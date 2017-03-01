@@ -21,20 +21,22 @@
 #include "binary-writer.h"
 #include "common.h"
 
-struct WabtWriter;
+namespace wabt {
+
+struct Writer;
 
 #define WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
   { nullptr, WABT_WRITE_BINARY_OPTIONS_DEFAULT }
 
-struct WabtWriteBinarySpecOptions {
+struct WriteBinarySpecOptions {
   const char* json_filename;
-  WabtWriteBinaryOptions write_binary_options;
+  WriteBinaryOptions write_binary_options;
 };
 
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_write_binary_spec_script(struct WabtScript*,
-                                         const char* source_filename,
-                                         const WabtWriteBinarySpecOptions*);
-WABT_EXTERN_C_END
+Result write_binary_spec_script(struct Script*,
+                                const char* source_filename,
+                                const WriteBinarySpecOptions*);
+
+}  // namespace wabt
 
 #endif /* WABT_BINARY_WRITER_SPEC_H_ */

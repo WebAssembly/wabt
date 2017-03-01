@@ -26,7 +26,9 @@
 #include "vector.h"
 #include "writer.h"
 
-struct WabtStream;
+namespace wabt {
+
+struct Stream;
 
 #define FOREACH_INTERPRETER_RESULT(V)                                       \
   V(Ok, "ok")                                                               \
@@ -65,7 +67,7 @@ struct WabtStream;
   /* the expected export kind doesn't match. */                             \
   V(ExportKindMismatch, "export kind mismatch")
 
-enum class WabtInterpreterResult {
+enum class InterpreterResult {
 #define V(Name, str) Name,
   FOREACH_INTERPRETER_RESULT(V)
 #undef V
@@ -86,94 +88,92 @@ enum class WabtInterpreterResult {
   V(___, ___, ___, 0, 0xfe, Data, "data")          \
   V(___, ___, ___, 0, 0xff, DropKeep, "drop_keep")
 
-enum class WabtInterpreterOpcode {
+enum class InterpreterOpcode {
 /* push space on the value stack for N entries */
-#define V(rtype, type1, type2, mem_size, code, Name, text) \
-  Name = code,
+#define V(rtype, type1, type2, mem_size, code, Name, text) Name = code,
   WABT_FOREACH_INTERPRETER_OPCODE(V)
 #undef V
 
-  First = static_cast<int>(WabtOpcode::First),
+      First = static_cast<int>(Opcode::First),
   Last = DropKeep,
 };
-static const int kWabtInterpreterOpcodeCount =
-    WABT_ENUM_COUNT(WabtInterpreterOpcode);
+static const int kInterpreterOpcodeCount = WABT_ENUM_COUNT(InterpreterOpcode);
 
-typedef uint32_t WabtUint32;
-WABT_DEFINE_ARRAY(uint32, WabtUint32);
+typedef uint32_t Uint32;
+WABT_DEFINE_ARRAY(uint32, Uint32);
 
-/* TODO(binji): identical to WabtFuncSignature. Share? */
-struct WabtInterpreterFuncSignature {
-  WabtTypeVector param_types;
-  WabtTypeVector result_types;
+/* TODO(binji): identical to FuncSignature. Share? */
+struct InterpreterFuncSignature {
+  TypeVector param_types;
+  TypeVector result_types;
 };
-WABT_DEFINE_VECTOR(interpreter_func_signature, WabtInterpreterFuncSignature);
+WABT_DEFINE_VECTOR(interpreter_func_signature, InterpreterFuncSignature);
 
-struct WabtInterpreterTable {
-  WabtLimits limits;
-  WabtUint32Array func_indexes;
+struct InterpreterTable {
+  Limits limits;
+  Uint32Array func_indexes;
 };
-WABT_DEFINE_VECTOR(interpreter_table, WabtInterpreterTable);
+WABT_DEFINE_VECTOR(interpreter_table, InterpreterTable);
 
-struct WabtInterpreterMemory {
+struct InterpreterMemory {
   void* data;
-  WabtLimits page_limits;
+  Limits page_limits;
   uint32_t byte_size; /* Cached from page_limits. */
 };
-WABT_DEFINE_VECTOR(interpreter_memory, WabtInterpreterMemory);
+WABT_DEFINE_VECTOR(interpreter_memory, InterpreterMemory);
 
-union WabtInterpreterValue {
+union InterpreterValue {
   uint32_t i32;
   uint64_t i64;
   uint32_t f32_bits;
   uint64_t f64_bits;
 };
-WABT_DEFINE_ARRAY(interpreter_value, WabtInterpreterValue);
+WABT_DEFINE_ARRAY(interpreter_value, InterpreterValue);
 
-struct WabtInterpreterTypedValue {
-  WabtType type;
-  WabtInterpreterValue value;
+struct InterpreterTypedValue {
+  Type type;
+  InterpreterValue value;
 };
-WABT_DEFINE_VECTOR(interpreter_typed_value, WabtInterpreterTypedValue);
+WABT_DEFINE_VECTOR(interpreter_typed_value, InterpreterTypedValue);
 
-struct WabtInterpreterGlobal {
-  WabtInterpreterTypedValue typed_value;
+struct InterpreterGlobal {
+  InterpreterTypedValue typed_value;
   bool mutable_;
   uint32_t import_index; /* or INVALID_INDEX if not imported */
 };
-WABT_DEFINE_VECTOR(interpreter_global, WabtInterpreterGlobal);
+WABT_DEFINE_VECTOR(interpreter_global, InterpreterGlobal);
 
-struct WabtInterpreterImport {
-  WabtStringSlice module_name;
-  WabtStringSlice field_name;
-  WabtExternalKind kind;
+struct InterpreterImport {
+  StringSlice module_name;
+  StringSlice field_name;
+  ExternalKind kind;
   union {
     struct {
       uint32_t sig_index;
     } func;
     struct {
-      WabtLimits limits;
+      Limits limits;
     } table, memory;
     struct {
-      WabtType type;
+      Type type;
       bool mutable_;
     } global;
   };
 };
-WABT_DEFINE_ARRAY(interpreter_import, WabtInterpreterImport);
+WABT_DEFINE_ARRAY(interpreter_import, InterpreterImport);
 
-struct WabtInterpreterFunc;
+struct InterpreterFunc;
 
-typedef WabtResult (*WabtInterpreterHostFuncCallback)(
-    const struct WabtInterpreterFunc* func,
-    const WabtInterpreterFuncSignature* sig,
+typedef Result (*InterpreterHostFuncCallback)(
+    const struct InterpreterFunc* func,
+    const InterpreterFuncSignature* sig,
     uint32_t num_args,
-    WabtInterpreterTypedValue* args,
+    InterpreterTypedValue* args,
     uint32_t num_results,
-    WabtInterpreterTypedValue* out_results,
+    InterpreterTypedValue* out_results,
     void* user_data);
 
-struct WabtInterpreterFunc {
+struct InterpreterFunc {
   uint32_t sig_index;
   bool is_host;
   union {
@@ -181,74 +181,74 @@ struct WabtInterpreterFunc {
       uint32_t offset;
       uint32_t local_decl_count;
       uint32_t local_count;
-      WabtTypeVector param_and_local_types;
+      TypeVector param_and_local_types;
     } defined;
     struct {
-      WabtStringSlice module_name;
-      WabtStringSlice field_name;
-      WabtInterpreterHostFuncCallback callback;
+      StringSlice module_name;
+      StringSlice field_name;
+      InterpreterHostFuncCallback callback;
       void* user_data;
     } host;
   };
 };
-WABT_DEFINE_VECTOR(interpreter_func, WabtInterpreterFunc);
+WABT_DEFINE_VECTOR(interpreter_func, InterpreterFunc);
 
-struct WabtInterpreterExport {
-  WabtStringSlice name; /* Owned by the export_bindings hash */
-  WabtExternalKind kind;
+struct InterpreterExport {
+  StringSlice name; /* Owned by the export_bindings hash */
+  ExternalKind kind;
   uint32_t index;
 };
-WABT_DEFINE_VECTOR(interpreter_export, WabtInterpreterExport);
+WABT_DEFINE_VECTOR(interpreter_export, InterpreterExport);
 
-struct WabtPrintErrorCallback {
+struct PrintErrorCallback {
   void* user_data;
   void (*print_error)(const char* msg, void* user_data);
 };
 
-struct WabtInterpreterHostImportDelegate {
-  void *user_data;
-  WabtResult (*import_func)(WabtInterpreterImport*,
-                            WabtInterpreterFunc*,
-                            WabtInterpreterFuncSignature*,
-                            WabtPrintErrorCallback,
-                            void* user_data);
-  WabtResult (*import_table)(WabtInterpreterImport*,
-                             WabtInterpreterTable*,
-                             WabtPrintErrorCallback,
-                             void* user_data);
-  WabtResult (*import_memory)(WabtInterpreterImport*,
-                              WabtInterpreterMemory*,
-                              WabtPrintErrorCallback,
-                              void* user_data);
-  WabtResult (*import_global)(WabtInterpreterImport*,
-                              WabtInterpreterGlobal*,
-                              WabtPrintErrorCallback,
-                              void* user_data);
+struct InterpreterHostImportDelegate {
+  void* user_data;
+  Result (*import_func)(InterpreterImport*,
+                        InterpreterFunc*,
+                        InterpreterFuncSignature*,
+                        PrintErrorCallback,
+                        void* user_data);
+  Result (*import_table)(InterpreterImport*,
+                         InterpreterTable*,
+                         PrintErrorCallback,
+                         void* user_data);
+  Result (*import_memory)(InterpreterImport*,
+                          InterpreterMemory*,
+                          PrintErrorCallback,
+                          void* user_data);
+  Result (*import_global)(InterpreterImport*,
+                          InterpreterGlobal*,
+                          PrintErrorCallback,
+                          void* user_data);
 };
 
-struct WabtInterpreterModule {
-  WabtStringSlice name;
-  WabtInterpreterExportVector exports;
-  WabtBindingHash export_bindings;
+struct InterpreterModule {
+  StringSlice name;
+  InterpreterExportVector exports;
+  BindingHash export_bindings;
   uint32_t memory_index; /* INVALID_INDEX if not defined */
   uint32_t table_index;  /* INVALID_INDEX if not defined */
   bool is_host;
   union {
     struct {
-      WabtInterpreterImportArray imports;
+      InterpreterImportArray imports;
       uint32_t start_func_index; /* INVALID_INDEX if not defined */
       size_t istream_start;
       size_t istream_end;
     } defined;
     struct {
-      WabtInterpreterHostImportDelegate import_delegate;
+      InterpreterHostImportDelegate import_delegate;
     } host;
   };
 };
-WABT_DEFINE_VECTOR(interpreter_module, WabtInterpreterModule);
+WABT_DEFINE_VECTOR(interpreter_module, InterpreterModule);
 
 /* Used to track and reset the state of the environment. */
-struct WabtInterpreterEnvironmentMark {
+struct InterpreterEnvironmentMark {
   size_t modules_size;
   size_t sigs_size;
   size_t funcs_size;
@@ -258,80 +258,77 @@ struct WabtInterpreterEnvironmentMark {
   size_t istream_size;
 };
 
-struct WabtInterpreterEnvironment {
-  WabtInterpreterModuleVector modules;
-  WabtInterpreterFuncSignatureVector sigs;
-  WabtInterpreterFuncVector funcs;
-  WabtInterpreterMemoryVector memories;
-  WabtInterpreterTableVector tables;
-  WabtInterpreterGlobalVector globals;
-  WabtOutputBuffer istream;
-  WabtBindingHash module_bindings;
-  WabtBindingHash registered_module_bindings;
+struct InterpreterEnvironment {
+  InterpreterModuleVector modules;
+  InterpreterFuncSignatureVector sigs;
+  InterpreterFuncVector funcs;
+  InterpreterMemoryVector memories;
+  InterpreterTableVector tables;
+  InterpreterGlobalVector globals;
+  OutputBuffer istream;
+  BindingHash module_bindings;
+  BindingHash registered_module_bindings;
 };
 
-struct WabtInterpreterThread {
-  WabtInterpreterEnvironment* env;
-  WabtInterpreterValueArray value_stack;
-  WabtUint32Array call_stack;
-  WabtInterpreterValue* value_stack_top;
-  WabtInterpreterValue* value_stack_end;
+struct InterpreterThread {
+  InterpreterEnvironment* env;
+  InterpreterValueArray value_stack;
+  Uint32Array call_stack;
+  InterpreterValue* value_stack_top;
+  InterpreterValue* value_stack_end;
   uint32_t* call_stack_top;
   uint32_t* call_stack_end;
   uint32_t pc;
 
   /* a temporary buffer that is for passing args to host functions */
-  WabtInterpreterTypedValueVector host_args;
+  InterpreterTypedValueVector host_args;
 };
 
 #define WABT_INTERPRETER_THREAD_OPTIONS_DEFAULT \
-  { 512 * 1024 / sizeof(WabtInterpreterValue), 64 * 1024, WABT_INVALID_OFFSET }
+  { 512 * 1024 / sizeof(InterpreterValue), 64 * 1024, WABT_INVALID_OFFSET }
 
-struct WabtInterpreterThreadOptions {
+struct InterpreterThreadOptions {
   uint32_t value_stack_size;
   uint32_t call_stack_size;
   uint32_t pc;
 };
 
-WABT_EXTERN_C_BEGIN
-bool wabt_is_nan_f32(uint32_t f32_bits);
-bool wabt_is_nan_f64(uint64_t f64_bits);
-bool wabt_func_signatures_are_equal(WabtInterpreterEnvironment* env,
-                                    uint32_t sig_index_0,
-                                    uint32_t sig_index_1);
+bool is_nan_f32(uint32_t f32_bits);
+bool is_nan_f64(uint64_t f64_bits);
+bool func_signatures_are_equal(InterpreterEnvironment* env,
+                               uint32_t sig_index_0,
+                               uint32_t sig_index_1);
 
-void wabt_init_interpreter_environment(WabtInterpreterEnvironment* env);
-void wabt_destroy_interpreter_environment(WabtInterpreterEnvironment* env);
-WabtInterpreterEnvironmentMark wabt_mark_interpreter_environment(
-    WabtInterpreterEnvironment* env);
-void wabt_reset_interpreter_environment_to_mark(
-    WabtInterpreterEnvironment* env,
-    WabtInterpreterEnvironmentMark mark);
-WabtInterpreterModule* wabt_append_host_module(WabtInterpreterEnvironment* env,
-                                               WabtStringSlice name);
-void wabt_init_interpreter_thread(WabtInterpreterEnvironment* env,
-                                  WabtInterpreterThread* thread,
-                                  WabtInterpreterThreadOptions* options);
-WabtInterpreterResult wabt_push_thread_value(WabtInterpreterThread* thread,
-                                             WabtInterpreterValue value);
-void wabt_destroy_interpreter_thread(WabtInterpreterThread* thread);
-WabtInterpreterResult wabt_call_host(WabtInterpreterThread* thread,
-                                     WabtInterpreterFunc* func);
-WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
-                                           uint32_t num_instructions,
-                                           uint32_t* call_stack_return_top);
-void wabt_trace_pc(WabtInterpreterThread* thread, struct WabtStream* stream);
-void wabt_disassemble(WabtInterpreterEnvironment* env,
-                      struct WabtStream* stream,
-                      uint32_t from,
-                      uint32_t to);
-void wabt_disassemble_module(WabtInterpreterEnvironment* env,
-                             struct WabtStream* stream,
-                             WabtInterpreterModule* module);
+void init_interpreter_environment(InterpreterEnvironment* env);
+void destroy_interpreter_environment(InterpreterEnvironment* env);
+InterpreterEnvironmentMark mark_interpreter_environment(
+    InterpreterEnvironment* env);
+void reset_interpreter_environment_to_mark(InterpreterEnvironment* env,
+                                           InterpreterEnvironmentMark mark);
+InterpreterModule* append_host_module(InterpreterEnvironment* env,
+                                      StringSlice name);
+void init_interpreter_thread(InterpreterEnvironment* env,
+                             InterpreterThread* thread,
+                             InterpreterThreadOptions* options);
+InterpreterResult push_thread_value(InterpreterThread* thread,
+                                    InterpreterValue value);
+void destroy_interpreter_thread(InterpreterThread* thread);
+InterpreterResult call_host(InterpreterThread* thread, InterpreterFunc* func);
+InterpreterResult run_interpreter(InterpreterThread* thread,
+                                  uint32_t num_instructions,
+                                  uint32_t* call_stack_return_top);
+void trace_pc(InterpreterThread* thread, struct Stream* stream);
+void disassemble(InterpreterEnvironment* env,
+                 struct Stream* stream,
+                 uint32_t from,
+                 uint32_t to);
+void disassemble_module(InterpreterEnvironment* env,
+                        struct Stream* stream,
+                        InterpreterModule* module);
 
-WabtInterpreterExport* wabt_get_interpreter_export_by_name(
-    WabtInterpreterModule* module,
-    const WabtStringSlice* name);
-WABT_EXTERN_C_END
+InterpreterExport* get_interpreter_export_by_name(InterpreterModule* module,
+                                                  const StringSlice* name);
+
+}  // namespace wabt
 
 #endif /* WABT_INTERPRETER_H_ */

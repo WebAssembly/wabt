@@ -26,11 +26,13 @@
 #include <alloca.h>
 #endif
 
+namespace wabt {
+
 static int option_match(const char* s,
                         const char* full,
-                        WabtHasArgument has_argument) {
+                        HasArgument has_argument) {
   int i;
-  for (i = 0; ; i++) {
+  for (i = 0;; i++) {
     if (full[i] == '\0') {
       /* perfect match. return +1, so it will be preferred over a longer option
        * with the same prefix */
@@ -39,7 +41,7 @@ static int option_match(const char* s,
 
       /* we want to fail if s is longer than full, e.g. --foobar vs. --foo.
        * However, if s ends with an '=', it's OK. */
-      if (!(has_argument == WabtHasArgument::Yes && s[i] == '='))
+      if (!(has_argument == HasArgument::Yes && s[i] == '='))
         return -1;
       break;
     }
@@ -52,14 +54,12 @@ static int option_match(const char* s,
 }
 
 static void WABT_PRINTF_FORMAT(2, 3)
-    error(WabtOptionParser* parser, const char* format, ...) {
+    error(OptionParser* parser, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   parser->on_error(parser, buffer);
 }
 
-void wabt_parse_options(WabtOptionParser* parser,
-                        int argc,
-                        char** argv) {
+void parse_options(OptionParser* parser, int argc, char** argv) {
   parser->argv0 = argv[0];
 
   int i;
@@ -74,7 +74,7 @@ void wabt_parse_options(WabtOptionParser* parser,
         int best_length = 0;
         int best_count = 0;
         for (j = 0; j < parser->num_options; ++j) {
-          WabtOption* option = &parser->options[j];
+          Option* option = &parser->options[j];
           if (option->long_name) {
             int match_length =
                 option_match(&arg[2], option->long_name, option->has_argument);
@@ -96,9 +96,9 @@ void wabt_parse_options(WabtOptionParser* parser,
           continue;
         }
 
-        WabtOption* best_option = &parser->options[best_index];
+        Option* best_option = &parser->options[best_index];
         const char* option_argument = nullptr;
-        if (best_option->has_argument == WabtHasArgument::Yes) {
+        if (best_option->has_argument == HasArgument::Yes) {
           if (arg[best_length] == '=') {
             option_argument = &arg[best_length + 1];
           } else {
@@ -124,10 +124,10 @@ void wabt_parse_options(WabtOptionParser* parser,
         for (k = 1; arg[k]; ++k) {
           bool matched = false;
           for (j = 0; j < parser->num_options; ++j) {
-            WabtOption* option = &parser->options[j];
+            Option* option = &parser->options[j];
             if (option->short_name && arg[k] == option->short_name) {
               const char* option_argument = nullptr;
-              if (option->has_argument == WabtHasArgument::Yes) {
+              if (option->has_argument == HasArgument::Yes) {
                 /* a short option with a required argument cannot be followed
                  * by other short options */
                 if (arg[k + 1] != '\0') {
@@ -163,7 +163,7 @@ void wabt_parse_options(WabtOptionParser* parser,
   }
 }
 
-void wabt_print_help(WabtOptionParser* parser, const char* program_name) {
+void print_help(OptionParser* parser, const char* program_name) {
   int i;
   /* TODO(binji): do something more generic for filename here */
   printf("usage: %s [options] filename\n\n", program_name);
@@ -173,14 +173,14 @@ void wabt_print_help(WabtOptionParser* parser, const char* program_name) {
   const int extra_space = 8;
   int longest_name_length = 0;
   for (i = 0; i < parser->num_options; ++i) {
-    WabtOption* option = &parser->options[i];
+    Option* option = &parser->options[i];
     int length;
     if (option->long_name) {
       if (option->metavar) {
-        length = wabt_snprintf(nullptr, 0, "%s=%s", option->long_name,
-                               option->metavar);
+        length =
+            snprintf(nullptr, 0, "%s=%s", option->long_name, option->metavar);
       } else {
-        length = wabt_snprintf(nullptr, 0, "%s", option->long_name);
+        length = snprintf(nullptr, 0, "%s", option->long_name);
       }
     } else {
       continue;
@@ -194,7 +194,7 @@ void wabt_print_help(WabtOptionParser* parser, const char* program_name) {
   char* buffer = static_cast<char*>(alloca(buffer_size));
 
   for (i = 0; i < parser->num_options; ++i) {
-    WabtOption* option = &parser->options[i];
+    Option* option = &parser->options[i];
     if (!option->short_name && !option->long_name)
       continue;
 
@@ -205,20 +205,20 @@ void wabt_print_help(WabtOptionParser* parser, const char* program_name) {
 
     char format[20];
     if (option->long_name) {
-      wabt_snprintf(format, sizeof(format), "--%%-%ds",
-                    longest_name_length + extra_space);
+      snprintf(format, sizeof(format), "--%%-%ds",
+               longest_name_length + extra_space);
 
       if (option->metavar) {
-        wabt_snprintf(buffer, buffer_size, "%s=%s", option->long_name,
-                      option->metavar);
+        snprintf(buffer, buffer_size, "%s=%s", option->long_name,
+                 option->metavar);
         printf(format, buffer);
       } else {
         printf(format, option->long_name);
       }
     } else {
       /* +2 for the extra "--" above */
-      wabt_snprintf(format, sizeof(format), "%%-%ds",
-                    longest_name_length + extra_space + 2);
+      snprintf(format, sizeof(format), "%%-%ds",
+               longest_name_length + extra_space + 2);
       printf(format, "");
     }
 
@@ -227,3 +227,5 @@ void wabt_print_help(WabtOptionParser* parser, const char* program_name) {
     printf("\n");
   }
 }
+
+}  // namespace wabt

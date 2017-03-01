@@ -40,8 +40,10 @@
   V(Code, code, 10)                    \
   V(Data, data, 11)
 
+namespace wabt {
+
 /* clang-format off */
-enum class WabtBinarySection {
+enum class BinarySection {
 #define V(Name, name, code) Name = code,
   WABT_FOREACH_BINARY_SECTION(V)
 #undef V
@@ -51,15 +53,15 @@ enum class WabtBinarySection {
   Last = Data,
 };
 /* clang-format on */
-static const int kWabtBinarySectionCount = WABT_ENUM_COUNT(WabtBinarySection);
+static const int kBinarySectionCount = WABT_ENUM_COUNT(BinarySection);
 
-WABT_EXTERN_C_BEGIN
-extern const char* g_wabt_section_name[];
+extern const char* g_section_name[];
 
-static WABT_INLINE const char* wabt_get_section_name(WabtBinarySection sec) {
-  assert(static_cast<int>(sec) < kWabtBinarySectionCount);
-  return g_wabt_section_name[static_cast<size_t>(sec)];
+static WABT_INLINE const char* get_section_name(BinarySection sec) {
+  assert(static_cast<int>(sec) < kBinarySectionCount);
+  return g_section_name[static_cast<size_t>(sec)];
 }
-WABT_EXTERN_C_END
+
+}  // namespace wabt
 
 #endif /* WABT_BINARY_H_ */

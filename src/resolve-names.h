@@ -19,19 +19,21 @@
 
 #include "common.h"
 
-struct WabtAstLexer;
-struct WabtModule;
-struct WabtScript;
-struct WabtSourceErrorHandler;
+namespace wabt {
 
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_resolve_names_module(struct WabtAstLexer*,
-                                     struct WabtModule*,
-                                     struct WabtSourceErrorHandler*);
+struct AstLexer;
+struct Module;
+struct Script;
+struct SourceErrorHandler;
 
-WabtResult wabt_resolve_names_script(struct WabtAstLexer*,
-                                     struct WabtScript*,
-                                     struct WabtSourceErrorHandler*);
-WABT_EXTERN_C_END
+Result resolve_names_module(struct AstLexer*,
+                            struct Module*,
+                            struct SourceErrorHandler*);
+
+Result resolve_names_script(struct AstLexer*,
+                            struct Script*,
+                            struct SourceErrorHandler*);
+
+}  // namespace wabt
 
 #endif /* WABT_RESOLVE_NAMES_H_ */

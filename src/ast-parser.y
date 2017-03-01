@@ -71,35 +71,34 @@
 
 #define APPEND_FIELD_TO_LIST(module, field, Kind, kind, loc_, item) \
   do {                                                              \
-    field = wabt_append_module_field(module);                       \
+    field = append_module_field(module);                            \
     field->loc = loc_;                                              \
-    field->type = WabtModuleFieldType::Kind;                        \
+    field->type = ModuleFieldType::Kind;                            \
     field->kind = item;                                             \
   } while (0)
 
 #define APPEND_ITEM_TO_VECTOR(module, Kind, kind, kinds, item_ptr) \
   do {                                                             \
-    Wabt##Kind* dummy = item_ptr;                                  \
-    wabt_append_##kind##_ptr_value(&(module)->kinds, &dummy);      \
+    Kind* dummy = item_ptr;                                        \
+    append_##kind##_ptr_value(&(module)->kinds, &dummy);           \
   } while (0)
 
-#define INSERT_BINDING(module, kind, kinds, loc_, name)             \
-  do                                                                \
-    if ((name).start) {                                             \
-      WabtBinding* binding =                                        \
-          wabt_insert_binding(&(module)->kind##_bindings, &(name)); \
-      binding->loc = loc_;                                          \
-      binding->index = (module)->kinds.size - 1;                    \
-    }                                                               \
+#define INSERT_BINDING(module, kind, kinds, loc_, name)                       \
+  do                                                                          \
+    if ((name).start) {                                                       \
+      Binding* binding = insert_binding(&(module)->kind##_bindings, &(name)); \
+      binding->loc = loc_;                                                    \
+      binding->index = (module)->kinds.size - 1;                              \
+    }                                                                         \
   while (0)
 
 #define APPEND_INLINE_EXPORT(module, Kind, loc_, value, index_)         \
   do                                                                    \
     if ((value).export_.has_export) {                                   \
-      WabtModuleField* export_field;                                    \
+      ModuleField* export_field;                                        \
       APPEND_FIELD_TO_LIST(module, export_field, Export, export_, loc_, \
                            (value).export_.export_);                    \
-      export_field->export_.kind = WabtExternalKind::Kind;              \
+      export_field->export_.kind = ExternalKind::Kind;                  \
       export_field->export_.var.loc = loc_;                             \
       export_field->export_.var.index = index_;                         \
       APPEND_ITEM_TO_VECTOR(module, Export, export, exports,            \
@@ -112,29 +111,28 @@
 #define CHECK_IMPORT_ORDERING(module, kind, kinds, loc_)           \
   do {                                                             \
     if ((module)->kinds.size != (module)->num_##kind##_imports) {  \
-      wabt_ast_parser_error(                                       \
+      ast_parser_error(                                            \
           &loc_, lexer, parser,                                    \
           "imports must occur before all non-import definitions"); \
     }                                                              \
   } while (0)
 
-#define CHECK_END_LABEL(loc, begin_label, end_label)                     \
-  do {                                                                   \
-    if (!wabt_string_slice_is_empty(&(end_label))) {                     \
-      if (wabt_string_slice_is_empty(&(begin_label))) {                  \
-        wabt_ast_parser_error(&loc, lexer, parser,                       \
-                              "unexpected label \"" PRIstringslice "\"", \
-                              WABT_PRINTF_STRING_SLICE_ARG(end_label));  \
-      } else if (!wabt_string_slices_are_equal(&(begin_label),           \
-                                               &(end_label))) {          \
-        wabt_ast_parser_error(&loc, lexer, parser,                       \
-                              "mismatching label \"" PRIstringslice      \
-                              "\" != \"" PRIstringslice "\"",            \
-                              WABT_PRINTF_STRING_SLICE_ARG(begin_label), \
-                              WABT_PRINTF_STRING_SLICE_ARG(end_label));  \
-      }                                                                  \
-      wabt_destroy_string_slice(&(end_label));                           \
-    }                                                                    \
+#define CHECK_END_LABEL(loc, begin_label, end_label)                       \
+  do {                                                                     \
+    if (!string_slice_is_empty(&(end_label))) {                            \
+      if (string_slice_is_empty(&(begin_label))) {                         \
+        ast_parser_error(&loc, lexer, parser,                              \
+                         "unexpected label \"" PRIstringslice "\"",        \
+                         WABT_PRINTF_STRING_SLICE_ARG(end_label));         \
+      } else if (!string_slices_are_equal(&(begin_label), &(end_label))) { \
+        ast_parser_error(&loc, lexer, parser,                              \
+                         "mismatching label \"" PRIstringslice             \
+                         "\" != \"" PRIstringslice "\"",                   \
+                         WABT_PRINTF_STRING_SLICE_ARG(begin_label),        \
+                         WABT_PRINTF_STRING_SLICE_ARG(end_label));         \
+      }                                                                    \
+      destroy_string_slice(&(end_label));                                  \
+    }                                                                      \
   } while (0)
 
 #define YYMALLOC(size) wabt_alloc(size)
@@ -142,65 +140,71 @@
 
 #define USE_NATURAL_ALIGNMENT (~0)
 
-static WabtExprList join_exprs1(WabtLocation* loc, WabtExpr* expr1);
-static WabtExprList join_exprs2(WabtLocation* loc, WabtExprList* expr1,
-                                WabtExpr* expr2);
+namespace wabt {
 
-static WabtFuncField* new_func_field(void) {
-  return static_cast<WabtFuncField*>(wabt_alloc_zero(sizeof(WabtFuncField)));
+ExprList join_exprs1(Location* loc, Expr* expr1);
+ExprList join_exprs2(Location* loc,
+                         ExprList* expr1,
+                         Expr* expr2);
+
+FuncField* new_func_field(void) {
+  return static_cast<FuncField*>(wabt_alloc_zero(sizeof(FuncField)));
 }
 
-static WabtFunc* new_func(void) {
-  return static_cast<WabtFunc*>(wabt_alloc_zero(sizeof(WabtFunc)));
+Func* new_func(void) {
+  return static_cast<Func*>(wabt_alloc_zero(sizeof(Func)));
 }
 
-static WabtCommand* new_command(void) {
-  return static_cast<WabtCommand*>(wabt_alloc_zero(sizeof(WabtCommand)));
+Command* new_command(void) {
+  return static_cast<Command*>(wabt_alloc_zero(sizeof(Command)));
 }
 
-static WabtModule* new_module(void) {
-  return static_cast<WabtModule*>(wabt_alloc_zero(sizeof(WabtModule)));
+Module* new_module(void) {
+  return static_cast<Module*>(wabt_alloc_zero(sizeof(Module)));
 }
 
-static WabtImport* new_import(void) {
-  return static_cast<WabtImport*>(wabt_alloc_zero(sizeof(WabtImport)));
+Import* new_import(void) {
+  return static_cast<Import*>(wabt_alloc_zero(sizeof(Import)));
 }
 
-static WabtTextListNode* new_text_list_node(void) {
-  return static_cast<WabtTextListNode*>(
-      wabt_alloc_zero(sizeof(WabtTextListNode)));
+TextListNode* new_text_list_node(void) {
+  return static_cast<TextListNode*>(wabt_alloc_zero(sizeof(TextListNode)));
 }
 
-static WabtResult parse_const(WabtType type, WabtLiteralType literal_type,
-                              const char* s, const char* end, WabtConst* out);
-static void dup_text_list(WabtTextList * text_list, void** out_data,
-                          size_t* out_size);
+Result parse_const(Type type,
+                       LiteralType literal_type,
+                       const char* s,
+                       const char* end,
+                       Const* out);
+void dup_text_list(TextList* text_list, void** out_data, size_t* out_size);
 
-static bool is_empty_signature(WabtFuncSignature* sig);
+bool is_empty_signature(FuncSignature* sig);
 
-static void append_implicit_func_declaration(WabtLocation*, WabtModule*,
-                                             WabtFuncDeclaration*);
+void append_implicit_func_declaration(Location*,
+                                      Module*,
+                                      FuncDeclaration*);
 
 struct BinaryErrorCallbackData {
-  WabtLocation* loc;
-  WabtAstLexer* lexer;
-  WabtAstParser* parser;
+  Location* loc;
+  AstLexer* lexer;
+  AstParser* parser;
 };
 
 static void on_read_binary_error(uint32_t offset, const char* error,
                                  void* user_data);
 
-#define wabt_ast_parser_lex wabt_ast_lexer_lex
+#define wabt_ast_parser_lex ast_lexer_lex
+#define wabt_ast_parser_error ast_parser_error
 
 %}
 
 %define api.prefix {wabt_ast_parser_}
 %define api.pure true
-%define api.value.type {WabtToken}
+%define api.value.type {::wabt::Token}
 %define api.token.prefix {WABT_TOKEN_TYPE_}
 %define parse.error verbose
-%lex-param {WabtAstLexer* lexer} {WabtAstParser* parser}
-%parse-param {WabtAstLexer* lexer} {WabtAstParser* parser}
+%lex-param {::wabt::AstLexer* lexer} {::wabt::AstParser* parser}
+%parse-param {::wabt::AstLexer* lexer} {::wabt::AstParser* parser}
 %locations
 
 %token LPAR "("
@@ -266,32 +270,32 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 /* These non-terminals use the types below that have destructors, but the
  * memory is shared with the lexer, so should not be destroyed. */
 %destructor {} ALIGN_EQ_NAT OFFSET_EQ_NAT TEXT VAR NAT INT FLOAT
-%destructor { wabt_destroy_block(&$$); } <block>
-%destructor { wabt_destroy_command($$); wabt_free($$); } <command>
-%destructor { wabt_destroy_command_vector_and_elements(&$$); } <commands>
-%destructor { wabt_destroy_const_vector(&$$); } <consts>
-%destructor { wabt_destroy_elem_segment(&$$); } <elem_segment>
-%destructor { wabt_destroy_export(&$$); } <export_>
-%destructor { wabt_destroy_exported_func(&$$); } <exported_func>
-%destructor { wabt_destroy_exported_memory(&$$); } <exported_memory>
-%destructor { wabt_destroy_exported_table(&$$); } <exported_table>
-%destructor { wabt_destroy_expr($$); } <expr>
-%destructor { wabt_destroy_expr_list($$.first); } <expr_list>
-%destructor { wabt_destroy_func_fields($$); } <func_fields>
-%destructor { wabt_destroy_func($$); wabt_free($$); } <func>
-%destructor { wabt_destroy_func_signature(&$$); } <func_sig>
-%destructor { wabt_destroy_func_type(&$$); } <func_type>
-%destructor { wabt_destroy_import($$); wabt_free($$); } <import>
-%destructor { wabt_destroy_data_segment(&$$); } <data_segment>
-%destructor { wabt_destroy_module($$); wabt_free($$); } <module>
-%destructor { wabt_destroy_raw_module(&$$); } <raw_module>
-%destructor { wabt_destroy_string_slice(&$$.text); } <literal>
-%destructor { wabt_destroy_script(&$$); } <script>
-%destructor { wabt_destroy_string_slice(&$$); } <text>
-%destructor { wabt_destroy_text_list(&$$); } <text_list>
-%destructor { wabt_destroy_type_vector(&$$); } <types>
-%destructor { wabt_destroy_var_vector_and_elements(&$$); } <vars>
-%destructor { wabt_destroy_var(&$$); } <var>
+%destructor { destroy_block(&$$); } <block>
+%destructor { destroy_command($$); wabt_free($$); } <command>
+%destructor { destroy_command_vector_and_elements(&$$); } <commands>
+%destructor { destroy_const_vector(&$$); } <consts>
+%destructor { destroy_elem_segment(&$$); } <elem_segment>
+%destructor { destroy_export(&$$); } <export_>
+%destructor { destroy_exported_func(&$$); } <exported_func>
+%destructor { destroy_exported_memory(&$$); } <exported_memory>
+%destructor { destroy_exported_table(&$$); } <exported_table>
+%destructor { destroy_expr($$); } <expr>
+%destructor { destroy_expr_list($$.first); } <expr_list>
+%destructor { destroy_func_fields($$); } <func_fields>
+%destructor { destroy_func($$); wabt_free($$); } <func>
+%destructor { destroy_func_signature(&$$); } <func_sig>
+%destructor { destroy_func_type(&$$); } <func_type>
+%destructor { destroy_import($$); wabt_free($$); } <import>
+%destructor { destroy_data_segment(&$$); } <data_segment>
+%destructor { destroy_module($$); wabt_free($$); } <module>
+%destructor { destroy_raw_module(&$$); } <raw_module>
+%destructor { destroy_string_slice(&$$.text); } <literal>
+%destructor { destroy_script(&$$); } <script>
+%destructor { destroy_string_slice(&$$); } <text>
+%destructor { destroy_text_list(&$$); } <text_list>
+%destructor { destroy_type_vector(&$$); } <types>
+%destructor { destroy_var_vector_and_elements(&$$); } <vars>
+%destructor { destroy_var(&$$); } <var>
 
 
 %nonassoc LOW
@@ -305,14 +309,14 @@ static void on_read_binary_error(uint32_t offset, const char* error,
 
 non_empty_text_list :
     TEXT {
-      WabtTextListNode* node = new_text_list_node();
+      TextListNode* node = new_text_list_node();
       DUPTEXT(node->text, $1);
       node->next = nullptr;
       $$.first = $$.last = node;
     }
   | non_empty_text_list TEXT {
       $$ = $1;
-      WabtTextListNode* node = new_text_list_node();
+      TextListNode* node = new_text_list_node();
       DUPTEXT(node->text, $2);
       node->next = nullptr;
       $$.last->next = node;
@@ -326,10 +330,10 @@ text_list :
 
 quoted_text :
     TEXT {
-      WabtTextListNode node;
+      TextListNode node;
       node.text = $1;
       node.next = nullptr;
-      WabtTextList text_list;
+      TextList text_list;
       text_list.first = &node;
       text_list.last = &node;
       void* data;
@@ -346,7 +350,7 @@ value_type_list :
     /* empty */ { WABT_ZERO_MEMORY($$); }
   | value_type_list VALUE_TYPE {
       $$ = $1;
-      wabt_append_type_value(&$$, &$2);
+      append_type_value(&$$, &$2);
     }
 ;
 elem_type :
@@ -410,9 +414,9 @@ type_use :
 
 nat :
     NAT {
-      if (WABT_FAILED(wabt_parse_uint64($1.text.start,
+      if (WABT_FAILED(parse_uint64($1.text.start,
                                         $1.text.start + $1.text.length, &$$))) {
-        wabt_ast_parser_error(&@1, lexer, parser,
+        ast_parser_error(&@1, lexer, parser,
                               "invalid int " PRIstringslice "\"",
                               WABT_PRINTF_STRING_SLICE_ARG($1.text));
       }
@@ -437,12 +441,12 @@ literal :
 var :
     nat {
       $$.loc = @1;
-      $$.type = WabtVarType::Index;
+      $$.type = VarType::Index;
       $$.index = $1;
     }
   | VAR {
       $$.loc = @1;
-      $$.type = WabtVarType::Name;
+      $$.type = VarType::Name;
       DUPTEXT($$.name, $1);
     }
 ;
@@ -450,7 +454,7 @@ var_list :
     /* empty */ { WABT_ZERO_MEMORY($$); }
   | var_list var {
       $$ = $1;
-      wabt_append_var_value(&$$, &$2);
+      append_var_value(&$$, &$2);
     }
 ;
 bind_var_opt :
@@ -469,9 +473,9 @@ labeling_opt :
 offset_opt :
     /* empty */ { $$ = 0; }
   | OFFSET_EQ_NAT {
-    if (WABT_FAILED(wabt_parse_int64($1.start, $1.start + $1.length, &$$,
-                                     WabtParseIntType::SignedAndUnsigned))) {
-      wabt_ast_parser_error(&@1, lexer, parser,
+    if (WABT_FAILED(parse_int64($1.start, $1.start + $1.length, &$$,
+                                ParseIntType::SignedAndUnsigned))) {
+      ast_parser_error(&@1, lexer, parser,
                             "invalid offset \"" PRIstringslice "\"",
                             WABT_PRINTF_STRING_SLICE_ARG($1));
       }
@@ -480,11 +484,11 @@ offset_opt :
 align_opt :
     /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN_EQ_NAT {
-    if (WABT_FAILED(wabt_parse_int32($1.start, $1.start + $1.length, &$$,
-                                     WabtParseIntType::UnsignedOnly))) {
-      wabt_ast_parser_error(&@1, lexer, parser,
-                            "invalid alignment \"" PRIstringslice "\"",
-                            WABT_PRINTF_STRING_SLICE_ARG($1));
+    if (WABT_FAILED(parse_int32($1.start, $1.start + $1.length, &$$,
+                                ParseIntType::UnsignedOnly))) {
+      ast_parser_error(&@1, lexer, parser,
+                       "invalid alignment \"" PRIstringslice "\"",
+                       WABT_PRINTF_STRING_SLICE_ARG($1));
       }
     }
 ;
@@ -496,129 +500,129 @@ instr :
 ;
 plain_instr :
     UNREACHABLE {
-      $$ = wabt_new_unreachable_expr();
+      $$ = new_unreachable_expr();
     }
   | NOP {
-      $$ = wabt_new_nop_expr();
+      $$ = new_nop_expr();
     }
   | DROP {
-      $$ = wabt_new_drop_expr();
+      $$ = new_drop_expr();
     }
   | SELECT {
-      $$ = wabt_new_select_expr();
+      $$ = new_select_expr();
     }
   | BR var {
-      $$ = wabt_new_br_expr();
+      $$ = new_br_expr();
       $$->br.var = $2;
     }
   | BR_IF var {
-      $$ = wabt_new_br_if_expr();
+      $$ = new_br_if_expr();
       $$->br_if.var = $2;
     }
   | BR_TABLE var_list var {
-      $$ = wabt_new_br_table_expr();
+      $$ = new_br_table_expr();
       $$->br_table.targets = $2;
       $$->br_table.default_target = $3;
     }
   | RETURN {
-      $$ = wabt_new_return_expr();
+      $$ = new_return_expr();
     }
   | CALL var {
-      $$ = wabt_new_call_expr();
+      $$ = new_call_expr();
       $$->call.var = $2;
     }
   | CALL_INDIRECT var {
-      $$ = wabt_new_call_indirect_expr();
+      $$ = new_call_indirect_expr();
       $$->call_indirect.var = $2;
     }
   | GET_LOCAL var {
-      $$ = wabt_new_get_local_expr();
+      $$ = new_get_local_expr();
       $$->get_local.var = $2;
     }
   | SET_LOCAL var {
-      $$ = wabt_new_set_local_expr();
+      $$ = new_set_local_expr();
       $$->set_local.var = $2;
     }
   | TEE_LOCAL var {
-      $$ = wabt_new_tee_local_expr();
+      $$ = new_tee_local_expr();
       $$->tee_local.var = $2;
     }
   | GET_GLOBAL var {
-      $$ = wabt_new_get_global_expr();
+      $$ = new_get_global_expr();
       $$->get_global.var = $2;
     }
   | SET_GLOBAL var {
-      $$ = wabt_new_set_global_expr();
+      $$ = new_set_global_expr();
       $$->set_global.var = $2;
     }
   | LOAD offset_opt align_opt {
-      $$ = wabt_new_load_expr();
+      $$ = new_load_expr();
       $$->load.opcode = $1;
       $$->load.offset = $2;
       $$->load.align = $3;
     }
   | STORE offset_opt align_opt {
-      $$ = wabt_new_store_expr();
+      $$ = new_store_expr();
       $$->store.opcode = $1;
       $$->store.offset = $2;
       $$->store.align = $3;
     }
   | CONST literal {
-      $$ = wabt_new_const_expr();
+      $$ = new_const_expr();
       $$->const_.loc = @1;
       if (WABT_FAILED(parse_const($1, $2.type, $2.text.start,
                                   $2.text.start + $2.text.length,
                                   &$$->const_))) {
-        wabt_ast_parser_error(&@2, lexer, parser,
+        ast_parser_error(&@2, lexer, parser,
                               "invalid literal \"" PRIstringslice "\"",
                               WABT_PRINTF_STRING_SLICE_ARG($2.text));
       }
       wabt_free(const_cast<char*>($2.text.start));
     }
   | UNARY {
-      $$ = wabt_new_unary_expr();
+      $$ = new_unary_expr();
       $$->unary.opcode = $1;
     }
   | BINARY {
-      $$ = wabt_new_binary_expr();
+      $$ = new_binary_expr();
       $$->binary.opcode = $1;
     }
   | COMPARE {
-      $$ = wabt_new_compare_expr();
+      $$ = new_compare_expr();
       $$->compare.opcode = $1;
     }
   | CONVERT {
-      $$ = wabt_new_convert_expr();
+      $$ = new_convert_expr();
       $$->convert.opcode = $1;
     }
   | CURRENT_MEMORY {
-      $$ = wabt_new_current_memory_expr();
+      $$ = new_current_memory_expr();
     }
   | GROW_MEMORY {
-      $$ = wabt_new_grow_memory_expr();
+      $$ = new_grow_memory_expr();
     }
 ;
 block_instr :
     BLOCK labeling_opt block END labeling_opt {
-      $$ = wabt_new_block_expr();
+      $$ = new_block_expr();
       $$->block = $3;
       $$->block.label = $2;
       CHECK_END_LABEL(@5, $$->block.label, $5);
     }
   | LOOP labeling_opt block END labeling_opt {
-      $$ = wabt_new_loop_expr();
+      $$ = new_loop_expr();
       $$->loop = $3;
       $$->loop.label = $2;
       CHECK_END_LABEL(@5, $$->block.label, $5);
     }
   | IF labeling_opt block END labeling_opt {
-      $$ = wabt_new_if_expr();
+      $$ = new_if_expr();
       $$->if_.true_ = $3;
       $$->if_.true_.label = $2;
       CHECK_END_LABEL(@5, $$->block.label, $5);
     }
   | IF labeling_opt block ELSE labeling_opt instr_list END labeling_opt {
-      $$ = wabt_new_if_expr();
+      $$ = new_if_expr();
       $$->if_.true_ = $3;
       $$->if_.true_.label = $2;
       $$->if_.false_ = $6.first;
@@ -643,56 +647,56 @@ expr1 :
       $$ = join_exprs2(&@1, &$2, $1);
     }
   | BLOCK labeling_opt block {
-      WabtExpr* expr = wabt_new_block_expr();
+      Expr* expr = new_block_expr();
       expr->block = $3;
       expr->block.label = $2;
       $$ = join_exprs1(&@1, expr);
     }
   | LOOP labeling_opt block {
-      WabtExpr* expr = wabt_new_loop_expr();
+      Expr* expr = new_loop_expr();
       expr->loop = $3;
       expr->loop.label = $2;
       $$ = join_exprs1(&@1, expr);
     }
   | IF labeling_opt value_type_list if_ {
       $$ = $4;
-      WabtExpr* if_ = $4.last;
-      assert(if_->type == WabtExprType::If);
+      Expr* if_ = $4.last;
+      assert(if_->type == ExprType::If);
       if_->if_.true_.label = $2;
       if_->if_.true_.sig = $3;
     }
 ;
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      WabtExpr* expr = wabt_new_if_expr();
+      Expr* expr = new_if_expr();
       expr->if_.true_.first = $3.first;
       expr->if_.false_ = $7.first;
       $$ = join_exprs1(&@1, expr);
     }
   | LPAR THEN instr_list RPAR {
-      WabtExpr* expr = wabt_new_if_expr();
+      Expr* expr = new_if_expr();
       expr->if_.true_.first = $3.first;
       $$ = join_exprs1(&@1, expr);
     }
   | expr LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      WabtExpr* expr = wabt_new_if_expr();
+      Expr* expr = new_if_expr();
       expr->if_.true_.first = $4.first;
       expr->if_.false_ = $8.first;
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr LPAR THEN instr_list RPAR {
-      WabtExpr* expr = wabt_new_if_expr();
+      Expr* expr = new_if_expr();
       expr->if_.true_.first = $4.first;
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr expr expr {
-      WabtExpr* expr = wabt_new_if_expr();
+      Expr* expr = new_if_expr();
       expr->if_.true_.first = $2.first;
       expr->if_.false_ = $3.first;
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr expr {
-      WabtExpr* expr = wabt_new_if_expr();
+      Expr* expr = new_if_expr();
       expr->if_.true_.first = $2.first;
       $$ = join_exprs2(&@1, &$1, expr);
     }
@@ -725,19 +729,19 @@ func_fields :
     func_body
   | LPAR RESULT value_type_list RPAR func_body {
       $$ = new_func_field();
-      $$->type = WabtFuncFieldType::ResultTypes;
+      $$->type = FuncFieldType::ResultTypes;
       $$->types = $3;
       $$->next = $5;
     }
   | LPAR PARAM value_type_list RPAR func_fields {
       $$ = new_func_field();
-      $$->type = WabtFuncFieldType::ParamTypes;
+      $$->type = FuncFieldType::ParamTypes;
       $$->types = $3;
       $$->next = $5;
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields {
       $$ = new_func_field();
-      $$->type = WabtFuncFieldType::BoundParam;
+      $$->type = FuncFieldType::BoundParam;
       $$->bound_type.loc = @2;
       $$->bound_type.name = $3;
       $$->bound_type.type = $4;
@@ -747,19 +751,19 @@ func_fields :
 func_body :
     instr_list {
       $$ = new_func_field();
-      $$->type = WabtFuncFieldType::Exprs;
+      $$->type = FuncFieldType::Exprs;
       $$->first_expr = $1.first;
       $$->next = nullptr;
     }
   | LPAR LOCAL value_type_list RPAR func_body {
       $$ = new_func_field();
-      $$->type = WabtFuncFieldType::LocalTypes;
+      $$->type = FuncFieldType::LocalTypes;
       $$->types = $3;
       $$->next = $5;
     }
   | LPAR LOCAL bind_var VALUE_TYPE RPAR func_body {
       $$ = new_func_field();
-      $$->type = WabtFuncFieldType::BoundLocal;
+      $$->type = FuncFieldType::BoundLocal;
       $$->bound_type.loc = @2;
       $$->bound_type.name = $3;
       $$->bound_type.type = $4;
@@ -769,30 +773,30 @@ func_body :
 func_info :
     func_fields {
       $$ = new_func();
-      WabtFuncField* field = $1;
+      FuncField* field = $1;
 
       while (field) {
-        WabtFuncField* next = field->next;
+        FuncField* next = field->next;
         switch (field->type) {
-          case WabtFuncFieldType::Exprs:
+          case FuncFieldType::Exprs:
             $$->first_expr = field->first_expr;
             break;
 
-          case WabtFuncFieldType::ParamTypes:
-          case WabtFuncFieldType::LocalTypes: {
-            WabtTypeVector* types = field->type == WabtFuncFieldType::ParamTypes
+          case FuncFieldType::ParamTypes:
+          case FuncFieldType::LocalTypes: {
+            TypeVector* types = field->type == FuncFieldType::ParamTypes
                                         ? &$$->decl.sig.param_types
                                         : &$$->local_types;
-            wabt_extend_types(types, &field->types);
-            wabt_destroy_type_vector(&field->types);
+            extend_types(types, &field->types);
+            destroy_type_vector(&field->types);
             break;
           }
 
-          case WabtFuncFieldType::BoundParam:
-          case WabtFuncFieldType::BoundLocal: {
-            WabtTypeVector* types;
-            WabtBindingHash* bindings;
-            if (field->type == WabtFuncFieldType::BoundParam) {
+          case FuncFieldType::BoundParam:
+          case FuncFieldType::BoundLocal: {
+            TypeVector* types;
+            BindingHash* bindings;
+            if (field->type == FuncFieldType::BoundParam) {
               types = &$$->decl.sig.param_types;
               bindings = &$$->param_bindings;
             } else {
@@ -800,15 +804,15 @@ func_info :
               bindings = &$$->local_bindings;
             }
 
-            wabt_append_type_value(types, &field->bound_type.type);
-            WabtBinding* binding =
-                wabt_insert_binding(bindings, &field->bound_type.name);
+            append_type_value(types, &field->bound_type.type);
+            Binding* binding =
+                insert_binding(bindings, &field->bound_type.name);
             binding->loc = field->bound_type.loc;
             binding->index = types->size - 1;
             break;
           }
 
-          case WabtFuncFieldType::ResultTypes:
+          case FuncFieldType::ResultTypes:
             $$->decl.sig.result_types = field->types;
             break;
         }
@@ -869,7 +873,7 @@ elem :
   | LPAR ELEM offset var_list RPAR {
       WABT_ZERO_MEMORY($$);
       $$.table_var.loc = @2;
-      $$.table_var.type = WabtVarType::Index;
+      $$.table_var.type = VarType::Index;
       $$.table_var.index = 0;
       $$.offset = $3.first;
       $$.vars = $4;
@@ -885,9 +889,9 @@ table :
     }
   | LPAR TABLE bind_var_opt inline_export_opt elem_type
          LPAR ELEM var_list RPAR RPAR {
-      WabtExpr* expr = wabt_new_const_expr();
+      Expr* expr = new_const_expr();
       expr->loc = @2;
-      expr->const_.type = WabtType::I32;
+      expr->const_.type = Type::I32;
       expr->const_.u32 = 0;
 
       WABT_ZERO_MEMORY($$);
@@ -908,16 +912,16 @@ data :
       $$.memory_var = $3;
       $$.offset = $4.first;
       dup_text_list(&$5, &$$.data, &$$.size);
-      wabt_destroy_text_list(&$5);
+      destroy_text_list(&$5);
     }
   | LPAR DATA offset text_list RPAR {
       WABT_ZERO_MEMORY($$);
       $$.memory_var.loc = @2;
-      $$.memory_var.type = WabtVarType::Index;
+      $$.memory_var.type = VarType::Index;
       $$.memory_var.index = 0;
       $$.offset = $3.first;
       dup_text_list(&$4, &$$.data, &$$.size);
-      wabt_destroy_text_list(&$4);
+      destroy_text_list(&$4);
     }
 ;
 
@@ -930,16 +934,16 @@ memory :
       $$.export_ = $4;
     }
   | LPAR MEMORY bind_var_opt inline_export LPAR DATA text_list RPAR RPAR {
-      WabtExpr* expr = wabt_new_const_expr();
+      Expr* expr = new_const_expr();
       expr->loc = @2;
-      expr->const_.type = WabtType::I32;
+      expr->const_.type = Type::I32;
       expr->const_.u32 = 0;
 
       WABT_ZERO_MEMORY($$);
       $$.has_data_segment = true;
       $$.data_segment.offset = expr;
       dup_text_list(&$7, &$$.data_segment.data, &$$.data_segment.size);
-      wabt_destroy_text_list(&$7);
+      destroy_text_list(&$7);
       uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE($$.data_segment.size);
       uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
       $$.memory.name = $3;
@@ -950,16 +954,16 @@ memory :
     }
   /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
   | LPAR MEMORY bind_var_opt LPAR DATA text_list RPAR RPAR {
-      WabtExpr* expr = wabt_new_const_expr();
+      Expr* expr = new_const_expr();
       expr->loc = @2;
-      expr->const_.type = WabtType::I32;
+      expr->const_.type = Type::I32;
       expr->const_.u32 = 0;
 
       WABT_ZERO_MEMORY($$);
       $$.has_data_segment = true;
       $$.data_segment.offset = expr;
       dup_text_list(&$6, &$$.data_segment.data, &$$.data_segment.size);
-      wabt_destroy_text_list(&$6);
+      destroy_text_list(&$6);
       uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE($$.data_segment.size);
       uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
       $$.memory.name = $3;
@@ -993,32 +997,32 @@ global :
 import_kind :
     LPAR FUNC bind_var_opt type_use RPAR {
       $$ = new_import();
-      $$->kind = WabtExternalKind::Func;
+      $$->kind = ExternalKind::Func;
       $$->func.name = $3;
       $$->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$->func.decl.type_var = $4;
     }
   | LPAR FUNC bind_var_opt func_sig RPAR {
       $$ = new_import();
-      $$->kind = WabtExternalKind::Func;
+      $$->kind = ExternalKind::Func;
       $$->func.name = $3;
       $$->func.decl.sig = $4;
     }
   | LPAR TABLE bind_var_opt table_sig RPAR {
       $$ = new_import();
-      $$->kind = WabtExternalKind::Table;
+      $$->kind = ExternalKind::Table;
       $$->table = $4;
       $$->table.name = $3;
     }
   | LPAR MEMORY bind_var_opt memory_sig RPAR {
       $$ = new_import();
-      $$->kind = WabtExternalKind::Memory;
+      $$->kind = ExternalKind::Memory;
       $$->memory = $4;
       $$->memory.name = $3;
     }
   | LPAR GLOBAL bind_var_opt global_type RPAR {
       $$ = new_import();
-      $$->kind = WabtExternalKind::Global;
+      $$->kind = ExternalKind::Global;
       $$->global = $4;
       $$->global.name = $3;
     }
@@ -1031,32 +1035,32 @@ import :
     }
   | LPAR FUNC bind_var_opt inline_import type_use RPAR {
       $$ = $4;
-      $$->kind = WabtExternalKind::Func;
+      $$->kind = ExternalKind::Func;
       $$->func.name = $3;
       $$->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       $$->func.decl.type_var = $5;
     }
   | LPAR FUNC bind_var_opt inline_import func_sig RPAR {
       $$ = $4;
-      $$->kind = WabtExternalKind::Func;
+      $$->kind = ExternalKind::Func;
       $$->func.name = $3;
       $$->func.decl.sig = $5;
     }
   | LPAR TABLE bind_var_opt inline_import table_sig RPAR {
       $$ = $4;
-      $$->kind = WabtExternalKind::Table;
+      $$->kind = ExternalKind::Table;
       $$->table = $5;
       $$->table.name = $3;
     }
   | LPAR MEMORY bind_var_opt inline_import memory_sig RPAR {
       $$ = $4;
-      $$->kind = WabtExternalKind::Memory;
+      $$->kind = ExternalKind::Memory;
       $$->memory = $5;
       $$->memory.name = $3;
     }
   | LPAR GLOBAL bind_var_opt inline_import global_type RPAR {
       $$ = $4;
-      $$->kind = WabtExternalKind::Global;
+      $$->kind = ExternalKind::Global;
       $$->global = $5;
       $$->global.name = $3;
     }
@@ -1073,22 +1077,22 @@ inline_import :
 export_kind :
     LPAR FUNC var RPAR {
       WABT_ZERO_MEMORY($$);
-      $$.kind = WabtExternalKind::Func;
+      $$.kind = ExternalKind::Func;
       $$.var = $3;
     }
   | LPAR TABLE var RPAR {
       WABT_ZERO_MEMORY($$);
-      $$.kind = WabtExternalKind::Table;
+      $$.kind = ExternalKind::Table;
       $$.var = $3;
     }
   | LPAR MEMORY var RPAR {
       WABT_ZERO_MEMORY($$);
-      $$.kind = WabtExternalKind::Memory;
+      $$.kind = ExternalKind::Memory;
       $$.var = $3;
     }
   | LPAR GLOBAL var RPAR {
       WABT_ZERO_MEMORY($$);
-      $$.kind = WabtExternalKind::Global;
+      $$.kind = ExternalKind::Global;
       $$.var = $3;
     }
 ;
@@ -1138,7 +1142,7 @@ module_fields :
     }
   | module_fields type_def {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, FuncType, func_type, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, FuncType, func_type, func_types,
                             &field->func_type);
@@ -1146,7 +1150,7 @@ module_fields :
     }
   | module_fields global {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, Global, global, @2, $2.global);
       APPEND_ITEM_TO_VECTOR($$, Global, global, globals, &field->global);
       INSERT_BINDING($$, global, globals, @2, $2.global.name);
@@ -1154,14 +1158,14 @@ module_fields :
     }
   | module_fields table {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, Table, table, @2, $2.table);
       APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->table);
       INSERT_BINDING($$, table, tables, @2, $2.table.name);
       APPEND_INLINE_EXPORT($$, Table, @2, $2, $$->tables.size - 1);
 
       if ($2.has_elem_segment) {
-        WabtModuleField* elem_segment_field;
+        ModuleField* elem_segment_field;
         APPEND_FIELD_TO_LIST($$, elem_segment_field, ElemSegment, elem_segment,
                              @2, $2.elem_segment);
         APPEND_ITEM_TO_VECTOR($$, ElemSegment, elem_segment, elem_segments,
@@ -1171,14 +1175,14 @@ module_fields :
     }
   | module_fields memory {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, Memory, memory, @2, $2.memory);
       APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories, &field->memory);
       INSERT_BINDING($$, memory, memories, @2, $2.memory.name);
       APPEND_INLINE_EXPORT($$, Memory, @2, $2, $$->memories.size - 1);
 
       if ($2.has_data_segment) {
-        WabtModuleField* data_segment_field;
+        ModuleField* data_segment_field;
         APPEND_FIELD_TO_LIST($$, data_segment_field, DataSegment, data_segment,
                              @2, $2.data_segment);
         APPEND_ITEM_TO_VECTOR($$, DataSegment, data_segment, data_segments,
@@ -1187,7 +1191,7 @@ module_fields :
     }
   | module_fields func {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, Func, func, @2, *$2.func);
       append_implicit_func_declaration(&@2, $$, &field->func.decl);
       APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->func);
@@ -1197,51 +1201,51 @@ module_fields :
     }
   | module_fields elem {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, ElemSegment, elem_segment, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, ElemSegment, elem_segment, elem_segments,
                             &field->elem_segment);
     }
   | module_fields data {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, DataSegment, data_segment, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, DataSegment, data_segment, data_segments,
                             &field->data_segment);
     }
   | module_fields start {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, Start, start, @2, $2);
       $$->start = &field->start;
     }
   | module_fields import {
       $$ = $1;
-      WabtModuleField* field;
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, Import, import, @2, *$2);
       CHECK_IMPORT_ORDERING($$, func, funcs, @2);
       CHECK_IMPORT_ORDERING($$, table, tables, @2);
       CHECK_IMPORT_ORDERING($$, memory, memories, @2);
       CHECK_IMPORT_ORDERING($$, global, globals, @2);
       switch ($2->kind) {
-        case WabtExternalKind::Func:
+        case ExternalKind::Func:
           append_implicit_func_declaration(&@2, $$, &field->import.func.decl);
           APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->import.func);
           INSERT_BINDING($$, func, funcs, @2, field->import.func.name);
           $$->num_func_imports++;
           break;
-        case WabtExternalKind::Table:
+        case ExternalKind::Table:
           APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->import.table);
           INSERT_BINDING($$, table, tables, @2, field->import.table.name);
           $$->num_table_imports++;
           break;
-        case WabtExternalKind::Memory:
+        case ExternalKind::Memory:
           APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories,
                                 &field->import.memory);
           INSERT_BINDING($$, memory, memories, @2, field->import.memory.name);
           $$->num_memory_imports++;
           break;
-        case WabtExternalKind::Global:
+        case ExternalKind::Global:
           APPEND_ITEM_TO_VECTOR($$, Global, global, globals,
                                 &field->import.global);
           INSERT_BINDING($$, global, globals, @2, field->import.global.name);
@@ -1253,7 +1257,7 @@ module_fields :
     }
   | module_fields export {
       $$ = $1;
-      WabtModuleField* field = wabt_append_module_field($$);
+      ModuleField* field = append_module_field($$);
       APPEND_FIELD_TO_LIST($$, field, Export, export_, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, Export, export, exports, &field->export_);
       INSERT_BINDING($$, export, exports, @2, $2.name);
@@ -1262,7 +1266,7 @@ module_fields :
 
 raw_module :
     LPAR MODULE bind_var_opt module_fields RPAR {
-      $$.type = WabtRawModuleType::Text;
+      $$.type = RawModuleType::Text;
       $$.text = $4;
       $$.text->name = $3;
       $$.text->loc = @2;
@@ -1271,11 +1275,11 @@ raw_module :
        * explicitly */
       size_t i;
       for (i = 0; i < $4->funcs.size; ++i) {
-        WabtFunc* func = $4->funcs.data[i];
-        if (wabt_decl_has_func_type(&func->decl) &&
+        Func* func = $4->funcs.data[i];
+        if (decl_has_func_type(&func->decl) &&
             is_empty_signature(&func->decl.sig)) {
-          WabtFuncType* func_type =
-              wabt_get_func_type_by_var($4, &func->decl.type_var);
+          FuncType* func_type =
+              get_func_type_by_var($4, &func->decl.type_var);
           if (func_type) {
             func->decl.sig = func_type->sig;
             func->decl.flags |= WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
@@ -1284,30 +1288,30 @@ raw_module :
       }
     }
   | LPAR MODULE bind_var_opt non_empty_text_list RPAR {
-      $$.type = WabtRawModuleType::Binary;
+      $$.type = RawModuleType::Binary;
       $$.binary.name = $3;
       $$.binary.loc = @2;
       dup_text_list(&$4, &$$.binary.data, &$$.binary.size);
-      wabt_destroy_text_list(&$4);
+      destroy_text_list(&$4);
     }
 ;
 
 module :
     raw_module {
-      if ($1.type == WabtRawModuleType::Text) {
+      if ($1.type == RawModuleType::Text) {
         $$ = $1.text;
       } else {
-        assert($1.type == WabtRawModuleType::Binary);
+        assert($1.type == RawModuleType::Binary);
         $$ = new_module();
-        WabtReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
+        ReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
         BinaryErrorCallbackData user_data;
         user_data.loc = &$1.binary.loc;
         user_data.lexer = lexer;
         user_data.parser = parser;
-        WabtBinaryErrorHandler error_handler;
+        BinaryErrorHandler error_handler;
         error_handler.on_error = on_read_binary_error;
         error_handler.user_data = &user_data;
-        wabt_read_binary_ast($1.binary.data, $1.binary.size, &options,
+        read_binary_ast($1.binary.data, $1.binary.size, &options,
                              &error_handler, $$);
         wabt_free($1.binary.data);
         $$->name = $1.binary.name;
@@ -1321,12 +1325,12 @@ module :
 script_var_opt :
     /* empty */ {
       WABT_ZERO_MEMORY($$);
-      $$.type = WabtVarType::Index;
+      $$.type = VarType::Index;
       $$.index = INVALID_VAR_INDEX;
     }
   | VAR {
       WABT_ZERO_MEMORY($$);
-      $$.type = WabtVarType::Name;
+      $$.type = VarType::Name;
       DUPTEXT($$.name, $1);
     }
 ;
@@ -1336,7 +1340,7 @@ action :
       WABT_ZERO_MEMORY($$);
       $$.loc = @2;
       $$.module_var = $3;
-      $$.type = WabtActionType::Invoke;
+      $$.type = ActionType::Invoke;
       $$.invoke.name = $4;
       $$.invoke.args = $5;
     }
@@ -1344,7 +1348,7 @@ action :
       WABT_ZERO_MEMORY($$);
       $$.loc = @2;
       $$.module_var = $3;
-      $$.type = WabtActionType::Get;
+      $$.type = ActionType::Get;
       $$.invoke.name = $4;
     }
 ;
@@ -1352,48 +1356,48 @@ action :
 assertion :
     LPAR ASSERT_MALFORMED raw_module quoted_text RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::AssertMalformed;
+      $$->type = CommandType::AssertMalformed;
       $$->assert_malformed.module = $3;
       $$->assert_malformed.text = $4;
     }
   | LPAR ASSERT_INVALID raw_module quoted_text RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::AssertInvalid;
+      $$->type = CommandType::AssertInvalid;
       $$->assert_invalid.module = $3;
       $$->assert_invalid.text = $4;
     }
   | LPAR ASSERT_UNLINKABLE raw_module quoted_text RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::AssertUnlinkable;
+      $$->type = CommandType::AssertUnlinkable;
       $$->assert_unlinkable.module = $3;
       $$->assert_unlinkable.text = $4;
     }
   | LPAR ASSERT_TRAP raw_module quoted_text RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::AssertUninstantiable;
+      $$->type = CommandType::AssertUninstantiable;
       $$->assert_uninstantiable.module = $3;
       $$->assert_uninstantiable.text = $4;
     }
   | LPAR ASSERT_RETURN action const_list RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::AssertReturn;
+      $$->type = CommandType::AssertReturn;
       $$->assert_return.action = $3;
       $$->assert_return.expected = $4;
     }
   | LPAR ASSERT_RETURN_NAN action RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::AssertReturnNan;
+      $$->type = CommandType::AssertReturnNan;
       $$->assert_return_nan.action = $3;
     }
   | LPAR ASSERT_TRAP action quoted_text RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::AssertTrap;
+      $$->type = CommandType::AssertTrap;
       $$->assert_trap.action = $3;
       $$->assert_trap.text = $4;
     }
   | LPAR ASSERT_EXHAUSTION action quoted_text RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::AssertExhaustion;
+      $$->type = CommandType::AssertExhaustion;
       $$->assert_trap.action = $3;
       $$->assert_trap.text = $4;
     }
@@ -1402,19 +1406,19 @@ assertion :
 cmd :
     action {
       $$ = new_command();
-      $$->type = WabtCommandType::Action;
+      $$->type = CommandType::Action;
       $$->action = $1;
     }
   | assertion
   | module {
       $$ = new_command();
-      $$->type = WabtCommandType::Module;
+      $$->type = CommandType::Module;
       $$->module = *$1;
       wabt_free($1);
     }
   | LPAR REGISTER quoted_text script_var_opt RPAR {
       $$ = new_command();
-      $$->type = WabtCommandType::Register;
+      $$->type = CommandType::Register;
       $$->register_.module_name = $3;
       $$->register_.var = $4;
       $$->register_.var.loc = @4;
@@ -1424,7 +1428,7 @@ cmd_list :
     /* empty */ { WABT_ZERO_MEMORY($$); }
   | cmd_list cmd {
       $$ = $1;
-      wabt_append_command_value(&$$, $2);
+      append_command_value(&$$, $2);
       wabt_free($2);
     }
 ;
@@ -1434,7 +1438,7 @@ const :
       $$.loc = @2;
       if (WABT_FAILED(parse_const($2, $3.type, $3.text.start,
                                   $3.text.start + $3.text.length, &$$))) {
-        wabt_ast_parser_error(&@3, lexer, parser,
+        ast_parser_error(&@3, lexer, parser,
                               "invalid literal \"" PRIstringslice "\"",
                               WABT_PRINTF_STRING_SLICE_ARG($3.text));
       }
@@ -1445,7 +1449,7 @@ const_list :
     /* empty */ { WABT_ZERO_MEMORY($$); }
   | const_list const {
       $$ = $1;
-      wabt_append_const_value(&$$, &$2);
+      append_const_value(&$$, &$2);
     }
 ;
 
@@ -1457,46 +1461,46 @@ script :
       int last_module_index = -1;
       size_t i;
       for (i = 0; i < $$.commands.size; ++i) {
-        WabtCommand* command = &$$.commands.data[i];
-        WabtVar* module_var = nullptr;
+        Command* command = &$$.commands.data[i];
+        Var* module_var = nullptr;
         switch (command->type) {
-          case WabtCommandType::Module: {
+          case CommandType::Module: {
             last_module_index = i;
 
             /* Wire up module name bindings. */
-            WabtModule* module = &command->module;
+            Module* module = &command->module;
             if (module->name.length == 0)
               continue;
 
-            WabtStringSlice module_name = wabt_dup_string_slice(module->name);
-            WabtBinding* binding =
-                wabt_insert_binding(&$$.module_bindings, &module_name);
+            StringSlice module_name = dup_string_slice(module->name);
+            Binding* binding =
+                insert_binding(&$$.module_bindings, &module_name);
             binding->loc = module->loc;
             binding->index = i;
             break;
           }
 
-          case WabtCommandType::AssertReturn:
+          case CommandType::AssertReturn:
             module_var = &command->assert_return.action.module_var;
             goto has_module_var;
-          case WabtCommandType::AssertReturnNan:
+          case CommandType::AssertReturnNan:
             module_var = &command->assert_return_nan.action.module_var;
             goto has_module_var;
-          case WabtCommandType::AssertTrap:
-          case WabtCommandType::AssertExhaustion:
+          case CommandType::AssertTrap:
+          case CommandType::AssertExhaustion:
             module_var = &command->assert_trap.action.module_var;
             goto has_module_var;
-          case WabtCommandType::Action:
+          case CommandType::Action:
             module_var = &command->action.module_var;
             goto has_module_var;
-          case WabtCommandType::Register:
+          case CommandType::Register:
             module_var = &command->register_.var;
             goto has_module_var;
 
           has_module_var: {
             /* Resolve actions with an invalid index to use the preceding
              * module. */
-            if (module_var->type == WabtVarType::Index &&
+            if (module_var->type == VarType::Index &&
                 module_var->index == INVALID_VAR_INDEX) {
               module_var->index = last_module_index;
             }
@@ -1519,7 +1523,7 @@ script_start :
 
 %%
 
-static void append_expr_list(WabtExprList* expr_list, WabtExprList* expr) {
+void append_expr_list(ExprList* expr_list, ExprList* expr) {
   if (!expr->first)
     return;
   if (expr_list->last)
@@ -1530,7 +1534,7 @@ static void append_expr_list(WabtExprList* expr_list, WabtExprList* expr) {
   expr_list->size += expr->size;
 }
 
-static void append_expr(WabtExprList* expr_list, WabtExpr* expr) {
+void append_expr(ExprList* expr_list, Expr* expr) {
   if (expr_list->last)
     expr_list->last->next = expr;
   else
@@ -1539,17 +1543,16 @@ static void append_expr(WabtExprList* expr_list, WabtExpr* expr) {
   expr_list->size++;
 }
 
-static WabtExprList join_exprs1(WabtLocation* loc, WabtExpr* expr1) {
-  WabtExprList result;
+ExprList join_exprs1(Location* loc, Expr* expr1) {
+  ExprList result;
   WABT_ZERO_MEMORY(result);
   append_expr(&result, expr1);
   expr1->loc = *loc;
   return result;
 }
 
-static WabtExprList join_exprs2(WabtLocation* loc, WabtExprList* expr1,
-                                WabtExpr* expr2) {
-  WabtExprList result;
+ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2) {
+  ExprList result;
   WABT_ZERO_MEMORY(result);
   append_expr_list(&result, expr1);
   append_expr(&result, expr2);
@@ -1557,31 +1560,29 @@ static WabtExprList join_exprs2(WabtLocation* loc, WabtExprList* expr1,
   return result;
 }
 
-static WabtResult parse_const(WabtType type,
-                              WabtLiteralType literal_type,
-                              const char* s,
-                              const char* end,
-                              WabtConst* out) {
+Result parse_const(Type type,
+                   LiteralType literal_type,
+                   const char* s,
+                   const char* end,
+                   Const* out) {
   out->type = type;
   switch (type) {
-    case WabtType::I32:
-      return wabt_parse_int32(s, end, &out->u32,
-                              WabtParseIntType::SignedAndUnsigned);
-    case WabtType::I64:
-      return wabt_parse_int64(s, end, &out->u64,
-                              WabtParseIntType::SignedAndUnsigned);
-    case WabtType::F32:
-      return wabt_parse_float(literal_type, s, end, &out->f32_bits);
-    case WabtType::F64:
-      return wabt_parse_double(literal_type, s, end, &out->f64_bits);
+    case Type::I32:
+      return parse_int32(s, end, &out->u32, ParseIntType::SignedAndUnsigned);
+    case Type::I64:
+      return parse_int64(s, end, &out->u64, ParseIntType::SignedAndUnsigned);
+    case Type::F32:
+      return parse_float(literal_type, s, end, &out->f32_bits);
+    case Type::F64:
+      return parse_double(literal_type, s, end, &out->f64_bits);
     default:
       assert(0);
       break;
   }
-  return WabtResult::Error;
+  return Result::Error;
 }
 
-static size_t copy_string_contents(WabtStringSlice* text, char* dest) {
+size_t copy_string_contents(StringSlice* text, char* dest) {
   const char* src = text->start + 1;
   const char* end = text->start + text->length - 1;
 
@@ -1611,8 +1612,8 @@ static size_t copy_string_contents(WabtStringSlice* text, char* dest) {
            * sequence */
           uint32_t hi;
           uint32_t lo;
-          if (WABT_SUCCEEDED(wabt_parse_hexdigit(src[0], &hi)) &&
-              WABT_SUCCEEDED(wabt_parse_hexdigit(src[1], &lo))) {
+          if (WABT_SUCCEEDED(parse_hexdigit(src[0], &hi)) &&
+              WABT_SUCCEEDED(parse_hexdigit(src[1], &lo))) {
             *dest++ = (hi << 4) | lo;
           } else {
             assert(0);
@@ -1630,12 +1631,10 @@ static size_t copy_string_contents(WabtStringSlice* text, char* dest) {
   return dest - dest_start;
 }
 
-static void dup_text_list(WabtTextList* text_list,
-                          void** out_data,
-                          size_t* out_size) {
+void dup_text_list(TextList* text_list, void** out_data, size_t* out_size) {
   /* walk the linked list to see how much total space is needed */
   size_t total_size = 0;
-  WabtTextListNode* node;
+  TextListNode* node;
   for (node = text_list->first; node; node = node->next) {
     /* Always allocate enough space for the entire string including the escape
      * characters. It will only get shorter, and this way we only have to
@@ -1655,33 +1654,32 @@ static void dup_text_list(WabtTextList* text_list,
   *out_size = dest - result;
 }
 
-static bool is_empty_signature(WabtFuncSignature* sig) {
+bool is_empty_signature(FuncSignature* sig) {
   return sig->result_types.size == 0 && sig->param_types.size == 0;
 }
 
-static void append_implicit_func_declaration(WabtLocation* loc,
-                                             WabtModule* module,
-                                             WabtFuncDeclaration* decl) {
-  if (wabt_decl_has_func_type(decl))
+void append_implicit_func_declaration(Location* loc,
+                                      Module* module,
+                                      FuncDeclaration* decl) {
+  if (decl_has_func_type(decl))
     return;
 
-  int sig_index = wabt_get_func_type_index_by_decl(module, decl);
+  int sig_index = get_func_type_index_by_decl(module, decl);
   if (sig_index == -1) {
-    wabt_append_implicit_func_type(loc, module, &decl->sig);
+    append_implicit_func_type(loc, module, &decl->sig);
   } else {
     /* signature already exists, share that one and destroy this one */
-    wabt_destroy_func_signature(&decl->sig);
-    WabtFuncSignature* sig = &module->func_types.data[sig_index]->sig;
+    destroy_func_signature(&decl->sig);
+    FuncSignature* sig = &module->func_types.data[sig_index]->sig;
     decl->sig = *sig;
   }
 
   decl->flags |= WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
 }
 
-WabtResult wabt_parse_ast(WabtAstLexer* lexer,
-                          struct WabtScript* out_script,
-                          WabtSourceErrorHandler* error_handler) {
-  WabtAstParser parser;
+Result parse_ast(AstLexer * lexer, struct Script * out_script,
+                 SourceErrorHandler * error_handler) {
+  AstParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.error_handler = error_handler;
   int result = wabt_ast_parser_parse(lexer, &parser);
@@ -1689,17 +1687,18 @@ WabtResult wabt_parse_ast(WabtAstLexer* lexer,
   wabt_free(parser.yyvsa);
   wabt_free(parser.yylsa);
   *out_script = parser.script;
-  return result == 0 && parser.errors == 0 ? WabtResult::Ok : WabtResult::Error;
+  return result == 0 && parser.errors == 0 ? Result::Ok : Result::Error;
 }
 
-static void on_read_binary_error(uint32_t offset, const char* error,
-                                 void* user_data) {
+void on_read_binary_error(uint32_t offset, const char* error, void* user_data) {
   BinaryErrorCallbackData* data = (BinaryErrorCallbackData*)user_data;
   if (offset == WABT_UNKNOWN_OFFSET) {
-    wabt_ast_parser_error(data->loc, data->lexer, data->parser,
-                          "error in binary module: %s", error);
+    ast_parser_error(data->loc, data->lexer, data->parser,
+                     "error in binary module: %s", error);
   } else {
-    wabt_ast_parser_error(data->loc, data->lexer, data->parser,
-                          "error in binary module: @0x%08x: %s", offset, error);
+    ast_parser_error(data->loc, data->lexer, data->parser,
+                     "error in binary module: @0x%08x: %s", offset, error);
   }
 }
+
+}  // namespace wabt

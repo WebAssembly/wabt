@@ -31,20 +31,22 @@
 #define ERROR(fmt, ...) \
   fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
 
+using namespace wabt;
+
 static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
 static size_t s_cutoff = 0;
 static const char* s_separator = ": ";
 
-static WabtReadBinaryOptions s_read_binary_options =
+static ReadBinaryOptions s_read_binary_options =
     WABT_READ_BINARY_OPTIONS_DEFAULT;
 
-static WabtFileWriter s_log_stream_writer;
-static WabtStream s_log_stream;
+static FileWriter s_log_stream_writer;
+static Stream s_log_stream;
 
-#define NOPE WabtHasArgument::No
-#define YEP WabtHasArgument::Yes
+#define NOPE HasArgument::No
+#define YEP HasArgument::Yes
 
 enum {
   FLAG_VERBOSE,
@@ -63,7 +65,7 @@ static const char s_description[] =
     "  # parse binary file test.wasm and write pcode dist file test.dist\n"
     "  $ wasmopcodecnt test.wasm -o test.dist\n";
 
-static WabtOption s_options[] = {
+static Option s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
     {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
@@ -76,19 +78,19 @@ static WabtOption s_options[] = {
 
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
-static void on_option(struct WabtOptionParser* parser,
-                      struct WabtOption* option,
+static void on_option(struct OptionParser* parser,
+                      struct Option* option,
                       const char* argument) {
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      wabt_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
+      init_file_writer_existing(&s_log_stream_writer, stdout);
+      init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
       s_read_binary_options.log_stream = &s_log_stream;
       break;
 
     case FLAG_HELP:
-      wabt_print_help(parser, PROGRAM_NAME);
+      print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
 
@@ -106,17 +108,16 @@ static void on_option(struct WabtOptionParser* parser,
   }
 }
 
-static void on_argument(struct WabtOptionParser* parser, const char* argument) {
+static void on_argument(struct OptionParser* parser, const char* argument) {
   s_infile = argument;
 }
 
-static void on_option_error(struct WabtOptionParser* parser,
-                            const char* message) {
+static void on_option_error(struct OptionParser* parser, const char* message) {
   WABT_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  WabtOptionParser parser;
+  OptionParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
   parser.options = s_options;
@@ -124,27 +125,27 @@ static void parse_options(int argc, char** argv) {
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  wabt_parse_options(&parser, argc, argv);
+  parse_options(&parser, argc, argv);
 
   if (!s_infile) {
-    wabt_print_help(&parser, PROGRAM_NAME);
+    print_help(&parser, PROGRAM_NAME);
     WABT_FATAL("No filename given.\n");
   }
 }
 
-WABT_DEFINE_VECTOR_SORT(int_counter, WabtIntCounter);
+WABT_DEFINE_VECTOR_SORT(int_counter, IntCounter);
 
-typedef int (int_counter_lt_fcn)(WabtIntCounter*, WabtIntCounter*);
+typedef int(int_counter_lt_fcn)(IntCounter*, IntCounter*);
 
-WABT_DEFINE_VECTOR_SORT(int_pair_counter, WabtIntPairCounter);
+WABT_DEFINE_VECTOR_SORT(int_pair_counter, IntPairCounter);
 
-typedef int (int_pair_counter_lt_fcn)(WabtIntPairCounter*, WabtIntPairCounter*);
+typedef int(int_pair_counter_lt_fcn)(IntPairCounter*, IntPairCounter*);
 
 typedef void (*display_name_fcn)(FILE* out, intmax_t value);
 
 static void display_opcode_name(FILE* out, intmax_t opcode) {
-  if (opcode >= 0 && opcode < kWabtOpcodeCount)
-    fprintf(out, "%s", wabt_get_opcode_name(static_cast<WabtOpcode>(opcode)));
+  if (opcode >= 0 && opcode < kOpcodeCount)
+    fprintf(out, "%s", get_opcode_name(static_cast<Opcode>(opcode)));
   else
     fprintf(out, "?(%" PRIdMAX ")", opcode);
 }
@@ -153,9 +154,10 @@ static void display_intmax(FILE* out, intmax_t value) {
   fprintf(out, "%" PRIdMAX, value);
 }
 
-static void display_int_counter_vector(
-    FILE* out, WabtIntCounterVector* vec, display_name_fcn display_fcn,
-    const char* opcode_name) {
+static void display_int_counter_vector(FILE* out,
+                                       IntCounterVector* vec,
+                                       display_name_fcn display_fcn,
+                                       const char* opcode_name) {
   size_t i;
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].count == 0)
@@ -169,10 +171,11 @@ static void display_int_counter_vector(
   }
 }
 
-static void display_int_pair_counter_vector(
-    FILE* out, WabtIntPairCounterVector* vec,
-    display_name_fcn display_first_fcn, display_name_fcn display_second_fcn,
-    const char* opcode_name) {
+static void display_int_pair_counter_vector(FILE* out,
+                                            IntPairCounterVector* vec,
+                                            display_name_fcn display_first_fcn,
+                                            display_name_fcn display_second_fcn,
+                                            const char* opcode_name) {
   size_t i;
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].count == 0)
@@ -188,8 +191,8 @@ static void display_int_pair_counter_vector(
   }
 }
 
-static void swap_int_counters(WabtIntCounter* v1, WabtIntCounter* v2) {
-  WabtIntCounter tmp;
+static void swap_int_counters(IntCounter* v1, IntCounter* v2) {
+  IntCounter tmp;
   tmp.value = v1->value;
   tmp.count = v1->count;
 
@@ -200,23 +203,22 @@ static void swap_int_counters(WabtIntCounter* v1, WabtIntCounter* v2) {
   v2->count = tmp.count;
 }
 
-static int opcode_counter_gt(WabtIntCounter* counter_1,
-                             WabtIntCounter* counter_2) {
+static int opcode_counter_gt(IntCounter* counter_1, IntCounter* counter_2) {
   if (counter_1->count > counter_2->count)
     return 1;
   if (counter_1->count < counter_2->count)
     return 0;
   const char* name_1 = "?1";
   const char* name_2 = "?2";
-  if (counter_1->value < kWabtOpcodeCount) {
+  if (counter_1->value < kOpcodeCount) {
     const char* opcode_name =
-        wabt_get_opcode_name(static_cast<WabtOpcode>(counter_1->value));
+        get_opcode_name(static_cast<Opcode>(counter_1->value));
     if (opcode_name)
       name_1 = opcode_name;
   }
-  if (counter_2->value < kWabtOpcodeCount) {
+  if (counter_2->value < kOpcodeCount) {
     const char* opcode_name =
-        wabt_get_opcode_name(static_cast<WabtOpcode>(counter_2->value));
+        get_opcode_name(static_cast<Opcode>(counter_2->value));
     if (opcode_name)
       name_2 = opcode_name;
   }
@@ -226,8 +228,7 @@ static int opcode_counter_gt(WabtIntCounter* counter_1,
   return 0;
 }
 
-static int int_counter_gt(WabtIntCounter* counter_1,
-                          WabtIntCounter* counter_2) {
+static int int_counter_gt(IntCounter* counter_1, IntCounter* counter_2) {
   if (counter_1->count < counter_2->count)
     return 0;
   if (counter_1->count > counter_2->count)
@@ -239,9 +240,8 @@ static int int_counter_gt(WabtIntCounter* counter_1,
   return 0;
 }
 
-static void swap_int_pair_counters(WabtIntPairCounter* v1,
-                                   WabtIntPairCounter* v2) {
-  WabtIntPairCounter tmp;
+static void swap_int_pair_counters(IntPairCounter* v1, IntPairCounter* v2) {
+  IntPairCounter tmp;
   tmp.first = v1->first;
   tmp.second = v1->second;
   tmp.count = v1->count;
@@ -255,8 +255,8 @@ static void swap_int_pair_counters(WabtIntPairCounter* v1,
   v2->count = tmp.count;
 }
 
-static int int_pair_counter_gt(WabtIntPairCounter* counter_1,
-                               WabtIntPairCounter* counter_2) {
+static int int_pair_counter_gt(IntPairCounter* counter_1,
+                               IntPairCounter* counter_2) {
   if (counter_1->count < counter_2->count)
     return 0;
   if (counter_1->count > counter_2->count)
@@ -274,7 +274,7 @@ static int int_pair_counter_gt(WabtIntPairCounter* counter_1,
 
 static void display_sorted_int_counter_vector(FILE* out,
                                               const char* title,
-                                              WabtIntCounterVector* vec,
+                                              IntCounterVector* vec,
                                               int_counter_lt_fcn lt_fcn,
                                               display_name_fcn display_fcn,
                                               const char* opcode_name) {
@@ -282,28 +282,28 @@ static void display_sorted_int_counter_vector(FILE* out,
     return;
 
   /* First filter out values less than cutoff. This speeds up sorting. */
-  WabtIntCounterVector filtered_vec;
+  IntCounterVector filtered_vec;
   WABT_ZERO_MEMORY(filtered_vec);
   size_t i;
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].count < s_cutoff)
       continue;
-    wabt_append_int_counter_value(&filtered_vec, &vec->data[i]);
+    append_int_counter_value(&filtered_vec, &vec->data[i]);
   }
-  WabtIntCounterVector sorted_vec;
+  IntCounterVector sorted_vec;
   WABT_ZERO_MEMORY(sorted_vec);
-  wabt_sort_int_counter_vector(&filtered_vec, &sorted_vec,
-                               swap_int_counters, lt_fcn);
+  sort_int_counter_vector(&filtered_vec, &sorted_vec, swap_int_counters,
+                          lt_fcn);
   fprintf(out, "%s\n", title);
   display_int_counter_vector(out, &sorted_vec, display_fcn, opcode_name);
-  wabt_destroy_int_counter_vector(&filtered_vec);
-  wabt_destroy_int_counter_vector(&sorted_vec);
+  destroy_int_counter_vector(&filtered_vec);
+  destroy_int_counter_vector(&sorted_vec);
 }
 
 static void display_sorted_int_pair_counter_vector(
     FILE* out,
     const char* title,
-    WabtIntPairCounterVector* vec,
+    IntPairCounterVector* vec,
     int_pair_counter_lt_fcn lt_fcn,
     display_name_fcn display_first_fcn,
     display_name_fcn display_second_fcn,
@@ -311,33 +311,32 @@ static void display_sorted_int_pair_counter_vector(
   if (vec->size == 0)
     return;
 
-  WabtIntPairCounterVector filtered_vec;
+  IntPairCounterVector filtered_vec;
   WABT_ZERO_MEMORY(filtered_vec);
-  WabtIntPairCounterVector sorted_vec;
+  IntPairCounterVector sorted_vec;
   size_t i;
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].count < s_cutoff)
       continue;
-    wabt_append_int_pair_counter_value(&filtered_vec, &vec->data[i]);
+    append_int_pair_counter_value(&filtered_vec, &vec->data[i]);
   }
   WABT_ZERO_MEMORY(sorted_vec);
-  wabt_sort_int_pair_counter_vector(&filtered_vec, &sorted_vec,
-                                    swap_int_pair_counters, lt_fcn);
+  sort_int_pair_counter_vector(&filtered_vec, &sorted_vec,
+                               swap_int_pair_counters, lt_fcn);
   fprintf(out, "%s\n", title);
   display_int_pair_counter_vector(out, &sorted_vec, display_first_fcn,
                                   display_second_fcn, opcode_name);
-  wabt_destroy_int_pair_counter_vector(&filtered_vec);
-  wabt_destroy_int_pair_counter_vector(&sorted_vec);
+  destroy_int_pair_counter_vector(&filtered_vec);
+  destroy_int_pair_counter_vector(&sorted_vec);
 }
 
 int main(int argc, char** argv) {
-
-  wabt_init_stdio();
+  init_stdio();
   parse_options(argc, argv);
 
   void* data;
   size_t size;
-  WabtResult result = wabt_read_file(s_infile, &data, &size);
+  Result result = read_file(s_infile, &data, &size);
   if (WABT_FAILED(result)) {
     const char* input_name = s_infile ? s_infile : "stdin";
     ERROR("Unable to parse: %s", input_name);
@@ -348,40 +347,37 @@ int main(int argc, char** argv) {
     out = fopen(s_outfile, "w");
     if (!out)
       ERROR("fopen \"%s\" failed, errno=%d\n", s_outfile, errno);
-    result = WabtResult::Error;
+    result = Result::Error;
   }
   if (WABT_SUCCEEDED(result)) {
-    WabtOpcntData opcnt_data;
-    wabt_init_opcnt_data(&opcnt_data);
-    result =
-        wabt_read_binary_opcnt(data, size, &s_read_binary_options, &opcnt_data);
+    OpcntData opcnt_data;
+    init_opcnt_data(&opcnt_data);
+    result = read_binary_opcnt(data, size, &s_read_binary_options, &opcnt_data);
     if (WABT_SUCCEEDED(result)) {
       display_sorted_int_counter_vector(
           out, "Opcode counts:", &opcnt_data.opcode_vec, opcode_counter_gt,
           display_opcode_name, nullptr);
       display_sorted_int_counter_vector(
           out, "\ni32.const:", &opcnt_data.i32_const_vec, int_counter_gt,
-          display_intmax, wabt_get_opcode_name(WabtOpcode::I32Const));
+          display_intmax, get_opcode_name(Opcode::I32Const));
       display_sorted_int_counter_vector(
           out, "\nget_local:", &opcnt_data.get_local_vec, int_counter_gt,
-          display_intmax, wabt_get_opcode_name(WabtOpcode::GetLocal));
+          display_intmax, get_opcode_name(Opcode::GetLocal));
       display_sorted_int_counter_vector(
           out, "\nset_local:", &opcnt_data.set_local_vec, int_counter_gt,
-          display_intmax, wabt_get_opcode_name(WabtOpcode::SetLocal));
+          display_intmax, get_opcode_name(Opcode::SetLocal));
       display_sorted_int_counter_vector(
           out, "\ntee_local:", &opcnt_data.tee_local_vec, int_counter_gt,
-          display_intmax, wabt_get_opcode_name(WabtOpcode::TeeLocal));
+          display_intmax, get_opcode_name(Opcode::TeeLocal));
       display_sorted_int_pair_counter_vector(
           out, "\ni32.load:", &opcnt_data.i32_load_vec, int_pair_counter_gt,
-          display_intmax, display_intmax,
-          wabt_get_opcode_name(WabtOpcode::I32Load));
+          display_intmax, display_intmax, get_opcode_name(Opcode::I32Load));
       display_sorted_int_pair_counter_vector(
           out, "\ni32.store:", &opcnt_data.i32_store_vec, int_pair_counter_gt,
-          display_intmax, display_intmax,
-          wabt_get_opcode_name(WabtOpcode::I32Store));
+          display_intmax, display_intmax, get_opcode_name(Opcode::I32Store));
     }
-    wabt_destroy_opcnt_data(&opcnt_data);
+    destroy_opcnt_data(&opcnt_data);
   }
   wabt_free(data);
-  return result != WabtResult::Ok;
+  return result != Result::Ok;
 }

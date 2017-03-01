@@ -27,8 +27,10 @@
 
 #define PROGRAM_NAME "wasmdump"
 
-#define NOPE WabtHasArgument::No
-#define YEP WabtHasArgument::Yes
+#define NOPE HasArgument::No
+#define YEP HasArgument::Yes
+
+using namespace wabt;
 
 enum {
   FLAG_HEADERS,
@@ -48,7 +50,7 @@ static const char s_description[] =
     "examples:\n"
     "  $ wasmdump test.wasm\n";
 
-static WabtOption s_options[] = {
+static Option s_options[] = {
     {FLAG_HEADERS, 'h', "headers", nullptr, NOPE, "print headers"},
     {FLAG_SECTION, 'j', "section", nullptr, YEP, "select just one section"},
     {FLAG_RAW, 's', "full-contents", nullptr, NOPE,
@@ -64,14 +66,14 @@ static WabtOption s_options[] = {
 
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
-static WabtObjdumpOptions s_objdump_options;
+static ObjdumpOptions s_objdump_options;
 
-static void on_argument(struct WabtOptionParser* parser, const char* argument) {
+static void on_argument(struct OptionParser* parser, const char* argument) {
   s_objdump_options.infile = argument;
 }
 
-static void on_option(struct WabtOptionParser* parser,
-                      struct WabtOption* option,
+static void on_option(struct OptionParser* parser,
+                      struct Option* option,
                       const char* argument) {
   switch (option->id) {
     case FLAG_HEADERS:
@@ -102,19 +104,18 @@ static void on_option(struct WabtOptionParser* parser,
       break;
 
     case FLAG_HELP:
-      wabt_print_help(parser, PROGRAM_NAME);
+      print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
   }
 }
 
-static void on_option_error(struct WabtOptionParser* parser,
-                            const char* message) {
+static void on_option_error(struct OptionParser* parser, const char* message) {
   WABT_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  WabtOptionParser parser;
+  OptionParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
   parser.options = s_options;
@@ -122,19 +123,20 @@ static void parse_options(int argc, char** argv) {
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  wabt_parse_options(&parser, argc, argv);
+  parse_options(&parser, argc, argv);
 
   if (!s_objdump_options.infile) {
-    wabt_print_help(&parser, PROGRAM_NAME);
+    print_help(&parser, PROGRAM_NAME);
     WABT_FATAL("No filename given.\n");
   }
 }
 
 int main(int argc, char** argv) {
-  wabt_init_stdio();
+  init_stdio();
 
   parse_options(argc, argv);
-  if (!s_objdump_options.headers && !s_objdump_options.details && !s_objdump_options.disassemble && !s_objdump_options.raw) {
+  if (!s_objdump_options.headers && !s_objdump_options.details &&
+      !s_objdump_options.disassemble && !s_objdump_options.raw) {
     fprintf(stderr, "At least one of the following switches must be given:\n");
     fprintf(stderr, " -d/--disassemble\n");
     fprintf(stderr, " -h/--headers\n");
@@ -145,10 +147,9 @@ int main(int argc, char** argv) {
 
   void* void_data;
   size_t size;
-  WabtResult result =
-      wabt_read_file(s_objdump_options.infile, &void_data, &size);
+  Result result = read_file(s_objdump_options.infile, &void_data, &size);
   if (WABT_FAILED(result))
-    return result != WabtResult::Ok;
+    return result != Result::Ok;
 
   uint8_t* data = static_cast<uint8_t*>(void_data);
 
@@ -165,41 +166,41 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  s_objdump_options.mode = WabtObjdumpMode::Prepass;
-  result = wabt_read_binary_objdump(data, size, &s_objdump_options);
+  s_objdump_options.mode = ObjdumpMode::Prepass;
+  result = read_binary_objdump(data, size, &s_objdump_options);
   if (WABT_FAILED(result))
     goto done;
 
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {
-    s_objdump_options.mode = WabtObjdumpMode::Headers;
-    result = wabt_read_binary_objdump(data, size, &s_objdump_options);
+    s_objdump_options.mode = ObjdumpMode::Headers;
+    result = read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   // Pass 2: Print extra information based on section type
   if (s_objdump_options.details) {
-    s_objdump_options.mode = WabtObjdumpMode::Details;
-    result = wabt_read_binary_objdump(data, size, &s_objdump_options);
+    s_objdump_options.mode = ObjdumpMode::Details;
+    result = read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   if (s_objdump_options.disassemble) {
-    s_objdump_options.mode = WabtObjdumpMode::Disassemble;
-    result = wabt_read_binary_objdump(data, size, &s_objdump_options);
+    s_objdump_options.mode = ObjdumpMode::Disassemble;
+    result = read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   // Pass 3: Dump to raw contents of the sections
   if (s_objdump_options.raw) {
-    s_objdump_options.mode = WabtObjdumpMode::RawData;
-    result = wabt_read_binary_objdump(data, size, &s_objdump_options);
+    s_objdump_options.mode = ObjdumpMode::RawData;
+    result = read_binary_objdump(data, size, &s_objdump_options);
   }
 
 done:
   wabt_free(data);
-  return result != WabtResult::Ok;
+  return result != Result::Ok;
 }

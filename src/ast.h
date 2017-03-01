@@ -26,27 +26,29 @@
 #include "type-vector.h"
 #include "vector.h"
 
-enum class WabtVarType {
+namespace wabt {
+
+enum class VarType {
   Index,
   Name,
 };
 
-struct WabtVar {
-  WabtLocation loc;
-  WabtVarType type;
+struct Var {
+  Location loc;
+  VarType type;
   union {
     int64_t index;
-    WabtStringSlice name;
+    StringSlice name;
   };
 };
-WABT_DEFINE_VECTOR(var, WabtVar);
+WABT_DEFINE_VECTOR(var, Var);
 
-typedef WabtStringSlice WabtLabel;
-WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
+typedef StringSlice Label;
+WABT_DEFINE_VECTOR(string_slice, StringSlice);
 
-struct WabtConst {
-  WabtLocation loc;
-  WabtType type;
+struct Const {
+  Location loc;
+  Type type;
   union {
     uint32_t u32;
     uint64_t u64;
@@ -54,9 +56,9 @@ struct WabtConst {
     uint64_t f64_bits;
   };
 };
-WABT_DEFINE_VECTOR(const, WabtConst);
+WABT_DEFINE_VECTOR(const, Const);
 
-enum class WabtExprType {
+enum class ExprType {
   Binary,
   Block,
   Br,
@@ -86,134 +88,134 @@ enum class WabtExprType {
   Unreachable,
 };
 
-typedef WabtTypeVector WabtBlockSignature;
+typedef TypeVector BlockSignature;
 
-struct WabtBlock {
-  WabtLabel label;
-  WabtBlockSignature sig;
-  struct WabtExpr* first;
+struct Block {
+  Label label;
+  BlockSignature sig;
+  struct Expr* first;
 };
 
-struct WabtExpr {
-  WabtLocation loc;
-  WabtExprType type;
-  WabtExpr* next;
+struct Expr {
+  Location loc;
+  ExprType type;
+  Expr* next;
   union {
-    struct { WabtOpcode opcode; } binary, compare, convert, unary;
-    WabtBlock block, loop;
-    struct { WabtVar var; } br, br_if;
-    struct { WabtVarVector targets; WabtVar default_target; } br_table;
-    struct { WabtVar var; } call, call_indirect;
-    WabtConst const_;
-    struct { WabtVar var; } get_global, set_global;
-    struct { WabtVar var; } get_local, set_local, tee_local;
-    struct { WabtBlock true_; struct WabtExpr* false_; } if_;
-    struct { WabtOpcode opcode; uint32_t align; uint64_t offset; } load, store;
+    struct { Opcode opcode; } binary, compare, convert, unary;
+    Block block, loop;
+    struct { Var var; } br, br_if;
+    struct { VarVector targets; Var default_target; } br_table;
+    struct { Var var; } call, call_indirect;
+    Const const_;
+    struct { Var var; } get_global, set_global;
+    struct { Var var; } get_local, set_local, tee_local;
+    struct { Block true_; struct Expr* false_; } if_;
+    struct { Opcode opcode; uint32_t align; uint64_t offset; } load, store;
   };
 };
 
-struct WabtFuncSignature {
-  WabtTypeVector param_types;
-  WabtTypeVector result_types;
+struct FuncSignature {
+  TypeVector param_types;
+  TypeVector result_types;
 };
 
-struct WabtFuncType {
-  WabtStringSlice name;
-  WabtFuncSignature sig;
+struct FuncType {
+  StringSlice name;
+  FuncSignature sig;
 };
-typedef WabtFuncType* WabtFuncTypePtr;
-WABT_DEFINE_VECTOR(func_type_ptr, WabtFuncTypePtr);
+typedef FuncType* FuncTypePtr;
+WABT_DEFINE_VECTOR(func_type_ptr, FuncTypePtr);
 
 enum {
   WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE = 1,
   /* set if the signature is owned by module */
   WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE = 2,
 };
-typedef uint32_t WabtFuncDeclarationFlags;
+typedef uint32_t FuncDeclarationFlags;
 
-struct WabtFuncDeclaration {
-  WabtFuncDeclarationFlags flags;
-  WabtVar type_var;
-  WabtFuncSignature sig;
+struct FuncDeclaration {
+  FuncDeclarationFlags flags;
+  Var type_var;
+  FuncSignature sig;
 };
 
-struct WabtFunc {
-  WabtStringSlice name;
-  WabtFuncDeclaration decl;
-  WabtTypeVector local_types;
-  WabtBindingHash param_bindings;
-  WabtBindingHash local_bindings;
-  WabtExpr* first_expr;
+struct Func {
+  StringSlice name;
+  FuncDeclaration decl;
+  TypeVector local_types;
+  BindingHash param_bindings;
+  BindingHash local_bindings;
+  Expr* first_expr;
 };
-typedef WabtFunc* WabtFuncPtr;
-WABT_DEFINE_VECTOR(func_ptr, WabtFuncPtr);
+typedef Func* FuncPtr;
+WABT_DEFINE_VECTOR(func_ptr, FuncPtr);
 
-struct WabtGlobal {
-  WabtStringSlice name;
-  WabtType type;
+struct Global {
+  StringSlice name;
+  Type type;
   bool mutable_;
-  WabtExpr* init_expr;
+  Expr* init_expr;
 };
-typedef WabtGlobal* WabtGlobalPtr;
-WABT_DEFINE_VECTOR(global_ptr, WabtGlobalPtr);
+typedef Global* GlobalPtr;
+WABT_DEFINE_VECTOR(global_ptr, GlobalPtr);
 
-struct WabtTable {
-  WabtStringSlice name;
-  WabtLimits elem_limits;
+struct Table {
+  StringSlice name;
+  Limits elem_limits;
 };
-typedef WabtTable* WabtTablePtr;
-WABT_DEFINE_VECTOR(table_ptr, WabtTablePtr);
+typedef Table* TablePtr;
+WABT_DEFINE_VECTOR(table_ptr, TablePtr);
 
-struct WabtElemSegment {
-  WabtVar table_var;
-  WabtExpr* offset;
-  WabtVarVector vars;
+struct ElemSegment {
+  Var table_var;
+  Expr* offset;
+  VarVector vars;
 };
-typedef WabtElemSegment* WabtElemSegmentPtr;
-WABT_DEFINE_VECTOR(elem_segment_ptr, WabtElemSegmentPtr);
+typedef ElemSegment* ElemSegmentPtr;
+WABT_DEFINE_VECTOR(elem_segment_ptr, ElemSegmentPtr);
 
-struct WabtMemory {
-  WabtStringSlice name;
-  WabtLimits page_limits;
+struct Memory {
+  StringSlice name;
+  Limits page_limits;
 };
-typedef WabtMemory* WabtMemoryPtr;
-WABT_DEFINE_VECTOR(memory_ptr, WabtMemoryPtr);
+typedef Memory* MemoryPtr;
+WABT_DEFINE_VECTOR(memory_ptr, MemoryPtr);
 
-struct WabtDataSegment {
-  WabtVar memory_var;
-  WabtExpr* offset;
+struct DataSegment {
+  Var memory_var;
+  Expr* offset;
   void* data;
   size_t size;
 };
-typedef WabtDataSegment* WabtDataSegmentPtr;
-WABT_DEFINE_VECTOR(data_segment_ptr, WabtDataSegmentPtr);
+typedef DataSegment* DataSegmentPtr;
+WABT_DEFINE_VECTOR(data_segment_ptr, DataSegmentPtr);
 
-struct WabtImport {
-  WabtStringSlice module_name;
-  WabtStringSlice field_name;
-  WabtExternalKind kind;
+struct Import {
+  StringSlice module_name;
+  StringSlice field_name;
+  ExternalKind kind;
   union {
-    /* an imported func is has the type WabtFunc so it can be more easily
+    /* an imported func is has the type Func so it can be more easily
      * included in the Module's vector of funcs; but only the
-     * WabtFuncDeclaration will have any useful information */
-    WabtFunc func;
-    WabtTable table;
-    WabtMemory memory;
-    WabtGlobal global;
+     * FuncDeclaration will have any useful information */
+    Func func;
+    Table table;
+    Memory memory;
+    Global global;
   };
 };
-typedef WabtImport* WabtImportPtr;
-WABT_DEFINE_VECTOR(import_ptr, WabtImportPtr);
+typedef Import* ImportPtr;
+WABT_DEFINE_VECTOR(import_ptr, ImportPtr);
 
-struct WabtExport {
-  WabtStringSlice name;
-  WabtExternalKind kind;
-  WabtVar var;
+struct Export {
+  StringSlice name;
+  ExternalKind kind;
+  Var var;
 };
-typedef WabtExport* WabtExportPtr;
-WABT_DEFINE_VECTOR(export_ptr, WabtExportPtr);
+typedef Export* ExportPtr;
+WABT_DEFINE_VECTOR(export_ptr, ExportPtr);
 
-enum class WabtModuleFieldType {
+enum class ModuleFieldType {
   Func,
   Global,
   Import,
@@ -226,29 +228,29 @@ enum class WabtModuleFieldType {
   Start,
 };
 
-struct WabtModuleField {
-  WabtLocation loc;
-  WabtModuleFieldType type;
-  struct WabtModuleField* next;
+struct ModuleField {
+  Location loc;
+  ModuleFieldType type;
+  struct ModuleField* next;
   union {
-    WabtFunc func;
-    WabtGlobal global;
-    WabtImport import;
-    WabtExport export_;
-    WabtFuncType func_type;
-    WabtTable table;
-    WabtElemSegment elem_segment;
-    WabtMemory memory;
-    WabtDataSegment data_segment;
-    WabtVar start;
+    Func func;
+    Global global;
+    Import import;
+    Export export_;
+    FuncType func_type;
+    Table table;
+    ElemSegment elem_segment;
+    Memory memory;
+    DataSegment data_segment;
+    Var start;
   };
 };
 
-struct WabtModule {
-  WabtLocation loc;
-  WabtStringSlice name;
-  WabtModuleField* first_field;
-  WabtModuleField* last_field;
+struct Module {
+  Location loc;
+  StringSlice name;
+  ModuleField* first_field;
+  ModuleField* last_field;
 
   uint32_t num_func_imports;
   uint32_t num_table_imports;
@@ -256,27 +258,27 @@ struct WabtModule {
   uint32_t num_global_imports;
 
   /* cached for convenience; the pointers are shared with values that are
-   * stored in either WabtModuleField or WabtImport. */
-  WabtFuncPtrVector funcs;
-  WabtGlobalPtrVector globals;
-  WabtImportPtrVector imports;
-  WabtExportPtrVector exports;
-  WabtFuncTypePtrVector func_types;
-  WabtTablePtrVector tables;
-  WabtElemSegmentPtrVector elem_segments;
-  WabtMemoryPtrVector memories;
-  WabtDataSegmentPtrVector data_segments;
-  WabtVar* start;
+   * stored in either ModuleField or Import. */
+  FuncPtrVector funcs;
+  GlobalPtrVector globals;
+  ImportPtrVector imports;
+  ExportPtrVector exports;
+  FuncTypePtrVector func_types;
+  TablePtrVector tables;
+  ElemSegmentPtrVector elem_segments;
+  MemoryPtrVector memories;
+  DataSegmentPtrVector data_segments;
+  Var* start;
 
-  WabtBindingHash func_bindings;
-  WabtBindingHash global_bindings;
-  WabtBindingHash export_bindings;
-  WabtBindingHash func_type_bindings;
-  WabtBindingHash table_bindings;
-  WabtBindingHash memory_bindings;
+  BindingHash func_bindings;
+  BindingHash global_bindings;
+  BindingHash export_bindings;
+  BindingHash func_type_bindings;
+  BindingHash table_bindings;
+  BindingHash memory_bindings;
 };
 
-enum class WabtRawModuleType {
+enum class RawModuleType {
   Text,
   Binary,
 };
@@ -286,44 +288,44 @@ enum class WabtRawModuleType {
  * decoding errors until wabt_check_assert_invalid is called. This isn't needed
  * when parsing text, as assert_invalid always assumes that text parsing
  * succeeds. */
-struct WabtRawModule {
-  WabtRawModuleType type;
+struct RawModule {
+  RawModuleType type;
   union {
-    WabtModule* text;
+    Module* text;
     struct {
-      WabtLocation loc;
-      WabtStringSlice name;
+      Location loc;
+      StringSlice name;
       void* data;
       size_t size;
     } binary;
   };
 };
 
-enum class WabtActionType {
+enum class ActionType {
   Invoke,
   Get,
 };
 
-struct WabtActionInvoke {
-  WabtStringSlice name;
-  WabtConstVector args;
+struct ActionInvoke {
+  StringSlice name;
+  ConstVector args;
 };
 
-struct WabtActionGet {
-  WabtStringSlice name;
+struct ActionGet {
+  StringSlice name;
 };
 
-struct WabtAction {
-  WabtLocation loc;
-  WabtActionType type;
-  WabtVar module_var;
+struct Action {
+  Location loc;
+  ActionType type;
+  Var module_var;
   union {
-    WabtActionInvoke invoke;
-    WabtActionGet get;
+    ActionInvoke invoke;
+    ActionGet get;
   };
 };
 
-enum class WabtCommandType {
+enum class CommandType {
   Module,
   Action,
   Register,
@@ -342,255 +344,236 @@ enum class WabtCommandType {
   First = Module,
   Last = AssertExhaustion,
 };
-static const int kWabtCommandTypeCount = WABT_ENUM_COUNT(WabtCommandType);
+static const int kCommandTypeCount = WABT_ENUM_COUNT(CommandType);
 
-struct WabtCommand {
-  WabtCommandType type;
+struct Command {
+  CommandType type;
   union {
-    WabtModule module;
-    WabtAction action;
-    struct { WabtStringSlice module_name; WabtVar var; } register_;
-    struct { WabtAction action; WabtConstVector expected; } assert_return;
-    struct { WabtAction action; } assert_return_nan;
-    struct { WabtAction action; WabtStringSlice text; } assert_trap;
+    Module module;
+    Action action;
+    struct { StringSlice module_name; Var var; } register_;
+    struct { Action action; ConstVector expected; } assert_return;
+    struct { Action action; } assert_return_nan;
+    struct { Action action; StringSlice text; } assert_trap;
     struct {
-      WabtRawModule module;
-      WabtStringSlice text;
+      RawModule module;
+      StringSlice text;
     } assert_malformed, assert_invalid, assert_unlinkable,
         assert_uninstantiable;
   };
 };
-WABT_DEFINE_VECTOR(command, WabtCommand);
+WABT_DEFINE_VECTOR(command, Command);
 
-struct WabtScript {
-  WabtCommandVector commands;
-  WabtBindingHash module_bindings;
+struct Script {
+  CommandVector commands;
+  BindingHash module_bindings;
 };
 
-struct WabtExprVisitor {
+struct ExprVisitor {
   void* user_data;
-  WabtResult (*on_binary_expr)(WabtExpr*, void* user_data);
-  WabtResult (*begin_block_expr)(WabtExpr*, void* user_data);
-  WabtResult (*end_block_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_br_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_br_if_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_br_table_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_call_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_call_indirect_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_compare_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_const_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_convert_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_current_memory_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_drop_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_get_global_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_get_local_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_grow_memory_expr)(WabtExpr*, void* user_data);
-  WabtResult (*begin_if_expr)(WabtExpr*, void* user_data);
-  WabtResult (*after_if_true_expr)(WabtExpr*, void* user_data);
-  WabtResult (*end_if_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_load_expr)(WabtExpr*, void* user_data);
-  WabtResult (*begin_loop_expr)(WabtExpr*, void* user_data);
-  WabtResult (*end_loop_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_nop_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_return_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_select_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_set_global_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_set_local_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_store_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_tee_local_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_unary_expr)(WabtExpr*, void* user_data);
-  WabtResult (*on_unreachable_expr)(WabtExpr*, void* user_data);
+  Result (*on_binary_expr)(Expr*, void* user_data);
+  Result (*begin_block_expr)(Expr*, void* user_data);
+  Result (*end_block_expr)(Expr*, void* user_data);
+  Result (*on_br_expr)(Expr*, void* user_data);
+  Result (*on_br_if_expr)(Expr*, void* user_data);
+  Result (*on_br_table_expr)(Expr*, void* user_data);
+  Result (*on_call_expr)(Expr*, void* user_data);
+  Result (*on_call_indirect_expr)(Expr*, void* user_data);
+  Result (*on_compare_expr)(Expr*, void* user_data);
+  Result (*on_const_expr)(Expr*, void* user_data);
+  Result (*on_convert_expr)(Expr*, void* user_data);
+  Result (*on_current_memory_expr)(Expr*, void* user_data);
+  Result (*on_drop_expr)(Expr*, void* user_data);
+  Result (*on_get_global_expr)(Expr*, void* user_data);
+  Result (*on_get_local_expr)(Expr*, void* user_data);
+  Result (*on_grow_memory_expr)(Expr*, void* user_data);
+  Result (*begin_if_expr)(Expr*, void* user_data);
+  Result (*after_if_true_expr)(Expr*, void* user_data);
+  Result (*end_if_expr)(Expr*, void* user_data);
+  Result (*on_load_expr)(Expr*, void* user_data);
+  Result (*begin_loop_expr)(Expr*, void* user_data);
+  Result (*end_loop_expr)(Expr*, void* user_data);
+  Result (*on_nop_expr)(Expr*, void* user_data);
+  Result (*on_return_expr)(Expr*, void* user_data);
+  Result (*on_select_expr)(Expr*, void* user_data);
+  Result (*on_set_global_expr)(Expr*, void* user_data);
+  Result (*on_set_local_expr)(Expr*, void* user_data);
+  Result (*on_store_expr)(Expr*, void* user_data);
+  Result (*on_tee_local_expr)(Expr*, void* user_data);
+  Result (*on_unary_expr)(Expr*, void* user_data);
+  Result (*on_unreachable_expr)(Expr*, void* user_data);
 };
 
-WABT_EXTERN_C_BEGIN
-WabtModuleField* wabt_append_module_field(WabtModule*);
+ModuleField* append_module_field(Module*);
 /* ownership of the function signature is passed to the module */
-WabtFuncType* wabt_append_implicit_func_type(WabtLocation*,
-                                             WabtModule*,
-                                             WabtFuncSignature*);
+FuncType* append_implicit_func_type(Location*, Module*, FuncSignature*);
 
-/* WabtExpr creation functions */
-WabtExpr* wabt_new_binary_expr(void);
-WabtExpr* wabt_new_block_expr(void);
-WabtExpr* wabt_new_br_expr(void);
-WabtExpr* wabt_new_br_if_expr(void);
-WabtExpr* wabt_new_br_table_expr(void);
-WabtExpr* wabt_new_call_expr(void);
-WabtExpr* wabt_new_call_indirect_expr(void);
-WabtExpr* wabt_new_compare_expr(void);
-WabtExpr* wabt_new_const_expr(void);
-WabtExpr* wabt_new_convert_expr(void);
-WabtExpr* wabt_new_current_memory_expr(void);
-WabtExpr* wabt_new_drop_expr(void);
-WabtExpr* wabt_new_get_global_expr(void);
-WabtExpr* wabt_new_get_local_expr(void);
-WabtExpr* wabt_new_grow_memory_expr(void);
-WabtExpr* wabt_new_if_expr(void);
-WabtExpr* wabt_new_load_expr(void);
-WabtExpr* wabt_new_loop_expr(void);
-WabtExpr* wabt_new_nop_expr(void);
-WabtExpr* wabt_new_return_expr(void);
-WabtExpr* wabt_new_select_expr(void);
-WabtExpr* wabt_new_set_global_expr(void);
-WabtExpr* wabt_new_set_local_expr(void);
-WabtExpr* wabt_new_store_expr(void);
-WabtExpr* wabt_new_tee_local_expr(void);
-WabtExpr* wabt_new_unary_expr(void);
-WabtExpr* wabt_new_unreachable_expr(void);
+/* Expr creation functions */
+Expr* new_binary_expr(void);
+Expr* new_block_expr(void);
+Expr* new_br_expr(void);
+Expr* new_br_if_expr(void);
+Expr* new_br_table_expr(void);
+Expr* new_call_expr(void);
+Expr* new_call_indirect_expr(void);
+Expr* new_compare_expr(void);
+Expr* new_const_expr(void);
+Expr* new_convert_expr(void);
+Expr* new_current_memory_expr(void);
+Expr* new_drop_expr(void);
+Expr* new_get_global_expr(void);
+Expr* new_get_local_expr(void);
+Expr* new_grow_memory_expr(void);
+Expr* new_if_expr(void);
+Expr* new_load_expr(void);
+Expr* new_loop_expr(void);
+Expr* new_nop_expr(void);
+Expr* new_return_expr(void);
+Expr* new_select_expr(void);
+Expr* new_set_global_expr(void);
+Expr* new_set_local_expr(void);
+Expr* new_store_expr(void);
+Expr* new_tee_local_expr(void);
+Expr* new_unary_expr(void);
+Expr* new_unreachable_expr(void);
 
 /* destruction functions. not needed unless you're creating your own AST
  elements */
-void wabt_destroy_script(struct WabtScript*);
-void wabt_destroy_action(struct WabtAction*);
-void wabt_destroy_block(struct WabtBlock*);
-void wabt_destroy_command_vector_and_elements(WabtCommandVector*);
-void wabt_destroy_command(WabtCommand*);
-void wabt_destroy_data_segment(WabtDataSegment*);
-void wabt_destroy_elem_segment(WabtElemSegment*);
-void wabt_destroy_export(WabtExport*);
-void wabt_destroy_expr(WabtExpr*);
-void wabt_destroy_expr_list(WabtExpr*);
-void wabt_destroy_func_declaration(WabtFuncDeclaration*);
-void wabt_destroy_func_signature(WabtFuncSignature*);
-void wabt_destroy_func_type(WabtFuncType*);
-void wabt_destroy_func(WabtFunc*);
-void wabt_destroy_import(WabtImport*);
-void wabt_destroy_memory(WabtMemory*);
-void wabt_destroy_module(WabtModule*);
-void wabt_destroy_raw_module(WabtRawModule*);
-void wabt_destroy_table(WabtTable*);
-void wabt_destroy_var_vector_and_elements(WabtVarVector*);
-void wabt_destroy_var(WabtVar*);
+void destroy_script(struct Script*);
+void destroy_action(struct Action*);
+void destroy_block(struct Block*);
+void destroy_command_vector_and_elements(CommandVector*);
+void destroy_command(Command*);
+void destroy_data_segment(DataSegment*);
+void destroy_elem_segment(ElemSegment*);
+void destroy_export(Export*);
+void destroy_expr(Expr*);
+void destroy_expr_list(Expr*);
+void destroy_func_declaration(FuncDeclaration*);
+void destroy_func_signature(FuncSignature*);
+void destroy_func_type(FuncType*);
+void destroy_func(Func*);
+void destroy_import(Import*);
+void destroy_memory(Memory*);
+void destroy_module(Module*);
+void destroy_raw_module(RawModule*);
+void destroy_table(Table*);
+void destroy_var_vector_and_elements(VarVector*);
+void destroy_var(Var*);
 
 /* traversal functions */
-WabtResult wabt_visit_func(WabtFunc* func, WabtExprVisitor*);
-WabtResult wabt_visit_expr_list(WabtExpr* expr, WabtExprVisitor*);
+Result visit_func(Func* func, ExprVisitor*);
+Result visit_expr_list(Expr* expr, ExprVisitor*);
 
 /* convenience functions for looking through the AST */
-int wabt_get_index_from_var(const WabtBindingHash* bindings,
-                            const WabtVar* var);
-int wabt_get_func_index_by_var(const WabtModule* module, const WabtVar* var);
-int wabt_get_global_index_by_var(const WabtModule* func, const WabtVar* var);
-int wabt_get_func_type_index_by_var(const WabtModule* module,
-                                    const WabtVar* var);
-int wabt_get_func_type_index_by_sig(const WabtModule* module,
-                                    const WabtFuncSignature* sig);
-int wabt_get_func_type_index_by_decl(const WabtModule* module,
-                                     const WabtFuncDeclaration* decl);
-int wabt_get_table_index_by_var(const WabtModule* module, const WabtVar* var);
-int wabt_get_memory_index_by_var(const WabtModule* module, const WabtVar* var);
-int wabt_get_import_index_by_var(const WabtModule* module, const WabtVar* var);
-int wabt_get_local_index_by_var(const WabtFunc* func, const WabtVar* var);
-int wabt_get_module_index_by_var(const WabtScript* script, const WabtVar* var);
+int get_index_from_var(const BindingHash* bindings, const Var* var);
+int get_func_index_by_var(const Module* module, const Var* var);
+int get_global_index_by_var(const Module* func, const Var* var);
+int get_func_type_index_by_var(const Module* module, const Var* var);
+int get_func_type_index_by_sig(const Module* module, const FuncSignature* sig);
+int get_func_type_index_by_decl(const Module* module,
+                                const FuncDeclaration* decl);
+int get_table_index_by_var(const Module* module, const Var* var);
+int get_memory_index_by_var(const Module* module, const Var* var);
+int get_import_index_by_var(const Module* module, const Var* var);
+int get_local_index_by_var(const Func* func, const Var* var);
+int get_module_index_by_var(const Script* script, const Var* var);
 
-WabtFuncPtr wabt_get_func_by_var(const WabtModule* module, const WabtVar* var);
-WabtGlobalPtr wabt_get_global_by_var(const WabtModule* func,
-                                     const WabtVar* var);
-WabtFuncTypePtr wabt_get_func_type_by_var(const WabtModule* module,
-                                          const WabtVar* var);
-WabtTablePtr wabt_get_table_by_var(const WabtModule* module,
-                                   const WabtVar* var);
-WabtMemoryPtr wabt_get_memory_by_var(const WabtModule* module,
-                                     const WabtVar* var);
-WabtImportPtr wabt_get_import_by_var(const WabtModule* module,
-                                     const WabtVar* var);
-WabtExportPtr wabt_get_export_by_name(const WabtModule* module,
-                                      const WabtStringSlice* name);
-WabtModule* wabt_get_first_module(const WabtScript* script);
-WabtModule* wabt_get_module_by_var(const WabtScript* script,
-                                   const WabtVar* var);
+FuncPtr get_func_by_var(const Module* module, const Var* var);
+GlobalPtr get_global_by_var(const Module* func, const Var* var);
+FuncTypePtr get_func_type_by_var(const Module* module, const Var* var);
+TablePtr get_table_by_var(const Module* module, const Var* var);
+MemoryPtr get_memory_by_var(const Module* module, const Var* var);
+ImportPtr get_import_by_var(const Module* module, const Var* var);
+ExportPtr get_export_by_name(const Module* module, const StringSlice* name);
+Module* get_first_module(const Script* script);
+Module* get_module_by_var(const Script* script, const Var* var);
 
-void wabt_make_type_binding_reverse_mapping(
-    const WabtTypeVector*,
-    const WabtBindingHash*,
-    WabtStringSliceVector* out_reverse_mapping);
+void make_type_binding_reverse_mapping(const TypeVector*,
+                                       const BindingHash*,
+                                       StringSliceVector* out_reverse_mapping);
 
-typedef void (*WabtDuplicateBindingCallback)(WabtBindingHashEntry* a,
-                                             WabtBindingHashEntry* b,
-                                             void* user_data);
-void wabt_find_duplicate_bindings(const WabtBindingHash*,
-                                  WabtDuplicateBindingCallback callback,
-                                  void* user_data);
+typedef void (*DuplicateBindingCallback)(BindingHashEntry* a,
+                                         BindingHashEntry* b,
+                                         void* user_data);
+void find_duplicate_bindings(const BindingHash*,
+                             DuplicateBindingCallback callback,
+                             void* user_data);
 
-static WABT_INLINE bool
-wabt_decl_has_func_type(const WabtFuncDeclaration* decl) {
+static WABT_INLINE bool decl_has_func_type(const FuncDeclaration* decl) {
   return static_cast<bool>(
       (decl->flags & WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE) != 0);
 }
 
-static WABT_INLINE bool
-wabt_signatures_are_equal(const WabtFuncSignature* sig1,
-                          const WabtFuncSignature* sig2) {
+static WABT_INLINE bool signatures_are_equal(const FuncSignature* sig1,
+                                             const FuncSignature* sig2) {
   return static_cast<bool>(
-      wabt_type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
-      wabt_type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
+      type_vectors_are_equal(&sig1->param_types, &sig2->param_types) &&
+      type_vectors_are_equal(&sig1->result_types, &sig2->result_types));
 }
 
-static WABT_INLINE size_t wabt_get_num_params(const WabtFunc* func) {
+static WABT_INLINE size_t get_num_params(const Func* func) {
   return func->decl.sig.param_types.size;
 }
 
-static WABT_INLINE size_t wabt_get_num_results(const WabtFunc* func) {
+static WABT_INLINE size_t get_num_results(const Func* func) {
   return func->decl.sig.result_types.size;
 }
 
-static WABT_INLINE size_t wabt_get_num_locals(const WabtFunc* func) {
+static WABT_INLINE size_t get_num_locals(const Func* func) {
   return func->local_types.size;
 }
 
-static WABT_INLINE size_t wabt_get_num_params_and_locals(const WabtFunc* func) {
-  return wabt_get_num_params(func) + wabt_get_num_locals(func);
+static WABT_INLINE size_t get_num_params_and_locals(const Func* func) {
+  return get_num_params(func) + get_num_locals(func);
 }
 
-static WABT_INLINE WabtType wabt_get_param_type(const WabtFunc* func,
-                                                int index) {
+static WABT_INLINE Type get_param_type(const Func* func, int index) {
   assert(static_cast<size_t>(index) < func->decl.sig.param_types.size);
   return func->decl.sig.param_types.data[index];
 }
 
-static WABT_INLINE WabtType wabt_get_local_type(const WabtFunc* func,
-                                                int index) {
-  assert(static_cast<size_t>(index) < wabt_get_num_locals(func));
+static WABT_INLINE Type get_local_type(const Func* func, int index) {
+  assert(static_cast<size_t>(index) < get_num_locals(func));
   return func->local_types.data[index];
 }
 
-static WABT_INLINE WabtType wabt_get_result_type(const WabtFunc* func,
-                                                 int index) {
+static WABT_INLINE Type get_result_type(const Func* func, int index) {
   assert(static_cast<size_t>(index) < func->decl.sig.result_types.size);
   return func->decl.sig.result_types.data[index];
 }
 
-static WABT_INLINE WabtType
-wabt_get_func_type_param_type(const WabtFuncType* func_type, int index) {
+static WABT_INLINE Type get_func_type_param_type(const FuncType* func_type,
+                                                 int index) {
   return func_type->sig.param_types.data[index];
 }
 
-static WABT_INLINE size_t
-wabt_get_func_type_num_params(const WabtFuncType* func_type) {
+static WABT_INLINE size_t get_func_type_num_params(const FuncType* func_type) {
   return func_type->sig.param_types.size;
 }
 
-static WABT_INLINE WabtType
-wabt_get_func_type_result_type(const WabtFuncType* func_type, int index) {
+static WABT_INLINE Type get_func_type_result_type(const FuncType* func_type,
+                                                  int index) {
   return func_type->sig.result_types.data[index];
 }
 
-static WABT_INLINE size_t
-wabt_get_func_type_num_results(const WabtFuncType* func_type) {
+static WABT_INLINE size_t get_func_type_num_results(const FuncType* func_type) {
   return func_type->sig.result_types.size;
 }
 
-static WABT_INLINE const WabtLocation* wabt_get_raw_module_location(
-    const WabtRawModule* raw) {
+static WABT_INLINE const Location* get_raw_module_location(
+    const RawModule* raw) {
   switch (raw->type) {
-    case WabtRawModuleType::Binary: return &raw->binary.loc;
-    case WabtRawModuleType::Text: return &raw->text->loc;
+    case RawModuleType::Binary:
+      return &raw->binary.loc;
+    case RawModuleType::Text:
+      return &raw->text->loc;
     default:
       assert(0);
       return nullptr;
   }
 }
 
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_AST_H_ */

@@ -31,20 +31,21 @@
 
 #define PROGRAM_NAME "wasm2wast"
 
+using namespace wabt;
+
 static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
-static WabtReadBinaryOptions s_read_binary_options = {nullptr, true};
+static ReadBinaryOptions s_read_binary_options = {nullptr, true};
 static bool s_generate_names;
 
-static WabtBinaryErrorHandler s_error_handler =
-    WABT_BINARY_ERROR_HANDLER_DEFAULT;
+static BinaryErrorHandler s_error_handler = WABT_BINARY_ERROR_HANDLER_DEFAULT;
 
-static WabtFileWriter s_log_stream_writer;
-static WabtStream s_log_stream;
+static FileWriter s_log_stream_writer;
+static Stream s_log_stream;
 
-#define NOPE WabtHasArgument::No
-#define YEP WabtHasArgument::Yes
+#define NOPE HasArgument::No
+#define YEP HasArgument::Yes
 
 enum {
   FLAG_VERBOSE,
@@ -66,7 +67,7 @@ static const char s_description[] =
     "  # parse test.wasm, write test.wast, but ignore the debug names, if any\n"
     "  $ wasm2wast test.wasm --no-debug-names -o test.wast\n";
 
-static WabtOption s_options[] = {
+static Option s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
     {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
@@ -79,19 +80,19 @@ static WabtOption s_options[] = {
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
-static void on_option(struct WabtOptionParser* parser,
-                      struct WabtOption* option,
+static void on_option(struct OptionParser* parser,
+                      struct Option* option,
                       const char* argument) {
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      wabt_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
+      init_file_writer_existing(&s_log_stream_writer, stdout);
+      init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
       s_read_binary_options.log_stream = &s_log_stream;
       break;
 
     case FLAG_HELP:
-      wabt_print_help(parser, PROGRAM_NAME);
+      print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
 
@@ -109,17 +110,16 @@ static void on_option(struct WabtOptionParser* parser,
   }
 }
 
-static void on_argument(struct WabtOptionParser* parser, const char* argument) {
+static void on_argument(struct OptionParser* parser, const char* argument) {
   s_infile = argument;
 }
 
-static void on_option_error(struct WabtOptionParser* parser,
-                            const char* message) {
+static void on_option_error(struct OptionParser* parser, const char* message) {
   WABT_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  WabtOptionParser parser;
+  OptionParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
   parser.options = s_options;
@@ -127,55 +127,55 @@ static void parse_options(int argc, char** argv) {
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  wabt_parse_options(&parser, argc, argv);
+  parse_options(&parser, argc, argv);
 
   if (!s_infile) {
-    wabt_print_help(&parser, PROGRAM_NAME);
+    print_help(&parser, PROGRAM_NAME);
     WABT_FATAL("No filename given.\n");
   }
 }
 
 int main(int argc, char** argv) {
-  WabtResult result;
+  Result result;
 
-  wabt_init_stdio();
+  init_stdio();
   parse_options(argc, argv);
 
   void* data;
   size_t size;
-  result = wabt_read_file(s_infile, &data, &size);
+  result = read_file(s_infile, &data, &size);
   if (WABT_SUCCEEDED(result)) {
-    WabtModule module;
+    Module module;
     WABT_ZERO_MEMORY(module);
-    result = wabt_read_binary_ast(data, size, &s_read_binary_options,
-                                  &s_error_handler, &module);
+    result = read_binary_ast(data, size, &s_read_binary_options,
+                             &s_error_handler, &module);
     if (WABT_SUCCEEDED(result)) {
       if (s_generate_names)
-        result = wabt_generate_names(&module);
+        result = generate_names(&module);
 
       if (WABT_SUCCEEDED(result)) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied
          * (because the index is invalid, say) it should just be skipped. */
-        WabtResult dummy_result = wabt_apply_names(&module);
+        Result dummy_result = apply_names(&module);
         WABT_USE(dummy_result);
       }
 
       if (WABT_SUCCEEDED(result)) {
-        WabtFileWriter file_writer;
+        FileWriter file_writer;
         if (s_outfile) {
-          result = wabt_init_file_writer(&file_writer, s_outfile);
+          result = init_file_writer(&file_writer, s_outfile);
         } else {
-          wabt_init_file_writer_existing(&file_writer, stdout);
+          init_file_writer_existing(&file_writer, stdout);
         }
 
         if (WABT_SUCCEEDED(result)) {
-          result = wabt_write_ast(&file_writer.base, &module);
-          wabt_close_file_writer(&file_writer);
+          result = write_ast(&file_writer.base, &module);
+          close_file_writer(&file_writer);
         }
       }
-      wabt_destroy_module(&module);
+      destroy_module(&module);
     }
     wabt_free(data);
   }
-  return result != WabtResult::Ok;
+  return result != Result::Ok;
 }

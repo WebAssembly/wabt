@@ -26,9 +26,11 @@
 #include "binary-reader-linker.h"
 
 #define PROGRAM_NAME "wasm-link"
-#define NOPE WabtHasArgument::No
-#define YEP WabtHasArgument::Yes
-#define FIRST_KNOWN_SECTION static_cast<size_t>(WabtBinarySection::Type)
+#define NOPE HasArgument::No
+#define YEP HasArgument::Yes
+#define FIRST_KNOWN_SECTION static_cast<size_t>(BinarySection::Type)
+
+using namespace wabt;
 
 enum { FLAG_VERBOSE, FLAG_OUTPUT, FLAG_RELOCATABLE, FLAG_HELP, NUM_FLAGS };
 
@@ -37,7 +39,7 @@ static const char s_description[] =
     "\n"
     "  $ wasm-link m1.wasm m2.wasm -o out.wasm\n";
 
-static WabtOption s_options[] = {
+static Option s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
@@ -54,23 +56,23 @@ static int s_verbose;
 static bool s_relocatable;
 static const char* s_outfile = "a.wasm";
 static StringVector s_infiles;
-static WabtFileWriter s_log_stream_writer;
-static WabtStream s_log_stream;
+static FileWriter s_log_stream_writer;
+static Stream s_log_stream;
 
 struct Context {
-  WabtStream stream;
-  WabtLinkerInputBinaryVector inputs;
+  Stream stream;
+  LinkerInputBinaryVector inputs;
   ssize_t current_section_payload_offset;
 };
 
-static void on_option(struct WabtOptionParser* parser,
-                      struct WabtOption* option,
+static void on_option(struct OptionParser* parser,
+                      struct Option* option,
                       const char* argument) {
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      wabt_init_file_writer_existing(&s_log_stream_writer, stdout);
-      wabt_init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
+      init_file_writer_existing(&s_log_stream_writer, stdout);
+      init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
       break;
 
     case FLAG_OUTPUT:
@@ -82,23 +84,22 @@ static void on_option(struct WabtOptionParser* parser,
       break;
 
     case FLAG_HELP:
-      wabt_print_help(parser, PROGRAM_NAME);
+      print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
   }
 }
 
-static void on_argument(struct WabtOptionParser* parser, const char* argument) {
-  wabt_append_string_value(&s_infiles, &argument);
+static void on_argument(struct OptionParser* parser, const char* argument) {
+  append_string_value(&s_infiles, &argument);
 }
 
-static void on_option_error(struct WabtOptionParser* parser,
-                            const char* message) {
+static void on_option_error(struct OptionParser* parser, const char* message) {
   WABT_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  WabtOptionParser parser;
+  OptionParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
   parser.options = s_options;
@@ -106,80 +107,79 @@ static void parse_options(int argc, char** argv) {
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  wabt_parse_options(&parser, argc, argv);
+  parse_options(&parser, argc, argv);
 
   if (!s_infiles.size) {
-    wabt_print_help(&parser, PROGRAM_NAME);
+    print_help(&parser, PROGRAM_NAME);
     WABT_FATAL("No inputs files specified.\n");
   }
 }
 
-void wabt_destroy_section(WabtSection* section) {
-  wabt_destroy_reloc_vector(&section->relocations);
+void destroy_section(Section* section) {
+  destroy_reloc_vector(&section->relocations);
   switch (section->section_code) {
-    case WabtBinarySection::Data:
-      wabt_destroy_data_segment_vector(&section->data_segments);
+    case BinarySection::Data:
+      destroy_data_segment_vector(&section->data_segments);
       break;
     default:
       break;
   }
 }
 
-void wabt_destroy_binary(WabtLinkerInputBinary* binary) {
+void destroy_binary(LinkerInputBinary* binary) {
   WABT_DESTROY_VECTOR_AND_ELEMENTS(binary->sections, section);
-  wabt_destroy_function_import_vector(&binary->function_imports);
-  wabt_destroy_global_import_vector(&binary->global_imports);
-  wabt_destroy_string_slice_vector(&binary->debug_names);
-  wabt_destroy_export_vector(&binary->exports);
+  destroy_function_import_vector(&binary->function_imports);
+  destroy_global_import_vector(&binary->global_imports);
+  destroy_string_slice_vector(&binary->debug_names);
+  destroy_export_vector(&binary->exports);
   wabt_free(binary->data);
 }
 
-static uint32_t relocate_func_index(WabtLinkerInputBinary* binary,
+static uint32_t relocate_func_index(LinkerInputBinary* binary,
                                     uint32_t function_index) {
   uint32_t offset;
   if (function_index >= binary->function_imports.size) {
     /* locally declared function call */
     offset = binary->function_index_offset;
     if (s_verbose)
-      wabt_writef(&s_log_stream, "func reloc %d + %d\n", function_index,
-                  offset);
+      writef(&s_log_stream, "func reloc %d + %d\n", function_index, offset);
   } else {
     /* imported function call */
-    WabtFunctionImport* import = &binary->function_imports.data[function_index];
+    FunctionImport* import = &binary->function_imports.data[function_index];
     offset = binary->imported_function_index_offset;
     if (!import->active) {
       function_index = import->foreign_index;
       offset = import->foreign_binary->function_index_offset;
       if (s_verbose)
-        wabt_writef(&s_log_stream,
-                    "reloc for disabled import. new index = %d + %d\n",
-                    function_index, offset);
+        writef(&s_log_stream,
+               "reloc for disabled import. new index = %d + %d\n",
+               function_index, offset);
     }
   }
   return function_index + offset;
 }
 
-static void apply_relocation(WabtSection* section, WabtReloc* r) {
-  WabtLinkerInputBinary* binary = section->binary;
+static void apply_relocation(Section* section, Reloc* r) {
+  LinkerInputBinary* binary = section->binary;
   uint8_t* section_data = &binary->data[section->offset];
   size_t section_size = section->size;
 
   uint32_t cur_value = 0, new_value = 0;
-  wabt_read_u32_leb128(section_data + r->offset, section_data + section_size,
-                       &cur_value);
+  read_u32_leb128(section_data + r->offset, section_data + section_size,
+                  &cur_value);
 
   uint32_t offset = 0;
   switch (r->type) {
-    case WabtRelocType::FuncIndexLeb:
+    case RelocType::FuncIndexLeb:
       new_value = relocate_func_index(binary, cur_value);
       break;
-    case WabtRelocType::TableIndexSleb:
+    case RelocType::TableIndexSleb:
       printf("%s: table index reloc: %d offset=%d\n", binary->filename,
              cur_value, binary->table_index_offset);
       offset = binary->table_index_offset;
       new_value = cur_value + offset;
       break;
-    case WabtRelocType::GlobalIndexLeb:
+    case RelocType::GlobalIndexLeb:
       if (cur_value >= binary->global_imports.size) {
         offset = binary->global_index_offset;
       } else {
@@ -189,62 +189,60 @@ static void apply_relocation(WabtSection* section, WabtReloc* r) {
       break;
     default:
       WABT_FATAL("unhandled relocation type: %s\n",
-                 wabt_get_reloc_type_name(r->type));
+                 get_reloc_type_name(r->type));
       break;
   }
 
-  wabt_write_fixed_u32_leb128_raw(section_data + r->offset,
-                                  section_data + section_size, new_value);
+  write_fixed_u32_leb128_raw(section_data + r->offset,
+                             section_data + section_size, new_value);
 }
 
-static void apply_relocations(WabtSection* section) {
+static void apply_relocations(Section* section) {
   if (!section->relocations.size)
     return;
 
   if (s_verbose)
-    wabt_writef(&s_log_stream, "apply_relocations: %s\n",
-                wabt_get_section_name(section->section_code));
+    writef(&s_log_stream, "apply_relocations: %s\n",
+           get_section_name(section->section_code));
 
   /* Perform relocations in-place */
   size_t i;
   for (i = 0; i < section->relocations.size; i++) {
-    WabtReloc* reloc = &section->relocations.data[i];
+    Reloc* reloc = &section->relocations.data[i];
     apply_relocation(section, reloc);
   }
 }
 
-static void write_section_payload(Context* ctx, WabtSection* sec) {
+static void write_section_payload(Context* ctx, Section* sec) {
   assert(ctx->current_section_payload_offset != -1);
 
   sec->output_payload_offset =
       ctx->stream.offset - ctx->current_section_payload_offset;
 
   uint8_t* payload = &sec->binary->data[sec->payload_offset];
-  wabt_write_data(&ctx->stream, payload, sec->payload_size, "section content");
+  write_data(&ctx->stream, payload, sec->payload_size, "section content");
 }
 
-static void write_c_str(WabtStream* stream, const char* str, const char* desc) {
-  wabt_write_str(stream, str, strlen(str), WabtPrintChars::Yes, desc);
+static void write_c_str(Stream* stream, const char* str, const char* desc) {
+  write_str(stream, str, strlen(str), PrintChars::Yes, desc);
 }
 
-static void write_slice(WabtStream* stream,
-                        WabtStringSlice str,
-                        const char* desc) {
-  wabt_write_str(stream, str.start, str.length, WabtPrintChars::Yes, desc);
+static void write_slice(Stream* stream, StringSlice str, const char* desc) {
+  write_str(stream, str.start, str.length, PrintChars::Yes, desc);
 }
 
 #define WRITE_UNKNOWN_SIZE(STREAM)                        \
   uint32_t fixup_offset = (STREAM)->offset;               \
-  wabt_write_fixed_u32_leb128(STREAM, 0, "unknown size"); \
+  write_fixed_u32_leb128(STREAM, 0, "unknown size");      \
   ctx->current_section_payload_offset = (STREAM)->offset; \
   uint32_t start = (STREAM)->offset;
 
-#define FIXUP_SIZE(STREAM)                             \
-  wabt_write_fixed_u32_leb128_at(STREAM, fixup_offset, \
-                                 (STREAM)->offset - start, "fixup size");
+#define FIXUP_SIZE(STREAM)                                                  \
+  write_fixed_u32_leb128_at(STREAM, fixup_offset, (STREAM)->offset - start, \
+                            "fixup size");
 
 static void write_table_section(Context* ctx,
-                                const WabtSectionPtrVector* sections) {
+                                const SectionPtrVector* sections) {
   /* Total section size includes the element count leb128 which is
    * always 1 in the current spec */
   uint32_t table_count = 1;
@@ -253,17 +251,17 @@ static void write_table_section(Context* ctx,
 
   size_t i;
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
+    Section* sec = sections->data[i];
     elem_count += sec->binary->table_elem_count;
   }
 
-  WabtStream* stream = &ctx->stream;
+  Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
-  wabt_write_u32_leb128(stream, table_count, "table count");
-  wabt_write_type(stream, WabtType::Anyfunc);
-  wabt_write_u32_leb128(stream, flags, "table elem flags");
-  wabt_write_u32_leb128(stream, elem_count, "table initial length");
-  wabt_write_u32_leb128(stream, elem_count, "table max length");
+  write_u32_leb128(stream, table_count, "table count");
+  write_type(stream, Type::Anyfunc);
+  write_u32_leb128(stream, flags, "table elem flags");
+  write_u32_leb128(stream, elem_count, "table initial length");
+  write_u32_leb128(stream, elem_count, "table max length");
   FIXUP_SIZE(stream);
 }
 
@@ -271,23 +269,23 @@ static void write_export_section(Context* ctx) {
   size_t i, j;
   uint32_t total_exports = 0;
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
     total_exports += binary->exports.size;
   }
 
-  WabtStream* stream = &ctx->stream;
+  Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
-  wabt_write_u32_leb128(stream, total_exports, "export count");
+  write_u32_leb128(stream, total_exports, "export count");
 
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->exports.size; j++) {
-      WabtExport* export_ = &binary->exports.data[j];
+      Export* export_ = &binary->exports.data[j];
       write_slice(stream, export_->name, "export name");
-      wabt_write_u8_enum(stream, export_->kind, "export kind");
+      write_u8_enum(stream, export_->kind, "export kind");
       uint32_t index = export_->index;
       switch (export_->kind) {
-        case WabtExternalKind::Func:
+        case ExternalKind::Func:
           index = relocate_func_index(binary, index);
           break;
         default:
@@ -295,35 +293,34 @@ static void write_export_section(Context* ctx) {
                      static_cast<int>(export_->kind));
           break;
       }
-      wabt_write_u32_leb128(stream, index, "export index");
+      write_u32_leb128(stream, index, "export index");
     }
   }
   FIXUP_SIZE(stream);
 }
 
-static void write_elem_section(Context* ctx,
-                               const WabtSectionPtrVector* sections) {
-  WabtStream* stream = &ctx->stream;
+static void write_elem_section(Context* ctx, const SectionPtrVector* sections) {
+  Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
   size_t i;
   uint32_t total_elem_count = 0;
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
+    Section* sec = sections->data[i];
     total_elem_count += sec->binary->table_elem_count;
   }
 
-  wabt_write_u32_leb128(stream, 1, "segment count");
-  wabt_write_u32_leb128(stream, 0, "table index");
-  wabt_write_opcode(&ctx->stream, WabtOpcode::I32Const);
-  wabt_write_i32_leb128(&ctx->stream, 0, "elem init literal");
-  wabt_write_opcode(&ctx->stream, WabtOpcode::End);
-  wabt_write_u32_leb128(stream, total_elem_count, "num elements");
+  write_u32_leb128(stream, 1, "segment count");
+  write_u32_leb128(stream, 0, "table index");
+  write_opcode(&ctx->stream, Opcode::I32Const);
+  write_i32_leb128(&ctx->stream, 0, "elem init literal");
+  write_opcode(&ctx->stream, Opcode::End);
+  write_u32_leb128(stream, total_elem_count, "num elements");
 
   ctx->current_section_payload_offset = stream->offset;
 
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
+    Section* sec = sections->data[i];
     apply_relocations(sec);
     write_section_payload(ctx, sec);
   }
@@ -332,52 +329,52 @@ static void write_elem_section(Context* ctx,
 }
 
 static void write_memory_section(Context* ctx,
-                                 const WabtSectionPtrVector* sections) {
-  WabtStream* stream = &ctx->stream;
+                                 const SectionPtrVector* sections) {
+  Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  wabt_write_u32_leb128(stream, 1, "memory count");
+  write_u32_leb128(stream, 1, "memory count");
 
-  WabtLimits limits;
+  Limits limits;
   WABT_ZERO_MEMORY(limits);
   limits.has_max = true;
   size_t i;
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
+    Section* sec = sections->data[i];
     limits.initial += sec->memory_limits.initial;
   }
   limits.max = limits.initial;
-  wabt_write_limits(stream, &limits);
+  write_limits(stream, &limits);
 
   FIXUP_SIZE(stream);
 }
 
 static void write_function_import(Context* ctx,
-                                  WabtFunctionImport* import,
+                                  FunctionImport* import,
                                   uint32_t offset) {
   write_c_str(&ctx->stream, WABT_LINK_MODULE_NAME, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
-  wabt_write_u8_enum(&ctx->stream, WabtExternalKind::Func, "import kind");
-  wabt_write_u32_leb128(&ctx->stream, import->sig_index + offset,
-                        "import signature index");
+  write_u8_enum(&ctx->stream, ExternalKind::Func, "import kind");
+  write_u32_leb128(&ctx->stream, import->sig_index + offset,
+                   "import signature index");
 }
 
-static void write_global_import(Context* ctx, WabtGlobalImport* import) {
+static void write_global_import(Context* ctx, GlobalImport* import) {
   write_c_str(&ctx->stream, WABT_LINK_MODULE_NAME, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
-  wabt_write_u8_enum(&ctx->stream, WabtExternalKind::Global, "import kind");
-  wabt_write_type(&ctx->stream, import->type);
-  wabt_write_u8(&ctx->stream, import->mutable_, "global mutability");
+  write_u8_enum(&ctx->stream, ExternalKind::Global, "import kind");
+  write_type(&ctx->stream, import->type);
+  write_u8(&ctx->stream, import->mutable_, "global mutability");
 }
 
 static void write_import_section(Context* ctx) {
   uint32_t num_imports = 0;
   size_t i, j;
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
-    WabtFunctionImportVector* imports = &binary->function_imports;
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
+    FunctionImportVector* imports = &binary->function_imports;
     for (j = 0; j < imports->size; j++) {
-      WabtFunctionImport* import = &imports->data[j];
+      FunctionImport* import = &imports->data[j];
       if (import->active)
         num_imports++;
     }
@@ -385,18 +382,18 @@ static void write_import_section(Context* ctx) {
   }
 
   WRITE_UNKNOWN_SIZE(&ctx->stream);
-  wabt_write_u32_leb128(&ctx->stream, num_imports, "num imports");
+  write_u32_leb128(&ctx->stream, num_imports, "num imports");
 
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
-    WabtFunctionImportVector* imports = &binary->function_imports;
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
+    FunctionImportVector* imports = &binary->function_imports;
     for (j = 0; j < imports->size; j++) {
-      WabtFunctionImport* import = &imports->data[j];
+      FunctionImport* import = &imports->data[j];
       if (import->active)
         write_function_import(ctx, import, binary->type_index_offset);
     }
 
-    WabtGlobalImportVector* globals = &binary->global_imports;
+    GlobalImportVector* globals = &binary->global_imports;
     for (j = 0; j < globals->size; j++) {
       write_global_import(ctx, &globals->data[j]);
     }
@@ -406,16 +403,16 @@ static void write_import_section(Context* ctx) {
 }
 
 static void write_function_section(Context* ctx,
-                                   const WabtSectionPtrVector* sections,
+                                   const SectionPtrVector* sections,
                                    uint32_t total_count) {
-  WabtStream* stream = &ctx->stream;
+  Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  wabt_write_u32_leb128(stream, total_count, "function count");
+  write_u32_leb128(stream, total_count, "function count");
 
   size_t i;
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
+    Section* sec = sections->data[i];
     uint32_t count = sec->count;
     uint32_t input_offset = 0;
     uint32_t sig_index = 0;
@@ -423,40 +420,39 @@ static void write_function_section(Context* ctx,
     const uint8_t* end =
         &sec->binary->data[sec->payload_offset + sec->payload_size];
     while (count--) {
-      input_offset +=
-          wabt_read_u32_leb128(start + input_offset, end, &sig_index);
+      input_offset += read_u32_leb128(start + input_offset, end, &sig_index);
       sig_index += sec->binary->type_index_offset;
-      wabt_write_u32_leb128(stream, sig_index, "sig");
+      write_u32_leb128(stream, sig_index, "sig");
     }
   }
 
   FIXUP_SIZE(stream);
 }
 
-static void write_data_segment(WabtStream* stream,
-                               WabtDataSegment* segment,
+static void write_data_segment(Stream* stream,
+                               DataSegment* segment,
                                uint32_t offset) {
   assert(segment->memory_index == 0);
-  wabt_write_u32_leb128(stream, segment->memory_index, "memory index");
-  wabt_write_opcode(stream, WabtOpcode::I32Const);
-  wabt_write_u32_leb128(stream, segment->offset + offset, "offset");
-  wabt_write_opcode(stream, WabtOpcode::End);
-  wabt_write_u32_leb128(stream, segment->size, "segment size");
-  wabt_write_data(stream, segment->data, segment->size, "segment data");
+  write_u32_leb128(stream, segment->memory_index, "memory index");
+  write_opcode(stream, Opcode::I32Const);
+  write_u32_leb128(stream, segment->offset + offset, "offset");
+  write_opcode(stream, Opcode::End);
+  write_u32_leb128(stream, segment->size, "segment size");
+  write_data(stream, segment->data, segment->size, "segment data");
 }
 
 static void write_data_section(Context* ctx,
-                               WabtSectionPtrVector* sections,
+                               SectionPtrVector* sections,
                                uint32_t total_count) {
-  WabtStream* stream = &ctx->stream;
+  Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  wabt_write_u32_leb128(stream, total_count, "data segment count");
+  write_u32_leb128(stream, total_count, "data segment count");
   size_t i, j;
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
+    Section* sec = sections->data[i];
     for (j = 0; j < sec->data_segments.size; j++) {
-      WabtDataSegment* segment = &sec->data_segments.data[j];
+      DataSegment* segment = &sec->data_segments.data[j];
       write_data_segment(stream, segment,
                          sec->binary->memory_page_offset * WABT_PAGE_SIZE);
     }
@@ -469,7 +465,7 @@ static void write_names_section(Context* ctx) {
   uint32_t total_count = 0;
   size_t i, j;
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->debug_names.size; j++) {
       if (j < binary->function_imports.size) {
         if (!binary->function_imports.data[j].active)
@@ -482,21 +478,21 @@ static void write_names_section(Context* ctx) {
   if (!total_count)
     return;
 
-  WabtStream* stream = &ctx->stream;
-  wabt_write_u8_enum(stream, WabtBinarySection::Custom, "section code");
+  Stream* stream = &ctx->stream;
+  write_u8_enum(stream, BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
   write_c_str(stream, "name", "custom section name");
-  wabt_write_u32_leb128(stream, total_count, "element count");
+  write_u32_leb128(stream, total_count, "element count");
 
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->debug_names.size; j++) {
       if (j < binary->function_imports.size) {
         if (!binary->function_imports.data[j].active)
           continue;
       }
       write_slice(stream, binary->debug_names.data[j], "function name");
-      wabt_write_u32_leb128(stream, 0, "local name count");
+      write_u32_leb128(stream, 0, "local name count");
     }
   }
 
@@ -504,14 +500,14 @@ static void write_names_section(Context* ctx) {
 }
 
 static void write_reloc_section(Context* ctx,
-                                WabtBinarySection section_code,
-                                WabtSectionPtrVector* sections) {
+                                BinarySection section_code,
+                                SectionPtrVector* sections) {
   size_t i, j;
   uint32_t total_relocs = 0;
 
   /* First pass to know total reloc count */
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
+    Section* sec = sections->data[i];
     total_relocs += sec->relocations.size;
   }
 
@@ -519,24 +515,23 @@ static void write_reloc_section(Context* ctx,
     return;
 
   char section_name[128];
-  wabt_snprintf(section_name, sizeof(section_name), "%s.%s",
-                WABT_BINARY_SECTION_RELOC, wabt_get_section_name(section_code));
+  snprintf(section_name, sizeof(section_name), "%s.%s",
+           WABT_BINARY_SECTION_RELOC, get_section_name(section_code));
 
-  WabtStream* stream = &ctx->stream;
-  wabt_write_u8_enum(stream, WabtBinarySection::Custom, "section code");
+  Stream* stream = &ctx->stream;
+  write_u8_enum(stream, BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
   write_c_str(stream, section_name, "reloc section name");
-  wabt_write_u32_leb128_enum(&ctx->stream, section_code, "reloc section");
-  wabt_write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
+  write_u32_leb128_enum(&ctx->stream, section_code, "reloc section");
+  write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
 
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
-    WabtRelocVector* relocs = &sec->relocations;
+    Section* sec = sections->data[i];
+    RelocVector* relocs = &sec->relocations;
     for (j = 0; j < relocs->size; j++) {
-      wabt_write_u32_leb128_enum(&ctx->stream, relocs->data[j].type,
-                                 "reloc type");
+      write_u32_leb128_enum(&ctx->stream, relocs->data[j].type, "reloc type");
       uint32_t new_offset = relocs->data[j].offset + sec->output_payload_offset;
-      wabt_write_u32_leb128(&ctx->stream, new_offset, "reloc offset");
+      write_u32_leb128(&ctx->stream, new_offset, "reloc offset");
     }
   }
 
@@ -544,14 +539,14 @@ static void write_reloc_section(Context* ctx,
 }
 
 static bool write_combined_section(Context* ctx,
-                                   WabtBinarySection section_code,
-                                   WabtSectionPtrVector* sections) {
+                                   BinarySection section_code,
+                                   SectionPtrVector* sections) {
   if (!sections->size)
     return false;
 
-  if (section_code == WabtBinarySection::Start && sections->size > 1) {
+  if (section_code == BinarySection::Start && sections->size > 1) {
     WABT_FATAL("Don't know how to combine sections of type: %s\n",
-               wabt_get_section_name(section_code));
+               get_section_name(section_code));
   }
 
   size_t i;
@@ -560,47 +555,47 @@ static bool write_combined_section(Context* ctx,
 
   /* Sum section size and element count */
   for (i = 0; i < sections->size; i++) {
-    WabtSection* sec = sections->data[i];
+    Section* sec = sections->data[i];
     total_size += sec->payload_size;
     total_count += sec->count;
   }
 
-  wabt_write_u8_enum(&ctx->stream, section_code, "section code");
+  write_u8_enum(&ctx->stream, section_code, "section code");
   ctx->current_section_payload_offset = -1;
 
   switch (section_code) {
-    case WabtBinarySection::Import:
+    case BinarySection::Import:
       write_import_section(ctx);
       break;
-    case WabtBinarySection::Function:
+    case BinarySection::Function:
       write_function_section(ctx, sections, total_count);
       break;
-    case WabtBinarySection::Table:
+    case BinarySection::Table:
       write_table_section(ctx, sections);
       break;
-    case WabtBinarySection::Export:
+    case BinarySection::Export:
       write_export_section(ctx);
       break;
-    case WabtBinarySection::Elem:
+    case BinarySection::Elem:
       write_elem_section(ctx, sections);
       break;
-    case WabtBinarySection::Memory:
+    case BinarySection::Memory:
       write_memory_section(ctx, sections);
       break;
-    case WabtBinarySection::Data:
+    case BinarySection::Data:
       write_data_section(ctx, sections, total_count);
       break;
     default: {
       /* Total section size includes the element count leb128. */
-      total_size += wabt_u32_leb128_length(total_count);
+      total_size += u32_leb128_length(total_count);
 
       /* Write section to stream */
-      WabtStream* stream = &ctx->stream;
-      wabt_write_u32_leb128(stream, total_size, "section size");
-      wabt_write_u32_leb128(stream, total_count, "element count");
+      Stream* stream = &ctx->stream;
+      write_u32_leb128(stream, total_size, "section size");
+      write_u32_leb128(stream, total_count, "element count");
       ctx->current_section_payload_offset = ctx->stream.offset;
       for (i = 0; i < sections->size; i++) {
-        WabtSection* sec = sections->data[i];
+        Section* sec = sections->data[i];
         apply_relocations(sec);
         write_section_payload(ctx, sec);
       }
@@ -611,30 +606,30 @@ static bool write_combined_section(Context* ctx,
 }
 
 struct ExportInfo {
-  WabtExport* export_;
-  WabtLinkerInputBinary* binary;
+  Export* export_;
+  LinkerInputBinary* binary;
 };
 WABT_DEFINE_VECTOR(export_info, ExportInfo);
 
 static void resolve_symbols(Context* ctx) {
   /* Create hashmap of all exported symbols from all inputs */
-  WabtBindingHash export_map;
+  BindingHash export_map;
   WABT_ZERO_MEMORY(export_map);
   ExportInfoVector export_list;
   WABT_ZERO_MEMORY(export_list);
 
   size_t i, j;
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->exports.size; j++) {
-      WabtExport* export_ = &binary->exports.data[j];
-      ExportInfo* info = wabt_append_export_info(&export_list);
+      Export* export_ = &binary->exports.data[j];
+      ExportInfo* info = append_export_info(&export_list);
       info->export_ = export_;
       info->binary = binary;
 
       /* TODO(sbc): Handle duplicate names */
-      WabtStringSlice name = wabt_dup_string_slice(export_->name);
-      WabtBinding* binding = wabt_insert_binding(&export_map, &name);
+      StringSlice name = dup_string_slice(export_->name);
+      Binding* binding = insert_binding(&export_map, &name);
       binding->index = export_list.size - 1;
     }
   }
@@ -644,11 +639,10 @@ static void resolve_symbols(Context* ctx) {
    * ones.
    */
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->function_imports.size; j++) {
-      WabtFunctionImport* import = &binary->function_imports.data[j];
-      int export_index =
-          wabt_find_binding_index_by_name(&export_map, &import->name);
+      FunctionImport* import = &binary->function_imports.data[j];
+      int export_index = find_binding_index_by_name(&export_map, &import->name);
       if (export_index == -1) {
         if (!s_relocatable)
           WABT_FATAL("undefined symbol: " PRIstringslice "\n",
@@ -667,8 +661,8 @@ static void resolve_symbols(Context* ctx) {
     }
   }
 
-  wabt_destroy_export_info_vector(&export_list);
-  wabt_destroy_binding_hash(&export_map);
+  destroy_export_info_vector(&export_list);
+  destroy_binding_hash(&export_map);
 }
 
 static void calculate_reloc_offsets(Context* ctx) {
@@ -681,7 +675,7 @@ static void calculate_reloc_offsets(Context* ctx) {
   uint32_t total_function_imports = 0;
   uint32_t total_global_imports = 0;
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
     /* The imported_function_index_offset is the sum of all the function
      * imports from objects that precede this one.  i.e. the current running
      * total */
@@ -694,23 +688,23 @@ static void calculate_reloc_offsets(Context* ctx) {
   }
 
   for (i = 0; i < ctx->inputs.size; i++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
+    LinkerInputBinary* binary = &ctx->inputs.data[i];
     binary->table_index_offset = table_elem_count;
     table_elem_count += binary->table_elem_count;
     for (j = 0; j < binary->sections.size; j++) {
-      WabtSection* sec = &binary->sections.data[j];
+      Section* sec = &binary->sections.data[j];
       switch (sec->section_code) {
-        case WabtBinarySection::Type:
+        case BinarySection::Type:
           binary->type_index_offset = type_count;
           type_count += sec->count;
           break;
-        case WabtBinarySection::Global:
+        case BinarySection::Global:
           binary->global_index_offset = total_global_imports -
                                         sec->binary->global_imports.size +
                                         global_count;
           global_count += sec->count;
           break;
-        case WabtBinarySection::Function:
+        case BinarySection::Function:
           binary->function_index_offset = total_function_imports -
                                           sec->binary->function_imports.size +
                                           function_count;
@@ -725,39 +719,37 @@ static void calculate_reloc_offsets(Context* ctx) {
 
 static void write_binary(Context* ctx) {
   /* Find all the sections of each type */
-  WabtSectionPtrVector sections[kWabtBinarySectionCount];
+  SectionPtrVector sections[kBinarySectionCount];
   WABT_ZERO_MEMORY(sections);
 
   size_t i, j;
   for (j = 0; j < ctx->inputs.size; j++) {
-    WabtLinkerInputBinary* binary = &ctx->inputs.data[j];
+    LinkerInputBinary* binary = &ctx->inputs.data[j];
     for (i = 0; i < binary->sections.size; i++) {
-      WabtSection* s = &binary->sections.data[i];
-      WabtSectionPtrVector* sec_list =
-          &sections[static_cast<int>(s->section_code)];
-      wabt_append_section_ptr_value(sec_list, &s);
+      Section* s = &binary->sections.data[i];
+      SectionPtrVector* sec_list = &sections[static_cast<int>(s->section_code)];
+      append_section_ptr_value(sec_list, &s);
     }
   }
 
   /* Write the final binary */
-  wabt_write_u32(&ctx->stream, WABT_BINARY_MAGIC, "WABT_BINARY_MAGIC");
-  wabt_write_u32(&ctx->stream, WABT_BINARY_VERSION, "WABT_BINARY_VERSION");
+  write_u32(&ctx->stream, WABT_BINARY_MAGIC, "WABT_BINARY_MAGIC");
+  write_u32(&ctx->stream, WABT_BINARY_VERSION, "WABT_BINARY_VERSION");
 
   /* Write known sections first */
-  for (i = FIRST_KNOWN_SECTION; i < kWabtBinarySectionCount; i++) {
-    write_combined_section(ctx, static_cast<WabtBinarySection>(i),
-                           &sections[i]);
+  for (i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
+    write_combined_section(ctx, static_cast<BinarySection>(i), &sections[i]);
   }
 
   write_names_section(ctx);
 
   /* Generate a new set of reloction sections */
-  for (i = FIRST_KNOWN_SECTION; i < kWabtBinarySectionCount; i++) {
-    write_reloc_section(ctx, static_cast<WabtBinarySection>(i), &sections[i]);
+  for (i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
+    write_reloc_section(ctx, static_cast<BinarySection>(i), &sections[i]);
   }
 
-  for (i = 0; i < kWabtBinarySectionCount; i++) {
-    wabt_destroy_section_ptr_vector(&sections[i]);
+  for (i = 0; i < kBinarySectionCount; i++) {
+    destroy_section_ptr_vector(&sections[i]);
   }
 }
 
@@ -765,85 +757,85 @@ static void dump_reloc_offsets(Context* ctx) {
   if (s_verbose) {
     uint32_t i;
     for (i = 0; i < ctx->inputs.size; i++) {
-      WabtLinkerInputBinary* binary = &ctx->inputs.data[i];
-      wabt_writef(&s_log_stream, "Relocation info for: %s\n", binary->filename);
-      wabt_writef(&s_log_stream, " - type index offset       : %d\n",
-                  binary->type_index_offset);
-      wabt_writef(&s_log_stream, " - mem page offset         : %d\n",
-                  binary->memory_page_offset);
-      wabt_writef(&s_log_stream, " - function index offset   : %d\n",
-                  binary->function_index_offset);
-      wabt_writef(&s_log_stream, " - global index offset     : %d\n",
-                  binary->global_index_offset);
-      wabt_writef(&s_log_stream, " - imported function offset: %d\n",
-                  binary->imported_function_index_offset);
-      wabt_writef(&s_log_stream, " - imported global offset  : %d\n",
-                  binary->imported_global_index_offset);
+      LinkerInputBinary* binary = &ctx->inputs.data[i];
+      writef(&s_log_stream, "Relocation info for: %s\n", binary->filename);
+      writef(&s_log_stream, " - type index offset       : %d\n",
+             binary->type_index_offset);
+      writef(&s_log_stream, " - mem page offset         : %d\n",
+             binary->memory_page_offset);
+      writef(&s_log_stream, " - function index offset   : %d\n",
+             binary->function_index_offset);
+      writef(&s_log_stream, " - global index offset     : %d\n",
+             binary->global_index_offset);
+      writef(&s_log_stream, " - imported function offset: %d\n",
+             binary->imported_function_index_offset);
+      writef(&s_log_stream, " - imported global offset  : %d\n",
+             binary->imported_global_index_offset);
     }
   }
 }
 
-static WabtResult perform_link(Context* ctx) {
-  WabtMemoryWriter writer;
+static Result perform_link(Context* ctx) {
+  MemoryWriter writer;
   WABT_ZERO_MEMORY(writer);
-  if (WABT_FAILED(wabt_init_mem_writer(&writer)))
+  if (WABT_FAILED(init_mem_writer(&writer)))
     WABT_FATAL("unable to open memory writer for writing\n");
 
-  WabtStream* log_stream = nullptr;
+  Stream* log_stream = nullptr;
   if (s_verbose)
     log_stream = &s_log_stream;
 
   if (s_verbose)
-    wabt_writef(&s_log_stream, "writing file: %s\n", s_outfile);
+    writef(&s_log_stream, "writing file: %s\n", s_outfile);
 
   calculate_reloc_offsets(ctx);
   resolve_symbols(ctx);
   calculate_reloc_offsets(ctx);
   dump_reloc_offsets(ctx);
-  wabt_init_stream(&ctx->stream, &writer.base, log_stream);
+  init_stream(&ctx->stream, &writer.base, log_stream);
   write_binary(ctx);
 
-  if (WABT_FAILED(wabt_write_output_buffer_to_file(&writer.buf, s_outfile)))
+  if (WABT_FAILED(write_output_buffer_to_file(&writer.buf, s_outfile)))
     WABT_FATAL("error writing linked output to file\n");
 
-  wabt_close_mem_writer(&writer);
-  return WabtResult::Ok;
+  close_mem_writer(&writer);
+  return Result::Ok;
 }
 
 int main(int argc, char** argv) {
-  wabt_init_stdio();
+  init_stdio();
 
   Context context;
   WABT_ZERO_MEMORY(context);
 
   parse_options(argc, argv);
 
-  WabtResult result = WabtResult::Ok;
+  Result result = Result::Ok;
   size_t i;
   for (i = 0; i < s_infiles.size; i++) {
     const char* input_filename = s_infiles.data[i];
     if (s_verbose)
-      wabt_writef(&s_log_stream, "reading file: %s\n", input_filename);
+      writef(&s_log_stream, "reading file: %s\n", input_filename);
     void* data;
     size_t size;
-    result = wabt_read_file(input_filename, &data, &size);
+    result = read_file(input_filename, &data, &size);
     if (WABT_FAILED(result))
-      return result != WabtResult::Ok;
-    WabtLinkerInputBinary* b = wabt_append_binary(&context.inputs);
+      return result != Result::Ok;
+    LinkerInputBinary* b = append_binary(&context.inputs);
     b->data = static_cast<uint8_t*>(data);
     b->size = size;
     b->filename = input_filename;
-    result = wabt_read_binary_linker(b);
+    result = read_binary_linker(b);
     if (WABT_FAILED(result))
       WABT_FATAL("error parsing file: %s\n", input_filename);
   }
 
   result = perform_link(&context);
   if (WABT_FAILED(result))
-    return result != WabtResult::Ok;
+    return result != Result::Ok;
 
   /* Cleanup */
   WABT_DESTROY_VECTOR_AND_ELEMENTS(context.inputs, binary);
-  wabt_destroy_string_vector(&s_infiles);
-  return result != WabtResult::Ok;
+  destroy_string_vector(&s_infiles);
+  return result != Result::Ok;
 }

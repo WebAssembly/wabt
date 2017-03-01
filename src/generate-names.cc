@@ -24,147 +24,144 @@
 #define CHECK_RESULT(expr) \
   do {                     \
     if (WABT_FAILED(expr)) \
-      return WabtResult::Error;   \
+      return Result::Error;   \
   } while (0)
 
+namespace wabt {
+
 struct Context {
-  WabtModule* module;
-  WabtExprVisitor visitor;
-  WabtStringSliceVector index_to_name;
+  Module* module;
+  ExprVisitor visitor;
+  StringSliceVector index_to_name;
   uint32_t label_count;
 };
 
-static bool has_name(WabtStringSlice* str) {
+static bool has_name(StringSlice* str) {
   return str->length > 0;
 }
 
 static void generate_name(const char* prefix,
                           uint32_t index,
-                          WabtStringSlice* str) {
+                          StringSlice* str) {
   size_t prefix_len = strlen(prefix);
   size_t buffer_len = prefix_len + 20; /* add space for the number */
   char* buffer = static_cast<char*>(alloca(buffer_len));
-  int actual_len = wabt_snprintf(buffer, buffer_len, "%s%u", prefix, index);
+  int actual_len = snprintf(buffer, buffer_len, "%s%u", prefix, index);
 
-  WabtStringSlice buf;
+  StringSlice buf;
   buf.length = actual_len;
   buf.start = buffer;
-  *str = wabt_dup_string_slice(buf);
+  *str = dup_string_slice(buf);
 }
 
 static void maybe_generate_name(const char* prefix,
                                 uint32_t index,
-                                WabtStringSlice* str) {
+                                StringSlice* str) {
   if (!has_name(str))
     generate_name(prefix, index, str);
 }
 
-static void generate_and_bind_name(WabtBindingHash* bindings,
+static void generate_and_bind_name(BindingHash* bindings,
                                    const char* prefix,
                                    uint32_t index,
-                                   WabtStringSlice* str) {
+                                   StringSlice* str) {
   generate_name(prefix, index, str);
-  WabtBinding* binding;
-  binding = wabt_insert_binding(bindings, str);
+  Binding* binding;
+  binding = insert_binding(bindings, str);
   binding->index = index;
 }
 
-static void maybe_generate_and_bind_name(WabtBindingHash* bindings,
+static void maybe_generate_and_bind_name(BindingHash* bindings,
                                          const char* prefix,
                                          uint32_t index,
-                                         WabtStringSlice* str) {
+                                         StringSlice* str) {
   if (!has_name(str))
     generate_and_bind_name(bindings, prefix, index, str);
 }
 
-static void generate_and_bind_local_names(WabtStringSliceVector* index_to_name,
-                                          WabtBindingHash* bindings,
+static void generate_and_bind_local_names(StringSliceVector* index_to_name,
+                                          BindingHash* bindings,
                                           const char* prefix) {
   size_t i;
   for (i = 0; i < index_to_name->size; ++i) {
-    WabtStringSlice* old_name = &index_to_name->data[i];
+    StringSlice* old_name = &index_to_name->data[i];
     if (has_name(old_name))
       continue;
 
-    WabtStringSlice new_name;
+    StringSlice new_name;
     generate_and_bind_name(bindings, prefix, i, &new_name);
     index_to_name->data[i] = new_name;
   }
 }
 
-static WabtResult begin_block_expr(WabtExpr* expr, void* user_data) {
+static Result begin_block_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$B", ctx->label_count++, &expr->block.label);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
-static WabtResult begin_loop_expr(WabtExpr* expr, void* user_data) {
+static Result begin_loop_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$L", ctx->label_count++, &expr->loop.label);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
-static WabtResult begin_if_expr(WabtExpr* expr, void* user_data) {
+static Result begin_if_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$L", ctx->label_count++, &expr->if_.true_.label);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
-
-static WabtResult visit_func(Context* ctx,
-                             uint32_t func_index,
-                             WabtFunc* func) {
+static Result visit_func(Context* ctx, uint32_t func_index, Func* func) {
   maybe_generate_and_bind_name(&ctx->module->func_bindings, "$f", func_index,
                                &func->name);
 
-  wabt_make_type_binding_reverse_mapping(
-      &func->decl.sig.param_types, &func->param_bindings, &ctx->index_to_name);
+  make_type_binding_reverse_mapping(&func->decl.sig.param_types,
+                                    &func->param_bindings, &ctx->index_to_name);
   generate_and_bind_local_names(&ctx->index_to_name, &func->param_bindings,
                                 "$p");
 
-  wabt_make_type_binding_reverse_mapping(
-      &func->local_types, &func->local_bindings, &ctx->index_to_name);
+  make_type_binding_reverse_mapping(&func->local_types, &func->local_bindings,
+                                    &ctx->index_to_name);
   generate_and_bind_local_names(&ctx->index_to_name, &func->local_bindings,
                                 "$l");
 
   ctx->label_count = 0;
-  CHECK_RESULT(wabt_visit_func(func, &ctx->visitor));
-  return WabtResult::Ok;
+  CHECK_RESULT(visit_func(func, &ctx->visitor));
+  return Result::Ok;
 }
 
-static WabtResult visit_global(Context* ctx,
-                               uint32_t global_index,
-                               WabtGlobal* global) {
+static Result visit_global(Context* ctx,
+                           uint32_t global_index,
+                           Global* global) {
   maybe_generate_and_bind_name(&ctx->module->global_bindings, "$g",
                                global_index, &global->name);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
-static WabtResult visit_func_type(Context* ctx,
-                                  uint32_t func_type_index,
-                                  WabtFuncType* func_type) {
+static Result visit_func_type(Context* ctx,
+                              uint32_t func_type_index,
+                              FuncType* func_type) {
   maybe_generate_and_bind_name(&ctx->module->func_type_bindings, "$t",
                                func_type_index, &func_type->name);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
-static WabtResult visit_table(Context* ctx,
-                              uint32_t table_index,
-                              WabtTable* table) {
+static Result visit_table(Context* ctx, uint32_t table_index, Table* table) {
   maybe_generate_and_bind_name(&ctx->module->table_bindings, "$T", table_index,
                                &table->name);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
-static WabtResult visit_memory(Context* ctx,
-                               uint32_t memory_index,
-                               WabtMemory* memory) {
+static Result visit_memory(Context* ctx,
+                           uint32_t memory_index,
+                           Memory* memory) {
   maybe_generate_and_bind_name(&ctx->module->memory_bindings, "$M",
                                memory_index, &memory->name);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
-static WabtResult visit_module(Context* ctx, WabtModule* module) {
+static Result visit_module(Context* ctx, Module* module) {
   size_t i;
   for (i = 0; i < module->globals.size; ++i)
     CHECK_RESULT(visit_global(ctx, i, module->globals.data[i]));
@@ -176,10 +173,10 @@ static WabtResult visit_module(Context* ctx, WabtModule* module) {
     CHECK_RESULT(visit_table(ctx, i, module->tables.data[i]));
   for (i = 0; i < module->memories.size; ++i)
     CHECK_RESULT(visit_memory(ctx, i, module->memories.data[i]));
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
-WabtResult wabt_generate_names(WabtModule* module) {
+Result generate_names(Module* module) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
   ctx.visitor.user_data = &ctx;
@@ -187,7 +184,9 @@ WabtResult wabt_generate_names(WabtModule* module) {
   ctx.visitor.begin_loop_expr = begin_loop_expr;
   ctx.visitor.begin_if_expr = begin_if_expr;
   ctx.module = module;
-  WabtResult result = visit_module(&ctx, module);
-  wabt_destroy_string_slice_vector(&ctx.index_to_name);
+  Result result = visit_module(&ctx, module);
+  destroy_string_slice_vector(&ctx.index_to_name);
   return result;
 }
+
+}  // namespace wabt

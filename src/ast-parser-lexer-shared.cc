@@ -20,31 +20,33 @@
 #include <stdio.h>
 #include <string.h>
 
-void wabt_ast_parser_error(WabtLocation* loc,
-                           WabtAstLexer* lexer,
-                           WabtAstParser* parser,
-                           const char* format,
-                           ...) {
+namespace wabt {
+
+void ast_parser_error(Location* loc,
+                      AstLexer* lexer,
+                      AstParser* parser,
+                      const char* format,
+                      ...) {
   parser->errors++;
   va_list args;
   va_start(args, format);
-  wabt_ast_format_error(parser->error_handler, loc, lexer, format, args);
+  ast_format_error(parser->error_handler, loc, lexer, format, args);
   va_end(args);
 }
 
-void wabt_ast_format_error(WabtSourceErrorHandler* error_handler,
-                           const struct WabtLocation* loc,
-                           WabtAstLexer* lexer,
-                           const char* format,
-                           va_list args) {
+void ast_format_error(SourceErrorHandler* error_handler,
+                      const struct Location* loc,
+                      AstLexer* lexer,
+                      const char* format,
+                      va_list args) {
   va_list args_copy;
   va_copy(args_copy, args);
   char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
   char* buffer = fixed_buf;
-  size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
+  size_t len = vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
   if (len + 1 > sizeof(fixed_buf)) {
     buffer = static_cast<char*>(alloca(len + 1));
-    len = wabt_vsnprintf(buffer, len + 1, format, args_copy);
+    len = vsnprintf(buffer, len + 1, format, args_copy);
   }
 
   char* source_line = nullptr;
@@ -53,7 +55,7 @@ void wabt_ast_format_error(WabtSourceErrorHandler* error_handler,
   size_t source_line_max_length = error_handler->source_line_max_length;
   if (loc && lexer) {
     source_line = static_cast<char*>(alloca(source_line_max_length + 1));
-    WabtResult result = wabt_ast_lexer_get_source_line(
+    Result result = ast_lexer_get_source_line(
         lexer, loc, source_line_max_length, source_line, &source_line_length,
         &source_line_column_offset);
     if (WABT_FAILED(result)) {
@@ -71,46 +73,46 @@ void wabt_ast_format_error(WabtSourceErrorHandler* error_handler,
   va_end(args_copy);
 }
 
-void wabt_destroy_optional_export(WabtOptionalExport* export_) {
+void destroy_optional_export(OptionalExport* export_) {
   if (export_->has_export)
-    wabt_destroy_export(&export_->export_);
+    destroy_export(&export_->export_);
 }
 
-void wabt_destroy_exported_func(WabtExportedFunc* exported_func) {
-  wabt_destroy_optional_export(&exported_func->export_);
-  wabt_destroy_func(exported_func->func);
+void destroy_exported_func(ExportedFunc* exported_func) {
+  destroy_optional_export(&exported_func->export_);
+  destroy_func(exported_func->func);
   wabt_free(exported_func->func);
 }
 
-void wabt_destroy_text_list(WabtTextList* text_list) {
-  WabtTextListNode* node = text_list->first;
+void destroy_text_list(TextList* text_list) {
+  TextListNode* node = text_list->first;
   while (node) {
-    WabtTextListNode* next = node->next;
-    wabt_destroy_string_slice(&node->text);
+    TextListNode* next = node->next;
+    destroy_string_slice(&node->text);
     wabt_free(node);
     node = next;
   }
 }
 
-void wabt_destroy_func_fields(WabtFuncField* func_field) {
+void destroy_func_fields(FuncField* func_field) {
   /* destroy the entire linked-list */
   while (func_field) {
-    WabtFuncField* next_func_field = func_field->next;
+    FuncField* next_func_field = func_field->next;
 
     switch (func_field->type) {
-      case WabtFuncFieldType::Exprs:
-        wabt_destroy_expr_list(func_field->first_expr);
+      case FuncFieldType::Exprs:
+        destroy_expr_list(func_field->first_expr);
         break;
 
-      case WabtFuncFieldType::ParamTypes:
-      case WabtFuncFieldType::LocalTypes:
-      case WabtFuncFieldType::ResultTypes:
-        wabt_destroy_type_vector(&func_field->types);
+      case FuncFieldType::ParamTypes:
+      case FuncFieldType::LocalTypes:
+      case FuncFieldType::ResultTypes:
+        destroy_type_vector(&func_field->types);
         break;
 
-      case WabtFuncFieldType::BoundParam:
-      case WabtFuncFieldType::BoundLocal:
-        wabt_destroy_string_slice(&func_field->bound_type.name);
+      case FuncFieldType::BoundParam:
+      case FuncFieldType::BoundLocal:
+        destroy_string_slice(&func_field->bound_type.name);
         break;
     }
 
@@ -119,16 +121,18 @@ void wabt_destroy_func_fields(WabtFuncField* func_field) {
   }
 }
 
-void wabt_destroy_exported_memory(WabtExportedMemory* memory) {
-  wabt_destroy_memory(&memory->memory);
-  wabt_destroy_optional_export(&memory->export_);
+void destroy_exported_memory(ExportedMemory* memory) {
+  destroy_memory(&memory->memory);
+  destroy_optional_export(&memory->export_);
   if (memory->has_data_segment)
-    wabt_destroy_data_segment(&memory->data_segment);
+    destroy_data_segment(&memory->data_segment);
 }
 
-void wabt_destroy_exported_table(WabtExportedTable* table) {
-  wabt_destroy_table(&table->table);
-  wabt_destroy_optional_export(&table->export_);
+void destroy_exported_table(ExportedTable* table) {
+  destroy_table(&table->table);
+  destroy_optional_export(&table->export_);
   if (table->has_elem_segment)
-    wabt_destroy_elem_segment(&table->elem_segment);
+    destroy_elem_segment(&table->elem_segment);
 }
+
+}  // namespace wabt

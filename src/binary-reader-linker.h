@@ -20,12 +20,12 @@
 #include "common.h"
 #include "stream.h"
 
-struct WabtLinkerInputBinary;
+namespace wabt {
 
-WABT_EXTERN_C_BEGIN
+struct LinkerInputBinary;
 
-WabtResult wabt_read_binary_linker(struct WabtLinkerInputBinary* input_info);
+Result read_binary_linker(struct LinkerInputBinary* input_info);
 
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_BINARY_READER_LINKER_H_ */

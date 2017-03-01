@@ -23,56 +23,58 @@
 
 #define WABT_LINK_MODULE_NAME "__extern"
 
-struct WabtLinkerInputBinary;
+namespace wabt {
 
-struct WabtFunctionImport {
-  WabtStringSlice name;
+struct LinkerInputBinary;
+
+struct FunctionImport {
+  StringSlice name;
   uint32_t sig_index;
   bool active; /* Is this import present in the linked binary */
-  struct WabtLinkerInputBinary* foreign_binary;
+  struct LinkerInputBinary* foreign_binary;
   uint32_t foreign_index;
 };
-WABT_DEFINE_VECTOR(function_import, WabtFunctionImport);
+WABT_DEFINE_VECTOR(function_import, FunctionImport);
 
-struct WabtGlobalImport {
-  WabtStringSlice name;
-  WabtType type;
+struct GlobalImport {
+  StringSlice name;
+  Type type;
   bool mutable_;
 };
-WABT_DEFINE_VECTOR(global_import, WabtGlobalImport);
+WABT_DEFINE_VECTOR(global_import, GlobalImport);
 
-struct WabtDataSegment {
+struct DataSegment {
   uint32_t memory_index;
   uint32_t offset;
   const uint8_t* data;
   size_t size;
 };
-WABT_DEFINE_VECTOR(data_segment, WabtDataSegment);
+WABT_DEFINE_VECTOR(data_segment, DataSegment);
 
-struct WabtReloc {
-  WabtRelocType type;
+struct Reloc {
+  RelocType type;
   size_t offset;
 };
-WABT_DEFINE_VECTOR(reloc, WabtReloc);
+WABT_DEFINE_VECTOR(reloc, Reloc);
 
-struct WabtExport {
-  WabtExternalKind kind;
-  WabtStringSlice name;
+struct Export {
+  ExternalKind kind;
+  StringSlice name;
   uint32_t index;
 };
-WABT_DEFINE_VECTOR(export, WabtExport);
+WABT_DEFINE_VECTOR(export, Export);
 
-struct WabtSectionDataCustom {
+struct SectionDataCustom {
   /* Reference to string data stored in the containing InputBinary */
-  WabtStringSlice name;
+  StringSlice name;
 };
 
-struct WabtSection {
+struct Section {
   /* The binary to which this section belongs */
-  struct WabtLinkerInputBinary* binary;
-  WabtRelocVector relocations; /* The relocations for this section */
+  struct LinkerInputBinary* binary;
+  RelocVector relocations; /* The relocations for this section */
 
-  WabtBinarySection section_code;
+  BinarySection section_code;
   size_t size;
   size_t offset;
 
@@ -84,35 +86,35 @@ struct WabtSection {
 
   union {
     /* CUSTOM section data */
-    WabtSectionDataCustom data_custom;
+    SectionDataCustom data_custom;
     /* DATA section data */
-    WabtDataSegmentVector data_segments;
+    DataSegmentVector data_segments;
     /* MEMORY section data */
-    WabtLimits memory_limits;
+    Limits memory_limits;
   };
 
   /* The offset at which this section appears within the combined output
    * section. */
   size_t output_payload_offset;
 };
-WABT_DEFINE_VECTOR(section, WabtSection);
+WABT_DEFINE_VECTOR(section, Section);
 
-typedef WabtSection* WabtSectionPtr;
-WABT_DEFINE_VECTOR(section_ptr, WabtSectionPtr);
+typedef Section* SectionPtr;
+WABT_DEFINE_VECTOR(section_ptr, SectionPtr);
 
-WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
+WABT_DEFINE_VECTOR(string_slice, StringSlice);
 
-struct WabtLinkerInputBinary {
+struct LinkerInputBinary {
   const char* filename;
   uint8_t* data;
   size_t size;
-  WabtSectionVector sections;
+  SectionVector sections;
 
-  WabtExportVector exports;
+  ExportVector exports;
 
-  WabtFunctionImportVector function_imports;
+  FunctionImportVector function_imports;
   uint32_t active_function_imports;
-  WabtGlobalImportVector global_imports;
+  GlobalImportVector global_imports;
   uint32_t active_global_imports;
 
   uint32_t type_index_offset;
@@ -126,8 +128,10 @@ struct WabtLinkerInputBinary {
 
   uint32_t table_elem_count;
 
-  WabtStringSliceVector debug_names;
+  StringSliceVector debug_names;
 };
-WABT_DEFINE_VECTOR(binary, WabtLinkerInputBinary);
+WABT_DEFINE_VECTOR(binary, LinkerInputBinary);
+
+}  // namespace wabt
 
 #endif /* WABT_LINK_H_ */

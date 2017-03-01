@@ -130,7 +130,7 @@ extern int wabt_ast_parser_debug;
 
 /* Value type.  */
 #if ! defined WABT_AST_PARSER_STYPE && ! defined WABT_AST_PARSER_STYPE_IS_DECLARED
-typedef WabtToken WABT_AST_PARSER_STYPE;
+typedef ::wabt::Token WABT_AST_PARSER_STYPE;
 # define WABT_AST_PARSER_STYPE_IS_TRIVIAL 1
 # define WABT_AST_PARSER_STYPE_IS_DECLARED 1
 #endif
@@ -151,6 +151,6 @@ struct WABT_AST_PARSER_LTYPE
 
 
 
-int wabt_ast_parser_parse (WabtAstLexer* lexer, WabtAstParser* parser);
+int wabt_ast_parser_parse (::wabt::AstLexer* lexer, ::wabt::AstParser* parser);
 
 #endif /* !YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_HH_INCLUDED  */

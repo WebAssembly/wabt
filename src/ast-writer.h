@@ -19,10 +19,13 @@
 
 #include "common.h"
 
-struct WabtModule;
-struct WabtWriter;
+namespace wabt {
 
-WABT_EXTERN_C WabtResult wabt_write_ast(struct WabtWriter*,
-                                        const struct WabtModule*);
+struct Module;
+struct Writer;
+
+Result write_ast(struct Writer*, const struct Module*);
+
+}  // namespace wabt
 
 #endif /* WABT_AST_WRITER_H_ */

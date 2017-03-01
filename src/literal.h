@@ -21,14 +21,16 @@
 
 #include "common.h"
 
-/* These functions all return WabtResult::Ok on success and WabtResult::Error on failure.
+namespace wabt {
+
+/* These functions all return Result::Ok on success and Result::Error on failure.
  *
  * NOTE: the functions are written for use with the re2c lexer, assuming that
  * the literal has already matched the regular expressions defined there. As a
  * result, the only validation that is done is for overflow, not for otherwise
  * bogus input. */
 
-enum class WabtParseIntType {
+enum class ParseIntType {
   UnsignedOnly = 0,
   SignedAndUnsigned = 1,
 };
@@ -37,29 +39,28 @@ enum class WabtParseIntType {
 #define WABT_MAX_FLOAT_HEX 20
 #define WABT_MAX_DOUBLE_HEX 40
 
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_parse_hexdigit(char c, uint32_t* out);
-WabtResult wabt_parse_int32(const char* s,
-                            const char* end,
-                            uint32_t* out,
-                            WabtParseIntType parse_type);
-WabtResult wabt_parse_int64(const char* s,
-                            const char* end,
-                            uint64_t* out,
-                            WabtParseIntType parse_type);
-WabtResult wabt_parse_uint64(const char* s, const char* end, uint64_t* out);
-WabtResult wabt_parse_float(WabtLiteralType literal_type,
-                            const char* s,
-                            const char* end,
-                            uint32_t* out_bits);
-WabtResult wabt_parse_double(WabtLiteralType literal_type,
-                             const char* s,
-                             const char* end,
-                             uint64_t* out_bits);
+Result parse_hexdigit(char c, uint32_t* out);
+Result parse_int32(const char* s,
+                   const char* end,
+                   uint32_t* out,
+                   ParseIntType parse_type);
+Result parse_int64(const char* s,
+                   const char* end,
+                   uint64_t* out,
+                   ParseIntType parse_type);
+Result parse_uint64(const char* s, const char* end, uint64_t* out);
+Result parse_float(LiteralType literal_type,
+                   const char* s,
+                   const char* end,
+                   uint32_t* out_bits);
+Result parse_double(LiteralType literal_type,
+                    const char* s,
+                    const char* end,
+                    uint64_t* out_bits);
 
-void wabt_write_float_hex(char* buffer, size_t size, uint32_t bits);
-void wabt_write_double_hex(char* buffer, size_t size, uint64_t bits);
+void write_float_hex(char* buffer, size_t size, uint32_t bits);
+void write_double_hex(char* buffer, size_t size, uint64_t bits);
 
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_LITERAL_H_ */

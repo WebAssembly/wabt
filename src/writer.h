@@ -21,57 +21,55 @@
 
 #include "common.h"
 
-struct WabtWriter {
+namespace wabt {
+
+struct Writer {
   void* user_data;
-  WabtResult (*write_data)(size_t offset,
-                           const void* data,
-                           size_t size,
-                           void* user_data);
-  WabtResult (*move_data)(size_t dst_offset,
-                          size_t src_offset,
-                          size_t size,
-                          void* user_data);
+  Result (*write_data)(size_t offset,
+                       const void* data,
+                       size_t size,
+                       void* user_data);
+  Result (*move_data)(size_t dst_offset,
+                      size_t src_offset,
+                      size_t size,
+                      void* user_data);
 };
 
-struct WabtOutputBuffer {
+struct OutputBuffer {
   void* start;
   size_t size;
   size_t capacity;
 };
 
-struct WabtMemoryWriter {
-  WabtWriter base;
-  WabtOutputBuffer buf;
+struct MemoryWriter {
+  Writer base;
+  OutputBuffer buf;
 };
 
-struct WabtFileWriter {
-  WabtWriter base;
+struct FileWriter {
+  Writer base;
   FILE* file;
   size_t offset;
 };
 
-WABT_EXTERN_C_BEGIN
+/* FileWriter */
+Result init_file_writer(FileWriter* writer, const char* filename);
+void init_file_writer_existing(FileWriter* writer, FILE* file);
+void close_file_writer(FileWriter* writer);
 
-/* WabtFileWriter */
-WabtResult wabt_init_file_writer(WabtFileWriter* writer, const char* filename);
-void wabt_init_file_writer_existing(WabtFileWriter* writer, FILE* file);
-void wabt_close_file_writer(WabtFileWriter* writer);
-
-/* WabtMemoryWriter */
-WabtResult wabt_init_mem_writer(WabtMemoryWriter* writer);
+/* MemoryWriter */
+Result init_mem_writer(MemoryWriter* writer);
 /* Passes ownership of the buffer to writer */
-WabtResult wabt_init_mem_writer_existing(WabtMemoryWriter* writer,
-                                         WabtOutputBuffer* buf);
-void wabt_steal_mem_writer_output_buffer(WabtMemoryWriter* writer,
-                                         WabtOutputBuffer* out_buf);
-void wabt_close_mem_writer(WabtMemoryWriter* writer);
+Result init_mem_writer_existing(MemoryWriter* writer, OutputBuffer* buf);
+void steal_mem_writer_output_buffer(MemoryWriter* writer,
+                                    OutputBuffer* out_buf);
+void close_mem_writer(MemoryWriter* writer);
 
-/* WabtOutputBuffer */
-void wabt_init_output_buffer(WabtOutputBuffer* buf, size_t initial_capacity);
-WabtResult wabt_write_output_buffer_to_file(WabtOutputBuffer* buf,
-                                            const char* filename);
-void wabt_destroy_output_buffer(WabtOutputBuffer* buf);
+/* OutputBuffer */
+void init_output_buffer(OutputBuffer* buf, size_t initial_capacity);
+Result write_output_buffer_to_file(OutputBuffer* buf, const char* filename);
+void destroy_output_buffer(OutputBuffer* buf);
 
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_WRITER_H_ */

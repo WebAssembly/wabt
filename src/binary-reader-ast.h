@@ -19,15 +19,17 @@
 
 #include "common.h"
 
-struct WabtModule;
-struct WabtReadBinaryOptions;
+namespace wabt {
 
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_read_binary_ast(const void* data,
-                                size_t size,
-                                const struct WabtReadBinaryOptions* options,
-                                WabtBinaryErrorHandler*,
-                                struct WabtModule* out_module);
-WABT_EXTERN_C_END
+struct Module;
+struct ReadBinaryOptions;
+
+Result read_binary_ast(const void* data,
+                       size_t size,
+                       const struct ReadBinaryOptions* options,
+                       BinaryErrorHandler*,
+                       struct Module* out_module);
+
+} // namespace wabt
 
 #endif /* WABT_BINARY_READER_AST_H_ */

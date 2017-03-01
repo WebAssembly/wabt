@@ -21,33 +21,29 @@
 
 #include "common.h"
 
-#define WABT_DEFINE_ARRAY(name, type)                                       \
-  struct type##Array {                                                      \
-    type* data;                                                             \
-    size_t size;                                                            \
-  };                                                                        \
-                                                                            \
-  WABT_EXTERN_C_BEGIN                                                       \
-  static WABT_INLINE void wabt_destroy_##name##_array(type##Array* array)   \
-      WABT_UNUSED;                                                          \
-  static WABT_INLINE void wabt_new_##name##_array(type##Array* array,       \
-                                                  size_t size) WABT_UNUSED; \
-  WABT_EXTERN_C_END                                                         \
-                                                                            \
-  void wabt_destroy_##name##_array(type##Array* array) {                    \
-    wabt_free(array->data);                                                 \
-  }                                                                         \
-  void wabt_new_##name##_array(type##Array* array, size_t size) {           \
-    array->size = size;                                                     \
-    array->data = static_cast<type*>(wabt_alloc_zero(size * sizeof(type))); \
+#define WABT_DEFINE_ARRAY(name, type)                                         \
+  struct type##Array {                                                        \
+    type* data;                                                               \
+    size_t size;                                                              \
+  };                                                                          \
+                                                                              \
+  static WABT_INLINE void destroy_##name##_array(type##Array* array)          \
+      WABT_UNUSED;                                                            \
+  static WABT_INLINE void new_##name##_array(type##Array* array, size_t size) \
+      WABT_UNUSED;                                                            \
+                                                                              \
+  void destroy_##name##_array(type##Array* array) { wabt_free(array->data); } \
+  void new_##name##_array(type##Array* array, size_t size) {                  \
+    array->size = size;                                                       \
+    array->data = static_cast<type*>(wabt_alloc_zero(size * sizeof(type)));   \
   }
 
 #define WABT_DESTROY_ARRAY_AND_ELEMENTS(v, name) \
   {                                              \
     size_t i;                                    \
     for (i = 0; i < (v).size; ++i)               \
-      wabt_destroy_##name(&((v).data[i]));       \
-    wabt_destroy_##name##_array(&(v));           \
+      destroy_##name(&((v).data[i]));            \
+    destroy_##name##_array(&(v));                \
   }
 
 #endif /* WABT_ARRAY_H_ */
