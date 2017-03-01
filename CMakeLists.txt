@@ -174,7 +174,7 @@ if (RUN_BISON AND BISON_FOUND)
   BISON_TARGET(AST_PARSER_GEN_C
     ${WABT_SOURCE_DIR}/src/ast-parser.y
     ${AST_PARSER_GEN_C}
-    COMPILE_FLAGS --defines=${WABT_BINARY_DIR}/ast-parser-gen.h
+    COMPILE_FLAGS --defines=${WABT_BINARY_DIR}/ast-parser-gen.hh
   )
 else ()
   set(AST_PARSER_GEN_C src/prebuilt/ast-parser-gen.cc)

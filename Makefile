@@ -146,7 +146,7 @@ update-bison: src/prebuilt/ast-parser-gen.cc
 update-re2c: src/prebuilt/ast-lexer-gen.cc
 
 src/prebuilt/ast-parser-gen.cc: src/ast-parser.y
-	bison -o $@ $< --defines=src/prebuilt/ast-parser-gen.h --report=state
+	bison -o $@ $< --defines=src/prebuilt/ast-parser-gen.hh --report=state
 
 src/prebuilt/ast-lexer-gen.cc: src/ast-lexer.cc
 	re2c --no-generation-date -bc -o $@ $<
