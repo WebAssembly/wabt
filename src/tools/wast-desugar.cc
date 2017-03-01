@@ -61,11 +61,11 @@ static const char s_description[] =
     "  $ wast-desugar --generate-names test.wast\n";
 
 static WabtOption s_options[] = {
-    {FLAG_HELP, 'h', "help", nullptr, WABT_OPTION_NO_ARGUMENT,
+    {FLAG_HELP, 'h', "help", nullptr, WabtHasArgument::No,
      "print this help message"},
-    {FLAG_OUTPUT, 'o', "output", "FILE", WABT_OPTION_HAS_ARGUMENT,
+    {FLAG_OUTPUT, 'o', "output", "FILE", WabtHasArgument::Yes,
      "output file for the formatted file"},
-    {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, WABT_OPTION_NO_ARGUMENT,
+    {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, WabtHasArgument::No,
      "Give auto-generated names to non-named functions, types, etc."},
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
@@ -163,6 +163,6 @@ int main(int argc, char** argv) {
 
   wabt_destroy_ast_lexer(lexer);
   wabt_destroy_script(&script);
-  return result;
+  return result != WabtResult::Ok;
 }
 

@@ -25,31 +25,31 @@ linked.wasm:	file format wasm 0x000001
 
 Sections:
 
-     TYPE start=0x0000000a end=0x00000014 (size=0x0000000a) count: 2
-   IMPORT start=0x0000001a end=0x0000003b (size=0x00000021) count: 2
- FUNCTION start=0x00000041 end=0x00000044 (size=0x00000003) count: 2
-   GLOBAL start=0x00000046 end=0x00000056 (size=0x00000010) count: 3
-     CODE start=0x00000058 end=0x0000008b (size=0x00000033) count: 2
-   CUSTOM start=0x00000091 end=0x000000ac (size=0x0000001b) "reloc.CODE"
+     Type start=0x0000000a end=0x00000014 (size=0x0000000a) count: 2
+   Import start=0x0000001a end=0x0000003b (size=0x00000021) count: 2
+ Function start=0x00000041 end=0x00000044 (size=0x00000003) count: 2
+   Global start=0x00000046 end=0x00000056 (size=0x00000010) count: 3
+     Code start=0x00000058 end=0x0000008b (size=0x00000033) count: 2
+   Custom start=0x00000091 end=0x000000ac (size=0x0000001b) "reloc.Code"
 
 Section Details:
 
-TYPE:
+Type:
  - [0] (i32) -> nil
  - [1] (i64, i64) -> nil
-IMPORT:
+Import:
  - global[0] i32 mutable=0 <- __extern.bar
  - global[1] i64 mutable=0 <- __extern.baz
-FUNCTION:
+Function:
  - func[0] sig=0
  - func[1] sig=1
-GLOBAL:
+Global:
  - global[2] i32 mutable=0 - init i32=1
  - global[3] i32 mutable=0 - init i32=2
  - global[4] i64 mutable=0 - init i64=2
-CUSTOM:
- - name: "reloc.CODE"
-  - section: CODE
+Custom:
+ - name: "reloc.Code"
+  - section: Code
    - R_GLOBAL_INDEX_LEB offset=0x5c (0x4)
    - R_GLOBAL_INDEX_LEB offset=0x62 (0xa)
    - R_GLOBAL_INDEX_LEB offset=0x69 (0x11)

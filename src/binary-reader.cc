@@ -47,14 +47,14 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
       WABT_SUCCEEDED(                                                   \
           ctx->reader->member                                           \
               ? ctx->reader->member(get_user_context(ctx), __VA_ARGS__) \
-              : WABT_OK),                                               \
+              : WabtResult::Ok),                                        \
       #member " callback failed")
 
 #define CALLBACK_CTX0(member)                                         \
   RAISE_ERROR_UNLESS(                                                 \
       WABT_SUCCEEDED(ctx->reader->member                              \
                          ? ctx->reader->member(get_user_context(ctx)) \
-                         : WABT_OK),                                  \
+                         : WabtResult::Ok),                           \
       #member " callback failed")
 
 #define CALLBACK_SECTION(member, section_size) \
@@ -64,7 +64,7 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
   RAISE_ERROR_UNLESS(                                                  \
       WABT_SUCCEEDED(ctx->reader->member                               \
                          ? ctx->reader->member(ctx->reader->user_data) \
-                         : WABT_OK),                                   \
+                         : WabtResult::Ok),                            \
       #member " callback failed")
 
 #define CALLBACK(member, ...)                                            \
@@ -72,23 +72,23 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
       WABT_SUCCEEDED(                                                    \
           ctx->reader->member                                            \
               ? ctx->reader->member(__VA_ARGS__, ctx->reader->user_data) \
-              : WABT_OK),                                                \
+              : WabtResult::Ok),                                         \
       #member " callback failed")
 
 #define FORWARD0(member)                                                   \
   return ctx->reader->member ? ctx->reader->member(ctx->reader->user_data) \
-                             : WABT_OK
+                             : WabtResult::Ok
 
 #define FORWARD_CTX0(member)                  \
   if (!ctx->reader->member)                   \
-    return WABT_OK;                           \
+    return WabtResult::Ok;                    \
   WabtBinaryReaderContext new_ctx = *context; \
   new_ctx.user_data = ctx->reader->user_data; \
   return ctx->reader->member(&new_ctx);
 
 #define FORWARD_CTX(member, ...)              \
   if (!ctx->reader->member)                   \
-    return WABT_OK;                           \
+    return WabtResult::Ok;                    \
   WabtBinaryReaderContext new_ctx = *context; \
   new_ctx.user_data = ctx->reader->user_data; \
   return ctx->reader->member(&new_ctx, __VA_ARGS__);
@@ -96,7 +96,7 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
 #define FORWARD(member, ...)                                            \
   return ctx->reader->member                                            \
              ? ctx->reader->member(__VA_ARGS__, ctx->reader->user_data) \
-             : WABT_OK
+             : WabtResult::Ok
 
 #define RAISE_ERROR(...) raise_error(ctx, __VA_ARGS__)
 
@@ -389,15 +389,15 @@ static void in_bytes(Context* ctx,
 }
 
 static bool is_valid_external_kind(uint8_t kind) {
-  return kind < WABT_NUM_EXTERNAL_KINDS;
+  return kind < kWabtExternalKindCount;
 }
 
 static bool is_concrete_type(WabtType type) {
   switch (type) {
-    case WABT_TYPE_I32:
-    case WABT_TYPE_I64:
-    case WABT_TYPE_F32:
-    case WABT_TYPE_F64:
+    case WabtType::I32:
+    case WabtType::I64:
+    case WabtType::F32:
+    case WabtType::F64:
       return true;
 
     default:
@@ -406,7 +406,7 @@ static bool is_concrete_type(WabtType type) {
 }
 
 static bool is_inline_sig_type(WabtType type) {
-  return is_concrete_type(type) || type == WABT_TYPE_VOID;
+  return is_concrete_type(type) || type == WabtType::Void;
 }
 
 static uint32_t num_total_funcs(Context* ctx) {
@@ -542,7 +542,8 @@ static WabtResult logging_begin_custom_section(WabtBinaryReaderContext* context,
 #define LOGGING_OPCODE(name)                                             \
   static WabtResult logging_##name(WabtOpcode opcode, void* user_data) { \
     LoggingContext* ctx = static_cast<LoggingContext*>(user_data);       \
-    LOGF(#name "(\"%s\" (%u))\n", wabt_get_opcode_name(opcode), opcode); \
+    LOGF(#name "(\"%s\" (%u))\n", wabt_get_opcode_name(opcode),          \
+         static_cast<unsigned>(opcode));                                 \
     FORWARD(name, opcode);                                               \
   }
 
@@ -890,7 +891,8 @@ static WabtResult logging_on_load_expr(WabtOpcode opcode,
                                        void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_load_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
-       wabt_get_opcode_name(opcode), opcode, alignment_log2, offset);
+       wabt_get_opcode_name(opcode), static_cast<unsigned>(opcode),
+       alignment_log2, offset);
   FORWARD(on_load_expr, opcode, alignment_log2, offset);
 }
 
@@ -910,7 +912,8 @@ static WabtResult logging_on_store_expr(WabtOpcode opcode,
                                         void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_store_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
-       wabt_get_opcode_name(opcode), opcode, alignment_log2, offset);
+       wabt_get_opcode_name(opcode), static_cast<unsigned>(opcode),
+       alignment_log2, offset);
   FORWARD(on_store_expr, opcode, alignment_log2, offset);
 }
 
@@ -1006,43 +1009,43 @@ static WabtResult logging_on_reloc_count(uint32_t count,
 static void read_init_expr(Context* ctx, uint32_t index) {
   uint8_t opcode;
   in_u8(ctx, &opcode, "opcode");
-  switch (opcode) {
-    case WABT_OPCODE_I32_CONST: {
+  switch (static_cast<WabtOpcode>(opcode)) {
+    case WabtOpcode::I32Const: {
       uint32_t value = 0;
       in_i32_leb128(ctx, &value, "init_expr i32.const value");
       CALLBACK(on_init_expr_i32_const_expr, index, value);
       break;
     }
 
-    case WABT_OPCODE_I64_CONST: {
+    case WabtOpcode::I64Const: {
       uint64_t value = 0;
       in_i64_leb128(ctx, &value, "init_expr i64.const value");
       CALLBACK(on_init_expr_i64_const_expr, index, value);
       break;
     }
 
-    case WABT_OPCODE_F32_CONST: {
+    case WabtOpcode::F32Const: {
       uint32_t value_bits = 0;
       in_f32(ctx, &value_bits, "init_expr f32.const value");
       CALLBACK(on_init_expr_f32_const_expr, index, value_bits);
       break;
     }
 
-    case WABT_OPCODE_F64_CONST: {
+    case WabtOpcode::F64Const: {
       uint64_t value_bits = 0;
       in_f64(ctx, &value_bits, "init_expr f64.const value");
       CALLBACK(on_init_expr_f64_const_expr, index, value_bits);
       break;
     }
 
-    case WABT_OPCODE_GET_GLOBAL: {
+    case WabtOpcode::GetGlobal: {
       uint32_t global_index;
       in_u32_leb128(ctx, &global_index, "init_expr get_global index");
       CALLBACK(on_init_expr_get_global_expr, index, global_index);
       break;
     }
 
-    case WABT_OPCODE_END:
+    case WabtOpcode::End:
       return;
 
     default:
@@ -1052,7 +1055,7 @@ static void read_init_expr(Context* ctx, uint32_t index) {
   }
 
   in_u8(ctx, &opcode, "opcode");
-  RAISE_ERROR_UNLESS(opcode == WABT_OPCODE_END,
+  RAISE_ERROR_UNLESS(static_cast<WabtOpcode>(opcode) == WabtOpcode::End,
                      "expected END opcode after initializer expression");
 }
 
@@ -1060,7 +1063,7 @@ static void read_table(Context* ctx,
                        WabtType* out_elem_type,
                        WabtLimits* out_elem_limits) {
   in_type(ctx, out_elem_type, "table elem type");
-  RAISE_ERROR_UNLESS(*out_elem_type == WABT_TYPE_ANYFUNC,
+  RAISE_ERROR_UNLESS(*out_elem_type == WabtType::Anyfunc,
                      "table elem type must by anyfunc");
 
   uint32_t flags;
@@ -1124,55 +1127,55 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
     WabtOpcode opcode = static_cast<WabtOpcode>(opcode_u8);
     CALLBACK_CTX(on_opcode, opcode);
     switch (opcode) {
-      case WABT_OPCODE_UNREACHABLE:
+      case WabtOpcode::Unreachable:
         CALLBACK0(on_unreachable_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_BLOCK: {
+      case WabtOpcode::Block: {
         WabtType sig_type;
         in_type(ctx, &sig_type, "block signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == WABT_TYPE_VOID ? 0 : 1;
+        uint32_t num_types = sig_type == WabtType::Void ? 0 : 1;
         CALLBACK(on_block_expr, num_types, &sig_type);
         CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
-      case WABT_OPCODE_LOOP: {
+      case WabtOpcode::Loop: {
         WabtType sig_type;
         in_type(ctx, &sig_type, "loop signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == WABT_TYPE_VOID ? 0 : 1;
+        uint32_t num_types = sig_type == WabtType::Void ? 0 : 1;
         CALLBACK(on_loop_expr, num_types, &sig_type);
         CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
-      case WABT_OPCODE_IF: {
+      case WabtOpcode::If: {
         WabtType sig_type;
         in_type(ctx, &sig_type, "if signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == WABT_TYPE_VOID ? 0 : 1;
+        uint32_t num_types = sig_type == WabtType::Void ? 0 : 1;
         CALLBACK(on_if_expr, num_types, &sig_type);
         CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
-      case WABT_OPCODE_ELSE:
+      case WabtOpcode::Else:
         CALLBACK0(on_else_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_SELECT:
+      case WabtOpcode::Select:
         CALLBACK0(on_select_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_BR: {
+      case WabtOpcode::Br: {
         uint32_t depth;
         in_u32_leb128(ctx, &depth, "br depth");
         CALLBACK(on_br_expr, depth);
@@ -1180,7 +1183,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_BR_IF: {
+      case WabtOpcode::BrIf: {
         uint32_t depth;
         in_u32_leb128(ctx, &depth, "br_if depth");
         CALLBACK(on_br_if_expr, depth);
@@ -1188,7 +1191,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_BR_TABLE: {
+      case WabtOpcode::BrTable: {
         uint32_t num_targets;
         in_u32_leb128(ctx, &num_targets, "br_table target count");
         if (num_targets > ctx->target_depths.capacity) {
@@ -1212,29 +1215,29 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_RETURN:
+      case WabtOpcode::Return:
         CALLBACK0(on_return_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_NOP:
+      case WabtOpcode::Nop:
         CALLBACK0(on_nop_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_DROP:
+      case WabtOpcode::Drop:
         CALLBACK0(on_drop_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_END:
+      case WabtOpcode::End:
         if (ctx->offset == end_offset)
           seen_end_opcode = true;
         else
           CALLBACK0(on_end_expr);
         break;
 
-      case WABT_OPCODE_I32_CONST: {
+      case WabtOpcode::I32Const: {
         uint32_t value = 0;
         in_i32_leb128(ctx, &value, "i32.const value");
         CALLBACK(on_i32_const_expr, value);
@@ -1242,7 +1245,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_I64_CONST: {
+      case WabtOpcode::I64Const: {
         uint64_t value = 0;
         in_i64_leb128(ctx, &value, "i64.const value");
         CALLBACK(on_i64_const_expr, value);
@@ -1250,7 +1253,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_F32_CONST: {
+      case WabtOpcode::F32Const: {
         uint32_t value_bits = 0;
         in_f32(ctx, &value_bits, "f32.const value");
         CALLBACK(on_f32_const_expr, value_bits);
@@ -1258,7 +1261,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_F64_CONST: {
+      case WabtOpcode::F64Const: {
         uint64_t value_bits = 0;
         in_f64(ctx, &value_bits, "f64.const value");
         CALLBACK(on_f64_const_expr, value_bits);
@@ -1266,7 +1269,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_GET_GLOBAL: {
+      case WabtOpcode::GetGlobal: {
         uint32_t global_index;
         in_u32_leb128(ctx, &global_index, "get_global global index");
         CALLBACK(on_get_global_expr, global_index);
@@ -1274,7 +1277,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_GET_LOCAL: {
+      case WabtOpcode::GetLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "get_local local index");
         CALLBACK(on_get_local_expr, local_index);
@@ -1282,7 +1285,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_SET_GLOBAL: {
+      case WabtOpcode::SetGlobal: {
         uint32_t global_index;
         in_u32_leb128(ctx, &global_index, "set_global global index");
         CALLBACK(on_set_global_expr, global_index);
@@ -1290,7 +1293,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_SET_LOCAL: {
+      case WabtOpcode::SetLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "set_local local index");
         CALLBACK(on_set_local_expr, local_index);
@@ -1298,7 +1301,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_CALL: {
+      case WabtOpcode::Call: {
         uint32_t func_index;
         in_u32_leb128(ctx, &func_index, "call function index");
         RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
@@ -1308,7 +1311,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_CALL_INDIRECT: {
+      case WabtOpcode::CallIndirect: {
         uint32_t sig_index;
         in_u32_leb128(ctx, &sig_index, "call_indirect signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
@@ -1322,7 +1325,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_TEE_LOCAL: {
+      case WabtOpcode::TeeLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "tee_local local index");
         CALLBACK(on_tee_local_expr, local_index);
@@ -1330,20 +1333,20 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_I32_LOAD8_S:
-      case WABT_OPCODE_I32_LOAD8_U:
-      case WABT_OPCODE_I32_LOAD16_S:
-      case WABT_OPCODE_I32_LOAD16_U:
-      case WABT_OPCODE_I64_LOAD8_S:
-      case WABT_OPCODE_I64_LOAD8_U:
-      case WABT_OPCODE_I64_LOAD16_S:
-      case WABT_OPCODE_I64_LOAD16_U:
-      case WABT_OPCODE_I64_LOAD32_S:
-      case WABT_OPCODE_I64_LOAD32_U:
-      case WABT_OPCODE_I32_LOAD:
-      case WABT_OPCODE_I64_LOAD:
-      case WABT_OPCODE_F32_LOAD:
-      case WABT_OPCODE_F64_LOAD: {
+      case WabtOpcode::I32Load8S:
+      case WabtOpcode::I32Load8U:
+      case WabtOpcode::I32Load16S:
+      case WabtOpcode::I32Load16U:
+      case WabtOpcode::I64Load8S:
+      case WabtOpcode::I64Load8U:
+      case WabtOpcode::I64Load16S:
+      case WabtOpcode::I64Load16U:
+      case WabtOpcode::I64Load32S:
+      case WabtOpcode::I64Load32U:
+      case WabtOpcode::I32Load:
+      case WabtOpcode::I64Load:
+      case WabtOpcode::F32Load:
+      case WabtOpcode::F64Load: {
         uint32_t alignment_log2;
         in_u32_leb128(ctx, &alignment_log2, "load alignment");
         uint32_t offset;
@@ -1354,15 +1357,15 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_I32_STORE8:
-      case WABT_OPCODE_I32_STORE16:
-      case WABT_OPCODE_I64_STORE8:
-      case WABT_OPCODE_I64_STORE16:
-      case WABT_OPCODE_I64_STORE32:
-      case WABT_OPCODE_I32_STORE:
-      case WABT_OPCODE_I64_STORE:
-      case WABT_OPCODE_F32_STORE:
-      case WABT_OPCODE_F64_STORE: {
+      case WabtOpcode::I32Store8:
+      case WabtOpcode::I32Store16:
+      case WabtOpcode::I64Store8:
+      case WabtOpcode::I64Store16:
+      case WabtOpcode::I64Store32:
+      case WabtOpcode::I32Store:
+      case WabtOpcode::I64Store:
+      case WabtOpcode::F32Store:
+      case WabtOpcode::F64Store: {
         uint32_t alignment_log2;
         in_u32_leb128(ctx, &alignment_log2, "store alignment");
         uint32_t offset;
@@ -1373,7 +1376,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_CURRENT_MEMORY: {
+      case WabtOpcode::CurrentMemory: {
         uint32_t reserved;
         in_u32_leb128(ctx, &reserved, "current_memory reserved");
         RAISE_ERROR_UNLESS(reserved == 0,
@@ -1383,7 +1386,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_GROW_MEMORY: {
+      case WabtOpcode::GrowMemory: {
         uint32_t reserved;
         in_u32_leb128(ctx, &reserved, "grow_memory reserved");
         RAISE_ERROR_UNLESS(reserved == 0,
@@ -1393,147 +1396,148 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WABT_OPCODE_I32_ADD:
-      case WABT_OPCODE_I32_SUB:
-      case WABT_OPCODE_I32_MUL:
-      case WABT_OPCODE_I32_DIV_S:
-      case WABT_OPCODE_I32_DIV_U:
-      case WABT_OPCODE_I32_REM_S:
-      case WABT_OPCODE_I32_REM_U:
-      case WABT_OPCODE_I32_AND:
-      case WABT_OPCODE_I32_OR:
-      case WABT_OPCODE_I32_XOR:
-      case WABT_OPCODE_I32_SHL:
-      case WABT_OPCODE_I32_SHR_U:
-      case WABT_OPCODE_I32_SHR_S:
-      case WABT_OPCODE_I32_ROTR:
-      case WABT_OPCODE_I32_ROTL:
-      case WABT_OPCODE_I64_ADD:
-      case WABT_OPCODE_I64_SUB:
-      case WABT_OPCODE_I64_MUL:
-      case WABT_OPCODE_I64_DIV_S:
-      case WABT_OPCODE_I64_DIV_U:
-      case WABT_OPCODE_I64_REM_S:
-      case WABT_OPCODE_I64_REM_U:
-      case WABT_OPCODE_I64_AND:
-      case WABT_OPCODE_I64_OR:
-      case WABT_OPCODE_I64_XOR:
-      case WABT_OPCODE_I64_SHL:
-      case WABT_OPCODE_I64_SHR_U:
-      case WABT_OPCODE_I64_SHR_S:
-      case WABT_OPCODE_I64_ROTR:
-      case WABT_OPCODE_I64_ROTL:
-      case WABT_OPCODE_F32_ADD:
-      case WABT_OPCODE_F32_SUB:
-      case WABT_OPCODE_F32_MUL:
-      case WABT_OPCODE_F32_DIV:
-      case WABT_OPCODE_F32_MIN:
-      case WABT_OPCODE_F32_MAX:
-      case WABT_OPCODE_F32_COPYSIGN:
-      case WABT_OPCODE_F64_ADD:
-      case WABT_OPCODE_F64_SUB:
-      case WABT_OPCODE_F64_MUL:
-      case WABT_OPCODE_F64_DIV:
-      case WABT_OPCODE_F64_MIN:
-      case WABT_OPCODE_F64_MAX:
-      case WABT_OPCODE_F64_COPYSIGN:
+      case WabtOpcode::I32Add:
+      case WabtOpcode::I32Sub:
+      case WabtOpcode::I32Mul:
+      case WabtOpcode::I32DivS:
+      case WabtOpcode::I32DivU:
+      case WabtOpcode::I32RemS:
+      case WabtOpcode::I32RemU:
+      case WabtOpcode::I32And:
+      case WabtOpcode::I32Or:
+      case WabtOpcode::I32Xor:
+      case WabtOpcode::I32Shl:
+      case WabtOpcode::I32ShrU:
+      case WabtOpcode::I32ShrS:
+      case WabtOpcode::I32Rotr:
+      case WabtOpcode::I32Rotl:
+      case WabtOpcode::I64Add:
+      case WabtOpcode::I64Sub:
+      case WabtOpcode::I64Mul:
+      case WabtOpcode::I64DivS:
+      case WabtOpcode::I64DivU:
+      case WabtOpcode::I64RemS:
+      case WabtOpcode::I64RemU:
+      case WabtOpcode::I64And:
+      case WabtOpcode::I64Or:
+      case WabtOpcode::I64Xor:
+      case WabtOpcode::I64Shl:
+      case WabtOpcode::I64ShrU:
+      case WabtOpcode::I64ShrS:
+      case WabtOpcode::I64Rotr:
+      case WabtOpcode::I64Rotl:
+      case WabtOpcode::F32Add:
+      case WabtOpcode::F32Sub:
+      case WabtOpcode::F32Mul:
+      case WabtOpcode::F32Div:
+      case WabtOpcode::F32Min:
+      case WabtOpcode::F32Max:
+      case WabtOpcode::F32Copysign:
+      case WabtOpcode::F64Add:
+      case WabtOpcode::F64Sub:
+      case WabtOpcode::F64Mul:
+      case WabtOpcode::F64Div:
+      case WabtOpcode::F64Min:
+      case WabtOpcode::F64Max:
+      case WabtOpcode::F64Copysign:
         CALLBACK(on_binary_expr, opcode);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_I32_EQ:
-      case WABT_OPCODE_I32_NE:
-      case WABT_OPCODE_I32_LT_S:
-      case WABT_OPCODE_I32_LE_S:
-      case WABT_OPCODE_I32_LT_U:
-      case WABT_OPCODE_I32_LE_U:
-      case WABT_OPCODE_I32_GT_S:
-      case WABT_OPCODE_I32_GE_S:
-      case WABT_OPCODE_I32_GT_U:
-      case WABT_OPCODE_I32_GE_U:
-      case WABT_OPCODE_I64_EQ:
-      case WABT_OPCODE_I64_NE:
-      case WABT_OPCODE_I64_LT_S:
-      case WABT_OPCODE_I64_LE_S:
-      case WABT_OPCODE_I64_LT_U:
-      case WABT_OPCODE_I64_LE_U:
-      case WABT_OPCODE_I64_GT_S:
-      case WABT_OPCODE_I64_GE_S:
-      case WABT_OPCODE_I64_GT_U:
-      case WABT_OPCODE_I64_GE_U:
-      case WABT_OPCODE_F32_EQ:
-      case WABT_OPCODE_F32_NE:
-      case WABT_OPCODE_F32_LT:
-      case WABT_OPCODE_F32_LE:
-      case WABT_OPCODE_F32_GT:
-      case WABT_OPCODE_F32_GE:
-      case WABT_OPCODE_F64_EQ:
-      case WABT_OPCODE_F64_NE:
-      case WABT_OPCODE_F64_LT:
-      case WABT_OPCODE_F64_LE:
-      case WABT_OPCODE_F64_GT:
-      case WABT_OPCODE_F64_GE:
+      case WabtOpcode::I32Eq:
+      case WabtOpcode::I32Ne:
+      case WabtOpcode::I32LtS:
+      case WabtOpcode::I32LeS:
+      case WabtOpcode::I32LtU:
+      case WabtOpcode::I32LeU:
+      case WabtOpcode::I32GtS:
+      case WabtOpcode::I32GeS:
+      case WabtOpcode::I32GtU:
+      case WabtOpcode::I32GeU:
+      case WabtOpcode::I64Eq:
+      case WabtOpcode::I64Ne:
+      case WabtOpcode::I64LtS:
+      case WabtOpcode::I64LeS:
+      case WabtOpcode::I64LtU:
+      case WabtOpcode::I64LeU:
+      case WabtOpcode::I64GtS:
+      case WabtOpcode::I64GeS:
+      case WabtOpcode::I64GtU:
+      case WabtOpcode::I64GeU:
+      case WabtOpcode::F32Eq:
+      case WabtOpcode::F32Ne:
+      case WabtOpcode::F32Lt:
+      case WabtOpcode::F32Le:
+      case WabtOpcode::F32Gt:
+      case WabtOpcode::F32Ge:
+      case WabtOpcode::F64Eq:
+      case WabtOpcode::F64Ne:
+      case WabtOpcode::F64Lt:
+      case WabtOpcode::F64Le:
+      case WabtOpcode::F64Gt:
+      case WabtOpcode::F64Ge:
         CALLBACK(on_compare_expr, opcode);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_I32_CLZ:
-      case WABT_OPCODE_I32_CTZ:
-      case WABT_OPCODE_I32_POPCNT:
-      case WABT_OPCODE_I64_CLZ:
-      case WABT_OPCODE_I64_CTZ:
-      case WABT_OPCODE_I64_POPCNT:
-      case WABT_OPCODE_F32_ABS:
-      case WABT_OPCODE_F32_NEG:
-      case WABT_OPCODE_F32_CEIL:
-      case WABT_OPCODE_F32_FLOOR:
-      case WABT_OPCODE_F32_TRUNC:
-      case WABT_OPCODE_F32_NEAREST:
-      case WABT_OPCODE_F32_SQRT:
-      case WABT_OPCODE_F64_ABS:
-      case WABT_OPCODE_F64_NEG:
-      case WABT_OPCODE_F64_CEIL:
-      case WABT_OPCODE_F64_FLOOR:
-      case WABT_OPCODE_F64_TRUNC:
-      case WABT_OPCODE_F64_NEAREST:
-      case WABT_OPCODE_F64_SQRT:
+      case WabtOpcode::I32Clz:
+      case WabtOpcode::I32Ctz:
+      case WabtOpcode::I32Popcnt:
+      case WabtOpcode::I64Clz:
+      case WabtOpcode::I64Ctz:
+      case WabtOpcode::I64Popcnt:
+      case WabtOpcode::F32Abs:
+      case WabtOpcode::F32Neg:
+      case WabtOpcode::F32Ceil:
+      case WabtOpcode::F32Floor:
+      case WabtOpcode::F32Trunc:
+      case WabtOpcode::F32Nearest:
+      case WabtOpcode::F32Sqrt:
+      case WabtOpcode::F64Abs:
+      case WabtOpcode::F64Neg:
+      case WabtOpcode::F64Ceil:
+      case WabtOpcode::F64Floor:
+      case WabtOpcode::F64Trunc:
+      case WabtOpcode::F64Nearest:
+      case WabtOpcode::F64Sqrt:
         CALLBACK(on_unary_expr, opcode);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WABT_OPCODE_I32_TRUNC_S_F32:
-      case WABT_OPCODE_I32_TRUNC_S_F64:
-      case WABT_OPCODE_I32_TRUNC_U_F32:
-      case WABT_OPCODE_I32_TRUNC_U_F64:
-      case WABT_OPCODE_I32_WRAP_I64:
-      case WABT_OPCODE_I64_TRUNC_S_F32:
-      case WABT_OPCODE_I64_TRUNC_S_F64:
-      case WABT_OPCODE_I64_TRUNC_U_F32:
-      case WABT_OPCODE_I64_TRUNC_U_F64:
-      case WABT_OPCODE_I64_EXTEND_S_I32:
-      case WABT_OPCODE_I64_EXTEND_U_I32:
-      case WABT_OPCODE_F32_CONVERT_S_I32:
-      case WABT_OPCODE_F32_CONVERT_U_I32:
-      case WABT_OPCODE_F32_CONVERT_S_I64:
-      case WABT_OPCODE_F32_CONVERT_U_I64:
-      case WABT_OPCODE_F32_DEMOTE_F64:
-      case WABT_OPCODE_F32_REINTERPRET_I32:
-      case WABT_OPCODE_F64_CONVERT_S_I32:
-      case WABT_OPCODE_F64_CONVERT_U_I32:
-      case WABT_OPCODE_F64_CONVERT_S_I64:
-      case WABT_OPCODE_F64_CONVERT_U_I64:
-      case WABT_OPCODE_F64_PROMOTE_F32:
-      case WABT_OPCODE_F64_REINTERPRET_I64:
-      case WABT_OPCODE_I32_REINTERPRET_F32:
-      case WABT_OPCODE_I64_REINTERPRET_F64:
-      case WABT_OPCODE_I32_EQZ:
-      case WABT_OPCODE_I64_EQZ:
+      case WabtOpcode::I32TruncSF32:
+      case WabtOpcode::I32TruncSF64:
+      case WabtOpcode::I32TruncUF32:
+      case WabtOpcode::I32TruncUF64:
+      case WabtOpcode::I32WrapI64:
+      case WabtOpcode::I64TruncSF32:
+      case WabtOpcode::I64TruncSF64:
+      case WabtOpcode::I64TruncUF32:
+      case WabtOpcode::I64TruncUF64:
+      case WabtOpcode::I64ExtendSI32:
+      case WabtOpcode::I64ExtendUI32:
+      case WabtOpcode::F32ConvertSI32:
+      case WabtOpcode::F32ConvertUI32:
+      case WabtOpcode::F32ConvertSI64:
+      case WabtOpcode::F32ConvertUI64:
+      case WabtOpcode::F32DemoteF64:
+      case WabtOpcode::F32ReinterpretI32:
+      case WabtOpcode::F64ConvertSI32:
+      case WabtOpcode::F64ConvertUI32:
+      case WabtOpcode::F64ConvertSI64:
+      case WabtOpcode::F64ConvertUI64:
+      case WabtOpcode::F64PromoteF32:
+      case WabtOpcode::F64ReinterpretI64:
+      case WabtOpcode::I32ReinterpretF32:
+      case WabtOpcode::I64ReinterpretF64:
+      case WabtOpcode::I32Eqz:
+      case WabtOpcode::I64Eqz:
         CALLBACK(on_convert_expr, opcode);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
       default:
-        RAISE_ERROR("unexpected opcode: %d (0x%x)", opcode, opcode);
+        RAISE_ERROR("unexpected opcode: %d (0x%x)", static_cast<int>(opcode),
+                    static_cast<unsigned>(opcode));
     }
   }
   RAISE_ERROR_UNLESS(ctx->offset == end_offset,
@@ -1546,7 +1550,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
   in_str(ctx, &section_name, "section name");
   CALLBACK_CTX(begin_custom_section, section_size, section_name);
 
-  bool name_section_ok = ctx->last_known_section >= WABT_BINARY_SECTION_IMPORT;
+  bool name_section_ok = ctx->last_known_section >= WabtBinarySection::Import;
   if (ctx->options->read_debug_names && name_section_ok &&
       strncmp(section_name.start, WABT_BINARY_SECTION_NAME,
               section_name.length) == 0) {
@@ -1576,7 +1580,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     uint32_t i, num_relocs, section;
     in_u32_leb128(ctx, &section, "section");
     WABT_ZERO_MEMORY(section_name);
-    if (section == WABT_BINARY_SECTION_CUSTOM)
+    if (static_cast<WabtBinarySection>(section) == WabtBinarySection::Custom)
       in_str(ctx, &section_name, "section name");
     in_u32_leb128(ctx, &num_relocs, "relocation count");
     CALLBACK(on_reloc_count, num_relocs,
@@ -1604,7 +1608,7 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
   for (i = 0; i < ctx->num_signatures; ++i) {
     WabtType form;
     in_type(ctx, &form, "type form");
-    RAISE_ERROR_UNLESS(form == WABT_TYPE_FUNC, "unexpected type form");
+    RAISE_ERROR_UNLESS(form == WabtType::Func, "unexpected type form");
 
     uint32_t num_params;
     in_u32_leb128(ctx, &num_params, "function param count");
@@ -1625,7 +1629,7 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
     in_u32_leb128(ctx, &num_results, "function result count");
     RAISE_ERROR_UNLESS(num_results <= 1, "result count must be 0 or 1");
 
-    WabtType result_type = WABT_TYPE_VOID;
+    WabtType result_type = WabtType::Void;
     if (num_results) {
       in_type(ctx, &result_type, "function result type");
       RAISE_ERROR_UNLESS(is_concrete_type(result_type),
@@ -1652,8 +1656,8 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
 
     uint32_t kind;
     in_u32_leb128(ctx, &kind, "import kind");
-    switch (kind) {
-      case WABT_EXTERNAL_KIND_FUNC: {
+    switch (static_cast<WabtExternalKind>(kind)) {
+      case WabtExternalKind::Func: {
         uint32_t sig_index;
         in_u32_leb128(ctx, &sig_index, "import signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
@@ -1663,7 +1667,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         break;
       }
 
-      case WABT_EXTERNAL_KIND_TABLE: {
+      case WabtExternalKind::Table: {
         WabtType elem_type;
         WabtLimits elem_limits;
         read_table(ctx, &elem_type, &elem_limits);
@@ -1673,7 +1677,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         break;
       }
 
-      case WABT_EXTERNAL_KIND_MEMORY: {
+      case WabtExternalKind::Memory: {
         WabtLimits page_limits;
         read_memory(ctx, &page_limits);
         CALLBACK(on_import_memory, i, ctx->num_memory_imports, &page_limits);
@@ -1681,7 +1685,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         break;
       }
 
-      case WABT_EXTERNAL_KIND_GLOBAL: {
+      case WabtExternalKind::Global: {
         WabtType type;
         bool mutable_;
         read_global_header(ctx, &type, &mutable_);
@@ -1780,25 +1784,22 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
 
     uint32_t item_index;
     in_u32_leb128(ctx, &item_index, "export item index");
-    switch (external_kind) {
-      case WABT_EXTERNAL_KIND_FUNC:
+    switch (static_cast<WabtExternalKind>(external_kind)) {
+      case WabtExternalKind::Func:
         RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
                            "invalid export func index: %d", item_index);
         break;
-      case WABT_EXTERNAL_KIND_TABLE:
+      case WabtExternalKind::Table:
         RAISE_ERROR_UNLESS(item_index < num_total_tables(ctx),
                            "invalid export table index");
         break;
-      case WABT_EXTERNAL_KIND_MEMORY:
+      case WabtExternalKind::Memory:
         RAISE_ERROR_UNLESS(item_index < num_total_memories(ctx),
                            "invalid export memory index");
         break;
-      case WABT_EXTERNAL_KIND_GLOBAL:
+      case WabtExternalKind::Global:
         RAISE_ERROR_UNLESS(item_index < num_total_globals(ctx),
                            "invalid export global index");
-        break;
-      case WABT_NUM_EXTERNAL_KINDS:
-        assert(0);
         break;
     }
 
@@ -1919,9 +1920,9 @@ static void read_sections(Context* ctx) {
     in_u32_leb128(ctx, &section_code, "section code");
     in_u32_leb128(ctx, &section_size, "section size");
     ctx->read_end = ctx->offset + section_size;
-    if (section_code >= WABT_NUM_BINARY_SECTIONS) {
+    if (section_code >= kWabtBinarySectionCount) {
       RAISE_ERROR("invalid section code: %u; max is %u", section_code,
-                  WABT_NUM_BINARY_SECTIONS - 1);
+                  kWabtBinarySectionCount - 1);
     }
 
     WabtBinarySection section = static_cast<WabtBinarySection>(section_code);
@@ -1929,16 +1930,16 @@ static void read_sections(Context* ctx) {
     if (ctx->read_end > ctx->data_size)
       RAISE_ERROR("invalid section size: extends past end");
 
-    if (ctx->last_known_section != WABT_NUM_BINARY_SECTIONS &&
-        section != WABT_BINARY_SECTION_CUSTOM &&
-        section_code <= ctx->last_known_section) {
+    if (ctx->last_known_section != WabtBinarySection::Invalid &&
+        section != WabtBinarySection::Custom &&
+        section <= ctx->last_known_section) {
       RAISE_ERROR("section %s out of order", wabt_get_section_name(section));
     }
 
     CALLBACK_CTX(begin_section, section, section_size);
 
-#define V(NAME, name, code)                   \
-  case WABT_BINARY_SECTION_##NAME:            \
+#define V(Name, name, code)                   \
+  case WabtBinarySection::Name:               \
     read_##name##_section(ctx, section_size); \
     break;
 
@@ -1957,7 +1958,7 @@ static void read_sections(Context* ctx) {
                   ctx->read_end);
     }
 
-    if (section != WABT_BINARY_SECTION_CUSTOM)
+    if (section != WabtBinarySection::Custom)
       ctx->last_known_section = section;
   }
 }
@@ -2132,11 +2133,11 @@ WabtResult wabt_read_binary(const void* data,
   ctx->data_size = ctx->read_end = size;
   ctx->reader = options->log_stream ? &logging_reader : reader;
   ctx->options = options;
-  ctx->last_known_section = WABT_NUM_BINARY_SECTIONS;
+  ctx->last_known_section = WabtBinarySection::Invalid;
 
   if (setjmp(ctx->error_jmp_buf) == 1) {
     destroy_context(ctx);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   wabt_reserve_types(&ctx->param_types, INITIAL_PARAM_TYPES_CAPACITY);
@@ -2155,5 +2156,5 @@ WabtResult wabt_read_binary(const void* data,
   read_sections(ctx);
   CALLBACK0(end_module);
   destroy_context(ctx);
-  return WABT_OK;
+  return WabtResult::Ok;
 }

@@ -32,12 +32,12 @@ WABT_DEFINE_VECTOR(reloc, WabtReloc);
 
 WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
 
-enum WabtObjdumpMode {
-  WABT_DUMP_PREPASS,
-  WABT_DUMP_HEADERS,
-  WABT_DUMP_DETAILS,
-  WABT_DUMP_DISASSEMBLE,
-  WABT_DUMP_RAW_DATA,
+enum class WabtObjdumpMode {
+  Prepass,
+  Headers,
+  Details,
+  Disassemble,
+  RawData,
 };
 
 struct WabtObjdumpOptions {

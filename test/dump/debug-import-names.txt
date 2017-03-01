@@ -5,7 +5,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "TYPE" (1)
+; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
@@ -14,7 +14,7 @@
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
-; section "IMPORT" (2)
+; section "Import" (2)
 000000e: 02                                        ; section code
 000000f: 00                                        ; section size (guess)
 0000010: 01                                        ; num imports
@@ -40,17 +40,17 @@ debug-import-names.wasm:	file format wasm 0x000001
 
 Sections:
 
-     TYPE start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
-   IMPORT start=0x00000010 end=0x0000001b (size=0x0000000b) count: 1
-   CUSTOM start=0x0000001d end=0x00000029 (size=0x0000000c) "name"
+     Type start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
+   Import start=0x00000010 end=0x0000001b (size=0x0000000b) count: 1
+   Custom start=0x0000001d end=0x00000029 (size=0x0000000c) "name"
 
 Section Details:
 
-TYPE:
+Type:
  - [0] () -> nil
-IMPORT:
+Import:
  - func[0] sig=0 <- bar.foo
-CUSTOM:
+Custom:
  - name: "name"
  - func[0] $foo
 

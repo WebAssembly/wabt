@@ -41,7 +41,7 @@ struct Context {
   bool header_printed;
   int section_found;
 
-  uint32_t section_starts[WABT_NUM_BINARY_SECTIONS];
+  uint32_t section_starts[kWabtBinarySectionCount];
   WabtBinarySection reloc_section;
 
   WabtStringSlice import_module_name;
@@ -51,7 +51,7 @@ struct Context {
 };
 
 static bool should_print_details(Context* ctx) {
-  if (ctx->options->mode != WABT_DUMP_DETAILS)
+  if (ctx->options->mode != WabtObjdumpMode::Details)
     return false;
   return ctx->print_details;
 }
@@ -70,7 +70,7 @@ static WabtResult begin_section(WabtBinaryReaderContext* ctx,
                                 WabtBinarySection section_code,
                                 uint32_t size) {
   Context* context = static_cast<Context*>(ctx->user_data);
-  context->section_starts[section_code] = ctx->offset;
+  context->section_starts[static_cast<size_t>(section_code)] = ctx->offset;
 
   const char* name = wabt_get_section_name(section_code);
 
@@ -80,33 +80,33 @@ static WabtResult begin_section(WabtBinaryReaderContext* ctx,
     context->section_found = true;
 
   switch (context->options->mode) {
-    case WABT_DUMP_PREPASS:
+    case WabtObjdumpMode::Prepass:
       break;
-    case WABT_DUMP_HEADERS:
+    case WabtObjdumpMode::Headers:
       printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010x) ",
              name, ctx->offset, ctx->offset + size, size);
       break;
-    case WABT_DUMP_DETAILS:
+    case WabtObjdumpMode::Details:
       if (section_match) {
-        if (section_code != WABT_BINARY_SECTION_CODE)
+        if (section_code != WabtBinarySection::Code)
           printf("%s:\n", name);
         context->print_details = true;
       } else {
         context->print_details = false;
       }
       break;
-    case WABT_DUMP_RAW_DATA:
+    case WabtObjdumpMode::RawData:
       if (section_match) {
         printf("\nContents of section %s:\n", name);
         wabt_write_memory_dump(context->out_stream, context->data + ctx->offset,
-                               size, ctx->offset, WABT_PRINT_CHARS, nullptr,
+                               size, ctx->offset, WabtPrintChars::Yes, nullptr,
                                nullptr);
       }
       break;
-    case WABT_DUMP_DISASSEMBLE:
+    case WabtObjdumpMode::Disassemble:
       break;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_custom_section(WabtBinaryReaderContext* ctx,
@@ -115,19 +115,19 @@ static WabtResult begin_custom_section(WabtBinaryReaderContext* ctx,
   Context* context = static_cast<Context*>(ctx->user_data);
   print_details(context, " - name: \"" PRIstringslice "\"\n",
                 WABT_PRINTF_STRING_SLICE_ARG(section_name));
-  if (context->options->mode == WABT_DUMP_HEADERS) {
+  if (context->options->mode == WabtObjdumpMode::Headers) {
     printf("\"" PRIstringslice "\"\n",
            WABT_PRINTF_STRING_SLICE_ARG(section_name));
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  if (ctx->options->mode == WABT_DUMP_HEADERS) {
+  if (ctx->options->mode == WabtObjdumpMode::Headers) {
     printf("count: %d\n", count);
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_module(uint32_t version, void* user_data) {
@@ -143,24 +143,24 @@ static WabtResult begin_module(uint32_t version, void* user_data) {
   }
 
   switch (ctx->options->mode) {
-    case WABT_DUMP_HEADERS:
+    case WabtObjdumpMode::Headers:
       printf("\n");
       printf("Sections:\n\n");
       break;
-    case WABT_DUMP_DETAILS:
+    case WabtObjdumpMode::Details:
       printf("\n");
       printf("Section Details:\n\n");
       break;
-    case WABT_DUMP_DISASSEMBLE:
+    case WabtObjdumpMode::Disassemble:
       printf("\n");
       printf("Code Disassembly:\n\n");
       break;
-    case WABT_DUMP_RAW_DATA:
-    case WABT_DUMP_PREPASS:
+    case WabtObjdumpMode::RawData:
+    case WabtObjdumpMode::Prepass:
       break;
   }
 
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult end_module(void *user_data) {
@@ -168,11 +168,11 @@ static WabtResult end_module(void *user_data) {
   if (ctx->options->section_name) {
     if (!ctx->section_found) {
       printf("Section not found: %s\n", ctx->options->section_name);
-      return WABT_ERROR;
+      return WabtResult::Error;
     }
   }
 
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_opcode(WabtBinaryReaderContext* ctx, WabtOpcode opcode) {
@@ -192,13 +192,13 @@ static WabtResult on_opcode(WabtBinaryReaderContext* ctx, WabtOpcode opcode) {
                       " (%#02x=%s)\n",
               ctx->offset, context->last_opcode_end + 1,
               ctx->data[context->last_opcode_end], opcode_name);
-      return WABT_ERROR;
+      return WabtResult::Error;
     }
   }
 
   context->current_opcode_offset = ctx->offset;
   context->current_opcode = opcode;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 #define IMMEDIATE_OCTET_COUNT 9
@@ -211,7 +211,8 @@ static void log_opcode(Context* ctx,
   size_t offset = ctx->current_opcode_offset;
 
   // Print binary data
-  printf(" %06" PRIzx ": %02x", offset - 1, ctx->current_opcode);
+  printf(" %06" PRIzx ": %02x", offset - 1,
+         static_cast<unsigned>(ctx->current_opcode));
   size_t i;
   for (i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT; i++, offset++) {
     printf(" %02x", data[offset]);
@@ -224,7 +225,7 @@ static void log_opcode(Context* ctx,
   // Print disassemble
   int j;
   int indent_level = ctx->indent_level;
-  if (ctx->current_opcode == WABT_OPCODE_ELSE)
+  if (ctx->current_opcode == WabtOpcode::Else)
     indent_level--;
   for (j = 0; j < indent_level; j++) {
     printf("  ");
@@ -247,7 +248,8 @@ static void log_opcode(Context* ctx,
   if (ctx->options->relocs) {
     if (ctx->next_reloc < ctx->options->code_relocations.size) {
       WabtReloc* reloc = &ctx->options->code_relocations.data[ctx->next_reloc];
-      size_t code_start = ctx->section_starts[WABT_BINARY_SECTION_CODE];
+      size_t code_start =
+          ctx->section_starts[static_cast<size_t>(WabtBinarySection::Code)];
       size_t abs_offset = code_start + reloc->offset;
       if (ctx->last_opcode_end > abs_offset) {
         printf("           %06" PRIzx ": %s\n", abs_offset,
@@ -261,7 +263,7 @@ static void log_opcode(Context* ctx,
 static WabtResult on_opcode_bare(WabtBinaryReaderContext* ctx) {
   Context* context = static_cast<Context*>(ctx->user_data);
   log_opcode(context, ctx->data, 0, nullptr);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_opcode_uint32(WabtBinaryReaderContext* ctx,
@@ -269,7 +271,7 @@ static WabtResult on_opcode_uint32(WabtBinaryReaderContext* ctx,
   Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   log_opcode(context, ctx->data, immediate_len, "%#x", value);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_opcode_uint32_uint32(WabtBinaryReaderContext* ctx,
@@ -278,7 +280,7 @@ static WabtResult on_opcode_uint32_uint32(WabtBinaryReaderContext* ctx,
   Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   log_opcode(context, ctx->data, immediate_len, "%lu %lu", value, value2);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_opcode_uint64(WabtBinaryReaderContext* ctx,
@@ -286,7 +288,7 @@ static WabtResult on_opcode_uint64(WabtBinaryReaderContext* ctx,
   Context* context = static_cast<Context*>(ctx->user_data);
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   log_opcode(context, ctx->data, immediate_len, "%d", value);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_opcode_f32(WabtBinaryReaderContext* ctx,
@@ -296,7 +298,7 @@ static WabtResult on_opcode_f32(WabtBinaryReaderContext* ctx,
   char buffer[WABT_MAX_FLOAT_HEX];
   wabt_write_float_hex(buffer, sizeof(buffer), value);
   log_opcode(context, ctx->data, immediate_len, buffer);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_opcode_f64(WabtBinaryReaderContext* ctx,
@@ -306,7 +308,7 @@ static WabtResult on_opcode_f64(WabtBinaryReaderContext* ctx,
   char buffer[WABT_MAX_DOUBLE_HEX];
   wabt_write_double_hex(buffer, sizeof(buffer), value);
   log_opcode(context, ctx->data, immediate_len, buffer);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult on_br_table_expr(WabtBinaryReaderContext* ctx,
@@ -317,7 +319,7 @@ WabtResult on_br_table_expr(WabtBinaryReaderContext* ctx,
   size_t immediate_len = ctx->offset - context->current_opcode_offset;
   /* TODO(sbc): Print targets */
   log_opcode(context, ctx->data, immediate_len, nullptr);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_end_expr(void* user_data) {
@@ -325,21 +327,21 @@ static WabtResult on_end_expr(void* user_data) {
   context->indent_level--;
   assert(context->indent_level >= 0);
   log_opcode(context, nullptr, 0, nullptr);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static const char* wabt_type_name(WabtType type) {
   switch (type) {
-    case WABT_TYPE_I32:
+    case WabtType::I32:
       return "i32";
 
-    case WABT_TYPE_I64:
+    case WabtType::I64:
       return "i64";
 
-    case WABT_TYPE_F32:
+    case WabtType::F32:
       return "f32";
 
-    case WABT_TYPE_F64:
+    case WabtType::F64:
       return "f64";
 
     default:
@@ -357,7 +359,7 @@ static WabtResult on_opcode_block_sig(WabtBinaryReaderContext* ctx,
   else
     log_opcode(context, ctx->data, 1, nullptr);
   context->indent_level++;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_signature(uint32_t index,
@@ -369,7 +371,7 @@ static WabtResult on_signature(uint32_t index,
   Context* ctx = static_cast<Context*>(user_data);
 
   if (!should_print_details(ctx))
-    return WABT_OK;
+    return WabtResult::Ok;
   printf(" - [%d] (", index);
   uint32_t i;
   for (i = 0; i < param_count; i++) {
@@ -384,7 +386,7 @@ static WabtResult on_signature(uint32_t index,
   else
     printf("nil");
   printf("\n");
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_function_signature(uint32_t index,
@@ -392,14 +394,14 @@ static WabtResult on_function_signature(uint32_t index,
                                         void* user_data) {
   print_details(static_cast<Context*>(user_data), " - func[%d] sig=%d\n", index,
                 sig_index);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_function_body(WabtBinaryReaderContext* context,
                                       uint32_t index) {
   Context* ctx = static_cast<Context*>(context->user_data);
 
-  if (ctx->options->mode == WABT_DUMP_DISASSEMBLE) {
+  if (ctx->options->mode == WabtObjdumpMode::Disassemble) {
     if (index < ctx->options->function_names.size)
       printf("%06" PRIzx " <" PRIstringslice ">:\n", context->offset,
              WABT_PRINTF_STRING_SLICE_ARG(
@@ -409,7 +411,7 @@ static WabtResult begin_function_body(WabtBinaryReaderContext* context,
   }
 
   ctx->last_opcode_end = 0;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_import(uint32_t index,
@@ -419,7 +421,7 @@ static WabtResult on_import(uint32_t index,
   Context* ctx = static_cast<Context*>(user_data);
   ctx->import_module_name = module_name;
   ctx->import_field_name = field_name;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_import_func(uint32_t import_index,
@@ -432,7 +434,7 @@ static WabtResult on_import_func(uint32_t import_index,
                 func_index, sig_index,
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_import_table(uint32_t import_index,
@@ -447,7 +449,7 @@ static WabtResult on_import_table(uint32_t import_index,
       WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
       WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
       wabt_get_type_name(elem_type), elem_limits->initial, elem_limits->max);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_import_memory(uint32_t import_index,
@@ -458,7 +460,7 @@ static WabtResult on_import_memory(uint32_t import_index,
   print_details(ctx, " - " PRIstringslice "." PRIstringslice " -> memory\n",
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_import_global(uint32_t import_index,
@@ -472,7 +474,7 @@ static WabtResult on_import_global(uint32_t import_index,
                 global_index, wabt_get_type_name(type), mutable_,
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
                 WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_memory(uint32_t index,
@@ -484,7 +486,7 @@ static WabtResult on_memory(uint32_t index,
   if (page_limits->has_max)
     print_details(ctx, " max=%" PRId64, page_limits->max);
   print_details(ctx, "\n");
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_table(uint32_t index,
@@ -497,7 +499,7 @@ static WabtResult on_table(uint32_t index,
   if (elem_limits->has_max)
     print_details(ctx, " max=%" PRId64, elem_limits->max);
   print_details(ctx, "\n");
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_export(uint32_t index,
@@ -509,7 +511,7 @@ static WabtResult on_export(uint32_t index,
   print_details(ctx, " - %s[%d] ", wabt_get_kind_name(kind), item_index);
   print_details(ctx, PRIstringslice, WABT_PRINTF_STRING_SLICE_ARG(name));
   print_details(ctx, "\n");
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_elem_segment_function_index(uint32_t index,
@@ -517,7 +519,7 @@ static WabtResult on_elem_segment_function_index(uint32_t index,
                                                  void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, "  - func[%d]\n", func_index);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_elem_segment(uint32_t index,
@@ -525,7 +527,7 @@ static WabtResult begin_elem_segment(uint32_t index,
                                      void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - segment[%d] table=%d\n", index, table_index);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_global(uint32_t index,
@@ -535,7 +537,7 @@ static WabtResult begin_global(uint32_t index,
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - global[%d] %s mutable=%d", index,
                 wabt_get_type_name(type), mutable_);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_init_expr_f32_const_expr(uint32_t index,
@@ -545,7 +547,7 @@ static WabtResult on_init_expr_f32_const_expr(uint32_t index,
   char buffer[WABT_MAX_FLOAT_HEX];
   wabt_write_float_hex(buffer, sizeof(buffer), value);
   print_details(ctx, " - init f32=%s\n", buffer);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_init_expr_f64_const_expr(uint32_t index,
@@ -555,7 +557,7 @@ static WabtResult on_init_expr_f64_const_expr(uint32_t index,
   char buffer[WABT_MAX_DOUBLE_HEX];
   wabt_write_float_hex(buffer, sizeof(buffer), value);
   print_details(ctx, " - init f64=%s\n", buffer);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_init_expr_get_global_expr(uint32_t index,
@@ -563,7 +565,7 @@ static WabtResult on_init_expr_get_global_expr(uint32_t index,
                                                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - init global=%d\n", global_index);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_init_expr_i32_const_expr(uint32_t index,
@@ -571,7 +573,7 @@ static WabtResult on_init_expr_i32_const_expr(uint32_t index,
                                               void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - init i32=%d\n", value);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_init_expr_i64_const_expr(uint32_t index,
@@ -579,7 +581,7 @@ static WabtResult on_init_expr_i64_const_expr(uint32_t index,
                                               void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - init i64=%" PRId64 "\n", value);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_function_name(uint32_t index,
@@ -588,9 +590,9 @@ static WabtResult on_function_name(uint32_t index,
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - func[%d] " PRIstringslice "\n", index,
                 WABT_PRINTF_STRING_SLICE_ARG(name));
-  if (ctx->options->mode == WABT_DUMP_PREPASS)
+  if (ctx->options->mode == WabtObjdumpMode::Prepass)
     wabt_append_string_slice_value(&ctx->options->function_names, &name);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_local_name(uint32_t func_index,
@@ -602,7 +604,7 @@ static WabtResult on_local_name(uint32_t func_index,
     print_details(ctx, "  - local[%d] " PRIstringslice "\n", local_index,
                   WABT_PRINTF_STRING_SLICE_ARG(name));
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult on_reloc_count(uint32_t count,
@@ -612,31 +614,32 @@ WabtResult on_reloc_count(uint32_t count,
   Context* ctx = static_cast<Context*>(user_data);
   ctx->reloc_section = section_code;
   print_details(ctx, "  - section: %s\n", wabt_get_section_name(section_code));
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult on_reloc(WabtRelocType type,
                     uint32_t offset,
                     void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  uint32_t total_offset = ctx->section_starts[ctx->reloc_section] + offset;
+  uint32_t total_offset =
+      ctx->section_starts[static_cast<size_t>(ctx->reloc_section)] + offset;
   print_details(ctx, "   - %-18s offset=%#x (%#x)\n",
                 wabt_get_reloc_type_name(type), total_offset, offset);
-  if (ctx->options->mode == WABT_DUMP_PREPASS &&
-      ctx->reloc_section == WABT_BINARY_SECTION_CODE) {
+  if (ctx->options->mode == WabtObjdumpMode::Prepass &&
+      ctx->reloc_section == WabtBinarySection::Code) {
     WabtReloc reloc;
     reloc.offset = offset;
     reloc.type = type;
     wabt_append_reloc_value(&ctx->options->code_relocations, &reloc);
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void on_error(WabtBinaryReaderContext* ctx, const char* message) {
   WabtDefaultErrorHandlerInfo info;
   info.header = "error reading binary";
   info.out_file = stdout;
-  info.print_header = WABT_PRINT_ERROR_HEADER_ONCE;
+  info.print_header = WabtPrintErrorHeader::Once;
   wabt_default_binary_error_callback(ctx->offset, message, &info);
 }
 
@@ -645,7 +648,7 @@ static WabtResult begin_data_segment(uint32_t index,
                                      void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - memory[%d]", memory_index);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_data_segment_data(uint32_t index,
@@ -654,10 +657,10 @@ static WabtResult on_data_segment_data(uint32_t index,
                                        void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   if (should_print_details(ctx)) {
-    wabt_write_memory_dump(ctx->out_stream, src_data, size, 0, WABT_PRINT_CHARS,
-                           "  - ", nullptr);
+    wabt_write_memory_dump(ctx->out_stream, src_data, size, 0,
+                           WabtPrintChars::Yes, "  - ", nullptr);
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_read_binary_objdump(const uint8_t* data,
@@ -675,7 +678,7 @@ WabtResult wabt_read_binary_objdump(const uint8_t* data,
 
   WabtBinaryReader reader;
   WABT_ZERO_MEMORY(reader);
-  if (options->mode == WABT_DUMP_PREPASS) {
+  if (options->mode == WabtObjdumpMode::Prepass) {
     reader.on_function_name = on_function_name;
     reader.on_reloc_count = on_reloc_count;
     reader.on_reloc = on_reloc;
@@ -750,7 +753,7 @@ WabtResult wabt_read_binary_objdump(const uint8_t* data,
     reader.on_init_expr_get_global_expr = on_init_expr_get_global_expr;
   }
 
-  if (options->mode == WABT_DUMP_DISASSEMBLE) {
+  if (options->mode == WabtObjdumpMode::Disassemble) {
     reader.on_opcode = on_opcode;
     reader.on_opcode_bare = on_opcode_bare;
     reader.on_opcode_uint32 = on_opcode_uint32;

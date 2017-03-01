@@ -13,7 +13,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "TYPE" (1)
+; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
@@ -28,14 +28,14 @@
 0000011: 7d                                        ; f32
 0000012: 00                                        ; num results
 0000009: 09                                        ; FIXUP section size
-; section "FUNCTION" (3)
+; section "Function" (3)
 0000013: 03                                        ; section code
 0000014: 00                                        ; section size (guess)
 0000015: 02                                        ; num functions
 0000016: 00                                        ; function 0 signature index
 0000017: 01                                        ; function 1 signature index
 0000014: 03                                        ; FIXUP section size
-; section "CODE" (10)
+; section "Code" (10)
 0000018: 0a                                        ; section code
 0000019: 00                                        ; section size (guess)
 000001a: 02                                        ; num functions
@@ -89,13 +89,13 @@ debug-names.wasm:	file format wasm 0x000001
 
 Section Details:
 
-TYPE:
+Type:
  - [0] (i32) -> nil
  - [1] (f32) -> nil
-FUNCTION:
+Function:
  - func[0] sig=0
  - func[1] sig=1
-CUSTOM:
+Custom:
  - name: "name"
  - func[0] $F1
   - local[0] $F1P0

@@ -24,7 +24,7 @@
 #define CHECK_RESULT(expr) \
   do {                     \
     if (WABT_FAILED(expr)) \
-      return WABT_ERROR;   \
+      return WabtResult::Error;   \
   } while (0)
 
 struct Context {
@@ -95,19 +95,19 @@ static void generate_and_bind_local_names(WabtStringSliceVector* index_to_name,
 static WabtResult begin_block_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$B", ctx->label_count++, &expr->block.label);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_loop_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$L", ctx->label_count++, &expr->loop.label);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_if_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   maybe_generate_name("$L", ctx->label_count++, &expr->if_.true_.label);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 
@@ -129,7 +129,7 @@ static WabtResult visit_func(Context* ctx,
 
   ctx->label_count = 0;
   CHECK_RESULT(wabt_visit_func(func, &ctx->visitor));
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult visit_global(Context* ctx,
@@ -137,7 +137,7 @@ static WabtResult visit_global(Context* ctx,
                                WabtGlobal* global) {
   maybe_generate_and_bind_name(&ctx->module->global_bindings, "$g",
                                global_index, &global->name);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult visit_func_type(Context* ctx,
@@ -145,7 +145,7 @@ static WabtResult visit_func_type(Context* ctx,
                                   WabtFuncType* func_type) {
   maybe_generate_and_bind_name(&ctx->module->func_type_bindings, "$t",
                                func_type_index, &func_type->name);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult visit_table(Context* ctx,
@@ -153,7 +153,7 @@ static WabtResult visit_table(Context* ctx,
                               WabtTable* table) {
   maybe_generate_and_bind_name(&ctx->module->table_bindings, "$T", table_index,
                                &table->name);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult visit_memory(Context* ctx,
@@ -161,7 +161,7 @@ static WabtResult visit_memory(Context* ctx,
                                WabtMemory* memory) {
   maybe_generate_and_bind_name(&ctx->module->memory_bindings, "$M",
                                memory_index, &memory->name);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult visit_module(Context* ctx, WabtModule* module) {
@@ -176,7 +176,7 @@ static WabtResult visit_module(Context* ctx, WabtModule* module) {
     CHECK_RESULT(visit_table(ctx, i, module->tables.data[i]));
   for (i = 0; i < module->memories.size; ++i)
     CHECK_RESULT(visit_memory(ctx, i, module->memories.data[i]));
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_generate_names(WabtModule* module) {

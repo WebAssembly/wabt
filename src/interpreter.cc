@@ -29,7 +29,7 @@ static const char* s_interpreter_opcode_name[256];
 #define CHECK_RESULT(expr) \
   do {                     \
     if (WABT_FAILED(expr)) \
-      return WABT_ERROR;   \
+      return WabtResult::Error;   \
   } while (0)
 
 /* TODO(binji): It's annoying to have to have an initializer function, but it
@@ -41,20 +41,16 @@ static void init_interpreter_opcode_table(void) {
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \
   s_interpreter_opcode_name[code] = text;
 
-    WABT_FOREACH_OPCODE(V)
-    s_interpreter_opcode_name[WABT_OPCODE_ALLOCA] = "alloca";
-    s_interpreter_opcode_name[WABT_OPCODE_BR_UNLESS] = "br_unless";
-    s_interpreter_opcode_name[WABT_OPCODE_CALL_HOST] = "call_host";
-    s_interpreter_opcode_name[WABT_OPCODE_DATA] = "data";
-    s_interpreter_opcode_name[WABT_OPCODE_DROP_KEEP] = "drop_keep";
+    WABT_FOREACH_INTERPRETER_OPCODE(V)
 
 #undef V
   }
 }
 
-static const char* wabt_get_interpreter_opcode_name(uint8_t opcode) {
+static const char* wabt_get_interpreter_opcode_name(
+    WabtInterpreterOpcode opcode) {
   init_interpreter_opcode_table();
-  return s_interpreter_opcode_name[opcode];
+  return s_interpreter_opcode_name[static_cast<int>(opcode)];
 }
 
 void wabt_init_interpreter_environment(WabtInterpreterEnvironment* env) {
@@ -199,9 +195,9 @@ void wabt_init_interpreter_thread(WabtInterpreterEnvironment* env,
 WabtInterpreterResult wabt_push_thread_value(WabtInterpreterThread* thread,
                                              WabtInterpreterValue value) {
   if (thread->value_stack_top >= thread->value_stack_end)
-    return WABT_INTERPRETER_TRAP_VALUE_STACK_EXHAUSTED;
+    return WabtInterpreterResult::TrapValueStackExhausted;
   *thread->value_stack_top++ = value;
-  return WABT_INTERPRETER_OK;
+  return WabtInterpreterResult::Ok;
 }
 
 WabtInterpreterExport* wabt_get_interpreter_export_by_name(
@@ -450,17 +446,17 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define TYPE_FIELD_NAME_F32 f32_bits
 #define TYPE_FIELD_NAME_F64 f64_bits
 
-#define TRAP(type) return WABT_INTERPRETER_TRAP_##type
+#define TRAP(type) return WabtInterpreterResult::Trap##type
 #define TRAP_UNLESS(cond, type) TRAP_IF(!(cond), type)
-#define TRAP_IF(cond, type)                \
-  do {                                     \
-    if (WABT_UNLIKELY(cond))               \
-      return WABT_INTERPRETER_TRAP_##type; \
+#define TRAP_IF(cond, type)  \
+  do {                       \
+    if (WABT_UNLIKELY(cond)) \
+      TRAP(type);            \
   } while (0)
 
 #define CHECK_STACK()                                         \
   TRAP_IF(thread->value_stack_top >= thread->value_stack_end, \
-          VALUE_STACK_EXHAUSTED)
+          ValueStackExhausted)
 
 #define PUSH_NEG_1_AND_BREAK_IF(cond) \
   if (WABT_UNLIKELY(cond)) {          \
@@ -506,7 +502,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define PUSH_CALL()                                           \
   do {                                                        \
     TRAP_IF(thread->call_stack_top >= thread->call_stack_end, \
-            CALL_STACK_EXHAUSTED);                            \
+            CallStackExhausted);                              \
     (*thread->call_stack_top++) = (pc - istream);             \
   } while (0)
 
@@ -523,7 +519,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     uint64_t offset = static_cast<uint64_t>(POP_I32()) + read_u32(&pc);    \
     MEM_TYPE_##mem_type value;                                             \
     TRAP_IF(offset + sizeof(value) > memory->byte_size,                    \
-            MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
+            MemoryAccessOutOfBounds);                                  \
     void* src =                                                            \
         reinterpret_cast<void*>(reinterpret_cast<intptr_t>(memory->data) + \
                                 static_cast<uint32_t>(offset));            \
@@ -538,7 +534,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     uint64_t offset = static_cast<uint64_t>(POP_I32()) + read_u32(&pc);    \
     MEM_TYPE_##mem_type src = static_cast<MEM_TYPE_##mem_type>(value);     \
     TRAP_IF(offset + sizeof(src) > memory->byte_size,                      \
-            MEMORY_ACCESS_OUT_OF_BOUNDS);                                  \
+            MemoryAccessOutOfBounds);                                  \
     void* dst =                                                            \
         reinterpret_cast<void*>(reinterpret_cast<intptr_t>(memory->data) + \
                                 static_cast<uint32_t>(offset));            \
@@ -593,7 +589,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   do {                                                     \
     VALUE_TYPE_##type rhs = POP_##type();                  \
     VALUE_TYPE_##type lhs = POP_##type();                  \
-    TRAP_IF(rhs == 0, INTEGER_DIVIDE_BY_ZERO);             \
+    TRAP_IF(rhs == 0, IntegerDivideByZero);            \
     PUSH_##type(BITCAST_##type##_TO_UNSIGNED(lhs)          \
                     op BITCAST_##type##_TO_UNSIGNED(rhs)); \
   } while (0)
@@ -605,10 +601,10 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   do {                                                 \
     VALUE_TYPE_##type rhs = POP_##type();              \
     VALUE_TYPE_##type lhs = POP_##type();              \
-    TRAP_IF(rhs == 0, INTEGER_DIVIDE_BY_ZERO);         \
+    TRAP_IF(rhs == 0, IntegerDivideByZero);            \
     TRAP_IF(lhs == VALUE_TYPE_SIGNED_MAX_##type &&     \
                 rhs == VALUE_TYPE_UNSIGNED_MAX_##type, \
-            INTEGER_OVERFLOW);                         \
+            IntegerOverflow);                          \
     PUSH_##type(BITCAST_##type##_TO_SIGNED(lhs) /      \
                 BITCAST_##type##_TO_SIGNED(rhs));      \
   } while (0)
@@ -617,7 +613,7 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
   do {                                                          \
     VALUE_TYPE_##type rhs = POP_##type();                       \
     VALUE_TYPE_##type lhs = POP_##type();                       \
-    TRAP_IF(rhs == 0, INTEGER_DIVIDE_BY_ZERO);                  \
+    TRAP_IF(rhs == 0, IntegerDivideByZero);                 \
     if (WABT_UNLIKELY(lhs == VALUE_TYPE_SIGNED_MAX_##type &&    \
                       rhs == VALUE_TYPE_UNSIGNED_MAX_##type)) { \
       PUSH_##type(0);                                           \
@@ -767,21 +763,21 @@ WabtInterpreterResult wabt_call_host(WabtInterpreterThread* thread,
   WabtResult call_result = func->host.callback(
       func, sig, num_args, thread->host_args.data, num_results,
       call_result_values, func->host.user_data);
-  TRAP_IF(call_result != WABT_OK, HOST_TRAPPED);
+  TRAP_IF(call_result != WabtResult::Ok, HostTrapped);
 
   for (i = 0; i < num_results; ++i) {
     TRAP_IF(call_result_values[i].type != sig->result_types.data[i],
-            HOST_RESULT_TYPE_MISMATCH);
+            HostResultTypeMismatch);
     PUSH(call_result_values[i].value);
   }
 
-  return WABT_INTERPRETER_OK;
+  return WabtInterpreterResult::Ok;
 }
 
 WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
                                            uint32_t num_instructions,
                                            uint32_t* call_stack_return_top) {
-  WabtInterpreterResult result = WABT_INTERPRETER_OK;
+  WabtInterpreterResult result = WabtInterpreterResult::Ok;
   assert(call_stack_return_top < thread->call_stack_end);
 
   WabtInterpreterEnvironment* env = thread->env;
@@ -790,9 +786,9 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
   const uint8_t* pc = &istream[thread->pc];
   uint32_t i;
   for (i = 0; i < num_instructions; ++i) {
-    uint8_t opcode = *pc++;
+    WabtInterpreterOpcode opcode = static_cast<WabtInterpreterOpcode>(*pc++);
     switch (opcode) {
-      case WABT_OPCODE_SELECT: {
+      case WabtInterpreterOpcode::Select: {
         VALUE_TYPE_I32 cond = POP_I32();
         WabtInterpreterValue false_ = POP();
         WabtInterpreterValue true_ = POP();
@@ -800,18 +796,18 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         break;
       }
 
-      case WABT_OPCODE_BR:
+      case WabtInterpreterOpcode::Br:
         GOTO(read_u32(&pc));
         break;
 
-      case WABT_OPCODE_BR_IF: {
+      case WabtInterpreterOpcode::BrIf: {
         uint32_t new_pc = read_u32(&pc);
         if (POP_I32())
           GOTO(new_pc);
         break;
       }
 
-      case WABT_OPCODE_BR_TABLE: {
+      case WabtInterpreterOpcode::BrTable: {
         uint32_t num_targets = read_u32(&pc);
         uint32_t table_offset = read_u32(&pc);
         VALUE_TYPE_I32 key = POP_I32();
@@ -827,85 +823,85 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         break;
       }
 
-      case WABT_OPCODE_RETURN:
+      case WabtInterpreterOpcode::Return:
         if (thread->call_stack_top == call_stack_return_top) {
-          result = WABT_INTERPRETER_RETURNED;
+          result = WabtInterpreterResult::Returned;
           goto exit_loop;
         }
         GOTO(POP_CALL());
         break;
 
-      case WABT_OPCODE_UNREACHABLE:
-        TRAP(UNREACHABLE);
+      case WabtInterpreterOpcode::Unreachable:
+        TRAP(Unreachable);
         break;
 
-      case WABT_OPCODE_I32_CONST:
+      case WabtInterpreterOpcode::I32Const:
         PUSH_I32(read_u32(&pc));
         break;
 
-      case WABT_OPCODE_I64_CONST:
+      case WabtInterpreterOpcode::I64Const:
         PUSH_I64(read_u64(&pc));
         break;
 
-      case WABT_OPCODE_F32_CONST:
+      case WabtInterpreterOpcode::F32Const:
         PUSH_F32(read_u32(&pc));
         break;
 
-      case WABT_OPCODE_F64_CONST:
+      case WabtInterpreterOpcode::F64Const:
         PUSH_F64(read_u64(&pc));
         break;
 
-      case WABT_OPCODE_GET_GLOBAL: {
+      case WabtInterpreterOpcode::GetGlobal: {
         uint32_t index = read_u32(&pc);
         assert(index < env->globals.size);
         PUSH(env->globals.data[index].typed_value.value);
         break;
       }
 
-      case WABT_OPCODE_SET_GLOBAL: {
+      case WabtInterpreterOpcode::SetGlobal: {
         uint32_t index = read_u32(&pc);
         assert(index < env->globals.size);
         env->globals.data[index].typed_value.value = POP();
         break;
       }
 
-      case WABT_OPCODE_GET_LOCAL: {
+      case WabtInterpreterOpcode::GetLocal: {
         WabtInterpreterValue value = PICK(read_u32(&pc));
         PUSH(value);
         break;
       }
 
-      case WABT_OPCODE_SET_LOCAL: {
+      case WabtInterpreterOpcode::SetLocal: {
         WabtInterpreterValue value = POP();
         PICK(read_u32(&pc)) = value;
         break;
       }
 
-      case WABT_OPCODE_TEE_LOCAL:
+      case WabtInterpreterOpcode::TeeLocal:
         PICK(read_u32(&pc)) = TOP();
         break;
 
-      case WABT_OPCODE_CALL: {
+      case WabtInterpreterOpcode::Call: {
         uint32_t offset = read_u32(&pc);
         PUSH_CALL();
         GOTO(offset);
         break;
       }
 
-      case WABT_OPCODE_CALL_INDIRECT: {
+      case WabtInterpreterOpcode::CallIndirect: {
         uint32_t table_index = read_u32(&pc);
         assert(table_index < env->tables.size);
         WabtInterpreterTable* table = &env->tables.data[table_index];
         uint32_t sig_index = read_u32(&pc);
         assert(sig_index < env->sigs.size);
         VALUE_TYPE_I32 entry_index = POP_I32();
-        TRAP_IF(entry_index >= table->func_indexes.size, UNDEFINED_TABLE_INDEX);
+        TRAP_IF(entry_index >= table->func_indexes.size, UndefinedTableIndex);
         uint32_t func_index = table->func_indexes.data[entry_index];
-        TRAP_IF(func_index == WABT_INVALID_INDEX, UNINITIALIZED_TABLE_ELEMENT);
+        TRAP_IF(func_index == WABT_INVALID_INDEX, UninitializedTableElement);
         WabtInterpreterFunc* func = &env->funcs.data[func_index];
         TRAP_UNLESS(
             wabt_func_signatures_are_equal(env, func->sig_index, sig_index),
-            INDIRECT_CALL_SIGNATURE_MISMATCH);
+            IndirectCallSignatureMismatch);
         if (func->is_host) {
           wabt_call_host(thread, func);
         } else {
@@ -915,7 +911,7 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         break;
       }
 
-      case WABT_OPCODE_CALL_HOST: {
+      case WabtInterpreterOpcode::CallHost: {
         uint32_t func_index = read_u32(&pc);
         assert(func_index < env->funcs.size);
         WabtInterpreterFunc* func = &env->funcs.data[func_index];
@@ -923,105 +919,105 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         break;
       }
 
-      case WABT_OPCODE_I32_LOAD8_S:
+      case WabtInterpreterOpcode::I32Load8S:
         LOAD(I32, I8);
         break;
 
-      case WABT_OPCODE_I32_LOAD8_U:
+      case WabtInterpreterOpcode::I32Load8U:
         LOAD(I32, U8);
         break;
 
-      case WABT_OPCODE_I32_LOAD16_S:
+      case WabtInterpreterOpcode::I32Load16S:
         LOAD(I32, I16);
         break;
 
-      case WABT_OPCODE_I32_LOAD16_U:
+      case WabtInterpreterOpcode::I32Load16U:
         LOAD(I32, U16);
         break;
 
-      case WABT_OPCODE_I64_LOAD8_S:
+      case WabtInterpreterOpcode::I64Load8S:
         LOAD(I64, I8);
         break;
 
-      case WABT_OPCODE_I64_LOAD8_U:
+      case WabtInterpreterOpcode::I64Load8U:
         LOAD(I64, U8);
         break;
 
-      case WABT_OPCODE_I64_LOAD16_S:
+      case WabtInterpreterOpcode::I64Load16S:
         LOAD(I64, I16);
         break;
 
-      case WABT_OPCODE_I64_LOAD16_U:
+      case WabtInterpreterOpcode::I64Load16U:
         LOAD(I64, U16);
         break;
 
-      case WABT_OPCODE_I64_LOAD32_S:
+      case WabtInterpreterOpcode::I64Load32S:
         LOAD(I64, I32);
         break;
 
-      case WABT_OPCODE_I64_LOAD32_U:
+      case WabtInterpreterOpcode::I64Load32U:
         LOAD(I64, U32);
         break;
 
-      case WABT_OPCODE_I32_LOAD:
+      case WabtInterpreterOpcode::I32Load:
         LOAD(I32, U32);
         break;
 
-      case WABT_OPCODE_I64_LOAD:
+      case WabtInterpreterOpcode::I64Load:
         LOAD(I64, U64);
         break;
 
-      case WABT_OPCODE_F32_LOAD:
+      case WabtInterpreterOpcode::F32Load:
         LOAD(F32, F32);
         break;
 
-      case WABT_OPCODE_F64_LOAD:
+      case WabtInterpreterOpcode::F64Load:
         LOAD(F64, F64);
         break;
 
-      case WABT_OPCODE_I32_STORE8:
+      case WabtInterpreterOpcode::I32Store8:
         STORE(I32, U8);
         break;
 
-      case WABT_OPCODE_I32_STORE16:
+      case WabtInterpreterOpcode::I32Store16:
         STORE(I32, U16);
         break;
 
-      case WABT_OPCODE_I64_STORE8:
+      case WabtInterpreterOpcode::I64Store8:
         STORE(I64, U8);
         break;
 
-      case WABT_OPCODE_I64_STORE16:
+      case WabtInterpreterOpcode::I64Store16:
         STORE(I64, U16);
         break;
 
-      case WABT_OPCODE_I64_STORE32:
+      case WabtInterpreterOpcode::I64Store32:
         STORE(I64, U32);
         break;
 
-      case WABT_OPCODE_I32_STORE:
+      case WabtInterpreterOpcode::I32Store:
         STORE(I32, U32);
         break;
 
-      case WABT_OPCODE_I64_STORE:
+      case WabtInterpreterOpcode::I64Store:
         STORE(I64, U64);
         break;
 
-      case WABT_OPCODE_F32_STORE:
+      case WabtInterpreterOpcode::F32Store:
         STORE(F32, F32);
         break;
 
-      case WABT_OPCODE_F64_STORE:
+      case WabtInterpreterOpcode::F64Store:
         STORE(F64, F64);
         break;
 
-      case WABT_OPCODE_CURRENT_MEMORY: {
+      case WabtInterpreterOpcode::CurrentMemory: {
         GET_MEMORY(memory);
         PUSH_I32(memory->page_limits.initial);
         break;
       }
 
-      case WABT_OPCODE_GROW_MEMORY: {
+      case WabtInterpreterOpcode::GrowMemory: {
         GET_MEMORY(memory);
         uint32_t old_page_size = memory->page_limits.initial;
         uint32_t old_byte_size = memory->byte_size;
@@ -1046,507 +1042,507 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         break;
       }
 
-      case WABT_OPCODE_I32_ADD:
+      case WabtInterpreterOpcode::I32Add:
         BINOP(I32, I32, +);
         break;
 
-      case WABT_OPCODE_I32_SUB:
+      case WabtInterpreterOpcode::I32Sub:
         BINOP(I32, I32, -);
         break;
 
-      case WABT_OPCODE_I32_MUL:
+      case WabtInterpreterOpcode::I32Mul:
         BINOP(I32, I32, *);
         break;
 
-      case WABT_OPCODE_I32_DIV_S:
+      case WabtInterpreterOpcode::I32DivS:
         BINOP_DIV_S(I32);
         break;
 
-      case WABT_OPCODE_I32_DIV_U:
+      case WabtInterpreterOpcode::I32DivU:
         BINOP_DIV_REM_U(I32, / );
         break;
 
-      case WABT_OPCODE_I32_REM_S:
+      case WabtInterpreterOpcode::I32RemS:
         BINOP_REM_S(I32);
         break;
 
-      case WABT_OPCODE_I32_REM_U:
+      case WabtInterpreterOpcode::I32RemU:
         BINOP_DIV_REM_U(I32, % );
         break;
 
-      case WABT_OPCODE_I32_AND:
+      case WabtInterpreterOpcode::I32And:
         BINOP(I32, I32, &);
         break;
 
-      case WABT_OPCODE_I32_OR:
+      case WabtInterpreterOpcode::I32Or:
         BINOP(I32, I32, | );
         break;
 
-      case WABT_OPCODE_I32_XOR:
+      case WabtInterpreterOpcode::I32Xor:
         BINOP(I32, I32, ^);
         break;
 
-      case WABT_OPCODE_I32_SHL:
+      case WabtInterpreterOpcode::I32Shl:
         BINOP_SHIFT(I32, <<, UNSIGNED);
         break;
 
-      case WABT_OPCODE_I32_SHR_U:
+      case WabtInterpreterOpcode::I32ShrU:
         BINOP_SHIFT(I32, >>, UNSIGNED);
         break;
 
-      case WABT_OPCODE_I32_SHR_S:
+      case WabtInterpreterOpcode::I32ShrS:
         BINOP_SHIFT(I32, >>, SIGNED);
         break;
 
-      case WABT_OPCODE_I32_EQ:
+      case WabtInterpreterOpcode::I32Eq:
         BINOP(I32, I32, == );
         break;
 
-      case WABT_OPCODE_I32_NE:
+      case WabtInterpreterOpcode::I32Ne:
         BINOP(I32, I32, != );
         break;
 
-      case WABT_OPCODE_I32_LT_S:
+      case WabtInterpreterOpcode::I32LtS:
         BINOP_SIGNED(I32, I32, < );
         break;
 
-      case WABT_OPCODE_I32_LE_S:
+      case WabtInterpreterOpcode::I32LeS:
         BINOP_SIGNED(I32, I32, <= );
         break;
 
-      case WABT_OPCODE_I32_LT_U:
+      case WabtInterpreterOpcode::I32LtU:
         BINOP(I32, I32, < );
         break;
 
-      case WABT_OPCODE_I32_LE_U:
+      case WabtInterpreterOpcode::I32LeU:
         BINOP(I32, I32, <= );
         break;
 
-      case WABT_OPCODE_I32_GT_S:
+      case WabtInterpreterOpcode::I32GtS:
         BINOP_SIGNED(I32, I32, > );
         break;
 
-      case WABT_OPCODE_I32_GE_S:
+      case WabtInterpreterOpcode::I32GeS:
         BINOP_SIGNED(I32, I32, >= );
         break;
 
-      case WABT_OPCODE_I32_GT_U:
+      case WabtInterpreterOpcode::I32GtU:
         BINOP(I32, I32, > );
         break;
 
-      case WABT_OPCODE_I32_GE_U:
+      case WabtInterpreterOpcode::I32GeU:
         BINOP(I32, I32, >= );
         break;
 
-      case WABT_OPCODE_I32_CLZ: {
+      case WabtInterpreterOpcode::I32Clz: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I32(value != 0 ? wabt_clz_u32(value) : 32);
         break;
       }
 
-      case WABT_OPCODE_I32_CTZ: {
+      case WabtInterpreterOpcode::I32Ctz: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I32(value != 0 ? wabt_ctz_u32(value) : 32);
         break;
       }
 
-      case WABT_OPCODE_I32_POPCNT: {
+      case WabtInterpreterOpcode::I32Popcnt: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I32(wabt_popcount_u32(value));
         break;
       }
 
-      case WABT_OPCODE_I32_EQZ: {
+      case WabtInterpreterOpcode::I32Eqz: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I32(value == 0);
         break;
       }
 
-      case WABT_OPCODE_I64_ADD:
+      case WabtInterpreterOpcode::I64Add:
         BINOP(I64, I64, +);
         break;
 
-      case WABT_OPCODE_I64_SUB:
+      case WabtInterpreterOpcode::I64Sub:
         BINOP(I64, I64, -);
         break;
 
-      case WABT_OPCODE_I64_MUL:
+      case WabtInterpreterOpcode::I64Mul:
         BINOP(I64, I64, *);
         break;
 
-      case WABT_OPCODE_I64_DIV_S:
+      case WabtInterpreterOpcode::I64DivS:
         BINOP_DIV_S(I64);
         break;
 
-      case WABT_OPCODE_I64_DIV_U:
+      case WabtInterpreterOpcode::I64DivU:
         BINOP_DIV_REM_U(I64, / );
         break;
 
-      case WABT_OPCODE_I64_REM_S:
+      case WabtInterpreterOpcode::I64RemS:
         BINOP_REM_S(I64);
         break;
 
-      case WABT_OPCODE_I64_REM_U:
+      case WabtInterpreterOpcode::I64RemU:
         BINOP_DIV_REM_U(I64, % );
         break;
 
-      case WABT_OPCODE_I64_AND:
+      case WabtInterpreterOpcode::I64And:
         BINOP(I64, I64, &);
         break;
 
-      case WABT_OPCODE_I64_OR:
+      case WabtInterpreterOpcode::I64Or:
         BINOP(I64, I64, | );
         break;
 
-      case WABT_OPCODE_I64_XOR:
+      case WabtInterpreterOpcode::I64Xor:
         BINOP(I64, I64, ^);
         break;
 
-      case WABT_OPCODE_I64_SHL:
+      case WabtInterpreterOpcode::I64Shl:
         BINOP_SHIFT(I64, <<, UNSIGNED);
         break;
 
-      case WABT_OPCODE_I64_SHR_U:
+      case WabtInterpreterOpcode::I64ShrU:
         BINOP_SHIFT(I64, >>, UNSIGNED);
         break;
 
-      case WABT_OPCODE_I64_SHR_S:
+      case WabtInterpreterOpcode::I64ShrS:
         BINOP_SHIFT(I64, >>, SIGNED);
         break;
 
-      case WABT_OPCODE_I64_EQ:
+      case WabtInterpreterOpcode::I64Eq:
         BINOP(I32, I64, == );
         break;
 
-      case WABT_OPCODE_I64_NE:
+      case WabtInterpreterOpcode::I64Ne:
         BINOP(I32, I64, != );
         break;
 
-      case WABT_OPCODE_I64_LT_S:
+      case WabtInterpreterOpcode::I64LtS:
         BINOP_SIGNED(I32, I64, < );
         break;
 
-      case WABT_OPCODE_I64_LE_S:
+      case WabtInterpreterOpcode::I64LeS:
         BINOP_SIGNED(I32, I64, <= );
         break;
 
-      case WABT_OPCODE_I64_LT_U:
+      case WabtInterpreterOpcode::I64LtU:
         BINOP(I32, I64, < );
         break;
 
-      case WABT_OPCODE_I64_LE_U:
+      case WabtInterpreterOpcode::I64LeU:
         BINOP(I32, I64, <= );
         break;
 
-      case WABT_OPCODE_I64_GT_S:
+      case WabtInterpreterOpcode::I64GtS:
         BINOP_SIGNED(I32, I64, > );
         break;
 
-      case WABT_OPCODE_I64_GE_S:
+      case WabtInterpreterOpcode::I64GeS:
         BINOP_SIGNED(I32, I64, >= );
         break;
 
-      case WABT_OPCODE_I64_GT_U:
+      case WabtInterpreterOpcode::I64GtU:
         BINOP(I32, I64, > );
         break;
 
-      case WABT_OPCODE_I64_GE_U:
+      case WabtInterpreterOpcode::I64GeU:
         BINOP(I32, I64, >= );
         break;
 
-      case WABT_OPCODE_I64_CLZ: {
+      case WabtInterpreterOpcode::I64Clz: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_I64(value != 0 ? wabt_clz_u64(value) : 64);
         break;
       }
 
-      case WABT_OPCODE_I64_CTZ: {
+      case WabtInterpreterOpcode::I64Ctz: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_I64(value != 0 ? wabt_ctz_u64(value) : 64);
         break;
       }
 
-      case WABT_OPCODE_I64_POPCNT: {
+      case WabtInterpreterOpcode::I64Popcnt: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_I64(wabt_popcount_u64(value));
         break;
       }
 
-      case WABT_OPCODE_F32_ADD:
+      case WabtInterpreterOpcode::F32Add:
         BINOP_FLOAT(F32, +);
         break;
 
-      case WABT_OPCODE_F32_SUB:
+      case WabtInterpreterOpcode::F32Sub:
         BINOP_FLOAT(F32, -);
         break;
 
-      case WABT_OPCODE_F32_MUL:
+      case WabtInterpreterOpcode::F32Mul:
         BINOP_FLOAT(F32, *);
         break;
 
-      case WABT_OPCODE_F32_DIV:
+      case WabtInterpreterOpcode::F32Div:
         BINOP_FLOAT_DIV(F32);
         break;
 
-      case WABT_OPCODE_F32_MIN:
+      case WabtInterpreterOpcode::F32Min:
         MINMAX_FLOAT(F32, MIN);
         break;
 
-      case WABT_OPCODE_F32_MAX:
+      case WabtInterpreterOpcode::F32Max:
         MINMAX_FLOAT(F32, MAX);
         break;
 
-      case WABT_OPCODE_F32_ABS:
+      case WabtInterpreterOpcode::F32Abs:
         TOP().f32_bits &= ~F32_SIGN_MASK;
         break;
 
-      case WABT_OPCODE_F32_NEG:
+      case WabtInterpreterOpcode::F32Neg:
         TOP().f32_bits ^= F32_SIGN_MASK;
         break;
 
-      case WABT_OPCODE_F32_COPYSIGN: {
+      case WabtInterpreterOpcode::F32Copysign: {
         VALUE_TYPE_F32 rhs = POP_F32();
         VALUE_TYPE_F32 lhs = POP_F32();
         PUSH_F32((lhs & ~F32_SIGN_MASK) | (rhs & F32_SIGN_MASK));
         break;
       }
 
-      case WABT_OPCODE_F32_CEIL:
+      case WabtInterpreterOpcode::F32Ceil:
         UNOP_FLOAT(F32, ceilf);
         break;
 
-      case WABT_OPCODE_F32_FLOOR:
+      case WabtInterpreterOpcode::F32Floor:
         UNOP_FLOAT(F32, floorf);
         break;
 
-      case WABT_OPCODE_F32_TRUNC:
+      case WabtInterpreterOpcode::F32Trunc:
         UNOP_FLOAT(F32, truncf);
         break;
 
-      case WABT_OPCODE_F32_NEAREST:
+      case WabtInterpreterOpcode::F32Nearest:
         UNOP_FLOAT(F32, nearbyintf);
         break;
 
-      case WABT_OPCODE_F32_SQRT:
+      case WabtInterpreterOpcode::F32Sqrt:
         UNOP_FLOAT(F32, sqrtf);
         break;
 
-      case WABT_OPCODE_F32_EQ:
+      case WabtInterpreterOpcode::F32Eq:
         BINOP_FLOAT_COMPARE(F32, == );
         break;
 
-      case WABT_OPCODE_F32_NE:
+      case WabtInterpreterOpcode::F32Ne:
         BINOP_FLOAT_COMPARE(F32, != );
         break;
 
-      case WABT_OPCODE_F32_LT:
+      case WabtInterpreterOpcode::F32Lt:
         BINOP_FLOAT_COMPARE(F32, < );
         break;
 
-      case WABT_OPCODE_F32_LE:
+      case WabtInterpreterOpcode::F32Le:
         BINOP_FLOAT_COMPARE(F32, <= );
         break;
 
-      case WABT_OPCODE_F32_GT:
+      case WabtInterpreterOpcode::F32Gt:
         BINOP_FLOAT_COMPARE(F32, > );
         break;
 
-      case WABT_OPCODE_F32_GE:
+      case WabtInterpreterOpcode::F32Ge:
         BINOP_FLOAT_COMPARE(F32, >= );
         break;
 
-      case WABT_OPCODE_F64_ADD:
+      case WabtInterpreterOpcode::F64Add:
         BINOP_FLOAT(F64, +);
         break;
 
-      case WABT_OPCODE_F64_SUB:
+      case WabtInterpreterOpcode::F64Sub:
         BINOP_FLOAT(F64, -);
         break;
 
-      case WABT_OPCODE_F64_MUL:
+      case WabtInterpreterOpcode::F64Mul:
         BINOP_FLOAT(F64, *);
         break;
 
-      case WABT_OPCODE_F64_DIV:
+      case WabtInterpreterOpcode::F64Div:
         BINOP_FLOAT_DIV(F64);
         break;
 
-      case WABT_OPCODE_F64_MIN:
+      case WabtInterpreterOpcode::F64Min:
         MINMAX_FLOAT(F64, MIN);
         break;
 
-      case WABT_OPCODE_F64_MAX:
+      case WabtInterpreterOpcode::F64Max:
         MINMAX_FLOAT(F64, MAX);
         break;
 
-      case WABT_OPCODE_F64_ABS:
+      case WabtInterpreterOpcode::F64Abs:
         TOP().f64_bits &= ~F64_SIGN_MASK;
         break;
 
-      case WABT_OPCODE_F64_NEG:
+      case WabtInterpreterOpcode::F64Neg:
         TOP().f64_bits ^= F64_SIGN_MASK;
         break;
 
-      case WABT_OPCODE_F64_COPYSIGN: {
+      case WabtInterpreterOpcode::F64Copysign: {
         VALUE_TYPE_F64 rhs = POP_F64();
         VALUE_TYPE_F64 lhs = POP_F64();
         PUSH_F64((lhs & ~F64_SIGN_MASK) | (rhs & F64_SIGN_MASK));
         break;
       }
 
-      case WABT_OPCODE_F64_CEIL:
+      case WabtInterpreterOpcode::F64Ceil:
         UNOP_FLOAT(F64, ceil);
         break;
 
-      case WABT_OPCODE_F64_FLOOR:
+      case WabtInterpreterOpcode::F64Floor:
         UNOP_FLOAT(F64, floor);
         break;
 
-      case WABT_OPCODE_F64_TRUNC:
+      case WabtInterpreterOpcode::F64Trunc:
         UNOP_FLOAT(F64, trunc);
         break;
 
-      case WABT_OPCODE_F64_NEAREST:
+      case WabtInterpreterOpcode::F64Nearest:
         UNOP_FLOAT(F64, nearbyint);
         break;
 
-      case WABT_OPCODE_F64_SQRT:
+      case WabtInterpreterOpcode::F64Sqrt:
         UNOP_FLOAT(F64, sqrt);
         break;
 
-      case WABT_OPCODE_F64_EQ:
+      case WabtInterpreterOpcode::F64Eq:
         BINOP_FLOAT_COMPARE(F64, == );
         break;
 
-      case WABT_OPCODE_F64_NE:
+      case WabtInterpreterOpcode::F64Ne:
         BINOP_FLOAT_COMPARE(F64, != );
         break;
 
-      case WABT_OPCODE_F64_LT:
+      case WabtInterpreterOpcode::F64Lt:
         BINOP_FLOAT_COMPARE(F64, < );
         break;
 
-      case WABT_OPCODE_F64_LE:
+      case WabtInterpreterOpcode::F64Le:
         BINOP_FLOAT_COMPARE(F64, <= );
         break;
 
-      case WABT_OPCODE_F64_GT:
+      case WabtInterpreterOpcode::F64Gt:
         BINOP_FLOAT_COMPARE(F64, > );
         break;
 
-      case WABT_OPCODE_F64_GE:
+      case WabtInterpreterOpcode::F64Ge:
         BINOP_FLOAT_COMPARE(F64, >= );
         break;
 
-      case WABT_OPCODE_I32_TRUNC_S_F32: {
+      case WabtInterpreterOpcode::I32TruncSF32: {
         VALUE_TYPE_F32 value = POP_F32();
-        TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
-        TRAP_UNLESS(is_in_range_i32_trunc_s_f32(value), INTEGER_OVERFLOW);
+        TRAP_IF(wabt_is_nan_f32(value), InvalidConversionToInteger);
+        TRAP_UNLESS(is_in_range_i32_trunc_s_f32(value), IntegerOverflow);
         PUSH_I32(static_cast<int32_t>(BITCAST_TO_F32(value)));
         break;
       }
 
-      case WABT_OPCODE_I32_TRUNC_S_F64: {
+      case WabtInterpreterOpcode::I32TruncSF64: {
         VALUE_TYPE_F64 value = POP_F64();
-        TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
-        TRAP_UNLESS(is_in_range_i32_trunc_s_f64(value), INTEGER_OVERFLOW);
+        TRAP_IF(wabt_is_nan_f64(value), InvalidConversionToInteger);
+        TRAP_UNLESS(is_in_range_i32_trunc_s_f64(value), IntegerOverflow);
         PUSH_I32(static_cast<int32_t>(BITCAST_TO_F64(value)));
         break;
       }
 
-      case WABT_OPCODE_I32_TRUNC_U_F32: {
+      case WabtInterpreterOpcode::I32TruncUF32: {
         VALUE_TYPE_F32 value = POP_F32();
-        TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
-        TRAP_UNLESS(is_in_range_i32_trunc_u_f32(value), INTEGER_OVERFLOW);
+        TRAP_IF(wabt_is_nan_f32(value), InvalidConversionToInteger);
+        TRAP_UNLESS(is_in_range_i32_trunc_u_f32(value), IntegerOverflow);
         PUSH_I32(static_cast<uint32_t>(BITCAST_TO_F32(value)));
         break;
       }
 
-      case WABT_OPCODE_I32_TRUNC_U_F64: {
+      case WabtInterpreterOpcode::I32TruncUF64: {
         VALUE_TYPE_F64 value = POP_F64();
-        TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
-        TRAP_UNLESS(is_in_range_i32_trunc_u_f64(value), INTEGER_OVERFLOW);
+        TRAP_IF(wabt_is_nan_f64(value), InvalidConversionToInteger);
+        TRAP_UNLESS(is_in_range_i32_trunc_u_f64(value), IntegerOverflow);
         PUSH_I32(static_cast<uint32_t>(BITCAST_TO_F64(value)));
         break;
       }
 
-      case WABT_OPCODE_I32_WRAP_I64: {
+      case WabtInterpreterOpcode::I32WrapI64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_I32(static_cast<uint32_t>(value));
         break;
       }
 
-      case WABT_OPCODE_I64_TRUNC_S_F32: {
+      case WabtInterpreterOpcode::I64TruncSF32: {
         VALUE_TYPE_F32 value = POP_F32();
-        TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
-        TRAP_UNLESS(is_in_range_i64_trunc_s_f32(value), INTEGER_OVERFLOW);
+        TRAP_IF(wabt_is_nan_f32(value), InvalidConversionToInteger);
+        TRAP_UNLESS(is_in_range_i64_trunc_s_f32(value), IntegerOverflow);
         PUSH_I64(static_cast<int64_t>(BITCAST_TO_F32(value)));
         break;
       }
 
-      case WABT_OPCODE_I64_TRUNC_S_F64: {
+      case WabtInterpreterOpcode::I64TruncSF64: {
         VALUE_TYPE_F64 value = POP_F64();
-        TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
-        TRAP_UNLESS(is_in_range_i64_trunc_s_f64(value), INTEGER_OVERFLOW);
+        TRAP_IF(wabt_is_nan_f64(value), InvalidConversionToInteger);
+        TRAP_UNLESS(is_in_range_i64_trunc_s_f64(value), IntegerOverflow);
         PUSH_I64(static_cast<int64_t>(BITCAST_TO_F64(value)));
         break;
       }
 
-      case WABT_OPCODE_I64_TRUNC_U_F32: {
+      case WabtInterpreterOpcode::I64TruncUF32: {
         VALUE_TYPE_F32 value = POP_F32();
-        TRAP_IF(wabt_is_nan_f32(value), INVALID_CONVERSION_TO_INTEGER);
-        TRAP_UNLESS(is_in_range_i64_trunc_u_f32(value), INTEGER_OVERFLOW);
+        TRAP_IF(wabt_is_nan_f32(value), InvalidConversionToInteger);
+        TRAP_UNLESS(is_in_range_i64_trunc_u_f32(value), IntegerOverflow);
         PUSH_I64(static_cast<uint64_t>(BITCAST_TO_F32(value)));
         break;
       }
 
-      case WABT_OPCODE_I64_TRUNC_U_F64: {
+      case WabtInterpreterOpcode::I64TruncUF64: {
         VALUE_TYPE_F64 value = POP_F64();
-        TRAP_IF(wabt_is_nan_f64(value), INVALID_CONVERSION_TO_INTEGER);
-        TRAP_UNLESS(is_in_range_i64_trunc_u_f64(value), INTEGER_OVERFLOW);
+        TRAP_IF(wabt_is_nan_f64(value), InvalidConversionToInteger);
+        TRAP_UNLESS(is_in_range_i64_trunc_u_f64(value), IntegerOverflow);
         PUSH_I64(static_cast<uint64_t>(BITCAST_TO_F64(value)));
         break;
       }
 
-      case WABT_OPCODE_I64_EXTEND_S_I32: {
+      case WabtInterpreterOpcode::I64ExtendSI32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I64(static_cast<int64_t>(BITCAST_I32_TO_SIGNED(value)));
         break;
       }
 
-      case WABT_OPCODE_I64_EXTEND_U_I32: {
+      case WabtInterpreterOpcode::I64ExtendUI32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_I64(static_cast<uint64_t>(value));
         break;
       }
 
-      case WABT_OPCODE_F32_CONVERT_S_I32: {
+      case WabtInterpreterOpcode::F32ConvertSI32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F32(
             BITCAST_FROM_F32(static_cast<float>(BITCAST_I32_TO_SIGNED(value))));
         break;
       }
 
-      case WABT_OPCODE_F32_CONVERT_U_I32: {
+      case WabtInterpreterOpcode::F32ConvertUI32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F32(BITCAST_FROM_F32(static_cast<float>(value)));
         break;
       }
 
-      case WABT_OPCODE_F32_CONVERT_S_I64: {
+      case WabtInterpreterOpcode::F32ConvertSI64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F32(
             BITCAST_FROM_F32(static_cast<float>(BITCAST_I64_TO_SIGNED(value))));
         break;
       }
 
-      case WABT_OPCODE_F32_CONVERT_U_I64: {
+      case WabtInterpreterOpcode::F32ConvertUI64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F32(BITCAST_FROM_F32(static_cast<float>(value)));
         break;
       }
 
-      case WABT_OPCODE_F32_DEMOTE_F64: {
+      case WabtInterpreterOpcode::F32DemoteF64: {
         VALUE_TYPE_F64 value = POP_F64();
         if (WABT_LIKELY(is_in_range_f64_demote_f32(value))) {
           PUSH_F32(BITCAST_FROM_F32(static_cast<float>(BITCAST_TO_F64(value))));
@@ -1566,85 +1562,85 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         break;
       }
 
-      case WABT_OPCODE_F32_REINTERPRET_I32: {
+      case WabtInterpreterOpcode::F32ReinterpretI32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F32(value);
         break;
       }
 
-      case WABT_OPCODE_F64_CONVERT_S_I32: {
+      case WabtInterpreterOpcode::F64ConvertSI32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F64(BITCAST_FROM_F64(
             static_cast<double>(BITCAST_I32_TO_SIGNED(value))));
         break;
       }
 
-      case WABT_OPCODE_F64_CONVERT_U_I32: {
+      case WabtInterpreterOpcode::F64ConvertUI32: {
         VALUE_TYPE_I32 value = POP_I32();
         PUSH_F64(BITCAST_FROM_F64(static_cast<double>(value)));
         break;
       }
 
-      case WABT_OPCODE_F64_CONVERT_S_I64: {
+      case WabtInterpreterOpcode::F64ConvertSI64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F64(BITCAST_FROM_F64(
             static_cast<double>(BITCAST_I64_TO_SIGNED(value))));
         break;
       }
 
-      case WABT_OPCODE_F64_CONVERT_U_I64: {
+      case WabtInterpreterOpcode::F64ConvertUI64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F64(BITCAST_FROM_F64(static_cast<double>(value)));
         break;
       }
 
-      case WABT_OPCODE_F64_PROMOTE_F32: {
+      case WabtInterpreterOpcode::F64PromoteF32: {
         VALUE_TYPE_F32 value = POP_F32();
         PUSH_F64(BITCAST_FROM_F64(static_cast<double>(BITCAST_TO_F32(value))));
         break;
       }
 
-      case WABT_OPCODE_F64_REINTERPRET_I64: {
+      case WabtInterpreterOpcode::F64ReinterpretI64: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_F64(value);
         break;
       }
 
-      case WABT_OPCODE_I32_REINTERPRET_F32: {
+      case WabtInterpreterOpcode::I32ReinterpretF32: {
         VALUE_TYPE_F32 value = POP_F32();
         PUSH_I32(value);
         break;
       }
 
-      case WABT_OPCODE_I64_REINTERPRET_F64: {
+      case WabtInterpreterOpcode::I64ReinterpretF64: {
         VALUE_TYPE_F64 value = POP_F64();
         PUSH_I64(value);
         break;
       }
 
-      case WABT_OPCODE_I32_ROTR:
+      case WabtInterpreterOpcode::I32Rotr:
         BINOP_ROT(I32, RIGHT);
         break;
 
-      case WABT_OPCODE_I32_ROTL:
+      case WabtInterpreterOpcode::I32Rotl:
         BINOP_ROT(I32, LEFT);
         break;
 
-      case WABT_OPCODE_I64_ROTR:
+      case WabtInterpreterOpcode::I64Rotr:
         BINOP_ROT(I64, RIGHT);
         break;
 
-      case WABT_OPCODE_I64_ROTL:
+      case WabtInterpreterOpcode::I64Rotl:
         BINOP_ROT(I64, LEFT);
         break;
 
-      case WABT_OPCODE_I64_EQZ: {
+      case WabtInterpreterOpcode::I64Eqz: {
         VALUE_TYPE_I64 value = POP_I64();
         PUSH_I64(value == 0);
         break;
       }
 
-      case WABT_OPCODE_ALLOCA: {
+      case WabtInterpreterOpcode::Alloca: {
         WabtInterpreterValue* old_value_stack_top = thread->value_stack_top;
         thread->value_stack_top += read_u32(&pc);
         CHECK_STACK();
@@ -1654,30 +1650,30 @@ WabtInterpreterResult wabt_run_interpreter(WabtInterpreterThread* thread,
         break;
       }
 
-      case WABT_OPCODE_BR_UNLESS: {
+      case WabtInterpreterOpcode::BrUnless: {
         uint32_t new_pc = read_u32(&pc);
         if (!POP_I32())
           GOTO(new_pc);
         break;
       }
 
-      case WABT_OPCODE_DROP:
+      case WabtInterpreterOpcode::Drop:
         (void)POP();
         break;
 
-      case WABT_OPCODE_DROP_KEEP: {
+      case WabtInterpreterOpcode::DropKeep: {
         uint32_t drop_count = read_u32(&pc);
         uint8_t keep_count = *pc++;
         DROP_KEEP(drop_count, keep_count);
         break;
       }
 
-      case WABT_OPCODE_DATA:
+      case WabtInterpreterOpcode::Data:
         /* shouldn't ever execute this */
         assert(0);
         break;
 
-      case WABT_OPCODE_NOP:
+      case WabtInterpreterOpcode::Nop:
         break;
 
       default:
@@ -1703,26 +1699,26 @@ void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
               pc - static_cast<uint8_t*>(thread->env->istream.start),
               value_stack_depth);
 
-  uint8_t opcode = *pc++;
+  WabtInterpreterOpcode opcode = static_cast<WabtInterpreterOpcode>(*pc++);
   switch (opcode) {
-    case WABT_OPCODE_SELECT:
+    case WabtInterpreterOpcode::Select:
       wabt_writef(stream, "%s %u, %" PRIu64 ", %" PRIu64 "\n",
                   wabt_get_interpreter_opcode_name(opcode), PICK(3).i32,
                   PICK(2).i64, PICK(1).i64);
       break;
 
-    case WABT_OPCODE_BR:
+    case WabtInterpreterOpcode::Br:
       wabt_writef(stream, "%s @%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WABT_OPCODE_BR_IF:
+    case WabtInterpreterOpcode::BrIf:
       wabt_writef(stream, "%s @%u, %u\n",
                   wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   TOP().i32);
       break;
 
-    case WABT_OPCODE_BR_TABLE: {
+    case WabtInterpreterOpcode::BrTable: {
       uint32_t num_targets = read_u32_at(pc);
       uint32_t table_offset = read_u32_at(pc + 4);
       VALUE_TYPE_I32 key = TOP().i32;
@@ -1732,84 +1728,84 @@ void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
       break;
     }
 
-    case WABT_OPCODE_NOP:
-    case WABT_OPCODE_RETURN:
-    case WABT_OPCODE_UNREACHABLE:
-    case WABT_OPCODE_DROP:
+    case WabtInterpreterOpcode::Nop:
+    case WabtInterpreterOpcode::Return:
+    case WabtInterpreterOpcode::Unreachable:
+    case WabtInterpreterOpcode::Drop:
       wabt_writef(stream, "%s\n", wabt_get_interpreter_opcode_name(opcode));
       break;
 
-    case WABT_OPCODE_CURRENT_MEMORY: {
+    case WabtInterpreterOpcode::CurrentMemory: {
       uint32_t memory_index = read_u32(&pc);
       wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   memory_index);
       break;
     }
 
-    case WABT_OPCODE_I32_CONST:
+    case WabtInterpreterOpcode::I32Const:
       wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WABT_OPCODE_I64_CONST:
+    case WabtInterpreterOpcode::I64Const:
       wabt_writef(stream, "%s $%" PRIu64 "\n",
                   wabt_get_interpreter_opcode_name(opcode), read_u64_at(pc));
       break;
 
-    case WABT_OPCODE_F32_CONST:
+    case WabtInterpreterOpcode::F32Const:
       wabt_writef(stream, "%s $%g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(read_u32_at(pc)));
       break;
 
-    case WABT_OPCODE_F64_CONST:
+    case WabtInterpreterOpcode::F64Const:
       wabt_writef(stream, "%s $%g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(read_u64_at(pc)));
       break;
 
-    case WABT_OPCODE_GET_LOCAL:
-    case WABT_OPCODE_GET_GLOBAL:
+    case WabtInterpreterOpcode::GetLocal:
+    case WabtInterpreterOpcode::GetGlobal:
       wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WABT_OPCODE_SET_LOCAL:
-    case WABT_OPCODE_SET_GLOBAL:
-    case WABT_OPCODE_TEE_LOCAL:
+    case WabtInterpreterOpcode::SetLocal:
+    case WabtInterpreterOpcode::SetGlobal:
+    case WabtInterpreterOpcode::TeeLocal:
       wabt_writef(stream, "%s $%u, %u\n",
                   wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   TOP().i32);
       break;
 
-    case WABT_OPCODE_CALL:
+    case WabtInterpreterOpcode::Call:
       wabt_writef(stream, "%s @%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WABT_OPCODE_CALL_INDIRECT:
+    case WabtInterpreterOpcode::CallIndirect:
       wabt_writef(stream, "%s $%u, %u\n",
                   wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   TOP().i32);
       break;
 
-    case WABT_OPCODE_CALL_HOST:
+    case WabtInterpreterOpcode::CallHost:
       wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WABT_OPCODE_I32_LOAD8_S:
-    case WABT_OPCODE_I32_LOAD8_U:
-    case WABT_OPCODE_I32_LOAD16_S:
-    case WABT_OPCODE_I32_LOAD16_U:
-    case WABT_OPCODE_I64_LOAD8_S:
-    case WABT_OPCODE_I64_LOAD8_U:
-    case WABT_OPCODE_I64_LOAD16_S:
-    case WABT_OPCODE_I64_LOAD16_U:
-    case WABT_OPCODE_I64_LOAD32_S:
-    case WABT_OPCODE_I64_LOAD32_U:
-    case WABT_OPCODE_I32_LOAD:
-    case WABT_OPCODE_I64_LOAD:
-    case WABT_OPCODE_F32_LOAD:
-    case WABT_OPCODE_F64_LOAD: {
+    case WabtInterpreterOpcode::I32Load8S:
+    case WabtInterpreterOpcode::I32Load8U:
+    case WabtInterpreterOpcode::I32Load16S:
+    case WabtInterpreterOpcode::I32Load16U:
+    case WabtInterpreterOpcode::I64Load8S:
+    case WabtInterpreterOpcode::I64Load8U:
+    case WabtInterpreterOpcode::I64Load16S:
+    case WabtInterpreterOpcode::I64Load16U:
+    case WabtInterpreterOpcode::I64Load32S:
+    case WabtInterpreterOpcode::I64Load32U:
+    case WabtInterpreterOpcode::I32Load:
+    case WabtInterpreterOpcode::I64Load:
+    case WabtInterpreterOpcode::F32Load:
+    case WabtInterpreterOpcode::F64Load: {
       uint32_t memory_index = read_u32(&pc);
       wabt_writef(stream, "%s $%u:%u+$%u\n",
                   wabt_get_interpreter_opcode_name(opcode), memory_index,
@@ -1817,9 +1813,9 @@ void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
       break;
     }
 
-    case WABT_OPCODE_I32_STORE8:
-    case WABT_OPCODE_I32_STORE16:
-    case WABT_OPCODE_I32_STORE: {
+    case WabtInterpreterOpcode::I32Store8:
+    case WabtInterpreterOpcode::I32Store16:
+    case WabtInterpreterOpcode::I32Store: {
       uint32_t memory_index = read_u32(&pc);
       wabt_writef(stream, "%s $%u:%u+$%u, %u\n",
                   wabt_get_interpreter_opcode_name(opcode), memory_index,
@@ -1827,10 +1823,10 @@ void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
       break;
     }
 
-    case WABT_OPCODE_I64_STORE8:
-    case WABT_OPCODE_I64_STORE16:
-    case WABT_OPCODE_I64_STORE32:
-    case WABT_OPCODE_I64_STORE: {
+    case WabtInterpreterOpcode::I64Store8:
+    case WabtInterpreterOpcode::I64Store16:
+    case WabtInterpreterOpcode::I64Store32:
+    case WabtInterpreterOpcode::I64Store: {
       uint32_t memory_index = read_u32(&pc);
       wabt_writef(stream, "%s $%u:%u+$%u, %" PRIu64 "\n",
                   wabt_get_interpreter_opcode_name(opcode), memory_index,
@@ -1838,7 +1834,7 @@ void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
       break;
     }
 
-    case WABT_OPCODE_F32_STORE: {
+    case WabtInterpreterOpcode::F32Store: {
       uint32_t memory_index = read_u32(&pc);
       wabt_writef(stream, "%s $%u:%u+$%u, %g\n",
                   wabt_get_interpreter_opcode_name(opcode), memory_index,
@@ -1847,7 +1843,7 @@ void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
       break;
     }
 
-    case WABT_OPCODE_F64_STORE: {
+    case WabtInterpreterOpcode::F64Store: {
       uint32_t memory_index = read_u32(&pc);
       wabt_writef(stream, "%s $%u:%u+$%u, %g\n",
                   wabt_get_interpreter_opcode_name(opcode), memory_index,
@@ -1856,7 +1852,7 @@ void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
       break;
     }
 
-    case WABT_OPCODE_GROW_MEMORY: {
+    case WabtInterpreterOpcode::GrowMemory: {
       uint32_t memory_index = read_u32(&pc);
       wabt_writef(stream, "%s $%u:%u\n",
                   wabt_get_interpreter_opcode_name(opcode), memory_index,
@@ -1864,199 +1860,199 @@ void wabt_trace_pc(WabtInterpreterThread* thread, WabtStream* stream) {
       break;
     }
 
-    case WABT_OPCODE_I32_ADD:
-    case WABT_OPCODE_I32_SUB:
-    case WABT_OPCODE_I32_MUL:
-    case WABT_OPCODE_I32_DIV_S:
-    case WABT_OPCODE_I32_DIV_U:
-    case WABT_OPCODE_I32_REM_S:
-    case WABT_OPCODE_I32_REM_U:
-    case WABT_OPCODE_I32_AND:
-    case WABT_OPCODE_I32_OR:
-    case WABT_OPCODE_I32_XOR:
-    case WABT_OPCODE_I32_SHL:
-    case WABT_OPCODE_I32_SHR_U:
-    case WABT_OPCODE_I32_SHR_S:
-    case WABT_OPCODE_I32_EQ:
-    case WABT_OPCODE_I32_NE:
-    case WABT_OPCODE_I32_LT_S:
-    case WABT_OPCODE_I32_LE_S:
-    case WABT_OPCODE_I32_LT_U:
-    case WABT_OPCODE_I32_LE_U:
-    case WABT_OPCODE_I32_GT_S:
-    case WABT_OPCODE_I32_GE_S:
-    case WABT_OPCODE_I32_GT_U:
-    case WABT_OPCODE_I32_GE_U:
-    case WABT_OPCODE_I32_ROTR:
-    case WABT_OPCODE_I32_ROTL:
+    case WabtInterpreterOpcode::I32Add:
+    case WabtInterpreterOpcode::I32Sub:
+    case WabtInterpreterOpcode::I32Mul:
+    case WabtInterpreterOpcode::I32DivS:
+    case WabtInterpreterOpcode::I32DivU:
+    case WabtInterpreterOpcode::I32RemS:
+    case WabtInterpreterOpcode::I32RemU:
+    case WabtInterpreterOpcode::I32And:
+    case WabtInterpreterOpcode::I32Or:
+    case WabtInterpreterOpcode::I32Xor:
+    case WabtInterpreterOpcode::I32Shl:
+    case WabtInterpreterOpcode::I32ShrU:
+    case WabtInterpreterOpcode::I32ShrS:
+    case WabtInterpreterOpcode::I32Eq:
+    case WabtInterpreterOpcode::I32Ne:
+    case WabtInterpreterOpcode::I32LtS:
+    case WabtInterpreterOpcode::I32LeS:
+    case WabtInterpreterOpcode::I32LtU:
+    case WabtInterpreterOpcode::I32LeU:
+    case WabtInterpreterOpcode::I32GtS:
+    case WabtInterpreterOpcode::I32GeS:
+    case WabtInterpreterOpcode::I32GtU:
+    case WabtInterpreterOpcode::I32GeU:
+    case WabtInterpreterOpcode::I32Rotr:
+    case WabtInterpreterOpcode::I32Rotl:
       wabt_writef(stream, "%s %u, %u\n",
                   wabt_get_interpreter_opcode_name(opcode), PICK(2).i32,
                   PICK(1).i32);
       break;
 
-    case WABT_OPCODE_I32_CLZ:
-    case WABT_OPCODE_I32_CTZ:
-    case WABT_OPCODE_I32_POPCNT:
-    case WABT_OPCODE_I32_EQZ:
+    case WabtInterpreterOpcode::I32Clz:
+    case WabtInterpreterOpcode::I32Ctz:
+    case WabtInterpreterOpcode::I32Popcnt:
+    case WabtInterpreterOpcode::I32Eqz:
       wabt_writef(stream, "%s %u\n", wabt_get_interpreter_opcode_name(opcode),
                   TOP().i32);
       break;
 
-    case WABT_OPCODE_I64_ADD:
-    case WABT_OPCODE_I64_SUB:
-    case WABT_OPCODE_I64_MUL:
-    case WABT_OPCODE_I64_DIV_S:
-    case WABT_OPCODE_I64_DIV_U:
-    case WABT_OPCODE_I64_REM_S:
-    case WABT_OPCODE_I64_REM_U:
-    case WABT_OPCODE_I64_AND:
-    case WABT_OPCODE_I64_OR:
-    case WABT_OPCODE_I64_XOR:
-    case WABT_OPCODE_I64_SHL:
-    case WABT_OPCODE_I64_SHR_U:
-    case WABT_OPCODE_I64_SHR_S:
-    case WABT_OPCODE_I64_EQ:
-    case WABT_OPCODE_I64_NE:
-    case WABT_OPCODE_I64_LT_S:
-    case WABT_OPCODE_I64_LE_S:
-    case WABT_OPCODE_I64_LT_U:
-    case WABT_OPCODE_I64_LE_U:
-    case WABT_OPCODE_I64_GT_S:
-    case WABT_OPCODE_I64_GE_S:
-    case WABT_OPCODE_I64_GT_U:
-    case WABT_OPCODE_I64_GE_U:
-    case WABT_OPCODE_I64_ROTR:
-    case WABT_OPCODE_I64_ROTL:
+    case WabtInterpreterOpcode::I64Add:
+    case WabtInterpreterOpcode::I64Sub:
+    case WabtInterpreterOpcode::I64Mul:
+    case WabtInterpreterOpcode::I64DivS:
+    case WabtInterpreterOpcode::I64DivU:
+    case WabtInterpreterOpcode::I64RemS:
+    case WabtInterpreterOpcode::I64RemU:
+    case WabtInterpreterOpcode::I64And:
+    case WabtInterpreterOpcode::I64Or:
+    case WabtInterpreterOpcode::I64Xor:
+    case WabtInterpreterOpcode::I64Shl:
+    case WabtInterpreterOpcode::I64ShrU:
+    case WabtInterpreterOpcode::I64ShrS:
+    case WabtInterpreterOpcode::I64Eq:
+    case WabtInterpreterOpcode::I64Ne:
+    case WabtInterpreterOpcode::I64LtS:
+    case WabtInterpreterOpcode::I64LeS:
+    case WabtInterpreterOpcode::I64LtU:
+    case WabtInterpreterOpcode::I64LeU:
+    case WabtInterpreterOpcode::I64GtS:
+    case WabtInterpreterOpcode::I64GeS:
+    case WabtInterpreterOpcode::I64GtU:
+    case WabtInterpreterOpcode::I64GeU:
+    case WabtInterpreterOpcode::I64Rotr:
+    case WabtInterpreterOpcode::I64Rotl:
       wabt_writef(stream, "%s %" PRIu64 ", %" PRIu64 "\n",
                   wabt_get_interpreter_opcode_name(opcode), PICK(2).i64,
                   PICK(1).i64);
       break;
 
-    case WABT_OPCODE_I64_CLZ:
-    case WABT_OPCODE_I64_CTZ:
-    case WABT_OPCODE_I64_POPCNT:
-    case WABT_OPCODE_I64_EQZ:
+    case WabtInterpreterOpcode::I64Clz:
+    case WabtInterpreterOpcode::I64Ctz:
+    case WabtInterpreterOpcode::I64Popcnt:
+    case WabtInterpreterOpcode::I64Eqz:
       wabt_writef(stream, "%s %" PRIu64 "\n",
                   wabt_get_interpreter_opcode_name(opcode), TOP().i64);
       break;
 
-    case WABT_OPCODE_F32_ADD:
-    case WABT_OPCODE_F32_SUB:
-    case WABT_OPCODE_F32_MUL:
-    case WABT_OPCODE_F32_DIV:
-    case WABT_OPCODE_F32_MIN:
-    case WABT_OPCODE_F32_MAX:
-    case WABT_OPCODE_F32_COPYSIGN:
-    case WABT_OPCODE_F32_EQ:
-    case WABT_OPCODE_F32_NE:
-    case WABT_OPCODE_F32_LT:
-    case WABT_OPCODE_F32_LE:
-    case WABT_OPCODE_F32_GT:
-    case WABT_OPCODE_F32_GE:
+    case WabtInterpreterOpcode::F32Add:
+    case WabtInterpreterOpcode::F32Sub:
+    case WabtInterpreterOpcode::F32Mul:
+    case WabtInterpreterOpcode::F32Div:
+    case WabtInterpreterOpcode::F32Min:
+    case WabtInterpreterOpcode::F32Max:
+    case WabtInterpreterOpcode::F32Copysign:
+    case WabtInterpreterOpcode::F32Eq:
+    case WabtInterpreterOpcode::F32Ne:
+    case WabtInterpreterOpcode::F32Lt:
+    case WabtInterpreterOpcode::F32Le:
+    case WabtInterpreterOpcode::F32Gt:
+    case WabtInterpreterOpcode::F32Ge:
       wabt_writef(
           stream, "%s %g, %g\n", wabt_get_interpreter_opcode_name(opcode),
           bitcast_u32_to_f32(PICK(2).i32), bitcast_u32_to_f32(PICK(1).i32));
       break;
 
-    case WABT_OPCODE_F32_ABS:
-    case WABT_OPCODE_F32_NEG:
-    case WABT_OPCODE_F32_CEIL:
-    case WABT_OPCODE_F32_FLOOR:
-    case WABT_OPCODE_F32_TRUNC:
-    case WABT_OPCODE_F32_NEAREST:
-    case WABT_OPCODE_F32_SQRT:
+    case WabtInterpreterOpcode::F32Abs:
+    case WabtInterpreterOpcode::F32Neg:
+    case WabtInterpreterOpcode::F32Ceil:
+    case WabtInterpreterOpcode::F32Floor:
+    case WabtInterpreterOpcode::F32Trunc:
+    case WabtInterpreterOpcode::F32Nearest:
+    case WabtInterpreterOpcode::F32Sqrt:
       wabt_writef(stream, "%s %g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(TOP().i32));
       break;
 
-    case WABT_OPCODE_F64_ADD:
-    case WABT_OPCODE_F64_SUB:
-    case WABT_OPCODE_F64_MUL:
-    case WABT_OPCODE_F64_DIV:
-    case WABT_OPCODE_F64_MIN:
-    case WABT_OPCODE_F64_MAX:
-    case WABT_OPCODE_F64_COPYSIGN:
-    case WABT_OPCODE_F64_EQ:
-    case WABT_OPCODE_F64_NE:
-    case WABT_OPCODE_F64_LT:
-    case WABT_OPCODE_F64_LE:
-    case WABT_OPCODE_F64_GT:
-    case WABT_OPCODE_F64_GE:
+    case WabtInterpreterOpcode::F64Add:
+    case WabtInterpreterOpcode::F64Sub:
+    case WabtInterpreterOpcode::F64Mul:
+    case WabtInterpreterOpcode::F64Div:
+    case WabtInterpreterOpcode::F64Min:
+    case WabtInterpreterOpcode::F64Max:
+    case WabtInterpreterOpcode::F64Copysign:
+    case WabtInterpreterOpcode::F64Eq:
+    case WabtInterpreterOpcode::F64Ne:
+    case WabtInterpreterOpcode::F64Lt:
+    case WabtInterpreterOpcode::F64Le:
+    case WabtInterpreterOpcode::F64Gt:
+    case WabtInterpreterOpcode::F64Ge:
       wabt_writef(
           stream, "%s %g, %g\n", wabt_get_interpreter_opcode_name(opcode),
           bitcast_u64_to_f64(PICK(2).i64), bitcast_u64_to_f64(PICK(1).i64));
       break;
 
-    case WABT_OPCODE_F64_ABS:
-    case WABT_OPCODE_F64_NEG:
-    case WABT_OPCODE_F64_CEIL:
-    case WABT_OPCODE_F64_FLOOR:
-    case WABT_OPCODE_F64_TRUNC:
-    case WABT_OPCODE_F64_NEAREST:
-    case WABT_OPCODE_F64_SQRT:
+    case WabtInterpreterOpcode::F64Abs:
+    case WabtInterpreterOpcode::F64Neg:
+    case WabtInterpreterOpcode::F64Ceil:
+    case WabtInterpreterOpcode::F64Floor:
+    case WabtInterpreterOpcode::F64Trunc:
+    case WabtInterpreterOpcode::F64Nearest:
+    case WabtInterpreterOpcode::F64Sqrt:
       wabt_writef(stream, "%s %g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(TOP().i64));
       break;
 
-    case WABT_OPCODE_I32_TRUNC_S_F32:
-    case WABT_OPCODE_I32_TRUNC_U_F32:
-    case WABT_OPCODE_I64_TRUNC_S_F32:
-    case WABT_OPCODE_I64_TRUNC_U_F32:
-    case WABT_OPCODE_F64_PROMOTE_F32:
-    case WABT_OPCODE_I32_REINTERPRET_F32:
+    case WabtInterpreterOpcode::I32TruncSF32:
+    case WabtInterpreterOpcode::I32TruncUF32:
+    case WabtInterpreterOpcode::I64TruncSF32:
+    case WabtInterpreterOpcode::I64TruncUF32:
+    case WabtInterpreterOpcode::F64PromoteF32:
+    case WabtInterpreterOpcode::I32ReinterpretF32:
       wabt_writef(stream, "%s %g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u32_to_f32(TOP().i32));
       break;
 
-    case WABT_OPCODE_I32_TRUNC_S_F64:
-    case WABT_OPCODE_I32_TRUNC_U_F64:
-    case WABT_OPCODE_I64_TRUNC_S_F64:
-    case WABT_OPCODE_I64_TRUNC_U_F64:
-    case WABT_OPCODE_F32_DEMOTE_F64:
-    case WABT_OPCODE_I64_REINTERPRET_F64:
+    case WabtInterpreterOpcode::I32TruncSF64:
+    case WabtInterpreterOpcode::I32TruncUF64:
+    case WabtInterpreterOpcode::I64TruncSF64:
+    case WabtInterpreterOpcode::I64TruncUF64:
+    case WabtInterpreterOpcode::F32DemoteF64:
+    case WabtInterpreterOpcode::I64ReinterpretF64:
       wabt_writef(stream, "%s %g\n", wabt_get_interpreter_opcode_name(opcode),
                   bitcast_u64_to_f64(TOP().i64));
       break;
 
-    case WABT_OPCODE_I32_WRAP_I64:
-    case WABT_OPCODE_F32_CONVERT_S_I64:
-    case WABT_OPCODE_F32_CONVERT_U_I64:
-    case WABT_OPCODE_F64_CONVERT_S_I64:
-    case WABT_OPCODE_F64_CONVERT_U_I64:
-    case WABT_OPCODE_F64_REINTERPRET_I64:
+    case WabtInterpreterOpcode::I32WrapI64:
+    case WabtInterpreterOpcode::F32ConvertSI64:
+    case WabtInterpreterOpcode::F32ConvertUI64:
+    case WabtInterpreterOpcode::F64ConvertSI64:
+    case WabtInterpreterOpcode::F64ConvertUI64:
+    case WabtInterpreterOpcode::F64ReinterpretI64:
       wabt_writef(stream, "%s %" PRIu64 "\n",
                   wabt_get_interpreter_opcode_name(opcode), TOP().i64);
       break;
 
-    case WABT_OPCODE_I64_EXTEND_S_I32:
-    case WABT_OPCODE_I64_EXTEND_U_I32:
-    case WABT_OPCODE_F32_CONVERT_S_I32:
-    case WABT_OPCODE_F32_CONVERT_U_I32:
-    case WABT_OPCODE_F32_REINTERPRET_I32:
-    case WABT_OPCODE_F64_CONVERT_S_I32:
-    case WABT_OPCODE_F64_CONVERT_U_I32:
+    case WabtInterpreterOpcode::I64ExtendSI32:
+    case WabtInterpreterOpcode::I64ExtendUI32:
+    case WabtInterpreterOpcode::F32ConvertSI32:
+    case WabtInterpreterOpcode::F32ConvertUI32:
+    case WabtInterpreterOpcode::F32ReinterpretI32:
+    case WabtInterpreterOpcode::F64ConvertSI32:
+    case WabtInterpreterOpcode::F64ConvertUI32:
       wabt_writef(stream, "%s %u\n", wabt_get_interpreter_opcode_name(opcode),
                   TOP().i32);
       break;
 
-    case WABT_OPCODE_ALLOCA:
+    case WabtInterpreterOpcode::Alloca:
       wabt_writef(stream, "%s $%u\n", wabt_get_interpreter_opcode_name(opcode),
                   read_u32_at(pc));
       break;
 
-    case WABT_OPCODE_BR_UNLESS:
+    case WabtInterpreterOpcode::BrUnless:
       wabt_writef(stream, "%s @%u, %u\n",
                   wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   TOP().i32);
       break;
 
-    case WABT_OPCODE_DROP_KEEP:
+    case WabtInterpreterOpcode::DropKeep:
       wabt_writef(stream, "%s $%u $%u\n",
                   wabt_get_interpreter_opcode_name(opcode), read_u32_at(pc),
                   *(pc + 4));
       break;
 
-    case WABT_OPCODE_DATA:
+    case WabtInterpreterOpcode::Data:
       /* shouldn't ever execute this */
       assert(0);
       break;
@@ -2083,24 +2079,24 @@ void wabt_disassemble(WabtInterpreterEnvironment* env,
   while (static_cast<uint32_t>(pc - istream) < to) {
     wabt_writef(stream, "%4" PRIzd "| ", pc - istream);
 
-    uint8_t opcode = *pc++;
+    WabtInterpreterOpcode opcode = static_cast<WabtInterpreterOpcode>(*pc++);
     switch (opcode) {
-      case WABT_OPCODE_SELECT:
+      case WabtInterpreterOpcode::Select:
         wabt_writef(stream, "%s %%[-3], %%[-2], %%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode));
         break;
 
-      case WABT_OPCODE_BR:
+      case WabtInterpreterOpcode::Br:
         wabt_writef(stream, "%s @%u\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_BR_IF:
+      case WabtInterpreterOpcode::BrIf:
         wabt_writef(stream, "%s @%u, %%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_BR_TABLE: {
+      case WabtInterpreterOpcode::BrTable: {
         uint32_t num_targets = read_u32(&pc);
         uint32_t table_offset = read_u32(&pc);
         wabt_writef(stream, "%s %%[-1], $#%u, table:$%u\n",
@@ -2109,61 +2105,61 @@ void wabt_disassemble(WabtInterpreterEnvironment* env,
         break;
       }
 
-      case WABT_OPCODE_NOP:
-      case WABT_OPCODE_RETURN:
-      case WABT_OPCODE_UNREACHABLE:
-      case WABT_OPCODE_DROP:
+      case WabtInterpreterOpcode::Nop:
+      case WabtInterpreterOpcode::Return:
+      case WabtInterpreterOpcode::Unreachable:
+      case WabtInterpreterOpcode::Drop:
         wabt_writef(stream, "%s\n", wabt_get_interpreter_opcode_name(opcode));
         break;
 
-      case WABT_OPCODE_CURRENT_MEMORY: {
+      case WabtInterpreterOpcode::CurrentMemory: {
         uint32_t memory_index = read_u32(&pc);
         wabt_writef(stream, "%s $%u\n",
                     wabt_get_interpreter_opcode_name(opcode), memory_index);
         break;
       }
 
-      case WABT_OPCODE_I32_CONST:
+      case WabtInterpreterOpcode::I32Const:
         wabt_writef(stream, "%s $%u\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_I64_CONST:
+      case WabtInterpreterOpcode::I64Const:
         wabt_writef(stream, "%s $%" PRIu64 "\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u64(&pc));
         break;
 
-      case WABT_OPCODE_F32_CONST:
+      case WabtInterpreterOpcode::F32Const:
         wabt_writef(stream, "%s $%g\n",
                     wabt_get_interpreter_opcode_name(opcode),
                     bitcast_u32_to_f32(read_u32(&pc)));
         break;
 
-      case WABT_OPCODE_F64_CONST:
+      case WabtInterpreterOpcode::F64Const:
         wabt_writef(stream, "%s $%g\n",
                     wabt_get_interpreter_opcode_name(opcode),
                     bitcast_u64_to_f64(read_u64(&pc)));
         break;
 
-      case WABT_OPCODE_GET_LOCAL:
-      case WABT_OPCODE_GET_GLOBAL:
+      case WabtInterpreterOpcode::GetLocal:
+      case WabtInterpreterOpcode::GetGlobal:
         wabt_writef(stream, "%s $%u\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_SET_LOCAL:
-      case WABT_OPCODE_SET_GLOBAL:
-      case WABT_OPCODE_TEE_LOCAL:
+      case WabtInterpreterOpcode::SetLocal:
+      case WabtInterpreterOpcode::SetGlobal:
+      case WabtInterpreterOpcode::TeeLocal:
         wabt_writef(stream, "%s $%u, %%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_CALL:
+      case WabtInterpreterOpcode::Call:
         wabt_writef(stream, "%s @%u\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_CALL_INDIRECT: {
+      case WabtInterpreterOpcode::CallIndirect: {
         uint32_t table_index = read_u32(&pc);
         wabt_writef(stream, "%s $%u:%u, %%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode), table_index,
@@ -2171,25 +2167,25 @@ void wabt_disassemble(WabtInterpreterEnvironment* env,
         break;
       }
 
-      case WABT_OPCODE_CALL_HOST:
+      case WabtInterpreterOpcode::CallHost:
         wabt_writef(stream, "%s $%u\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_I32_LOAD8_S:
-      case WABT_OPCODE_I32_LOAD8_U:
-      case WABT_OPCODE_I32_LOAD16_S:
-      case WABT_OPCODE_I32_LOAD16_U:
-      case WABT_OPCODE_I64_LOAD8_S:
-      case WABT_OPCODE_I64_LOAD8_U:
-      case WABT_OPCODE_I64_LOAD16_S:
-      case WABT_OPCODE_I64_LOAD16_U:
-      case WABT_OPCODE_I64_LOAD32_S:
-      case WABT_OPCODE_I64_LOAD32_U:
-      case WABT_OPCODE_I32_LOAD:
-      case WABT_OPCODE_I64_LOAD:
-      case WABT_OPCODE_F32_LOAD:
-      case WABT_OPCODE_F64_LOAD: {
+      case WabtInterpreterOpcode::I32Load8S:
+      case WabtInterpreterOpcode::I32Load8U:
+      case WabtInterpreterOpcode::I32Load16S:
+      case WabtInterpreterOpcode::I32Load16U:
+      case WabtInterpreterOpcode::I64Load8S:
+      case WabtInterpreterOpcode::I64Load8U:
+      case WabtInterpreterOpcode::I64Load16S:
+      case WabtInterpreterOpcode::I64Load16U:
+      case WabtInterpreterOpcode::I64Load32S:
+      case WabtInterpreterOpcode::I64Load32U:
+      case WabtInterpreterOpcode::I32Load:
+      case WabtInterpreterOpcode::I64Load:
+      case WabtInterpreterOpcode::F32Load:
+      case WabtInterpreterOpcode::F64Load: {
         uint32_t memory_index = read_u32(&pc);
         wabt_writef(stream, "%s $%u:%%[-1]+$%u\n",
                     wabt_get_interpreter_opcode_name(opcode), memory_index,
@@ -2197,15 +2193,15 @@ void wabt_disassemble(WabtInterpreterEnvironment* env,
         break;
       }
 
-      case WABT_OPCODE_I32_STORE8:
-      case WABT_OPCODE_I32_STORE16:
-      case WABT_OPCODE_I32_STORE:
-      case WABT_OPCODE_I64_STORE8:
-      case WABT_OPCODE_I64_STORE16:
-      case WABT_OPCODE_I64_STORE32:
-      case WABT_OPCODE_I64_STORE:
-      case WABT_OPCODE_F32_STORE:
-      case WABT_OPCODE_F64_STORE: {
+      case WabtInterpreterOpcode::I32Store8:
+      case WabtInterpreterOpcode::I32Store16:
+      case WabtInterpreterOpcode::I32Store:
+      case WabtInterpreterOpcode::I64Store8:
+      case WabtInterpreterOpcode::I64Store16:
+      case WabtInterpreterOpcode::I64Store32:
+      case WabtInterpreterOpcode::I64Store:
+      case WabtInterpreterOpcode::F32Store:
+      case WabtInterpreterOpcode::F64Store: {
         uint32_t memory_index = read_u32(&pc);
         wabt_writef(stream, "%s %%[-2]+$%u, $%u:%%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode), memory_index,
@@ -2213,155 +2209,155 @@ void wabt_disassemble(WabtInterpreterEnvironment* env,
         break;
       }
 
-      case WABT_OPCODE_I32_ADD:
-      case WABT_OPCODE_I32_SUB:
-      case WABT_OPCODE_I32_MUL:
-      case WABT_OPCODE_I32_DIV_S:
-      case WABT_OPCODE_I32_DIV_U:
-      case WABT_OPCODE_I32_REM_S:
-      case WABT_OPCODE_I32_REM_U:
-      case WABT_OPCODE_I32_AND:
-      case WABT_OPCODE_I32_OR:
-      case WABT_OPCODE_I32_XOR:
-      case WABT_OPCODE_I32_SHL:
-      case WABT_OPCODE_I32_SHR_U:
-      case WABT_OPCODE_I32_SHR_S:
-      case WABT_OPCODE_I32_EQ:
-      case WABT_OPCODE_I32_NE:
-      case WABT_OPCODE_I32_LT_S:
-      case WABT_OPCODE_I32_LE_S:
-      case WABT_OPCODE_I32_LT_U:
-      case WABT_OPCODE_I32_LE_U:
-      case WABT_OPCODE_I32_GT_S:
-      case WABT_OPCODE_I32_GE_S:
-      case WABT_OPCODE_I32_GT_U:
-      case WABT_OPCODE_I32_GE_U:
-      case WABT_OPCODE_I32_ROTR:
-      case WABT_OPCODE_I32_ROTL:
-      case WABT_OPCODE_F32_ADD:
-      case WABT_OPCODE_F32_SUB:
-      case WABT_OPCODE_F32_MUL:
-      case WABT_OPCODE_F32_DIV:
-      case WABT_OPCODE_F32_MIN:
-      case WABT_OPCODE_F32_MAX:
-      case WABT_OPCODE_F32_COPYSIGN:
-      case WABT_OPCODE_F32_EQ:
-      case WABT_OPCODE_F32_NE:
-      case WABT_OPCODE_F32_LT:
-      case WABT_OPCODE_F32_LE:
-      case WABT_OPCODE_F32_GT:
-      case WABT_OPCODE_F32_GE:
-      case WABT_OPCODE_I64_ADD:
-      case WABT_OPCODE_I64_SUB:
-      case WABT_OPCODE_I64_MUL:
-      case WABT_OPCODE_I64_DIV_S:
-      case WABT_OPCODE_I64_DIV_U:
-      case WABT_OPCODE_I64_REM_S:
-      case WABT_OPCODE_I64_REM_U:
-      case WABT_OPCODE_I64_AND:
-      case WABT_OPCODE_I64_OR:
-      case WABT_OPCODE_I64_XOR:
-      case WABT_OPCODE_I64_SHL:
-      case WABT_OPCODE_I64_SHR_U:
-      case WABT_OPCODE_I64_SHR_S:
-      case WABT_OPCODE_I64_EQ:
-      case WABT_OPCODE_I64_NE:
-      case WABT_OPCODE_I64_LT_S:
-      case WABT_OPCODE_I64_LE_S:
-      case WABT_OPCODE_I64_LT_U:
-      case WABT_OPCODE_I64_LE_U:
-      case WABT_OPCODE_I64_GT_S:
-      case WABT_OPCODE_I64_GE_S:
-      case WABT_OPCODE_I64_GT_U:
-      case WABT_OPCODE_I64_GE_U:
-      case WABT_OPCODE_I64_ROTR:
-      case WABT_OPCODE_I64_ROTL:
-      case WABT_OPCODE_F64_ADD:
-      case WABT_OPCODE_F64_SUB:
-      case WABT_OPCODE_F64_MUL:
-      case WABT_OPCODE_F64_DIV:
-      case WABT_OPCODE_F64_MIN:
-      case WABT_OPCODE_F64_MAX:
-      case WABT_OPCODE_F64_COPYSIGN:
-      case WABT_OPCODE_F64_EQ:
-      case WABT_OPCODE_F64_NE:
-      case WABT_OPCODE_F64_LT:
-      case WABT_OPCODE_F64_LE:
-      case WABT_OPCODE_F64_GT:
-      case WABT_OPCODE_F64_GE:
+      case WabtInterpreterOpcode::I32Add:
+      case WabtInterpreterOpcode::I32Sub:
+      case WabtInterpreterOpcode::I32Mul:
+      case WabtInterpreterOpcode::I32DivS:
+      case WabtInterpreterOpcode::I32DivU:
+      case WabtInterpreterOpcode::I32RemS:
+      case WabtInterpreterOpcode::I32RemU:
+      case WabtInterpreterOpcode::I32And:
+      case WabtInterpreterOpcode::I32Or:
+      case WabtInterpreterOpcode::I32Xor:
+      case WabtInterpreterOpcode::I32Shl:
+      case WabtInterpreterOpcode::I32ShrU:
+      case WabtInterpreterOpcode::I32ShrS:
+      case WabtInterpreterOpcode::I32Eq:
+      case WabtInterpreterOpcode::I32Ne:
+      case WabtInterpreterOpcode::I32LtS:
+      case WabtInterpreterOpcode::I32LeS:
+      case WabtInterpreterOpcode::I32LtU:
+      case WabtInterpreterOpcode::I32LeU:
+      case WabtInterpreterOpcode::I32GtS:
+      case WabtInterpreterOpcode::I32GeS:
+      case WabtInterpreterOpcode::I32GtU:
+      case WabtInterpreterOpcode::I32GeU:
+      case WabtInterpreterOpcode::I32Rotr:
+      case WabtInterpreterOpcode::I32Rotl:
+      case WabtInterpreterOpcode::F32Add:
+      case WabtInterpreterOpcode::F32Sub:
+      case WabtInterpreterOpcode::F32Mul:
+      case WabtInterpreterOpcode::F32Div:
+      case WabtInterpreterOpcode::F32Min:
+      case WabtInterpreterOpcode::F32Max:
+      case WabtInterpreterOpcode::F32Copysign:
+      case WabtInterpreterOpcode::F32Eq:
+      case WabtInterpreterOpcode::F32Ne:
+      case WabtInterpreterOpcode::F32Lt:
+      case WabtInterpreterOpcode::F32Le:
+      case WabtInterpreterOpcode::F32Gt:
+      case WabtInterpreterOpcode::F32Ge:
+      case WabtInterpreterOpcode::I64Add:
+      case WabtInterpreterOpcode::I64Sub:
+      case WabtInterpreterOpcode::I64Mul:
+      case WabtInterpreterOpcode::I64DivS:
+      case WabtInterpreterOpcode::I64DivU:
+      case WabtInterpreterOpcode::I64RemS:
+      case WabtInterpreterOpcode::I64RemU:
+      case WabtInterpreterOpcode::I64And:
+      case WabtInterpreterOpcode::I64Or:
+      case WabtInterpreterOpcode::I64Xor:
+      case WabtInterpreterOpcode::I64Shl:
+      case WabtInterpreterOpcode::I64ShrU:
+      case WabtInterpreterOpcode::I64ShrS:
+      case WabtInterpreterOpcode::I64Eq:
+      case WabtInterpreterOpcode::I64Ne:
+      case WabtInterpreterOpcode::I64LtS:
+      case WabtInterpreterOpcode::I64LeS:
+      case WabtInterpreterOpcode::I64LtU:
+      case WabtInterpreterOpcode::I64LeU:
+      case WabtInterpreterOpcode::I64GtS:
+      case WabtInterpreterOpcode::I64GeS:
+      case WabtInterpreterOpcode::I64GtU:
+      case WabtInterpreterOpcode::I64GeU:
+      case WabtInterpreterOpcode::I64Rotr:
+      case WabtInterpreterOpcode::I64Rotl:
+      case WabtInterpreterOpcode::F64Add:
+      case WabtInterpreterOpcode::F64Sub:
+      case WabtInterpreterOpcode::F64Mul:
+      case WabtInterpreterOpcode::F64Div:
+      case WabtInterpreterOpcode::F64Min:
+      case WabtInterpreterOpcode::F64Max:
+      case WabtInterpreterOpcode::F64Copysign:
+      case WabtInterpreterOpcode::F64Eq:
+      case WabtInterpreterOpcode::F64Ne:
+      case WabtInterpreterOpcode::F64Lt:
+      case WabtInterpreterOpcode::F64Le:
+      case WabtInterpreterOpcode::F64Gt:
+      case WabtInterpreterOpcode::F64Ge:
         wabt_writef(stream, "%s %%[-2], %%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode));
         break;
 
-      case WABT_OPCODE_I32_CLZ:
-      case WABT_OPCODE_I32_CTZ:
-      case WABT_OPCODE_I32_POPCNT:
-      case WABT_OPCODE_I32_EQZ:
-      case WABT_OPCODE_I64_CLZ:
-      case WABT_OPCODE_I64_CTZ:
-      case WABT_OPCODE_I64_POPCNT:
-      case WABT_OPCODE_I64_EQZ:
-      case WABT_OPCODE_F32_ABS:
-      case WABT_OPCODE_F32_NEG:
-      case WABT_OPCODE_F32_CEIL:
-      case WABT_OPCODE_F32_FLOOR:
-      case WABT_OPCODE_F32_TRUNC:
-      case WABT_OPCODE_F32_NEAREST:
-      case WABT_OPCODE_F32_SQRT:
-      case WABT_OPCODE_F64_ABS:
-      case WABT_OPCODE_F64_NEG:
-      case WABT_OPCODE_F64_CEIL:
-      case WABT_OPCODE_F64_FLOOR:
-      case WABT_OPCODE_F64_TRUNC:
-      case WABT_OPCODE_F64_NEAREST:
-      case WABT_OPCODE_F64_SQRT:
-      case WABT_OPCODE_I32_TRUNC_S_F32:
-      case WABT_OPCODE_I32_TRUNC_U_F32:
-      case WABT_OPCODE_I64_TRUNC_S_F32:
-      case WABT_OPCODE_I64_TRUNC_U_F32:
-      case WABT_OPCODE_F64_PROMOTE_F32:
-      case WABT_OPCODE_I32_REINTERPRET_F32:
-      case WABT_OPCODE_I32_TRUNC_S_F64:
-      case WABT_OPCODE_I32_TRUNC_U_F64:
-      case WABT_OPCODE_I64_TRUNC_S_F64:
-      case WABT_OPCODE_I64_TRUNC_U_F64:
-      case WABT_OPCODE_F32_DEMOTE_F64:
-      case WABT_OPCODE_I64_REINTERPRET_F64:
-      case WABT_OPCODE_I32_WRAP_I64:
-      case WABT_OPCODE_F32_CONVERT_S_I64:
-      case WABT_OPCODE_F32_CONVERT_U_I64:
-      case WABT_OPCODE_F64_CONVERT_S_I64:
-      case WABT_OPCODE_F64_CONVERT_U_I64:
-      case WABT_OPCODE_F64_REINTERPRET_I64:
-      case WABT_OPCODE_I64_EXTEND_S_I32:
-      case WABT_OPCODE_I64_EXTEND_U_I32:
-      case WABT_OPCODE_F32_CONVERT_S_I32:
-      case WABT_OPCODE_F32_CONVERT_U_I32:
-      case WABT_OPCODE_F32_REINTERPRET_I32:
-      case WABT_OPCODE_F64_CONVERT_S_I32:
-      case WABT_OPCODE_F64_CONVERT_U_I32:
+      case WabtInterpreterOpcode::I32Clz:
+      case WabtInterpreterOpcode::I32Ctz:
+      case WabtInterpreterOpcode::I32Popcnt:
+      case WabtInterpreterOpcode::I32Eqz:
+      case WabtInterpreterOpcode::I64Clz:
+      case WabtInterpreterOpcode::I64Ctz:
+      case WabtInterpreterOpcode::I64Popcnt:
+      case WabtInterpreterOpcode::I64Eqz:
+      case WabtInterpreterOpcode::F32Abs:
+      case WabtInterpreterOpcode::F32Neg:
+      case WabtInterpreterOpcode::F32Ceil:
+      case WabtInterpreterOpcode::F32Floor:
+      case WabtInterpreterOpcode::F32Trunc:
+      case WabtInterpreterOpcode::F32Nearest:
+      case WabtInterpreterOpcode::F32Sqrt:
+      case WabtInterpreterOpcode::F64Abs:
+      case WabtInterpreterOpcode::F64Neg:
+      case WabtInterpreterOpcode::F64Ceil:
+      case WabtInterpreterOpcode::F64Floor:
+      case WabtInterpreterOpcode::F64Trunc:
+      case WabtInterpreterOpcode::F64Nearest:
+      case WabtInterpreterOpcode::F64Sqrt:
+      case WabtInterpreterOpcode::I32TruncSF32:
+      case WabtInterpreterOpcode::I32TruncUF32:
+      case WabtInterpreterOpcode::I64TruncSF32:
+      case WabtInterpreterOpcode::I64TruncUF32:
+      case WabtInterpreterOpcode::F64PromoteF32:
+      case WabtInterpreterOpcode::I32ReinterpretF32:
+      case WabtInterpreterOpcode::I32TruncSF64:
+      case WabtInterpreterOpcode::I32TruncUF64:
+      case WabtInterpreterOpcode::I64TruncSF64:
+      case WabtInterpreterOpcode::I64TruncUF64:
+      case WabtInterpreterOpcode::F32DemoteF64:
+      case WabtInterpreterOpcode::I64ReinterpretF64:
+      case WabtInterpreterOpcode::I32WrapI64:
+      case WabtInterpreterOpcode::F32ConvertSI64:
+      case WabtInterpreterOpcode::F32ConvertUI64:
+      case WabtInterpreterOpcode::F64ConvertSI64:
+      case WabtInterpreterOpcode::F64ConvertUI64:
+      case WabtInterpreterOpcode::F64ReinterpretI64:
+      case WabtInterpreterOpcode::I64ExtendSI32:
+      case WabtInterpreterOpcode::I64ExtendUI32:
+      case WabtInterpreterOpcode::F32ConvertSI32:
+      case WabtInterpreterOpcode::F32ConvertUI32:
+      case WabtInterpreterOpcode::F32ReinterpretI32:
+      case WabtInterpreterOpcode::F64ConvertSI32:
+      case WabtInterpreterOpcode::F64ConvertUI32:
         wabt_writef(stream, "%s %%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode));
         break;
 
-      case WABT_OPCODE_GROW_MEMORY: {
+      case WabtInterpreterOpcode::GrowMemory: {
         uint32_t memory_index = read_u32(&pc);
         wabt_writef(stream, "%s $%u:%%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode), memory_index);
         break;
       }
 
-      case WABT_OPCODE_ALLOCA:
+      case WabtInterpreterOpcode::Alloca:
         wabt_writef(stream, "%s $%u\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_BR_UNLESS:
+      case WabtInterpreterOpcode::BrUnless:
         wabt_writef(stream, "%s @%u, %%[-1]\n",
                     wabt_get_interpreter_opcode_name(opcode), read_u32(&pc));
         break;
 
-      case WABT_OPCODE_DROP_KEEP: {
+      case WabtInterpreterOpcode::DropKeep: {
         uint32_t drop = read_u32(&pc);
         uint32_t keep = *pc++;
         wabt_writef(stream, "%s $%u $%u\n",
@@ -2369,7 +2365,7 @@ void wabt_disassemble(WabtInterpreterEnvironment* env,
         break;
       }
 
-      case WABT_OPCODE_DATA: {
+      case WabtInterpreterOpcode::Data: {
         uint32_t num_bytes = read_u32(&pc);
         wabt_writef(stream, "%s $%u\n",
                     wabt_get_interpreter_opcode_name(opcode), num_bytes);

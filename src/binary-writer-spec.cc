@@ -148,12 +148,11 @@ static void write_command_type(Context* ctx, const WabtCommand* command) {
           "assert_trap",
           "assert_exhaustion",
       };
-  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_command_names) ==
-                     WABT_NUM_COMMAND_TYPES);
+  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_command_names) == kWabtCommandTypeCount);
 
   write_key(ctx, "type");
-  assert(s_command_names[command->type]);
-  write_string(ctx, s_command_names[command->type]);
+  assert(s_command_names[static_cast<size_t>(command->type)]);
+  write_string(ctx, s_command_names[static_cast<size_t>(command->type)]);
 }
 
 static void write_location(Context* ctx, const WabtLocation* loc) {
@@ -162,7 +161,7 @@ static void write_location(Context* ctx, const WabtLocation* loc) {
 }
 
 static void write_var(Context* ctx, const WabtVar* var) {
-  if (var->type == WABT_VAR_TYPE_INDEX)
+  if (var->type == WabtVarType::Index)
     wabt_writef(&ctx->json_stream, "\"%" PRIu64 "\"", var->index);
   else
     write_escaped_string_slice(ctx, var->name);
@@ -182,21 +181,21 @@ static void write_const(Context* ctx, const WabtConst* const_) {
   /* Always write the values as strings, even though they may be representable
    * as JSON numbers. This way the formatting is consistent. */
   switch (const_->type) {
-    case WABT_TYPE_I32:
+    case WabtType::I32:
       write_string(ctx, "i32");
       write_separator(ctx);
       write_key(ctx, "value");
       wabt_writef(&ctx->json_stream, "\"%u\"", const_->u32);
       break;
 
-    case WABT_TYPE_I64:
+    case WabtType::I64:
       write_string(ctx, "i64");
       write_separator(ctx);
       write_key(ctx, "value");
       wabt_writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->u64);
       break;
 
-    case WABT_TYPE_F32: {
+    case WabtType::F32: {
       /* TODO(binji): write as hex float */
       write_string(ctx, "f32");
       write_separator(ctx);
@@ -205,7 +204,7 @@ static void write_const(Context* ctx, const WabtConst* const_) {
       break;
     }
 
-    case WABT_TYPE_F64: {
+    case WabtType::F64: {
       /* TODO(binji): write as hex float */
       write_string(ctx, "f64");
       write_separator(ctx);
@@ -237,19 +236,19 @@ static void write_action(Context* ctx, const WabtAction* action) {
   write_key(ctx, "action");
   wabt_writef(&ctx->json_stream, "{");
   write_key(ctx, "type");
-  if (action->type == WABT_ACTION_TYPE_INVOKE) {
+  if (action->type == WabtActionType::Invoke) {
     write_string(ctx, "invoke");
   } else {
-    assert(action->type == WABT_ACTION_TYPE_GET);
+    assert(action->type == WabtActionType::Get);
     write_string(ctx, "get");
   }
   write_separator(ctx);
-  if (action->module_var.type != WABT_VAR_TYPE_INDEX) {
+  if (action->module_var.type != WabtVarType::Index) {
     write_key(ctx, "module");
     write_var(ctx, &action->module_var);
     write_separator(ctx);
   }
-  if (action->type == WABT_ACTION_TYPE_INVOKE) {
+  if (action->type == WabtActionType::Invoke) {
     write_key(ctx, "field");
     write_escaped_string_slice(ctx, action->invoke.name);
     write_separator(ctx);
@@ -270,9 +269,9 @@ static void write_action_result_type(Context* ctx,
   const WabtExport* export_;
   wabt_writef(&ctx->json_stream, "[");
   switch (action->type) {
-    case WABT_ACTION_TYPE_INVOKE: {
+    case WabtActionType::Invoke: {
       export_ = wabt_get_export_by_name(module, &action->invoke.name);
-      assert(export_->kind == WABT_EXTERNAL_KIND_FUNC);
+      assert(export_->kind == WabtExternalKind::Func);
       WabtFunc* func = wabt_get_func_by_var(module, &export_->var);
       size_t num_results = wabt_get_num_results(func);
       size_t i;
@@ -281,9 +280,9 @@ static void write_action_result_type(Context* ctx,
       break;
     }
 
-    case WABT_ACTION_TYPE_GET: {
+    case WabtActionType::Get: {
       export_ = wabt_get_export_by_name(module, &action->get.name);
-      assert(export_->kind == WABT_EXTERNAL_KIND_GLOBAL);
+      assert(export_->kind == WabtExternalKind::Global);
       WabtGlobal* global = wabt_get_global_by_var(module, &export_->var);
       write_type_object(ctx, global->type);
       break;
@@ -311,7 +310,7 @@ static void write_module(Context* ctx,
 static void write_raw_module(Context* ctx,
                              char* filename,
                              const WabtRawModule* raw_module) {
-  if (raw_module->type == WABT_RAW_MODULE_TYPE_TEXT) {
+  if (raw_module->type == WabtRawModuleType::Text) {
     write_module(ctx, filename, raw_module->text);
   } else if (ctx->write_modules) {
     WabtFileStream stream;
@@ -350,7 +349,7 @@ static void write_commands(Context* ctx, WabtScript* script) {
   for (i = 0; i < script->commands.size; ++i) {
     WabtCommand* command = &script->commands.data[i];
 
-    if (command->type == WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY)
+    if (command->type == WabtCommandType::AssertInvalidNonBinary)
       continue;
 
     if (i != 0)
@@ -362,7 +361,7 @@ static void write_commands(Context* ctx, WabtScript* script) {
     write_separator(ctx);
 
     switch (command->type) {
-      case WABT_COMMAND_TYPE_MODULE: {
+      case WabtCommandType::Module: {
         WabtModule* module = &command->module;
         char* filename = get_module_filename(ctx);
         write_location(ctx, &module->loc);
@@ -381,16 +380,16 @@ static void write_commands(Context* ctx, WabtScript* script) {
         break;
       }
 
-      case WABT_COMMAND_TYPE_ACTION:
+      case WabtCommandType::Action:
         write_location(ctx, &command->action.loc);
         write_separator(ctx);
         write_action(ctx, &command->action);
         break;
 
-      case WABT_COMMAND_TYPE_REGISTER:
+      case WabtCommandType::Register:
         write_location(ctx, &command->register_.var.loc);
         write_separator(ctx);
-        if (command->register_.var.type == WABT_VAR_TYPE_NAME) {
+        if (command->register_.var.type == WabtVarType::Name) {
           write_key(ctx, "name");
           write_var(ctx, &command->register_.var);
           write_separator(ctx);
@@ -404,31 +403,31 @@ static void write_commands(Context* ctx, WabtScript* script) {
         write_escaped_string_slice(ctx, command->register_.module_name);
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_MALFORMED:
+      case WabtCommandType::AssertMalformed:
         write_invalid_module(ctx, &command->assert_malformed.module,
                              command->assert_malformed.text);
         ctx->num_modules++;
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_INVALID:
+      case WabtCommandType::AssertInvalid:
         write_invalid_module(ctx, &command->assert_invalid.module,
                              command->assert_invalid.text);
         ctx->num_modules++;
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_UNLINKABLE:
+      case WabtCommandType::AssertUnlinkable:
         write_invalid_module(ctx, &command->assert_unlinkable.module,
                              command->assert_unlinkable.text);
         ctx->num_modules++;
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
+      case WabtCommandType::AssertUninstantiable:
         write_invalid_module(ctx, &command->assert_uninstantiable.module,
                              command->assert_uninstantiable.text);
         ctx->num_modules++;
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_RETURN:
+      case WabtCommandType::AssertReturn:
         write_location(ctx, &command->assert_return.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_return.action);
@@ -437,7 +436,7 @@ static void write_commands(Context* ctx, WabtScript* script) {
         write_const_vector(ctx, &command->assert_return.expected);
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_RETURN_NAN:
+      case WabtCommandType::AssertReturnNan:
         write_location(ctx, &command->assert_return_nan.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_return_nan.action);
@@ -447,7 +446,7 @@ static void write_commands(Context* ctx, WabtScript* script) {
                                  &command->assert_return_nan.action);
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_TRAP:
+      case WabtCommandType::AssertTrap:
         write_location(ctx, &command->assert_trap.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_trap.action);
@@ -456,14 +455,13 @@ static void write_commands(Context* ctx, WabtScript* script) {
         write_escaped_string_slice(ctx, command->assert_trap.text);
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_EXHAUSTION:
+      case WabtCommandType::AssertExhaustion:
         write_location(ctx, &command->assert_trap.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_trap.action);
         break;
 
-      case WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
-      case WABT_NUM_COMMAND_TYPES:
+      case WabtCommandType::AssertInvalidNonBinary:
         assert(0);
         break;
     }
@@ -481,7 +479,7 @@ WabtResult wabt_write_binary_spec_script(
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
   ctx.spec_options = spec_options;
-  ctx.result = WABT_OK;
+  ctx.result = WabtResult::Ok;
   ctx.source_filename.start = source_filename;
   ctx.source_filename.length = strlen(source_filename);
   ctx.module_filename_noext = strip_extension(

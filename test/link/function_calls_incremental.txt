@@ -28,32 +28,32 @@ linked.wasm:	file format wasm 0x000001
 
 Sections:
 
-     TYPE start=0x0000000a end=0x00000024 (size=0x0000001a) count: 6
-   IMPORT start=0x0000002a end=0x00000069 (size=0x0000003f) count: 3
- FUNCTION start=0x0000006f end=0x00000073 (size=0x00000004) count: 3
-     CODE start=0x00000075 end=0x000000b7 (size=0x00000042) count: 3
-   CUSTOM start=0x000000bd end=0x000000d6 (size=0x00000019) "reloc.CODE"
+     Type start=0x0000000a end=0x00000024 (size=0x0000001a) count: 6
+   Import start=0x0000002a end=0x00000069 (size=0x0000003f) count: 3
+ Function start=0x0000006f end=0x00000073 (size=0x00000004) count: 3
+     Code start=0x00000075 end=0x000000b7 (size=0x00000042) count: 3
+   Custom start=0x000000bd end=0x000000d6 (size=0x00000019) "reloc.Code"
 
 Section Details:
 
-TYPE:
+Type:
  - [0] (i32) -> i32
  - [1] (i32) -> nil
  - [2] (f64) -> nil
  - [3] (i64) -> nil
  - [4] (f32) -> nil
  - [5] (i32) -> nil
-IMPORT:
+Import:
  - func[0] sig=0 <- __extern.bar
  - func[1] sig=2 <- __extern.does_nothing
  - func[2] sig=4 <- __extern.hello_world
-FUNCTION:
+Function:
  - func[3] sig=1
  - func[4] sig=3
  - func[5] sig=5
-CUSTOM:
- - name: "reloc.CODE"
-  - section: CODE
+Custom:
+ - name: "reloc.Code"
+  - section: Code
    - R_FUNC_INDEX_LEB   offset=0x7b (0x6)
    - R_FUNC_INDEX_LEB   offset=0x81 (0xc)
    - R_FUNC_INDEX_LEB   offset=0x93 (0x1e)

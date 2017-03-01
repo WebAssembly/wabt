@@ -20,7 +20,7 @@
 #include <stddef.h>
 
 int wabt_get_index_from_var(const WabtBindingHash* hash, const WabtVar* var) {
-  if (var->type == WABT_VAR_TYPE_NAME)
+  if (var->type == WabtVarType::Name)
     return wabt_find_binding_index_by_name(hash, &var->name);
   return static_cast<int>(var->index);
 }
@@ -55,7 +55,7 @@ int wabt_get_func_type_index_by_var(const WabtModule* module,
 }
 
 int wabt_get_local_index_by_var(const WabtFunc* func, const WabtVar* var) {
-  if (var->type == WABT_VAR_TYPE_INDEX)
+  if (var->type == WabtVarType::Index)
     return static_cast<int>(var->index);
 
   int result =
@@ -136,7 +136,7 @@ WabtModule* wabt_get_first_module(const WabtScript* script) {
   size_t i;
   for (i = 0; i < script->commands.size; ++i) {
     WabtCommand* command = &script->commands.data[i];
-    if (command->type == WABT_COMMAND_TYPE_MODULE)
+    if (command->type == WabtCommandType::Module)
       return &command->module;
   }
   return nullptr;
@@ -148,7 +148,7 @@ WabtModule* wabt_get_module_by_var(const WabtScript* script,
   if (index < 0 || static_cast<size_t>(index) >= script->commands.size)
     return nullptr;
   WabtCommand* command = &script->commands.data[index];
-  assert(command->type == WABT_COMMAND_TYPE_MODULE);
+  assert(command->type == WabtCommandType::Module);
   return &command->module;
 }
 
@@ -214,7 +214,7 @@ WabtFuncType* wabt_append_implicit_func_type(WabtLocation* loc,
                                              WabtFuncSignature* sig) {
   WabtModuleField* field = wabt_append_module_field(module);
   field->loc = *loc;
-  field->type = WABT_MODULE_FIELD_TYPE_FUNC_TYPE;
+  field->type = WabtModuleFieldType::FuncType;
   field->func_type.sig = *sig;
 
   WabtFuncType* func_type_ptr = &field->func_type;
@@ -222,34 +222,34 @@ WabtFuncType* wabt_append_implicit_func_type(WabtLocation* loc,
   return func_type_ptr;
 }
 
-#define FOREACH_EXPR_TYPE(V)                       \
-  V(WABT_EXPR_TYPE_BINARY, binary)                 \
-  V(WABT_EXPR_TYPE_BLOCK, block)                   \
-  V(WABT_EXPR_TYPE_BR, br)                         \
-  V(WABT_EXPR_TYPE_BR_IF, br_if)                   \
-  V(WABT_EXPR_TYPE_BR_TABLE, br_table)             \
-  V(WABT_EXPR_TYPE_CALL, call)                     \
-  V(WABT_EXPR_TYPE_CALL_INDIRECT, call_indirect)   \
-  V(WABT_EXPR_TYPE_COMPARE, compare)               \
-  V(WABT_EXPR_TYPE_CONST, const)                   \
-  V(WABT_EXPR_TYPE_CONVERT, convert)               \
-  V(WABT_EXPR_TYPE_GET_GLOBAL, get_global)         \
-  V(WABT_EXPR_TYPE_GET_LOCAL, get_local)           \
-  V(WABT_EXPR_TYPE_IF, if)                         \
-  V(WABT_EXPR_TYPE_LOAD, load)                     \
-  V(WABT_EXPR_TYPE_LOOP, loop)                     \
-  V(WABT_EXPR_TYPE_SET_GLOBAL, set_global)         \
-  V(WABT_EXPR_TYPE_SET_LOCAL, set_local)           \
-  V(WABT_EXPR_TYPE_STORE, store)                   \
-  V(WABT_EXPR_TYPE_TEE_LOCAL, tee_local)           \
-  V(WABT_EXPR_TYPE_UNARY, unary)                   \
-  V(WABT_EXPR_TYPE_CURRENT_MEMORY, current_memory) \
-  V(WABT_EXPR_TYPE_DROP, drop)                     \
-  V(WABT_EXPR_TYPE_GROW_MEMORY, grow_memory)       \
-  V(WABT_EXPR_TYPE_NOP, nop)                       \
-  V(WABT_EXPR_TYPE_RETURN, return )                \
-  V(WABT_EXPR_TYPE_SELECT, select)                 \
-  V(WABT_EXPR_TYPE_UNREACHABLE, unreachable)
+#define FOREACH_EXPR_TYPE(V)                     \
+  V(WabtExprType::Binary, binary)                \
+  V(WabtExprType::Block, block)                  \
+  V(WabtExprType::Br, br)                        \
+  V(WabtExprType::BrIf, br_if)                   \
+  V(WabtExprType::BrTable, br_table)             \
+  V(WabtExprType::Call, call)                    \
+  V(WabtExprType::CallIndirect, call_indirect)   \
+  V(WabtExprType::Compare, compare)              \
+  V(WabtExprType::Const, const)                  \
+  V(WabtExprType::Convert, convert)              \
+  V(WabtExprType::GetGlobal, get_global)         \
+  V(WabtExprType::GetLocal, get_local)           \
+  V(WabtExprType::If, if)                        \
+  V(WabtExprType::Load, load)                    \
+  V(WabtExprType::Loop, loop)                    \
+  V(WabtExprType::SetGlobal, set_global)         \
+  V(WabtExprType::SetLocal, set_local)           \
+  V(WabtExprType::Store, store)                  \
+  V(WabtExprType::TeeLocal, tee_local)           \
+  V(WabtExprType::Unary, unary)                  \
+  V(WabtExprType::CurrentMemory, current_memory) \
+  V(WabtExprType::Drop, drop)                    \
+  V(WabtExprType::GrowMemory, grow_memory)       \
+  V(WabtExprType::Nop, nop)                      \
+  V(WabtExprType::Return, return )               \
+  V(WabtExprType::Select, select)                \
+  V(WabtExprType::Unreachable, unreachable)
 
 #define DEFINE_NEW_EXPR(type_, name)                               \
   WabtExpr* wabt_new_##name##_expr(void) {                         \
@@ -262,7 +262,7 @@ FOREACH_EXPR_TYPE(DEFINE_NEW_EXPR)
 #undef DEFINE_NEW_EXPR
 
 void wabt_destroy_var(WabtVar* var) {
-  if (var->type == WABT_VAR_TYPE_NAME)
+  if (var->type == WabtVarType::Name)
     wabt_destroy_string_slice(&var->name);
 }
 
@@ -292,62 +292,62 @@ void wabt_destroy_block(WabtBlock* block) {
 
 void wabt_destroy_expr(WabtExpr* expr) {
   switch (expr->type) {
-    case WABT_EXPR_TYPE_BLOCK:
+    case WabtExprType::Block:
       wabt_destroy_block(&expr->block);
       break;
-    case WABT_EXPR_TYPE_BR:
+    case WabtExprType::Br:
       wabt_destroy_var(&expr->br.var);
       break;
-    case WABT_EXPR_TYPE_BR_IF:
+    case WabtExprType::BrIf:
       wabt_destroy_var(&expr->br_if.var);
       break;
-    case WABT_EXPR_TYPE_BR_TABLE:
+    case WabtExprType::BrTable:
       WABT_DESTROY_VECTOR_AND_ELEMENTS(expr->br_table.targets, var);
       wabt_destroy_var(&expr->br_table.default_target);
       break;
-    case WABT_EXPR_TYPE_CALL:
+    case WabtExprType::Call:
       wabt_destroy_var(&expr->call.var);
       break;
-    case WABT_EXPR_TYPE_CALL_INDIRECT:
+    case WabtExprType::CallIndirect:
       wabt_destroy_var(&expr->call_indirect.var);
       break;
-    case WABT_EXPR_TYPE_GET_GLOBAL:
+    case WabtExprType::GetGlobal:
       wabt_destroy_var(&expr->get_global.var);
       break;
-    case WABT_EXPR_TYPE_GET_LOCAL:
+    case WabtExprType::GetLocal:
       wabt_destroy_var(&expr->get_local.var);
       break;
-    case WABT_EXPR_TYPE_IF:
+    case WabtExprType::If:
       wabt_destroy_block(&expr->if_.true_);
       wabt_destroy_expr_list(expr->if_.false_);
       break;
-    case WABT_EXPR_TYPE_LOOP:
+    case WabtExprType::Loop:
       wabt_destroy_block(&expr->loop);
       break;
-    case WABT_EXPR_TYPE_SET_GLOBAL:
+    case WabtExprType::SetGlobal:
       wabt_destroy_var(&expr->set_global.var);
       break;
-    case WABT_EXPR_TYPE_SET_LOCAL:
+    case WabtExprType::SetLocal:
       wabt_destroy_var(&expr->set_local.var);
       break;
-    case WABT_EXPR_TYPE_TEE_LOCAL:
+    case WabtExprType::TeeLocal:
       wabt_destroy_var(&expr->tee_local.var);
       break;
 
-    case WABT_EXPR_TYPE_BINARY:
-    case WABT_EXPR_TYPE_COMPARE:
-    case WABT_EXPR_TYPE_CONST:
-    case WABT_EXPR_TYPE_CONVERT:
-    case WABT_EXPR_TYPE_DROP:
-    case WABT_EXPR_TYPE_CURRENT_MEMORY:
-    case WABT_EXPR_TYPE_GROW_MEMORY:
-    case WABT_EXPR_TYPE_LOAD:
-    case WABT_EXPR_TYPE_NOP:
-    case WABT_EXPR_TYPE_RETURN:
-    case WABT_EXPR_TYPE_SELECT:
-    case WABT_EXPR_TYPE_STORE:
-    case WABT_EXPR_TYPE_UNARY:
-    case WABT_EXPR_TYPE_UNREACHABLE:
+    case WabtExprType::Binary:
+    case WabtExprType::Compare:
+    case WabtExprType::Const:
+    case WabtExprType::Convert:
+    case WabtExprType::Drop:
+    case WabtExprType::CurrentMemory:
+    case WabtExprType::GrowMemory:
+    case WabtExprType::Load:
+    case WabtExprType::Nop:
+    case WabtExprType::Return:
+    case WabtExprType::Select:
+    case WabtExprType::Store:
+    case WabtExprType::Unary:
+    case WabtExprType::Unreachable:
       break;
   }
   wabt_free(expr);
@@ -377,20 +377,17 @@ void wabt_destroy_import(WabtImport* import) {
   wabt_destroy_string_slice(&import->module_name);
   wabt_destroy_string_slice(&import->field_name);
   switch (import->kind) {
-    case WABT_EXTERNAL_KIND_FUNC:
+    case WabtExternalKind::Func:
       wabt_destroy_func(&import->func);
       break;
-    case WABT_EXTERNAL_KIND_TABLE:
+    case WabtExternalKind::Table:
       wabt_destroy_table(&import->table);
       break;
-    case WABT_EXTERNAL_KIND_MEMORY:
+    case WabtExternalKind::Memory:
       wabt_destroy_memory(&import->memory);
       break;
-    case WABT_EXTERNAL_KIND_GLOBAL:
+    case WabtExternalKind::Global:
       wabt_destroy_global(&import->global);
-      break;
-    case WABT_NUM_EXTERNAL_KINDS:
-      assert(0);
       break;
   }
 }
@@ -421,34 +418,34 @@ void wabt_destroy_table(WabtTable* table) {
 
 static void destroy_module_field(WabtModuleField* field) {
   switch (field->type) {
-    case WABT_MODULE_FIELD_TYPE_FUNC:
+    case WabtModuleFieldType::Func:
       wabt_destroy_func(&field->func);
       break;
-    case WABT_MODULE_FIELD_TYPE_GLOBAL:
+    case WabtModuleFieldType::Global:
       wabt_destroy_global(&field->global);
       break;
-    case WABT_MODULE_FIELD_TYPE_IMPORT:
+    case WabtModuleFieldType::Import:
       wabt_destroy_import(&field->import);
       break;
-    case WABT_MODULE_FIELD_TYPE_EXPORT:
+    case WabtModuleFieldType::Export:
       wabt_destroy_export(&field->export_);
       break;
-    case WABT_MODULE_FIELD_TYPE_FUNC_TYPE:
+    case WabtModuleFieldType::FuncType:
       wabt_destroy_func_type(&field->func_type);
       break;
-    case WABT_MODULE_FIELD_TYPE_TABLE:
+    case WabtModuleFieldType::Table:
       wabt_destroy_table(&field->table);
       break;
-    case WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+    case WabtModuleFieldType::ElemSegment:
       wabt_destroy_elem_segment(&field->elem_segment);
       break;
-    case WABT_MODULE_FIELD_TYPE_MEMORY:
+    case WabtModuleFieldType::Memory:
       wabt_destroy_memory(&field->memory);
       break;
-    case WABT_MODULE_FIELD_TYPE_DATA_SEGMENT:
+    case WabtModuleFieldType::DataSegment:
       wabt_destroy_data_segment(&field->data_segment);
       break;
-    case WABT_MODULE_FIELD_TYPE_START:
+    case WabtModuleFieldType::Start:
       wabt_destroy_var(&field->start);
       break;
   }
@@ -485,7 +482,7 @@ void wabt_destroy_module(WabtModule* module) {
 }
 
 void wabt_destroy_raw_module(WabtRawModule* raw) {
-  if (raw->type == WABT_RAW_MODULE_TYPE_TEXT) {
+  if (raw->type == WabtRawModuleType::Text) {
     wabt_destroy_module(raw->text);
     wabt_free(raw->text);
   } else {
@@ -497,11 +494,11 @@ void wabt_destroy_raw_module(WabtRawModule* raw) {
 void wabt_destroy_action(WabtAction* action) {
   wabt_destroy_var(&action->module_var);
   switch (action->type) {
-    case WABT_ACTION_TYPE_INVOKE:
+    case WabtActionType::Invoke:
       wabt_destroy_string_slice(&action->invoke.name);
       wabt_destroy_const_vector(&action->invoke.args);
       break;
-    case WABT_ACTION_TYPE_GET:
+    case WabtActionType::Get:
       wabt_destroy_string_slice(&action->get.name);
       break;
   }
@@ -509,47 +506,44 @@ void wabt_destroy_action(WabtAction* action) {
 
 void wabt_destroy_command(WabtCommand* command) {
   switch (command->type) {
-    case WABT_COMMAND_TYPE_MODULE:
+    case WabtCommandType::Module:
       wabt_destroy_module(&command->module);
       break;
-    case WABT_COMMAND_TYPE_ACTION:
+    case WabtCommandType::Action:
       wabt_destroy_action(&command->action);
       break;
-    case WABT_COMMAND_TYPE_REGISTER:
+    case WabtCommandType::Register:
       wabt_destroy_string_slice(&command->register_.module_name);
       wabt_destroy_var(&command->register_.var);
       break;
-    case WABT_COMMAND_TYPE_ASSERT_MALFORMED:
+    case WabtCommandType::AssertMalformed:
       wabt_destroy_raw_module(&command->assert_malformed.module);
       wabt_destroy_string_slice(&command->assert_malformed.text);
       break;
-    case WABT_COMMAND_TYPE_ASSERT_INVALID:
-    case WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
+    case WabtCommandType::AssertInvalid:
+    case WabtCommandType::AssertInvalidNonBinary:
       wabt_destroy_raw_module(&command->assert_invalid.module);
       wabt_destroy_string_slice(&command->assert_invalid.text);
       break;
-    case WABT_COMMAND_TYPE_ASSERT_UNLINKABLE:
+    case WabtCommandType::AssertUnlinkable:
       wabt_destroy_raw_module(&command->assert_unlinkable.module);
       wabt_destroy_string_slice(&command->assert_unlinkable.text);
       break;
-    case WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
+    case WabtCommandType::AssertUninstantiable:
       wabt_destroy_raw_module(&command->assert_uninstantiable.module);
       wabt_destroy_string_slice(&command->assert_uninstantiable.text);
       break;
-    case WABT_COMMAND_TYPE_ASSERT_RETURN:
+    case WabtCommandType::AssertReturn:
       wabt_destroy_action(&command->assert_return.action);
       wabt_destroy_const_vector(&command->assert_return.expected);
       break;
-    case WABT_COMMAND_TYPE_ASSERT_RETURN_NAN:
+    case WabtCommandType::AssertReturnNan:
       wabt_destroy_action(&command->assert_return_nan.action);
       break;
-    case WABT_COMMAND_TYPE_ASSERT_TRAP:
-    case WABT_COMMAND_TYPE_ASSERT_EXHAUSTION:
+    case WabtCommandType::AssertTrap:
+    case WabtCommandType::AssertExhaustion:
       wabt_destroy_action(&command->assert_trap.action);
       wabt_destroy_string_slice(&command->assert_trap.text);
-      break;
-    case WABT_NUM_COMMAND_TYPES:
-      assert(0);
       break;
   }
 }
@@ -569,16 +563,16 @@ void wabt_destroy_script(WabtScript* script) {
   wabt_destroy_binding_hash(&script->module_bindings);
 }
 
-#define CHECK_RESULT(expr)   \
-  do {                       \
-    if (WABT_FAILED((expr))) \
-      return WABT_ERROR;     \
+#define CHECK_RESULT(expr)      \
+  do {                          \
+    if (WABT_FAILED((expr)))    \
+      return WabtResult::Error; \
   } while (0)
 
 #define CALLBACK(member)                                           \
   CHECK_RESULT((visitor)->member                                   \
                    ? (visitor)->member(expr, (visitor)->user_data) \
-                   : WABT_OK)
+                   : WabtResult::Ok)
 
 static WabtResult visit_expr(WabtExpr* expr, WabtExprVisitor* visitor);
 
@@ -586,74 +580,74 @@ WabtResult wabt_visit_expr_list(WabtExpr* first, WabtExprVisitor* visitor) {
   WabtExpr* expr;
   for (expr = first; expr; expr = expr->next)
     CHECK_RESULT(visit_expr(expr, visitor));
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult visit_expr(WabtExpr* expr, WabtExprVisitor* visitor) {
   switch (expr->type) {
-    case WABT_EXPR_TYPE_BINARY:
+    case WabtExprType::Binary:
       CALLBACK(on_binary_expr);
       break;
 
-    case WABT_EXPR_TYPE_BLOCK:
+    case WabtExprType::Block:
       CALLBACK(begin_block_expr);
       CHECK_RESULT(wabt_visit_expr_list(expr->block.first, visitor));
       CALLBACK(end_block_expr);
       break;
 
-    case WABT_EXPR_TYPE_BR:
+    case WabtExprType::Br:
       CALLBACK(on_br_expr);
       break;
 
-    case WABT_EXPR_TYPE_BR_IF:
+    case WabtExprType::BrIf:
       CALLBACK(on_br_if_expr);
       break;
 
-    case WABT_EXPR_TYPE_BR_TABLE:
+    case WabtExprType::BrTable:
       CALLBACK(on_br_table_expr);
       break;
 
-    case WABT_EXPR_TYPE_CALL:
+    case WabtExprType::Call:
       CALLBACK(on_call_expr);
       break;
 
-    case WABT_EXPR_TYPE_CALL_INDIRECT:
+    case WabtExprType::CallIndirect:
       CALLBACK(on_call_indirect_expr);
       break;
 
-    case WABT_EXPR_TYPE_COMPARE:
+    case WabtExprType::Compare:
       CALLBACK(on_compare_expr);
       break;
 
-    case WABT_EXPR_TYPE_CONST:
+    case WabtExprType::Const:
       CALLBACK(on_const_expr);
       break;
 
-    case WABT_EXPR_TYPE_CONVERT:
+    case WabtExprType::Convert:
       CALLBACK(on_convert_expr);
       break;
 
-    case WABT_EXPR_TYPE_CURRENT_MEMORY:
+    case WabtExprType::CurrentMemory:
       CALLBACK(on_current_memory_expr);
       break;
 
-    case WABT_EXPR_TYPE_DROP:
+    case WabtExprType::Drop:
       CALLBACK(on_drop_expr);
       break;
 
-    case WABT_EXPR_TYPE_GET_GLOBAL:
+    case WabtExprType::GetGlobal:
       CALLBACK(on_get_global_expr);
       break;
 
-    case WABT_EXPR_TYPE_GET_LOCAL:
+    case WabtExprType::GetLocal:
       CALLBACK(on_get_local_expr);
       break;
 
-    case WABT_EXPR_TYPE_GROW_MEMORY:
+    case WabtExprType::GrowMemory:
       CALLBACK(on_grow_memory_expr);
       break;
 
-    case WABT_EXPR_TYPE_IF:
+    case WabtExprType::If:
       CALLBACK(begin_if_expr);
       CHECK_RESULT(wabt_visit_expr_list(expr->if_.true_.first, visitor));
       CALLBACK(after_if_true_expr);
@@ -661,54 +655,54 @@ static WabtResult visit_expr(WabtExpr* expr, WabtExprVisitor* visitor) {
       CALLBACK(end_if_expr);
       break;
 
-    case WABT_EXPR_TYPE_LOAD:
+    case WabtExprType::Load:
       CALLBACK(on_load_expr);
       break;
 
-    case WABT_EXPR_TYPE_LOOP:
+    case WabtExprType::Loop:
       CALLBACK(begin_loop_expr);
       CHECK_RESULT(wabt_visit_expr_list(expr->loop.first, visitor));
       CALLBACK(end_loop_expr);
       break;
 
-    case WABT_EXPR_TYPE_NOP:
+    case WabtExprType::Nop:
       CALLBACK(on_nop_expr);
       break;
 
-    case WABT_EXPR_TYPE_RETURN:
+    case WabtExprType::Return:
       CALLBACK(on_return_expr);
       break;
 
-    case WABT_EXPR_TYPE_SELECT:
+    case WabtExprType::Select:
       CALLBACK(on_select_expr);
       break;
 
-    case WABT_EXPR_TYPE_SET_GLOBAL:
+    case WabtExprType::SetGlobal:
       CALLBACK(on_set_global_expr);
       break;
 
-    case WABT_EXPR_TYPE_SET_LOCAL:
+    case WabtExprType::SetLocal:
       CALLBACK(on_set_local_expr);
       break;
 
-    case WABT_EXPR_TYPE_STORE:
+    case WabtExprType::Store:
       CALLBACK(on_store_expr);
       break;
 
-    case WABT_EXPR_TYPE_TEE_LOCAL:
+    case WabtExprType::TeeLocal:
       CALLBACK(on_tee_local_expr);
       break;
 
-    case WABT_EXPR_TYPE_UNARY:
+    case WabtExprType::Unary:
       CALLBACK(on_unary_expr);
       break;
 
-    case WABT_EXPR_TYPE_UNREACHABLE:
+    case WabtExprType::Unreachable:
       CALLBACK(on_unreachable_expr);
       break;
   }
 
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 /* TODO(binji): make the visitor non-recursive */

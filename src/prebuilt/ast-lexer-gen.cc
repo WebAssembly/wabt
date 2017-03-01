@@ -84,13 +84,13 @@
   lval->text.start = yytext + offset; \
   lval->text.length = yyleng - offset
 
-#define TYPE(type_) lval->type = WABT_TYPE_##type_
+#define TYPE(type_) lval->type = WabtType::type_
 
-#define OPCODE(name) lval->opcode = WABT_OPCODE_##name
+#define OPCODE(name) lval->opcode = WabtOpcode::name
 
-#define LITERAL(type_)                      \
-  lval->literal.type = WABT_LITERAL_TYPE_##type_; \
-  lval->literal.text.start = yytext;              \
+#define LITERAL(type_)                         \
+  lval->literal.type = WabtLiteralType::type_; \
+  lval->literal.text.start = yytext;           \
   lval->literal.text.length = yyleng
 
 static WabtResult fill(WabtLocation* loc,
@@ -98,7 +98,7 @@ static WabtResult fill(WabtLocation* loc,
                        WabtAstParser* parser,
                        size_t need) {
   if (lexer->eof)
-    return WABT_ERROR;
+    return WabtResult::Error;
   size_t free = lexer->token - lexer->buffer;
   assert(static_cast<size_t>(lexer->cursor - lexer->buffer) >= free);
   /* our buffer is too small, need to realloc */
@@ -120,7 +120,7 @@ static WabtResult fill(WabtLocation* loc,
     if (!new_buffer) {
       wabt_ast_parser_error(loc, lexer, parser,
                             "unable to reallocate lexer buffer.");
-      return WABT_ERROR;
+      return WabtResult::Error;
     }
     memmove(new_buffer, lexer->token, lexer->limit - lexer->token);
     lexer->buffer = new_buffer;
@@ -141,11 +141,11 @@ static WabtResult fill(WabtLocation* loc,
     lexer->buffer_file_offset += free;
   }
   /* read the new data into the buffer */
-  if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE) {
+  if (lexer->source.type == WabtAstLexerSourceType::File) {
     lexer->limit += fread(lexer->limit, 1, free, lexer->source.file);
   } else {
     /* TODO(binji): could lex directly from buffer */
-    assert(lexer->source.type == WABT_LEXER_SOURCE_TYPE_BUFFER);
+    assert(lexer->source.type == WabtAstLexerSourceType::Buffer);
     size_t read_size = free;
     size_t offset = lexer->source.buffer.read_offset;
     size_t bytes_left = lexer->source.buffer.size - offset;
@@ -165,7 +165,7 @@ static WabtResult fill(WabtLocation* loc,
     memset(lexer->limit, 0, YYMAXFILL);
     lexer->limit += YYMAXFILL;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 int wabt_ast_lexer_lex(WABT_AST_PARSER_STYPE* lval,
@@ -702,7 +702,7 @@ yy60:
 		}
 yy61:
 #line 222 "src/ast-lexer.cc"
-		{ LITERAL(INT); RETURN(NAT); }
+		{ LITERAL(Int); RETURN(NAT); }
 #line 707 "src/prebuilt/ast-lexer-gen.cc"
 yy62:
 		++lexer->cursor;
@@ -1020,7 +1020,7 @@ yy93:
 		}
 yy94:
 #line 223 "src/ast-lexer.cc"
-		{ LITERAL(INT); RETURN(INT); }
+		{ LITERAL(Int); RETURN(INT); }
 #line 1025 "src/prebuilt/ast-lexer-gen.cc"
 yy95:
 		++lexer->cursor;
@@ -1119,7 +1119,7 @@ yy99:
 		}
 yy101:
 #line 224 "src/ast-lexer.cc"
-		{ LITERAL(FLOAT); RETURN(FLOAT); }
+		{ LITERAL(Float); RETURN(FLOAT); }
 #line 1124 "src/prebuilt/ast-lexer-gen.cc"
 yy102:
 		yych = *++lexer->cursor;
@@ -1810,7 +1810,7 @@ yy185:
 		}
 yy186:
 #line 226 "src/ast-lexer.cc"
-		{ LITERAL(INFINITY); RETURN(FLOAT); }
+		{ LITERAL(Infinity); RETURN(FLOAT); }
 #line 1815 "src/prebuilt/ast-lexer-gen.cc"
 yy187:
 		yych = *++lexer->cursor;
@@ -1879,7 +1879,7 @@ yy195:
 		}
 yy196:
 #line 227 "src/ast-lexer.cc"
-		{ LITERAL(NAN); RETURN(FLOAT); }
+		{ LITERAL(Nan); RETURN(FLOAT); }
 #line 1884 "src/prebuilt/ast-lexer-gen.cc"
 yy197:
 		++lexer->cursor;
@@ -2399,7 +2399,7 @@ yy273:
 		}
 yy275:
 #line 225 "src/ast-lexer.cc"
-		{ LITERAL(HEXFLOAT); RETURN(FLOAT); }
+		{ LITERAL(Hexfloat); RETURN(FLOAT); }
 #line 2404 "src/prebuilt/ast-lexer-gen.cc"
 yy276:
 		yych = *++lexer->cursor;
@@ -2938,7 +2938,7 @@ yy386:
 			goto yy49;
 		}
 #line 382 "src/ast-lexer.cc"
-		{ OPCODE(F32_EQ); RETURN(COMPARE); }
+		{ OPCODE(F32Eq); RETURN(COMPARE); }
 #line 2943 "src/prebuilt/ast-lexer-gen.cc"
 yy388:
 		yych = *++lexer->cursor;
@@ -2950,7 +2950,7 @@ yy389:
 			goto yy49;
 		}
 #line 392 "src/ast-lexer.cc"
-		{ OPCODE(F32_GE); RETURN(COMPARE); }
+		{ OPCODE(F32Ge); RETURN(COMPARE); }
 #line 2955 "src/prebuilt/ast-lexer-gen.cc"
 yy391:
 		++lexer->cursor;
@@ -2958,7 +2958,7 @@ yy391:
 			goto yy49;
 		}
 #line 390 "src/ast-lexer.cc"
-		{ OPCODE(F32_GT); RETURN(COMPARE); }
+		{ OPCODE(F32Gt); RETURN(COMPARE); }
 #line 2963 "src/prebuilt/ast-lexer-gen.cc"
 yy393:
 		++lexer->cursor;
@@ -2966,7 +2966,7 @@ yy393:
 			goto yy49;
 		}
 #line 388 "src/ast-lexer.cc"
-		{ OPCODE(F32_LE); RETURN(COMPARE); }
+		{ OPCODE(F32Le); RETURN(COMPARE); }
 #line 2971 "src/prebuilt/ast-lexer-gen.cc"
 yy395:
 		yych = *++lexer->cursor;
@@ -2978,7 +2978,7 @@ yy396:
 			goto yy49;
 		}
 #line 386 "src/ast-lexer.cc"
-		{ OPCODE(F32_LT); RETURN(COMPARE); }
+		{ OPCODE(F32Lt); RETURN(COMPARE); }
 #line 2983 "src/prebuilt/ast-lexer-gen.cc"
 yy398:
 		yych = *++lexer->cursor;
@@ -3029,7 +3029,7 @@ yy401:
 		}
 yy402:
 #line 384 "src/ast-lexer.cc"
-		{ OPCODE(F32_NE); RETURN(COMPARE); }
+		{ OPCODE(F32Ne); RETURN(COMPARE); }
 #line 3034 "src/prebuilt/ast-lexer-gen.cc"
 yy403:
 		yych = *++lexer->cursor;
@@ -3078,7 +3078,7 @@ yy413:
 			goto yy49;
 		}
 #line 383 "src/ast-lexer.cc"
-		{ OPCODE(F64_EQ); RETURN(COMPARE); }
+		{ OPCODE(F64Eq); RETURN(COMPARE); }
 #line 3083 "src/prebuilt/ast-lexer-gen.cc"
 yy415:
 		yych = *++lexer->cursor;
@@ -3090,7 +3090,7 @@ yy416:
 			goto yy49;
 		}
 #line 393 "src/ast-lexer.cc"
-		{ OPCODE(F64_GE); RETURN(COMPARE); }
+		{ OPCODE(F64Ge); RETURN(COMPARE); }
 #line 3095 "src/prebuilt/ast-lexer-gen.cc"
 yy418:
 		++lexer->cursor;
@@ -3098,7 +3098,7 @@ yy418:
 			goto yy49;
 		}
 #line 391 "src/ast-lexer.cc"
-		{ OPCODE(F64_GT); RETURN(COMPARE); }
+		{ OPCODE(F64Gt); RETURN(COMPARE); }
 #line 3103 "src/prebuilt/ast-lexer-gen.cc"
 yy420:
 		++lexer->cursor;
@@ -3106,7 +3106,7 @@ yy420:
 			goto yy49;
 		}
 #line 389 "src/ast-lexer.cc"
-		{ OPCODE(F64_LE); RETURN(COMPARE); }
+		{ OPCODE(F64Le); RETURN(COMPARE); }
 #line 3111 "src/prebuilt/ast-lexer-gen.cc"
 yy422:
 		yych = *++lexer->cursor;
@@ -3118,7 +3118,7 @@ yy423:
 			goto yy49;
 		}
 #line 387 "src/ast-lexer.cc"
-		{ OPCODE(F64_LT); RETURN(COMPARE); }
+		{ OPCODE(F64Lt); RETURN(COMPARE); }
 #line 3123 "src/prebuilt/ast-lexer-gen.cc"
 yy425:
 		yych = *++lexer->cursor;
@@ -3169,7 +3169,7 @@ yy428:
 		}
 yy429:
 #line 385 "src/ast-lexer.cc"
-		{ OPCODE(F64_NE); RETURN(COMPARE); }
+		{ OPCODE(F64Ne); RETURN(COMPARE); }
 #line 3174 "src/prebuilt/ast-lexer-gen.cc"
 yy430:
 		yych = *++lexer->cursor;
@@ -3275,7 +3275,7 @@ yy447:
 		}
 yy448:
 #line 362 "src/ast-lexer.cc"
-		{ OPCODE(I32_EQ); RETURN(COMPARE); }
+		{ OPCODE(I32Eq); RETURN(COMPARE); }
 #line 3280 "src/prebuilt/ast-lexer-gen.cc"
 yy449:
 		yych = *++lexer->cursor;
@@ -3307,7 +3307,7 @@ yy455:
 			goto yy49;
 		}
 #line 364 "src/ast-lexer.cc"
-		{ OPCODE(I32_NE); RETURN(COMPARE); }
+		{ OPCODE(I32Ne); RETURN(COMPARE); }
 #line 3312 "src/prebuilt/ast-lexer-gen.cc"
 yy457:
 		++lexer->cursor;
@@ -3315,7 +3315,7 @@ yy457:
 			goto yy49;
 		}
 #line 334 "src/ast-lexer.cc"
-		{ OPCODE(I32_OR); RETURN(BINARY); }
+		{ OPCODE(I32Or); RETURN(BINARY); }
 #line 3320 "src/prebuilt/ast-lexer-gen.cc"
 yy459:
 		yych = *++lexer->cursor;
@@ -3415,7 +3415,7 @@ yy474:
 		}
 yy475:
 #line 363 "src/ast-lexer.cc"
-		{ OPCODE(I64_EQ); RETURN(COMPARE); }
+		{ OPCODE(I64Eq); RETURN(COMPARE); }
 #line 3420 "src/prebuilt/ast-lexer-gen.cc"
 yy476:
 		yych = *++lexer->cursor;
@@ -3451,7 +3451,7 @@ yy483:
 			goto yy49;
 		}
 #line 365 "src/ast-lexer.cc"
-		{ OPCODE(I64_NE); RETURN(COMPARE); }
+		{ OPCODE(I64Ne); RETURN(COMPARE); }
 #line 3456 "src/prebuilt/ast-lexer-gen.cc"
 yy485:
 		++lexer->cursor;
@@ -3459,7 +3459,7 @@ yy485:
 			goto yy49;
 		}
 #line 335 "src/ast-lexer.cc"
-		{ OPCODE(I64_OR); RETURN(BINARY); }
+		{ OPCODE(I64Or); RETURN(BINARY); }
 #line 3464 "src/prebuilt/ast-lexer-gen.cc"
 yy487:
 		yych = *++lexer->cursor;
@@ -3759,7 +3759,7 @@ yy532:
 			goto yy49;
 		}
 #line 306 "src/ast-lexer.cc"
-		{ OPCODE(F32_ABS); RETURN(UNARY); }
+		{ OPCODE(F32Abs); RETURN(UNARY); }
 #line 3764 "src/prebuilt/ast-lexer-gen.cc"
 yy534:
 		++lexer->cursor;
@@ -3767,7 +3767,7 @@ yy534:
 			goto yy49;
 		}
 #line 348 "src/ast-lexer.cc"
-		{ OPCODE(F32_ADD); RETURN(BINARY); }
+		{ OPCODE(F32Add); RETURN(BINARY); }
 #line 3772 "src/prebuilt/ast-lexer-gen.cc"
 yy536:
 		yych = *++lexer->cursor;
@@ -3792,7 +3792,7 @@ yy540:
 			goto yy49;
 		}
 #line 354 "src/ast-lexer.cc"
-		{ OPCODE(F32_DIV); RETURN(BINARY); }
+		{ OPCODE(F32Div); RETURN(BINARY); }
 #line 3797 "src/prebuilt/ast-lexer-gen.cc"
 yy542:
 		yych = *++lexer->cursor;
@@ -3808,7 +3808,7 @@ yy544:
 			goto yy49;
 		}
 #line 358 "src/ast-lexer.cc"
-		{ OPCODE(F32_MAX); RETURN(BINARY); }
+		{ OPCODE(F32Max); RETURN(BINARY); }
 #line 3813 "src/prebuilt/ast-lexer-gen.cc"
 yy546:
 		++lexer->cursor;
@@ -3816,7 +3816,7 @@ yy546:
 			goto yy49;
 		}
 #line 356 "src/ast-lexer.cc"
-		{ OPCODE(F32_MIN); RETURN(BINARY); }
+		{ OPCODE(F32Min); RETURN(BINARY); }
 #line 3821 "src/prebuilt/ast-lexer-gen.cc"
 yy548:
 		++lexer->cursor;
@@ -3824,7 +3824,7 @@ yy548:
 			goto yy49;
 		}
 #line 352 "src/ast-lexer.cc"
-		{ OPCODE(F32_MUL); RETURN(BINARY); }
+		{ OPCODE(F32Mul); RETURN(BINARY); }
 #line 3829 "src/prebuilt/ast-lexer-gen.cc"
 yy550:
 		yych = *++lexer->cursor;
@@ -3836,7 +3836,7 @@ yy551:
 			goto yy49;
 		}
 #line 304 "src/ast-lexer.cc"
-		{ OPCODE(F32_NEG); RETURN(UNARY); }
+		{ OPCODE(F32Neg); RETURN(UNARY); }
 #line 3841 "src/prebuilt/ast-lexer-gen.cc"
 yy553:
 		yych = *++lexer->cursor;
@@ -3856,7 +3856,7 @@ yy556:
 			goto yy49;
 		}
 #line 350 "src/ast-lexer.cc"
-		{ OPCODE(F32_SUB); RETURN(BINARY); }
+		{ OPCODE(F32Sub); RETURN(BINARY); }
 #line 3861 "src/prebuilt/ast-lexer-gen.cc"
 yy558:
 		yych = *++lexer->cursor;
@@ -3868,7 +3868,7 @@ yy559:
 			goto yy49;
 		}
 #line 307 "src/ast-lexer.cc"
-		{ OPCODE(F64_ABS); RETURN(UNARY); }
+		{ OPCODE(F64Abs); RETURN(UNARY); }
 #line 3873 "src/prebuilt/ast-lexer-gen.cc"
 yy561:
 		++lexer->cursor;
@@ -3876,7 +3876,7 @@ yy561:
 			goto yy49;
 		}
 #line 349 "src/ast-lexer.cc"
-		{ OPCODE(F64_ADD); RETURN(BINARY); }
+		{ OPCODE(F64Add); RETURN(BINARY); }
 #line 3881 "src/prebuilt/ast-lexer-gen.cc"
 yy563:
 		yych = *++lexer->cursor;
@@ -3897,7 +3897,7 @@ yy566:
 			goto yy49;
 		}
 #line 355 "src/ast-lexer.cc"
-		{ OPCODE(F64_DIV); RETURN(BINARY); }
+		{ OPCODE(F64Div); RETURN(BINARY); }
 #line 3902 "src/prebuilt/ast-lexer-gen.cc"
 yy568:
 		yych = *++lexer->cursor;
@@ -3913,7 +3913,7 @@ yy570:
 			goto yy49;
 		}
 #line 359 "src/ast-lexer.cc"
-		{ OPCODE(F64_MAX); RETURN(BINARY); }
+		{ OPCODE(F64Max); RETURN(BINARY); }
 #line 3918 "src/prebuilt/ast-lexer-gen.cc"
 yy572:
 		++lexer->cursor;
@@ -3921,7 +3921,7 @@ yy572:
 			goto yy49;
 		}
 #line 357 "src/ast-lexer.cc"
-		{ OPCODE(F64_MIN); RETURN(BINARY); }
+		{ OPCODE(F64Min); RETURN(BINARY); }
 #line 3926 "src/prebuilt/ast-lexer-gen.cc"
 yy574:
 		++lexer->cursor;
@@ -3929,7 +3929,7 @@ yy574:
 			goto yy49;
 		}
 #line 353 "src/ast-lexer.cc"
-		{ OPCODE(F64_MUL); RETURN(BINARY); }
+		{ OPCODE(F64Mul); RETURN(BINARY); }
 #line 3934 "src/prebuilt/ast-lexer-gen.cc"
 yy576:
 		yych = *++lexer->cursor;
@@ -3941,7 +3941,7 @@ yy577:
 			goto yy49;
 		}
 #line 305 "src/ast-lexer.cc"
-		{ OPCODE(F64_NEG); RETURN(UNARY); }
+		{ OPCODE(F64Neg); RETURN(UNARY); }
 #line 3946 "src/prebuilt/ast-lexer-gen.cc"
 yy579:
 		yych = *++lexer->cursor;
@@ -3965,7 +3965,7 @@ yy583:
 			goto yy49;
 		}
 #line 351 "src/ast-lexer.cc"
-		{ OPCODE(F64_SUB); RETURN(BINARY); }
+		{ OPCODE(F64Sub); RETURN(BINARY); }
 #line 3970 "src/prebuilt/ast-lexer-gen.cc"
 yy585:
 		yych = *++lexer->cursor;
@@ -3989,7 +3989,7 @@ yy589:
 			goto yy49;
 		}
 #line 318 "src/ast-lexer.cc"
-		{ OPCODE(I32_ADD); RETURN(BINARY); }
+		{ OPCODE(I32Add); RETURN(BINARY); }
 #line 3994 "src/prebuilt/ast-lexer-gen.cc"
 yy591:
 		++lexer->cursor;
@@ -3997,7 +3997,7 @@ yy591:
 			goto yy49;
 		}
 #line 332 "src/ast-lexer.cc"
-		{ OPCODE(I32_AND); RETURN(BINARY); }
+		{ OPCODE(I32And); RETURN(BINARY); }
 #line 4002 "src/prebuilt/ast-lexer-gen.cc"
 yy593:
 		++lexer->cursor;
@@ -4005,7 +4005,7 @@ yy593:
 			goto yy49;
 		}
 #line 298 "src/ast-lexer.cc"
-		{ OPCODE(I32_CLZ); RETURN(UNARY); }
+		{ OPCODE(I32Clz); RETURN(UNARY); }
 #line 4010 "src/prebuilt/ast-lexer-gen.cc"
 yy595:
 		yych = *++lexer->cursor;
@@ -4017,7 +4017,7 @@ yy596:
 			goto yy49;
 		}
 #line 300 "src/ast-lexer.cc"
-		{ OPCODE(I32_CTZ); RETURN(UNARY); }
+		{ OPCODE(I32Ctz); RETURN(UNARY); }
 #line 4022 "src/prebuilt/ast-lexer-gen.cc"
 yy598:
 		yych = *++lexer->cursor;
@@ -4029,7 +4029,7 @@ yy599:
 			goto yy49;
 		}
 #line 296 "src/ast-lexer.cc"
-		{ OPCODE(I32_EQZ); RETURN(CONVERT); }
+		{ OPCODE(I32Eqz); RETURN(CONVERT); }
 #line 4034 "src/prebuilt/ast-lexer-gen.cc"
 yy601:
 		yych = *++lexer->cursor;
@@ -4061,7 +4061,7 @@ yy606:
 			goto yy49;
 		}
 #line 322 "src/ast-lexer.cc"
-		{ OPCODE(I32_MUL); RETURN(BINARY); }
+		{ OPCODE(I32Mul); RETURN(BINARY); }
 #line 4066 "src/prebuilt/ast-lexer-gen.cc"
 yy608:
 		yych = *++lexer->cursor;
@@ -4086,7 +4086,7 @@ yy612:
 			goto yy49;
 		}
 #line 338 "src/ast-lexer.cc"
-		{ OPCODE(I32_SHL); RETURN(BINARY); }
+		{ OPCODE(I32Shl); RETURN(BINARY); }
 #line 4091 "src/prebuilt/ast-lexer-gen.cc"
 yy614:
 		yych = *++lexer->cursor;
@@ -4102,7 +4102,7 @@ yy616:
 			goto yy49;
 		}
 #line 320 "src/ast-lexer.cc"
-		{ OPCODE(I32_SUB); RETURN(BINARY); }
+		{ OPCODE(I32Sub); RETURN(BINARY); }
 #line 4107 "src/prebuilt/ast-lexer-gen.cc"
 yy618:
 		yych = *++lexer->cursor;
@@ -4118,7 +4118,7 @@ yy620:
 			goto yy49;
 		}
 #line 336 "src/ast-lexer.cc"
-		{ OPCODE(I32_XOR); RETURN(BINARY); }
+		{ OPCODE(I32Xor); RETURN(BINARY); }
 #line 4123 "src/prebuilt/ast-lexer-gen.cc"
 yy622:
 		++lexer->cursor;
@@ -4126,7 +4126,7 @@ yy622:
 			goto yy49;
 		}
 #line 319 "src/ast-lexer.cc"
-		{ OPCODE(I64_ADD); RETURN(BINARY); }
+		{ OPCODE(I64Add); RETURN(BINARY); }
 #line 4131 "src/prebuilt/ast-lexer-gen.cc"
 yy624:
 		++lexer->cursor;
@@ -4134,7 +4134,7 @@ yy624:
 			goto yy49;
 		}
 #line 333 "src/ast-lexer.cc"
-		{ OPCODE(I64_AND); RETURN(BINARY); }
+		{ OPCODE(I64And); RETURN(BINARY); }
 #line 4139 "src/prebuilt/ast-lexer-gen.cc"
 yy626:
 		++lexer->cursor;
@@ -4142,7 +4142,7 @@ yy626:
 			goto yy49;
 		}
 #line 299 "src/ast-lexer.cc"
-		{ OPCODE(I64_CLZ); RETURN(UNARY); }
+		{ OPCODE(I64Clz); RETURN(UNARY); }
 #line 4147 "src/prebuilt/ast-lexer-gen.cc"
 yy628:
 		yych = *++lexer->cursor;
@@ -4154,7 +4154,7 @@ yy629:
 			goto yy49;
 		}
 #line 301 "src/ast-lexer.cc"
-		{ OPCODE(I64_CTZ); RETURN(UNARY); }
+		{ OPCODE(I64Ctz); RETURN(UNARY); }
 #line 4159 "src/prebuilt/ast-lexer-gen.cc"
 yy631:
 		yych = *++lexer->cursor;
@@ -4166,7 +4166,7 @@ yy632:
 			goto yy49;
 		}
 #line 297 "src/ast-lexer.cc"
-		{ OPCODE(I64_EQZ); RETURN(CONVERT); }
+		{ OPCODE(I64Eqz); RETURN(CONVERT); }
 #line 4171 "src/prebuilt/ast-lexer-gen.cc"
 yy634:
 		yych = *++lexer->cursor;
@@ -4202,7 +4202,7 @@ yy640:
 			goto yy49;
 		}
 #line 323 "src/ast-lexer.cc"
-		{ OPCODE(I64_MUL); RETURN(BINARY); }
+		{ OPCODE(I64Mul); RETURN(BINARY); }
 #line 4207 "src/prebuilt/ast-lexer-gen.cc"
 yy642:
 		yych = *++lexer->cursor;
@@ -4227,7 +4227,7 @@ yy646:
 			goto yy49;
 		}
 #line 339 "src/ast-lexer.cc"
-		{ OPCODE(I64_SHL); RETURN(BINARY); }
+		{ OPCODE(I64Shl); RETURN(BINARY); }
 #line 4232 "src/prebuilt/ast-lexer-gen.cc"
 yy648:
 		yych = *++lexer->cursor;
@@ -4243,7 +4243,7 @@ yy650:
 			goto yy49;
 		}
 #line 321 "src/ast-lexer.cc"
-		{ OPCODE(I64_SUB); RETURN(BINARY); }
+		{ OPCODE(I64Sub); RETURN(BINARY); }
 #line 4248 "src/prebuilt/ast-lexer-gen.cc"
 yy652:
 		yych = *++lexer->cursor;
@@ -4255,7 +4255,7 @@ yy653:
 			goto yy49;
 		}
 #line 337 "src/ast-lexer.cc"
-		{ OPCODE(I64_XOR); RETURN(BINARY); }
+		{ OPCODE(I64Xor); RETURN(BINARY); }
 #line 4260 "src/prebuilt/ast-lexer-gen.cc"
 yy655:
 		++lexer->cursor;
@@ -4403,7 +4403,7 @@ yy678:
 			goto yy49;
 		}
 #line 310 "src/ast-lexer.cc"
-		{ OPCODE(F32_CEIL); RETURN(UNARY); }
+		{ OPCODE(F32Ceil); RETURN(UNARY); }
 #line 4408 "src/prebuilt/ast-lexer-gen.cc"
 yy680:
 		yych = *++lexer->cursor;
@@ -4431,7 +4431,7 @@ yy685:
 			goto yy49;
 		}
 #line 269 "src/ast-lexer.cc"
-		{ OPCODE(F32_LOAD); RETURN(LOAD); }
+		{ OPCODE(F32Load); RETURN(LOAD); }
 #line 4436 "src/prebuilt/ast-lexer-gen.cc"
 yy687:
 		yych = *++lexer->cursor;
@@ -4447,7 +4447,7 @@ yy689:
 			goto yy49;
 		}
 #line 308 "src/ast-lexer.cc"
-		{ OPCODE(F32_SQRT); RETURN(UNARY); }
+		{ OPCODE(F32Sqrt); RETURN(UNARY); }
 #line 4452 "src/prebuilt/ast-lexer-gen.cc"
 yy691:
 		yych = *++lexer->cursor;
@@ -4463,7 +4463,7 @@ yy693:
 			goto yy49;
 		}
 #line 311 "src/ast-lexer.cc"
-		{ OPCODE(F64_CEIL); RETURN(UNARY); }
+		{ OPCODE(F64Ceil); RETURN(UNARY); }
 #line 4468 "src/prebuilt/ast-lexer-gen.cc"
 yy695:
 		yych = *++lexer->cursor;
@@ -4487,7 +4487,7 @@ yy699:
 			goto yy49;
 		}
 #line 270 "src/ast-lexer.cc"
-		{ OPCODE(F64_LOAD); RETURN(LOAD); }
+		{ OPCODE(F64Load); RETURN(LOAD); }
 #line 4492 "src/prebuilt/ast-lexer-gen.cc"
 yy701:
 		yych = *++lexer->cursor;
@@ -4507,7 +4507,7 @@ yy704:
 			goto yy49;
 		}
 #line 309 "src/ast-lexer.cc"
-		{ OPCODE(F64_SQRT); RETURN(UNARY); }
+		{ OPCODE(F64Sqrt); RETURN(UNARY); }
 #line 4512 "src/prebuilt/ast-lexer-gen.cc"
 yy706:
 		yych = *++lexer->cursor;
@@ -4544,7 +4544,7 @@ yy713:
 			goto yy49;
 		}
 #line 378 "src/ast-lexer.cc"
-		{ OPCODE(I32_GE_S); RETURN(COMPARE); }
+		{ OPCODE(I32GeS); RETURN(COMPARE); }
 #line 4549 "src/prebuilt/ast-lexer-gen.cc"
 yy715:
 		++lexer->cursor;
@@ -4552,7 +4552,7 @@ yy715:
 			goto yy49;
 		}
 #line 380 "src/ast-lexer.cc"
-		{ OPCODE(I32_GE_U); RETURN(COMPARE); }
+		{ OPCODE(I32GeU); RETURN(COMPARE); }
 #line 4557 "src/prebuilt/ast-lexer-gen.cc"
 yy717:
 		++lexer->cursor;
@@ -4560,7 +4560,7 @@ yy717:
 			goto yy49;
 		}
 #line 374 "src/ast-lexer.cc"
-		{ OPCODE(I32_GT_S); RETURN(COMPARE); }
+		{ OPCODE(I32GtS); RETURN(COMPARE); }
 #line 4565 "src/prebuilt/ast-lexer-gen.cc"
 yy719:
 		++lexer->cursor;
@@ -4568,7 +4568,7 @@ yy719:
 			goto yy49;
 		}
 #line 376 "src/ast-lexer.cc"
-		{ OPCODE(I32_GT_U); RETURN(COMPARE); }
+		{ OPCODE(I32GtU); RETURN(COMPARE); }
 #line 4573 "src/prebuilt/ast-lexer-gen.cc"
 yy721:
 		++lexer->cursor;
@@ -4576,7 +4576,7 @@ yy721:
 			goto yy49;
 		}
 #line 370 "src/ast-lexer.cc"
-		{ OPCODE(I32_LE_S); RETURN(COMPARE); }
+		{ OPCODE(I32LeS); RETURN(COMPARE); }
 #line 4581 "src/prebuilt/ast-lexer-gen.cc"
 yy723:
 		++lexer->cursor;
@@ -4584,7 +4584,7 @@ yy723:
 			goto yy49;
 		}
 #line 372 "src/ast-lexer.cc"
-		{ OPCODE(I32_LE_U); RETURN(COMPARE); }
+		{ OPCODE(I32LeU); RETURN(COMPARE); }
 #line 4589 "src/prebuilt/ast-lexer-gen.cc"
 yy725:
 		++lexer->cursor;
@@ -4622,7 +4622,7 @@ yy725:
 		}
 yy726:
 #line 267 "src/ast-lexer.cc"
-		{ OPCODE(I32_LOAD); RETURN(LOAD); }
+		{ OPCODE(I32Load); RETURN(LOAD); }
 #line 4627 "src/prebuilt/ast-lexer-gen.cc"
 yy727:
 		++lexer->cursor;
@@ -4630,7 +4630,7 @@ yy727:
 			goto yy49;
 		}
 #line 366 "src/ast-lexer.cc"
-		{ OPCODE(I32_LT_S); RETURN(COMPARE); }
+		{ OPCODE(I32LtS); RETURN(COMPARE); }
 #line 4635 "src/prebuilt/ast-lexer-gen.cc"
 yy729:
 		++lexer->cursor;
@@ -4638,7 +4638,7 @@ yy729:
 			goto yy49;
 		}
 #line 368 "src/ast-lexer.cc"
-		{ OPCODE(I32_LT_U); RETURN(COMPARE); }
+		{ OPCODE(I32LtU); RETURN(COMPARE); }
 #line 4643 "src/prebuilt/ast-lexer-gen.cc"
 yy731:
 		yych = *++lexer->cursor;
@@ -4659,7 +4659,7 @@ yy734:
 			goto yy49;
 		}
 #line 344 "src/ast-lexer.cc"
-		{ OPCODE(I32_ROTL); RETURN(BINARY); }
+		{ OPCODE(I32Rotl); RETURN(BINARY); }
 #line 4664 "src/prebuilt/ast-lexer-gen.cc"
 yy736:
 		++lexer->cursor;
@@ -4667,7 +4667,7 @@ yy736:
 			goto yy49;
 		}
 #line 346 "src/ast-lexer.cc"
-		{ OPCODE(I32_ROTR); RETURN(BINARY); }
+		{ OPCODE(I32Rotr); RETURN(BINARY); }
 #line 4672 "src/prebuilt/ast-lexer-gen.cc"
 yy738:
 		yych = *++lexer->cursor;
@@ -4705,7 +4705,7 @@ yy745:
 			goto yy49;
 		}
 #line 379 "src/ast-lexer.cc"
-		{ OPCODE(I64_GE_S); RETURN(COMPARE); }
+		{ OPCODE(I64GeS); RETURN(COMPARE); }
 #line 4710 "src/prebuilt/ast-lexer-gen.cc"
 yy747:
 		++lexer->cursor;
@@ -4713,7 +4713,7 @@ yy747:
 			goto yy49;
 		}
 #line 381 "src/ast-lexer.cc"
-		{ OPCODE(I64_GE_U); RETURN(COMPARE); }
+		{ OPCODE(I64GeU); RETURN(COMPARE); }
 #line 4718 "src/prebuilt/ast-lexer-gen.cc"
 yy749:
 		++lexer->cursor;
@@ -4721,7 +4721,7 @@ yy749:
 			goto yy49;
 		}
 #line 375 "src/ast-lexer.cc"
-		{ OPCODE(I64_GT_S); RETURN(COMPARE); }
+		{ OPCODE(I64GtS); RETURN(COMPARE); }
 #line 4726 "src/prebuilt/ast-lexer-gen.cc"
 yy751:
 		++lexer->cursor;
@@ -4729,7 +4729,7 @@ yy751:
 			goto yy49;
 		}
 #line 377 "src/ast-lexer.cc"
-		{ OPCODE(I64_GT_U); RETURN(COMPARE); }
+		{ OPCODE(I64GtU); RETURN(COMPARE); }
 #line 4734 "src/prebuilt/ast-lexer-gen.cc"
 yy753:
 		++lexer->cursor;
@@ -4737,7 +4737,7 @@ yy753:
 			goto yy49;
 		}
 #line 371 "src/ast-lexer.cc"
-		{ OPCODE(I64_LE_S); RETURN(COMPARE); }
+		{ OPCODE(I64LeS); RETURN(COMPARE); }
 #line 4742 "src/prebuilt/ast-lexer-gen.cc"
 yy755:
 		++lexer->cursor;
@@ -4745,7 +4745,7 @@ yy755:
 			goto yy49;
 		}
 #line 373 "src/ast-lexer.cc"
-		{ OPCODE(I64_LE_U); RETURN(COMPARE); }
+		{ OPCODE(I64LeU); RETURN(COMPARE); }
 #line 4750 "src/prebuilt/ast-lexer-gen.cc"
 yy757:
 		++lexer->cursor;
@@ -4787,7 +4787,7 @@ yy757:
 		}
 yy758:
 #line 268 "src/ast-lexer.cc"
-		{ OPCODE(I64_LOAD); RETURN(LOAD); }
+		{ OPCODE(I64Load); RETURN(LOAD); }
 #line 4792 "src/prebuilt/ast-lexer-gen.cc"
 yy759:
 		++lexer->cursor;
@@ -4795,7 +4795,7 @@ yy759:
 			goto yy49;
 		}
 #line 367 "src/ast-lexer.cc"
-		{ OPCODE(I64_LT_S); RETURN(COMPARE); }
+		{ OPCODE(I64LtS); RETURN(COMPARE); }
 #line 4800 "src/prebuilt/ast-lexer-gen.cc"
 yy761:
 		++lexer->cursor;
@@ -4803,7 +4803,7 @@ yy761:
 			goto yy49;
 		}
 #line 369 "src/ast-lexer.cc"
-		{ OPCODE(I64_LT_U); RETURN(COMPARE); }
+		{ OPCODE(I64LtU); RETURN(COMPARE); }
 #line 4808 "src/prebuilt/ast-lexer-gen.cc"
 yy763:
 		yych = *++lexer->cursor;
@@ -4824,7 +4824,7 @@ yy766:
 			goto yy49;
 		}
 #line 345 "src/ast-lexer.cc"
-		{ OPCODE(I64_ROTL); RETURN(BINARY); }
+		{ OPCODE(I64Rotl); RETURN(BINARY); }
 #line 4829 "src/prebuilt/ast-lexer-gen.cc"
 yy768:
 		++lexer->cursor;
@@ -4832,7 +4832,7 @@ yy768:
 			goto yy49;
 		}
 #line 347 "src/ast-lexer.cc"
-		{ OPCODE(I64_ROTR); RETURN(BINARY); }
+		{ OPCODE(I64Rotr); RETURN(BINARY); }
 #line 4837 "src/prebuilt/ast-lexer-gen.cc"
 yy770:
 		yych = *++lexer->cursor;
@@ -5067,7 +5067,7 @@ yy800:
 			goto yy49;
 		}
 #line 312 "src/ast-lexer.cc"
-		{ OPCODE(F32_FLOOR); RETURN(UNARY); }
+		{ OPCODE(F32Floor); RETURN(UNARY); }
 #line 5072 "src/prebuilt/ast-lexer-gen.cc"
 yy802:
 		yych = *++lexer->cursor;
@@ -5083,7 +5083,7 @@ yy804:
 			goto yy49;
 		}
 #line 273 "src/ast-lexer.cc"
-		{ OPCODE(F32_STORE); RETURN(STORE); }
+		{ OPCODE(F32Store); RETURN(STORE); }
 #line 5088 "src/prebuilt/ast-lexer-gen.cc"
 yy806:
 		++lexer->cursor;
@@ -5091,7 +5091,7 @@ yy806:
 			goto yy49;
 		}
 #line 314 "src/ast-lexer.cc"
-		{ OPCODE(F32_TRUNC); RETURN(UNARY); }
+		{ OPCODE(F32Trunc); RETURN(UNARY); }
 #line 5096 "src/prebuilt/ast-lexer-gen.cc"
 yy808:
 		++lexer->cursor;
@@ -5115,7 +5115,7 @@ yy812:
 			goto yy49;
 		}
 #line 313 "src/ast-lexer.cc"
-		{ OPCODE(F64_FLOOR); RETURN(UNARY); }
+		{ OPCODE(F64Floor); RETURN(UNARY); }
 #line 5120 "src/prebuilt/ast-lexer-gen.cc"
 yy814:
 		yych = *++lexer->cursor;
@@ -5135,7 +5135,7 @@ yy817:
 			goto yy49;
 		}
 #line 274 "src/ast-lexer.cc"
-		{ OPCODE(F64_STORE); RETURN(STORE); }
+		{ OPCODE(F64Store); RETURN(STORE); }
 #line 5140 "src/prebuilt/ast-lexer-gen.cc"
 yy819:
 		++lexer->cursor;
@@ -5143,7 +5143,7 @@ yy819:
 			goto yy49;
 		}
 #line 315 "src/ast-lexer.cc"
-		{ OPCODE(F64_TRUNC); RETURN(UNARY); }
+		{ OPCODE(F64Trunc); RETURN(UNARY); }
 #line 5148 "src/prebuilt/ast-lexer-gen.cc"
 yy821:
 		yych = *++lexer->cursor;
@@ -5175,7 +5175,7 @@ yy827:
 			goto yy49;
 		}
 #line 324 "src/ast-lexer.cc"
-		{ OPCODE(I32_DIV_S); RETURN(BINARY); }
+		{ OPCODE(I32DivS); RETURN(BINARY); }
 #line 5180 "src/prebuilt/ast-lexer-gen.cc"
 yy829:
 		++lexer->cursor;
@@ -5183,7 +5183,7 @@ yy829:
 			goto yy49;
 		}
 #line 326 "src/ast-lexer.cc"
-		{ OPCODE(I32_DIV_U); RETURN(BINARY); }
+		{ OPCODE(I32DivU); RETURN(BINARY); }
 #line 5188 "src/prebuilt/ast-lexer-gen.cc"
 yy831:
 		yych = *++lexer->cursor;
@@ -5207,7 +5207,7 @@ yy835:
 			goto yy49;
 		}
 #line 328 "src/ast-lexer.cc"
-		{ OPCODE(I32_REM_S); RETURN(BINARY); }
+		{ OPCODE(I32RemS); RETURN(BINARY); }
 #line 5212 "src/prebuilt/ast-lexer-gen.cc"
 yy837:
 		++lexer->cursor;
@@ -5215,7 +5215,7 @@ yy837:
 			goto yy49;
 		}
 #line 330 "src/ast-lexer.cc"
-		{ OPCODE(I32_REM_U); RETURN(BINARY); }
+		{ OPCODE(I32RemU); RETURN(BINARY); }
 #line 5220 "src/prebuilt/ast-lexer-gen.cc"
 yy839:
 		++lexer->cursor;
@@ -5223,7 +5223,7 @@ yy839:
 			goto yy49;
 		}
 #line 340 "src/ast-lexer.cc"
-		{ OPCODE(I32_SHR_S); RETURN(BINARY); }
+		{ OPCODE(I32ShrS); RETURN(BINARY); }
 #line 5228 "src/prebuilt/ast-lexer-gen.cc"
 yy841:
 		++lexer->cursor;
@@ -5231,7 +5231,7 @@ yy841:
 			goto yy49;
 		}
 #line 342 "src/ast-lexer.cc"
-		{ OPCODE(I32_SHR_U); RETURN(BINARY); }
+		{ OPCODE(I32ShrU); RETURN(BINARY); }
 #line 5236 "src/prebuilt/ast-lexer-gen.cc"
 yy843:
 		++lexer->cursor;
@@ -5269,7 +5269,7 @@ yy843:
 		}
 yy844:
 #line 271 "src/ast-lexer.cc"
-		{ OPCODE(I32_STORE); RETURN(STORE); }
+		{ OPCODE(I32Store); RETURN(STORE); }
 #line 5274 "src/prebuilt/ast-lexer-gen.cc"
 yy845:
 		yych = *++lexer->cursor;
@@ -5293,7 +5293,7 @@ yy849:
 			goto yy49;
 		}
 #line 325 "src/ast-lexer.cc"
-		{ OPCODE(I64_DIV_S); RETURN(BINARY); }
+		{ OPCODE(I64DivS); RETURN(BINARY); }
 #line 5298 "src/prebuilt/ast-lexer-gen.cc"
 yy851:
 		++lexer->cursor;
@@ -5301,7 +5301,7 @@ yy851:
 			goto yy49;
 		}
 #line 327 "src/ast-lexer.cc"
-		{ OPCODE(I64_DIV_U); RETURN(BINARY); }
+		{ OPCODE(I64DivU); RETURN(BINARY); }
 #line 5306 "src/prebuilt/ast-lexer-gen.cc"
 yy853:
 		yych = *++lexer->cursor;
@@ -5333,7 +5333,7 @@ yy859:
 			goto yy49;
 		}
 #line 329 "src/ast-lexer.cc"
-		{ OPCODE(I64_REM_S); RETURN(BINARY); }
+		{ OPCODE(I64RemS); RETURN(BINARY); }
 #line 5338 "src/prebuilt/ast-lexer-gen.cc"
 yy861:
 		++lexer->cursor;
@@ -5341,7 +5341,7 @@ yy861:
 			goto yy49;
 		}
 #line 331 "src/ast-lexer.cc"
-		{ OPCODE(I64_REM_U); RETURN(BINARY); }
+		{ OPCODE(I64RemU); RETURN(BINARY); }
 #line 5346 "src/prebuilt/ast-lexer-gen.cc"
 yy863:
 		++lexer->cursor;
@@ -5349,7 +5349,7 @@ yy863:
 			goto yy49;
 		}
 #line 341 "src/ast-lexer.cc"
-		{ OPCODE(I64_SHR_S); RETURN(BINARY); }
+		{ OPCODE(I64ShrS); RETURN(BINARY); }
 #line 5354 "src/prebuilt/ast-lexer-gen.cc"
 yy865:
 		++lexer->cursor;
@@ -5357,7 +5357,7 @@ yy865:
 			goto yy49;
 		}
 #line 343 "src/ast-lexer.cc"
-		{ OPCODE(I64_SHR_U); RETURN(BINARY); }
+		{ OPCODE(I64ShrU); RETURN(BINARY); }
 #line 5362 "src/prebuilt/ast-lexer-gen.cc"
 yy867:
 		++lexer->cursor;
@@ -5399,7 +5399,7 @@ yy867:
 		}
 yy868:
 #line 272 "src/ast-lexer.cc"
-		{ OPCODE(I64_STORE); RETURN(STORE); }
+		{ OPCODE(I64Store); RETURN(STORE); }
 #line 5404 "src/prebuilt/ast-lexer-gen.cc"
 yy869:
 		yych = *++lexer->cursor;
@@ -5544,7 +5544,7 @@ yy901:
 			goto yy49;
 		}
 #line 302 "src/ast-lexer.cc"
-		{ OPCODE(I32_POPCNT); RETURN(UNARY); }
+		{ OPCODE(I32Popcnt); RETURN(UNARY); }
 #line 5549 "src/prebuilt/ast-lexer-gen.cc"
 yy903:
 		yych = *++lexer->cursor;
@@ -5560,7 +5560,7 @@ yy905:
 			goto yy49;
 		}
 #line 285 "src/ast-lexer.cc"
-		{ OPCODE(I32_STORE8); RETURN(STORE); }
+		{ OPCODE(I32Store8); RETURN(STORE); }
 #line 5565 "src/prebuilt/ast-lexer-gen.cc"
 yy907:
 		yych = *++lexer->cursor;
@@ -5594,7 +5594,7 @@ yy913:
 			goto yy49;
 		}
 #line 303 "src/ast-lexer.cc"
-		{ OPCODE(I64_POPCNT); RETURN(UNARY); }
+		{ OPCODE(I64Popcnt); RETURN(UNARY); }
 #line 5599 "src/prebuilt/ast-lexer-gen.cc"
 yy915:
 		yych = *++lexer->cursor;
@@ -5614,7 +5614,7 @@ yy918:
 			goto yy49;
 		}
 #line 286 "src/ast-lexer.cc"
-		{ OPCODE(I64_STORE8); RETURN(STORE); }
+		{ OPCODE(I64Store8); RETURN(STORE); }
 #line 5619 "src/prebuilt/ast-lexer-gen.cc"
 yy920:
 		yych = *++lexer->cursor;
@@ -5741,7 +5741,7 @@ yy940:
 			goto yy49;
 		}
 #line 316 "src/ast-lexer.cc"
-		{ OPCODE(F32_NEAREST); RETURN(UNARY); }
+		{ OPCODE(F32Nearest); RETURN(UNARY); }
 #line 5746 "src/prebuilt/ast-lexer-gen.cc"
 yy942:
 		yych = *++lexer->cursor;
@@ -5761,7 +5761,7 @@ yy945:
 			goto yy49;
 		}
 #line 317 "src/ast-lexer.cc"
-		{ OPCODE(F64_NEAREST); RETURN(UNARY); }
+		{ OPCODE(F64Nearest); RETURN(UNARY); }
 #line 5766 "src/prebuilt/ast-lexer-gen.cc"
 yy947:
 		yych = *++lexer->cursor;
@@ -5790,7 +5790,7 @@ yy952:
 			goto yy49;
 		}
 #line 275 "src/ast-lexer.cc"
-		{ OPCODE(I32_LOAD8_S); RETURN(LOAD); }
+		{ OPCODE(I32Load8S); RETURN(LOAD); }
 #line 5795 "src/prebuilt/ast-lexer-gen.cc"
 yy954:
 		++lexer->cursor;
@@ -5798,7 +5798,7 @@ yy954:
 			goto yy49;
 		}
 #line 277 "src/ast-lexer.cc"
-		{ OPCODE(I32_LOAD8_U); RETURN(LOAD); }
+		{ OPCODE(I32Load8U); RETURN(LOAD); }
 #line 5803 "src/prebuilt/ast-lexer-gen.cc"
 yy956:
 		yych = *++lexer->cursor;
@@ -5810,7 +5810,7 @@ yy957:
 			goto yy49;
 		}
 #line 287 "src/ast-lexer.cc"
-		{ OPCODE(I32_STORE16); RETURN(STORE); }
+		{ OPCODE(I32Store16); RETURN(STORE); }
 #line 5815 "src/prebuilt/ast-lexer-gen.cc"
 yy959:
 		yych = *++lexer->cursor;
@@ -5845,7 +5845,7 @@ yy965:
 			goto yy49;
 		}
 #line 276 "src/ast-lexer.cc"
-		{ OPCODE(I64_LOAD8_S); RETURN(LOAD); }
+		{ OPCODE(I64Load8S); RETURN(LOAD); }
 #line 5850 "src/prebuilt/ast-lexer-gen.cc"
 yy967:
 		++lexer->cursor;
@@ -5853,7 +5853,7 @@ yy967:
 			goto yy49;
 		}
 #line 278 "src/ast-lexer.cc"
-		{ OPCODE(I64_LOAD8_U); RETURN(LOAD); }
+		{ OPCODE(I64Load8U); RETURN(LOAD); }
 #line 5858 "src/prebuilt/ast-lexer-gen.cc"
 yy969:
 		yych = *++lexer->cursor;
@@ -5865,7 +5865,7 @@ yy970:
 			goto yy49;
 		}
 #line 288 "src/ast-lexer.cc"
-		{ OPCODE(I64_STORE16); RETURN(STORE); }
+		{ OPCODE(I64Store16); RETURN(STORE); }
 #line 5870 "src/prebuilt/ast-lexer-gen.cc"
 yy972:
 		++lexer->cursor;
@@ -5873,7 +5873,7 @@ yy972:
 			goto yy49;
 		}
 #line 289 "src/ast-lexer.cc"
-		{ OPCODE(I64_STORE32); RETURN(STORE); }
+		{ OPCODE(I64Store32); RETURN(STORE); }
 #line 5878 "src/prebuilt/ast-lexer-gen.cc"
 yy974:
 		yych = *++lexer->cursor;
@@ -5930,7 +5930,7 @@ yy986:
 			goto yy49;
 		}
 #line 360 "src/ast-lexer.cc"
-		{ OPCODE(F32_COPYSIGN); RETURN(BINARY); }
+		{ OPCODE(F32Copysign); RETURN(BINARY); }
 #line 5935 "src/prebuilt/ast-lexer-gen.cc"
 yy988:
 		yych = *++lexer->cursor;
@@ -5951,7 +5951,7 @@ yy991:
 			goto yy49;
 		}
 #line 361 "src/ast-lexer.cc"
-		{ OPCODE(F64_COPYSIGN); RETURN(BINARY); }
+		{ OPCODE(F64Copysign); RETURN(BINARY); }
 #line 5956 "src/prebuilt/ast-lexer-gen.cc"
 yy993:
 		yych = *++lexer->cursor;
@@ -5967,7 +5967,7 @@ yy995:
 			goto yy49;
 		}
 #line 279 "src/ast-lexer.cc"
-		{ OPCODE(I32_LOAD16_S); RETURN(LOAD); }
+		{ OPCODE(I32Load16S); RETURN(LOAD); }
 #line 5972 "src/prebuilt/ast-lexer-gen.cc"
 yy997:
 		++lexer->cursor;
@@ -5975,7 +5975,7 @@ yy997:
 			goto yy49;
 		}
 #line 281 "src/ast-lexer.cc"
-		{ OPCODE(I32_LOAD16_U); RETURN(LOAD); }
+		{ OPCODE(I32Load16U); RETURN(LOAD); }
 #line 5980 "src/prebuilt/ast-lexer-gen.cc"
 yy999:
 		yych = *++lexer->cursor;
@@ -5995,7 +5995,7 @@ yy1002:
 			goto yy49;
 		}
 #line 396 "src/ast-lexer.cc"
-		{ OPCODE(I32_WRAP_I64); RETURN(CONVERT); }
+		{ OPCODE(I32WrapI64); RETURN(CONVERT); }
 #line 6000 "src/prebuilt/ast-lexer-gen.cc"
 yy1004:
 		yych = *++lexer->cursor;
@@ -6011,7 +6011,7 @@ yy1006:
 			goto yy49;
 		}
 #line 280 "src/ast-lexer.cc"
-		{ OPCODE(I64_LOAD16_S); RETURN(LOAD); }
+		{ OPCODE(I64Load16S); RETURN(LOAD); }
 #line 6016 "src/prebuilt/ast-lexer-gen.cc"
 yy1008:
 		++lexer->cursor;
@@ -6019,7 +6019,7 @@ yy1008:
 			goto yy49;
 		}
 #line 282 "src/ast-lexer.cc"
-		{ OPCODE(I64_LOAD16_U); RETURN(LOAD); }
+		{ OPCODE(I64Load16U); RETURN(LOAD); }
 #line 6024 "src/prebuilt/ast-lexer-gen.cc"
 yy1010:
 		++lexer->cursor;
@@ -6027,7 +6027,7 @@ yy1010:
 			goto yy49;
 		}
 #line 283 "src/ast-lexer.cc"
-		{ OPCODE(I64_LOAD32_S); RETURN(LOAD); }
+		{ OPCODE(I64Load32S); RETURN(LOAD); }
 #line 6032 "src/prebuilt/ast-lexer-gen.cc"
 yy1012:
 		++lexer->cursor;
@@ -6035,7 +6035,7 @@ yy1012:
 			goto yy49;
 		}
 #line 284 "src/ast-lexer.cc"
-		{ OPCODE(I64_LOAD32_U); RETURN(LOAD); }
+		{ OPCODE(I64Load32U); RETURN(LOAD); }
 #line 6040 "src/prebuilt/ast-lexer-gen.cc"
 yy1014:
 		yych = *++lexer->cursor;
@@ -6229,7 +6229,7 @@ yy1052:
 			goto yy49;
 		}
 #line 414 "src/ast-lexer.cc"
-		{ OPCODE(F32_DEMOTE_F64); RETURN(CONVERT); }
+		{ OPCODE(F32DemoteF64); RETURN(CONVERT); }
 #line 6234 "src/prebuilt/ast-lexer-gen.cc"
 yy1054:
 		yych = *++lexer->cursor;
@@ -6345,7 +6345,7 @@ yy1080:
 			goto yy49;
 		}
 #line 413 "src/ast-lexer.cc"
-		{ OPCODE(F64_PROMOTE_F32); RETURN(CONVERT); }
+		{ OPCODE(F64PromoteF32); RETURN(CONVERT); }
 #line 6350 "src/prebuilt/ast-lexer-gen.cc"
 yy1082:
 		yych = *++lexer->cursor;
@@ -6361,7 +6361,7 @@ yy1084:
 			goto yy49;
 		}
 #line 397 "src/ast-lexer.cc"
-		{ OPCODE(I32_TRUNC_S_F32); RETURN(CONVERT); }
+		{ OPCODE(I32TruncSF32); RETURN(CONVERT); }
 #line 6366 "src/prebuilt/ast-lexer-gen.cc"
 yy1086:
 		++lexer->cursor;
@@ -6369,7 +6369,7 @@ yy1086:
 			goto yy49;
 		}
 #line 399 "src/ast-lexer.cc"
-		{ OPCODE(I32_TRUNC_S_F64); RETURN(CONVERT); }
+		{ OPCODE(I32TruncSF64); RETURN(CONVERT); }
 #line 6374 "src/prebuilt/ast-lexer-gen.cc"
 yy1088:
 		++lexer->cursor;
@@ -6377,7 +6377,7 @@ yy1088:
 			goto yy49;
 		}
 #line 401 "src/ast-lexer.cc"
-		{ OPCODE(I32_TRUNC_U_F32); RETURN(CONVERT); }
+		{ OPCODE(I32TruncUF32); RETURN(CONVERT); }
 #line 6382 "src/prebuilt/ast-lexer-gen.cc"
 yy1090:
 		++lexer->cursor;
@@ -6385,7 +6385,7 @@ yy1090:
 			goto yy49;
 		}
 #line 403 "src/ast-lexer.cc"
-		{ OPCODE(I32_TRUNC_U_F64); RETURN(CONVERT); }
+		{ OPCODE(I32TruncUF64); RETURN(CONVERT); }
 #line 6390 "src/prebuilt/ast-lexer-gen.cc"
 yy1092:
 		yych = *++lexer->cursor;
@@ -6405,7 +6405,7 @@ yy1095:
 			goto yy49;
 		}
 #line 398 "src/ast-lexer.cc"
-		{ OPCODE(I64_TRUNC_S_F32); RETURN(CONVERT); }
+		{ OPCODE(I64TruncSF32); RETURN(CONVERT); }
 #line 6410 "src/prebuilt/ast-lexer-gen.cc"
 yy1097:
 		++lexer->cursor;
@@ -6413,7 +6413,7 @@ yy1097:
 			goto yy49;
 		}
 #line 400 "src/ast-lexer.cc"
-		{ OPCODE(I64_TRUNC_S_F64); RETURN(CONVERT); }
+		{ OPCODE(I64TruncSF64); RETURN(CONVERT); }
 #line 6418 "src/prebuilt/ast-lexer-gen.cc"
 yy1099:
 		++lexer->cursor;
@@ -6421,7 +6421,7 @@ yy1099:
 			goto yy49;
 		}
 #line 402 "src/ast-lexer.cc"
-		{ OPCODE(I64_TRUNC_U_F32); RETURN(CONVERT); }
+		{ OPCODE(I64TruncUF32); RETURN(CONVERT); }
 #line 6426 "src/prebuilt/ast-lexer-gen.cc"
 yy1101:
 		++lexer->cursor;
@@ -6429,7 +6429,7 @@ yy1101:
 			goto yy49;
 		}
 #line 404 "src/ast-lexer.cc"
-		{ OPCODE(I64_TRUNC_U_F64); RETURN(CONVERT); }
+		{ OPCODE(I64TruncUF64); RETURN(CONVERT); }
 #line 6434 "src/prebuilt/ast-lexer-gen.cc"
 yy1103:
 		yych = *++lexer->cursor;
@@ -6501,7 +6501,7 @@ yy1119:
 			goto yy49;
 		}
 #line 394 "src/ast-lexer.cc"
-		{ OPCODE(I64_EXTEND_S_I32); RETURN(CONVERT); }
+		{ OPCODE(I64ExtendSI32); RETURN(CONVERT); }
 #line 6506 "src/prebuilt/ast-lexer-gen.cc"
 yy1121:
 		++lexer->cursor;
@@ -6509,7 +6509,7 @@ yy1121:
 			goto yy49;
 		}
 #line 395 "src/ast-lexer.cc"
-		{ OPCODE(I64_EXTEND_U_I32); RETURN(CONVERT); }
+		{ OPCODE(I64ExtendUI32); RETURN(CONVERT); }
 #line 6514 "src/prebuilt/ast-lexer-gen.cc"
 yy1123:
 		yych = *++lexer->cursor;
@@ -6545,7 +6545,7 @@ yy1130:
 			goto yy49;
 		}
 #line 405 "src/ast-lexer.cc"
-		{ OPCODE(F32_CONVERT_S_I32); RETURN(CONVERT); }
+		{ OPCODE(F32ConvertSI32); RETURN(CONVERT); }
 #line 6550 "src/prebuilt/ast-lexer-gen.cc"
 yy1132:
 		++lexer->cursor;
@@ -6553,7 +6553,7 @@ yy1132:
 			goto yy49;
 		}
 #line 407 "src/ast-lexer.cc"
-		{ OPCODE(F32_CONVERT_S_I64); RETURN(CONVERT); }
+		{ OPCODE(F32ConvertSI64); RETURN(CONVERT); }
 #line 6558 "src/prebuilt/ast-lexer-gen.cc"
 yy1134:
 		++lexer->cursor;
@@ -6561,7 +6561,7 @@ yy1134:
 			goto yy49;
 		}
 #line 409 "src/ast-lexer.cc"
-		{ OPCODE(F32_CONVERT_U_I32); RETURN(CONVERT); }
+		{ OPCODE(F32ConvertUI32); RETURN(CONVERT); }
 #line 6566 "src/prebuilt/ast-lexer-gen.cc"
 yy1136:
 		++lexer->cursor;
@@ -6569,7 +6569,7 @@ yy1136:
 			goto yy49;
 		}
 #line 411 "src/ast-lexer.cc"
-		{ OPCODE(F32_CONVERT_U_I64); RETURN(CONVERT); }
+		{ OPCODE(F32ConvertUI64); RETURN(CONVERT); }
 #line 6574 "src/prebuilt/ast-lexer-gen.cc"
 yy1138:
 		yych = *++lexer->cursor;
@@ -6581,7 +6581,7 @@ yy1139:
 			goto yy49;
 		}
 #line 406 "src/ast-lexer.cc"
-		{ OPCODE(F64_CONVERT_S_I32); RETURN(CONVERT); }
+		{ OPCODE(F64ConvertSI32); RETURN(CONVERT); }
 #line 6586 "src/prebuilt/ast-lexer-gen.cc"
 yy1141:
 		++lexer->cursor;
@@ -6589,7 +6589,7 @@ yy1141:
 			goto yy49;
 		}
 #line 408 "src/ast-lexer.cc"
-		{ OPCODE(F64_CONVERT_S_I64); RETURN(CONVERT); }
+		{ OPCODE(F64ConvertSI64); RETURN(CONVERT); }
 #line 6594 "src/prebuilt/ast-lexer-gen.cc"
 yy1143:
 		++lexer->cursor;
@@ -6597,7 +6597,7 @@ yy1143:
 			goto yy49;
 		}
 #line 410 "src/ast-lexer.cc"
-		{ OPCODE(F64_CONVERT_U_I32); RETURN(CONVERT); }
+		{ OPCODE(F64ConvertUI32); RETURN(CONVERT); }
 #line 6602 "src/prebuilt/ast-lexer-gen.cc"
 yy1145:
 		++lexer->cursor;
@@ -6605,7 +6605,7 @@ yy1145:
 			goto yy49;
 		}
 #line 412 "src/ast-lexer.cc"
-		{ OPCODE(F64_CONVERT_U_I64); RETURN(CONVERT); }
+		{ OPCODE(F64ConvertUI64); RETURN(CONVERT); }
 #line 6610 "src/prebuilt/ast-lexer-gen.cc"
 yy1147:
 		yych = *++lexer->cursor;
@@ -6641,7 +6641,7 @@ yy1154:
 			goto yy49;
 		}
 #line 415 "src/ast-lexer.cc"
-		{ OPCODE(F32_REINTERPRET_I32); RETURN(CONVERT);
+		{ OPCODE(F32ReinterpretI32); RETURN(CONVERT);
       }
 #line 6647 "src/prebuilt/ast-lexer-gen.cc"
 yy1156:
@@ -6650,7 +6650,7 @@ yy1156:
 			goto yy49;
 		}
 #line 419 "src/ast-lexer.cc"
-		{ OPCODE(F64_REINTERPRET_I64); RETURN(CONVERT);
+		{ OPCODE(F64ReinterpretI64); RETURN(CONVERT);
       }
 #line 6656 "src/prebuilt/ast-lexer-gen.cc"
 yy1158:
@@ -6659,7 +6659,7 @@ yy1158:
 			goto yy49;
 		}
 #line 417 "src/ast-lexer.cc"
-		{ OPCODE(I32_REINTERPRET_F32); RETURN(CONVERT);
+		{ OPCODE(I32ReinterpretF32); RETURN(CONVERT);
       }
 #line 6665 "src/prebuilt/ast-lexer-gen.cc"
 yy1160:
@@ -6668,7 +6668,7 @@ yy1160:
 			goto yy49;
 		}
 #line 421 "src/ast-lexer.cc"
-		{ OPCODE(I64_REINTERPRET_F64); RETURN(CONVERT);
+		{ OPCODE(I64ReinterpretF64); RETURN(CONVERT);
       }
 #line 6674 "src/prebuilt/ast-lexer-gen.cc"
 	}
@@ -6689,7 +6689,7 @@ static WabtAstLexer* wabt_new_lexer(WabtAstLexerSourceType type,
 }
 
 WabtAstLexer* wabt_new_ast_file_lexer(const char* filename) {
-  WabtAstLexer* lexer = wabt_new_lexer(WABT_LEXER_SOURCE_TYPE_FILE, filename);
+  WabtAstLexer* lexer = wabt_new_lexer(WabtAstLexerSourceType::File, filename);
   lexer->source.file = fopen(filename, "rb");
   if (!lexer->source.file) {
     wabt_destroy_ast_lexer(lexer);
@@ -6701,7 +6701,8 @@ WabtAstLexer* wabt_new_ast_file_lexer(const char* filename) {
 WabtAstLexer* wabt_new_ast_buffer_lexer(const char* filename,
                                         const void* data,
                                         size_t size) {
-  WabtAstLexer* lexer = wabt_new_lexer(WABT_LEXER_SOURCE_TYPE_BUFFER, filename);
+  WabtAstLexer* lexer =
+      wabt_new_lexer(WabtAstLexerSourceType::Buffer, filename);
   lexer->source.buffer.data = data;
   lexer->source.buffer.size = size;
   lexer->source.buffer.read_offset = 0;
@@ -6709,15 +6710,15 @@ WabtAstLexer* wabt_new_ast_buffer_lexer(const char* filename,
 }
 
 void wabt_destroy_ast_lexer(WabtAstLexer* lexer) {
-  if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE && lexer->source.file)
+  if (lexer->source.type == WabtAstLexerSourceType::File && lexer->source.file)
     fclose(lexer->source.file);
   wabt_free(lexer->buffer);
   wabt_free(lexer);
 }
 
-enum WabtLineOffsetPosition {
-  WABT_LINE_OFFSET_POSITION_START,
-  WABT_LINE_OFFSET_POSITION_END,
+enum class WabtLineOffsetPosition {
+  Start,
+  End,
 };
 
 static WabtResult scan_forward_for_line_offset_in_buffer(
@@ -6735,14 +6736,15 @@ static WabtResult scan_forward_for_line_offset_in_buffer(
   bool is_previous_carriage = 0;
   for (p = buffer_start; p < buffer_end; ++p) {
     if (*p == '\n') {
-      if (find_position == WABT_LINE_OFFSET_POSITION_START) {
+      if (find_position == WabtLineOffsetPosition::Start) {
         if (++line == find_line) {
           line_offset = buffer_file_offset + (p - buffer_start) + 1;
           break;
         }
       } else {
         if (line++ == find_line) {
-          line_offset = buffer_file_offset + (p - buffer_start) - is_previous_carriage;
+          line_offset =
+              buffer_file_offset + (p - buffer_start) - is_previous_carriage;
           break;
         }
       }
@@ -6750,11 +6752,11 @@ static WabtResult scan_forward_for_line_offset_in_buffer(
     is_previous_carriage = *p == '\r';
   }
 
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   if (p == buffer_end) {
     /* end of buffer */
-    if (find_position == WABT_LINE_OFFSET_POSITION_START) {
-      result = WABT_ERROR;
+    if (find_position == WabtLineOffsetPosition::Start) {
+      result = WabtResult::Error;
     } else {
       line_offset = buffer_file_offset + (buffer_end - buffer_start);
     }
@@ -6773,10 +6775,10 @@ static WabtResult scan_forward_for_line_offset_in_file(
     int find_line,
     size_t* out_line_offset) {
   FILE* lexer_file = lexer->source.file;
-  WabtResult result = WABT_ERROR;
+  WabtResult result = WabtResult::Error;
   long old_offset = ftell(lexer_file);
   if (old_offset == -1)
-    return WABT_ERROR;
+    return WabtResult::Error;
   size_t buffer_file_offset = line_start_offset;
   if (fseek(lexer_file, buffer_file_offset, SEEK_SET) == -1)
     goto cleanup;
@@ -6787,11 +6789,11 @@ static WabtResult scan_forward_for_line_offset_in_file(
     size_t read_bytes = fread(buffer, 1, buffer_size, lexer_file);
     if (read_bytes == 0) {
       /* end of buffer */
-      if (find_position == WABT_LINE_OFFSET_POSITION_START) {
-        result = WABT_ERROR;
+      if (find_position == WabtLineOffsetPosition::Start) {
+        result = WabtResult::Error;
       } else {
         *out_line_offset = buffer_file_offset + read_bytes;
-        result = WABT_OK;
+        result = WabtResult::Ok;
       }
       goto cleanup;
     }
@@ -6800,7 +6802,7 @@ static WabtResult scan_forward_for_line_offset_in_file(
     result = scan_forward_for_line_offset_in_buffer(
         buffer, buffer_end, line, buffer_file_offset, find_position, find_line,
         &line, out_line_offset);
-    if (result == WABT_OK)
+    if (result == WabtResult::Ok)
       goto cleanup;
 
     buffer_file_offset += read_bytes;
@@ -6809,7 +6811,7 @@ static WabtResult scan_forward_for_line_offset_in_file(
 cleanup:
   /* if this fails, we're screwed */
   if (fseek(lexer_file, old_offset, SEEK_SET) == -1)
-    return WABT_ERROR;
+    return WabtResult::Error;
   return result;
 }
 
@@ -6821,7 +6823,7 @@ static WabtResult scan_forward_for_line_offset(
     int find_line,
     size_t* out_line_offset) {
   assert(line <= find_line);
-  if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_BUFFER) {
+  if (lexer->source.type == WabtAstLexerSourceType::Buffer) {
     const char* source_buffer =
         static_cast<const char*>(lexer->source.buffer.data);
     const char* buffer_start = source_buffer + line_start_offset;
@@ -6830,7 +6832,7 @@ static WabtResult scan_forward_for_line_offset(
         buffer_start, buffer_end, line, line_start_offset, find_position,
         find_line, &line, out_line_offset);
   } else {
-    assert(lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE);
+    assert(lexer->source.type == WabtAstLexerSourceType::File);
     return scan_forward_for_line_offset_in_file(lexer, line, line_start_offset,
                                                 find_position, find_line,
                                                 out_line_offset);
@@ -6847,18 +6849,18 @@ static WabtResult get_line_start_offset(WabtAstLexer* lexer,
 
   if (line == current_line) {
     *out_offset = current_offset;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (line == first_line) {
     *out_offset = first_offset;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (line > current_line) {
     return scan_forward_for_line_offset(lexer, current_line, current_offset,
-                                        WABT_LINE_OFFSET_POSITION_START, line,
+                                        WabtLineOffsetPosition::Start, line,
                                         out_offset);
   } else {
     /* TODO(binji): optimize by storing more known line/offset pairs */
     return scan_forward_for_line_offset(lexer, first_line, first_offset,
-                                        WABT_LINE_OFFSET_POSITION_START, line,
+                                        WabtLineOffsetPosition::Start, line,
                                         out_offset);
   }
 }
@@ -6869,16 +6871,16 @@ static WabtResult get_offsets_from_line(WabtAstLexer* lexer,
                                         size_t* out_line_end) {
   size_t line_start;
   if (WABT_FAILED(get_line_start_offset(lexer, line, &line_start)))
-    return WABT_ERROR;
+    return WabtResult::Error;
 
   size_t line_end;
   if (WABT_FAILED(scan_forward_for_line_offset(lexer, line, line_start,
-                                               WABT_LINE_OFFSET_POSITION_END,
+                                               WabtLineOffsetPosition::End,
                                                line, &line_end)))
-    return WABT_ERROR;
+    return WabtResult::Error;
   *out_line_start = line_start;
   *out_line_end = line_end;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void clamp_source_line_offsets_to_location(size_t line_start,
@@ -6946,27 +6948,27 @@ WabtResult wabt_ast_lexer_get_source_line(WabtAstLexer* lexer,
     read_length -= 3;
   }
 
-  if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_BUFFER) {
+  if (lexer->source.type == WabtAstLexerSourceType::Buffer) {
     const char* buffer_read_start =
         static_cast<const char*>(lexer->source.buffer.data) + read_start;
     memcpy(write_start, buffer_read_start, read_length);
   } else {
-    assert(lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE);
+    assert(lexer->source.type == WabtAstLexerSourceType::File);
     FILE* lexer_file = lexer->source.file;
     long old_offset = ftell(lexer_file);
     if (old_offset == -1)
-      return WABT_ERROR;
+      return WabtResult::Error;
     if (fseek(lexer_file, read_start, SEEK_SET) == -1)
-      return WABT_ERROR;
+      return WabtResult::Error;
     if (fread(write_start, 1, read_length, lexer_file) < read_length)
-      return WABT_ERROR;
+      return WabtResult::Error;
     if (fseek(lexer_file, old_offset, SEEK_SET) == -1)
-      return WABT_ERROR;
+      return WabtResult::Error;
   }
 
   line[line_length] = '\0';
 
   *out_line_length = line_length;
   *out_column_offset = new_line_start - line_start;
-  return WABT_OK;
+  return WabtResult::Ok;
 }

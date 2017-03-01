@@ -38,7 +38,7 @@ struct Context {
 
 static void WABT_PRINTF_FORMAT(3, 4)
     print_error(Context* ctx, const WabtLocation* loc, const char* fmt, ...) {
-  ctx->result = WABT_ERROR;
+  ctx->result = WabtResult::Error;
   va_list args;
   va_start(args, fmt);
   wabt_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
@@ -82,13 +82,13 @@ static void check_duplicate_bindings(Context* ctx,
 }
 
 static void resolve_label_var(Context* ctx, WabtVar* var) {
-  if (var->type == WABT_VAR_TYPE_NAME) {
+  if (var->type == WabtVarType::Name) {
     int i;
     for (i = ctx->labels.size - 1; i >= 0; --i) {
       WabtLabel* label = ctx->labels.data[i];
       if (wabt_string_slices_are_equal(label, &var->name)) {
         wabt_destroy_string_slice(&var->name);
-        var->type = WABT_VAR_TYPE_INDEX;
+        var->type = WabtVarType::Index;
         var->index = ctx->labels.size - i - 1;
         return;
       }
@@ -103,7 +103,7 @@ static void resolve_var(Context* ctx,
                         const WabtBindingHash* bindings,
                         WabtVar* var,
                         const char* desc) {
-  if (var->type == WABT_VAR_TYPE_NAME) {
+  if (var->type == WabtVarType::Name) {
     int index = wabt_get_index_from_var(bindings, var);
     if (index == -1) {
       print_error(ctx, &var->loc,
@@ -114,7 +114,7 @@ static void resolve_var(Context* ctx,
 
     wabt_destroy_string_slice(&var->name);
     var->index = index;
-    var->type = WABT_VAR_TYPE_INDEX;
+    var->type = WabtVarType::Index;
   }
 }
 
@@ -140,7 +140,7 @@ static void resolve_memory_var(Context* ctx, WabtVar* var) {
 }
 
 static void resolve_local_var(Context* ctx, WabtVar* var) {
-  if (var->type == WABT_VAR_TYPE_NAME) {
+  if (var->type == WabtVarType::Name) {
     int index = wabt_get_local_index_by_var(ctx->current_func, var);
     if (index == -1) {
       print_error(ctx, &var->loc,
@@ -151,44 +151,44 @@ static void resolve_local_var(Context* ctx, WabtVar* var) {
 
     wabt_destroy_string_slice(&var->name);
     var->index = index;
-    var->type = WABT_VAR_TYPE_INDEX;
+    var->type = WabtVarType::Index;
   }
 }
 
 static WabtResult begin_block_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->block.label);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult end_block_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_loop_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->loop.label);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult end_loop_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_br_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_label_var(ctx, &expr->br.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_br_if_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_label_var(ctx, &expr->br_if.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_br_table_expr(WabtExpr* expr, void* user_data) {
@@ -201,61 +201,61 @@ static WabtResult on_br_table_expr(WabtExpr* expr, void* user_data) {
   }
 
   resolve_label_var(ctx, &expr->br_table.default_target);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_call_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_func_var(ctx, &expr->call.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_call_indirect_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_func_type_var(ctx, &expr->call_indirect.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_get_global_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_global_var(ctx, &expr->get_global.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_get_local_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_local_var(ctx, &expr->get_local.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_if_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   push_label(ctx, &expr->if_.true_.label);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult end_if_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   pop_label(ctx);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_set_global_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_global_var(ctx, &expr->set_global.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_set_local_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_local_var(ctx, &expr->set_local.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_tee_local_expr(WabtExpr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resolve_local_var(ctx, &expr->tee_local.var);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void visit_func(Context* ctx, WabtFunc* func) {
@@ -272,24 +272,20 @@ static void visit_func(Context* ctx, WabtFunc* func) {
 
 static void visit_export(Context* ctx, WabtExport* export_) {
   switch (export_->kind) {
-    case WABT_EXTERNAL_KIND_FUNC:
+    case WabtExternalKind::Func:
       resolve_func_var(ctx, &export_->var);
       break;
 
-    case WABT_EXTERNAL_KIND_TABLE:
+    case WabtExternalKind::Table:
       resolve_table_var(ctx, &export_->var);
       break;
 
-    case WABT_EXTERNAL_KIND_MEMORY:
+    case WabtExternalKind::Memory:
       resolve_memory_var(ctx, &export_->var);
       break;
 
-    case WABT_EXTERNAL_KIND_GLOBAL:
+    case WabtExternalKind::Global:
       resolve_global_var(ctx, &export_->var);
-      break;
-
-    case WABT_NUM_EXTERNAL_KINDS:
-      assert(0);
       break;
   }
 }
@@ -336,7 +332,7 @@ static void visit_module(Context* ctx, WabtModule* module) {
 }
 
 static void visit_raw_module(Context* ctx, WabtRawModule* raw_module) {
-  if (raw_module->type == WABT_RAW_MODULE_TYPE_TEXT)
+  if (raw_module->type == WabtRawModuleType::Text)
     visit_module(ctx, raw_module->text);
 }
 
@@ -349,26 +345,26 @@ static void dummy_source_error_callback(const WabtLocation* loc,
 
 static void visit_command(Context* ctx, WabtCommand* command) {
   switch (command->type) {
-    case WABT_COMMAND_TYPE_MODULE:
+    case WabtCommandType::Module:
       visit_module(ctx, &command->module);
       break;
 
-    case WABT_COMMAND_TYPE_ACTION:
-    case WABT_COMMAND_TYPE_ASSERT_RETURN:
-    case WABT_COMMAND_TYPE_ASSERT_RETURN_NAN:
-    case WABT_COMMAND_TYPE_ASSERT_TRAP:
-    case WABT_COMMAND_TYPE_ASSERT_EXHAUSTION:
-    case WABT_COMMAND_TYPE_REGISTER:
+    case WabtCommandType::Action:
+    case WabtCommandType::AssertReturn:
+    case WabtCommandType::AssertReturnNan:
+    case WabtCommandType::AssertTrap:
+    case WabtCommandType::AssertExhaustion:
+    case WabtCommandType::Register:
       /* Don't resolve a module_var, since it doesn't really behave like other
        * vars. You can't reference a module by index. */
       break;
 
-    case WABT_COMMAND_TYPE_ASSERT_MALFORMED:
+    case WabtCommandType::AssertMalformed:
       /* Malformed modules should not be text; the whole point of this
        * assertion is to test for malformed binary modules. */
       break;
 
-    case WABT_COMMAND_TYPE_ASSERT_INVALID: {
+    case WabtCommandType::AssertInvalid: {
       /* The module may be invalid because the names cannot be resolved; we
        * don't want to print errors or fail if that's the case, but we still
        * should try to resolve names when possible. */
@@ -383,32 +379,28 @@ static void visit_command(Context* ctx, WabtCommand* command) {
       new_ctx.lexer = ctx->lexer;
       new_ctx.visitor = ctx->visitor;
       new_ctx.visitor.user_data = &new_ctx;
-      new_ctx.result = WABT_OK;
+      new_ctx.result = WabtResult::Ok;
 
       visit_raw_module(&new_ctx, &command->assert_invalid.module);
       wabt_destroy_label_ptr_vector(&new_ctx.labels);
       if (WABT_FAILED(new_ctx.result)) {
-        command->type = WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY;
+        command->type = WabtCommandType::AssertInvalidNonBinary;
       }
       break;
     }
 
-    case WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
+    case WabtCommandType::AssertInvalidNonBinary:
       /* The only reason a module would be "non-binary" is if the names cannot
        * be resolved. So we assume name resolution has already been tried and
        * failed, so skip it. */
       break;
 
-    case WABT_COMMAND_TYPE_ASSERT_UNLINKABLE:
+    case WabtCommandType::AssertUnlinkable:
       visit_raw_module(ctx, &command->assert_unlinkable.module);
       break;
 
-    case WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
+    case WabtCommandType::AssertUninstantiable:
       visit_raw_module(ctx, &command->assert_uninstantiable.module);
-      break;
-
-    case WABT_NUM_COMMAND_TYPES:
-      assert(0);
       break;
   }
 }
@@ -426,7 +418,7 @@ static void init_context(Context* ctx,
   WABT_ZERO_MEMORY(*ctx);
   ctx->lexer = lexer;
   ctx->error_handler = error_handler;
-  ctx->result = WABT_OK;
+  ctx->result = WabtResult::Ok;
   ctx->script = script;
   ctx->visitor.user_data = ctx;
   ctx->visitor.begin_block_expr = begin_block_expr;

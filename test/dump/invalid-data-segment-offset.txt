@@ -5,7 +5,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "MEMORY" (5)
+; section "Memory" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
@@ -13,7 +13,7 @@
 000000b: 00                                        ; limits: flags
 000000c: 01                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
-; section "DATA" (11)
+; section "Data" (11)
 000000d: 0b                                        ; section code
 000000e: 00                                        ; section size (guess)
 000000f: 01                                        ; num data segments

@@ -126,11 +126,11 @@
     }                                                         \
   while (0)
 
-#define APPEND_FIELD_TO_LIST(module, field, KIND, kind, loc_, item) \
+#define APPEND_FIELD_TO_LIST(module, field, Kind, kind, loc_, item) \
   do {                                                              \
     field = wabt_append_module_field(module);                       \
     field->loc = loc_;                                              \
-    field->type = WABT_MODULE_FIELD_TYPE_##KIND;                    \
+    field->type = WabtModuleFieldType::Kind;                        \
     field->kind = item;                                             \
   } while (0)
 
@@ -150,13 +150,13 @@
     }                                                               \
   while (0)
 
-#define APPEND_INLINE_EXPORT(module, KIND, loc_, value, index_)         \
+#define APPEND_INLINE_EXPORT(module, Kind, loc_, value, index_)         \
   do                                                                    \
     if ((value).export_.has_export) {                                   \
       WabtModuleField* export_field;                                    \
-      APPEND_FIELD_TO_LIST(module, export_field, EXPORT, export_, loc_, \
+      APPEND_FIELD_TO_LIST(module, export_field, Export, export_, loc_, \
                            (value).export_.export_);                    \
-      export_field->export_.kind = WABT_EXTERNAL_KIND_##KIND;           \
+      export_field->export_.kind = WabtExternalKind::Kind;              \
       export_field->export_.var.loc = loc_;                             \
       export_field->export_.var.index = index_;                         \
       APPEND_ITEM_TO_VECTOR(module, Export, export, exports,            \
@@ -712,15 +712,15 @@ static const yytype_uint16 yyrline[] =
      578,   582,   586,   590,   594,   597,   602,   608,   614,   620,
      630,   638,   642,   645,   651,   657,   666,   672,   677,   683,
      688,   694,   702,   703,   711,   712,   720,   725,   726,   732,
-     738,   748,   754,   760,   770,   824,   833,   840,   847,   857,
-     860,   864,   870,   881,   887,   907,   914,   926,   933,   953,
-     975,   982,   995,  1002,  1008,  1014,  1020,  1028,  1033,  1040,
-    1046,  1052,  1058,  1067,  1075,  1080,  1085,  1090,  1097,  1104,
-    1108,  1111,  1122,  1126,  1133,  1137,  1140,  1148,  1156,  1173,
-    1189,  1199,  1206,  1213,  1219,  1258,  1268,  1290,  1300,  1326,
-    1331,  1339,  1347,  1357,  1363,  1369,  1375,  1381,  1387,  1392,
-    1398,  1407,  1412,  1413,  1419,  1428,  1429,  1437,  1449,  1450,
-    1457,  1521
+     738,   748,   754,   760,   770,   823,   832,   839,   846,   856,
+     859,   863,   869,   880,   886,   906,   913,   925,   932,   952,
+     974,   981,   994,  1001,  1007,  1013,  1019,  1027,  1032,  1039,
+    1045,  1051,  1057,  1066,  1074,  1079,  1084,  1089,  1096,  1103,
+    1107,  1110,  1121,  1125,  1132,  1136,  1139,  1147,  1155,  1172,
+    1188,  1198,  1205,  1212,  1218,  1254,  1264,  1286,  1296,  1322,
+    1327,  1335,  1343,  1353,  1359,  1365,  1371,  1377,  1383,  1388,
+    1394,  1403,  1408,  1409,  1415,  1424,  1425,  1433,  1445,  1446,
+    1453,  1517
 };
 #endif
 
@@ -2487,7 +2487,7 @@ yyreduce:
 #line 438 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.var).loc = (yylsp[0]);
-      (yyval.var).type = WABT_VAR_TYPE_INDEX;
+      (yyval.var).type = WabtVarType::Index;
       (yyval.var).index = (yyvsp[0].u64);
     }
 #line 2494 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
@@ -2497,7 +2497,7 @@ yyreduce:
 #line 443 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.var).loc = (yylsp[0]);
-      (yyval.var).type = WABT_VAR_TYPE_NAME;
+      (yyval.var).type = WabtVarType::Name;
       DUPTEXT((yyval.var).name, (yyvsp[0].text));
     }
 #line 2504 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
@@ -2546,7 +2546,7 @@ yyreduce:
 #line 471 "src/ast-parser.y" /* yacc.c:1646  */
     {
     if (WABT_FAILED(wabt_parse_int64((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u64),
-                                     WABT_PARSE_SIGNED_AND_UNSIGNED))) {
+                                     WabtParseIntType::SignedAndUnsigned))) {
       wabt_ast_parser_error(&(yylsp[0]), lexer, parser,
                             "invalid offset \"" PRIstringslice "\"",
                             WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
@@ -2564,11 +2564,11 @@ yyreduce:
   case 38:
 #line 482 "src/ast-parser.y" /* yacc.c:1646  */
     {
-      if (WABT_FAILED(wabt_parse_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32),
-                                       WABT_PARSE_UNSIGNED_ONLY))) {
-        wabt_ast_parser_error(&(yylsp[0]), lexer, parser,
-                              "invalid alignment \"" PRIstringslice "\"",
-                              WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
+    if (WABT_FAILED(wabt_parse_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32),
+                                     WabtParseIntType::UnsignedOnly))) {
+      wabt_ast_parser_error(&(yylsp[0]), lexer, parser,
+                            "invalid alignment \"" PRIstringslice "\"",
+                            WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
       }
     }
 #line 2575 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
@@ -2911,7 +2911,7 @@ yyreduce:
     {
       (yyval.expr_list) = (yyvsp[0].expr_list);
       WabtExpr* if_ = (yyvsp[0].expr_list).last;
-      assert(if_->type == WABT_EXPR_TYPE_IF);
+      assert(if_->type == WabtExprType::If);
       if_->if_.true_.label = (yyvsp[-2].text);
       if_->if_.true_.sig = (yyvsp[-1].types);
     }
@@ -3019,7 +3019,7 @@ yyreduce:
 #line 726 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field();
-      (yyval.func_fields)->type = WABT_FUNC_FIELD_TYPE_RESULT_TYPES;
+      (yyval.func_fields)->type = WabtFuncFieldType::ResultTypes;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
@@ -3030,7 +3030,7 @@ yyreduce:
 #line 732 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field();
-      (yyval.func_fields)->type = WABT_FUNC_FIELD_TYPE_PARAM_TYPES;
+      (yyval.func_fields)->type = WabtFuncFieldType::ParamTypes;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
@@ -3041,7 +3041,7 @@ yyreduce:
 #line 738 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field();
-      (yyval.func_fields)->type = WABT_FUNC_FIELD_TYPE_BOUND_PARAM;
+      (yyval.func_fields)->type = WabtFuncFieldType::BoundParam;
       (yyval.func_fields)->bound_type.loc = (yylsp[-4]);
       (yyval.func_fields)->bound_type.name = (yyvsp[-3].text);
       (yyval.func_fields)->bound_type.type = (yyvsp[-2].type);
@@ -3054,7 +3054,7 @@ yyreduce:
 #line 748 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field();
-      (yyval.func_fields)->type = WABT_FUNC_FIELD_TYPE_EXPRS;
+      (yyval.func_fields)->type = WabtFuncFieldType::Exprs;
       (yyval.func_fields)->first_expr = (yyvsp[0].expr_list).first;
       (yyval.func_fields)->next = nullptr;
     }
@@ -3065,7 +3065,7 @@ yyreduce:
 #line 754 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field();
-      (yyval.func_fields)->type = WABT_FUNC_FIELD_TYPE_LOCAL_TYPES;
+      (yyval.func_fields)->type = WabtFuncFieldType::LocalTypes;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
@@ -3076,7 +3076,7 @@ yyreduce:
 #line 760 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new_func_field();
-      (yyval.func_fields)->type = WABT_FUNC_FIELD_TYPE_BOUND_LOCAL;
+      (yyval.func_fields)->type = WabtFuncFieldType::BoundLocal;
       (yyval.func_fields)->bound_type.loc = (yylsp[-4]);
       (yyval.func_fields)->bound_type.name = (yyvsp[-3].text);
       (yyval.func_fields)->bound_type.type = (yyvsp[-2].type);
@@ -3094,26 +3094,25 @@ yyreduce:
       while (field) {
         WabtFuncField* next = field->next;
         switch (field->type) {
-          case WABT_FUNC_FIELD_TYPE_EXPRS:
+          case WabtFuncFieldType::Exprs:
             (yyval.func)->first_expr = field->first_expr;
             break;
 
-          case WABT_FUNC_FIELD_TYPE_PARAM_TYPES:
-          case WABT_FUNC_FIELD_TYPE_LOCAL_TYPES: {
-            WabtTypeVector* types =
-                field->type == WABT_FUNC_FIELD_TYPE_PARAM_TYPES
-                    ? &(yyval.func)->decl.sig.param_types
-                    : &(yyval.func)->local_types;
+          case WabtFuncFieldType::ParamTypes:
+          case WabtFuncFieldType::LocalTypes: {
+            WabtTypeVector* types = field->type == WabtFuncFieldType::ParamTypes
+                                        ? &(yyval.func)->decl.sig.param_types
+                                        : &(yyval.func)->local_types;
             wabt_extend_types(types, &field->types);
             wabt_destroy_type_vector(&field->types);
             break;
           }
 
-          case WABT_FUNC_FIELD_TYPE_BOUND_PARAM:
-          case WABT_FUNC_FIELD_TYPE_BOUND_LOCAL: {
+          case WabtFuncFieldType::BoundParam:
+          case WabtFuncFieldType::BoundLocal: {
             WabtTypeVector* types;
             WabtBindingHash* bindings;
-            if (field->type == WABT_FUNC_FIELD_TYPE_BOUND_PARAM) {
+            if (field->type == WabtFuncFieldType::BoundParam) {
               types = &(yyval.func)->decl.sig.param_types;
               bindings = &(yyval.func)->param_bindings;
             } else {
@@ -3129,7 +3128,7 @@ yyreduce:
             break;
           }
 
-          case WABT_FUNC_FIELD_TYPE_RESULT_TYPES:
+          case WabtFuncFieldType::ResultTypes:
             (yyval.func)->decl.sig.result_types = field->types;
             break;
         }
@@ -3139,11 +3138,11 @@ yyreduce:
         field = next;
       }
     }
-#line 3143 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3142 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 824 "src/ast-parser.y" /* yacc.c:1646  */
+#line 823 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.exported_func));
       (yyval.exported_func).func = (yyvsp[-1].func);
@@ -3152,11 +3151,11 @@ yyreduce:
       (yyval.exported_func).func->name = (yyvsp[-4].text);
       (yyval.exported_func).export_ = (yyvsp[-3].optional_export);
     }
-#line 3156 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3155 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 833 "src/ast-parser.y" /* yacc.c:1646  */
+#line 832 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.exported_func));
       (yyval.exported_func).func = (yyvsp[-1].func);
@@ -3164,79 +3163,79 @@ yyreduce:
       (yyval.exported_func).func->decl.type_var = (yyvsp[-2].var);
       (yyval.exported_func).func->name = (yyvsp[-3].text);
     }
-#line 3168 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3167 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 840 "src/ast-parser.y" /* yacc.c:1646  */
+#line 839 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.exported_func));
       (yyval.exported_func).func = (yyvsp[-1].func);
       (yyval.exported_func).func->name = (yyvsp[-3].text);
       (yyval.exported_func).export_ = (yyvsp[-2].optional_export);
     }
-#line 3179 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3178 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 847 "src/ast-parser.y" /* yacc.c:1646  */
+#line 846 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.exported_func));
       (yyval.exported_func).func = (yyvsp[-1].func);
       (yyval.exported_func).func->name = (yyvsp[-2].text);
     }
-#line 3189 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3188 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 857 "src/ast-parser.y" /* yacc.c:1646  */
+#line 856 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = (yyvsp[-1].expr_list);
     }
-#line 3197 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3196 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 864 "src/ast-parser.y" /* yacc.c:1646  */
+#line 863 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.elem_segment));
       (yyval.elem_segment).table_var = (yyvsp[-3].var);
       (yyval.elem_segment).offset = (yyvsp[-2].expr_list).first;
       (yyval.elem_segment).vars = (yyvsp[-1].vars);
     }
-#line 3208 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3207 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 870 "src/ast-parser.y" /* yacc.c:1646  */
+#line 869 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.elem_segment));
       (yyval.elem_segment).table_var.loc = (yylsp[-3]);
-      (yyval.elem_segment).table_var.type = WABT_VAR_TYPE_INDEX;
+      (yyval.elem_segment).table_var.type = WabtVarType::Index;
       (yyval.elem_segment).table_var.index = 0;
       (yyval.elem_segment).offset = (yyvsp[-2].expr_list).first;
       (yyval.elem_segment).vars = (yyvsp[-1].vars);
     }
-#line 3221 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3220 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 881 "src/ast-parser.y" /* yacc.c:1646  */
+#line 880 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_table).table = (yyvsp[-1].table);
       (yyval.exported_table).table.name = (yyvsp[-3].text);
       (yyval.exported_table).has_elem_segment = false;
       (yyval.exported_table).export_ = (yyvsp[-2].optional_export);
     }
-#line 3232 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3231 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 888 "src/ast-parser.y" /* yacc.c:1646  */
+#line 887 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WabtExpr* expr = wabt_new_const_expr();
       expr->loc = (yylsp[-8]);
-      expr->const_.type = WABT_TYPE_I32;
+      expr->const_.type = WabtType::I32;
       expr->const_.u32 = 0;
 
       WABT_ZERO_MEMORY((yyval.exported_table));
@@ -3249,11 +3248,11 @@ yyreduce:
       (yyval.exported_table).elem_segment.vars = (yyvsp[-2].vars);
       (yyval.exported_table).export_ = (yyvsp[-6].optional_export);
     }
-#line 3253 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3252 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 907 "src/ast-parser.y" /* yacc.c:1646  */
+#line 906 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.data_segment));
       (yyval.data_segment).memory_var = (yyvsp[-3].var);
@@ -3261,25 +3260,25 @@ yyreduce:
       dup_text_list(&(yyvsp[-1].text_list), &(yyval.data_segment).data, &(yyval.data_segment).size);
       wabt_destroy_text_list(&(yyvsp[-1].text_list));
     }
-#line 3265 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3264 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 914 "src/ast-parser.y" /* yacc.c:1646  */
+#line 913 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.data_segment));
       (yyval.data_segment).memory_var.loc = (yylsp[-3]);
-      (yyval.data_segment).memory_var.type = WABT_VAR_TYPE_INDEX;
+      (yyval.data_segment).memory_var.type = WabtVarType::Index;
       (yyval.data_segment).memory_var.index = 0;
       (yyval.data_segment).offset = (yyvsp[-2].expr_list).first;
       dup_text_list(&(yyvsp[-1].text_list), &(yyval.data_segment).data, &(yyval.data_segment).size);
       wabt_destroy_text_list(&(yyvsp[-1].text_list));
     }
-#line 3279 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3278 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 926 "src/ast-parser.y" /* yacc.c:1646  */
+#line 925 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.exported_memory));
       (yyval.exported_memory).memory = (yyvsp[-1].memory);
@@ -3287,15 +3286,15 @@ yyreduce:
       (yyval.exported_memory).has_data_segment = false;
       (yyval.exported_memory).export_ = (yyvsp[-2].optional_export);
     }
-#line 3291 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3290 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 933 "src/ast-parser.y" /* yacc.c:1646  */
+#line 932 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WabtExpr* expr = wabt_new_const_expr();
       expr->loc = (yylsp[-7]);
-      expr->const_.type = WABT_TYPE_I32;
+      expr->const_.type = WabtType::I32;
       expr->const_.u32 = 0;
 
       WABT_ZERO_MEMORY((yyval.exported_memory));
@@ -3311,15 +3310,15 @@ yyreduce:
       (yyval.exported_memory).memory.page_limits.has_max = true;
       (yyval.exported_memory).export_ = (yyvsp[-5].optional_export);
     }
-#line 3315 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3314 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 953 "src/ast-parser.y" /* yacc.c:1646  */
+#line 952 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WabtExpr* expr = wabt_new_const_expr();
       expr->loc = (yylsp[-6]);
-      expr->const_.type = WABT_TYPE_I32;
+      expr->const_.type = WabtType::I32;
       expr->const_.u32 = 0;
 
       WABT_ZERO_MEMORY((yyval.exported_memory));
@@ -3335,11 +3334,11 @@ yyreduce:
       (yyval.exported_memory).memory.page_limits.has_max = true;
       (yyval.exported_memory).export_.has_export = false;
     }
-#line 3339 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3338 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 975 "src/ast-parser.y" /* yacc.c:1646  */
+#line 974 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.exported_global));
       (yyval.exported_global).global = (yyvsp[-2].global);
@@ -3347,11 +3346,11 @@ yyreduce:
       (yyval.exported_global).global.init_expr = (yyvsp[-1].expr_list).first;
       (yyval.exported_global).export_ = (yyvsp[-3].optional_export);
     }
-#line 3351 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3350 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 982 "src/ast-parser.y" /* yacc.c:1646  */
+#line 981 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.exported_global));
       (yyval.exported_global).global = (yyvsp[-2].global);
@@ -3359,420 +3358,417 @@ yyreduce:
       (yyval.exported_global).global.init_expr = (yyvsp[-1].expr_list).first;
       (yyval.exported_global).export_.has_export = false;
     }
-#line 3363 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3362 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 995 "src/ast-parser.y" /* yacc.c:1646  */
+#line 994 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import();
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_FUNC;
+      (yyval.import)->kind = WabtExternalKind::Func;
       (yyval.import)->func.name = (yyvsp[-2].text);
       (yyval.import)->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       (yyval.import)->func.decl.type_var = (yyvsp[-1].var);
     }
-#line 3375 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3374 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 1002 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1001 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import();
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_FUNC;
+      (yyval.import)->kind = WabtExternalKind::Func;
       (yyval.import)->func.name = (yyvsp[-2].text);
       (yyval.import)->func.decl.sig = (yyvsp[-1].func_sig);
     }
-#line 3386 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3385 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 1008 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1007 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import();
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_TABLE;
+      (yyval.import)->kind = WabtExternalKind::Table;
       (yyval.import)->table = (yyvsp[-1].table);
       (yyval.import)->table.name = (yyvsp[-2].text);
     }
-#line 3397 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3396 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 1014 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1013 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import();
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_MEMORY;
+      (yyval.import)->kind = WabtExternalKind::Memory;
       (yyval.import)->memory = (yyvsp[-1].memory);
       (yyval.import)->memory.name = (yyvsp[-2].text);
     }
-#line 3408 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3407 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 1020 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1019 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import();
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_GLOBAL;
+      (yyval.import)->kind = WabtExternalKind::Global;
       (yyval.import)->global = (yyvsp[-1].global);
       (yyval.import)->global.name = (yyvsp[-2].text);
     }
-#line 3419 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3418 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 1028 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1027 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-1].import);
       (yyval.import)->module_name = (yyvsp[-3].text);
       (yyval.import)->field_name = (yyvsp[-2].text);
     }
-#line 3429 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3428 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 1033 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1032 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_FUNC;
+      (yyval.import)->kind = WabtExternalKind::Func;
       (yyval.import)->func.name = (yyvsp[-3].text);
       (yyval.import)->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
       (yyval.import)->func.decl.type_var = (yyvsp[-1].var);
     }
-#line 3441 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3440 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 1040 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1039 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_FUNC;
+      (yyval.import)->kind = WabtExternalKind::Func;
       (yyval.import)->func.name = (yyvsp[-3].text);
       (yyval.import)->func.decl.sig = (yyvsp[-1].func_sig);
     }
-#line 3452 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3451 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 1046 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1045 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_TABLE;
+      (yyval.import)->kind = WabtExternalKind::Table;
       (yyval.import)->table = (yyvsp[-1].table);
       (yyval.import)->table.name = (yyvsp[-3].text);
     }
-#line 3463 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3462 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 1052 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1051 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_MEMORY;
+      (yyval.import)->kind = WabtExternalKind::Memory;
       (yyval.import)->memory = (yyvsp[-1].memory);
       (yyval.import)->memory.name = (yyvsp[-3].text);
     }
-#line 3474 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3473 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 1058 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1057 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
-      (yyval.import)->kind = WABT_EXTERNAL_KIND_GLOBAL;
+      (yyval.import)->kind = WabtExternalKind::Global;
       (yyval.import)->global = (yyvsp[-1].global);
       (yyval.import)->global.name = (yyvsp[-3].text);
     }
-#line 3485 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3484 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 1067 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1066 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new_import();
       (yyval.import)->module_name = (yyvsp[-2].text);
       (yyval.import)->field_name = (yyvsp[-1].text);
     }
-#line 3495 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3494 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 1075 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1074 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.export_));
-      (yyval.export_).kind = WABT_EXTERNAL_KIND_FUNC;
+      (yyval.export_).kind = WabtExternalKind::Func;
       (yyval.export_).var = (yyvsp[-1].var);
     }
-#line 3505 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3504 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 1080 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1079 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.export_));
-      (yyval.export_).kind = WABT_EXTERNAL_KIND_TABLE;
+      (yyval.export_).kind = WabtExternalKind::Table;
       (yyval.export_).var = (yyvsp[-1].var);
     }
-#line 3515 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3514 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 1085 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1084 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.export_));
-      (yyval.export_).kind = WABT_EXTERNAL_KIND_MEMORY;
+      (yyval.export_).kind = WabtExternalKind::Memory;
       (yyval.export_).var = (yyvsp[-1].var);
     }
-#line 3525 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3524 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 1090 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1089 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.export_));
-      (yyval.export_).kind = WABT_EXTERNAL_KIND_GLOBAL;
+      (yyval.export_).kind = WabtExternalKind::Global;
       (yyval.export_).var = (yyvsp[-1].var);
     }
-#line 3535 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3534 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 1097 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1096 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = (yyvsp[-1].export_);
       (yyval.export_).name = (yyvsp[-2].text);
     }
-#line 3544 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3543 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 1104 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1103 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.optional_export));
       (yyval.optional_export).has_export = false;
     }
-#line 3553 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3552 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 1111 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1110 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.optional_export));
       (yyval.optional_export).has_export = true;
       (yyval.optional_export).export_.name = (yyvsp[-1].text);
     }
-#line 3563 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3562 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 1122 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1121 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.func_type));
       (yyval.func_type).sig = (yyvsp[-1].func_sig);
     }
-#line 3572 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3571 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 1126 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1125 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_type).name = (yyvsp[-2].text);
       (yyval.func_type).sig = (yyvsp[-1].func_sig);
     }
-#line 3581 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3580 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 1133 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1132 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.var) = (yyvsp[-1].var); }
-#line 3587 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3586 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 1137 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1136 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = new_module();
     }
-#line 3595 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3594 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 1140 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1139 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, FUNC_TYPE, func_type, (yylsp[0]), (yyvsp[0].func_type));
+      APPEND_FIELD_TO_LIST((yyval.module), field, FuncType, func_type, (yylsp[0]), (yyvsp[0].func_type));
       APPEND_ITEM_TO_VECTOR((yyval.module), FuncType, func_type, func_types,
                             &field->func_type);
       INSERT_BINDING((yyval.module), func_type, func_types, (yylsp[0]), (yyvsp[0].func_type).name);
     }
-#line 3608 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3607 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 1148 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1147 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, GLOBAL, global, (yylsp[0]), (yyvsp[0].exported_global).global);
+      APPEND_FIELD_TO_LIST((yyval.module), field, Global, global, (yylsp[0]), (yyvsp[0].exported_global).global);
       APPEND_ITEM_TO_VECTOR((yyval.module), Global, global, globals, &field->global);
       INSERT_BINDING((yyval.module), global, globals, (yylsp[0]), (yyvsp[0].exported_global).global.name);
-      APPEND_INLINE_EXPORT((yyval.module), GLOBAL, (yylsp[0]), (yyvsp[0].exported_global), (yyval.module)->globals.size - 1);
+      APPEND_INLINE_EXPORT((yyval.module), Global, (yylsp[0]), (yyvsp[0].exported_global), (yyval.module)->globals.size - 1);
     }
-#line 3621 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3620 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 1156 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1155 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, TABLE, table, (yylsp[0]), (yyvsp[0].exported_table).table);
+      APPEND_FIELD_TO_LIST((yyval.module), field, Table, table, (yylsp[0]), (yyvsp[0].exported_table).table);
       APPEND_ITEM_TO_VECTOR((yyval.module), Table, table, tables, &field->table);
       INSERT_BINDING((yyval.module), table, tables, (yylsp[0]), (yyvsp[0].exported_table).table.name);
-      APPEND_INLINE_EXPORT((yyval.module), TABLE, (yylsp[0]), (yyvsp[0].exported_table), (yyval.module)->tables.size - 1);
+      APPEND_INLINE_EXPORT((yyval.module), Table, (yylsp[0]), (yyvsp[0].exported_table), (yyval.module)->tables.size - 1);
 
       if ((yyvsp[0].exported_table).has_elem_segment) {
         WabtModuleField* elem_segment_field;
-        APPEND_FIELD_TO_LIST((yyval.module), elem_segment_field, ELEM_SEGMENT, elem_segment,
+        APPEND_FIELD_TO_LIST((yyval.module), elem_segment_field, ElemSegment, elem_segment,
                              (yylsp[0]), (yyvsp[0].exported_table).elem_segment);
         APPEND_ITEM_TO_VECTOR((yyval.module), ElemSegment, elem_segment, elem_segments,
                               &elem_segment_field->elem_segment);
       }
 
     }
-#line 3643 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3642 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 1173 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1172 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, MEMORY, memory, (yylsp[0]), (yyvsp[0].exported_memory).memory);
+      APPEND_FIELD_TO_LIST((yyval.module), field, Memory, memory, (yylsp[0]), (yyvsp[0].exported_memory).memory);
       APPEND_ITEM_TO_VECTOR((yyval.module), Memory, memory, memories, &field->memory);
       INSERT_BINDING((yyval.module), memory, memories, (yylsp[0]), (yyvsp[0].exported_memory).memory.name);
-      APPEND_INLINE_EXPORT((yyval.module), MEMORY, (yylsp[0]), (yyvsp[0].exported_memory), (yyval.module)->memories.size - 1);
+      APPEND_INLINE_EXPORT((yyval.module), Memory, (yylsp[0]), (yyvsp[0].exported_memory), (yyval.module)->memories.size - 1);
 
       if ((yyvsp[0].exported_memory).has_data_segment) {
         WabtModuleField* data_segment_field;
-        APPEND_FIELD_TO_LIST((yyval.module), data_segment_field, DATA_SEGMENT, data_segment,
+        APPEND_FIELD_TO_LIST((yyval.module), data_segment_field, DataSegment, data_segment,
                              (yylsp[0]), (yyvsp[0].exported_memory).data_segment);
         APPEND_ITEM_TO_VECTOR((yyval.module), DataSegment, data_segment, data_segments,
                               &data_segment_field->data_segment);
       }
     }
-#line 3664 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3663 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 1189 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1188 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, FUNC, func, (yylsp[0]), *(yyvsp[0].exported_func).func);
+      APPEND_FIELD_TO_LIST((yyval.module), field, Func, func, (yylsp[0]), *(yyvsp[0].exported_func).func);
       append_implicit_func_declaration(&(yylsp[0]), (yyval.module), &field->func.decl);
       APPEND_ITEM_TO_VECTOR((yyval.module), Func, func, funcs, &field->func);
       INSERT_BINDING((yyval.module), func, funcs, (yylsp[0]), (yyvsp[0].exported_func).func->name);
-      APPEND_INLINE_EXPORT((yyval.module), FUNC, (yylsp[0]), (yyvsp[0].exported_func), (yyval.module)->funcs.size - 1);
+      APPEND_INLINE_EXPORT((yyval.module), Func, (yylsp[0]), (yyvsp[0].exported_func), (yyval.module)->funcs.size - 1);
       wabt_free((yyvsp[0].exported_func).func);
     }
-#line 3679 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3678 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 1199 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1198 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, ELEM_SEGMENT, elem_segment, (yylsp[0]), (yyvsp[0].elem_segment));
+      APPEND_FIELD_TO_LIST((yyval.module), field, ElemSegment, elem_segment, (yylsp[0]), (yyvsp[0].elem_segment));
       APPEND_ITEM_TO_VECTOR((yyval.module), ElemSegment, elem_segment, elem_segments,
                             &field->elem_segment);
     }
-#line 3691 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3690 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 1206 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1205 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, DATA_SEGMENT, data_segment, (yylsp[0]), (yyvsp[0].data_segment));
+      APPEND_FIELD_TO_LIST((yyval.module), field, DataSegment, data_segment, (yylsp[0]), (yyvsp[0].data_segment));
       APPEND_ITEM_TO_VECTOR((yyval.module), DataSegment, data_segment, data_segments,
                             &field->data_segment);
     }
-#line 3703 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3702 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 1213 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1212 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, START, start, (yylsp[0]), (yyvsp[0].var));
+      APPEND_FIELD_TO_LIST((yyval.module), field, Start, start, (yylsp[0]), (yyvsp[0].var));
       (yyval.module)->start = &field->start;
     }
-#line 3714 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3713 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 1219 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1218 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field;
-      APPEND_FIELD_TO_LIST((yyval.module), field, IMPORT, import, (yylsp[0]), *(yyvsp[0].import));
+      APPEND_FIELD_TO_LIST((yyval.module), field, Import, import, (yylsp[0]), *(yyvsp[0].import));
       CHECK_IMPORT_ORDERING((yyval.module), func, funcs, (yylsp[0]));
       CHECK_IMPORT_ORDERING((yyval.module), table, tables, (yylsp[0]));
       CHECK_IMPORT_ORDERING((yyval.module), memory, memories, (yylsp[0]));
       CHECK_IMPORT_ORDERING((yyval.module), global, globals, (yylsp[0]));
       switch ((yyvsp[0].import)->kind) {
-        case WABT_EXTERNAL_KIND_FUNC:
+        case WabtExternalKind::Func:
           append_implicit_func_declaration(&(yylsp[0]), (yyval.module), &field->import.func.decl);
           APPEND_ITEM_TO_VECTOR((yyval.module), Func, func, funcs, &field->import.func);
           INSERT_BINDING((yyval.module), func, funcs, (yylsp[0]), field->import.func.name);
           (yyval.module)->num_func_imports++;
           break;
-        case WABT_EXTERNAL_KIND_TABLE:
+        case WabtExternalKind::Table:
           APPEND_ITEM_TO_VECTOR((yyval.module), Table, table, tables, &field->import.table);
           INSERT_BINDING((yyval.module), table, tables, (yylsp[0]), field->import.table.name);
           (yyval.module)->num_table_imports++;
           break;
-        case WABT_EXTERNAL_KIND_MEMORY:
+        case WabtExternalKind::Memory:
           APPEND_ITEM_TO_VECTOR((yyval.module), Memory, memory, memories,
                                 &field->import.memory);
           INSERT_BINDING((yyval.module), memory, memories, (yylsp[0]), field->import.memory.name);
           (yyval.module)->num_memory_imports++;
           break;
-        case WABT_EXTERNAL_KIND_GLOBAL:
+        case WabtExternalKind::Global:
           APPEND_ITEM_TO_VECTOR((yyval.module), Global, global, globals,
                                 &field->import.global);
           INSERT_BINDING((yyval.module), global, globals, (yylsp[0]), field->import.global.name);
           (yyval.module)->num_global_imports++;
           break;
-        case WABT_NUM_EXTERNAL_KINDS:
-          assert(0);
-          break;
       }
       wabt_free((yyvsp[0].import));
       APPEND_ITEM_TO_VECTOR((yyval.module), Import, import, imports, &field->import);
     }
-#line 3758 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3754 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 1258 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1254 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       WabtModuleField* field = wabt_append_module_field((yyval.module));
-      APPEND_FIELD_TO_LIST((yyval.module), field, EXPORT, export_, (yylsp[0]), (yyvsp[0].export_));
+      APPEND_FIELD_TO_LIST((yyval.module), field, Export, export_, (yylsp[0]), (yyvsp[0].export_));
       APPEND_ITEM_TO_VECTOR((yyval.module), Export, export, exports, &field->export_);
       INSERT_BINDING((yyval.module), export, exports, (yylsp[0]), (yyvsp[0].export_).name);
     }
-#line 3770 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3766 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 146:
-#line 1268 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1264 "src/ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.raw_module).type = WABT_RAW_MODULE_TYPE_TEXT;
+      (yyval.raw_module).type = WabtRawModuleType::Text;
       (yyval.raw_module).text = (yyvsp[-1].module);
       (yyval.raw_module).text->name = (yyvsp[-2].text);
       (yyval.raw_module).text->loc = (yylsp[-3]);
@@ -3793,28 +3789,28 @@ yyreduce:
         }
       }
     }
-#line 3797 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3793 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 147:
-#line 1290 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1286 "src/ast-parser.y" /* yacc.c:1646  */
     {
-      (yyval.raw_module).type = WABT_RAW_MODULE_TYPE_BINARY;
+      (yyval.raw_module).type = WabtRawModuleType::Binary;
       (yyval.raw_module).binary.name = (yyvsp[-2].text);
       (yyval.raw_module).binary.loc = (yylsp[-3]);
       dup_text_list(&(yyvsp[-1].text_list), &(yyval.raw_module).binary.data, &(yyval.raw_module).binary.size);
       wabt_destroy_text_list(&(yyvsp[-1].text_list));
     }
-#line 3809 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3805 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 148:
-#line 1300 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1296 "src/ast-parser.y" /* yacc.c:1646  */
     {
-      if ((yyvsp[0].raw_module).type == WABT_RAW_MODULE_TYPE_TEXT) {
+      if ((yyvsp[0].raw_module).type == WabtRawModuleType::Text) {
         (yyval.module) = (yyvsp[0].raw_module).text;
       } else {
-        assert((yyvsp[0].raw_module).type == WABT_RAW_MODULE_TYPE_BINARY);
+        assert((yyvsp[0].raw_module).type == WabtRawModuleType::Binary);
         (yyval.module) = new_module();
         WabtReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
         BinaryErrorCallbackData user_data;
@@ -3831,192 +3827,192 @@ yyreduce:
         (yyval.module)->loc = (yyvsp[0].raw_module).binary.loc;
       }
     }
-#line 3835 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3831 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 1326 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1322 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.var));
-      (yyval.var).type = WABT_VAR_TYPE_INDEX;
+      (yyval.var).type = WabtVarType::Index;
       (yyval.var).index = INVALID_VAR_INDEX;
     }
-#line 3845 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3841 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 150:
-#line 1331 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1327 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.var));
-      (yyval.var).type = WABT_VAR_TYPE_NAME;
+      (yyval.var).type = WabtVarType::Name;
       DUPTEXT((yyval.var).name, (yyvsp[0].text));
     }
-#line 3855 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3851 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 151:
-#line 1339 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1335 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.action));
       (yyval.action).loc = (yylsp[-4]);
       (yyval.action).module_var = (yyvsp[-3].var);
-      (yyval.action).type = WABT_ACTION_TYPE_INVOKE;
+      (yyval.action).type = WabtActionType::Invoke;
       (yyval.action).invoke.name = (yyvsp[-2].text);
       (yyval.action).invoke.args = (yyvsp[-1].consts);
     }
-#line 3868 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3864 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 152:
-#line 1347 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1343 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.action));
       (yyval.action).loc = (yylsp[-3]);
       (yyval.action).module_var = (yyvsp[-2].var);
-      (yyval.action).type = WABT_ACTION_TYPE_GET;
+      (yyval.action).type = WabtActionType::Get;
       (yyval.action).invoke.name = (yyvsp[-1].text);
     }
-#line 3880 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3876 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 153:
-#line 1357 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1353 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ASSERT_MALFORMED;
+      (yyval.command)->type = WabtCommandType::AssertMalformed;
       (yyval.command)->assert_malformed.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_malformed.text = (yyvsp[-1].text);
     }
-#line 3891 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3887 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 154:
-#line 1363 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1359 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ASSERT_INVALID;
+      (yyval.command)->type = WabtCommandType::AssertInvalid;
       (yyval.command)->assert_invalid.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_invalid.text = (yyvsp[-1].text);
     }
-#line 3902 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3898 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 155:
-#line 1369 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1365 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ASSERT_UNLINKABLE;
+      (yyval.command)->type = WabtCommandType::AssertUnlinkable;
       (yyval.command)->assert_unlinkable.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_unlinkable.text = (yyvsp[-1].text);
     }
-#line 3913 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3909 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 156:
-#line 1375 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1371 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE;
+      (yyval.command)->type = WabtCommandType::AssertUninstantiable;
       (yyval.command)->assert_uninstantiable.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_uninstantiable.text = (yyvsp[-1].text);
     }
-#line 3924 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3920 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 157:
-#line 1381 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1377 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ASSERT_RETURN;
+      (yyval.command)->type = WabtCommandType::AssertReturn;
       (yyval.command)->assert_return.action = (yyvsp[-2].action);
       (yyval.command)->assert_return.expected = (yyvsp[-1].consts);
     }
-#line 3935 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3931 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 158:
-#line 1387 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1383 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ASSERT_RETURN_NAN;
+      (yyval.command)->type = WabtCommandType::AssertReturnNan;
       (yyval.command)->assert_return_nan.action = (yyvsp[-1].action);
     }
-#line 3945 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3941 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 159:
-#line 1392 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1388 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ASSERT_TRAP;
+      (yyval.command)->type = WabtCommandType::AssertTrap;
       (yyval.command)->assert_trap.action = (yyvsp[-2].action);
       (yyval.command)->assert_trap.text = (yyvsp[-1].text);
     }
-#line 3956 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3952 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 160:
-#line 1398 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1394 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ASSERT_EXHAUSTION;
+      (yyval.command)->type = WabtCommandType::AssertExhaustion;
       (yyval.command)->assert_trap.action = (yyvsp[-2].action);
       (yyval.command)->assert_trap.text = (yyvsp[-1].text);
     }
-#line 3967 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3963 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 161:
-#line 1407 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1403 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_ACTION;
+      (yyval.command)->type = WabtCommandType::Action;
       (yyval.command)->action = (yyvsp[0].action);
     }
-#line 3977 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3973 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 163:
-#line 1413 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1409 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_MODULE;
+      (yyval.command)->type = WabtCommandType::Module;
       (yyval.command)->module = *(yyvsp[0].module);
       wabt_free((yyvsp[0].module));
     }
-#line 3988 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3984 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 164:
-#line 1419 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1415 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new_command();
-      (yyval.command)->type = WABT_COMMAND_TYPE_REGISTER;
+      (yyval.command)->type = WabtCommandType::Register;
       (yyval.command)->register_.module_name = (yyvsp[-2].text);
       (yyval.command)->register_.var = (yyvsp[-1].var);
       (yyval.command)->register_.var.loc = (yylsp[-1]);
     }
-#line 4000 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3996 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 1428 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1424 "src/ast-parser.y" /* yacc.c:1646  */
     { WABT_ZERO_MEMORY((yyval.commands)); }
-#line 4006 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4002 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 166:
-#line 1429 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1425 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.commands) = (yyvsp[-1].commands);
       wabt_append_command_value(&(yyval.commands), (yyvsp[0].command));
       wabt_free((yyvsp[0].command));
     }
-#line 4016 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4012 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 167:
-#line 1437 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1433 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.const_).loc = (yylsp[-2]);
       if (WABT_FAILED(parse_const((yyvsp[-2].type), (yyvsp[-1].literal).type, (yyvsp[-1].literal).text.start,
@@ -4027,26 +4023,26 @@ yyreduce:
       }
       wabt_free(const_cast<char*>((yyvsp[-1].literal).text.start));
     }
-#line 4031 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4027 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 168:
-#line 1449 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1445 "src/ast-parser.y" /* yacc.c:1646  */
     { WABT_ZERO_MEMORY((yyval.consts)); }
-#line 4037 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4033 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 169:
-#line 1450 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1446 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.consts) = (yyvsp[-1].consts);
       wabt_append_const_value(&(yyval.consts), &(yyvsp[0].const_));
     }
-#line 4046 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4042 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 170:
-#line 1457 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1453 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.script));
       (yyval.script).commands = (yyvsp[0].commands);
@@ -4057,7 +4053,7 @@ yyreduce:
         WabtCommand* command = &(yyval.script).commands.data[i];
         WabtVar* module_var = nullptr;
         switch (command->type) {
-          case WABT_COMMAND_TYPE_MODULE: {
+          case WabtCommandType::Module: {
             last_module_index = i;
 
             /* Wire up module name bindings. */
@@ -4073,27 +4069,27 @@ yyreduce:
             break;
           }
 
-          case WABT_COMMAND_TYPE_ASSERT_RETURN:
+          case WabtCommandType::AssertReturn:
             module_var = &command->assert_return.action.module_var;
             goto has_module_var;
-          case WABT_COMMAND_TYPE_ASSERT_RETURN_NAN:
+          case WabtCommandType::AssertReturnNan:
             module_var = &command->assert_return_nan.action.module_var;
             goto has_module_var;
-          case WABT_COMMAND_TYPE_ASSERT_TRAP:
-          case WABT_COMMAND_TYPE_ASSERT_EXHAUSTION:
+          case WabtCommandType::AssertTrap:
+          case WabtCommandType::AssertExhaustion:
             module_var = &command->assert_trap.action.module_var;
             goto has_module_var;
-          case WABT_COMMAND_TYPE_ACTION:
+          case WabtCommandType::Action:
             module_var = &command->action.module_var;
             goto has_module_var;
-          case WABT_COMMAND_TYPE_REGISTER:
+          case WabtCommandType::Register:
             module_var = &command->register_.var;
             goto has_module_var;
 
           has_module_var: {
             /* Resolve actions with an invalid index to use the preceding
              * module. */
-            if (module_var->type == WABT_VAR_TYPE_INDEX &&
+            if (module_var->type == WabtVarType::Index &&
                 module_var->index == INVALID_VAR_INDEX) {
               module_var->index = last_module_index;
             }
@@ -4106,11 +4102,11 @@ yyreduce:
       }
       parser->script = (yyval.script);
     }
-#line 4110 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4106 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
 
-#line 4114 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4110 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4345,7 +4341,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1524 "src/ast-parser.y" /* yacc.c:1906  */
+#line 1520 "src/ast-parser.y" /* yacc.c:1906  */
 
 
 static void append_expr_list(WabtExprList* expr_list, WabtExprList* expr) {
@@ -4393,21 +4389,21 @@ static WabtResult parse_const(WabtType type,
                               WabtConst* out) {
   out->type = type;
   switch (type) {
-    case WABT_TYPE_I32:
+    case WabtType::I32:
       return wabt_parse_int32(s, end, &out->u32,
-                              WABT_PARSE_SIGNED_AND_UNSIGNED);
-    case WABT_TYPE_I64:
+                              WabtParseIntType::SignedAndUnsigned);
+    case WabtType::I64:
       return wabt_parse_int64(s, end, &out->u64,
-                              WABT_PARSE_SIGNED_AND_UNSIGNED);
-    case WABT_TYPE_F32:
+                              WabtParseIntType::SignedAndUnsigned);
+    case WabtType::F32:
       return wabt_parse_float(literal_type, s, end, &out->f32_bits);
-    case WABT_TYPE_F64:
+    case WabtType::F64:
       return wabt_parse_double(literal_type, s, end, &out->f64_bits);
     default:
       assert(0);
       break;
   }
-  return WABT_ERROR;
+  return WabtResult::Error;
 }
 
 static size_t copy_string_contents(WabtStringSlice* text, char* dest) {
@@ -4518,7 +4514,7 @@ WabtResult wabt_parse_ast(WabtAstLexer* lexer,
   wabt_free(parser.yyvsa);
   wabt_free(parser.yylsa);
   *out_script = parser.script;
-  return result == 0 && parser.errors == 0 ? WABT_OK : WABT_ERROR;
+  return result == 0 && parser.errors == 0 ? WabtResult::Ok : WabtResult::Error;
 }
 
 static void on_read_binary_error(uint32_t offset, const char* error,

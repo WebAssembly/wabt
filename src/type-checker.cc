@@ -19,12 +19,13 @@
 #define CHECK_RESULT(expr) \
   do {                     \
     if (WABT_FAILED(expr)) \
-      return WABT_ERROR;   \
+      return WabtResult::Error;   \
   } while (0)
 
-#define COMBINE_RESULT(result_var, result)                           \
-  do {                                                               \
-    (result_var) = static_cast<WabtResult>((result_var) | (result)); \
+#define COMBINE_RESULT(result_var, result)                                \
+  do {                                                                    \
+    (result_var) = static_cast<WabtResult>(static_cast<int>(result_var) | \
+                                           static_cast<int>(result));     \
   } while (0)
 
 static void WABT_PRINTF_FORMAT(2, 3)
@@ -43,10 +44,10 @@ WabtResult wabt_typechecker_get_label(WabtTypeChecker* tc,
     print_error(tc, "invalid depth: %" PRIzd " (max %" PRIzd ")",
                 depth, tc->label_stack.size - 1);
     *out_label = nullptr;
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
   *out_label = &tc->label_stack.data[tc->label_stack.size - depth - 1];
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult top_label(WabtTypeChecker* tc,
@@ -71,7 +72,7 @@ static WabtResult set_unreachable(WabtTypeChecker* tc) {
   CHECK_RESULT(top_label(tc, &label));
   label->unreachable = true;
   reset_type_stack_to_label(tc, label);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void push_label(WabtTypeChecker* tc,
@@ -94,12 +95,12 @@ static WabtResult pop_label(WabtTypeChecker* tc) {
   CHECK_RESULT(top_label(tc, &label));
   wabt_destroy_type_checker_label(label);
   tc->label_stack.size--;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult check_label_type(WabtTypeCheckerLabel* label,
                                    WabtLabelType label_type) {
-  return label->label_type == label_type ? WABT_OK : WABT_ERROR;
+  return label->label_type == label_type ? WabtResult::Ok : WabtResult::Error;
 }
 
 static WabtResult peek_type(WabtTypeChecker* tc,
@@ -109,11 +110,11 @@ static WabtResult peek_type(WabtTypeChecker* tc,
   CHECK_RESULT(top_label(tc, &label));
 
   if (label->type_stack_limit + depth >= tc->type_stack.size) {
-    *out_type = WABT_TYPE_ANY;
-    return label->unreachable ? WABT_OK : WABT_ERROR;
+    *out_type = WabtType::Any;
+    return label->unreachable ? WabtResult::Ok : WabtResult::Error;
   }
   *out_type = tc->type_stack.data[tc->type_stack.size - depth - 1];
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult top_type(WabtTypeChecker* tc, WabtType* out_type) {
@@ -135,16 +136,16 @@ static WabtResult drop_types(WabtTypeChecker* tc, size_t drop_count) {
   if (label->type_stack_limit + drop_count > tc->type_stack.size) {
     if (label->unreachable) {
       reset_type_stack_to_label(tc, label);
-      return WABT_OK;
+      return WabtResult::Ok;
     }
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
   tc->type_stack.size -= drop_count;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void push_type(WabtTypeChecker* tc, WabtType type) {
-  if (type != WABT_TYPE_VOID)
+  if (type != WabtType::Void)
     wabt_append_type_value(&tc->type_stack, &type);
 }
 
@@ -164,9 +165,9 @@ static WabtResult check_type_stack_limit(WabtTypeChecker* tc,
     print_error(tc, "type stack size too small at %s. got %" PRIzd
                     ", expected at least %" PRIzd,
                 desc, avail, expected);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult check_type_stack_end(WabtTypeChecker* tc, const char* desc) {
@@ -175,32 +176,32 @@ static WabtResult check_type_stack_end(WabtTypeChecker* tc, const char* desc) {
   if (tc->type_stack.size != label->type_stack_limit) {
     print_error(tc, "type stack at end of %s is %" PRIzd ", expected %" PRIzd,
                 desc, tc->type_stack.size, label->type_stack_limit);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult check_type(WabtTypeChecker* tc,
                              WabtType actual,
                              WabtType expected,
                              const char* desc) {
-  if (expected != actual && expected != WABT_TYPE_ANY &&
-      actual != WABT_TYPE_ANY) {
+  if (expected != actual && expected != WabtType::Any &&
+      actual != WabtType::Any) {
     print_error(tc, "type mismatch in %s, expected %s but got %s.", desc,
                 wabt_get_type_name(expected), wabt_get_type_name(actual));
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult check_signature(WabtTypeChecker* tc,
                                   const WabtTypeVector* sig,
                                   const char* desc) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   size_t i;
   COMBINE_RESULT(result, check_type_stack_limit(tc, sig->size, desc));
   for (i = 0; i < sig->size; ++i) {
-    WabtType actual = WABT_TYPE_ANY;
+    WabtType actual = WabtType::Any;
     COMBINE_RESULT(result, peek_type(tc, sig->size - i -  1, &actual));
     COMBINE_RESULT(result, check_type(tc, actual, sig->data[i], desc));
   }
@@ -210,7 +211,7 @@ static WabtResult check_signature(WabtTypeChecker* tc,
 static WabtResult pop_and_check_signature(WabtTypeChecker* tc,
                                           const WabtTypeVector* sig,
                                           const char* desc) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   COMBINE_RESULT(result, check_signature(tc, sig, desc));
   COMBINE_RESULT(result, drop_types(tc, sig->size));
   return result;
@@ -220,11 +221,11 @@ static WabtResult pop_and_check_call(WabtTypeChecker* tc,
                                      const WabtTypeVector* param_types,
                                      const WabtTypeVector* result_types,
                                      const char* desc) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   size_t i;
   COMBINE_RESULT(result, check_type_stack_limit(tc, param_types->size, desc));
   for (i = 0; i < param_types->size; ++i) {
-    WabtType actual = WABT_TYPE_ANY;
+    WabtType actual = WabtType::Any;
     COMBINE_RESULT(result, peek_type(tc, param_types->size - i - 1, &actual));
     COMBINE_RESULT(result, check_type(tc, actual, param_types->data[i], desc));
   }
@@ -236,8 +237,8 @@ static WabtResult pop_and_check_call(WabtTypeChecker* tc,
 static WabtResult pop_and_check_1_type(WabtTypeChecker* tc,
                                        WabtType expected,
                                        const char* desc) {
-  WabtResult result = WABT_OK;
-  WabtType actual = WABT_TYPE_ANY;
+  WabtResult result = WabtResult::Ok;
+  WabtType actual = WabtType::Any;
   COMBINE_RESULT(result, check_type_stack_limit(tc, 1, desc));
   COMBINE_RESULT(result, pop_type(tc, &actual));
   COMBINE_RESULT(result, check_type(tc, actual, expected, desc));
@@ -248,9 +249,9 @@ static WabtResult pop_and_check_2_types(WabtTypeChecker* tc,
                                         WabtType expected1,
                                         WabtType expected2,
                                         const char* desc) {
-  WabtResult result = WABT_OK;
-  WabtType actual1 = WABT_TYPE_ANY;
-  WabtType actual2 = WABT_TYPE_ANY;
+  WabtResult result = WabtResult::Ok;
+  WabtType actual1 = WabtType::Any;
+  WabtType actual2 = WabtType::Any;
   COMBINE_RESULT(result, check_type_stack_limit(tc, 2, desc));
   COMBINE_RESULT(result, pop_type(tc, &actual2));
   COMBINE_RESULT(result, pop_type(tc, &actual1));
@@ -262,9 +263,9 @@ static WabtResult pop_and_check_2_types(WabtTypeChecker* tc,
 static WabtResult pop_and_check_2_types_are_equal(WabtTypeChecker* tc,
                                                   WabtType* out_type,
                                                   const char* desc) {
-  WabtResult result = WABT_OK;
-  WabtType right = WABT_TYPE_ANY;
-  WabtType left = WABT_TYPE_ANY;
+  WabtResult result = WabtResult::Ok;
+  WabtType right = WabtType::Any;
+  WabtType left = WabtType::Any;
   COMBINE_RESULT(result, check_type_stack_limit(tc, 2, desc));
   COMBINE_RESULT(result, pop_type(tc, &right));
   COMBINE_RESULT(result, pop_type(tc, &left));
@@ -297,8 +298,8 @@ WabtResult wabt_typechecker_begin_function(WabtTypeChecker* tc,
                                            const WabtTypeVector* sig) {
   tc->type_stack.size = 0;
   tc->label_stack.size = 0;
-  push_label(tc, WABT_LABEL_TYPE_FUNC, sig);
-  return WABT_OK;
+  push_label(tc, WabtLabelType::Func, sig);
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_typechecker_on_binary(WabtTypeChecker* tc, WabtOpcode opcode) {
@@ -307,48 +308,48 @@ WabtResult wabt_typechecker_on_binary(WabtTypeChecker* tc, WabtOpcode opcode) {
 
 WabtResult wabt_typechecker_on_block(WabtTypeChecker* tc,
                                      const WabtTypeVector* sig) {
-  push_label(tc, WABT_LABEL_TYPE_BLOCK, sig);
-  return WABT_OK;
+  push_label(tc, WabtLabelType::Block, sig);
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_typechecker_on_br(WabtTypeChecker* tc, size_t depth) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(wabt_typechecker_get_label(tc, depth, &label));
-  if (label->label_type != WABT_LABEL_TYPE_LOOP)
+  if (label->label_type != WabtLabelType::Loop)
     COMBINE_RESULT(result, check_signature(tc, &label->sig, "br"));
   CHECK_RESULT(set_unreachable(tc));
   return result;
 }
 
 WabtResult wabt_typechecker_on_br_if(WabtTypeChecker* tc, size_t depth) {
-  WabtResult result = WABT_OK;
-  COMBINE_RESULT(result, pop_and_check_1_type(tc, WABT_TYPE_I32, "br_if"));
+  WabtResult result = WabtResult::Ok;
+  COMBINE_RESULT(result, pop_and_check_1_type(tc, WabtType::I32, "br_if"));
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(wabt_typechecker_get_label(tc, depth, &label));
-  if (label->label_type != WABT_LABEL_TYPE_LOOP)
+  if (label->label_type != WabtLabelType::Loop)
     COMBINE_RESULT(result, check_signature(tc, &label->sig, "br_if"));
   return result;
 }
 
 WabtResult wabt_typechecker_begin_br_table(WabtTypeChecker* tc) {
-  tc->br_table_sig = WABT_TYPE_ANY;
-  return pop_and_check_1_type(tc, WABT_TYPE_I32, "br_table");
+  tc->br_table_sig = WabtType::Any;
+  return pop_and_check_1_type(tc, WabtType::I32, "br_table");
 }
 
 WabtResult wabt_typechecker_on_br_table_target(WabtTypeChecker* tc,
                                                size_t depth) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(wabt_typechecker_get_label(tc, depth, &label));
   assert(label->sig.size <= 1);
   WabtType label_sig =
-      label->sig.size == 0 ? WABT_TYPE_VOID : label->sig.data[0];
+      label->sig.size == 0 ? WabtType::Void : label->sig.data[0];
   COMBINE_RESULT(result,
                  check_type(tc, tc->br_table_sig, label_sig, "br_table"));
   tc->br_table_sig = label_sig;
 
-  if (label->label_type != WABT_LABEL_TYPE_LOOP)
+  if (label->label_type != WabtLabelType::Loop)
     COMBINE_RESULT(result, check_signature(tc, &label->sig, "br_table"));
   return result;
 }
@@ -367,9 +368,9 @@ WabtResult wabt_typechecker_on_call_indirect(
     WabtTypeChecker* tc,
     const WabtTypeVector* param_types,
     const WabtTypeVector* result_types) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   COMBINE_RESULT(result,
-                 pop_and_check_1_type(tc, WABT_TYPE_I32, "call_indirect"));
+                 pop_and_check_1_type(tc, WabtType::I32, "call_indirect"));
   COMBINE_RESULT(result, pop_and_check_call(tc, param_types, result_types,
                                             "call_indirect"));
   return result;
@@ -381,7 +382,7 @@ WabtResult wabt_typechecker_on_compare(WabtTypeChecker* tc, WabtOpcode opcode) {
 
 WabtResult wabt_typechecker_on_const(WabtTypeChecker* tc, WabtType type) {
   push_type(tc, type);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_typechecker_on_convert(WabtTypeChecker* tc, WabtOpcode opcode) {
@@ -389,28 +390,28 @@ WabtResult wabt_typechecker_on_convert(WabtTypeChecker* tc, WabtOpcode opcode) {
 }
 
 WabtResult wabt_typechecker_on_current_memory(WabtTypeChecker* tc) {
-  push_type(tc, WABT_TYPE_I32);
-  return WABT_OK;
+  push_type(tc, WabtType::I32);
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_typechecker_on_drop(WabtTypeChecker* tc) {
-  WabtResult result = WABT_OK;
-  WabtType type = WABT_TYPE_ANY;
+  WabtResult result = WabtResult::Ok;
+  WabtType type = WabtType::Any;
   COMBINE_RESULT(result, check_type_stack_limit(tc, 1, "drop"));
   COMBINE_RESULT(result, pop_type(tc, &type));
   return result;
 }
 
 WabtResult wabt_typechecker_on_else(WabtTypeChecker* tc) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(top_label(tc, &label));
-  COMBINE_RESULT(result, check_label_type(label, WABT_LABEL_TYPE_IF));
+  COMBINE_RESULT(result, check_label_type(label, WabtLabelType::If));
   COMBINE_RESULT(result,
                  pop_and_check_signature(tc, &label->sig, "if true branch"));
   COMBINE_RESULT(result, check_type_stack_end(tc, "if true branch"));
   reset_type_stack_to_label(tc, label);
-  label->label_type = WABT_LABEL_TYPE_ELSE;
+  label->label_type = WabtLabelType::Else;
   label->unreachable = false;
   return result;
 }
@@ -419,7 +420,7 @@ static WabtResult on_end(WabtTypeChecker* tc,
                          WabtTypeCheckerLabel* label,
                          const char* sig_desc,
                          const char* end_desc) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   COMBINE_RESULT(result, pop_and_check_signature(tc, &label->sig, sig_desc));
   COMBINE_RESULT(result, check_type_stack_end(tc, end_desc));
   reset_type_stack_to_label(tc, label);
@@ -429,44 +430,43 @@ static WabtResult on_end(WabtTypeChecker* tc,
 }
 
 WabtResult wabt_typechecker_on_end(WabtTypeChecker* tc) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   static const char* s_label_type_name[] = {"function", "block", "loop", "if",
                                             "if false branch"};
-  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) ==
-                     WABT_NUM_LABEL_TYPES);
+  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kWabtLabelTypeCount);
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(top_label(tc, &label));
-  assert(label->label_type < WABT_NUM_LABEL_TYPES);
-  if (label->label_type == WABT_LABEL_TYPE_IF) {
+  assert(static_cast<int>(label->label_type) < kWabtLabelTypeCount);
+  if (label->label_type == WabtLabelType::If) {
     if (label->sig.size != 0) {
       print_error(tc, "if without else cannot have type signature.");
-      result = WABT_ERROR;
+      result = WabtResult::Error;
     }
   }
-  const char* desc = s_label_type_name[label->label_type];
+  const char* desc = s_label_type_name[static_cast<int>(label->label_type)];
   COMBINE_RESULT(result, on_end(tc, label, desc, desc));
   return result;
 }
 
 WabtResult wabt_typechecker_on_grow_memory(WabtTypeChecker* tc) {
-  return check_opcode1(tc, WABT_OPCODE_GROW_MEMORY);
+  return check_opcode1(tc, WabtOpcode::GrowMemory);
 }
 
 WabtResult wabt_typechecker_on_if(WabtTypeChecker* tc,
                                   const WabtTypeVector* sig) {
-  WabtResult result = pop_and_check_1_type(tc, WABT_TYPE_I32, "if");
-  push_label(tc, WABT_LABEL_TYPE_IF, sig);
+  WabtResult result = pop_and_check_1_type(tc, WabtType::I32, "if");
+  push_label(tc, WabtLabelType::If, sig);
   return result;
 }
 
 WabtResult wabt_typechecker_on_get_global(WabtTypeChecker* tc, WabtType type) {
   push_type(tc, type);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_typechecker_on_get_local(WabtTypeChecker* tc, WabtType type) {
   push_type(tc, type);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_typechecker_on_load(WabtTypeChecker* tc, WabtOpcode opcode) {
@@ -475,12 +475,12 @@ WabtResult wabt_typechecker_on_load(WabtTypeChecker* tc, WabtOpcode opcode) {
 
 WabtResult wabt_typechecker_on_loop(WabtTypeChecker* tc,
                                     const WabtTypeVector* sig) {
-  push_label(tc, WABT_LABEL_TYPE_LOOP, sig);
-  return WABT_OK;
+  push_label(tc, WabtLabelType::Loop, sig);
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_typechecker_on_return(WabtTypeChecker* tc) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   WabtTypeCheckerLabel* func_label;
   CHECK_RESULT(
       wabt_typechecker_get_label(tc, tc->label_stack.size - 1, &func_label));
@@ -491,9 +491,9 @@ WabtResult wabt_typechecker_on_return(WabtTypeChecker* tc) {
 }
 
 WabtResult wabt_typechecker_on_select(WabtTypeChecker* tc) {
-  WabtResult result = WABT_OK;
-  COMBINE_RESULT(result, pop_and_check_1_type(tc, WABT_TYPE_I32, "select"));
-  WabtType type = WABT_TYPE_ANY;
+  WabtResult result = WabtResult::Ok;
+  COMBINE_RESULT(result, pop_and_check_1_type(tc, WabtType::I32, "select"));
+  WabtType type = WabtType::Any;
   COMBINE_RESULT(result, pop_and_check_2_types_are_equal(tc, &type, "select"));
   push_type(tc, type);
   return result;
@@ -512,8 +512,8 @@ WabtResult wabt_typechecker_on_store(WabtTypeChecker* tc, WabtOpcode opcode) {
 }
 
 WabtResult wabt_typechecker_on_tee_local(WabtTypeChecker* tc, WabtType type) {
-  WabtResult result = WABT_OK;
-  WabtType value = WABT_TYPE_ANY;
+  WabtResult result = WabtResult::Ok;
+  WabtType value = WabtType::Any;
   COMBINE_RESULT(result, check_type_stack_limit(tc, 1, "tee_local"));
   COMBINE_RESULT(result, top_type(tc, &value));
   COMBINE_RESULT(result, check_type(tc, value, type, "tee_local"));
@@ -529,10 +529,10 @@ WabtResult wabt_typechecker_on_unreachable(WabtTypeChecker* tc) {
 }
 
 WabtResult wabt_typechecker_end_function(WabtTypeChecker* tc) {
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   WabtTypeCheckerLabel* label;
   CHECK_RESULT(top_label(tc, &label));
-  COMBINE_RESULT(result, check_label_type(label, WABT_LABEL_TYPE_FUNC));
+  COMBINE_RESULT(result, check_label_type(label, WabtLabelType::Func));
   COMBINE_RESULT(result, on_end(tc, label, "implicit return", "function"));
   return result;
 }

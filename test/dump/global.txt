@@ -18,7 +18,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "IMPORT" (2)
+; section "Import" (2)
 0000008: 02                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 04                                        ; num imports
@@ -55,7 +55,7 @@
 0000051: 7c                                        ; f64
 0000052: 00                                        ; global mutability
 0000009: 49                                        ; FIXUP section size
-; section "GLOBAL" (6)
+; section "Global" (6)
 0000053: 06                                        ; section code
 0000054: 00                                        ; section size (guess)
 0000055: 08                                        ; num globals
@@ -104,12 +104,12 @@ global.wasm:	file format wasm 0x000001
 
 Section Details:
 
-IMPORT:
+Import:
  - global[0] i32 mutable=0 <- foo.i32_global
  - global[1] i64 mutable=0 <- foo.i64_global
  - global[2] f32 mutable=0 <- foo.f32_global
  - global[3] f64 mutable=0 <- foo.f64_global
-GLOBAL:
+Global:
  - global[4] i32 mutable=0 - init i32=1
  - global[5] i64 mutable=0 - init i64=2
  - global[6] f32 mutable=0 - init f32=0x1.8p+1

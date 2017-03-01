@@ -44,11 +44,11 @@ static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
-enum NextChar {
-  NEXT_CHAR_NONE,
-  NEXT_CHAR_SPACE,
-  NEXT_CHAR_NEWLINE,
-  NEXT_CHAR_FORCE_NEWLINE,
+enum class NextChar {
+  None,
+  Space,
+  Newline,
+  ForceNewline,
 };
 
 struct Context {
@@ -93,20 +93,20 @@ static void write_indent(Context* ctx) {
 
 static void write_next_char(Context* ctx) {
   switch (ctx->next_char) {
-    case NEXT_CHAR_SPACE:
+    case NextChar::Space:
       wabt_write_data(&ctx->stream, " ", 1, nullptr);
       break;
-    case NEXT_CHAR_NEWLINE:
-    case NEXT_CHAR_FORCE_NEWLINE:
+    case NextChar::Newline:
+    case NextChar::ForceNewline:
       wabt_write_data(&ctx->stream, "\n", 1, nullptr);
       write_indent(ctx);
       break;
 
     default:
-    case NEXT_CHAR_NONE:
+    case NextChar::None:
       break;
   }
-  ctx->next_char = NEXT_CHAR_NONE;
+  ctx->next_char = NextChar::None;
 }
 
 static void write_data_with_next_char(Context* ctx,
@@ -121,7 +121,7 @@ static void WABT_PRINTF_FORMAT(2, 3)
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   /* default to following space */
   write_data_with_next_char(ctx, buffer, length);
-  ctx->next_char = NEXT_CHAR_SPACE;
+  ctx->next_char = NextChar::Space;
 }
 
 static void write_putc(Context* ctx, char c) {
@@ -135,46 +135,46 @@ static void write_puts(Context* ctx, const char* s, NextChar next_char) {
 }
 
 static void write_puts_space(Context* ctx, const char* s) {
-  write_puts(ctx, s, NEXT_CHAR_SPACE);
+  write_puts(ctx, s, NextChar::Space);
 }
 
 static void write_puts_newline(Context* ctx, const char* s) {
-  write_puts(ctx, s, NEXT_CHAR_NEWLINE);
+  write_puts(ctx, s, NextChar::Newline);
 }
 
 static void write_newline(Context* ctx, bool force) {
-  if (ctx->next_char == NEXT_CHAR_FORCE_NEWLINE)
+  if (ctx->next_char == NextChar::ForceNewline)
     write_next_char(ctx);
-  ctx->next_char = force ? NEXT_CHAR_FORCE_NEWLINE : NEXT_CHAR_NEWLINE;
+  ctx->next_char = force ? NextChar::ForceNewline : NextChar::Newline;
 }
 
 static void write_open(Context* ctx, const char* name, NextChar next_char) {
-  write_puts(ctx, "(", NEXT_CHAR_NONE);
+  write_puts(ctx, "(", NextChar::None);
   write_puts(ctx, name, next_char);
   indent(ctx);
 }
 
 static void write_open_newline(Context* ctx, const char* name) {
-  write_open(ctx, name, NEXT_CHAR_NEWLINE);
+  write_open(ctx, name, NextChar::Newline);
 }
 
 static void write_open_space(Context* ctx, const char* name) {
-  write_open(ctx, name, NEXT_CHAR_SPACE);
+  write_open(ctx, name, NextChar::Space);
 }
 
 static void write_close(Context* ctx, NextChar next_char) {
-  if (ctx->next_char != NEXT_CHAR_FORCE_NEWLINE)
-    ctx->next_char = NEXT_CHAR_NONE;
+  if (ctx->next_char != NextChar::ForceNewline)
+    ctx->next_char = NextChar::None;
   dedent(ctx);
   write_puts(ctx, ")", next_char);
 }
 
 static void write_close_newline(Context* ctx) {
-  write_close(ctx, NEXT_CHAR_NEWLINE);
+  write_close(ctx, NextChar::Newline);
 }
 
 static void write_close_space(Context* ctx) {
-  write_close(ctx, NEXT_CHAR_SPACE);
+  write_close(ctx, NextChar::Space);
 }
 
 static void write_string_slice(Context* ctx,
@@ -219,7 +219,7 @@ static void write_quoted_data(Context* ctx, const void* data, size_t length) {
     }
   }
   write_putc(ctx, '\"');
-  ctx->next_char = NEXT_CHAR_SPACE;
+  ctx->next_char = NextChar::Space;
 }
 
 static void write_quoted_string_slice(Context* ctx,
@@ -230,7 +230,7 @@ static void write_quoted_string_slice(Context* ctx,
 }
 
 static void write_var(Context* ctx, const WabtVar* var, NextChar next_char) {
-  if (var->type == WABT_VAR_TYPE_INDEX) {
+  if (var->type == WabtVarType::Index) {
     writef(ctx, "%" PRId64, var->index);
     ctx->next_char = next_char;
   } else {
@@ -239,7 +239,7 @@ static void write_var(Context* ctx, const WabtVar* var, NextChar next_char) {
 }
 
 static void write_br_var(Context* ctx, const WabtVar* var, NextChar next_char) {
-  if (var->type == WABT_VAR_TYPE_INDEX) {
+  if (var->type == WabtVarType::Index) {
     writef(ctx, "%" PRId64 " (;@%" PRId64 ";)", var->index,
            ctx->depth - var->index - 1);
     ctx->next_char = next_char;
@@ -262,7 +262,7 @@ static void write_types(Context* ctx,
     if (name)
       write_open_space(ctx, name);
     for (i = 0; i < types->size; ++i)
-      write_type(ctx, types->data[i], NEXT_CHAR_SPACE);
+      write_type(ctx, types->data[i], NextChar::Space);
     if (name)
       write_close_space(ctx);
   }
@@ -283,7 +283,7 @@ static void write_begin_block(Context* ctx,
                               const char* text) {
   write_puts_space(ctx, text);
   bool has_label =
-      write_string_slice_opt(ctx, &block->label, NEXT_CHAR_SPACE);
+      write_string_slice_opt(ctx, &block->label, NextChar::Space);
   write_types(ctx, &block->sig, nullptr);
   if (!has_label)
     writef(ctx, " ;; label = @%d", ctx->depth);
@@ -295,7 +295,7 @@ static void write_begin_block(Context* ctx,
 static void write_end_block(Context* ctx) {
   dedent(ctx);
   ctx->depth--;
-  write_puts_newline(ctx, wabt_get_opcode_name(WABT_OPCODE_END));
+  write_puts_newline(ctx, wabt_get_opcode_name(WabtOpcode::End));
 }
 
 static void write_block(Context* ctx,
@@ -308,20 +308,20 @@ static void write_block(Context* ctx,
 
 static void write_const(Context* ctx, const WabtConst* const_) {
   switch (const_->type) {
-    case WABT_TYPE_I32:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_I32_CONST));
+    case WabtType::I32:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::I32Const));
       writef(ctx, "%d", static_cast<int32_t>(const_->u32));
       write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
-    case WABT_TYPE_I64:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_I64_CONST));
+    case WabtType::I64:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::I64Const));
       writef(ctx, "%" PRId64, static_cast<int64_t>(const_->u64));
       write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
-    case WABT_TYPE_F32: {
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_F32_CONST));
+    case WabtType::F32: {
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::F32Const));
       char buffer[128];
       wabt_write_float_hex(buffer, 128, const_->f32_bits);
       write_puts_space(ctx, buffer);
@@ -332,8 +332,8 @@ static void write_const(Context* ctx, const WabtConst* const_) {
       break;
     }
 
-    case WABT_TYPE_F64: {
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_F64_CONST));
+    case WabtType::F64: {
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::F64Const));
       char buffer[128];
       wabt_write_double_hex(buffer, 128, const_->f64_bits);
       write_puts_space(ctx, buffer);
@@ -352,80 +352,80 @@ static void write_const(Context* ctx, const WabtConst* const_) {
 
 static void write_expr(Context* ctx, const WabtExpr* expr) {
   switch (expr->type) {
-    case WABT_EXPR_TYPE_BINARY:
+    case WabtExprType::Binary:
       write_puts_newline(ctx, wabt_get_opcode_name(expr->binary.opcode));
       break;
 
-    case WABT_EXPR_TYPE_BLOCK:
-      write_block(ctx, &expr->block, wabt_get_opcode_name(WABT_OPCODE_BLOCK));
+    case WabtExprType::Block:
+      write_block(ctx, &expr->block, wabt_get_opcode_name(WabtOpcode::Block));
       break;
 
-    case WABT_EXPR_TYPE_BR:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_BR));
-      write_br_var(ctx, &expr->br.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::Br:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::Br));
+      write_br_var(ctx, &expr->br.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_BR_IF:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_BR_IF));
-      write_br_var(ctx, &expr->br_if.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::BrIf:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::BrIf));
+      write_br_var(ctx, &expr->br_if.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_BR_TABLE: {
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_BR_TABLE));
+    case WabtExprType::BrTable: {
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::BrTable));
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i)
-        write_br_var(ctx, &expr->br_table.targets.data[i], NEXT_CHAR_SPACE);
-      write_br_var(ctx, &expr->br_table.default_target, NEXT_CHAR_NEWLINE);
+        write_br_var(ctx, &expr->br_table.targets.data[i], NextChar::Space);
+      write_br_var(ctx, &expr->br_table.default_target, NextChar::Newline);
       break;
     }
 
-    case WABT_EXPR_TYPE_CALL:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_CALL));
-      write_var(ctx, &expr->call.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::Call:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::Call));
+      write_var(ctx, &expr->call.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_CALL_INDIRECT:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_CALL_INDIRECT));
-      write_var(ctx, &expr->call_indirect.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::CallIndirect:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::CallIndirect));
+      write_var(ctx, &expr->call_indirect.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_COMPARE:
+    case WabtExprType::Compare:
       write_puts_newline(ctx, wabt_get_opcode_name(expr->compare.opcode));
       break;
 
-    case WABT_EXPR_TYPE_CONST:
+    case WabtExprType::Const:
       write_const(ctx, &expr->const_);
       break;
 
-    case WABT_EXPR_TYPE_CONVERT:
+    case WabtExprType::Convert:
       write_puts_newline(ctx, wabt_get_opcode_name(expr->convert.opcode));
       break;
 
-    case WABT_EXPR_TYPE_DROP:
-      write_puts_newline(ctx, wabt_get_opcode_name(WABT_OPCODE_DROP));
+    case WabtExprType::Drop:
+      write_puts_newline(ctx, wabt_get_opcode_name(WabtOpcode::Drop));
       break;
 
-    case WABT_EXPR_TYPE_GET_GLOBAL:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_GET_GLOBAL));
-      write_var(ctx, &expr->get_global.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::GetGlobal:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::GetGlobal));
+      write_var(ctx, &expr->get_global.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_GET_LOCAL:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_GET_LOCAL));
-      write_var(ctx, &expr->get_local.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::GetLocal:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::GetLocal));
+      write_var(ctx, &expr->get_local.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_GROW_MEMORY:
-      write_puts_newline(ctx, wabt_get_opcode_name(WABT_OPCODE_GROW_MEMORY));
+    case WabtExprType::GrowMemory:
+      write_puts_newline(ctx, wabt_get_opcode_name(WabtOpcode::GrowMemory));
       break;
 
-    case WABT_EXPR_TYPE_IF:
+    case WabtExprType::If:
       write_begin_block(ctx, &expr->if_.true_,
-                        wabt_get_opcode_name(WABT_OPCODE_IF));
+                        wabt_get_opcode_name(WabtOpcode::If));
       write_expr_list(ctx, expr->if_.true_.first);
       if (expr->if_.false_) {
         dedent(ctx);
-        write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_ELSE));
+        write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::Else));
         indent(ctx);
         write_newline(ctx, FORCE_NEWLINE);
         write_expr_list(ctx, expr->if_.false_);
@@ -433,7 +433,7 @@ static void write_expr(Context* ctx, const WabtExpr* expr) {
       write_end_block(ctx);
       break;
 
-    case WABT_EXPR_TYPE_LOAD:
+    case WabtExprType::Load:
       write_puts_space(ctx, wabt_get_opcode_name(expr->load.opcode));
       if (expr->load.offset)
         writef(ctx, "offset=%" PRIu64, expr->load.offset);
@@ -442,37 +442,37 @@ static void write_expr(Context* ctx, const WabtExpr* expr) {
       write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
-    case WABT_EXPR_TYPE_LOOP:
-      write_block(ctx, &expr->loop, wabt_get_opcode_name(WABT_OPCODE_LOOP));
+    case WabtExprType::Loop:
+      write_block(ctx, &expr->loop, wabt_get_opcode_name(WabtOpcode::Loop));
       break;
 
-    case WABT_EXPR_TYPE_CURRENT_MEMORY:
-      write_puts_newline(ctx, wabt_get_opcode_name(WABT_OPCODE_CURRENT_MEMORY));
+    case WabtExprType::CurrentMemory:
+      write_puts_newline(ctx, wabt_get_opcode_name(WabtOpcode::CurrentMemory));
       break;
 
-    case WABT_EXPR_TYPE_NOP:
-      write_puts_newline(ctx, wabt_get_opcode_name(WABT_OPCODE_NOP));
+    case WabtExprType::Nop:
+      write_puts_newline(ctx, wabt_get_opcode_name(WabtOpcode::Nop));
       break;
 
-    case WABT_EXPR_TYPE_RETURN:
-      write_puts_newline(ctx, wabt_get_opcode_name(WABT_OPCODE_RETURN));
+    case WabtExprType::Return:
+      write_puts_newline(ctx, wabt_get_opcode_name(WabtOpcode::Return));
       break;
 
-    case WABT_EXPR_TYPE_SELECT:
-      write_puts_newline(ctx, wabt_get_opcode_name(WABT_OPCODE_SELECT));
+    case WabtExprType::Select:
+      write_puts_newline(ctx, wabt_get_opcode_name(WabtOpcode::Select));
       break;
 
-    case WABT_EXPR_TYPE_SET_GLOBAL:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_SET_GLOBAL));
-      write_var(ctx, &expr->set_global.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::SetGlobal:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::SetGlobal));
+      write_var(ctx, &expr->set_global.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_SET_LOCAL:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_SET_LOCAL));
-      write_var(ctx, &expr->set_local.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::SetLocal:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::SetLocal));
+      write_var(ctx, &expr->set_local.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_STORE:
+    case WabtExprType::Store:
       write_puts_space(ctx, wabt_get_opcode_name(expr->store.opcode));
       if (expr->store.offset)
         writef(ctx, "offset=%" PRIu64, expr->store.offset);
@@ -481,21 +481,21 @@ static void write_expr(Context* ctx, const WabtExpr* expr) {
       write_newline(ctx, NO_FORCE_NEWLINE);
       break;
 
-    case WABT_EXPR_TYPE_TEE_LOCAL:
-      write_puts_space(ctx, wabt_get_opcode_name(WABT_OPCODE_TEE_LOCAL));
-      write_var(ctx, &expr->tee_local.var, NEXT_CHAR_NEWLINE);
+    case WabtExprType::TeeLocal:
+      write_puts_space(ctx, wabt_get_opcode_name(WabtOpcode::TeeLocal));
+      write_var(ctx, &expr->tee_local.var, NextChar::Newline);
       break;
 
-    case WABT_EXPR_TYPE_UNARY:
+    case WabtExprType::Unary:
       write_puts_newline(ctx, wabt_get_opcode_name(expr->unary.opcode));
       break;
 
-    case WABT_EXPR_TYPE_UNREACHABLE:
-      write_puts_newline(ctx, wabt_get_opcode_name(WABT_OPCODE_UNREACHABLE));
+    case WabtExprType::Unreachable:
+      write_puts_newline(ctx, wabt_get_opcode_name(WabtOpcode::Unreachable));
       break;
 
     default:
-      fprintf(stderr, "bad expr type: %d\n", expr->type);
+      fprintf(stderr, "bad expr type: %d\n", static_cast<int>(expr->type));
       assert(0);
       break;
   }
@@ -509,11 +509,11 @@ static void write_expr_list(Context* ctx, const WabtExpr* first) {
 
 static void write_init_expr(Context* ctx, const WabtExpr* expr) {
   if (expr) {
-    write_puts(ctx, "(", NEXT_CHAR_NONE);
+    write_puts(ctx, "(", NextChar::None);
     write_expr(ctx, expr);
     /* clear the next char, so we don't write a newline after the expr */
-    ctx->next_char = NEXT_CHAR_NONE;
-    write_puts(ctx, ")", NEXT_CHAR_SPACE);
+    ctx->next_char = NextChar::None;
+    write_puts(ctx, ")", NextChar::Space);
   }
 }
 
@@ -540,8 +540,8 @@ static void write_type_bindings(Context* ctx,
     const WabtStringSlice* name = &ctx->index_to_name.data[i];
     bool has_name = !!name->start;
     if (has_name)
-      write_string_slice(ctx, name, NEXT_CHAR_SPACE);
-    write_type(ctx, types->data[i], NEXT_CHAR_SPACE);
+      write_string_slice(ctx, name, NextChar::Space);
+    write_type(ctx, types->data[i], NextChar::Space);
     if (has_name) {
       write_close_space(ctx);
       is_open = false;
@@ -556,10 +556,10 @@ static void write_func(Context* ctx,
                        const WabtFunc* func) {
   write_open_space(ctx, "func");
   write_string_slice_or_index(ctx, &func->name, ctx->func_index++,
-                              NEXT_CHAR_SPACE);
+                              NextChar::Space);
   if (wabt_decl_has_func_type(&func->decl)) {
     write_open_space(ctx, "type");
-    write_var(ctx, &func->decl.type_var, NEXT_CHAR_NONE);
+    write_var(ctx, &func->decl.type_var, NextChar::None);
     write_close_space(ctx);
   }
   write_type_bindings(ctx, "param", func, &func->decl.sig.param_types,
@@ -579,13 +579,13 @@ static void write_func(Context* ctx,
 static void write_begin_global(Context* ctx, const WabtGlobal* global) {
   write_open_space(ctx, "global");
   write_string_slice_or_index(ctx, &global->name, ctx->global_index++,
-                              NEXT_CHAR_SPACE);
+                              NextChar::Space);
   if (global->mutable_) {
     write_open_space(ctx, "mut");
-    write_type(ctx, global->type, NEXT_CHAR_SPACE);
+    write_type(ctx, global->type, NextChar::Space);
     write_close_space(ctx);
   } else {
-    write_type(ctx, global->type, NEXT_CHAR_SPACE);
+    write_type(ctx, global->type, NextChar::Space);
   }
 }
 
@@ -604,7 +604,7 @@ static void write_limits(Context* ctx, const WabtLimits* limits) {
 static void write_table(Context* ctx, const WabtTable* table) {
   write_open_space(ctx, "table");
   write_string_slice_or_index(ctx, &table->name, ctx->table_index++,
-                              NEXT_CHAR_SPACE);
+                              NextChar::Space);
   write_limits(ctx, &table->elem_limits);
   write_puts_space(ctx, "anyfunc");
   write_close_newline(ctx);
@@ -615,14 +615,14 @@ static void write_elem_segment(Context* ctx, const WabtElemSegment* segment) {
   write_init_expr(ctx, segment->offset);
   size_t i;
   for (i = 0; i < segment->vars.size; ++i)
-    write_var(ctx, &segment->vars.data[i], NEXT_CHAR_SPACE);
+    write_var(ctx, &segment->vars.data[i], NextChar::Space);
   write_close_newline(ctx);
 }
 
 static void write_memory(Context* ctx, const WabtMemory* memory) {
   write_open_space(ctx, "memory");
   write_string_slice_or_index(ctx, &memory->name, ctx->memory_index++,
-                              NEXT_CHAR_SPACE);
+                              NextChar::Space);
   write_limits(ctx, &memory->page_limits);
   write_close_newline(ctx);
 }
@@ -636,16 +636,16 @@ static void write_data_segment(Context* ctx, const WabtDataSegment* segment) {
 
 static void write_import(Context* ctx, const WabtImport* import) {
   write_open_space(ctx, "import");
-  write_quoted_string_slice(ctx, &import->module_name, NEXT_CHAR_SPACE);
-  write_quoted_string_slice(ctx, &import->field_name, NEXT_CHAR_SPACE);
+  write_quoted_string_slice(ctx, &import->module_name, NextChar::Space);
+  write_quoted_string_slice(ctx, &import->field_name, NextChar::Space);
   switch (import->kind) {
-    case WABT_EXTERNAL_KIND_FUNC:
+    case WabtExternalKind::Func:
       write_open_space(ctx, "func");
       write_string_slice_or_index(ctx, &import->func.name, ctx->func_index++,
-                                  NEXT_CHAR_SPACE);
+                                  NextChar::Space);
       if (wabt_decl_has_func_type(&import->func.decl)) {
         write_open_space(ctx, "type");
-        write_var(ctx, &import->func.decl.type_var, NEXT_CHAR_NONE);
+        write_var(ctx, &import->func.decl.type_var, NextChar::None);
         write_close_space(ctx);
       } else {
         write_func_sig_space(ctx, &import->func.decl.sig);
@@ -653,21 +653,17 @@ static void write_import(Context* ctx, const WabtImport* import) {
       write_close_space(ctx);
       break;
 
-    case WABT_EXTERNAL_KIND_TABLE:
+    case WabtExternalKind::Table:
       write_table(ctx, &import->table);
       break;
 
-    case WABT_EXTERNAL_KIND_MEMORY:
+    case WabtExternalKind::Memory:
       write_memory(ctx, &import->memory);
       break;
 
-    case WABT_EXTERNAL_KIND_GLOBAL:
+    case WabtExternalKind::Global:
       write_begin_global(ctx, &import->global);
       write_close_space(ctx);
-      break;
-
-    case WABT_NUM_EXTERNAL_KINDS:
-      assert(0);
       break;
   }
   write_close_newline(ctx);
@@ -675,12 +671,12 @@ static void write_import(Context* ctx, const WabtImport* import) {
 
 static void write_export(Context* ctx, const WabtExport* export_) {
   static const char* s_kind_names[] = {"func", "table", "memory", "global"};
-  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_kind_names) == WABT_NUM_EXTERNAL_KINDS);
+  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_kind_names) == kWabtExternalKindCount);
   write_open_space(ctx, "export");
-  write_quoted_string_slice(ctx, &export_->name, NEXT_CHAR_SPACE);
-  assert(export_->kind < WABT_ARRAY_SIZE(s_kind_names));
-  write_open_space(ctx, s_kind_names[export_->kind]);
-  write_var(ctx, &export_->var, NEXT_CHAR_SPACE);
+  write_quoted_string_slice(ctx, &export_->name, NextChar::Space);
+  assert(static_cast<size_t>(export_->kind) < WABT_ARRAY_SIZE(s_kind_names));
+  write_open_space(ctx, s_kind_names[static_cast<size_t>(export_->kind)]);
+  write_var(ctx, &export_->var, NextChar::Space);
   write_close_space(ctx);
   write_close_newline(ctx);
 }
@@ -688,7 +684,7 @@ static void write_export(Context* ctx, const WabtExport* export_) {
 static void write_func_type(Context* ctx, const WabtFuncType* func_type) {
   write_open_space(ctx, "type");
   write_string_slice_or_index(ctx, &func_type->name, ctx->func_type_index++,
-                              NEXT_CHAR_SPACE);
+                              NextChar::Space);
   write_open_space(ctx, "func");
   write_func_sig_space(ctx, &func_type->sig);
   write_close_space(ctx);
@@ -697,7 +693,7 @@ static void write_func_type(Context* ctx, const WabtFuncType* func_type) {
 
 static void write_start_function(Context* ctx, const WabtVar* start) {
   write_open_space(ctx, "start");
-  write_var(ctx, start, NEXT_CHAR_NONE);
+  write_var(ctx, start, NextChar::None);
   write_close_newline(ctx);
 }
 
@@ -706,34 +702,34 @@ static void write_module(Context* ctx, const WabtModule* module) {
   const WabtModuleField* field;
   for (field = module->first_field; field; field = field->next) {
     switch (field->type) {
-      case WABT_MODULE_FIELD_TYPE_FUNC:
+      case WabtModuleFieldType::Func:
         write_func(ctx, module, &field->func);
         break;
-      case WABT_MODULE_FIELD_TYPE_GLOBAL:
+      case WabtModuleFieldType::Global:
         write_global(ctx, &field->global);
         break;
-      case WABT_MODULE_FIELD_TYPE_IMPORT:
+      case WabtModuleFieldType::Import:
         write_import(ctx, &field->import);
         break;
-      case WABT_MODULE_FIELD_TYPE_EXPORT:
+      case WabtModuleFieldType::Export:
         write_export(ctx, &field->export_);
         break;
-      case WABT_MODULE_FIELD_TYPE_TABLE:
+      case WabtModuleFieldType::Table:
         write_table(ctx, &field->table);
         break;
-      case WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+      case WabtModuleFieldType::ElemSegment:
         write_elem_segment(ctx, &field->elem_segment);
         break;
-      case WABT_MODULE_FIELD_TYPE_MEMORY:
+      case WabtModuleFieldType::Memory:
         write_memory(ctx, &field->memory);
         break;
-      case WABT_MODULE_FIELD_TYPE_DATA_SEGMENT:
+      case WabtModuleFieldType::DataSegment:
         write_data_segment(ctx, &field->data_segment);
         break;
-      case WABT_MODULE_FIELD_TYPE_FUNC_TYPE:
+      case WabtModuleFieldType::FuncType:
         write_func_type(ctx, &field->func_type);
         break;
-      case WABT_MODULE_FIELD_TYPE_START:
+      case WabtModuleFieldType::Start:
         write_start_function(ctx, &field->start);
         break;
     }
@@ -746,7 +742,7 @@ static void write_module(Context* ctx, const WabtModule* module) {
 WabtResult wabt_write_ast(WabtWriter* writer, const WabtModule* module) {
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
-  ctx.result = WABT_OK;
+  ctx.result = WabtResult::Ok;
   wabt_init_stream(&ctx.stream, writer, nullptr);
   write_module(&ctx, module);
   /* the memory for the actual string slice is shared with the module, so we

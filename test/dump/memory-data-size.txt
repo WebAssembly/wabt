@@ -7,7 +7,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "MEMORY" (5)
+; section "Memory" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
@@ -17,7 +17,7 @@
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "MEMORY" (5)
+; section "Memory" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
@@ -27,7 +27,7 @@
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "MEMORY" (5)
+; section "Memory" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
@@ -37,7 +37,7 @@
 0000009: 03                                        ; FIXUP section size
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "MEMORY" (5)
+; section "Memory" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories

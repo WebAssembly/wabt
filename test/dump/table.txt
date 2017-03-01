@@ -10,7 +10,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "TYPE" (1)
+; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 03                                        ; num types
@@ -31,7 +31,7 @@
 0000016: 01                                        ; num results
 0000017: 7c                                        ; f64
 0000009: 0e                                        ; FIXUP section size
-; section "FUNCTION" (3)
+; section "Function" (3)
 0000018: 03                                        ; section code
 0000019: 00                                        ; section size (guess)
 000001a: 03                                        ; num functions
@@ -39,7 +39,7 @@
 000001c: 01                                        ; function 1 signature index
 000001d: 02                                        ; function 2 signature index
 0000019: 04                                        ; FIXUP section size
-; section "TABLE" (4)
+; section "Table" (4)
 000001e: 04                                        ; section code
 000001f: 00                                        ; section size (guess)
 0000020: 01                                        ; num tables
@@ -49,7 +49,7 @@
 0000023: 04                                        ; limits: initial
 0000024: 04                                        ; limits: max
 000001f: 05                                        ; FIXUP section size
-; section "ELEM" (9)
+; section "Elem" (9)
 0000025: 09                                        ; section code
 0000026: 00                                        ; section size (guess)
 0000027: 01                                        ; num elem segments
@@ -64,7 +64,7 @@
 000002f: 01                                        ; function index
 0000030: 02                                        ; function index
 0000026: 0a                                        ; FIXUP section size
-; section "CODE" (10)
+; section "Code" (10)
 0000031: 0a                                        ; section code
 0000032: 00                                        ; section size (guess)
 0000033: 03                                        ; num functions
@@ -90,17 +90,17 @@ table.wasm:	file format wasm 0x000001
 
 Section Details:
 
-TYPE:
+Type:
  - [0] (i32) -> nil
  - [1] (i32, i64) -> nil
  - [2] () -> f64
-FUNCTION:
+Function:
  - func[0] sig=0
  - func[1] sig=1
  - func[2] sig=2
-TABLE:
+Table:
  - table[0] type=anyfunc initial=4 max=4
-ELEM:
+Elem:
  - segment[0] table=0
  - init i32=0
   - func[0]

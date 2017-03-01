@@ -7,7 +7,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "MEMORY" (5)
+; section "Memory" (5)
 0000008: 05                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num memories
@@ -15,7 +15,7 @@
 000000b: 00                                        ; limits: flags
 000000c: 01                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
-; section "DATA" (11)
+; section "Data" (11)
 000000d: 0b                                        ; section code
 000000e: 00                                        ; section size (guess)
 000000f: 02                                        ; num data segments
@@ -42,9 +42,9 @@ memory.wasm:	file format wasm 0x000001
 
 Section Details:
 
-MEMORY:
+Memory:
  - memory[0] pages: initial=1
-DATA:
+Data:
  - memory[0] - init i32=10
   - 0000000: 6865 6c6c 6f                             hello
  - memory[0] - init i32=20

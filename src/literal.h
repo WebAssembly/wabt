@@ -21,16 +21,16 @@
 
 #include "common.h"
 
-/* These functions all return WABT_OK on success and WABT_ERROR on failure.
+/* These functions all return WabtResult::Ok on success and WabtResult::Error on failure.
  *
  * NOTE: the functions are written for use with the re2c lexer, assuming that
  * the literal has already matched the regular expressions defined there. As a
  * result, the only validation that is done is for overflow, not for otherwise
  * bogus input. */
 
-enum WabtParseIntType {
-  WABT_PARSE_UNSIGNED_ONLY = 0,
-  WABT_PARSE_SIGNED_AND_UNSIGNED = 1,
+enum class WabtParseIntType {
+  UnsignedOnly = 0,
+  SignedAndUnsigned = 1,
 };
 
 /* Size of char buffer required to hold hex representation of a float/double */

@@ -22,7 +22,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "TYPE" (1)
+; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
@@ -33,13 +33,13 @@
 000000e: 7d                                        ; f32
 000000f: 00                                        ; num results
 0000009: 06                                        ; FIXUP section size
-; section "FUNCTION" (3)
+; section "Function" (3)
 0000010: 03                                        ; section code
 0000011: 00                                        ; section size (guess)
 0000012: 01                                        ; num functions
 0000013: 00                                        ; function 0 signature index
 0000011: 02                                        ; FIXUP section size
-; section "CODE" (10)
+; section "Code" (10)
 0000014: 0a                                        ; section code
 0000015: 00                                        ; section size (guess)
 0000016: 01                                        ; num functions

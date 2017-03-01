@@ -77,4 +77,19 @@ void wabt_write_opcode(struct WabtStream* stream, WabtOpcode opcode);
 void wabt_write_limits(struct WabtStream* stream, const WabtLimits* limits);
 WABT_EXTERN_C_END
 
+/* Convenience functions for writing enums as LEB128s. */
+template <typename T>
+void wabt_write_u32_leb128_enum(struct WabtStream* stream,
+                                T value,
+                                const char* desc) {
+  wabt_write_u32_leb128(stream, static_cast<uint32_t>(value), desc);
+}
+
+template <typename T>
+void wabt_write_i32_leb128_enum(struct WabtStream* stream,
+                                T value,
+                                const char* desc) {
+  wabt_write_i32_leb128(stream, static_cast<int32_t>(value), desc);
+}
+
 #endif /* WABT_BINARY_WRITER_H_ */

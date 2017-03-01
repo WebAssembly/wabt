@@ -54,15 +54,15 @@ static const char s_hex_digits[] = "0123456789abcdef";
 WabtResult wabt_parse_hexdigit(char c, uint32_t* out) {
   if (static_cast<unsigned int>(c - '0') <= 9) {
     *out = c - '0';
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (static_cast<unsigned int>(c - 'a') <= 6) {
     *out = 10 + (c - 'a');
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (static_cast<unsigned int>(c - 'A') <= 6) {
     *out = 10 + (c - 'A');
-    return WABT_OK;
+    return WabtResult::Ok;
   }
-  return WABT_ERROR;
+  return WabtResult::Error;
 }
 
 /* return 1 if the non-NULL-terminated string starting with |start| and ending
@@ -81,38 +81,38 @@ static bool string_starts_with(const char* start,
 
 WabtResult wabt_parse_uint64(const char* s, const char* end, uint64_t* out) {
   if (s == end)
-    return WABT_ERROR;
+    return WabtResult::Error;
   uint64_t value = 0;
   if (*s == '0' && s + 1 < end && s[1] == 'x') {
     s += 2;
     if (s == end)
-      return WABT_ERROR;
+      return WabtResult::Error;
     for (; s < end; ++s) {
       uint32_t digit;
       if (WABT_FAILED(wabt_parse_hexdigit(*s, &digit)))
-        return WABT_ERROR;
+        return WabtResult::Error;
       uint64_t old_value = value;
       value = value * 16 + digit;
       /* check for overflow */
       if (old_value > value)
-        return WABT_ERROR;
+        return WabtResult::Error;
     }
   } else {
     for (; s < end; ++s) {
       uint32_t digit = (*s - '0');
       if (digit > 9)
-        return WABT_ERROR;
+        return WabtResult::Error;
       uint64_t old_value = value;
       value = value * 10 + digit;
       /* check for overflow */
       if (old_value > value)
-        return WABT_ERROR;
+        return WabtResult::Error;
     }
   }
   if (s != end)
-    return WABT_ERROR;
+    return WabtResult::Error;
   *out = value;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_parse_int64(const char* s,
@@ -121,8 +121,8 @@ WabtResult wabt_parse_int64(const char* s,
                             WabtParseIntType parse_type) {
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
-    if (parse_type == WABT_PARSE_UNSIGNED_ONLY)
-      return WABT_ERROR;
+    if (parse_type == WabtParseIntType::UnsignedOnly)
+      return WabtResult::Error;
     if (*s == '-')
       has_sign = true;
     s++;
@@ -132,7 +132,7 @@ WabtResult wabt_parse_int64(const char* s,
   if (has_sign) {
     /* abs(INT64_MIN) == INT64_MAX + 1 */
     if (value > static_cast<uint64_t>(INT64_MAX) + 1)
-      return WABT_ERROR;
+      return WabtResult::Error;
     value = UINT64_MAX - value + 1;
   }
   *out = value;
@@ -146,26 +146,26 @@ WabtResult wabt_parse_int32(const char* s,
   uint64_t value;
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
-    if (parse_type == WABT_PARSE_UNSIGNED_ONLY)
-      return WABT_ERROR;
+    if (parse_type == WabtParseIntType::UnsignedOnly)
+      return WabtResult::Error;
     if (*s == '-')
       has_sign = true;
     s++;
   }
   if (WABT_FAILED(wabt_parse_uint64(s, end, &value)))
-    return WABT_ERROR;
+    return WabtResult::Error;
 
   if (has_sign) {
     /* abs(INT32_MIN) == INT32_MAX + 1 */
     if (value > static_cast<uint64_t>(INT32_MAX) + 1)
-      return WABT_ERROR;
+      return WabtResult::Error;
     value = UINT32_MAX - value + 1;
   } else {
     if (value > static_cast<uint64_t>(UINT32_MAX))
-      return WABT_ERROR;
+      return WabtResult::Error;
   }
   *out = static_cast<uint32_t>(value);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 /* floats */
@@ -208,22 +208,22 @@ static WabtResult parse_float_nan(const char* s,
     for (; s < end; ++s) {
       uint32_t digit;
       if (WABT_FAILED(wabt_parse_hexdigit(*s, &digit)))
-        return WABT_ERROR;
+        return WabtResult::Error;
       tag = tag * 16 + digit;
       /* check for overflow */
       if (tag > F32_SIG_MASK)
-        return WABT_ERROR;
+        return WabtResult::Error;
     }
 
     /* NaN cannot have a zero tag, that is reserved for infinity */
     if (tag == 0)
-      return WABT_ERROR;
+      return WabtResult::Error;
   } else {
     tag = F32_QUIET_NAN_TAG;
   }
 
   *out_bits = make_float(is_neg, F32_MAX_EXP, tag);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void parse_float_hex(const char* s,
@@ -383,8 +383,8 @@ WabtResult wabt_parse_float(WabtLiteralType literal_type,
                             const char* end,
                             uint32_t* out_bits) {
   switch (literal_type) {
-    case WABT_LITERAL_TYPE_INT:
-    case WABT_LITERAL_TYPE_FLOAT: {
+    case WabtLiteralType::Int:
+    case WabtLiteralType::Float: {
       errno = 0;
       char* endptr;
       float value;
@@ -392,26 +392,26 @@ WabtResult wabt_parse_float(WabtLiteralType literal_type,
       if (endptr != end ||
           ((value == 0 || value == HUGE_VALF || value == -HUGE_VALF) &&
            errno != 0))
-        return WABT_ERROR;
+        return WabtResult::Error;
 
       memcpy(out_bits, &value, sizeof(value));
-      return WABT_OK;
+      return WabtResult::Ok;
     }
 
-    case WABT_LITERAL_TYPE_HEXFLOAT:
+    case WabtLiteralType::Hexfloat:
       parse_float_hex(s, end, out_bits);
-      return WABT_OK;
+      return WabtResult::Ok;
 
-    case WABT_LITERAL_TYPE_INFINITY:
+    case WabtLiteralType::Infinity:
       parse_float_infinity(s, end, out_bits);
-      return WABT_OK;
+      return WabtResult::Ok;
 
-    case WABT_LITERAL_TYPE_NAN:
+    case WabtLiteralType::Nan:
       return parse_float_nan(s, end, out_bits);
 
     default:
       assert(0);
-      return WABT_ERROR;
+      return WabtResult::Error;
   }
 }
 
@@ -539,28 +539,28 @@ static WabtResult parse_double_nan(const char* s,
   if (s != end) {
     tag = 0;
     if (!string_starts_with(s, end, ":0x"))
-      return WABT_ERROR;
+      return WabtResult::Error;
     s += 3;
 
     for (; s < end; ++s) {
       uint32_t digit;
       if (WABT_FAILED(wabt_parse_hexdigit(*s, &digit)))
-        return WABT_ERROR;
+        return WabtResult::Error;
       tag = tag * 16 + digit;
       /* check for overflow */
       if (tag > F64_SIG_MASK)
-        return WABT_ERROR;
+        return WabtResult::Error;
     }
 
     /* NaN cannot have a zero tag, that is reserved for infinity */
     if (tag == 0)
-      return WABT_ERROR;
+      return WabtResult::Error;
   } else {
     tag = F64_QUIET_NAN_TAG;
   }
 
   *out_bits = make_double(is_neg, F64_MAX_EXP, tag);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void parse_double_hex(const char* s,
@@ -713,8 +713,8 @@ WabtResult wabt_parse_double(WabtLiteralType literal_type,
                              const char* end,
                              uint64_t* out_bits) {
   switch (literal_type) {
-    case WABT_LITERAL_TYPE_INT:
-    case WABT_LITERAL_TYPE_FLOAT: {
+    case WabtLiteralType::Int:
+    case WabtLiteralType::Float: {
       errno = 0;
       char* endptr;
       double value;
@@ -722,26 +722,26 @@ WabtResult wabt_parse_double(WabtLiteralType literal_type,
       if (endptr != end ||
           ((value == 0 || value == HUGE_VAL || value == -HUGE_VAL) &&
            errno != 0))
-        return WABT_ERROR;
+        return WabtResult::Error;
 
       memcpy(out_bits, &value, sizeof(value));
-      return WABT_OK;
+      return WabtResult::Ok;
     }
 
-    case WABT_LITERAL_TYPE_HEXFLOAT:
+    case WabtLiteralType::Hexfloat:
       parse_double_hex(s, end, out_bits);
-      return WABT_OK;
+      return WabtResult::Ok;
 
-    case WABT_LITERAL_TYPE_INFINITY:
+    case WabtLiteralType::Infinity:
       parse_double_infinity(s, end, out_bits);
-      return WABT_OK;
+      return WabtResult::Ok;
 
-    case WABT_LITERAL_TYPE_NAN:
+    case WabtLiteralType::Nan:
       return parse_double_nan(s, end, out_bits);
 
     default:
       assert(0);
-      return WABT_ERROR;
+      return WabtResult::Error;
   }
 }
 

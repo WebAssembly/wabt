@@ -20,6 +20,7 @@
 #include <stdint.h>
 
 #include "array.h"
+#include "common.h"
 #include "binding-hash.h"
 #include "type-vector.h"
 #include "vector.h"
@@ -27,45 +28,45 @@
 
 struct WabtStream;
 
-#define FOREACH_INTERPRETER_RESULT(V)                                          \
-  V(OK, "ok")                                                                  \
-  /* returned from the top-most function */                                    \
-  V(RETURNED, "returned")                                                      \
-  /* memory access is out of bounds */                                         \
-  V(TRAP_MEMORY_ACCESS_OUT_OF_BOUNDS, "out of bounds memory access")           \
-  /* converting from float -> int would overflow int */                        \
-  V(TRAP_INTEGER_OVERFLOW, "integer overflow")                                 \
-  /* dividend is zero in integer divide */                                     \
-  V(TRAP_INTEGER_DIVIDE_BY_ZERO, "integer divide by zero")                     \
-  /* converting from float -> int where float is nan */                        \
-  V(TRAP_INVALID_CONVERSION_TO_INTEGER, "invalid conversion to integer")       \
-  /* function table index is out of bounds */                                  \
-  V(TRAP_UNDEFINED_TABLE_INDEX, "undefined table index")                       \
-  /* function table element is uninitialized */                                \
-  V(TRAP_UNINITIALIZED_TABLE_ELEMENT, "uninitialized table element")           \
-  /* unreachable instruction executed */                                       \
-  V(TRAP_UNREACHABLE, "unreachable executed")                                  \
-  /* call indirect signature doesn't match function table signature */         \
-  V(TRAP_INDIRECT_CALL_SIGNATURE_MISMATCH, "indirect call signature mismatch") \
-  /* ran out of call stack frames (probably infinite recursion) */             \
-  V(TRAP_CALL_STACK_EXHAUSTED, "call stack exhausted")                         \
-  /* ran out of value stack space */                                           \
-  V(TRAP_VALUE_STACK_EXHAUSTED, "value stack exhausted")                       \
-  /* we called a host function, but the return value didn't match the */       \
-  /* expected type */                                                          \
-  V(TRAP_HOST_RESULT_TYPE_MISMATCH, "host result type mismatch")               \
-  /* we called an import function, but it didn't complete succesfully */       \
-  V(TRAP_HOST_TRAPPED, "host function trapped")                                \
-  /* we attempted to call a function with the an argument list that doesn't    \
-   * match the function signature */                                           \
-  V(ARGUMENT_TYPE_MISMATCH, "argument type mismatch")                          \
-  /* we tried to get an export by name that doesn't exist */                   \
-  V(UNKNOWN_EXPORT, "unknown export")                                          \
-  /* the expected export kind doesn't match. */                                \
-  V(EXPORT_KIND_MISMATCH, "export kind mismatch")
+#define FOREACH_INTERPRETER_RESULT(V)                                       \
+  V(Ok, "ok")                                                               \
+  /* returned from the top-most function */                                 \
+  V(Returned, "returned")                                                   \
+  /* memory access is out of bounds */                                      \
+  V(TrapMemoryAccessOutOfBounds, "out of bounds memory access")             \
+  /* converting from float -> int would overflow int */                     \
+  V(TrapIntegerOverflow, "integer overflow")                                \
+  /* dividend is zero in integer divide */                                  \
+  V(TrapIntegerDivideByZero, "integer divide by zero")                      \
+  /* converting from float -> int where float is nan */                     \
+  V(TrapInvalidConversionToInteger, "invalid conversion to integer")        \
+  /* function table index is out of bounds */                               \
+  V(TrapUndefinedTableIndex, "undefined table index")                       \
+  /* function table element is uninitialized */                             \
+  V(TrapUninitializedTableElement, "uninitialized table element")           \
+  /* unreachable instruction executed */                                    \
+  V(TrapUnreachable, "unreachable executed")                                \
+  /* call indirect signature doesn't match function table signature */      \
+  V(TrapIndirectCallSignatureMismatch, "indirect call signature mismatch")  \
+  /* ran out of call stack frames (probably infinite recursion) */          \
+  V(TrapCallStackExhausted, "call stack exhausted")                         \
+  /* ran out of value stack space */                                        \
+  V(TrapValueStackExhausted, "value stack exhausted")                       \
+  /* we called a host function, but the return value didn't match the */    \
+  /* expected type */                                                       \
+  V(TrapHostResultTypeMismatch, "host result type mismatch")                \
+  /* we called an import function, but it didn't complete succesfully */    \
+  V(TrapHostTrapped, "host function trapped")                               \
+  /* we attempted to call a function with the an argument list that doesn't \
+   * match the function signature */                                        \
+  V(ArgumentTypeMismatch, "argument type mismatch")                         \
+  /* we tried to get an export by name that doesn't exist */                \
+  V(UnknownExport, "unknown export")                                        \
+  /* the expected export kind doesn't match. */                             \
+  V(ExportKindMismatch, "export kind mismatch")
 
-enum WabtInterpreterResult {
-#define V(name, str) WABT_INTERPRETER_##name,
+enum class WabtInterpreterResult {
+#define V(Name, str) Name,
   FOREACH_INTERPRETER_RESULT(V)
 #undef V
 };
@@ -77,16 +78,26 @@ enum WabtInterpreterResult {
 #define WABT_TABLE_ENTRY_DROP_OFFSET sizeof(uint32_t)
 #define WABT_TABLE_ENTRY_KEEP_OFFSET (sizeof(uint32_t) * 2)
 
-enum {
-  /* push space on the value stack for N entries */
-  WABT_OPCODE_ALLOCA = WABT_NUM_OPCODES,
-  WABT_OPCODE_BR_UNLESS,
-  WABT_OPCODE_CALL_HOST,
-  WABT_OPCODE_DATA,
-  WABT_OPCODE_DROP_KEEP,
-  WABT_NUM_INTERPRETER_OPCODES,
+#define WABT_FOREACH_INTERPRETER_OPCODE(V)         \
+  WABT_FOREACH_OPCODE(V)                           \
+  V(___, ___, ___, 0, 0xfb, Alloca, "alloca")      \
+  V(___, ___, ___, 0, 0xfc, BrUnless, "br_unless") \
+  V(___, ___, ___, 0, 0xfd, CallHost, "call_host") \
+  V(___, ___, ___, 0, 0xfe, Data, "data")          \
+  V(___, ___, ___, 0, 0xff, DropKeep, "drop_keep")
+
+enum class WabtInterpreterOpcode {
+/* push space on the value stack for N entries */
+#define V(rtype, type1, type2, mem_size, code, Name, text) \
+  Name = code,
+  WABT_FOREACH_INTERPRETER_OPCODE(V)
+#undef V
+
+  First = static_cast<int>(WabtOpcode::First),
+  Last = DropKeep,
 };
-WABT_STATIC_ASSERT(WABT_NUM_INTERPRETER_OPCODES <= 256);
+static const int kWabtInterpreterOpcodeCount =
+    WABT_ENUM_COUNT(WabtInterpreterOpcode);
 
 typedef uint32_t WabtUint32;
 WABT_DEFINE_ARRAY(uint32, WabtUint32);
