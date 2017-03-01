@@ -14,26 +14,26 @@ linked.wasm:	file format wasm 0x000001
 
 Sections:
 
-     TYPE start=0x0000000a end=0x00000017 (size=0x0000000d) count: 3
- FUNCTION start=0x0000001d end=0x00000021 (size=0x00000004) count: 3
-    TABLE start=0x00000027 end=0x0000002c (size=0x00000005) count: 1
-     ELEM start=0x00000032 end=0x00000051 (size=0x0000001f) count: 1
-     CODE start=0x00000053 end=0x0000005d (size=0x0000000a) count: 3
-   CUSTOM start=0x00000063 end=0x0000007a (size=0x00000017) "reloc.ELEM"
+     Type start=0x0000000a end=0x00000017 (size=0x0000000d) count: 3
+ Function start=0x0000001d end=0x00000021 (size=0x00000004) count: 3
+    Table start=0x00000027 end=0x0000002c (size=0x00000005) count: 1
+     Elem start=0x00000032 end=0x00000051 (size=0x0000001f) count: 1
+     Code start=0x00000053 end=0x0000005d (size=0x0000000a) count: 3
+   Custom start=0x00000063 end=0x0000007a (size=0x00000017) "reloc.Elem"
 
 Section Details:
 
-TYPE:
+Type:
  - [0] (i32) -> nil
  - [1] (i64) -> nil
  - [2] (f64) -> nil
-FUNCTION:
+Function:
  - func[0] sig=0
  - func[1] sig=1
  - func[2] sig=2
-TABLE:
+Table:
  - table[0] type=anyfunc initial=5 max=5
-ELEM:
+Elem:
  - segment[0] table=0
  - init i32=0
   - func[0]
@@ -41,9 +41,9 @@ ELEM:
   - func[2]
   - func[1]
   - func[1]
-CUSTOM:
- - name: "reloc.ELEM"
-  - section: ELEM
+Custom:
+ - name: "reloc.Elem"
+  - section: Elem
    - R_FUNC_INDEX_LEB   offset=0x38 (0x6)
    - R_FUNC_INDEX_LEB   offset=0x3d (0xb)
    - R_FUNC_INDEX_LEB   offset=0x42 (0x10)

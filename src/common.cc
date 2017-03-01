@@ -29,7 +29,7 @@
 #define PATH_MAX _MAX_PATH
 #endif
 
-WabtOpcodeInfo g_wabt_opcode_info[WABT_NUM_OPCODES];
+WabtOpcodeInfo g_wabt_opcode_info[kWabtOpcodeCount];
 
 /* TODO(binji): It's annoying to have to have an initializer function, but it
  * seems to be necessary as g++ doesn't allow non-trival designated
@@ -37,11 +37,11 @@ WabtOpcodeInfo g_wabt_opcode_info[WABT_NUM_OPCODES];
 void wabt_init_opcode_info(void) {
   static bool s_initialized = false;
   if (!s_initialized) {
-#define V(rtype, type1, type2, mem_size, code, NAME, text)  \
-  g_wabt_opcode_info[code].name = text;                     \
-  g_wabt_opcode_info[code].result_type = WABT_TYPE_##rtype; \
-  g_wabt_opcode_info[code].param1_type = WABT_TYPE_##type1; \
-  g_wabt_opcode_info[code].param2_type = WABT_TYPE_##type2; \
+#define V(rtype, type1, type2, mem_size, code, NAME, text) \
+  g_wabt_opcode_info[code].name = text;                    \
+  g_wabt_opcode_info[code].result_type = WabtType::rtype;  \
+  g_wabt_opcode_info[code].param1_type = WabtType::type1;  \
+  g_wabt_opcode_info[code].param2_type = WabtType::type2;  \
   g_wabt_opcode_info[code].memory_size = mem_size;
 
     WABT_FOREACH_OPCODE(V)
@@ -51,14 +51,13 @@ void wabt_init_opcode_info(void) {
 }
 
 const char* g_wabt_kind_name[] = {"func", "table", "memory", "global"};
-WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_wabt_kind_name) ==
-                   WABT_NUM_EXTERNAL_KINDS);
+WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_wabt_kind_name) == kWabtExternalKindCount);
 
 const char* g_wabt_reloc_type_name[] = {
     "R_FUNC_INDEX_LEB", "R_TABLE_INDEX_SLEB", "R_TABLE_INDEX_I32",
     "R_GLOBAL_INDEX_LEB", "R_DATA"};
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_wabt_reloc_type_name) ==
-                   WABT_NUM_RELOC_TYPES);
+                   kWabtRelocTypeCount);
 
 bool wabt_is_naturally_aligned(WabtOpcode opcode, uint32_t alignment) {
   uint32_t opcode_align = wabt_get_opcode_memory_size(opcode);
@@ -127,35 +126,35 @@ WabtResult wabt_read_file(const char* filename,
     char msg[PATH_MAX + sizeof(format)];
     wabt_snprintf(msg, sizeof(msg), format, filename);
     perror(msg);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   if (fseek(infile, 0, SEEK_END) < 0) {
     perror("fseek to end failed");
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   long size = ftell(infile);
   if (size < 0) {
     perror("ftell failed");
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   if (fseek(infile, 0, SEEK_SET) < 0) {
     perror("fseek to beginning failed");
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   void* data = wabt_alloc(size);
   if (size != 0 && fread(data, size, 1, infile) != 1) {
     perror("fread failed");
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   *out_data = data;
   *out_size = size;
   fclose(infile);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void print_carets(FILE* out,
@@ -193,14 +192,14 @@ static void print_source_error(FILE* out,
 static void print_error_header(FILE* out, WabtDefaultErrorHandlerInfo* info) {
   if (info && info->header) {
     switch (info->print_header) {
-      case WABT_PRINT_ERROR_HEADER_NEVER:
+      case WabtPrintErrorHeader::Never:
         break;
 
-      case WABT_PRINT_ERROR_HEADER_ONCE:
-        info->print_header = WABT_PRINT_ERROR_HEADER_NEVER;
+      case WabtPrintErrorHeader::Once:
+        info->print_header = WabtPrintErrorHeader::Never;
         /* Fallthrough. */
 
-      case WABT_PRINT_ERROR_HEADER_ALWAYS:
+      case WabtPrintErrorHeader::Always:
         fprintf(out, "%s:\n", info->header);
         break;
     }

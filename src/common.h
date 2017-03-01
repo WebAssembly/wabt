@@ -68,22 +68,28 @@
   }                                                                        \
   va_end(args_copy)
 
-enum WabtResult {
-  WABT_OK,
-  WABT_ERROR,
+#define WABT_ENUM_COUNT(name) \
+  (static_cast<int>(name::Last) - static_cast<int>(name::First) + 1)
+
+enum class WabtResult {
+  Ok,
+  Error,
 };
 
-#define WABT_SUCCEEDED(x) ((x) == WABT_OK)
-#define WABT_FAILED(x) ((x) == WABT_ERROR)
+#define WABT_SUCCEEDED(x) ((x) == WabtResult::Ok)
+#define WABT_FAILED(x) ((x) == WabtResult::Error)
 
-enum WabtLabelType {
-  WABT_LABEL_TYPE_FUNC,
-  WABT_LABEL_TYPE_BLOCK,
-  WABT_LABEL_TYPE_LOOP,
-  WABT_LABEL_TYPE_IF,
-  WABT_LABEL_TYPE_ELSE,
-  WABT_NUM_LABEL_TYPES,
+enum class WabtLabelType {
+  Func,
+  Block,
+  Loop,
+  If,
+  Else,
+
+  First = Func,
+  Last = Else,
 };
+static const int kWabtLabelTypeCount = WABT_ENUM_COUNT(WabtLabelType);
 
 struct WabtStringSlice {
   const char* start;
@@ -132,10 +138,10 @@ struct WabtBinaryErrorHandler {
 
 /* This data structure is not required; it is just used by the default error
  * handler callbacks. */
-enum WabtPrintErrorHeader {
-  WABT_PRINT_ERROR_HEADER_NEVER,
-  WABT_PRINT_ERROR_HEADER_ONCE,
-  WABT_PRINT_ERROR_HEADER_ALWAYS,
+enum class WabtPrintErrorHeader {
+  Never,
+  Once,
+  Always,
 };
 
 struct WabtDefaultErrorHandlerInfo {
@@ -145,35 +151,41 @@ struct WabtDefaultErrorHandlerInfo {
 };
 
 /* matches binary format, do not change */
-enum WabtType {
-  WABT_TYPE_I32 = -0x01,
-  WABT_TYPE_I64 = -0x02,
-  WABT_TYPE_F32 = -0x03,
-  WABT_TYPE_F64 = -0x04,
-  WABT_TYPE_ANYFUNC = -0x10,
-  WABT_TYPE_FUNC = -0x20,
-  WABT_TYPE_VOID = -0x40,
-  WABT_TYPE____ = WABT_TYPE_VOID, /* convenient for the opcode table below */
-  WABT_TYPE_ANY = 0, /* Not actually specified, but useful for type-checking */
+enum class WabtType {
+  I32 = -0x01,
+  I64 = -0x02,
+  F32 = -0x03,
+  F64 = -0x04,
+  Anyfunc = -0x10,
+  Func = -0x20,
+  Void = -0x40,
+  ___ = Void, /* convenient for the opcode table below */
+  Any = 0,    /* Not actually specified, but useful for type-checking */
 };
 
-enum WabtRelocType {
-  WABT_RELOC_FUNC_INDEX_LEB = 0,   /* e.g. immediate of call instruction */
-  WABT_RELOC_TABLE_INDEX_SLEB = 1, /* e.g. loading address of function */
-  WABT_RELOC_TABLE_INDEX_I32 = 2,  /* e.g. function address in DATA */
-  WABT_RELOC_GLOBAL_INDEX_LEB = 3, /* e.g immediate of get_global inst */
-  WABT_RELOC_DATA = 4,
-  WABT_NUM_RELOC_TYPES,
+enum class WabtRelocType {
+  FuncIndexLeb = 0,   /* e.g. immediate of call instruction */
+  TableIndexSleb = 1, /* e.g. loading address of function */
+  TableIndexI32 = 2,  /* e.g. function address in DATA */
+  GlobalIndexLeb = 3, /* e.g immediate of get_global inst */
+  Data = 4,
+
+  First = FuncIndexLeb,
+  Last = Data,
 };
+static const int kWabtRelocTypeCount = WABT_ENUM_COUNT(WabtRelocType);
 
 /* matches binary format, do not change */
-enum WabtExternalKind {
-  WABT_EXTERNAL_KIND_FUNC = 0,
-  WABT_EXTERNAL_KIND_TABLE = 1,
-  WABT_EXTERNAL_KIND_MEMORY = 2,
-  WABT_EXTERNAL_KIND_GLOBAL = 3,
-  WABT_NUM_EXTERNAL_KINDS,
+enum class WabtExternalKind {
+  Func = 0,
+  Table = 1,
+  Memory = 2,
+  Global = 3,
+
+  First = Func,
+  Last = Global,
 };
+static const int kWabtExternalKindCount = WABT_ENUM_COUNT(WabtExternalKind);
 
 struct WabtLimits {
   uint64_t initial;
@@ -194,187 +206,190 @@ enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
  *
  *  tr  t1    t2   m  code  NAME text
  *  ============================ */
-#define WABT_FOREACH_OPCODE(V)                                          \
-  V(___, ___, ___, 0, 0x00, UNREACHABLE, "unreachable")                 \
-  V(___, ___, ___, 0, 0x01, NOP, "nop")                                 \
-  V(___, ___, ___, 0, 0x02, BLOCK, "block")                             \
-  V(___, ___, ___, 0, 0x03, LOOP, "loop")                               \
-  V(___, ___, ___, 0, 0x04, IF, "if")                                   \
-  V(___, ___, ___, 0, 0x05, ELSE, "else")                               \
-  V(___, ___, ___, 0, 0x0b, END, "end")                                 \
-  V(___, ___, ___, 0, 0x0c, BR, "br")                                   \
-  V(___, ___, ___, 0, 0x0d, BR_IF, "br_if")                             \
-  V(___, ___, ___, 0, 0x0e, BR_TABLE, "br_table")                       \
-  V(___, ___, ___, 0, 0x0f, RETURN, "return")                           \
-  V(___, ___, ___, 0, 0x10, CALL, "call")                               \
-  V(___, ___, ___, 0, 0x11, CALL_INDIRECT, "call_indirect")             \
-  V(___, ___, ___, 0, 0x1a, DROP, "drop")                               \
-  V(___, ___, ___, 0, 0x1b, SELECT, "select")                           \
-  V(___, ___, ___, 0, 0x20, GET_LOCAL, "get_local")                     \
-  V(___, ___, ___, 0, 0x21, SET_LOCAL, "set_local")                     \
-  V(___, ___, ___, 0, 0x22, TEE_LOCAL, "tee_local")                     \
-  V(___, ___, ___, 0, 0x23, GET_GLOBAL, "get_global")                   \
-  V(___, ___, ___, 0, 0x24, SET_GLOBAL, "set_global")                   \
-  V(I32, I32, ___, 4, 0x28, I32_LOAD, "i32.load")                       \
-  V(I64, I32, ___, 8, 0x29, I64_LOAD, "i64.load")                       \
-  V(F32, I32, ___, 4, 0x2a, F32_LOAD, "f32.load")                       \
-  V(F64, I32, ___, 8, 0x2b, F64_LOAD, "f64.load")                       \
-  V(I32, I32, ___, 1, 0x2c, I32_LOAD8_S, "i32.load8_s")                 \
-  V(I32, I32, ___, 1, 0x2d, I32_LOAD8_U, "i32.load8_u")                 \
-  V(I32, I32, ___, 2, 0x2e, I32_LOAD16_S, "i32.load16_s")               \
-  V(I32, I32, ___, 2, 0x2f, I32_LOAD16_U, "i32.load16_u")               \
-  V(I64, I32, ___, 1, 0x30, I64_LOAD8_S, "i64.load8_s")                 \
-  V(I64, I32, ___, 1, 0x31, I64_LOAD8_U, "i64.load8_u")                 \
-  V(I64, I32, ___, 2, 0x32, I64_LOAD16_S, "i64.load16_s")               \
-  V(I64, I32, ___, 2, 0x33, I64_LOAD16_U, "i64.load16_u")               \
-  V(I64, I32, ___, 4, 0x34, I64_LOAD32_S, "i64.load32_s")               \
-  V(I64, I32, ___, 4, 0x35, I64_LOAD32_U, "i64.load32_u")               \
-  V(___, I32, I32, 4, 0x36, I32_STORE, "i32.store")                     \
-  V(___, I32, I64, 8, 0x37, I64_STORE, "i64.store")                     \
-  V(___, I32, F32, 4, 0x38, F32_STORE, "f32.store")                     \
-  V(___, I32, F64, 8, 0x39, F64_STORE, "f64.store")                     \
-  V(___, I32, I32, 1, 0x3a, I32_STORE8, "i32.store8")                   \
-  V(___, I32, I32, 2, 0x3b, I32_STORE16, "i32.store16")                 \
-  V(___, I32, I64, 1, 0x3c, I64_STORE8, "i64.store8")                   \
-  V(___, I32, I64, 2, 0x3d, I64_STORE16, "i64.store16")                 \
-  V(___, I32, I64, 4, 0x3e, I64_STORE32, "i64.store32")                 \
-  V(I32, ___, ___, 0, 0x3f, CURRENT_MEMORY, "current_memory")           \
-  V(I32, I32, ___, 0, 0x40, GROW_MEMORY, "grow_memory")                 \
-  V(I32, ___, ___, 0, 0x41, I32_CONST, "i32.const")                     \
-  V(I64, ___, ___, 0, 0x42, I64_CONST, "i64.const")                     \
-  V(F32, ___, ___, 0, 0x43, F32_CONST, "f32.const")                     \
-  V(F64, ___, ___, 0, 0x44, F64_CONST, "f64.const")                     \
-  V(I32, I32, ___, 0, 0x45, I32_EQZ, "i32.eqz")                         \
-  V(I32, I32, I32, 0, 0x46, I32_EQ, "i32.eq")                           \
-  V(I32, I32, I32, 0, 0x47, I32_NE, "i32.ne")                           \
-  V(I32, I32, I32, 0, 0x48, I32_LT_S, "i32.lt_s")                       \
-  V(I32, I32, I32, 0, 0x49, I32_LT_U, "i32.lt_u")                       \
-  V(I32, I32, I32, 0, 0x4a, I32_GT_S, "i32.gt_s")                       \
-  V(I32, I32, I32, 0, 0x4b, I32_GT_U, "i32.gt_u")                       \
-  V(I32, I32, I32, 0, 0x4c, I32_LE_S, "i32.le_s")                       \
-  V(I32, I32, I32, 0, 0x4d, I32_LE_U, "i32.le_u")                       \
-  V(I32, I32, I32, 0, 0x4e, I32_GE_S, "i32.ge_s")                       \
-  V(I32, I32, I32, 0, 0x4f, I32_GE_U, "i32.ge_u")                       \
-  V(I32, I64, ___, 0, 0x50, I64_EQZ, "i64.eqz")                         \
-  V(I32, I64, I64, 0, 0x51, I64_EQ, "i64.eq")                           \
-  V(I32, I64, I64, 0, 0x52, I64_NE, "i64.ne")                           \
-  V(I32, I64, I64, 0, 0x53, I64_LT_S, "i64.lt_s")                       \
-  V(I32, I64, I64, 0, 0x54, I64_LT_U, "i64.lt_u")                       \
-  V(I32, I64, I64, 0, 0x55, I64_GT_S, "i64.gt_s")                       \
-  V(I32, I64, I64, 0, 0x56, I64_GT_U, "i64.gt_u")                       \
-  V(I32, I64, I64, 0, 0x57, I64_LE_S, "i64.le_s")                       \
-  V(I32, I64, I64, 0, 0x58, I64_LE_U, "i64.le_u")                       \
-  V(I32, I64, I64, 0, 0x59, I64_GE_S, "i64.ge_s")                       \
-  V(I32, I64, I64, 0, 0x5a, I64_GE_U, "i64.ge_u")                       \
-  V(I32, F32, F32, 0, 0x5b, F32_EQ, "f32.eq")                           \
-  V(I32, F32, F32, 0, 0x5c, F32_NE, "f32.ne")                           \
-  V(I32, F32, F32, 0, 0x5d, F32_LT, "f32.lt")                           \
-  V(I32, F32, F32, 0, 0x5e, F32_GT, "f32.gt")                           \
-  V(I32, F32, F32, 0, 0x5f, F32_LE, "f32.le")                           \
-  V(I32, F32, F32, 0, 0x60, F32_GE, "f32.ge")                           \
-  V(I32, F64, F64, 0, 0x61, F64_EQ, "f64.eq")                           \
-  V(I32, F64, F64, 0, 0x62, F64_NE, "f64.ne")                           \
-  V(I32, F64, F64, 0, 0x63, F64_LT, "f64.lt")                           \
-  V(I32, F64, F64, 0, 0x64, F64_GT, "f64.gt")                           \
-  V(I32, F64, F64, 0, 0x65, F64_LE, "f64.le")                           \
-  V(I32, F64, F64, 0, 0x66, F64_GE, "f64.ge")                           \
-  V(I32, I32, ___, 0, 0x67, I32_CLZ, "i32.clz")                         \
-  V(I32, I32, ___, 0, 0x68, I32_CTZ, "i32.ctz")                         \
-  V(I32, I32, ___, 0, 0x69, I32_POPCNT, "i32.popcnt")                   \
-  V(I32, I32, I32, 0, 0x6a, I32_ADD, "i32.add")                         \
-  V(I32, I32, I32, 0, 0x6b, I32_SUB, "i32.sub")                         \
-  V(I32, I32, I32, 0, 0x6c, I32_MUL, "i32.mul")                         \
-  V(I32, I32, I32, 0, 0x6d, I32_DIV_S, "i32.div_s")                     \
-  V(I32, I32, I32, 0, 0x6e, I32_DIV_U, "i32.div_u")                     \
-  V(I32, I32, I32, 0, 0x6f, I32_REM_S, "i32.rem_s")                     \
-  V(I32, I32, I32, 0, 0x70, I32_REM_U, "i32.rem_u")                     \
-  V(I32, I32, I32, 0, 0x71, I32_AND, "i32.and")                         \
-  V(I32, I32, I32, 0, 0x72, I32_OR, "i32.or")                           \
-  V(I32, I32, I32, 0, 0x73, I32_XOR, "i32.xor")                         \
-  V(I32, I32, I32, 0, 0x74, I32_SHL, "i32.shl")                         \
-  V(I32, I32, I32, 0, 0x75, I32_SHR_S, "i32.shr_s")                     \
-  V(I32, I32, I32, 0, 0x76, I32_SHR_U, "i32.shr_u")                     \
-  V(I32, I32, I32, 0, 0x77, I32_ROTL, "i32.rotl")                       \
-  V(I32, I32, I32, 0, 0x78, I32_ROTR, "i32.rotr")                       \
-  V(I64, I64, I64, 0, 0x79, I64_CLZ, "i64.clz")                         \
-  V(I64, I64, I64, 0, 0x7a, I64_CTZ, "i64.ctz")                         \
-  V(I64, I64, I64, 0, 0x7b, I64_POPCNT, "i64.popcnt")                   \
-  V(I64, I64, I64, 0, 0x7c, I64_ADD, "i64.add")                         \
-  V(I64, I64, I64, 0, 0x7d, I64_SUB, "i64.sub")                         \
-  V(I64, I64, I64, 0, 0x7e, I64_MUL, "i64.mul")                         \
-  V(I64, I64, I64, 0, 0x7f, I64_DIV_S, "i64.div_s")                     \
-  V(I64, I64, I64, 0, 0x80, I64_DIV_U, "i64.div_u")                     \
-  V(I64, I64, I64, 0, 0x81, I64_REM_S, "i64.rem_s")                     \
-  V(I64, I64, I64, 0, 0x82, I64_REM_U, "i64.rem_u")                     \
-  V(I64, I64, I64, 0, 0x83, I64_AND, "i64.and")                         \
-  V(I64, I64, I64, 0, 0x84, I64_OR, "i64.or")                           \
-  V(I64, I64, I64, 0, 0x85, I64_XOR, "i64.xor")                         \
-  V(I64, I64, I64, 0, 0x86, I64_SHL, "i64.shl")                         \
-  V(I64, I64, I64, 0, 0x87, I64_SHR_S, "i64.shr_s")                     \
-  V(I64, I64, I64, 0, 0x88, I64_SHR_U, "i64.shr_u")                     \
-  V(I64, I64, I64, 0, 0x89, I64_ROTL, "i64.rotl")                       \
-  V(I64, I64, I64, 0, 0x8a, I64_ROTR, "i64.rotr")                       \
-  V(F32, F32, F32, 0, 0x8b, F32_ABS, "f32.abs")                         \
-  V(F32, F32, F32, 0, 0x8c, F32_NEG, "f32.neg")                         \
-  V(F32, F32, F32, 0, 0x8d, F32_CEIL, "f32.ceil")                       \
-  V(F32, F32, F32, 0, 0x8e, F32_FLOOR, "f32.floor")                     \
-  V(F32, F32, F32, 0, 0x8f, F32_TRUNC, "f32.trunc")                     \
-  V(F32, F32, F32, 0, 0x90, F32_NEAREST, "f32.nearest")                 \
-  V(F32, F32, F32, 0, 0x91, F32_SQRT, "f32.sqrt")                       \
-  V(F32, F32, F32, 0, 0x92, F32_ADD, "f32.add")                         \
-  V(F32, F32, F32, 0, 0x93, F32_SUB, "f32.sub")                         \
-  V(F32, F32, F32, 0, 0x94, F32_MUL, "f32.mul")                         \
-  V(F32, F32, F32, 0, 0x95, F32_DIV, "f32.div")                         \
-  V(F32, F32, F32, 0, 0x96, F32_MIN, "f32.min")                         \
-  V(F32, F32, F32, 0, 0x97, F32_MAX, "f32.max")                         \
-  V(F32, F32, F32, 0, 0x98, F32_COPYSIGN, "f32.copysign")               \
-  V(F64, F64, F64, 0, 0x99, F64_ABS, "f64.abs")                         \
-  V(F64, F64, F64, 0, 0x9a, F64_NEG, "f64.neg")                         \
-  V(F64, F64, F64, 0, 0x9b, F64_CEIL, "f64.ceil")                       \
-  V(F64, F64, F64, 0, 0x9c, F64_FLOOR, "f64.floor")                     \
-  V(F64, F64, F64, 0, 0x9d, F64_TRUNC, "f64.trunc")                     \
-  V(F64, F64, F64, 0, 0x9e, F64_NEAREST, "f64.nearest")                 \
-  V(F64, F64, F64, 0, 0x9f, F64_SQRT, "f64.sqrt")                       \
-  V(F64, F64, F64, 0, 0xa0, F64_ADD, "f64.add")                         \
-  V(F64, F64, F64, 0, 0xa1, F64_SUB, "f64.sub")                         \
-  V(F64, F64, F64, 0, 0xa2, F64_MUL, "f64.mul")                         \
-  V(F64, F64, F64, 0, 0xa3, F64_DIV, "f64.div")                         \
-  V(F64, F64, F64, 0, 0xa4, F64_MIN, "f64.min")                         \
-  V(F64, F64, F64, 0, 0xa5, F64_MAX, "f64.max")                         \
-  V(F64, F64, F64, 0, 0xa6, F64_COPYSIGN, "f64.copysign")               \
-  V(I32, I64, ___, 0, 0xa7, I32_WRAP_I64, "i32.wrap/i64")               \
-  V(I32, F32, ___, 0, 0xa8, I32_TRUNC_S_F32, "i32.trunc_s/f32")         \
-  V(I32, F32, ___, 0, 0xa9, I32_TRUNC_U_F32, "i32.trunc_u/f32")         \
-  V(I32, F64, ___, 0, 0xaa, I32_TRUNC_S_F64, "i32.trunc_s/f64")         \
-  V(I32, F64, ___, 0, 0xab, I32_TRUNC_U_F64, "i32.trunc_u/f64")         \
-  V(I64, I32, ___, 0, 0xac, I64_EXTEND_S_I32, "i64.extend_s/i32")       \
-  V(I64, I32, ___, 0, 0xad, I64_EXTEND_U_I32, "i64.extend_u/i32")       \
-  V(I64, F32, ___, 0, 0xae, I64_TRUNC_S_F32, "i64.trunc_s/f32")         \
-  V(I64, F32, ___, 0, 0xaf, I64_TRUNC_U_F32, "i64.trunc_u/f32")         \
-  V(I64, F64, ___, 0, 0xb0, I64_TRUNC_S_F64, "i64.trunc_s/f64")         \
-  V(I64, F64, ___, 0, 0xb1, I64_TRUNC_U_F64, "i64.trunc_u/f64")         \
-  V(F32, I32, ___, 0, 0xb2, F32_CONVERT_S_I32, "f32.convert_s/i32")     \
-  V(F32, I32, ___, 0, 0xb3, F32_CONVERT_U_I32, "f32.convert_u/i32")     \
-  V(F32, I64, ___, 0, 0xb4, F32_CONVERT_S_I64, "f32.convert_s/i64")     \
-  V(F32, I64, ___, 0, 0xb5, F32_CONVERT_U_I64, "f32.convert_u/i64")     \
-  V(F32, F64, ___, 0, 0xb6, F32_DEMOTE_F64, "f32.demote/f64")           \
-  V(F64, I32, ___, 0, 0xb7, F64_CONVERT_S_I32, "f64.convert_s/i32")     \
-  V(F64, I32, ___, 0, 0xb8, F64_CONVERT_U_I32, "f64.convert_u/i32")     \
-  V(F64, I64, ___, 0, 0xb9, F64_CONVERT_S_I64, "f64.convert_s/i64")     \
-  V(F64, I64, ___, 0, 0xba, F64_CONVERT_U_I64, "f64.convert_u/i64")     \
-  V(F64, F32, ___, 0, 0xbb, F64_PROMOTE_F32, "f64.promote/f32")         \
-  V(I32, F32, ___, 0, 0xbc, I32_REINTERPRET_F32, "i32.reinterpret/f32") \
-  V(I64, F64, ___, 0, 0xbd, I64_REINTERPRET_F64, "i64.reinterpret/f64") \
-  V(F32, I32, ___, 0, 0xbe, F32_REINTERPRET_I32, "f32.reinterpret/i32") \
-  V(F64, I64, ___, 0, 0xbf, F64_REINTERPRET_I64, "f64.reinterpret/i64")
+#define WABT_FOREACH_OPCODE(V)                                        \
+  V(___, ___, ___, 0, 0x00, Unreachable, "unreachable")               \
+  V(___, ___, ___, 0, 0x01, Nop, "nop")                               \
+  V(___, ___, ___, 0, 0x02, Block, "block")                           \
+  V(___, ___, ___, 0, 0x03, Loop, "loop")                             \
+  V(___, ___, ___, 0, 0x04, If, "if")                                 \
+  V(___, ___, ___, 0, 0x05, Else, "else")                             \
+  V(___, ___, ___, 0, 0x0b, End, "end")                               \
+  V(___, ___, ___, 0, 0x0c, Br, "br")                                 \
+  V(___, ___, ___, 0, 0x0d, BrIf, "br_if")                            \
+  V(___, ___, ___, 0, 0x0e, BrTable, "br_table")                      \
+  V(___, ___, ___, 0, 0x0f, Return, "return")                         \
+  V(___, ___, ___, 0, 0x10, Call, "call")                             \
+  V(___, ___, ___, 0, 0x11, CallIndirect, "call_indirect")            \
+  V(___, ___, ___, 0, 0x1a, Drop, "drop")                             \
+  V(___, ___, ___, 0, 0x1b, Select, "select")                         \
+  V(___, ___, ___, 0, 0x20, GetLocal, "get_local")                    \
+  V(___, ___, ___, 0, 0x21, SetLocal, "set_local")                    \
+  V(___, ___, ___, 0, 0x22, TeeLocal, "tee_local")                    \
+  V(___, ___, ___, 0, 0x23, GetGlobal, "get_global")                  \
+  V(___, ___, ___, 0, 0x24, SetGlobal, "set_global")                  \
+  V(I32, I32, ___, 4, 0x28, I32Load, "i32.load")                      \
+  V(I64, I32, ___, 8, 0x29, I64Load, "i64.load")                      \
+  V(F32, I32, ___, 4, 0x2a, F32Load, "f32.load")                      \
+  V(F64, I32, ___, 8, 0x2b, F64Load, "f64.load")                      \
+  V(I32, I32, ___, 1, 0x2c, I32Load8S, "i32.load8_s")                 \
+  V(I32, I32, ___, 1, 0x2d, I32Load8U, "i32.load8_u")                 \
+  V(I32, I32, ___, 2, 0x2e, I32Load16S, "i32.load16_s")               \
+  V(I32, I32, ___, 2, 0x2f, I32Load16U, "i32.load16_u")               \
+  V(I64, I32, ___, 1, 0x30, I64Load8S, "i64.load8_s")                 \
+  V(I64, I32, ___, 1, 0x31, I64Load8U, "i64.load8_u")                 \
+  V(I64, I32, ___, 2, 0x32, I64Load16S, "i64.load16_s")               \
+  V(I64, I32, ___, 2, 0x33, I64Load16U, "i64.load16_u")               \
+  V(I64, I32, ___, 4, 0x34, I64Load32S, "i64.load32_s")               \
+  V(I64, I32, ___, 4, 0x35, I64Load32U, "i64.load32_u")               \
+  V(___, I32, I32, 4, 0x36, I32Store, "i32.store")                    \
+  V(___, I32, I64, 8, 0x37, I64Store, "i64.store")                    \
+  V(___, I32, F32, 4, 0x38, F32Store, "f32.store")                    \
+  V(___, I32, F64, 8, 0x39, F64Store, "f64.store")                    \
+  V(___, I32, I32, 1, 0x3a, I32Store8, "i32.store8")                  \
+  V(___, I32, I32, 2, 0x3b, I32Store16, "i32.store16")                \
+  V(___, I32, I64, 1, 0x3c, I64Store8, "i64.store8")                  \
+  V(___, I32, I64, 2, 0x3d, I64Store16, "i64.store16")                \
+  V(___, I32, I64, 4, 0x3e, I64Store32, "i64.store32")                \
+  V(I32, ___, ___, 0, 0x3f, CurrentMemory, "current_memory")          \
+  V(I32, I32, ___, 0, 0x40, GrowMemory, "grow_memory")                \
+  V(I32, ___, ___, 0, 0x41, I32Const, "i32.const")                    \
+  V(I64, ___, ___, 0, 0x42, I64Const, "i64.const")                    \
+  V(F32, ___, ___, 0, 0x43, F32Const, "f32.const")                    \
+  V(F64, ___, ___, 0, 0x44, F64Const, "f64.const")                    \
+  V(I32, I32, ___, 0, 0x45, I32Eqz, "i32.eqz")                        \
+  V(I32, I32, I32, 0, 0x46, I32Eq, "i32.eq")                          \
+  V(I32, I32, I32, 0, 0x47, I32Ne, "i32.ne")                          \
+  V(I32, I32, I32, 0, 0x48, I32LtS, "i32.lt_s")                       \
+  V(I32, I32, I32, 0, 0x49, I32LtU, "i32.lt_u")                       \
+  V(I32, I32, I32, 0, 0x4a, I32GtS, "i32.gt_s")                       \
+  V(I32, I32, I32, 0, 0x4b, I32GtU, "i32.gt_u")                       \
+  V(I32, I32, I32, 0, 0x4c, I32LeS, "i32.le_s")                       \
+  V(I32, I32, I32, 0, 0x4d, I32LeU, "i32.le_u")                       \
+  V(I32, I32, I32, 0, 0x4e, I32GeS, "i32.ge_s")                       \
+  V(I32, I32, I32, 0, 0x4f, I32GeU, "i32.ge_u")                       \
+  V(I32, I64, ___, 0, 0x50, I64Eqz, "i64.eqz")                        \
+  V(I32, I64, I64, 0, 0x51, I64Eq, "i64.eq")                          \
+  V(I32, I64, I64, 0, 0x52, I64Ne, "i64.ne")                          \
+  V(I32, I64, I64, 0, 0x53, I64LtS, "i64.lt_s")                       \
+  V(I32, I64, I64, 0, 0x54, I64LtU, "i64.lt_u")                       \
+  V(I32, I64, I64, 0, 0x55, I64GtS, "i64.gt_s")                       \
+  V(I32, I64, I64, 0, 0x56, I64GtU, "i64.gt_u")                       \
+  V(I32, I64, I64, 0, 0x57, I64LeS, "i64.le_s")                       \
+  V(I32, I64, I64, 0, 0x58, I64LeU, "i64.le_u")                       \
+  V(I32, I64, I64, 0, 0x59, I64GeS, "i64.ge_s")                       \
+  V(I32, I64, I64, 0, 0x5a, I64GeU, "i64.ge_u")                       \
+  V(I32, F32, F32, 0, 0x5b, F32Eq, "f32.eq")                          \
+  V(I32, F32, F32, 0, 0x5c, F32Ne, "f32.ne")                          \
+  V(I32, F32, F32, 0, 0x5d, F32Lt, "f32.lt")                          \
+  V(I32, F32, F32, 0, 0x5e, F32Gt, "f32.gt")                          \
+  V(I32, F32, F32, 0, 0x5f, F32Le, "f32.le")                          \
+  V(I32, F32, F32, 0, 0x60, F32Ge, "f32.ge")                          \
+  V(I32, F64, F64, 0, 0x61, F64Eq, "f64.eq")                          \
+  V(I32, F64, F64, 0, 0x62, F64Ne, "f64.ne")                          \
+  V(I32, F64, F64, 0, 0x63, F64Lt, "f64.lt")                          \
+  V(I32, F64, F64, 0, 0x64, F64Gt, "f64.gt")                          \
+  V(I32, F64, F64, 0, 0x65, F64Le, "f64.le")                          \
+  V(I32, F64, F64, 0, 0x66, F64Ge, "f64.ge")                          \
+  V(I32, I32, ___, 0, 0x67, I32Clz, "i32.clz")                        \
+  V(I32, I32, ___, 0, 0x68, I32Ctz, "i32.ctz")                        \
+  V(I32, I32, ___, 0, 0x69, I32Popcnt, "i32.popcnt")                  \
+  V(I32, I32, I32, 0, 0x6a, I32Add, "i32.add")                        \
+  V(I32, I32, I32, 0, 0x6b, I32Sub, "i32.sub")                        \
+  V(I32, I32, I32, 0, 0x6c, I32Mul, "i32.mul")                        \
+  V(I32, I32, I32, 0, 0x6d, I32DivS, "i32.div_s")                     \
+  V(I32, I32, I32, 0, 0x6e, I32DivU, "i32.div_u")                     \
+  V(I32, I32, I32, 0, 0x6f, I32RemS, "i32.rem_s")                     \
+  V(I32, I32, I32, 0, 0x70, I32RemU, "i32.rem_u")                     \
+  V(I32, I32, I32, 0, 0x71, I32And, "i32.and")                        \
+  V(I32, I32, I32, 0, 0x72, I32Or, "i32.or")                          \
+  V(I32, I32, I32, 0, 0x73, I32Xor, "i32.xor")                        \
+  V(I32, I32, I32, 0, 0x74, I32Shl, "i32.shl")                        \
+  V(I32, I32, I32, 0, 0x75, I32ShrS, "i32.shr_s")                     \
+  V(I32, I32, I32, 0, 0x76, I32ShrU, "i32.shr_u")                     \
+  V(I32, I32, I32, 0, 0x77, I32Rotl, "i32.rotl")                      \
+  V(I32, I32, I32, 0, 0x78, I32Rotr, "i32.rotr")                      \
+  V(I64, I64, I64, 0, 0x79, I64Clz, "i64.clz")                        \
+  V(I64, I64, I64, 0, 0x7a, I64Ctz, "i64.ctz")                        \
+  V(I64, I64, I64, 0, 0x7b, I64Popcnt, "i64.popcnt")                  \
+  V(I64, I64, I64, 0, 0x7c, I64Add, "i64.add")                        \
+  V(I64, I64, I64, 0, 0x7d, I64Sub, "i64.sub")                        \
+  V(I64, I64, I64, 0, 0x7e, I64Mul, "i64.mul")                        \
+  V(I64, I64, I64, 0, 0x7f, I64DivS, "i64.div_s")                     \
+  V(I64, I64, I64, 0, 0x80, I64DivU, "i64.div_u")                     \
+  V(I64, I64, I64, 0, 0x81, I64RemS, "i64.rem_s")                     \
+  V(I64, I64, I64, 0, 0x82, I64RemU, "i64.rem_u")                     \
+  V(I64, I64, I64, 0, 0x83, I64And, "i64.and")                        \
+  V(I64, I64, I64, 0, 0x84, I64Or, "i64.or")                          \
+  V(I64, I64, I64, 0, 0x85, I64Xor, "i64.xor")                        \
+  V(I64, I64, I64, 0, 0x86, I64Shl, "i64.shl")                        \
+  V(I64, I64, I64, 0, 0x87, I64ShrS, "i64.shr_s")                     \
+  V(I64, I64, I64, 0, 0x88, I64ShrU, "i64.shr_u")                     \
+  V(I64, I64, I64, 0, 0x89, I64Rotl, "i64.rotl")                      \
+  V(I64, I64, I64, 0, 0x8a, I64Rotr, "i64.rotr")                      \
+  V(F32, F32, F32, 0, 0x8b, F32Abs, "f32.abs")                        \
+  V(F32, F32, F32, 0, 0x8c, F32Neg, "f32.neg")                        \
+  V(F32, F32, F32, 0, 0x8d, F32Ceil, "f32.ceil")                      \
+  V(F32, F32, F32, 0, 0x8e, F32Floor, "f32.floor")                    \
+  V(F32, F32, F32, 0, 0x8f, F32Trunc, "f32.trunc")                    \
+  V(F32, F32, F32, 0, 0x90, F32Nearest, "f32.nearest")                \
+  V(F32, F32, F32, 0, 0x91, F32Sqrt, "f32.sqrt")                      \
+  V(F32, F32, F32, 0, 0x92, F32Add, "f32.add")                        \
+  V(F32, F32, F32, 0, 0x93, F32Sub, "f32.sub")                        \
+  V(F32, F32, F32, 0, 0x94, F32Mul, "f32.mul")                        \
+  V(F32, F32, F32, 0, 0x95, F32Div, "f32.div")                        \
+  V(F32, F32, F32, 0, 0x96, F32Min, "f32.min")                        \
+  V(F32, F32, F32, 0, 0x97, F32Max, "f32.max")                        \
+  V(F32, F32, F32, 0, 0x98, F32Copysign, "f32.copysign")              \
+  V(F64, F64, F64, 0, 0x99, F64Abs, "f64.abs")                        \
+  V(F64, F64, F64, 0, 0x9a, F64Neg, "f64.neg")                        \
+  V(F64, F64, F64, 0, 0x9b, F64Ceil, "f64.ceil")                      \
+  V(F64, F64, F64, 0, 0x9c, F64Floor, "f64.floor")                    \
+  V(F64, F64, F64, 0, 0x9d, F64Trunc, "f64.trunc")                    \
+  V(F64, F64, F64, 0, 0x9e, F64Nearest, "f64.nearest")                \
+  V(F64, F64, F64, 0, 0x9f, F64Sqrt, "f64.sqrt")                      \
+  V(F64, F64, F64, 0, 0xa0, F64Add, "f64.add")                        \
+  V(F64, F64, F64, 0, 0xa1, F64Sub, "f64.sub")                        \
+  V(F64, F64, F64, 0, 0xa2, F64Mul, "f64.mul")                        \
+  V(F64, F64, F64, 0, 0xa3, F64Div, "f64.div")                        \
+  V(F64, F64, F64, 0, 0xa4, F64Min, "f64.min")                        \
+  V(F64, F64, F64, 0, 0xa5, F64Max, "f64.max")                        \
+  V(F64, F64, F64, 0, 0xa6, F64Copysign, "f64.copysign")              \
+  V(I32, I64, ___, 0, 0xa7, I32WrapI64, "i32.wrap/i64")               \
+  V(I32, F32, ___, 0, 0xa8, I32TruncSF32, "i32.trunc_s/f32")          \
+  V(I32, F32, ___, 0, 0xa9, I32TruncUF32, "i32.trunc_u/f32")          \
+  V(I32, F64, ___, 0, 0xaa, I32TruncSF64, "i32.trunc_s/f64")          \
+  V(I32, F64, ___, 0, 0xab, I32TruncUF64, "i32.trunc_u/f64")          \
+  V(I64, I32, ___, 0, 0xac, I64ExtendSI32, "i64.extend_s/i32")        \
+  V(I64, I32, ___, 0, 0xad, I64ExtendUI32, "i64.extend_u/i32")        \
+  V(I64, F32, ___, 0, 0xae, I64TruncSF32, "i64.trunc_s/f32")          \
+  V(I64, F32, ___, 0, 0xaf, I64TruncUF32, "i64.trunc_u/f32")          \
+  V(I64, F64, ___, 0, 0xb0, I64TruncSF64, "i64.trunc_s/f64")          \
+  V(I64, F64, ___, 0, 0xb1, I64TruncUF64, "i64.trunc_u/f64")          \
+  V(F32, I32, ___, 0, 0xb2, F32ConvertSI32, "f32.convert_s/i32")      \
+  V(F32, I32, ___, 0, 0xb3, F32ConvertUI32, "f32.convert_u/i32")      \
+  V(F32, I64, ___, 0, 0xb4, F32ConvertSI64, "f32.convert_s/i64")      \
+  V(F32, I64, ___, 0, 0xb5, F32ConvertUI64, "f32.convert_u/i64")      \
+  V(F32, F64, ___, 0, 0xb6, F32DemoteF64, "f32.demote/f64")           \
+  V(F64, I32, ___, 0, 0xb7, F64ConvertSI32, "f64.convert_s/i32")      \
+  V(F64, I32, ___, 0, 0xb8, F64ConvertUI32, "f64.convert_u/i32")      \
+  V(F64, I64, ___, 0, 0xb9, F64ConvertSI64, "f64.convert_s/i64")      \
+  V(F64, I64, ___, 0, 0xba, F64ConvertUI64, "f64.convert_u/i64")      \
+  V(F64, F32, ___, 0, 0xbb, F64PromoteF32, "f64.promote/f32")         \
+  V(I32, F32, ___, 0, 0xbc, I32ReinterpretF32, "i32.reinterpret/f32") \
+  V(I64, F64, ___, 0, 0xbd, I64ReinterpretF64, "i64.reinterpret/f64") \
+  V(F32, I32, ___, 0, 0xbe, F32ReinterpretI32, "f32.reinterpret/i32") \
+  V(F64, I64, ___, 0, 0xbf, F64ReinterpretI64, "f64.reinterpret/i64")
 
-enum WabtOpcode {
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  WABT_OPCODE_##NAME = code,
+enum class WabtOpcode {
+#define V(rtype, type1, type2, mem_size, code, Name, text) \
+  Name = code,
   WABT_FOREACH_OPCODE(V)
 #undef V
-  WABT_NUM_OPCODES
+
+  First = Unreachable,
+  Last = F64ReinterpretI64,
 };
+static const int kWabtOpcodeCount = WABT_ENUM_COUNT(WabtOpcode);
 
 struct WabtOpcodeInfo {
   const char* name;
@@ -384,12 +399,12 @@ struct WabtOpcodeInfo {
   int memory_size;
 };
 
-enum WabtLiteralType {
-  WABT_LITERAL_TYPE_INT,
-  WABT_LITERAL_TYPE_FLOAT,
-  WABT_LITERAL_TYPE_HEXFLOAT,
-  WABT_LITERAL_TYPE_INFINITY,
-  WABT_LITERAL_TYPE_NAN,
+enum class WabtLiteralType {
+  Int,
+  Float,
+  Hexfloat,
+  Infinity,
+  Nan,
 };
 
 struct WabtLiteral {
@@ -477,33 +492,33 @@ extern WabtOpcodeInfo g_wabt_opcode_info[];
 void wabt_init_opcode_info(void);
 
 static WABT_INLINE const char* wabt_get_opcode_name(WabtOpcode opcode) {
-  assert(opcode < WABT_NUM_OPCODES);
+  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
   wabt_init_opcode_info();
-  return g_wabt_opcode_info[opcode].name;
+  return g_wabt_opcode_info[static_cast<size_t>(opcode)].name;
 }
 
 static WABT_INLINE WabtType wabt_get_opcode_result_type(WabtOpcode opcode) {
-  assert(opcode < WABT_NUM_OPCODES);
+  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
   wabt_init_opcode_info();
-  return g_wabt_opcode_info[opcode].result_type;
+  return g_wabt_opcode_info[static_cast<size_t>(opcode)].result_type;
 }
 
 static WABT_INLINE WabtType wabt_get_opcode_param_type_1(WabtOpcode opcode) {
-  assert(opcode < WABT_NUM_OPCODES);
+  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
   wabt_init_opcode_info();
-  return g_wabt_opcode_info[opcode].param1_type;
+  return g_wabt_opcode_info[static_cast<size_t>(opcode)].param1_type;
 }
 
 static WABT_INLINE WabtType wabt_get_opcode_param_type_2(WabtOpcode opcode) {
-  assert(opcode < WABT_NUM_OPCODES);
+  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
   wabt_init_opcode_info();
-  return g_wabt_opcode_info[opcode].param2_type;
+  return g_wabt_opcode_info[static_cast<size_t>(opcode)].param2_type;
 }
 
 static WABT_INLINE int wabt_get_opcode_memory_size(WabtOpcode opcode) {
-  assert(opcode < WABT_NUM_OPCODES);
+  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
   wabt_init_opcode_info();
-  return g_wabt_opcode_info[opcode].memory_size;
+  return g_wabt_opcode_info[static_cast<size_t>(opcode)].memory_size;
 }
 
 /* external kind */
@@ -511,8 +526,8 @@ static WABT_INLINE int wabt_get_opcode_memory_size(WabtOpcode opcode) {
 extern const char* g_wabt_kind_name[];
 
 static WABT_INLINE const char* wabt_get_kind_name(WabtExternalKind kind) {
-  assert(kind < WABT_NUM_EXTERNAL_KINDS);
-  return g_wabt_kind_name[kind];
+  assert(static_cast<int>(kind) < kWabtExternalKindCount);
+  return g_wabt_kind_name[static_cast<size_t>(kind)];
 }
 
 /* reloc */
@@ -520,22 +535,22 @@ static WABT_INLINE const char* wabt_get_kind_name(WabtExternalKind kind) {
 extern const char* g_wabt_reloc_type_name[];
 
 static WABT_INLINE const char* wabt_get_reloc_type_name(WabtRelocType reloc) {
-  assert(reloc < WABT_NUM_RELOC_TYPES);
-  return g_wabt_reloc_type_name[reloc];
+  assert(static_cast<int>(reloc) < kWabtRelocTypeCount);
+  return g_wabt_reloc_type_name[static_cast<size_t>(reloc)];
 }
 
 /* type */
 
 static WABT_INLINE const char* wabt_get_type_name(WabtType type) {
   switch (type) {
-    case WABT_TYPE_I32: return "i32";
-    case WABT_TYPE_I64: return "i64";
-    case WABT_TYPE_F32: return "f32";
-    case WABT_TYPE_F64: return "f64";
-    case WABT_TYPE_ANYFUNC: return "anyfunc";
-    case WABT_TYPE_FUNC: return "func";
-    case WABT_TYPE_VOID: return "void";
-    case WABT_TYPE_ANY: return "any";
+    case WabtType::I32: return "i32";
+    case WabtType::I64: return "i64";
+    case WabtType::F32: return "f32";
+    case WabtType::F64: return "f64";
+    case WabtType::Anyfunc: return "anyfunc";
+    case WabtType::Func: return "func";
+    case WabtType::Void: return "void";
+    case WabtType::Any: return "any";
     default: return nullptr;
   }
 }

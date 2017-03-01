@@ -43,8 +43,8 @@ static WabtBinaryErrorHandler s_error_handler =
 static WabtFileWriter s_log_stream_writer;
 static WabtStream s_log_stream;
 
-#define NOPE WABT_OPTION_NO_ARGUMENT
-#define YEP WABT_OPTION_HAS_ARGUMENT
+#define NOPE WabtHasArgument::No
+#define YEP WabtHasArgument::Yes
 
 enum {
   FLAG_VERBOSE,
@@ -177,5 +177,5 @@ int main(int argc, char** argv) {
     }
     wabt_free(data);
   }
-  return result;
+  return result != WabtResult::Ok;
 }

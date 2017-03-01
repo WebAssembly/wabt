@@ -33,21 +33,21 @@ static WabtResult write_data_to_file(size_t offset,
                                      size_t size,
                                      void* user_data) {
   if (size == 0)
-    return WABT_OK;
+    return WabtResult::Ok;
   WabtFileWriter* writer = static_cast<WabtFileWriter*>(user_data);
   if (offset != writer->offset) {
     if (fseek(writer->file, offset, SEEK_SET) != 0) {
       ERROR("fseek offset=%" PRIzd " failed, errno=%d\n", size, errno);
-      return WABT_ERROR;
+      return WabtResult::Error;
     }
     writer->offset = offset;
   }
   if (fwrite(data, size, 1, writer->file) != 1) {
     ERROR("fwrite size=%" PRIzd " failed, errno=%d\n", size, errno);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
   writer->offset += size;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult move_data_in_file(size_t dst_offset,
@@ -55,10 +55,10 @@ static WabtResult move_data_in_file(size_t dst_offset,
                                     size_t size,
                                     void* user_data) {
   if (size == 0)
-    return WABT_OK;
+    return WabtResult::Ok;
   /* TODO(binji): implement if needed. */
   ERROR0("move_data_in_file not implemented!\n");
-  return WABT_ERROR;
+  return WabtResult::Error;
 }
 
 void wabt_init_file_writer_existing(WabtFileWriter* writer, FILE* file) {
@@ -74,11 +74,11 @@ WabtResult wabt_init_file_writer(WabtFileWriter* writer, const char* filename) {
   FILE* file = fopen(filename, "wb");
   if (!file) {
     ERROR("fopen name=\"%s\" failed, errno=%d\n", filename, errno);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   wabt_init_file_writer_existing(writer, file);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 void wabt_close_file_writer(WabtFileWriter* writer) {
@@ -116,7 +116,7 @@ static WabtResult write_data_to_output_buffer(size_t offset,
          data, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult move_data_in_output_buffer(size_t dst_offset,
@@ -135,7 +135,7 @@ static WabtResult move_data_in_output_buffer(size_t dst_offset,
   memmove(dst, src, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_init_mem_writer(WabtMemoryWriter* writer) {
@@ -144,7 +144,7 @@ WabtResult wabt_init_mem_writer(WabtMemoryWriter* writer) {
   writer->base.write_data = write_data_to_output_buffer;
   writer->base.move_data = move_data_in_output_buffer;
   wabt_init_output_buffer(&writer->buf, INITIAL_OUTPUT_BUFFER_CAPACITY);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_init_mem_writer_existing(WabtMemoryWriter* writer,
@@ -156,7 +156,7 @@ WabtResult wabt_init_mem_writer_existing(WabtMemoryWriter* writer,
   writer->buf = *buf;
   /* Clear buffer, since ownership has passed to the writer. */
   WABT_ZERO_MEMORY(*buf);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 void wabt_steal_mem_writer_output_buffer(WabtMemoryWriter* writer,
@@ -176,17 +176,17 @@ WabtResult wabt_write_output_buffer_to_file(WabtOutputBuffer* buf,
   FILE* file = fopen(filename, "wb");
   if (!file) {
     ERROR("unable to open %s for writing\n", filename);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   ssize_t bytes = fwrite(buf->start, 1, buf->size, file);
   if (bytes < 0 || static_cast<size_t>(bytes) != buf->size) {
     ERROR("failed to write %" PRIzd " bytes to %s\n", buf->size, filename);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   fclose(file);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 void wabt_destroy_output_buffer(WabtOutputBuffer* buf) {

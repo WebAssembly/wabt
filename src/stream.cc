@@ -30,7 +30,7 @@ void wabt_init_stream(WabtStream* stream,
                       WabtStream* log_stream) {
   stream->writer = writer;
   stream->offset = 0;
-  stream->result = WABT_OK;
+  stream->result = WabtResult::Ok;
   stream->log_stream = log_stream;
 }
 
@@ -71,7 +71,7 @@ void wabt_write_data(WabtStream* stream,
                      const void* src,
                      size_t size,
                      const char* desc) {
-  wabt_write_data_at(stream, stream->offset, src, size, WABT_DONT_PRINT_CHARS,
+  wabt_write_data_at(stream, stream->offset, src, size, WabtPrintChars::No,
                      desc);
   stream->offset += size;
 }
@@ -102,19 +102,19 @@ void wabt_write_u8(WabtStream* stream, uint32_t value, const char* desc) {
   assert(value <= UINT8_MAX);
   uint8_t value8 = value;
   wabt_write_data_at(stream, stream->offset, &value8, sizeof(value8),
-                     WABT_DONT_PRINT_CHARS, desc);
+                     WabtPrintChars::No, desc);
   stream->offset += sizeof(value8);
 }
 
 void wabt_write_u32(WabtStream* stream, uint32_t value, const char* desc) {
   wabt_write_data_at(stream, stream->offset, &value, sizeof(value),
-                     WABT_DONT_PRINT_CHARS, desc);
+                     WabtPrintChars::No, desc);
   stream->offset += sizeof(value);
 }
 
 void wabt_write_u64(WabtStream* stream, uint64_t value, const char* desc) {
   wabt_write_data_at(stream, stream->offset, &value, sizeof(value),
-                     WABT_DONT_PRINT_CHARS, desc);
+                     WabtPrintChars::No, desc);
   stream->offset += sizeof(value);
 }
 
@@ -148,7 +148,7 @@ void wabt_write_memory_dump(WabtStream* stream,
       wabt_write_char(stream, ' ');
     }
 
-    if (print_chars == WABT_PRINT_CHARS) {
+    if (print_chars == WabtPrintChars::Yes) {
       wabt_write_char(stream, ' ');
       p = line;
       int i;

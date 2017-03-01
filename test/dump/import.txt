@@ -6,7 +6,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "TYPE" (1)
+; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 02                                        ; num types
@@ -25,7 +25,7 @@
 0000015: 01                                        ; num results
 0000016: 7f                                        ; i32
 0000009: 0d                                        ; FIXUP section size
-; section "IMPORT" (2)
+; section "Import" (2)
 0000017: 02                                        ; section code
 0000018: 00                                        ; section size (guess)
 0000019: 02                                        ; num imports
@@ -48,10 +48,10 @@ import.wasm:	file format wasm 0x000001
 
 Section Details:
 
-TYPE:
+Type:
  - [0] (i32, i64, f32, f64) -> nil
  - [1] (i32) -> i32
-IMPORT:
+Import:
  - func[0] sig=0 <- ignored.test
  - func[1] sig=1 <- ignored.test2
 

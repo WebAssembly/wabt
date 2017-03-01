@@ -6,7 +6,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "TYPE" (1)
+; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
@@ -15,13 +15,13 @@
 000000c: 00                                        ; num params
 000000d: 00                                        ; num results
 0000009: 04                                        ; FIXUP section size
-; section "FUNCTION" (3)
+; section "Function" (3)
 000000e: 03                                        ; section code
 000000f: 00                                        ; section size (guess)
 0000010: 01                                        ; num functions
 0000011: 00                                        ; function 0 signature index
 000000f: 02                                        ; FIXUP section size
-; section "TABLE" (4)
+; section "Table" (4)
 0000012: 04                                        ; section code
 0000013: 00                                        ; section size (guess)
 0000014: 01                                        ; num tables
@@ -30,7 +30,7 @@
 0000016: 00                                        ; limits: flags
 0000017: 01                                        ; limits: initial
 0000013: 04                                        ; FIXUP section size
-; section "ELEM" (9)
+; section "Elem" (9)
 0000018: 09                                        ; section code
 0000019: 00                                        ; section size (guess)
 000001a: 01                                        ; num elem segments
@@ -43,7 +43,7 @@
 0000020: 01                                        ; num function indices
 0000021: 00                                        ; function index
 0000019: 08                                        ; FIXUP section size
-; section "CODE" (10)
+; section "Code" (10)
 0000022: 0a                                        ; section code
 0000023: 00                                        ; section size (guess)
 0000024: 01                                        ; num functions

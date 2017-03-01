@@ -23,9 +23,9 @@
 #include "common.h"
 #include "vector.h"
 
-enum WabtAstLexerSourceType {
-  WABT_LEXER_SOURCE_TYPE_FILE,
-  WABT_LEXER_SOURCE_TYPE_BUFFER,
+enum class WabtAstLexerSourceType {
+  File,
+  Buffer,
 };
 
 struct WabtAstLexerSource {

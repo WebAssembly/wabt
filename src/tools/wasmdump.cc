@@ -27,8 +27,8 @@
 
 #define PROGRAM_NAME "wasmdump"
 
-#define NOPE WABT_OPTION_NO_ARGUMENT
-#define YEP WABT_OPTION_HAS_ARGUMENT
+#define NOPE WabtHasArgument::No
+#define YEP WabtHasArgument::Yes
 
 enum {
   FLAG_HEADERS,
@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
   WabtResult result =
       wabt_read_file(s_objdump_options.infile, &void_data, &size);
   if (WABT_FAILED(result))
-    return result;
+    return result != WabtResult::Ok;
 
   uint8_t* data = static_cast<uint8_t*>(void_data);
 
@@ -165,14 +165,14 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  s_objdump_options.mode = WABT_DUMP_PREPASS;
+  s_objdump_options.mode = WabtObjdumpMode::Prepass;
   result = wabt_read_binary_objdump(data, size, &s_objdump_options);
   if (WABT_FAILED(result))
     goto done;
 
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {
-    s_objdump_options.mode = WABT_DUMP_HEADERS;
+    s_objdump_options.mode = WabtObjdumpMode::Headers;
     result = wabt_read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
@@ -180,14 +180,14 @@ int main(int argc, char** argv) {
   }
   // Pass 2: Print extra information based on section type
   if (s_objdump_options.details) {
-    s_objdump_options.mode = WABT_DUMP_DETAILS;
+    s_objdump_options.mode = WabtObjdumpMode::Details;
     result = wabt_read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
     s_objdump_options.print_header = 0;
   }
   if (s_objdump_options.disassemble) {
-    s_objdump_options.mode = WABT_DUMP_DISASSEMBLE;
+    s_objdump_options.mode = WabtObjdumpMode::Disassemble;
     result = wabt_read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
@@ -195,11 +195,11 @@ int main(int argc, char** argv) {
   }
   // Pass 3: Dump to raw contents of the sections
   if (s_objdump_options.raw) {
-    s_objdump_options.mode = WABT_DUMP_RAW_DATA;
+    s_objdump_options.mode = WabtObjdumpMode::RawData;
     result = wabt_read_binary_objdump(data, size, &s_objdump_options);
   }
 
 done:
   wabt_free(data);
-  return result;
+  return result != WabtResult::Ok;
 }

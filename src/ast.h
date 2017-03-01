@@ -26,9 +26,9 @@
 #include "type-vector.h"
 #include "vector.h"
 
-enum WabtVarType {
-  WABT_VAR_TYPE_INDEX,
-  WABT_VAR_TYPE_NAME,
+enum class WabtVarType {
+  Index,
+  Name,
 };
 
 struct WabtVar {
@@ -56,34 +56,34 @@ struct WabtConst {
 };
 WABT_DEFINE_VECTOR(const, WabtConst);
 
-enum WabtExprType {
-  WABT_EXPR_TYPE_BINARY,
-  WABT_EXPR_TYPE_BLOCK,
-  WABT_EXPR_TYPE_BR,
-  WABT_EXPR_TYPE_BR_IF,
-  WABT_EXPR_TYPE_BR_TABLE,
-  WABT_EXPR_TYPE_CALL,
-  WABT_EXPR_TYPE_CALL_INDIRECT,
-  WABT_EXPR_TYPE_COMPARE,
-  WABT_EXPR_TYPE_CONST,
-  WABT_EXPR_TYPE_CONVERT,
-  WABT_EXPR_TYPE_CURRENT_MEMORY,
-  WABT_EXPR_TYPE_DROP,
-  WABT_EXPR_TYPE_GET_GLOBAL,
-  WABT_EXPR_TYPE_GET_LOCAL,
-  WABT_EXPR_TYPE_GROW_MEMORY,
-  WABT_EXPR_TYPE_IF,
-  WABT_EXPR_TYPE_LOAD,
-  WABT_EXPR_TYPE_LOOP,
-  WABT_EXPR_TYPE_NOP,
-  WABT_EXPR_TYPE_RETURN,
-  WABT_EXPR_TYPE_SELECT,
-  WABT_EXPR_TYPE_SET_GLOBAL,
-  WABT_EXPR_TYPE_SET_LOCAL,
-  WABT_EXPR_TYPE_STORE,
-  WABT_EXPR_TYPE_TEE_LOCAL,
-  WABT_EXPR_TYPE_UNARY,
-  WABT_EXPR_TYPE_UNREACHABLE,
+enum class WabtExprType {
+  Binary,
+  Block,
+  Br,
+  BrIf,
+  BrTable,
+  Call,
+  CallIndirect,
+  Compare,
+  Const,
+  Convert,
+  CurrentMemory,
+  Drop,
+  GetGlobal,
+  GetLocal,
+  GrowMemory,
+  If,
+  Load,
+  Loop,
+  Nop,
+  Return,
+  Select,
+  SetGlobal,
+  SetLocal,
+  Store,
+  TeeLocal,
+  Unary,
+  Unreachable,
 };
 
 typedef WabtTypeVector WabtBlockSignature;
@@ -213,17 +213,17 @@ struct WabtExport {
 typedef WabtExport* WabtExportPtr;
 WABT_DEFINE_VECTOR(export_ptr, WabtExportPtr);
 
-enum WabtModuleFieldType {
-  WABT_MODULE_FIELD_TYPE_FUNC,
-  WABT_MODULE_FIELD_TYPE_GLOBAL,
-  WABT_MODULE_FIELD_TYPE_IMPORT,
-  WABT_MODULE_FIELD_TYPE_EXPORT,
-  WABT_MODULE_FIELD_TYPE_FUNC_TYPE,
-  WABT_MODULE_FIELD_TYPE_TABLE,
-  WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT,
-  WABT_MODULE_FIELD_TYPE_MEMORY,
-  WABT_MODULE_FIELD_TYPE_DATA_SEGMENT,
-  WABT_MODULE_FIELD_TYPE_START,
+enum class WabtModuleFieldType {
+  Func,
+  Global,
+  Import,
+  Export,
+  FuncType,
+  Table,
+  ElemSegment,
+  Memory,
+  DataSegment,
+  Start,
 };
 
 struct WabtModuleField {
@@ -276,9 +276,9 @@ struct WabtModule {
   WabtBindingHash memory_bindings;
 };
 
-enum WabtRawModuleType {
-  WABT_RAW_MODULE_TYPE_TEXT,
-  WABT_RAW_MODULE_TYPE_BINARY,
+enum class WabtRawModuleType {
+  Text,
+  Binary,
 };
 
 /* "raw" means that the binary module has not yet been decoded. This is only
@@ -299,9 +299,9 @@ struct WabtRawModule {
   };
 };
 
-enum WabtActionType {
-  WABT_ACTION_TYPE_INVOKE,
-  WABT_ACTION_TYPE_GET,
+enum class WabtActionType {
+  Invoke,
+  Get,
 };
 
 struct WabtActionInvoke {
@@ -323,23 +323,26 @@ struct WabtAction {
   };
 };
 
-enum WabtCommandType {
-  WABT_COMMAND_TYPE_MODULE,
-  WABT_COMMAND_TYPE_ACTION,
-  WABT_COMMAND_TYPE_REGISTER,
-  WABT_COMMAND_TYPE_ASSERT_MALFORMED,
-  WABT_COMMAND_TYPE_ASSERT_INVALID,
+enum class WabtCommandType {
+  Module,
+  Action,
+  Register,
+  AssertMalformed,
+  AssertInvalid,
   /* This is a module that is invalid, but cannot be written as a binary module
    * (e.g. it has unresolvable names.) */
-  WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY,
-  WABT_COMMAND_TYPE_ASSERT_UNLINKABLE,
-  WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE,
-  WABT_COMMAND_TYPE_ASSERT_RETURN,
-  WABT_COMMAND_TYPE_ASSERT_RETURN_NAN,
-  WABT_COMMAND_TYPE_ASSERT_TRAP,
-  WABT_COMMAND_TYPE_ASSERT_EXHAUSTION,
-  WABT_NUM_COMMAND_TYPES,
+  AssertInvalidNonBinary,
+  AssertUnlinkable,
+  AssertUninstantiable,
+  AssertReturn,
+  AssertReturnNan,
+  AssertTrap,
+  AssertExhaustion,
+
+  First = Module,
+  Last = AssertExhaustion,
 };
+static const int kWabtCommandTypeCount = WABT_ENUM_COUNT(WabtCommandType);
 
 struct WabtCommand {
   WabtCommandType type;
@@ -580,8 +583,8 @@ wabt_get_func_type_num_results(const WabtFuncType* func_type) {
 static WABT_INLINE const WabtLocation* wabt_get_raw_module_location(
     const WabtRawModule* raw) {
   switch (raw->type) {
-    case WABT_RAW_MODULE_TYPE_BINARY: return &raw->binary.loc;
-    case WABT_RAW_MODULE_TYPE_TEXT: return &raw->text->loc;
+    case WabtRawModuleType::Binary: return &raw->binary.loc;
+    case WabtRawModuleType::Text: return &raw->text->loc;
     default:
       assert(0);
       return nullptr;

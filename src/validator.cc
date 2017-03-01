@@ -28,10 +28,10 @@
 #include "binary-reader.h"
 #include "type-checker.h"
 
-enum ActionResultKind {
-  ACTION_RESULT_KIND_ERROR,
-  ACTION_RESULT_KIND_TYPES,
-  ACTION_RESULT_KIND_TYPE,
+enum class ActionResultKind {
+  Error,
+  Types,
+  Type,
 };
 
 struct ActionResult {
@@ -59,7 +59,7 @@ struct Context {
 
 static void WABT_PRINTF_FORMAT(3, 4)
     print_error(Context* ctx, const WabtLocation* loc, const char* fmt, ...) {
-  ctx->result = WABT_ERROR;
+  ctx->result = WabtResult::Error;
   va_list args;
   va_start(args, fmt);
   wabt_ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
@@ -86,15 +86,15 @@ static WabtResult check_var(Context* ctx,
                             const WabtVar* var,
                             const char* desc,
                             int* out_index) {
-  assert(var->type == WABT_VAR_TYPE_INDEX);
+  assert(var->type == WabtVarType::Index);
   if (var->index >= 0 && var->index < max_index) {
     if (out_index)
       *out_index = var->index;
-    return WABT_OK;
+    return WabtResult::Ok;
   }
   print_error(ctx, &var->loc, "%s variable out of range (max %d)", desc,
               max_index);
-  return WABT_ERROR;
+  return WabtResult::Error;
 }
 
 static WabtResult check_func_var(Context* ctx,
@@ -103,12 +103,12 @@ static WabtResult check_func_var(Context* ctx,
   int index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->funcs.size, var,
                             "function", &index))) {
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   if (out_func)
     *out_func = ctx->current_module->funcs.data[index];
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult check_global_var(Context* ctx,
@@ -118,21 +118,21 @@ static WabtResult check_global_var(Context* ctx,
   int index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->globals.size, var,
                             "global", &index))) {
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   if (out_global)
     *out_global = ctx->current_module->globals.data[index];
   if (out_global_index)
     *out_global_index = index;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtType get_global_var_type_or_any(Context* ctx, const WabtVar* var) {
   const WabtGlobal* global;
   if (WABT_SUCCEEDED(check_global_var(ctx, var, &global, nullptr)))
     return global->type;
-  return WABT_TYPE_ANY;
+  return WabtType::Any;
 }
 
 static WabtResult check_func_type_var(Context* ctx,
@@ -141,12 +141,12 @@ static WabtResult check_func_type_var(Context* ctx,
   int index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->func_types.size, var,
                             "function type", &index))) {
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   if (out_func_type)
     *out_func_type = ctx->current_module->func_types.data[index];
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult check_table_var(Context* ctx,
@@ -155,12 +155,12 @@ static WabtResult check_table_var(Context* ctx,
   int index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->tables.size, var, "table",
                             &index))) {
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   if (out_table)
     *out_table = ctx->current_module->tables.data[index];
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult check_memory_var(Context* ctx,
@@ -169,12 +169,12 @@ static WabtResult check_memory_var(Context* ctx,
   int index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->memories.size, var,
                             "memory", &index))) {
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   if (out_memory)
     *out_memory = ctx->current_module->memories.data[index];
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult check_local_var(Context* ctx,
@@ -192,10 +192,10 @@ static WabtResult check_local_var(Context* ctx,
         *out_type = ctx->current_func->local_types.data[index - num_params];
       }
     }
-    return WABT_OK;
+    return WabtResult::Ok;
   }
 
-  if (var->type == WABT_VAR_TYPE_NAME) {
+  if (var->type == WabtVarType::Name) {
     print_error(ctx, &var->loc,
                 "undefined local variable \"" PRIstringslice "\"",
                 WABT_PRINTF_STRING_SLICE_ARG(var->name));
@@ -203,11 +203,11 @@ static WabtResult check_local_var(Context* ctx,
     print_error(ctx, &var->loc, "local variable out of range (max %d)",
                 max_index);
   }
-  return WABT_ERROR;
+  return WabtResult::Error;
 }
 
 static WabtType get_local_var_type_or_any(Context* ctx, const WabtVar* var) {
-  WabtType type = WABT_TYPE_ANY;
+  WabtType type = WabtType::Any;
   check_local_var(ctx, var, &type);
   return type;
 }
@@ -253,8 +253,8 @@ static void check_type_index(Context* ctx,
                              const char* desc,
                              int index,
                              const char* index_kind) {
-  if (expected != actual && expected != WABT_TYPE_ANY &&
-      actual != WABT_TYPE_ANY) {
+  if (expected != actual && expected != WabtType::Any &&
+      actual != WabtType::Any) {
     print_error(ctx, loc, "type mismatch for %s %d of %s. got %s, expected %s",
                 index_kind, index, desc, wabt_get_type_name(actual),
                 wabt_get_type_name(expected));
@@ -303,7 +303,7 @@ static void check_const_type(Context* ctx,
                              const char* desc) {
   WabtTypeVector actual_types;
   WABT_ZERO_MEMORY(actual_types);
-  actual_types.size = actual == WABT_TYPE_VOID ? 0 : 1;
+  actual_types.size = actual == WabtType::Void ? 0 : 1;
   actual_types.data = &actual;
   check_const_types(ctx, loc, &actual_types, expected, desc);
 }
@@ -314,7 +314,7 @@ static void check_assert_return_nan_type(Context* ctx,
                                          const char* desc) {
   /* when using assert_return_nan, the result can be either a f32 or f64 type
    * so we special case it here. */
-  if (actual != WABT_TYPE_F32 && actual != WABT_TYPE_F64) {
+  if (actual != WabtType::F32 && actual != WabtType::F64) {
     print_error(ctx, loc, "type mismatch at %s. got %s, expected f32 or f64",
                 desc, wabt_get_type_name(actual));
   }
@@ -345,25 +345,25 @@ static void check_expr(Context* ctx, const WabtExpr* expr) {
   ctx->expr_loc = &expr->loc;
 
   switch (expr->type) {
-    case WABT_EXPR_TYPE_BINARY:
+    case WabtExprType::Binary:
       wabt_typechecker_on_binary(&ctx->typechecker, expr->binary.opcode);
       break;
 
-    case WABT_EXPR_TYPE_BLOCK:
+    case WabtExprType::Block:
       wabt_typechecker_on_block(&ctx->typechecker, &expr->block.sig);
       check_expr_list(ctx, &expr->loc, expr->block.first);
       wabt_typechecker_on_end(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_BR:
+    case WabtExprType::Br:
       wabt_typechecker_on_br(&ctx->typechecker, expr->br.var.index);
       break;
 
-    case WABT_EXPR_TYPE_BR_IF:
+    case WabtExprType::BrIf:
       wabt_typechecker_on_br_if(&ctx->typechecker, expr->br_if.var.index);
       break;
 
-    case WABT_EXPR_TYPE_BR_TABLE: {
+    case WabtExprType::BrTable: {
       wabt_typechecker_begin_br_table(&ctx->typechecker);
       size_t i;
       for (i = 0; i < expr->br_table.targets.size; ++i) {
@@ -376,7 +376,7 @@ static void check_expr(Context* ctx, const WabtExpr* expr) {
       break;
     }
 
-    case WABT_EXPR_TYPE_CALL: {
+    case WabtExprType::Call: {
       const WabtFunc* callee;
       if (WABT_SUCCEEDED(check_func_var(ctx, &expr->call.var, &callee))) {
         wabt_typechecker_on_call(&ctx->typechecker,
@@ -386,7 +386,7 @@ static void check_expr(Context* ctx, const WabtExpr* expr) {
       break;
     }
 
-    case WABT_EXPR_TYPE_CALL_INDIRECT: {
+    case WabtExprType::CallIndirect: {
       const WabtFuncType* func_type;
       if (ctx->current_module->tables.size == 0) {
         print_error(ctx, &expr->loc,
@@ -401,40 +401,40 @@ static void check_expr(Context* ctx, const WabtExpr* expr) {
       break;
     }
 
-    case WABT_EXPR_TYPE_COMPARE:
+    case WabtExprType::Compare:
       wabt_typechecker_on_compare(&ctx->typechecker, expr->compare.opcode);
       break;
 
-    case WABT_EXPR_TYPE_CONST:
+    case WabtExprType::Const:
       wabt_typechecker_on_const(&ctx->typechecker, expr->const_.type);
       break;
 
-    case WABT_EXPR_TYPE_CONVERT:
+    case WabtExprType::Convert:
       wabt_typechecker_on_convert(&ctx->typechecker, expr->convert.opcode);
       break;
 
-    case WABT_EXPR_TYPE_DROP:
+    case WabtExprType::Drop:
       wabt_typechecker_on_drop(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_GET_GLOBAL:
+    case WabtExprType::GetGlobal:
       wabt_typechecker_on_get_global(
           &ctx->typechecker,
           get_global_var_type_or_any(ctx, &expr->get_global.var));
       break;
 
-    case WABT_EXPR_TYPE_GET_LOCAL:
+    case WabtExprType::GetLocal:
       wabt_typechecker_on_get_local(
           &ctx->typechecker,
           get_local_var_type_or_any(ctx, &expr->get_local.var));
       break;
 
-    case WABT_EXPR_TYPE_GROW_MEMORY:
-      check_has_memory(ctx, &expr->loc, WABT_OPCODE_GROW_MEMORY);
+    case WabtExprType::GrowMemory:
+      check_has_memory(ctx, &expr->loc, WabtOpcode::GrowMemory);
       wabt_typechecker_on_grow_memory(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_IF:
+    case WabtExprType::If:
       wabt_typechecker_on_if(&ctx->typechecker, &expr->if_.true_.sig);
       check_expr_list(ctx, &expr->loc, expr->if_.true_.first);
       if (expr->if_.false_) {
@@ -444,7 +444,7 @@ static void check_expr(Context* ctx, const WabtExpr* expr) {
       wabt_typechecker_on_end(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_LOAD:
+    case WabtExprType::Load:
       check_has_memory(ctx, &expr->loc, expr->load.opcode);
       check_align(ctx, &expr->loc, expr->load.align,
                   get_opcode_natural_alignment(expr->load.opcode));
@@ -452,41 +452,41 @@ static void check_expr(Context* ctx, const WabtExpr* expr) {
       wabt_typechecker_on_load(&ctx->typechecker, expr->load.opcode);
       break;
 
-    case WABT_EXPR_TYPE_LOOP:
+    case WabtExprType::Loop:
       wabt_typechecker_on_loop(&ctx->typechecker, &expr->loop.sig);
       check_expr_list(ctx, &expr->loc, expr->loop.first);
       wabt_typechecker_on_end(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_CURRENT_MEMORY:
-      check_has_memory(ctx, &expr->loc, WABT_OPCODE_CURRENT_MEMORY);
+    case WabtExprType::CurrentMemory:
+      check_has_memory(ctx, &expr->loc, WabtOpcode::CurrentMemory);
       wabt_typechecker_on_current_memory(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_NOP:
+    case WabtExprType::Nop:
       break;
 
-    case WABT_EXPR_TYPE_RETURN:
+    case WabtExprType::Return:
       wabt_typechecker_on_return(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_SELECT:
+    case WabtExprType::Select:
       wabt_typechecker_on_select(&ctx->typechecker);
       break;
 
-    case WABT_EXPR_TYPE_SET_GLOBAL:
+    case WabtExprType::SetGlobal:
       wabt_typechecker_on_set_global(
           &ctx->typechecker,
           get_global_var_type_or_any(ctx, &expr->set_global.var));
       break;
 
-    case WABT_EXPR_TYPE_SET_LOCAL:
+    case WabtExprType::SetLocal:
       wabt_typechecker_on_set_local(
           &ctx->typechecker,
           get_local_var_type_or_any(ctx, &expr->set_local.var));
       break;
 
-    case WABT_EXPR_TYPE_STORE:
+    case WabtExprType::Store:
       check_has_memory(ctx, &expr->loc, expr->store.opcode);
       check_align(ctx, &expr->loc, expr->store.align,
                   get_opcode_natural_alignment(expr->store.opcode));
@@ -494,17 +494,17 @@ static void check_expr(Context* ctx, const WabtExpr* expr) {
       wabt_typechecker_on_store(&ctx->typechecker, expr->store.opcode);
       break;
 
-    case WABT_EXPR_TYPE_TEE_LOCAL:
+    case WabtExprType::TeeLocal:
       wabt_typechecker_on_tee_local(
           &ctx->typechecker,
           get_local_var_type_or_any(ctx, &expr->tee_local.var));
       break;
 
-    case WABT_EXPR_TYPE_UNARY:
+    case WabtExprType::Unary:
       wabt_typechecker_on_unary(&ctx->typechecker, expr->unary.opcode);
       break;
 
-    case WABT_EXPR_TYPE_UNREACHABLE:
+    case WabtExprType::Unreachable:
       wabt_typechecker_on_unreachable(&ctx->typechecker);
       break;
   }
@@ -561,7 +561,7 @@ static void check_const_init_expr(Context* ctx,
                                   const WabtExpr* expr,
                                   WabtType expected_type,
                                   const char* desc) {
-  WabtType type = WABT_TYPE_VOID;
+  WabtType type = WabtType::Void;
   if (expr) {
     if (expr->next) {
       print_const_expr_error(ctx, loc, desc);
@@ -569,11 +569,11 @@ static void check_const_init_expr(Context* ctx,
     }
 
     switch (expr->type) {
-      case WABT_EXPR_TYPE_CONST:
+      case WabtExprType::Const:
         type = expr->const_.type;
         break;
 
-      case WABT_EXPR_TYPE_GET_GLOBAL: {
+      case WabtExprType::GetGlobal: {
         const WabtGlobal* ref_global = nullptr;
         int ref_global_index;
         if (WABT_FAILED(check_global_var(ctx, &expr->get_global.var,
@@ -652,7 +652,7 @@ static void check_table(Context* ctx,
 static void check_elem_segments(Context* ctx, const WabtModule* module) {
   WabtModuleField* field;
   for (field = module->first_field; field; field = field->next) {
-    if (field->type != WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT)
+    if (field->type != WabtModuleFieldType::ElemSegment)
       continue;
 
     WabtElemSegment* elem_segment = &field->elem_segment;
@@ -668,7 +668,7 @@ static void check_elem_segments(Context* ctx, const WabtModule* module) {
         continue;
     }
 
-    check_const_init_expr(ctx, &field->loc, elem_segment->offset, WABT_TYPE_I32,
+    check_const_init_expr(ctx, &field->loc, elem_segment->offset, WabtType::I32,
                           "elem segment offset");
   }
 }
@@ -684,7 +684,7 @@ static void check_memory(Context* ctx,
 static void check_data_segments(Context* ctx, const WabtModule* module) {
   WabtModuleField* field;
   for (field = module->first_field; field; field = field->next) {
-    if (field->type != WABT_MODULE_FIELD_TYPE_DATA_SEGMENT)
+    if (field->type != WabtModuleFieldType::DataSegment)
       continue;
 
     WabtDataSegment* data_segment = &field->data_segment;
@@ -693,7 +693,7 @@ static void check_data_segments(Context* ctx, const WabtModule* module) {
             check_memory_var(ctx, &data_segment->memory_var, &memory)))
       continue;
 
-    check_const_init_expr(ctx, &field->loc, data_segment->offset, WABT_TYPE_I32,
+    check_const_init_expr(ctx, &field->loc, data_segment->offset, WabtType::I32,
                           "data segment offset");
   }
 }
@@ -702,43 +702,40 @@ static void check_import(Context* ctx,
                          const WabtLocation* loc,
                          const WabtImport* import) {
   switch (import->kind) {
-    case WABT_EXTERNAL_KIND_FUNC:
+    case WabtExternalKind::Func:
       if (wabt_decl_has_func_type(&import->func.decl))
         check_func_type_var(ctx, &import->func.decl.type_var, nullptr);
       break;
-    case WABT_EXTERNAL_KIND_TABLE:
+    case WabtExternalKind::Table:
       check_table(ctx, loc, &import->table);
       ctx->current_table_index++;
       break;
-    case WABT_EXTERNAL_KIND_MEMORY:
+    case WabtExternalKind::Memory:
       check_memory(ctx, loc, &import->memory);
       ctx->current_memory_index++;
       break;
-    case WABT_EXTERNAL_KIND_GLOBAL:
+    case WabtExternalKind::Global:
       if (import->global.mutable_) {
         print_error(ctx, loc, "mutable globals cannot be imported");
       }
       ctx->num_imported_globals++;
       ctx->current_global_index++;
       break;
-    case WABT_NUM_EXTERNAL_KINDS:
-      assert(0);
-      break;
   }
 }
 
 static void check_export(Context* ctx, const WabtExport* export_) {
   switch (export_->kind) {
-    case WABT_EXTERNAL_KIND_FUNC:
+    case WabtExternalKind::Func:
       check_func_var(ctx, &export_->var, nullptr);
       break;
-    case WABT_EXTERNAL_KIND_TABLE:
+    case WabtExternalKind::Table:
       check_table_var(ctx, &export_->var, nullptr);
       break;
-    case WABT_EXTERNAL_KIND_MEMORY:
+    case WabtExternalKind::Memory:
       check_memory_var(ctx, &export_->var, nullptr);
       break;
-    case WABT_EXTERNAL_KIND_GLOBAL: {
+    case WabtExternalKind::Global: {
       const WabtGlobal* global;
       if (WABT_SUCCEEDED(
               check_global_var(ctx, &export_->var, &global, nullptr))) {
@@ -749,9 +746,6 @@ static void check_export(Context* ctx, const WabtExport* export_) {
       }
       break;
     }
-    case WABT_NUM_EXTERNAL_KINDS:
-      assert(0);
-      break;
   }
 }
 
@@ -785,45 +779,45 @@ static void check_module(Context* ctx, const WabtModule* module) {
   WabtModuleField* field;
   for (field = module->first_field; field; field = field->next) {
     switch (field->type) {
-      case WABT_MODULE_FIELD_TYPE_FUNC:
+      case WabtModuleFieldType::Func:
         check_func(ctx, &field->loc, &field->func);
         break;
 
-      case WABT_MODULE_FIELD_TYPE_GLOBAL:
+      case WabtModuleFieldType::Global:
         check_global(ctx, &field->loc, &field->global);
         ctx->current_global_index++;
         break;
 
-      case WABT_MODULE_FIELD_TYPE_IMPORT:
+      case WabtModuleFieldType::Import:
         check_import(ctx, &field->loc, &field->import);
         break;
 
-      case WABT_MODULE_FIELD_TYPE_EXPORT:
+      case WabtModuleFieldType::Export:
         check_export(ctx, &field->export_);
         break;
 
-      case WABT_MODULE_FIELD_TYPE_TABLE:
+      case WabtModuleFieldType::Table:
         check_table(ctx, &field->loc, &field->table);
         ctx->current_table_index++;
         break;
 
-      case WABT_MODULE_FIELD_TYPE_ELEM_SEGMENT:
+      case WabtModuleFieldType::ElemSegment:
         /* checked below */
         break;
 
-      case WABT_MODULE_FIELD_TYPE_MEMORY:
+      case WabtModuleFieldType::Memory:
         check_memory(ctx, &field->loc, &field->memory);
         ctx->current_memory_index++;
         break;
 
-      case WABT_MODULE_FIELD_TYPE_DATA_SEGMENT:
+      case WabtModuleFieldType::DataSegment:
         /* checked below */
         break;
 
-      case WABT_MODULE_FIELD_TYPE_FUNC_TYPE:
+      case WabtModuleFieldType::FuncType:
         break;
 
-      case WABT_MODULE_FIELD_TYPE_START: {
+      case WabtModuleFieldType::Start: {
         if (seen_start) {
           print_error(ctx, &field->loc, "only one start function allowed");
         }
@@ -905,7 +899,7 @@ static WabtResult check_get(Context* ctx,
       wabt_get_module_by_var(ctx->script, &action->module_var);
   if (!module) {
     print_error(ctx, &action->loc, "unknown module");
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   WabtExport* export_ = wabt_get_export_by_name(module, &get->name);
@@ -913,17 +907,17 @@ static WabtResult check_get(Context* ctx,
     print_error(ctx, &action->loc,
                 "unknown global export \"" PRIstringslice "\"",
                 WABT_PRINTF_STRING_SLICE_ARG(get->name));
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   WabtGlobal* global = wabt_get_global_by_var(module, &export_->var);
   if (!global) {
     /* this error will have already been reported, just skip it */
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   *out_type = global->type;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static ActionResult check_action(Context* ctx, const WabtAction* action) {
@@ -931,17 +925,17 @@ static ActionResult check_action(Context* ctx, const WabtAction* action) {
   WABT_ZERO_MEMORY(result);
 
   switch (action->type) {
-    case WABT_ACTION_TYPE_INVOKE:
+    case WabtActionType::Invoke:
       result.types = check_invoke(ctx, action);
       result.kind =
-          result.types ? ACTION_RESULT_KIND_TYPES : ACTION_RESULT_KIND_ERROR;
+          result.types ? ActionResultKind::Types : ActionResultKind::Error;
       break;
 
-    case WABT_ACTION_TYPE_GET:
+    case WabtActionType::Get:
       if (WABT_SUCCEEDED(check_get(ctx, action, &result.type)))
-        result.kind = ACTION_RESULT_KIND_TYPE;
+        result.kind = ActionResultKind::Type;
       else
-        result.kind = ACTION_RESULT_KIND_ERROR;
+        result.kind = ActionResultKind::Error;
       break;
   }
 
@@ -950,78 +944,73 @@ static ActionResult check_action(Context* ctx, const WabtAction* action) {
 
 static void check_command(Context* ctx, const WabtCommand* command) {
   switch (command->type) {
-    case WABT_COMMAND_TYPE_MODULE:
+    case WabtCommandType::Module:
       check_module(ctx, &command->module);
       break;
 
-    case WABT_COMMAND_TYPE_ACTION:
+    case WabtCommandType::Action:
       /* ignore result type */
       check_action(ctx, &command->action);
       break;
 
-    case WABT_COMMAND_TYPE_REGISTER:
-    case WABT_COMMAND_TYPE_ASSERT_MALFORMED:
-    case WABT_COMMAND_TYPE_ASSERT_INVALID:
-    case WABT_COMMAND_TYPE_ASSERT_INVALID_NON_BINARY:
-    case WABT_COMMAND_TYPE_ASSERT_UNLINKABLE:
-    case WABT_COMMAND_TYPE_ASSERT_UNINSTANTIABLE:
+    case WabtCommandType::Register:
+    case WabtCommandType::AssertMalformed:
+    case WabtCommandType::AssertInvalid:
+    case WabtCommandType::AssertInvalidNonBinary:
+    case WabtCommandType::AssertUnlinkable:
+    case WabtCommandType::AssertUninstantiable:
       /* ignore */
       break;
 
-    case WABT_COMMAND_TYPE_ASSERT_RETURN: {
+    case WabtCommandType::AssertReturn: {
       const WabtAction* action = &command->assert_return.action;
       ActionResult result = check_action(ctx, action);
       switch (result.kind) {
-        case ACTION_RESULT_KIND_TYPES:
+        case ActionResultKind::Types:
           check_const_types(ctx, &action->loc, result.types,
                             &command->assert_return.expected, "action");
           break;
 
-        case ACTION_RESULT_KIND_TYPE:
+        case ActionResultKind::Type:
           check_const_type(ctx, &action->loc, result.type,
                            &command->assert_return.expected, "action");
           break;
 
-        case ACTION_RESULT_KIND_ERROR:
+        case ActionResultKind::Error:
           /* error occurred, don't do any further checks */
           break;
       }
       break;
     }
 
-    case WABT_COMMAND_TYPE_ASSERT_RETURN_NAN: {
+    case WabtCommandType::AssertReturnNan: {
       const WabtAction* action = &command->assert_return_nan.action;
       ActionResult result = check_action(ctx, action);
 
       /* a valid result type will either be f32 or f64; convert a TYPES result
-       * into a TYPE result, so it is easier to check below. WABT_TYPE_ANY is
+       * into a TYPE result, so it is easier to check below. WabtType::Any is
        * used to specify a type that should not be checked (because an earlier
        * error occurred). */
-      if (result.kind == ACTION_RESULT_KIND_TYPES) {
+      if (result.kind == ActionResultKind::Types) {
         if (result.types->size == 1) {
-          result.kind = ACTION_RESULT_KIND_TYPE;
+          result.kind = ActionResultKind::Type;
           result.type = result.types->data[0];
         } else {
           print_error(ctx, &action->loc, "expected 1 result, got %" PRIzd,
                       result.types->size);
-          result.type = WABT_TYPE_ANY;
+          result.type = WabtType::Any;
         }
       }
 
-      if (result.kind == ACTION_RESULT_KIND_TYPE &&
-          result.type != WABT_TYPE_ANY)
+      if (result.kind == ActionResultKind::Type && result.type != WabtType::Any)
         check_assert_return_nan_type(ctx, &action->loc, result.type, "action");
       break;
     }
 
-    case WABT_COMMAND_TYPE_ASSERT_TRAP:
-    case WABT_COMMAND_TYPE_ASSERT_EXHAUSTION:
+    case WabtCommandType::AssertTrap:
+    case WabtCommandType::AssertExhaustion:
       /* ignore result type */
       check_action(ctx, &command->assert_trap.action);
-      break;
-
-    case WABT_NUM_COMMAND_TYPES:
-      assert(0);
       break;
   }
 }
@@ -1037,7 +1026,7 @@ WabtResult wabt_validate_script(WabtAstLexer* lexer,
   WABT_ZERO_MEMORY(ctx);
   ctx.lexer = lexer;
   ctx.error_handler = error_handler;
-  ctx.result = WABT_OK;
+  ctx.result = WabtResult::Ok;
   ctx.script = script;
 
   WabtTypeCheckerErrorHandler tc_error_handler;

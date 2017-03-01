@@ -31,35 +31,35 @@ linked.wasm:	file format wasm 0x000001
 
 Sections:
 
-     TYPE start=0x0000000a end=0x00000024 (size=0x0000001a) count: 6
-   IMPORT start=0x0000002a end=0x00000069 (size=0x0000003f) count: 3
- FUNCTION start=0x0000006f end=0x00000073 (size=0x00000004) count: 3
-    TABLE start=0x00000079 end=0x0000007e (size=0x00000005) count: 1
-     ELEM start=0x00000084 end=0x000000ad (size=0x00000029) count: 1
-     CODE start=0x000000af end=0x000000f1 (size=0x00000042) count: 3
-   CUSTOM start=0x000000f7 end=0x00000112 (size=0x0000001b) "reloc.ELEM"
-   CUSTOM start=0x00000118 end=0x00000131 (size=0x00000019) "reloc.CODE"
+     Type start=0x0000000a end=0x00000024 (size=0x0000001a) count: 6
+   Import start=0x0000002a end=0x00000069 (size=0x0000003f) count: 3
+ Function start=0x0000006f end=0x00000073 (size=0x00000004) count: 3
+    Table start=0x00000079 end=0x0000007e (size=0x00000005) count: 1
+     Elem start=0x00000084 end=0x000000ad (size=0x00000029) count: 1
+     Code start=0x000000af end=0x000000f1 (size=0x00000042) count: 3
+   Custom start=0x000000f7 end=0x00000112 (size=0x0000001b) "reloc.Elem"
+   Custom start=0x00000118 end=0x00000131 (size=0x00000019) "reloc.Code"
 
 Section Details:
 
-TYPE:
+Type:
  - [0] (i32) -> i32
  - [1] (i32) -> nil
  - [2] (f64) -> nil
  - [3] (i64) -> nil
  - [4] (f32) -> nil
  - [5] (i32) -> nil
-IMPORT:
+Import:
  - func[0] sig=0 <- __extern.bar
  - func[1] sig=2 <- __extern.does_nothing
  - func[2] sig=4 <- __extern.hello_world
-FUNCTION:
+Function:
  - func[3] sig=1
  - func[4] sig=3
  - func[5] sig=5
-TABLE:
+Table:
  - table[0] type=anyfunc initial=7 max=7
-ELEM:
+Elem:
  - segment[0] table=0
  - init i32=0
   - func[3]
@@ -69,9 +69,9 @@ ELEM:
   - func[4]
   - func[5]
   - func[5]
-CUSTOM:
- - name: "reloc.ELEM"
-  - section: ELEM
+Custom:
+ - name: "reloc.Elem"
+  - section: Elem
    - R_FUNC_INDEX_LEB   offset=0x8a (0x6)
    - R_FUNC_INDEX_LEB   offset=0x8f (0xb)
    - R_FUNC_INDEX_LEB   offset=0x94 (0x10)
@@ -79,9 +79,9 @@ CUSTOM:
    - R_FUNC_INDEX_LEB   offset=0x9e (0x1a)
    - R_FUNC_INDEX_LEB   offset=0xa3 (0x1f)
    - R_FUNC_INDEX_LEB   offset=0xa8 (0x24)
-CUSTOM:
- - name: "reloc.CODE"
-  - section: CODE
+Custom:
+ - name: "reloc.Code"
+  - section: Code
    - R_FUNC_INDEX_LEB   offset=0xb5 (0x6)
    - R_FUNC_INDEX_LEB   offset=0xbb (0xc)
    - R_FUNC_INDEX_LEB   offset=0xcd (0x1e)

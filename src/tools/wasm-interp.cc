@@ -50,12 +50,12 @@ static WabtBinaryErrorHandler s_error_handler =
 static WabtFileWriter s_log_stream_writer;
 static WabtStream s_log_stream;
 
-#define NOPE WABT_OPTION_NO_ARGUMENT
-#define YEP WABT_OPTION_HAS_ARGUMENT
+#define NOPE WabtHasArgument::No
+#define YEP WabtHasArgument::Yes
 
-enum RunVerbosity {
-  RUN_QUIET = 0,
-  RUN_VERBOSE = 1,
+enum class RunVerbosity {
+  Quiet = 0,
+  Verbose = 1,
 };
 
 enum {
@@ -68,6 +68,7 @@ enum {
   FLAG_RUN_ALL_EXPORTS,
   NUM_FLAGS
 };
+
 
 static const char s_description[] =
     "  read a file in the wasm binary format, and run in it a stack-based\n"
@@ -199,22 +200,22 @@ static void sprint_typed_value(char* buffer,
                                size_t size,
                                const WabtInterpreterTypedValue* tv) {
   switch (tv->type) {
-    case WABT_TYPE_I32:
+    case WabtType::I32:
       wabt_snprintf(buffer, size, "i32:%u", tv->value.i32);
       break;
 
-    case WABT_TYPE_I64:
+    case WabtType::I64:
       wabt_snprintf(buffer, size, "i64:%" PRIu64, tv->value.i64);
       break;
 
-    case WABT_TYPE_F32: {
+    case WabtType::F32: {
       float value;
       memcpy(&value, &tv->value.f32_bits, sizeof(float));
       wabt_snprintf(buffer, size, "f32:%g", value);
       break;
     }
 
-    case WABT_TYPE_F64: {
+    case WabtType::F64: {
       double value;
       memcpy(&value, &tv->value.f64_bits, sizeof(double));
       wabt_snprintf(buffer, size, "f64:%g", value);
@@ -250,7 +251,7 @@ static void print_typed_value_vector(
 
 static void print_interpreter_result(const char* desc,
                                      WabtInterpreterResult iresult) {
-  printf("%s: %s\n", desc, s_trap_strings[iresult]);
+  printf("%s: %s\n", desc, s_trap_strings[static_cast<size_t>(iresult)]);
 }
 
 static void print_call(WabtStringSlice module_name,
@@ -263,7 +264,7 @@ static void print_call(WabtStringSlice module_name,
   printf(PRIstringslice "(", WABT_PRINTF_STRING_SLICE_ARG(func_name));
   print_typed_value_vector(args);
   printf(") =>");
-  if (iresult == WABT_INTERPRETER_OK) {
+  if (iresult == WabtInterpreterResult::Ok) {
     if (results->size > 0) {
       printf(" ");
       print_typed_value_vector(results);
@@ -277,18 +278,18 @@ static void print_call(WabtStringSlice module_name,
 static WabtInterpreterResult run_defined_function(WabtInterpreterThread* thread,
                                                   uint32_t offset) {
   thread->pc = offset;
-  WabtInterpreterResult iresult = WABT_INTERPRETER_OK;
+  WabtInterpreterResult iresult = WabtInterpreterResult::Ok;
   uint32_t quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
   uint32_t* call_stack_return_top = thread->call_stack_top;
-  while (iresult == WABT_INTERPRETER_OK) {
+  while (iresult == WabtInterpreterResult::Ok) {
     if (s_trace)
       wabt_trace_pc(thread, s_stdout_stream);
     iresult = wabt_run_interpreter(thread, quantum, call_stack_return_top);
   }
-  if (iresult != WABT_INTERPRETER_RETURNED)
+  if (iresult != WabtInterpreterResult::Returned)
     return iresult;
   /* use OK instead of RETURNED for consistency */
-  return WABT_INTERPRETER_OK;
+  return WabtInterpreterResult::Ok;
 }
 
 static WabtInterpreterResult push_args(
@@ -296,21 +297,21 @@ static WabtInterpreterResult push_args(
     const WabtInterpreterFuncSignature* sig,
     const WabtInterpreterTypedValueVector* args) {
   if (sig->param_types.size != args->size)
-    return WABT_INTERPRETER_ARGUMENT_TYPE_MISMATCH;
+    return WabtInterpreterResult::ArgumentTypeMismatch;
 
   size_t i;
   for (i = 0; i < sig->param_types.size; ++i) {
     if (sig->param_types.data[i] != args->data[i].type)
-      return WABT_INTERPRETER_ARGUMENT_TYPE_MISMATCH;
+      return WabtInterpreterResult::ArgumentTypeMismatch;
 
     WabtInterpreterResult iresult =
         wabt_push_thread_value(thread, args->data[i].value);
-    if (iresult != WABT_INTERPRETER_OK) {
+    if (iresult != WabtInterpreterResult::Ok) {
       thread->value_stack_top = thread->value_stack.data;
       return iresult;
     }
   }
-  return WABT_INTERPRETER_OK;
+  return WabtInterpreterResult::Ok;
 }
 
 static void copy_results(WabtInterpreterThread* thread,
@@ -344,11 +345,11 @@ static WabtInterpreterResult run_function(
   WabtInterpreterFuncSignature* sig = &thread->env->sigs.data[sig_index];
 
   WabtInterpreterResult iresult = push_args(thread, sig, args);
-  if (iresult == WABT_INTERPRETER_OK) {
+  if (iresult == WabtInterpreterResult::Ok) {
     iresult = func->is_host
                   ? wabt_call_host(thread, func)
                   : run_defined_function(thread, func->defined.offset);
-    if (iresult == WABT_INTERPRETER_OK)
+    if (iresult == WabtInterpreterResult::Ok)
       copy_results(thread, sig, out_results);
   }
 
@@ -361,7 +362,7 @@ static WabtInterpreterResult run_function(
 static WabtInterpreterResult run_start_function(WabtInterpreterThread* thread,
                                                 WabtInterpreterModule* module) {
   if (module->defined.start_func_index == WABT_INVALID_INDEX)
-    return WABT_INTERPRETER_OK;
+    return WabtInterpreterResult::Ok;
 
   if (s_trace)
     printf(">>> running start function:\n");
@@ -386,7 +387,7 @@ static WabtInterpreterResult run_export(
            WABT_PRINTF_STRING_SLICE_ARG(export_->name));
   }
 
-  assert(export_->kind == WABT_EXTERNAL_KIND_FUNC);
+  assert(export_->kind == WabtExternalKind::Func);
   return run_function(thread, export_->index, args, out_results);
 }
 
@@ -400,9 +401,9 @@ static WabtInterpreterResult run_export_by_name(
   WabtInterpreterExport* export_ =
       wabt_get_interpreter_export_by_name(module, name);
   if (!export_)
-    return WABT_INTERPRETER_UNKNOWN_EXPORT;
-  if (export_->kind != WABT_EXTERNAL_KIND_FUNC)
-    return WABT_INTERPRETER_EXPORT_KIND_MISMATCH;
+    return WabtInterpreterResult::UnknownExport;
+  if (export_->kind != WabtExternalKind::Func)
+    return WabtInterpreterResult::ExportKindMismatch;
   return run_export(thread, export_, args, out_results);
 }
 
@@ -414,9 +415,9 @@ static WabtInterpreterResult get_global_export_by_name(
   WabtInterpreterExport* export_ =
       wabt_get_interpreter_export_by_name(module, name);
   if (!export_)
-    return WABT_INTERPRETER_UNKNOWN_EXPORT;
-  if (export_->kind != WABT_EXTERNAL_KIND_GLOBAL)
-    return WABT_INTERPRETER_EXPORT_KIND_MISMATCH;
+    return WabtInterpreterResult::UnknownExport;
+  if (export_->kind != WabtExternalKind::Global)
+    return WabtInterpreterResult::ExportKindMismatch;
 
   assert(export_->index < thread->env->globals.size);
   WabtInterpreterGlobal* global = &thread->env->globals.data[export_->index];
@@ -425,7 +426,7 @@ static WabtInterpreterResult get_global_export_by_name(
    * size to zero. */
   out_results->size = 0;
   wabt_append_interpreter_typed_value_value(out_results, &global->typed_value);
-  return WABT_INTERPRETER_OK;
+  return WabtInterpreterResult::Ok;
 }
 
 static void run_all_exports(WabtInterpreterModule* module,
@@ -440,7 +441,7 @@ static void run_all_exports(WabtInterpreterModule* module,
     WabtInterpreterExport* export_ = &module->exports.data[i];
     WabtInterpreterResult iresult =
         run_export(thread, export_, &args, &results);
-    if (verbose) {
+    if (verbose == RunVerbosity::Verbose) {
       print_call(wabt_empty_string_slice(), export_->name, &args, &results,
                  iresult);
     }
@@ -495,8 +496,8 @@ static WabtResult default_host_callback(const WabtInterpreterFunc* func,
 
   printf("called host ");
   print_call(func->host.module_name, func->host.field_name, &vec_args,
-             &vec_results, WABT_INTERPRETER_OK);
-  return WABT_OK;
+             &vec_results, WabtInterpreterResult::Ok);
+  return WabtResult::Ok;
 }
 
 #define PRIimport "\"" PRIstringslice "." PRIstringslice "\""
@@ -517,11 +518,11 @@ static WabtResult spectest_import_func(WabtInterpreterImport* import,
                                        void* user_data) {
   if (wabt_string_slice_eq_cstr(&import->field_name, "print")) {
     func->host.callback = default_host_callback;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else {
     print_error(callback, "unknown host function import " PRIimport,
                 PRINTF_IMPORT_ARG(*import));
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 }
 
@@ -533,11 +534,11 @@ static WabtResult spectest_import_table(WabtInterpreterImport* import,
     table->limits.has_max = true;
     table->limits.initial = 10;
     table->limits.max = 20;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else {
     print_error(callback, "unknown host table import " PRIimport,
                 PRINTF_IMPORT_ARG(*import));
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 }
 
@@ -551,11 +552,11 @@ static WabtResult spectest_import_memory(WabtInterpreterImport* import,
     memory->page_limits.max = 2;
     memory->byte_size = memory->page_limits.initial * WABT_MAX_PAGES;
     memory->data = wabt_alloc_zero(memory->byte_size);
-    return WABT_OK;
+    return WabtResult::Ok;
   } else {
     print_error(callback, "unknown host memory import " PRIimport,
                 PRINTF_IMPORT_ARG(*import));
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 }
 
@@ -565,21 +566,21 @@ static WabtResult spectest_import_global(WabtInterpreterImport* import,
                                          void* user_data) {
   if (wabt_string_slice_eq_cstr(&import->field_name, "global")) {
     switch (global->typed_value.type) {
-      case WABT_TYPE_I32:
+      case WabtType::I32:
         global->typed_value.value.i32 = 666;
         break;
 
-      case WABT_TYPE_F32: {
+      case WabtType::F32: {
         float value = 666.6f;
         memcpy(&global->typed_value.value.f32_bits, &value, sizeof(value));
         break;
       }
 
-      case WABT_TYPE_I64:
+      case WabtType::I64:
         global->typed_value.value.i64 = 666;
         break;
 
-      case WABT_TYPE_F64: {
+      case WabtType::F64: {
         double value = 666.6;
         memcpy(&global->typed_value.value.f64_bits, &value, sizeof(value));
         break;
@@ -588,14 +589,14 @@ static WabtResult spectest_import_global(WabtInterpreterImport* import,
       default:
         print_error(callback, "bad type for host global import " PRIimport,
                     PRINTF_IMPORT_ARG(*import));
-        return WABT_ERROR;
+        return WabtResult::Error;
     }
 
-    return WABT_OK;
+    return WabtResult::Ok;
   } else {
     print_error(callback, "unknown host global import " PRIimport,
                 PRINTF_IMPORT_ARG(*import));
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 }
 
@@ -620,9 +621,9 @@ static WabtResult read_and_run_module(const char* module_filename) {
   result = read_module(module_filename, &env, &s_error_handler, &module);
   if (WABT_SUCCEEDED(result)) {
     WabtInterpreterResult iresult = run_start_function(&thread, module);
-    if (iresult == WABT_INTERPRETER_OK) {
+    if (iresult == WabtInterpreterResult::Ok) {
       if (s_run_all_exports)
-        run_all_exports(module, &thread, RUN_VERBOSE);
+        run_all_exports(module, &thread, RunVerbosity::Verbose);
     } else {
       print_interpreter_result("error running start function", iresult);
     }
@@ -656,9 +657,9 @@ struct Context {
   int total;
 };
 
-enum ActionType {
-  ACTION_TYPE_INVOKE,
-  ACTION_TYPE_GET,
+enum class ActionType {
+  Invoke,
+  Get,
 };
 
 struct Action {
@@ -671,7 +672,7 @@ struct Action {
 #define CHECK_RESULT(x)  \
   do {                   \
     if (WABT_FAILED(x))  \
-      return WABT_ERROR; \
+      return WabtResult::Error; \
   } while (0)
 
 #define EXPECT(x) CHECK_RESULT(expect(ctx, x))
@@ -753,10 +754,10 @@ static bool match(Context* ctx, const char* s) {
 
 static WabtResult expect(Context* ctx, const char* s) {
   if (match(ctx, s)) {
-    return WABT_OK;
+    return WabtResult::Ok;
   } else {
     print_parse_error(ctx, "expected %s", s);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 }
 
@@ -767,7 +768,7 @@ static WabtResult expect_key(Context* ctx, const char* key) {
   wabt_snprintf(quoted, quoted_len, "\"%s\"", key);
   EXPECT(quoted);
   EXPECT(":");
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult parse_uint32(Context* ctx, uint32_t* out_int) {
@@ -780,7 +781,7 @@ static WabtResult parse_uint32(Context* ctx, uint32_t* out_int) {
       result = result * 10 + static_cast<uint32_t>(c - '0');
       if (result < last_result) {
         print_parse_error(ctx, "uint32 overflow");
-        return WABT_ERROR;
+        return WabtResult::Error;
       }
     } else {
       putback_char(ctx);
@@ -788,7 +789,7 @@ static WabtResult parse_uint32(Context* ctx, uint32_t* out_int) {
     }
   }
   *out_int = result;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult parse_string(Context* ctx, WabtStringSlice* out_string) {
@@ -797,7 +798,7 @@ static WabtResult parse_string(Context* ctx, WabtStringSlice* out_string) {
   skip_whitespace(ctx);
   if (read_char(ctx) != '"') {
     print_parse_error(ctx, "expected string");
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
   /* Modify json_data in-place so we can use the WabtStringSlice directly
    * without having to allocate additional memory; this is only necessary when
@@ -815,7 +816,7 @@ static WabtResult parse_string(Context* ctx, WabtStringSlice* out_string) {
       c = read_char(ctx);
       if (c != 'u') {
         print_parse_error(ctx, "expected escape: \\uxxxx");
-        return WABT_ERROR;
+        return WabtResult::Error;
       }
       int i;
       uint16_t code = 0;
@@ -830,7 +831,7 @@ static WabtResult parse_string(Context* ctx, WabtStringSlice* out_string) {
           cval = c - 'A' + 10;
         } else {
           print_parse_error(ctx, "expected hex char");
-          return WABT_ERROR;
+          return WabtResult::Error;
         }
         code = (code << 4) + cval;
       }
@@ -846,7 +847,7 @@ static WabtResult parse_string(Context* ctx, WabtStringSlice* out_string) {
     }
   }
   out_string->length = p - start;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult parse_key_string_value(Context* ctx,
@@ -865,13 +866,13 @@ static WabtResult parse_opt_name_string_value(Context* ctx,
     CHECK_RESULT(parse_string(ctx, out_string));
     EXPECT(",");
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult parse_line(Context* ctx) {
   EXPECT_KEY("line");
   CHECK_RESULT(parse_uint32(ctx, &ctx->command_line_number));
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult parse_type_object(Context* ctx, WabtType* out_type) {
@@ -881,21 +882,21 @@ static WabtResult parse_type_object(Context* ctx, WabtType* out_type) {
   EXPECT("}");
 
   if (wabt_string_slice_eq_cstr(&type_str, "i32")) {
-    *out_type = WABT_TYPE_I32;
-    return WABT_OK;
+    *out_type = WabtType::I32;
+    return WabtResult::Ok;
   } else if (wabt_string_slice_eq_cstr(&type_str, "f32")) {
-    *out_type = WABT_TYPE_F32;
-    return WABT_OK;
+    *out_type = WabtType::F32;
+    return WabtResult::Ok;
   } else if (wabt_string_slice_eq_cstr(&type_str, "i64")) {
-    *out_type = WABT_TYPE_I64;
-    return WABT_OK;
+    *out_type = WabtType::I64;
+    return WabtResult::Ok;
   } else if (wabt_string_slice_eq_cstr(&type_str, "f64")) {
-    *out_type = WABT_TYPE_F64;
-    return WABT_OK;
+    *out_type = WabtType::F64;
+    return WabtResult::Ok;
   } else {
     print_parse_error(ctx, "unknown type: \"" PRIstringslice "\"",
                       WABT_PRINTF_STRING_SLICE_ARG(type_str));
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 }
 
@@ -911,7 +912,7 @@ static WabtResult parse_type_vector(Context* ctx, WabtTypeVector* out_types) {
     first = false;
     wabt_append_type_value(out_types, &type);
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult parse_const(Context* ctx,
@@ -930,35 +931,35 @@ static WabtResult parse_const(Context* ctx,
   if (wabt_string_slice_eq_cstr(&type_str, "i32")) {
     uint32_t value;
     CHECK_RESULT(wabt_parse_int32(value_start, value_end, &value,
-                                  WABT_PARSE_UNSIGNED_ONLY));
-    out_value->type = WABT_TYPE_I32;
+                                  WabtParseIntType::UnsignedOnly));
+    out_value->type = WabtType::I32;
     out_value->value.i32 = value;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (wabt_string_slice_eq_cstr(&type_str, "f32")) {
     uint32_t value_bits;
     CHECK_RESULT(wabt_parse_int32(value_start, value_end, &value_bits,
-                                  WABT_PARSE_UNSIGNED_ONLY));
-    out_value->type = WABT_TYPE_F32;
+                                  WabtParseIntType::UnsignedOnly));
+    out_value->type = WabtType::F32;
     out_value->value.f32_bits = value_bits;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (wabt_string_slice_eq_cstr(&type_str, "i64")) {
     uint64_t value;
     CHECK_RESULT(wabt_parse_int64(value_start, value_end, &value,
-                                  WABT_PARSE_UNSIGNED_ONLY));
-    out_value->type = WABT_TYPE_I64;
+                                  WabtParseIntType::UnsignedOnly));
+    out_value->type = WabtType::I64;
     out_value->value.i64 = value;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (wabt_string_slice_eq_cstr(&type_str, "f64")) {
     uint64_t value_bits;
     CHECK_RESULT(wabt_parse_int64(value_start, value_end, &value_bits,
-                                  WABT_PARSE_UNSIGNED_ONLY));
-    out_value->type = WABT_TYPE_F64;
+                                  WabtParseIntType::UnsignedOnly));
+    out_value->type = WabtType::F64;
     out_value->value.f64_bits = value_bits;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else {
     print_parse_error(ctx, "unknown type: \"" PRIstringslice "\"",
                       WABT_PRINTF_STRING_SLICE_ARG(type_str));
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 }
 
@@ -976,7 +977,7 @@ static WabtResult parse_const_vector(
     wabt_append_interpreter_typed_value_value(out_values, &value);
     first = false;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult parse_action(Context* ctx, Action* out_action) {
@@ -985,10 +986,10 @@ static WabtResult parse_action(Context* ctx, Action* out_action) {
   EXPECT("{");
   EXPECT_KEY("type");
   if (match(ctx, "\"invoke\"")) {
-    out_action->type = ACTION_TYPE_INVOKE;
+    out_action->type = ActionType::Invoke;
   } else {
     EXPECT("\"get\"");
-    out_action->type = ACTION_TYPE_GET;
+    out_action->type = ActionType::Get;
   }
   EXPECT(",");
   if (match(ctx, "\"module\"")) {
@@ -997,13 +998,13 @@ static WabtResult parse_action(Context* ctx, Action* out_action) {
     EXPECT(",");
   }
   PARSE_KEY_STRING_VALUE("field", &out_action->field_name);
-  if (out_action->type == ACTION_TYPE_INVOKE) {
+  if (out_action->type == ActionType::Invoke) {
     EXPECT(",");
     EXPECT_KEY("args");
     CHECK_RESULT(parse_const_vector(ctx, &out_action->args));
   }
   EXPECT("}");
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static char* create_module_path(Context* ctx, WabtStringSlice filename) {
@@ -1037,17 +1038,17 @@ static WabtResult on_module_command(Context* ctx,
     wabt_reset_interpreter_environment_to_mark(&ctx->env, mark);
     print_command_error(ctx, "error reading module: \"%s\"", path);
     wabt_free(path);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   wabt_free(path);
 
   WabtInterpreterResult iresult =
       run_start_function(&ctx->thread, ctx->last_module);
-  if (iresult != WABT_INTERPRETER_OK) {
+  if (iresult != WabtInterpreterResult::Ok) {
     wabt_reset_interpreter_environment_to_mark(&ctx->env, mark);
     print_interpreter_result("error running start function", iresult);
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   if (!wabt_string_slice_is_empty(&name)) {
@@ -1059,7 +1060,7 @@ static WabtResult on_module_command(Context* ctx,
         wabt_insert_binding(&ctx->env.module_bindings, &binding_name);
     binding->index = ctx->env.modules.size - 1;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult run_action(Context* ctx,
@@ -1081,25 +1082,26 @@ static WabtResult run_action(Context* ctx,
   WabtInterpreterModule* module = &ctx->env.modules.data[module_index];
 
   switch (action->type) {
-    case ACTION_TYPE_INVOKE:
+    case ActionType::Invoke:
       *out_iresult =
           run_export_by_name(&ctx->thread, module, &action->field_name,
                              &action->args, out_results, verbose);
-      if (verbose) {
+      if (verbose == RunVerbosity::Verbose) {
         print_call(wabt_empty_string_slice(), action->field_name, &action->args,
                    out_results, *out_iresult);
       }
-      return WABT_OK;
+      return WabtResult::Ok;
 
-    case ACTION_TYPE_GET: {
+    case ActionType::Get: {
       *out_iresult = get_global_export_by_name(
           &ctx->thread, module, &action->field_name, out_results);
-      return WABT_OK;
+      return WabtResult::Ok;
     }
 
     default:
-      print_command_error(ctx, "invalid action type %d", action->type);
-      return WABT_ERROR;
+      print_command_error(ctx, "invalid action type %d",
+                          static_cast<int>(action->type));
+      return WabtResult::Error;
   }
 }
 
@@ -1108,13 +1110,15 @@ static WabtResult on_action_command(Context* ctx, Action* action) {
   WabtInterpreterResult iresult;
 
   ctx->total++;
-  WabtResult result = run_action(ctx, action, &iresult, &results, RUN_VERBOSE);
+  WabtResult result =
+      run_action(ctx, action, &iresult, &results, RunVerbosity::Verbose);
   if (WABT_SUCCEEDED(result)) {
-    if (iresult == WABT_INTERPRETER_OK) {
+    if (iresult == WabtInterpreterResult::Ok) {
       ctx->passed++;
     } else {
-      print_command_error(ctx, "unexpected trap: %s", s_trap_strings[iresult]);
-      result = WABT_ERROR;
+      print_command_error(ctx, "unexpected trap: %s",
+                          s_trap_strings[static_cast<size_t>(iresult)]);
+      result = WabtResult::Error;
     }
   }
 
@@ -1134,7 +1138,7 @@ static WabtBinaryErrorHandler* new_custom_error_handler(Context* ctx,
       wabt_alloc_zero(sizeof(WabtDefaultErrorHandlerInfo)));
   info->header = header;
   info->out_file = stdout;
-  info->print_header = WABT_PRINT_ERROR_HEADER_ONCE;
+  info->print_header = WabtPrintErrorHeader::Once;
 
   WabtBinaryErrorHandler* error_handler = static_cast<WabtBinaryErrorHandler*>(
       wabt_alloc_zero(sizeof(WabtBinaryErrorHandler)));
@@ -1167,10 +1171,10 @@ static WabtResult on_assert_malformed_command(Context* ctx,
   WabtResult result = read_module(path, &env, error_handler, &module);
   if (WABT_FAILED(result)) {
     ctx->passed++;
-    result = WABT_OK;
+    result = WabtResult::Ok;
   } else {
     print_command_error(ctx, "expected module to be malformed: \"%s\"", path);
-    result = WABT_ERROR;
+    result = WabtResult::Error;
   }
 
   wabt_free(path);
@@ -1204,14 +1208,14 @@ static WabtResult on_register_command(Context* ctx,
   if (module_index < 0 ||
       module_index >= static_cast<int>(ctx->env.modules.size)) {
     print_command_error(ctx, "unknown module in register");
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
 
   WabtStringSlice dup_as = wabt_dup_string_slice(as);
   WabtBinding* binding =
       wabt_insert_binding(&ctx->env.registered_module_bindings, &dup_as);
   binding->index = module_index;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_assert_unlinkable_command(Context* ctx,
@@ -1230,10 +1234,10 @@ static WabtResult on_assert_unlinkable_command(Context* ctx,
 
   if (WABT_FAILED(result)) {
     ctx->passed++;
-    result = WABT_OK;
+    result = WabtResult::Ok;
   } else {
     print_command_error(ctx, "expected module to be unlinkable: \"%s\"", path);
-    result = WABT_ERROR;
+    result = WabtResult::Error;
   }
 
   wabt_free(path);
@@ -1256,10 +1260,10 @@ static WabtResult on_assert_invalid_command(Context* ctx,
   WabtResult result = read_module(path, &env, error_handler, &module);
   if (WABT_FAILED(result)) {
     ctx->passed++;
-    result = WABT_OK;
+    result = WabtResult::Ok;
   } else {
     print_command_error(ctx, "expected module to be invalid: \"%s\"", path);
-    result = WABT_ERROR;
+    result = WabtResult::Error;
   }
 
   wabt_free(path);
@@ -1280,17 +1284,17 @@ static WabtResult on_assert_uninstantiable_command(Context* ctx,
 
   if (WABT_SUCCEEDED(result)) {
     WabtInterpreterResult iresult = run_start_function(&ctx->thread, module);
-    if (iresult == WABT_INTERPRETER_OK) {
+    if (iresult == WabtInterpreterResult::Ok) {
       print_command_error(ctx, "expected error running start function: \"%s\"",
                           path);
-      result = WABT_ERROR;
+      result = WabtResult::Error;
     } else {
       ctx->passed++;
-      result = WABT_OK;
+      result = WabtResult::Ok;
     }
   } else {
     print_command_error(ctx, "error reading module: \"%s\"", path);
-    result = WABT_ERROR;
+    result = WabtResult::Error;
   }
 
   wabt_reset_interpreter_environment_to_mark(&ctx->env, mark);
@@ -1304,10 +1308,10 @@ static bool typed_values_are_equal(const WabtInterpreterTypedValue* tv1,
     return false;
 
   switch (tv1->type) {
-    case WABT_TYPE_I32: return tv1->value.i32 == tv2->value.i32;
-    case WABT_TYPE_F32: return tv1->value.f32_bits == tv2->value.f32_bits;
-    case WABT_TYPE_I64: return tv1->value.i64 == tv2->value.i64;
-    case WABT_TYPE_F64: return tv1->value.f64_bits == tv2->value.f64_bits;
+    case WabtType::I32: return tv1->value.i32 == tv2->value.i32;
+    case WabtType::F32: return tv1->value.f32_bits == tv2->value.f32_bits;
+    case WabtType::I64: return tv1->value.i64 == tv2->value.i64;
+    case WabtType::F64: return tv1->value.f64_bits == tv2->value.f64_bits;
     default: assert(0); return false;
   }
 }
@@ -1320,10 +1324,11 @@ static WabtResult on_assert_return_command(
   WabtInterpreterResult iresult;
 
   ctx->total++;
-  WabtResult result = run_action(ctx, action, &iresult, &results, RUN_QUIET);
+  WabtResult result =
+      run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
 
   if (WABT_SUCCEEDED(result)) {
-    if (iresult == WABT_INTERPRETER_OK) {
+    if (iresult == WabtInterpreterResult::Ok) {
       if (results.size == expected->size) {
         size_t i;
         for (i = 0; i < results.size; ++i) {
@@ -1337,7 +1342,7 @@ static WabtResult on_assert_return_command(
             print_command_error(ctx, "mismatch in result %" PRIzd
                                      " of assert_return: expected %s, got %s",
                                 i, expected_str, actual_str);
-            result = WABT_ERROR;
+            result = WabtResult::Error;
           }
         }
       } else {
@@ -1345,11 +1350,12 @@ static WabtResult on_assert_return_command(
             ctx, "result length mismatch in assert_return: expected %" PRIzd
                  ", got %" PRIzd,
             expected->size, results.size);
-        result = WABT_ERROR;
+        result = WabtResult::Error;
       }
     } else {
-      print_command_error(ctx, "unexpected trap: %s", s_trap_strings[iresult]);
-      result = WABT_ERROR;
+      print_command_error(ctx, "unexpected trap: %s",
+                          s_trap_strings[static_cast<size_t>(iresult)]);
+      result = WabtResult::Error;
     }
   }
 
@@ -1365,34 +1371,35 @@ static WabtResult on_assert_return_nan_command(Context* ctx, Action* action) {
   WabtInterpreterResult iresult;
 
   ctx->total++;
-  WabtResult result = run_action(ctx, action, &iresult, &results, RUN_QUIET);
+  WabtResult result =
+      run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
   if (WABT_SUCCEEDED(result)) {
-    if (iresult == WABT_INTERPRETER_OK) {
+    if (iresult == WabtInterpreterResult::Ok) {
       if (results.size != 1) {
         print_command_error(ctx, "expected one result, got %" PRIzd,
                             results.size);
-        result = WABT_ERROR;
+        result = WabtResult::Error;
       }
 
       const WabtInterpreterTypedValue* actual = &results.data[0];
       switch (actual->type) {
-        case WABT_TYPE_F32:
+        case WabtType::F32:
           if (!wabt_is_nan_f32(actual->value.f32_bits)) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
             sprint_typed_value(actual_str, sizeof(actual_str), actual);
             print_command_error(ctx, "expected result to be nan, got %s",
                                 actual_str);
-            result = WABT_ERROR;
+            result = WabtResult::Error;
           }
           break;
 
-        case WABT_TYPE_F64:
+        case WabtType::F64:
           if (!wabt_is_nan_f64(actual->value.f64_bits)) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
             sprint_typed_value(actual_str, sizeof(actual_str), actual);
             print_command_error(ctx, "expected result to be nan, got %s",
                                 actual_str);
-            result = WABT_ERROR;
+            result = WabtResult::Error;
           }
           break;
 
@@ -1400,12 +1407,13 @@ static WabtResult on_assert_return_nan_command(Context* ctx, Action* action) {
           print_command_error(ctx,
                               "expected result type to be f32 or f64, got %s",
                               wabt_get_type_name(actual->type));
-          result = WABT_ERROR;
+          result = WabtResult::Error;
           break;
       }
     } else {
-      print_command_error(ctx, "unexpected trap: %s", s_trap_strings[iresult]);
-      result = WABT_ERROR;
+      print_command_error(ctx, "unexpected trap: %s",
+                          s_trap_strings[static_cast<int>(iresult)]);
+      result = WabtResult::Error;
     }
   }
 
@@ -1413,7 +1421,7 @@ static WabtResult on_assert_return_nan_command(Context* ctx, Action* action) {
     ctx->passed++;
 
   wabt_destroy_interpreter_typed_value_vector(&results);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_assert_trap_command(Context* ctx,
@@ -1423,14 +1431,15 @@ static WabtResult on_assert_trap_command(Context* ctx,
   WabtInterpreterResult iresult;
 
   ctx->total++;
-  WabtResult result = run_action(ctx, action, &iresult, &results, RUN_QUIET);
+  WabtResult result =
+      run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
   if (WABT_SUCCEEDED(result)) {
-    if (iresult != WABT_INTERPRETER_OK) {
+    if (iresult != WabtInterpreterResult::Ok) {
       ctx->passed++;
     } else {
       print_command_error(ctx, "expected trap: \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG(text));
-      result = WABT_ERROR;
+      result = WabtResult::Error;
     }
   }
 
@@ -1444,14 +1453,15 @@ static WabtResult on_assert_exhaustion_command(Context* ctx,
     WabtInterpreterResult iresult;
 
     ctx->total++;
-    WabtResult result = run_action(ctx, action, &iresult, &results, RUN_QUIET);
+    WabtResult result =
+        run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
     if (WABT_SUCCEEDED(result)) {
-      if (iresult == WABT_INTERPRETER_TRAP_CALL_STACK_EXHAUSTED ||
-          iresult == WABT_INTERPRETER_TRAP_VALUE_STACK_EXHAUSTED) {
+      if (iresult == WabtInterpreterResult::TrapCallStackExhausted ||
+          iresult == WabtInterpreterResult::TrapValueStackExhausted) {
         ctx->passed++;
       } else {
         print_command_error(ctx, "expected call stack exhaustion");
-        result = WABT_ERROR;
+        result = WabtResult::Error;
       }
     }
 
@@ -1609,10 +1619,10 @@ static WabtResult parse_command(Context* ctx) {
     destroy_action(&action);
   } else {
     print_command_error(ctx, "unknown command type");
-    return WABT_ERROR;
+    return WabtResult::Error;
   }
   EXPECT("}");
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult parse_commands(Context* ctx) {
@@ -1629,7 +1639,7 @@ static WabtResult parse_commands(Context* ctx) {
     first = false;
   }
   EXPECT("}");
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void destroy_context(Context* ctx) {
@@ -1651,7 +1661,7 @@ static WabtResult read_and_run_spec_json(const char* spec_json_filename) {
   size_t size;
   WabtResult result = wabt_read_file(spec_json_filename, &data, &size);
   if (WABT_FAILED(result))
-    return WABT_ERROR;
+    return WabtResult::Error;
 
   ctx.json_data = static_cast<char*>(data);
   ctx.json_data_size = size;
@@ -1668,9 +1678,11 @@ int main(int argc, char** argv) {
 
   s_stdout_stream = wabt_init_stdout_stream();
 
+  WabtResult result;
   if (s_spec) {
-    return read_and_run_spec_json(s_infile);
+    result = read_and_run_spec_json(s_infile);
   } else {
-    return read_and_run_module(s_infile);
+    result = read_and_run_module(s_infile);
   }
+  return result != WabtResult::Ok;
 }

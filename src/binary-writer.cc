@@ -118,7 +118,7 @@ uint32_t wabt_write_u32_leb128_at(WabtStream* stream,
   uint32_t i = 0;
   LEB128_LOOP_UNTIL(value == 0);
   uint32_t length = i;
-  wabt_write_data_at(stream, offset, data, length, WABT_DONT_PRINT_CHARS, desc);
+  wabt_write_data_at(stream, offset, data, length, WabtPrintChars::No, desc);
   return length;
 }
 
@@ -142,7 +142,7 @@ uint32_t wabt_write_fixed_u32_leb128_at(WabtStream* stream,
   uint8_t data[MAX_U32_LEB128_BYTES];
   uint32_t length =
       wabt_write_fixed_u32_leb128_raw(data, data + MAX_U32_LEB128_BYTES, value);
-  wabt_write_data_at(stream, offset, data, length, WABT_DONT_PRINT_CHARS, desc);
+  wabt_write_data_at(stream, offset, data, length, WabtPrintChars::No, desc);
   return length;
 }
 
@@ -174,7 +174,7 @@ void wabt_write_i32_leb128(WabtStream* stream,
 
   uint32_t length = i;
   wabt_write_data_at(stream, stream->offset, data, length,
-                     WABT_DONT_PRINT_CHARS, desc);
+                     WabtPrintChars::No, desc);
   stream->offset += length;
 }
 
@@ -190,7 +190,7 @@ static void write_i64_leb128(WabtStream* stream,
 
   int length = i;
   wabt_write_data_at(stream, stream->offset, data, length,
-                     WABT_DONT_PRINT_CHARS, desc);
+                     WabtPrintChars::No, desc);
   stream->offset += length;
 }
 
@@ -249,17 +249,17 @@ void wabt_write_str(WabtStream* stream,
 }
 
 void wabt_write_opcode(WabtStream* stream, WabtOpcode opcode) {
-  wabt_write_u8(stream, opcode, wabt_get_opcode_name(opcode));
+  wabt_write_u8_enum(stream, opcode, wabt_get_opcode_name(opcode));
 }
 
 void wabt_write_type(WabtStream* stream, WabtType type) {
-  wabt_write_i32_leb128(stream, type, wabt_get_type_name(type));
+  wabt_write_i32_leb128_enum(stream, type, wabt_get_type_name(type));
 }
 
 static void write_inline_signature_type(WabtStream* stream,
                                         const WabtBlockSignature* sig) {
   if (sig->size == 0) {
-    wabt_write_type(stream, WABT_TYPE_VOID);
+    wabt_write_type(stream, WabtType::Void);
   } else if (sig->size == 1) {
     wabt_write_type(stream, sig->data[0]);
   } else {
@@ -274,9 +274,10 @@ static void begin_known_section(Context* ctx,
   assert(ctx->last_section_leb_size_guess == 0);
   char desc[100];
   wabt_snprintf(desc, sizeof(desc), "section \"%s\" (%u)",
-                wabt_get_section_name(section_code), section_code);
+                wabt_get_section_name(section_code),
+                static_cast<unsigned>(section_code));
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
-  wabt_write_u8(&ctx->stream, section_code, "section code");
+  wabt_write_u8_enum(&ctx->stream, section_code, "section code");
   ctx->last_section_type = section_code;
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
@@ -291,14 +292,14 @@ static void begin_custom_section(Context* ctx,
   char desc[100];
   wabt_snprintf(desc, sizeof(desc), "section \"%s\"", name);
   write_header(ctx, desc, PRINT_HEADER_NO_INDEX);
-  wabt_write_u8(&ctx->stream, WABT_BINARY_SECTION_CUSTOM,
-                "custom section code");
-  ctx->last_section_type = WABT_BINARY_SECTION_CUSTOM;
+  wabt_write_u8_enum(&ctx->stream, WabtBinarySection::Custom,
+                     "custom section code");
+  ctx->last_section_type = WabtBinarySection::Custom;
   ctx->last_section_leb_size_guess = leb_size_guess;
   ctx->last_section_offset =
       write_u32_leb128_space(ctx, leb_size_guess, "section size (guess)");
   ctx->last_section_payload_offset = ctx->stream.offset;
-  wabt_write_str(&ctx->stream, name, strlen(name), WABT_PRINT_CHARS,
+  wabt_write_str(&ctx->stream, name, strlen(name), WabtPrintChars::Yes,
                  "custom section name");
 }
 
@@ -311,7 +312,7 @@ static void end_section(Context* ctx) {
 }
 
 static uint32_t get_label_var_depth(Context* ctx, const WabtVar* var) {
-  assert(var->type == WABT_VAR_TYPE_INDEX);
+  assert(var->type == WabtVarType::Index);
   return var->index;
 }
 
@@ -354,28 +355,28 @@ static void write_expr(Context* ctx,
                        const WabtFunc* func,
                        const WabtExpr* expr) {
   switch (expr->type) {
-    case WABT_EXPR_TYPE_BINARY:
+    case WabtExprType::Binary:
       wabt_write_opcode(&ctx->stream, expr->binary.opcode);
       break;
-    case WABT_EXPR_TYPE_BLOCK:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_BLOCK);
+    case WabtExprType::Block:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Block);
       write_inline_signature_type(&ctx->stream, &expr->block.sig);
       write_expr_list(ctx, module, func, expr->block.first);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_END);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::End);
       break;
-    case WABT_EXPR_TYPE_BR:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_BR);
+    case WabtExprType::Br:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Br);
       wabt_write_u32_leb128(
           &ctx->stream, get_label_var_depth(ctx, &expr->br.var), "break depth");
       break;
-    case WABT_EXPR_TYPE_BR_IF:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_BR_IF);
+    case WabtExprType::BrIf:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::BrIf);
       wabt_write_u32_leb128(&ctx->stream,
                             get_label_var_depth(ctx, &expr->br_if.var),
                             "break depth");
       break;
-    case WABT_EXPR_TYPE_BR_TABLE: {
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_BR_TABLE);
+    case WabtExprType::BrTable: {
+      wabt_write_opcode(&ctx->stream, WabtOpcode::BrTable);
       wabt_write_u32_leb128(&ctx->stream, expr->br_table.targets.size,
                             "num targets");
       size_t i;
@@ -388,146 +389,139 @@ static void write_expr(Context* ctx,
       wabt_write_u32_leb128(&ctx->stream, depth, "break depth for default");
       break;
     }
-    case WABT_EXPR_TYPE_CALL: {
+    case WabtExprType::Call: {
       int index = wabt_get_func_index_by_var(module, &expr->call.var);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_CALL);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Call);
       write_u32_leb128_with_reloc(ctx, index, "function index",
-                                  WABT_RELOC_FUNC_INDEX_LEB);
+                                  WabtRelocType::FuncIndexLeb);
       break;
     }
-    case WABT_EXPR_TYPE_CALL_INDIRECT: {
+    case WabtExprType::CallIndirect: {
       int index =
           wabt_get_func_type_index_by_var(module, &expr->call_indirect.var);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_CALL_INDIRECT);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::CallIndirect);
       wabt_write_u32_leb128(&ctx->stream, index, "signature index");
       wabt_write_u32_leb128(&ctx->stream, 0, "call_indirect reserved");
       break;
     }
-    case WABT_EXPR_TYPE_COMPARE:
+    case WabtExprType::Compare:
       wabt_write_opcode(&ctx->stream, expr->compare.opcode);
       break;
-    case WABT_EXPR_TYPE_CONST:
+    case WabtExprType::Const:
       switch (expr->const_.type) {
-        case WABT_TYPE_I32: {
-          wabt_write_opcode(&ctx->stream, WABT_OPCODE_I32_CONST);
-          wabt_write_i32_leb128(&ctx->stream,
-                                static_cast<int32_t>(expr->const_.u32),
-                                "i32 literal");
+        case WabtType::I32: {
+          wabt_write_opcode(&ctx->stream, WabtOpcode::I32Const);
+          wabt_write_i32_leb128(&ctx->stream, expr->const_.u32, "i32 literal");
           break;
         }
-        case WABT_TYPE_I64:
-          wabt_write_opcode(&ctx->stream, WABT_OPCODE_I64_CONST);
-          write_i64_leb128(&ctx->stream, static_cast<int64_t>(expr->const_.u64),
-                           "i64 literal");
+        case WabtType::I64:
+          wabt_write_opcode(&ctx->stream, WabtOpcode::I64Const);
+          write_i64_leb128(&ctx->stream, expr->const_.u64, "i64 literal");
           break;
-        case WABT_TYPE_F32:
-          wabt_write_opcode(&ctx->stream, WABT_OPCODE_F32_CONST);
+        case WabtType::F32:
+          wabt_write_opcode(&ctx->stream, WabtOpcode::F32Const);
           wabt_write_u32(&ctx->stream, expr->const_.f32_bits, "f32 literal");
           break;
-        case WABT_TYPE_F64:
-          wabt_write_opcode(&ctx->stream, WABT_OPCODE_F64_CONST);
+        case WabtType::F64:
+          wabt_write_opcode(&ctx->stream, WabtOpcode::F64Const);
           wabt_write_u64(&ctx->stream, expr->const_.f64_bits, "f64 literal");
           break;
         default:
           assert(0);
       }
       break;
-    case WABT_EXPR_TYPE_CONVERT:
+    case WabtExprType::Convert:
       wabt_write_opcode(&ctx->stream, expr->convert.opcode);
       break;
-    case WABT_EXPR_TYPE_CURRENT_MEMORY:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_CURRENT_MEMORY);
+    case WabtExprType::CurrentMemory:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::CurrentMemory);
       wabt_write_u32_leb128(&ctx->stream, 0, "current_memory reserved");
       break;
-    case WABT_EXPR_TYPE_DROP:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_DROP);
+    case WabtExprType::Drop:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Drop);
       break;
-    case WABT_EXPR_TYPE_GET_GLOBAL: {
+    case WabtExprType::GetGlobal: {
       int index = wabt_get_global_index_by_var(module, &expr->get_global.var);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_GET_GLOBAL);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::GetGlobal);
       write_u32_leb128_with_reloc(ctx, index, "global index",
-                                  WABT_RELOC_GLOBAL_INDEX_LEB);
+                                  WabtRelocType::GlobalIndexLeb);
       break;
     }
-    case WABT_EXPR_TYPE_GET_LOCAL: {
+    case WabtExprType::GetLocal: {
       int index = wabt_get_local_index_by_var(func, &expr->get_local.var);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_GET_LOCAL);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::GetLocal);
       wabt_write_u32_leb128(&ctx->stream, index, "local index");
       break;
     }
-    case WABT_EXPR_TYPE_GROW_MEMORY:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_GROW_MEMORY);
+    case WabtExprType::GrowMemory:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::GrowMemory);
       wabt_write_u32_leb128(&ctx->stream, 0, "grow_memory reserved");
       break;
-    case WABT_EXPR_TYPE_IF:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_IF);
+    case WabtExprType::If:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::If);
       write_inline_signature_type(&ctx->stream, &expr->if_.true_.sig);
       write_expr_list(ctx, module, func, expr->if_.true_.first);
       if (expr->if_.false_) {
-        wabt_write_opcode(&ctx->stream, WABT_OPCODE_ELSE);
+        wabt_write_opcode(&ctx->stream, WabtOpcode::Else);
         write_expr_list(ctx, module, func, expr->if_.false_);
       }
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_END);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::End);
       break;
-    case WABT_EXPR_TYPE_LOAD: {
+    case WabtExprType::Load: {
       wabt_write_opcode(&ctx->stream, expr->load.opcode);
       uint32_t align =
           wabt_get_opcode_alignment(expr->load.opcode, expr->load.align);
       wabt_write_u8(&ctx->stream, log2_u32(align), "alignment");
-      wabt_write_u32_leb128(&ctx->stream,
-                            static_cast<uint32_t>(expr->load.offset),
-                            "load offset");
+      wabt_write_u32_leb128(&ctx->stream, expr->load.offset, "load offset");
       break;
     }
-    case WABT_EXPR_TYPE_LOOP:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_LOOP);
+    case WabtExprType::Loop:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Loop);
       write_inline_signature_type(&ctx->stream, &expr->loop.sig);
       write_expr_list(ctx, module, func, expr->loop.first);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_END);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::End);
       break;
-    case WABT_EXPR_TYPE_NOP:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_NOP);
+    case WabtExprType::Nop:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Nop);
       break;
-    case WABT_EXPR_TYPE_RETURN:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_RETURN);
+    case WabtExprType::Return:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Return);
       break;
-    case WABT_EXPR_TYPE_SELECT:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_SELECT);
+    case WabtExprType::Select:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Select);
       break;
-    case WABT_EXPR_TYPE_SET_GLOBAL: {
+    case WabtExprType::SetGlobal: {
       int index = wabt_get_global_index_by_var(module, &expr->get_global.var);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_SET_GLOBAL);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::SetGlobal);
       write_u32_leb128_with_reloc(ctx, index, "global index",
-                                  WABT_RELOC_GLOBAL_INDEX_LEB);
+                                  WabtRelocType::GlobalIndexLeb);
       break;
     }
-    case WABT_EXPR_TYPE_SET_LOCAL: {
+    case WabtExprType::SetLocal: {
       int index = wabt_get_local_index_by_var(func, &expr->get_local.var);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_SET_LOCAL);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::SetLocal);
       wabt_write_u32_leb128(&ctx->stream, index, "local index");
       break;
     }
-    case WABT_EXPR_TYPE_STORE: {
+    case WabtExprType::Store: {
       wabt_write_opcode(&ctx->stream, expr->store.opcode);
       uint32_t align =
           wabt_get_opcode_alignment(expr->store.opcode, expr->store.align);
       wabt_write_u8(&ctx->stream, log2_u32(align), "alignment");
-      wabt_write_u32_leb128(&ctx->stream,
-                            static_cast<uint32_t>(expr->store.offset),
-                            "store offset");
+      wabt_write_u32_leb128(&ctx->stream, expr->store.offset, "store offset");
       break;
     }
-    case WABT_EXPR_TYPE_TEE_LOCAL: {
+    case WabtExprType::TeeLocal: {
       int index = wabt_get_local_index_by_var(func, &expr->get_local.var);
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_TEE_LOCAL);
+      wabt_write_opcode(&ctx->stream, WabtOpcode::TeeLocal);
       wabt_write_u32_leb128(&ctx->stream, index, "local index");
       break;
     }
-    case WABT_EXPR_TYPE_UNARY:
+    case WabtExprType::Unary:
       wabt_write_opcode(&ctx->stream, expr->unary.opcode);
       break;
-    case WABT_EXPR_TYPE_UNREACHABLE:
-      wabt_write_opcode(&ctx->stream, WABT_OPCODE_UNREACHABLE);
+    case WabtExprType::Unreachable:
+      wabt_write_opcode(&ctx->stream, WabtOpcode::Unreachable);
       break;
   }
 }
@@ -546,7 +540,7 @@ static void write_init_expr(Context* ctx,
                             const WabtExpr* expr) {
   if (expr)
     write_expr_list(ctx, module, nullptr, expr);
-  wabt_write_opcode(&ctx->stream, WABT_OPCODE_END);
+  wabt_write_opcode(&ctx->stream, WabtOpcode::End);
 }
 
 static void write_func_locals(Context* ctx,
@@ -582,7 +576,7 @@ static void write_func_locals(Context* ctx,
   uint32_t local_type_count = 1;
   for (i = FIRST_LOCAL_INDEX + 1; i <= LAST_LOCAL_INDEX; ++i) {
     /* loop through an extra time to catch the final type transition */
-    WabtType type = i == LAST_LOCAL_INDEX ? WABT_TYPE_VOID : GET_LOCAL_TYPE(i);
+    WabtType type = i == LAST_LOCAL_INDEX ? WabtType::Void : GET_LOCAL_TYPE(i);
     if (current_type == type) {
       local_type_count++;
     } else {
@@ -599,7 +593,7 @@ static void write_func(Context* ctx,
                        const WabtFunc* func) {
   write_func_locals(ctx, module, func, &func->local_types);
   write_expr_list(ctx, module, func, func->first_expr);
-  wabt_write_opcode(&ctx->stream, WABT_OPCODE_END);
+  wabt_write_opcode(&ctx->stream, WabtOpcode::End);
 }
 
 void wabt_write_limits(WabtStream* stream, const WabtLimits* limits) {
@@ -611,7 +605,7 @@ void wabt_write_limits(WabtStream* stream, const WabtLimits* limits) {
 }
 
 static void write_table(Context* ctx, const WabtTable* table) {
-  wabt_write_type(&ctx->stream, WABT_TYPE_ANYFUNC);
+  wabt_write_type(&ctx->stream, WabtType::Anyfunc);
   wabt_write_limits(&ctx->stream, &table->elem_limits);
 }
 
@@ -629,14 +623,15 @@ static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
   wabt_snprintf(section_name, sizeof(section_name), "%s.%s",
                 WABT_BINARY_SECTION_RELOC, reloc_section->name);
   begin_custom_section(ctx, section_name, LEB_SECTION_SIZE_GUESS);
-  wabt_write_u32_leb128(&ctx->stream, reloc_section->section_code,
-                        "reloc section type");
+  wabt_write_u32_leb128_enum(&ctx->stream, reloc_section->section_code,
+                             "reloc section type");
   RelocVector* relocs = &reloc_section->relocations;
   wabt_write_u32_leb128(&ctx->stream, relocs->size, "num relocs");
 
   size_t i;
   for (i = 0; i < relocs->size; i++) {
-    wabt_write_u32_leb128(&ctx->stream, relocs->data[i].type, "reloc type");
+    wabt_write_u32_leb128_enum(&ctx->stream, relocs->data[i].type,
+                               "reloc type");
     wabt_write_u32_leb128(&ctx->stream, relocs->data[i].offset, "reloc offset");
   }
 
@@ -649,13 +644,13 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   wabt_write_u32(&ctx->stream, WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
 
   if (module->func_types.size) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_TYPE, LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Type, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, module->func_types.size, "num types");
     for (i = 0; i < module->func_types.size; ++i) {
       const WabtFuncType* func_type = module->func_types.data[i];
       const WabtFuncSignature* sig = &func_type->sig;
       write_header(ctx, "type", i);
-      wabt_write_type(&ctx->stream, WABT_TYPE_FUNC);
+      wabt_write_type(&ctx->stream, WabtType::Func);
 
       size_t j;
       uint32_t num_params = sig->param_types.size;
@@ -672,37 +667,33 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   }
 
   if (module->imports.size) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_IMPORT,
-                        LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Import, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, module->imports.size, "num imports");
 
     for (i = 0; i < module->imports.size; ++i) {
       const WabtImport* import = module->imports.data[i];
       write_header(ctx, "import header", i);
       wabt_write_str(&ctx->stream, import->module_name.start,
-                     import->module_name.length, WABT_PRINT_CHARS,
+                     import->module_name.length, WabtPrintChars::Yes,
                      "import module name");
       wabt_write_str(&ctx->stream, import->field_name.start,
-                     import->field_name.length, WABT_PRINT_CHARS,
+                     import->field_name.length, WabtPrintChars::Yes,
                      "import field name");
-      wabt_write_u8(&ctx->stream, import->kind, "import kind");
+      wabt_write_u8_enum(&ctx->stream, import->kind, "import kind");
       switch (import->kind) {
-        case WABT_EXTERNAL_KIND_FUNC:
+        case WabtExternalKind::Func:
           wabt_write_u32_leb128(&ctx->stream, wabt_get_func_type_index_by_decl(
                                                   module, &import->func.decl),
                                 "import signature index");
           break;
-        case WABT_EXTERNAL_KIND_TABLE:
+        case WabtExternalKind::Table:
           write_table(ctx, &import->table);
           break;
-        case WABT_EXTERNAL_KIND_MEMORY:
+        case WabtExternalKind::Memory:
           write_memory(ctx, &import->memory);
           break;
-        case WABT_EXTERNAL_KIND_GLOBAL:
+        case WabtExternalKind::Global:
           write_global_header(ctx, &import->global);
-          break;
-        case WABT_NUM_EXTERNAL_KINDS:
-          assert(0);
           break;
       }
     }
@@ -712,7 +703,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   assert(module->funcs.size >= module->num_func_imports);
   uint32_t num_funcs = module->funcs.size - module->num_func_imports;
   if (num_funcs) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_FUNCTION,
+    begin_known_section(ctx, WabtBinarySection::Function,
                         LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, num_funcs, "num functions");
 
@@ -731,7 +722,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   assert(module->tables.size >= module->num_table_imports);
   uint32_t num_tables = module->tables.size - module->num_table_imports;
   if (num_tables) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_TABLE, LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Table, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, num_tables, "num tables");
     for (i = 0; i < num_tables; ++i) {
       const WabtTable* table =
@@ -745,8 +736,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   assert(module->memories.size >= module->num_memory_imports);
   uint32_t num_memories = module->memories.size - module->num_memory_imports;
   if (num_memories) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_MEMORY,
-                        LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Memory, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, num_memories, "num memories");
     for (i = 0; i < num_memories; ++i) {
       const WabtMemory* memory =
@@ -760,8 +750,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   assert(module->globals.size >= module->num_global_imports);
   uint32_t num_globals = module->globals.size - module->num_global_imports;
   if (num_globals) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_GLOBAL,
-                        LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Global, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, num_globals, "num globals");
 
     for (i = 0; i < num_globals; ++i) {
@@ -774,39 +763,35 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   }
 
   if (module->exports.size) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_EXPORT,
-                        LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Export, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, module->exports.size, "num exports");
 
     for (i = 0; i < module->exports.size; ++i) {
       const WabtExport* export_ = module->exports.data[i];
       wabt_write_str(&ctx->stream, export_->name.start, export_->name.length,
-                     WABT_PRINT_CHARS, "export name");
-      wabt_write_u8(&ctx->stream, export_->kind, "export kind");
+                     WabtPrintChars::Yes, "export name");
+      wabt_write_u8_enum(&ctx->stream, export_->kind, "export kind");
       switch (export_->kind) {
-        case WABT_EXTERNAL_KIND_FUNC: {
+        case WabtExternalKind::Func: {
           int index = wabt_get_func_index_by_var(module, &export_->var);
           wabt_write_u32_leb128(&ctx->stream, index, "export func index");
           break;
         }
-        case WABT_EXTERNAL_KIND_TABLE: {
+        case WabtExternalKind::Table: {
           int index = wabt_get_table_index_by_var(module, &export_->var);
           wabt_write_u32_leb128(&ctx->stream, index, "export table index");
           break;
         }
-        case WABT_EXTERNAL_KIND_MEMORY: {
+        case WabtExternalKind::Memory: {
           int index = wabt_get_memory_index_by_var(module, &export_->var);
           wabt_write_u32_leb128(&ctx->stream, index, "export memory index");
           break;
         }
-        case WABT_EXTERNAL_KIND_GLOBAL: {
+        case WabtExternalKind::Global: {
           int index = wabt_get_global_index_by_var(module, &export_->var);
           wabt_write_u32_leb128(&ctx->stream, index, "export global index");
           break;
         }
-        case WABT_NUM_EXTERNAL_KINDS:
-          assert(0);
-          break;
       }
     }
     end_section(ctx);
@@ -815,7 +800,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   if (module->start) {
     int start_func_index = wabt_get_func_index_by_var(module, module->start);
     if (start_func_index != -1) {
-      begin_known_section(ctx, WABT_BINARY_SECTION_START,
+      begin_known_section(ctx, WabtBinarySection::Start,
                           LEB_SECTION_SIZE_GUESS);
       wabt_write_u32_leb128(&ctx->stream, start_func_index, "start func index");
       end_section(ctx);
@@ -823,7 +808,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   }
 
   if (module->elem_segments.size) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_ELEM, LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Elem, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, module->elem_segments.size,
                           "num elem segments");
     for (i = 0; i < module->elem_segments.size; ++i) {
@@ -839,14 +824,14 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
       for (j = 0; j < segment->vars.size; ++j) {
         int index = wabt_get_func_index_by_var(module, &segment->vars.data[j]);
         write_u32_leb128_with_reloc(ctx, index, "function index",
-                                    WABT_RELOC_FUNC_INDEX_LEB);
+                                    WabtRelocType::FuncIndexLeb);
       }
     }
     end_section(ctx);
   }
 
   if (num_funcs) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_CODE, LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Code, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, num_funcs, "num functions");
 
     for (i = 0; i < num_funcs; ++i) {
@@ -865,7 +850,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
   }
 
   if (module->data_segments.size) {
-    begin_known_section(ctx, WABT_BINARY_SECTION_DATA, LEB_SECTION_SIZE_GUESS);
+    begin_known_section(ctx, WabtBinarySection::Data, LEB_SECTION_SIZE_GUESS);
     wabt_write_u32_leb128(&ctx->stream, module->data_segments.size,
                           "num data segments");
     for (i = 0; i < module->data_segments.size; ++i) {
@@ -898,7 +883,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
 
       wabt_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
       wabt_write_str(&ctx->stream, func->name.start, func->name.length,
-                     WABT_PRINT_CHARS, desc);
+                     WabtPrintChars::Yes, desc);
       wabt_write_u32_leb128(&ctx->stream, num_params_and_locals, "num locals");
 
       if (num_params_and_locals) {
@@ -909,7 +894,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
           WabtStringSlice name = index_to_name.data[j];
           wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
           wabt_write_str(&ctx->stream, name.start, name.length,
-                         WABT_PRINT_CHARS, desc);
+                         WabtPrintChars::Yes, desc);
         }
 
         wabt_make_type_binding_reverse_mapping(
@@ -919,7 +904,7 @@ static WabtResult write_module(Context* ctx, const WabtModule* module) {
           wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd,
                         num_params + j);
           wabt_write_str(&ctx->stream, name.start, name.length,
-                         WABT_PRINT_CHARS, desc);
+                         WabtPrintChars::Yes, desc);
         }
       }
     }

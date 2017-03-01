@@ -39,7 +39,7 @@ static int option_match(const char* s,
 
       /* we want to fail if s is longer than full, e.g. --foobar vs. --foo.
        * However, if s ends with an '=', it's OK. */
-      if (!(has_argument && s[i] == '='))
+      if (!(has_argument == WabtHasArgument::Yes && s[i] == '='))
         return -1;
       break;
     }
@@ -98,7 +98,7 @@ void wabt_parse_options(WabtOptionParser* parser,
 
         WabtOption* best_option = &parser->options[best_index];
         const char* option_argument = nullptr;
-        if (best_option->has_argument) {
+        if (best_option->has_argument == WabtHasArgument::Yes) {
           if (arg[best_length] == '=') {
             option_argument = &arg[best_length + 1];
           } else {
@@ -127,7 +127,7 @@ void wabt_parse_options(WabtOptionParser* parser,
             WabtOption* option = &parser->options[j];
             if (option->short_name && arg[k] == option->short_name) {
               const char* option_argument = nullptr;
-              if (option->has_argument) {
+              if (option->has_argument == WabtHasArgument::Yes) {
                 /* a short option with a required argument cannot be followed
                  * by other short options */
                 if (arg[k + 1] != '\0') {

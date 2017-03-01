@@ -35,14 +35,14 @@ static WabtResult add_int_counter_value(WabtIntCounterVector* vec,
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].value == value) {
       ++vec->data[i].count;
-      return WABT_OK;
+      return WabtResult::Ok;
     }
   }
   WabtIntCounter counter;
   counter.value = value;
   counter.count = 1;
   wabt_append_int_counter_value(vec, &counter);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult add_int_pair_counter_value(WabtIntPairCounterVector* vec,
@@ -52,7 +52,7 @@ static WabtResult add_int_pair_counter_value(WabtIntPairCounterVector* vec,
   for (i = 0; i < vec->size; ++i) {
     if (vec->data[i].first == first && vec->data[i].second == second) {
       ++vec->data[i].count;
-      return WABT_OK;
+      return WabtResult::Ok;
     }
   }
   WabtIntPairCounter counter;
@@ -60,21 +60,21 @@ static WabtResult add_int_pair_counter_value(WabtIntPairCounterVector* vec,
   counter.second = second;
   counter.count = 1;
   wabt_append_int_pair_counter_value(vec, &counter);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_opcode(WabtBinaryReaderContext* context,
                             WabtOpcode opcode) {
   Context* ctx = static_cast<Context*>(context->user_data);
   WabtIntCounterVector* opcnt_vec = &ctx->opcnt_data->opcode_vec;
-  while (opcode >= opcnt_vec->size) {
+  while (static_cast<size_t>(opcode) >= opcnt_vec->size) {
     WabtIntCounter Counter;
     Counter.value = opcnt_vec->size;
     Counter.count = 0;
     wabt_append_int_counter_value(opcnt_vec, &Counter);
   }
-  ++opcnt_vec->data[opcode].count;
-  return WABT_OK;
+  ++opcnt_vec->data[static_cast<size_t>(opcode)].count;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_i32_const_expr(uint32_t value, void* user_data) {
@@ -103,10 +103,10 @@ static  WabtResult on_load_expr(WabtOpcode opcode,
                                 uint32_t offset,
                                 void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  if (opcode == WABT_OPCODE_I32_LOAD)
+  if (opcode == WabtOpcode::I32Load)
     return add_int_pair_counter_value(&ctx->opcnt_data->i32_load_vec,
                                       alignment_log2, offset);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static  WabtResult on_store_expr(WabtOpcode opcode,
@@ -114,17 +114,17 @@ static  WabtResult on_store_expr(WabtOpcode opcode,
                                  uint32_t offset,
                                  void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  if (opcode == WABT_OPCODE_I32_STORE)
+  if (opcode == WabtOpcode::I32Store)
     return add_int_pair_counter_value(&ctx->opcnt_data->i32_store_vec,
                                       alignment_log2, offset);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void on_error(WabtBinaryReaderContext* ctx, const char* message) {
   WabtDefaultErrorHandlerInfo info;
   info.header = "error reading binary";
   info.out_file = stdout;
-  info.print_header = WABT_PRINT_ERROR_HEADER_ONCE;
+  info.print_header = WabtPrintErrorHeader::Once;
   wabt_default_binary_error_callback(ctx->offset, message, &info);
 }
 

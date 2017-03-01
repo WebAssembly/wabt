@@ -16,7 +16,7 @@
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
-; section "TYPE" (1)
+; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
 000000a: 01                                        ; num types
@@ -28,13 +28,13 @@
 000000f: 01                                        ; num results
 0000010: 7f                                        ; i32
 0000009: 07                                        ; FIXUP section size
-; section "FUNCTION" (3)
+; section "Function" (3)
 0000011: 03                                        ; section code
 0000012: 00                                        ; section size (guess)
 0000013: 01                                        ; num functions
 0000014: 00                                        ; function 0 signature index
 0000012: 02                                        ; FIXUP section size
-; section "MEMORY" (5)
+; section "Memory" (5)
 0000015: 05                                        ; section code
 0000016: 00                                        ; section size (guess)
 0000017: 01                                        ; num memories
@@ -42,7 +42,7 @@
 0000018: 00                                        ; limits: flags
 0000019: 01                                        ; limits: initial
 0000016: 03                                        ; FIXUP section size
-; section "EXPORT" (7)
+; section "Export" (7)
 000001a: 07                                        ; section code
 000001b: 00                                        ; section size (guess)
 000001c: 01                                        ; num exports
@@ -51,7 +51,7 @@
 000001f: 00                                        ; export kind
 0000020: 00                                        ; export func index
 000001b: 05                                        ; FIXUP section size
-; section "CODE" (10)
+; section "Code" (10)
 0000021: 0a                                        ; section code
 0000022: 00                                        ; section size (guess)
 0000023: 01                                        ; num functions
@@ -83,11 +83,11 @@ basic.wasm:	file format wasm 0x000001
 
 Sections:
 
-     TYPE start=0x0000000a end=0x00000011 (size=0x00000007) count: 1
- FUNCTION start=0x00000013 end=0x00000015 (size=0x00000002) count: 1
-   MEMORY start=0x00000017 end=0x0000001a (size=0x00000003) count: 1
-   EXPORT start=0x0000001c end=0x00000021 (size=0x00000005) count: 1
-     CODE start=0x00000023 end=0x00000039 (size=0x00000016) count: 1
+     Type start=0x0000000a end=0x00000011 (size=0x00000007) count: 1
+ Function start=0x00000013 end=0x00000015 (size=0x00000002) count: 1
+   Memory start=0x00000017 end=0x0000001a (size=0x00000003) count: 1
+   Export start=0x0000001c end=0x00000021 (size=0x00000005) count: 1
+     Code start=0x00000023 end=0x00000039 (size=0x00000016) count: 1
 
 Code Disassembly:
 

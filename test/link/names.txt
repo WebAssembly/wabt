@@ -22,39 +22,39 @@ linked.wasm:	file format wasm 0x000001
 
 Sections:
 
-     TYPE start=0x0000000a end=0x0000001a (size=0x00000010) count: 4
-   IMPORT start=0x00000020 end=0x00000034 (size=0x00000014) count: 1
- FUNCTION start=0x0000003a end=0x0000003e (size=0x00000004) count: 3
-   EXPORT start=0x00000044 end=0x00000051 (size=0x0000000d) count: 2
-     CODE start=0x00000053 end=0x00000075 (size=0x00000022) count: 3
-   CUSTOM start=0x0000007b end=0x000000a8 (size=0x0000002d) "name"
-   CUSTOM start=0x000000ae end=0x000000c1 (size=0x00000013) "reloc.CODE"
+     Type start=0x0000000a end=0x0000001a (size=0x00000010) count: 4
+   Import start=0x00000020 end=0x00000034 (size=0x00000014) count: 1
+ Function start=0x0000003a end=0x0000003e (size=0x00000004) count: 3
+   Export start=0x00000044 end=0x00000051 (size=0x0000000d) count: 2
+     Code start=0x00000053 end=0x00000075 (size=0x00000022) count: 3
+   Custom start=0x0000007b end=0x000000a8 (size=0x0000002d) "name"
+   Custom start=0x000000ae end=0x000000c1 (size=0x00000013) "reloc.Code"
 
 Section Details:
 
-TYPE:
+Type:
  - [0] () -> nil
  - [1] (i32) -> nil
  - [2] (i64) -> nil
  - [3] (i32) -> nil
-IMPORT:
+Import:
  - func[0] sig=0 <- __extern.missing
-FUNCTION:
+Function:
  - func[1] sig=1
  - func[2] sig=2
  - func[3] sig=3
-EXPORT:
+Export:
  - func[1] foo
  - func[3] baz
-CUSTOM:
+Custom:
  - name: "name"
  - func[0] $import_func2
  - func[1] $name1
  - func[2] $name2
  - func[3] $name3
-CUSTOM:
- - name: "reloc.CODE"
-  - section: CODE
+Custom:
+ - name: "reloc.Code"
+  - section: Code
    - R_FUNC_INDEX_LEB   offset=0x59 (0x6)
    - R_FUNC_INDEX_LEB   offset=0x64 (0x11)
    - R_FUNC_INDEX_LEB   offset=0x6f (0x1c)

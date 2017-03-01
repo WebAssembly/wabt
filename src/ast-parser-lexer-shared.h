@@ -75,13 +75,13 @@ struct WabtExportedMemory {
   bool has_data_segment;
 };
 
-enum WabtFuncFieldType {
-  WABT_FUNC_FIELD_TYPE_EXPRS,
-  WABT_FUNC_FIELD_TYPE_PARAM_TYPES,
-  WABT_FUNC_FIELD_TYPE_BOUND_PARAM,
-  WABT_FUNC_FIELD_TYPE_RESULT_TYPES,
-  WABT_FUNC_FIELD_TYPE_LOCAL_TYPES,
-  WABT_FUNC_FIELD_TYPE_BOUND_LOCAL,
+enum class WabtFuncFieldType {
+  Exprs,
+  ParamTypes,
+  BoundParam,
+  ResultTypes,
+  LocalTypes,
+  BoundLocal,
 };
 
 struct WabtBoundType {

@@ -37,9 +37,9 @@ struct WabtFileStream {
 
 /* whether to display the ASCII characters in the debug output for
  * wabt_write_memory */
-enum WabtPrintChars {
-  WABT_DONT_PRINT_CHARS,
-  WABT_PRINT_CHARS,
+enum class WabtPrintChars {
+  No = 0,
+  Yes = 1,
 };
 
 WABT_EXTERN_C_BEGIN
@@ -93,9 +93,15 @@ static WABT_INLINE void wabt_write_output_buffer_memory_dump(
     WabtStream* stream,
     struct WabtOutputBuffer* buf) {
   wabt_write_memory_dump(stream, buf->start, buf->size, 0,
-                         WABT_DONT_PRINT_CHARS, nullptr, nullptr);
+                         WabtPrintChars::No, nullptr, nullptr);
 }
 
 WABT_EXTERN_C_END
+
+/* Helper function for writing enums as u8. */
+template <typename T>
+void wabt_write_u8_enum(WabtStream* stream, T value, const char* desc) {
+  wabt_write_u8(stream, static_cast<uint32_t>(value), desc);
+}
 
 #endif /* WABT_STREAM_H_ */

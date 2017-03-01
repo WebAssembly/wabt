@@ -19,9 +19,9 @@
 
 #include "common.h"
 
-enum WabtHasArgument {
-  WABT_OPTION_NO_ARGUMENT,
-  WABT_OPTION_HAS_ARGUMENT,
+enum class WabtHasArgument {
+  No = 0,
+  Yes = 1,
 };
 
 struct WabtOption;

@@ -98,18 +98,18 @@ void wabt_destroy_func_fields(WabtFuncField* func_field) {
     WabtFuncField* next_func_field = func_field->next;
 
     switch (func_field->type) {
-      case WABT_FUNC_FIELD_TYPE_EXPRS:
+      case WabtFuncFieldType::Exprs:
         wabt_destroy_expr_list(func_field->first_expr);
         break;
 
-      case WABT_FUNC_FIELD_TYPE_PARAM_TYPES:
-      case WABT_FUNC_FIELD_TYPE_LOCAL_TYPES:
-      case WABT_FUNC_FIELD_TYPE_RESULT_TYPES:
+      case WabtFuncFieldType::ParamTypes:
+      case WabtFuncFieldType::LocalTypes:
+      case WabtFuncFieldType::ResultTypes:
         wabt_destroy_type_vector(&func_field->types);
         break;
 
-      case WABT_FUNC_FIELD_TYPE_BOUND_PARAM:
-      case WABT_FUNC_FIELD_TYPE_BOUND_LOCAL:
+      case WabtFuncFieldType::BoundParam:
+      case WabtFuncFieldType::BoundLocal:
         wabt_destroy_string_slice(&func_field->bound_type.name);
         break;
     }

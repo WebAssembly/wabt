@@ -82,13 +82,13 @@
   lval->text.start = yytext + offset; \
   lval->text.length = yyleng - offset
 
-#define TYPE(type_) lval->type = WABT_TYPE_##type_
+#define TYPE(type_) lval->type = WabtType::type_
 
-#define OPCODE(name) lval->opcode = WABT_OPCODE_##name
+#define OPCODE(name) lval->opcode = WabtOpcode::name
 
-#define LITERAL(type_)                      \
-  lval->literal.type = WABT_LITERAL_TYPE_##type_; \
-  lval->literal.text.start = yytext;              \
+#define LITERAL(type_)                         \
+  lval->literal.type = WabtLiteralType::type_; \
+  lval->literal.text.start = yytext;           \
   lval->literal.text.length = yyleng
 
 static WabtResult fill(WabtLocation* loc,
@@ -96,7 +96,7 @@ static WabtResult fill(WabtLocation* loc,
                        WabtAstParser* parser,
                        size_t need) {
   if (lexer->eof)
-    return WABT_ERROR;
+    return WabtResult::Error;
   size_t free = lexer->token - lexer->buffer;
   assert(static_cast<size_t>(lexer->cursor - lexer->buffer) >= free);
   /* our buffer is too small, need to realloc */
@@ -118,7 +118,7 @@ static WabtResult fill(WabtLocation* loc,
     if (!new_buffer) {
       wabt_ast_parser_error(loc, lexer, parser,
                             "unable to reallocate lexer buffer.");
-      return WABT_ERROR;
+      return WabtResult::Error;
     }
     memmove(new_buffer, lexer->token, lexer->limit - lexer->token);
     lexer->buffer = new_buffer;
@@ -139,11 +139,11 @@ static WabtResult fill(WabtLocation* loc,
     lexer->buffer_file_offset += free;
   }
   /* read the new data into the buffer */
-  if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE) {
+  if (lexer->source.type == WabtAstLexerSourceType::File) {
     lexer->limit += fread(lexer->limit, 1, free, lexer->source.file);
   } else {
     /* TODO(binji): could lex directly from buffer */
-    assert(lexer->source.type == WABT_LEXER_SOURCE_TYPE_BUFFER);
+    assert(lexer->source.type == WabtAstLexerSourceType::Buffer);
     size_t read_size = free;
     size_t offset = lexer->source.buffer.read_offset;
     size_t bytes_left = lexer->source.buffer.size - offset;
@@ -163,7 +163,7 @@ static WabtResult fill(WabtLocation* loc,
     memset(lexer->limit, 0, YYMAXFILL);
     lexer->limit += YYMAXFILL;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 int wabt_ast_lexer_lex(WABT_AST_PARSER_STYPE* lval,
@@ -219,12 +219,12 @@ int wabt_ast_lexer_lex(WABT_AST_PARSER_STYPE* lval,
 
       <i> "("                   { RETURN(LPAR); }
       <i> ")"                   { RETURN(RPAR); }
-      <i> nat                   { LITERAL(INT); RETURN(NAT); }
-      <i> int                   { LITERAL(INT); RETURN(INT); }
-      <i> float                 { LITERAL(FLOAT); RETURN(FLOAT); }
-      <i> hexfloat              { LITERAL(HEXFLOAT); RETURN(FLOAT); }
-      <i> infinity              { LITERAL(INFINITY); RETURN(FLOAT); }
-      <i> nan                   { LITERAL(NAN); RETURN(FLOAT); }
+      <i> nat                   { LITERAL(Int); RETURN(NAT); }
+      <i> int                   { LITERAL(Int); RETURN(INT); }
+      <i> float                 { LITERAL(Float); RETURN(FLOAT); }
+      <i> hexfloat              { LITERAL(Hexfloat); RETURN(FLOAT); }
+      <i> infinity              { LITERAL(Infinity); RETURN(FLOAT); }
+      <i> nan                   { LITERAL(Nan); RETURN(FLOAT); }
       <i> text                  { TEXT; RETURN(TEXT); }
       <i> '"' => BAD_TEXT       { continue; }
       <BAD_TEXT> character      { continue; }
@@ -264,161 +264,161 @@ int wabt_ast_lexer_lex(WABT_AST_PARSER_STYPE* lval,
       <i> "tee_local"           { RETURN(TEE_LOCAL); }
       <i> "get_global"          { RETURN(GET_GLOBAL); }
       <i> "set_global"          { RETURN(SET_GLOBAL); }
-      <i> "i32.load"            { OPCODE(I32_LOAD); RETURN(LOAD); }
-      <i> "i64.load"            { OPCODE(I64_LOAD); RETURN(LOAD); }
-      <i> "f32.load"            { OPCODE(F32_LOAD); RETURN(LOAD); }
-      <i> "f64.load"            { OPCODE(F64_LOAD); RETURN(LOAD); }
-      <i> "i32.store"           { OPCODE(I32_STORE); RETURN(STORE); }
-      <i> "i64.store"           { OPCODE(I64_STORE); RETURN(STORE); }
-      <i> "f32.store"           { OPCODE(F32_STORE); RETURN(STORE); }
-      <i> "f64.store"           { OPCODE(F64_STORE); RETURN(STORE); }
-      <i> "i32.load8_s"         { OPCODE(I32_LOAD8_S); RETURN(LOAD); }
-      <i> "i64.load8_s"         { OPCODE(I64_LOAD8_S); RETURN(LOAD); }
-      <i> "i32.load8_u"         { OPCODE(I32_LOAD8_U); RETURN(LOAD); }
-      <i> "i64.load8_u"         { OPCODE(I64_LOAD8_U); RETURN(LOAD); }
-      <i> "i32.load16_s"        { OPCODE(I32_LOAD16_S); RETURN(LOAD); }
-      <i> "i64.load16_s"        { OPCODE(I64_LOAD16_S); RETURN(LOAD); }
-      <i> "i32.load16_u"        { OPCODE(I32_LOAD16_U); RETURN(LOAD); }
-      <i> "i64.load16_u"        { OPCODE(I64_LOAD16_U); RETURN(LOAD); }
-      <i> "i64.load32_s"        { OPCODE(I64_LOAD32_S); RETURN(LOAD); }
-      <i> "i64.load32_u"        { OPCODE(I64_LOAD32_U); RETURN(LOAD); }
-      <i> "i32.store8"          { OPCODE(I32_STORE8); RETURN(STORE); }
-      <i> "i64.store8"          { OPCODE(I64_STORE8); RETURN(STORE); }
-      <i> "i32.store16"         { OPCODE(I32_STORE16); RETURN(STORE); }
-      <i> "i64.store16"         { OPCODE(I64_STORE16); RETURN(STORE); }
-      <i> "i64.store32"         { OPCODE(I64_STORE32); RETURN(STORE); }
+      <i> "i32.load"            { OPCODE(I32Load); RETURN(LOAD); }
+      <i> "i64.load"            { OPCODE(I64Load); RETURN(LOAD); }
+      <i> "f32.load"            { OPCODE(F32Load); RETURN(LOAD); }
+      <i> "f64.load"            { OPCODE(F64Load); RETURN(LOAD); }
+      <i> "i32.store"           { OPCODE(I32Store); RETURN(STORE); }
+      <i> "i64.store"           { OPCODE(I64Store); RETURN(STORE); }
+      <i> "f32.store"           { OPCODE(F32Store); RETURN(STORE); }
+      <i> "f64.store"           { OPCODE(F64Store); RETURN(STORE); }
+      <i> "i32.load8_s"         { OPCODE(I32Load8S); RETURN(LOAD); }
+      <i> "i64.load8_s"         { OPCODE(I64Load8S); RETURN(LOAD); }
+      <i> "i32.load8_u"         { OPCODE(I32Load8U); RETURN(LOAD); }
+      <i> "i64.load8_u"         { OPCODE(I64Load8U); RETURN(LOAD); }
+      <i> "i32.load16_s"        { OPCODE(I32Load16S); RETURN(LOAD); }
+      <i> "i64.load16_s"        { OPCODE(I64Load16S); RETURN(LOAD); }
+      <i> "i32.load16_u"        { OPCODE(I32Load16U); RETURN(LOAD); }
+      <i> "i64.load16_u"        { OPCODE(I64Load16U); RETURN(LOAD); }
+      <i> "i64.load32_s"        { OPCODE(I64Load32S); RETURN(LOAD); }
+      <i> "i64.load32_u"        { OPCODE(I64Load32U); RETURN(LOAD); }
+      <i> "i32.store8"          { OPCODE(I32Store8); RETURN(STORE); }
+      <i> "i64.store8"          { OPCODE(I64Store8); RETURN(STORE); }
+      <i> "i32.store16"         { OPCODE(I32Store16); RETURN(STORE); }
+      <i> "i64.store16"         { OPCODE(I64Store16); RETURN(STORE); }
+      <i> "i64.store32"         { OPCODE(I64Store32); RETURN(STORE); }
       <i> "offset=" nat         { TEXT_AT(7); RETURN(OFFSET_EQ_NAT); }
       <i> "align=" nat          { TEXT_AT(6); RETURN(ALIGN_EQ_NAT); }
       <i> "i32.const"           { TYPE(I32); RETURN(CONST); }
       <i> "i64.const"           { TYPE(I64); RETURN(CONST); }
       <i> "f32.const"           { TYPE(F32); RETURN(CONST); }
       <i> "f64.const"           { TYPE(F64); RETURN(CONST); }
-      <i> "i32.eqz"             { OPCODE(I32_EQZ); RETURN(CONVERT); }
-      <i> "i64.eqz"             { OPCODE(I64_EQZ); RETURN(CONVERT); }
-      <i> "i32.clz"             { OPCODE(I32_CLZ); RETURN(UNARY); }
-      <i> "i64.clz"             { OPCODE(I64_CLZ); RETURN(UNARY); }
-      <i> "i32.ctz"             { OPCODE(I32_CTZ); RETURN(UNARY); }
-      <i> "i64.ctz"             { OPCODE(I64_CTZ); RETURN(UNARY); }
-      <i> "i32.popcnt"          { OPCODE(I32_POPCNT); RETURN(UNARY); }
-      <i> "i64.popcnt"          { OPCODE(I64_POPCNT); RETURN(UNARY); }
-      <i> "f32.neg"             { OPCODE(F32_NEG); RETURN(UNARY); }
-      <i> "f64.neg"             { OPCODE(F64_NEG); RETURN(UNARY); }
-      <i> "f32.abs"             { OPCODE(F32_ABS); RETURN(UNARY); }
-      <i> "f64.abs"             { OPCODE(F64_ABS); RETURN(UNARY); }
-      <i> "f32.sqrt"            { OPCODE(F32_SQRT); RETURN(UNARY); }
-      <i> "f64.sqrt"            { OPCODE(F64_SQRT); RETURN(UNARY); }
-      <i> "f32.ceil"            { OPCODE(F32_CEIL); RETURN(UNARY); }
-      <i> "f64.ceil"            { OPCODE(F64_CEIL); RETURN(UNARY); }
-      <i> "f32.floor"           { OPCODE(F32_FLOOR); RETURN(UNARY); }
-      <i> "f64.floor"           { OPCODE(F64_FLOOR); RETURN(UNARY); }
-      <i> "f32.trunc"           { OPCODE(F32_TRUNC); RETURN(UNARY); }
-      <i> "f64.trunc"           { OPCODE(F64_TRUNC); RETURN(UNARY); }
-      <i> "f32.nearest"         { OPCODE(F32_NEAREST); RETURN(UNARY); }
-      <i> "f64.nearest"         { OPCODE(F64_NEAREST); RETURN(UNARY); }
-      <i> "i32.add"             { OPCODE(I32_ADD); RETURN(BINARY); }
-      <i> "i64.add"             { OPCODE(I64_ADD); RETURN(BINARY); }
-      <i> "i32.sub"             { OPCODE(I32_SUB); RETURN(BINARY); }
-      <i> "i64.sub"             { OPCODE(I64_SUB); RETURN(BINARY); }
-      <i> "i32.mul"             { OPCODE(I32_MUL); RETURN(BINARY); }
-      <i> "i64.mul"             { OPCODE(I64_MUL); RETURN(BINARY); }
-      <i> "i32.div_s"           { OPCODE(I32_DIV_S); RETURN(BINARY); }
-      <i> "i64.div_s"           { OPCODE(I64_DIV_S); RETURN(BINARY); }
-      <i> "i32.div_u"           { OPCODE(I32_DIV_U); RETURN(BINARY); }
-      <i> "i64.div_u"           { OPCODE(I64_DIV_U); RETURN(BINARY); }
-      <i> "i32.rem_s"           { OPCODE(I32_REM_S); RETURN(BINARY); }
-      <i> "i64.rem_s"           { OPCODE(I64_REM_S); RETURN(BINARY); }
-      <i> "i32.rem_u"           { OPCODE(I32_REM_U); RETURN(BINARY); }
-      <i> "i64.rem_u"           { OPCODE(I64_REM_U); RETURN(BINARY); }
-      <i> "i32.and"             { OPCODE(I32_AND); RETURN(BINARY); }
-      <i> "i64.and"             { OPCODE(I64_AND); RETURN(BINARY); }
-      <i> "i32.or"              { OPCODE(I32_OR); RETURN(BINARY); }
-      <i> "i64.or"              { OPCODE(I64_OR); RETURN(BINARY); }
-      <i> "i32.xor"             { OPCODE(I32_XOR); RETURN(BINARY); }
-      <i> "i64.xor"             { OPCODE(I64_XOR); RETURN(BINARY); }
-      <i> "i32.shl"             { OPCODE(I32_SHL); RETURN(BINARY); }
-      <i> "i64.shl"             { OPCODE(I64_SHL); RETURN(BINARY); }
-      <i> "i32.shr_s"           { OPCODE(I32_SHR_S); RETURN(BINARY); }
-      <i> "i64.shr_s"           { OPCODE(I64_SHR_S); RETURN(BINARY); }
-      <i> "i32.shr_u"           { OPCODE(I32_SHR_U); RETURN(BINARY); }
-      <i> "i64.shr_u"           { OPCODE(I64_SHR_U); RETURN(BINARY); }
-      <i> "i32.rotl"            { OPCODE(I32_ROTL); RETURN(BINARY); }
-      <i> "i64.rotl"            { OPCODE(I64_ROTL); RETURN(BINARY); }
-      <i> "i32.rotr"            { OPCODE(I32_ROTR); RETURN(BINARY); }
-      <i> "i64.rotr"            { OPCODE(I64_ROTR); RETURN(BINARY); }
-      <i> "f32.add"             { OPCODE(F32_ADD); RETURN(BINARY); }
-      <i> "f64.add"             { OPCODE(F64_ADD); RETURN(BINARY); }
-      <i> "f32.sub"             { OPCODE(F32_SUB); RETURN(BINARY); }
-      <i> "f64.sub"             { OPCODE(F64_SUB); RETURN(BINARY); }
-      <i> "f32.mul"             { OPCODE(F32_MUL); RETURN(BINARY); }
-      <i> "f64.mul"             { OPCODE(F64_MUL); RETURN(BINARY); }
-      <i> "f32.div"             { OPCODE(F32_DIV); RETURN(BINARY); }
-      <i> "f64.div"             { OPCODE(F64_DIV); RETURN(BINARY); }
-      <i> "f32.min"             { OPCODE(F32_MIN); RETURN(BINARY); }
-      <i> "f64.min"             { OPCODE(F64_MIN); RETURN(BINARY); }
-      <i> "f32.max"             { OPCODE(F32_MAX); RETURN(BINARY); }
-      <i> "f64.max"             { OPCODE(F64_MAX); RETURN(BINARY); }
-      <i> "f32.copysign"        { OPCODE(F32_COPYSIGN); RETURN(BINARY); }
-      <i> "f64.copysign"        { OPCODE(F64_COPYSIGN); RETURN(BINARY); }
-      <i> "i32.eq"              { OPCODE(I32_EQ); RETURN(COMPARE); }
-      <i> "i64.eq"              { OPCODE(I64_EQ); RETURN(COMPARE); }
-      <i> "i32.ne"              { OPCODE(I32_NE); RETURN(COMPARE); }
-      <i> "i64.ne"              { OPCODE(I64_NE); RETURN(COMPARE); }
-      <i> "i32.lt_s"            { OPCODE(I32_LT_S); RETURN(COMPARE); }
-      <i> "i64.lt_s"            { OPCODE(I64_LT_S); RETURN(COMPARE); }
-      <i> "i32.lt_u"            { OPCODE(I32_LT_U); RETURN(COMPARE); }
-      <i> "i64.lt_u"            { OPCODE(I64_LT_U); RETURN(COMPARE); }
-      <i> "i32.le_s"            { OPCODE(I32_LE_S); RETURN(COMPARE); }
-      <i> "i64.le_s"            { OPCODE(I64_LE_S); RETURN(COMPARE); }
-      <i> "i32.le_u"            { OPCODE(I32_LE_U); RETURN(COMPARE); }
-      <i> "i64.le_u"            { OPCODE(I64_LE_U); RETURN(COMPARE); }
-      <i> "i32.gt_s"            { OPCODE(I32_GT_S); RETURN(COMPARE); }
-      <i> "i64.gt_s"            { OPCODE(I64_GT_S); RETURN(COMPARE); }
-      <i> "i32.gt_u"            { OPCODE(I32_GT_U); RETURN(COMPARE); }
-      <i> "i64.gt_u"            { OPCODE(I64_GT_U); RETURN(COMPARE); }
-      <i> "i32.ge_s"            { OPCODE(I32_GE_S); RETURN(COMPARE); }
-      <i> "i64.ge_s"            { OPCODE(I64_GE_S); RETURN(COMPARE); }
-      <i> "i32.ge_u"            { OPCODE(I32_GE_U); RETURN(COMPARE); }
-      <i> "i64.ge_u"            { OPCODE(I64_GE_U); RETURN(COMPARE); }
-      <i> "f32.eq"              { OPCODE(F32_EQ); RETURN(COMPARE); }
-      <i> "f64.eq"              { OPCODE(F64_EQ); RETURN(COMPARE); }
-      <i> "f32.ne"              { OPCODE(F32_NE); RETURN(COMPARE); }
-      <i> "f64.ne"              { OPCODE(F64_NE); RETURN(COMPARE); }
-      <i> "f32.lt"              { OPCODE(F32_LT); RETURN(COMPARE); }
-      <i> "f64.lt"              { OPCODE(F64_LT); RETURN(COMPARE); }
-      <i> "f32.le"              { OPCODE(F32_LE); RETURN(COMPARE); }
-      <i> "f64.le"              { OPCODE(F64_LE); RETURN(COMPARE); }
-      <i> "f32.gt"              { OPCODE(F32_GT); RETURN(COMPARE); }
-      <i> "f64.gt"              { OPCODE(F64_GT); RETURN(COMPARE); }
-      <i> "f32.ge"              { OPCODE(F32_GE); RETURN(COMPARE); }
-      <i> "f64.ge"              { OPCODE(F64_GE); RETURN(COMPARE); }
-      <i> "i64.extend_s/i32"    { OPCODE(I64_EXTEND_S_I32); RETURN(CONVERT); }
-      <i> "i64.extend_u/i32"    { OPCODE(I64_EXTEND_U_I32); RETURN(CONVERT); }
-      <i> "i32.wrap/i64"        { OPCODE(I32_WRAP_I64); RETURN(CONVERT); }
-      <i> "i32.trunc_s/f32"     { OPCODE(I32_TRUNC_S_F32); RETURN(CONVERT); }
-      <i> "i64.trunc_s/f32"     { OPCODE(I64_TRUNC_S_F32); RETURN(CONVERT); }
-      <i> "i32.trunc_s/f64"     { OPCODE(I32_TRUNC_S_F64); RETURN(CONVERT); }
-      <i> "i64.trunc_s/f64"     { OPCODE(I64_TRUNC_S_F64); RETURN(CONVERT); }
-      <i> "i32.trunc_u/f32"     { OPCODE(I32_TRUNC_U_F32); RETURN(CONVERT); }
-      <i> "i64.trunc_u/f32"     { OPCODE(I64_TRUNC_U_F32); RETURN(CONVERT); }
-      <i> "i32.trunc_u/f64"     { OPCODE(I32_TRUNC_U_F64); RETURN(CONVERT); }
-      <i> "i64.trunc_u/f64"     { OPCODE(I64_TRUNC_U_F64); RETURN(CONVERT); }
-      <i> "f32.convert_s/i32"   { OPCODE(F32_CONVERT_S_I32); RETURN(CONVERT); }
-      <i> "f64.convert_s/i32"   { OPCODE(F64_CONVERT_S_I32); RETURN(CONVERT); }
-      <i> "f32.convert_s/i64"   { OPCODE(F32_CONVERT_S_I64); RETURN(CONVERT); }
-      <i> "f64.convert_s/i64"   { OPCODE(F64_CONVERT_S_I64); RETURN(CONVERT); }
-      <i> "f32.convert_u/i32"   { OPCODE(F32_CONVERT_U_I32); RETURN(CONVERT); }
-      <i> "f64.convert_u/i32"   { OPCODE(F64_CONVERT_U_I32); RETURN(CONVERT); }
-      <i> "f32.convert_u/i64"   { OPCODE(F32_CONVERT_U_I64); RETURN(CONVERT); }
-      <i> "f64.convert_u/i64"   { OPCODE(F64_CONVERT_U_I64); RETURN(CONVERT); }
-      <i> "f64.promote/f32"     { OPCODE(F64_PROMOTE_F32); RETURN(CONVERT); }
-      <i> "f32.demote/f64"      { OPCODE(F32_DEMOTE_F64); RETURN(CONVERT); }
-      <i> "f32.reinterpret/i32" { OPCODE(F32_REINTERPRET_I32); RETURN(CONVERT);
+      <i> "i32.eqz"             { OPCODE(I32Eqz); RETURN(CONVERT); }
+      <i> "i64.eqz"             { OPCODE(I64Eqz); RETURN(CONVERT); }
+      <i> "i32.clz"             { OPCODE(I32Clz); RETURN(UNARY); }
+      <i> "i64.clz"             { OPCODE(I64Clz); RETURN(UNARY); }
+      <i> "i32.ctz"             { OPCODE(I32Ctz); RETURN(UNARY); }
+      <i> "i64.ctz"             { OPCODE(I64Ctz); RETURN(UNARY); }
+      <i> "i32.popcnt"          { OPCODE(I32Popcnt); RETURN(UNARY); }
+      <i> "i64.popcnt"          { OPCODE(I64Popcnt); RETURN(UNARY); }
+      <i> "f32.neg"             { OPCODE(F32Neg); RETURN(UNARY); }
+      <i> "f64.neg"             { OPCODE(F64Neg); RETURN(UNARY); }
+      <i> "f32.abs"             { OPCODE(F32Abs); RETURN(UNARY); }
+      <i> "f64.abs"             { OPCODE(F64Abs); RETURN(UNARY); }
+      <i> "f32.sqrt"            { OPCODE(F32Sqrt); RETURN(UNARY); }
+      <i> "f64.sqrt"            { OPCODE(F64Sqrt); RETURN(UNARY); }
+      <i> "f32.ceil"            { OPCODE(F32Ceil); RETURN(UNARY); }
+      <i> "f64.ceil"            { OPCODE(F64Ceil); RETURN(UNARY); }
+      <i> "f32.floor"           { OPCODE(F32Floor); RETURN(UNARY); }
+      <i> "f64.floor"           { OPCODE(F64Floor); RETURN(UNARY); }
+      <i> "f32.trunc"           { OPCODE(F32Trunc); RETURN(UNARY); }
+      <i> "f64.trunc"           { OPCODE(F64Trunc); RETURN(UNARY); }
+      <i> "f32.nearest"         { OPCODE(F32Nearest); RETURN(UNARY); }
+      <i> "f64.nearest"         { OPCODE(F64Nearest); RETURN(UNARY); }
+      <i> "i32.add"             { OPCODE(I32Add); RETURN(BINARY); }
+      <i> "i64.add"             { OPCODE(I64Add); RETURN(BINARY); }
+      <i> "i32.sub"             { OPCODE(I32Sub); RETURN(BINARY); }
+      <i> "i64.sub"             { OPCODE(I64Sub); RETURN(BINARY); }
+      <i> "i32.mul"             { OPCODE(I32Mul); RETURN(BINARY); }
+      <i> "i64.mul"             { OPCODE(I64Mul); RETURN(BINARY); }
+      <i> "i32.div_s"           { OPCODE(I32DivS); RETURN(BINARY); }
+      <i> "i64.div_s"           { OPCODE(I64DivS); RETURN(BINARY); }
+      <i> "i32.div_u"           { OPCODE(I32DivU); RETURN(BINARY); }
+      <i> "i64.div_u"           { OPCODE(I64DivU); RETURN(BINARY); }
+      <i> "i32.rem_s"           { OPCODE(I32RemS); RETURN(BINARY); }
+      <i> "i64.rem_s"           { OPCODE(I64RemS); RETURN(BINARY); }
+      <i> "i32.rem_u"           { OPCODE(I32RemU); RETURN(BINARY); }
+      <i> "i64.rem_u"           { OPCODE(I64RemU); RETURN(BINARY); }
+      <i> "i32.and"             { OPCODE(I32And); RETURN(BINARY); }
+      <i> "i64.and"             { OPCODE(I64And); RETURN(BINARY); }
+      <i> "i32.or"              { OPCODE(I32Or); RETURN(BINARY); }
+      <i> "i64.or"              { OPCODE(I64Or); RETURN(BINARY); }
+      <i> "i32.xor"             { OPCODE(I32Xor); RETURN(BINARY); }
+      <i> "i64.xor"             { OPCODE(I64Xor); RETURN(BINARY); }
+      <i> "i32.shl"             { OPCODE(I32Shl); RETURN(BINARY); }
+      <i> "i64.shl"             { OPCODE(I64Shl); RETURN(BINARY); }
+      <i> "i32.shr_s"           { OPCODE(I32ShrS); RETURN(BINARY); }
+      <i> "i64.shr_s"           { OPCODE(I64ShrS); RETURN(BINARY); }
+      <i> "i32.shr_u"           { OPCODE(I32ShrU); RETURN(BINARY); }
+      <i> "i64.shr_u"           { OPCODE(I64ShrU); RETURN(BINARY); }
+      <i> "i32.rotl"            { OPCODE(I32Rotl); RETURN(BINARY); }
+      <i> "i64.rotl"            { OPCODE(I64Rotl); RETURN(BINARY); }
+      <i> "i32.rotr"            { OPCODE(I32Rotr); RETURN(BINARY); }
+      <i> "i64.rotr"            { OPCODE(I64Rotr); RETURN(BINARY); }
+      <i> "f32.add"             { OPCODE(F32Add); RETURN(BINARY); }
+      <i> "f64.add"             { OPCODE(F64Add); RETURN(BINARY); }
+      <i> "f32.sub"             { OPCODE(F32Sub); RETURN(BINARY); }
+      <i> "f64.sub"             { OPCODE(F64Sub); RETURN(BINARY); }
+      <i> "f32.mul"             { OPCODE(F32Mul); RETURN(BINARY); }
+      <i> "f64.mul"             { OPCODE(F64Mul); RETURN(BINARY); }
+      <i> "f32.div"             { OPCODE(F32Div); RETURN(BINARY); }
+      <i> "f64.div"             { OPCODE(F64Div); RETURN(BINARY); }
+      <i> "f32.min"             { OPCODE(F32Min); RETURN(BINARY); }
+      <i> "f64.min"             { OPCODE(F64Min); RETURN(BINARY); }
+      <i> "f32.max"             { OPCODE(F32Max); RETURN(BINARY); }
+      <i> "f64.max"             { OPCODE(F64Max); RETURN(BINARY); }
+      <i> "f32.copysign"        { OPCODE(F32Copysign); RETURN(BINARY); }
+      <i> "f64.copysign"        { OPCODE(F64Copysign); RETURN(BINARY); }
+      <i> "i32.eq"              { OPCODE(I32Eq); RETURN(COMPARE); }
+      <i> "i64.eq"              { OPCODE(I64Eq); RETURN(COMPARE); }
+      <i> "i32.ne"              { OPCODE(I32Ne); RETURN(COMPARE); }
+      <i> "i64.ne"              { OPCODE(I64Ne); RETURN(COMPARE); }
+      <i> "i32.lt_s"            { OPCODE(I32LtS); RETURN(COMPARE); }
+      <i> "i64.lt_s"            { OPCODE(I64LtS); RETURN(COMPARE); }
+      <i> "i32.lt_u"            { OPCODE(I32LtU); RETURN(COMPARE); }
+      <i> "i64.lt_u"            { OPCODE(I64LtU); RETURN(COMPARE); }
+      <i> "i32.le_s"            { OPCODE(I32LeS); RETURN(COMPARE); }
+      <i> "i64.le_s"            { OPCODE(I64LeS); RETURN(COMPARE); }
+      <i> "i32.le_u"            { OPCODE(I32LeU); RETURN(COMPARE); }
+      <i> "i64.le_u"            { OPCODE(I64LeU); RETURN(COMPARE); }
+      <i> "i32.gt_s"            { OPCODE(I32GtS); RETURN(COMPARE); }
+      <i> "i64.gt_s"            { OPCODE(I64GtS); RETURN(COMPARE); }
+      <i> "i32.gt_u"            { OPCODE(I32GtU); RETURN(COMPARE); }
+      <i> "i64.gt_u"            { OPCODE(I64GtU); RETURN(COMPARE); }
+      <i> "i32.ge_s"            { OPCODE(I32GeS); RETURN(COMPARE); }
+      <i> "i64.ge_s"            { OPCODE(I64GeS); RETURN(COMPARE); }
+      <i> "i32.ge_u"            { OPCODE(I32GeU); RETURN(COMPARE); }
+      <i> "i64.ge_u"            { OPCODE(I64GeU); RETURN(COMPARE); }
+      <i> "f32.eq"              { OPCODE(F32Eq); RETURN(COMPARE); }
+      <i> "f64.eq"              { OPCODE(F64Eq); RETURN(COMPARE); }
+      <i> "f32.ne"              { OPCODE(F32Ne); RETURN(COMPARE); }
+      <i> "f64.ne"              { OPCODE(F64Ne); RETURN(COMPARE); }
+      <i> "f32.lt"              { OPCODE(F32Lt); RETURN(COMPARE); }
+      <i> "f64.lt"              { OPCODE(F64Lt); RETURN(COMPARE); }
+      <i> "f32.le"              { OPCODE(F32Le); RETURN(COMPARE); }
+      <i> "f64.le"              { OPCODE(F64Le); RETURN(COMPARE); }
+      <i> "f32.gt"              { OPCODE(F32Gt); RETURN(COMPARE); }
+      <i> "f64.gt"              { OPCODE(F64Gt); RETURN(COMPARE); }
+      <i> "f32.ge"              { OPCODE(F32Ge); RETURN(COMPARE); }
+      <i> "f64.ge"              { OPCODE(F64Ge); RETURN(COMPARE); }
+      <i> "i64.extend_s/i32"    { OPCODE(I64ExtendSI32); RETURN(CONVERT); }
+      <i> "i64.extend_u/i32"    { OPCODE(I64ExtendUI32); RETURN(CONVERT); }
+      <i> "i32.wrap/i64"        { OPCODE(I32WrapI64); RETURN(CONVERT); }
+      <i> "i32.trunc_s/f32"     { OPCODE(I32TruncSF32); RETURN(CONVERT); }
+      <i> "i64.trunc_s/f32"     { OPCODE(I64TruncSF32); RETURN(CONVERT); }
+      <i> "i32.trunc_s/f64"     { OPCODE(I32TruncSF64); RETURN(CONVERT); }
+      <i> "i64.trunc_s/f64"     { OPCODE(I64TruncSF64); RETURN(CONVERT); }
+      <i> "i32.trunc_u/f32"     { OPCODE(I32TruncUF32); RETURN(CONVERT); }
+      <i> "i64.trunc_u/f32"     { OPCODE(I64TruncUF32); RETURN(CONVERT); }
+      <i> "i32.trunc_u/f64"     { OPCODE(I32TruncUF64); RETURN(CONVERT); }
+      <i> "i64.trunc_u/f64"     { OPCODE(I64TruncUF64); RETURN(CONVERT); }
+      <i> "f32.convert_s/i32"   { OPCODE(F32ConvertSI32); RETURN(CONVERT); }
+      <i> "f64.convert_s/i32"   { OPCODE(F64ConvertSI32); RETURN(CONVERT); }
+      <i> "f32.convert_s/i64"   { OPCODE(F32ConvertSI64); RETURN(CONVERT); }
+      <i> "f64.convert_s/i64"   { OPCODE(F64ConvertSI64); RETURN(CONVERT); }
+      <i> "f32.convert_u/i32"   { OPCODE(F32ConvertUI32); RETURN(CONVERT); }
+      <i> "f64.convert_u/i32"   { OPCODE(F64ConvertUI32); RETURN(CONVERT); }
+      <i> "f32.convert_u/i64"   { OPCODE(F32ConvertUI64); RETURN(CONVERT); }
+      <i> "f64.convert_u/i64"   { OPCODE(F64ConvertUI64); RETURN(CONVERT); }
+      <i> "f64.promote/f32"     { OPCODE(F64PromoteF32); RETURN(CONVERT); }
+      <i> "f32.demote/f64"      { OPCODE(F32DemoteF64); RETURN(CONVERT); }
+      <i> "f32.reinterpret/i32" { OPCODE(F32ReinterpretI32); RETURN(CONVERT);
       }
-      <i> "i32.reinterpret/f32" { OPCODE(I32_REINTERPRET_F32); RETURN(CONVERT);
+      <i> "i32.reinterpret/f32" { OPCODE(I32ReinterpretF32); RETURN(CONVERT);
       }
-      <i> "f64.reinterpret/i64" { OPCODE(F64_REINTERPRET_I64); RETURN(CONVERT);
+      <i> "f64.reinterpret/i64" { OPCODE(F64ReinterpretI64); RETURN(CONVERT);
       }
-      <i> "i64.reinterpret/f64" { OPCODE(I64_REINTERPRET_F64); RETURN(CONVERT);
+      <i> "i64.reinterpret/f64" { OPCODE(I64ReinterpretF64); RETURN(CONVERT);
       }
       <i> "select"              { RETURN(SELECT); }
       <i> "unreachable"         { RETURN(UNREACHABLE); }
@@ -486,7 +486,7 @@ static WabtAstLexer* wabt_new_lexer(WabtAstLexerSourceType type,
 }
 
 WabtAstLexer* wabt_new_ast_file_lexer(const char* filename) {
-  WabtAstLexer* lexer = wabt_new_lexer(WABT_LEXER_SOURCE_TYPE_FILE, filename);
+  WabtAstLexer* lexer = wabt_new_lexer(WabtAstLexerSourceType::File, filename);
   lexer->source.file = fopen(filename, "rb");
   if (!lexer->source.file) {
     wabt_destroy_ast_lexer(lexer);
@@ -498,7 +498,8 @@ WabtAstLexer* wabt_new_ast_file_lexer(const char* filename) {
 WabtAstLexer* wabt_new_ast_buffer_lexer(const char* filename,
                                         const void* data,
                                         size_t size) {
-  WabtAstLexer* lexer = wabt_new_lexer(WABT_LEXER_SOURCE_TYPE_BUFFER, filename);
+  WabtAstLexer* lexer =
+      wabt_new_lexer(WabtAstLexerSourceType::Buffer, filename);
   lexer->source.buffer.data = data;
   lexer->source.buffer.size = size;
   lexer->source.buffer.read_offset = 0;
@@ -506,15 +507,15 @@ WabtAstLexer* wabt_new_ast_buffer_lexer(const char* filename,
 }
 
 void wabt_destroy_ast_lexer(WabtAstLexer* lexer) {
-  if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE && lexer->source.file)
+  if (lexer->source.type == WabtAstLexerSourceType::File && lexer->source.file)
     fclose(lexer->source.file);
   wabt_free(lexer->buffer);
   wabt_free(lexer);
 }
 
-enum WabtLineOffsetPosition {
-  WABT_LINE_OFFSET_POSITION_START,
-  WABT_LINE_OFFSET_POSITION_END,
+enum class WabtLineOffsetPosition {
+  Start,
+  End,
 };
 
 static WabtResult scan_forward_for_line_offset_in_buffer(
@@ -532,14 +533,15 @@ static WabtResult scan_forward_for_line_offset_in_buffer(
   bool is_previous_carriage = 0;
   for (p = buffer_start; p < buffer_end; ++p) {
     if (*p == '\n') {
-      if (find_position == WABT_LINE_OFFSET_POSITION_START) {
+      if (find_position == WabtLineOffsetPosition::Start) {
         if (++line == find_line) {
           line_offset = buffer_file_offset + (p - buffer_start) + 1;
           break;
         }
       } else {
         if (line++ == find_line) {
-          line_offset = buffer_file_offset + (p - buffer_start) - is_previous_carriage;
+          line_offset =
+              buffer_file_offset + (p - buffer_start) - is_previous_carriage;
           break;
         }
       }
@@ -547,11 +549,11 @@ static WabtResult scan_forward_for_line_offset_in_buffer(
     is_previous_carriage = *p == '\r';
   }
 
-  WabtResult result = WABT_OK;
+  WabtResult result = WabtResult::Ok;
   if (p == buffer_end) {
     /* end of buffer */
-    if (find_position == WABT_LINE_OFFSET_POSITION_START) {
-      result = WABT_ERROR;
+    if (find_position == WabtLineOffsetPosition::Start) {
+      result = WabtResult::Error;
     } else {
       line_offset = buffer_file_offset + (buffer_end - buffer_start);
     }
@@ -570,10 +572,10 @@ static WabtResult scan_forward_for_line_offset_in_file(
     int find_line,
     size_t* out_line_offset) {
   FILE* lexer_file = lexer->source.file;
-  WabtResult result = WABT_ERROR;
+  WabtResult result = WabtResult::Error;
   long old_offset = ftell(lexer_file);
   if (old_offset == -1)
-    return WABT_ERROR;
+    return WabtResult::Error;
   size_t buffer_file_offset = line_start_offset;
   if (fseek(lexer_file, buffer_file_offset, SEEK_SET) == -1)
     goto cleanup;
@@ -584,11 +586,11 @@ static WabtResult scan_forward_for_line_offset_in_file(
     size_t read_bytes = fread(buffer, 1, buffer_size, lexer_file);
     if (read_bytes == 0) {
       /* end of buffer */
-      if (find_position == WABT_LINE_OFFSET_POSITION_START) {
-        result = WABT_ERROR;
+      if (find_position == WabtLineOffsetPosition::Start) {
+        result = WabtResult::Error;
       } else {
         *out_line_offset = buffer_file_offset + read_bytes;
-        result = WABT_OK;
+        result = WabtResult::Ok;
       }
       goto cleanup;
     }
@@ -597,7 +599,7 @@ static WabtResult scan_forward_for_line_offset_in_file(
     result = scan_forward_for_line_offset_in_buffer(
         buffer, buffer_end, line, buffer_file_offset, find_position, find_line,
         &line, out_line_offset);
-    if (result == WABT_OK)
+    if (result == WabtResult::Ok)
       goto cleanup;
 
     buffer_file_offset += read_bytes;
@@ -606,7 +608,7 @@ static WabtResult scan_forward_for_line_offset_in_file(
 cleanup:
   /* if this fails, we're screwed */
   if (fseek(lexer_file, old_offset, SEEK_SET) == -1)
-    return WABT_ERROR;
+    return WabtResult::Error;
   return result;
 }
 
@@ -618,7 +620,7 @@ static WabtResult scan_forward_for_line_offset(
     int find_line,
     size_t* out_line_offset) {
   assert(line <= find_line);
-  if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_BUFFER) {
+  if (lexer->source.type == WabtAstLexerSourceType::Buffer) {
     const char* source_buffer =
         static_cast<const char*>(lexer->source.buffer.data);
     const char* buffer_start = source_buffer + line_start_offset;
@@ -627,7 +629,7 @@ static WabtResult scan_forward_for_line_offset(
         buffer_start, buffer_end, line, line_start_offset, find_position,
         find_line, &line, out_line_offset);
   } else {
-    assert(lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE);
+    assert(lexer->source.type == WabtAstLexerSourceType::File);
     return scan_forward_for_line_offset_in_file(lexer, line, line_start_offset,
                                                 find_position, find_line,
                                                 out_line_offset);
@@ -644,18 +646,18 @@ static WabtResult get_line_start_offset(WabtAstLexer* lexer,
 
   if (line == current_line) {
     *out_offset = current_offset;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (line == first_line) {
     *out_offset = first_offset;
-    return WABT_OK;
+    return WabtResult::Ok;
   } else if (line > current_line) {
     return scan_forward_for_line_offset(lexer, current_line, current_offset,
-                                        WABT_LINE_OFFSET_POSITION_START, line,
+                                        WabtLineOffsetPosition::Start, line,
                                         out_offset);
   } else {
     /* TODO(binji): optimize by storing more known line/offset pairs */
     return scan_forward_for_line_offset(lexer, first_line, first_offset,
-                                        WABT_LINE_OFFSET_POSITION_START, line,
+                                        WabtLineOffsetPosition::Start, line,
                                         out_offset);
   }
 }
@@ -666,16 +668,16 @@ static WabtResult get_offsets_from_line(WabtAstLexer* lexer,
                                         size_t* out_line_end) {
   size_t line_start;
   if (WABT_FAILED(get_line_start_offset(lexer, line, &line_start)))
-    return WABT_ERROR;
+    return WabtResult::Error;
 
   size_t line_end;
   if (WABT_FAILED(scan_forward_for_line_offset(lexer, line, line_start,
-                                               WABT_LINE_OFFSET_POSITION_END,
+                                               WabtLineOffsetPosition::End,
                                                line, &line_end)))
-    return WABT_ERROR;
+    return WabtResult::Error;
   *out_line_start = line_start;
   *out_line_end = line_end;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static void clamp_source_line_offsets_to_location(size_t line_start,
@@ -743,27 +745,27 @@ WabtResult wabt_ast_lexer_get_source_line(WabtAstLexer* lexer,
     read_length -= 3;
   }
 
-  if (lexer->source.type == WABT_LEXER_SOURCE_TYPE_BUFFER) {
+  if (lexer->source.type == WabtAstLexerSourceType::Buffer) {
     const char* buffer_read_start =
         static_cast<const char*>(lexer->source.buffer.data) + read_start;
     memcpy(write_start, buffer_read_start, read_length);
   } else {
-    assert(lexer->source.type == WABT_LEXER_SOURCE_TYPE_FILE);
+    assert(lexer->source.type == WabtAstLexerSourceType::File);
     FILE* lexer_file = lexer->source.file;
     long old_offset = ftell(lexer_file);
     if (old_offset == -1)
-      return WABT_ERROR;
+      return WabtResult::Error;
     if (fseek(lexer_file, read_start, SEEK_SET) == -1)
-      return WABT_ERROR;
+      return WabtResult::Error;
     if (fread(write_start, 1, read_length, lexer_file) < read_length)
-      return WABT_ERROR;
+      return WabtResult::Error;
     if (fseek(lexer_file, old_offset, SEEK_SET) == -1)
-      return WABT_ERROR;
+      return WabtResult::Error;
   }
 
   line[line_length] = '\0';
 
   *out_line_length = line_length;
   *out_column_offset = new_line_start - line_start;
-  return WABT_OK;
+  return WabtResult::Ok;
 }

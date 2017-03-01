@@ -43,8 +43,8 @@ static WabtReadBinaryOptions s_read_binary_options =
 static WabtFileWriter s_log_stream_writer;
 static WabtStream s_log_stream;
 
-#define NOPE WABT_OPTION_NO_ARGUMENT
-#define YEP WABT_OPTION_HAS_ARGUMENT
+#define NOPE WabtHasArgument::No
+#define YEP WabtHasArgument::Yes
 
 enum {
   FLAG_VERBOSE,
@@ -143,7 +143,7 @@ typedef int (int_pair_counter_lt_fcn)(WabtIntPairCounter*, WabtIntPairCounter*);
 typedef void (*display_name_fcn)(FILE* out, intmax_t value);
 
 static void display_opcode_name(FILE* out, intmax_t opcode) {
-  if (opcode >= 0 && opcode < WABT_NUM_OPCODES)
+  if (opcode >= 0 && opcode < kWabtOpcodeCount)
     fprintf(out, "%s", wabt_get_opcode_name(static_cast<WabtOpcode>(opcode)));
   else
     fprintf(out, "?(%" PRIdMAX ")", opcode);
@@ -208,13 +208,13 @@ static int opcode_counter_gt(WabtIntCounter* counter_1,
     return 0;
   const char* name_1 = "?1";
   const char* name_2 = "?2";
-  if (counter_1->value < WABT_NUM_OPCODES) {
+  if (counter_1->value < kWabtOpcodeCount) {
     const char* opcode_name =
         wabt_get_opcode_name(static_cast<WabtOpcode>(counter_1->value));
     if (opcode_name)
       name_1 = opcode_name;
   }
-  if (counter_2->value < WABT_NUM_OPCODES) {
+  if (counter_2->value < kWabtOpcodeCount) {
     const char* opcode_name =
         wabt_get_opcode_name(static_cast<WabtOpcode>(counter_2->value));
     if (opcode_name)
@@ -348,7 +348,7 @@ int main(int argc, char** argv) {
     out = fopen(s_outfile, "w");
     if (!out)
       ERROR("fopen \"%s\" failed, errno=%d\n", s_outfile, errno);
-    result = WABT_ERROR;
+    result = WabtResult::Error;
   }
   if (WABT_SUCCEEDED(result)) {
     WabtOpcntData opcnt_data;
@@ -361,27 +361,27 @@ int main(int argc, char** argv) {
           display_opcode_name, nullptr);
       display_sorted_int_counter_vector(
           out, "\ni32.const:", &opcnt_data.i32_const_vec, int_counter_gt,
-          display_intmax, wabt_get_opcode_name(WABT_OPCODE_I32_CONST));
+          display_intmax, wabt_get_opcode_name(WabtOpcode::I32Const));
       display_sorted_int_counter_vector(
           out, "\nget_local:", &opcnt_data.get_local_vec, int_counter_gt,
-          display_intmax, wabt_get_opcode_name(WABT_OPCODE_GET_LOCAL));
+          display_intmax, wabt_get_opcode_name(WabtOpcode::GetLocal));
       display_sorted_int_counter_vector(
           out, "\nset_local:", &opcnt_data.set_local_vec, int_counter_gt,
-          display_intmax, wabt_get_opcode_name(WABT_OPCODE_SET_LOCAL));
+          display_intmax, wabt_get_opcode_name(WabtOpcode::SetLocal));
       display_sorted_int_counter_vector(
           out, "\ntee_local:", &opcnt_data.tee_local_vec, int_counter_gt,
-          display_intmax, wabt_get_opcode_name(WABT_OPCODE_TEE_LOCAL));
+          display_intmax, wabt_get_opcode_name(WabtOpcode::TeeLocal));
       display_sorted_int_pair_counter_vector(
           out, "\ni32.load:", &opcnt_data.i32_load_vec, int_pair_counter_gt,
           display_intmax, display_intmax,
-          wabt_get_opcode_name(WABT_OPCODE_I32_LOAD));
+          wabt_get_opcode_name(WabtOpcode::I32Load));
       display_sorted_int_pair_counter_vector(
           out, "\ni32.store:", &opcnt_data.i32_store_vec, int_pair_counter_gt,
           display_intmax, display_intmax,
-          wabt_get_opcode_name(WABT_OPCODE_I32_STORE));
+          wabt_get_opcode_name(WabtOpcode::I32Store));
     }
     wabt_destroy_opcnt_data(&opcnt_data);
   }
   wabt_free(data);
-  return result;
+  return result != WabtResult::Ok;
 }

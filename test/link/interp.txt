@@ -45,37 +45,37 @@ linked.wasm:	file format wasm 0x000001
 
 Sections:
 
-     TYPE start=0x0000000a end=0x0000001f (size=0x00000015) count: 5
-   IMPORT start=0x00000025 end=0x00000026 (size=0x00000001) count: 0
- FUNCTION start=0x0000002c end=0x00000032 (size=0x00000006) count: 5
-   EXPORT start=0x00000038 end=0x00000075 (size=0x0000003d) count: 5
-     CODE start=0x00000077 end=0x000000a2 (size=0x0000002b) count: 5
-   CUSTOM start=0x000000a8 end=0x000000b9 (size=0x00000011) "reloc.CODE"
+     Type start=0x0000000a end=0x0000001f (size=0x00000015) count: 5
+   Import start=0x00000025 end=0x00000026 (size=0x00000001) count: 0
+ Function start=0x0000002c end=0x00000032 (size=0x00000006) count: 5
+   Export start=0x00000038 end=0x00000075 (size=0x0000003d) count: 5
+     Code start=0x00000077 end=0x000000a2 (size=0x0000002b) count: 5
+   Custom start=0x000000a8 end=0x000000b9 (size=0x00000011) "reloc.Code"
 
 Section Details:
 
-TYPE:
+Type:
  - [0] () -> i32
  - [1] () -> i64
  - [2] () -> f32
  - [3] () -> i32
  - [4] () -> i64
-IMPORT:
-FUNCTION:
+Import:
+Function:
  - func[0] sig=2
  - func[1] sig=0
  - func[2] sig=1
  - func[3] sig=3
  - func[4] sig=4
-EXPORT:
+Export:
  - func[0] export1
  - func[1] call_import1
  - func[2] call_import2
  - func[3] export2
  - func[4] export3
-CUSTOM:
- - name: "reloc.CODE"
-  - section: CODE
+Custom:
+ - name: "reloc.Code"
+  - section: Code
    - R_FUNC_INDEX_LEB   offset=0x84 (0xd)
    - R_FUNC_INDEX_LEB   offset=0x8e (0x17)
 

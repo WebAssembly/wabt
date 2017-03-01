@@ -36,7 +36,7 @@ static WabtResult on_reloc_count(uint32_t count,
                                  void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   WabtLinkerInputBinary* binary = ctx->binary;
-  if (section_code == WABT_BINARY_SECTION_CUSTOM) {
+  if (section_code == WabtBinarySection::Custom) {
     WABT_FATAL("relocation for custom sections not yet supported\n");
   }
 
@@ -46,11 +46,11 @@ static WabtResult on_reloc_count(uint32_t count,
     if (sec->section_code != section_code)
       continue;
     ctx->reloc_section = sec;
-    return WABT_OK;
+    return WabtResult::Ok;
   }
 
-  WABT_FATAL("section not found: %d\n", section_code);
-  return WABT_ERROR;
+  WABT_FATAL("section not found: %d\n", static_cast<int>(section_code));
+  return WabtResult::Error;
 }
 
 static WabtResult on_reloc(WabtRelocType type,
@@ -66,7 +66,7 @@ static WabtResult on_reloc(WabtRelocType type,
   reloc->type = type;
   reloc->offset = offset;
 
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_import(uint32_t index,
@@ -79,7 +79,7 @@ static WabtResult on_import(uint32_t index,
                WABT_PRINTF_STRING_SLICE_ARG(module_name));
   }
   ctx->import_name = field_name;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_import_func(uint32_t import_index,
@@ -93,7 +93,7 @@ static WabtResult on_import_func(uint32_t import_index,
   import->sig_index = sig_index;
   import->active = true;
   ctx->binary->active_function_imports++;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_import_global(uint32_t import_index,
@@ -108,7 +108,7 @@ static WabtResult on_import_global(uint32_t import_index,
   import->type = type;
   import->mutable_ = mutable_;
   ctx->binary->active_global_imports++;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_section(WabtBinaryReaderContext* ctx,
@@ -123,8 +123,8 @@ static WabtResult begin_section(WabtBinaryReaderContext* ctx,
   sec->offset = ctx->offset;
   sec->binary = binary;
 
-  if (sec->section_code != WABT_BINARY_SECTION_CUSTOM &&
-      sec->section_code != WABT_BINARY_SECTION_START) {
+  if (sec->section_code != WabtBinarySection::Custom &&
+      sec->section_code != WabtBinarySection::Start) {
     size_t bytes_read = wabt_read_u32_leb128(
         &binary->data[sec->offset], &binary->data[binary->size], &sec->count);
     if (bytes_read == 0)
@@ -132,7 +132,7 @@ static WabtResult begin_section(WabtBinaryReaderContext* ctx,
     sec->payload_offset = sec->offset + bytes_read;
     sec->payload_size = sec->size - bytes_read;
   }
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_custom_section(WabtBinaryReaderContext* ctx,
@@ -163,7 +163,7 @@ static WabtResult begin_custom_section(WabtBinaryReaderContext* ctx,
     uint32_t total_funcs = binary->function_imports.size;
     for (i = 0; i < binary->sections.size; i++) {
       if (binary->sections.data[i].section_code ==
-          WABT_BINARY_SECTION_FUNCTION) {
+          WabtBinarySection::Function) {
         total_funcs += binary->sections.data[i].count;
         break;
       }
@@ -174,7 +174,7 @@ static WabtResult begin_custom_section(WabtBinaryReaderContext* ctx,
     }
   }
 
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_table(uint32_t index,
@@ -186,7 +186,7 @@ static WabtResult on_table(uint32_t index,
 
   Context* ctx = static_cast<Context*>(user_data);
   ctx->binary->table_elem_count = elem_limits->initial;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_elem_segment_function_index_count(
@@ -200,7 +200,7 @@ static WabtResult on_elem_segment_function_index_count(
   size_t delta = ctx->offset - sec->payload_offset;
   sec->payload_offset += delta;
   sec->payload_size -= delta;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_memory(uint32_t index,
@@ -210,7 +210,7 @@ static WabtResult on_memory(uint32_t index,
   WabtSection* sec = ctx->current_section;
   sec->memory_limits = *page_limits;
   ctx->binary->memory_page_count = page_limits->initial;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult begin_data_segment(uint32_t index,
@@ -220,7 +220,7 @@ static WabtResult begin_data_segment(uint32_t index,
   WabtSection* sec = ctx->current_section;
   WabtDataSegment* segment = wabt_append_data_segment(&sec->data_segments);
   segment->memory_index = memory_index;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_init_expr_i32_const_expr(uint32_t index,
@@ -228,12 +228,12 @@ static WabtResult on_init_expr_i32_const_expr(uint32_t index,
                                               void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   WabtSection* sec = ctx->current_section;
-  if (sec->section_code != WABT_BINARY_SECTION_DATA)
-    return WABT_OK;
+  if (sec->section_code != WabtBinarySection::Data)
+    return WabtResult::Ok;
   WabtDataSegment* segment =
       &sec->data_segments.data[sec->data_segments.size - 1];
   segment->offset = value;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_data_segment_data(uint32_t index,
@@ -246,7 +246,7 @@ static WabtResult on_data_segment_data(uint32_t index,
       &sec->data_segments.data[sec->data_segments.size - 1];
   segment->data = static_cast<const uint8_t*>(src_data);
   segment->size = size;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_export(uint32_t index,
@@ -259,7 +259,7 @@ static WabtResult on_export(uint32_t index,
   export_->name = name;
   export_->kind = kind;
   export_->index = item_index;
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 static WabtResult on_function_name(uint32_t index,
@@ -267,7 +267,7 @@ static WabtResult on_function_name(uint32_t index,
                                    void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   wabt_append_string_slice_value(&ctx->binary->debug_names, &name);
-  return WABT_OK;
+  return WabtResult::Ok;
 }
 
 WabtResult wabt_read_binary_linker(WabtLinkerInputBinary* input_info) {
