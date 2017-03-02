@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_H_INCLUDED
-# define YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_H_INCLUDED
+#ifndef YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_HH_INCLUDED
+# define YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_HH_INCLUDED
 /* Debug traces.  */
 #ifndef WABT_AST_PARSER_DEBUG
 # if defined YYDEBUG
@@ -153,4 +153,4 @@ struct WABT_AST_PARSER_LTYPE
 
 int wabt_ast_parser_parse (WabtAstLexer* lexer, WabtAstParser* parser);
 
-#endif /* !YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_H_INCLUDED  */
+#endif /* !YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_HH_INCLUDED  */
