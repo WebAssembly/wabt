@@ -32,7 +32,7 @@
 
 using namespace wabt;
 
-enum { FLAG_VERBOSE, FLAG_OUTPUT, FLAG_RELOCATABLE, FLAG_HELP, NUM_FLAGS };
+enum { FLAG_DEBUG, FLAG_OUTPUT, FLAG_RELOCATABLE, FLAG_HELP, NUM_FLAGS };
 
 static const char s_description[] =
     "  link one or more wasm binary modules into a single binary module."
@@ -40,8 +40,8 @@ static const char s_description[] =
     "  $ wasm-link m1.wasm m2.wasm -o out.wasm\n";
 
 static Option s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
-     "use multiple times for more info"},
+    {FLAG_DEBUG, '\0', "debug", nullptr, NOPE,
+     "log extra information when reading and writing wasm files"},
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
     {FLAG_RELOCATABLE, 'r', "relocatable", nullptr, NOPE,
      "output a relocatable object file"},
@@ -52,7 +52,7 @@ WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 typedef const char* String;
 WABT_DEFINE_VECTOR(string, String);
 
-static int s_verbose;
+static bool s_debug;
 static bool s_relocatable;
 static const char* s_outfile = "a.wasm";
 static StringVector s_infiles;
@@ -69,8 +69,8 @@ static void on_option(struct OptionParser* parser,
                       struct Option* option,
                       const char* argument) {
   switch (option->id) {
-    case FLAG_VERBOSE:
-      s_verbose++;
+    case FLAG_DEBUG:
+      s_debug = true;
       init_file_writer_existing(&s_log_stream_writer, stdout);
       init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
       break;
@@ -141,7 +141,7 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
   if (function_index >= binary->function_imports.size) {
     /* locally declared function call */
     offset = binary->function_index_offset;
-    if (s_verbose)
+    if (s_debug)
       writef(&s_log_stream, "func reloc %d + %d\n", function_index, offset);
   } else {
     /* imported function call */
@@ -150,7 +150,7 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
     if (!import->active) {
       function_index = import->foreign_index;
       offset = import->foreign_binary->function_index_offset;
-      if (s_verbose)
+      if (s_debug)
         writef(&s_log_stream,
                "reloc for disabled import. new index = %d + %d\n",
                function_index, offset);
@@ -201,7 +201,7 @@ static void apply_relocations(Section* section) {
   if (!section->relocations.size)
     return;
 
-  if (s_verbose)
+  if (s_debug)
     writef(&s_log_stream, "apply_relocations: %s\n",
            get_section_name(section->section_code));
 
@@ -754,7 +754,7 @@ static void write_binary(Context* ctx) {
 }
 
 static void dump_reloc_offsets(Context* ctx) {
-  if (s_verbose) {
+  if (s_debug) {
     uint32_t i;
     for (i = 0; i < ctx->inputs.size; i++) {
       LinkerInputBinary* binary = &ctx->inputs.data[i];
@@ -782,10 +782,10 @@ static Result perform_link(Context* ctx) {
     WABT_FATAL("unable to open memory writer for writing\n");
 
   Stream* log_stream = nullptr;
-  if (s_verbose)
+  if (s_debug)
     log_stream = &s_log_stream;
 
-  if (s_verbose)
+  if (s_debug)
     writef(&s_log_stream, "writing file: %s\n", s_outfile);
 
   calculate_reloc_offsets(ctx);
@@ -814,7 +814,7 @@ int main(int argc, char** argv) {
   size_t i;
   for (i = 0; i < s_infiles.size; i++) {
     const char* input_filename = s_infiles.data[i];
-    if (s_verbose)
+    if (s_debug)
       writef(&s_log_stream, "reading file: %s\n", input_filename);
     void* data;
     size_t size;
@@ -825,7 +825,10 @@ int main(int argc, char** argv) {
     b->data = static_cast<uint8_t*>(data);
     b->size = size;
     b->filename = input_filename;
-    result = read_binary_linker(b);
+    LinkOptions options = { NULL };
+    if (s_debug)
+      options.log_stream = &s_log_stream;
+    result = read_binary_linker(b, &options);
     if (WABT_FAILED(result))
       WABT_FATAL("error parsing file: %s\n", input_filename);
   }
