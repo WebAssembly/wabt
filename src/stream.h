@@ -22,86 +22,78 @@
 #include "common.h"
 #include "writer.h"
 
-struct WabtStream {
-  WabtWriter* writer;
+namespace wabt {
+
+struct Stream {
+  Writer* writer;
   size_t offset;
-  WabtResult result;
+  Result result;
   /* if non-null, log all writes to this stream */
-  struct WabtStream* log_stream;
+  struct Stream* log_stream;
 };
 
-struct WabtFileStream {
-  WabtStream base;
-  WabtFileWriter writer;
+struct FileStream {
+  Stream base;
+  FileWriter writer;
 };
 
 /* whether to display the ASCII characters in the debug output for
- * wabt_write_memory */
-enum class WabtPrintChars {
+ * write_memory */
+enum class PrintChars {
   No = 0,
   Yes = 1,
 };
 
-WABT_EXTERN_C_BEGIN
+void init_stream(Stream* stream, Writer* writer, Stream* log_stream);
+void init_file_stream_from_existing(FileStream* stream, FILE* file);
+Stream* init_stdout_stream(void);
+Stream* init_stderr_stream(void);
 
-void wabt_init_stream(WabtStream* stream,
-                      WabtWriter* writer,
-                      WabtStream* log_stream);
-void wabt_init_file_stream_from_existing(WabtFileStream* stream, FILE* file);
-WabtStream* wabt_init_stdout_stream(void);
-WabtStream* wabt_init_stderr_stream(void);
-
-/* helper functions for writing to a WabtStream. the |desc| parameter is
+/* helper functions for writing to a Stream. the |desc| parameter is
  * optional, and will be appended to the log stream if |stream.log_stream| is
  * non-null. */
-void wabt_write_data_at(WabtStream*,
-                        size_t offset,
-                        const void* src,
-                        size_t size,
-                        WabtPrintChars print_chars,
-                        const char* desc);
-void wabt_write_data(WabtStream*,
-                     const void* src,
-                     size_t size,
-                     const char* desc);
-void wabt_move_data(WabtStream*,
-                    size_t dst_offset,
-                    size_t src_offset,
-                    size_t size);
+void write_data_at(Stream*,
+                   size_t offset,
+                   const void* src,
+                   size_t size,
+                   PrintChars print_chars,
+                   const char* desc);
+void write_data(Stream*, const void* src, size_t size, const char* desc);
+void move_data(Stream*, size_t dst_offset, size_t src_offset, size_t size);
 
-void WABT_PRINTF_FORMAT(2, 3) wabt_writef(WabtStream*, const char* format, ...);
+void WABT_PRINTF_FORMAT(2, 3) writef(Stream*, const char* format, ...);
 /* specified as uint32_t instead of uint8_t so we can check if the value given
  * is in range before wrapping */
-void wabt_write_u8(WabtStream*, uint32_t value, const char* desc);
-void wabt_write_u32(WabtStream*, uint32_t value, const char* desc);
-void wabt_write_u64(WabtStream*, uint64_t value, const char* desc);
+void write_u8(Stream*, uint32_t value, const char* desc);
+void write_u32(Stream*, uint32_t value, const char* desc);
+void write_u64(Stream*, uint64_t value, const char* desc);
 
-static WABT_INLINE void wabt_write_char(WabtStream* stream, char c) {
-  wabt_write_u8(stream, c, nullptr);
+static WABT_INLINE void write_char(Stream* stream, char c) {
+  write_u8(stream, c, nullptr);
 }
 
 /* dump memory as text, similar to the xxd format */
-void wabt_write_memory_dump(WabtStream*,
-                            const void* start,
-                            size_t size,
-                            size_t offset,
-                            WabtPrintChars print_chars,
-                            const char* prefix,
-                            const char* desc);
+void write_memory_dump(Stream*,
+                       const void* start,
+                       size_t size,
+                       size_t offset,
+                       PrintChars print_chars,
+                       const char* prefix,
+                       const char* desc);
 
-static WABT_INLINE void wabt_write_output_buffer_memory_dump(
-    WabtStream* stream,
-    struct WabtOutputBuffer* buf) {
-  wabt_write_memory_dump(stream, buf->start, buf->size, 0,
-                         WabtPrintChars::No, nullptr, nullptr);
+static WABT_INLINE void write_output_buffer_memory_dump(
+    Stream* stream,
+    struct OutputBuffer* buf) {
+  write_memory_dump(stream, buf->start, buf->size, 0, PrintChars::No, nullptr,
+                    nullptr);
 }
-
-WABT_EXTERN_C_END
 
 /* Helper function for writing enums as u8. */
 template <typename T>
-void wabt_write_u8_enum(WabtStream* stream, T value, const char* desc) {
-  wabt_write_u8(stream, static_cast<uint32_t>(value), desc);
+void write_u8_enum(Stream* stream, T value, const char* desc) {
+  write_u8(stream, static_cast<uint32_t>(value), desc);
 }
+
+}  // namespace wabt
 
 #endif /* WABT_STREAM_H_ */

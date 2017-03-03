@@ -23,22 +23,21 @@
 #include "config.h"
 
 /*
- * WABT_DEFINE_VECTOR(widget, WabtWidget) defines struct and functions like the
+ * WABT_DEFINE_VECTOR(widget, Widget) defines struct and functions like the
  * following:
  *
- * struct WabtWidgetVector {
- *   WabtWidget* data;
+ * struct WidgetVector {
+ *   Widget* data;
  *   size_t size;
  *   size_t capacity;
  * };
  *
- * void wabt_destroy_widget_vector(WabtWidgetVector* vec);
- * WabtWidget* wabt_append_widget(WabtWidgetVector* vec);
- * void wabt_resize_widget_vector(WabtWidgetVector* vec, size_t size);
- * void wabt_reserve_widgets(WabtWidgetVector* vec, size_t desired);
- * void wabt_append_widget_value(WabtWidgetVector* vec,
- *                               const WabtWidget* value);
- * void wabt_extend_widgets(WabtWidgetVector* dst, const WabtWidgetVector* src);
+ * void destroy_widget_vector(WidgetVector* vec);
+ * Widget* append_widget(WidgetVector* vec);
+ * void resize_widget_vector(WidgetVector* vec, size_t size);
+ * void reserve_widgets(WidgetVector* vec, size_t desired);
+ * void append_widget_value(WidgetVector* vec, const Widget* value);
+ * void extend_widgets(WidgetVector* dst, const WidgetVector* src);
  */
 
 #define WABT_DEFINE_VECTOR(name, type)                                         \
@@ -48,45 +47,43 @@
     size_t capacity;                                                           \
   };                                                                           \
                                                                                \
-  WABT_EXTERN_C_BEGIN                                                          \
-  static WABT_INLINE void wabt_destroy_##name##_vector(type##Vector* vec)      \
+  static WABT_INLINE void destroy_##name##_vector(type##Vector* vec)           \
       WABT_UNUSED;                                                             \
-  static WABT_INLINE void wabt_resize_##name##_vector(                         \
-      type##Vector* vec, size_t desired) WABT_UNUSED;                          \
-  static WABT_INLINE void wabt_reserve_##name##s(type##Vector* vec,            \
+  static WABT_INLINE void resize_##name##_vector(type##Vector* vec,            \
                                                  size_t desired) WABT_UNUSED;  \
-  static WABT_INLINE type* wabt_append_##name(type##Vector* vec) WABT_UNUSED;  \
-  static WABT_INLINE void wabt_append_##name##_value(                          \
+  static WABT_INLINE void reserve_##name##s(type##Vector* vec, size_t desired) \
+      WABT_UNUSED;                                                             \
+  static WABT_INLINE type* append_##name(type##Vector* vec) WABT_UNUSED;       \
+  static WABT_INLINE void append_##name##_value(                               \
       type##Vector* vec, const type* value) WABT_UNUSED;                       \
-  static WABT_INLINE void wabt_extend_##name##s(                               \
+  static WABT_INLINE void extend_##name##s(                                    \
       type##Vector* dst, const type##Vector* src) WABT_UNUSED;                 \
-  WABT_EXTERN_C_END                                                            \
                                                                                \
-  void wabt_destroy_##name##_vector(type##Vector* vec) {                       \
+  void destroy_##name##_vector(type##Vector* vec) {                            \
     wabt_free(vec->data);                                                      \
     vec->data = nullptr;                                                       \
     vec->size = 0;                                                             \
     vec->capacity = 0;                                                         \
   }                                                                            \
-  void wabt_resize_##name##_vector(type##Vector* vec, size_t size) {           \
-    wabt_resize_vector(reinterpret_cast<void**>(&vec->data), &vec->size,       \
-                       &vec->capacity, size, sizeof(type));                    \
+  void resize_##name##_vector(type##Vector* vec, size_t size) {                \
+    resize_vector(reinterpret_cast<void**>(&vec->data), &vec->size,            \
+                  &vec->capacity, size, sizeof(type));                         \
   }                                                                            \
-  void wabt_reserve_##name##s(type##Vector* vec, size_t desired) {             \
-    wabt_ensure_capacity(reinterpret_cast<void**>(&vec->data), &vec->capacity, \
-                         desired, sizeof(type));                               \
+  void reserve_##name##s(type##Vector* vec, size_t desired) {                  \
+    ensure_capacity(reinterpret_cast<void**>(&vec->data), &vec->capacity,      \
+                    desired, sizeof(type));                                    \
   }                                                                            \
-  type* wabt_append_##name(type##Vector* vec) {                                \
+  type* append_##name(type##Vector* vec) {                                     \
     return static_cast<type*>(                                                 \
-        wabt_append_element(reinterpret_cast<void**>(&vec->data), &vec->size,  \
-                            &vec->capacity, sizeof(type)));                    \
+        append_element(reinterpret_cast<void**>(&vec->data), &vec->size,       \
+                       &vec->capacity, sizeof(type)));                         \
   }                                                                            \
-  void wabt_append_##name##_value(type##Vector* vec, const type* value) {      \
-    type* slot = wabt_append_##name(vec);                                      \
+  void append_##name##_value(type##Vector* vec, const type* value) {           \
+    type* slot = append_##name(vec);                                           \
     *slot = *value;                                                            \
   }                                                                            \
-  void wabt_extend_##name##s(type##Vector* dst, const type##Vector* src) {     \
-    wabt_extend_elements(                                                      \
+  void extend_##name##s(type##Vector* dst, const type##Vector* src) {          \
+    extend_elements(                                                           \
         reinterpret_cast<void**>(&dst->data), &dst->size, &dst->capacity,      \
         reinterpret_cast<void* const*>(&src->data), src->size, sizeof(type));  \
   }
@@ -95,33 +92,35 @@
   {                                               \
     size_t i;                                     \
     for (i = 0; i < (v).size; ++i)                \
-      wabt_destroy_##name(&((v).data[i]));        \
-    wabt_destroy_##name##_vector(&(v));           \
+      destroy_##name(&((v).data[i]));             \
+    destroy_##name##_vector(&(v));                \
   }
 
-WABT_EXTERN_C_BEGIN
-void wabt_ensure_capacity(void** data,
-                          size_t* capacity,
-                          size_t desired_size,
-                          size_t elt_byte_size);
+namespace wabt {
 
-void wabt_resize_vector(void** data,
-                        size_t* size,
-                        size_t* capacity,
-                        size_t desired_size,
-                        size_t elt_byte_size);
+void ensure_capacity(void** data,
+                     size_t* capacity,
+                     size_t desired_size,
+                     size_t elt_byte_size);
 
-void* wabt_append_element(void** data,
-                          size_t* size,
-                          size_t* capacity,
-                          size_t elt_byte_size);
+void resize_vector(void** data,
+                   size_t* size,
+                   size_t* capacity,
+                   size_t desired_size,
+                   size_t elt_byte_size);
 
-void wabt_extend_elements(void** dst,
-                          size_t* dst_size,
-                          size_t* dst_capacity,
-                          void* const* src,
-                          size_t src_size,
-                          size_t elt_byte_size);
-WABT_EXTERN_C_END
+void* append_element(void** data,
+                     size_t* size,
+                     size_t* capacity,
+                     size_t elt_byte_size);
+
+void extend_elements(void** dst,
+                     size_t* dst_size,
+                     size_t* dst_capacity,
+                     void* const* src,
+                     size_t src_size,
+                     size_t elt_byte_size);
+
+}  // namespace wabt
 
 #endif /* WABT_VECTOR_H_ */

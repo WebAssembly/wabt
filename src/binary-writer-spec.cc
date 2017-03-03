@@ -26,14 +26,16 @@
 #include "stream.h"
 #include "writer.h"
 
+namespace wabt {
+
 struct Context {
-  WabtMemoryWriter json_writer;
-  WabtStream json_stream;
-  WabtStringSlice source_filename;
-  WabtStringSlice module_filename_noext;
+  MemoryWriter json_writer;
+  Stream json_stream;
+  StringSlice source_filename;
+  StringSlice module_filename_noext;
   bool write_modules; /* Whether to write the modules files. */
-  const WabtWriteBinarySpecOptions* spec_options;
-  WabtResult result;
+  const WriteBinarySpecOptions* spec_options;
+  Result result;
   size_t num_modules;
 };
 
@@ -44,7 +46,7 @@ static void convert_backslash_to_slash(char* s, size_t length) {
       s[i] = '/';
 }
 
-static WabtStringSlice strip_extension(const char* s) {
+static StringSlice strip_extension(const char* s) {
   /* strip .json or .wasm, but leave other extensions, e.g.:
    *
    * s = "foo", => "foo"
@@ -53,7 +55,7 @@ static WabtStringSlice strip_extension(const char* s) {
    * s = "foo.bar" => "foo.bar"
    */
   if (!s) {
-    WabtStringSlice result;
+    StringSlice result;
     result.start = nullptr;
     result.length = 0;
     return result;
@@ -64,7 +66,7 @@ static WabtStringSlice strip_extension(const char* s) {
   if (!ext_start)
     ext_start = s + slen;
 
-  WabtStringSlice result;
+  StringSlice result;
   result.start = s;
 
   if (strcmp(ext_start, ".json") == 0 || strcmp(ext_start, ".wasm") == 0) {
@@ -75,7 +77,7 @@ static WabtStringSlice strip_extension(const char* s) {
   return result;
 }
 
-static WabtStringSlice get_basename(const char* s) {
+static StringSlice get_basename(const char* s) {
   /* strip everything up to and including the last slash, e.g.:
    *
    * s = "/foo/bar/baz", => "baz"
@@ -88,7 +90,7 @@ static WabtStringSlice get_basename(const char* s) {
   if (last_slash)
     start = last_slash + 1;
 
-  WabtStringSlice result;
+  StringSlice result;
   result.start = start;
   result.length = s + slen - start;
   return result;
@@ -98,118 +100,109 @@ static char* get_module_filename(Context* ctx) {
   size_t buflen = ctx->module_filename_noext.length + 20;
   char* str = static_cast<char*>(wabt_alloc(buflen));
   size_t length =
-      wabt_snprintf(str, buflen, PRIstringslice ".%" PRIzd ".wasm",
-                    WABT_PRINTF_STRING_SLICE_ARG(ctx->module_filename_noext),
-                    ctx->num_modules);
+      snprintf(str, buflen, PRIstringslice ".%" PRIzd ".wasm",
+               WABT_PRINTF_STRING_SLICE_ARG(ctx->module_filename_noext),
+               ctx->num_modules);
   convert_backslash_to_slash(str, length);
   return str;
 }
 
 static void write_string(Context* ctx, const char* s) {
-  wabt_writef(&ctx->json_stream, "\"%s\"", s);
+  writef(&ctx->json_stream, "\"%s\"", s);
 }
 
 static void write_key(Context* ctx, const char* key) {
-  wabt_writef(&ctx->json_stream, "\"%s\": ", key);
+  writef(&ctx->json_stream, "\"%s\": ", key);
 }
 
 static void write_separator(Context* ctx) {
-  wabt_writef(&ctx->json_stream, ", ");
+  writef(&ctx->json_stream, ", ");
 }
 
-static void write_escaped_string_slice(Context* ctx, WabtStringSlice ss) {
+static void write_escaped_string_slice(Context* ctx, StringSlice ss) {
   size_t i;
-  wabt_write_char(&ctx->json_stream, '"');
+  write_char(&ctx->json_stream, '"');
   for (i = 0; i < ss.length; ++i) {
     uint8_t c = ss.start[i];
     if (c < 0x20 || c == '\\' || c == '"') {
-      wabt_writef(&ctx->json_stream, "\\u%04x", c);
+      writef(&ctx->json_stream, "\\u%04x", c);
     } else {
-      wabt_write_char(&ctx->json_stream, c);
+      write_char(&ctx->json_stream, c);
     }
   }
-  wabt_write_char(&ctx->json_stream, '"');
+  write_char(&ctx->json_stream, '"');
 }
 
-static void write_command_type(Context* ctx, const WabtCommand* command) {
-  static const char* s_command_names[] =
-      {
-          "module",
-          "action",
-          "register",
-          "assert_malformed",
-          "assert_invalid",
-          nullptr, /* ASSERT_INVALID_NON_BINARY, this command will never be
-                      written */
-          "assert_unlinkable",
-          "assert_uninstantiable",
-          "assert_return",
-          "assert_return_nan",
-          "assert_trap",
-          "assert_exhaustion",
-      };
-  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_command_names) == kWabtCommandTypeCount);
+static void write_command_type(Context* ctx, const Command* command) {
+  static const char* s_command_names[] = {
+      "module", "action", "register", "assert_malformed", "assert_invalid",
+      nullptr, /* ASSERT_INVALID_NON_BINARY, this command will never be
+                  written */
+      "assert_unlinkable", "assert_uninstantiable", "assert_return",
+      "assert_return_nan", "assert_trap", "assert_exhaustion",
+  };
+  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_command_names) == kCommandTypeCount);
 
   write_key(ctx, "type");
   assert(s_command_names[static_cast<size_t>(command->type)]);
   write_string(ctx, s_command_names[static_cast<size_t>(command->type)]);
 }
 
-static void write_location(Context* ctx, const WabtLocation* loc) {
+static void write_location(Context* ctx, const Location* loc) {
   write_key(ctx, "line");
-  wabt_writef(&ctx->json_stream, "%d", loc->line);
+  writef(&ctx->json_stream, "%d", loc->line);
 }
 
-static void write_var(Context* ctx, const WabtVar* var) {
-  if (var->type == WabtVarType::Index)
-    wabt_writef(&ctx->json_stream, "\"%" PRIu64 "\"", var->index);
+static void write_var(Context* ctx, const Var* var) {
+  if (var->type == VarType::Index)
+    writef(&ctx->json_stream, "\"%" PRIu64 "\"", var->index);
   else
     write_escaped_string_slice(ctx, var->name);
 }
 
-static void write_type_object(Context* ctx, WabtType type) {
-  wabt_writef(&ctx->json_stream, "{");
+static void write_type_object(Context* ctx, Type type) {
+  writef(&ctx->json_stream, "{");
   write_key(ctx, "type");
-  write_string(ctx, wabt_get_type_name(type));
-  wabt_writef(&ctx->json_stream, "}");
+  write_string(ctx, get_type_name(type));
+  writef(&ctx->json_stream, "}");
 }
 
-static void write_const(Context* ctx, const WabtConst* const_) {
-  wabt_writef(&ctx->json_stream, "{");
+static void write_const(Context* ctx, const Const* const_) {
+  writef(&ctx->json_stream, "{");
   write_key(ctx, "type");
 
   /* Always write the values as strings, even though they may be representable
    * as JSON numbers. This way the formatting is consistent. */
   switch (const_->type) {
-    case WabtType::I32:
+    case Type::I32:
       write_string(ctx, "i32");
       write_separator(ctx);
       write_key(ctx, "value");
-      wabt_writef(&ctx->json_stream, "\"%u\"", const_->u32);
+      writef(&ctx->json_stream, "\"%u\"", const_->u32);
       break;
 
-    case WabtType::I64:
+    case Type::I64:
       write_string(ctx, "i64");
       write_separator(ctx);
       write_key(ctx, "value");
-      wabt_writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->u64);
+      writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->u64);
       break;
 
-    case WabtType::F32: {
+    case Type::F32: {
       /* TODO(binji): write as hex float */
       write_string(ctx, "f32");
       write_separator(ctx);
       write_key(ctx, "value");
-      wabt_writef(&ctx->json_stream, "\"%u\"", const_->f32_bits);
+      writef(&ctx->json_stream, "\"%u\"", const_->f32_bits);
       break;
     }
 
-    case WabtType::F64: {
+    case Type::F64: {
       /* TODO(binji): write as hex float */
       write_string(ctx, "f64");
       write_separator(ctx);
       write_key(ctx, "value");
-      wabt_writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->f64_bits);
+      writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->f64_bits);
       break;
     }
 
@@ -217,38 +210,38 @@ static void write_const(Context* ctx, const WabtConst* const_) {
       assert(0);
   }
 
-  wabt_writef(&ctx->json_stream, "}");
+  writef(&ctx->json_stream, "}");
 }
 
-static void write_const_vector(Context* ctx, const WabtConstVector* consts) {
-  wabt_writef(&ctx->json_stream, "[");
+static void write_const_vector(Context* ctx, const ConstVector* consts) {
+  writef(&ctx->json_stream, "[");
   size_t i;
   for (i = 0; i < consts->size; ++i) {
-    const WabtConst* const_ = &consts->data[i];
+    const Const* const_ = &consts->data[i];
     write_const(ctx, const_);
     if (i != consts->size - 1)
       write_separator(ctx);
   }
-  wabt_writef(&ctx->json_stream, "]");
+  writef(&ctx->json_stream, "]");
 }
 
-static void write_action(Context* ctx, const WabtAction* action) {
+static void write_action(Context* ctx, const Action* action) {
   write_key(ctx, "action");
-  wabt_writef(&ctx->json_stream, "{");
+  writef(&ctx->json_stream, "{");
   write_key(ctx, "type");
-  if (action->type == WabtActionType::Invoke) {
+  if (action->type == ActionType::Invoke) {
     write_string(ctx, "invoke");
   } else {
-    assert(action->type == WabtActionType::Get);
+    assert(action->type == ActionType::Get);
     write_string(ctx, "get");
   }
   write_separator(ctx);
-  if (action->module_var.type != WabtVarType::Index) {
+  if (action->module_var.type != VarType::Index) {
     write_key(ctx, "module");
     write_var(ctx, &action->module_var);
     write_separator(ctx);
   }
-  if (action->type == WabtActionType::Invoke) {
+  if (action->type == ActionType::Invoke) {
     write_key(ctx, "field");
     write_escaped_string_slice(ctx, action->invoke.name);
     write_separator(ctx);
@@ -258,50 +251,47 @@ static void write_action(Context* ctx, const WabtAction* action) {
     write_key(ctx, "field");
     write_escaped_string_slice(ctx, action->get.name);
   }
-  wabt_writef(&ctx->json_stream, "}");
+  writef(&ctx->json_stream, "}");
 }
 
 static void write_action_result_type(Context* ctx,
-                                     WabtScript* script,
-                                     const WabtAction* action) {
-  const WabtModule* module =
-      wabt_get_module_by_var(script, &action->module_var);
-  const WabtExport* export_;
-  wabt_writef(&ctx->json_stream, "[");
+                                     Script* script,
+                                     const Action* action) {
+  const Module* module = get_module_by_var(script, &action->module_var);
+  const Export* export_;
+  writef(&ctx->json_stream, "[");
   switch (action->type) {
-    case WabtActionType::Invoke: {
-      export_ = wabt_get_export_by_name(module, &action->invoke.name);
-      assert(export_->kind == WabtExternalKind::Func);
-      WabtFunc* func = wabt_get_func_by_var(module, &export_->var);
-      size_t num_results = wabt_get_num_results(func);
+    case ActionType::Invoke: {
+      export_ = get_export_by_name(module, &action->invoke.name);
+      assert(export_->kind == ExternalKind::Func);
+      Func* func = get_func_by_var(module, &export_->var);
+      size_t num_results = get_num_results(func);
       size_t i;
       for (i = 0; i < num_results; ++i)
-        write_type_object(ctx, wabt_get_result_type(func, i));
+        write_type_object(ctx, get_result_type(func, i));
       break;
     }
 
-    case WabtActionType::Get: {
-      export_ = wabt_get_export_by_name(module, &action->get.name);
-      assert(export_->kind == WabtExternalKind::Global);
-      WabtGlobal* global = wabt_get_global_by_var(module, &export_->var);
+    case ActionType::Get: {
+      export_ = get_export_by_name(module, &action->get.name);
+      assert(export_->kind == ExternalKind::Global);
+      Global* global = get_global_by_var(module, &export_->var);
       write_type_object(ctx, global->type);
       break;
     }
   }
-  wabt_writef(&ctx->json_stream, "]");
+  writef(&ctx->json_stream, "]");
 }
 
-static void write_module(Context* ctx,
-                         char* filename,
-                         const WabtModule* module) {
-  WabtMemoryWriter writer;
-  WabtResult result = wabt_init_mem_writer(&writer);
+static void write_module(Context* ctx, char* filename, const Module* module) {
+  MemoryWriter writer;
+  Result result = init_mem_writer(&writer);
   if (WABT_SUCCEEDED(result)) {
-    WabtWriteBinaryOptions options = ctx->spec_options->write_binary_options;
-    result = wabt_write_binary_module(&writer.base, module, &options);
+    WriteBinaryOptions options = ctx->spec_options->write_binary_options;
+    result = write_binary_module(&writer.base, module, &options);
     if (WABT_SUCCEEDED(result) && ctx->write_modules)
-      result = wabt_write_output_buffer_to_file(&writer.buf, filename);
-    wabt_close_mem_writer(&writer);
+      result = write_output_buffer_to_file(&writer.buf, filename);
+    close_mem_writer(&writer);
   }
 
   ctx->result = result;
@@ -309,27 +299,27 @@ static void write_module(Context* ctx,
 
 static void write_raw_module(Context* ctx,
                              char* filename,
-                             const WabtRawModule* raw_module) {
-  if (raw_module->type == WabtRawModuleType::Text) {
+                             const RawModule* raw_module) {
+  if (raw_module->type == RawModuleType::Text) {
     write_module(ctx, filename, raw_module->text);
   } else if (ctx->write_modules) {
-    WabtFileStream stream;
-    WabtResult result = wabt_init_file_writer(&stream.writer, filename);
+    FileStream stream;
+    Result result = init_file_writer(&stream.writer, filename);
     if (WABT_SUCCEEDED(result)) {
-      wabt_init_stream(&stream.base, &stream.writer.base, nullptr);
-      wabt_write_data(&stream.base, raw_module->binary.data,
-                      raw_module->binary.size, "");
-      wabt_close_file_writer(&stream.writer);
+      init_stream(&stream.base, &stream.writer.base, nullptr);
+      write_data(&stream.base, raw_module->binary.data, raw_module->binary.size,
+                 "");
+      close_file_writer(&stream.writer);
     }
     ctx->result = result;
   }
 }
 
 static void write_invalid_module(Context* ctx,
-                                 const WabtRawModule* module,
-                                 WabtStringSlice text) {
+                                 const RawModule* module,
+                                 StringSlice text) {
   char* filename = get_module_filename(ctx);
-  write_location(ctx, wabt_get_raw_module_location(module));
+  write_location(ctx, get_raw_module_location(module));
   write_separator(ctx);
   write_key(ctx, "filename");
   write_escaped_string_slice(ctx, get_basename(filename));
@@ -340,29 +330,29 @@ static void write_invalid_module(Context* ctx,
   wabt_free(filename);
 }
 
-static void write_commands(Context* ctx, WabtScript* script) {
-  wabt_writef(&ctx->json_stream, "{\"source_filename\": ");
+static void write_commands(Context* ctx, Script* script) {
+  writef(&ctx->json_stream, "{\"source_filename\": ");
   write_escaped_string_slice(ctx, ctx->source_filename);
-  wabt_writef(&ctx->json_stream, ",\n \"commands\": [\n");
+  writef(&ctx->json_stream, ",\n \"commands\": [\n");
   size_t i;
   int last_module_index = -1;
   for (i = 0; i < script->commands.size; ++i) {
-    WabtCommand* command = &script->commands.data[i];
+    Command* command = &script->commands.data[i];
 
-    if (command->type == WabtCommandType::AssertInvalidNonBinary)
+    if (command->type == CommandType::AssertInvalidNonBinary)
       continue;
 
     if (i != 0)
       write_separator(ctx);
-    wabt_writef(&ctx->json_stream, "\n");
+    writef(&ctx->json_stream, "\n");
 
-    wabt_writef(&ctx->json_stream, "  {");
+    writef(&ctx->json_stream, "  {");
     write_command_type(ctx, command);
     write_separator(ctx);
 
     switch (command->type) {
-      case WabtCommandType::Module: {
-        WabtModule* module = &command->module;
+      case CommandType::Module: {
+        Module* module = &command->module;
         char* filename = get_module_filename(ctx);
         write_location(ctx, &module->loc);
         write_separator(ctx);
@@ -380,16 +370,16 @@ static void write_commands(Context* ctx, WabtScript* script) {
         break;
       }
 
-      case WabtCommandType::Action:
+      case CommandType::Action:
         write_location(ctx, &command->action.loc);
         write_separator(ctx);
         write_action(ctx, &command->action);
         break;
 
-      case WabtCommandType::Register:
+      case CommandType::Register:
         write_location(ctx, &command->register_.var.loc);
         write_separator(ctx);
-        if (command->register_.var.type == WabtVarType::Name) {
+        if (command->register_.var.type == VarType::Name) {
           write_key(ctx, "name");
           write_var(ctx, &command->register_.var);
           write_separator(ctx);
@@ -403,31 +393,31 @@ static void write_commands(Context* ctx, WabtScript* script) {
         write_escaped_string_slice(ctx, command->register_.module_name);
         break;
 
-      case WabtCommandType::AssertMalformed:
+      case CommandType::AssertMalformed:
         write_invalid_module(ctx, &command->assert_malformed.module,
                              command->assert_malformed.text);
         ctx->num_modules++;
         break;
 
-      case WabtCommandType::AssertInvalid:
+      case CommandType::AssertInvalid:
         write_invalid_module(ctx, &command->assert_invalid.module,
                              command->assert_invalid.text);
         ctx->num_modules++;
         break;
 
-      case WabtCommandType::AssertUnlinkable:
+      case CommandType::AssertUnlinkable:
         write_invalid_module(ctx, &command->assert_unlinkable.module,
                              command->assert_unlinkable.text);
         ctx->num_modules++;
         break;
 
-      case WabtCommandType::AssertUninstantiable:
+      case CommandType::AssertUninstantiable:
         write_invalid_module(ctx, &command->assert_uninstantiable.module,
                              command->assert_uninstantiable.text);
         ctx->num_modules++;
         break;
 
-      case WabtCommandType::AssertReturn:
+      case CommandType::AssertReturn:
         write_location(ctx, &command->assert_return.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_return.action);
@@ -436,7 +426,7 @@ static void write_commands(Context* ctx, WabtScript* script) {
         write_const_vector(ctx, &command->assert_return.expected);
         break;
 
-      case WabtCommandType::AssertReturnNan:
+      case CommandType::AssertReturnNan:
         write_location(ctx, &command->assert_return_nan.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_return_nan.action);
@@ -446,7 +436,7 @@ static void write_commands(Context* ctx, WabtScript* script) {
                                  &command->assert_return_nan.action);
         break;
 
-      case WabtCommandType::AssertTrap:
+      case CommandType::AssertTrap:
         write_location(ctx, &command->assert_trap.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_trap.action);
@@ -455,31 +445,30 @@ static void write_commands(Context* ctx, WabtScript* script) {
         write_escaped_string_slice(ctx, command->assert_trap.text);
         break;
 
-      case WabtCommandType::AssertExhaustion:
+      case CommandType::AssertExhaustion:
         write_location(ctx, &command->assert_trap.action.loc);
         write_separator(ctx);
         write_action(ctx, &command->assert_trap.action);
         break;
 
-      case WabtCommandType::AssertInvalidNonBinary:
+      case CommandType::AssertInvalidNonBinary:
         assert(0);
         break;
     }
 
-    wabt_writef(&ctx->json_stream, "}");
+    writef(&ctx->json_stream, "}");
   }
-  wabt_writef(&ctx->json_stream, "]}\n");
+  writef(&ctx->json_stream, "]}\n");
 }
 
-WabtResult wabt_write_binary_spec_script(
-    WabtScript* script,
-    const char* source_filename,
-    const WabtWriteBinarySpecOptions* spec_options) {
+Result write_binary_spec_script(Script* script,
+                                const char* source_filename,
+                                const WriteBinarySpecOptions* spec_options) {
   assert(source_filename);
   Context ctx;
   WABT_ZERO_MEMORY(ctx);
   ctx.spec_options = spec_options;
-  ctx.result = WabtResult::Ok;
+  ctx.result = Result::Ok;
   ctx.source_filename.start = source_filename;
   ctx.source_filename.length = strlen(source_filename);
   ctx.module_filename_noext = strip_extension(
@@ -487,16 +476,18 @@ WabtResult wabt_write_binary_spec_script(
                                       : source_filename);
   ctx.write_modules = !!ctx.spec_options->json_filename;
 
-  WabtResult result = wabt_init_mem_writer(&ctx.json_writer);
+  Result result = init_mem_writer(&ctx.json_writer);
   if (WABT_SUCCEEDED(result)) {
-    wabt_init_stream(&ctx.json_stream, &ctx.json_writer.base, nullptr);
+    init_stream(&ctx.json_stream, &ctx.json_writer.base, nullptr);
     write_commands(&ctx, script);
     if (ctx.spec_options->json_filename) {
-      wabt_write_output_buffer_to_file(&ctx.json_writer.buf,
-                                       ctx.spec_options->json_filename);
+      write_output_buffer_to_file(&ctx.json_writer.buf,
+                                  ctx.spec_options->json_filename);
     }
-    wabt_close_mem_writer(&ctx.json_writer);
+    close_mem_writer(&ctx.json_writer);
   }
 
   return ctx.result;
 }
+
+}  // namespace wabt

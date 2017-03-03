@@ -34,24 +34,26 @@
 
 #define PROGRAM_NAME "wast2wasm"
 
+using namespace wabt;
+
 static const char* s_infile;
 static const char* s_outfile;
 static bool s_dump_module;
 static int s_verbose;
-static WabtWriteBinaryOptions s_write_binary_options =
+static WriteBinaryOptions s_write_binary_options =
     WABT_WRITE_BINARY_OPTIONS_DEFAULT;
-static WabtWriteBinarySpecOptions s_write_binary_spec_options =
+static WriteBinarySpecOptions s_write_binary_spec_options =
     WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
 static bool s_spec;
 static bool s_validate = true;
 
-static WabtSourceErrorHandler s_error_handler =
+static SourceErrorHandler s_error_handler =
     WABT_SOURCE_ERROR_HANDLER_DEFAULT;
 
-static WabtFileStream s_log_stream;
+static FileStream s_log_stream;
 
-#define NOPE WabtHasArgument::No
-#define YEP WabtHasArgument::Yes
+#define NOPE HasArgument::No
+#define YEP HasArgument::Yes
 
 enum {
   FLAG_VERBOSE,
@@ -85,7 +87,7 @@ static const char s_description[] =
     "  # written to spec-test.0.wasm, spec-test.1.wasm, etc.\n"
     "  $ wast2wasm spec-test.wast --spec -o spec-test.json\n";
 
-static WabtOption s_options[] = {
+static Option s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
     {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
@@ -106,8 +108,8 @@ static WabtOption s_options[] = {
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
-static void on_option(struct WabtOptionParser* parser,
-                      struct WabtOption* option,
+static void on_option(struct OptionParser* parser,
+                      struct Option* option,
                       const char* argument) {
   switch (option->id) {
     case FLAG_VERBOSE:
@@ -116,7 +118,7 @@ static void on_option(struct WabtOptionParser* parser,
       break;
 
     case FLAG_HELP:
-      wabt_print_help(parser, PROGRAM_NAME);
+      print_help(parser, PROGRAM_NAME);
       exit(0);
       break;
 
@@ -150,17 +152,17 @@ static void on_option(struct WabtOptionParser* parser,
   }
 }
 
-static void on_argument(struct WabtOptionParser* parser, const char* argument) {
+static void on_argument(struct OptionParser* parser, const char* argument) {
   s_infile = argument;
 }
 
-static void on_option_error(struct WabtOptionParser* parser,
+static void on_option_error(struct OptionParser* parser,
                             const char* message) {
   WABT_FATAL("%s\n", message);
 }
 
 static void parse_options(int argc, char** argv) {
-  WabtOptionParser parser;
+  OptionParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.description = s_description;
   parser.options = s_options;
@@ -168,75 +170,75 @@ static void parse_options(int argc, char** argv) {
   parser.on_option = on_option;
   parser.on_argument = on_argument;
   parser.on_error = on_option_error;
-  wabt_parse_options(&parser, argc, argv);
+  parse_options(&parser, argc, argv);
 
   if (!s_infile) {
-    wabt_print_help(&parser, PROGRAM_NAME);
+    print_help(&parser, PROGRAM_NAME);
     WABT_FATAL("No filename given.\n");
   }
 }
 
 static void write_buffer_to_file(const char* filename,
-                                 WabtOutputBuffer* buffer) {
+                                 OutputBuffer* buffer) {
   if (s_dump_module) {
     if (s_verbose)
-      wabt_writef(&s_log_stream.base, ";; dump\n");
-    wabt_write_output_buffer_memory_dump(&s_log_stream.base, buffer);
+      writef(&s_log_stream.base, ";; dump\n");
+    write_output_buffer_memory_dump(&s_log_stream.base, buffer);
   }
 
   if (filename) {
-    wabt_write_output_buffer_to_file(buffer, filename);
+    write_output_buffer_to_file(buffer, filename);
   }
 }
 
 int main(int argc, char** argv) {
-  wabt_init_stdio();
+  init_stdio();
 
-  wabt_init_file_stream_from_existing(&s_log_stream, stdout);
+  init_file_stream_from_existing(&s_log_stream, stdout);
   parse_options(argc, argv);
 
-  WabtAstLexer* lexer = wabt_new_ast_file_lexer(s_infile);
+  AstLexer* lexer = new_ast_file_lexer(s_infile);
   if (!lexer)
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
-  WabtScript script;
-  WabtResult result = wabt_parse_ast(lexer, &script, &s_error_handler);
+  Script script;
+  Result result = parse_ast(lexer, &script, &s_error_handler);
 
   if (WABT_SUCCEEDED(result)) {
-    result = wabt_resolve_names_script(lexer, &script, &s_error_handler);
+    result = resolve_names_script(lexer, &script, &s_error_handler);
 
     if (WABT_SUCCEEDED(result) && s_validate)
-      result = wabt_validate_script(lexer, &script, &s_error_handler);
+      result = validate_script(lexer, &script, &s_error_handler);
 
     if (WABT_SUCCEEDED(result)) {
       if (s_spec) {
         s_write_binary_spec_options.json_filename = s_outfile;
         s_write_binary_spec_options.write_binary_options =
             s_write_binary_options;
-        result = wabt_write_binary_spec_script(&script, s_infile,
-                                               &s_write_binary_spec_options);
+        result = write_binary_spec_script(&script, s_infile,
+                                          &s_write_binary_spec_options);
       } else {
-        WabtMemoryWriter writer;
+        MemoryWriter writer;
         WABT_ZERO_MEMORY(writer);
-        if (WABT_FAILED(wabt_init_mem_writer(&writer)))
+        if (WABT_FAILED(init_mem_writer(&writer)))
           WABT_FATAL("unable to open memory writer for writing\n");
 
-        WabtModule* module = wabt_get_first_module(&script);
+        Module* module = get_first_module(&script);
         if (module) {
-          result = wabt_write_binary_module(&writer.base, module,
-                                            &s_write_binary_options);
+          result = write_binary_module(&writer.base, module,
+                                       &s_write_binary_options);
         } else {
           WABT_FATAL("no module found\n");
         }
 
         if (WABT_SUCCEEDED(result))
           write_buffer_to_file(s_outfile, &writer.buf);
-        wabt_close_mem_writer(&writer);
+        close_mem_writer(&writer);
       }
     }
   }
 
-  wabt_destroy_ast_lexer(lexer);
-  wabt_destroy_script(&script);
-  return result != WabtResult::Ok;
+  destroy_ast_lexer(lexer);
+  destroy_script(&script);
+  return result != Result::Ok;
 }

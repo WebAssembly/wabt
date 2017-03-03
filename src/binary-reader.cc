@@ -38,8 +38,10 @@
 #define INITIAL_PARAM_TYPES_CAPACITY 128
 #define INITIAL_BR_TABLE_TARGET_CAPACITY 1000
 
+namespace wabt {
+
 typedef uint32_t Uint32;
-WABT_DEFINE_VECTOR(type, WabtType)
+WABT_DEFINE_VECTOR(type, Type)
 WABT_DEFINE_VECTOR(uint32, Uint32);
 
 #define CALLBACK_CTX(member, ...)                                       \
@@ -47,14 +49,14 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
       WABT_SUCCEEDED(                                                   \
           ctx->reader->member                                           \
               ? ctx->reader->member(get_user_context(ctx), __VA_ARGS__) \
-              : WabtResult::Ok),                                        \
+              : Result::Ok),                                            \
       #member " callback failed")
 
 #define CALLBACK_CTX0(member)                                         \
   RAISE_ERROR_UNLESS(                                                 \
       WABT_SUCCEEDED(ctx->reader->member                              \
                          ? ctx->reader->member(get_user_context(ctx)) \
-                         : WabtResult::Ok),                           \
+                         : Result::Ok),                               \
       #member " callback failed")
 
 #define CALLBACK_SECTION(member, section_size) \
@@ -64,7 +66,7 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
   RAISE_ERROR_UNLESS(                                                  \
       WABT_SUCCEEDED(ctx->reader->member                               \
                          ? ctx->reader->member(ctx->reader->user_data) \
-                         : WabtResult::Ok),                            \
+                         : Result::Ok),                                \
       #member " callback failed")
 
 #define CALLBACK(member, ...)                                            \
@@ -72,31 +74,31 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
       WABT_SUCCEEDED(                                                    \
           ctx->reader->member                                            \
               ? ctx->reader->member(__VA_ARGS__, ctx->reader->user_data) \
-              : WabtResult::Ok),                                         \
+              : Result::Ok),                                             \
       #member " callback failed")
 
 #define FORWARD0(member)                                                   \
   return ctx->reader->member ? ctx->reader->member(ctx->reader->user_data) \
-                             : WabtResult::Ok
+                             : Result::Ok
 
 #define FORWARD_CTX0(member)                  \
   if (!ctx->reader->member)                   \
-    return WabtResult::Ok;                    \
-  WabtBinaryReaderContext new_ctx = *context; \
+    return Result::Ok;                        \
+  BinaryReaderContext new_ctx = *context;     \
   new_ctx.user_data = ctx->reader->user_data; \
   return ctx->reader->member(&new_ctx);
 
 #define FORWARD_CTX(member, ...)              \
   if (!ctx->reader->member)                   \
-    return WabtResult::Ok;                    \
-  WabtBinaryReaderContext new_ctx = *context; \
+    return Result::Ok;                        \
+  BinaryReaderContext new_ctx = *context;     \
   new_ctx.user_data = ctx->reader->user_data; \
   return ctx->reader->member(&new_ctx, __VA_ARGS__);
 
 #define FORWARD(member, ...)                                            \
   return ctx->reader->member                                            \
              ? ctx->reader->member(__VA_ARGS__, ctx->reader->user_data) \
-             : WabtResult::Ok
+             : Result::Ok
 
 #define RAISE_ERROR(...) raise_error(ctx, __VA_ARGS__)
 
@@ -109,13 +111,13 @@ struct Context {
   size_t data_size;
   size_t offset;
   size_t read_end; /* Either the section end or data_size. */
-  WabtBinaryReaderContext user_ctx;
-  WabtBinaryReader* reader;
+  BinaryReaderContext user_ctx;
+  BinaryReader* reader;
   jmp_buf error_jmp_buf;
-  WabtTypeVector param_types;
+  TypeVector param_types;
   Uint32Vector target_depths;
-  const WabtReadBinaryOptions* options;
-  WabtBinarySection last_known_section;
+  const ReadBinaryOptions* options;
+  BinarySection last_known_section;
   uint32_t num_signatures;
   uint32_t num_imports;
   uint32_t num_func_imports;
@@ -131,12 +133,12 @@ struct Context {
 };
 
 struct LoggingContext {
-  WabtStream* stream;
-  WabtBinaryReader* reader;
+  Stream* stream;
+  BinaryReader* reader;
   int indent;
 };
 
-static WabtBinaryReaderContext* get_user_context(Context* ctx) {
+static BinaryReaderContext* get_user_context(Context* ctx) {
   ctx->user_ctx.user_data = ctx->reader->user_data;
   ctx->user_ctx.data = ctx->data;
   ctx->user_ctx.size = ctx->data_size;
@@ -199,9 +201,9 @@ static void in_f64(Context* ctx, uint64_t* out_value, const char* desc) {
   (static_cast<type>((value) << SHIFT_AMOUNT(type, sign_bit)) >> \
    SHIFT_AMOUNT(type, sign_bit))
 
-size_t wabt_read_u32_leb128(const uint8_t* p,
-                            const uint8_t* end,
-                            uint32_t* out_value) {
+size_t read_u32_leb128(const uint8_t* p,
+                       const uint8_t* end,
+                       uint32_t* out_value) {
   if (p < end && (p[0] & 0x80) == 0) {
     *out_value = LEB128_1(uint32_t);
     return 1;
@@ -230,15 +232,15 @@ size_t wabt_read_u32_leb128(const uint8_t* p,
 static void in_u32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
   const uint8_t* end = ctx->data + ctx->read_end;
-  size_t bytes_read = wabt_read_u32_leb128(p, end, out_value);
+  size_t bytes_read = read_u32_leb128(p, end, out_value);
   if (!bytes_read)
     RAISE_ERROR("unable to read u32 leb128: %s", desc);
   ctx->offset += bytes_read;
 }
 
-size_t wabt_read_i32_leb128(const uint8_t* p,
-                            const uint8_t* end,
-                            uint32_t* out_value) {
+size_t read_i32_leb128(const uint8_t* p,
+                       const uint8_t* end,
+                       uint32_t* out_value) {
   if (p < end && (p[0] & 0x80) == 0) {
     uint32_t result = LEB128_1(uint32_t);
     *out_value = SIGN_EXTEND(int32_t, result, 6);
@@ -275,7 +277,7 @@ size_t wabt_read_i32_leb128(const uint8_t* p,
 static void in_i32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
   const uint8_t* p = ctx->data + ctx->offset;
   const uint8_t* end = ctx->data + ctx->read_end;
-  size_t bytes_read = wabt_read_i32_leb128(p, end, out_value);
+  size_t bytes_read = read_i32_leb128(p, end, out_value);
   if (!bytes_read)
     RAISE_ERROR("unable to read i32 leb128: %s", desc);
   ctx->offset += bytes_read;
@@ -352,16 +354,16 @@ static void in_i64_leb128(Context* ctx, uint64_t* out_value, const char* desc) {
 #undef SHIFT_AMOUNT
 #undef SIGN_EXTEND
 
-static void in_type(Context* ctx, WabtType* out_value, const char* desc) {
+static void in_type(Context* ctx, Type* out_value, const char* desc) {
   uint32_t type = 0;
   in_i32_leb128(ctx, &type, desc);
   /* Must be in the vs7 range: [-128, 127). */
   if (static_cast<int32_t>(type) < -128 || static_cast<int32_t>(type) > 127)
     RAISE_ERROR("invalid type: %d", type);
-  *out_value = static_cast<WabtType>(type);
+  *out_value = static_cast<Type>(type);
 }
 
-static void in_str(Context* ctx, WabtStringSlice* out_str, const char* desc) {
+static void in_str(Context* ctx, StringSlice* out_str, const char* desc) {
   uint32_t str_len = 0;
   in_u32_leb128(ctx, &str_len, "string length");
 
@@ -389,15 +391,15 @@ static void in_bytes(Context* ctx,
 }
 
 static bool is_valid_external_kind(uint8_t kind) {
-  return kind < kWabtExternalKindCount;
+  return kind < kExternalKindCount;
 }
 
-static bool is_concrete_type(WabtType type) {
+static bool is_concrete_type(Type type) {
   switch (type) {
-    case WabtType::I32:
-    case WabtType::I64:
-    case WabtType::F32:
-    case WabtType::F64:
+    case Type::I32:
+    case Type::I64:
+    case Type::F32:
+    case Type::F64:
       return true;
 
     default:
@@ -405,8 +407,8 @@ static bool is_concrete_type(WabtType type) {
   }
 }
 
-static bool is_inline_sig_type(WabtType type) {
-  return is_concrete_type(type) || type == WabtType::Void;
+static bool is_inline_sig_type(Type type) {
+  return is_concrete_type(type) || type == Type::Void;
 }
 
 static uint32_t num_total_funcs(Context* ctx) {
@@ -426,8 +428,8 @@ static uint32_t num_total_globals(Context* ctx) {
 }
 
 static void destroy_context(Context* ctx) {
-  wabt_destroy_type_vector(&ctx->param_types);
-  wabt_destroy_uint32_vector(&ctx->target_depths);
+  destroy_type_vector(&ctx->param_types);
+  destroy_uint32_vector(&ctx->target_depths);
 }
 
 /* Logging */
@@ -448,15 +450,15 @@ static void write_indent(LoggingContext* ctx) {
   static size_t s_indent_len = sizeof(s_indent) - 1;
   size_t indent = ctx->indent;
   while (indent > s_indent_len) {
-    wabt_write_data(ctx->stream, s_indent, s_indent_len, nullptr);
+    write_data(ctx->stream, s_indent, s_indent_len, nullptr);
     indent -= s_indent_len;
   }
   if (indent > 0) {
-    wabt_write_data(ctx->stream, s_indent, indent, nullptr);
+    write_data(ctx->stream, s_indent, indent, nullptr);
   }
 }
 
-#define LOGF_NOINDENT(...) wabt_writef(ctx->stream, __VA_ARGS__)
+#define LOGF_NOINDENT(...) writef(ctx->stream, __VA_ARGS__)
 
 #define LOGF(...)               \
   do {                          \
@@ -464,19 +466,18 @@ static void write_indent(LoggingContext* ctx) {
     LOGF_NOINDENT(__VA_ARGS__); \
   } while (0)
 
-static void logging_on_error(WabtBinaryReaderContext* ctx,
-                             const char* message) {
+static void logging_on_error(BinaryReaderContext* ctx, const char* message) {
   LoggingContext* logging_ctx = static_cast<LoggingContext*>(ctx->user_data);
   if (logging_ctx->reader->on_error) {
-    WabtBinaryReaderContext new_ctx = *ctx;
+    BinaryReaderContext new_ctx = *ctx;
     new_ctx.user_data = logging_ctx->reader->user_data;
     logging_ctx->reader->on_error(&new_ctx, message);
   }
 }
 
-static WabtResult logging_begin_custom_section(WabtBinaryReaderContext* context,
-                                               uint32_t size,
-                                               WabtStringSlice section_name) {
+static Result logging_begin_custom_section(BinaryReaderContext* context,
+                                           uint32_t size,
+                                           StringSlice section_name) {
   LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
   LOGF("begin_custom_section: '" PRIstringslice "' size=%d\n",
        WABT_PRINTF_STRING_SLICE_ARG(section_name), size);
@@ -485,8 +486,8 @@ static WabtResult logging_begin_custom_section(WabtBinaryReaderContext* context,
 }
 
 #define LOGGING_BEGIN(name)                                                 \
-  static WabtResult logging_begin_##name(WabtBinaryReaderContext* context,  \
-                                         uint32_t size) {                   \
+  static Result logging_begin_##name(BinaryReaderContext* context,          \
+                                     uint32_t size) {                       \
     LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
     LOGF("begin_" #name "\n");                                              \
     indent(ctx);                                                            \
@@ -494,61 +495,60 @@ static WabtResult logging_begin_custom_section(WabtBinaryReaderContext* context,
   }
 
 #define LOGGING_END(name)                                                   \
-  static WabtResult logging_end_##name(WabtBinaryReaderContext* context) {  \
+  static Result logging_end_##name(BinaryReaderContext* context) {          \
     LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
     dedent(ctx);                                                            \
     LOGF("end_" #name "\n");                                                \
     FORWARD_CTX0(end_##name);                                               \
   }
 
-#define LOGGING_UINT32(name)                                          \
-  static WabtResult logging_##name(uint32_t value, void* user_data) { \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);    \
-    LOGF(#name "(%u)\n", value);                                      \
-    FORWARD(name, value);                                             \
+#define LOGGING_UINT32(name)                                       \
+  static Result logging_##name(uint32_t value, void* user_data) {  \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
+    LOGF(#name "(%u)\n", value);                                   \
+    FORWARD(name, value);                                          \
   }
 
-#define LOGGING_UINT32_CTX(name)                                            \
-  static WabtResult logging_##name(WabtBinaryReaderContext* context,        \
-                                   uint32_t value) {                        \
-    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
-    LOGF(#name "(%u)\n", value);                                            \
-    FORWARD_CTX(name, value);                                               \
+#define LOGGING_UINT32_CTX(name)                                               \
+  static Result logging_##name(BinaryReaderContext* context, uint32_t value) { \
+    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);    \
+    LOGF(#name "(%u)\n", value);                                               \
+    FORWARD_CTX(name, value);                                                  \
   }
 
-#define LOGGING_UINT32_DESC(name, desc)                               \
-  static WabtResult logging_##name(uint32_t value, void* user_data) { \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);    \
-    LOGF(#name "(" desc ": %u)\n", value);                            \
-    FORWARD(name, value);                                             \
+#define LOGGING_UINT32_DESC(name, desc)                            \
+  static Result logging_##name(uint32_t value, void* user_data) {  \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
+    LOGF(#name "(" desc ": %u)\n", value);                         \
+    FORWARD(name, value);                                          \
   }
 
-#define LOGGING_UINT32_UINT32(name, desc0, desc1)                    \
-  static WabtResult logging_##name(uint32_t value0, uint32_t value1, \
-                                   void* user_data) {                \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);   \
-    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);  \
-    FORWARD(name, value0, value1);                                   \
+#define LOGGING_UINT32_UINT32(name, desc0, desc1)                   \
+  static Result logging_##name(uint32_t value0, uint32_t value1,    \
+                               void* user_data) {                   \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);  \
+    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1); \
+    FORWARD(name, value0, value1);                                  \
   }
 
-#define LOGGING_UINT32_UINT32_CTX(name, desc0, desc1)                       \
-  static WabtResult logging_##name(WabtBinaryReaderContext* context,        \
-                                   uint32_t value0, uint32_t value1) {      \
-    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
-    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);         \
-    FORWARD_CTX(name, value0, value1);                                      \
+#define LOGGING_UINT32_UINT32_CTX(name, desc0, desc1)                         \
+  static Result logging_##name(BinaryReaderContext* context, uint32_t value0, \
+                               uint32_t value1) {                             \
+    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);   \
+    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);           \
+    FORWARD_CTX(name, value0, value1);                                        \
   }
 
-#define LOGGING_OPCODE(name)                                             \
-  static WabtResult logging_##name(WabtOpcode opcode, void* user_data) { \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);       \
-    LOGF(#name "(\"%s\" (%u))\n", wabt_get_opcode_name(opcode),          \
-         static_cast<unsigned>(opcode));                                 \
-    FORWARD(name, opcode);                                               \
+#define LOGGING_OPCODE(name)                                       \
+  static Result logging_##name(Opcode opcode, void* user_data) {   \
+    LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
+    LOGF(#name "(\"%s\" (%u))\n", get_opcode_name(opcode),         \
+         static_cast<unsigned>(opcode));                           \
+    FORWARD(name, opcode);                                         \
   }
 
 #define LOGGING0(name)                                             \
-  static WabtResult logging_##name(void* user_data) {              \
+  static Result logging_##name(void* user_data) {                  \
     LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
     LOGF(#name "\n");                                              \
     FORWARD0(name);                                                \
@@ -638,37 +638,35 @@ LOGGING_BEGIN(reloc_section)
 LOGGING_END(reloc_section)
 LOGGING_UINT32_UINT32(on_init_expr_get_global_expr, "index", "global_index")
 
-static void sprint_limits(char* dst, size_t size, const WabtLimits* limits) {
+static void sprint_limits(char* dst, size_t size, const Limits* limits) {
   int result;
   if (limits->has_max) {
-    result = wabt_snprintf(dst, size, "initial: %" PRIu64 ", max: %" PRIu64,
-                           limits->initial, limits->max);
+    result = snprintf(dst, size, "initial: %" PRIu64 ", max: %" PRIu64,
+                      limits->initial, limits->max);
   } else {
-    result = wabt_snprintf(dst, size, "initial: %" PRIu64, limits->initial);
+    result = snprintf(dst, size, "initial: %" PRIu64, limits->initial);
   }
   WABT_USE(result);
   assert(static_cast<size_t>(result) < size);
 }
 
-static void log_types(LoggingContext* ctx,
-                      uint32_t type_count,
-                      WabtType* types) {
+static void log_types(LoggingContext* ctx, uint32_t type_count, Type* types) {
   uint32_t i;
   LOGF_NOINDENT("[");
   for (i = 0; i < type_count; ++i) {
-    LOGF_NOINDENT("%s", wabt_get_type_name(types[i]));
+    LOGF_NOINDENT("%s", get_type_name(types[i]));
     if (i != type_count - 1)
       LOGF_NOINDENT(", ");
   }
   LOGF_NOINDENT("]");
 }
 
-static WabtResult logging_on_signature(uint32_t index,
-                                       uint32_t param_count,
-                                       WabtType* param_types,
-                                       uint32_t result_count,
-                                       WabtType* result_types,
-                                       void* user_data) {
+static Result logging_on_signature(uint32_t index,
+                                   uint32_t param_count,
+                                   Type* param_types,
+                                   uint32_t result_count,
+                                   Type* result_types,
+                                   void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_signature(index: %u, params: ", index);
   log_types(ctx, param_count, param_types);
@@ -679,10 +677,10 @@ static WabtResult logging_on_signature(uint32_t index,
           result_types);
 }
 
-static WabtResult logging_on_import(uint32_t index,
-                                    WabtStringSlice module_name,
-                                    WabtStringSlice field_name,
-                                    void* user_data) {
+static Result logging_on_import(uint32_t index,
+                                StringSlice module_name,
+                                StringSlice field_name,
+                                void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_import(index: %u, module: \"" PRIstringslice
        "\", field: \"" PRIstringslice "\")\n",
@@ -691,35 +689,34 @@ static WabtResult logging_on_import(uint32_t index,
   FORWARD(on_import, index, module_name, field_name);
 }
 
-static WabtResult logging_on_import_func(uint32_t import_index,
-                                         uint32_t func_index,
-                                         uint32_t sig_index,
-                                         void* user_data) {
+static Result logging_on_import_func(uint32_t import_index,
+                                     uint32_t func_index,
+                                     uint32_t sig_index,
+                                     void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_import_func(import_index: %u, func_index: %u, sig_index: %u)\n",
        import_index, func_index, sig_index);
   FORWARD(on_import_func, import_index, func_index, sig_index);
 }
 
-
-static WabtResult logging_on_import_table(uint32_t import_index,
-                                          uint32_t table_index,
-                                          WabtType elem_type,
-                                          const WabtLimits* elem_limits,
-                                          void* user_data) {
+static Result logging_on_import_table(uint32_t import_index,
+                                      uint32_t table_index,
+                                      Type elem_type,
+                                      const Limits* elem_limits,
+                                      void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   char buf[100];
   sprint_limits(buf, sizeof(buf), elem_limits);
   LOGF(
       "on_import_table(import_index: %u, table_index: %u, elem_type: %s, %s)\n",
-      import_index, table_index, wabt_get_type_name(elem_type), buf);
+      import_index, table_index, get_type_name(elem_type), buf);
   FORWARD(on_import_table, import_index, table_index, elem_type, elem_limits);
 }
 
-static WabtResult logging_on_import_memory(uint32_t import_index,
-                                           uint32_t memory_index,
-                                           const WabtLimits* page_limits,
-                                           void* user_data) {
+static Result logging_on_import_memory(uint32_t import_index,
+                                       uint32_t memory_index,
+                                       const Limits* page_limits,
+                                       void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   char buf[100];
   sprint_limits(buf, sizeof(buf), page_limits);
@@ -728,35 +725,35 @@ static WabtResult logging_on_import_memory(uint32_t import_index,
   FORWARD(on_import_memory, import_index, memory_index, page_limits);
 }
 
-static WabtResult logging_on_import_global(uint32_t import_index,
-                                           uint32_t global_index,
-                                           WabtType type,
-                                           bool mutable_,
-                                           void* user_data) {
+static Result logging_on_import_global(uint32_t import_index,
+                                       uint32_t global_index,
+                                       Type type,
+                                       bool mutable_,
+                                       void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF(
       "on_import_global(import_index: %u, global_index: %u, type: %s, mutable: "
       "%s)\n",
-      import_index, global_index, wabt_get_type_name(type),
+      import_index, global_index, get_type_name(type),
       mutable_ ? "true" : "false");
   FORWARD(on_import_global, import_index, global_index, type, mutable_);
 }
 
-static WabtResult logging_on_table(uint32_t index,
-                                   WabtType elem_type,
-                                   const WabtLimits* elem_limits,
-                                   void* user_data) {
+static Result logging_on_table(uint32_t index,
+                               Type elem_type,
+                               const Limits* elem_limits,
+                               void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   char buf[100];
   sprint_limits(buf, sizeof(buf), elem_limits);
   LOGF("on_table(index: %u, elem_type: %s, %s)\n", index,
-       wabt_get_type_name(elem_type), buf);
+       get_type_name(elem_type), buf);
   FORWARD(on_table, index, elem_type, elem_limits);
 }
 
-static WabtResult logging_on_memory(uint32_t index,
-                                    const WabtLimits* page_limits,
-                                    void* user_data) {
+static Result logging_on_memory(uint32_t index,
+                                const Limits* page_limits,
+                                void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   char buf[100];
   sprint_limits(buf, sizeof(buf), page_limits);
@@ -764,51 +761,51 @@ static WabtResult logging_on_memory(uint32_t index,
   FORWARD(on_memory, index, page_limits);
 }
 
-static WabtResult logging_begin_global(uint32_t index,
-                                       WabtType type,
-                                       bool mutable_,
-                                       void* user_data) {
+static Result logging_begin_global(uint32_t index,
+                                   Type type,
+                                   bool mutable_,
+                                   void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("begin_global(index: %u, type: %s, mutable: %s)\n", index,
-       wabt_get_type_name(type), mutable_ ? "true" : "false");
+       get_type_name(type), mutable_ ? "true" : "false");
   FORWARD(begin_global, index, type, mutable_);
 }
 
-static WabtResult logging_on_export(uint32_t index,
-                                    WabtExternalKind kind,
-                                    uint32_t item_index,
-                                    WabtStringSlice name,
-                                    void* user_data) {
+static Result logging_on_export(uint32_t index,
+                                ExternalKind kind,
+                                uint32_t item_index,
+                                StringSlice name,
+                                void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_export(index: %u, kind: %s, item_index: %u, name: \"" PRIstringslice
        "\")\n",
-       index, wabt_get_kind_name(kind), item_index,
+       index, get_kind_name(kind), item_index,
        WABT_PRINTF_STRING_SLICE_ARG(name));
   FORWARD(on_export, index, kind, item_index, name);
 }
 
-static WabtResult logging_begin_function_body_pass(uint32_t index,
-                                                   uint32_t pass,
-                                                   void* user_data) {
+static Result logging_begin_function_body_pass(uint32_t index,
+                                               uint32_t pass,
+                                               void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("begin_function_body_pass(index: %u, pass: %u)\n", index, pass);
   indent(ctx);
   FORWARD(begin_function_body_pass, index, pass);
 }
 
-static WabtResult logging_on_local_decl(uint32_t decl_index,
-                                        uint32_t count,
-                                        WabtType type,
-                                        void* user_data) {
+static Result logging_on_local_decl(uint32_t decl_index,
+                                    uint32_t count,
+                                    Type type,
+                                    void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_local_decl(index: %u, count: %u, type: %s)\n", decl_index, count,
-       wabt_get_type_name(type));
+       get_type_name(type));
   FORWARD(on_local_decl, decl_index, count, type);
 }
 
-static WabtResult logging_on_block_expr(uint32_t num_types,
-                                        WabtType* sig_types,
-                                        void* user_data) {
+static Result logging_on_block_expr(uint32_t num_types,
+                                    Type* sig_types,
+                                    void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_block_expr(sig: ");
   log_types(ctx, num_types, sig_types);
@@ -816,22 +813,22 @@ static WabtResult logging_on_block_expr(uint32_t num_types,
   FORWARD(on_block_expr, num_types, sig_types);
 }
 
-static WabtResult logging_on_br_expr(uint32_t depth, void* user_data) {
+static Result logging_on_br_expr(uint32_t depth, void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_br_expr(depth: %u)\n", depth);
   FORWARD(on_br_expr, depth);
 }
 
-static WabtResult logging_on_br_if_expr(uint32_t depth, void* user_data) {
+static Result logging_on_br_if_expr(uint32_t depth, void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_br_if_expr(depth: %u)\n", depth);
   FORWARD(on_br_if_expr, depth);
 }
 
-static WabtResult logging_on_br_table_expr(WabtBinaryReaderContext* context,
-                                           uint32_t num_targets,
-                                           uint32_t* target_depths,
-                                           uint32_t default_target_depth) {
+static Result logging_on_br_table_expr(BinaryReaderContext* context,
+                                       uint32_t num_targets,
+                                       uint32_t* target_depths,
+                                       uint32_t default_target_depth) {
   LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
   LOGF("on_br_table_expr(num_targets: %u, depths: [", num_targets);
   uint32_t i;
@@ -845,8 +842,7 @@ static WabtResult logging_on_br_table_expr(WabtBinaryReaderContext* context,
               default_target_depth);
 }
 
-static WabtResult logging_on_f32_const_expr(uint32_t value_bits,
-                                            void* user_data) {
+static Result logging_on_f32_const_expr(uint32_t value_bits, void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   float value;
   memcpy(&value, &value_bits, sizeof(value));
@@ -854,8 +850,7 @@ static WabtResult logging_on_f32_const_expr(uint32_t value_bits,
   FORWARD(on_f32_const_expr, value_bits);
 }
 
-static WabtResult logging_on_f64_const_expr(uint64_t value_bits,
-                                            void* user_data) {
+static Result logging_on_f64_const_expr(uint64_t value_bits, void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   double value;
   memcpy(&value, &value_bits, sizeof(value));
@@ -863,21 +858,21 @@ static WabtResult logging_on_f64_const_expr(uint64_t value_bits,
   FORWARD(on_f64_const_expr, value_bits);
 }
 
-static WabtResult logging_on_i32_const_expr(uint32_t value, void* user_data) {
+static Result logging_on_i32_const_expr(uint32_t value, void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_i32_const_expr(%u (0x%x))\n", value, value);
   FORWARD(on_i32_const_expr, value);
 }
 
-static WabtResult logging_on_i64_const_expr(uint64_t value, void* user_data) {
+static Result logging_on_i64_const_expr(uint64_t value, void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_i64_const_expr(%" PRIu64 " (0x%" PRIx64 "))\n", value, value);
   FORWARD(on_i64_const_expr, value);
 }
 
-static WabtResult logging_on_if_expr(uint32_t num_types,
-                                     WabtType* sig_types,
-                                     void* user_data) {
+static Result logging_on_if_expr(uint32_t num_types,
+                                 Type* sig_types,
+                                 void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_if_expr(sig: ");
   log_types(ctx, num_types, sig_types);
@@ -885,20 +880,20 @@ static WabtResult logging_on_if_expr(uint32_t num_types,
   FORWARD(on_if_expr, num_types, sig_types);
 }
 
-static WabtResult logging_on_load_expr(WabtOpcode opcode,
-                                       uint32_t alignment_log2,
-                                       uint32_t offset,
-                                       void* user_data) {
+static Result logging_on_load_expr(Opcode opcode,
+                                   uint32_t alignment_log2,
+                                   uint32_t offset,
+                                   void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_load_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
-       wabt_get_opcode_name(opcode), static_cast<unsigned>(opcode),
-       alignment_log2, offset);
+       get_opcode_name(opcode), static_cast<unsigned>(opcode), alignment_log2,
+       offset);
   FORWARD(on_load_expr, opcode, alignment_log2, offset);
 }
 
-static WabtResult logging_on_loop_expr(uint32_t num_types,
-                                       WabtType* sig_types,
-                                       void* user_data) {
+static Result logging_on_loop_expr(uint32_t num_types,
+                                   Type* sig_types,
+                                   void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_loop_expr(sig: ");
   log_types(ctx, num_types, sig_types);
@@ -906,48 +901,48 @@ static WabtResult logging_on_loop_expr(uint32_t num_types,
   FORWARD(on_loop_expr, num_types, sig_types);
 }
 
-static WabtResult logging_on_store_expr(WabtOpcode opcode,
-                                        uint32_t alignment_log2,
-                                        uint32_t offset,
-                                        void* user_data) {
+static Result logging_on_store_expr(Opcode opcode,
+                                    uint32_t alignment_log2,
+                                    uint32_t offset,
+                                    void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_store_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
-       wabt_get_opcode_name(opcode), static_cast<unsigned>(opcode),
-       alignment_log2, offset);
+       get_opcode_name(opcode), static_cast<unsigned>(opcode), alignment_log2,
+       offset);
   FORWARD(on_store_expr, opcode, alignment_log2, offset);
 }
 
-static WabtResult logging_end_function_body_pass(uint32_t index,
-                                                 uint32_t pass,
-                                                 void* user_data) {
+static Result logging_end_function_body_pass(uint32_t index,
+                                             uint32_t pass,
+                                             void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   dedent(ctx);
   LOGF("end_function_body_pass(index: %u, pass: %u)\n", index, pass);
   FORWARD(end_function_body_pass, index, pass);
 }
 
-static WabtResult logging_on_data_segment_data(uint32_t index,
-                                               const void* data,
-                                               uint32_t size,
-                                               void* user_data) {
+static Result logging_on_data_segment_data(uint32_t index,
+                                           const void* data,
+                                           uint32_t size,
+                                           void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_data_segment_data(index:%u, size:%u)\n", index, size);
   FORWARD(on_data_segment_data, index, data, size);
 }
 
-static WabtResult logging_on_function_name(uint32_t index,
-                                           WabtStringSlice name,
-                                           void* user_data) {
+static Result logging_on_function_name(uint32_t index,
+                                       StringSlice name,
+                                       void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_function_name(index: %u, name: \"" PRIstringslice "\")\n", index,
        WABT_PRINTF_STRING_SLICE_ARG(name));
   FORWARD(on_function_name, index, name);
 }
 
-static WabtResult logging_on_local_name(uint32_t func_index,
-                                        uint32_t local_index,
-                                        WabtStringSlice name,
-                                        void* user_data) {
+static Result logging_on_local_name(uint32_t func_index,
+                                    uint32_t local_index,
+                                    StringSlice name,
+                                    void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_local_name(func_index: %u, local_index: %u, name: \"" PRIstringslice
        "\")\n",
@@ -955,9 +950,9 @@ static WabtResult logging_on_local_name(uint32_t func_index,
   FORWARD(on_local_name, func_index, local_index, name);
 }
 
-static WabtResult logging_on_init_expr_f32_const_expr(uint32_t index,
-                                                      uint32_t value_bits,
-                                                      void* user_data) {
+static Result logging_on_init_expr_f32_const_expr(uint32_t index,
+                                                  uint32_t value_bits,
+                                                  void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   float value;
   memcpy(&value, &value_bits, sizeof(value));
@@ -966,9 +961,9 @@ static WabtResult logging_on_init_expr_f32_const_expr(uint32_t index,
   FORWARD(on_init_expr_f32_const_expr, index, value_bits);
 }
 
-static WabtResult logging_on_init_expr_f64_const_expr(uint32_t index,
-                                                      uint64_t value_bits,
-                                                      void* user_data) {
+static Result logging_on_init_expr_f64_const_expr(uint32_t index,
+                                                  uint64_t value_bits,
+                                                  void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   double value;
   memcpy(&value, &value_bits, sizeof(value));
@@ -977,31 +972,31 @@ static WabtResult logging_on_init_expr_f64_const_expr(uint32_t index,
   FORWARD(on_init_expr_f64_const_expr, index, value_bits);
 }
 
-static WabtResult logging_on_init_expr_i32_const_expr(uint32_t index,
-                                                      uint32_t value,
-                                                      void* user_data) {
+static Result logging_on_init_expr_i32_const_expr(uint32_t index,
+                                                  uint32_t value,
+                                                  void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_init_expr_i32_const_expr(index: %u, value: %u)\n", index, value);
   FORWARD(on_init_expr_i32_const_expr, index, value);
 }
 
-static WabtResult logging_on_init_expr_i64_const_expr(uint32_t index,
-                                                      uint64_t value,
-                                                      void* user_data) {
+static Result logging_on_init_expr_i64_const_expr(uint32_t index,
+                                                  uint64_t value,
+                                                  void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_init_expr_i64_const_expr(index: %u, value: %" PRIu64 ")\n", index,
        value);
   FORWARD(on_init_expr_i64_const_expr, index, value);
 }
 
-static WabtResult logging_on_reloc_count(uint32_t count,
-                                         WabtBinarySection section_code,
-                                         WabtStringSlice section_name,
-                                         void* user_data) {
+static Result logging_on_reloc_count(uint32_t count,
+                                     BinarySection section_code,
+                                     StringSlice section_name,
+                                     void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
   LOGF("on_reloc_count(count: %d, section: %s, section_name: " PRIstringslice
        ")\n",
-       count, wabt_get_section_name(section_code),
+       count, get_section_name(section_code),
        WABT_PRINTF_STRING_SLICE_ARG(section_name));
   FORWARD(on_reloc_count, count, section_code, section_name);
 }
@@ -1009,43 +1004,43 @@ static WabtResult logging_on_reloc_count(uint32_t count,
 static void read_init_expr(Context* ctx, uint32_t index) {
   uint8_t opcode;
   in_u8(ctx, &opcode, "opcode");
-  switch (static_cast<WabtOpcode>(opcode)) {
-    case WabtOpcode::I32Const: {
+  switch (static_cast<Opcode>(opcode)) {
+    case Opcode::I32Const: {
       uint32_t value = 0;
       in_i32_leb128(ctx, &value, "init_expr i32.const value");
       CALLBACK(on_init_expr_i32_const_expr, index, value);
       break;
     }
 
-    case WabtOpcode::I64Const: {
+    case Opcode::I64Const: {
       uint64_t value = 0;
       in_i64_leb128(ctx, &value, "init_expr i64.const value");
       CALLBACK(on_init_expr_i64_const_expr, index, value);
       break;
     }
 
-    case WabtOpcode::F32Const: {
+    case Opcode::F32Const: {
       uint32_t value_bits = 0;
       in_f32(ctx, &value_bits, "init_expr f32.const value");
       CALLBACK(on_init_expr_f32_const_expr, index, value_bits);
       break;
     }
 
-    case WabtOpcode::F64Const: {
+    case Opcode::F64Const: {
       uint64_t value_bits = 0;
       in_f64(ctx, &value_bits, "init_expr f64.const value");
       CALLBACK(on_init_expr_f64_const_expr, index, value_bits);
       break;
     }
 
-    case WabtOpcode::GetGlobal: {
+    case Opcode::GetGlobal: {
       uint32_t global_index;
       in_u32_leb128(ctx, &global_index, "init_expr get_global index");
       CALLBACK(on_init_expr_get_global_expr, index, global_index);
       break;
     }
 
-    case WabtOpcode::End:
+    case Opcode::End:
       return;
 
     default:
@@ -1055,15 +1050,15 @@ static void read_init_expr(Context* ctx, uint32_t index) {
   }
 
   in_u8(ctx, &opcode, "opcode");
-  RAISE_ERROR_UNLESS(static_cast<WabtOpcode>(opcode) == WabtOpcode::End,
+  RAISE_ERROR_UNLESS(static_cast<Opcode>(opcode) == Opcode::End,
                      "expected END opcode after initializer expression");
 }
 
 static void read_table(Context* ctx,
-                       WabtType* out_elem_type,
-                       WabtLimits* out_elem_limits) {
+                       Type* out_elem_type,
+                       Limits* out_elem_limits) {
   in_type(ctx, out_elem_type, "table elem type");
-  RAISE_ERROR_UNLESS(*out_elem_type == WabtType::Anyfunc,
+  RAISE_ERROR_UNLESS(*out_elem_type == Type::Anyfunc,
                      "table elem type must by anyfunc");
 
   uint32_t flags;
@@ -1083,7 +1078,7 @@ static void read_table(Context* ctx,
   out_elem_limits->max = max;
 }
 
-static void read_memory(Context* ctx, WabtLimits* out_page_limits) {
+static void read_memory(Context* ctx, Limits* out_page_limits) {
   uint32_t flags;
   uint32_t initial;
   uint32_t max = 0;
@@ -1104,9 +1099,9 @@ static void read_memory(Context* ctx, WabtLimits* out_page_limits) {
 }
 
 static void read_global_header(Context* ctx,
-                               WabtType* out_type,
+                               Type* out_type,
                                bool* out_mutable) {
-  WabtType global_type;
+  Type global_type;
   uint8_t mutable_;
   in_type(ctx, &global_type, "global type");
   RAISE_ERROR_UNLESS(is_concrete_type(global_type),
@@ -1124,58 +1119,58 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
   while (ctx->offset < end_offset) {
     uint8_t opcode_u8;
     in_u8(ctx, &opcode_u8, "opcode");
-    WabtOpcode opcode = static_cast<WabtOpcode>(opcode_u8);
+    Opcode opcode = static_cast<Opcode>(opcode_u8);
     CALLBACK_CTX(on_opcode, opcode);
     switch (opcode) {
-      case WabtOpcode::Unreachable:
+      case Opcode::Unreachable:
         CALLBACK0(on_unreachable_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::Block: {
-        WabtType sig_type;
+      case Opcode::Block: {
+        Type sig_type;
         in_type(ctx, &sig_type, "block signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == WabtType::Void ? 0 : 1;
+        uint32_t num_types = sig_type == Type::Void ? 0 : 1;
         CALLBACK(on_block_expr, num_types, &sig_type);
         CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
-      case WabtOpcode::Loop: {
-        WabtType sig_type;
+      case Opcode::Loop: {
+        Type sig_type;
         in_type(ctx, &sig_type, "loop signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == WabtType::Void ? 0 : 1;
+        uint32_t num_types = sig_type == Type::Void ? 0 : 1;
         CALLBACK(on_loop_expr, num_types, &sig_type);
         CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
-      case WabtOpcode::If: {
-        WabtType sig_type;
+      case Opcode::If: {
+        Type sig_type;
         in_type(ctx, &sig_type, "if signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == WabtType::Void ? 0 : 1;
+        uint32_t num_types = sig_type == Type::Void ? 0 : 1;
         CALLBACK(on_if_expr, num_types, &sig_type);
         CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
         break;
       }
 
-      case WabtOpcode::Else:
+      case Opcode::Else:
         CALLBACK0(on_else_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::Select:
+      case Opcode::Select:
         CALLBACK0(on_select_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::Br: {
+      case Opcode::Br: {
         uint32_t depth;
         in_u32_leb128(ctx, &depth, "br depth");
         CALLBACK(on_br_expr, depth);
@@ -1183,7 +1178,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::BrIf: {
+      case Opcode::BrIf: {
         uint32_t depth;
         in_u32_leb128(ctx, &depth, "br_if depth");
         CALLBACK(on_br_if_expr, depth);
@@ -1191,11 +1186,11 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::BrTable: {
+      case Opcode::BrTable: {
         uint32_t num_targets;
         in_u32_leb128(ctx, &num_targets, "br_table target count");
         if (num_targets > ctx->target_depths.capacity) {
-          wabt_reserve_uint32s(&ctx->target_depths, num_targets);
+          reserve_uint32s(&ctx->target_depths, num_targets);
           ctx->target_depths.size = num_targets;
         }
 
@@ -1215,29 +1210,29 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::Return:
+      case Opcode::Return:
         CALLBACK0(on_return_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::Nop:
+      case Opcode::Nop:
         CALLBACK0(on_nop_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::Drop:
+      case Opcode::Drop:
         CALLBACK0(on_drop_expr);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::End:
+      case Opcode::End:
         if (ctx->offset == end_offset)
           seen_end_opcode = true;
         else
           CALLBACK0(on_end_expr);
         break;
 
-      case WabtOpcode::I32Const: {
+      case Opcode::I32Const: {
         uint32_t value = 0;
         in_i32_leb128(ctx, &value, "i32.const value");
         CALLBACK(on_i32_const_expr, value);
@@ -1245,7 +1240,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::I64Const: {
+      case Opcode::I64Const: {
         uint64_t value = 0;
         in_i64_leb128(ctx, &value, "i64.const value");
         CALLBACK(on_i64_const_expr, value);
@@ -1253,7 +1248,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::F32Const: {
+      case Opcode::F32Const: {
         uint32_t value_bits = 0;
         in_f32(ctx, &value_bits, "f32.const value");
         CALLBACK(on_f32_const_expr, value_bits);
@@ -1261,7 +1256,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::F64Const: {
+      case Opcode::F64Const: {
         uint64_t value_bits = 0;
         in_f64(ctx, &value_bits, "f64.const value");
         CALLBACK(on_f64_const_expr, value_bits);
@@ -1269,7 +1264,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::GetGlobal: {
+      case Opcode::GetGlobal: {
         uint32_t global_index;
         in_u32_leb128(ctx, &global_index, "get_global global index");
         CALLBACK(on_get_global_expr, global_index);
@@ -1277,7 +1272,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::GetLocal: {
+      case Opcode::GetLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "get_local local index");
         CALLBACK(on_get_local_expr, local_index);
@@ -1285,7 +1280,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::SetGlobal: {
+      case Opcode::SetGlobal: {
         uint32_t global_index;
         in_u32_leb128(ctx, &global_index, "set_global global index");
         CALLBACK(on_set_global_expr, global_index);
@@ -1293,7 +1288,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::SetLocal: {
+      case Opcode::SetLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "set_local local index");
         CALLBACK(on_set_local_expr, local_index);
@@ -1301,7 +1296,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::Call: {
+      case Opcode::Call: {
         uint32_t func_index;
         in_u32_leb128(ctx, &func_index, "call function index");
         RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
@@ -1311,7 +1306,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::CallIndirect: {
+      case Opcode::CallIndirect: {
         uint32_t sig_index;
         in_u32_leb128(ctx, &sig_index, "call_indirect signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
@@ -1325,7 +1320,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::TeeLocal: {
+      case Opcode::TeeLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "tee_local local index");
         CALLBACK(on_tee_local_expr, local_index);
@@ -1333,20 +1328,20 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::I32Load8S:
-      case WabtOpcode::I32Load8U:
-      case WabtOpcode::I32Load16S:
-      case WabtOpcode::I32Load16U:
-      case WabtOpcode::I64Load8S:
-      case WabtOpcode::I64Load8U:
-      case WabtOpcode::I64Load16S:
-      case WabtOpcode::I64Load16U:
-      case WabtOpcode::I64Load32S:
-      case WabtOpcode::I64Load32U:
-      case WabtOpcode::I32Load:
-      case WabtOpcode::I64Load:
-      case WabtOpcode::F32Load:
-      case WabtOpcode::F64Load: {
+      case Opcode::I32Load8S:
+      case Opcode::I32Load8U:
+      case Opcode::I32Load16S:
+      case Opcode::I32Load16U:
+      case Opcode::I64Load8S:
+      case Opcode::I64Load8U:
+      case Opcode::I64Load16S:
+      case Opcode::I64Load16U:
+      case Opcode::I64Load32S:
+      case Opcode::I64Load32U:
+      case Opcode::I32Load:
+      case Opcode::I64Load:
+      case Opcode::F32Load:
+      case Opcode::F64Load: {
         uint32_t alignment_log2;
         in_u32_leb128(ctx, &alignment_log2, "load alignment");
         uint32_t offset;
@@ -1357,15 +1352,15 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::I32Store8:
-      case WabtOpcode::I32Store16:
-      case WabtOpcode::I64Store8:
-      case WabtOpcode::I64Store16:
-      case WabtOpcode::I64Store32:
-      case WabtOpcode::I32Store:
-      case WabtOpcode::I64Store:
-      case WabtOpcode::F32Store:
-      case WabtOpcode::F64Store: {
+      case Opcode::I32Store8:
+      case Opcode::I32Store16:
+      case Opcode::I64Store8:
+      case Opcode::I64Store16:
+      case Opcode::I64Store32:
+      case Opcode::I32Store:
+      case Opcode::I64Store:
+      case Opcode::F32Store:
+      case Opcode::F64Store: {
         uint32_t alignment_log2;
         in_u32_leb128(ctx, &alignment_log2, "store alignment");
         uint32_t offset;
@@ -1376,7 +1371,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::CurrentMemory: {
+      case Opcode::CurrentMemory: {
         uint32_t reserved;
         in_u32_leb128(ctx, &reserved, "current_memory reserved");
         RAISE_ERROR_UNLESS(reserved == 0,
@@ -1386,7 +1381,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::GrowMemory: {
+      case Opcode::GrowMemory: {
         uint32_t reserved;
         in_u32_leb128(ctx, &reserved, "grow_memory reserved");
         RAISE_ERROR_UNLESS(reserved == 0,
@@ -1396,141 +1391,141 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
       }
 
-      case WabtOpcode::I32Add:
-      case WabtOpcode::I32Sub:
-      case WabtOpcode::I32Mul:
-      case WabtOpcode::I32DivS:
-      case WabtOpcode::I32DivU:
-      case WabtOpcode::I32RemS:
-      case WabtOpcode::I32RemU:
-      case WabtOpcode::I32And:
-      case WabtOpcode::I32Or:
-      case WabtOpcode::I32Xor:
-      case WabtOpcode::I32Shl:
-      case WabtOpcode::I32ShrU:
-      case WabtOpcode::I32ShrS:
-      case WabtOpcode::I32Rotr:
-      case WabtOpcode::I32Rotl:
-      case WabtOpcode::I64Add:
-      case WabtOpcode::I64Sub:
-      case WabtOpcode::I64Mul:
-      case WabtOpcode::I64DivS:
-      case WabtOpcode::I64DivU:
-      case WabtOpcode::I64RemS:
-      case WabtOpcode::I64RemU:
-      case WabtOpcode::I64And:
-      case WabtOpcode::I64Or:
-      case WabtOpcode::I64Xor:
-      case WabtOpcode::I64Shl:
-      case WabtOpcode::I64ShrU:
-      case WabtOpcode::I64ShrS:
-      case WabtOpcode::I64Rotr:
-      case WabtOpcode::I64Rotl:
-      case WabtOpcode::F32Add:
-      case WabtOpcode::F32Sub:
-      case WabtOpcode::F32Mul:
-      case WabtOpcode::F32Div:
-      case WabtOpcode::F32Min:
-      case WabtOpcode::F32Max:
-      case WabtOpcode::F32Copysign:
-      case WabtOpcode::F64Add:
-      case WabtOpcode::F64Sub:
-      case WabtOpcode::F64Mul:
-      case WabtOpcode::F64Div:
-      case WabtOpcode::F64Min:
-      case WabtOpcode::F64Max:
-      case WabtOpcode::F64Copysign:
+      case Opcode::I32Add:
+      case Opcode::I32Sub:
+      case Opcode::I32Mul:
+      case Opcode::I32DivS:
+      case Opcode::I32DivU:
+      case Opcode::I32RemS:
+      case Opcode::I32RemU:
+      case Opcode::I32And:
+      case Opcode::I32Or:
+      case Opcode::I32Xor:
+      case Opcode::I32Shl:
+      case Opcode::I32ShrU:
+      case Opcode::I32ShrS:
+      case Opcode::I32Rotr:
+      case Opcode::I32Rotl:
+      case Opcode::I64Add:
+      case Opcode::I64Sub:
+      case Opcode::I64Mul:
+      case Opcode::I64DivS:
+      case Opcode::I64DivU:
+      case Opcode::I64RemS:
+      case Opcode::I64RemU:
+      case Opcode::I64And:
+      case Opcode::I64Or:
+      case Opcode::I64Xor:
+      case Opcode::I64Shl:
+      case Opcode::I64ShrU:
+      case Opcode::I64ShrS:
+      case Opcode::I64Rotr:
+      case Opcode::I64Rotl:
+      case Opcode::F32Add:
+      case Opcode::F32Sub:
+      case Opcode::F32Mul:
+      case Opcode::F32Div:
+      case Opcode::F32Min:
+      case Opcode::F32Max:
+      case Opcode::F32Copysign:
+      case Opcode::F64Add:
+      case Opcode::F64Sub:
+      case Opcode::F64Mul:
+      case Opcode::F64Div:
+      case Opcode::F64Min:
+      case Opcode::F64Max:
+      case Opcode::F64Copysign:
         CALLBACK(on_binary_expr, opcode);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::I32Eq:
-      case WabtOpcode::I32Ne:
-      case WabtOpcode::I32LtS:
-      case WabtOpcode::I32LeS:
-      case WabtOpcode::I32LtU:
-      case WabtOpcode::I32LeU:
-      case WabtOpcode::I32GtS:
-      case WabtOpcode::I32GeS:
-      case WabtOpcode::I32GtU:
-      case WabtOpcode::I32GeU:
-      case WabtOpcode::I64Eq:
-      case WabtOpcode::I64Ne:
-      case WabtOpcode::I64LtS:
-      case WabtOpcode::I64LeS:
-      case WabtOpcode::I64LtU:
-      case WabtOpcode::I64LeU:
-      case WabtOpcode::I64GtS:
-      case WabtOpcode::I64GeS:
-      case WabtOpcode::I64GtU:
-      case WabtOpcode::I64GeU:
-      case WabtOpcode::F32Eq:
-      case WabtOpcode::F32Ne:
-      case WabtOpcode::F32Lt:
-      case WabtOpcode::F32Le:
-      case WabtOpcode::F32Gt:
-      case WabtOpcode::F32Ge:
-      case WabtOpcode::F64Eq:
-      case WabtOpcode::F64Ne:
-      case WabtOpcode::F64Lt:
-      case WabtOpcode::F64Le:
-      case WabtOpcode::F64Gt:
-      case WabtOpcode::F64Ge:
+      case Opcode::I32Eq:
+      case Opcode::I32Ne:
+      case Opcode::I32LtS:
+      case Opcode::I32LeS:
+      case Opcode::I32LtU:
+      case Opcode::I32LeU:
+      case Opcode::I32GtS:
+      case Opcode::I32GeS:
+      case Opcode::I32GtU:
+      case Opcode::I32GeU:
+      case Opcode::I64Eq:
+      case Opcode::I64Ne:
+      case Opcode::I64LtS:
+      case Opcode::I64LeS:
+      case Opcode::I64LtU:
+      case Opcode::I64LeU:
+      case Opcode::I64GtS:
+      case Opcode::I64GeS:
+      case Opcode::I64GtU:
+      case Opcode::I64GeU:
+      case Opcode::F32Eq:
+      case Opcode::F32Ne:
+      case Opcode::F32Lt:
+      case Opcode::F32Le:
+      case Opcode::F32Gt:
+      case Opcode::F32Ge:
+      case Opcode::F64Eq:
+      case Opcode::F64Ne:
+      case Opcode::F64Lt:
+      case Opcode::F64Le:
+      case Opcode::F64Gt:
+      case Opcode::F64Ge:
         CALLBACK(on_compare_expr, opcode);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::I32Clz:
-      case WabtOpcode::I32Ctz:
-      case WabtOpcode::I32Popcnt:
-      case WabtOpcode::I64Clz:
-      case WabtOpcode::I64Ctz:
-      case WabtOpcode::I64Popcnt:
-      case WabtOpcode::F32Abs:
-      case WabtOpcode::F32Neg:
-      case WabtOpcode::F32Ceil:
-      case WabtOpcode::F32Floor:
-      case WabtOpcode::F32Trunc:
-      case WabtOpcode::F32Nearest:
-      case WabtOpcode::F32Sqrt:
-      case WabtOpcode::F64Abs:
-      case WabtOpcode::F64Neg:
-      case WabtOpcode::F64Ceil:
-      case WabtOpcode::F64Floor:
-      case WabtOpcode::F64Trunc:
-      case WabtOpcode::F64Nearest:
-      case WabtOpcode::F64Sqrt:
+      case Opcode::I32Clz:
+      case Opcode::I32Ctz:
+      case Opcode::I32Popcnt:
+      case Opcode::I64Clz:
+      case Opcode::I64Ctz:
+      case Opcode::I64Popcnt:
+      case Opcode::F32Abs:
+      case Opcode::F32Neg:
+      case Opcode::F32Ceil:
+      case Opcode::F32Floor:
+      case Opcode::F32Trunc:
+      case Opcode::F32Nearest:
+      case Opcode::F32Sqrt:
+      case Opcode::F64Abs:
+      case Opcode::F64Neg:
+      case Opcode::F64Ceil:
+      case Opcode::F64Floor:
+      case Opcode::F64Trunc:
+      case Opcode::F64Nearest:
+      case Opcode::F64Sqrt:
         CALLBACK(on_unary_expr, opcode);
         CALLBACK_CTX0(on_opcode_bare);
         break;
 
-      case WabtOpcode::I32TruncSF32:
-      case WabtOpcode::I32TruncSF64:
-      case WabtOpcode::I32TruncUF32:
-      case WabtOpcode::I32TruncUF64:
-      case WabtOpcode::I32WrapI64:
-      case WabtOpcode::I64TruncSF32:
-      case WabtOpcode::I64TruncSF64:
-      case WabtOpcode::I64TruncUF32:
-      case WabtOpcode::I64TruncUF64:
-      case WabtOpcode::I64ExtendSI32:
-      case WabtOpcode::I64ExtendUI32:
-      case WabtOpcode::F32ConvertSI32:
-      case WabtOpcode::F32ConvertUI32:
-      case WabtOpcode::F32ConvertSI64:
-      case WabtOpcode::F32ConvertUI64:
-      case WabtOpcode::F32DemoteF64:
-      case WabtOpcode::F32ReinterpretI32:
-      case WabtOpcode::F64ConvertSI32:
-      case WabtOpcode::F64ConvertUI32:
-      case WabtOpcode::F64ConvertSI64:
-      case WabtOpcode::F64ConvertUI64:
-      case WabtOpcode::F64PromoteF32:
-      case WabtOpcode::F64ReinterpretI64:
-      case WabtOpcode::I32ReinterpretF32:
-      case WabtOpcode::I64ReinterpretF64:
-      case WabtOpcode::I32Eqz:
-      case WabtOpcode::I64Eqz:
+      case Opcode::I32TruncSF32:
+      case Opcode::I32TruncSF64:
+      case Opcode::I32TruncUF32:
+      case Opcode::I32TruncUF64:
+      case Opcode::I32WrapI64:
+      case Opcode::I64TruncSF32:
+      case Opcode::I64TruncSF64:
+      case Opcode::I64TruncUF32:
+      case Opcode::I64TruncUF64:
+      case Opcode::I64ExtendSI32:
+      case Opcode::I64ExtendUI32:
+      case Opcode::F32ConvertSI32:
+      case Opcode::F32ConvertUI32:
+      case Opcode::F32ConvertSI64:
+      case Opcode::F32ConvertUI64:
+      case Opcode::F32DemoteF64:
+      case Opcode::F32ReinterpretI32:
+      case Opcode::F64ConvertSI32:
+      case Opcode::F64ConvertUI32:
+      case Opcode::F64ConvertSI64:
+      case Opcode::F64ConvertUI64:
+      case Opcode::F64PromoteF32:
+      case Opcode::F64ReinterpretI64:
+      case Opcode::I32ReinterpretF32:
+      case Opcode::I64ReinterpretF64:
+      case Opcode::I32Eqz:
+      case Opcode::I64Eqz:
         CALLBACK(on_convert_expr, opcode);
         CALLBACK_CTX0(on_opcode_bare);
         break;
@@ -1546,11 +1541,11 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
 }
 
 static void read_custom_section(Context* ctx, uint32_t section_size) {
-  WabtStringSlice section_name;
+  StringSlice section_name;
   in_str(ctx, &section_name, "section name");
   CALLBACK_CTX(begin_custom_section, section_size, section_name);
 
-  bool name_section_ok = ctx->last_known_section >= WabtBinarySection::Import;
+  bool name_section_ok = ctx->last_known_section >= BinarySection::Import;
   if (ctx->options->read_debug_names && name_section_ok &&
       strncmp(section_name.start, WABT_BINARY_SECTION_NAME,
               section_name.length) == 0) {
@@ -1559,7 +1554,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     in_u32_leb128(ctx, &num_functions, "function name count");
     CALLBACK(on_function_names_count, num_functions);
     for (i = 0; i < num_functions; ++i) {
-      WabtStringSlice function_name;
+      StringSlice function_name;
       in_str(ctx, &function_name, "function name");
       CALLBACK(on_function_name, i, function_name);
 
@@ -1568,7 +1563,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
       CALLBACK(on_local_names_count, i, num_locals);
       uint32_t j;
       for (j = 0; j < num_locals; ++j) {
-        WabtStringSlice local_name;
+        StringSlice local_name;
         in_str(ctx, &local_name, "local name");
         CALLBACK(on_local_name, i, j, local_name);
       }
@@ -1580,16 +1575,16 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     uint32_t i, num_relocs, section;
     in_u32_leb128(ctx, &section, "section");
     WABT_ZERO_MEMORY(section_name);
-    if (static_cast<WabtBinarySection>(section) == WabtBinarySection::Custom)
+    if (static_cast<BinarySection>(section) == BinarySection::Custom)
       in_str(ctx, &section_name, "section name");
     in_u32_leb128(ctx, &num_relocs, "relocation count");
-    CALLBACK(on_reloc_count, num_relocs,
-             static_cast<WabtBinarySection>(section), section_name);
+    CALLBACK(on_reloc_count, num_relocs, static_cast<BinarySection>(section),
+             section_name);
     for (i = 0; i < num_relocs; ++i) {
       uint32_t reloc_type, offset;
       in_u32_leb128(ctx, &reloc_type, "relocation type");
       in_u32_leb128(ctx, &offset, "offset");
-      CALLBACK(on_reloc, static_cast<WabtRelocType>(reloc_type), offset);
+      CALLBACK(on_reloc, static_cast<RelocType>(reloc_type), offset);
     }
     CALLBACK_CTX0(end_reloc_section);
   } else {
@@ -1606,19 +1601,19 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
   CALLBACK(on_signature_count, ctx->num_signatures);
 
   for (i = 0; i < ctx->num_signatures; ++i) {
-    WabtType form;
+    Type form;
     in_type(ctx, &form, "type form");
-    RAISE_ERROR_UNLESS(form == WabtType::Func, "unexpected type form");
+    RAISE_ERROR_UNLESS(form == Type::Func, "unexpected type form");
 
     uint32_t num_params;
     in_u32_leb128(ctx, &num_params, "function param count");
 
     if (num_params > ctx->param_types.capacity)
-      wabt_reserve_types(&ctx->param_types, num_params);
+      reserve_types(&ctx->param_types, num_params);
 
     uint32_t j;
     for (j = 0; j < num_params; ++j) {
-      WabtType param_type;
+      Type param_type;
       in_type(ctx, &param_type, "function param type");
       RAISE_ERROR_UNLESS(is_concrete_type(param_type),
                          "expected valid param type");
@@ -1629,7 +1624,7 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
     in_u32_leb128(ctx, &num_results, "function result count");
     RAISE_ERROR_UNLESS(num_results <= 1, "result count must be 0 or 1");
 
-    WabtType result_type = WabtType::Void;
+    Type result_type = Type::Void;
     if (num_results) {
       in_type(ctx, &result_type, "function result type");
       RAISE_ERROR_UNLESS(is_concrete_type(result_type),
@@ -1648,16 +1643,16 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
   in_u32_leb128(ctx, &ctx->num_imports, "import count");
   CALLBACK(on_import_count, ctx->num_imports);
   for (i = 0; i < ctx->num_imports; ++i) {
-    WabtStringSlice module_name;
+    StringSlice module_name;
     in_str(ctx, &module_name, "import module name");
-    WabtStringSlice field_name;
+    StringSlice field_name;
     in_str(ctx, &field_name, "import field name");
     CALLBACK(on_import, i, module_name, field_name);
 
     uint32_t kind;
     in_u32_leb128(ctx, &kind, "import kind");
-    switch (static_cast<WabtExternalKind>(kind)) {
-      case WabtExternalKind::Func: {
+    switch (static_cast<ExternalKind>(kind)) {
+      case ExternalKind::Func: {
         uint32_t sig_index;
         in_u32_leb128(ctx, &sig_index, "import signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
@@ -1667,9 +1662,9 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         break;
       }
 
-      case WabtExternalKind::Table: {
-        WabtType elem_type;
-        WabtLimits elem_limits;
+      case ExternalKind::Table: {
+        Type elem_type;
+        Limits elem_limits;
         read_table(ctx, &elem_type, &elem_limits);
         CALLBACK(on_import_table, i, ctx->num_table_imports, elem_type,
                  &elem_limits);
@@ -1677,16 +1672,16 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         break;
       }
 
-      case WabtExternalKind::Memory: {
-        WabtLimits page_limits;
+      case ExternalKind::Memory: {
+        Limits page_limits;
         read_memory(ctx, &page_limits);
         CALLBACK(on_import_memory, i, ctx->num_memory_imports, &page_limits);
         ctx->num_memory_imports++;
         break;
       }
 
-      case WabtExternalKind::Global: {
-        WabtType type;
+      case ExternalKind::Global: {
+        Type type;
         bool mutable_;
         read_global_header(ctx, &type, &mutable_);
         CALLBACK(on_import_global, i, ctx->num_global_imports, type, mutable_);
@@ -1726,8 +1721,8 @@ static void read_table_section(Context* ctx, uint32_t section_size) {
   CALLBACK(on_table_count, ctx->num_tables);
   for (i = 0; i < ctx->num_tables; ++i) {
     uint32_t table_index = ctx->num_table_imports + i;
-    WabtType elem_type;
-    WabtLimits elem_limits;
+    Type elem_type;
+    Limits elem_limits;
     read_table(ctx, &elem_type, &elem_limits);
     CALLBACK(on_table, table_index, elem_type, &elem_limits);
   }
@@ -1742,7 +1737,7 @@ static void read_memory_section(Context* ctx, uint32_t section_size) {
   CALLBACK(on_memory_count, ctx->num_memories);
   for (i = 0; i < ctx->num_memories; ++i) {
     uint32_t memory_index = ctx->num_memory_imports + i;
-    WabtLimits page_limits;
+    Limits page_limits;
     read_memory(ctx, &page_limits);
     CALLBACK(on_memory, memory_index, &page_limits);
   }
@@ -1756,7 +1751,7 @@ static void read_global_section(Context* ctx, uint32_t section_size) {
   CALLBACK(on_global_count, ctx->num_globals);
   for (i = 0; i < ctx->num_globals; ++i) {
     uint32_t global_index = ctx->num_global_imports + i;
-    WabtType global_type;
+    Type global_type;
     bool mutable_;
     read_global_header(ctx, &global_type, &mutable_);
     CALLBACK(begin_global, global_index, global_type, mutable_);
@@ -1774,7 +1769,7 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
   in_u32_leb128(ctx, &ctx->num_exports, "export count");
   CALLBACK(on_export_count, ctx->num_exports);
   for (i = 0; i < ctx->num_exports; ++i) {
-    WabtStringSlice name;
+    StringSlice name;
     in_str(ctx, &name, "export item name");
 
     uint8_t external_kind;
@@ -1784,27 +1779,27 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
 
     uint32_t item_index;
     in_u32_leb128(ctx, &item_index, "export item index");
-    switch (static_cast<WabtExternalKind>(external_kind)) {
-      case WabtExternalKind::Func:
+    switch (static_cast<ExternalKind>(external_kind)) {
+      case ExternalKind::Func:
         RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
                            "invalid export func index: %d", item_index);
         break;
-      case WabtExternalKind::Table:
+      case ExternalKind::Table:
         RAISE_ERROR_UNLESS(item_index < num_total_tables(ctx),
                            "invalid export table index");
         break;
-      case WabtExternalKind::Memory:
+      case ExternalKind::Memory:
         RAISE_ERROR_UNLESS(item_index < num_total_memories(ctx),
                            "invalid export memory index");
         break;
-      case WabtExternalKind::Global:
+      case ExternalKind::Global:
         RAISE_ERROR_UNLESS(item_index < num_total_globals(ctx),
                            "invalid export global index");
         break;
     }
 
-    CALLBACK(on_export, i, static_cast<WabtExternalKind>(external_kind),
-             item_index, name);
+    CALLBACK(on_export, i, static_cast<ExternalKind>(external_kind), item_index,
+             name);
   }
   CALLBACK_CTX0(end_export_section);
 }
@@ -1872,7 +1867,7 @@ static void read_code_section(Context* ctx, uint32_t section_size) {
     for (k = 0; k < num_local_decls; ++k) {
       uint32_t num_local_types;
       in_u32_leb128(ctx, &num_local_types, "local type count");
-      WabtType local_type;
+      Type local_type;
       in_type(ctx, &local_type, "local type");
       RAISE_ERROR_UNLESS(is_concrete_type(local_type),
                          "expected valid local type");
@@ -1920,26 +1915,26 @@ static void read_sections(Context* ctx) {
     in_u32_leb128(ctx, &section_code, "section code");
     in_u32_leb128(ctx, &section_size, "section size");
     ctx->read_end = ctx->offset + section_size;
-    if (section_code >= kWabtBinarySectionCount) {
+    if (section_code >= kBinarySectionCount) {
       RAISE_ERROR("invalid section code: %u; max is %u", section_code,
-                  kWabtBinarySectionCount - 1);
+                  kBinarySectionCount - 1);
     }
 
-    WabtBinarySection section = static_cast<WabtBinarySection>(section_code);
+    BinarySection section = static_cast<BinarySection>(section_code);
 
     if (ctx->read_end > ctx->data_size)
       RAISE_ERROR("invalid section size: extends past end");
 
-    if (ctx->last_known_section != WabtBinarySection::Invalid &&
-        section != WabtBinarySection::Custom &&
+    if (ctx->last_known_section != BinarySection::Invalid &&
+        section != BinarySection::Custom &&
         section <= ctx->last_known_section) {
-      RAISE_ERROR("section %s out of order", wabt_get_section_name(section));
+      RAISE_ERROR("section %s out of order", get_section_name(section));
     }
 
     CALLBACK_CTX(begin_section, section, section_size);
 
 #define V(Name, name, code)                   \
-  case WabtBinarySection::Name:               \
+  case BinarySection::Name:                   \
     read_##name##_section(ctx, section_size); \
     break;
 
@@ -1958,22 +1953,22 @@ static void read_sections(Context* ctx) {
                   ctx->read_end);
     }
 
-    if (section != WabtBinarySection::Custom)
+    if (section != BinarySection::Custom)
       ctx->last_known_section = section;
   }
 }
 
-WabtResult wabt_read_binary(const void* data,
-                            size_t size,
-                            WabtBinaryReader* reader,
-                            uint32_t num_function_passes,
-                            const WabtReadBinaryOptions* options) {
+Result read_binary(const void* data,
+                   size_t size,
+                   BinaryReader* reader,
+                   uint32_t num_function_passes,
+                   const ReadBinaryOptions* options) {
   LoggingContext logging_context;
   WABT_ZERO_MEMORY(logging_context);
   logging_context.reader = reader;
   logging_context.stream = options->log_stream;
 
-  WabtBinaryReader logging_reader;
+  BinaryReader logging_reader;
   WABT_ZERO_MEMORY(logging_reader);
   logging_reader.user_data = &logging_context;
 
@@ -2133,15 +2128,15 @@ WabtResult wabt_read_binary(const void* data,
   ctx->data_size = ctx->read_end = size;
   ctx->reader = options->log_stream ? &logging_reader : reader;
   ctx->options = options;
-  ctx->last_known_section = WabtBinarySection::Invalid;
+  ctx->last_known_section = BinarySection::Invalid;
 
   if (setjmp(ctx->error_jmp_buf) == 1) {
     destroy_context(ctx);
-    return WabtResult::Error;
+    return Result::Error;
   }
 
-  wabt_reserve_types(&ctx->param_types, INITIAL_PARAM_TYPES_CAPACITY);
-  wabt_reserve_uint32s(&ctx->target_depths, INITIAL_BR_TABLE_TARGET_CAPACITY);
+  reserve_types(&ctx->param_types, INITIAL_PARAM_TYPES_CAPACITY);
+  reserve_uint32s(&ctx->target_depths, INITIAL_BR_TABLE_TARGET_CAPACITY);
 
   uint32_t magic;
   in_u32(ctx, &magic, "magic");
@@ -2156,5 +2151,7 @@ WabtResult wabt_read_binary(const void* data,
   read_sections(ctx);
   CALLBACK0(end_module);
   destroy_context(ctx);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
+
+}  // namespace wabt

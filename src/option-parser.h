@@ -19,48 +19,46 @@
 
 #include "common.h"
 
-enum class WabtHasArgument {
+namespace wabt {
+
+enum class HasArgument {
   No = 0,
   Yes = 1,
 };
 
-struct WabtOption;
-struct WabtOptionParser;
-typedef void (*WabtOptionCallback)(struct WabtOptionParser*,
-                                   struct WabtOption*,
-                                   const char* argument);
-typedef void (*WabtArgumentCallback)(struct WabtOptionParser*,
-                                     const char* argument);
-typedef void (*WabtOptionErrorCallback)(struct WabtOptionParser*,
-                                        const char* message);
+struct Option;
+struct OptionParser;
+typedef void (*OptionCallback)(struct OptionParser*,
+                               struct Option*,
+                               const char* argument);
+typedef void (*ArgumentCallback)(struct OptionParser*, const char* argument);
+typedef void (*OptionErrorCallback)(struct OptionParser*, const char* message);
 
-struct WabtOption {
+struct Option {
   int id;
   char short_name;
   const char* long_name;
   const char* metavar;
-  WabtHasArgument has_argument;
+  HasArgument has_argument;
   const char* help;
 };
 
-struct WabtOptionParser {
+struct OptionParser {
   const char* description;
-  WabtOption* options;
+  Option* options;
   int num_options;
-  WabtOptionCallback on_option;
-  WabtArgumentCallback on_argument;
-  WabtOptionErrorCallback on_error;
+  OptionCallback on_option;
+  ArgumentCallback on_argument;
+  OptionErrorCallback on_error;
   void* user_data;
 
-  /* cached after call to wabt_parse_options */
+  /* cached after call to parse_options */
   char* argv0;
 };
 
-WABT_EXTERN_C_BEGIN
-void wabt_parse_options(WabtOptionParser* parser,
-                        int argc,
-                        char** argv);
-void wabt_print_help(WabtOptionParser* parser, const char* program_name);
-WABT_EXTERN_C_END
+void parse_options(OptionParser* parser, int argc, char** argv);
+void print_help(OptionParser* parser, const char* program_name);
+
+}  // namespace wabt
 
 #endif /* WABT_OPTION_PARSER_H_ */

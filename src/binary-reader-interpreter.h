@@ -19,18 +19,19 @@
 
 #include "common.h"
 
-struct WabtInterpreterEnvironment;
-struct WabtInterpreterModule;
-struct WabtReadBinaryOptions;
+namespace wabt {
 
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_read_binary_interpreter(
-    struct WabtInterpreterEnvironment* env,
-    const void* data,
-    size_t size,
-    const struct WabtReadBinaryOptions* options,
-    WabtBinaryErrorHandler*,
-    struct WabtInterpreterModule** out_module);
-WABT_EXTERN_C_END
+struct InterpreterEnvironment;
+struct InterpreterModule;
+struct ReadBinaryOptions;
+
+Result read_binary_interpreter(struct InterpreterEnvironment* env,
+                               const void* data,
+                               size_t size,
+                               const struct ReadBinaryOptions* options,
+                               BinaryErrorHandler*,
+                               struct InterpreterModule** out_module);
+
+}  // namespace wabt
 
 #endif /* WABT_BINARY_READER_INTERPRETER_H_ */

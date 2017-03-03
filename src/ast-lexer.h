@@ -23,13 +23,15 @@
 #include "common.h"
 #include "vector.h"
 
-enum class WabtAstLexerSourceType {
+namespace wabt {
+
+enum class AstLexerSourceType {
   File,
   Buffer,
 };
 
-struct WabtAstLexerSource {
-  WabtAstLexerSourceType type;
+struct AstLexerSource {
+  AstLexerSourceType type;
   union {
     FILE* file;
     struct {
@@ -40,8 +42,8 @@ struct WabtAstLexerSource {
   };
 };
 
-struct WabtAstLexer {
-  WabtAstLexerSource source;
+struct AstLexer {
+  AstLexerSource source;
   const char* filename;
   int line;
   int comment_nesting;
@@ -58,13 +60,12 @@ struct WabtAstLexer {
   char* limit;
 };
 
-WABT_EXTERN_C_BEGIN
+AstLexer* new_ast_file_lexer(const char* filename);
+AstLexer* new_ast_buffer_lexer(const char* filename,
+                               const void* data,
+                               size_t size);
+void destroy_ast_lexer(AstLexer*);
 
-WabtAstLexer* wabt_new_ast_file_lexer(const char* filename);
-WabtAstLexer* wabt_new_ast_buffer_lexer(const char* filename,
-                                        const void* data,
-                                        size_t size);
-void wabt_destroy_ast_lexer(WabtAstLexer*);
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_AST_LEXER_H_ */

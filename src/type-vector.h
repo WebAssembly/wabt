@@ -20,13 +20,12 @@
 #include "common.h"
 #include "vector.h"
 
-WABT_DEFINE_VECTOR(type, WabtType)
+namespace wabt {
 
-WABT_EXTERN_C_BEGIN
+WABT_DEFINE_VECTOR(type, Type)
 
-static WABT_INLINE bool wabt_type_vectors_are_equal(
-    const WabtTypeVector* types1,
-    const WabtTypeVector* types2) {
+static WABT_INLINE bool type_vectors_are_equal(const TypeVector* types1,
+                                               const TypeVector* types2) {
   if (types1->size != types2->size)
     return false;
   size_t i;
@@ -37,6 +36,6 @@ static WABT_INLINE bool wabt_type_vectors_are_equal(
   return true;
 }
 
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_TYPE_VECTOR_H_ */

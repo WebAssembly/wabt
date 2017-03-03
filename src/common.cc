@@ -29,20 +29,22 @@
 #define PATH_MAX _MAX_PATH
 #endif
 
-WabtOpcodeInfo g_wabt_opcode_info[kWabtOpcodeCount];
+namespace wabt {
+
+OpcodeInfo g_opcode_info[kOpcodeCount];
 
 /* TODO(binji): It's annoying to have to have an initializer function, but it
  * seems to be necessary as g++ doesn't allow non-trival designated
  * initializers (e.g. [314] = "blah") */
-void wabt_init_opcode_info(void) {
+void init_opcode_info(void) {
   static bool s_initialized = false;
   if (!s_initialized) {
 #define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  g_wabt_opcode_info[code].name = text;                    \
-  g_wabt_opcode_info[code].result_type = WabtType::rtype;  \
-  g_wabt_opcode_info[code].param1_type = WabtType::type1;  \
-  g_wabt_opcode_info[code].param2_type = WabtType::type2;  \
-  g_wabt_opcode_info[code].memory_size = mem_size;
+  g_opcode_info[code].name = text;                         \
+  g_opcode_info[code].result_type = Type::rtype;           \
+  g_opcode_info[code].param1_type = Type::type1;           \
+  g_opcode_info[code].param2_type = Type::type2;           \
+  g_opcode_info[code].memory_size = mem_size;
 
     WABT_FOREACH_OPCODE(V)
 
@@ -50,34 +52,33 @@ void wabt_init_opcode_info(void) {
   }
 }
 
-const char* g_wabt_kind_name[] = {"func", "table", "memory", "global"};
-WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_wabt_kind_name) == kWabtExternalKindCount);
+const char* g_kind_name[] = {"func", "table", "memory", "global"};
+WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_kind_name) == kExternalKindCount);
 
-const char* g_wabt_reloc_type_name[] = {
-    "R_FUNC_INDEX_LEB", "R_TABLE_INDEX_SLEB", "R_TABLE_INDEX_I32",
-    "R_GLOBAL_INDEX_LEB", "R_DATA"};
-WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_wabt_reloc_type_name) ==
-                   kWabtRelocTypeCount);
+const char* g_reloc_type_name[] = {"R_FUNC_INDEX_LEB", "R_TABLE_INDEX_SLEB",
+                                   "R_TABLE_INDEX_I32", "R_GLOBAL_INDEX_LEB",
+                                   "R_DATA"};
+WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
 
-bool wabt_is_naturally_aligned(WabtOpcode opcode, uint32_t alignment) {
-  uint32_t opcode_align = wabt_get_opcode_memory_size(opcode);
+bool is_naturally_aligned(Opcode opcode, uint32_t alignment) {
+  uint32_t opcode_align = get_opcode_memory_size(opcode);
   return alignment == WABT_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
 }
 
-uint32_t wabt_get_opcode_alignment(WabtOpcode opcode, uint32_t alignment) {
+uint32_t get_opcode_alignment(Opcode opcode, uint32_t alignment) {
   if (alignment == WABT_USE_NATURAL_ALIGNMENT)
-    return wabt_get_opcode_memory_size(opcode);
+    return get_opcode_memory_size(opcode);
   return alignment;
 }
 
-WabtStringSlice wabt_empty_string_slice(void) {
-  WabtStringSlice result;
+StringSlice empty_string_slice(void) {
+  StringSlice result;
   result.start = "";
   result.length = 0;
   return result;
 }
 
-bool wabt_string_slice_eq_cstr(const WabtStringSlice* s1, const char* s2) {
+bool string_slice_eq_cstr(const StringSlice* s1, const char* s2) {
   size_t s2_len = strlen(s2);
   if (s2_len != s1->length)
     return false;
@@ -85,7 +86,7 @@ bool wabt_string_slice_eq_cstr(const WabtStringSlice* s1, const char* s2) {
   return strncmp(s1->start, s2, s2_len) == 0;
 }
 
-bool wabt_string_slice_startswith(const WabtStringSlice* s1, const char* s2) {
+bool string_slice_startswith(const StringSlice* s1, const char* s2) {
   size_t s2_len = strlen(s2);
   if (s2_len > s1->length)
     return false;
@@ -93,68 +94,65 @@ bool wabt_string_slice_startswith(const WabtStringSlice* s1, const char* s2) {
   return strncmp(s1->start, s2, s2_len) == 0;
 }
 
-WabtStringSlice wabt_string_slice_from_cstr(const char* string) {
-  WabtStringSlice result;
+StringSlice string_slice_from_cstr(const char* string) {
+  StringSlice result;
   result.start = string;
   result.length = strlen(string);
   return result;
 }
 
-bool wabt_string_slice_is_empty(const WabtStringSlice* str) {
+bool string_slice_is_empty(const StringSlice* str) {
   assert(str);
   return !str->start || str->length == 0;
 }
 
-bool wabt_string_slices_are_equal(const WabtStringSlice* a,
-                                  const WabtStringSlice* b) {
+bool string_slices_are_equal(const StringSlice* a, const StringSlice* b) {
   assert(a && b);
   return a->start && b->start && a->length == b->length &&
          memcmp(a->start, b->start, a->length) == 0;
 }
 
-void wabt_destroy_string_slice(WabtStringSlice* str) {
+void destroy_string_slice(StringSlice* str) {
   assert(str);
   wabt_free(const_cast<void*>(static_cast<const void*>(str->start)));
 }
 
-WabtResult wabt_read_file(const char* filename,
-                          void** out_data,
-                          size_t* out_size) {
+Result read_file(const char* filename, void** out_data, size_t* out_size) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
     const char* format = "unable to read file %s";
     char msg[PATH_MAX + sizeof(format)];
-    wabt_snprintf(msg, sizeof(msg), format, filename);
+    snprintf(msg, sizeof(msg), format, filename);
     perror(msg);
-    return WabtResult::Error;
+    return Result::Error;
   }
 
   if (fseek(infile, 0, SEEK_END) < 0) {
     perror("fseek to end failed");
-    return WabtResult::Error;
+    return Result::Error;
   }
 
   long size = ftell(infile);
   if (size < 0) {
     perror("ftell failed");
-    return WabtResult::Error;
+    return Result::Error;
   }
 
   if (fseek(infile, 0, SEEK_SET) < 0) {
     perror("fseek to beginning failed");
-    return WabtResult::Error;
+    return Result::Error;
   }
 
   void* data = wabt_alloc(size);
   if (size != 0 && fread(data, size, 1, infile) != 1) {
     perror("fread failed");
-    return WabtResult::Error;
+    return Result::Error;
   }
 
   *out_data = data;
   *out_size = size;
   fclose(infile);
-  return WabtResult::Ok;
+  return Result::Ok;
 }
 
 static void print_carets(FILE* out,
@@ -174,7 +172,7 @@ static void print_carets(FILE* out,
 }
 
 static void print_source_error(FILE* out,
-                               const WabtLocation* loc,
+                               const Location* loc,
                                const char* error,
                                const char* source_line,
                                size_t source_line_length,
@@ -189,17 +187,17 @@ static void print_source_error(FILE* out,
   }
 }
 
-static void print_error_header(FILE* out, WabtDefaultErrorHandlerInfo* info) {
+static void print_error_header(FILE* out, DefaultErrorHandlerInfo* info) {
   if (info && info->header) {
     switch (info->print_header) {
-      case WabtPrintErrorHeader::Never:
+      case PrintErrorHeader::Never:
         break;
 
-      case WabtPrintErrorHeader::Once:
-        info->print_header = WabtPrintErrorHeader::Never;
-        /* Fallthrough. */
+      case PrintErrorHeader::Once:
+        info->print_header = PrintErrorHeader::Never;
+      /* Fallthrough. */
 
-      case WabtPrintErrorHeader::Always:
+      case PrintErrorHeader::Always:
         fprintf(out, "%s:\n", info->header);
         break;
     }
@@ -209,29 +207,29 @@ static void print_error_header(FILE* out, WabtDefaultErrorHandlerInfo* info) {
 }
 
 static FILE* get_default_error_handler_info_output_file(
-    WabtDefaultErrorHandlerInfo* info) {
+    DefaultErrorHandlerInfo* info) {
   return info && info->out_file ? info->out_file : stderr;
 }
 
-void wabt_default_source_error_callback(const WabtLocation* loc,
-                                        const char* error,
-                                        const char* source_line,
-                                        size_t source_line_length,
-                                        size_t source_line_column_offset,
-                                        void* user_data) {
-  WabtDefaultErrorHandlerInfo* info =
-      static_cast<WabtDefaultErrorHandlerInfo*>(user_data);
+void default_source_error_callback(const Location* loc,
+                                   const char* error,
+                                   const char* source_line,
+                                   size_t source_line_length,
+                                   size_t source_line_column_offset,
+                                   void* user_data) {
+  DefaultErrorHandlerInfo* info =
+      static_cast<DefaultErrorHandlerInfo*>(user_data);
   FILE* out = get_default_error_handler_info_output_file(info);
   print_error_header(out, info);
   print_source_error(out, loc, error, source_line, source_line_length,
                      source_line_column_offset);
 }
 
-void wabt_default_binary_error_callback(uint32_t offset,
-                                        const char* error,
-                                        void* user_data) {
-  WabtDefaultErrorHandlerInfo* info =
-      static_cast<WabtDefaultErrorHandlerInfo*>(user_data);
+void default_binary_error_callback(uint32_t offset,
+                                   const char* error,
+                                   void* user_data) {
+  DefaultErrorHandlerInfo* info =
+      static_cast<DefaultErrorHandlerInfo*>(user_data);
   FILE* out = get_default_error_handler_info_output_file(info);
   print_error_header(out, info);
   if (offset == WABT_UNKNOWN_OFFSET)
@@ -241,7 +239,7 @@ void wabt_default_binary_error_callback(uint32_t offset,
   fflush(out);
 }
 
-void wabt_init_stdio() {
+void init_stdio() {
 #if COMPILER_IS_MSVC
   int result = _setmode(_fileno(stdout), _O_BINARY);
   if (result == -1)
@@ -251,3 +249,5 @@ void wabt_init_stdio() {
     perror("Cannot set mode binary to stderr");
 #endif
 }
+
+}  // namespace wabt

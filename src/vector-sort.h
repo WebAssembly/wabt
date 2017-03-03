@@ -24,27 +24,27 @@
  *
  */
 
-#define WABT_DEFINE_VECTOR_SORT(name, type)                  \
-  static void wabt_sort_##name##_vector(                     \
-      type##Vector* in_vec, type##Vector* out_vec,           \
-      void (*swap_fcn)(type * v1, type * v2),                \
-      int (*lt_fcn)(type * v1, type * v2)) {                 \
-    /* TODO(karlschimpf) Use a faster sort. */               \
-    size_t i;                                                \
-    size_t j;                                                \
-    if (in_vec->size == 0)                                   \
-      return;                                                \
-    for (i = 0; i < in_vec->size; ++i) {                     \
-      wabt_append_##name##_value(out_vec, &in_vec->data[i]); \
-      if (out_vec->size < 2)                                 \
-        continue;                                            \
-      for (j = out_vec->size; j >= 2; --j) {                 \
-        type* v1 = &out_vec->data[j - 1];                    \
-        type* v2 = &out_vec->data[j - 2];                    \
-        if (lt_fcn(v1, v2))                                  \
-          swap_fcn(v1, v2);                                  \
-      }                                                      \
-    }                                                        \
+#define WABT_DEFINE_VECTOR_SORT(name, type)                                \
+  static void sort_##name##_vector(type##Vector* in_vec,                   \
+                                   type##Vector* out_vec,                  \
+                                   void (*swap_fcn)(type * v1, type * v2), \
+                                   int (*lt_fcn)(type * v1, type * v2)) {  \
+    /* TODO(karlschimpf) Use a faster sort. */                             \
+    size_t i;                                                              \
+    size_t j;                                                              \
+    if (in_vec->size == 0)                                                 \
+      return;                                                              \
+    for (i = 0; i < in_vec->size; ++i) {                                   \
+      append_##name##_value(out_vec, &in_vec->data[i]);                    \
+      if (out_vec->size < 2)                                               \
+        continue;                                                          \
+      for (j = out_vec->size; j >= 2; --j) {                               \
+        type* v1 = &out_vec->data[j - 1];                                  \
+        type* v2 = &out_vec->data[j - 2];                                  \
+        if (lt_fcn(v1, v2))                                                \
+          swap_fcn(v1, v2);                                                \
+      }                                                                    \
+    }                                                                      \
   }
 
 #endif // WABT_VECTOR_SORT_H_

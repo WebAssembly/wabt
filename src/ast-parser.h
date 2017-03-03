@@ -20,12 +20,14 @@
 #include "ast-lexer.h"
 #include "common.h"
 
-struct WabtScript;
+namespace wabt {
 
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_parse_ast(WabtAstLexer* lexer,
-                          struct WabtScript* out_script,
-                          WabtSourceErrorHandler*);
-WABT_EXTERN_C_END
+struct Script;
+
+Result parse_ast(AstLexer* lexer,
+                 struct Script* out_script,
+                 SourceErrorHandler*);
+
+}  // namespace wabt
 
 #endif /* WABT_AST_PARSER_H_ */

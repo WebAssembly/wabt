@@ -21,18 +21,20 @@
 #include "stream.h"
 #include "vector.h"
 
-struct WabtModule;
-struct WabtReadBinaryOptions;
+namespace wabt {
 
-struct WabtReloc {
-  WabtRelocType type;
+struct Module;
+struct ReadBinaryOptions;
+
+struct Reloc {
+  RelocType type;
   size_t offset;
 };
-WABT_DEFINE_VECTOR(reloc, WabtReloc);
+WABT_DEFINE_VECTOR(reloc, Reloc);
 
-WABT_DEFINE_VECTOR(string_slice, WabtStringSlice);
+WABT_DEFINE_VECTOR(string_slice, StringSlice);
 
-enum class WabtObjdumpMode {
+enum class ObjdumpMode {
   Prepass,
   Headers,
   Details,
@@ -40,27 +42,25 @@ enum class WabtObjdumpMode {
   RawData,
 };
 
-struct WabtObjdumpOptions {
+struct ObjdumpOptions {
   bool headers;
   bool details;
   bool raw;
   bool disassemble;
   bool debug;
   bool relocs;
-  WabtObjdumpMode mode;
+  ObjdumpMode mode;
   const char* infile;
   const char* section_name;
   bool print_header;
-  WabtStringSliceVector function_names;
-  WabtRelocVector code_relocations;
+  StringSliceVector function_names;
+  RelocVector code_relocations;
 };
 
-WABT_EXTERN_C_BEGIN
+Result read_binary_objdump(const uint8_t* data,
+                           size_t size,
+                           ObjdumpOptions* options);
 
-WabtResult wabt_read_binary_objdump(const uint8_t* data,
-                                    size_t size,
-                                    WabtObjdumpOptions* options);
-
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_BINARY_READER_OBJDUMP_H_ */

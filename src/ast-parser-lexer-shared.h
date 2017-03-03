@@ -23,59 +23,61 @@
 #include "ast-lexer.h"
 #include "common.h"
 
-#define WABT_AST_PARSER_STYPE WabtToken
-#define WABT_AST_PARSER_LTYPE WabtLocation
+#define WABT_AST_PARSER_STYPE Token
+#define WABT_AST_PARSER_LTYPE Location
 #define YYSTYPE WABT_AST_PARSER_STYPE
 #define YYLTYPE WABT_AST_PARSER_LTYPE
 
 #define WABT_INVALID_LINE_OFFSET (static_cast<size_t>(~0))
 
-struct WabtExprList {
-  WabtExpr* first;
-  WabtExpr* last;
+namespace wabt {
+
+struct ExprList {
+  Expr* first;
+  Expr* last;
   size_t size;
 };
 
-struct WabtTextListNode {
-  WabtStringSlice text;
-  struct WabtTextListNode* next;
+struct TextListNode {
+  StringSlice text;
+  struct TextListNode* next;
 };
 
-struct WabtTextList {
-  WabtTextListNode* first;
-  WabtTextListNode* last;
+struct TextList {
+  TextListNode* first;
+  TextListNode* last;
 };
 
-struct WabtOptionalExport {
-  WabtExport export_;
+struct OptionalExport {
+  Export export_;
   bool has_export;
 };
 
-struct WabtExportedFunc {
-  WabtFunc* func;
-  WabtOptionalExport export_;
+struct ExportedFunc {
+  Func* func;
+  OptionalExport export_;
 };
 
-struct WabtExportedGlobal {
-  WabtGlobal global;
-  WabtOptionalExport export_;
+struct ExportedGlobal {
+  Global global;
+  OptionalExport export_;
 };
 
-struct WabtExportedTable {
-  WabtTable table;
-  WabtElemSegment elem_segment;
-  WabtOptionalExport export_;
+struct ExportedTable {
+  Table table;
+  ElemSegment elem_segment;
+  OptionalExport export_;
   bool has_elem_segment;
 };
 
-struct WabtExportedMemory {
-  WabtMemory memory;
-  WabtDataSegment data_segment;
-  WabtOptionalExport export_;
+struct ExportedMemory {
+  Memory memory;
+  DataSegment data_segment;
+  OptionalExport export_;
   bool has_data_segment;
 };
 
-enum class WabtFuncFieldType {
+enum class FuncFieldType {
   Exprs,
   ParamTypes,
   BoundParam,
@@ -84,71 +86,71 @@ enum class WabtFuncFieldType {
   BoundLocal,
 };
 
-struct WabtBoundType {
-  WabtLocation loc;
-  WabtStringSlice name;
-  WabtType type;
+struct BoundType {
+  Location loc;
+  StringSlice name;
+  Type type;
 };
 
-struct WabtFuncField {
-  WabtFuncFieldType type;
+struct FuncField {
+  FuncFieldType type;
   union {
-    WabtExpr* first_expr;     /* WABT_FUNC_FIELD_TYPE_EXPRS */
-    WabtTypeVector types;     /* WABT_FUNC_FIELD_TYPE_*_TYPES */
-    WabtBoundType bound_type; /* WABT_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
+    Expr* first_expr;     /* WABT_FUNC_FIELD_TYPE_EXPRS */
+    TypeVector types;     /* WABT_FUNC_FIELD_TYPE_*_TYPES */
+    BoundType bound_type; /* WABT_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
   };
-  struct WabtFuncField* next;
+  struct FuncField* next;
 };
 
-union WabtToken {
+union Token {
   /* terminals */
-  WabtStringSlice text;
-  WabtType type;
-  WabtOpcode opcode;
-  WabtLiteral literal;
+  StringSlice text;
+  Type type;
+  Opcode opcode;
+  Literal literal;
 
   /* non-terminals */
-  /* some of these use pointers to keep the size of WabtToken down; copying the
+  /* some of these use pointers to keep the size of Token down; copying the
    tokens is a hotspot when parsing large files. */
-  WabtAction action;
-  WabtBlock block;
-  WabtCommand* command;
-  WabtCommandVector commands;
-  WabtConst const_;
-  WabtConstVector consts;
-  WabtDataSegment data_segment;
-  WabtElemSegment elem_segment;
-  WabtExport export_;
-  WabtExportedFunc exported_func;
-  WabtExportedGlobal exported_global;
-  WabtExportedMemory exported_memory;
-  WabtExportedTable exported_table;
-  WabtExpr* expr;
-  WabtExprList expr_list;
-  WabtFuncField* func_fields;
-  WabtFunc* func;
-  WabtFuncSignature func_sig;
-  WabtFuncType func_type;
-  WabtGlobal global;
-  WabtImport* import;
-  WabtLimits limits;
-  WabtOptionalExport optional_export;
-  WabtMemory memory;
-  WabtModule* module;
-  WabtRawModule raw_module;
-  WabtScript script;
-  WabtTable table;
-  WabtTextList text_list;
-  WabtTypeVector types;
+  Action action;
+  Block block;
+  Command* command;
+  CommandVector commands;
+  Const const_;
+  ConstVector consts;
+  DataSegment data_segment;
+  ElemSegment elem_segment;
+  Export export_;
+  ExportedFunc exported_func;
+  ExportedGlobal exported_global;
+  ExportedMemory exported_memory;
+  ExportedTable exported_table;
+  Expr* expr;
+  ExprList expr_list;
+  FuncField* func_fields;
+  Func* func;
+  FuncSignature func_sig;
+  FuncType func_type;
+  Global global;
+  Import* import;
+  Limits limits;
+  OptionalExport optional_export;
+  Memory memory;
+  Module* module;
+  RawModule raw_module;
+  Script script;
+  Table table;
+  TextList text_list;
+  TypeVector types;
   uint32_t u32;
   uint64_t u64;
-  WabtVar var;
-  WabtVarVector vars;
+  Var var;
+  VarVector vars;
 };
 
-struct WabtAstParser {
-  WabtScript script;
-  WabtSourceErrorHandler* error_handler;
+struct AstParser {
+  Script script;
+  SourceErrorHandler* error_handler;
   int errors;
   /* Cached pointers to reallocated parser buffers, so they don't leak. */
   int16_t* yyssa;
@@ -156,34 +158,31 @@ struct WabtAstParser {
   YYLTYPE* yylsa;
 };
 
-WABT_EXTERN_C_BEGIN
-int wabt_ast_lexer_lex(union WabtToken*,
-                       struct WabtLocation*,
-                       WabtAstLexer*,
-                       struct WabtAstParser*);
-WabtResult wabt_ast_lexer_get_source_line(WabtAstLexer*,
-                                          const struct WabtLocation*,
-                                          size_t line_max_length,
-                                          char* line,
-                                          size_t* out_line_length,
-                                          int* out_column_offset);
-void WABT_PRINTF_FORMAT(4, 5) wabt_ast_parser_error(struct WabtLocation*,
-                                                    WabtAstLexer*,
-                                                    struct WabtAstParser*,
-                                                    const char*,
-                                                    ...);
-void wabt_ast_format_error(WabtSourceErrorHandler*,
-                           const struct WabtLocation*,
-                           WabtAstLexer*,
-                           const char* format,
-                           va_list);
-void wabt_destroy_optional_export(WabtOptionalExport*);
-void wabt_destroy_exported_func(WabtExportedFunc*);
-void wabt_destroy_exported_global(WabtExportedFunc*);
-void wabt_destroy_exported_memory(WabtExportedMemory*);
-void wabt_destroy_exported_table(WabtExportedTable*);
-void wabt_destroy_func_fields(WabtFuncField*);
-void wabt_destroy_text_list(WabtTextList*);
-WABT_EXTERN_C_END
+int ast_lexer_lex(union Token*, struct Location*, AstLexer*, struct AstParser*);
+Result ast_lexer_get_source_line(AstLexer*,
+                                 const struct Location*,
+                                 size_t line_max_length,
+                                 char* line,
+                                 size_t* out_line_length,
+                                 int* out_column_offset);
+void WABT_PRINTF_FORMAT(4, 5) ast_parser_error(struct Location*,
+                                               AstLexer*,
+                                               struct AstParser*,
+                                               const char*,
+                                               ...);
+void ast_format_error(SourceErrorHandler*,
+                      const struct Location*,
+                      AstLexer*,
+                      const char* format,
+                      va_list);
+void destroy_optional_export(OptionalExport*);
+void destroy_exported_func(ExportedFunc*);
+void destroy_exported_global(ExportedFunc*);
+void destroy_exported_memory(ExportedMemory*);
+void destroy_exported_table(ExportedTable*);
+void destroy_func_fields(FuncField*);
+void destroy_text_list(TextList*);
+
+}  // namespace wabt
 
 #endif /* WABT_AST_PARSER_LEXER_SHARED_H_ */

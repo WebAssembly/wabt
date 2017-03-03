@@ -16,8 +16,12 @@
 
 #include "binary.h"
 
-const char* g_wabt_section_name[] = {
+namespace wabt {
+
+const char* g_section_name[] = {
 #define V(NAME, name, code) #NAME,
-  WABT_FOREACH_BINARY_SECTION(V)
+    WABT_FOREACH_BINARY_SECTION(V)
 #undef V
 };
+
+}  // namespace wabt

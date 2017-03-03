@@ -19,10 +19,12 @@
 
 #include "common.h"
 
-struct WabtModule;
+namespace wabt {
 
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_generate_names(struct WabtModule*);
-WABT_EXTERN_C_END
+struct Module;
+
+Result generate_names(struct Module*);
+
+}  // namespace wabt
 
 #endif /* WABT_GENERATE_NAMES_H_ */

@@ -21,82 +21,76 @@
 #include "type-vector.h"
 #include "vector.h"
 
-struct WabtAllocator;
+namespace wabt {
 
-typedef void (*WabtTypeCheckerErrorCallback)(const char* msg, void* user_data);
+typedef void (*TypeCheckerErrorCallback)(const char* msg, void* user_data);
 
-struct WabtTypeCheckerErrorHandler {
-  WabtTypeCheckerErrorCallback on_error;
+struct TypeCheckerErrorHandler {
+  TypeCheckerErrorCallback on_error;
   void* user_data;
 };
 
-struct WabtTypeCheckerLabel {
-  WabtLabelType label_type;
-  WabtTypeVector sig;
+struct TypeCheckerLabel {
+  LabelType label_type;
+  TypeVector sig;
   size_t type_stack_limit;
   bool unreachable;
 };
-WABT_DEFINE_VECTOR(type_checker_label, WabtTypeCheckerLabel);
+WABT_DEFINE_VECTOR(type_checker_label, TypeCheckerLabel);
 
-struct WabtTypeChecker {
-  WabtTypeCheckerErrorHandler* error_handler;
-  WabtTypeVector type_stack;
-  WabtTypeCheckerLabelVector label_stack;
-/* TODO(binji): will need to be complete signature when signatures with
- * multiple types are allowed. */
-  WabtType br_table_sig;
+struct TypeChecker {
+  TypeCheckerErrorHandler* error_handler;
+  TypeVector type_stack;
+  TypeCheckerLabelVector label_stack;
+  /* TODO(binji): will need to be complete signature when signatures with
+   * multiple types are allowed. */
+  Type br_table_sig;
 };
 
-WABT_EXTERN_C_BEGIN
+void destroy_typechecker(TypeChecker*);
 
-void wabt_destroy_typechecker(WabtTypeChecker*);
+bool typechecker_is_unreachable(TypeChecker* tc);
+Result typechecker_get_label(TypeChecker* tc,
+                             size_t depth,
+                             TypeCheckerLabel** out_label);
 
-bool wabt_typechecker_is_unreachable(WabtTypeChecker* tc);
-WabtResult wabt_typechecker_get_label(WabtTypeChecker* tc,
-                                      size_t depth,
-                                      WabtTypeCheckerLabel** out_label);
+Result typechecker_begin_function(TypeChecker*, const TypeVector* sig);
+Result typechecker_on_binary(TypeChecker*, Opcode);
+Result typechecker_on_block(TypeChecker*, const TypeVector* sig);
+Result typechecker_on_br(TypeChecker*, size_t depth);
+Result typechecker_on_br_if(TypeChecker*, size_t depth);
+Result typechecker_begin_br_table(TypeChecker*);
+Result typechecker_on_br_table_target(TypeChecker*, size_t depth);
+Result typechecker_end_br_table(TypeChecker*);
+Result typechecker_on_call(TypeChecker*,
+                           const TypeVector* param_types,
+                           const TypeVector* result_types);
+Result typechecker_on_call_indirect(TypeChecker*,
+                                    const TypeVector* param_types,
+                                    const TypeVector* result_types);
+Result typechecker_on_compare(TypeChecker*, Opcode);
+Result typechecker_on_const(TypeChecker*, Type);
+Result typechecker_on_convert(TypeChecker*, Opcode);
+Result typechecker_on_current_memory(TypeChecker*);
+Result typechecker_on_drop(TypeChecker*);
+Result typechecker_on_else(TypeChecker*);
+Result typechecker_on_end(TypeChecker*);
+Result typechecker_on_get_global(TypeChecker*, Type);
+Result typechecker_on_get_local(TypeChecker*, Type);
+Result typechecker_on_grow_memory(TypeChecker*);
+Result typechecker_on_if(TypeChecker*, const TypeVector* sig);
+Result typechecker_on_load(TypeChecker*, Opcode);
+Result typechecker_on_loop(TypeChecker*, const TypeVector* sig);
+Result typechecker_on_return(TypeChecker*);
+Result typechecker_on_select(TypeChecker*);
+Result typechecker_on_set_global(TypeChecker*, Type);
+Result typechecker_on_set_local(TypeChecker*, Type);
+Result typechecker_on_store(TypeChecker*, Opcode);
+Result typechecker_on_tee_local(TypeChecker*, Type);
+Result typechecker_on_unary(TypeChecker*, Opcode);
+Result typechecker_on_unreachable(TypeChecker*);
+Result typechecker_end_function(TypeChecker*);
 
-WabtResult wabt_typechecker_begin_function(WabtTypeChecker*,
-                                           const WabtTypeVector* sig);
-WabtResult wabt_typechecker_on_binary(WabtTypeChecker*, WabtOpcode);
-WabtResult wabt_typechecker_on_block(WabtTypeChecker*,
-                                     const WabtTypeVector* sig);
-WabtResult wabt_typechecker_on_br(WabtTypeChecker*, size_t depth);
-WabtResult wabt_typechecker_on_br_if(WabtTypeChecker*, size_t depth);
-WabtResult wabt_typechecker_begin_br_table(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_br_table_target(WabtTypeChecker*, size_t depth);
-WabtResult wabt_typechecker_end_br_table(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_call(WabtTypeChecker*,
-                                    const WabtTypeVector* param_types,
-                                    const WabtTypeVector* result_types);
-WabtResult wabt_typechecker_on_call_indirect(
-    WabtTypeChecker*,
-    const WabtTypeVector* param_types,
-    const WabtTypeVector* result_types);
-WabtResult wabt_typechecker_on_compare(WabtTypeChecker*, WabtOpcode);
-WabtResult wabt_typechecker_on_const(WabtTypeChecker*, WabtType);
-WabtResult wabt_typechecker_on_convert(WabtTypeChecker*, WabtOpcode);
-WabtResult wabt_typechecker_on_current_memory(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_drop(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_else(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_end(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_get_global(WabtTypeChecker*, WabtType);
-WabtResult wabt_typechecker_on_get_local(WabtTypeChecker*, WabtType);
-WabtResult wabt_typechecker_on_grow_memory(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_if(WabtTypeChecker*, const WabtTypeVector* sig);
-WabtResult wabt_typechecker_on_load(WabtTypeChecker*, WabtOpcode);
-WabtResult wabt_typechecker_on_loop(WabtTypeChecker*,
-                                    const WabtTypeVector* sig);
-WabtResult wabt_typechecker_on_return(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_select(WabtTypeChecker*);
-WabtResult wabt_typechecker_on_set_global(WabtTypeChecker*, WabtType);
-WabtResult wabt_typechecker_on_set_local(WabtTypeChecker*, WabtType);
-WabtResult wabt_typechecker_on_store(WabtTypeChecker*, WabtOpcode);
-WabtResult wabt_typechecker_on_tee_local(WabtTypeChecker*, WabtType);
-WabtResult wabt_typechecker_on_unary(WabtTypeChecker*, WabtOpcode);
-WabtResult wabt_typechecker_on_unreachable(WabtTypeChecker*);
-WabtResult wabt_typechecker_end_function(WabtTypeChecker*);
-
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_TYPE_CHECKER_H_ */

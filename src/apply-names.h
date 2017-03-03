@@ -19,9 +19,11 @@
 
 #include "common.h"
 
-struct WabtModule;
+namespace wabt {
 
-/* Use function, import, function type, parameter and local names in WabtVars
+struct Module;
+
+/* Use function, import, function type, parameter and local names in Vars
  * that reference them.
  *
  * e.g. transform this:
@@ -36,8 +38,8 @@ struct WabtModule;
  *    ...
  *    (call $foo ...)
  */
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_apply_names(struct WabtModule*);
-WABT_EXTERN_C_END
+Result apply_names(struct Module*);
+
+}  // namespace wabt
 
 #endif /* WABT_APPLY_NAMES_H_ */

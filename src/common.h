@@ -27,16 +27,6 @@
 
 #include "config.h"
 
-#ifdef __cplusplus
-#define WABT_EXTERN_C extern "C"
-#define WABT_EXTERN_C_BEGIN extern "C" {
-#define WABT_EXTERN_C_END }
-#else
-#define WABT_EXTERN_C
-#define WABT_EXTERN_C_BEGIN
-#define WABT_EXTERN_C_END
-#endif
-
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define WABT_ZERO_MEMORY(var) memset(static_cast<void*>(&(var)), 0, sizeof(var))
@@ -71,15 +61,17 @@
 #define WABT_ENUM_COUNT(name) \
   (static_cast<int>(name::Last) - static_cast<int>(name::First) + 1)
 
-enum class WabtResult {
+namespace wabt {
+
+enum class Result {
   Ok,
   Error,
 };
 
-#define WABT_SUCCEEDED(x) ((x) == WabtResult::Ok)
-#define WABT_FAILED(x) ((x) == WabtResult::Error)
+#define WABT_SUCCEEDED(x) ((x) == Result::Ok)
+#define WABT_FAILED(x) ((x) == Result::Error)
 
-enum class WabtLabelType {
+enum class LabelType {
   Func,
   Block,
   Loop,
@@ -89,69 +81,69 @@ enum class WabtLabelType {
   First = Func,
   Last = Else,
 };
-static const int kWabtLabelTypeCount = WABT_ENUM_COUNT(WabtLabelType);
+static const int kLabelTypeCount = WABT_ENUM_COUNT(LabelType);
 
-struct WabtStringSlice {
+struct StringSlice {
   const char* start;
   size_t length;
 };
 
-struct WabtLocation {
+struct Location {
   const char* filename;
   int line;
   int first_column;
   int last_column;
 };
 
-typedef void (*WabtSourceErrorCallback)(const WabtLocation*,
-                                        const char* error,
-                                        const char* source_line,
-                                        size_t source_line_length,
-                                        size_t source_line_column_offset,
-                                        void* user_data);
+typedef void (*SourceErrorCallback)(const Location*,
+                                    const char* error,
+                                    const char* source_line,
+                                    size_t source_line_length,
+                                    size_t source_line_column_offset,
+                                    void* user_data);
 
-struct WabtSourceErrorHandler {
-  WabtSourceErrorCallback on_error;
+struct SourceErrorHandler {
+  SourceErrorCallback on_error;
   /* on_error will be called with with source_line trimmed to this length */
   size_t source_line_max_length;
   void* user_data;
 };
 
 #define WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT 80
-#define WABT_SOURCE_ERROR_HANDLER_DEFAULT                                    \
-  {                                                                          \
-    wabt_default_source_error_callback, WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT, \
-        nullptr                                                              \
+#define WABT_SOURCE_ERROR_HANDLER_DEFAULT                               \
+  {                                                                     \
+    default_source_error_callback, WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT, \
+        nullptr                                                         \
   }
 
-typedef void (*WabtBinaryErrorCallback)(uint32_t offset,
-                                        const char* error,
-                                        void* user_data);
+typedef void (*BinaryErrorCallback)(uint32_t offset,
+                                    const char* error,
+                                    void* user_data);
 
-struct WabtBinaryErrorHandler {
-  WabtBinaryErrorCallback on_error;
+struct BinaryErrorHandler {
+  BinaryErrorCallback on_error;
   void* user_data;
 };
 
 #define WABT_BINARY_ERROR_HANDLER_DEFAULT \
-  { wabt_default_binary_error_callback, nullptr }
+  { default_binary_error_callback, nullptr }
 
 /* This data structure is not required; it is just used by the default error
  * handler callbacks. */
-enum class WabtPrintErrorHeader {
+enum class PrintErrorHeader {
   Never,
   Once,
   Always,
 };
 
-struct WabtDefaultErrorHandlerInfo {
+struct DefaultErrorHandlerInfo {
   const char* header;
   FILE* out_file;
-  WabtPrintErrorHeader print_header;
+  PrintErrorHeader print_header;
 };
 
 /* matches binary format, do not change */
-enum class WabtType {
+enum class Type {
   I32 = -0x01,
   I64 = -0x02,
   F32 = -0x03,
@@ -163,7 +155,7 @@ enum class WabtType {
   Any = 0,    /* Not actually specified, but useful for type-checking */
 };
 
-enum class WabtRelocType {
+enum class RelocType {
   FuncIndexLeb = 0,   /* e.g. immediate of call instruction */
   TableIndexSleb = 1, /* e.g. loading address of function */
   TableIndexI32 = 2,  /* e.g. function address in DATA */
@@ -173,10 +165,10 @@ enum class WabtRelocType {
   First = FuncIndexLeb,
   Last = Data,
 };
-static const int kWabtRelocTypeCount = WABT_ENUM_COUNT(WabtRelocType);
+static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 
 /* matches binary format, do not change */
-enum class WabtExternalKind {
+enum class ExternalKind {
   Func = 0,
   Table = 1,
   Memory = 2,
@@ -185,9 +177,9 @@ enum class WabtExternalKind {
   First = Func,
   Last = Global,
 };
-static const int kWabtExternalKindCount = WABT_ENUM_COUNT(WabtExternalKind);
+static const int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
 
-struct WabtLimits {
+struct Limits {
   uint64_t initial;
   uint64_t max;
   bool has_max;
@@ -380,26 +372,25 @@ enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(F32, I32, ___, 0, 0xbe, F32ReinterpretI32, "f32.reinterpret/i32") \
   V(F64, I64, ___, 0, 0xbf, F64ReinterpretI64, "f64.reinterpret/i64")
 
-enum class WabtOpcode {
-#define V(rtype, type1, type2, mem_size, code, Name, text) \
-  Name = code,
+enum class Opcode {
+#define V(rtype, type1, type2, mem_size, code, Name, text) Name = code,
   WABT_FOREACH_OPCODE(V)
 #undef V
 
-  First = Unreachable,
+      First = Unreachable,
   Last = F64ReinterpretI64,
 };
-static const int kWabtOpcodeCount = WABT_ENUM_COUNT(WabtOpcode);
+static const int kOpcodeCount = WABT_ENUM_COUNT(Opcode);
 
-struct WabtOpcodeInfo {
+struct OpcodeInfo {
   const char* name;
-  WabtType result_type;
-  WabtType param1_type;
-  WabtType param2_type;
+  Type result_type;
+  Type param1_type;
+  Type param2_type;
   int memory_size;
 };
 
-enum class WabtLiteralType {
+enum class LiteralType {
   Int,
   Float,
   Hexfloat,
@@ -407,12 +398,11 @@ enum class WabtLiteralType {
   Nan,
 };
 
-struct WabtLiteral {
-  WabtLiteralType type;
-  WabtStringSlice text;
+struct Literal {
+  LiteralType type;
+  StringSlice text;
 };
 
-WABT_EXTERN_C_BEGIN
 static WABT_INLINE void* wabt_alloc(size_t size) {
   return malloc(size);
 }
@@ -446,8 +436,8 @@ static WABT_INLINE char* wabt_strndup(const char* s, size_t len) {
   return new_s;
 }
 
-static WABT_INLINE WabtStringSlice wabt_dup_string_slice(WabtStringSlice str) {
-  WabtStringSlice result;
+static WABT_INLINE StringSlice dup_string_slice(StringSlice str) {
+  StringSlice result;
   result.start = wabt_strndup(str.start, str.length);
   result.length = str.length;
   return result;
@@ -455,106 +445,111 @@ static WABT_INLINE WabtStringSlice wabt_dup_string_slice(WabtStringSlice str) {
 
 /* return 1 if |alignment| matches the alignment of |opcode|, or if |alignment|
  * is WABT_USE_NATURAL_ALIGNMENT */
-bool wabt_is_naturally_aligned(WabtOpcode opcode, uint32_t alignment);
+bool is_naturally_aligned(Opcode opcode, uint32_t alignment);
 
 /* if |alignment| is WABT_USE_NATURAL_ALIGNMENT, return the alignment of
  * |opcode|, else return |alignment| */
-uint32_t wabt_get_opcode_alignment(WabtOpcode opcode, uint32_t alignment);
+uint32_t get_opcode_alignment(Opcode opcode, uint32_t alignment);
 
-WabtStringSlice wabt_empty_string_slice(void);
-bool wabt_string_slice_eq_cstr(const WabtStringSlice* s1, const char* s2);
-bool wabt_string_slice_startswith(const WabtStringSlice* s1,
-                                      const char* s2);
-WabtStringSlice wabt_string_slice_from_cstr(const char* string);
-bool wabt_string_slice_is_empty(const WabtStringSlice*);
-bool wabt_string_slices_are_equal(const WabtStringSlice*,
-                                  const WabtStringSlice*);
-void wabt_destroy_string_slice(WabtStringSlice*);
-WabtResult wabt_read_file(const char* filename,
-                          void** out_data,
-                          size_t* out_size);
+StringSlice empty_string_slice(void);
+bool string_slice_eq_cstr(const StringSlice* s1, const char* s2);
+bool string_slice_startswith(const StringSlice* s1, const char* s2);
+StringSlice string_slice_from_cstr(const char* string);
+bool string_slice_is_empty(const StringSlice*);
+bool string_slices_are_equal(const StringSlice*, const StringSlice*);
+void destroy_string_slice(StringSlice*);
+Result read_file(const char* filename, void** out_data, size_t* out_size);
 
-void wabt_default_source_error_callback(const WabtLocation*,
-                                        const char* error,
-                                        const char* source_line,
-                                        size_t source_line_length,
-                                        size_t source_line_column_offset,
-                                        void* user_data);
+void default_source_error_callback(const Location*,
+                                   const char* error,
+                                   const char* source_line,
+                                   size_t source_line_length,
+                                   size_t source_line_column_offset,
+                                   void* user_data);
 
-void wabt_default_binary_error_callback(uint32_t offset,
-                                        const char* error,
-                                        void* user_data);
+void default_binary_error_callback(uint32_t offset,
+                                   const char* error,
+                                   void* user_data);
 
-void wabt_init_stdio();
+void init_stdio();
 
 /* opcode info */
-extern WabtOpcodeInfo g_wabt_opcode_info[];
-void wabt_init_opcode_info(void);
+extern OpcodeInfo g_opcode_info[];
+void init_opcode_info(void);
 
-static WABT_INLINE const char* wabt_get_opcode_name(WabtOpcode opcode) {
-  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
-  wabt_init_opcode_info();
-  return g_wabt_opcode_info[static_cast<size_t>(opcode)].name;
+static WABT_INLINE const char* get_opcode_name(Opcode opcode) {
+  assert(static_cast<int>(opcode) < kOpcodeCount);
+  init_opcode_info();
+  return g_opcode_info[static_cast<size_t>(opcode)].name;
 }
 
-static WABT_INLINE WabtType wabt_get_opcode_result_type(WabtOpcode opcode) {
-  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
-  wabt_init_opcode_info();
-  return g_wabt_opcode_info[static_cast<size_t>(opcode)].result_type;
+static WABT_INLINE Type get_opcode_result_type(Opcode opcode) {
+  assert(static_cast<int>(opcode) < kOpcodeCount);
+  init_opcode_info();
+  return g_opcode_info[static_cast<size_t>(opcode)].result_type;
 }
 
-static WABT_INLINE WabtType wabt_get_opcode_param_type_1(WabtOpcode opcode) {
-  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
-  wabt_init_opcode_info();
-  return g_wabt_opcode_info[static_cast<size_t>(opcode)].param1_type;
+static WABT_INLINE Type get_opcode_param_type_1(Opcode opcode) {
+  assert(static_cast<int>(opcode) < kOpcodeCount);
+  init_opcode_info();
+  return g_opcode_info[static_cast<size_t>(opcode)].param1_type;
 }
 
-static WABT_INLINE WabtType wabt_get_opcode_param_type_2(WabtOpcode opcode) {
-  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
-  wabt_init_opcode_info();
-  return g_wabt_opcode_info[static_cast<size_t>(opcode)].param2_type;
+static WABT_INLINE Type get_opcode_param_type_2(Opcode opcode) {
+  assert(static_cast<int>(opcode) < kOpcodeCount);
+  init_opcode_info();
+  return g_opcode_info[static_cast<size_t>(opcode)].param2_type;
 }
 
-static WABT_INLINE int wabt_get_opcode_memory_size(WabtOpcode opcode) {
-  assert(static_cast<int>(opcode) < kWabtOpcodeCount);
-  wabt_init_opcode_info();
-  return g_wabt_opcode_info[static_cast<size_t>(opcode)].memory_size;
+static WABT_INLINE int get_opcode_memory_size(Opcode opcode) {
+  assert(static_cast<int>(opcode) < kOpcodeCount);
+  init_opcode_info();
+  return g_opcode_info[static_cast<size_t>(opcode)].memory_size;
 }
 
 /* external kind */
 
-extern const char* g_wabt_kind_name[];
+extern const char* g_kind_name[];
 
-static WABT_INLINE const char* wabt_get_kind_name(WabtExternalKind kind) {
-  assert(static_cast<int>(kind) < kWabtExternalKindCount);
-  return g_wabt_kind_name[static_cast<size_t>(kind)];
+static WABT_INLINE const char* get_kind_name(ExternalKind kind) {
+  assert(static_cast<int>(kind) < kExternalKindCount);
+  return g_kind_name[static_cast<size_t>(kind)];
 }
 
 /* reloc */
 
-extern const char* g_wabt_reloc_type_name[];
+extern const char* g_reloc_type_name[];
 
-static WABT_INLINE const char* wabt_get_reloc_type_name(WabtRelocType reloc) {
-  assert(static_cast<int>(reloc) < kWabtRelocTypeCount);
-  return g_wabt_reloc_type_name[static_cast<size_t>(reloc)];
+static WABT_INLINE const char* get_reloc_type_name(RelocType reloc) {
+  assert(static_cast<int>(reloc) < kRelocTypeCount);
+  return g_reloc_type_name[static_cast<size_t>(reloc)];
 }
 
 /* type */
 
-static WABT_INLINE const char* wabt_get_type_name(WabtType type) {
+static WABT_INLINE const char* get_type_name(Type type) {
   switch (type) {
-    case WabtType::I32: return "i32";
-    case WabtType::I64: return "i64";
-    case WabtType::F32: return "f32";
-    case WabtType::F64: return "f64";
-    case WabtType::Anyfunc: return "anyfunc";
-    case WabtType::Func: return "func";
-    case WabtType::Void: return "void";
-    case WabtType::Any: return "any";
-    default: return nullptr;
+    case Type::I32:
+      return "i32";
+    case Type::I64:
+      return "i64";
+    case Type::F32:
+      return "f32";
+    case Type::F64:
+      return "f64";
+    case Type::Anyfunc:
+      return "anyfunc";
+    case Type::Func:
+      return "func";
+    case Type::Void:
+      return "void";
+    case Type::Any:
+      return "any";
+    default:
+      return nullptr;
   }
 }
 
-WABT_EXTERN_C_END
+}  // namespace
 
 #endif /* WABT_COMMON_H_ */

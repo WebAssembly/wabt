@@ -20,44 +20,44 @@
 #include "common.h"
 #include "vector.h"
 
-struct WabtModule;
-struct WabtReadBinaryOptions;
+namespace wabt {
 
-WABT_EXTERN_C_BEGIN
+struct Module;
+struct ReadBinaryOptions;
 
-struct WabtIntCounter {
+struct IntCounter {
   intmax_t value;
   size_t count;
 };
 
-WABT_DEFINE_VECTOR(int_counter, WabtIntCounter)
+WABT_DEFINE_VECTOR(int_counter, IntCounter)
 
-struct WabtIntPairCounter {
+struct IntPairCounter {
   intmax_t first;
   intmax_t second;
   size_t count;
 };
 
-WABT_DEFINE_VECTOR(int_pair_counter, WabtIntPairCounter);
+WABT_DEFINE_VECTOR(int_pair_counter, IntPairCounter);
 
-struct WabtOpcntData {
-  WabtIntCounterVector opcode_vec;
-  WabtIntCounterVector i32_const_vec;
-  WabtIntCounterVector get_local_vec;
-  WabtIntCounterVector set_local_vec;
-  WabtIntCounterVector tee_local_vec;
-  WabtIntPairCounterVector i32_load_vec;
-  WabtIntPairCounterVector i32_store_vec;
+struct OpcntData {
+  IntCounterVector opcode_vec;
+  IntCounterVector i32_const_vec;
+  IntCounterVector get_local_vec;
+  IntCounterVector set_local_vec;
+  IntCounterVector tee_local_vec;
+  IntPairCounterVector i32_load_vec;
+  IntPairCounterVector i32_store_vec;
 };
 
-void wabt_init_opcnt_data(WabtOpcntData* data);
-void wabt_destroy_opcnt_data(WabtOpcntData* data);
+void init_opcnt_data(OpcntData* data);
+void destroy_opcnt_data(OpcntData* data);
 
-WabtResult wabt_read_binary_opcnt(const void* data,
-                                  size_t size,
-                                  const struct WabtReadBinaryOptions* options,
-                                  WabtOpcntData* opcnt_data);
+Result read_binary_opcnt(const void* data,
+                         size_t size,
+                         const struct ReadBinaryOptions* options,
+                         OpcntData* opcnt_data);
 
-WABT_EXTERN_C_END
+}  // namespace wabt
 
 #endif /* WABT_BINARY_READER_OPCNT_H_ */

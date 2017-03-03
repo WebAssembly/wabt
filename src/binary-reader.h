@@ -26,315 +26,294 @@
 #define WABT_READ_BINARY_OPTIONS_DEFAULT \
   { nullptr, false }
 
-struct WabtReadBinaryOptions {
-  struct WabtStream* log_stream;
+namespace wabt {
+
+struct ReadBinaryOptions {
+  struct Stream* log_stream;
   bool read_debug_names;
 };
 
-struct WabtBinaryReaderContext {
+struct BinaryReaderContext {
   const uint8_t* data;
   size_t size;
   size_t offset;
   void* user_data;
 };
 
-struct WabtBinaryReader {
+struct BinaryReader {
   void* user_data;
 
-  void (*on_error)(WabtBinaryReaderContext* ctx, const char* message);
+  void (*on_error)(BinaryReaderContext* ctx, const char* message);
 
   /* module */
-  WabtResult (*begin_module)(uint32_t version, void* user_data);
-  WabtResult (*end_module)(void* user_data);
+  Result (*begin_module)(uint32_t version, void* user_data);
+  Result (*end_module)(void* user_data);
 
-  WabtResult (*begin_section)(WabtBinaryReaderContext* ctx,
-                              WabtBinarySection section_type,
-                              uint32_t size);
+  Result (*begin_section)(BinaryReaderContext* ctx,
+                          BinarySection section_type,
+                          uint32_t size);
 
   /* custom section */
-  WabtResult (*begin_custom_section)(WabtBinaryReaderContext* ctx,
-                                     uint32_t size,
-                                     WabtStringSlice section_name);
-  WabtResult (*end_custom_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_custom_section)(BinaryReaderContext* ctx,
+                                 uint32_t size,
+                                 StringSlice section_name);
+  Result (*end_custom_section)(BinaryReaderContext* ctx);
 
   /* signatures section */
   /* TODO(binji): rename to "type" section */
-  WabtResult (*begin_signature_section)(WabtBinaryReaderContext* ctx,
-                                        uint32_t size);
-  WabtResult (*on_signature_count)(uint32_t count, void* user_data);
-  WabtResult (*on_signature)(uint32_t index,
-                             uint32_t param_count,
-                             WabtType* param_types,
-                             uint32_t result_count,
-                             WabtType* result_types,
-                             void* user_data);
-  WabtResult (*end_signature_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_signature_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_signature_count)(uint32_t count, void* user_data);
+  Result (*on_signature)(uint32_t index,
+                         uint32_t param_count,
+                         Type* param_types,
+                         uint32_t result_count,
+                         Type* result_types,
+                         void* user_data);
+  Result (*end_signature_section)(BinaryReaderContext* ctx);
 
   /* import section */
-  WabtResult (*begin_import_section)(WabtBinaryReaderContext* ctx,
-                                     uint32_t size);
-  WabtResult (*on_import_count)(uint32_t count, void* user_data);
-  WabtResult (*on_import)(uint32_t index,
-                          WabtStringSlice module_name,
-                          WabtStringSlice field_name,
-                          void* user_data);
-  WabtResult (*on_import_func)(uint32_t import_index,
-                               uint32_t func_index,
-                               uint32_t sig_index,
-                               void* user_data);
-  WabtResult (*on_import_table)(uint32_t import_index,
-                                uint32_t table_index,
-                                WabtType elem_type,
-                                const WabtLimits* elem_limits,
-                                void* user_data);
-  WabtResult (*on_import_memory)(uint32_t import_index,
-                                 uint32_t memory_index,
-                                 const WabtLimits* page_limits,
-                                 void* user_data);
-  WabtResult (*on_import_global)(uint32_t import_index,
-                                 uint32_t global_index,
-                                 WabtType type,
-                                 bool mutable_,
-                                 void* user_data);
-  WabtResult (*end_import_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_import_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_import_count)(uint32_t count, void* user_data);
+  Result (*on_import)(uint32_t index,
+                      StringSlice module_name,
+                      StringSlice field_name,
+                      void* user_data);
+  Result (*on_import_func)(uint32_t import_index,
+                           uint32_t func_index,
+                           uint32_t sig_index,
+                           void* user_data);
+  Result (*on_import_table)(uint32_t import_index,
+                            uint32_t table_index,
+                            Type elem_type,
+                            const Limits* elem_limits,
+                            void* user_data);
+  Result (*on_import_memory)(uint32_t import_index,
+                             uint32_t memory_index,
+                             const Limits* page_limits,
+                             void* user_data);
+  Result (*on_import_global)(uint32_t import_index,
+                             uint32_t global_index,
+                             Type type,
+                             bool mutable_,
+                             void* user_data);
+  Result (*end_import_section)(BinaryReaderContext* ctx);
 
   /* function signatures section */
   /* TODO(binji): rename to "function" section */
-  WabtResult (*begin_function_signatures_section)(WabtBinaryReaderContext* ctx,
-                                                  uint32_t size);
-  WabtResult (*on_function_signatures_count)(uint32_t count, void* user_data);
-  WabtResult (*on_function_signature)(uint32_t index,
-                                      uint32_t sig_index,
-                                      void* user_data);
-  WabtResult (*end_function_signatures_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_function_signatures_section)(BinaryReaderContext* ctx,
+                                              uint32_t size);
+  Result (*on_function_signatures_count)(uint32_t count, void* user_data);
+  Result (*on_function_signature)(uint32_t index,
+                                  uint32_t sig_index,
+                                  void* user_data);
+  Result (*end_function_signatures_section)(BinaryReaderContext* ctx);
 
   /* table section */
-  WabtResult (*begin_table_section)(WabtBinaryReaderContext* ctx,
-                                    uint32_t size);
-  WabtResult (*on_table_count)(uint32_t count, void* user_data);
-  WabtResult (*on_table)(uint32_t index,
-                         WabtType elem_type,
-                         const WabtLimits* elem_limits,
-                         void* user_data);
-  WabtResult (*end_table_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_table_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_table_count)(uint32_t count, void* user_data);
+  Result (*on_table)(uint32_t index,
+                     Type elem_type,
+                     const Limits* elem_limits,
+                     void* user_data);
+  Result (*end_table_section)(BinaryReaderContext* ctx);
 
   /* memory section */
-  WabtResult (*begin_memory_section)(WabtBinaryReaderContext* ctx,
-                                     uint32_t size);
-  WabtResult (*on_memory_count)(uint32_t count, void* user_data);
-  WabtResult (*on_memory)(uint32_t index,
-                          const WabtLimits* limits,
-                          void* user_data);
-  WabtResult (*end_memory_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_memory_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_memory_count)(uint32_t count, void* user_data);
+  Result (*on_memory)(uint32_t index, const Limits* limits, void* user_data);
+  Result (*end_memory_section)(BinaryReaderContext* ctx);
 
   /* global section */
-  WabtResult (*begin_global_section)(WabtBinaryReaderContext* ctx,
-                                     uint32_t size);
-  WabtResult (*on_global_count)(uint32_t count, void* user_data);
-  WabtResult (*begin_global)(uint32_t index,
-                             WabtType type,
-                             bool mutable_,
-                             void* user_data);
-  WabtResult (*begin_global_init_expr)(uint32_t index, void* user_data);
-  WabtResult (*end_global_init_expr)(uint32_t index, void* user_data);
-  WabtResult (*end_global)(uint32_t index, void* user_data);
-  WabtResult (*end_global_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_global_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_global_count)(uint32_t count, void* user_data);
+  Result (*begin_global)(uint32_t index,
+                         Type type,
+                         bool mutable_,
+                         void* user_data);
+  Result (*begin_global_init_expr)(uint32_t index, void* user_data);
+  Result (*end_global_init_expr)(uint32_t index, void* user_data);
+  Result (*end_global)(uint32_t index, void* user_data);
+  Result (*end_global_section)(BinaryReaderContext* ctx);
 
   /* exports section */
-  WabtResult (*begin_export_section)(WabtBinaryReaderContext* ctx,
-                                     uint32_t size);
-  WabtResult (*on_export_count)(uint32_t count, void* user_data);
-  WabtResult (*on_export)(uint32_t index,
-                          WabtExternalKind kind,
-                          uint32_t item_index,
-                          WabtStringSlice name,
-                          void* user_data);
-  WabtResult (*end_export_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_export_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_export_count)(uint32_t count, void* user_data);
+  Result (*on_export)(uint32_t index,
+                      ExternalKind kind,
+                      uint32_t item_index,
+                      StringSlice name,
+                      void* user_data);
+  Result (*end_export_section)(BinaryReaderContext* ctx);
 
   /* start section */
-  WabtResult (*begin_start_section)(WabtBinaryReaderContext* ctx,
-                                    uint32_t size);
-  WabtResult (*on_start_function)(uint32_t func_index, void* user_data);
-  WabtResult (*end_start_section)(WabtBinaryReaderContext* ctx);
+  Result (*begin_start_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_start_function)(uint32_t func_index, void* user_data);
+  Result (*end_start_section)(BinaryReaderContext* ctx);
 
   /* function bodies section */
   /* TODO(binji): rename to code section */
-  WabtResult (*begin_function_bodies_section)(WabtBinaryReaderContext* ctx,
-                                              uint32_t size);
-  WabtResult (*on_function_bodies_count)(uint32_t count, void* user_data);
-  WabtResult (*begin_function_body_pass)(uint32_t index,
-                                         uint32_t pass,
-                                         void* user_data);
-  WabtResult (*begin_function_body)(WabtBinaryReaderContext* ctx,
-                                    uint32_t index);
-  WabtResult (*on_local_decl_count)(uint32_t count, void* user_data);
-  WabtResult (*on_local_decl)(uint32_t decl_index,
-                              uint32_t count,
-                              WabtType type,
-                              void* user_data);
+  Result (*begin_function_bodies_section)(BinaryReaderContext* ctx,
+                                          uint32_t size);
+  Result (*on_function_bodies_count)(uint32_t count, void* user_data);
+  Result (*begin_function_body_pass)(uint32_t index,
+                                     uint32_t pass,
+                                     void* user_data);
+  Result (*begin_function_body)(BinaryReaderContext* ctx, uint32_t index);
+  Result (*on_local_decl_count)(uint32_t count, void* user_data);
+  Result (*on_local_decl)(uint32_t decl_index,
+                          uint32_t count,
+                          Type type,
+                          void* user_data);
 
   /* function expressions; called between begin_function_body and
    end_function_body */
-  WabtResult (*on_opcode)(WabtBinaryReaderContext* ctx, WabtOpcode Opcode);
-  WabtResult (*on_opcode_bare)(WabtBinaryReaderContext* ctx);
-  WabtResult (*on_opcode_uint32)(WabtBinaryReaderContext* ctx, uint32_t value);
-  WabtResult (*on_opcode_uint32_uint32)(WabtBinaryReaderContext* ctx,
-                                        uint32_t value,
-                                        uint32_t value2);
-  WabtResult (*on_opcode_uint64)(WabtBinaryReaderContext* ctx, uint64_t value);
-  WabtResult (*on_opcode_f32)(WabtBinaryReaderContext* ctx, uint32_t value);
-  WabtResult (*on_opcode_f64)(WabtBinaryReaderContext* ctx, uint64_t value);
-  WabtResult (*on_opcode_block_sig)(WabtBinaryReaderContext* ctx,
-                                    uint32_t num_types,
-                                    WabtType* sig_types);
-  WabtResult (*on_binary_expr)(WabtOpcode opcode, void* user_data);
-  WabtResult (*on_block_expr)(uint32_t num_types,
-                              WabtType* sig_types,
-                              void* user_data);
-  WabtResult (*on_br_expr)(uint32_t depth, void* user_data);
-  WabtResult (*on_br_if_expr)(uint32_t depth, void* user_data);
-  WabtResult (*on_br_table_expr)(WabtBinaryReaderContext* ctx,
-                                 uint32_t num_targets,
-                                 uint32_t* target_depths,
-                                 uint32_t default_target_depth);
-  WabtResult (*on_call_expr)(uint32_t func_index, void* user_data);
-  WabtResult (*on_call_import_expr)(uint32_t import_index, void* user_data);
-  WabtResult (*on_call_indirect_expr)(uint32_t sig_index, void* user_data);
-  WabtResult (*on_compare_expr)(WabtOpcode opcode, void* user_data);
-  WabtResult (*on_convert_expr)(WabtOpcode opcode, void* user_data);
-  WabtResult (*on_drop_expr)(void* user_data);
-  WabtResult (*on_else_expr)(void* user_data);
-  WabtResult (*on_end_expr)(void* user_data);
-  WabtResult (*on_f32_const_expr)(uint32_t value_bits, void* user_data);
-  WabtResult (*on_f64_const_expr)(uint64_t value_bits, void* user_data);
-  WabtResult (*on_get_global_expr)(uint32_t global_index, void* user_data);
-  WabtResult (*on_get_local_expr)(uint32_t local_index, void* user_data);
-  WabtResult (*on_grow_memory_expr)(void* user_data);
-  WabtResult (*on_i32_const_expr)(uint32_t value, void* user_data);
-  WabtResult (*on_i64_const_expr)(uint64_t value, void* user_data);
-  WabtResult (*on_if_expr)(uint32_t num_types,
-                           WabtType* sig_types,
-                           void* user_data);
-  WabtResult (*on_load_expr)(WabtOpcode opcode,
-                             uint32_t alignment_log2,
-                             uint32_t offset,
-                             void* user_data);
-  WabtResult (*on_loop_expr)(uint32_t num_types,
-                             WabtType* sig_types,
-                             void* user_data);
-  WabtResult (*on_current_memory_expr)(void* user_data);
-  WabtResult (*on_nop_expr)(void* user_data);
-  WabtResult (*on_return_expr)(void* user_data);
-  WabtResult (*on_select_expr)(void* user_data);
-  WabtResult (*on_set_global_expr)(uint32_t global_index, void* user_data);
-  WabtResult (*on_set_local_expr)(uint32_t local_index, void* user_data);
-  WabtResult (*on_store_expr)(WabtOpcode opcode,
-                              uint32_t alignment_log2,
-                              uint32_t offset,
-                              void* user_data);
-  WabtResult (*on_tee_local_expr)(uint32_t local_index, void* user_data);
-  WabtResult (*on_unary_expr)(WabtOpcode opcode, void* user_data);
-  WabtResult (*on_unreachable_expr)(void* user_data);
-  WabtResult (*end_function_body)(uint32_t index, void* user_data);
-  WabtResult (*end_function_body_pass)(uint32_t index,
-                                       uint32_t pass,
-                                       void* user_data);
-  WabtResult (*end_function_bodies_section)(WabtBinaryReaderContext* ctx);
-
-  /* elem section */
-  WabtResult (*begin_elem_section)(WabtBinaryReaderContext* ctx, uint32_t size);
-  WabtResult (*on_elem_segment_count)(uint32_t count, void* user_data);
-  WabtResult (*begin_elem_segment)(uint32_t index,
-                                   uint32_t table_index,
-                                   void* user_data);
-  WabtResult (*begin_elem_segment_init_expr)(uint32_t index, void* user_data);
-  WabtResult (*end_elem_segment_init_expr)(uint32_t index, void* user_data);
-  WabtResult (*on_elem_segment_function_index_count)(
-      WabtBinaryReaderContext* ctx,
-      uint32_t index,
-      uint32_t count);
-  WabtResult (*on_elem_segment_function_index)(uint32_t index,
-                                               uint32_t func_index,
-                                               void* user_data);
-  WabtResult (*end_elem_segment)(uint32_t index, void* user_data);
-  WabtResult (*end_elem_section)(WabtBinaryReaderContext* ctx);
-
-  /* data section */
-  WabtResult (*begin_data_section)(WabtBinaryReaderContext* ctx, uint32_t size);
-  WabtResult (*on_data_segment_count)(uint32_t count, void* user_data);
-  WabtResult (*begin_data_segment)(uint32_t index,
-                                   uint32_t memory_index,
-                                   void* user_data);
-  WabtResult (*begin_data_segment_init_expr)(uint32_t index, void* user_data);
-  WabtResult (*end_data_segment_init_expr)(uint32_t index, void* user_data);
-  WabtResult (*on_data_segment_data)(uint32_t index,
-                                     const void* data,
-                                     uint32_t size,
-                                     void* user_data);
-  WabtResult (*end_data_segment)(uint32_t index, void* user_data);
-  WabtResult (*end_data_section)(WabtBinaryReaderContext* ctx);
-
-  /* names section */
-  WabtResult (*begin_names_section)(WabtBinaryReaderContext* ctx,
-                                    uint32_t size);
-  WabtResult (*on_function_names_count)(uint32_t count, void* user_data);
-  WabtResult (*on_function_name)(uint32_t index,
-                                 WabtStringSlice name,
-                                 void* user_data);
-  WabtResult (*on_local_names_count)(uint32_t index,
-                                     uint32_t count,
-                                     void* user_data);
-  WabtResult (*on_local_name)(uint32_t func_index,
-                              uint32_t local_index,
-                              WabtStringSlice name,
-                              void* user_data);
-  WabtResult (*end_names_section)(WabtBinaryReaderContext* ctx);
-
-  /* names section */
-  WabtResult (*begin_reloc_section)(WabtBinaryReaderContext* ctx,
-                                    uint32_t size);
-  WabtResult (*on_reloc_count)(uint32_t count,
-                               WabtBinarySection section_code,
-                               WabtStringSlice section_name,
-                               void* user_data);
-  WabtResult (*on_reloc)(WabtRelocType type,
+  Result (*on_opcode)(BinaryReaderContext* ctx, Opcode Opcode);
+  Result (*on_opcode_bare)(BinaryReaderContext* ctx);
+  Result (*on_opcode_uint32)(BinaryReaderContext* ctx, uint32_t value);
+  Result (*on_opcode_uint32_uint32)(BinaryReaderContext* ctx,
+                                    uint32_t value,
+                                    uint32_t value2);
+  Result (*on_opcode_uint64)(BinaryReaderContext* ctx, uint64_t value);
+  Result (*on_opcode_f32)(BinaryReaderContext* ctx, uint32_t value);
+  Result (*on_opcode_f64)(BinaryReaderContext* ctx, uint64_t value);
+  Result (*on_opcode_block_sig)(BinaryReaderContext* ctx,
+                                uint32_t num_types,
+                                Type* sig_types);
+  Result (*on_binary_expr)(Opcode opcode, void* user_data);
+  Result (*on_block_expr)(uint32_t num_types, Type* sig_types, void* user_data);
+  Result (*on_br_expr)(uint32_t depth, void* user_data);
+  Result (*on_br_if_expr)(uint32_t depth, void* user_data);
+  Result (*on_br_table_expr)(BinaryReaderContext* ctx,
+                             uint32_t num_targets,
+                             uint32_t* target_depths,
+                             uint32_t default_target_depth);
+  Result (*on_call_expr)(uint32_t func_index, void* user_data);
+  Result (*on_call_import_expr)(uint32_t import_index, void* user_data);
+  Result (*on_call_indirect_expr)(uint32_t sig_index, void* user_data);
+  Result (*on_compare_expr)(Opcode opcode, void* user_data);
+  Result (*on_convert_expr)(Opcode opcode, void* user_data);
+  Result (*on_drop_expr)(void* user_data);
+  Result (*on_else_expr)(void* user_data);
+  Result (*on_end_expr)(void* user_data);
+  Result (*on_f32_const_expr)(uint32_t value_bits, void* user_data);
+  Result (*on_f64_const_expr)(uint64_t value_bits, void* user_data);
+  Result (*on_get_global_expr)(uint32_t global_index, void* user_data);
+  Result (*on_get_local_expr)(uint32_t local_index, void* user_data);
+  Result (*on_grow_memory_expr)(void* user_data);
+  Result (*on_i32_const_expr)(uint32_t value, void* user_data);
+  Result (*on_i64_const_expr)(uint64_t value, void* user_data);
+  Result (*on_if_expr)(uint32_t num_types, Type* sig_types, void* user_data);
+  Result (*on_load_expr)(Opcode opcode,
+                         uint32_t alignment_log2,
                          uint32_t offset,
                          void* user_data);
-  WabtResult (*end_reloc_section)(WabtBinaryReaderContext* ctx);
+  Result (*on_loop_expr)(uint32_t num_types, Type* sig_types, void* user_data);
+  Result (*on_current_memory_expr)(void* user_data);
+  Result (*on_nop_expr)(void* user_data);
+  Result (*on_return_expr)(void* user_data);
+  Result (*on_select_expr)(void* user_data);
+  Result (*on_set_global_expr)(uint32_t global_index, void* user_data);
+  Result (*on_set_local_expr)(uint32_t local_index, void* user_data);
+  Result (*on_store_expr)(Opcode opcode,
+                          uint32_t alignment_log2,
+                          uint32_t offset,
+                          void* user_data);
+  Result (*on_tee_local_expr)(uint32_t local_index, void* user_data);
+  Result (*on_unary_expr)(Opcode opcode, void* user_data);
+  Result (*on_unreachable_expr)(void* user_data);
+  Result (*end_function_body)(uint32_t index, void* user_data);
+  Result (*end_function_body_pass)(uint32_t index,
+                                   uint32_t pass,
+                                   void* user_data);
+  Result (*end_function_bodies_section)(BinaryReaderContext* ctx);
+
+  /* elem section */
+  Result (*begin_elem_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_elem_segment_count)(uint32_t count, void* user_data);
+  Result (*begin_elem_segment)(uint32_t index,
+                               uint32_t table_index,
+                               void* user_data);
+  Result (*begin_elem_segment_init_expr)(uint32_t index, void* user_data);
+  Result (*end_elem_segment_init_expr)(uint32_t index, void* user_data);
+  Result (*on_elem_segment_function_index_count)(BinaryReaderContext* ctx,
+                                                 uint32_t index,
+                                                 uint32_t count);
+  Result (*on_elem_segment_function_index)(uint32_t index,
+                                           uint32_t func_index,
+                                           void* user_data);
+  Result (*end_elem_segment)(uint32_t index, void* user_data);
+  Result (*end_elem_section)(BinaryReaderContext* ctx);
+
+  /* data section */
+  Result (*begin_data_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_data_segment_count)(uint32_t count, void* user_data);
+  Result (*begin_data_segment)(uint32_t index,
+                               uint32_t memory_index,
+                               void* user_data);
+  Result (*begin_data_segment_init_expr)(uint32_t index, void* user_data);
+  Result (*end_data_segment_init_expr)(uint32_t index, void* user_data);
+  Result (*on_data_segment_data)(uint32_t index,
+                                 const void* data,
+                                 uint32_t size,
+                                 void* user_data);
+  Result (*end_data_segment)(uint32_t index, void* user_data);
+  Result (*end_data_section)(BinaryReaderContext* ctx);
+
+  /* names section */
+  Result (*begin_names_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_function_names_count)(uint32_t count, void* user_data);
+  Result (*on_function_name)(uint32_t index, StringSlice name, void* user_data);
+  Result (*on_local_names_count)(uint32_t index,
+                                 uint32_t count,
+                                 void* user_data);
+  Result (*on_local_name)(uint32_t func_index,
+                          uint32_t local_index,
+                          StringSlice name,
+                          void* user_data);
+  Result (*end_names_section)(BinaryReaderContext* ctx);
+
+  /* names section */
+  Result (*begin_reloc_section)(BinaryReaderContext* ctx, uint32_t size);
+  Result (*on_reloc_count)(uint32_t count,
+                           BinarySection section_code,
+                           StringSlice section_name,
+                           void* user_data);
+  Result (*on_reloc)(RelocType type, uint32_t offset, void* user_data);
+  Result (*end_reloc_section)(BinaryReaderContext* ctx);
 
   /* init_expr - used by elem, data and global sections; these functions are
    * only called between calls to begin_*_init_expr and end_*_init_expr */
-  WabtResult (*on_init_expr_f32_const_expr)(uint32_t index,
-                                            uint32_t value,
-                                            void* user_data);
-  WabtResult (*on_init_expr_f64_const_expr)(uint32_t index,
-                                            uint64_t value,
-                                            void* user_data);
-  WabtResult (*on_init_expr_get_global_expr)(uint32_t index,
-                                             uint32_t global_index,
-                                             void* user_data);
-  WabtResult (*on_init_expr_i32_const_expr)(uint32_t index,
-                                            uint32_t value,
-                                            void* user_data);
-  WabtResult (*on_init_expr_i64_const_expr)(uint32_t index,
-                                            uint64_t value,
-                                            void* user_data);
+  Result (*on_init_expr_f32_const_expr)(uint32_t index,
+                                        uint32_t value,
+                                        void* user_data);
+  Result (*on_init_expr_f64_const_expr)(uint32_t index,
+                                        uint64_t value,
+                                        void* user_data);
+  Result (*on_init_expr_get_global_expr)(uint32_t index,
+                                         uint32_t global_index,
+                                         void* user_data);
+  Result (*on_init_expr_i32_const_expr)(uint32_t index,
+                                        uint32_t value,
+                                        void* user_data);
+  Result (*on_init_expr_i64_const_expr)(uint32_t index,
+                                        uint64_t value,
+                                        void* user_data);
 };
 
-WABT_EXTERN_C_BEGIN
-WabtResult wabt_read_binary(const void* data,
-                            size_t size,
-                            WabtBinaryReader* reader,
-                            uint32_t num_function_passes,
-                            const WabtReadBinaryOptions* options);
+Result read_binary(const void* data,
+                   size_t size,
+                   BinaryReader* reader,
+                   uint32_t num_function_passes,
+                   const ReadBinaryOptions* options);
 
-size_t wabt_read_u32_leb128(const uint8_t* ptr,
-                            const uint8_t* end,
-                            uint32_t* out_value);
+size_t read_u32_leb128(const uint8_t* ptr,
+                       const uint8_t* end,
+                       uint32_t* out_value);
 
-size_t wabt_read_i32_leb128(const uint8_t* ptr,
-                            const uint8_t* end,
-                            uint32_t* out_value);
-WABT_EXTERN_C_END
+size_t read_i32_leb128(const uint8_t* ptr,
+                       const uint8_t* end,
+                       uint32_t* out_value);
+
+}  // namespace wabt
 
 #endif /* WABT_BINARY_READER_H_ */

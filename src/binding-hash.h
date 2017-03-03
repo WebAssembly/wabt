@@ -20,32 +20,33 @@
 #include "common.h"
 #include "vector.h"
 
-struct WabtBinding {
-  WabtLocation loc;
-  WabtStringSlice name;
+namespace wabt {
+
+struct Binding {
+  Location loc;
+  StringSlice name;
   int index;
 };
 
-struct WabtBindingHashEntry {
-  WabtBinding binding;
-  struct WabtBindingHashEntry* next;
-  struct WabtBindingHashEntry* prev; /* only valid when this entry is unused */
+struct BindingHashEntry {
+  Binding binding;
+  struct BindingHashEntry* next;
+  struct BindingHashEntry* prev; /* only valid when this entry is unused */
 };
-WABT_DEFINE_VECTOR(binding_hash_entry, WabtBindingHashEntry);
+WABT_DEFINE_VECTOR(binding_hash_entry, BindingHashEntry);
 
-struct WabtBindingHash {
-  WabtBindingHashEntryVector entries;
-  WabtBindingHashEntry* free_head;
+struct BindingHash {
+  BindingHashEntryVector entries;
+  BindingHashEntry* free_head;
 };
 
-WABT_EXTERN_C_BEGIN
-WabtBinding* wabt_insert_binding(WabtBindingHash*, const WabtStringSlice*);
-void wabt_remove_binding(WabtBindingHash*, const WabtStringSlice*);
-bool wabt_hash_entry_is_free(const WabtBindingHashEntry*);
+Binding* insert_binding(BindingHash*, const StringSlice*);
+void remove_binding(BindingHash*, const StringSlice*);
+bool hash_entry_is_free(const BindingHashEntry*);
 /* returns -1 if the name is not in the hash */
-int wabt_find_binding_index_by_name(const WabtBindingHash*,
-                                    const WabtStringSlice* name);
-void wabt_destroy_binding_hash(WabtBindingHash*);
-WABT_EXTERN_C_END
+int find_binding_index_by_name(const BindingHash*, const StringSlice* name);
+void destroy_binding_hash(BindingHash*);
+
+}  // namespace wabt
 
 #endif /* WABT_BINDING_HASH_H_ */

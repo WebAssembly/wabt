@@ -53,6 +53,8 @@
     fflush(stdout);    \
   }
 
+using namespace wabt;
+
 template <typename T, typename F>
 T bit_cast(F value) {
   T result;
@@ -113,7 +115,7 @@ class AllFloatsParseTest : public ThreadedTest {
       int len = snprintf(buffer, sizeof(buffer), "%a", value);
 
       uint32_t me;
-      wabt_parse_float(WabtLiteralType::Hexfloat, buffer, buffer + len, &me);
+      parse_float(LiteralType::Hexfloat, buffer, buffer + len, &me);
       ASSERT_EQ(me, bits);
     }
     LOG_DONE();
@@ -133,7 +135,7 @@ class AllFloatsWriteTest : public ThreadedTest {
       if (is_infinity_or_nan(bits))
         continue;
 
-      wabt_write_float_hex(buffer, sizeof(buffer), bits);
+      write_float_hex(buffer, sizeof(buffer), bits);
 
       char* endptr;
       float them_float = strtof(buffer, &endptr);
@@ -150,15 +152,15 @@ TEST_F(AllFloatsWriteTest, Run) {
 
 class AllFloatsRoundtripTest : public ThreadedTest {
  protected:
-  static WabtLiteralType ClassifyFloat(uint32_t float_bits) {
+  static LiteralType ClassifyFloat(uint32_t float_bits) {
     if (is_infinity_or_nan(float_bits)) {
       if (float_bits & 0x7fffff) {
-        return WabtLiteralType::Nan;
+        return LiteralType::Nan;
       } else {
-        return WabtLiteralType::Infinity;
+        return LiteralType::Infinity;
       }
     } else {
-      return WabtLiteralType::Hexfloat;
+      return LiteralType::Hexfloat;
     }
   }
 
@@ -166,11 +168,11 @@ class AllFloatsRoundtripTest : public ThreadedTest {
     char buffer[100];
     FOREACH_UINT32(bits) {
       LOG_COMPLETION(bits);
-      wabt_write_float_hex(buffer, sizeof(buffer), bits);
+      write_float_hex(buffer, sizeof(buffer), bits);
       int len = strlen(buffer);
 
       uint32_t new_bits;
-      wabt_parse_float(ClassifyFloat(bits), buffer, buffer + len, &new_bits);
+      parse_float(ClassifyFloat(bits), buffer, buffer + len, &new_bits);
       ASSERT_EQ(new_bits, bits);
     }
     LOG_DONE();
@@ -196,7 +198,7 @@ class ManyDoublesParseTest : public ThreadedTest {
       int len = snprintf(buffer, sizeof(buffer), "%a", value);
 
       uint64_t me;
-      wabt_parse_double(WabtLiteralType::Hexfloat, buffer, buffer + len, &me);
+      parse_double(LiteralType::Hexfloat, buffer, buffer + len, &me);
       ASSERT_EQ(me, bits);
     }
     LOG_DONE();
@@ -217,7 +219,7 @@ class ManyDoublesWriteTest : public ThreadedTest {
       if (is_infinity_or_nan(bits))
         continue;
 
-      wabt_write_double_hex(buffer, sizeof(buffer), bits);
+      write_double_hex(buffer, sizeof(buffer), bits);
 
       char* endptr;
       double them_double = strtod(buffer, &endptr);
@@ -234,15 +236,15 @@ TEST_F(ManyDoublesWriteTest, Run) {
 
 class ManyDoublesRoundtripTest : public ThreadedTest {
  protected:
-  static WabtLiteralType ClassifyDouble(uint64_t double_bits) {
+  static LiteralType ClassifyDouble(uint64_t double_bits) {
     if (is_infinity_or_nan(double_bits)) {
       if (double_bits & 0xfffffffffffffULL) {
-        return WabtLiteralType::Nan;
+        return LiteralType::Nan;
       } else {
-        return WabtLiteralType::Infinity;
+        return LiteralType::Infinity;
       }
     } else {
-      return WabtLiteralType::Hexfloat;
+      return LiteralType::Hexfloat;
     }
   }
 
@@ -251,11 +253,11 @@ class ManyDoublesRoundtripTest : public ThreadedTest {
     FOREACH_UINT32(halfbits) {
       LOG_COMPLETION(halfbits);
       uint64_t bits = (static_cast<uint64_t>(halfbits) << 32) | halfbits;
-      wabt_write_double_hex(buffer, sizeof(buffer), bits);
+      write_double_hex(buffer, sizeof(buffer), bits);
       int len = strlen(buffer);
 
       uint64_t new_bits;
-      wabt_parse_double(ClassifyDouble(bits), buffer, buffer + len, &new_bits);
+      parse_double(ClassifyDouble(bits), buffer, buffer + len, &new_bits);
       ASSERT_EQ(new_bits, bits);
     }
     LOG_DONE();
