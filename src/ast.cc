@@ -191,8 +191,7 @@ void find_duplicate_bindings(const BindingHash* bindings,
 }
 
 ModuleField* append_module_field(Module* module) {
-  ModuleField* result =
-      static_cast<ModuleField*>(wabt_alloc_zero(sizeof(ModuleField)));
+  ModuleField* result = new ModuleField();
   if (!module->first_field)
     module->first_field = result;
   else if (module->last_field)
@@ -243,11 +242,11 @@ FuncType* append_implicit_func_type(Location* loc,
   V(ExprType::Select, select)                \
   V(ExprType::Unreachable, unreachable)
 
-#define DEFINE_NEW_EXPR(type_, name)                                  \
-  Expr* new_##name##_expr(void) {                                     \
-    Expr* result = static_cast<Expr*>(wabt_alloc_zero(sizeof(Expr))); \
-    result->type = type_;                                             \
-    return result;                                                    \
+#define DEFINE_NEW_EXPR(type_, name) \
+  Expr* new_##name##_expr(void) {    \
+    Expr* result = new Expr();       \
+    result->type = type_;            \
+    return result;                   \
   }
 FOREACH_EXPR_TYPE(DEFINE_NEW_EXPR)
 #undef DEFINE_NEW_EXPR
@@ -341,7 +340,7 @@ void destroy_expr(Expr* expr) {
     case ExprType::Unreachable:
       break;
   }
-  wabt_free(expr);
+  delete expr;
 }
 
 void destroy_func_declaration(FuncDeclaration* decl) {
@@ -396,7 +395,7 @@ void destroy_func_type(FuncType* func_type) {
 void destroy_data_segment(DataSegment* data) {
   destroy_var(&data->memory_var);
   destroy_expr_list(data->offset);
-  wabt_free(data->data);
+  delete [] data->data;
 }
 
 void destroy_memory(Memory* memory) {
@@ -449,7 +448,7 @@ void destroy_module(Module* module) {
   while (field) {
     ModuleField* next_field = field->next;
     destroy_module_field(field);
-    wabt_free(field);
+    delete field;
     field = next_field;
   }
 
@@ -475,10 +474,10 @@ void destroy_module(Module* module) {
 void destroy_raw_module(RawModule* raw) {
   if (raw->type == RawModuleType::Text) {
     destroy_module(raw->text);
-    wabt_free(raw->text);
+    delete raw->text;
   } else {
     destroy_string_slice(&raw->binary.name);
-    wabt_free(raw->binary.data);
+    delete [] raw->binary.data;
   }
 }
 

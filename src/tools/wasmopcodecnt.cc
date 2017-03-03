@@ -334,13 +334,13 @@ int main(int argc, char** argv) {
   init_stdio();
   parse_options(argc, argv);
 
-  void* data;
+  char* data;
   size_t size;
   Result result = read_file(s_infile, &data, &size);
   if (WABT_FAILED(result)) {
     const char* input_name = s_infile ? s_infile : "stdin";
     ERROR("Unable to parse: %s", input_name);
-    wabt_free(data);
+    delete[] data;
   }
   FILE* out = stdout;
   if (s_outfile) {
@@ -378,6 +378,6 @@ int main(int argc, char** argv) {
     }
     destroy_opcnt_data(&opcnt_data);
   }
-  wabt_free(data);
+  delete[] data;
   return result != Result::Ok;
 }
