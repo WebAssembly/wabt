@@ -906,9 +906,9 @@ static Result on_function_name(uint32_t index,
   return Result::Ok;
 }
 
-static Result on_local_names_count(uint32_t index,
-                                   uint32_t count,
-                                   void* user_data) {
+static Result on_local_name_local_count(uint32_t index,
+                                        uint32_t count,
+                                        void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   Module* module = ctx->module;
   assert(index < module->funcs.size);
@@ -1106,7 +1106,7 @@ Result read_binary_ast(const void* data,
 
   reader.on_function_names_count = on_function_names_count;
   reader.on_function_name = on_function_name;
-  reader.on_local_names_count = on_local_names_count;
+  reader.on_local_name_local_count = on_local_name_local_count;
   reader.on_local_name = on_local_name;
 
   reader.on_init_expr_f32_const_expr = on_init_expr_f32_const_expr;

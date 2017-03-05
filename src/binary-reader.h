@@ -261,14 +261,27 @@ struct BinaryReader {
 
   /* names section */
   Result (*begin_names_section)(BinaryReaderContext* ctx, uint32_t size);
-  Result (*on_function_names_count)(uint32_t count, void* user_data);
-  Result (*on_function_name)(uint32_t index, StringSlice name, void* user_data);
-  Result (*on_local_names_count)(uint32_t index,
-                                 uint32_t count,
-                                 void* user_data);
-  Result (*on_local_name)(uint32_t func_index,
+  Result (*on_function_name_subsection)(uint32_t index,
+                                        uint32_t name_type,
+                                        uint32_t subsection_size,
+                                        void* user_data);
+  Result (*on_function_names_count)(uint32_t num_functions,
+                                    void* user_data);
+  Result (*on_function_name)(uint32_t function_index,
+                             StringSlice function_name,
+                             void* user_data);
+  Result (*on_local_name_subsection)(uint32_t index,
+                                     uint32_t name_type,
+                                     uint32_t subsection_size,
+                                     void* user_data);
+  Result (*on_local_name_function_count)(uint32_t num_functions,
+                                         void* user_data);
+  Result (*on_local_name_local_count)(uint32_t function_index,
+                                      uint32_t num_locals,
+                                      void* user_data);
+  Result (*on_local_name)(uint32_t function_index,
                           uint32_t local_index,
-                          StringSlice name,
+                          StringSlice local_name,
                           void* user_data);
   Result (*end_names_section)(BinaryReaderContext* ctx);
 

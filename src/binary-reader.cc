@@ -632,7 +632,8 @@ LOGGING_UINT32(end_data_segment)
 LOGGING_END(data_section)
 LOGGING_BEGIN(names_section)
 LOGGING_UINT32(on_function_names_count)
-LOGGING_UINT32_UINT32(on_local_names_count, "index", "count")
+LOGGING_UINT32(on_local_name_function_count)
+LOGGING_UINT32_UINT32(on_local_name_local_count, "index", "count")
 LOGGING_END(names_section)
 LOGGING_BEGIN(reloc_section)
 LOGGING_END(reloc_section)
@@ -930,6 +931,15 @@ static Result logging_on_data_segment_data(uint32_t index,
   FORWARD(on_data_segment_data, index, data, size);
 }
 
+static Result logging_on_function_name_subsection(uint32_t index,
+                                                  uint32_t name_type,
+                                                  uint32_t subsection_size,
+                                                  void* user_data) {
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
+  LOGF("on_function_name_subsection(index:%u, nametype:%u, size:%u)\n", index, name_type, subsection_size);
+  FORWARD(on_function_name_subsection, index, name_type, subsection_size);
+}
+
 static Result logging_on_function_name(uint32_t index,
                                        StringSlice name,
                                        void* user_data) {
@@ -937,6 +947,15 @@ static Result logging_on_function_name(uint32_t index,
   LOGF("on_function_name(index: %u, name: \"" PRIstringslice "\")\n", index,
        WABT_PRINTF_STRING_SLICE_ARG(name));
   FORWARD(on_function_name, index, name);
+}
+
+static Result logging_on_local_name_subsection(uint32_t index,
+                                               uint32_t name_type,
+                                               uint32_t subsection_size,
+                                               void* user_data) {
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
+  LOGF("on_local_name_subsection(index:%u, nametype:%u, size:%u)\n", index, name_type, subsection_size);
+  FORWARD(on_local_name_subsection, index, name_type, subsection_size);
 }
 
 static Result logging_on_local_name(uint32_t func_index,
@@ -1550,22 +1569,58 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
       strncmp(section_name.start, WABT_BINARY_SECTION_NAME,
               section_name.length) == 0) {
     CALLBACK_SECTION(begin_names_section, section_size);
-    uint32_t i, num_functions;
-    in_u32_leb128(ctx, &num_functions, "function name count");
-    CALLBACK(on_function_names_count, num_functions);
-    for (i = 0; i < num_functions; ++i) {
-      StringSlice function_name;
-      in_str(ctx, &function_name, "function name");
-      CALLBACK(on_function_name, i, function_name);
+    uint32_t i = 0;
+    while (ctx->offset < ctx->read_end) {
+      uint32_t name_type;
+      uint32_t subsection_size;
+      in_u32_leb128(ctx, &name_type, "name type");
+      in_u32_leb128(ctx, &subsection_size, "subsection size");
 
-      uint32_t num_locals;
-      in_u32_leb128(ctx, &num_locals, "local name count");
-      CALLBACK(on_local_names_count, i, num_locals);
-      uint32_t j;
-      for (j = 0; j < num_locals; ++j) {
-        StringSlice local_name;
-        in_str(ctx, &local_name, "local name");
-        CALLBACK(on_local_name, i, j, local_name);
+      switch (name_type) {
+      case 1:
+        CALLBACK(on_function_name_subsection, i, name_type, subsection_size);
+        if (subsection_size) {
+          uint32_t num_names;
+          in_u32_leb128(ctx, &num_names, "name count");
+          uint32_t j;
+          CALLBACK(on_function_names_count, num_names);
+          for (j = 0; j < num_names; ++j) {
+            uint32_t function_index;
+            StringSlice function_name;
+
+            in_u32_leb128(ctx, &function_index, "function index");
+            in_str(ctx, &function_name, "function name");
+            CALLBACK(on_function_name, function_index, function_name);
+          }
+        }
+        ++i;
+        break;
+      case 2:
+        CALLBACK(on_local_name_subsection, i, name_type, subsection_size);
+        if (subsection_size) {
+          uint32_t num_funcs;
+          in_u32_leb128(ctx, &num_funcs, "function count");
+          uint32_t j;
+          CALLBACK(on_local_name_function_count, num_funcs);
+          for (j = 0; j < num_funcs; ++j) {
+            uint32_t function_index;
+            in_u32_leb128(ctx, &function_index, "function index");
+            uint32_t num_locals;
+            in_u32_leb128(ctx, &num_locals, "local count");
+            CALLBACK(on_local_name_local_count, function_index, num_locals);
+            uint32_t k;
+            for (k = 0; k < num_locals; ++k) {
+              uint32_t local_index;
+              StringSlice local_name;
+
+              in_u32_leb128(ctx, &local_index, "named index");
+              in_str(ctx, &local_name, "name");
+              CALLBACK(on_local_name, function_index, local_index, local_name);
+            }
+          }
+        }
+        ++i;
+        break;
       }
     }
     CALLBACK_CTX0(end_names_section);
@@ -2099,9 +2154,12 @@ Result read_binary(const void* data,
   logging_reader.end_data_section = logging_end_data_section;
 
   logging_reader.begin_names_section = logging_begin_names_section;
+  logging_reader.on_function_name_subsection = logging_on_function_name_subsection;
   logging_reader.on_function_names_count = logging_on_function_names_count;
   logging_reader.on_function_name = logging_on_function_name;
-  logging_reader.on_local_names_count = logging_on_local_names_count;
+  logging_reader.on_local_name_subsection = logging_on_local_name_subsection;
+  logging_reader.on_local_name_function_count = logging_on_local_name_function_count;
+  logging_reader.on_local_name_local_count = logging_on_local_name_local_count;
   logging_reader.on_local_name = logging_on_local_name;
   logging_reader.end_names_section = logging_end_names_section;
 
