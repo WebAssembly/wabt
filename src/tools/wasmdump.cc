@@ -145,13 +145,13 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  void* void_data;
+  char* char_data;
   size_t size;
-  Result result = read_file(s_objdump_options.infile, &void_data, &size);
+  Result result = read_file(s_objdump_options.infile, &char_data, &size);
   if (WABT_FAILED(result))
     return result != Result::Ok;
 
-  uint8_t* data = static_cast<uint8_t*>(void_data);
+  uint8_t* data = reinterpret_cast<uint8_t*>(char_data);
 
   // Perform serveral passed over the binary in order to print out different
   // types of information.
@@ -201,6 +201,6 @@ int main(int argc, char** argv) {
   }
 
 done:
-  wabt_free(data);
+  delete[] data;
   return result != Result::Ok;
 }

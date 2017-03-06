@@ -36,7 +36,7 @@ struct Writer {
 };
 
 struct OutputBuffer {
-  void* start;
+  char* start;
   size_t size;
   size_t capacity;
 };

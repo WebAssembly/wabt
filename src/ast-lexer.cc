@@ -94,9 +94,9 @@
 namespace wabt {
 
 static Result fill(Location* loc,
-                       AstLexer* lexer,
-                       AstParser* parser,
-                       size_t need) {
+                   AstLexer* lexer,
+                   AstParser* parser,
+                   size_t need) {
   if (lexer->eof)
     return Result::Error;
   size_t free = lexer->token - lexer->buffer;
@@ -113,10 +113,7 @@ static Result fill(Location* loc,
     while ((new_buffer_size - old_buffer_size) + free < need + YYMAXFILL)
       new_buffer_size *= 2;
 
-    /* TODO(binji): could just alloc instead, because we know we'll need to
-     * memmove below */
-    char* new_buffer =
-        static_cast<char*>(wabt_realloc(lexer->buffer, new_buffer_size));
+    char* new_buffer = new char[new_buffer_size];
     if (!new_buffer) {
       ast_parser_error(loc, lexer, parser,
                             "unable to reallocate lexer buffer.");
@@ -131,6 +128,7 @@ static Result fill(Location* loc,
     lexer->limit = new_buffer + (lexer->limit - old_buffer) - free;
     lexer->buffer_file_offset += free;
     free += new_buffer_size - old_buffer_size;
+    delete [] old_buffer;
   } else {
     /* shift everything down to make more room in the buffer */
     memmove(lexer->buffer, lexer->token, lexer->limit - lexer->token);
@@ -479,7 +477,7 @@ int ast_lexer_lex(WABT_AST_PARSER_STYPE* lval,
 
 static AstLexer* new_lexer(AstLexerSourceType type,
                                     const char* filename) {
-  AstLexer* lexer = static_cast<AstLexer*>(wabt_alloc_zero(sizeof(AstLexer)));
+  AstLexer* lexer = new AstLexer();
   lexer->line = 1;
   lexer->filename = filename;
   lexer->source.type = type;
@@ -510,8 +508,8 @@ AstLexer* new_ast_buffer_lexer(const char* filename,
 void destroy_ast_lexer(AstLexer* lexer) {
   if (lexer->source.type == AstLexerSourceType::File && lexer->source.file)
     fclose(lexer->source.file);
-  wabt_free(lexer->buffer);
-  wabt_free(lexer);
+  delete [] lexer->buffer;
+  delete lexer;
 }
 
 enum class LineOffsetPosition {

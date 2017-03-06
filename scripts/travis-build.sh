@@ -21,7 +21,9 @@ set -o errexit
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source "${SCRIPT_DIR}/travis-common.sh"
 
-flake8 --ignore=E111,E114 ./scripts/
+if [[ ${TRAVIS_OS_NAME} = "linux" ]]; then
+  flake8 --ignore=E111,E114 ./scripts/
+fi
 
 if [[ ${COMPILER} = "gcc" ]]; then
   # Build without re2c/bison to test prebuilt C sources

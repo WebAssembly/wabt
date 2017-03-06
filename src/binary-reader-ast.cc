@@ -105,7 +105,7 @@ static void dup_name(Context* ctx, StringSlice* name, StringSlice* out_name) {
 static Result append_expr(Context* ctx, Expr* expr) {
   LabelNode* label;
   if (WABT_FAILED(top_label(ctx, &label))) {
-    wabt_free(expr);
+    delete expr;
     return Result::Error;
   }
   if (*label->first) {
@@ -873,7 +873,7 @@ static Result on_data_segment_data(uint32_t index,
   Context* ctx = static_cast<Context*>(user_data);
   assert(index == ctx->module->data_segments.size - 1);
   DataSegment* segment = ctx->module->data_segments.data[index];
-  segment->data = wabt_alloc(size);
+  segment->data = new char[size];
   segment->size = size;
   memcpy(segment->data, data, size);
   return Result::Ok;

@@ -132,7 +132,7 @@ void destroy_binary(LinkerInputBinary* binary) {
   destroy_global_import_vector(&binary->global_imports);
   destroy_string_slice_vector(&binary->debug_names);
   destroy_export_vector(&binary->exports);
-  wabt_free(binary->data);
+  delete[] binary->data;
 }
 
 static uint32_t relocate_func_index(LinkerInputBinary* binary,
@@ -822,13 +822,13 @@ int main(int argc, char** argv) {
     const char* input_filename = s_infiles.data[i];
     if (s_verbose)
       writef(&s_log_stream, "reading file: %s\n", input_filename);
-    void* data;
+    char* data;
     size_t size;
     result = read_file(input_filename, &data, &size);
     if (WABT_FAILED(result))
       return result != Result::Ok;
     LinkerInputBinary* b = append_binary(&context.inputs);
-    b->data = static_cast<uint8_t*>(data);
+    b->data = reinterpret_cast<uint8_t*>(data);
     b->size = size;
     b->filename = input_filename;
     result = read_binary_linker(b);

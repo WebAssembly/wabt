@@ -32,10 +32,10 @@
   static WABT_INLINE void new_##name##_array(type##Array* array, size_t size) \
       WABT_UNUSED;                                                            \
                                                                               \
-  void destroy_##name##_array(type##Array* array) { wabt_free(array->data); } \
+  void destroy_##name##_array(type##Array* array) { delete[] array->data; }   \
   void new_##name##_array(type##Array* array, size_t size) {                  \
     array->size = size;                                                       \
-    array->data = static_cast<type*>(wabt_alloc_zero(size * sizeof(type)));   \
+    array->data = new type[size]();                                           \
   }
 
 #define WABT_DESTROY_ARRAY_AND_ELEMENTS(v, name) \

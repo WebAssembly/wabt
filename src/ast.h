@@ -184,7 +184,7 @@ WABT_DEFINE_VECTOR(memory_ptr, MemoryPtr);
 struct DataSegment {
   Var memory_var;
   Expr* offset;
-  void* data;
+  char* data;
   size_t size;
 };
 typedef DataSegment* DataSegmentPtr;
@@ -295,7 +295,7 @@ struct RawModule {
     struct {
       Location loc;
       StringSlice name;
-      void* data;
+      char* data;
       size_t size;
     } binary;
   };

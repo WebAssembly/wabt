@@ -114,10 +114,10 @@ bool string_slices_are_equal(const StringSlice* a, const StringSlice* b) {
 
 void destroy_string_slice(StringSlice* str) {
   assert(str);
-  wabt_free(const_cast<void*>(static_cast<const void*>(str->start)));
+  delete [] str->start;
 }
 
-Result read_file(const char* filename, void** out_data, size_t* out_size) {
+Result read_file(const char* filename, char** out_data, size_t* out_size) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
     const char* format = "unable to read file %s";
@@ -143,7 +143,7 @@ Result read_file(const char* filename, void** out_data, size_t* out_size) {
     return Result::Error;
   }
 
-  void* data = wabt_alloc(size);
+  char* data = new char [size];
   if (size != 0 && fread(data, size, 1, infile) != 1) {
     perror("fread failed");
     return Result::Error;

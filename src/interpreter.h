@@ -116,7 +116,7 @@ struct InterpreterTable {
 WABT_DEFINE_VECTOR(interpreter_table, InterpreterTable);
 
 struct InterpreterMemory {
-  void* data;
+  char* data;
   Limits page_limits;
   uint32_t byte_size; /* Cached from page_limits. */
 };

@@ -408,25 +408,6 @@ enum class NameSectionSubsection {
   Local = 2,
 };
 
-static WABT_INLINE void* wabt_alloc(size_t size) {
-  return malloc(size);
-}
-
-static WABT_INLINE void* wabt_alloc_zero(size_t size) {
-  return calloc(size, 1);
-}
-
-static WABT_INLINE void* wabt_realloc(void* p, size_t size) {
-  /* Realloc normally frees if size is 0, but we don't want that behavior. */
-  if (size == 0)
-    return p;
-  return realloc(p, size);
-}
-
-static WABT_INLINE void wabt_free(void* p) {
-  free(p);
-}
-
 static WABT_INLINE char* wabt_strndup(const char* s, size_t len) {
   size_t real_len = 0;
   const char* p = s;
@@ -435,7 +416,7 @@ static WABT_INLINE char* wabt_strndup(const char* s, size_t len) {
     real_len++;
   }
 
-  char* new_s = static_cast<char*>(wabt_alloc(real_len + 1));
+  char* new_s = new char[real_len + 1];
   memcpy(new_s, s, real_len);
   new_s[real_len] = 0;
   return new_s;
@@ -463,7 +444,7 @@ StringSlice string_slice_from_cstr(const char* string);
 bool string_slice_is_empty(const StringSlice*);
 bool string_slices_are_equal(const StringSlice*, const StringSlice*);
 void destroy_string_slice(StringSlice*);
-Result read_file(const char* filename, void** out_data, size_t* out_size);
+Result read_file(const char* filename, char** out_data, size_t* out_size);
 
 void default_source_error_callback(const Location*,
                                    const char* error,

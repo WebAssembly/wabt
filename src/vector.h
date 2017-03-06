@@ -60,22 +60,22 @@
       type##Vector* dst, const type##Vector* src) WABT_UNUSED;                 \
                                                                                \
   void destroy_##name##_vector(type##Vector* vec) {                            \
-    wabt_free(vec->data);                                                      \
+    delete[] vec->data;                                                        \
     vec->data = nullptr;                                                       \
     vec->size = 0;                                                             \
     vec->capacity = 0;                                                         \
   }                                                                            \
   void resize_##name##_vector(type##Vector* vec, size_t size) {                \
-    resize_vector(reinterpret_cast<void**>(&vec->data), &vec->size,            \
+    resize_vector(reinterpret_cast<char**>(&vec->data), &vec->size,            \
                   &vec->capacity, size, sizeof(type));                         \
   }                                                                            \
   void reserve_##name##s(type##Vector* vec, size_t desired) {                  \
-    ensure_capacity(reinterpret_cast<void**>(&vec->data), &vec->capacity,      \
+    ensure_capacity(reinterpret_cast<char**>(&vec->data), &vec->capacity,      \
                     desired, sizeof(type));                                    \
   }                                                                            \
   type* append_##name(type##Vector* vec) {                                     \
     return static_cast<type*>(                                                 \
-        append_element(reinterpret_cast<void**>(&vec->data), &vec->size,       \
+        append_element(reinterpret_cast<char**>(&vec->data), &vec->size,       \
                        &vec->capacity, sizeof(type)));                         \
   }                                                                            \
   void append_##name##_value(type##Vector* vec, const type* value) {           \
@@ -84,8 +84,8 @@
   }                                                                            \
   void extend_##name##s(type##Vector* dst, const type##Vector* src) {          \
     extend_elements(                                                           \
-        reinterpret_cast<void**>(&dst->data), &dst->size, &dst->capacity,      \
-        reinterpret_cast<void* const*>(&src->data), src->size, sizeof(type));  \
+        reinterpret_cast<char**>(&dst->data), &dst->size, &dst->capacity,      \
+        reinterpret_cast<char* const*>(&src->data), src->size, sizeof(type));  \
   }
 
 #define WABT_DESTROY_VECTOR_AND_ELEMENTS(v, name) \
@@ -98,26 +98,26 @@
 
 namespace wabt {
 
-void ensure_capacity(void** data,
+void ensure_capacity(char** data,
                      size_t* capacity,
                      size_t desired_size,
                      size_t elt_byte_size);
 
-void resize_vector(void** data,
+void resize_vector(char** data,
                    size_t* size,
                    size_t* capacity,
                    size_t desired_size,
                    size_t elt_byte_size);
 
-void* append_element(void** data,
+void* append_element(char** data,
                      size_t* size,
                      size_t* capacity,
                      size_t elt_byte_size);
 
-void extend_elements(void** dst,
+void extend_elements(char** dst,
                      size_t* dst_size,
                      size_t* dst_capacity,
-                     void* const* src,
+                     char* const* src,
                      size_t src_size,
                      size_t elt_byte_size);
 

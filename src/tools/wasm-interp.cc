@@ -448,7 +448,7 @@ static Result read_module(const char* module_filename,
                           BinaryErrorHandler* error_handler,
                           InterpreterModule** out_module) {
   Result result;
-  void* data;
+  char* data;
   size_t size;
 
   *out_module = nullptr;
@@ -462,7 +462,7 @@ static Result read_module(const char* module_filename,
       if (s_verbose)
         disassemble_module(env, s_stdout_stream, *out_module);
     }
-    wabt_free(data);
+    delete[] data;
   }
   return result;
 }
@@ -544,7 +544,7 @@ static Result spectest_import_memory(InterpreterImport* import,
     memory->page_limits.initial = 1;
     memory->page_limits.max = 2;
     memory->byte_size = memory->page_limits.initial * WABT_MAX_PAGES;
-    memory->data = wabt_alloc_zero(memory->byte_size);
+    memory->data = new char[memory->byte_size]();
     return Result::Ok;
   } else {
     print_error(callback, "unknown host memory import " PRIimport,
@@ -1002,7 +1002,7 @@ static char* create_module_path(Context* ctx, StringSlice filename) {
   const char* spec_json_filename = ctx->loc.filename;
   StringSlice dirname = get_dirname(spec_json_filename);
   size_t path_len = dirname.length + 1 + filename.length + 1;
-  char* path = static_cast<char*>(wabt_alloc(path_len));
+  char* path = new char[path_len];
 
   if (dirname.length == 0) {
     snprintf(path, path_len, PRIstringslice,
@@ -1027,11 +1027,11 @@ static Result on_module_command(Context* ctx,
   if (WABT_FAILED(result)) {
     reset_interpreter_environment_to_mark(&ctx->env, mark);
     print_command_error(ctx, "error reading module: \"%s\"", path);
-    wabt_free(path);
+    delete[] path;
     return Result::Error;
   }
 
-  wabt_free(path);
+  delete[] path;
 
   InterpreterResult iresult =
       run_start_function(&ctx->thread, ctx->last_module);
@@ -1118,19 +1118,17 @@ static Result on_action_command(Context* ctx, Action* action) {
 static BinaryErrorHandler* new_custom_error_handler(Context* ctx,
                                                     const char* desc) {
   size_t header_size = ctx->source_filename.length + strlen(desc) + 100;
-  char* header = static_cast<char*>(wabt_alloc(header_size));
+  char* header = new char[header_size];
   snprintf(header, header_size, PRIstringslice ":%d: %s passed",
            WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
            ctx->command_line_number, desc);
 
-  DefaultErrorHandlerInfo* info = static_cast<DefaultErrorHandlerInfo*>(
-      wabt_alloc_zero(sizeof(DefaultErrorHandlerInfo)));
+  DefaultErrorHandlerInfo* info = new DefaultErrorHandlerInfo();
   info->header = header;
   info->out_file = stdout;
   info->print_header = PrintErrorHeader::Once;
 
-  BinaryErrorHandler* error_handler = static_cast<BinaryErrorHandler*>(
-      wabt_alloc_zero(sizeof(BinaryErrorHandler)));
+  BinaryErrorHandler* error_handler = new BinaryErrorHandler();
   error_handler->on_error = default_binary_error_callback;
   error_handler->user_data = info;
   return error_handler;
@@ -1139,9 +1137,9 @@ static BinaryErrorHandler* new_custom_error_handler(Context* ctx,
 static void destroy_custom_error_handler(BinaryErrorHandler* error_handler) {
   DefaultErrorHandlerInfo* info =
       static_cast<DefaultErrorHandlerInfo*>(error_handler->user_data);
-  wabt_free(const_cast<void*>(static_cast<const void*>(info->header)));
-  wabt_free(info);
-  wabt_free(error_handler);
+  delete [] info->header;
+  delete info;
+  delete error_handler;
 }
 
 static Result on_assert_malformed_command(Context* ctx,
@@ -1165,7 +1163,7 @@ static Result on_assert_malformed_command(Context* ctx,
     result = Result::Error;
   }
 
-  wabt_free(path);
+  delete[] path;
   destroy_interpreter_environment(&env);
   destroy_custom_error_handler(error_handler);
   return result;
@@ -1227,7 +1225,7 @@ static Result on_assert_unlinkable_command(Context* ctx,
     result = Result::Error;
   }
 
-  wabt_free(path);
+  delete[] path;
   destroy_custom_error_handler(error_handler);
   return result;
 }
@@ -1253,7 +1251,7 @@ static Result on_assert_invalid_command(Context* ctx,
     result = Result::Error;
   }
 
-  wabt_free(path);
+  delete[] path;
   destroy_interpreter_environment(&env);
   destroy_custom_error_handler(error_handler);
   return result;
@@ -1284,7 +1282,7 @@ static Result on_assert_uninstantiable_command(Context* ctx,
   }
 
   reset_interpreter_environment_to_mark(&ctx->env, mark);
-  wabt_free(path);
+  delete[] path;
   return result;
 }
 
@@ -1635,7 +1633,7 @@ static Result parse_commands(Context* ctx) {
 static void destroy_context(Context* ctx) {
   destroy_interpreter_thread(&ctx->thread);
   destroy_interpreter_environment(&ctx->env);
-  wabt_free(ctx->json_data);
+  delete[] ctx->json_data;
 }
 
 static Result read_and_run_spec_json(const char* spec_json_filename) {
@@ -1647,13 +1645,13 @@ static Result read_and_run_spec_json(const char* spec_json_filename) {
   init_environment(&ctx.env);
   init_interpreter_thread(&ctx.env, &ctx.thread, &s_thread_options);
 
-  void* data;
+  char* data;
   size_t size;
   Result result = read_file(spec_json_filename, &data, &size);
   if (WABT_FAILED(result))
     return Result::Error;
 
-  ctx.json_data = static_cast<char*>(data);
+  ctx.json_data = data;
   ctx.json_data_size = size;
 
   result = parse_commands(&ctx);
