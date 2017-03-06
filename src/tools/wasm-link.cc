@@ -232,6 +232,7 @@ static void write_slice(Stream* stream, StringSlice str, const char* desc) {
 }
 
 #define WRITE_UNKNOWN_SIZE(STREAM)                        \
+  {                                                       \
   uint32_t fixup_offset = (STREAM)->offset;               \
   write_fixed_u32_leb128(STREAM, 0, "unknown size");      \
   ctx->current_section_payload_offset = (STREAM)->offset; \
@@ -239,7 +240,8 @@ static void write_slice(Stream* stream, StringSlice str, const char* desc) {
 
 #define FIXUP_SIZE(STREAM)                                                  \
   write_fixed_u32_leb128_at(STREAM, fixup_offset, (STREAM)->offset - start, \
-                            "fixup size");
+                            "fixup size");                              \
+  }
 
 static void write_table_section(Context* ctx,
                                 const SectionPtrVector* sections) {
@@ -463,7 +465,7 @@ static void write_data_section(Context* ctx,
 
 static void write_names_section(Context* ctx) {
   uint32_t total_count = 0;
-  size_t i, j;
+  size_t i, j, k;
   for (i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->debug_names.size; j++) {
@@ -482,8 +484,11 @@ static void write_names_section(Context* ctx) {
   write_u8_enum(stream, BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
   write_c_str(stream, "name", "custom section name");
+  write_u8_enum(stream, NameSectionSubsection::Function, "subsection code");
+  WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_count, "element count");
 
+  k = 0;
   for (i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
     for (j = 0; j < binary->debug_names.size; j++) {
@@ -491,11 +496,12 @@ static void write_names_section(Context* ctx) {
         if (!binary->function_imports.data[j].active)
           continue;
       }
+      write_u32_leb128(stream, k++, "function index");
       write_slice(stream, binary->debug_names.data[j], "function name");
-      write_u32_leb128(stream, 0, "local name count");
     }
   }
 
+  FIXUP_SIZE(stream);
   FIXUP_SIZE(stream);
 }
 

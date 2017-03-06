@@ -151,8 +151,30 @@ static Result begin_custom_section(BinaryReaderContext* ctx,
 
   /* Special handling for certain CUSTOM sections */
   if (string_slice_eq_cstr(&section_name, "name")) {
+    uint32_t name_type;
     size_t bytes_read = read_u32_leb128(
-        &binary->data[sec->offset], &binary->data[binary->size], &sec->count);
+        &binary->data[sec->offset], &binary->data[binary->size], &name_type);
+
+    if (static_cast<NameSectionSubsection>(name_type) != NameSectionSubsection::Function) {
+      WABT_FATAL("no function name section");
+    }
+
+    sec->payload_offset += bytes_read;
+    sec->payload_size -= bytes_read;
+
+    uint32_t subsection_size;
+    bytes_read = read_u32_leb128(
+        &binary->data[sec->offset], &binary->data[binary->size], &subsection_size);
+
+    if (static_cast<NameSectionSubsection>(name_type) != NameSectionSubsection::Function) {
+      WABT_FATAL("no function name section");
+    }
+
+    sec->payload_offset += bytes_read;
+    sec->payload_size -= bytes_read;
+
+    bytes_read = read_u32_leb128(
+        &binary->data[sec->payload_offset], &binary->data[binary->size], &sec->count);
     sec->payload_offset += bytes_read;
     sec->payload_size -= bytes_read;
 
@@ -261,7 +283,13 @@ static Result on_function_name(uint32_t index,
                                StringSlice name,
                                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  append_string_slice_value(&ctx->binary->debug_names, &name);
+  while (ctx->binary->debug_names.size < index) {
+    StringSlice empty = empty_string_slice();
+    append_string_slice_value(&ctx->binary->debug_names, &empty);
+  }
+  if (ctx->binary->debug_names.size == index) {
+    append_string_slice_value(&ctx->binary->debug_names, &name);
+  }
   return Result::Ok;
 }
 
