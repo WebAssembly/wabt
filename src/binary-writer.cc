@@ -874,19 +874,6 @@ static Result write_module(Context* ctx, const Module* module) {
     char desc[100];
     begin_custom_section(ctx, WABT_BINARY_SECTION_NAME, LEB_SECTION_SIZE_GUESS);
     write_u32_leb128(&ctx->stream, 1, "function name type");
-
-    begin_subsection(ctx, "function name subsection", LEB_SECTION_SIZE_GUESS);
-    write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
-    for (i = 0; i < module->funcs.size; ++i) {
-      const Func* func = module->funcs.data[i];
-      write_u32_leb128(&ctx->stream, i, "function index");
-      snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
-      write_str(&ctx->stream, func->name.start, func->name.length,
-                PrintChars::Yes, desc);
-    }
-    end_subsection(ctx);
-    write_u32_leb128(&ctx->stream, 1, "function name type");
-
     begin_subsection(ctx, "function name subsection", LEB_SECTION_SIZE_GUESS);
     write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
     for (i = 0; i < module->funcs.size; ++i) {
