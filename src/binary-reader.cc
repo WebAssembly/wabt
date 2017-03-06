@@ -466,15 +466,6 @@ static void write_indent(LoggingContext* ctx) {
     LOGF_NOINDENT(__VA_ARGS__); \
   } while (0)
 
-static void logging_on_error(BinaryReaderContext* ctx, const char* message) {
-  LoggingContext* logging_ctx = static_cast<LoggingContext*>(ctx->user_data);
-  if (logging_ctx->reader->on_error) {
-    BinaryReaderContext new_ctx = *ctx;
-    new_ctx.user_data = logging_ctx->reader->user_data;
-    logging_ctx->reader->on_error(&new_ctx, message);
-  }
-}
-
 static Result logging_begin_section(BinaryReaderContext* context,
                                     BinarySection section_type,
                                     uint32_t size) {
@@ -1979,7 +1970,7 @@ Result read_binary(const void* data,
   WABT_ZERO_MEMORY(logging_reader);
   logging_reader.user_data = &logging_context;
 
-  logging_reader.on_error = logging_on_error;
+  logging_reader.on_error = reader->on_error;
   logging_reader.begin_section = logging_begin_section;
   logging_reader.begin_module = logging_begin_module;
   logging_reader.end_module = logging_end_module;
