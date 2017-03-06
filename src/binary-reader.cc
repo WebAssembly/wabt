@@ -1576,8 +1576,8 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
       in_u32_leb128(ctx, &name_type, "name type");
       in_u32_leb128(ctx, &subsection_size, "subsection size");
 
-      switch (name_type) {
-      case 1:
+      switch (static_cast<NameSectionSubsection>(name_type)) {
+      case NameSectionSubsection::Function:
         CALLBACK(on_function_name_subsection, i, name_type, subsection_size);
         if (subsection_size) {
           uint32_t num_names;
@@ -1595,7 +1595,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
         }
         ++i;
         break;
-      case 2:
+      case NameSectionSubsection::Local:
         CALLBACK(on_local_name_subsection, i, name_type, subsection_size);
         if (subsection_size) {
           uint32_t num_funcs;
@@ -1620,6 +1620,10 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
           }
         }
         ++i;
+        break;
+      default:
+        /* unknown subsection, skip rest of section */
+        ctx->offset = ctx->read_end;
         break;
       }
     }

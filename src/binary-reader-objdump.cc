@@ -593,7 +593,9 @@ static Result on_function_name(uint32_t index,
       StringSlice empty = empty_string_slice();
       append_string_slice_value(&ctx->options->function_names, &empty);
     }
-    append_string_slice_value(&ctx->options->function_names, &name);
+    if (ctx->options->function_names.size == index) {
+      append_string_slice_value(&ctx->options->function_names, &name);
+    }
   }
   return Result::Ok;
 }

@@ -403,6 +403,11 @@ struct Literal {
   StringSlice text;
 };
 
+enum class NameSectionSubsection {
+  Function = 1,
+  Local = 2,
+};
+
 static WABT_INLINE void* wabt_alloc(size_t size) {
   return malloc(size);
 }
