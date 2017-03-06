@@ -27,8 +27,8 @@ Sections:
  Function start=0x0000003a end=0x0000003e (size=0x00000004) count: 3
    Export start=0x00000044 end=0x00000051 (size=0x0000000d) count: 2
      Code start=0x00000053 end=0x00000075 (size=0x00000022) count: 3
-   Custom start=0x0000007b end=0x000000a8 (size=0x0000002d) "name"
-   Custom start=0x000000ae end=0x000000c1 (size=0x00000013) "reloc.Code"
+   Custom start=0x0000007b end=0x000000ae (size=0x00000033) "name"
+   Custom start=0x000000b4 end=0x000000c7 (size=0x00000013) "reloc.Code"
 
 Section Details:
 

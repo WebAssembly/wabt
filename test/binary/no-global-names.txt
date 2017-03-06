@@ -20,9 +20,11 @@ section(CODE) {
   }
 }
 section("name") {
+  subsection[1]
+  length[1]
   func_count[1]
+  index[0]
   str("bar")
-  local_count[0]
 }
 (;; STDOUT ;;;
 (module

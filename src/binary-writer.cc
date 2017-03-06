@@ -67,6 +67,10 @@ struct Context {
   size_t last_section_leb_size_guess;
   BinarySection last_section_type;
   size_t last_section_payload_offset;
+
+  size_t last_subsection_offset;
+  size_t last_subsection_leb_size_guess;
+  size_t last_subsection_payload_offset;
 };
 
 void destroy_reloc_section(RelocSection* reloc_section) {
@@ -298,6 +302,26 @@ static void end_section(Context* ctx) {
                               ctx->last_section_leb_size_guess,
                               "FIXUP section size");
   ctx->last_section_leb_size_guess = 0;
+}
+
+static void begin_subsection(Context* ctx,
+                             const char* name,
+                             size_t leb_size_guess) {
+  assert(ctx->last_subsection_leb_size_guess == 0);
+  char desc[100];
+  wabt_snprintf(desc, sizeof(desc), "subsection \"%s\"", name);
+  ctx->last_subsection_leb_size_guess = leb_size_guess;
+  ctx->last_subsection_offset =
+      write_u32_leb128_space(ctx, leb_size_guess, "subsection size (guess)");
+  ctx->last_subsection_payload_offset = ctx->stream.offset;
+}
+
+static void end_subsection(Context* ctx) {
+  assert(ctx->last_subsection_leb_size_guess != 0);
+  write_fixup_u32_leb128_size(ctx, ctx->last_subsection_offset,
+                              ctx->last_subsection_leb_size_guess,
+                              "FIXUP subsection size");
+  ctx->last_subsection_leb_size_guess = 0;
 }
 
 static uint32_t get_label_var_depth(Context* ctx, const Var* var) {
@@ -849,6 +873,21 @@ static Result write_module(Context* ctx, const Module* module) {
 
     char desc[100];
     begin_custom_section(ctx, WABT_BINARY_SECTION_NAME, LEB_SECTION_SIZE_GUESS);
+    write_u32_leb128(&ctx->stream, 1, "function name type");
+    begin_subsection(ctx, "function name subsection", LEB_SECTION_SIZE_GUESS);
+    write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
+    for (i = 0; i < module->funcs.size; ++i) {
+      const Func* func = module->funcs.data[i];
+      write_u32_leb128(&ctx->stream, i, "function index");
+      snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
+      write_str(&ctx->stream, func->name.start, func->name.length,
+                PrintChars::Yes, desc);
+    }
+    end_subsection(ctx);
+
+    write_u32_leb128(&ctx->stream, 2, "local name type");
+
+    begin_subsection(ctx, "local name subsection", LEB_SECTION_SIZE_GUESS);
     write_u32_leb128(&ctx->stream, module->funcs.size, "num functions");
     for (i = 0; i < module->funcs.size; ++i) {
       const Func* func = module->funcs.data[i];
@@ -856,32 +895,31 @@ static Result write_module(Context* ctx, const Module* module) {
       uint32_t num_locals = func->local_types.size;
       uint32_t num_params_and_locals = get_num_params_and_locals(func);
 
-      snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
-      write_str(&ctx->stream, func->name.start, func->name.length,
-                PrintChars::Yes, desc);
+      write_u32_leb128(&ctx->stream, i, "function index");
       write_u32_leb128(&ctx->stream, num_params_and_locals, "num locals");
 
-      if (num_params_and_locals) {
-        make_type_binding_reverse_mapping(
-            &func->decl.sig.param_types, &func->param_bindings, &index_to_name);
-        size_t j;
-        for (j = 0; j < num_params; ++j) {
-          StringSlice name = index_to_name.data[j];
-          snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
-          write_str(&ctx->stream, name.start, name.length, PrintChars::Yes,
-                    desc);
-        }
+      make_type_binding_reverse_mapping(
+        &func->decl.sig.param_types, &func->param_bindings, &index_to_name);
+      size_t j;
+      for (j = 0; j < num_params; ++j) {
+        StringSlice name = index_to_name.data[j];
+        snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
+        write_u32_leb128(&ctx->stream, j, "local index");
+        write_str(&ctx->stream, name.start, name.length, PrintChars::Yes,
+                  desc);
+      }
 
-        make_type_binding_reverse_mapping(
-            &func->local_types, &func->local_bindings, &index_to_name);
-        for (j = 0; j < num_locals; ++j) {
-          StringSlice name = index_to_name.data[j];
-          snprintf(desc, sizeof(desc), "local name %" PRIzd, num_params + j);
-          write_str(&ctx->stream, name.start, name.length, PrintChars::Yes,
-                    desc);
-        }
+      make_type_binding_reverse_mapping(
+        &func->local_types, &func->local_bindings, &index_to_name);
+      for (j = 0; j < num_locals; ++j) {
+        StringSlice name = index_to_name.data[j];
+        snprintf(desc, sizeof(desc), "local name %" PRIzd, num_params + j);
+        write_u32_leb128(&ctx->stream, num_params + j, "local index");
+        write_str(&ctx->stream, name.start, name.length, PrintChars::Yes,
+                  desc);
       }
     }
+    end_subsection(ctx);
     end_section(ctx);
 
     destroy_string_slice_vector(&index_to_name);

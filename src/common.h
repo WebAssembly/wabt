@@ -403,6 +403,11 @@ struct Literal {
   StringSlice text;
 };
 
+enum class NameSectionSubsection {
+  Function = 1,
+  Local = 2,
+};
+
 static WABT_INLINE char* wabt_strndup(const char* s, size_t len) {
   size_t real_len = 0;
   const char* p = s;

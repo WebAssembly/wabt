@@ -399,7 +399,8 @@ static Result begin_function_body(BinaryReaderContext* context,
   Context* ctx = static_cast<Context*>(context->user_data);
 
   if (ctx->options->mode == ObjdumpMode::Disassemble) {
-    if (index < ctx->options->function_names.size)
+    if (index < ctx->options->function_names.size &&
+        !string_slice_is_empty(&ctx->options->function_names.data[index]))
       printf("%06" PRIzx " <" PRIstringslice ">:\n", context->offset,
              WABT_PRINTF_STRING_SLICE_ARG(
                  ctx->options->function_names.data[index]));
@@ -587,8 +588,15 @@ static Result on_function_name(uint32_t index,
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - func[%d] " PRIstringslice "\n", index,
                 WABT_PRINTF_STRING_SLICE_ARG(name));
-  if (ctx->options->mode == ObjdumpMode::Prepass)
-    append_string_slice_value(&ctx->options->function_names, &name);
+  if (ctx->options->mode == ObjdumpMode::Prepass) {
+    while (ctx->options->function_names.size < index) {
+      StringSlice empty = empty_string_slice();
+      append_string_slice_value(&ctx->options->function_names, &empty);
+    }
+    if (ctx->options->function_names.size == index) {
+      append_string_slice_value(&ctx->options->function_names, &name);
+    }
+  }
   return Result::Ok;
 }
 
