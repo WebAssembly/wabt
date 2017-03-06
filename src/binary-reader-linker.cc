@@ -166,10 +166,6 @@ static Result begin_custom_section(BinaryReaderContext* ctx,
     bytes_read = read_u32_leb128(
         &binary->data[sec->offset], &binary->data[binary->size], &subsection_size);
 
-    if (static_cast<NameSectionSubsection>(name_type) != NameSectionSubsection::Function) {
-      WABT_FATAL("no function name section");
-    }
-
     sec->payload_offset += bytes_read;
     sec->payload_size -= bytes_read;
 

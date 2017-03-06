@@ -309,7 +309,7 @@ static void begin_subsection(Context* ctx,
                              size_t leb_size_guess) {
   assert(ctx->last_subsection_leb_size_guess == 0);
   char desc[100];
-  snprintf(desc, sizeof(desc), "subsection \"%s\"", name);
+  wabt_snprintf(desc, sizeof(desc), "subsection \"%s\"", name);
   ctx->last_subsection_leb_size_guess = leb_size_guess;
   ctx->last_subsection_offset =
       write_u32_leb128_space(ctx, leb_size_guess, "subsection size (guess)");
