@@ -81,7 +81,7 @@ void destroy_optional_export(OptionalExport* export_) {
 void destroy_exported_func(ExportedFunc* exported_func) {
   destroy_optional_export(&exported_func->export_);
   destroy_func(exported_func->func);
-  wabt_free(exported_func->func);
+  delete exported_func->func;
 }
 
 void destroy_text_list(TextList* text_list) {
@@ -89,7 +89,7 @@ void destroy_text_list(TextList* text_list) {
   while (node) {
     TextListNode* next = node->next;
     destroy_string_slice(&node->text);
-    wabt_free(node);
+    delete node;
     node = next;
   }
 }
@@ -116,7 +116,7 @@ void destroy_func_fields(FuncField* func_field) {
         break;
     }
 
-    wabt_free(func_field);
+    delete func_field;
     func_field = next_func_field;
   }
 }

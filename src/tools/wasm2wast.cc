@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
   init_stdio();
   parse_options(argc, argv);
 
-  void* data;
+  char* data;
   size_t size;
   result = read_file(s_infile, &data, &size);
   if (WABT_SUCCEEDED(result)) {
@@ -175,7 +175,7 @@ int main(int argc, char** argv) {
       }
       destroy_module(&module);
     }
-    wabt_free(data);
+    delete[] data;
   }
   return result != Result::Ok;
 }

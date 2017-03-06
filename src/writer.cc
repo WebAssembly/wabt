@@ -89,7 +89,7 @@ void close_file_writer(FileWriter* writer) {
 
 void init_output_buffer(OutputBuffer* buf, size_t initial_capacity) {
   assert(initial_capacity != 0);
-  buf->start = wabt_alloc(initial_capacity);
+  buf->start = new char[initial_capacity]();
   buf->size = 0;
   buf->capacity = initial_capacity;
 }
@@ -101,7 +101,11 @@ static void ensure_output_buffer_capacity(OutputBuffer* buf,
     size_t new_capacity = buf->capacity * 2;
     while (new_capacity < ensure_capacity)
       new_capacity *= 2;
-    buf->start = wabt_realloc(buf->start, new_capacity);
+    char* new_data = new char [new_capacity];
+    memcpy(new_data, buf->start, buf->capacity);
+    memset(new_data + buf->capacity, 0, new_capacity - buf->capacity);
+    delete [] buf->start;
+    buf->start = new_data;
     buf->capacity = new_capacity;
   }
 }
@@ -113,9 +117,7 @@ static Result write_data_to_output_buffer(size_t offset,
   MemoryWriter* writer = static_cast<MemoryWriter*>(user_data);
   size_t end = offset + size;
   ensure_output_buffer_capacity(&writer->buf, end);
-  memcpy(reinterpret_cast<void*>(reinterpret_cast<intptr_t>(writer->buf.start) +
-                                 offset),
-         data, size);
+  memcpy(writer->buf.start + offset, data, size);
   if (end > writer->buf.size)
     writer->buf.size = end;
   return Result::Ok;
@@ -190,7 +192,7 @@ Result write_output_buffer_to_file(OutputBuffer* buf, const char* filename) {
 }
 
 void destroy_output_buffer(OutputBuffer* buf) {
-  wabt_free(buf->start);
+  delete[] buf->start;
 }
 
 }  // namespace wabt

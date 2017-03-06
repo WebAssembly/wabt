@@ -20,7 +20,7 @@
 
 namespace wabt {
 
-void ensure_capacity(void** data,
+void ensure_capacity(char** data,
                      size_t* capacity,
                      size_t desired_size,
                      size_t elt_byte_size) {
@@ -29,12 +29,17 @@ void ensure_capacity(void** data,
     while (new_capacity < desired_size)
       new_capacity *= 2;
     size_t new_byte_size = new_capacity * elt_byte_size;
-    *data = wabt_realloc(*data, new_byte_size);
+    size_t old_byte_capacity = *capacity * elt_byte_size;
+    char* new_data = new char [new_byte_size];
+    memcpy(new_data, *data, old_byte_capacity);
+    memset(new_data + old_byte_capacity, 0, new_byte_size - old_byte_capacity);
+    delete[] *data;
+    *data = new_data;
     *capacity = new_capacity;
   }
 }
 
-void resize_vector(void** data,
+void resize_vector(char** data,
                    size_t* size,
                    size_t* capacity,
                    size_t desired_size,
@@ -42,34 +47,30 @@ void resize_vector(void** data,
   size_t old_size = *size;
   ensure_capacity(data, capacity, desired_size, elt_byte_size);
   if (desired_size > old_size) {
-    memset(reinterpret_cast<void*>(reinterpret_cast<intptr_t>(*data) +
-                                   old_size * elt_byte_size),
-           0, (desired_size - old_size) * elt_byte_size);
+    memset(*data + old_size * elt_byte_size, 0,
+           (desired_size - old_size) * elt_byte_size);
   }
   *size = desired_size;
 }
 
-void* append_element(void** data,
+void* append_element(char** data,
                      size_t* size,
                      size_t* capacity,
                      size_t elt_byte_size) {
   ensure_capacity(data, capacity, *size + 1, elt_byte_size);
-  void* p = reinterpret_cast<void*>(reinterpret_cast<intptr_t>(*data) +
-                                    (*size)++ * elt_byte_size);
+  char* p = *data + (*size)++ * elt_byte_size;
   memset(p, 0, elt_byte_size);
   return p;
 }
 
-void extend_elements(void** dst,
+void extend_elements(char** dst,
                      size_t* dst_size,
                      size_t* dst_capacity,
-                     void* const* src,
+                     char* const* src,
                      size_t src_size,
                      size_t elt_byte_size) {
   ensure_capacity(dst, dst_capacity, *dst_size + src_size, elt_byte_size);
-  memcpy(reinterpret_cast<void*>(reinterpret_cast<intptr_t>(*dst) +
-                                 (*dst_size * elt_byte_size)),
-         *src, src_size * elt_byte_size);
+  memcpy(*dst + (*dst_size * elt_byte_size), *src, src_size * elt_byte_size);
   *dst_size += src_size;
 }
 

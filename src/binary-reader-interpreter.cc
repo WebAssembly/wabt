@@ -726,7 +726,7 @@ static Result on_memory(uint32_t index,
   InterpreterMemory* memory = append_interpreter_memory(&ctx->env->memories);
   memory->page_limits = *page_limits;
   memory->byte_size = page_limits->initial * WABT_PAGE_SIZE;
-  memory->data = wabt_alloc_zero(memory->byte_size);
+  memory->data = new char[memory->byte_size]();
   ctx->module->memory_index = ctx->env->memories.size - 1;
   return Result::Ok;
 }
@@ -953,8 +953,7 @@ static Result on_data_segment_data(uint32_t index,
   InterpreterMemory* memory =
       &ctx->env->memories.data[ctx->module->memory_index];
   uint32_t address = ctx->init_expr_value.value.i32;
-  uint8_t* dst_data = static_cast<uint8_t*>(memory->data);
-  memcpy(&dst_data[address], src_data, size);
+  memcpy(memory->data + address, src_data, size);
   return Result::Ok;
 }
 

@@ -70,7 +70,7 @@ static void destroy_interpreter_func(InterpreterFunc* func) {
 }
 
 static void destroy_interpreter_memory(InterpreterMemory* memory) {
-  wabt_free(memory->data);
+  delete [] memory->data;
 }
 
 static void destroy_interpreter_table(InterpreterTable* table) {
@@ -783,7 +783,7 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
 
   InterpreterEnvironment* env = thread->env;
 
-  const uint8_t* istream = static_cast<const uint8_t*>(env->istream.start);
+  const uint8_t* istream = reinterpret_cast<const uint8_t*>(env->istream.start);
   const uint8_t* pc = &istream[thread->pc];
   uint32_t i;
   for (i = 0; i < num_instructions; ++i) {
@@ -1030,11 +1030,10 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
         PUSH_NEG_1_AND_BREAK_IF(
             static_cast<uint64_t>(new_page_size) * WABT_PAGE_SIZE > UINT32_MAX);
         uint32_t new_byte_size = new_page_size * WABT_PAGE_SIZE;
-        void* new_data = wabt_realloc(memory->data, new_byte_size);
-        PUSH_NEG_1_AND_BREAK_IF(!new_data);
-        memset(reinterpret_cast<void*>(reinterpret_cast<intptr_t>(new_data) +
-                                       old_byte_size),
-               0, new_byte_size - old_byte_size);
+        char* new_data = new char [new_byte_size];
+        memcpy(new_data, memory->data, old_byte_size);
+        memset(new_data + old_byte_size, 0, new_byte_size - old_byte_size);
+        delete [] memory->data;
         memory->data = new_data;
         memory->page_limits.initial = new_page_size;
         memory->byte_size = new_byte_size;
@@ -1689,13 +1688,13 @@ exit_loop:
 
 void trace_pc(InterpreterThread* thread, Stream* stream) {
   const uint8_t* istream =
-      static_cast<const uint8_t*>(thread->env->istream.start);
+      reinterpret_cast<const uint8_t*>(thread->env->istream.start);
   const uint8_t* pc = &istream[thread->pc];
   size_t value_stack_depth = thread->value_stack_top - thread->value_stack.data;
   size_t call_stack_depth = thread->call_stack_top - thread->call_stack.data;
 
   writef(stream, "#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ", call_stack_depth,
-         pc - static_cast<uint8_t*>(thread->env->istream.start),
+         pc - reinterpret_cast<uint8_t*>(thread->env->istream.start),
          value_stack_depth);
 
   InterpreterOpcode opcode = static_cast<InterpreterOpcode>(*pc++);
@@ -2056,7 +2055,7 @@ void disassemble(InterpreterEnvironment* env,
     return;
   if (to > env->istream.size)
     to = env->istream.size;
-  const uint8_t* istream = static_cast<const uint8_t*>(env->istream.start);
+  const uint8_t* istream = reinterpret_cast<const uint8_t*>(env->istream.start);
   const uint8_t* pc = &istream[from];
 
   while (static_cast<uint32_t>(pc - istream) < to) {

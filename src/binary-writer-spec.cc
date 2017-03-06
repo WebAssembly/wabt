@@ -98,7 +98,7 @@ static StringSlice get_basename(const char* s) {
 
 static char* get_module_filename(Context* ctx) {
   size_t buflen = ctx->module_filename_noext.length + 20;
-  char* str = static_cast<char*>(wabt_alloc(buflen));
+  char* str = new char[buflen];
   size_t length =
       snprintf(str, buflen, PRIstringslice ".%" PRIzd ".wasm",
                WABT_PRINTF_STRING_SLICE_ARG(ctx->module_filename_noext),
@@ -327,7 +327,7 @@ static void write_invalid_module(Context* ctx,
   write_key(ctx, "text");
   write_escaped_string_slice(ctx, text);
   write_raw_module(ctx, filename, module);
-  wabt_free(filename);
+  delete [] filename;
 }
 
 static void write_commands(Context* ctx, Script* script) {
@@ -364,7 +364,7 @@ static void write_commands(Context* ctx, Script* script) {
         write_key(ctx, "filename");
         write_escaped_string_slice(ctx, get_basename(filename));
         write_module(ctx, filename, module);
-        wabt_free(filename);
+        delete [] filename;
         ctx->num_modules++;
         last_module_index = static_cast<int>(i);
         break;
