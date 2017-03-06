@@ -245,44 +245,41 @@ if (NOT EMSCRIPTEN)
     link_libraries(gcov)
   endif ()
 
+  function(wabt_executable name)
+    # ARGV contains all arguments; remove the first one, ${name}, so it's just
+    # a list of sources.
+    list(REMOVE_AT ARGV 0)
+    add_executable(${name} ${ARGV})
+    add_dependencies(everything ${name})
+    target_link_libraries(${name} libwabt)
+    set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
+    set_property(TARGET ${name} PROPERTY CXX_STANDARD_REQUIRED ON)
+  endfunction()
+
   # wast2wasm
-  add_executable(wast2wasm src/tools/wast2wasm.cc)
-  add_dependencies(everything wast2wasm)
-  target_link_libraries(wast2wasm libwabt)
+  wabt_executable(wast2wasm src/tools/wast2wasm.cc)
 
   # wasm2wast
-  add_executable(wasm2wast src/tools/wasm2wast.cc)
-  add_dependencies(everything wasm2wast)
-  target_link_libraries(wasm2wast libwabt)
+  wabt_executable(wasm2wast src/tools/wasm2wast.cc)
 
   # wasmopcodecnt
-  add_executable(wasmopcodecnt src/tools/wasmopcodecnt.cc
-    src/binary-reader-opcnt.cc)
-  add_dependencies(everything wasmopcodecnt)
-  target_link_libraries(wasmopcodecnt libwabt)
+  wabt_executable(wasmopcodecnt
+    src/tools/wasmopcodecnt.cc src/binary-reader-opcnt.cc)
 
   # wasmdump
-  add_executable(wasmdump src/tools/wasmdump.cc src/binary-reader-objdump.cc)
-  add_dependencies(everything wasmdump)
-  target_link_libraries(wasmdump libwabt)
+  wabt_executable(wasmdump src/tools/wasmdump.cc src/binary-reader-objdump.cc)
 
   # wasm-link
-  add_executable(wasm-link src/tools/wasm-link.cc src/binary-reader-linker.cc)
-  add_dependencies(everything wasm-link)
-  target_link_libraries(wasm-link libwabt)
+  wabt_executable(wasm-link src/tools/wasm-link.cc src/binary-reader-linker.cc)
 
   # wasm-interp
-  add_executable(wasm-interp src/tools/wasm-interp.cc)
-  add_dependencies(everything wasm-interp)
-  target_link_libraries(wasm-interp libwabt)
+  wabt_executable(wasm-interp src/tools/wasm-interp.cc)
   if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
     target_link_libraries(wasm-interp m)
   endif ()
 
   # wast-desugar
-  add_executable(wast-desugar src/tools/wast-desugar.cc)
-  add_dependencies(everything wast-desugar)
-  target_link_libraries(wast-desugar libwabt)
+  wabt_executable(wast-desugar src/tools/wast-desugar.cc)
 
   # symlinks for wast2wasm and wasm2wast
   if (NOT WIN32)
@@ -320,12 +317,9 @@ if (NOT EMSCRIPTEN)
     )
     add_executable(hexfloat_test ${HEXFLOAT_TEST_SRCS})
     add_dependencies(everything hexfloat_test)
-    set_source_files_properties(
-      test/hexfloat.cc
-      PROPERTIES
-      COMPILE_FLAGS -std=c++11
-    )
     target_link_libraries(hexfloat_test ${CMAKE_THREAD_LIBS_INIT})
+    set_property(TARGET hexfloat_test PROPERTY CXX_STANDARD 11)
+    set_property(TARGET hexfloat_test PROPERTY CXX_STANDARD_REQUIRED ON)
   endif ()
 
   # test running
