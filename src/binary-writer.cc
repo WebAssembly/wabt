@@ -895,9 +895,6 @@ static Result write_module(Context* ctx, const Module* module) {
       uint32_t num_locals = func->local_types.size;
       uint32_t num_params_and_locals = get_num_params_and_locals(func);
 
-      if (!num_params_and_locals)
-        continue;
-
       write_u32_leb128(&ctx->stream, i, "function index");
       write_u32_leb128(&ctx->stream, num_params_and_locals, "num locals");
 
