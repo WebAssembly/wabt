@@ -43,6 +43,7 @@ enum class ObjdumpMode {
 };
 
 struct ObjdumpOptions {
+  Stream* log_stream;
   bool headers;
   bool details;
   bool raw;

@@ -289,7 +289,8 @@ static Result on_function_name(uint32_t index,
   return Result::Ok;
 }
 
-Result read_binary_linker(LinkerInputBinary* input_info) {
+Result read_binary_linker(LinkerInputBinary* input_info,
+                          LinkOptions* options) {
   Context context;
   WABT_ZERO_MEMORY(context);
   context.binary = input_info;
@@ -324,6 +325,7 @@ Result read_binary_linker(LinkerInputBinary* input_info) {
 
   ReadBinaryOptions read_options = WABT_READ_BINARY_OPTIONS_DEFAULT;
   read_options.read_debug_names = true;
+  read_options.log_stream = options->log_stream;
   return read_binary(input_info->data, input_info->size, &reader, 1,
                      &read_options);
 }

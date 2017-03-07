@@ -773,6 +773,7 @@ Result read_binary_objdump(const uint8_t* data,
 
   ReadBinaryOptions read_options = WABT_READ_BINARY_OPTIONS_DEFAULT;
   read_options.read_debug_names = true;
+  read_options.log_stream = options->log_stream;
   return read_binary(data, size, &reader, 1, &read_options);
 }
 

@@ -6,18 +6,19 @@ WABT (we pronounce it "wabbit") is suite of tools for WebAssembly, including:
 
  - **wast2wasm**: translate from [s-expressions](https://github.com/WebAssembly/spec) to the WebAssembly [binary-encoding](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md)
  - **wasm2wast**: the inverse of wast2wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
+ - **wasmdump**: print information about a wasm binary. Similiar to objdump.
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
  - **wast-desugar**: parse .wast text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and print "canonical" flat format
+ - **wasm-link**: simple linker for merging multiple wasm files.
 
 These tools are intended for use in (or for development of) toolchains or other
 systems that want to manipulate WebAssembly files. Unlike the WebAssembly spec
 interpreter (which is written to be as simple, declarative and "speccy" as
-possible), they are written in C (possibly C++ in the future) and designed for
-easier integration into other systems. Unlike
-[Binaryen](https://github.com/WebAssembly/binaryen) these tools do not aim to
-provide an optimization platform or a higher-level compiler target; instead
-they aim for full fidelity and compliance with the spec (e.g. 1:1 round-trips
-with no changes to instructions).
+possible), they are written in C/C++ and designed for easier integration into
+other systems. Unlike [Binaryen](https://github.com/WebAssembly/binaryen) these
+tools do not aim to provide an optimization platform or a higher-level compiler
+target; instead they aim for full fidelity and compliance with the spec (e.g.
+1:1 round-trips with no changes to instructions).
 
 ## Cloning
 
