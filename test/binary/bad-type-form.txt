@@ -8,6 +8,6 @@ section(TYPE) {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000000c: unexpected type form
+error: @0x0000000c: unexpected type form: 32
 
 ;;; STDERR ;;)
