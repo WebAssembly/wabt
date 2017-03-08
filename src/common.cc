@@ -122,7 +122,7 @@ Result read_file(const char* filename, char** out_data, size_t* out_size) {
   if (!infile) {
     const char* format = "unable to read file %s";
     char msg[PATH_MAX + sizeof(format)];
-    snprintf(msg, sizeof(msg), format, filename);
+    wabt_snprintf(msg, sizeof(msg), format, filename);
     perror(msg);
     return Result::Error;
   }

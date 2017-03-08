@@ -640,10 +640,10 @@ LOGGING_UINT32_UINT32(on_init_expr_get_global_expr, "index", "global_index")
 static void sprint_limits(char* dst, size_t size, const Limits* limits) {
   int result;
   if (limits->has_max) {
-    result = snprintf(dst, size, "initial: %" PRIu64 ", max: %" PRIu64,
+    result = wabt_snprintf(dst, size, "initial: %" PRIu64 ", max: %" PRIu64,
                       limits->initial, limits->max);
   } else {
-    result = snprintf(dst, size, "initial: %" PRIu64, limits->initial);
+    result = wabt_snprintf(dst, size, "initial: %" PRIu64, limits->initial);
   }
   WABT_USE(result);
   assert(static_cast<size_t>(result) < size);

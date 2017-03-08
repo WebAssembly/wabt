@@ -46,7 +46,7 @@ static void generate_name(const char* prefix,
   size_t prefix_len = strlen(prefix);
   size_t buffer_len = prefix_len + 20; /* add space for the number */
   char* buffer = static_cast<char*>(alloca(buffer_len));
-  int actual_len = snprintf(buffer, buffer_len, "%s%u", prefix, index);
+  int actual_len = wabt_snprintf(buffer, buffer_len, "%s%u", prefix, index);
 
   StringSlice buf;
   buf.length = actual_len;
