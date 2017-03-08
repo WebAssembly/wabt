@@ -43,10 +43,10 @@ void ast_format_error(SourceErrorHandler* error_handler,
   va_copy(args_copy, args);
   char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
   char* buffer = fixed_buf;
-  size_t len = vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
+  size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
   if (len + 1 > sizeof(fixed_buf)) {
     buffer = static_cast<char*>(alloca(len + 1));
-    len = vsnprintf(buffer, len + 1, format, args_copy);
+    len = wabt_vsnprintf(buffer, len + 1, format, args_copy);
   }
 
   char* source_line = nullptr;

@@ -100,7 +100,7 @@ static char* get_module_filename(Context* ctx) {
   size_t buflen = ctx->module_filename_noext.length + 20;
   char* str = new char[buflen];
   size_t length =
-      snprintf(str, buflen, PRIstringslice ".%" PRIzd ".wasm",
+      wabt_snprintf(str, buflen, PRIstringslice ".%" PRIzd ".wasm",
                WABT_PRINTF_STRING_SLICE_ARG(ctx->module_filename_noext),
                ctx->num_modules);
   convert_backslash_to_slash(str, length);
