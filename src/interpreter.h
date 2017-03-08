@@ -19,7 +19,9 @@
 
 #include <stdint.h>
 
-#include "array.h"
+#include <memory>
+#include <vector>
+
 #include "common.h"
 #include "binding-hash.h"
 #include "type-vector.h"
@@ -99,9 +101,6 @@ enum class InterpreterOpcode {
 };
 static const int kInterpreterOpcodeCount = WABT_ENUM_COUNT(InterpreterOpcode);
 
-typedef uint32_t Uint32;
-WABT_DEFINE_ARRAY(uint32, Uint32);
-
 /* TODO(binji): identical to FuncSignature. Share? */
 struct InterpreterFuncSignature {
   TypeVector param_types;
@@ -110,10 +109,11 @@ struct InterpreterFuncSignature {
 WABT_DEFINE_VECTOR(interpreter_func_signature, InterpreterFuncSignature);
 
 struct InterpreterTable {
+  explicit InterpreterTable(const Limits&);
+
   Limits limits;
-  Uint32Array func_indexes;
+  std::vector<uint32_t> func_indexes;
 };
-WABT_DEFINE_VECTOR(interpreter_table, InterpreterTable);
 
 struct InterpreterMemory {
   char* data;
@@ -128,7 +128,6 @@ union InterpreterValue {
   uint32_t f32_bits;
   uint64_t f64_bits;
 };
-WABT_DEFINE_ARRAY(interpreter_value, InterpreterValue);
 
 struct InterpreterTypedValue {
   Type type;
@@ -144,6 +143,8 @@ struct InterpreterGlobal {
 WABT_DEFINE_VECTOR(interpreter_global, InterpreterGlobal);
 
 struct InterpreterImport {
+  ~InterpreterImport();
+
   StringSlice module_name;
   StringSlice field_name;
   ExternalKind kind;
@@ -160,7 +161,6 @@ struct InterpreterImport {
     } global;
   };
 };
-WABT_DEFINE_ARRAY(interpreter_import, InterpreterImport);
 
 struct InterpreterFunc;
 
@@ -227,25 +227,45 @@ struct InterpreterHostImportDelegate {
 };
 
 struct InterpreterModule {
+  explicit InterpreterModule(bool is_host);
+  InterpreterModule(const StringSlice& name, bool is_host);
+  virtual ~InterpreterModule();
+
+  inline struct DefinedInterpreterModule* as_defined();
+  inline struct HostInterpreterModule* as_host();
+
   StringSlice name;
   InterpreterExportVector exports;
   BindingHash export_bindings;
   uint32_t memory_index; /* INVALID_INDEX if not defined */
   uint32_t table_index;  /* INVALID_INDEX if not defined */
   bool is_host;
-  union {
-    struct {
-      InterpreterImportArray imports;
-      uint32_t start_func_index; /* INVALID_INDEX if not defined */
-      size_t istream_start;
-      size_t istream_end;
-    } defined;
-    struct {
-      InterpreterHostImportDelegate import_delegate;
-    } host;
-  };
 };
-WABT_DEFINE_VECTOR(interpreter_module, InterpreterModule);
+
+struct DefinedInterpreterModule : InterpreterModule {
+  explicit DefinedInterpreterModule(size_t istream_start);
+
+  std::vector<InterpreterImport> imports;
+  uint32_t start_func_index; /* INVALID_INDEX if not defined */
+  size_t istream_start;
+  size_t istream_end;
+};
+
+struct HostInterpreterModule : InterpreterModule {
+  HostInterpreterModule(const StringSlice& name);
+
+  InterpreterHostImportDelegate import_delegate;
+};
+
+DefinedInterpreterModule* InterpreterModule::as_defined() {
+  assert(!is_host);
+  return static_cast<DefinedInterpreterModule*>(this);
+}
+
+HostInterpreterModule* InterpreterModule::as_host() {
+  assert(is_host);
+  return static_cast<HostInterpreterModule*>(this);
+}
 
 /* Used to track and reset the state of the environment. */
 struct InterpreterEnvironmentMark {
@@ -259,11 +279,11 @@ struct InterpreterEnvironmentMark {
 };
 
 struct InterpreterEnvironment {
-  InterpreterModuleVector modules;
+  std::vector<std::unique_ptr<InterpreterModule>> modules;
   InterpreterFuncSignatureVector sigs;
   InterpreterFuncVector funcs;
   InterpreterMemoryVector memories;
-  InterpreterTableVector tables;
+  std::vector<InterpreterTable> tables;
   InterpreterGlobalVector globals;
   OutputBuffer istream;
   BindingHash module_bindings;
@@ -272,8 +292,8 @@ struct InterpreterEnvironment {
 
 struct InterpreterThread {
   InterpreterEnvironment* env;
-  InterpreterValueArray value_stack;
-  Uint32Array call_stack;
+  std::vector<InterpreterValue> value_stack;
+  std::vector<uint32_t> call_stack;
   InterpreterValue* value_stack_top;
   InterpreterValue* value_stack_end;
   uint32_t* call_stack_top;
@@ -305,8 +325,8 @@ InterpreterEnvironmentMark mark_interpreter_environment(
     InterpreterEnvironment* env);
 void reset_interpreter_environment_to_mark(InterpreterEnvironment* env,
                                            InterpreterEnvironmentMark mark);
-InterpreterModule* append_host_module(InterpreterEnvironment* env,
-                                      StringSlice name);
+HostInterpreterModule* append_host_module(InterpreterEnvironment* env,
+                                          StringSlice name);
 void init_interpreter_thread(InterpreterEnvironment* env,
                              InterpreterThread* thread,
                              InterpreterThreadOptions* options);
