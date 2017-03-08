@@ -35,7 +35,7 @@
 #define CHECK_LOCAL(ctx, local_index)                                       \
   do {                                                                      \
     uint32_t max_local_index =                                              \
-        (ctx)->current_func->defined.param_and_local_types.size;            \
+        (ctx)->current_func->param_and_local_types.size();                  \
     if ((local_index) >= max_local_index) {                                 \
       print_error((ctx), "invalid local_index: %d (max %d)", (local_index), \
                   max_local_index);                                         \
@@ -70,7 +70,7 @@ struct Context {
   BinaryErrorHandler* error_handler;
   InterpreterEnvironment* env;
   DefinedInterpreterModule* module;
-  InterpreterFunc* current_func;
+  DefinedInterpreterFunc* current_func;
   TypeChecker typechecker;
   LabelVector label_stack;
   Uint32VectorVector func_fixups;
@@ -129,8 +129,7 @@ static uint32_t translate_sig_index_to_env(Context* ctx, uint32_t sig_index) {
 static InterpreterFuncSignature* get_signature_by_env_index(
     Context* ctx,
     uint32_t sig_index) {
-  assert(sig_index < ctx->env->sigs.size);
-  return &ctx->env->sigs.data[sig_index];
+  return &ctx->env->sigs[sig_index];
 }
 
 static InterpreterFuncSignature* get_signature_by_module_index(
@@ -153,8 +152,7 @@ static uint32_t translate_module_func_index_to_defined(Context* ctx,
 
 static InterpreterFunc* get_func_by_env_index(Context* ctx,
                                               uint32_t func_index) {
-  assert(func_index < ctx->env->funcs.size);
-  return &ctx->env->funcs.data[func_index];
+  return ctx->env->funcs[func_index].get();
 }
 
 static InterpreterFunc* get_func_by_module_index(Context* ctx,
@@ -165,14 +163,12 @@ static InterpreterFunc* get_func_by_module_index(Context* ctx,
 
 static uint32_t translate_global_index_to_env(Context* ctx,
                                               uint32_t global_index) {
-  assert(global_index < ctx->global_index_mapping.size);
   return ctx->global_index_mapping.data[global_index];
 }
 
 static InterpreterGlobal* get_global_by_env_index(Context* ctx,
                                                   uint32_t global_index) {
-  assert(global_index < ctx->env->globals.size);
-  return &ctx->env->globals.data[global_index];
+  return &ctx->env->globals[global_index];
 }
 
 static InterpreterGlobal* get_global_by_module_index(Context* ctx,
@@ -189,8 +185,7 @@ static Type get_global_type_by_module_index(Context* ctx,
 static Type get_local_type_by_index(InterpreterFunc* func,
                                     uint32_t local_index) {
   assert(!func->is_host);
-  assert(local_index < func->defined.param_and_local_types.size);
-  return func->defined.param_and_local_types.data[local_index];
+  return func->as_defined()->param_and_local_types[local_index];
 }
 
 static uint32_t get_istream_offset(Context* ctx) {
@@ -297,7 +292,7 @@ static Result get_return_drop_keep_count(Context* ctx,
     return Result::Error;
   }
 
-  *out_drop_count += ctx->current_func->defined.param_and_local_types.size;
+  *out_drop_count += ctx->current_func->param_and_local_types.size();
   return Result::Ok;
 }
 
@@ -338,14 +333,14 @@ static Result fixup_top_label(Context* ctx) {
 }
 
 static Result emit_func_offset(Context* ctx,
-                               InterpreterFunc* func,
+                               DefinedInterpreterFunc* func,
                                uint32_t func_index) {
-  if (func->defined.offset == WABT_INVALID_OFFSET) {
+  if (func->offset == WABT_INVALID_OFFSET) {
     uint32_t defined_index =
         translate_module_func_index_to_defined(ctx, func_index);
     CHECK_RESULT(append_fixup(ctx, &ctx->func_fixups, defined_index));
   }
-  CHECK_RESULT(emit_i32(ctx, func->defined.offset));
+  CHECK_RESULT(emit_i32(ctx, func->offset));
   return Result::Ok;
 }
 
@@ -357,9 +352,8 @@ static Result on_signature_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resize_uint32_vector(&ctx->sig_index_mapping, count);
   for (uint32_t i = 0; i < count; ++i)
-    ctx->sig_index_mapping.data[i] = ctx->env->sigs.size + i;
-  resize_interpreter_func_signature_vector(&ctx->env->sigs,
-                                           ctx->env->sigs.size + count);
+    ctx->sig_index_mapping.data[i] = ctx->env->sigs.size() + i;
+  ctx->env->sigs.resize(ctx->env->sigs.size() + count);
   return Result::Ok;
 }
 
@@ -371,14 +365,10 @@ static Result on_signature(uint32_t index,
                            void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   InterpreterFuncSignature* sig = get_signature_by_module_index(ctx, index);
-
-  reserve_types(&sig->param_types, param_count);
-  sig->param_types.size = param_count;
-  memcpy(sig->param_types.data, param_types, param_count * sizeof(Type));
-
-  reserve_types(&sig->result_types, result_count);
-  sig->result_types.size = result_count;
-  memcpy(sig->result_types.data, result_types, result_count * sizeof(Type));
+  sig->param_types.insert(sig->param_types.end(), param_types,
+                          param_types + param_count);
+  sig->result_types.insert(sig->result_types.end(), result_types,
+                           result_types + result_count);
   return Result::Ok;
 }
 
@@ -479,13 +469,11 @@ static Result append_export(Context* ctx,
     return Result::Error;
   }
 
-  InterpreterExport* export_ = append_interpreter_export(&module->exports);
-  export_->name = dup_string_slice(name);
-  export_->kind = kind;
-  export_->index = item_index;
+  module->exports.emplace_back(dup_string_slice(name), kind, item_index);
+  InterpreterExport* export_ = &module->exports.back();
 
   Binding* binding = insert_binding(&module->export_bindings, &export_->name);
-  binding->index = module->exports.size - 1;
+  binding->index = module->exports.size() - 1;
   return Result::Ok;
 }
 
@@ -509,32 +497,29 @@ static Result on_import_func(uint32_t import_index,
                              void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   InterpreterImport* import = &ctx->module->imports[import_index];
-  assert(sig_index < ctx->env->sigs.size);
   import->func.sig_index = translate_sig_index_to_env(ctx, sig_index);
 
   uint32_t func_env_index;
   if (ctx->is_host_import) {
-    InterpreterFunc* func = append_interpreter_func(&ctx->env->funcs);
-    func->is_host = true;
-    func->sig_index = import->func.sig_index;
-    func->host.module_name = import->module_name;
-    func->host.field_name = import->field_name;
+    HostInterpreterFunc* func = new HostInterpreterFunc(
+        import->module_name, import->field_name, import->func.sig_index);
+
+    ctx->env->funcs.emplace_back(func);
 
     InterpreterHostImportDelegate* host_delegate =
         &ctx->host_import_module->import_delegate;
-    InterpreterFuncSignature* sig = &ctx->env->sigs.data[func->sig_index];
+    InterpreterFuncSignature* sig = &ctx->env->sigs[func->sig_index];
     CHECK_RESULT(host_delegate->import_func(import, func, sig,
                                             make_print_error_callback(ctx),
                                             host_delegate->user_data));
-    assert(func->host.callback);
+    assert(func->callback);
 
-    func_env_index = ctx->env->funcs.size - 1;
+    func_env_index = ctx->env->funcs.size() - 1;
     append_export(ctx, ctx->host_import_module, ExternalKind::Func,
                   func_env_index, import->field_name);
   } else {
     CHECK_RESULT(check_import_kind(ctx, import, ExternalKind::Func));
-    assert(ctx->import_env_index < ctx->env->funcs.size);
-    InterpreterFunc* func = &ctx->env->funcs.data[ctx->import_env_index];
+    InterpreterFunc* func = ctx->env->funcs[ctx->import_env_index].get();
     if (!func_signatures_are_equal(ctx->env, import->func.sig_index,
                                    func->sig_index)) {
       print_error(ctx, "import signature mismatch");
@@ -604,7 +589,8 @@ static Result on_import_memory(uint32_t import_index,
   InterpreterImport* import = &ctx->module->imports[import_index];
 
   if (ctx->is_host_import) {
-    InterpreterMemory* memory = append_interpreter_memory(&ctx->env->memories);
+    ctx->env->memories.emplace_back();
+    InterpreterMemory* memory = &ctx->env->memories.back();
 
     InterpreterHostImportDelegate* host_delegate =
         &ctx->host_import_module->import_delegate;
@@ -612,16 +598,14 @@ static Result on_import_memory(uint32_t import_index,
                                               make_print_error_callback(ctx),
                                               host_delegate->user_data));
 
-    assert(memory->data);
     CHECK_RESULT(check_import_limits(ctx, page_limits, &memory->page_limits));
 
-    ctx->module->memory_index = ctx->env->memories.size - 1;
+    ctx->module->memory_index = ctx->env->memories.size() - 1;
     append_export(ctx, ctx->host_import_module, ExternalKind::Memory,
                   ctx->module->memory_index, import->field_name);
   } else {
     CHECK_RESULT(check_import_kind(ctx, import, ExternalKind::Memory));
-    assert(ctx->import_env_index < ctx->env->memories.size);
-    InterpreterMemory* memory = &ctx->env->memories.data[ctx->import_env_index];
+    InterpreterMemory* memory = &ctx->env->memories[ctx->import_env_index];
     CHECK_RESULT(check_import_limits(ctx, page_limits, &memory->page_limits));
 
     import->memory.limits = *page_limits;
@@ -640,11 +624,10 @@ static Result on_import_global(uint32_t import_index,
   Context* ctx = static_cast<Context*>(user_data);
   InterpreterImport* import = &ctx->module->imports[import_index];
 
-  uint32_t global_env_index = ctx->env->globals.size - 1;
+  uint32_t global_env_index = ctx->env->globals.size() - 1;
   if (ctx->is_host_import) {
-    InterpreterGlobal* global = append_interpreter_global(&ctx->env->globals);
-    global->typed_value.type = type;
-    global->mutable_ = mutable_;
+    ctx->env->globals.emplace_back(InterpreterTypedValue(type), mutable_);
+    InterpreterGlobal* global = &ctx->env->globals.back();
 
     InterpreterHostImportDelegate* host_delegate =
         &ctx->host_import_module->import_delegate;
@@ -652,7 +635,7 @@ static Result on_import_global(uint32_t import_index,
                                               make_print_error_callback(ctx),
                                               host_delegate->user_data));
 
-    global_env_index = ctx->env->globals.size - 1;
+    global_env_index = ctx->env->globals.size() - 1;
     append_export(ctx, ctx->host_import_module, ExternalKind::Global,
                   global_env_index, import->field_name);
   } else {
@@ -672,9 +655,8 @@ static Result on_function_signatures_count(uint32_t count, void* user_data) {
   size_t old_size = ctx->func_index_mapping.size;
   resize_uint32_vector(&ctx->func_index_mapping, old_size + count);
   for (uint32_t i = 0; i < count; ++i)
-    ctx->func_index_mapping.data[old_size + i] = ctx->env->funcs.size + i;
-  resize_interpreter_func_vector(&ctx->env->funcs,
-                                 ctx->env->funcs.size + count);
+    ctx->func_index_mapping.data[old_size + i] = ctx->env->funcs.size() + i;
+  ctx->env->funcs.reserve(ctx->env->funcs.size() + count);
   resize_uint32_vector_vector(&ctx->func_fixups, count);
   return Result::Ok;
 }
@@ -683,9 +665,9 @@ static Result on_function_signature(uint32_t index,
                                     uint32_t sig_index,
                                     void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  InterpreterFunc* func = get_func_by_module_index(ctx, index);
-  func->defined.offset = WABT_INVALID_OFFSET;
-  func->sig_index = translate_sig_index_to_env(ctx, sig_index);
+  DefinedInterpreterFunc* func =
+      new DefinedInterpreterFunc(translate_sig_index_to_env(ctx, sig_index));
+  ctx->env->funcs.emplace_back(func);
   return Result::Ok;
 }
 
@@ -711,11 +693,8 @@ static Result on_memory(uint32_t index,
     print_error(ctx, "only one memory allowed");
     return Result::Error;
   }
-  InterpreterMemory* memory = append_interpreter_memory(&ctx->env->memories);
-  memory->page_limits = *page_limits;
-  memory->byte_size = page_limits->initial * WABT_PAGE_SIZE;
-  memory->data = new char[memory->byte_size]();
-  ctx->module->memory_index = ctx->env->memories.size - 1;
+  ctx->env->memories.emplace_back(*page_limits);
+  ctx->module->memory_index = ctx->env->memories.size() - 1;
   return Result::Ok;
 }
 
@@ -724,9 +703,8 @@ static Result on_global_count(uint32_t count, void* user_data) {
   size_t old_size = ctx->global_index_mapping.size;
   resize_uint32_vector(&ctx->global_index_mapping, old_size + count);
   for (uint32_t i = 0; i < count; ++i)
-    ctx->global_index_mapping.data[old_size + i] = ctx->env->globals.size + i;
-  resize_interpreter_global_vector(&ctx->env->globals,
-                                   ctx->env->globals.size + count);
+    ctx->global_index_mapping.data[old_size + i] = ctx->env->globals.size() + i;
+  ctx->env->globals.resize(ctx->env->globals.size() + count);
   return Result::Ok;
 }
 
@@ -830,7 +808,7 @@ static Result on_export(uint32_t index,
 
     case ExternalKind::Global: {
       item_index = translate_global_index_to_env(ctx, item_index);
-      InterpreterGlobal* global = &ctx->env->globals.data[item_index];
+      InterpreterGlobal* global = &ctx->env->globals[item_index];
       if (global->mutable_) {
         print_error(ctx, "mutable globals cannot be exported");
         return Result::Error;
@@ -847,11 +825,11 @@ static Result on_start_function(uint32_t func_index, void* user_data) {
   InterpreterFunc* start_func = get_func_by_env_index(ctx, start_func_index);
   InterpreterFuncSignature* sig =
       get_signature_by_env_index(ctx, start_func->sig_index);
-  if (sig->param_types.size != 0) {
+  if (sig->param_types.size() != 0) {
     print_error(ctx, "start function must be nullary");
     return Result::Error;
   }
-  if (sig->result_types.size != 0) {
+  if (sig->result_types.size() != 0) {
     print_error(ctx, "start function must not return anything");
     return Result::Error;
   }
@@ -890,8 +868,6 @@ static Result on_elem_segment_function_index_check(uint32_t index,
     return Result::Error;
   }
 
-  table->func_indexes[ctx->table_offset++] =
-      translate_func_index_to_env(ctx, func_index);
   return Result::Ok;
 }
 
@@ -912,8 +888,7 @@ static Result on_data_segment_data_check(uint32_t index,
                                          void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   assert(ctx->module->memory_index != WABT_INVALID_INDEX);
-  InterpreterMemory* memory =
-      &ctx->env->memories.data[ctx->module->memory_index];
+  InterpreterMemory* memory = &ctx->env->memories[ctx->module->memory_index];
   if (ctx->init_expr_value.type != Type::I32) {
     print_error(ctx, "type mismatch in data segment, expected i32 but got %s",
                 get_type_name(ctx->init_expr_value.type));
@@ -922,10 +897,11 @@ static Result on_data_segment_data_check(uint32_t index,
   uint32_t address = ctx->init_expr_value.value.i32;
   uint64_t end_address =
       static_cast<uint64_t>(address) + static_cast<uint64_t>(size);
-  if (end_address > memory->byte_size) {
-    print_error(ctx, "data segment is out of bounds: [%u, %" PRIu64
-                     ") >= max value %u",
-                address, end_address, memory->byte_size);
+  if (end_address > memory->data.size()) {
+    print_error(ctx,
+                "data segment is out of bounds: [%u, %" PRIu64
+                ") >= max value %" PRIzd,
+                address, end_address, memory->data.size());
     return Result::Error;
   }
   return Result::Ok;
@@ -936,11 +912,12 @@ static Result on_data_segment_data(uint32_t index,
                                    uint32_t size,
                                    void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  assert(ctx->module->memory_index != WABT_INVALID_INDEX);
-  InterpreterMemory* memory =
-      &ctx->env->memories.data[ctx->module->memory_index];
-  uint32_t address = ctx->init_expr_value.value.i32;
-  memcpy(memory->data + address, src_data, size);
+  if (size > 0) {
+    assert(ctx->module->memory_index != WABT_INVALID_INDEX);
+    InterpreterMemory* memory = &ctx->env->memories[ctx->module->memory_index];
+    uint32_t address = ctx->init_expr_value.value.i32;
+    memcpy(&memory->data[address], src_data, size);
+  }
   return Result::Ok;
 }
 
@@ -963,17 +940,29 @@ static void pop_label(Context* ctx) {
   }
 }
 
+// TODO(binji): remove this when the rest of the code is using std::vector
+#define INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(out, in)                \
+  TypeVector out;                                                      \
+  {                                                                    \
+    size_t byte_size = (in).size() * sizeof((in)[0]);                  \
+    (out).data = static_cast<decltype((out).data)>(alloca(byte_size)); \
+    (out).size = (in).size();                                          \
+    if (byte_size) {                                                   \
+      memcpy((out).data, (in).data(), byte_size);                      \
+    }                                                                  \
+  }
+
 static Result begin_function_body(BinaryReaderContext* context,
                                   uint32_t index) {
   Context* ctx = static_cast<Context*>(context->user_data);
-  InterpreterFunc* func = get_func_by_module_index(ctx, index);
+  DefinedInterpreterFunc* func =
+      get_func_by_module_index(ctx, index)->as_defined();
   InterpreterFuncSignature* sig =
       get_signature_by_env_index(ctx, func->sig_index);
 
-  func->is_host = false;
-  func->defined.offset = get_istream_offset(ctx);
-  func->defined.local_decl_count = 0;
-  func->defined.local_count = 0;
+  func->offset = get_istream_offset(ctx);
+  func->local_decl_count = 0;
+  func->local_count = 0;
 
   ctx->current_func = func;
   ctx->depth_fixups.size = 0;
@@ -983,16 +972,14 @@ static Result begin_function_body(BinaryReaderContext* context,
   uint32_t defined_index = translate_module_func_index_to_defined(ctx, index);
   Uint32Vector* fixups = &ctx->func_fixups.data[defined_index];
   for (uint32_t i = 0; i < fixups->size; ++i)
-    CHECK_RESULT(emit_i32_at(ctx, fixups->data[i], func->defined.offset));
+    CHECK_RESULT(emit_i32_at(ctx, fixups->data[i], func->offset));
 
   /* append param types */
-  for (uint32_t i = 0; i < sig->param_types.size; ++i) {
-    append_type_value(&func->defined.param_and_local_types,
-                      &sig->param_types.data[i]);
-  }
+  for (uint32_t i = 0; i < sig->param_types.size(); ++i)
+    func->param_and_local_types.push_back(sig->param_types[i]);
 
-  CHECK_RESULT(
-      typechecker_begin_function(&ctx->typechecker, &sig->result_types));
+  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(result_types, sig->result_types);
+  CHECK_RESULT(typechecker_begin_function(&ctx->typechecker, &result_types));
 
   /* push implicit func label (equivalent to return) */
   push_label(ctx, WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
@@ -1014,8 +1001,7 @@ static Result end_function_body(uint32_t index, void* user_data) {
 
 static Result on_local_decl_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  InterpreterFunc* func = ctx->current_func;
-  func->defined.local_decl_count = count;
+  ctx->current_func->local_decl_count = count;
   return Result::Ok;
 }
 
@@ -1024,17 +1010,15 @@ static Result on_local_decl(uint32_t decl_index,
                             Type type,
                             void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  InterpreterFunc* func = ctx->current_func;
-  func->defined.local_count += count;
+  ctx->current_func->local_count += count;
 
-  for (uint32_t i = 0; i < count; ++i) {
-    append_type_value(&func->defined.param_and_local_types, &type);
-  }
+  for (uint32_t i = 0; i < count; ++i)
+    ctx->current_func->param_and_local_types.push_back(type);
 
-  if (decl_index == func->defined.local_decl_count - 1) {
+  if (decl_index == ctx->current_func->local_decl_count - 1) {
     /* last local declaration, allocate space for all locals. */
     CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Alloca));
-    CHECK_RESULT(emit_i32(ctx, func->defined.local_count));
+    CHECK_RESULT(emit_i32(ctx, ctx->current_func->local_count));
   }
   return Result::Ok;
 }
@@ -1191,15 +1175,17 @@ static Result on_call_expr(uint32_t func_index, void* user_data) {
   InterpreterFunc* func = get_func_by_module_index(ctx, func_index);
   InterpreterFuncSignature* sig =
       get_signature_by_env_index(ctx, func->sig_index);
-  CHECK_RESULT(typechecker_on_call(&ctx->typechecker, &sig->param_types,
-                                   &sig->result_types));
+  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(param_types, sig->param_types);
+  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(result_types, sig->result_types);
+  CHECK_RESULT(
+      typechecker_on_call(&ctx->typechecker, &param_types, &result_types));
 
   if (func->is_host) {
     CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::CallHost));
     CHECK_RESULT(emit_i32(ctx, translate_func_index_to_env(ctx, func_index)));
   } else {
     CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Call));
-    CHECK_RESULT(emit_func_offset(ctx, func, func_index));
+    CHECK_RESULT(emit_func_offset(ctx, func->as_defined(), func_index));
   }
 
   return Result::Ok;
@@ -1212,8 +1198,10 @@ static Result on_call_indirect_expr(uint32_t sig_index, void* user_data) {
     return Result::Error;
   }
   InterpreterFuncSignature* sig = get_signature_by_module_index(ctx, sig_index);
-  CHECK_RESULT(typechecker_on_call_indirect(
-      &ctx->typechecker, &sig->param_types, &sig->result_types));
+  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(param_types, sig->param_types);
+  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(result_types, sig->result_types);
+  CHECK_RESULT(typechecker_on_call_indirect(&ctx->typechecker, &param_types,
+                                            &result_types));
 
   CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::CallIndirect));
   CHECK_RESULT(emit_i32(ctx, ctx->module->table_index));
@@ -1288,7 +1276,7 @@ static Result on_set_global_expr(uint32_t global_index, void* user_data) {
 
 static uint32_t translate_local_index(Context* ctx, uint32_t local_index) {
   return ctx->typechecker.type_stack.size +
-         ctx->current_func->defined.param_and_local_types.size - local_index;
+         ctx->current_func->param_and_local_types.size() - local_index;
 }
 
 static Result on_get_local_expr(uint32_t local_index, void* user_data) {
