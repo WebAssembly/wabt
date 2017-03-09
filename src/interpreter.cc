@@ -73,31 +73,51 @@ static void destroy_interpreter_memory(InterpreterMemory* memory) {
   delete [] memory->data;
 }
 
-static void destroy_interpreter_table(InterpreterTable* table) {
-  destroy_uint32_array(&table->func_indexes);
+InterpreterTable::InterpreterTable(const Limits& limits)
+    : limits(limits), func_indexes(limits.initial, WABT_INVALID_INDEX) {}
+
+InterpreterImport::~InterpreterImport() {
+  destroy_string_slice(&module_name);
+  destroy_string_slice(&field_name);
 }
 
-static void destroy_interpreter_import(InterpreterImport* import) {
-  destroy_string_slice(&import->module_name);
-  destroy_string_slice(&import->field_name);
+InterpreterModule::InterpreterModule(bool is_host)
+    : memory_index(WABT_INVALID_INDEX),
+      table_index(WABT_INVALID_INDEX),
+      is_host(is_host) {
+  WABT_ZERO_MEMORY(name);
+  WABT_ZERO_MEMORY(exports);
+  WABT_ZERO_MEMORY(export_bindings);
 }
 
-static void destroy_interpreter_module(InterpreterModule* module) {
-  destroy_interpreter_export_vector(&module->exports);
-  destroy_binding_hash(&module->export_bindings);
-  destroy_string_slice(&module->name);
-  if (!module->is_host) {
-    WABT_DESTROY_ARRAY_AND_ELEMENTS(module->defined.imports,
-                                    interpreter_import);
-  }
+InterpreterModule::InterpreterModule(const StringSlice& name, bool is_host)
+    : name(name),
+      memory_index(WABT_INVALID_INDEX),
+      table_index(WABT_INVALID_INDEX),
+      is_host(is_host) {
+  WABT_ZERO_MEMORY(exports);
+  WABT_ZERO_MEMORY(export_bindings);
 }
+
+InterpreterModule::~InterpreterModule() {
+  destroy_interpreter_export_vector(&exports);
+  destroy_binding_hash(&export_bindings);
+  destroy_string_slice(&name);
+}
+
+DefinedInterpreterModule::DefinedInterpreterModule(size_t istream_start)
+    : InterpreterModule(false),
+      start_func_index(WABT_INVALID_INDEX),
+      istream_start(istream_start),
+      istream_end(istream_start) {}
+
+HostInterpreterModule::HostInterpreterModule(const StringSlice& name)
+    : InterpreterModule(name, true) {}
 
 void destroy_interpreter_environment(InterpreterEnvironment* env) {
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(env->modules, interpreter_module);
   WABT_DESTROY_VECTOR_AND_ELEMENTS(env->sigs, interpreter_func_signature);
   WABT_DESTROY_VECTOR_AND_ELEMENTS(env->funcs, interpreter_func);
   WABT_DESTROY_VECTOR_AND_ELEMENTS(env->memories, interpreter_memory);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(env->tables, interpreter_table);
   destroy_interpreter_global_vector(&env->globals);
   destroy_output_buffer(&env->istream);
   destroy_binding_hash(&env->module_bindings);
@@ -108,11 +128,11 @@ InterpreterEnvironmentMark mark_interpreter_environment(
     InterpreterEnvironment* env) {
   InterpreterEnvironmentMark mark;
   WABT_ZERO_MEMORY(mark);
-  mark.modules_size = env->modules.size;
+  mark.modules_size = env->modules.size();
   mark.sigs_size = env->sigs.size;
   mark.funcs_size = env->funcs.size;
   mark.memories_size = env->memories.size;
-  mark.tables_size = env->tables.size;
+  mark.tables_size = env->tables.size();
   mark.globals_size = env->globals.size;
   mark.istream_size = env->istream.size;
   return mark;
@@ -131,8 +151,8 @@ void reset_interpreter_environment_to_mark(InterpreterEnvironment* env,
   } while (0)
 
   /* Destroy entries in the binding hash. */
-  for (i = mark.modules_size; i < env->modules.size; ++i) {
-    const StringSlice* name = &env->modules.data[i].name;
+  for (i = mark.modules_size; i < env->modules.size(); ++i) {
+    const StringSlice* name = &env->modules[i]->name;
     if (!string_slice_is_empty(name))
       remove_binding(&env->module_bindings, name);
   }
@@ -148,29 +168,28 @@ void reset_interpreter_environment_to_mark(InterpreterEnvironment* env,
     }
   }
 
-  DESTROY_PAST_MARK(module, modules);
+  env->modules.erase(env->modules.begin() + mark.modules_size,
+                     env->modules.end());
   DESTROY_PAST_MARK(func_signature, sigs);
   DESTROY_PAST_MARK(func, funcs);
   DESTROY_PAST_MARK(memory, memories);
-  DESTROY_PAST_MARK(table, tables);
+  env->tables.erase(env->tables.begin() + mark.tables_size, env->tables.end());
   env->globals.size = mark.globals_size;
   env->istream.size = mark.istream_size;
 
 #undef DESTROY_PAST_MARK
 }
 
-InterpreterModule* append_host_module(InterpreterEnvironment* env,
-                                      StringSlice name) {
-  InterpreterModule* module = append_interpreter_module(&env->modules);
-  module->name = dup_string_slice(name);
-  module->memory_index = WABT_INVALID_INDEX;
-  module->table_index = WABT_INVALID_INDEX;
-  module->is_host = true;
+HostInterpreterModule* append_host_module(InterpreterEnvironment* env,
+                                          StringSlice name) {
+  HostInterpreterModule* module =
+      new HostInterpreterModule(dup_string_slice(name));
+  env->modules.emplace_back(module);
 
   StringSlice dup_name = dup_string_slice(name);
   Binding* binding =
       insert_binding(&env->registered_module_bindings, &dup_name);
-  binding->index = env->modules.size - 1;
+  binding->index = env->modules.size() - 1;
   return module;
 }
 
@@ -178,13 +197,15 @@ void init_interpreter_thread(InterpreterEnvironment* env,
                              InterpreterThread* thread,
                              InterpreterThreadOptions* options) {
   WABT_ZERO_MEMORY(*thread);
-  new_interpreter_value_array(&thread->value_stack, options->value_stack_size);
-  new_uint32_array(&thread->call_stack, options->call_stack_size);
+  thread->value_stack.resize(options->value_stack_size);
+  thread->call_stack.resize(options->call_stack_size);
   thread->env = env;
-  thread->value_stack_top = thread->value_stack.data;
-  thread->value_stack_end = thread->value_stack.data + thread->value_stack.size;
-  thread->call_stack_top = thread->call_stack.data;
-  thread->call_stack_end = thread->call_stack.data + thread->call_stack.size;
+  thread->value_stack_top = thread->value_stack.data();
+  thread->value_stack_end =
+      thread->value_stack.data() + thread->value_stack.size();
+  thread->call_stack_top = thread->call_stack.data();
+  thread->call_stack_end =
+      thread->call_stack.data() + thread->call_stack.size();
   thread->pc = options->pc;
 }
 
@@ -206,8 +227,6 @@ InterpreterExport* get_interpreter_export_by_name(InterpreterModule* module,
 }
 
 void destroy_interpreter_thread(InterpreterThread* thread) {
-  destroy_interpreter_value_array(&thread->value_stack);
-  destroy_uint32_array(&thread->call_stack);
   destroy_interpreter_typed_value_vector(&thread->host_args);
 }
 
@@ -891,13 +910,13 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
 
       case InterpreterOpcode::CallIndirect: {
         uint32_t table_index = read_u32(&pc);
-        assert(table_index < env->tables.size);
-        InterpreterTable* table = &env->tables.data[table_index];
+        assert(table_index < env->tables.size());
+        InterpreterTable* table = &env->tables[table_index];
         uint32_t sig_index = read_u32(&pc);
         assert(sig_index < env->sigs.size);
         VALUE_TYPE_I32 entry_index = POP_I32();
-        TRAP_IF(entry_index >= table->func_indexes.size, UndefinedTableIndex);
-        uint32_t func_index = table->func_indexes.data[entry_index];
+        TRAP_IF(entry_index >= table->func_indexes.size(), UndefinedTableIndex);
+        uint32_t func_index = table->func_indexes[entry_index];
         TRAP_IF(func_index == WABT_INVALID_INDEX, UninitializedTableElement);
         InterpreterFunc* func = &env->funcs.data[func_index];
         TRAP_UNLESS(func_signatures_are_equal(env, func->sig_index, sig_index),
@@ -1690,8 +1709,9 @@ void trace_pc(InterpreterThread* thread, Stream* stream) {
   const uint8_t* istream =
       reinterpret_cast<const uint8_t*>(thread->env->istream.start);
   const uint8_t* pc = &istream[thread->pc];
-  size_t value_stack_depth = thread->value_stack_top - thread->value_stack.data;
-  size_t call_stack_depth = thread->call_stack_top - thread->call_stack.data;
+  size_t value_stack_depth =
+      thread->value_stack_top - thread->value_stack.data();
+  size_t call_stack_depth = thread->call_stack_top - thread->call_stack.data();
 
   writef(stream, "#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ", call_stack_depth,
          pc - reinterpret_cast<uint8_t*>(thread->env->istream.start),
@@ -2380,8 +2400,8 @@ void disassemble_module(InterpreterEnvironment* env,
                         Stream* stream,
                         InterpreterModule* module) {
   assert(!module->is_host);
-  disassemble(env, stream, module->defined.istream_start,
-              module->defined.istream_end);
+  disassemble(env, stream, module->as_defined()->istream_start,
+              module->as_defined()->istream_end);
 }
 
 }  // namespace wabt

@@ -305,7 +305,7 @@ static InterpreterResult push_args(InterpreterThread* thread,
 
     InterpreterResult iresult = push_thread_value(thread, args->data[i].value);
     if (iresult != InterpreterResult::Ok) {
-      thread->value_stack_top = thread->value_stack.data;
+      thread->value_stack_top = thread->value_stack.data();
       return iresult;
     }
   }
@@ -316,7 +316,8 @@ static void copy_results(InterpreterThread* thread,
                          const InterpreterFuncSignature* sig,
                          InterpreterTypedValueVector* out_results) {
   size_t expected_results = sig->result_types.size;
-  size_t value_stack_depth = thread->value_stack_top - thread->value_stack.data;
+  size_t value_stack_depth =
+      thread->value_stack_top - thread->value_stack.data();
   WABT_USE(value_stack_depth);
   assert(expected_results == value_stack_depth);
 
@@ -327,7 +328,7 @@ static void copy_results(InterpreterThread* thread,
   size_t i;
   for (i = 0; i < expected_results; ++i) {
     out_results->data[i].type = sig->result_types.data[i];
-    out_results->data[i].value = thread->value_stack.data[i];
+    out_results->data[i].value = thread->value_stack[i];
   }
 }
 
@@ -352,14 +353,14 @@ static InterpreterResult run_function(
   }
 
   /* Always reset the value and call stacks */
-  thread->value_stack_top = thread->value_stack.data;
-  thread->call_stack_top = thread->call_stack.data;
+  thread->value_stack_top = thread->value_stack.data();
+  thread->call_stack_top = thread->call_stack.data();
   return iresult;
 }
 
 static InterpreterResult run_start_function(InterpreterThread* thread,
-                                            InterpreterModule* module) {
-  if (module->defined.start_func_index == WABT_INVALID_INDEX)
+                                            DefinedInterpreterModule* module) {
+  if (module->start_func_index == WABT_INVALID_INDEX)
     return InterpreterResult::Ok;
 
   if (s_trace)
@@ -370,7 +371,7 @@ static InterpreterResult run_start_function(InterpreterThread* thread,
   WABT_ZERO_MEMORY(results);
 
   InterpreterResult iresult =
-      run_function(thread, module->defined.start_func_index, &args, &results);
+      run_function(thread, module->start_func_index, &args, &results);
   assert(results.size == 0);
   return iresult;
 }
@@ -446,7 +447,7 @@ static void run_all_exports(InterpreterModule* module,
 static Result read_module(const char* module_filename,
                           InterpreterEnvironment* env,
                           BinaryErrorHandler* error_handler,
-                          InterpreterModule** out_module) {
+                          DefinedInterpreterModule** out_module) {
   Result result;
   char* data;
   size_t size;
@@ -595,18 +596,18 @@ static Result spectest_import_global(InterpreterImport* import,
 
 static void init_environment(InterpreterEnvironment* env) {
   init_interpreter_environment(env);
-  InterpreterModule* host_module =
+  HostInterpreterModule* host_module =
       append_host_module(env, string_slice_from_cstr("spectest"));
-  host_module->host.import_delegate.import_func = spectest_import_func;
-  host_module->host.import_delegate.import_table = spectest_import_table;
-  host_module->host.import_delegate.import_memory = spectest_import_memory;
-  host_module->host.import_delegate.import_global = spectest_import_global;
+  host_module->import_delegate.import_func = spectest_import_func;
+  host_module->import_delegate.import_table = spectest_import_table;
+  host_module->import_delegate.import_memory = spectest_import_memory;
+  host_module->import_delegate.import_global = spectest_import_global;
 }
 
 static Result read_and_run_module(const char* module_filename) {
   Result result;
   InterpreterEnvironment env;
-  InterpreterModule* module = nullptr;
+  DefinedInterpreterModule* module = nullptr;
   InterpreterThread thread;
 
   init_environment(&env);
@@ -633,7 +634,7 @@ WABT_DEFINE_VECTOR(interpreter_thread, InterpreterThread);
 struct Context {
   InterpreterEnvironment env;
   InterpreterThread thread;
-  InterpreterModule* last_module;
+  DefinedInterpreterModule* last_module;
 
   /* Parsing info */
   char* json_data;
@@ -1047,7 +1048,7 @@ static Result on_module_command(Context* ctx,
     /* The binding also needs its own copy of the name. */
     StringSlice binding_name = dup_string_slice(name);
     Binding* binding = insert_binding(&ctx->env.module_bindings, &binding_name);
-    binding->index = ctx->env.modules.size - 1;
+    binding->index = ctx->env.modules.size() - 1;
   }
   return Result::Ok;
 }
@@ -1064,11 +1065,11 @@ static Result run_action(Context* ctx,
     module_index = find_binding_index_by_name(&ctx->env.module_bindings,
                                               &action->module_name);
   } else {
-    module_index = static_cast<int>(ctx->env.modules.size) - 1;
+    module_index = static_cast<int>(ctx->env.modules.size()) - 1;
   }
 
-  assert(module_index < static_cast<int>(ctx->env.modules.size));
-  InterpreterModule* module = &ctx->env.modules.data[module_index];
+  assert(module_index < static_cast<int>(ctx->env.modules.size()));
+  InterpreterModule* module = ctx->env.modules[module_index].get();
 
   switch (action->type) {
     case ActionType::Invoke:
@@ -1153,7 +1154,7 @@ static Result on_assert_malformed_command(Context* ctx,
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
-  InterpreterModule* module;
+  DefinedInterpreterModule* module;
   Result result = read_module(path, &env, error_handler, &module);
   if (WABT_FAILED(result)) {
     ctx->passed++;
@@ -1179,8 +1180,8 @@ static Result on_register_command(Context* ctx,
      * just iterate over all the modules to find it. */
     size_t i;
     module_index = -1;
-    for (i = 0; i < ctx->env.modules.size; ++i) {
-      const StringSlice* module_name = &ctx->env.modules.data[i].name;
+    for (i = 0; i < ctx->env.modules.size(); ++i) {
+      const StringSlice* module_name = &ctx->env.modules[i]->name;
       if (!string_slice_is_empty(module_name) &&
           string_slices_are_equal(&name, module_name)) {
         module_index = static_cast<int>(i);
@@ -1188,11 +1189,11 @@ static Result on_register_command(Context* ctx,
       }
     }
   } else {
-    module_index = static_cast<int>(ctx->env.modules.size) - 1;
+    module_index = static_cast<int>(ctx->env.modules.size()) - 1;
   }
 
   if (module_index < 0 ||
-      module_index >= static_cast<int>(ctx->env.modules.size)) {
+      module_index >= static_cast<int>(ctx->env.modules.size())) {
     print_command_error(ctx, "unknown module in register");
     return Result::Error;
   }
@@ -1212,7 +1213,7 @@ static Result on_assert_unlinkable_command(Context* ctx,
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
-  InterpreterModule* module;
+  DefinedInterpreterModule* module;
   InterpreterEnvironmentMark mark = mark_interpreter_environment(&ctx->env);
   Result result = read_module(path, &ctx->env, error_handler, &module);
   reset_interpreter_environment_to_mark(&ctx->env, mark);
@@ -1241,7 +1242,7 @@ static Result on_assert_invalid_command(Context* ctx,
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
-  InterpreterModule* module;
+  DefinedInterpreterModule* module;
   Result result = read_module(path, &env, error_handler, &module);
   if (WABT_FAILED(result)) {
     ctx->passed++;
@@ -1262,7 +1263,7 @@ static Result on_assert_uninstantiable_command(Context* ctx,
                                                StringSlice text) {
   ctx->total++;
   char* path = create_module_path(ctx, filename);
-  InterpreterModule* module;
+  DefinedInterpreterModule* module;
   InterpreterEnvironmentMark mark = mark_interpreter_environment(&ctx->env);
   Result result = read_module(path, &ctx->env, &s_error_handler, &module);
 

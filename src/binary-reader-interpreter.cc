@@ -69,7 +69,7 @@ struct Context {
   BinaryReader* reader;
   BinaryErrorHandler* error_handler;
   InterpreterEnvironment* env;
-  InterpreterModule* module;
+  DefinedInterpreterModule* module;
   InterpreterFunc* current_func;
   TypeChecker typechecker;
   LabelVector label_stack;
@@ -90,7 +90,7 @@ struct Context {
   InterpreterTypedValue init_expr_value;
   uint32_t table_offset;
   bool is_host_import;
-  InterpreterModule* host_import_module;
+  HostInterpreterModule* host_import_module;
   uint32_t import_env_index;
 };
 
@@ -386,7 +386,7 @@ static Result on_signature(uint32_t index,
 
 static Result on_import_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  new_interpreter_import_array(&ctx->module->defined.imports, count);
+  ctx->module->imports.resize(count);
   return Result::Ok;
 }
 
@@ -395,8 +395,7 @@ static Result on_import(uint32_t index,
                         StringSlice field_name,
                         void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  assert(index < ctx->module->defined.imports.size);
-  InterpreterImport* import = &ctx->module->defined.imports.data[index];
+  InterpreterImport* import = &ctx->module->imports[index];
   import->module_name = dup_string_slice(module_name);
   import->field_name = dup_string_slice(field_name);
   int module_index = find_binding_index_by_name(
@@ -407,14 +406,13 @@ static Result on_import(uint32_t index,
     return Result::Error;
   }
 
-  assert(static_cast<size_t>(module_index) < ctx->env->modules.size);
-  InterpreterModule* module = &ctx->env->modules.data[module_index];
+  InterpreterModule* module = ctx->env->modules[module_index].get();
   if (module->is_host) {
     /* We don't yet know the kind of a host import module, so just assume it
      * exists for now. We'll fail later (in on_import_* below) if it doesn't
      * exist). */
     ctx->is_host_import = true;
-    ctx->host_import_module = module;
+    ctx->host_import_module = module->as_host();
   } else {
     InterpreterExport* export_ =
         get_interpreter_export_by_name(module, &import->field_name);
@@ -510,8 +508,7 @@ static Result on_import_func(uint32_t import_index,
                              uint32_t sig_index,
                              void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  assert(import_index < ctx->module->defined.imports.size);
-  InterpreterImport* import = &ctx->module->defined.imports.data[import_index];
+  InterpreterImport* import = &ctx->module->imports[import_index];
   assert(sig_index < ctx->env->sigs.size);
   import->func.sig_index = translate_sig_index_to_env(ctx, sig_index);
 
@@ -524,7 +521,7 @@ static Result on_import_func(uint32_t import_index,
     func->host.field_name = import->field_name;
 
     InterpreterHostImportDelegate* host_delegate =
-        &ctx->host_import_module->host.import_delegate;
+        &ctx->host_import_module->import_delegate;
     InterpreterFuncSignature* sig = &ctx->env->sigs.data[func->sig_index];
     CHECK_RESULT(host_delegate->import_func(import, func, sig,
                                             make_print_error_callback(ctx),
@@ -551,13 +548,6 @@ static Result on_import_func(uint32_t import_index,
   return Result::Ok;
 }
 
-static void init_table_func_indexes(Context* ctx, InterpreterTable* table) {
-  new_uint32_array(&table->func_indexes, table->limits.initial);
-  size_t i;
-  for (i = 0; i < table->func_indexes.size; ++i)
-    table->func_indexes.data[i] = WABT_INVALID_INDEX;
-}
-
 static Result on_import_table(uint32_t import_index,
                               uint32_t table_index,
                               Type elem_type,
@@ -569,29 +559,26 @@ static Result on_import_table(uint32_t import_index,
     return Result::Error;
   }
 
-  assert(import_index < ctx->module->defined.imports.size);
-  InterpreterImport* import = &ctx->module->defined.imports.data[import_index];
+  InterpreterImport* import = &ctx->module->imports[import_index];
 
   if (ctx->is_host_import) {
-    InterpreterTable* table = append_interpreter_table(&ctx->env->tables);
-    table->limits = *elem_limits;
-    init_table_func_indexes(ctx, table);
+    ctx->env->tables.emplace_back(*elem_limits);
+    InterpreterTable* table = &ctx->env->tables.back();
 
     InterpreterHostImportDelegate* host_delegate =
-        &ctx->host_import_module->host.import_delegate;
+        &ctx->host_import_module->import_delegate;
     CHECK_RESULT(host_delegate->import_table(import, table,
                                              make_print_error_callback(ctx),
                                              host_delegate->user_data));
 
     CHECK_RESULT(check_import_limits(ctx, elem_limits, &table->limits));
 
-    ctx->module->table_index = ctx->env->tables.size - 1;
+    ctx->module->table_index = ctx->env->tables.size() - 1;
     append_export(ctx, ctx->host_import_module, ExternalKind::Table,
                   ctx->module->table_index, import->field_name);
   } else {
     CHECK_RESULT(check_import_kind(ctx, import, ExternalKind::Table));
-    assert(ctx->import_env_index < ctx->env->tables.size);
-    InterpreterTable* table = &ctx->env->tables.data[ctx->import_env_index];
+    InterpreterTable* table = &ctx->env->tables[ctx->import_env_index];
     CHECK_RESULT(check_import_limits(ctx, elem_limits, &table->limits));
 
     import->table.limits = *elem_limits;
@@ -610,14 +597,13 @@ static Result on_import_memory(uint32_t import_index,
     return Result::Error;
   }
 
-  assert(import_index < ctx->module->defined.imports.size);
-  InterpreterImport* import = &ctx->module->defined.imports.data[import_index];
+  InterpreterImport* import = &ctx->module->imports[import_index];
 
   if (ctx->is_host_import) {
     InterpreterMemory* memory = append_interpreter_memory(&ctx->env->memories);
 
     InterpreterHostImportDelegate* host_delegate =
-        &ctx->host_import_module->host.import_delegate;
+        &ctx->host_import_module->import_delegate;
     CHECK_RESULT(host_delegate->import_memory(import, memory,
                                               make_print_error_callback(ctx),
                                               host_delegate->user_data));
@@ -646,8 +632,7 @@ static Result on_import_global(uint32_t import_index,
                                bool mutable_,
                                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  assert(import_index < ctx->module->defined.imports.size);
-  InterpreterImport* import = &ctx->module->defined.imports.data[import_index];
+  InterpreterImport* import = &ctx->module->imports[import_index];
 
   uint32_t global_env_index = ctx->env->globals.size - 1;
   if (ctx->is_host_import) {
@@ -656,7 +641,7 @@ static Result on_import_global(uint32_t import_index,
     global->mutable_ = mutable_;
 
     InterpreterHostImportDelegate* host_delegate =
-        &ctx->host_import_module->host.import_delegate;
+        &ctx->host_import_module->import_delegate;
     CHECK_RESULT(host_delegate->import_global(import, global,
                                               make_print_error_callback(ctx),
                                               host_delegate->user_data));
@@ -708,10 +693,8 @@ static Result on_table(uint32_t index,
     print_error(ctx, "only one table allowed");
     return Result::Error;
   }
-  InterpreterTable* table = append_interpreter_table(&ctx->env->tables);
-  table->limits = *elem_limits;
-  init_table_func_indexes(ctx, table);
-  ctx->module->table_index = ctx->env->tables.size - 1;
+  ctx->env->tables.emplace_back(*elem_limits);
+  ctx->module->table_index = ctx->env->tables.size() - 1;
   return Result::Ok;
 }
 
@@ -868,7 +851,7 @@ static Result on_start_function(uint32_t func_index, void* user_data) {
     print_error(ctx, "start function must not return anything");
     return Result::Error;
   }
-  ctx->module->defined.start_func_index = start_func_index;
+  ctx->module->start_func_index = start_func_index;
   return Result::Ok;
 }
 
@@ -888,11 +871,11 @@ static Result on_elem_segment_function_index_check(uint32_t index,
                                                    void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   assert(ctx->module->table_index != WABT_INVALID_INDEX);
-  InterpreterTable* table = &ctx->env->tables.data[ctx->module->table_index];
-  if (ctx->table_offset >= table->func_indexes.size) {
+  InterpreterTable* table = &ctx->env->tables[ctx->module->table_index];
+  if (ctx->table_offset >= table->func_indexes.size()) {
     print_error(ctx,
                 "elem segment offset is out of bounds: %u >= max value %" PRIzd,
-                ctx->table_offset, table->func_indexes.size);
+                ctx->table_offset, table->func_indexes.size());
     return Result::Error;
   }
 
@@ -903,7 +886,7 @@ static Result on_elem_segment_function_index_check(uint32_t index,
     return Result::Error;
   }
 
-  table->func_indexes.data[ctx->table_offset++] =
+  table->func_indexes[ctx->table_offset++] =
       translate_func_index_to_env(ctx, func_index);
   return Result::Ok;
 }
@@ -913,8 +896,8 @@ static Result on_elem_segment_function_index(uint32_t index,
                                              void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   assert(ctx->module->table_index != WABT_INVALID_INDEX);
-  InterpreterTable* table = &ctx->env->tables.data[ctx->module->table_index];
-  table->func_indexes.data[ctx->table_offset++] =
+  InterpreterTable* table = &ctx->env->tables[ctx->module->table_index];
+  table->func_indexes[ctx->table_offset++] =
       translate_func_index_to_env(ctx, func_index);
   return Result::Ok;
 }
@@ -1433,13 +1416,15 @@ Result read_binary_interpreter(InterpreterEnvironment* env,
                                size_t size,
                                const ReadBinaryOptions* options,
                                BinaryErrorHandler* error_handler,
-                               InterpreterModule** out_module) {
+                               DefinedInterpreterModule** out_module) {
   Context ctx;
   BinaryReader reader;
 
   InterpreterEnvironmentMark mark = mark_interpreter_environment(env);
 
-  InterpreterModule* module = append_interpreter_module(&env->modules);
+  DefinedInterpreterModule* module =
+      new DefinedInterpreterModule(env->istream.size);
+  env->modules.emplace_back(module);
 
   WABT_ZERO_MEMORY(ctx);
   WABT_ZERO_MEMORY(reader);
@@ -1448,11 +1433,6 @@ Result read_binary_interpreter(InterpreterEnvironment* env,
   ctx.error_handler = error_handler;
   ctx.env = env;
   ctx.module = module;
-  ctx.module->is_host = false;
-  ctx.module->table_index = WABT_INVALID_INDEX;
-  ctx.module->memory_index = WABT_INVALID_INDEX;
-  ctx.module->defined.start_func_index = WABT_INVALID_INDEX;
-  ctx.module->defined.istream_start = env->istream.size;
   ctx.istream_offset = env->istream.size;
   CHECK_RESULT(init_mem_writer_existing(&ctx.istream_writer, &env->istream));
 
@@ -1548,7 +1528,7 @@ Result read_binary_interpreter(InterpreterEnvironment* env,
     assert(WABT_SUCCEEDED(result));
 
     env->istream.size = ctx.istream_offset;
-    ctx.module->defined.istream_end = env->istream.size;
+    ctx.module->istream_end = env->istream.size;
     *out_module = module;
   } else {
     reset_interpreter_environment_to_mark(env, mark);
