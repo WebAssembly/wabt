@@ -120,7 +120,7 @@ void destroy_string_slice(StringSlice* str) {
 Result read_file(const char* filename, char** out_data, size_t* out_size) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
-    const char* format = "unable to read file %s";
+    const char format[] = "unable to read file %s";
     char msg[PATH_MAX + sizeof(format)];
     wabt_snprintf(msg, sizeof(msg), format, filename);
     perror(msg);
