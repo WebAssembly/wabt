@@ -66,8 +66,14 @@
 #define WABT_INLINE inline
 #define WABT_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #define WABT_LIKELY(x) __builtin_expect(!!(x), 1)
+
+// Mingw64 seems to be confused about printf formats: see issue #324.
+#if !defined(__MINGW64__)
 #define WABT_PRINTF_FORMAT(format_arg, first_arg) \
   __attribute__((format(printf, (format_arg), (first_arg))))
+#else
+#define WABT_PRINTF_FORMAT(format_arg, first_arg)
+#endif
 
 #ifdef __cplusplus
 #if __cplusplus >= 201103L
