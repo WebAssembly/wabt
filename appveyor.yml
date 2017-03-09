@@ -1,9 +1,5 @@
 ---
 
-# TODO(binji): roll back to previous image because MSYS2 6.3.0 seems to be
-# broken.
-os: Previous Visual Studio 2015
-
 init:
   - set PATH=C:\Python27\Scripts;%PATH%             # while python's bin is already in PATH, but pip.exe in Scripts\ dir isn't
   - set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%
