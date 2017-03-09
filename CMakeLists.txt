@@ -96,7 +96,7 @@ else ()
   if (MINGW)
     # Mingw won't define format (e.g. PRIu64) or limit (e.g. UINT32_MAX) macros
     # in C++ without these.
-    add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDC_FORMAT_MACROS=1)
+    add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDC_FORMAT_MACROS=1 -D_GLIBCXX_INCLUDE_NEXT_C_HEADERS=1)
   endif ()
 
   if (COMPILER_IS_GNU)
