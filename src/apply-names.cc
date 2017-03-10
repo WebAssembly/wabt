@@ -55,8 +55,7 @@ void pop_label(Context* ctx) {
 
 Label* find_label_by_var(Context* ctx, Var* var) {
   if (var->type == VarType::Name) {
-    int i;
-    for (i = ctx->labels.size - 1; i >= 0; --i) {
+    for (int i = ctx->labels.size - 1; i >= 0; --i) {
       Label* label = ctx->labels.data[i];
       if (string_slices_are_equal(label, &var->name))
         return label;
@@ -192,9 +191,8 @@ Result on_br_if_expr(Expr* expr, void* user_data) {
 
 Result on_br_table_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  size_t i;
   VarVector* targets = &expr->br_table.targets;
-  for (i = 0; i < targets->size; ++i) {
+  for (size_t i = 0; i < targets->size; ++i) {
     Var* target = &targets->data[i];
     Label* label = find_label_by_var(ctx, target);
     use_name_for_var(label, target);
@@ -291,9 +289,8 @@ Result visit_export(Context* ctx, uint32_t export_index, Export* export_) {
 Result visit_elem_segment(Context* ctx,
                           uint32_t elem_segment_index,
                           ElemSegment* segment) {
-  size_t i;
   CHECK_RESULT(use_name_for_table_var(ctx->module, &segment->table_var));
-  for (i = 0; i < segment->vars.size; ++i) {
+  for (size_t i = 0; i < segment->vars.size; ++i) {
     CHECK_RESULT(use_name_for_func_var(ctx->module, &segment->vars.data[i]));
   }
   return Result::Ok;
@@ -307,14 +304,13 @@ Result visit_data_segment(Context* ctx,
 }
 
 Result visit_module(Context* ctx, Module* module) {
-  size_t i;
-  for (i = 0; i < module->funcs.size; ++i)
+  for (size_t i = 0; i < module->funcs.size; ++i)
     CHECK_RESULT(visit_func(ctx, i, module->funcs.data[i]));
-  for (i = 0; i < module->exports.size; ++i)
+  for (size_t i = 0; i < module->exports.size; ++i)
     CHECK_RESULT(visit_export(ctx, i, module->exports.data[i]));
-  for (i = 0; i < module->elem_segments.size; ++i)
+  for (size_t i = 0; i < module->elem_segments.size; ++i)
     CHECK_RESULT(visit_elem_segment(ctx, i, module->elem_segments.data[i]));
-  for (i = 0; i < module->data_segments.size; ++i)
+  for (size_t i = 0; i < module->data_segments.size; ++i)
     CHECK_RESULT(visit_data_segment(ctx, i, module->data_segments.data[i]));
   return Result::Ok;
 }

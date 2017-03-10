@@ -206,8 +206,7 @@ static void apply_relocations(Section* section) {
            get_section_name(section->section_code));
 
   /* Perform relocations in-place */
-  size_t i;
-  for (i = 0; i < section->relocations.size; i++) {
+  for (size_t i = 0; i < section->relocations.size; i++) {
     Reloc* reloc = &section->relocations.data[i];
     apply_relocation(section, reloc);
   }
@@ -251,8 +250,7 @@ static void write_table_section(Context* ctx,
   uint32_t flags = WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   uint32_t elem_count = 0;
 
-  size_t i;
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
     elem_count += sec->binary->table_elem_count;
   }
@@ -268,9 +266,8 @@ static void write_table_section(Context* ctx,
 }
 
 static void write_export_section(Context* ctx) {
-  size_t i, j;
   uint32_t total_exports = 0;
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
     total_exports += binary->exports.size;
   }
@@ -279,9 +276,9 @@ static void write_export_section(Context* ctx) {
   WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_exports, "export count");
 
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
-    for (j = 0; j < binary->exports.size; j++) {
+    for (size_t j = 0; j < binary->exports.size; j++) {
       Export* export_ = &binary->exports.data[j];
       write_slice(stream, export_->name, "export name");
       write_u8_enum(stream, export_->kind, "export kind");
@@ -305,9 +302,8 @@ static void write_elem_section(Context* ctx, const SectionPtrVector* sections) {
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  size_t i;
   uint32_t total_elem_count = 0;
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
     total_elem_count += sec->binary->table_elem_count;
   }
@@ -321,7 +317,7 @@ static void write_elem_section(Context* ctx, const SectionPtrVector* sections) {
 
   ctx->current_section_payload_offset = stream->offset;
 
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
     apply_relocations(sec);
     write_section_payload(ctx, sec);
@@ -340,8 +336,7 @@ static void write_memory_section(Context* ctx,
   Limits limits;
   WABT_ZERO_MEMORY(limits);
   limits.has_max = true;
-  size_t i;
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
     limits.initial += sec->memory_limits.initial;
   }
@@ -371,11 +366,10 @@ static void write_global_import(Context* ctx, GlobalImport* import) {
 
 static void write_import_section(Context* ctx) {
   uint32_t num_imports = 0;
-  size_t i, j;
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
     FunctionImportVector* imports = &binary->function_imports;
-    for (j = 0; j < imports->size; j++) {
+    for (size_t j = 0; j < imports->size; j++) {
       FunctionImport* import = &imports->data[j];
       if (import->active)
         num_imports++;
@@ -386,17 +380,17 @@ static void write_import_section(Context* ctx) {
   WRITE_UNKNOWN_SIZE(&ctx->stream);
   write_u32_leb128(&ctx->stream, num_imports, "num imports");
 
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
     FunctionImportVector* imports = &binary->function_imports;
-    for (j = 0; j < imports->size; j++) {
+    for (size_t j = 0; j < imports->size; j++) {
       FunctionImport* import = &imports->data[j];
       if (import->active)
         write_function_import(ctx, import, binary->type_index_offset);
     }
 
     GlobalImportVector* globals = &binary->global_imports;
-    for (j = 0; j < globals->size; j++) {
+    for (size_t j = 0; j < globals->size; j++) {
       write_global_import(ctx, &globals->data[j]);
     }
   }
@@ -412,8 +406,7 @@ static void write_function_section(Context* ctx,
 
   write_u32_leb128(stream, total_count, "function count");
 
-  size_t i;
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
     uint32_t count = sec->count;
     uint32_t input_offset = 0;
@@ -450,10 +443,9 @@ static void write_data_section(Context* ctx,
   WRITE_UNKNOWN_SIZE(stream);
 
   write_u32_leb128(stream, total_count, "data segment count");
-  size_t i, j;
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
-    for (j = 0; j < sec->data_segments.size; j++) {
+    for (size_t j = 0; j < sec->data_segments.size; j++) {
       DataSegment* segment = &sec->data_segments.data[j];
       write_data_segment(stream, segment,
                          sec->binary->memory_page_offset * WABT_PAGE_SIZE);
@@ -465,10 +457,10 @@ static void write_data_section(Context* ctx,
 
 static void write_names_section(Context* ctx) {
   uint32_t total_count = 0;
-  size_t i, j, k;
-  for (i = 0; i < ctx->inputs.size; i++) {
+  size_t k;
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
-    for (j = 0; j < binary->debug_names.size; j++) {
+    for (size_t j = 0; j < binary->debug_names.size; j++) {
       if (j < binary->function_imports.size) {
         if (!binary->function_imports.data[j].active)
           continue;
@@ -489,9 +481,9 @@ static void write_names_section(Context* ctx) {
   write_u32_leb128(stream, total_count, "element count");
 
   k = 0;
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
-    for (j = 0; j < binary->debug_names.size; j++) {
+    for (size_t j = 0; j < binary->debug_names.size; j++) {
       if (j < binary->function_imports.size) {
         if (!binary->function_imports.data[j].active)
           continue;
@@ -508,11 +500,10 @@ static void write_names_section(Context* ctx) {
 static void write_reloc_section(Context* ctx,
                                 BinarySection section_code,
                                 SectionPtrVector* sections) {
-  size_t i, j;
   uint32_t total_relocs = 0;
 
   /* First pass to know total reloc count */
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
     total_relocs += sec->relocations.size;
   }
@@ -531,10 +522,10 @@ static void write_reloc_section(Context* ctx,
   write_u32_leb128_enum(&ctx->stream, section_code, "reloc section");
   write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
 
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
     RelocVector* relocs = &sec->relocations;
-    for (j = 0; j < relocs->size; j++) {
+    for (size_t j = 0; j < relocs->size; j++) {
       write_u32_leb128_enum(&ctx->stream, relocs->data[j].type, "reloc type");
       uint32_t new_offset = relocs->data[j].offset + sec->output_payload_offset;
       write_u32_leb128(&ctx->stream, new_offset, "reloc offset");
@@ -555,12 +546,11 @@ static bool write_combined_section(Context* ctx,
                get_section_name(section_code));
   }
 
-  size_t i;
   uint32_t total_count = 0;
   uint32_t total_size = 0;
 
   /* Sum section size and element count */
-  for (i = 0; i < sections->size; i++) {
+  for (size_t i = 0; i < sections->size; i++) {
     Section* sec = sections->data[i];
     total_size += sec->payload_size;
     total_count += sec->count;
@@ -600,7 +590,7 @@ static bool write_combined_section(Context* ctx,
       write_u32_leb128(stream, total_size, "section size");
       write_u32_leb128(stream, total_count, "element count");
       ctx->current_section_payload_offset = ctx->stream.offset;
-      for (i = 0; i < sections->size; i++) {
+      for (size_t i = 0; i < sections->size; i++) {
         Section* sec = sections->data[i];
         apply_relocations(sec);
         write_section_payload(ctx, sec);
@@ -624,10 +614,9 @@ static void resolve_symbols(Context* ctx) {
   ExportInfoVector export_list;
   WABT_ZERO_MEMORY(export_list);
 
-  size_t i, j;
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
-    for (j = 0; j < binary->exports.size; j++) {
+    for (size_t j = 0; j < binary->exports.size; j++) {
       Export* export_ = &binary->exports.data[j];
       ExportInfo* info = append_export_info(&export_list);
       info->export_ = export_;
@@ -644,9 +633,9 @@ static void resolve_symbols(Context* ctx) {
    * Iterate through all imported functions resolving them against exported
    * ones.
    */
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
-    for (j = 0; j < binary->function_imports.size; j++) {
+    for (size_t j = 0; j < binary->function_imports.size; j++) {
       FunctionImport* import = &binary->function_imports.data[j];
       int export_index = find_binding_index_by_name(&export_map, &import->name);
       if (export_index == -1) {
@@ -672,7 +661,6 @@ static void resolve_symbols(Context* ctx) {
 }
 
 static void calculate_reloc_offsets(Context* ctx) {
-  size_t i, j;
   uint32_t memory_page_offset = 0;
   uint32_t type_count = 0;
   uint32_t global_count = 0;
@@ -680,7 +668,7 @@ static void calculate_reloc_offsets(Context* ctx) {
   uint32_t table_elem_count = 0;
   uint32_t total_function_imports = 0;
   uint32_t total_global_imports = 0;
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
     /* The imported_function_index_offset is the sum of all the function
      * imports from objects that precede this one.  i.e. the current running
@@ -693,11 +681,11 @@ static void calculate_reloc_offsets(Context* ctx) {
     total_global_imports += binary->global_imports.size;
   }
 
-  for (i = 0; i < ctx->inputs.size; i++) {
+  for (size_t i = 0; i < ctx->inputs.size; i++) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
     binary->table_index_offset = table_elem_count;
     table_elem_count += binary->table_elem_count;
-    for (j = 0; j < binary->sections.size; j++) {
+    for (size_t j = 0; j < binary->sections.size; j++) {
       Section* sec = &binary->sections.data[j];
       switch (sec->section_code) {
         case BinarySection::Type:
@@ -728,10 +716,9 @@ static void write_binary(Context* ctx) {
   SectionPtrVector sections[kBinarySectionCount];
   WABT_ZERO_MEMORY(sections);
 
-  size_t i, j;
-  for (j = 0; j < ctx->inputs.size; j++) {
+  for (size_t j = 0; j < ctx->inputs.size; j++) {
     LinkerInputBinary* binary = &ctx->inputs.data[j];
-    for (i = 0; i < binary->sections.size; i++) {
+    for (size_t i = 0; i < binary->sections.size; i++) {
       Section* s = &binary->sections.data[i];
       SectionPtrVector* sec_list = &sections[static_cast<int>(s->section_code)];
       append_section_ptr_value(sec_list, &s);
@@ -743,26 +730,25 @@ static void write_binary(Context* ctx) {
   write_u32(&ctx->stream, WABT_BINARY_VERSION, "WABT_BINARY_VERSION");
 
   /* Write known sections first */
-  for (i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
+  for (size_t i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
     write_combined_section(ctx, static_cast<BinarySection>(i), &sections[i]);
   }
 
   write_names_section(ctx);
 
   /* Generate a new set of reloction sections */
-  for (i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
+  for (size_t i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
     write_reloc_section(ctx, static_cast<BinarySection>(i), &sections[i]);
   }
 
-  for (i = 0; i < kBinarySectionCount; i++) {
+  for (size_t i = 0; i < kBinarySectionCount; i++) {
     destroy_section_ptr_vector(&sections[i]);
   }
 }
 
 static void dump_reloc_offsets(Context* ctx) {
   if (s_debug) {
-    uint32_t i;
-    for (i = 0; i < ctx->inputs.size; i++) {
+    for (uint32_t i = 0; i < ctx->inputs.size; i++) {
       LinkerInputBinary* binary = &ctx->inputs.data[i];
       writef(&s_log_stream, "Relocation info for: %s\n", binary->filename);
       writef(&s_log_stream, " - type index offset       : %d\n",
@@ -817,8 +803,7 @@ int main(int argc, char** argv) {
   parse_options(argc, argv);
 
   Result result = Result::Ok;
-  size_t i;
-  for (i = 0; i < s_infiles.size; i++) {
+  for (size_t i = 0; i < s_infiles.size; i++) {
     const char* input_filename = s_infiles.data[i];
     if (s_debug)
       writef(&s_log_stream, "reading file: %s\n", input_filename);

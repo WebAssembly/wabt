@@ -110,8 +110,7 @@ FuncTypePtr get_func_type_by_var(const Module* module, const Var* var) {
 }
 
 int get_func_type_index_by_sig(const Module* module, const FuncSignature* sig) {
-  size_t i;
-  for (i = 0; i < module->func_types.size; ++i)
+  for (size_t i = 0; i < module->func_types.size; ++i)
     if (signatures_are_equal(&module->func_types.data[i]->sig, sig))
       return i;
   return -1;
@@ -127,8 +126,7 @@ int get_func_type_index_by_decl(const Module* module,
 }
 
 Module* get_first_module(const Script* script) {
-  size_t i;
-  for (i = 0; i < script->commands.size; ++i) {
+  for (size_t i = 0; i < script->commands.size; ++i) {
     Command* command = &script->commands.data[i];
     if (command->type == CommandType::Module)
       return &command->module;
@@ -154,8 +152,7 @@ void make_type_binding_reverse_mapping(const TypeVector* types,
   memset(out_reverse_mapping->data, 0, num_names * sizeof(StringSlice));
 
   /* map index to name */
-  size_t i;
-  for (i = 0; i < bindings->entries.capacity; ++i) {
+  for (size_t i = 0; i < bindings->entries.capacity; ++i) {
     const BindingHashEntry* entry = &bindings->entries.data[i];
     if (hash_entry_is_free(entry))
       continue;
@@ -169,8 +166,7 @@ void make_type_binding_reverse_mapping(const TypeVector* types,
 void find_duplicate_bindings(const BindingHash* bindings,
                              DuplicateBindingCallback callback,
                              void* user_data) {
-  size_t i;
-  for (i = 0; i < bindings->entries.capacity; ++i) {
+  for (size_t i = 0; i < bindings->entries.capacity; ++i) {
     BindingHashEntry* entry = &bindings->entries.data[i];
     if (hash_entry_is_free(entry))
       continue;
@@ -179,10 +175,8 @@ void find_duplicate_bindings(const BindingHash* bindings,
     if (entry->prev)
       continue;
 
-    BindingHashEntry* a = entry;
-    for (; a; a = a->next) {
-      BindingHashEntry* b = a->next;
-      for (; b; b = b->next) {
+    for (BindingHashEntry* a = entry; a; a = a->next) {
+      for (BindingHashEntry* b = a->next; b; b = b->next) {
         if (string_slices_are_equal(&a->binding.name, &b->binding.name))
           callback(a, b, user_data);
       }
@@ -567,8 +561,7 @@ void destroy_script(Script* script) {
 static Result visit_expr(Expr* expr, ExprVisitor* visitor);
 
 Result visit_expr_list(Expr* first, ExprVisitor* visitor) {
-  Expr* expr;
-  for (expr = first; expr; expr = expr->next)
+  for (Expr* expr = first; expr; expr = expr->next)
     CHECK_RESULT(visit_expr(expr, visitor));
   return Result::Ok;
 }

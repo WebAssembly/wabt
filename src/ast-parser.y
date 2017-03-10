@@ -1260,8 +1260,7 @@ raw_module :
 
       /* resolve func type variables where the signature was not specified
        * explicitly */
-      size_t i;
-      for (i = 0; i < $4->funcs.size; ++i) {
+      for (size_t i = 0; i < $4->funcs.size; ++i) {
         Func* func = $4->funcs.data[i];
         if (decl_has_func_type(&func->decl) &&
             is_empty_signature(&func->decl.sig)) {
@@ -1446,8 +1445,7 @@ script :
       $$.commands = $1;
 
       int last_module_index = -1;
-      size_t i;
-      for (i = 0; i < $$.commands.size; ++i) {
+      for (size_t i = 0; i < $$.commands.size; ++i) {
         Command* command = &$$.commands.data[i];
         Var* module_var = nullptr;
         switch (command->type) {
@@ -1621,8 +1619,7 @@ size_t copy_string_contents(StringSlice* text, char* dest) {
 void dup_text_list(TextList* text_list, char** out_data, size_t* out_size) {
   /* walk the linked list to see how much total space is needed */
   size_t total_size = 0;
-  TextListNode* node;
-  for (node = text_list->first; node; node = node->next) {
+  for (TextListNode* node = text_list->first; node; node = node->next) {
     /* Always allocate enough space for the entire string including the escape
      * characters. It will only get shorter, and this way we only have to
      * iterate through the string once. */
@@ -1633,7 +1630,7 @@ void dup_text_list(TextList* text_list, char** out_data, size_t* out_size) {
   }
   char* result = new char [total_size];
   char* dest = result;
-  for (node = text_list->first; node; node = node->next) {
+  for (TextListNode* node = text_list->first; node; node = node->next) {
     size_t actual_size = copy_string_contents(&node->text, dest);
     dest += actual_size;
   }

@@ -214,21 +214,20 @@ static void log_opcode(Context* ctx,
   // Print binary data
   printf(" %06" PRIzx ": %02x", offset - 1,
          static_cast<unsigned>(ctx->current_opcode));
-  size_t i;
-  for (i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT; i++, offset++) {
+  for (size_t i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT;
+       i++, offset++) {
     printf(" %02x", data[offset]);
   }
-  for (i = data_size + 1; i < IMMEDIATE_OCTET_COUNT; i++) {
+  for (size_t i = data_size + 1; i < IMMEDIATE_OCTET_COUNT; i++) {
     printf("   ");
   }
   printf(" | ");
 
   // Print disassemble
-  int j;
   int indent_level = ctx->indent_level;
   if (ctx->current_opcode == Opcode::Else)
     indent_level--;
-  for (j = 0; j < indent_level; j++) {
+  for (int j = 0; j < indent_level; j++) {
     printf("  ");
   }
 
@@ -370,8 +369,7 @@ static Result on_signature(uint32_t index,
   if (!should_print_details(ctx))
     return Result::Ok;
   printf(" - [%d] (", index);
-  uint32_t i;
-  for (i = 0; i < param_count; i++) {
+  for (uint32_t i = 0; i < param_count; i++) {
     if (i != 0) {
       printf(", ");
     }

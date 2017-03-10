@@ -90,8 +90,7 @@
 
 #define WABT_DESTROY_VECTOR_AND_ELEMENTS(v, name) \
   {                                               \
-    size_t i;                                     \
-    for (i = 0; i < (v).size; ++i)                \
+    for (size_t i = 0; i < (v).size; ++i)         \
       destroy_##name(&((v).data[i]));             \
     destroy_##name##_vector(&(v));                \
   }

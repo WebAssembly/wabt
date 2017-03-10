@@ -82,8 +82,7 @@ static void maybe_generate_and_bind_name(BindingHash* bindings,
 static void generate_and_bind_local_names(StringSliceVector* index_to_name,
                                           BindingHash* bindings,
                                           const char* prefix) {
-  size_t i;
-  for (i = 0; i < index_to_name->size; ++i) {
+  for (size_t i = 0; i < index_to_name->size; ++i) {
     StringSlice* old_name = &index_to_name->data[i];
     if (has_name(old_name))
       continue;
@@ -162,16 +161,15 @@ static Result visit_memory(Context* ctx,
 }
 
 static Result visit_module(Context* ctx, Module* module) {
-  size_t i;
-  for (i = 0; i < module->globals.size; ++i)
+  for (size_t i = 0; i < module->globals.size; ++i)
     CHECK_RESULT(visit_global(ctx, i, module->globals.data[i]));
-  for (i = 0; i < module->func_types.size; ++i)
+  for (size_t i = 0; i < module->func_types.size; ++i)
     CHECK_RESULT(visit_func_type(ctx, i, module->func_types.data[i]));
-  for (i = 0; i < module->funcs.size; ++i)
+  for (size_t i = 0; i < module->funcs.size; ++i)
     CHECK_RESULT(visit_func(ctx, i, module->funcs.data[i]));
-  for (i = 0; i < module->tables.size; ++i)
+  for (size_t i = 0; i < module->tables.size; ++i)
     CHECK_RESULT(visit_table(ctx, i, module->tables.data[i]));
-  for (i = 0; i < module->memories.size; ++i)
+  for (size_t i = 0; i < module->memories.size; ++i)
     CHECK_RESULT(visit_memory(ctx, i, module->memories.data[i]));
   return Result::Ok;
 }

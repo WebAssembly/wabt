@@ -236,8 +236,7 @@ static void print_typed_value(const InterpreterTypedValue* tv) {
 
 static void print_typed_values(const InterpreterTypedValue* values,
                                size_t num_values) {
-  size_t i;
-  for (i = 0; i < num_values; ++i) {
+  for (size_t i = 0; i < num_values; ++i) {
     print_typed_value(&values[i]);
     if (i != num_values - 1)
       printf(", ");
@@ -298,8 +297,7 @@ static InterpreterResult push_args(InterpreterThread* thread,
   if (sig->param_types.size != args->size)
     return InterpreterResult::ArgumentTypeMismatch;
 
-  size_t i;
-  for (i = 0; i < sig->param_types.size; ++i) {
+  for (size_t i = 0; i < sig->param_types.size; ++i) {
     if (sig->param_types.data[i] != args->data[i].type)
       return InterpreterResult::ArgumentTypeMismatch;
 
@@ -325,8 +323,7 @@ static void copy_results(InterpreterThread* thread,
    * size to zero. */
   out_results->size = 0;
   resize_interpreter_typed_value_vector(out_results, expected_results);
-  size_t i;
-  for (i = 0; i < expected_results; ++i) {
+  for (size_t i = 0; i < expected_results; ++i) {
     out_results->data[i].type = sig->result_types.data[i];
     out_results->data[i].value = thread->value_stack[i];
   }
@@ -432,8 +429,7 @@ static void run_all_exports(InterpreterModule* module,
   InterpreterTypedValueVector results;
   WABT_ZERO_MEMORY(args);
   WABT_ZERO_MEMORY(results);
-  uint32_t i;
-  for (i = 0; i < module->exports.size; ++i) {
+  for (uint32_t i = 0; i < module->exports.size; ++i) {
     InterpreterExport* export_ = &module->exports.data[i];
     InterpreterResult iresult = run_export(thread, export_, &args, &results);
     if (verbose == RunVerbosity::Verbose) {
@@ -476,8 +472,7 @@ static Result default_host_callback(const InterpreterFunc* func,
                                     InterpreterTypedValue* out_results,
                                     void* user_data) {
   memset(out_results, 0, sizeof(InterpreterTypedValue) * num_results);
-  uint32_t i;
-  for (i = 0; i < num_results; ++i)
+  for (uint32_t i = 0; i < num_results; ++i)
     out_results[i].type = sig->result_types.data[i];
 
   InterpreterTypedValueVector vec_args;
@@ -812,9 +807,8 @@ static Result parse_string(Context* ctx, StringSlice* out_string) {
         print_parse_error(ctx, "expected escape: \\uxxxx");
         return Result::Error;
       }
-      int i;
       uint16_t code = 0;
-      for (i = 0; i < 4; ++i) {
+      for (int i = 0; i < 4; ++i) {
         c = read_char(ctx);
         int cval;
         if (c >= '0' && c <= '9') {
@@ -1178,9 +1172,8 @@ static Result on_register_command(Context* ctx,
     /* The module names can be different than their registered names. We don't
      * keep a hash for the module names (just the registered names), so we'll
      * just iterate over all the modules to find it. */
-    size_t i;
     module_index = -1;
-    for (i = 0; i < ctx->env.modules.size(); ++i) {
+    for (size_t i = 0; i < ctx->env.modules.size(); ++i) {
       const StringSlice* module_name = &ctx->env.modules[i]->name;
       if (!string_slice_is_empty(module_name) &&
           string_slices_are_equal(&name, module_name)) {
@@ -1320,8 +1313,7 @@ static Result on_assert_return_command(Context* ctx,
   if (WABT_SUCCEEDED(result)) {
     if (iresult == InterpreterResult::Ok) {
       if (results.size == expected->size) {
-        size_t i;
-        for (i = 0; i < results.size; ++i) {
+        for (size_t i = 0; i < results.size; ++i) {
           const InterpreterTypedValue* expected_tv = &expected->data[i];
           const InterpreterTypedValue* actual_tv = &results.data[i];
           if (!typed_values_are_equal(expected_tv, actual_tv)) {

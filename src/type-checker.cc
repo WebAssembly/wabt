@@ -147,8 +147,7 @@ static void push_type(TypeChecker* tc, Type type) {
 }
 
 static void push_types(TypeChecker* tc, const TypeVector* types) {
-  size_t i;
-  for (i = 0; i < types->size; ++i)
+  for (size_t i = 0; i < types->size; ++i)
     push_type(tc, types->data[i]);
 }
 
@@ -194,9 +193,8 @@ static Result check_signature(TypeChecker* tc,
                               const TypeVector* sig,
                               const char* desc) {
   Result result = Result::Ok;
-  size_t i;
   COMBINE_RESULT(result, check_type_stack_limit(tc, sig->size, desc));
-  for (i = 0; i < sig->size; ++i) {
+  for (size_t i = 0; i < sig->size; ++i) {
     Type actual = Type::Any;
     COMBINE_RESULT(result, peek_type(tc, sig->size - i - 1, &actual));
     COMBINE_RESULT(result, check_type(tc, actual, sig->data[i], desc));
@@ -218,9 +216,8 @@ static Result pop_and_check_call(TypeChecker* tc,
                                  const TypeVector* result_types,
                                  const char* desc) {
   Result result = Result::Ok;
-  size_t i;
   COMBINE_RESULT(result, check_type_stack_limit(tc, param_types->size, desc));
-  for (i = 0; i < param_types->size; ++i) {
+  for (size_t i = 0; i < param_types->size; ++i) {
     Type actual = Type::Any;
     COMBINE_RESULT(result, peek_type(tc, param_types->size - i - 1, &actual));
     COMBINE_RESULT(result, check_type(tc, actual, param_types->data[i], desc));
