@@ -502,6 +502,8 @@ static PrintErrorCallback make_print_error_callback(Context* ctx) {
 }
 
 static Result on_import_func(uint32_t import_index,
+                             StringSlice module_name,
+                             StringSlice field_name,
                              uint32_t func_index,
                              uint32_t sig_index,
                              void* user_data) {
@@ -547,6 +549,8 @@ static Result on_import_func(uint32_t import_index,
 }
 
 static Result on_import_table(uint32_t import_index,
+                              StringSlice module_name,
+                              StringSlice field_name,
                               uint32_t table_index,
                               Type elem_type,
                               const Limits* elem_limits,
@@ -586,6 +590,8 @@ static Result on_import_table(uint32_t import_index,
 }
 
 static Result on_import_memory(uint32_t import_index,
+                               StringSlice module_name,
+                               StringSlice field_name,
                                uint32_t memory_index,
                                const Limits* page_limits,
                                void* user_data) {
@@ -625,6 +631,8 @@ static Result on_import_memory(uint32_t import_index,
 }
 
 static Result on_import_global(uint32_t import_index,
+                               StringSlice module_name,
+                               StringSlice field_name,
                                uint32_t global_index,
                                Type type,
                                bool mutable_,

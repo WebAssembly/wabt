@@ -27,8 +27,6 @@ struct Context {
   LinkerInputBinary* binary;
 
   Section* reloc_section;
-
-  StringSlice import_name;
   Section* current_section;
 };
 
@@ -72,23 +70,23 @@ static Result on_import(uint32_t index,
                         StringSlice module_name,
                         StringSlice field_name,
                         void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
   if (!string_slice_eq_cstr(&module_name, WABT_LINK_MODULE_NAME)) {
     WABT_FATAL("unsupported import module: " PRIstringslice,
                WABT_PRINTF_STRING_SLICE_ARG(module_name));
   }
-  ctx->import_name = field_name;
   return Result::Ok;
 }
 
 static Result on_import_func(uint32_t import_index,
+                             StringSlice module_name,
+                             StringSlice field_name,
                              uint32_t global_index,
                              uint32_t sig_index,
                              void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   FunctionImport* import =
       append_function_import(&ctx->binary->function_imports);
-  import->name = ctx->import_name;
+  import->name = field_name;
   import->sig_index = sig_index;
   import->active = true;
   ctx->binary->active_function_imports++;
@@ -96,13 +94,15 @@ static Result on_import_func(uint32_t import_index,
 }
 
 static Result on_import_global(uint32_t import_index,
+                               StringSlice module_name,
+                               StringSlice field_name,
                                uint32_t global_index,
                                Type type,
                                bool mutable_,
                                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   GlobalImport* import = append_global_import(&ctx->binary->global_imports);
-  import->name = ctx->import_name;
+  import->name = field_name;
   import->type = type;
   import->mutable_ = mutable_;
   ctx->binary->active_global_imports++;
