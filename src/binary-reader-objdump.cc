@@ -46,9 +46,6 @@ struct Context {
   uint32_t section_starts[kBinarySectionCount];
   BinarySection reloc_section;
 
-  StringSlice import_module_name;
-  StringSlice import_field_name;
-
   uint32_t next_reloc;
 };
 
@@ -410,17 +407,9 @@ static Result begin_function_body(BinaryReaderContext* context,
   return Result::Ok;
 }
 
-static Result on_import(uint32_t index,
-                        StringSlice module_name,
-                        StringSlice field_name,
-                        void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->import_module_name = module_name;
-  ctx->import_field_name = field_name;
-  return Result::Ok;
-}
-
 static Result on_import_func(uint32_t import_index,
+                             StringSlice module_name,
+                             StringSlice field_name,
                              uint32_t func_index,
                              uint32_t sig_index,
                              void* user_data) {
@@ -428,12 +417,14 @@ static Result on_import_func(uint32_t import_index,
   print_details(ctx,
                 " - func[%d] sig=%d <- " PRIstringslice "." PRIstringslice "\n",
                 func_index, sig_index,
-                WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
-                WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
+                WABT_PRINTF_STRING_SLICE_ARG(module_name),
+                WABT_PRINTF_STRING_SLICE_ARG(field_name));
   return Result::Ok;
 }
 
 static Result on_import_table(uint32_t import_index,
+                              StringSlice module_name,
+                              StringSlice field_name,
                               uint32_t table_index,
                               Type elem_type,
                               const Limits* elem_limits,
@@ -442,24 +433,28 @@ static Result on_import_table(uint32_t import_index,
   print_details(
       ctx, " - " PRIstringslice "." PRIstringslice
            " -> table elem_type=%s init=%" PRId64 " max=%" PRId64 "\n",
-      WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
-      WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name),
+      WABT_PRINTF_STRING_SLICE_ARG(module_name),
+      WABT_PRINTF_STRING_SLICE_ARG(field_name),
       get_type_name(elem_type), elem_limits->initial, elem_limits->max);
   return Result::Ok;
 }
 
 static Result on_import_memory(uint32_t import_index,
+                               StringSlice module_name,
+                               StringSlice field_name,
                                uint32_t memory_index,
                                const Limits* page_limits,
                                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   print_details(ctx, " - " PRIstringslice "." PRIstringslice " -> memory\n",
-                WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
-                WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
+                WABT_PRINTF_STRING_SLICE_ARG(module_name),
+                WABT_PRINTF_STRING_SLICE_ARG(field_name));
   return Result::Ok;
 }
 
 static Result on_import_global(uint32_t import_index,
+                               StringSlice module_name,
+                               StringSlice field_name,
                                uint32_t global_index,
                                Type type,
                                bool mutable_,
@@ -468,8 +463,8 @@ static Result on_import_global(uint32_t import_index,
   print_details(ctx, " - global[%d] %s mutable=%d <- " PRIstringslice
                      "." PRIstringslice "\n",
                 global_index, get_type_name(type), mutable_,
-                WABT_PRINTF_STRING_SLICE_ARG(ctx->import_module_name),
-                WABT_PRINTF_STRING_SLICE_ARG(ctx->import_field_name));
+                WABT_PRINTF_STRING_SLICE_ARG(module_name),
+                WABT_PRINTF_STRING_SLICE_ARG(field_name));
   return Result::Ok;
 }
 
@@ -699,7 +694,6 @@ Result read_binary_objdump(const uint8_t* data,
 
     // Import section
     reader.on_import_count = on_count;
-    reader.on_import = on_import;
     reader.on_import_func = on_import_func;
     reader.on_import_table = on_import_table;
     reader.on_import_memory = on_import_memory;
