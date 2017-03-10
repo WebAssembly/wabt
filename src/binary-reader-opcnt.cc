@@ -33,8 +33,7 @@ struct Context {
 
 static Result add_int_counter_value(IntCounterVector* vec,
                                         intmax_t value) {
-  size_t i;
-  for (i = 0; i < vec->size; ++i) {
+  for (size_t i = 0; i < vec->size; ++i) {
     if (vec->data[i].value == value) {
       ++vec->data[i].count;
       return Result::Ok;
@@ -50,8 +49,7 @@ static Result add_int_counter_value(IntCounterVector* vec,
 static Result add_int_pair_counter_value(IntPairCounterVector* vec,
                                              intmax_t first,
                                              intmax_t second) {
-  size_t i;
-  for (i = 0; i < vec->size; ++i) {
+  for (size_t i = 0; i < vec->size; ++i) {
     if (vec->data[i].first == first && vec->data[i].second == second) {
       ++vec->data[i].count;
       return Result::Ok;

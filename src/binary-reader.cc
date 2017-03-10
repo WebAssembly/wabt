@@ -650,9 +650,8 @@ static void sprint_limits(char* dst, size_t size, const Limits* limits) {
 }
 
 static void log_types(LoggingContext* ctx, uint32_t type_count, Type* types) {
-  uint32_t i;
   LOGF_NOINDENT("[");
-  for (i = 0; i < type_count; ++i) {
+  for (uint32_t i = 0; i < type_count; ++i) {
     LOGF_NOINDENT("%s", get_type_name(types[i]));
     if (i != type_count - 1)
       LOGF_NOINDENT(", ");
@@ -830,8 +829,7 @@ static Result logging_on_br_table_expr(BinaryReaderContext* context,
                                        uint32_t default_target_depth) {
   LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
   LOGF("on_br_table_expr(num_targets: %u, depths: [", num_targets);
-  uint32_t i;
-  for (i = 0; i < num_targets; ++i) {
+  for (uint32_t i = 0; i < num_targets; ++i) {
     LOGF_NOINDENT("%u", target_depths[i]);
     if (i != num_targets - 1)
       LOGF_NOINDENT(", ");
@@ -1211,8 +1209,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
           ctx->target_depths.size = num_targets;
         }
 
-        uint32_t i;
-        for (i = 0; i < num_targets; ++i) {
+        for (uint32_t i = 0; i < num_targets; ++i) {
           uint32_t target_depth;
           in_u32_leb128(ctx, &target_depth, "br_table target depth");
           ctx->target_depths.data[i] = target_depth;
@@ -1580,9 +1577,8 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
         if (subsection_size) {
           uint32_t num_names;
           in_u32_leb128(ctx, &num_names, "name count");
-          uint32_t j;
           CALLBACK(on_function_names_count, num_names);
-          for (j = 0; j < num_names; ++j) {
+          for (uint32_t j = 0; j < num_names; ++j) {
             uint32_t function_index;
             StringSlice function_name;
 
@@ -1598,16 +1594,14 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
         if (subsection_size) {
           uint32_t num_funcs;
           in_u32_leb128(ctx, &num_funcs, "function count");
-          uint32_t j;
           CALLBACK(on_local_name_function_count, num_funcs);
-          for (j = 0; j < num_funcs; ++j) {
+          for (uint32_t j = 0; j < num_funcs; ++j) {
             uint32_t function_index;
             in_u32_leb128(ctx, &function_index, "function index");
             uint32_t num_locals;
             in_u32_leb128(ctx, &num_locals, "local count");
             CALLBACK(on_local_name_local_count, function_index, num_locals);
-            uint32_t k;
-            for (k = 0; k < num_locals; ++k) {
+            for (uint32_t k = 0; k < num_locals; ++k) {
               uint32_t local_index;
               StringSlice local_name;
 
@@ -1629,7 +1623,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
   } else if (strncmp(section_name.start, WABT_BINARY_SECTION_RELOC,
                      strlen(WABT_BINARY_SECTION_RELOC)) == 0) {
     CALLBACK_SECTION(begin_reloc_section, section_size);
-    uint32_t i, num_relocs, section;
+    uint32_t num_relocs, section;
     in_u32_leb128(ctx, &section, "section");
     WABT_ZERO_MEMORY(section_name);
     if (static_cast<BinarySection>(section) == BinarySection::Custom)
@@ -1637,7 +1631,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     in_u32_leb128(ctx, &num_relocs, "relocation count");
     CALLBACK(on_reloc_count, num_relocs, static_cast<BinarySection>(section),
              section_name);
-    for (i = 0; i < num_relocs; ++i) {
+    for (uint32_t i = 0; i < num_relocs; ++i) {
       uint32_t reloc_type, offset;
       in_u32_leb128(ctx, &reloc_type, "relocation type");
       in_u32_leb128(ctx, &offset, "offset");
@@ -1653,11 +1647,10 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
 
 static void read_type_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_signature_section, section_size);
-  uint32_t i;
   in_u32_leb128(ctx, &ctx->num_signatures, "type count");
   CALLBACK(on_signature_count, ctx->num_signatures);
 
-  for (i = 0; i < ctx->num_signatures; ++i) {
+  for (uint32_t i = 0; i < ctx->num_signatures; ++i) {
     Type form;
     in_type(ctx, &form, "type form");
     RAISE_ERROR_UNLESS(form == Type::Func, "unexpected type form");
@@ -1668,8 +1661,7 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
     if (num_params > ctx->param_types.capacity)
       reserve_types(&ctx->param_types, num_params);
 
-    uint32_t j;
-    for (j = 0; j < num_params; ++j) {
+    for (uint32_t j = 0; j < num_params; ++j) {
       Type param_type;
       in_type(ctx, &param_type, "function param type");
       RAISE_ERROR_UNLESS(is_concrete_type(param_type),
@@ -1696,10 +1688,9 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
 
 static void read_import_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_import_section, section_size);
-  uint32_t i;
   in_u32_leb128(ctx, &ctx->num_imports, "import count");
   CALLBACK(on_import_count, ctx->num_imports);
-  for (i = 0; i < ctx->num_imports; ++i) {
+  for (uint32_t i = 0; i < ctx->num_imports; ++i) {
     StringSlice module_name;
     in_str(ctx, &module_name, "import module name");
     StringSlice field_name;
@@ -1755,10 +1746,9 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
 
 static void read_function_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_function_signatures_section, section_size);
-  uint32_t i;
   in_u32_leb128(ctx, &ctx->num_function_signatures, "function signature count");
   CALLBACK(on_function_signatures_count, ctx->num_function_signatures);
-  for (i = 0; i < ctx->num_function_signatures; ++i) {
+  for (uint32_t i = 0; i < ctx->num_function_signatures; ++i) {
     uint32_t func_index = ctx->num_func_imports + i;
     uint32_t sig_index;
     in_u32_leb128(ctx, &sig_index, "function signature index");
@@ -1771,12 +1761,11 @@ static void read_function_section(Context* ctx, uint32_t section_size) {
 
 static void read_table_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_table_section, section_size);
-  uint32_t i;
   in_u32_leb128(ctx, &ctx->num_tables, "table count");
   RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count (%d) must be 0 or 1",
                      ctx->num_tables);
   CALLBACK(on_table_count, ctx->num_tables);
-  for (i = 0; i < ctx->num_tables; ++i) {
+  for (uint32_t i = 0; i < ctx->num_tables; ++i) {
     uint32_t table_index = ctx->num_table_imports + i;
     Type elem_type;
     Limits elem_limits;
@@ -1788,11 +1777,10 @@ static void read_table_section(Context* ctx, uint32_t section_size) {
 
 static void read_memory_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_memory_section, section_size);
-  uint32_t i;
   in_u32_leb128(ctx, &ctx->num_memories, "memory count");
   RAISE_ERROR_UNLESS(ctx->num_memories <= 1, "memory count must be 0 or 1");
   CALLBACK(on_memory_count, ctx->num_memories);
-  for (i = 0; i < ctx->num_memories; ++i) {
+  for (uint32_t i = 0; i < ctx->num_memories; ++i) {
     uint32_t memory_index = ctx->num_memory_imports + i;
     Limits page_limits;
     read_memory(ctx, &page_limits);
@@ -1803,10 +1791,9 @@ static void read_memory_section(Context* ctx, uint32_t section_size) {
 
 static void read_global_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_global_section, section_size);
-  uint32_t i;
   in_u32_leb128(ctx, &ctx->num_globals, "global count");
   CALLBACK(on_global_count, ctx->num_globals);
-  for (i = 0; i < ctx->num_globals; ++i) {
+  for (uint32_t i = 0; i < ctx->num_globals; ++i) {
     uint32_t global_index = ctx->num_global_imports + i;
     Type global_type;
     bool mutable_;
@@ -1822,10 +1809,9 @@ static void read_global_section(Context* ctx, uint32_t section_size) {
 
 static void read_export_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_export_section, section_size);
-  uint32_t i;
   in_u32_leb128(ctx, &ctx->num_exports, "export count");
   CALLBACK(on_export_count, ctx->num_exports);
-  for (i = 0; i < ctx->num_exports; ++i) {
+  for (uint32_t i = 0; i < ctx->num_exports; ++i) {
     StringSlice name;
     in_str(ctx, &name, "export item name");
 
@@ -1873,12 +1859,12 @@ static void read_start_section(Context* ctx, uint32_t section_size) {
 
 static void read_elem_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_elem_section, section_size);
-  uint32_t i, num_elem_segments;
+  uint32_t num_elem_segments;
   in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
   CALLBACK(on_elem_segment_count, num_elem_segments);
   RAISE_ERROR_UNLESS(num_elem_segments == 0 || num_total_tables(ctx) > 0,
                      "elem section without table section");
-  for (i = 0; i < num_elem_segments; ++i) {
+  for (uint32_t i = 0; i < num_elem_segments; ++i) {
     uint32_t table_index;
     in_u32_leb128(ctx, &table_index, "elem segment table index");
     CALLBACK(begin_elem_segment, i, table_index);
@@ -1886,11 +1872,11 @@ static void read_elem_section(Context* ctx, uint32_t section_size) {
     read_init_expr(ctx, i);
     CALLBACK(end_elem_segment_init_expr, i);
 
-    uint32_t j, num_function_indexes;
+    uint32_t num_function_indexes;
     in_u32_leb128(ctx, &num_function_indexes,
                   "elem segment function index count");
     CALLBACK_CTX(on_elem_segment_function_index_count, i, num_function_indexes);
-    for (j = 0; j < num_function_indexes; ++j) {
+    for (uint32_t j = 0; j < num_function_indexes; ++j) {
       uint32_t func_index;
       in_u32_leb128(ctx, &func_index, "elem segment function index");
       CALLBACK(on_elem_segment_function_index, i, func_index);
@@ -1902,12 +1888,11 @@ static void read_elem_section(Context* ctx, uint32_t section_size) {
 
 static void read_code_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_function_bodies_section, section_size);
-  uint32_t i;
   in_u32_leb128(ctx, &ctx->num_function_bodies, "function body count");
   RAISE_ERROR_UNLESS(ctx->num_function_signatures == ctx->num_function_bodies,
                      "function signature count != function body count");
   CALLBACK(on_function_bodies_count, ctx->num_function_bodies);
-  for (i = 0; i < ctx->num_function_bodies; ++i) {
+  for (uint32_t i = 0; i < ctx->num_function_bodies; ++i) {
     uint32_t func_index = ctx->num_func_imports + i;
     uint32_t func_offset = ctx->offset;
     ctx->offset = func_offset;
@@ -1920,8 +1905,7 @@ static void read_code_section(Context* ctx, uint32_t section_size) {
     uint32_t num_local_decls;
     in_u32_leb128(ctx, &num_local_decls, "local declaration count");
     CALLBACK(on_local_decl_count, num_local_decls);
-    uint32_t k;
-    for (k = 0; k < num_local_decls; ++k) {
+    for (uint32_t k = 0; k < num_local_decls; ++k) {
       uint32_t num_local_types;
       in_u32_leb128(ctx, &num_local_types, "local type count");
       Type local_type;
@@ -1940,12 +1924,12 @@ static void read_code_section(Context* ctx, uint32_t section_size) {
 
 static void read_data_section(Context* ctx, uint32_t section_size) {
   CALLBACK_SECTION(begin_data_section, section_size);
-  uint32_t i, num_data_segments;
+  uint32_t num_data_segments;
   in_u32_leb128(ctx, &num_data_segments, "data segment count");
   CALLBACK(on_data_segment_count, num_data_segments);
   RAISE_ERROR_UNLESS(num_data_segments == 0 || num_total_memories(ctx) > 0,
                      "data section without memory section");
-  for (i = 0; i < num_data_segments; ++i) {
+  for (uint32_t i = 0; i < num_data_segments; ++i) {
     uint32_t memory_index;
     in_u32_leb128(ctx, &memory_index, "data segment memory index");
     CALLBACK(begin_data_segment, i, memory_index);

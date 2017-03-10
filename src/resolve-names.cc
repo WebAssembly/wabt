@@ -85,8 +85,7 @@ static void check_duplicate_bindings(Context* ctx,
 
 static void resolve_label_var(Context* ctx, Var* var) {
   if (var->type == VarType::Name) {
-    int i;
-    for (i = ctx->labels.size - 1; i >= 0; --i) {
+    for (int i = ctx->labels.size - 1; i >= 0; --i) {
       Label* label = ctx->labels.data[i];
       if (string_slices_are_equal(label, &var->name)) {
         destroy_string_slice(&var->name);
@@ -195,9 +194,8 @@ static Result on_br_if_expr(Expr* expr, void* user_data) {
 
 static Result on_br_table_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  size_t i;
   VarVector* targets = &expr->br_table.targets;
-  for (i = 0; i < targets->size; ++i) {
+  for (size_t i = 0; i < targets->size; ++i) {
     Var* target = &targets->data[i];
     resolve_label_var(ctx, target);
   }
@@ -297,10 +295,9 @@ static void visit_global(Context* ctx, Global* global) {
 }
 
 static void visit_elem_segment(Context* ctx, ElemSegment* segment) {
-  size_t i;
   resolve_table_var(ctx, &segment->table_var);
   visit_expr_list(segment->offset, &ctx->visitor);
-  for (i = 0; i < segment->vars.size; ++i)
+  for (size_t i = 0; i < segment->vars.size; ++i)
     resolve_func_var(ctx, &segment->vars.data[i]);
 }
 
@@ -317,16 +314,15 @@ static void visit_module(Context* ctx, Module* module) {
   check_duplicate_bindings(ctx, &module->table_bindings, "table");
   check_duplicate_bindings(ctx, &module->memory_bindings, "memory");
 
-  size_t i;
-  for (i = 0; i < module->funcs.size; ++i)
+  for (size_t i = 0; i < module->funcs.size; ++i)
     visit_func(ctx, module->funcs.data[i]);
-  for (i = 0; i < module->exports.size; ++i)
+  for (size_t i = 0; i < module->exports.size; ++i)
     visit_export(ctx, module->exports.data[i]);
-  for (i = 0; i < module->globals.size; ++i)
+  for (size_t i = 0; i < module->globals.size; ++i)
     visit_global(ctx, module->globals.data[i]);
-  for (i = 0; i < module->elem_segments.size; ++i)
+  for (size_t i = 0; i < module->elem_segments.size; ++i)
     visit_elem_segment(ctx, module->elem_segments.data[i]);
-  for (i = 0; i < module->data_segments.size; ++i)
+  for (size_t i = 0; i < module->data_segments.size; ++i)
     visit_data_segment(ctx, module->data_segments.data[i]);
   if (module->start)
     resolve_func_var(ctx, module->start);
@@ -408,8 +404,7 @@ static void visit_command(Context* ctx, Command* command) {
 }
 
 static void visit_script(Context* ctx, Script* script) {
-  size_t i;
-  for (i = 0; i < script->commands.size; ++i)
+  for (size_t i = 0; i < script->commands.size; ++i)
     visit_command(ctx, &script->commands.data[i]);
 }
 

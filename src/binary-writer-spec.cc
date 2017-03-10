@@ -40,8 +40,7 @@ struct Context {
 };
 
 static void convert_backslash_to_slash(char* s, size_t length) {
-  size_t i = 0;
-  for (; i < length; ++i)
+  for (size_t i = 0; i < length; ++i)
     if (s[i] == '\\')
       s[i] = '/';
 }
@@ -120,9 +119,8 @@ static void write_separator(Context* ctx) {
 }
 
 static void write_escaped_string_slice(Context* ctx, StringSlice ss) {
-  size_t i;
   write_char(&ctx->json_stream, '"');
-  for (i = 0; i < ss.length; ++i) {
+  for (size_t i = 0; i < ss.length; ++i) {
     uint8_t c = ss.start[i];
     if (c < 0x20 || c == '\\' || c == '"') {
       writef(&ctx->json_stream, "\\u%04x", c);
@@ -215,8 +213,7 @@ static void write_const(Context* ctx, const Const* const_) {
 
 static void write_const_vector(Context* ctx, const ConstVector* consts) {
   writef(&ctx->json_stream, "[");
-  size_t i;
-  for (i = 0; i < consts->size; ++i) {
+  for (size_t i = 0; i < consts->size; ++i) {
     const Const* const_ = &consts->data[i];
     write_const(ctx, const_);
     if (i != consts->size - 1)
@@ -266,8 +263,7 @@ static void write_action_result_type(Context* ctx,
       assert(export_->kind == ExternalKind::Func);
       Func* func = get_func_by_var(module, &export_->var);
       size_t num_results = get_num_results(func);
-      size_t i;
-      for (i = 0; i < num_results; ++i)
+      for (size_t i = 0; i < num_results; ++i)
         write_type_object(ctx, get_result_type(func, i));
       break;
     }
@@ -334,9 +330,8 @@ static void write_commands(Context* ctx, Script* script) {
   writef(&ctx->json_stream, "{\"source_filename\": ");
   write_escaped_string_slice(ctx, ctx->source_filename);
   writef(&ctx->json_stream, ",\n \"commands\": [\n");
-  size_t i;
   int last_module_index = -1;
-  for (i = 0; i < script->commands.size; ++i) {
+  for (size_t i = 0; i < script->commands.size; ++i) {
     Command* command = &script->commands.data[i];
 
     if (command->type == CommandType::AssertInvalidNonBinary)

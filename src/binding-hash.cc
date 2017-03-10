@@ -96,8 +96,7 @@ static void hash_resize(BindingHash* hash, size_t desired_capacity) {
   reserve_binding_hash_entrys(&new_hash.entries, desired_capacity);
 
   /* update the free list */
-  size_t i;
-  for (i = 0; i < new_hash.entries.capacity; ++i) {
+  for (size_t i = 0; i < new_hash.entries.capacity; ++i) {
     BindingHashEntry* entry = &new_hash.entries.data[i];
     if (new_hash.free_head)
       new_hash.free_head->prev = entry;
@@ -109,7 +108,7 @@ static void hash_resize(BindingHash* hash, size_t desired_capacity) {
   new_hash.free_head->prev = nullptr;
 
   /* copy from the old hash to the new hash */
-  for (i = 0; i < hash->entries.capacity; ++i) {
+  for (size_t i = 0; i < hash->entries.capacity; ++i) {
     BindingHashEntry* old_entry = &hash->entries.data[i];
     if (hash_entry_is_free(old_entry))
       continue;
@@ -172,8 +171,7 @@ static void destroy_binding_hash_entry(BindingHashEntry* entry) {
 void destroy_binding_hash(BindingHash* hash) {
   /* Can't use WABT_DESTROY_VECTOR_AND_ELEMENTS, because it loops over size, not
    * capacity. */
-  size_t i;
-  for (i = 0; i < hash->entries.capacity; ++i)
+  for (size_t i = 0; i < hash->entries.capacity; ++i)
     destroy_binding_hash_entry(&hash->entries.data[i]);
   destroy_binding_hash_entry_vector(&hash->entries);
 }

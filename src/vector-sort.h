@@ -30,15 +30,13 @@
                                    void (*swap_fcn)(type * v1, type * v2), \
                                    int (*lt_fcn)(type * v1, type * v2)) {  \
     /* TODO(karlschimpf) Use a faster sort. */                             \
-    size_t i;                                                              \
-    size_t j;                                                              \
     if (in_vec->size == 0)                                                 \
       return;                                                              \
-    for (i = 0; i < in_vec->size; ++i) {                                   \
+    for (size_t i = 0; i < in_vec->size; ++i) {                            \
       append_##name##_value(out_vec, &in_vec->data[i]);                    \
       if (out_vec->size < 2)                                               \
         continue;                                                          \
-      for (j = out_vec->size; j >= 2; --j) {                               \
+      for (size_t j = out_vec->size; j >= 2; --j) {                        \
         type* v1 = &out_vec->data[j - 1];                                  \
         type* v2 = &out_vec->data[j - 2];                                  \
         if (lt_fcn(v1, v2))                                                \

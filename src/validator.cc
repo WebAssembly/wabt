@@ -265,8 +265,7 @@ static void check_types(Context* ctx,
                         const char* desc,
                         const char* index_kind) {
   if (actual->size == expected->size) {
-    size_t i;
-    for (i = 0; i < actual->size; ++i) {
+    for (size_t i = 0; i < actual->size; ++i) {
       check_type_index(ctx, loc, actual->data[i], expected->data[i], desc, i,
                        index_kind);
     }
@@ -282,8 +281,7 @@ static void check_const_types(Context* ctx,
                               const ConstVector* expected,
                               const char* desc) {
   if (actual->size == expected->size) {
-    size_t i;
-    for (i = 0; i < actual->size; ++i) {
+    for (size_t i = 0; i < actual->size; ++i) {
       check_type_index(ctx, loc, actual->data[i], expected->data[i].type, desc,
                        i, "result");
     }
@@ -323,8 +321,7 @@ static void check_expr_list(Context* ctx,
                             const Location* loc,
                             const Expr* first) {
   if (first) {
-    const Expr* expr;
-    for (expr = first; expr; expr = expr->next)
+    for (const Expr* expr = first; expr; expr = expr->next)
       check_expr(ctx, expr);
   }
 }
@@ -360,8 +357,7 @@ static void check_expr(Context* ctx, const Expr* expr) {
 
     case ExprType::BrTable: {
       typechecker_begin_br_table(&ctx->typechecker);
-      size_t i;
-      for (i = 0; i < expr->br_table.targets.size; ++i) {
+      for (size_t i = 0; i < expr->br_table.targets.size; ++i) {
         typechecker_on_br_table_target(&ctx->typechecker,
                                        expr->br_table.targets.data[i].index);
       }
@@ -638,8 +634,7 @@ static void check_table(Context* ctx, const Location* loc, const Table* table) {
 }
 
 static void check_elem_segments(Context* ctx, const Module* module) {
-  ModuleField* field;
-  for (field = module->first_field; field; field = field->next) {
+  for (ModuleField* field = module->first_field; field; field = field->next) {
     if (field->type != ModuleFieldType::ElemSegment)
       continue;
 
@@ -648,8 +643,7 @@ static void check_elem_segments(Context* ctx, const Module* module) {
     if (!WABT_SUCCEEDED(check_table_var(ctx, &elem_segment->table_var, &table)))
       continue;
 
-    size_t i;
-    for (i = 0; i < elem_segment->vars.size; ++i) {
+    for (size_t i = 0; i < elem_segment->vars.size; ++i) {
       if (!WABT_SUCCEEDED(
               check_func_var(ctx, &elem_segment->vars.data[i], nullptr)))
         continue;
@@ -669,8 +663,7 @@ static void check_memory(Context* ctx,
 }
 
 static void check_data_segments(Context* ctx, const Module* module) {
-  ModuleField* field;
-  for (field = module->first_field; field; field = field->next) {
+  for (ModuleField* field = module->first_field; field; field = field->next) {
     if (field->type != ModuleFieldType::DataSegment)
       continue;
 
@@ -762,8 +755,7 @@ static void check_module(Context* ctx, const Module* module) {
   ctx->current_global_index = 0;
   ctx->num_imported_globals = 0;
 
-  ModuleField* field;
-  for (field = module->first_field; field; field = field->next) {
+  for (ModuleField* field = module->first_field; field; field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Func:
         check_func(ctx, &field->loc, &field->func);
@@ -865,8 +857,7 @@ static const TypeVector* check_invoke(Context* ctx, const Action* action) {
                 expected_args);
     return nullptr;
   }
-  size_t i;
-  for (i = 0; i < actual_args; ++i) {
+  for (size_t i = 0; i < actual_args; ++i) {
     Const* const_ = &invoke->args.data[i];
     check_type_index(ctx, &const_->loc, const_->type, get_param_type(func, i),
                      "invoke", i, "argument");
@@ -1015,8 +1006,7 @@ Result validate_script(AstLexer* lexer,
   tc_error_handler.user_data = &ctx;
   ctx.typechecker.error_handler = &tc_error_handler;
 
-  size_t i;
-  for (i = 0; i < script->commands.size; ++i)
+  for (size_t i = 0; i < script->commands.size; ++i)
     check_command(&ctx, &script->commands.data[i]);
   destroy_context(&ctx);
   return ctx.result;

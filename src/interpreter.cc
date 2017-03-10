@@ -140,18 +140,16 @@ InterpreterEnvironmentMark mark_interpreter_environment(
 
 void reset_interpreter_environment_to_mark(InterpreterEnvironment* env,
                                            InterpreterEnvironmentMark mark) {
-  size_t i;
-
 #define DESTROY_PAST_MARK(destroy_name, names)                 \
   do {                                                         \
     assert(mark.names##_size <= env->names.size);              \
-    for (i = mark.names##_size; i < env->names.size; ++i)      \
+    for (size_t i = mark.names##_size; i < env->names.size; ++i)      \
       destroy_interpreter_##destroy_name(&env->names.data[i]); \
     env->names.size = mark.names##_size;                       \
   } while (0)
 
   /* Destroy entries in the binding hash. */
-  for (i = mark.modules_size; i < env->modules.size(); ++i) {
+  for (size_t i = mark.modules_size; i < env->modules.size(); ++i) {
     const StringSlice* name = &env->modules[i]->name;
     if (!string_slice_is_empty(name))
       remove_binding(&env->module_bindings, name);
@@ -160,7 +158,8 @@ void reset_interpreter_environment_to_mark(InterpreterEnvironment* env,
   /* registered_module_bindings maps from an arbitrary name to a module index,
    * so we have to iterate through the entire table to find entries to remove.
    */
-  for (i = 0; i < env->registered_module_bindings.entries.capacity; ++i) {
+  for (size_t i = 0; i < env->registered_module_bindings.entries.capacity;
+       ++i) {
     BindingHashEntry* entry = &env->registered_module_bindings.entries.data[i];
     if (!hash_entry_is_free(entry) &&
         entry->binding.index >= static_cast<int>(mark.modules_size)) {
@@ -767,8 +766,7 @@ InterpreterResult call_host(InterpreterThread* thread, InterpreterFunc* func) {
     resize_interpreter_typed_value_vector(&thread->host_args, num_args);
   }
 
-  uint32_t i;
-  for (i = num_args; i > 0; --i) {
+  for (uint32_t i = num_args; i > 0; --i) {
     InterpreterValue value = POP();
     InterpreterTypedValue* arg = &thread->host_args.data[i - 1];
     arg->type = sig->param_types.data[i - 1];
@@ -785,7 +783,7 @@ InterpreterResult call_host(InterpreterThread* thread, InterpreterFunc* func) {
       call_result_values, func->host.user_data);
   TRAP_IF(call_result != Result::Ok, HostTrapped);
 
-  for (i = 0; i < num_results; ++i) {
+  for (uint32_t i = 0; i < num_results; ++i) {
     TRAP_IF(call_result_values[i].type != sig->result_types.data[i],
             HostResultTypeMismatch);
     PUSH(call_result_values[i].value);
@@ -804,8 +802,7 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
 
   const uint8_t* istream = reinterpret_cast<const uint8_t*>(env->istream.start);
   const uint8_t* pc = &istream[thread->pc];
-  uint32_t i;
-  for (i = 0; i < num_instructions; ++i) {
+  for (uint32_t i = 0; i < num_instructions; ++i) {
     InterpreterOpcode opcode = static_cast<InterpreterOpcode>(*pc++);
     switch (opcode) {
       case InterpreterOpcode::Select: {
@@ -2370,8 +2367,7 @@ void disassemble(InterpreterEnvironment* env,
          * it as a list of table entries */
         if (num_bytes % WABT_TABLE_ENTRY_SIZE == 0) {
           uint32_t num_entries = num_bytes / WABT_TABLE_ENTRY_SIZE;
-          uint32_t i;
-          for (i = 0; i < num_entries; ++i) {
+          for (uint32_t i = 0; i < num_entries; ++i) {
             writef(stream, "%4" PRIzd "| ", pc - istream);
             uint32_t offset;
             uint32_t drop;

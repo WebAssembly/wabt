@@ -209,8 +209,7 @@ static void write_quoted_data(Context* ctx, const void* data, size_t length) {
   static const char s_hexdigits[] = "0123456789abcdef";
   write_next_char(ctx);
   write_putc(ctx, '\"');
-  size_t i;
-  for (i = 0; i < length; ++i) {
+  for (size_t i = 0; i < length; ++i) {
     uint8_t c = u8_data[i];
     if (s_is_char_escaped[c]) {
       write_putc(ctx, '\\');
@@ -260,10 +259,9 @@ static void write_types(Context* ctx,
                         const TypeVector* types,
                         const char* name) {
   if (types->size) {
-    size_t i;
     if (name)
       write_open_space(ctx, name);
-    for (i = 0; i < types->size; ++i)
+    for (size_t i = 0; i < types->size; ++i)
       write_type(ctx, types->data[i], NextChar::Space);
     if (name)
       write_close_space(ctx);
@@ -372,8 +370,7 @@ static void write_expr(Context* ctx, const Expr* expr) {
 
     case ExprType::BrTable: {
       write_puts_space(ctx, get_opcode_name(Opcode::BrTable));
-      size_t i;
-      for (i = 0; i < expr->br_table.targets.size; ++i)
+      for (size_t i = 0; i < expr->br_table.targets.size; ++i)
         write_br_var(ctx, &expr->br_table.targets.data[i], NextChar::Space);
       write_br_var(ctx, &expr->br_table.default_target, NextChar::Newline);
       break;
@@ -501,8 +498,7 @@ static void write_expr(Context* ctx, const Expr* expr) {
 }
 
 static void write_expr_list(Context* ctx, const Expr* first) {
-  const Expr* expr;
-  for (expr = first; expr; expr = expr->next)
+  for (const Expr* expr = first; expr; expr = expr->next)
     write_expr(ctx, expr);
 }
 
@@ -529,8 +525,7 @@ static void write_type_bindings(Context* ctx,
    *   (param i32 i64 f32)
    */
   bool is_open = false;
-  size_t i;
-  for (i = 0; i < types->size; ++i) {
+  for (size_t i = 0; i < types->size; ++i) {
     if (!is_open) {
       write_open_space(ctx, prefix);
       is_open = true;
@@ -610,8 +605,7 @@ static void write_table(Context* ctx, const Table* table) {
 static void write_elem_segment(Context* ctx, const ElemSegment* segment) {
   write_open_space(ctx, "elem");
   write_init_expr(ctx, segment->offset);
-  size_t i;
-  for (i = 0; i < segment->vars.size; ++i)
+  for (size_t i = 0; i < segment->vars.size; ++i)
     write_var(ctx, &segment->vars.data[i], NextChar::Space);
   write_close_newline(ctx);
 }
@@ -696,8 +690,8 @@ static void write_start_function(Context* ctx, const Var* start) {
 
 static void write_module(Context* ctx, const Module* module) {
   write_open_newline(ctx, "module");
-  const ModuleField* field;
-  for (field = module->first_field; field; field = field->next) {
+  for (const ModuleField* field = module->first_field; field;
+       field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Func:
         write_func(ctx, module, &field->func);

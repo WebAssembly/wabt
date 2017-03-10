@@ -158,8 +158,7 @@ static void display_int_counter_vector(FILE* out,
                                        IntCounterVector* vec,
                                        display_name_fcn display_fcn,
                                        const char* opcode_name) {
-  size_t i;
-  for (i = 0; i < vec->size; ++i) {
+  for (size_t i = 0; i < vec->size; ++i) {
     if (vec->data[i].count == 0)
       continue;
     if (opcode_name)
@@ -176,8 +175,7 @@ static void display_int_pair_counter_vector(FILE* out,
                                             display_name_fcn display_first_fcn,
                                             display_name_fcn display_second_fcn,
                                             const char* opcode_name) {
-  size_t i;
-  for (i = 0; i < vec->size; ++i) {
+  for (size_t i = 0; i < vec->size; ++i) {
     if (vec->data[i].count == 0)
       continue;
     if (opcode_name)
@@ -284,8 +282,7 @@ static void display_sorted_int_counter_vector(FILE* out,
   /* First filter out values less than cutoff. This speeds up sorting. */
   IntCounterVector filtered_vec;
   WABT_ZERO_MEMORY(filtered_vec);
-  size_t i;
-  for (i = 0; i < vec->size; ++i) {
+  for (size_t i = 0; i < vec->size; ++i) {
     if (vec->data[i].count < s_cutoff)
       continue;
     append_int_counter_value(&filtered_vec, &vec->data[i]);
@@ -314,8 +311,7 @@ static void display_sorted_int_pair_counter_vector(
   IntPairCounterVector filtered_vec;
   WABT_ZERO_MEMORY(filtered_vec);
   IntPairCounterVector sorted_vec;
-  size_t i;
-  for (i = 0; i < vec->size; ++i) {
+  for (size_t i = 0; i < vec->size; ++i) {
     if (vec->data[i].count < s_cutoff)
       continue;
     append_int_pair_counter_value(&filtered_vec, &vec->data[i]);

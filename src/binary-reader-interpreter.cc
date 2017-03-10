@@ -329,8 +329,7 @@ static Result fixup_top_label(Context* ctx) {
   }
 
   Uint32Vector* fixups = &ctx->depth_fixups.data[top];
-  uint32_t i;
-  for (i = 0; i < fixups->size; ++i)
+  for (uint32_t i = 0; i < fixups->size; ++i)
     CHECK_RESULT(emit_i32_at(ctx, fixups->data[i], offset));
   /* reduce the size to 0 in case this gets reused. Keep the allocations for
    * later use */
@@ -357,8 +356,7 @@ static void on_error(BinaryReaderContext* ctx, const char* message) {
 static Result on_signature_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   resize_uint32_vector(&ctx->sig_index_mapping, count);
-  uint32_t i;
-  for (i = 0; i < count; ++i)
+  for (uint32_t i = 0; i < count; ++i)
     ctx->sig_index_mapping.data[i] = ctx->env->sigs.size + i;
   resize_interpreter_func_signature_vector(&ctx->env->sigs,
                                            ctx->env->sigs.size + count);
@@ -665,8 +663,7 @@ static Result on_function_signatures_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   size_t old_size = ctx->func_index_mapping.size;
   resize_uint32_vector(&ctx->func_index_mapping, old_size + count);
-  uint32_t i;
-  for (i = 0; i < count; ++i)
+  for (uint32_t i = 0; i < count; ++i)
     ctx->func_index_mapping.data[old_size + i] = ctx->env->funcs.size + i;
   resize_interpreter_func_vector(&ctx->env->funcs,
                                  ctx->env->funcs.size + count);
@@ -718,8 +715,7 @@ static Result on_global_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   size_t old_size = ctx->global_index_mapping.size;
   resize_uint32_vector(&ctx->global_index_mapping, old_size + count);
-  uint32_t i;
-  for (i = 0; i < count; ++i)
+  for (uint32_t i = 0; i < count; ++i)
     ctx->global_index_mapping.data[old_size + i] = ctx->env->globals.size + i;
   resize_interpreter_global_vector(&ctx->env->globals,
                                    ctx->env->globals.size + count);
@@ -953,8 +949,7 @@ static void pop_label(Context* ctx) {
   if (ctx->depth_fixups.size > ctx->label_stack.size) {
     uint32_t from = ctx->label_stack.size;
     uint32_t to = ctx->depth_fixups.size;
-    uint32_t i;
-    for (i = from; i < to; ++i)
+    for (uint32_t i = from; i < to; ++i)
       destroy_uint32_vector(&ctx->depth_fixups.data[i]);
     ctx->depth_fixups.size = ctx->label_stack.size;
   }
@@ -978,13 +973,12 @@ static Result begin_function_body(BinaryReaderContext* context,
 
   /* fixup function references */
   uint32_t defined_index = translate_module_func_index_to_defined(ctx, index);
-  uint32_t i;
   Uint32Vector* fixups = &ctx->func_fixups.data[defined_index];
-  for (i = 0; i < fixups->size; ++i)
+  for (uint32_t i = 0; i < fixups->size; ++i)
     CHECK_RESULT(emit_i32_at(ctx, fixups->data[i], func->defined.offset));
 
   /* append param types */
-  for (i = 0; i < sig->param_types.size; ++i) {
+  for (uint32_t i = 0; i < sig->param_types.size; ++i) {
     append_type_value(&func->defined.param_and_local_types,
                       &sig->param_types.data[i]);
   }
@@ -1025,8 +1019,7 @@ static Result on_local_decl(uint32_t decl_index,
   InterpreterFunc* func = ctx->current_func;
   func->defined.local_count += count;
 
-  uint32_t i;
-  for (i = 0; i < count; ++i) {
+  for (uint32_t i = 0; i < count; ++i) {
     append_type_value(&func->defined.param_and_local_types, &type);
   }
 
@@ -1175,8 +1168,7 @@ static Result on_br_table_expr(BinaryReaderContext* context,
   CHECK_RESULT(emit_i32(ctx, (num_targets + 1) * WABT_TABLE_ENTRY_SIZE));
   CHECK_RESULT(emit_i32_at(ctx, fixup_table_offset, get_istream_offset(ctx)));
 
-  uint32_t i;
-  for (i = 0; i <= num_targets; ++i) {
+  for (uint32_t i = 0; i <= num_targets; ++i) {
     uint32_t depth = i != num_targets ? target_depths[i] : default_target_depth;
     CHECK_RESULT(typechecker_on_br_table_target(&ctx->typechecker, depth));
     CHECK_RESULT(emit_br_table_offset(ctx, depth));

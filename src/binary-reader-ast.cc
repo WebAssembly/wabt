@@ -464,8 +464,7 @@ static Result on_local_decl(uint32_t decl_index,
   size_t new_local_count = old_local_count + count;
   reserve_types(&ctx->current_func->local_types, new_local_count);
   TypeVector* types = &ctx->current_func->local_types;
-  size_t i;
-  for (i = 0; i < count; ++i)
+  for (size_t i = 0; i < count; ++i)
     types->data[old_local_count + i] = type;
   types->size = new_local_count;
   return Result::Ok;
@@ -517,8 +516,7 @@ static Result on_br_table_expr(BinaryReaderContext* context,
   Expr* expr = new_br_table_expr();
   reserve_vars(&expr->br_table.targets, num_targets);
   expr->br_table.targets.size = num_targets;
-  uint32_t i;
-  for (i = 0; i < num_targets; ++i) {
+  for (uint32_t i = 0; i < num_targets; ++i) {
     Var* var = &expr->br_table.targets.data[i];
     var->type = VarType::Index;
     var->index = target_depths[i];
