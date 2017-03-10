@@ -407,13 +407,6 @@ static Result begin_function_body(BinaryReaderContext* context,
   return Result::Ok;
 }
 
-static Result on_import(uint32_t index,
-                        StringSlice module_name,
-                        StringSlice field_name,
-                        void* user_data) {
-  return Result::Ok;
-}
-
 static Result on_import_func(uint32_t import_index,
                              StringSlice module_name,
                              StringSlice field_name,
@@ -701,7 +694,6 @@ Result read_binary_objdump(const uint8_t* data,
 
     // Import section
     reader.on_import_count = on_count;
-    reader.on_import = on_import;
     reader.on_import_func = on_import_func;
     reader.on_import_table = on_import_table;
     reader.on_import_memory = on_import_memory;
