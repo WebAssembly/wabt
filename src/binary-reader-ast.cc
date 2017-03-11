@@ -51,7 +51,7 @@ struct Context {
   Expr** current_init_expr;
 };
 
-static void handle_error(Context* ctx, uint32_t offset, const char* message);
+static bool handle_error(Context* ctx, uint32_t offset, const char* message);
 
 static void WABT_PRINTF_FORMAT(2, 3)
     print_error(Context* ctx, const char* format, ...) {
@@ -117,16 +117,17 @@ static Result append_expr(Context* ctx, Expr* expr) {
   return Result::Ok;
 }
 
-static void handle_error(Context* ctx, uint32_t offset, const char* message) {
+static bool handle_error(Context* ctx, uint32_t offset, const char* message) {
   if (ctx->error_handler->on_error) {
-    ctx->error_handler->on_error(offset, message,
-                                 ctx->error_handler->user_data);
+    return ctx->error_handler->on_error(offset, message,
+                                        ctx->error_handler->user_data);
   }
+  return false;
 }
 
-static void on_error(BinaryReaderContext* reader_context, const char* message) {
+static bool on_error(BinaryReaderContext* reader_context, const char* message) {
   Context* ctx = static_cast<Context*>(reader_context->user_data);
-  handle_error(ctx, reader_context->offset, message);
+  return handle_error(ctx, reader_context->offset, message);
 }
 
 static Result on_signature_count(uint32_t count, void* user_data) {

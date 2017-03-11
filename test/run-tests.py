@@ -51,7 +51,7 @@ TOOLS = {
     },
     'run-wasmdump': {
         'EXE': 'test/run-wasmdump.py',
-        'FLAGS': ' '.join(['--bindir=%(bindir)s',]),
+        'FLAGS': ' '.join(['--bindir=%(bindir)s', '--no-error-cmdline']),
         'VERBOSE-FLAGS': ['-v']
     },
     'run-wasm-link': {

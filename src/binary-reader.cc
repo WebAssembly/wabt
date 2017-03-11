@@ -149,11 +149,14 @@ static BinaryReaderContext* get_user_context(Context* ctx) {
 static void WABT_PRINTF_FORMAT(2, 3)
     raise_error(Context* ctx, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  bool handled = false;
   if (ctx->reader->on_error) {
-    ctx->reader->on_error(get_user_context(ctx), buffer);
-  } else {
+    handled = ctx->reader->on_error(get_user_context(ctx), buffer);
+  }
+
+  if (!handled) {
     /* Not great to just print, but we don't want to eat the error either. */
-    fprintf(stderr, "*ERROR*: %s\n", buffer);
+    fprintf(stderr, "*ERROR*: @0x%08zx: %s\n", ctx->offset, buffer);
   }
   longjmp(ctx->error_jmp_buf, 1);
 }
@@ -465,6 +468,17 @@ static void write_indent(LoggingContext* ctx) {
     write_indent(ctx);          \
     LOGF_NOINDENT(__VA_ARGS__); \
   } while (0)
+
+static bool logging_on_error(BinaryReaderContext* context,
+                             const char* message) {
+  LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
+  // Can't use FORWARD_CTX because it returns Result by default.
+  if (!ctx->reader->on_error)
+    return false;
+  BinaryReaderContext new_ctx = *context;
+  new_ctx.user_data = ctx->reader->user_data;
+  return ctx->reader->on_error(&new_ctx, message);
+}
 
 static Result logging_begin_section(BinaryReaderContext* context,
                                     BinarySection section_type,
@@ -2037,7 +2051,7 @@ Result read_binary(const void* data,
   WABT_ZERO_MEMORY(logging_reader);
   logging_reader.user_data = &logging_context;
 
-  logging_reader.on_error = reader->on_error;
+  logging_reader.on_error = logging_on_error;
   logging_reader.begin_section = logging_begin_section;
   logging_reader.begin_module = logging_begin_module;
   logging_reader.end_module = logging_end_module;

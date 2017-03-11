@@ -103,11 +103,12 @@ static Label* top_label(Context* ctx) {
   return get_label(ctx, 0);
 }
 
-static void handle_error(uint32_t offset, const char* message, Context* ctx) {
+static bool handle_error(uint32_t offset, const char* message, Context* ctx) {
   if (ctx->error_handler->on_error) {
-    ctx->error_handler->on_error(offset, message,
-                                 ctx->error_handler->user_data);
+    return ctx->error_handler->on_error(offset, message,
+                                        ctx->error_handler->user_data);
   }
+  return false;
 }
 
 static void WABT_PRINTF_FORMAT(2, 3)
@@ -344,8 +345,9 @@ static Result emit_func_offset(Context* ctx,
   return Result::Ok;
 }
 
-static void on_error(BinaryReaderContext* ctx, const char* message) {
-  handle_error(ctx->offset, message, static_cast<Context*>(ctx->user_data));
+static bool on_error(BinaryReaderContext* ctx, const char* message) {
+  return handle_error(ctx->offset, message,
+                      static_cast<Context*>(ctx->user_data));
 }
 
 static Result on_signature_count(uint32_t count, void* user_data) {

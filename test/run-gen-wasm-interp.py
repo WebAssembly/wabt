@@ -43,6 +43,7 @@ def main(args):
                       action='store_false')
   parser.add_argument('--run-all-exports', action='store_true')
   parser.add_argument('--spec', action='store_true')
+  parser.add_argument('-t', '--trace', action='store_true')
   parser.add_argument('--print-cmd', help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('file', help='test file.')
@@ -55,9 +56,10 @@ def main(args):
       find_exe.GetWasmInterpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm_interp.AppendOptionalArgs({
+      '-v': options.verbose,
       '--run-all-exports': options.run_all_exports,
       '--spec': options.spec,
-      '--trace': options.verbose,
+      '--trace': options.trace,
   })
 
   gen_wasm.verbose = options.print_cmd

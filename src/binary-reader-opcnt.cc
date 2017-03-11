@@ -120,14 +120,6 @@ static  Result on_store_expr(Opcode opcode,
   return Result::Ok;
 }
 
-static void on_error(BinaryReaderContext* ctx, const char* message) {
-  DefaultErrorHandlerInfo info;
-  info.header = "error reading binary";
-  info.out_file = stdout;
-  info.print_header = PrintErrorHeader::Once;
-  default_binary_error_callback(ctx->offset, message, &info);
-}
-
 void init_opcnt_data(OpcntData* data) {
   WABT_ZERO_MEMORY(*data);
 }
@@ -150,7 +142,6 @@ Result read_binary_opcnt(const void* data,
   BinaryReader reader;
   WABT_ZERO_MEMORY(reader);
   reader.user_data = &ctx;
-  reader.on_error = on_error;
   reader.on_opcode = on_opcode;
   reader.on_i32_const_expr = on_i32_const_expr;
   reader.on_get_local_expr = on_get_local_expr;

@@ -631,14 +631,6 @@ Result on_reloc(RelocType type, uint32_t offset, void* user_data) {
   return Result::Ok;
 }
 
-static void on_error(BinaryReaderContext* ctx, const char* message) {
-  DefaultErrorHandlerInfo info;
-  info.header = "error reading binary";
-  info.out_file = stdout;
-  info.print_header = PrintErrorHeader::Once;
-  default_binary_error_callback(ctx->offset, message, &info);
-}
-
 static Result begin_data_segment(uint32_t index,
                                  uint32_t memory_index,
                                  void* user_data) {
@@ -681,7 +673,6 @@ Result read_binary_objdump(const uint8_t* data,
   } else {
     reader.begin_module = begin_module;
     reader.end_module = end_module;
-    reader.on_error = on_error;
 
     reader.begin_section = begin_section;
 

@@ -177,7 +177,7 @@ struct BinaryErrorCallbackData {
   AstParser* parser;
 };
 
-static void on_read_binary_error(uint32_t offset, const char* error,
+static bool on_read_binary_error(uint32_t offset, const char* error,
                                  void* user_data);
 
 #define wabt_ast_parser_lex ast_lexer_lex
@@ -1674,7 +1674,7 @@ Result parse_ast(AstLexer * lexer, struct Script * out_script,
   return result == 0 && parser.errors == 0 ? Result::Ok : Result::Error;
 }
 
-void on_read_binary_error(uint32_t offset, const char* error, void* user_data) {
+bool on_read_binary_error(uint32_t offset, const char* error, void* user_data) {
   BinaryErrorCallbackData* data = (BinaryErrorCallbackData*)user_data;
   if (offset == WABT_UNKNOWN_OFFSET) {
     ast_parser_error(data->loc, data->lexer, data->parser,
@@ -1683,6 +1683,7 @@ void on_read_binary_error(uint32_t offset, const char* error, void* user_data) {
     ast_parser_error(data->loc, data->lexer, data->parser,
                      "error in binary module: @0x%08x: %s", offset, error);
   }
+  return true;
 }
 
 }  // namespace wabt
