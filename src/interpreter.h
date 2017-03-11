@@ -101,26 +101,29 @@ enum class InterpreterOpcode {
 };
 static const int kInterpreterOpcodeCount = WABT_ENUM_COUNT(InterpreterOpcode);
 
-/* TODO(binji): identical to FuncSignature. Share? */
 struct InterpreterFuncSignature {
-  TypeVector param_types;
-  TypeVector result_types;
+  std::vector<Type> param_types;
+  std::vector<Type> result_types;
 };
-WABT_DEFINE_VECTOR(interpreter_func_signature, InterpreterFuncSignature);
 
 struct InterpreterTable {
-  explicit InterpreterTable(const Limits&);
+  explicit InterpreterTable(const Limits& limits)
+      : limits(limits), func_indexes(limits.initial, WABT_INVALID_INDEX) {}
 
   Limits limits;
   std::vector<uint32_t> func_indexes;
 };
 
 struct InterpreterMemory {
-  char* data;
+  InterpreterMemory() {
+    WABT_ZERO_MEMORY(page_limits);
+  }
+  explicit InterpreterMemory(const Limits& limits)
+      : page_limits(limits), data(limits.initial * WABT_PAGE_SIZE) {}
+
   Limits page_limits;
-  uint32_t byte_size; /* Cached from page_limits. */
+  std::vector<char> data;
 };
-WABT_DEFINE_VECTOR(interpreter_memory, InterpreterMemory);
 
 union InterpreterValue {
   uint32_t i32;
@@ -130,17 +133,24 @@ union InterpreterValue {
 };
 
 struct InterpreterTypedValue {
+  InterpreterTypedValue() {}
+  explicit InterpreterTypedValue(Type type): type(type) {}
+  InterpreterTypedValue(Type type, const InterpreterValue& value)
+      : type(type), value(value) {}
+
   Type type;
   InterpreterValue value;
 };
-WABT_DEFINE_VECTOR(interpreter_typed_value, InterpreterTypedValue);
 
 struct InterpreterGlobal {
+  InterpreterGlobal() : mutable_(false), import_index(WABT_INVALID_INDEX) {}
+  InterpreterGlobal(const InterpreterTypedValue& typed_value, bool mutable_)
+      : typed_value(typed_value), mutable_(mutable_) {}
+
   InterpreterTypedValue typed_value;
   bool mutable_;
   uint32_t import_index; /* or INVALID_INDEX if not imported */
 };
-WABT_DEFINE_VECTOR(interpreter_global, InterpreterGlobal);
 
 struct InterpreterImport {
   ~InterpreterImport();
@@ -165,7 +175,7 @@ struct InterpreterImport {
 struct InterpreterFunc;
 
 typedef Result (*InterpreterHostFuncCallback)(
-    const struct InterpreterFunc* func,
+    const struct HostInterpreterFunc* func,
     const InterpreterFuncSignature* sig,
     uint32_t num_args,
     InterpreterTypedValue* args,
@@ -174,31 +184,62 @@ typedef Result (*InterpreterHostFuncCallback)(
     void* user_data);
 
 struct InterpreterFunc {
+  InterpreterFunc(uint32_t sig_index, bool is_host)
+      : sig_index(sig_index), is_host(is_host) {}
+  virtual ~InterpreterFunc() {}
+
+  inline struct DefinedInterpreterFunc* as_defined();
+  inline struct HostInterpreterFunc* as_host();
+
   uint32_t sig_index;
   bool is_host;
-  union {
-    struct {
-      uint32_t offset;
-      uint32_t local_decl_count;
-      uint32_t local_count;
-      TypeVector param_and_local_types;
-    } defined;
-    struct {
-      StringSlice module_name;
-      StringSlice field_name;
-      InterpreterHostFuncCallback callback;
-      void* user_data;
-    } host;
-  };
 };
-WABT_DEFINE_VECTOR(interpreter_func, InterpreterFunc);
+
+struct DefinedInterpreterFunc : InterpreterFunc {
+  DefinedInterpreterFunc(uint32_t sig_index)
+      : InterpreterFunc(sig_index, false),
+        offset(WABT_INVALID_INDEX),
+        local_decl_count(0),
+        local_count(0) {}
+
+  uint32_t offset;
+  uint32_t local_decl_count;
+  uint32_t local_count;
+  std::vector<Type> param_and_local_types;
+};
+
+struct HostInterpreterFunc : InterpreterFunc {
+  HostInterpreterFunc(const StringSlice& module_name,
+                      const StringSlice& field_name,
+                      uint32_t sig_index)
+      : InterpreterFunc(sig_index, true),
+        module_name(module_name),
+        field_name(field_name) {}
+
+  StringSlice module_name;
+  StringSlice field_name;
+  InterpreterHostFuncCallback callback;
+  void* user_data;
+};
+
+DefinedInterpreterFunc* InterpreterFunc::as_defined() {
+  assert(!is_host);
+  return static_cast<DefinedInterpreterFunc*>(this);
+}
+
+HostInterpreterFunc* InterpreterFunc::as_host() {
+  assert(is_host);
+  return static_cast<HostInterpreterFunc*>(this);
+}
 
 struct InterpreterExport {
+  InterpreterExport(const StringSlice& name, ExternalKind kind, uint32_t index)
+      : name(name), kind(kind), index(index) {}
+
   StringSlice name; /* Owned by the export_bindings hash */
   ExternalKind kind;
   uint32_t index;
 };
-WABT_DEFINE_VECTOR(interpreter_export, InterpreterExport);
 
 struct PrintErrorCallback {
   void* user_data;
@@ -235,7 +276,7 @@ struct InterpreterModule {
   inline struct HostInterpreterModule* as_host();
 
   StringSlice name;
-  InterpreterExportVector exports;
+  std::vector<InterpreterExport> exports;
   BindingHash export_bindings;
   uint32_t memory_index; /* INVALID_INDEX if not defined */
   uint32_t table_index;  /* INVALID_INDEX if not defined */
@@ -280,11 +321,11 @@ struct InterpreterEnvironmentMark {
 
 struct InterpreterEnvironment {
   std::vector<std::unique_ptr<InterpreterModule>> modules;
-  InterpreterFuncSignatureVector sigs;
-  InterpreterFuncVector funcs;
-  InterpreterMemoryVector memories;
+  std::vector<InterpreterFuncSignature> sigs;
+  std::vector<std::unique_ptr<InterpreterFunc>> funcs;
+  std::vector<InterpreterMemory> memories;
   std::vector<InterpreterTable> tables;
-  InterpreterGlobalVector globals;
+  std::vector<InterpreterGlobal> globals;
   OutputBuffer istream;
   BindingHash module_bindings;
   BindingHash registered_module_bindings;
@@ -299,9 +340,6 @@ struct InterpreterThread {
   uint32_t* call_stack_top;
   uint32_t* call_stack_end;
   uint32_t pc;
-
-  /* a temporary buffer that is for passing args to host functions */
-  InterpreterTypedValueVector host_args;
 };
 
 #define WABT_INTERPRETER_THREAD_OPTIONS_DEFAULT \
@@ -333,7 +371,8 @@ void init_interpreter_thread(InterpreterEnvironment* env,
 InterpreterResult push_thread_value(InterpreterThread* thread,
                                     InterpreterValue value);
 void destroy_interpreter_thread(InterpreterThread* thread);
-InterpreterResult call_host(InterpreterThread* thread, InterpreterFunc* func);
+InterpreterResult call_host(InterpreterThread* thread,
+                            HostInterpreterFunc* func);
 InterpreterResult run_interpreter(InterpreterThread* thread,
                                   uint32_t num_instructions,
                                   uint32_t* call_stack_return_top);
