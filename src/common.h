@@ -95,7 +95,8 @@ struct Location {
   int last_column;
 };
 
-typedef void (*SourceErrorCallback)(const Location*,
+/* Returns true if the error was handled. */
+typedef bool (*SourceErrorCallback)(const Location*,
                                     const char* error,
                                     const char* source_line,
                                     size_t source_line_length,
@@ -116,7 +117,8 @@ struct SourceErrorHandler {
         nullptr                                                         \
   }
 
-typedef void (*BinaryErrorCallback)(uint32_t offset,
+/* Returns true if the error was handled. */
+typedef bool (*BinaryErrorCallback)(uint32_t offset,
                                     const char* error,
                                     void* user_data);
 
@@ -456,14 +458,14 @@ bool string_slices_are_equal(const StringSlice*, const StringSlice*);
 void destroy_string_slice(StringSlice*);
 Result read_file(const char* filename, char** out_data, size_t* out_size);
 
-void default_source_error_callback(const Location*,
+bool default_source_error_callback(const Location*,
                                    const char* error,
                                    const char* source_line,
                                    size_t source_line_length,
                                    size_t source_line_column_offset,
                                    void* user_data);
 
-void default_binary_error_callback(uint32_t offset,
+bool default_binary_error_callback(uint32_t offset,
                                    const char* error,
                                    void* user_data);
 

@@ -23,6 +23,8 @@ import tempfile
 import find_exe
 import utils
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+GEN_WASM_PY = os.path.join(SCRIPT_DIR, 'gen-wasm.py')
 
 def main(args):
   parser = argparse.ArgumentParser()
@@ -44,11 +46,20 @@ def main(args):
   parser.add_argument('--no-check', action='store_true')
   parser.add_argument('-c', '--compile-only', action='store_true')
   parser.add_argument('--dump-verbose', action='store_true')
+  parser.add_argument('--dump-debug', action='store_true')
+  parser.add_argument('--gen-wasm', action='store_true',
+                      help='parse with gen-wasm')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('--no-canonicalize-leb128s', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
+
+  if options.gen_wasm and options.spec:
+    parser.error('Can\'t use both --gen-wasm and --spec')
+
+  gen_wasm = utils.Executable(sys.executable, GEN_WASM_PY,
+                              error_cmdline=options.error_cmdline)
 
   wast2wasm = utils.Executable(
       find_exe.GetWast2WasmExecutable(options.bindir),
@@ -68,8 +79,10 @@ def main(args):
   wasmdump.AppendOptionalArgs({
       '-h': options.headers,
       '-x': options.dump_verbose,
+      '--debug': options.dump_debug,
   })
 
+  gen_wasm.verbose = options.print_cmd
   wast2wasm.verbose = options.print_cmd
   wasmdump.verbose = options.print_cmd
 
@@ -78,11 +91,15 @@ def main(args):
   with utils.TempDirectory(options.out_dir, 'wasmdump-') as out_dir:
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
-    if options.spec:
-      out_file = os.path.join(out_dir, basename_noext + '.json')
-    else:
+    if options.gen_wasm:
       out_file = os.path.join(out_dir, basename_noext + '.wasm')
-    wast2wasm.RunWithArgs('-o', out_file, filename)
+      gen_wasm.RunWithArgs('-o', out_file, filename)
+    else:
+      if options.spec:
+        out_file = os.path.join(out_dir, basename_noext + '.json')
+      else:
+        out_file = os.path.join(out_dir, basename_noext + '.wasm')
+      wast2wasm.RunWithArgs('-o', out_file, filename)
 
     if options.spec:
       wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)

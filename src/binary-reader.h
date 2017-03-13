@@ -43,7 +43,7 @@ struct BinaryReaderContext {
 struct BinaryReader {
   void* user_data;
 
-  void (*on_error)(BinaryReaderContext* ctx, const char* message);
+  bool (*on_error)(BinaryReaderContext* ctx, const char* message);
 
   /* module */
   Result (*begin_module)(uint32_t version, void* user_data);

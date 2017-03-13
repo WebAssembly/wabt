@@ -1,0 +1,60 @@
+;;; TOOL: run-interp
+;;; FLAGS: --trace
+(module
+  (func $fib (param $n i32) (result i32)
+    get_local $n
+    i32.const 1
+    i32.le_s
+    if i32
+      i32.const 1
+    else
+      get_local $n
+      i32.const 1
+      i32.sub
+      call $fib
+      get_local $n
+      i32.mul
+    end)
+
+  (func (export "main") (result i32)
+    i32.const 3
+    call $fib))
+(;; STDOUT ;;;
+>>> running export "main":
+#0.   55: V:0  | i32.const $3
+#0.   60: V:1  | call @0
+#1.    0: V:1  | get_local $1
+#1.    5: V:2  | i32.const $1
+#1.   10: V:3  | i32.le_s 3, 1
+#1.   11: V:2  | br_unless @26, 0
+#1.   26: V:1  | get_local $1
+#1.   31: V:2  | i32.const $1
+#1.   36: V:3  | i32.sub 3, 1
+#1.   37: V:2  | call @0
+#2.    0: V:2  | get_local $1
+#2.    5: V:3  | i32.const $1
+#2.   10: V:4  | i32.le_s 2, 1
+#2.   11: V:3  | br_unless @26, 0
+#2.   26: V:2  | get_local $1
+#2.   31: V:3  | i32.const $1
+#2.   36: V:4  | i32.sub 2, 1
+#2.   37: V:3  | call @0
+#3.    0: V:3  | get_local $1
+#3.    5: V:4  | i32.const $1
+#3.   10: V:5  | i32.le_s 1, 1
+#3.   11: V:4  | br_unless @26, 1
+#3.   16: V:3  | i32.const $1
+#3.   21: V:4  | br @48
+#3.   48: V:4  | drop_keep $1 $1
+#3.   54: V:3  | return
+#2.   42: V:3  | get_local $2
+#2.   47: V:4  | i32.mul 1, 2
+#2.   48: V:3  | drop_keep $1 $1
+#2.   54: V:2  | return
+#1.   42: V:2  | get_local $2
+#1.   47: V:3  | i32.mul 2, 3
+#1.   48: V:2  | drop_keep $1 $1
+#1.   54: V:1  | return
+#0.   65: V:1  | return
+main() => i32:6
+;;; STDOUT ;;)

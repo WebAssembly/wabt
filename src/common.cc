@@ -217,7 +217,7 @@ static FILE* get_default_error_handler_info_output_file(
   return info && info->out_file ? info->out_file : stderr;
 }
 
-void default_source_error_callback(const Location* loc,
+bool default_source_error_callback(const Location* loc,
                                    const char* error,
                                    const char* source_line,
                                    size_t source_line_length,
@@ -229,9 +229,10 @@ void default_source_error_callback(const Location* loc,
   print_error_header(out, info);
   print_source_error(out, loc, error, source_line, source_line_length,
                      source_line_column_offset);
+  return true;
 }
 
-void default_binary_error_callback(uint32_t offset,
+bool default_binary_error_callback(uint32_t offset,
                                    const char* error,
                                    void* user_data) {
   DefaultErrorHandlerInfo* info =
@@ -243,6 +244,7 @@ void default_binary_error_callback(uint32_t offset,
   else
     fprintf(out, "error: @0x%08x: %s\n", offset, error);
   fflush(out);
+  return true;
 }
 
 void init_stdio() {
