@@ -635,9 +635,9 @@ static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
     write_u32_leb128(&ctx->stream, relocs->data[i].offset, "reloc offset");
     write_u32_leb128(&ctx->stream, relocs->data[i].index, "reloc index");
     switch (relocs->data[i].type) {
-      case RelocType::GlobalAddressLEB:
-      case RelocType::GlobalAddressSLEB:
-      case RelocType::GlobalAddressI32:
+      case RelocType::MemoryAddressLEB:
+      case RelocType::MemoryAddressSLEB:
+      case RelocType::MemoryAddressI32:
         write_u32_leb128(&ctx->stream, relocs->data[i].addend, "reloc addend");
         break;
       default:

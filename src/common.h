@@ -159,10 +159,11 @@ enum class RelocType {
   FuncIndexLEB = 0,   /* e.g. immediate of call instruction */
   TableIndexSLEB = 1, /* e.g. loading address of function */
   TableIndexI32 = 2,  /* e.g. function address in DATA */
-  GlobalAddressLEB = 3,
-  GlobalAddressSLEB = 4,
-  GlobalAddressI32 = 5,
-  GlobalIndexLEB = 6, /* e.g immediate of get_global inst */
+  MemoryAddressLEB = 3,
+  MemoryAddressSLEB = 4,
+  MemoryAddressI32 = 5,
+  TypeIndexLEB = 6, /* e.g immediate type in call_indirect */
+  GlobalIndexLEB = 7, /* e.g immediate of get_global inst */
 
   First = FuncIndexLEB,
   Last = GlobalIndexLEB,

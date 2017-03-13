@@ -1661,9 +1661,9 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
       in_u32_leb128(ctx, &index, "index");
       RelocType type = static_cast<RelocType>(reloc_type);
       switch (type) {
-        case RelocType::GlobalAddressLEB:
-        case RelocType::GlobalAddressSLEB:
-        case RelocType::GlobalAddressI32:
+        case RelocType::MemoryAddressLEB:
+        case RelocType::MemoryAddressSLEB:
+        case RelocType::MemoryAddressI32:
           in_u32_leb128(ctx, &addend, "addend");
           break;
         default:
