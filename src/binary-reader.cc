@@ -487,7 +487,7 @@ static Result logging_begin_custom_section(BinaryReaderContext* context,
   static Result logging_begin_##name(BinaryReaderContext* context,          \
                                      uint32_t size) {                       \
     LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
-    LOGF("begin_" #name "\n");                                              \
+    LOGF("begin_" #name "(%u)\n", size);                                              \
     indent(ctx);                                                            \
     FORWARD_CTX(begin_##name, size);                                        \
   }
@@ -1026,6 +1026,12 @@ static Result logging_on_reloc_count(uint32_t count,
        count, get_section_name(section_code),
        WABT_PRINTF_STRING_SLICE_ARG(section_name));
   FORWARD(on_reloc_count, count, section_code, section_name);
+}
+
+static Result logging_on_reloc(RelocType type, uint32_t offset, void* user_data) {
+  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
+  LOGF("on_reloc(type: %d, offset: %d)\n", static_cast<int>(type), offset);
+  FORWARD(on_reloc, type, offset);
 }
 
 static void read_init_expr(Context* ctx, uint32_t index) {
@@ -1665,7 +1671,8 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
   for (uint32_t i = 0; i < ctx->num_signatures; ++i) {
     Type form;
     in_type(ctx, &form, "type form");
-    RAISE_ERROR_UNLESS(form == Type::Func, "unexpected type form");
+    RAISE_ERROR_UNLESS(form == Type::Func, "unexpected type form: %d",
+                       static_cast<int>(form));
 
     uint32_t num_params;
     in_u32_leb128(ctx, &num_params, "function param count");
@@ -1677,7 +1684,8 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
       Type param_type;
       in_type(ctx, &param_type, "function param type");
       RAISE_ERROR_UNLESS(is_concrete_type(param_type),
-                         "expected valid param type");
+                         "expected valid param type (got %d)",
+                         static_cast<int>(param_type));
       ctx->param_types.data[j] = param_type;
     }
 
@@ -1689,7 +1697,8 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
     if (num_results) {
       in_type(ctx, &result_type, "function result type");
       RAISE_ERROR_UNLESS(is_concrete_type(result_type),
-                         "expected valid result type");
+                         "expected valid result type: %d",
+                         static_cast<int>(result_type));
     }
 
     CALLBACK(on_signature, i, num_params, ctx->param_types.data, num_results,
@@ -2167,6 +2176,7 @@ Result read_binary(const void* data,
 
   logging_reader.begin_reloc_section = logging_begin_reloc_section;
   logging_reader.on_reloc_count = logging_on_reloc_count;
+  logging_reader.on_reloc = logging_on_reloc;
   logging_reader.end_reloc_section = logging_end_reloc_section;
 
   logging_reader.on_init_expr_f32_const_expr =

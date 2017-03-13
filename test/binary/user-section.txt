@@ -10,7 +10,7 @@ section("foo") { count[6] }
 begin_module(1)
 begin_custom_section: 'foo' size=5
 end_custom_section
-begin_signature_section
+begin_signature_section(5)
   on_signature_count(1)
   on_signature(index: 0, params: [], results: [i32])
 end_signature_section
