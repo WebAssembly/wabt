@@ -50,7 +50,7 @@ Sections:
  Function start=0x0000002c end=0x00000032 (size=0x00000006) count: 5
    Export start=0x00000038 end=0x00000075 (size=0x0000003d) count: 5
      Code start=0x00000077 end=0x000000a2 (size=0x0000002b) count: 5
-   Custom start=0x000000a8 end=0x000000b9 (size=0x00000011) "reloc.Code"
+   Custom start=0x000000a8 end=0x000000bb (size=0x00000013) "reloc.Code"
 
 Section Details:
 
@@ -86,11 +86,11 @@ Code Disassembly:
  00007f: 0f                         | return
 000081 func[1]:
  000083: 10 83 80 80 80 00          | call 0x3
-           000084: R_FUNC_INDEX_LEB
+           000084: R_FUNC_INDEX_LEB	0
  000089: 0f                         | return
 00008b func[2]:
  00008d: 10 84 80 80 80 00          | call 0x4
-           00008e: R_FUNC_INDEX_LEB
+           00008e: R_FUNC_INDEX_LEB	1
  000093: 0f                         | return
 000095 func[3]:
  000097: 41 2a                      | i32.const 0x2a

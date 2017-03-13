@@ -156,16 +156,26 @@ enum class Type {
 };
 
 enum class RelocType {
-  FuncIndexLeb = 0,   /* e.g. immediate of call instruction */
-  TableIndexSleb = 1, /* e.g. loading address of function */
+  FuncIndexLEB = 0,   /* e.g. immediate of call instruction */
+  TableIndexSLEB = 1, /* e.g. loading address of function */
   TableIndexI32 = 2,  /* e.g. function address in DATA */
-  GlobalIndexLeb = 3, /* e.g immediate of get_global inst */
-  Data = 4,
+  MemoryAddressLEB = 3,
+  MemoryAddressSLEB = 4,
+  MemoryAddressI32 = 5,
+  TypeIndexLEB = 6, /* e.g immediate type in call_indirect */
+  GlobalIndexLEB = 7, /* e.g immediate of get_global inst */
 
-  First = FuncIndexLeb,
-  Last = Data,
+  First = FuncIndexLEB,
+  Last = GlobalIndexLEB,
 };
 static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
+
+struct Reloc {
+  RelocType type;
+  size_t offset;
+  uint32_t index;
+  int32_t addend;
+};
 
 /* matches binary format, do not change */
 enum class ExternalKind {

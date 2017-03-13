@@ -51,10 +51,6 @@ struct DataSegment {
 };
 WABT_DEFINE_VECTOR(data_segment, DataSegment);
 
-struct Reloc {
-  RelocType type;
-  size_t offset;
-};
 WABT_DEFINE_VECTOR(reloc, Reloc);
 
 struct Export {

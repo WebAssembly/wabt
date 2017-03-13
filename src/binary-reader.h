@@ -299,7 +299,11 @@ struct BinaryReader {
                            BinarySection section_code,
                            StringSlice section_name,
                            void* user_data);
-  Result (*on_reloc)(RelocType type, uint32_t offset, void* user_data);
+  Result (*on_reloc)(RelocType type,
+                     uint32_t offset,
+                     uint32_t index,
+                     int32_t addend,
+                     void* user_data);
   Result (*end_reloc_section)(BinaryReaderContext* ctx);
 
   /* init_expr - used by elem, data and global sections; these functions are

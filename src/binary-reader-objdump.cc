@@ -249,8 +249,8 @@ static void log_opcode(Context* ctx,
           ctx->section_starts[static_cast<size_t>(BinarySection::Code)];
       size_t abs_offset = code_start + reloc->offset;
       if (ctx->last_opcode_end > abs_offset) {
-        printf("           %06" PRIzx ": %s\n", abs_offset,
-               get_reloc_type_name(reloc->type));
+        printf("           %06" PRIzx ": %s\t%d\n", abs_offset,
+               get_reloc_type_name(reloc->type), reloc->index);
         ctx->next_reloc++;
       }
     }
@@ -615,7 +615,11 @@ Result on_reloc_count(uint32_t count,
   return Result::Ok;
 }
 
-Result on_reloc(RelocType type, uint32_t offset, void* user_data) {
+Result on_reloc(RelocType type,
+                uint32_t offset,
+                uint32_t index,
+                int32_t addend,
+                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   uint32_t total_offset =
       ctx->section_starts[static_cast<size_t>(ctx->reloc_section)] + offset;
@@ -626,6 +630,8 @@ Result on_reloc(RelocType type, uint32_t offset, void* user_data) {
     Reloc reloc;
     reloc.offset = offset;
     reloc.type = type;
+    reloc.index = index;
+    reloc.addend = addend;
     append_reloc_value(&ctx->options->code_relocations, &reloc);
   }
   return Result::Ok;

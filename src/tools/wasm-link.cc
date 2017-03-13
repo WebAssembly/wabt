@@ -170,16 +170,16 @@ static void apply_relocation(Section* section, Reloc* r) {
 
   uint32_t offset = 0;
   switch (r->type) {
-    case RelocType::FuncIndexLeb:
+    case RelocType::FuncIndexLEB:
       new_value = relocate_func_index(binary, cur_value);
       break;
-    case RelocType::TableIndexSleb:
+    case RelocType::TableIndexSLEB:
       printf("%s: table index reloc: %d offset=%d\n", binary->filename,
              cur_value, binary->table_index_offset);
       offset = binary->table_index_offset;
       new_value = cur_value + offset;
       break;
-    case RelocType::GlobalIndexLeb:
+    case RelocType::GlobalIndexLEB:
       if (cur_value >= binary->global_imports.size) {
         offset = binary->global_index_offset;
       } else {
@@ -529,6 +529,7 @@ static void write_reloc_section(Context* ctx,
       write_u32_leb128_enum(&ctx->stream, relocs->data[j].type, "reloc type");
       uint32_t new_offset = relocs->data[j].offset + sec->output_payload_offset;
       write_u32_leb128(&ctx->stream, new_offset, "reloc offset");
+      write_u32_leb128(&ctx->stream, relocs->data[j].index, "reloc index");
     }
   }
 

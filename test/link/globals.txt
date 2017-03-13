@@ -30,7 +30,7 @@ Sections:
  Function start=0x00000041 end=0x00000044 (size=0x00000003) count: 2
    Global start=0x00000046 end=0x00000056 (size=0x00000010) count: 3
      Code start=0x00000058 end=0x0000008b (size=0x00000033) count: 2
-   Custom start=0x00000091 end=0x000000ac (size=0x0000001b) "reloc.Code"
+   Custom start=0x00000091 end=0x000000b3 (size=0x00000022) "reloc.Code"
 
 Section Details:
 
@@ -62,20 +62,20 @@ Code Disassembly:
 
 000059 func[0]:
  00005b: 23 83 80 80 80 00          | get_global 0x3
-           00005c: R_GLOBAL_INDEX_LEB
+           00005c: R_GLOBAL_INDEX_LEB	2
  000061: 23 82 80 80 80 00          | get_global 0x2
-           000062: R_GLOBAL_INDEX_LEB
+           000062: R_GLOBAL_INDEX_LEB	1
  000067: 6a                         | i32.add
  000068: 23 80 80 80 80 00          | get_global 0
-           000069: R_GLOBAL_INDEX_LEB
+           000069: R_GLOBAL_INDEX_LEB	0
  00006e: 6a                         | i32.add
  00006f: 10 80 80 80 80 00          | call 0
-           000070: R_FUNC_INDEX_LEB
+           000070: R_FUNC_INDEX_LEB	0
 000076 func[1]:
  000078: 23 81 80 80 80 00          | get_global 0x1
-           000079: R_GLOBAL_INDEX_LEB
+           000079: R_GLOBAL_INDEX_LEB	0
  00007e: 23 84 80 80 80 00          | get_global 0x4
-           00007f: R_GLOBAL_INDEX_LEB
+           00007f: R_GLOBAL_INDEX_LEB	1
  000084: 10 81 80 80 80 00          | call 0x1
-           000085: R_FUNC_INDEX_LEB
+           000085: R_FUNC_INDEX_LEB	0
 ;;; STDOUT ;;)

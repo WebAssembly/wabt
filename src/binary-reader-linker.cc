@@ -52,7 +52,11 @@ static Result on_reloc_count(uint32_t count,
   return Result::Error;
 }
 
-static Result on_reloc(RelocType type, uint32_t offset, void* user_data) {
+static Result on_reloc(RelocType type,
+                       uint32_t offset,
+                       uint32_t index,
+                       int32_t addend,
+                       void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
 
   if (offset + RELOC_SIZE > ctx->reloc_section->size) {
@@ -62,6 +66,8 @@ static Result on_reloc(RelocType type, uint32_t offset, void* user_data) {
   Reloc* reloc = append_reloc(&ctx->reloc_section->relocations);
   reloc->type = type;
   reloc->offset = offset;
+  reloc->index = index;
+  reloc->addend = addend;
 
   return Result::Ok;
 }

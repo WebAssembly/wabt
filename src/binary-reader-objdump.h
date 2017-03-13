@@ -26,10 +26,6 @@ namespace wabt {
 struct Module;
 struct ReadBinaryOptions;
 
-struct Reloc {
-  RelocType type;
-  size_t offset;
-};
 WABT_DEFINE_VECTOR(reloc, Reloc);
 
 WABT_DEFINE_VECTOR(string_slice, StringSlice);

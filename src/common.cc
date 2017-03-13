@@ -55,9 +55,15 @@ void init_opcode_info(void) {
 const char* g_kind_name[] = {"func", "table", "memory", "global"};
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_kind_name) == kExternalKindCount);
 
-const char* g_reloc_type_name[] = {"R_FUNC_INDEX_LEB", "R_TABLE_INDEX_SLEB",
-                                   "R_TABLE_INDEX_I32", "R_GLOBAL_INDEX_LEB",
-                                   "R_DATA"};
+const char* g_reloc_type_name[] = {"R_FUNC_INDEX_LEB",
+                                   "R_TABLE_INDEX_SLEB",
+                                   "R_TABLE_INDEX_I32",
+                                   "R_MEMORY_ADDR_LEB",
+                                   "R_MEMORY_ADDR_SLEB",
+                                   "R_MEMORY_ADDR_I32",
+                                   "R_TYPE_INDEX_LEB",
+                                   "R_GLOBAL_INDEX_LEB",
+                                   };
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
 
 bool is_naturally_aligned(Opcode opcode, uint32_t alignment) {
