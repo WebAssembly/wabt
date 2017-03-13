@@ -1030,7 +1030,7 @@ static Result logging_on_reloc_count(uint32_t count,
 
 static Result logging_on_reloc(RelocType type, uint32_t offset, void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_reloc(type: %d, offset: %d)\n", type, offset);
+  LOGF("on_reloc(type: %d, offset: %d)\n", static_cast<int>(type), offset);
   FORWARD(on_reloc, type, offset);
 }
 
@@ -1683,7 +1683,8 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
       Type param_type;
       in_type(ctx, &param_type, "function param type");
       RAISE_ERROR_UNLESS(is_concrete_type(param_type),
-                         "expected valid param type (got %d)", param_type);
+                         "expected valid param type (got %d)",
+                         static_cast<int>(param_type));
       ctx->param_types.data[j] = param_type;
     }
 
@@ -1695,7 +1696,8 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
     if (num_results) {
       in_type(ctx, &result_type, "function result type");
       RAISE_ERROR_UNLESS(is_concrete_type(result_type),
-                         "expected valid result type: %d", result_type);
+                         "expected valid result type: %d",
+                         static_cast<int>(result_type));
     }
 
     CALLBACK(on_signature, i, num_params, ctx->param_types.data, num_results,
