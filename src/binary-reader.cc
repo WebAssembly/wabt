@@ -153,7 +153,7 @@ static void WABT_PRINTF_FORMAT(2, 3)
     ctx->reader->on_error(get_user_context(ctx), buffer);
   } else {
     /* Not great to just print, but we don't want to eat the error either. */
-    fprintf(stderr, "*ERROR*: @0x%08zx: %s\n", ctx->offset, buffer);
+    fprintf(stderr, "*ERROR*: %s\n", buffer);
   }
   longjmp(ctx->error_jmp_buf, 1);
 }
