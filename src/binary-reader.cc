@@ -1671,7 +1671,8 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
   for (uint32_t i = 0; i < ctx->num_signatures; ++i) {
     Type form;
     in_type(ctx, &form, "type form");
-    RAISE_ERROR_UNLESS(form == Type::Func, "unexpected type form: %d", form);
+    RAISE_ERROR_UNLESS(form == Type::Func, "unexpected type form: %d",
+                       static_cast<int>(form));
 
     uint32_t num_params;
     in_u32_leb128(ctx, &num_params, "function param count");
