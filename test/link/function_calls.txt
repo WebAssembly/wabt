@@ -24,7 +24,7 @@ Sections:
    Import start=0x00000022 end=0x00000041 (size=0x0000001f) count: 2
  Function start=0x00000047 end=0x0000004a (size=0x00000003) count: 2
      Code start=0x0000004c end=0x00000078 (size=0x0000002c) count: 2
-   Custom start=0x0000007e end=0x00000093 (size=0x00000015) "reloc.Code"
+   Custom start=0x0000007e end=0x00000097 (size=0x00000019) "reloc.Code"
 
 Section Details:
 
@@ -52,14 +52,14 @@ Code Disassembly:
 00004d func[2]:
  00004f: 20 00                      | get_local 0
  000051: 10 80 80 80 80 00          | call 0
-           000052: R_FUNC_INDEX_LEB
+           000052: R_FUNC_INDEX_LEB	0
  000057: 10 82 80 80 80 00          | call 0x2
-           000058: R_FUNC_INDEX_LEB
+           000058: R_FUNC_INDEX_LEB	1
 00005e func[3]:
  000060: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  000069: 10 81 80 80 80 00          | call 0x1
-           00006a: R_FUNC_INDEX_LEB
+           00006a: R_FUNC_INDEX_LEB	0
  00006f: 42 0a                      | i64.const 10
  000071: 10 83 80 80 80 00          | call 0x3
-           000072: R_FUNC_INDEX_LEB
+           000072: R_FUNC_INDEX_LEB	1
 ;;; STDOUT ;;)

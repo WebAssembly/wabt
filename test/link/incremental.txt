@@ -37,8 +37,8 @@ Sections:
     Table start=0x00000079 end=0x0000007e (size=0x00000005) count: 1
      Elem start=0x00000084 end=0x000000ad (size=0x00000029) count: 1
      Code start=0x000000af end=0x000000f1 (size=0x00000042) count: 3
-   Custom start=0x000000f7 end=0x00000112 (size=0x0000001b) "reloc.Elem"
-   Custom start=0x00000118 end=0x00000131 (size=0x00000019) "reloc.Code"
+   Custom start=0x000000f7 end=0x00000119 (size=0x00000022) "reloc.Elem"
+   Custom start=0x0000011f end=0x0000013e (size=0x0000001f) "reloc.Code"
 
 Section Details:
 
@@ -94,21 +94,21 @@ Code Disassembly:
 0000b0 func[3]:
  0000b2: 20 00                      | get_local 0
  0000b4: 10 80 80 80 80 00          | call 0
-           0000b5: R_FUNC_INDEX_LEB
+           0000b5: R_FUNC_INDEX_LEB	0
  0000ba: 10 83 80 80 80 00          | call 0x3
-           0000bb: R_FUNC_INDEX_LEB
+           0000bb: R_FUNC_INDEX_LEB	1
 0000c1 func[4]:
  0000c3: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  0000cc: 10 81 80 80 80 00          | call 0x1
-           0000cd: R_FUNC_INDEX_LEB
+           0000cd: R_FUNC_INDEX_LEB	0
  0000d2: 42 0a                      | i64.const 10
  0000d4: 10 84 80 80 80 00          | call 0x4
-           0000d5: R_FUNC_INDEX_LEB
+           0000d5: R_FUNC_INDEX_LEB	1
 0000db func[5]:
  0000dd: 43 00 00 80 3f             | f32.const 0x1p+0
  0000e2: 10 82 80 80 80 00          | call 0x2
-           0000e3: R_FUNC_INDEX_LEB
+           0000e3: R_FUNC_INDEX_LEB	0
  0000e8: 41 0a                      | i32.const 0xa
  0000ea: 10 85 80 80 80 00          | call 0x5
-           0000eb: R_FUNC_INDEX_LEB
+           0000eb: R_FUNC_INDEX_LEB	1
 ;;; STDOUT ;;)

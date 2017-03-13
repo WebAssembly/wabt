@@ -1028,10 +1028,15 @@ static Result logging_on_reloc_count(uint32_t count,
   FORWARD(on_reloc_count, count, section_code, section_name);
 }
 
-static Result logging_on_reloc(RelocType type, uint32_t offset, void* user_data) {
+static Result logging_on_reloc(RelocType type,
+                               uint32_t offset,
+                               uint32_t index,
+                               int32_t addend,
+                               void* user_data) {
   LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_reloc(type: %d, offset: %d)\n", static_cast<int>(type), offset);
-  FORWARD(on_reloc, type, offset);
+  LOGF("on_reloc(type: %s, offset: %u, index: %u, addend: %d)\n",
+       get_reloc_type_name(type), offset, index, addend);
+  FORWARD(on_reloc, type, offset, index, addend);
 }
 
 static void read_init_expr(Context* ctx, uint32_t index) {
@@ -1650,10 +1655,21 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
     CALLBACK(on_reloc_count, num_relocs, static_cast<BinarySection>(section),
              section_name);
     for (uint32_t i = 0; i < num_relocs; ++i) {
-      uint32_t reloc_type, offset;
+      uint32_t reloc_type, offset, index, addend = 0;
       in_u32_leb128(ctx, &reloc_type, "relocation type");
       in_u32_leb128(ctx, &offset, "offset");
-      CALLBACK(on_reloc, static_cast<RelocType>(reloc_type), offset);
+      in_u32_leb128(ctx, &index, "index");
+      RelocType type = static_cast<RelocType>(reloc_type);
+      switch (type) {
+        case RelocType::GlobalAddressLEB:
+        case RelocType::GlobalAddressSLEB:
+        case RelocType::GlobalAddressI32:
+          in_u32_leb128(ctx, &addend, "addend");
+          break;
+        default:
+          break;
+      }
+      CALLBACK(on_reloc, type, offset, index, addend);
     }
     CALLBACK_CTX0(end_reloc_section);
   } else {

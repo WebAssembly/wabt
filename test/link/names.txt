@@ -28,7 +28,7 @@ Sections:
    Export start=0x00000044 end=0x00000051 (size=0x0000000d) count: 2
      Code start=0x00000053 end=0x00000075 (size=0x00000022) count: 3
    Custom start=0x0000007b end=0x000000ae (size=0x00000033) "name"
-   Custom start=0x000000b4 end=0x000000c7 (size=0x00000013) "reloc.Code"
+   Custom start=0x000000b4 end=0x000000ca (size=0x00000016) "reloc.Code"
 
 Section Details:
 
@@ -64,13 +64,13 @@ Code Disassembly:
 000054 <$name1>:
  000056: 41 01                      | i32.const 0x1
  000058: 10 83 80 80 80 00          | call 0x3
-           000059: R_FUNC_INDEX_LEB
+           000059: R_FUNC_INDEX_LEB	0
 00005f <$name2>:
  000061: 42 01                      | i64.const 1
  000063: 10 81 80 80 80 00          | call 0x1
-           000064: R_FUNC_INDEX_LEB
+           000064: R_FUNC_INDEX_LEB	1
 00006a <$name3>:
  00006c: 41 02                      | i32.const 0x2
  00006e: 10 83 80 80 80 00          | call 0x3
-           00006f: R_FUNC_INDEX_LEB
+           00006f: R_FUNC_INDEX_LEB	0
 ;;; STDOUT ;;)

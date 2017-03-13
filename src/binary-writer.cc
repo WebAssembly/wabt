@@ -42,10 +42,6 @@ static const size_t LEB_SECTION_SIZE_GUESS = 1;
 #define ALLOC_FAILURE \
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
-struct Reloc {
-  RelocType type;
-  size_t offset;
-};
 WABT_DEFINE_VECTOR(reloc, Reloc);
 
 struct RelocSection {
@@ -334,7 +330,7 @@ static void write_expr_list(Context* ctx,
                             const Func* func,
                             const Expr* first_expr);
 
-static void add_reloc(Context* ctx, RelocType reloc_type) {
+static void add_reloc(Context* ctx, RelocType reloc_type, uint32_t index) {
   // Add a new reloc section if needed
   if (!ctx->current_reloc_section ||
       ctx->current_reloc_section->section_code != ctx->last_section_type) {
@@ -347,17 +343,19 @@ static void add_reloc(Context* ctx, RelocType reloc_type) {
   Reloc* r = append_reloc(&ctx->current_reloc_section->relocations);
   r->type = reloc_type;
   r->offset = ctx->stream.offset - ctx->last_section_payload_offset;
+  r->index = index;
+  r->addend = 0;
 }
 
 static void write_u32_leb128_with_reloc(Context* ctx,
-                                        uint32_t value,
+                                        uint32_t index,
                                         const char* desc,
                                         RelocType reloc_type) {
   if (ctx->options->relocatable) {
-    add_reloc(ctx, reloc_type);
-    write_fixed_u32_leb128(&ctx->stream, value, desc);
+    add_reloc(ctx, reloc_type, index);
+    write_fixed_u32_leb128(&ctx->stream, index, desc);
   } else {
-    write_u32_leb128(&ctx->stream, value, desc);
+    write_u32_leb128(&ctx->stream, index, desc);
   }
 }
 
@@ -402,7 +400,7 @@ static void write_expr(Context* ctx,
       int index = get_func_index_by_var(module, &expr->call.var);
       write_opcode(&ctx->stream, Opcode::Call);
       write_u32_leb128_with_reloc(ctx, index, "function index",
-                                  RelocType::FuncIndexLeb);
+                                  RelocType::FuncIndexLEB);
       break;
     }
     case ExprType::CallIndirect: {
@@ -452,7 +450,7 @@ static void write_expr(Context* ctx,
       int index = get_global_index_by_var(module, &expr->get_global.var);
       write_opcode(&ctx->stream, Opcode::GetGlobal);
       write_u32_leb128_with_reloc(ctx, index, "global index",
-                                  RelocType::GlobalIndexLeb);
+                                  RelocType::GlobalIndexLEB);
       break;
     }
     case ExprType::GetLocal: {
@@ -502,7 +500,7 @@ static void write_expr(Context* ctx,
       int index = get_global_index_by_var(module, &expr->get_global.var);
       write_opcode(&ctx->stream, Opcode::SetGlobal);
       write_u32_leb128_with_reloc(ctx, index, "global index",
-                                  RelocType::GlobalIndexLeb);
+                                  RelocType::GlobalIndexLEB);
       break;
     }
     case ExprType::SetLocal: {
@@ -635,6 +633,16 @@ static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
   for (size_t i = 0; i < relocs->size; i++) {
     write_u32_leb128_enum(&ctx->stream, relocs->data[i].type, "reloc type");
     write_u32_leb128(&ctx->stream, relocs->data[i].offset, "reloc offset");
+    write_u32_leb128(&ctx->stream, relocs->data[i].index, "reloc index");
+    switch (relocs->data[i].type) {
+      case RelocType::GlobalAddressLEB:
+      case RelocType::GlobalAddressSLEB:
+      case RelocType::GlobalAddressI32:
+        write_u32_leb128(&ctx->stream, relocs->data[i].addend, "reloc addend");
+        break;
+      default:
+        break;
+    }
   }
 
   end_section(ctx);
@@ -818,7 +826,7 @@ static Result write_module(Context* ctx, const Module* module) {
       for (size_t j = 0; j < segment->vars.size; ++j) {
         int index = get_func_index_by_var(module, &segment->vars.data[j]);
         write_u32_leb128_with_reloc(ctx, index, "function index",
-                                    RelocType::FuncIndexLeb);
+                                    RelocType::FuncIndexLEB);
       }
     }
     end_section(ctx);

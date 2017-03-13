@@ -19,7 +19,7 @@ Sections:
     Table start=0x00000027 end=0x0000002c (size=0x00000005) count: 1
      Elem start=0x00000032 end=0x00000051 (size=0x0000001f) count: 1
      Code start=0x00000053 end=0x0000005d (size=0x0000000a) count: 3
-   Custom start=0x00000063 end=0x0000007a (size=0x00000017) "reloc.Elem"
+   Custom start=0x00000063 end=0x0000007f (size=0x0000001c) "reloc.Elem"
 
 Section Details:
 
