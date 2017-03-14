@@ -315,8 +315,6 @@ static void begin_subsection(Context* ctx,
                              const char* name,
                              size_t leb_size_guess) {
   assert(ctx->last_subsection_leb_size_guess == 0);
-  char desc[100];
-  wabt_snprintf(desc, sizeof(desc), "subsection \"%s\"", name);
   ctx->last_subsection_leb_size_guess = leb_size_guess;
   ctx->last_subsection_offset =
       write_u32_leb128_space(ctx, leb_size_guess, "subsection size (guess)");
@@ -880,17 +878,29 @@ static Result write_module(Context* ctx, const Module* module) {
 
     char desc[100];
     begin_custom_section(ctx, WABT_BINARY_SECTION_NAME, LEB_SECTION_SIZE_GUESS);
-    write_u32_leb128(&ctx->stream, 1, "function name type");
-    begin_subsection(ctx, "function name subsection", LEB_SECTION_SIZE_GUESS);
-    write_u32_leb128(&ctx->stream, module->funcs.size(), "num functions");
-    for (size_t i = 0; i < module->funcs.size(); ++i) {
-      const Func* func = module->funcs[i];
-      write_u32_leb128(&ctx->stream, i, "function index");
-      wabt_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
-      write_str(&ctx->stream, func->name.start, func->name.length,
-                PrintChars::Yes, desc);
+
+    size_t named_functions = 0;
+    for (const auto func: module->funcs) {
+      if (func->name.length > 0)
+        named_functions++;
     }
-    end_subsection(ctx);
+
+    if (named_functions > 0) {
+      write_u32_leb128(&ctx->stream, 1, "function name type");
+      begin_subsection(ctx, "function name subsection", LEB_SECTION_SIZE_GUESS);
+
+      write_u32_leb128(&ctx->stream, named_functions, "num functions");
+      for (size_t i = 0; i < module->funcs.size(); ++i) {
+        const Func* func = module->funcs[i];
+        if (func->name.length == 0)
+          continue;
+        write_u32_leb128(&ctx->stream, i, "function index");
+        wabt_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
+        write_str(&ctx->stream, func->name.start, func->name.length,
+                  PrintChars::Yes, desc);
+      }
+      end_subsection(ctx);
+    }
 
     write_u32_leb128(&ctx->stream, 2, "local name type");
 
