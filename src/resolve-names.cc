@@ -65,17 +65,17 @@ struct FindDuplicateBindingContext {
   const char* desc;
 };
 
-static void on_duplicate_binding(BindingHashEntry* a,
-                                 BindingHashEntry* b,
+static void on_duplicate_binding(const BindingHash::value_type& a,
+                                 const BindingHash::value_type& b,
                                  void* user_data) {
   FindDuplicateBindingContext* fdbc =
       static_cast<FindDuplicateBindingContext*>(user_data);
   /* choose the location that is later in the file */
-  Location* a_loc = &a->binding.loc;
-  Location* b_loc = &b->binding.loc;
-  Location* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
-  print_error(fdbc->ctx, loc, "redefinition of %s \"" PRIstringslice "\"",
-              fdbc->desc, WABT_PRINTF_STRING_SLICE_ARG(a->binding.name));
+  const Location& a_loc = a.second.loc;
+  const Location& b_loc = b.second.loc;
+  const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
+  print_error(fdbc->ctx, &loc, "redefinition of %s \"%s\"", fdbc->desc,
+              a.first.c_str());
 }
 
 static void check_duplicate_bindings(Context* ctx,
@@ -84,7 +84,7 @@ static void check_duplicate_bindings(Context* ctx,
   FindDuplicateBindingContext fdbc;
   fdbc.ctx = ctx;
   fdbc.desc = desc;
-  find_duplicate_bindings(bindings, on_duplicate_binding, &fdbc);
+  find_duplicate_bindings(*bindings, on_duplicate_binding, &fdbc);
 }
 
 static void resolve_label_var(Context* ctx, Var* var) {
@@ -350,7 +350,7 @@ static bool dummy_source_error_callback(const Location* loc,
 static void visit_command(Context* ctx, Command* command) {
   switch (command->type) {
     case CommandType::Module:
-      visit_module(ctx, &command->module);
+      visit_module(ctx, command->module);
       break;
 
     case CommandType::Action:

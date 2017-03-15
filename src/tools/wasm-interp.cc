@@ -566,7 +566,6 @@ static Result spectest_import_global(InterpreterImport* import,
 }
 
 static void init_environment(InterpreterEnvironment* env) {
-  init_interpreter_environment(env);
   HostInterpreterModule* host_module =
       append_host_module(env, string_slice_from_cstr("spectest"));
   host_module->import_delegate.import_func = spectest_import_func;
@@ -602,6 +601,20 @@ WABT_DEFINE_VECTOR(interpreter_thread, InterpreterThread);
 /* An extremely simple JSON parser that only knows how to parse the expected
  * format from wast2wabt. */
 struct Context {
+  Context()
+      : last_module(nullptr),
+        json_data(nullptr),
+        json_data_size(0),
+        json_offset(0),
+        has_prev_loc(0),
+        command_line_number(0),
+        passed(0),
+        total(0) {
+    WABT_ZERO_MEMORY(source_filename);
+    WABT_ZERO_MEMORY(loc);
+    WABT_ZERO_MEMORY(prev_loc);
+  }
+
   InterpreterEnvironment env;
   InterpreterThread thread;
   DefinedInterpreterModule* last_module;
@@ -1014,11 +1027,8 @@ static Result on_module_command(Context* ctx,
 
   if (!string_slice_is_empty(&name)) {
     ctx->last_module->name = dup_string_slice(name);
-
-    /* The binding also needs its own copy of the name. */
-    StringSlice binding_name = dup_string_slice(name);
-    Binding* binding = insert_binding(&ctx->env.module_bindings, &binding_name);
-    binding->index = ctx->env.modules.size() - 1;
+    ctx->env.module_bindings.emplace(string_slice_to_string(name),
+                                     Binding(ctx->env.modules.size() - 1));
   }
   return Result::Ok;
 }
@@ -1032,8 +1042,8 @@ static Result run_action(Context* ctx,
 
   int module_index;
   if (!string_slice_is_empty(&action->module_name)) {
-    module_index = find_binding_index_by_name(&ctx->env.module_bindings,
-                                              &action->module_name);
+    module_index = find_binding_index_by_name(ctx->env.module_bindings,
+                                              action->module_name);
   } else {
     module_index = static_cast<int>(ctx->env.modules.size()) - 1;
   }
@@ -1118,7 +1128,6 @@ static Result on_assert_malformed_command(Context* ctx,
   BinaryErrorHandler* error_handler =
       new_custom_error_handler(ctx, "assert_malformed");
   InterpreterEnvironment env;
-  WABT_ZERO_MEMORY(env);
   init_environment(&env);
 
   ctx->total++;
@@ -1166,10 +1175,8 @@ static Result on_register_command(Context* ctx,
     return Result::Error;
   }
 
-  StringSlice dup_as = dup_string_slice(as);
-  Binding* binding =
-      insert_binding(&ctx->env.registered_module_bindings, &dup_as);
-  binding->index = module_index;
+  ctx->env.registered_module_bindings.emplace(string_slice_to_string(as),
+                                              Binding(module_index));
   return Result::Ok;
 }
 
@@ -1205,7 +1212,6 @@ static Result on_assert_invalid_command(Context* ctx,
   BinaryErrorHandler* error_handler =
       new_custom_error_handler(ctx, "assert_invalid");
   InterpreterEnvironment env;
-  WABT_ZERO_MEMORY(env);
   init_environment(&env);
 
   ctx->total++;
@@ -1591,7 +1597,6 @@ static void destroy_context(Context* ctx) {
 
 static Result read_and_run_spec_json(const char* spec_json_filename) {
   Context ctx;
-  WABT_ZERO_MEMORY(ctx);
   ctx.loc.filename = spec_json_filename;
   ctx.loc.line = 1;
   ctx.loc.first_column = 1;

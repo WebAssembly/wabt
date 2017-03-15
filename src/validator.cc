@@ -687,8 +687,8 @@ static void check_import(Context* ctx,
                          const Import* import) {
   switch (import->kind) {
     case ExternalKind::Func:
-      if (decl_has_func_type(&import->func.decl))
-        check_func_type_var(ctx, &import->func.decl.type_var, nullptr);
+      if (decl_has_func_type(&import->func->decl))
+        check_func_type_var(ctx, &import->func->decl.type_var, nullptr);
       break;
     case ExternalKind::Table:
       check_table(ctx, loc, &import->table);
@@ -733,21 +733,20 @@ static void check_export(Context* ctx, const Export* export_) {
   }
 }
 
-static void on_duplicate_binding(BindingHashEntry* a,
-                                 BindingHashEntry* b,
+static void on_duplicate_binding(const BindingHash::value_type& a,
+                                 const BindingHash::value_type& b,
                                  void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   /* choose the location that is later in the file */
-  Location* a_loc = &a->binding.loc;
-  Location* b_loc = &b->binding.loc;
-  Location* loc = a_loc->line > b_loc->line ? a_loc : b_loc;
-  print_error(ctx, loc, "redefinition of export \"" PRIstringslice "\"",
-              WABT_PRINTF_STRING_SLICE_ARG(a->binding.name));
+  const Location& a_loc = a.second.loc;
+  const Location& b_loc = b.second.loc;
+  const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
+  print_error(ctx, &loc, "redefinition of export \"%s\"", a.first.c_str());
 }
 
 static void check_duplicate_export_bindings(Context* ctx,
                                             const Module* module) {
-  find_duplicate_bindings(&module->export_bindings, on_duplicate_binding, ctx);
+  find_duplicate_bindings(module->export_bindings, on_duplicate_binding, ctx);
 }
 
 static void check_module(Context* ctx, const Module* module) {
@@ -762,7 +761,7 @@ static void check_module(Context* ctx, const Module* module) {
   for (ModuleField* field = module->first_field; field; field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Func:
-        check_func(ctx, &field->loc, &field->func);
+        check_func(ctx, &field->loc, field->func);
         break;
 
       case ModuleFieldType::Global:
@@ -771,7 +770,7 @@ static void check_module(Context* ctx, const Module* module) {
         break;
 
       case ModuleFieldType::Import:
-        check_import(ctx, &field->loc, &field->import);
+        check_import(ctx, &field->loc, field->import);
         break;
 
       case ModuleFieldType::Export:
@@ -921,7 +920,7 @@ static ActionResult check_action(Context* ctx, const Action* action) {
 static void check_command(Context* ctx, const Command* command) {
   switch (command->type) {
     case CommandType::Module:
-      check_module(ctx, &command->module);
+      check_module(ctx, command->module);
       break;
 
     case CommandType::Action:

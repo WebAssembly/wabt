@@ -39,8 +39,8 @@ struct Context {
   Func* current_func;
   ExprVisitor visitor;
   /* mapping from param index to its name, if any, for the current func */
-  StringSliceVector param_index_to_name;
-  StringSliceVector local_index_to_name;
+  std::vector<std::string> param_index_to_name;
+  std::vector<std::string> local_index_to_name;
   LabelPtrVector labels;
 };
 
@@ -126,26 +126,26 @@ Result use_name_for_param_and_local_var(Context* ctx, Func* func, Var* var) {
     return Result::Error;
 
   uint32_t num_params = get_num_params(func);
-  StringSlice* name;
+  std::string* name;
   if (static_cast<uint32_t>(local_index) < num_params) {
     /* param */
-    assert(static_cast<size_t>(local_index) < ctx->param_index_to_name.size);
-    name = &ctx->param_index_to_name.data[local_index];
+    assert(static_cast<size_t>(local_index) < ctx->param_index_to_name.size());
+    name = &ctx->param_index_to_name[local_index];
   } else {
     /* local */
     local_index -= num_params;
-    assert(static_cast<size_t>(local_index) < ctx->local_index_to_name.size);
-    name = &ctx->local_index_to_name.data[local_index];
+    assert(static_cast<size_t>(local_index) < ctx->local_index_to_name.size());
+    name = &ctx->local_index_to_name[local_index];
   }
 
   if (var->type == VarType::Name) {
-    assert(string_slices_are_equal(name, &var->name));
+    assert(*name == string_slice_to_string(var->name));
     return Result::Ok;
   }
 
-  if (name->start) {
+  if (!name->empty()) {
     var->type = VarType::Name;
-    var->name = dup_string_slice(*name);
+    var->name = dup_string_slice(string_to_string_slice(*name));
     return var->name.start ? Result::Ok : Result::Error;
   }
   return Result::Ok;
@@ -267,11 +267,11 @@ Result visit_func(Context* ctx, uint32_t func_index, Func* func) {
     CHECK_RESULT(use_name_for_func_type_var(ctx->module, &func->decl.type_var));
   }
 
-  make_type_binding_reverse_mapping(&func->decl.sig.param_types,
-                                    &func->param_bindings,
+  make_type_binding_reverse_mapping(func->decl.sig.param_types,
+                                    func->param_bindings,
                                     &ctx->param_index_to_name);
 
-  make_type_binding_reverse_mapping(&func->local_types, &func->local_bindings,
+  make_type_binding_reverse_mapping(func->local_types, func->local_bindings,
                                     &ctx->local_index_to_name);
 
   CHECK_RESULT(visit_func(func, &ctx->visitor));
@@ -339,8 +339,6 @@ Result apply_names(Module* module) {
   ctx.visitor.on_set_local_expr = on_set_local_expr;
   ctx.visitor.on_tee_local_expr = on_tee_local_expr;
   Result result = visit_module(&ctx, module);
-  destroy_string_slice_vector(&ctx.param_index_to_name);
-  destroy_string_slice_vector(&ctx.local_index_to_name);
   destroy_label_ptr_vector(&ctx.labels);
   return result;
 }

@@ -393,7 +393,7 @@ static Result on_import(uint32_t index,
   import->module_name = dup_string_slice(module_name);
   import->field_name = dup_string_slice(field_name);
   int module_index = find_binding_index_by_name(
-      &ctx->env->registered_module_bindings, &import->module_name);
+      ctx->env->registered_module_bindings, import->module_name);
   if (module_index < 0) {
     print_error(ctx, "unknown import module \"" PRIstringslice "\"",
                 WABT_PRINTF_STRING_SLICE_ARG(import->module_name));
@@ -469,7 +469,7 @@ static Result append_export(Context* ctx,
                             ExternalKind kind,
                             uint32_t item_index,
                             StringSlice name) {
-  if (find_binding_index_by_name(&module->export_bindings, &name) != -1) {
+  if (find_binding_index_by_name(module->export_bindings, name) != -1) {
     print_error(ctx, "duplicate export \"" PRIstringslice "\"",
                 WABT_PRINTF_STRING_SLICE_ARG(name));
     return Result::Error;
@@ -478,8 +478,8 @@ static Result append_export(Context* ctx,
   module->exports.emplace_back(dup_string_slice(name), kind, item_index);
   InterpreterExport* export_ = &module->exports.back();
 
-  Binding* binding = insert_binding(&module->export_bindings, &export_->name);
-  binding->index = module->exports.size() - 1;
+  module->export_bindings.emplace(string_slice_to_string(export_->name),
+                                  Binding(module->exports.size() - 1));
   return Result::Ok;
 }
 

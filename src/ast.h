@@ -21,6 +21,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "binding-hash.h"
 #include "common.h"
 #include "type-vector.h"
@@ -140,6 +144,8 @@ struct FuncDeclaration {
 };
 
 struct Func {
+  Func();
+
   StringSlice name;
   FuncDeclaration decl;
   TypeVector local_types;
@@ -198,7 +204,7 @@ struct Import {
     /* an imported func is has the type Func so it can be more easily
      * included in the Module's vector of funcs; but only the
      * FuncDeclaration will have any useful information */
-    Func func;
+    Func* func;
     Table table;
     Memory memory;
     Global global;
@@ -233,9 +239,9 @@ struct ModuleField {
   ModuleFieldType type;
   struct ModuleField* next;
   union {
-    Func func;
+    Func* func;
     Global global;
-    Import import;
+    Import* import;
     Export export_;
     FuncType func_type;
     Table table;
@@ -247,6 +253,8 @@ struct ModuleField {
 };
 
 struct Module {
+  Module();
+
   Location loc;
   StringSlice name;
   ModuleField* first_field;
@@ -349,7 +357,7 @@ static const int kCommandTypeCount = WABT_ENUM_COUNT(CommandType);
 struct Command {
   CommandType type;
   union {
-    Module module;
+    Module* module;
     Action action;
     struct { StringSlice module_name; Var var; } register_;
     struct { Action action; ConstVector expected; } assert_return;
@@ -365,6 +373,8 @@ struct Command {
 WABT_DEFINE_VECTOR(command, Command);
 
 struct Script {
+  ~Script();
+
   CommandVector commands;
   BindingHash module_bindings;
 };
@@ -489,16 +499,10 @@ ExportPtr get_export_by_name(const Module* module, const StringSlice* name);
 Module* get_first_module(const Script* script);
 Module* get_module_by_var(const Script* script, const Var* var);
 
-void make_type_binding_reverse_mapping(const TypeVector*,
-                                       const BindingHash*,
-                                       StringSliceVector* out_reverse_mapping);
-
-typedef void (*DuplicateBindingCallback)(BindingHashEntry* a,
-                                         BindingHashEntry* b,
-                                         void* user_data);
-void find_duplicate_bindings(const BindingHash*,
-                             DuplicateBindingCallback callback,
-                             void* user_data);
+void make_type_binding_reverse_mapping(
+    const TypeVector&,
+    const BindingHash&,
+    std::vector<std::string>* out_reverse_mapping);
 
 static WABT_INLINE bool decl_has_func_type(const FuncDeclaration* decl) {
   return static_cast<bool>(

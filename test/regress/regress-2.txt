@@ -10,10 +10,10 @@
   (func $memory(param f32)(call 332 ))
   (func $memorGe ))
 (;; STDERR ;;;
-out/test/regress/regress-2.txt:10:3: redefinition of function "$memory"
-  (func $memory(param f32)(call 332 ))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/test/regress/regress-2.txt:6:3: redefinition of function "$memor"
   (func $memor(call 2 ))
   ^^^^^^^^^^^^^^^^^^^^^^
+out/test/regress/regress-2.txt:10:3: redefinition of function "$memory"
+  (func $memory(param f32)(call 332 ))
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

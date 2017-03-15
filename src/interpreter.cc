@@ -54,14 +54,41 @@ static const char* get_interpreter_opcode_name(InterpreterOpcode opcode) {
   return s_interpreter_opcode_name[static_cast<int>(opcode)];
 }
 
-void init_interpreter_environment(InterpreterEnvironment* env) {
-  WABT_ZERO_MEMORY(*env);
-  init_output_buffer(&env->istream, INITIAL_ISTREAM_CAPACITY);
+InterpreterEnvironment::InterpreterEnvironment() {
+  WABT_ZERO_MEMORY(istream);
+  init_output_buffer(&istream, INITIAL_ISTREAM_CAPACITY);
 }
+
+InterpreterThread::InterpreterThread()
+    : env(nullptr),
+      value_stack_top(nullptr),
+      value_stack_end(nullptr),
+      call_stack_top(nullptr),
+      call_stack_end(nullptr),
+      pc(0) {}
 
 InterpreterImport::~InterpreterImport() {
   destroy_string_slice(&module_name);
   destroy_string_slice(&field_name);
+}
+
+InterpreterExport::InterpreterExport(InterpreterExport&& other)
+  : name(other.name),
+    kind(other.kind),
+    index(other.index) {
+  WABT_ZERO_MEMORY(other.name);
+}
+
+InterpreterExport& InterpreterExport::operator=(InterpreterExport&& other) {
+  name = other.name;
+  kind = other.kind;
+  index = other.index;
+  WABT_ZERO_MEMORY(other.name);
+  return *this;
+}
+
+InterpreterExport::~InterpreterExport() {
+  destroy_string_slice(&name);
 }
 
 InterpreterModule::InterpreterModule(bool is_host)
@@ -69,19 +96,15 @@ InterpreterModule::InterpreterModule(bool is_host)
       table_index(WABT_INVALID_INDEX),
       is_host(is_host) {
   WABT_ZERO_MEMORY(name);
-  WABT_ZERO_MEMORY(export_bindings);
 }
 
 InterpreterModule::InterpreterModule(const StringSlice& name, bool is_host)
     : name(name),
       memory_index(WABT_INVALID_INDEX),
       table_index(WABT_INVALID_INDEX),
-      is_host(is_host) {
-  WABT_ZERO_MEMORY(export_bindings);
-}
+      is_host(is_host) {}
 
 InterpreterModule::~InterpreterModule() {
-  destroy_binding_hash(&export_bindings);
   destroy_string_slice(&name);
 }
 
@@ -96,8 +119,6 @@ HostInterpreterModule::HostInterpreterModule(const StringSlice& name)
 
 void destroy_interpreter_environment(InterpreterEnvironment* env) {
   destroy_output_buffer(&env->istream);
-  destroy_binding_hash(&env->module_bindings);
-  destroy_binding_hash(&env->registered_module_bindings);
 }
 
 InterpreterEnvironmentMark mark_interpreter_environment(
@@ -120,19 +141,18 @@ void reset_interpreter_environment_to_mark(InterpreterEnvironment* env,
   for (size_t i = mark.modules_size; i < env->modules.size(); ++i) {
     const StringSlice* name = &env->modules[i]->name;
     if (!string_slice_is_empty(name))
-      remove_binding(&env->module_bindings, name);
+      env->module_bindings.erase(string_slice_to_string(*name));
   }
 
   /* registered_module_bindings maps from an arbitrary name to a module index,
    * so we have to iterate through the entire table to find entries to remove.
    */
-  for (size_t i = 0; i < env->registered_module_bindings.entries.capacity;
-       ++i) {
-    BindingHashEntry* entry = &env->registered_module_bindings.entries.data[i];
-    if (!hash_entry_is_free(entry) &&
-        entry->binding.index >= static_cast<int>(mark.modules_size)) {
-      remove_binding(&env->registered_module_bindings, &entry->binding.name);
-    }
+  auto iter = env->registered_module_bindings.begin();
+  while (iter != env->registered_module_bindings.end()) {
+    if (iter->second.index >= static_cast<int>(mark.modules_size))
+      iter = env->registered_module_bindings.erase(iter);
+    else
+      ++iter;
   }
 
   env->modules.erase(env->modules.begin() + mark.modules_size,
@@ -152,11 +172,8 @@ HostInterpreterModule* append_host_module(InterpreterEnvironment* env,
   HostInterpreterModule* module =
       new HostInterpreterModule(dup_string_slice(name));
   env->modules.emplace_back(module);
-
-  StringSlice dup_name = dup_string_slice(name);
-  Binding* binding =
-      insert_binding(&env->registered_module_bindings, &dup_name);
-  binding->index = env->modules.size() - 1;
+  env->registered_module_bindings.emplace(string_slice_to_string(name),
+                                          Binding(env->modules.size() - 1));
   return module;
 }
 
@@ -186,7 +203,7 @@ InterpreterResult push_thread_value(InterpreterThread* thread,
 
 InterpreterExport* get_interpreter_export_by_name(InterpreterModule* module,
                                                   const StringSlice* name) {
-  int field_index = find_binding_index_by_name(&module->export_bindings, name);
+  int field_index = find_binding_index_by_name(module->export_bindings, *name);
   if (field_index < 0)
     return nullptr;
   return &module->exports[field_index];

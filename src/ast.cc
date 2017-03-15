@@ -23,12 +23,12 @@ namespace wabt {
 
 int get_index_from_var(const BindingHash* hash, const Var* var) {
   if (var->type == VarType::Name)
-    return find_binding_index_by_name(hash, &var->name);
+    return find_binding_index_by_name(*hash, var->name);
   return static_cast<int>(var->index);
 }
 
 ExportPtr get_export_by_name(const Module* module, const StringSlice* name) {
-  int index = find_binding_index_by_name(&module->export_bindings, name);
+  int index = find_binding_index_by_name(module->export_bindings, *name);
   if (index == -1)
     return nullptr;
   return module->exports.data[index];
@@ -58,11 +58,11 @@ int get_local_index_by_var(const Func* func, const Var* var) {
   if (var->type == VarType::Index)
     return static_cast<int>(var->index);
 
-  int result = find_binding_index_by_name(&func->param_bindings, &var->name);
+  int result = find_binding_index_by_name(func->param_bindings, var->name);
   if (result != -1)
     return result;
 
-  result = find_binding_index_by_name(&func->local_bindings, &var->name);
+  result = find_binding_index_by_name(func->local_bindings, var->name);
   if (result == -1)
     return result;
 
@@ -129,7 +129,7 @@ Module* get_first_module(const Script* script) {
   for (size_t i = 0; i < script->commands.size; ++i) {
     Command* command = &script->commands.data[i];
     if (command->type == CommandType::Module)
-      return &command->module;
+      return command->module;
   }
   return nullptr;
 }
@@ -140,47 +140,19 @@ Module* get_module_by_var(const Script* script, const Var* var) {
     return nullptr;
   Command* command = &script->commands.data[index];
   assert(command->type == CommandType::Module);
-  return &command->module;
+  return command->module;
 }
 
-void make_type_binding_reverse_mapping(const TypeVector* types,
-                                       const BindingHash* bindings,
-                                       StringSliceVector* out_reverse_mapping) {
-  uint32_t num_names = types->size;
-  reserve_string_slices(out_reverse_mapping, num_names);
-  out_reverse_mapping->size = num_names;
-  memset(out_reverse_mapping->data, 0, num_names * sizeof(StringSlice));
-
-  /* map index to name */
-  for (size_t i = 0; i < bindings->entries.capacity; ++i) {
-    const BindingHashEntry* entry = &bindings->entries.data[i];
-    if (hash_entry_is_free(entry))
-      continue;
-
-    uint32_t index = entry->binding.index;
-    assert(index < out_reverse_mapping->size);
-    out_reverse_mapping->data[index] = entry->binding.name;
-  }
-}
-
-void find_duplicate_bindings(const BindingHash* bindings,
-                             DuplicateBindingCallback callback,
-                             void* user_data) {
-  for (size_t i = 0; i < bindings->entries.capacity; ++i) {
-    BindingHashEntry* entry = &bindings->entries.data[i];
-    if (hash_entry_is_free(entry))
-      continue;
-
-    /* only follow the chain if this is the first entry in the chain */
-    if (entry->prev)
-      continue;
-
-    for (BindingHashEntry* a = entry; a; a = a->next) {
-      for (BindingHashEntry* b = a->next; b; b = b->next) {
-        if (string_slices_are_equal(&a->binding.name, &b->binding.name))
-          callback(a, b, user_data);
-      }
-    }
+void make_type_binding_reverse_mapping(
+    const TypeVector& types,
+    const BindingHash& bindings,
+    std::vector<std::string>* out_reverse_mapping) {
+  out_reverse_mapping->clear();
+  out_reverse_mapping->resize(types.size);
+  for (auto iter: bindings) {
+    assert(static_cast<size_t>(iter.second.index) <
+           out_reverse_mapping->size());
+    (*out_reverse_mapping)[iter.second.index] = iter.first;
   }
 }
 
@@ -343,12 +315,16 @@ void destroy_func_declaration(FuncDeclaration* decl) {
     destroy_func_signature(&decl->sig);
 }
 
+Func::Func() : first_expr(nullptr) {
+  WABT_ZERO_MEMORY(name);
+  WABT_ZERO_MEMORY(decl);
+  WABT_ZERO_MEMORY(local_types);
+}
+
 void destroy_func(Func* func) {
   destroy_string_slice(&func->name);
   destroy_func_declaration(&func->decl);
   destroy_type_vector(&func->local_types);
-  destroy_binding_hash(&func->param_bindings);
-  destroy_binding_hash(&func->local_bindings);
   destroy_expr_list(func->first_expr);
 }
 
@@ -362,7 +338,8 @@ void destroy_import(Import* import) {
   destroy_string_slice(&import->field_name);
   switch (import->kind) {
     case ExternalKind::Func:
-      destroy_func(&import->func);
+      destroy_func(import->func);
+      delete import->func;
       break;
     case ExternalKind::Table:
       destroy_table(&import->table);
@@ -403,13 +380,15 @@ void destroy_table(Table* table) {
 static void destroy_module_field(ModuleField* field) {
   switch (field->type) {
     case ModuleFieldType::Func:
-      destroy_func(&field->func);
+      destroy_func(field->func);
+      delete field->func;
       break;
     case ModuleFieldType::Global:
       destroy_global(&field->global);
       break;
     case ModuleFieldType::Import:
-      destroy_import(&field->import);
+      destroy_import(field->import);
+      delete field->import;
       break;
     case ModuleFieldType::Export:
       destroy_export(&field->export_);
@@ -435,6 +414,27 @@ static void destroy_module_field(ModuleField* field) {
   }
 }
 
+Module::Module()
+    : first_field(nullptr),
+      last_field(nullptr),
+      num_func_imports(0),
+      num_table_imports(0),
+      num_memory_imports(0),
+      num_global_imports(0),
+      start(0) {
+  WABT_ZERO_MEMORY(loc);
+  WABT_ZERO_MEMORY(name);
+  WABT_ZERO_MEMORY(funcs);
+  WABT_ZERO_MEMORY(globals);
+  WABT_ZERO_MEMORY(imports);
+  WABT_ZERO_MEMORY(exports);
+  WABT_ZERO_MEMORY(func_types);
+  WABT_ZERO_MEMORY(tables);
+  WABT_ZERO_MEMORY(elem_segments);
+  WABT_ZERO_MEMORY(memories);
+  WABT_ZERO_MEMORY(data_segments);
+}
+
 void destroy_module(Module* module) {
   destroy_string_slice(&module->name);
 
@@ -457,12 +457,6 @@ void destroy_module(Module* module) {
   destroy_elem_segment_ptr_vector(&module->elem_segments);
   destroy_memory_ptr_vector(&module->memories);
   destroy_data_segment_ptr_vector(&module->data_segments);
-  destroy_binding_hash_entry_vector(&module->func_bindings.entries);
-  destroy_binding_hash_entry_vector(&module->global_bindings.entries);
-  destroy_binding_hash_entry_vector(&module->export_bindings.entries);
-  destroy_binding_hash_entry_vector(&module->func_type_bindings.entries);
-  destroy_binding_hash_entry_vector(&module->table_bindings.entries);
-  destroy_binding_hash_entry_vector(&module->memory_bindings.entries);
 }
 
 void destroy_raw_module(RawModule* raw) {
@@ -491,7 +485,8 @@ void destroy_action(Action* action) {
 void destroy_command(Command* command) {
   switch (command->type) {
     case CommandType::Module:
-      destroy_module(&command->module);
+      destroy_module(command->module);
+      delete command->module;
       break;
     case CommandType::Action:
       destroy_action(&command->action);
@@ -542,9 +537,8 @@ void destroy_elem_segment(ElemSegment* elem) {
   WABT_DESTROY_VECTOR_AND_ELEMENTS(elem->vars, var);
 }
 
-void destroy_script(Script* script) {
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(script->commands, command);
-  destroy_binding_hash(&script->module_bindings);
+Script::~Script() {
+  WABT_DESTROY_VECTOR_AND_ELEMENTS(commands, command);
 }
 
 #define CHECK_RESULT(expr)   \

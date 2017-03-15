@@ -6,10 +6,10 @@ out/third_party/testsuite/globals.wast:50: assert_invalid passed:
   error: @0x00000026: on_set_global_expr callback failed
 out/third_party/testsuite/globals.wast:55: assert_invalid passed:
   error: unknown import module "m"
-  error: @0x0000000f: on_import callback failed
+  error: @0x00000012: on_import callback failed
 out/third_party/testsuite/globals.wast:60: assert_invalid passed:
   error: unknown import module "m"
-  error: @0x0000000f: on_import callback failed
+  error: @0x00000012: on_import callback failed
 out/third_party/testsuite/globals.wast:65: assert_invalid passed:
   error: mutable globals cannot be exported
   error: @0x0000001a: on_export callback failed

@@ -98,14 +98,6 @@ static Result top_label(Context* ctx, LabelNode** label) {
   return get_label_at(ctx, label, 0);
 }
 
-static void dup_name(Context* ctx, StringSlice* name, StringSlice* out_name) {
-  if (name->length > 0) {
-    *out_name = dup_string_slice(*name);
-  } else {
-    WABT_ZERO_MEMORY(*out_name);
-  }
-}
-
 static Result append_expr(Context* ctx, Expr* expr) {
   LabelNode* label;
   if (WABT_FAILED(top_label(ctx, &label))) {
@@ -184,9 +176,9 @@ static Result on_import(uint32_t index,
 
   ModuleField* field = append_module_field(ctx->module);
   field->type = ModuleFieldType::Import;
+  field->import = new Import();
 
-  Import* import = &field->import;
-  WABT_ZERO_MEMORY(*import);
+  Import* import = field->import;
   import->module_name = dup_string_slice(module_name);
   import->field_name = dup_string_slice(field_name);
 
@@ -207,13 +199,14 @@ static Result on_import_func(uint32_t import_index,
   Import* import = ctx->module->imports.data[import_index];
 
   import->kind = ExternalKind::Func;
-  import->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
+  import->func = new Func();
+  import->func->decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
                             WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
-  import->func.decl.type_var.type = VarType::Index;
-  import->func.decl.type_var.index = sig_index;
-  import->func.decl.sig = ctx->module->func_types.data[sig_index]->sig;
+  import->func->decl.type_var.type = VarType::Index;
+  import->func->decl.type_var.index = sig_index;
+  import->func->decl.sig = ctx->module->func_types.data[sig_index]->sig;
 
-  FuncPtr func_ptr = &import->func;
+  FuncPtr func_ptr = import->func;
   append_func_ptr_value(&ctx->module->funcs, &func_ptr);
   ctx->module->num_func_imports++;
   return Result::Ok;
@@ -291,9 +284,9 @@ static Result on_function_signature(uint32_t index,
 
   ModuleField* field = append_module_field(ctx->module);
   field->type = ModuleFieldType::Func;
+  field->func = new Func();
 
-  Func* func = &field->func;
-  WABT_ZERO_MEMORY(*func);
+  Func* func = field->func;
   func->decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE |
                      WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
   func->decl.type_var.type = VarType::Index;
@@ -904,16 +897,14 @@ static Result on_function_names_count(uint32_t count, void* user_data) {
 static Result on_function_name(uint32_t index,
                                StringSlice name,
                                void* user_data) {
+  if (string_slice_is_empty(&name))
+    return Result::Ok;
+
   Context* ctx = static_cast<Context*>(user_data);
-
-  StringSlice new_name;
-  dup_name(ctx, &name, &new_name);
-
-  Binding* binding = insert_binding(&ctx->module->func_bindings, &new_name);
-  binding->index = index;
-
+  ctx->module->func_bindings.emplace(string_slice_to_string(name),
+                                     Binding(index));
   Func* func = ctx->module->funcs.data[index];
-  func->name = new_name;
+  func->name = dup_string_slice(name);
   return Result::Ok;
 }
 
@@ -992,14 +983,14 @@ static Result on_local_name(uint32_t func_index,
                             uint32_t local_index,
                             StringSlice name,
                             void* user_data) {
+  if (string_slice_is_empty(&name))
+    return Result::Ok;
+
   Context* ctx = static_cast<Context*>(user_data);
   Module* module = ctx->module;
   Func* func = module->funcs.data[func_index];
   uint32_t num_params = get_num_params(func);
-  StringSlice new_name;
-  dup_name(ctx, &name, &new_name);
   BindingHash* bindings;
-  Binding* binding;
   uint32_t index;
   if (local_index < num_params) {
     /* param name */
@@ -1010,8 +1001,7 @@ static Result on_local_name(uint32_t func_index,
     bindings = &func->local_bindings;
     index = local_index - num_params;
   }
-  binding = insert_binding(bindings, &new_name);
-  binding->index = index;
+  bindings->emplace(string_slice_to_string(name), Binding(index));
   return Result::Ok;
 }
 

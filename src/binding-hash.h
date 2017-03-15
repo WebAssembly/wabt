@@ -18,34 +18,38 @@
 #define WABT_BINDING_HASH_H_
 
 #include "common.h"
-#include "vector.h"
+
+#include <string>
+#include <unordered_map>
 
 namespace wabt {
 
 struct Binding {
+  explicit Binding(int index) : index(index) {
+    WABT_ZERO_MEMORY(loc);
+  }
+  Binding(const Location& loc, int index) : loc(loc), index(index) {}
+
   Location loc;
-  StringSlice name;
   int index;
 };
 
-struct BindingHashEntry {
-  Binding binding;
-  struct BindingHashEntry* next;
-  struct BindingHashEntry* prev; /* only valid when this entry is unused */
-};
-WABT_DEFINE_VECTOR(binding_hash_entry, BindingHashEntry);
+typedef std::unordered_multimap<std::string, Binding> BindingHash;
 
-struct BindingHash {
-  BindingHashEntryVector entries;
-  BindingHashEntry* free_head;
-};
+typedef void (*DuplicateBindingCallback)(const BindingHash::value_type& a,
+                                         const BindingHash::value_type& b,
+                                         void* user_data);
+void find_duplicate_bindings(const BindingHash&,
+                             DuplicateBindingCallback callback,
+                             void* user_data);
 
-Binding* insert_binding(BindingHash*, const StringSlice*);
-void remove_binding(BindingHash*, const StringSlice*);
-bool hash_entry_is_free(const BindingHashEntry*);
-/* returns -1 if the name is not in the hash */
-int find_binding_index_by_name(const BindingHash*, const StringSlice* name);
-void destroy_binding_hash(BindingHash*);
+inline int find_binding_index_by_name(const BindingHash& hash,
+                                      const StringSlice& name) {
+  auto iter = hash.find(string_slice_to_string(name));
+  if (iter != hash.end())
+    return iter->second.index;
+  return -1;
+}
 
 }  // namespace wabt
 

@@ -32,9 +32,11 @@ namespace wabt {
 namespace {
 
 struct Context {
+  Context() : module(nullptr), label_count(0) { WABT_ZERO_MEMORY(visitor); }
+
   Module* module;
   ExprVisitor visitor;
-  StringSliceVector index_to_name;
+  std::vector<std::string> index_to_name;
   uint32_t label_count;
 };
 
@@ -70,9 +72,7 @@ static void generate_and_bind_name(BindingHash* bindings,
                                    uint32_t index,
                                    StringSlice* str) {
   generate_name(prefix, index, str);
-  Binding* binding;
-  binding = insert_binding(bindings, str);
-  binding->index = index;
+  bindings->emplace(string_slice_to_string(*str), Binding(index));
 }
 
 static void maybe_generate_and_bind_name(BindingHash* bindings,
@@ -83,17 +83,19 @@ static void maybe_generate_and_bind_name(BindingHash* bindings,
     generate_and_bind_name(bindings, prefix, index, str);
 }
 
-static void generate_and_bind_local_names(StringSliceVector* index_to_name,
-                                          BindingHash* bindings,
-                                          const char* prefix) {
-  for (size_t i = 0; i < index_to_name->size; ++i) {
-    StringSlice* old_name = &index_to_name->data[i];
-    if (has_name(old_name))
+static void generate_and_bind_local_names(
+    Context* ctx,
+    BindingHash* bindings,
+    const char* prefix) {
+  for (size_t i = 0; i < ctx->index_to_name.size(); ++i) {
+    const std::string& old_name = ctx->index_to_name[i];
+    if (!old_name.empty())
       continue;
 
     StringSlice new_name;
     generate_and_bind_name(bindings, prefix, i, &new_name);
-    index_to_name->data[i] = new_name;
+    ctx->index_to_name[i] = string_slice_to_string(new_name);
+    destroy_string_slice(&new_name);
   }
 }
 
@@ -119,15 +121,13 @@ static Result visit_func(Context* ctx, uint32_t func_index, Func* func) {
   maybe_generate_and_bind_name(&ctx->module->func_bindings, "$f", func_index,
                                &func->name);
 
-  make_type_binding_reverse_mapping(&func->decl.sig.param_types,
-                                    &func->param_bindings, &ctx->index_to_name);
-  generate_and_bind_local_names(&ctx->index_to_name, &func->param_bindings,
-                                "$p");
+  make_type_binding_reverse_mapping(func->decl.sig.param_types,
+                                    func->param_bindings, &ctx->index_to_name);
+  generate_and_bind_local_names(ctx, &func->param_bindings, "$p");
 
-  make_type_binding_reverse_mapping(&func->local_types, &func->local_bindings,
+  make_type_binding_reverse_mapping(func->local_types, func->local_bindings,
                                     &ctx->index_to_name);
-  generate_and_bind_local_names(&ctx->index_to_name, &func->local_bindings,
-                                "$l");
+  generate_and_bind_local_names(ctx, &func->local_bindings, "$l");
 
   ctx->label_count = 0;
   CHECK_RESULT(visit_func(func, &ctx->visitor));
@@ -180,14 +180,12 @@ static Result visit_module(Context* ctx, Module* module) {
 
 Result generate_names(Module* module) {
   Context ctx;
-  WABT_ZERO_MEMORY(ctx);
   ctx.visitor.user_data = &ctx;
   ctx.visitor.begin_block_expr = begin_block_expr;
   ctx.visitor.begin_loop_expr = begin_loop_expr;
   ctx.visitor.begin_if_expr = begin_if_expr;
   ctx.module = module;
   Result result = visit_module(&ctx, module);
-  destroy_string_slice_vector(&ctx.index_to_name);
   return result;
 }
 
