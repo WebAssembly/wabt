@@ -24,6 +24,8 @@
 
 namespace wabt {
 
+namespace {
+
 typedef Label* LabelPtr;
 WABT_DEFINE_VECTOR(label_ptr, LabelPtr);
 
@@ -37,6 +39,8 @@ struct Context {
   LabelPtrVector labels;
   Result result;
 };
+
+}  // namespace
 
 static void WABT_PRINTF_FORMAT(3, 4)
     print_error(Context* ctx, const Location* loc, const char* fmt, ...) {

@@ -35,6 +35,8 @@
 
 namespace wabt {
 
+namespace {
+
 /* TODO(binji): better leb size guess. Some sections we know will only be 1
  byte, but others we can be fairly certain will be larger. */
 static const size_t LEB_SECTION_SIZE_GUESS = 1;
@@ -68,6 +70,8 @@ struct Context {
   size_t last_subsection_leb_size_guess;
   size_t last_subsection_payload_offset;
 };
+
+}  // namespace
 
 void destroy_reloc_section(RelocSection* reloc_section) {
   destroy_reloc_vector(&reloc_section->relocations);

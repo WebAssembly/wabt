@@ -55,6 +55,8 @@
 
 namespace wabt {
 
+namespace {
+
 typedef uint32_t Uint32;
 WABT_DEFINE_VECTOR(uint32, Uint32);
 WABT_DEFINE_VECTOR(uint32_vector, Uint32Vector);
@@ -93,6 +95,8 @@ struct Context {
   HostInterpreterModule* host_import_module;
   uint32_t import_env_index;
 };
+
+}  // namespace
 
 static Label* get_label(Context* ctx, uint32_t depth) {
   assert(depth < ctx->label_stack.size);

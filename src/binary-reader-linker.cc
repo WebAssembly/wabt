@@ -22,6 +22,9 @@
 #define RELOC_SIZE 5
 
 namespace wabt {
+namespace link {
+
+namespace {
 
 struct Context {
   LinkerInputBinary* binary;
@@ -29,6 +32,8 @@ struct Context {
   Section* reloc_section;
   Section* current_section;
 };
+
+}  // namespace
 
 static Result on_reloc_count(uint32_t count,
                              BinarySection section_code,
@@ -334,4 +339,5 @@ Result read_binary_linker(LinkerInputBinary* input_info,
                      &read_options);
 }
 
+}  // namespace link
 }  // namespace wabt

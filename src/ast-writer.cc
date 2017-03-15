@@ -33,6 +33,8 @@
 
 namespace wabt {
 
+namespace {
+
 static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -68,6 +70,8 @@ struct Context {
   int memory_index;
   int func_type_index;
 };
+
+}  // namespace
 
 static void indent(Context* ctx) {
   ctx->indent += INDENT_SIZE;

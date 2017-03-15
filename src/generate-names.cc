@@ -29,12 +29,16 @@
 
 namespace wabt {
 
+namespace {
+
 struct Context {
   Module* module;
   ExprVisitor visitor;
   StringSliceVector index_to_name;
   uint32_t label_count;
 };
+
+}  // namespace
 
 static bool has_name(StringSlice* str) {
   return str->length > 0;

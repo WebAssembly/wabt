@@ -34,6 +34,8 @@
 
 namespace wabt {
 
+namespace {
+
 struct LabelNode {
   LabelType label_type;
   Expr** first;
@@ -50,6 +52,8 @@ struct Context {
   uint32_t max_depth;
   Expr** current_init_expr;
 };
+
+}  // namespace
 
 static bool handle_error(Context* ctx, uint32_t offset, const char* message);
 

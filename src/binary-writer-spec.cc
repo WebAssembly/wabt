@@ -28,6 +28,8 @@
 
 namespace wabt {
 
+namespace {
+
 struct Context {
   MemoryWriter json_writer;
   Stream json_stream;
@@ -38,6 +40,8 @@ struct Context {
   Result result;
   size_t num_modules;
 };
+
+}  // namespace
 
 static void convert_backslash_to_slash(char* s, size_t length) {
   for (size_t i = 0; i < length; ++i)
