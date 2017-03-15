@@ -40,6 +40,8 @@
 
 namespace wabt {
 
+namespace {
+
 typedef uint32_t Uint32;
 WABT_DEFINE_VECTOR(type, Type)
 WABT_DEFINE_VECTOR(uint32, Uint32);
@@ -137,6 +139,8 @@ struct LoggingContext {
   BinaryReader* reader;
   int indent;
 };
+
+}  // namespace
 
 static BinaryReaderContext* get_user_context(Context* ctx) {
   ctx->user_ctx.user_data = ctx->reader->user_data;

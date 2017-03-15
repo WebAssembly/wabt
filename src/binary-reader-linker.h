@@ -23,6 +23,9 @@
 namespace wabt {
 
 struct Stream;
+
+namespace link {
+
 struct LinkerInputBinary;
 
 struct LinkOptions {
@@ -32,6 +35,7 @@ struct LinkOptions {
 Result read_binary_linker(struct LinkerInputBinary* input_info,
                           struct LinkOptions* options);
 
+} // namespace link
 }  // namespace wabt
 
 #endif /* WABT_BINARY_READER_LINKER_H_ */

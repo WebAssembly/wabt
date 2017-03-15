@@ -31,6 +31,7 @@
 #define FIRST_KNOWN_SECTION static_cast<size_t>(BinarySection::Type)
 
 using namespace wabt;
+using namespace wabt::link;
 
 enum { FLAG_DEBUG, FLAG_OUTPUT, FLAG_RELOCATABLE, FLAG_HELP, NUM_FLAGS };
 

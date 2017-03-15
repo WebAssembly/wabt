@@ -30,6 +30,8 @@
 
 namespace wabt {
 
+namespace {
+
 enum class ActionResultKind {
   Error,
   Types,
@@ -58,6 +60,8 @@ struct Context {
   const Location* expr_loc; /* Cached for access by on_typechecker_error */
   Result result;
 };
+
+}  // namespace
 
 static void WABT_PRINTF_FORMAT(3, 4)
     print_error(Context* ctx, const Location* loc, const char* fmt, ...) {

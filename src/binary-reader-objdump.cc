@@ -27,6 +27,8 @@
 
 namespace wabt {
 
+namespace {
+
 typedef uint32_t Uint32;
 WABT_DEFINE_VECTOR(uint32, Uint32);
 
@@ -48,6 +50,8 @@ struct Context {
 
   uint32_t next_reloc;
 };
+
+}  // namespace
 
 static bool should_print_details(Context* ctx) {
   if (ctx->options->mode != ObjdumpMode::Details)

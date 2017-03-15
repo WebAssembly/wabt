@@ -24,6 +24,7 @@
 #define WABT_LINK_MODULE_NAME "__extern"
 
 namespace wabt {
+namespace link {
 
 struct LinkerInputBinary;
 
@@ -128,6 +129,7 @@ struct LinkerInputBinary {
 };
 WABT_DEFINE_VECTOR(binary, LinkerInputBinary);
 
+}  // namespace link
 }  // namespace wabt
 
 #endif /* WABT_LINK_H_ */

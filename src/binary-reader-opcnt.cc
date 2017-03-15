@@ -27,9 +27,13 @@
 
 namespace wabt {
 
+namespace {
+
 struct Context {
   OpcntData* opcnt_data;
 };
+
+}  // namespace
 
 static Result add_int_counter_value(IntCounterVector* vec,
                                         intmax_t value) {
