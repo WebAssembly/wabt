@@ -77,4 +77,5 @@ Code Disassembly:
  000032: 10 00                      | call 0
  000034: 1a                         | drop
  000035: 10 01                      | call 0x1
+ 000037: 0b                         | end
 ;;; STDOUT ;;)

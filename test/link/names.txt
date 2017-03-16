@@ -65,12 +65,15 @@ Code Disassembly:
  000056: 41 01                      | i32.const 0x1
  000058: 10 83 80 80 80 00          | call 0x3
            000059: R_FUNC_INDEX_LEB	0
+ 00005e: 0b                         | end
 00005f <$name2>:
  000061: 42 01                      | i64.const 1
  000063: 10 81 80 80 80 00          | call 0x1
            000064: R_FUNC_INDEX_LEB	1
+ 000069: 0b                         | end
 00006a <$name3>:
  00006c: 41 02                      | i32.const 0x2
  00006e: 10 83 80 80 80 00          | call 0x3
            00006f: R_FUNC_INDEX_LEB	0
+ 000074: 0b                         | end
 ;;; STDOUT ;;)

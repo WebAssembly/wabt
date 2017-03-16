@@ -52,4 +52,5 @@ Code Disassembly:
 
 000020 func[0]:
  000022: 01                         | nop
+ 000023: 0b                         | end
 ;;; STDOUT ;;)

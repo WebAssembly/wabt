@@ -98,4 +98,5 @@ Code Disassembly:
  000039: 21 04                      | set_local 0x4
  00003b: 43 00 00 00 00             | f32.const 0x0p+0
  000040: 21 05                      | set_local 0x5
+ 000042: 0b                         | end
 ;;; STDOUT ;;)

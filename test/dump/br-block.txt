@@ -86,4 +86,5 @@ Code Disassembly:
  00002b: 0b                         |     end
  00002c: 0b                         |   end
  00002d: 0b                         | end
+ 00002e: 0b                         | end
 ;;; STDOUT ;;)

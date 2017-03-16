@@ -49,4 +49,5 @@ Code Disassembly:
 
 00001b func[0]:
  00001d: 3f 00                      | current_memory 0
+ 00001f: 0b                         | end
 ;;; STDOUT ;;)

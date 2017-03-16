@@ -128,5 +128,7 @@ Custom:
 Code Disassembly:
 
 00001b <$F1>:
+ 000021: 0b                         | end
 000022 <$F2>:
+ 000028: 0b                         | end
 ;;; STDOUT ;;)

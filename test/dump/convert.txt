@@ -121,4 +121,5 @@ Code Disassembly:
  000035: bb                         | f64.promote/f32
  000036: b6                         | f32.demote/f64
  000037: 1a                         | drop
+ 000038: 0b                         | end
 ;;; STDOUT ;;)

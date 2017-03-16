@@ -212,4 +212,5 @@ Code Disassembly:
  00006a: 41 00                      | i32.const 0
  00006c: 2b 03 00                   | f64.load 3 0
  00006f: 1a                         | drop
+ 000070: 0b                         | end
 ;;; STDOUT ;;)

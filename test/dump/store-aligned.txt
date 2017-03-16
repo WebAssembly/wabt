@@ -252,4 +252,5 @@ Code Disassembly:
  000085: 41 00                      | i32.const 0
  000087: 42 00                      | i64.const 0
  000089: 37 03 00                   | i64.store 3 0
+ 00008c: 0b                         | end
 ;;; STDOUT ;;)

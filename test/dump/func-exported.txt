@@ -45,4 +45,5 @@ func-exported.wasm:	file format wasm 0x000001
 Code Disassembly:
 
 00001e func[0]:
+ 000020: 0b                         | end
 ;;; STDOUT ;;)

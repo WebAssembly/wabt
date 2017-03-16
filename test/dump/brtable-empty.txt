@@ -51,4 +51,5 @@ Code Disassembly:
  000019: 41 00                      |   i32.const 0
  00001b: 0e 00 00                   |   br_table
  00001e: 0b                         | end
+ 00001f: 0b                         | end
 ;;; STDOUT ;;)

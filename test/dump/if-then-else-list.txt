@@ -77,4 +77,5 @@ Code Disassembly:
  000025: 41 05                      |   i32.const 0x5
  000027: 1a                         |   drop
  000028: 0b                         | end
+ 000029: 0b                         | end
 ;;; STDOUT ;;)

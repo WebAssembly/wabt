@@ -43,4 +43,5 @@ string-hex.wasm:	file format wasm 0x000001
 Code Disassembly:
 
 000022 func[0]:
+ 000024: 0b                         | end
 ;;; STDOUT ;;)

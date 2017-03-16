@@ -315,6 +315,12 @@ Result on_br_table_expr(BinaryReaderContext* ctx,
   return Result::Ok;
 }
 
+static Result on_end_func(void* user_data) {
+  Context* context = static_cast<Context*>(user_data);
+  log_opcode(context, nullptr, 0, nullptr);
+  return Result::Ok;
+}
+
 static Result on_end_expr(void* user_data) {
   Context* context = static_cast<Context*>(user_data);
   context->indent_level--;
@@ -755,6 +761,7 @@ Result read_binary_objdump(const uint8_t* data,
     reader.on_opcode_f64 = on_opcode_f64;
     reader.on_opcode_block_sig = on_opcode_block_sig;
     reader.on_end_expr = on_end_expr;
+    reader.on_end_func = on_end_func;
     reader.on_br_table_expr = on_br_table_expr;
   }
 

@@ -106,4 +106,5 @@ Code Disassembly:
  000039: 1a                         | drop
  00003a: 20 07                      | get_local 0x7
  00003c: 1a                         | drop
+ 00003d: 0b                         | end
 ;;; STDOUT ;;)

@@ -118,4 +118,5 @@ Code Disassembly:
  000053: 21 06                      | set_local 0x6
  000055: 42 00                      | i64.const 0
  000057: 21 07                      | set_local 0x7
+ 000059: 0b                         | end
 ;;; STDOUT ;;)

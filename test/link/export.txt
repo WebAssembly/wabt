@@ -46,8 +46,10 @@ Code Disassembly:
  000034: 41 01                      | i32.const 0x1
  000036: 10 80 80 80 80 00          | call 0
            000037: R_FUNC_INDEX_LEB	0
+ 00003c: 0b                         | end
 00003d func[1]:
  00003f: 41 02                      | i32.const 0x2
  000041: 10 81 80 80 80 00          | call 0x1
            000042: R_FUNC_INDEX_LEB	0
+ 000047: 0b                         | end
 ;;; STDOUT ;;)

@@ -45,4 +45,5 @@ string-escape.wasm:	file format wasm 0x000001
 Code Disassembly:
 
 000043 func[0]:
+ 000045: 0b                         | end
 ;;; STDOUT ;;)

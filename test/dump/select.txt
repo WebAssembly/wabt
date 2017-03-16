@@ -107,4 +107,5 @@ Code Disassembly:
  000047: 41 01                      | i32.const 0x1
  000049: 1b                         | select
  00004a: 1a                         | drop
+ 00004b: 0b                         | end
 ;;; STDOUT ;;)

@@ -605,4 +605,5 @@ Code Disassembly:
  00011b: 0c 00                      |   br 0
  00011d: 0c 00                      |   br 0
  00011f: 0b                         | end
+ 000120: 0b                         | end
 ;;; STDOUT ;;)

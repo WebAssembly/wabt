@@ -88,4 +88,5 @@ Code Disassembly:
  00002f: 1a                         | drop
  000030: 20 05                      | get_local 0x5
  000032: 1a                         | drop
+ 000033: 0b                         | end
 ;;; STDOUT ;;)

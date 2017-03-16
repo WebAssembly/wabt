@@ -1157,7 +1157,7 @@ static void read_global_header(Context* ctx,
   uint8_t mutable_;
   in_type(ctx, &global_type, "global type");
   RAISE_ERROR_UNLESS(is_concrete_type(global_type),
-                     "expected valid global type");
+                     "invalid global type: %#x", global_type);
 
   in_u8(ctx, &mutable_, "global mutability");
   RAISE_ERROR_UNLESS(mutable_ <= 1, "global mutability must be 0 or 1");
@@ -1277,10 +1277,12 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
 
       case Opcode::End:
-        if (ctx->offset == end_offset)
+        if (ctx->offset == end_offset) {
           seen_end_opcode = true;
-        else
+          CALLBACK0(on_end_func);
+        } else {
           CALLBACK0(on_end_expr);
+        }
         break;
 
       case Opcode::I32Const: {

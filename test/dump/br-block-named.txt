@@ -78,4 +78,5 @@ Code Disassembly:
  000027: 0b                         |     end
  000028: 0b                         |   end
  000029: 0b                         | end
+ 00002a: 0b                         | end
 ;;; STDOUT ;;)

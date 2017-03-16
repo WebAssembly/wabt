@@ -425,4 +425,5 @@ Code Disassembly:
  00012b: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  000134: 66                         | f64.ge
  000135: 1a                         | drop
+ 000136: 0b                         | end
 ;;; STDOUT ;;)

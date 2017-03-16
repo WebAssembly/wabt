@@ -42,4 +42,5 @@ Code Disassembly:
 000015 func[0]:
  000017: 41 00                      | i32.const 0
  000019: 1a                         | drop
+ 00001a: 0b                         | end
 ;;; STDOUT ;;)

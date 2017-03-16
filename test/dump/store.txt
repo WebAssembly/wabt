@@ -161,4 +161,5 @@ Code Disassembly:
  000057: 41 00                      | i32.const 0
  000059: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  000062: 39 03 00                   | f64.store 3 0
+ 000065: 0b                         | end
 ;;; STDOUT ;;)
