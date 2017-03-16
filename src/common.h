@@ -25,11 +25,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <string>
+#include <type_traits>
+
 #include "config.h"
 
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define WABT_ZERO_MEMORY(var) memset(static_cast<void*>(&(var)), 0, sizeof(var))
+#define WABT_ZERO_MEMORY(var)                                          \
+  WABT_STATIC_ASSERT(                                                  \
+      std::is_pod<std::remove_reference<decltype(var)>::type>::value); \
+  memset(static_cast<void*>(&(var)), 0, sizeof(var))
+
 #define WABT_USE(x) static_cast<void>(x)
 
 #define WABT_UNKNOWN_OFFSET (static_cast<uint32_t>(~0))
@@ -60,6 +67,10 @@
 
 #define WABT_ENUM_COUNT(name) \
   (static_cast<int>(name::Last) - static_cast<int>(name::First) + 1)
+
+#define WABT_DISALLOW_COPY_AND_ASSIGN(type) \
+  type(const type&) = delete;               \
+  type& operator=(const type&) = delete;
 
 namespace wabt {
 
@@ -457,6 +468,17 @@ bool string_slice_is_empty(const StringSlice*);
 bool string_slices_are_equal(const StringSlice*, const StringSlice*);
 void destroy_string_slice(StringSlice*);
 Result read_file(const char* filename, char** out_data, size_t* out_size);
+
+inline std::string string_slice_to_string(const StringSlice& ss) {
+  return std::string(ss.start, ss.length);
+}
+
+inline StringSlice string_to_string_slice(const std::string& s) {
+  StringSlice ss;
+  ss.start = s.data();
+  ss.length = s.length();
+  return ss;
+}
 
 bool default_source_error_callback(const Location*,
                                    const char* error,

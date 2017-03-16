@@ -351,7 +351,7 @@ static void write_commands(Context* ctx, Script* script) {
 
     switch (command->type) {
       case CommandType::Module: {
-        Module* module = &command->module;
+        Module* module = command->module;
         char* filename = get_module_filename(ctx);
         write_location(ctx, &module->loc);
         write_separator(ctx);

@@ -612,7 +612,6 @@ WABT_DEFINE_VECTOR(export_info, ExportInfo);
 static void resolve_symbols(Context* ctx) {
   /* Create hashmap of all exported symbols from all inputs */
   BindingHash export_map;
-  WABT_ZERO_MEMORY(export_map);
   ExportInfoVector export_list;
   WABT_ZERO_MEMORY(export_list);
 
@@ -625,9 +624,8 @@ static void resolve_symbols(Context* ctx) {
       info->binary = binary;
 
       /* TODO(sbc): Handle duplicate names */
-      StringSlice name = dup_string_slice(export_->name);
-      Binding* binding = insert_binding(&export_map, &name);
-      binding->index = export_list.size - 1;
+      export_map.emplace(string_slice_to_string(export_->name),
+                         Binding(export_list.size - 1));
     }
   }
 
@@ -639,7 +637,7 @@ static void resolve_symbols(Context* ctx) {
     LinkerInputBinary* binary = &ctx->inputs.data[i];
     for (size_t j = 0; j < binary->function_imports.size; j++) {
       FunctionImport* import = &binary->function_imports.data[j];
-      int export_index = find_binding_index_by_name(&export_map, &import->name);
+      int export_index = export_map.find_index(import->name);
       if (export_index == -1) {
         if (!s_relocatable)
           WABT_FATAL("undefined symbol: " PRIstringslice "\n",
@@ -659,7 +657,6 @@ static void resolve_symbols(Context* ctx) {
   }
 
   destroy_export_info_vector(&export_list);
-  destroy_binding_hash(&export_map);
 }
 
 static void calculate_reloc_offsets(Context* ctx) {

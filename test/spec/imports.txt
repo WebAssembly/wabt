@@ -13,7 +13,7 @@ called host spectest.print(f64:24) =>
 called host spectest.print(f64:24) =>
 out/third_party/testsuite/imports.wast:89: assert_unlinkable passed:
   error: unknown module field "unknown"
-  error: @0x0000001e: on_import callback failed
+  error: @0x00000020: on_import callback failed
 out/third_party/testsuite/imports.wast:93: assert_unlinkable passed:
   error: unknown host function import "spectest.unknown"
   error: @0x00000024: on_import_func callback failed
@@ -85,7 +85,7 @@ out/third_party/testsuite/imports.wast:183: assert_unlinkable passed:
   error: @0x00000023: on_import_func callback failed
 out/third_party/testsuite/imports.wast:217: assert_unlinkable passed:
   error: unknown module field "unknown"
-  error: @0x00000018: on_import callback failed
+  error: @0x0000001b: on_import callback failed
 out/third_party/testsuite/imports.wast:221: assert_unlinkable passed:
   error: unknown host global import "spectest.unknown"
   error: @0x0000001f: on_import_global callback failed
@@ -109,15 +109,15 @@ out/third_party/testsuite/imports.wast:246: assert_unlinkable passed:
   error: @0x0000001e: on_import_global callback failed
 out/third_party/testsuite/imports.wast:288: assert_invalid passed:
   error: unknown import module ""
-  error: @0x0000000d: on_import callback failed
+  error: @0x00000011: on_import callback failed
 out/third_party/testsuite/imports.wast:292: assert_invalid passed:
   error: unknown import module ""
-  error: @0x0000000d: on_import callback failed
+  error: @0x00000011: on_import callback failed
 out/third_party/testsuite/imports.wast:296: assert_invalid passed:
   error: @0x0000000b: table count (2) must be 0 or 1
 out/third_party/testsuite/imports.wast:313: assert_unlinkable passed:
   error: unknown module field "unknown"
-  error: @0x00000018: on_import callback failed
+  error: @0x0000001c: on_import callback failed
 out/third_party/testsuite/imports.wast:317: assert_unlinkable passed:
   error: unknown host table import "spectest.unknown"
   error: @0x00000020: on_import_table callback failed
@@ -147,15 +147,15 @@ out/third_party/testsuite/imports.wast:351: assert_unlinkable passed:
   error: @0x0000001e: on_import_table callback failed
 out/third_party/testsuite/imports.wast:383: assert_invalid passed:
   error: unknown import module ""
-  error: @0x0000000d: on_import callback failed
+  error: @0x00000010: on_import callback failed
 out/third_party/testsuite/imports.wast:387: assert_invalid passed:
   error: unknown import module ""
-  error: @0x0000000d: on_import callback failed
+  error: @0x00000010: on_import callback failed
 out/third_party/testsuite/imports.wast:391: assert_invalid passed:
   error: @0x0000000b: memory count must be 0 or 1
 out/third_party/testsuite/imports.wast:406: assert_unlinkable passed:
   error: unknown module field "unknown"
-  error: @0x00000018: on_import callback failed
+  error: @0x0000001b: on_import callback failed
 out/third_party/testsuite/imports.wast:410: assert_unlinkable passed:
   error: unknown host memory import "spectest.unknown"
   error: @0x0000001f: on_import_memory callback failed

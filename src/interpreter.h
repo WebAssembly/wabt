@@ -153,6 +153,9 @@ struct InterpreterGlobal {
 };
 
 struct InterpreterImport {
+  InterpreterImport();
+  InterpreterImport(InterpreterImport&&);
+  InterpreterImport& operator=(InterpreterImport&&);
   ~InterpreterImport();
 
   StringSlice module_name;
@@ -184,6 +187,7 @@ typedef Result (*InterpreterHostFuncCallback)(
     void* user_data);
 
 struct InterpreterFunc {
+  WABT_DISALLOW_COPY_AND_ASSIGN(InterpreterFunc);
   InterpreterFunc(uint32_t sig_index, bool is_host)
       : sig_index(sig_index), is_host(is_host) {}
   virtual ~InterpreterFunc() {}
@@ -235,8 +239,11 @@ HostInterpreterFunc* InterpreterFunc::as_host() {
 struct InterpreterExport {
   InterpreterExport(const StringSlice& name, ExternalKind kind, uint32_t index)
       : name(name), kind(kind), index(index) {}
+  InterpreterExport(InterpreterExport&&);
+  InterpreterExport& operator=(InterpreterExport&&);
+  ~InterpreterExport();
 
-  StringSlice name; /* Owned by the export_bindings hash */
+  StringSlice name;
   ExternalKind kind;
   uint32_t index;
 };
@@ -268,6 +275,7 @@ struct InterpreterHostImportDelegate {
 };
 
 struct InterpreterModule {
+  WABT_DISALLOW_COPY_AND_ASSIGN(InterpreterModule);
   explicit InterpreterModule(bool is_host);
   InterpreterModule(const StringSlice& name, bool is_host);
   virtual ~InterpreterModule();
@@ -320,6 +328,8 @@ struct InterpreterEnvironmentMark {
 };
 
 struct InterpreterEnvironment {
+  InterpreterEnvironment();
+
   std::vector<std::unique_ptr<InterpreterModule>> modules;
   std::vector<InterpreterFuncSignature> sigs;
   std::vector<std::unique_ptr<InterpreterFunc>> funcs;
@@ -332,6 +342,8 @@ struct InterpreterEnvironment {
 };
 
 struct InterpreterThread {
+  InterpreterThread();
+
   InterpreterEnvironment* env;
   std::vector<InterpreterValue> value_stack;
   std::vector<uint32_t> call_stack;
@@ -357,7 +369,6 @@ bool func_signatures_are_equal(InterpreterEnvironment* env,
                                uint32_t sig_index_0,
                                uint32_t sig_index_1);
 
-void init_interpreter_environment(InterpreterEnvironment* env);
 void destroy_interpreter_environment(InterpreterEnvironment* env);
 InterpreterEnvironmentMark mark_interpreter_environment(
     InterpreterEnvironment* env);

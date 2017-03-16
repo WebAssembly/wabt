@@ -87,13 +87,13 @@
     append_##kind##_ptr_value(&(module)->kinds, &dummy);           \
   } while (0)
 
-#define INSERT_BINDING(module, kind, kinds, loc_, name)                       \
-  do                                                                          \
-    if ((name).start) {                                                       \
-      Binding* binding = insert_binding(&(module)->kind##_bindings, &(name)); \
-      binding->loc = loc_;                                                    \
-      binding->index = (module)->kinds.size - 1;                              \
-    }                                                                         \
+#define INSERT_BINDING(module, kind, kinds, loc_, name) \
+  do                                                    \
+    if ((name).start) {                                 \
+      (module)->kind##_bindings.emplace(                \
+          string_slice_to_string(name),                 \
+          Binding(loc_, (module)->kinds.size - 1));     \
+    }                                                   \
   while (0)
 
 #define APPEND_INLINE_EXPORT(module, Kind, loc_, value, index_)         \
@@ -152,7 +152,6 @@ ExprList join_exprs2(Location* loc,
                          Expr* expr2);
 
 FuncField* new_func_field(void) { return new FuncField(); }
-Func* new_func(void) { return new Func(); }
 Command* new_command(void) { return new Command(); }
 Module* new_module(void) { return new Module(); }
 Import* new_import(void) { return new Import(); }
@@ -269,15 +268,15 @@ static bool on_read_binary_error(uint32_t offset, const char* error,
 %destructor { destroy_expr($$); } <expr>
 %destructor { destroy_expr_list($$.first); } <expr_list>
 %destructor { destroy_func_fields($$); } <func_fields>
-%destructor { destroy_func($$); delete $$; } <func>
+%destructor { delete $$; } <func>
 %destructor { destroy_func_signature(&$$); } <func_sig>
 %destructor { destroy_func_type(&$$); } <func_type>
 %destructor { destroy_import($$); delete $$; } <import>
 %destructor { destroy_data_segment(&$$); } <data_segment>
-%destructor { destroy_module($$); delete $$; } <module>
+%destructor { delete $$; } <module>
 %destructor { destroy_raw_module(&$$); } <raw_module>
 %destructor { destroy_string_slice(&$$.text); } <literal>
-%destructor { destroy_script(&$$); } <script>
+%destructor { delete $$; } <script>
 %destructor { destroy_string_slice(&$$); } <text>
 %destructor { destroy_text_list(&$$); } <text_list>
 %destructor { destroy_type_vector(&$$); } <types>
@@ -759,7 +758,7 @@ func_body :
 ;
 func_info :
     func_fields {
-      $$ = new_func();
+      $$ = new Func();
       FuncField* field = $1;
 
       while (field) {
@@ -792,10 +791,9 @@ func_info :
             }
 
             append_type_value(types, &field->bound_type.type);
-            Binding* binding =
-                insert_binding(bindings, &field->bound_type.name);
-            binding->loc = field->bound_type.loc;
-            binding->index = types->size - 1;
+            bindings->emplace(string_slice_to_string(field->bound_type.name),
+                              Binding(field->bound_type.loc, types->size - 1));
+            destroy_string_slice(&field->bound_type.name);
             break;
           }
 
@@ -805,7 +803,7 @@ func_info :
         }
 
         /* we steal memory from the func field, but not the linked list nodes */
-        delete (field);
+        delete field;
         field = next;
       }
     }
@@ -985,15 +983,17 @@ import_kind :
     LPAR FUNC bind_var_opt type_use RPAR {
       $$ = new_import();
       $$->kind = ExternalKind::Func;
-      $$->func.name = $3;
-      $$->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
-      $$->func.decl.type_var = $4;
+      $$->func = new Func();
+      $$->func->name = $3;
+      $$->func->decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$->func->decl.type_var = $4;
     }
   | LPAR FUNC bind_var_opt func_sig RPAR {
       $$ = new_import();
       $$->kind = ExternalKind::Func;
-      $$->func.name = $3;
-      $$->func.decl.sig = $4;
+      $$->func = new Func();
+      $$->func->name = $3;
+      $$->func->decl.sig = $4;
     }
   | LPAR TABLE bind_var_opt table_sig RPAR {
       $$ = new_import();
@@ -1023,15 +1023,17 @@ import :
   | LPAR FUNC bind_var_opt inline_import type_use RPAR {
       $$ = $4;
       $$->kind = ExternalKind::Func;
-      $$->func.name = $3;
-      $$->func.decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
-      $$->func.decl.type_var = $5;
+      $$->func = new Func();
+      $$->func->name = $3;
+      $$->func->decl.flags = WABT_FUNC_DECLARATION_FLAG_HAS_FUNC_TYPE;
+      $$->func->decl.type_var = $5;
     }
   | LPAR FUNC bind_var_opt inline_import func_sig RPAR {
       $$ = $4;
       $$->kind = ExternalKind::Func;
-      $$->func.name = $3;
-      $$->func.decl.sig = $5;
+      $$->func = new Func();
+      $$->func->name = $3;
+      $$->func->decl.sig = $5;
     }
   | LPAR TABLE bind_var_opt inline_import table_sig RPAR {
       $$ = $4;
@@ -1179,12 +1181,11 @@ module_fields :
   | module_fields func {
       $$ = $1;
       ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, Func, func, @2, *$2.func);
-      append_implicit_func_declaration(&@2, $$, &field->func.decl);
-      APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->func);
+      APPEND_FIELD_TO_LIST($$, field, Func, func, @2, $2.func);
+      append_implicit_func_declaration(&@2, $$, &field->func->decl);
+      APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, field->func);
       INSERT_BINDING($$, func, funcs, @2, $2.func->name);
       APPEND_INLINE_EXPORT($$, Func, @2, $2, $$->funcs.size - 1);
-      delete $2.func;
     }
   | module_fields elem {
       $$ = $1;
@@ -1209,42 +1210,42 @@ module_fields :
   | module_fields import {
       $$ = $1;
       ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, Import, import, @2, *$2);
+      APPEND_FIELD_TO_LIST($$, field, Import, import, @2, $2);
       CHECK_IMPORT_ORDERING($$, func, funcs, @2);
       CHECK_IMPORT_ORDERING($$, table, tables, @2);
       CHECK_IMPORT_ORDERING($$, memory, memories, @2);
       CHECK_IMPORT_ORDERING($$, global, globals, @2);
       switch ($2->kind) {
         case ExternalKind::Func:
-          append_implicit_func_declaration(&@2, $$, &field->import.func.decl);
-          APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, &field->import.func);
-          INSERT_BINDING($$, func, funcs, @2, field->import.func.name);
+          append_implicit_func_declaration(&@2, $$, &field->import->func->decl);
+          APPEND_ITEM_TO_VECTOR($$, Func, func, funcs, field->import->func);
+          INSERT_BINDING($$, func, funcs, @2, field->import->func->name);
           $$->num_func_imports++;
           break;
         case ExternalKind::Table:
-          APPEND_ITEM_TO_VECTOR($$, Table, table, tables, &field->import.table);
-          INSERT_BINDING($$, table, tables, @2, field->import.table.name);
+          APPEND_ITEM_TO_VECTOR($$, Table, table, tables,
+                                &field->import->table);
+          INSERT_BINDING($$, table, tables, @2, field->import->table.name);
           $$->num_table_imports++;
           break;
         case ExternalKind::Memory:
           APPEND_ITEM_TO_VECTOR($$, Memory, memory, memories,
-                                &field->import.memory);
-          INSERT_BINDING($$, memory, memories, @2, field->import.memory.name);
+                                &field->import->memory);
+          INSERT_BINDING($$, memory, memories, @2, field->import->memory.name);
           $$->num_memory_imports++;
           break;
         case ExternalKind::Global:
           APPEND_ITEM_TO_VECTOR($$, Global, global, globals,
-                                &field->import.global);
-          INSERT_BINDING($$, global, globals, @2, field->import.global.name);
+                                &field->import->global);
+          INSERT_BINDING($$, global, globals, @2, field->import->global.name);
           $$->num_global_imports++;
           break;
       }
-      delete $2;
-      APPEND_ITEM_TO_VECTOR($$, Import, import, imports, &field->import);
+      APPEND_ITEM_TO_VECTOR($$, Import, import, imports, field->import);
     }
   | module_fields export {
       $$ = $1;
-      ModuleField* field = append_module_field($$);
+      ModuleField* field;
       APPEND_FIELD_TO_LIST($$, field, Export, export_, @2, $2);
       APPEND_ITEM_TO_VECTOR($$, Export, export, exports, &field->export_);
       INSERT_BINDING($$, export, exports, @2, $2.name);
@@ -1399,8 +1400,7 @@ cmd :
   | module {
       $$ = new_command();
       $$->type = CommandType::Module;
-      $$->module = *$1;
-      delete $1;
+      $$->module = $1;
     }
   | LPAR REGISTER quoted_text script_var_opt RPAR {
       $$ = new_command();
@@ -1441,27 +1441,24 @@ const_list :
 
 script :
     cmd_list {
-      WABT_ZERO_MEMORY($$);
-      $$.commands = $1;
+      $$ = new Script();
+      $$->commands = $1;
 
       int last_module_index = -1;
-      for (size_t i = 0; i < $$.commands.size; ++i) {
-        Command* command = &$$.commands.data[i];
+      for (size_t i = 0; i < $$->commands.size; ++i) {
+        Command* command = &$$->commands.data[i];
         Var* module_var = nullptr;
         switch (command->type) {
           case CommandType::Module: {
             last_module_index = i;
 
             /* Wire up module name bindings. */
-            Module* module = &command->module;
+            Module* module = command->module;
             if (module->name.length == 0)
               continue;
 
-            StringSlice module_name = dup_string_slice(module->name);
-            Binding* binding =
-                insert_binding(&$$.module_bindings, &module_name);
-            binding->loc = module->loc;
-            binding->index = i;
+            $$->module_bindings.emplace(string_slice_to_string(module->name),
+                                        Binding(module->loc, i));
             break;
           }
 
@@ -1661,8 +1658,8 @@ void append_implicit_func_declaration(Location* loc,
   decl->flags |= WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE;
 }
 
-Result parse_ast(AstLexer * lexer, struct Script * out_script,
-                 SourceErrorHandler * error_handler) {
+Result parse_ast(AstLexer* lexer, Script** out_script,
+                 SourceErrorHandler* error_handler) {
   AstParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.error_handler = error_handler;

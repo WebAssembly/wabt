@@ -138,7 +138,7 @@ union Token {
   Memory memory;
   Module* module;
   RawModule raw_module;
-  Script script;
+  Script* script;
   Table table;
   TextList text_list;
   TypeVector types;
@@ -149,7 +149,7 @@ union Token {
 };
 
 struct AstParser {
-  Script script;
+  Script* script;
   SourceErrorHandler* error_handler;
   int errors;
   /* Cached pointers to reallocated parser buffers, so they don't leak. */

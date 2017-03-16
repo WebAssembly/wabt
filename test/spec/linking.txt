@@ -12,7 +12,7 @@ out/third_party/testsuite/linking.wast:166: assert_unlinkable passed:
   error: @0x00000029: on_elem_segment_function_index callback failed
 out/third_party/testsuite/linking.wast:175: assert_unlinkable passed:
   error: unknown module field "mem"
-  error: @0x00000024: on_import callback failed
+  error: @0x00000027: on_import callback failed
 out/third_party/testsuite/linking.wast:187: assert_unlinkable passed:
   error: elem segment offset is out of bounds: 12 >= max value 10
   error: @0x00000030: on_elem_segment_function_index callback failed
@@ -25,7 +25,7 @@ out/third_party/testsuite/linking.wast:258: assert_unlinkable passed:
 out/third_party/testsuite/linking.wast:283: assert_unlinkable passed:
   error: duplicate export "print"
   error: unknown module field "tab"
-  error: @0x00000033: on_import callback failed
+  error: @0x00000037: on_import callback failed
 out/third_party/testsuite/linking.wast:294: assert_unlinkable passed:
   error: data segment is out of bounds: [327680, 327681) >= max value 327680
   error: @0x00000028: on_data_segment_data callback failed

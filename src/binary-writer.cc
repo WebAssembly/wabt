@@ -695,7 +695,7 @@ static Result write_module(Context* ctx, const Module* module) {
       switch (import->kind) {
         case ExternalKind::Func:
           write_u32_leb128(&ctx->stream, get_func_type_index_by_decl(
-                                             module, &import->func.decl),
+                                             module, &import->func->decl),
                            "import signature index");
           break;
         case ExternalKind::Table:
@@ -874,8 +874,7 @@ static Result write_module(Context* ctx, const Module* module) {
   }
 
   if (ctx->options->write_debug_names) {
-    StringSliceVector index_to_name;
-    WABT_ZERO_MEMORY(index_to_name);
+    std::vector<std::string> index_to_name;
 
     char desc[100];
     begin_custom_section(ctx, WABT_BINARY_SECTION_NAME, LEB_SECTION_SIZE_GUESS);
@@ -904,30 +903,28 @@ static Result write_module(Context* ctx, const Module* module) {
       write_u32_leb128(&ctx->stream, i, "function index");
       write_u32_leb128(&ctx->stream, num_params_and_locals, "num locals");
 
-      make_type_binding_reverse_mapping(
-        &func->decl.sig.param_types, &func->param_bindings, &index_to_name);
+      make_type_binding_reverse_mapping(func->decl.sig.param_types,
+                                        func->param_bindings, &index_to_name);
       for (size_t j = 0; j < num_params; ++j) {
-        StringSlice name = index_to_name.data[j];
+        const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
         write_u32_leb128(&ctx->stream, j, "local index");
-        write_str(&ctx->stream, name.start, name.length, PrintChars::Yes,
+        write_str(&ctx->stream, name.data(), name.length(), PrintChars::Yes,
                   desc);
       }
 
-      make_type_binding_reverse_mapping(
-        &func->local_types, &func->local_bindings, &index_to_name);
+      make_type_binding_reverse_mapping(func->local_types, func->local_bindings,
+                                        &index_to_name);
       for (size_t j = 0; j < num_locals; ++j) {
-        StringSlice name = index_to_name.data[j];
+        const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, num_params + j);
         write_u32_leb128(&ctx->stream, num_params + j, "local index");
-        write_str(&ctx->stream, name.start, name.length, PrintChars::Yes,
+        write_str(&ctx->stream, name.data(), name.length(), PrintChars::Yes,
                   desc);
       }
     }
     end_subsection(ctx);
     end_section(ctx);
-
-    destroy_string_slice_vector(&index_to_name);
   }
 
   if (ctx->options->relocatable) {

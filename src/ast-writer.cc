@@ -56,19 +56,21 @@ enum class NextChar {
 };
 
 struct Context {
-  Stream stream;
-  Result result;
-  int indent;
-  NextChar next_char;
-  int depth;
-  StringSliceVector index_to_name;
+  Context() { WABT_ZERO_MEMORY(stream); }
 
-  int func_index;
-  int global_index;
-  int export_index;
-  int table_index;
-  int memory_index;
-  int func_type_index;
+  Stream stream;
+  Result result = Result::Ok;
+  int indent = 0;
+  NextChar next_char = NextChar::None;
+  int depth = 0;
+  std::vector<std::string> index_to_name;
+
+  int func_index = 0;
+  int global_index = 0;
+  int export_index = 0;
+  int table_index = 0;
+  int memory_index = 0;
+  int func_type_index = 0;
 };
 
 }  // namespace
@@ -181,6 +183,12 @@ static void write_close_newline(Context* ctx) {
 
 static void write_close_space(Context* ctx) {
   write_close(ctx, NextChar::Space);
+}
+
+static void write_string(Context* ctx,
+                         const std::string& str,
+                         NextChar next_char) {
+  write_puts(ctx, str.c_str(), next_char);
 }
 
 static void write_string_slice(Context* ctx,
@@ -521,7 +529,7 @@ static void write_type_bindings(Context* ctx,
                                 const Func* func,
                                 const TypeVector* types,
                                 const BindingHash* bindings) {
-  make_type_binding_reverse_mapping(types, bindings, &ctx->index_to_name);
+  make_type_binding_reverse_mapping(*types, *bindings, &ctx->index_to_name);
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
@@ -535,12 +543,11 @@ static void write_type_bindings(Context* ctx,
       is_open = true;
     }
 
-    const StringSlice* name = &ctx->index_to_name.data[i];
-    bool has_name = !!name->start;
-    if (has_name)
-      write_string_slice(ctx, name, NextChar::Space);
+    const std::string& name = ctx->index_to_name[i];
+    if (!name.empty())
+      write_string(ctx, name, NextChar::Space);
     write_type(ctx, types->data[i], NextChar::Space);
-    if (has_name) {
+    if (!name.empty()) {
       write_close_space(ctx);
       is_open = false;
     }
@@ -636,14 +643,14 @@ static void write_import(Context* ctx, const Import* import) {
   switch (import->kind) {
     case ExternalKind::Func:
       write_open_space(ctx, "func");
-      write_string_slice_or_index(ctx, &import->func.name, ctx->func_index++,
+      write_string_slice_or_index(ctx, &import->func->name, ctx->func_index++,
                                   NextChar::Space);
-      if (decl_has_func_type(&import->func.decl)) {
+      if (decl_has_func_type(&import->func->decl)) {
         write_open_space(ctx, "type");
-        write_var(ctx, &import->func.decl.type_var, NextChar::None);
+        write_var(ctx, &import->func->decl.type_var, NextChar::None);
         write_close_space(ctx);
       } else {
-        write_func_sig_space(ctx, &import->func.decl.sig);
+        write_func_sig_space(ctx, &import->func->decl.sig);
       }
       write_close_space(ctx);
       break;
@@ -698,13 +705,13 @@ static void write_module(Context* ctx, const Module* module) {
        field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Func:
-        write_func(ctx, module, &field->func);
+        write_func(ctx, module, field->func);
         break;
       case ModuleFieldType::Global:
         write_global(ctx, &field->global);
         break;
       case ModuleFieldType::Import:
-        write_import(ctx, &field->import);
+        write_import(ctx, field->import);
         break;
       case ModuleFieldType::Export:
         write_export(ctx, &field->export_);
@@ -736,13 +743,8 @@ static void write_module(Context* ctx, const Module* module) {
 
 Result write_ast(Writer* writer, const Module* module) {
   Context ctx;
-  WABT_ZERO_MEMORY(ctx);
-  ctx.result = Result::Ok;
   init_stream(&ctx.stream, writer, nullptr);
   write_module(&ctx, module);
-  /* the memory for the actual string slice is shared with the module, so we
-   * only need to free the vector */
-  destroy_string_slice_vector(&ctx.index_to_name);
   return ctx.result;
 }
 

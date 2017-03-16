@@ -1750,7 +1750,6 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
     in_str(ctx, &module_name, "import module name");
     StringSlice field_name;
     in_str(ctx, &field_name, "import field name");
-    CALLBACK(on_import, i, module_name, field_name);
 
     uint32_t kind;
     in_u32_leb128(ctx, &kind, "import kind");
@@ -1760,6 +1759,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         in_u32_leb128(ctx, &sig_index, "import signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                            "invalid import signature index");
+        CALLBACK(on_import, i, module_name, field_name);
         CALLBACK(on_import_func, i, module_name, field_name,
                  ctx->num_func_imports, sig_index);
         ctx->num_func_imports++;
@@ -1770,6 +1770,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         Type elem_type;
         Limits elem_limits;
         read_table(ctx, &elem_type, &elem_limits);
+        CALLBACK(on_import, i, module_name, field_name);
         CALLBACK(on_import_table, i, module_name, field_name,
                  ctx->num_table_imports, elem_type, &elem_limits);
         ctx->num_table_imports++;
@@ -1779,6 +1780,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
       case ExternalKind::Memory: {
         Limits page_limits;
         read_memory(ctx, &page_limits);
+        CALLBACK(on_import, i, module_name, field_name);
         CALLBACK(on_import_memory, i, module_name, field_name,
                  ctx->num_memory_imports, &page_limits);
         ctx->num_memory_imports++;
@@ -1789,6 +1791,7 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         Type type;
         bool mutable_;
         read_global_header(ctx, &type, &mutable_);
+        CALLBACK(on_import, i, module_name, field_name);
         CALLBACK(on_import_global, i, module_name, field_name,
                  ctx->num_global_imports, type, mutable_);
         ctx->num_global_imports++;
