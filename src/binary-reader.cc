@@ -1157,7 +1157,7 @@ static void read_global_header(Context* ctx,
   uint8_t mutable_;
   in_type(ctx, &global_type, "global type");
   RAISE_ERROR_UNLESS(is_concrete_type(global_type),
-                     "invalid global type: %#x", global_type);
+                     "invalid global type: %#x", static_cast<int>(global_type));
 
   in_u8(ctx, &mutable_, "global mutability");
   RAISE_ERROR_UNLESS(mutable_ <= 1, "global mutability must be 0 or 1");
