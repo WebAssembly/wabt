@@ -35,6 +35,9 @@ struct Binding {
   int index;
 };
 
+// This class derives from a C++ container, which is usually not advisable
+// because they don't have virtual destructors. So don't delete a BindingHash
+// object through a pointer to std::unordered_multimap.
 class BindingHash : public std::unordered_multimap<std::string, Binding> {
  public:
   typedef void (*DuplicateCallback)(const value_type& a,
