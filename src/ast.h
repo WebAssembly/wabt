@@ -144,7 +144,9 @@ struct FuncDeclaration {
 };
 
 struct Func {
+  WABT_DISALLOW_COPY_AND_ASSIGN(Func);
   Func();
+  ~Func();
 
   StringSlice name;
   FuncDeclaration decl;
@@ -253,7 +255,9 @@ struct ModuleField {
 };
 
 struct Module {
+  WABT_DISALLOW_COPY_AND_ASSIGN(Module);
   Module();
+  ~Module();
 
   Location loc;
   StringSlice name;
@@ -373,6 +377,8 @@ struct Command {
 WABT_DEFINE_VECTOR(command, Command);
 
 struct Script {
+  WABT_DISALLOW_COPY_AND_ASSIGN(Script);
+  Script();
   ~Script();
 
   CommandVector commands;
@@ -449,7 +455,6 @@ Expr* new_unreachable_expr(void);
 
 /* destruction functions. not needed unless you're creating your own AST
  elements */
-void destroy_script(struct Script*);
 void destroy_action(struct Action*);
 void destroy_block(struct Block*);
 void destroy_command_vector_and_elements(CommandVector*);
@@ -462,10 +467,8 @@ void destroy_expr_list(Expr*);
 void destroy_func_declaration(FuncDeclaration*);
 void destroy_func_signature(FuncSignature*);
 void destroy_func_type(FuncType*);
-void destroy_func(Func*);
 void destroy_import(Import*);
 void destroy_memory(Memory*);
-void destroy_module(Module*);
 void destroy_raw_module(RawModule*);
 void destroy_table(Table*);
 void destroy_var_vector_and_elements(VarVector*);

@@ -67,6 +67,42 @@ InterpreterThread::InterpreterThread()
       call_stack_end(nullptr),
       pc(0) {}
 
+InterpreterImport::InterpreterImport() 
+  : kind(ExternalKind::Func) {
+  WABT_ZERO_MEMORY(module_name);
+  WABT_ZERO_MEMORY(field_name);
+  WABT_ZERO_MEMORY(func.sig_index);
+}
+
+InterpreterImport::InterpreterImport(InterpreterImport&& other) {
+  *this = std::move(other);
+}
+
+InterpreterImport& InterpreterImport::operator=(InterpreterImport&& other) {
+  kind = other.kind;
+  module_name = other.module_name;
+  WABT_ZERO_MEMORY(other.module_name);
+  field_name = other.field_name;
+  WABT_ZERO_MEMORY(other.field_name);
+  switch (kind) {
+    case ExternalKind::Func:
+      func.sig_index = other.func.sig_index;
+      break;
+    case ExternalKind::Table:
+      table.limits = other.table.limits;
+      break;
+    case ExternalKind::Memory:
+      memory.limits = other.memory.limits;
+      break;
+    case ExternalKind::Global:
+      global.type = other.global.type;
+      global.mutable_ = other.global.mutable_;
+      break;
+  }
+  return *this;
+}
+
+
 InterpreterImport::~InterpreterImport() {
   destroy_string_slice(&module_name);
   destroy_string_slice(&field_name);
@@ -180,7 +216,6 @@ HostInterpreterModule* append_host_module(InterpreterEnvironment* env,
 void init_interpreter_thread(InterpreterEnvironment* env,
                              InterpreterThread* thread,
                              InterpreterThreadOptions* options) {
-  WABT_ZERO_MEMORY(*thread);
   thread->value_stack.resize(options->value_stack_size);
   thread->call_stack.resize(options->call_stack_size);
   thread->env = env;
@@ -203,7 +238,7 @@ InterpreterResult push_thread_value(InterpreterThread* thread,
 
 InterpreterExport* get_interpreter_export_by_name(InterpreterModule* module,
                                                   const StringSlice* name) {
-  int field_index = find_binding_index_by_name(module->export_bindings, *name);
+  int field_index = module->export_bindings.find_index(*name);
   if (field_index < 0)
     return nullptr;
   return &module->exports[field_index];

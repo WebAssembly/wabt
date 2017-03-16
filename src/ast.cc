@@ -23,12 +23,12 @@ namespace wabt {
 
 int get_index_from_var(const BindingHash* hash, const Var* var) {
   if (var->type == VarType::Name)
-    return find_binding_index_by_name(*hash, var->name);
+    return hash->find_index(var->name);
   return static_cast<int>(var->index);
 }
 
 ExportPtr get_export_by_name(const Module* module, const StringSlice* name) {
-  int index = find_binding_index_by_name(module->export_bindings, *name);
+  int index = module->export_bindings.find_index(*name);
   if (index == -1)
     return nullptr;
   return module->exports.data[index];
@@ -58,11 +58,11 @@ int get_local_index_by_var(const Func* func, const Var* var) {
   if (var->type == VarType::Index)
     return static_cast<int>(var->index);
 
-  int result = find_binding_index_by_name(func->param_bindings, var->name);
+  int result = func->param_bindings.find_index(var->name);
   if (result != -1)
     return result;
 
-  result = find_binding_index_by_name(func->local_bindings, var->name);
+  result = func->local_bindings.find_index(var->name);
   if (result == -1)
     return result;
 
@@ -321,11 +321,11 @@ Func::Func() : first_expr(nullptr) {
   WABT_ZERO_MEMORY(local_types);
 }
 
-void destroy_func(Func* func) {
-  destroy_string_slice(&func->name);
-  destroy_func_declaration(&func->decl);
-  destroy_type_vector(&func->local_types);
-  destroy_expr_list(func->first_expr);
+Func::~Func() {
+  destroy_string_slice(&name);
+  destroy_func_declaration(&decl);
+  destroy_type_vector(&local_types);
+  destroy_expr_list(first_expr);
 }
 
 void destroy_global(Global* global) {
@@ -338,7 +338,6 @@ void destroy_import(Import* import) {
   destroy_string_slice(&import->field_name);
   switch (import->kind) {
     case ExternalKind::Func:
-      destroy_func(import->func);
       delete import->func;
       break;
     case ExternalKind::Table:
@@ -380,7 +379,6 @@ void destroy_table(Table* table) {
 static void destroy_module_field(ModuleField* field) {
   switch (field->type) {
     case ModuleFieldType::Func:
-      destroy_func(field->func);
       delete field->func;
       break;
     case ModuleFieldType::Global:
@@ -435,10 +433,10 @@ Module::Module()
   WABT_ZERO_MEMORY(data_segments);
 }
 
-void destroy_module(Module* module) {
-  destroy_string_slice(&module->name);
+Module::~Module() {
+  destroy_string_slice(&name);
 
-  ModuleField* field = module->first_field;
+  ModuleField* field = first_field;
   while (field) {
     ModuleField* next_field = field->next;
     destroy_module_field(field);
@@ -448,20 +446,19 @@ void destroy_module(Module* module) {
 
   /* everything that follows shares data with the module fields above, so we
    only need to destroy the containing vectors */
-  destroy_func_ptr_vector(&module->funcs);
-  destroy_global_ptr_vector(&module->globals);
-  destroy_import_ptr_vector(&module->imports);
-  destroy_export_ptr_vector(&module->exports);
-  destroy_func_type_ptr_vector(&module->func_types);
-  destroy_table_ptr_vector(&module->tables);
-  destroy_elem_segment_ptr_vector(&module->elem_segments);
-  destroy_memory_ptr_vector(&module->memories);
-  destroy_data_segment_ptr_vector(&module->data_segments);
+  destroy_func_ptr_vector(&funcs);
+  destroy_global_ptr_vector(&globals);
+  destroy_import_ptr_vector(&imports);
+  destroy_export_ptr_vector(&exports);
+  destroy_func_type_ptr_vector(&func_types);
+  destroy_table_ptr_vector(&tables);
+  destroy_elem_segment_ptr_vector(&elem_segments);
+  destroy_memory_ptr_vector(&memories);
+  destroy_data_segment_ptr_vector(&data_segments);
 }
 
 void destroy_raw_module(RawModule* raw) {
   if (raw->type == RawModuleType::Text) {
-    destroy_module(raw->text);
     delete raw->text;
   } else {
     destroy_string_slice(&raw->binary.name);
@@ -485,7 +482,6 @@ void destroy_action(Action* action) {
 void destroy_command(Command* command) {
   switch (command->type) {
     case CommandType::Module:
-      destroy_module(command->module);
       delete command->module;
       break;
     case CommandType::Action:
@@ -535,6 +531,10 @@ void destroy_elem_segment(ElemSegment* elem) {
   destroy_var(&elem->table_var);
   destroy_expr_list(elem->offset);
   WABT_DESTROY_VECTOR_AND_ELEMENTS(elem->vars, var);
+}
+
+Script::Script() {
+  WABT_ZERO_MEMORY(commands);
 }
 
 Script::~Script() {

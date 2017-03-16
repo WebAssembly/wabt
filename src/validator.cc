@@ -746,7 +746,7 @@ static void on_duplicate_binding(const BindingHash::value_type& a,
 
 static void check_duplicate_export_bindings(Context* ctx,
                                             const Module* module) {
-  find_duplicate_bindings(module->export_bindings, on_duplicate_binding, ctx);
+  module->export_bindings.find_duplicates(on_duplicate_binding, ctx);
 }
 
 static void check_module(Context* ctx, const Module* module) {

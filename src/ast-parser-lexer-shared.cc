@@ -80,7 +80,6 @@ void destroy_optional_export(OptionalExport* export_) {
 
 void destroy_exported_func(ExportedFunc* exported_func) {
   destroy_optional_export(&exported_func->export_);
-  destroy_func(exported_func->func);
   delete exported_func->func;
 }
 

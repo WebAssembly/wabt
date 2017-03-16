@@ -153,6 +153,9 @@ struct InterpreterGlobal {
 };
 
 struct InterpreterImport {
+  InterpreterImport();
+  InterpreterImport(InterpreterImport&&);
+  InterpreterImport& operator=(InterpreterImport&&);
   ~InterpreterImport();
 
   StringSlice module_name;
@@ -184,6 +187,7 @@ typedef Result (*InterpreterHostFuncCallback)(
     void* user_data);
 
 struct InterpreterFunc {
+  WABT_DISALLOW_COPY_AND_ASSIGN(InterpreterFunc);
   InterpreterFunc(uint32_t sig_index, bool is_host)
       : sig_index(sig_index), is_host(is_host) {}
   virtual ~InterpreterFunc() {}
@@ -235,8 +239,6 @@ HostInterpreterFunc* InterpreterFunc::as_host() {
 struct InterpreterExport {
   InterpreterExport(const StringSlice& name, ExternalKind kind, uint32_t index)
       : name(name), kind(kind), index(index) {}
-  InterpreterExport(const InterpreterExport&) = delete;
-  InterpreterExport& operator=(const InterpreterExport&) = delete;
   InterpreterExport(InterpreterExport&&);
   InterpreterExport& operator=(InterpreterExport&&);
   ~InterpreterExport();
@@ -273,6 +275,7 @@ struct InterpreterHostImportDelegate {
 };
 
 struct InterpreterModule {
+  WABT_DISALLOW_COPY_AND_ASSIGN(InterpreterModule);
   explicit InterpreterModule(bool is_host);
   InterpreterModule(const StringSlice& name, bool is_host);
   virtual ~InterpreterModule();

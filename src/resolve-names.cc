@@ -84,7 +84,7 @@ static void check_duplicate_bindings(Context* ctx,
   FindDuplicateBindingContext fdbc;
   fdbc.ctx = ctx;
   fdbc.desc = desc;
-  find_duplicate_bindings(*bindings, on_duplicate_binding, &fdbc);
+  bindings->find_duplicates(on_duplicate_binding, &fdbc);
 }
 
 static void resolve_label_var(Context* ctx, Var* var) {

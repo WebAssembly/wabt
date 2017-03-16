@@ -152,7 +152,6 @@ ExprList join_exprs2(Location* loc,
                          Expr* expr2);
 
 FuncField* new_func_field(void) { return new FuncField(); }
-Func* new_func(void) { return new Func(); }
 Command* new_command(void) { return new Command(); }
 Module* new_module(void) { return new Module(); }
 Import* new_import(void) { return new Import(); }
@@ -269,12 +268,12 @@ static bool on_read_binary_error(uint32_t offset, const char* error,
 %destructor { destroy_expr($$); } <expr>
 %destructor { destroy_expr_list($$.first); } <expr_list>
 %destructor { destroy_func_fields($$); } <func_fields>
-%destructor { destroy_func($$); delete $$; } <func>
+%destructor { delete $$; } <func>
 %destructor { destroy_func_signature(&$$); } <func_sig>
 %destructor { destroy_func_type(&$$); } <func_type>
 %destructor { destroy_import($$); delete $$; } <import>
 %destructor { destroy_data_segment(&$$); } <data_segment>
-%destructor { destroy_module($$); delete $$; } <module>
+%destructor { delete $$; } <module>
 %destructor { destroy_raw_module(&$$); } <raw_module>
 %destructor { destroy_string_slice(&$$.text); } <literal>
 %destructor { delete $$; } <script>
@@ -759,7 +758,7 @@ func_body :
 ;
 func_info :
     func_fields {
-      $$ = new_func();
+      $$ = new Func();
       FuncField* field = $1;
 
       while (field) {

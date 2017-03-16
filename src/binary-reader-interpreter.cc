@@ -68,32 +68,43 @@ struct Label {
 WABT_DEFINE_VECTOR(label, Label);
 
 struct Context {
-  BinaryReader* reader;
-  BinaryErrorHandler* error_handler;
-  InterpreterEnvironment* env;
-  DefinedInterpreterModule* module;
-  DefinedInterpreterFunc* current_func;
+  Context() {
+    WABT_ZERO_MEMORY(typechecker);
+    WABT_ZERO_MEMORY(label_stack);
+    WABT_ZERO_MEMORY(func_fixups);
+    WABT_ZERO_MEMORY(depth_fixups);
+    WABT_ZERO_MEMORY(istream_writer);
+    WABT_ZERO_MEMORY(sig_index_mapping);
+    WABT_ZERO_MEMORY(func_index_mapping);
+    WABT_ZERO_MEMORY(global_index_mapping);
+  }
+
+  BinaryReader* reader = nullptr;
+  BinaryErrorHandler* error_handler = nullptr;
+  InterpreterEnvironment* env = nullptr;
+  DefinedInterpreterModule* module = nullptr;
+  DefinedInterpreterFunc* current_func = nullptr;
   TypeChecker typechecker;
   LabelVector label_stack;
   Uint32VectorVector func_fixups;
   Uint32VectorVector depth_fixups;
   MemoryWriter istream_writer;
-  uint32_t istream_offset;
+  uint32_t istream_offset = 0;
   /* mappings from module index space to env index space; this won't just be a
    * translation, because imported values will be resolved as well */
   Uint32Vector sig_index_mapping;
   Uint32Vector func_index_mapping;
   Uint32Vector global_index_mapping;
 
-  uint32_t num_func_imports;
-  uint32_t num_global_imports;
+  uint32_t num_func_imports = 0;
+  uint32_t num_global_imports = 0;
 
   /* values cached in the Context so they can be shared between callbacks */
   InterpreterTypedValue init_expr_value;
-  uint32_t table_offset;
-  bool is_host_import;
-  HostInterpreterModule* host_import_module;
-  uint32_t import_env_index;
+  uint32_t table_offset = 0;
+  bool is_host_import = false;
+  HostInterpreterModule* host_import_module = nullptr;
+  uint32_t import_env_index = 0;
 };
 
 }  // namespace
@@ -392,8 +403,8 @@ static Result on_import(uint32_t index,
   InterpreterImport* import = &ctx->module->imports[index];
   import->module_name = dup_string_slice(module_name);
   import->field_name = dup_string_slice(field_name);
-  int module_index = find_binding_index_by_name(
-      ctx->env->registered_module_bindings, import->module_name);
+  int module_index =
+      ctx->env->registered_module_bindings.find_index(import->module_name);
   if (module_index < 0) {
     print_error(ctx, "unknown import module \"" PRIstringslice "\"",
                 WABT_PRINTF_STRING_SLICE_ARG(import->module_name));
@@ -469,7 +480,7 @@ static Result append_export(Context* ctx,
                             ExternalKind kind,
                             uint32_t item_index,
                             StringSlice name) {
-  if (find_binding_index_by_name(module->export_bindings, name) != -1) {
+  if (module->export_bindings.find_index(name) != -1) {
     print_error(ctx, "duplicate export \"" PRIstringslice "\"",
                 WABT_PRINTF_STRING_SLICE_ARG(name));
     return Result::Error;
@@ -1420,7 +1431,6 @@ Result read_binary_interpreter(InterpreterEnvironment* env,
       new DefinedInterpreterModule(env->istream.size);
   env->modules.emplace_back(module);
 
-  WABT_ZERO_MEMORY(ctx);
   WABT_ZERO_MEMORY(reader);
 
   ctx.reader = &reader;

@@ -107,7 +107,7 @@ else ()
   endif ()
 
   if (COMPILER_IS_CLANG)
-    add_definitions(-fcolor-diagnostics)
+    # add_definitions(-fcolor-diagnostics)
   endif ()
 
   if (NOT EMSCRIPTEN)

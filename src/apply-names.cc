@@ -35,14 +35,21 @@ typedef Label* LabelPtr;
 WABT_DEFINE_VECTOR(label_ptr, LabelPtr);
 
 struct Context {
-  Module* module;
-  Func* current_func;
+  Context();
+
+  Module* module = nullptr;
+  Func* current_func = nullptr;
   ExprVisitor visitor;
   /* mapping from param index to its name, if any, for the current func */
   std::vector<std::string> param_index_to_name;
   std::vector<std::string> local_index_to_name;
   LabelPtrVector labels;
 };
+
+Context::Context() {
+  WABT_ZERO_MEMORY(visitor);
+  WABT_ZERO_MEMORY(labels);
+}
 
 void push_label(Context* ctx, Label* label) {
   append_label_ptr_value(&ctx->labels, &label);
@@ -319,7 +326,6 @@ Result visit_module(Context* ctx, Module* module) {
 
 Result apply_names(Module* module) {
   Context ctx;
-  WABT_ZERO_MEMORY(ctx);
   ctx.module = module;
   ctx.visitor.user_data = &ctx;
   ctx.visitor.begin_block_expr = begin_block_expr;

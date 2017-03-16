@@ -640,7 +640,12 @@ enum class ActionType {
 };
 
 struct Action {
-  ActionType type;
+  Action() {
+    WABT_ZERO_MEMORY(module_name);
+    WABT_ZERO_MEMORY(field_name);
+  }
+
+  ActionType type = ActionType::Invoke;
   StringSlice module_name;
   StringSlice field_name;
   std::vector<InterpreterTypedValue> args;
@@ -956,7 +961,6 @@ static Result parse_const_vector(
 }
 
 static Result parse_action(Context* ctx, Action* out_action) {
-  WABT_ZERO_MEMORY(*out_action);
   EXPECT_KEY("action");
   EXPECT("{");
   EXPECT_KEY("type");
@@ -1042,8 +1046,7 @@ static Result run_action(Context* ctx,
 
   int module_index;
   if (!string_slice_is_empty(&action->module_name)) {
-    module_index = find_binding_index_by_name(ctx->env.module_bindings,
-                                              action->module_name);
+    module_index = ctx->env.module_bindings.find_index(action->module_name);
   } else {
     module_index = static_cast<int>(ctx->env.modules.size()) - 1;
   }
@@ -1445,7 +1448,6 @@ static Result parse_command(Context* ctx) {
     on_module_command(ctx, filename, name);
   } else if (match(ctx, "\"action\"")) {
     Action action;
-    WABT_ZERO_MEMORY(action);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1516,7 +1518,6 @@ static Result parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_return\"")) {
     Action action;
     std::vector<InterpreterTypedValue> expected;
-    WABT_ZERO_MEMORY(action);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1529,7 +1530,6 @@ static Result parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_return_nan\"")) {
     Action action;
     TypeVector expected;
-    WABT_ZERO_MEMORY(action);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1544,7 +1544,6 @@ static Result parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_trap\"")) {
     Action action;
     StringSlice text;
-    WABT_ZERO_MEMORY(action);
     WABT_ZERO_MEMORY(text);
 
     EXPECT(",");
@@ -1557,7 +1556,6 @@ static Result parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_exhaustion\"")) {
     Action action;
     StringSlice text;
-    WABT_ZERO_MEMORY(action);
     WABT_ZERO_MEMORY(text);
 
     EXPECT(",");

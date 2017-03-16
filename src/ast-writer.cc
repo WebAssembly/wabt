@@ -56,19 +56,21 @@ enum class NextChar {
 };
 
 struct Context {
+  Context() { WABT_ZERO_MEMORY(stream); }
+
   Stream stream;
-  Result result;
-  int indent;
-  NextChar next_char;
-  int depth;
+  Result result = Result::Ok;
+  int indent = 0;
+  NextChar next_char = NextChar::None;
+  int depth = 0;
   std::vector<std::string> index_to_name;
 
-  int func_index;
-  int global_index;
-  int export_index;
-  int table_index;
-  int memory_index;
-  int func_type_index;
+  int func_index = 0;
+  int global_index = 0;
+  int export_index = 0;
+  int table_index = 0;
+  int memory_index = 0;
+  int func_type_index = 0;
 };
 
 }  // namespace
@@ -741,8 +743,6 @@ static void write_module(Context* ctx, const Module* module) {
 
 Result write_ast(Writer* writer, const Module* module) {
   Context ctx;
-  WABT_ZERO_MEMORY(ctx);
-  ctx.result = Result::Ok;
   init_stream(&ctx.stream, writer, nullptr);
   write_module(&ctx, module);
   return ctx.result;

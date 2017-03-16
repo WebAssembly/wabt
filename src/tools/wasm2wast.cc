@@ -172,7 +172,6 @@ int main(int argc, char** argv) {
           close_file_writer(&file_writer);
         }
       }
-      destroy_module(&module);
     }
     delete[] data;
   }

@@ -1118,8 +1118,6 @@ Result read_binary_ast(const void* data,
 
   Result result = read_binary(data, size, &reader, 1, options);
   WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx.label_stack, label_node);
-  if (WABT_FAILED(result))
-    destroy_module(out_module);
   return result;
 }
 
