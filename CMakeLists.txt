@@ -214,6 +214,8 @@ endif ()
 add_custom_target(everything)
 
 add_library(libwabt STATIC
+  src/hash-util.cc
+  src/string-view.cc
   src/ast.cc
   src/ast-parser-lexer-shared.cc
   ${AST_LEXER_GEN_C}
@@ -303,28 +305,41 @@ if (NOT EMSCRIPTEN)
     DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
     "sexpr-wasm" "wasm-wast")
 
-  # hexfloat-test
   find_package(Threads)
-  if (BUILD_TESTS AND CMAKE_USE_PTHREADS_INIT)
+  if (BUILD_TESTS)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
       message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
     endif ()
 
-    set(HEXFLOAT_TEST_SRCS
-      src/literal.cc
-      test/hexfloat.cc
-      third_party/gtest/googletest/src/gtest-all.cc
-      third_party/gtest/googletest/src/gtest_main.cc
-    )
     include_directories(
       third_party/gtest/googletest
       third_party/gtest/googletest/include
     )
+
+    # gtest
+    add_library(libgtest STATIC
+      third_party/gtest/googletest/src/gtest-all.cc
+    )
+
+    # hexfloat-test
+    set(HEXFLOAT_TEST_SRCS
+      src/literal.cc
+      test/hexfloat.cc
+      third_party/gtest/googletest/src/gtest_main.cc
+    )
     add_executable(hexfloat_test ${HEXFLOAT_TEST_SRCS})
     add_dependencies(everything hexfloat_test)
-    target_link_libraries(hexfloat_test ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(hexfloat_test libgtest ${CMAKE_THREAD_LIBS_INIT})
     set_property(TARGET hexfloat_test PROPERTY CXX_STANDARD 11)
     set_property(TARGET hexfloat_test PROPERTY CXX_STANDARD_REQUIRED ON)
+
+    # wabt-unittests
+    set(UNITTESTS_SRCS
+      src/test-string-view.cc
+      third_party/gtest/googletest/src/gtest_main.cc
+    )
+    wabt_executable(wabt-unittests ${UNITTESTS_SRCS})
+    target_link_libraries(wabt-unittests libgtest ${CMAKE_THREAD_LIBS_INIT})
   endif ()
 
   # test running
