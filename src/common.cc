@@ -31,6 +31,9 @@
 
 namespace wabt {
 
+Reloc::Reloc(RelocType type, size_t offset, uint32_t index, int32_t addend)
+    : type(type), offset(offset), index(index), addend(addend) {}
+
 OpcodeInfo g_opcode_info[kOpcodeCount];
 
 /* TODO(binji): It's annoying to have to have an initializer function, but it

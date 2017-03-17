@@ -27,11 +27,11 @@ int get_index_from_var(const BindingHash* hash, const Var* var) {
   return static_cast<int>(var->index);
 }
 
-ExportPtr get_export_by_name(const Module* module, const StringSlice* name) {
+Export* get_export_by_name(const Module* module, const StringSlice* name) {
   int index = module->export_bindings.find_index(*name);
   if (index == -1)
     return nullptr;
-  return module->exports.data[index];
+  return module->exports[index];
 }
 
 int get_func_index_by_var(const Module* module, const Var* var) {
@@ -67,51 +67,51 @@ int get_local_index_by_var(const Func* func, const Var* var) {
     return result;
 
   /* the locals start after all the params */
-  return func->decl.sig.param_types.size + result;
+  return func->decl.sig.param_types.size() + result;
 }
 
 int get_module_index_by_var(const Script* script, const Var* var) {
   return get_index_from_var(&script->module_bindings, var);
 }
 
-FuncPtr get_func_by_var(const Module* module, const Var* var) {
+Func* get_func_by_var(const Module* module, const Var* var) {
   int index = get_index_from_var(&module->func_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->funcs.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->funcs.size())
     return nullptr;
-  return module->funcs.data[index];
+  return module->funcs[index];
 }
 
-GlobalPtr get_global_by_var(const Module* module, const Var* var) {
+Global* get_global_by_var(const Module* module, const Var* var) {
   int index = get_index_from_var(&module->global_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->globals.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->globals.size())
     return nullptr;
-  return module->globals.data[index];
+  return module->globals[index];
 }
 
-TablePtr get_table_by_var(const Module* module, const Var* var) {
+Table* get_table_by_var(const Module* module, const Var* var) {
   int index = get_index_from_var(&module->table_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->tables.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->tables.size())
     return nullptr;
-  return module->tables.data[index];
+  return module->tables[index];
 }
 
-MemoryPtr get_memory_by_var(const Module* module, const Var* var) {
+Memory* get_memory_by_var(const Module* module, const Var* var) {
   int index = get_index_from_var(&module->memory_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->memories.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->memories.size())
     return nullptr;
-  return module->memories.data[index];
+  return module->memories[index];
 }
 
-FuncTypePtr get_func_type_by_var(const Module* module, const Var* var) {
+FuncType* get_func_type_by_var(const Module* module, const Var* var) {
   int index = get_index_from_var(&module->func_type_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->func_types.size)
+  if (index < 0 || static_cast<size_t>(index) >= module->func_types.size())
     return nullptr;
-  return module->func_types.data[index];
+  return module->func_types[index];
 }
 
 int get_func_type_index_by_sig(const Module* module, const FuncSignature* sig) {
-  for (size_t i = 0; i < module->func_types.size; ++i)
-    if (signatures_are_equal(&module->func_types.data[i]->sig, sig))
+  for (size_t i = 0; i < module->func_types.size(); ++i)
+    if (signatures_are_equal(&module->func_types[i]->sig, sig))
       return i;
   return -1;
 }
@@ -126,21 +126,21 @@ int get_func_type_index_by_decl(const Module* module,
 }
 
 Module* get_first_module(const Script* script) {
-  for (size_t i = 0; i < script->commands.size; ++i) {
-    Command* command = &script->commands.data[i];
-    if (command->type == CommandType::Module)
-      return command->module;
+  for (size_t i = 0; i < script->commands.size(); ++i) {
+    const Command& command = *script->commands[i].get();
+    if (command.type == CommandType::Module)
+      return command.module;
   }
   return nullptr;
 }
 
 Module* get_module_by_var(const Script* script, const Var* var) {
   int index = get_index_from_var(&script->module_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= script->commands.size)
+  if (index < 0 || static_cast<size_t>(index) >= script->commands.size())
     return nullptr;
-  Command* command = &script->commands.data[index];
-  assert(command->type == CommandType::Module);
-  return command->module;
+  const Command& command = *script->commands[index].get();
+  assert(command.type == CommandType::Module);
+  return command.module;
 }
 
 void make_type_binding_reverse_mapping(
@@ -148,7 +148,7 @@ void make_type_binding_reverse_mapping(
     const BindingHash& bindings,
     std::vector<std::string>* out_reverse_mapping) {
   out_reverse_mapping->clear();
-  out_reverse_mapping->resize(types.size);
+  out_reverse_mapping->resize(types.size());
   for (auto iter: bindings) {
     assert(static_cast<size_t>(iter.second.index) <
            out_reverse_mapping->size());
@@ -172,11 +172,11 @@ FuncType* append_implicit_func_type(Location* loc,
   ModuleField* field = append_module_field(module);
   field->loc = *loc;
   field->type = ModuleFieldType::FuncType;
-  field->func_type.sig = *sig;
+  field->func_type = new FuncType();
+  field->func_type->sig = *sig;
 
-  FuncType* func_type_ptr = &field->func_type;
-  append_func_type_ptr_value(&module->func_types, &func_type_ptr);
-  return func_type_ptr;
+  module->func_types.push_back(field->func_type);
+  return field->func_type;
 }
 
 #define FOREACH_EXPR_TYPE(V)                 \
@@ -222,72 +222,73 @@ void destroy_var(Var* var) {
     destroy_string_slice(&var->name);
 }
 
-void destroy_var_vector_and_elements(VarVector* vars) {
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(*vars, var);
-}
-
-void destroy_func_signature(FuncSignature* sig) {
-  destroy_type_vector(&sig->param_types);
-  destroy_type_vector(&sig->result_types);
-}
-
 void destroy_expr_list(Expr* first) {
   Expr* expr = first;
   while (expr) {
     Expr* next = expr->next;
-    destroy_expr(expr);
+    delete expr;
     expr = next;
   }
 }
 
-void destroy_block(Block* block) {
-  destroy_string_slice(&block->label);
-  destroy_type_vector(&block->sig);
-  destroy_expr_list(block->first);
+Block::Block(): first(nullptr) {
+  WABT_ZERO_MEMORY(label);
 }
 
-void destroy_expr(Expr* expr) {
-  switch (expr->type) {
+Block::~Block() {
+  destroy_string_slice(&label);
+  destroy_expr_list(first);
+}
+
+Expr::Expr() : type(ExprType::Binary), next(nullptr) {
+  WABT_ZERO_MEMORY(loc);
+  binary.opcode = Opcode::Nop;
+}
+
+Expr::~Expr() {
+  switch (type) {
     case ExprType::Block:
-      destroy_block(&expr->block);
+      delete block;
       break;
     case ExprType::Br:
-      destroy_var(&expr->br.var);
+      destroy_var(&br.var);
       break;
     case ExprType::BrIf:
-      destroy_var(&expr->br_if.var);
+      destroy_var(&br_if.var);
       break;
     case ExprType::BrTable:
-      WABT_DESTROY_VECTOR_AND_ELEMENTS(expr->br_table.targets, var);
-      destroy_var(&expr->br_table.default_target);
+      for (auto& var : *br_table.targets)
+        destroy_var(&var);
+      delete br_table.targets;
+      destroy_var(&br_table.default_target);
       break;
     case ExprType::Call:
-      destroy_var(&expr->call.var);
+      destroy_var(&call.var);
       break;
     case ExprType::CallIndirect:
-      destroy_var(&expr->call_indirect.var);
+      destroy_var(&call_indirect.var);
       break;
     case ExprType::GetGlobal:
-      destroy_var(&expr->get_global.var);
+      destroy_var(&get_global.var);
       break;
     case ExprType::GetLocal:
-      destroy_var(&expr->get_local.var);
+      destroy_var(&get_local.var);
       break;
     case ExprType::If:
-      destroy_block(&expr->if_.true_);
-      destroy_expr_list(expr->if_.false_);
+      delete if_.true_;
+      destroy_expr_list(if_.false_);
       break;
     case ExprType::Loop:
-      destroy_block(&expr->loop);
+      delete loop;
       break;
     case ExprType::SetGlobal:
-      destroy_var(&expr->set_global.var);
+      destroy_var(&set_global.var);
       break;
     case ExprType::SetLocal:
-      destroy_var(&expr->set_local.var);
+      destroy_var(&set_local.var);
       break;
     case ExprType::TeeLocal:
-      destroy_var(&expr->tee_local.var);
+      destroy_var(&tee_local.var);
       break;
 
     case ExprType::Binary:
@@ -306,66 +307,113 @@ void destroy_expr(Expr* expr) {
     case ExprType::Unreachable:
       break;
   }
-  delete expr;
 }
 
-void destroy_func_declaration(FuncDeclaration* decl) {
-  destroy_var(&decl->type_var);
-  if (!(decl->flags & WABT_FUNC_DECLARATION_FLAG_SHARED_SIGNATURE))
-    destroy_func_signature(&decl->sig);
+FuncType::FuncType() {
+  WABT_ZERO_MEMORY(name);
+}
+
+FuncType::~FuncType() {
+  destroy_string_slice(&name);
+}
+
+FuncDeclaration::FuncDeclaration() : has_func_type(false) {
+  WABT_ZERO_MEMORY(type_var);
+}
+
+FuncDeclaration::~FuncDeclaration() {
+  destroy_var(&type_var);
 }
 
 Func::Func() : first_expr(nullptr) {
   WABT_ZERO_MEMORY(name);
-  WABT_ZERO_MEMORY(decl);
-  WABT_ZERO_MEMORY(local_types);
 }
 
 Func::~Func() {
   destroy_string_slice(&name);
-  destroy_func_declaration(&decl);
-  destroy_type_vector(&local_types);
   destroy_expr_list(first_expr);
 }
 
-void destroy_global(Global* global) {
-  destroy_string_slice(&global->name);
-  destroy_expr_list(global->init_expr);
+Global::Global() : type(Type::Void), mutable_(false), init_expr(nullptr) {
+  WABT_ZERO_MEMORY(name);
 }
 
-void destroy_import(Import* import) {
-  destroy_string_slice(&import->module_name);
-  destroy_string_slice(&import->field_name);
-  switch (import->kind) {
+Global::~Global() {
+  destroy_string_slice(&name);
+  destroy_expr_list(init_expr);
+}
+
+Table::Table() {
+  WABT_ZERO_MEMORY(name);
+  WABT_ZERO_MEMORY(elem_limits);
+}
+
+Table::~Table() {
+  destroy_string_slice(&name);
+}
+
+ElemSegment::ElemSegment() : offset(nullptr) {
+  WABT_ZERO_MEMORY(table_var);
+}
+
+ElemSegment::~ElemSegment() {
+  destroy_var(&table_var);
+  destroy_expr_list(offset);
+  for (auto& var : vars)
+    destroy_var(&var);
+}
+
+DataSegment::DataSegment() : offset(nullptr), data(nullptr), size(0) {
+  WABT_ZERO_MEMORY(memory_var);
+}
+
+DataSegment::~DataSegment() {
+  destroy_var(&memory_var);
+  destroy_expr_list(offset);
+  delete [] data;
+}
+
+Memory::Memory() {
+  WABT_ZERO_MEMORY(name);
+  WABT_ZERO_MEMORY(page_limits);
+}
+
+Memory::~Memory() {
+  destroy_string_slice(&name);
+}
+
+Import::Import() : kind(ExternalKind::Func), func(nullptr) {
+  WABT_ZERO_MEMORY(module_name);
+  WABT_ZERO_MEMORY(field_name);
+}
+
+Import::~Import() {
+  destroy_string_slice(&module_name);
+  destroy_string_slice(&field_name);
+  switch (kind) {
     case ExternalKind::Func:
-      delete import->func;
+      delete func;
       break;
     case ExternalKind::Table:
-      destroy_table(&import->table);
+      delete table;
       break;
     case ExternalKind::Memory:
-      destroy_memory(&import->memory);
+      delete memory;
       break;
     case ExternalKind::Global:
-      destroy_global(&import->global);
+      delete global;
       break;
   }
 }
 
-void destroy_export(Export* export_) {
-  destroy_string_slice(&export_->name);
-  destroy_var(&export_->var);
+Export::Export() {
+  WABT_ZERO_MEMORY(name);
+  WABT_ZERO_MEMORY(var);
 }
 
-void destroy_func_type(FuncType* func_type) {
-  destroy_string_slice(&func_type->name);
-  destroy_func_signature(&func_type->sig);
-}
-
-void destroy_data_segment(DataSegment* data) {
-  destroy_var(&data->memory_var);
-  destroy_expr_list(data->offset);
-  delete [] data->data;
+Export::~Export() {
+  destroy_string_slice(&name);
+  destroy_var(&var);
 }
 
 void destroy_memory(Memory* memory) {
@@ -376,38 +424,42 @@ void destroy_table(Table* table) {
   destroy_string_slice(&table->name);
 }
 
-static void destroy_module_field(ModuleField* field) {
-  switch (field->type) {
+ModuleField::ModuleField() : type(ModuleFieldType::Start), next(nullptr) {
+  WABT_ZERO_MEMORY(loc);
+  WABT_ZERO_MEMORY(start);
+}
+
+ModuleField::~ModuleField() {
+  switch (type) {
     case ModuleFieldType::Func:
-      delete field->func;
+      delete func;
       break;
     case ModuleFieldType::Global:
-      destroy_global(&field->global);
+      delete global;
       break;
     case ModuleFieldType::Import:
-      destroy_import(field->import);
-      delete field->import;
+      delete import;
       break;
     case ModuleFieldType::Export:
-      destroy_export(&field->export_);
+      delete export_;
       break;
     case ModuleFieldType::FuncType:
-      destroy_func_type(&field->func_type);
+      delete func_type;
       break;
     case ModuleFieldType::Table:
-      destroy_table(&field->table);
+      delete table;
       break;
     case ModuleFieldType::ElemSegment:
-      destroy_elem_segment(&field->elem_segment);
+      delete elem_segment;
       break;
     case ModuleFieldType::Memory:
-      destroy_memory(&field->memory);
+      delete memory;
       break;
     case ModuleFieldType::DataSegment:
-      destroy_data_segment(&field->data_segment);
+      delete data_segment;
       break;
     case ModuleFieldType::Start:
-      destroy_var(&field->start);
+      destroy_var(&start);
       break;
   }
 }
@@ -422,15 +474,6 @@ Module::Module()
       start(0) {
   WABT_ZERO_MEMORY(loc);
   WABT_ZERO_MEMORY(name);
-  WABT_ZERO_MEMORY(funcs);
-  WABT_ZERO_MEMORY(globals);
-  WABT_ZERO_MEMORY(imports);
-  WABT_ZERO_MEMORY(exports);
-  WABT_ZERO_MEMORY(func_types);
-  WABT_ZERO_MEMORY(tables);
-  WABT_ZERO_MEMORY(elem_segments);
-  WABT_ZERO_MEMORY(memories);
-  WABT_ZERO_MEMORY(data_segments);
 }
 
 Module::~Module() {
@@ -439,107 +482,89 @@ Module::~Module() {
   ModuleField* field = first_field;
   while (field) {
     ModuleField* next_field = field->next;
-    destroy_module_field(field);
     delete field;
     field = next_field;
   }
-
-  /* everything that follows shares data with the module fields above, so we
-   only need to destroy the containing vectors */
-  destroy_func_ptr_vector(&funcs);
-  destroy_global_ptr_vector(&globals);
-  destroy_import_ptr_vector(&imports);
-  destroy_export_ptr_vector(&exports);
-  destroy_func_type_ptr_vector(&func_types);
-  destroy_table_ptr_vector(&tables);
-  destroy_elem_segment_ptr_vector(&elem_segments);
-  destroy_memory_ptr_vector(&memories);
-  destroy_data_segment_ptr_vector(&data_segments);
 }
 
-void destroy_raw_module(RawModule* raw) {
-  if (raw->type == RawModuleType::Text) {
-    delete raw->text;
+RawModule::RawModule() : type(RawModuleType::Text), text(nullptr) {}
+
+RawModule::~RawModule() {
+  if (type == RawModuleType::Text) {
+    delete text;
   } else {
-    destroy_string_slice(&raw->binary.name);
-    delete [] raw->binary.data;
+    destroy_string_slice(&binary.name);
+    delete [] binary.data;
   }
 }
 
-void destroy_action(Action* action) {
-  destroy_var(&action->module_var);
-  switch (action->type) {
+ActionInvoke::ActionInvoke() {}
+
+Action::Action() : type(ActionType::Get) {
+  WABT_ZERO_MEMORY(loc);
+  WABT_ZERO_MEMORY(module_var);
+  WABT_ZERO_MEMORY(name);
+}
+
+Action::~Action() {
+  destroy_var(&module_var);
+  destroy_string_slice(&name);
+  switch (type) {
     case ActionType::Invoke:
-      destroy_string_slice(&action->invoke.name);
-      destroy_const_vector(&action->invoke.args);
+      delete invoke;
       break;
     case ActionType::Get:
-      destroy_string_slice(&action->get.name);
       break;
   }
 }
 
-void destroy_command(Command* command) {
-  switch (command->type) {
+Command::Command() : type(CommandType::Module), module(nullptr) {}
+
+Command::~Command() {
+  switch (type) {
     case CommandType::Module:
-      delete command->module;
+      delete module;
       break;
     case CommandType::Action:
-      destroy_action(&command->action);
+      delete action;
       break;
     case CommandType::Register:
-      destroy_string_slice(&command->register_.module_name);
-      destroy_var(&command->register_.var);
+      destroy_string_slice(&register_.module_name);
+      destroy_var(&register_.var);
       break;
     case CommandType::AssertMalformed:
-      destroy_raw_module(&command->assert_malformed.module);
-      destroy_string_slice(&command->assert_malformed.text);
+      delete assert_malformed.module;
+      destroy_string_slice(&assert_malformed.text);
       break;
     case CommandType::AssertInvalid:
     case CommandType::AssertInvalidNonBinary:
-      destroy_raw_module(&command->assert_invalid.module);
-      destroy_string_slice(&command->assert_invalid.text);
+      delete assert_invalid.module;
+      destroy_string_slice(&assert_invalid.text);
       break;
     case CommandType::AssertUnlinkable:
-      destroy_raw_module(&command->assert_unlinkable.module);
-      destroy_string_slice(&command->assert_unlinkable.text);
+      delete assert_unlinkable.module;
+      destroy_string_slice(&assert_unlinkable.text);
       break;
     case CommandType::AssertUninstantiable:
-      destroy_raw_module(&command->assert_uninstantiable.module);
-      destroy_string_slice(&command->assert_uninstantiable.text);
+      delete assert_uninstantiable.module;
+      destroy_string_slice(&assert_uninstantiable.text);
       break;
     case CommandType::AssertReturn:
-      destroy_action(&command->assert_return.action);
-      destroy_const_vector(&command->assert_return.expected);
+      delete assert_return.action;
+      delete assert_return.expected;
       break;
     case CommandType::AssertReturnNan:
-      destroy_action(&command->assert_return_nan.action);
+      delete assert_return_nan.action;
       break;
     case CommandType::AssertTrap:
     case CommandType::AssertExhaustion:
-      destroy_action(&command->assert_trap.action);
-      destroy_string_slice(&command->assert_trap.text);
+      delete assert_trap.action;
+      destroy_string_slice(&assert_trap.text);
       break;
   }
 }
 
-void destroy_command_vector_and_elements(CommandVector* commands) {
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(*commands, command);
-}
-
-void destroy_elem_segment(ElemSegment* elem) {
-  destroy_var(&elem->table_var);
-  destroy_expr_list(elem->offset);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(elem->vars, var);
-}
-
-Script::Script() {
-  WABT_ZERO_MEMORY(commands);
-}
-
-Script::~Script() {
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(commands, command);
-}
+Script::Script() {}
 
 #define CHECK_RESULT(expr)   \
   do {                       \
@@ -568,7 +593,7 @@ static Result visit_expr(Expr* expr, ExprVisitor* visitor) {
 
     case ExprType::Block:
       CALLBACK(begin_block_expr);
-      CHECK_RESULT(visit_expr_list(expr->block.first, visitor));
+      CHECK_RESULT(visit_expr_list(expr->block->first, visitor));
       CALLBACK(end_block_expr);
       break;
 
@@ -626,7 +651,7 @@ static Result visit_expr(Expr* expr, ExprVisitor* visitor) {
 
     case ExprType::If:
       CALLBACK(begin_if_expr);
-      CHECK_RESULT(visit_expr_list(expr->if_.true_.first, visitor));
+      CHECK_RESULT(visit_expr_list(expr->if_.true_->first, visitor));
       CALLBACK(after_if_true_expr);
       CHECK_RESULT(visit_expr_list(expr->if_.false_, visitor));
       CALLBACK(end_if_expr);
@@ -638,7 +663,7 @@ static Result visit_expr(Expr* expr, ExprVisitor* visitor) {
 
     case ExprType::Loop:
       CALLBACK(begin_loop_expr);
-      CHECK_RESULT(visit_expr_list(expr->loop.first, visitor));
+      CHECK_RESULT(visit_expr_list(expr->loop->first, visitor));
       CALLBACK(end_loop_expr);
       break;
 

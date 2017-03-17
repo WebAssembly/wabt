@@ -19,6 +19,9 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include <string>
+#include <vector>
+
 #include "ast.h"
 
 #define CHECK_RESULT(expr) \
@@ -101,19 +104,19 @@ static void generate_and_bind_local_names(
 
 static Result begin_block_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  maybe_generate_name("$B", ctx->label_count++, &expr->block.label);
+  maybe_generate_name("$B", ctx->label_count++, &expr->block->label);
   return Result::Ok;
 }
 
 static Result begin_loop_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  maybe_generate_name("$L", ctx->label_count++, &expr->loop.label);
+  maybe_generate_name("$L", ctx->label_count++, &expr->loop->label);
   return Result::Ok;
 }
 
 static Result begin_if_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  maybe_generate_name("$L", ctx->label_count++, &expr->if_.true_.label);
+  maybe_generate_name("$L", ctx->label_count++, &expr->if_.true_->label);
   return Result::Ok;
 }
 
@@ -165,16 +168,16 @@ static Result visit_memory(Context* ctx,
 }
 
 static Result visit_module(Context* ctx, Module* module) {
-  for (size_t i = 0; i < module->globals.size; ++i)
-    CHECK_RESULT(visit_global(ctx, i, module->globals.data[i]));
-  for (size_t i = 0; i < module->func_types.size; ++i)
-    CHECK_RESULT(visit_func_type(ctx, i, module->func_types.data[i]));
-  for (size_t i = 0; i < module->funcs.size; ++i)
-    CHECK_RESULT(visit_func(ctx, i, module->funcs.data[i]));
-  for (size_t i = 0; i < module->tables.size; ++i)
-    CHECK_RESULT(visit_table(ctx, i, module->tables.data[i]));
-  for (size_t i = 0; i < module->memories.size; ++i)
-    CHECK_RESULT(visit_memory(ctx, i, module->memories.data[i]));
+  for (size_t i = 0; i < module->globals.size(); ++i)
+    CHECK_RESULT(visit_global(ctx, i, module->globals[i]));
+  for (size_t i = 0; i < module->func_types.size(); ++i)
+    CHECK_RESULT(visit_func_type(ctx, i, module->func_types[i]));
+  for (size_t i = 0; i < module->funcs.size(); ++i)
+    CHECK_RESULT(visit_func(ctx, i, module->funcs[i]));
+  for (size_t i = 0; i < module->tables.size(); ++i)
+    CHECK_RESULT(visit_table(ctx, i, module->tables[i]));
+  for (size_t i = 0; i < module->memories.size(); ++i)
+    CHECK_RESULT(visit_memory(ctx, i, module->memories[i]));
   return Result::Ok;
 }
 

@@ -27,18 +27,23 @@ namespace wabt {
 namespace {
 
 typedef Label* LabelPtr;
-WABT_DEFINE_VECTOR(label_ptr, LabelPtr);
 
 struct Context {
-  SourceErrorHandler* error_handler;
-  AstLexer* lexer;
-  Script* script;
-  Module* current_module;
-  Func* current_func;
+  Context();
+
+  SourceErrorHandler* error_handler = nullptr;
+  AstLexer* lexer = nullptr;
+  Script* script = nullptr;
+  Module* current_module = nullptr;
+  Func* current_func = nullptr;
   ExprVisitor visitor;
-  LabelPtrVector labels;
-  Result result;
+  std::vector<Label*> labels;
+  Result result = Result::Ok;
 };
+
+Context::Context() {
+  WABT_ZERO_MEMORY(visitor);
+}
 
 }  // namespace
 
@@ -52,12 +57,11 @@ static void WABT_PRINTF_FORMAT(3, 4)
 }
 
 static void push_label(Context* ctx, Label* label) {
-  append_label_ptr_value(&ctx->labels, &label);
+  ctx->labels.push_back(label);
 }
 
 static void pop_label(Context* ctx) {
-  assert(ctx->labels.size > 0);
-  ctx->labels.size--;
+  ctx->labels.pop_back();
 }
 
 struct FindDuplicateBindingContext {
@@ -89,12 +93,12 @@ static void check_duplicate_bindings(Context* ctx,
 
 static void resolve_label_var(Context* ctx, Var* var) {
   if (var->type == VarType::Name) {
-    for (int i = ctx->labels.size - 1; i >= 0; --i) {
-      Label* label = ctx->labels.data[i];
+    for (int i = ctx->labels.size() - 1; i >= 0; --i) {
+      Label* label = ctx->labels[i];
       if (string_slices_are_equal(label, &var->name)) {
         destroy_string_slice(&var->name);
         var->type = VarType::Index;
-        var->index = ctx->labels.size - i - 1;
+        var->index = ctx->labels.size() - i - 1;
         return;
       }
     }
@@ -162,7 +166,7 @@ static void resolve_local_var(Context* ctx, Var* var) {
 
 static Result begin_block_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  push_label(ctx, &expr->block.label);
+  push_label(ctx, &expr->block->label);
   return Result::Ok;
 }
 
@@ -174,7 +178,7 @@ static Result end_block_expr(Expr* expr, void* user_data) {
 
 static Result begin_loop_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  push_label(ctx, &expr->loop.label);
+  push_label(ctx, &expr->loop->label);
   return Result::Ok;
 }
 
@@ -198,9 +202,9 @@ static Result on_br_if_expr(Expr* expr, void* user_data) {
 
 static Result on_br_table_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  VarVector* targets = &expr->br_table.targets;
-  for (size_t i = 0; i < targets->size; ++i) {
-    Var* target = &targets->data[i];
+  VarVector& targets = *expr->br_table.targets;
+  for (size_t i = 0; i < targets.size(); ++i) {
+    Var* target = &targets[i];
     resolve_label_var(ctx, target);
   }
 
@@ -234,7 +238,7 @@ static Result on_get_local_expr(Expr* expr, void* user_data) {
 
 static Result begin_if_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  push_label(ctx, &expr->if_.true_.label);
+  push_label(ctx, &expr->if_.true_->label);
   return Result::Ok;
 }
 
@@ -301,8 +305,8 @@ static void visit_global(Context* ctx, Global* global) {
 static void visit_elem_segment(Context* ctx, ElemSegment* segment) {
   resolve_table_var(ctx, &segment->table_var);
   visit_expr_list(segment->offset, &ctx->visitor);
-  for (size_t i = 0; i < segment->vars.size; ++i)
-    resolve_func_var(ctx, &segment->vars.data[i]);
+  for (size_t i = 0; i < segment->vars.size(); ++i)
+    resolve_func_var(ctx, &segment->vars[i]);
 }
 
 static void visit_data_segment(Context* ctx, DataSegment* segment) {
@@ -318,16 +322,16 @@ static void visit_module(Context* ctx, Module* module) {
   check_duplicate_bindings(ctx, &module->table_bindings, "table");
   check_duplicate_bindings(ctx, &module->memory_bindings, "memory");
 
-  for (size_t i = 0; i < module->funcs.size; ++i)
-    visit_func(ctx, module->funcs.data[i]);
-  for (size_t i = 0; i < module->exports.size; ++i)
-    visit_export(ctx, module->exports.data[i]);
-  for (size_t i = 0; i < module->globals.size; ++i)
-    visit_global(ctx, module->globals.data[i]);
-  for (size_t i = 0; i < module->elem_segments.size; ++i)
-    visit_elem_segment(ctx, module->elem_segments.data[i]);
-  for (size_t i = 0; i < module->data_segments.size; ++i)
-    visit_data_segment(ctx, module->data_segments.data[i]);
+  for (size_t i = 0; i < module->funcs.size(); ++i)
+    visit_func(ctx, module->funcs[i]);
+  for (size_t i = 0; i < module->exports.size(); ++i)
+    visit_export(ctx, module->exports[i]);
+  for (size_t i = 0; i < module->globals.size(); ++i)
+    visit_global(ctx, module->globals[i]);
+  for (size_t i = 0; i < module->elem_segments.size(); ++i)
+    visit_elem_segment(ctx, module->elem_segments[i]);
+  for (size_t i = 0; i < module->data_segments.size(); ++i)
+    visit_data_segment(ctx, module->data_segments[i]);
   if (module->start)
     resolve_func_var(ctx, module->start);
   ctx->current_module = nullptr;
@@ -378,15 +382,13 @@ static void visit_command(Context* ctx, Command* command) {
           ctx->error_handler->source_line_max_length;
 
       Context new_ctx;
-      WABT_ZERO_MEMORY(new_ctx);
       new_ctx.error_handler = &new_error_handler;
       new_ctx.lexer = ctx->lexer;
       new_ctx.visitor = ctx->visitor;
       new_ctx.visitor.user_data = &new_ctx;
       new_ctx.result = Result::Ok;
 
-      visit_raw_module(&new_ctx, &command->assert_invalid.module);
-      destroy_label_ptr_vector(&new_ctx.labels);
+      visit_raw_module(&new_ctx, command->assert_invalid.module);
       if (WABT_FAILED(new_ctx.result)) {
         command->type = CommandType::AssertInvalidNonBinary;
       }
@@ -400,25 +402,24 @@ static void visit_command(Context* ctx, Command* command) {
       break;
 
     case CommandType::AssertUnlinkable:
-      visit_raw_module(ctx, &command->assert_unlinkable.module);
+      visit_raw_module(ctx, command->assert_unlinkable.module);
       break;
 
     case CommandType::AssertUninstantiable:
-      visit_raw_module(ctx, &command->assert_uninstantiable.module);
+      visit_raw_module(ctx, command->assert_uninstantiable.module);
       break;
   }
 }
 
 static void visit_script(Context* ctx, Script* script) {
-  for (size_t i = 0; i < script->commands.size; ++i)
-    visit_command(ctx, &script->commands.data[i]);
+  for (size_t i = 0; i < script->commands.size(); ++i)
+    visit_command(ctx, script->commands[i].get());
 }
 
 static void init_context(Context* ctx,
                          AstLexer* lexer,
                          Script* script,
                          SourceErrorHandler* error_handler) {
-  WABT_ZERO_MEMORY(*ctx);
   ctx->lexer = lexer;
   ctx->error_handler = error_handler;
   ctx->result = Result::Ok;
@@ -448,7 +449,6 @@ Result resolve_names_module(AstLexer* lexer,
   Context ctx;
   init_context(&ctx, lexer, nullptr, error_handler);
   visit_module(&ctx, module);
-  destroy_label_ptr_vector(&ctx.labels);
   return ctx.result;
 }
 
@@ -458,7 +458,6 @@ Result resolve_names_script(AstLexer* lexer,
   Context ctx;
   init_context(&ctx, lexer, script, error_handler);
   visit_script(&ctx, script);
-  destroy_label_ptr_vector(&ctx.labels);
   return ctx.result;
 }
 

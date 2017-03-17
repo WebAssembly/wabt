@@ -241,7 +241,6 @@ add_library(libwabt STATIC
   src/literal.cc
   src/option-parser.cc
   src/stream.cc
-  src/vector.cc
   src/writer.cc
 )
 set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
