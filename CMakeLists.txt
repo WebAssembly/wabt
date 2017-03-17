@@ -93,11 +93,15 @@ else ()
     -Wold-style-cast
   )
 
+  # Need to define __STDC_*_MACROS because C99 specifies that C++ shouldn't
+  # define format (e.g. PRIu64) or limit (e.g. UINT32_MAX) macros without the
+  # definition, and some libcs (e.g. glibc2.17 and earlier) follow that.
+  add_definitions(-D__STDC_LIMIT_MACROS=1 -D__STDC_FORMAT_MACROS=1)
+
   if (MINGW)
-    # Mingw won't define format (e.g. PRIu64) or limit (e.g. UINT32_MAX) macros
-    # in C++ without these. Also, _POSIX is needed to ensure we use mingw
-    # printf instead of the VC runtime one.
-    add_definitions(-D_POSIX -D__STDC_LIMIT_MACROS=1 -D__STDC_FORMAT_MACROS=1)
+    # _POSIX is needed to ensure we use mingw printf
+    # instead of the VC runtime one.
+    add_definitions(-D_POSIX)
   endif ()
 
   if (COMPILER_IS_GNU)
