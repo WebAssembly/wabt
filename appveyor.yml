@@ -4,29 +4,32 @@ init:
   - set PATH=C:\Python27\Scripts;%PATH%             # while python's bin is already in PATH, but pip.exe in Scripts\ dir isn't
   - set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%
 
+install:
+  - git submodule update --init
+
 environment:
-  DEGREE_OF_PARALLELISM: 3
+  JOBS: 3
   matrix:
   - GENERATOR: MSYS Makefiles
     CONFIG: Release
-    EXTRA_CONFIG_FLAGS: -DBUILD_TESTS=OFF
-    PARALLEL_FLAG: -j
+    JOBS_FLAG: -j
+    EXE_DIR: .
   - GENERATOR: Visual Studio 14 2015
     CONFIG: Release
-    EXTRA_CONFIG_FLAGS:
-    PARALLEL_FLAG: "/m:"
+    JOBS_FLAG: "/m:"
+    EXE_DIR: '%CONFIG%'
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Debug
-    EXTRA_CONFIG_FLAGS:
-    PARALLEL_FLAG: "/m:"
+    JOBS_FLAG: "/m:"
+    EXE_DIR: '%CONFIG%'
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Release
-    EXTRA_CONFIG_FLAGS:
-    PARALLEL_FLAG: "/m:"
+    JOBS_FLAG: "/m:"
+    EXE_DIR: '%CONFIG%'
 
 build_script:
-  - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% %EXTRA_CONFIG_FLAGS% -G "%GENERATOR%"
-  - cmake --build . --config %CONFIG% -- %PARALLEL_FLAG%%DEGREE_OF_PARALLELISM%
+  - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% -G "%GENERATOR%"
+  - cmake --build . --config %CONFIG% -- %JOBS_FLAG%%JOBS%
 
 test_script:
-  - ctest --output-on-failure --timeout 10 -j 5
+  - cmd: '%EXE_DIR%\wabt-unittests.exe'

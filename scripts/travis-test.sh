@@ -27,7 +27,8 @@ log_and_run() {
 }
 
 run_tests() {
-  (cd ${ROOT_DIR} && log_and_run test/run-tests.py ${RUN_TEST_ARGS} $* --timeout=10)
+  (cd ${ROOT_DIR} && log_and_run test/run-tests.py --bindir ${BINDIR} $* --timeout=10) && true
+  (log_and_run ${BINDIR}/wabt-unittests) && true
 }
 
 set_run_test_args() {
@@ -35,7 +36,7 @@ set_run_test_args() {
   local BUILD_TYPE=$2
   local CONFIG=${3:-}
 
-  RUN_TEST_ARGS="--bindir out/${COMPILER}/${BUILD_TYPE}/${CONFIG}"
+  BINDIR="out/${COMPILER}/${BUILD_TYPE}/${CONFIG}"
 }
 
 if [ ${CC} = "gcc" ]; then
