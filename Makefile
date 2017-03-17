@@ -25,15 +25,12 @@ GCC_FUZZ_CC := ${FUZZ_BIN_DIR}/afl-gcc
 GCC_FUZZ_CXX := ${FUZZ_BIN_DIR}/afl-g++
 EMSCRIPTEN_DIR ?= ${ROOT_DIR}/emscripten
 
-DEFAULT_COMPILER = CLANG
-DEFAULT_BUILD_TYPE = DEBUG
+DEFAULT_SUFFIX = clang-debug
 
 COMPILERS := GCC GCC_I686 GCC_FUZZ CLANG EMSCRIPTEN
 BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := ASAN MSAN LSAN UBSAN
 CONFIGS := NORMAL $(SANITIZERS) COV NO_RE2C_BISON NO_TESTS
-EXECUTABLES := wast2wasm wasm2wast wasm-interp wasmopcodecnt hexfloat_test \
-	wasmdump wast-desugar wasm-link
 
 # directory names
 GCC_DIR := gcc/
@@ -88,27 +85,19 @@ NO_RE2C_BISON_PREFIX := -no-re2c-bison
 NO_TESTS_PREFIX := -no-tests
 
 ifeq ($(USE_NINJA),1)
-BUILD := ninja
+BUILD_CMD := ninja
 BUILD_FILE := build.ninja
 GENERATOR := Ninja
 else
-BUILD := $(MAKE) --no-print-directory
+BUILD_CMD := $(MAKE) --no-print-directory
 BUILD_FILE := Makefile
 GENERATOR := "Unix Makefiles"
 endif
 
 CMAKE_DIR = out/$($(1)_DIR)$($(2)_DIR)$($(3)_DIR)
-EXE_TARGET = $($(1)_PREFIX)$($(2)_PREFIX)$($(3)_PREFIX)
+BUILD_TARGET = $($(1)_PREFIX)$($(2)_PREFIX)$($(3)_PREFIX)
+INSTALL_TARGET = install-$($(1)_PREFIX)$($(2)_PREFIX)$($(3)_PREFIX)
 TEST_TARGET = test-$($(1)_PREFIX)$($(2)_PREFIX)$($(3)_PREFIX)
-
-define DEFAULT
-.PHONY: $(3)$($(4)_PREFIX) test$($(4)_PREFIX)
-$(3)$($(4)_PREFIX): $(call EXE_TARGET,$(1),$(2),$(4))
-	ln -sf ../$(call CMAKE_DIR,$(1),$(2),$(4))$(3) out/$(3)$($(4)_PREFIX)
-
-test$($(4)_PREFIX): $(call TEST_TARGET,$(1),$(2),$(4))
-test-everything: test$($(4)_PREFIX)
-endef
 
 define CMAKE
 $(call CMAKE_DIR,$(1),$(2),$(3)):
@@ -116,23 +105,32 @@ $(call CMAKE_DIR,$(1),$(2),$(3)):
 
 $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE): | $(call CMAKE_DIR,$(1),$(2),$(3))
 	cd $(call CMAKE_DIR,$(1),$(2),$(3)) && \
-	cmake -G $$(GENERATOR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
+	cmake -G $$(GENERATOR) -DCMAKE_INSTALL_PREFIX=$$(ROOT_DIR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
 endef
 
-define EXE
-.PHONY: $(call EXE_TARGET,$(1),$(2),$(3))
-$(call EXE_TARGET,$(1),$(2),$(3)): $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE)
-	$$(BUILD) -C $(call CMAKE_DIR,$(1),$(2),$(3)) all
+define BUILD
+.PHONY: $(call BUILD_TARGET,$(1),$(2),$(3))
+$(call BUILD_TARGET,$(1),$(2),$(3)): $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE)
+	$$(BUILD_CMD) -C $(call CMAKE_DIR,$(1),$(2),$(3)) all
+endef
+
+define INSTALL
+.PHONY: $(call INSTALL_TARGET,$(1),$(2),$(3))
+$(call INSTALL_TARGET,$(1),$(2),$(3)): $(call BUILD_TARGET,$(1),$(2),$(3))
+	$$(BUILD_CMD) -C $(call CMAKE_DIR,$(1),$(2),$(3)) install
 endef
 
 define TEST
 .PHONY: $(call TEST_TARGET,$(1),$(2),$(3))
 $(call TEST_TARGET,$(1),$(2),$(3)): $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE)
-	$$(BUILD) -C $(call CMAKE_DIR,$(1),$(2),$(3)) run-tests
+	$$(BUILD_CMD) -C $(call CMAKE_DIR,$(1),$(2),$(3)) run-tests
+test-everything: $(CALL TEST_TARGET,$(1),$(2),$(3))
 endef
 
-.PHONY: all
-all: ${EXECUTABLES}
+.PHONY: all install test
+all: $(DEFAULT_SUFFIX)
+install: install-$(DEFAULT_SUFFIX)
+test: test-$(DEFAULT_SUFFIX)
 
 .PHONY: clean
 clean:
@@ -151,12 +149,6 @@ src/prebuilt/ast-parser-gen.cc: src/ast-parser.y
 src/prebuilt/ast-lexer-gen.cc: src/ast-lexer.cc
 	re2c --no-generation-date -bc -o $@ $<
 
-# defaults with simple names
-$(foreach EXECUTABLE,$(EXECUTABLES), \
-	$(eval $(call DEFAULT,$(DEFAULT_COMPILER),$(DEFAULT_BUILD_TYPE),$(EXECUTABLE),NORMAL)) \
-	$(foreach SANITIZER,$(SANITIZERS), \
-		$(eval $(call DEFAULT,$(DEFAULT_COMPILER),$(DEFAULT_BUILD_TYPE),$(EXECUTABLE),$(SANITIZER)))))
-
 # running CMake
 $(foreach CONFIG,$(CONFIGS), \
 	$(foreach COMPILER,$(COMPILERS), \
@@ -167,7 +159,13 @@ $(foreach CONFIG,$(CONFIGS), \
 $(foreach CONFIG,$(CONFIGS), \
 	$(foreach COMPILER,$(COMPILERS), \
 		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
-			$(eval $(call EXE,$(COMPILER),$(BUILD_TYPE),$(CONFIG))))))
+			$(eval $(call BUILD,$(COMPILER),$(BUILD_TYPE),$(CONFIG))))))
+
+# installing
+$(foreach CONFIG,$(CONFIGS), \
+	$(foreach COMPILER,$(COMPILERS), \
+		$(foreach BUILD_TYPE,$(BUILD_TYPES), \
+			$(eval $(call INSTALL,$(COMPILER),$(BUILD_TYPE),$(CONFIG))))))
 
 # test running
 $(foreach CONFIG,$(CONFIGS), \
