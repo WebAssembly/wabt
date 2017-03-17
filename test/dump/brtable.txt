@@ -95,4 +95,5 @@ Code Disassembly:
  00002e: 0b                         | end
  00002f: 41 03                      | i32.const 0x3
  000031: 1a                         | drop
+ 000032: 0b                         | end
 ;;; STDOUT ;;)

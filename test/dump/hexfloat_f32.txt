@@ -156,4 +156,5 @@ Code Disassembly:
  000076: 1a                         | drop
  000077: 43 80 80 7f c0             | f32.const -0x1.ff01p+1
  00007c: 1a                         | drop
+ 00007d: 0b                         | end
 ;;; STDOUT ;;)

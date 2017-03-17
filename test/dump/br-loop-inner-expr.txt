@@ -88,4 +88,5 @@ Code Disassembly:
  00002c: 41 05                      |     i32.const 0x5
  00002e: 0b                         |   end
  00002f: 0b                         | end
+ 000030: 0b                         | end
 ;;; STDOUT ;;)

@@ -303,4 +303,5 @@ Code Disassembly:
  000126: 1a                         | drop
  000127: 44 18 2d 44 54 fb 21 19 40 | f64.const 0x1.921fb54442d18p+2
  000130: 1a                         | drop
+ 000131: 0b                         | end
 ;;; STDOUT ;;)

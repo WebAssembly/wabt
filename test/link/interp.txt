@@ -84,19 +84,24 @@ Code Disassembly:
 000078 func[0]:
  00007a: 43 00 00 80 3f             | f32.const 0x1p+0
  00007f: 0f                         | return
+ 000080: 0b                         | end
 000081 func[1]:
  000083: 10 83 80 80 80 00          | call 0x3
            000084: R_FUNC_INDEX_LEB	0
  000089: 0f                         | return
+ 00008a: 0b                         | end
 00008b func[2]:
  00008d: 10 84 80 80 80 00          | call 0x4
            00008e: R_FUNC_INDEX_LEB	1
  000093: 0f                         | return
+ 000094: 0b                         | end
 000095 func[3]:
  000097: 41 2a                      | i32.const 0x2a
  000099: 0f                         | return
+ 00009a: 0b                         | end
 00009b func[4]:
  00009d: 42 e3 00                   | i64.const 99
  0000a0: 0f                         | return
+ 0000a1: 0b                         | end
 5/5 tests passed.
 ;;; STDOUT ;;)

@@ -203,6 +203,7 @@ struct BinaryReader {
   Result (*on_drop_expr)(void* user_data);
   Result (*on_else_expr)(void* user_data);
   Result (*on_end_expr)(void* user_data);
+  Result (*on_end_func)(void* user_data);
   Result (*on_f32_const_expr)(uint32_t value_bits, void* user_data);
   Result (*on_f64_const_expr)(uint64_t value_bits, void* user_data);
   Result (*on_get_global_expr)(uint32_t global_index, void* user_data);

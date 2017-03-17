@@ -111,7 +111,10 @@ Elem:
 Code Disassembly:
 
 000034 func[0]:
+ 000036: 0b                         | end
 000037 func[1]:
+ 000039: 0b                         | end
 00003a func[2]:
  00003c: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 000045: 0b                         | end
 ;;; STDOUT ;;)

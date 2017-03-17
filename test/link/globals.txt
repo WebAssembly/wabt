@@ -71,6 +71,7 @@ Code Disassembly:
  00006e: 6a                         | i32.add
  00006f: 10 80 80 80 80 00          | call 0
            000070: R_FUNC_INDEX_LEB	0
+ 000075: 0b                         | end
 000076 func[1]:
  000078: 23 81 80 80 80 00          | get_global 0x1
            000079: R_GLOBAL_INDEX_LEB	0
@@ -78,4 +79,5 @@ Code Disassembly:
            00007f: R_GLOBAL_INDEX_LEB	1
  000084: 10 81 80 80 80 00          | call 0x1
            000085: R_FUNC_INDEX_LEB	0
+ 00008a: 0b                         | end
 ;;; STDOUT ;;)

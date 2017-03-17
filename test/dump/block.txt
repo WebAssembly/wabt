@@ -72,8 +72,10 @@ Code Disassembly:
  00001f: 01                         |   nop
  000020: 01                         |   nop
  000021: 0b                         | end
+ 000022: 0b                         | end
 000023 func[1]:
  000025: 02 7f                      | block i32
  000027: 41 01                      |   i32.const 0x1
  000029: 0b                         | end
+ 00002a: 0b                         | end
 ;;; STDOUT ;;)

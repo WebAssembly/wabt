@@ -600,4 +600,5 @@ Code Disassembly:
  00011a: 01                         |   nop
  00011b: 01                         |   nop
  00011c: 0b                         | end
+ 00011d: 0b                         | end
 ;;; STDOUT ;;)

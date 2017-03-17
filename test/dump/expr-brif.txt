@@ -62,4 +62,5 @@ Code Disassembly:
  000020: 1a                         |   drop
  000021: 41 1d                      |   i32.const 0x1d
  000023: 0b                         | end
+ 000024: 0b                         | end
 ;;; STDOUT ;;)

@@ -75,4 +75,5 @@ Code Disassembly:
  000026: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  00002f: bd                         | i64.reinterpret/f64
  000030: 1a                         | drop
+ 000031: 0b                         | end
 ;;; STDOUT ;;)

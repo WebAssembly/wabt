@@ -48,4 +48,5 @@ Code Disassembly:
  000019: 01                         |   nop
  00001a: 01                         |   nop
  00001b: 0b                         | end
+ 00001c: 0b                         | end
 ;;; STDOUT ;;)

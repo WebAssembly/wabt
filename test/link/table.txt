@@ -53,6 +53,9 @@ Custom:
 Code Disassembly:
 
 000054 func[0]:
+ 000056: 0b                         | end
 000057 func[1]:
+ 000059: 0b                         | end
 00005a func[2]:
+ 00005c: 0b                         | end
 ;;; STDOUT ;;)

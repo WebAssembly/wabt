@@ -38,4 +38,5 @@ Code Disassembly:
 
 000015 func[0]:
  000017: 00                         | unreachable
+ 000018: 0b                         | end
 ;;; STDOUT ;;)

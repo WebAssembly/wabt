@@ -158,4 +158,5 @@ Code Disassembly:
  0000b8: 1a                         | drop
  0000b9: 44 00 00 00 00 10 f0 0f c0 | f64.const -0x1.ff01p+1
  0000c2: 1a                         | drop
+ 0000c3: 0b                         | end
 ;;; STDOUT ;;)

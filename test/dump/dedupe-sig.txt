@@ -55,4 +55,5 @@ Code Disassembly:
 
 000024 func[1]:
  000026: 42 00                      | i64.const 0
+ 000028: 0b                         | end
 ;;; STDOUT ;;)

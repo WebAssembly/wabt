@@ -101,4 +101,5 @@ Code Disassembly:
  000033: 20 00                      | get_local 0
  000035: 20 01                      | get_local 0x1
  000037: 6a                         | i32.add
+ 000038: 0b                         | end
 ;;; STDOUT ;;)

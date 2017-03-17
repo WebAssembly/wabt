@@ -622,4 +622,5 @@ Code Disassembly:
  000123: 0c 00                      |     br 0
  000125: 0b                         |   end
  000126: 0b                         | end
+ 000127: 0b                         | end
 ;;; STDOUT ;;)

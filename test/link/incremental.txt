@@ -97,6 +97,7 @@ Code Disassembly:
            0000b5: R_FUNC_INDEX_LEB	0
  0000ba: 10 83 80 80 80 00          | call 0x3
            0000bb: R_FUNC_INDEX_LEB	1
+ 0000c0: 0b                         | end
 0000c1 func[4]:
  0000c3: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  0000cc: 10 81 80 80 80 00          | call 0x1
@@ -104,6 +105,7 @@ Code Disassembly:
  0000d2: 42 0a                      | i64.const 10
  0000d4: 10 84 80 80 80 00          | call 0x4
            0000d5: R_FUNC_INDEX_LEB	1
+ 0000da: 0b                         | end
 0000db func[5]:
  0000dd: 43 00 00 80 3f             | f32.const 0x1p+0
  0000e2: 10 82 80 80 80 00          | call 0x2
@@ -111,4 +113,5 @@ Code Disassembly:
  0000e8: 41 0a                      | i32.const 0xa
  0000ea: 10 85 80 80 80 00          | call 0x5
            0000eb: R_FUNC_INDEX_LEB	1
+ 0000f0: 0b                         | end
 ;;; STDOUT ;;)

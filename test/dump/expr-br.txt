@@ -52,4 +52,5 @@ Code Disassembly:
  00001a: 41 01                      |   i32.const 0x1
  00001c: 0c 00                      |   br 0
  00001e: 0b                         | end
+ 00001f: 0b                         | end
 ;;; STDOUT ;;)

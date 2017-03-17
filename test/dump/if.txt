@@ -95,6 +95,7 @@ Code Disassembly:
  000028: 43 00 00 00 40             |   f32.const 0x1p+1
  00002d: 0b                         | end
  00002e: 1a                         | drop
+ 00002f: 0b                         | end
 000030 func[1]:
  000032: 41 01                      | i32.const 0x1
  000034: 04 40                      | if
@@ -102,4 +103,5 @@ Code Disassembly:
  000037: 05                         | else
  000038: 0f                         |   return
  000039: 0b                         | end
+ 00003a: 0b                         | end
 ;;; STDOUT ;;)

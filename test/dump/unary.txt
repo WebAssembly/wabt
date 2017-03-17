@@ -129,4 +129,5 @@ Code Disassembly:
  00003f: 99                         | f64.abs
  000040: 9a                         | f64.neg
  000041: 1a                         | drop
+ 000042: 0b                         | end
 ;;; STDOUT ;;)
