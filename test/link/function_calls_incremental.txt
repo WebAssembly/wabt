@@ -54,36 +54,36 @@ Function:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB	idx=0	offset=0x6(file=0x7b)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0x1	offset=0xc(file=0x81)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0	offset=0x1e(file=0x93)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0x1	offset=0x26(file=0x9b)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0	offset=0x34(file=0xa9)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0x1	offset=0x3c(file=0xb1)	addend=0
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x6(file=0x7b)
+   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0xc(file=0x81)
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x1e(file=0x93)
+   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x26(file=0x9b)
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x34(file=0xa9)
+   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x3c(file=0xb1)
 
 Code Disassembly:
 
 000076 func[3]:
  000078: 20 00                      | get_local 0
  00007a: 10 80 80 80 80 00          | call 0
-           00007b: R_FUNC_INDEX_LEB	0
+           00007b: R_FUNC_INDEX_LEB   0
  000080: 10 83 80 80 80 00          | call 0x3
-           000081: R_FUNC_INDEX_LEB	1
+           000081: R_FUNC_INDEX_LEB   1
  000086: 0b                         | end
 000087 func[4]:
  000089: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  000092: 10 81 80 80 80 00          | call 0x1
-           000093: R_FUNC_INDEX_LEB	0
+           000093: R_FUNC_INDEX_LEB   0
  000098: 42 0a                      | i64.const 10
  00009a: 10 84 80 80 80 00          | call 0x4
-           00009b: R_FUNC_INDEX_LEB	1
+           00009b: R_FUNC_INDEX_LEB   1
  0000a0: 0b                         | end
 0000a1 func[5]:
  0000a3: 43 00 00 80 3f             | f32.const 0x1p+0
  0000a8: 10 82 80 80 80 00          | call 0x2
-           0000a9: R_FUNC_INDEX_LEB	0
+           0000a9: R_FUNC_INDEX_LEB   0
  0000ae: 41 0a                      | i32.const 0xa
  0000b0: 10 85 80 80 80 00          | call 0x5
-           0000b1: R_FUNC_INDEX_LEB	1
+           0000b1: R_FUNC_INDEX_LEB   1
  0000b6: 0b                         | end
 ;;; STDOUT ;;)

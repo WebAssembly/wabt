@@ -76,8 +76,8 @@ Export:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB	idx=0	offset=0xd(file=0x84)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0x1	offset=0x17(file=0x8e)	addend=0
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0xd(file=0x84)
+   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x17(file=0x8e)
 
 Code Disassembly:
 
@@ -87,12 +87,12 @@ Code Disassembly:
  000080: 0b                         | end
 000081 func[1]:
  000083: 10 83 80 80 80 00          | call 0x3
-           000084: R_FUNC_INDEX_LEB	0
+           000084: R_FUNC_INDEX_LEB   0
  000089: 0f                         | return
  00008a: 0b                         | end
 00008b func[2]:
  00008d: 10 84 80 80 80 00          | call 0x4
-           00008e: R_FUNC_INDEX_LEB	1
+           00008e: R_FUNC_INDEX_LEB   1
  000093: 0f                         | return
  000094: 0b                         | end
 000095 func[3]:

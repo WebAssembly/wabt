@@ -37,19 +37,19 @@ Export:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB	idx=0	offset=0x6(file=0x37)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0	offset=0x11(file=0x42)	addend=0
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x6(file=0x37)
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x11(file=0x42)
 
 Code Disassembly:
 
 000032 func[0]:
  000034: 41 01                      | i32.const 0x1
  000036: 10 80 80 80 80 00          | call 0
-           000037: R_FUNC_INDEX_LEB	0
+           000037: R_FUNC_INDEX_LEB   0
  00003c: 0b                         | end
 00003d func[1]:
  00003f: 41 02                      | i32.const 0x2
  000041: 10 81 80 80 80 00          | call 0x1
-           000042: R_FUNC_INDEX_LEB	0
+           000042: R_FUNC_INDEX_LEB   0
  000047: 0b                         | end
 ;;; STDOUT ;;)

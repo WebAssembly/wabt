@@ -50,34 +50,34 @@ Global:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_GLOBAL_INDEX_LEB	idx=0x2	offset=0x4(file=0x5c)	addend=0
-   - R_GLOBAL_INDEX_LEB	idx=0x1	offset=0xa(file=0x62)	addend=0
-   - R_GLOBAL_INDEX_LEB	idx=0	offset=0x11(file=0x69)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0	offset=0x18(file=0x70)	addend=0
-   - R_GLOBAL_INDEX_LEB	idx=0	offset=0x21(file=0x79)	addend=0
-   - R_GLOBAL_INDEX_LEB	idx=0x1	offset=0x27(file=0x7f)	addend=0
-   - R_FUNC_INDEX_LEB	idx=0	offset=0x2d(file=0x85)	addend=0
+   - R_GLOBAL_INDEX_LEB idx=0x2  addend=0    offset=0x4(file=0x5c)
+   - R_GLOBAL_INDEX_LEB idx=0x1  addend=0    offset=0xa(file=0x62)
+   - R_GLOBAL_INDEX_LEB idx=0    addend=0    offset=0x11(file=0x69)
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x18(file=0x70)
+   - R_GLOBAL_INDEX_LEB idx=0    addend=0    offset=0x21(file=0x79)
+   - R_GLOBAL_INDEX_LEB idx=0x1  addend=0    offset=0x27(file=0x7f)
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x2d(file=0x85)
 
 Code Disassembly:
 
 000059 func[0]:
  00005b: 23 83 80 80 80 00          | get_global 0x3
-           00005c: R_GLOBAL_INDEX_LEB	2
+           00005c: R_GLOBAL_INDEX_LEB 2
  000061: 23 82 80 80 80 00          | get_global 0x2
-           000062: R_GLOBAL_INDEX_LEB	1
+           000062: R_GLOBAL_INDEX_LEB 1
  000067: 6a                         | i32.add
  000068: 23 80 80 80 80 00          | get_global 0
-           000069: R_GLOBAL_INDEX_LEB	0
+           000069: R_GLOBAL_INDEX_LEB 0
  00006e: 6a                         | i32.add
  00006f: 10 80 80 80 80 00          | call 0
-           000070: R_FUNC_INDEX_LEB	0
+           000070: R_FUNC_INDEX_LEB   0
  000075: 0b                         | end
 000076 func[1]:
  000078: 23 81 80 80 80 00          | get_global 0x1
-           000079: R_GLOBAL_INDEX_LEB	0
+           000079: R_GLOBAL_INDEX_LEB 0
  00007e: 23 84 80 80 80 00          | get_global 0x4
-           00007f: R_GLOBAL_INDEX_LEB	1
+           00007f: R_GLOBAL_INDEX_LEB 1
  000084: 10 81 80 80 80 00          | call 0x1
-           000085: R_FUNC_INDEX_LEB	0
+           000085: R_FUNC_INDEX_LEB   0
  00008a: 0b                         | end
 ;;; STDOUT ;;)
