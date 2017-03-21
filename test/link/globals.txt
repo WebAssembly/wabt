@@ -50,13 +50,13 @@ Global:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_GLOBAL_INDEX_LEB offset=0x5c (0x4)
-   - R_GLOBAL_INDEX_LEB offset=0x62 (0xa)
-   - R_GLOBAL_INDEX_LEB offset=0x69 (0x11)
-   - R_FUNC_INDEX_LEB   offset=0x70 (0x18)
-   - R_GLOBAL_INDEX_LEB offset=0x79 (0x21)
-   - R_GLOBAL_INDEX_LEB offset=0x7f (0x27)
-   - R_FUNC_INDEX_LEB   offset=0x85 (0x2d)
+   - R_GLOBAL_INDEX_LEB	idx=0x2	offset=0x4(file=0x5c)	addend=0
+   - R_GLOBAL_INDEX_LEB	idx=0x1	offset=0xa(file=0x62)	addend=0
+   - R_GLOBAL_INDEX_LEB	idx=0	offset=0x11(file=0x69)	addend=0
+   - R_FUNC_INDEX_LEB	idx=0	offset=0x18(file=0x70)	addend=0
+   - R_GLOBAL_INDEX_LEB	idx=0	offset=0x21(file=0x79)	addend=0
+   - R_GLOBAL_INDEX_LEB	idx=0x1	offset=0x27(file=0x7f)	addend=0
+   - R_FUNC_INDEX_LEB	idx=0	offset=0x2d(file=0x85)	addend=0
 
 Code Disassembly:
 
