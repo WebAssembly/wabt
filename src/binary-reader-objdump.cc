@@ -253,8 +253,18 @@ static void log_opcode(Context* ctx,
           ctx->section_starts[static_cast<size_t>(BinarySection::Code)];
       size_t abs_offset = code_start + reloc->offset;
       if (ctx->last_opcode_end > abs_offset) {
-        printf("           %06" PRIzx ": %s\t%d\n", abs_offset,
+        printf("           %06" PRIzx ": %-18s %d", abs_offset,
                get_reloc_type_name(reloc->type), reloc->index);
+        switch (reloc->type) {
+          case RelocType::MemoryAddressLEB:
+          case RelocType::MemoryAddressSLEB:
+          case RelocType::MemoryAddressI32:
+            printf(" + %d", reloc->addend);
+            break;
+          default:
+            break;
+        }
+        printf("\n");
         ctx->next_reloc++;
       }
     }
@@ -633,8 +643,8 @@ Result on_reloc(RelocType type,
   Context* ctx = static_cast<Context*>(user_data);
   uint32_t total_offset =
       ctx->section_starts[static_cast<size_t>(ctx->reloc_section)] + offset;
-  print_details(ctx, "   - %-18s offset=%#x (%#x)\n", get_reloc_type_name(type),
-                total_offset, offset);
+  print_details(ctx, "   - %-18s idx=%#-4x addend=%#-4x offset=%#x(file=%#x)\n",
+                get_reloc_type_name(type), index, addend, offset, total_offset);
   if (ctx->options->mode == ObjdumpMode::Prepass &&
       ctx->reloc_section == BinarySection::Code) {
     Reloc reloc;
