@@ -61,16 +61,14 @@ static Stream s_log_stream;
 
 struct Context {
   WABT_DISALLOW_COPY_AND_ASSIGN(Context);
-  Context();
+  Context() {
+    WABT_ZERO_MEMORY(stream);
+  }
 
   Stream stream;
   std::vector<std::unique_ptr<LinkerInputBinary>> inputs;
   ssize_t current_section_payload_offset = 0;
 };
-
-Context::Context() {
-  WABT_ZERO_MEMORY(stream);
-}
 
 static void on_option(struct OptionParser* parser,
                       struct Option* option,

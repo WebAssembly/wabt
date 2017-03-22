@@ -36,6 +36,11 @@ enum class VarType {
 };
 
 struct Var {
+  // Keep the default constructor trivial so it can be used as a union member.
+  Var() = default;
+  explicit Var(int64_t index);
+  explicit Var(const StringSlice& name);
+
   Location loc;
   VarType type;
   union {
@@ -48,6 +53,19 @@ typedef std::vector<Var> VarVector;
 typedef StringSlice Label;
 
 struct Const {
+  // Struct tags to differentiate constructors.
+  struct I32 {};
+  struct I64 {};
+  struct F32 {};
+  struct F64 {};
+
+  // Keep the default constructor trivial so it can be used as a union member.
+  Const() = default;
+  Const(I32, uint32_t);
+  Const(I64, uint64_t);
+  Const(F32, uint32_t);
+  Const(F64, uint64_t);
+
   Location loc;
   Type type;
   union {
@@ -94,6 +112,7 @@ typedef TypeVector BlockSignature;
 struct Block {
   WABT_DISALLOW_COPY_AND_ASSIGN(Block);
   Block();
+  explicit Block(struct Expr* first);
   ~Block();
 
   Label label;
@@ -104,21 +123,50 @@ struct Block {
 struct Expr {
   WABT_DISALLOW_COPY_AND_ASSIGN(Expr);
   Expr();
+  explicit Expr(ExprType);
   ~Expr();
+
+  static Expr* CreateBinary(Opcode);
+  static Expr* CreateBlock(Block*);
+  static Expr* CreateBr(Var);
+  static Expr* CreateBrIf(Var);
+  static Expr* CreateBrTable(VarVector* targets, Var default_target);
+  static Expr* CreateCall(Var);
+  static Expr* CreateCallIndirect(Var);
+  static Expr* CreateCompare(Opcode);
+  static Expr* CreateConst(const Const&);
+  static Expr* CreateConvert(Opcode);
+  static Expr* CreateCurrentMemory();
+  static Expr* CreateDrop();
+  static Expr* CreateGetGlobal(Var);
+  static Expr* CreateGetLocal(Var);
+  static Expr* CreateGrowMemory();
+  static Expr* CreateIf(struct Block* true_, struct Expr* false_ = nullptr);
+  static Expr* CreateLoad(Opcode, uint32_t align, uint64_t offset);
+  static Expr* CreateLoop(struct Block*);
+  static Expr* CreateNop();
+  static Expr* CreateReturn();
+  static Expr* CreateSelect();
+  static Expr* CreateSetGlobal(Var);
+  static Expr* CreateSetLocal(Var);
+  static Expr* CreateStore(Opcode, uint32_t align, uint64_t offset);
+  static Expr* CreateTeeLocal(Var);
+  static Expr* CreateUnary(Opcode);
+  static Expr* CreateUnreachable();
 
   Location loc;
   ExprType type;
   Expr* next;
   union {
     struct { Opcode opcode; } binary, compare, convert, unary;
-    Block *block, *loop;
+    struct Block *block, *loop;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;
     struct { Var var; } call, call_indirect;
-    Const const_;
+    struct Const const_;
     struct { Var var; } get_global, set_global;
     struct { Var var; } get_local, set_local, tee_local;
-    struct { Block* true_; struct Expr* false_; } if_;
+    struct { struct Block* true_; struct Expr* false_; } if_;
     struct { Opcode opcode; uint32_t align; uint64_t offset; } load, store;
   };
 };
@@ -453,35 +501,6 @@ struct ExprVisitor {
 ModuleField* append_module_field(Module*);
 /* ownership of the function signature is passed to the module */
 FuncType* append_implicit_func_type(Location*, Module*, FuncSignature*);
-
-/* Expr creation functions */
-Expr* new_binary_expr(void);
-Expr* new_block_expr(void);
-Expr* new_br_expr(void);
-Expr* new_br_if_expr(void);
-Expr* new_br_table_expr(void);
-Expr* new_call_expr(void);
-Expr* new_call_indirect_expr(void);
-Expr* new_compare_expr(void);
-Expr* new_const_expr(void);
-Expr* new_convert_expr(void);
-Expr* new_current_memory_expr(void);
-Expr* new_drop_expr(void);
-Expr* new_get_global_expr(void);
-Expr* new_get_local_expr(void);
-Expr* new_grow_memory_expr(void);
-Expr* new_if_expr(void);
-Expr* new_load_expr(void);
-Expr* new_loop_expr(void);
-Expr* new_nop_expr(void);
-Expr* new_return_expr(void);
-Expr* new_select_expr(void);
-Expr* new_set_global_expr(void);
-Expr* new_set_local_expr(void);
-Expr* new_store_expr(void);
-Expr* new_tee_local_expr(void);
-Expr* new_unary_expr(void);
-Expr* new_unreachable_expr(void);
 
 /* destruction functions. not needed unless you're creating your own AST
  elements */

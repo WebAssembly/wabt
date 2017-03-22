@@ -431,8 +431,7 @@ static Result on_local_decl(uint32_t decl_index,
 
 static Result on_binary_expr(Opcode opcode, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_binary_expr();
-  expr->binary.opcode = opcode;
+  Expr* expr = Expr::CreateBinary(opcode);
   return append_expr(ctx, expr);
 }
 
@@ -440,8 +439,7 @@ static Result on_block_expr(uint32_t num_types,
                             Type* sig_types,
                             void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_block_expr();
-  expr->block = new Block();
+  Expr* expr = Expr::CreateBlock(new Block());
   expr->block->sig.assign(sig_types, sig_types + num_types);
   append_expr(ctx, expr);
   push_label(ctx, LabelType::Block, &expr->block->first);
@@ -450,17 +448,13 @@ static Result on_block_expr(uint32_t num_types,
 
 static Result on_br_expr(uint32_t depth, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_br_expr();
-  expr->br.var.type = VarType::Index;
-  expr->br.var.index = depth;
+  Expr* expr = Expr::CreateBr(Var(depth));
   return append_expr(ctx, expr);
 }
 
 static Result on_br_if_expr(uint32_t depth, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_br_if_expr();
-  expr->br_if.var.type = VarType::Index;
-  expr->br_if.var.index = depth;
+  Expr* expr = Expr::CreateBrIf(Var(depth));
   return append_expr(ctx, expr);
 }
 
@@ -469,60 +463,50 @@ static Result on_br_table_expr(BinaryReaderContext* context,
                                uint32_t* target_depths,
                                uint32_t default_target_depth) {
   Context* ctx = static_cast<Context*>(context->user_data);
-  Expr* expr = new_br_table_expr();
-  expr->br_table.targets = new VarVector();
-  expr->br_table.targets->resize(num_targets);
+  VarVector* targets = new VarVector();
+  targets->resize(num_targets);
   for (uint32_t i = 0; i < num_targets; ++i) {
-    Var* var = &(*expr->br_table.targets)[i];
-    var->type = VarType::Index;
-    var->index = target_depths[i];
+    (*targets)[i] = Var(target_depths[i]);
   }
-  expr->br_table.default_target.type = VarType::Index;
-  expr->br_table.default_target.index = default_target_depth;
+  Expr* expr = Expr::CreateBrTable(targets, Var(default_target_depth));
   return append_expr(ctx, expr);
 }
 
 static Result on_call_expr(uint32_t func_index, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   assert(func_index < ctx->module->funcs.size());
-  Expr* expr = new_call_expr();
-  expr->call.var.type = VarType::Index;
-  expr->call.var.index = func_index;
+  Expr* expr = Expr::CreateCall(Var(func_index));
   return append_expr(ctx, expr);
 }
 
 static Result on_call_indirect_expr(uint32_t sig_index, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   assert(sig_index < ctx->module->func_types.size());
-  Expr* expr = new_call_indirect_expr();
-  expr->call_indirect.var.type = VarType::Index;
-  expr->call_indirect.var.index = sig_index;
+  Expr* expr = Expr::CreateCallIndirect(Var(sig_index));
   return append_expr(ctx, expr);
 }
 
 static Result on_compare_expr(Opcode opcode, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_compare_expr();
-  expr->compare.opcode = opcode;
+  Expr* expr = Expr::CreateCompare(opcode);
   return append_expr(ctx, expr);
 }
 
 static Result on_convert_expr(Opcode opcode, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_convert_expr();
-  expr->convert.opcode = opcode;
+  Expr* expr = Expr::CreateConvert(opcode);
   return append_expr(ctx, expr);
 }
 
 static Result on_current_memory_expr(void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_current_memory_expr();
+  Expr* expr = Expr::CreateCurrentMemory();
   return append_expr(ctx, expr);
 }
 
 static Result on_drop_expr(void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_drop_expr();
+  Expr* expr = Expr::CreateDrop();
   return append_expr(ctx, expr);
 }
 
@@ -552,62 +536,49 @@ static Result on_end_expr(void* user_data) {
 
 static Result on_f32_const_expr(uint32_t value_bits, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_const_expr();
-  expr->const_.type = Type::F32;
-  expr->const_.f32_bits = value_bits;
+  Expr* expr = Expr::CreateConst(Const(Const::F32(), value_bits));
   return append_expr(ctx, expr);
 }
 
 static Result on_f64_const_expr(uint64_t value_bits, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_const_expr();
-  expr->const_.type = Type::F64;
-  expr->const_.f64_bits = value_bits;
+  Expr* expr = Expr::CreateConst(Const(Const::F64(), value_bits));
   return append_expr(ctx, expr);
 }
 
 static Result on_get_global_expr(uint32_t global_index, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_get_global_expr();
-  expr->get_global.var.type = VarType::Index;
-  expr->get_global.var.index = global_index;
+  Expr* expr = Expr::CreateGetGlobal(Var(global_index));
   return append_expr(ctx, expr);
 }
 
 static Result on_get_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_get_local_expr();
-  expr->get_local.var.type = VarType::Index;
-  expr->get_local.var.index = local_index;
+  Expr* expr = Expr::CreateGetLocal(Var(local_index));
   return append_expr(ctx, expr);
 }
 
 static Result on_grow_memory_expr(void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_grow_memory_expr();
+  Expr* expr = Expr::CreateGrowMemory();
   return append_expr(ctx, expr);
 }
 
 static Result on_i32_const_expr(uint32_t value, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_const_expr();
-  expr->const_.type = Type::I32;
-  expr->const_.u32 = value;
+  Expr* expr = Expr::CreateConst(Const(Const::I32(), value));
   return append_expr(ctx, expr);
 }
 
 static Result on_i64_const_expr(uint64_t value, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_const_expr();
-  expr->const_.type = Type::I64;
-  expr->const_.u64 = value;
+  Expr* expr = Expr::CreateConst(Const(Const::I64(), value));
   return append_expr(ctx, expr);
 }
 
 static Result on_if_expr(uint32_t num_types, Type* sig_types, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_if_expr();
-  expr->if_.true_ = new Block();
+  Expr* expr = Expr::CreateIf(new Block());
   expr->if_.true_->sig.assign(sig_types, sig_types + num_types);
   expr->if_.false_ = nullptr;
   append_expr(ctx, expr);
@@ -620,10 +591,7 @@ static Result on_load_expr(Opcode opcode,
                            uint32_t offset,
                            void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_load_expr();
-  expr->load.opcode = opcode;
-  expr->load.align = 1 << alignment_log2;
-  expr->load.offset = offset;
+  Expr* expr = Expr::CreateLoad(opcode, 1 << alignment_log2, offset);
   return append_expr(ctx, expr);
 }
 
@@ -631,8 +599,7 @@ static Result on_loop_expr(uint32_t num_types,
                            Type* sig_types,
                            void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_loop_expr();
-  expr->loop = new Block();
+  Expr* expr = Expr::CreateLoop(new Block());
   expr->loop->sig.assign(sig_types, sig_types + num_types);
   append_expr(ctx, expr);
   push_label(ctx, LabelType::Loop, &expr->loop->first);
@@ -641,35 +608,31 @@ static Result on_loop_expr(uint32_t num_types,
 
 static Result on_nop_expr(void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_nop_expr();
+  Expr* expr = Expr::CreateNop();
   return append_expr(ctx, expr);
 }
 
 static Result on_return_expr(void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_return_expr();
+  Expr* expr = Expr::CreateReturn();
   return append_expr(ctx, expr);
 }
 
 static Result on_select_expr(void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_select_expr();
+  Expr* expr = Expr::CreateSelect();
   return append_expr(ctx, expr);
 }
 
 static Result on_set_global_expr(uint32_t global_index, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_set_global_expr();
-  expr->set_global.var.type = VarType::Index;
-  expr->set_global.var.index = global_index;
+  Expr* expr = Expr::CreateSetGlobal(Var(global_index));
   return append_expr(ctx, expr);
 }
 
 static Result on_set_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_set_local_expr();
-  expr->set_local.var.type = VarType::Index;
-  expr->set_local.var.index = local_index;
+  Expr* expr = Expr::CreateSetLocal(Var(local_index));
   return append_expr(ctx, expr);
 }
 
@@ -678,31 +641,25 @@ static Result on_store_expr(Opcode opcode,
                             uint32_t offset,
                             void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_store_expr();
-  expr->store.opcode = opcode;
-  expr->store.align = 1 << alignment_log2;
-  expr->store.offset = offset;
+  Expr* expr = Expr::CreateStore(opcode, 1 << alignment_log2, offset);
   return append_expr(ctx, expr);
 }
 
 static Result on_tee_local_expr(uint32_t local_index, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_tee_local_expr();
-  expr->tee_local.var.type = VarType::Index;
-  expr->tee_local.var.index = local_index;
+  Expr* expr = Expr::CreateTeeLocal(Var(local_index));
   return append_expr(ctx, expr);
 }
 
 static Result on_unary_expr(Opcode opcode, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_unary_expr();
-  expr->unary.opcode = opcode;
+  Expr* expr = Expr::CreateUnary(opcode);
   return append_expr(ctx, expr);
 }
 
 static Result on_unreachable_expr(void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_unreachable_expr();
+  Expr* expr = Expr::CreateUnreachable();
   return append_expr(ctx, expr);
 }
 
@@ -860,10 +817,7 @@ static Result on_init_expr_f32_const_expr(uint32_t index,
                                           uint32_t value,
                                           void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_const_expr();
-  expr->const_.type = Type::F32;
-  expr->const_.f32_bits = value;
-  *ctx->current_init_expr = expr;
+  *ctx->current_init_expr = Expr::CreateConst(Const(Const::F32(), value));
   return Result::Ok;
 }
 
@@ -871,10 +825,7 @@ static Result on_init_expr_f64_const_expr(uint32_t index,
                                           uint64_t value,
                                           void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_const_expr();
-  expr->const_.type = Type::F64;
-  expr->const_.f64_bits = value;
-  *ctx->current_init_expr = expr;
+  *ctx->current_init_expr = Expr::CreateConst(Const(Const::F64(), value));
   return Result::Ok;
 }
 
@@ -882,10 +833,7 @@ static Result on_init_expr_get_global_expr(uint32_t index,
                                            uint32_t global_index,
                                            void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_get_global_expr();
-  expr->get_global.var.type = VarType::Index;
-  expr->get_global.var.index = global_index;
-  *ctx->current_init_expr = expr;
+  *ctx->current_init_expr = Expr::CreateGetGlobal(Var(global_index));
   return Result::Ok;
 }
 
@@ -893,10 +841,7 @@ static Result on_init_expr_i32_const_expr(uint32_t index,
                                           uint32_t value,
                                           void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_const_expr();
-  expr->const_.type = Type::I32;
-  expr->const_.u32 = value;
-  *ctx->current_init_expr = expr;
+  *ctx->current_init_expr = Expr::CreateConst(Const(Const::I32(), value));
   return Result::Ok;
 }
 
@@ -904,10 +849,7 @@ static Result on_init_expr_i64_const_expr(uint32_t index,
                                           uint64_t value,
                                           void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Expr* expr = new_const_expr();
-  expr->const_.type = Type::I64;
-  expr->const_.u64 = value;
-  *ctx->current_init_expr = expr;
+  *ctx->current_init_expr = Expr::CreateConst(Const(Const::I64(), value));
   return Result::Ok;
 }
 

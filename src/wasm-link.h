@@ -94,6 +94,7 @@ struct Section {
    * section. */
   size_t output_payload_offset;
 };
+
 typedef std::vector<Section*> SectionPtrVector;
 
 struct LinkerInputBinary {

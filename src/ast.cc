@@ -179,44 +179,6 @@ FuncType* append_implicit_func_type(Location* loc,
   return field->func_type;
 }
 
-#define FOREACH_EXPR_TYPE(V)                 \
-  V(ExprType::Binary, binary)                \
-  V(ExprType::Block, block)                  \
-  V(ExprType::Br, br)                        \
-  V(ExprType::BrIf, br_if)                   \
-  V(ExprType::BrTable, br_table)             \
-  V(ExprType::Call, call)                    \
-  V(ExprType::CallIndirect, call_indirect)   \
-  V(ExprType::Compare, compare)              \
-  V(ExprType::Const, const)                  \
-  V(ExprType::Convert, convert)              \
-  V(ExprType::GetGlobal, get_global)         \
-  V(ExprType::GetLocal, get_local)           \
-  V(ExprType::If, if)                        \
-  V(ExprType::Load, load)                    \
-  V(ExprType::Loop, loop)                    \
-  V(ExprType::SetGlobal, set_global)         \
-  V(ExprType::SetLocal, set_local)           \
-  V(ExprType::Store, store)                  \
-  V(ExprType::TeeLocal, tee_local)           \
-  V(ExprType::Unary, unary)                  \
-  V(ExprType::CurrentMemory, current_memory) \
-  V(ExprType::Drop, drop)                    \
-  V(ExprType::GrowMemory, grow_memory)       \
-  V(ExprType::Nop, nop)                      \
-  V(ExprType::Return, return )               \
-  V(ExprType::Select, select)                \
-  V(ExprType::Unreachable, unreachable)
-
-#define DEFINE_NEW_EXPR(type_, name) \
-  Expr* new_##name##_expr(void) {    \
-    Expr* result = new Expr();       \
-    result->type = type_;            \
-    return result;                   \
-  }
-FOREACH_EXPR_TYPE(DEFINE_NEW_EXPR)
-#undef DEFINE_NEW_EXPR
-
 void destroy_var(Var* var) {
   if (var->type == VarType::Name)
     destroy_string_slice(&var->name);
@@ -231,7 +193,35 @@ void destroy_expr_list(Expr* first) {
   }
 }
 
+Var::Var(int64_t index) : type(VarType::Index), index(index) {
+  WABT_ZERO_MEMORY(loc);
+}
+
+Var::Var(const StringSlice& name) : type(VarType::Name), name(name) {
+  WABT_ZERO_MEMORY(loc);
+}
+
+Const::Const(I32, uint32_t value) : type(Type::I32), u32(value) {
+  WABT_ZERO_MEMORY(loc);
+}
+
+Const::Const(I64, uint64_t value) : type(Type::I64), u64(value) {
+  WABT_ZERO_MEMORY(loc);
+}
+
+Const::Const(F32, uint32_t value) : type(Type::F32), f32_bits(value) {
+  WABT_ZERO_MEMORY(loc);
+}
+
+Const::Const(F64, uint64_t value) : type(Type::F64), f64_bits(value) {
+  WABT_ZERO_MEMORY(loc);
+}
+
 Block::Block(): first(nullptr) {
+  WABT_ZERO_MEMORY(label);
+}
+
+Block::Block(Expr* first) : first(first) {
   WABT_ZERO_MEMORY(label);
 }
 
@@ -243,6 +233,10 @@ Block::~Block() {
 Expr::Expr() : type(ExprType::Binary), next(nullptr) {
   WABT_ZERO_MEMORY(loc);
   binary.opcode = Opcode::Nop;
+}
+
+Expr::Expr(ExprType type) : type(type), next(nullptr) {
+  WABT_ZERO_MEMORY(loc);
 }
 
 Expr::~Expr() {
@@ -307,6 +301,187 @@ Expr::~Expr() {
     case ExprType::Unreachable:
       break;
   }
+}
+
+// static
+Expr* Expr::CreateBinary(Opcode opcode) {
+  Expr* expr = new Expr(ExprType::Binary);
+  expr->binary.opcode = opcode;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateBlock(Block* block) {
+  Expr* expr = new Expr(ExprType::Block);
+  expr->block = block;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateBr(Var var) {
+  Expr* expr = new Expr(ExprType::Br);
+  expr->br.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateBrIf(Var var) {
+  Expr* expr = new Expr(ExprType::BrIf);
+  expr->br_if.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateBrTable(VarVector* targets, Var default_target) {
+  Expr* expr = new Expr(ExprType::BrTable);
+  expr->br_table.targets = targets;
+  expr->br_table.default_target = default_target;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateCall(Var var) {
+  Expr* expr = new Expr(ExprType::Call);
+  expr->call.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateCallIndirect(Var var) {
+  Expr* expr = new Expr(ExprType::CallIndirect);
+  expr->call_indirect.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateCompare(Opcode opcode) {
+  Expr* expr = new Expr(ExprType::Compare);
+  expr->compare.opcode = opcode;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateConst(const Const& const_) {
+  Expr* expr = new Expr(ExprType::Const);
+  expr->const_ = const_;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateConvert(Opcode opcode) {
+  Expr* expr = new Expr(ExprType::Convert);
+  expr->convert.opcode = opcode;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateCurrentMemory() {
+  return new Expr(ExprType::CurrentMemory);
+}
+
+// static
+Expr* Expr::CreateDrop() {
+  return new Expr(ExprType::Drop);
+}
+
+// static
+Expr* Expr::CreateGetGlobal(Var var) {
+  Expr* expr = new Expr(ExprType::GetGlobal);
+  expr->get_global.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateGetLocal(Var var) {
+  Expr* expr = new Expr(ExprType::GetLocal);
+  expr->get_local.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateGrowMemory() {
+  return new Expr(ExprType::GrowMemory);
+}
+
+// static
+Expr* Expr::CreateIf(Block* true_, Expr* false_) {
+  Expr* expr = new Expr(ExprType::If);
+  expr->if_.true_ = true_;
+  expr->if_.false_ = false_;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateLoad(Opcode opcode, uint32_t align, uint64_t offset) {
+  Expr* expr = new Expr(ExprType::Load);
+  expr->load.opcode = opcode;
+  expr->load.align = align;
+  expr->load.offset = offset;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateLoop(Block* block) {
+  Expr* expr = new Expr(ExprType::Loop);
+  expr->loop = block;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateNop() {
+  return new Expr(ExprType::Nop);
+}
+
+// static
+Expr* Expr::CreateReturn() {
+  return new Expr(ExprType::Return);
+}
+
+// static
+Expr* Expr::CreateSelect() {
+  return new Expr(ExprType::Select);
+}
+
+// static
+Expr* Expr::CreateSetGlobal(Var var) {
+  Expr* expr = new Expr(ExprType::SetGlobal);
+  expr->set_global.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateSetLocal(Var var) {
+  Expr* expr = new Expr(ExprType::SetLocal);
+  expr->set_local.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateStore(Opcode opcode, uint32_t align, uint64_t offset) {
+  Expr* expr = new Expr(ExprType::Store);
+  expr->store.opcode = opcode;
+  expr->store.align = align;
+  expr->store.offset = offset;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateTeeLocal(Var var) {
+  Expr* expr = new Expr(ExprType::TeeLocal);
+  expr->tee_local.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateUnary(Opcode opcode) {
+  Expr* expr = new Expr(ExprType::Unary);
+  expr->unary.opcode = opcode;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateUnreachable() {
+  return new Expr(ExprType::Unreachable);
 }
 
 FuncType::FuncType() {

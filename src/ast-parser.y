@@ -362,8 +362,8 @@ func_sig :
   | LPAR PARAM value_type_list RPAR LPAR RESULT value_type_list RPAR {
       $$ = new FuncSignature();
       $$->param_types = std::move(*$3);
-      $$->result_types = std::move(*$7);
       delete $3;
+      $$->result_types = std::move(*$7);
       delete $7;
     }
   | LPAR RESULT value_type_list RPAR {
@@ -491,133 +491,107 @@ instr :
 ;
 plain_instr :
     UNREACHABLE {
-      $$ = new_unreachable_expr();
+      $$ = Expr::CreateUnreachable();
     }
   | NOP {
-      $$ = new_nop_expr();
+      $$ = Expr::CreateNop();
     }
   | DROP {
-      $$ = new_drop_expr();
+      $$ = Expr::CreateDrop();
     }
   | SELECT {
-      $$ = new_select_expr();
+      $$ = Expr::CreateSelect();
     }
   | BR var {
-      $$ = new_br_expr();
-      $$->br.var = $2;
+      $$ = Expr::CreateBr($2);
     }
   | BR_IF var {
-      $$ = new_br_if_expr();
-      $$->br_if.var = $2;
+      $$ = Expr::CreateBrIf($2);
     }
   | BR_TABLE var_list var {
-      $$ = new_br_table_expr();
-      $$->br_table.targets = $2;
-      $$->br_table.default_target = $3;
+      $$ = Expr::CreateBrTable($2, $3);
     }
   | RETURN {
-      $$ = new_return_expr();
+      $$ = Expr::CreateReturn();
     }
   | CALL var {
-      $$ = new_call_expr();
-      $$->call.var = $2;
+      $$ = Expr::CreateCall($2);
     }
   | CALL_INDIRECT var {
-      $$ = new_call_indirect_expr();
-      $$->call_indirect.var = $2;
+      $$ = Expr::CreateCallIndirect($2);
     }
   | GET_LOCAL var {
-      $$ = new_get_local_expr();
-      $$->get_local.var = $2;
+      $$ = Expr::CreateGetLocal($2);
     }
   | SET_LOCAL var {
-      $$ = new_set_local_expr();
-      $$->set_local.var = $2;
+      $$ = Expr::CreateSetLocal($2);
     }
   | TEE_LOCAL var {
-      $$ = new_tee_local_expr();
-      $$->tee_local.var = $2;
+      $$ = Expr::CreateTeeLocal($2);
     }
   | GET_GLOBAL var {
-      $$ = new_get_global_expr();
-      $$->get_global.var = $2;
+      $$ = Expr::CreateGetGlobal($2);
     }
   | SET_GLOBAL var {
-      $$ = new_set_global_expr();
-      $$->set_global.var = $2;
+      $$ = Expr::CreateSetGlobal($2);
     }
   | LOAD offset_opt align_opt {
-      $$ = new_load_expr();
-      $$->load.opcode = $1;
-      $$->load.offset = $2;
-      $$->load.align = $3;
+      $$ = Expr::CreateLoad($1, $3, $2);
     }
   | STORE offset_opt align_opt {
-      $$ = new_store_expr();
-      $$->store.opcode = $1;
-      $$->store.offset = $2;
-      $$->store.align = $3;
+      $$ = Expr::CreateStore($1, $3, $2);
     }
   | CONST literal {
-      $$ = new_const_expr();
-      $$->const_.loc = @1;
+      Const const_;
+      WABT_ZERO_MEMORY(const_);
+      const_.loc = @1;
       if (WABT_FAILED(parse_const($1, $2.type, $2.text.start,
-                                  $2.text.start + $2.text.length,
-                                  &$$->const_))) {
+                                  $2.text.start + $2.text.length, &const_))) {
         ast_parser_error(&@2, lexer, parser,
                               "invalid literal \"" PRIstringslice "\"",
                               WABT_PRINTF_STRING_SLICE_ARG($2.text));
       }
       delete [] $2.text.start;
+      $$ = Expr::CreateConst(const_);
     }
   | UNARY {
-      $$ = new_unary_expr();
-      $$->unary.opcode = $1;
+      $$ = Expr::CreateUnary($1);
     }
   | BINARY {
-      $$ = new_binary_expr();
-      $$->binary.opcode = $1;
+      $$ = Expr::CreateBinary($1);
     }
   | COMPARE {
-      $$ = new_compare_expr();
-      $$->compare.opcode = $1;
+      $$ = Expr::CreateCompare($1);
     }
   | CONVERT {
-      $$ = new_convert_expr();
-      $$->convert.opcode = $1;
+      $$ = Expr::CreateConvert($1);
     }
   | CURRENT_MEMORY {
-      $$ = new_current_memory_expr();
+      $$ = Expr::CreateCurrentMemory();
     }
   | GROW_MEMORY {
-      $$ = new_grow_memory_expr();
+      $$ = Expr::CreateGrowMemory();
     }
 ;
 block_instr :
     BLOCK labeling_opt block END labeling_opt {
-      $$ = new_block_expr();
-      $$->block = $3;
+      $$ = Expr::CreateBlock($3);
       $$->block->label = $2;
       CHECK_END_LABEL(@5, $$->block->label, $5);
     }
   | LOOP labeling_opt block END labeling_opt {
-      $$ = new_loop_expr();
-      $$->loop = $3;
+      $$ = Expr::CreateLoop($3);
       $$->loop->label = $2;
       CHECK_END_LABEL(@5, $$->loop->label, $5);
     }
   | IF labeling_opt block END labeling_opt {
-      $$ = new_if_expr();
-      $$->if_.true_ = $3;
+      $$ = Expr::CreateIf($3, nullptr);
       $$->if_.true_->label = $2;
-      $$->if_.false_ = nullptr;
       CHECK_END_LABEL(@5, $$->if_.true_->label, $5);
     }
   | IF labeling_opt block ELSE labeling_opt instr_list END labeling_opt {
-      $$ = new_if_expr();
-      $$->if_.true_ = $3;
+      $$ = Expr::CreateIf($3, $6.first);
       $$->if_.true_->label = $2;
-      $$->if_.false_ = $6.first;
       CHECK_END_LABEL(@5, $$->if_.true_->label, $5);
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
@@ -626,8 +600,8 @@ block :
     value_type_list instr_list {
       $$ = new Block();
       $$->sig = std::move(*$1);
-      $$->first = $2.first;
       delete $1;
+      $$->first = $2.first;
     }
 ;
 
@@ -640,14 +614,12 @@ expr1 :
       $$ = join_exprs2(&@1, &$2, $1);
     }
   | BLOCK labeling_opt block {
-      Expr* expr = new_block_expr();
-      expr->block = $3;
+      Expr* expr = Expr::CreateBlock($3);
       expr->block->label = $2;
       $$ = join_exprs1(&@1, expr);
     }
   | LOOP labeling_opt block {
-      Expr* expr = new_loop_expr();
-      expr->loop = $3;
+      Expr* expr = Expr::CreateLoop($3);
       expr->loop->label = $2;
       $$ = join_exprs1(&@1, expr);
     }
@@ -662,45 +634,27 @@ expr1 :
 ;
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      Expr* expr = new_if_expr();
-      expr->if_.true_ = new Block();
-      expr->if_.true_->first = $3.first;
-      expr->if_.false_ = $7.first;
+      Expr* expr = Expr::CreateIf(new Block($3.first), $7.first);
       $$ = join_exprs1(&@1, expr);
     }
   | LPAR THEN instr_list RPAR {
-      Expr* expr = new_if_expr();
-      expr->if_.true_ = new Block();
-      expr->if_.true_->first = $3.first;
-      expr->if_.false_ = nullptr;
+      Expr* expr = Expr::CreateIf(new Block($3.first), nullptr);
       $$ = join_exprs1(&@1, expr);
     }
   | expr LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      Expr* expr = new_if_expr();
-      expr->if_.true_ = new Block();
-      expr->if_.true_->first = $4.first;
-      expr->if_.false_ = $8.first;
+      Expr* expr = Expr::CreateIf(new Block($4.first), $8.first);
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr LPAR THEN instr_list RPAR {
-      Expr* expr = new_if_expr();
-      expr->if_.true_ = new Block();
-      expr->if_.true_->first = $4.first;
-      expr->if_.false_ = nullptr;
+      Expr* expr = Expr::CreateIf(new Block($4.first), nullptr);
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr expr expr {
-      Expr* expr = new_if_expr();
-      expr->if_.true_ = new Block();
-      expr->if_.true_->first = $2.first;
-      expr->if_.false_ = $3.first;
+      Expr* expr = Expr::CreateIf(new Block($2.first), $3.first);
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr expr {
-      Expr* expr = new_if_expr();
-      expr->if_.true_ = new Block();
-      expr->if_.true_->first = $2.first;
-      expr->if_.false_ = nullptr;
+      Expr* expr = Expr::CreateIf(new Block($2.first), nullptr);
       $$ = join_exprs2(&@1, &$1, expr);
     }
 ;
@@ -897,10 +851,8 @@ table :
     }
   | LPAR TABLE bind_var_opt inline_export_opt elem_type
          LPAR ELEM var_list RPAR RPAR {
-      Expr* expr = new_const_expr();
+      Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
       expr->loc = @2;
-      expr->const_.type = Type::I32;
-      expr->const_.u32 = 0;
 
       $$ = new ExportedTable();
       $$->table.reset(new Table());
@@ -912,9 +864,9 @@ table :
       $$->elem_segment.reset(new ElemSegment());
       $$->elem_segment->offset = expr;
       $$->elem_segment->vars = std::move(*$8);
+      delete $8;
       $$->export_ = std::move(*$4);
       delete $4;
-      delete $8;
     }
 ;
 
@@ -947,10 +899,8 @@ memory :
       delete $4;
     }
   | LPAR MEMORY bind_var_opt inline_export LPAR DATA text_list RPAR RPAR {
-      Expr* expr = new_const_expr();
+      Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
       expr->loc = @2;
-      expr->const_.type = Type::I32;
-      expr->const_.u32 = 0;
 
       $$ = new ExportedMemory();
       $$->has_data_segment = true;
@@ -970,10 +920,8 @@ memory :
     }
   /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
   | LPAR MEMORY bind_var_opt LPAR DATA text_list RPAR RPAR {
-      Expr* expr = new_const_expr();
+      Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
       expr->loc = @2;
-      expr->const_.type = Type::I32;
-      expr->const_.u32 = 0;
 
       $$ = new ExportedMemory();
       $$->has_data_segment = true;
