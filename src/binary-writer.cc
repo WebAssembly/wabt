@@ -397,8 +397,8 @@ static void write_expr(Context* ctx,
       write_u32_leb128(&ctx->stream, expr->br_table.targets->size(),
                        "num targets");
       uint32_t depth;
-      for (size_t i = 0; i < expr->br_table.targets->size(); ++i) {
-        depth = get_label_var_depth(ctx, &(*expr->br_table.targets)[i]);
+      for (const Var& var: *expr->br_table.targets) {
+        depth = get_label_var_depth(ctx, &var);
         write_u32_leb128(&ctx->stream, depth, "break depth");
       }
       depth = get_label_var_depth(ctx, &expr->br_table.default_target);
@@ -639,15 +639,15 @@ static void write_reloc_section(Context* ctx, RelocSection* reloc_section) {
   std::vector<Reloc>& relocs = reloc_section->relocations;
   write_u32_leb128(&ctx->stream, relocs.size(), "num relocs");
 
-  for (size_t i = 0; i < relocs.size(); i++) {
-    write_u32_leb128_enum(&ctx->stream, relocs[i].type, "reloc type");
-    write_u32_leb128(&ctx->stream, relocs[i].offset, "reloc offset");
-    write_u32_leb128(&ctx->stream, relocs[i].index, "reloc index");
-    switch (relocs[i].type) {
+  for (const Reloc& reloc: relocs) {
+    write_u32_leb128_enum(&ctx->stream, reloc.type, "reloc type");
+    write_u32_leb128(&ctx->stream, reloc.offset, "reloc offset");
+    write_u32_leb128(&ctx->stream, reloc.index, "reloc index");
+    switch (reloc.type) {
       case RelocType::MemoryAddressLEB:
       case RelocType::MemoryAddressSLEB:
       case RelocType::MemoryAddressI32:
-        write_u32_leb128(&ctx->stream, relocs[i].addend, "reloc addend");
+        write_u32_leb128(&ctx->stream, reloc.addend, "reloc addend");
         break;
       default:
         break;
@@ -778,8 +778,7 @@ static Result write_module(Context* ctx, const Module* module) {
     begin_known_section(ctx, BinarySection::Export, LEB_SECTION_SIZE_GUESS);
     write_u32_leb128(&ctx->stream, module->exports.size(), "num exports");
 
-    for (size_t i = 0; i < module->exports.size(); ++i) {
-      const Export* export_ = module->exports[i];
+    for (const Export* export_ : module->exports) {
       write_str(&ctx->stream, export_->name.start, export_->name.length,
                 PrintChars::Yes, "export name");
       write_u8_enum(&ctx->stream, export_->kind, "export kind");
@@ -830,8 +829,8 @@ static Result write_module(Context* ctx, const Module* module) {
       write_init_expr(ctx, module, segment->offset);
       write_u32_leb128(&ctx->stream, segment->vars.size(),
                        "num function indices");
-      for (size_t j = 0; j < segment->vars.size(); ++j) {
-        int index = get_func_index_by_var(module, &segment->vars[j]);
+      for (const Var& var: segment->vars) {
+        int index = get_func_index_by_var(module, &var);
         write_u32_leb128_with_reloc(ctx, index, "function index",
                                     RelocType::FuncIndexLEB);
       }
