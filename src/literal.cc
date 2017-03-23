@@ -283,37 +283,37 @@ static void parse_float_hex(const char* s,
   if (!seen_dot)
     significand_exponent += significand_shift;
 
-  assert(s < end && *s == 'p');
-  s++;
-
   if (significand == 0) {
     /* 0 or -0 */
     *out_bits = make_float(is_neg, F32_MIN_EXP, 0);
     return;
   }
 
-  assert(s < end);
   int exponent = 0;
   bool exponent_is_neg = false;
-  /* exponent is always positive, but significand_exponent is signed.
-   significand_exponent_add is negated if exponent will be negative, so it  can
-   be easily summed to see if the exponent is too large (see below) */
-  int significand_exponent_add = 0;
-  if (*s == '-') {
-    exponent_is_neg = true;
-    significand_exponent_add = -significand_exponent;
+  if (s < end) {
+    assert(*s == 'p');
     s++;
-  } else if (*s == '+') {
-    s++;
-    significand_exponent_add = significand_exponent;
-  }
+    /* exponent is always positive, but significand_exponent is signed.
+     significand_exponent_add is negated if exponent will be negative, so it  can
+     be easily summed to see if the exponent is too large (see below) */
+    int significand_exponent_add = 0;
+    if (*s == '-') {
+      exponent_is_neg = true;
+      significand_exponent_add = -significand_exponent;
+      s++;
+    } else if (*s == '+') {
+      s++;
+      significand_exponent_add = significand_exponent;
+    }
 
-  for (; s < end; ++s) {
-    uint32_t digit = (*s - '0');
-    assert(digit <= 9);
-    exponent = exponent * 10 + digit;
-    if (exponent + significand_exponent_add >= F32_MAX_EXP)
-      break;
+    for (; s < end; ++s) {
+      uint32_t digit = (*s - '0');
+      assert(digit <= 9);
+      exponent = exponent * 10 + digit;
+      if (exponent + significand_exponent_add >= F32_MAX_EXP)
+        break;
+    }
   }
 
   if (exponent_is_neg)
@@ -384,6 +384,13 @@ Result parse_float(LiteralType literal_type,
                    const char* s,
                    const char* end,
                    uint32_t* out_bits) {
+#if COMPILER_IS_MSVC
+  if (literal_type == LiteralType::Int && string_starts_with(s, end, "0x"))
+  {
+    // Some MSVC crt implementation of strtof doesn't support hex strings
+    literal_type = LiteralType::Hexfloat;
+  }
+#endif
   switch (literal_type) {
     case LiteralType::Int:
     case LiteralType::Float: {
@@ -615,37 +622,38 @@ static void parse_double_hex(const char* s,
   if (!seen_dot)
     significand_exponent += significand_shift;
 
-  assert(s < end && *s == 'p');
-  s++;
-
   if (significand == 0) {
     /* 0 or -0 */
     *out_bits = make_double(is_neg, F64_MIN_EXP, 0);
     return;
   }
 
-  assert(s < end);
   int exponent = 0;
   bool exponent_is_neg = false;
-  /* exponent is always positive, but significand_exponent is signed.
-   significand_exponent_add is negated if exponent will be negative, so it  can
-   be easily summed to see if the exponent is too large (see below) */
-  int significand_exponent_add = 0;
-  if (*s == '-') {
-    exponent_is_neg = true;
-    significand_exponent_add = -significand_exponent;
+  if (s < end) {
+    assert(*s == 'p');
     s++;
-  } else if (*s == '+') {
-    s++;
-    significand_exponent_add = significand_exponent;
-  }
 
-  for (; s < end; ++s) {
-    uint32_t digit = (*s - '0');
-    assert(digit <= 9);
-    exponent = exponent * 10 + digit;
-    if (exponent + significand_exponent_add >= F64_MAX_EXP)
-      break;
+    /* exponent is always positive, but significand_exponent is signed.
+     significand_exponent_add is negated if exponent will be negative, so it  can
+     be easily summed to see if the exponent is too large (see below) */
+    int significand_exponent_add = 0;
+    if (*s == '-') {
+      exponent_is_neg = true;
+      significand_exponent_add = -significand_exponent;
+      s++;
+    } else if (*s == '+') {
+      s++;
+      significand_exponent_add = significand_exponent;
+    }
+
+    for (; s < end; ++s) {
+      uint32_t digit = (*s - '0');
+      assert(digit <= 9);
+      exponent = exponent * 10 + digit;
+      if (exponent + significand_exponent_add >= F64_MAX_EXP)
+        break;
+    }
   }
 
   if (exponent_is_neg)
@@ -716,6 +724,14 @@ Result parse_double(LiteralType literal_type,
                     const char* s,
                     const char* end,
                     uint64_t* out_bits) {
+
+#if COMPILER_IS_MSVC
+  if (literal_type == LiteralType::Int && string_starts_with(s, end, "0x"))
+  {
+    // Some MSVC crt implementation of strtod doesn't support hex strings
+    literal_type = LiteralType::Hexfloat;
+  }
+#endif
   switch (literal_type) {
     case LiteralType::Int:
     case LiteralType::Float: {
