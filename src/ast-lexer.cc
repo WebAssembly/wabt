@@ -23,7 +23,6 @@
 
 #include "ast-parser.h"
 #include "ast-parser-lexer-shared.h"
-#include "vector.h"
 
 /* must be included after so some typedefs will be defined */
 #include "ast-parser-gen.hh"

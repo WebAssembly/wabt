@@ -20,6 +20,9 @@
 #include <inttypes.h>
 #include <math.h>
 
+#include <algorithm>
+#include <vector>
+
 #include "stream.h"
 
 #define INITIAL_ISTREAM_CAPACITY (64 * 1024)

@@ -21,16 +21,16 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <vector>
+
 #include "binary-reader.h"
 #include "literal.h"
-#include "vector.h"
 
 namespace wabt {
 
 namespace {
 
-typedef uint32_t Uint32;
-WABT_DEFINE_VECTOR(uint32, Uint32);
+typedef std::vector<uint32_t> Uint32Vector;
 
 struct Context {
   ObjdumpOptions* options;
@@ -247,8 +247,8 @@ static void log_opcode(Context* ctx,
   ctx->last_opcode_end = ctx->current_opcode_offset + data_size;
 
   if (ctx->options->relocs) {
-    if (ctx->next_reloc < ctx->options->code_relocations.size) {
-      Reloc* reloc = &ctx->options->code_relocations.data[ctx->next_reloc];
+    if (ctx->next_reloc < ctx->options->code_relocations.size()) {
+      Reloc* reloc = &ctx->options->code_relocations[ctx->next_reloc];
       size_t code_start =
           ctx->section_starts[static_cast<size_t>(BinarySection::Code)];
       size_t abs_offset = code_start + reloc->offset;
@@ -414,11 +414,10 @@ static Result begin_function_body(BinaryReaderContext* context,
   Context* ctx = static_cast<Context*>(context->user_data);
 
   if (ctx->options->mode == ObjdumpMode::Disassemble) {
-    if (index < ctx->options->function_names.size &&
-        !string_slice_is_empty(&ctx->options->function_names.data[index]))
-      printf("%06" PRIzx " <" PRIstringslice ">:\n", context->offset,
-             WABT_PRINTF_STRING_SLICE_ARG(
-                 ctx->options->function_names.data[index]));
+    if (index < ctx->options->function_names.size() &&
+        !ctx->options->function_names[index].empty())
+      printf("%06" PRIzx " <%s>:\n", context->offset,
+             ctx->options->function_names[index].c_str());
     else
       printf("%06" PRIzx " func[%d]:\n", context->offset, index);
   }
@@ -602,12 +601,11 @@ static Result on_function_name(uint32_t index,
   print_details(ctx, " - func[%d] " PRIstringslice "\n", index,
                 WABT_PRINTF_STRING_SLICE_ARG(name));
   if (ctx->options->mode == ObjdumpMode::Prepass) {
-    while (ctx->options->function_names.size < index) {
-      StringSlice empty = empty_string_slice();
-      append_string_slice_value(&ctx->options->function_names, &empty);
+    while (ctx->options->function_names.size() < index) {
+      ctx->options->function_names.emplace_back();
     }
-    if (ctx->options->function_names.size == index) {
-      append_string_slice_value(&ctx->options->function_names, &name);
+    if (ctx->options->function_names.size() == index) {
+      ctx->options->function_names.push_back(string_slice_to_string(name));
     }
   }
   return Result::Ok;
@@ -647,12 +645,7 @@ Result on_reloc(RelocType type,
                 get_reloc_type_name(type), index, addend, offset, total_offset);
   if (ctx->options->mode == ObjdumpMode::Prepass &&
       ctx->reloc_section == BinarySection::Code) {
-    Reloc reloc;
-    reloc.offset = offset;
-    reloc.type = type;
-    reloc.index = index;
-    reloc.addend = addend;
-    append_reloc_value(&ctx->options->code_relocations, &reloc);
+    ctx->options->code_relocations.emplace_back(type, offset, index, addend);
   }
   return Result::Ok;
 }

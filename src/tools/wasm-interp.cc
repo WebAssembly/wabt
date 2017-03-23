@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <vector>
+
 #include "binary-reader.h"
 #include "binary-reader-interpreter.h"
 #include "interpreter.h"
@@ -412,11 +414,10 @@ static void run_all_exports(InterpreterModule* module,
                             RunVerbosity verbose) {
   std::vector<InterpreterTypedValue> args;
   std::vector<InterpreterTypedValue> results;
-  for (uint32_t i = 0; i < module->exports.size(); ++i) {
-    InterpreterExport* export_ = &module->exports[i];
-    InterpreterResult iresult = run_export(thread, export_, args, &results);
+  for (const InterpreterExport& export_: module->exports) {
+    InterpreterResult iresult = run_export(thread, &export_, args, &results);
     if (verbose == RunVerbosity::Verbose) {
-      print_call(empty_string_slice(), export_->name, args, results, iresult);
+      print_call(empty_string_slice(), export_.name, args, results, iresult);
     }
   }
 }
@@ -595,8 +596,6 @@ static Result read_and_run_module(const char* module_filename) {
   destroy_interpreter_environment(&env);
   return result;
 }
-
-WABT_DEFINE_VECTOR(interpreter_thread, InterpreterThread);
 
 /* An extremely simple JSON parser that only knows how to parse the expected
  * format from wast2wabt. */
@@ -882,7 +881,7 @@ static Result parse_type_object(Context* ctx, Type* out_type) {
 }
 
 static Result parse_type_vector(Context* ctx, TypeVector* out_types) {
-  WABT_ZERO_MEMORY(*out_types);
+  out_types->clear();
   EXPECT("[");
   bool first = true;
   while (!match(ctx, "]")) {
@@ -891,7 +890,7 @@ static Result parse_type_vector(Context* ctx, TypeVector* out_types) {
     Type type;
     CHECK_RESULT(parse_type_object(ctx, &type));
     first = false;
-    append_type_value(out_types, &type);
+    out_types->push_back(type);
   }
   return Result::Ok;
 }
@@ -1540,7 +1539,6 @@ static Result parse_command(Context* ctx) {
     EXPECT_KEY("expected");
     CHECK_RESULT(parse_type_vector(ctx, &expected));
     on_assert_return_nan_command(ctx, &action);
-    destroy_type_vector(&expected);
   } else if (match(ctx, "\"assert_trap\"")) {
     Action action;
     StringSlice text;

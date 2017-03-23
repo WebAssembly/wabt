@@ -21,6 +21,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <vector>
+
 #include "binary-reader.h"
 #include "interpreter.h"
 #include "type-checker.h"
@@ -45,7 +47,7 @@
 
 #define CHECK_GLOBAL(ctx, global_index)                                       \
   do {                                                                        \
-    uint32_t max_global_index = (ctx)->global_index_mapping.size;             \
+    uint32_t max_global_index = (ctx)->global_index_mapping.size();           \
     if ((global_index) >= max_global_index) {                                 \
       print_error((ctx), "invalid global_index: %d (max %d)", (global_index), \
                   max_global_index);                                          \
@@ -57,27 +59,21 @@ namespace wabt {
 
 namespace {
 
-typedef uint32_t Uint32;
-WABT_DEFINE_VECTOR(uint32, Uint32);
-WABT_DEFINE_VECTOR(uint32_vector, Uint32Vector);
+typedef std::vector<uint32_t> Uint32Vector;
+typedef std::vector<Uint32Vector> Uint32VectorVector;
 
 struct Label {
+  Label(uint32_t offset, uint32_t fixup_offset);
+
   uint32_t offset; /* branch location in the istream */
   uint32_t fixup_offset;
 };
-WABT_DEFINE_VECTOR(label, Label);
+
+Label::Label(uint32_t offset, uint32_t fixup_offset)
+    : offset(offset), fixup_offset(fixup_offset) {}
 
 struct Context {
-  Context() {
-    WABT_ZERO_MEMORY(typechecker);
-    WABT_ZERO_MEMORY(label_stack);
-    WABT_ZERO_MEMORY(func_fixups);
-    WABT_ZERO_MEMORY(depth_fixups);
-    WABT_ZERO_MEMORY(istream_writer);
-    WABT_ZERO_MEMORY(sig_index_mapping);
-    WABT_ZERO_MEMORY(func_index_mapping);
-    WABT_ZERO_MEMORY(global_index_mapping);
-  }
+  Context();
 
   BinaryReader* reader = nullptr;
   BinaryErrorHandler* error_handler = nullptr;
@@ -85,7 +81,7 @@ struct Context {
   DefinedInterpreterModule* module = nullptr;
   DefinedInterpreterFunc* current_func = nullptr;
   TypeChecker typechecker;
-  LabelVector label_stack;
+  std::vector<Label> label_stack;
   Uint32VectorVector func_fixups;
   Uint32VectorVector depth_fixups;
   MemoryWriter istream_writer;
@@ -107,11 +103,15 @@ struct Context {
   uint32_t import_env_index = 0;
 };
 
+Context::Context() {
+  WABT_ZERO_MEMORY(istream_writer);
+}
+
 }  // namespace
 
 static Label* get_label(Context* ctx, uint32_t depth) {
-  assert(depth < ctx->label_stack.size);
-  return &ctx->label_stack.data[ctx->label_stack.size - depth - 1];
+  assert(depth < ctx->label_stack.size());
+  return &ctx->label_stack[ctx->label_stack.size() - depth - 1];
 }
 
 static Label* top_label(Context* ctx) {
@@ -138,8 +138,8 @@ static void on_typechecker_error(const char* msg, void* user_data) {
 }
 
 static uint32_t translate_sig_index_to_env(Context* ctx, uint32_t sig_index) {
-  assert(sig_index < ctx->sig_index_mapping.size);
-  return ctx->sig_index_mapping.data[sig_index];
+  assert(sig_index < ctx->sig_index_mapping.size());
+  return ctx->sig_index_mapping[sig_index];
 }
 
 static InterpreterFuncSignature* get_signature_by_env_index(
@@ -156,8 +156,8 @@ static InterpreterFuncSignature* get_signature_by_module_index(
 }
 
 static uint32_t translate_func_index_to_env(Context* ctx, uint32_t func_index) {
-  assert(func_index < ctx->func_index_mapping.size);
-  return ctx->func_index_mapping.data[func_index];
+  assert(func_index < ctx->func_index_mapping.size());
+  return ctx->func_index_mapping[func_index];
 }
 
 static uint32_t translate_module_func_index_to_defined(Context* ctx,
@@ -179,7 +179,7 @@ static InterpreterFunc* get_func_by_module_index(Context* ctx,
 
 static uint32_t translate_global_index_to_env(Context* ctx,
                                               uint32_t global_index) {
-  return ctx->global_index_mapping.data[global_index];
+  return ctx->global_index_mapping[global_index];
 }
 
 static InterpreterGlobal* get_global_by_env_index(Context* ctx,
@@ -264,11 +264,9 @@ static Result emit_drop_keep(Context* ctx, uint32_t drop, uint8_t keep) {
 static Result append_fixup(Context* ctx,
                            Uint32VectorVector* fixups_vector,
                            uint32_t index) {
-  if (index >= fixups_vector->size)
-    resize_uint32_vector_vector(fixups_vector, index + 1);
-  Uint32Vector* fixups = &fixups_vector->data[index];
-  uint32_t offset = get_istream_offset(ctx);
-  append_uint32_value(fixups, &offset);
+  if (index >= fixups_vector->size())
+    fixups_vector->resize(index + 1);
+  (*fixups_vector)[index].push_back(get_istream_offset(ctx));
   return Result::Ok;
 }
 
@@ -276,7 +274,7 @@ static Result emit_br_offset(Context* ctx, uint32_t depth, uint32_t offset) {
   if (offset == WABT_INVALID_OFFSET) {
     /* depth_fixups stores the depth counting up from zero, where zero is the
      * top-level function scope. */
-    depth = ctx->label_stack.size - 1 - depth;
+    depth = ctx->label_stack.size() - 1 - depth;
     CHECK_RESULT(append_fixup(ctx, &ctx->depth_fixups, depth));
   }
   CHECK_RESULT(emit_i32(ctx, offset));
@@ -289,12 +287,13 @@ static Result get_br_drop_keep_count(Context* ctx,
                                      uint32_t* out_keep_count) {
   TypeCheckerLabel* label;
   CHECK_RESULT(typechecker_get_label(&ctx->typechecker, depth, &label));
-  *out_keep_count = label->label_type != LabelType::Loop ? label->sig.size : 0;
+  *out_keep_count =
+      label->label_type != LabelType::Loop ? label->sig.size() : 0;
   if (typechecker_is_unreachable(&ctx->typechecker)) {
     *out_drop_count = 0;
   } else {
     *out_drop_count =
-        (ctx->typechecker.type_stack.size - label->type_stack_limit) -
+        (ctx->typechecker.type_stack.size() - label->type_stack_limit) -
         *out_keep_count;
   }
   return Result::Ok;
@@ -303,7 +302,7 @@ static Result get_br_drop_keep_count(Context* ctx,
 static Result get_return_drop_keep_count(Context* ctx,
                                          uint32_t* out_drop_count,
                                          uint32_t* out_keep_count) {
-  if (WABT_FAILED(get_br_drop_keep_count(ctx, ctx->label_stack.size - 1,
+  if (WABT_FAILED(get_br_drop_keep_count(ctx, ctx->label_stack.size() - 1,
                                          out_drop_count, out_keep_count))) {
     return Result::Error;
   }
@@ -333,18 +332,16 @@ static Result emit_br_table_offset(Context* ctx, uint32_t depth) {
 
 static Result fixup_top_label(Context* ctx) {
   uint32_t offset = get_istream_offset(ctx);
-  uint32_t top = ctx->label_stack.size - 1;
-  if (top >= ctx->depth_fixups.size) {
+  uint32_t top = ctx->label_stack.size() - 1;
+  if (top >= ctx->depth_fixups.size()) {
     /* nothing to fixup */
     return Result::Ok;
   }
 
-  Uint32Vector* fixups = &ctx->depth_fixups.data[top];
-  for (uint32_t i = 0; i < fixups->size; ++i)
-    CHECK_RESULT(emit_i32_at(ctx, fixups->data[i], offset));
-  /* reduce the size to 0 in case this gets reused. Keep the allocations for
-   * later use */
-  fixups->size = 0;
+  Uint32Vector& fixups = ctx->depth_fixups[top];
+  for (uint32_t fixup: fixups)
+    CHECK_RESULT(emit_i32_at(ctx, fixup, offset));
+  fixups.clear();
   return Result::Ok;
 }
 
@@ -367,9 +364,9 @@ static bool on_error(BinaryReaderContext* ctx, const char* message) {
 
 static Result on_signature_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  resize_uint32_vector(&ctx->sig_index_mapping, count);
+  ctx->sig_index_mapping.resize(count);
   for (uint32_t i = 0; i < count; ++i)
-    ctx->sig_index_mapping.data[i] = ctx->env->sigs.size() + i;
+    ctx->sig_index_mapping[i] = ctx->env->sigs.size() + i;
   ctx->env->sigs.resize(ctx->env->sigs.size() + count);
   return Result::Ok;
 }
@@ -545,7 +542,7 @@ static Result on_import_func(uint32_t import_index,
 
     func_env_index = ctx->import_env_index;
   }
-  append_uint32_value(&ctx->func_index_mapping, &func_env_index);
+  ctx->func_index_mapping.push_back(func_env_index);
   ctx->num_func_imports++;
   return Result::Ok;
 }
@@ -662,19 +659,17 @@ static Result on_import_global(uint32_t import_index,
     import->global.mutable_ = mutable_;
     global_env_index = ctx->import_env_index;
   }
-  append_uint32_value(&ctx->global_index_mapping, &global_env_index);
+  ctx->global_index_mapping.push_back(global_env_index);
   ctx->num_global_imports++;
   return Result::Ok;
 }
 
 static Result on_function_signatures_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  size_t old_size = ctx->func_index_mapping.size;
-  resize_uint32_vector(&ctx->func_index_mapping, old_size + count);
   for (uint32_t i = 0; i < count; ++i)
-    ctx->func_index_mapping.data[old_size + i] = ctx->env->funcs.size() + i;
+    ctx->func_index_mapping.push_back(ctx->env->funcs.size() + i);
   ctx->env->funcs.reserve(ctx->env->funcs.size() + count);
-  resize_uint32_vector_vector(&ctx->func_fixups, count);
+  ctx->func_fixups.resize(count);
   return Result::Ok;
 }
 
@@ -717,10 +712,8 @@ static Result on_memory(uint32_t index,
 
 static Result on_global_count(uint32_t count, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  size_t old_size = ctx->global_index_mapping.size;
-  resize_uint32_vector(&ctx->global_index_mapping, old_size + count);
   for (uint32_t i = 0; i < count; ++i)
-    ctx->global_index_mapping.data[old_size + i] = ctx->env->globals.size() + i;
+    ctx->global_index_mapping.push_back(ctx->env->globals.size() + i);
   ctx->env->globals.resize(ctx->env->globals.size() + count);
   return Result::Ok;
 }
@@ -878,7 +871,7 @@ static Result on_elem_segment_function_index_check(uint32_t index,
     return Result::Error;
   }
 
-  uint32_t max_func_index = ctx->func_index_mapping.size;
+  uint32_t max_func_index = ctx->func_index_mapping.size();
   if (func_index >= max_func_index) {
     print_error(ctx, "invalid func_index: %d (max %d)", func_index,
                 max_func_index);
@@ -939,21 +932,16 @@ static Result on_data_segment_data(uint32_t index,
 }
 
 static void push_label(Context* ctx, uint32_t offset, uint32_t fixup_offset) {
-  Label* label = append_label(&ctx->label_stack);
-  label->offset = offset;
-  label->fixup_offset = fixup_offset;
+  ctx->label_stack.emplace_back(offset, fixup_offset);
 }
 
 static void pop_label(Context* ctx) {
-  ctx->label_stack.size--;
+  ctx->label_stack.pop_back();
   /* reduce the depth_fixups stack as well, but it may be smaller than
    * label_stack so only do it conditionally. */
-  if (ctx->depth_fixups.size > ctx->label_stack.size) {
-    uint32_t from = ctx->label_stack.size;
-    uint32_t to = ctx->depth_fixups.size;
-    for (uint32_t i = from; i < to; ++i)
-      destroy_uint32_vector(&ctx->depth_fixups.data[i]);
-    ctx->depth_fixups.size = ctx->label_stack.size;
+  if (ctx->depth_fixups.size() > ctx->label_stack.size()) {
+    ctx->depth_fixups.erase(ctx->depth_fixups.begin() + ctx->label_stack.size(),
+                            ctx->depth_fixups.end());
   }
 }
 
@@ -982,21 +970,21 @@ static Result begin_function_body(BinaryReaderContext* context,
   func->local_count = 0;
 
   ctx->current_func = func;
-  ctx->depth_fixups.size = 0;
-  ctx->label_stack.size = 0;
+  ctx->depth_fixups.clear();
+  ctx->label_stack.clear();
 
   /* fixup function references */
   uint32_t defined_index = translate_module_func_index_to_defined(ctx, index);
-  Uint32Vector* fixups = &ctx->func_fixups.data[defined_index];
-  for (uint32_t i = 0; i < fixups->size; ++i)
-    CHECK_RESULT(emit_i32_at(ctx, fixups->data[i], func->offset));
+  Uint32Vector& fixups = ctx->func_fixups[defined_index];
+  for (uint32_t fixup: fixups)
+    CHECK_RESULT(emit_i32_at(ctx, fixup, func->offset));
 
   /* append param types */
-  for (uint32_t i = 0; i < sig->param_types.size(); ++i)
-    func->param_and_local_types.push_back(sig->param_types[i]);
+  for (Type param_type: sig->param_types)
+    func->param_and_local_types.push_back(param_type);
 
-  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(result_types, sig->result_types);
-  CHECK_RESULT(typechecker_begin_function(&ctx->typechecker, &result_types));
+  CHECK_RESULT(
+      typechecker_begin_function(&ctx->typechecker, &sig->result_types));
 
   /* push implicit func label (equivalent to return) */
   push_label(ctx, WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
@@ -1078,9 +1066,7 @@ static Result on_block_expr(uint32_t num_types,
                             Type* sig_types,
                             void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  TypeVector sig;
-  sig.size = num_types;
-  sig.data = sig_types;
+  TypeVector sig(sig_types, sig_types + num_types);
   CHECK_RESULT(typechecker_on_block(&ctx->typechecker, &sig));
   push_label(ctx, WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
   return Result::Ok;
@@ -1090,9 +1076,7 @@ static Result on_loop_expr(uint32_t num_types,
                            Type* sig_types,
                            void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  TypeVector sig;
-  sig.size = num_types;
-  sig.data = sig_types;
+  TypeVector sig(sig_types, sig_types + num_types);
   CHECK_RESULT(typechecker_on_loop(&ctx->typechecker, &sig));
   push_label(ctx, get_istream_offset(ctx), WABT_INVALID_OFFSET);
   return Result::Ok;
@@ -1100,9 +1084,7 @@ static Result on_loop_expr(uint32_t num_types,
 
 static Result on_if_expr(uint32_t num_types, Type* sig_types, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  TypeVector sig;
-  sig.size = num_types;
-  sig.data = sig_types;
+  TypeVector sig(sig_types, sig_types + num_types);
   CHECK_RESULT(typechecker_on_if(&ctx->typechecker, &sig));
   CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::BrUnless));
   uint32_t fixup_offset = get_istream_offset(ctx);
@@ -1192,10 +1174,8 @@ static Result on_call_expr(uint32_t func_index, void* user_data) {
   InterpreterFunc* func = get_func_by_module_index(ctx, func_index);
   InterpreterFuncSignature* sig =
       get_signature_by_env_index(ctx, func->sig_index);
-  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(param_types, sig->param_types);
-  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(result_types, sig->result_types);
-  CHECK_RESULT(
-      typechecker_on_call(&ctx->typechecker, &param_types, &result_types));
+  CHECK_RESULT(typechecker_on_call(&ctx->typechecker, &sig->param_types,
+                                   &sig->result_types));
 
   if (func->is_host) {
     CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::CallHost));
@@ -1215,10 +1195,8 @@ static Result on_call_indirect_expr(uint32_t sig_index, void* user_data) {
     return Result::Error;
   }
   InterpreterFuncSignature* sig = get_signature_by_module_index(ctx, sig_index);
-  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(param_types, sig->param_types);
-  INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(result_types, sig->result_types);
-  CHECK_RESULT(typechecker_on_call_indirect(&ctx->typechecker, &param_types,
-                                            &result_types));
+  CHECK_RESULT(typechecker_on_call_indirect(
+      &ctx->typechecker, &sig->param_types, &sig->result_types));
 
   CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::CallIndirect));
   CHECK_RESULT(emit_i32(ctx, ctx->module->table_index));
@@ -1292,7 +1270,7 @@ static Result on_set_global_expr(uint32_t global_index, void* user_data) {
 }
 
 static uint32_t translate_local_index(Context* ctx, uint32_t local_index) {
-  return ctx->typechecker.type_stack.size +
+  return ctx->typechecker.type_stack.size() +
          ctx->current_func->param_and_local_types.size() - local_index;
 }
 
@@ -1404,16 +1382,6 @@ static Result on_unreachable_expr(void* user_data) {
   CHECK_RESULT(typechecker_on_unreachable(&ctx->typechecker));
   CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Unreachable));
   return Result::Ok;
-}
-
-static void destroy_context(Context* ctx) {
-  destroy_label_vector(&ctx->label_stack);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->depth_fixups, uint32_vector);
-  WABT_DESTROY_VECTOR_AND_ELEMENTS(ctx->func_fixups, uint32_vector);
-  destroy_uint32_vector(&ctx->sig_index_mapping);
-  destroy_uint32_vector(&ctx->func_index_mapping);
-  destroy_uint32_vector(&ctx->global_index_mapping);
-  destroy_typechecker(&ctx->typechecker);
 }
 
 Result read_binary_interpreter(InterpreterEnvironment* env,
@@ -1538,7 +1506,6 @@ Result read_binary_interpreter(InterpreterEnvironment* env,
     reset_interpreter_environment_to_mark(env, mark);
     *out_module = nullptr;
   }
-  destroy_context(&ctx);
   return result;
 }
 

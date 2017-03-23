@@ -17,11 +17,11 @@
 #ifndef WABT_BINDING_HASH_H_
 #define WABT_BINDING_HASH_H_
 
-#include "common.h"
-
 #include <string>
 #include <vector>
 #include <unordered_map>
+
+#include "common.h"
 
 namespace wabt {
 

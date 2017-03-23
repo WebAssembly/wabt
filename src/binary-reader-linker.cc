@@ -16,6 +16,8 @@
 
 #include "binary-reader-linker.h"
 
+#include <vector>
+
 #include "binary-reader.h"
 #include "wasm-link.h"
 
@@ -45,11 +47,10 @@ static Result on_reloc_count(uint32_t count,
     WABT_FATAL("relocation for custom sections not yet supported\n");
   }
 
-  for (uint32_t i = 0; i < binary->sections.size; i++) {
-    Section* sec = &binary->sections.data[i];
-    if (sec->section_code != section_code)
+  for (const std::unique_ptr<Section>& section : binary->sections) {
+    if (section->section_code != section_code)
       continue;
-    ctx->reloc_section = sec;
+    ctx->reloc_section = section.get();
     return Result::Ok;
   }
 
@@ -68,11 +69,7 @@ static Result on_reloc(RelocType type,
     WABT_FATAL("invalid relocation offset: %#x\n", offset);
   }
 
-  Reloc* reloc = append_reloc(&ctx->reloc_section->relocations);
-  reloc->type = type;
-  reloc->offset = offset;
-  reloc->index = index;
-  reloc->addend = addend;
+  ctx->reloc_section->relocations.emplace_back(type, offset, index, addend);
 
   return Result::Ok;
 }
@@ -95,8 +92,8 @@ static Result on_import_func(uint32_t import_index,
                              uint32_t sig_index,
                              void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  FunctionImport* import =
-      append_function_import(&ctx->binary->function_imports);
+  ctx->binary->function_imports.emplace_back();
+  FunctionImport* import = &ctx->binary->function_imports.back();
   import->name = field_name;
   import->sig_index = sig_index;
   import->active = true;
@@ -112,7 +109,8 @@ static Result on_import_global(uint32_t import_index,
                                bool mutable_,
                                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  GlobalImport* import = append_global_import(&ctx->binary->global_imports);
+  ctx->binary->global_imports.emplace_back();
+  GlobalImport* import = &ctx->binary->global_imports.back();
   import->name = field_name;
   import->type = type;
   import->mutable_ = mutable_;
@@ -125,7 +123,8 @@ static Result begin_section(BinaryReaderContext* ctx,
                             uint32_t size) {
   Context* context = static_cast<Context*>(ctx->user_data);
   LinkerInputBinary* binary = context->binary;
-  Section* sec = append_section(&binary->sections);
+  Section* sec = new Section();
+  binary->sections.emplace_back(sec);
   context->current_section = sec;
   sec->section_code = section_code;
   sec->size = size;
@@ -186,10 +185,10 @@ static Result begin_custom_section(BinaryReaderContext* ctx,
 
     /* We don't currently support merging name sections unless they contain
      * a name for every function. */
-    uint32_t total_funcs = binary->function_imports.size;
-    for (size_t i = 0; i < binary->sections.size; i++) {
-      if (binary->sections.data[i].section_code == BinarySection::Function) {
-        total_funcs += binary->sections.data[i].count;
+    uint32_t total_funcs = binary->function_imports.size();
+    for (const std::unique_ptr<Section>& section : binary->sections) {
+      if (section->section_code == BinarySection::Function) {
+        total_funcs += section->count;
         break;
       }
     }
@@ -242,8 +241,12 @@ static Result begin_data_segment(uint32_t index,
                                  void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   Section* sec = ctx->current_section;
-  DataSegment* segment = append_data_segment(&sec->data_segments);
-  segment->memory_index = memory_index;
+  if (!sec->data_segments) {
+    sec->data_segments = new std::vector<DataSegment>();
+  }
+  sec->data_segments->emplace_back();
+  DataSegment& segment = sec->data_segments->back();
+  segment.memory_index = memory_index;
   return Result::Ok;
 }
 
@@ -254,8 +257,8 @@ static Result on_init_expr_i32_const_expr(uint32_t index,
   Section* sec = ctx->current_section;
   if (sec->section_code != BinarySection::Data)
     return Result::Ok;
-  DataSegment* segment = &sec->data_segments.data[sec->data_segments.size - 1];
-  segment->offset = value;
+  DataSegment& segment = sec->data_segments->back();
+  segment.offset = value;
   return Result::Ok;
 }
 
@@ -265,9 +268,9 @@ static Result on_data_segment_data(uint32_t index,
                                    void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   Section* sec = ctx->current_section;
-  DataSegment* segment = &sec->data_segments.data[sec->data_segments.size - 1];
-  segment->data = static_cast<const uint8_t*>(src_data);
-  segment->size = size;
+  DataSegment& segment = sec->data_segments->back();
+  segment.data = static_cast<const uint8_t*>(src_data);
+  segment.size = size;
   return Result::Ok;
 }
 
@@ -277,7 +280,8 @@ static Result on_export(uint32_t index,
                         StringSlice name,
                         void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  Export* export_ = append_export(&ctx->binary->exports);
+  ctx->binary->exports.emplace_back();
+  Export* export_ = &ctx->binary->exports.back();
   export_->name = name;
   export_->kind = kind;
   export_->index = item_index;
@@ -288,12 +292,11 @@ static Result on_function_name(uint32_t index,
                                StringSlice name,
                                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  while (ctx->binary->debug_names.size < index) {
-    StringSlice empty = empty_string_slice();
-    append_string_slice_value(&ctx->binary->debug_names, &empty);
+  while (ctx->binary->debug_names.size() < index) {
+    ctx->binary->debug_names.emplace_back();
   }
-  if (ctx->binary->debug_names.size == index) {
-    append_string_slice_value(&ctx->binary->debug_names, &name);
+  if (ctx->binary->debug_names.size() == index) {
+    ctx->binary->debug_names.push_back(string_slice_to_string(name));
   }
   return Result::Ok;
 }

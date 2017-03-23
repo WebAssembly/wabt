@@ -24,10 +24,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <vector>
+
 #include "binary.h"
 #include "config.h"
 #include "stream.h"
-#include "vector.h"
 
 #if HAVE_ALLOCA
 #include <alloca.h>
@@ -41,10 +42,6 @@
 namespace wabt {
 
 namespace {
-
-typedef uint32_t Uint32;
-WABT_DEFINE_VECTOR(type, Type)
-WABT_DEFINE_VECTOR(uint32, Uint32);
 
 #define CALLBACK_CTX(member, ...)                                       \
   RAISE_ERROR_UNLESS(                                                   \
@@ -109,29 +106,29 @@ WABT_DEFINE_VECTOR(uint32, Uint32);
     RAISE_ERROR(__VA_ARGS__);
 
 struct Context {
-  const uint8_t* data;
-  size_t data_size;
-  size_t offset;
-  size_t read_end; /* Either the section end or data_size. */
+  const uint8_t* data = nullptr;
+  size_t data_size = 0;
+  size_t offset = 0;
+  size_t read_end = 0; /* Either the section end or data_size. */
   BinaryReaderContext user_ctx;
-  BinaryReader* reader;
+  BinaryReader* reader = nullptr;
   jmp_buf error_jmp_buf;
   TypeVector param_types;
-  Uint32Vector target_depths;
-  const ReadBinaryOptions* options;
-  BinarySection last_known_section;
-  uint32_t num_signatures;
-  uint32_t num_imports;
-  uint32_t num_func_imports;
-  uint32_t num_table_imports;
-  uint32_t num_memory_imports;
-  uint32_t num_global_imports;
-  uint32_t num_function_signatures;
-  uint32_t num_tables;
-  uint32_t num_memories;
-  uint32_t num_globals;
-  uint32_t num_exports;
-  uint32_t num_function_bodies;
+  std::vector<uint32_t> target_depths;
+  const ReadBinaryOptions* options = nullptr;
+  BinarySection last_known_section = BinarySection::Invalid;
+  uint32_t num_signatures = 0;
+  uint32_t num_imports = 0;
+  uint32_t num_func_imports = 0;
+  uint32_t num_table_imports = 0;
+  uint32_t num_memory_imports = 0;
+  uint32_t num_global_imports = 0;
+  uint32_t num_function_signatures = 0;
+  uint32_t num_tables = 0;
+  uint32_t num_memories = 0;
+  uint32_t num_globals = 0;
+  uint32_t num_exports = 0;
+  uint32_t num_function_bodies = 0;
 };
 
 struct LoggingContext {
@@ -432,11 +429,6 @@ static uint32_t num_total_memories(Context* ctx) {
 
 static uint32_t num_total_globals(Context* ctx) {
   return ctx->num_global_imports + ctx->num_globals;
-}
-
-static void destroy_context(Context* ctx) {
-  destroy_type_vector(&ctx->param_types);
-  destroy_uint32_vector(&ctx->target_depths);
 }
 
 /* Logging */
@@ -1245,22 +1237,22 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       case Opcode::BrTable: {
         uint32_t num_targets;
         in_u32_leb128(ctx, &num_targets, "br_table target count");
-        if (num_targets > ctx->target_depths.capacity) {
-          reserve_uint32s(&ctx->target_depths, num_targets);
-          ctx->target_depths.size = num_targets;
-        }
+        ctx->target_depths.resize(num_targets);
 
         for (uint32_t i = 0; i < num_targets; ++i) {
           uint32_t target_depth;
           in_u32_leb128(ctx, &target_depth, "br_table target depth");
-          ctx->target_depths.data[i] = target_depth;
+          ctx->target_depths[i] = target_depth;
         }
 
         uint32_t default_target_depth;
         in_u32_leb128(ctx, &default_target_depth,
                       "br_table default target depth");
 
-        CALLBACK_CTX(on_br_table_expr, num_targets, ctx->target_depths.data,
+        uint32_t* target_depths =
+            num_targets ? ctx->target_depths.data() : nullptr;
+
+        CALLBACK_CTX(on_br_table_expr, num_targets, target_depths,
                      default_target_depth);
         break;
       }
@@ -1713,8 +1705,7 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
     uint32_t num_params;
     in_u32_leb128(ctx, &num_params, "function param count");
 
-    if (num_params > ctx->param_types.capacity)
-      reserve_types(&ctx->param_types, num_params);
+    ctx->param_types.resize(num_params);
 
     for (uint32_t j = 0; j < num_params; ++j) {
       Type param_type;
@@ -1722,7 +1713,7 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
       RAISE_ERROR_UNLESS(is_concrete_type(param_type),
                          "expected valid param type (got %d)",
                          static_cast<int>(param_type));
-      ctx->param_types.data[j] = param_type;
+      ctx->param_types[j] = param_type;
     }
 
     uint32_t num_results;
@@ -1737,7 +1728,9 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
                          static_cast<int>(result_type));
     }
 
-    CALLBACK(on_signature, i, num_params, ctx->param_types.data, num_results,
+    Type* param_types = num_params ? ctx->param_types.data() : nullptr;
+
+    CALLBACK(on_signature, i, num_params, param_types, num_results,
              &result_type);
   }
   CALLBACK_CTX0(end_signature_section);
@@ -2230,7 +2223,6 @@ Result read_binary(const void* data,
       logging_on_init_expr_i64_const_expr;
 
   Context context;
-  WABT_ZERO_MEMORY(context);
   /* all the macros assume a Context* named ctx */
   Context* ctx = &context;
   ctx->data = static_cast<const uint8_t*>(data);
@@ -2240,12 +2232,8 @@ Result read_binary(const void* data,
   ctx->last_known_section = BinarySection::Invalid;
 
   if (setjmp(ctx->error_jmp_buf) == 1) {
-    destroy_context(ctx);
     return Result::Error;
   }
-
-  reserve_types(&ctx->param_types, INITIAL_PARAM_TYPES_CAPACITY);
-  reserve_uint32s(&ctx->target_depths, INITIAL_BR_TABLE_TARGET_CAPACITY);
 
   uint32_t magic;
   in_u32(ctx, &magic, "magic");
@@ -2259,7 +2247,6 @@ Result read_binary(const void* data,
   CALLBACK(begin_module, version);
   read_sections(ctx);
   CALLBACK0(end_module);
-  destroy_context(ctx);
   return Result::Ok;
 }
 
