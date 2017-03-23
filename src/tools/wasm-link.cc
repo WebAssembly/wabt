@@ -227,9 +227,8 @@ static void apply_relocations(Section* section) {
            get_section_name(section->section_code));
 
   /* Perform relocations in-place */
-  for (size_t i = 0; i < section->relocations.size(); i++) {
-    Reloc* reloc = &section->relocations[i];
-    apply_relocation(section, reloc);
+  for (Reloc& reloc: section->relocations) {
+    apply_relocation(section, &reloc);
   }
 }
 
@@ -277,9 +276,8 @@ static void write_table_section(Context* ctx,
   uint32_t flags = WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   uint32_t elem_count = 0;
 
-  for (size_t i = 0; i < sections.size(); i++) {
-    Section* sec = sections[i];
-    elem_count += sec->binary->table_elem_count;
+  for (Section* section: sections) {
+    elem_count += section->binary->table_elem_count;
   }
 
   Stream* stream = &ctx->stream;
@@ -294,8 +292,7 @@ static void write_table_section(Context* ctx,
 
 static void write_export_section(Context* ctx) {
   uint32_t total_exports = 0;
-  for (size_t i = 0; i < ctx->inputs.size(); i++) {
-    LinkerInputBinary* binary = ctx->inputs[i].get();
+  for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     total_exports += binary->exports.size();
   }
 
@@ -303,20 +300,18 @@ static void write_export_section(Context* ctx) {
   WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_exports, "export count");
 
-  for (size_t i = 0; i < ctx->inputs.size(); i++) {
-    LinkerInputBinary* binary = ctx->inputs[i].get();
-    for (size_t j = 0; j < binary->exports.size(); j++) {
-      Export* export_ = &binary->exports[j];
-      write_slice(stream, export_->name, "export name");
-      write_u8_enum(stream, export_->kind, "export kind");
-      uint32_t index = export_->index;
-      switch (export_->kind) {
+  for (const std::unique_ptr<LinkerInputBinary>& binary : ctx->inputs) {
+    for (const Export& export_ : binary->exports) {
+      write_slice(stream, export_.name, "export name");
+      write_u8_enum(stream, export_.kind, "export kind");
+      uint32_t index = export_.index;
+      switch (export_.kind) {
         case ExternalKind::Func:
-          index = relocate_func_index(binary, index);
+          index = relocate_func_index(binary.get(), index);
           break;
         default:
           WABT_FATAL("unsupport export type: %d\n",
-                     static_cast<int>(export_->kind));
+                     static_cast<int>(export_.kind));
           break;
       }
       write_u32_leb128(stream, index, "export index");
@@ -331,9 +326,8 @@ static void write_elem_section(Context* ctx,
   WRITE_UNKNOWN_SIZE(stream);
 
   uint32_t total_elem_count = 0;
-  for (size_t i = 0; i < sections.size(); i++) {
-    Section* sec = sections[i];
-    total_elem_count += sec->binary->table_elem_count;
+  for (Section* section : sections) {
+    total_elem_count += section->binary->table_elem_count;
   }
 
   write_u32_leb128(stream, 1, "segment count");
@@ -345,10 +339,9 @@ static void write_elem_section(Context* ctx,
 
   ctx->current_section_payload_offset = stream->offset;
 
-  for (size_t i = 0; i < sections.size(); i++) {
-    Section* sec = sections[i];
-    apply_relocations(sec);
-    write_section_payload(ctx, sec);
+  for (Section* section : sections) {
+    apply_relocations(section);
+    write_section_payload(ctx, section);
   }
 
   FIXUP_SIZE(stream);

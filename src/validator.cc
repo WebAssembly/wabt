@@ -368,9 +368,8 @@ static void check_expr(Context* ctx, const Expr* expr) {
 
     case ExprType::BrTable: {
       typechecker_begin_br_table(&ctx->typechecker);
-      for (size_t i = 0; i < expr->br_table.targets->size(); ++i) {
-        typechecker_on_br_table_target(&ctx->typechecker,
-                                       (*expr->br_table.targets)[i].index);
+      for (Var& var: *expr->br_table.targets) {
+        typechecker_on_br_table_target(&ctx->typechecker, var.index);
       }
       typechecker_on_br_table_target(&ctx->typechecker,
                                      expr->br_table.default_target.index);
@@ -654,9 +653,8 @@ static void check_elem_segments(Context* ctx, const Module* module) {
     if (!WABT_SUCCEEDED(check_table_var(ctx, &elem_segment->table_var, &table)))
       continue;
 
-    for (size_t i = 0; i < elem_segment->vars.size(); ++i) {
-      if (!WABT_SUCCEEDED(
-              check_func_var(ctx, &elem_segment->vars[i], nullptr)))
+    for (const Var& var: elem_segment->vars) {
+      if (!WABT_SUCCEEDED(check_func_var(ctx, &var, nullptr)))
         continue;
     }
 
@@ -1006,8 +1004,8 @@ Result validate_script(AstLexer* lexer,
   tc_error_handler.user_data = &ctx;
   ctx.typechecker.error_handler = &tc_error_handler;
 
-  for (size_t i = 0; i < script->commands.size(); ++i)
-    check_command(&ctx, script->commands[i].get());
+  for (const std::unique_ptr<Command>& command : script->commands)
+    check_command(&ctx, command.get());
   return ctx.result;
 }
 

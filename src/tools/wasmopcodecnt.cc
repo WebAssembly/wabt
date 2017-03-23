@@ -156,15 +156,15 @@ static void display_int_counter_vector(FILE* out,
                                        const IntCounterVector& vec,
                                        display_name_fcn display_fcn,
                                        const char* opcode_name) {
-  for (size_t i = 0; i < vec.size(); ++i) {
-    if (vec[i].count == 0)
+  for (const IntCounter& counter : vec) {
+    if (counter.count == 0)
       continue;
     if (opcode_name)
       fprintf(out, "(%s ", opcode_name);
-    display_fcn(out, vec[i].value);
+    display_fcn(out, counter.value);
     if (opcode_name)
       fprintf(out, ")");
-    fprintf(out, "%s%" PRIzd "\n", s_separator, vec[i].count);
+    fprintf(out, "%s%" PRIzd "\n", s_separator, counter.count);
   }
 }
 
@@ -173,17 +173,17 @@ static void display_int_pair_counter_vector(FILE* out,
                                             display_name_fcn display_first_fcn,
                                             display_name_fcn display_second_fcn,
                                             const char* opcode_name) {
-  for (size_t i = 0; i < vec.size(); ++i) {
-    if (vec[i].count == 0)
+  for (const IntPairCounter& pair : vec) {
+    if (pair.count == 0)
       continue;
     if (opcode_name)
       fprintf(out, "(%s ", opcode_name);
-    display_first_fcn(out, vec[i].first);
+    display_first_fcn(out, pair.first);
     fputc(' ', out);
-    display_second_fcn(out, vec[i].second);
+    display_second_fcn(out, pair.second);
     if (opcode_name)
       fprintf(out, ")");
-    fprintf(out, "%s%" PRIzd "\n", s_separator, vec[i].count);
+    fprintf(out, "%s%" PRIzd "\n", s_separator, pair.count);
   }
 }
 
@@ -254,10 +254,10 @@ static void display_sorted_int_counter_vector(FILE* out,
 
   /* First filter out values less than cutoff. This speeds up sorting. */
   IntCounterVector filtered_vec;
-  for (size_t i = 0; i < vec.size(); ++i) {
-    if (vec[i].count < s_cutoff)
+  for (const IntCounter& counter: vec) {
+    if (counter.count < s_cutoff)
       continue;
-    filtered_vec.push_back(vec[i]);
+    filtered_vec.push_back(counter);
   }
   std::sort(filtered_vec.begin(), filtered_vec.end(), lt_fcn);
   fprintf(out, "%s\n", title);
@@ -276,10 +276,10 @@ static void display_sorted_int_pair_counter_vector(
     return;
 
   IntPairCounterVector filtered_vec;
-  for (size_t i = 0; i < vec.size(); ++i) {
-    if (vec[i].count < s_cutoff)
+  for (const IntPairCounter& pair : vec) {
+    if (pair.count < s_cutoff)
       continue;
-    filtered_vec.push_back(vec[i]);
+    filtered_vec.push_back(pair);
   }
   std::sort(filtered_vec.begin(), filtered_vec.end(), lt_fcn);
   fprintf(out, "%s\n", title);

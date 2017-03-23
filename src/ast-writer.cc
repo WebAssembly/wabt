@@ -276,8 +276,8 @@ static void write_types(Context* ctx,
   if (types.size()) {
     if (name)
       write_open_space(ctx, name);
-    for (size_t i = 0; i < types.size(); ++i)
-      write_type(ctx, types[i], NextChar::Space);
+    for (Type type: types)
+      write_type(ctx, type, NextChar::Space);
     if (name)
       write_close_space(ctx);
   }
@@ -385,8 +385,8 @@ static void write_expr(Context* ctx, const Expr* expr) {
 
     case ExprType::BrTable: {
       write_puts_space(ctx, get_opcode_name(Opcode::BrTable));
-      for (size_t i = 0; i < expr->br_table.targets->size(); ++i)
-        write_br_var(ctx, &(*expr->br_table.targets)[i], NextChar::Space);
+      for (const Var& var : *expr->br_table.targets)
+        write_br_var(ctx, &var, NextChar::Space);
       write_br_var(ctx, &expr->br_table.default_target, NextChar::Newline);
       break;
     }
@@ -619,8 +619,8 @@ static void write_table(Context* ctx, const Table* table) {
 static void write_elem_segment(Context* ctx, const ElemSegment* segment) {
   write_open_space(ctx, "elem");
   write_init_expr(ctx, segment->offset);
-  for (size_t i = 0; i < segment->vars.size(); ++i)
-    write_var(ctx, &segment->vars[i], NextChar::Space);
+  for (const Var& var : segment->vars)
+    write_var(ctx, &var, NextChar::Space);
   write_close_newline(ctx);
 }
 

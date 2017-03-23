@@ -414,11 +414,10 @@ static void run_all_exports(InterpreterModule* module,
                             RunVerbosity verbose) {
   std::vector<InterpreterTypedValue> args;
   std::vector<InterpreterTypedValue> results;
-  for (uint32_t i = 0; i < module->exports.size(); ++i) {
-    InterpreterExport* export_ = &module->exports[i];
-    InterpreterResult iresult = run_export(thread, export_, args, &results);
+  for (const InterpreterExport& export_: module->exports) {
+    InterpreterResult iresult = run_export(thread, &export_, args, &results);
     if (verbose == RunVerbosity::Verbose) {
-      print_call(empty_string_slice(), export_->name, args, results, iresult);
+      print_call(empty_string_slice(), export_.name, args, results, iresult);
     }
   }
 }

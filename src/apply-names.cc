@@ -196,10 +196,9 @@ Result on_br_if_expr(Expr* expr, void* user_data) {
 Result on_br_table_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   VarVector& targets = *expr->br_table.targets;
-  for (size_t i = 0; i < targets.size(); ++i) {
-    Var* target = &targets[i];
-    Label* label = find_label_by_var(ctx, target);
-    use_name_for_var(label, target);
+  for (Var& target : targets) {
+    Label* label = find_label_by_var(ctx, &target);
+    use_name_for_var(label, &target);
   }
 
   Label* label = find_label_by_var(ctx, &expr->br_table.default_target);
@@ -294,8 +293,8 @@ Result visit_elem_segment(Context* ctx,
                           uint32_t elem_segment_index,
                           ElemSegment* segment) {
   CHECK_RESULT(use_name_for_table_var(ctx->module, &segment->table_var));
-  for (size_t i = 0; i < segment->vars.size(); ++i) {
-    CHECK_RESULT(use_name_for_func_var(ctx->module, &segment->vars[i]));
+  for (Var& var : segment->vars) {
+    CHECK_RESULT(use_name_for_func_var(ctx->module, &var));
   }
   return Result::Ok;
 }

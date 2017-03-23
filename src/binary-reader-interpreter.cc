@@ -339,8 +339,8 @@ static Result fixup_top_label(Context* ctx) {
   }
 
   Uint32Vector& fixups = ctx->depth_fixups[top];
-  for (uint32_t i = 0; i < fixups.size(); ++i)
-    CHECK_RESULT(emit_i32_at(ctx, fixups[i], offset));
+  for (uint32_t fixup: fixups)
+    CHECK_RESULT(emit_i32_at(ctx, fixup, offset));
   fixups.clear();
   return Result::Ok;
 }
@@ -976,12 +976,12 @@ static Result begin_function_body(BinaryReaderContext* context,
   /* fixup function references */
   uint32_t defined_index = translate_module_func_index_to_defined(ctx, index);
   Uint32Vector& fixups = ctx->func_fixups[defined_index];
-  for (uint32_t i = 0; i < fixups.size(); ++i)
-    CHECK_RESULT(emit_i32_at(ctx, fixups[i], func->offset));
+  for (uint32_t fixup: fixups)
+    CHECK_RESULT(emit_i32_at(ctx, fixup, func->offset));
 
   /* append param types */
-  for (uint32_t i = 0; i < sig->param_types.size(); ++i)
-    func->param_and_local_types.push_back(sig->param_types[i]);
+  for (Type param_type: sig->param_types)
+    func->param_and_local_types.push_back(param_type);
 
   CHECK_RESULT(
       typechecker_begin_function(&ctx->typechecker, &sig->result_types));

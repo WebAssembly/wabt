@@ -126,10 +126,9 @@ int get_func_type_index_by_decl(const Module* module,
 }
 
 Module* get_first_module(const Script* script) {
-  for (size_t i = 0; i < script->commands.size(); ++i) {
-    const Command& command = *script->commands[i].get();
-    if (command.type == CommandType::Module)
-      return command.module;
+  for (const std::unique_ptr<Command>& command : script->commands) {
+    if (command->type == CommandType::Module)
+      return command->module;
   }
   return nullptr;
 }
@@ -149,10 +148,10 @@ void make_type_binding_reverse_mapping(
     std::vector<std::string>* out_reverse_mapping) {
   out_reverse_mapping->clear();
   out_reverse_mapping->resize(types.size());
-  for (auto iter: bindings) {
-    assert(static_cast<size_t>(iter.second.index) <
+  for (const auto& pair : bindings) {
+    assert(static_cast<size_t>(pair.second.index) <
            out_reverse_mapping->size());
-    (*out_reverse_mapping)[iter.second.index] = iter.first;
+    (*out_reverse_mapping)[pair.second.index] = pair.first;
   }
 }
 
@@ -251,7 +250,7 @@ Expr::~Expr() {
       destroy_var(&br_if.var);
       break;
     case ExprType::BrTable:
-      for (auto& var : *br_table.targets)
+      for (Var& var : *br_table.targets)
         destroy_var(&var);
       delete br_table.targets;
       destroy_var(&br_table.default_target);
@@ -534,7 +533,7 @@ ElemSegment::ElemSegment() : offset(nullptr) {
 ElemSegment::~ElemSegment() {
   destroy_var(&table_var);
   destroy_expr_list(offset);
-  for (auto& var : vars)
+  for (Var& var : vars)
     destroy_var(&var);
 }
 

@@ -144,8 +144,8 @@ static void push_type(TypeChecker* tc, Type type) {
 }
 
 static void push_types(TypeChecker* tc, const TypeVector& types) {
-  for (size_t i = 0; i < types.size(); ++i)
-    push_type(tc, types[i]);
+  for (Type type: types)
+    push_type(tc, type);
 }
 
 static Result check_type_stack_limit(TypeChecker* tc,

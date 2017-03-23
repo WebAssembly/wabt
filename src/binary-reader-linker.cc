@@ -47,11 +47,10 @@ static Result on_reloc_count(uint32_t count,
     WABT_FATAL("relocation for custom sections not yet supported\n");
   }
 
-  for (uint32_t i = 0; i < binary->sections.size(); i++) {
-    Section* sec = binary->sections[i].get();
-    if (sec->section_code != section_code)
+  for (const std::unique_ptr<Section>& section : binary->sections) {
+    if (section->section_code != section_code)
       continue;
-    ctx->reloc_section = sec;
+    ctx->reloc_section = section.get();
     return Result::Ok;
   }
 
@@ -187,9 +186,9 @@ static Result begin_custom_section(BinaryReaderContext* ctx,
     /* We don't currently support merging name sections unless they contain
      * a name for every function. */
     uint32_t total_funcs = binary->function_imports.size();
-    for (size_t i = 0; i < binary->sections.size(); i++) {
-      if (binary->sections[i]->section_code == BinarySection::Function) {
-        total_funcs += binary->sections[i]->count;
+    for (const std::unique_ptr<Section>& section : binary->sections) {
+      if (section->section_code == BinarySection::Function) {
+        total_funcs += section->count;
         break;
       }
     }

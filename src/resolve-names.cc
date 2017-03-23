@@ -202,12 +202,8 @@ static Result on_br_if_expr(Expr* expr, void* user_data) {
 
 static Result on_br_table_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  VarVector& targets = *expr->br_table.targets;
-  for (size_t i = 0; i < targets.size(); ++i) {
-    Var* target = &targets[i];
-    resolve_label_var(ctx, target);
-  }
-
+  for (Var& target: *expr->br_table.targets)
+    resolve_label_var(ctx, &target);
   resolve_label_var(ctx, &expr->br_table.default_target);
   return Result::Ok;
 }
@@ -305,8 +301,8 @@ static void visit_global(Context* ctx, Global* global) {
 static void visit_elem_segment(Context* ctx, ElemSegment* segment) {
   resolve_table_var(ctx, &segment->table_var);
   visit_expr_list(segment->offset, &ctx->visitor);
-  for (size_t i = 0; i < segment->vars.size(); ++i)
-    resolve_func_var(ctx, &segment->vars[i]);
+  for (Var& var: segment->vars)
+    resolve_func_var(ctx, &var);
 }
 
 static void visit_data_segment(Context* ctx, DataSegment* segment) {
@@ -322,16 +318,16 @@ static void visit_module(Context* ctx, Module* module) {
   check_duplicate_bindings(ctx, &module->table_bindings, "table");
   check_duplicate_bindings(ctx, &module->memory_bindings, "memory");
 
-  for (size_t i = 0; i < module->funcs.size(); ++i)
-    visit_func(ctx, module->funcs[i]);
-  for (size_t i = 0; i < module->exports.size(); ++i)
-    visit_export(ctx, module->exports[i]);
-  for (size_t i = 0; i < module->globals.size(); ++i)
-    visit_global(ctx, module->globals[i]);
-  for (size_t i = 0; i < module->elem_segments.size(); ++i)
-    visit_elem_segment(ctx, module->elem_segments[i]);
-  for (size_t i = 0; i < module->data_segments.size(); ++i)
-    visit_data_segment(ctx, module->data_segments[i]);
+  for (Func* func : module->funcs)
+    visit_func(ctx, func);
+  for (Export* export_ : module->exports)
+    visit_export(ctx, export_);
+  for (Global* global : module->globals)
+    visit_global(ctx, global);
+  for (ElemSegment* elem_segment : module->elem_segments)
+    visit_elem_segment(ctx, elem_segment);
+  for (DataSegment* data_segment : module->data_segments)
+    visit_data_segment(ctx, data_segment);
   if (module->start)
     resolve_func_var(ctx, module->start);
   ctx->current_module = nullptr;
@@ -412,8 +408,8 @@ static void visit_command(Context* ctx, Command* command) {
 }
 
 static void visit_script(Context* ctx, Script* script) {
-  for (size_t i = 0; i < script->commands.size(); ++i)
-    visit_command(ctx, script->commands[i].get());
+  for (const std::unique_ptr<Command>& command: script->commands)
+    visit_command(ctx, command.get());
 }
 
 static void init_context(Context* ctx,
