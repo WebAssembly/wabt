@@ -727,8 +727,11 @@ Command::~Command() {
       delete assert_return.action;
       delete assert_return.expected;
       break;
-    case CommandType::AssertReturnNan:
-      delete assert_return_nan.action;
+    case CommandType::AssertReturnCanonicalNan:
+      delete assert_return_arithmetic_nan.action;
+      break;
+    case CommandType::AssertReturnArithmeticNan:
+      delete assert_return_canonical_nan.action;
       break;
     case CommandType::AssertTrap:
     case CommandType::AssertExhaustion:

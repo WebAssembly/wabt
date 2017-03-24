@@ -921,6 +921,29 @@ static ActionResult check_action(Context* ctx, const Action* action) {
   return result;
 }
 
+static void check_assert_return_nan_command(Context* ctx,
+                                            const Action* action) {
+  ActionResult result = check_action(ctx, action);
+
+  /* a valid result type will either be f32 or f64; convert a TYPES result
+   * into a TYPE result, so it is easier to check below. Type::Any is
+   * used to specify a type that should not be checked (because an earlier
+   * error occurred). */
+  if (result.kind == ActionResultKind::Types) {
+    if (result.types->size() == 1) {
+      result.kind = ActionResultKind::Type;
+      result.type = (*result.types)[0];
+    } else {
+      print_error(ctx, &action->loc, "expected 1 result, got %" PRIzd,
+                  result.types->size());
+      result.type = Type::Any;
+    }
+  }
+
+  if (result.kind == ActionResultKind::Type && result.type != Type::Any)
+    check_assert_return_nan_type(ctx, &action->loc, result.type, "action");
+}
+
 static void check_command(Context* ctx, const Command* command) {
   switch (command->type) {
     case CommandType::Module:
@@ -962,29 +985,15 @@ static void check_command(Context* ctx, const Command* command) {
       break;
     }
 
-    case CommandType::AssertReturnNan: {
-      const Action* action = command->assert_return_nan.action;
-      ActionResult result = check_action(ctx, action);
-
-      /* a valid result type will either be f32 or f64; convert a TYPES result
-       * into a TYPE result, so it is easier to check below. Type::Any is
-       * used to specify a type that should not be checked (because an earlier
-       * error occurred). */
-      if (result.kind == ActionResultKind::Types) {
-        if (result.types->size() == 1) {
-          result.kind = ActionResultKind::Type;
-          result.type = (*result.types)[0];
-        } else {
-          print_error(ctx, &action->loc, "expected 1 result, got %" PRIzd,
-                      result.types->size());
-          result.type = Type::Any;
-        }
-      }
-
-      if (result.kind == ActionResultKind::Type && result.type != Type::Any)
-        check_assert_return_nan_type(ctx, &action->loc, result.type, "action");
+    case CommandType::AssertReturnCanonicalNan:
+      check_assert_return_nan_command(
+          ctx, command->assert_return_canonical_nan.action);
       break;
-    }
+
+    case CommandType::AssertReturnArithmeticNan:
+      check_assert_return_nan_command(
+          ctx, command->assert_return_arithmetic_nan.action);
+      break;
 
     case CommandType::AssertTrap:
     case CommandType::AssertExhaustion:

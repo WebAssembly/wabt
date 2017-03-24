@@ -2,5 +2,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/f64.wast
 (;; STDOUT ;;;
-2394/2394 tests passed.
+2462/2462 tests passed.
 ;;; STDOUT ;;)

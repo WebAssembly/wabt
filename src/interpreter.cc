@@ -278,14 +278,23 @@ InterpreterExport* get_interpreter_export_by_name(InterpreterModule* module,
 #define F32_NEG_ONE 0xbf800000U
 #define F32_NEG_ZERO 0x80000000U
 #define F32_QUIET_NAN 0x7fc00000U
+#define F32_QUIET_NEG_NAN 0xffc00000U
 #define F32_QUIET_NAN_BIT 0x00400000U
 #define F32_SIG_BITS 23
 #define F32_SIG_MASK 0x7fffff
 #define F32_SIGN_MASK 0x80000000U
 
-bool is_nan_f32(uint32_t f32_bits) {
+static bool is_nan_f32(uint32_t f32_bits) {
   return (f32_bits > F32_INF && f32_bits < F32_NEG_ZERO) ||
          (f32_bits > F32_NEG_INF);
+}
+
+bool is_canonical_nan_f32(uint32_t f32_bits) {
+  return f32_bits == F32_QUIET_NAN || f32_bits == F32_QUIET_NEG_NAN;
+}
+
+bool is_arithmetic_nan_f32(uint32_t f32_bits) {
+  return (f32_bits & F32_QUIET_NAN) == F32_QUIET_NAN;
 }
 
 static WABT_INLINE bool is_zero_f32(uint32_t f32_bits) {
@@ -317,32 +326,22 @@ static WABT_INLINE bool is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
  * 3 21098765432 1098..9..432109...210
  * -----------------------------------
  * 0 00000000000 0000..0..000000...000 0x0000000000000000 => 0
- * 0 10000011101 1111..1..111000...000 0x41dfffffffc00000 => 2147483647
- * (INT32_MAX)
- * 0 10000011110 1111..1..111100...000 0x41efffffffe00000 => 4294967295
- * (UINT32_MAX)
- * 0 10000111101 1111..1..111111...111 0x43dfffffffffffff => 9223372036854774784
- * (~INT64_MAX)
+ * 0 10000011101 1111..1..111000...000 0x41dfffffffc00000 => 2147483647           (INT32_MAX)
+ * 0 10000011110 1111..1..111100...000 0x41efffffffe00000 => 4294967295           (UINT32_MAX)
+ * 0 10000111101 1111..1..111111...111 0x43dfffffffffffff => 9223372036854774784  (~INT64_MAX)
  * 0 10000111110 0000..0..000000...000 0x43e0000000000000 => 9223372036854775808
- * 0 10000111110 1111..1..111111...111 0x43efffffffffffff =>
- * 18446744073709549568   (~UINT64_MAX)
- * 0 10000111111 0000..0..000000...000 0x43f0000000000000 =>
- * 18446744073709551616
- * 0 10001111110 1111..1..000000...000 0x47efffffe0000000 => 3.402823e+38
- * (FLT_MAX)
+ * 0 10000111110 1111..1..111111...111 0x43efffffffffffff => 18446744073709549568 (~UINT64_MAX)
+ * 0 10000111111 0000..0..000000...000 0x43f0000000000000 => 18446744073709551616
+ * 0 10001111110 1111..1..000000...000 0x47efffffe0000000 => 3.402823e+38         (FLT_MAX)
  * 0 11111111111 0000..0..000000...000 0x7ff0000000000000 => inf
  * 0 11111111111 0000..0..000000...001 0x7ff0000000000001 => nan(0x1)
  * 0 11111111111 1111..1..111111...111 0x7fffffffffffffff => nan(0xfff...)
  * 1 00000000000 0000..0..000000...000 0x8000000000000000 => -0
- * 1 01111111110 1111..1..111111...111 0xbfefffffffffffff => -1 + ulp
- * (~UINT32_MIN, ~UINT64_MIN)
+ * 1 01111111110 1111..1..111111...111 0xbfefffffffffffff => -1 + ulp             (~UINT32_MIN, ~UINT64_MIN)
  * 1 01111111111 0000..0..000000...000 0xbff0000000000000 => -1
- * 1 10000011110 0000..0..000000...000 0xc1e0000000000000 => -2147483648
- * (INT32_MIN)
- * 1 10000111110 0000..0..000000...000 0xc3e0000000000000 =>
- * -9223372036854775808     (INT64_MIN)
- * 1 10001111110 1111..1..000000...000 0xc7efffffe0000000 => -3.402823e+38
- * (-FLT_MAX)
+ * 1 10000011110 0000..0..000000...000 0xc1e0000000000000 => -2147483648          (INT32_MIN)
+ * 1 10000111110 0000..0..000000...000 0xc3e0000000000000 => -9223372036854775808 (INT64_MIN)
+ * 1 10001111110 1111..1..000000...000 0xc7efffffe0000000 => -3.402823e+38        (-FLT_MAX)
  * 1 11111111111 0000..0..000000...000 0xfff0000000000000 => -inf
  * 1 11111111111 0000..0..000000...001 0xfff0000000000001 => -nan(0x1)
  * 1 11111111111 1111..1..111111...111 0xffffffffffffffff => -nan(0xfff...)
@@ -353,14 +352,23 @@ static WABT_INLINE bool is_in_range_i64_trunc_u_f32(uint32_t f32_bits) {
 #define F64_NEG_ONE 0xbff0000000000000ULL
 #define F64_NEG_ZERO 0x8000000000000000ULL
 #define F64_QUIET_NAN 0x7ff8000000000000ULL
+#define F64_QUIET_NEG_NAN 0xfff8000000000000ULL
 #define F64_QUIET_NAN_BIT 0x0008000000000000ULL
 #define F64_SIG_BITS 52
 #define F64_SIG_MASK 0xfffffffffffffULL
 #define F64_SIGN_MASK 0x8000000000000000ULL
 
-bool is_nan_f64(uint64_t f64_bits) {
+static bool is_nan_f64(uint64_t f64_bits) {
   return (f64_bits > F64_INF && f64_bits < F64_NEG_ZERO) ||
          (f64_bits > F64_NEG_INF);
+}
+
+bool is_canonical_nan_f64(uint64_t f64_bits) {
+  return f64_bits == F64_QUIET_NAN || f64_bits == F64_QUIET_NEG_NAN;
+}
+
+bool is_arithmetic_nan_f64(uint64_t f64_bits) {
+  return (f64_bits & F64_QUIET_NAN) == F64_QUIET_NAN;
 }
 
 static WABT_INLINE bool is_zero_f64(uint64_t f64_bits) {

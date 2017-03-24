@@ -1,0 +1,10 @@
+;;; FLAGS: --spec
+(module
+  (func $foo (param f32) (result f32)
+    get_local 0
+    f32.const 0
+    f32.div)
+  (export "foo" (func $foo)))
+
+(assert_return_canonical_nan
+  (invoke "foo" (f32.const 0)))

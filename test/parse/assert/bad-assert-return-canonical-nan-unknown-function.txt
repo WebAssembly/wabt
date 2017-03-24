@@ -1,0 +1,9 @@
+;;; ERROR: 1
+;;; FLAGS: --spec
+(module)
+(assert_return_canonical_nan (invoke "foo"))
+(;; STDERR ;;;
+out/test/parse/assert/bad-assert-return-canonical-nan-unknown-function.txt:4:31: unknown function export "foo"
+(assert_return_canonical_nan (invoke "foo"))
+                              ^^^^^^
+;;; STDERR ;;)

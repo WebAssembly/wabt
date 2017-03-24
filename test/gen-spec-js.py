@@ -38,12 +38,14 @@ F32_NEG_INF = 0xff800000
 F32_NEG_ZERO = 0x80000000
 F32_SIGN_BIT = F32_NEG_ZERO
 F32_SIG_MASK = 0x7fffff
+F32_QUIET_NAN = 0x7fc00000
 F32_QUIET_NAN_TAG = 0x400000
 F64_INF = 0x7ff0000000000000
 F64_NEG_INF = 0xfff0000000000000
 F64_NEG_ZERO = 0x8000000000000000
 F64_SIGN_BIT = F64_NEG_ZERO
 F64_SIG_MASK = 0xfffffffffffff
+F64_QUIET_NAN = 0x7ff8000000000000
 F64_QUIET_NAN_TAG = 0x8000000000000
 
 
@@ -183,7 +185,8 @@ def IsValidJSCommand(command):
     expected = command['expected']
     return (IsValidJSAction(action) and
             all(IsValidJSConstant(x) for x in expected))
-  elif type_ in ('assert_return_nan', 'assert_trap', 'assert_exhaustion'):
+  elif type_ in ('assert_return_canonical_nan', 'assert_return_arithmetic_nan',
+                 'assert_trap', 'assert_exhaustion'):
     return IsValidJSAction(action)
 
 
@@ -197,8 +200,9 @@ def CollectInvalidModuleCommands(commands):
       module_name = command.get('name')
       if module_name:
         module_map[module_name] = pair
-    elif command['type'] in ('assert_return', 'assert_return_nan',
-                             'assert_trap', 'assert_exhaustion'):
+    elif command['type'] in (
+        'assert_return', 'assert_return_canonical_nan',
+        'assert_return_arithmetic_nan', 'assert_trap', 'assert_exhaustion'):
       if IsValidJSCommand(command):
         continue
 
@@ -249,25 +253,13 @@ class ModuleExtender(object):
         self._Reinterpret(expected['type'])
         self._Constant(expected)
         self._Reinterpret(expected['type'])
-        self._Compare(expected['type'])
+        self._Eq(expected['type'])
         self.lines.extend(['i32.eqz', 'br_if 0'])
       self.lines.extend(['return', 'end', 'unreachable', ')'])
-    elif command_type == 'assert_return_nan':
-      type_ = command['expected'][0]['type']
-      self.lines.append('(func (export "%s")' % new_field)
-      self.lines.append('(local %s)' % type_)
-      self.lines.append('block')
-      self._Action(command['action'])
-      self.lines.append('tee_local 0')
-      self._Reinterpret(type_)
-      self.lines.append('get_local 0')
-      self._Reinterpret(type_)
-      self._Compare(type_)
-      self.lines.extend(
-          ['i32.eqz', 'br_if 0', 'return', 'end', 'unreachable', ')'])
-
-      # Change the command to assert_return, it won't return NaN anymore.
-      command['type'] = 'assert_return'
+    elif command_type == 'assert_return_canonical_nan':
+      self._AssertReturnNan(new_field, command, True)
+    elif command_type == 'assert_return_arithmetic_nan':
+      self._AssertReturnNan(new_field, command, False)
     elif command_type in ('assert_trap', 'assert_exhaustion'):
       self.lines.append('(func (export "%s")' % new_field)
       self._Action(command['action'])
@@ -279,6 +271,22 @@ class ModuleExtender(object):
     command['action']['field'] = new_field
     command['action']['args'] = []
     command['expected'] = []
+
+  def _AssertReturnNan(self, new_field, command, canonical):
+      type_ = command['expected'][0]['type']
+      self.lines.append('(func (export "%s")' % new_field)
+      self.lines.append('block')
+      self._Action(command['action'])
+      self._Reinterpret(type_)
+      self._NanBitmask(canonical, type_)
+      self._And(type_)
+      self._QuietNan(type_)
+      self._Eq(type_)
+      self.lines.extend(
+          ['i32.eqz', 'br_if 0', 'return', 'end', 'unreachable', ')'])
+
+      # Change the command to assert_return, it won't return NaN anymore.
+      command['type'] = 'assert_return'
 
   def _GetExports(self, wast):
     result = {}
@@ -306,13 +314,43 @@ class ModuleExtender(object):
         'f64': ['i64.reinterpret/f64']
     }[type_])
 
-  def _Compare(self, type_):
+  def _Eq(self, type_):
     self.lines.append({
         'i32': 'i32.eq',
         'i64': 'i64.eq',
         'f32': 'i32.eq',
         'f64': 'i64.eq'
     }[type_])
+
+  def _And(self, type_):
+    self.lines.append({
+        'i32': 'i32.and',
+        'i64': 'i64.and',
+        'f32': 'i32.and',
+        'f64': 'i64.and'
+    }[type_])
+
+  def _NanBitmask(self, canonical, type_):
+    # When checking for canonical NaNs, the value can differ only in the sign
+    # bit from +nan. For arithmetic NaNs, the sign bit and the rest of the tag
+    # can differ as well.
+    assert(type_ in ('f32', 'f64'))
+    if not canonical:
+      return self._QuietNan(type_)
+
+    if type_ == 'f32':
+      line = 'i32.const 0x7fffffff'
+    else:
+      line = 'i64.const 0x7fffffffffffffff'
+    self.lines.append(line)
+
+  def _QuietNan(self, type_):
+    assert(type_ in ('f32', 'f64'))
+    if type_ == 'f32':
+      line = 'i32.const 0x%x' % F32_QUIET_NAN
+    else:
+      line = 'i64.const 0x%x' % F64_QUIET_NAN
+    self.lines.append(line)
 
   def _Constant(self, const):
     inst = None
@@ -359,7 +397,8 @@ class JSWriter(object):
         'assert_unlinkable': self._WriteAssertModuleCommand,
         'assert_uninstantiable': self._WriteAssertModuleCommand,
         'assert_return': self._WriteAssertReturnCommand,
-        'assert_return_nan': self._WriteAssertActionCommand,
+        'assert_return_canonical_nan': self._WriteAssertActionCommand,
+        'assert_return_arithmetic_nan': self._WriteAssertActionCommand,
         'assert_trap': self._WriteAssertActionCommand,
         'assert_exhaustion': self._WriteAssertActionCommand,
     }
