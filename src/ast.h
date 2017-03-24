@@ -424,7 +424,8 @@ enum class CommandType {
   AssertUnlinkable,
   AssertUninstantiable,
   AssertReturn,
-  AssertReturnNan,
+  AssertReturnCanonicalNan,
+  AssertReturnArithmeticNan,
   AssertTrap,
   AssertExhaustion,
 
@@ -444,7 +445,9 @@ struct Command {
     Action* action;
     struct { StringSlice module_name; Var var; } register_;
     struct { Action* action; ConstVector* expected; } assert_return;
-    struct { Action* action; } assert_return_nan;
+    struct {
+      Action* action;
+    } assert_return_canonical_nan, assert_return_arithmetic_nan;
     struct { Action* action; StringSlice text; } assert_trap;
     struct {
       RawModule* module;

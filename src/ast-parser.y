@@ -197,7 +197,8 @@ static bool on_read_binary_error(uint32_t offset, const char* error,
 %token MODULE TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT
 %token REGISTER INVOKE GET
 %token ASSERT_MALFORMED ASSERT_INVALID ASSERT_UNLINKABLE
-%token ASSERT_RETURN ASSERT_RETURN_NAN ASSERT_TRAP ASSERT_EXHAUSTION
+%token ASSERT_RETURN ASSERT_RETURN_CANONICAL_NAN ASSERT_RETURN_ARITHMETIC_NAN
+%token ASSERT_TRAP ASSERT_EXHAUSTION
 %token INPUT OUTPUT
 %token EOF 0 "EOF"
 
@@ -1360,10 +1361,15 @@ assertion :
       $$->assert_return.action = $3;
       $$->assert_return.expected = $4;
     }
-  | LPAR ASSERT_RETURN_NAN action RPAR {
+  | LPAR ASSERT_RETURN_CANONICAL_NAN action RPAR {
       $$ = new Command();
-      $$->type = CommandType::AssertReturnNan;
-      $$->assert_return_nan.action = $3;
+      $$->type = CommandType::AssertReturnCanonicalNan;
+      $$->assert_return_canonical_nan.action = $3;
+    }
+  | LPAR ASSERT_RETURN_ARITHMETIC_NAN action RPAR {
+      $$ = new Command();
+      $$->type = CommandType::AssertReturnArithmeticNan;
+      $$->assert_return_arithmetic_nan.action = $3;
     }
   | LPAR ASSERT_TRAP action quoted_text RPAR {
       $$ = new Command();
@@ -1454,8 +1460,13 @@ script :
           case CommandType::AssertReturn:
             module_var = &command.assert_return.action->module_var;
             goto has_module_var;
-          case CommandType::AssertReturnNan:
-            module_var = &command.assert_return_nan.action->module_var;
+          case CommandType::AssertReturnCanonicalNan:
+            module_var =
+                &command.assert_return_canonical_nan.action->module_var;
+            goto has_module_var;
+          case CommandType::AssertReturnArithmeticNan:
+            module_var =
+                &command.assert_return_arithmetic_nan.action->module_var;
             goto has_module_var;
           case CommandType::AssertTrap:
           case CommandType::AssertExhaustion:

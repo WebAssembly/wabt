@@ -1331,7 +1331,9 @@ static Result on_assert_return_command(
   return result;
 }
 
-static Result on_assert_return_nan_command(Context* ctx, Action* action) {
+static Result on_assert_return_nan_command(Context* ctx,
+                                           Action* action,
+                                           bool canonical) {
   std::vector<InterpreterTypedValue> results;
   InterpreterResult iresult;
 
@@ -1348,8 +1350,11 @@ static Result on_assert_return_nan_command(Context* ctx, Action* action) {
 
       const InterpreterTypedValue& actual = results[0];
       switch (actual.type) {
-        case Type::F32:
-          if (!is_nan_f32(actual.value.f32_bits)) {
+        case Type::F32: {
+          typedef bool (*IsNanFunc)(uint32_t);
+          IsNanFunc is_nan_func =
+              canonical ? is_canonical_nan_f32 : is_arithmetic_nan_f32;
+          if (!is_nan_func(actual.value.f32_bits)) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
             sprint_typed_value(actual_str, sizeof(actual_str), &actual);
             print_command_error(ctx, "expected result to be nan, got %s",
@@ -1357,9 +1362,13 @@ static Result on_assert_return_nan_command(Context* ctx, Action* action) {
             result = Result::Error;
           }
           break;
+        }
 
-        case Type::F64:
-          if (!is_nan_f64(actual.value.f64_bits)) {
+        case Type::F64: {
+          typedef bool (*IsNanFunc)(uint64_t);
+          IsNanFunc is_nan_func =
+              canonical ? is_canonical_nan_f64 : is_arithmetic_nan_f64;
+          if (!is_nan_func(actual.value.f64_bits)) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
             sprint_typed_value(actual_str, sizeof(actual_str), &actual);
             print_command_error(ctx, "expected result to be nan, got %s",
@@ -1367,6 +1376,7 @@ static Result on_assert_return_nan_command(Context* ctx, Action* action) {
             result = Result::Error;
           }
           break;
+        }
 
         default:
           print_command_error(ctx,
@@ -1526,7 +1536,7 @@ static Result parse_command(Context* ctx) {
     EXPECT_KEY("expected");
     CHECK_RESULT(parse_const_vector(ctx, &expected));
     on_assert_return_command(ctx, &action, expected);
-  } else if (match(ctx, "\"assert_return_nan\"")) {
+  } else if (match(ctx, "\"assert_return_canonical_nan\"")) {
     Action action;
     TypeVector expected;
 
@@ -1538,7 +1548,20 @@ static Result parse_command(Context* ctx) {
     /* Not needed for wabt-interp, but useful for other parsers. */
     EXPECT_KEY("expected");
     CHECK_RESULT(parse_type_vector(ctx, &expected));
-    on_assert_return_nan_command(ctx, &action);
+    on_assert_return_nan_command(ctx, &action, true);
+  } else if (match(ctx, "\"assert_return_arithmetic_nan\"")) {
+    Action action;
+    TypeVector expected;
+
+    EXPECT(",");
+    CHECK_RESULT(parse_line(ctx));
+    EXPECT(",");
+    CHECK_RESULT(parse_action(ctx, &action));
+    EXPECT(",");
+    /* Not needed for wabt-interp, but useful for other parsers. */
+    EXPECT_KEY("expected");
+    CHECK_RESULT(parse_type_vector(ctx, &expected));
+    on_assert_return_nan_command(ctx, &action, false);
   } else if (match(ctx, "\"assert_trap\"")) {
     Action action;
     StringSlice text;

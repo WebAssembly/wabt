@@ -361,8 +361,10 @@ struct InterpreterThreadOptions {
   uint32_t pc;
 };
 
-bool is_nan_f32(uint32_t f32_bits);
-bool is_nan_f64(uint64_t f64_bits);
+bool is_canonical_nan_f32(uint32_t f32_bits);
+bool is_canonical_nan_f64(uint64_t f64_bits);
+bool is_arithmetic_nan_f32(uint32_t f32_bits);
+bool is_arithmetic_nan_f64(uint64_t f64_bits);
 bool func_signatures_are_equal(InterpreterEnvironment* env,
                                uint32_t sig_index_0,
                                uint32_t sig_index_1);

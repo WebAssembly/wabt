@@ -137,11 +137,20 @@ static void write_escaped_string_slice(Context* ctx, StringSlice ss) {
 
 static void write_command_type(Context* ctx, const Command& command) {
   static const char* s_command_names[] = {
-      "module", "action", "register", "assert_malformed", "assert_invalid",
+      "module",
+      "action",
+      "register",
+      "assert_malformed",
+      "assert_invalid",
       nullptr, /* ASSERT_INVALID_NON_BINARY, this command will never be
                   written */
-      "assert_unlinkable", "assert_uninstantiable", "assert_return",
-      "assert_return_nan", "assert_trap", "assert_exhaustion",
+      "assert_unlinkable",
+      "assert_uninstantiable",
+      "assert_return",
+      "assert_return_canonical_nan",
+      "assert_return_arithmetic_nan",
+      "assert_trap",
+      "assert_exhaustion",
   };
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_command_names) == kCommandTypeCount);
 
@@ -425,14 +434,24 @@ static void write_commands(Context* ctx, Script* script) {
         write_const_vector(ctx, *command.assert_return.expected);
         break;
 
-      case CommandType::AssertReturnNan:
-        write_location(ctx, &command.assert_return_nan.action->loc);
+      case CommandType::AssertReturnCanonicalNan:
+        write_location(ctx, &command.assert_return_canonical_nan.action->loc);
         write_separator(ctx);
-        write_action(ctx, command.assert_return_nan.action);
+        write_action(ctx, command.assert_return_canonical_nan.action);
         write_separator(ctx);
         write_key(ctx, "expected");
         write_action_result_type(ctx, script,
-                                 command.assert_return_nan.action);
+                                 command.assert_return_canonical_nan.action);
+        break;
+
+      case CommandType::AssertReturnArithmeticNan:
+        write_location(ctx, &command.assert_return_arithmetic_nan.action->loc);
+        write_separator(ctx);
+        write_action(ctx, command.assert_return_arithmetic_nan.action);
+        write_separator(ctx);
+        write_key(ctx, "expected");
+        write_action_result_type(ctx, script,
+                                 command.assert_return_arithmetic_nan.action);
         break;
 
       case CommandType::AssertTrap:

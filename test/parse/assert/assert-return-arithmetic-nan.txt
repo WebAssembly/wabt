@@ -6,5 +6,5 @@
     f32.div)
   (export "foo" (func $foo)))
 
-(assert_return_nan
+(assert_return_arithmetic_nan
   (invoke "foo" (f32.const 0)))

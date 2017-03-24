@@ -355,7 +355,8 @@ static void visit_command(Context* ctx, Command* command) {
 
     case CommandType::Action:
     case CommandType::AssertReturn:
-    case CommandType::AssertReturnNan:
+    case CommandType::AssertReturnCanonicalNan:
+    case CommandType::AssertReturnArithmeticNan:
     case CommandType::AssertTrap:
     case CommandType::AssertExhaustion:
     case CommandType::Register:

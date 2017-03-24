@@ -83,8 +83,19 @@ function assert_return(action, expected) {
   };
 }
 
-function assert_return_nan(action) {
+function assert_return_canonical_nan(action) {
   let actual = action();
+  // Note that JS can't reliably distinguish different NaN values,
+  // so there's no good way to test that it's a canonical NaN.
+  if (!Number.isNaN(actual)) {
+    throw new Error("Wasm return value NaN expected, got " + actual);
+  };
+}
+
+function assert_return_arithmetic_nan(action) {
+  let actual = action();
+  // Note that JS can't reliably distinguish different NaN values,
+  // so there's no good way to test that it's a canonical NaN.
   if (!Number.isNaN(actual)) {
     throw new Error("Wasm return value NaN expected, got " + actual);
   };

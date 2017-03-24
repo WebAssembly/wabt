@@ -1,0 +1,13 @@
+;;; ERROR: 1
+;;; FLAGS: --spec
+(module
+  (func $foo (result i32) 
+     i32.const 0)
+  (export "foo" (func $foo)))
+
+(assert_return_canonical_nan (invoke "foo"))
+(;; STDERR ;;;
+out/test/parse/assert/bad-assert-return-canonical-nan-invalid-return-type.txt:8:31: type mismatch at action. got i32, expected f32 or f64
+(assert_return_canonical_nan (invoke "foo"))
+                              ^^^^^^
+;;; STDERR ;;)

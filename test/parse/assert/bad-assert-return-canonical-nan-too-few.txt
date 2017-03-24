@@ -1,0 +1,12 @@
+;;; ERROR: 1
+;;; FLAGS: --spec
+(module
+  (func $foo (param i32) (result f32) 
+    f32.const 0)
+  (export "foo" (func $foo)))
+(assert_return_canonical_nan (invoke "foo"))
+(;; STDERR ;;;
+out/test/parse/assert/bad-assert-return-canonical-nan-too-few.txt:7:31: too few parameters to function. got 0, expected 1
+(assert_return_canonical_nan (invoke "foo"))
+                              ^^^^^^
+;;; STDERR ;;)
