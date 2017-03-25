@@ -5,10 +5,10 @@ out/third_party/testsuite/start.wast:2: assert_invalid passed:
   error: @0x00000015: invalid start function index
 out/third_party/testsuite/start.wast:7: assert_invalid passed:
   error: start function must not return anything
-  error: @0x00000016: on_start_function callback failed
+  error: @0x00000016: OnStartFunction callback failed
 out/third_party/testsuite/start.wast:14: assert_invalid passed:
   error: start function must be nullary
-  error: @0x00000016: on_start_function callback failed
+  error: @0x00000016: OnStartFunction callback failed
 inc() =>
 inc() =>
 inc() =>

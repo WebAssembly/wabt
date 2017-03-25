@@ -224,6 +224,7 @@ add_library(libwabt STATIC
   src/validator.cc
 
   src/binary-reader.cc
+  src/binary-reader-logging.cc
   src/binary-writer.cc
   src/binary-writer-spec.cc
   src/binary-reader-ast.cc

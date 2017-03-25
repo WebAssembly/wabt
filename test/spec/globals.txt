@@ -3,32 +3,32 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/globals.wast:50: assert_invalid passed:
   error: can't set_global on immutable global at index 0.
-  error: @0x00000026: on_set_global_expr callback failed
+  error: @0x00000026: OnSetGlobalExpr callback failed
 out/third_party/testsuite/globals.wast:55: assert_invalid passed:
   error: unknown import module "m"
-  error: @0x00000012: on_import callback failed
+  error: @0x00000012: OnImport callback failed
 out/third_party/testsuite/globals.wast:60: assert_invalid passed:
   error: unknown import module "m"
-  error: @0x00000012: on_import callback failed
+  error: @0x00000012: OnImport callback failed
 out/third_party/testsuite/globals.wast:65: assert_invalid passed:
   error: mutable globals cannot be exported
-  error: @0x0000001a: on_export callback failed
+  error: @0x0000001a: OnExport callback failed
 out/third_party/testsuite/globals.wast:70: assert_invalid passed:
   error: mutable globals cannot be exported
-  error: @0x0000001a: on_export callback failed
+  error: @0x0000001a: OnExport callback failed
 out/third_party/testsuite/globals.wast:75: assert_invalid passed:
   error: @0x00000013: expected END opcode after initializer expression
 out/third_party/testsuite/globals.wast:80: assert_invalid passed:
   error: @0x0000000e: unexpected opcode in initializer expression: 32 (0x20)
 out/third_party/testsuite/globals.wast:85: assert_invalid passed:
   error: type mismatch in global, expected i32 but got f32.
-  error: @0x00000013: end_global_init_expr callback failed
+  error: @0x00000013: EndGlobalInitExpr callback failed
 out/third_party/testsuite/globals.wast:90: assert_invalid passed:
   error: initializer expression can only reference an imported global
-  error: @0x0000000f: on_init_expr_get_global_expr callback failed
+  error: @0x0000000f: OnInitExprGetGlobalExpr callback failed
 out/third_party/testsuite/globals.wast:95: assert_invalid passed:
   error: initializer expression can only reference an imported global
-  error: @0x0000000f: on_init_expr_get_global_expr callback failed
+  error: @0x0000000f: OnInitExprGetGlobalExpr callback failed
 out/third_party/testsuite/globals.wast:103: assert_malformed passed:
   error: @0x00000022: global mutability must be 0 or 1
 out/third_party/testsuite/globals.wast:116: assert_malformed passed:

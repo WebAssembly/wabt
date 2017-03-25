@@ -3,91 +3,91 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/func.wast:315: assert_invalid passed:
   error: type mismatch in implicit return, expected i64 but got i32.
-  error: @0x0000001d: end_function_body callback failed
+  error: @0x0000001d: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:319: assert_invalid passed:
   error: type mismatch in i32.eqz, expected i32 but got f32.
-  error: @0x0000001c: on_convert_expr callback failed
+  error: @0x0000001c: OnConvertExpr callback failed
 out/third_party/testsuite/func.wast:323: assert_invalid passed:
   error: type mismatch in f64.neg, expected f64 but got i64.
-  error: @0x0000001e: on_unary_expr callback failed
+  error: @0x0000001e: OnUnaryExpr callback failed
 out/third_party/testsuite/func.wast:331: assert_invalid passed:
   error: type mismatch in implicit return, expected i64 but got i32.
-  error: @0x0000001c: end_function_body callback failed
+  error: @0x0000001c: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:335: assert_invalid passed:
   error: type mismatch in i32.eqz, expected i32 but got f32.
-  error: @0x0000001b: on_convert_expr callback failed
+  error: @0x0000001b: OnConvertExpr callback failed
 out/third_party/testsuite/func.wast:339: assert_invalid passed:
   error: type mismatch in f64.neg, expected f64 but got i64.
-  error: @0x0000001c: on_unary_expr callback failed
+  error: @0x0000001c: OnUnaryExpr callback failed
 out/third_party/testsuite/func.wast:347: assert_invalid passed:
   error: @0x0000000e: result count must be 0 or 1
 out/third_party/testsuite/func.wast:351: assert_invalid passed:
   error: @0x0000000e: result count must be 0 or 1
 out/third_party/testsuite/func.wast:360: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000019: end_function_body callback failed
+  error: @0x00000019: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:364: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000019: end_function_body callback failed
+  error: @0x00000019: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:368: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000019: end_function_body callback failed
+  error: @0x00000019: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:372: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000019: end_function_body callback failed
+  error: @0x00000019: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:377: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x0000001a: end_function_body callback failed
+  error: @0x0000001a: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:383: assert_invalid passed:
   error: type stack at end of function is 1, expected 0
-  error: @0x0000001a: end_function_body callback failed
+  error: @0x0000001a: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:389: assert_invalid passed:
   error: type mismatch in implicit return, expected i32 but got f32.
-  error: @0x0000001e: end_function_body callback failed
+  error: @0x0000001e: EndFunctionBody callback failed
 out/third_party/testsuite/func.wast:396: assert_invalid passed:
   error: type stack size too small at return. got 0, expected at least 1
-  error: @0x00000019: on_return_expr callback failed
+  error: @0x00000019: OnReturnExpr callback failed
 out/third_party/testsuite/func.wast:402: assert_invalid passed:
   error: type stack size too small at return. got 0, expected at least 1
-  error: @0x0000001a: on_return_expr callback failed
+  error: @0x0000001a: OnReturnExpr callback failed
 out/third_party/testsuite/func.wast:408: assert_invalid passed:
   error: type mismatch in return, expected i32 but got i64.
-  error: @0x0000001b: on_return_expr callback failed
+  error: @0x0000001b: OnReturnExpr callback failed
 out/third_party/testsuite/func.wast:415: assert_invalid passed:
   error: type stack size too small at return. got 0, expected at least 1
-  error: @0x00000019: on_return_expr callback failed
+  error: @0x00000019: OnReturnExpr callback failed
 out/third_party/testsuite/func.wast:421: assert_invalid passed:
   error: type stack size too small at return. got 0, expected at least 1
-  error: @0x0000001a: on_return_expr callback failed
+  error: @0x0000001a: OnReturnExpr callback failed
 out/third_party/testsuite/func.wast:427: assert_invalid passed:
   error: type mismatch in return, expected i32 but got i64.
-  error: @0x0000001b: on_return_expr callback failed
+  error: @0x0000001b: OnReturnExpr callback failed
 out/third_party/testsuite/func.wast:433: assert_invalid passed:
   error: type mismatch in return, expected i32 but got i64.
-  error: @0x0000001b: on_return_expr callback failed
+  error: @0x0000001b: OnReturnExpr callback failed
 out/third_party/testsuite/func.wast:440: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001a: on_br_expr callback failed
+  error: @0x0000001a: OnBrExpr callback failed
 out/third_party/testsuite/func.wast:446: assert_invalid passed:
   error: type mismatch in br, expected i32 but got f32.
-  error: @0x0000001f: on_br_expr callback failed
+  error: @0x0000001f: OnBrExpr callback failed
 out/third_party/testsuite/func.wast:452: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001a: on_br_expr callback failed
+  error: @0x0000001a: OnBrExpr callback failed
 out/third_party/testsuite/func.wast:458: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
-  error: @0x0000001c: on_br_expr callback failed
+  error: @0x0000001c: OnBrExpr callback failed
 out/third_party/testsuite/func.wast:464: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
-  error: @0x0000001c: on_br_expr callback failed
+  error: @0x0000001c: OnBrExpr callback failed
 out/third_party/testsuite/func.wast:471: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001c: on_br_expr callback failed
+  error: @0x0000001c: OnBrExpr callback failed
 out/third_party/testsuite/func.wast:477: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001d: on_br_expr callback failed
+  error: @0x0000001d: OnBrExpr callback failed
 out/third_party/testsuite/func.wast:483: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
-  error: @0x0000001e: on_br_expr callback failed
+  error: @0x0000001e: OnBrExpr callback failed
 96/96 tests passed.
 ;;; STDOUT ;;)

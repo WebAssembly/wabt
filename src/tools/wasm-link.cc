@@ -128,11 +128,13 @@ Section::Section()
       payload_size(0),
       payload_offset(0),
       count(0),
-      output_payload_offset(0) {}
+      output_payload_offset(0) {
+  WABT_ZERO_MEMORY(data);
+}
 
 Section::~Section() {
   if (section_code == BinarySection::Data) {
-    delete data_segments;
+    delete data.data_segments;
   }
 }
 
@@ -359,7 +361,7 @@ static void write_memory_section(Context* ctx,
   limits.has_max = true;
   for (size_t i = 0; i < sections.size(); i++) {
     Section* sec = sections[i];
-    limits.initial += sec->memory_limits.initial;
+    limits.initial += sec->data.memory_limits.initial;
   }
   limits.max = limits.initial;
   write_limits(stream, &limits);
@@ -466,8 +468,8 @@ static void write_data_section(Context* ctx,
   write_u32_leb128(stream, total_count, "data segment count");
   for (size_t i = 0; i < sections.size(); i++) {
     Section* sec = sections[i];
-    for (size_t j = 0; j < sec->data_segments->size(); j++) {
-      const DataSegment& segment = (*sec->data_segments)[j];
+    for (size_t j = 0; j < sec->data.data_segments->size(); j++) {
+      const DataSegment& segment = (*sec->data.data_segments)[j];
       write_data_segment(stream, segment,
                          sec->binary->memory_page_offset * WABT_PAGE_SIZE);
     }

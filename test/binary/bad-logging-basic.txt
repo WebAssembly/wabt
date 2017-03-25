@@ -17,14 +17,14 @@ error: @0x00000015: function signature count != function body count
 
 ;;; STDERR ;;)
 (;; STDOUT ;;;
-begin_module(1)
-begin_signature_section(4)
-  on_signature_count(1)
-  on_signature(index: 0, params: [], results: [])
-end_signature_section
-begin_function_signatures_section(2)
-  on_function_signatures_count(1)
-  on_function_signature(index: 0, sig_index: 0)
-end_function_signatures_section
-begin_function_bodies_section(4)
+BeginModule(version: 1)
+  BeginTypeSection(4)
+    OnTypeCount(1)
+    OnType(index: 0, params: [], results: [])
+  EndTypeSection
+  BeginFunctionSection(2)
+    OnFunctionCount(1)
+    OnFunction(index: 0, sig_index: 0)
+  EndFunctionSection
+  BeginCodeSection(4)
 ;;; STDOUT ;;)

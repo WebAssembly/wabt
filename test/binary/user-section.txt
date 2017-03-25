@@ -7,18 +7,18 @@ section(TYPE) { count[1] function params[0] results[1] i32 }
 section("bar") { count[5] }
 section("foo") { count[6] }
 (;; STDOUT ;;;
-begin_module(1)
-begin_custom_section: 'foo' size=5
-end_custom_section
-begin_signature_section(5)
-  on_signature_count(1)
-  on_signature(index: 0, params: [], results: [i32])
-end_signature_section
-begin_custom_section: 'bar' size=5
-end_custom_section
-begin_custom_section: 'foo' size=5
-end_custom_section
-end_module
+BeginModule(version: 1)
+  BeginCustomSection('foo', size: 5)
+  EndCustomSection
+  BeginTypeSection(5)
+    OnTypeCount(1)
+    OnType(index: 0, params: [], results: [i32])
+  EndTypeSection
+  BeginCustomSection('bar', size: 5)
+  EndCustomSection
+  BeginCustomSection('foo', size: 5)
+  EndCustomSection
+EndModule
 (module
   (type (;0;) (func (result i32))))
 ;;; STDOUT ;;)
