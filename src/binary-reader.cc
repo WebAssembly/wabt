@@ -1600,7 +1600,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
               section_name.length) == 0) {
     CALLBACK_SECTION(begin_names_section, section_size);
     uint32_t i = 0;
-    uint32_t previous_read_end = ctx->read_end;
+    size_t previous_read_end = ctx->read_end;
     while (ctx->offset < ctx->read_end) {
       uint32_t name_type;
       uint32_t subsection_size;
