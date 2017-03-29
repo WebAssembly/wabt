@@ -1,0 +1,24 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[decl_count[1] i32_count[1] i32]
+    get_local 0
+  }
+}
+section("name") {
+  subsection[1]
+  length[1]
+  func_count[1]
+  index[0]
+  str("$F0")
+}
+(;; STDERR ;;;
+Error running "wasm2wast":
+error: @0x0000002c: unfinished sub-section (expected end: 0x27)
+;;; STDERR ;;)
