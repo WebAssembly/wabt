@@ -598,15 +598,12 @@ static Result on_function_name(uint32_t index,
                                StringSlice name,
                                void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  print_details(ctx, " - func[%d] " PRIstringslice "\n", index,
-                WABT_PRINTF_STRING_SLICE_ARG(name));
   if (ctx->options->mode == ObjdumpMode::Prepass) {
-    while (ctx->options->function_names.size() < index) {
-      ctx->options->function_names.emplace_back();
-    }
-    if (ctx->options->function_names.size() == index) {
-      ctx->options->function_names.push_back(string_slice_to_string(name));
-    }
+    ctx->options->function_names.resize(index+1);
+    ctx->options->function_names[index] = string_slice_to_string(name);
+  } else {
+    print_details(ctx, " - func[%d] " PRIstringslice "\n", index,
+                  WABT_PRINTF_STRING_SLICE_ARG(name));
   }
   return Result::Ok;
 }
@@ -617,8 +614,8 @@ static Result on_local_name(uint32_t func_index,
                             void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
   if (name.length) {
-    print_details(ctx, "  - local[%d] " PRIstringslice "\n", local_index,
-                  WABT_PRINTF_STRING_SLICE_ARG(name));
+    print_details(ctx, " - func[%d] local[%d] " PRIstringslice "\n", func_index,
+                  local_index, WABT_PRINTF_STRING_SLICE_ARG(name));
   }
   return Result::Ok;
 }

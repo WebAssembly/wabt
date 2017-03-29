@@ -265,7 +265,7 @@ static void write_string(Stream* stream,
 
 #define FIXUP_SIZE(STREAM)                                                  \
   write_fixed_u32_leb128_at(STREAM, fixup_offset, (STREAM)->offset - start, \
-                            "fixup size");                              \
+                            "fixup size");                                  \
   }
 
 static void write_table_section(Context* ctx,
