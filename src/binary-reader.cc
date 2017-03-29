@@ -1605,6 +1605,9 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
       uint32_t subsection_size;
       in_u32_leb128(ctx, &name_type, "name type");
       in_u32_leb128(ctx, &subsection_size, "subsection size");
+      size_t subsection_end = ctx->offset + subsection_size;
+      if (subsection_end > ctx->read_end)
+        RAISE_ERROR("invalid sub-section size: extends past end");
 
       switch (static_cast<NameSectionSubsection>(name_type)) {
       case NameSectionSubsection::Function:
@@ -1649,9 +1652,13 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
         ++i;
         break;
       default:
-        /* unknown subsection, skip rest of section */
-        ctx->offset = ctx->read_end;
+        /* unknown subsection, skip it */
+        ctx->offset = subsection_end;
         break;
+      }
+      if (ctx->offset != subsection_end) {
+        RAISE_ERROR("unfinished sub-section (expected end: 0x%" PRIzx ")",
+                    subsection_end);
       }
     }
     CALLBACK_CTX0(end_names_section);

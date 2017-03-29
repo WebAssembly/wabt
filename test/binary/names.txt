@@ -12,12 +12,12 @@ section(CODE) {
 }
 section("name") {
   subsection[1]
-  length[1]
+  length[6]
   func_count[1]
   index[0]
   str("$F0")
   subsection[2]
-  length[1]
+  length[8]
   func_count[1]
   index[0]
   local_count[1]
