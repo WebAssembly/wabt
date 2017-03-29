@@ -13,12 +13,16 @@ section(CODE) {
 }
 section("name") {
   subsection[1]
-  length[1]
+  length[10]
   func_count[1]
   index[0]
   str("$F0")
+  subsection[1]
+  data[1]
+  data[1]
+  data[1]
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000027: unable to read u32 leb128: function index
+error: @0x0000002c: unfinished sub-section (expected end: 0x30)
 ;;; STDERR ;;)

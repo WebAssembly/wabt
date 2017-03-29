@@ -1600,6 +1600,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
               section_name.length) == 0) {
     CALLBACK_SECTION(begin_names_section, section_size);
     uint32_t i = 0;
+    uint32_t previous_read_end = ctx->read_end;
     while (ctx->offset < ctx->read_end) {
       uint32_t name_type;
       uint32_t subsection_size;
@@ -1608,6 +1609,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
       size_t subsection_end = ctx->offset + subsection_size;
       if (subsection_end > ctx->read_end)
         RAISE_ERROR("invalid sub-section size: extends past end");
+      ctx->read_end = subsection_end;
 
       switch (static_cast<NameSectionSubsection>(name_type)) {
       case NameSectionSubsection::Function:
@@ -1660,6 +1662,7 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
         RAISE_ERROR("unfinished sub-section (expected end: 0x%" PRIzx ")",
                     subsection_end);
       }
+      ctx->read_end = previous_read_end;
     }
     CALLBACK_CTX0(end_names_section);
   } else if (strncmp(section_name.start, WABT_BINARY_SECTION_RELOC,
