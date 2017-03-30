@@ -5,63 +5,63 @@ out/third_party/testsuite/exports.wast:27: assert_invalid passed:
   error: @0x00000019: invalid export func index: 1
 out/third_party/testsuite/exports.wast:31: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001d: on_export callback failed
+  error: @0x0000001d: OnExport callback failed
 out/third_party/testsuite/exports.wast:35: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001e: on_export callback failed
+  error: @0x0000001e: OnExport callback failed
 out/third_party/testsuite/exports.wast:39: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000025: on_export callback failed
+  error: @0x00000025: OnExport callback failed
 out/third_party/testsuite/exports.wast:43: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000023: on_export callback failed
+  error: @0x00000023: OnExport callback failed
 out/third_party/testsuite/exports.wast:47: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000022: on_export callback failed
+  error: @0x00000022: OnExport callback failed
 out/third_party/testsuite/exports.wast:76: assert_invalid passed:
   error: @0x00000017: invalid export global index
 out/third_party/testsuite/exports.wast:80: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001b: on_export callback failed
+  error: @0x0000001b: OnExport callback failed
 out/third_party/testsuite/exports.wast:84: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000020: on_export callback failed
+  error: @0x00000020: OnExport callback failed
 out/third_party/testsuite/exports.wast:88: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000025: on_export callback failed
+  error: @0x00000025: OnExport callback failed
 out/third_party/testsuite/exports.wast:92: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000021: on_export callback failed
+  error: @0x00000021: OnExport callback failed
 out/third_party/testsuite/exports.wast:96: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000020: on_export callback failed
+  error: @0x00000020: OnExport callback failed
 out/third_party/testsuite/exports.wast:124: assert_invalid passed:
   error: @0x00000015: invalid export table index
 out/third_party/testsuite/exports.wast:128: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000019: on_export callback failed
+  error: @0x00000019: OnExport callback failed
 out/third_party/testsuite/exports.wast:137: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000023: on_export callback failed
+  error: @0x00000023: OnExport callback failed
 out/third_party/testsuite/exports.wast:141: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000021: on_export callback failed
+  error: @0x00000021: OnExport callback failed
 out/third_party/testsuite/exports.wast:145: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001e: on_export callback failed
+  error: @0x0000001e: OnExport callback failed
 out/third_party/testsuite/exports.wast:173: assert_invalid passed:
   error: @0x00000014: invalid export memory index
 out/third_party/testsuite/exports.wast:177: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000018: on_export callback failed
+  error: @0x00000018: OnExport callback failed
 out/third_party/testsuite/exports.wast:186: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000022: on_export callback failed
+  error: @0x00000022: OnExport callback failed
 out/third_party/testsuite/exports.wast:190: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000020: on_export callback failed
+  error: @0x00000020: OnExport callback failed
 out/third_party/testsuite/exports.wast:194: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001e: on_export callback failed
+  error: @0x0000001e: OnExport callback failed
 28/28 tests passed.
 ;;; STDOUT ;;)

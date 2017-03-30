@@ -23,7 +23,7 @@
 
 #include <vector>
 
-#include "binary-reader.h"
+#include "binary-reader-nop.h"
 #include "interpreter.h"
 #include "type-checker.h"
 #include "writer.h"
@@ -32,27 +32,6 @@
   do {                      \
     if (WABT_FAILED(expr))  \
       return Result::Error; \
-  } while (0)
-
-#define CHECK_LOCAL(ctx, local_index)                                       \
-  do {                                                                      \
-    uint32_t max_local_index =                                              \
-        (ctx)->current_func->param_and_local_types.size();                  \
-    if ((local_index) >= max_local_index) {                                 \
-      print_error((ctx), "invalid local_index: %d (max %d)", (local_index), \
-                  max_local_index);                                         \
-      return Result::Error;                                                 \
-    }                                                                       \
-  } while (0)
-
-#define CHECK_GLOBAL(ctx, global_index)                                       \
-  do {                                                                        \
-    uint32_t max_global_index = (ctx)->global_index_mapping.size();           \
-    if ((global_index) >= max_global_index) {                                 \
-      print_error((ctx), "invalid global_index: %d (max %d)", (global_index), \
-                  max_global_index);                                          \
-      return Result::Error;                                                   \
-    }                                                                         \
   } while (0)
 
 namespace wabt {
@@ -72,14 +51,219 @@ struct Label {
 Label::Label(uint32_t offset, uint32_t fixup_offset)
     : offset(offset), fixup_offset(fixup_offset) {}
 
-struct Context {
-  Context();
+struct ElemSegmentInfo {
+  ElemSegmentInfo(uint32_t* dst, uint32_t func_index)
+      : dst(dst), func_index(func_index) {}
 
-  BinaryReader* reader = nullptr;
+  uint32_t* dst;
+  uint32_t func_index;
+};
+
+struct DataSegmentInfo {
+  DataSegmentInfo(void* dst_data, const void* src_data, uint32_t size)
+      : dst_data(dst_data), src_data(src_data), size(size) {}
+
+  void* dst_data;        // Not owned.
+  const void* src_data;  // Not owned.
+  uint32_t size;
+};
+
+class BinaryReaderInterpreter : public BinaryReaderNop {
+ public:
+  BinaryReaderInterpreter(InterpreterEnvironment* env,
+                          DefinedInterpreterModule* module,
+                          size_t istream_offset,
+                          BinaryErrorHandler* error_handler);
+
+  Result Init();
+  void StealOutputBuffer(OutputBuffer*);
+  size_t get_istream_offset() { return istream_offset; }
+
+  // Implement BinaryReader.
+  virtual bool OnError(const char* message);
+
+  virtual Result EndModule();
+
+  virtual Result OnTypeCount(uint32_t count);
+  virtual Result OnType(uint32_t index,
+                        uint32_t param_count,
+                        Type* param_types,
+                        uint32_t result_count,
+                        Type* result_types);
+
+  virtual Result OnImportCount(uint32_t count);
+  virtual Result OnImport(uint32_t index,
+                          StringSlice module_name,
+                          StringSlice field_name);
+  virtual Result OnImportFunc(uint32_t import_index,
+                              StringSlice module_name,
+                              StringSlice field_name,
+                              uint32_t func_index,
+                              uint32_t sig_index);
+  virtual Result OnImportTable(uint32_t import_index,
+                               StringSlice module_name,
+                               StringSlice field_name,
+                               uint32_t table_index,
+                               Type elem_type,
+                               const Limits* elem_limits);
+  virtual Result OnImportMemory(uint32_t import_index,
+                                StringSlice module_name,
+                                StringSlice field_name,
+                                uint32_t memory_index,
+                                const Limits* page_limits);
+  virtual Result OnImportGlobal(uint32_t import_index,
+                                StringSlice module_name,
+                                StringSlice field_name,
+                                uint32_t global_index,
+                                Type type,
+                                bool mutable_);
+
+  virtual Result OnFunctionCount(uint32_t count);
+  virtual Result OnFunction(uint32_t index, uint32_t sig_index);
+
+  virtual Result OnTable(uint32_t index,
+                         Type elem_type,
+                         const Limits* elem_limits);
+
+  virtual Result OnMemory(uint32_t index, const Limits* limits);
+
+  virtual Result OnGlobalCount(uint32_t count);
+  virtual Result BeginGlobal(uint32_t index, Type type, bool mutable_);
+  virtual Result EndGlobalInitExpr(uint32_t index);
+
+  virtual Result OnExport(uint32_t index,
+                          ExternalKind kind,
+                          uint32_t item_index,
+                          StringSlice name);
+
+  virtual Result OnStartFunction(uint32_t func_index);
+
+  virtual Result BeginFunctionBody(uint32_t index);
+  virtual Result OnLocalDeclCount(uint32_t count);
+  virtual Result OnLocalDecl(uint32_t decl_index, uint32_t count, Type type);
+
+  virtual Result OnBinaryExpr(Opcode opcode);
+  virtual Result OnBlockExpr(uint32_t num_types, Type* sig_types);
+  virtual Result OnBrExpr(uint32_t depth);
+  virtual Result OnBrIfExpr(uint32_t depth);
+  virtual Result OnBrTableExpr(uint32_t num_targets,
+                               uint32_t* target_depths,
+                               uint32_t default_target_depth);
+  virtual Result OnCallExpr(uint32_t func_index);
+  virtual Result OnCallIndirectExpr(uint32_t sig_index);
+  virtual Result OnCompareExpr(Opcode opcode);
+  virtual Result OnConvertExpr(Opcode opcode);
+  virtual Result OnCurrentMemoryExpr();
+  virtual Result OnDropExpr();
+  virtual Result OnElseExpr();
+  virtual Result OnEndExpr();
+  virtual Result OnF32ConstExpr(uint32_t value_bits);
+  virtual Result OnF64ConstExpr(uint64_t value_bits);
+  virtual Result OnGetGlobalExpr(uint32_t global_index);
+  virtual Result OnGetLocalExpr(uint32_t local_index);
+  virtual Result OnGrowMemoryExpr();
+  virtual Result OnI32ConstExpr(uint32_t value);
+  virtual Result OnI64ConstExpr(uint64_t value);
+  virtual Result OnIfExpr(uint32_t num_types, Type* sig_types);
+  virtual Result OnLoadExpr(Opcode opcode,
+                            uint32_t alignment_log2,
+                            uint32_t offset);
+  virtual Result OnLoopExpr(uint32_t num_types, Type* sig_types);
+  virtual Result OnNopExpr();
+  virtual Result OnReturnExpr();
+  virtual Result OnSelectExpr();
+  virtual Result OnSetGlobalExpr(uint32_t global_index);
+  virtual Result OnSetLocalExpr(uint32_t local_index);
+  virtual Result OnStoreExpr(Opcode opcode,
+                             uint32_t alignment_log2,
+                             uint32_t offset);
+  virtual Result OnTeeLocalExpr(uint32_t local_index);
+  virtual Result OnUnaryExpr(Opcode opcode);
+  virtual Result OnUnreachableExpr();
+  virtual Result EndFunctionBody(uint32_t index);
+
+  virtual Result EndElemSegmentInitExpr(uint32_t index);
+  virtual Result OnElemSegmentFunctionIndex(uint32_t index,
+                                            uint32_t func_index);
+
+  virtual Result OnDataSegmentData(uint32_t index,
+                                   const void* data,
+                                   uint32_t size);
+
+  virtual Result OnInitExprF32ConstExpr(uint32_t index, uint32_t value);
+  virtual Result OnInitExprF64ConstExpr(uint32_t index, uint64_t value);
+  virtual Result OnInitExprGetGlobalExpr(uint32_t index, uint32_t global_index);
+  virtual Result OnInitExprI32ConstExpr(uint32_t index, uint32_t value);
+  virtual Result OnInitExprI64ConstExpr(uint32_t index, uint64_t value);
+
+ private:
+  Label* GetLabel(uint32_t depth);
+  Label* TopLabel();
+  void PushLabel(uint32_t offset, uint32_t fixup_offset);
+  void PopLabel();
+
+  bool HandleError(uint32_t offset, const char* message);
+  void PrintError(const char* format, ...);
+  static void OnTypecheckerError(const char* msg, void* user_data);
+
+  uint32_t TranslateSigIndexToEnv(uint32_t sig_index);
+  InterpreterFuncSignature* GetSignatureByEnvIndex(uint32_t sig_index);
+  InterpreterFuncSignature* GetSignatureByModuleIndex(uint32_t sig_index);
+  uint32_t TranslateFuncIndexToEnv(uint32_t func_index);
+  uint32_t TranslateModuleFuncIndexToDefined(uint32_t func_index);
+  InterpreterFunc* GetFuncByEnvIndex(uint32_t func_index);
+  InterpreterFunc* GetFuncByModuleIndex(uint32_t func_index);
+  uint32_t TranslateGlobalIndexToEnv(uint32_t global_index);
+  InterpreterGlobal* GetGlobalByEnvIndex(uint32_t global_index);
+  InterpreterGlobal* GetGlobalByModuleIndex(uint32_t global_index);
+  Type GetGlobalTypeByModuleIndex(uint32_t global_index);
+  uint32_t TranslateLocalIndex(uint32_t local_index);
+  Type GetLocalTypeByIndex(InterpreterFunc* func, uint32_t local_index);
+
+  uint32_t GetIstreamOffset();
+
+  Result EmitDataAt(size_t offset, const void* data, size_t size);
+  Result EmitData(const void* data, size_t size);
+  Result EmitOpcode(Opcode opcode);
+  Result EmitOpcode(InterpreterOpcode opcode);
+  Result EmitI8(uint8_t value);
+  Result EmitI32(uint32_t value);
+  Result EmitI64(uint64_t value);
+  Result EmitI32At(uint32_t offset, uint32_t value);
+  Result EmitDropKeep(uint32_t drop, uint8_t keep);
+  Result AppendFixup(Uint32VectorVector* fixups_vector, uint32_t index);
+  Result EmitBrOffset(uint32_t depth, uint32_t offset);
+  Result GetBrDropKeepCount(uint32_t depth,
+                            uint32_t* out_drop_count,
+                            uint32_t* out_keep_count);
+  Result GetReturnDropKeepCount(uint32_t* out_drop_count,
+                                uint32_t* out_keep_count);
+  Result EmitBr(uint32_t depth, uint32_t drop_count, uint32_t keep_count);
+  Result EmitBrTableOffset(uint32_t depth);
+  Result FixupTopLabel();
+  Result EmitFuncOffset(DefinedInterpreterFunc* func, uint32_t func_index);
+
+  Result CheckLocal(uint32_t local_index);
+  Result CheckGlobal(uint32_t global_index);
+  Result CheckImportKind(InterpreterImport* import, ExternalKind expected_kind);
+  Result CheckImportLimits(const Limits* declared_limits,
+                           const Limits* actual_limits);
+  Result CheckHasMemory(Opcode opcode);
+  Result CheckAlign(uint32_t alignment_log2, uint32_t natural_alignment);
+
+  Result AppendExport(InterpreterModule* module,
+                      ExternalKind kind,
+                      uint32_t item_index,
+                      StringSlice name);
+
+  PrintErrorCallback MakePrintErrorCallback();
+  static void OnHostImportPrintError(const char* msg, void* user_data);
+
   BinaryErrorHandler* error_handler = nullptr;
   InterpreterEnvironment* env = nullptr;
   DefinedInterpreterModule* module = nullptr;
   DefinedInterpreterFunc* current_func = nullptr;
+  TypeCheckerErrorHandler tc_error_handler;
   TypeChecker typechecker;
   std::vector<Label> label_stack;
   Uint32VectorVector func_fixups;
@@ -95,7 +279,13 @@ struct Context {
   uint32_t num_func_imports = 0;
   uint32_t num_global_imports = 0;
 
-  /* values cached in the Context so they can be shared between callbacks */
+  // Changes to linear memory and tables should not apply if a validation error
+  // occurs; these vectors cache the changes that must be applied after we know
+  // that there are no validation errors.
+  std::vector<ElemSegmentInfo> elem_segment_infos;
+  std::vector<DataSegmentInfo> data_segment_infos;
+
+  /* values cached so they can be shared between callbacks */
   InterpreterTypedValue init_expr_value;
   uint32_t table_offset = 0;
   bool is_host_import = false;
@@ -103,282 +293,286 @@ struct Context {
   uint32_t import_env_index = 0;
 };
 
-Context::Context() {
+BinaryReaderInterpreter::BinaryReaderInterpreter(
+    InterpreterEnvironment* env,
+    DefinedInterpreterModule* module,
+    size_t istream_offset,
+    BinaryErrorHandler* error_handler)
+    : error_handler(error_handler),
+      env(env),
+      module(module),
+      istream_offset(istream_offset) {
   WABT_ZERO_MEMORY(istream_writer);
+
+  tc_error_handler.on_error = OnTypecheckerError;
+  tc_error_handler.user_data = this;
+  typechecker.error_handler = &tc_error_handler;
 }
 
-}  // namespace
-
-static Label* get_label(Context* ctx, uint32_t depth) {
-  assert(depth < ctx->label_stack.size());
-  return &ctx->label_stack[ctx->label_stack.size() - depth - 1];
+Result BinaryReaderInterpreter::Init() {
+  return init_mem_writer_existing(&istream_writer, &env->istream);
 }
 
-static Label* top_label(Context* ctx) {
-  return get_label(ctx, 0);
+void BinaryReaderInterpreter::StealOutputBuffer(OutputBuffer* output_buffer) {
+  steal_mem_writer_output_buffer(&istream_writer, output_buffer);
 }
 
-static bool handle_error(uint32_t offset, const char* message, Context* ctx) {
-  if (ctx->error_handler->on_error) {
-    return ctx->error_handler->on_error(offset, message,
-                                        ctx->error_handler->user_data);
+Label* BinaryReaderInterpreter::GetLabel(uint32_t depth) {
+  assert(depth < label_stack.size());
+  return &label_stack[label_stack.size() - depth - 1];
+}
+
+Label* BinaryReaderInterpreter::TopLabel() {
+  return GetLabel(0);
+}
+
+bool BinaryReaderInterpreter::HandleError(uint32_t offset,
+                                          const char* message) {
+  if (error_handler->on_error) {
+    return error_handler->on_error(offset, message, error_handler->user_data);
   }
   return false;
 }
 
-static void WABT_PRINTF_FORMAT(2, 3)
-    print_error(Context* ctx, const char* format, ...) {
+void WABT_PRINTF_FORMAT(2, 3)
+    BinaryReaderInterpreter::PrintError(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  handle_error(WABT_INVALID_OFFSET, buffer, ctx);
+  HandleError(WABT_INVALID_OFFSET, buffer);
 }
 
-static void on_typechecker_error(const char* msg, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  print_error(ctx, "%s", msg);
+// static
+void BinaryReaderInterpreter::OnTypecheckerError(const char* msg,
+                                                 void* user_data) {
+  static_cast<BinaryReaderInterpreter*>(user_data)->PrintError("%s", msg);
 }
 
-static uint32_t translate_sig_index_to_env(Context* ctx, uint32_t sig_index) {
-  assert(sig_index < ctx->sig_index_mapping.size());
-  return ctx->sig_index_mapping[sig_index];
+uint32_t BinaryReaderInterpreter::TranslateSigIndexToEnv(uint32_t sig_index) {
+  assert(sig_index < sig_index_mapping.size());
+  return sig_index_mapping[sig_index];
 }
 
-static InterpreterFuncSignature* get_signature_by_env_index(
-    Context* ctx,
+InterpreterFuncSignature* BinaryReaderInterpreter::GetSignatureByEnvIndex(
     uint32_t sig_index) {
-  return &ctx->env->sigs[sig_index];
+  return &env->sigs[sig_index];
 }
 
-static InterpreterFuncSignature* get_signature_by_module_index(
-    Context* ctx,
+InterpreterFuncSignature* BinaryReaderInterpreter::GetSignatureByModuleIndex(
     uint32_t sig_index) {
-  return get_signature_by_env_index(ctx,
-                                    translate_sig_index_to_env(ctx, sig_index));
+  return GetSignatureByEnvIndex(TranslateSigIndexToEnv(sig_index));
 }
 
-static uint32_t translate_func_index_to_env(Context* ctx, uint32_t func_index) {
-  assert(func_index < ctx->func_index_mapping.size());
-  return ctx->func_index_mapping[func_index];
+uint32_t BinaryReaderInterpreter::TranslateFuncIndexToEnv(uint32_t func_index) {
+  assert(func_index < func_index_mapping.size());
+  return func_index_mapping[func_index];
 }
 
-static uint32_t translate_module_func_index_to_defined(Context* ctx,
-                                                       uint32_t func_index) {
-  assert(func_index >= ctx->num_func_imports);
-  return func_index - ctx->num_func_imports;
+uint32_t BinaryReaderInterpreter::TranslateModuleFuncIndexToDefined(
+    uint32_t func_index) {
+  assert(func_index >= num_func_imports);
+  return func_index - num_func_imports;
 }
 
-static InterpreterFunc* get_func_by_env_index(Context* ctx,
-                                              uint32_t func_index) {
-  return ctx->env->funcs[func_index].get();
+InterpreterFunc* BinaryReaderInterpreter::GetFuncByEnvIndex(
+    uint32_t func_index) {
+  return env->funcs[func_index].get();
 }
 
-static InterpreterFunc* get_func_by_module_index(Context* ctx,
-                                                 uint32_t func_index) {
-  return get_func_by_env_index(ctx,
-                               translate_func_index_to_env(ctx, func_index));
+InterpreterFunc* BinaryReaderInterpreter::GetFuncByModuleIndex(
+    uint32_t func_index) {
+  return GetFuncByEnvIndex(TranslateFuncIndexToEnv(func_index));
 }
 
-static uint32_t translate_global_index_to_env(Context* ctx,
-                                              uint32_t global_index) {
-  return ctx->global_index_mapping[global_index];
+uint32_t BinaryReaderInterpreter::TranslateGlobalIndexToEnv(
+    uint32_t global_index) {
+  return global_index_mapping[global_index];
 }
 
-static InterpreterGlobal* get_global_by_env_index(Context* ctx,
-                                                  uint32_t global_index) {
-  return &ctx->env->globals[global_index];
+InterpreterGlobal* BinaryReaderInterpreter::GetGlobalByEnvIndex(
+    uint32_t global_index) {
+  return &env->globals[global_index];
 }
 
-static InterpreterGlobal* get_global_by_module_index(Context* ctx,
-                                                     uint32_t global_index) {
-  return get_global_by_env_index(
-      ctx, translate_global_index_to_env(ctx, global_index));
+InterpreterGlobal* BinaryReaderInterpreter::GetGlobalByModuleIndex(
+    uint32_t global_index) {
+  return GetGlobalByEnvIndex(TranslateGlobalIndexToEnv(global_index));
 }
 
-static Type get_global_type_by_module_index(Context* ctx,
-                                            uint32_t global_index) {
-  return get_global_by_module_index(ctx, global_index)->typed_value.type;
+Type BinaryReaderInterpreter::GetGlobalTypeByModuleIndex(
+    uint32_t global_index) {
+  return GetGlobalByModuleIndex(global_index)->typed_value.type;
 }
 
-static Type get_local_type_by_index(InterpreterFunc* func,
-                                    uint32_t local_index) {
+Type BinaryReaderInterpreter::GetLocalTypeByIndex(InterpreterFunc* func,
+                                                  uint32_t local_index) {
   assert(!func->is_host);
   return func->as_defined()->param_and_local_types[local_index];
 }
 
-static uint32_t get_istream_offset(Context* ctx) {
-  return ctx->istream_offset;
+uint32_t BinaryReaderInterpreter::GetIstreamOffset() {
+  return istream_offset;
 }
 
-static Result emit_data_at(Context* ctx,
-                           size_t offset,
-                           const void* data,
-                           size_t size) {
-  return ctx->istream_writer.base.write_data(
-      offset, data, size, ctx->istream_writer.base.user_data);
+Result BinaryReaderInterpreter::EmitDataAt(size_t offset,
+                                           const void* data,
+                                           size_t size) {
+  return istream_writer.base.write_data(offset, data, size,
+                                        istream_writer.base.user_data);
 }
 
-static Result emit_data(Context* ctx, const void* data, size_t size) {
-  CHECK_RESULT(emit_data_at(ctx, ctx->istream_offset, data, size));
-  ctx->istream_offset += size;
+Result BinaryReaderInterpreter::EmitData(const void* data, size_t size) {
+  CHECK_RESULT(EmitDataAt(istream_offset, data, size));
+  istream_offset += size;
   return Result::Ok;
 }
 
-static Result emit_opcode(Context* ctx, Opcode opcode) {
-  return emit_data(ctx, &opcode, sizeof(uint8_t));
+Result BinaryReaderInterpreter::EmitOpcode(Opcode opcode) {
+  return EmitData(&opcode, sizeof(uint8_t));
 }
 
-static Result emit_opcode(Context* ctx, InterpreterOpcode opcode) {
-  return emit_data(ctx, &opcode, sizeof(uint8_t));
+Result BinaryReaderInterpreter::EmitOpcode(InterpreterOpcode opcode) {
+  return EmitData(&opcode, sizeof(uint8_t));
 }
 
-static Result emit_i8(Context* ctx, uint8_t value) {
-  return emit_data(ctx, &value, sizeof(value));
+Result BinaryReaderInterpreter::EmitI8(uint8_t value) {
+  return EmitData(&value, sizeof(value));
 }
 
-static Result emit_i32(Context* ctx, uint32_t value) {
-  return emit_data(ctx, &value, sizeof(value));
+Result BinaryReaderInterpreter::EmitI32(uint32_t value) {
+  return EmitData(&value, sizeof(value));
 }
 
-static Result emit_i64(Context* ctx, uint64_t value) {
-  return emit_data(ctx, &value, sizeof(value));
+Result BinaryReaderInterpreter::EmitI64(uint64_t value) {
+  return EmitData(&value, sizeof(value));
 }
 
-static Result emit_i32_at(Context* ctx, uint32_t offset, uint32_t value) {
-  return emit_data_at(ctx, offset, &value, sizeof(value));
+Result BinaryReaderInterpreter::EmitI32At(uint32_t offset, uint32_t value) {
+  return EmitDataAt(offset, &value, sizeof(value));
 }
 
-static Result emit_drop_keep(Context* ctx, uint32_t drop, uint8_t keep) {
+Result BinaryReaderInterpreter::EmitDropKeep(uint32_t drop, uint8_t keep) {
   assert(drop != UINT32_MAX);
   assert(keep <= 1);
   if (drop > 0) {
     if (drop == 1 && keep == 0) {
-      CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Drop));
+      CHECK_RESULT(EmitOpcode(InterpreterOpcode::Drop));
     } else {
-      CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::DropKeep));
-      CHECK_RESULT(emit_i32(ctx, drop));
-      CHECK_RESULT(emit_i8(ctx, keep));
+      CHECK_RESULT(EmitOpcode(InterpreterOpcode::DropKeep));
+      CHECK_RESULT(EmitI32(drop));
+      CHECK_RESULT(EmitI8(keep));
     }
   }
   return Result::Ok;
 }
 
-static Result append_fixup(Context* ctx,
-                           Uint32VectorVector* fixups_vector,
-                           uint32_t index) {
+Result BinaryReaderInterpreter::AppendFixup(Uint32VectorVector* fixups_vector,
+                                            uint32_t index) {
   if (index >= fixups_vector->size())
     fixups_vector->resize(index + 1);
-  (*fixups_vector)[index].push_back(get_istream_offset(ctx));
+  (*fixups_vector)[index].push_back(GetIstreamOffset());
   return Result::Ok;
 }
 
-static Result emit_br_offset(Context* ctx, uint32_t depth, uint32_t offset) {
+Result BinaryReaderInterpreter::EmitBrOffset(uint32_t depth, uint32_t offset) {
   if (offset == WABT_INVALID_OFFSET) {
     /* depth_fixups stores the depth counting up from zero, where zero is the
      * top-level function scope. */
-    depth = ctx->label_stack.size() - 1 - depth;
-    CHECK_RESULT(append_fixup(ctx, &ctx->depth_fixups, depth));
+    depth = label_stack.size() - 1 - depth;
+    CHECK_RESULT(AppendFixup(&depth_fixups, depth));
   }
-  CHECK_RESULT(emit_i32(ctx, offset));
+  CHECK_RESULT(EmitI32(offset));
   return Result::Ok;
 }
 
-static Result get_br_drop_keep_count(Context* ctx,
-                                     uint32_t depth,
-                                     uint32_t* out_drop_count,
-                                     uint32_t* out_keep_count) {
+Result BinaryReaderInterpreter::GetBrDropKeepCount(uint32_t depth,
+                                                   uint32_t* out_drop_count,
+                                                   uint32_t* out_keep_count) {
   TypeCheckerLabel* label;
-  CHECK_RESULT(typechecker_get_label(&ctx->typechecker, depth, &label));
+  CHECK_RESULT(typechecker_get_label(&typechecker, depth, &label));
   *out_keep_count =
       label->label_type != LabelType::Loop ? label->sig.size() : 0;
-  if (typechecker_is_unreachable(&ctx->typechecker)) {
+  if (typechecker_is_unreachable(&typechecker)) {
     *out_drop_count = 0;
   } else {
     *out_drop_count =
-        (ctx->typechecker.type_stack.size() - label->type_stack_limit) -
+        (typechecker.type_stack.size() - label->type_stack_limit) -
         *out_keep_count;
   }
   return Result::Ok;
 }
 
-static Result get_return_drop_keep_count(Context* ctx,
-                                         uint32_t* out_drop_count,
-                                         uint32_t* out_keep_count) {
-  if (WABT_FAILED(get_br_drop_keep_count(ctx, ctx->label_stack.size() - 1,
-                                         out_drop_count, out_keep_count))) {
+Result BinaryReaderInterpreter::GetReturnDropKeepCount(
+    uint32_t* out_drop_count,
+    uint32_t* out_keep_count) {
+  if (WABT_FAILED(GetBrDropKeepCount(label_stack.size() - 1, out_drop_count,
+                                     out_keep_count))) {
     return Result::Error;
   }
 
-  *out_drop_count += ctx->current_func->param_and_local_types.size();
+  *out_drop_count += current_func->param_and_local_types.size();
   return Result::Ok;
 }
 
-static Result emit_br(Context* ctx,
-                      uint32_t depth,
-                      uint32_t drop_count,
-                      uint32_t keep_count) {
-  CHECK_RESULT(emit_drop_keep(ctx, drop_count, keep_count));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Br));
-  CHECK_RESULT(emit_br_offset(ctx, depth, get_label(ctx, depth)->offset));
+Result BinaryReaderInterpreter::EmitBr(uint32_t depth,
+                                       uint32_t drop_count,
+                                       uint32_t keep_count) {
+  CHECK_RESULT(EmitDropKeep(drop_count, keep_count));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::Br));
+  CHECK_RESULT(EmitBrOffset(depth, GetLabel(depth)->offset));
   return Result::Ok;
 }
 
-static Result emit_br_table_offset(Context* ctx, uint32_t depth) {
+Result BinaryReaderInterpreter::EmitBrTableOffset(uint32_t depth) {
   uint32_t drop_count, keep_count;
-  CHECK_RESULT(get_br_drop_keep_count(ctx, depth, &drop_count, &keep_count));
-  CHECK_RESULT(emit_br_offset(ctx, depth, get_label(ctx, depth)->offset));
-  CHECK_RESULT(emit_i32(ctx, drop_count));
-  CHECK_RESULT(emit_i8(ctx, keep_count));
+  CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
+  CHECK_RESULT(EmitBrOffset(depth, GetLabel(depth)->offset));
+  CHECK_RESULT(EmitI32(drop_count));
+  CHECK_RESULT(EmitI8(keep_count));
   return Result::Ok;
 }
 
-static Result fixup_top_label(Context* ctx) {
-  uint32_t offset = get_istream_offset(ctx);
-  uint32_t top = ctx->label_stack.size() - 1;
-  if (top >= ctx->depth_fixups.size()) {
+Result BinaryReaderInterpreter::FixupTopLabel() {
+  uint32_t offset = GetIstreamOffset();
+  uint32_t top = label_stack.size() - 1;
+  if (top >= depth_fixups.size()) {
     /* nothing to fixup */
     return Result::Ok;
   }
 
-  Uint32Vector& fixups = ctx->depth_fixups[top];
-  for (uint32_t fixup: fixups)
-    CHECK_RESULT(emit_i32_at(ctx, fixup, offset));
+  Uint32Vector& fixups = depth_fixups[top];
+  for (uint32_t fixup : fixups)
+    CHECK_RESULT(EmitI32At(fixup, offset));
   fixups.clear();
   return Result::Ok;
 }
 
-static Result emit_func_offset(Context* ctx,
-                               DefinedInterpreterFunc* func,
-                               uint32_t func_index) {
+Result BinaryReaderInterpreter::EmitFuncOffset(DefinedInterpreterFunc* func,
+                                               uint32_t func_index) {
   if (func->offset == WABT_INVALID_OFFSET) {
-    uint32_t defined_index =
-        translate_module_func_index_to_defined(ctx, func_index);
-    CHECK_RESULT(append_fixup(ctx, &ctx->func_fixups, defined_index));
+    uint32_t defined_index = TranslateModuleFuncIndexToDefined(func_index);
+    CHECK_RESULT(AppendFixup(&func_fixups, defined_index));
   }
-  CHECK_RESULT(emit_i32(ctx, func->offset));
+  CHECK_RESULT(EmitI32(func->offset));
   return Result::Ok;
 }
 
-static bool on_error(BinaryReaderContext* ctx, const char* message) {
-  return handle_error(ctx->offset, message,
-                      static_cast<Context*>(ctx->user_data));
+bool BinaryReaderInterpreter::OnError(const char* message) {
+  return HandleError(state->offset, message);
 }
 
-static Result on_signature_count(uint32_t count, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->sig_index_mapping.resize(count);
+Result BinaryReaderInterpreter::OnTypeCount(uint32_t count) {
+  sig_index_mapping.resize(count);
   for (uint32_t i = 0; i < count; ++i)
-    ctx->sig_index_mapping[i] = ctx->env->sigs.size() + i;
-  ctx->env->sigs.resize(ctx->env->sigs.size() + count);
+    sig_index_mapping[i] = env->sigs.size() + i;
+  env->sigs.resize(env->sigs.size() + count);
   return Result::Ok;
 }
 
-static Result on_signature(uint32_t index,
-                           uint32_t param_count,
-                           Type* param_types,
-                           uint32_t result_count,
-                           Type* result_types,
-                           void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  InterpreterFuncSignature* sig = get_signature_by_module_index(ctx, index);
+Result BinaryReaderInterpreter::OnType(uint32_t index,
+                                       uint32_t param_count,
+                                       Type* param_types,
+                                       uint32_t result_count,
+                                       Type* result_types) {
+  InterpreterFuncSignature* sig = GetSignatureByModuleIndex(index);
   sig->param_types.insert(sig->param_types.end(), param_types,
                           param_types + param_count);
   sig->result_types.insert(sig->result_types.end(), result_types,
@@ -386,85 +580,97 @@ static Result on_signature(uint32_t index,
   return Result::Ok;
 }
 
-static Result on_import_count(uint32_t count, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->module->imports.resize(count);
+Result BinaryReaderInterpreter::OnImportCount(uint32_t count) {
+  module->imports.resize(count);
   return Result::Ok;
 }
 
-static Result on_import(uint32_t index,
-                        StringSlice module_name,
-                        StringSlice field_name,
-                        void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  InterpreterImport* import = &ctx->module->imports[index];
+Result BinaryReaderInterpreter::OnImport(uint32_t index,
+                                         StringSlice module_name,
+                                         StringSlice field_name) {
+  InterpreterImport* import = &module->imports[index];
   import->module_name = dup_string_slice(module_name);
   import->field_name = dup_string_slice(field_name);
   int module_index =
-      ctx->env->registered_module_bindings.find_index(import->module_name);
+      env->registered_module_bindings.find_index(import->module_name);
   if (module_index < 0) {
-    print_error(ctx, "unknown import module \"" PRIstringslice "\"",
-                WABT_PRINTF_STRING_SLICE_ARG(import->module_name));
+    PrintError("unknown import module \"" PRIstringslice "\"",
+               WABT_PRINTF_STRING_SLICE_ARG(import->module_name));
     return Result::Error;
   }
 
-  InterpreterModule* module = ctx->env->modules[module_index].get();
+  InterpreterModule* module = env->modules[module_index].get();
   if (module->is_host) {
     /* We don't yet know the kind of a host import module, so just assume it
      * exists for now. We'll fail later (in on_import_* below) if it doesn't
      * exist). */
-    ctx->is_host_import = true;
-    ctx->host_import_module = module->as_host();
+    is_host_import = true;
+    host_import_module = module->as_host();
   } else {
     InterpreterExport* export_ =
         get_interpreter_export_by_name(module, &import->field_name);
     if (!export_) {
-      print_error(ctx, "unknown module field \"" PRIstringslice "\"",
-                  WABT_PRINTF_STRING_SLICE_ARG(import->field_name));
+      PrintError("unknown module field \"" PRIstringslice "\"",
+                 WABT_PRINTF_STRING_SLICE_ARG(import->field_name));
       return Result::Error;
     }
 
     import->kind = export_->kind;
-    ctx->is_host_import = false;
-    ctx->import_env_index = export_->index;
+    is_host_import = false;
+    import_env_index = export_->index;
   }
   return Result::Ok;
 }
 
-static Result check_import_kind(Context* ctx,
-                                InterpreterImport* import,
-                                ExternalKind expected_kind) {
-  if (import->kind != expected_kind) {
-    print_error(ctx, "expected import \"" PRIstringslice "." PRIstringslice
-                     "\" to have kind %s, not %s",
-                WABT_PRINTF_STRING_SLICE_ARG(import->module_name),
-                WABT_PRINTF_STRING_SLICE_ARG(import->field_name),
-                get_kind_name(expected_kind), get_kind_name(import->kind));
+Result BinaryReaderInterpreter::CheckLocal(uint32_t local_index) {
+  uint32_t max_local_index = current_func->param_and_local_types.size();
+  if (local_index >= max_local_index) {
+    PrintError("invalid local_index: %d (max %d)", local_index,
+               max_local_index);
     return Result::Error;
   }
   return Result::Ok;
 }
 
-static Result check_import_limits(Context* ctx,
-                                  const Limits* declared_limits,
-                                  const Limits* actual_limits) {
+Result BinaryReaderInterpreter::CheckGlobal(uint32_t global_index) {
+  uint32_t max_global_index = global_index_mapping.size();
+  if (global_index >= max_global_index) {
+    PrintError("invalid global_index: %d (max %d)", global_index,
+               max_global_index);
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderInterpreter::CheckImportKind(InterpreterImport* import,
+                                                ExternalKind expected_kind) {
+  if (import->kind != expected_kind) {
+    PrintError("expected import \"" PRIstringslice "." PRIstringslice
+               "\" to have kind %s, not %s",
+               WABT_PRINTF_STRING_SLICE_ARG(import->module_name),
+               WABT_PRINTF_STRING_SLICE_ARG(import->field_name),
+               get_kind_name(expected_kind), get_kind_name(import->kind));
+    return Result::Error;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderInterpreter::CheckImportLimits(const Limits* declared_limits,
+                                                  const Limits* actual_limits) {
   if (actual_limits->initial < declared_limits->initial) {
-    print_error(ctx,
-                "actual size (%" PRIu64 ") smaller than declared (%" PRIu64 ")",
-                actual_limits->initial, declared_limits->initial);
+    PrintError("actual size (%" PRIu64 ") smaller than declared (%" PRIu64 ")",
+               actual_limits->initial, declared_limits->initial);
     return Result::Error;
   }
 
   if (declared_limits->has_max) {
     if (!actual_limits->has_max) {
-      print_error(ctx,
-                  "max size (unspecified) larger than declared (%" PRIu64 ")",
-                  declared_limits->max);
+      PrintError("max size (unspecified) larger than declared (%" PRIu64 ")",
+                 declared_limits->max);
       return Result::Error;
     } else if (actual_limits->max > declared_limits->max) {
-      print_error(ctx,
-                  "max size (%" PRIu64 ") larger than declared (%" PRIu64 ")",
-                  actual_limits->max, declared_limits->max);
+      PrintError("max size (%" PRIu64 ") larger than declared (%" PRIu64 ")",
+                 actual_limits->max, declared_limits->max);
       return Result::Error;
     }
   }
@@ -472,14 +678,13 @@ static Result check_import_limits(Context* ctx,
   return Result::Ok;
 }
 
-static Result append_export(Context* ctx,
-                            InterpreterModule* module,
-                            ExternalKind kind,
-                            uint32_t item_index,
-                            StringSlice name) {
+Result BinaryReaderInterpreter::AppendExport(InterpreterModule* module,
+                                             ExternalKind kind,
+                                             uint32_t item_index,
+                                             StringSlice name) {
   if (module->export_bindings.find_index(name) != -1) {
-    print_error(ctx, "duplicate export \"" PRIstringslice "\"",
-                WABT_PRINTF_STRING_SLICE_ARG(name));
+    PrintError("duplicate export \"" PRIstringslice "\"",
+               WABT_PRINTF_STRING_SLICE_ARG(name));
     return Result::Error;
   }
 
@@ -491,898 +696,795 @@ static Result append_export(Context* ctx,
   return Result::Ok;
 }
 
-static void on_host_import_print_error(const char* msg, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  print_error(ctx, "%s", msg);
+// static
+void BinaryReaderInterpreter::OnHostImportPrintError(const char* msg,
+                                                     void* user_data) {
+  static_cast<BinaryReaderInterpreter*>(user_data)->PrintError("%s", msg);
 }
 
-static PrintErrorCallback make_print_error_callback(Context* ctx) {
+PrintErrorCallback BinaryReaderInterpreter::MakePrintErrorCallback() {
   PrintErrorCallback result;
-  result.print_error = on_host_import_print_error;
-  result.user_data = ctx;
+  result.print_error = OnHostImportPrintError;
+  result.user_data = this;
   return result;
 }
 
-static Result on_import_func(uint32_t import_index,
-                             StringSlice module_name,
-                             StringSlice field_name,
-                             uint32_t func_index,
-                             uint32_t sig_index,
-                             void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  InterpreterImport* import = &ctx->module->imports[import_index];
-  import->func.sig_index = translate_sig_index_to_env(ctx, sig_index);
+Result BinaryReaderInterpreter::OnImportFunc(uint32_t import_index,
+                                             StringSlice module_name,
+                                             StringSlice field_name,
+                                             uint32_t func_index,
+                                             uint32_t sig_index) {
+  InterpreterImport* import = &module->imports[import_index];
+  import->func.sig_index = TranslateSigIndexToEnv(sig_index);
 
   uint32_t func_env_index;
-  if (ctx->is_host_import) {
+  if (is_host_import) {
     HostInterpreterFunc* func = new HostInterpreterFunc(
         import->module_name, import->field_name, import->func.sig_index);
 
-    ctx->env->funcs.emplace_back(func);
+    env->funcs.emplace_back(func);
 
     InterpreterHostImportDelegate* host_delegate =
-        &ctx->host_import_module->import_delegate;
-    InterpreterFuncSignature* sig = &ctx->env->sigs[func->sig_index];
-    CHECK_RESULT(host_delegate->import_func(import, func, sig,
-                                            make_print_error_callback(ctx),
-                                            host_delegate->user_data));
+        &host_import_module->import_delegate;
+    InterpreterFuncSignature* sig = &env->sigs[func->sig_index];
+    CHECK_RESULT(host_delegate->import_func(
+        import, func, sig, MakePrintErrorCallback(), host_delegate->user_data));
     assert(func->callback);
 
-    func_env_index = ctx->env->funcs.size() - 1;
-    append_export(ctx, ctx->host_import_module, ExternalKind::Func,
-                  func_env_index, import->field_name);
+    func_env_index = env->funcs.size() - 1;
+    AppendExport(host_import_module, ExternalKind::Func, func_env_index,
+                 import->field_name);
   } else {
-    CHECK_RESULT(check_import_kind(ctx, import, ExternalKind::Func));
-    InterpreterFunc* func = ctx->env->funcs[ctx->import_env_index].get();
-    if (!func_signatures_are_equal(ctx->env, import->func.sig_index,
+    CHECK_RESULT(CheckImportKind(import, ExternalKind::Func));
+    InterpreterFunc* func = env->funcs[import_env_index].get();
+    if (!func_signatures_are_equal(env, import->func.sig_index,
                                    func->sig_index)) {
-      print_error(ctx, "import signature mismatch");
+      PrintError("import signature mismatch");
       return Result::Error;
     }
 
-    func_env_index = ctx->import_env_index;
+    func_env_index = import_env_index;
   }
-  ctx->func_index_mapping.push_back(func_env_index);
-  ctx->num_func_imports++;
+  func_index_mapping.push_back(func_env_index);
+  num_func_imports++;
   return Result::Ok;
 }
 
-static Result on_import_table(uint32_t import_index,
-                              StringSlice module_name,
-                              StringSlice field_name,
-                              uint32_t table_index,
-                              Type elem_type,
-                              const Limits* elem_limits,
-                              void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  if (ctx->module->table_index != WABT_INVALID_INDEX) {
-    print_error(ctx, "only one table allowed");
+Result BinaryReaderInterpreter::OnImportTable(uint32_t import_index,
+                                              StringSlice module_name,
+                                              StringSlice field_name,
+                                              uint32_t table_index,
+                                              Type elem_type,
+                                              const Limits* elem_limits) {
+  if (module->table_index != WABT_INVALID_INDEX) {
+    PrintError("only one table allowed");
     return Result::Error;
   }
 
-  InterpreterImport* import = &ctx->module->imports[import_index];
+  InterpreterImport* import = &module->imports[import_index];
 
-  if (ctx->is_host_import) {
-    ctx->env->tables.emplace_back(*elem_limits);
-    InterpreterTable* table = &ctx->env->tables.back();
+  if (is_host_import) {
+    env->tables.emplace_back(*elem_limits);
+    InterpreterTable* table = &env->tables.back();
 
     InterpreterHostImportDelegate* host_delegate =
-        &ctx->host_import_module->import_delegate;
-    CHECK_RESULT(host_delegate->import_table(import, table,
-                                             make_print_error_callback(ctx),
-                                             host_delegate->user_data));
+        &host_import_module->import_delegate;
+    CHECK_RESULT(host_delegate->import_table(
+        import, table, MakePrintErrorCallback(), host_delegate->user_data));
 
-    CHECK_RESULT(check_import_limits(ctx, elem_limits, &table->limits));
+    CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
 
-    ctx->module->table_index = ctx->env->tables.size() - 1;
-    append_export(ctx, ctx->host_import_module, ExternalKind::Table,
-                  ctx->module->table_index, import->field_name);
+    module->table_index = env->tables.size() - 1;
+    AppendExport(host_import_module, ExternalKind::Table, module->table_index,
+                 import->field_name);
   } else {
-    CHECK_RESULT(check_import_kind(ctx, import, ExternalKind::Table));
-    InterpreterTable* table = &ctx->env->tables[ctx->import_env_index];
-    CHECK_RESULT(check_import_limits(ctx, elem_limits, &table->limits));
+    CHECK_RESULT(CheckImportKind(import, ExternalKind::Table));
+    InterpreterTable* table = &env->tables[import_env_index];
+    CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
 
     import->table.limits = *elem_limits;
-    ctx->module->table_index = ctx->import_env_index;
+    module->table_index = import_env_index;
   }
   return Result::Ok;
 }
 
-static Result on_import_memory(uint32_t import_index,
-                               StringSlice module_name,
-                               StringSlice field_name,
-                               uint32_t memory_index,
-                               const Limits* page_limits,
-                               void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  if (ctx->module->memory_index != WABT_INVALID_INDEX) {
-    print_error(ctx, "only one memory allowed");
+Result BinaryReaderInterpreter::OnImportMemory(uint32_t import_index,
+                                               StringSlice module_name,
+                                               StringSlice field_name,
+                                               uint32_t memory_index,
+                                               const Limits* page_limits) {
+  if (module->memory_index != WABT_INVALID_INDEX) {
+    PrintError("only one memory allowed");
     return Result::Error;
   }
 
-  InterpreterImport* import = &ctx->module->imports[import_index];
+  InterpreterImport* import = &module->imports[import_index];
 
-  if (ctx->is_host_import) {
-    ctx->env->memories.emplace_back();
-    InterpreterMemory* memory = &ctx->env->memories.back();
+  if (is_host_import) {
+    env->memories.emplace_back();
+    InterpreterMemory* memory = &env->memories.back();
 
     InterpreterHostImportDelegate* host_delegate =
-        &ctx->host_import_module->import_delegate;
-    CHECK_RESULT(host_delegate->import_memory(import, memory,
-                                              make_print_error_callback(ctx),
-                                              host_delegate->user_data));
+        &host_import_module->import_delegate;
+    CHECK_RESULT(host_delegate->import_memory(
+        import, memory, MakePrintErrorCallback(), host_delegate->user_data));
 
-    CHECK_RESULT(check_import_limits(ctx, page_limits, &memory->page_limits));
+    CHECK_RESULT(CheckImportLimits(page_limits, &memory->page_limits));
 
-    ctx->module->memory_index = ctx->env->memories.size() - 1;
-    append_export(ctx, ctx->host_import_module, ExternalKind::Memory,
-                  ctx->module->memory_index, import->field_name);
+    module->memory_index = env->memories.size() - 1;
+    AppendExport(host_import_module, ExternalKind::Memory, module->memory_index,
+                 import->field_name);
   } else {
-    CHECK_RESULT(check_import_kind(ctx, import, ExternalKind::Memory));
-    InterpreterMemory* memory = &ctx->env->memories[ctx->import_env_index];
-    CHECK_RESULT(check_import_limits(ctx, page_limits, &memory->page_limits));
+    CHECK_RESULT(CheckImportKind(import, ExternalKind::Memory));
+    InterpreterMemory* memory = &env->memories[import_env_index];
+    CHECK_RESULT(CheckImportLimits(page_limits, &memory->page_limits));
 
     import->memory.limits = *page_limits;
-    ctx->module->memory_index = ctx->import_env_index;
+    module->memory_index = import_env_index;
   }
   return Result::Ok;
 }
 
-static Result on_import_global(uint32_t import_index,
-                               StringSlice module_name,
-                               StringSlice field_name,
-                               uint32_t global_index,
-                               Type type,
-                               bool mutable_,
-                               void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  InterpreterImport* import = &ctx->module->imports[import_index];
+Result BinaryReaderInterpreter::OnImportGlobal(uint32_t import_index,
+                                               StringSlice module_name,
+                                               StringSlice field_name,
+                                               uint32_t global_index,
+                                               Type type,
+                                               bool mutable_) {
+  InterpreterImport* import = &module->imports[import_index];
 
-  uint32_t global_env_index = ctx->env->globals.size() - 1;
-  if (ctx->is_host_import) {
-    ctx->env->globals.emplace_back(InterpreterTypedValue(type), mutable_);
-    InterpreterGlobal* global = &ctx->env->globals.back();
+  uint32_t global_env_index = env->globals.size() - 1;
+  if (is_host_import) {
+    env->globals.emplace_back(InterpreterTypedValue(type), mutable_);
+    InterpreterGlobal* global = &env->globals.back();
 
     InterpreterHostImportDelegate* host_delegate =
-        &ctx->host_import_module->import_delegate;
-    CHECK_RESULT(host_delegate->import_global(import, global,
-                                              make_print_error_callback(ctx),
-                                              host_delegate->user_data));
+        &host_import_module->import_delegate;
+    CHECK_RESULT(host_delegate->import_global(
+        import, global, MakePrintErrorCallback(), host_delegate->user_data));
 
-    global_env_index = ctx->env->globals.size() - 1;
-    append_export(ctx, ctx->host_import_module, ExternalKind::Global,
-                  global_env_index, import->field_name);
+    global_env_index = env->globals.size() - 1;
+    AppendExport(host_import_module, ExternalKind::Global, global_env_index,
+                 import->field_name);
   } else {
-    CHECK_RESULT(check_import_kind(ctx, import, ExternalKind::Global));
+    CHECK_RESULT(CheckImportKind(import, ExternalKind::Global));
     // TODO: check type and mutability
     import->global.type = type;
     import->global.mutable_ = mutable_;
-    global_env_index = ctx->import_env_index;
+    global_env_index = import_env_index;
   }
-  ctx->global_index_mapping.push_back(global_env_index);
-  ctx->num_global_imports++;
+  global_index_mapping.push_back(global_env_index);
+  num_global_imports++;
   return Result::Ok;
 }
 
-static Result on_function_signatures_count(uint32_t count, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnFunctionCount(uint32_t count) {
   for (uint32_t i = 0; i < count; ++i)
-    ctx->func_index_mapping.push_back(ctx->env->funcs.size() + i);
-  ctx->env->funcs.reserve(ctx->env->funcs.size() + count);
-  ctx->func_fixups.resize(count);
+    func_index_mapping.push_back(env->funcs.size() + i);
+  env->funcs.reserve(env->funcs.size() + count);
+  func_fixups.resize(count);
   return Result::Ok;
 }
 
-static Result on_function_signature(uint32_t index,
-                                    uint32_t sig_index,
-                                    void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnFunction(uint32_t index, uint32_t sig_index) {
   DefinedInterpreterFunc* func =
-      new DefinedInterpreterFunc(translate_sig_index_to_env(ctx, sig_index));
-  ctx->env->funcs.emplace_back(func);
+      new DefinedInterpreterFunc(TranslateSigIndexToEnv(sig_index));
+  env->funcs.emplace_back(func);
   return Result::Ok;
 }
 
-static Result on_table(uint32_t index,
-                       Type elem_type,
-                       const Limits* elem_limits,
-                       void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  if (ctx->module->table_index != WABT_INVALID_INDEX) {
-    print_error(ctx, "only one table allowed");
+Result BinaryReaderInterpreter::OnTable(uint32_t index,
+                                        Type elem_type,
+                                        const Limits* elem_limits) {
+  if (module->table_index != WABT_INVALID_INDEX) {
+    PrintError("only one table allowed");
     return Result::Error;
   }
-  ctx->env->tables.emplace_back(*elem_limits);
-  ctx->module->table_index = ctx->env->tables.size() - 1;
+  env->tables.emplace_back(*elem_limits);
+  module->table_index = env->tables.size() - 1;
   return Result::Ok;
 }
 
-static Result on_memory(uint32_t index,
-                        const Limits* page_limits,
-                        void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  if (ctx->module->memory_index != WABT_INVALID_INDEX) {
-    print_error(ctx, "only one memory allowed");
+Result BinaryReaderInterpreter::OnMemory(uint32_t index,
+                                         const Limits* page_limits) {
+  if (module->memory_index != WABT_INVALID_INDEX) {
+    PrintError("only one memory allowed");
     return Result::Error;
   }
-  ctx->env->memories.emplace_back(*page_limits);
-  ctx->module->memory_index = ctx->env->memories.size() - 1;
+  env->memories.emplace_back(*page_limits);
+  module->memory_index = env->memories.size() - 1;
   return Result::Ok;
 }
 
-static Result on_global_count(uint32_t count, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnGlobalCount(uint32_t count) {
   for (uint32_t i = 0; i < count; ++i)
-    ctx->global_index_mapping.push_back(ctx->env->globals.size() + i);
-  ctx->env->globals.resize(ctx->env->globals.size() + count);
+    global_index_mapping.push_back(env->globals.size() + i);
+  env->globals.resize(env->globals.size() + count);
   return Result::Ok;
 }
 
-static Result begin_global(uint32_t index,
-                           Type type,
-                           bool mutable_,
-                           void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  InterpreterGlobal* global = get_global_by_module_index(ctx, index);
+Result BinaryReaderInterpreter::BeginGlobal(uint32_t index,
+                                            Type type,
+                                            bool mutable_) {
+  InterpreterGlobal* global = GetGlobalByModuleIndex(index);
   global->typed_value.type = type;
   global->mutable_ = mutable_;
   return Result::Ok;
 }
 
-static Result end_global_init_expr(uint32_t index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  InterpreterGlobal* global = get_global_by_module_index(ctx, index);
-  if (ctx->init_expr_value.type != global->typed_value.type) {
-    print_error(ctx, "type mismatch in global, expected %s but got %s.",
-                get_type_name(global->typed_value.type),
-                get_type_name(ctx->init_expr_value.type));
+Result BinaryReaderInterpreter::EndGlobalInitExpr(uint32_t index) {
+  InterpreterGlobal* global = GetGlobalByModuleIndex(index);
+  if (init_expr_value.type != global->typed_value.type) {
+    PrintError("type mismatch in global, expected %s but got %s.",
+               get_type_name(global->typed_value.type),
+               get_type_name(init_expr_value.type));
     return Result::Error;
   }
-  global->typed_value = ctx->init_expr_value;
+  global->typed_value = init_expr_value;
   return Result::Ok;
 }
 
-static Result on_init_expr_f32_const_expr(uint32_t index,
-                                          uint32_t value_bits,
-                                          void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->init_expr_value.type = Type::F32;
-  ctx->init_expr_value.value.f32_bits = value_bits;
+Result BinaryReaderInterpreter::OnInitExprF32ConstExpr(uint32_t index,
+                                                       uint32_t value_bits) {
+  init_expr_value.type = Type::F32;
+  init_expr_value.value.f32_bits = value_bits;
   return Result::Ok;
 }
 
-static Result on_init_expr_f64_const_expr(uint32_t index,
-                                          uint64_t value_bits,
-                                          void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->init_expr_value.type = Type::F64;
-  ctx->init_expr_value.value.f64_bits = value_bits;
+Result BinaryReaderInterpreter::OnInitExprF64ConstExpr(uint32_t index,
+                                                       uint64_t value_bits) {
+  init_expr_value.type = Type::F64;
+  init_expr_value.value.f64_bits = value_bits;
   return Result::Ok;
 }
 
-static Result on_init_expr_get_global_expr(uint32_t index,
-                                           uint32_t global_index,
-                                           void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  if (global_index >= ctx->num_global_imports) {
-    print_error(ctx,
-                "initializer expression can only reference an imported global");
+Result BinaryReaderInterpreter::OnInitExprGetGlobalExpr(uint32_t index,
+                                                        uint32_t global_index) {
+  if (global_index >= num_global_imports) {
+    PrintError("initializer expression can only reference an imported global");
     return Result::Error;
   }
-  InterpreterGlobal* ref_global = get_global_by_module_index(ctx, global_index);
+  InterpreterGlobal* ref_global = GetGlobalByModuleIndex(global_index);
   if (ref_global->mutable_) {
-    print_error(ctx,
-                "initializer expression cannot reference a mutable global");
+    PrintError("initializer expression cannot reference a mutable global");
     return Result::Error;
   }
-  ctx->init_expr_value = ref_global->typed_value;
+  init_expr_value = ref_global->typed_value;
   return Result::Ok;
 }
 
-static Result on_init_expr_i32_const_expr(uint32_t index,
-                                          uint32_t value,
-                                          void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->init_expr_value.type = Type::I32;
-  ctx->init_expr_value.value.i32 = value;
+Result BinaryReaderInterpreter::OnInitExprI32ConstExpr(uint32_t index,
+                                                       uint32_t value) {
+  init_expr_value.type = Type::I32;
+  init_expr_value.value.i32 = value;
   return Result::Ok;
 }
 
-static Result on_init_expr_i64_const_expr(uint32_t index,
-                                          uint64_t value,
-                                          void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->init_expr_value.type = Type::I64;
-  ctx->init_expr_value.value.i64 = value;
+Result BinaryReaderInterpreter::OnInitExprI64ConstExpr(uint32_t index,
+                                                       uint64_t value) {
+  init_expr_value.type = Type::I64;
+  init_expr_value.value.i64 = value;
   return Result::Ok;
 }
 
-static Result on_export(uint32_t index,
-                        ExternalKind kind,
-                        uint32_t item_index,
-                        StringSlice name,
-                        void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnExport(uint32_t index,
+                                         ExternalKind kind,
+                                         uint32_t item_index,
+                                         StringSlice name) {
   switch (kind) {
     case ExternalKind::Func:
-      item_index = translate_func_index_to_env(ctx, item_index);
+      item_index = TranslateFuncIndexToEnv(item_index);
       break;
 
     case ExternalKind::Table:
-      item_index = ctx->module->table_index;
+      item_index = module->table_index;
       break;
 
     case ExternalKind::Memory:
-      item_index = ctx->module->memory_index;
+      item_index = module->memory_index;
       break;
 
     case ExternalKind::Global: {
-      item_index = translate_global_index_to_env(ctx, item_index);
-      InterpreterGlobal* global = &ctx->env->globals[item_index];
+      item_index = TranslateGlobalIndexToEnv(item_index);
+      InterpreterGlobal* global = &env->globals[item_index];
       if (global->mutable_) {
-        print_error(ctx, "mutable globals cannot be exported");
+        PrintError("mutable globals cannot be exported");
         return Result::Error;
       }
       break;
     }
   }
-  return append_export(ctx, ctx->module, kind, item_index, name);
+  return AppendExport(module, kind, item_index, name);
 }
 
-static Result on_start_function(uint32_t func_index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  uint32_t start_func_index = translate_func_index_to_env(ctx, func_index);
-  InterpreterFunc* start_func = get_func_by_env_index(ctx, start_func_index);
-  InterpreterFuncSignature* sig =
-      get_signature_by_env_index(ctx, start_func->sig_index);
+Result BinaryReaderInterpreter::OnStartFunction(uint32_t func_index) {
+  uint32_t start_func_index = TranslateFuncIndexToEnv(func_index);
+  InterpreterFunc* start_func = GetFuncByEnvIndex(start_func_index);
+  InterpreterFuncSignature* sig = GetSignatureByEnvIndex(start_func->sig_index);
   if (sig->param_types.size() != 0) {
-    print_error(ctx, "start function must be nullary");
+    PrintError("start function must be nullary");
     return Result::Error;
   }
   if (sig->result_types.size() != 0) {
-    print_error(ctx, "start function must not return anything");
+    PrintError("start function must not return anything");
     return Result::Error;
   }
-  ctx->module->start_func_index = start_func_index;
+  module->start_func_index = start_func_index;
   return Result::Ok;
 }
 
-static Result end_elem_segment_init_expr(uint32_t index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  if (ctx->init_expr_value.type != Type::I32) {
-    print_error(ctx, "type mismatch in elem segment, expected i32 but got %s",
-                get_type_name(ctx->init_expr_value.type));
+Result BinaryReaderInterpreter::EndElemSegmentInitExpr(uint32_t index) {
+  if (init_expr_value.type != Type::I32) {
+    PrintError("type mismatch in elem segment, expected i32 but got %s",
+               get_type_name(init_expr_value.type));
     return Result::Error;
   }
-  ctx->table_offset = ctx->init_expr_value.value.i32;
+  table_offset = init_expr_value.value.i32;
   return Result::Ok;
 }
 
-static Result on_elem_segment_function_index_check(uint32_t index,
-                                                   uint32_t func_index,
-                                                   void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  assert(ctx->module->table_index != WABT_INVALID_INDEX);
-  InterpreterTable* table = &ctx->env->tables[ctx->module->table_index];
-  if (ctx->table_offset >= table->func_indexes.size()) {
-    print_error(ctx,
-                "elem segment offset is out of bounds: %u >= max value %" PRIzd,
-                ctx->table_offset, table->func_indexes.size());
+Result BinaryReaderInterpreter::OnElemSegmentFunctionIndex(
+
+    uint32_t index,
+    uint32_t func_index) {
+  assert(module->table_index != WABT_INVALID_INDEX);
+  InterpreterTable* table = &env->tables[module->table_index];
+  if (table_offset >= table->func_indexes.size()) {
+    PrintError("elem segment offset is out of bounds: %u >= max value %" PRIzd,
+               table_offset, table->func_indexes.size());
     return Result::Error;
   }
 
-  uint32_t max_func_index = ctx->func_index_mapping.size();
+  uint32_t max_func_index = func_index_mapping.size();
   if (func_index >= max_func_index) {
-    print_error(ctx, "invalid func_index: %d (max %d)", func_index,
-                max_func_index);
+    PrintError("invalid func_index: %d (max %d)", func_index, max_func_index);
     return Result::Error;
   }
 
+  elem_segment_infos.emplace_back(&table->func_indexes[table_offset++],
+                                  TranslateFuncIndexToEnv(func_index));
   return Result::Ok;
 }
 
-static Result on_elem_segment_function_index(uint32_t index,
-                                             uint32_t func_index,
-                                             void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  assert(ctx->module->table_index != WABT_INVALID_INDEX);
-  InterpreterTable* table = &ctx->env->tables[ctx->module->table_index];
-  table->func_indexes[ctx->table_offset++] =
-      translate_func_index_to_env(ctx, func_index);
-  return Result::Ok;
-}
-
-static Result on_data_segment_data_check(uint32_t index,
-                                         const void* src_data,
-                                         uint32_t size,
-                                         void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  assert(ctx->module->memory_index != WABT_INVALID_INDEX);
-  InterpreterMemory* memory = &ctx->env->memories[ctx->module->memory_index];
-  if (ctx->init_expr_value.type != Type::I32) {
-    print_error(ctx, "type mismatch in data segment, expected i32 but got %s",
-                get_type_name(ctx->init_expr_value.type));
+Result BinaryReaderInterpreter::OnDataSegmentData(uint32_t index,
+                                                  const void* src_data,
+                                                  uint32_t size) {
+  assert(module->memory_index != WABT_INVALID_INDEX);
+  InterpreterMemory* memory = &env->memories[module->memory_index];
+  if (init_expr_value.type != Type::I32) {
+    PrintError("type mismatch in data segment, expected i32 but got %s",
+               get_type_name(init_expr_value.type));
     return Result::Error;
   }
-  uint32_t address = ctx->init_expr_value.value.i32;
+  uint32_t address = init_expr_value.value.i32;
   uint64_t end_address =
       static_cast<uint64_t>(address) + static_cast<uint64_t>(size);
   if (end_address > memory->data.size()) {
-    print_error(ctx,
-                "data segment is out of bounds: [%u, %" PRIu64
-                ") >= max value %" PRIzd,
-                address, end_address, memory->data.size());
+    PrintError("data segment is out of bounds: [%u, %" PRIu64
+               ") >= max value %" PRIzd,
+               address, end_address, memory->data.size());
     return Result::Error;
   }
+
+  if (size > 0)
+    data_segment_infos.emplace_back(&memory->data[address], src_data, size);
+
   return Result::Ok;
 }
 
-static Result on_data_segment_data(uint32_t index,
-                                   const void* src_data,
-                                   uint32_t size,
-                                   void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  if (size > 0) {
-    assert(ctx->module->memory_index != WABT_INVALID_INDEX);
-    InterpreterMemory* memory = &ctx->env->memories[ctx->module->memory_index];
-    uint32_t address = ctx->init_expr_value.value.i32;
-    memcpy(&memory->data[address], src_data, size);
-  }
-  return Result::Ok;
+void BinaryReaderInterpreter::PushLabel(uint32_t offset,
+                                        uint32_t fixup_offset) {
+  label_stack.emplace_back(offset, fixup_offset);
 }
 
-static void push_label(Context* ctx, uint32_t offset, uint32_t fixup_offset) {
-  ctx->label_stack.emplace_back(offset, fixup_offset);
-}
-
-static void pop_label(Context* ctx) {
-  ctx->label_stack.pop_back();
+void BinaryReaderInterpreter::PopLabel() {
+  label_stack.pop_back();
   /* reduce the depth_fixups stack as well, but it may be smaller than
    * label_stack so only do it conditionally. */
-  if (ctx->depth_fixups.size() > ctx->label_stack.size()) {
-    ctx->depth_fixups.erase(ctx->depth_fixups.begin() + ctx->label_stack.size(),
-                            ctx->depth_fixups.end());
+  if (depth_fixups.size() > label_stack.size()) {
+    depth_fixups.erase(depth_fixups.begin() + label_stack.size(),
+                       depth_fixups.end());
   }
 }
 
-// TODO(binji): remove this when the rest of the code is using std::vector
-#define INTERPRETER_TYPE_VECTOR_TO_TYPE_VECTOR(out, in)                \
-  TypeVector out;                                                      \
-  {                                                                    \
-    size_t byte_size = (in).size() * sizeof((in)[0]);                  \
-    (out).data = static_cast<decltype((out).data)>(alloca(byte_size)); \
-    (out).size = (in).size();                                          \
-    if (byte_size) {                                                   \
-      memcpy((out).data, (in).data(), byte_size);                      \
-    }                                                                  \
-  }
+Result BinaryReaderInterpreter::BeginFunctionBody(uint32_t index) {
+  DefinedInterpreterFunc* func = GetFuncByModuleIndex(index)->as_defined();
+  InterpreterFuncSignature* sig = GetSignatureByEnvIndex(func->sig_index);
 
-static Result begin_function_body(BinaryReaderContext* context,
-                                  uint32_t index) {
-  Context* ctx = static_cast<Context*>(context->user_data);
-  DefinedInterpreterFunc* func =
-      get_func_by_module_index(ctx, index)->as_defined();
-  InterpreterFuncSignature* sig =
-      get_signature_by_env_index(ctx, func->sig_index);
-
-  func->offset = get_istream_offset(ctx);
+  func->offset = GetIstreamOffset();
   func->local_decl_count = 0;
   func->local_count = 0;
 
-  ctx->current_func = func;
-  ctx->depth_fixups.clear();
-  ctx->label_stack.clear();
+  current_func = func;
+  depth_fixups.clear();
+  label_stack.clear();
 
   /* fixup function references */
-  uint32_t defined_index = translate_module_func_index_to_defined(ctx, index);
-  Uint32Vector& fixups = ctx->func_fixups[defined_index];
-  for (uint32_t fixup: fixups)
-    CHECK_RESULT(emit_i32_at(ctx, fixup, func->offset));
+  uint32_t defined_index = TranslateModuleFuncIndexToDefined(index);
+  Uint32Vector& fixups = func_fixups[defined_index];
+  for (uint32_t fixup : fixups)
+    CHECK_RESULT(EmitI32At(fixup, func->offset));
 
   /* append param types */
-  for (Type param_type: sig->param_types)
+  for (Type param_type : sig->param_types)
     func->param_and_local_types.push_back(param_type);
 
-  CHECK_RESULT(
-      typechecker_begin_function(&ctx->typechecker, &sig->result_types));
+  CHECK_RESULT(typechecker_begin_function(&typechecker, &sig->result_types));
 
   /* push implicit func label (equivalent to return) */
-  push_label(ctx, WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
+  PushLabel(WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
   return Result::Ok;
 }
 
-static Result end_function_body(uint32_t index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  fixup_top_label(ctx);
+Result BinaryReaderInterpreter::EndFunctionBody(uint32_t index) {
+  FixupTopLabel();
   uint32_t drop_count, keep_count;
-  CHECK_RESULT(get_return_drop_keep_count(ctx, &drop_count, &keep_count));
-  CHECK_RESULT(typechecker_end_function(&ctx->typechecker));
-  CHECK_RESULT(emit_drop_keep(ctx, drop_count, keep_count));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Return));
-  pop_label(ctx);
-  ctx->current_func = nullptr;
+  CHECK_RESULT(GetReturnDropKeepCount(&drop_count, &keep_count));
+  CHECK_RESULT(typechecker_end_function(&typechecker));
+  CHECK_RESULT(EmitDropKeep(drop_count, keep_count));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::Return));
+  PopLabel();
+  current_func = nullptr;
   return Result::Ok;
 }
 
-static Result on_local_decl_count(uint32_t count, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->current_func->local_decl_count = count;
+Result BinaryReaderInterpreter::OnLocalDeclCount(uint32_t count) {
+  current_func->local_decl_count = count;
   return Result::Ok;
 }
 
-static Result on_local_decl(uint32_t decl_index,
-                            uint32_t count,
-                            Type type,
-                            void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  ctx->current_func->local_count += count;
+Result BinaryReaderInterpreter::OnLocalDecl(uint32_t decl_index,
+                                            uint32_t count,
+                                            Type type) {
+  current_func->local_count += count;
 
   for (uint32_t i = 0; i < count; ++i)
-    ctx->current_func->param_and_local_types.push_back(type);
+    current_func->param_and_local_types.push_back(type);
 
-  if (decl_index == ctx->current_func->local_decl_count - 1) {
+  if (decl_index == current_func->local_decl_count - 1) {
     /* last local declaration, allocate space for all locals. */
-    CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Alloca));
-    CHECK_RESULT(emit_i32(ctx, ctx->current_func->local_count));
+    CHECK_RESULT(EmitOpcode(InterpreterOpcode::Alloca));
+    CHECK_RESULT(EmitI32(current_func->local_count));
   }
   return Result::Ok;
 }
 
-static Result check_has_memory(Context* ctx, Opcode opcode) {
-  if (ctx->module->memory_index == WABT_INVALID_INDEX) {
-    print_error(ctx, "%s requires an imported or defined memory.",
-                get_opcode_name(opcode));
+Result BinaryReaderInterpreter::CheckHasMemory(Opcode opcode) {
+  if (module->memory_index == WABT_INVALID_INDEX) {
+    PrintError("%s requires an imported or defined memory.",
+               get_opcode_name(opcode));
     return Result::Error;
   }
   return Result::Ok;
 }
 
-static Result check_align(Context* ctx,
-                          uint32_t alignment_log2,
-                          uint32_t natural_alignment) {
+Result BinaryReaderInterpreter::CheckAlign(uint32_t alignment_log2,
+                                           uint32_t natural_alignment) {
   if (alignment_log2 >= 32 || (1U << alignment_log2) > natural_alignment) {
-    print_error(ctx, "alignment must not be larger than natural alignment (%u)",
-                natural_alignment);
+    PrintError("alignment must not be larger than natural alignment (%u)",
+               natural_alignment);
     return Result::Error;
   }
   return Result::Ok;
 }
 
-static Result on_unary_expr(Opcode opcode, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_unary(&ctx->typechecker, opcode));
-  CHECK_RESULT(emit_opcode(ctx, opcode));
+Result BinaryReaderInterpreter::OnUnaryExpr(Opcode opcode) {
+  CHECK_RESULT(typechecker_on_unary(&typechecker, opcode));
+  CHECK_RESULT(EmitOpcode(opcode));
   return Result::Ok;
 }
 
-static Result on_binary_expr(Opcode opcode, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_binary(&ctx->typechecker, opcode));
-  CHECK_RESULT(emit_opcode(ctx, opcode));
+Result BinaryReaderInterpreter::OnBinaryExpr(Opcode opcode) {
+  CHECK_RESULT(typechecker_on_binary(&typechecker, opcode));
+  CHECK_RESULT(EmitOpcode(opcode));
   return Result::Ok;
 }
 
-static Result on_block_expr(uint32_t num_types,
-                            Type* sig_types,
-                            void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnBlockExpr(uint32_t num_types,
+                                            Type* sig_types) {
   TypeVector sig(sig_types, sig_types + num_types);
-  CHECK_RESULT(typechecker_on_block(&ctx->typechecker, &sig));
-  push_label(ctx, WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
+  CHECK_RESULT(typechecker_on_block(&typechecker, &sig));
+  PushLabel(WABT_INVALID_OFFSET, WABT_INVALID_OFFSET);
   return Result::Ok;
 }
 
-static Result on_loop_expr(uint32_t num_types,
-                           Type* sig_types,
-                           void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnLoopExpr(uint32_t num_types,
+                                           Type* sig_types) {
   TypeVector sig(sig_types, sig_types + num_types);
-  CHECK_RESULT(typechecker_on_loop(&ctx->typechecker, &sig));
-  push_label(ctx, get_istream_offset(ctx), WABT_INVALID_OFFSET);
+  CHECK_RESULT(typechecker_on_loop(&typechecker, &sig));
+  PushLabel(GetIstreamOffset(), WABT_INVALID_OFFSET);
   return Result::Ok;
 }
 
-static Result on_if_expr(uint32_t num_types, Type* sig_types, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnIfExpr(uint32_t num_types, Type* sig_types) {
   TypeVector sig(sig_types, sig_types + num_types);
-  CHECK_RESULT(typechecker_on_if(&ctx->typechecker, &sig));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::BrUnless));
-  uint32_t fixup_offset = get_istream_offset(ctx);
-  CHECK_RESULT(emit_i32(ctx, WABT_INVALID_OFFSET));
-  push_label(ctx, WABT_INVALID_OFFSET, fixup_offset);
+  CHECK_RESULT(typechecker_on_if(&typechecker, &sig));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::BrUnless));
+  uint32_t fixup_offset = GetIstreamOffset();
+  CHECK_RESULT(EmitI32(WABT_INVALID_OFFSET));
+  PushLabel(WABT_INVALID_OFFSET, fixup_offset);
   return Result::Ok;
 }
 
-static Result on_else_expr(void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_else(&ctx->typechecker));
-  Label* label = top_label(ctx);
+Result BinaryReaderInterpreter::OnElseExpr() {
+  CHECK_RESULT(typechecker_on_else(&typechecker));
+  Label* label = TopLabel();
   uint32_t fixup_cond_offset = label->fixup_offset;
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Br));
-  label->fixup_offset = get_istream_offset(ctx);
-  CHECK_RESULT(emit_i32(ctx, WABT_INVALID_OFFSET));
-  CHECK_RESULT(emit_i32_at(ctx, fixup_cond_offset, get_istream_offset(ctx)));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::Br));
+  label->fixup_offset = GetIstreamOffset();
+  CHECK_RESULT(EmitI32(WABT_INVALID_OFFSET));
+  CHECK_RESULT(EmitI32At(fixup_cond_offset, GetIstreamOffset()));
   return Result::Ok;
 }
 
-static Result on_end_expr(void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnEndExpr() {
   TypeCheckerLabel* label;
-  CHECK_RESULT(typechecker_get_label(&ctx->typechecker, 0, &label));
+  CHECK_RESULT(typechecker_get_label(&typechecker, 0, &label));
   LabelType label_type = label->label_type;
-  CHECK_RESULT(typechecker_on_end(&ctx->typechecker));
+  CHECK_RESULT(typechecker_on_end(&typechecker));
   if (label_type == LabelType::If || label_type == LabelType::Else) {
-    CHECK_RESULT(emit_i32_at(ctx, top_label(ctx)->fixup_offset,
-                             get_istream_offset(ctx)));
+    CHECK_RESULT(EmitI32At(TopLabel()->fixup_offset, GetIstreamOffset()));
   }
-  fixup_top_label(ctx);
-  pop_label(ctx);
+  FixupTopLabel();
+  PopLabel();
   return Result::Ok;
 }
 
-static Result on_br_expr(uint32_t depth, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnBrExpr(uint32_t depth) {
   uint32_t drop_count, keep_count;
-  CHECK_RESULT(get_br_drop_keep_count(ctx, depth, &drop_count, &keep_count));
-  CHECK_RESULT(typechecker_on_br(&ctx->typechecker, depth));
-  CHECK_RESULT(emit_br(ctx, depth, drop_count, keep_count));
+  CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
+  CHECK_RESULT(typechecker_on_br(&typechecker, depth));
+  CHECK_RESULT(EmitBr(depth, drop_count, keep_count));
   return Result::Ok;
 }
 
-static Result on_br_if_expr(uint32_t depth, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnBrIfExpr(uint32_t depth) {
   uint32_t drop_count, keep_count;
-  CHECK_RESULT(typechecker_on_br_if(&ctx->typechecker, depth));
-  CHECK_RESULT(get_br_drop_keep_count(ctx, depth, &drop_count, &keep_count));
+  CHECK_RESULT(typechecker_on_br_if(&typechecker, depth));
+  CHECK_RESULT(GetBrDropKeepCount(depth, &drop_count, &keep_count));
   /* flip the br_if so if <cond> is true it can drop values from the stack */
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::BrUnless));
-  uint32_t fixup_br_offset = get_istream_offset(ctx);
-  CHECK_RESULT(emit_i32(ctx, WABT_INVALID_OFFSET));
-  CHECK_RESULT(emit_br(ctx, depth, drop_count, keep_count));
-  CHECK_RESULT(emit_i32_at(ctx, fixup_br_offset, get_istream_offset(ctx)));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::BrUnless));
+  uint32_t fixup_br_offset = GetIstreamOffset();
+  CHECK_RESULT(EmitI32(WABT_INVALID_OFFSET));
+  CHECK_RESULT(EmitBr(depth, drop_count, keep_count));
+  CHECK_RESULT(EmitI32At(fixup_br_offset, GetIstreamOffset()));
   return Result::Ok;
 }
 
-static Result on_br_table_expr(BinaryReaderContext* context,
-                               uint32_t num_targets,
-                               uint32_t* target_depths,
-                               uint32_t default_target_depth) {
-  Context* ctx = static_cast<Context*>(context->user_data);
-  CHECK_RESULT(typechecker_begin_br_table(&ctx->typechecker));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::BrTable));
-  CHECK_RESULT(emit_i32(ctx, num_targets));
-  uint32_t fixup_table_offset = get_istream_offset(ctx);
-  CHECK_RESULT(emit_i32(ctx, WABT_INVALID_OFFSET));
+Result BinaryReaderInterpreter::OnBrTableExpr(uint32_t num_targets,
+                                              uint32_t* target_depths,
+                                              uint32_t default_target_depth) {
+  CHECK_RESULT(typechecker_begin_br_table(&typechecker));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::BrTable));
+  CHECK_RESULT(EmitI32(num_targets));
+  uint32_t fixup_table_offset = GetIstreamOffset();
+  CHECK_RESULT(EmitI32(WABT_INVALID_OFFSET));
   /* not necessary for the interpreter, but it makes it easier to disassemble.
    * This opcode specifies how many bytes of data follow. */
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Data));
-  CHECK_RESULT(emit_i32(ctx, (num_targets + 1) * WABT_TABLE_ENTRY_SIZE));
-  CHECK_RESULT(emit_i32_at(ctx, fixup_table_offset, get_istream_offset(ctx)));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::Data));
+  CHECK_RESULT(EmitI32((num_targets + 1) * WABT_TABLE_ENTRY_SIZE));
+  CHECK_RESULT(EmitI32At(fixup_table_offset, GetIstreamOffset()));
 
   for (uint32_t i = 0; i <= num_targets; ++i) {
     uint32_t depth = i != num_targets ? target_depths[i] : default_target_depth;
-    CHECK_RESULT(typechecker_on_br_table_target(&ctx->typechecker, depth));
-    CHECK_RESULT(emit_br_table_offset(ctx, depth));
+    CHECK_RESULT(typechecker_on_br_table_target(&typechecker, depth));
+    CHECK_RESULT(EmitBrTableOffset(depth));
   }
 
-  CHECK_RESULT(typechecker_end_br_table(&ctx->typechecker));
+  CHECK_RESULT(typechecker_end_br_table(&typechecker));
   return Result::Ok;
 }
 
-static Result on_call_expr(uint32_t func_index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  InterpreterFunc* func = get_func_by_module_index(ctx, func_index);
-  InterpreterFuncSignature* sig =
-      get_signature_by_env_index(ctx, func->sig_index);
-  CHECK_RESULT(typechecker_on_call(&ctx->typechecker, &sig->param_types,
-                                   &sig->result_types));
+Result BinaryReaderInterpreter::OnCallExpr(uint32_t func_index) {
+  InterpreterFunc* func = GetFuncByModuleIndex(func_index);
+  InterpreterFuncSignature* sig = GetSignatureByEnvIndex(func->sig_index);
+  CHECK_RESULT(
+      typechecker_on_call(&typechecker, &sig->param_types, &sig->result_types));
 
   if (func->is_host) {
-    CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::CallHost));
-    CHECK_RESULT(emit_i32(ctx, translate_func_index_to_env(ctx, func_index)));
+    CHECK_RESULT(EmitOpcode(InterpreterOpcode::CallHost));
+    CHECK_RESULT(EmitI32(TranslateFuncIndexToEnv(func_index)));
   } else {
-    CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Call));
-    CHECK_RESULT(emit_func_offset(ctx, func->as_defined(), func_index));
+    CHECK_RESULT(EmitOpcode(InterpreterOpcode::Call));
+    CHECK_RESULT(EmitFuncOffset(func->as_defined(), func_index));
   }
 
   return Result::Ok;
 }
 
-static Result on_call_indirect_expr(uint32_t sig_index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  if (ctx->module->table_index == WABT_INVALID_INDEX) {
-    print_error(ctx, "found call_indirect operator, but no table");
+Result BinaryReaderInterpreter::OnCallIndirectExpr(uint32_t sig_index) {
+  if (module->table_index == WABT_INVALID_INDEX) {
+    PrintError("found call_indirect operator, but no table");
     return Result::Error;
   }
-  InterpreterFuncSignature* sig = get_signature_by_module_index(ctx, sig_index);
-  CHECK_RESULT(typechecker_on_call_indirect(
-      &ctx->typechecker, &sig->param_types, &sig->result_types));
+  InterpreterFuncSignature* sig = GetSignatureByModuleIndex(sig_index);
+  CHECK_RESULT(typechecker_on_call_indirect(&typechecker, &sig->param_types,
+                                            &sig->result_types));
 
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::CallIndirect));
-  CHECK_RESULT(emit_i32(ctx, ctx->module->table_index));
-  CHECK_RESULT(emit_i32(ctx, translate_sig_index_to_env(ctx, sig_index)));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::CallIndirect));
+  CHECK_RESULT(EmitI32(module->table_index));
+  CHECK_RESULT(EmitI32(TranslateSigIndexToEnv(sig_index)));
   return Result::Ok;
 }
 
-static Result on_drop_expr(void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_drop(&ctx->typechecker));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Drop));
+Result BinaryReaderInterpreter::OnCompareExpr(Opcode opcode) {
+  return OnBinaryExpr(opcode);
+}
+
+Result BinaryReaderInterpreter::OnConvertExpr(Opcode opcode) {
+  return OnUnaryExpr(opcode);
+}
+
+Result BinaryReaderInterpreter::OnDropExpr() {
+  CHECK_RESULT(typechecker_on_drop(&typechecker));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::Drop));
   return Result::Ok;
 }
 
-static Result on_i32_const_expr(uint32_t value, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_const(&ctx->typechecker, Type::I32));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::I32Const));
-  CHECK_RESULT(emit_i32(ctx, value));
+Result BinaryReaderInterpreter::OnI32ConstExpr(uint32_t value) {
+  CHECK_RESULT(typechecker_on_const(&typechecker, Type::I32));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::I32Const));
+  CHECK_RESULT(EmitI32(value));
   return Result::Ok;
 }
 
-static Result on_i64_const_expr(uint64_t value, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_const(&ctx->typechecker, Type::I64));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::I64Const));
-  CHECK_RESULT(emit_i64(ctx, value));
+Result BinaryReaderInterpreter::OnI64ConstExpr(uint64_t value) {
+  CHECK_RESULT(typechecker_on_const(&typechecker, Type::I64));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::I64Const));
+  CHECK_RESULT(EmitI64(value));
   return Result::Ok;
 }
 
-static Result on_f32_const_expr(uint32_t value_bits, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_const(&ctx->typechecker, Type::F32));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::F32Const));
-  CHECK_RESULT(emit_i32(ctx, value_bits));
+Result BinaryReaderInterpreter::OnF32ConstExpr(uint32_t value_bits) {
+  CHECK_RESULT(typechecker_on_const(&typechecker, Type::F32));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::F32Const));
+  CHECK_RESULT(EmitI32(value_bits));
   return Result::Ok;
 }
 
-static Result on_f64_const_expr(uint64_t value_bits, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_const(&ctx->typechecker, Type::F64));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::F64Const));
-  CHECK_RESULT(emit_i64(ctx, value_bits));
+Result BinaryReaderInterpreter::OnF64ConstExpr(uint64_t value_bits) {
+  CHECK_RESULT(typechecker_on_const(&typechecker, Type::F64));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::F64Const));
+  CHECK_RESULT(EmitI64(value_bits));
   return Result::Ok;
 }
 
-static Result on_get_global_expr(uint32_t global_index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_GLOBAL(ctx, global_index);
-  Type type = get_global_type_by_module_index(ctx, global_index);
-  CHECK_RESULT(typechecker_on_get_global(&ctx->typechecker, type));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::GetGlobal));
-  CHECK_RESULT(emit_i32(ctx, translate_global_index_to_env(ctx, global_index)));
+Result BinaryReaderInterpreter::OnGetGlobalExpr(uint32_t global_index) {
+  CHECK_RESULT(CheckGlobal(global_index));
+  Type type = GetGlobalTypeByModuleIndex(global_index);
+  CHECK_RESULT(typechecker_on_get_global(&typechecker, type));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::GetGlobal));
+  CHECK_RESULT(EmitI32(TranslateGlobalIndexToEnv(global_index)));
   return Result::Ok;
 }
 
-static Result on_set_global_expr(uint32_t global_index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_GLOBAL(ctx, global_index);
-  InterpreterGlobal* global = get_global_by_module_index(ctx, global_index);
+Result BinaryReaderInterpreter::OnSetGlobalExpr(uint32_t global_index) {
+  CHECK_RESULT(CheckGlobal(global_index));
+  InterpreterGlobal* global = GetGlobalByModuleIndex(global_index);
   if (!global->mutable_) {
-    print_error(ctx, "can't set_global on immutable global at index %u.",
-                global_index);
+    PrintError("can't set_global on immutable global at index %u.",
+               global_index);
     return Result::Error;
   }
   CHECK_RESULT(
-      typechecker_on_set_global(&ctx->typechecker, global->typed_value.type));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::SetGlobal));
-  CHECK_RESULT(emit_i32(ctx, translate_global_index_to_env(ctx, global_index)));
+      typechecker_on_set_global(&typechecker, global->typed_value.type));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::SetGlobal));
+  CHECK_RESULT(EmitI32(TranslateGlobalIndexToEnv(global_index)));
   return Result::Ok;
 }
 
-static uint32_t translate_local_index(Context* ctx, uint32_t local_index) {
-  return ctx->typechecker.type_stack.size() +
-         ctx->current_func->param_and_local_types.size() - local_index;
+uint32_t BinaryReaderInterpreter::TranslateLocalIndex(uint32_t local_index) {
+  return typechecker.type_stack.size() +
+         current_func->param_and_local_types.size() - local_index;
 }
 
-static Result on_get_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_LOCAL(ctx, local_index);
-  Type type = get_local_type_by_index(ctx->current_func, local_index);
+Result BinaryReaderInterpreter::OnGetLocalExpr(uint32_t local_index) {
+  CHECK_RESULT(CheckLocal(local_index));
+  Type type = GetLocalTypeByIndex(current_func, local_index);
   /* Get the translated index before calling typechecker_on_get_local
    * because it will update the type stack size. We need the index to be
    * relative to the old stack size. */
-  uint32_t translated_local_index = translate_local_index(ctx, local_index);
-  CHECK_RESULT(typechecker_on_get_local(&ctx->typechecker, type));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::GetLocal));
-  CHECK_RESULT(emit_i32(ctx, translated_local_index));
+  uint32_t translated_local_index = TranslateLocalIndex(local_index);
+  CHECK_RESULT(typechecker_on_get_local(&typechecker, type));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::GetLocal));
+  CHECK_RESULT(EmitI32(translated_local_index));
   return Result::Ok;
 }
 
-static Result on_set_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_LOCAL(ctx, local_index);
-  Type type = get_local_type_by_index(ctx->current_func, local_index);
-  CHECK_RESULT(typechecker_on_set_local(&ctx->typechecker, type));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::SetLocal));
-  CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
+Result BinaryReaderInterpreter::OnSetLocalExpr(uint32_t local_index) {
+  CHECK_RESULT(CheckLocal(local_index));
+  Type type = GetLocalTypeByIndex(current_func, local_index);
+  CHECK_RESULT(typechecker_on_set_local(&typechecker, type));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::SetLocal));
+  CHECK_RESULT(EmitI32(TranslateLocalIndex(local_index)));
   return Result::Ok;
 }
 
-static Result on_tee_local_expr(uint32_t local_index, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_LOCAL(ctx, local_index);
-  Type type = get_local_type_by_index(ctx->current_func, local_index);
-  CHECK_RESULT(typechecker_on_tee_local(&ctx->typechecker, type));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::TeeLocal));
-  CHECK_RESULT(emit_i32(ctx, translate_local_index(ctx, local_index)));
+Result BinaryReaderInterpreter::OnTeeLocalExpr(uint32_t local_index) {
+  CHECK_RESULT(CheckLocal(local_index));
+  Type type = GetLocalTypeByIndex(current_func, local_index);
+  CHECK_RESULT(typechecker_on_tee_local(&typechecker, type));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::TeeLocal));
+  CHECK_RESULT(EmitI32(TranslateLocalIndex(local_index)));
   return Result::Ok;
 }
 
-static Result on_grow_memory_expr(void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(check_has_memory(ctx, Opcode::GrowMemory));
-  CHECK_RESULT(typechecker_on_grow_memory(&ctx->typechecker));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::GrowMemory));
-  CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
+Result BinaryReaderInterpreter::OnGrowMemoryExpr() {
+  CHECK_RESULT(CheckHasMemory(Opcode::GrowMemory));
+  CHECK_RESULT(typechecker_on_grow_memory(&typechecker));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::GrowMemory));
+  CHECK_RESULT(EmitI32(module->memory_index));
   return Result::Ok;
 }
 
-static Result on_load_expr(Opcode opcode,
-                           uint32_t alignment_log2,
-                           uint32_t offset,
-                           void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(check_has_memory(ctx, opcode));
-  CHECK_RESULT(
-      check_align(ctx, alignment_log2, get_opcode_memory_size(opcode)));
-  CHECK_RESULT(typechecker_on_load(&ctx->typechecker, opcode));
-  CHECK_RESULT(emit_opcode(ctx, opcode));
-  CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
-  CHECK_RESULT(emit_i32(ctx, offset));
+Result BinaryReaderInterpreter::OnLoadExpr(Opcode opcode,
+                                           uint32_t alignment_log2,
+                                           uint32_t offset) {
+  CHECK_RESULT(CheckHasMemory(opcode));
+  CHECK_RESULT(CheckAlign(alignment_log2, get_opcode_memory_size(opcode)));
+  CHECK_RESULT(typechecker_on_load(&typechecker, opcode));
+  CHECK_RESULT(EmitOpcode(opcode));
+  CHECK_RESULT(EmitI32(module->memory_index));
+  CHECK_RESULT(EmitI32(offset));
   return Result::Ok;
 }
 
-static Result on_store_expr(Opcode opcode,
-                            uint32_t alignment_log2,
-                            uint32_t offset,
-                            void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(check_has_memory(ctx, opcode));
-  CHECK_RESULT(
-      check_align(ctx, alignment_log2, get_opcode_memory_size(opcode)));
-  CHECK_RESULT(typechecker_on_store(&ctx->typechecker, opcode));
-  CHECK_RESULT(emit_opcode(ctx, opcode));
-  CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
-  CHECK_RESULT(emit_i32(ctx, offset));
+Result BinaryReaderInterpreter::OnStoreExpr(Opcode opcode,
+                                            uint32_t alignment_log2,
+                                            uint32_t offset) {
+  CHECK_RESULT(CheckHasMemory(opcode));
+  CHECK_RESULT(CheckAlign(alignment_log2, get_opcode_memory_size(opcode)));
+  CHECK_RESULT(typechecker_on_store(&typechecker, opcode));
+  CHECK_RESULT(EmitOpcode(opcode));
+  CHECK_RESULT(EmitI32(module->memory_index));
+  CHECK_RESULT(EmitI32(offset));
   return Result::Ok;
 }
 
-static Result on_current_memory_expr(void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(check_has_memory(ctx, Opcode::CurrentMemory));
-  CHECK_RESULT(typechecker_on_current_memory(&ctx->typechecker));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::CurrentMemory));
-  CHECK_RESULT(emit_i32(ctx, ctx->module->memory_index));
+Result BinaryReaderInterpreter::OnCurrentMemoryExpr() {
+  CHECK_RESULT(CheckHasMemory(Opcode::CurrentMemory));
+  CHECK_RESULT(typechecker_on_current_memory(&typechecker));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::CurrentMemory));
+  CHECK_RESULT(EmitI32(module->memory_index));
   return Result::Ok;
 }
 
-static Result on_nop_expr(void* user_data) {
+Result BinaryReaderInterpreter::OnNopExpr() {
   return Result::Ok;
 }
 
-static Result on_return_expr(void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result BinaryReaderInterpreter::OnReturnExpr() {
   uint32_t drop_count, keep_count;
-  CHECK_RESULT(get_return_drop_keep_count(ctx, &drop_count, &keep_count));
-  CHECK_RESULT(typechecker_on_return(&ctx->typechecker));
-  CHECK_RESULT(emit_drop_keep(ctx, drop_count, keep_count));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Return));
+  CHECK_RESULT(GetReturnDropKeepCount(&drop_count, &keep_count));
+  CHECK_RESULT(typechecker_on_return(&typechecker));
+  CHECK_RESULT(EmitDropKeep(drop_count, keep_count));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::Return));
   return Result::Ok;
 }
 
-static Result on_select_expr(void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_select(&ctx->typechecker));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Select));
+Result BinaryReaderInterpreter::OnSelectExpr() {
+  CHECK_RESULT(typechecker_on_select(&typechecker));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::Select));
   return Result::Ok;
 }
 
-static Result on_unreachable_expr(void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(typechecker_on_unreachable(&ctx->typechecker));
-  CHECK_RESULT(emit_opcode(ctx, InterpreterOpcode::Unreachable));
+Result BinaryReaderInterpreter::OnUnreachableExpr() {
+  CHECK_RESULT(typechecker_on_unreachable(&typechecker));
+  CHECK_RESULT(EmitOpcode(InterpreterOpcode::Unreachable));
   return Result::Ok;
 }
+
+Result BinaryReaderInterpreter::EndModule() {
+  for (ElemSegmentInfo& info : elem_segment_infos) {
+    *info.dst = info.func_index;
+  }
+  for (DataSegmentInfo& info : data_segment_infos) {
+    memcpy(info.dst_data, info.src_data, info.size);
+  }
+  return Result::Ok;
+}
+
+}  // namespace
 
 Result read_binary_interpreter(InterpreterEnvironment* env,
                                const void* data,
@@ -1390,117 +1492,24 @@ Result read_binary_interpreter(InterpreterEnvironment* env,
                                const ReadBinaryOptions* options,
                                BinaryErrorHandler* error_handler,
                                DefinedInterpreterModule** out_module) {
-  Context ctx;
-  BinaryReader reader;
+  size_t istream_offset = env->istream.size;
+  DefinedInterpreterModule* module =
+      new DefinedInterpreterModule(istream_offset);
+
+  BinaryReaderInterpreter reader(env, module, istream_offset, error_handler);
+  if (WABT_FAILED(reader.Init())) {
+    delete module;
+    return Result::Error;
+  }
 
   InterpreterEnvironmentMark mark = mark_interpreter_environment(env);
-
-  DefinedInterpreterModule* module =
-      new DefinedInterpreterModule(env->istream.size);
   env->modules.emplace_back(module);
 
-  WABT_ZERO_MEMORY(reader);
-
-  ctx.reader = &reader;
-  ctx.error_handler = error_handler;
-  ctx.env = env;
-  ctx.module = module;
-  ctx.istream_offset = env->istream.size;
-  CHECK_RESULT(init_mem_writer_existing(&ctx.istream_writer, &env->istream));
-
-  TypeCheckerErrorHandler tc_error_handler;
-  tc_error_handler.on_error = on_typechecker_error;
-  tc_error_handler.user_data = &ctx;
-  ctx.typechecker.error_handler = &tc_error_handler;
-
-  WABT_ZERO_MEMORY(reader);
-  reader.user_data = &ctx;
-  reader.on_error = on_error;
-  reader.on_signature_count = on_signature_count;
-  reader.on_signature = on_signature;
-  reader.on_import_count = on_import_count;
-  reader.on_import = on_import;
-  reader.on_import_func = on_import_func;
-  reader.on_import_table = on_import_table;
-  reader.on_import_memory = on_import_memory;
-  reader.on_import_global = on_import_global;
-  reader.on_function_signatures_count = on_function_signatures_count;
-  reader.on_function_signature = on_function_signature;
-  reader.on_table = on_table;
-  reader.on_memory = on_memory;
-  reader.on_global_count = on_global_count;
-  reader.begin_global = begin_global;
-  reader.end_global_init_expr = end_global_init_expr;
-  reader.on_export = on_export;
-  reader.on_start_function = on_start_function;
-  reader.begin_function_body = begin_function_body;
-  reader.on_local_decl_count = on_local_decl_count;
-  reader.on_local_decl = on_local_decl;
-  reader.on_binary_expr = on_binary_expr;
-  reader.on_block_expr = on_block_expr;
-  reader.on_br_expr = on_br_expr;
-  reader.on_br_if_expr = on_br_if_expr;
-  reader.on_br_table_expr = on_br_table_expr;
-  reader.on_call_expr = on_call_expr;
-  reader.on_call_indirect_expr = on_call_indirect_expr;
-  reader.on_compare_expr = on_binary_expr;
-  reader.on_convert_expr = on_unary_expr;
-  reader.on_current_memory_expr = on_current_memory_expr;
-  reader.on_drop_expr = on_drop_expr;
-  reader.on_else_expr = on_else_expr;
-  reader.on_end_expr = on_end_expr;
-  reader.on_f32_const_expr = on_f32_const_expr;
-  reader.on_f64_const_expr = on_f64_const_expr;
-  reader.on_get_global_expr = on_get_global_expr;
-  reader.on_get_local_expr = on_get_local_expr;
-  reader.on_grow_memory_expr = on_grow_memory_expr;
-  reader.on_i32_const_expr = on_i32_const_expr;
-  reader.on_i64_const_expr = on_i64_const_expr;
-  reader.on_if_expr = on_if_expr;
-  reader.on_load_expr = on_load_expr;
-  reader.on_loop_expr = on_loop_expr;
-  reader.on_nop_expr = on_nop_expr;
-  reader.on_return_expr = on_return_expr;
-  reader.on_select_expr = on_select_expr;
-  reader.on_set_global_expr = on_set_global_expr;
-  reader.on_set_local_expr = on_set_local_expr;
-  reader.on_store_expr = on_store_expr;
-  reader.on_tee_local_expr = on_tee_local_expr;
-  reader.on_unary_expr = on_unary_expr;
-  reader.on_unreachable_expr = on_unreachable_expr;
-  reader.end_function_body = end_function_body;
-  reader.end_elem_segment_init_expr = end_elem_segment_init_expr;
-  reader.on_elem_segment_function_index = on_elem_segment_function_index_check;
-  reader.on_data_segment_data = on_data_segment_data_check;
-  reader.on_init_expr_f32_const_expr = on_init_expr_f32_const_expr;
-  reader.on_init_expr_f64_const_expr = on_init_expr_f64_const_expr;
-  reader.on_init_expr_get_global_expr = on_init_expr_get_global_expr;
-  reader.on_init_expr_i32_const_expr = on_init_expr_i32_const_expr;
-  reader.on_init_expr_i64_const_expr = on_init_expr_i64_const_expr;
-
-  const uint32_t num_function_passes = 1;
-  Result result =
-      read_binary(data, size, &reader, num_function_passes, options);
-  steal_mem_writer_output_buffer(&ctx.istream_writer, &env->istream);
+  Result result = read_binary(data, size, &reader, options);
+  reader.StealOutputBuffer(&env->istream);
   if (WABT_SUCCEEDED(result)) {
-    /* Another pass on the read binary to assign data and elem segments. */
-    WABT_ZERO_MEMORY(reader);
-    reader.user_data = &ctx;
-    reader.on_error = on_error;
-    reader.end_elem_segment_init_expr = end_elem_segment_init_expr;
-    reader.on_elem_segment_function_index = on_elem_segment_function_index;
-    reader.on_data_segment_data = on_data_segment_data;
-    reader.on_init_expr_f32_const_expr = on_init_expr_f32_const_expr;
-    reader.on_init_expr_f64_const_expr = on_init_expr_f64_const_expr;
-    reader.on_init_expr_get_global_expr = on_init_expr_get_global_expr;
-    reader.on_init_expr_i32_const_expr = on_init_expr_i32_const_expr;
-    reader.on_init_expr_i64_const_expr = on_init_expr_i64_const_expr;
-
-    result = read_binary(data, size, &reader, num_function_passes, options);
-    assert(WABT_SUCCEEDED(result));
-
-    env->istream.size = ctx.istream_offset;
-    ctx.module->istream_end = env->istream.size;
+    env->istream.size = reader.get_istream_offset();
+    module->istream_end = env->istream.size;
     *out_module = module;
   } else {
     reset_interpreter_environment_to_mark(env, mark);
