@@ -70,6 +70,8 @@ class BinaryReaderLinker : public BinaryReaderNop {
                                    const void* data,
                                    uint32_t size);
 
+  virtual Result BeginNamesSection(uint32_t size);
+
   virtual Result OnFunctionName(uint32_t function_index,
                                 StringSlice function_name);
 
@@ -88,6 +90,7 @@ class BinaryReaderLinker : public BinaryReaderNop {
 
   Section* reloc_section = nullptr;
   Section* current_section = nullptr;
+  uint32_t function_count = 0;
 };
 
 BinaryReaderLinker::BinaryReaderLinker(LinkerInputBinary* binary)
@@ -164,7 +167,7 @@ Result BinaryReaderLinker::OnImportGlobal(uint32_t import_index,
 }
 
 Result BinaryReaderLinker::OnFunctionCount(uint32_t count) {
-  binary->debug_names.resize(count + binary->function_imports.size());
+  function_count = count;
   return Result::Ok;
 }
 
@@ -259,6 +262,11 @@ Result BinaryReaderLinker::OnExport(uint32_t index,
   export_->name = name;
   export_->kind = kind;
   export_->index = item_index;
+  return Result::Ok;
+}
+
+Result BinaryReaderLinker::BeginNamesSection(uint32_t size) {
+  binary->debug_names.resize(function_count + binary->function_imports.size());
   return Result::Ok;
 }
 
