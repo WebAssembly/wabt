@@ -263,7 +263,6 @@ Result BinaryReaderLinker::OnExport(uint32_t index,
 }
 
 Result BinaryReaderLinker::OnFunctionName(uint32_t index, StringSlice name) {
-  assert(index < binary->debug_names.size());
   binary->debug_names[index] = string_slice_to_string(name);
   return Result::Ok;
 }

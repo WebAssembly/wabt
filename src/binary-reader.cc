@@ -943,6 +943,8 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
             StringSlice function_name;
 
             in_u32_leb128(ctx, &function_index, "function index");
+            RAISE_ERROR_UNLESS(function_index < num_total_funcs(ctx),
+                               "invalid function index");
             in_str(ctx, &function_name, "function name");
             CALLBACK(OnFunctionName, function_index, function_name);
           }
