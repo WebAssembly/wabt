@@ -51,97 +51,82 @@ TOOLS = {
     },
     'run-wasmdump': {
         'EXE': 'test/run-wasmdump.py',
-        'FLAGS': ' '.join(['--bindir=%(bindir)s', '--no-error-cmdline']),
+        'FLAGS': ['--bindir=%(bindir)s', '--no-error-cmdline'],
         'VERBOSE-FLAGS': ['-v']
     },
     'run-wasm-link': {
         'EXE': 'test/run-wasm-link.py',
-        'FLAGS': ' '.join(['--bindir=%(bindir)s',]),
+        'FLAGS': ['--bindir=%(bindir)s'],
         'VERBOSE-FLAGS': ['-v']
     },
     'run-roundtrip': {
-        'EXE':
-            'test/run-roundtrip.py',
-        'FLAGS':
-            ' '.join([
+        'EXE': 'test/run-roundtrip.py',
+        'FLAGS': [
                 '-v',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-            ]),
-        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+        ],
+        'VERBOSE-FLAGS': ['--print-cmd', '-v']
     },
     'run-interp': {
-        'EXE':
-            'test/run-interp.py',
-        'FLAGS':
-            ' '.join([
+        'EXE': 'test/run-interp.py',
+        'FLAGS': [
                 '--bindir=%(bindir)s',
                 '--run-all-exports',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-            ]),
-        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+        ],
+        'VERBOSE-FLAGS': ['--print-cmd', '-v']
     },
     'run-interp-spec': {
-        'EXE':
-            'test/run-interp.py',
-        'FLAGS':
-            ' '.join([
+        'EXE': 'test/run-interp.py',
+        'FLAGS': [
                 '--bindir=%(bindir)s',
                 '--spec',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-            ]),
-        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+         ],
+        'VERBOSE-FLAGS': ['--print-cmd', '-v']
     },
     'run-gen-wasm': {
-        'EXE':
-            'test/run-gen-wasm.py',
-        'FLAGS':
-            ' '.join([
+        'EXE': 'test/run-gen-wasm.py',
+        'FLAGS': [
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-            ]),
-        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+         ],
+        'VERBOSE-FLAGS': ['--print-cmd', '-v']
     },
     'run-gen-wasm-interp': {
-        'EXE':
-            'test/run-gen-wasm-interp.py',
-        'FLAGS':
-            ' '.join([
+        'EXE': 'test/run-gen-wasm-interp.py',
+        'FLAGS': [
                 '--bindir=%(bindir)s',
                 '--run-all-exports',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-            ]),
-        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+        ],
+        'VERBOSE-FLAGS': ['--print-cmd', '-v']
     },
     'run-opcodecnt': {
         'EXE': 'test/run-opcodecnt.py',
-        'FLAGS': ' '.join([
-            '--bindir=%(bindir)s',
-            '--no-error-cmdline',
-        ]),
-        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+        'FLAGS': ['--bindir=%(bindir)s', '--no-error-cmdline'],
+        'VERBOSE-FLAGS': ['--print-cmd', '-v']
     },
     'run-gen-spec-js': {
-        'EXE':
-            'test/run-gen-spec-js.py',
-        'FLAGS':
-            ' '.join([
+        'EXE': 'test/run-gen-spec-js.py',
+        'FLAGS': [
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-            ]),
-        'VERBOSE-FLAGS': [' '.join(['--print-cmd',]), '-v']
+        ],
+        'VERBOSE-FLAGS': ['--print-cmd', '-v']
     },
 }
 
@@ -288,7 +273,9 @@ class TestInfo(object):
     elif key == 'STDIN_FILE':
       self.input_filename = value
     elif key == 'FLAGS':
-      self.flags += shlex.split(value)
+      if not isinstance(value, list):
+        value = shlex.split(value)
+      self.flags += value
     elif key == 'ERROR':
       self.expected_error = int(value)
     elif key == 'SLOW':

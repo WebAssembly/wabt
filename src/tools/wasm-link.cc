@@ -478,12 +478,12 @@ static void write_data_section(Context* ctx,
 
 static void write_names_section(Context* ctx) {
   uint32_t total_count = 0;
-  size_t k;
-  for (size_t i = 0; i < ctx->inputs.size(); i++) {
-    LinkerInputBinary* binary = ctx->inputs[i].get();
-    for (size_t j = 0; j < binary->debug_names.size(); j++) {
-      if (j < binary->function_imports.size()) {
-        if (!binary->function_imports[j].active)
+  for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
+    for (size_t i = 0; i < binary->debug_names.size(); i++) {
+      if (binary->debug_names[i].empty())
+        continue;
+      if (i < binary->function_imports.size()) {
+        if (!binary->function_imports[i].active)
           continue;
       }
       total_count++;
@@ -497,24 +497,25 @@ static void write_names_section(Context* ctx) {
   write_u8_enum(stream, BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
   write_c_str(stream, "name", "custom section name");
+
   write_u8_enum(stream, NameSectionSubsection::Function, "subsection code");
   WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_count, "element count");
-
-  k = 0;
-  for (size_t i = 0; i < ctx->inputs.size(); i++) {
-    LinkerInputBinary* binary = ctx->inputs[i].get();
-    for (size_t j = 0; j < binary->debug_names.size(); j++) {
-      if (j < binary->function_imports.size()) {
-        if (!binary->function_imports[j].active)
+  for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
+    for (size_t i = 0; i < binary->debug_names.size(); i++) {
+      if (binary->debug_names[i].empty())
+        continue;
+      if (i < binary->function_imports.size()) {
+        if (!binary->function_imports[i].active)
           continue;
       }
-      write_u32_leb128(stream, k++, "function index");
-      write_string(stream, binary->debug_names[j], "function name");
+      write_u32_leb128(stream, i + binary->function_index_offset, "function index");
+      write_string(stream, binary->debug_names[i], "function name");
     }
   }
 
   FIXUP_SIZE(stream);
+
   FIXUP_SIZE(stream);
 }
 
