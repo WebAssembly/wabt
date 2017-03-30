@@ -110,10 +110,6 @@ else ()
     add_definitions(-Wno-clobbered)
   endif ()
 
-  if (COMPILER_IS_CLANG)
-    add_definitions(-fcolor-diagnostics)
-  endif ()
-
   if (NOT EMSCRIPTEN)
     # try to get the target architecture by compiling a dummy.c file and
     # checking the architecture using the file command.
