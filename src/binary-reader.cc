@@ -1600,11 +1600,24 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
               section_name.length) == 0) {
     CALLBACK_SECTION(begin_names_section, section_size);
     uint32_t i = 0;
+    size_t previous_read_end = ctx->read_end;
+    uint32_t previous_subsection_type = 0;
     while (ctx->offset < ctx->read_end) {
       uint32_t name_type;
       uint32_t subsection_size;
       in_u32_leb128(ctx, &name_type, "name type");
+      if (i != 0) {
+        if (name_type == previous_subsection_type)
+          RAISE_ERROR("duplicate sub-section");
+        if (name_type < previous_subsection_type)
+          RAISE_ERROR("out-of-order sub-section");
+      }
+      previous_subsection_type = name_type;
       in_u32_leb128(ctx, &subsection_size, "subsection size");
+      size_t subsection_end = ctx->offset + subsection_size;
+      if (subsection_end > ctx->read_end)
+        RAISE_ERROR("invalid sub-section size: extends past end");
+      ctx->read_end = subsection_end;
 
       switch (static_cast<NameSectionSubsection>(name_type)) {
       case NameSectionSubsection::Function:
@@ -1622,7 +1635,6 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
             CALLBACK(on_function_name, function_index, function_name);
           }
         }
-        ++i;
         break;
       case NameSectionSubsection::Local:
         CALLBACK(on_local_name_subsection, i, name_type, subsection_size);
@@ -1646,13 +1658,18 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
             }
           }
         }
-        ++i;
         break;
       default:
-        /* unknown subsection, skip rest of section */
-        ctx->offset = ctx->read_end;
+        /* unknown subsection, skip it */
+        ctx->offset = subsection_end;
         break;
       }
+      ++i;
+      if (ctx->offset != subsection_end) {
+        RAISE_ERROR("unfinished sub-section (expected end: 0x%" PRIzx ")",
+                    subsection_end);
+      }
+      ctx->read_end = previous_read_end;
     }
     CALLBACK_CTX0(end_names_section);
   } else if (strncmp(section_name.start, WABT_BINARY_SECTION_RELOC,
