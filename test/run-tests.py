@@ -535,13 +535,13 @@ def RunTest(info, options, variables, verbose_level=0):
     cmd = info.GetCommand(rel_gen_input_path, variables, options.arg,
                           verbose_level)
     return RunCommandWithTimeout(cmd, cwd, timeout, verbose_level > 0)
-  except (Exception, KeyboardInterrupt) as e:
+  except (Error, KeyboardInterrupt) as e:
     return e
 
 
 def HandleTestResult(status, info, result, rebase=False):
   try:
-    if isinstance(result, Exception):
+    if isinstance(result, (Error, KeyboardInterrupt)):
       raise result
 
     stdout, stderr, returncode, duration = result
@@ -570,7 +570,7 @@ def HandleTestResult(status, info, result, rebase=False):
         else:
           info.Diff(stdout, stderr)
         status.Passed(info, duration)
-  except Exception as e:
+  except Error as e:
     status.Failed(info, str(e))
 
 
@@ -623,8 +623,6 @@ def RunMultiThreaded(infos_to_run, status, options, variables):
       time.sleep(0.01)
       results = new_results
     pool.close()
-  except KeyboardInterrupt:
-    pass
   finally:
     pool.terminate()
     pool.join()
