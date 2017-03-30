@@ -704,8 +704,6 @@ def main(args):
       parser.error('--fail-fast only works with -j1')
     if options.stop_interactive:
       parser.error('--stop-interactive only works with -j1')
-    if options.print_cmd:
-      parser.error('--print-cmd only works with -j1')
 
   if options.patterns:
     pattern_re = '|'.join(
