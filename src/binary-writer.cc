@@ -880,7 +880,7 @@ static Result write_module(Context* ctx, const Module* module) {
     begin_custom_section(ctx, WABT_BINARY_SECTION_NAME, LEB_SECTION_SIZE_GUESS);
 
     size_t named_functions = 0;
-    for (const auto func: module->funcs) {
+    for (const Func* func: module->funcs) {
       if (func->name.length > 0)
         named_functions++;
     }
