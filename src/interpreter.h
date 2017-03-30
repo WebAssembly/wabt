@@ -28,7 +28,7 @@
 
 namespace wabt {
 
-struct Stream;
+class Stream;
 
 #define FOREACH_INTERPRETER_RESULT(V)                                       \
   V(Ok, "ok")                                                               \
@@ -334,7 +334,7 @@ struct InterpreterEnvironment {
   std::vector<InterpreterMemory> memories;
   std::vector<InterpreterTable> tables;
   std::vector<InterpreterGlobal> globals;
-  OutputBuffer istream;
+  std::unique_ptr<OutputBuffer> istream;
   BindingHash module_bindings;
   BindingHash registered_module_bindings;
 };
@@ -387,13 +387,13 @@ InterpreterResult call_host(InterpreterThread* thread,
 InterpreterResult run_interpreter(InterpreterThread* thread,
                                   uint32_t num_instructions,
                                   uint32_t* call_stack_return_top);
-void trace_pc(InterpreterThread* thread, struct Stream* stream);
+void trace_pc(InterpreterThread* thread, Stream* stream);
 void disassemble(InterpreterEnvironment* env,
-                 struct Stream* stream,
+                 Stream* stream,
                  uint32_t from,
                  uint32_t to);
 void disassemble_module(InterpreterEnvironment* env,
-                        struct Stream* stream,
+                        Stream* stream,
                         InterpreterModule* module);
 
 InterpreterExport* get_interpreter_export_by_name(InterpreterModule* module,

@@ -50,7 +50,7 @@ static bool s_validate = true;
 static SourceErrorHandler s_error_handler =
     WABT_SOURCE_ERROR_HANDLER_DEFAULT;
 
-static FileStream s_log_stream;
+static std::unique_ptr<FileStream> s_log_stream;
 
 #define NOPE HasArgument::No
 #define YEP HasArgument::Yes
@@ -114,7 +114,8 @@ static void on_option(struct OptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      s_write_binary_options.log_stream = &s_log_stream.base;
+      s_log_stream = FileStream::CreateStdout();
+      s_write_binary_options.log_stream = s_log_stream.get();
       break;
 
     case FLAG_HELP:
@@ -179,22 +180,23 @@ static void parse_options(int argc, char** argv) {
 }
 
 static void write_buffer_to_file(const char* filename,
-                                 OutputBuffer* buffer) {
+                                 const OutputBuffer& buffer) {
   if (s_dump_module) {
     if (s_verbose)
-      writef(&s_log_stream.base, ";; dump\n");
-    write_output_buffer_memory_dump(&s_log_stream.base, buffer);
+      s_log_stream->Writef(";; dump\n");
+    if (!buffer.data.empty()) {
+      s_log_stream->WriteMemoryDump(buffer.data.data(), buffer.data.size());
+    }
   }
 
   if (filename) {
-    write_output_buffer_to_file(buffer, filename);
+    buffer.WriteToFile(filename);
   }
 }
 
 int main(int argc, char** argv) {
   init_stdio();
 
-  init_file_stream_from_existing(&s_log_stream, stdout);
   parse_options(argc, argv);
 
   AstLexer* lexer = new_ast_file_lexer(s_infile);
@@ -219,21 +221,16 @@ int main(int argc, char** argv) {
                                           &s_write_binary_spec_options);
       } else {
         MemoryWriter writer;
-        WABT_ZERO_MEMORY(writer);
-        if (WABT_FAILED(init_mem_writer(&writer)))
-          WABT_FATAL("unable to open memory writer for writing\n");
-
         Module* module = get_first_module(script);
         if (module) {
-          result = write_binary_module(&writer.base, module,
-                                       &s_write_binary_options);
+          result =
+              write_binary_module(&writer, module, &s_write_binary_options);
         } else {
           WABT_FATAL("no module found\n");
         }
 
         if (WABT_SUCCEEDED(result))
-          write_buffer_to_file(s_outfile, &writer.buf);
-        close_mem_writer(&writer);
+          write_buffer_to_file(s_outfile, writer.output_buffer());
       }
     }
   }

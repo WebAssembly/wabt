@@ -56,16 +56,13 @@ static bool s_debug;
 static bool s_relocatable;
 static const char* s_outfile = "a.wasm";
 static std::vector<std::string> s_infiles;
-static FileWriter s_log_stream_writer;
-static Stream s_log_stream;
+static std::unique_ptr<FileStream> s_log_stream;
 
 struct Context {
   WABT_DISALLOW_COPY_AND_ASSIGN(Context);
-  Context() {
-    WABT_ZERO_MEMORY(stream);
-  }
+  Context() {}
 
-  Stream stream;
+  MemoryStream stream;
   std::vector<std::unique_ptr<LinkerInputBinary>> inputs;
   ssize_t current_section_payload_offset = 0;
 };
@@ -76,8 +73,7 @@ static void on_option(struct OptionParser* parser,
   switch (option->id) {
     case FLAG_DEBUG:
       s_debug = true;
-      init_file_writer_existing(&s_log_stream_writer, stdout);
-      init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
+      s_log_stream = FileStream::CreateStdout();
       break;
 
     case FLAG_OUTPUT:
@@ -165,7 +161,7 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
     /* locally declared function call */
     offset = binary->function_index_offset;
     if (s_debug)
-      writef(&s_log_stream, "func reloc %d + %d\n", function_index, offset);
+      s_log_stream->Writef("func reloc %d + %d\n", function_index, offset);
   } else {
     /* imported function call */
     FunctionImport* import = &binary->function_imports[function_index];
@@ -173,15 +169,14 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
       function_index = import->foreign_index;
       offset = import->foreign_binary->function_index_offset;
       if (s_debug)
-        writef(&s_log_stream,
-               "reloc for disabled import. new index = %d + %d\n",
-               function_index, offset);
+        s_log_stream->Writef("reloc for disabled import. new index = %d + %d\n",
+                             function_index, offset);
     } else {
       uint32_t new_index = import->relocated_function_index;
       if (s_debug)
-        writef(&s_log_stream,
-               "reloc for active import. old index = %d, new index = %d\n",
-               function_index, new_index);
+        s_log_stream->Writef(
+            "reloc for active import. old index = %d, new index = %d\n",
+            function_index, new_index);
       return new_index;
     }
   }
@@ -236,9 +231,10 @@ static void apply_relocations(Section* section) {
   if (!section->relocations.size())
     return;
 
-  if (s_debug)
-    writef(&s_log_stream, "apply_relocations: %s\n",
-           get_section_name(section->section_code));
+  if (s_debug) {
+    s_log_stream->Writef("apply_relocations: %s\n",
+                         get_section_name(section->section_code));
+  }
 
   /* Perform relocations in-place */
   for (Reloc& reloc: section->relocations) {
@@ -250,36 +246,36 @@ static void write_section_payload(Context* ctx, Section* sec) {
   assert(ctx->current_section_payload_offset != -1);
 
   sec->output_payload_offset =
-      ctx->stream.offset - ctx->current_section_payload_offset;
+      ctx->stream.offset() - ctx->current_section_payload_offset;
 
   uint8_t* payload = &sec->binary->data[sec->payload_offset];
-  write_data(&ctx->stream, payload, sec->payload_size, "section content");
+  ctx->stream.WriteData(payload, sec->payload_size, "section content");
 }
 
 static void write_c_str(Stream* stream, const char* str, const char* desc) {
-  write_str(stream, str, strlen(str), PrintChars::Yes, desc);
+  write_str(stream, str, strlen(str), desc, PrintChars::Yes);
 }
 
 static void write_slice(Stream* stream, StringSlice str, const char* desc) {
-  write_str(stream, str.start, str.length, PrintChars::Yes, desc);
+  write_str(stream, str.start, str.length, desc, PrintChars::Yes);
 }
 
 static void write_string(Stream* stream,
                          const std::string& str,
                          const char* desc) {
-  write_str(stream, str.data(), str.length(), PrintChars::Yes, desc);
+  write_str(stream, str.data(), str.length(), desc, PrintChars::Yes);
 }
 
-#define WRITE_UNKNOWN_SIZE(STREAM)                        \
-  {                                                       \
-  uint32_t fixup_offset = (STREAM)->offset;               \
-  write_fixed_u32_leb128(STREAM, 0, "unknown size");      \
-  ctx->current_section_payload_offset = (STREAM)->offset; \
-  uint32_t start = (STREAM)->offset;
+#define WRITE_UNKNOWN_SIZE(STREAM)                            \
+  {                                                           \
+    uint32_t fixup_offset = (STREAM)->offset();               \
+    write_fixed_u32_leb128(STREAM, 0, "unknown size");        \
+    ctx->current_section_payload_offset = (STREAM)->offset(); \
+    uint32_t start = (STREAM)->offset();
 
-#define FIXUP_SIZE(STREAM)                                                  \
-  write_fixed_u32_leb128_at(STREAM, fixup_offset, (STREAM)->offset - start, \
-                            "fixup size");                                  \
+#define FIXUP_SIZE(STREAM)                                                    \
+  write_fixed_u32_leb128_at(STREAM, fixup_offset, (STREAM)->offset() - start, \
+                            "fixup size");                                    \
   }
 
 static void write_table_section(Context* ctx,
@@ -317,7 +313,7 @@ static void write_export_section(Context* ctx) {
   for (const std::unique_ptr<LinkerInputBinary>& binary : ctx->inputs) {
     for (const Export& export_ : binary->exports) {
       write_slice(stream, export_.name, "export name");
-      write_u8_enum(stream, export_.kind, "export kind");
+      stream->WriteU8Enum(export_.kind, "export kind");
       uint32_t index = export_.index;
       switch (export_.kind) {
         case ExternalKind::Func:
@@ -351,7 +347,7 @@ static void write_elem_section(Context* ctx,
   write_opcode(&ctx->stream, Opcode::End);
   write_u32_leb128(stream, total_elem_count, "num elements");
 
-  ctx->current_section_payload_offset = stream->offset;
+  ctx->current_section_payload_offset = stream->offset();
 
   for (Section* section : sections) {
     apply_relocations(section);
@@ -386,7 +382,7 @@ static void write_function_import(Context* ctx,
                                   uint32_t offset) {
   write_c_str(&ctx->stream, WABT_LINK_MODULE_NAME, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
-  write_u8_enum(&ctx->stream, ExternalKind::Func, "import kind");
+  ctx->stream.WriteU8Enum(ExternalKind::Func, "import kind");
   write_u32_leb128(&ctx->stream, import->sig_index + offset,
                    "import signature index");
 }
@@ -394,9 +390,9 @@ static void write_function_import(Context* ctx,
 static void write_global_import(Context* ctx, GlobalImport* import) {
   write_c_str(&ctx->stream, WABT_LINK_MODULE_NAME, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
-  write_u8_enum(&ctx->stream, ExternalKind::Global, "import kind");
+  ctx->stream.WriteU8Enum(ExternalKind::Global, "import kind");
   write_type(&ctx->stream, import->type);
-  write_u8(&ctx->stream, import->mutable_, "global mutability");
+  ctx->stream.WriteU8(import->mutable_, "global mutability");
 }
 
 static void write_import_section(Context* ctx) {
@@ -468,7 +464,7 @@ static void write_data_segment(Stream* stream,
   write_u32_leb128(stream, segment.offset + offset, "offset");
   write_opcode(stream, Opcode::End);
   write_u32_leb128(stream, segment.size, "segment size");
-  write_data(stream, segment.data, segment.size, "segment data");
+  stream->WriteData(segment.data, segment.size, "segment data");
 }
 
 static void write_data_section(Context* ctx,
@@ -508,11 +504,11 @@ static void write_names_section(Context* ctx) {
     return;
 
   Stream* stream = &ctx->stream;
-  write_u8_enum(stream, BinarySection::Custom, "section code");
+  stream->WriteU8Enum(BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
   write_c_str(stream, "name", "custom section name");
 
-  write_u8_enum(stream, NameSectionSubsection::Function, "subsection code");
+  stream->WriteU8Enum(NameSectionSubsection::Function, "subsection code");
   WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_count, "element count");
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
@@ -553,7 +549,7 @@ static void write_reloc_section(Context* ctx,
            WABT_BINARY_SECTION_RELOC, get_section_name(section_code));
 
   Stream* stream = &ctx->stream;
-  write_u8_enum(stream, BinarySection::Custom, "section code");
+  stream->WriteU8Enum(BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
   write_c_str(stream, section_name, "reloc section name");
   write_u32_leb128_enum(&ctx->stream, section_code, "reloc section");
@@ -604,7 +600,7 @@ static bool write_combined_section(Context* ctx,
     total_count += sec->count;
   }
 
-  write_u8_enum(&ctx->stream, section_code, "section code");
+  ctx->stream.WriteU8Enum(section_code, "section code");
   ctx->current_section_payload_offset = -1;
 
   switch (section_code) {
@@ -637,7 +633,7 @@ static bool write_combined_section(Context* ctx,
       Stream* stream = &ctx->stream;
       write_u32_leb128(stream, total_size, "section size");
       write_u32_leb128(stream, total_count, "element count");
-      ctx->current_section_payload_offset = ctx->stream.offset;
+      ctx->current_section_payload_offset = ctx->stream.offset();
       for (Section* sec: sections) {
         apply_relocations(sec);
         write_section_payload(ctx, sec);
@@ -777,8 +773,8 @@ static void write_binary(Context* ctx) {
   }
 
   /* Write the final binary */
-  write_u32(&ctx->stream, WABT_BINARY_MAGIC, "WABT_BINARY_MAGIC");
-  write_u32(&ctx->stream, WABT_BINARY_VERSION, "WABT_BINARY_VERSION");
+  ctx->stream.WriteU32(WABT_BINARY_MAGIC, "WABT_BINARY_MAGIC");
+  ctx->stream.WriteU32(WABT_BINARY_VERSION, "WABT_BINARY_VERSION");
 
   /* Write known sections first */
   for (size_t i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
@@ -797,47 +793,39 @@ static void dump_reloc_offsets(Context* ctx) {
   if (s_debug) {
     for (uint32_t i = 0; i < ctx->inputs.size(); i++) {
       LinkerInputBinary* binary = ctx->inputs[i].get();
-      writef(&s_log_stream, "Relocation info for: %s\n", binary->filename);
-      writef(&s_log_stream, " - type index offset       : %d\n",
-             binary->type_index_offset);
-      writef(&s_log_stream, " - mem page offset         : %d\n",
-             binary->memory_page_offset);
-      writef(&s_log_stream, " - function index offset   : %d\n",
-             binary->function_index_offset);
-      writef(&s_log_stream, " - global index offset     : %d\n",
-             binary->global_index_offset);
-      writef(&s_log_stream, " - imported function offset: %d\n",
-             binary->imported_function_index_offset);
-      writef(&s_log_stream, " - imported global offset  : %d\n",
-             binary->imported_global_index_offset);
+      s_log_stream->Writef("Relocation info for: %s\n", binary->filename);
+      s_log_stream->Writef(" - type index offset       : %d\n",
+                           binary->type_index_offset);
+      s_log_stream->Writef(" - mem page offset         : %d\n",
+                           binary->memory_page_offset);
+      s_log_stream->Writef(" - function index offset   : %d\n",
+                           binary->function_index_offset);
+      s_log_stream->Writef(" - global index offset     : %d\n",
+                           binary->global_index_offset);
+      s_log_stream->Writef(" - imported function offset: %d\n",
+                           binary->imported_function_index_offset);
+      s_log_stream->Writef(" - imported global offset  : %d\n",
+                           binary->imported_global_index_offset);
     }
   }
 }
 
 static Result perform_link(Context* ctx) {
-  MemoryWriter writer;
-  WABT_ZERO_MEMORY(writer);
-  if (WABT_FAILED(init_mem_writer(&writer)))
-    WABT_FATAL("unable to open memory writer for writing\n");
-
-  Stream* log_stream = nullptr;
-  if (s_debug)
-    log_stream = &s_log_stream;
-
-  if (s_debug)
-    writef(&s_log_stream, "writing file: %s\n", s_outfile);
+  if (s_debug) {
+    ctx->stream.set_log_stream(s_log_stream.get());
+    s_log_stream->Writef("writing file: %s\n", s_outfile);
+  }
 
   calculate_reloc_offsets(ctx);
   resolve_symbols(ctx);
   calculate_reloc_offsets(ctx);
   dump_reloc_offsets(ctx);
-  init_stream(&ctx->stream, &writer.base, log_stream);
   write_binary(ctx);
 
-  if (WABT_FAILED(write_output_buffer_to_file(&writer.buf, s_outfile)))
+  if (WABT_FAILED(ctx->stream.WriteToFile(s_outfile))) {
     WABT_FATAL("error writing linked output to file\n");
+  }
 
-  close_mem_writer(&writer);
   return Result::Ok;
 }
 
@@ -852,7 +840,7 @@ int main(int argc, char** argv) {
   for (size_t i = 0; i < s_infiles.size(); i++) {
     const std::string& input_filename = s_infiles[i];
     if (s_debug)
-      writef(&s_log_stream, "reading file: %s\n", input_filename.c_str());
+      s_log_stream->Writef("reading file: %s\n", input_filename.c_str());
     char* data;
     size_t size;
     result = read_file(input_filename.c_str(), &data, &size);
@@ -863,7 +851,7 @@ int main(int argc, char** argv) {
     context.inputs.emplace_back(b);
     LinkOptions options = { NULL };
     if (s_debug)
-      options.log_stream = &s_log_stream;
+      options.log_stream = s_log_stream.get();
     result = read_binary_linker(b, &options);
     if (WABT_FAILED(result))
       WABT_FATAL("error parsing file: %s\n", input_filename.c_str());

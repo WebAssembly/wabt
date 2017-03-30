@@ -67,8 +67,8 @@ static Option s_options[] = {
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
 static ObjdumpOptions s_objdump_options;
-static FileWriter s_log_stream_writer;
-static Stream s_log_stream;
+
+static std::unique_ptr<FileStream> s_log_stream;
 
 static void on_argument(struct OptionParser* parser, const char* argument) {
   s_objdump_options.infile = argument;
@@ -88,9 +88,8 @@ static void on_option(struct OptionParser* parser,
 
     case FLAG_DEBUG:
       s_objdump_options.debug = true;
-      init_file_writer_existing(&s_log_stream_writer, stdout);
-      init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
-      s_objdump_options.log_stream = &s_log_stream;
+      s_log_stream = FileStream::CreateStdout();
+      s_objdump_options.log_stream = s_log_stream.get();
       break;
 
     case FLAG_DISASSEMBLE:

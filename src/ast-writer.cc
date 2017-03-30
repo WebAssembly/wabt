@@ -58,302 +58,338 @@ enum class NextChar {
   ForceNewline,
 };
 
-struct Context {
-  Context() { WABT_ZERO_MEMORY(stream); }
+class ASTWriter {
+ public:
+  ASTWriter(Writer* writer) : stream_(writer) {}
 
-  Stream stream;
-  Result result = Result::Ok;
-  int indent = 0;
-  NextChar next_char = NextChar::None;
-  int depth = 0;
-  std::vector<std::string> index_to_name;
+  Result WriteModule(const Module* module);
 
-  int func_index = 0;
-  int global_index = 0;
-  int export_index = 0;
-  int table_index = 0;
-  int memory_index = 0;
-  int func_type_index = 0;
+ private:
+  void Indent();
+  void Dedent();
+  void WriteIndent();
+  void WriteNextChar();
+  void WriteDataWithNextChar(const void* src, size_t size);
+  void Writef(const char* format, ...);
+  void WritePutc(char c);
+  void WritePuts(const char* s, NextChar next_char);
+  void WritePutsSpace(const char* s);
+  void WritePutsNewline(const char* s);
+  void WriteNewline(bool force);
+  void WriteOpen(const char* name, NextChar next_char);
+  void WriteOpenNewline(const char* name);
+  void WriteOpenSpace(const char* name);
+  void WriteClose(NextChar next_char);
+  void WriteCloseNewline();
+  void WriteCloseSpace();
+  void WriteString(const std::string& str, NextChar next_char);
+  void WriteStringSlice(const StringSlice* str, NextChar next_char);
+  bool WriteStringSliceOpt(const StringSlice* str, NextChar next_char);
+  void WriteStringSliceOrIndex(const StringSlice* str,
+                               uint32_t index,
+                               NextChar next_char);
+  void WriteQuotedData(const void* data, size_t length);
+  void WriteQuotedStringSlice(const StringSlice* str, NextChar next_char);
+  void WriteVar(const Var* var, NextChar next_char);
+  void WriteBrVar(const Var* var, NextChar next_char);
+  void WriteType(Type type, NextChar next_char);
+  void WriteTypes(const TypeVector& types, const char* name);
+  void WriteFuncSigSpace(const FuncSignature* func_sig);
+  void WriteBeginBlock(const Block* block, const char* text);
+  void WriteEndBlock();
+  void WriteBlock(const Block* block, const char* start_text);
+  void WriteConst(const Const* const_);
+  void WriteExpr(const Expr* expr);
+  void WriteExprList(const Expr* first);
+  void WriteInitExpr(const Expr* expr);
+  void WriteTypeBindings(const char* prefix,
+                         const Func* func,
+                         const TypeVector& types,
+                         const BindingHash& bindings);
+  void WriteFunc(const Module* module, const Func* func);
+  void WriteBeginGlobal(const Global* global);
+  void WriteGlobal(const Global* global);
+  void WriteLimits(const Limits* limits);
+  void WriteTable(const Table* table);
+  void WriteElemSegment(const ElemSegment* segment);
+  void WriteMemory(const Memory* memory);
+  void WriteDataSegment(const DataSegment* segment);
+  void WriteImport(const Import* import);
+  void WriteExport(const Export* export_);
+  void WriteFuncType(const FuncType* func_type);
+  void WriteStartFunction(const Var* start);
+
+  Stream stream_;
+  Result result_ = Result::Ok;
+  int indent_ = 0;
+  NextChar next_char_ = NextChar::None;
+  int depth_ = 0;
+  std::vector<std::string> index_to_name_;
+
+  int func_index_ = 0;
+  int global_index_ = 0;
+  int table_index_ = 0;
+  int memory_index_ = 0;
+  int func_type_index_ = 0;
 };
 
 }  // namespace
 
-static void indent(Context* ctx) {
-  ctx->indent += INDENT_SIZE;
+void ASTWriter::Indent() {
+  indent_ += INDENT_SIZE;
 }
 
-static void dedent(Context* ctx) {
-  ctx->indent -= INDENT_SIZE;
-  assert(ctx->indent >= 0);
+void ASTWriter::Dedent() {
+  indent_ -= INDENT_SIZE;
+  assert(indent_ >= 0);
 }
 
-static void write_indent(Context* ctx) {
+void ASTWriter::WriteIndent() {
   static char s_indent[] =
       "                                                                       "
       "                                                                       ";
   static size_t s_indent_len = sizeof(s_indent) - 1;
-  size_t indent = ctx->indent;
-  while (indent > s_indent_len) {
-    write_data(&ctx->stream, s_indent, s_indent_len, nullptr);
-    indent -= s_indent_len;
+  while (static_cast<size_t>(indent_) > s_indent_len) {
+    stream_.WriteData(s_indent, s_indent_len, nullptr);
+    indent_ -= s_indent_len;
   }
-  if (indent > 0) {
-    write_data(&ctx->stream, s_indent, indent, nullptr);
+  if (indent_ > 0) {
+    stream_.WriteData(s_indent, indent_, nullptr);
   }
 }
 
-static void write_next_char(Context* ctx) {
-  switch (ctx->next_char) {
+void ASTWriter::WriteNextChar() {
+  switch (next_char_) {
     case NextChar::Space:
-      write_data(&ctx->stream, " ", 1, nullptr);
+      stream_.WriteData(" ", 1, nullptr);
       break;
     case NextChar::Newline:
     case NextChar::ForceNewline:
-      write_data(&ctx->stream, "\n", 1, nullptr);
-      write_indent(ctx);
+      stream_.WriteData("\n", 1, nullptr);
+      WriteIndent();
       break;
 
     default:
     case NextChar::None:
       break;
   }
-  ctx->next_char = NextChar::None;
+  next_char_ = NextChar::None;
 }
 
-static void write_data_with_next_char(Context* ctx,
-                                      const void* src,
-                                      size_t size) {
-  write_next_char(ctx);
-  write_data(&ctx->stream, src, size, nullptr);
+void ASTWriter::WriteDataWithNextChar(const void* src, size_t size) {
+  WriteNextChar();
+  stream_.WriteData(src, size, nullptr);
 }
 
-static void WABT_PRINTF_FORMAT(2, 3)
-    writef(Context* ctx, const char* format, ...) {
+void WABT_PRINTF_FORMAT(2, 3) ASTWriter::Writef(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   /* default to following space */
-  write_data_with_next_char(ctx, buffer, length);
-  ctx->next_char = NextChar::Space;
+  WriteDataWithNextChar(buffer, length);
+  next_char_ = NextChar::Space;
 }
 
-static void write_putc(Context* ctx, char c) {
-  write_data(&ctx->stream, &c, 1, nullptr);
+void ASTWriter::WritePutc(char c) {
+  stream_.WriteData(&c, 1, nullptr);
 }
 
-static void write_puts(Context* ctx, const char* s, NextChar next_char) {
+void ASTWriter::WritePuts(const char* s, NextChar next_char) {
   size_t len = strlen(s);
-  write_data_with_next_char(ctx, s, len);
-  ctx->next_char = next_char;
+  WriteDataWithNextChar(s, len);
+  next_char_ = next_char;
 }
 
-static void write_puts_space(Context* ctx, const char* s) {
-  write_puts(ctx, s, NextChar::Space);
+void ASTWriter::WritePutsSpace(const char* s) {
+  WritePuts(s, NextChar::Space);
 }
 
-static void write_puts_newline(Context* ctx, const char* s) {
-  write_puts(ctx, s, NextChar::Newline);
+void ASTWriter::WritePutsNewline(const char* s) {
+  WritePuts(s, NextChar::Newline);
 }
 
-static void write_newline(Context* ctx, bool force) {
-  if (ctx->next_char == NextChar::ForceNewline)
-    write_next_char(ctx);
-  ctx->next_char = force ? NextChar::ForceNewline : NextChar::Newline;
+void ASTWriter::WriteNewline(bool force) {
+  if (next_char_ == NextChar::ForceNewline)
+    WriteNextChar();
+  next_char_ = force ? NextChar::ForceNewline : NextChar::Newline;
 }
 
-static void write_open(Context* ctx, const char* name, NextChar next_char) {
-  write_puts(ctx, "(", NextChar::None);
-  write_puts(ctx, name, next_char);
-  indent(ctx);
+void ASTWriter::WriteOpen(const char* name, NextChar next_char) {
+  WritePuts("(", NextChar::None);
+  WritePuts(name, next_char);
+  Indent();
 }
 
-static void write_open_newline(Context* ctx, const char* name) {
-  write_open(ctx, name, NextChar::Newline);
+void ASTWriter::WriteOpenNewline(const char* name) {
+  WriteOpen(name, NextChar::Newline);
 }
 
-static void write_open_space(Context* ctx, const char* name) {
-  write_open(ctx, name, NextChar::Space);
+void ASTWriter::WriteOpenSpace(const char* name) {
+  WriteOpen(name, NextChar::Space);
 }
 
-static void write_close(Context* ctx, NextChar next_char) {
-  if (ctx->next_char != NextChar::ForceNewline)
-    ctx->next_char = NextChar::None;
-  dedent(ctx);
-  write_puts(ctx, ")", next_char);
+void ASTWriter::WriteClose(NextChar next_char) {
+  if (next_char_ != NextChar::ForceNewline)
+    next_char_ = NextChar::None;
+  Dedent();
+  WritePuts(")", next_char);
 }
 
-static void write_close_newline(Context* ctx) {
-  write_close(ctx, NextChar::Newline);
+void ASTWriter::WriteCloseNewline() {
+  WriteClose(NextChar::Newline);
 }
 
-static void write_close_space(Context* ctx) {
-  write_close(ctx, NextChar::Space);
+void ASTWriter::WriteCloseSpace() {
+  WriteClose(NextChar::Space);
 }
 
-static void write_string(Context* ctx,
-                         const std::string& str,
-                         NextChar next_char) {
-  write_puts(ctx, str.c_str(), next_char);
+void ASTWriter::WriteString(const std::string& str, NextChar next_char) {
+  WritePuts(str.c_str(), next_char);
 }
 
-static void write_string_slice(Context* ctx,
-                               const StringSlice* str,
-                               NextChar next_char) {
-  writef(ctx, PRIstringslice, WABT_PRINTF_STRING_SLICE_ARG(*str));
-  ctx->next_char = next_char;
+void ASTWriter::WriteStringSlice(const StringSlice* str, NextChar next_char) {
+  Writef(PRIstringslice, WABT_PRINTF_STRING_SLICE_ARG(*str));
+  next_char_ = next_char;
 }
 
-static bool write_string_slice_opt(Context* ctx,
-                                   const StringSlice* str,
-                                   NextChar next_char) {
+bool ASTWriter::WriteStringSliceOpt(const StringSlice* str,
+                                    NextChar next_char) {
   if (str->start)
-    write_string_slice(ctx, str, next_char);
+    WriteStringSlice(str, next_char);
   return !!str->start;
 }
 
-static void write_string_slice_or_index(Context* ctx,
-                                        const StringSlice* str,
+void ASTWriter::WriteStringSliceOrIndex(const StringSlice* str,
                                         uint32_t index,
                                         NextChar next_char) {
   if (str->start)
-    write_string_slice(ctx, str, next_char);
+    WriteStringSlice(str, next_char);
   else
-    writef(ctx, "(;%u;)", index);
+    Writef("(;%u;)", index);
 }
 
-static void write_quoted_data(Context* ctx, const void* data, size_t length) {
+void ASTWriter::WriteQuotedData(const void* data, size_t length) {
   const uint8_t* u8_data = static_cast<const uint8_t*>(data);
   static const char s_hexdigits[] = "0123456789abcdef";
-  write_next_char(ctx);
-  write_putc(ctx, '\"');
+  WriteNextChar();
+  WritePutc('\"');
   for (size_t i = 0; i < length; ++i) {
     uint8_t c = u8_data[i];
     if (s_is_char_escaped[c]) {
-      write_putc(ctx, '\\');
-      write_putc(ctx, s_hexdigits[c >> 4]);
-      write_putc(ctx, s_hexdigits[c & 0xf]);
+      WritePutc('\\');
+      WritePutc(s_hexdigits[c >> 4]);
+      WritePutc(s_hexdigits[c & 0xf]);
     } else {
-      write_putc(ctx, c);
+      WritePutc(c);
     }
   }
-  write_putc(ctx, '\"');
-  ctx->next_char = NextChar::Space;
+  WritePutc('\"');
+  next_char_ = NextChar::Space;
 }
 
-static void write_quoted_string_slice(Context* ctx,
-                                      const StringSlice* str,
-                                      NextChar next_char) {
-  write_quoted_data(ctx, str->start, str->length);
-  ctx->next_char = next_char;
+void ASTWriter::WriteQuotedStringSlice(const StringSlice* str,
+                                       NextChar next_char) {
+  WriteQuotedData(str->start, str->length);
+  next_char_ = next_char;
 }
 
-static void write_var(Context* ctx, const Var* var, NextChar next_char) {
+void ASTWriter::WriteVar(const Var* var, NextChar next_char) {
   if (var->type == VarType::Index) {
-    writef(ctx, "%" PRId64, var->index);
-    ctx->next_char = next_char;
+    Writef("%" PRId64, var->index);
+    next_char_ = next_char;
   } else {
-    write_string_slice(ctx, &var->name, next_char);
+    WriteStringSlice(&var->name, next_char);
   }
 }
 
-static void write_br_var(Context* ctx, const Var* var, NextChar next_char) {
+void ASTWriter::WriteBrVar(const Var* var, NextChar next_char) {
   if (var->type == VarType::Index) {
-    writef(ctx, "%" PRId64 " (;@%" PRId64 ";)", var->index,
-           ctx->depth - var->index - 1);
-    ctx->next_char = next_char;
+    Writef("%" PRId64 " (;@%" PRId64 ";)", var->index,
+           depth_ - var->index - 1);
+    next_char_ = next_char;
   } else {
-    write_string_slice(ctx, &var->name, next_char);
+    WriteStringSlice(&var->name, next_char);
   }
 }
 
-static void write_type(Context* ctx, Type type, NextChar next_char) {
+void ASTWriter::WriteType(Type type, NextChar next_char) {
   const char* type_name = get_type_name(type);
   assert(type_name);
-  write_puts(ctx, type_name, next_char);
+  WritePuts(type_name, next_char);
 }
 
-static void write_types(Context* ctx,
-                        const TypeVector& types,
-                        const char* name) {
+void ASTWriter::WriteTypes(const TypeVector& types, const char* name) {
   if (types.size()) {
     if (name)
-      write_open_space(ctx, name);
+      WriteOpenSpace(name);
     for (Type type: types)
-      write_type(ctx, type, NextChar::Space);
+      WriteType(type, NextChar::Space);
     if (name)
-      write_close_space(ctx);
+      WriteCloseSpace();
   }
 }
 
-static void write_func_sig_space(Context* ctx, const FuncSignature* func_sig) {
-  write_types(ctx, func_sig->param_types, "param");
-  write_types(ctx, func_sig->result_types, "result");
+void ASTWriter::WriteFuncSigSpace(const FuncSignature* func_sig) {
+  WriteTypes(func_sig->param_types, "param");
+  WriteTypes(func_sig->result_types, "result");
 }
 
-static void write_expr_list(Context* ctx, const Expr* first);
-
-static void write_expr(Context* ctx, const Expr* expr);
-
-static void write_begin_block(Context* ctx,
-                              const Block* block,
-                              const char* text) {
-  write_puts_space(ctx, text);
-  bool has_label = write_string_slice_opt(ctx, &block->label, NextChar::Space);
-  write_types(ctx, block->sig, nullptr);
+void ASTWriter::WriteBeginBlock(const Block* block, const char* text) {
+  WritePutsSpace(text);
+  bool has_label = WriteStringSliceOpt(&block->label, NextChar::Space);
+  WriteTypes(block->sig, nullptr);
   if (!has_label)
-    writef(ctx, " ;; label = @%d", ctx->depth);
-  write_newline(ctx, FORCE_NEWLINE);
-  ctx->depth++;
-  indent(ctx);
+    Writef(" ;; label = @%d", depth_);
+  WriteNewline(FORCE_NEWLINE);
+  depth_++;
+  Indent();
 }
 
-static void write_end_block(Context* ctx) {
-  dedent(ctx);
-  ctx->depth--;
-  write_puts_newline(ctx, get_opcode_name(Opcode::End));
+void ASTWriter::WriteEndBlock() {
+  Dedent();
+  depth_--;
+  WritePutsNewline(get_opcode_name(Opcode::End));
 }
 
-static void write_block(Context* ctx,
-                        const Block* block,
-                        const char* start_text) {
-  write_begin_block(ctx, block, start_text);
-  write_expr_list(ctx, block->first);
-  write_end_block(ctx);
+void ASTWriter::WriteBlock(const Block* block, const char* start_text) {
+  WriteBeginBlock(block, start_text);
+  WriteExprList(block->first);
+  WriteEndBlock();
 }
 
-static void write_const(Context* ctx, const Const* const_) {
+void ASTWriter::WriteConst(const Const* const_) {
   switch (const_->type) {
     case Type::I32:
-      write_puts_space(ctx, get_opcode_name(Opcode::I32Const));
-      writef(ctx, "%d", static_cast<int32_t>(const_->u32));
-      write_newline(ctx, NO_FORCE_NEWLINE);
+      WritePutsSpace(get_opcode_name(Opcode::I32Const));
+      Writef("%d", static_cast<int32_t>(const_->u32));
+      WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case Type::I64:
-      write_puts_space(ctx, get_opcode_name(Opcode::I64Const));
-      writef(ctx, "%" PRId64, static_cast<int64_t>(const_->u64));
-      write_newline(ctx, NO_FORCE_NEWLINE);
+      WritePutsSpace(get_opcode_name(Opcode::I64Const));
+      Writef("%" PRId64, static_cast<int64_t>(const_->u64));
+      WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case Type::F32: {
-      write_puts_space(ctx, get_opcode_name(Opcode::F32Const));
+      WritePutsSpace(get_opcode_name(Opcode::F32Const));
       char buffer[128];
       write_float_hex(buffer, 128, const_->f32_bits);
-      write_puts_space(ctx, buffer);
+      WritePutsSpace(buffer);
       float f32;
       memcpy(&f32, &const_->f32_bits, sizeof(f32));
-      writef(ctx, "(;=%g;)", f32);
-      write_newline(ctx, NO_FORCE_NEWLINE);
+      Writef("(;=%g;)", f32);
+      WriteNewline(NO_FORCE_NEWLINE);
       break;
     }
 
     case Type::F64: {
-      write_puts_space(ctx, get_opcode_name(Opcode::F64Const));
+      WritePutsSpace(get_opcode_name(Opcode::F64Const));
       char buffer[128];
       write_double_hex(buffer, 128, const_->f64_bits);
-      write_puts_space(ctx, buffer);
+      WritePutsSpace(buffer);
       double f64;
       memcpy(&f64, &const_->f64_bits, sizeof(f64));
-      writef(ctx, "(;=%g;)", f64);
-      write_newline(ctx, NO_FORCE_NEWLINE);
+      Writef("(;=%g;)", f64);
+      WriteNewline(NO_FORCE_NEWLINE);
       break;
     }
 
@@ -363,146 +399,146 @@ static void write_const(Context* ctx, const Const* const_) {
   }
 }
 
-static void write_expr(Context* ctx, const Expr* expr) {
+void ASTWriter::WriteExpr(const Expr* expr) {
   switch (expr->type) {
     case ExprType::Binary:
-      write_puts_newline(ctx, get_opcode_name(expr->binary.opcode));
+      WritePutsNewline(get_opcode_name(expr->binary.opcode));
       break;
 
     case ExprType::Block:
-      write_block(ctx, expr->block, get_opcode_name(Opcode::Block));
+      WriteBlock(expr->block, get_opcode_name(Opcode::Block));
       break;
 
     case ExprType::Br:
-      write_puts_space(ctx, get_opcode_name(Opcode::Br));
-      write_br_var(ctx, &expr->br.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::Br));
+      WriteBrVar(&expr->br.var, NextChar::Newline);
       break;
 
     case ExprType::BrIf:
-      write_puts_space(ctx, get_opcode_name(Opcode::BrIf));
-      write_br_var(ctx, &expr->br_if.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::BrIf));
+      WriteBrVar(&expr->br_if.var, NextChar::Newline);
       break;
 
     case ExprType::BrTable: {
-      write_puts_space(ctx, get_opcode_name(Opcode::BrTable));
+      WritePutsSpace(get_opcode_name(Opcode::BrTable));
       for (const Var& var : *expr->br_table.targets)
-        write_br_var(ctx, &var, NextChar::Space);
-      write_br_var(ctx, &expr->br_table.default_target, NextChar::Newline);
+        WriteBrVar(&var, NextChar::Space);
+      WriteBrVar(&expr->br_table.default_target, NextChar::Newline);
       break;
     }
 
     case ExprType::Call:
-      write_puts_space(ctx, get_opcode_name(Opcode::Call));
-      write_var(ctx, &expr->call.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::Call));
+      WriteVar(&expr->call.var, NextChar::Newline);
       break;
 
     case ExprType::CallIndirect:
-      write_puts_space(ctx, get_opcode_name(Opcode::CallIndirect));
-      write_var(ctx, &expr->call_indirect.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::CallIndirect));
+      WriteVar(&expr->call_indirect.var, NextChar::Newline);
       break;
 
     case ExprType::Compare:
-      write_puts_newline(ctx, get_opcode_name(expr->compare.opcode));
+      WritePutsNewline(get_opcode_name(expr->compare.opcode));
       break;
 
     case ExprType::Const:
-      write_const(ctx, &expr->const_);
+      WriteConst(&expr->const_);
       break;
 
     case ExprType::Convert:
-      write_puts_newline(ctx, get_opcode_name(expr->convert.opcode));
+      WritePutsNewline(get_opcode_name(expr->convert.opcode));
       break;
 
     case ExprType::Drop:
-      write_puts_newline(ctx, get_opcode_name(Opcode::Drop));
+      WritePutsNewline(get_opcode_name(Opcode::Drop));
       break;
 
     case ExprType::GetGlobal:
-      write_puts_space(ctx, get_opcode_name(Opcode::GetGlobal));
-      write_var(ctx, &expr->get_global.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::GetGlobal));
+      WriteVar(&expr->get_global.var, NextChar::Newline);
       break;
 
     case ExprType::GetLocal:
-      write_puts_space(ctx, get_opcode_name(Opcode::GetLocal));
-      write_var(ctx, &expr->get_local.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::GetLocal));
+      WriteVar(&expr->get_local.var, NextChar::Newline);
       break;
 
     case ExprType::GrowMemory:
-      write_puts_newline(ctx, get_opcode_name(Opcode::GrowMemory));
+      WritePutsNewline(get_opcode_name(Opcode::GrowMemory));
       break;
 
     case ExprType::If:
-      write_begin_block(ctx, expr->if_.true_, get_opcode_name(Opcode::If));
-      write_expr_list(ctx, expr->if_.true_->first);
+      WriteBeginBlock(expr->if_.true_, get_opcode_name(Opcode::If));
+      WriteExprList(expr->if_.true_->first);
       if (expr->if_.false_) {
-        dedent(ctx);
-        write_puts_space(ctx, get_opcode_name(Opcode::Else));
-        indent(ctx);
-        write_newline(ctx, FORCE_NEWLINE);
-        write_expr_list(ctx, expr->if_.false_);
+        Dedent();
+        WritePutsSpace(get_opcode_name(Opcode::Else));
+        Indent();
+        WriteNewline(FORCE_NEWLINE);
+        WriteExprList(expr->if_.false_);
       }
-      write_end_block(ctx);
+      WriteEndBlock();
       break;
 
     case ExprType::Load:
-      write_puts_space(ctx, get_opcode_name(expr->load.opcode));
+      WritePutsSpace(get_opcode_name(expr->load.opcode));
       if (expr->load.offset)
-        writef(ctx, "offset=%" PRIu64, expr->load.offset);
+        Writef("offset=%" PRIu64, expr->load.offset);
       if (!is_naturally_aligned(expr->load.opcode, expr->load.align))
-        writef(ctx, "align=%u", expr->load.align);
-      write_newline(ctx, NO_FORCE_NEWLINE);
+        Writef("align=%u", expr->load.align);
+      WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case ExprType::Loop:
-      write_block(ctx, expr->loop, get_opcode_name(Opcode::Loop));
+      WriteBlock(expr->loop, get_opcode_name(Opcode::Loop));
       break;
 
     case ExprType::CurrentMemory:
-      write_puts_newline(ctx, get_opcode_name(Opcode::CurrentMemory));
+      WritePutsNewline(get_opcode_name(Opcode::CurrentMemory));
       break;
 
     case ExprType::Nop:
-      write_puts_newline(ctx, get_opcode_name(Opcode::Nop));
+      WritePutsNewline(get_opcode_name(Opcode::Nop));
       break;
 
     case ExprType::Return:
-      write_puts_newline(ctx, get_opcode_name(Opcode::Return));
+      WritePutsNewline(get_opcode_name(Opcode::Return));
       break;
 
     case ExprType::Select:
-      write_puts_newline(ctx, get_opcode_name(Opcode::Select));
+      WritePutsNewline(get_opcode_name(Opcode::Select));
       break;
 
     case ExprType::SetGlobal:
-      write_puts_space(ctx, get_opcode_name(Opcode::SetGlobal));
-      write_var(ctx, &expr->set_global.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::SetGlobal));
+      WriteVar(&expr->set_global.var, NextChar::Newline);
       break;
 
     case ExprType::SetLocal:
-      write_puts_space(ctx, get_opcode_name(Opcode::SetLocal));
-      write_var(ctx, &expr->set_local.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::SetLocal));
+      WriteVar(&expr->set_local.var, NextChar::Newline);
       break;
 
     case ExprType::Store:
-      write_puts_space(ctx, get_opcode_name(expr->store.opcode));
+      WritePutsSpace(get_opcode_name(expr->store.opcode));
       if (expr->store.offset)
-        writef(ctx, "offset=%" PRIu64, expr->store.offset);
+        Writef("offset=%" PRIu64, expr->store.offset);
       if (!is_naturally_aligned(expr->store.opcode, expr->store.align))
-        writef(ctx, "align=%u", expr->store.align);
-      write_newline(ctx, NO_FORCE_NEWLINE);
+        Writef("align=%u", expr->store.align);
+      WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case ExprType::TeeLocal:
-      write_puts_space(ctx, get_opcode_name(Opcode::TeeLocal));
-      write_var(ctx, &expr->tee_local.var, NextChar::Newline);
+      WritePutsSpace(get_opcode_name(Opcode::TeeLocal));
+      WriteVar(&expr->tee_local.var, NextChar::Newline);
       break;
 
     case ExprType::Unary:
-      write_puts_newline(ctx, get_opcode_name(expr->unary.opcode));
+      WritePutsNewline(get_opcode_name(expr->unary.opcode));
       break;
 
     case ExprType::Unreachable:
-      write_puts_newline(ctx, get_opcode_name(Opcode::Unreachable));
+      WritePutsNewline(get_opcode_name(Opcode::Unreachable));
       break;
 
     default:
@@ -512,27 +548,26 @@ static void write_expr(Context* ctx, const Expr* expr) {
   }
 }
 
-static void write_expr_list(Context* ctx, const Expr* first) {
+void ASTWriter::WriteExprList(const Expr* first) {
   for (const Expr* expr = first; expr; expr = expr->next)
-    write_expr(ctx, expr);
+    WriteExpr(expr);
 }
 
-static void write_init_expr(Context* ctx, const Expr* expr) {
+void ASTWriter::WriteInitExpr(const Expr* expr) {
   if (expr) {
-    write_puts(ctx, "(", NextChar::None);
-    write_expr(ctx, expr);
+    WritePuts("(", NextChar::None);
+    WriteExpr(expr);
     /* clear the next char, so we don't write a newline after the expr */
-    ctx->next_char = NextChar::None;
-    write_puts(ctx, ")", NextChar::Space);
+    next_char_ = NextChar::None;
+    WritePuts(")", NextChar::Space);
   }
 }
 
-static void write_type_bindings(Context* ctx,
-                                const char* prefix,
-                                const Func* func,
-                                const TypeVector& types,
-                                const BindingHash& bindings) {
-  make_type_binding_reverse_mapping(types, bindings, &ctx->index_to_name);
+void ASTWriter::WriteTypeBindings(const char* prefix,
+                                  const Func* func,
+                                  const TypeVector& types,
+                                  const BindingHash& bindings) {
+  make_type_binding_reverse_mapping(types, bindings, &index_to_name_);
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
@@ -542,213 +577,210 @@ static void write_type_bindings(Context* ctx,
   bool is_open = false;
   for (size_t i = 0; i < types.size(); ++i) {
     if (!is_open) {
-      write_open_space(ctx, prefix);
+      WriteOpenSpace(prefix);
       is_open = true;
     }
 
-    const std::string& name = ctx->index_to_name[i];
+    const std::string& name = index_to_name_[i];
     if (!name.empty())
-      write_string(ctx, name, NextChar::Space);
-    write_type(ctx, types[i], NextChar::Space);
+      WriteString(name, NextChar::Space);
+    WriteType(types[i], NextChar::Space);
     if (!name.empty()) {
-      write_close_space(ctx);
+      WriteCloseSpace();
       is_open = false;
     }
   }
   if (is_open)
-    write_close_space(ctx);
+    WriteCloseSpace();
 }
 
-static void write_func(Context* ctx, const Module* module, const Func* func) {
-  write_open_space(ctx, "func");
-  write_string_slice_or_index(ctx, &func->name, ctx->func_index++,
-                              NextChar::Space);
+void ASTWriter::WriteFunc(const Module* module, const Func* func) {
+  WriteOpenSpace("func");
+  WriteStringSliceOrIndex(&func->name, func_index_++, NextChar::Space);
   if (decl_has_func_type(&func->decl)) {
-    write_open_space(ctx, "type");
-    write_var(ctx, &func->decl.type_var, NextChar::None);
-    write_close_space(ctx);
+    WriteOpenSpace("type");
+    WriteVar(&func->decl.type_var, NextChar::None);
+    WriteCloseSpace();
   }
-  write_type_bindings(ctx, "param", func, func->decl.sig.param_types,
-                      func->param_bindings);
-  write_types(ctx, func->decl.sig.result_types, "result");
-  write_newline(ctx, NO_FORCE_NEWLINE);
+  WriteTypeBindings("param", func, func->decl.sig.param_types,
+                    func->param_bindings);
+  WriteTypes(func->decl.sig.result_types, "result");
+  WriteNewline(NO_FORCE_NEWLINE);
   if (func->local_types.size()) {
-    write_type_bindings(ctx, "local", func, func->local_types,
-                        func->local_bindings);
+    WriteTypeBindings("local", func, func->local_types, func->local_bindings);
   }
-  write_newline(ctx, NO_FORCE_NEWLINE);
-  ctx->depth = 1; /* for the implicit "return" label */
-  write_expr_list(ctx, func->first_expr);
-  write_close_newline(ctx);
+  WriteNewline(NO_FORCE_NEWLINE);
+  depth_ = 1; /* for the implicit "return" label */
+  WriteExprList(func->first_expr);
+  WriteCloseNewline();
 }
 
-static void write_begin_global(Context* ctx, const Global* global) {
-  write_open_space(ctx, "global");
-  write_string_slice_or_index(ctx, &global->name, ctx->global_index++,
+void ASTWriter::WriteBeginGlobal(const Global* global) {
+  WriteOpenSpace("global");
+  WriteStringSliceOrIndex(&global->name, global_index_++,
                               NextChar::Space);
   if (global->mutable_) {
-    write_open_space(ctx, "mut");
-    write_type(ctx, global->type, NextChar::Space);
-    write_close_space(ctx);
+    WriteOpenSpace("mut");
+    WriteType(global->type, NextChar::Space);
+    WriteCloseSpace();
   } else {
-    write_type(ctx, global->type, NextChar::Space);
+    WriteType(global->type, NextChar::Space);
   }
 }
 
-static void write_global(Context* ctx, const Global* global) {
-  write_begin_global(ctx, global);
-  write_init_expr(ctx, global->init_expr);
-  write_close_newline(ctx);
+void ASTWriter::WriteGlobal(const Global* global) {
+  WriteBeginGlobal(global);
+  WriteInitExpr(global->init_expr);
+  WriteCloseNewline();
 }
 
-static void write_limits(Context* ctx, const Limits* limits) {
-  writef(ctx, "%" PRIu64, limits->initial);
+void ASTWriter::WriteLimits(const Limits* limits) {
+  Writef("%" PRIu64, limits->initial);
   if (limits->has_max)
-    writef(ctx, "%" PRIu64, limits->max);
+    Writef("%" PRIu64, limits->max);
 }
 
-static void write_table(Context* ctx, const Table* table) {
-  write_open_space(ctx, "table");
-  write_string_slice_or_index(ctx, &table->name, ctx->table_index++,
+void ASTWriter::WriteTable(const Table* table) {
+  WriteOpenSpace("table");
+  WriteStringSliceOrIndex(&table->name, table_index_++,
                               NextChar::Space);
-  write_limits(ctx, &table->elem_limits);
-  write_puts_space(ctx, "anyfunc");
-  write_close_newline(ctx);
+  WriteLimits(&table->elem_limits);
+  WritePutsSpace("anyfunc");
+  WriteCloseNewline();
 }
 
-static void write_elem_segment(Context* ctx, const ElemSegment* segment) {
-  write_open_space(ctx, "elem");
-  write_init_expr(ctx, segment->offset);
+void ASTWriter::WriteElemSegment(const ElemSegment* segment) {
+  WriteOpenSpace("elem");
+  WriteInitExpr(segment->offset);
   for (const Var& var : segment->vars)
-    write_var(ctx, &var, NextChar::Space);
-  write_close_newline(ctx);
+    WriteVar(&var, NextChar::Space);
+  WriteCloseNewline();
 }
 
-static void write_memory(Context* ctx, const Memory* memory) {
-  write_open_space(ctx, "memory");
-  write_string_slice_or_index(ctx, &memory->name, ctx->memory_index++,
+void ASTWriter::WriteMemory(const Memory* memory) {
+  WriteOpenSpace("memory");
+  WriteStringSliceOrIndex(&memory->name, memory_index_++,
                               NextChar::Space);
-  write_limits(ctx, &memory->page_limits);
-  write_close_newline(ctx);
+  WriteLimits(&memory->page_limits);
+  WriteCloseNewline();
 }
 
-static void write_data_segment(Context* ctx, const DataSegment* segment) {
-  write_open_space(ctx, "data");
-  write_init_expr(ctx, segment->offset);
-  write_quoted_data(ctx, segment->data, segment->size);
-  write_close_newline(ctx);
+void ASTWriter::WriteDataSegment(const DataSegment* segment) {
+  WriteOpenSpace("data");
+  WriteInitExpr(segment->offset);
+  WriteQuotedData(segment->data, segment->size);
+  WriteCloseNewline();
 }
 
-static void write_import(Context* ctx, const Import* import) {
-  write_open_space(ctx, "import");
-  write_quoted_string_slice(ctx, &import->module_name, NextChar::Space);
-  write_quoted_string_slice(ctx, &import->field_name, NextChar::Space);
+void ASTWriter::WriteImport(const Import* import) {
+  WriteOpenSpace("import");
+  WriteQuotedStringSlice(&import->module_name, NextChar::Space);
+  WriteQuotedStringSlice(&import->field_name, NextChar::Space);
   switch (import->kind) {
     case ExternalKind::Func:
-      write_open_space(ctx, "func");
-      write_string_slice_or_index(ctx, &import->func->name, ctx->func_index++,
+      WriteOpenSpace("func");
+      WriteStringSliceOrIndex(&import->func->name, func_index_++,
                                   NextChar::Space);
       if (decl_has_func_type(&import->func->decl)) {
-        write_open_space(ctx, "type");
-        write_var(ctx, &import->func->decl.type_var, NextChar::None);
-        write_close_space(ctx);
+        WriteOpenSpace("type");
+        WriteVar(&import->func->decl.type_var, NextChar::None);
+        WriteCloseSpace();
       } else {
-        write_func_sig_space(ctx, &import->func->decl.sig);
+        WriteFuncSigSpace(&import->func->decl.sig);
       }
-      write_close_space(ctx);
+      WriteCloseSpace();
       break;
 
     case ExternalKind::Table:
-      write_table(ctx, import->table);
+      WriteTable(import->table);
       break;
 
     case ExternalKind::Memory:
-      write_memory(ctx, import->memory);
+      WriteMemory(import->memory);
       break;
 
     case ExternalKind::Global:
-      write_begin_global(ctx, import->global);
-      write_close_space(ctx);
+      WriteBeginGlobal(import->global);
+      WriteCloseSpace();
       break;
   }
-  write_close_newline(ctx);
+  WriteCloseNewline();
 }
 
-static void write_export(Context* ctx, const Export* export_) {
+void ASTWriter::WriteExport(const Export* export_) {
   static const char* s_kind_names[] = {"func", "table", "memory", "global"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_kind_names) == kExternalKindCount);
-  write_open_space(ctx, "export");
-  write_quoted_string_slice(ctx, &export_->name, NextChar::Space);
+  WriteOpenSpace("export");
+  WriteQuotedStringSlice(&export_->name, NextChar::Space);
   assert(static_cast<size_t>(export_->kind) < WABT_ARRAY_SIZE(s_kind_names));
-  write_open_space(ctx, s_kind_names[static_cast<size_t>(export_->kind)]);
-  write_var(ctx, &export_->var, NextChar::Space);
-  write_close_space(ctx);
-  write_close_newline(ctx);
+  WriteOpenSpace(s_kind_names[static_cast<size_t>(export_->kind)]);
+  WriteVar(&export_->var, NextChar::Space);
+  WriteCloseSpace();
+  WriteCloseNewline();
 }
 
-static void write_func_type(Context* ctx, const FuncType* func_type) {
-  write_open_space(ctx, "type");
-  write_string_slice_or_index(ctx, &func_type->name, ctx->func_type_index++,
-                              NextChar::Space);
-  write_open_space(ctx, "func");
-  write_func_sig_space(ctx, &func_type->sig);
-  write_close_space(ctx);
-  write_close_newline(ctx);
+void ASTWriter::WriteFuncType(const FuncType* func_type) {
+  WriteOpenSpace("type");
+  WriteStringSliceOrIndex(&func_type->name, func_type_index_++,
+                          NextChar::Space);
+  WriteOpenSpace("func");
+  WriteFuncSigSpace(&func_type->sig);
+  WriteCloseSpace();
+  WriteCloseNewline();
 }
 
-static void write_start_function(Context* ctx, const Var* start) {
-  write_open_space(ctx, "start");
-  write_var(ctx, start, NextChar::None);
-  write_close_newline(ctx);
+void ASTWriter::WriteStartFunction(const Var* start) {
+  WriteOpenSpace("start");
+  WriteVar(start, NextChar::None);
+  WriteCloseNewline();
 }
 
-static void write_module(Context* ctx, const Module* module) {
-  write_open_newline(ctx, "module");
+Result ASTWriter::WriteModule(const Module* module) {
+  WriteOpenNewline("module");
   for (const ModuleField* field = module->first_field; field;
        field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Func:
-        write_func(ctx, module, field->func);
+        WriteFunc(module, field->func);
         break;
       case ModuleFieldType::Global:
-        write_global(ctx, field->global);
+        WriteGlobal(field->global);
         break;
       case ModuleFieldType::Import:
-        write_import(ctx, field->import);
+        WriteImport(field->import);
         break;
       case ModuleFieldType::Export:
-        write_export(ctx, field->export_);
+        WriteExport(field->export_);
         break;
       case ModuleFieldType::Table:
-        write_table(ctx, field->table);
+        WriteTable(field->table);
         break;
       case ModuleFieldType::ElemSegment:
-        write_elem_segment(ctx, field->elem_segment);
+        WriteElemSegment(field->elem_segment);
         break;
       case ModuleFieldType::Memory:
-        write_memory(ctx, field->memory);
+        WriteMemory(field->memory);
         break;
       case ModuleFieldType::DataSegment:
-        write_data_segment(ctx, field->data_segment);
+        WriteDataSegment(field->data_segment);
         break;
       case ModuleFieldType::FuncType:
-        write_func_type(ctx, field->func_type);
+        WriteFuncType(field->func_type);
         break;
       case ModuleFieldType::Start:
-        write_start_function(ctx, &field->start);
+        WriteStartFunction(&field->start);
         break;
     }
   }
-  write_close_newline(ctx);
+  WriteCloseNewline();
   /* force the newline to be written */
-  write_next_char(ctx);
+  WriteNextChar();
+  return result_;
 }
 
 Result write_ast(Writer* writer, const Module* module) {
-  Context ctx;
-  init_stream(&ctx.stream, writer, nullptr);
-  write_module(&ctx, module);
-  return ctx.result;
+  ASTWriter ast_writer(writer);
+  return ast_writer.WriteModule(module);
 }
 
 }  // namespace wabt

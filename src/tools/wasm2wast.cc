@@ -38,11 +38,8 @@ static const char* s_infile;
 static const char* s_outfile;
 static ReadBinaryOptions s_read_binary_options = {nullptr, true};
 static bool s_generate_names;
-
 static BinaryErrorHandler s_error_handler = WABT_BINARY_ERROR_HANDLER_DEFAULT;
-
-static FileWriter s_log_stream_writer;
-static Stream s_log_stream;
+static std::unique_ptr<FileStream> s_log_stream;
 
 #define NOPE HasArgument::No
 #define YEP HasArgument::Yes
@@ -86,9 +83,8 @@ static void on_option(struct OptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      init_file_writer_existing(&s_log_stream_writer, stdout);
-      init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
-      s_read_binary_options.log_stream = &s_log_stream;
+      s_log_stream = FileStream::CreateStdout();
+      s_read_binary_options.log_stream = s_log_stream.get();
       break;
 
     case FLAG_HELP:
@@ -160,17 +156,9 @@ int main(int argc, char** argv) {
       }
 
       if (WABT_SUCCEEDED(result)) {
-        FileWriter file_writer;
-        if (s_outfile) {
-          result = init_file_writer(&file_writer, s_outfile);
-        } else {
-          init_file_writer_existing(&file_writer, stdout);
-        }
-
-        if (WABT_SUCCEEDED(result)) {
-          result = write_ast(&file_writer.base, &module);
-          close_file_writer(&file_writer);
-        }
+        std::unique_ptr<FileWriter> writer(s_outfile ? new FileWriter(s_outfile)
+                                                     : new FileWriter(stdout));
+        result = write_ast(writer.get(), &module);
       }
     }
     delete[] data;

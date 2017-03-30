@@ -75,8 +75,7 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
                           size_t istream_offset,
                           BinaryErrorHandler* error_handler);
 
-  Result Init();
-  void StealOutputBuffer(OutputBuffer*);
+  std::unique_ptr<OutputBuffer> ReleaseOutputBuffer();
   size_t get_istream_offset() { return istream_offset; }
 
   // Implement BinaryReader.
@@ -301,20 +300,15 @@ BinaryReaderInterpreter::BinaryReaderInterpreter(
     : error_handler(error_handler),
       env(env),
       module(module),
+      istream_writer(std::move(env->istream)),
       istream_offset(istream_offset) {
-  WABT_ZERO_MEMORY(istream_writer);
-
   tc_error_handler.on_error = OnTypecheckerError;
   tc_error_handler.user_data = this;
   typechecker.error_handler = &tc_error_handler;
 }
 
-Result BinaryReaderInterpreter::Init() {
-  return init_mem_writer_existing(&istream_writer, &env->istream);
-}
-
-void BinaryReaderInterpreter::StealOutputBuffer(OutputBuffer* output_buffer) {
-  steal_mem_writer_output_buffer(&istream_writer, output_buffer);
+std::unique_ptr<OutputBuffer> BinaryReaderInterpreter::ReleaseOutputBuffer() {
+  return istream_writer.ReleaseOutputBuffer();
 }
 
 Label* BinaryReaderInterpreter::GetLabel(uint32_t depth) {
@@ -415,8 +409,7 @@ uint32_t BinaryReaderInterpreter::GetIstreamOffset() {
 Result BinaryReaderInterpreter::EmitDataAt(size_t offset,
                                            const void* data,
                                            size_t size) {
-  return istream_writer.base.write_data(offset, data, size,
-                                        istream_writer.base.user_data);
+  return istream_writer.WriteData(offset, data, size);
 }
 
 Result BinaryReaderInterpreter::EmitData(const void* data, size_t size) {
@@ -1492,24 +1485,19 @@ Result read_binary_interpreter(InterpreterEnvironment* env,
                                const ReadBinaryOptions* options,
                                BinaryErrorHandler* error_handler,
                                DefinedInterpreterModule** out_module) {
-  size_t istream_offset = env->istream.size;
+  size_t istream_offset = env->istream->data.size();
   DefinedInterpreterModule* module =
       new DefinedInterpreterModule(istream_offset);
 
-  BinaryReaderInterpreter reader(env, module, istream_offset, error_handler);
-  if (WABT_FAILED(reader.Init())) {
-    delete module;
-    return Result::Error;
-  }
-
   InterpreterEnvironmentMark mark = mark_interpreter_environment(env);
+  BinaryReaderInterpreter reader(env, module, istream_offset, error_handler);
   env->modules.emplace_back(module);
 
   Result result = read_binary(data, size, &reader, options);
-  reader.StealOutputBuffer(&env->istream);
+  env->istream = reader.ReleaseOutputBuffer();
   if (WABT_SUCCEEDED(result)) {
-    env->istream.size = reader.get_istream_offset();
-    module->istream_end = env->istream.size;
+    env->istream->data.resize(reader.get_istream_offset());
+    module->istream_end = env->istream->data.size();
     *out_module = module;
   } else {
     reset_interpreter_environment_to_mark(env, mark);

@@ -28,8 +28,10 @@
 
 namespace wabt {
 
+class Stream;
+
 struct ReadBinaryOptions {
-  struct Stream* log_stream;
+  Stream* log_stream;
   bool read_debug_names;
 };
 
