@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "binary.h"
+#include "binary-reader-logging.h"
 #include "config.h"
 #include "stream.h"
 
@@ -34,70 +35,17 @@
 #include <alloca.h>
 #endif
 
-#define INDENT_SIZE 2
-
-#define INITIAL_PARAM_TYPES_CAPACITY 128
-#define INITIAL_BR_TABLE_TARGET_CAPACITY 1000
-
 namespace wabt {
 
 namespace {
 
-#define CALLBACK_CTX(member, ...)                                       \
-  RAISE_ERROR_UNLESS(                                                   \
-      WABT_SUCCEEDED(                                                   \
-          ctx->reader->member                                           \
-              ? ctx->reader->member(get_user_context(ctx), __VA_ARGS__) \
-              : Result::Ok),                                            \
-      #member " callback failed")
+#define CALLBACK0(member)                                   \
+  RAISE_ERROR_UNLESS(WABT_SUCCEEDED(ctx->reader->member()), \
+                     #member " callback failed")
 
-#define CALLBACK_CTX0(member)                                         \
-  RAISE_ERROR_UNLESS(                                                 \
-      WABT_SUCCEEDED(ctx->reader->member                              \
-                         ? ctx->reader->member(get_user_context(ctx)) \
-                         : Result::Ok),                               \
-      #member " callback failed")
-
-#define CALLBACK_SECTION(member, section_size) \
-  CALLBACK_CTX(member, section_size)
-
-#define CALLBACK0(member)                                              \
-  RAISE_ERROR_UNLESS(                                                  \
-      WABT_SUCCEEDED(ctx->reader->member                               \
-                         ? ctx->reader->member(ctx->reader->user_data) \
-                         : Result::Ok),                                \
-      #member " callback failed")
-
-#define CALLBACK(member, ...)                                            \
-  RAISE_ERROR_UNLESS(                                                    \
-      WABT_SUCCEEDED(                                                    \
-          ctx->reader->member                                            \
-              ? ctx->reader->member(__VA_ARGS__, ctx->reader->user_data) \
-              : Result::Ok),                                             \
-      #member " callback failed")
-
-#define FORWARD0(member)                                                   \
-  return ctx->reader->member ? ctx->reader->member(ctx->reader->user_data) \
-                             : Result::Ok
-
-#define FORWARD_CTX0(member)                  \
-  if (!ctx->reader->member)                   \
-    return Result::Ok;                        \
-  BinaryReaderContext new_ctx = *context;     \
-  new_ctx.user_data = ctx->reader->user_data; \
-  return ctx->reader->member(&new_ctx);
-
-#define FORWARD_CTX(member, ...)              \
-  if (!ctx->reader->member)                   \
-    return Result::Ok;                        \
-  BinaryReaderContext new_ctx = *context;     \
-  new_ctx.user_data = ctx->reader->user_data; \
-  return ctx->reader->member(&new_ctx, __VA_ARGS__);
-
-#define FORWARD(member, ...)                                            \
-  return ctx->reader->member                                            \
-             ? ctx->reader->member(__VA_ARGS__, ctx->reader->user_data) \
-             : Result::Ok
+#define CALLBACK(member, ...)                                          \
+  RAISE_ERROR_UNLESS(WABT_SUCCEEDED(ctx->reader->member(__VA_ARGS__)), \
+                     #member " callback failed")
 
 #define RAISE_ERROR(...) raise_error(ctx, __VA_ARGS__)
 
@@ -106,12 +54,9 @@ namespace {
     RAISE_ERROR(__VA_ARGS__);
 
 struct Context {
-  const uint8_t* data = nullptr;
-  size_t data_size = 0;
-  size_t offset = 0;
   size_t read_end = 0; /* Either the section end or data_size. */
-  BinaryReaderContext user_ctx;
   BinaryReader* reader = nullptr;
+  BinaryReader::State state;
   jmp_buf error_jmp_buf;
   TypeVector param_types;
   std::vector<uint32_t> target_depths;
@@ -131,43 +76,26 @@ struct Context {
   uint32_t num_function_bodies = 0;
 };
 
-struct LoggingContext {
-  Stream* stream;
-  BinaryReader* reader;
-  int indent;
-};
-
 }  // namespace
-
-static BinaryReaderContext* get_user_context(Context* ctx) {
-  ctx->user_ctx.user_data = ctx->reader->user_data;
-  ctx->user_ctx.data = ctx->data;
-  ctx->user_ctx.size = ctx->data_size;
-  ctx->user_ctx.offset = ctx->offset;
-  return &ctx->user_ctx;
-}
 
 static void WABT_PRINTF_FORMAT(2, 3)
     raise_error(Context* ctx, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  bool handled = false;
-  if (ctx->reader->on_error) {
-    handled = ctx->reader->on_error(get_user_context(ctx), buffer);
-  }
+  bool handled = ctx->reader->OnError(buffer);
 
   if (!handled) {
     /* Not great to just print, but we don't want to eat the error either. */
-    fprintf(stderr, "*ERROR*: @0x%08zx: %s\n", ctx->offset, buffer);
+    fprintf(stderr, "*ERROR*: @0x%08zx: %s\n", ctx->state.offset, buffer);
   }
   longjmp(ctx->error_jmp_buf, 1);
 }
 
-#define IN_SIZE(type)                                       \
-  if (ctx->offset + sizeof(type) > ctx->read_end) {         \
-    RAISE_ERROR("unable to read " #type ": %s", desc);      \
-  }                                                         \
-  memcpy(out_value, ctx->data + ctx->offset, sizeof(type)); \
-  ctx->offset += sizeof(type)
+#define IN_SIZE(type)                                                   \
+  if (ctx->state.offset + sizeof(type) > ctx->read_end) {               \
+    RAISE_ERROR("unable to read " #type ": %s", desc);                  \
+  }                                                                     \
+  memcpy(out_value, ctx->state.data + ctx->state.offset, sizeof(type)); \
+  ctx->state.offset += sizeof(type)
 
 static void in_u8(Context* ctx, uint8_t* out_value, const char* desc) {
   IN_SIZE(uint8_t);
@@ -234,12 +162,12 @@ size_t read_u32_leb128(const uint8_t* p,
 }
 
 static void in_u32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
-  const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->read_end;
+  const uint8_t* p = ctx->state.data + ctx->state.offset;
+  const uint8_t* end = ctx->state.data + ctx->read_end;
   size_t bytes_read = read_u32_leb128(p, end, out_value);
   if (!bytes_read)
     RAISE_ERROR("unable to read u32 leb128: %s", desc);
-  ctx->offset += bytes_read;
+  ctx->state.offset += bytes_read;
 }
 
 size_t read_i32_leb128(const uint8_t* p,
@@ -279,54 +207,54 @@ size_t read_i32_leb128(const uint8_t* p,
 }
 
 static void in_i32_leb128(Context* ctx, uint32_t* out_value, const char* desc) {
-  const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->read_end;
+  const uint8_t* p = ctx->state.data + ctx->state.offset;
+  const uint8_t* end = ctx->state.data + ctx->read_end;
   size_t bytes_read = read_i32_leb128(p, end, out_value);
   if (!bytes_read)
     RAISE_ERROR("unable to read i32 leb128: %s", desc);
-  ctx->offset += bytes_read;
+  ctx->state.offset += bytes_read;
 }
 
 static void in_i64_leb128(Context* ctx, uint64_t* out_value, const char* desc) {
-  const uint8_t* p = ctx->data + ctx->offset;
-  const uint8_t* end = ctx->data + ctx->read_end;
+  const uint8_t* p = ctx->state.data + ctx->state.offset;
+  const uint8_t* end = ctx->state.data + ctx->read_end;
 
   if (p < end && (p[0] & 0x80) == 0) {
     uint64_t result = LEB128_1(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 6);
-    ctx->offset += 1;
+    ctx->state.offset += 1;
   } else if (p + 1 < end && (p[1] & 0x80) == 0) {
     uint64_t result = LEB128_2(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 13);
-    ctx->offset += 2;
+    ctx->state.offset += 2;
   } else if (p + 2 < end && (p[2] & 0x80) == 0) {
     uint64_t result = LEB128_3(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 20);
-    ctx->offset += 3;
+    ctx->state.offset += 3;
   } else if (p + 3 < end && (p[3] & 0x80) == 0) {
     uint64_t result = LEB128_4(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 27);
-    ctx->offset += 4;
+    ctx->state.offset += 4;
   } else if (p + 4 < end && (p[4] & 0x80) == 0) {
     uint64_t result = LEB128_5(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 34);
-    ctx->offset += 5;
+    ctx->state.offset += 5;
   } else if (p + 5 < end && (p[5] & 0x80) == 0) {
     uint64_t result = LEB128_6(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 41);
-    ctx->offset += 6;
+    ctx->state.offset += 6;
   } else if (p + 6 < end && (p[6] & 0x80) == 0) {
     uint64_t result = LEB128_7(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 48);
-    ctx->offset += 7;
+    ctx->state.offset += 7;
   } else if (p + 7 < end && (p[7] & 0x80) == 0) {
     uint64_t result = LEB128_8(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 55);
-    ctx->offset += 8;
+    ctx->state.offset += 8;
   } else if (p + 8 < end && (p[8] & 0x80) == 0) {
     uint64_t result = LEB128_9(uint64_t);
     *out_value = SIGN_EXTEND(int64_t, result, 62);
-    ctx->offset += 9;
+    ctx->state.offset += 9;
   } else if (p + 9 < end && (p[9] & 0x80) == 0) {
     /* the top bits should be a sign-extension of the sign bit */
     bool sign_bit_set = (p[9] & 0x1);
@@ -337,7 +265,7 @@ static void in_i64_leb128(Context* ctx, uint64_t* out_value, const char* desc) {
     }
     uint64_t result = LEB128_10(uint64_t);
     *out_value = result;
-    ctx->offset += 10;
+    ctx->state.offset += 10;
   } else {
     /* past the end */
     RAISE_ERROR("unable to read i64 leb128: %s", desc);
@@ -371,12 +299,13 @@ static void in_str(Context* ctx, StringSlice* out_str, const char* desc) {
   uint32_t str_len = 0;
   in_u32_leb128(ctx, &str_len, "string length");
 
-  if (ctx->offset + str_len > ctx->read_end)
+  if (ctx->state.offset + str_len > ctx->read_end)
     RAISE_ERROR("unable to read string: %s", desc);
 
-  out_str->start = reinterpret_cast<const char*>(ctx->data) + ctx->offset;
+  out_str->start =
+      reinterpret_cast<const char*>(ctx->state.data) + ctx->state.offset;
   out_str->length = str_len;
-  ctx->offset += str_len;
+  ctx->state.offset += str_len;
 }
 
 static void in_bytes(Context* ctx,
@@ -386,12 +315,13 @@ static void in_bytes(Context* ctx,
   uint32_t data_size = 0;
   in_u32_leb128(ctx, &data_size, "data size");
 
-  if (ctx->offset + data_size > ctx->read_end)
+  if (ctx->state.offset + data_size > ctx->read_end)
     RAISE_ERROR("unable to read data: %s", desc);
 
-  *out_data = static_cast<const uint8_t*>(ctx->data) + ctx->offset;
+  *out_data =
+      static_cast<const uint8_t*>(ctx->state.data) + ctx->state.offset;
   *out_data_size = data_size;
-  ctx->offset += data_size;
+  ctx->state.offset += data_size;
 }
 
 static bool is_valid_external_kind(uint8_t kind) {
@@ -431,624 +361,6 @@ static uint32_t num_total_globals(Context* ctx) {
   return ctx->num_global_imports + ctx->num_globals;
 }
 
-/* Logging */
-
-static void indent(LoggingContext* ctx) {
-  ctx->indent += INDENT_SIZE;
-}
-
-static void dedent(LoggingContext* ctx) {
-  ctx->indent -= INDENT_SIZE;
-  assert(ctx->indent >= 0);
-}
-
-static void write_indent(LoggingContext* ctx) {
-  static char s_indent[] =
-      "                                                                       "
-      "                                                                       ";
-  static size_t s_indent_len = sizeof(s_indent) - 1;
-  size_t indent = ctx->indent;
-  while (indent > s_indent_len) {
-    write_data(ctx->stream, s_indent, s_indent_len, nullptr);
-    indent -= s_indent_len;
-  }
-  if (indent > 0) {
-    write_data(ctx->stream, s_indent, indent, nullptr);
-  }
-}
-
-#define LOGF_NOINDENT(...) writef(ctx->stream, __VA_ARGS__)
-
-#define LOGF(...)               \
-  do {                          \
-    write_indent(ctx);          \
-    LOGF_NOINDENT(__VA_ARGS__); \
-  } while (0)
-
-static bool logging_on_error(BinaryReaderContext* context,
-                             const char* message) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
-  // Can't use FORWARD_CTX because it returns Result by default.
-  if (!ctx->reader->on_error)
-    return false;
-  BinaryReaderContext new_ctx = *context;
-  new_ctx.user_data = ctx->reader->user_data;
-  return ctx->reader->on_error(&new_ctx, message);
-}
-
-static Result logging_begin_section(BinaryReaderContext* context,
-                                    BinarySection section_type,
-                                    uint32_t size) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
-  FORWARD_CTX(begin_section, section_type, size);
-}
-
-static Result logging_begin_custom_section(BinaryReaderContext* context,
-                                           uint32_t size,
-                                           StringSlice section_name) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
-  LOGF("begin_custom_section: '" PRIstringslice "' size=%d\n",
-       WABT_PRINTF_STRING_SLICE_ARG(section_name), size);
-  indent(ctx);
-  FORWARD_CTX(begin_custom_section, size, section_name);
-}
-
-#define LOGGING_BEGIN(name)                                                 \
-  static Result logging_begin_##name(BinaryReaderContext* context,          \
-                                     uint32_t size) {                       \
-    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
-    LOGF("begin_" #name "(%u)\n", size);                                              \
-    indent(ctx);                                                            \
-    FORWARD_CTX(begin_##name, size);                                        \
-  }
-
-#define LOGGING_END(name)                                                   \
-  static Result logging_end_##name(BinaryReaderContext* context) {          \
-    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data); \
-    dedent(ctx);                                                            \
-    LOGF("end_" #name "\n");                                                \
-    FORWARD_CTX0(end_##name);                                               \
-  }
-
-#define LOGGING_UINT32(name)                                       \
-  static Result logging_##name(uint32_t value, void* user_data) {  \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
-    LOGF(#name "(%u)\n", value);                                   \
-    FORWARD(name, value);                                          \
-  }
-
-#define LOGGING_UINT32_CTX(name)                                               \
-  static Result logging_##name(BinaryReaderContext* context, uint32_t value) { \
-    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);    \
-    LOGF(#name "(%u)\n", value);                                               \
-    FORWARD_CTX(name, value);                                                  \
-  }
-
-#define LOGGING_UINT32_DESC(name, desc)                            \
-  static Result logging_##name(uint32_t value, void* user_data) {  \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
-    LOGF(#name "(" desc ": %u)\n", value);                         \
-    FORWARD(name, value);                                          \
-  }
-
-#define LOGGING_UINT32_UINT32(name, desc0, desc1)                   \
-  static Result logging_##name(uint32_t value0, uint32_t value1,    \
-                               void* user_data) {                   \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data);  \
-    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1); \
-    FORWARD(name, value0, value1);                                  \
-  }
-
-#define LOGGING_UINT32_UINT32_CTX(name, desc0, desc1)                         \
-  static Result logging_##name(BinaryReaderContext* context, uint32_t value0, \
-                               uint32_t value1) {                             \
-    LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);   \
-    LOGF(#name "(" desc0 ": %u, " desc1 ": %u)\n", value0, value1);           \
-    FORWARD_CTX(name, value0, value1);                                        \
-  }
-
-#define LOGGING_OPCODE(name)                                       \
-  static Result logging_##name(Opcode opcode, void* user_data) {   \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
-    LOGF(#name "(\"%s\" (%u))\n", get_opcode_name(opcode),         \
-         static_cast<unsigned>(opcode));                           \
-    FORWARD(name, opcode);                                         \
-  }
-
-#define LOGGING0(name)                                             \
-  static Result logging_##name(void* user_data) {                  \
-    LoggingContext* ctx = static_cast<LoggingContext*>(user_data); \
-    LOGF(#name "\n");                                              \
-    FORWARD0(name);                                                \
-  }
-
-LOGGING_UINT32(begin_module)
-LOGGING0(end_module)
-LOGGING_END(custom_section)
-LOGGING_BEGIN(signature_section)
-LOGGING_UINT32(on_signature_count)
-LOGGING_END(signature_section)
-LOGGING_BEGIN(import_section)
-LOGGING_UINT32(on_import_count)
-LOGGING_END(import_section)
-LOGGING_BEGIN(function_signatures_section)
-LOGGING_UINT32(on_function_signatures_count)
-LOGGING_UINT32_UINT32(on_function_signature, "index", "sig_index")
-LOGGING_END(function_signatures_section)
-LOGGING_BEGIN(table_section)
-LOGGING_UINT32(on_table_count)
-LOGGING_END(table_section)
-LOGGING_BEGIN(memory_section)
-LOGGING_UINT32(on_memory_count)
-LOGGING_END(memory_section)
-LOGGING_BEGIN(global_section)
-LOGGING_UINT32(on_global_count)
-LOGGING_UINT32(begin_global_init_expr)
-LOGGING_UINT32(end_global_init_expr)
-LOGGING_UINT32(end_global)
-LOGGING_END(global_section)
-LOGGING_BEGIN(export_section)
-LOGGING_UINT32(on_export_count)
-LOGGING_END(export_section)
-LOGGING_BEGIN(start_section)
-LOGGING_UINT32(on_start_function)
-LOGGING_END(start_section)
-LOGGING_BEGIN(function_bodies_section)
-LOGGING_UINT32(on_function_bodies_count)
-LOGGING_UINT32_CTX(begin_function_body)
-LOGGING_UINT32(end_function_body)
-LOGGING_UINT32(on_local_decl_count)
-LOGGING_OPCODE(on_binary_expr)
-LOGGING_UINT32_DESC(on_call_expr, "func_index")
-LOGGING_UINT32_DESC(on_call_import_expr, "import_index")
-LOGGING_UINT32_DESC(on_call_indirect_expr, "sig_index")
-LOGGING_OPCODE(on_compare_expr)
-LOGGING_OPCODE(on_convert_expr)
-LOGGING0(on_current_memory_expr)
-LOGGING0(on_drop_expr)
-LOGGING0(on_else_expr)
-LOGGING0(on_end_expr)
-LOGGING_UINT32_DESC(on_get_global_expr, "index")
-LOGGING_UINT32_DESC(on_get_local_expr, "index")
-LOGGING0(on_grow_memory_expr)
-LOGGING0(on_nop_expr)
-LOGGING0(on_return_expr)
-LOGGING0(on_select_expr)
-LOGGING_UINT32_DESC(on_set_global_expr, "index")
-LOGGING_UINT32_DESC(on_set_local_expr, "index")
-LOGGING_UINT32_DESC(on_tee_local_expr, "index")
-LOGGING0(on_unreachable_expr)
-LOGGING_OPCODE(on_unary_expr)
-LOGGING_END(function_bodies_section)
-LOGGING_BEGIN(elem_section)
-LOGGING_UINT32(on_elem_segment_count)
-LOGGING_UINT32_UINT32(begin_elem_segment, "index", "table_index")
-LOGGING_UINT32(begin_elem_segment_init_expr)
-LOGGING_UINT32(end_elem_segment_init_expr)
-LOGGING_UINT32_UINT32_CTX(on_elem_segment_function_index_count,
-                          "index",
-                          "count")
-LOGGING_UINT32_UINT32(on_elem_segment_function_index, "index", "func_index")
-LOGGING_UINT32(end_elem_segment)
-LOGGING_END(elem_section)
-LOGGING_BEGIN(data_section)
-LOGGING_UINT32(on_data_segment_count)
-LOGGING_UINT32_UINT32(begin_data_segment, "index", "memory_index")
-LOGGING_UINT32(begin_data_segment_init_expr)
-LOGGING_UINT32(end_data_segment_init_expr)
-LOGGING_UINT32(end_data_segment)
-LOGGING_END(data_section)
-LOGGING_BEGIN(names_section)
-LOGGING_UINT32(on_function_names_count)
-LOGGING_UINT32(on_local_name_function_count)
-LOGGING_UINT32_UINT32(on_local_name_local_count, "index", "count")
-LOGGING_END(names_section)
-LOGGING_BEGIN(reloc_section)
-LOGGING_END(reloc_section)
-LOGGING_UINT32_UINT32(on_init_expr_get_global_expr, "index", "global_index")
-
-static void sprint_limits(char* dst, size_t size, const Limits* limits) {
-  int result;
-  if (limits->has_max) {
-    result = wabt_snprintf(dst, size, "initial: %" PRIu64 ", max: %" PRIu64,
-                      limits->initial, limits->max);
-  } else {
-    result = wabt_snprintf(dst, size, "initial: %" PRIu64, limits->initial);
-  }
-  WABT_USE(result);
-  assert(static_cast<size_t>(result) < size);
-}
-
-static void log_types(LoggingContext* ctx, uint32_t type_count, Type* types) {
-  LOGF_NOINDENT("[");
-  for (uint32_t i = 0; i < type_count; ++i) {
-    LOGF_NOINDENT("%s", get_type_name(types[i]));
-    if (i != type_count - 1)
-      LOGF_NOINDENT(", ");
-  }
-  LOGF_NOINDENT("]");
-}
-
-static Result logging_on_signature(uint32_t index,
-                                   uint32_t param_count,
-                                   Type* param_types,
-                                   uint32_t result_count,
-                                   Type* result_types,
-                                   void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_signature(index: %u, params: ", index);
-  log_types(ctx, param_count, param_types);
-  LOGF_NOINDENT(", results: ");
-  log_types(ctx, result_count, result_types);
-  LOGF_NOINDENT(")\n");
-  FORWARD(on_signature, index, param_count, param_types, result_count,
-          result_types);
-}
-
-static Result logging_on_import(uint32_t index,
-                                StringSlice module_name,
-                                StringSlice field_name,
-                                void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_import(index: %u, module: \"" PRIstringslice
-       "\", field: \"" PRIstringslice "\")\n",
-       index, WABT_PRINTF_STRING_SLICE_ARG(module_name),
-       WABT_PRINTF_STRING_SLICE_ARG(field_name));
-  FORWARD(on_import, index, module_name, field_name);
-}
-
-static Result logging_on_import_func(uint32_t import_index,
-                                     StringSlice module_name,
-                                     StringSlice field_name,
-                                     uint32_t func_index,
-                                     uint32_t sig_index,
-                                     void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_import_func(import_index: %u, func_index: %u, sig_index: %u)\n",
-       import_index, func_index, sig_index);
-  FORWARD(on_import_func, import_index, module_name, field_name,
-          func_index, sig_index);
-}
-
-static Result logging_on_import_table(uint32_t import_index,
-                                      StringSlice module_name,
-                                      StringSlice field_name,
-                                      uint32_t table_index,
-                                      Type elem_type,
-                                      const Limits* elem_limits,
-                                      void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  char buf[100];
-  sprint_limits(buf, sizeof(buf), elem_limits);
-  LOGF(
-      "on_import_table(import_index: %u, table_index: %u, elem_type: %s, %s)\n",
-      import_index, table_index, get_type_name(elem_type), buf);
-  FORWARD(on_import_table, import_index, module_name, field_name,
-          table_index, elem_type, elem_limits);
-}
-
-static Result logging_on_import_memory(uint32_t import_index,
-                                       StringSlice module_name,
-                                       StringSlice field_name,
-                                       uint32_t memory_index,
-                                       const Limits* page_limits,
-                                       void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  char buf[100];
-  sprint_limits(buf, sizeof(buf), page_limits);
-  LOGF("on_import_memory(import_index: %u, memory_index: %u, %s)\n",
-       import_index, memory_index, buf);
-  FORWARD(on_import_memory, import_index, module_name, field_name,
-          memory_index, page_limits);
-}
-
-static Result logging_on_import_global(uint32_t import_index,
-                                       StringSlice module_name,
-                                       StringSlice field_name,
-                                       uint32_t global_index,
-                                       Type type,
-                                       bool mutable_,
-                                       void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF(
-      "on_import_global(import_index: %u, global_index: %u, type: %s, mutable: "
-      "%s)\n",
-      import_index, global_index, get_type_name(type),
-      mutable_ ? "true" : "false");
-  FORWARD(on_import_global, import_index, module_name, field_name,
-          global_index, type, mutable_);
-}
-
-static Result logging_on_table(uint32_t index,
-                               Type elem_type,
-                               const Limits* elem_limits,
-                               void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  char buf[100];
-  sprint_limits(buf, sizeof(buf), elem_limits);
-  LOGF("on_table(index: %u, elem_type: %s, %s)\n", index,
-       get_type_name(elem_type), buf);
-  FORWARD(on_table, index, elem_type, elem_limits);
-}
-
-static Result logging_on_memory(uint32_t index,
-                                const Limits* page_limits,
-                                void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  char buf[100];
-  sprint_limits(buf, sizeof(buf), page_limits);
-  LOGF("on_memory(index: %u, %s)\n", index, buf);
-  FORWARD(on_memory, index, page_limits);
-}
-
-static Result logging_begin_global(uint32_t index,
-                                   Type type,
-                                   bool mutable_,
-                                   void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("begin_global(index: %u, type: %s, mutable: %s)\n", index,
-       get_type_name(type), mutable_ ? "true" : "false");
-  FORWARD(begin_global, index, type, mutable_);
-}
-
-static Result logging_on_export(uint32_t index,
-                                ExternalKind kind,
-                                uint32_t item_index,
-                                StringSlice name,
-                                void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_export(index: %u, kind: %s, item_index: %u, name: \"" PRIstringslice
-       "\")\n",
-       index, get_kind_name(kind), item_index,
-       WABT_PRINTF_STRING_SLICE_ARG(name));
-  FORWARD(on_export, index, kind, item_index, name);
-}
-
-static Result logging_begin_function_body_pass(uint32_t index,
-                                               uint32_t pass,
-                                               void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("begin_function_body_pass(index: %u, pass: %u)\n", index, pass);
-  indent(ctx);
-  FORWARD(begin_function_body_pass, index, pass);
-}
-
-static Result logging_on_local_decl(uint32_t decl_index,
-                                    uint32_t count,
-                                    Type type,
-                                    void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_local_decl(index: %u, count: %u, type: %s)\n", decl_index, count,
-       get_type_name(type));
-  FORWARD(on_local_decl, decl_index, count, type);
-}
-
-static Result logging_on_block_expr(uint32_t num_types,
-                                    Type* sig_types,
-                                    void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_block_expr(sig: ");
-  log_types(ctx, num_types, sig_types);
-  LOGF_NOINDENT(")\n");
-  FORWARD(on_block_expr, num_types, sig_types);
-}
-
-static Result logging_on_br_expr(uint32_t depth, void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_br_expr(depth: %u)\n", depth);
-  FORWARD(on_br_expr, depth);
-}
-
-static Result logging_on_br_if_expr(uint32_t depth, void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_br_if_expr(depth: %u)\n", depth);
-  FORWARD(on_br_if_expr, depth);
-}
-
-static Result logging_on_br_table_expr(BinaryReaderContext* context,
-                                       uint32_t num_targets,
-                                       uint32_t* target_depths,
-                                       uint32_t default_target_depth) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(context->user_data);
-  LOGF("on_br_table_expr(num_targets: %u, depths: [", num_targets);
-  for (uint32_t i = 0; i < num_targets; ++i) {
-    LOGF_NOINDENT("%u", target_depths[i]);
-    if (i != num_targets - 1)
-      LOGF_NOINDENT(", ");
-  }
-  LOGF_NOINDENT("], default: %u)\n", default_target_depth);
-  FORWARD_CTX(on_br_table_expr, num_targets, target_depths,
-              default_target_depth);
-}
-
-static Result logging_on_f32_const_expr(uint32_t value_bits, void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  float value;
-  memcpy(&value, &value_bits, sizeof(value));
-  LOGF("on_f32_const_expr(%g (0x04%x))\n", value, value_bits);
-  FORWARD(on_f32_const_expr, value_bits);
-}
-
-static Result logging_on_f64_const_expr(uint64_t value_bits, void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  double value;
-  memcpy(&value, &value_bits, sizeof(value));
-  LOGF("on_f64_const_expr(%g (0x08%" PRIx64 "))\n", value, value_bits);
-  FORWARD(on_f64_const_expr, value_bits);
-}
-
-static Result logging_on_i32_const_expr(uint32_t value, void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_i32_const_expr(%u (0x%x))\n", value, value);
-  FORWARD(on_i32_const_expr, value);
-}
-
-static Result logging_on_i64_const_expr(uint64_t value, void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_i64_const_expr(%" PRIu64 " (0x%" PRIx64 "))\n", value, value);
-  FORWARD(on_i64_const_expr, value);
-}
-
-static Result logging_on_if_expr(uint32_t num_types,
-                                 Type* sig_types,
-                                 void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_if_expr(sig: ");
-  log_types(ctx, num_types, sig_types);
-  LOGF_NOINDENT(")\n");
-  FORWARD(on_if_expr, num_types, sig_types);
-}
-
-static Result logging_on_load_expr(Opcode opcode,
-                                   uint32_t alignment_log2,
-                                   uint32_t offset,
-                                   void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_load_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
-       get_opcode_name(opcode), static_cast<unsigned>(opcode), alignment_log2,
-       offset);
-  FORWARD(on_load_expr, opcode, alignment_log2, offset);
-}
-
-static Result logging_on_loop_expr(uint32_t num_types,
-                                   Type* sig_types,
-                                   void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_loop_expr(sig: ");
-  log_types(ctx, num_types, sig_types);
-  LOGF_NOINDENT(")\n");
-  FORWARD(on_loop_expr, num_types, sig_types);
-}
-
-static Result logging_on_store_expr(Opcode opcode,
-                                    uint32_t alignment_log2,
-                                    uint32_t offset,
-                                    void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_store_expr(opcode: \"%s\" (%u), align log2: %u, offset: %u)\n",
-       get_opcode_name(opcode), static_cast<unsigned>(opcode), alignment_log2,
-       offset);
-  FORWARD(on_store_expr, opcode, alignment_log2, offset);
-}
-
-static Result logging_end_function_body_pass(uint32_t index,
-                                             uint32_t pass,
-                                             void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  dedent(ctx);
-  LOGF("end_function_body_pass(index: %u, pass: %u)\n", index, pass);
-  FORWARD(end_function_body_pass, index, pass);
-}
-
-static Result logging_on_data_segment_data(uint32_t index,
-                                           const void* data,
-                                           uint32_t size,
-                                           void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_data_segment_data(index:%u, size:%u)\n", index, size);
-  FORWARD(on_data_segment_data, index, data, size);
-}
-
-static Result logging_on_function_name_subsection(uint32_t index,
-                                                  uint32_t name_type,
-                                                  uint32_t subsection_size,
-                                                  void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_function_name_subsection(index:%u, nametype:%u, size:%u)\n", index, name_type, subsection_size);
-  FORWARD(on_function_name_subsection, index, name_type, subsection_size);
-}
-
-static Result logging_on_function_name(uint32_t index,
-                                       StringSlice name,
-                                       void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_function_name(index: %u, name: \"" PRIstringslice "\")\n", index,
-       WABT_PRINTF_STRING_SLICE_ARG(name));
-  FORWARD(on_function_name, index, name);
-}
-
-static Result logging_on_local_name_subsection(uint32_t index,
-                                               uint32_t name_type,
-                                               uint32_t subsection_size,
-                                               void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_local_name_subsection(index:%u, nametype:%u, size:%u)\n", index, name_type, subsection_size);
-  FORWARD(on_local_name_subsection, index, name_type, subsection_size);
-}
-
-static Result logging_on_local_name(uint32_t func_index,
-                                    uint32_t local_index,
-                                    StringSlice name,
-                                    void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_local_name(func_index: %u, local_index: %u, name: \"" PRIstringslice
-       "\")\n",
-       func_index, local_index, WABT_PRINTF_STRING_SLICE_ARG(name));
-  FORWARD(on_local_name, func_index, local_index, name);
-}
-
-static Result logging_on_init_expr_f32_const_expr(uint32_t index,
-                                                  uint32_t value_bits,
-                                                  void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  float value;
-  memcpy(&value, &value_bits, sizeof(value));
-  LOGF("on_init_expr_f32_const_expr(index: %u, value: %g (0x04%x))\n", index,
-       value, value_bits);
-  FORWARD(on_init_expr_f32_const_expr, index, value_bits);
-}
-
-static Result logging_on_init_expr_f64_const_expr(uint32_t index,
-                                                  uint64_t value_bits,
-                                                  void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  double value;
-  memcpy(&value, &value_bits, sizeof(value));
-  LOGF("on_init_expr_f64_const_expr(index: %u value: %g (0x08%" PRIx64 "))\n",
-       index, value, value_bits);
-  FORWARD(on_init_expr_f64_const_expr, index, value_bits);
-}
-
-static Result logging_on_init_expr_i32_const_expr(uint32_t index,
-                                                  uint32_t value,
-                                                  void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_init_expr_i32_const_expr(index: %u, value: %u)\n", index, value);
-  FORWARD(on_init_expr_i32_const_expr, index, value);
-}
-
-static Result logging_on_init_expr_i64_const_expr(uint32_t index,
-                                                  uint64_t value,
-                                                  void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_init_expr_i64_const_expr(index: %u, value: %" PRIu64 ")\n", index,
-       value);
-  FORWARD(on_init_expr_i64_const_expr, index, value);
-}
-
-static Result logging_on_reloc_count(uint32_t count,
-                                     BinarySection section_code,
-                                     StringSlice section_name,
-                                     void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_reloc_count(count: %d, section: %s, section_name: " PRIstringslice
-       ")\n",
-       count, get_section_name(section_code),
-       WABT_PRINTF_STRING_SLICE_ARG(section_name));
-  FORWARD(on_reloc_count, count, section_code, section_name);
-}
-
-static Result logging_on_reloc(RelocType type,
-                               uint32_t offset,
-                               uint32_t index,
-                               int32_t addend,
-                               void* user_data) {
-  LoggingContext* ctx = static_cast<LoggingContext*>(user_data);
-  LOGF("on_reloc(type: %s, offset: %u, index: %u, addend: %d)\n",
-       get_reloc_type_name(type), offset, index, addend);
-  FORWARD(on_reloc, type, offset, index, addend);
-}
-
 static void read_init_expr(Context* ctx, uint32_t index) {
   uint8_t opcode;
   in_u8(ctx, &opcode, "opcode");
@@ -1056,35 +368,35 @@ static void read_init_expr(Context* ctx, uint32_t index) {
     case Opcode::I32Const: {
       uint32_t value = 0;
       in_i32_leb128(ctx, &value, "init_expr i32.const value");
-      CALLBACK(on_init_expr_i32_const_expr, index, value);
+      CALLBACK(OnInitExprI32ConstExpr, index, value);
       break;
     }
 
     case Opcode::I64Const: {
       uint64_t value = 0;
       in_i64_leb128(ctx, &value, "init_expr i64.const value");
-      CALLBACK(on_init_expr_i64_const_expr, index, value);
+      CALLBACK(OnInitExprI64ConstExpr, index, value);
       break;
     }
 
     case Opcode::F32Const: {
       uint32_t value_bits = 0;
       in_f32(ctx, &value_bits, "init_expr f32.const value");
-      CALLBACK(on_init_expr_f32_const_expr, index, value_bits);
+      CALLBACK(OnInitExprF32ConstExpr, index, value_bits);
       break;
     }
 
     case Opcode::F64Const: {
       uint64_t value_bits = 0;
       in_f64(ctx, &value_bits, "init_expr f64.const value");
-      CALLBACK(on_init_expr_f64_const_expr, index, value_bits);
+      CALLBACK(OnInitExprF64ConstExpr, index, value_bits);
       break;
     }
 
     case Opcode::GetGlobal: {
       uint32_t global_index;
       in_u32_leb128(ctx, &global_index, "init_expr get_global index");
-      CALLBACK(on_init_expr_get_global_expr, index, global_index);
+      CALLBACK(OnInitExprGetGlobalExpr, index, global_index);
       break;
     }
 
@@ -1164,15 +476,15 @@ static void read_global_header(Context* ctx,
 
 static void read_function_body(Context* ctx, uint32_t end_offset) {
   bool seen_end_opcode = false;
-  while (ctx->offset < end_offset) {
+  while (ctx->state.offset < end_offset) {
     uint8_t opcode_u8;
     in_u8(ctx, &opcode_u8, "opcode");
     Opcode opcode = static_cast<Opcode>(opcode_u8);
-    CALLBACK_CTX(on_opcode, opcode);
+    CALLBACK(OnOpcode, opcode);
     switch (opcode) {
       case Opcode::Unreachable:
-        CALLBACK0(on_unreachable_expr);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK0(OnUnreachableExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::Block: {
@@ -1181,8 +493,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
         uint32_t num_types = sig_type == Type::Void ? 0 : 1;
-        CALLBACK(on_block_expr, num_types, &sig_type);
-        CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
+        CALLBACK(OnBlockExpr, num_types, &sig_type);
+        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
         break;
       }
 
@@ -1192,8 +504,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
         uint32_t num_types = sig_type == Type::Void ? 0 : 1;
-        CALLBACK(on_loop_expr, num_types, &sig_type);
-        CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
+        CALLBACK(OnLoopExpr, num_types, &sig_type);
+        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
         break;
       }
 
@@ -1203,34 +515,34 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
         uint32_t num_types = sig_type == Type::Void ? 0 : 1;
-        CALLBACK(on_if_expr, num_types, &sig_type);
-        CALLBACK_CTX(on_opcode_block_sig, num_types, &sig_type);
+        CALLBACK(OnIfExpr, num_types, &sig_type);
+        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
         break;
       }
 
       case Opcode::Else:
-        CALLBACK0(on_else_expr);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK0(OnElseExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::Select:
-        CALLBACK0(on_select_expr);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK0(OnSelectExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::Br: {
         uint32_t depth;
         in_u32_leb128(ctx, &depth, "br depth");
-        CALLBACK(on_br_expr, depth);
-        CALLBACK_CTX(on_opcode_uint32, depth);
+        CALLBACK(OnBrExpr, depth);
+        CALLBACK(OnOpcodeUint32, depth);
         break;
       }
 
       case Opcode::BrIf: {
         uint32_t depth;
         in_u32_leb128(ctx, &depth, "br_if depth");
-        CALLBACK(on_br_if_expr, depth);
-        CALLBACK_CTX(on_opcode_uint32, depth);
+        CALLBACK(OnBrIfExpr, depth);
+        CALLBACK(OnOpcodeUint32, depth);
         break;
       }
 
@@ -1252,96 +564,96 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         uint32_t* target_depths =
             num_targets ? ctx->target_depths.data() : nullptr;
 
-        CALLBACK_CTX(on_br_table_expr, num_targets, target_depths,
-                     default_target_depth);
+        CALLBACK(OnBrTableExpr, num_targets, target_depths,
+                 default_target_depth);
         break;
       }
 
       case Opcode::Return:
-        CALLBACK0(on_return_expr);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK0(OnReturnExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::Nop:
-        CALLBACK0(on_nop_expr);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK0(OnNopExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::Drop:
-        CALLBACK0(on_drop_expr);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK0(OnDropExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::End:
-        if (ctx->offset == end_offset) {
+        if (ctx->state.offset == end_offset) {
           seen_end_opcode = true;
-          CALLBACK0(on_end_func);
+          CALLBACK0(OnEndFunc);
         } else {
-          CALLBACK0(on_end_expr);
+          CALLBACK0(OnEndExpr);
         }
         break;
 
       case Opcode::I32Const: {
         uint32_t value = 0;
         in_i32_leb128(ctx, &value, "i32.const value");
-        CALLBACK(on_i32_const_expr, value);
-        CALLBACK_CTX(on_opcode_uint32, value);
+        CALLBACK(OnI32ConstExpr, value);
+        CALLBACK(OnOpcodeUint32, value);
         break;
       }
 
       case Opcode::I64Const: {
         uint64_t value = 0;
         in_i64_leb128(ctx, &value, "i64.const value");
-        CALLBACK(on_i64_const_expr, value);
-        CALLBACK_CTX(on_opcode_uint64, value);
+        CALLBACK(OnI64ConstExpr, value);
+        CALLBACK(OnOpcodeUint64, value);
         break;
       }
 
       case Opcode::F32Const: {
         uint32_t value_bits = 0;
         in_f32(ctx, &value_bits, "f32.const value");
-        CALLBACK(on_f32_const_expr, value_bits);
-        CALLBACK_CTX(on_opcode_f32, value_bits);
+        CALLBACK(OnF32ConstExpr, value_bits);
+        CALLBACK(OnOpcodeF32, value_bits);
         break;
       }
 
       case Opcode::F64Const: {
         uint64_t value_bits = 0;
         in_f64(ctx, &value_bits, "f64.const value");
-        CALLBACK(on_f64_const_expr, value_bits);
-        CALLBACK_CTX(on_opcode_f64, value_bits);
+        CALLBACK(OnF64ConstExpr, value_bits);
+        CALLBACK(OnOpcodeF64, value_bits);
         break;
       }
 
       case Opcode::GetGlobal: {
         uint32_t global_index;
         in_u32_leb128(ctx, &global_index, "get_global global index");
-        CALLBACK(on_get_global_expr, global_index);
-        CALLBACK_CTX(on_opcode_uint32, global_index);
+        CALLBACK(OnGetGlobalExpr, global_index);
+        CALLBACK(OnOpcodeUint32, global_index);
         break;
       }
 
       case Opcode::GetLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "get_local local index");
-        CALLBACK(on_get_local_expr, local_index);
-        CALLBACK_CTX(on_opcode_uint32, local_index);
+        CALLBACK(OnGetLocalExpr, local_index);
+        CALLBACK(OnOpcodeUint32, local_index);
         break;
       }
 
       case Opcode::SetGlobal: {
         uint32_t global_index;
         in_u32_leb128(ctx, &global_index, "set_global global index");
-        CALLBACK(on_set_global_expr, global_index);
-        CALLBACK_CTX(on_opcode_uint32, global_index);
+        CALLBACK(OnSetGlobalExpr, global_index);
+        CALLBACK(OnOpcodeUint32, global_index);
         break;
       }
 
       case Opcode::SetLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "set_local local index");
-        CALLBACK(on_set_local_expr, local_index);
-        CALLBACK_CTX(on_opcode_uint32, local_index);
+        CALLBACK(OnSetLocalExpr, local_index);
+        CALLBACK(OnOpcodeUint32, local_index);
         break;
       }
 
@@ -1350,8 +662,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         in_u32_leb128(ctx, &func_index, "call function index");
         RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
                            "invalid call function index");
-        CALLBACK(on_call_expr, func_index);
-        CALLBACK_CTX(on_opcode_uint32, func_index);
+        CALLBACK(OnCallExpr, func_index);
+        CALLBACK(OnOpcodeUint32, func_index);
         break;
       }
 
@@ -1364,16 +676,16 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         in_u32_leb128(ctx, &reserved, "call_indirect reserved");
         RAISE_ERROR_UNLESS(reserved == 0,
                            "call_indirect reserved value must be 0");
-        CALLBACK(on_call_indirect_expr, sig_index);
-        CALLBACK_CTX(on_opcode_uint32_uint32, sig_index, reserved);
+        CALLBACK(OnCallIndirectExpr, sig_index);
+        CALLBACK(OnOpcodeUint32Uint32, sig_index, reserved);
         break;
       }
 
       case Opcode::TeeLocal: {
         uint32_t local_index;
         in_u32_leb128(ctx, &local_index, "tee_local local index");
-        CALLBACK(on_tee_local_expr, local_index);
-        CALLBACK_CTX(on_opcode_uint32, local_index);
+        CALLBACK(OnTeeLocalExpr, local_index);
+        CALLBACK(OnOpcodeUint32, local_index);
         break;
       }
 
@@ -1396,8 +708,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         uint32_t offset;
         in_u32_leb128(ctx, &offset, "load offset");
 
-        CALLBACK(on_load_expr, opcode, alignment_log2, offset);
-        CALLBACK_CTX(on_opcode_uint32_uint32, alignment_log2, offset);
+        CALLBACK(OnLoadExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
         break;
       }
 
@@ -1415,8 +727,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         uint32_t offset;
         in_u32_leb128(ctx, &offset, "store offset");
 
-        CALLBACK(on_store_expr, opcode, alignment_log2, offset);
-        CALLBACK_CTX(on_opcode_uint32_uint32, alignment_log2, offset);
+        CALLBACK(OnStoreExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
         break;
       }
 
@@ -1425,8 +737,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         in_u32_leb128(ctx, &reserved, "current_memory reserved");
         RAISE_ERROR_UNLESS(reserved == 0,
                            "current_memory reserved value must be 0");
-        CALLBACK0(on_current_memory_expr);
-        CALLBACK_CTX(on_opcode_uint32, reserved);
+        CALLBACK0(OnCurrentMemoryExpr);
+        CALLBACK(OnOpcodeUint32, reserved);
         break;
       }
 
@@ -1435,8 +747,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         in_u32_leb128(ctx, &reserved, "grow_memory reserved");
         RAISE_ERROR_UNLESS(reserved == 0,
                            "grow_memory reserved value must be 0");
-        CALLBACK0(on_grow_memory_expr);
-        CALLBACK_CTX(on_opcode_uint32, reserved);
+        CALLBACK0(OnGrowMemoryExpr);
+        CALLBACK(OnOpcodeUint32, reserved);
         break;
       }
 
@@ -1484,8 +796,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       case Opcode::F64Min:
       case Opcode::F64Max:
       case Opcode::F64Copysign:
-        CALLBACK(on_binary_expr, opcode);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK(OnBinaryExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::I32Eq:
@@ -1520,8 +832,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       case Opcode::F64Le:
       case Opcode::F64Gt:
       case Opcode::F64Ge:
-        CALLBACK(on_compare_expr, opcode);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK(OnCompareExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::I32Clz:
@@ -1544,8 +856,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       case Opcode::F64Trunc:
       case Opcode::F64Nearest:
       case Opcode::F64Sqrt:
-        CALLBACK(on_unary_expr, opcode);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK(OnUnaryExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::I32TruncSF32:
@@ -1575,8 +887,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       case Opcode::I64ReinterpretF64:
       case Opcode::I32Eqz:
       case Opcode::I64Eqz:
-        CALLBACK(on_convert_expr, opcode);
-        CALLBACK_CTX0(on_opcode_bare);
+        CALLBACK(OnConvertExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
         break;
 
       default:
@@ -1584,7 +896,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
                     static_cast<unsigned>(opcode));
     }
   }
-  RAISE_ERROR_UNLESS(ctx->offset == end_offset,
+  RAISE_ERROR_UNLESS(ctx->state.offset == end_offset,
                      "function body longer than given size");
   RAISE_ERROR_UNLESS(seen_end_opcode, "function body must end with END opcode");
 }
@@ -1592,79 +904,96 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
 static void read_custom_section(Context* ctx, uint32_t section_size) {
   StringSlice section_name;
   in_str(ctx, &section_name, "section name");
-  CALLBACK_CTX(begin_custom_section, section_size, section_name);
+  CALLBACK(BeginCustomSection, section_size, section_name);
 
   bool name_section_ok = ctx->last_known_section >= BinarySection::Import;
   if (ctx->options->read_debug_names && name_section_ok &&
       strncmp(section_name.start, WABT_BINARY_SECTION_NAME,
               section_name.length) == 0) {
-    CALLBACK_SECTION(begin_names_section, section_size);
+    CALLBACK(BeginNamesSection, section_size);
     uint32_t i = 0;
-    while (ctx->offset < ctx->read_end) {
+    size_t previous_read_end = ctx->read_end;
+    uint32_t previous_subsection_type = 0;
+    while (ctx->state.offset < ctx->read_end) {
       uint32_t name_type;
       uint32_t subsection_size;
       in_u32_leb128(ctx, &name_type, "name type");
+      if (i != 0) {
+        if (name_type == previous_subsection_type)
+          RAISE_ERROR("duplicate sub-section");
+        if (name_type < previous_subsection_type)
+          RAISE_ERROR("out-of-order sub-section");
+      }
+      previous_subsection_type = name_type;
       in_u32_leb128(ctx, &subsection_size, "subsection size");
+      size_t subsection_end = ctx->state.offset + subsection_size;
+      if (subsection_end > ctx->read_end)
+        RAISE_ERROR("invalid sub-section size: extends past end");
+      ctx->read_end = subsection_end;
 
       switch (static_cast<NameSectionSubsection>(name_type)) {
       case NameSectionSubsection::Function:
-        CALLBACK(on_function_name_subsection, i, name_type, subsection_size);
+        CALLBACK(OnFunctionNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {
           uint32_t num_names;
           in_u32_leb128(ctx, &num_names, "name count");
-          CALLBACK(on_function_names_count, num_names);
+          CALLBACK(OnFunctionNamesCount, num_names);
           for (uint32_t j = 0; j < num_names; ++j) {
             uint32_t function_index;
             StringSlice function_name;
 
             in_u32_leb128(ctx, &function_index, "function index");
             in_str(ctx, &function_name, "function name");
-            CALLBACK(on_function_name, function_index, function_name);
+            CALLBACK(OnFunctionName, function_index, function_name);
           }
         }
-        ++i;
         break;
       case NameSectionSubsection::Local:
-        CALLBACK(on_local_name_subsection, i, name_type, subsection_size);
+        CALLBACK(OnLocalNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {
           uint32_t num_funcs;
           in_u32_leb128(ctx, &num_funcs, "function count");
-          CALLBACK(on_local_name_function_count, num_funcs);
+          CALLBACK(OnLocalNameFunctionCount, num_funcs);
           for (uint32_t j = 0; j < num_funcs; ++j) {
             uint32_t function_index;
             in_u32_leb128(ctx, &function_index, "function index");
             uint32_t num_locals;
             in_u32_leb128(ctx, &num_locals, "local count");
-            CALLBACK(on_local_name_local_count, function_index, num_locals);
+            CALLBACK(OnLocalNameLocalCount, function_index, num_locals);
             for (uint32_t k = 0; k < num_locals; ++k) {
               uint32_t local_index;
               StringSlice local_name;
 
               in_u32_leb128(ctx, &local_index, "named index");
               in_str(ctx, &local_name, "name");
-              CALLBACK(on_local_name, function_index, local_index, local_name);
+              CALLBACK(OnLocalName, function_index, local_index, local_name);
             }
           }
         }
-        ++i;
         break;
       default:
-        /* unknown subsection, skip rest of section */
-        ctx->offset = ctx->read_end;
+        /* unknown subsection, skip it */
+        ctx->state.offset = subsection_end;
         break;
       }
+      ++i;
+      if (ctx->state.offset != subsection_end) {
+        RAISE_ERROR("unfinished sub-section (expected end: 0x%" PRIzx ")",
+                    subsection_end);
+      }
+      ctx->read_end = previous_read_end;
     }
-    CALLBACK_CTX0(end_names_section);
+    CALLBACK0(EndNamesSection);
   } else if (strncmp(section_name.start, WABT_BINARY_SECTION_RELOC,
                      strlen(WABT_BINARY_SECTION_RELOC)) == 0) {
-    CALLBACK_SECTION(begin_reloc_section, section_size);
+    CALLBACK(BeginRelocSection, section_size);
     uint32_t num_relocs, section;
     in_u32_leb128(ctx, &section, "section");
     WABT_ZERO_MEMORY(section_name);
     if (static_cast<BinarySection>(section) == BinarySection::Custom)
       in_str(ctx, &section_name, "section name");
     in_u32_leb128(ctx, &num_relocs, "relocation count");
-    CALLBACK(on_reloc_count, num_relocs, static_cast<BinarySection>(section),
+    CALLBACK(OnRelocCount, num_relocs, static_cast<BinarySection>(section),
              section_name);
     for (uint32_t i = 0; i < num_relocs; ++i) {
       uint32_t reloc_type, offset, index, addend = 0;
@@ -1681,20 +1010,20 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
         default:
           break;
       }
-      CALLBACK(on_reloc, type, offset, index, addend);
+      CALLBACK(OnReloc, type, offset, index, addend);
     }
-    CALLBACK_CTX0(end_reloc_section);
+    CALLBACK0(EndRelocSection);
   } else {
     /* This is an unknown custom section, skip it. */
-    ctx->offset = ctx->read_end;
+    ctx->state.offset = ctx->read_end;
   }
-  CALLBACK_CTX0(end_custom_section);
+  CALLBACK0(EndCustomSection);
 }
 
 static void read_type_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_signature_section, section_size);
+  CALLBACK(BeginTypeSection, section_size);
   in_u32_leb128(ctx, &ctx->num_signatures, "type count");
-  CALLBACK(on_signature_count, ctx->num_signatures);
+  CALLBACK(OnTypeCount, ctx->num_signatures);
 
   for (uint32_t i = 0; i < ctx->num_signatures; ++i) {
     Type form;
@@ -1730,16 +1059,15 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
 
     Type* param_types = num_params ? ctx->param_types.data() : nullptr;
 
-    CALLBACK(on_signature, i, num_params, param_types, num_results,
-             &result_type);
+    CALLBACK(OnType, i, num_params, param_types, num_results, &result_type);
   }
-  CALLBACK_CTX0(end_signature_section);
+  CALLBACK0(EndTypeSection);
 }
 
 static void read_import_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_import_section, section_size);
+  CALLBACK(BeginImportSection, section_size);
   in_u32_leb128(ctx, &ctx->num_imports, "import count");
-  CALLBACK(on_import_count, ctx->num_imports);
+  CALLBACK(OnImportCount, ctx->num_imports);
   for (uint32_t i = 0; i < ctx->num_imports; ++i) {
     StringSlice module_name;
     in_str(ctx, &module_name, "import module name");
@@ -1754,8 +1082,8 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         in_u32_leb128(ctx, &sig_index, "import signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                            "invalid import signature index");
-        CALLBACK(on_import, i, module_name, field_name);
-        CALLBACK(on_import_func, i, module_name, field_name,
+        CALLBACK(OnImport, i, module_name, field_name);
+        CALLBACK(OnImportFunc, i, module_name, field_name,
                  ctx->num_func_imports, sig_index);
         ctx->num_func_imports++;
         break;
@@ -1765,8 +1093,8 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         Type elem_type;
         Limits elem_limits;
         read_table(ctx, &elem_type, &elem_limits);
-        CALLBACK(on_import, i, module_name, field_name);
-        CALLBACK(on_import_table, i, module_name, field_name,
+        CALLBACK(OnImport, i, module_name, field_name);
+        CALLBACK(OnImportTable, i, module_name, field_name,
                  ctx->num_table_imports, elem_type, &elem_limits);
         ctx->num_table_imports++;
         break;
@@ -1775,8 +1103,8 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
       case ExternalKind::Memory: {
         Limits page_limits;
         read_memory(ctx, &page_limits);
-        CALLBACK(on_import, i, module_name, field_name);
-        CALLBACK(on_import_memory, i, module_name, field_name,
+        CALLBACK(OnImport, i, module_name, field_name);
+        CALLBACK(OnImportMemory, i, module_name, field_name,
                  ctx->num_memory_imports, &page_limits);
         ctx->num_memory_imports++;
         break;
@@ -1786,8 +1114,8 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         Type type;
         bool mutable_;
         read_global_header(ctx, &type, &mutable_);
-        CALLBACK(on_import, i, module_name, field_name);
-        CALLBACK(on_import_global, i, module_name, field_name,
+        CALLBACK(OnImport, i, module_name, field_name);
+        CALLBACK(OnImportGlobal, i, module_name, field_name,
                  ctx->num_global_imports, type, mutable_);
         ctx->num_global_imports++;
         break;
@@ -1797,76 +1125,76 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
         RAISE_ERROR("invalid import kind: %d", kind);
     }
   }
-  CALLBACK_CTX0(end_import_section);
+  CALLBACK0(EndImportSection);
 }
 
 static void read_function_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_function_signatures_section, section_size);
+  CALLBACK(BeginFunctionSection, section_size);
   in_u32_leb128(ctx, &ctx->num_function_signatures, "function signature count");
-  CALLBACK(on_function_signatures_count, ctx->num_function_signatures);
+  CALLBACK(OnFunctionCount, ctx->num_function_signatures);
   for (uint32_t i = 0; i < ctx->num_function_signatures; ++i) {
     uint32_t func_index = ctx->num_func_imports + i;
     uint32_t sig_index;
     in_u32_leb128(ctx, &sig_index, "function signature index");
     RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                        "invalid function signature index: %d", sig_index);
-    CALLBACK(on_function_signature, func_index, sig_index);
+    CALLBACK(OnFunction, func_index, sig_index);
   }
-  CALLBACK_CTX0(end_function_signatures_section);
+  CALLBACK0(EndFunctionSection);
 }
 
 static void read_table_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_table_section, section_size);
+  CALLBACK(BeginTableSection, section_size);
   in_u32_leb128(ctx, &ctx->num_tables, "table count");
   RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count (%d) must be 0 or 1",
                      ctx->num_tables);
-  CALLBACK(on_table_count, ctx->num_tables);
+  CALLBACK(OnTableCount, ctx->num_tables);
   for (uint32_t i = 0; i < ctx->num_tables; ++i) {
     uint32_t table_index = ctx->num_table_imports + i;
     Type elem_type;
     Limits elem_limits;
     read_table(ctx, &elem_type, &elem_limits);
-    CALLBACK(on_table, table_index, elem_type, &elem_limits);
+    CALLBACK(OnTable, table_index, elem_type, &elem_limits);
   }
-  CALLBACK_CTX0(end_table_section);
+  CALLBACK0(EndTableSection);
 }
 
 static void read_memory_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_memory_section, section_size);
+  CALLBACK(BeginMemorySection, section_size);
   in_u32_leb128(ctx, &ctx->num_memories, "memory count");
   RAISE_ERROR_UNLESS(ctx->num_memories <= 1, "memory count must be 0 or 1");
-  CALLBACK(on_memory_count, ctx->num_memories);
+  CALLBACK(OnMemoryCount, ctx->num_memories);
   for (uint32_t i = 0; i < ctx->num_memories; ++i) {
     uint32_t memory_index = ctx->num_memory_imports + i;
     Limits page_limits;
     read_memory(ctx, &page_limits);
-    CALLBACK(on_memory, memory_index, &page_limits);
+    CALLBACK(OnMemory, memory_index, &page_limits);
   }
-  CALLBACK_CTX0(end_memory_section);
+  CALLBACK0(EndMemorySection);
 }
 
 static void read_global_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_global_section, section_size);
+  CALLBACK(BeginGlobalSection, section_size);
   in_u32_leb128(ctx, &ctx->num_globals, "global count");
-  CALLBACK(on_global_count, ctx->num_globals);
+  CALLBACK(OnGlobalCount, ctx->num_globals);
   for (uint32_t i = 0; i < ctx->num_globals; ++i) {
     uint32_t global_index = ctx->num_global_imports + i;
     Type global_type;
     bool mutable_;
     read_global_header(ctx, &global_type, &mutable_);
-    CALLBACK(begin_global, global_index, global_type, mutable_);
-    CALLBACK(begin_global_init_expr, global_index);
+    CALLBACK(BeginGlobal, global_index, global_type, mutable_);
+    CALLBACK(BeginGlobalInitExpr, global_index);
     read_init_expr(ctx, global_index);
-    CALLBACK(end_global_init_expr, global_index);
-    CALLBACK(end_global, global_index);
+    CALLBACK(EndGlobalInitExpr, global_index);
+    CALLBACK(EndGlobal, global_index);
   }
-  CALLBACK_CTX0(end_global_section);
+  CALLBACK0(EndGlobalSection);
 }
 
 static void read_export_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_export_section, section_size);
+  CALLBACK(BeginExportSection, section_size);
   in_u32_leb128(ctx, &ctx->num_exports, "export count");
-  CALLBACK(on_export_count, ctx->num_exports);
+  CALLBACK(OnExportCount, ctx->num_exports);
   for (uint32_t i = 0; i < ctx->num_exports; ++i) {
     StringSlice name;
     in_str(ctx, &name, "export item name");
@@ -1897,70 +1225,70 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
         break;
     }
 
-    CALLBACK(on_export, i, static_cast<ExternalKind>(external_kind), item_index,
+    CALLBACK(OnExport, i, static_cast<ExternalKind>(external_kind), item_index,
              name);
   }
-  CALLBACK_CTX0(end_export_section);
+  CALLBACK0(EndExportSection);
 }
 
 static void read_start_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_start_section, section_size);
+  CALLBACK(BeginStartSection, section_size);
   uint32_t func_index;
   in_u32_leb128(ctx, &func_index, "start function index");
   RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
                      "invalid start function index");
-  CALLBACK(on_start_function, func_index);
-  CALLBACK_CTX0(end_start_section);
+  CALLBACK(OnStartFunction, func_index);
+  CALLBACK0(EndStartSection);
 }
 
 static void read_elem_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_elem_section, section_size);
+  CALLBACK(BeginElemSection, section_size);
   uint32_t num_elem_segments;
   in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
-  CALLBACK(on_elem_segment_count, num_elem_segments);
+  CALLBACK(OnElemSegmentCount, num_elem_segments);
   RAISE_ERROR_UNLESS(num_elem_segments == 0 || num_total_tables(ctx) > 0,
                      "elem section without table section");
   for (uint32_t i = 0; i < num_elem_segments; ++i) {
     uint32_t table_index;
     in_u32_leb128(ctx, &table_index, "elem segment table index");
-    CALLBACK(begin_elem_segment, i, table_index);
-    CALLBACK(begin_elem_segment_init_expr, i);
+    CALLBACK(BeginElemSegment, i, table_index);
+    CALLBACK(BeginElemSegmentInitExpr, i);
     read_init_expr(ctx, i);
-    CALLBACK(end_elem_segment_init_expr, i);
+    CALLBACK(EndElemSegmentInitExpr, i);
 
     uint32_t num_function_indexes;
     in_u32_leb128(ctx, &num_function_indexes,
                   "elem segment function index count");
-    CALLBACK_CTX(on_elem_segment_function_index_count, i, num_function_indexes);
+    CALLBACK(OnElemSegmentFunctionIndexCount, i, num_function_indexes);
     for (uint32_t j = 0; j < num_function_indexes; ++j) {
       uint32_t func_index;
       in_u32_leb128(ctx, &func_index, "elem segment function index");
-      CALLBACK(on_elem_segment_function_index, i, func_index);
+      CALLBACK(OnElemSegmentFunctionIndex, i, func_index);
     }
-    CALLBACK(end_elem_segment, i);
+    CALLBACK(EndElemSegment, i);
   }
-  CALLBACK_CTX0(end_elem_section);
+  CALLBACK0(EndElemSection);
 }
 
 static void read_code_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_function_bodies_section, section_size);
+  CALLBACK(BeginCodeSection, section_size);
   in_u32_leb128(ctx, &ctx->num_function_bodies, "function body count");
   RAISE_ERROR_UNLESS(ctx->num_function_signatures == ctx->num_function_bodies,
                      "function signature count != function body count");
-  CALLBACK(on_function_bodies_count, ctx->num_function_bodies);
+  CALLBACK(OnFunctionBodyCount, ctx->num_function_bodies);
   for (uint32_t i = 0; i < ctx->num_function_bodies; ++i) {
     uint32_t func_index = ctx->num_func_imports + i;
-    uint32_t func_offset = ctx->offset;
-    ctx->offset = func_offset;
-    CALLBACK_CTX(begin_function_body, func_index);
+    uint32_t func_offset = ctx->state.offset;
+    ctx->state.offset = func_offset;
+    CALLBACK(BeginFunctionBody, func_index);
     uint32_t body_size;
     in_u32_leb128(ctx, &body_size, "function body size");
-    uint32_t body_start_offset = ctx->offset;
+    uint32_t body_start_offset = ctx->state.offset;
     uint32_t end_offset = body_start_offset + body_size;
 
     uint32_t num_local_decls;
     in_u32_leb128(ctx, &num_local_decls, "local declaration count");
-    CALLBACK(on_local_decl_count, num_local_decls);
+    CALLBACK(OnLocalDeclCount, num_local_decls);
     for (uint32_t k = 0; k < num_local_decls; ++k) {
       uint32_t num_local_types;
       in_u32_leb128(ctx, &num_local_types, "local type count");
@@ -1968,50 +1296,50 @@ static void read_code_section(Context* ctx, uint32_t section_size) {
       in_type(ctx, &local_type, "local type");
       RAISE_ERROR_UNLESS(is_concrete_type(local_type),
                          "expected valid local type");
-      CALLBACK(on_local_decl, k, num_local_types, local_type);
+      CALLBACK(OnLocalDecl, k, num_local_types, local_type);
     }
 
     read_function_body(ctx, end_offset);
 
-    CALLBACK(end_function_body, func_index);
+    CALLBACK(EndFunctionBody, func_index);
   }
-  CALLBACK_CTX0(end_function_bodies_section);
+  CALLBACK0(EndCodeSection);
 }
 
 static void read_data_section(Context* ctx, uint32_t section_size) {
-  CALLBACK_SECTION(begin_data_section, section_size);
+  CALLBACK(BeginDataSection, section_size);
   uint32_t num_data_segments;
   in_u32_leb128(ctx, &num_data_segments, "data segment count");
-  CALLBACK(on_data_segment_count, num_data_segments);
+  CALLBACK(OnDataSegmentCount, num_data_segments);
   RAISE_ERROR_UNLESS(num_data_segments == 0 || num_total_memories(ctx) > 0,
                      "data section without memory section");
   for (uint32_t i = 0; i < num_data_segments; ++i) {
     uint32_t memory_index;
     in_u32_leb128(ctx, &memory_index, "data segment memory index");
-    CALLBACK(begin_data_segment, i, memory_index);
-    CALLBACK(begin_data_segment_init_expr, i);
+    CALLBACK(BeginDataSegment, i, memory_index);
+    CALLBACK(BeginDataSegmentInitExpr, i);
     read_init_expr(ctx, i);
-    CALLBACK(end_data_segment_init_expr, i);
+    CALLBACK(EndDataSegmentInitExpr, i);
 
     uint32_t data_size;
     const void* data;
     in_bytes(ctx, &data, &data_size, "data segment data");
-    CALLBACK(on_data_segment_data, i, data, data_size);
-    CALLBACK(end_data_segment, i);
+    CALLBACK(OnDataSegmentData, i, data, data_size);
+    CALLBACK(EndDataSegment, i);
   }
-  CALLBACK_CTX0(end_data_section);
+  CALLBACK0(EndDataSection);
 }
 
 static void read_sections(Context* ctx) {
-  while (ctx->offset < ctx->data_size) {
+  while (ctx->state.offset < ctx->state.size) {
     uint32_t section_code;
     uint32_t section_size;
     /* Temporarily reset read_end to the full data size so the next section
      * can be read. */
-    ctx->read_end = ctx->data_size;
+    ctx->read_end = ctx->state.size;
     in_u32_leb128(ctx, &section_code, "section code");
     in_u32_leb128(ctx, &section_size, "section size");
-    ctx->read_end = ctx->offset + section_size;
+    ctx->read_end = ctx->state.offset + section_size;
     if (section_code >= kBinarySectionCount) {
       RAISE_ERROR("invalid section code: %u; max is %u", section_code,
                   kBinarySectionCount - 1);
@@ -2019,7 +1347,7 @@ static void read_sections(Context* ctx) {
 
     BinarySection section = static_cast<BinarySection>(section_code);
 
-    if (ctx->read_end > ctx->data_size)
+    if (ctx->read_end > ctx->state.size)
       RAISE_ERROR("invalid section size: extends past end");
 
     if (ctx->last_known_section != BinarySection::Invalid &&
@@ -2028,7 +1356,7 @@ static void read_sections(Context* ctx) {
       RAISE_ERROR("section %s out of order", get_section_name(section));
     }
 
-    CALLBACK_CTX(begin_section, section, section_size);
+    CALLBACK(BeginSection, section, section_size);
 
 #define V(Name, name, code)                   \
   case BinarySection::Name:                   \
@@ -2045,7 +1373,7 @@ static void read_sections(Context* ctx) {
 
 #undef V
 
-    if (ctx->offset != ctx->read_end) {
+    if (ctx->state.offset != ctx->read_end) {
       RAISE_ERROR("unfinished section (expected end: 0x%" PRIzx ")",
                   ctx->read_end);
     }
@@ -2058,175 +1386,14 @@ static void read_sections(Context* ctx) {
 Result read_binary(const void* data,
                    size_t size,
                    BinaryReader* reader,
-                   uint32_t num_function_passes,
                    const ReadBinaryOptions* options) {
-  LoggingContext logging_context;
-  WABT_ZERO_MEMORY(logging_context);
-  logging_context.reader = reader;
-  logging_context.stream = options->log_stream;
-
-  BinaryReader logging_reader;
-  WABT_ZERO_MEMORY(logging_reader);
-  logging_reader.user_data = &logging_context;
-
-  logging_reader.on_error = logging_on_error;
-  logging_reader.begin_section = logging_begin_section;
-  logging_reader.begin_module = logging_begin_module;
-  logging_reader.end_module = logging_end_module;
-
-  logging_reader.begin_custom_section = logging_begin_custom_section;
-  logging_reader.end_custom_section = logging_end_custom_section;
-
-  logging_reader.begin_signature_section = logging_begin_signature_section;
-  logging_reader.on_signature_count = logging_on_signature_count;
-  logging_reader.on_signature = logging_on_signature;
-  logging_reader.end_signature_section = logging_end_signature_section;
-
-  logging_reader.begin_import_section = logging_begin_import_section;
-  logging_reader.on_import_count = logging_on_import_count;
-  logging_reader.on_import = logging_on_import;
-  logging_reader.on_import_func = logging_on_import_func;
-  logging_reader.on_import_table = logging_on_import_table;
-  logging_reader.on_import_memory = logging_on_import_memory;
-  logging_reader.on_import_global = logging_on_import_global;
-  logging_reader.end_import_section = logging_end_import_section;
-
-  logging_reader.begin_function_signatures_section =
-      logging_begin_function_signatures_section;
-  logging_reader.on_function_signatures_count =
-      logging_on_function_signatures_count;
-  logging_reader.on_function_signature = logging_on_function_signature;
-  logging_reader.end_function_signatures_section =
-      logging_end_function_signatures_section;
-
-  logging_reader.begin_table_section = logging_begin_table_section;
-  logging_reader.on_table_count = logging_on_table_count;
-  logging_reader.on_table = logging_on_table;
-  logging_reader.end_table_section = logging_end_table_section;
-
-  logging_reader.begin_memory_section = logging_begin_memory_section;
-  logging_reader.on_memory_count = logging_on_memory_count;
-  logging_reader.on_memory = logging_on_memory;
-  logging_reader.end_memory_section = logging_end_memory_section;
-
-  logging_reader.begin_global_section = logging_begin_global_section;
-  logging_reader.on_global_count = logging_on_global_count;
-  logging_reader.begin_global = logging_begin_global;
-  logging_reader.begin_global_init_expr = logging_begin_global_init_expr;
-  logging_reader.end_global_init_expr = logging_end_global_init_expr;
-  logging_reader.end_global = logging_end_global;
-  logging_reader.end_global_section = logging_end_global_section;
-
-  logging_reader.begin_export_section = logging_begin_export_section;
-  logging_reader.on_export_count = logging_on_export_count;
-  logging_reader.on_export = logging_on_export;
-  logging_reader.end_export_section = logging_end_export_section;
-
-  logging_reader.begin_start_section = logging_begin_start_section;
-  logging_reader.on_start_function = logging_on_start_function;
-  logging_reader.end_start_section = logging_end_start_section;
-
-  logging_reader.begin_function_bodies_section =
-      logging_begin_function_bodies_section;
-  logging_reader.on_function_bodies_count = logging_on_function_bodies_count;
-  logging_reader.begin_function_body_pass = logging_begin_function_body_pass;
-  logging_reader.begin_function_body = logging_begin_function_body;
-  logging_reader.on_local_decl_count = logging_on_local_decl_count;
-  logging_reader.on_local_decl = logging_on_local_decl;
-  logging_reader.on_binary_expr = logging_on_binary_expr;
-  logging_reader.on_block_expr = logging_on_block_expr;
-  logging_reader.on_br_expr = logging_on_br_expr;
-  logging_reader.on_br_if_expr = logging_on_br_if_expr;
-  logging_reader.on_br_table_expr = logging_on_br_table_expr;
-  logging_reader.on_call_expr = logging_on_call_expr;
-  logging_reader.on_call_import_expr = logging_on_call_import_expr;
-  logging_reader.on_call_indirect_expr = logging_on_call_indirect_expr;
-  logging_reader.on_compare_expr = logging_on_compare_expr;
-  logging_reader.on_convert_expr = logging_on_convert_expr;
-  logging_reader.on_drop_expr = logging_on_drop_expr;
-  logging_reader.on_else_expr = logging_on_else_expr;
-  logging_reader.on_end_expr = logging_on_end_expr;
-  logging_reader.on_f32_const_expr = logging_on_f32_const_expr;
-  logging_reader.on_f64_const_expr = logging_on_f64_const_expr;
-  logging_reader.on_get_global_expr = logging_on_get_global_expr;
-  logging_reader.on_get_local_expr = logging_on_get_local_expr;
-  logging_reader.on_grow_memory_expr = logging_on_grow_memory_expr;
-  logging_reader.on_i32_const_expr = logging_on_i32_const_expr;
-  logging_reader.on_i64_const_expr = logging_on_i64_const_expr;
-  logging_reader.on_if_expr = logging_on_if_expr;
-  logging_reader.on_load_expr = logging_on_load_expr;
-  logging_reader.on_loop_expr = logging_on_loop_expr;
-  logging_reader.on_current_memory_expr = logging_on_current_memory_expr;
-  logging_reader.on_nop_expr = logging_on_nop_expr;
-  logging_reader.on_return_expr = logging_on_return_expr;
-  logging_reader.on_select_expr = logging_on_select_expr;
-  logging_reader.on_set_global_expr = logging_on_set_global_expr;
-  logging_reader.on_set_local_expr = logging_on_set_local_expr;
-  logging_reader.on_store_expr = logging_on_store_expr;
-  logging_reader.on_tee_local_expr = logging_on_tee_local_expr;
-  logging_reader.on_unary_expr = logging_on_unary_expr;
-  logging_reader.on_unreachable_expr = logging_on_unreachable_expr;
-  logging_reader.end_function_body = logging_end_function_body;
-  logging_reader.end_function_body_pass = logging_end_function_body_pass;
-  logging_reader.end_function_bodies_section =
-      logging_end_function_bodies_section;
-
-  logging_reader.begin_elem_section = logging_begin_elem_section;
-  logging_reader.on_elem_segment_count = logging_on_elem_segment_count;
-  logging_reader.begin_elem_segment = logging_begin_elem_segment;
-  logging_reader.begin_elem_segment_init_expr =
-      logging_begin_elem_segment_init_expr;
-  logging_reader.end_elem_segment_init_expr =
-      logging_end_elem_segment_init_expr;
-  logging_reader.on_elem_segment_function_index_count =
-      logging_on_elem_segment_function_index_count;
-  logging_reader.on_elem_segment_function_index =
-      logging_on_elem_segment_function_index;
-  logging_reader.end_elem_segment = logging_end_elem_segment;
-  logging_reader.end_elem_section = logging_end_elem_section;
-
-  logging_reader.begin_data_section = logging_begin_data_section;
-  logging_reader.on_data_segment_count = logging_on_data_segment_count;
-  logging_reader.begin_data_segment = logging_begin_data_segment;
-  logging_reader.begin_data_segment_init_expr =
-      logging_begin_data_segment_init_expr;
-  logging_reader.end_data_segment_init_expr =
-      logging_end_data_segment_init_expr;
-  logging_reader.on_data_segment_data = logging_on_data_segment_data;
-  logging_reader.end_data_segment = logging_end_data_segment;
-  logging_reader.end_data_section = logging_end_data_section;
-
-  logging_reader.begin_names_section = logging_begin_names_section;
-  logging_reader.on_function_name_subsection = logging_on_function_name_subsection;
-  logging_reader.on_function_names_count = logging_on_function_names_count;
-  logging_reader.on_function_name = logging_on_function_name;
-  logging_reader.on_local_name_subsection = logging_on_local_name_subsection;
-  logging_reader.on_local_name_function_count = logging_on_local_name_function_count;
-  logging_reader.on_local_name_local_count = logging_on_local_name_local_count;
-  logging_reader.on_local_name = logging_on_local_name;
-  logging_reader.end_names_section = logging_end_names_section;
-
-  logging_reader.begin_reloc_section = logging_begin_reloc_section;
-  logging_reader.on_reloc_count = logging_on_reloc_count;
-  logging_reader.on_reloc = logging_on_reloc;
-  logging_reader.end_reloc_section = logging_end_reloc_section;
-
-  logging_reader.on_init_expr_f32_const_expr =
-      logging_on_init_expr_f32_const_expr;
-  logging_reader.on_init_expr_f64_const_expr =
-      logging_on_init_expr_f64_const_expr;
-  logging_reader.on_init_expr_get_global_expr =
-      logging_on_init_expr_get_global_expr;
-  logging_reader.on_init_expr_i32_const_expr =
-      logging_on_init_expr_i32_const_expr;
-  logging_reader.on_init_expr_i64_const_expr =
-      logging_on_init_expr_i64_const_expr;
-
+  BinaryReaderLogging logging_reader(options->log_stream, reader);
   Context context;
   /* all the macros assume a Context* named ctx */
   Context* ctx = &context;
-  ctx->data = static_cast<const uint8_t*>(data);
-  ctx->data_size = ctx->read_end = size;
+  ctx->state.data = static_cast<const uint8_t*>(data);
+  ctx->state.size = ctx->read_end = size;
+  ctx->state.offset = 0;
   ctx->reader = options->log_stream ? &logging_reader : reader;
   ctx->options = options;
   ctx->last_known_section = BinarySection::Invalid;
@@ -2234,6 +1401,8 @@ Result read_binary(const void* data,
   if (setjmp(ctx->error_jmp_buf) == 1) {
     return Result::Error;
   }
+
+  ctx->reader->OnSetState(&ctx->state);
 
   uint32_t magic;
   in_u32(ctx, &magic, "magic");
@@ -2244,9 +1413,9 @@ Result read_binary(const void* data,
                      "bad wasm file version: %#x (expected %#x)", version,
                      WABT_BINARY_VERSION);
 
-  CALLBACK(begin_module, version);
+  CALLBACK(BeginModule, version);
   read_sections(ctx);
-  CALLBACK0(end_module);
+  CALLBACK0(EndModule);
   return Result::Ok;
 }
 

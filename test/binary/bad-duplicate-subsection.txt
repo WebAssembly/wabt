@@ -7,14 +7,19 @@ section(FUNCTION) { count[1] type[0] }
 section(CODE) {
   count[1]
   func {
-    locals[0]
-    end
-    nop
+    locals[decl_count[1] i32_count[1] i32]
+    get_local 0
   }
+}
+section("name") {
+  subsection_type[1]
+  subsection_length[1]
+  count[0]
+  subsection_type[1]
+  subsection_length[1]
+  count[0]
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: accessing stack depth: 0 >= max: 0
-error: @0x0000001a: OnNopExpr callback failed
-
+error: @0x00000028: duplicate sub-section
 ;;; STDERR ;;)
