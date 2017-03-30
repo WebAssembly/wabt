@@ -168,11 +168,11 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
       writef(&s_log_stream, "func reloc %d + %d\n", function_index, offset);
   } else {
     /* imported function call */
-    FunctionImport* import = &binary->function_imports[function_index];
+    const FunctionImport& import = binary->function_imports[function_index];
     offset = binary->imported_function_index_offset;
-    if (!import->active) {
-      function_index = import->foreign_index;
-      offset = import->foreign_binary->function_index_offset;
+    if (!import.active) {
+      function_index = import.foreign_index;
+      offset = import.foreign_binary->function_index_offset;
       if (s_debug)
         writef(&s_log_stream,
                "reloc for disabled import. new index = %d + %d\n",
@@ -627,11 +627,11 @@ static bool write_combined_section(Context* ctx,
 }
 
 struct ExportInfo {
-  ExportInfo(Export* export_, LinkerInputBinary* binary)
+  ExportInfo(const Export* export_, const LinkerInputBinary* binary)
       : export_(export_), binary(binary) {}
 
-  Export* export_;
-  LinkerInputBinary* binary;
+  const Export* export_;
+  const LinkerInputBinary* binary;
 };
 
 static void resolve_symbols(Context* ctx) {
@@ -655,8 +655,7 @@ static void resolve_symbols(Context* ctx) {
    * Iterate through all imported functions resolving them against exported
    * ones.
    */
-  for (size_t i = 0; i < ctx->inputs.size(); i++) {
-    LinkerInputBinary* binary = ctx->inputs[i].get();
+  for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     for (size_t j = 0; j < binary->function_imports.size(); j++) {
       FunctionImport* import = &binary->function_imports[j];
       int export_index = export_map.find_index(import->name);
