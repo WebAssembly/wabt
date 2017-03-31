@@ -59,7 +59,6 @@ for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
   else
     if set_run_test_args ${COMPILER} ${BUILD_TYPE}; then
       run_tests
-      break
     fi
   fi
 done
