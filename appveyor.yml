@@ -28,8 +28,9 @@ environment:
     EXE_DIR: '%CONFIG%'
 
 build_script:
-  - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% -G "%GENERATOR%"
-  - cmake --build . --config %CONFIG% -- %JOBS_FLAG%%JOBS%
+  - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_INSTALL_PREFIX=. -G "%GENERATOR%"
+  - cmake --build . --config %CONFIG% --target install -- %JOBS_FLAG%%JOBS%
 
 test_script:
-  - cmd: '%EXE_DIR%\wabt-unittests.exe'
+  - wabt-unittests
+  - python test\run-tests.py --bindir bin
