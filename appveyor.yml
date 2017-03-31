@@ -28,11 +28,11 @@ environment:
     EXE_DIR: '%CONFIG%'
 
 build_script:
-  - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_INSTALL_PREFIX=. -G "%GENERATOR%"
+  - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER% -G "%GENERATOR%"
   - cmake --build . --config %CONFIG% --target install -- %JOBS_FLAG%%JOBS%
 
 test_script:
   - wabt-unittests
   - cd test
-  - python run-tests.py --bindir ..\bin
+  - python run-tests.py --bindir %APPVEYOR_BUILD_FOLDER%\bin
   - cd ..
