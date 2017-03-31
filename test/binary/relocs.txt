@@ -17,4 +17,5 @@ section("reloc.name") {
 (;; STDOUT ;;;
 (module
   (type (;0;) (func (result i32))))
+XXXXX
 ;;; STDOUT ;;)
