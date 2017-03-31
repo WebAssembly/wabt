@@ -22,14 +22,18 @@ RTN=0
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source "${SCRIPT_DIR}/travis-common.sh"
 
+cd ${ROOT_DIR}
+
 log_and_run() {
   echo $*
-  (exec $*) && true
-  [[ $? != 0 ]] && RTN=1
+  if ! $*; then
+    echo "travis-test.sh: sub-command failed: $*"
+    RTN=1;
+  fi
 }
 
 run_tests() {
-  (cd ${ROOT_DIR} && log_and_run test/run-tests.py -v --bindir ${BINDIR} $* --timeout=10)
+  log_and_run test/run-tests.py -v --bindir ${BINDIR} $* --timeout=10
   log_and_run ${BINDIR}/wabt-unittests
 }
 
@@ -55,8 +59,10 @@ for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
   else
     if set_run_test_args ${COMPILER} ${BUILD_TYPE}; then
       run_tests
+      break
     fi
   fi
 done
 
+echo "travis-test.sh done: $RTN"
 exit $RTN
