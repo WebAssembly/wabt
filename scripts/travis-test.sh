@@ -18,17 +18,19 @@
 set -o nounset
 set -o errexit
 
+RTN=0
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source "${SCRIPT_DIR}/travis-common.sh"
 
 log_and_run() {
   echo $*
-  exec $*
+  (exec $*) && true
+  [[ $? != 0 ]] && RTN=1
 }
 
 run_tests() {
-  (cd ${ROOT_DIR} && log_and_run test/run-tests.py --bindir ${BINDIR} $* --timeout=10) && true
-  (log_and_run ${BINDIR}/wabt-unittests) && true
+  (cd ${ROOT_DIR} && log_and_run test/run-tests.py --bindir ${BINDIR} $* --timeout=10)
+  log_and_run ${BINDIR}/wabt-unittests
 }
 
 set_run_test_args() {
@@ -56,3 +58,5 @@ for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
     fi
   fi
 done
+
+exit $RTN
