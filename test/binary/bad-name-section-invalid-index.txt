@@ -21,4 +21,5 @@ section("name") {
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x00000028: invalid function index: 8
+
 ;;; STDERR ;;)

@@ -22,4 +22,5 @@ section("name") {
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x00000028: out-of-order sub-section
+
 ;;; STDERR ;;)
