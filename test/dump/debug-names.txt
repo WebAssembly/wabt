@@ -6,10 +6,13 @@
     (local $F1L2 i32)
     (local i32))
 
-  (func $F2 (param $F2P0 f32)
-    (local $F2L1 f64)
+  ;; An unnamed function with a named param
+  (func (param $F2P0 f32))
+
+  (func $F2 (param $F3P0 f32)
+    (local $F3L1 f64)
     (local i64)
-    (local $F2L3 i64)))
+    (local $F3L3 i64)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
@@ -31,79 +34,90 @@
 ; section "Function" (3)
 0000013: 03                                        ; section code
 0000014: 00                                        ; section size (guess)
-0000015: 02                                        ; num functions
+0000015: 03                                        ; num functions
 0000016: 00                                        ; function 0 signature index
 0000017: 01                                        ; function 1 signature index
-0000014: 03                                        ; FIXUP section size
+0000018: 01                                        ; function 2 signature index
+0000014: 04                                        ; FIXUP section size
 ; section "Code" (10)
-0000018: 0a                                        ; section code
-0000019: 00                                        ; section size (guess)
-000001a: 02                                        ; num functions
+0000019: 0a                                        ; section code
+000001a: 00                                        ; section size (guess)
+000001b: 03                                        ; num functions
 ; function body 0
-000001b: 00                                        ; func body size (guess)
-000001c: 02                                        ; local decl count
-000001d: 01                                        ; local type count
-000001e: 7d                                        ; f32
-000001f: 02                                        ; local type count
-0000020: 7f                                        ; i32
-0000021: 0b                                        ; end
-000001b: 06                                        ; FIXUP func body size
+000001c: 00                                        ; func body size (guess)
+000001d: 02                                        ; local decl count
+000001e: 01                                        ; local type count
+000001f: 7d                                        ; f32
+0000020: 02                                        ; local type count
+0000021: 7f                                        ; i32
+0000022: 0b                                        ; end
+000001c: 06                                        ; FIXUP func body size
 ; function body 1
-0000022: 00                                        ; func body size (guess)
-0000023: 02                                        ; local decl count
-0000024: 01                                        ; local type count
-0000025: 7c                                        ; f64
-0000026: 02                                        ; local type count
-0000027: 7e                                        ; i64
-0000028: 0b                                        ; end
-0000022: 06                                        ; FIXUP func body size
-0000019: 0f                                        ; FIXUP section size
+0000023: 00                                        ; func body size (guess)
+0000024: 00                                        ; local decl count
+0000025: 0b                                        ; end
+0000023: 02                                        ; FIXUP func body size
+; function body 2
+0000026: 00                                        ; func body size (guess)
+0000027: 02                                        ; local decl count
+0000028: 01                                        ; local type count
+0000029: 7c                                        ; f64
+000002a: 02                                        ; local type count
+000002b: 7e                                        ; i64
+000002c: 0b                                        ; end
+0000026: 06                                        ; FIXUP func body size
+000001a: 12                                        ; FIXUP section size
 ; section "name"
-0000029: 00                                        ; custom section code
-000002a: 00                                        ; section size (guess)
-000002b: 04                                        ; string length
-000002c: 6e61 6d65                                name  ; custom section name
-0000030: 01                                        ; function name type
-0000031: 00                                        ; subsection size (guess)
-0000032: 02                                        ; num functions
-0000033: 00                                        ; function index
-0000034: 03                                        ; string length
-0000035: 2446 31                                  $F1  ; func name 0
-0000038: 01                                        ; function index
-0000039: 03                                        ; string length
-000003a: 2446 32                                  $F2  ; func name 1
-0000031: 0b                                        ; FIXUP subsection size
-000003d: 02                                        ; local name type
-000003e: 00                                        ; subsection size (guess)
-000003f: 02                                        ; num functions
-0000040: 00                                        ; function index
-0000041: 04                                        ; num locals
-0000042: 00                                        ; local index
-0000043: 05                                        ; string length
-0000044: 2446 3150 30                             $F1P0  ; local name 0
-0000049: 01                                        ; local index
-000004a: 05                                        ; string length
-000004b: 2446 314c 31                             $F1L1  ; local name 1
-0000050: 02                                        ; local index
-0000051: 05                                        ; string length
-0000052: 2446 314c 32                             $F1L2  ; local name 2
-0000057: 03                                        ; local index
-0000058: 00                                        ; string length
-0000059: 01                                        ; function index
-000005a: 04                                        ; num locals
-000005b: 00                                        ; local index
-000005c: 05                                        ; string length
-000005d: 2446 3250 30                             $F2P0  ; local name 0
-0000062: 01                                        ; local index
-0000063: 05                                        ; string length
-0000064: 2446 324c 31                             $F2L1  ; local name 1
-0000069: 02                                        ; local index
-000006a: 00                                        ; string length
-000006b: 03                                        ; local index
-000006c: 05                                        ; string length
-000006d: 2446 324c 33                             $F2L3  ; local name 3
-000003e: 33                                        ; FIXUP subsection size
-000002a: 47                                        ; FIXUP section size
+000002d: 00                                        ; custom section code
+000002e: 00                                        ; section size (guess)
+000002f: 04                                        ; string length
+0000030: 6e61 6d65                                name  ; custom section name
+0000034: 01                                        ; function name type
+0000035: 00                                        ; subsection size (guess)
+0000036: 02                                        ; num functions
+0000037: 00                                        ; function index
+0000038: 03                                        ; string length
+0000039: 2446 31                                  $F1  ; func name 0
+000003c: 02                                        ; function index
+000003d: 03                                        ; string length
+000003e: 2446 32                                  $F2  ; func name 2
+0000035: 0b                                        ; FIXUP subsection size
+0000041: 02                                        ; local name type
+0000042: 00                                        ; subsection size (guess)
+0000043: 03                                        ; num functions
+0000044: 00                                        ; function index
+0000045: 04                                        ; num locals
+0000046: 00                                        ; local index
+0000047: 05                                        ; string length
+0000048: 2446 3150 30                             $F1P0  ; local name 0
+000004d: 01                                        ; local index
+000004e: 05                                        ; string length
+000004f: 2446 314c 31                             $F1L1  ; local name 1
+0000054: 02                                        ; local index
+0000055: 05                                        ; string length
+0000056: 2446 314c 32                             $F1L2  ; local name 2
+000005b: 03                                        ; local index
+000005c: 00                                        ; string length
+000005d: 01                                        ; function index
+000005e: 01                                        ; num locals
+000005f: 00                                        ; local index
+0000060: 05                                        ; string length
+0000061: 2446 3250 30                             $F2P0  ; local name 0
+0000066: 02                                        ; function index
+0000067: 04                                        ; num locals
+0000068: 00                                        ; local index
+0000069: 05                                        ; string length
+000006a: 2446 3350 30                             $F3P0  ; local name 0
+000006f: 01                                        ; local index
+0000070: 05                                        ; string length
+0000071: 2446 334c 31                             $F3L1  ; local name 1
+0000076: 02                                        ; local index
+0000077: 00                                        ; string length
+0000078: 03                                        ; local index
+0000079: 05                                        ; string length
+000007a: 2446 334c 33                             $F3L3  ; local name 3
+0000042: 3c                                        ; FIXUP subsection size
+000002e: 50                                        ; FIXUP section size
 debug-names.wasm:	file format wasm 0x000001
 
 Section Details:
@@ -114,21 +128,25 @@ Type:
 Function:
  - func[0] sig=0
  - func[1] sig=1
+ - func[2] sig=1
 Custom:
  - name: "name"
  - func[0] $F1
- - func[1] $F2
+ - func[2] $F2
  - func[0] local[0] $F1P0
  - func[0] local[1] $F1L1
  - func[0] local[2] $F1L2
  - func[1] local[0] $F2P0
- - func[1] local[1] $F2L1
- - func[1] local[3] $F2L3
+ - func[2] local[0] $F3P0
+ - func[2] local[1] $F3L1
+ - func[2] local[3] $F3L3
 
 Code Disassembly:
 
-00001b <$F1>:
- 000021: 0b                         | end
-000022 <$F2>:
- 000028: 0b                         | end
+00001c <$F1>:
+ 000022: 0b                         | end
+000023 func[1]:
+ 000025: 0b                         | end
+000026 <$F2>:
+ 00002c: 0b                         | end
 ;;; STDOUT ;;)

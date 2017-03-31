@@ -1,0 +1,27 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS: --debug-names -r
+(module
+  (import "__extern" "baz" (func $import_func1))
+)
+(;; STDOUT ;;;
+linked.wasm:	file format wasm 0x000001
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
+   Import start=0x00000014 end=0x00000024 (size=0x00000010) count: 1
+   Custom start=0x0000002a end=0x00000045 (size=0x0000001b) "name"
+
+Section Details:
+
+Type:
+ - [0] () -> nil
+Import:
+ - func[0] sig=0 <- __extern.baz
+Custom:
+ - name: "name"
+ - func[0] $import_func1
+
+Code Disassembly:
+
+;;; STDOUT ;;)

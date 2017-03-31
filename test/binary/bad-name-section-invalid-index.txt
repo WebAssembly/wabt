@@ -12,15 +12,14 @@ section(CODE) {
   }
 }
 section("name") {
-  subsection_type[2]
-  subsection_length[1]
-  count[0]
-  subsection_type[1]
-  subsection_length[1]
-  count[0]
+  subsection[1]
+  length[6]
+  func_count[1]
+  index[8]
+  str("$F0")
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000028: out-of-order sub-section
+error: @0x00000028: invalid function index: 8
 
 ;;; STDERR ;;)

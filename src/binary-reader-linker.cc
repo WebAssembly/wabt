@@ -34,8 +34,6 @@ class BinaryReaderLinker : public BinaryReaderNop {
 
   virtual Result BeginSection(BinarySection section_type, uint32_t size);
 
-  virtual Result BeginCustomSection(uint32_t size, StringSlice section_name);
-
   virtual Result OnImport(uint32_t index,
                           StringSlice module_name,
                           StringSlice field_name);
@@ -50,6 +48,8 @@ class BinaryReaderLinker : public BinaryReaderNop {
                                 uint32_t global_index,
                                 Type type,
                                 bool mutable_);
+
+  virtual Result OnFunctionCount(uint32_t count);
 
   virtual Result OnTable(uint32_t index,
                          Type elem_type,
@@ -70,6 +70,8 @@ class BinaryReaderLinker : public BinaryReaderNop {
                                    const void* data,
                                    uint32_t size);
 
+  virtual Result BeginNamesSection(uint32_t size);
+
   virtual Result OnFunctionName(uint32_t function_index,
                                 StringSlice function_name);
 
@@ -88,6 +90,7 @@ class BinaryReaderLinker : public BinaryReaderNop {
 
   Section* reloc_section = nullptr;
   Section* current_section = nullptr;
+  uint32_t function_count = 0;
 };
 
 BinaryReaderLinker::BinaryReaderLinker(LinkerInputBinary* binary)
@@ -163,6 +166,11 @@ Result BinaryReaderLinker::OnImportGlobal(uint32_t import_index,
   return Result::Ok;
 }
 
+Result BinaryReaderLinker::OnFunctionCount(uint32_t count) {
+  function_count = count;
+  return Result::Ok;
+}
+
 Result BinaryReaderLinker::BeginSection(BinarySection section_code,
                                         uint32_t size) {
   Section* sec = new Section();
@@ -182,62 +190,6 @@ Result BinaryReaderLinker::BeginSection(BinarySection section_code,
     sec->payload_offset = sec->offset + bytes_read;
     sec->payload_size = sec->size - bytes_read;
   }
-  return Result::Ok;
-}
-
-Result BinaryReaderLinker::BeginCustomSection(uint32_t size,
-                                              StringSlice section_name) {
-  Section* sec = current_section;
-  sec->data.custom.name = section_name;
-
-  /* Modify section size and offset to not include the name itself. */
-  size_t delta = state->offset - sec->offset;
-  sec->offset = sec->offset + delta;
-  sec->size = sec->size - delta;
-  sec->payload_offset = sec->offset;
-  sec->payload_size = sec->size;
-
-  /* Special handling for certain CUSTOM sections */
-  if (string_slice_eq_cstr(&section_name, "name")) {
-    uint32_t name_type;
-    size_t bytes_read = read_u32_leb128(
-        &binary->data[sec->offset], &binary->data[binary->size], &name_type);
-
-    if (static_cast<NameSectionSubsection>(name_type) !=
-        NameSectionSubsection::Function) {
-      WABT_FATAL("no function name section");
-    }
-
-    sec->payload_offset += bytes_read;
-    sec->payload_size -= bytes_read;
-
-    uint32_t subsection_size;
-    bytes_read = read_u32_leb128(&binary->data[sec->offset],
-                                 &binary->data[binary->size], &subsection_size);
-
-    sec->payload_offset += bytes_read;
-    sec->payload_size -= bytes_read;
-
-    bytes_read = read_u32_leb128(&binary->data[sec->payload_offset],
-                                 &binary->data[binary->size], &sec->count);
-    sec->payload_offset += bytes_read;
-    sec->payload_size -= bytes_read;
-
-    /* We don't currently support merging name sections unless they contain
-     * a name for every function. */
-    uint32_t total_funcs = binary->function_imports.size();
-    for (const std::unique_ptr<Section>& section : binary->sections) {
-      if (section->section_code == BinarySection::Function) {
-        total_funcs += section->count;
-        break;
-      }
-    }
-    if (total_funcs != sec->count) {
-      WABT_FATAL("name section count (%d) does not match function count (%d)\n",
-                 sec->count, total_funcs);
-    }
-  }
-
   return Result::Ok;
 }
 
@@ -313,13 +265,13 @@ Result BinaryReaderLinker::OnExport(uint32_t index,
   return Result::Ok;
 }
 
+Result BinaryReaderLinker::BeginNamesSection(uint32_t size) {
+  binary->debug_names.resize(function_count + binary->function_imports.size());
+  return Result::Ok;
+}
+
 Result BinaryReaderLinker::OnFunctionName(uint32_t index, StringSlice name) {
-  while (binary->debug_names.size() < index) {
-    binary->debug_names.emplace_back();
-  }
-  if (binary->debug_names.size() == index) {
-    binary->debug_names.push_back(string_slice_to_string(name));
-  }
+  binary->debug_names[index] = string_slice_to_string(name);
   return Result::Ok;
 }
 
