@@ -3,6 +3,9 @@
 init:
   - set PATH=C:\Python27\Scripts;%PATH%             # while python's bin is already in PATH, but pip.exe in Scripts\ dir isn't
   - set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%
+  # Python doesn't seem to be able to import files from the current script's
+  # directory on Windows.
+  - set PYTHONPATH=%APPVEYOR_BUILD_FOLDER%\test
 
 install:
   - git submodule update --init
@@ -33,6 +36,4 @@ build_script:
 
 test_script:
   - wabt-unittests
-  - cd test
-  - python run-tests.py --bindir %APPVEYOR_BUILD_FOLDER%\bin
-  - cd ..
+  - python test\run-tests.py --bindir %APPVEYOR_BUILD_FOLDER%\bin
