@@ -328,15 +328,15 @@ Result BinaryReaderObjdump::OnCount(uint32_t count) {
 
 Result BinaryReaderObjdump::BeginModule(uint32_t version) {
   if (options->print_header) {
-    const char* lastslash = strrchr(options->infile, '/');
-    const char* lastbackslash = strrchr(options->infile, '\\');
+    const char* last_slash = strrchr(options->infile, '/');
+    const char* last_backslash = strrchr(options->infile, '\\');
     const char* basename;
-    if (lastslash && lastbackslash) {
-      basename = std::max(lastslash, lastbackslash) + 1;
-    } else if (lastslash) {
-      basename = lastslash + 1;
-    } else if (lastbackslash) {
-      basename = lastbackslash + 1;
+    if (last_slash && last_backslash) {
+      basename = std::max(last_slash, last_backslash) + 1;
+    } else if (last_slash) {
+      basename = last_slash + 1;
+    } else if (last_backslash) {
+      basename = last_backslash + 1;
     } else {
       basename = options->infile;
     }

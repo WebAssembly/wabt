@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <algorithm>
 #include <vector>
 
 #include "binary-reader.h"
@@ -179,19 +180,23 @@ static void parse_options(int argc, char** argv) {
 }
 
 static StringSlice get_dirname(const char* s) {
-  /* strip everything after and including the last slash, e.g.:
+  /* strip everything after and including the last slash (or backslash), e.g.:
    *
    * s = "foo/bar/baz", => "foo/bar"
    * s = "/usr/local/include/stdio.h", => "/usr/local/include"
    * s = "foo.bar", => ""
+   * s = "some\windows\directory", => "some\windows"
    */
   const char* last_slash = strrchr(s, '/');
-  if (last_slash == nullptr)
+  const char* last_backslash = strrchr(s, '\\');
+  if (!last_slash)
     last_slash = s;
+  if (!last_backslash)
+    last_backslash = s;
 
   StringSlice result;
   result.start = s;
-  result.length = last_slash - s;
+  result.length = std::max(last_slash, last_backslash) - s;
   return result;
 }
 
