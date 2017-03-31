@@ -9,5 +9,4 @@ section(TYPE) {
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x00000010: expected valid result type: -64
-
 ;;; STDERR ;;)

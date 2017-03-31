@@ -7,5 +7,4 @@ section(IMPORT) { count[1] str("module") str("func") func_kind type[1] }
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x00000020: invalid import signature index
-
 ;;; STDERR ;;)

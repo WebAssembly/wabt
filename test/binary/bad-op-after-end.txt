@@ -16,5 +16,4 @@ section(CODE) {
 Error running "wasm2wast":
 error: accessing stack depth: 0 >= max: 0
 error: @0x0000001a: OnNopExpr callback failed
-
 ;;; STDERR ;;)

@@ -6,5 +6,4 @@ Error running "wast2wasm":
 out/third_party/testsuite/of_string-overflow-u64.fail.wast:1:26: invalid literal "18446744073709551616"
 (module (func (i64.const 18446744073709551616)))
                          ^^^^^^^^^^^^^^^^^^^^
-
 ;;; STDERR ;;)

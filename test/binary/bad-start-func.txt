@@ -8,5 +8,4 @@ section(START) { func[1] }
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x00000015: invalid start function index
-
 ;;; STDERR ;;)

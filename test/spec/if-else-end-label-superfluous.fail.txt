@@ -9,5 +9,4 @@ out/third_party/testsuite/if-else-end-label-superfluous.fail.wast:1:23: unexpect
 out/third_party/testsuite/if-else-end-label-superfluous.fail.wast:1:30: unexpected label "$l"
 (module (func if else $l end $l))
                              ^^
-
 ;;; STDERR ;;)

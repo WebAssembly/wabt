@@ -11,5 +11,4 @@ section(CODE) {
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x00000016: function signature count != function body count
-
 ;;; STDERR ;;)

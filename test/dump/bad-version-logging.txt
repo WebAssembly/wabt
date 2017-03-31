@@ -6,5 +6,4 @@ magic
 (;; STDERR ;;;
 Error running "wasmdump":
 *ERROR*: @0x00000008: bad wasm file version: 0xe (expected 0x1)
-
 ;;; STDERR ;;)

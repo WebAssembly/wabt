@@ -9,5 +9,4 @@ out/third_party/testsuite/i32.load64_s.fail.wast:1:52: unexpected token "i32.loa
 out/third_party/testsuite/i32.load64_s.fail.wast:1:65: syntax error, unexpected (
 (module (memory 1) (func (param i32) (result i32) (i32.load64_s (get_local 0))))
                                                                 ^
-
 ;;; STDERR ;;)

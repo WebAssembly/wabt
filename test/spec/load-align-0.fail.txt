@@ -6,5 +6,4 @@ Error running "wast2wasm":
 out/third_party/testsuite/load-align-0.fail.wast:1:33: alignment must be power-of-two
 (module (memory 0) (func (drop (i64.load align=0 (i32.const 0)))))
                                 ^^^^^^^^^^^^^^^^
-
 ;;; STDERR ;;)

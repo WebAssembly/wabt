@@ -6,5 +6,4 @@ Error running "wast2wasm":
 out/third_party/testsuite/if-else-label-superfluous.fail.wast:1:23: unexpected label "$l"
 (module (func if else $l end))
                       ^^
-
 ;;; STDERR ;;)

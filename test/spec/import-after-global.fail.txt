@@ -6,5 +6,4 @@ Error running "wast2wasm":
 out/third_party/testsuite/import-after-global.fail.wast:1:22: imports must occur before all non-import definitions
 (module (global i64) (import "" "" (table 0 anyfunc)))
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 ;;; STDERR ;;)

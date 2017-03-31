@@ -7,5 +7,4 @@ section(FUNCTION) { count[1] type[1] }
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x00000014: invalid function signature index: 1
-
 ;;; STDERR ;;)

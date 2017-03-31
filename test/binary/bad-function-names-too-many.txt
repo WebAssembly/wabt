@@ -18,5 +18,4 @@ section("name") {
 Error running "wasm2wast":
 error: expected function name count (2) <= function count (1)
 error: @0x00000023: OnFunctionNamesCount callback failed
-
 ;;; STDERR ;;)

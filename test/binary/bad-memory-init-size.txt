@@ -10,5 +10,4 @@ section(MEMORY) {
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x0000000f: invalid memory initial size
-
 ;;; STDERR ;;)

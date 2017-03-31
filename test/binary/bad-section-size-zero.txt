@@ -8,5 +8,4 @@ section_code[1] section_size[0]
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: @0x0000000a: unable to read u32 leb128: type count
-
 ;;; STDERR ;;)

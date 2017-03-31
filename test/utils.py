@@ -71,6 +71,10 @@ class Executable(object):
         stdout = self.clean_stdout(stdout)
       if self.clean_stderr:
         stderr = self.clean_stderr(stderr)
+
+      # stderr is used to generate an exception string which shouldn't end
+      # in a newline.
+      stderr = stderr.strip('\n')
       if process.returncode < 0:
         # Terminated by signal
         signame = SIGNAMES.get(-process.returncode, '<unknown>')

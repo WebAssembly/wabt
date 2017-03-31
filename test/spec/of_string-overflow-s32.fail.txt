@@ -6,5 +6,4 @@ Error running "wast2wasm":
 out/third_party/testsuite/of_string-overflow-s32.fail.wast:1:26: invalid literal "-2147483649"
 (module (func (i32.const -2147483649)))
                          ^^^^^^^^^^^
-
 ;;; STDERR ;;)

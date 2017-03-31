@@ -14,7 +14,6 @@ section(CODE) {
 (;; STDERR ;;;
 Error running "wasm-interp":
 error: @0x00000015: function signature count != function body count
-
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 BeginModule(version: 1)

@@ -6,5 +6,4 @@ Error running "wast2wasm":
 out/third_party/testsuite/func-result-before-param.fail.wast:1:29: syntax error, unexpected PARAM
 (module (func (result i32) (param i32) (get_local 0)))
                             ^^^^^
-
 ;;; STDERR ;;)

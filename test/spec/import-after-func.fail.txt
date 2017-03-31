@@ -6,5 +6,4 @@ Error running "wast2wasm":
 out/third_party/testsuite/import-after-func.fail.wast:1:16: imports must occur before all non-import definitions
 (module (func) (import "" "" (memory 0)))
                ^^^^^^^^^^^^^^^^^^^^^^^^^
-
 ;;; STDERR ;;)

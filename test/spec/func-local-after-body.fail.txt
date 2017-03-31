@@ -6,5 +6,4 @@ Error running "wast2wasm":
 out/third_party/testsuite/func-local-after-body.fail.wast:1:22: syntax error, unexpected LOCAL
 (module (func (nop) (local i32)))
                      ^^^^^
-
 ;;; STDERR ;;)
