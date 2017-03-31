@@ -29,6 +29,8 @@ import sys
 import threading
 import time
 
+print(sys.path)
+
 import find_exe
 from utils import Error
 
