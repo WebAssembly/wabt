@@ -36,4 +36,4 @@ build_script:
 
 test_script:
   - wabt-unittests
-  - python test\run-tests.py --bindir %APPVEYOR_BUILD_FOLDER%\bin
+  - python test\run-tests.py -v --bindir %APPVEYOR_BUILD_FOLDER%\bin

@@ -2,15 +2,15 @@
 ;;; STDIN_FILE: third_party/testsuite/imports.wast
 (;; STDOUT ;;;
 called host spectest.print(i32:13) =>
-called host spectest.print(i32:14, f32:42) =>
+called host spectest.print(i32:14, f32:42.000000) =>
 called host spectest.print(i32:13) =>
 called host spectest.print(i32:13) =>
-called host spectest.print(f32:13) =>
+called host spectest.print(f32:13.000000) =>
 called host spectest.print(i32:13) =>
-called host spectest.print(f64:25, f64:53) =>
-called host spectest.print(f64:24) =>
-called host spectest.print(f64:24) =>
-called host spectest.print(f64:24) =>
+called host spectest.print(f64:25.000000, f64:53.000000) =>
+called host spectest.print(f64:24.000000) =>
+called host spectest.print(f64:24.000000) =>
+called host spectest.print(f64:24.000000) =>
 out/third_party/testsuite/imports.wast:89: assert_unlinkable passed:
   error: unknown module field "unknown"
   error: @0x00000020: OnImport callback failed

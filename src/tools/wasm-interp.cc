@@ -218,14 +218,14 @@ static void sprint_typed_value(char* buffer,
     case Type::F32: {
       float value;
       memcpy(&value, &tv->value.f32_bits, sizeof(float));
-      snprintf(buffer, size, "f32:%g", value);
+      snprintf(buffer, size, "f32:%f", value);
       break;
     }
 
     case Type::F64: {
       double value;
       memcpy(&value, &tv->value.f64_bits, sizeof(double));
-      snprintf(buffer, size, "f64:%g", value);
+      snprintf(buffer, size, "f64:%f", value);
       break;
     }
 
