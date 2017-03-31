@@ -527,13 +527,16 @@ def RunTest(info, options, variables, verbose_level=0):
   # Clone variables dict so it can be safely modified.
   variables = dict(variables)
 
+  cwd = REPO_ROOT_DIR
+  gen_input_path = info.CreateInputFile()
+  rel_gen_input_path = os.path.relpath(gen_input_path, cwd)
+  variables['out_dir'] = os.path.dirname(rel_gen_input_path)
+  cmd = info.GetCommand(rel_gen_input_path, variables, options.arg,
+                        verbose_level)
+  if options.print_cmd:
+    print(' '.join(cmd))
+
   try:
-    cwd = REPO_ROOT_DIR
-    gen_input_path = info.CreateInputFile()
-    rel_gen_input_path = os.path.relpath(gen_input_path, cwd)
-    variables['out_dir'] = os.path.dirname(rel_gen_input_path)
-    cmd = info.GetCommand(rel_gen_input_path, variables, options.arg,
-                          verbose_level)
     return RunCommandWithTimeout(cmd, cwd, timeout, verbose_level > 0)
   except (Error, KeyboardInterrupt) as e:
     return e
@@ -687,6 +690,9 @@ def main(args):
   parser.add_argument('--no-roundtrip',
                       help='don\'t run roundtrip.py on all tests',
                       action='store_false', default=True, dest='roundtrip')
+  parser.add_argument('-p', '--print-cmd',
+                      help='print the commands that are run.',
+                      action='store_true')
   parser.add_argument('patterns', metavar='pattern', nargs='*',
                       help='test patterns.')
   options = parser.parse_args(args)
