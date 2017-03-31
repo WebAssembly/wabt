@@ -33,4 +33,6 @@ build_script:
 
 test_script:
   - wabt-unittests
-  - python test\run-tests.py --bindir bin
+  - cd test
+  - python run-tests.py --bindir ..\bin
+  - cd ..
