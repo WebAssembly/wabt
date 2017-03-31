@@ -29,7 +29,7 @@ log_and_run() {
 }
 
 run_tests() {
-  (cd ${ROOT_DIR} && log_and_run test/run-tests.py --bindir ${BINDIR} $* --timeout=10)
+  (cd ${ROOT_DIR} && log_and_run test/run-tests.py -v --bindir ${BINDIR} $* --timeout=10)
   log_and_run ${BINDIR}/wabt-unittests
 }
 
