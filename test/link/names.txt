@@ -1,15 +1,17 @@
 ;;; TOOL: run-wasm-link
 ;;; FLAGS: --debug-names -r
 (module
+  (import "__extern" "missing0" (func $import_func0))
+  (import "__extern" "missing1" (func))
   (import "__extern" "baz" (func $import_func1))
-  (import "__extern" "missing" (func $import_func2))
+  (import "__extern" "missing2" (func $import_func2))
   (export "foo" (func $name1))
   (func $name1 (param $param1 i32)
      i32.const 1
-     call 0)
+     call 2)
   (func $name2 (param $param2 i64)
      i64.const 1
-     call 1)
+     call 3)
   (func (param $param2 i64))
 )
 (module
@@ -24,12 +26,12 @@ linked.wasm:	file format wasm 0x000001
 Sections:
 
      Type start=0x0000000a end=0x0000001a (size=0x00000010) count: 4
-   Import start=0x00000020 end=0x00000034 (size=0x00000014) count: 1
- Function start=0x0000003a end=0x0000003f (size=0x00000005) count: 4
-   Export start=0x00000045 end=0x00000052 (size=0x0000000d) count: 2
-     Code start=0x00000054 end=0x00000079 (size=0x00000025) count: 4
-   Custom start=0x0000007f end=0x000000b2 (size=0x00000033) "name"
-   Custom start=0x000000b8 end=0x000000ce (size=0x00000016) "reloc.Code"
+   Import start=0x00000020 end=0x0000005d (size=0x0000003d) count: 3
+ Function start=0x00000063 end=0x00000068 (size=0x00000005) count: 4
+   Export start=0x0000006e end=0x0000007b (size=0x0000000d) count: 2
+     Code start=0x0000007d end=0x000000a2 (size=0x00000025) count: 4
+   Custom start=0x000000a8 end=0x000000ea (size=0x00000042) "name"
+   Custom start=0x000000f0 end=0x00000106 (size=0x00000016) "reloc.Code"
 
 Section Details:
 
@@ -39,45 +41,48 @@ Type:
  - [2] (i64) -> nil
  - [3] (i32) -> nil
 Import:
- - func[0] sig=0 <- __extern.missing
+ - func[0] sig=0 <- __extern.missing0
+ - func[1] sig=0 <- __extern.missing1
+ - func[2] sig=0 <- __extern.missing2
 Function:
- - func[1] sig=1
- - func[2] sig=2
- - func[3] sig=2
- - func[4] sig=3
+ - func[3] sig=1
+ - func[4] sig=2
+ - func[5] sig=2
+ - func[6] sig=3
 Export:
- - func[1] foo
- - func[4] baz
+ - func[3] foo
+ - func[6] baz
 Custom:
  - name: "name"
- - func[0] $import_func2
- - func[1] $name1
- - func[2] $name2
- - func[4] $name3
+ - func[0] $import_func0
+ - func[2] $import_func2
+ - func[3] $name1
+ - func[4] $name2
+ - func[6] $name3
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x6(file=0x5a)
-   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x11(file=0x65)
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x1f(file=0x73)
+   - R_FUNC_INDEX_LEB   idx=0x2  addend=0    offset=0x6(file=0x83)
+   - R_FUNC_INDEX_LEB   idx=0x3  addend=0    offset=0x11(file=0x8e)
+   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x1f(file=0x9c)
 
 Code Disassembly:
 
-000055 <$name1>:
- 000057: 41 01                      | i32.const 0x1
- 000059: 10 84 80 80 80 00          | call 0x4
-           00005a: R_FUNC_INDEX_LEB   0
- 00005f: 0b                         | end
-000060 <$name2>:
- 000062: 42 01                      | i64.const 1
- 000064: 10 81 80 80 80 00          | call 0x1
-           000065: R_FUNC_INDEX_LEB   1
- 00006a: 0b                         | end
-00006b func[3]:
- 00006d: 0b                         | end
-00006e <$name3>:
- 000070: 41 02                      | i32.const 0x2
- 000072: 10 84 80 80 80 00          | call 0x4
-           000073: R_FUNC_INDEX_LEB   0
- 000078: 0b                         | end
+00007e <$name1>:
+ 000080: 41 01                      | i32.const 0x1
+ 000082: 10 86 80 80 80 00          | call 0x6
+           000083: R_FUNC_INDEX_LEB   2
+ 000088: 0b                         | end
+000089 <$name2>:
+ 00008b: 42 01                      | i64.const 1
+ 00008d: 10 83 80 80 80 00          | call 0x3
+           00008e: R_FUNC_INDEX_LEB   3
+ 000093: 0b                         | end
+000094 func[5]:
+ 000096: 0b                         | end
+000097 <$name3>:
+ 000099: 41 02                      | i32.const 0x2
+ 00009b: 10 86 80 80 80 00          | call 0x6
+           00009c: R_FUNC_INDEX_LEB   0
+ 0000a1: 0b                         | end
 ;;; STDOUT ;;)

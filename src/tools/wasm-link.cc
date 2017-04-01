@@ -507,8 +507,6 @@ static void write_names_section(Context* ctx) {
     size_t delta = 0;
     uint32_t off;
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
-      if (binary->debug_names[i].empty())
-        continue;
       if (i < binary->function_imports.size()) {
         if (!binary->function_imports[i].active) {
           delta++;
@@ -519,6 +517,8 @@ static void write_names_section(Context* ctx) {
         off = binary->function_index_offset;
       }
 
+      if (binary->debug_names[i].empty())
+        continue;
       write_u32_leb128(stream, i + off, "function index");
       write_string(stream, binary->debug_names[i], "function name");
     }
