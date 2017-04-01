@@ -35,5 +35,5 @@ build_script:
   - cmake --build . --config %CONFIG% --target install -- %JOBS_FLAG%%JOBS%
 
 test_script:
-  - "%APPVEYOR_BUILD_FOLDER%\wabt-unittests"
+  - "%APPVEYOR_BUILD_FOLDER%\\wabt-unittests"
   - python test\run-tests.py -v --bindir %APPVEYOR_BUILD_FOLDER%\bin
