@@ -75,7 +75,7 @@ Code Disassembly:
  000088: 0b                         | end
 000089 <$name2>:
  00008b: 42 01                      | i64.const 1
- 00008d: 10 83 80 80 80 00          | call 0x3
+ 00008d: 10 82 80 80 80 00          | call 0x2
            00008e: R_FUNC_INDEX_LEB   3
  000093: 0b                         | end
 000094 func[5]:
