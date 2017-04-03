@@ -169,7 +169,6 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
   } else {
     /* imported function call */
     FunctionImport* import = &binary->function_imports[function_index];
-    uint32_t new_index = import->relocated_function_index;
     if (!import->active) {
       function_index = import->foreign_index;
       offset = import->foreign_binary->function_index_offset;
@@ -178,6 +177,7 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
                "reloc for disabled import. new index = %d + %d\n",
                function_index, offset);
     } else {
+      uint32_t new_index = import->relocated_function_index;
       if (s_debug)
         writef(&s_log_stream,
                "reloc for active import. old index = %d, new index = %d\n",
@@ -709,9 +709,10 @@ static void calculate_reloc_offsets(Context* ctx) {
     for (size_t i = 0; i < binary->function_imports.size(); i++) {
       if (!binary->function_imports[i].active) {
         delta++;
+      } else {
+        binary->function_imports[i].relocated_function_index =
+          total_function_imports + i - delta;
       }
-      binary->function_imports[i].relocated_function_index =
-        total_function_imports + i - delta;
     }
 
     memory_page_offset += binary->memory_page_count;
