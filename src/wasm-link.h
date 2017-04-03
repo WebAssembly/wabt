@@ -34,6 +34,7 @@ struct FunctionImport {
   StringSlice name;
   uint32_t sig_index;
   bool active; /* Is this import present in the linked binary */
+  uint32_t relocated_function_index;
   struct LinkerInputBinary* foreign_binary;
   uint32_t foreign_index;
 };

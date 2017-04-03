@@ -169,7 +169,6 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
   } else {
     /* imported function call */
     FunctionImport* import = &binary->function_imports[function_index];
-    offset = binary->imported_function_index_offset;
     if (!import->active) {
       function_index = import->foreign_index;
       offset = import->foreign_binary->function_index_offset;
@@ -177,6 +176,13 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
         writef(&s_log_stream,
                "reloc for disabled import. new index = %d + %d\n",
                function_index, offset);
+    } else {
+      uint32_t new_index = import->relocated_function_index;
+      if (s_debug)
+        writef(&s_log_stream,
+               "reloc for active import. old index = %d, new index = %d\n",
+               function_index, new_index);
+      return new_index;
     }
   }
   return function_index + offset;
@@ -505,13 +511,16 @@ static void write_names_section(Context* ctx) {
   write_u32_leb128(stream, total_count, "element count");
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
+      if (i < binary->function_imports.size()) {
+        if (!binary->function_imports[i].active) {
+          continue;
+        }
+      }
+
       if (binary->debug_names[i].empty())
         continue;
-      if (i < binary->function_imports.size()) {
-        if (!binary->function_imports[i].active)
-          continue;
-      }
-      write_u32_leb128(stream, i + binary->function_index_offset, "function index");
+      write_u32_leb128(stream, relocate_func_index(&*binary, i),
+                       "function index");
       write_string(stream, binary->debug_names[i], "function name");
     }
   }
@@ -695,6 +704,17 @@ static void calculate_reloc_offsets(Context* ctx) {
     binary->imported_function_index_offset = total_function_imports;
     binary->imported_global_index_offset = total_global_imports;
     binary->memory_page_offset = memory_page_offset;
+
+    size_t delta = 0;
+    for (size_t i = 0; i < binary->function_imports.size(); i++) {
+      if (!binary->function_imports[i].active) {
+        delta++;
+      } else {
+        binary->function_imports[i].relocated_function_index =
+          total_function_imports + i - delta;
+      }
+    }
+
     memory_page_offset += binary->memory_page_count;
     total_function_imports += binary->active_function_imports;
     total_global_imports += binary->global_imports.size();
