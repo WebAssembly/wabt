@@ -188,6 +188,17 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
   return function_index + offset;
 }
 
+static uint32_t relocate_global_index(LinkerInputBinary* binary,
+                                      uint32_t global_index) {
+  uint32_t offset;
+  if (global_index >= binary->global_imports.size()) {
+    offset = binary->global_index_offset;
+  } else {
+    offset = binary->imported_global_index_offset;
+  }
+  return global_index + offset;
+}
+
 static void apply_relocation(Section* section, Reloc* r) {
   LinkerInputBinary* binary = section->binary;
   uint8_t* section_data = &binary->data[section->offset];
@@ -209,12 +220,7 @@ static void apply_relocation(Section* section, Reloc* r) {
       new_value = cur_value + offset;
       break;
     case RelocType::GlobalIndexLEB:
-      if (cur_value >= binary->global_imports.size()) {
-        offset = binary->global_index_offset;
-      } else {
-        offset = binary->imported_global_index_offset;
-      }
-      new_value = cur_value + offset;
+      new_value = relocate_global_index(binary, cur_value);
       break;
     default:
       WABT_FATAL("unhandled relocation type: %s\n",
@@ -558,15 +564,20 @@ static void write_reloc_section(Context* ctx,
       write_u32_leb128_enum(&ctx->stream, reloc.type, "reloc type");
       uint32_t new_offset = reloc.offset + sec->output_payload_offset;
       write_u32_leb128(&ctx->stream, new_offset, "reloc offset");
-      uint32_t index = reloc.index;
+      uint32_t relocated_index;
       switch (reloc.type) {
         case RelocType::FuncIndexLEB:
-          index = relocate_func_index(sec->binary, index);
+          relocated_index = relocate_func_index(sec->binary, reloc.index);
           break;
+        case RelocType::GlobalIndexLEB:
+          relocated_index = relocate_global_index(sec->binary, reloc.index);
+          break;
+        // TODO(sbc): Handle other relocation types.
         default:
+          WABT_FATAL("Unhandled reloc type: %s\n", get_reloc_type_name(reloc.type));
           break;
       }
-      write_u32_leb128(&ctx->stream, index, "reloc index");
+      write_u32_leb128(&ctx->stream, relocated_index, "reloc index");
     }
   }
 
