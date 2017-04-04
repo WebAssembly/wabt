@@ -67,7 +67,7 @@
 0000037: 0b                                        ; end
 0000029: 0e                                        ; FIXUP func body size
 0000027: 10                                        ; FIXUP section size
-callimport.wasm:	file format wasm 0x000001
+callimport.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

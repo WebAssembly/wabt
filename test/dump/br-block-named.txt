@@ -61,7 +61,7 @@
 000002a: 0b                                        ; end
 0000015: 15                                        ; FIXUP func body size
 0000013: 17                                        ; FIXUP section size
-br-block-named.wasm:	file format wasm 0x000001
+br-block-named.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

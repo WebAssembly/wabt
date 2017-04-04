@@ -75,7 +75,7 @@
 0000032: 0b                                        ; end
 0000015: 1d                                        ; FIXUP func body size
 0000013: 1f                                        ; FIXUP section size
-brtable.wasm:	file format wasm 0x000001
+brtable.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

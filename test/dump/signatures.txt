@@ -66,7 +66,7 @@
 000002e: 01                                        ; num results
 000002f: 7c                                        ; f64
 0000009: 26                                        ; FIXUP section size
-signatures.wasm:	file format wasm 0x000001
+signatures.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

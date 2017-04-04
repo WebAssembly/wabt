@@ -47,7 +47,7 @@
 0000029: 0b                                        ; end
 0000020: 09                                        ; FIXUP func body size
 000001e: 0b                                        ; FIXUP section size
-setglobal.wasm:	file format wasm 0x000001
+setglobal.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

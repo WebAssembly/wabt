@@ -117,7 +117,7 @@
 000007d: 0b                                        ; end
 0000015: 68                                        ; FIXUP func body size
 0000013: 6a                                        ; FIXUP section size
-hexfloat_f32.wasm:	file format wasm 0x000001
+hexfloat_f32.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

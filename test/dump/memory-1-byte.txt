@@ -12,7 +12,7 @@
 000000b: 00                                        ; limits: flags
 000000c: 01                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
-memory-1-byte.wasm:	file format wasm 0x000001
+memory-1-byte.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

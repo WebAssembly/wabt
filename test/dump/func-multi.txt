@@ -44,7 +44,7 @@
 000001f: 0b                                        ; end
 000001d: 02                                        ; FIXUP func body size
 0000015: 0a                                        ; FIXUP section size
-func-multi.wasm:	file format wasm 0x000001
+func-multi.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

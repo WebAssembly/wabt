@@ -10,7 +10,7 @@
   (table anyfunc (elem $func3 $func2 $func2))
 )
 (;; STDOUT ;;;
-linked.wasm:	file format wasm 0x000001
+linked.wasm:	file format wasm 0x00000001
 
 Sections:
 

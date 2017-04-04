@@ -119,7 +119,7 @@
 0000015: ac01                                      ; FIXUP func body size
 ; move data: [14, c3) -> [15, c4)
 0000013: af01                                      ; FIXUP section size
-hexfloat_f64.wasm:	file format wasm 0x000001
+hexfloat_f64.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

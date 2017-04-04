@@ -146,7 +146,7 @@
 0000099: 0b                                        ; end
 000008d: 8880 8080 00                              ; FIXUP func body size
 000006b: aa80 8080 00                              ; FIXUP section size
-no-canonicalize.wasm:	file format wasm 0x000001
+no-canonicalize.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

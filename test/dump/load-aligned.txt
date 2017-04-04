@@ -183,7 +183,7 @@
 000007c: 0b                                        ; end
 000001a: 62                                        ; FIXUP func body size
 0000018: 64                                        ; FIXUP section size
-load-aligned.wasm:	file format wasm 0x000001
+load-aligned.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 

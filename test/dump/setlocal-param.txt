@@ -81,7 +81,7 @@
 0000042: 0b                                        ; end
 0000017: 2b                                        ; FIXUP func body size
 0000015: 2d                                        ; FIXUP section size
-setlocal-param.wasm:	file format wasm 0x000001
+setlocal-param.wasm:	file format wasm 0x00000001
 
 Code Disassembly:
 
