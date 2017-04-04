@@ -50,6 +50,7 @@ def main(args):
   parser.add_argument('--gen-wasm', action='store_true',
                       help='parse with gen-wasm')
   parser.add_argument('--spec', action='store_true')
+  parser.add_argument('-r', '--relocatable', action='store_true')
   parser.add_argument('--no-canonicalize-leb128s', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('file', help='test file.')
@@ -70,6 +71,7 @@ def main(args):
       '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
       '--spec': options.spec,
       '-v': options.verbose,
+      '-r': options.relocatable,
       '-c': options.compile_only,
   })
 
@@ -108,7 +110,7 @@ def main(args):
       wasm_files = [out_file]
 
     for wasm_file in wasm_files:
-      wasmdump.RunWithArgs('-d', wasm_file)
+      wasmdump.RunWithArgs('-r', '-d', wasm_file)
 
 
 if __name__ == '__main__':
