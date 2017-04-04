@@ -56,7 +56,7 @@ Custom:
    - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x18(file=0x70)
    - R_GLOBAL_INDEX_LEB idx=0    addend=0    offset=0x21(file=0x79)
    - R_GLOBAL_INDEX_LEB idx=0x1  addend=0    offset=0x27(file=0x7f)
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x2d(file=0x85)
+   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x2d(file=0x85)
 
 Code Disassembly:
 
@@ -78,6 +78,6 @@ Code Disassembly:
  00007e: 23 84 80 80 80 00          | get_global 0x4
            00007f: R_GLOBAL_INDEX_LEB 1
  000084: 10 81 80 80 80 00          | call 0x1
-           000085: R_FUNC_INDEX_LEB   0
+           000085: R_FUNC_INDEX_LEB   1
  00008a: 0b                         | end
 ;;; STDOUT ;;)

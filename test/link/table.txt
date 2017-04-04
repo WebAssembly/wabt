@@ -46,9 +46,9 @@ Custom:
   - section: Elem
    - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x6(file=0x38)
    - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0xb(file=0x3d)
-   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x10(file=0x42)
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x15(file=0x47)
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x1a(file=0x4c)
+   - R_FUNC_INDEX_LEB   idx=0x2  addend=0    offset=0x10(file=0x42)
+   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x15(file=0x47)
+   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x1a(file=0x4c)
 
 Code Disassembly:
 

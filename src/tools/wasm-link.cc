@@ -536,10 +536,8 @@ static void write_reloc_section(Context* ctx,
   uint32_t total_relocs = 0;
 
   /* First pass to know total reloc count */
-  for (size_t i = 0; i < sections.size(); i++) {
-    Section* sec = sections[i];
+  for (Section* sec: sections)
     total_relocs += sec->relocations.size();
-  }
 
   if (!total_relocs)
     return;
@@ -555,14 +553,20 @@ static void write_reloc_section(Context* ctx,
   write_u32_leb128_enum(&ctx->stream, section_code, "reloc section");
   write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
 
-  for (size_t i = 0; i < sections.size(); i++) {
-    Section* sec = sections[i];
-    const std::vector<Reloc>& relocs = sec->relocations;
-    for (size_t j = 0; j < relocs.size(); j++) {
-      write_u32_leb128_enum(&ctx->stream, relocs[j].type, "reloc type");
-      uint32_t new_offset = relocs[j].offset + sec->output_payload_offset;
+  for (Section* sec: sections) {
+    for (const Reloc& reloc: sec->relocations) {
+      write_u32_leb128_enum(&ctx->stream, reloc.type, "reloc type");
+      uint32_t new_offset = reloc.offset + sec->output_payload_offset;
       write_u32_leb128(&ctx->stream, new_offset, "reloc offset");
-      write_u32_leb128(&ctx->stream, relocs[j].index, "reloc index");
+      uint32_t index = reloc.index;
+      switch (reloc.type) {
+        case RelocType::FuncIndexLEB:
+          index = relocate_func_index(sec->binary, index);
+          break;
+        default:
+          break;
+      }
+      write_u32_leb128(&ctx->stream, index, "reloc index");
     }
   }
 
@@ -584,8 +588,7 @@ static bool write_combined_section(Context* ctx,
   uint32_t total_size = 0;
 
   /* Sum section size and element count */
-  for (size_t i = 0; i < sections.size(); i++) {
-    Section* sec = sections[i];
+  for (Section* sec: sections) {
     total_size += sec->payload_size;
     total_count += sec->count;
   }
@@ -624,8 +627,7 @@ static bool write_combined_section(Context* ctx,
       write_u32_leb128(stream, total_size, "section size");
       write_u32_leb128(stream, total_count, "element count");
       ctx->current_section_payload_offset = ctx->stream.offset;
-      for (size_t i = 0; i < sections.size(); i++) {
-        Section* sec = sections[i];
+      for (Section* sec: sections) {
         apply_relocations(sec);
         write_section_payload(ctx, sec);
       }
