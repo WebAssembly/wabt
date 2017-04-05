@@ -50,8 +50,8 @@ test_i32_l() => i32:2
 test_i32_r() => i32:1
 test_i64_l() => i64:2
 test_i64_r() => i64:1
-test_f32_l() => f32:2
-test_f32_r() => f32:1
-test_f64_l() => f64:2
-test_f64_r() => f64:1
+test_f32_l() => f32:2.000000
+test_f32_r() => f32:1.000000
+test_f64_l() => f64:2.000000
+test_f64_r() => f64:1.000000
 ;;; STDOUT ;;)

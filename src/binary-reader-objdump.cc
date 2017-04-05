@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <algorithm>
 #include <vector>
 
 #include "binary-reader-nop.h"
@@ -327,11 +328,18 @@ Result BinaryReaderObjdump::OnCount(uint32_t count) {
 
 Result BinaryReaderObjdump::BeginModule(uint32_t version) {
   if (options->print_header) {
-    const char* basename = strrchr(options->infile, '/');
-    if (basename)
-      basename++;
-    else
+    const char* last_slash = strrchr(options->infile, '/');
+    const char* last_backslash = strrchr(options->infile, '\\');
+    const char* basename;
+    if (last_slash && last_backslash) {
+      basename = std::max(last_slash, last_backslash) + 1;
+    } else if (last_slash) {
+      basename = last_slash + 1;
+    } else if (last_backslash) {
+      basename = last_backslash + 1;
+    } else {
       basename = options->infile;
+    }
     printf("%s:\tfile format wasm %#08x\n", basename, version);
     header_printed = true;
   }
