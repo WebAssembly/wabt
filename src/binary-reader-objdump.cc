@@ -45,14 +45,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   virtual Result OnRelocCount(uint32_t count,
                               BinarySection section_code,
                               StringSlice section_name);
-  virtual Result OnReloc(RelocType type,
-                         uint32_t offset,
-                         uint32_t index,
-                         int32_t addend);
-
  protected:
-  bool ShouldPrintDetails();
-  void PrintDetails(const char* fmt, ...);
 
   ObjdumpOptions* options = nullptr;
   const uint8_t* data = nullptr;
@@ -61,7 +54,6 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   BinarySection reloc_section = BinarySection::Invalid;
   uint32_t section_starts[kBinarySectionCount];
   bool section_found = false;
-  Stream* out_stream = nullptr;
 };
 
 BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
@@ -69,83 +61,13 @@ BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
                                                  ObjdumpOptions* options)
     : options(options),
       data(data),
-      size(size),
-      out_stream(init_stdout_stream()) {
+      size(size) {
   WABT_ZERO_MEMORY(section_starts);
-}
-
-bool BinaryReaderObjdumpBase::ShouldPrintDetails() {
-  if (options->mode != ObjdumpMode::Details)
-    return false;
-  return print_details;
-}
-
-void WABT_PRINTF_FORMAT(2, 3)
-    BinaryReaderObjdumpBase::PrintDetails(const char* fmt, ...) {
-  if (!ShouldPrintDetails())
-    return;
-  va_list args;
-  va_start(args, fmt);
-  vprintf(fmt, args);
-  va_end(args);
-}
-
-Result BinaryReaderObjdumpBase::OnRelocCount(uint32_t count,
-                                             BinarySection section_code,
-                                             StringSlice section_name) {
-  reloc_section = section_code;
-  PrintDetails("  - section: %s\n", get_section_name(section_code));
-  return Result::Ok;
-}
-
-Result BinaryReaderObjdumpBase::OnReloc(RelocType type,
-                                        uint32_t offset,
-                                        uint32_t index,
-                                        int32_t addend) {
-  uint32_t total_offset =
-      section_starts[static_cast<size_t>(reloc_section)] + offset;
-  PrintDetails("   - %-18s idx=%#-4x addend=%#-4x offset=%#x(file=%#x)\n",
-               get_reloc_type_name(type), index, addend, offset, total_offset);
-  return Result::Ok;
 }
 
 Result BinaryReaderObjdumpBase::BeginSection(BinarySection section_code,
                                              uint32_t size) {
   section_starts[static_cast<size_t>(section_code)] = state->offset;
-
-  const char* name = get_section_name(section_code);
-
-  bool section_match =
-      !options->section_name || !strcasecmp(options->section_name, name);
-  if (section_match)
-    section_found = true;
-
-  switch (options->mode) {
-    case ObjdumpMode::Prepass:
-      break;
-    case ObjdumpMode::Headers:
-      printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010x) ", name,
-             state->offset, state->offset + size, size);
-      break;
-    case ObjdumpMode::Details:
-      if (section_match) {
-        if (section_code != BinarySection::Code)
-          printf("%s:\n", name);
-        print_details = true;
-      } else {
-        print_details = false;
-      }
-      break;
-    case ObjdumpMode::RawData:
-      if (section_match) {
-        printf("\nContents of section %s:\n", name);
-        write_memory_dump(out_stream, data + state->offset, size, state->offset,
-                          PrintChars::Yes, nullptr, nullptr);
-      }
-      break;
-    case ObjdumpMode::Disassemble:
-      break;
-  }
   return Result::Ok;
 }
 
@@ -187,6 +109,13 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
   return Result::Ok;
 }
 
+Result BinaryReaderObjdumpBase::OnRelocCount(uint32_t count,
+                                             BinarySection section_code,
+                                             StringSlice section_name) {
+  reloc_section = section_code;
+  return Result::Ok;
+}
+
 class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
  public:
   BinaryReaderObjdumpPrepass(const uint8_t* data,
@@ -208,13 +137,8 @@ BinaryReaderObjdumpPrepass::BinaryReaderObjdumpPrepass(const uint8_t* data,
 
 Result BinaryReaderObjdumpPrepass::OnFunctionName(uint32_t index,
                                                   StringSlice name) {
-  if (options->mode == ObjdumpMode::Prepass) {
-    options->function_names.resize(index + 1);
-    options->function_names[index] = string_slice_to_string(name);
-  } else {
-    PrintDetails(" - func[%d] " PRIstringslice "\n", index,
-                 WABT_PRINTF_STRING_SLICE_ARG(name));
-  }
+  options->function_names.resize(index + 1);
+  options->function_names[index] = string_slice_to_string(name);
   return Result::Ok;
 }
 
@@ -256,7 +180,6 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnCount(uint32_t count);
   void LogOpcode(const uint8_t* data, size_t data_size, const char* fmt, ...);
 
-  Stream* out_stream = nullptr;
   Opcode current_opcode = Opcode::Unreachable;
   size_t current_opcode_offset = 0;
   size_t last_opcode_end = 0;
@@ -472,7 +395,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                       ObjdumpOptions* options);
 
   virtual Result EndModule();
-
+  virtual Result BeginSection(BinarySection section_type, uint32_t size);
   virtual Result BeginCustomSection(uint32_t size, StringSlice section_name);
 
   virtual Result OnTypeCount(uint32_t count);
@@ -551,7 +474,18 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   virtual Result OnInitExprI32ConstExpr(uint32_t index, uint32_t value);
   virtual Result OnInitExprI64ConstExpr(uint32_t index, uint64_t value);
 
+  virtual Result OnRelocCount(uint32_t count,
+                              BinarySection section_code,
+                              StringSlice section_name);
+  virtual Result OnReloc(RelocType type,
+                         uint32_t offset,
+                         uint32_t index,
+                         int32_t addend);
+
  private:
+
+  bool ShouldPrintDetails();
+  void PrintDetails(const char* fmt, ...);
   Result OnCount(uint32_t count);
   void LogOpcode(const uint8_t* data, size_t data_size, const char* fmt, ...);
 
@@ -559,14 +493,14 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   size_t current_opcode_offset = 0;
   size_t last_opcode_end = 0;
   int indent_level = 0;
-  uint32_t next_reloc = 0;
+  Stream* out_stream = nullptr;
 };
 
-BinaryReaderObjdump::BinaryReaderObjdump(
-    const uint8_t* data,
-    size_t size,
-    ObjdumpOptions* options)
-    : BinaryReaderObjdumpBase(data, size, options) {}
+BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
+                                         size_t size,
+                                         ObjdumpOptions* options)
+    : BinaryReaderObjdumpBase(data, size, options),
+      out_stream(init_stdout_stream()) {}
 
 Result BinaryReaderObjdump::BeginCustomSection(uint32_t size,
                                                StringSlice section_name) {
@@ -577,6 +511,61 @@ Result BinaryReaderObjdump::BeginCustomSection(uint32_t size,
            WABT_PRINTF_STRING_SLICE_ARG(section_name));
   }
   return Result::Ok;
+}
+
+Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
+                                         uint32_t size) {
+  BinaryReaderObjdumpBase::BeginSection(section_code, size);
+
+  const char* name = get_section_name(section_code);
+
+  bool section_match =
+      !options->section_name || !strcasecmp(options->section_name, name);
+  if (section_match)
+    section_found = true;
+
+  switch (options->mode) {
+    case ObjdumpMode::Headers:
+      printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010x) ", name,
+             state->offset, state->offset + size, size);
+      break;
+    case ObjdumpMode::Details:
+      if (section_match) {
+        if (section_code != BinarySection::Code)
+          printf("%s:\n", name);
+        print_details = true;
+      } else {
+        print_details = false;
+      }
+      break;
+    case ObjdumpMode::RawData:
+      if (section_match) {
+        printf("\nContents of section %s:\n", name);
+        write_memory_dump(out_stream, data + state->offset, size, state->offset,
+                          PrintChars::Yes, nullptr, nullptr);
+      }
+      break;
+    case ObjdumpMode::Prepass:
+    case ObjdumpMode::Disassemble:
+      break;
+  }
+  return Result::Ok;
+}
+
+bool BinaryReaderObjdump::ShouldPrintDetails() {
+  if (options->mode != ObjdumpMode::Details)
+    return false;
+  return print_details;
+}
+
+void WABT_PRINTF_FORMAT(2, 3)
+    BinaryReaderObjdump::PrintDetails(const char* fmt, ...) {
+  if (!ShouldPrintDetails())
+    return;
+  va_list args;
+  va_start(args, fmt);
+  vprintf(fmt, args);
+  va_end(args);
 }
 
 Result BinaryReaderObjdump::OnCount(uint32_t count) {
@@ -832,6 +821,24 @@ Result BinaryReaderObjdump::OnDataSegmentData(uint32_t index,
   return Result::Ok;
 }
 
+Result BinaryReaderObjdump::OnRelocCount(uint32_t count,
+                                         BinarySection section_code,
+                                         StringSlice section_name) {
+  BinaryReaderObjdumpBase::OnRelocCount(count, section_code, section_name);
+  PrintDetails("  - section: %s\n", get_section_name(section_code));
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnReloc(RelocType type,
+                                    uint32_t offset,
+                                    uint32_t index,
+                                    int32_t addend) {
+  uint32_t total_offset =
+      section_starts[static_cast<size_t>(reloc_section)] + offset;
+  PrintDetails("   - %-18s idx=%#-4x addend=%#-4x offset=%#x(file=%#x)\n",
+               get_reloc_type_name(type), index, addend, offset, total_offset);
+  return Result::Ok;
+}
 
 }  // namespace
 
