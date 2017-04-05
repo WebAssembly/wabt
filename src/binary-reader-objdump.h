@@ -47,7 +47,6 @@ struct ObjdumpOptions {
   ObjdumpMode mode;
   const char* infile;
   const char* section_name;
-  bool print_header;
   std::vector<std::string> function_names;
   std::vector<Reloc> code_relocations;
 };
