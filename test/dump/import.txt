@@ -44,7 +44,7 @@
 0000037: 00                                        ; import kind
 0000038: 01                                        ; import signature index
 0000018: 20                                        ; FIXUP section size
-import.wasm:	file format wasm 0x00000001
+import.wasm:	file format wasm 0x1
 
 Section Details:
 

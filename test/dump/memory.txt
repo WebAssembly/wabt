@@ -38,7 +38,7 @@
 000002f: 7073 756d 2064 6f6c 6f72 2073 6974 2061 
 000003f: 6d65 742c 2063 6f6e 7365 6374 6574 7572   ; data segment data
 000000e: 40                                        ; FIXUP section size
-memory.wasm:	file format wasm 0x00000001
+memory.wasm:	file format wasm 0x1
 
 Section Details:
 

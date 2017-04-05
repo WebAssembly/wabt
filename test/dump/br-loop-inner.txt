@@ -55,7 +55,7 @@
 000002b: 0b                                        ; end
 0000015: 16                                        ; FIXUP func body size
 0000013: 18                                        ; FIXUP section size
-br-loop-inner.wasm:	file format wasm 0x00000001
+br-loop-inner.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

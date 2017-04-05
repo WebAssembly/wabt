@@ -50,7 +50,7 @@
 0000024: 0b                                        ; end
 0000016: 0e                                        ; FIXUP func body size
 0000014: 10                                        ; FIXUP section size
-expr-brif.wasm:	file format wasm 0x00000001
+expr-brif.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

@@ -13,7 +13,7 @@
     i32.add)
   (export "f" (func $f)))
 (;; STDOUT ;;;
-basic_dump_only.wasm:	file format wasm 0x00000001
+basic_dump_only.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

@@ -38,7 +38,7 @@
 0000024: 0b                                        ; end
 0000022: 02                                        ; FIXUP func body size
 0000020: 04                                        ; FIXUP section size
-string-hex.wasm:	file format wasm 0x00000001
+string-hex.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

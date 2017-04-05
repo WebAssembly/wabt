@@ -28,7 +28,7 @@
 ; data segment data 0
 0000016: 0001 0203 0405 0607 0809 0a               ; data segment data
 000000f: 11                                        ; FIXUP section size
-memory-hex.wasm:	file format wasm 0x00000001
+memory-hex.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

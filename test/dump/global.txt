@@ -100,7 +100,7 @@
 0000086: 03                                        ; global index
 0000087: 0b                                        ; end
 0000054: 33                                        ; FIXUP section size
-global.wasm:	file format wasm 0x00000001
+global.wasm:	file format wasm 0x1
 
 Section Details:
 

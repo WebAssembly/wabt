@@ -40,7 +40,7 @@
 0000045: 0b                                        ; end
 0000043: 02                                        ; FIXUP func body size
 0000041: 04                                        ; FIXUP section size
-string-escape.wasm:	file format wasm 0x00000001
+string-escape.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
