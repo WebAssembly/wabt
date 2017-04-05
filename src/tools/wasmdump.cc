@@ -161,7 +161,6 @@ int main(int argc, char** argv) {
 
   // Perform serveral passed over the binary in order to print out different
   // types of information.
-  s_objdump_options.print_header = true;
   if (!s_objdump_options.headers && !s_objdump_options.details &&
       !s_objdump_options.disassemble && !s_objdump_options.raw) {
     printf("At least one of the following switches must be given:\n");
@@ -184,7 +183,6 @@ int main(int argc, char** argv) {
     result = read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
-    s_objdump_options.print_header = false;
   }
   // Pass 2: Print extra information based on section type
   if (s_objdump_options.details) {
@@ -192,14 +190,12 @@ int main(int argc, char** argv) {
     result = read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
-    s_objdump_options.print_header = false;
   }
   if (s_objdump_options.disassemble) {
     s_objdump_options.mode = ObjdumpMode::Disassemble;
     result = read_binary_objdump(data, size, &s_objdump_options);
     if (WABT_FAILED(result))
       goto done;
-    s_objdump_options.print_header = false;
   }
   // Pass 3: Dump to raw contents of the sections
   if (s_objdump_options.raw) {
