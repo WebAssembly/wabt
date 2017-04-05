@@ -11,7 +11,7 @@
   (export "f" (func $f))
   (table anyfunc (elem $f)))
 (;; STDOUT ;;;
-relocations.wasm:	file format wasm 0x000001
+relocations.wasm:	file format wasm 0x1
 
 Sections:
 

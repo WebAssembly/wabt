@@ -49,7 +49,7 @@
 0000023: 0b                                        ; end
 0000020: 03                                        ; FIXUP func body size
 0000018: 0b                                        ; FIXUP section size
-return.wasm:	file format wasm 0x000001
+return.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
