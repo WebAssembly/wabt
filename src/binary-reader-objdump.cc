@@ -60,8 +60,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   bool print_details = false;
   BinarySection reloc_section = BinarySection::Invalid;
   uint32_t section_starts[kBinarySectionCount];
-  int section_found = false;
-  bool header_printed = false;
+  bool section_found = false;
   Stream* out_stream = nullptr;
 };
 
@@ -179,7 +178,6 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
       }
 
       printf("%s:\tfile format wasm %#08x\n", basename, version);
-      header_printed = true;
       break;
     }
     case ObjdumpMode::RawData:
@@ -589,11 +587,9 @@ Result BinaryReaderObjdump::OnCount(uint32_t count) {
 }
 
 Result BinaryReaderObjdump::EndModule() {
-  if (options->section_name) {
-    if (!section_found) {
-      printf("Section not found: %s\n", options->section_name);
-      return Result::Error;
-    }
+  if (options->section_name && !section_found) {
+    printf("Section not found: %s\n", options->section_name);
+    return Result::Error;
   }
 
   return Result::Ok;
