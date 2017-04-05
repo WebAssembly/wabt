@@ -571,6 +571,8 @@ const char* type_name(Type type) {
 
 Result BinaryReaderObjdump::OnOpcodeBlockSig(uint32_t num_types,
                                              Type* sig_types) {
+  if (options->mode != ObjdumpMode::Disassemble)
+    return Result::Ok;
   if (num_types)
     LogOpcode(data, 1, "%s", type_name(*sig_types));
   else
