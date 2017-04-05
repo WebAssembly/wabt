@@ -83,7 +83,9 @@ if (COMPILER_IS_MSVC)
   # disable warning C4018: signed/unsigned mismatch
   # disable warning C4056, C4756: overflow in floating-point constant arithmetic
   #   seems to not like float compare w/ HUGE_VALF; bug?
-  add_definitions(-W3 -wd4018 -wd4056 -wd4756 -D_CRT_SECURE_NO_WARNINGS)
+  # disable warnings C4267 and C4244: conversion/truncation from larger to smaller type.
+  # disable warning C4800: implicit conversion from larger int to bool
+  add_definitions(-W3 -wd4018 -wd4056 -wd4756 -wd4267 -wd4244 -wd4800 -WX -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
 else ()
   # disable -Wunused-parameter: this is really common when implementing
   #   interfaces, etc.
@@ -257,6 +259,8 @@ if (NOT EMSCRIPTEN)
     target_link_libraries(${name} libwabt)
     set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
     set_property(TARGET ${name} PROPERTY CXX_STANDARD_REQUIRED ON)
+    list(APPEND WABT_EXECUTABLES ${name})
+    set(WABT_EXECUTABLES ${WABT_EXECUTABLES} PARENT_SCOPE)
   endfunction()
 
   # wast2wasm
@@ -343,16 +347,12 @@ if (NOT EMSCRIPTEN)
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
   add_custom_target(run-tests
     COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir ${CMAKE_BINARY_DIR}
-    DEPENDS wast2wasm wasm2wast wasm-interp
+    DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
   )
 
   # install
-  install(
-    TARGETS wast2wasm wasm2wast wasm-interp wasmopcodecnt wasmdump wast-desugar
-        wasm-link
-    DESTINATION bin
-  )
+  install(TARGETS ${WABT_EXECUTABLES} DESTINATION bin)
 
 else ()
   # emscripten stuff
