@@ -1,0 +1,5 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/f32_bitwise.wast
+(;; STDOUT ;;;
+360/360 tests passed.
+;;; STDOUT ;;)

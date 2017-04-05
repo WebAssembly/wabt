@@ -106,5 +106,5 @@ out/third_party/testsuite/memory.wast:194: assert_invalid passed:
 out/third_party/testsuite/memory.wast:198: assert_invalid passed:
   error: alignment must not be larger than natural alignment (1)
   error: @0x00000023: OnStoreExpr callback failed
-66/66 tests passed.
+86/86 tests passed.
 ;;; STDOUT ;;)

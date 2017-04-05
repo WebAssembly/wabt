@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/i32.wast
 (;; STDOUT ;;;
-342/342 tests passed.
+359/359 tests passed.
 ;;; STDOUT ;;)
