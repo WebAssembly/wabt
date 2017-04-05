@@ -231,9 +231,9 @@ Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
   return Result::Ok;
 }
 
-class BinaryReaderObjdumpDisasseble : public BinaryReaderObjdumpBase {
+class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
  public:
-  BinaryReaderObjdumpDisasseble(const uint8_t* data,
+  BinaryReaderObjdumpDisassemble(const uint8_t* data,
                                 size_t size,
                                 ObjdumpOptions* options);
 
@@ -266,13 +266,13 @@ class BinaryReaderObjdumpDisasseble : public BinaryReaderObjdumpBase {
   uint32_t next_reloc = 0;
 };
 
-BinaryReaderObjdumpDisasseble::BinaryReaderObjdumpDisasseble(
+BinaryReaderObjdumpDisassemble::BinaryReaderObjdumpDisassemble(
     const uint8_t* data,
     size_t size,
     ObjdumpOptions* options)
     : BinaryReaderObjdumpBase(data, size, options) {}
 
-Result BinaryReaderObjdumpDisasseble::OnOpcode(Opcode opcode) {
+Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
   if (options->debug) {
     const char* opcode_name = get_opcode_name(opcode);
     printf("on_opcode: %#" PRIzx ": %s\n", state->offset, opcode_name);
@@ -298,7 +298,7 @@ Result BinaryReaderObjdumpDisasseble::OnOpcode(Opcode opcode) {
 
 #define IMMEDIATE_OCTET_COUNT 9
 
-void BinaryReaderObjdumpDisasseble::LogOpcode(const uint8_t* data,
+void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
                                               size_t data_size,
                                               const char* fmt,
                                               ...) {
@@ -363,31 +363,31 @@ void BinaryReaderObjdumpDisasseble::LogOpcode(const uint8_t* data,
   }
 }
 
-Result BinaryReaderObjdumpDisasseble::OnOpcodeBare() {
+Result BinaryReaderObjdumpDisassemble::OnOpcodeBare() {
   LogOpcode(data, 0, nullptr);
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::OnOpcodeUint32(uint32_t value) {
+Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32(uint32_t value) {
   size_t immediate_len = state->offset - current_opcode_offset;
   LogOpcode(data, immediate_len, "%#x", value);
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::OnOpcodeUint32Uint32(uint32_t value,
+Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32(uint32_t value,
                                                  uint32_t value2) {
   size_t immediate_len = state->offset - current_opcode_offset;
   LogOpcode(data, immediate_len, "%lu %lu", value, value2);
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::OnOpcodeUint64(uint64_t value) {
+Result BinaryReaderObjdumpDisassemble::OnOpcodeUint64(uint64_t value) {
   size_t immediate_len = state->offset - current_opcode_offset;
   LogOpcode(data, immediate_len, "%d", value);
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::OnOpcodeF32(uint32_t value) {
+Result BinaryReaderObjdumpDisassemble::OnOpcodeF32(uint32_t value) {
   size_t immediate_len = state->offset - current_opcode_offset;
   char buffer[WABT_MAX_FLOAT_HEX];
   write_float_hex(buffer, sizeof(buffer), value);
@@ -395,7 +395,7 @@ Result BinaryReaderObjdumpDisasseble::OnOpcodeF32(uint32_t value) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::OnOpcodeF64(uint64_t value) {
+Result BinaryReaderObjdumpDisassemble::OnOpcodeF64(uint64_t value) {
   size_t immediate_len = state->offset - current_opcode_offset;
   char buffer[WABT_MAX_DOUBLE_HEX];
   write_double_hex(buffer, sizeof(buffer), value);
@@ -403,7 +403,7 @@ Result BinaryReaderObjdumpDisasseble::OnOpcodeF64(uint64_t value) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::OnBrTableExpr(
+Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
     uint32_t num_targets,
     uint32_t* target_depths,
     uint32_t default_target_depth) {
@@ -413,19 +413,19 @@ Result BinaryReaderObjdumpDisasseble::OnBrTableExpr(
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::OnEndFunc() {
+Result BinaryReaderObjdumpDisassemble::OnEndFunc() {
   LogOpcode(nullptr, 0, nullptr);
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::OnEndExpr() {
+Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
   indent_level--;
   assert(indent_level >= 0);
   LogOpcode(nullptr, 0, nullptr);
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisasseble::BeginFunctionBody(uint32_t index) {
+Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(uint32_t index) {
   if (index < options->function_names.size() &&
       !options->function_names[index].empty())
     printf("%06" PRIzx " <%s>:\n", state->offset,
@@ -457,7 +457,7 @@ const char* type_name(Type type) {
   }
 }
 
-Result BinaryReaderObjdumpDisasseble::OnOpcodeBlockSig(uint32_t num_types,
+Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(uint32_t num_types,
                                                        Type* sig_types) {
   if (num_types)
     LogOpcode(data, 1, "%s", type_name(*sig_types));
@@ -852,7 +852,7 @@ Result read_binary_objdump(const uint8_t* data,
       return read_binary(data, size, &reader, &read_options);
     }
     case ObjdumpMode::Disassemble: {
-      BinaryReaderObjdumpDisasseble reader(data, size, options);
+      BinaryReaderObjdumpDisassemble reader(data, size, options);
       return read_binary(data, size, &reader, &read_options);
     }
     default: {
