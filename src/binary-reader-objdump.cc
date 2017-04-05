@@ -46,7 +46,6 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
                               BinarySection section_code,
                               StringSlice section_name);
  protected:
-
   ObjdumpOptions* options = nullptr;
   const uint8_t* data = nullptr;
   size_t size = 0;
@@ -177,7 +176,6 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   virtual Result OnEndFunc();
 
  private:
-  Result OnCount(uint32_t count);
   void LogOpcode(const uint8_t* data, size_t data_size, const char* fmt, ...);
 
   Opcode current_opcode = Opcode::Unreachable;
@@ -483,17 +481,11 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                          int32_t addend);
 
  private:
-
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
   Result OnCount(uint32_t count);
-  void LogOpcode(const uint8_t* data, size_t data_size, const char* fmt, ...);
 
-  Opcode current_opcode = Opcode::Unreachable;
-  size_t current_opcode_offset = 0;
-  size_t last_opcode_end = 0;
-  int indent_level = 0;
-  Stream* out_stream = nullptr;
+  Stream* out_stream;
 };
 
 BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
