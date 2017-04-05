@@ -310,7 +310,7 @@
 0000015: 9f02                                      ; FIXUP func body size
 ; move data: [14, 136) -> [15, 137)
 0000013: a202                                      ; FIXUP section size
-compare.wasm:	file format wasm 0x000001
+compare.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

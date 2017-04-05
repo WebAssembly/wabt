@@ -340,7 +340,7 @@ Result BinaryReaderObjdump::BeginModule(uint32_t version) {
     } else {
       basename = options->infile;
     }
-    printf("%s:\tfile format wasm %#08x\n", basename, version);
+    printf("%s:\tfile format wasm %#x\n", basename, version);
     header_printed = true;
   }
 

@@ -86,7 +86,7 @@
 0000045: 0b                                        ; end
 000003a: 0b                                        ; FIXUP func body size
 0000032: 13                                        ; FIXUP section size
-table.wasm:	file format wasm 0x000001
+table.wasm:	file format wasm 0x1
 
 Section Details:
 

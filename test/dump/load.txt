@@ -165,7 +165,7 @@
 0000070: 0b                                        ; end
 000001a: 56                                        ; FIXUP func body size
 0000018: 58                                        ; FIXUP section size
-load.wasm:	file format wasm 0x000001
+load.wasm:	file format wasm 0x1
 
 Code Disassembly:
 

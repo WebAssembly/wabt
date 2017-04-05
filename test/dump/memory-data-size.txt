@@ -45,19 +45,19 @@
 000000b: 00                                        ; limits: flags
 000000c: 05                                        ; limits: initial
 0000009: 03                                        ; FIXUP section size
-memory-data-size.0.wasm:	file format wasm 0x000001
+memory-data-size.0.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-memory-data-size.1.wasm:	file format wasm 0x000001
+memory-data-size.1.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-memory-data-size.2.wasm:	file format wasm 0x000001
+memory-data-size.2.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-memory-data-size.3.wasm:	file format wasm 0x000001
+memory-data-size.3.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
