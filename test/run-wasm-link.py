@@ -95,13 +95,15 @@ def main(args):
 
     output = os.path.join(out_dir, 'linked.wasm')
     if options.incremental:
-      partialy_linked = output + '.partial'
+      partially_linked = output + '.partial'
       for i, f in enumerate(wasm_files):
         if i == 0:
           wasm_link.RunWithArgs('-o', output, f)
         else:
-          os.rename(output, partialy_linked)
-          wasm_link.RunWithArgs('-r', '-o', output, partialy_linked, f)
+          if os.path.exists(partially_linked):
+            os.remove(partially_linked)
+          os.rename(output, partially_linked)
+          wasm_link.RunWithArgs('-r', '-o', output, partially_linked, f)
         #wasmdump.RunWithArgs('-d', '-h', output)
       wasmdump.RunWithArgs('-d', '-x', '-r', '-h', output)
     else:

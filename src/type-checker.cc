@@ -324,8 +324,14 @@ Result typechecker_on_br_table_target(TypeChecker* tc, size_t depth) {
   Result result = Result::Ok;
   TypeCheckerLabel* label;
   CHECK_RESULT(typechecker_get_label(tc, depth, &label));
-  assert(label->sig.size() <= 1);
-  Type label_sig = label->sig.size() == 0 ? Type::Void : label->sig[0];
+  Type label_sig;
+  if (label->label_type == LabelType::Loop) {
+    label_sig = Type::Void;
+  } else {
+    assert(label->sig.size() <= 1);
+    label_sig = label->sig.size() == 0 ? Type::Void : label->sig[0];
+  }
+
   COMBINE_RESULT(result,
                  check_type(tc, tc->br_table_sig, label_sig, "br_table"));
   tc->br_table_sig = label_sig;

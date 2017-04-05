@@ -16,8 +16,8 @@
     f64.const 1.375e10
     i64.reinterpret/f64))
 (;; STDOUT ;;;
-f32_reinterpret_i32() => f32:4.5
+f32_reinterpret_i32() => f32:4.500000
 i32_reinterpret_f32() => i32:3227516928
-f64_reinterpret_i64() => f64:125.125
+f64_reinterpret_i64() => f64:125.125000
 i64_reinterpret_f64() => i64:4758506566875873280
 ;;; STDOUT ;;)

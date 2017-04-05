@@ -1558,7 +1558,7 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
 
       case InterpreterOpcode::F32ConvertUI64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_F32(BITCAST_FROM_F32(static_cast<float>(value)));
+        PUSH_F32(BITCAST_FROM_F32(wabt_convert_uint64_to_float(value)));
         break;
       }
 
@@ -1610,7 +1610,7 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
 
       case InterpreterOpcode::F64ConvertUI64: {
         VALUE_TYPE_I64 value = POP_I64();
-        PUSH_F64(BITCAST_FROM_F64(static_cast<double>(value)));
+        PUSH_F64(BITCAST_FROM_F64(wabt_convert_uint64_to_double(value)));
         break;
       }
 
