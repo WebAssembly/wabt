@@ -2,5 +2,5 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/f32_cmp.wast
 (;; STDOUT ;;;
-1944/1944 tests passed.
+2400/2400 tests passed.
 ;;; STDOUT ;;)

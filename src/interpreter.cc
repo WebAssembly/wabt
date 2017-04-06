@@ -668,11 +668,15 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     }                                                           \
   } while (0)
 
-#define UNOP_FLOAT(type, func)                                 \
-  do {                                                         \
-    FLOAT_TYPE_##type value = BITCAST_TO_##type(POP_##type()); \
-    PUSH_##type(BITCAST_FROM_##type(func(value)));             \
-    break;                                                     \
+#define UNOP_FLOAT(type, func)                                   \
+  do {                                                           \
+    FLOAT_TYPE_##type value = BITCAST_TO_##type(POP_##type());   \
+    VALUE_TYPE_##type result = BITCAST_FROM_##type(func(value)); \
+    if (WABT_UNLIKELY(IS_NAN_##type(result))) {                  \
+      result |= type##_QUIET_NAN_BIT;                            \
+    }                                                            \
+    PUSH_##type(result);                                         \
+    break;                                                       \
   } while (0)
 
 #define BINOP_FLOAT(type, op)                                \
