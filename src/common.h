@@ -327,9 +327,9 @@ enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
   V(I32, I32, I32, 0, 0x76, I32ShrU, "i32.shr_u")                     \
   V(I32, I32, I32, 0, 0x77, I32Rotl, "i32.rotl")                      \
   V(I32, I32, I32, 0, 0x78, I32Rotr, "i32.rotr")                      \
-  V(I64, I64, I64, 0, 0x79, I64Clz, "i64.clz")                        \
-  V(I64, I64, I64, 0, 0x7a, I64Ctz, "i64.ctz")                        \
-  V(I64, I64, I64, 0, 0x7b, I64Popcnt, "i64.popcnt")                  \
+  V(I64, I64, ___, 0, 0x79, I64Clz, "i64.clz")                        \
+  V(I64, I64, ___, 0, 0x7a, I64Ctz, "i64.ctz")                        \
+  V(I64, I64, ___, 0, 0x7b, I64Popcnt, "i64.popcnt")                  \
   V(I64, I64, I64, 0, 0x7c, I64Add, "i64.add")                        \
   V(I64, I64, I64, 0, 0x7d, I64Sub, "i64.sub")                        \
   V(I64, I64, I64, 0, 0x7e, I64Mul, "i64.mul")                        \
