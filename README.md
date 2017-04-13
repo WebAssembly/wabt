@@ -2,7 +2,7 @@
 
 # WABT: The WebAssembly Binary Toolkit
 
-WABT (we pronounce it "wabbit") is suite of tools for WebAssembly, including:
+WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
 
  - **wast2wasm**: translate from [s-expressions](https://github.com/WebAssembly/spec) to the WebAssembly [binary-encoding](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md)
  - **wasm2wast**: the inverse of wast2wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
