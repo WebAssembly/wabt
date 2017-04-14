@@ -220,8 +220,6 @@ add_library(libwabt STATIC
   ${AST_PARSER_GEN_C}
   src/type-checker.cc
   src/validator.cc
-  src/stream.cc
-  src/writer.cc
 
   src/binary-reader.cc
   src/binary-reader-logging.cc
@@ -241,6 +239,8 @@ add_library(libwabt STATIC
   src/config.cc
   src/literal.cc
   src/option-parser.cc
+  src/stream.cc
+  src/writer.cc
 )
 set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
 

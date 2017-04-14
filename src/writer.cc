@@ -75,10 +75,6 @@ Result MemoryWriter::WriteData(size_t dst_offset,
 Result MemoryWriter::MoveData(size_t dst_offset,
                               size_t src_offset,
                               size_t size) {
-  if (size == 0) {
-    return Result::Ok;
-  }
-
   size_t src_end = src_offset + size;
   size_t dst_end = dst_offset + size;
   size_t end = src_end > dst_end ? src_end : dst_end;
@@ -95,17 +91,20 @@ Result MemoryWriter::MoveData(size_t dst_offset,
 FileWriter::FileWriter(FILE* file)
     : file_(file), offset_(0), should_close_(false) {}
 
-FileWriter::FileWriter(const char* filename) : file_(nullptr), offset_(0) {
+FileWriter::FileWriter(const char* filename)
+    : file_(nullptr), offset_(0), should_close_(false) {
   file_ = fopen(filename, "wb");
 
   // TODO(binji): this is pretty cheesy, should come up with a better API.
-  if (!file_) {
+  if (file_) {
+    should_close_ = true;
+  } else {
     ERROR("fopen name=\"%s\" failed, errno=%d\n", filename, errno);
   }
-  should_close_ = file_ != nullptr;
 }
 
 FileWriter::~FileWriter() {
+  // We don't want to close existing files (stdout/sterr, for example).
   if (should_close_) {
     fclose(file_);
   }

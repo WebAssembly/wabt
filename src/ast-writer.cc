@@ -124,7 +124,7 @@ static void write_data_with_next_char(Context* ctx,
                                       const void* src,
                                       size_t size) {
   write_next_char(ctx);
-  ctx->stream.WriteData(src, size, nullptr);
+  ctx->stream.WriteData(src, size);
 }
 
 static void WABT_PRINTF_FORMAT(2, 3)
@@ -136,7 +136,7 @@ static void WABT_PRINTF_FORMAT(2, 3)
 }
 
 static void write_putc(Context* ctx, char c) {
-  ctx->stream.WriteData(&c, 1, nullptr);
+  ctx->stream.WriteChar(c);
 }
 
 static void write_puts(Context* ctx, const char* s, NextChar next_char) {

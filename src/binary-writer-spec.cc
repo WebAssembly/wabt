@@ -308,8 +308,12 @@ static void write_raw_module(Context* ctx,
     write_module(ctx, filename, raw_module->text);
   } else if (ctx->write_modules) {
     FileStream stream(filename);
-    stream.WriteData(raw_module->binary.data, raw_module->binary.size, "");
-    ctx->result = stream.result();
+    if (stream.is_open()) {
+      stream.WriteData(raw_module->binary.data, raw_module->binary.size);
+      ctx->result = stream.result();
+    } else {
+      ctx->result = Result::Error;
+    }
   }
 }
 

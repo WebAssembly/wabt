@@ -64,7 +64,7 @@ void BinaryReaderLogging::WriteIndent() {
   static char s_indent[] =
       "                                                                       "
       "                                                                       ";
-  static size_t s_indent_len = sizeof(s_indent) - 1;
+  static const size_t s_indent_len = sizeof(s_indent) - 1;
   size_t i = indent;
   while (i > s_indent_len) {
     stream->WriteData(s_indent, s_indent_len);

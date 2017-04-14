@@ -1489,6 +1489,8 @@ Result read_binary_interpreter(InterpreterEnvironment* env,
   DefinedInterpreterModule* module =
       new DefinedInterpreterModule(istream_offset);
 
+  // Need to mark before constructing the reader since it takes ownership of
+  // env->istream, which makes env->istream == nullptr.
   InterpreterEnvironmentMark mark = mark_interpreter_environment(env);
   BinaryReaderInterpreter reader(env, module, istream_offset, error_handler);
   env->modules.emplace_back(module);
