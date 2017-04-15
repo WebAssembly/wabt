@@ -103,6 +103,20 @@ FileWriter::FileWriter(const char* filename)
   }
 }
 
+FileWriter::FileWriter(FileWriter&& other) {
+  *this = std::move(other);
+}
+
+FileWriter& FileWriter::operator=(FileWriter&& other) {
+  file_ = other.file_;
+  offset_ = other.offset_;
+  should_close_ = other.should_close_;
+  other.file_ = nullptr;
+  other.offset_ = 0;
+  other.should_close_ = false;
+  return *this;
+}
+
 FileWriter::~FileWriter() {
   // We don't want to close existing files (stdout/sterr, for example).
   if (should_close_) {

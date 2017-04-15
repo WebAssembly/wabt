@@ -149,13 +149,8 @@ int main(int argc, char** argv) {
       result = apply_names(module);
 
     if (WABT_SUCCEEDED(result)) {
-      if (s_outfile) {
-        FileWriter writer(s_outfile);
-        result = write_ast(&writer, module);
-      } else {
-        FileWriter writer(stdout);
-        result = write_ast(&writer, module);
-      }
+      FileWriter writer(s_outfile ? FileWriter(s_outfile) : FileWriter(stdout));
+      result = write_ast(&writer, module);
     }
   }
 

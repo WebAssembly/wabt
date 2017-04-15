@@ -62,6 +62,8 @@ class FileWriter : public Writer {
  public:
   explicit FileWriter(const char* filename);
   explicit FileWriter(FILE* file);
+  FileWriter(FileWriter&&);
+  FileWriter& operator=(FileWriter&&);
   ~FileWriter();
 
   bool is_open() const { return file_ != nullptr; }
