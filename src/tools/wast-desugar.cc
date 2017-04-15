@@ -149,9 +149,13 @@ int main(int argc, char** argv) {
       result = apply_names(module);
 
     if (WABT_SUCCEEDED(result)) {
-      std::unique_ptr<FileWriter> writer(s_outfile ? new FileWriter(s_outfile)
-                                                   : new FileWriter(stdout));
-      result = write_ast(writer.get(), module);
+      if (s_outfile) {
+        FileWriter writer(s_outfile);
+        result = write_ast(&writer, module);
+      } else {
+        FileWriter writer(stdout);
+        result = write_ast(&writer, module);
+      }
     }
   }
 
