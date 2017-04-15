@@ -1171,8 +1171,10 @@ module_fields :
   | module_fields func {
       $$ = $1;
       ModuleField* field;
+      // Append the implicit func declaration first so it occurs before the
+      // func definition when serialized out to the text format.
+      append_implicit_func_declaration(&@2, $$, &$2->func->decl);
       APPEND_FIELD_TO_LIST($$, field, Func, func, @2, $2->func.release());
-      append_implicit_func_declaration(&@2, $$, &field->func->decl);
       APPEND_ITEM_TO_VECTOR($$, funcs, field->func);
       INSERT_BINDING($$, func, funcs, @2, field->func->name);
       APPEND_INLINE_EXPORT($$, Func, @2, $2, $$->funcs.size() - 1);
