@@ -149,17 +149,8 @@ int main(int argc, char** argv) {
       result = apply_names(module);
 
     if (WABT_SUCCEEDED(result)) {
-      FileWriter file_writer;
-      if (s_outfile) {
-        result = init_file_writer(&file_writer, s_outfile);
-      } else {
-        init_file_writer_existing(&file_writer, stdout);
-      }
-
-      if (WABT_SUCCEEDED(result)) {
-        result = write_ast(&file_writer.base, module);
-        close_file_writer(&file_writer);
-      }
+      FileWriter writer(s_outfile ? FileWriter(s_outfile) : FileWriter(stdout));
+      result = write_ast(&writer, module);
     }
   }
 

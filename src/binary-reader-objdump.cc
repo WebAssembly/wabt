@@ -485,14 +485,14 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   void PrintDetails(const char* fmt, ...);
   Result OnCount(uint32_t count);
 
-  Stream* out_stream;
+  std::unique_ptr<FileStream> out_stream;
 };
 
 BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
                                          size_t size,
                                          ObjdumpOptions* options)
     : BinaryReaderObjdumpBase(data, size, options),
-      out_stream(init_stdout_stream()) {}
+      out_stream(FileStream::CreateStdout()) {}
 
 Result BinaryReaderObjdump::BeginCustomSection(uint32_t size,
                                                StringSlice section_name) {
@@ -533,8 +533,8 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
     case ObjdumpMode::RawData:
       if (section_match) {
         printf("\nContents of section %s:\n", name);
-        write_memory_dump(out_stream, data + state->offset, size, state->offset,
-                          PrintChars::Yes, nullptr, nullptr);
+        out_stream->WriteMemoryDump(data + state->offset, size, state->offset,
+                                    nullptr, nullptr, PrintChars::Yes);
       }
       break;
     case ObjdumpMode::Prepass:
@@ -807,8 +807,8 @@ Result BinaryReaderObjdump::OnDataSegmentData(uint32_t index,
                                               const void* src_data,
                                               uint32_t size) {
   if (ShouldPrintDetails()) {
-    write_memory_dump(out_stream, src_data, size, 0, PrintChars::Yes, "  - ",
-                      nullptr);
+    out_stream->WriteMemoryDump(src_data, size, 0, "  - ", nullptr,
+                                PrintChars::Yes);
   }
   return Result::Ok;
 }

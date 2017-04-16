@@ -22,9 +22,9 @@
 namespace wabt {
 
 struct Module;
-struct Writer;
+class Writer;
 
-Result write_ast(struct Writer*, const struct Module*);
+Result write_ast(Writer*, const Module*);
 
 }  // namespace wabt
 

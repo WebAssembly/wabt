@@ -20,6 +20,7 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 #include "binary-reader.h"
@@ -47,12 +48,11 @@ static InterpreterThreadOptions s_thread_options =
 static bool s_trace;
 static bool s_spec;
 static bool s_run_all_exports;
-static Stream* s_stdout_stream;
 
 static BinaryErrorHandler s_error_handler = WABT_BINARY_ERROR_HANDLER_DEFAULT;
 
-static FileWriter s_log_stream_writer;
-static Stream s_log_stream;
+static std::unique_ptr<FileStream> s_log_stream;
+static std::unique_ptr<FileStream> s_stdout_stream;
 
 #define NOPE HasArgument::No
 #define YEP HasArgument::Yes
@@ -117,9 +117,8 @@ static void on_option(struct OptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      init_file_writer_existing(&s_log_stream_writer, stdout);
-      init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
-      s_read_binary_options.log_stream = &s_log_stream;
+      s_log_stream = FileStream::CreateStdout();
+      s_read_binary_options.log_stream = s_log_stream.get();
       break;
 
     case FLAG_HELP:
@@ -284,7 +283,7 @@ static InterpreterResult run_defined_function(InterpreterThread* thread,
   uint32_t* call_stack_return_top = thread->call_stack_top;
   while (iresult == InterpreterResult::Ok) {
     if (s_trace)
-      trace_pc(thread, s_stdout_stream);
+      trace_pc(thread, s_stdout_stream.get());
     iresult = run_interpreter(thread, quantum, call_stack_return_top);
   }
   if (iresult != InterpreterResult::Returned)
@@ -444,7 +443,7 @@ static Result read_module(const char* module_filename,
 
     if (WABT_SUCCEEDED(result)) {
       if (s_verbose)
-        disassemble_module(env, s_stdout_stream, *out_module);
+        disassemble_module(env, s_stdout_stream.get(), *out_module);
     }
     delete[] data;
   }
@@ -598,12 +597,11 @@ static Result read_and_run_module(const char* module_filename) {
       print_interpreter_result("error running start function", iresult);
     }
   }
-  destroy_interpreter_environment(&env);
   return result;
 }
 
 /* An extremely simple JSON parser that only knows how to parse the expected
- * format from wast2wabt. */
+ * format from wast2wasm. */
 struct Context {
   Context()
       : last_module(nullptr),
@@ -1150,7 +1148,6 @@ static Result on_assert_malformed_command(Context* ctx,
   }
 
   delete[] path;
-  destroy_interpreter_environment(&env);
   destroy_custom_error_handler(error_handler);
   return result;
 }
@@ -1234,7 +1231,6 @@ static Result on_assert_invalid_command(Context* ctx,
   }
 
   delete[] path;
-  destroy_interpreter_environment(&env);
   destroy_custom_error_handler(error_handler);
   return result;
 }
@@ -1615,7 +1611,6 @@ static Result parse_commands(Context* ctx) {
 }
 
 static void destroy_context(Context* ctx) {
-  destroy_interpreter_environment(&ctx->env);
   delete[] ctx->json_data;
 }
 
@@ -1646,7 +1641,7 @@ int main(int argc, char** argv) {
   init_stdio();
   parse_options(argc, argv);
 
-  s_stdout_stream = init_stdout_stream();
+  s_stdout_stream = FileStream::CreateStdout();
 
   Result result;
   if (s_spec) {

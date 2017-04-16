@@ -43,8 +43,7 @@ static const char* s_separator = ": ";
 static ReadBinaryOptions s_read_binary_options =
     WABT_READ_BINARY_OPTIONS_DEFAULT;
 
-static FileWriter s_log_stream_writer;
-static Stream s_log_stream;
+static std::unique_ptr<FileStream> s_log_stream;
 
 #define NOPE HasArgument::No
 #define YEP HasArgument::Yes
@@ -85,9 +84,8 @@ static void on_option(struct OptionParser* parser,
   switch (option->id) {
     case FLAG_VERBOSE:
       s_verbose++;
-      init_file_writer_existing(&s_log_stream_writer, stdout);
-      init_stream(&s_log_stream, &s_log_stream_writer.base, nullptr);
-      s_read_binary_options.log_stream = &s_log_stream;
+      s_log_stream = FileStream::CreateStdout();
+      s_read_binary_options.log_stream = s_log_stream.get();
       break;
 
     case FLAG_HELP:

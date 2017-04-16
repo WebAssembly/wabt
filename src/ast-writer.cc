@@ -59,7 +59,7 @@ enum class NextChar {
 };
 
 struct Context {
-  Context() { WABT_ZERO_MEMORY(stream); }
+  explicit Context(Writer* writer) : stream(writer) {}
 
   Stream stream;
   Result result = Result::Ok;
@@ -94,22 +94,22 @@ static void write_indent(Context* ctx) {
   static size_t s_indent_len = sizeof(s_indent) - 1;
   size_t indent = ctx->indent;
   while (indent > s_indent_len) {
-    write_data(&ctx->stream, s_indent, s_indent_len, nullptr);
+    ctx->stream.WriteData(s_indent, s_indent_len);
     indent -= s_indent_len;
   }
   if (indent > 0) {
-    write_data(&ctx->stream, s_indent, indent, nullptr);
+    ctx->stream.WriteData(s_indent, indent);
   }
 }
 
 static void write_next_char(Context* ctx) {
   switch (ctx->next_char) {
     case NextChar::Space:
-      write_data(&ctx->stream, " ", 1, nullptr);
+      ctx->stream.WriteChar(' ');
       break;
     case NextChar::Newline:
     case NextChar::ForceNewline:
-      write_data(&ctx->stream, "\n", 1, nullptr);
+      ctx->stream.WriteChar('\n');
       write_indent(ctx);
       break;
 
@@ -124,7 +124,7 @@ static void write_data_with_next_char(Context* ctx,
                                       const void* src,
                                       size_t size) {
   write_next_char(ctx);
-  write_data(&ctx->stream, src, size, nullptr);
+  ctx->stream.WriteData(src, size);
 }
 
 static void WABT_PRINTF_FORMAT(2, 3)
@@ -136,7 +136,7 @@ static void WABT_PRINTF_FORMAT(2, 3)
 }
 
 static void write_putc(Context* ctx, char c) {
-  write_data(&ctx->stream, &c, 1, nullptr);
+  ctx->stream.WriteChar(c);
 }
 
 static void write_puts(Context* ctx, const char* s, NextChar next_char) {
@@ -745,8 +745,7 @@ static void write_module(Context* ctx, const Module* module) {
 }
 
 Result write_ast(Writer* writer, const Module* module) {
-  Context ctx;
-  init_stream(&ctx.stream, writer, nullptr);
+  Context ctx(writer);
   write_module(&ctx, module);
   return ctx.result;
 }

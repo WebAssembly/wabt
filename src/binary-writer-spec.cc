@@ -31,8 +31,7 @@ namespace wabt {
 namespace {
 
 struct Context {
-  MemoryWriter json_writer;
-  Stream json_stream;
+  MemoryStream json_stream;
   StringSlice source_filename;
   StringSlice module_filename_noext;
   bool write_modules; /* Whether to write the modules files. */
@@ -111,28 +110,28 @@ static char* get_module_filename(Context* ctx) {
 }
 
 static void write_string(Context* ctx, const char* s) {
-  writef(&ctx->json_stream, "\"%s\"", s);
+  ctx->json_stream.Writef("\"%s\"", s);
 }
 
 static void write_key(Context* ctx, const char* key) {
-  writef(&ctx->json_stream, "\"%s\": ", key);
+  ctx->json_stream.Writef("\"%s\": ", key);
 }
 
 static void write_separator(Context* ctx) {
-  writef(&ctx->json_stream, ", ");
+  ctx->json_stream.Writef(", ");
 }
 
 static void write_escaped_string_slice(Context* ctx, StringSlice ss) {
-  write_char(&ctx->json_stream, '"');
+  ctx->json_stream.WriteChar('"');
   for (size_t i = 0; i < ss.length; ++i) {
     uint8_t c = ss.start[i];
     if (c < 0x20 || c == '\\' || c == '"') {
-      writef(&ctx->json_stream, "\\u%04x", c);
+      ctx->json_stream.Writef("\\u%04x", c);
     } else {
-      write_char(&ctx->json_stream, c);
+      ctx->json_stream.WriteChar(c);
     }
   }
-  write_char(&ctx->json_stream, '"');
+  ctx->json_stream.WriteChar('"');
 }
 
 static void write_command_type(Context* ctx, const Command& command) {
@@ -161,25 +160,25 @@ static void write_command_type(Context* ctx, const Command& command) {
 
 static void write_location(Context* ctx, const Location* loc) {
   write_key(ctx, "line");
-  writef(&ctx->json_stream, "%d", loc->line);
+  ctx->json_stream.Writef("%d", loc->line);
 }
 
 static void write_var(Context* ctx, const Var* var) {
   if (var->type == VarType::Index)
-    writef(&ctx->json_stream, "\"%" PRIu64 "\"", var->index);
+    ctx->json_stream.Writef("\"%" PRIu64 "\"", var->index);
   else
     write_escaped_string_slice(ctx, var->name);
 }
 
 static void write_type_object(Context* ctx, Type type) {
-  writef(&ctx->json_stream, "{");
+  ctx->json_stream.Writef("{");
   write_key(ctx, "type");
   write_string(ctx, get_type_name(type));
-  writef(&ctx->json_stream, "}");
+  ctx->json_stream.Writef("}");
 }
 
 static void write_const(Context* ctx, const Const* const_) {
-  writef(&ctx->json_stream, "{");
+  ctx->json_stream.Writef("{");
   write_key(ctx, "type");
 
   /* Always write the values as strings, even though they may be representable
@@ -189,14 +188,14 @@ static void write_const(Context* ctx, const Const* const_) {
       write_string(ctx, "i32");
       write_separator(ctx);
       write_key(ctx, "value");
-      writef(&ctx->json_stream, "\"%u\"", const_->u32);
+      ctx->json_stream.Writef("\"%u\"", const_->u32);
       break;
 
     case Type::I64:
       write_string(ctx, "i64");
       write_separator(ctx);
       write_key(ctx, "value");
-      writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->u64);
+      ctx->json_stream.Writef("\"%" PRIu64 "\"", const_->u64);
       break;
 
     case Type::F32: {
@@ -204,7 +203,7 @@ static void write_const(Context* ctx, const Const* const_) {
       write_string(ctx, "f32");
       write_separator(ctx);
       write_key(ctx, "value");
-      writef(&ctx->json_stream, "\"%u\"", const_->f32_bits);
+      ctx->json_stream.Writef("\"%u\"", const_->f32_bits);
       break;
     }
 
@@ -213,7 +212,7 @@ static void write_const(Context* ctx, const Const* const_) {
       write_string(ctx, "f64");
       write_separator(ctx);
       write_key(ctx, "value");
-      writef(&ctx->json_stream, "\"%" PRIu64 "\"", const_->f64_bits);
+      ctx->json_stream.Writef("\"%" PRIu64 "\"", const_->f64_bits);
       break;
     }
 
@@ -221,23 +220,23 @@ static void write_const(Context* ctx, const Const* const_) {
       assert(0);
   }
 
-  writef(&ctx->json_stream, "}");
+  ctx->json_stream.Writef("}");
 }
 
 static void write_const_vector(Context* ctx, const ConstVector& consts) {
-  writef(&ctx->json_stream, "[");
+  ctx->json_stream.Writef("[");
   for (size_t i = 0; i < consts.size(); ++i) {
     const Const* const_ = &consts[i];
     write_const(ctx, const_);
     if (i != consts.size() - 1)
       write_separator(ctx);
   }
-  writef(&ctx->json_stream, "]");
+  ctx->json_stream.Writef("]");
 }
 
 static void write_action(Context* ctx, const Action* action) {
   write_key(ctx, "action");
-  writef(&ctx->json_stream, "{");
+  ctx->json_stream.Writef("{");
   write_key(ctx, "type");
   if (action->type == ActionType::Invoke) {
     write_string(ctx, "invoke");
@@ -261,7 +260,7 @@ static void write_action(Context* ctx, const Action* action) {
     write_key(ctx, "field");
     write_escaped_string_slice(ctx, action->name);
   }
-  writef(&ctx->json_stream, "}");
+  ctx->json_stream.Writef("}");
 }
 
 static void write_action_result_type(Context* ctx,
@@ -269,7 +268,7 @@ static void write_action_result_type(Context* ctx,
                                      const Action* action) {
   const Module* module = get_module_by_var(script, &action->module_var);
   const Export* export_;
-  writef(&ctx->json_stream, "[");
+  ctx->json_stream.Writef("[");
   switch (action->type) {
     case ActionType::Invoke: {
       export_ = get_export_by_name(module, &action->name);
@@ -289,19 +288,15 @@ static void write_action_result_type(Context* ctx,
       break;
     }
   }
-  writef(&ctx->json_stream, "]");
+  ctx->json_stream.Writef("]");
 }
 
 static void write_module(Context* ctx, char* filename, const Module* module) {
   MemoryWriter writer;
-  Result result = init_mem_writer(&writer);
-  if (WABT_SUCCEEDED(result)) {
-    WriteBinaryOptions options = ctx->spec_options->write_binary_options;
-    result = write_binary_module(&writer.base, module, &options);
-    if (WABT_SUCCEEDED(result) && ctx->write_modules)
-      result = write_output_buffer_to_file(&writer.buf, filename);
-    close_mem_writer(&writer);
-  }
+  WriteBinaryOptions options = ctx->spec_options->write_binary_options;
+  Result result = write_binary_module(&writer, module, &options);
+  if (WABT_SUCCEEDED(result) && ctx->write_modules)
+    result = writer.output_buffer().WriteToFile(filename);
 
   ctx->result = result;
 }
@@ -312,15 +307,13 @@ static void write_raw_module(Context* ctx,
   if (raw_module->type == RawModuleType::Text) {
     write_module(ctx, filename, raw_module->text);
   } else if (ctx->write_modules) {
-    FileStream stream;
-    Result result = init_file_writer(&stream.writer, filename);
-    if (WABT_SUCCEEDED(result)) {
-      init_stream(&stream.base, &stream.writer.base, nullptr);
-      write_data(&stream.base, raw_module->binary.data, raw_module->binary.size,
-                 "");
-      close_file_writer(&stream.writer);
+    FileStream stream(filename);
+    if (stream.is_open()) {
+      stream.WriteData(raw_module->binary.data, raw_module->binary.size);
+      ctx->result = stream.result();
+    } else {
+      ctx->result = Result::Error;
     }
-    ctx->result = result;
   }
 }
 
@@ -340,9 +333,9 @@ static void write_invalid_module(Context* ctx,
 }
 
 static void write_commands(Context* ctx, Script* script) {
-  writef(&ctx->json_stream, "{\"source_filename\": ");
+  ctx->json_stream.Writef("{\"source_filename\": ");
   write_escaped_string_slice(ctx, ctx->source_filename);
-  writef(&ctx->json_stream, ",\n \"commands\": [\n");
+  ctx->json_stream.Writef(",\n \"commands\": [\n");
   int last_module_index = -1;
   for (size_t i = 0; i < script->commands.size(); ++i) {
     const Command& command = *script->commands[i].get();
@@ -352,9 +345,9 @@ static void write_commands(Context* ctx, Script* script) {
 
     if (i != 0)
       write_separator(ctx);
-    writef(&ctx->json_stream, "\n");
+    ctx->json_stream.Writef("\n");
 
-    writef(&ctx->json_stream, "  {");
+    ctx->json_stream.Writef("  {");
     write_command_type(ctx, command);
     write_separator(ctx);
 
@@ -474,9 +467,9 @@ static void write_commands(Context* ctx, Script* script) {
         break;
     }
 
-    writef(&ctx->json_stream, "}");
+    ctx->json_stream.Writef("}");
   }
-  writef(&ctx->json_stream, "]}\n");
+  ctx->json_stream.Writef("]}\n");
 }
 
 Result write_binary_spec_script(Script* script,
@@ -484,7 +477,6 @@ Result write_binary_spec_script(Script* script,
                                 const WriteBinarySpecOptions* spec_options) {
   assert(source_filename);
   Context ctx;
-  WABT_ZERO_MEMORY(ctx);
   ctx.spec_options = spec_options;
   ctx.result = Result::Ok;
   ctx.source_filename.start = source_filename;
@@ -494,15 +486,9 @@ Result write_binary_spec_script(Script* script,
                                       : source_filename);
   ctx.write_modules = !!ctx.spec_options->json_filename;
 
-  Result result = init_mem_writer(&ctx.json_writer);
-  if (WABT_SUCCEEDED(result)) {
-    init_stream(&ctx.json_stream, &ctx.json_writer.base, nullptr);
-    write_commands(&ctx, script);
-    if (ctx.spec_options->json_filename) {
-      write_output_buffer_to_file(&ctx.json_writer.buf,
-                                  ctx.spec_options->json_filename);
-    }
-    close_mem_writer(&ctx.json_writer);
+  write_commands(&ctx, script);
+  if (ctx.spec_options->json_filename) {
+    ctx.json_stream.WriteToFile(ctx.spec_options->json_filename);
   }
 
   return ctx.result;

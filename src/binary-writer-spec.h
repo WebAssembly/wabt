@@ -23,8 +23,6 @@
 
 namespace wabt {
 
-struct Writer;
-
 #define WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
   { nullptr, WABT_WRITE_BINARY_OPTIONS_DEFAULT }
 

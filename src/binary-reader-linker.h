@@ -22,14 +22,14 @@
 
 namespace wabt {
 
-struct Stream;
+class Stream;
 
 namespace link {
 
 struct LinkerInputBinary;
 
 struct LinkOptions {
-  struct Stream* log_stream;
+  Stream* log_stream;
 };
 
 Result read_binary_linker(struct LinkerInputBinary* input_info,

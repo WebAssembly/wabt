@@ -21,7 +21,7 @@
 
 namespace wabt {
 
-struct Stream;
+class Stream;
 
 class BinaryReaderLogging : public BinaryReader {
  public:
