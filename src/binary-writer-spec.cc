@@ -31,14 +31,21 @@ namespace wabt {
 namespace {
 
 struct Context {
+  Context();
+
   MemoryStream json_stream;
   StringSlice source_filename;
   StringSlice module_filename_noext;
-  bool write_modules; /* Whether to write the modules files. */
+  bool write_modules = false; /* Whether to write the modules files. */
   const WriteBinarySpecOptions* spec_options;
-  Result result;
-  size_t num_modules;
+  Result result = Result::Ok;
+  size_t num_modules = 0;
 };
+
+Context::Context() {
+  WABT_ZERO_MEMORY(source_filename);
+  WABT_ZERO_MEMORY(module_filename_noext);
+}
 
 }  // namespace
 
