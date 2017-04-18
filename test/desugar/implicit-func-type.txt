@@ -1,0 +1,18 @@
+;;; TOOL: wast-desugar
+(module
+  ;; The implicitly defined function type should come before the function,
+  ;; otherwise the function will not "see" it and define its own.
+  (func (param i32)
+    nop)
+
+  ;; This won't define a new function type, it will reuse the one above.
+  (func (param i32)
+    nop))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32)))
+  (func (;0;) (param i32)
+    nop)
+  (func (;1;) (param i32)
+    nop))
+;;; STDOUT ;;)
