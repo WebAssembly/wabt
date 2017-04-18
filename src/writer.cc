@@ -63,6 +63,8 @@ std::unique_ptr<OutputBuffer> MemoryWriter::ReleaseOutputBuffer() {
 Result MemoryWriter::WriteData(size_t dst_offset,
                                const void* src,
                                size_t size) {
+  if (size == 0)
+    return Result::Ok;
   size_t end = dst_offset + size;
   if (end > buf_->data.size()) {
     buf_->data.resize(end);
@@ -75,6 +77,8 @@ Result MemoryWriter::WriteData(size_t dst_offset,
 Result MemoryWriter::MoveData(size_t dst_offset,
                               size_t src_offset,
                               size_t size) {
+  if (size == 0)
+    return Result::Ok;
   size_t src_end = src_offset + size;
   size_t dst_end = dst_offset + size;
   size_t end = src_end > dst_end ? src_end : dst_end;
