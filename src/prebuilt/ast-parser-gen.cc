@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.4"
+#define YYBISON_VERSION "3.0.2"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -82,6 +82,7 @@
 
 #include "ast-parser.h"
 #include "ast-parser-lexer-shared.h"
+#include "binary-error-handler.h"
 #include "binary-reader-ast.h"
 #include "binary-reader.h"
 #include "literal.h"
@@ -218,20 +219,22 @@ void append_implicit_func_declaration(Location*,
                                       Module*,
                                       FuncDeclaration*);
 
-struct BinaryErrorCallbackData {
-  Location* loc;
-  AstLexer* lexer;
-  AstParser* parser;
-};
+class BinaryErrorHandlerModule : public BinaryErrorHandler {
+ public:
+  BinaryErrorHandlerModule(Location* loc, AstLexer* lexer, AstParser* parser);
+  bool OnError(uint32_t offset, const std::string& error) override;
 
-static bool on_read_binary_error(uint32_t offset, const char* error,
-                                 void* user_data);
+ private:
+  Location* loc_;
+  AstLexer* lexer_;
+  AstParser* parser_;
+};
 
 #define wabt_ast_parser_lex ast_lexer_lex
 #define wabt_ast_parser_error ast_parser_error
 
 
-#line 235 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:339  */
+#line 238 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -379,7 +382,7 @@ int wabt_ast_parser_parse (::wabt::AstLexer* lexer, ::wabt::AstParser* parser);
 
 /* Copy the second part of user declarations.  */
 
-#line 383 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:358  */
+#line 386 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -685,24 +688,24 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   293,   293,   299,   309,   310,   314,   332,   333,   339,
-     342,   347,   354,   357,   358,   363,   370,   378,   384,   390,
-     395,   402,   408,   419,   423,   427,   434,   439,   446,   447,
-     453,   454,   457,   461,   462,   466,   467,   477,   478,   489,
-     490,   491,   494,   497,   500,   503,   506,   509,   512,   515,
-     518,   521,   524,   527,   530,   533,   536,   539,   542,   545,
-     558,   561,   564,   567,   570,   573,   578,   583,   588,   593,
-     601,   610,   614,   617,   622,   627,   637,   641,   645,   649,
-     653,   657,   664,   665,   673,   674,   682,   687,   688,   694,
-     700,   710,   716,   722,   732,   784,   794,   801,   809,   819,
-     822,   826,   833,   845,   853,   875,   882,   894,   902,   923,
-     945,   953,   966,   974,   982,   988,   994,  1002,  1007,  1015,
-    1023,  1029,  1035,  1044,  1052,  1057,  1062,  1067,  1074,  1081,
-    1085,  1088,  1100,  1105,  1114,  1118,  1121,  1128,  1137,  1154,
-    1171,  1183,  1189,  1195,  1201,  1234,  1244,  1264,  1275,  1303,
-    1308,  1316,  1326,  1336,  1342,  1348,  1354,  1360,  1366,  1371,
-    1376,  1382,  1391,  1396,  1397,  1402,  1411,  1412,  1419,  1431,
-    1432,  1439,  1505
+       0,   296,   296,   302,   312,   313,   317,   335,   336,   342,
+     345,   350,   357,   360,   361,   366,   373,   381,   387,   393,
+     398,   405,   411,   422,   426,   430,   437,   442,   449,   450,
+     456,   457,   460,   464,   465,   469,   470,   480,   481,   492,
+     493,   494,   497,   500,   503,   506,   509,   512,   515,   518,
+     521,   524,   527,   530,   533,   536,   539,   542,   545,   548,
+     561,   564,   567,   570,   573,   576,   581,   586,   591,   596,
+     604,   613,   617,   620,   625,   630,   640,   644,   648,   652,
+     656,   660,   667,   668,   676,   677,   685,   690,   691,   697,
+     703,   713,   719,   725,   735,   787,   797,   804,   812,   822,
+     825,   829,   836,   848,   856,   878,   885,   897,   905,   926,
+     948,   956,   969,   977,   985,   991,   997,  1005,  1010,  1018,
+    1026,  1032,  1038,  1047,  1055,  1060,  1065,  1070,  1077,  1084,
+    1088,  1091,  1103,  1108,  1117,  1121,  1124,  1131,  1140,  1157,
+    1174,  1186,  1192,  1198,  1204,  1237,  1247,  1267,  1278,  1300,
+    1305,  1313,  1323,  1333,  1339,  1345,  1351,  1357,  1363,  1368,
+    1373,  1379,  1388,  1393,  1394,  1399,  1408,  1409,  1416,  1428,
+    1429,  1436,  1502
 };
 #endif
 
@@ -1642,363 +1645,363 @@ yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocatio
   switch (yytype)
     {
           case 5: /* NAT  */
-#line 250 "src/ast-parser.y" /* yacc.c:1257  */
+#line 253 "src/ast-parser.y" /* yacc.c:1257  */
       {}
-#line 1648 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1651 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 6: /* INT  */
-#line 250 "src/ast-parser.y" /* yacc.c:1257  */
+#line 253 "src/ast-parser.y" /* yacc.c:1257  */
       {}
-#line 1654 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1657 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 7: /* FLOAT  */
-#line 250 "src/ast-parser.y" /* yacc.c:1257  */
+#line 253 "src/ast-parser.y" /* yacc.c:1257  */
       {}
-#line 1660 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1663 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 8: /* TEXT  */
-#line 250 "src/ast-parser.y" /* yacc.c:1257  */
+#line 253 "src/ast-parser.y" /* yacc.c:1257  */
       {}
-#line 1666 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1669 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 9: /* VAR  */
-#line 250 "src/ast-parser.y" /* yacc.c:1257  */
+#line 253 "src/ast-parser.y" /* yacc.c:1257  */
       {}
-#line 1672 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1675 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 35: /* OFFSET_EQ_NAT  */
-#line 250 "src/ast-parser.y" /* yacc.c:1257  */
+#line 253 "src/ast-parser.y" /* yacc.c:1257  */
       {}
-#line 1678 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1681 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 36: /* ALIGN_EQ_NAT  */
-#line 250 "src/ast-parser.y" /* yacc.c:1257  */
+#line 253 "src/ast-parser.y" /* yacc.c:1257  */
       {}
-#line 1684 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1687 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 76: /* non_empty_text_list  */
-#line 277 "src/ast-parser.y" /* yacc.c:1257  */
+#line 280 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_text_list(&((*yyvaluep).text_list)); }
-#line 1690 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1693 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 77: /* text_list  */
-#line 277 "src/ast-parser.y" /* yacc.c:1257  */
+#line 280 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_text_list(&((*yyvaluep).text_list)); }
-#line 1696 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1699 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 78: /* quoted_text  */
-#line 251 "src/ast-parser.y" /* yacc.c:1257  */
+#line 254 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_string_slice(&((*yyvaluep).text)); }
-#line 1702 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1705 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 79: /* value_type_list  */
-#line 278 "src/ast-parser.y" /* yacc.c:1257  */
+#line 281 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).types); }
-#line 1708 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1711 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 81: /* global_type  */
-#line 270 "src/ast-parser.y" /* yacc.c:1257  */
+#line 273 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).global); }
-#line 1714 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1717 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 82: /* func_type  */
-#line 268 "src/ast-parser.y" /* yacc.c:1257  */
+#line 271 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).func_sig); }
-#line 1720 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1723 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 83: /* func_sig  */
-#line 268 "src/ast-parser.y" /* yacc.c:1257  */
+#line 271 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).func_sig); }
-#line 1726 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1729 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 85: /* memory_sig  */
-#line 273 "src/ast-parser.y" /* yacc.c:1257  */
+#line 276 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).memory); }
-#line 1732 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1735 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 87: /* type_use  */
-#line 279 "src/ast-parser.y" /* yacc.c:1257  */
+#line 282 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_var(&((*yyvaluep).var)); }
-#line 1738 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1741 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 89: /* literal  */
-#line 252 "src/ast-parser.y" /* yacc.c:1257  */
+#line 255 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_string_slice(&((*yyvaluep).literal).text); }
-#line 1744 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1747 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 90: /* var  */
-#line 279 "src/ast-parser.y" /* yacc.c:1257  */
+#line 282 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_var(&((*yyvaluep).var)); }
-#line 1750 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1753 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 91: /* var_list  */
-#line 280 "src/ast-parser.y" /* yacc.c:1257  */
+#line 283 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).vars); }
-#line 1756 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1759 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 92: /* bind_var_opt  */
-#line 251 "src/ast-parser.y" /* yacc.c:1257  */
+#line 254 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_string_slice(&((*yyvaluep).text)); }
-#line 1762 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1765 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 93: /* bind_var  */
-#line 251 "src/ast-parser.y" /* yacc.c:1257  */
+#line 254 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_string_slice(&((*yyvaluep).text)); }
-#line 1768 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1771 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 94: /* labeling_opt  */
-#line 251 "src/ast-parser.y" /* yacc.c:1257  */
+#line 254 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_string_slice(&((*yyvaluep).text)); }
-#line 1774 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1777 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 97: /* instr  */
-#line 265 "src/ast-parser.y" /* yacc.c:1257  */
+#line 268 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_expr_list(((*yyvaluep).expr_list).first); }
-#line 1780 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1783 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 98: /* plain_instr  */
-#line 264 "src/ast-parser.y" /* yacc.c:1257  */
+#line 267 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).expr); }
-#line 1786 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1789 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 99: /* block_instr  */
-#line 264 "src/ast-parser.y" /* yacc.c:1257  */
+#line 267 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).expr); }
-#line 1792 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1795 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 100: /* block  */
-#line 254 "src/ast-parser.y" /* yacc.c:1257  */
+#line 257 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).block); }
-#line 1798 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1801 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 101: /* expr  */
-#line 265 "src/ast-parser.y" /* yacc.c:1257  */
+#line 268 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_expr_list(((*yyvaluep).expr_list).first); }
-#line 1804 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1807 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 102: /* expr1  */
-#line 265 "src/ast-parser.y" /* yacc.c:1257  */
+#line 268 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_expr_list(((*yyvaluep).expr_list).first); }
-#line 1810 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1813 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 103: /* if_  */
-#line 265 "src/ast-parser.y" /* yacc.c:1257  */
+#line 268 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_expr_list(((*yyvaluep).expr_list).first); }
-#line 1816 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1819 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 104: /* instr_list  */
-#line 265 "src/ast-parser.y" /* yacc.c:1257  */
+#line 268 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_expr_list(((*yyvaluep).expr_list).first); }
-#line 1822 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1825 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 105: /* expr_list  */
-#line 265 "src/ast-parser.y" /* yacc.c:1257  */
+#line 268 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_expr_list(((*yyvaluep).expr_list).first); }
-#line 1828 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1831 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 106: /* const_expr  */
-#line 265 "src/ast-parser.y" /* yacc.c:1257  */
+#line 268 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_expr_list(((*yyvaluep).expr_list).first); }
-#line 1834 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1837 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 107: /* func_fields  */
-#line 266 "src/ast-parser.y" /* yacc.c:1257  */
+#line 269 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_func_fields(((*yyvaluep).func_fields)); }
-#line 1840 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1843 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 108: /* func_body  */
-#line 266 "src/ast-parser.y" /* yacc.c:1257  */
+#line 269 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_func_fields(((*yyvaluep).func_fields)); }
-#line 1846 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1849 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 109: /* func_info  */
-#line 267 "src/ast-parser.y" /* yacc.c:1257  */
+#line 270 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).func); }
-#line 1852 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1855 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 110: /* func  */
-#line 261 "src/ast-parser.y" /* yacc.c:1257  */
+#line 264 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).exported_func); }
-#line 1858 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1861 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 111: /* offset  */
-#line 265 "src/ast-parser.y" /* yacc.c:1257  */
+#line 268 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_expr_list(((*yyvaluep).expr_list).first); }
-#line 1864 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1867 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 112: /* elem  */
-#line 259 "src/ast-parser.y" /* yacc.c:1257  */
+#line 262 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).elem_segment); }
-#line 1870 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1873 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 113: /* table  */
-#line 263 "src/ast-parser.y" /* yacc.c:1257  */
+#line 266 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).exported_table); }
-#line 1876 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1879 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 114: /* data  */
-#line 258 "src/ast-parser.y" /* yacc.c:1257  */
+#line 261 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).data_segment); }
-#line 1882 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1885 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 115: /* memory  */
-#line 262 "src/ast-parser.y" /* yacc.c:1257  */
+#line 265 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).exported_memory); }
-#line 1888 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1891 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 117: /* import_kind  */
-#line 271 "src/ast-parser.y" /* yacc.c:1257  */
+#line 274 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).import); }
-#line 1894 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1897 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 118: /* import  */
-#line 271 "src/ast-parser.y" /* yacc.c:1257  */
+#line 274 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).import); }
-#line 1900 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1903 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 119: /* inline_import  */
-#line 271 "src/ast-parser.y" /* yacc.c:1257  */
+#line 274 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).import); }
-#line 1906 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1909 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 120: /* export_kind  */
-#line 260 "src/ast-parser.y" /* yacc.c:1257  */
+#line 263 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).export_); }
-#line 1912 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1915 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 121: /* export  */
-#line 260 "src/ast-parser.y" /* yacc.c:1257  */
+#line 263 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).export_); }
-#line 1918 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1921 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 122: /* inline_export_opt  */
-#line 272 "src/ast-parser.y" /* yacc.c:1257  */
+#line 275 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).optional_export); }
-#line 1924 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1927 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 123: /* inline_export  */
-#line 272 "src/ast-parser.y" /* yacc.c:1257  */
+#line 275 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).optional_export); }
-#line 1930 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1933 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 124: /* type_def  */
-#line 269 "src/ast-parser.y" /* yacc.c:1257  */
+#line 272 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).func_type); }
-#line 1936 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1939 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 125: /* start  */
-#line 279 "src/ast-parser.y" /* yacc.c:1257  */
+#line 282 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_var(&((*yyvaluep).var)); }
-#line 1942 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1945 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 126: /* module_fields  */
-#line 274 "src/ast-parser.y" /* yacc.c:1257  */
+#line 277 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).module); }
-#line 1948 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1951 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 127: /* raw_module  */
-#line 275 "src/ast-parser.y" /* yacc.c:1257  */
+#line 278 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).raw_module); }
-#line 1954 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1957 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 128: /* module  */
-#line 274 "src/ast-parser.y" /* yacc.c:1257  */
+#line 277 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).module); }
-#line 1960 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1963 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 129: /* script_var_opt  */
-#line 279 "src/ast-parser.y" /* yacc.c:1257  */
+#line 282 "src/ast-parser.y" /* yacc.c:1257  */
       { destroy_var(&((*yyvaluep).var)); }
-#line 1966 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1969 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 130: /* action  */
-#line 253 "src/ast-parser.y" /* yacc.c:1257  */
+#line 256 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).action); }
-#line 1972 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1975 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 131: /* assertion  */
-#line 255 "src/ast-parser.y" /* yacc.c:1257  */
+#line 258 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).command); }
-#line 1978 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1981 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 132: /* cmd  */
-#line 255 "src/ast-parser.y" /* yacc.c:1257  */
+#line 258 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).command); }
-#line 1984 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1987 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 133: /* cmd_list  */
-#line 256 "src/ast-parser.y" /* yacc.c:1257  */
+#line 259 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).commands); }
-#line 1990 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1993 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 135: /* const_list  */
-#line 257 "src/ast-parser.y" /* yacc.c:1257  */
+#line 260 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).consts); }
-#line 1996 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 1999 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
     case 136: /* script  */
-#line 276 "src/ast-parser.y" /* yacc.c:1257  */
+#line 279 "src/ast-parser.y" /* yacc.c:1257  */
       { delete ((*yyvaluep).script); }
-#line 2002 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
+#line 2005 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1257  */
         break;
 
 
@@ -2290,18 +2293,18 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 293 "src/ast-parser.y" /* yacc.c:1646  */
+#line 296 "src/ast-parser.y" /* yacc.c:1646  */
     {
       TextListNode* node = new TextListNode();
       DUPTEXT(node->text, (yyvsp[0].text));
       node->next = nullptr;
       (yyval.text_list).first = (yyval.text_list).last = node;
     }
-#line 2301 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2304 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 299 "src/ast-parser.y" /* yacc.c:1646  */
+#line 302 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.text_list) = (yyvsp[-1].text_list);
       TextListNode* node = new TextListNode();
@@ -2310,17 +2313,17 @@ yyreduce:
       (yyval.text_list).last->next = node;
       (yyval.text_list).last = node;
     }
-#line 2314 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2317 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 309 "src/ast-parser.y" /* yacc.c:1646  */
+#line 312 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.text_list).first = (yyval.text_list).last = nullptr; }
-#line 2320 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2323 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 314 "src/ast-parser.y" /* yacc.c:1646  */
+#line 317 "src/ast-parser.y" /* yacc.c:1646  */
     {
       TextListNode node;
       node.text = (yyvsp[0].text);
@@ -2334,74 +2337,74 @@ yyreduce:
       (yyval.text).start = data;
       (yyval.text).length = size;
     }
-#line 2338 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2341 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 332 "src/ast-parser.y" /* yacc.c:1646  */
+#line 335 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.types) = new TypeVector(); }
-#line 2344 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2347 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 333 "src/ast-parser.y" /* yacc.c:1646  */
+#line 336 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.types) = (yyvsp[-1].types);
       (yyval.types)->push_back((yyvsp[0].type));
     }
-#line 2353 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2356 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 339 "src/ast-parser.y" /* yacc.c:1646  */
+#line 342 "src/ast-parser.y" /* yacc.c:1646  */
     {}
-#line 2359 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2362 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 342 "src/ast-parser.y" /* yacc.c:1646  */
+#line 345 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.global) = new Global();
       (yyval.global)->type = (yyvsp[0].type);
       (yyval.global)->mutable_ = false;
     }
-#line 2369 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2372 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 347 "src/ast-parser.y" /* yacc.c:1646  */
+#line 350 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.global) = new Global();
       (yyval.global)->type = (yyvsp[-1].type);
       (yyval.global)->mutable_ = true;
     }
-#line 2379 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2382 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 354 "src/ast-parser.y" /* yacc.c:1646  */
+#line 357 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.func_sig) = (yyvsp[-1].func_sig); }
-#line 2385 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2388 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 357 "src/ast-parser.y" /* yacc.c:1646  */
+#line 360 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.func_sig) = new FuncSignature(); }
-#line 2391 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2394 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 358 "src/ast-parser.y" /* yacc.c:1646  */
+#line 361 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_sig) = new FuncSignature();
       (yyval.func_sig)->param_types = std::move(*(yyvsp[-1].types));
       delete (yyvsp[-1].types);
     }
-#line 2401 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2404 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 363 "src/ast-parser.y" /* yacc.c:1646  */
+#line 366 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_sig) = new FuncSignature();
       (yyval.func_sig)->param_types = std::move(*(yyvsp[-5].types));
@@ -2409,65 +2412,65 @@ yyreduce:
       (yyval.func_sig)->result_types = std::move(*(yyvsp[-1].types));
       delete (yyvsp[-1].types);
     }
-#line 2413 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2416 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 370 "src/ast-parser.y" /* yacc.c:1646  */
+#line 373 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_sig) = new FuncSignature();
       (yyval.func_sig)->result_types = std::move(*(yyvsp[-1].types));
       delete (yyvsp[-1].types);
     }
-#line 2423 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2426 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 378 "src/ast-parser.y" /* yacc.c:1646  */
+#line 381 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.table) = new Table();
       (yyval.table)->elem_limits = (yyvsp[-1].limits);
     }
-#line 2432 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2435 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 384 "src/ast-parser.y" /* yacc.c:1646  */
+#line 387 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.memory) = new Memory();
       (yyval.memory)->page_limits = (yyvsp[0].limits);
     }
-#line 2441 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2444 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 390 "src/ast-parser.y" /* yacc.c:1646  */
+#line 393 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.limits).has_max = false;
       (yyval.limits).initial = (yyvsp[0].u64);
       (yyval.limits).max = 0;
     }
-#line 2451 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2454 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 395 "src/ast-parser.y" /* yacc.c:1646  */
+#line 398 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.limits).has_max = true;
       (yyval.limits).initial = (yyvsp[-1].u64);
       (yyval.limits).max = (yyvsp[0].u64);
     }
-#line 2461 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2464 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 402 "src/ast-parser.y" /* yacc.c:1646  */
+#line 405 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.var) = (yyvsp[-1].var); }
-#line 2467 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2470 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 408 "src/ast-parser.y" /* yacc.c:1646  */
+#line 411 "src/ast-parser.y" /* yacc.c:1646  */
     {
       if (WABT_FAILED(parse_uint64((yyvsp[0].literal).text.start,
                                         (yyvsp[0].literal).text.start + (yyvsp[0].literal).text.length, &(yyval.u64)))) {
@@ -2476,97 +2479,97 @@ yyreduce:
                               WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].literal).text));
       }
     }
-#line 2480 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2483 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 419 "src/ast-parser.y" /* yacc.c:1646  */
+#line 422 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.literal).type = (yyvsp[0].literal).type;
       DUPTEXT((yyval.literal).text, (yyvsp[0].literal).text);
     }
-#line 2489 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2492 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 423 "src/ast-parser.y" /* yacc.c:1646  */
+#line 426 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.literal).type = (yyvsp[0].literal).type;
       DUPTEXT((yyval.literal).text, (yyvsp[0].literal).text);
     }
-#line 2498 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2501 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 427 "src/ast-parser.y" /* yacc.c:1646  */
+#line 430 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.literal).type = (yyvsp[0].literal).type;
       DUPTEXT((yyval.literal).text, (yyvsp[0].literal).text);
     }
-#line 2507 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2510 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 434 "src/ast-parser.y" /* yacc.c:1646  */
+#line 437 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.var).loc = (yylsp[0]);
       (yyval.var).type = VarType::Index;
       (yyval.var).index = (yyvsp[0].u64);
     }
-#line 2517 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2520 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 439 "src/ast-parser.y" /* yacc.c:1646  */
+#line 442 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.var).loc = (yylsp[0]);
       (yyval.var).type = VarType::Name;
       DUPTEXT((yyval.var).name, (yyvsp[0].text));
     }
-#line 2527 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2530 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 446 "src/ast-parser.y" /* yacc.c:1646  */
+#line 449 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.vars) = new VarVector(); }
-#line 2533 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2536 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 447 "src/ast-parser.y" /* yacc.c:1646  */
+#line 450 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.vars) = (yyvsp[-1].vars);
       (yyval.vars)->push_back((yyvsp[0].var));
     }
-#line 2542 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2545 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 453 "src/ast-parser.y" /* yacc.c:1646  */
+#line 456 "src/ast-parser.y" /* yacc.c:1646  */
     { WABT_ZERO_MEMORY((yyval.text)); }
-#line 2548 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2551 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 457 "src/ast-parser.y" /* yacc.c:1646  */
+#line 460 "src/ast-parser.y" /* yacc.c:1646  */
     { DUPTEXT((yyval.text), (yyvsp[0].text)); }
-#line 2554 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2557 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 461 "src/ast-parser.y" /* yacc.c:1646  */
+#line 464 "src/ast-parser.y" /* yacc.c:1646  */
     { WABT_ZERO_MEMORY((yyval.text)); }
-#line 2560 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2563 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 466 "src/ast-parser.y" /* yacc.c:1646  */
+#line 469 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.u64) = 0; }
-#line 2566 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2569 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 467 "src/ast-parser.y" /* yacc.c:1646  */
+#line 470 "src/ast-parser.y" /* yacc.c:1646  */
     {
     if (WABT_FAILED(parse_int64((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u64),
                                 ParseIntType::SignedAndUnsigned))) {
@@ -2575,17 +2578,17 @@ yyreduce:
                             WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
       }
     }
-#line 2579 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2582 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 477 "src/ast-parser.y" /* yacc.c:1646  */
+#line 480 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.u32) = USE_NATURAL_ALIGNMENT; }
-#line 2585 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2588 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 478 "src/ast-parser.y" /* yacc.c:1646  */
+#line 481 "src/ast-parser.y" /* yacc.c:1646  */
     {
     if (WABT_FAILED(parse_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32),
                                 ParseIntType::UnsignedOnly))) {
@@ -2594,165 +2597,165 @@ yyreduce:
                        WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
       }
     }
-#line 2598 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2601 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 489 "src/ast-parser.y" /* yacc.c:1646  */
+#line 492 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = join_exprs1(&(yylsp[0]), (yyvsp[0].expr)); }
-#line 2604 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2607 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 490 "src/ast-parser.y" /* yacc.c:1646  */
+#line 493 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = join_exprs1(&(yylsp[0]), (yyvsp[0].expr)); }
-#line 2610 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2613 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 491 "src/ast-parser.y" /* yacc.c:1646  */
+#line 494 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = (yyvsp[0].expr_list); }
-#line 2616 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2619 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 494 "src/ast-parser.y" /* yacc.c:1646  */
+#line 497 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateUnreachable();
     }
-#line 2624 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2627 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 497 "src/ast-parser.y" /* yacc.c:1646  */
+#line 500 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateNop();
     }
-#line 2632 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2635 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 500 "src/ast-parser.y" /* yacc.c:1646  */
+#line 503 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateDrop();
     }
-#line 2640 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2643 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 503 "src/ast-parser.y" /* yacc.c:1646  */
+#line 506 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateSelect();
     }
-#line 2648 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2651 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 506 "src/ast-parser.y" /* yacc.c:1646  */
+#line 509 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateBr((yyvsp[0].var));
     }
-#line 2656 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2659 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 509 "src/ast-parser.y" /* yacc.c:1646  */
+#line 512 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateBrIf((yyvsp[0].var));
     }
-#line 2664 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2667 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 512 "src/ast-parser.y" /* yacc.c:1646  */
+#line 515 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateBrTable((yyvsp[-1].vars), (yyvsp[0].var));
     }
-#line 2672 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2675 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 515 "src/ast-parser.y" /* yacc.c:1646  */
+#line 518 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateReturn();
     }
-#line 2680 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2683 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 518 "src/ast-parser.y" /* yacc.c:1646  */
+#line 521 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateCall((yyvsp[0].var));
     }
-#line 2688 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2691 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 521 "src/ast-parser.y" /* yacc.c:1646  */
+#line 524 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateCallIndirect((yyvsp[0].var));
     }
-#line 2696 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2699 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 524 "src/ast-parser.y" /* yacc.c:1646  */
+#line 527 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateGetLocal((yyvsp[0].var));
     }
-#line 2704 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2707 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 527 "src/ast-parser.y" /* yacc.c:1646  */
+#line 530 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateSetLocal((yyvsp[0].var));
     }
-#line 2712 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2715 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 530 "src/ast-parser.y" /* yacc.c:1646  */
+#line 533 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateTeeLocal((yyvsp[0].var));
     }
-#line 2720 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2723 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 533 "src/ast-parser.y" /* yacc.c:1646  */
+#line 536 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateGetGlobal((yyvsp[0].var));
     }
-#line 2728 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2731 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 536 "src/ast-parser.y" /* yacc.c:1646  */
+#line 539 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateSetGlobal((yyvsp[0].var));
     }
-#line 2736 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2739 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 539 "src/ast-parser.y" /* yacc.c:1646  */
+#line 542 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateLoad((yyvsp[-2].opcode), (yyvsp[0].u32), (yyvsp[-1].u64));
     }
-#line 2744 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2747 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 542 "src/ast-parser.y" /* yacc.c:1646  */
+#line 545 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateStore((yyvsp[-2].opcode), (yyvsp[0].u32), (yyvsp[-1].u64));
     }
-#line 2752 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2755 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 545 "src/ast-parser.y" /* yacc.c:1646  */
+#line 548 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Const const_;
       WABT_ZERO_MEMORY(const_);
@@ -2766,145 +2769,145 @@ yyreduce:
       delete [] (yyvsp[0].literal).text.start;
       (yyval.expr) = Expr::CreateConst(const_);
     }
-#line 2770 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2773 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 558 "src/ast-parser.y" /* yacc.c:1646  */
+#line 561 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateUnary((yyvsp[0].opcode));
     }
-#line 2778 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2781 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 561 "src/ast-parser.y" /* yacc.c:1646  */
+#line 564 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateBinary((yyvsp[0].opcode));
     }
-#line 2786 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2789 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 564 "src/ast-parser.y" /* yacc.c:1646  */
+#line 567 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateCompare((yyvsp[0].opcode));
     }
-#line 2794 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2797 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 567 "src/ast-parser.y" /* yacc.c:1646  */
+#line 570 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateConvert((yyvsp[0].opcode));
     }
-#line 2802 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2805 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 570 "src/ast-parser.y" /* yacc.c:1646  */
+#line 573 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateCurrentMemory();
     }
-#line 2810 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2813 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 573 "src/ast-parser.y" /* yacc.c:1646  */
+#line 576 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateGrowMemory();
     }
-#line 2818 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2821 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 578 "src/ast-parser.y" /* yacc.c:1646  */
+#line 581 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateBlock((yyvsp[-2].block));
       (yyval.expr)->block->label = (yyvsp[-3].text);
       CHECK_END_LABEL((yylsp[0]), (yyval.expr)->block->label, (yyvsp[0].text));
     }
-#line 2828 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2831 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 583 "src/ast-parser.y" /* yacc.c:1646  */
+#line 586 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateLoop((yyvsp[-2].block));
       (yyval.expr)->loop->label = (yyvsp[-3].text);
       CHECK_END_LABEL((yylsp[0]), (yyval.expr)->loop->label, (yyvsp[0].text));
     }
-#line 2838 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2841 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 588 "src/ast-parser.y" /* yacc.c:1646  */
+#line 591 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateIf((yyvsp[-2].block), nullptr);
       (yyval.expr)->if_.true_->label = (yyvsp[-3].text);
       CHECK_END_LABEL((yylsp[0]), (yyval.expr)->if_.true_->label, (yyvsp[0].text));
     }
-#line 2848 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2851 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 593 "src/ast-parser.y" /* yacc.c:1646  */
+#line 596 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = Expr::CreateIf((yyvsp[-5].block), (yyvsp[-2].expr_list).first);
       (yyval.expr)->if_.true_->label = (yyvsp[-6].text);
       CHECK_END_LABEL((yylsp[-3]), (yyval.expr)->if_.true_->label, (yyvsp[-3].text));
       CHECK_END_LABEL((yylsp[0]), (yyval.expr)->if_.true_->label, (yyvsp[0].text));
     }
-#line 2859 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2862 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 601 "src/ast-parser.y" /* yacc.c:1646  */
+#line 604 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.block) = new Block();
       (yyval.block)->sig = std::move(*(yyvsp[-1].types));
       delete (yyvsp[-1].types);
       (yyval.block)->first = (yyvsp[0].expr_list).first;
     }
-#line 2870 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2873 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 610 "src/ast-parser.y" /* yacc.c:1646  */
+#line 613 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = (yyvsp[-1].expr_list); }
-#line 2876 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2879 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 614 "src/ast-parser.y" /* yacc.c:1646  */
+#line 617 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = join_exprs2(&(yylsp[-1]), &(yyvsp[0].expr_list), (yyvsp[-1].expr));
     }
-#line 2884 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2887 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 617 "src/ast-parser.y" /* yacc.c:1646  */
+#line 620 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateBlock((yyvsp[0].block));
       expr->block->label = (yyvsp[-1].text);
       (yyval.expr_list) = join_exprs1(&(yylsp[-2]), expr);
     }
-#line 2894 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2897 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 622 "src/ast-parser.y" /* yacc.c:1646  */
+#line 625 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateLoop((yyvsp[0].block));
       expr->loop->label = (yyvsp[-1].text);
       (yyval.expr_list) = join_exprs1(&(yylsp[-2]), expr);
     }
-#line 2904 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2907 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 627 "src/ast-parser.y" /* yacc.c:1646  */
+#line 630 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = (yyvsp[0].expr_list);
       Expr* if_ = (yyvsp[0].expr_list).last;
@@ -2913,121 +2916,121 @@ yyreduce:
       if_->if_.true_->sig = std::move(*(yyvsp[-1].types));
       delete (yyvsp[-1].types);
     }
-#line 2917 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2920 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 637 "src/ast-parser.y" /* yacc.c:1646  */
+#line 640 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateIf(new Block((yyvsp[-5].expr_list).first), (yyvsp[-1].expr_list).first);
       (yyval.expr_list) = join_exprs1(&(yylsp[-7]), expr);
     }
-#line 2926 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2929 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 641 "src/ast-parser.y" /* yacc.c:1646  */
+#line 644 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateIf(new Block((yyvsp[-1].expr_list).first), nullptr);
       (yyval.expr_list) = join_exprs1(&(yylsp[-3]), expr);
     }
-#line 2935 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2938 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 645 "src/ast-parser.y" /* yacc.c:1646  */
+#line 648 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateIf(new Block((yyvsp[-5].expr_list).first), (yyvsp[-1].expr_list).first);
       (yyval.expr_list) = join_exprs2(&(yylsp[-8]), &(yyvsp[-8].expr_list), expr);
     }
-#line 2944 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2947 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 649 "src/ast-parser.y" /* yacc.c:1646  */
+#line 652 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateIf(new Block((yyvsp[-1].expr_list).first), nullptr);
       (yyval.expr_list) = join_exprs2(&(yylsp[-4]), &(yyvsp[-4].expr_list), expr);
     }
-#line 2953 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2956 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 653 "src/ast-parser.y" /* yacc.c:1646  */
+#line 656 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateIf(new Block((yyvsp[-1].expr_list).first), (yyvsp[0].expr_list).first);
       (yyval.expr_list) = join_exprs2(&(yylsp[-2]), &(yyvsp[-2].expr_list), expr);
     }
-#line 2962 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2965 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 657 "src/ast-parser.y" /* yacc.c:1646  */
+#line 660 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateIf(new Block((yyvsp[0].expr_list).first), nullptr);
       (yyval.expr_list) = join_exprs2(&(yylsp[-1]), &(yyvsp[-1].expr_list), expr);
     }
-#line 2971 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2974 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 664 "src/ast-parser.y" /* yacc.c:1646  */
+#line 667 "src/ast-parser.y" /* yacc.c:1646  */
     { WABT_ZERO_MEMORY((yyval.expr_list)); }
-#line 2977 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2980 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 665 "src/ast-parser.y" /* yacc.c:1646  */
+#line 668 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list).first = (yyvsp[-1].expr_list).first;
       (yyvsp[-1].expr_list).last->next = (yyvsp[0].expr_list).first;
       (yyval.expr_list).last = (yyvsp[0].expr_list).last ? (yyvsp[0].expr_list).last : (yyvsp[-1].expr_list).last;
       (yyval.expr_list).size = (yyvsp[-1].expr_list).size + (yyvsp[0].expr_list).size;
     }
-#line 2988 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2991 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 673 "src/ast-parser.y" /* yacc.c:1646  */
+#line 676 "src/ast-parser.y" /* yacc.c:1646  */
     { WABT_ZERO_MEMORY((yyval.expr_list)); }
-#line 2994 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 2997 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 674 "src/ast-parser.y" /* yacc.c:1646  */
+#line 677 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list).first = (yyvsp[-1].expr_list).first;
       (yyvsp[-1].expr_list).last->next = (yyvsp[0].expr_list).first;
       (yyval.expr_list).last = (yyvsp[0].expr_list).last ? (yyvsp[0].expr_list).last : (yyvsp[-1].expr_list).last;
       (yyval.expr_list).size = (yyvsp[-1].expr_list).size + (yyvsp[0].expr_list).size;
     }
-#line 3005 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3008 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 688 "src/ast-parser.y" /* yacc.c:1646  */
+#line 691 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new FuncField();
       (yyval.func_fields)->type = FuncFieldType::ResultTypes;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 3016 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3019 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 694 "src/ast-parser.y" /* yacc.c:1646  */
+#line 697 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new FuncField();
       (yyval.func_fields)->type = FuncFieldType::ParamTypes;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 3027 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3030 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 700 "src/ast-parser.y" /* yacc.c:1646  */
+#line 703 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new FuncField();
       (yyval.func_fields)->type = FuncFieldType::BoundParam;
@@ -3036,33 +3039,33 @@ yyreduce:
       (yyval.func_fields)->bound_type.type = (yyvsp[-2].type);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 3040 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3043 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 710 "src/ast-parser.y" /* yacc.c:1646  */
+#line 713 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new FuncField();
       (yyval.func_fields)->type = FuncFieldType::Exprs;
       (yyval.func_fields)->first_expr = (yyvsp[0].expr_list).first;
       (yyval.func_fields)->next = nullptr;
     }
-#line 3051 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3054 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 716 "src/ast-parser.y" /* yacc.c:1646  */
+#line 719 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new FuncField();
       (yyval.func_fields)->type = FuncFieldType::LocalTypes;
       (yyval.func_fields)->types = (yyvsp[-2].types);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 3062 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3065 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 722 "src/ast-parser.y" /* yacc.c:1646  */
+#line 725 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_fields) = new FuncField();
       (yyval.func_fields)->type = FuncFieldType::BoundLocal;
@@ -3071,11 +3074,11 @@ yyreduce:
       (yyval.func_fields)->bound_type.type = (yyvsp[-2].type);
       (yyval.func_fields)->next = (yyvsp[0].func_fields);
     }
-#line 3075 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3078 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 732 "src/ast-parser.y" /* yacc.c:1646  */
+#line 735 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = new Func();
       FuncField* field = (yyvsp[0].func_fields);
@@ -3126,11 +3129,11 @@ yyreduce:
         field = next;
       }
     }
-#line 3130 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3133 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 784 "src/ast-parser.y" /* yacc.c:1646  */
+#line 787 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_func) = new ExportedFunc();
       (yyval.exported_func)->func.reset((yyvsp[-1].func));
@@ -3140,11 +3143,11 @@ yyreduce:
       (yyval.exported_func)->export_ = std::move(*(yyvsp[-3].optional_export));
       delete (yyvsp[-3].optional_export);
     }
-#line 3144 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3147 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 794 "src/ast-parser.y" /* yacc.c:1646  */
+#line 797 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_func) = new ExportedFunc();
       (yyval.exported_func)->func.reset((yyvsp[-1].func));
@@ -3152,11 +3155,11 @@ yyreduce:
       (yyval.exported_func)->func->decl.type_var = (yyvsp[-2].var);
       (yyval.exported_func)->func->name = (yyvsp[-3].text);
     }
-#line 3156 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3159 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 801 "src/ast-parser.y" /* yacc.c:1646  */
+#line 804 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_func) = new ExportedFunc();
       (yyval.exported_func)->func.reset((yyvsp[-1].func));
@@ -3164,29 +3167,29 @@ yyreduce:
       (yyval.exported_func)->export_ = std::move(*(yyvsp[-2].optional_export));
       delete (yyvsp[-2].optional_export);
     }
-#line 3168 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3171 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 809 "src/ast-parser.y" /* yacc.c:1646  */
+#line 812 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_func) = new ExportedFunc();
       (yyval.exported_func)->func.reset((yyvsp[-1].func));
       (yyval.exported_func)->func->name = (yyvsp[-2].text);
     }
-#line 3178 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3181 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 819 "src/ast-parser.y" /* yacc.c:1646  */
+#line 822 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = (yyvsp[-1].expr_list);
     }
-#line 3186 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3189 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 826 "src/ast-parser.y" /* yacc.c:1646  */
+#line 829 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.elem_segment) = new ElemSegment();
       (yyval.elem_segment)->table_var = (yyvsp[-3].var);
@@ -3194,11 +3197,11 @@ yyreduce:
       (yyval.elem_segment)->vars = std::move(*(yyvsp[-1].vars));
       delete (yyvsp[-1].vars);
     }
-#line 3198 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3201 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 833 "src/ast-parser.y" /* yacc.c:1646  */
+#line 836 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.elem_segment) = new ElemSegment();
       (yyval.elem_segment)->table_var.loc = (yylsp[-3]);
@@ -3208,11 +3211,11 @@ yyreduce:
       (yyval.elem_segment)->vars = std::move(*(yyvsp[-1].vars));
       delete (yyvsp[-1].vars);
     }
-#line 3212 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3215 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 845 "src/ast-parser.y" /* yacc.c:1646  */
+#line 848 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_table) = new ExportedTable();
       (yyval.exported_table)->table.reset((yyvsp[-1].table));
@@ -3221,11 +3224,11 @@ yyreduce:
       (yyval.exported_table)->export_ = std::move(*(yyvsp[-2].optional_export));
       delete (yyvsp[-2].optional_export);
     }
-#line 3225 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3228 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 854 "src/ast-parser.y" /* yacc.c:1646  */
+#line 857 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
       expr->loc = (yylsp[-8]);
@@ -3244,11 +3247,11 @@ yyreduce:
       (yyval.exported_table)->export_ = std::move(*(yyvsp[-6].optional_export));
       delete (yyvsp[-6].optional_export);
     }
-#line 3248 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3251 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 875 "src/ast-parser.y" /* yacc.c:1646  */
+#line 878 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.data_segment) = new DataSegment();
       (yyval.data_segment)->memory_var = (yyvsp[-3].var);
@@ -3256,11 +3259,11 @@ yyreduce:
       dup_text_list(&(yyvsp[-1].text_list), &(yyval.data_segment)->data, &(yyval.data_segment)->size);
       destroy_text_list(&(yyvsp[-1].text_list));
     }
-#line 3260 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3263 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 882 "src/ast-parser.y" /* yacc.c:1646  */
+#line 885 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.data_segment) = new DataSegment();
       (yyval.data_segment)->memory_var.loc = (yylsp[-3]);
@@ -3270,11 +3273,11 @@ yyreduce:
       dup_text_list(&(yyvsp[-1].text_list), &(yyval.data_segment)->data, &(yyval.data_segment)->size);
       destroy_text_list(&(yyvsp[-1].text_list));
     }
-#line 3274 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3277 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 894 "src/ast-parser.y" /* yacc.c:1646  */
+#line 897 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_memory) = new ExportedMemory();
       (yyval.exported_memory)->memory.reset((yyvsp[-1].memory));
@@ -3283,11 +3286,11 @@ yyreduce:
       (yyval.exported_memory)->export_ = std::move(*(yyvsp[-2].optional_export));
       delete (yyvsp[-2].optional_export);
     }
-#line 3287 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3290 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 902 "src/ast-parser.y" /* yacc.c:1646  */
+#line 905 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
       expr->loc = (yylsp[-7]);
@@ -3308,11 +3311,11 @@ yyreduce:
       (yyval.exported_memory)->export_ = std::move(*(yyvsp[-5].optional_export));
       delete (yyvsp[-5].optional_export);
     }
-#line 3312 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3315 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 923 "src/ast-parser.y" /* yacc.c:1646  */
+#line 926 "src/ast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
       expr->loc = (yylsp[-6]);
@@ -3332,11 +3335,11 @@ yyreduce:
       (yyval.exported_memory)->memory->page_limits.has_max = true;
       (yyval.exported_memory)->export_.has_export = false;
     }
-#line 3336 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3339 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 110:
-#line 945 "src/ast-parser.y" /* yacc.c:1646  */
+#line 948 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_global) = new ExportedGlobal();
       (yyval.exported_global)->global.reset((yyvsp[-2].global));
@@ -3345,11 +3348,11 @@ yyreduce:
       (yyval.exported_global)->export_ = std::move(*(yyvsp[-3].optional_export));
       delete (yyvsp[-3].optional_export);
     }
-#line 3349 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3352 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 953 "src/ast-parser.y" /* yacc.c:1646  */
+#line 956 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exported_global) = new ExportedGlobal();
       (yyval.exported_global)->global.reset((yyvsp[-2].global));
@@ -3357,11 +3360,11 @@ yyreduce:
       (yyval.exported_global)->global->init_expr = (yyvsp[-1].expr_list).first;
       (yyval.exported_global)->export_.has_export = false;
     }
-#line 3361 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3364 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 966 "src/ast-parser.y" /* yacc.c:1646  */
+#line 969 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Func;
@@ -3370,11 +3373,11 @@ yyreduce:
       (yyval.import)->func->decl.has_func_type = true;
       (yyval.import)->func->decl.type_var = (yyvsp[-1].var);
     }
-#line 3374 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3377 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 974 "src/ast-parser.y" /* yacc.c:1646  */
+#line 977 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Func;
@@ -3383,54 +3386,54 @@ yyreduce:
       (yyval.import)->func->decl.sig = std::move(*(yyvsp[-1].func_sig));
       delete (yyvsp[-1].func_sig);
     }
-#line 3387 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3390 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 982 "src/ast-parser.y" /* yacc.c:1646  */
+#line 985 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Table;
       (yyval.import)->table = (yyvsp[-1].table);
       (yyval.import)->table->name = (yyvsp[-2].text);
     }
-#line 3398 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3401 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 988 "src/ast-parser.y" /* yacc.c:1646  */
+#line 991 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Memory;
       (yyval.import)->memory = (yyvsp[-1].memory);
       (yyval.import)->memory->name = (yyvsp[-2].text);
     }
-#line 3409 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3412 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 994 "src/ast-parser.y" /* yacc.c:1646  */
+#line 997 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Global;
       (yyval.import)->global = (yyvsp[-1].global);
       (yyval.import)->global->name = (yyvsp[-2].text);
     }
-#line 3420 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3423 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 1002 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1005 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-1].import);
       (yyval.import)->module_name = (yyvsp[-3].text);
       (yyval.import)->field_name = (yyvsp[-2].text);
     }
-#line 3430 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3433 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 1007 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1010 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->kind = ExternalKind::Func;
@@ -3439,11 +3442,11 @@ yyreduce:
       (yyval.import)->func->decl.has_func_type = true;
       (yyval.import)->func->decl.type_var = (yyvsp[-1].var);
     }
-#line 3443 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3446 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 1015 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1018 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->kind = ExternalKind::Func;
@@ -3452,158 +3455,158 @@ yyreduce:
       (yyval.import)->func->decl.sig = std::move(*(yyvsp[-1].func_sig));
       delete (yyvsp[-1].func_sig);
     }
-#line 3456 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3459 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 120:
-#line 1023 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1026 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->kind = ExternalKind::Table;
       (yyval.import)->table = (yyvsp[-1].table);
       (yyval.import)->table->name = (yyvsp[-3].text);
     }
-#line 3467 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3470 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 1029 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1032 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->kind = ExternalKind::Memory;
       (yyval.import)->memory = (yyvsp[-1].memory);
       (yyval.import)->memory->name = (yyvsp[-3].text);
     }
-#line 3478 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3481 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 1035 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1038 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = (yyvsp[-2].import);
       (yyval.import)->kind = ExternalKind::Global;
       (yyval.import)->global = (yyvsp[-1].global);
       (yyval.import)->global->name = (yyvsp[-3].text);
     }
-#line 3489 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3492 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 1044 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1047 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->module_name = (yyvsp[-2].text);
       (yyval.import)->field_name = (yyvsp[-1].text);
     }
-#line 3499 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3502 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 1052 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1055 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Func;
       (yyval.export_)->var = (yyvsp[-1].var);
     }
-#line 3509 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3512 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 1057 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1060 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Table;
       (yyval.export_)->var = (yyvsp[-1].var);
     }
-#line 3519 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3522 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 126:
-#line 1062 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1065 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Memory;
       (yyval.export_)->var = (yyvsp[-1].var);
     }
-#line 3529 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3532 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 1067 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1070 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Global;
       (yyval.export_)->var = (yyvsp[-1].var);
     }
-#line 3539 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3542 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 1074 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1077 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = (yyvsp[-1].export_);
       (yyval.export_)->name = (yyvsp[-2].text);
     }
-#line 3548 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3551 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 129:
-#line 1081 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1084 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.optional_export) = new OptionalExport();
       (yyval.optional_export)->has_export = false;
     }
-#line 3557 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3560 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 1088 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1091 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.optional_export) = new OptionalExport();
       (yyval.optional_export)->has_export = true;
       (yyval.optional_export)->export_.reset(new Export());
       (yyval.optional_export)->export_->name = (yyvsp[-1].text);
     }
-#line 3568 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3571 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 1100 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1103 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_type) = new FuncType();
       (yyval.func_type)->sig = std::move(*(yyvsp[-1].func_sig));
       delete (yyvsp[-1].func_sig);
     }
-#line 3578 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3581 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 1105 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1108 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func_type) = new FuncType();
       (yyval.func_type)->name = (yyvsp[-2].text);
       (yyval.func_type)->sig = std::move(*(yyvsp[-1].func_sig));
       delete (yyvsp[-1].func_sig);
     }
-#line 3589 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3592 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 1114 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1117 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.var) = (yyvsp[-1].var); }
-#line 3595 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3598 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 1118 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1121 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = new Module();
     }
-#line 3603 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3606 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 136:
-#line 1121 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1124 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
@@ -3611,11 +3614,11 @@ yyreduce:
       APPEND_ITEM_TO_VECTOR((yyval.module), func_types, field->func_type);
       INSERT_BINDING((yyval.module), func_type, func_types, (yylsp[0]), (yyvsp[0].func_type)->name);
     }
-#line 3615 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3618 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 1128 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1131 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
@@ -3625,11 +3628,11 @@ yyreduce:
       APPEND_INLINE_EXPORT((yyval.module), Global, (yylsp[0]), (yyvsp[0].exported_global), (yyval.module)->globals.size() - 1);
       delete (yyvsp[0].exported_global);
     }
-#line 3629 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3632 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 1137 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1140 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
@@ -3647,11 +3650,11 @@ yyreduce:
       }
       delete (yyvsp[0].exported_table);
     }
-#line 3651 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3654 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 1154 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1157 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
@@ -3669,11 +3672,11 @@ yyreduce:
       }
       delete (yyvsp[0].exported_memory);
     }
-#line 3673 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3676 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 1171 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1174 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
@@ -3686,44 +3689,44 @@ yyreduce:
       APPEND_INLINE_EXPORT((yyval.module), Func, (yylsp[0]), (yyvsp[0].exported_func), (yyval.module)->funcs.size() - 1);
       delete (yyvsp[0].exported_func);
     }
-#line 3690 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3693 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 1183 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1186 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
       APPEND_FIELD_TO_LIST((yyval.module), field, ElemSegment, elem_segment, (yylsp[0]), (yyvsp[0].elem_segment));
       APPEND_ITEM_TO_VECTOR((yyval.module), elem_segments, field->elem_segment);
     }
-#line 3701 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3704 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 1189 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1192 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
       APPEND_FIELD_TO_LIST((yyval.module), field, DataSegment, data_segment, (yylsp[0]), (yyvsp[0].data_segment));
       APPEND_ITEM_TO_VECTOR((yyval.module), data_segments, field->data_segment);
     }
-#line 3712 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3715 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 1195 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1198 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
       APPEND_FIELD_TO_LIST((yyval.module), field, Start, start, (yylsp[0]), (yyvsp[0].var));
       (yyval.module)->start = &field->start;
     }
-#line 3723 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3726 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 1201 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1204 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
@@ -3757,11 +3760,11 @@ yyreduce:
       }
       APPEND_ITEM_TO_VECTOR((yyval.module), imports, field->import);
     }
-#line 3761 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3764 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 1234 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1237 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       ModuleField* field;
@@ -3769,11 +3772,11 @@ yyreduce:
       APPEND_ITEM_TO_VECTOR((yyval.module), exports, field->export_);
       INSERT_BINDING((yyval.module), export, exports, (yylsp[0]), field->export_->name);
     }
-#line 3773 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3776 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 146:
-#line 1244 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1247 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.raw_module) = new RawModule();
       (yyval.raw_module)->type = RawModuleType::Text;
@@ -3794,11 +3797,11 @@ yyreduce:
         }
       }
     }
-#line 3798 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3801 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 147:
-#line 1264 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1267 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.raw_module) = new RawModule();
       (yyval.raw_module)->type = RawModuleType::Binary;
@@ -3807,11 +3810,11 @@ yyreduce:
       dup_text_list(&(yyvsp[-1].text_list), &(yyval.raw_module)->binary.data, &(yyval.raw_module)->binary.size);
       destroy_text_list(&(yyvsp[-1].text_list));
     }
-#line 3811 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3814 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 148:
-#line 1275 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1278 "src/ast-parser.y" /* yacc.c:1646  */
     {
       if ((yyvsp[0].raw_module)->type == RawModuleType::Text) {
         (yyval.module) = (yyvsp[0].raw_module)->text;
@@ -3820,13 +3823,7 @@ yyreduce:
         assert((yyvsp[0].raw_module)->type == RawModuleType::Binary);
         (yyval.module) = new Module();
         ReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
-        BinaryErrorCallbackData user_data;
-        user_data.loc = &(yyvsp[0].raw_module)->binary.loc;
-        user_data.lexer = lexer;
-        user_data.parser = parser;
-        BinaryErrorHandler error_handler;
-        error_handler.on_error = on_read_binary_error;
-        error_handler.user_data = &user_data;
+        BinaryErrorHandlerModule error_handler(&(yyvsp[0].raw_module)->binary.loc, lexer, parser);
         read_binary_ast((yyvsp[0].raw_module)->binary.data, (yyvsp[0].raw_module)->binary.size, &options,
                         &error_handler, (yyval.module));
         (yyval.module)->name = (yyvsp[0].raw_module)->binary.name;
@@ -3835,31 +3832,31 @@ yyreduce:
       }
       delete (yyvsp[0].raw_module);
     }
-#line 3839 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3836 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 1303 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1300 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.var));
       (yyval.var).type = VarType::Index;
       (yyval.var).index = INVALID_VAR_INDEX;
     }
-#line 3849 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3846 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 150:
-#line 1308 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1305 "src/ast-parser.y" /* yacc.c:1646  */
     {
       WABT_ZERO_MEMORY((yyval.var));
       (yyval.var).type = VarType::Name;
       DUPTEXT((yyval.var).name, (yyvsp[0].text));
     }
-#line 3859 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3856 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 151:
-#line 1316 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1313 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.action) = new Action();
       (yyval.action)->loc = (yylsp[-4]);
@@ -3870,11 +3867,11 @@ yyreduce:
       (yyval.action)->invoke->args = std::move(*(yyvsp[-1].consts));
       delete (yyvsp[-1].consts);
     }
-#line 3874 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3871 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 152:
-#line 1326 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1323 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.action) = new Action();
       (yyval.action)->loc = (yylsp[-3]);
@@ -3882,128 +3879,128 @@ yyreduce:
       (yyval.action)->type = ActionType::Get;
       (yyval.action)->name = (yyvsp[-1].text);
     }
-#line 3886 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3883 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 153:
-#line 1336 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1333 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertMalformed;
       (yyval.command)->assert_malformed.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_malformed.text = (yyvsp[-1].text);
     }
-#line 3897 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3894 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 154:
-#line 1342 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1339 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertInvalid;
       (yyval.command)->assert_invalid.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_invalid.text = (yyvsp[-1].text);
     }
-#line 3908 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3905 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 155:
-#line 1348 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1345 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertUnlinkable;
       (yyval.command)->assert_unlinkable.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_unlinkable.text = (yyvsp[-1].text);
     }
-#line 3919 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3916 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 156:
-#line 1354 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1351 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertUninstantiable;
       (yyval.command)->assert_uninstantiable.module = (yyvsp[-2].raw_module);
       (yyval.command)->assert_uninstantiable.text = (yyvsp[-1].text);
     }
-#line 3930 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3927 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 157:
-#line 1360 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1357 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertReturn;
       (yyval.command)->assert_return.action = (yyvsp[-2].action);
       (yyval.command)->assert_return.expected = (yyvsp[-1].consts);
     }
-#line 3941 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3938 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 158:
-#line 1366 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1363 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertReturnCanonicalNan;
       (yyval.command)->assert_return_canonical_nan.action = (yyvsp[-1].action);
     }
-#line 3951 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3948 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 159:
-#line 1371 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1368 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertReturnArithmeticNan;
       (yyval.command)->assert_return_arithmetic_nan.action = (yyvsp[-1].action);
     }
-#line 3961 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3958 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 160:
-#line 1376 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1373 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertTrap;
       (yyval.command)->assert_trap.action = (yyvsp[-2].action);
       (yyval.command)->assert_trap.text = (yyvsp[-1].text);
     }
-#line 3972 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3969 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 161:
-#line 1382 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1379 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertExhaustion;
       (yyval.command)->assert_trap.action = (yyvsp[-2].action);
       (yyval.command)->assert_trap.text = (yyvsp[-1].text);
     }
-#line 3983 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3980 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 162:
-#line 1391 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1388 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::Action;
       (yyval.command)->action = (yyvsp[0].action);
     }
-#line 3993 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 3990 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 164:
-#line 1397 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1394 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::Module;
       (yyval.command)->module = (yyvsp[0].module);
     }
-#line 4003 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4000 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 1402 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1399 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::Register;
@@ -4011,26 +4008,26 @@ yyreduce:
       (yyval.command)->register_.var = (yyvsp[-1].var);
       (yyval.command)->register_.var.loc = (yylsp[-1]);
     }
-#line 4015 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4012 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 166:
-#line 1411 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1408 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.commands) = new CommandPtrVector(); }
-#line 4021 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4018 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 167:
-#line 1412 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1409 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.commands) = (yyvsp[-1].commands);
       (yyval.commands)->emplace_back((yyvsp[0].command));
     }
-#line 4030 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4027 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 168:
-#line 1419 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1416 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.const_).loc = (yylsp[-2]);
       if (WABT_FAILED(parse_const((yyvsp[-2].type), (yyvsp[-1].literal).type, (yyvsp[-1].literal).text.start,
@@ -4041,26 +4038,26 @@ yyreduce:
       }
       delete [] (yyvsp[-1].literal).text.start;
     }
-#line 4045 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4042 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 169:
-#line 1431 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1428 "src/ast-parser.y" /* yacc.c:1646  */
     { (yyval.consts) = new ConstVector(); }
-#line 4051 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4048 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 170:
-#line 1432 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1429 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.consts) = (yyvsp[-1].consts);
       (yyval.consts)->push_back((yyvsp[0].const_));
     }
-#line 4060 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4057 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 171:
-#line 1439 "src/ast-parser.y" /* yacc.c:1646  */
+#line 1436 "src/ast-parser.y" /* yacc.c:1646  */
     {
       (yyval.script) = new Script();
       (yyval.script)->commands = std::move(*(yyvsp[0].commands));
@@ -4122,11 +4119,11 @@ yyreduce:
       }
       parser->script = (yyval.script);
     }
-#line 4126 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4123 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
 
-#line 4130 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
+#line 4127 "src/prebuilt/ast-parser-gen.cc" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4361,7 +4358,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1508 "src/ast-parser.y" /* yacc.c:1906  */
+#line 1505 "src/ast-parser.y" /* yacc.c:1906  */
 
 
 void append_expr_list(ExprList* expr_list, ExprList* expr) {
@@ -4525,14 +4522,19 @@ Result parse_ast(AstLexer* lexer, Script** out_script,
   return result == 0 && parser.errors == 0 ? Result::Ok : Result::Error;
 }
 
-bool on_read_binary_error(uint32_t offset, const char* error, void* user_data) {
-  BinaryErrorCallbackData* data = (BinaryErrorCallbackData*)user_data;
+BinaryErrorHandlerModule::BinaryErrorHandlerModule(
+    Location* loc, AstLexer* lexer, AstParser* parser)
+  : loc_(loc), lexer_(lexer), parser_(parser) {}
+
+bool BinaryErrorHandlerModule::OnError(uint32_t offset,
+                                       const std::string& error) {
   if (offset == WABT_UNKNOWN_OFFSET) {
-    ast_parser_error(data->loc, data->lexer, data->parser,
-                     "error in binary module: %s", error);
+    ast_parser_error(loc_, lexer_, parser_, "error in binary module: %s",
+                     error.c_str());
   } else {
-    ast_parser_error(data->loc, data->lexer, data->parser,
-                     "error in binary module: @0x%08x: %s", offset, error);
+    ast_parser_error(loc_, lexer_, parser_,
+                     "error in binary module: @0x%08x: %s", offset,
+                     error.c_str());
   }
   return true;
 }
