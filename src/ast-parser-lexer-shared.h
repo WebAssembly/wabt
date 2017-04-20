@@ -24,6 +24,7 @@
 #include "ast.h"
 #include "ast-lexer.h"
 #include "common.h"
+#include "source-error-handler.h"
 
 #define WABT_AST_PARSER_STYPE Token
 #define WABT_AST_PARSER_LTYPE Location

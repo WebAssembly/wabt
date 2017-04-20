@@ -18,12 +18,12 @@
 #define WABT_VALIDATOR_H_
 
 #include "ast-lexer.h"
-#include "common.h"
 
 namespace wabt {
 
 struct Module;
 struct Script;
+class SourceErrorHandler;
 
 /* perform all checks on the AST; the module is valid if and only if this
  * function succeeds. */

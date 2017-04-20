@@ -23,6 +23,7 @@
 #include <memory>
 #include <vector>
 
+#include "binary-error-handler.h"
 #include "binary-reader.h"
 #include "binary-reader-interpreter.h"
 #include "interpreter.h"
@@ -48,8 +49,6 @@ static InterpreterThreadOptions s_thread_options =
 static bool s_trace;
 static bool s_spec;
 static bool s_run_all_exports;
-
-static BinaryErrorHandler s_error_handler = WABT_BINARY_ERROR_HANDLER_DEFAULT;
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
@@ -584,10 +583,11 @@ static Result read_and_run_module(const char* module_filename) {
   InterpreterEnvironment env;
   DefinedInterpreterModule* module = nullptr;
   InterpreterThread thread;
+  BinaryErrorHandlerFile error_handler;
 
   init_environment(&env);
   init_interpreter_thread(&env, &thread, &s_thread_options);
-  result = read_module(module_filename, &env, &s_error_handler, &module);
+  result = read_module(module_filename, &env, &error_handler, &module);
   if (WABT_SUCCEEDED(result)) {
     InterpreterResult iresult = run_start_function(&thread, module);
     if (iresult == InterpreterResult::Ok) {
@@ -1011,8 +1011,9 @@ static Result on_module_command(Context* ctx,
                                 StringSlice name) {
   char* path = create_module_path(ctx, filename);
   InterpreterEnvironmentMark mark = mark_interpreter_environment(&ctx->env);
+  BinaryErrorHandlerFile error_handler;
   Result result =
-      read_module(path, &ctx->env, &s_error_handler, &ctx->last_module);
+      read_module(path, &ctx->env, &error_handler, &ctx->last_module);
 
   if (WABT_FAILED(result)) {
     reset_interpreter_environment_to_mark(&ctx->env, mark);
@@ -1100,45 +1101,30 @@ static Result on_action_command(Context* ctx, Action* action) {
   return result;
 }
 
-static BinaryErrorHandler* new_custom_error_handler(Context* ctx,
-                                                    const char* desc) {
-  size_t header_size = ctx->source_filename.length + strlen(desc) + 100;
-  char* header = new char[header_size];
-  snprintf(header, header_size, PRIstringslice ":%d: %s passed",
-           WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
-           ctx->command_line_number, desc);
+class BinaryErrorHandlerAssert : public BinaryErrorHandlerFile {
+ public:
+  BinaryErrorHandlerAssert(Context* ctx, const char* desc)
+      : BinaryErrorHandlerFile(stdout, Header(ctx, desc), PrintHeader::Once) {}
 
-  DefaultErrorHandlerInfo* info = new DefaultErrorHandlerInfo();
-  info->header = header;
-  info->out_file = stdout;
-  info->print_header = PrintErrorHeader::Once;
-
-  BinaryErrorHandler* error_handler = new BinaryErrorHandler();
-  error_handler->on_error = default_binary_error_callback;
-  error_handler->user_data = info;
-  return error_handler;
-}
-
-static void destroy_custom_error_handler(BinaryErrorHandler* error_handler) {
-  DefaultErrorHandlerInfo* info =
-      static_cast<DefaultErrorHandlerInfo*>(error_handler->user_data);
-  delete [] info->header;
-  delete info;
-  delete error_handler;
-}
+ private:
+  std::string Header(Context* ctx, const char* desc) {
+    return string_printf(PRIstringslice ":%d: %s passed",
+                         WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
+                         ctx->command_line_number, desc);
+  }
+};
 
 static Result on_assert_malformed_command(Context* ctx,
                                           StringSlice filename,
                                           StringSlice text) {
-  BinaryErrorHandler* error_handler =
-      new_custom_error_handler(ctx, "assert_malformed");
+  BinaryErrorHandlerAssert error_handler(ctx, "assert_malformed");
   InterpreterEnvironment env;
   init_environment(&env);
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   DefinedInterpreterModule* module;
-  Result result = read_module(path, &env, error_handler, &module);
+  Result result = read_module(path, &env, &error_handler, &module);
   if (WABT_FAILED(result)) {
     ctx->passed++;
     result = Result::Ok;
@@ -1148,7 +1134,6 @@ static Result on_assert_malformed_command(Context* ctx,
   }
 
   delete[] path;
-  destroy_custom_error_handler(error_handler);
   return result;
 }
 
@@ -1187,14 +1172,13 @@ static Result on_register_command(Context* ctx,
 static Result on_assert_unlinkable_command(Context* ctx,
                                            StringSlice filename,
                                            StringSlice text) {
-  BinaryErrorHandler* error_handler =
-      new_custom_error_handler(ctx, "assert_unlinkable");
+  BinaryErrorHandlerAssert error_handler(ctx, "assert_unlinkable");
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   DefinedInterpreterModule* module;
   InterpreterEnvironmentMark mark = mark_interpreter_environment(&ctx->env);
-  Result result = read_module(path, &ctx->env, error_handler, &module);
+  Result result = read_module(path, &ctx->env, &error_handler, &module);
   reset_interpreter_environment_to_mark(&ctx->env, mark);
 
   if (WABT_FAILED(result)) {
@@ -1206,22 +1190,20 @@ static Result on_assert_unlinkable_command(Context* ctx,
   }
 
   delete[] path;
-  destroy_custom_error_handler(error_handler);
   return result;
 }
 
 static Result on_assert_invalid_command(Context* ctx,
                                         StringSlice filename,
                                         StringSlice text) {
-  BinaryErrorHandler* error_handler =
-      new_custom_error_handler(ctx, "assert_invalid");
+  BinaryErrorHandlerAssert error_handler(ctx, "assert_invalid");
   InterpreterEnvironment env;
   init_environment(&env);
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   DefinedInterpreterModule* module;
-  Result result = read_module(path, &env, error_handler, &module);
+  Result result = read_module(path, &env, &error_handler, &module);
   if (WABT_FAILED(result)) {
     ctx->passed++;
     result = Result::Ok;
@@ -1231,18 +1213,18 @@ static Result on_assert_invalid_command(Context* ctx,
   }
 
   delete[] path;
-  destroy_custom_error_handler(error_handler);
   return result;
 }
 
 static Result on_assert_uninstantiable_command(Context* ctx,
                                                StringSlice filename,
                                                StringSlice text) {
+  BinaryErrorHandlerFile error_handler;
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   DefinedInterpreterModule* module;
   InterpreterEnvironmentMark mark = mark_interpreter_environment(&ctx->env);
-  Result result = read_module(path, &ctx->env, &s_error_handler, &module);
+  Result result = read_module(path, &ctx->env, &error_handler, &module);
 
   if (WABT_SUCCEEDED(result)) {
     InterpreterResult iresult = run_start_function(&ctx->thread, module);

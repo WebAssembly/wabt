@@ -23,6 +23,7 @@
 
 #include <vector>
 
+#include "binary-error-handler.h"
 #include "binary-reader-nop.h"
 #include "interpreter.h"
 #include "type-checker.h"
@@ -322,10 +323,7 @@ Label* BinaryReaderInterpreter::TopLabel() {
 
 bool BinaryReaderInterpreter::HandleError(uint32_t offset,
                                           const char* message) {
-  if (error_handler->on_error) {
-    return error_handler->on_error(offset, message, error_handler->user_data);
-  }
-  return false;
+  return error_handler->OnError(offset, message);
 }
 
 void WABT_PRINTF_FORMAT(2, 3)

@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <string>
+
 namespace wabt {
 
 void ast_parser_error(Location* loc,
@@ -52,7 +54,7 @@ void ast_format_error(SourceErrorHandler* error_handler,
   char* source_line = nullptr;
   size_t source_line_length = 0;
   int source_line_column_offset = 0;
-  size_t source_line_max_length = error_handler->source_line_max_length;
+  size_t source_line_max_length = error_handler->source_line_max_length();
   if (loc && lexer) {
     source_line = static_cast<char*>(alloca(source_line_max_length + 1));
     Result result = ast_lexer_get_source_line(
@@ -65,11 +67,9 @@ void ast_format_error(SourceErrorHandler* error_handler,
     }
   }
 
-  if (error_handler->on_error) {
-    error_handler->on_error(loc, buffer, source_line, source_line_length,
-                            source_line_column_offset,
-                            error_handler->user_data);
-  }
+  error_handler->OnError(loc, std::string(buffer),
+                         std::string(source_line, source_line_length),
+                         source_line_column_offset);
   va_end(args_copy);
 }
 

@@ -25,6 +25,7 @@
 
 #include "ast-parser.h"
 #include "ast-parser-lexer-shared.h"
+#include "binary-error-handler.h"
 #include "binary-reader-ast.h"
 #include "binary-reader.h"
 #include "literal.h"
@@ -161,14 +162,16 @@ void append_implicit_func_declaration(Location*,
                                       Module*,
                                       FuncDeclaration*);
 
-struct BinaryErrorCallbackData {
-  Location* loc;
-  AstLexer* lexer;
-  AstParser* parser;
-};
+class BinaryErrorHandlerModule : public BinaryErrorHandler {
+ public:
+  BinaryErrorHandlerModule(Location* loc, AstLexer* lexer, AstParser* parser);
+  bool OnError(uint32_t offset, const std::string& error) override;
 
-static bool on_read_binary_error(uint32_t offset, const char* error,
-                                 void* user_data);
+ private:
+  Location* loc_;
+  AstLexer* lexer_;
+  AstParser* parser_;
+};
 
 #define wabt_ast_parser_lex ast_lexer_lex
 #define wabt_ast_parser_error ast_parser_error
@@ -1280,13 +1283,7 @@ module :
         assert($1->type == RawModuleType::Binary);
         $$ = new Module();
         ReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
-        BinaryErrorCallbackData user_data;
-        user_data.loc = &$1->binary.loc;
-        user_data.lexer = lexer;
-        user_data.parser = parser;
-        BinaryErrorHandler error_handler;
-        error_handler.on_error = on_read_binary_error;
-        error_handler.user_data = &user_data;
+        BinaryErrorHandlerModule error_handler(&$1->binary.loc, lexer, parser);
         read_binary_ast($1->binary.data, $1->binary.size, &options,
                         &error_handler, $$);
         $$->name = $1->binary.name;
@@ -1668,14 +1665,19 @@ Result parse_ast(AstLexer* lexer, Script** out_script,
   return result == 0 && parser.errors == 0 ? Result::Ok : Result::Error;
 }
 
-bool on_read_binary_error(uint32_t offset, const char* error, void* user_data) {
-  BinaryErrorCallbackData* data = (BinaryErrorCallbackData*)user_data;
+BinaryErrorHandlerModule::BinaryErrorHandlerModule(
+    Location* loc, AstLexer* lexer, AstParser* parser)
+  : loc_(loc), lexer_(lexer), parser_(parser) {}
+
+bool BinaryErrorHandlerModule::OnError(uint32_t offset,
+                                       const std::string& error) {
   if (offset == WABT_UNKNOWN_OFFSET) {
-    ast_parser_error(data->loc, data->lexer, data->parser,
-                     "error in binary module: %s", error);
+    ast_parser_error(loc_, lexer_, parser_, "error in binary module: %s",
+                     error.c_str());
   } else {
-    ast_parser_error(data->loc, data->lexer, data->parser,
-                     "error in binary module: @0x%08x: %s", offset, error);
+    ast_parser_error(loc_, lexer_, parser_,
+                     "error in binary module: @0x%08x: %s", offset,
+                     error.c_str());
   }
   return true;
 }
