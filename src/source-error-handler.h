@@ -86,6 +86,26 @@ class SourceErrorHandlerFile : public SourceErrorHandler {
   size_t source_line_max_length_;
 };
 
+class SourceErrorHandlerBuffer : public SourceErrorHandler {
+ public:
+  explicit SourceErrorHandlerBuffer(size_t source_line_max_length = 80);
+
+  bool OnError(const Location*,
+               const std::string& error,
+               const std::string& source_line,
+               size_t source_line_column_offset) override;
+
+  size_t source_line_max_length() const override {
+    return source_line_max_length_;
+  }
+
+  const std::string& buffer() const { return buffer_; }
+
+ private:
+  size_t source_line_max_length_;
+  std::string buffer_;
+};
+
 }  // namespace wabt
 
 #endif // WABT_SOURCE_ERROR_HANDLER_H_

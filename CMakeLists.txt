@@ -370,6 +370,7 @@ else ()
   set(EMSCRIPTEN_EXPORTED_JSON ${WABT_SOURCE_DIR}/src/emscripten-exported.json)
 
   set(LIBWABT_LINK_FLAGS
+    --memory-init-file 0
     --pre-js ${WABT_JS}
     -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTED_JSON}\"
     -s RESERVED_FUNCTION_POINTERS=10
