@@ -149,23 +149,24 @@ void ASTWriter::WriteIndent() {
       "                                                                       "
       "                                                                       ";
   static size_t s_indent_len = sizeof(s_indent) - 1;
+  size_t indent = indent_;
   while (static_cast<size_t>(indent_) > s_indent_len) {
-    stream_.WriteData(s_indent, s_indent_len, nullptr);
-    indent_ -= s_indent_len;
+    stream_.WriteData(s_indent, s_indent_len);
+    indent -= s_indent_len;
   }
-  if (indent_ > 0) {
-    stream_.WriteData(s_indent, indent_, nullptr);
+  if (indent > 0) {
+    stream_.WriteData(s_indent, indent);
   }
 }
 
 void ASTWriter::WriteNextChar() {
   switch (next_char_) {
     case NextChar::Space:
-      stream_.WriteData(" ", 1, nullptr);
+      stream_.WriteChar(' ');
       break;
     case NextChar::Newline:
     case NextChar::ForceNewline:
-      stream_.WriteData("\n", 1, nullptr);
+      stream_.WriteChar('\n');
       WriteIndent();
       break;
 
@@ -178,7 +179,7 @@ void ASTWriter::WriteNextChar() {
 
 void ASTWriter::WriteDataWithNextChar(const void* src, size_t size) {
   WriteNextChar();
-  stream_.WriteData(src, size, nullptr);
+  stream_.WriteData(src, size);
 }
 
 void WABT_PRINTF_FORMAT(2, 3) ASTWriter::Writef(const char* format, ...) {
@@ -189,7 +190,7 @@ void WABT_PRINTF_FORMAT(2, 3) ASTWriter::Writef(const char* format, ...) {
 }
 
 void ASTWriter::WritePutc(char c) {
-  stream_.WriteData(&c, 1, nullptr);
+  stream_.WriteChar(c);
 }
 
 void ASTWriter::WritePuts(const char* s, NextChar next_char) {
