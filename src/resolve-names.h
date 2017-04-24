@@ -24,15 +24,10 @@ namespace wabt {
 struct AstLexer;
 struct Module;
 struct Script;
-struct SourceErrorHandler;
+class SourceErrorHandler;
 
-Result resolve_names_module(struct AstLexer*,
-                            struct Module*,
-                            struct SourceErrorHandler*);
-
-Result resolve_names_script(struct AstLexer*,
-                            struct Script*,
-                            struct SourceErrorHandler*);
+Result resolve_names_module(AstLexer*, Module*, SourceErrorHandler*);
+Result resolve_names_script(AstLexer*, Script*, SourceErrorHandler*);
 
 }  // namespace wabt
 

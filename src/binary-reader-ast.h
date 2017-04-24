@@ -23,12 +23,13 @@ namespace wabt {
 
 struct Module;
 struct ReadBinaryOptions;
+class BinaryErrorHandler;
 
 Result read_binary_ast(const void* data,
                        size_t size,
-                       const struct ReadBinaryOptions* options,
+                       const ReadBinaryOptions* options,
                        BinaryErrorHandler*,
-                       struct Module* out_module);
+                       Module* out_module);
 
 } // namespace wabt
 

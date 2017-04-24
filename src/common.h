@@ -83,6 +83,20 @@ enum class Result {
 #define WABT_SUCCEEDED(x) ((x) == Result::Ok)
 #define WABT_FAILED(x) ((x) == Result::Error)
 
+inline std::string WABT_PRINTF_FORMAT(1, 2)
+    string_printf(const char* format, ...) {
+  va_list args;
+  va_list args_copy;
+  va_start(args, format);
+  va_copy(args_copy, args);
+  size_t len = wabt_vsnprintf(nullptr, 0, format, args) + 1;  // For \0.
+  std::vector<char> buffer(len);
+  va_end(args);
+  wabt_vsnprintf(buffer.data(), len, format, args_copy);
+  va_end(args_copy);
+  return std::string(buffer.data(), len - 1);
+}
+
 enum class LabelType {
   Func,
   Block,
@@ -105,55 +119,6 @@ struct Location {
   int line;
   int first_column;
   int last_column;
-};
-
-/* Returns true if the error was handled. */
-typedef bool (*SourceErrorCallback)(const Location*,
-                                    const char* error,
-                                    const char* source_line,
-                                    size_t source_line_length,
-                                    size_t source_line_column_offset,
-                                    void* user_data);
-
-struct SourceErrorHandler {
-  SourceErrorCallback on_error;
-  /* on_error will be called with with source_line trimmed to this length */
-  size_t source_line_max_length;
-  void* user_data;
-};
-
-#define WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT 80
-#define WABT_SOURCE_ERROR_HANDLER_DEFAULT                               \
-  {                                                                     \
-    default_source_error_callback, WABT_SOURCE_LINE_MAX_LENGTH_DEFAULT, \
-        nullptr                                                         \
-  }
-
-/* Returns true if the error was handled. */
-typedef bool (*BinaryErrorCallback)(uint32_t offset,
-                                    const char* error,
-                                    void* user_data);
-
-struct BinaryErrorHandler {
-  BinaryErrorCallback on_error;
-  void* user_data;
-};
-
-#define WABT_BINARY_ERROR_HANDLER_DEFAULT \
-  { default_binary_error_callback, nullptr }
-
-/* This data structure is not required; it is just used by the default error
- * handler callbacks. */
-enum class PrintErrorHeader {
-  Never,
-  Once,
-  Always,
-};
-
-struct DefaultErrorHandlerInfo {
-  const char* header;
-  FILE* out_file;
-  PrintErrorHeader print_header;
 };
 
 /* matches binary format, do not change */

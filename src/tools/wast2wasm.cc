@@ -28,6 +28,7 @@
 #include "common.h"
 #include "option-parser.h"
 #include "resolve-names.h"
+#include "source-error-handler.h"
 #include "stream.h"
 #include "validator.h"
 #include "writer.h"
@@ -46,9 +47,6 @@ static WriteBinarySpecOptions s_write_binary_spec_options =
     WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
 static bool s_spec;
 static bool s_validate = true;
-
-static SourceErrorHandler s_error_handler =
-    WABT_SOURCE_ERROR_HANDLER_DEFAULT;
 
 static std::unique_ptr<FileStream> s_log_stream;
 
@@ -203,14 +201,15 @@ int main(int argc, char** argv) {
   if (!lexer)
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
+  SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_ast(lexer, &script, &s_error_handler);
+  Result result = parse_ast(lexer, &script, &error_handler);
 
   if (WABT_SUCCEEDED(result)) {
-    result = resolve_names_script(lexer, script, &s_error_handler);
+    result = resolve_names_script(lexer, script, &error_handler);
 
     if (WABT_SUCCEEDED(result) && s_validate)
-      result = validate_script(lexer, script, &s_error_handler);
+      result = validate_script(lexer, script, &error_handler);
 
     if (WABT_SUCCEEDED(result)) {
       if (s_spec) {

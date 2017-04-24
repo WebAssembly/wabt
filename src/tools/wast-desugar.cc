@@ -28,6 +28,7 @@
 #include "config.h"
 #include "generate-names.h"
 #include "option-parser.h"
+#include "source-error-handler.h"
 #include "stream.h"
 #include "writer.h"
 
@@ -38,9 +39,6 @@ using namespace wabt;
 static const char* s_infile;
 static const char* s_outfile;
 static bool s_generate_names;
-
-static SourceErrorHandler s_error_handler =
-    WABT_SOURCE_ERROR_HANDLER_DEFAULT;
 
 enum {
   FLAG_HELP,
@@ -134,8 +132,9 @@ int main(int argc, char** argv) {
   if (!lexer)
     WABT_FATAL("unable to read %s\n", s_infile);
 
+  SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_ast(lexer, &script, &s_error_handler);
+  Result result = parse_ast(lexer, &script, &error_handler);
 
   if (WABT_SUCCEEDED(result)) {
     Module* module = get_first_module(script);

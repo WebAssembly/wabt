@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "ast.h"
+#include "binary-error-handler.h"
 #include "binary-reader-nop.h"
 #include "common.h"
 
@@ -264,10 +265,7 @@ Result BinaryReaderAST::AppendExpr(Expr* expr) {
 }
 
 bool BinaryReaderAST::HandleError(uint32_t offset, const char* message) {
-  if (error_handler->on_error) {
-    return error_handler->on_error(offset, message, error_handler->user_data);
-  }
-  return false;
+  return error_handler->OnError(offset, message);
 }
 
 bool BinaryReaderAST::OnError(const char* message) {

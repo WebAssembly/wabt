@@ -18,15 +18,13 @@
 #define WABT_AST_PARSER_H_
 
 #include "ast-lexer.h"
-#include "common.h"
 
 namespace wabt {
 
 struct Script;
+class SourceErrorHandler;
 
-Result parse_ast(AstLexer* lexer,
-                 struct Script** out_script,
-                 SourceErrorHandler*);
+Result parse_ast(AstLexer* lexer, Script** out_script, SourceErrorHandler*);
 
 }  // namespace wabt
 

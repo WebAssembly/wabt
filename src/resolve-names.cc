@@ -338,15 +338,6 @@ static void visit_raw_module(Context* ctx, RawModule* raw_module) {
     visit_module(ctx, raw_module->text);
 }
 
-static bool dummy_source_error_callback(const Location* loc,
-                                        const char* error,
-                                        const char* source_line,
-                                        size_t source_line_length,
-                                        size_t source_line_column_offset,
-                                        void* user_data) {
-  return false;
-}
-
 static void visit_command(Context* ctx, Command* command) {
   switch (command->type) {
     case CommandType::Module:
@@ -373,10 +364,7 @@ static void visit_command(Context* ctx, Command* command) {
       /* The module may be invalid because the names cannot be resolved; we
        * don't want to print errors or fail if that's the case, but we still
        * should try to resolve names when possible. */
-      SourceErrorHandler new_error_handler;
-      new_error_handler.on_error = dummy_source_error_callback;
-      new_error_handler.source_line_max_length =
-          ctx->error_handler->source_line_max_length;
+      SourceErrorHandlerNop new_error_handler;
 
       Context new_ctx;
       new_ctx.error_handler = &new_error_handler;
