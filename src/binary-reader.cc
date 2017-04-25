@@ -901,6 +901,116 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
   RAISE_ERROR_UNLESS(seen_end_opcode, "function body must end with END opcode");
 }
 
+static void read_names_section(Context* ctx, uint32_t section_size) {
+  CALLBACK(BeginNamesSection, section_size);
+  uint32_t i = 0;
+  size_t previous_read_end = ctx->read_end;
+  uint32_t previous_subsection_type = 0;
+  while (ctx->state.offset < ctx->read_end) {
+    uint32_t name_type;
+    uint32_t subsection_size;
+    in_u32_leb128(ctx, &name_type, "name type");
+    if (i != 0) {
+      if (name_type == previous_subsection_type)
+        RAISE_ERROR("duplicate sub-section");
+      if (name_type < previous_subsection_type)
+        RAISE_ERROR("out-of-order sub-section");
+    }
+    previous_subsection_type = name_type;
+    in_u32_leb128(ctx, &subsection_size, "subsection size");
+    size_t subsection_end = ctx->state.offset + subsection_size;
+    if (subsection_end > ctx->read_end)
+      RAISE_ERROR("invalid sub-section size: extends past end");
+    ctx->read_end = subsection_end;
+
+    switch (static_cast<NameSectionSubsection>(name_type)) {
+    case NameSectionSubsection::Function:
+      CALLBACK(OnFunctionNameSubsection, i, name_type, subsection_size);
+      if (subsection_size) {
+        uint32_t num_names;
+        in_u32_leb128(ctx, &num_names, "name count");
+        CALLBACK(OnFunctionNamesCount, num_names);
+        for (uint32_t j = 0; j < num_names; ++j) {
+          uint32_t function_index;
+          StringSlice function_name;
+
+          in_u32_leb128(ctx, &function_index, "function index");
+          RAISE_ERROR_UNLESS(function_index < num_total_funcs(ctx),
+                             "invalid function index: %u", function_index);
+          in_str(ctx, &function_name, "function name");
+          CALLBACK(OnFunctionName, function_index, function_name);
+        }
+      }
+      break;
+    case NameSectionSubsection::Local:
+      CALLBACK(OnLocalNameSubsection, i, name_type, subsection_size);
+      if (subsection_size) {
+        uint32_t num_funcs;
+        in_u32_leb128(ctx, &num_funcs, "function count");
+        CALLBACK(OnLocalNameFunctionCount, num_funcs);
+        for (uint32_t j = 0; j < num_funcs; ++j) {
+          uint32_t function_index;
+          in_u32_leb128(ctx, &function_index, "function index");
+          uint32_t num_locals;
+          in_u32_leb128(ctx, &num_locals, "local count");
+          CALLBACK(OnLocalNameLocalCount, function_index, num_locals);
+          for (uint32_t k = 0; k < num_locals; ++k) {
+            uint32_t local_index;
+            StringSlice local_name;
+
+            in_u32_leb128(ctx, &local_index, "named index");
+            in_str(ctx, &local_name, "name");
+            CALLBACK(OnLocalName, function_index, local_index, local_name);
+          }
+        }
+      }
+      break;
+    default:
+      /* unknown subsection, skip it */
+      ctx->state.offset = subsection_end;
+      break;
+    }
+    ++i;
+    if (ctx->state.offset != subsection_end) {
+      RAISE_ERROR("unfinished sub-section (expected end: 0x%" PRIzx ")",
+                  subsection_end);
+    }
+    ctx->read_end = previous_read_end;
+  }
+  CALLBACK0(EndNamesSection);
+}
+
+static void read_reloc_section(Context* ctx, uint32_t section_size) {
+  CALLBACK(BeginRelocSection, section_size);
+  uint32_t num_relocs, section;
+  in_u32_leb128(ctx, &section, "section");
+  StringSlice section_name;
+  WABT_ZERO_MEMORY(section_name);
+  if (static_cast<BinarySection>(section) == BinarySection::Custom)
+    in_str(ctx, &section_name, "section name");
+  in_u32_leb128(ctx, &num_relocs, "relocation count");
+  CALLBACK(OnRelocCount, num_relocs, static_cast<BinarySection>(section),
+           section_name);
+  for (uint32_t i = 0; i < num_relocs; ++i) {
+    uint32_t reloc_type, offset, index, addend = 0;
+    in_u32_leb128(ctx, &reloc_type, "relocation type");
+    in_u32_leb128(ctx, &offset, "offset");
+    in_u32_leb128(ctx, &index, "index");
+    RelocType type = static_cast<RelocType>(reloc_type);
+    switch (type) {
+      case RelocType::MemoryAddressLEB:
+      case RelocType::MemoryAddressSLEB:
+      case RelocType::MemoryAddressI32:
+        in_u32_leb128(ctx, &addend, "addend");
+        break;
+      default:
+        break;
+    }
+    CALLBACK(OnReloc, type, offset, index, addend);
+  }
+  CALLBACK0(EndRelocSection);
+}
+
 static void read_custom_section(Context* ctx, uint32_t section_size) {
   StringSlice section_name;
   in_str(ctx, &section_name, "section name");
@@ -910,111 +1020,10 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
   if (ctx->options->read_debug_names && name_section_ok &&
       strncmp(section_name.start, WABT_BINARY_SECTION_NAME,
               section_name.length) == 0) {
-    CALLBACK(BeginNamesSection, section_size);
-    uint32_t i = 0;
-    size_t previous_read_end = ctx->read_end;
-    uint32_t previous_subsection_type = 0;
-    while (ctx->state.offset < ctx->read_end) {
-      uint32_t name_type;
-      uint32_t subsection_size;
-      in_u32_leb128(ctx, &name_type, "name type");
-      if (i != 0) {
-        if (name_type == previous_subsection_type)
-          RAISE_ERROR("duplicate sub-section");
-        if (name_type < previous_subsection_type)
-          RAISE_ERROR("out-of-order sub-section");
-      }
-      previous_subsection_type = name_type;
-      in_u32_leb128(ctx, &subsection_size, "subsection size");
-      size_t subsection_end = ctx->state.offset + subsection_size;
-      if (subsection_end > ctx->read_end)
-        RAISE_ERROR("invalid sub-section size: extends past end");
-      ctx->read_end = subsection_end;
-
-      switch (static_cast<NameSectionSubsection>(name_type)) {
-      case NameSectionSubsection::Function:
-        CALLBACK(OnFunctionNameSubsection, i, name_type, subsection_size);
-        if (subsection_size) {
-          uint32_t num_names;
-          in_u32_leb128(ctx, &num_names, "name count");
-          CALLBACK(OnFunctionNamesCount, num_names);
-          for (uint32_t j = 0; j < num_names; ++j) {
-            uint32_t function_index;
-            StringSlice function_name;
-
-            in_u32_leb128(ctx, &function_index, "function index");
-            RAISE_ERROR_UNLESS(function_index < num_total_funcs(ctx),
-                               "invalid function index: %u", function_index);
-            in_str(ctx, &function_name, "function name");
-            CALLBACK(OnFunctionName, function_index, function_name);
-          }
-        }
-        break;
-      case NameSectionSubsection::Local:
-        CALLBACK(OnLocalNameSubsection, i, name_type, subsection_size);
-        if (subsection_size) {
-          uint32_t num_funcs;
-          in_u32_leb128(ctx, &num_funcs, "function count");
-          CALLBACK(OnLocalNameFunctionCount, num_funcs);
-          for (uint32_t j = 0; j < num_funcs; ++j) {
-            uint32_t function_index;
-            in_u32_leb128(ctx, &function_index, "function index");
-            uint32_t num_locals;
-            in_u32_leb128(ctx, &num_locals, "local count");
-            CALLBACK(OnLocalNameLocalCount, function_index, num_locals);
-            for (uint32_t k = 0; k < num_locals; ++k) {
-              uint32_t local_index;
-              StringSlice local_name;
-
-              in_u32_leb128(ctx, &local_index, "named index");
-              in_str(ctx, &local_name, "name");
-              CALLBACK(OnLocalName, function_index, local_index, local_name);
-            }
-          }
-        }
-        break;
-      default:
-        /* unknown subsection, skip it */
-        ctx->state.offset = subsection_end;
-        break;
-      }
-      ++i;
-      if (ctx->state.offset != subsection_end) {
-        RAISE_ERROR("unfinished sub-section (expected end: 0x%" PRIzx ")",
-                    subsection_end);
-      }
-      ctx->read_end = previous_read_end;
-    }
-    CALLBACK0(EndNamesSection);
+    read_names_section(ctx, section_size);
   } else if (strncmp(section_name.start, WABT_BINARY_SECTION_RELOC,
                      strlen(WABT_BINARY_SECTION_RELOC)) == 0) {
-    CALLBACK(BeginRelocSection, section_size);
-    uint32_t num_relocs, section;
-    in_u32_leb128(ctx, &section, "section");
-    WABT_ZERO_MEMORY(section_name);
-    if (static_cast<BinarySection>(section) == BinarySection::Custom)
-      in_str(ctx, &section_name, "section name");
-    in_u32_leb128(ctx, &num_relocs, "relocation count");
-    CALLBACK(OnRelocCount, num_relocs, static_cast<BinarySection>(section),
-             section_name);
-    for (uint32_t i = 0; i < num_relocs; ++i) {
-      uint32_t reloc_type, offset, index, addend = 0;
-      in_u32_leb128(ctx, &reloc_type, "relocation type");
-      in_u32_leb128(ctx, &offset, "offset");
-      in_u32_leb128(ctx, &index, "index");
-      RelocType type = static_cast<RelocType>(reloc_type);
-      switch (type) {
-        case RelocType::MemoryAddressLEB:
-        case RelocType::MemoryAddressSLEB:
-        case RelocType::MemoryAddressI32:
-          in_u32_leb128(ctx, &addend, "addend");
-          break;
-        default:
-          break;
-      }
-      CALLBACK(OnReloc, type, offset, index, addend);
-    }
-    CALLBACK0(EndRelocSection);
+    read_reloc_section(ctx, section_size);
   } else {
     /* This is an unknown custom section, skip it. */
     ctx->state.offset = ctx->read_end;
