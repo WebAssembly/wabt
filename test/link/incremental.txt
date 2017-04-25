@@ -72,22 +72,22 @@ Elem:
 Custom:
  - name: "reloc.Elem"
   - section: Elem
-   - R_FUNC_INDEX_LEB   idx=0x3  addend=0    offset=0x6(file=0x8a)
-   - R_FUNC_INDEX_LEB   idx=0x3  addend=0    offset=0xb(file=0x8f)
-   - R_FUNC_INDEX_LEB   idx=0x3  addend=0    offset=0x10(file=0x94)
-   - R_FUNC_INDEX_LEB   idx=0x4  addend=0    offset=0x15(file=0x99)
-   - R_FUNC_INDEX_LEB   idx=0x4  addend=0    offset=0x1a(file=0x9e)
-   - R_FUNC_INDEX_LEB   idx=0x5  addend=0    offset=0x1f(file=0xa3)
-   - R_FUNC_INDEX_LEB   idx=0x5  addend=0    offset=0x24(file=0xa8)
+   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x00008a) index=0x000003
+   - R_FUNC_INDEX_LEB   offset=0x00000b(file=0x00008f) index=0x000003
+   - R_FUNC_INDEX_LEB   offset=0x000010(file=0x000094) index=0x000003
+   - R_FUNC_INDEX_LEB   offset=0x000015(file=0x000099) index=0x000004
+   - R_FUNC_INDEX_LEB   offset=0x00001a(file=0x00009e) index=0x000004
+   - R_FUNC_INDEX_LEB   offset=0x00001f(file=0x0000a3) index=0x000005
+   - R_FUNC_INDEX_LEB   offset=0x000024(file=0x0000a8) index=0x000005
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x6(file=0xb5)
-   - R_FUNC_INDEX_LEB   idx=0x3  addend=0    offset=0xc(file=0xbb)
-   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x1e(file=0xcd)
-   - R_FUNC_INDEX_LEB   idx=0x4  addend=0    offset=0x26(file=0xd5)
-   - R_FUNC_INDEX_LEB   idx=0x2  addend=0    offset=0x34(file=0xe3)
-   - R_FUNC_INDEX_LEB   idx=0x5  addend=0    offset=0x3c(file=0xeb)
+   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x0000b5) index=00000000
+   - R_FUNC_INDEX_LEB   offset=0x00000c(file=0x0000bb) index=0x000003
+   - R_FUNC_INDEX_LEB   offset=0x00001e(file=0x0000cd) index=0x000001
+   - R_FUNC_INDEX_LEB   offset=0x000026(file=0x0000d5) index=0x000004
+   - R_FUNC_INDEX_LEB   offset=0x000034(file=0x0000e3) index=0x000002
+   - R_FUNC_INDEX_LEB   offset=0x00003c(file=0x0000eb) index=0x000005
 
 Code Disassembly:
 

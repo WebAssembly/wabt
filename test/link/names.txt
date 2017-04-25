@@ -62,9 +62,9 @@ Custom:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   idx=0x6  addend=0    offset=0x6(file=0x83)
-   - R_FUNC_INDEX_LEB   idx=0x2  addend=0    offset=0x11(file=0x8e)
-   - R_FUNC_INDEX_LEB   idx=0x6  addend=0    offset=0x1f(file=0x9c)
+   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x000083) index=0x000006
+   - R_FUNC_INDEX_LEB   offset=0x000011(file=0x00008e) index=0x000002
+   - R_FUNC_INDEX_LEB   offset=0x00001f(file=0x00009c) index=0x000006
 
 Code Disassembly:
 

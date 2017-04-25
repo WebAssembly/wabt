@@ -299,7 +299,7 @@ class BinaryReaderNop : public BinaryReader {
   virtual Result OnReloc(RelocType type,
                          uint32_t offset,
                          uint32_t index,
-                         int32_t addend) {
+                         uint32_t addend) {
     return Result::Ok;
   }
   virtual Result EndRelocSection() { return Result::Ok; }

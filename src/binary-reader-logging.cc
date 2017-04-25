@@ -403,10 +403,11 @@ Result BinaryReaderLogging::OnRelocCount(uint32_t count,
 Result BinaryReaderLogging::OnReloc(RelocType type,
                                     uint32_t offset,
                                     uint32_t index,
-                                    int32_t addend) {
+                                    uint32_t addend) {
+  int32_t signed_addend = static_cast<int32_t>(addend);
   LOGF("OnReloc(type: %s, offset: %u, index: %u, addend: %d)\n",
-       get_reloc_type_name(type), offset, index, addend);
-  return reader->OnReloc(type, offset, index, addend);
+       get_reloc_type_name(type), offset, index, signed_addend);
+  return reader->OnReloc(type, offset, index, static_cast<int32_t>(addend));
 }
 
 #define DEFINE_BEGIN(name)                          \

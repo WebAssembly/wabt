@@ -44,11 +44,11 @@ Elem:
 Custom:
  - name: "reloc.Elem"
   - section: Elem
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x6(file=0x38)
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0xb(file=0x3d)
-   - R_FUNC_INDEX_LEB   idx=0x2  addend=0    offset=0x10(file=0x42)
-   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x15(file=0x47)
-   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x1a(file=0x4c)
+   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x000038) index=00000000
+   - R_FUNC_INDEX_LEB   offset=0x00000b(file=0x00003d) index=00000000
+   - R_FUNC_INDEX_LEB   offset=0x000010(file=0x000042) index=0x000002
+   - R_FUNC_INDEX_LEB   offset=0x000015(file=0x000047) index=0x000001
+   - R_FUNC_INDEX_LEB   offset=0x00001a(file=0x00004c) index=0x000001
 
 Code Disassembly:
 

@@ -1001,7 +1001,7 @@ static void read_reloc_section(Context* ctx, uint32_t section_size) {
       case RelocType::MemoryAddressLEB:
       case RelocType::MemoryAddressSLEB:
       case RelocType::MemoryAddressI32:
-        in_u32_leb128(ctx, &addend, "addend");
+        in_i32_leb128(ctx, &addend, "addend");
         break;
       default:
         break;
