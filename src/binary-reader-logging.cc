@@ -407,7 +407,7 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   int32_t signed_addend = static_cast<int32_t>(addend);
   LOGF("OnReloc(type: %s, offset: %u, index: %u, addend: %d)\n",
        get_reloc_type_name(type), offset, index, signed_addend);
-  return reader->OnReloc(type, offset, index, static_cast<int32_t>(addend));
+  return reader->OnReloc(type, offset, index, addend);
 }
 
 #define DEFINE_BEGIN(name)                          \
