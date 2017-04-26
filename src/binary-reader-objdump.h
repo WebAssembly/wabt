@@ -45,7 +45,7 @@ struct ObjdumpOptions {
   bool debug;
   bool relocs;
   ObjdumpMode mode;
-  const char* infile;
+  const char* filename;
   const char* section_name;
   std::vector<std::string> function_names;
   std::vector<Reloc> code_relocations;
