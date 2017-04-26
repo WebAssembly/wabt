@@ -24,6 +24,7 @@ FUZZ_BIN_DIR ?= ${ROOT_DIR}/afl-fuzz
 GCC_FUZZ_CC := ${FUZZ_BIN_DIR}/afl-gcc
 GCC_FUZZ_CXX := ${FUZZ_BIN_DIR}/afl-g++
 EMSCRIPTEN_DIR ?= ${ROOT_DIR}/emscripten
+CMAKE_CMD ?= cmake
 
 DEFAULT_SUFFIX = clang-debug
 
@@ -105,7 +106,7 @@ $(call CMAKE_DIR,$(1),$(2),$(3)):
 
 $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE): | $(call CMAKE_DIR,$(1),$(2),$(3))
 	cd $(call CMAKE_DIR,$(1),$(2),$(3)) && \
-	cmake -G $$(GENERATOR) -DCMAKE_INSTALL_PREFIX=$$(ROOT_DIR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
+	$$(CMAKE_CMD) -G $$(GENERATOR) -DCMAKE_INSTALL_PREFIX=$$(ROOT_DIR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
 endef
 
 define BUILD

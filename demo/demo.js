@@ -50,49 +50,6 @@ function insertTextAtSelection(input, src) {
   input.selectionStart = input.selectionEnd = selectionStart + src.length;
 }
 
-function onInputKeyDown(e) {
-  if (e.keyCode == 9) {  // tab
-    insertTextAtSelection(this, defaultIndent);
-    e.preventDefault();
-  } else if (e.keyCode == 13) {  // newline
-    // count nesting depth
-    var parens = 0;
-    var lastOpen = -1;
-    var indent = '';
-    for (var i = this.selectionStart - 1; i >= 0; --i) {
-      var c = this.value[i];
-      if (c == '(') {
-        if (--parens < 0) {
-          if (lastOpen != -1)
-            i = lastOpen;
-          else
-            indent = defaultIndent;
-          break;
-        // find first sibling "(", if any
-        } else if (parens == 0 && lastOpen == -1) {
-          lastOpen = i;
-        }
-      } else if (c == ')') {
-        parens++;
-      }
-    }
-    // get column of current nesting
-    var col = 0;
-    for (; i > 0; --i) {
-      var c = this.value[i];
-      if (c == '\n') {
-        col--;  // went back too far
-        break;
-      } else {
-        col++;
-      }
-    }
-    // write newline, plus indentation
-    insertTextAtSelection(this, '\n' + ' '.repeat(col) + indent);
-    e.preventDefault();
-  }
-}
-
 function compile(text) {
   wabt.ready.then(function() {
     output.textContent = '';
@@ -113,7 +70,7 @@ function compile(text) {
       output.textContent += e.toString();
       download.classList.add('disabled');
     } finally {
-      if (script) script.$destroy();
+      if (script) script.destroy();
     }
   });
 }
@@ -199,7 +156,6 @@ function onDownloadClicked(e) {
   downloadLink.dispatchEvent(event);
 }
 
-input.addEventListener('keydown', onInputKeyDown);
 input.addEventListener('input', onInputInput);
 select.addEventListener('change', onSelectChanged);
 download.addEventListener('click', onDownloadClicked);

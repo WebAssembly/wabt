@@ -82,4 +82,17 @@ void SourceErrorHandlerFile::PrintErrorHeader() {
   fprintf(file_, "  ");
 }
 
+SourceErrorHandlerBuffer::SourceErrorHandlerBuffer(
+    size_t source_line_max_length)
+    : source_line_max_length_(source_line_max_length) {}
+
+bool SourceErrorHandlerBuffer::OnError(const Location* loc,
+                                       const std::string& error,
+                                       const std::string& source_line,
+                                       size_t source_line_column_offset) {
+  buffer_ +=
+      DefaultErrorMessage(loc, error, source_line, source_line_column_offset);
+  return true;
+}
+
 }  // namespace wabt
