@@ -51,26 +51,28 @@ function insertTextAtSelection(input, src) {
 }
 
 function compile(text) {
-  output.textContent = '';
-  try {
-    var script = wabt.parseAst('test.wast', text);
-    script.resolveNames();
-    script.validate();
-    var binaryOutput = script.toBinary({log: true});
-    output.textContent = binaryOutput.log;
-    var blob = new Blob([binaryOutput.buffer]);
-    if (binaryBlobUrl) {
-      URL.revokeObjectURL(binaryBlobUrl);
+  wabt.ready.then(function() {
+    output.textContent = '';
+    try {
+      var script = wabt.parseAst('test.wast', text);
+      script.resolveNames();
+      script.validate();
+      var binaryOutput = script.toBinary({log: true});
+      output.textContent = binaryOutput.log;
+      var blob = new Blob([binaryOutput.buffer]);
+      if (binaryBlobUrl) {
+        URL.revokeObjectURL(binaryBlobUrl);
+      }
+      binaryBlobUrl = URL.createObjectURL(blob);
+      downloadLink.setAttribute('href', binaryBlobUrl);
+      download.classList.remove('disabled');
+    } catch (e) {
+      output.textContent += e.toString();
+      download.classList.add('disabled');
+    } finally {
+      if (script) script.destroy();
     }
-    binaryBlobUrl = URL.createObjectURL(blob);
-    downloadLink.setAttribute('href', binaryBlobUrl);
-    download.classList.remove('disabled');
-  } catch (e) {
-    output.textContent += e.toString();
-    download.classList.add('disabled');
-  } finally {
-    if (script) script.destroy();
-  }
+  });
 }
 
 var compileInput = debounce(function() { compile(input.value); }, 100);

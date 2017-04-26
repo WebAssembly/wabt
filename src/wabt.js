@@ -238,6 +238,7 @@ Script.prototype.destroy = function() {
   this.lexer.destroy();
 };
 
+wabt.ready = Promise.resolve();
 wabt.parseAst = parseAst;
 
 })(wabt);
