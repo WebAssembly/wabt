@@ -900,6 +900,7 @@ Result BinaryReaderInterpreter::BeginGlobal(uint32_t index,
   InterpreterGlobal* global = GetGlobalByModuleIndex(index);
   global->typed_value.type = type;
   global->mutable_ = mutable_;
+  init_expr_value.type = Type::Void;
   return Result::Ok;
 }
 
