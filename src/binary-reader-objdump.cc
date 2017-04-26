@@ -126,7 +126,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
   virtual Result OnReloc(RelocType type,
                          uint32_t offset,
                          uint32_t index,
-                         int32_t addend);
+                         uint32_t addend);
 };
 
 BinaryReaderObjdumpPrepass::BinaryReaderObjdumpPrepass(const uint8_t* data,
@@ -144,7 +144,7 @@ Result BinaryReaderObjdumpPrepass::OnFunctionName(uint32_t index,
 Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
                                            uint32_t offset,
                                            uint32_t index,
-                                           int32_t addend) {
+                                           uint32_t addend) {
   BinaryReaderObjdumpBase::OnReloc(type, offset, index, addend);
   if (reloc_section == BinarySection::Code) {
     options->code_relocations.emplace_back(type, offset, index, addend);
@@ -478,7 +478,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   virtual Result OnReloc(RelocType type,
                          uint32_t offset,
                          uint32_t index,
-                         int32_t addend);
+                         uint32_t addend);
 
  private:
   bool ShouldPrintDetails();
@@ -807,7 +807,7 @@ Result BinaryReaderObjdump::OnDataSegmentData(uint32_t index,
                                               const void* src_data,
                                               uint32_t size) {
   if (ShouldPrintDetails()) {
-    out_stream->WriteMemoryDump(src_data, size, 0, "  - ", nullptr,
+    out_stream->WriteMemoryDump(src_data, size, state->offset - size, "  - ", nullptr,
                                 PrintChars::Yes);
   }
   return Result::Ok;
@@ -824,11 +824,22 @@ Result BinaryReaderObjdump::OnRelocCount(uint32_t count,
 Result BinaryReaderObjdump::OnReloc(RelocType type,
                                     uint32_t offset,
                                     uint32_t index,
-                                    int32_t addend) {
+                                    uint32_t addend) {
   uint32_t total_offset =
       section_starts[static_cast<size_t>(reloc_section)] + offset;
-  PrintDetails("   - %-18s idx=%#-4x addend=%#-4x offset=%#x(file=%#x)\n",
-               get_reloc_type_name(type), index, addend, offset, total_offset);
+  PrintDetails("   - %-18s offset=%#08x(file=%#08x) index=%#08x",
+               get_reloc_type_name(type), offset, total_offset, index);
+  if (addend) {
+    int32_t signed_addend = static_cast<int32_t>(addend);
+    if (signed_addend < 0) {
+      PrintDetails("-");
+      signed_addend = -signed_addend;
+    } else {
+      PrintDetails("+");
+    }
+    PrintDetails("%#x", signed_addend);
+  }
+  PrintDetails("\n");
   return Result::Ok;
 }
 

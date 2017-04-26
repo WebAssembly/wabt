@@ -81,7 +81,7 @@ class BinaryReaderLinker : public BinaryReaderNop {
   virtual Result OnReloc(RelocType type,
                          uint32_t offset,
                          uint32_t index,
-                         int32_t addend);
+                         uint32_t addend);
 
   virtual Result OnInitExprI32ConstExpr(uint32_t index, uint32_t value);
 
@@ -117,7 +117,7 @@ Result BinaryReaderLinker::OnRelocCount(uint32_t count,
 Result BinaryReaderLinker::OnReloc(RelocType type,
                                    uint32_t offset,
                                    uint32_t index,
-                                   int32_t addend) {
+                                   uint32_t addend) {
   if (offset + RELOC_SIZE > reloc_section->size) {
     WABT_FATAL("invalid relocation offset: %#x\n", offset);
   }

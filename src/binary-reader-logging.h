@@ -217,7 +217,7 @@ class BinaryReaderLogging : public BinaryReader {
   virtual Result OnReloc(RelocType type,
                          uint32_t offset,
                          uint32_t index,
-                         int32_t addend);
+                         uint32_t addend);
   virtual Result EndRelocSection();
 
   virtual Result OnInitExprF32ConstExpr(uint32_t index, uint32_t value);

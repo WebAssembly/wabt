@@ -24,13 +24,13 @@ Memory:
  - memory[0] pages: initial=2 max=2
 Data:
  - memory[0] - init i32=0
-  - 0000000: 666f 6f                                  foo
+  - 000001e: 666f 6f                                  foo
  - memory[0] - init i32=10
-  - 0000000: 6261 72                                  bar
+  - 0000026: 6261 72                                  bar
  - memory[0] - init i32=65536
-  - 0000000: 6865 6c6c 6f                             hello
+  - 0000030: 6865 6c6c 6f                             hello
  - memory[0] - init i32=65636
-  - 0000000: 776f 726c 64                             world
+  - 000003c: 776f 726c 64                             world
 
 Code Disassembly:
 

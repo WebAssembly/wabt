@@ -255,7 +255,7 @@ class BinaryReader {
   virtual Result OnReloc(RelocType type,
                          uint32_t offset,
                          uint32_t index,
-                         int32_t addend) = 0;
+                         uint32_t addend) = 0;
   virtual Result EndRelocSection() = 0;
 
   /* InitExpr - used by elem, data and global sections; these functions are

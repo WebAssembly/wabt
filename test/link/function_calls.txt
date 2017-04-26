@@ -48,11 +48,11 @@ Export:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   idx=0x2  addend=0    offset=0x6(file=0x5f)
-   - R_FUNC_INDEX_LEB   idx=0x3  addend=0    offset=0xc(file=0x65)
-   - R_FUNC_INDEX_LEB   idx=0    addend=0    offset=0x12(file=0x6b)
-   - R_FUNC_INDEX_LEB   idx=0x1  addend=0    offset=0x24(file=0x7d)
-   - R_FUNC_INDEX_LEB   idx=0x3  addend=0    offset=0x2c(file=0x85)
+   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x00005f) index=0x000002
+   - R_FUNC_INDEX_LEB   offset=0x00000c(file=0x000065) index=0x000003
+   - R_FUNC_INDEX_LEB   offset=0x000012(file=0x00006b) index=00000000
+   - R_FUNC_INDEX_LEB   offset=0x000024(file=0x00007d) index=0x000001
+   - R_FUNC_INDEX_LEB   offset=0x00002c(file=0x000085) index=0x000003
 
 Code Disassembly:
 
