@@ -1,0 +1,36 @@
+;;; TOOL: run-wasmdump
+;;; FLAGS: --headers --spec
+(module
+  (func (param $param2 i64))
+)
+(module
+  (func (param $param2 i64))
+)
+(;; STDOUT ;;;
+
+multi_file.0.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+ Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
+     Code start=0x00000015 end=0x00000019 (size=0x00000004) count: 1
+
+Code Disassembly:
+
+000016 func[0]:
+ 000018: 0b                         | end
+
+multi_file.1.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+ Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
+     Code start=0x00000015 end=0x00000019 (size=0x00000004) count: 1
+
+Code Disassembly:
+
+000016 func[0]:
+ 000018: 0b                         | end
+;;; STDOUT ;;)
