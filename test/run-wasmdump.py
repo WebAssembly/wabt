@@ -109,8 +109,7 @@ def main(args):
     else:
       wasm_files = [out_file]
 
-    for wasm_file in wasm_files:
-      wasmdump.RunWithArgs('-r', '-d', wasm_file)
+    wasmdump.RunWithArgs('-r', '-d', *wasm_files)
 
 
 if __name__ == '__main__':

@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
   }
 
   for (const char* filename: s_infiles) {
-    if (dump_file(filename) != Result::Ok) {
+    if (WABT_FAILED(dump_file(filename))) {
       return 1;
     }
   }
