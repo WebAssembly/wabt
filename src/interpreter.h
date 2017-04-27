@@ -81,19 +81,11 @@ enum class InterpreterResult {
 #define WABT_TABLE_ENTRY_DROP_OFFSET sizeof(uint32_t)
 #define WABT_TABLE_ENTRY_KEEP_OFFSET (sizeof(uint32_t) * 2)
 
-#define WABT_FOREACH_INTERPRETER_OPCODE(V)         \
-  WABT_FOREACH_OPCODE(V)                           \
-  V(___, ___, ___, 0, 0xfb, Alloca, "alloca")      \
-  V(___, ___, ___, 0, 0xfc, BrUnless, "br_unless") \
-  V(___, ___, ___, 0, 0xfd, CallHost, "call_host") \
-  V(___, ___, ___, 0, 0xfe, Data, "data")          \
-  V(___, ___, ___, 0, 0xff, DropKeep, "drop_keep")
-
 enum class InterpreterOpcode {
 /* push space on the value stack for N entries */
-#define V(rtype, type1, type2, mem_size, code, Name, text) Name = code,
-  WABT_FOREACH_INTERPRETER_OPCODE(V)
-#undef V
+#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) Name = code,
+#include "interpreter-opcode.def"
+#undef WABT_OPCODE
 
       First = static_cast<int>(Opcode::First),
   Last = DropKeep,

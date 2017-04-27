@@ -18,14 +18,15 @@
 #define WABT_OPCODE_H_
 
 #include "common.h"
-#include "opcode.def.h"
 
 namespace wabt {
 
 enum class Opcode {
-#define V(rtype, type1, type2, mem_size, code, Name, text) Name = code,
-  WABT_FOREACH_OPCODE(V)
-#undef V
+
+#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) \
+  Name = code,
+#include "opcode.def"
+#undef WABT_OPCODE
 
   First = Unreachable,
   Last = F64ReinterpretI64,
