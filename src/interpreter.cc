@@ -27,7 +27,13 @@
 
 namespace wabt {
 
-static const char* s_interpreter_opcode_name[256];
+static const char* s_interpreter_opcode_name[256] = {
+
+#define WABT_OPCODE(rtype, type1, type2, mem_size, code, NAME, text) text,
+#include "interpreter-opcode.def"
+#undef WABT_OPCODE
+
+};
 
 #define CHECK_RESULT(expr)  \
   do {                      \
@@ -35,23 +41,7 @@ static const char* s_interpreter_opcode_name[256];
       return Result::Error; \
   } while (0)
 
-/* TODO(binji): It's annoying to have to have an initializer function, but it
- * seems to be necessary as g++ doesn't allow non-trival designated
- * initializers (e.g. [314] = "blah") */
-static void init_interpreter_opcode_table(void) {
-  static bool s_initialized = false;
-  if (!s_initialized) {
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  s_interpreter_opcode_name[code] = text;
-
-    WABT_FOREACH_INTERPRETER_OPCODE(V)
-
-#undef V
-  }
-}
-
 static const char* get_interpreter_opcode_name(InterpreterOpcode opcode) {
-  init_interpreter_opcode_table();
   return s_interpreter_opcode_name[static_cast<int>(opcode)];
 }
 
