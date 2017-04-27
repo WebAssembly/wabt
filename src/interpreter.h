@@ -24,6 +24,7 @@
 
 #include "common.h"
 #include "binding-hash.h"
+#include "opcode.h"
 #include "writer.h"
 
 namespace wabt {

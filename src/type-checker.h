@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "common.h"
+#include "opcode.h"
 
 namespace wabt {
 

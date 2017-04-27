@@ -22,6 +22,7 @@
 
 #include "binary.h"
 #include "common.h"
+#include "opcode.h"
 
 #define WABT_READ_BINARY_OPTIONS_DEFAULT \
   { nullptr, false }

@@ -34,27 +34,6 @@ namespace wabt {
 Reloc::Reloc(RelocType type, size_t offset, uint32_t index, int32_t addend)
     : type(type), offset(offset), index(index), addend(addend) {}
 
-OpcodeInfo g_opcode_info[kOpcodeCount];
-
-/* TODO(binji): It's annoying to have to have an initializer function, but it
- * seems to be necessary as g++ doesn't allow non-trival designated
- * initializers (e.g. [314] = "blah") */
-void init_opcode_info(void) {
-  static bool s_initialized = false;
-  if (!s_initialized) {
-#define V(rtype, type1, type2, mem_size, code, NAME, text) \
-  g_opcode_info[code].name = text;                         \
-  g_opcode_info[code].result_type = Type::rtype;           \
-  g_opcode_info[code].param1_type = Type::type1;           \
-  g_opcode_info[code].param2_type = Type::type2;           \
-  g_opcode_info[code].memory_size = mem_size;
-
-    WABT_FOREACH_OPCODE(V)
-
-#undef V
-  }
-}
-
 const char* g_kind_name[] = {"func", "table", "memory", "global"};
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_kind_name) == kExternalKindCount);
 
@@ -68,17 +47,6 @@ const char* g_reloc_type_name[] = {"R_FUNC_INDEX_LEB",
                                    "R_GLOBAL_INDEX_LEB",
                                    };
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
-
-bool is_naturally_aligned(Opcode opcode, uint32_t alignment) {
-  uint32_t opcode_align = get_opcode_memory_size(opcode);
-  return alignment == WABT_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
-}
-
-uint32_t get_opcode_alignment(Opcode opcode, uint32_t alignment) {
-  if (alignment == WABT_USE_NATURAL_ALIGNMENT)
-    return get_opcode_memory_size(opcode);
-  return alignment;
-}
 
 StringSlice empty_string_slice(void) {
   StringSlice result;

@@ -18,6 +18,7 @@
 #define WABT_BINARY_WRITER_H_
 
 #include "common.h"
+#include "opcode.h"
 #include "stream.h"
 
 namespace wabt {
