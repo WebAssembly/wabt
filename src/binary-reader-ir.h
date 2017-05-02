@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WABT_BINARY_READER_AST_H_
-#define WABT_BINARY_READER_AST_H_
+#ifndef WABT_BINARY_READER_IR_H_
+#define WABT_BINARY_READER_IR_H_
 
 #include "common.h"
 
@@ -25,12 +25,12 @@ struct Module;
 struct ReadBinaryOptions;
 class BinaryErrorHandler;
 
-Result read_binary_ast(const void* data,
-                       size_t size,
-                       const ReadBinaryOptions* options,
-                       BinaryErrorHandler*,
-                       Module* out_module);
+Result read_binary_ir(const void* data,
+                      size_t size,
+                      const ReadBinaryOptions* options,
+                      BinaryErrorHandler*,
+                      Module* out_module);
 
 } // namespace wabt
 
-#endif /* WABT_BINARY_READER_AST_H_ */
+#endif /* WABT_BINARY_READER_IR_H_ */

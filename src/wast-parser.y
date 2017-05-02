@@ -23,12 +23,12 @@
 #include <algorithm>
 #include <utility>
 
-#include "ast-parser.h"
-#include "ast-parser-lexer-shared.h"
 #include "binary-error-handler.h"
-#include "binary-reader-ast.h"
 #include "binary-reader.h"
+#include "binary-reader-ir.h"
 #include "literal.h"
+#include "wast-parser.h"
+#include "wast-parser-lexer-shared.h"
 
 #define INVALID_VAR_INDEX (-1)
 
@@ -113,7 +113,7 @@
 #define CHECK_IMPORT_ORDERING(module, kind, kinds, loc_)            \
   do {                                                              \
     if ((module)->kinds.size() != (module)->num_##kind##_imports) { \
-      ast_parser_error(                                             \
+      wast_parser_error(                                            \
           &loc_, lexer, parser,                                     \
           "imports must occur before all non-import definitions");  \
     }                                                               \
@@ -123,15 +123,15 @@
   do {                                                                     \
     if (!string_slice_is_empty(&(end_label))) {                            \
       if (string_slice_is_empty(&(begin_label))) {                         \
-        ast_parser_error(&loc, lexer, parser,                              \
-                         "unexpected label \"" PRIstringslice "\"",        \
-                         WABT_PRINTF_STRING_SLICE_ARG(end_label));         \
+        wast_parser_error(&loc, lexer, parser,                             \
+                          "unexpected label \"" PRIstringslice "\"",       \
+                          WABT_PRINTF_STRING_SLICE_ARG(end_label));        \
       } else if (!string_slices_are_equal(&(begin_label), &(end_label))) { \
-        ast_parser_error(&loc, lexer, parser,                              \
-                         "mismatching label \"" PRIstringslice             \
-                         "\" != \"" PRIstringslice "\"",                   \
-                         WABT_PRINTF_STRING_SLICE_ARG(begin_label),        \
-                         WABT_PRINTF_STRING_SLICE_ARG(end_label));         \
+        wast_parser_error(&loc, lexer, parser,                             \
+                          "mismatching label \"" PRIstringslice            \
+                          "\" != \"" PRIstringslice "\"",                  \
+                          WABT_PRINTF_STRING_SLICE_ARG(begin_label),       \
+                          WABT_PRINTF_STRING_SLICE_ARG(end_label));        \
       }                                                                    \
       destroy_string_slice(&(end_label));                                  \
     }                                                                      \
@@ -164,27 +164,27 @@ void append_implicit_func_declaration(Location*,
 
 class BinaryErrorHandlerModule : public BinaryErrorHandler {
  public:
-  BinaryErrorHandlerModule(Location* loc, AstLexer* lexer, AstParser* parser);
+  BinaryErrorHandlerModule(Location* loc, WastLexer* lexer, WastParser* parser);
   bool OnError(uint32_t offset, const std::string& error) override;
 
  private:
   Location* loc_;
-  AstLexer* lexer_;
-  AstParser* parser_;
+  WastLexer* lexer_;
+  WastParser* parser_;
 };
 
-#define wabt_ast_parser_lex ast_lexer_lex
-#define wabt_ast_parser_error ast_parser_error
+#define wabt_wast_parser_lex wast_lexer_lex
+#define wabt_wast_parser_error wast_parser_error
 
 %}
 
-%define api.prefix {wabt_ast_parser_}
+%define api.prefix {wabt_wast_parser_}
 %define api.pure true
 %define api.value.type {::wabt::Token}
 %define api.token.prefix {WABT_TOKEN_TYPE_}
 %define parse.error verbose
-%lex-param {::wabt::AstLexer* lexer} {::wabt::AstParser* parser}
-%parse-param {::wabt::AstLexer* lexer} {::wabt::AstParser* parser}
+%lex-param {::wabt::WastLexer* lexer} {::wabt::WastParser* parser}
+%parse-param {::wabt::WastLexer* lexer} {::wabt::WastParser* parser}
 %locations
 
 %token LPAR "("
@@ -411,9 +411,9 @@ nat :
     NAT {
       if (WABT_FAILED(parse_uint64($1.text.start,
                                         $1.text.start + $1.text.length, &$$))) {
-        ast_parser_error(&@1, lexer, parser,
-                              "invalid int " PRIstringslice "\"",
-                              WABT_PRINTF_STRING_SLICE_ARG($1.text));
+        wast_parser_error(&@1, lexer, parser,
+                          "invalid int " PRIstringslice "\"",
+                          WABT_PRINTF_STRING_SLICE_ARG($1.text));
       }
     }
 ;
@@ -470,9 +470,9 @@ offset_opt :
   | OFFSET_EQ_NAT {
     if (WABT_FAILED(parse_int64($1.start, $1.start + $1.length, &$$,
                                 ParseIntType::SignedAndUnsigned))) {
-      ast_parser_error(&@1, lexer, parser,
-                            "invalid offset \"" PRIstringslice "\"",
-                            WABT_PRINTF_STRING_SLICE_ARG($1));
+      wast_parser_error(&@1, lexer, parser,
+                        "invalid offset \"" PRIstringslice "\"",
+                        WABT_PRINTF_STRING_SLICE_ARG($1));
       }
     }
 ;
@@ -481,9 +481,9 @@ align_opt :
   | ALIGN_EQ_NAT {
     if (WABT_FAILED(parse_int32($1.start, $1.start + $1.length, &$$,
                                 ParseIntType::UnsignedOnly))) {
-      ast_parser_error(&@1, lexer, parser,
-                       "invalid alignment \"" PRIstringslice "\"",
-                       WABT_PRINTF_STRING_SLICE_ARG($1));
+      wast_parser_error(&@1, lexer, parser,
+                        "invalid alignment \"" PRIstringslice "\"",
+                        WABT_PRINTF_STRING_SLICE_ARG($1));
       }
     }
 ;
@@ -551,9 +551,9 @@ plain_instr :
       const_.loc = @1;
       if (WABT_FAILED(parse_const($1, $2.type, $2.text.start,
                                   $2.text.start + $2.text.length, &const_))) {
-        ast_parser_error(&@2, lexer, parser,
-                              "invalid literal \"" PRIstringslice "\"",
-                              WABT_PRINTF_STRING_SLICE_ARG($2.text));
+        wast_parser_error(&@2, lexer, parser,
+                          "invalid literal \"" PRIstringslice "\"",
+                          WABT_PRINTF_STRING_SLICE_ARG($2.text));
       }
       delete [] $2.text.start;
       $$ = Expr::CreateConst(const_);
@@ -1284,8 +1284,8 @@ module :
         $$ = new Module();
         ReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
         BinaryErrorHandlerModule error_handler(&$1->binary.loc, lexer, parser);
-        read_binary_ast($1->binary.data, $1->binary.size, &options,
-                        &error_handler, $$);
+        read_binary_ir($1->binary.data, $1->binary.size, &options,
+                       &error_handler, $$);
         $$->name = $1->binary.name;
         $$->loc = $1->binary.loc;
         WABT_ZERO_MEMORY($1->binary.name);
@@ -1417,9 +1417,9 @@ const :
       $$.loc = @2;
       if (WABT_FAILED(parse_const($2, $3.type, $3.text.start,
                                   $3.text.start + $3.text.length, &$$))) {
-        ast_parser_error(&@3, lexer, parser,
-                              "invalid literal \"" PRIstringslice "\"",
-                              WABT_PRINTF_STRING_SLICE_ARG($3.text));
+        wast_parser_error(&@3, lexer, parser,
+                          "invalid literal \"" PRIstringslice "\"",
+                          WABT_PRINTF_STRING_SLICE_ARG($3.text));
       }
       delete [] $3.text.start;
     }
@@ -1652,12 +1652,12 @@ void append_implicit_func_declaration(Location* loc,
   }
 }
 
-Result parse_ast(AstLexer* lexer, Script** out_script,
+Result parse_wast(WastLexer* lexer, Script** out_script,
                  SourceErrorHandler* error_handler) {
-  AstParser parser;
+  WastParser parser;
   WABT_ZERO_MEMORY(parser);
   parser.error_handler = error_handler;
-  int result = wabt_ast_parser_parse(lexer, &parser);
+  int result = wabt_wast_parser_parse(lexer, &parser);
   delete [] parser.yyssa;
   delete [] parser.yyvsa;
   delete [] parser.yylsa;
@@ -1666,18 +1666,18 @@ Result parse_ast(AstLexer* lexer, Script** out_script,
 }
 
 BinaryErrorHandlerModule::BinaryErrorHandlerModule(
-    Location* loc, AstLexer* lexer, AstParser* parser)
+    Location* loc, WastLexer* lexer, WastParser* parser)
   : loc_(loc), lexer_(lexer), parser_(parser) {}
 
 bool BinaryErrorHandlerModule::OnError(uint32_t offset,
                                        const std::string& error) {
   if (offset == WABT_UNKNOWN_OFFSET) {
-    ast_parser_error(loc_, lexer_, parser_, "error in binary module: %s",
-                     error.c_str());
+    wast_parser_error(loc_, lexer_, parser_, "error in binary module: %s",
+                      error.c_str());
   } else {
-    ast_parser_error(loc_, lexer_, parser_,
-                     "error in binary module: @0x%08x: %s", offset,
-                     error.c_str());
+    wast_parser_error(loc_, lexer_, parser_,
+                      "error in binary module: @0x%08x: %s", offset,
+                      error.c_str());
   }
   return true;
 }

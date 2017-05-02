@@ -20,14 +20,14 @@
 #include <stdlib.h>
 
 #include "apply-names.h"
-#include "ast.h"
-#include "ast-writer.h"
 #include "binary-error-handler.h"
 #include "binary-reader.h"
-#include "binary-reader-ast.h"
+#include "binary-reader-ir.h"
 #include "generate-names.h"
+#include "ir.h"
 #include "option-parser.h"
 #include "stream.h"
+#include "wat-writer.h"
 #include "writer.h"
 
 #define PROGRAM_NAME "wasm2wast"
@@ -143,8 +143,8 @@ int main(int argc, char** argv) {
   if (WABT_SUCCEEDED(result)) {
     BinaryErrorHandlerFile error_handler;
     Module module;
-    result = read_binary_ast(data, size, &s_read_binary_options, &error_handler,
-                             &module);
+    result = read_binary_ir(data, size, &s_read_binary_options, &error_handler,
+                            &module);
     if (WABT_SUCCEEDED(result)) {
       if (s_generate_names)
         result = generate_names(&module);
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
       if (WABT_SUCCEEDED(result)) {
         FileWriter writer(s_outfile ? FileWriter(s_outfile)
                                     : FileWriter(stdout));
-        result = write_ast(&writer, &module);
+        result = write_wat(&writer, &module);
       }
     }
     delete[] data;

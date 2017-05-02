@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "ast-writer.h"
+#include "wat-writer.h"
 
 #include <assert.h>
 #include <inttypes.h>
@@ -24,8 +24,8 @@
 #include <string>
 #include <vector>
 
-#include "ast.h"
 #include "common.h"
+#include "ir.h"
 #include "literal.h"
 #include "stream.h"
 #include "writer.h"
@@ -58,9 +58,9 @@ enum class NextChar {
   ForceNewline,
 };
 
-class ASTWriter {
+class WatWriter {
  public:
-  ASTWriter(Writer* writer) : stream_(writer) {}
+  WatWriter(Writer* writer) : stream_(writer) {}
 
   Result WriteModule(const Module* module);
 
@@ -135,16 +135,16 @@ class ASTWriter {
 
 }  // namespace
 
-void ASTWriter::Indent() {
+void WatWriter::Indent() {
   indent_ += INDENT_SIZE;
 }
 
-void ASTWriter::Dedent() {
+void WatWriter::Dedent() {
   indent_ -= INDENT_SIZE;
   assert(indent_ >= 0);
 }
 
-void ASTWriter::WriteIndent() {
+void WatWriter::WriteIndent() {
   static char s_indent[] =
       "                                                                       "
       "                                                                       ";
@@ -159,7 +159,7 @@ void ASTWriter::WriteIndent() {
   }
 }
 
-void ASTWriter::WriteNextChar() {
+void WatWriter::WriteNextChar() {
   switch (next_char_) {
     case NextChar::Space:
       stream_.WriteChar(' ');
@@ -177,88 +177,88 @@ void ASTWriter::WriteNextChar() {
   next_char_ = NextChar::None;
 }
 
-void ASTWriter::WriteDataWithNextChar(const void* src, size_t size) {
+void WatWriter::WriteDataWithNextChar(const void* src, size_t size) {
   WriteNextChar();
   stream_.WriteData(src, size);
 }
 
-void WABT_PRINTF_FORMAT(2, 3) ASTWriter::Writef(const char* format, ...) {
+void WABT_PRINTF_FORMAT(2, 3) WatWriter::Writef(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   /* default to following space */
   WriteDataWithNextChar(buffer, length);
   next_char_ = NextChar::Space;
 }
 
-void ASTWriter::WritePutc(char c) {
+void WatWriter::WritePutc(char c) {
   stream_.WriteChar(c);
 }
 
-void ASTWriter::WritePuts(const char* s, NextChar next_char) {
+void WatWriter::WritePuts(const char* s, NextChar next_char) {
   size_t len = strlen(s);
   WriteDataWithNextChar(s, len);
   next_char_ = next_char;
 }
 
-void ASTWriter::WritePutsSpace(const char* s) {
+void WatWriter::WritePutsSpace(const char* s) {
   WritePuts(s, NextChar::Space);
 }
 
-void ASTWriter::WritePutsNewline(const char* s) {
+void WatWriter::WritePutsNewline(const char* s) {
   WritePuts(s, NextChar::Newline);
 }
 
-void ASTWriter::WriteNewline(bool force) {
+void WatWriter::WriteNewline(bool force) {
   if (next_char_ == NextChar::ForceNewline)
     WriteNextChar();
   next_char_ = force ? NextChar::ForceNewline : NextChar::Newline;
 }
 
-void ASTWriter::WriteOpen(const char* name, NextChar next_char) {
+void WatWriter::WriteOpen(const char* name, NextChar next_char) {
   WritePuts("(", NextChar::None);
   WritePuts(name, next_char);
   Indent();
 }
 
-void ASTWriter::WriteOpenNewline(const char* name) {
+void WatWriter::WriteOpenNewline(const char* name) {
   WriteOpen(name, NextChar::Newline);
 }
 
-void ASTWriter::WriteOpenSpace(const char* name) {
+void WatWriter::WriteOpenSpace(const char* name) {
   WriteOpen(name, NextChar::Space);
 }
 
-void ASTWriter::WriteClose(NextChar next_char) {
+void WatWriter::WriteClose(NextChar next_char) {
   if (next_char_ != NextChar::ForceNewline)
     next_char_ = NextChar::None;
   Dedent();
   WritePuts(")", next_char);
 }
 
-void ASTWriter::WriteCloseNewline() {
+void WatWriter::WriteCloseNewline() {
   WriteClose(NextChar::Newline);
 }
 
-void ASTWriter::WriteCloseSpace() {
+void WatWriter::WriteCloseSpace() {
   WriteClose(NextChar::Space);
 }
 
-void ASTWriter::WriteString(const std::string& str, NextChar next_char) {
+void WatWriter::WriteString(const std::string& str, NextChar next_char) {
   WritePuts(str.c_str(), next_char);
 }
 
-void ASTWriter::WriteStringSlice(const StringSlice* str, NextChar next_char) {
+void WatWriter::WriteStringSlice(const StringSlice* str, NextChar next_char) {
   Writef(PRIstringslice, WABT_PRINTF_STRING_SLICE_ARG(*str));
   next_char_ = next_char;
 }
 
-bool ASTWriter::WriteStringSliceOpt(const StringSlice* str,
+bool WatWriter::WriteStringSliceOpt(const StringSlice* str,
                                     NextChar next_char) {
   if (str->start)
     WriteStringSlice(str, next_char);
   return !!str->start;
 }
 
-void ASTWriter::WriteStringSliceOrIndex(const StringSlice* str,
+void WatWriter::WriteStringSliceOrIndex(const StringSlice* str,
                                         uint32_t index,
                                         NextChar next_char) {
   if (str->start)
@@ -267,7 +267,7 @@ void ASTWriter::WriteStringSliceOrIndex(const StringSlice* str,
     Writef("(;%u;)", index);
 }
 
-void ASTWriter::WriteQuotedData(const void* data, size_t length) {
+void WatWriter::WriteQuotedData(const void* data, size_t length) {
   const uint8_t* u8_data = static_cast<const uint8_t*>(data);
   static const char s_hexdigits[] = "0123456789abcdef";
   WriteNextChar();
@@ -286,13 +286,13 @@ void ASTWriter::WriteQuotedData(const void* data, size_t length) {
   next_char_ = NextChar::Space;
 }
 
-void ASTWriter::WriteQuotedStringSlice(const StringSlice* str,
+void WatWriter::WriteQuotedStringSlice(const StringSlice* str,
                                        NextChar next_char) {
   WriteQuotedData(str->start, str->length);
   next_char_ = next_char;
 }
 
-void ASTWriter::WriteVar(const Var* var, NextChar next_char) {
+void WatWriter::WriteVar(const Var* var, NextChar next_char) {
   if (var->type == VarType::Index) {
     Writef("%" PRId64, var->index);
     next_char_ = next_char;
@@ -301,7 +301,7 @@ void ASTWriter::WriteVar(const Var* var, NextChar next_char) {
   }
 }
 
-void ASTWriter::WriteBrVar(const Var* var, NextChar next_char) {
+void WatWriter::WriteBrVar(const Var* var, NextChar next_char) {
   if (var->type == VarType::Index) {
     Writef("%" PRId64 " (;@%" PRId64 ";)", var->index,
            depth_ - var->index - 1);
@@ -311,13 +311,13 @@ void ASTWriter::WriteBrVar(const Var* var, NextChar next_char) {
   }
 }
 
-void ASTWriter::WriteType(Type type, NextChar next_char) {
+void WatWriter::WriteType(Type type, NextChar next_char) {
   const char* type_name = get_type_name(type);
   assert(type_name);
   WritePuts(type_name, next_char);
 }
 
-void ASTWriter::WriteTypes(const TypeVector& types, const char* name) {
+void WatWriter::WriteTypes(const TypeVector& types, const char* name) {
   if (types.size()) {
     if (name)
       WriteOpenSpace(name);
@@ -328,12 +328,12 @@ void ASTWriter::WriteTypes(const TypeVector& types, const char* name) {
   }
 }
 
-void ASTWriter::WriteFuncSigSpace(const FuncSignature* func_sig) {
+void WatWriter::WriteFuncSigSpace(const FuncSignature* func_sig) {
   WriteTypes(func_sig->param_types, "param");
   WriteTypes(func_sig->result_types, "result");
 }
 
-void ASTWriter::WriteBeginBlock(const Block* block, const char* text) {
+void WatWriter::WriteBeginBlock(const Block* block, const char* text) {
   WritePutsSpace(text);
   bool has_label = WriteStringSliceOpt(&block->label, NextChar::Space);
   WriteTypes(block->sig, nullptr);
@@ -344,19 +344,19 @@ void ASTWriter::WriteBeginBlock(const Block* block, const char* text) {
   Indent();
 }
 
-void ASTWriter::WriteEndBlock() {
+void WatWriter::WriteEndBlock() {
   Dedent();
   depth_--;
   WritePutsNewline(get_opcode_name(Opcode::End));
 }
 
-void ASTWriter::WriteBlock(const Block* block, const char* start_text) {
+void WatWriter::WriteBlock(const Block* block, const char* start_text) {
   WriteBeginBlock(block, start_text);
   WriteExprList(block->first);
   WriteEndBlock();
 }
 
-void ASTWriter::WriteConst(const Const* const_) {
+void WatWriter::WriteConst(const Const* const_) {
   switch (const_->type) {
     case Type::I32:
       WritePutsSpace(get_opcode_name(Opcode::I32Const));
@@ -400,7 +400,7 @@ void ASTWriter::WriteConst(const Const* const_) {
   }
 }
 
-void ASTWriter::WriteExpr(const Expr* expr) {
+void WatWriter::WriteExpr(const Expr* expr) {
   switch (expr->type) {
     case ExprType::Binary:
       WritePutsNewline(get_opcode_name(expr->binary.opcode));
@@ -549,12 +549,12 @@ void ASTWriter::WriteExpr(const Expr* expr) {
   }
 }
 
-void ASTWriter::WriteExprList(const Expr* first) {
+void WatWriter::WriteExprList(const Expr* first) {
   for (const Expr* expr = first; expr; expr = expr->next)
     WriteExpr(expr);
 }
 
-void ASTWriter::WriteInitExpr(const Expr* expr) {
+void WatWriter::WriteInitExpr(const Expr* expr) {
   if (expr) {
     WritePuts("(", NextChar::None);
     WriteExpr(expr);
@@ -564,7 +564,7 @@ void ASTWriter::WriteInitExpr(const Expr* expr) {
   }
 }
 
-void ASTWriter::WriteTypeBindings(const char* prefix,
+void WatWriter::WriteTypeBindings(const char* prefix,
                                   const Func* func,
                                   const TypeVector& types,
                                   const BindingHash& bindings) {
@@ -595,7 +595,7 @@ void ASTWriter::WriteTypeBindings(const char* prefix,
     WriteCloseSpace();
 }
 
-void ASTWriter::WriteFunc(const Module* module, const Func* func) {
+void WatWriter::WriteFunc(const Module* module, const Func* func) {
   WriteOpenSpace("func");
   WriteStringSliceOrIndex(&func->name, func_index_++, NextChar::Space);
   if (decl_has_func_type(&func->decl)) {
@@ -616,7 +616,7 @@ void ASTWriter::WriteFunc(const Module* module, const Func* func) {
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteBeginGlobal(const Global* global) {
+void WatWriter::WriteBeginGlobal(const Global* global) {
   WriteOpenSpace("global");
   WriteStringSliceOrIndex(&global->name, global_index_++,
                               NextChar::Space);
@@ -629,19 +629,19 @@ void ASTWriter::WriteBeginGlobal(const Global* global) {
   }
 }
 
-void ASTWriter::WriteGlobal(const Global* global) {
+void WatWriter::WriteGlobal(const Global* global) {
   WriteBeginGlobal(global);
   WriteInitExpr(global->init_expr);
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteLimits(const Limits* limits) {
+void WatWriter::WriteLimits(const Limits* limits) {
   Writef("%" PRIu64, limits->initial);
   if (limits->has_max)
     Writef("%" PRIu64, limits->max);
 }
 
-void ASTWriter::WriteTable(const Table* table) {
+void WatWriter::WriteTable(const Table* table) {
   WriteOpenSpace("table");
   WriteStringSliceOrIndex(&table->name, table_index_++,
                               NextChar::Space);
@@ -650,7 +650,7 @@ void ASTWriter::WriteTable(const Table* table) {
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteElemSegment(const ElemSegment* segment) {
+void WatWriter::WriteElemSegment(const ElemSegment* segment) {
   WriteOpenSpace("elem");
   WriteInitExpr(segment->offset);
   for (const Var& var : segment->vars)
@@ -658,7 +658,7 @@ void ASTWriter::WriteElemSegment(const ElemSegment* segment) {
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteMemory(const Memory* memory) {
+void WatWriter::WriteMemory(const Memory* memory) {
   WriteOpenSpace("memory");
   WriteStringSliceOrIndex(&memory->name, memory_index_++,
                               NextChar::Space);
@@ -666,14 +666,14 @@ void ASTWriter::WriteMemory(const Memory* memory) {
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteDataSegment(const DataSegment* segment) {
+void WatWriter::WriteDataSegment(const DataSegment* segment) {
   WriteOpenSpace("data");
   WriteInitExpr(segment->offset);
   WriteQuotedData(segment->data, segment->size);
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteImport(const Import* import) {
+void WatWriter::WriteImport(const Import* import) {
   WriteOpenSpace("import");
   WriteQuotedStringSlice(&import->module_name, NextChar::Space);
   WriteQuotedStringSlice(&import->field_name, NextChar::Space);
@@ -708,7 +708,7 @@ void ASTWriter::WriteImport(const Import* import) {
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteExport(const Export* export_) {
+void WatWriter::WriteExport(const Export* export_) {
   static const char* s_kind_names[] = {"func", "table", "memory", "global"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_kind_names) == kExternalKindCount);
   WriteOpenSpace("export");
@@ -720,7 +720,7 @@ void ASTWriter::WriteExport(const Export* export_) {
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteFuncType(const FuncType* func_type) {
+void WatWriter::WriteFuncType(const FuncType* func_type) {
   WriteOpenSpace("type");
   WriteStringSliceOrIndex(&func_type->name, func_type_index_++,
                           NextChar::Space);
@@ -730,13 +730,13 @@ void ASTWriter::WriteFuncType(const FuncType* func_type) {
   WriteCloseNewline();
 }
 
-void ASTWriter::WriteStartFunction(const Var* start) {
+void WatWriter::WriteStartFunction(const Var* start) {
   WriteOpenSpace("start");
   WriteVar(start, NextChar::None);
   WriteCloseNewline();
 }
 
-Result ASTWriter::WriteModule(const Module* module) {
+Result WatWriter::WriteModule(const Module* module) {
   WriteOpenNewline("module");
   for (const ModuleField* field = module->first_field; field;
        field = field->next) {
@@ -779,9 +779,9 @@ Result ASTWriter::WriteModule(const Module* module) {
   return result_;
 }
 
-Result write_ast(Writer* writer, const Module* module) {
-  ASTWriter ast_writer(writer);
-  return ast_writer.WriteModule(module);
+Result write_wat(Writer* writer, const Module* module) {
+  WatWriter wat_writer(writer);
+  return wat_writer.WriteModule(module);
 }
 
 }  // namespace wabt

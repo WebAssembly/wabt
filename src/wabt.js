@@ -68,13 +68,13 @@ function allocateCString(s) {
 function Lexer(filename, buffer) {
   this.filenameObj = allocateCString(filename);
   this.bufferObj = allocateBuffer(buffer);
-  this.addr = Module._wabt_new_ast_buffer_lexer(
+  this.addr = Module._wabt_new_wast_buffer_lexer(
       this.filenameObj.addr, this.bufferObj.addr, this.bufferObj.size);
 }
 Lexer.prototype = Object.create(Object.prototype);
 
 Lexer.prototype.destroy = function() {
-  Module._wabt_destroy_ast_lexer(this.addr);
+  Module._wabt_destroy_wast_lexer(this.addr);
   Module._free(this.bufferObj.addr);
   Module._free(this.filenameObj.addr);
 };
@@ -130,28 +130,28 @@ ErrorHandler.prototype.destroy = function() {
 };
 
 
-/// parseAst
-function parseAst(filename, buffer) {
+/// parseWast
+function parseWast(filename, buffer) {
   var lexer = new Lexer(filename, buffer);
   var errorHandler = new ErrorHandler();
 
   try {
     var parseResult_addr =
-        Module._wabt_parse_ast(lexer.addr, errorHandler.addr);
+        Module._wabt_parse_wast(lexer.addr, errorHandler.addr);
 
-    var result = Module._wabt_parse_ast_result_get_result(parseResult_addr);
+    var result = Module._wabt_parse_wast_result_get_result(parseResult_addr);
     if (result !== WABT_OK) {
-      throw new Error('parseAst failed:\n' + errorHandler.getMessage());
+      throw new Error('parseWast failed:\n' + errorHandler.getMessage());
     }
 
     var script_addr =
-        Module._wabt_parse_ast_result_release_script(parseResult_addr);
+        Module._wabt_parse_wast_result_release_script(parseResult_addr);
     var result = new Script(lexer, script_addr);
     // Clear lexer so it isn't destroyed below.
     lexer = null;
     return result;
   } finally {
-    Module._wabt_destroy_parse_ast_result(parseResult_addr);
+    Module._wabt_destroy_parse_wast_result(parseResult_addr);
     errorHandler.destroy();
     if (lexer) {
       lexer.destroy();
@@ -239,6 +239,6 @@ Script.prototype.destroy = function() {
 };
 
 wabt.ready = Promise.resolve();
-wabt.parseAst = parseAst;
+wabt.parseWast = parseWast;
 
 })(wabt);

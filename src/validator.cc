@@ -23,10 +23,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "ast-parser-lexer-shared.h"
-#include "binary-reader-ast.h"
 #include "binary-reader.h"
 #include "type-checker.h"
+#include "wast-parser-lexer-shared.h"
 
 namespace wabt {
 
@@ -48,10 +47,10 @@ struct ActionResult {
 
 struct Context {
   WABT_DISALLOW_COPY_AND_ASSIGN(Context);
-  Context(SourceErrorHandler*, AstLexer*, const Script*);
+  Context(SourceErrorHandler*, WastLexer*, const Script*);
 
   SourceErrorHandler* error_handler = nullptr;
-  AstLexer* lexer = nullptr;
+  WastLexer* lexer = nullptr;
   const Script* script = nullptr;
   const Module* current_module = nullptr;
   const Func* current_func = nullptr;
@@ -66,7 +65,7 @@ struct Context {
 };
 
 Context::Context(SourceErrorHandler* error_handler,
-                 AstLexer* lexer,
+                 WastLexer* lexer,
                  const Script* script)
     : error_handler(error_handler), lexer(lexer), script(script) {}
 
@@ -77,7 +76,7 @@ static void WABT_PRINTF_FORMAT(3, 4)
   ctx->result = Result::Error;
   va_list args;
   va_start(args, fmt);
-  ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
+  wast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
   va_end(args);
 }
 
@@ -1003,7 +1002,7 @@ static void check_command(Context* ctx, const Command* command) {
   }
 }
 
-Result validate_script(AstLexer* lexer,
+Result validate_script(WastLexer* lexer,
                        const struct Script* script,
                        SourceErrorHandler* error_handler) {
   Context ctx(error_handler, lexer, script);

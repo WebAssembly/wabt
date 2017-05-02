@@ -173,14 +173,14 @@ SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover")
 
 find_package(BISON 3.0)
 if (RUN_BISON AND BISON_FOUND)
-  set(AST_PARSER_GEN_C ${WABT_BINARY_DIR}/ast-parser-gen.cc)
-  BISON_TARGET(AST_PARSER_GEN_C
-    ${WABT_SOURCE_DIR}/src/ast-parser.y
-    ${AST_PARSER_GEN_C}
-    COMPILE_FLAGS --defines=${WABT_BINARY_DIR}/ast-parser-gen.hh
+  set(WAST_PARSER_GEN_CC ${WABT_BINARY_DIR}/wast-parser-gen.cc)
+  BISON_TARGET(WAST_PARSER_GEN_CC
+    ${WABT_SOURCE_DIR}/src/wast-parser.y
+    ${WAST_PARSER_GEN_CC}
+    COMPILE_FLAGS --defines=${WABT_BINARY_DIR}/wast-parser-gen.hh
   )
 else ()
-  set(AST_PARSER_GEN_C src/prebuilt/ast-parser-gen.cc)
+  set(WAST_PARSER_GEN_CC src/prebuilt/wast-parser-gen.cc)
   include_directories(src/prebuilt)
 endif ()
 
@@ -188,7 +188,7 @@ if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
   # yyerror passes a non-string-literal to a printf-like function, which is a
   # warning.
   set_source_files_properties(
-    ${AST_PARSER_GEN_C}
+    ${WAST_PARSER_GEN_CC}
     PROPERTIES
     COMPILE_FLAGS "-Wno-format-security -Wno-old-style-cast"
   )
@@ -197,16 +197,16 @@ endif ()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 find_package(RE2C 0.13)
 if (RUN_RE2C AND RE2C_EXECUTABLE)
-  set(AST_LEXER_C ${WABT_SOURCE_DIR}/src/ast-lexer.cc)
-  set(AST_LEXER_GEN_C ${WABT_BINARY_DIR}/ast-lexer-gen.cc)
+  set(WAST_LEXER_CC ${WABT_SOURCE_DIR}/src/wast-lexer.cc)
+  set(WAST_LEXER_GEN_CC ${WABT_BINARY_DIR}/wast-lexer-gen.cc)
   RE2C_TARGET(
-    NAME AST_LEXER_GEN_C
-    INPUT ${AST_LEXER_C}
-    OUTPUT ${AST_LEXER_GEN_C}
+    NAME WAST_LEXER_GEN_CC
+    INPUT ${WAST_LEXER_CC}
+    OUTPUT ${WAST_LEXER_GEN_CC}
     OPTIONS -bc
   )
 else ()
-  set(AST_LEXER_GEN_C src/prebuilt/ast-lexer-gen.cc)
+  set(WAST_LEXER_GEN_CC src/prebuilt/wast-lexer-gen.cc)
 endif ()
 
 add_custom_target(everything)
@@ -217,10 +217,10 @@ add_library(libwabt STATIC
   src/source-error-handler.cc
   src/hash-util.cc
   src/string-view.cc
-  src/ast.cc
-  src/ast-parser-lexer-shared.cc
-  ${AST_LEXER_GEN_C}
-  ${AST_PARSER_GEN_C}
+  src/ir.cc
+  src/wast-parser-lexer-shared.cc
+  ${WAST_LEXER_GEN_CC}
+  ${WAST_PARSER_GEN_CC}
   src/type-checker.cc
   src/validator.cc
 
@@ -228,9 +228,9 @@ add_library(libwabt STATIC
   src/binary-reader-logging.cc
   src/binary-writer.cc
   src/binary-writer-spec.cc
-  src/binary-reader-ast.cc
+  src/binary-reader-ir.cc
   src/binding-hash.cc
-  src/ast-writer.cc
+  src/wat-writer.cc
   src/interpreter.cc
   src/binary-reader-interpreter.cc
   src/apply-names.cc

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-#include "ast-lexer.h"
+#include "wast-lexer.h"
 
 #include <assert.h>
 #include <stdio.h>
 
 #include "config.h"
 
-#include "ast-parser.h"
-#include "ast-parser-lexer-shared.h"
+#include "wast-parser.h"
+#include "wast-parser-lexer-shared.h"
 
 /* must be included after so some typedefs will be defined */
-#include "ast-parser-gen.hh"
+#include "wast-parser-gen.hh"
 
 /*!max:re2c */
 
@@ -45,7 +45,7 @@
 
 #define ERROR(...) \
   YY_USER_ACTION;  \
-  ast_parser_error(loc, lexer, parser, __VA_ARGS__)
+  wast_parser_error(loc, lexer, parser, __VA_ARGS__)
 
 #define BEGIN(c) \
   do {           \
@@ -93,8 +93,8 @@
 namespace wabt {
 
 static Result fill(Location* loc,
-                   AstLexer* lexer,
-                   AstParser* parser,
+                   WastLexer* lexer,
+                   WastParser* parser,
                    size_t need) {
   if (lexer->eof)
     return Result::Error;
@@ -114,8 +114,8 @@ static Result fill(Location* loc,
 
     char* new_buffer = new char[new_buffer_size];
     if (!new_buffer) {
-      ast_parser_error(loc, lexer, parser,
-                            "unable to reallocate lexer buffer.");
+      wast_parser_error(loc, lexer, parser,
+                        "unable to reallocate lexer buffer.");
       return Result::Error;
     }
     memmove(new_buffer, lexer->token, lexer->limit - lexer->token);
@@ -127,7 +127,7 @@ static Result fill(Location* loc,
     lexer->limit = new_buffer + (lexer->limit - old_buffer) - free;
     lexer->buffer_file_offset += free;
     free += new_buffer_size - old_buffer_size;
-    delete [] old_buffer;
+    delete[] old_buffer;
   } else {
     /* shift everything down to make more room in the buffer */
     memmove(lexer->buffer, lexer->token, lexer->limit - lexer->token);
@@ -138,11 +138,11 @@ static Result fill(Location* loc,
     lexer->buffer_file_offset += free;
   }
   /* read the new data into the buffer */
-  if (lexer->source.type == AstLexerSourceType::File) {
+  if (lexer->source.type == WastLexerSourceType::File) {
     lexer->limit += fread(lexer->limit, 1, free, lexer->source.file);
   } else {
     /* TODO(binji): could lex directly from buffer */
-    assert(lexer->source.type == AstLexerSourceType::Buffer);
+    assert(lexer->source.type == WastLexerSourceType::Buffer);
     size_t read_size = free;
     size_t offset = lexer->source.buffer.read_offset;
     size_t bytes_left = lexer->source.buffer.size - offset;
@@ -165,10 +165,10 @@ static Result fill(Location* loc,
   return Result::Ok;
 }
 
-int ast_lexer_lex(WABT_AST_PARSER_STYPE* lval,
-                  WABT_AST_PARSER_LTYPE* loc,
-                  AstLexer* lexer,
-                  AstParser* parser) {
+int wast_lexer_lex(WABT_WAST_PARSER_STYPE* lval,
+                   WABT_WAST_PARSER_LTYPE* loc,
+                   WastLexer* lexer,
+                   WastParser* parser) {
   enum {
     YYCOND_INIT,
     YYCOND_BAD_TEXT,
@@ -474,40 +474,38 @@ int ast_lexer_lex(WABT_AST_PARSER_STYPE* lval,
   }
 }
 
-static AstLexer* new_lexer(AstLexerSourceType type,
-                                    const char* filename) {
-  AstLexer* lexer = new AstLexer();
+static WastLexer* new_lexer(WastLexerSourceType type, const char* filename) {
+  WastLexer* lexer = new WastLexer();
   lexer->line = 1;
   lexer->filename = filename;
   lexer->source.type = type;
   return lexer;
 }
 
-AstLexer* new_ast_file_lexer(const char* filename) {
-  AstLexer* lexer = new_lexer(AstLexerSourceType::File, filename);
+WastLexer* new_wast_file_lexer(const char* filename) {
+  WastLexer* lexer = new_lexer(WastLexerSourceType::File, filename);
   lexer->source.file = fopen(filename, "rb");
   if (!lexer->source.file) {
-    destroy_ast_lexer(lexer);
+    destroy_wast_lexer(lexer);
     return nullptr;
   }
   return lexer;
 }
 
-AstLexer* new_ast_buffer_lexer(const char* filename,
-                                        const void* data,
-                                        size_t size) {
-  AstLexer* lexer =
-      new_lexer(AstLexerSourceType::Buffer, filename);
+WastLexer* new_wast_buffer_lexer(const char* filename,
+                                 const void* data,
+                                 size_t size) {
+  WastLexer* lexer = new_lexer(WastLexerSourceType::Buffer, filename);
   lexer->source.buffer.data = data;
   lexer->source.buffer.size = size;
   lexer->source.buffer.read_offset = 0;
   return lexer;
 }
 
-void destroy_ast_lexer(AstLexer* lexer) {
-  if (lexer->source.type == AstLexerSourceType::File && lexer->source.file)
+void destroy_wast_lexer(WastLexer* lexer) {
+  if (lexer->source.type == WastLexerSourceType::File && lexer->source.file)
     fclose(lexer->source.file);
-  delete [] lexer->buffer;
+  delete[] lexer->buffer;
   delete lexer;
 }
 
@@ -563,7 +561,7 @@ static Result scan_forward_for_line_offset_in_buffer(
 }
 
 static Result scan_forward_for_line_offset_in_file(
-    AstLexer* lexer,
+    WastLexer* lexer,
     int line,
     size_t line_start_offset,
     LineOffsetPosition find_position,
@@ -610,15 +608,14 @@ cleanup:
   return result;
 }
 
-static Result scan_forward_for_line_offset(
-    AstLexer* lexer,
-    int line,
-    size_t line_start_offset,
-    LineOffsetPosition find_position,
-    int find_line,
-    size_t* out_line_offset) {
+static Result scan_forward_for_line_offset(WastLexer* lexer,
+                                           int line,
+                                           size_t line_start_offset,
+                                           LineOffsetPosition find_position,
+                                           int find_line,
+                                           size_t* out_line_offset) {
   assert(line <= find_line);
-  if (lexer->source.type == AstLexerSourceType::Buffer) {
+  if (lexer->source.type == WastLexerSourceType::Buffer) {
     const char* source_buffer =
         static_cast<const char*>(lexer->source.buffer.data);
     const char* buffer_start = source_buffer + line_start_offset;
@@ -627,16 +624,16 @@ static Result scan_forward_for_line_offset(
         buffer_start, buffer_end, line, line_start_offset, find_position,
         find_line, &line, out_line_offset);
   } else {
-    assert(lexer->source.type == AstLexerSourceType::File);
+    assert(lexer->source.type == WastLexerSourceType::File);
     return scan_forward_for_line_offset_in_file(lexer, line, line_start_offset,
                                                 find_position, find_line,
                                                 out_line_offset);
   }
 }
 
-static Result get_line_start_offset(AstLexer* lexer,
-                                        int line,
-                                        size_t* out_offset) {
+static Result get_line_start_offset(WastLexer* lexer,
+                                    int line,
+                                    size_t* out_offset) {
   int first_line = 1;
   size_t first_offset = 0;
   int current_line = lexer->line;
@@ -660,18 +657,17 @@ static Result get_line_start_offset(AstLexer* lexer,
   }
 }
 
-static Result get_offsets_from_line(AstLexer* lexer,
-                                        int line,
-                                        size_t* out_line_start,
-                                        size_t* out_line_end) {
+static Result get_offsets_from_line(WastLexer* lexer,
+                                    int line,
+                                    size_t* out_line_start,
+                                    size_t* out_line_end) {
   size_t line_start;
   if (WABT_FAILED(get_line_start_offset(lexer, line, &line_start)))
     return Result::Error;
 
   size_t line_end;
-  if (WABT_FAILED(scan_forward_for_line_offset(lexer, line, line_start,
-                                               LineOffsetPosition::End,
-                                               line, &line_end)))
+  if (WABT_FAILED(scan_forward_for_line_offset(
+          lexer, line, line_start, LineOffsetPosition::End, line, &line_end)))
     return Result::Error;
   *out_line_start = line_start;
   *out_line_end = line_end;
@@ -707,12 +703,12 @@ static void clamp_source_line_offsets_to_location(size_t line_start,
   *out_new_line_end = line_end;
 }
 
-Result ast_lexer_get_source_line(AstLexer* lexer,
-                                          const Location* loc,
-                                          size_t line_max_length,
-                                          char* line,
-                                          size_t* out_line_length,
-                                          int* out_column_offset) {
+Result wast_lexer_get_source_line(WastLexer* lexer,
+                                  const Location* loc,
+                                  size_t line_max_length,
+                                  char* line,
+                                  size_t* out_line_length,
+                                  int* out_column_offset) {
   Result result;
   size_t line_start; /* inclusive */
   size_t line_end;   /* exclusive */
@@ -743,12 +739,12 @@ Result ast_lexer_get_source_line(AstLexer* lexer,
     read_length -= 3;
   }
 
-  if (lexer->source.type == AstLexerSourceType::Buffer) {
+  if (lexer->source.type == WastLexerSourceType::Buffer) {
     const char* buffer_read_start =
         static_cast<const char*>(lexer->source.buffer.data) + read_start;
     memcpy(write_start, buffer_read_start, read_length);
   } else {
-    assert(lexer->source.type == AstLexerSourceType::File);
+    assert(lexer->source.type == WastLexerSourceType::File);
     FILE* lexer_file = lexer->source.file;
     long old_offset = ftell(lexer_file);
     if (old_offset == -1)

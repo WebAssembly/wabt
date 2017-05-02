@@ -71,11 +71,11 @@ $ cmake ..
 ...
 ```
 
-If you make changes to `src/ast-parser.y`, you'll need to install Bison.
+If you make changes to `src/wast-parser.y`, you'll need to install Bison.
 Before you upload your PR, please run `make update-bison` to update the
 prebuilt C sources in `src/prebuilt/`.
 
-If you make changes to `src/ast-lexer.c`, you'll need to install
+If you make changes to `src/wast-lexer.c`, you'll need to install
 [re2c](http://re2c.org). Before you upload your PR, please run `make
 update-re2c` to update the prebuilt C sources in `src/prebuilt/`.
 

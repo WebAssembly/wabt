@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WABT_AST_LEXER_H_
-#define WABT_AST_LEXER_H_
+#ifndef WABT_WAST_LEXER_H_
+#define WABT_WAST_LEXER_H_
 
 #include <stddef.h>
 #include <stdio.h>
@@ -24,13 +24,13 @@
 
 namespace wabt {
 
-enum class AstLexerSourceType {
+enum class WastLexerSourceType {
   File,
   Buffer,
 };
 
-struct AstLexerSource {
-  AstLexerSourceType type;
+struct WastLexerSource {
+  WastLexerSourceType type;
   union {
     FILE* file;
     struct {
@@ -41,8 +41,8 @@ struct AstLexerSource {
   };
 };
 
-struct AstLexer {
-  AstLexerSource source;
+struct WastLexer {
+  WastLexerSource source;
   const char* filename;
   int line;
   int comment_nesting;
@@ -59,12 +59,12 @@ struct AstLexer {
   char* limit;
 };
 
-AstLexer* new_ast_file_lexer(const char* filename);
-AstLexer* new_ast_buffer_lexer(const char* filename,
-                               const void* data,
-                               size_t size);
-void destroy_ast_lexer(AstLexer*);
+WastLexer* new_wast_file_lexer(const char* filename);
+WastLexer* new_wast_buffer_lexer(const char* filename,
+                                const void* data,
+                                size_t size);
+void destroy_wast_lexer(WastLexer*);
 
 }  // namespace wabt
 
-#endif /* WABT_AST_LEXER_H_ */
+#endif /* WABT_WAST_LEXER_H_ */

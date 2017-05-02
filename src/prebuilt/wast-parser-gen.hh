@@ -30,28 +30,28 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_HH_INCLUDED
-# define YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_HH_INCLUDED
+#ifndef YY_WABT_WAST_PARSER_SRC_PREBUILT_WAST_PARSER_GEN_HH_INCLUDED
+# define YY_WABT_WAST_PARSER_SRC_PREBUILT_WAST_PARSER_GEN_HH_INCLUDED
 /* Debug traces.  */
-#ifndef WABT_AST_PARSER_DEBUG
+#ifndef WABT_WAST_PARSER_DEBUG
 # if defined YYDEBUG
 #if YYDEBUG
-#   define WABT_AST_PARSER_DEBUG 1
+#   define WABT_WAST_PARSER_DEBUG 1
 #  else
-#   define WABT_AST_PARSER_DEBUG 0
+#   define WABT_WAST_PARSER_DEBUG 0
 #  endif
 # else /* ! defined YYDEBUG */
-#  define WABT_AST_PARSER_DEBUG 0
+#  define WABT_WAST_PARSER_DEBUG 0
 # endif /* ! defined YYDEBUG */
-#endif  /* ! defined WABT_AST_PARSER_DEBUG */
-#if WABT_AST_PARSER_DEBUG
-extern int wabt_ast_parser_debug;
+#endif  /* ! defined WABT_WAST_PARSER_DEBUG */
+#if WABT_WAST_PARSER_DEBUG
+extern int wabt_wast_parser_debug;
 #endif
 
 /* Token type.  */
-#ifndef WABT_AST_PARSER_TOKENTYPE
-# define WABT_AST_PARSER_TOKENTYPE
-  enum wabt_ast_parser_tokentype
+#ifndef WABT_WAST_PARSER_TOKENTYPE
+# define WABT_WAST_PARSER_TOKENTYPE
+  enum wabt_wast_parser_tokentype
   {
     WABT_TOKEN_TYPE_EOF = 0,
     WABT_TOKEN_TYPE_LPAR = 258,
@@ -130,28 +130,28 @@ extern int wabt_ast_parser_debug;
 #endif
 
 /* Value type.  */
-#if ! defined WABT_AST_PARSER_STYPE && ! defined WABT_AST_PARSER_STYPE_IS_DECLARED
-typedef ::wabt::Token WABT_AST_PARSER_STYPE;
-# define WABT_AST_PARSER_STYPE_IS_TRIVIAL 1
-# define WABT_AST_PARSER_STYPE_IS_DECLARED 1
+#if ! defined WABT_WAST_PARSER_STYPE && ! defined WABT_WAST_PARSER_STYPE_IS_DECLARED
+typedef ::wabt::Token WABT_WAST_PARSER_STYPE;
+# define WABT_WAST_PARSER_STYPE_IS_TRIVIAL 1
+# define WABT_WAST_PARSER_STYPE_IS_DECLARED 1
 #endif
 
 /* Location type.  */
-#if ! defined WABT_AST_PARSER_LTYPE && ! defined WABT_AST_PARSER_LTYPE_IS_DECLARED
-typedef struct WABT_AST_PARSER_LTYPE WABT_AST_PARSER_LTYPE;
-struct WABT_AST_PARSER_LTYPE
+#if ! defined WABT_WAST_PARSER_LTYPE && ! defined WABT_WAST_PARSER_LTYPE_IS_DECLARED
+typedef struct WABT_WAST_PARSER_LTYPE WABT_WAST_PARSER_LTYPE;
+struct WABT_WAST_PARSER_LTYPE
 {
   int first_line;
   int first_column;
   int last_line;
   int last_column;
 };
-# define WABT_AST_PARSER_LTYPE_IS_DECLARED 1
-# define WABT_AST_PARSER_LTYPE_IS_TRIVIAL 1
+# define WABT_WAST_PARSER_LTYPE_IS_DECLARED 1
+# define WABT_WAST_PARSER_LTYPE_IS_TRIVIAL 1
 #endif
 
 
 
-int wabt_ast_parser_parse (::wabt::AstLexer* lexer, ::wabt::AstParser* parser);
+int wabt_wast_parser_parse (::wabt::WastLexer* lexer, ::wabt::WastParser* parser);
 
-#endif /* !YY_WABT_AST_PARSER_SRC_PREBUILT_AST_PARSER_GEN_HH_INCLUDED  */
+#endif /* !YY_WABT_WAST_PARSER_SRC_PREBUILT_WAST_PARSER_GEN_HH_INCLUDED  */

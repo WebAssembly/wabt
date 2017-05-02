@@ -54,7 +54,7 @@ function compile(text) {
   wabt.ready.then(function() {
     output.textContent = '';
     try {
-      var script = wabt.parseAst('test.wast', text);
+      var script = wabt.parseWast('test.wast', text);
       script.resolveNames();
       script.validate();
       var binaryOutput = script.toBinary({log: true});

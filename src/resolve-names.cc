@@ -19,8 +19,8 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "ast.h"
-#include "ast-parser-lexer-shared.h"
+#include "ir.h"
+#include "wast-parser-lexer-shared.h"
 
 namespace wabt {
 
@@ -32,7 +32,7 @@ struct Context {
   Context();
 
   SourceErrorHandler* error_handler = nullptr;
-  AstLexer* lexer = nullptr;
+  WastLexer* lexer = nullptr;
   Script* script = nullptr;
   Module* current_module = nullptr;
   Func* current_func = nullptr;
@@ -52,7 +52,7 @@ static void WABT_PRINTF_FORMAT(3, 4)
   ctx->result = Result::Error;
   va_list args;
   va_start(args, fmt);
-  ast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
+  wast_format_error(ctx->error_handler, loc, ctx->lexer, fmt, args);
   va_end(args);
 }
 
@@ -402,7 +402,7 @@ static void visit_script(Context* ctx, Script* script) {
 }
 
 static void init_context(Context* ctx,
-                         AstLexer* lexer,
+                         WastLexer* lexer,
                          Script* script,
                          SourceErrorHandler* error_handler) {
   ctx->lexer = lexer;
@@ -428,7 +428,7 @@ static void init_context(Context* ctx,
   ctx->visitor.on_tee_local_expr = on_tee_local_expr;
 }
 
-Result resolve_names_module(AstLexer* lexer,
+Result resolve_names_module(WastLexer* lexer,
                             Module* module,
                             SourceErrorHandler* error_handler) {
   Context ctx;
@@ -437,7 +437,7 @@ Result resolve_names_module(AstLexer* lexer,
   return ctx.result;
 }
 
-Result resolve_names_script(AstLexer* lexer,
+Result resolve_names_script(WastLexer* lexer,
                             Script* script,
                             SourceErrorHandler* error_handler) {
   Context ctx;

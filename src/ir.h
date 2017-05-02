@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WABT_AST_H_
-#define WABT_AST_H_
+#ifndef WABT_IR_H_
+#define WABT_IR_H_
 
 #include <assert.h>
 #include <stddef.h>
@@ -506,7 +506,7 @@ ModuleField* append_module_field(Module*);
 /* ownership of the function signature is passed to the module */
 FuncType* append_implicit_func_type(Location*, Module*, FuncSignature*);
 
-/* destruction functions. not needed unless you're creating your own AST
+/* destruction functions. not needed unless you're creating your own IR
  elements */
 void destroy_expr_list(Expr*);
 void destroy_var(Var*);
@@ -515,7 +515,7 @@ void destroy_var(Var*);
 Result visit_func(Func* func, ExprVisitor*);
 Result visit_expr_list(Expr* expr, ExprVisitor*);
 
-/* convenience functions for looking through the AST */
+/* convenience functions for looking through the IR */
 int get_index_from_var(const BindingHash* bindings, const Var* var);
 int get_func_index_by_var(const Module* module, const Var* var);
 int get_global_index_by_var(const Module* func, const Var* var);
@@ -618,4 +618,4 @@ static WABT_INLINE const Location* get_raw_module_location(
 
 }  // namespace wabt
 
-#endif /* WABT_AST_H_ */
+#endif /* WABT_IR_H_ */
