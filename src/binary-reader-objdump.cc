@@ -85,8 +85,8 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
       printf("Code Disassembly:\n\n");
       break;
     case ObjdumpMode::Prepass: {
-      const char* last_slash = strrchr(options->infile, '/');
-      const char* last_backslash = strrchr(options->infile, '\\');
+      const char* last_slash = strrchr(options->filename, '/');
+      const char* last_backslash = strrchr(options->filename, '\\');
       const char* basename;
       if (last_slash && last_backslash) {
         basename = std::max(last_slash, last_backslash) + 1;
@@ -95,7 +95,7 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
       } else if (last_backslash) {
         basename = last_backslash + 1;
       } else {
-        basename = options->infile;
+        basename = options->filename;
       }
 
       printf("%s:\tfile format wasm %#x\n", basename, version);

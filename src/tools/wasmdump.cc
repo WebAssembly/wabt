@@ -45,7 +45,7 @@ enum {
 };
 
 static const char s_description[] =
-    "  Print information about the contents of a wasm binary file.\n"
+    "  Print information about the contents of wasm binaries.\n"
     "\n"
     "examples:\n"
     "  $ wasmdump test.wasm\n";
@@ -68,10 +68,12 @@ WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
 static ObjdumpOptions s_objdump_options;
 
+static std::vector<const char*> s_infiles;
+
 static std::unique_ptr<FileStream> s_log_stream;
 
 static void on_argument(struct OptionParser* parser, const char* argument) {
-  s_objdump_options.infile = argument;
+  s_infiles.push_back(argument);
 }
 
 static void on_option(struct OptionParser* parser,
@@ -130,10 +132,66 @@ static void parse_options(int argc, char** argv) {
   parser.on_error = on_option_error;
   parse_options(&parser, argc, argv);
 
-  if (!s_objdump_options.infile) {
+  if (s_infiles.size() == 0) {
     print_help(&parser, PROGRAM_NAME);
     WABT_FATAL("No filename given.\n");
   }
+}
+
+Result dump_file(const char* filename) {
+  char* char_data;
+  size_t size;
+  Result result = read_file(filename, &char_data, &size);
+  if (WABT_FAILED(result))
+    return result;
+
+  uint8_t* data = reinterpret_cast<uint8_t*>(char_data);
+
+  // Perform serveral passed over the binary in order to print out different
+  // types of information.
+  s_objdump_options.filename = filename;
+  printf("\n");
+
+  // Pass 0: Prepass
+  s_objdump_options.mode = ObjdumpMode::Prepass;
+  result = read_binary_objdump(data, size, &s_objdump_options);
+  if (WABT_FAILED(result))
+    goto done;
+  s_objdump_options.log_stream = nullptr;
+
+  // Pass 1: Print the section headers
+  if (s_objdump_options.headers) {
+    s_objdump_options.mode = ObjdumpMode::Headers;
+    result = read_binary_objdump(data, size, &s_objdump_options);
+    if (WABT_FAILED(result))
+      goto done;
+  }
+
+  // Pass 2: Print extra information based on section type
+  if (s_objdump_options.details) {
+    s_objdump_options.mode = ObjdumpMode::Details;
+    result = read_binary_objdump(data, size, &s_objdump_options);
+    if (WABT_FAILED(result))
+      goto done;
+  }
+
+  // Pass 3: Disassemble code section
+  if (s_objdump_options.disassemble) {
+    s_objdump_options.mode = ObjdumpMode::Disassemble;
+    result = read_binary_objdump(data, size, &s_objdump_options);
+    if (WABT_FAILED(result))
+      goto done;
+  }
+
+  // Pass 4: Dump to raw contents of the sections
+  if (s_objdump_options.raw) {
+    s_objdump_options.mode = ObjdumpMode::RawData;
+    result = read_binary_objdump(data, size, &s_objdump_options);
+  }
+
+done:
+  delete[] data;
+  return result;
 }
 
 int main(int argc, char** argv) {
@@ -150,59 +208,11 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  char* char_data;
-  size_t size;
-  Result result = read_file(s_objdump_options.infile, &char_data, &size);
-  if (WABT_FAILED(result))
-    return result != Result::Ok;
-
-  uint8_t* data = reinterpret_cast<uint8_t*>(char_data);
-
-  // Perform serveral passed over the binary in order to print out different
-  // types of information.
-  if (!s_objdump_options.headers && !s_objdump_options.details &&
-      !s_objdump_options.disassemble && !s_objdump_options.raw) {
-    printf("At least one of the following switches must be given:\n");
-    printf(" -d/--disassemble\n");
-    printf(" -h/--headers\n");
-    printf(" -x/--details\n");
-    printf(" -s/--full-contents\n");
-    return 1;
+  for (const char* filename: s_infiles) {
+    if (WABT_FAILED(dump_file(filename))) {
+      return 1;
+    }
   }
 
-  s_objdump_options.mode = ObjdumpMode::Prepass;
-  result = read_binary_objdump(data, size, &s_objdump_options);
-  if (WABT_FAILED(result))
-    goto done;
-  s_objdump_options.log_stream = nullptr;
-
-  // Pass 1: Print the section headers
-  if (s_objdump_options.headers) {
-    s_objdump_options.mode = ObjdumpMode::Headers;
-    result = read_binary_objdump(data, size, &s_objdump_options);
-    if (WABT_FAILED(result))
-      goto done;
-  }
-  // Pass 2: Print extra information based on section type
-  if (s_objdump_options.details) {
-    s_objdump_options.mode = ObjdumpMode::Details;
-    result = read_binary_objdump(data, size, &s_objdump_options);
-    if (WABT_FAILED(result))
-      goto done;
-  }
-  if (s_objdump_options.disassemble) {
-    s_objdump_options.mode = ObjdumpMode::Disassemble;
-    result = read_binary_objdump(data, size, &s_objdump_options);
-    if (WABT_FAILED(result))
-      goto done;
-  }
-  // Pass 3: Dump to raw contents of the sections
-  if (s_objdump_options.raw) {
-    s_objdump_options.mode = ObjdumpMode::RawData;
-    result = read_binary_objdump(data, size, &s_objdump_options);
-  }
-
-done:
-  delete[] data;
-  return result != Result::Ok;
+  return 0;
 }
