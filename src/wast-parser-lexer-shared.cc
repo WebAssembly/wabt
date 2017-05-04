@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "ast-parser-lexer-shared.h"
+#include "wast-parser-lexer-shared.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -24,23 +24,23 @@
 
 namespace wabt {
 
-void ast_parser_error(Location* loc,
-                      AstLexer* lexer,
-                      AstParser* parser,
-                      const char* format,
-                      ...) {
+void wast_parser_error(Location* loc,
+                       WastLexer* lexer,
+                       WastParser* parser,
+                       const char* format,
+                       ...) {
   parser->errors++;
   va_list args;
   va_start(args, format);
-  ast_format_error(parser->error_handler, loc, lexer, format, args);
+  wast_format_error(parser->error_handler, loc, lexer, format, args);
   va_end(args);
 }
 
-void ast_format_error(SourceErrorHandler* error_handler,
-                      const struct Location* loc,
-                      AstLexer* lexer,
-                      const char* format,
-                      va_list args) {
+void wast_format_error(SourceErrorHandler* error_handler,
+                       const struct Location* loc,
+                       WastLexer* lexer,
+                       const char* format,
+                       va_list args) {
   va_list args_copy;
   va_copy(args_copy, args);
   char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
@@ -57,7 +57,7 @@ void ast_format_error(SourceErrorHandler* error_handler,
   size_t source_line_max_length = error_handler->source_line_max_length();
   if (loc && lexer) {
     source_line = static_cast<char*>(alloca(source_line_max_length + 1));
-    Result result = ast_lexer_get_source_line(
+    Result result = wast_lexer_get_source_line(
         lexer, loc, source_line_max_length, source_line, &source_line_length,
         &source_line_column_offset);
     if (WABT_FAILED(result)) {

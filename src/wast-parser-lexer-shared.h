@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-#ifndef WABT_AST_PARSER_LEXER_SHARED_H_
-#define WABT_AST_PARSER_LEXER_SHARED_H_
+#ifndef WABT_WAST_PARSER_LEXER_SHARED_H_
+#define WABT_WAST_PARSER_LEXER_SHARED_H_
 
 #include <stdarg.h>
 
 #include <memory>
 
-#include "ast.h"
-#include "ast-lexer.h"
 #include "common.h"
+#include "ir.h"
 #include "source-error-handler.h"
+#include "wast-lexer.h"
 
-#define WABT_AST_PARSER_STYPE Token
-#define WABT_AST_PARSER_LTYPE Location
-#define YYSTYPE WABT_AST_PARSER_STYPE
-#define YYLTYPE WABT_AST_PARSER_LTYPE
+#define WABT_WAST_PARSER_STYPE Token
+#define WABT_WAST_PARSER_LTYPE Location
+#define YYSTYPE WABT_WAST_PARSER_STYPE
+#define YYLTYPE WABT_WAST_PARSER_LTYPE
 
 #define WABT_INVALID_LINE_OFFSET (static_cast<size_t>(~0))
 
@@ -159,7 +159,7 @@ union Token {
   VarVector* vars;
 };
 
-struct AstParser {
+struct WastParser {
   Script* script;
   SourceErrorHandler* error_handler;
   int errors;
@@ -169,26 +169,29 @@ struct AstParser {
   YYLTYPE* yylsa;
 };
 
-int ast_lexer_lex(union Token*, struct Location*, AstLexer*, struct AstParser*);
-Result ast_lexer_get_source_line(AstLexer*,
-                                 const struct Location*,
-                                 size_t line_max_length,
-                                 char* line,
-                                 size_t* out_line_length,
-                                 int* out_column_offset);
-void WABT_PRINTF_FORMAT(4, 5) ast_parser_error(struct Location*,
-                                               AstLexer*,
-                                               struct AstParser*,
-                                               const char*,
-                                               ...);
-void ast_format_error(SourceErrorHandler*,
-                      const struct Location*,
-                      AstLexer*,
-                      const char* format,
-                      va_list);
+int wast_lexer_lex(union Token*,
+                   struct Location*,
+                   WastLexer*,
+                   struct WastParser*);
+Result wast_lexer_get_source_line(WastLexer*,
+                                  const struct Location*,
+                                  size_t line_max_length,
+                                  char* line,
+                                  size_t* out_line_length,
+                                  int* out_column_offset);
+void WABT_PRINTF_FORMAT(4, 5) wast_parser_error(struct Location*,
+                                                WastLexer*,
+                                                struct WastParser*,
+                                                const char*,
+                                                ...);
+void wast_format_error(SourceErrorHandler*,
+                       const struct Location*,
+                       WastLexer*,
+                       const char* format,
+                       va_list);
 void destroy_func_fields(FuncField*);
 void destroy_text_list(TextList*);
 
 }  // namespace wabt
 
-#endif /* WABT_AST_PARSER_LEXER_SHARED_H_ */
+#endif /* WABT_WAST_PARSER_LEXER_SHARED_H_ */

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-#ifndef WABT_AST_PARSER_H_
-#define WABT_AST_PARSER_H_
+#ifndef WABT_WAT_WRITER_H_
+#define WABT_WAT_WRITER_H_
 
-#include "ast-lexer.h"
+#include "common.h"
 
 namespace wabt {
 
-struct Script;
-class SourceErrorHandler;
+struct Module;
+class Writer;
 
-Result parse_ast(AstLexer* lexer, Script** out_script, SourceErrorHandler*);
+Result write_wat(Writer*, const Module*);
 
 }  // namespace wabt
 
-#endif /* WABT_AST_PARSER_H_ */
+#endif /* WABT_WAT_WRITER_H_ */

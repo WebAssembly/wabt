@@ -17,7 +17,7 @@
 #ifndef WABT_VALIDATOR_H_
 #define WABT_VALIDATOR_H_
 
-#include "ast-lexer.h"
+#include "wast-lexer.h"
 
 namespace wabt {
 
@@ -25,9 +25,9 @@ struct Module;
 struct Script;
 class SourceErrorHandler;
 
-/* perform all checks on the AST; the module is valid if and only if this
+/* perform all checks on the script; the module is valid if and only if this
  * function succeeds. */
-Result validate_script(AstLexer*, const struct Script*, SourceErrorHandler*);
+Result validate_script(WastLexer*, const struct Script*, SourceErrorHandler*);
 
 }  // namespace wabt
 

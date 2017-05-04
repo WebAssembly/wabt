@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "ast.h"
+#include "ir.h"
 
 #include <assert.h>
 #include <stddef.h>

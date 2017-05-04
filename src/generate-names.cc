@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "ast.h"
+#include "ir.h"
 
 #define CHECK_RESULT(expr) \
   do {                     \

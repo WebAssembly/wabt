@@ -21,15 +21,15 @@
 #include <stdlib.h>
 
 #include "apply-names.h"
-#include "ast.h"
-#include "ast-parser.h"
-#include "ast-writer.h"
 #include "common.h"
 #include "config.h"
 #include "generate-names.h"
+#include "ir.h"
 #include "option-parser.h"
 #include "source-error-handler.h"
 #include "stream.h"
+#include "wast-parser.h"
+#include "wat-writer.h"
 #include "writer.h"
 
 #define PROGRAM_NAME "wast-desugar"
@@ -128,13 +128,13 @@ int main(int argc, char** argv) {
   init_stdio();
   parse_options(argc, argv);
 
-  AstLexer* lexer = new_ast_file_lexer(s_infile);
+  WastLexer* lexer = new_wast_file_lexer(s_infile);
   if (!lexer)
     WABT_FATAL("unable to read %s\n", s_infile);
 
   SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_ast(lexer, &script, &error_handler);
+  Result result = parse_wast(lexer, &script, &error_handler);
 
   if (WABT_SUCCEEDED(result)) {
     Module* module = get_first_module(script);
@@ -149,11 +149,11 @@ int main(int argc, char** argv) {
 
     if (WABT_SUCCEEDED(result)) {
       FileWriter writer(s_outfile ? FileWriter(s_outfile) : FileWriter(stdout));
-      result = write_ast(&writer, module);
+      result = write_wat(&writer, module);
     }
   }
 
-  destroy_ast_lexer(lexer);
+  destroy_wast_lexer(lexer);
   delete script;
   return result != Result::Ok;
 }

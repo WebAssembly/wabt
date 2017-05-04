@@ -26,8 +26,8 @@
 
 #include <vector>
 
-#include "ast.h"
 #include "binary.h"
+#include "ir.h"
 #include "stream.h"
 #include "writer.h"
 

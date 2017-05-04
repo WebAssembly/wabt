@@ -19,10 +19,10 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#include "ast.h"
 #include "binary.h"
 #include "binary-writer.h"
 #include "config.h"
+#include "ir.h"
 #include "stream.h"
 #include "writer.h"
 

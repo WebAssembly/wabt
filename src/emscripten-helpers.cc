@@ -21,18 +21,18 @@
 
 #include <memory>
 
-#include "ast.h"
-#include "ast-lexer.h"
-#include "ast-parser.h"
 #include "binary-writer.h"
 #include "common.h"
+#include "ir.h"
 #include "resolve-names.h"
 #include "source-error-handler.h"
 #include "stream.h"
 #include "validator.h"
+#include "wast-lexer.h"
+#include "wast-parser.h"
 #include "writer.h"
 
-struct WabtParseAstResult {
+struct WabtParseWastResult {
   wabt::Result result;
   std::unique_ptr<wabt::Script> script;
 };
@@ -45,32 +45,31 @@ struct WabtWriteBinaryModuleResult {
 
 extern "C" {
 
-wabt::AstLexer* wabt_new_ast_buffer_lexer(const char* filename,
-                                          const void* data,
-                                          size_t size) {
-  return wabt::new_ast_buffer_lexer(filename, data, size);
+wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
+                                            const void* data,
+                                            size_t size) {
+  return wabt::new_wast_buffer_lexer(filename, data, size);
 }
 
-WabtParseAstResult* wabt_parse_ast(
-    wabt::AstLexer* lexer,
+WabtParseWastResult* wabt_parse_wast(
+    wabt::WastLexer* lexer,
     wabt::SourceErrorHandlerBuffer* error_handler) {
-  WabtParseAstResult* result = new WabtParseAstResult();
+  WabtParseWastResult* result = new WabtParseWastResult();
   wabt::Script* script = nullptr;
-  result->result = wabt::parse_ast(lexer, &script, error_handler);
+  result->result = wabt::parse_wast(lexer, &script, error_handler);
   result->script.reset(script);
   return result;
-
 }
 
 wabt::Result wabt_resolve_names_script(
-    wabt::AstLexer* lexer,
+    wabt::WastLexer* lexer,
     wabt::Script* script,
     wabt::SourceErrorHandlerBuffer* error_handler) {
   return resolve_names_script(lexer, script, error_handler);
 }
 
 wabt::Result wabt_validate_script(
-    wabt::AstLexer* lexer,
+    wabt::WastLexer* lexer,
     wabt::Script* script,
     wabt::SourceErrorHandlerBuffer* error_handler) {
   return validate_script(lexer, script, error_handler);
@@ -103,8 +102,8 @@ void wabt_destroy_script(wabt::Script* script) {
   delete script;
 }
 
-void wabt_destroy_ast_lexer(wabt::AstLexer* lexer) {
-  destroy_ast_lexer(lexer);
+void wabt_destroy_wast_lexer(wabt::WastLexer* lexer) {
+  destroy_wast_lexer(lexer);
 }
 
 // SourceErrorHandlerBuffer
@@ -127,16 +126,17 @@ void wabt_destroy_source_error_handler_buffer(
   delete error_handler;
 }
 
-// WabtParseAstResult
-wabt::Result wabt_parse_ast_result_get_result(WabtParseAstResult* result) {
+// WabtParseWastResult
+wabt::Result wabt_parse_wast_result_get_result(WabtParseWastResult* result) {
   return result->result;
 }
 
-wabt::Script* wabt_parse_ast_result_release_script(WabtParseAstResult* result) {
+wabt::Script* wabt_parse_wast_result_release_script(
+    WabtParseWastResult* result) {
   return result->script.release();
 }
 
-void wabt_destroy_parse_ast_result(WabtParseAstResult* result) {
+void wabt_destroy_parse_wast_result(WabtParseWastResult* result) {
   delete result;
 }
 

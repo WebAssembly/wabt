@@ -21,16 +21,16 @@
 #include <stdlib.h>
 #include "config.h"
 
-#include "ast.h"
-#include "ast-parser.h"
 #include "binary-writer.h"
 #include "binary-writer-spec.h"
 #include "common.h"
+#include "ir.h"
 #include "option-parser.h"
 #include "resolve-names.h"
 #include "source-error-handler.h"
 #include "stream.h"
 #include "validator.h"
+#include "wast-parser.h"
 #include "writer.h"
 
 #define PROGRAM_NAME "wast2wasm"
@@ -197,13 +197,13 @@ int main(int argc, char** argv) {
 
   parse_options(argc, argv);
 
-  AstLexer* lexer = new_ast_file_lexer(s_infile);
+  WastLexer* lexer = new_wast_file_lexer(s_infile);
   if (!lexer)
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
   SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_ast(lexer, &script, &error_handler);
+  Result result = parse_wast(lexer, &script, &error_handler);
 
   if (WABT_SUCCEEDED(result)) {
     result = resolve_names_script(lexer, script, &error_handler);
@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  destroy_ast_lexer(lexer);
+  destroy_wast_lexer(lexer);
   delete script;
   return result != Result::Ok;
 }

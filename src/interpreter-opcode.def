@@ -25,7 +25,7 @@
  *    m: memory size of the operation, if any
  * code: opcode
  * Name: used to generate the opcode enum
- * text: a string of the opcode name in the AST format
+ * text: a string of the opcode name in the text format
  *
  *          tr  t1    t2   m  code  Name text
  * ============================================================  */
