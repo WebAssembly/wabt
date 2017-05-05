@@ -246,7 +246,6 @@ int wast_lexer_lex(WABT_WAST_PARSER_STYPE* lval,
       <i> "nop"                 { RETURN(NOP); }
       <i> "block"               { RETURN(BLOCK); }
       <i> "if"                  { RETURN(IF); }
-      <i> "if_else"             { RETURN(IF); }
       <i> "then"                { RETURN(THEN); }
       <i> "else"                { RETURN(ELSE); }
       <i> "loop"                { RETURN(LOOP); }
@@ -254,7 +253,6 @@ int wast_lexer_lex(WABT_WAST_PARSER_STYPE* lval,
       <i> "br_if"               { RETURN(BR_IF); }
       <i> "br_table"            { RETURN(BR_TABLE); }
       <i> "call"                { RETURN(CALL); }
-      <i> "call_import"         { RETURN(CALL_IMPORT); }
       <i> "call_indirect"       { RETURN(CALL_INDIRECT); }
       <i> "drop"                { RETURN(DROP); }
       <i> "end"                 { RETURN(END); }
@@ -448,8 +446,6 @@ int wast_lexer_lex(WABT_WAST_PARSER_STYPE* lval,
                                   RETURN(ASSERT_RETURN_ARITHMETIC_NAN); }
       <i> "assert_trap"         { RETURN(ASSERT_TRAP); }
       <i> "assert_exhaustion"   { RETURN(ASSERT_EXHAUSTION); }
-      <i> "input"               { RETURN(INPUT); }
-      <i> "output"              { RETURN(OUTPUT); }
       <i> name                  { TEXT; RETURN(VAR); }
 
       <i> ";;" => LINE_COMMENT  { continue; }
