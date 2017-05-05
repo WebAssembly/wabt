@@ -132,37 +132,41 @@ static void parse_options(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-  Result result;
+  try {
+    Result result;
 
-  init_stdio();
-  parse_options(argc, argv);
+    init_stdio();
+    parse_options(argc, argv);
 
-  char* data;
-  size_t size;
-  result = read_file(s_infile, &data, &size);
-  if (WABT_SUCCEEDED(result)) {
-    BinaryErrorHandlerFile error_handler;
-    Module module;
-    result = read_binary_ir(data, size, &s_read_binary_options, &error_handler,
-                            &module);
+    char* data;
+    size_t size;
+    result = read_file(s_infile, &data, &size);
     if (WABT_SUCCEEDED(result)) {
-      if (s_generate_names)
-        result = generate_names(&module);
-
+      BinaryErrorHandlerFile error_handler;
+      Module module;
+      result = read_binary_ir(data, size, &s_read_binary_options, &error_handler,
+                               &module);
       if (WABT_SUCCEEDED(result)) {
-        /* TODO(binji): This shouldn't fail; if a name can't be applied
-         * (because the index is invalid, say) it should just be skipped. */
-        Result dummy_result = apply_names(&module);
-        WABT_USE(dummy_result);
-      }
+        if (s_generate_names)
+          result = generate_names(&module);
 
-      if (WABT_SUCCEEDED(result)) {
-        FileWriter writer(s_outfile ? FileWriter(s_outfile)
-                                    : FileWriter(stdout));
-        result = write_wat(&writer, &module);
+        if (WABT_SUCCEEDED(result)) {
+          /* TODO(binji): This shouldn't fail; if a name can't be applied
+           * (because the index is invalid, say) it should just be skipped. */
+          Result dummy_result = apply_names(&module);
+          WABT_USE(dummy_result);
+        }
+
+        if (WABT_SUCCEEDED(result)) {
+          FileWriter writer(s_outfile ? FileWriter(s_outfile)
+                                      : FileWriter(stdout));
+          result = write_wat(&writer, &module);
+        }
       }
+      delete[] data;
     }
-    delete[] data;
+    return result != Result::Ok;
+  } catch (std::bad_alloc&) {
+    WABT_FATAL("Memory allocation failure.\n");
   }
-  return result != Result::Ok;
 }

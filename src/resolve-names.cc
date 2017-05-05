@@ -150,6 +150,9 @@ static void resolve_memory_var(Context* ctx, Var* var) {
 
 static void resolve_local_var(Context* ctx, Var* var) {
   if (var->type == VarType::Name) {
+    if (!ctx->current_func)
+      return;
+
     int index = get_local_index_by_var(ctx->current_func, var);
     if (index == -1) {
       print_error(ctx, &var->loc,

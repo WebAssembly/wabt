@@ -376,7 +376,7 @@ static void parse_float_infinity(const char* s,
   } else if (*s == '+') {
     s++;
   }
-  assert(string_starts_with(s, end, "infinity"));
+  assert(string_starts_with(s, end, "inf"));  // Could be inf or infinity.
   *out_bits = make_float(is_neg, F32_MAX_EXP, 0);
 }
 
@@ -716,7 +716,7 @@ static void parse_double_infinity(const char* s,
   } else if (*s == '+') {
     s++;
   }
-  assert(string_starts_with(s, end, "infinity"));
+  assert(string_starts_with(s, end, "inf"));  // Could be inf or infinity.
   *out_bits = make_double(is_neg, F64_MAX_EXP, 0);
 }
 

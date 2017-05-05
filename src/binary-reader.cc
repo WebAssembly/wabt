@@ -951,6 +951,8 @@ static void read_names_section(Context* ctx, uint32_t section_size) {
         for (uint32_t j = 0; j < num_funcs; ++j) {
           uint32_t function_index;
           in_u32_leb128(ctx, &function_index, "function index");
+          RAISE_ERROR_UNLESS(function_index < num_total_funcs(ctx),
+                             "invalid function index: %u", function_index);
           uint32_t num_locals;
           in_u32_leb128(ctx, &num_locals, "local count");
           CALLBACK(OnLocalNameLocalCount, function_index, num_locals);
