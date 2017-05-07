@@ -24,7 +24,7 @@ target; instead they aim for full fidelity and compliance with the spec (e.g.
 
 Clone as normal, but don't forget to get the submodules as well:
 
-```
+```console
 $ git clone --recursive https://github.com/WebAssembly/wabt
 $ cd wabt
 ```
@@ -38,7 +38,7 @@ CMake for you, and put the result in `out/clang/Debug/` by default:
 
 > Note: If you are on OSX, you will need to use CMake version 3.2 or higher
 
-```
+```console
 $ make
 ```
 
@@ -57,7 +57,7 @@ configuration.
 
 They are combined with dashes, for example:
 
-```
+```console
 $ make clang-debug
 $ make gcc-i686-release
 $ make clang-debug-lsan
@@ -66,7 +66,7 @@ $ make gcc-debug-no-re2c-bison
 
 You can also run CMake yourself, the normal way:
 
-```
+```console
 $ mkdir build
 $ cd build
 $ cmake ..
@@ -88,7 +88,7 @@ prebuilt source files instead.
 
 Some examples:
 
-```
+```sh
 # parse and typecheck test.wast
 $ out/wast2wasm test.wast
 
@@ -106,7 +106,7 @@ $ out/wast2wasm spec-test.wast --spec -o spec-test.json
 
 You can use `-h` to get additional help:
 
-```
+```console
 $ out/wast2wasm -h
 ```
 
@@ -116,7 +116,7 @@ Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/ab4290e57d39ef0
 
 Some examples:
 
-```
+```sh
 # parse binary file test.wasm and write s-expression file test.wast
 $ out/wasm2wast test.wasm -o test.wast
 
@@ -126,7 +126,7 @@ $ out/wasm2wast test.wasm -o test.wast
 
 You can use `-h` to get additional help:
 
-```
+```console
 $ out/wasm2wast -h
 ```
 
@@ -134,7 +134,7 @@ $ out/wasm2wast -h
 
 Some examples:
 
-```
+```sh
 # parse binary file test.wasm, and type-check it
 $ out/wasm-interp test.wasm
 
@@ -155,14 +155,14 @@ $ out/wasm-interp test.wasm -V 100 --run-all-exports
 As a convenience, you can use `test/run-interp.py` to convert a .wast file to
 binary first, then run it in the interpreter:
 
-```
+```console
 $ test/run-interp.py --spec spec-test.wast
 20/20 tests.passed.
 ```
 
 You can use `-h` to get additional help:
 
-```
+```console
 $ out/wasm-interp -h
 $ out/run-interp.py -h
 ```
@@ -171,13 +171,13 @@ $ out/run-interp.py -h
 
 To run all the tests with default configuration:
 
-```
+```console
 $ make test
 ```
 
 Every make target has a matching `test-*` target.
 
-```
+```console
 $ make gcc-debug-asan
 $ make test-gcc-debug-asan
 $ make clang-release
@@ -187,13 +187,13 @@ $ make test-clang-release
 
 You can also run the Python test runner script directly:
 
-```
+```console
 $ test/run-tests.py
 ```
 
 To run a subset of the tests, use a glob-like syntax:
 
-```
+```console
 $ test/run-tests.py const -v
 + dump/const.txt (0.002s)
 + parse/assert/bad-assertreturn-non-const.txt (0.003s)
@@ -218,7 +218,7 @@ $ test/run-tests.py expr*const*i32
 
 When tests are broken, they will give you the expected stdout/stderr as a diff:
 
-```
+```console
 $ <whoops, turned addition into subtraction in the interpreter>
 $ test/run-tests.py interp/binary
 - interp/binary.txt
@@ -250,7 +250,7 @@ only one thing. Also make sure that tests that are expected to fail start with
 
 The test format is straightforward:
 
-```
+```wast
 ;;; KEY1: VALUE1A VALUE1B...
 ;;; KEY2: VALUE2A VALUE2B...
 (input (to)
@@ -290,7 +290,7 @@ When you first write a test, it's easiest if you omit the expected stdout and
 stderr. You can have the test harness fill it in for you automatically. First
 let's write our test:
 
-```
+```sh
 $ cat > test/my-awesome-test.txt << HERE
 ;;; TOOL: run-interp-spec
 (module
@@ -320,7 +320,7 @@ If we run it, it will fail:
 We can rebase it automatically with the `-r` flag. Running the test again shows
 that the expected stdout has been added:
 
-```
+```console
 $ test/run-tests.py my-awesome-test -r
 [+1|-0|%100] (0.03s)
 $ test/run-tests.py my-awesome-test
@@ -336,7 +336,7 @@ $ tail -n 3 test/my-awesome-test.txt
 To build with the [LLVM sanitizers](https://github.com/google/sanitizers),
 append the sanitizer name to the target:
 
-```
+```console
 $ make clang-debug-asan
 $ make clang-debug-msan
 $ make clang-debug-lsan
@@ -353,13 +353,13 @@ finds undefined behavior (surprise!).
 
 Typically, you'll just want to run all the tests for a given sanitizer:
 
-```
+```console
 $ make test-asan
 ```
 
 You can also run the tests for a release build:
 
-```
+```console
 $ make test-clang-release-asan
 ...
 ```
@@ -367,13 +367,13 @@ $ make test-clang-release-asan
 The Travis bots run all of these tests (and more). Before you land a change,
 you should run them too. One easy way is to use the `test-everything` target:
 
-```
+```console
 $ make test-everything
 ```
 
 To run everything the Travis bots do, you can use the following scripts:
 
-```
+```console
 $ CC=gcc scripts/travis-build.sh
 $ CC=gcc scripts/travis-test.sh
 $ CC=clang scripts/travis-build.sh
