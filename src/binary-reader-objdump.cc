@@ -447,6 +447,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                           uint32_t item_index,
                           StringSlice name);
 
+  virtual Result OnStartFunction(uint32_t func_index);
+
   virtual Result OnFunctionBodyCount(uint32_t count);
 
   virtual Result OnElemSegmentCount(uint32_t count);
@@ -614,6 +616,15 @@ Result BinaryReaderObjdump::OnFunction(uint32_t index, uint32_t sig_index) {
 
 Result BinaryReaderObjdump::OnFunctionBodyCount(uint32_t count) {
   return OnCount(count);
+}
+
+Result BinaryReaderObjdump::OnStartFunction(uint32_t func_index) {
+  if (options->mode == ObjdumpMode::Headers) {
+    printf("start: %d\n", func_index);
+  } else {
+    PrintDetails(" - start function: %d\n", func_index);
+  }
+  return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnImportCount(uint32_t count) {
