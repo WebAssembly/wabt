@@ -78,6 +78,7 @@ configure_file(
 )
 
 include_directories(src ${WABT_BINARY_DIR})
+include_directories(third_party/jsoncpp)
 
 if (COMPILER_IS_MSVC)
   # disable warning C4018: signed/unsigned mismatch
@@ -244,8 +245,17 @@ add_library(libwabt STATIC
   src/option-parser.cc
   src/stream.cc
   src/writer.cc
+  src/source-maps.cc
 )
 set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
+
+add_library(libjsoncpp STATIC
+  third_party/jsoncpp/jsoncpp.cpp
+)
+set_target_properties(libjsoncpp PROPERTIES OUTPUT_NAME jsoncpp)
+if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
+  target_compile_options(libjsoncpp PRIVATE "-Wno-old-style-cast")
+endif ()
 
 if (NOT EMSCRIPTEN)
   if (CODE_COVERAGE)
@@ -339,6 +349,7 @@ if (NOT EMSCRIPTEN)
     # wabt-unittests
     set(UNITTESTS_SRCS
       src/test-string-view.cc
+      src/test-source-maps.cc
       third_party/gtest/googletest/src/gtest_main.cc
     )
     wabt_executable(wabt-unittests ${UNITTESTS_SRCS})
