@@ -33,10 +33,10 @@ struct SourceMap {
     size_t source;  // Index into sources list
     // Field 3
     uint32_t source_line;        // Start line in source. Remove?
-    uint32_t source_line_delta;  // Delta from previous source line
+    int32_t source_line_delta;     // Delta from previous source line
     // Field 4
     uint32_t source_col;        // Start column in source. Remove?
-    uint32_t source_col_delta;  // Delta from previous source column
+    int32_t source_col_delta;     // Delta from previous source column
     bool has_name; // If true, field 5 will be valid.
     // Field 5
     size_t name;  // Index into names list
@@ -81,7 +81,7 @@ class SourceMapGenerator {
     return map;
   };
   // AddMapping(SourceLocation original, token, str source)
- private:
+ public:
   struct SourceMapping {
     SourceLocation original;
     SourceLocation generated;  // Use binary location?
@@ -89,7 +89,9 @@ class SourceMapGenerator {
     // We don't use the 'name' field currently.
     bool operator<(const SourceMapping& other) const;
     bool operator==(const SourceMapping& other) const;
+    void Dump() const;
   };
+  friend class SourceMappingTest;
   void CompressMappings();
 
   std::string SerializeMappings();

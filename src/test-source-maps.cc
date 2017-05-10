@@ -31,6 +31,33 @@
     EXPECT_EQ(lhs.name, rhs.name);                  \
   } while (0)
 
+class TestSourceMapGenerator : public SourceMapGenerator {
+
+};
+class SourceMappingTest : public ::testing::Test {
+  // Empty, just for friendliness to get access to SourceMapping
+};
+TEST_F(SourceMappingTest, comparisons) {
+  SourceMapGenerator::SourceMapping a = {{1, 1}, {1, 1}, 0};
+  SourceMapGenerator::SourceMapping b = {{1, 1}, {1, 1}, 0};
+  EXPECT_TRUE(a == b);
+  EXPECT_FALSE(a < b);
+  b.Dump();
+  b = {{1, 1}, {2, 1}, 0};
+  b.Dump();
+  EXPECT_FALSE(a == b);
+  EXPECT_TRUE(a < b);
+  b = {{1, 1}, {1, 2}, 0};
+  EXPECT_FALSE(a == b);
+  EXPECT_TRUE(a < b);
+  b = {{1, 0}, {1, 2}, 0};
+  EXPECT_FALSE(a == b);
+  EXPECT_TRUE(a < b);
+  b = {{0, 0}, {1, 2}, 0};
+  EXPECT_FALSE(a == b);
+  EXPECT_TRUE(a < b);
+}
+
 TEST(source_maps, constructor) { SourceMapGenerator("file", "source-root"); }
 
 TEST(source_maps, sources) {
@@ -66,7 +93,7 @@ TEST(source_maps, zero_mappings) {
   EXPECT_SEGMENT_EQ(s, seg);
 }
 
-TEST(source_maps, initial_mappings) {
+TEST(source_maps, incremental_mappings) {
   // Check cases where there is no delta; i.e. the first instances of fields.
   SourceMapGenerator smg("", "");
   smg.AddMapping({4, 1}, {3, 7}, "asdf");
@@ -113,13 +140,63 @@ TEST(source_maps, initial_mappings) {
   s = {9, 1, true, 0, 4, 0, 2, 1, false, 0};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
-  // New generated column, same line, new source line
+  // New generated column, same line, new source line, negative source col delta
   smg.AddMapping({5, 0}, {3, 10}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(4UL, map.segment_groups.back().segments.size());
-  s = {10, 1, true, 0, 5, 1, 0, 0, false, 0};
+  s = {10, 1, true, 0, 5, 1, 0, -2, false, 0};
+  EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
+
+  // Same generated line and col, different source.
+  // The JS sourcemapper allows and encodes this
+  // (I guess it overrides the previous mapping?)
+  smg.AddMapping({6, 10}, {3, 10}, "asdf");
+  smg.GetMap();
+  ASSERT_TRUE(map.Validate(true));
+  ASSERT_EQ(4UL, map.segment_groups.size());
+  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  ASSERT_EQ(5UL, map.segment_groups.back().segments.size());
+  s = {10, 0, true, 0, 6, 1, 10, 10, false, 0};
+  EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
+
+  // New generated col, negative source col delta
+  smg.AddMapping({6, 9}, {3, 11}, "asdf");
+  smg.GetMap();
+  smg.DumpMappings();
+  smg.DumpMappings();
+  ASSERT_TRUE(map.Validate(true));
+  ASSERT_EQ(4UL, map.segment_groups.size());
+  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  ASSERT_EQ(6UL, map.segment_groups.back().segments.size());
+  s = {11, 1, true, 0, 6, 0, 9, -1, false, 0};
+  EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
+
+  // New generated line (new segment, leave 1 hole)
+  smg.AddMapping({7, 0}, {5, 1}, "asdf");
+  smg.GetMap();
+  ASSERT_TRUE(map.Validate(true));
+  ASSERT_EQ(6UL, map.segment_groups.size());
+  // Empty segment at 4
+  EXPECT_EQ(4U, map.segment_groups[4].generated_line);
+  ASSERT_EQ(0UL, map.segment_groups[4].segments.size());
+  // Populated segment at 5
+  EXPECT_EQ(5U, map.segment_groups.back().generated_line);
+  ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
+  s = {1, 1, true, 0, 7, 1, 0, -9, false, 0};
+  EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
+
+  // New generated line inserted into the hole
+  smg.AddMapping({7, 0}, {4, 1}, "asdf");
+  smg.DumpMappings();
+  smg.GetMap();
+  smg.DumpMappings();
+  ASSERT_TRUE(map.Validate(true));
+  ASSERT_EQ(6UL, map.segment_groups.size());
+  EXPECT_EQ(4U, map.segment_groups[4].generated_line);
+  ASSERT_EQ(1UL, map.segment_groups[4].segments.size());
+  s = {1, 0, true, 0, 7, 0, 0, 0, false, 0};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 }

@@ -41,12 +41,12 @@ bool SourceMap::Validate(bool fatal) const {
       if (!seg.has_source) return true;
       if (seg.source >= sources.size()) INVALID();
       if (last_seg) {
-        if (seg.source_line_delta == 0) INVALID();
+        if (seg.source_line_delta == 0 &&
+            seg.source_col_delta == 0) INVALID();
         // FIXME: This has a limitation that if this seg has a source, the last one must.
         if (last_seg->source_line + seg.source_line_delta != seg.source_line) {
           INVALID();
         }
-        if (seg.source_col_delta == 0) INVALID();
         if (last_seg->source_col + seg.source_col_delta != seg.source_col) {
           INVALID();
         }
@@ -66,11 +66,11 @@ static int32_t cmpLocation(const SourceMapGenerator::SourceLocation& a,
 
 bool SourceMapGenerator::SourceMapping::operator<(
     const SourceMapGenerator::SourceMapping& rhs) const {
-  return cmpLocation(generated, rhs.generated) ||
-                 cmpLocation(original, rhs.original) || source_idx != INDEX_NONE
-             ? (rhs.source_idx != INDEX_NONE ? source_idx < rhs.source_idx
-                                             : false)
-             : rhs.source_idx == INDEX_NONE;
+  if (cmpLocation(generated, rhs.generated) < 0) return true;
+  if (cmpLocation(original, rhs.original) < 0) return true;
+  if (source_idx == INDEX_NONE) return rhs.source_idx != INDEX_NONE;
+  if (rhs.source_idx == INDEX_NONE) return false;
+  return source_idx < rhs.source_idx;
 }
 
 bool SourceMapGenerator::SourceMapping::operator==(
@@ -78,6 +78,12 @@ bool SourceMapGenerator::SourceMapping::operator==(
   return !cmpLocation(generated, rhs.generated) &&
       !cmpLocation(original, rhs.original) &&
       source_idx == rhs.source_idx;
+}
+
+void SourceMapGenerator::SourceMapping::Dump() const {
+  std::cout << "Mapping " << original.line << ":" << original.col
+            << " -> " << generated.line << ":" << generated.col << ":"
+            << source_idx << "\n";
 }
 
 void SourceMapGenerator::AddMapping(SourceLocation original,
@@ -154,7 +160,8 @@ std::string SourceMapGenerator::SerializeMappings() {
 }
 
 void SourceMapGenerator::DumpRawMappings() {
-  CompressMappings();  // Just to sort them
+  //CompressMappings();  // Just to sort them
+  std::sort(mappings.begin(), mappings.end());
   std::cout << "Map: " << map.file << " " << map.source_root << "\n"
             << "Sources [";
   for (size_t i = 0; i < map.sources.size(); ++i) {
@@ -162,8 +169,6 @@ void SourceMapGenerator::DumpRawMappings() {
   }
   std::cout << "]\n";
   for (const auto& m : mappings) {
-    std::cout << "Mapping " << m.original.line << ":" << m.original.col
-              << " -> " << m.generated.line << ":" << m.generated.col << ":"
-              << m.source_idx << "\n";
+    m.Dump();
   }
 }
