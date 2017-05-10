@@ -192,53 +192,55 @@ static void write_buffer_to_file(const char* filename,
   }
 }
 
-int main(int argc, char** argv) {
-  try {
-    init_stdio();
+int ProgramMain(int argc, char** argv) {
+  init_stdio();
 
-    parse_options(argc, argv);
+  parse_options(argc, argv);
 
-    WastLexer* lexer = new_wast_file_lexer(s_infile);
-    if (!lexer)
-      WABT_FATAL("unable to read file: %s\n", s_infile);
+  WastLexer* lexer = new_wast_file_lexer(s_infile);
+  if (!lexer)
+    WABT_FATAL("unable to read file: %s\n", s_infile);
 
-    SourceErrorHandlerFile error_handler;
-    Script* script;
-    Result result = parse_wast(lexer, &script, &error_handler);
+  SourceErrorHandlerFile error_handler;
+  Script* script;
+  Result result = parse_wast(lexer, &script, &error_handler);
+
+  if (WABT_SUCCEEDED(result)) {
+    result = resolve_names_script(lexer, script, &error_handler);
+
+    if (WABT_SUCCEEDED(result) && s_validate)
+      result = validate_script(lexer, script, &error_handler);
 
     if (WABT_SUCCEEDED(result)) {
-      result = resolve_names_script(lexer, script, &error_handler);
-
-      if (WABT_SUCCEEDED(result) && s_validate)
-        result = validate_script(lexer, script, &error_handler);
-
-      if (WABT_SUCCEEDED(result)) {
-        if (s_spec) {
-          s_write_binary_spec_options.json_filename = s_outfile;
-          s_write_binary_spec_options.write_binary_options =
-              s_write_binary_options;
-          result = write_binary_spec_script(script, s_infile,
-                                            &s_write_binary_spec_options);
+      if (s_spec) {
+        s_write_binary_spec_options.json_filename = s_outfile;
+        s_write_binary_spec_options.write_binary_options =
+            s_write_binary_options;
+        result = write_binary_spec_script(script, s_infile,
+                                          &s_write_binary_spec_options);
+      } else {
+        MemoryWriter writer;
+        Module* module = get_first_module(script);
+        if (module) {
+          result =
+              write_binary_module(&writer, module, &s_write_binary_options);
         } else {
-          MemoryWriter writer;
-          Module* module = get_first_module(script);
-          if (module) {
-            result =
-                write_binary_module(&writer, module, &s_write_binary_options);
-          } else {
-            WABT_FATAL("no module found\n");
-          }
-
-          if (WABT_SUCCEEDED(result))
-            write_buffer_to_file(s_outfile, writer.output_buffer());
+          WABT_FATAL("no module found\n");
         }
+
+        if (WABT_SUCCEEDED(result))
+          write_buffer_to_file(s_outfile, writer.output_buffer());
       }
     }
-
-    destroy_wast_lexer(lexer);
-    delete script;
-    return result != Result::Ok;
-  } catch (std::bad_alloc&) {
-    WABT_FATAL("Memory allocation failure.\n");
   }
+
+  destroy_wast_lexer(lexer);
+  delete script;
+  return result != Result::Ok;
+}
+
+int main(int argc, char** argv) {
+  WABT_TRY
+  return ProgramMain(argc, argv);
+  WABT_CATCH_BAD_ALLOC_AND_EXIT
 }

@@ -25,6 +25,7 @@ option(USE_MSAN "Use memory sanitizer" OFF)
 option(USE_LSAN "Use leak sanitizer" OFF)
 option(USE_UBSAN "Use undefined behavior sanitizer" OFF)
 option(CODE_COVERAGE "Build with code coverage enabled" OFF)
+option(WITH_EXCEPTIONS "Build with exceptions enabled" OFF)
 
 if (${CMAKE_C_COMPILER_ID} STREQUAL "Clang")
   set(COMPILER_IS_CLANG 1)
@@ -86,6 +87,11 @@ if (COMPILER_IS_MSVC)
   # disable warnings C4267 and C4244: conversion/truncation from larger to smaller type.
   # disable warning C4800: implicit conversion from larger int to bool
   add_definitions(-W3 -wd4018 -wd4056 -wd4756 -wd4267 -wd4244 -wd4800 -WX -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS)
+
+  if (NOT WITH_EXCEPTIONS)
+    # disable exception use in C++ library
+    add_definitions(-D_HAS_EXCEPTIONS=0)
+  endif ()
 else ()
   # disable -Wunused-parameter: this is really common when implementing
   #   interfaces, etc.
@@ -94,6 +100,10 @@ else ()
     -Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -g -std=c++11
     -Wold-style-cast
   )
+
+  if (NOT WITH_EXCEPTIONS)
+    add_definitions(-fno-exceptions)
+  endif ()
 
   # Need to define __STDC_*_MACROS because C99 specifies that C++ shouldn't
   # define format (e.g. PRIu64) or limit (e.g. UINT32_MAX) macros without the
