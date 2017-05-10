@@ -58,6 +58,7 @@
 0000031: 0b                                        ; end
 0000015: 1c                                        ; FIXUP func body size
 0000013: 1e                                        ; FIXUP section size
+
 cast.wasm:	file format wasm 0x1
 
 Code Disassembly:

@@ -19,6 +19,7 @@
      call $local_func)
 )
 (;; STDOUT ;;;
+
 linked.wasm:	file format wasm 0x1
 
 Sections:

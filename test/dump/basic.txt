@@ -79,6 +79,7 @@
 0000038: 0b                                        ; end
 0000024: 14                                        ; FIXUP func body size
 0000022: 16                                        ; FIXUP section size
+
 basic.wasm:	file format wasm 0x1
 
 Sections:
