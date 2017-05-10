@@ -1,5 +1,8 @@
 ;;; TOOL: run-gen-wasm
 ;;; FLAGS: --dump
+;; This test file contains two functions, but their names are listed in the
+;; names section out of order (1 first, then 0).  gen-wasm is needed here
+;; since wast2wasm alwasys generates names in order.
 magic
 version
 section(TYPE) { count[1] function params[0] results[1] i32 }
