@@ -1213,26 +1213,26 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
     uint8_t external_kind;
     in_u8(ctx, &external_kind, "export external kind");
     RAISE_ERROR_UNLESS(is_valid_external_kind(external_kind),
-                       "invalid export external kind");
+                       "invalid export external kind: %#x", external_kind);
 
     uint32_t item_index;
     in_u32_leb128(ctx, &item_index, "export item index");
     switch (static_cast<ExternalKind>(external_kind)) {
       case ExternalKind::Func:
         RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
-                           "invalid export func index: %d", item_index);
+                           "invalid export func index: %#x", item_index);
         break;
       case ExternalKind::Table:
         RAISE_ERROR_UNLESS(item_index < num_total_tables(ctx),
-                           "invalid export table index");
+                           "invalid export table index: %#x", item_index);
         break;
       case ExternalKind::Memory:
         RAISE_ERROR_UNLESS(item_index < num_total_memories(ctx),
-                           "invalid export memory index");
+                           "invalid export memory index: %#x", item_index);
         break;
       case ExternalKind::Global:
         RAISE_ERROR_UNLESS(item_index < num_total_globals(ctx),
-                           "invalid export global index");
+                           "invalid export global index: %#x", item_index);
         break;
     }
 
@@ -1247,7 +1247,7 @@ static void read_start_section(Context* ctx, uint32_t section_size) {
   uint32_t func_index;
   in_u32_leb128(ctx, &func_index, "start function index");
   RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
-                     "invalid start function index");
+                     "invalid start function index: %#x", func_index);
   CALLBACK(OnStartFunction, func_index);
   CALLBACK0(EndStartSection);
 }
