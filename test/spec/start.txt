@@ -2,7 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/start.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/start.wast:2: assert_invalid passed:
-  error: @0x00000015: invalid start function index: 0x1
+  error: @0x00000015: invalid start function index: 1
 out/third_party/testsuite/start.wast:7: assert_invalid passed:
   error: start function must not return anything
   error: @0x00000016: OnStartFunction callback failed
