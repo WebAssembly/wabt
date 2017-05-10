@@ -71,6 +71,7 @@ TEST(source_maps, initial_mappings) {
   SourceMapGenerator smg("", "");
   smg.AddMapping({4, 1}, {3, 7}, "asdf");
   auto& map = smg.GetMap();
+  ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
@@ -81,6 +82,7 @@ TEST(source_maps, initial_mappings) {
   // Duplicate mapping (no new segment)
   smg.AddMapping({4, 1}, {3, 7}, "asdf");
   smg.GetMap();
+  ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
@@ -88,18 +90,36 @@ TEST(source_maps, initial_mappings) {
   // New generated column, same line, same source
   smg.AddMapping({4, 1}, {3, 8}, "asdf");
   smg.GetMap();
+  ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(2UL, map.segment_groups.back().segments.size());
-  s = {8, 1, true, 0, 4, 0, 1, 0, false, 0};
+  //s = {8, 1, true, 0, 4, 0, 1, 0, false, 0};
+  // Not sure which is more readable; pass a whole new segment on one line or
+  // update by field name?
+  s.generated_col = 8;
+  s.generated_col_delta = 1;
+  s.source_line_delta = 0;
+  s.source_col_delta = 0;
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated column, same line, new source col
   smg.AddMapping({4, 2}, {3, 9}, "asdf");
   smg.GetMap();
+  ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(3UL, map.segment_groups.back().segments.size());
   s = {9, 1, true, 0, 4, 0, 2, 1, false, 0};
+  EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
+
+  // New generated column, same line, new source line
+  smg.AddMapping({5, 0}, {3, 10}, "asdf");
+  smg.GetMap();
+  ASSERT_TRUE(map.Validate(true));
+  ASSERT_EQ(4UL, map.segment_groups.size());
+  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  ASSERT_EQ(4UL, map.segment_groups.back().segments.size());
+  s = {10, 1, true, 0, 5, 1, 0, 0, false, 0};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 }

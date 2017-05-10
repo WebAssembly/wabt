@@ -41,6 +41,7 @@ struct SourceMap {
     // Field 5
     size_t name;  // Index into names list
     //Segment() { memset(this, 0x0, sizeof(*this)); } // FIXME: HACK
+    void Dump();
   };
   struct SegmentGroup {
     uint32_t generated_line;  // Line in the generated file for all segments
@@ -57,6 +58,9 @@ struct SourceMap {
 
   SourceMap(std::string file_, std::string source_root_)
       : file(file_), source_root(source_root_) {}
+
+  void Dump();
+  bool Validate(bool fatal=false) const;
 };
 
 class SourceMapGenerator {

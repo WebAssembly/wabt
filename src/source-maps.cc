@@ -21,6 +21,43 @@
 
 #define INDEX_NONE static_cast<size_t>(-1)
 
+#define INVALID() do { \
+    if (fatal) { abort(); } else { return false; }      \
+  } while(0);
+
+bool SourceMap::Validate(bool fatal) const {
+  for (size_t i = 0; i < segment_groups.size(); ++i) {
+    const auto& group = segment_groups[i];
+    if (i > 0 &&
+        group.generated_line <= segment_groups[i - 1].generated_line) {
+      INVALID();
+    }
+    for (size_t j = 0; j < group.segments.size(); ++j) {
+      const auto& seg = group.segments[j];
+      const Segment* last_seg = nullptr;
+      if (j > 0) last_seg = &group.segments[j - 1];
+      if (seg.generated_col_delta == 0) INVALID();
+      if (!seg.has_source && seg.has_name) INVALID();
+      if (!seg.has_source) return true;
+      if (seg.source >= sources.size()) INVALID();
+      if (last_seg) {
+        if (seg.source_line_delta == 0) INVALID();
+        // FIXME: This has a limitation that if this seg has a source, the last one must.
+        if (last_seg->source_line + seg.source_line_delta != seg.source_line) {
+          INVALID();
+        }
+        if (seg.source_col_delta == 0) INVALID();
+        if (last_seg->source_col + seg.source_col_delta != seg.source_col) {
+          INVALID();
+        }
+      }
+      if (!seg.has_name) return true;
+      if (seg.name >= names.size()) INVALID();
+    }
+  }
+  return true;
+}
+
 static int32_t cmpLocation(const SourceMapGenerator::SourceLocation& a,
                            const SourceMapGenerator::SourceLocation& b) {
   int32_t cmp = a.line - b.line;
@@ -119,11 +156,11 @@ std::string SourceMapGenerator::SerializeMappings() {
 void SourceMapGenerator::DumpRawMappings() {
   CompressMappings();  // Just to sort them
   std::cout << "Map: " << map.file << " " << map.source_root << "\n"
-            << "Sources: ";
+            << "Sources [";
   for (size_t i = 0; i < map.sources.size(); ++i) {
-    std::cout << i << ":" << map.sources[i] << " ";
+    std::cout << i << ":" << map.sources[i] << ", ";
   }
-  std::cout << "\n";
+  std::cout << "]\n";
   for (const auto& m : mappings) {
     std::cout << "Mapping " << m.original.line << ":" << m.original.col
               << " -> " << m.generated.line << ":" << m.generated.col << ":"
