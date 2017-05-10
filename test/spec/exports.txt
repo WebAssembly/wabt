@@ -19,7 +19,7 @@ out/third_party/testsuite/exports.wast:47: assert_invalid passed:
   error: duplicate export "a"
   error: @0x00000022: OnExport callback failed
 out/third_party/testsuite/exports.wast:76: assert_invalid passed:
-  error: @0x00000017: invalid export global index
+  error: @0x00000017: invalid export global index: 1
 out/third_party/testsuite/exports.wast:80: assert_invalid passed:
   error: duplicate export "a"
   error: @0x0000001b: OnExport callback failed
@@ -36,7 +36,7 @@ out/third_party/testsuite/exports.wast:96: assert_invalid passed:
   error: duplicate export "a"
   error: @0x00000020: OnExport callback failed
 out/third_party/testsuite/exports.wast:124: assert_invalid passed:
-  error: @0x00000015: invalid export table index
+  error: @0x00000015: invalid export table index: 1
 out/third_party/testsuite/exports.wast:128: assert_invalid passed:
   error: duplicate export "a"
   error: @0x00000019: OnExport callback failed
@@ -50,7 +50,7 @@ out/third_party/testsuite/exports.wast:145: assert_invalid passed:
   error: duplicate export "a"
   error: @0x0000001e: OnExport callback failed
 out/third_party/testsuite/exports.wast:173: assert_invalid passed:
-  error: @0x00000014: invalid export memory index
+  error: @0x00000014: invalid export memory index: 1
 out/third_party/testsuite/exports.wast:177: assert_invalid passed:
   error: duplicate export "a"
   error: @0x00000018: OnExport callback failed
