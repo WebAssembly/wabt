@@ -8,7 +8,7 @@ out/third_party/testsuite/unreached-invalid.wast:8: assert_invalid passed:
   error: invalid global_index: 0 (max 0)
   error: @0x0000001a: OnGetGlobalExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:12: assert_invalid passed:
-  error: @0x0000001a: invalid call function index
+  error: @0x0000001a: invalid call function index: 1
 out/third_party/testsuite/unreached-invalid.wast:16: assert_invalid passed:
   error: invalid depth: 1 (max 0)
   error: @0x0000001a: OnBrExpr callback failed

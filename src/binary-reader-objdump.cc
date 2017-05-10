@@ -177,6 +177,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
  private:
   void LogOpcode(const uint8_t* data, size_t data_size, const char* fmt, ...);
+  const char* GetFunctionName(uint32_t index);
 
   Opcode current_opcode = Opcode::Unreachable;
   size_t current_opcode_offset = 0;
@@ -257,27 +258,29 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
 
   last_opcode_end = current_opcode_offset + data_size;
 
-  if (options->relocs) {
-    if (next_reloc < options->code_relocations.size()) {
-      Reloc* reloc = &options->code_relocations[next_reloc];
-      size_t code_start =
-          section_starts[static_cast<size_t>(BinarySection::Code)];
-      size_t abs_offset = code_start + reloc->offset;
-      if (last_opcode_end > abs_offset) {
-        printf("           %06" PRIzx ": %-18s %d", abs_offset,
-               get_reloc_type_name(reloc->type), reloc->index);
-        switch (reloc->type) {
-          case RelocType::MemoryAddressLEB:
-          case RelocType::MemoryAddressSLEB:
-          case RelocType::MemoryAddressI32:
-            printf(" + %d", reloc->addend);
-            break;
-          default:
-            break;
-        }
-        printf("\n");
-        next_reloc++;
+  if (options->relocs && next_reloc < options->code_relocations.size()) {
+    Reloc* reloc = &options->code_relocations[next_reloc];
+    size_t code_start =
+        section_starts[static_cast<size_t>(BinarySection::Code)];
+    size_t abs_offset = code_start + reloc->offset;
+    if (last_opcode_end > abs_offset) {
+      printf("           %06" PRIzx ": %-18s %d", abs_offset,
+             get_reloc_type_name(reloc->type), reloc->index);
+      switch (reloc->type) {
+        case RelocType::MemoryAddressLEB:
+        case RelocType::MemoryAddressSLEB:
+        case RelocType::MemoryAddressI32:
+          printf(" + %d", reloc->addend);
+          break;
+        case RelocType::FuncIndexLEB:
+          if (const char* name = GetFunctionName(reloc->index)) {
+            printf(" <%s>", name);
+          }
+        default:
+          break;
       }
+      printf("\n");
+      next_reloc++;
     }
   }
 }
@@ -344,11 +347,18 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
   return Result::Ok;
 }
 
+const char* BinaryReaderObjdumpDisassemble::GetFunctionName(uint32_t index) {
+  if (index >= options->function_names.size() ||
+      options->function_names[index].empty())
+    return nullptr;
+
+  return options->function_names[index].c_str();
+}
+
 Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(uint32_t index) {
-  if (index < options->function_names.size() &&
-      !options->function_names[index].empty())
-    printf("%06" PRIzx " <%s>:\n", state->offset,
-           options->function_names[index].c_str());
+  const char* name = GetFunctionName(index);
+  if (name)
+    printf("%06" PRIzx " <%s>:\n", state->offset, name);
   else
     printf("%06" PRIzx " func[%d]:\n", state->offset, index);
 
