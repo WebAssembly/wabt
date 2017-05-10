@@ -72,18 +72,18 @@ Code Disassembly:
 00007e <$name1>:
  000080: 41 01                      | i32.const 0x1
  000082: 10 86 80 80 80 00          | call 0x6
-           000083: R_FUNC_INDEX_LEB   6
+           000083: R_FUNC_INDEX_LEB   6 <$name3>
  000088: 0b                         | end
 000089 <$name2>:
  00008b: 42 01                      | i64.const 1
  00008d: 10 82 80 80 80 00          | call 0x2
-           00008e: R_FUNC_INDEX_LEB   2
+           00008e: R_FUNC_INDEX_LEB   2 <$import_func2>
  000093: 0b                         | end
 000094 func[5]:
  000096: 0b                         | end
 000097 <$name3>:
  000099: 41 02                      | i32.const 0x2
  00009b: 10 86 80 80 80 00          | call 0x6
-           00009c: R_FUNC_INDEX_LEB   6
+           00009c: R_FUNC_INDEX_LEB   6 <$name3>
  0000a1: 0b                         | end
 ;;; STDOUT ;;)

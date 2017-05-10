@@ -34,8 +34,8 @@ out/third_party/testsuite/call.wast:216: assert_invalid passed:
   error: type mismatch in call, expected i32 but got f64.
   error: @0x0000002a: OnCallExpr callback failed
 out/third_party/testsuite/call.wast:227: assert_invalid passed:
-  error: @0x00000019: invalid call function index
+  error: @0x00000019: invalid call function index: 1
 out/third_party/testsuite/call.wast:231: assert_invalid passed:
-  error: @0x0000001d: invalid call function index
+  error: @0x0000001d: invalid call function index: 1012321300
 47/47 tests passed.
 ;;; STDOUT ;;)

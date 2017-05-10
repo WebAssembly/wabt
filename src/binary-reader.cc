@@ -661,7 +661,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         uint32_t func_index;
         in_u32_leb128(ctx, &func_index, "call function index");
         RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
-                           "invalid call function index");
+                           "invalid call function index: %d", func_index);
         CALLBACK(OnCallExpr, func_index);
         CALLBACK(OnOpcodeUint32, func_index);
         break;
