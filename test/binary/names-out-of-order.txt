@@ -2,12 +2,8 @@
 ;;; FLAGS: --dump
 magic
 version
-section(TYPE) {
-  count[2]
-  function params[0] results[1] i32
-  function params[0] results[1] i64
-}
-section(FUNCTION) { count[2] type[0] type[1] }
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[2] type[0] type[0] }
 section(CODE) {
   count[2]
   func {
@@ -15,7 +11,7 @@ section(CODE) {
     get_local 0
   }
   func {
-    locals[decl_count[1] i64_count[1] i64]
+    locals[decl_count[1] i32_count[1] i32]
     get_local 0
   }
 }
@@ -27,23 +23,15 @@ section("name") {
   str("$F1")
   index[0]
   str("$F0")
-  subsection[2]
-  length[8]
-  func_count[1]
-  index[0]
-  local_count[1]
-  index[0]
-  str("$L0")
 }
 (;; STDOUT ;;;
 (module
   (type (;0;) (func (result i32)))
-  (type (;1;) (func (result i64)))
   (func $F0 (type 0) (result i32)
-    (local $L0 i32)
-    get_local $L0)
-  (func $F1 (type 1) (result i64)
-    (local i64)
+    (local i32)
+    get_local 0)
+  (func $F1 (type 0) (result i32)
+    (local i32)
     get_local 0))
 
 names-out-of-order.wasm:	file format wasm 0x1
@@ -52,22 +40,20 @@ Section Details:
 
 Type:
  - [0] () -> i32
- - [1] () -> i64
 Function:
  - func[0] sig=0
- - func[1] sig=1
+ - func[1] sig=0
 Custom:
  - name: "name"
  - func[1] $F1
  - func[0] $F0
- - func[0] local[0] $L0
 
 Code Disassembly:
 
-00001b <$F0>:
- 00001f: 20 00                      | get_local 0
- 000021: 0b                         | end
-000022 <$F1>:
- 000026: 20 00                      | get_local 0
- 000028: 0b                         | end
+000017 <$F0>:
+ 00001b: 20 00                      | get_local 0
+ 00001d: 0b                         | end
+00001e <$F1>:
+ 000022: 20 00                      | get_local 0
+ 000024: 0b                         | end
 ;;; STDOUT ;;)
