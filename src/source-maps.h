@@ -16,17 +16,13 @@
 #ifndef WABT_SOURCE_MAPS_H
 #define WABT_SOURCE_MAPS_H
 #include <cstdint>
+#include <cstring>
 #include <map>
 #include <string>
 #include <vector>
 
 struct SourceMap {
   static constexpr const int32_t kSourceMapVersion = 3;
-  std::string file;         // Generated code filename; optional
-  std::string source_root;  // Prepended to entries in sources list; optional
-  std::vector<std::string> sources;          // List of sources use by mappings
-  std::vector<std::string> sources_content;  // Not supported yet.
-  std::vector<std::string> names;            // Not supported yet.
   // Representation of mappings
   struct Segment {
     // Field 1
@@ -41,14 +37,24 @@ struct SourceMap {
     // Field 4
     uint32_t source_col;        // Start column in source. Remove?
     uint32_t source_col_delta;  // Delta from previous source column
-    bool has_name;
+    bool has_name; // If true, field 5 will be valid.
     // Field 5
     size_t name;  // Index into names list
+    //Segment() { memset(this, 0x0, sizeof(*this)); } // FIXME: HACK
   };
   struct SegmentGroup {
     uint32_t generated_line;  // Line in the generated file for all segments
     std::vector<Segment> segments;
   };
+
+  // Top level fields
+  std::string file;         // Generated code filename; optional
+  std::string source_root;  // Prepended to entries in sources list; optional
+  std::vector<std::string> sources;          // List of sources use by mappings
+  std::vector<std::string> sources_content;  // Not supported yet.
+  std::vector<std::string> names;            // Not supported yet.
+  std::vector<SegmentGroup> segment_groups;
+
   SourceMap(std::string file_, std::string source_root_)
       : file(file_), source_root(source_root_) {}
 };
@@ -76,9 +82,9 @@ class SourceMapGenerator {
     SourceLocation original;
     SourceLocation generated;  // Use binary location?
     size_t source_idx;         // pointer to src?
-    // We don't use the 'name' field.
+    // We don't use the 'name' field currently.
     bool operator<(const SourceMapping& other) const;
-    //                          const SourceMapping& rhs);
+    bool operator==(const SourceMapping& other) const;
   };
   void CompressMappings();
 

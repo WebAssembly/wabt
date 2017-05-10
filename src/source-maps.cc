@@ -36,15 +36,21 @@ bool SourceMapGenerator::SourceMapping::operator<(
              : rhs.source_idx == INDEX_NONE;
 }
 
+bool SourceMapGenerator::SourceMapping::operator==(
+    const SourceMapGenerator::SourceMapping& rhs) const {
+  return !cmpLocation(generated, rhs.generated) &&
+      !cmpLocation(original, rhs.original) &&
+      source_idx == rhs.source_idx;
+}
+
 void SourceMapGenerator::AddMapping(SourceLocation original,
                                     SourceLocation generated,
                                     std::string source) {
   map_prepared = false;  // New mapping invalidates compressed map.
   size_t source_idx = INDEX_NONE;
-  if (!source.empty()) {
     auto s = sources_map.find(source);
     if (s == sources_map.end()) {
-      size_t source_idx = map.sources.size();
+      source_idx = map.sources.size();
       map.sources.push_back(source);
       bool inserted;
       std::tie(std::ignore, inserted) =
@@ -53,14 +59,53 @@ void SourceMapGenerator::AddMapping(SourceLocation original,
     } else {
       source_idx = s->second;
     }
-  }
   mappings.push_back({original, generated, source_idx});
 }
 
 void SourceMapGenerator::CompressMappings() {
-  // Sort mappings
   std::sort(mappings.begin(), mappings.end());
+  uint32_t last_gen_line = static_cast<uint32_t>(-1);
+  uint32_t last_gen_col = 0;
+  uint32_t last_source_line = 0;
+  uint32_t last_source_col = 0;
+  map.segment_groups.clear();
+  SourceMapGenerator::SourceMapping* last_mapping = nullptr;
+  for (auto& mapping : mappings) {
+    if (mapping.generated.line != last_gen_line) {
+      // Output an empty segment group for each line between the previous
+      // and current.
+      assert(map.segment_groups.empty() ||
+             mapping.generated.line > last_gen_line); // Not sorted.
+      while (++last_gen_line <= mapping.generated.line) {
+        map.segment_groups.push_back(
+            {last_gen_line, std::vector<SourceMap::Segment>()});
+      }
+      last_gen_line = mapping.generated.line;
+      last_gen_col = 0;
+    }
+    if (last_mapping != nullptr && mapping == *last_mapping)
+      continue;
+    last_mapping = &mapping;
 
+    auto& group = map.segment_groups.back();
+    group.segments.emplace_back();
+    SourceMap::Segment& seg = group.segments.back();
+    memset(&seg, 0x0, sizeof(seg));
+    seg.generated_col = mapping.generated.col;
+    seg.generated_col_delta = mapping.generated.col - last_gen_col;
+    last_gen_col = mapping.generated.col;
+    seg.has_source = mapping.source_idx != INDEX_NONE;
+    assert(seg.has_source); // TODO(dschuff): support mappings without source
+    if (seg.has_source) {
+      seg.source_line = mapping.original.line;
+      seg.source_line_delta = mapping.original.line - last_source_line;
+      last_source_line = mapping.original.line;
+      seg.source_col = mapping.original.col;
+      seg.source_col_delta = mapping.original.col - last_source_col;
+      last_source_col = mapping.original.col;
+    }
+    seg.has_name = false; // TODO(dschuff): add support
+  }
   map_prepared = true;
 }
 
