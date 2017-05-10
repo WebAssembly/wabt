@@ -42,6 +42,7 @@
 000001e: 0b                                        ; end
 0000015: 09                                        ; FIXUP func body size
 0000013: 0b                                        ; FIXUP section size
+
 if-then-list.wasm:	file format wasm 0x1
 
 Code Disassembly:

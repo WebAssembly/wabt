@@ -32,6 +32,7 @@
 0000018: 0b                                        ; end
 0000015: 03                                        ; FIXUP func body size
 0000013: 05                                        ; FIXUP section size
+
 unreachable.wasm:	file format wasm 0x1
 
 Code Disassembly:

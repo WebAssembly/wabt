@@ -4,6 +4,7 @@
   (import "__extern" "baz" (func $import_func1))
 )
 (;; STDOUT ;;;
+
 linked.wasm:	file format wasm 0x1
 
 Sections:

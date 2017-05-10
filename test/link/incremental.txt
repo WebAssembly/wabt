@@ -27,6 +27,7 @@
   (table anyfunc (elem $func3 $func3))
 )
 (;; STDOUT ;;;
+
 linked.wasm:	file format wasm 0x1
 
 Sections:

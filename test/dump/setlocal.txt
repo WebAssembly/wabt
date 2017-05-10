@@ -97,6 +97,7 @@
 0000059: 0b                                        ; end
 0000015: 44                                        ; FIXUP func body size
 0000013: 46                                        ; FIXUP section size
+
 setlocal.wasm:	file format wasm 0x1
 
 Code Disassembly:
