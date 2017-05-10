@@ -118,6 +118,7 @@
 000007a: 2446 334c 33                             $F3L3  ; local name 3
 0000042: 3c                                        ; FIXUP subsection size
 000002e: 50                                        ; FIXUP section size
+
 debug-names.wasm:	file format wasm 0x1
 
 Section Details:

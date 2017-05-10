@@ -49,6 +49,7 @@
 0000028: 0b                                        ; end
 0000024: 04                                        ; FIXUP func body size
 0000022: 06                                        ; FIXUP section size
+
 dedupe-sig.wasm:	file format wasm 0x1
 
 Code Disassembly:

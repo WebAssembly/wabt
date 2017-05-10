@@ -45,6 +45,7 @@
 000002f: 00                                        ; num locals
 000002c: 03                                        ; FIXUP subsection size
 000001c: 13                                        ; FIXUP section size
+
 debug-import-names.wasm:	file format wasm 0x1
 
 Sections:

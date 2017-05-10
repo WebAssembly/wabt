@@ -24,6 +24,7 @@
      call 1)
 )
 (;; STDOUT ;;;
+
 linked.wasm:	file format wasm 0x1
 
 Sections:

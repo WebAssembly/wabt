@@ -41,6 +41,7 @@
 (assert_return (invoke "call_import2") (i64.const 99))
 
 (;; STDOUT ;;;
+
 linked.wasm:	file format wasm 0x1
 
 Sections:

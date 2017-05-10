@@ -39,6 +39,7 @@
 000001c: 0b                                        ; end
 0000015: 07                                        ; FIXUP func body size
 0000013: 09                                        ; FIXUP section size
+
 loop.wasm:	file format wasm 0x1
 
 Code Disassembly:
