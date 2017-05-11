@@ -267,9 +267,9 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
       printf("           %06" PRIzx ": %-18s %d", abs_offset,
              get_reloc_type_name(reloc->type), reloc->index);
       switch (reloc->type) {
-        case RelocType::MemoryAddressLEB:
-        case RelocType::MemoryAddressSLEB:
-        case RelocType::MemoryAddressI32:
+        case RelocType::GlobalAddressLEB:
+        case RelocType::GlobalAddressSLEB:
+        case RelocType::GlobalAddressI32:
           printf(" + %d", reloc->addend);
           break;
         case RelocType::FuncIndexLEB:
