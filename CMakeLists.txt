@@ -243,6 +243,7 @@ add_library(libwabt STATIC
   src/literal.cc
   src/option-parser.cc
   src/stream.cc
+  src/utf8.cc
   src/writer.cc
 )
 set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
@@ -339,6 +340,7 @@ if (NOT EMSCRIPTEN)
     # wabt-unittests
     set(UNITTESTS_SRCS
       src/test-string-view.cc
+      src/test-utf8.cc
       third_party/gtest/googletest/src/gtest_main.cc
     )
     wabt_executable(wabt-unittests ${UNITTESTS_SRCS})

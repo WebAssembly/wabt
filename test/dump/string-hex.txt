@@ -1,6 +1,6 @@
 ;;; TOOL: run-wasmdump
 ;;; FLAGS: -v
-(module (func) (export "foo\ba\dc\0d\ee" (func 0)))
+(module (func) (export "foo\de\ad\ca\bb" (func 0)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
@@ -24,7 +24,7 @@
 0000013: 00                                        ; section size (guess)
 0000014: 01                                        ; num exports
 0000015: 07                                        ; string length
-0000016: 666f 6fba dc0d ee                        foo....  ; export name
+0000016: 666f 6fde adca bb                        foo....  ; export name
 000001d: 00                                        ; export kind
 000001e: 00                                        ; export func index
 0000013: 0b                                        ; FIXUP section size

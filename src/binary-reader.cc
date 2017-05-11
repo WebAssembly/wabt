@@ -30,6 +30,7 @@
 #include "binary-reader-logging.h"
 #include "config.h"
 #include "stream.h"
+#include "utf8.h"
 
 #if HAVE_ALLOCA
 #include <alloca.h>
@@ -306,6 +307,9 @@ static void in_str(Context* ctx, StringSlice* out_str, const char* desc) {
       reinterpret_cast<const char*>(ctx->state.data) + ctx->state.offset;
   out_str->length = str_len;
   ctx->state.offset += str_len;
+
+  RAISE_ERROR_UNLESS(is_valid_utf8(out_str->start, out_str->length),
+                     "invalid utf-8 encoding: %s", desc);
 }
 
 static void in_bytes(Context* ctx,

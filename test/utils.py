@@ -65,8 +65,8 @@ class Executable(object):
       process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE, **kwargs)
       stdout, stderr = process.communicate()
-      stdout = stdout.decode('ascii')
-      stderr = stderr.decode('ascii')
+      stdout = stdout.decode('utf-8', 'ignore')
+      stderr = stderr.decode('utf-8', 'ignore')
       if self.clean_stdout:
         stdout = self.clean_stdout(stdout)
       if self.clean_stderr:
