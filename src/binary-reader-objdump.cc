@@ -736,9 +736,8 @@ Result BinaryReaderObjdump::OnExport(uint32_t index,
       PrintDetails(" <%s>", name);
   }
 
-  PrintDetails(" -> \"");
-  PrintDetails(PRIstringslice, WABT_PRINTF_STRING_SLICE_ARG(name));
-  PrintDetails("\"\n");
+  PrintDetails(" -> \"" PRIstringslice "\"\n",
+               WABT_PRINTF_STRING_SLICE_ARG(name));
   return Result::Ok;
 }
 
