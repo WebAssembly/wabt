@@ -45,7 +45,7 @@ Function:
  - func[2] sig=1
  - func[3] sig=3
 Export:
- - func[3] foo
+ - func[3] -> "foo"
 Custom:
  - name: "reloc.Code"
   - section: Code

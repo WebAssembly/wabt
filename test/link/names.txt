@@ -51,8 +51,8 @@ Function:
  - func[5] sig=2
  - func[6] sig=3
 Export:
- - func[3] foo
- - func[6] baz
+ - func[3] <$name1> -> "foo"
+ - func[6] <$name3> -> "baz"
 Custom:
  - name: "name"
  - func[0] $import_func0

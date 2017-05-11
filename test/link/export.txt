@@ -33,8 +33,8 @@ Function:
  - func[0] sig=0
  - func[1] sig=1
 Export:
- - func[0] foo
- - func[1] bar
+ - func[0] -> "foo"
+ - func[1] -> "bar"
 Custom:
  - name: "reloc.Code"
   - section: Code
