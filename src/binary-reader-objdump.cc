@@ -46,6 +46,8 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
                               BinarySection section_code,
                               StringSlice section_name);
  protected:
+  const char* GetFunctionName(uint32_t index);
+
   ObjdumpOptions* options = nullptr;
   const uint8_t* data = nullptr;
   size_t size = 0;
@@ -106,6 +108,14 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
   }
 
   return Result::Ok;
+}
+
+const char* BinaryReaderObjdumpBase::GetFunctionName(uint32_t index) {
+  if (index >= options->function_names.size() ||
+      options->function_names[index].empty())
+    return nullptr;
+
+  return options->function_names[index].c_str();
 }
 
 Result BinaryReaderObjdumpBase::OnRelocCount(uint32_t count,
@@ -177,7 +187,6 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
  private:
   void LogOpcode(const uint8_t* data, size_t data_size, const char* fmt, ...);
-  const char* GetFunctionName(uint32_t index);
 
   Opcode current_opcode = Opcode::Unreachable;
   size_t current_opcode_offset = 0;
@@ -345,14 +354,6 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
   assert(indent_level >= 0);
   LogOpcode(nullptr, 0, nullptr);
   return Result::Ok;
-}
-
-const char* BinaryReaderObjdumpDisassemble::GetFunctionName(uint32_t index) {
-  if (index >= options->function_names.size() ||
-      options->function_names[index].empty())
-    return nullptr;
-
-  return options->function_names[index].c_str();
 }
 
 Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(uint32_t index) {
@@ -729,9 +730,15 @@ Result BinaryReaderObjdump::OnExport(uint32_t index,
                                      ExternalKind kind,
                                      uint32_t item_index,
                                      StringSlice name) {
-  PrintDetails(" - %s[%d] ", get_kind_name(kind), item_index);
+  PrintDetails(" - %s[%d]", get_kind_name(kind), item_index);
+  if (kind == ExternalKind::Func) {
+    if (const char* name = GetFunctionName(item_index))
+      PrintDetails(" <%s>", name);
+  }
+
+  PrintDetails(" -> \"");
   PrintDetails(PRIstringslice, WABT_PRINTF_STRING_SLICE_ARG(name));
-  PrintDetails("\n");
+  PrintDetails("\"\n");
   return Result::Ok;
 }
 

@@ -69,11 +69,11 @@ Function:
  - func[3] sig=3
  - func[4] sig=4
 Export:
- - func[0] export1
- - func[1] call_import1
- - func[2] call_import2
- - func[3] export2
- - func[4] export3
+ - func[0] -> "export1"
+ - func[1] -> "call_import1"
+ - func[2] -> "call_import2"
+ - func[3] -> "export2"
+ - func[4] -> "export3"
 Custom:
  - name: "reloc.Code"
   - section: Code
