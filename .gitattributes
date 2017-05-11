@@ -11,3 +11,5 @@
 *.y text
 demo/primer.css binary
 demo/libwabt.js binary
+demo/third_party/codemirror/codemirror.css binary
+demo/third_party/codemirror/codemirror.js binary

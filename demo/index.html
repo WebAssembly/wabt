@@ -19,6 +19,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
   <title>wast2wasm demo</title>
+  <link href="third_party/codemirror/codemirror.css" rel="stylesheet">
   <link href="primer.css" rel="stylesheet">
   <link href="custom.css" rel="stylesheet">
 </head>
@@ -35,8 +36,8 @@
     </p>
     <div class="columns">
       <div class="two-fifths column">
-        <textarea id="input" autofocus autocomplete="off" autocorrect="off"
-            autocapitalize="off" spellcheck="false"></textarea>
+        <textarea class="editor" autofocus autocomplete="off" autocorrect="off"
+            autocapitalize="off" spellcheck="false" hidden></textarea>
         <div class="right">
           <label>example:</label>
           <select id="select" class="form-select"></select>
@@ -49,7 +50,11 @@
       </div>
     </div>
   </div>
+  <script src="third_party/codemirror/codemirror.js"></script>
+  <script src="third_party/codemirror/simple-mode.js"></script>
+  <script src="wast-mode.js"></script>
   <script src="libwabt.js"></script>
+  <script src="examples.js"></script>
   <script src="demo.js"></script>
 </body>
 </html>
