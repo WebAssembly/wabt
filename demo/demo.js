@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-var defaultIndent = '  ';
-var input = document.getElementById('input');
-var output = document.getElementById('output');
-var select = document.getElementById('select');
-var download = document.getElementById('download');
+var kCompileMinMS = 100;
+
+var editorEl = document.querySelector('.editor');
+var outputEl = document.getElementById('output');
+var selectEl = document.getElementById('select');
+var downloadEl = document.getElementById('download');
 var downloadLink = document.getElementById('downloadLink');
+var binaryBuffer = null;
 var binaryBlobUrl = null;
+
+var wasmInstance = null;
+
+var options = {mode: 'wast', lineNumbers: true};
+var editor = CodeMirror.fromTextArea(editorEl, options);
 
 function debounce(f, wait) {
   var lastTime = 0;
@@ -41,104 +48,42 @@ function debounce(f, wait) {
   return wrapped;
 }
 
-function insertTextAtSelection(input, src) {
-  var selectionStart = input.selectionStart;
-  var selectionEnd = input.selectionEnd;
-  var oldValue = input.value;
-  input.value = oldValue.slice(0, selectionStart) + src +
-                oldValue.slice(selectionEnd);
-  input.selectionStart = input.selectionEnd = selectionStart + src.length;
-}
-
 function compile(text) {
   wabt.ready.then(function() {
-    output.textContent = '';
+    outputEl.textContent = '';
     try {
       var script = wabt.parseWast('test.wast', text);
       script.resolveNames();
       script.validate();
       var binaryOutput = script.toBinary({log: true});
-      output.textContent = binaryOutput.log;
+      outputEl.textContent = binaryOutput.log;
+      binaryBuffer = binaryOutput.buffer;
       var blob = new Blob([binaryOutput.buffer]);
       if (binaryBlobUrl) {
         URL.revokeObjectURL(binaryBlobUrl);
       }
       binaryBlobUrl = URL.createObjectURL(blob);
       downloadLink.setAttribute('href', binaryBlobUrl);
-      download.classList.remove('disabled');
+      downloadEl.classList.remove('disabled');
     } catch (e) {
-      output.textContent += e.toString();
-      download.classList.add('disabled');
+      outputEl.textContent += e.toString();
+      downloadEl.classList.add('disabled');
     } finally {
       if (script) script.destroy();
     }
   });
 }
 
-var compileInput = debounce(function() { compile(input.value); }, 100);
+var compileInput =
+    debounce(function() { compile(editor.getValue()); }, kCompileMinMS);
 
-function onInputInput(e) {
+function onEditorChange(e) {
   compileInput();
 }
 
-var examples = [
-  {
-    name: 'empty',
-    contents: '(module)'
-  },
-
-  {
-    name: 'simple',
-    contents:
-      '(module\n' +
-      '  (func $addTwo (param i32 i32) (result i32)\n' +
-      '    get_local 0\n' +
-      '    get_local 1\n' +
-      '    i32.add)\n' +
-      '  (export "addTwo" (func $addTwo)))\n'
-  },
-
-  {
-    name: 'factorial',
-    contents:
-      '(module\n' +
-      '  (func $fac (param i64) (result i64)\n' +
-      '    get_local 0\n' +
-      '    i64.const 1\n' +
-      '    i64.lt_s\n' +
-      '    if i64\n' +
-      '      i64.const 1\n' +
-      '    else\n' +
-      '      get_local 0\n' +
-      '      get_local 0\n' +
-      '      i64.const 1\n' +
-      '      i64.sub\n' +
-      '      call $fac\n' +
-      '      i64.mul\n' +
-      '    end)\n' +
-      '  (export "fac" (func $fac)))\n'
-  },
-
-  {
-    name: 'stuff',
-    contents:
-      '(module\n' +
-      '  (import "foo" "bar" (func (param f32)))\n' +
-      '  (memory (data "hi"))\n' +
-      '  (type (func (param i32) (result i32)))\n' +
-      '  (start 1)\n' +
-      '  (table 0 1 anyfunc)\n' +
-      '  (func)\n' +
-      '  (func (type 0)\n' +
-      '    i32.const 42\n' +
-      '    drop)\n' +
-      '  (export "e" (func 1)))\n'
-  }
-];
-
 function setExample(index) {
   var contents = examples[index].contents;
-  input.value = contents;
+  editor.setValue(contents);
   compileInput();
 }
 
@@ -156,15 +101,15 @@ function onDownloadClicked(e) {
   downloadLink.dispatchEvent(event);
 }
 
-input.addEventListener('input', onInputInput);
-select.addEventListener('change', onSelectChanged);
-download.addEventListener('click', onDownloadClicked);
+editor.on('change', onEditorChange);
+selectEl.addEventListener('change', onSelectChanged);
+downloadEl.addEventListener('click', onDownloadClicked);
 
 for (var i = 0; i < examples.length; ++i) {
   var example = examples[i];
   var option = document.createElement('option');
   option.textContent = example.name;
-  select.appendChild(option);
+  selectEl.appendChild(option);
 }
-select.selectedIndex = 1;
-setExample(select.selectedIndex);
+selectEl.selectedIndex = 1;
+setExample(selectEl.selectedIndex);

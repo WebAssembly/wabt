@@ -1,9 +1,5 @@
-textarea {
-  width: 100%;
-  height: 400px;
-  min-height: 400px;
-  font-family: monospace;
-  resize: vertical;
+.CodeMirror {
+  height: 600px;
 }
 
 .two-fifths {
