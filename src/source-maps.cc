@@ -88,8 +88,8 @@ void SourceMapGenerator::SourceMapping::Dump() const {
             << source_idx << "\n";
 }
 
-void SourceMapGenerator::AddMapping(SourceLocation original,
-                                    SourceLocation generated,
+void SourceMapGenerator::AddMapping(SourceLocation generated,
+                                    SourceLocation original,
                                     std::string source) {
   map_prepared = false;  // New mapping invalidates compressed map.
   size_t source_idx = INDEX_NONE;

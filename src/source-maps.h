@@ -41,6 +41,7 @@ struct SourceMap {
     // Field 5
     size_t name = 0;  // Index into names list
     Segment() = default;
+    // Explicit constructor, mostly used for testing.
     Segment(std::pair<uint32_t, int32_t> generated_col_p,
             std::pair<bool, size_t> source_p,
             std::pair<uint32_t, int32_t> source_line_p,
@@ -83,7 +84,7 @@ class SourceMapGenerator {
   SourceMapGenerator(std::string file_, std::string source_root_)
       : map(file_, source_root_) {}
 
-  void AddMapping(SourceLocation original, SourceLocation generated,
+  void AddMapping(SourceLocation generated, SourceLocation original,
                   std::string source);
   void DumpMappings() { DumpRawMappings(); }
   SourceMap& GetMap() {

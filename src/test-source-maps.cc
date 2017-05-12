@@ -69,9 +69,9 @@ TEST(source_maps, constructor) { SourceMapGenerator("file", "source-root"); }
 
 TEST(source_maps, sources) {
   SourceMapGenerator smg("source.out", "source-root");
-  smg.AddMapping({1, 1}, {2, 3}, "asdf1");
-  smg.AddMapping({1, 1}, {2, 2}, "");
-  smg.AddMapping({1, 1}, {2, 3}, "asdf2");
+  smg.AddMapping({2, 3}, {1, 1}, "asdf1");
+  smg.AddMapping({2, 2}, {1, 1}, "");
+  smg.AddMapping({2, 3}, {1, 1}, "asdf2");
   const auto& map = smg.GetMap();
   EXPECT_EQ("source.out", map.file);
   EXPECT_EQ("source-root", map.source_root);
@@ -101,7 +101,7 @@ TEST(source_maps, zero_mappings) {
 TEST(source_maps, incremental_mappings) {
   // Check cases where there is no delta; i.e. the first instances of fields.
   SourceMapGenerator smg("", "");
-  smg.AddMapping({4, 1}, {3, 7}, "asdf");
+  smg.AddMapping({3, 7}, {4, 1}, "asdf");
   auto& map = smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
@@ -112,7 +112,7 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_SEGMENT_EQ(s, seg);
 
   // Duplicate mapping (no new segment)
-  smg.AddMapping({4, 1}, {3, 7}, "asdf");
+  smg.AddMapping({3, 7}, {4, 1}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
@@ -120,7 +120,7 @@ TEST(source_maps, incremental_mappings) {
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
 
   // New generated column, same line, same source
-  smg.AddMapping({4, 1}, {3, 8}, "asdf");
+  smg.AddMapping({3, 8}, {4, 1}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
@@ -136,7 +136,7 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated column, same line, new source col
-  smg.AddMapping({4, 2}, {3, 9}, "asdf");
+  smg.AddMapping({3, 9}, {4, 2}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
@@ -146,7 +146,7 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated column, same line, new source line, negative source col delta
-  smg.AddMapping({5, 0}, {3, 10}, "asdf");
+  smg.AddMapping({3, 10}, {5, 0}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
@@ -158,7 +158,7 @@ TEST(source_maps, incremental_mappings) {
   // Same generated line and col, different source.
   // The JS sourcemapper allows and encodes this
   // (I guess it overrides the previous mapping?)
-  smg.AddMapping({6, 10}, {3, 10}, "asdf");
+  smg.AddMapping({3, 10}, {6, 10}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
@@ -168,7 +168,7 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated col, negative source col delta
-  smg.AddMapping({6, 9}, {3, 11}, "asdf");
+  smg.AddMapping({3, 11}, {6, 9}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
@@ -178,7 +178,7 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated line (new segment, leave 1 hole)
-  smg.AddMapping({7, 0}, {5, 1}, "asdf");
+  smg.AddMapping({5, 1}, {7, 0}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(6UL, map.segment_groups.size());
@@ -193,7 +193,7 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated line inserted into the hole
-  smg.AddMapping({7, 0}, {4, 1}, "asdf");
+  smg.AddMapping({4, 1}, {7, 0}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(6UL, map.segment_groups.size());
