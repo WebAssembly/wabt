@@ -138,7 +138,6 @@ void SourceMapGenerator::CompressMappings() {
     auto& group = map.segment_groups.back();
     group.segments.emplace_back();
     SourceMap::Segment& seg = group.segments.back();
-    memset(&seg, 0x0, sizeof(seg));
     seg.generated_col = mapping.generated.col;
     seg.generated_col_delta = mapping.generated.col - last_gen_col;
     last_gen_col = mapping.generated.col;
