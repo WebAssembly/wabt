@@ -26,22 +26,32 @@ struct SourceMap {
   // Representation of mappings
   struct Segment {
     // Field 1
-    uint32_t generated_col;        // Start column in generated code. Remove?
-    uint32_t generated_col_delta;  // Delta from previous generated col
-    bool has_source;               // If true, fields 2-4 will be valid.
+    uint32_t generated_col = 0;        // Start column in generated code. Remove?
+    uint32_t generated_col_delta = 0;  // Delta from previous generated col
+    bool has_source = false;               // If true, fields 2-4 will be valid.
     // Field 2
-    size_t source;  // Index into sources list
+    size_t source = 0;  // Index into sources list
     // Field 3
-    uint32_t source_line;        // Start line in source. Remove?
-    int32_t source_line_delta;     // Delta from previous source line
+    uint32_t source_line = 0;        // Start line in source. Remove?
+    int32_t source_line_delta = 0;     // Delta from previous source line
     // Field 4
-    uint32_t source_col;        // Start column in source. Remove?
-    int32_t source_col_delta;     // Delta from previous source column
-    bool has_name; // If true, field 5 will be valid.
+    uint32_t source_col = 0;        // Start column in source. Remove?
+    int32_t source_col_delta = 0;     // Delta from previous source column
+    bool has_name = false; // If true, field 5 will be valid.
     // Field 5
-    size_t name;  // Index into names list
-    //Segment() { memset(this, 0x0, sizeof(*this)); } // FIXME: HACK
-    void Dump();
+    size_t name = 0;  // Index into names list
+    Segment() = default;
+    Segment(std::pair<uint32_t, int32_t> generated_col_p,
+            std::pair<bool, size_t> source_p,
+            std::pair<uint32_t, int32_t> source_line_p,
+            std::pair<uint32_t, int32_t> source_col_p,
+            std::pair<bool, size_t> name_p) {
+      std::tie(generated_col, generated_col_delta) = generated_col_p;
+      std::tie(has_source, source) = source_p;
+      std::tie(source_line, source_line_delta) = source_line_p;
+      std::tie(source_col, source_col_delta) = source_col_p;
+      std::tie(has_name, name) = name_p;
+    }
   };
   struct SegmentGroup {
     uint32_t generated_line;  // Line in the generated file for all segments

@@ -94,7 +94,7 @@ TEST(source_maps, zero_mappings) {
   EXPECT_EQ(0U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
   const auto& seg = map.segment_groups.back().segments.back();
-  SourceMap::Segment s = {0, 0, true, 0, 0, 0, 0, 0, false, 0};
+  SourceMap::Segment s = {{0, 0}, {true, 0}, {0, 0}, {0, 0}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, seg);
 }
 
@@ -108,7 +108,7 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
   const auto& seg = map.segment_groups.back().segments.back();
-  SourceMap::Segment s = {7, 7, true, 0, 4, 4, 1, 1, false, 0};
+  SourceMap::Segment s = {{7, 7}, {true, 0}, {4, 4}, {1, 1}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, seg);
 
   // Duplicate mapping (no new segment)
@@ -126,7 +126,7 @@ TEST(source_maps, incremental_mappings) {
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(2UL, map.segment_groups.back().segments.size());
-  //s = {8, 1, true, 0, 4, 0, 1, 0, false, 0};
+  //s = {{8, 1}, {true, 0}, {4, 0}, {1, 0}, {false, 0}};
   // Not sure which is more readable; pass a whole new segment on one line or
   // update by field name?
   s.generated_col = 8;
@@ -142,7 +142,7 @@ TEST(source_maps, incremental_mappings) {
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(3UL, map.segment_groups.back().segments.size());
-  s = {9, 1, true, 0, 4, 0, 2, 1, false, 0};
+  s = {{9, 1}, {true, 0}, {4, 0}, {2, 1}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated column, same line, new source line, negative source col delta
@@ -152,7 +152,7 @@ TEST(source_maps, incremental_mappings) {
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(4UL, map.segment_groups.back().segments.size());
-  s = {10, 1, true, 0, 5, 1, 0, -2, false, 0};
+  s = {{10, 1}, {true, 0}, {5, 1}, {0, -2}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // Same generated line and col, different source.
@@ -164,7 +164,7 @@ TEST(source_maps, incremental_mappings) {
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(5UL, map.segment_groups.back().segments.size());
-  s = {10, 0, true, 0, 6, 1, 10, 10, false, 0};
+  s = {{10, 0}, {true, 0}, {6, 1}, {10, 10}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated col, negative source col delta
@@ -174,7 +174,7 @@ TEST(source_maps, incremental_mappings) {
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
   ASSERT_EQ(6UL, map.segment_groups.back().segments.size());
-  s = {11, 1, true, 0, 6, 0, 9, -1, false, 0};
+  s = {{11, 1}, {true, 0}, {6, 0}, {9, -1}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated line (new segment, leave 1 hole)
@@ -189,7 +189,7 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_EQ(5U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
   // Generated col delta is 1 because it's a new line
-  s = {1, 1, true, 0, 7, 1, 0, -9, false, 0};
+  s = {{1, 1}, {true, 0}, {7, 1}, {0, -9}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated line inserted into the hole
@@ -200,9 +200,9 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_EQ(4U, map.segment_groups[4].generated_line);
   ASSERT_EQ(1UL, map.segment_groups[4].segments.size());
   // Inserted segment. Generated col delta is 0
-  s = {1, 1, true, 0, 7, 1, 0, -9, false, 0};
+  s = {{1, 1}, {true, 0}, {7, 1}, {0, -9}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups[4].segments.back());
   // Following segment
-  s = {1, 1, true, 0, 7, 0, 0, 0, false, 0};
+  s = {{1, 1}, {true, 0}, {7, 0}, {0, 0}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 }
