@@ -88,45 +88,54 @@ TEST(source_maps, sources) {
 
 TEST(source_maps, zero_mappings) {
   SourceMapGenerator smg("", "");
-  smg.AddMapping({0, 0}, {0, 0}, "");
+  smg.AddMapping({1, 0}, {1, 0}, "");
   const auto& map = smg.GetMap();
   ASSERT_EQ(1UL, map.segment_groups.size());
-  EXPECT_EQ(0U, map.segment_groups.back().generated_line);
+  EXPECT_EQ(1U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
   const auto& seg = map.segment_groups.back().segments.back();
-  SourceMap::Segment s = {{0, 0}, {true, 0}, {0, 0}, {0, 0}, {false, 0}};
+  SourceMap::Segment s = {{0, 0}, {true, 0}, {1, 1}, {0, 0}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, seg);
+}
+
+TEST(source_maps, invalid_mappings) {
+  SourceMapGenerator smg("", "");
+  // For now gen, orig, and source are all required.
+  EXPECT_FALSE(smg.AddMapping({0, 1}, {1, 1}, ""));
+  EXPECT_FALSE(smg.AddMapping({1, 1}, {0, 1}, ""));
+  EXPECT_TRUE(smg.AddMapping({1, 0}, {1, 1}, ""));
+  EXPECT_TRUE(smg.AddMapping({1, 1}, {1, 0}, ""));
 }
 
 TEST(source_maps, incremental_mappings) {
   // Check cases where there is no delta; i.e. the first instances of fields.
   SourceMapGenerator smg("", "");
-  smg.AddMapping({3, 7}, {4, 1}, "asdf");
+  smg.AddMapping({4, 7}, {5, 1}, "asdf");
   auto& map = smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
-  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  EXPECT_EQ(4U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
   const auto& seg = map.segment_groups.back().segments.back();
-  SourceMap::Segment s = {{7, 7}, {true, 0}, {4, 4}, {1, 1}, {false, 0}};
+  SourceMap::Segment s = {{7, 7}, {true, 0}, {5, 5}, {1, 1}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, seg);
 
   // Duplicate mapping (no new segment)
-  smg.AddMapping({3, 7}, {4, 1}, "asdf");
+  smg.AddMapping({4, 7}, {5, 1}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
-  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  EXPECT_EQ(4U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
 
   // New generated column, same line, same source
-  smg.AddMapping({3, 8}, {4, 1}, "asdf");
+  smg.AddMapping({4, 8}, {5, 1}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
-  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  EXPECT_EQ(4U, map.segment_groups.back().generated_line);
   ASSERT_EQ(2UL, map.segment_groups.back().segments.size());
-  //s = {{8, 1}, {true, 0}, {4, 0}, {1, 0}, {false, 0}};
+  //s = {{8, 1}, {true, 0}, {5, 1}, {1, 0}, {false, 0}};
   // Not sure which is more readable; pass a whole new segment on one line or
   // update by field name?
   s.generated_col = 8;
@@ -136,73 +145,73 @@ TEST(source_maps, incremental_mappings) {
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated column, same line, new source col
-  smg.AddMapping({3, 9}, {4, 2}, "asdf");
+  smg.AddMapping({4, 9}, {5, 2}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
-  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  EXPECT_EQ(4U, map.segment_groups.back().generated_line);
   ASSERT_EQ(3UL, map.segment_groups.back().segments.size());
-  s = {{9, 1}, {true, 0}, {4, 0}, {2, 1}, {false, 0}};
+  s = {{9, 1}, {true, 0}, {5, 0}, {2, 1}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated column, same line, new source line, negative source col delta
-  smg.AddMapping({3, 10}, {5, 0}, "asdf");
+  smg.AddMapping({4, 10}, {6, 0}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
-  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  EXPECT_EQ(4U, map.segment_groups.back().generated_line);
   ASSERT_EQ(4UL, map.segment_groups.back().segments.size());
-  s = {{10, 1}, {true, 0}, {5, 1}, {0, -2}, {false, 0}};
+  s = {{10, 1}, {true, 0}, {6, 1}, {0, -2}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // Same generated line and col, different source.
   // The JS sourcemapper allows and encodes this
   // (I guess it overrides the previous mapping?)
-  smg.AddMapping({3, 10}, {6, 10}, "asdf");
+  smg.AddMapping({4, 10}, {7, 10}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
-  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  EXPECT_EQ(4U, map.segment_groups.back().generated_line);
   ASSERT_EQ(5UL, map.segment_groups.back().segments.size());
-  s = {{10, 0}, {true, 0}, {6, 1}, {10, 10}, {false, 0}};
+  s = {{10, 0}, {true, 0}, {7, 1}, {10, 10}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated col, negative source col delta
-  smg.AddMapping({3, 11}, {6, 9}, "asdf");
+  smg.AddMapping({4, 11}, {7, 9}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
-  EXPECT_EQ(3U, map.segment_groups.back().generated_line);
+  EXPECT_EQ(4U, map.segment_groups.back().generated_line);
   ASSERT_EQ(6UL, map.segment_groups.back().segments.size());
-  s = {{11, 1}, {true, 0}, {6, 0}, {9, -1}, {false, 0}};
+  s = {{11, 1}, {true, 0}, {7, 0}, {9, -1}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated line (new segment, leave 1 hole)
-  smg.AddMapping({5, 1}, {7, 0}, "asdf");
+  smg.AddMapping({6, 1}, {8, 0}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(6UL, map.segment_groups.size());
-  // Empty segment at 4
-  EXPECT_EQ(4U, map.segment_groups[4].generated_line);
+  // Empty segment at line 5
+  EXPECT_EQ(5U, map.segment_groups[4].generated_line);
   ASSERT_EQ(0UL, map.segment_groups[4].segments.size());
-  // Populated segment at 5
-  EXPECT_EQ(5U, map.segment_groups.back().generated_line);
+  // Populated segment at line 6
+  EXPECT_EQ(6U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
   // Generated col delta is 1 because it's a new line
-  s = {{1, 1}, {true, 0}, {7, 1}, {0, -9}, {false, 0}};
+  s = {{1, 1}, {true, 0}, {8, 1}, {0, -9}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated line inserted into the hole
-  smg.AddMapping({4, 1}, {7, 0}, "asdf");
+  smg.AddMapping({5, 1}, {8, 0}, "asdf");
   smg.GetMap();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(6UL, map.segment_groups.size());
-  EXPECT_EQ(4U, map.segment_groups[4].generated_line);
+  EXPECT_EQ(5U, map.segment_groups[4].generated_line);
   ASSERT_EQ(1UL, map.segment_groups[4].segments.size());
   // Inserted segment. Generated col delta is 0
-  s = {{1, 1}, {true, 0}, {7, 1}, {0, -9}, {false, 0}};
+  s = {{1, 1}, {true, 0}, {8, 1}, {0, -9}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups[4].segments.back());
   // Following segment
-  s = {{1, 1}, {true, 0}, {7, 0}, {0, 0}, {false, 0}};
+  s = {{1, 1}, {true, 0}, {8, 0}, {0, 0}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 }

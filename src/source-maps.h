@@ -84,14 +84,14 @@ class SourceMapGenerator {
   SourceMapGenerator(std::string file_, std::string source_root_)
       : map(file_, source_root_) {}
 
-  void AddMapping(SourceLocation generated, SourceLocation original,
+  // Returns true if the mapping is valid, and if so adds to the list.
+  bool AddMapping(SourceLocation generated, SourceLocation original,
                   std::string source);
   void DumpMappings() { DumpRawMappings(); }
-  SourceMap& GetMap() {
+  const SourceMap& GetMap() {
     CompressMappings();
     return map;
   };
-  // AddMapping(SourceLocation original, token, str source)
  public:
   struct SourceMapping {
     SourceLocation original;

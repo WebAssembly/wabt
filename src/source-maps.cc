@@ -88,28 +88,31 @@ void SourceMapGenerator::SourceMapping::Dump() const {
             << source_idx << "\n";
 }
 
-void SourceMapGenerator::AddMapping(SourceLocation generated,
+bool SourceMapGenerator::AddMapping(SourceLocation generated,
                                     SourceLocation original,
                                     std::string source) {
+  // Validate. For now, original, generated, and source are required
+  if (generated.line == 0 || original.line == 0) return false;
   map_prepared = false;  // New mapping invalidates compressed map.
   size_t source_idx = INDEX_NONE;
-    auto s = sources_map.find(source);
-    if (s == sources_map.end()) {
-      source_idx = map.sources.size();
-      map.sources.push_back(source);
-      bool inserted;
-      std::tie(std::ignore, inserted) =
-          sources_map.insert({source, source_idx});
-      assert(inserted);
-    } else {
-      source_idx = s->second;
-    }
+  auto s = sources_map.find(source);
+  if (s == sources_map.end()) {
+    source_idx = map.sources.size();
+    map.sources.push_back(source);
+    bool inserted;
+    std::tie(std::ignore, inserted) =
+        sources_map.insert({source, source_idx});
+    assert(inserted);
+  } else {
+    source_idx = s->second;
+  }
   mappings.push_back({original, generated, source_idx});
+  return true;
 }
 
 void SourceMapGenerator::CompressMappings() {
   std::sort(mappings.begin(), mappings.end());
-  uint32_t last_gen_line = static_cast<uint32_t>(-1);
+  uint32_t last_gen_line = 0;
   uint32_t last_gen_col = 0;
   uint32_t last_source_line = 0;
   uint32_t last_source_col = 0;
@@ -158,11 +161,11 @@ std::string SourceMapGenerator::SerializeMappings() {
   std::vector<std::string> mapping_results;
   mapping_results.reserve(mappings.size());
   CompressMappings();
+  // TODO: serialize the mappings.
   return "";
 }
 
 void SourceMapGenerator::DumpRawMappings() {
-  //CompressMappings();  // Just to sort them
   std::sort(mappings.begin(), mappings.end());
   std::cout << "Map: " << map.file << " " << map.source_root << "\n"
             << "Sources [";
