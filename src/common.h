@@ -73,6 +73,19 @@
   type(const type&) = delete;               \
   type& operator=(const type&) = delete;
 
+#if WITH_EXCEPTIONS
+#define WABT_TRY try {
+#define WABT_CATCH_BAD_ALLOC_AND_EXIT           \
+  }                                             \
+  catch (std::bad_alloc&) {                     \
+    WABT_FATAL("Memory allocation failure.\n"); \
+  }
+#else
+#define WABT_TRY
+#define WABT_CATCH_BAD_ALLOC_AND_EXIT
+#endif
+
+
 namespace wabt {
 
 enum class Result {

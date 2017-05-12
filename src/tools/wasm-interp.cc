@@ -1618,7 +1618,7 @@ static Result read_and_run_spec_json(const char* spec_json_filename) {
   return result;
 }
 
-int main(int argc, char** argv) {
+int ProgramMain(int argc, char** argv) {
   init_stdio();
   parse_options(argc, argv);
 
@@ -1631,4 +1631,10 @@ int main(int argc, char** argv) {
     result = read_and_run_module(s_infile);
   }
   return result != Result::Ok;
+}
+
+int main(int argc, char** argv) {
+  WABT_TRY
+  return ProgramMain(argc, argv);
+  WABT_CATCH_BAD_ALLOC_AND_EXIT
 }

@@ -41,6 +41,8 @@
 #cmakedefine01 COMPILER_IS_GNU
 #cmakedefine01 COMPILER_IS_MSVC
 
+#cmakedefine01 WITH_EXCEPTIONS
+
 #define SIZEOF_SIZE_T @SIZEOF_SIZE_T@
 #define SIZEOF_INT @SIZEOF_INT@
 #define SIZEOF_LONG @SIZEOF_LONG@
