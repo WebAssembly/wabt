@@ -42,20 +42,27 @@ TEST_F(SourceMappingTest, comparisons) {
   SourceMapGenerator::SourceMapping b = {{1, 1}, {1, 1}, 0};
   EXPECT_TRUE(a == b);
   EXPECT_FALSE(a < b);
-  b.Dump();
+  EXPECT_FALSE(b < a);
   b = {{1, 1}, {2, 1}, 0};
-  b.Dump();
   EXPECT_FALSE(a == b);
   EXPECT_TRUE(a < b);
+  EXPECT_FALSE(b < a);
   b = {{1, 1}, {1, 2}, 0};
   EXPECT_FALSE(a == b);
   EXPECT_TRUE(a < b);
+  EXPECT_FALSE(b < a);
   b = {{1, 0}, {1, 2}, 0};
   EXPECT_FALSE(a == b);
   EXPECT_TRUE(a < b);
+  EXPECT_FALSE(b < a);
   b = {{0, 0}, {1, 2}, 0};
   EXPECT_FALSE(a == b);
   EXPECT_TRUE(a < b);
+  EXPECT_FALSE(b < a);
+  b = {{1, 2}, {1, 0}, 0};
+  EXPECT_FALSE(a == b);
+  EXPECT_TRUE(b < a);
+  EXPECT_FALSE(a < b);
 }
 
 TEST(source_maps, constructor) { SourceMapGenerator("file", "source-root"); }
@@ -65,7 +72,6 @@ TEST(source_maps, sources) {
   smg.AddMapping({1, 1}, {2, 3}, "asdf1");
   smg.AddMapping({1, 1}, {2, 2}, "");
   smg.AddMapping({1, 1}, {2, 3}, "asdf2");
-  smg.DumpMappings();
   const auto& map = smg.GetMap();
   EXPECT_EQ("source.out", map.file);
   EXPECT_EQ("source-root", map.source_root);
@@ -83,7 +89,6 @@ TEST(source_maps, sources) {
 TEST(source_maps, zero_mappings) {
   SourceMapGenerator smg("", "");
   smg.AddMapping({0, 0}, {0, 0}, "");
-  smg.DumpMappings();
   const auto& map = smg.GetMap();
   ASSERT_EQ(1UL, map.segment_groups.size());
   EXPECT_EQ(0U, map.segment_groups.back().generated_line);
@@ -165,8 +170,6 @@ TEST(source_maps, incremental_mappings) {
   // New generated col, negative source col delta
   smg.AddMapping({6, 9}, {3, 11}, "asdf");
   smg.GetMap();
-  smg.DumpMappings();
-  smg.DumpMappings();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(3U, map.segment_groups.back().generated_line);
@@ -185,18 +188,21 @@ TEST(source_maps, incremental_mappings) {
   // Populated segment at 5
   EXPECT_EQ(5U, map.segment_groups.back().generated_line);
   ASSERT_EQ(1UL, map.segment_groups.back().segments.size());
+  // Generated col delta is 1 because it's a new line
   s = {1, 1, true, 0, 7, 1, 0, -9, false, 0};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 
   // New generated line inserted into the hole
   smg.AddMapping({7, 0}, {4, 1}, "asdf");
-  smg.DumpMappings();
   smg.GetMap();
-  smg.DumpMappings();
   ASSERT_TRUE(map.Validate(true));
   ASSERT_EQ(6UL, map.segment_groups.size());
   EXPECT_EQ(4U, map.segment_groups[4].generated_line);
   ASSERT_EQ(1UL, map.segment_groups[4].segments.size());
-  s = {1, 0, true, 0, 7, 0, 0, 0, false, 0};
+  // Inserted segment. Generated col delta is 0
+  s = {1, 1, true, 0, 7, 1, 0, -9, false, 0};
+  EXPECT_SEGMENT_EQ(s, map.segment_groups[4].segments.back());
+  // Following segment
+  s = {1, 1, true, 0, 7, 0, 0, 0, false, 0};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 }

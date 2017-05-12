@@ -66,8 +66,10 @@ static int32_t cmpLocation(const SourceMapGenerator::SourceLocation& a,
 
 bool SourceMapGenerator::SourceMapping::operator<(
     const SourceMapGenerator::SourceMapping& rhs) const {
-  if (cmpLocation(generated, rhs.generated) < 0) return true;
-  if (cmpLocation(original, rhs.original) < 0) return true;
+  int32_t cmp = cmpLocation(generated, rhs.generated);
+  if (cmp != 0) return cmp < 0;
+  cmp = cmpLocation(original, rhs.original);
+  if (cmp != 0) return cmp < 0;
   if (source_idx == INDEX_NONE) return rhs.source_idx != INDEX_NONE;
   if (rhs.source_idx == INDEX_NONE) return false;
   return source_idx < rhs.source_idx;
@@ -82,7 +84,7 @@ bool SourceMapGenerator::SourceMapping::operator==(
 
 void SourceMapGenerator::SourceMapping::Dump() const {
   std::cout << "Mapping " << original.line << ":" << original.col
-            << " -> " << generated.line << ":" << generated.col << ":"
+            << " -> " << generated.line << ":" << generated.col << " in "
             << source_idx << "\n";
 }
 
