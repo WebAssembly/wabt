@@ -51,7 +51,7 @@ Result typechecker_get_label(TypeChecker* tc,
                              TypeCheckerLabel** out_label) {
   if (depth >= tc->label_stack.size()) {
     assert(tc->label_stack.size() > 0);
-    print_error(tc, "invalid depth: %" PRIzd " (max %" PRIzd ")", depth,
+    print_error(tc, "invalid depth: %" PRIindex " (max %" PRIzd ")", depth,
                 tc->label_stack.size() - 1);
     *out_label = nullptr;
     return Result::Error;
