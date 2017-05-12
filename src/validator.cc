@@ -17,11 +17,10 @@
 #include "validator.h"
 #include "config.h"
 
-#include <assert.h>
-#include <inttypes.h>
-#include <memory.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <cassert>
+#include <cinttypes>
+#include <cstdarg>
+#include <cstdio>
 
 #include "binary-reader.h"
 #include "type-checker.h"

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include <assert.h>
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cinttypes>
+#include <cstdio>
+#include <cstdlib>
 
 #include "apply-names.h"
 #include "binary-error-handler.h"

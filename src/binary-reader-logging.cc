@@ -16,7 +16,7 @@
 
 #include "binary-reader-logging.h"
 
-#include <inttypes.h>
+#include <cinttypes>
 
 #include "stream.h"
 

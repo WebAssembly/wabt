@@ -17,9 +17,8 @@
 #ifndef WABT_BINARY_ERROR_HANDLER_H_
 #define WABT_BINARY_ERROR_HANDLER_H_
 
-#include <stdint.h>
-#include <stdio.h>
-
+#include <cstdint>
+#include <cstdio>
 #include <string>
 
 namespace wabt {

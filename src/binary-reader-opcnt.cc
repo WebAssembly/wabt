@@ -16,11 +16,11 @@
 
 #include "binary-reader-opcnt.h"
 
-#include <assert.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <cassert>
+#include <cinttypes>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
 
 #include "binary-reader-nop.h"
 #include "common.h"

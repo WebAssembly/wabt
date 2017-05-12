@@ -16,11 +16,10 @@
 
 #include "wat-writer.h"
 
-#include <assert.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdio.h>
-
+#include <cassert>
+#include <cinttypes>
+#include <cstdarg>
+#include <cstdio>
 #include <string>
 #include <vector>
 

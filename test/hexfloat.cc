@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-#include <stdio.h>
-
-#include <vector>
+#include <cstdio>
 #include <thread>
+#include <vector>
 
 #include "gtest/gtest.h"
 

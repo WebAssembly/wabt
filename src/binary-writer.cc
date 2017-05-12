@@ -17,13 +17,11 @@
 #include "binary-writer.h"
 #include "config.h"
 
-#include <assert.h>
-#include <math.h>
-#include <memory.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-
+#include <cassert>
+#include <cmath>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
 #include <vector>
 
 #include "binary.h"

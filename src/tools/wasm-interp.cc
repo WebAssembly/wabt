@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-#include <assert.h>
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <algorithm>
+#include <cassert>
+#include <cinttypes>
+#include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <vector>
 

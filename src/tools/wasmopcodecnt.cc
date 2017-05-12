@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-#include <assert.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <algorithm>
+#include <cassert>
+#include <cerrno>
+#include <cinttypes>
+#include <cstdio>
+#include <cstdlib>
 
 #include "binary-reader.h"
 #include "binary-reader-opcnt.h"

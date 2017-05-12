@@ -16,12 +16,10 @@
 
 #include "writer.h"
 
-#include <assert.h>
-#include <errno.h>
-#include <memory.h>
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <cassert>
+#include <cerrno>
+#include <cstdio>
+#include <cstdlib>
 #include <utility>
 
 #define ERROR0(msg) fprintf(stderr, "%s:%d: " msg, __FILE__, __LINE__)

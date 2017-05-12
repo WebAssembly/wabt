@@ -17,8 +17,7 @@
 #ifndef WABT_WAST_PARSER_LEXER_SHARED_H_
 #define WABT_WAST_PARSER_LEXER_SHARED_H_
 
-#include <stdarg.h>
-
+#include <cstdarg>
 #include <memory>
 
 #include "common.h"

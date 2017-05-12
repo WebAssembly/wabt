@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdlib>
+#include <cstdio>
+
 #include "config.h"
 
 #include "binary-writer.h"

@@ -16,11 +16,10 @@
 
 #include "binary-reader-interpreter.h"
 
-#include <assert.h>
-#include <inttypes.h>
-#include <stdarg.h>
-#include <stdio.h>
-
+#include <cassert>
+#include <cinttypes>
+#include <cstdarg>
+#include <cstdio>
 #include <vector>
 
 #include "binary-error-handler.h"

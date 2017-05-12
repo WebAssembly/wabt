@@ -17,10 +17,9 @@
 #ifndef WABT_IR_H_
 #define WABT_IR_H_
 
-#include <assert.h>
-#include <stddef.h>
-#include <stdint.h>
-
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
