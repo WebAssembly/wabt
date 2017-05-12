@@ -16,8 +16,8 @@
 
 #include "binary-writer-spec.h"
 
-#include <assert.h>
-#include <inttypes.h>
+#include <cassert>
+#include <cinttypes>
 
 #include "binary.h"
 #include "binary-writer.h"

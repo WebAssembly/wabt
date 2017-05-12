@@ -16,9 +16,8 @@
 
 #include "generate-names.h"
 
-#include <assert.h>
-#include <stdio.h>
-
+#include <cassert>
+#include <cstdio>
 #include <string>
 #include <vector>
 

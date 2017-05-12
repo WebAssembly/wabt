@@ -16,14 +16,13 @@
 
 #include "binary-reader.h"
 
-#include <assert.h>
-#include <inttypes.h>
-#include <setjmp.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-
+#include <cassert>
+#include <cinttypes>
+#include <csetjmp>
+#include <cstdarg>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
 #include <vector>
 
 #include "binary.h"

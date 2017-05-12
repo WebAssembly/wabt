@@ -16,11 +16,11 @@
 
 #include "common.h"
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <limits.h>
+#include <cassert>
+#include <climits>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
 
 #if COMPILER_IS_MSVC
 #include <fcntl.h>

@@ -15,12 +15,11 @@
  */
 
 %{
-#include <assert.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <algorithm>
+#include <cassert>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
 #include <utility>
 
 #include "binary-error-handler.h"

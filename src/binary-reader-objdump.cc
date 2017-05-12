@@ -16,12 +16,11 @@
 
 #include "binary-reader-objdump.h"
 
-#include <assert.h>
-#include <inttypes.h>
-#include <string.h>
-#include <stdio.h>
-
 #include <algorithm>
+#include <cassert>
+#include <cinttypes>
+#include <cstdio>
+#include <cstring>
 #include <vector>
 
 #include "binary-reader-nop.h"

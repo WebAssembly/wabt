@@ -16,9 +16,8 @@
 
 #include "apply-names.h"
 
-#include <assert.h>
-#include <stdio.h>
-
+#include <cassert>
+#include <cstdio>
 #include <vector>
 
 #include "ir.h"

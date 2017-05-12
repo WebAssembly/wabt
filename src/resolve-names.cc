@@ -16,8 +16,8 @@
 
 #include "resolve-names.h"
 
-#include <assert.h>
-#include <stdio.h>
+#include <cassert>
+#include <cstdio>
 
 #include "ir.h"
 #include "wast-parser-lexer-shared.h"

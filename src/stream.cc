@@ -16,8 +16,8 @@
 
 #include "stream.h"
 
-#include <assert.h>
-#include <ctype.h>
+#include <cassert>
+#include <cctype>
 
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2

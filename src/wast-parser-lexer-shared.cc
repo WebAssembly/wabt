@@ -16,10 +16,9 @@
 
 #include "wast-parser-lexer-shared.h"
 
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
 #include <string>
 
 namespace wabt {

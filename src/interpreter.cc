@@ -16,11 +16,10 @@
 
 #include "interpreter.h"
 
-#include <assert.h>
-#include <inttypes.h>
-#include <math.h>
-
 #include <algorithm>
+#include <cassert>
+#include <cinttypes>
+#include <cmath>
 #include <vector>
 
 #include "stream.h"

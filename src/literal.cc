@@ -16,11 +16,11 @@
 
 #include "literal.h"
 
-#include <assert.h>
-#include <errno.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cassert>
+#include <cerrno>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 
 #define HEX_DIGIT_BITS 4
 

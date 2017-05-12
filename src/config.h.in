@@ -119,8 +119,8 @@
 
 #elif COMPILER_IS_MSVC
 
+#include <cstring>
 #include <intrin.h>
-#include <string.h>
 
 #define WABT_UNUSED
 #define WABT_WARN_UNUSED _Check_return_
@@ -240,7 +240,7 @@ __inline unsigned __int64 __popcnt64(unsigned __int64 value) {
 #define wabt_snprintf snprintf
 #elif COMPILER_IS_MSVC
 /* can't just use _snprintf because it doesn't always null terminate */
-#include <stdarg.h>
+#include <cstdarg>
 int wabt_snprintf(char* str, size_t size, const char* format, ...);
 #else
 #error no snprintf
