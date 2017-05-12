@@ -34,10 +34,7 @@
 class TestSourceMapGenerator : public SourceMapGenerator {
 
 };
-class SourceMappingTest : public ::testing::Test {
-  // Empty, just for friendliness to get access to SourceMapping
-};
-TEST_F(SourceMappingTest, comparisons) {
+TEST(source_mappings, comparisons) {
   SourceMapGenerator::SourceMapping a = {{1, 1}, {1, 1}, 0};
   SourceMapGenerator::SourceMapping b = {{1, 1}, {1, 1}, 0};
   EXPECT_TRUE(a == b);

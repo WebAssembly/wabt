@@ -93,6 +93,7 @@ class SourceMapGenerator {
     return map;
   };
  public:
+  // TODO: make this private? But need to find a way to use it in tests.
   struct SourceMapping {
     SourceLocation original;
     SourceLocation generated;  // Use binary location?
@@ -102,7 +103,7 @@ class SourceMapGenerator {
     bool operator==(const SourceMapping& other) const;
     void Dump() const;
   };
-  friend class SourceMappingTest;
+ private:
   void CompressMappings();
 
   std::string SerializeMappings();
@@ -110,13 +111,13 @@ class SourceMapGenerator {
   SourceMap map;
   std::map<std::string, size_t> sources_map;
   std::vector<SourceMapping> mappings;
+  // TODO:
   // Parse from file
-  // Incrementally add full mappings
   // Dump to file
   // Lookup mapping bidirectionally (future?)
   // Future? Support modifiable mappings (e.g. a way to pin source location to
   // IR) Add source location without generated mapping (with e.g. an opaque
-  // handle/token) Apply generated-location to each handle (
+  // handle/token) Apply generated-location to each handle
   void DumpRawMappings();
 };
 
