@@ -269,7 +269,7 @@ if (NOT EMSCRIPTEN)
     list(REMOVE_AT ARGV 0)
     add_executable(${name} ${ARGV})
     add_dependencies(everything ${name})
-    target_link_libraries(${name} libwabt)
+    target_link_libraries(${name} libwabt libjsoncpp)
     set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
     set_property(TARGET ${name} PROPERTY CXX_STANDARD_REQUIRED ON)
     list(APPEND WABT_EXECUTABLES ${name})
@@ -353,7 +353,7 @@ if (NOT EMSCRIPTEN)
       third_party/gtest/googletest/src/gtest_main.cc
     )
     wabt_executable(wabt-unittests ${UNITTESTS_SRCS})
-    target_link_libraries(wabt-unittests libgtest ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(wabt-unittests libgtest libjsoncpp ${CMAKE_THREAD_LIBS_INIT})
   endif ()
 
   # test running

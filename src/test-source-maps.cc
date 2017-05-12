@@ -215,3 +215,18 @@ TEST(source_maps, incremental_mappings) {
   s = {{1, 1}, {true, 0}, {8, 0}, {0, 0}, {false, 0}};
   EXPECT_SEGMENT_EQ(s, map.segment_groups.back().segments.back());
 }
+
+#define EXPECT_JSON_CONTAINS_STR(output, key, value)       \
+  EXPECT_TRUE(output.find(std::string("\"") + key + "\" : \"" + value + "\"") != std::string::npos)
+#define EXPECT_JSON_CONTAINS_NUM(output, key, value)       \
+  EXPECT_TRUE(output.find(std::string("\"") + key + "\" : " + value) != std::string::npos)
+
+
+TEST(source_maps, serialization_empty) {
+  SourceMapGenerator smg("source.out", "source-root");
+  std::string output = smg.SerializeMappings();
+  EXPECT_JSON_CONTAINS_NUM(output, "version", "3");
+  EXPECT_JSON_CONTAINS_STR(output, "file", "source.out");
+  EXPECT_JSON_CONTAINS_STR(output, "sourceRoot", "source-root");
+  EXPECT_JSON_CONTAINS_NUM(output, "sources", "[]"); // TODO: fix this abuse of NUM
+}

@@ -19,6 +19,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "json/json.h"
+
 #define INDEX_NONE static_cast<size_t>(-1)
 
 #define INVALID()       \
@@ -158,8 +160,17 @@ std::string SourceMapGenerator::SerializeMappings() {
   std::vector<std::string> mapping_results;
   mapping_results.reserve(mappings.size());
   CompressMappings();
-  // TODO: serialize the mappings.
-  return "";
+  Json::Value output;
+  output["version"] = SourceMap::kSourceMapVersion;
+  output["file"] = map.file;
+  output["sourceRoot"] = map.source_root;
+  Json::Value sources(Json::arrayValue);
+  for (const auto& source : map.sources) {
+    sources.append(source);
+  }
+  output["sources"] = sources;
+  std::cout << output;
+  return output.toStyledString();
 }
 
 void SourceMapGenerator::DumpRawMappings() {

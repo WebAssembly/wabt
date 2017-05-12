@@ -92,7 +92,7 @@ class SourceMapGenerator {
     CompressMappings();
     return map;
   };
-
+  std::string SerializeMappings();
  public:
   // TODO: make this private? But need to find a way to use it in tests.
   struct SourceMapping {
@@ -108,7 +108,6 @@ class SourceMapGenerator {
  private:
   void CompressMappings();
 
-  std::string SerializeMappings();
   bool map_prepared = false;  // Is the map compressed and ready for export?
   SourceMap map;
   std::map<std::string, size_t> sources_map;
