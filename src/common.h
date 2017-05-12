@@ -40,7 +40,6 @@
 
 #define WABT_USE(x) static_cast<void>(x)
 
-#define WABT_UNKNOWN_OFFSET (static_cast<uint32_t>(~0))
 #define WABT_PAGE_SIZE 0x10000 /* 64k */
 #define WABT_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space */
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
@@ -85,8 +84,19 @@
 #define WABT_CATCH_BAD_ALLOC_AND_EXIT
 #endif
 
+#define PRIindex "u"
+#define PRIaddress "u"
+#define PRIoffset PRIzx
 
 namespace wabt {
+
+typedef uint32_t Index;    // An index into one of the many index spaces.
+typedef uint32_t Address;  // An address or size in linear memory.
+typedef size_t Offset;     // An offset into a host's file or memory buffer.
+
+static const Address kInvalidAddress = ~0;
+static const Index kInvalidIndex = ~0;
+static const Offset kInvalidOffset = ~0;
 
 enum class Result {
   Ok,
@@ -164,11 +174,11 @@ enum class RelocType {
 static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 
 struct Reloc {
-  Reloc(RelocType, size_t offset, uint32_t index, int32_t addend = 0);
+  Reloc(RelocType, size_t offset, Index index, int32_t addend = 0);
 
   RelocType type;
   size_t offset;
-  uint32_t index;
+  Index index;
   int32_t addend;
 };
 
@@ -250,17 +260,6 @@ inline StringSlice string_to_string_slice(const std::string& s) {
   ss.length = s.length();
   return ss;
 }
-
-bool default_source_error_callback(const Location*,
-                                   const char* error,
-                                   const char* source_line,
-                                   size_t source_line_length,
-                                   size_t source_line_column_offset,
-                                   void* user_data);
-
-bool default_binary_error_callback(uint32_t offset,
-                                   const char* error,
-                                   void* user_data);
 
 void init_stdio();
 

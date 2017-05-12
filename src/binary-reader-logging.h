@@ -27,210 +27,211 @@ class BinaryReaderLogging : public BinaryReader {
  public:
   BinaryReaderLogging(Stream*, BinaryReader* forward);
 
-  virtual bool OnError(const char* message);
-  virtual void OnSetState(const State* s);
+  bool OnError(const char* message) override;
+  void OnSetState(const State* s) override;
 
-  virtual Result BeginModule(uint32_t version);
-  virtual Result EndModule();
+  Result BeginModule(uint32_t version) override;
+  Result EndModule() override;
 
-  virtual Result BeginSection(BinarySection section_type, uint32_t size);
+  Result BeginSection(BinarySection section_type, Offset size) override;
 
-  virtual Result BeginCustomSection(uint32_t size, StringSlice section_name);
-  virtual Result EndCustomSection();
+  Result BeginCustomSection(Offset size, StringSlice section_name) override;
+  Result EndCustomSection() override;
 
-  virtual Result BeginTypeSection(uint32_t size);
-  virtual Result OnTypeCount(uint32_t count);
-  virtual Result OnType(uint32_t index,
-                        uint32_t param_count,
-                        Type* param_types,
-                        uint32_t result_count,
-                        Type* result_types);
-  virtual Result EndTypeSection();
+  Result BeginTypeSection(Offset size) override;
+  Result OnTypeCount(Index count) override;
+  Result OnType(Index index,
+                Index param_count,
+                Type* param_types,
+                Index result_count,
+                Type* result_types) override;
+  Result EndTypeSection() override;
 
-  virtual Result BeginImportSection(uint32_t size);
-  virtual Result OnImportCount(uint32_t count);
-  virtual Result OnImport(uint32_t index,
-                          StringSlice module_name,
-                          StringSlice field_name);
-  virtual Result OnImportFunc(uint32_t import_index,
-                              StringSlice module_name,
-                              StringSlice field_name,
-                              uint32_t func_index,
-                              uint32_t sig_index);
-  virtual Result OnImportTable(uint32_t import_index,
-                               StringSlice module_name,
-                               StringSlice field_name,
-                               uint32_t table_index,
-                               Type elem_type,
-                               const Limits* elem_limits);
-  virtual Result OnImportMemory(uint32_t import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
-                                uint32_t memory_index,
-                                const Limits* page_limits);
-  virtual Result OnImportGlobal(uint32_t import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
-                                uint32_t global_index,
-                                Type type,
-                                bool mutable_);
-  virtual Result EndImportSection();
+  Result BeginImportSection(Offset size) override;
+  Result OnImportCount(Index count) override;
+  Result OnImport(Index index,
+                  StringSlice module_name,
+                  StringSlice field_name) override;
+  Result OnImportFunc(Index import_index,
+                      StringSlice module_name,
+                      StringSlice field_name,
+                      Index func_index,
+                      Index sig_index) override;
+  Result OnImportTable(Index import_index,
+                       StringSlice module_name,
+                       StringSlice field_name,
+                       Index table_index,
+                       Type elem_type,
+                       const Limits* elem_limits) override;
+  Result OnImportMemory(Index import_index,
+                        StringSlice module_name,
+                        StringSlice field_name,
+                        Index memory_index,
+                        const Limits* page_limits) override;
+  Result OnImportGlobal(Index import_index,
+                        StringSlice module_name,
+                        StringSlice field_name,
+                        Index global_index,
+                        Type type,
+                        bool mutable_) override;
+  Result EndImportSection() override;
 
-  virtual Result BeginFunctionSection(uint32_t size);
-  virtual Result OnFunctionCount(uint32_t count);
-  virtual Result OnFunction(uint32_t index, uint32_t sig_index);
-  virtual Result EndFunctionSection();
+  Result BeginFunctionSection(Offset size) override;
+  Result OnFunctionCount(Index count) override;
+  Result OnFunction(Index index, Index sig_index) override;
+  Result EndFunctionSection() override;
 
-  virtual Result BeginTableSection(uint32_t size);
-  virtual Result OnTableCount(uint32_t count);
-  virtual Result OnTable(uint32_t index,
-                         Type elem_type,
-                         const Limits* elem_limits);
-  virtual Result EndTableSection();
+  Result BeginTableSection(Offset size) override;
+  Result OnTableCount(Index count) override;
+  Result OnTable(Index index,
+                 Type elem_type,
+                 const Limits* elem_limits) override;
+  Result EndTableSection() override;
 
-  virtual Result BeginMemorySection(uint32_t size);
-  virtual Result OnMemoryCount(uint32_t count);
-  virtual Result OnMemory(uint32_t index, const Limits* limits);
-  virtual Result EndMemorySection();
+  Result BeginMemorySection(Offset size) override;
+  Result OnMemoryCount(Index count) override;
+  Result OnMemory(Index index, const Limits* limits) override;
+  Result EndMemorySection() override;
 
-  virtual Result BeginGlobalSection(uint32_t size);
-  virtual Result OnGlobalCount(uint32_t count);
-  virtual Result BeginGlobal(uint32_t index, Type type, bool mutable_);
-  virtual Result BeginGlobalInitExpr(uint32_t index);
-  virtual Result EndGlobalInitExpr(uint32_t index);
-  virtual Result EndGlobal(uint32_t index);
-  virtual Result EndGlobalSection();
+  Result BeginGlobalSection(Offset size) override;
+  Result OnGlobalCount(Index count) override;
+  Result BeginGlobal(Index index, Type type, bool mutable_) override;
+  Result BeginGlobalInitExpr(Index index) override;
+  Result EndGlobalInitExpr(Index index) override;
+  Result EndGlobal(Index index) override;
+  Result EndGlobalSection() override;
 
-  virtual Result BeginExportSection(uint32_t size);
-  virtual Result OnExportCount(uint32_t count);
-  virtual Result OnExport(uint32_t index,
-                          ExternalKind kind,
-                          uint32_t item_index,
-                          StringSlice name);
-  virtual Result EndExportSection();
+  Result BeginExportSection(Offset size) override;
+  Result OnExportCount(Index count) override;
+  Result OnExport(Index index,
+                  ExternalKind kind,
+                  Index item_index,
+                  StringSlice name) override;
+  Result EndExportSection() override;
 
-  virtual Result BeginStartSection(uint32_t size);
-  virtual Result OnStartFunction(uint32_t func_index);
-  virtual Result EndStartSection();
+  Result BeginStartSection(Offset size) override;
+  Result OnStartFunction(Index func_index) override;
+  Result EndStartSection() override;
 
-  virtual Result BeginCodeSection(uint32_t size);
-  virtual Result OnFunctionBodyCount(uint32_t count);
-  virtual Result BeginFunctionBody(uint32_t index);
-  virtual Result OnLocalDeclCount(uint32_t count);
-  virtual Result OnLocalDecl(uint32_t decl_index, uint32_t count, Type type);
+  Result BeginCodeSection(Offset size) override;
+  Result OnFunctionBodyCount(Index count) override;
+  Result BeginFunctionBody(Index index) override;
+  Result OnLocalDeclCount(Index count) override;
+  Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
-  virtual Result OnOpcode(Opcode opcode);
-  virtual Result OnOpcodeBare();
-  virtual Result OnOpcodeUint32(uint32_t value);
-  virtual Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2);
-  virtual Result OnOpcodeUint64(uint64_t value);
-  virtual Result OnOpcodeF32(uint32_t value);
-  virtual Result OnOpcodeF64(uint64_t value);
-  virtual Result OnOpcodeBlockSig(uint32_t num_types, Type* sig_types);
-  virtual Result OnBinaryExpr(Opcode opcode);
-  virtual Result OnBlockExpr(uint32_t num_types, Type* sig_types);
-  virtual Result OnBrExpr(uint32_t depth);
-  virtual Result OnBrIfExpr(uint32_t depth);
-  virtual Result OnBrTableExpr(uint32_t num_targets,
-                               uint32_t* target_depths,
-                               uint32_t default_target_depth);
-  virtual Result OnCallExpr(uint32_t func_index);
-  virtual Result OnCallIndirectExpr(uint32_t sig_index);
-  virtual Result OnCompareExpr(Opcode opcode);
-  virtual Result OnConvertExpr(Opcode opcode);
-  virtual Result OnCurrentMemoryExpr();
-  virtual Result OnDropExpr();
-  virtual Result OnElseExpr();
-  virtual Result OnEndExpr();
-  virtual Result OnEndFunc();
-  virtual Result OnF32ConstExpr(uint32_t value_bits);
-  virtual Result OnF64ConstExpr(uint64_t value_bits);
-  virtual Result OnGetGlobalExpr(uint32_t global_index);
-  virtual Result OnGetLocalExpr(uint32_t local_index);
-  virtual Result OnGrowMemoryExpr();
-  virtual Result OnI32ConstExpr(uint32_t value);
-  virtual Result OnI64ConstExpr(uint64_t value);
-  virtual Result OnIfExpr(uint32_t num_types, Type* sig_types);
-  virtual Result OnLoadExpr(Opcode opcode,
-                            uint32_t alignment_log2,
-                            uint32_t offset);
-  virtual Result OnLoopExpr(uint32_t num_types, Type* sig_types);
-  virtual Result OnNopExpr();
-  virtual Result OnReturnExpr();
-  virtual Result OnSelectExpr();
-  virtual Result OnSetGlobalExpr(uint32_t global_index);
-  virtual Result OnSetLocalExpr(uint32_t local_index);
-  virtual Result OnStoreExpr(Opcode opcode,
-                             uint32_t alignment_log2,
-                             uint32_t offset);
-  virtual Result OnTeeLocalExpr(uint32_t local_index);
-  virtual Result OnUnaryExpr(Opcode opcode);
-  virtual Result OnUnreachableExpr();
-  virtual Result EndFunctionBody(uint32_t index);
-  virtual Result EndCodeSection();
+  Result OnOpcode(Opcode opcode) override;
+  Result OnOpcodeBare() override;
+  Result OnOpcodeUint32(uint32_t value) override;
+  Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override;
+  Result OnOpcodeUint64(uint64_t value) override;
+  Result OnOpcodeF32(uint32_t value) override;
+  Result OnOpcodeF64(uint64_t value) override;
+  Result OnOpcodeBlockSig(Index num_types, Type* sig_types) override;
+  Result OnBinaryExpr(Opcode opcode) override;
+  Result OnBlockExpr(Index num_types, Type* sig_types) override;
+  Result OnBrExpr(Index depth) override;
+  Result OnBrIfExpr(Index depth) override;
+  Result OnBrTableExpr(Index num_targets,
+                       Index* target_depths,
+                       Index default_target_depth) override;
+  Result OnCallExpr(Index func_index) override;
+  Result OnCallIndirectExpr(Index sig_index) override;
+  Result OnCompareExpr(Opcode opcode) override;
+  Result OnConvertExpr(Opcode opcode) override;
+  Result OnCurrentMemoryExpr() override;
+  Result OnDropExpr() override;
+  Result OnElseExpr() override;
+  Result OnEndExpr() override;
+  Result OnEndFunc() override;
+  Result OnF32ConstExpr(uint32_t value_bits) override;
+  Result OnF64ConstExpr(uint64_t value_bits) override;
+  Result OnGetGlobalExpr(Index global_index) override;
+  Result OnGetLocalExpr(Index local_index) override;
+  Result OnGrowMemoryExpr() override;
+  Result OnI32ConstExpr(uint32_t value) override;
+  Result OnI64ConstExpr(uint64_t value) override;
+  Result OnIfExpr(Index num_types, Type* sig_types) override;
+  Result OnLoadExpr(Opcode opcode,
+                    uint32_t alignment_log2,
+                    Address offset) override;
+  Result OnLoopExpr(Index num_types, Type* sig_types) override;
+  Result OnNopExpr() override;
+  Result OnReturnExpr() override;
+  Result OnSelectExpr() override;
+  Result OnSetGlobalExpr(Index global_index) override;
+  Result OnSetLocalExpr(Index local_index) override;
+  Result OnStoreExpr(Opcode opcode,
+                     uint32_t alignment_log2,
+                     Address offset) override;
+  Result OnTeeLocalExpr(Index local_index) override;
+  Result OnUnaryExpr(Opcode opcode) override;
+  Result OnUnreachableExpr() override;
+  Result EndFunctionBody(Index index) override;
+  Result EndCodeSection() override;
 
-  virtual Result BeginElemSection(uint32_t size);
-  virtual Result OnElemSegmentCount(uint32_t count);
-  virtual Result BeginElemSegment(uint32_t index, uint32_t table_index);
-  virtual Result BeginElemSegmentInitExpr(uint32_t index);
-  virtual Result EndElemSegmentInitExpr(uint32_t index);
-  virtual Result OnElemSegmentFunctionIndexCount(uint32_t index,
-                                                 uint32_t count);
-  virtual Result OnElemSegmentFunctionIndex(uint32_t index,
-                                            uint32_t func_index);
-  virtual Result EndElemSegment(uint32_t index);
-  virtual Result EndElemSection();
+  Result BeginElemSection(Offset size) override;
+  Result OnElemSegmentCount(Index count) override;
+  Result BeginElemSegment(Index index, Index table_index) override;
+  Result BeginElemSegmentInitExpr(Index index) override;
+  Result EndElemSegmentInitExpr(Index index) override;
+  Result OnElemSegmentFunctionIndexCount(Index index,
+                                         Index count) override;
+  Result OnElemSegmentFunctionIndex(Index index,
+                                    Index func_index) override;
+  Result EndElemSegment(Index index) override;
+  Result EndElemSection() override;
 
-  virtual Result BeginDataSection(uint32_t size);
-  virtual Result OnDataSegmentCount(uint32_t count);
-  virtual Result BeginDataSegment(uint32_t index, uint32_t memory_index);
-  virtual Result BeginDataSegmentInitExpr(uint32_t index);
-  virtual Result EndDataSegmentInitExpr(uint32_t index);
-  virtual Result OnDataSegmentData(uint32_t index,
-                                   const void* data,
-                                   uint32_t size);
-  virtual Result EndDataSegment(uint32_t index);
-  virtual Result EndDataSection();
+  Result BeginDataSection(Offset size) override;
+  Result OnDataSegmentCount(Index count) override;
+  Result BeginDataSegment(Index index, Index memory_index) override;
+  Result BeginDataSegmentInitExpr(Index index) override;
+  Result EndDataSegmentInitExpr(Index index) override;
+  Result OnDataSegmentData(Index index,
+                           const void* data,
+                           Address size) override;
+  Result EndDataSegment(Index index) override;
+  Result EndDataSection() override;
 
-  virtual Result BeginNamesSection(uint32_t size);
-  virtual Result OnFunctionNameSubsection(uint32_t index,
-                                          uint32_t name_type,
-                                          uint32_t subsection_size);
-  virtual Result OnFunctionNamesCount(uint32_t num_functions);
-  virtual Result OnFunctionName(uint32_t function_index,
-                                StringSlice function_name);
-  virtual Result OnLocalNameSubsection(uint32_t index,
-                                       uint32_t name_type,
-                                       uint32_t subsection_size);
-  virtual Result OnLocalNameFunctionCount(uint32_t num_functions);
-  virtual Result OnLocalNameLocalCount(uint32_t function_index,
-                                       uint32_t num_locals);
-  virtual Result OnLocalName(uint32_t function_index,
-                             uint32_t local_index,
-                             StringSlice local_name);
-  virtual Result EndNamesSection();
+  Result BeginNamesSection(Offset size) override;
+  Result OnFunctionNameSubsection(Index index,
+                                  uint32_t name_type,
+                                  Offset subsection_size) override;
+  Result OnFunctionNamesCount(Index num_functions) override;
+  Result OnFunctionName(Index function_index,
+                        StringSlice function_name) override;
+  Result OnLocalNameSubsection(Index index,
+                               uint32_t name_type,
+                               Offset subsection_size) override;
+  Result OnLocalNameFunctionCount(Index num_functions) override;
+  Result OnLocalNameLocalCount(Index function_index,
+                               Index num_locals) override;
+  Result OnLocalName(Index function_index,
+                     Index local_index,
+                     StringSlice local_name) override;
+  Result EndNamesSection() override;
 
-  virtual Result BeginRelocSection(uint32_t size);
-  virtual Result OnRelocCount(uint32_t count,
-                              BinarySection section_code,
-                              StringSlice section_name);
-  virtual Result OnReloc(RelocType type,
-                         uint32_t offset,
-                         uint32_t index,
-                         uint32_t addend);
-  virtual Result EndRelocSection();
+  Result BeginRelocSection(Offset size) override;
+  Result OnRelocCount(Index count,
+                      BinarySection section_code,
+                      StringSlice section_name) override;
+  Result OnReloc(RelocType type,
+                 Offset offset,
+                 Index index,
+                 uint32_t addend) override;
+  Result EndRelocSection() override;
 
-  virtual Result OnInitExprF32ConstExpr(uint32_t index, uint32_t value);
-  virtual Result OnInitExprF64ConstExpr(uint32_t index, uint64_t value);
-  virtual Result OnInitExprGetGlobalExpr(uint32_t index, uint32_t global_index);
-  virtual Result OnInitExprI32ConstExpr(uint32_t index, uint32_t value);
-  virtual Result OnInitExprI64ConstExpr(uint32_t index, uint64_t value);
+  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
+  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
+  Result OnInitExprGetGlobalExpr(Index index,
+                                 Index global_index) override;
+  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
+  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
  private:
   void Indent();
   void Dedent();
   void WriteIndent();
-  void LogTypes(uint32_t type_count, Type* types);
+  void LogTypes(Index type_count, Type* types);
 
   Stream* stream;
   BinaryReader* reader;

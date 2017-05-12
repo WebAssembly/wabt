@@ -21,103 +21,104 @@
 
 namespace wabt {
 
-int get_index_from_var(const BindingHash* hash, const Var* var) {
+Index get_index_from_var(const BindingHash* hash, const Var* var) {
   if (var->type == VarType::Name)
     return hash->find_index(var->name);
-  return static_cast<int>(var->index);
+  return var->index;
 }
 
 Export* get_export_by_name(const Module* module, const StringSlice* name) {
-  int index = module->export_bindings.find_index(*name);
-  if (index == -1)
+  Index index = module->export_bindings.find_index(*name);
+  if (index >= module->exports.size())
     return nullptr;
   return module->exports[index];
 }
 
-int get_func_index_by_var(const Module* module, const Var* var) {
+Index get_func_index_by_var(const Module* module, const Var* var) {
   return get_index_from_var(&module->func_bindings, var);
 }
 
-int get_global_index_by_var(const Module* module, const Var* var) {
+Index get_global_index_by_var(const Module* module, const Var* var) {
   return get_index_from_var(&module->global_bindings, var);
 }
 
-int get_table_index_by_var(const Module* module, const Var* var) {
+Index get_table_index_by_var(const Module* module, const Var* var) {
   return get_index_from_var(&module->table_bindings, var);
 }
 
-int get_memory_index_by_var(const Module* module, const Var* var) {
+Index get_memory_index_by_var(const Module* module, const Var* var) {
   return get_index_from_var(&module->memory_bindings, var);
 }
 
-int get_func_type_index_by_var(const Module* module, const Var* var) {
+Index get_func_type_index_by_var(const Module* module, const Var* var) {
   return get_index_from_var(&module->func_type_bindings, var);
 }
 
-int get_local_index_by_var(const Func* func, const Var* var) {
+Index get_local_index_by_var(const Func* func, const Var* var) {
   if (var->type == VarType::Index)
-    return static_cast<int>(var->index);
+    return var->index;
 
-  int result = func->param_bindings.find_index(var->name);
-  if (result != -1)
+  Index result = func->param_bindings.find_index(var->name);
+  if (result != kInvalidIndex)
     return result;
 
   result = func->local_bindings.find_index(var->name);
-  if (result == -1)
+  if (result == kInvalidIndex)
     return result;
 
   /* the locals start after all the params */
   return func->decl.sig.param_types.size() + result;
 }
 
-int get_module_index_by_var(const Script* script, const Var* var) {
+Index get_module_index_by_var(const Script* script, const Var* var) {
   return get_index_from_var(&script->module_bindings, var);
 }
 
 Func* get_func_by_var(const Module* module, const Var* var) {
-  int index = get_index_from_var(&module->func_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->funcs.size())
+  Index index = get_index_from_var(&module->func_bindings, var);
+  if (index >= module->funcs.size())
     return nullptr;
   return module->funcs[index];
 }
 
 Global* get_global_by_var(const Module* module, const Var* var) {
-  int index = get_index_from_var(&module->global_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->globals.size())
+  Index index = get_index_from_var(&module->global_bindings, var);
+  if (index >= module->globals.size())
     return nullptr;
   return module->globals[index];
 }
 
 Table* get_table_by_var(const Module* module, const Var* var) {
-  int index = get_index_from_var(&module->table_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->tables.size())
+  Index index = get_index_from_var(&module->table_bindings, var);
+  if (index >= module->tables.size())
     return nullptr;
   return module->tables[index];
 }
 
 Memory* get_memory_by_var(const Module* module, const Var* var) {
-  int index = get_index_from_var(&module->memory_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->memories.size())
+  Index index = get_index_from_var(&module->memory_bindings, var);
+  if (index >= module->memories.size())
     return nullptr;
   return module->memories[index];
 }
 
 FuncType* get_func_type_by_var(const Module* module, const Var* var) {
-  int index = get_index_from_var(&module->func_type_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= module->func_types.size())
+  Index index = get_index_from_var(&module->func_type_bindings, var);
+  if (index >= module->func_types.size())
     return nullptr;
   return module->func_types[index];
 }
 
-int get_func_type_index_by_sig(const Module* module, const FuncSignature* sig) {
+Index get_func_type_index_by_sig(const Module* module,
+                                 const FuncSignature* sig) {
   for (size_t i = 0; i < module->func_types.size(); ++i)
     if (signatures_are_equal(&module->func_types[i]->sig, sig))
       return i;
-  return -1;
+  return kInvalidIndex;
 }
 
-int get_func_type_index_by_decl(const Module* module,
-                                const FuncDeclaration* decl) {
+Index get_func_type_index_by_decl(const Module* module,
+                                  const FuncDeclaration* decl) {
   if (decl_has_func_type(decl)) {
     return get_func_type_index_by_var(module, &decl->type_var);
   } else {
@@ -134,8 +135,8 @@ Module* get_first_module(const Script* script) {
 }
 
 Module* get_module_by_var(const Script* script, const Var* var) {
-  int index = get_index_from_var(&script->module_bindings, var);
-  if (index < 0 || static_cast<size_t>(index) >= script->commands.size())
+  Index index = get_index_from_var(&script->module_bindings, var);
+  if (index >= script->commands.size())
     return nullptr;
   const Command& command = *script->commands[index].get();
   assert(command.type == CommandType::Module);
@@ -411,7 +412,7 @@ Expr* Expr::CreateIf(Block* true_, Expr* false_) {
 }
 
 // static
-Expr* Expr::CreateLoad(Opcode opcode, uint32_t align, uint64_t offset) {
+Expr* Expr::CreateLoad(Opcode opcode, Address align, uint64_t offset) {
   Expr* expr = new Expr(ExprType::Load);
   expr->load.opcode = opcode;
   expr->load.align = align;
@@ -456,7 +457,7 @@ Expr* Expr::CreateSetLocal(Var var) {
 }
 
 // static
-Expr* Expr::CreateStore(Opcode opcode, uint32_t align, uint64_t offset) {
+Expr* Expr::CreateStore(Opcode opcode, Address align, uint64_t offset) {
   Expr* expr = new Expr(ExprType::Store);
   expr->store.opcode = opcode;
   expr->store.align = align;

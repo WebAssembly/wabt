@@ -116,16 +116,16 @@ InterpreterExport::~InterpreterExport() {
 }
 
 InterpreterModule::InterpreterModule(bool is_host)
-    : memory_index(WABT_INVALID_INDEX),
-      table_index(WABT_INVALID_INDEX),
+    : memory_index(kInvalidIndex),
+      table_index(kInvalidIndex),
       is_host(is_host) {
   WABT_ZERO_MEMORY(name);
 }
 
 InterpreterModule::InterpreterModule(const StringSlice& name, bool is_host)
     : name(name),
-      memory_index(WABT_INVALID_INDEX),
-      table_index(WABT_INVALID_INDEX),
+      memory_index(kInvalidIndex),
+      table_index(kInvalidIndex),
       is_host(is_host) {}
 
 InterpreterModule::~InterpreterModule() {
@@ -134,7 +134,7 @@ InterpreterModule::~InterpreterModule() {
 
 DefinedInterpreterModule::DefinedInterpreterModule(size_t istream_start)
     : InterpreterModule(false),
-      start_func_index(WABT_INVALID_INDEX),
+      start_func_index(kInvalidIndex),
       istream_start(istream_start),
       istream_end(istream_start) {}
 
@@ -537,8 +537,8 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 
 #define POP_CALL() (*--thread->call_stack_top)
 
-#define GET_MEMORY(var)                  \
-  uint32_t memory_index = read_u32(&pc); \
+#define GET_MEMORY(var)               \
+  Index memory_index = read_u32(&pc); \
   InterpreterMemory* var = &env->memories[memory_index]
 
 #define LOAD(type, mem_type)                                              \
@@ -548,21 +548,21 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     MEM_TYPE_##mem_type value;                                            \
     TRAP_IF(offset + sizeof(value) > memory->data.size(),                 \
             MemoryAccessOutOfBounds);                                     \
-    void* src = memory->data.data() + static_cast<uint32_t>(offset);      \
+    void* src = memory->data.data() + static_cast<IstreamOffset>(offset); \
     memcpy(&value, src, sizeof(MEM_TYPE_##mem_type));                     \
     PUSH_##type(static_cast<MEM_TYPE_EXTEND_##type##_##mem_type>(value)); \
   } while (0)
 
-#define STORE(type, mem_type)                                           \
-  do {                                                                  \
-    GET_MEMORY(memory);                                                 \
-    VALUE_TYPE_##type value = POP_##type();                             \
-    uint64_t offset = static_cast<uint64_t>(POP_I32()) + read_u32(&pc); \
-    MEM_TYPE_##mem_type src = static_cast<MEM_TYPE_##mem_type>(value);  \
-    TRAP_IF(offset + sizeof(src) > memory->data.size(),                 \
-            MemoryAccessOutOfBounds);                                   \
-    void* dst = memory->data.data() + static_cast<uint32_t>(offset);    \
-    memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                     \
+#define STORE(type, mem_type)                                             \
+  do {                                                                    \
+    GET_MEMORY(memory);                                                   \
+    VALUE_TYPE_##type value = POP_##type();                               \
+    uint64_t offset = static_cast<uint64_t>(POP_I32()) + read_u32(&pc);   \
+    MEM_TYPE_##mem_type src = static_cast<MEM_TYPE_##mem_type>(value);    \
+    TRAP_IF(offset + sizeof(src) > memory->data.size(),                   \
+            MemoryAccessOutOfBounds);                                     \
+    void* dst = memory->data.data() + static_cast<IstreamOffset>(offset); \
+    memcpy(dst, &src, sizeof(MEM_TYPE_##mem_type));                       \
   } while (0)
 
 #define BINOP(rtype, type, op)            \
@@ -743,7 +743,7 @@ static WABT_INLINE uint64_t read_u64(const uint8_t** pc) {
 }
 
 static WABT_INLINE void read_table_entry_at(const uint8_t* pc,
-                                            uint32_t* out_offset,
+                                            IstreamOffset* out_offset,
                                             uint32_t* out_drop,
                                             uint8_t* out_keep) {
   *out_offset = read_u32_at(pc + WABT_TABLE_ENTRY_OFFSET_OFFSET);
@@ -752,8 +752,8 @@ static WABT_INLINE void read_table_entry_at(const uint8_t* pc,
 }
 
 bool func_signatures_are_equal(InterpreterEnvironment* env,
-                               uint32_t sig_index_0,
-                               uint32_t sig_index_1) {
+                               Index sig_index_0,
+                               Index sig_index_1) {
   if (sig_index_0 == sig_index_1)
     return true;
   InterpreterFuncSignature* sig_0 = &env->sigs[sig_index_0];
@@ -792,8 +792,8 @@ InterpreterResult call_host(InterpreterThread* thread,
 }
 
 InterpreterResult run_interpreter(InterpreterThread* thread,
-                                  uint32_t num_instructions,
-                                  uint32_t* call_stack_return_top) {
+                                  int num_instructions,
+                                  IstreamOffset* call_stack_return_top) {
   InterpreterResult result = InterpreterResult::Ok;
   assert(call_stack_return_top < thread->call_stack_end);
 
@@ -801,7 +801,7 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
 
   const uint8_t* istream = env->istream->data.data();
   const uint8_t* pc = &istream[thread->pc];
-  for (uint32_t i = 0; i < num_instructions; ++i) {
+  for (int i = 0; i < num_instructions; ++i) {
     InterpreterOpcode opcode = static_cast<InterpreterOpcode>(*pc++);
     switch (opcode) {
       case InterpreterOpcode::Select: {
@@ -817,20 +817,20 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
         break;
 
       case InterpreterOpcode::BrIf: {
-        uint32_t new_pc = read_u32(&pc);
+        IstreamOffset new_pc = read_u32(&pc);
         if (POP_I32())
           GOTO(new_pc);
         break;
       }
 
       case InterpreterOpcode::BrTable: {
-        uint32_t num_targets = read_u32(&pc);
-        uint32_t table_offset = read_u32(&pc);
+        Index num_targets = read_u32(&pc);
+        IstreamOffset table_offset = read_u32(&pc);
         VALUE_TYPE_I32 key = POP_I32();
-        uint32_t key_offset =
+        IstreamOffset key_offset =
             (key >= num_targets ? num_targets : key) * WABT_TABLE_ENTRY_SIZE;
         const uint8_t* entry = istream + table_offset + key_offset;
-        uint32_t new_pc;
+        IstreamOffset new_pc;
         uint32_t drop_count;
         uint8_t keep_count;
         read_table_entry_at(entry, &new_pc, &drop_count, &keep_count);
@@ -868,14 +868,14 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
         break;
 
       case InterpreterOpcode::GetGlobal: {
-        uint32_t index = read_u32(&pc);
+        Index index = read_u32(&pc);
         assert(index < env->globals.size());
         PUSH(env->globals[index].typed_value.value);
         break;
       }
 
       case InterpreterOpcode::SetGlobal: {
-        uint32_t index = read_u32(&pc);
+        Index index = read_u32(&pc);
         assert(index < env->globals.size());
         env->globals[index].typed_value.value = POP();
         break;
@@ -898,20 +898,20 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
         break;
 
       case InterpreterOpcode::Call: {
-        uint32_t offset = read_u32(&pc);
+        IstreamOffset offset = read_u32(&pc);
         PUSH_CALL();
         GOTO(offset);
         break;
       }
 
       case InterpreterOpcode::CallIndirect: {
-        uint32_t table_index = read_u32(&pc);
+        Index table_index = read_u32(&pc);
         InterpreterTable* table = &env->tables[table_index];
-        uint32_t sig_index = read_u32(&pc);
+        Index sig_index = read_u32(&pc);
         VALUE_TYPE_I32 entry_index = POP_I32();
         TRAP_IF(entry_index >= table->func_indexes.size(), UndefinedTableIndex);
-        uint32_t func_index = table->func_indexes[entry_index];
-        TRAP_IF(func_index == WABT_INVALID_INDEX, UninitializedTableElement);
+        Index func_index = table->func_indexes[entry_index];
+        TRAP_IF(func_index == kInvalidIndex, UninitializedTableElement);
         InterpreterFunc* func = env->funcs[func_index].get();
         TRAP_UNLESS(func_signatures_are_equal(env, func->sig_index, sig_index),
                     IndirectCallSignatureMismatch);
@@ -925,7 +925,7 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
       }
 
       case InterpreterOpcode::CallHost: {
-        uint32_t func_index = read_u32(&pc);
+        Index func_index = read_u32(&pc);
         call_host(thread, env->funcs[func_index]->as_host());
         break;
       }
@@ -1654,7 +1654,7 @@ InterpreterResult run_interpreter(InterpreterThread* thread,
       }
 
       case InterpreterOpcode::BrUnless: {
-        uint32_t new_pc = read_u32(&pc);
+        IstreamOffset new_pc = read_u32(&pc);
         if (!POP_I32())
           GOTO(new_pc);
         break;
@@ -1719,10 +1719,10 @@ void trace_pc(InterpreterThread* thread, Stream* stream) {
       break;
 
     case InterpreterOpcode::BrTable: {
-      uint32_t num_targets = read_u32_at(pc);
-      uint32_t table_offset = read_u32_at(pc + 4);
+      Index num_targets = read_u32_at(pc);
+      IstreamOffset table_offset = read_u32_at(pc + 4);
       VALUE_TYPE_I32 key = TOP().i32;
-      stream->Writef("%s %u, $#%u, table:$%u\n",
+      stream->Writef("%s %u, $#%" PRIindex ", table:$%u\n",
                      get_interpreter_opcode_name(opcode), key, num_targets,
                      table_offset);
       break;
@@ -1736,8 +1736,8 @@ void trace_pc(InterpreterThread* thread, Stream* stream) {
       break;
 
     case InterpreterOpcode::CurrentMemory: {
-      uint32_t memory_index = read_u32(&pc);
-      stream->Writef("%s $%u\n", get_interpreter_opcode_name(opcode),
+      Index memory_index = read_u32(&pc);
+      stream->Writef("%s $%" PRIindex "\n", get_interpreter_opcode_name(opcode),
                      memory_index);
       break;
     }
@@ -1804,18 +1804,20 @@ void trace_pc(InterpreterThread* thread, Stream* stream) {
     case InterpreterOpcode::I64Load:
     case InterpreterOpcode::F32Load:
     case InterpreterOpcode::F64Load: {
-      uint32_t memory_index = read_u32(&pc);
-      stream->Writef("%s $%u:%u+$%u\n", get_interpreter_opcode_name(opcode),
-                     memory_index, TOP().i32, read_u32_at(pc));
+      Index memory_index = read_u32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u+$%u\n",
+                     get_interpreter_opcode_name(opcode), memory_index,
+                     TOP().i32, read_u32_at(pc));
       break;
     }
 
     case InterpreterOpcode::I32Store8:
     case InterpreterOpcode::I32Store16:
     case InterpreterOpcode::I32Store: {
-      uint32_t memory_index = read_u32(&pc);
-      stream->Writef("%s $%u:%u+$%u, %u\n", get_interpreter_opcode_name(opcode),
-                     memory_index, PICK(2).i32, read_u32_at(pc), PICK(1).i32);
+      Index memory_index = read_u32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %u\n",
+                     get_interpreter_opcode_name(opcode), memory_index,
+                     PICK(2).i32, read_u32_at(pc), PICK(1).i32);
       break;
     }
 
@@ -1823,33 +1825,36 @@ void trace_pc(InterpreterThread* thread, Stream* stream) {
     case InterpreterOpcode::I64Store16:
     case InterpreterOpcode::I64Store32:
     case InterpreterOpcode::I64Store: {
-      uint32_t memory_index = read_u32(&pc);
-      stream->Writef("%s $%u:%u+$%u, %" PRIu64 "\n",
+      Index memory_index = read_u32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %" PRIu64 "\n",
                      get_interpreter_opcode_name(opcode), memory_index,
                      PICK(2).i32, read_u32_at(pc), PICK(1).i64);
       break;
     }
 
     case InterpreterOpcode::F32Store: {
-      uint32_t memory_index = read_u32(&pc);
-      stream->Writef("%s $%u:%u+$%u, %g\n", get_interpreter_opcode_name(opcode),
-                     memory_index, PICK(2).i32, read_u32_at(pc),
+      Index memory_index = read_u32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n",
+                     get_interpreter_opcode_name(opcode), memory_index,
+                     PICK(2).i32, read_u32_at(pc),
                      bitcast_u32_to_f32(PICK(1).f32_bits));
       break;
     }
 
     case InterpreterOpcode::F64Store: {
-      uint32_t memory_index = read_u32(&pc);
-      stream->Writef("%s $%u:%u+$%u, %g\n", get_interpreter_opcode_name(opcode),
-                     memory_index, PICK(2).i32, read_u32_at(pc),
+      Index memory_index = read_u32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n",
+                     get_interpreter_opcode_name(opcode), memory_index,
+                     PICK(2).i32, read_u32_at(pc),
                      bitcast_u64_to_f64(PICK(1).f64_bits));
       break;
     }
 
     case InterpreterOpcode::GrowMemory: {
-      uint32_t memory_index = read_u32(&pc);
-      stream->Writef("%s $%u:%u\n", get_interpreter_opcode_name(opcode),
-                     memory_index, TOP().i32);
+      Index memory_index = read_u32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u\n",
+                     get_interpreter_opcode_name(opcode), memory_index,
+                     TOP().i32);
       break;
     }
 
@@ -2053,17 +2058,17 @@ void trace_pc(InterpreterThread* thread, Stream* stream) {
 
 void disassemble(InterpreterEnvironment* env,
                  Stream* stream,
-                 uint32_t from,
-                 uint32_t to) {
+                 IstreamOffset from,
+                 IstreamOffset to) {
   /* TODO(binji): mark function entries */
   /* TODO(binji): track value stack size */
   if (from >= env->istream->data.size())
     return;
-  to = std::min<uint32_t>(to, env->istream->data.size());
+  to = std::min<IstreamOffset>(to, env->istream->data.size());
   const uint8_t* istream = env->istream->data.data();
   const uint8_t* pc = &istream[from];
 
-  while (static_cast<uint32_t>(pc - istream) < to) {
+  while (static_cast<IstreamOffset>(pc - istream) < to) {
     stream->Writef("%4" PRIzd "| ", pc - istream);
 
     InterpreterOpcode opcode = static_cast<InterpreterOpcode>(*pc++);
@@ -2084,9 +2089,9 @@ void disassemble(InterpreterEnvironment* env,
         break;
 
       case InterpreterOpcode::BrTable: {
-        uint32_t num_targets = read_u32(&pc);
-        uint32_t table_offset = read_u32(&pc);
-        stream->Writef("%s %%[-1], $#%u, table:$%u\n",
+        Index num_targets = read_u32(&pc);
+        IstreamOffset table_offset = read_u32(&pc);
+        stream->Writef("%s %%[-1], $#%" PRIindex ", table:$%u\n",
                        get_interpreter_opcode_name(opcode), num_targets,
                        table_offset);
         break;
@@ -2100,9 +2105,9 @@ void disassemble(InterpreterEnvironment* env,
         break;
 
       case InterpreterOpcode::CurrentMemory: {
-        uint32_t memory_index = read_u32(&pc);
-        stream->Writef("%s $%u\n", get_interpreter_opcode_name(opcode),
-                       memory_index);
+        Index memory_index = read_u32(&pc);
+        stream->Writef("%s $%" PRIindex "\n",
+                       get_interpreter_opcode_name(opcode), memory_index);
         break;
       }
 
@@ -2145,8 +2150,8 @@ void disassemble(InterpreterEnvironment* env,
         break;
 
       case InterpreterOpcode::CallIndirect: {
-        uint32_t table_index = read_u32(&pc);
-        stream->Writef("%s $%u:%u, %%[-1]\n",
+        Index table_index = read_u32(&pc);
+        stream->Writef("%s $%" PRIindex ":%u, %%[-1]\n",
                        get_interpreter_opcode_name(opcode), table_index,
                        read_u32(&pc));
         break;
@@ -2171,8 +2176,8 @@ void disassemble(InterpreterEnvironment* env,
       case InterpreterOpcode::I64Load:
       case InterpreterOpcode::F32Load:
       case InterpreterOpcode::F64Load: {
-        uint32_t memory_index = read_u32(&pc);
-        stream->Writef("%s $%u:%%[-1]+$%u\n",
+        Index memory_index = read_u32(&pc);
+        stream->Writef("%s $%" PRIindex ":%%[-1]+$%u\n",
                        get_interpreter_opcode_name(opcode), memory_index,
                        read_u32(&pc));
         break;
@@ -2187,8 +2192,8 @@ void disassemble(InterpreterEnvironment* env,
       case InterpreterOpcode::I64Store:
       case InterpreterOpcode::F32Store:
       case InterpreterOpcode::F64Store: {
-        uint32_t memory_index = read_u32(&pc);
-        stream->Writef("%s %%[-2]+$%u, $%u:%%[-1]\n",
+        Index memory_index = read_u32(&pc);
+        stream->Writef("%s %%[-2]+$%" PRIindex ", $%u:%%[-1]\n",
                        get_interpreter_opcode_name(opcode), memory_index,
                        read_u32(&pc));
         break;
@@ -2325,9 +2330,9 @@ void disassemble(InterpreterEnvironment* env,
         break;
 
       case InterpreterOpcode::GrowMemory: {
-        uint32_t memory_index = read_u32(&pc);
-        stream->Writef("%s $%u:%%[-1]\n", get_interpreter_opcode_name(opcode),
-                       memory_index);
+        Index memory_index = read_u32(&pc);
+        stream->Writef("%s $%" PRIindex ":%%[-1]\n",
+                       get_interpreter_opcode_name(opcode), memory_index);
         break;
       }
 
@@ -2343,7 +2348,7 @@ void disassemble(InterpreterEnvironment* env,
 
       case InterpreterOpcode::DropKeep: {
         uint32_t drop = read_u32(&pc);
-        uint32_t keep = *pc++;
+        uint8_t keep = *pc++;
         stream->Writef("%s $%u $%u\n", get_interpreter_opcode_name(opcode),
                        drop, keep);
         break;
@@ -2356,15 +2361,16 @@ void disassemble(InterpreterEnvironment* env,
         /* for now, the only reason this is emitted is for br_table, so display
          * it as a list of table entries */
         if (num_bytes % WABT_TABLE_ENTRY_SIZE == 0) {
-          uint32_t num_entries = num_bytes / WABT_TABLE_ENTRY_SIZE;
-          for (uint32_t i = 0; i < num_entries; ++i) {
+          Index num_entries = num_bytes / WABT_TABLE_ENTRY_SIZE;
+          for (Index i = 0; i < num_entries; ++i) {
             stream->Writef("%4" PRIzd "| ", pc - istream);
-            uint32_t offset;
+            IstreamOffset offset;
             uint32_t drop;
             uint8_t keep;
             read_table_entry_at(pc, &offset, &drop, &keep);
-            stream->Writef("  entry %d: offset: %u drop: %u keep: %u\n", i,
-                           offset, drop, keep);
+            stream->Writef("  entry %" PRIindex
+                           ": offset: %u drop: %u keep: %u\n",
+                           i, offset, drop, keep);
             pc += WABT_TABLE_ENTRY_SIZE;
           }
         } else {

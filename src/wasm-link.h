@@ -32,11 +32,11 @@ struct LinkerInputBinary;
 
 struct FunctionImport {
   StringSlice name;
-  uint32_t sig_index;
+  Index sig_index;
   bool active; /* Is this import present in the linked binary */
-  uint32_t relocated_function_index;
+  Index relocated_function_index;
   struct LinkerInputBinary* foreign_binary;
-  uint32_t foreign_index;
+  Index foreign_index;
 };
 
 struct GlobalImport {
@@ -46,8 +46,8 @@ struct GlobalImport {
 };
 
 struct DataSegment {
-  uint32_t memory_index;
-  uint32_t offset;
+  Index memory_index;
+  Address offset;
   const uint8_t* data;
   size_t size;
 };
@@ -55,7 +55,7 @@ struct DataSegment {
 struct Export {
   ExternalKind kind;
   StringSlice name;
-  uint32_t index;
+  Index index;
 };
 
 struct SectionDataCustom {
@@ -80,7 +80,7 @@ struct Section {
   size_t payload_offset;
 
   /* For known sections, the count of the number of elements in the section */
-  uint32_t count;
+  Index count;
 
   union {
     /* CUSTOM section data */
@@ -110,20 +110,20 @@ struct LinkerInputBinary {
   std::vector<Export> exports;
 
   std::vector<FunctionImport> function_imports;
-  uint32_t active_function_imports;
+  Index active_function_imports;
   std::vector<GlobalImport> global_imports;
-  uint32_t active_global_imports;
+  Index active_global_imports;
 
-  uint32_t type_index_offset;
-  uint32_t function_index_offset;
-  uint32_t imported_function_index_offset;
-  uint32_t global_index_offset;
-  uint32_t imported_global_index_offset;
-  uint32_t table_index_offset;
-  uint32_t memory_page_count;
-  uint32_t memory_page_offset;
+  Index type_index_offset;
+  Index function_index_offset;
+  Index imported_function_index_offset;
+  Index global_index_offset;
+  Index imported_global_index_offset;
+  Index table_index_offset;
+  Index memory_page_count;
+  Index memory_page_offset;
 
-  uint32_t table_elem_count;
+  Index table_elem_count;
 
   std::vector<std::string> debug_names;
 };

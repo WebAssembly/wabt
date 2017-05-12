@@ -25,13 +25,12 @@ BinaryErrorHandlerFile::BinaryErrorHandlerFile(FILE* file,
                                                PrintHeader print_header)
     : file_(file), header_(header), print_header_(print_header) {}
 
-bool BinaryErrorHandlerFile::OnError(uint32_t offset,
-                                     const std::string& error) {
+bool BinaryErrorHandlerFile::OnError(Offset offset, const std::string& error) {
   PrintErrorHeader();
-  if (offset == WABT_UNKNOWN_OFFSET)
+  if (offset == kInvalidOffset)
     fprintf(file_, "error: %s\n", error.c_str());
   else
-    fprintf(file_, "error: @0x%08x: %s\n", offset, error.c_str());
+    fprintf(file_, "error: @0x%08" PRIzx ": %s\n", offset, error.c_str());
   fflush(file_);
   return true;
 }

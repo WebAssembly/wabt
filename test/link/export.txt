@@ -38,8 +38,8 @@ Export:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x000037) index=00000000
-   - R_FUNC_INDEX_LEB   offset=0x000011(file=0x000042) index=0x000001
+   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x000037) index=0
+   - R_FUNC_INDEX_LEB   offset=0x000011(file=0x000042) index=1
 
 Code Disassembly:
 

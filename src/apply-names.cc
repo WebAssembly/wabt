@@ -65,7 +65,7 @@ Label* find_label_by_var(Context* ctx, Var* var) {
     }
     return nullptr;
   } else {
-    if (var->index < 0 || static_cast<size_t>(var->index) >= ctx->labels.size())
+    if (var->index >= ctx->labels.size())
       return nullptr;
     return ctx->labels[ctx->labels.size() - 1 - var->index];
   }
@@ -123,21 +123,20 @@ Result use_name_for_memory_var(Module* module, Var* var) {
 }
 
 Result use_name_for_param_and_local_var(Context* ctx, Func* func, Var* var) {
-  int local_index = get_local_index_by_var(func, var);
-  if (local_index < 0 ||
-      static_cast<size_t>(local_index) >= get_num_params_and_locals(func))
+  Index local_index = get_local_index_by_var(func, var);
+  if (local_index >= get_num_params_and_locals(func))
     return Result::Error;
 
-  uint32_t num_params = get_num_params(func);
+  Index num_params = get_num_params(func);
   std::string* name;
-  if (static_cast<uint32_t>(local_index) < num_params) {
+  if (local_index < num_params) {
     /* param */
-    assert(static_cast<size_t>(local_index) < ctx->param_index_to_name.size());
+    assert(local_index < ctx->param_index_to_name.size());
     name = &ctx->param_index_to_name[local_index];
   } else {
     /* local */
     local_index -= num_params;
-    assert(static_cast<size_t>(local_index) < ctx->local_index_to_name.size());
+    assert(local_index < ctx->local_index_to_name.size());
     name = &ctx->local_index_to_name[local_index];
   }
 
@@ -263,7 +262,7 @@ Result on_tee_local_expr(Expr* expr, void* user_data) {
   return Result::Ok;
 }
 
-Result visit_func(Context* ctx, uint32_t func_index, Func* func) {
+Result visit_func(Context* ctx, Index func_index, Func* func) {
   ctx->current_func = func;
   if (decl_has_func_type(&func->decl)) {
     CHECK_RESULT(use_name_for_func_type_var(ctx->module, &func->decl.type_var));
@@ -281,7 +280,7 @@ Result visit_func(Context* ctx, uint32_t func_index, Func* func) {
   return Result::Ok;
 }
 
-Result visit_export(Context* ctx, uint32_t export_index, Export* export_) {
+Result visit_export(Context* ctx, Index export_index, Export* export_) {
   if (export_->kind == ExternalKind::Func) {
     use_name_for_func_var(ctx->module, &export_->var);
   }
@@ -289,7 +288,7 @@ Result visit_export(Context* ctx, uint32_t export_index, Export* export_) {
 }
 
 Result visit_elem_segment(Context* ctx,
-                          uint32_t elem_segment_index,
+                          Index elem_segment_index,
                           ElemSegment* segment) {
   CHECK_RESULT(use_name_for_table_var(ctx->module, &segment->table_var));
   for (Var& var : segment->vars) {
@@ -299,7 +298,7 @@ Result visit_elem_segment(Context* ctx,
 }
 
 Result visit_data_segment(Context* ctx,
-                          uint32_t data_segment_index,
+                          Index data_segment_index,
                           DataSegment* segment) {
   CHECK_RESULT(use_name_for_memory_var(ctx->module, &segment->memory_var));
   return Result::Ok;

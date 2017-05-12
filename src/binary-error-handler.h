@@ -21,6 +21,8 @@
 #include <cstdio>
 #include <string>
 
+#include "common.h"
+
 namespace wabt {
 
 class BinaryErrorHandler {
@@ -28,7 +30,7 @@ class BinaryErrorHandler {
   virtual ~BinaryErrorHandler() {}
 
   // Returns true if the error was handled.
-  virtual bool OnError(uint32_t offset, const std::string& error) = 0;
+  virtual bool OnError(Offset offset, const std::string& error) = 0;
 };
 
 class BinaryErrorHandlerFile : public BinaryErrorHandler {
@@ -43,7 +45,7 @@ class BinaryErrorHandlerFile : public BinaryErrorHandler {
                          const std::string& header = std::string(),
                          PrintHeader print_header = PrintHeader::Never);
 
-  bool OnError(uint32_t offset, const std::string& error) override;
+  bool OnError(Offset offset, const std::string& error) override;
 
  private:
   void PrintErrorHeader();

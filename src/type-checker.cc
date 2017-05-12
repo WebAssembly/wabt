@@ -47,7 +47,7 @@ static void WABT_PRINTF_FORMAT(2, 3)
 }
 
 Result typechecker_get_label(TypeChecker* tc,
-                             size_t depth,
+                             Index depth,
                              TypeCheckerLabel** out_label) {
   if (depth >= tc->label_stack.size()) {
     assert(tc->label_stack.size() > 0);
@@ -99,7 +99,7 @@ static Result check_label_type(TypeCheckerLabel* label, LabelType label_type) {
   return label->label_type == label_type ? Result::Ok : Result::Error;
 }
 
-static Result peek_type(TypeChecker* tc, uint32_t depth, Type* out_type) {
+static Result peek_type(TypeChecker* tc, Index depth, Type* out_type) {
   TypeCheckerLabel* label;
   CHECK_RESULT(top_label(tc, &label));
 
@@ -295,7 +295,7 @@ Result typechecker_on_block(TypeChecker* tc, const TypeVector* sig) {
   return Result::Ok;
 }
 
-Result typechecker_on_br(TypeChecker* tc, size_t depth) {
+Result typechecker_on_br(TypeChecker* tc, Index depth) {
   Result result = Result::Ok;
   TypeCheckerLabel* label;
   CHECK_RESULT(typechecker_get_label(tc, depth, &label));
@@ -305,7 +305,7 @@ Result typechecker_on_br(TypeChecker* tc, size_t depth) {
   return result;
 }
 
-Result typechecker_on_br_if(TypeChecker* tc, size_t depth) {
+Result typechecker_on_br_if(TypeChecker* tc, Index depth) {
   Result result = Result::Ok;
   COMBINE_RESULT(result, pop_and_check_1_type(tc, Type::I32, "br_if"));
   TypeCheckerLabel* label;
@@ -320,7 +320,7 @@ Result typechecker_begin_br_table(TypeChecker* tc) {
   return pop_and_check_1_type(tc, Type::I32, "br_table");
 }
 
-Result typechecker_on_br_table_target(TypeChecker* tc, size_t depth) {
+Result typechecker_on_br_table_target(TypeChecker* tc, Index depth) {
   Result result = Result::Ok;
   TypeCheckerLabel* label;
   CHECK_RESULT(typechecker_get_label(tc, depth, &label));

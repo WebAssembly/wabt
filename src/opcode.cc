@@ -27,12 +27,12 @@ OpcodeInfo g_opcode_info[kOpcodeCount] = {
 
 };
 
-bool is_naturally_aligned(Opcode opcode, uint32_t alignment) {
-  uint32_t opcode_align = get_opcode_memory_size(opcode);
+bool is_naturally_aligned(Opcode opcode, Address alignment) {
+  Address opcode_align = get_opcode_memory_size(opcode);
   return alignment == WABT_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
 }
 
-uint32_t get_opcode_alignment(Opcode opcode, uint32_t alignment) {
+Address get_opcode_alignment(Opcode opcode, Address alignment) {
   if (alignment == WABT_USE_NATURAL_ALIGNMENT)
     return get_opcode_memory_size(opcode);
   return alignment;

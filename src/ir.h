@@ -44,7 +44,7 @@ struct Var {
   Location loc;
   VarType type;
   union {
-    int64_t index;
+    Index index;
     StringSlice name;
   };
 };
@@ -142,14 +142,14 @@ struct Expr {
   static Expr* CreateGetLocal(Var);
   static Expr* CreateGrowMemory();
   static Expr* CreateIf(struct Block* true_, struct Expr* false_ = nullptr);
-  static Expr* CreateLoad(Opcode, uint32_t align, uint64_t offset);
+  static Expr* CreateLoad(Opcode, Address align, uint64_t offset);
   static Expr* CreateLoop(struct Block*);
   static Expr* CreateNop();
   static Expr* CreateReturn();
   static Expr* CreateSelect();
   static Expr* CreateSetGlobal(Var);
   static Expr* CreateSetLocal(Var);
-  static Expr* CreateStore(Opcode, uint32_t align, uint64_t offset);
+  static Expr* CreateStore(Opcode, Address align, uint64_t offset);
   static Expr* CreateTeeLocal(Var);
   static Expr* CreateUnary(Opcode);
   static Expr* CreateUnreachable();
@@ -167,7 +167,7 @@ struct Expr {
     struct { Var var; } get_global, set_global;
     struct { Var var; } get_local, set_local, tee_local;
     struct { struct Block* true_; struct Expr* false_; } if_;
-    struct { Opcode opcode; uint32_t align; uint64_t offset; } load, store;
+    struct { Opcode opcode; Address align; uint64_t offset; } load, store;
   };
 };
 
@@ -332,10 +332,10 @@ struct Module {
   ModuleField* first_field;
   ModuleField* last_field;
 
-  uint32_t num_func_imports;
-  uint32_t num_table_imports;
-  uint32_t num_memory_imports;
-  uint32_t num_global_imports;
+  Index num_func_imports;
+  Index num_table_imports;
+  Index num_memory_imports;
+  Index num_global_imports;
 
   /* cached for convenience; the pointers are shared with values that are
    * stored in either ModuleField or Import. */
@@ -515,18 +515,19 @@ Result visit_func(Func* func, ExprVisitor*);
 Result visit_expr_list(Expr* expr, ExprVisitor*);
 
 /* convenience functions for looking through the IR */
-int get_index_from_var(const BindingHash* bindings, const Var* var);
-int get_func_index_by_var(const Module* module, const Var* var);
-int get_global_index_by_var(const Module* func, const Var* var);
-int get_func_type_index_by_var(const Module* module, const Var* var);
-int get_func_type_index_by_sig(const Module* module, const FuncSignature* sig);
-int get_func_type_index_by_decl(const Module* module,
-                                const FuncDeclaration* decl);
-int get_table_index_by_var(const Module* module, const Var* var);
-int get_memory_index_by_var(const Module* module, const Var* var);
-int get_import_index_by_var(const Module* module, const Var* var);
-int get_local_index_by_var(const Func* func, const Var* var);
-int get_module_index_by_var(const Script* script, const Var* var);
+Index get_index_from_var(const BindingHash* bindings, const Var* var);
+Index get_func_index_by_var(const Module* module, const Var* var);
+Index get_global_index_by_var(const Module* func, const Var* var);
+Index get_func_type_index_by_var(const Module* module, const Var* var);
+Index get_func_type_index_by_sig(const Module* module,
+                                 const FuncSignature* sig);
+Index get_func_type_index_by_decl(const Module* module,
+                                  const FuncDeclaration* decl);
+Index get_table_index_by_var(const Module* module, const Var* var);
+Index get_memory_index_by_var(const Module* module, const Var* var);
+Index get_import_index_by_var(const Module* module, const Var* var);
+Index get_local_index_by_var(const Func* func, const Var* var);
+Index get_module_index_by_var(const Script* script, const Var* var);
 
 Func* get_func_by_var(const Module* module, const Var* var);
 Global* get_global_by_var(const Module* func, const Var* var);
@@ -569,23 +570,23 @@ static WABT_INLINE size_t get_num_params_and_locals(const Func* func) {
   return get_num_params(func) + get_num_locals(func);
 }
 
-static WABT_INLINE Type get_param_type(const Func* func, int index) {
+static WABT_INLINE Type get_param_type(const Func* func, Index index) {
   assert(static_cast<size_t>(index) < func->decl.sig.param_types.size());
   return func->decl.sig.param_types[index];
 }
 
-static WABT_INLINE Type get_local_type(const Func* func, int index) {
+static WABT_INLINE Type get_local_type(const Func* func, Index index) {
   assert(static_cast<size_t>(index) < get_num_locals(func));
   return func->local_types[index];
 }
 
-static WABT_INLINE Type get_result_type(const Func* func, int index) {
+static WABT_INLINE Type get_result_type(const Func* func, Index index) {
   assert(static_cast<size_t>(index) < func->decl.sig.result_types.size());
   return func->decl.sig.result_types[index];
 }
 
 static WABT_INLINE Type get_func_type_param_type(const FuncType* func_type,
-                                                 int index) {
+                                                 Index index) {
   return func_type->sig.param_types[index];
 }
 
@@ -594,7 +595,7 @@ static WABT_INLINE size_t get_func_type_num_params(const FuncType* func_type) {
 }
 
 static WABT_INLINE Type get_func_type_result_type(const FuncType* func_type,
-                                                  int index) {
+                                                  Index index) {
   return func_type->sig.result_types[index];
 }
 

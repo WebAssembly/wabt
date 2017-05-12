@@ -274,11 +274,11 @@ static void print_call(StringSlice module_name,
 }
 
 static InterpreterResult run_defined_function(InterpreterThread* thread,
-                                              uint32_t offset) {
+                                              IstreamOffset offset) {
   thread->pc = offset;
   InterpreterResult iresult = InterpreterResult::Ok;
-  uint32_t quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
-  uint32_t* call_stack_return_top = thread->call_stack_top;
+  int quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
+  IstreamOffset* call_stack_return_top = thread->call_stack_top;
   while (iresult == InterpreterResult::Ok) {
     if (s_trace)
       trace_pc(thread, s_stdout_stream.get());
@@ -326,12 +326,12 @@ static void copy_results(InterpreterThread* thread,
 
 static InterpreterResult run_function(
     InterpreterThread* thread,
-    uint32_t func_index,
+    Index func_index,
     const std::vector<InterpreterTypedValue>& args,
     std::vector<InterpreterTypedValue>* out_results) {
   assert(func_index < thread->env->funcs.size());
   InterpreterFunc* func = thread->env->funcs[func_index].get();
-  uint32_t sig_index = func->sig_index;
+  Index sig_index = func->sig_index;
   assert(sig_index < thread->env->sigs.size());
   InterpreterFuncSignature* sig = &thread->env->sigs[sig_index];
 
@@ -352,7 +352,7 @@ static InterpreterResult run_function(
 
 static InterpreterResult run_start_function(InterpreterThread* thread,
                                             DefinedInterpreterModule* module) {
-  if (module->start_func_index == WABT_INVALID_INDEX)
+  if (module->start_func_index == kInvalidIndex)
     return InterpreterResult::Ok;
 
   if (s_trace)
@@ -450,13 +450,13 @@ static Result read_module(const char* module_filename,
 
 static Result default_host_callback(const HostInterpreterFunc* func,
                                     const InterpreterFuncSignature* sig,
-                                    uint32_t num_args,
+                                    Index num_args,
                                     InterpreterTypedValue* args,
-                                    uint32_t num_results,
+                                    Index num_results,
                                     InterpreterTypedValue* out_results,
                                     void* user_data) {
   memset(out_results, 0, sizeof(InterpreterTypedValue) * num_results);
-  for (uint32_t i = 0; i < num_results; ++i)
+  for (Index i = 0; i < num_results; ++i)
     out_results[i].type = sig->result_types[i];
 
   std::vector<InterpreterTypedValue> vec_args(args, args + num_args);
