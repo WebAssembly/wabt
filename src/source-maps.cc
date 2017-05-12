@@ -21,15 +21,16 @@
 
 #define INDEX_NONE static_cast<size_t>(-1)
 
-#define INVALID() do { \
-    if (fatal) { abort(); } else { return false; }      \
-  } while(0);
+#define INVALID()       \
+  do {                  \
+    if (fatal) abort(); \
+    return false;       \
+  } while (0);
 
 bool SourceMap::Validate(bool fatal) const {
   for (size_t i = 0; i < segment_groups.size(); ++i) {
     const auto& group = segment_groups[i];
-    if (i > 0 &&
-        group.generated_line <= segment_groups[i - 1].generated_line) {
+    if (i > 0 && group.generated_line <= segment_groups[i - 1].generated_line) {
       INVALID();
     }
     for (size_t j = 0; j < group.segments.size(); ++j) {
@@ -41,9 +42,9 @@ bool SourceMap::Validate(bool fatal) const {
       if (!seg.has_source) return true;
       if (seg.source >= sources.size()) INVALID();
       if (last_seg) {
-        if (seg.source_line_delta == 0 &&
-            seg.source_col_delta == 0) INVALID();
-        // FIXME: This has a limitation that if this seg has a source, the last one must.
+        if (seg.source_line_delta == 0 && seg.source_col_delta == 0) INVALID();
+        // FIXME: This has a limitation that if this seg has a source, the last
+        // one must.
         if (last_seg->source_line + seg.source_line_delta != seg.source_line) {
           INVALID();
         }
@@ -78,14 +79,13 @@ bool SourceMapGenerator::SourceMapping::operator<(
 bool SourceMapGenerator::SourceMapping::operator==(
     const SourceMapGenerator::SourceMapping& rhs) const {
   return !cmpLocation(generated, rhs.generated) &&
-      !cmpLocation(original, rhs.original) &&
-      source_idx == rhs.source_idx;
+         !cmpLocation(original, rhs.original) && source_idx == rhs.source_idx;
 }
 
 void SourceMapGenerator::SourceMapping::Dump() const {
-  std::cout << "Mapping " << original.line << ":" << original.col
-            << " -> " << generated.line << ":" << generated.col << " in "
-            << source_idx << "\n";
+  std::cout << "Mapping " << original.line << ":" << original.col << " -> "
+            << generated.line << ":" << generated.col << " in " << source_idx
+            << "\n";
 }
 
 bool SourceMapGenerator::AddMapping(SourceLocation generated,
@@ -100,8 +100,7 @@ bool SourceMapGenerator::AddMapping(SourceLocation generated,
     source_idx = map.sources.size();
     map.sources.push_back(source);
     bool inserted;
-    std::tie(std::ignore, inserted) =
-        sources_map.insert({source, source_idx});
+    std::tie(std::ignore, inserted) = sources_map.insert({source, source_idx});
     assert(inserted);
   } else {
     source_idx = s->second;
@@ -117,13 +116,13 @@ void SourceMapGenerator::CompressMappings() {
   uint32_t last_source_line = 0;
   uint32_t last_source_col = 0;
   map.segment_groups.clear();
-  SourceMapGenerator::SourceMapping* last_mapping = nullptr;
-  for (auto& mapping : mappings) {
+  const SourceMapGenerator::SourceMapping* last_mapping = nullptr;
+  for (const auto& mapping : mappings) {
     if (mapping.generated.line != last_gen_line) {
       // Output an empty segment group for each line between the previous
       // and current.
       assert(map.segment_groups.empty() ||
-             mapping.generated.line > last_gen_line); // Not sorted.
+             mapping.generated.line > last_gen_line);  // Not sorted.
       while (++last_gen_line <= mapping.generated.line) {
         map.segment_groups.push_back(
             {last_gen_line, std::vector<SourceMap::Segment>()});
@@ -131,8 +130,7 @@ void SourceMapGenerator::CompressMappings() {
       last_gen_line = mapping.generated.line;
       last_gen_col = 0;
     }
-    if (last_mapping != nullptr && mapping == *last_mapping)
-      continue;
+    if (last_mapping != nullptr && mapping == *last_mapping) continue;
     last_mapping = &mapping;
 
     auto& group = map.segment_groups.back();
@@ -142,7 +140,7 @@ void SourceMapGenerator::CompressMappings() {
     seg.generated_col_delta = mapping.generated.col - last_gen_col;
     last_gen_col = mapping.generated.col;
     seg.has_source = mapping.source_idx != INDEX_NONE;
-    assert(seg.has_source); // TODO(dschuff): support mappings without source
+    assert(seg.has_source);  // TODO(dschuff): support mappings without source
     if (seg.has_source) {
       seg.source_line = mapping.original.line;
       seg.source_line_delta = mapping.original.line - last_source_line;
@@ -151,7 +149,7 @@ void SourceMapGenerator::CompressMappings() {
       seg.source_col_delta = mapping.original.col - last_source_col;
       last_source_col = mapping.original.col;
     }
-    seg.has_name = false; // TODO(dschuff): add support
+    seg.has_name = false;  // TODO(dschuff): add support
   }
   map_prepared = true;
 }

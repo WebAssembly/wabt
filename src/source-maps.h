@@ -26,18 +26,18 @@ struct SourceMap {
   // Representation of mappings
   struct Segment {
     // Field 1
-    uint32_t generated_col = 0;        // Start column in generated code. Remove?
+    uint32_t generated_col = 0;  // Start column in generated code. Remove?
     uint32_t generated_col_delta = 0;  // Delta from previous generated col
-    bool has_source = false;               // If true, fields 2-4 will be valid.
+    bool has_source = false;           // If true, fields 2-4 will be valid.
     // Field 2
     size_t source = 0;  // Index into sources list
     // Field 3
-    uint32_t source_line = 0;        // Start line in source. Remove?
-    int32_t source_line_delta = 0;     // Delta from previous source line
+    uint32_t source_line = 0;       // Start line in source. Remove?
+    int32_t source_line_delta = 0;  // Delta from previous source line
     // Field 4
-    uint32_t source_col = 0;        // Start column in source. Remove?
-    int32_t source_col_delta = 0;     // Delta from previous source column
-    bool has_name = false; // If true, field 5 will be valid.
+    uint32_t source_col = 0;       // Start column in source. Remove?
+    int32_t source_col_delta = 0;  // Delta from previous source column
+    bool has_name = false;         // If true, field 5 will be valid.
     // Field 5
     size_t name = 0;  // Index into names list
     Segment() = default;
@@ -71,7 +71,7 @@ struct SourceMap {
       : file(file_), source_root(source_root_) {}
 
   void Dump();
-  bool Validate(bool fatal=false) const;
+  bool Validate(bool fatal = false) const;
 };
 
 class SourceMapGenerator {
@@ -92,6 +92,7 @@ class SourceMapGenerator {
     CompressMappings();
     return map;
   };
+
  public:
   // TODO: make this private? But need to find a way to use it in tests.
   struct SourceMapping {
@@ -103,6 +104,7 @@ class SourceMapGenerator {
     bool operator==(const SourceMapping& other) const;
     void Dump() const;
   };
+
  private:
   void CompressMappings();
 

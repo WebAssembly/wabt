@@ -18,22 +18,20 @@
 #include "source-maps.h"
 
 // Use a macro instead of a function to get meaningful line numbers on failure.
-#define EXPECT_SEGMENT_EQ(lhs, rhs) do {           \
-    EXPECT_EQ(lhs.generated_col, rhs.generated_col);           \
-    EXPECT_EQ(lhs.generated_col_delta, rhs.generated_col_delta);        \
-    EXPECT_EQ(lhs.has_source, rhs.has_source);                          \
-    EXPECT_EQ(lhs.source, rhs.source);\
-    EXPECT_EQ(lhs.source_line, rhs.source_line);\
-    EXPECT_EQ(lhs.source_line_delta, rhs.source_line_delta);        \
-    EXPECT_EQ(lhs.source_col, rhs.source_col);                    \
-    EXPECT_EQ(lhs.source_col_delta, rhs.source_col_delta);      \
-    EXPECT_EQ(lhs.has_name, rhs.has_name);                  \
-    EXPECT_EQ(lhs.name, rhs.name);                  \
+#define EXPECT_SEGMENT_EQ(lhs, rhs)                              \
+  do {                                                           \
+    EXPECT_EQ(lhs.generated_col, rhs.generated_col);             \
+    EXPECT_EQ(lhs.generated_col_delta, rhs.generated_col_delta); \
+    EXPECT_EQ(lhs.has_source, rhs.has_source);                   \
+    EXPECT_EQ(lhs.source, rhs.source);                           \
+    EXPECT_EQ(lhs.source_line, rhs.source_line);                 \
+    EXPECT_EQ(lhs.source_line_delta, rhs.source_line_delta);     \
+    EXPECT_EQ(lhs.source_col, rhs.source_col);                   \
+    EXPECT_EQ(lhs.source_col_delta, rhs.source_col_delta);       \
+    EXPECT_EQ(lhs.has_name, rhs.has_name);                       \
+    EXPECT_EQ(lhs.name, rhs.name);                               \
   } while (0)
 
-class TestSourceMapGenerator : public SourceMapGenerator {
-
-};
 TEST(source_mappings, comparisons) {
   SourceMapGenerator::SourceMapping a = {{1, 1}, {1, 1}, 0};
   SourceMapGenerator::SourceMapping b = {{1, 1}, {1, 1}, 0};
@@ -58,8 +56,13 @@ TEST(source_mappings, comparisons) {
   EXPECT_FALSE(b < a);
   b = {{1, 2}, {1, 0}, 0};
   EXPECT_FALSE(a == b);
-  EXPECT_TRUE(b < a);
   EXPECT_FALSE(a < b);
+  EXPECT_TRUE(b < a);
+
+  b = {{1, 1}, {1, 1}, 1};
+  EXPECT_FALSE(a == b);
+  EXPECT_TRUE(a < b);
+  EXPECT_FALSE(b < a);
 }
 
 TEST(source_maps, constructor) { SourceMapGenerator("file", "source-root"); }
@@ -132,7 +135,7 @@ TEST(source_maps, incremental_mappings) {
   ASSERT_EQ(4UL, map.segment_groups.size());
   EXPECT_EQ(4U, map.segment_groups.back().generated_line);
   ASSERT_EQ(2UL, map.segment_groups.back().segments.size());
-  //s = {{8, 1}, {true, 0}, {5, 1}, {1, 0}, {false, 0}};
+  // s = {{8, 1}, {true, 0}, {5, 1}, {1, 0}, {false, 0}};
   // Not sure which is more readable; pass a whole new segment on one line or
   // update by field name?
   s.generated_col = 8;
