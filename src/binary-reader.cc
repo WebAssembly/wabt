@@ -58,21 +58,21 @@ struct Context {
   BinaryReader::State state;
   jmp_buf error_jmp_buf;
   TypeVector param_types;
-  std::vector<uint32_t> target_depths;
+  std::vector<Index> target_depths;
   const ReadBinaryOptions* options = nullptr;
   BinarySection last_known_section = BinarySection::Invalid;
-  uint32_t num_signatures = 0;
-  uint32_t num_imports = 0;
-  uint32_t num_func_imports = 0;
-  uint32_t num_table_imports = 0;
-  uint32_t num_memory_imports = 0;
-  uint32_t num_global_imports = 0;
-  uint32_t num_function_signatures = 0;
-  uint32_t num_tables = 0;
-  uint32_t num_memories = 0;
-  uint32_t num_globals = 0;
-  uint32_t num_exports = 0;
-  uint32_t num_function_bodies = 0;
+  Index num_signatures = 0;
+  Index num_imports = 0;
+  Index num_func_imports = 0;
+  Index num_table_imports = 0;
+  Index num_memory_imports = 0;
+  Index num_global_imports = 0;
+  Index num_function_signatures = 0;
+  Index num_tables = 0;
+  Index num_memories = 0;
+  Index num_globals = 0;
+  Index num_exports = 0;
+  Index num_function_bodies = 0;
 };
 
 }  // namespace
@@ -309,7 +309,7 @@ static void in_str(Context* ctx, StringSlice* out_str, const char* desc) {
 
 static void in_bytes(Context* ctx,
                      const void** out_data,
-                     uint32_t* out_data_size,
+                     Address* out_data_size,
                      const char* desc) {
   uint32_t data_size = 0;
   in_u32_leb128(ctx, &data_size, "data size");
@@ -321,6 +321,18 @@ static void in_bytes(Context* ctx,
       static_cast<const uint8_t*>(ctx->state.data) + ctx->state.offset;
   *out_data_size = data_size;
   ctx->state.offset += data_size;
+}
+
+static void in_index(Context* ctx, Index* index, const char* desc) {
+  uint32_t value;
+  in_u32_leb128(ctx, &value, desc);
+  *index = value;
+}
+
+static void in_file_offset(Context* ctx, Offset* offset, const char* desc) {
+  uint32_t value;
+  in_u32_leb128(ctx, &value, desc);
+  *offset = value;
 }
 
 static bool is_valid_external_kind(uint8_t kind) {
@@ -344,23 +356,23 @@ static bool is_inline_sig_type(Type type) {
   return is_concrete_type(type) || type == Type::Void;
 }
 
-static uint32_t num_total_funcs(Context* ctx) {
+static Index num_total_funcs(Context* ctx) {
   return ctx->num_func_imports + ctx->num_function_signatures;
 }
 
-static uint32_t num_total_tables(Context* ctx) {
+static Index num_total_tables(Context* ctx) {
   return ctx->num_table_imports + ctx->num_tables;
 }
 
-static uint32_t num_total_memories(Context* ctx) {
+static Index num_total_memories(Context* ctx) {
   return ctx->num_memory_imports + ctx->num_memories;
 }
 
-static uint32_t num_total_globals(Context* ctx) {
+static Index num_total_globals(Context* ctx) {
   return ctx->num_global_imports + ctx->num_globals;
 }
 
-static void read_init_expr(Context* ctx, uint32_t index) {
+static void read_init_expr(Context* ctx, Index index) {
   uint8_t opcode;
   in_u8(ctx, &opcode, "opcode");
   switch (static_cast<Opcode>(opcode)) {
@@ -393,8 +405,8 @@ static void read_init_expr(Context* ctx, uint32_t index) {
     }
 
     case Opcode::GetGlobal: {
-      uint32_t global_index;
-      in_u32_leb128(ctx, &global_index, "init_expr get_global index");
+      Index global_index;
+      in_index(ctx, &global_index, "init_expr get_global index");
       CALLBACK(OnInitExprGetGlobalExpr, index, global_index);
       break;
     }
@@ -473,7 +485,7 @@ static void read_global_header(Context* ctx,
   *out_mutable = mutable_;
 }
 
-static void read_function_body(Context* ctx, uint32_t end_offset) {
+static void read_function_body(Context* ctx, Offset end_offset) {
   bool seen_end_opcode = false;
   while (ctx->state.offset < end_offset) {
     uint8_t opcode_u8;
@@ -491,7 +503,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         in_type(ctx, &sig_type, "block signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == Type::Void ? 0 : 1;
+        Index num_types = sig_type == Type::Void ? 0 : 1;
         CALLBACK(OnBlockExpr, num_types, &sig_type);
         CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
         break;
@@ -502,7 +514,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         in_type(ctx, &sig_type, "loop signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == Type::Void ? 0 : 1;
+        Index num_types = sig_type == Type::Void ? 0 : 1;
         CALLBACK(OnLoopExpr, num_types, &sig_type);
         CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
         break;
@@ -513,7 +525,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         in_type(ctx, &sig_type, "if signature type");
         RAISE_ERROR_UNLESS(is_inline_sig_type(sig_type),
                            "expected valid block signature type");
-        uint32_t num_types = sig_type == Type::Void ? 0 : 1;
+        Index num_types = sig_type == Type::Void ? 0 : 1;
         CALLBACK(OnIfExpr, num_types, &sig_type);
         CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
         break;
@@ -530,37 +542,36 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
         break;
 
       case Opcode::Br: {
-        uint32_t depth;
-        in_u32_leb128(ctx, &depth, "br depth");
+        Index depth;
+        in_index(ctx, &depth, "br depth");
         CALLBACK(OnBrExpr, depth);
         CALLBACK(OnOpcodeUint32, depth);
         break;
       }
 
       case Opcode::BrIf: {
-        uint32_t depth;
-        in_u32_leb128(ctx, &depth, "br_if depth");
+        Index depth;
+        in_index(ctx, &depth, "br_if depth");
         CALLBACK(OnBrIfExpr, depth);
         CALLBACK(OnOpcodeUint32, depth);
         break;
       }
 
       case Opcode::BrTable: {
-        uint32_t num_targets;
-        in_u32_leb128(ctx, &num_targets, "br_table target count");
+        Index num_targets;
+        in_index(ctx, &num_targets, "br_table target count");
         ctx->target_depths.resize(num_targets);
 
-        for (uint32_t i = 0; i < num_targets; ++i) {
-          uint32_t target_depth;
-          in_u32_leb128(ctx, &target_depth, "br_table target depth");
+        for (Index i = 0; i < num_targets; ++i) {
+          Index target_depth;
+          in_index(ctx, &target_depth, "br_table target depth");
           ctx->target_depths[i] = target_depth;
         }
 
-        uint32_t default_target_depth;
-        in_u32_leb128(ctx, &default_target_depth,
-                      "br_table default target depth");
+        Index default_target_depth;
+        in_index(ctx, &default_target_depth, "br_table default target depth");
 
-        uint32_t* target_depths =
+        Index* target_depths =
             num_targets ? ctx->target_depths.data() : nullptr;
 
         CALLBACK(OnBrTableExpr, num_targets, target_depths,
@@ -625,50 +636,51 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       }
 
       case Opcode::GetGlobal: {
-        uint32_t global_index;
-        in_u32_leb128(ctx, &global_index, "get_global global index");
+        Index global_index;
+        in_index(ctx, &global_index, "get_global global index");
         CALLBACK(OnGetGlobalExpr, global_index);
         CALLBACK(OnOpcodeUint32, global_index);
         break;
       }
 
       case Opcode::GetLocal: {
-        uint32_t local_index;
-        in_u32_leb128(ctx, &local_index, "get_local local index");
+        Index local_index;
+        in_index(ctx, &local_index, "get_local local index");
         CALLBACK(OnGetLocalExpr, local_index);
         CALLBACK(OnOpcodeUint32, local_index);
         break;
       }
 
       case Opcode::SetGlobal: {
-        uint32_t global_index;
-        in_u32_leb128(ctx, &global_index, "set_global global index");
+        Index global_index;
+        in_index(ctx, &global_index, "set_global global index");
         CALLBACK(OnSetGlobalExpr, global_index);
         CALLBACK(OnOpcodeUint32, global_index);
         break;
       }
 
       case Opcode::SetLocal: {
-        uint32_t local_index;
-        in_u32_leb128(ctx, &local_index, "set_local local index");
+        Index local_index;
+        in_index(ctx, &local_index, "set_local local index");
         CALLBACK(OnSetLocalExpr, local_index);
         CALLBACK(OnOpcodeUint32, local_index);
         break;
       }
 
       case Opcode::Call: {
-        uint32_t func_index;
-        in_u32_leb128(ctx, &func_index, "call function index");
+        Index func_index;
+        in_index(ctx, &func_index, "call function index");
         RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
-                           "invalid call function index: %d", func_index);
+                           "invalid call function index: %" PRIindex,
+                           func_index);
         CALLBACK(OnCallExpr, func_index);
         CALLBACK(OnOpcodeUint32, func_index);
         break;
       }
 
       case Opcode::CallIndirect: {
-        uint32_t sig_index;
-        in_u32_leb128(ctx, &sig_index, "call_indirect signature index");
+        Index sig_index;
+        in_index(ctx, &sig_index, "call_indirect signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                            "invalid call_indirect signature index");
         uint32_t reserved;
@@ -681,8 +693,8 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       }
 
       case Opcode::TeeLocal: {
-        uint32_t local_index;
-        in_u32_leb128(ctx, &local_index, "tee_local local index");
+        Index local_index;
+        in_index(ctx, &local_index, "tee_local local index");
         CALLBACK(OnTeeLocalExpr, local_index);
         CALLBACK(OnOpcodeUint32, local_index);
         break;
@@ -704,7 +716,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       case Opcode::F64Load: {
         uint32_t alignment_log2;
         in_u32_leb128(ctx, &alignment_log2, "load alignment");
-        uint32_t offset;
+        Address offset;
         in_u32_leb128(ctx, &offset, "load offset");
 
         CALLBACK(OnLoadExpr, opcode, alignment_log2, offset);
@@ -723,7 +735,7 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
       case Opcode::F64Store: {
         uint32_t alignment_log2;
         in_u32_leb128(ctx, &alignment_log2, "store alignment");
-        uint32_t offset;
+        Address offset;
         in_u32_leb128(ctx, &offset, "store offset");
 
         CALLBACK(OnStoreExpr, opcode, alignment_log2, offset);
@@ -900,14 +912,14 @@ static void read_function_body(Context* ctx, uint32_t end_offset) {
   RAISE_ERROR_UNLESS(seen_end_opcode, "function body must end with END opcode");
 }
 
-static void read_names_section(Context* ctx, uint32_t section_size) {
+static void read_names_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginNamesSection, section_size);
-  uint32_t i = 0;
-  size_t previous_read_end = ctx->read_end;
+  Index i = 0;
+  Offset previous_read_end = ctx->read_end;
   uint32_t previous_subsection_type = 0;
   while (ctx->state.offset < ctx->read_end) {
     uint32_t name_type;
-    uint32_t subsection_size;
+    Offset subsection_size;
     in_u32_leb128(ctx, &name_type, "name type");
     if (i != 0) {
       if (name_type == previous_subsection_type)
@@ -916,7 +928,7 @@ static void read_names_section(Context* ctx, uint32_t section_size) {
         RAISE_ERROR("out-of-order sub-section");
     }
     previous_subsection_type = name_type;
-    in_u32_leb128(ctx, &subsection_size, "subsection size");
+    in_file_offset(ctx, &subsection_size, "subsection size");
     size_t subsection_end = ctx->state.offset + subsection_size;
     if (subsection_end > ctx->read_end)
       RAISE_ERROR("invalid sub-section size: extends past end");
@@ -926,16 +938,17 @@ static void read_names_section(Context* ctx, uint32_t section_size) {
     case NameSectionSubsection::Function:
       CALLBACK(OnFunctionNameSubsection, i, name_type, subsection_size);
       if (subsection_size) {
-        uint32_t num_names;
-        in_u32_leb128(ctx, &num_names, "name count");
+        Index num_names;
+        in_index(ctx, &num_names, "name count");
         CALLBACK(OnFunctionNamesCount, num_names);
-        for (uint32_t j = 0; j < num_names; ++j) {
-          uint32_t function_index;
+        for (Index j = 0; j < num_names; ++j) {
+          Index function_index;
           StringSlice function_name;
 
-          in_u32_leb128(ctx, &function_index, "function index");
+          in_index(ctx, &function_index, "function index");
           RAISE_ERROR_UNLESS(function_index < num_total_funcs(ctx),
-                             "invalid function index: %u", function_index);
+                             "invalid function index: %" PRIindex,
+                             function_index);
           in_str(ctx, &function_name, "function name");
           CALLBACK(OnFunctionName, function_index, function_name);
         }
@@ -944,22 +957,22 @@ static void read_names_section(Context* ctx, uint32_t section_size) {
     case NameSectionSubsection::Local:
       CALLBACK(OnLocalNameSubsection, i, name_type, subsection_size);
       if (subsection_size) {
-        uint32_t num_funcs;
-        in_u32_leb128(ctx, &num_funcs, "function count");
+        Index num_funcs;
+        in_index(ctx, &num_funcs, "function count");
         CALLBACK(OnLocalNameFunctionCount, num_funcs);
-        for (uint32_t j = 0; j < num_funcs; ++j) {
-          uint32_t function_index;
-          in_u32_leb128(ctx, &function_index, "function index");
+        for (Index j = 0; j < num_funcs; ++j) {
+          Index function_index;
+          in_index(ctx, &function_index, "function index");
           RAISE_ERROR_UNLESS(function_index < num_total_funcs(ctx),
                              "invalid function index: %u", function_index);
-          uint32_t num_locals;
-          in_u32_leb128(ctx, &num_locals, "local count");
+          Index num_locals;
+          in_index(ctx, &num_locals, "local count");
           CALLBACK(OnLocalNameLocalCount, function_index, num_locals);
-          for (uint32_t k = 0; k < num_locals; ++k) {
-            uint32_t local_index;
+          for (Index k = 0; k < num_locals; ++k) {
+            Index local_index;
             StringSlice local_name;
 
-            in_u32_leb128(ctx, &local_index, "named index");
+            in_index(ctx, &local_index, "named index");
             in_str(ctx, &local_name, "name");
             CALLBACK(OnLocalName, function_index, local_index, local_name);
           }
@@ -981,22 +994,25 @@ static void read_names_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndNamesSection);
 }
 
-static void read_reloc_section(Context* ctx, uint32_t section_size) {
+static void read_reloc_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginRelocSection, section_size);
-  uint32_t num_relocs, section;
+  uint32_t section;
   in_u32_leb128(ctx, &section, "section");
   StringSlice section_name;
   WABT_ZERO_MEMORY(section_name);
   if (static_cast<BinarySection>(section) == BinarySection::Custom)
     in_str(ctx, &section_name, "section name");
-  in_u32_leb128(ctx, &num_relocs, "relocation count");
+  Index num_relocs;
+  in_index(ctx, &num_relocs, "relocation count");
   CALLBACK(OnRelocCount, num_relocs, static_cast<BinarySection>(section),
            section_name);
-  for (uint32_t i = 0; i < num_relocs; ++i) {
-    uint32_t reloc_type, offset, index, addend = 0;
+  for (Index i = 0; i < num_relocs; ++i) {
+    Offset offset;
+    Index index;
+    uint32_t reloc_type, addend = 0;
     in_u32_leb128(ctx, &reloc_type, "relocation type");
-    in_u32_leb128(ctx, &offset, "offset");
-    in_u32_leb128(ctx, &index, "index");
+    in_file_offset(ctx, &offset, "offset");
+    in_index(ctx, &index, "index");
     RelocType type = static_cast<RelocType>(reloc_type);
     switch (type) {
       case RelocType::GlobalAddressLEB:
@@ -1012,7 +1028,7 @@ static void read_reloc_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndRelocSection);
 }
 
-static void read_custom_section(Context* ctx, uint32_t section_size) {
+static void read_custom_section(Context* ctx, Offset section_size) {
   StringSlice section_name;
   in_str(ctx, &section_name, "section name");
   CALLBACK(BeginCustomSection, section_size, section_name);
@@ -1032,23 +1048,23 @@ static void read_custom_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndCustomSection);
 }
 
-static void read_type_section(Context* ctx, uint32_t section_size) {
+static void read_type_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginTypeSection, section_size);
-  in_u32_leb128(ctx, &ctx->num_signatures, "type count");
+  in_index(ctx, &ctx->num_signatures, "type count");
   CALLBACK(OnTypeCount, ctx->num_signatures);
 
-  for (uint32_t i = 0; i < ctx->num_signatures; ++i) {
+  for (Index i = 0; i < ctx->num_signatures; ++i) {
     Type form;
     in_type(ctx, &form, "type form");
     RAISE_ERROR_UNLESS(form == Type::Func, "unexpected type form: %d",
                        static_cast<int>(form));
 
-    uint32_t num_params;
-    in_u32_leb128(ctx, &num_params, "function param count");
+    Index num_params;
+    in_index(ctx, &num_params, "function param count");
 
     ctx->param_types.resize(num_params);
 
-    for (uint32_t j = 0; j < num_params; ++j) {
+    for (Index j = 0; j < num_params; ++j) {
       Type param_type;
       in_type(ctx, &param_type, "function param type");
       RAISE_ERROR_UNLESS(is_concrete_type(param_type),
@@ -1057,8 +1073,8 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
       ctx->param_types[j] = param_type;
     }
 
-    uint32_t num_results;
-    in_u32_leb128(ctx, &num_results, "function result count");
+    Index num_results;
+    in_index(ctx, &num_results, "function result count");
     RAISE_ERROR_UNLESS(num_results <= 1, "result count must be 0 or 1");
 
     Type result_type = Type::Void;
@@ -1076,11 +1092,11 @@ static void read_type_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndTypeSection);
 }
 
-static void read_import_section(Context* ctx, uint32_t section_size) {
+static void read_import_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginImportSection, section_size);
-  in_u32_leb128(ctx, &ctx->num_imports, "import count");
+  in_index(ctx, &ctx->num_imports, "import count");
   CALLBACK(OnImportCount, ctx->num_imports);
-  for (uint32_t i = 0; i < ctx->num_imports; ++i) {
+  for (Index i = 0; i < ctx->num_imports; ++i) {
     StringSlice module_name;
     in_str(ctx, &module_name, "import module name");
     StringSlice field_name;
@@ -1090,8 +1106,8 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
     in_u32_leb128(ctx, &kind, "import kind");
     switch (static_cast<ExternalKind>(kind)) {
       case ExternalKind::Func: {
-        uint32_t sig_index;
-        in_u32_leb128(ctx, &sig_index, "import signature index");
+        Index sig_index;
+        in_index(ctx, &sig_index, "import signature index");
         RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
                            "invalid import signature index");
         CALLBACK(OnImport, i, module_name, field_name);
@@ -1140,29 +1156,31 @@ static void read_import_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndImportSection);
 }
 
-static void read_function_section(Context* ctx, uint32_t section_size) {
+static void read_function_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginFunctionSection, section_size);
-  in_u32_leb128(ctx, &ctx->num_function_signatures, "function signature count");
+  in_index(ctx, &ctx->num_function_signatures, "function signature count");
   CALLBACK(OnFunctionCount, ctx->num_function_signatures);
-  for (uint32_t i = 0; i < ctx->num_function_signatures; ++i) {
-    uint32_t func_index = ctx->num_func_imports + i;
-    uint32_t sig_index;
-    in_u32_leb128(ctx, &sig_index, "function signature index");
+  for (Index i = 0; i < ctx->num_function_signatures; ++i) {
+    Index func_index = ctx->num_func_imports + i;
+    Index sig_index;
+    in_index(ctx, &sig_index, "function signature index");
     RAISE_ERROR_UNLESS(sig_index < ctx->num_signatures,
-                       "invalid function signature index: %d", sig_index);
+                       "invalid function signature index: %" PRIindex,
+                       sig_index);
     CALLBACK(OnFunction, func_index, sig_index);
   }
   CALLBACK0(EndFunctionSection);
 }
 
-static void read_table_section(Context* ctx, uint32_t section_size) {
+static void read_table_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginTableSection, section_size);
-  in_u32_leb128(ctx, &ctx->num_tables, "table count");
-  RAISE_ERROR_UNLESS(ctx->num_tables <= 1, "table count (%d) must be 0 or 1",
+  in_index(ctx, &ctx->num_tables, "table count");
+  RAISE_ERROR_UNLESS(ctx->num_tables <= 1,
+                     "table count (%" PRIindex ") must be 0 or 1",
                      ctx->num_tables);
   CALLBACK(OnTableCount, ctx->num_tables);
-  for (uint32_t i = 0; i < ctx->num_tables; ++i) {
-    uint32_t table_index = ctx->num_table_imports + i;
+  for (Index i = 0; i < ctx->num_tables; ++i) {
+    Index table_index = ctx->num_table_imports + i;
     Type elem_type;
     Limits elem_limits;
     read_table(ctx, &elem_type, &elem_limits);
@@ -1171,13 +1189,13 @@ static void read_table_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndTableSection);
 }
 
-static void read_memory_section(Context* ctx, uint32_t section_size) {
+static void read_memory_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginMemorySection, section_size);
-  in_u32_leb128(ctx, &ctx->num_memories, "memory count");
+  in_index(ctx, &ctx->num_memories, "memory count");
   RAISE_ERROR_UNLESS(ctx->num_memories <= 1, "memory count must be 0 or 1");
   CALLBACK(OnMemoryCount, ctx->num_memories);
-  for (uint32_t i = 0; i < ctx->num_memories; ++i) {
-    uint32_t memory_index = ctx->num_memory_imports + i;
+  for (Index i = 0; i < ctx->num_memories; ++i) {
+    Index memory_index = ctx->num_memory_imports + i;
     Limits page_limits;
     read_memory(ctx, &page_limits);
     CALLBACK(OnMemory, memory_index, &page_limits);
@@ -1185,12 +1203,12 @@ static void read_memory_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndMemorySection);
 }
 
-static void read_global_section(Context* ctx, uint32_t section_size) {
+static void read_global_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginGlobalSection, section_size);
-  in_u32_leb128(ctx, &ctx->num_globals, "global count");
+  in_index(ctx, &ctx->num_globals, "global count");
   CALLBACK(OnGlobalCount, ctx->num_globals);
-  for (uint32_t i = 0; i < ctx->num_globals; ++i) {
-    uint32_t global_index = ctx->num_global_imports + i;
+  for (Index i = 0; i < ctx->num_globals; ++i) {
+    Index global_index = ctx->num_global_imports + i;
     Type global_type;
     bool mutable_;
     read_global_header(ctx, &global_type, &mutable_);
@@ -1203,11 +1221,11 @@ static void read_global_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndGlobalSection);
 }
 
-static void read_export_section(Context* ctx, uint32_t section_size) {
+static void read_export_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginExportSection, section_size);
-  in_u32_leb128(ctx, &ctx->num_exports, "export count");
+  in_index(ctx, &ctx->num_exports, "export count");
   CALLBACK(OnExportCount, ctx->num_exports);
-  for (uint32_t i = 0; i < ctx->num_exports; ++i) {
+  for (Index i = 0; i < ctx->num_exports; ++i) {
     StringSlice name;
     in_str(ctx, &name, "export item name");
 
@@ -1216,24 +1234,27 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
     RAISE_ERROR_UNLESS(is_valid_external_kind(external_kind),
                        "invalid export external kind: %d", external_kind);
 
-    uint32_t item_index;
-    in_u32_leb128(ctx, &item_index, "export item index");
+    Index item_index;
+    in_index(ctx, &item_index, "export item index");
     switch (static_cast<ExternalKind>(external_kind)) {
       case ExternalKind::Func:
         RAISE_ERROR_UNLESS(item_index < num_total_funcs(ctx),
-                           "invalid export func index: %d", item_index);
+                           "invalid export func index: %" PRIindex, item_index);
         break;
       case ExternalKind::Table:
         RAISE_ERROR_UNLESS(item_index < num_total_tables(ctx),
-                           "invalid export table index: %d", item_index);
+                           "invalid export table index: %" PRIindex,
+                           item_index);
         break;
       case ExternalKind::Memory:
         RAISE_ERROR_UNLESS(item_index < num_total_memories(ctx),
-                           "invalid export memory index: %d", item_index);
+                           "invalid export memory index: %" PRIindex,
+                           item_index);
         break;
       case ExternalKind::Global:
         RAISE_ERROR_UNLESS(item_index < num_total_globals(ctx),
-                           "invalid export global index: %d", item_index);
+                           "invalid export global index: %" PRIindex,
+                           item_index);
         break;
     }
 
@@ -1243,38 +1264,37 @@ static void read_export_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndExportSection);
 }
 
-static void read_start_section(Context* ctx, uint32_t section_size) {
+static void read_start_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginStartSection, section_size);
-  uint32_t func_index;
-  in_u32_leb128(ctx, &func_index, "start function index");
+  Index func_index;
+  in_index(ctx, &func_index, "start function index");
   RAISE_ERROR_UNLESS(func_index < num_total_funcs(ctx),
-                     "invalid start function index: %d", func_index);
+                     "invalid start function index: %" PRIindex, func_index);
   CALLBACK(OnStartFunction, func_index);
   CALLBACK0(EndStartSection);
 }
 
-static void read_elem_section(Context* ctx, uint32_t section_size) {
+static void read_elem_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginElemSection, section_size);
-  uint32_t num_elem_segments;
-  in_u32_leb128(ctx, &num_elem_segments, "elem segment count");
+  Index num_elem_segments;
+  in_index(ctx, &num_elem_segments, "elem segment count");
   CALLBACK(OnElemSegmentCount, num_elem_segments);
   RAISE_ERROR_UNLESS(num_elem_segments == 0 || num_total_tables(ctx) > 0,
                      "elem section without table section");
-  for (uint32_t i = 0; i < num_elem_segments; ++i) {
-    uint32_t table_index;
-    in_u32_leb128(ctx, &table_index, "elem segment table index");
+  for (Index i = 0; i < num_elem_segments; ++i) {
+    Index table_index;
+    in_index(ctx, &table_index, "elem segment table index");
     CALLBACK(BeginElemSegment, i, table_index);
     CALLBACK(BeginElemSegmentInitExpr, i);
     read_init_expr(ctx, i);
     CALLBACK(EndElemSegmentInitExpr, i);
 
-    uint32_t num_function_indexes;
-    in_u32_leb128(ctx, &num_function_indexes,
-                  "elem segment function index count");
+    Index num_function_indexes;
+    in_index(ctx, &num_function_indexes, "elem segment function index count");
     CALLBACK(OnElemSegmentFunctionIndexCount, i, num_function_indexes);
-    for (uint32_t j = 0; j < num_function_indexes; ++j) {
-      uint32_t func_index;
-      in_u32_leb128(ctx, &func_index, "elem segment function index");
+    for (Index j = 0; j < num_function_indexes; ++j) {
+      Index func_index;
+      in_index(ctx, &func_index, "elem segment function index");
       CALLBACK(OnElemSegmentFunctionIndex, i, func_index);
     }
     CALLBACK(EndElemSegment, i);
@@ -1282,28 +1302,28 @@ static void read_elem_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndElemSection);
 }
 
-static void read_code_section(Context* ctx, uint32_t section_size) {
+static void read_code_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginCodeSection, section_size);
-  in_u32_leb128(ctx, &ctx->num_function_bodies, "function body count");
+  in_index(ctx, &ctx->num_function_bodies, "function body count");
   RAISE_ERROR_UNLESS(ctx->num_function_signatures == ctx->num_function_bodies,
                      "function signature count != function body count");
   CALLBACK(OnFunctionBodyCount, ctx->num_function_bodies);
-  for (uint32_t i = 0; i < ctx->num_function_bodies; ++i) {
-    uint32_t func_index = ctx->num_func_imports + i;
-    uint32_t func_offset = ctx->state.offset;
+  for (Index i = 0; i < ctx->num_function_bodies; ++i) {
+    Index func_index = ctx->num_func_imports + i;
+    Offset func_offset = ctx->state.offset;
     ctx->state.offset = func_offset;
     CALLBACK(BeginFunctionBody, func_index);
     uint32_t body_size;
     in_u32_leb128(ctx, &body_size, "function body size");
-    uint32_t body_start_offset = ctx->state.offset;
-    uint32_t end_offset = body_start_offset + body_size;
+    Offset body_start_offset = ctx->state.offset;
+    Offset end_offset = body_start_offset + body_size;
 
-    uint32_t num_local_decls;
-    in_u32_leb128(ctx, &num_local_decls, "local declaration count");
+    Index num_local_decls;
+    in_index(ctx, &num_local_decls, "local declaration count");
     CALLBACK(OnLocalDeclCount, num_local_decls);
-    for (uint32_t k = 0; k < num_local_decls; ++k) {
-      uint32_t num_local_types;
-      in_u32_leb128(ctx, &num_local_types, "local type count");
+    for (Index k = 0; k < num_local_decls; ++k) {
+      Index num_local_types;
+      in_index(ctx, &num_local_types, "local type count");
       Type local_type;
       in_type(ctx, &local_type, "local type");
       RAISE_ERROR_UNLESS(is_concrete_type(local_type),
@@ -1318,22 +1338,22 @@ static void read_code_section(Context* ctx, uint32_t section_size) {
   CALLBACK0(EndCodeSection);
 }
 
-static void read_data_section(Context* ctx, uint32_t section_size) {
+static void read_data_section(Context* ctx, Offset section_size) {
   CALLBACK(BeginDataSection, section_size);
-  uint32_t num_data_segments;
-  in_u32_leb128(ctx, &num_data_segments, "data segment count");
+  Index num_data_segments;
+  in_index(ctx, &num_data_segments, "data segment count");
   CALLBACK(OnDataSegmentCount, num_data_segments);
   RAISE_ERROR_UNLESS(num_data_segments == 0 || num_total_memories(ctx) > 0,
                      "data section without memory section");
-  for (uint32_t i = 0; i < num_data_segments; ++i) {
-    uint32_t memory_index;
-    in_u32_leb128(ctx, &memory_index, "data segment memory index");
+  for (Index i = 0; i < num_data_segments; ++i) {
+    Index memory_index;
+    in_index(ctx, &memory_index, "data segment memory index");
     CALLBACK(BeginDataSegment, i, memory_index);
     CALLBACK(BeginDataSegmentInitExpr, i);
     read_init_expr(ctx, i);
     CALLBACK(EndDataSegmentInitExpr, i);
 
-    uint32_t data_size;
+    Address data_size;
     const void* data;
     in_bytes(ctx, &data, &data_size, "data segment data");
     CALLBACK(OnDataSegmentData, i, data, data_size);
@@ -1345,12 +1365,12 @@ static void read_data_section(Context* ctx, uint32_t section_size) {
 static void read_sections(Context* ctx) {
   while (ctx->state.offset < ctx->state.size) {
     uint32_t section_code;
-    uint32_t section_size;
+    Offset section_size;
     /* Temporarily reset read_end to the full data size so the next section
      * can be read. */
     ctx->read_end = ctx->state.size;
     in_u32_leb128(ctx, &section_code, "section code");
-    in_u32_leb128(ctx, &section_size, "section size");
+    in_file_offset(ctx, &section_size, "section size");
     ctx->read_end = ctx->state.offset + section_size;
     if (section_code >= kBinarySectionCount) {
       RAISE_ERROR("invalid section code: %u; max is %u", section_code,

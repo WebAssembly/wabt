@@ -33,17 +33,17 @@ class BinaryReaderOpcnt : public BinaryReaderNop {
  public:
   explicit BinaryReaderOpcnt(OpcntData* data);
 
-  virtual Result OnOpcode(Opcode opcode);
-  virtual Result OnI32ConstExpr(uint32_t value);
-  virtual Result OnGetLocalExpr(uint32_t local_index);
-  virtual Result OnSetLocalExpr(uint32_t local_index);
-  virtual Result OnTeeLocalExpr(uint32_t local_index);
-  virtual Result OnLoadExpr(Opcode opcode,
-                            uint32_t alignment_log2,
-                            uint32_t offset);
-  virtual Result OnStoreExpr(Opcode opcode,
-                             uint32_t alignment_log2,
-                             uint32_t offset);
+  Result OnOpcode(Opcode opcode) override;
+  Result OnI32ConstExpr(uint32_t value) override;
+  Result OnGetLocalExpr(Index local_index) override;
+  Result OnSetLocalExpr(Index local_index) override;
+  Result OnTeeLocalExpr(Index local_index) override;
+  Result OnLoadExpr(Opcode opcode,
+                    uint32_t alignment_log2,
+                    Address offset) override;
+  Result OnStoreExpr(Opcode opcode,
+                     uint32_t alignment_log2,
+                     Address offset) override;
 
  private:
   OpcntData* opcnt_data;
@@ -89,21 +89,21 @@ Result BinaryReaderOpcnt::OnI32ConstExpr(uint32_t value) {
                             static_cast<int32_t>(value));
 }
 
-Result BinaryReaderOpcnt::OnGetLocalExpr(uint32_t local_index) {
+Result BinaryReaderOpcnt::OnGetLocalExpr(Index local_index) {
   return AddIntCounterValue(&opcnt_data->get_local_vec, local_index);
 }
 
-Result BinaryReaderOpcnt::OnSetLocalExpr(uint32_t local_index) {
+Result BinaryReaderOpcnt::OnSetLocalExpr(Index local_index) {
   return AddIntCounterValue(&opcnt_data->set_local_vec, local_index);
 }
 
-Result BinaryReaderOpcnt::OnTeeLocalExpr(uint32_t local_index) {
+Result BinaryReaderOpcnt::OnTeeLocalExpr(Index local_index) {
   return AddIntCounterValue(&opcnt_data->tee_local_vec, local_index);
 }
 
 Result BinaryReaderOpcnt::OnLoadExpr(Opcode opcode,
                                      uint32_t alignment_log2,
-                                     uint32_t offset) {
+                                     Address offset) {
   if (opcode == Opcode::I32Load) {
     return AddIntPairCounterValue(&opcnt_data->i32_load_vec, alignment_log2,
                                   offset);
@@ -113,7 +113,7 @@ Result BinaryReaderOpcnt::OnLoadExpr(Opcode opcode,
 
 Result BinaryReaderOpcnt::OnStoreExpr(Opcode opcode,
                                       uint32_t alignment_log2,
-                                      uint32_t offset) {
+                                      Address offset) {
   if (opcode == Opcode::I32Store) {
     return AddIntPairCounterValue(&opcnt_data->i32_store_vec, alignment_log2,
                                   offset);

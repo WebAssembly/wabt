@@ -39,7 +39,7 @@ struct Context {
   Module* module;
   ExprVisitor visitor;
   std::vector<std::string> index_to_name;
-  uint32_t label_count;
+  Index label_count;
 };
 
 }  // namespace
@@ -48,9 +48,7 @@ static bool has_name(StringSlice* str) {
   return str->length > 0;
 }
 
-static void generate_name(const char* prefix,
-                          uint32_t index,
-                          StringSlice* str) {
+static void generate_name(const char* prefix, Index index, StringSlice* str) {
   size_t prefix_len = strlen(prefix);
   size_t buffer_len = prefix_len + 20; /* add space for the number */
   char* buffer = static_cast<char*>(alloca(buffer_len));
@@ -63,7 +61,7 @@ static void generate_name(const char* prefix,
 }
 
 static void maybe_generate_name(const char* prefix,
-                                uint32_t index,
+                                Index index,
                                 StringSlice* str) {
   if (!has_name(str))
     generate_name(prefix, index, str);
@@ -71,7 +69,7 @@ static void maybe_generate_name(const char* prefix,
 
 static void generate_and_bind_name(BindingHash* bindings,
                                    const char* prefix,
-                                   uint32_t index,
+                                   Index index,
                                    StringSlice* str) {
   generate_name(prefix, index, str);
   bindings->emplace(string_slice_to_string(*str), Binding(index));
@@ -79,16 +77,15 @@ static void generate_and_bind_name(BindingHash* bindings,
 
 static void maybe_generate_and_bind_name(BindingHash* bindings,
                                          const char* prefix,
-                                         uint32_t index,
+                                         Index index,
                                          StringSlice* str) {
   if (!has_name(str))
     generate_and_bind_name(bindings, prefix, index, str);
 }
 
-static void generate_and_bind_local_names(
-    Context* ctx,
-    BindingHash* bindings,
-    const char* prefix) {
+static void generate_and_bind_local_names(Context* ctx,
+                                          BindingHash* bindings,
+                                          const char* prefix) {
   for (size_t i = 0; i < ctx->index_to_name.size(); ++i) {
     const std::string& old_name = ctx->index_to_name[i];
     if (!old_name.empty())
@@ -119,7 +116,7 @@ static Result begin_if_expr(Expr* expr, void* user_data) {
   return Result::Ok;
 }
 
-static Result visit_func(Context* ctx, uint32_t func_index, Func* func) {
+static Result visit_func(Context* ctx, Index func_index, Func* func) {
   maybe_generate_and_bind_name(&ctx->module->func_bindings, "$f", func_index,
                                &func->name);
 
@@ -136,46 +133,42 @@ static Result visit_func(Context* ctx, uint32_t func_index, Func* func) {
   return Result::Ok;
 }
 
-static Result visit_global(Context* ctx,
-                           uint32_t global_index,
-                           Global* global) {
+static Result visit_global(Context* ctx, Index global_index, Global* global) {
   maybe_generate_and_bind_name(&ctx->module->global_bindings, "$g",
                                global_index, &global->name);
   return Result::Ok;
 }
 
 static Result visit_func_type(Context* ctx,
-                              uint32_t func_type_index,
+                              Index func_type_index,
                               FuncType* func_type) {
   maybe_generate_and_bind_name(&ctx->module->func_type_bindings, "$t",
                                func_type_index, &func_type->name);
   return Result::Ok;
 }
 
-static Result visit_table(Context* ctx, uint32_t table_index, Table* table) {
+static Result visit_table(Context* ctx, Index table_index, Table* table) {
   maybe_generate_and_bind_name(&ctx->module->table_bindings, "$T", table_index,
                                &table->name);
   return Result::Ok;
 }
 
-static Result visit_memory(Context* ctx,
-                           uint32_t memory_index,
-                           Memory* memory) {
+static Result visit_memory(Context* ctx, Index memory_index, Memory* memory) {
   maybe_generate_and_bind_name(&ctx->module->memory_bindings, "$M",
                                memory_index, &memory->name);
   return Result::Ok;
 }
 
 static Result visit_module(Context* ctx, Module* module) {
-  for (size_t i = 0; i < module->globals.size(); ++i)
+  for (Index i = 0; i < module->globals.size(); ++i)
     CHECK_RESULT(visit_global(ctx, i, module->globals[i]));
-  for (size_t i = 0; i < module->func_types.size(); ++i)
+  for (Index i = 0; i < module->func_types.size(); ++i)
     CHECK_RESULT(visit_func_type(ctx, i, module->func_types[i]));
-  for (size_t i = 0; i < module->funcs.size(); ++i)
+  for (Index i = 0; i < module->funcs.size(); ++i)
     CHECK_RESULT(visit_func(ctx, i, module->funcs[i]));
-  for (size_t i = 0; i < module->tables.size(); ++i)
+  for (Index i = 0; i < module->tables.size(); ++i)
     CHECK_RESULT(visit_table(ctx, i, module->tables[i]));
-  for (size_t i = 0; i < module->memories.size(); ++i)
+  for (Index i = 0; i < module->memories.size(); ++i)
     CHECK_RESULT(visit_memory(ctx, i, module->memories[i]));
   return Result::Ok;
 }

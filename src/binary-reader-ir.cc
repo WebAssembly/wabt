@@ -53,148 +53,148 @@ class BinaryReaderIR : public BinaryReaderNop {
  public:
   BinaryReaderIR(Module* out_module, BinaryErrorHandler* error_handler);
 
-  virtual bool OnError(const char* message);
+  bool OnError(const char* message) override;
 
-  virtual Result OnTypeCount(uint32_t count);
-  virtual Result OnType(uint32_t index,
-                        uint32_t param_count,
-                        Type* param_types,
-                        uint32_t result_count,
-                        Type* result_types);
+  Result OnTypeCount(Index count) override;
+  Result OnType(Index index,
+                Index param_count,
+                Type* param_types,
+                Index result_count,
+                Type* result_types) override;
 
-  virtual Result OnImportCount(uint32_t count);
-  virtual Result OnImport(uint32_t index,
-                          StringSlice module_name,
-                          StringSlice field_name);
-  virtual Result OnImportFunc(uint32_t import_index,
-                              StringSlice module_name,
-                              StringSlice field_name,
-                              uint32_t func_index,
-                              uint32_t sig_index);
-  virtual Result OnImportTable(uint32_t import_index,
-                               StringSlice module_name,
-                               StringSlice field_name,
-                               uint32_t table_index,
-                               Type elem_type,
-                               const Limits* elem_limits);
-  virtual Result OnImportMemory(uint32_t import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
-                                uint32_t memory_index,
-                                const Limits* page_limits);
-  virtual Result OnImportGlobal(uint32_t import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
-                                uint32_t global_index,
-                                Type type,
-                                bool mutable_);
+  Result OnImportCount(Index count) override;
+  Result OnImport(Index index,
+                  StringSlice module_name,
+                  StringSlice field_name) override;
+  Result OnImportFunc(Index import_index,
+                      StringSlice module_name,
+                      StringSlice field_name,
+                      Index func_index,
+                      Index sig_index) override;
+  Result OnImportTable(Index import_index,
+                       StringSlice module_name,
+                       StringSlice field_name,
+                       Index table_index,
+                       Type elem_type,
+                       const Limits* elem_limits) override;
+  Result OnImportMemory(Index import_index,
+                        StringSlice module_name,
+                        StringSlice field_name,
+                        Index memory_index,
+                        const Limits* page_limits) override;
+  Result OnImportGlobal(Index import_index,
+                        StringSlice module_name,
+                        StringSlice field_name,
+                        Index global_index,
+                        Type type,
+                        bool mutable_) override;
 
-  virtual Result OnFunctionCount(uint32_t count);
-  virtual Result OnFunction(uint32_t index, uint32_t sig_index);
+  Result OnFunctionCount(Index count) override;
+  Result OnFunction(Index index, Index sig_index) override;
 
-  virtual Result OnTableCount(uint32_t count);
-  virtual Result OnTable(uint32_t index,
-                         Type elem_type,
-                         const Limits* elem_limits);
+  Result OnTableCount(Index count) override;
+  Result OnTable(Index index,
+                 Type elem_type,
+                 const Limits* elem_limits) override;
 
-  virtual Result OnMemoryCount(uint32_t count);
-  virtual Result OnMemory(uint32_t index, const Limits* limits);
+  Result OnMemoryCount(Index count) override;
+  Result OnMemory(Index index, const Limits* limits) override;
 
-  virtual Result OnGlobalCount(uint32_t count);
-  virtual Result BeginGlobal(uint32_t index, Type type, bool mutable_);
-  virtual Result BeginGlobalInitExpr(uint32_t index);
-  virtual Result EndGlobalInitExpr(uint32_t index);
+  Result OnGlobalCount(Index count) override;
+  Result BeginGlobal(Index index, Type type, bool mutable_) override;
+  Result BeginGlobalInitExpr(Index index) override;
+  Result EndGlobalInitExpr(Index index) override;
 
-  virtual Result OnExportCount(uint32_t count);
-  virtual Result OnExport(uint32_t index,
-                          ExternalKind kind,
-                          uint32_t item_index,
-                          StringSlice name);
+  Result OnExportCount(Index count) override;
+  Result OnExport(Index index,
+                  ExternalKind kind,
+                  Index item_index,
+                  StringSlice name) override;
 
-  virtual Result OnStartFunction(uint32_t func_index);
+  Result OnStartFunction(Index func_index) override;
 
-  virtual Result OnFunctionBodyCount(uint32_t count);
-  virtual Result BeginFunctionBody(uint32_t index);
-  virtual Result OnLocalDecl(uint32_t decl_index, uint32_t count, Type type);
+  Result OnFunctionBodyCount(Index count) override;
+  Result BeginFunctionBody(Index index) override;
+  Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
-  virtual Result OnBinaryExpr(Opcode opcode);
-  virtual Result OnBlockExpr(uint32_t num_types, Type* sig_types);
-  virtual Result OnBrExpr(uint32_t depth);
-  virtual Result OnBrIfExpr(uint32_t depth);
-  virtual Result OnBrTableExpr(uint32_t num_targets,
-                               uint32_t* target_depths,
-                               uint32_t default_target_depth);
-  virtual Result OnCallExpr(uint32_t func_index);
-  virtual Result OnCallIndirectExpr(uint32_t sig_index);
-  virtual Result OnCompareExpr(Opcode opcode);
-  virtual Result OnConvertExpr(Opcode opcode);
-  virtual Result OnDropExpr();
-  virtual Result OnElseExpr();
-  virtual Result OnEndExpr();
-  virtual Result OnF32ConstExpr(uint32_t value_bits);
-  virtual Result OnF64ConstExpr(uint64_t value_bits);
-  virtual Result OnGetGlobalExpr(uint32_t global_index);
-  virtual Result OnGetLocalExpr(uint32_t local_index);
-  virtual Result OnGrowMemoryExpr();
-  virtual Result OnI32ConstExpr(uint32_t value);
-  virtual Result OnI64ConstExpr(uint64_t value);
-  virtual Result OnIfExpr(uint32_t num_types, Type* sig_types);
-  virtual Result OnLoadExpr(Opcode opcode,
-                            uint32_t alignment_log2,
-                            uint32_t offset);
-  virtual Result OnLoopExpr(uint32_t num_types, Type* sig_types);
-  virtual Result OnCurrentMemoryExpr();
-  virtual Result OnNopExpr();
-  virtual Result OnReturnExpr();
-  virtual Result OnSelectExpr();
-  virtual Result OnSetGlobalExpr(uint32_t global_index);
-  virtual Result OnSetLocalExpr(uint32_t local_index);
-  virtual Result OnStoreExpr(Opcode opcode,
-                             uint32_t alignment_log2,
-                             uint32_t offset);
-  virtual Result OnTeeLocalExpr(uint32_t local_index);
-  virtual Result OnUnaryExpr(Opcode opcode);
-  virtual Result OnUnreachableExpr();
-  virtual Result EndFunctionBody(uint32_t index);
+  Result OnBinaryExpr(Opcode opcode) override;
+  Result OnBlockExpr(Index num_types, Type* sig_types) override;
+  Result OnBrExpr(Index depth) override;
+  Result OnBrIfExpr(Index depth) override;
+  Result OnBrTableExpr(Index num_targets,
+                       Index* target_depths,
+                       Index default_target_depth) override;
+  Result OnCallExpr(Index func_index) override;
+  Result OnCallIndirectExpr(Index sig_index) override;
+  Result OnCompareExpr(Opcode opcode) override;
+  Result OnConvertExpr(Opcode opcode) override;
+  Result OnDropExpr() override;
+  Result OnElseExpr() override;
+  Result OnEndExpr() override;
+  Result OnF32ConstExpr(uint32_t value_bits) override;
+  Result OnF64ConstExpr(uint64_t value_bits) override;
+  Result OnGetGlobalExpr(Index global_index) override;
+  Result OnGetLocalExpr(Index local_index) override;
+  Result OnGrowMemoryExpr() override;
+  Result OnI32ConstExpr(uint32_t value) override;
+  Result OnI64ConstExpr(uint64_t value) override;
+  Result OnIfExpr(Index num_types, Type* sig_types) override;
+  Result OnLoadExpr(Opcode opcode,
+                    uint32_t alignment_log2,
+                    Address offset) override;
+  Result OnLoopExpr(Index num_types, Type* sig_types) override;
+  Result OnCurrentMemoryExpr() override;
+  Result OnNopExpr() override;
+  Result OnReturnExpr() override;
+  Result OnSelectExpr() override;
+  Result OnSetGlobalExpr(Index global_index) override;
+  Result OnSetLocalExpr(Index local_index) override;
+  Result OnStoreExpr(Opcode opcode,
+                     uint32_t alignment_log2,
+                     Address offset) override;
+  Result OnTeeLocalExpr(Index local_index) override;
+  Result OnUnaryExpr(Opcode opcode) override;
+  Result OnUnreachableExpr() override;
+  Result EndFunctionBody(Index index) override;
 
-  virtual Result OnElemSegmentCount(uint32_t count);
-  virtual Result BeginElemSegment(uint32_t index, uint32_t table_index);
-  virtual Result BeginElemSegmentInitExpr(uint32_t index);
-  virtual Result EndElemSegmentInitExpr(uint32_t index);
-  virtual Result OnElemSegmentFunctionIndexCount(uint32_t index,
-                                                 uint32_t count);
-  virtual Result OnElemSegmentFunctionIndex(uint32_t index,
-                                            uint32_t func_index);
+  Result OnElemSegmentCount(Index count) override;
+  Result BeginElemSegment(Index index, Index table_index) override;
+  Result BeginElemSegmentInitExpr(Index index) override;
+  Result EndElemSegmentInitExpr(Index index) override;
+  Result OnElemSegmentFunctionIndexCount(Index index,
+                                         Index count) override;
+  Result OnElemSegmentFunctionIndex(Index index,
+                                    Index func_index) override;
 
-  virtual Result OnDataSegmentCount(uint32_t count);
-  virtual Result BeginDataSegment(uint32_t index, uint32_t memory_index);
-  virtual Result BeginDataSegmentInitExpr(uint32_t index);
-  virtual Result EndDataSegmentInitExpr(uint32_t index);
-  virtual Result OnDataSegmentData(uint32_t index,
-                                   const void* data,
-                                   uint32_t size);
+  Result OnDataSegmentCount(Index count) override;
+  Result BeginDataSegment(Index index, Index memory_index) override;
+  Result BeginDataSegmentInitExpr(Index index) override;
+  Result EndDataSegmentInitExpr(Index index) override;
+  Result OnDataSegmentData(Index index,
+                           const void* data,
+                           Address size) override;
 
-  virtual Result OnFunctionNamesCount(uint32_t num_functions);
-  virtual Result OnFunctionName(uint32_t function_index,
-                                StringSlice function_name);
-  virtual Result OnLocalNameLocalCount(uint32_t function_index,
-                                       uint32_t num_locals);
-  virtual Result OnLocalName(uint32_t function_index,
-                             uint32_t local_index,
-                             StringSlice local_name);
+  Result OnFunctionNamesCount(Index num_functions) override;
+  Result OnFunctionName(Index function_index,
+                        StringSlice function_name) override;
+  Result OnLocalNameLocalCount(Index function_index,
+                               Index num_locals) override;
+  Result OnLocalName(Index function_index,
+                     Index local_index,
+                     StringSlice local_name) override;
 
-  virtual Result OnInitExprF32ConstExpr(uint32_t index, uint32_t value);
-  virtual Result OnInitExprF64ConstExpr(uint32_t index, uint64_t value);
-  virtual Result OnInitExprGetGlobalExpr(uint32_t index, uint32_t global_index);
-  virtual Result OnInitExprI32ConstExpr(uint32_t index, uint32_t value);
-  virtual Result OnInitExprI64ConstExpr(uint32_t index, uint64_t value);
+  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
+  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
+  Result OnInitExprGetGlobalExpr(Index index, Index global_index) override;
+  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
+  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
  private:
-  bool HandleError(uint32_t offset, const char* message);
+  bool HandleError(Offset offset, const char* message);
   void PrintError(const char* format, ...);
   void PushLabel(LabelType label_type, Expr** first);
   Result PopLabel();
-  Result GetLabelAt(LabelNode** label, uint32_t depth);
+  Result GetLabelAt(LabelNode** label, Index depth);
   Result TopLabel(LabelNode** label);
   Result AppendExpr(Expr* expr);
 
@@ -203,7 +203,6 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Func* current_func = nullptr;
   std::vector<LabelNode> label_stack;
-  uint32_t max_depth = 0;
   Expr** current_init_expr = nullptr;
 };
 
@@ -214,11 +213,10 @@ BinaryReaderIR::BinaryReaderIR(Module* out_module,
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderIR::PrintError(const char* format,
                                                           ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  HandleError(WABT_UNKNOWN_OFFSET, buffer);
+  HandleError(kInvalidOffset, buffer);
 }
 
 void BinaryReaderIR::PushLabel(LabelType label_type, Expr** first) {
-  max_depth++;
   label_stack.emplace_back(label_type, first);
 }
 
@@ -228,14 +226,13 @@ Result BinaryReaderIR::PopLabel() {
     return Result::Error;
   }
 
-  max_depth--;
   label_stack.pop_back();
   return Result::Ok;
 }
 
-Result BinaryReaderIR::GetLabelAt(LabelNode** label, uint32_t depth) {
+Result BinaryReaderIR::GetLabelAt(LabelNode** label, Index depth) {
   if (depth >= label_stack.size()) {
-    PrintError("accessing stack depth: %u >= max: %" PRIzd, depth,
+    PrintError("accessing stack depth: %" PRIindex " >= max: %" PRIzd, depth,
                label_stack.size());
     return Result::Error;
   }
@@ -263,7 +260,7 @@ Result BinaryReaderIR::AppendExpr(Expr* expr) {
   return Result::Ok;
 }
 
-bool BinaryReaderIR::HandleError(uint32_t offset, const char* message) {
+bool BinaryReaderIR::HandleError(Offset offset, const char* message) {
   return error_handler->OnError(offset, message);
 }
 
@@ -271,15 +268,15 @@ bool BinaryReaderIR::OnError(const char* message) {
   return HandleError(state->offset, message);
 }
 
-Result BinaryReaderIR::OnTypeCount(uint32_t count) {
+Result BinaryReaderIR::OnTypeCount(Index count) {
   module->func_types.reserve(count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnType(uint32_t index,
-                               uint32_t param_count,
+Result BinaryReaderIR::OnType(Index index,
+                               Index param_count,
                                Type* param_types,
-                               uint32_t result_count,
+                               Index result_count,
                                Type* result_types) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::FuncType;
@@ -292,12 +289,12 @@ Result BinaryReaderIR::OnType(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnImportCount(uint32_t count) {
+Result BinaryReaderIR::OnImportCount(Index count) {
   module->imports.reserve(count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnImport(uint32_t index,
+Result BinaryReaderIR::OnImport(Index index,
                                  StringSlice module_name,
                                  StringSlice field_name) {
   ModuleField* field = append_module_field(module);
@@ -311,11 +308,11 @@ Result BinaryReaderIR::OnImport(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnImportFunc(uint32_t import_index,
-                                     StringSlice module_name,
-                                     StringSlice field_name,
-                                     uint32_t func_index,
-                                     uint32_t sig_index) {
+Result BinaryReaderIR::OnImportFunc(Index import_index,
+                                    StringSlice module_name,
+                                    StringSlice field_name,
+                                    Index func_index,
+                                    Index sig_index) {
   assert(import_index == module->imports.size() - 1);
   Import* import = module->imports[import_index];
 
@@ -331,12 +328,12 @@ Result BinaryReaderIR::OnImportFunc(uint32_t import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnImportTable(uint32_t import_index,
-                                      StringSlice module_name,
-                                      StringSlice field_name,
-                                      uint32_t table_index,
-                                      Type elem_type,
-                                      const Limits* elem_limits) {
+Result BinaryReaderIR::OnImportTable(Index import_index,
+                                     StringSlice module_name,
+                                     StringSlice field_name,
+                                     Index table_index,
+                                     Type elem_type,
+                                     const Limits* elem_limits) {
   assert(import_index == module->imports.size() - 1);
   Import* import = module->imports[import_index];
   import->kind = ExternalKind::Table;
@@ -347,11 +344,11 @@ Result BinaryReaderIR::OnImportTable(uint32_t import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnImportMemory(uint32_t import_index,
-                                       StringSlice module_name,
-                                       StringSlice field_name,
-                                       uint32_t memory_index,
-                                       const Limits* page_limits) {
+Result BinaryReaderIR::OnImportMemory(Index import_index,
+                                      StringSlice module_name,
+                                      StringSlice field_name,
+                                      Index memory_index,
+                                      const Limits* page_limits) {
   assert(import_index == module->imports.size() - 1);
   Import* import = module->imports[import_index];
   import->kind = ExternalKind::Memory;
@@ -362,12 +359,12 @@ Result BinaryReaderIR::OnImportMemory(uint32_t import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnImportGlobal(uint32_t import_index,
-                                       StringSlice module_name,
-                                       StringSlice field_name,
-                                       uint32_t global_index,
-                                       Type type,
-                                       bool mutable_) {
+Result BinaryReaderIR::OnImportGlobal(Index import_index,
+                                      StringSlice module_name,
+                                      StringSlice field_name,
+                                      Index global_index,
+                                      Type type,
+                                      bool mutable_) {
   assert(import_index == module->imports.size() - 1);
   Import* import = module->imports[import_index];
   import->kind = ExternalKind::Global;
@@ -379,12 +376,12 @@ Result BinaryReaderIR::OnImportGlobal(uint32_t import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionCount(uint32_t count) {
+Result BinaryReaderIR::OnFunctionCount(Index count) {
   module->funcs.reserve(module->num_func_imports + count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunction(uint32_t index, uint32_t sig_index) {
+Result BinaryReaderIR::OnFunction(Index index, Index sig_index) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::Func;
   field->func = new Func();
@@ -399,14 +396,14 @@ Result BinaryReaderIR::OnFunction(uint32_t index, uint32_t sig_index) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnTableCount(uint32_t count) {
+Result BinaryReaderIR::OnTableCount(Index count) {
   module->tables.reserve(module->num_table_imports + count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnTable(uint32_t index,
-                                Type elem_type,
-                                const Limits* elem_limits) {
+Result BinaryReaderIR::OnTable(Index index,
+                               Type elem_type,
+                               const Limits* elem_limits) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::Table;
   field->table = new Table();
@@ -415,12 +412,12 @@ Result BinaryReaderIR::OnTable(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnMemoryCount(uint32_t count) {
+Result BinaryReaderIR::OnMemoryCount(Index count) {
   module->memories.reserve(module->num_memory_imports + count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnMemory(uint32_t index, const Limits* page_limits) {
+Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::Memory;
   field->memory = new Memory();
@@ -429,12 +426,12 @@ Result BinaryReaderIR::OnMemory(uint32_t index, const Limits* page_limits) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnGlobalCount(uint32_t count) {
+Result BinaryReaderIR::OnGlobalCount(Index count) {
   module->globals.reserve(module->num_global_imports + count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginGlobal(uint32_t index, Type type, bool mutable_) {
+Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::Global;
   field->global = new Global();
@@ -444,27 +441,27 @@ Result BinaryReaderIR::BeginGlobal(uint32_t index, Type type, bool mutable_) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginGlobalInitExpr(uint32_t index) {
+Result BinaryReaderIR::BeginGlobalInitExpr(Index index) {
   assert(index == module->globals.size() - 1);
   Global* global = module->globals[index];
   current_init_expr = &global->init_expr;
   return Result::Ok;
 }
 
-Result BinaryReaderIR::EndGlobalInitExpr(uint32_t index) {
+Result BinaryReaderIR::EndGlobalInitExpr(Index index) {
   current_init_expr = nullptr;
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnExportCount(uint32_t count) {
+Result BinaryReaderIR::OnExportCount(Index count) {
   module->exports.reserve(count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnExport(uint32_t index,
-                                 ExternalKind kind,
-                                 uint32_t item_index,
-                                 StringSlice name) {
+Result BinaryReaderIR::OnExport(Index index,
+                                ExternalKind kind,
+                                Index item_index,
+                                StringSlice name) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::Export;
   field->export_ = new Export();
@@ -492,7 +489,7 @@ Result BinaryReaderIR::OnExport(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnStartFunction(uint32_t func_index) {
+Result BinaryReaderIR::OnStartFunction(Index func_index) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::Start;
 
@@ -504,20 +501,18 @@ Result BinaryReaderIR::OnStartFunction(uint32_t func_index) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionBodyCount(uint32_t count) {
+Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
   assert(module->num_func_imports + count == module->funcs.size());
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginFunctionBody(uint32_t index) {
+Result BinaryReaderIR::BeginFunctionBody(Index index) {
   current_func = module->funcs[index];
   PushLabel(LabelType::Func, &current_func->first_expr);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnLocalDecl(uint32_t decl_index,
-                                    uint32_t count,
-                                    Type type) {
+Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
   TypeVector& types = current_func->local_types;
   types.reserve(types.size() + count);
   for (size_t i = 0; i < count; ++i)
@@ -530,7 +525,7 @@ Result BinaryReaderIR::OnBinaryExpr(Opcode opcode) {
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnBlockExpr(uint32_t num_types, Type* sig_types) {
+Result BinaryReaderIR::OnBlockExpr(Index num_types, Type* sig_types) {
   Expr* expr = Expr::CreateBlock(new Block());
   expr->block->sig.assign(sig_types, sig_types + num_types);
   AppendExpr(expr);
@@ -538,35 +533,35 @@ Result BinaryReaderIR::OnBlockExpr(uint32_t num_types, Type* sig_types) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnBrExpr(uint32_t depth) {
+Result BinaryReaderIR::OnBrExpr(Index depth) {
   Expr* expr = Expr::CreateBr(Var(depth));
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnBrIfExpr(uint32_t depth) {
+Result BinaryReaderIR::OnBrIfExpr(Index depth) {
   Expr* expr = Expr::CreateBrIf(Var(depth));
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnBrTableExpr(uint32_t num_targets,
-                                      uint32_t* target_depths,
-                                      uint32_t default_target_depth) {
+Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
+                                     Index* target_depths,
+                                     Index default_target_depth) {
   VarVector* targets = new VarVector();
   targets->resize(num_targets);
-  for (uint32_t i = 0; i < num_targets; ++i) {
+  for (Index i = 0; i < num_targets; ++i) {
     (*targets)[i] = Var(target_depths[i]);
   }
   Expr* expr = Expr::CreateBrTable(targets, Var(default_target_depth));
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnCallExpr(uint32_t func_index) {
+Result BinaryReaderIR::OnCallExpr(Index func_index) {
   assert(func_index < module->funcs.size());
   Expr* expr = Expr::CreateCall(Var(func_index));
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnCallIndirectExpr(uint32_t sig_index) {
+Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index) {
   assert(sig_index < module->func_types.size());
   Expr* expr = Expr::CreateCallIndirect(Var(sig_index));
   return AppendExpr(expr);
@@ -624,12 +619,12 @@ Result BinaryReaderIR::OnF64ConstExpr(uint64_t value_bits) {
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnGetGlobalExpr(uint32_t global_index) {
+Result BinaryReaderIR::OnGetGlobalExpr(Index global_index) {
   Expr* expr = Expr::CreateGetGlobal(Var(global_index));
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnGetLocalExpr(uint32_t local_index) {
+Result BinaryReaderIR::OnGetLocalExpr(Index local_index) {
   Expr* expr = Expr::CreateGetLocal(Var(local_index));
   return AppendExpr(expr);
 }
@@ -649,7 +644,7 @@ Result BinaryReaderIR::OnI64ConstExpr(uint64_t value) {
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnIfExpr(uint32_t num_types, Type* sig_types) {
+Result BinaryReaderIR::OnIfExpr(Index num_types, Type* sig_types) {
   Expr* expr = Expr::CreateIf(new Block());
   expr->if_.true_->sig.assign(sig_types, sig_types + num_types);
   expr->if_.false_ = nullptr;
@@ -659,13 +654,13 @@ Result BinaryReaderIR::OnIfExpr(uint32_t num_types, Type* sig_types) {
 }
 
 Result BinaryReaderIR::OnLoadExpr(Opcode opcode,
-                                   uint32_t alignment_log2,
-                                   uint32_t offset) {
+                                  uint32_t alignment_log2,
+                                  Address offset) {
   Expr* expr = Expr::CreateLoad(opcode, 1 << alignment_log2, offset);
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnLoopExpr(uint32_t num_types, Type* sig_types) {
+Result BinaryReaderIR::OnLoopExpr(Index num_types, Type* sig_types) {
   Expr* expr = Expr::CreateLoop(new Block());
   expr->loop->sig.assign(sig_types, sig_types + num_types);
   AppendExpr(expr);
@@ -688,24 +683,24 @@ Result BinaryReaderIR::OnSelectExpr() {
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnSetGlobalExpr(uint32_t global_index) {
+Result BinaryReaderIR::OnSetGlobalExpr(Index global_index) {
   Expr* expr = Expr::CreateSetGlobal(Var(global_index));
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnSetLocalExpr(uint32_t local_index) {
+Result BinaryReaderIR::OnSetLocalExpr(Index local_index) {
   Expr* expr = Expr::CreateSetLocal(Var(local_index));
   return AppendExpr(expr);
 }
 
 Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
-                                    uint32_t alignment_log2,
-                                    uint32_t offset) {
+                                   uint32_t alignment_log2,
+                                   Address offset) {
   Expr* expr = Expr::CreateStore(opcode, 1 << alignment_log2, offset);
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::OnTeeLocalExpr(uint32_t local_index) {
+Result BinaryReaderIR::OnTeeLocalExpr(Index local_index) {
   Expr* expr = Expr::CreateTeeLocal(Var(local_index));
   return AppendExpr(expr);
 }
@@ -720,18 +715,18 @@ Result BinaryReaderIR::OnUnreachableExpr() {
   return AppendExpr(expr);
 }
 
-Result BinaryReaderIR::EndFunctionBody(uint32_t index) {
+Result BinaryReaderIR::EndFunctionBody(Index index) {
   CHECK_RESULT(PopLabel());
   current_func = nullptr;
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnElemSegmentCount(uint32_t count) {
+Result BinaryReaderIR::OnElemSegmentCount(Index count) {
   module->elem_segments.reserve(count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginElemSegment(uint32_t index, uint32_t table_index) {
+Result BinaryReaderIR::BeginElemSegment(Index index, Index table_index) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::ElemSegment;
   field->elem_segment = new ElemSegment();
@@ -741,28 +736,28 @@ Result BinaryReaderIR::BeginElemSegment(uint32_t index, uint32_t table_index) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginElemSegmentInitExpr(uint32_t index) {
+Result BinaryReaderIR::BeginElemSegmentInitExpr(Index index) {
   assert(index == module->elem_segments.size() - 1);
   ElemSegment* segment = module->elem_segments[index];
   current_init_expr = &segment->offset;
   return Result::Ok;
 }
 
-Result BinaryReaderIR::EndElemSegmentInitExpr(uint32_t index) {
+Result BinaryReaderIR::EndElemSegmentInitExpr(Index index) {
   current_init_expr = nullptr;
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnElemSegmentFunctionIndexCount(uint32_t index,
-                                                        uint32_t count) {
+Result BinaryReaderIR::OnElemSegmentFunctionIndexCount(Index index,
+                                                       Index count) {
   assert(index == module->elem_segments.size() - 1);
   ElemSegment* segment = module->elem_segments[index];
   segment->vars.reserve(count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnElemSegmentFunctionIndex(uint32_t index,
-                                                   uint32_t func_index) {
+Result BinaryReaderIR::OnElemSegmentFunctionIndex(Index index,
+                                                  Index func_index) {
   assert(index == module->elem_segments.size() - 1);
   ElemSegment* segment = module->elem_segments[index];
   segment->vars.emplace_back();
@@ -772,13 +767,12 @@ Result BinaryReaderIR::OnElemSegmentFunctionIndex(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnDataSegmentCount(uint32_t count) {
+Result BinaryReaderIR::OnDataSegmentCount(Index count) {
   module->data_segments.reserve(count);
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginDataSegment(uint32_t index,
-                                         uint32_t memory_index) {
+Result BinaryReaderIR::BeginDataSegment(Index index, Index memory_index) {
   ModuleField* field = append_module_field(module);
   field->type = ModuleFieldType::DataSegment;
   field->data_segment = new DataSegment();
@@ -788,21 +782,21 @@ Result BinaryReaderIR::BeginDataSegment(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginDataSegmentInitExpr(uint32_t index) {
+Result BinaryReaderIR::BeginDataSegmentInitExpr(Index index) {
   assert(index == module->data_segments.size() - 1);
   DataSegment* segment = module->data_segments[index];
   current_init_expr = &segment->offset;
   return Result::Ok;
 }
 
-Result BinaryReaderIR::EndDataSegmentInitExpr(uint32_t index) {
+Result BinaryReaderIR::EndDataSegmentInitExpr(Index index) {
   current_init_expr = nullptr;
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnDataSegmentData(uint32_t index,
-                                          const void* data,
-                                          uint32_t size) {
+Result BinaryReaderIR::OnDataSegmentData(Index index,
+                                         const void* data,
+                                         Address size) {
   assert(index == module->data_segments.size() - 1);
   DataSegment* segment = module->data_segments[index];
   segment->data = new char[size];
@@ -811,17 +805,17 @@ Result BinaryReaderIR::OnDataSegmentData(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionNamesCount(uint32_t count) {
+Result BinaryReaderIR::OnFunctionNamesCount(Index count) {
   if (count > module->funcs.size()) {
-    PrintError("expected function name count (%u) <= function count (%" PRIzd
-               ")",
+    PrintError("expected function name count (%" PRIindex
+               ") <= function count (%" PRIzd ")",
                count, module->funcs.size());
     return Result::Error;
   }
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionName(uint32_t index, StringSlice name) {
+Result BinaryReaderIR::OnFunctionName(Index index, StringSlice name) {
   if (string_slice_is_empty(&name))
     return Result::Ok;
 
@@ -831,54 +825,55 @@ Result BinaryReaderIR::OnFunctionName(uint32_t index, StringSlice name) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnLocalNameLocalCount(uint32_t index, uint32_t count) {
+Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
   assert(index < module->funcs.size());
   Func* func = module->funcs[index];
-  uint32_t num_params_and_locals = get_num_params_and_locals(func);
+  Index num_params_and_locals = get_num_params_and_locals(func);
   if (count > num_params_and_locals) {
-    PrintError("expected local name count (%d) <= local count (%d)", count,
-               num_params_and_locals);
+    PrintError("expected local name count (%" PRIindex
+               ") <= local count (%" PRIindex ")",
+               count, num_params_and_locals);
     return Result::Error;
   }
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnInitExprF32ConstExpr(uint32_t index, uint32_t value) {
+Result BinaryReaderIR::OnInitExprF32ConstExpr(Index index, uint32_t value) {
   *current_init_expr = Expr::CreateConst(Const(Const::F32(), value));
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnInitExprF64ConstExpr(uint32_t index, uint64_t value) {
+Result BinaryReaderIR::OnInitExprF64ConstExpr(Index index, uint64_t value) {
   *current_init_expr = Expr::CreateConst(Const(Const::F64(), value));
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnInitExprGetGlobalExpr(uint32_t index,
-                                                uint32_t global_index) {
+Result BinaryReaderIR::OnInitExprGetGlobalExpr(Index index,
+                                               Index global_index) {
   *current_init_expr = Expr::CreateGetGlobal(Var(global_index));
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnInitExprI32ConstExpr(uint32_t index, uint32_t value) {
+Result BinaryReaderIR::OnInitExprI32ConstExpr(Index index, uint32_t value) {
   *current_init_expr = Expr::CreateConst(Const(Const::I32(), value));
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnInitExprI64ConstExpr(uint32_t index, uint64_t value) {
+Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
   *current_init_expr = Expr::CreateConst(Const(Const::I64(), value));
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnLocalName(uint32_t func_index,
-                                    uint32_t local_index,
-                                    StringSlice name) {
+Result BinaryReaderIR::OnLocalName(Index func_index,
+                                   Index local_index,
+                                   StringSlice name) {
   if (string_slice_is_empty(&name))
     return Result::Ok;
 
   Func* func = module->funcs[func_index];
-  uint32_t num_params = get_num_params(func);
+  Index num_params = get_num_params(func);
   BindingHash* bindings;
-  uint32_t index;
+  Index index;
   if (local_index < num_params) {
     /* param name */
     bindings = &func->param_bindings;

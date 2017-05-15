@@ -51,16 +51,16 @@ struct TypeChecker {
 
 bool typechecker_is_unreachable(TypeChecker* tc);
 Result typechecker_get_label(TypeChecker* tc,
-                             size_t depth,
+                             Index depth,
                              TypeCheckerLabel** out_label);
 
 Result typechecker_begin_function(TypeChecker*, const TypeVector* sig);
 Result typechecker_on_binary(TypeChecker*, Opcode);
 Result typechecker_on_block(TypeChecker*, const TypeVector* sig);
-Result typechecker_on_br(TypeChecker*, size_t depth);
-Result typechecker_on_br_if(TypeChecker*, size_t depth);
+Result typechecker_on_br(TypeChecker*, Index depth);
+Result typechecker_on_br_if(TypeChecker*, Index depth);
 Result typechecker_begin_br_table(TypeChecker*);
-Result typechecker_on_br_table_target(TypeChecker*, size_t depth);
+Result typechecker_on_br_table_target(TypeChecker*, Index depth);
 Result typechecker_end_br_table(TypeChecker*);
 Result typechecker_on_call(TypeChecker*,
                            const TypeVector* param_types,

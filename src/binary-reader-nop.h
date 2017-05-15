@@ -23,303 +23,300 @@ namespace wabt {
 
 class BinaryReaderNop : public BinaryReader {
  public:
-  virtual bool OnError(const char* message) { return false; }
+  bool OnError(const char* message) override { return false; }
 
   /* Module */
-  virtual Result BeginModule(uint32_t version) { return Result::Ok; }
-  virtual Result EndModule() { return Result::Ok; }
+  Result BeginModule(uint32_t version) override { return Result::Ok; }
+  Result EndModule() override { return Result::Ok; }
 
-  virtual Result BeginSection(BinarySection section_type, uint32_t size) {
+  Result BeginSection(BinarySection section_type, Offset size) override {
     return Result::Ok;
   }
 
   /* Custom section */
-  virtual Result BeginCustomSection(uint32_t size, StringSlice section_name) {
+  Result BeginCustomSection(Offset size, StringSlice section_name) override {
     return Result::Ok;
   }
-  virtual Result EndCustomSection() { return Result::Ok; }
+  Result EndCustomSection() override { return Result::Ok; }
 
   /* Type section */
-  virtual Result BeginTypeSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnTypeCount(uint32_t count) { return Result::Ok; }
-  virtual Result OnType(uint32_t index,
-                        uint32_t param_count,
-                        Type* param_types,
-                        uint32_t result_count,
-                        Type* result_types) {
+  Result BeginTypeSection(Offset size) override { return Result::Ok; }
+  Result OnTypeCount(Index count) override { return Result::Ok; }
+  Result OnType(Index index,
+                Index param_count,
+                Type* param_types,
+                Index result_count,
+                Type* result_types) override {
     return Result::Ok;
   }
-  virtual Result EndTypeSection() { return Result::Ok; }
+  Result EndTypeSection() override { return Result::Ok; }
 
   /* Import section */
-  virtual Result BeginImportSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnImportCount(uint32_t count) { return Result::Ok; }
-  virtual Result OnImport(uint32_t index,
-                          StringSlice module_name,
-                          StringSlice field_name) {
+  Result BeginImportSection(Offset size) override { return Result::Ok; }
+  Result OnImportCount(Index count) override { return Result::Ok; }
+  Result OnImport(Index index,
+                  StringSlice module_name,
+                  StringSlice field_name) override {
     return Result::Ok;
   }
-  virtual Result OnImportFunc(uint32_t import_index,
-                              StringSlice module_name,
-                              StringSlice field_name,
-                              uint32_t func_index,
-                              uint32_t sig_index) {
+  Result OnImportFunc(Index import_index,
+                      StringSlice module_name,
+                      StringSlice field_name,
+                      Index func_index,
+                      Index sig_index) override {
     return Result::Ok;
   }
-  virtual Result OnImportTable(uint32_t import_index,
-                               StringSlice module_name,
-                               StringSlice field_name,
-                               uint32_t table_index,
-                               Type elem_type,
-                               const Limits* elem_limits) {
+  Result OnImportTable(Index import_index,
+                       StringSlice module_name,
+                       StringSlice field_name,
+                       Index table_index,
+                       Type elem_type,
+                       const Limits* elem_limits) override {
     return Result::Ok;
   }
-  virtual Result OnImportMemory(uint32_t import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
-                                uint32_t memory_index,
-                                const Limits* page_limits) {
+  Result OnImportMemory(Index import_index,
+                        StringSlice module_name,
+                        StringSlice field_name,
+                        Index memory_index,
+                        const Limits* page_limits) override {
     return Result::Ok;
   }
-  virtual Result OnImportGlobal(uint32_t import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
-                                uint32_t global_index,
-                                Type type,
-                                bool mutable_) {
+  Result OnImportGlobal(Index import_index,
+                        StringSlice module_name,
+                        StringSlice field_name,
+                        Index global_index,
+                        Type type,
+                        bool mutable_) override {
     return Result::Ok;
   }
-  virtual Result EndImportSection() { return Result::Ok; }
+  Result EndImportSection() override { return Result::Ok; }
 
   /* Function section */
-  virtual Result BeginFunctionSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnFunctionCount(uint32_t count) { return Result::Ok; }
-  virtual Result OnFunction(uint32_t index, uint32_t sig_index) {
+  Result BeginFunctionSection(Offset size) override { return Result::Ok; }
+  Result OnFunctionCount(Index count) override { return Result::Ok; }
+  Result OnFunction(Index index, Index sig_index) override {
     return Result::Ok;
   }
-  virtual Result EndFunctionSection() { return Result::Ok; }
+  Result EndFunctionSection() override { return Result::Ok; }
 
   /* Table section */
-  virtual Result BeginTableSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnTableCount(uint32_t count) { return Result::Ok; }
-  virtual Result OnTable(uint32_t index,
-                         Type elem_type,
-                         const Limits* elem_limits) {
+  Result BeginTableSection(Offset size) override { return Result::Ok; }
+  Result OnTableCount(Index count) override { return Result::Ok; }
+  Result OnTable(Index index,
+                 Type elem_type,
+                 const Limits* elem_limits) override {
     return Result::Ok;
   }
-  virtual Result EndTableSection() { return Result::Ok; }
+  Result EndTableSection() override { return Result::Ok; }
 
   /* Memory section */
-  virtual Result BeginMemorySection(uint32_t size) { return Result::Ok; }
-  virtual Result OnMemoryCount(uint32_t count) { return Result::Ok; }
-  virtual Result OnMemory(uint32_t index, const Limits* limits) {
+  Result BeginMemorySection(Offset size) override { return Result::Ok; }
+  Result OnMemoryCount(Index count) override { return Result::Ok; }
+  Result OnMemory(Index index, const Limits* limits) override {
     return Result::Ok;
   }
-  virtual Result EndMemorySection() { return Result::Ok; }
+  Result EndMemorySection() override { return Result::Ok; }
 
   /* Global section */
-  virtual Result BeginGlobalSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnGlobalCount(uint32_t count) { return Result::Ok; }
-  virtual Result BeginGlobal(uint32_t index, Type type, bool mutable_) {
+  Result BeginGlobalSection(Offset size) override { return Result::Ok; }
+  Result OnGlobalCount(Index count) override { return Result::Ok; }
+  Result BeginGlobal(Index index, Type type, bool mutable_) override {
     return Result::Ok;
   }
-  virtual Result BeginGlobalInitExpr(uint32_t index) { return Result::Ok; }
-  virtual Result EndGlobalInitExpr(uint32_t index) { return Result::Ok; }
-  virtual Result EndGlobal(uint32_t index) { return Result::Ok; }
-  virtual Result EndGlobalSection() { return Result::Ok; }
+  Result BeginGlobalInitExpr(Index index) override { return Result::Ok; }
+  Result EndGlobalInitExpr(Index index) override { return Result::Ok; }
+  Result EndGlobal(Index index) override { return Result::Ok; }
+  Result EndGlobalSection() override { return Result::Ok; }
 
   /* Exports section */
-  virtual Result BeginExportSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnExportCount(uint32_t count) { return Result::Ok; }
-  virtual Result OnExport(uint32_t index,
-                          ExternalKind kind,
-                          uint32_t item_index,
-                          StringSlice name) {
+  Result BeginExportSection(Offset size) override { return Result::Ok; }
+  Result OnExportCount(Index count) override { return Result::Ok; }
+  Result OnExport(Index index,
+                  ExternalKind kind,
+                  Index item_index,
+                  StringSlice name) override {
     return Result::Ok;
   }
-  virtual Result EndExportSection() { return Result::Ok; }
+  Result EndExportSection() override { return Result::Ok; }
 
   /* Start section */
-  virtual Result BeginStartSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnStartFunction(uint32_t func_index) { return Result::Ok; }
-  virtual Result EndStartSection() { return Result::Ok; }
+  Result BeginStartSection(Offset size) override { return Result::Ok; }
+  Result OnStartFunction(Index func_index) override { return Result::Ok; }
+  Result EndStartSection() override { return Result::Ok; }
 
   /* Code section */
-  virtual Result BeginCodeSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnFunctionBodyCount(uint32_t count) { return Result::Ok; }
-  virtual Result BeginFunctionBody(uint32_t index) { return Result::Ok; }
-  virtual Result OnLocalDeclCount(uint32_t count) { return Result::Ok; }
-  virtual Result OnLocalDecl(uint32_t decl_index, uint32_t count, Type type) {
+  Result BeginCodeSection(Offset size) override { return Result::Ok; }
+  Result OnFunctionBodyCount(Index count) override { return Result::Ok; }
+  Result BeginFunctionBody(Index index) override { return Result::Ok; }
+  Result OnLocalDeclCount(Index count) override { return Result::Ok; }
+  Result OnLocalDecl(Index decl_index, Index count, Type type) override {
     return Result::Ok;
   }
 
   /* Function expressions; called between BeginFunctionBody and
    EndFunctionBody */
-  virtual Result OnOpcode(Opcode Opcode) { return Result::Ok; }
-  virtual Result OnOpcodeBare() { return Result::Ok; }
-  virtual Result OnOpcodeUint32(uint32_t value) { return Result::Ok; }
-  virtual Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) {
+  Result OnOpcode(Opcode Opcode) override { return Result::Ok; }
+  Result OnOpcodeBare() override { return Result::Ok; }
+  Result OnOpcodeUint32(uint32_t value) override { return Result::Ok; }
+  Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override {
     return Result::Ok;
   }
-  virtual Result OnOpcodeUint64(uint64_t value) { return Result::Ok; }
-  virtual Result OnOpcodeF32(uint32_t value) { return Result::Ok; }
-  virtual Result OnOpcodeF64(uint64_t value) { return Result::Ok; }
-  virtual Result OnOpcodeBlockSig(uint32_t num_types, Type* sig_types) {
+  Result OnOpcodeUint64(uint64_t value) override { return Result::Ok; }
+  Result OnOpcodeF32(uint32_t value) override { return Result::Ok; }
+  Result OnOpcodeF64(uint64_t value) override { return Result::Ok; }
+  Result OnOpcodeBlockSig(Index num_types, Type* sig_types) override {
     return Result::Ok;
   }
-  virtual Result OnBinaryExpr(Opcode opcode) { return Result::Ok; }
-  virtual Result OnBlockExpr(uint32_t num_types, Type* sig_types) {
+  Result OnBinaryExpr(Opcode opcode) override { return Result::Ok; }
+  Result OnBlockExpr(Index num_types, Type* sig_types) override {
     return Result::Ok;
   }
-  virtual Result OnBrExpr(uint32_t depth) { return Result::Ok; }
-  virtual Result OnBrIfExpr(uint32_t depth) { return Result::Ok; }
-  virtual Result OnBrTableExpr(uint32_t num_targets,
-                               uint32_t* target_depths,
-                               uint32_t default_target_depth) {
+  Result OnBrExpr(Index depth) override { return Result::Ok; }
+  Result OnBrIfExpr(Index depth) override { return Result::Ok; }
+  Result OnBrTableExpr(Index num_targets,
+                       Index* target_depths,
+                       Index default_target_depth) override {
     return Result::Ok;
   }
-  virtual Result OnCallExpr(uint32_t func_index) { return Result::Ok; }
-  virtual Result OnCallIndirectExpr(uint32_t sig_index) { return Result::Ok; }
-  virtual Result OnCompareExpr(Opcode opcode) { return Result::Ok; }
-  virtual Result OnConvertExpr(Opcode opcode) { return Result::Ok; }
-  virtual Result OnCurrentMemoryExpr() { return Result::Ok; }
-  virtual Result OnDropExpr() { return Result::Ok; }
-  virtual Result OnElseExpr() { return Result::Ok; }
-  virtual Result OnEndExpr() { return Result::Ok; }
-  virtual Result OnEndFunc() { return Result::Ok; }
-  virtual Result OnF32ConstExpr(uint32_t value_bits) { return Result::Ok; }
-  virtual Result OnF64ConstExpr(uint64_t value_bits) { return Result::Ok; }
-  virtual Result OnGetGlobalExpr(uint32_t global_index) { return Result::Ok; }
-  virtual Result OnGetLocalExpr(uint32_t local_index) { return Result::Ok; }
-  virtual Result OnGrowMemoryExpr() { return Result::Ok; }
-  virtual Result OnI32ConstExpr(uint32_t value) { return Result::Ok; }
-  virtual Result OnI64ConstExpr(uint64_t value) { return Result::Ok; }
-  virtual Result OnIfExpr(uint32_t num_types, Type* sig_types) {
+  Result OnCallExpr(Index func_index) override { return Result::Ok; }
+  Result OnCallIndirectExpr(Index sig_index) override { return Result::Ok; }
+  Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
+  Result OnConvertExpr(Opcode opcode) override { return Result::Ok; }
+  Result OnCurrentMemoryExpr() override { return Result::Ok; }
+  Result OnDropExpr() override { return Result::Ok; }
+  Result OnElseExpr() override { return Result::Ok; }
+  Result OnEndExpr() override { return Result::Ok; }
+  Result OnEndFunc() override { return Result::Ok; }
+  Result OnF32ConstExpr(uint32_t value_bits) override { return Result::Ok; }
+  Result OnF64ConstExpr(uint64_t value_bits) override { return Result::Ok; }
+  Result OnGetGlobalExpr(Index global_index) override { return Result::Ok; }
+  Result OnGetLocalExpr(Index local_index) override { return Result::Ok; }
+  Result OnGrowMemoryExpr() override { return Result::Ok; }
+  Result OnI32ConstExpr(uint32_t value) override { return Result::Ok; }
+  Result OnI64ConstExpr(uint64_t value) override { return Result::Ok; }
+  Result OnIfExpr(Index num_types, Type* sig_types) override {
     return Result::Ok;
   }
-  virtual Result OnLoadExpr(Opcode opcode,
-                            uint32_t alignment_log2,
-                            uint32_t offset) {
+  Result OnLoadExpr(Opcode opcode,
+                    uint32_t alignment_log2,
+                    Address offset) override {
     return Result::Ok;
   }
-  virtual Result OnLoopExpr(uint32_t num_types, Type* sig_types) {
+  Result OnLoopExpr(Index num_types, Type* sig_types) override {
     return Result::Ok;
   }
-  virtual Result OnNopExpr() { return Result::Ok; }
-  virtual Result OnReturnExpr() { return Result::Ok; }
-  virtual Result OnSelectExpr() { return Result::Ok; }
-  virtual Result OnSetGlobalExpr(uint32_t global_index) { return Result::Ok; }
-  virtual Result OnSetLocalExpr(uint32_t local_index) { return Result::Ok; }
-  virtual Result OnStoreExpr(Opcode opcode,
-                             uint32_t alignment_log2,
-                             uint32_t offset) {
+  Result OnNopExpr() override { return Result::Ok; }
+  Result OnReturnExpr() override { return Result::Ok; }
+  Result OnSelectExpr() override { return Result::Ok; }
+  Result OnSetGlobalExpr(Index global_index) override { return Result::Ok; }
+  Result OnSetLocalExpr(Index local_index) override { return Result::Ok; }
+  Result OnStoreExpr(Opcode opcode,
+                     uint32_t alignment_log2,
+                     Address offset) override {
     return Result::Ok;
   }
-  virtual Result OnTeeLocalExpr(uint32_t local_index) { return Result::Ok; }
-  virtual Result OnUnaryExpr(Opcode opcode) { return Result::Ok; }
-  virtual Result OnUnreachableExpr() { return Result::Ok; }
-  virtual Result EndFunctionBody(uint32_t index) { return Result::Ok; }
-  virtual Result EndCodeSection() { return Result::Ok; }
+  Result OnTeeLocalExpr(Index local_index) override { return Result::Ok; }
+  Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
+  Result OnUnreachableExpr() override { return Result::Ok; }
+  Result EndFunctionBody(Index index) override { return Result::Ok; }
+  Result EndCodeSection() override { return Result::Ok; }
 
   /* Elem section */
-  virtual Result BeginElemSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnElemSegmentCount(uint32_t count) { return Result::Ok; }
-  virtual Result BeginElemSegment(uint32_t index, uint32_t table_index) {
+  Result BeginElemSection(Offset size) override { return Result::Ok; }
+  Result OnElemSegmentCount(Index count) override { return Result::Ok; }
+  Result BeginElemSegment(Index index, Index table_index) override {
     return Result::Ok;
   }
-  virtual Result BeginElemSegmentInitExpr(uint32_t index) { return Result::Ok; }
-  virtual Result EndElemSegmentInitExpr(uint32_t index) { return Result::Ok; }
-  virtual Result OnElemSegmentFunctionIndexCount(uint32_t index,
-                                                 uint32_t count) {
+  Result BeginElemSegmentInitExpr(Index index) override { return Result::Ok; }
+  Result EndElemSegmentInitExpr(Index index) override { return Result::Ok; }
+  Result OnElemSegmentFunctionIndexCount(Index index, Index count) override {
     return Result::Ok;
   }
-  virtual Result OnElemSegmentFunctionIndex(uint32_t index,
-                                            uint32_t func_index) {
+  Result OnElemSegmentFunctionIndex(Index index, Index func_index) override {
     return Result::Ok;
   }
-  virtual Result EndElemSegment(uint32_t index) { return Result::Ok; }
-  virtual Result EndElemSection() { return Result::Ok; }
+  Result EndElemSegment(Index index) override { return Result::Ok; }
+  Result EndElemSection() override { return Result::Ok; }
 
   /* Data section */
-  virtual Result BeginDataSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnDataSegmentCount(uint32_t count) { return Result::Ok; }
-  virtual Result BeginDataSegment(uint32_t index, uint32_t memory_index) {
+  Result BeginDataSection(Offset size) override { return Result::Ok; }
+  Result OnDataSegmentCount(Index count) override { return Result::Ok; }
+  Result BeginDataSegment(Index index, Index memory_index) override {
     return Result::Ok;
   }
-  virtual Result BeginDataSegmentInitExpr(uint32_t index) { return Result::Ok; }
-  virtual Result EndDataSegmentInitExpr(uint32_t index) { return Result::Ok; }
-  virtual Result OnDataSegmentData(uint32_t index,
-                                   const void* data,
-                                   uint32_t size) {
+  Result BeginDataSegmentInitExpr(Index index) override { return Result::Ok; }
+  Result EndDataSegmentInitExpr(Index index) override { return Result::Ok; }
+  Result OnDataSegmentData(Index index,
+                           const void* data,
+                           Address size) override {
     return Result::Ok;
   }
-  virtual Result EndDataSegment(uint32_t index) { return Result::Ok; }
-  virtual Result EndDataSection() { return Result::Ok; }
+  Result EndDataSegment(Index index) override { return Result::Ok; }
+  Result EndDataSection() override { return Result::Ok; }
 
   /* Names section */
-  virtual Result BeginNamesSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnFunctionNameSubsection(uint32_t index,
-                                          uint32_t name_type,
-                                          uint32_t subsection_size) {
+  Result BeginNamesSection(Offset size) override { return Result::Ok; }
+  Result OnFunctionNameSubsection(Index index,
+                                  uint32_t name_type,
+                                  Offset subsection_size) override {
     return Result::Ok;
   }
-  virtual Result OnFunctionNamesCount(uint32_t num_functions) {
+  Result OnFunctionNamesCount(Index num_functions) override {
     return Result::Ok;
   }
-  virtual Result OnFunctionName(uint32_t function_index,
-                                StringSlice function_name) {
+  Result OnFunctionName(Index function_index,
+                        StringSlice function_name) override {
     return Result::Ok;
   }
-  virtual Result OnLocalNameSubsection(uint32_t index,
-                                       uint32_t name_type,
-                                       uint32_t subsection_size) {
+  Result OnLocalNameSubsection(Index index,
+                               uint32_t name_type,
+                               Offset subsection_size) override {
     return Result::Ok;
   }
-  virtual Result OnLocalNameFunctionCount(uint32_t num_functions) {
+  Result OnLocalNameFunctionCount(Index num_functions) override {
     return Result::Ok;
   }
-  virtual Result OnLocalNameLocalCount(uint32_t function_index,
-                                       uint32_t num_locals) {
+  Result OnLocalNameLocalCount(Index function_index,
+                               Index num_locals) override {
     return Result::Ok;
   }
-  virtual Result OnLocalName(uint32_t function_index,
-                             uint32_t local_index,
-                             StringSlice local_name) {
+  Result OnLocalName(Index function_index,
+                     Index local_index,
+                     StringSlice local_name) override {
     return Result::Ok;
   }
-  virtual Result EndNamesSection() { return Result::Ok; }
+  Result EndNamesSection() override { return Result::Ok; }
 
   /* Reloc section */
-  virtual Result BeginRelocSection(uint32_t size) { return Result::Ok; }
-  virtual Result OnRelocCount(uint32_t count,
-                              BinarySection section_code,
-                              StringSlice section_name) {
+  Result BeginRelocSection(Offset size) override { return Result::Ok; }
+  Result OnRelocCount(Index count,
+                      BinarySection section_code,
+                      StringSlice section_name) override {
     return Result::Ok;
   }
-  virtual Result OnReloc(RelocType type,
-                         uint32_t offset,
-                         uint32_t index,
-                         uint32_t addend) {
+  Result OnReloc(RelocType type,
+                 Offset offset,
+                 Index index,
+                 uint32_t addend) override {
     return Result::Ok;
   }
-  virtual Result EndRelocSection() { return Result::Ok; }
+  Result EndRelocSection() override { return Result::Ok; }
 
   /* InitExpr - used by elem, data and global sections; these functions are
    * only called between calls to Begin*InitExpr and End*InitExpr */
-  virtual Result OnInitExprF32ConstExpr(uint32_t index, uint32_t value) {
+  Result OnInitExprF32ConstExpr(Index index, uint32_t value) override {
     return Result::Ok;
   }
-  virtual Result OnInitExprF64ConstExpr(uint32_t index, uint64_t value) {
+  Result OnInitExprF64ConstExpr(Index index, uint64_t value) override {
     return Result::Ok;
   }
-  virtual Result OnInitExprGetGlobalExpr(uint32_t index,
-                                         uint32_t global_index) {
+  Result OnInitExprGetGlobalExpr(Index index, Index global_index) override {
     return Result::Ok;
   }
-  virtual Result OnInitExprI32ConstExpr(uint32_t index, uint32_t value) {
+  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override {
     return Result::Ok;
   }
-  virtual Result OnInitExprI64ConstExpr(uint32_t index, uint64_t value) {
+  Result OnInitExprI64ConstExpr(Index index, uint64_t value) override {
     return Result::Ok;
   }
 };

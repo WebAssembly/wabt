@@ -40,7 +40,7 @@ struct WriteBinaryOptions {
 Result write_binary_module(Writer*, const Module*, const WriteBinaryOptions*);
 
 /* returns the length of the leb128 */
-uint32_t u32_leb128_length(uint32_t value);
+Offset u32_leb128_length(uint32_t value);
 
 void write_u32_leb128(Stream* stream, uint32_t value, const char* desc);
 
@@ -48,14 +48,12 @@ void write_i32_leb128(Stream* stream, int32_t value, const char* desc);
 
 void write_fixed_u32_leb128(Stream* stream, uint32_t value, const char* desc);
 
-uint32_t write_fixed_u32_leb128_at(Stream* stream,
-                                   uint32_t offset,
-                                   uint32_t value,
-                                   const char* desc);
+Offset write_fixed_u32_leb128_at(Stream* stream,
+                                 Offset offset,
+                                 uint32_t value,
+                                 const char* desc);
 
-uint32_t write_fixed_u32_leb128_raw(uint8_t* data,
-                                    uint8_t* end,
-                                    uint32_t value);
+Offset write_fixed_u32_leb128_raw(uint8_t* data, uint8_t* end, uint32_t value);
 
 void write_type(Stream* stream, Type type);
 

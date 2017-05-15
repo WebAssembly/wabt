@@ -29,8 +29,6 @@
 #include "wast-parser.h"
 #include "wast-parser-lexer-shared.h"
 
-#define INVALID_VAR_INDEX (-1)
-
 #define RELOCATE_STACK(type, array, stack_base, old_size, new_size)   \
   do {                                                                \
     type* new_stack = new type[new_size]();                           \
@@ -164,7 +162,7 @@ void append_implicit_func_declaration(Location*,
 class BinaryErrorHandlerModule : public BinaryErrorHandler {
  public:
   BinaryErrorHandlerModule(Location* loc, WastLexer* lexer, WastParser* parser);
-  bool OnError(uint32_t offset, const std::string& error) override;
+  bool OnError(Offset offset, const std::string& error) override;
 
  private:
   Location* loc_;
@@ -1298,7 +1296,7 @@ script_var_opt :
     /* empty */ {
       WABT_ZERO_MEMORY($$);
       $$.type = VarType::Index;
-      $$.index = INVALID_VAR_INDEX;
+      $$.index = kInvalidIndex;
     }
   | VAR {
       WABT_ZERO_MEMORY($$);
@@ -1480,7 +1478,7 @@ script :
             /* Resolve actions with an invalid index to use the preceding
              * module. */
             if (module_var->type == VarType::Index &&
-                module_var->index == INVALID_VAR_INDEX) {
+                module_var->index == kInvalidIndex) {
               module_var->index = last_module_index;
             }
             break;
@@ -1667,14 +1665,14 @@ BinaryErrorHandlerModule::BinaryErrorHandlerModule(
     Location* loc, WastLexer* lexer, WastParser* parser)
   : loc_(loc), lexer_(lexer), parser_(parser) {}
 
-bool BinaryErrorHandlerModule::OnError(uint32_t offset,
+bool BinaryErrorHandlerModule::OnError(Offset offset,
                                        const std::string& error) {
-  if (offset == WABT_UNKNOWN_OFFSET) {
+  if (offset == kInvalidOffset) {
     wast_parser_error(loc_, lexer_, parser_, "error in binary module: %s",
                       error.c_str());
   } else {
     wast_parser_error(loc_, lexer_, parser_,
-                      "error in binary module: @0x%08x: %s", offset,
+                      "error in binary module: @0x%08" PRIzx ": %s", offset,
                       error.c_str());
   }
   return true;

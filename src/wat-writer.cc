@@ -85,7 +85,7 @@ class WatWriter {
   void WriteStringSlice(const StringSlice* str, NextChar next_char);
   bool WriteStringSliceOpt(const StringSlice* str, NextChar next_char);
   void WriteStringSliceOrIndex(const StringSlice* str,
-                               uint32_t index,
+                               Index index,
                                NextChar next_char);
   void WriteQuotedData(const void* data, size_t length);
   void WriteQuotedStringSlice(const StringSlice* str, NextChar next_char);
@@ -122,14 +122,14 @@ class WatWriter {
   Result result_ = Result::Ok;
   int indent_ = 0;
   NextChar next_char_ = NextChar::None;
-  int depth_ = 0;
+  Index depth_ = 0;
   std::vector<std::string> index_to_name_;
 
-  int func_index_ = 0;
-  int global_index_ = 0;
-  int table_index_ = 0;
-  int memory_index_ = 0;
-  int func_type_index_ = 0;
+  Index func_index_ = 0;
+  Index global_index_ = 0;
+  Index table_index_ = 0;
+  Index memory_index_ = 0;
+  Index func_type_index_ = 0;
 };
 
 }  // namespace
@@ -258,7 +258,7 @@ bool WatWriter::WriteStringSliceOpt(const StringSlice* str,
 }
 
 void WatWriter::WriteStringSliceOrIndex(const StringSlice* str,
-                                        uint32_t index,
+                                        Index index,
                                         NextChar next_char) {
   if (str->start)
     WriteStringSlice(str, next_char);
@@ -293,7 +293,7 @@ void WatWriter::WriteQuotedStringSlice(const StringSlice* str,
 
 void WatWriter::WriteVar(const Var* var, NextChar next_char) {
   if (var->type == VarType::Index) {
-    Writef("%" PRId64, var->index);
+    Writef("%" PRIindex, var->index);
     next_char_ = next_char;
   } else {
     WriteStringSlice(&var->name, next_char);
@@ -302,7 +302,8 @@ void WatWriter::WriteVar(const Var* var, NextChar next_char) {
 
 void WatWriter::WriteBrVar(const Var* var, NextChar next_char) {
   if (var->type == VarType::Index) {
-    Writef("%" PRId64 " (;@%" PRId64 ";)", var->index,
+    assert(var->index < depth_);
+    Writef("%" PRIindex " (;@%" PRIindex ";)", var->index,
            depth_ - var->index - 1);
     next_char_ = next_char;
   } else {
@@ -337,7 +338,7 @@ void WatWriter::WriteBeginBlock(const Block* block, const char* text) {
   bool has_label = WriteStringSliceOpt(&block->label, NextChar::Space);
   WriteTypes(block->sig, nullptr);
   if (!has_label)
-    Writef(" ;; label = @%d", depth_);
+    Writef(" ;; label = @%" PRIindex, depth_);
   WriteNewline(FORCE_NEWLINE);
   depth_++;
   Indent();

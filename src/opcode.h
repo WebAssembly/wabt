@@ -38,16 +38,16 @@ struct OpcodeInfo {
   Type result_type;
   Type param1_type;
   Type param2_type;
-  int memory_size;
+  Address memory_size;
 };
 
 // Return 1 if |alignment| matches the alignment of |opcode|, or if |alignment|
 // is WABT_USE_NATURAL_ALIGNMENT.
-bool is_naturally_aligned(Opcode opcode, uint32_t alignment);
+bool is_naturally_aligned(Opcode opcode, Address alignment);
 
 // If |alignment| is WABT_USE_NATURAL_ALIGNMENT, return the alignment of
 // |opcode|, else return |alignment|.
-uint32_t get_opcode_alignment(Opcode opcode, uint32_t alignment);
+Address get_opcode_alignment(Opcode opcode, Address alignment);
 
 extern OpcodeInfo g_opcode_info[];
 

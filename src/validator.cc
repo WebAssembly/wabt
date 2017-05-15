@@ -53,10 +53,10 @@ struct Context {
   const Script* script = nullptr;
   const Module* current_module = nullptr;
   const Func* current_func = nullptr;
-  int current_table_index = 0;
-  int current_memory_index = 0;
-  int current_global_index = 0;
-  int num_imported_globals = 0;
+  Index current_table_index = 0;
+  Index current_memory_index = 0;
+  Index current_global_index = 0;
+  Index num_imported_globals = 0;
   TypeChecker typechecker;
   /* Cached for access by on_typechecker_error */
   const Location* expr_loc = nullptr;
@@ -88,32 +88,32 @@ static bool is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static uint32_t get_opcode_natural_alignment(Opcode opcode) {
-  uint32_t memory_size = get_opcode_memory_size(opcode);
+static Address get_opcode_natural_alignment(Opcode opcode) {
+  Address memory_size = get_opcode_memory_size(opcode);
   assert(memory_size != 0);
   return memory_size;
 }
 
 static Result check_var(Context* ctx,
-                        int max_index,
+                        Index max_index,
                         const Var* var,
                         const char* desc,
-                        int* out_index) {
+                        Index* out_index) {
   assert(var->type == VarType::Index);
-  if (var->index >= 0 && var->index < max_index) {
+  if (var->index < max_index) {
     if (out_index)
       *out_index = var->index;
     return Result::Ok;
   }
-  print_error(ctx, &var->loc, "%s variable out of range (max %d)", desc,
-              max_index);
+  print_error(ctx, &var->loc, "%s variable out of range (max %" PRIindex ")",
+              desc, max_index);
   return Result::Error;
 }
 
 static Result check_func_var(Context* ctx,
                              const Var* var,
                              const Func** out_func) {
-  int index;
+  Index index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->funcs.size(), var,
                             "function", &index))) {
     return Result::Error;
@@ -127,8 +127,8 @@ static Result check_func_var(Context* ctx,
 static Result check_global_var(Context* ctx,
                                const Var* var,
                                const Global** out_global,
-                               int* out_global_index) {
-  int index;
+                               Index* out_global_index) {
+  Index index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->globals.size(), var,
                             "global", &index))) {
     return Result::Error;
@@ -151,7 +151,7 @@ static Type get_global_var_type_or_any(Context* ctx, const Var* var) {
 static Result check_func_type_var(Context* ctx,
                                   const Var* var,
                                   const FuncType** out_func_type) {
-  int index;
+  Index index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->func_types.size(), var,
                             "function type", &index))) {
     return Result::Error;
@@ -165,7 +165,7 @@ static Result check_func_type_var(Context* ctx,
 static Result check_table_var(Context* ctx,
                               const Var* var,
                               const Table** out_table) {
-  int index;
+  Index index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->tables.size(), var,
                             "table", &index))) {
     return Result::Error;
@@ -179,7 +179,7 @@ static Result check_table_var(Context* ctx,
 static Result check_memory_var(Context* ctx,
                                const Var* var,
                                const Memory** out_memory) {
-  int index;
+  Index index;
   if (WABT_FAILED(check_var(ctx, ctx->current_module->memories.size(), var,
                             "memory", &index))) {
     return Result::Error;
@@ -192,11 +192,11 @@ static Result check_memory_var(Context* ctx,
 
 static Result check_local_var(Context* ctx, const Var* var, Type* out_type) {
   const Func* func = ctx->current_func;
-  int max_index = get_num_params_and_locals(func);
-  int index = get_local_index_by_var(func, var);
-  if (index >= 0 && index < max_index) {
+  Index max_index = get_num_params_and_locals(func);
+  Index index = get_local_index_by_var(func, var);
+  if (index < max_index) {
     if (out_type) {
-      int num_params = get_num_params(func);
+      Index num_params = get_num_params(func);
       if (index < num_params) {
         *out_type = get_param_type(func, index);
       } else {
@@ -211,8 +211,8 @@ static Result check_local_var(Context* ctx, const Var* var, Type* out_type) {
                 "undefined local variable \"" PRIstringslice "\"",
                 WABT_PRINTF_STRING_SLICE_ARG(var->name));
   } else {
-    print_error(ctx, &var->loc, "local variable out of range (max %d)",
-                max_index);
+    print_error(ctx, &var->loc,
+                "local variable out of range (max %" PRIindex ")", max_index);
   }
   return Result::Error;
 }
@@ -225,8 +225,8 @@ static Type get_local_var_type_or_any(Context* ctx, const Var* var) {
 
 static void check_align(Context* ctx,
                         const Location* loc,
-                        uint32_t alignment,
-                        uint32_t natural_alignment) {
+                        Address alignment,
+                        Address natural_alignment) {
   if (alignment != WABT_USE_NATURAL_ALIGNMENT) {
     if (!is_power_of_two(alignment))
       print_error(ctx, loc, "alignment must be power-of-two");
@@ -260,10 +260,11 @@ static void check_type_index(Context* ctx,
                              Type actual,
                              Type expected,
                              const char* desc,
-                             int index,
+                             Index index,
                              const char* index_kind) {
   if (expected != actual && expected != Type::Any && actual != Type::Any) {
-    print_error(ctx, loc, "type mismatch for %s %d of %s. got %s, expected %s",
+    print_error(ctx, loc,
+                "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
                 index_kind, index, desc, get_type_name(actual),
                 get_type_name(expected));
   }
@@ -569,7 +570,7 @@ static void check_const_init_expr(Context* ctx,
 
       case ExprType::GetGlobal: {
         const Global* ref_global = nullptr;
-        int ref_global_index;
+        Index ref_global_index;
         if (WABT_FAILED(check_global_var(ctx, &expr->get_global.var,
                                          &ref_global, &ref_global_index))) {
           return;

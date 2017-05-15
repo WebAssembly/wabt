@@ -154,9 +154,9 @@ LinkerInputBinary::~LinkerInputBinary() {
   delete[] data;
 }
 
-static uint32_t relocate_func_index(LinkerInputBinary* binary,
-                                    uint32_t function_index) {
-  uint32_t offset;
+static Index relocate_func_index(LinkerInputBinary* binary,
+                                 Index function_index) {
+  Index offset;
   if (function_index >= binary->function_imports.size()) {
     /* locally declared function call */
     offset = binary->function_index_offset;
@@ -172,7 +172,7 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
         s_log_stream->Writef("reloc for disabled import. new index = %d + %d\n",
                              function_index, offset);
     } else {
-      uint32_t new_index = import->relocated_function_index;
+      Index new_index = import->relocated_function_index;
       if (s_debug)
         s_log_stream->Writef(
             "reloc for active import. old index = %d, new index = %d\n",
@@ -183,9 +183,9 @@ static uint32_t relocate_func_index(LinkerInputBinary* binary,
   return function_index + offset;
 }
 
-static uint32_t relocate_global_index(LinkerInputBinary* binary,
-                                      uint32_t global_index) {
-  uint32_t offset;
+static Index relocate_global_index(LinkerInputBinary* binary,
+                                   Index global_index) {
+  Index offset;
   if (global_index >= binary->global_imports.size()) {
     offset = binary->global_index_offset;
   } else {
@@ -199,11 +199,11 @@ static void apply_relocation(Section* section, Reloc* r) {
   uint8_t* section_data = &binary->data[section->offset];
   size_t section_size = section->size;
 
-  uint32_t cur_value = 0, new_value = 0;
+  Index cur_value = 0, new_value = 0;
   read_u32_leb128(section_data + r->offset, section_data + section_size,
                   &cur_value);
 
-  uint32_t offset = 0;
+  Index offset = 0;
   switch (r->type) {
     case RelocType::FuncIndexLEB:
       new_value = relocate_func_index(binary, cur_value);
@@ -268,10 +268,10 @@ static void write_string(Stream* stream,
 
 #define WRITE_UNKNOWN_SIZE(STREAM)                            \
   {                                                           \
-    uint32_t fixup_offset = (STREAM)->offset();               \
+    Offset fixup_offset = (STREAM)->offset();                 \
     write_fixed_u32_leb128(STREAM, 0, "unknown size");        \
     ctx->current_section_payload_offset = (STREAM)->offset(); \
-    uint32_t start = (STREAM)->offset();
+    Offset start = (STREAM)->offset();
 
 #define FIXUP_SIZE(STREAM)                                                    \
   write_fixed_u32_leb128_at(STREAM, fixup_offset, (STREAM)->offset() - start, \
@@ -282,9 +282,9 @@ static void write_table_section(Context* ctx,
                                 const SectionPtrVector& sections) {
   /* Total section size includes the element count leb128 which is
    * always 1 in the current spec */
-  uint32_t table_count = 1;
+  Index table_count = 1;
   uint32_t flags = WABT_BINARY_LIMITS_HAS_MAX_FLAG;
-  uint32_t elem_count = 0;
+  Index elem_count = 0;
 
   for (Section* section: sections) {
     elem_count += section->binary->table_elem_count;
@@ -301,7 +301,7 @@ static void write_table_section(Context* ctx,
 }
 
 static void write_export_section(Context* ctx) {
-  uint32_t total_exports = 0;
+  Index total_exports = 0;
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     total_exports += binary->exports.size();
   }
@@ -314,7 +314,7 @@ static void write_export_section(Context* ctx) {
     for (const Export& export_ : binary->exports) {
       write_slice(stream, export_.name, "export name");
       stream->WriteU8Enum(export_.kind, "export kind");
-      uint32_t index = export_.index;
+      Index index = export_.index;
       switch (export_.kind) {
         case ExternalKind::Func:
           index = relocate_func_index(binary.get(), index);
@@ -335,7 +335,7 @@ static void write_elem_section(Context* ctx,
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  uint32_t total_elem_count = 0;
+  Index total_elem_count = 0;
   for (Section* section : sections) {
     total_elem_count += section->binary->table_elem_count;
   }
@@ -379,7 +379,7 @@ static void write_memory_section(Context* ctx,
 
 static void write_function_import(Context* ctx,
                                   FunctionImport* import,
-                                  uint32_t offset) {
+                                  Index offset) {
   write_c_str(&ctx->stream, WABT_LINK_MODULE_NAME, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
   ctx->stream.WriteU8Enum(ExternalKind::Func, "import kind");
@@ -396,7 +396,7 @@ static void write_global_import(Context* ctx, GlobalImport* import) {
 }
 
 static void write_import_section(Context* ctx) {
-  uint32_t num_imports = 0;
+  Index num_imports = 0;
   for (size_t i = 0; i < ctx->inputs.size(); i++) {
     LinkerInputBinary* binary = ctx->inputs[i].get();
     std::vector<FunctionImport>& imports = binary->function_imports;
@@ -431,7 +431,7 @@ static void write_import_section(Context* ctx) {
 
 static void write_function_section(Context* ctx,
                                    const SectionPtrVector& sections,
-                                   uint32_t total_count) {
+                                   Index total_count) {
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
@@ -439,9 +439,9 @@ static void write_function_section(Context* ctx,
 
   for (size_t i = 0; i < sections.size(); i++) {
     Section* sec = sections[i];
-    uint32_t count = sec->count;
-    uint32_t input_offset = 0;
-    uint32_t sig_index = 0;
+    Index count = sec->count;
+    Offset input_offset = 0;
+    Index sig_index = 0;
     const uint8_t* start = &sec->binary->data[sec->payload_offset];
     const uint8_t* end =
         &sec->binary->data[sec->payload_offset + sec->payload_size];
@@ -457,7 +457,7 @@ static void write_function_section(Context* ctx,
 
 static void write_data_segment(Stream* stream,
                                const DataSegment& segment,
-                               uint32_t offset) {
+                               Address offset) {
   assert(segment.memory_index == 0);
   write_u32_leb128(stream, segment.memory_index, "memory index");
   write_opcode(stream, Opcode::I32Const);
@@ -469,7 +469,7 @@ static void write_data_segment(Stream* stream,
 
 static void write_data_section(Context* ctx,
                                const SectionPtrVector& sections,
-                               uint32_t total_count) {
+                               Index total_count) {
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
@@ -487,7 +487,7 @@ static void write_data_section(Context* ctx,
 }
 
 static void write_names_section(Context* ctx) {
-  uint32_t total_count = 0;
+  Index total_count = 0;
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
       if (binary->debug_names[i].empty())
@@ -535,7 +535,7 @@ static void write_names_section(Context* ctx) {
 static void write_reloc_section(Context* ctx,
                                 BinarySection section_code,
                                 const SectionPtrVector& sections) {
-  uint32_t total_relocs = 0;
+  Index total_relocs = 0;
 
   /* First pass to know total reloc count */
   for (Section* sec: sections)
@@ -558,9 +558,9 @@ static void write_reloc_section(Context* ctx,
   for (Section* sec: sections) {
     for (const Reloc& reloc: sec->relocations) {
       write_u32_leb128_enum(&ctx->stream, reloc.type, "reloc type");
-      uint32_t new_offset = reloc.offset + sec->output_payload_offset;
+      Offset new_offset = reloc.offset + sec->output_payload_offset;
       write_u32_leb128(&ctx->stream, new_offset, "reloc offset");
-      uint32_t relocated_index;
+      Index relocated_index;
       switch (reloc.type) {
         case RelocType::FuncIndexLEB:
           relocated_index = relocate_func_index(sec->binary, reloc.index);
@@ -591,8 +591,8 @@ static bool write_combined_section(Context* ctx,
                get_section_name(section_code));
   }
 
-  uint32_t total_count = 0;
-  uint32_t total_size = 0;
+  Index total_count = 0;
+  Index total_size = 0;
 
   /* Sum section size and element count */
   for (Section* sec: sections) {
@@ -698,13 +698,13 @@ static void resolve_symbols(Context* ctx) {
 }
 
 static void calculate_reloc_offsets(Context* ctx) {
-  uint32_t memory_page_offset = 0;
-  uint32_t type_count = 0;
-  uint32_t global_count = 0;
-  uint32_t function_count = 0;
-  uint32_t table_elem_count = 0;
-  uint32_t total_function_imports = 0;
-  uint32_t total_global_imports = 0;
+  Index memory_page_offset = 0;
+  Index type_count = 0;
+  Index global_count = 0;
+  Index function_count = 0;
+  Index table_elem_count = 0;
+  Index total_function_imports = 0;
+  Index total_global_imports = 0;
   for (size_t i = 0; i < ctx->inputs.size(); i++) {
     LinkerInputBinary* binary = ctx->inputs[i].get();
     /* The imported_function_index_offset is the sum of all the function
@@ -791,7 +791,7 @@ static void write_binary(Context* ctx) {
 
 static void dump_reloc_offsets(Context* ctx) {
   if (s_debug) {
-    for (uint32_t i = 0; i < ctx->inputs.size(); i++) {
+    for (size_t i = 0; i < ctx->inputs.size(); i++) {
       LinkerInputBinary* binary = ctx->inputs[i].get();
       s_log_stream->Writef("Relocation info for: %s\n", binary->filename);
       s_log_stream->Writef(" - type index offset       : %d\n",

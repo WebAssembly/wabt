@@ -32,71 +32,71 @@ class BinaryReaderLinker : public BinaryReaderNop {
  public:
   explicit BinaryReaderLinker(LinkerInputBinary* binary);
 
-  virtual Result BeginSection(BinarySection section_type, uint32_t size);
+  Result BeginSection(BinarySection section_type, Offset size) override;
 
-  virtual Result OnImport(uint32_t index,
-                          StringSlice module_name,
-                          StringSlice field_name);
-  virtual Result OnImportFunc(uint32_t import_index,
-                              StringSlice module_name,
-                              StringSlice field_name,
-                              uint32_t func_index,
-                              uint32_t sig_index);
-  virtual Result OnImportGlobal(uint32_t import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
-                                uint32_t global_index,
-                                Type type,
-                                bool mutable_);
+  Result OnImport(Index index,
+                  StringSlice module_name,
+                  StringSlice field_name) override;
+  Result OnImportFunc(Index import_index,
+                      StringSlice module_name,
+                      StringSlice field_name,
+                      Index func_index,
+                      Index sig_index) override;
+  Result OnImportGlobal(Index import_index,
+                        StringSlice module_name,
+                        StringSlice field_name,
+                        Index global_index,
+                        Type type,
+                        bool mutable_) override;
 
-  virtual Result OnFunctionCount(uint32_t count);
+  Result OnFunctionCount(Index count) override;
 
-  virtual Result OnTable(uint32_t index,
-                         Type elem_type,
-                         const Limits* elem_limits);
+  Result OnTable(Index index,
+                 Type elem_type,
+                 const Limits* elem_limits) override;
 
-  virtual Result OnMemory(uint32_t index, const Limits* limits);
+  Result OnMemory(Index index, const Limits* limits) override;
 
-  virtual Result OnExport(uint32_t index,
-                          ExternalKind kind,
-                          uint32_t item_index,
-                          StringSlice name);
+  Result OnExport(Index index,
+                  ExternalKind kind,
+                  Index item_index,
+                  StringSlice name) override;
 
-  virtual Result OnElemSegmentFunctionIndexCount(uint32_t index,
-                                                 uint32_t count);
+  Result OnElemSegmentFunctionIndexCount(Index index,
+                                         Index count) override;
 
-  virtual Result BeginDataSegment(uint32_t index, uint32_t memory_index);
-  virtual Result OnDataSegmentData(uint32_t index,
-                                   const void* data,
-                                   uint32_t size);
+  Result BeginDataSegment(Index index, Index memory_index) override;
+  Result OnDataSegmentData(Index index,
+                           const void* data,
+                           Address size) override;
 
-  virtual Result BeginNamesSection(uint32_t size);
+  Result BeginNamesSection(Offset size) override;
 
-  virtual Result OnFunctionName(uint32_t function_index,
-                                StringSlice function_name);
+  Result OnFunctionName(Index function_index,
+                        StringSlice function_name) override;
 
-  virtual Result OnRelocCount(uint32_t count,
-                              BinarySection section_code,
-                              StringSlice section_name);
-  virtual Result OnReloc(RelocType type,
-                         uint32_t offset,
-                         uint32_t index,
-                         uint32_t addend);
+  Result OnRelocCount(Index count,
+                      BinarySection section_code,
+                      StringSlice section_name) override;
+  Result OnReloc(RelocType type,
+                 Offset offset,
+                 Index index,
+                 uint32_t addend) override;
 
-  virtual Result OnInitExprI32ConstExpr(uint32_t index, uint32_t value);
+  Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
 
  private:
   LinkerInputBinary* binary;
 
   Section* reloc_section = nullptr;
   Section* current_section = nullptr;
-  uint32_t function_count = 0;
+  Index function_count = 0;
 };
 
 BinaryReaderLinker::BinaryReaderLinker(LinkerInputBinary* binary)
     : binary(binary) {}
 
-Result BinaryReaderLinker::OnRelocCount(uint32_t count,
+Result BinaryReaderLinker::OnRelocCount(Index count,
                                         BinarySection section_code,
                                         StringSlice section_name) {
   if (section_code == BinarySection::Custom) {
@@ -115,11 +115,11 @@ Result BinaryReaderLinker::OnRelocCount(uint32_t count,
 }
 
 Result BinaryReaderLinker::OnReloc(RelocType type,
-                                   uint32_t offset,
-                                   uint32_t index,
+                                   Offset offset,
+                                   Index index,
                                    uint32_t addend) {
   if (offset + RELOC_SIZE > reloc_section->size) {
-    WABT_FATAL("invalid relocation offset: %#x\n", offset);
+    WABT_FATAL("invalid relocation offset: %#" PRIoffset "\n", offset);
   }
 
   reloc_section->relocations.emplace_back(type, offset, index, addend);
@@ -127,7 +127,7 @@ Result BinaryReaderLinker::OnReloc(RelocType type,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnImport(uint32_t index,
+Result BinaryReaderLinker::OnImport(Index index,
                                     StringSlice module_name,
                                     StringSlice field_name) {
   if (!string_slice_eq_cstr(&module_name, WABT_LINK_MODULE_NAME)) {
@@ -137,11 +137,11 @@ Result BinaryReaderLinker::OnImport(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnImportFunc(uint32_t import_index,
+Result BinaryReaderLinker::OnImportFunc(Index import_index,
                                         StringSlice module_name,
                                         StringSlice field_name,
-                                        uint32_t global_index,
-                                        uint32_t sig_index) {
+                                        Index global_index,
+                                        Index sig_index) {
   binary->function_imports.emplace_back();
   FunctionImport* import = &binary->function_imports.back();
   import->name = field_name;
@@ -151,10 +151,10 @@ Result BinaryReaderLinker::OnImportFunc(uint32_t import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnImportGlobal(uint32_t import_index,
+Result BinaryReaderLinker::OnImportGlobal(Index import_index,
                                           StringSlice module_name,
                                           StringSlice field_name,
-                                          uint32_t global_index,
+                                          Index global_index,
                                           Type type,
                                           bool mutable_) {
   binary->global_imports.emplace_back();
@@ -166,13 +166,13 @@ Result BinaryReaderLinker::OnImportGlobal(uint32_t import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnFunctionCount(uint32_t count) {
+Result BinaryReaderLinker::OnFunctionCount(Index count) {
   function_count = count;
   return Result::Ok;
 }
 
 Result BinaryReaderLinker::BeginSection(BinarySection section_code,
-                                        uint32_t size) {
+                                        Offset size) {
   Section* sec = new Section();
   binary->sections.emplace_back(sec);
   current_section = sec;
@@ -193,7 +193,7 @@ Result BinaryReaderLinker::BeginSection(BinarySection section_code,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnTable(uint32_t index,
+Result BinaryReaderLinker::OnTable(Index index,
                                    Type elem_type,
                                    const Limits* elem_limits) {
   if (elem_limits->has_max && (elem_limits->max != elem_limits->initial))
@@ -203,8 +203,8 @@ Result BinaryReaderLinker::OnTable(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnElemSegmentFunctionIndexCount(uint32_t index,
-                                                           uint32_t count) {
+Result BinaryReaderLinker::OnElemSegmentFunctionIndexCount(Index index,
+                                                           Index count) {
   Section* sec = current_section;
 
   /* Modify the payload to include only the actual function indexes */
@@ -214,15 +214,14 @@ Result BinaryReaderLinker::OnElemSegmentFunctionIndexCount(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnMemory(uint32_t index, const Limits* page_limits) {
+Result BinaryReaderLinker::OnMemory(Index index, const Limits* page_limits) {
   Section* sec = current_section;
   sec->data.memory_limits = *page_limits;
   binary->memory_page_count = page_limits->initial;
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::BeginDataSegment(uint32_t index,
-                                            uint32_t memory_index) {
+Result BinaryReaderLinker::BeginDataSegment(Index index, Index memory_index) {
   Section* sec = current_section;
   if (!sec->data.data_segments) {
     sec->data.data_segments = new std::vector<DataSegment>();
@@ -233,8 +232,7 @@ Result BinaryReaderLinker::BeginDataSegment(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnInitExprI32ConstExpr(uint32_t index,
-                                                  uint32_t value) {
+Result BinaryReaderLinker::OnInitExprI32ConstExpr(Index index, uint32_t value) {
   Section* sec = current_section;
   if (sec->section_code != BinarySection::Data)
     return Result::Ok;
@@ -243,9 +241,9 @@ Result BinaryReaderLinker::OnInitExprI32ConstExpr(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnDataSegmentData(uint32_t index,
+Result BinaryReaderLinker::OnDataSegmentData(Index index,
                                              const void* src_data,
-                                             uint32_t size) {
+                                             Address size) {
   Section* sec = current_section;
   DataSegment& segment = sec->data.data_segments->back();
   segment.data = static_cast<const uint8_t*>(src_data);
@@ -253,9 +251,9 @@ Result BinaryReaderLinker::OnDataSegmentData(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnExport(uint32_t index,
+Result BinaryReaderLinker::OnExport(Index index,
                                     ExternalKind kind,
-                                    uint32_t item_index,
+                                    Index item_index,
                                     StringSlice name) {
   binary->exports.emplace_back();
   Export* export_ = &binary->exports.back();
@@ -265,12 +263,12 @@ Result BinaryReaderLinker::OnExport(uint32_t index,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::BeginNamesSection(uint32_t size) {
+Result BinaryReaderLinker::BeginNamesSection(Offset size) {
   binary->debug_names.resize(function_count + binary->function_imports.size());
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnFunctionName(uint32_t index, StringSlice name) {
+Result BinaryReaderLinker::OnFunctionName(Index index, StringSlice name) {
   binary->debug_names[index] = string_slice_to_string(name);
   return Result::Ok;
 }

@@ -198,7 +198,7 @@ void BinaryWriterSpec::WriteLocation(const Location* loc) {
 
 void BinaryWriterSpec::WriteVar(const Var* var) {
   if (var->type == VarType::Index)
-    json_stream_.Writef("\"%" PRIu64 "\"", var->index);
+    json_stream_.Writef("\"%" PRIindex "\"", var->index);
   else
     WriteEscapedStringSlice(var->name);
 }
@@ -365,7 +365,7 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
   json_stream_.Writef("{\"source_filename\": ");
   WriteEscapedStringSlice(source_filename_);
   json_stream_.Writef(",\n \"commands\": [\n");
-  int last_module_index = -1;
+  Index last_module_index = kInvalidIndex;
   for (size_t i = 0; i < script->commands.size(); ++i) {
     const Command& command = *script->commands[i].get();
 
@@ -396,7 +396,7 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
         WriteModule(filename, module);
         delete [] filename;
         num_modules_++;
-        last_module_index = static_cast<int>(i);
+        last_module_index = i;
         break;
       }
 

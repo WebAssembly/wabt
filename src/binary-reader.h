@@ -40,8 +40,8 @@ class BinaryReader {
  public:
   struct State {
     const uint8_t* data;
-    size_t size;
-    size_t offset;
+    Offset size;
+    Offset offset;
   };
 
   virtual ~BinaryReader() {}
@@ -53,104 +53,101 @@ class BinaryReader {
   virtual Result BeginModule(uint32_t version) = 0;
   virtual Result EndModule() = 0;
 
-  virtual Result BeginSection(BinarySection section_type, uint32_t size) = 0;
+  virtual Result BeginSection(BinarySection section_type, Offset size) = 0;
 
   /* Custom section */
-  virtual Result BeginCustomSection(uint32_t size,
-                                    StringSlice section_name) = 0;
+  virtual Result BeginCustomSection(Offset size, StringSlice section_name) = 0;
   virtual Result EndCustomSection() = 0;
 
   /* Type section */
-  virtual Result BeginTypeSection(uint32_t size) = 0;
-  virtual Result OnTypeCount(uint32_t count) = 0;
-  virtual Result OnType(uint32_t index,
-                        uint32_t param_count,
+  virtual Result BeginTypeSection(Offset size) = 0;
+  virtual Result OnTypeCount(Index count) = 0;
+  virtual Result OnType(Index index,
+                        Index param_count,
                         Type* param_types,
-                        uint32_t result_count,
+                        Index result_count,
                         Type* result_types) = 0;
   virtual Result EndTypeSection() = 0;
 
   /* Import section */
-  virtual Result BeginImportSection(uint32_t size) = 0;
-  virtual Result OnImportCount(uint32_t count) = 0;
-  virtual Result OnImport(uint32_t index,
+  virtual Result BeginImportSection(Offset size) = 0;
+  virtual Result OnImportCount(Index count) = 0;
+  virtual Result OnImport(Index index,
                           StringSlice module_name,
                           StringSlice field_name) = 0;
-  virtual Result OnImportFunc(uint32_t import_index,
+  virtual Result OnImportFunc(Index import_index,
                               StringSlice module_name,
                               StringSlice field_name,
-                              uint32_t func_index,
-                              uint32_t sig_index) = 0;
-  virtual Result OnImportTable(uint32_t import_index,
+                              Index func_index,
+                              Index sig_index) = 0;
+  virtual Result OnImportTable(Index import_index,
                                StringSlice module_name,
                                StringSlice field_name,
-                               uint32_t table_index,
+                               Index table_index,
                                Type elem_type,
                                const Limits* elem_limits) = 0;
-  virtual Result OnImportMemory(uint32_t import_index,
+  virtual Result OnImportMemory(Index import_index,
                                 StringSlice module_name,
                                 StringSlice field_name,
-                                uint32_t memory_index,
+                                Index memory_index,
                                 const Limits* page_limits) = 0;
-  virtual Result OnImportGlobal(uint32_t import_index,
+  virtual Result OnImportGlobal(Index import_index,
                                 StringSlice module_name,
                                 StringSlice field_name,
-                                uint32_t global_index,
+                                Index global_index,
                                 Type type,
                                 bool mutable_) = 0;
   virtual Result EndImportSection() = 0;
 
   /* Function section */
-  virtual Result BeginFunctionSection(uint32_t size) = 0;
-  virtual Result OnFunctionCount(uint32_t count) = 0;
-  virtual Result OnFunction(uint32_t index, uint32_t sig_index) = 0;
+  virtual Result BeginFunctionSection(Offset size) = 0;
+  virtual Result OnFunctionCount(Index count) = 0;
+  virtual Result OnFunction(Index index, Index sig_index) = 0;
   virtual Result EndFunctionSection() = 0;
 
   /* Table section */
-  virtual Result BeginTableSection(uint32_t size) = 0;
-  virtual Result OnTableCount(uint32_t count) = 0;
-  virtual Result OnTable(uint32_t index,
+  virtual Result BeginTableSection(Offset size) = 0;
+  virtual Result OnTableCount(Index count) = 0;
+  virtual Result OnTable(Index index,
                          Type elem_type,
                          const Limits* elem_limits) = 0;
   virtual Result EndTableSection() = 0;
 
   /* Memory section */
-  virtual Result BeginMemorySection(uint32_t size) = 0;
-  virtual Result OnMemoryCount(uint32_t count) = 0;
-  virtual Result OnMemory(uint32_t index, const Limits* limits) = 0;
+  virtual Result BeginMemorySection(Offset size) = 0;
+  virtual Result OnMemoryCount(Index count) = 0;
+  virtual Result OnMemory(Index index, const Limits* limits) = 0;
   virtual Result EndMemorySection() = 0;
 
   /* Global section */
-  virtual Result BeginGlobalSection(uint32_t size) = 0;
-  virtual Result OnGlobalCount(uint32_t count) = 0;
-  virtual Result BeginGlobal(uint32_t index, Type type, bool mutable_) = 0;
-  virtual Result BeginGlobalInitExpr(uint32_t index) = 0;
-  virtual Result EndGlobalInitExpr(uint32_t index) = 0;
-  virtual Result EndGlobal(uint32_t index) = 0;
+  virtual Result BeginGlobalSection(Offset size) = 0;
+  virtual Result OnGlobalCount(Index count) = 0;
+  virtual Result BeginGlobal(Index index, Type type, bool mutable_) = 0;
+  virtual Result BeginGlobalInitExpr(Index index) = 0;
+  virtual Result EndGlobalInitExpr(Index index) = 0;
+  virtual Result EndGlobal(Index index) = 0;
   virtual Result EndGlobalSection() = 0;
 
   /* Exports section */
-  virtual Result BeginExportSection(uint32_t size) = 0;
-  virtual Result OnExportCount(uint32_t count) = 0;
-  virtual Result OnExport(uint32_t index,
+  virtual Result BeginExportSection(Offset size) = 0;
+  virtual Result OnExportCount(Index count) = 0;
+  virtual Result OnExport(Index index,
                           ExternalKind kind,
-                          uint32_t item_index,
+                          Index item_index,
                           StringSlice name) = 0;
   virtual Result EndExportSection() = 0;
 
   /* Start section */
-  virtual Result BeginStartSection(uint32_t size) = 0;
-  virtual Result OnStartFunction(uint32_t func_index) = 0;
+  virtual Result BeginStartSection(Offset size) = 0;
+  virtual Result OnStartFunction(Index func_index) = 0;
   virtual Result EndStartSection() = 0;
 
   /* Code section */
-  virtual Result BeginCodeSection(uint32_t size) = 0;
-  virtual Result OnFunctionBodyCount(uint32_t count) = 0;
-  virtual Result BeginFunctionBody(uint32_t index) = 0;
-  virtual Result OnLocalDeclCount(uint32_t count) = 0;
-  virtual Result OnLocalDecl(uint32_t decl_index,
-                             uint32_t count,
-                             Type type) = 0;
+  virtual Result BeginCodeSection(Offset size) = 0;
+  virtual Result OnFunctionBodyCount(Index count) = 0;
+  virtual Result BeginFunctionBody(Index index) = 0;
+  virtual Result OnLocalDeclCount(Index count) = 0;
+  virtual Result OnLocalDecl(Index decl_index, Index count, Type type) = 0;
 
   /* Function expressions; called between BeginFunctionBody and
    EndFunctionBody */
@@ -161,16 +158,16 @@ class BinaryReader {
   virtual Result OnOpcodeUint64(uint64_t value) = 0;
   virtual Result OnOpcodeF32(uint32_t value) = 0;
   virtual Result OnOpcodeF64(uint64_t value) = 0;
-  virtual Result OnOpcodeBlockSig(uint32_t num_types, Type* sig_types) = 0;
+  virtual Result OnOpcodeBlockSig(Index num_types, Type* sig_types) = 0;
   virtual Result OnBinaryExpr(Opcode opcode) = 0;
-  virtual Result OnBlockExpr(uint32_t num_types, Type* sig_types) = 0;
-  virtual Result OnBrExpr(uint32_t depth) = 0;
-  virtual Result OnBrIfExpr(uint32_t depth) = 0;
-  virtual Result OnBrTableExpr(uint32_t num_targets,
-                               uint32_t* target_depths,
-                               uint32_t default_target_depth) = 0;
-  virtual Result OnCallExpr(uint32_t func_index) = 0;
-  virtual Result OnCallIndirectExpr(uint32_t sig_index) = 0;
+  virtual Result OnBlockExpr(Index num_types, Type* sig_types) = 0;
+  virtual Result OnBrExpr(Index depth) = 0;
+  virtual Result OnBrIfExpr(Index depth) = 0;
+  virtual Result OnBrTableExpr(Index num_targets,
+                               Index* target_depths,
+                               Index default_target_depth) = 0;
+  virtual Result OnCallExpr(Index func_index) = 0;
+  virtual Result OnCallIndirectExpr(Index sig_index) = 0;
   virtual Result OnCompareExpr(Opcode opcode) = 0;
   virtual Result OnConvertExpr(Opcode opcode) = 0;
   virtual Result OnCurrentMemoryExpr() = 0;
@@ -180,93 +177,90 @@ class BinaryReader {
   virtual Result OnEndFunc() = 0;
   virtual Result OnF32ConstExpr(uint32_t value_bits) = 0;
   virtual Result OnF64ConstExpr(uint64_t value_bits) = 0;
-  virtual Result OnGetGlobalExpr(uint32_t global_index) = 0;
-  virtual Result OnGetLocalExpr(uint32_t local_index) = 0;
+  virtual Result OnGetGlobalExpr(Index global_index) = 0;
+  virtual Result OnGetLocalExpr(Index local_index) = 0;
   virtual Result OnGrowMemoryExpr() = 0;
   virtual Result OnI32ConstExpr(uint32_t value) = 0;
   virtual Result OnI64ConstExpr(uint64_t value) = 0;
-  virtual Result OnIfExpr(uint32_t num_types, Type* sig_types) = 0;
+  virtual Result OnIfExpr(Index num_types, Type* sig_types) = 0;
   virtual Result OnLoadExpr(Opcode opcode,
                             uint32_t alignment_log2,
-                            uint32_t offset) = 0;
-  virtual Result OnLoopExpr(uint32_t num_types, Type* sig_types) = 0;
+                            Address offset) = 0;
+  virtual Result OnLoopExpr(Index num_types, Type* sig_types) = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnReturnExpr() = 0;
   virtual Result OnSelectExpr() = 0;
-  virtual Result OnSetGlobalExpr(uint32_t global_index) = 0;
-  virtual Result OnSetLocalExpr(uint32_t local_index) = 0;
+  virtual Result OnSetGlobalExpr(Index global_index) = 0;
+  virtual Result OnSetLocalExpr(Index local_index) = 0;
   virtual Result OnStoreExpr(Opcode opcode,
                              uint32_t alignment_log2,
-                             uint32_t offset) = 0;
-  virtual Result OnTeeLocalExpr(uint32_t local_index) = 0;
+                             Address offset) = 0;
+  virtual Result OnTeeLocalExpr(Index local_index) = 0;
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
-  virtual Result EndFunctionBody(uint32_t index) = 0;
+  virtual Result EndFunctionBody(Index index) = 0;
   virtual Result EndCodeSection() = 0;
 
   /* Elem section */
-  virtual Result BeginElemSection(uint32_t size) = 0;
-  virtual Result OnElemSegmentCount(uint32_t count) = 0;
-  virtual Result BeginElemSegment(uint32_t index, uint32_t table_index) = 0;
-  virtual Result BeginElemSegmentInitExpr(uint32_t index) = 0;
-  virtual Result EndElemSegmentInitExpr(uint32_t index) = 0;
-  virtual Result OnElemSegmentFunctionIndexCount(uint32_t index,
-                                                 uint32_t count) = 0;
-  virtual Result OnElemSegmentFunctionIndex(uint32_t index,
-                                            uint32_t func_index) = 0;
-  virtual Result EndElemSegment(uint32_t index) = 0;
+  virtual Result BeginElemSection(Offset size) = 0;
+  virtual Result OnElemSegmentCount(Index count) = 0;
+  virtual Result BeginElemSegment(Index index, Index table_index) = 0;
+  virtual Result BeginElemSegmentInitExpr(Index index) = 0;
+  virtual Result EndElemSegmentInitExpr(Index index) = 0;
+  virtual Result OnElemSegmentFunctionIndexCount(Index index, Index count) = 0;
+  virtual Result OnElemSegmentFunctionIndex(Index index, Index func_index) = 0;
+  virtual Result EndElemSegment(Index index) = 0;
   virtual Result EndElemSection() = 0;
 
   /* Data section */
-  virtual Result BeginDataSection(uint32_t size) = 0;
-  virtual Result OnDataSegmentCount(uint32_t count) = 0;
-  virtual Result BeginDataSegment(uint32_t index, uint32_t memory_index) = 0;
-  virtual Result BeginDataSegmentInitExpr(uint32_t index) = 0;
-  virtual Result EndDataSegmentInitExpr(uint32_t index) = 0;
-  virtual Result OnDataSegmentData(uint32_t index,
+  virtual Result BeginDataSection(Offset size) = 0;
+  virtual Result OnDataSegmentCount(Index count) = 0;
+  virtual Result BeginDataSegment(Index index, Index memory_index) = 0;
+  virtual Result BeginDataSegmentInitExpr(Index index) = 0;
+  virtual Result EndDataSegmentInitExpr(Index index) = 0;
+  virtual Result OnDataSegmentData(Index index,
                                    const void* data,
-                                   uint32_t size) = 0;
-  virtual Result EndDataSegment(uint32_t index) = 0;
+                                   Address size) = 0;
+  virtual Result EndDataSegment(Index index) = 0;
   virtual Result EndDataSection() = 0;
 
   /* Names section */
-  virtual Result BeginNamesSection(uint32_t size) = 0;
-  virtual Result OnFunctionNameSubsection(uint32_t index,
+  virtual Result BeginNamesSection(Offset size) = 0;
+  virtual Result OnFunctionNameSubsection(Index index,
                                           uint32_t name_type,
-                                          uint32_t subsection_size) = 0;
-  virtual Result OnFunctionNamesCount(uint32_t num_functions) = 0;
-  virtual Result OnFunctionName(uint32_t function_index,
+                                          Offset subsection_size) = 0;
+  virtual Result OnFunctionNamesCount(Index num_functions) = 0;
+  virtual Result OnFunctionName(Index function_index,
                                 StringSlice function_name) = 0;
-  virtual Result OnLocalNameSubsection(uint32_t index,
+  virtual Result OnLocalNameSubsection(Index index,
                                        uint32_t name_type,
-                                       uint32_t subsection_size) = 0;
-  virtual Result OnLocalNameFunctionCount(uint32_t num_functions) = 0;
-  virtual Result OnLocalNameLocalCount(uint32_t function_index,
-                                       uint32_t num_locals) = 0;
-  virtual Result OnLocalName(uint32_t function_index,
-                             uint32_t local_index,
+                                       Offset subsection_size) = 0;
+  virtual Result OnLocalNameFunctionCount(Index num_functions) = 0;
+  virtual Result OnLocalNameLocalCount(Index function_index,
+                                       Index num_locals) = 0;
+  virtual Result OnLocalName(Index function_index,
+                             Index local_index,
                              StringSlice local_name) = 0;
   virtual Result EndNamesSection() = 0;
 
   /* Reloc section */
-  virtual Result BeginRelocSection(uint32_t size) = 0;
-  virtual Result OnRelocCount(uint32_t count,
+  virtual Result BeginRelocSection(Offset size) = 0;
+  virtual Result OnRelocCount(Index count,
                               BinarySection section_code,
                               StringSlice section_name) = 0;
   virtual Result OnReloc(RelocType type,
-                         uint32_t offset,
-                         uint32_t index,
+                         Offset offset,
+                         Index index,
                          uint32_t addend) = 0;
   virtual Result EndRelocSection() = 0;
 
   /* InitExpr - used by elem, data and global sections; these functions are
    * only called between calls to Begin*InitExpr and End*InitExpr */
-  virtual Result OnInitExprF32ConstExpr(uint32_t index, uint32_t value) = 0;
-  virtual Result OnInitExprF64ConstExpr(uint32_t index, uint64_t value) = 0;
-  virtual Result OnInitExprGetGlobalExpr(uint32_t index,
-                                         uint32_t global_index) = 0;
-  virtual Result OnInitExprI32ConstExpr(uint32_t index, uint32_t value) = 0;
-  virtual Result OnInitExprI64ConstExpr(uint32_t index, uint64_t value) = 0;
+  virtual Result OnInitExprF32ConstExpr(Index index, uint32_t value) = 0;
+  virtual Result OnInitExprF64ConstExpr(Index index, uint64_t value) = 0;
+  virtual Result OnInitExprGetGlobalExpr(Index index, Index global_index) = 0;
+  virtual Result OnInitExprI32ConstExpr(Index index, uint32_t value) = 0;
+  virtual Result OnInitExprI64ConstExpr(Index index, uint64_t value) = 0;
 
   const State* state = nullptr;
 };

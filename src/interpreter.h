@@ -29,6 +29,8 @@
 
 namespace wabt {
 
+// TODO(binji): move all the Interpreter stuff into its own namespace.
+
 class Stream;
 
 #define FOREACH_INTERPRETER_RESULT(V)                                       \
@@ -74,12 +76,21 @@ enum class InterpreterResult {
 #undef V
 };
 
-#define WABT_INVALID_INDEX static_cast<uint32_t>(~0)
-#define WABT_INVALID_OFFSET static_cast<uint32_t>(~0)
-#define WABT_TABLE_ENTRY_SIZE (sizeof(uint32_t) * 2 + sizeof(uint8_t))
+typedef uint32_t IstreamOffset;
+static const IstreamOffset kInvalidIstreamOffset = ~0;
+
+// A table entry has the following packed layout:
+//
+//   struct {
+//     IstreamOffset offset;
+//     uint32_t drop_count;
+//     uint8_t keep_count;
+//   };
+#define WABT_TABLE_ENTRY_SIZE \
+  (sizeof(IstreamOffset) + sizeof(uint32_t) + sizeof(uint8_t))
 #define WABT_TABLE_ENTRY_OFFSET_OFFSET 0
 #define WABT_TABLE_ENTRY_DROP_OFFSET sizeof(uint32_t)
-#define WABT_TABLE_ENTRY_KEEP_OFFSET (sizeof(uint32_t) * 2)
+#define WABT_TABLE_ENTRY_KEEP_OFFSET (sizeof(IstreamOffset) + sizeof(uint32_t))
 
 enum class InterpreterOpcode {
 /* push space on the value stack for N entries */
@@ -99,10 +110,10 @@ struct InterpreterFuncSignature {
 
 struct InterpreterTable {
   explicit InterpreterTable(const Limits& limits)
-      : limits(limits), func_indexes(limits.initial, WABT_INVALID_INDEX) {}
+      : limits(limits), func_indexes(limits.initial, kInvalidIndex) {}
 
   Limits limits;
-  std::vector<uint32_t> func_indexes;
+  std::vector<Index> func_indexes;
 };
 
 struct InterpreterMemory {
@@ -134,13 +145,13 @@ struct InterpreterTypedValue {
 };
 
 struct InterpreterGlobal {
-  InterpreterGlobal() : mutable_(false), import_index(WABT_INVALID_INDEX) {}
+  InterpreterGlobal() : mutable_(false), import_index(kInvalidIndex) {}
   InterpreterGlobal(const InterpreterTypedValue& typed_value, bool mutable_)
       : typed_value(typed_value), mutable_(mutable_) {}
 
   InterpreterTypedValue typed_value;
   bool mutable_;
-  uint32_t import_index; /* or INVALID_INDEX if not imported */
+  Index import_index; /* or INVALID_INDEX if not imported */
 };
 
 struct InterpreterImport {
@@ -154,7 +165,7 @@ struct InterpreterImport {
   ExternalKind kind;
   union {
     struct {
-      uint32_t sig_index;
+      Index sig_index;
     } func;
     struct {
       Limits limits;
@@ -171,42 +182,42 @@ struct InterpreterFunc;
 typedef Result (*InterpreterHostFuncCallback)(
     const struct HostInterpreterFunc* func,
     const InterpreterFuncSignature* sig,
-    uint32_t num_args,
+    Index num_args,
     InterpreterTypedValue* args,
-    uint32_t num_results,
+    Index num_results,
     InterpreterTypedValue* out_results,
     void* user_data);
 
 struct InterpreterFunc {
   WABT_DISALLOW_COPY_AND_ASSIGN(InterpreterFunc);
-  InterpreterFunc(uint32_t sig_index, bool is_host)
+  InterpreterFunc(Index sig_index, bool is_host)
       : sig_index(sig_index), is_host(is_host) {}
   virtual ~InterpreterFunc() {}
 
   inline struct DefinedInterpreterFunc* as_defined();
   inline struct HostInterpreterFunc* as_host();
 
-  uint32_t sig_index;
+  Index sig_index;
   bool is_host;
 };
 
 struct DefinedInterpreterFunc : InterpreterFunc {
-  DefinedInterpreterFunc(uint32_t sig_index)
+  DefinedInterpreterFunc(Index sig_index)
       : InterpreterFunc(sig_index, false),
-        offset(WABT_INVALID_INDEX),
+        offset(kInvalidIstreamOffset),
         local_decl_count(0),
         local_count(0) {}
 
-  uint32_t offset;
-  uint32_t local_decl_count;
-  uint32_t local_count;
+  IstreamOffset offset;
+  Index local_decl_count;
+  Index local_count;
   std::vector<Type> param_and_local_types;
 };
 
 struct HostInterpreterFunc : InterpreterFunc {
   HostInterpreterFunc(const StringSlice& module_name,
                       const StringSlice& field_name,
-                      uint32_t sig_index)
+                      Index sig_index)
       : InterpreterFunc(sig_index, true),
         module_name(module_name),
         field_name(field_name) {}
@@ -228,7 +239,7 @@ HostInterpreterFunc* InterpreterFunc::as_host() {
 }
 
 struct InterpreterExport {
-  InterpreterExport(const StringSlice& name, ExternalKind kind, uint32_t index)
+  InterpreterExport(const StringSlice& name, ExternalKind kind, Index index)
       : name(name), kind(kind), index(index) {}
   InterpreterExport(InterpreterExport&&);
   InterpreterExport& operator=(InterpreterExport&&);
@@ -236,7 +247,7 @@ struct InterpreterExport {
 
   StringSlice name;
   ExternalKind kind;
-  uint32_t index;
+  Index index;
 };
 
 struct PrintErrorCallback {
@@ -277,8 +288,8 @@ struct InterpreterModule {
   StringSlice name;
   std::vector<InterpreterExport> exports;
   BindingHash export_bindings;
-  uint32_t memory_index; /* INVALID_INDEX if not defined */
-  uint32_t table_index;  /* INVALID_INDEX if not defined */
+  Index memory_index; /* kInvalidIndex if not defined */
+  Index table_index;  /* kInvalidIndex if not defined */
   bool is_host;
 };
 
@@ -286,7 +297,7 @@ struct DefinedInterpreterModule : InterpreterModule {
   explicit DefinedInterpreterModule(size_t istream_start);
 
   std::vector<InterpreterImport> imports;
-  uint32_t start_func_index; /* INVALID_INDEX if not defined */
+  Index start_func_index; /* kInvalidIndex if not defined */
   size_t istream_start;
   size_t istream_end;
 };
@@ -337,21 +348,21 @@ struct InterpreterThread {
 
   InterpreterEnvironment* env;
   std::vector<InterpreterValue> value_stack;
-  std::vector<uint32_t> call_stack;
+  std::vector<IstreamOffset> call_stack;
   InterpreterValue* value_stack_top;
   InterpreterValue* value_stack_end;
-  uint32_t* call_stack_top;
-  uint32_t* call_stack_end;
-  uint32_t pc;
+  IstreamOffset* call_stack_top;
+  IstreamOffset* call_stack_end;
+  IstreamOffset pc;
 };
 
 #define WABT_INTERPRETER_THREAD_OPTIONS_DEFAULT \
-  { 512 * 1024 / sizeof(InterpreterValue), 64 * 1024, WABT_INVALID_OFFSET }
+  { 512 * 1024 / sizeof(InterpreterValue), 64 * 1024, kInvalidIstreamOffset }
 
 struct InterpreterThreadOptions {
   uint32_t value_stack_size;
   uint32_t call_stack_size;
-  uint32_t pc;
+  IstreamOffset pc;
 };
 
 bool is_canonical_nan_f32(uint32_t f32_bits);
@@ -359,8 +370,8 @@ bool is_canonical_nan_f64(uint64_t f64_bits);
 bool is_arithmetic_nan_f32(uint32_t f32_bits);
 bool is_arithmetic_nan_f64(uint64_t f64_bits);
 bool func_signatures_are_equal(InterpreterEnvironment* env,
-                               uint32_t sig_index_0,
-                               uint32_t sig_index_1);
+                               Index sig_index_0,
+                               Index sig_index_1);
 
 void destroy_interpreter_environment(InterpreterEnvironment* env);
 InterpreterEnvironmentMark mark_interpreter_environment(
@@ -378,13 +389,13 @@ void destroy_interpreter_thread(InterpreterThread* thread);
 InterpreterResult call_host(InterpreterThread* thread,
                             HostInterpreterFunc* func);
 InterpreterResult run_interpreter(InterpreterThread* thread,
-                                  uint32_t num_instructions,
-                                  uint32_t* call_stack_return_top);
+                                  int num_instructions,
+                                  IstreamOffset* call_stack_return_top);
 void trace_pc(InterpreterThread* thread, Stream* stream);
 void disassemble(InterpreterEnvironment* env,
                  Stream* stream,
-                 uint32_t from,
-                 uint32_t to);
+                 IstreamOffset from,
+                 IstreamOffset to);
 void disassemble_module(InterpreterEnvironment* env,
                         Stream* stream,
                         InterpreterModule* module);

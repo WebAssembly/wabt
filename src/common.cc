@@ -31,7 +31,7 @@
 
 namespace wabt {
 
-Reloc::Reloc(RelocType type, size_t offset, uint32_t index, int32_t addend)
+Reloc::Reloc(RelocType type, Offset offset, Index index, int32_t addend)
     : type(type), offset(offset), index(index), addend(addend) {}
 
 const char* g_kind_name[] = {"func", "table", "memory", "global"};
