@@ -31,6 +31,7 @@
 
 #include "config.h"
 
+#define WABT_LOG(...) do { fprintf(stdout, __VA_ARGS__); } while(0)
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define WABT_ZERO_MEMORY(var)                                          \

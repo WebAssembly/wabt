@@ -380,7 +380,7 @@ static void write_memory_section(Context* ctx,
 static void write_function_import(Context* ctx,
                                   FunctionImport* import,
                                   Index offset) {
-  write_c_str(&ctx->stream, WABT_LINK_MODULE_NAME, "import module name");
+  write_slice(&ctx->stream, import->module_name, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
   ctx->stream.WriteU8Enum(ExternalKind::Func, "import kind");
   write_u32_leb128(&ctx->stream, import->sig_index + offset,
@@ -388,7 +388,7 @@ static void write_function_import(Context* ctx,
 }
 
 static void write_global_import(Context* ctx, GlobalImport* import) {
-  write_c_str(&ctx->stream, WABT_LINK_MODULE_NAME, "import module name");
+  write_slice(&ctx->stream, import->module_name, "import module name");
   write_slice(&ctx->stream, import->name, "import field name");
   ctx->stream.WriteU8Enum(ExternalKind::Global, "import kind");
   write_type(&ctx->stream, import->type);
