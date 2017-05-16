@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+//#define DLOG
+
 #include "binary-reader-linker.h"
 
 #include <vector>
@@ -137,7 +139,7 @@ Result BinaryReaderLinker::OnImport(Index index,
   }
   return Result::Ok;
 #else
-  WABT_LOG("OnImport: module_name=\"" PRIstringslice "\""
+  WABT_DLOG("OnImport: module_name=\"" PRIstringslice "\""
           " field_name=\"" PRIstringslice "\"\n",
           WABT_PRINTF_STRING_SLICE_ARG(module_name),
           WABT_PRINTF_STRING_SLICE_ARG(field_name));
@@ -145,14 +147,14 @@ Result BinaryReaderLinker::OnImport(Index index,
   for (size_t j = 0; j < imports.size(); j++) {
     FunctionImport* import = &imports[j];
     if (string_slices_are_equal(&module_name, &import->module_name)) {
-      WABT_LOG("OnImport: module_name=\"" PRIstringslice "\""
+      WABT_DLOG("OnImport: module_name=\"" PRIstringslice "\""
               " field_name=\"" PRIstringslice "\" FOUND\n",
               WABT_PRINTF_STRING_SLICE_ARG(module_name),
               WABT_PRINTF_STRING_SLICE_ARG(field_name));
       return Result::Ok;
     }
   }
-  WABT_LOG("OnImport: module_name=\"" PRIstringslice "\""
+  WABT_DLOG("OnImport: module_name=\"" PRIstringslice "\""
           " field_name=\"" PRIstringslice "\" NOT FOUND\n",
           WABT_PRINTF_STRING_SLICE_ARG(module_name),
           WABT_PRINTF_STRING_SLICE_ARG(field_name));
@@ -165,10 +167,10 @@ Result BinaryReaderLinker::OnImportFunc(Index import_index,
                                         StringSlice field_name,
                                         uint32_t global_index,
                                         uint32_t sig_index) {
-  //WABT_LOG("OnImportFunction: module_name=\"" PRIstringslice "\""
-  //        " field_name=\"" PRIstringslice "\"\n",
-  //        WABT_PRINTF_STRING_SLICE_ARG(module_name),
-  //        WABT_PRINTF_STRING_SLICE_ARG(field_name));
+  WABT_DLOG("OnImportFunction: module_name=\"" PRIstringslice "\""
+          " field_name=\"" PRIstringslice "\"\n",
+          WABT_PRINTF_STRING_SLICE_ARG(module_name),
+          WABT_PRINTF_STRING_SLICE_ARG(field_name));
   binary->function_imports.emplace_back();
   FunctionImport* import = &binary->function_imports.back();
   import->module_name = module_name;
@@ -185,10 +187,10 @@ Result BinaryReaderLinker::OnImportGlobal(Index import_index,
                                           Index global_index,
                                           Type type,
                                           bool mutable_) {
-  //WABT_LOG("OnImportGlobal: module_name=\"" PRIstringslice "\""
-  //        " field_name=\"" PRIstringslice "\"\n",
-  //        WABT_PRINTF_STRING_SLICE_ARG(module_name),
-  //        WABT_PRINTF_STRING_SLICE_ARG(field_name));
+  WABT_DLOG("OnImportGlobal: module_name=\"" PRIstringslice "\""
+          " field_name=\"" PRIstringslice "\"\n",
+          WABT_PRINTF_STRING_SLICE_ARG(module_name),
+          WABT_PRINTF_STRING_SLICE_ARG(field_name));
   binary->global_imports.emplace_back();
   GlobalImport* import = &binary->global_imports.back();
   import->module_name = module_name;
