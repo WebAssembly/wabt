@@ -34,9 +34,6 @@ class BinaryReaderLinker : public BinaryReaderNop {
 
   Result BeginSection(BinarySection section_type, Offset size) override;
 
-  Result OnImport(Index index,
-                  StringSlice module_name,
-                  StringSlice field_name) override;
   Result OnImportFunc(Index import_index,
                       StringSlice module_name,
                       StringSlice field_name,
@@ -127,16 +124,6 @@ Result BinaryReaderLinker::OnReloc(RelocType type,
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnImport(Index index,
-                                    StringSlice module_name,
-                                    StringSlice field_name) {
-  if (!string_slice_eq_cstr(&module_name, WABT_LINK_MODULE_NAME)) {
-    WABT_FATAL("unsupported import module: " PRIstringslice,
-               WABT_PRINTF_STRING_SLICE_ARG(module_name));
-  }
-  return Result::Ok;
-}
-
 Result BinaryReaderLinker::OnImportFunc(Index import_index,
                                         StringSlice module_name,
                                         StringSlice field_name,
@@ -144,6 +131,7 @@ Result BinaryReaderLinker::OnImportFunc(Index import_index,
                                         Index sig_index) {
   binary->function_imports.emplace_back();
   FunctionImport* import = &binary->function_imports.back();
+  import->module_name = module_name;
   import->name = field_name;
   import->sig_index = sig_index;
   import->active = true;
@@ -159,6 +147,7 @@ Result BinaryReaderLinker::OnImportGlobal(Index import_index,
                                           bool mutable_) {
   binary->global_imports.emplace_back();
   GlobalImport* import = &binary->global_imports.back();
+  import->module_name = module_name;
   import->name = field_name;
   import->type = type;
   import->mutable_ = mutable_;
