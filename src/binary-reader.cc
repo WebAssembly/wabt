@@ -545,7 +545,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
         Index depth;
         in_index(ctx, &depth, "br depth");
         CALLBACK(OnBrExpr, depth);
-        CALLBACK(OnOpcodeUint32, depth);
+        CALLBACK(OnOpcodeIndex, depth);
         break;
       }
 
@@ -553,7 +553,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
         Index depth;
         in_index(ctx, &depth, "br_if depth");
         CALLBACK(OnBrIfExpr, depth);
-        CALLBACK(OnOpcodeUint32, depth);
+        CALLBACK(OnOpcodeIndex, depth);
         break;
       }
 
@@ -604,7 +604,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
         break;
 
       case Opcode::I32Const: {
-        uint32_t value = 0;
+        uint32_t value;
         in_i32_leb128(ctx, &value, "i32.const value");
         CALLBACK(OnI32ConstExpr, value);
         CALLBACK(OnOpcodeUint32, value);
@@ -612,7 +612,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
       }
 
       case Opcode::I64Const: {
-        uint64_t value = 0;
+        uint64_t value;
         in_i64_leb128(ctx, &value, "i64.const value");
         CALLBACK(OnI64ConstExpr, value);
         CALLBACK(OnOpcodeUint64, value);
@@ -639,7 +639,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
         Index global_index;
         in_index(ctx, &global_index, "get_global global index");
         CALLBACK(OnGetGlobalExpr, global_index);
-        CALLBACK(OnOpcodeUint32, global_index);
+        CALLBACK(OnOpcodeIndex, global_index);
         break;
       }
 
@@ -647,7 +647,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
         Index local_index;
         in_index(ctx, &local_index, "get_local local index");
         CALLBACK(OnGetLocalExpr, local_index);
-        CALLBACK(OnOpcodeUint32, local_index);
+        CALLBACK(OnOpcodeIndex, local_index);
         break;
       }
 
@@ -655,7 +655,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
         Index global_index;
         in_index(ctx, &global_index, "set_global global index");
         CALLBACK(OnSetGlobalExpr, global_index);
-        CALLBACK(OnOpcodeUint32, global_index);
+        CALLBACK(OnOpcodeIndex, global_index);
         break;
       }
 
@@ -663,7 +663,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
         Index local_index;
         in_index(ctx, &local_index, "set_local local index");
         CALLBACK(OnSetLocalExpr, local_index);
-        CALLBACK(OnOpcodeUint32, local_index);
+        CALLBACK(OnOpcodeIndex, local_index);
         break;
       }
 
@@ -674,7 +674,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
                            "invalid call function index: %" PRIindex,
                            func_index);
         CALLBACK(OnCallExpr, func_index);
-        CALLBACK(OnOpcodeUint32, func_index);
+        CALLBACK(OnOpcodeIndex, func_index);
         break;
       }
 
@@ -696,7 +696,7 @@ static void read_function_body(Context* ctx, Offset end_offset) {
         Index local_index;
         in_index(ctx, &local_index, "tee_local local index");
         CALLBACK(OnTeeLocalExpr, local_index);
-        CALLBACK(OnOpcodeUint32, local_index);
+        CALLBACK(OnOpcodeIndex, local_index);
         break;
       }
 

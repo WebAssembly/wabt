@@ -91,7 +91,7 @@ Code Disassembly:
  000027: 1a                         |     drop
  000028: 41 02                      |     i32.const 0x2
  00002a: 1a                         |     drop
- 00002b: 0c 01                      |     br 0x1
+ 00002b: 0c 01                      |     br 1
  00002d: 0b                         |   end
  00002e: 0b                         | end
  00002f: 41 03                      | i32.const 0x3

@@ -153,7 +153,7 @@ Code Disassembly:
 
 000071 func[1]:
  000077: 20 00                      | get_local 0
- 000079: 20 01                      | get_local 0x1
+ 000079: 20 01                      | get_local 1
  00007b: 11 01 00                   | call_indirect 1 0
  00007e: 1a                         | drop
  00007f: 0b                         | end

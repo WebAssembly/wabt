@@ -62,9 +62,9 @@ Custom:
 Code Disassembly:
 
 000059 func[0]:
- 00005b: 23 83 80 80 80 00          | get_global 0x3
+ 00005b: 23 83 80 80 80 00          | get_global 3
            00005c: R_GLOBAL_INDEX_LEB 3
- 000061: 23 82 80 80 80 00          | get_global 0x2
+ 000061: 23 82 80 80 80 00          | get_global 2
            000062: R_GLOBAL_INDEX_LEB 2
  000067: 6a                         | i32.add
  000068: 23 80 80 80 80 00          | get_global 0
@@ -74,11 +74,11 @@ Code Disassembly:
            000070: R_FUNC_INDEX_LEB   0
  000075: 0b                         | end
 000076 func[1]:
- 000078: 23 81 80 80 80 00          | get_global 0x1
+ 000078: 23 81 80 80 80 00          | get_global 1
            000079: R_GLOBAL_INDEX_LEB 1
- 00007e: 23 84 80 80 80 00          | get_global 0x4
+ 00007e: 23 84 80 80 80 00          | get_global 4
            00007f: R_GLOBAL_INDEX_LEB 4
- 000084: 10 81 80 80 80 00          | call 0x1
+ 000084: 10 81 80 80 80 00          | call 1
            000085: R_FUNC_INDEX_LEB   1
  00008a: 0b                         | end
 ;;; STDOUT ;;)
