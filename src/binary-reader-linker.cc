@@ -34,9 +34,6 @@ class BinaryReaderLinker : public BinaryReaderNop {
 
   Result BeginSection(BinarySection section_type, Offset size) override;
 
-  Result OnImport(Index index,
-                  StringSlice module_name,
-                  StringSlice field_name) override;
   Result OnImportFunc(Index import_index,
                       StringSlice module_name,
                       StringSlice field_name,
@@ -124,12 +121,6 @@ Result BinaryReaderLinker::OnReloc(RelocType type,
 
   reloc_section->relocations.emplace_back(type, offset, index, addend);
 
-  return Result::Ok;
-}
-
-Result BinaryReaderLinker::OnImport(Index index,
-                                    StringSlice module_name,
-                                    StringSlice field_name) {
   return Result::Ok;
 }
 
