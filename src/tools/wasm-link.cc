@@ -183,6 +183,11 @@ static Index relocate_func_index(LinkerInputBinary* binary,
   return function_index + offset;
 }
 
+static Index relocate_type_index(LinkerInputBinary* binary,
+                                 Index type_index) {
+  return type_index + binary->type_index_offset;
+}
+
 static Index relocate_global_index(LinkerInputBinary* binary,
                                    Index global_index) {
   Index offset;
@@ -203,16 +208,15 @@ static void apply_relocation(Section* section, Reloc* r) {
   read_u32_leb128(section_data + r->offset, section_data + section_size,
                   &cur_value);
 
-  Index offset = 0;
   switch (r->type) {
     case RelocType::FuncIndexLEB:
       new_value = relocate_func_index(binary, cur_value);
       break;
+    case RelocType::TypeIndexLEB:
+      new_value = relocate_type_index(binary, cur_value);
+      break;
     case RelocType::TableIndexSLEB:
-      printf("%s: table index reloc: %d offset=%d\n", binary->filename,
-             cur_value, binary->table_index_offset);
-      offset = binary->table_index_offset;
-      new_value = cur_value + offset;
+      new_value = cur_value + binary->table_index_offset;
       break;
     case RelocType::GlobalIndexLEB:
       new_value = relocate_global_index(binary, cur_value);
@@ -447,8 +451,7 @@ static void write_function_section(Context* ctx,
         &sec->binary->data[sec->payload_offset + sec->payload_size];
     while (count--) {
       input_offset += read_u32_leb128(start + input_offset, end, &sig_index);
-      sig_index += sec->binary->type_index_offset;
-      write_u32_leb128(stream, sig_index, "sig");
+      write_u32_leb128(stream, relocate_type_index(sec->binary, sig_index), "sig");
     }
   }
 
@@ -564,6 +567,9 @@ static void write_reloc_section(Context* ctx,
       switch (reloc.type) {
         case RelocType::FuncIndexLEB:
           relocated_index = relocate_func_index(sec->binary, reloc.index);
+          break;
+        case RelocType::TypeIndexLEB:
+          relocated_index = relocate_type_index(sec->binary, reloc.index);
           break;
         case RelocType::GlobalIndexLEB:
           relocated_index = relocate_global_index(sec->binary, reloc.index);
