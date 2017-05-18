@@ -23,14 +23,13 @@
 #include "binary.h"
 #include "common.h"
 
-#define WABT_LINK_MODULE_NAME "__extern"
-
 namespace wabt {
 namespace link {
 
 struct LinkerInputBinary;
 
 struct FunctionImport {
+  StringSlice module_name;
   StringSlice name;
   Index sig_index;
   bool active; /* Is this import present in the linked binary */
@@ -40,6 +39,7 @@ struct FunctionImport {
 };
 
 struct GlobalImport {
+  StringSlice module_name;
   StringSlice name;
   Type type;
   bool mutable_;
