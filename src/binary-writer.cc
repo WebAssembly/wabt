@@ -421,7 +421,7 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::CallIndirect: {
       int index = get_func_type_index_by_var(module, &expr->call_indirect.var);
       write_opcode(&stream_, Opcode::CallIndirect);
-      write_u32_leb128(&stream_, index, "signature index");
+      WriteU32Leb128WithReloc(index, "signature index", RelocType::TypeIndexLEB);
       write_u32_leb128(&stream_, 0, "call_indirect reserved");
       break;
     }

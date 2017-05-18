@@ -7,7 +7,12 @@
 (module
   (func $func2 (param i64))
   (func $func3 (param f64))
+  (type $t1 (func))
   (table anyfunc (elem $func3 $func2 $func2))
+  (func
+    i64.const 7
+    call_indirect $t1
+  )
 )
 (;; STDOUT ;;;
 
@@ -15,12 +20,13 @@ linked.wasm:	file format wasm 0x1
 
 Sections:
 
-     Type start=0x0000000a end=0x00000017 (size=0x0000000d) count: 3
- Function start=0x0000001d end=0x00000021 (size=0x00000004) count: 3
-    Table start=0x00000027 end=0x0000002c (size=0x00000005) count: 1
-     Elem start=0x00000032 end=0x00000051 (size=0x0000001f) count: 1
-     Code start=0x00000053 end=0x0000005d (size=0x0000000a) count: 3
-   Custom start=0x00000063 end=0x0000007f (size=0x0000001c) "reloc.Elem"
+     Type start=0x0000000a end=0x0000001a (size=0x00000010) count: 4
+ Function start=0x00000020 end=0x00000025 (size=0x00000005) count: 4
+    Table start=0x0000002b end=0x00000030 (size=0x00000005) count: 1
+     Elem start=0x00000036 end=0x00000055 (size=0x0000001f) count: 1
+     Code start=0x00000057 end=0x0000006d (size=0x00000016) count: 4
+   Custom start=0x00000073 end=0x0000008f (size=0x0000001c) "reloc.Elem"
+   Custom start=0x00000095 end=0x000000a5 (size=0x00000010) "reloc.Code"
 
 Section Details:
 
@@ -28,10 +34,12 @@ Type:
  - [0] (i32) -> nil
  - [1] (i64) -> nil
  - [2] (f64) -> nil
+ - [3] () -> nil
 Function:
  - func[0] sig=0
  - func[1] sig=1
  - func[2] sig=2
+ - func[3] sig=3
 Table:
  - table[0] type=anyfunc initial=5 max=5
 Elem:
@@ -45,18 +53,27 @@ Elem:
 Custom:
  - name: "reloc.Elem"
   - section: Elem
-   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x000038) index=0
-   - R_FUNC_INDEX_LEB   offset=0x00000b(file=0x00003d) index=0
-   - R_FUNC_INDEX_LEB   offset=0x000010(file=0x000042) index=2
-   - R_FUNC_INDEX_LEB   offset=0x000015(file=0x000047) index=1
-   - R_FUNC_INDEX_LEB   offset=0x00001a(file=0x00004c) index=1
+   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x00003c) index=0
+   - R_FUNC_INDEX_LEB   offset=0x00000b(file=0x000041) index=0
+   - R_FUNC_INDEX_LEB   offset=0x000010(file=0x000046) index=2
+   - R_FUNC_INDEX_LEB   offset=0x000015(file=0x00004b) index=1
+   - R_FUNC_INDEX_LEB   offset=0x00001a(file=0x000050) index=1
+Custom:
+ - name: "reloc.Code"
+  - section: Code
+   - R_TYPE_INDEX_LEB   offset=0x00000f(file=0x000066) index=3
 
 Code Disassembly:
 
-000054 func[0]:
- 000056: 0b                         | end
-000057 func[1]:
- 000059: 0b                         | end
-00005a func[2]:
- 00005c: 0b                         | end
+000058 func[0]:
+ 00005a: 0b                         | end
+00005b func[1]:
+ 00005d: 0b                         | end
+00005e func[2]:
+ 000060: 0b                         | end
+000061 func[3]:
+ 000063: 42 07                      | i64.const 7
+ 000065: 11 83 80 80 80 00 00       | call_indirect 3 0
+           000066: R_TYPE_INDEX_LEB   3
+ 00006c: 0b                         | end
 ;;; STDOUT ;;)
