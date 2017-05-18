@@ -84,9 +84,10 @@ class WatWriter {
   void WriteString(const std::string& str, NextChar next_char);
   void WriteStringSlice(const StringSlice* str, NextChar next_char);
   bool WriteStringSliceOpt(const StringSlice* str, NextChar next_char);
-  void WriteStringSliceOrIndex(const StringSlice* str,
-                               Index index,
-                               NextChar next_char);
+  void WriteName(const StringSlice* str, NextChar next_char);
+  void WriteNameOrIndex(const StringSlice* str,
+                        Index index,
+                        NextChar next_char);
   void WriteQuotedData(const void* data, size_t length);
   void WriteQuotedStringSlice(const StringSlice* str, NextChar next_char);
   void WriteVar(const Var* var, NextChar next_char);
@@ -257,11 +258,17 @@ bool WatWriter::WriteStringSliceOpt(const StringSlice* str,
   return !!str->start;
 }
 
-void WatWriter::WriteStringSliceOrIndex(const StringSlice* str,
-                                        Index index,
-                                        NextChar next_char) {
+void WatWriter::WriteName(const StringSlice* str, NextChar next_char) {
+  // Debug names must begin with a $ for for wast file to be valid
+  assert(str->length == 0 || str->start[0] == '$');
+  WriteStringSlice(str, next_char);
+}
+
+void WatWriter::WriteNameOrIndex(const StringSlice* str,
+                                 Index index,
+                                 NextChar next_char) {
   if (str->start)
-    WriteStringSlice(str, next_char);
+    WriteName(str, next_char);
   else
     Writef("(;%u;)", index);
 }
@@ -296,7 +303,7 @@ void WatWriter::WriteVar(const Var* var, NextChar next_char) {
     Writef("%" PRIindex, var->index);
     next_char_ = next_char;
   } else {
-    WriteStringSlice(&var->name, next_char);
+    WriteName(&var->name, next_char);
   }
 }
 
@@ -597,7 +604,7 @@ void WatWriter::WriteTypeBindings(const char* prefix,
 
 void WatWriter::WriteFunc(const Module* module, const Func* func) {
   WriteOpenSpace("func");
-  WriteStringSliceOrIndex(&func->name, func_index_++, NextChar::Space);
+  WriteNameOrIndex(&func->name, func_index_++, NextChar::Space);
   if (decl_has_func_type(&func->decl)) {
     WriteOpenSpace("type");
     WriteVar(&func->decl.type_var, NextChar::None);
@@ -618,7 +625,7 @@ void WatWriter::WriteFunc(const Module* module, const Func* func) {
 
 void WatWriter::WriteBeginGlobal(const Global* global) {
   WriteOpenSpace("global");
-  WriteStringSliceOrIndex(&global->name, global_index_++,
+  WriteNameOrIndex(&global->name, global_index_++,
                               NextChar::Space);
   if (global->mutable_) {
     WriteOpenSpace("mut");
@@ -643,7 +650,7 @@ void WatWriter::WriteLimits(const Limits* limits) {
 
 void WatWriter::WriteTable(const Table* table) {
   WriteOpenSpace("table");
-  WriteStringSliceOrIndex(&table->name, table_index_++,
+  WriteNameOrIndex(&table->name, table_index_++,
                               NextChar::Space);
   WriteLimits(&table->elem_limits);
   WritePutsSpace("anyfunc");
@@ -660,7 +667,7 @@ void WatWriter::WriteElemSegment(const ElemSegment* segment) {
 
 void WatWriter::WriteMemory(const Memory* memory) {
   WriteOpenSpace("memory");
-  WriteStringSliceOrIndex(&memory->name, memory_index_++,
+  WriteNameOrIndex(&memory->name, memory_index_++,
                               NextChar::Space);
   WriteLimits(&memory->page_limits);
   WriteCloseNewline();
@@ -680,7 +687,7 @@ void WatWriter::WriteImport(const Import* import) {
   switch (import->kind) {
     case ExternalKind::Func:
       WriteOpenSpace("func");
-      WriteStringSliceOrIndex(&import->func->name, func_index_++,
+      WriteNameOrIndex(&import->func->name, func_index_++,
                                   NextChar::Space);
       if (decl_has_func_type(&import->func->decl)) {
         WriteOpenSpace("type");
@@ -722,8 +729,7 @@ void WatWriter::WriteExport(const Export* export_) {
 
 void WatWriter::WriteFuncType(const FuncType* func_type) {
   WriteOpenSpace("type");
-  WriteStringSliceOrIndex(&func_type->name, func_type_index_++,
-                          NextChar::Space);
+  WriteNameOrIndex(&func_type->name, func_type_index_++, NextChar::Space);
   WriteOpenSpace("func");
   WriteFuncSigSpace(&func_type->sig);
   WriteCloseSpace();

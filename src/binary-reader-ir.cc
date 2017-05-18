@@ -821,7 +821,8 @@ Result BinaryReaderIR::OnFunctionName(Index index, StringSlice name) {
 
   module->func_bindings.emplace(string_slice_to_string(name), Binding(index));
   Func* func = module->funcs[index];
-  func->name = dup_string_slice(name);
+  func->name = dup_string_slice(
+      string_to_string_slice(std::string("$") + string_slice_to_string(name)));
   return Result::Ok;
 }
 
@@ -883,7 +884,8 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
     bindings = &func->local_bindings;
     index = local_index - num_params;
   }
-  bindings->emplace(string_slice_to_string(name), Binding(index));
+  bindings->emplace(std::string("$") + string_slice_to_string(name),
+                    Binding(index));
   return Result::Ok;
 }
 
