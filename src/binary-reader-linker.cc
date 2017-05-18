@@ -130,18 +130,6 @@ Result BinaryReaderLinker::OnReloc(RelocType type,
 Result BinaryReaderLinker::OnImport(Index index,
                                     StringSlice module_name,
                                     StringSlice field_name) {
-#if 0
-  // Is this module been seen in the past
-  std::vector<FunctionImport>& imports = binary->function_imports;
-  for (size_t j = 0; j < imports.size(); j++) {
-    FunctionImport* import = &imports[j];
-    if (string_slices_are_equal(&module_name, &import->module_name)) {
-      // Found
-      return Result::Ok;
-    }
-  }
-  // A new module should anything be done?
-#endif
   return Result::Ok;
 }
 
