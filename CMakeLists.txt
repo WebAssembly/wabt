@@ -79,6 +79,7 @@ configure_file(
 )
 
 include_directories(src ${WABT_BINARY_DIR})
+include_directories(third_party/jsoncpp)
 
 if (COMPILER_IS_MSVC)
   # disable warning C4018: signed/unsigned mismatch
@@ -254,8 +255,17 @@ add_library(libwabt STATIC
   src/option-parser.cc
   src/stream.cc
   src/writer.cc
+  src/source-maps.cc
 )
 set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
+
+add_library(libjsoncpp STATIC
+  third_party/jsoncpp/jsoncpp.cpp
+)
+set_target_properties(libjsoncpp PROPERTIES OUTPUT_NAME jsoncpp)
+if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
+  target_compile_options(libjsoncpp PRIVATE "-Wno-old-style-cast")
+endif ()
 
 if (NOT EMSCRIPTEN)
   if (CODE_COVERAGE)
@@ -269,7 +279,7 @@ if (NOT EMSCRIPTEN)
     list(REMOVE_AT ARGV 0)
     add_executable(${name} ${ARGV})
     add_dependencies(everything ${name})
-    target_link_libraries(${name} libwabt)
+    target_link_libraries(${name} libwabt libjsoncpp)
     set_property(TARGET ${name} PROPERTY CXX_STANDARD 11)
     set_property(TARGET ${name} PROPERTY CXX_STANDARD_REQUIRED ON)
     list(APPEND WABT_EXECUTABLES ${name})
@@ -349,10 +359,11 @@ if (NOT EMSCRIPTEN)
     # wabt-unittests
     set(UNITTESTS_SRCS
       src/test-string-view.cc
+      src/test-source-maps.cc
       third_party/gtest/googletest/src/gtest_main.cc
     )
     wabt_executable(wabt-unittests ${UNITTESTS_SRCS})
-    target_link_libraries(wabt-unittests libgtest ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(wabt-unittests libgtest libjsoncpp ${CMAKE_THREAD_LIBS_INIT})
   endif ()
 
   # test running
