@@ -305,16 +305,19 @@ static void write_table_section(Context* ctx,
 }
 
 static void write_export_section(Context* ctx) {
-  bool seenMemory = false;
+  bool seenMemory = false, singleMemoryExport = false;
 
   Index total_exports = 0;
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     for (const Export& export_ : binary->exports) {
       if (export_.kind == ExternalKind::Memory) {
         if (string_slice_to_string(export_.name) != "memory") {
-          WABT_FATAL("Only a single memory export, \"memory\" is supported.");
+          singleMemoryExport = true;
         }
         if (seenMemory) {
+          if (singleMemoryExport) {
+            WABT_FATAL("Multiple memory exports only supported when named \"memory\".");
+          }
           continue;
         }
         seenMemory = true;
