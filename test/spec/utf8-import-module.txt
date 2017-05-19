@@ -1,0 +1,357 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/utf8-import-module.wast
+(;; STDOUT ;;;
+out/third_party/testsuite/utf8-import-module.wast:7: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:22: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:37: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:52: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:67: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:82: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:99: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:114: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:129: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:146: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:161: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:176: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:191: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:206: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:221: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:236: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:251: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:266: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:281: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:296: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:311: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:328: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:343: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:358: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:373: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:388: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:405: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:420: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:435: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:450: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:465: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:480: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:495: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:510: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:525: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:540: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:555: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:570: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:585: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:600: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:615: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:630: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:645: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:660: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:675: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:690: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:705: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:720: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:735: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:750: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:765: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:780: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:795: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:810: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:825: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:840: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:855: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:870: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:887: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:902: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:917: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:932: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:947: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:962: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:977: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:992: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1007: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1022: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1037: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1052: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1067: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1082: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1097: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1112: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1127: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1142: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1157: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1172: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1187: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1202: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1217: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1232: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1249: assert_malformed passed:
+  error: @0x00000016: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1264: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1279: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1294: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1309: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1324: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1339: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1356: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1371: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1386: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1401: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1416: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1431: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1446: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1461: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1476: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1491: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1506: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1521: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1536: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1551: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1566: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1581: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1596: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1611: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1626: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1641: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1656: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1671: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1686: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1701: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1716: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1733: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1748: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1763: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1778: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1793: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1808: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1823: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1838: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1853: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1868: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1883: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1898: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1913: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1928: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1943: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1958: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1975: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:1990: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2005: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2020: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2035: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2050: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2065: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2080: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2095: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2110: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2125: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2140: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2155: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2170: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2185: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2200: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2217: assert_malformed passed:
+  error: @0x00000017: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2232: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2247: assert_malformed passed:
+  error: @0x00000016: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2262: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2277: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2292: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2307: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2322: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2337: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2354: assert_malformed passed:
+  error: @0x00000016: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2369: assert_malformed passed:
+  error: @0x00000016: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2386: assert_malformed passed:
+  error: @0x00000018: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2401: assert_malformed passed:
+  error: @0x00000016: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2416: assert_malformed passed:
+  error: @0x00000017: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2431: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2446: assert_malformed passed:
+  error: @0x00000016: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2461: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2476: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2491: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2506: assert_malformed passed:
+  error: @0x00000014: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2521: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2536: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2553: assert_malformed passed:
+  error: @0x00000017: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2568: assert_malformed passed:
+  error: @0x00000017: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2585: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2600: assert_malformed passed:
+  error: @0x00000012: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2615: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2630: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2645: assert_malformed passed:
+  error: @0x00000013: invalid utf-8 encoding: import field name
+out/third_party/testsuite/utf8-import-module.wast:2660: assert_malformed passed:
+  error: @0x00000015: invalid utf-8 encoding: import field name
+176/176 tests passed.
+;;; STDOUT ;;)

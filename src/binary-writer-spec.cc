@@ -158,7 +158,7 @@ void BinaryWriterSpec::WriteEscapedStringSlice(StringSlice ss) {
   json_stream_.WriteChar('"');
   for (size_t i = 0; i < ss.length; ++i) {
     uint8_t c = ss.start[i];
-    if (c < 0x20 || c == '\\' || c == '"') {
+    if (c < 0x20 || c == '\\' || c == '"' || c > 0x7f) {
       json_stream_.Writef("\\u%04x", c);
     } else {
       json_stream_.WriteChar(c);
