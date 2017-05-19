@@ -74,7 +74,7 @@ Code Disassembly:
  00001f: 1a                         |       drop
  000020: 02 40                      |       block
  000022: 0c 00                      |         br 0
- 000024: 0c 03                      |         br 0x3
+ 000024: 0c 03                      |         br 3
  000026: 0b                         |       end
  000027: 0b                         |     end
  000028: 0b                         |   end

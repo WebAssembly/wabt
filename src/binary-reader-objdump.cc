@@ -169,6 +169,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
   virtual Result OnOpcode(Opcode Opcode);
   virtual Result OnOpcodeBare();
+  virtual Result OnOpcodeIndex(Index value);
   virtual Result OnOpcodeUint32(uint32_t value);
   virtual Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2);
   virtual Result OnOpcodeUint64(uint64_t value);
@@ -293,6 +294,16 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeBare() {
   LogOpcode(data, 0, nullptr);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
+  Offset immediate_len = state->offset - current_opcode_offset;
+  const char *name;
+  if (current_opcode == Opcode::Call && (name = GetFunctionName(value)))
+    LogOpcode(data, immediate_len, "%d <%s>", value, name);
+  else
+    LogOpcode(data, immediate_len, "%d", value);
   return Result::Ok;
 }
 

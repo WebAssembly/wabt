@@ -93,19 +93,19 @@ Code Disassembly:
 000015 func[0]:
  000025: 20 00                      | get_local 0
  000027: 1a                         | drop
- 000028: 20 01                      | get_local 0x1
+ 000028: 20 01                      | get_local 1
  00002a: 1a                         | drop
- 00002b: 20 02                      | get_local 0x2
+ 00002b: 20 02                      | get_local 2
  00002d: 1a                         | drop
- 00002e: 20 03                      | get_local 0x3
+ 00002e: 20 03                      | get_local 3
  000030: 1a                         | drop
- 000031: 20 04                      | get_local 0x4
+ 000031: 20 04                      | get_local 4
  000033: 1a                         | drop
- 000034: 20 05                      | get_local 0x5
+ 000034: 20 05                      | get_local 5
  000036: 1a                         | drop
- 000037: 20 06                      | get_local 0x6
+ 000037: 20 06                      | get_local 6
  000039: 1a                         | drop
- 00003a: 20 07                      | get_local 0x7
+ 00003a: 20 07                      | get_local 7
  00003c: 1a                         | drop
  00003d: 0b                         | end
 ;;; STDOUT ;;)

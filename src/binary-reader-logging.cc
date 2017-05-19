@@ -573,6 +573,10 @@ Result BinaryReaderLogging::OnOpcodeBare() {
   return reader->OnOpcodeBare();
 }
 
+Result BinaryReaderLogging::OnOpcodeIndex(Index value) {
+  return reader->OnOpcodeIndex(value);
+}
+
 Result BinaryReaderLogging::OnOpcodeUint32(uint32_t value) {
   return reader->OnOpcodeUint32(value);
 }

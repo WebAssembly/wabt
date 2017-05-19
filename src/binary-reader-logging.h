@@ -121,6 +121,7 @@ class BinaryReaderLogging : public BinaryReader {
 
   Result OnOpcode(Opcode opcode) override;
   Result OnOpcodeBare() override;
+  Result OnOpcodeIndex(Index value) override;
   Result OnOpcodeUint32(uint32_t value) override;
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override;
   Result OnOpcodeUint64(uint64_t value) override;

@@ -50,7 +50,7 @@ Code Disassembly:
  00003c: 0b                         | end
 00003d func[1]:
  00003f: 41 02                      | i32.const 0x2
- 000041: 10 81 80 80 80 00          | call 0x1
+ 000041: 10 81 80 80 80 00          | call 1
            000042: R_FUNC_INDEX_LEB   1
  000047: 0b                         | end
 ;;; STDOUT ;;)

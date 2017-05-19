@@ -157,6 +157,7 @@ class BinaryReaderNop : public BinaryReader {
    EndFunctionBody */
   Result OnOpcode(Opcode Opcode) override { return Result::Ok; }
   Result OnOpcodeBare() override { return Result::Ok; }
+  Result OnOpcodeIndex(Index value) override { return Result::Ok; }
   Result OnOpcodeUint32(uint32_t value) override { return Result::Ok; }
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override {
     return Result::Ok;

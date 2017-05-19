@@ -32,7 +32,7 @@ Code Disassembly:
 000050 func[1]:
  000052: 23 80 80 80 80 00          | get_global 0
            000053: R_GLOBAL_INDEX_LEB 0
- 000058: 10 81 80 80 80 00          | call 0x1
+ 000058: 10 81 80 80 80 00          | call 1
            000059: R_FUNC_INDEX_LEB   1
  00005e: 10 80 80 80 80 00          | call 0
            00005f: R_FUNC_INDEX_LEB   0
