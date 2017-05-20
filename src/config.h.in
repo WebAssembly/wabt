@@ -211,6 +211,16 @@ __inline unsigned __int64 __popcnt64(unsigned __int64 value) {
 
 #endif
 
+#ifdef __MINGW32__
+#include <inttypes.h>
+
+#undef PRIu64
+#undef PRId64
+#undef PRIx64
+#define PRIu64 "I64u"
+#define PRId64 "I64d"
+#define PRIx64 "I64x"
+#endif
 
 #if COMPILER_IS_MSVC
 
