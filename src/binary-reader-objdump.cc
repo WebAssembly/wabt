@@ -630,7 +630,10 @@ Result BinaryReaderObjdump::OnFunctionCount(Index count) {
 }
 
 Result BinaryReaderObjdump::OnFunction(Index index, Index sig_index) {
-  PrintDetails(" - func[%" PRIindex "] sig=%" PRIindex "\n", index, sig_index);
+  PrintDetails(" - func[%" PRIindex "] sig=%" PRIindex, index, sig_index);
+  if (const char* name = GetFunctionName(index))
+    PrintDetails(" <%s>", name);
+  PrintDetails("\n");
   return Result::Ok;
 }
 
@@ -656,9 +659,11 @@ Result BinaryReaderObjdump::OnImportFunc(Index import_index,
                                          StringSlice field_name,
                                          Index func_index,
                                          Index sig_index) {
-  PrintDetails(" - func[%" PRIindex "] sig=%" PRIindex " <- " PRIstringslice
-               "." PRIstringslice "\n",
-               func_index, sig_index, WABT_PRINTF_STRING_SLICE_ARG(module_name),
+  PrintDetails(" - func[%" PRIindex "] sig=%" PRIindex, func_index, sig_index);
+  if (const char* name = GetFunctionName(func_index))
+    PrintDetails(" <%s>", name);
+  PrintDetails(" <- " PRIstringslice "." PRIstringslice "\n",
+               WABT_PRINTF_STRING_SLICE_ARG(module_name),
                WABT_PRINTF_STRING_SLICE_ARG(field_name));
   return Result::Ok;
 }
