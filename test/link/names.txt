@@ -42,14 +42,14 @@ Type:
  - [2] (i64) -> nil
  - [3] (i32) -> nil
 Import:
- - func[0] sig=0 <- __extern.missing0
+ - func[0] sig=0 <$import_func0> <- __extern.missing0
  - func[1] sig=0 <- _extern1.missing1
- - func[2] sig=0 <- extern2.missing2
+ - func[2] sig=0 <$import_func2> <- extern2.missing2
 Function:
- - func[3] sig=1
- - func[4] sig=2
+ - func[3] sig=1 <$name1>
+ - func[4] sig=2 <$name2>
  - func[5] sig=2
- - func[6] sig=3
+ - func[6] sig=3 <$name3>
 Export:
  - func[3] <$name1> -> "foo"
  - func[6] <$name3> -> "baz"
