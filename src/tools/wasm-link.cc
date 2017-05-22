@@ -305,22 +305,23 @@ static void write_table_section(Context* ctx,
 }
 
 static void write_export_section(Context* ctx) {
-  bool seenMemory = false, singleMemoryExport = false;
+  bool seen_memory = false;
+  StringSlice memory_export_name;
 
   Index total_exports = 0;
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     for (const Export& export_ : binary->exports) {
       if (export_.kind == ExternalKind::Memory) {
-        if (string_slice_to_string(export_.name) != "memory") {
-          singleMemoryExport = true;
-        }
-        if (seenMemory) {
-          if (singleMemoryExport) {
-            WABT_FATAL("Multiple memory exports only supported when named \"memory\".");
+        if (seen_memory) {
+          if (!string_slices_are_equal(&memory_export_name, &export_.name)) {
+            WABT_FATAL("Unable to link memory exports using different names.");
           }
           continue;
         }
-        seenMemory = true;
+        else {
+          memory_export_name = export_.name;
+          seen_memory = true;
+        }
       }
       total_exports++;
     }
@@ -330,7 +331,7 @@ static void write_export_section(Context* ctx) {
   WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_exports, "export count");
 
-  seenMemory = false;
+  seen_memory = false;
   for (const std::unique_ptr<LinkerInputBinary>& binary : ctx->inputs) {
     for (const Export& export_ : binary->exports) {
       Index index = export_.index;
@@ -339,10 +340,10 @@ static void write_export_section(Context* ctx) {
           index = relocate_func_index(binary.get(), index);
           break;
         case ExternalKind::Memory:
-          if (seenMemory) {
+          if (seen_memory) {
             continue;
           }
-          seenMemory = true;
+          seen_memory = true;
           break;
         default:
           WABT_FATAL("unsupport export type: %d\n",
