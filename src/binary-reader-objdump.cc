@@ -309,7 +309,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32(uint32_t value) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(data, immediate_len, "%#x", value);
+  LogOpcode(data, immediate_len, "%u", value);
   return Result::Ok;
 }
 
@@ -322,7 +322,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint32Uint32(uint32_t value,
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeUint64(uint64_t value) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(data, immediate_len, "%d", value);
+  LogOpcode(data, immediate_len, "%" PRId64, value);
   return Result::Ok;
 }
 

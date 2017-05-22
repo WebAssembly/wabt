@@ -48,7 +48,7 @@ Code Disassembly:
 
 000015 func[0]:
  000017: 02 40                      | block
- 000019: 41 01                      |   i32.const 0x1
+ 000019: 41 01                      |   i32.const 1
  00001b: 0d 00                      |   br_if 0
  00001d: 0b                         | end
  00001e: 0b                         | end

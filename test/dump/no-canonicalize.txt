@@ -159,13 +159,13 @@ Code Disassembly:
  00007f: 0b                         | end
 000080 func[2]:
  000086: 20 00                      | get_local 0
- 000088: 41 01                      | i32.const 0x1
+ 000088: 41 01                      | i32.const 1
  00008a: 6a                         | i32.add
  00008b: 1a                         | drop
  00008c: 0b                         | end
 00008d func[3]:
  000093: 20 00                      | get_local 0
- 000095: 41 02                      | i32.const 0x2
+ 000095: 41 02                      | i32.const 2
  000097: 6c                         | i32.mul
  000098: 1a                         | drop
  000099: 0b                         | end

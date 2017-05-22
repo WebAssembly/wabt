@@ -50,7 +50,7 @@ Code Disassembly:
 
 000016 func[0]:
  000018: 02 7f                      | block i32
- 00001a: 41 01                      |   i32.const 0x1
+ 00001a: 41 01                      |   i32.const 1
  00001c: 0c 00                      |   br 0
  00001e: 0b                         | end
  00001f: 0b                         | end

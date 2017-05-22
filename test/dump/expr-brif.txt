@@ -57,11 +57,11 @@ Code Disassembly:
 
 000016 func[0]:
  000018: 02 7f                      | block i32
- 00001a: 41 2a                      |   i32.const 0x2a
+ 00001a: 41 2a                      |   i32.const 42
  00001c: 41 00                      |   i32.const 0
  00001e: 0d 00                      |   br_if 0
  000020: 1a                         |   drop
- 000021: 41 1d                      |   i32.const 0x1d
+ 000021: 41 1d                      |   i32.const 29
  000023: 0b                         | end
  000024: 0b                         | end
 ;;; STDOUT ;;)

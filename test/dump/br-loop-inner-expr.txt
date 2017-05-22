@@ -77,16 +77,16 @@ Code Disassembly:
 000016 func[0]:
  000018: 02 7f                      | block i32
  00001a: 03 7f                      |   loop i32
- 00001c: 41 01                      |     i32.const 0x1
+ 00001c: 41 01                      |     i32.const 1
  00001e: 04 40                      |     if
  000020: 0c 01                      |       br 1
  000022: 0b                         |     end
- 000023: 41 03                      |     i32.const 0x3
+ 000023: 41 03                      |     i32.const 3
  000025: 04 40                      |     if
- 000027: 41 04                      |       i32.const 0x4
+ 000027: 41 04                      |       i32.const 4
  000029: 0c 02                      |       br 2
  00002b: 0b                         |     end
- 00002c: 41 05                      |     i32.const 0x5
+ 00002c: 41 05                      |     i32.const 5
  00002e: 0b                         |   end
  00002f: 0b                         | end
  000030: 0b                         | end

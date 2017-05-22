@@ -22,7 +22,7 @@ Code Disassembly:
  000026: 41 00                      | i32.const 0
  000028: 41 00                      | i32.const 0
  00002a: 28 02 00                   | i32.load 2 0
- 00002d: 41 01                      | i32.const 0x1
+ 00002d: 41 01                      | i32.const 1
  00002f: 6a                         | i32.add
  000030: 36 02 00                   | i32.store 2 0
  000033: 20 00                      | get_local 0
