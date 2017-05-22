@@ -17,14 +17,13 @@
 #ifndef WABT_COMMON_H_
 #define WABT_COMMON_H_
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
+#include <cassert>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -236,7 +235,9 @@ static WABT_INLINE char* wabt_strndup(const char* s, size_t len) {
 
 static WABT_INLINE StringSlice dup_string_slice(StringSlice str) {
   StringSlice result;
-  result.start = wabt_strndup(str.start, str.length);
+  char* new_data = new char[str.length];
+  memcpy(new_data, str.start, str.length);
+  result.start = new_data;
   result.length = str.length;
   return result;
 }

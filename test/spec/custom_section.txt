@@ -1,13 +1,17 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/custom_section.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/custom_section.wast:58: assert_malformed passed:
+out/third_party/testsuite/custom_section.wast:61: assert_malformed passed:
+  error: @0x00000009: unable to read u32 leb128: section size
+out/third_party/testsuite/custom_section.wast:69: assert_malformed passed:
   error: @0x0000000a: unable to read u32 leb128: string length
-out/third_party/testsuite/custom_section.wast:66: assert_malformed passed:
+out/third_party/testsuite/custom_section.wast:77: assert_malformed passed:
   error: @0x0000000a: invalid section size: extends past end
-out/third_party/testsuite/custom_section.wast:74: assert_malformed passed:
+out/third_party/testsuite/custom_section.wast:85: assert_malformed passed:
   error: @0x00000031: invalid section code: 36; max is 11
-out/third_party/testsuite/custom_section.wast:83: assert_malformed passed:
+out/third_party/testsuite/custom_section.wast:94: assert_malformed passed:
   error: @0x0000003e: function signature count != function body count
-4/4 tests passed.
+out/third_party/testsuite/custom_section.wast:107: assert_malformed passed:
+  error: @0x0000000a: invalid section size: extends past end
+6/6 tests passed.
 ;;; STDOUT ;;)
