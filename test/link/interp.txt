@@ -97,7 +97,7 @@ Code Disassembly:
  000093: 0f                         | return
  000094: 0b                         | end
 000095 func[3]:
- 000097: 41 2a                      | i32.const 0x2a
+ 000097: 41 2a                      | i32.const 42
  000099: 0f                         | return
  00009a: 0b                         | end
 00009b func[4]:

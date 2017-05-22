@@ -70,7 +70,7 @@ Custom:
 Code Disassembly:
 
 00007d <$name1>:
- 00007f: 41 01                      | i32.const 0x1
+ 00007f: 41 01                      | i32.const 1
  000081: 10 86 80 80 80 00          | call 6 <$name3>
            000082: R_FUNC_INDEX_LEB   6 <$name3>
  000087: 0b                         | end
@@ -82,7 +82,7 @@ Code Disassembly:
 000093 func[5]:
  000095: 0b                         | end
 000096 <$name3>:
- 000098: 41 02                      | i32.const 0x2
+ 000098: 41 02                      | i32.const 2
  00009a: 10 86 80 80 80 00          | call 6 <$name3>
            00009b: R_FUNC_INDEX_LEB   6 <$name3>
  0000a0: 0b                         | end

@@ -88,24 +88,24 @@ select.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000015 func[0]:
- 000017: 41 02                      | i32.const 0x2
- 000019: 41 03                      | i32.const 0x3
- 00001b: 41 01                      | i32.const 0x1
+ 000017: 41 02                      | i32.const 2
+ 000019: 41 03                      | i32.const 3
+ 00001b: 41 01                      | i32.const 1
  00001d: 1b                         | select
  00001e: 1a                         | drop
  00001f: 42 02                      | i64.const 2
  000021: 42 03                      | i64.const 3
- 000023: 41 01                      | i32.const 0x1
+ 000023: 41 01                      | i32.const 1
  000025: 1b                         | select
  000026: 1a                         | drop
  000027: 43 00 00 00 40             | f32.const 0x1p+1
  00002c: 43 00 00 40 40             | f32.const 0x1.8p+1
- 000031: 41 01                      | i32.const 0x1
+ 000031: 41 01                      | i32.const 1
  000033: 1b                         | select
  000034: 1a                         | drop
  000035: 44 00 00 00 00 00 00 00 40 | f64.const 0x1p+1
  00003e: 44 00 00 00 00 00 00 08 40 | f64.const 0x1.8p+1
- 000047: 41 01                      | i32.const 0x1
+ 000047: 41 01                      | i32.const 1
  000049: 1b                         | select
  00004a: 1a                         | drop
  00004b: 0b                         | end

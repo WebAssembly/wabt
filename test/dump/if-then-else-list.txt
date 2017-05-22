@@ -66,16 +66,16 @@ if-then-else-list.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000015 func[0]:
- 000017: 41 01                      | i32.const 0x1
+ 000017: 41 01                      | i32.const 1
  000019: 04 40                      | if
- 00001b: 41 02                      |   i32.const 0x2
+ 00001b: 41 02                      |   i32.const 2
  00001d: 1a                         |   drop
- 00001e: 41 03                      |   i32.const 0x3
+ 00001e: 41 03                      |   i32.const 3
  000020: 1a                         |   drop
  000021: 05                         | else
- 000022: 41 04                      |   i32.const 0x4
+ 000022: 41 04                      |   i32.const 4
  000024: 1a                         |   drop
- 000025: 41 05                      |   i32.const 0x5
+ 000025: 41 05                      |   i32.const 5
  000027: 1a                         |   drop
  000028: 0b                         | end
  000029: 0b                         | end

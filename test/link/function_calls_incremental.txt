@@ -83,7 +83,7 @@ Code Disassembly:
  0000a3: 43 00 00 80 3f             | f32.const 0x1p+0
  0000a8: 10 82 80 80 80 00          | call 2
            0000a9: R_FUNC_INDEX_LEB   2
- 0000ae: 41 0a                      | i32.const 0xa
+ 0000ae: 41 0a                      | i32.const 10
  0000b0: 10 85 80 80 80 00          | call 5
            0000b1: R_FUNC_INDEX_LEB   5
  0000b6: 0b                         | end
