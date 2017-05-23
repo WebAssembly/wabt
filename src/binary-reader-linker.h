@@ -26,14 +26,14 @@ class Stream;
 
 namespace link {
 
-struct LinkerInputBinary;
+class LinkerInputBinary;
 
 struct LinkOptions {
   Stream* log_stream;
 };
 
-Result read_binary_linker(struct LinkerInputBinary* input_info,
-                          struct LinkOptions* options);
+Result read_binary_linker(LinkerInputBinary* input_info,
+                          LinkOptions* options);
 
 } // namespace link
 }  // namespace wabt
