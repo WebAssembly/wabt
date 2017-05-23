@@ -11,17 +11,17 @@ Sections:
 
      Type start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
    Import start=0x00000014 end=0x00000024 (size=0x00000010) count: 1
-   Custom start=0x0000002a end=0x00000045 (size=0x0000001b) "name"
+   Custom start=0x0000002a end=0x00000044 (size=0x0000001a) "name"
 
 Section Details:
 
 Type:
  - [0] () -> nil
 Import:
- - func[0] sig=0 <$import_func1> <- __extern.baz
+ - func[0] sig=0 <import_func1> <- __extern.baz
 Custom:
  - name: "name"
- - func[0] $import_func1
+ - func[0] import_func1
 
 Code Disassembly:
 

@@ -156,6 +156,18 @@ void write_limits(Stream* stream, const Limits* limits) {
     write_u32_leb128(stream, limits->max, "limits: max");
 }
 
+void write_debug_name(Stream* stream,
+                      StringSlice name,
+                      const char* desc) {
+  if (name.length > 0) {
+    // Strip leading $ from name
+    assert(*name.start == '$');
+    name.start++;
+    name.length--;
+  }
+  write_str(stream, name.start, name.length, desc, PrintChars::Yes);
+}
+
 namespace {
 
 /* TODO(binji): better leb size guess. Some sections we know will only be 1
@@ -886,8 +898,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
           continue;
         write_u32_leb128(&stream_, i, "function index");
         wabt_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
-        write_str(&stream_, func->name.start, func->name.length, desc,
-                  PrintChars::Yes);
+        write_debug_name(&stream_, func->name, desc);
       }
       EndSubsection();
     }
@@ -911,7 +922,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
         const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
         write_u32_leb128(&stream_, j, "local index");
-        write_str(&stream_, name.data(), name.length(), desc, PrintChars::Yes);
+        write_debug_name(&stream_, string_to_string_slice(name), desc);
       }
 
       make_type_binding_reverse_mapping(func->local_types, func->local_bindings,
@@ -920,7 +931,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
         const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, num_params + j);
         write_u32_leb128(&stream_, num_params + j, "local index");
-        write_str(&stream_, name.data(), name.length(), desc, PrintChars::Yes);
+        write_debug_name(&stream_, string_to_string_slice(name), desc);
       }
     }
     EndSubsection();

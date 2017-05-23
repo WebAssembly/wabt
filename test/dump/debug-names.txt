@@ -76,48 +76,48 @@
 0000035: 00                                        ; subsection size (guess)
 0000036: 02                                        ; num functions
 0000037: 00                                        ; function index
-0000038: 03                                        ; string length
-0000039: 2446 31                                  $F1  ; func name 0
-000003c: 02                                        ; function index
-000003d: 03                                        ; string length
-000003e: 2446 32                                  $F2  ; func name 2
-0000035: 0b                                        ; FIXUP subsection size
-0000041: 02                                        ; local name type
-0000042: 00                                        ; subsection size (guess)
-0000043: 03                                        ; num functions
-0000044: 00                                        ; function index
-0000045: 04                                        ; num locals
-0000046: 00                                        ; local index
-0000047: 05                                        ; string length
-0000048: 2446 3150 30                             $F1P0  ; local name 0
-000004d: 01                                        ; local index
-000004e: 05                                        ; string length
-000004f: 2446 314c 31                             $F1L1  ; local name 1
-0000054: 02                                        ; local index
-0000055: 05                                        ; string length
-0000056: 2446 314c 32                             $F1L2  ; local name 2
-000005b: 03                                        ; local index
-000005c: 00                                        ; string length
-000005d: 01                                        ; function index
-000005e: 01                                        ; num locals
-000005f: 00                                        ; local index
-0000060: 05                                        ; string length
-0000061: 2446 3250 30                             $F2P0  ; local name 0
-0000066: 02                                        ; function index
-0000067: 04                                        ; num locals
-0000068: 00                                        ; local index
-0000069: 05                                        ; string length
-000006a: 2446 3350 30                             $F3P0  ; local name 0
-000006f: 01                                        ; local index
-0000070: 05                                        ; string length
-0000071: 2446 334c 31                             $F3L1  ; local name 1
-0000076: 02                                        ; local index
-0000077: 00                                        ; string length
-0000078: 03                                        ; local index
-0000079: 05                                        ; string length
-000007a: 2446 334c 33                             $F3L3  ; local name 3
-0000042: 3c                                        ; FIXUP subsection size
-000002e: 50                                        ; FIXUP section size
+0000038: 02                                        ; string length
+0000039: 4631                                     F1  ; func name 0
+000003b: 02                                        ; function index
+000003c: 02                                        ; string length
+000003d: 4632                                     F2  ; func name 2
+0000035: 09                                        ; FIXUP subsection size
+000003f: 02                                        ; local name type
+0000040: 00                                        ; subsection size (guess)
+0000041: 03                                        ; num functions
+0000042: 00                                        ; function index
+0000043: 04                                        ; num locals
+0000044: 00                                        ; local index
+0000045: 04                                        ; string length
+0000046: 4631 5030                                F1P0  ; local name 0
+000004a: 01                                        ; local index
+000004b: 04                                        ; string length
+000004c: 4631 4c31                                F1L1  ; local name 1
+0000050: 02                                        ; local index
+0000051: 04                                        ; string length
+0000052: 4631 4c32                                F1L2  ; local name 2
+0000056: 03                                        ; local index
+0000057: 00                                        ; string length
+0000058: 01                                        ; function index
+0000059: 01                                        ; num locals
+000005a: 00                                        ; local index
+000005b: 04                                        ; string length
+000005c: 4632 5030                                F2P0  ; local name 0
+0000060: 02                                        ; function index
+0000061: 04                                        ; num locals
+0000062: 00                                        ; local index
+0000063: 04                                        ; string length
+0000064: 4633 5030                                F3P0  ; local name 0
+0000068: 01                                        ; local index
+0000069: 04                                        ; string length
+000006a: 4633 4c31                                F3L1  ; local name 1
+000006e: 02                                        ; local index
+000006f: 00                                        ; string length
+0000070: 03                                        ; local index
+0000071: 04                                        ; string length
+0000072: 4633 4c33                                F3L3  ; local name 3
+0000040: 35                                        ; FIXUP subsection size
+000002e: 47                                        ; FIXUP section size
 
 debug-names.wasm:	file format wasm 0x1
 
@@ -127,27 +127,27 @@ Type:
  - [0] (i32) -> nil
  - [1] (f32) -> nil
 Function:
- - func[0] sig=0 <$F1>
+ - func[0] sig=0 <F1>
  - func[1] sig=1
- - func[2] sig=1 <$F2>
+ - func[2] sig=1 <F2>
 Custom:
  - name: "name"
- - func[0] $F1
- - func[2] $F2
- - func[0] local[0] $F1P0
- - func[0] local[1] $F1L1
- - func[0] local[2] $F1L2
- - func[1] local[0] $F2P0
- - func[2] local[0] $F3P0
- - func[2] local[1] $F3L1
- - func[2] local[3] $F3L3
+ - func[0] F1
+ - func[2] F2
+ - func[0] local[0] F1P0
+ - func[0] local[1] F1L1
+ - func[0] local[2] F1L2
+ - func[1] local[0] F2P0
+ - func[2] local[0] F3P0
+ - func[2] local[1] F3L1
+ - func[2] local[3] F3L3
 
 Code Disassembly:
 
-00001c <$F1>:
+00001c <F1>:
  000022: 0b                         | end
 000023 func[1]:
  000025: 0b                         | end
-000026 <$F2>:
+000026 <F2>:
  00002c: 0b                         | end
 ;;; STDOUT ;;)

@@ -12,17 +12,17 @@ section(CODE) {
 }
 section("name") {
   subsection[1]
-  length[6]
+  length[5]
   func_count[1]
   index[0]
-  str("$F0")
+  str("F0")
   subsection[2]
-  length[8]
+  length[7]
   func_count[1]
   index[0]
   local_count[1]
   index[0]
-  str("$L0")
+  str("L0")
 }
 (;; STDOUT ;;;
 (module
