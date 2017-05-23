@@ -23,9 +23,9 @@ namespace wabt {
 
 class Stream;
 
-class BinaryReaderLogging : public BinaryReader {
+class BinaryReaderLogging : public BinaryReaderDelegate {
  public:
-  BinaryReaderLogging(Stream*, BinaryReader* forward);
+  BinaryReaderLogging(Stream*, BinaryReaderDelegate* forward);
 
   bool OnError(const char* message) override;
   void OnSetState(const State* s) override;
@@ -235,7 +235,7 @@ class BinaryReaderLogging : public BinaryReader {
   void LogTypes(Index type_count, Type* types);
 
   Stream* stream;
-  BinaryReader* reader;
+  BinaryReaderDelegate* reader;
   int indent;
 };
 

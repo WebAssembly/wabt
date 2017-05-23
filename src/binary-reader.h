@@ -36,15 +36,18 @@ struct ReadBinaryOptions {
   bool read_debug_names;
 };
 
-class BinaryReader {
+class BinaryReaderDelegate {
  public:
   struct State {
+    State(const uint8_t* data, Offset size)
+        : data(data), size(size), offset(0) {}
+
     const uint8_t* data;
     Offset size;
     Offset offset;
   };
 
-  virtual ~BinaryReader() {}
+  virtual ~BinaryReaderDelegate() {}
 
   virtual bool OnError(const char* message) = 0;
   virtual void OnSetState(const State* s) { state = s; }
@@ -268,7 +271,7 @@ class BinaryReader {
 
 Result read_binary(const void* data,
                    size_t size,
-                   BinaryReader* reader,
+                   BinaryReaderDelegate* reader,
                    const ReadBinaryOptions* options);
 
 size_t read_u32_leb128(const uint8_t* ptr,
