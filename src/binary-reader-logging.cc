@@ -48,7 +48,8 @@ void sprint_limits(char* dst, size_t size, const Limits* limits) {
 
 }  // namespace
 
-BinaryReaderLogging::BinaryReaderLogging(Stream* stream, BinaryReader* forward)
+BinaryReaderLogging::BinaryReaderLogging(Stream* stream,
+                                         BinaryReaderDelegate* forward)
     : stream(stream), reader(forward), indent(0) {}
 
 void BinaryReaderLogging::Indent() {
@@ -90,7 +91,7 @@ bool BinaryReaderLogging::OnError(const char* message) {
 }
 
 void BinaryReaderLogging::OnSetState(const State* s) {
-  BinaryReader::OnSetState(s);
+  BinaryReaderDelegate::OnSetState(s);
   reader->OnSetState(s);
 }
 

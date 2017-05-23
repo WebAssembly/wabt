@@ -21,7 +21,7 @@
 
 namespace wabt {
 
-class BinaryReaderNop : public BinaryReader {
+class BinaryReaderNop : public BinaryReaderDelegate {
  public:
   bool OnError(const char* message) override { return false; }
 
