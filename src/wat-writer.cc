@@ -260,7 +260,7 @@ bool WatWriter::WriteStringSliceOpt(const StringSlice* str,
 
 void WatWriter::WriteName(const StringSlice* str, NextChar next_char) {
   // Debug names must begin with a $ for for wast file to be valid
-  assert(str->length == 0 || str->start[0] == '$');
+  assert(str->length > 0 && str->start[0] == '$');
   WriteStringSlice(str, next_char);
 }
 
