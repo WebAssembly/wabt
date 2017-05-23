@@ -523,11 +523,23 @@ static void write_names_section(Context* ctx) {
   stream->WriteU8Enum(NameSectionSubsection::Function, "subsection code");
   WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_count, "element count");
+
+  // Write import names
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
-      if (binary->debug_names[i].empty())
+      if (binary->debug_names[i].empty() || !binary->IsFunctionImport(i))
         continue;
       if (binary->IsInactiveFunctionImport(i))
+        continue;
+      write_u32_leb128(stream, binary->RelocateFuncIndex(i), "function index");
+      write_string(stream, binary->debug_names[i], "function name");
+    }
+  }
+
+  // Write non-import names
+  for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
+    for (size_t i = 0; i < binary->debug_names.size(); i++) {
+      if (binary->debug_names[i].empty() || binary->IsFunctionImport(i))
         continue;
       write_u32_leb128(stream, binary->RelocateFuncIndex(i), "function index");
       write_string(stream, binary->debug_names[i], "function name");
