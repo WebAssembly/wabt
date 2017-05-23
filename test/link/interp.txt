@@ -51,7 +51,8 @@ Sections:
  Function start=0x0000002c end=0x00000032 (size=0x00000006) count: 5
    Export start=0x00000038 end=0x00000075 (size=0x0000003d) count: 5
      Code start=0x00000077 end=0x000000a2 (size=0x0000002b) count: 5
-   Custom start=0x000000a8 end=0x000000bb (size=0x00000013) "reloc.Code"
+   Custom start=0x000000a8 end=0x000000eb (size=0x00000043) "name"
+   Custom start=0x000000f1 end=0x00000104 (size=0x00000013) "reloc.Code"
 
 Section Details:
 
@@ -63,17 +64,24 @@ Type:
  - [4] () -> i64
 Import:
 Function:
- - func[0] sig=2
- - func[1] sig=0
- - func[2] sig=1
- - func[3] sig=3
- - func[4] sig=4
+ - func[0] sig=2 <export1>
+ - func[1] sig=0 <call_import1>
+ - func[2] sig=1 <call_import2>
+ - func[3] sig=3 <export2>
+ - func[4] sig=4 <export3>
 Export:
- - func[0] -> "export1"
- - func[1] -> "call_import1"
- - func[2] -> "call_import2"
- - func[3] -> "export2"
- - func[4] -> "export3"
+ - func[0] <export1> -> "export1"
+ - func[1] <call_import1> -> "call_import1"
+ - func[2] <call_import2> -> "call_import2"
+ - func[3] <export2> -> "export2"
+ - func[4] <export3> -> "export3"
+Custom:
+ - name: "name"
+ - func[0] export1
+ - func[1] call_import1
+ - func[2] call_import2
+ - func[3] export2
+ - func[4] export3
 Custom:
  - name: "reloc.Code"
   - section: Code
@@ -82,25 +90,25 @@ Custom:
 
 Code Disassembly:
 
-000078 func[0]:
+000078 <export1>:
  00007a: 43 00 00 80 3f             | f32.const 0x1p+0
  00007f: 0f                         | return
  000080: 0b                         | end
-000081 func[1]:
- 000083: 10 83 80 80 80 00          | call 3
-           000084: R_FUNC_INDEX_LEB   3
+000081 <call_import1>:
+ 000083: 10 83 80 80 80 00          | call 3 <export2>
+           000084: R_FUNC_INDEX_LEB   3 <export2>
  000089: 0f                         | return
  00008a: 0b                         | end
-00008b func[2]:
- 00008d: 10 84 80 80 80 00          | call 4
-           00008e: R_FUNC_INDEX_LEB   4
+00008b <call_import2>:
+ 00008d: 10 84 80 80 80 00          | call 4 <export3>
+           00008e: R_FUNC_INDEX_LEB   4 <export3>
  000093: 0f                         | return
  000094: 0b                         | end
-000095 func[3]:
+000095 <export2>:
  000097: 41 2a                      | i32.const 42
  000099: 0f                         | return
  00009a: 0b                         | end
-00009b func[4]:
+00009b <export3>:
  00009d: 42 e3 00                   | i64.const 99
  0000a0: 0f                         | return
  0000a1: 0b                         | end

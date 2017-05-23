@@ -757,7 +757,10 @@ Result BinaryReaderObjdump::OnExport(Index index,
 
 Result BinaryReaderObjdump::OnElemSegmentFunctionIndex(Index index,
                                                        Index func_index) {
-  PrintDetails("  - func[%" PRIindex "]\n", func_index);
+  PrintDetails("  - func[%" PRIindex "]", func_index);
+  if (const char* name = GetFunctionName(func_index))
+    PrintDetails(" <%s>", name);
+  PrintDetails("\n");
   return Result::Ok;
 }
 
