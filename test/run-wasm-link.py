@@ -87,8 +87,8 @@ def main(args):
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
     out_file = os.path.join(out_dir, basename_noext + '.json')
-    wast2wasm.RunWithArgs('--spec', '--no-check', '-r', '-o', out_file,
-                          filename)
+    wast2wasm.RunWithArgs('--spec', '--debug-names', '--no-check', '-r', '-o',
+                          out_file, filename)
 
     wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
     wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]

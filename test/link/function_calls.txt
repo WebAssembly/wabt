@@ -29,7 +29,8 @@ Sections:
  Function start=0x00000047 end=0x0000004a (size=0x00000003) count: 2
    Export start=0x00000050 end=0x00000057 (size=0x00000007) count: 1
      Code start=0x00000059 end=0x0000008b (size=0x00000032) count: 2
-   Custom start=0x00000091 end=0x000000ad (size=0x0000001c) "reloc.Code"
+   Custom start=0x00000091 end=0x000000c7 (size=0x00000036) "name"
+   Custom start=0x000000cd end=0x000000e9 (size=0x0000001c) "reloc.Code"
 
 Section Details:
 
@@ -39,13 +40,19 @@ Type:
  - [2] (f64) -> nil
  - [3] (i64) -> nil
 Import:
- - func[0] sig=0 <- __extern.bar
- - func[1] sig=2 <- __extern.baz
+ - func[0] sig=0 <import1> <- __extern.bar
+ - func[1] sig=2 <import0> <- __extern.baz
 Function:
  - func[2] sig=1
- - func[3] sig=3
+ - func[3] sig=3 <local_func>
 Export:
- - func[3] -> "foo"
+ - func[3] <local_func> -> "foo"
+Custom:
+ - name: "name"
+ - func[0] import1
+ - func[2] local_func
+ - func[1] import0
+ - func[3] local_func
 Custom:
  - name: "reloc.Code"
   - section: Code
@@ -61,17 +68,17 @@ Code Disassembly:
  00005c: 20 00                      | get_local 0
  00005e: 10 82 80 80 80 00          | call 2
            00005f: R_FUNC_INDEX_LEB   2
- 000064: 10 83 80 80 80 00          | call 3
-           000065: R_FUNC_INDEX_LEB   3
- 00006a: 10 80 80 80 80 00          | call 0
-           00006b: R_FUNC_INDEX_LEB   0
+ 000064: 10 83 80 80 80 00          | call 3 <local_func>
+           000065: R_FUNC_INDEX_LEB   3 <local_func>
+ 00006a: 10 80 80 80 80 00          | call 0 <import1>
+           00006b: R_FUNC_INDEX_LEB   0 <import1>
  000070: 0b                         | end
-000071 func[3]:
+000071 <local_func>:
  000073: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
- 00007c: 10 81 80 80 80 00          | call 1
-           00007d: R_FUNC_INDEX_LEB   1
+ 00007c: 10 81 80 80 80 00          | call 1 <import0>
+           00007d: R_FUNC_INDEX_LEB   1 <import0>
  000082: 42 0a                      | i64.const 10
- 000084: 10 83 80 80 80 00          | call 3
-           000085: R_FUNC_INDEX_LEB   3
+ 000084: 10 83 80 80 80 00          | call 3 <local_func>
+           000085: R_FUNC_INDEX_LEB   3 <local_func>
  00008a: 0b                         | end
 ;;; STDOUT ;;)

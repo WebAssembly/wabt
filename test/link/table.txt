@@ -9,7 +9,7 @@
   (func $func3 (param f64))
   (type $t1 (func))
   (table anyfunc (elem $func3 $func2 $func2))
-  (func
+  (func $func4
     i64.const 7
     call_indirect $t1
   )
@@ -25,8 +25,9 @@ Sections:
     Table start=0x0000002b end=0x00000030 (size=0x00000005) count: 1
      Elem start=0x00000036 end=0x00000055 (size=0x0000001f) count: 1
      Code start=0x00000057 end=0x0000006d (size=0x00000016) count: 4
-   Custom start=0x00000073 end=0x0000008f (size=0x0000001c) "reloc.Elem"
-   Custom start=0x00000095 end=0x000000a5 (size=0x00000010) "reloc.Code"
+   Custom start=0x00000073 end=0x0000009b (size=0x00000028) "name"
+   Custom start=0x000000a1 end=0x000000bd (size=0x0000001c) "reloc.Elem"
+   Custom start=0x000000c3 end=0x000000d3 (size=0x00000010) "reloc.Code"
 
 Section Details:
 
@@ -36,20 +37,26 @@ Type:
  - [2] (f64) -> nil
  - [3] () -> nil
 Function:
- - func[0] sig=0
- - func[1] sig=1
- - func[2] sig=2
- - func[3] sig=3
+ - func[0] sig=0 <func1>
+ - func[1] sig=1 <func2>
+ - func[2] sig=2 <func3>
+ - func[3] sig=3 <func4>
 Table:
  - table[0] type=anyfunc initial=5 max=5
 Elem:
  - segment[0] table=0
  - init i32=0
-  - func[0]
-  - func[0]
-  - func[2]
-  - func[1]
-  - func[1]
+  - func[0] <func1>
+  - func[0] <func1>
+  - func[2] <func3>
+  - func[1] <func2>
+  - func[1] <func2>
+Custom:
+ - name: "name"
+ - func[0] func1
+ - func[1] func2
+ - func[2] func3
+ - func[3] func4
 Custom:
  - name: "reloc.Elem"
   - section: Elem
@@ -65,13 +72,13 @@ Custom:
 
 Code Disassembly:
 
-000058 func[0]:
+000058 <func1>:
  00005a: 0b                         | end
-00005b func[1]:
+00005b <func2>:
  00005d: 0b                         | end
-00005e func[2]:
+00005e <func3>:
  000060: 0b                         | end
-000061 func[3]:
+000061 <func4>:
  000063: 42 07                      | i64.const 7
  000065: 11 83 80 80 80 00 00       | call_indirect 3 0
            000066: R_TYPE_INDEX_LEB   3
