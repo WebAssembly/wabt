@@ -132,8 +132,8 @@ class LinkerInputBinary {
   Index memory_page_count;
   Index memory_page_offset;
 
-  Index table_elem_count;
-  Index function_count;
+  Index table_elem_count = 0;
+  Index function_count = 0;
 
   std::vector<std::string> debug_names;
 };
