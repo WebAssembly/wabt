@@ -90,7 +90,7 @@ BUILD_CMD := ninja
 BUILD_FILE := build.ninja
 GENERATOR := Ninja
 else
-BUILD_CMD := $(MAKE) --no-print-directory
+BUILD_CMD := +$(MAKE) --no-print-directory
 BUILD_FILE := Makefile
 GENERATOR := "Unix Makefiles"
 endif
