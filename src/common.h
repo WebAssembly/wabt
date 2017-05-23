@@ -102,8 +102,8 @@ enum class Result {
   Error,
 };
 
-#define WABT_SUCCEEDED(x) ((x) == Result::Ok)
-#define WABT_FAILED(x) ((x) == Result::Error)
+#define WABT_SUCCEEDED(x) ((x) == ::wabt::Result::Ok)
+#define WABT_FAILED(x) ((x) == ::wabt::Result::Error)
 
 inline std::string WABT_PRINTF_FORMAT(1, 2)
     string_printf(const char* format, ...) {
