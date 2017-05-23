@@ -1,0 +1,26 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+;; This test file contains a name section that names that same function twice
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[2] type[0] type[0] }
+section(CODE) {
+  count[2]
+  func { locals[decl_count[0]] }
+  func { locals[decl_count[0]] }
+}
+section("name") {
+  subsection[1]
+  length[9]
+  func_count[2]
+  index[0]
+  str("F0")
+  index[0]
+  str("F1")
+}
+(;; STDERR ;;;
+Error running "wasm2wast":
+error: @0x0000002c: duplicate function name: 0
+
+;;; STDERR ;;)

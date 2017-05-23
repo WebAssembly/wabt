@@ -1,0 +1,37 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[2] type[0] type[0] }
+section(CODE) {
+  count[2]
+  func { locals[decl_count[1] i32_count[2] i32] }
+  func { locals[decl_count[1] i32_count[2] i32] }
+}
+section("name") {
+  subsection[1]
+  length[9]
+  func_count[2]
+  index[0]
+  str("F0")
+  index[1]
+  str("F2")
+
+  subsection[2]
+  length[13]
+  func_count[2]
+  index[1]
+  local_count[1]
+  index[0]
+  str("L0")
+  index[0]
+  local_count[1]
+  index[0]
+  str("L0")
+}
+(;; STDERR ;;;
+Error running "wasm2wast":
+error: @0x0000003d: locals function index out of order: 0
+
+;;; STDERR ;;)

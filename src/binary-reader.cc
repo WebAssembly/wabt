@@ -1021,11 +1021,19 @@ Result BinaryReader::ReadNamesSection(Offset section_size) {
           Index num_names;
           CHECK_RESULT(ReadIndex(&num_names, "name count"));
           CALLBACK(OnFunctionNamesCount, num_names);
+          Index last_function_index = kInvalidIndex;
+
           for (Index j = 0; j < num_names; ++j) {
             Index function_index;
             StringSlice function_name;
 
             CHECK_RESULT(ReadIndex(&function_index, "function index"));
+            ERROR_UNLESS(function_index != last_function_index,
+                         "duplicate function name: %u", function_index);
+            ERROR_UNLESS(last_function_index == kInvalidIndex ||
+                             function_index > last_function_index,
+                         "function index out of order: %u", function_index);
+            last_function_index = function_index;
             ERROR_UNLESS(function_index < NumTotalFuncs(),
                          "invalid function index: %" PRIindex, function_index);
             CHECK_RESULT(ReadStr(&function_name, "function name"));
@@ -1039,19 +1047,32 @@ Result BinaryReader::ReadNamesSection(Offset section_size) {
           Index num_funcs;
           CHECK_RESULT(ReadIndex(&num_funcs, "function count"));
           CALLBACK(OnLocalNameFunctionCount, num_funcs);
+          Index last_function_index = kInvalidIndex;
           for (Index j = 0; j < num_funcs; ++j) {
             Index function_index;
             CHECK_RESULT(ReadIndex(&function_index, "function index"));
             ERROR_UNLESS(function_index < NumTotalFuncs(),
                          "invalid function index: %u", function_index);
+            ERROR_UNLESS(last_function_index == kInvalidIndex ||
+                             function_index > last_function_index,
+                         "locals function index out of order: %u",
+                         function_index);
+            last_function_index = function_index;
             Index num_locals;
             CHECK_RESULT(ReadIndex(&num_locals, "local count"));
             CALLBACK(OnLocalNameLocalCount, function_index, num_locals);
+            Index last_local_index = kInvalidIndex;
             for (Index k = 0; k < num_locals; ++k) {
               Index local_index;
               StringSlice local_name;
 
               CHECK_RESULT(ReadIndex(&local_index, "named index"));
+              ERROR_UNLESS(local_index != last_local_index,
+                           "duplicate local index: %u", local_index);
+              ERROR_UNLESS(last_local_index == kInvalidIndex ||
+                               local_index > last_local_index,
+                           "local index out of order: %u", local_index);
+              last_local_index = local_index;
               CHECK_RESULT(ReadStr(&local_name, "name"));
               CALLBACK(OnLocalName, function_index, local_index, local_name);
             }
