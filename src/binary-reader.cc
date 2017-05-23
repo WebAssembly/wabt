@@ -40,10 +40,12 @@
       return Result::Error; \
   } while (0)
 
-#define ERROR_UNLESS(expr, ...)    \
-  do {                             \
-    if (!(expr))                   \
-      return OnError(__VA_ARGS__); \
+#define ERROR_UNLESS(expr, ...) \
+  do {                          \
+    if (!(expr)) {              \
+      PrintError(__VA_ARGS__);  \
+      return Result::Error;     \
+    }                           \
   } while (0)
 
 #define CALLBACK0(member)                                   \
@@ -152,7 +154,7 @@ class BinaryReader {
   Result ReadModule();
 
  private:
-  Result WABT_PRINTF_FORMAT(2, 3) OnError(const char* format, ...);
+  void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
   Result ReadU8(uint8_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadU32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadF32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
@@ -230,7 +232,8 @@ BinaryReader::BinaryReader(const void* data,
   delegate->OnSetState(&state_);
 }
 
-Result WABT_PRINTF_FORMAT(2, 3) BinaryReader::OnError(const char* format, ...) {
+void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
+                                                       ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   bool handled = delegate_->OnError(buffer);
 
@@ -238,12 +241,12 @@ Result WABT_PRINTF_FORMAT(2, 3) BinaryReader::OnError(const char* format, ...) {
     /* Not great to just print, but we don't want to eat the error either. */
     fprintf(stderr, "*ERROR*: @0x%08zx: %s\n", state_.offset, buffer);
   }
-  return Result::Error;
 }
 
 #define IN_SIZE(type)                                           \
   if (state_.offset + sizeof(type) > read_end_) {               \
-    return OnError("unable to read " #type ": %s", desc);       \
+    PrintError("unable to read " #type ": %s", desc);           \
+    return Result::Error;                                       \
   }                                                             \
   memcpy(out_value, state_.data + state_.offset, sizeof(type)); \
   state_.offset += sizeof(type);                                \
@@ -331,14 +334,16 @@ Result BinaryReader::ReadI64Leb128(uint64_t* out_value, const char* desc) {
     int top_bits = p[9] & 0xfe;
     if ((sign_bit_set && top_bits != 0x7e) ||
         (!sign_bit_set && top_bits != 0)) {
-      return OnError("invalid i64 leb128: %s", desc);
+      PrintError("invalid i64 leb128: %s", desc);
+      return Result::Error;
     }
     uint64_t result = LEB128_10(uint64_t);
     *out_value = result;
     state_.offset += 10;
   } else {
     /* past the end */
-    return OnError("unable to read i64 leb128: %s", desc);
+    PrintError("unable to read i64 leb128: %s", desc);
+    return Result::Error;
   }
   return Result::Ok;
 }
@@ -493,8 +498,9 @@ Result BinaryReader::ReadInitExpr(Index index) {
       return Result::Ok;
 
     default:
-      return OnError("unexpected opcode in initializer expression: %d (0x%x)",
-                     opcode, opcode);
+      PrintError("unexpected opcode in initializer expression: %d (0x%x)",
+                 opcode, opcode);
+      return Result::Error;
   }
 
   CHECK_RESULT(ReadU8(&opcode, "opcode"));
@@ -975,8 +981,9 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       default:
-        return OnError("unexpected opcode: %d (0x%x)", static_cast<int>(opcode),
-                       static_cast<unsigned>(opcode));
+        PrintError("unexpected opcode: %d (0x%x)", static_cast<int>(opcode),
+                   static_cast<unsigned>(opcode));
+        return Result::Error;
     }
   }
   ERROR_UNLESS(state_.offset == end_offset,
@@ -995,16 +1002,16 @@ Result BinaryReader::ReadNamesSection(Offset section_size) {
     Offset subsection_size;
     CHECK_RESULT(ReadU32Leb128(&name_type, "name type"));
     if (i != 0) {
-      if (name_type == previous_subsection_type)
-        return OnError("duplicate sub-section");
-      if (name_type < previous_subsection_type)
-        return OnError("out-of-order sub-section");
+      ERROR_UNLESS(name_type != previous_subsection_type,
+                   "duplicate sub-section");
+      ERROR_UNLESS(name_type >= previous_subsection_type,
+                   "out-of-order sub-section");
     }
     previous_subsection_type = name_type;
     CHECK_RESULT(ReadOffset(&subsection_size, "subsection size"));
     size_t subsection_end = state_.offset + subsection_size;
-    if (subsection_end > read_end_)
-      return OnError("invalid sub-section size: extends past end");
+    ERROR_UNLESS(subsection_end <= read_end_,
+                 "invalid sub-section size: extends past end");
     read_end_ = subsection_end;
 
     switch (static_cast<NameSectionSubsection>(name_type)) {
@@ -1057,10 +1064,9 @@ Result BinaryReader::ReadNamesSection(Offset section_size) {
         break;
     }
     ++i;
-    if (state_.offset != subsection_end) {
-      return OnError("unfinished sub-section (expected end: 0x%" PRIzx ")",
-                     subsection_end);
-    }
+    ERROR_UNLESS(state_.offset == subsection_end,
+                 "unfinished sub-section (expected end: 0x%" PRIzx ")",
+                 subsection_end);
     read_end_ = previous_read_end;
   }
   CALLBACK0(EndNamesSection);
@@ -1226,7 +1232,8 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       }
 
       default:
-        return OnError("invalid import kind: %d", kind);
+        PrintError("invalid import kind: %d", kind);
+        return Result::Error;
     }
   }
   CALLBACK0(EndImportSection);
@@ -1455,19 +1462,20 @@ Result BinaryReader::ReadSections() {
     CHECK_RESULT(ReadOffset(&section_size, "section size"));
     read_end_ = state_.offset + section_size;
     if (section_code >= kBinarySectionCount) {
-      return OnError("invalid section code: %u; max is %u", section_code,
-                     kBinarySectionCount - 1);
+      PrintError("invalid section code: %u; max is %u", section_code,
+                 kBinarySectionCount - 1);
+      return Result::Error;
     }
 
     BinarySection section = static_cast<BinarySection>(section_code);
 
-    if (read_end_ > state_.size)
-      return OnError("invalid section size: extends past end");
+    ERROR_UNLESS(read_end_ <= state_.size,
+                 "invalid section size: extends past end");
 
-    if (last_known_section_ != BinarySection::Invalid &&
-        section != BinarySection::Custom && section <= last_known_section_) {
-      return OnError("section %s out of order", get_section_name(section));
-    }
+    ERROR_UNLESS(last_known_section_ == BinarySection::Invalid ||
+                     section == BinarySection::Custom ||
+                     section > last_known_section_,
+                 "section %s out of order", get_section_name(section));
 
     CALLBACK(BeginSection, section, section_size);
 
@@ -1486,10 +1494,8 @@ Result BinaryReader::ReadSections() {
 
 #undef V
 
-    if (state_.offset != read_end_) {
-      return OnError("unfinished section (expected end: 0x%" PRIzx ")",
-                     read_end_);
-    }
+    ERROR_UNLESS(state_.offset == read_end_,
+                 "unfinished section (expected end: 0x%" PRIzx ")", read_end_);
 
     if (section != BinarySection::Custom)
       last_known_section_ = section;
