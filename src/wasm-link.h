@@ -99,10 +99,18 @@ struct Section {
 typedef std::vector<Section*> SectionPtrVector;
 
 class LinkerInputBinary {
-public:
+ public:
   WABT_DISALLOW_COPY_AND_ASSIGN(LinkerInputBinary);
   LinkerInputBinary(const char* filename, uint8_t* data, size_t size);
   ~LinkerInputBinary();
+
+  Index RelocateFuncIndex(Index findex);
+  Index RelocateTypeIndex(Index index);
+  Index RelocateGlobalIndex(Index index);
+
+  bool IsValidFunctionIndex(Index index);
+  bool IsFunctionImport(Index index);
+  bool IsInactiveFunctionImport(Index index);
 
   const char* filename;
   uint8_t* data;
@@ -128,14 +136,6 @@ public:
   Index function_count;
 
   std::vector<std::string> debug_names;
-
-  Index RelocateFuncIndex(Index findex);
-  Index RelocateTypeIndex(Index index);
-  Index RelocateGlobalIndex(Index index);
-
-  bool IsValidFunctionIndex(Index index);
-  bool IsFunctionImport(Index index);
-  bool IsInactiveFunctionImport(Index index);
 };
 
 }  // namespace link

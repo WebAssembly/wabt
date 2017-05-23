@@ -168,9 +168,8 @@ bool LinkerInputBinary::IsValidFunctionIndex(Index index) {
 }
 
 Index LinkerInputBinary::RelocateFuncIndex(Index function_index) {
-  assert(IsValidFunctionIndex(function_index));
   Index offset;
-  if (function_index >= function_imports.size()) {
+  if (!IsFunctionImport(function_index)) {
     /* locally declared function call */
     offset = function_index_offset;
     if (s_debug)
