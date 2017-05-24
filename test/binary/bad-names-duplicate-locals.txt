@@ -13,22 +13,22 @@ section(CODE) {
 }
 section("name") {
   subsection[1]
-  length[6]
+  length[5]
   func_count[1]
   index[0]
-  str("$F0")
+  str("F0")
   subsection[2]
-  length[13]
+  length[11]
   func_count[1]
   index[0]
   local_count[2]
   index[0]
-  str("$L0")
+  str("L0")
   index[0]
-  str("$L1")
+  str("L1")
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000037: duplicate local index: 0
+error: @0x00000035: duplicate local index: 0
 
 ;;; STDERR ;;)
