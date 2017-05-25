@@ -52,17 +52,17 @@ def main(args):
       '-v': options.verbose,
   })
 
-  wasmopcodecnt = utils.Executable(
+  wasm_opcodecnt = utils.Executable(
       find_exe.GetWasmOpcodeCntExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
   wast2wasm.verbose = options.print_cmd
-  wasmopcodecnt.verbose = options.print_cmd
+  wasm_opcodecnt.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-opcodecnt-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
     wast2wasm.RunWithArgs(options.file, '-o', out_file)
-    wasmopcodecnt.RunWithArgs(out_file)
+    wasm_opcodecnt.RunWithArgs(out_file)
 
   return 0
 

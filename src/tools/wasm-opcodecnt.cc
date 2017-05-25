@@ -26,7 +26,7 @@
 #include "option-parser.h"
 #include "stream.h"
 
-#define PROGRAM_NAME "wasmopcodecnt"
+#define PROGRAM_NAME "wasm-opcodecnt"
 
 #define ERROR(fmt, ...) \
   fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
@@ -62,7 +62,7 @@ static const char s_description[] =
     "\n"
     "examples:\n"
     "  # parse binary file test.wasm and write pcode dist file test.dist\n"
-    "  $ wasmopcodecnt test.wasm -o test.dist\n";
+    "  $ wasm-opcodecnt test.wasm -o test.dist\n";
 
 static Option s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,

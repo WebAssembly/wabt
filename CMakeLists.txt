@@ -283,7 +283,7 @@ if (NOT EMSCRIPTEN)
   # wasm2wast
   wabt_executable(wasm2wast src/tools/wasm2wast.cc)
 
-  # wasmopcodecnt
+  # wasm-opcodecnt
   wabt_executable(wasm-opcodecnt
     src/tools/wasm-opcodecnt.cc src/binary-reader-opcnt.cc)
 
