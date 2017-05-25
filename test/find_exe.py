@@ -30,7 +30,7 @@ EXECUTABLES = [
 
 
 def GetDefaultPath():
-  return os.path.join(REPO_ROOT_DIR, 'out')
+  return os.path.join(REPO_ROOT_DIR, 'bin')
 
 
 def GetDefaultExe(basename):
