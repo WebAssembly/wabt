@@ -30,7 +30,6 @@
 #include "option-parser.h"
 #include "stream.h"
 
-#define INSTRUCTION_QUANTUM 1000
 #define PROGRAM_NAME "wasm-interp"
 
 using namespace wabt;
@@ -44,7 +43,7 @@ static int s_verbose;
 static const char* s_infile;
 static ReadBinaryOptions s_read_binary_options =
     WABT_READ_BINARY_OPTIONS_DEFAULT;
-static ThreadOptions s_thread_options = WABT_INTERPRETER_THREAD_OPTIONS_DEFAULT;
+static Thread::Options s_thread_options;
 static bool s_trace;
 static bool s_spec;
 static bool s_run_all_exports;
@@ -271,79 +270,13 @@ static void print_call(StringSlice module_name,
   }
 }
 
-static interpreter::Result run_defined_function(Thread* thread,
-                                                IstreamOffset offset) {
-  thread->pc = offset;
-  interpreter::Result iresult = interpreter::Result::Ok;
-  int quantum = s_trace ? 1 : INSTRUCTION_QUANTUM;
-  IstreamOffset* call_stack_return_top = thread->call_stack_top;
-  while (iresult == interpreter::Result::Ok) {
-    if (s_trace)
-      trace_pc(thread, s_stdout_stream.get());
-    iresult = run_interpreter(thread, quantum, call_stack_return_top);
-  }
-  if (iresult != interpreter::Result::Returned)
-    return iresult;
-  /* use OK instead of RETURNED for consistency */
-  return interpreter::Result::Ok;
-}
-
-static interpreter::Result push_args(Thread* thread,
-                                     const FuncSignature* sig,
-                                     const std::vector<TypedValue>& args) {
-  if (sig->param_types.size() != args.size())
-    return interpreter::Result::ArgumentTypeMismatch;
-
-  for (size_t i = 0; i < sig->param_types.size(); ++i) {
-    if (sig->param_types[i] != args[i].type)
-      return interpreter::Result::ArgumentTypeMismatch;
-
-    interpreter::Result iresult = push_thread_value(thread, args[i].value);
-    if (iresult != interpreter::Result::Ok) {
-      thread->value_stack_top = thread->value_stack.data();
-      return iresult;
-    }
-  }
-  return interpreter::Result::Ok;
-}
-
-static void copy_results(Thread* thread,
-                         const FuncSignature* sig,
-                         std::vector<TypedValue>* out_results) {
-  size_t expected_results = sig->result_types.size();
-  size_t value_stack_depth =
-      thread->value_stack_top - thread->value_stack.data();
-  WABT_USE(value_stack_depth);
-  assert(expected_results == value_stack_depth);
-
-  out_results->clear();
-  for (size_t i = 0; i < expected_results; ++i)
-    out_results->emplace_back(sig->result_types[i], thread->value_stack[i]);
-}
-
 static interpreter::Result run_function(Thread* thread,
                                         Index func_index,
                                         const std::vector<TypedValue>& args,
                                         std::vector<TypedValue>* out_results) {
-  assert(func_index < thread->env->funcs.size());
-  Func* func = thread->env->funcs[func_index].get();
-  Index sig_index = func->sig_index;
-  assert(sig_index < thread->env->sigs.size());
-  FuncSignature* sig = &thread->env->sigs[sig_index];
-
-  interpreter::Result iresult = push_args(thread, sig, args);
-  if (iresult == interpreter::Result::Ok) {
-    iresult = func->is_host
-                  ? call_host(thread, func->as_host())
-                  : run_defined_function(thread, func->as_defined()->offset);
-    if (iresult == interpreter::Result::Ok)
-      copy_results(thread, sig, out_results);
-  }
-
-  /* Always reset the value and call stacks */
-  thread->value_stack_top = thread->value_stack.data();
-  thread->call_stack_top = thread->call_stack.data();
-  return iresult;
+  return s_trace ? thread->TraceFunction(func_index, s_stdout_stream.get(),
+                                         args, out_results)
+                 : thread->RunFunction(func_index, args, out_results);
 }
 
 static interpreter::Result run_start_function(Thread* thread,
@@ -381,7 +314,7 @@ static interpreter::Result run_export_by_name(
     const std::vector<TypedValue>& args,
     std::vector<TypedValue>* out_results,
     RunVerbosity verbose) {
-  Export* export_ = get_export_by_name(module, name);
+  Export* export_ = module->GetExport(*name);
   if (!export_)
     return interpreter::Result::UnknownExport;
   if (export_->kind != ExternalKind::Func)
@@ -394,13 +327,13 @@ static interpreter::Result get_global_export_by_name(
     Module* module,
     const StringSlice* name,
     std::vector<TypedValue>* out_results) {
-  Export* export_ = get_export_by_name(module, name);
+  Export* export_ = module->GetExport(*name);
   if (!export_)
     return interpreter::Result::UnknownExport;
   if (export_->kind != ExternalKind::Global)
     return interpreter::Result::ExportKindMismatch;
 
-  Global* global = &thread->env->globals[export_->index];
+  Global* global = thread->env()->GetGlobal(export_->index);
   out_results->clear();
   out_results->push_back(global->typed_value);
   return interpreter::Result::Ok;
@@ -436,7 +369,7 @@ static wabt::Result read_module(const char* module_filename,
 
     if (WABT_SUCCEEDED(result)) {
       if (s_verbose)
-        disassemble_module(env, s_stdout_stream.get(), *out_module);
+        env->DisassembleModule(s_stdout_stream.get(), *out_module);
     }
     delete[] data;
   }
@@ -564,7 +497,7 @@ static wabt::Result spectest_import_global(Import* import,
 
 static void init_environment(Environment* env) {
   HostModule* host_module =
-      append_host_module(env, string_slice_from_cstr("spectest"));
+      env->AppendHostModule(string_slice_from_cstr("spectest"));
   host_module->import_delegate.import_func = spectest_import_func;
   host_module->import_delegate.import_table = spectest_import_table;
   host_module->import_delegate.import_memory = spectest_import_memory;
@@ -574,14 +507,13 @@ static void init_environment(Environment* env) {
 static wabt::Result read_and_run_module(const char* module_filename) {
   wabt::Result result;
   Environment env;
-  DefinedModule* module = nullptr;
-  Thread thread;
-  BinaryErrorHandlerFile error_handler;
-
   init_environment(&env);
-  init_thread(&env, &thread, &s_thread_options);
+
+  BinaryErrorHandlerFile error_handler;
+  DefinedModule* module = nullptr;
   result = read_module(module_filename, &env, &error_handler, &module);
   if (WABT_SUCCEEDED(result)) {
+    Thread thread(&env, s_thread_options);
     interpreter::Result iresult = run_start_function(&thread, module);
     if (iresult == interpreter::Result::Ok) {
       if (s_run_all_exports)
@@ -597,7 +529,8 @@ static wabt::Result read_and_run_module(const char* module_filename) {
  * format from wast2wasm. */
 struct Context {
   Context()
-      : last_module(nullptr),
+      : thread(&env, s_thread_options),
+        last_module(nullptr),
         json_data(nullptr),
         json_data_size(0),
         json_offset(0),
@@ -1002,13 +935,13 @@ static wabt::Result on_module_command(Context* ctx,
                                       StringSlice filename,
                                       StringSlice name) {
   char* path = create_module_path(ctx, filename);
-  EnvironmentMark mark = mark_environment(&ctx->env);
+  Environment::MarkPoint mark = ctx->env.Mark();
   BinaryErrorHandlerFile error_handler;
   wabt::Result result =
       read_module(path, &ctx->env, &error_handler, &ctx->last_module);
 
   if (WABT_FAILED(result)) {
-    reset_environment_to_mark(&ctx->env, mark);
+    ctx->env.ResetToMarkPoint(mark);
     print_command_error(ctx, "error reading module: \"%s\"", path);
     delete[] path;
     return wabt::Result::Error;
@@ -1019,15 +952,15 @@ static wabt::Result on_module_command(Context* ctx,
   interpreter::Result iresult =
       run_start_function(&ctx->thread, ctx->last_module);
   if (iresult != interpreter::Result::Ok) {
-    reset_environment_to_mark(&ctx->env, mark);
+    ctx->env.ResetToMarkPoint(mark);
     print_interpreter_result("error running start function", iresult);
     return wabt::Result::Error;
   }
 
   if (!string_slice_is_empty(&name)) {
     ctx->last_module->name = dup_string_slice(name);
-    ctx->env.module_bindings.emplace(string_slice_to_string(name),
-                                     Binding(ctx->env.modules.size() - 1));
+    ctx->env.EmplaceModuleBinding(string_slice_to_string(name),
+                                  Binding(ctx->env.GetModuleCount() - 1));
   }
   return wabt::Result::Ok;
 }
@@ -1039,15 +972,13 @@ static wabt::Result run_action(Context* ctx,
                                RunVerbosity verbose) {
   out_results->clear();
 
-  int module_index;
+  Module* module;
   if (!string_slice_is_empty(&action->module_name)) {
-    module_index = ctx->env.module_bindings.find_index(action->module_name);
+    module = ctx->env.FindModule(action->module_name);
   } else {
-    module_index = static_cast<int>(ctx->env.modules.size()) - 1;
+    module = ctx->env.GetLastModule();
   }
-
-  assert(module_index < static_cast<int>(ctx->env.modules.size()));
-  Module* module = ctx->env.modules[module_index].get();
+  assert(module);
 
   switch (action->type) {
     case ActionType::Invoke:
@@ -1132,32 +1063,20 @@ static wabt::Result on_assert_malformed_command(Context* ctx,
 static wabt::Result on_register_command(Context* ctx,
                                         StringSlice name,
                                         StringSlice as) {
-  int module_index;
+  Index module_index;
   if (!string_slice_is_empty(&name)) {
-    /* The module names can be different than their registered names. We don't
-     * keep a hash for the module names (just the registered names), so we'll
-     * just iterate over all the modules to find it. */
-    module_index = -1;
-    for (size_t i = 0; i < ctx->env.modules.size(); ++i) {
-      const StringSlice* module_name = &ctx->env.modules[i]->name;
-      if (!string_slice_is_empty(module_name) &&
-          string_slices_are_equal(&name, module_name)) {
-        module_index = static_cast<int>(i);
-        break;
-      }
-    }
+    module_index = ctx->env.FindModuleIndex(name);
   } else {
-    module_index = static_cast<int>(ctx->env.modules.size()) - 1;
+    module_index = ctx->env.GetLastModuleIndex();
   }
 
-  if (module_index < 0 ||
-      module_index >= static_cast<int>(ctx->env.modules.size())) {
+  if (module_index == kInvalidIndex) {
     print_command_error(ctx, "unknown module in register");
     return wabt::Result::Error;
   }
 
-  ctx->env.registered_module_bindings.emplace(string_slice_to_string(as),
-                                              Binding(module_index));
+  ctx->env.EmplaceRegisteredModuleBinding(string_slice_to_string(as),
+                                          Binding(module_index));
   return wabt::Result::Ok;
 }
 
@@ -1169,9 +1088,9 @@ static wabt::Result on_assert_unlinkable_command(Context* ctx,
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   DefinedModule* module;
-  EnvironmentMark mark = mark_environment(&ctx->env);
+  Environment::MarkPoint mark = ctx->env.Mark();
   wabt::Result result = read_module(path, &ctx->env, &error_handler, &module);
-  reset_environment_to_mark(&ctx->env, mark);
+  ctx->env.ResetToMarkPoint(mark);
 
   if (WABT_FAILED(result)) {
     ctx->passed++;
@@ -1215,7 +1134,7 @@ static wabt::Result on_assert_uninstantiable_command(Context* ctx,
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   DefinedModule* module;
-  EnvironmentMark mark = mark_environment(&ctx->env);
+  Environment::MarkPoint mark = ctx->env.Mark();
   wabt::Result result = read_module(path, &ctx->env, &error_handler, &module);
 
   if (WABT_SUCCEEDED(result)) {
@@ -1233,7 +1152,7 @@ static wabt::Result on_assert_uninstantiable_command(Context* ctx,
     result = wabt::Result::Error;
   }
 
-  reset_environment_to_mark(&ctx->env, mark);
+  ctx->env.ResetToMarkPoint(mark);
   delete[] path;
   return result;
 }
@@ -1596,7 +1515,6 @@ static wabt::Result read_and_run_spec_json(const char* spec_json_filename) {
   ctx.loc.line = 1;
   ctx.loc.first_column = 1;
   init_environment(&ctx.env);
-  init_thread(&ctx.env, &ctx.thread, &s_thread_options);
 
   char* data;
   size_t size;

@@ -45,15 +45,50 @@ static const char* get_opcode_name(Opcode opcode) {
   return s_opcode_name[static_cast<int>(opcode)];
 }
 
-Environment::Environment() : istream(new OutputBuffer()) {}
+Environment::Environment() : istream_(new OutputBuffer()) {}
 
-Thread::Thread()
-    : env(nullptr),
-      value_stack_top(nullptr),
-      value_stack_end(nullptr),
-      call_stack_top(nullptr),
-      call_stack_end(nullptr),
-      pc(0) {}
+Index Environment::FindModuleIndex(StringSlice name) const {
+  auto iter = module_bindings_.find(string_slice_to_string(name));
+  if (iter == module_bindings_.end())
+    return kInvalidIndex;
+  return iter->second.index;
+}
+
+Module* Environment::FindModule(StringSlice name) {
+  Index index = FindModuleIndex(name);
+  return index == kInvalidIndex ? nullptr : modules_[index].get();
+}
+
+Module* Environment::FindRegisteredModule(StringSlice name) {
+  auto iter = registered_module_bindings_.find(string_slice_to_string(name));
+  if (iter == registered_module_bindings_.end())
+    return nullptr;
+  return modules_[iter->second.index].get();
+}
+
+Thread::Options::Options(uint32_t value_stack_size,
+                         uint32_t call_stack_size,
+                         IstreamOffset pc)
+    : value_stack_size(value_stack_size),
+      call_stack_size(call_stack_size),
+      pc(pc) {}
+
+Thread::Thread(Environment* env, const Options& options)
+    : env_(env),
+      value_stack_(options.value_stack_size),
+      call_stack_(options.call_stack_size),
+      value_stack_top_(value_stack_.data()),
+      value_stack_end_(value_stack_.data() + value_stack_.size()),
+      call_stack_top_(call_stack_.data()),
+      call_stack_end_(call_stack_.data() + call_stack_.size()),
+      pc_(options.pc) {}
+
+FuncSignature::FuncSignature(Index param_count,
+                             Type* param_types,
+                             Index result_count,
+                             Type* result_types)
+    : param_types(param_types, param_types + param_count),
+      result_types(result_types, result_types + result_count) {}
 
 Import::Import() : kind(ExternalKind::Func) {
   WABT_ZERO_MEMORY(module_name);
@@ -128,91 +163,103 @@ Module::~Module() {
   destroy_string_slice(&name);
 }
 
-DefinedModule::DefinedModule(size_t istream_start)
+Export* Module::GetExport(StringSlice name) {
+  int field_index = export_bindings.find_index(name);
+  if (field_index < 0)
+    return nullptr;
+  return &exports[field_index];
+}
+
+DefinedModule::DefinedModule()
     : Module(false),
       start_func_index(kInvalidIndex),
-      istream_start(istream_start),
-      istream_end(istream_start) {}
+      istream_start(kInvalidIstreamOffset),
+      istream_end(kInvalidIstreamOffset) {}
 
 HostModule::HostModule(const StringSlice& name) : Module(name, true) {}
 
-EnvironmentMark mark_environment(Environment* env) {
-  EnvironmentMark mark;
-  WABT_ZERO_MEMORY(mark);
-  mark.modules_size = env->modules.size();
-  mark.sigs_size = env->sigs.size();
-  mark.funcs_size = env->funcs.size();
-  mark.memories_size = env->memories.size();
-  mark.tables_size = env->tables.size();
-  mark.globals_size = env->globals.size();
-  mark.istream_size = env->istream->data.size();
+Environment::MarkPoint Environment::Mark() {
+  MarkPoint mark;
+  mark.modules_size = modules_.size();
+  mark.sigs_size = sigs_.size();
+  mark.funcs_size = funcs_.size();
+  mark.memories_size = memories_.size();
+  mark.tables_size = tables_.size();
+  mark.globals_size = globals_.size();
+  mark.istream_size = istream_->data.size();
   return mark;
 }
 
-void reset_environment_to_mark(Environment* env, EnvironmentMark mark) {
-  /* Destroy entries in the binding hash. */
-  for (size_t i = mark.modules_size; i < env->modules.size(); ++i) {
-    const StringSlice* name = &env->modules[i]->name;
+void Environment::ResetToMarkPoint(const MarkPoint& mark) {
+  // Destroy entries in the binding hash.
+  for (size_t i = mark.modules_size; i < modules_.size(); ++i) {
+    const StringSlice* name = &modules_[i]->name;
     if (!string_slice_is_empty(name))
-      env->module_bindings.erase(string_slice_to_string(*name));
+      module_bindings_.erase(string_slice_to_string(*name));
   }
 
-  /* registered_module_bindings maps from an arbitrary name to a module index,
-   * so we have to iterate through the entire table to find entries to remove.
-   */
-  auto iter = env->registered_module_bindings.begin();
-  while (iter != env->registered_module_bindings.end()) {
+  // registered_module_bindings_ maps from an arbitrary name to a module index,
+  // so we have to iterate through the entire table to find entries to remove.
+  auto iter = registered_module_bindings_.begin();
+  while (iter != registered_module_bindings_.end()) {
     if (iter->second.index >= static_cast<int>(mark.modules_size))
-      iter = env->registered_module_bindings.erase(iter);
+      iter = registered_module_bindings_.erase(iter);
     else
       ++iter;
   }
 
-  env->modules.erase(env->modules.begin() + mark.modules_size,
-                     env->modules.end());
-  env->sigs.erase(env->sigs.begin() + mark.sigs_size, env->sigs.end());
-  env->funcs.erase(env->funcs.begin() + mark.funcs_size, env->funcs.end());
-  env->memories.erase(env->memories.begin() + mark.memories_size,
-                      env->memories.end());
-  env->tables.erase(env->tables.begin() + mark.tables_size, env->tables.end());
-  env->globals.erase(env->globals.begin() + mark.globals_size,
-                     env->globals.end());
-  env->istream->data.resize(mark.istream_size);
+  modules_.erase(modules_.begin() + mark.modules_size, modules_.end());
+  sigs_.erase(sigs_.begin() + mark.sigs_size, sigs_.end());
+  funcs_.erase(funcs_.begin() + mark.funcs_size, funcs_.end());
+  memories_.erase(memories_.begin() + mark.memories_size, memories_.end());
+  tables_.erase(tables_.begin() + mark.tables_size, tables_.end());
+  globals_.erase(globals_.begin() + mark.globals_size, globals_.end());
+  istream_->data.resize(mark.istream_size);
 }
 
-HostModule* append_host_module(Environment* env, StringSlice name) {
+HostModule* Environment::AppendHostModule(StringSlice name) {
   HostModule* module = new HostModule(dup_string_slice(name));
-  env->modules.emplace_back(module);
-  env->registered_module_bindings.emplace(string_slice_to_string(name),
-                                          Binding(env->modules.size() - 1));
+  modules_.emplace_back(module);
+  registered_module_bindings_.emplace(string_slice_to_string(name),
+                                      Binding(modules_.size() - 1));
   return module;
 }
 
-void init_thread(Environment* env, Thread* thread, ThreadOptions* options) {
-  thread->value_stack.resize(options->value_stack_size);
-  thread->call_stack.resize(options->call_stack_size);
-  thread->env = env;
-  thread->value_stack_top = thread->value_stack.data();
-  thread->value_stack_end =
-      thread->value_stack.data() + thread->value_stack.size();
-  thread->call_stack_top = thread->call_stack.data();
-  thread->call_stack_end =
-      thread->call_stack.data() + thread->call_stack.size();
-  thread->pc = options->pc;
-}
-
-Result push_thread_value(Thread* thread, Value value) {
-  if (thread->value_stack_top >= thread->value_stack_end)
+Result Thread::PushValue(Value value) {
+  if (value_stack_top_ >= value_stack_end_)
     return Result::TrapValueStackExhausted;
-  *thread->value_stack_top++ = value;
+  *value_stack_top_++ = value;
   return Result::Ok;
 }
 
-Export* get_export_by_name(Module* module, const StringSlice* name) {
-  int field_index = module->export_bindings.find_index(*name);
-  if (field_index < 0)
-    return nullptr;
-  return &module->exports[field_index];
+Result Thread::PushArgs(const FuncSignature* sig,
+                        const std::vector<TypedValue>& args) {
+  if (sig->param_types.size() != args.size())
+    return interpreter::Result::ArgumentTypeMismatch;
+
+  for (size_t i = 0; i < sig->param_types.size(); ++i) {
+    if (sig->param_types[i] != args[i].type)
+      return interpreter::Result::ArgumentTypeMismatch;
+
+    interpreter::Result iresult = PushValue(args[i].value);
+    if (iresult != interpreter::Result::Ok) {
+      value_stack_top_ = value_stack_.data();
+      return iresult;
+    }
+  }
+  return interpreter::Result::Ok;
+}
+
+void Thread::CopyResults(const FuncSignature* sig,
+                         std::vector<TypedValue>* out_results) {
+  size_t expected_results = sig->result_types.size();
+  size_t value_stack_depth = value_stack_top_ - value_stack_.data();
+  WABT_USE(value_stack_depth);
+  assert(expected_results == value_stack_depth);
+
+  out_results->clear();
+  for (size_t i = 0; i < expected_results; ++i)
+    out_results->emplace_back(sig->result_types[i], value_stack_[i]);
 }
 
 /* 3 32222222 222...00
@@ -470,9 +517,8 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
       TRAP(type);            \
   } while (0)
 
-#define CHECK_STACK()                                         \
-  TRAP_IF(thread->value_stack_top >= thread->value_stack_end, \
-          ValueStackExhausted)
+#define CHECK_STACK() \
+  TRAP_IF(value_stack_top_ >= value_stack_end_, ValueStackExhausted)
 
 #define PUSH_NEG_1_AND_BREAK_IF(cond) \
   if (WABT_UNLIKELY(cond)) {          \
@@ -480,17 +526,17 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
     break;                            \
   }
 
-#define PUSH(v)                         \
-  do {                                  \
-    CHECK_STACK();                      \
-    (*thread->value_stack_top++) = (v); \
+#define PUSH(v)                  \
+  do {                           \
+    CHECK_STACK();               \
+    (*value_stack_top_++) = (v); \
   } while (0)
 
-#define PUSH_TYPE(type, v)                                \
-  do {                                                    \
-    CHECK_STACK();                                        \
-    (*thread->value_stack_top++).TYPE_FIELD_NAME_##type = \
-        static_cast<VALUE_TYPE_##type>(v);                \
+#define PUSH_TYPE(type, v)                         \
+  do {                                             \
+    CHECK_STACK();                                 \
+    (*value_stack_top_++).TYPE_FIELD_NAME_##type = \
+        static_cast<VALUE_TYPE_##type>(v);         \
   } while (0)
 
 #define PUSH_I32(v) PUSH_TYPE(I32, (v))
@@ -498,35 +544,34 @@ DEFINE_BITCAST(bitcast_u64_to_f64, uint64_t, double)
 #define PUSH_F32(v) PUSH_TYPE(F32, (v))
 #define PUSH_F64(v) PUSH_TYPE(F64, (v))
 
-#define PICK(depth) (*(thread->value_stack_top - (depth)))
+#define PICK(depth) (*(value_stack_top_ - (depth)))
 #define TOP() (PICK(1))
-#define POP() (*--thread->value_stack_top)
+#define POP() (*--value_stack_top_)
 #define POP_I32() (POP().i32)
 #define POP_I64() (POP().i64)
 #define POP_F32() (POP().f32_bits)
 #define POP_F64() (POP().f64_bits)
-#define DROP_KEEP(drop, keep)          \
-  do {                                 \
-    assert((keep) <= 1);               \
-    if ((keep) == 1)                   \
-      PICK((drop) + 1) = TOP();        \
-    thread->value_stack_top -= (drop); \
+#define DROP_KEEP(drop, keep)   \
+  do {                          \
+    assert((keep) <= 1);        \
+    if ((keep) == 1)            \
+      PICK((drop) + 1) = TOP(); \
+    value_stack_top_ -= (drop); \
   } while (0)
 
 #define GOTO(offset) pc = &istream[offset]
 
-#define PUSH_CALL()                                           \
-  do {                                                        \
-    TRAP_IF(thread->call_stack_top >= thread->call_stack_end, \
-            CallStackExhausted);                              \
-    (*thread->call_stack_top++) = (pc - istream);             \
+#define PUSH_CALL()                                                  \
+  do {                                                               \
+    TRAP_IF(call_stack_top_ >= call_stack_end_, CallStackExhausted); \
+    (*call_stack_top_++) = (pc - istream);                           \
   } while (0)
 
-#define POP_CALL() (*--thread->call_stack_top)
+#define POP_CALL() (*--call_stack_top_)
 
 #define GET_MEMORY(var)               \
   Index memory_index = read_u32(&pc); \
-  Memory* var = &env->memories[memory_index]
+  Memory* var = &env_->memories_[memory_index]
 
 #define LOAD(type, mem_type)                                              \
   do {                                                                    \
@@ -738,19 +783,90 @@ static WABT_INLINE void read_table_entry_at(const uint8_t* pc,
   *out_keep = *(pc + WABT_TABLE_ENTRY_KEEP_OFFSET);
 }
 
-bool func_signatures_are_equal(Environment* env,
-                               Index sig_index_0,
-                               Index sig_index_1) {
+bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
+                                         Index sig_index_1) const {
   if (sig_index_0 == sig_index_1)
     return true;
-  FuncSignature* sig_0 = &env->sigs[sig_index_0];
-  FuncSignature* sig_1 = &env->sigs[sig_index_1];
+  const FuncSignature* sig_0 = &sigs_[sig_index_0];
+  const FuncSignature* sig_1 = &sigs_[sig_index_1];
   return sig_0->param_types == sig_1->param_types &&
          sig_0->result_types == sig_1->result_types;
 }
 
-Result call_host(Thread* thread, HostFunc* func) {
-  FuncSignature* sig = &thread->env->sigs[func->sig_index];
+Result Thread::RunFunction(Index func_index,
+                           const std::vector<TypedValue>& args,
+                           std::vector<TypedValue>* out_results) {
+  Func* func = env_->GetFunc(func_index);
+  FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
+
+  Result result = PushArgs(sig, args);
+  if (result == Result::Ok) {
+    result = func->is_host ? CallHost(func->as_host())
+                           : RunDefinedFunction(func->as_defined()->offset);
+    if (result == Result::Ok)
+      CopyResults(sig, out_results);
+  }
+
+  // Always reset the value and call stacks.
+  value_stack_top_ = value_stack_.data();
+  call_stack_top_ = call_stack_.data();
+  return result;
+}
+
+Result Thread::TraceFunction(Index func_index,
+                             Stream* stream,
+                             const std::vector<TypedValue>& args,
+                             std::vector<TypedValue>* out_results) {
+  Func* func = env_->GetFunc(func_index);
+  FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
+
+  Result result = PushArgs(sig, args);
+  if (result == Result::Ok) {
+    result = func->is_host
+                 ? CallHost(func->as_host())
+                 : TraceDefinedFunction(func->as_defined()->offset, stream);
+    if (result == Result::Ok)
+      CopyResults(sig, out_results);
+  }
+
+  // Always reset the value and call stacks.
+  value_stack_top_ = value_stack_.data();
+  call_stack_top_ = call_stack_.data();
+  return result;
+}
+
+Result Thread::RunDefinedFunction(IstreamOffset function_offset) {
+  const int kNumInstructions = 1000;
+  Result result = Result::Ok;
+  pc_ = function_offset;
+  IstreamOffset* call_stack_return_top = call_stack_top_;
+  while (result == Result::Ok) {
+    result = Run(kNumInstructions, call_stack_return_top);
+  }
+  if (result != Result::Returned)
+    return result;
+  // Use OK instead of RETURNED for consistency.
+  return Result::Ok;
+}
+
+Result Thread::TraceDefinedFunction(IstreamOffset function_offset,
+                                    Stream* stream) {
+  const int kNumInstructions = 1;
+  Result result = Result::Ok;
+  pc_ = function_offset;
+  IstreamOffset* call_stack_return_top = call_stack_top_;
+  while (result == Result::Ok) {
+    Trace(stream);
+    result = Run(kNumInstructions, call_stack_return_top);
+  }
+  if (result != Result::Returned)
+    return result;
+  // Use OK instead of RETURNED for consistency.
+  return Result::Ok;
+}
+
+Result Thread::CallHost(HostFunc* func) {
+  FuncSignature* sig = &env_->sigs_[func->sig_index];
 
   size_t num_params = sig->param_types.size();
   size_t num_results = sig->result_types.size();
@@ -777,16 +893,12 @@ Result call_host(Thread* thread, HostFunc* func) {
   return Result::Ok;
 }
 
-Result run_interpreter(Thread* thread,
-                       int num_instructions,
-                       IstreamOffset* call_stack_return_top) {
+Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
   Result result = Result::Ok;
-  assert(call_stack_return_top < thread->call_stack_end);
+  assert(call_stack_return_top < call_stack_end_);
 
-  Environment* env = thread->env;
-
-  const uint8_t* istream = env->istream->data.data();
-  const uint8_t* pc = &istream[thread->pc];
+  const uint8_t* istream = env_->istream_->data.data();
+  const uint8_t* pc = &istream[pc_];
   for (int i = 0; i < num_instructions; ++i) {
     Opcode opcode = static_cast<Opcode>(*pc++);
     switch (opcode) {
@@ -826,7 +938,7 @@ Result run_interpreter(Thread* thread,
       }
 
       case Opcode::Return:
-        if (thread->call_stack_top == call_stack_return_top) {
+        if (call_stack_top_ == call_stack_return_top) {
           result = Result::Returned;
           goto exit_loop;
         }
@@ -855,15 +967,15 @@ Result run_interpreter(Thread* thread,
 
       case Opcode::GetGlobal: {
         Index index = read_u32(&pc);
-        assert(index < env->globals.size());
-        PUSH(env->globals[index].typed_value.value);
+        assert(index < env_->globals_.size());
+        PUSH(env_->globals_[index].typed_value.value);
         break;
       }
 
       case Opcode::SetGlobal: {
         Index index = read_u32(&pc);
-        assert(index < env->globals.size());
-        env->globals[index].typed_value.value = POP();
+        assert(index < env_->globals_.size());
+        env_->globals_[index].typed_value.value = POP();
         break;
       }
 
@@ -892,17 +1004,17 @@ Result run_interpreter(Thread* thread,
 
       case Opcode::CallIndirect: {
         Index table_index = read_u32(&pc);
-        Table* table = &env->tables[table_index];
+        Table* table = &env_->tables_[table_index];
         Index sig_index = read_u32(&pc);
         VALUE_TYPE_I32 entry_index = POP_I32();
         TRAP_IF(entry_index >= table->func_indexes.size(), UndefinedTableIndex);
         Index func_index = table->func_indexes[entry_index];
         TRAP_IF(func_index == kInvalidIndex, UninitializedTableElement);
-        Func* func = env->funcs[func_index].get();
-        TRAP_UNLESS(func_signatures_are_equal(env, func->sig_index, sig_index),
+        Func* func = env_->funcs_[func_index].get();
+        TRAP_UNLESS(env_->FuncSignaturesAreEqual(func->sig_index, sig_index),
                     IndirectCallSignatureMismatch);
         if (func->is_host) {
-          call_host(thread, func->as_host());
+          CallHost(func->as_host());
         } else {
           PUSH_CALL();
           GOTO(func->as_defined()->offset);
@@ -912,7 +1024,7 @@ Result run_interpreter(Thread* thread,
 
       case Opcode::CallHost: {
         Index func_index = read_u32(&pc);
-        call_host(thread, env->funcs[func_index]->as_host());
+        CallHost(env_->funcs_[func_index]->as_host());
         break;
       }
 
@@ -1630,11 +1742,11 @@ Result run_interpreter(Thread* thread,
       }
 
       case Opcode::Alloca: {
-        Value* old_value_stack_top = thread->value_stack_top;
-        thread->value_stack_top += read_u32(&pc);
+        Value* old_value_stack_top = value_stack_top_;
+        value_stack_top_ += read_u32(&pc);
         CHECK_STACK();
         memset(old_value_stack_top, 0,
-               (thread->value_stack_top - old_value_stack_top) * sizeof(Value));
+               (value_stack_top_ - old_value_stack_top) * sizeof(Value));
         break;
       }
 
@@ -1671,19 +1783,18 @@ Result run_interpreter(Thread* thread,
   }
 
 exit_loop:
-  thread->pc = pc - istream;
+  pc_ = pc - istream;
   return result;
 }
 
-void trace_pc(Thread* thread, Stream* stream) {
-  const uint8_t* istream = thread->env->istream->data.data();
-  const uint8_t* pc = &istream[thread->pc];
-  size_t value_stack_depth =
-      thread->value_stack_top - thread->value_stack.data();
-  size_t call_stack_depth = thread->call_stack_top - thread->call_stack.data();
+void Thread::Trace(Stream* stream) {
+  const uint8_t* istream = env_->istream_->data.data();
+  const uint8_t* pc = &istream[pc_];
+  size_t value_stack_depth = value_stack_top_ - value_stack_.data();
+  size_t call_stack_depth = call_stack_top_ - call_stack_.data();
 
   stream->Writef("#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ", call_stack_depth,
-                 pc - thread->env->istream->data.data(), value_stack_depth);
+                 pc - env_->istream_->data.data(), value_stack_depth);
 
   Opcode opcode = static_cast<Opcode>(*pc++);
   switch (opcode) {
@@ -2026,16 +2137,15 @@ void trace_pc(Thread* thread, Stream* stream) {
   }
 }
 
-void disassemble(Environment* env,
-                 Stream* stream,
-                 IstreamOffset from,
-                 IstreamOffset to) {
+void Environment::Disassemble(Stream* stream,
+                              IstreamOffset from,
+                              IstreamOffset to) {
   /* TODO(binji): mark function entries */
   /* TODO(binji): track value stack size */
-  if (from >= env->istream->data.size())
+  if (from >= istream_->data.size())
     return;
-  to = std::min<IstreamOffset>(to, env->istream->data.size());
-  const uint8_t* istream = env->istream->data.data();
+  to = std::min<IstreamOffset>(to, istream_->data.size());
+  const uint8_t* istream = istream_->data.data();
   const uint8_t* pc = &istream[from];
 
   while (static_cast<IstreamOffset>(pc - istream) < to) {
@@ -2344,9 +2454,9 @@ void disassemble(Environment* env,
   }
 }
 
-void disassemble_module(Environment* env, Stream* stream, Module* module) {
+void Environment::DisassembleModule(Stream* stream, Module* module) {
   assert(!module->is_host);
-  disassemble(env, stream, module->as_defined()->istream_start,
+  Disassemble(stream, module->as_defined()->istream_start,
               module->as_defined()->istream_end);
 }
 
