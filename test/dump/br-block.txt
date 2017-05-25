@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: -v
 (module
   (func                     ;; depth

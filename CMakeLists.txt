@@ -284,11 +284,12 @@ if (NOT EMSCRIPTEN)
   wabt_executable(wasm2wast src/tools/wasm2wast.cc)
 
   # wasmopcodecnt
-  wabt_executable(wasmopcodecnt
-    src/tools/wasmopcodecnt.cc src/binary-reader-opcnt.cc)
+  wabt_executable(wasm-opcodecnt
+    src/tools/wasm-opcodecnt.cc src/binary-reader-opcnt.cc)
 
-  # wasmdump
-  wabt_executable(wasmdump src/tools/wasmdump.cc src/binary-reader-objdump.cc)
+  # wasm-objdump
+  wabt_executable(wasm-objdump
+    src/tools/wasm-objdump.cc src/binary-reader-objdump.cc)
 
   # wasm-link
   wabt_executable(wasm-link src/tools/wasm-link.cc src/binary-reader-linker.cc)

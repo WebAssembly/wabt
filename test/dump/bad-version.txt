@@ -1,10 +1,10 @@
 ;;; ERROR: 1
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: --gen-wasm
 magic
 0xe 0 0 0
 (;; STDERR ;;;
-Error running "wasmdump":
+Error running "wasm-objdump":
 *ERROR*: @0x00000008: bad wasm file version: 0xe (expected 0x1)
 
 ;;; STDERR ;;)
