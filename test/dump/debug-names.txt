@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: -v --debug-names --dump-verbose
 (module
   (func $F1 (param $F1P0 i32)

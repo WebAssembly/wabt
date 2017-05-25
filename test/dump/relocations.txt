@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: --headers -r
 (module
   (type $t (func (param i32)))

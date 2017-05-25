@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: -v
 (module (func) (export "tab:\t newline:\n slash:\\ quote:\' double:\"" (func 0)))
 (;; STDOUT ;;;

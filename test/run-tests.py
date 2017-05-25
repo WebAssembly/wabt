@@ -49,8 +49,8 @@ TOOLS = {
     'wast-desugar': {
         'EXE': '%(wast-desugar)s'
     },
-    'run-wasmdump': {
-        'EXE': 'test/run-wasmdump.py',
+    'run-objdump': {
+        'EXE': 'test/run-objdump.py',
         'FLAGS': ['--bindir=%(bindir)s', '--no-error-cmdline'],
         'VERBOSE-FLAGS': ['-v']
     },
