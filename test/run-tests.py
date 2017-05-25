@@ -751,16 +751,14 @@ def main(args):
     print('\nInterrupted testing\n')
 
   status.Done()
-  ret = 0
 
+  ret = 0
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
     for info in status.failed_tests:
       sys.stderr.write('- %s\n    %s\n' % (info.GetName(),
                                            ' '.join(info.last_cmd)))
     ret = 1
-
-
 
   return ret
 
