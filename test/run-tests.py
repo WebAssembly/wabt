@@ -435,8 +435,8 @@ class TestInfo(object):
 
 class Status(object):
 
-  def __init__(self, verbose):
-    self.verbose = verbose
+  def __init__(self, isatty):
+    self.isatty = isatty
     self.start_time = None
     self.last_length = 0
     self.last_finished = None
@@ -452,48 +452,46 @@ class Status(object):
 
   def Passed(self, info, duration):
     self.passed += 1
-    if self.verbose:
-      sys.stderr.write('+ %s (%.3fs)\n' % (info.GetName(), duration))
-    else:
-      self.Clear()
+    if self.isatty:
+      self._Clear()
       self._PrintShortStatus(info)
-      sys.stderr.flush()
+    else:
+      sys.stderr.write('+ %s (%.3fs)\n' % (info.GetName(), duration))
 
   def Failed(self, info, error_msg):
     self.failed += 1
     self.failed_tests.append(info)
-    if not self.verbose:
-      self.Clear()
+    if self.isatty:
+      self._Clear()
     sys.stderr.write('- %s\n%s\n' % (info.GetName(), Indent(error_msg, 2)))
 
   def Skipped(self, info):
     self.skipped += 1
-    if self.verbose:
+    if not self.isatty:
       sys.stderr.write('. %s (skipped)\n' % info.GetName())
 
-  def UpdateTimer(self):
-    self._PrintShortStatus(self.last_finished)
-
-  def Print(self):
-    self._PrintShortStatus(None)
-    sys.stderr.write('\n')
+  def Done(self):
+    if self.isatty:
+      sys.stderr.write('\n')
 
   def _PrintShortStatus(self, info):
+    assert(self.isatty)
     total_duration = time.time() - self.start_time
     name = info.GetName() if info else ''
     if (self.total - self.skipped):
       percent = 100 * (self.passed + self.failed) / (self.total - self.skipped)
     else:
       percent = 100
-    status = '[+%d|-%d|%%%d] (%.2fs) %s\r' % (self.passed, self.failed,
-                                              percent, total_duration, name)
+    status = '[+%d|-%d|%%%d] (%.2fs) %s' % (self.passed, self.failed,
+                                            percent, total_duration, name)
     self.last_length = len(status)
     self.last_finished = info
     sys.stderr.write(status)
+    sys.stderr.flush()
 
-  def Clear(self):
-    if not self.verbose:
-      sys.stderr.write('%s\r' % (' ' * self.last_length))
+  def _Clear(self):
+    assert(self.isatty)
+    sys.stderr.write('\r%s\r' % (' ' * self.last_length))
 
 
 def FindTestFiles(ext, filter_pattern_re):
@@ -727,7 +725,7 @@ def main(args):
     variables[exe_basename] = find_exe.FindExecutable(exe_basename,
                                                       exe_override)
 
-  status = Status(options.verbose)
+  status = Status(sys.stderr.isatty() and not options.verbose)
   infos = GetAllTestInfo(test_names, status)
   infos_to_run = []
   for info in infos:
@@ -752,10 +750,9 @@ def main(args):
   except KeyboardInterrupt:
     print('\nInterrupted testing\n')
 
-  status.Clear()
+  status.Done()
 
   ret = 0
-
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
     for info in status.failed_tests:
@@ -763,7 +760,6 @@ def main(args):
                                            ' '.join(info.last_cmd)))
     ret = 1
 
-  status.Print()
   return ret
 
 
