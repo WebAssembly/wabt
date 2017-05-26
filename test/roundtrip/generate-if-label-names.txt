@@ -18,13 +18,13 @@
   (type $t0 (func))
   (func $f0 (type $t0)
     i32.const 1
-    if $L0
-      br $L0
+    if $I0
+      br $I0
     end
     i32.const 2
-    if $L1
-      br $L1
+    if $I1
+      br $I1
     else
-      br $L1
+      br $I1
     end))
 ;;; STDOUT ;;)

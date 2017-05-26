@@ -1,0 +1,70 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --fold-exprs
+(module
+  (func $fold-binary (result i32)
+    i32.const 1
+    i32.const 2
+    i32.add)
+
+  (func $fold-binary-chain (result i32)
+    i32.const 1
+    i32.const 1
+    i32.const 1
+    i32.add
+    i32.sub)
+
+  (func $fold-compare (result i32)
+    f32.const 1
+    f32.const 2
+    f32.le)
+
+  (func $fold-unary (result f32)
+    f32.const 1
+    f32.neg
+    f32.neg)
+
+  (func $fold-convert (result i64)
+    f64.const 0
+    f32.demote/f64
+    i32.trunc_s/f32
+    i64.extend_s/i32)
+
+  (func $fold-select (result f32)
+    f32.const 1
+    f32.const 2
+    i32.const 3
+    select))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func (result f32)))
+  (type (;2;) (func (result i64)))
+  (func (;0;) (type 0) (result i32)
+    (i32.add
+      (i32.const 1)
+      (i32.const 2)))
+  (func (;1;) (type 0) (result i32)
+    (i32.sub
+      (i32.const 1)
+      (i32.add
+        (i32.const 1)
+        (i32.const 1))))
+  (func (;2;) (type 0) (result i32)
+    (f32.le
+      (f32.const 0x1p+0 (;=1;))
+      (f32.const 0x1p+1 (;=2;))))
+  (func (;3;) (type 1) (result f32)
+    (f32.neg
+      (f32.neg
+        (f32.const 0x1p+0 (;=1;)))))
+  (func (;4;) (type 2) (result i64)
+    (i64.extend_s/i32
+      (i32.trunc_s/f32
+        (f32.demote/f64
+          (f64.const 0x0p+0 (;=0;))))))
+  (func (;5;) (type 1) (result f32)
+    (select
+      (f32.const 0x1p+0 (;=1;))
+      (f32.const 0x1p+1 (;=2;))
+      (i32.const 3))))
+;;; STDOUT ;;)

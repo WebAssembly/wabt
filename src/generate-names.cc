@@ -112,7 +112,7 @@ static Result begin_loop_expr(Expr* expr, void* user_data) {
 
 static Result begin_if_expr(Expr* expr, void* user_data) {
   Context* ctx = static_cast<Context*>(user_data);
-  maybe_generate_name("$L", ctx->label_count++, &expr->if_.true_->label);
+  maybe_generate_name("$I", ctx->label_count++, &expr->if_.true_->label);
   return Result::Ok;
 }
 
