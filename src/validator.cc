@@ -347,6 +347,33 @@ static void check_expr(Context* ctx, const Expr* expr) {
   ctx->expr_loc = &expr->loc;
 
   switch (expr->type) {
+#if 1
+    // TODO(karlschimpf) Fill these out.
+    case ExprType::Catch:
+      print_error(ctx, &expr->loc,
+                  "Catch: don't know how to validate");
+      break;
+    case ExprType::CatchAll:
+      print_error(ctx, &expr->loc,
+                  "CatchAll: don't know how to validate");
+      break;
+    case ExprType::CatchBlock:
+      print_error(ctx, &expr->loc,
+                  "CatchBlock: don't know how to validate");
+      break;
+    case ExprType::Throw:
+      print_error(ctx, &expr->loc,
+                  "Throw: don't know how to validate");
+      break;
+    case ExprType::Rethrow:
+      print_error(ctx, &expr->loc,
+                  "Rethrow: don't know how to validate");
+      break;
+    case ExprType::TryBlock:
+      print_error(ctx, &expr->loc,
+                  "TryBlock: don't know how to validate");
+      break;
+#endif
     case ExprType::Binary:
       typechecker_on_binary(&ctx->typechecker, expr->binary.opcode);
       break;

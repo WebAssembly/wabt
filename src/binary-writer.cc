@@ -33,6 +33,9 @@
 #define MAX_U32_LEB128_BYTES 5
 #define MAX_U64_LEB128_BYTES 10
 
+#define ERROR(Message)            \
+  fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, (Message));
+
 namespace wabt {
 
 // TODO(binji): move the LEB128 functions somewhere else.
@@ -393,6 +396,27 @@ void BinaryWriter::WriteExpr(const Module* module,
                              const Func* func,
                              const Expr* expr) {
   switch (expr->type) {
+#if 1
+    // TODO(karlschimpf) Fix these cases.
+    case ExprType::Catch:
+      ERROR("Catch: Don't know how to write");
+      break;
+    case ExprType::CatchAll:
+      ERROR("CatchAll: Don't know how to write");
+      break;
+    case ExprType::CatchBlock:
+      ERROR("CatchBlock: Don't know how to write");
+      break;
+    case ExprType::Rethrow:
+      ERROR("Rethrow: Don't know how to write");
+      break;
+    case ExprType::Throw:
+      ERROR("Throw: Don't know how to write");
+      break;
+    case ExprType::TryBlock:
+      ERROR("TryBlock: Don't know how to write");
+      break;
+#endif
     case ExprType::Binary:
       write_opcode(&stream_, expr->binary.opcode);
       break;

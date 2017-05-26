@@ -446,6 +446,11 @@ int wast_lexer_lex(WABT_WAST_PARSER_STYPE* lval,
                                   RETURN(ASSERT_RETURN_ARITHMETIC_NAN); }
       <i> "assert_trap"         { RETURN(ASSERT_TRAP); }
       <i> "assert_exhaustion"   { RETURN(ASSERT_EXHAUSTION); }
+      <i> "try"                 { RETURN(TRY); }
+      <i> "catch"               { RETURN(CATCH); }
+      <i> "catch_all"           { RETURN(CATCH_ALL); }
+      <i> "throw"               { RETURN(THROW); }
+      <i> "rethrow"             { RETURN(RETHROW); }
       <i> name                  { TEXT; RETURN(VAR); }
 
       <i> ";;" => LINE_COMMENT  { continue; }
