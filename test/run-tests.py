@@ -228,7 +228,7 @@ class TestInfo(object):
     self.skip = False
     self.is_roundtrip = False
 
-  def CreateRoundtripInfo(self):
+  def CreateRoundtripInfo(self, fold_exprs):
     result = TestInfo()
     result.filename = self.filename
     result.header = self.header
@@ -239,16 +239,22 @@ class TestInfo(object):
     result.tool = 'run-roundtrip'
     result.exe = ROUNDTRIP_PY
     result.flags = ['--bindir', '%(bindir)s', '-v']
+    if fold_exprs:
+      result.flags.append('--fold-exprs')
     result.expected_error = 0
     result.slow = self.slow
     result.skip = self.skip
     result.is_roundtrip = True
+    result.fold_exprs = fold_exprs
     return result
 
   def GetName(self):
     name = self.filename
     if self.is_roundtrip:
-      name += ' (roundtrip)'
+      if self.fold_exprs:
+        name += ' (roundtrip fold-exprs)'
+      else:
+        name += ' (roundtrip)'
     return name
 
   def GetGeneratedInputFilename(self):
@@ -737,7 +743,8 @@ def main(args):
     infos_to_run.append(info)
 
     if options.roundtrip and info.ShouldCreateRoundtrip():
-      infos_to_run.append(info.CreateRoundtripInfo())
+      infos_to_run.append(info.CreateRoundtripInfo(fold_exprs=False))
+      infos_to_run.append(info.CreateRoundtripInfo(fold_exprs=True))
 
   if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)
