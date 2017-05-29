@@ -66,6 +66,8 @@ struct Context {
   MemoryStream stream;
   std::vector<std::unique_ptr<LinkerInputBinary>> inputs;
   ssize_t current_section_payload_offset = 0;
+  bool has_memory_import = false;
+  Limits memory_import_limits = { 0, 0, 0 };
 };
 
 static void on_option(struct OptionParser* parser,
@@ -384,6 +386,10 @@ static void extend_memory_limits (Limits* limits_to, Limits* limits_new) {
 
 static void write_memory_section(Context* ctx,
                                  const SectionPtrVector& sections) {
+  if (ctx->has_memory_import) {
+    return;
+  }
+
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
@@ -421,8 +427,6 @@ static void write_global_import(Context* ctx, GlobalImport* import) {
 static void write_import_section(Context* ctx) {
   StringSlice* memory_import_module = nullptr;
   StringSlice* memory_import_name = nullptr;
-  Limits memory_import_limits;
-  WABT_ZERO_MEMORY(memory_import_limits);
 
   Index num_imports = 0;
   for (size_t i = 0; i < ctx->inputs.size(); i++) {
@@ -434,12 +438,10 @@ static void write_import_section(Context* ctx) {
         if (!string_slices_are_equal(memory_import_name, &binary->memory_import_name)) {
           WABT_FATAL("unable to link memory imports using different names");
         }
-        extend_memory_limits(&memory_import_limits, &binary->memory_import_limits);
       }
       else {
         memory_import_module = &binary->memory_import_module;
         memory_import_name = &binary->memory_import_name;
-        memory_import_limits = binary->memory_import_limits;
         num_imports++;
       }
     }
@@ -460,7 +462,7 @@ static void write_import_section(Context* ctx) {
     write_slice(&ctx->stream, *memory_import_module, "import module name");
     write_slice(&ctx->stream, *memory_import_name, "import field name");
     ctx->stream.WriteU8Enum(ExternalKind::Memory, "import kind");
-    write_limits(&ctx->stream, &memory_import_limits);
+    write_limits(&ctx->stream, &ctx->memory_import_limits);
   }
 
   for (size_t i = 0; i < ctx->inputs.size(); i++) {
@@ -640,6 +642,19 @@ static void write_reloc_section(Context* ctx,
   FIXUP_SIZE(stream);
 }
 
+static void resolve_any_memory_import (Context* ctx, const SectionPtrVector& sections) {
+  for (size_t i = 0; i < ctx->inputs.size(); i++) {
+    LinkerInputBinary* binary = ctx->inputs[i].get();
+    // handle import memory coalescing
+    if (binary->has_memory_import) {
+      if (!ctx->has_memory_import) {
+        ctx->has_memory_import = true;
+      }
+      extend_memory_limits(&ctx->memory_import_limits, &binary->memory_import_limits);
+    }
+  }
+}
+
 static bool write_combined_section(Context* ctx,
                                    BinarySection section_code,
                                    const SectionPtrVector& sections) {
@@ -662,6 +677,8 @@ static bool write_combined_section(Context* ctx,
 
   ctx->stream.WriteU8Enum(section_code, "section code");
   ctx->current_section_payload_offset = -1;
+
+  resolve_any_memory_import(ctx, sections);
 
   switch (section_code) {
     case BinarySection::Import:
