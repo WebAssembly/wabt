@@ -123,6 +123,11 @@ class LinkerInputBinary {
   std::vector<GlobalImport> global_imports;
   Index active_global_imports;
 
+  bool has_memory_import;
+  StringSlice memory_import_module;
+  StringSlice memory_import_name;
+  Limits memory_import_limits;
+
   Index type_index_offset;
   Index function_index_offset;
   Index imported_function_index_offset;

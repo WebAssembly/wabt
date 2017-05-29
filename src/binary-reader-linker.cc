@@ -54,6 +54,12 @@ class BinaryReaderLinker : public BinaryReaderNop {
 
   Result OnMemory(Index index, const Limits* limits) override;
 
+  Result OnImportMemory(Index import_index,
+                        StringSlice module_name,
+                        StringSlice field_name,
+                        Index memory_index,
+                        const Limits* page_limits) override;
+
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
@@ -209,6 +215,18 @@ Result BinaryReaderLinker::OnMemory(Index index, const Limits* page_limits) {
   return Result::Ok;
 }
 
+Result BinaryReaderLinker::OnImportMemory(Index import_index,
+                                           StringSlice module_name,
+                                           StringSlice field_name,
+                                           Index memory_index,
+                                           const Limits* page_limits) {
+  binary_->has_memory_import = true;
+  binary_->memory_import_module = module_name;
+  binary_->memory_import_name = field_name;
+  binary_->memory_import_limits = *page_limits;
+  return Result::Ok;
+}
+
 Result BinaryReaderLinker::BeginDataSegment(Index index, Index memory_index) {
   Section* sec = current_section_;
   if (!sec->data.data_segments) {
@@ -243,11 +261,16 @@ Result BinaryReaderLinker::OnExport(Index index,
                                     ExternalKind kind,
                                     Index item_index,
                                     StringSlice name) {
+  if (kind == ExternalKind::Memory) {
+    WABT_FATAL("Linker does not support exported memories");
+  }
+
   binary_->exports.emplace_back();
   Export* export_ = &binary_->exports.back();
   export_->name = name;
   export_->kind = kind;
   export_->index = item_index;
+
   return Result::Ok;
 }
 

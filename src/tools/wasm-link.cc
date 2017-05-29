@@ -143,6 +143,7 @@ LinkerInputBinary::LinkerInputBinary(const char* filename,
       size(size),
       active_function_imports(0),
       active_global_imports(0),
+      memory_import_limits({}),
       type_index_offset(0),
       function_index_offset(0),
       imported_function_index_offset(0),
@@ -365,6 +366,19 @@ static void write_elem_section(Context* ctx,
   FIXUP_SIZE(stream);
 }
 
+static void extend_memory_limits (Limits* limits_to, Limits* limits_new) {
+  limits_to->initial += limits_new->initial;
+  if (limits_new->has_max) {
+    if (!limits_to->has_max) {
+      limits_to->has_max = true;
+    }
+    limits_to->max += limits_new->max;
+  }
+  else {
+    limits_to->max += limits_new->initial;
+  }
+}
+
 static void write_memory_section(Context* ctx,
                                  const SectionPtrVector& sections) {
   Stream* stream = &ctx->stream;
@@ -374,12 +388,10 @@ static void write_memory_section(Context* ctx,
 
   Limits limits;
   WABT_ZERO_MEMORY(limits);
-  limits.has_max = true;
   for (size_t i = 0; i < sections.size(); i++) {
     Section* sec = sections[i];
-    limits.initial += sec->data.memory_limits.initial;
+    extend_memory_limits(&limits, &sec->data.memory_limits);
   }
-  limits.max = limits.initial;
   write_limits(stream, &limits);
 
   FIXUP_SIZE(stream);
@@ -404,9 +416,31 @@ static void write_global_import(Context* ctx, GlobalImport* import) {
 }
 
 static void write_import_section(Context* ctx) {
+  StringSlice* memory_import_module = nullptr;
+  StringSlice* memory_import_name = nullptr;
+  Limits memory_import_limits;
+  WABT_ZERO_MEMORY(memory_import_limits);
+
   Index num_imports = 0;
   for (size_t i = 0; i < ctx->inputs.size(); i++) {
     LinkerInputBinary* binary = ctx->inputs[i].get();
+
+    // handle import memory coalescing
+    if (binary->has_memory_import) {
+      if (memory_import_name) {
+        if (!string_slices_are_equal(memory_import_name, &binary->memory_import_name)) {
+          WABT_FATAL("unable to link memory imports using different names");
+        }
+        extend_memory_limits(&memory_import_limits, &binary->memory_import_limits);
+      }
+      else {
+        memory_import_module = &binary->memory_import_module;
+        memory_import_name = &binary->memory_import_name;
+        memory_import_limits = binary->memory_import_limits;
+        num_imports++;
+      }
+    }
+
     std::vector<FunctionImport>& imports = binary->function_imports;
     for (size_t j = 0; j < imports.size(); j++) {
       FunctionImport* import = &imports[j];
@@ -418,6 +452,13 @@ static void write_import_section(Context* ctx) {
 
   WRITE_UNKNOWN_SIZE(&ctx->stream);
   write_u32_leb128(&ctx->stream, num_imports, "num imports");
+
+  if (memory_import_name) {
+    write_slice(&ctx->stream, *memory_import_module, "import module name");
+    write_slice(&ctx->stream, *memory_import_name, "import field name");
+    ctx->stream.WriteU8Enum(ExternalKind::Memory, "import kind");
+    write_limits(&ctx->stream, &memory_import_limits);
+  }
 
   for (size_t i = 0; i < ctx->inputs.size(); i++) {
     LinkerInputBinary* binary = ctx->inputs[i].get();
