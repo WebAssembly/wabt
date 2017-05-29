@@ -386,22 +386,20 @@ static void extend_memory_limits (Limits* limits_to, Limits* limits_new) {
 
 static void write_memory_section(Context* ctx,
                                  const SectionPtrVector& sections) {
-  if (ctx->has_memory_import) {
-    return;
-  }
-
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  write_u32_leb128(stream, 1, "memory count");
+  write_u32_leb128(stream, ctx->has_memory_import ? 0 : 1, "memory count");
 
-  Limits limits;
-  WABT_ZERO_MEMORY(limits);
-  for (size_t i = 0; i < sections.size(); i++) {
-    Section* sec = sections[i];
-    extend_memory_limits(&limits, &sec->data.memory_limits);
+  if (!ctx->has_memory_import) {
+    Limits limits;
+    WABT_ZERO_MEMORY(limits);
+    for (size_t i = 0; i < sections.size(); i++) {
+      Section* sec = sections[i];
+      extend_memory_limits(&limits, &sec->data.memory_limits);
+    }
+    write_limits(stream, &limits);
   }
-  write_limits(stream, &limits);
 
   FIXUP_SIZE(stream);
 }
