@@ -651,6 +651,13 @@ static void resolve_any_memory_import (Context* ctx, const SectionPtrVector& sec
       extend_memory_limits(&ctx->memory_import_limits, &binary->memory_import_limits);
     }
   }
+
+  if (ctx->has_memory_import) {
+    for (size_t i = 0; i < sections.size(); i++) {
+      Section* sec = sections[i];
+      extend_memory_limits(&ctx->memory_import_limits, &sec->data.memory_limits);
+    }
+  }
 }
 
 static bool write_combined_section(Context* ctx,
