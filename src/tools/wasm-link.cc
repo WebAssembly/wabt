@@ -31,6 +31,7 @@
 #define NOPE HasArgument::No
 #define YEP HasArgument::Yes
 #define FIRST_KNOWN_SECTION static_cast<size_t>(BinarySection::Type)
+#define LOG_DEBUG(fmt, ...) if (s_debug) s_log_stream->Writef(fmt, __VA_ARGS__);
 
 using namespace wabt;
 using namespace wabt::link;
@@ -172,23 +173,19 @@ Index LinkerInputBinary::RelocateFuncIndex(Index function_index) {
   if (!IsFunctionImport(function_index)) {
     /* locally declared function call */
     offset = function_index_offset;
-    if (s_debug)
-      s_log_stream->Writef("func reloc %d + %d\n", function_index, offset);
+    LOG_DEBUG("func reloc %d + %d\n", function_index, offset);
   } else {
     /* imported function call */
     FunctionImport* import = &function_imports[function_index];
     if (!import->active) {
       function_index = import->foreign_index;
       offset = import->foreign_binary->function_index_offset;
-      if (s_debug)
-        s_log_stream->Writef("reloc for disabled import. new index = %d + %d\n",
-                             function_index, offset);
+      LOG_DEBUG("reloc for disabled import. new index = %d + %d\n",
+                function_index, offset);
     } else {
       Index new_index = import->relocated_function_index;
-      if (s_debug)
-        s_log_stream->Writef(
-            "reloc for active import. old index = %d, new index = %d\n",
-            function_index, new_index);
+      LOG_DEBUG("reloc for active import. old index = %d, new index = %d\n",
+                function_index, new_index);
       return new_index;
     }
   }
@@ -245,10 +242,7 @@ static void apply_relocations(Section* section) {
   if (!section->relocations.size())
     return;
 
-  if (s_debug) {
-    s_log_stream->Writef("apply_relocations: %s\n",
-                         get_section_name(section->section_code));
-  }
+  LOG_DEBUG("apply_relocations: %s\n", get_section_name(section->section_code));
 
   /* Perform relocations in-place */
   for (Reloc& reloc: section->relocations) {
@@ -815,29 +809,28 @@ static void dump_reloc_offsets(Context* ctx) {
   if (s_debug) {
     for (size_t i = 0; i < ctx->inputs.size(); i++) {
       LinkerInputBinary* binary = ctx->inputs[i].get();
-      s_log_stream->Writef("Relocation info for: %s\n", binary->filename);
-      s_log_stream->Writef(" - type index offset       : %d\n",
+      LOG_DEBUG("Relocation info for: %s\n", binary->filename);
+      LOG_DEBUG(" - type index offset       : %d\n",
                            binary->type_index_offset);
-      s_log_stream->Writef(" - mem page offset         : %d\n",
+      LOG_DEBUG(" - mem page offset         : %d\n",
                            binary->memory_page_offset);
-      s_log_stream->Writef(" - function index offset   : %d\n",
+      LOG_DEBUG(" - function index offset   : %d\n",
                            binary->function_index_offset);
-      s_log_stream->Writef(" - global index offset     : %d\n",
+      LOG_DEBUG(" - global index offset     : %d\n",
                            binary->global_index_offset);
-      s_log_stream->Writef(" - imported function offset: %d\n",
+      LOG_DEBUG(" - imported function offset: %d\n",
                            binary->imported_function_index_offset);
-      s_log_stream->Writef(" - imported global offset  : %d\n",
+      LOG_DEBUG(" - imported global offset  : %d\n",
                            binary->imported_global_index_offset);
     }
   }
 }
 
 static Result perform_link(Context* ctx) {
-  if (s_debug) {
+  if (s_debug)
     ctx->stream.set_log_stream(s_log_stream.get());
-    s_log_stream->Writef("writing file: %s\n", s_outfile);
-  }
 
+  LOG_DEBUG("writing file: %s\n", s_outfile);
   calculate_reloc_offsets(ctx);
   resolve_symbols(ctx);
   calculate_reloc_offsets(ctx);
@@ -861,8 +854,7 @@ int ProgramMain(int argc, char** argv) {
   Result result = Result::Ok;
   for (size_t i = 0; i < s_infiles.size(); i++) {
     const std::string& input_filename = s_infiles[i];
-    if (s_debug)
-      s_log_stream->Writef("reading file: %s\n", input_filename.c_str());
+    LOG_DEBUG("reading file: %s\n", input_filename.c_str());
     char* data;
     size_t size;
     result = read_file(input_filename.c_str(), &data, &size);
