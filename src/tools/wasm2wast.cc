@@ -52,6 +52,7 @@ enum {
   FLAG_NO_DEBUG_NAMES,
   FLAG_GENERATE_NAMES,
   FLAG_FOLD_EXPRS,
+  FLAG_INLINE_EXPORTS,
   NUM_FLAGS
 };
 
@@ -74,6 +75,8 @@ static Option s_options[] = {
      "output file for the generated wast file, by default use stdout"},
     {FLAG_FOLD_EXPRS, 'f', "fold-exprs", nullptr, NOPE,
      "Write folded expressions where possible"},
+    {FLAG_INLINE_EXPORTS, 0, "inline-exports", nullptr, NOPE,
+     "Write all exports inline"},
     {FLAG_NO_DEBUG_NAMES, 0, "no-debug-names", nullptr, NOPE,
      "Ignore debug names in the binary file"},
     {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, NOPE,
@@ -102,6 +105,10 @@ static void on_option(struct OptionParser* parser,
 
     case FLAG_FOLD_EXPRS:
       s_write_wat_options.fold_exprs = true;
+      break;
+
+    case FLAG_INLINE_EXPORTS:
+      s_write_wat_options.inline_export = true;
       break;
 
     case FLAG_NO_DEBUG_NAMES:

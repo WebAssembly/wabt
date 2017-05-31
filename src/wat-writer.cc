@@ -21,6 +21,7 @@
 #include <cinttypes>
 #include <cstdarg>
 #include <cstdio>
+#include <map>
 #include <iterator>
 #include <string>
 #include <vector>
@@ -156,6 +157,9 @@ class WatWriter {
   void WriteFoldedExpr(const Expr* first);
   void WriteFoldedExprList(const Expr* first);
 
+  void BuildExportMaps();
+  void WriteInlineExport(const Export* export_);
+
   const WriteWatOptions* options_ = nullptr;
   const Module* module_ = nullptr;
   const Func* current_func_ = nullptr;
@@ -166,6 +170,10 @@ class WatWriter {
   std::vector<std::string> index_to_name_;
   std::vector<Label> label_stack_;
   std::vector<ExprTree> expr_tree_stack_;
+  std::vector<const Export*> func_to_export_map_;
+  std::vector<const Export*> global_to_export_map_;
+  std::vector<const Export*> table_to_export_map_;
+  std::vector<const Export*> memory_to_export_map_;
 
   Index func_index_ = 0;
   Index global_index_ = 0;
@@ -856,7 +864,8 @@ void WatWriter::WriteTypeBindings(const char* prefix,
 
 void WatWriter::WriteFunc(const Module* module, const Func* func) {
   WriteOpenSpace("func");
-  WriteNameOrIndex(&func->name, func_index_++, NextChar::Space);
+  WriteNameOrIndex(&func->name, func_index_, NextChar::Space);
+  WriteInlineExport(func_to_export_map_[func_index_]);
   if (decl_has_func_type(&func->decl)) {
     WriteOpenSpace("type");
     WriteVar(&func->decl.type_var, NextChar::None);
@@ -882,11 +891,13 @@ void WatWriter::WriteFunc(const Module* module, const Func* func) {
   }
   current_func_ = nullptr;
   WriteCloseNewline();
+  func_index_++;
 }
 
 void WatWriter::WriteBeginGlobal(const Global* global) {
   WriteOpenSpace("global");
-  WriteNameOrIndex(&global->name, global_index_++, NextChar::Space);
+  WriteNameOrIndex(&global->name, global_index_, NextChar::Space);
+  WriteInlineExport(global_to_export_map_[global_index_]);
   if (global->mutable_) {
     WriteOpenSpace("mut");
     WriteType(global->type, NextChar::Space);
@@ -894,6 +905,7 @@ void WatWriter::WriteBeginGlobal(const Global* global) {
   } else {
     WriteType(global->type, NextChar::Space);
   }
+  global_index_++;
 }
 
 void WatWriter::WriteGlobal(const Global* global) {
@@ -910,10 +922,12 @@ void WatWriter::WriteLimits(const Limits* limits) {
 
 void WatWriter::WriteTable(const Table* table) {
   WriteOpenSpace("table");
-  WriteNameOrIndex(&table->name, table_index_++, NextChar::Space);
+  WriteNameOrIndex(&table->name, table_index_, NextChar::Space);
+  WriteInlineExport(table_to_export_map_[table_index_]);
   WriteLimits(&table->elem_limits);
   WritePutsSpace("anyfunc");
   WriteCloseNewline();
+  table_index_++;
 }
 
 void WatWriter::WriteElemSegment(const ElemSegment* segment) {
@@ -926,9 +940,11 @@ void WatWriter::WriteElemSegment(const ElemSegment* segment) {
 
 void WatWriter::WriteMemory(const Memory* memory) {
   WriteOpenSpace("memory");
-  WriteNameOrIndex(&memory->name, memory_index_++, NextChar::Space);
+  WriteNameOrIndex(&memory->name, memory_index_, NextChar::Space);
+  WriteInlineExport(memory_to_export_map_[memory_index_]);
   WriteLimits(&memory->page_limits);
   WriteCloseNewline();
+  memory_index_++;
 }
 
 void WatWriter::WriteDataSegment(const DataSegment* segment) {
@@ -973,6 +989,8 @@ void WatWriter::WriteImport(const Import* import) {
 }
 
 void WatWriter::WriteExport(const Export* export_) {
+  if (options_->inline_export)
+    return;
   static const char* s_kind_names[] = {"func", "table", "memory", "global"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_kind_names) == kExternalKindCount);
   WriteOpenSpace("export");
@@ -1001,6 +1019,7 @@ void WatWriter::WriteStartFunction(const Var* start) {
 
 Result WatWriter::WriteModule(const Module* module) {
   module_ = module;
+  BuildExportMaps();
   WriteOpenNewline("module");
   for (const ModuleField* field = module->first_field; field;
        field = field->next) {
@@ -1041,6 +1060,53 @@ Result WatWriter::WriteModule(const Module* module) {
   /* force the newline to be written */
   WriteNextChar();
   return result_;
+}
+
+void WatWriter::BuildExportMaps() {
+  assert(module_);
+  func_to_export_map_.resize(module_->funcs.size());
+  global_to_export_map_.resize(module_->globals.size());
+  table_to_export_map_.resize(module_->tables.size());
+  memory_to_export_map_.resize(module_->memories.size());
+  for (Export* export_ : module_->exports) {
+    switch (export_->kind) {
+      case ExternalKind::Func: {
+        Index func_index = get_func_index_by_var(module_, &export_->var);
+        if (func_index != kInvalidIndex)
+          func_to_export_map_[func_index] = export_;
+        break;
+      }
+
+      case ExternalKind::Table: {
+        Index table_index = get_table_index_by_var(module_, &export_->var);
+        if (table_index != kInvalidIndex)
+          table_to_export_map_[table_index] = export_;
+        break;
+      }
+
+      case ExternalKind::Memory: {
+        Index memory_index = get_memory_index_by_var(module_, &export_->var);
+        if (memory_index != kInvalidIndex)
+          memory_to_export_map_[memory_index] = export_;
+        break;
+      }
+
+      case ExternalKind::Global: {
+        Index global_index = get_global_index_by_var(module_, &export_->var);
+        if (global_index != kInvalidIndex)
+          global_to_export_map_[global_index] = export_;
+        break;
+      }
+    }
+  }
+}
+
+void WatWriter::WriteInlineExport(const Export* export_) {
+  if (export_ && options_->inline_export) {
+    WriteOpenSpace("export");
+    WriteQuotedStringSlice(&export_->name, NextChar::None);
+    WriteCloseSpace();
+  }
 }
 
 }  // namespace

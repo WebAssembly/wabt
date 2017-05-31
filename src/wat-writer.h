@@ -26,6 +26,7 @@ class Writer;
 
 struct WriteWatOptions {
   bool fold_exprs = false;  // Write folded expressions.
+  bool inline_export = false;
 };
 
 Result write_wat(Writer*, const Module*, const WriteWatOptions*);
