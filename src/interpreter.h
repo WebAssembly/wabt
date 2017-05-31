@@ -22,8 +22,8 @@
 #include <memory>
 #include <vector>
 
-#include "common.h"
 #include "binding-hash.h"
+#include "common.h"
 #include "opcode.h"
 #include "writer.h"
 
@@ -105,6 +105,12 @@ enum class Opcode {
 static const int kOpcodeCount = WABT_ENUM_COUNT(Opcode);
 
 struct FuncSignature {
+  FuncSignature() = default;
+  FuncSignature(Index param_count,
+                Type* param_types,
+                Index result_count,
+                Type* result_types);
+
   std::vector<Type> param_types;
   std::vector<Type> result_types;
 };
@@ -255,10 +261,10 @@ struct PrintErrorCallback {
 struct HostImportDelegate {
   void* user_data;
   ::wabt::Result (*import_func)(Import*,
-                        Func*,
-                        FuncSignature*,
-                        PrintErrorCallback,
-                        void* user_data);
+                                Func*,
+                                FuncSignature*,
+                                PrintErrorCallback,
+                                void* user_data);
   ::wabt::Result (*import_table)(Import*,
                                  Table*,
                                  PrintErrorCallback,
@@ -282,6 +288,8 @@ struct Module {
   inline struct DefinedModule* as_defined();
   inline struct HostModule* as_host();
 
+  Export* GetExport(StringSlice name);
+
   StringSlice name;
   std::vector<Export> exports;
   BindingHash export_bindings;
@@ -291,12 +299,12 @@ struct Module {
 };
 
 struct DefinedModule : Module {
-  explicit DefinedModule(size_t istream_start);
+  DefinedModule();
 
   std::vector<Import> imports;
   Index start_func_index; /* kInvalidIndex if not defined */
-  size_t istream_start;
-  size_t istream_end;
+  IstreamOffset istream_start;
+  IstreamOffset istream_end;
 };
 
 struct HostModule : Module {
@@ -315,85 +323,192 @@ HostModule* Module::as_host() {
   return static_cast<HostModule*>(this);
 }
 
-/* Used to track and reset the state of the environment. */
-struct EnvironmentMark {
-  size_t modules_size;
-  size_t sigs_size;
-  size_t funcs_size;
-  size_t memories_size;
-  size_t tables_size;
-  size_t globals_size;
-  size_t istream_size;
-};
+class Environment {
+ public:
+  // Used to track and reset the state of the environment.
+  struct MarkPoint {
+    size_t modules_size = 0;
+    size_t sigs_size = 0;
+    size_t funcs_size = 0;
+    size_t memories_size = 0;
+    size_t tables_size = 0;
+    size_t globals_size = 0;
+    size_t istream_size = 0;
+  };
 
-struct Environment {
   Environment();
 
-  std::vector<std::unique_ptr<Module>> modules;
-  std::vector<FuncSignature> sigs;
-  std::vector<std::unique_ptr<Func>> funcs;
-  std::vector<Memory> memories;
-  std::vector<Table> tables;
-  std::vector<Global> globals;
-  std::unique_ptr<OutputBuffer> istream;
-  BindingHash module_bindings;
-  BindingHash registered_module_bindings;
-};
+  OutputBuffer& istream() { return *istream_; }
+  void SetIstream(std::unique_ptr<OutputBuffer> istream) {
+    istream_ = std::move(istream);
+  }
+  std::unique_ptr<OutputBuffer> ReleaseIstream() { return std::move(istream_); }
 
-struct Thread {
-  Thread();
+  Index GetFuncSignatureCount() const { return sigs_.size(); }
+  Index GetFuncCount() const { return funcs_.size(); }
+  Index GetGlobalCount() const { return globals_.size(); }
+  Index GetMemoryCount() const { return memories_.size(); }
+  Index GetTableCount() const { return tables_.size(); }
+  Index GetModuleCount() const { return modules_.size(); }
 
-  Environment* env;
-  std::vector<Value> value_stack;
-  std::vector<IstreamOffset> call_stack;
-  Value* value_stack_top;
-  Value* value_stack_end;
-  IstreamOffset* call_stack_top;
-  IstreamOffset* call_stack_end;
-  IstreamOffset pc;
-};
+  Index GetLastModuleIndex() const {
+    return modules_.empty() ? kInvalidIndex : modules_.size() - 1;
+  }
+  Index FindModuleIndex(StringSlice name) const;
 
-// TODO(binji): Remove and use default constructor.
-#define WABT_INTERPRETER_THREAD_OPTIONS_DEFAULT                 \
-  {                                                             \
-    512 * 1024 / sizeof(::wabt::interpreter::Value), 64 * 1024, \
-        ::wabt::interpreter::kInvalidIstreamOffset              \
+  FuncSignature* GetFuncSignature(Index index) { return &sigs_[index]; }
+  Func* GetFunc(Index index) {
+    assert(index < funcs_.size());
+    return funcs_[index].get();
+  }
+  Global* GetGlobal(Index index) {
+    assert(index < globals_.size());
+    return &globals_[index];
+  }
+  Memory* GetMemory(Index index) {
+    assert(index < memories_.size());
+    return &memories_[index];
+  }
+  Table* GetTable(Index index) {
+    assert(index < tables_.size());
+    return &tables_[index];
+  }
+  Module* GetModule(Index index) {
+    assert(index < modules_.size());
+    return modules_[index].get();
   }
 
-struct ThreadOptions {
-  uint32_t value_stack_size;
-  uint32_t call_stack_size;
-  IstreamOffset pc;
+  Module* GetLastModule() {
+    return modules_.empty() ? nullptr : modules_.back().get();
+  }
+  Module* FindModule(StringSlice name);
+  Module* FindRegisteredModule(StringSlice name);
+
+  template <typename... Args>
+  FuncSignature* EmplaceBackFuncSignature(Args&&... args) {
+    sigs_.emplace_back(args...);
+    return &sigs_.back();
+  }
+
+  template <typename... Args>
+  Func* EmplaceBackFunc(Args&&... args) {
+    funcs_.emplace_back(args...);
+    return funcs_.back().get();
+  }
+
+  template <typename... Args>
+  Global* EmplaceBackGlobal(Args&&... args) {
+    globals_.emplace_back(args...);
+    return &globals_.back();
+  }
+
+  template <typename... Args>
+  Table* EmplaceBackTable(Args&&... args) {
+    tables_.emplace_back(args...);
+    return &tables_.back();
+  }
+
+  template <typename... Args>
+  Memory* EmplaceBackMemory(Args&&... args) {
+    memories_.emplace_back(args...);
+    return &memories_.back();
+  }
+
+  template <typename... Args>
+  Module* EmplaceBackModule(Args&&... args) {
+    modules_.emplace_back(args...);
+    return modules_.back().get();
+  }
+
+  template <typename... Args>
+  void EmplaceModuleBinding(Args&&... args) {
+    module_bindings_.emplace(args...);
+  }
+
+  template <typename... Args>
+  void EmplaceRegisteredModuleBinding(Args&&... args) {
+    registered_module_bindings_.emplace(args...);
+  }
+
+  HostModule* AppendHostModule(StringSlice name);
+
+  bool FuncSignaturesAreEqual(Index sig_index_0, Index sig_index_1) const;
+
+  MarkPoint Mark();
+  void ResetToMarkPoint(const MarkPoint&);
+
+  void Disassemble(Stream* stream, IstreamOffset from, IstreamOffset to);
+  void DisassembleModule(Stream* stream, Module*);
+
+ private:
+  friend class Thread;
+
+  std::vector<std::unique_ptr<Module>> modules_;
+  std::vector<FuncSignature> sigs_;
+  std::vector<std::unique_ptr<Func>> funcs_;
+  std::vector<Memory> memories_;
+  std::vector<Table> tables_;
+  std::vector<Global> globals_;
+  std::unique_ptr<OutputBuffer> istream_;
+  BindingHash module_bindings_;
+  BindingHash registered_module_bindings_;
+};
+
+class Thread {
+ public:
+  struct Options {
+    static const uint32_t kDefaultValueStackSize = 512 * 1024 / sizeof(Value);
+    static const uint32_t kDefaultCallStackSize = 64 * 1024;
+
+    explicit Options(uint32_t value_stack_size = kDefaultValueStackSize,
+                     uint32_t call_stack_size = kDefaultCallStackSize,
+                     IstreamOffset pc = kInvalidIstreamOffset);
+
+    uint32_t value_stack_size;
+    uint32_t call_stack_size;
+    IstreamOffset pc;
+  };
+
+  explicit Thread(Environment*, const Options& = Options());
+
+  Environment* env() { return env_; }
+
+  Result RunFunction(Index func_index,
+                     const std::vector<TypedValue>& args,
+                     std::vector<TypedValue>* out_results);
+
+  Result TraceFunction(Index func_index,
+                       Stream*,
+                       const std::vector<TypedValue>& args,
+                       std::vector<TypedValue>* out_results);
+
+ private:
+  Result PushValue(Value);
+  Result PushArgs(const FuncSignature*, const std::vector<TypedValue>& args);
+  void CopyResults(const FuncSignature*, std::vector<TypedValue>* out_results);
+
+  Result Run(int num_instructions, IstreamOffset* call_stack_return_top);
+  void Trace(Stream*);
+
+  Result RunDefinedFunction(IstreamOffset);
+  Result TraceDefinedFunction(IstreamOffset, Stream*);
+
+  Result CallHost(HostFunc*);
+
+  Environment* env_;
+  std::vector<Value> value_stack_;
+  std::vector<IstreamOffset> call_stack_;
+  Value* value_stack_top_;
+  Value* value_stack_end_;
+  IstreamOffset* call_stack_top_;
+  IstreamOffset* call_stack_end_;
+  IstreamOffset pc_;
 };
 
 bool is_canonical_nan_f32(uint32_t f32_bits);
 bool is_canonical_nan_f64(uint64_t f64_bits);
 bool is_arithmetic_nan_f32(uint32_t f32_bits);
 bool is_arithmetic_nan_f64(uint64_t f64_bits);
-bool func_signatures_are_equal(Environment* env,
-                               Index sig_index_0,
-                               Index sig_index_1);
-
-// TODO(binji): Use methods on Environment and Thread instead.
-void destroy_environment(Environment* env);
-EnvironmentMark mark_environment(Environment* env);
-void reset_environment_to_mark(Environment* env, EnvironmentMark mark);
-HostModule* append_host_module(Environment* env, StringSlice name);
-void init_thread(Environment* env, Thread* thread, ThreadOptions* options);
-Result push_thread_value(Thread* thread, Value value);
-void destroy_thread(Thread* thread);
-Result call_host(Thread* thread, HostFunc* func);
-Result run_interpreter(Thread* thread,
-                       int num_instructions,
-                       IstreamOffset* call_stack_return_top);
-void trace_pc(Thread* thread, Stream* stream);
-void disassemble(Environment* env,
-                 Stream* stream,
-                 IstreamOffset from,
-                 IstreamOffset to);
-void disassemble_module(Environment* env, Stream* stream, Module* module);
-
-Export* get_export_by_name(Module* module, const StringSlice* name);
 
 }  // namespace interpreter
 }  // namespace wabt

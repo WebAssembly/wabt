@@ -24,7 +24,7 @@ namespace wabt {
 namespace interpreter {
 
 struct DefinedModule;
-struct Environment;
+class Environment;
 
 } // namespace interpreter
 
