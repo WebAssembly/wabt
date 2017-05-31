@@ -1,0 +1,9 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --inline-export
+(module
+  (memory $foo 0)
+  (export "foo" (memory $foo)))
+(;; STDOUT ;;;
+(module
+  (memory (;0;) (export "foo") 0))
+;;; STDOUT ;;)
