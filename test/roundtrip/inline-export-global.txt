@@ -1,0 +1,9 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --inline-export
+(module
+  (global $foo i32 (i32.const 0))
+  (export "foo" (global $foo)))
+(;; STDOUT ;;;
+(module
+  (global (;0;) (export "foo") i32 (i32.const 0)))
+;;; STDOUT ;;)
