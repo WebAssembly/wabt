@@ -640,26 +640,6 @@ static void write_reloc_section(Context* ctx,
   FIXUP_SIZE(stream);
 }
 
-static void resolve_any_memory_import (Context* ctx, const SectionPtrVector& sections) {
-  for (size_t i = 0; i < ctx->inputs.size(); i++) {
-    LinkerInputBinary* binary = ctx->inputs[i].get();
-    // handle import memory coalescing
-    if (binary->has_memory_import) {
-      if (!ctx->has_memory_import) {
-        ctx->has_memory_import = true;
-      }
-      extend_memory_limits(&ctx->memory_import_limits, &binary->memory_import_limits);
-    }
-  }
-
-  if (ctx->has_memory_import) {
-    for (size_t i = 0; i < sections.size(); i++) {
-      Section* sec = sections[i];
-      extend_memory_limits(&ctx->memory_import_limits, &sec->data.memory_limits);
-    }
-  }
-}
-
 static bool write_combined_section(Context* ctx,
                                    BinarySection section_code,
                                    const SectionPtrVector& sections) {
@@ -682,8 +662,6 @@ static bool write_combined_section(Context* ctx,
 
   ctx->stream.WriteU8Enum(section_code, "section code");
   ctx->current_section_payload_offset = -1;
-
-  resolve_any_memory_import(ctx, sections);
 
   switch (section_code) {
     case BinarySection::Import:
@@ -847,10 +825,26 @@ static void write_binary(Context* ctx) {
 
   for (size_t j = 0; j < ctx->inputs.size(); j++) {
     LinkerInputBinary* binary = ctx->inputs[j].get();
+
+    /* Handle import memory coalescing */
+    if (binary->has_memory_import) {
+      if (!ctx->has_memory_import) {
+        ctx->has_memory_import = true;
+      }
+      extend_memory_limits(&ctx->memory_import_limits, &binary->memory_import_limits);
+    }
+
     for (size_t i = 0; i < binary->sections.size(); i++) {
       Section* s = binary->sections[i].get();
       SectionPtrVector& sec_list = sections[static_cast<int>(s->section_code)];
       sec_list.push_back(s);
+    }
+  }
+
+  /* Extend the memory size by the memory sections */
+  if (ctx->has_memory_import) {
+    for (Section* sec: sections[static_cast<int>(BinarySection::Memory)]) {
+      extend_memory_limits(&ctx->memory_import_limits, &sec->data.memory_limits);
     }
   }
 
