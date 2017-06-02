@@ -71,9 +71,11 @@ Result LexerSourceFile::ReadRange(OffsetRange range,
   CHECK_RESULT(Seek(range.start));
 
   std::vector<char> result(range.size());
-  size_t read_size = Fill(result.data(), range.size());
-  if (read_size < range.size())
-    result.resize(read_size);
+  if (range.size() > 0) {
+    size_t read_size = Fill(result.data(), range.size());
+    if (read_size < range.size())
+      result.resize(read_size);
+  }
 
   CHECK_RESULT(Seek(old_offset));
 
@@ -105,9 +107,11 @@ Result LexerSourceBuffer::Tell(Offset* out_offset) {
 
 size_t LexerSourceBuffer::Fill(void* dest, Offset size) {
   Offset read_size = std::min(size, size_ - read_offset_);
-  const void* src = static_cast<const char*>(data_) + read_offset_;
-  memcpy(dest, src, read_size);
-  read_offset_ += read_size;
+  if (read_size > 0) {
+    const void* src = static_cast<const char*>(data_) + read_offset_;
+    memcpy(dest, src, read_size);
+    read_offset_ += read_size;
+  }
   return read_size;
 }
 
@@ -116,9 +120,11 @@ Result LexerSourceBuffer::ReadRange(OffsetRange range,
   OffsetRange clamped = range;
   clamped.start = std::min(clamped.start, size_);
   clamped.end = std::min(clamped.end, size_);
-  std::vector<char> result(clamped.size());
-  const void* src = static_cast<const char*>(data_) + clamped.start;
-  memcpy(result.data(), src, clamped.size());
+  if (clamped.size()) {
+    std::vector<char> result(clamped.size());
+    const void* src = static_cast<const char*>(data_) + clamped.start;
+    memcpy(result.data(), src, clamped.size());
+  }
   return Result::Ok;
 }
 
