@@ -372,7 +372,6 @@ static void visit_command(Context* ctx, Command* command) {
       Context new_ctx;
       new_ctx.error_handler = &new_error_handler;
       new_ctx.lexer = ctx->lexer;
-      new_ctx.visitor = ctx->visitor;
       new_ctx.result = Result::Ok;
 
       visit_raw_module(&new_ctx, command->assert_invalid.module);
