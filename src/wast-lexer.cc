@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include "lexer-source.h"
 #include "wast-parser.h"
 #include "wast-parser-lexer-shared.h"
 

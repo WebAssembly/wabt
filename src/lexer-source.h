@@ -23,21 +23,9 @@
 #include <vector>
 
 #include "common.h"
+#include "range.h"
 
 namespace wabt {
-
-template <typename T>
-struct Range {
-  Range() : start(0), end(0) {}
-  Range(T start, T end) : start(start), end(end) {}
-  T start;
-  T end;
-
-  T size() const { return end - start; }
-};
-
-typedef Range<Offset> OffsetRange;
-typedef Range<int> ColumnRange;
 
 class LexerSource {
  public:
@@ -83,36 +71,6 @@ class LexerSourceBuffer : public LexerSource {
   const void* data_;
   Offset size_;
   Offset read_offset_;
-};
-
-class LexerSourceLineFinder {
- public:
-  struct SourceLine {
-    std::string line;
-    int column_offset;
-  };
-
-  explicit LexerSourceLineFinder(std::unique_ptr<LexerSource>);
-
-  Result GetLine(int line,
-                 ColumnRange column_range,
-                 Offset max_line_length,
-                 SourceLine* out_source_line);
-  Result GetLineOffsets(int line, OffsetRange* out_offsets);
-
- private:
-  static OffsetRange ClampSourceLineOffsets(OffsetRange line_offset_range,
-                                            ColumnRange column_range,
-                                            Offset max_line_length);
-
-  bool IsLineCached(int) const;
-  OffsetRange GetCachedLine(int) const;
-
-  std::unique_ptr<LexerSource> source_;
-  std::vector<OffsetRange> line_ranges_;
-  Offset next_line_start_;
-  bool last_cr_;  // Last read character was a '\r' (carriage return).
-  bool eof_;
 };
 
 }  // namespace wabt

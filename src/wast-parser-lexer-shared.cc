@@ -53,9 +53,8 @@ void wast_format_error(SourceErrorHandler* error_handler,
   LexerSourceLineFinder::SourceLine source_line;
   if (loc && lexer) {
     size_t source_line_max_length = error_handler->source_line_max_length();
-    ColumnRange column_range(loc->first_column, loc->last_column);
-    Result result = lexer->line_finder().GetLine(
-        loc->line, column_range, source_line_max_length, &source_line);
+    Result result = lexer->line_finder().GetSourceLine(
+        *loc, source_line_max_length, &source_line);
     if (WABT_FAILED(result)) {
       // If this fails, it means that we've probably screwed up the lexer. Blow
       // up.
