@@ -50,25 +50,21 @@ void wast_format_error(SourceErrorHandler* error_handler,
     len = wabt_vsnprintf(buffer, len + 1, format, args_copy);
   }
 
-  char* source_line = nullptr;
-  size_t source_line_length = 0;
-  int source_line_column_offset = 0;
-  size_t source_line_max_length = error_handler->source_line_max_length();
+  LexerSourceLineFinder::SourceLine source_line;
   if (loc && lexer) {
-    source_line = static_cast<char*>(alloca(source_line_max_length + 1));
-    Result result = wast_lexer_get_source_line(
-        lexer, loc, source_line_max_length, source_line, &source_line_length,
-        &source_line_column_offset);
+    size_t source_line_max_length = error_handler->source_line_max_length();
+    ColumnRange column_range(loc->first_column, loc->last_column);
+    Result result = lexer->line_finder().GetLine(
+        loc->line, column_range, source_line_max_length, &source_line);
     if (WABT_FAILED(result)) {
-      /* if this fails, it means that we've probably screwed up the lexer. blow
-       * up. */
+      // If this fails, it means that we've probably screwed up the lexer. Blow
+      // up.
       WABT_FATAL("error getting the source line.\n");
     }
   }
 
-  error_handler->OnError(loc, std::string(buffer),
-                         std::string(source_line, source_line_length),
-                         source_line_column_offset);
+  error_handler->OnError(loc, std::string(buffer), source_line.line,
+                         source_line.column_offset);
   va_end(args_copy);
 }
 

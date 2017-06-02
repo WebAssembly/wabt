@@ -1,0 +1,11 @@
+;;; ERROR: 1
+modulez
+funcz
+(;; STDERR ;;;
+out/test/parse/bad-crlf.txt:2:1: unexpected token "modulez"
+modulez
+^^^^^^^
+out/test/parse/bad-crlf.txt:3:1: unexpected token "funcz"
+funcz
+^^^^^
+;;; STDERR ;;)

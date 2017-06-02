@@ -17,53 +17,54 @@
 #ifndef WABT_WAST_LEXER_H_
 #define WABT_WAST_LEXER_H_
 
-#include <stddef.h>
-#include <stdio.h>
+#include <cstddef>
+#include <cstdio>
+#include <memory>
 
 #include "common.h"
+#include "lexer-source.h"
 
 namespace wabt {
 
-enum class WastLexerSourceType {
-  File,
-  Buffer,
+union Token;
+struct WastParser;
+
+class WastLexer {
+ public:
+  WastLexer(std::unique_ptr<LexerSource> source, const char* filename);
+  ~WastLexer();
+
+  // Convenience functions.
+  static std::unique_ptr<WastLexer> CreateFileLexer(const char* filename);
+  static std::unique_ptr<WastLexer> CreateBufferLexer(const char* filename,
+                                                      const void* data,
+                                                      size_t size);
+
+  int GetToken(Token* lval, Location* loc, WastParser* parser);
+  Result Fill(Location* loc, WastParser* parser, size_t need);
+
+  LexerSourceLineFinder& line_finder() { return line_finder_; }
+
+ private:
+  std::unique_ptr<LexerSource> source_;
+  LexerSourceLineFinder line_finder_;
+  const char* filename_;
+  int line_;
+  int comment_nesting_;
+  size_t buffer_file_offset_; // File offset of the start of the buffer.
+  size_t line_file_offset_;   // File offset of the start of the current line.
+
+  // Lexing data needed by re2c.
+  bool eof_;
+  char* buffer_;
+  size_t buffer_size_;
+  char* marker_;
+  char* token_;
+  char* cursor_;
+  char* limit_;
+
+  WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 };
-
-struct WastLexerSource {
-  WastLexerSourceType type;
-  union {
-    FILE* file;
-    struct {
-      const void* data;
-      size_t size;
-      size_t read_offset;
-    } buffer;
-  };
-};
-
-struct WastLexer {
-  WastLexerSource source;
-  const char* filename;
-  int line;
-  int comment_nesting;
-  size_t buffer_file_offset; /* file offset of the start of the buffer */
-  size_t line_file_offset;   /* file offset of the start of the current line */
-
-  /* lexing data needed by re2c */
-  bool eof;
-  char* buffer;
-  size_t buffer_size;
-  char* marker;
-  char* token;
-  char* cursor;
-  char* limit;
-};
-
-WastLexer* new_wast_file_lexer(const char* filename);
-WastLexer* new_wast_buffer_lexer(const char* filename,
-                                const void* data,
-                                size_t size);
-void destroy_wast_lexer(WastLexer*);
 
 }  // namespace wabt
 

@@ -198,19 +198,19 @@ int ProgramMain(int argc, char** argv) {
 
   parse_options(argc, argv);
 
-  WastLexer* lexer = new_wast_file_lexer(s_infile);
+  std::unique_ptr<WastLexer> lexer = WastLexer::CreateFileLexer(s_infile);
   if (!lexer)
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
   SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_wast(lexer, &script, &error_handler);
+  Result result = parse_wast(lexer.get(), &script, &error_handler);
 
   if (WABT_SUCCEEDED(result)) {
-    result = resolve_names_script(lexer, script, &error_handler);
+    result = resolve_names_script(lexer.get(), script, &error_handler);
 
     if (WABT_SUCCEEDED(result) && s_validate)
-      result = validate_script(lexer, script, &error_handler);
+      result = validate_script(lexer.get(), script, &error_handler);
 
     if (WABT_SUCCEEDED(result)) {
       if (s_spec) {
@@ -235,7 +235,6 @@ int ProgramMain(int argc, char** argv) {
     }
   }
 
-  destroy_wast_lexer(lexer);
   delete script;
   return result != Result::Ok;
 }
