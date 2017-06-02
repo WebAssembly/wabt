@@ -356,9 +356,12 @@ void WatWriter::WriteVar(const Var* var, NextChar next_char) {
 
 void WatWriter::WriteBrVar(const Var* var, NextChar next_char) {
   if (var->type == VarType::Index) {
-    assert(var->index < GetLabelStackSize());
-    Writef("%" PRIindex " (;@%" PRIindex ";)", var->index,
-           GetLabelStackSize() - var->index - 1);
+    if (var->index < GetLabelStackSize()) {
+      Writef("%" PRIindex " (;@%" PRIindex ";)", var->index,
+             GetLabelStackSize() - var->index - 1);
+    } else {
+      Writef("%" PRIindex " (; INVALID ;)", var->index);
+    }
     next_char_ = next_char;
   } else {
     WriteStringSlice(&var->name, next_char);
