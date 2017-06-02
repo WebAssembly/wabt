@@ -170,7 +170,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
   WastParser* parser_;
 };
 
-#define wabt_wast_parser_lex wast_lexer_lex
+#define wabt_wast_parser_lex(...) lexer->GetToken(__VA_ARGS__, parser)
 #define wabt_wast_parser_error wast_parser_error
 
 %}
@@ -180,7 +180,6 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %define api.value.type {::wabt::Token}
 %define api.token.prefix {WABT_TOKEN_TYPE_}
 %define parse.error verbose
-%lex-param {::wabt::WastLexer* lexer} {::wabt::WastParser* parser}
 %parse-param {::wabt::WastLexer* lexer} {::wabt::WastParser* parser}
 %locations
 

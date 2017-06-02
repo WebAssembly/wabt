@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 WebAssembly Community Group participants
+ * Copyright 2017 WebAssembly Community Group participants
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef WABT_RESOLVE_NAMES_H_
-#define WABT_RESOLVE_NAMES_H_
-
-#include "common.h"
+#ifndef WABT_RANGE_H_
+#define WABT_RANGE_H_
 
 namespace wabt {
 
-class WastLexer;
-struct Module;
-struct Script;
-class SourceErrorHandler;
+template <typename T>
+struct Range {
+  Range() : start(0), end(0) {}
+  Range(T start, T end) : start(start), end(end) {}
+  T start;
+  T end;
 
-Result resolve_names_module(WastLexer*, Module*, SourceErrorHandler*);
-Result resolve_names_script(WastLexer*, Script*, SourceErrorHandler*);
+  T size() const { return end - start; }
+};
 
-}  // namespace wabt
+typedef Range<Offset> OffsetRange;
+typedef Range<int> ColumnRange;
 
-#endif /* WABT_RESOLVE_NAMES_H_ */
+} // namespace wabt
+
+#endif  // WABT_RANGE_H_

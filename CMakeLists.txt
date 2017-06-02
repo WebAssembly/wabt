@@ -228,6 +228,8 @@ add_library(libwabt STATIC
   src/hash-util.cc
   src/string-view.cc
   src/ir.cc
+  src/lexer-source.cc
+  src/lexer-source-line-finder.cc
   src/wast-parser-lexer-shared.cc
   ${WAST_LEXER_GEN_CC}
   ${WAST_PARSER_GEN_CC}
