@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <vector>
 
+#include "expr-visitor.h"
 #include "ir.h"
 
 #define CHECK_RESULT(expr)  \
@@ -32,8 +33,25 @@ namespace wabt {
 
 namespace {
 
-struct Context {
+struct Context : ExprVisitor::DelegateNop {
   Context();
+
+  Result BeginBlockExpr(Expr*) override;
+  Result EndBlockExpr(Expr*) override;
+  Result OnBrExpr(Expr*) override;
+  Result OnBrIfExpr(Expr*) override;
+  Result OnBrTableExpr(Expr*) override;
+  Result OnCallExpr(Expr*) override;
+  Result OnCallIndirectExpr(Expr*) override;
+  Result OnGetGlobalExpr(Expr*) override;
+  Result OnGetLocalExpr(Expr*) override;
+  Result BeginIfExpr(Expr*) override;
+  Result EndIfExpr(Expr*) override;
+  Result BeginLoopExpr(Expr*) override;
+  Result EndLoopExpr(Expr*) override;
+  Result OnSetGlobalExpr(Expr*) override;
+  Result OnSetLocalExpr(Expr*) override;
+  Result OnTeeLocalExpr(Expr*) override;
 
   Module* module = nullptr;
   Func* current_func = nullptr;
@@ -44,8 +62,7 @@ struct Context {
   std::vector<Label*> labels;
 };
 
-Context::Context() {
-  WABT_ZERO_MEMORY(visitor);
+Context::Context() : visitor(this) {
 }
 
 void push_label(Context* ctx, Label* label) {
@@ -153,111 +170,94 @@ Result use_name_for_param_and_local_var(Context* ctx, Func* func, Var* var) {
   return Result::Ok;
 }
 
-Result begin_block_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  push_label(ctx, &expr->block->label);
+Result Context::BeginBlockExpr(Expr* expr) {
+  push_label(this, &expr->block->label);
   return Result::Ok;
 }
 
-Result end_block_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  pop_label(ctx);
+Result Context::EndBlockExpr(Expr* expr) {
+  pop_label(this);
   return Result::Ok;
 }
 
-Result begin_loop_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  push_label(ctx, &expr->loop->label);
+Result Context::BeginLoopExpr(Expr* expr) {
+  push_label(this, &expr->loop->label);
   return Result::Ok;
 }
 
-Result end_loop_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  pop_label(ctx);
+Result Context::EndLoopExpr(Expr* expr) {
+  pop_label(this);
   return Result::Ok;
 }
 
-Result on_br_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  Label* label = find_label_by_var(ctx, &expr->br.var);
+Result Context::OnBrExpr(Expr* expr) {
+  Label* label = find_label_by_var(this, &expr->br.var);
   use_name_for_var(label, &expr->br.var);
   return Result::Ok;
 }
 
-Result on_br_if_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  Label* label = find_label_by_var(ctx, &expr->br_if.var);
+Result Context::OnBrIfExpr(Expr* expr) {
+  Label* label = find_label_by_var(this, &expr->br_if.var);
   use_name_for_var(label, &expr->br_if.var);
   return Result::Ok;
 }
 
-Result on_br_table_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
+Result Context::OnBrTableExpr(Expr* expr) {
   VarVector& targets = *expr->br_table.targets;
   for (Var& target : targets) {
-    Label* label = find_label_by_var(ctx, &target);
+    Label* label = find_label_by_var(this, &target);
     use_name_for_var(label, &target);
   }
 
-  Label* label = find_label_by_var(ctx, &expr->br_table.default_target);
+  Label* label = find_label_by_var(this, &expr->br_table.default_target);
   use_name_for_var(label, &expr->br_table.default_target);
   return Result::Ok;
 }
 
-Result on_call_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(use_name_for_func_var(ctx->module, &expr->call.var));
+Result Context::OnCallExpr(Expr* expr) {
+  CHECK_RESULT(use_name_for_func_var(module, &expr->call.var));
   return Result::Ok;
 }
 
-Result on_call_indirect_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(
-      use_name_for_func_type_var(ctx->module, &expr->call_indirect.var));
+Result Context::OnCallIndirectExpr(Expr* expr) {
+  CHECK_RESULT(use_name_for_func_type_var(module, &expr->call_indirect.var));
   return Result::Ok;
 }
 
-Result on_get_global_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(use_name_for_global_var(ctx->module, &expr->get_global.var));
+Result Context::OnGetGlobalExpr(Expr* expr) {
+  CHECK_RESULT(use_name_for_global_var(module, &expr->get_global.var));
   return Result::Ok;
 }
 
-Result on_get_local_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
+Result Context::OnGetLocalExpr(Expr* expr) {
+  CHECK_RESULT(use_name_for_param_and_local_var(this, current_func,
                                                 &expr->get_local.var));
   return Result::Ok;
 }
 
-Result begin_if_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  push_label(ctx, &expr->if_.true_->label);
+Result Context::BeginIfExpr(Expr* expr) {
+  push_label(this, &expr->if_.true_->label);
   return Result::Ok;
 }
 
-Result end_if_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  pop_label(ctx);
+Result Context::EndIfExpr(Expr* expr) {
+  pop_label(this);
   return Result::Ok;
 }
 
-Result on_set_global_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(use_name_for_global_var(ctx->module, &expr->set_global.var));
+Result Context::OnSetGlobalExpr(Expr* expr) {
+  CHECK_RESULT(use_name_for_global_var(module, &expr->set_global.var));
   return Result::Ok;
 }
 
-Result on_set_local_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
+Result Context::OnSetLocalExpr(Expr* expr) {
+  CHECK_RESULT(use_name_for_param_and_local_var(this, current_func,
                                                 &expr->set_local.var));
   return Result::Ok;
 }
 
-Result on_tee_local_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  CHECK_RESULT(use_name_for_param_and_local_var(ctx, ctx->current_func,
+Result Context::OnTeeLocalExpr(Expr* expr) {
+  CHECK_RESULT(use_name_for_param_and_local_var(this, current_func,
                                                 &expr->tee_local.var));
   return Result::Ok;
 }
@@ -275,7 +275,7 @@ Result visit_func(Context* ctx, Index func_index, Func* func) {
   make_type_binding_reverse_mapping(func->local_types, func->local_bindings,
                                     &ctx->local_index_to_name);
 
-  CHECK_RESULT(visit_func(func, &ctx->visitor));
+  CHECK_RESULT(ctx->visitor.VisitFunc(func));
   ctx->current_func = nullptr;
   return Result::Ok;
 }
@@ -321,23 +321,6 @@ Result visit_module(Context* ctx, Module* module) {
 Result apply_names(Module* module) {
   Context ctx;
   ctx.module = module;
-  ctx.visitor.user_data = &ctx;
-  ctx.visitor.begin_block_expr = begin_block_expr;
-  ctx.visitor.end_block_expr = end_block_expr;
-  ctx.visitor.begin_loop_expr = begin_loop_expr;
-  ctx.visitor.end_loop_expr = end_loop_expr;
-  ctx.visitor.on_br_expr = on_br_expr;
-  ctx.visitor.on_br_if_expr = on_br_if_expr;
-  ctx.visitor.on_br_table_expr = on_br_table_expr;
-  ctx.visitor.on_call_expr = on_call_expr;
-  ctx.visitor.on_call_indirect_expr = on_call_indirect_expr;
-  ctx.visitor.on_get_global_expr = on_get_global_expr;
-  ctx.visitor.on_get_local_expr = on_get_local_expr;
-  ctx.visitor.begin_if_expr = begin_if_expr;
-  ctx.visitor.end_if_expr = end_if_expr;
-  ctx.visitor.on_set_global_expr = on_set_global_expr;
-  ctx.visitor.on_set_local_expr = on_set_local_expr;
-  ctx.visitor.on_tee_local_expr = on_tee_local_expr;
   Result result = visit_module(&ctx, module);
   return result;
 }
