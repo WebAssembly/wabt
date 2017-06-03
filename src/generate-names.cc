@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "expr-visitor.h"
 #include "ir.h"
 
 #define CHECK_RESULT(expr) \
@@ -33,8 +34,12 @@ namespace wabt {
 
 namespace {
 
-struct Context {
-  Context() : module(nullptr), label_count(0) { WABT_ZERO_MEMORY(visitor); }
+struct Context : public ExprVisitor::DelegateNop {
+  Context() : module(nullptr), visitor(this), label_count(0) {}
+
+  Result BeginBlockExpr(Expr* expr) override;
+  Result BeginLoopExpr(Expr* expr) override;
+  Result BeginIfExpr(Expr* expr) override;
 
   Module* module;
   ExprVisitor visitor;
@@ -98,21 +103,18 @@ static void generate_and_bind_local_names(Context* ctx,
   }
 }
 
-static Result begin_block_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  maybe_generate_name("$B", ctx->label_count++, &expr->block->label);
+Result Context::BeginBlockExpr(Expr* expr) {
+  maybe_generate_name("$B", label_count++, &expr->block->label);
   return Result::Ok;
 }
 
-static Result begin_loop_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  maybe_generate_name("$L", ctx->label_count++, &expr->loop->label);
+Result Context::BeginLoopExpr(Expr* expr) {
+  maybe_generate_name("$L", label_count++, &expr->loop->label);
   return Result::Ok;
 }
 
-static Result begin_if_expr(Expr* expr, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  maybe_generate_name("$I", ctx->label_count++, &expr->if_.true_->label);
+Result Context::BeginIfExpr(Expr* expr) {
+  maybe_generate_name("$I", label_count++, &expr->if_.true_->label);
   return Result::Ok;
 }
 
@@ -129,7 +131,7 @@ static Result visit_func(Context* ctx, Index func_index, Func* func) {
   generate_and_bind_local_names(ctx, &func->local_bindings, "$l");
 
   ctx->label_count = 0;
-  CHECK_RESULT(visit_func(func, &ctx->visitor));
+  CHECK_RESULT(ctx->visitor.VisitFunc(func));
   return Result::Ok;
 }
 
@@ -175,10 +177,6 @@ static Result visit_module(Context* ctx, Module* module) {
 
 Result generate_names(Module* module) {
   Context ctx;
-  ctx.visitor.user_data = &ctx;
-  ctx.visitor.begin_block_expr = begin_block_expr;
-  ctx.visitor.begin_loop_expr = begin_loop_expr;
-  ctx.visitor.begin_if_expr = begin_if_expr;
   ctx.module = module;
   Result result = visit_module(&ctx, module);
   return result;
