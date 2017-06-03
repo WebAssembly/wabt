@@ -47,11 +47,17 @@ def main(args):
                       help='print the commands that are run.')
   parser.add_argument('--no-debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
+  parser.add_argument('--dump', action='store_true',
+                      help='run wasmdump on generated binary')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
   gen_wasm = utils.Executable(sys.executable, GEN_WASM_PY,
                               error_cmdline=options.error_cmdline)
+
+  wasmdump = utils.Executable(
+      find_exe.GetWasmdumpExecutable(options.bindir),
+      error_cmdline=options.error_cmdline)
 
   wasm2wast = utils.Executable(
       find_exe.GetWasm2WastExecutable(options.bindir),
@@ -69,6 +75,8 @@ def main(args):
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
     gen_wasm.RunWithArgs(options.file, '-o', out_file)
     wasm2wast.RunWithArgs(out_file)
+    if options.dump:
+      wasmdump.RunWithArgs(out_file, '--disassemble', '-r', '-x')
 
 
 if __name__ == '__main__':

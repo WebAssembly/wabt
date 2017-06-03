@@ -144,7 +144,8 @@ BinaryReaderObjdumpPrepass::BinaryReaderObjdumpPrepass(const uint8_t* data,
 
 Result BinaryReaderObjdumpPrepass::OnFunctionName(Index index,
                                                   StringSlice name) {
-  options->function_names.resize(index + 1);
+  if (options->function_names.size() < index + 1)
+    options->function_names.resize(index + 1);
   options->function_names[index] = string_slice_to_string(name);
   return Result::Ok;
 }
