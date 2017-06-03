@@ -205,7 +205,7 @@ if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
 endif ()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
-find_package(RE2C 0.13)
+find_package(RE2C 0.16)
 if (RUN_RE2C AND RE2C_EXECUTABLE)
   set(WAST_LEXER_CC ${WABT_SOURCE_DIR}/src/wast-lexer.cc)
   set(WAST_LEXER_GEN_CC ${WABT_BINARY_DIR}/wast-lexer-gen.cc)
@@ -213,7 +213,7 @@ if (RUN_RE2C AND RE2C_EXECUTABLE)
     NAME WAST_LEXER_GEN_CC
     INPUT ${WAST_LEXER_CC}
     OUTPUT ${WAST_LEXER_GEN_CC}
-    OPTIONS -bc
+    OPTIONS -bc8
   )
 else ()
   set(WAST_LEXER_GEN_CC src/prebuilt/wast-lexer-gen.cc)

@@ -1,0 +1,13 @@
+;;; ERROR: 1
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/token-keyword-separation.fail.wast
+(;; STDERR ;;;
+Error running "wast2wasm":
+out/third_party/testsuite/token-keyword-separation.fail.wast:1:22: unexpected token "i32.const0"
+(module (func (drop (i32.const0))))
+                     ^^^^^^^^^^
+out/third_party/testsuite/token-keyword-separation.fail.wast:1:32: syntax error, unexpected )
+(module (func (drop (i32.const0))))
+                               ^
+
+;;; STDERR ;;)

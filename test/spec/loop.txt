@@ -1,31 +1,31 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/loop.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/loop.wast:226: assert_invalid passed:
+out/third_party/testsuite/loop.wast:254: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001c: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:230: assert_invalid passed:
+out/third_party/testsuite/loop.wast:258: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001c: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:234: assert_invalid passed:
+out/third_party/testsuite/loop.wast:262: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001c: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:238: assert_invalid passed:
+out/third_party/testsuite/loop.wast:266: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001c: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:243: assert_invalid passed:
+out/third_party/testsuite/loop.wast:271: assert_invalid passed:
   error: type stack at end of loop is 1, expected 0
   error: @0x0000001c: OnEndExpr callback failed
-out/third_party/testsuite/loop.wast:249: assert_invalid passed:
+out/third_party/testsuite/loop.wast:277: assert_invalid passed:
   error: type stack size too small at loop. got 0, expected at least 1
   error: @0x0000001b: OnEndExpr callback failed
-out/third_party/testsuite/loop.wast:255: assert_invalid passed:
+out/third_party/testsuite/loop.wast:283: assert_invalid passed:
   error: type stack size too small at loop. got 0, expected at least 1
   error: @0x0000001c: OnEndExpr callback failed
-out/third_party/testsuite/loop.wast:261: assert_invalid passed:
+out/third_party/testsuite/loop.wast:289: assert_invalid passed:
   error: type mismatch in loop, expected i32 but got f32.
   error: @0x00000020: OnEndExpr callback failed
-out/third_party/testsuite/loop.wast:267: assert_invalid passed:
+out/third_party/testsuite/loop.wast:295: assert_invalid passed:
   error: type mismatch in implicit return, expected i32 but got i64.
   error: @0x00000020: EndFunctionBody callback failed
 51/51 tests passed.

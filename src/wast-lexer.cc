@@ -48,17 +48,19 @@
   YY_USER_ACTION;  \
   wast_parser_error(loc, this, parser, __VA_ARGS__)
 
-#define BEGIN(c) \
-  do {           \
-    cond = c;    \
+#define BEGIN(c) cond = (c)
+#define FILL(n)                                \
+  do {                                         \
+    if (WABT_FAILED(Fill(loc, parser, (n)))) { \
+      RETURN(EOF);                             \
+    }                                          \
   } while (0)
-#define FILL(n)                              \
-  do {                                       \
-    if (WABT_FAILED(Fill(loc, parser, n))) { \
-      RETURN(EOF);                           \
-      continue;                              \
-    }                                        \
-  } while (0)
+
+#define MAYBE_MALFORMED_UTF8(desc)                \
+  if (!(eof_ && limit_ - cursor_ <= YYMAXFILL)) { \
+    ERROR("malformed utf-8%s", desc);             \
+  }                                               \
+  continue
 
 #define yytext (token_)
 #define yyleng (cursor_ - token_)
@@ -174,7 +176,8 @@ Result WastLexer::Fill(Location* loc, WastParser* parser, size_t need) {
   // http://re2c.org/examples/example_03.html.
   if (limit_ < buffer_ + buffer_size_ - YYMAXFILL) {
     eof_ = true;
-    memset(limit_, 0, YYMAXFILL);
+    // Fill with 0xff, since that is an invalid utf-8 byte.
+    memset(limit_, 0xff, YYMAXFILL);
     limit_ += YYMAXFILL;
   }
   return Result::Ok;
@@ -203,30 +206,29 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       re2c:define:YYGETCONDITION:naked = 1;
       re2c:define:YYSETCONDITION = "BEGIN";
 
-      space =     [ \t];
       digit =     [0-9];
-      digits =    [0-9]+;
       hexdigit =  [0-9a-fA-F];
-      letter =    [a-zA-Z];
-      symbol =    [+\-*\/\\\^~=<>!?@#$%&|:`.];
-      tick =      "'";
-      escape =    [nt\\'"];
-      character = [^"\\\x00-\x1f\x7f] | "\\" escape | "\\" hexdigit hexdigit;
-      sign =      [+-];
       num =       digit+;
-      hexnum =    "0x" hexdigit+;
-      nat =       num | hexnum;
+      hexnum =    hexdigit+;
+      letter =    [a-zA-Z];
+      symbol =    [+\-*\/\\\^~=<>!?@#$%&|:`.'];
+      character = [^"\\\x00-\x1f]
+                | "\\" [nrt\\'"]
+                | "\\" hexdigit hexdigit;
+      sign =      [+-];
+      nat =       num | "0x" hexnum;
       int =       sign nat;
-      float0 =    sign? num "." digit*;
-      float1 =    sign? num ("." digit*)? [eE] sign? num;
-      hexfloat =  sign? "0x" hexdigit+ "."? hexdigit* "p" sign? digit+;
-      infinity =  sign? ("inf" | "infinity");
-      nan =       sign? "nan" | sign? "nan:0x" hexdigit+;
-      float =     float0 | float1;
+      hexfloat =  sign? "0x" hexnum ("." hexdigit*)? "p" sign? num;
+      infinity =  sign? "inf";
+      nan =       sign? "nan"
+          |       sign? "nan:0x" hexnum;
+      float =     sign? num "." digit*
+            |     sign? num ("." digit*)? [eE] sign? num;
       text =      '"' character* '"';
-      atom =      (letter | digit | "_" | tick | symbol)+;
-      name =      "$" atom;
-      EOF =       "\x00";
+      name =      "$" (letter | digit | "_" | symbol)+;
+
+      // Should be ([\x21-\x7e] \ [()"; ])+ , but re2c doesn't like this...
+      reserved =  [\x21\x23-\x27\x2a-\x3a\x3c-\x7e]+;  
 
       <i> "("                   { RETURN(LPAR); }
       <i> ")"                   { RETURN(RPAR); }
@@ -246,9 +248,9 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
                                         static_cast<int>(yyleng), yytext);
                                   continue; }
       <BAD_TEXT> '"' => i       { TEXT; RETURN(TEXT); }
-      <BAD_TEXT> EOF            { ERROR("unexpected EOF"); RETURN(EOF); }
       <BAD_TEXT> [^]            { ERROR("illegal character in string");
                                   continue; }
+      <BAD_TEXT> *              { MAYBE_MALFORMED_UTF8(" in string"); }
       <i> "i32"                 { TYPE(I32); RETURN(VALUE_TYPE); }
       <i> "i64"                 { TYPE(I64); RETURN(VALUE_TYPE); }
       <i> "f32"                 { TYPE(F32); RETURN(VALUE_TYPE); }
@@ -469,15 +471,15 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
                                     BEGIN(YYCOND_INIT);
                                   continue; }
       <BLOCK_COMMENT> "\n"      { NEWLINE; continue; }
-      <BLOCK_COMMENT> EOF       { ERROR("unexpected EOF"); RETURN(EOF); }
       <BLOCK_COMMENT> [^]       { continue; }
+      <BLOCK_COMMENT> *         { MAYBE_MALFORMED_UTF8(" in block comment"); }
       <i> "\n"                  { NEWLINE; continue; }
       <i> [ \t\r]+              { continue; }
-      <i> atom                  { ERROR("unexpected token \"%.*s\"",
+      <i> reserved              { ERROR("unexpected token \"%.*s\"",
                                         static_cast<int>(yyleng), yytext);
                                   continue; }
-      <*> EOF                   { RETURN(EOF); }
       <*> [^]                   { ERROR("unexpected char"); continue; }
+      <*> *                     { MAYBE_MALFORMED_UTF8(""); }
      */
   }
 }

@@ -77,34 +77,12 @@ void destroy_text_list(TextList* text_list) {
   }
 }
 
-FuncField::FuncField()
-    : type(FuncFieldType::Exprs), first_expr(nullptr), next(nullptr) {}
-
-FuncField::~FuncField() {
-  switch (type) {
-    case FuncFieldType::Exprs:
-      destroy_expr_list(first_expr);
-      break;
-
-    case FuncFieldType::ParamTypes:
-    case FuncFieldType::LocalTypes:
-    case FuncFieldType::ResultTypes:
-      delete types;
-      break;
-
-    case FuncFieldType::BoundParam:
-    case FuncFieldType::BoundLocal:
-      destroy_string_slice(&bound_type.name);
-      break;
-  }
-}
-
-void destroy_func_fields(FuncField* func_field) {
-  /* destroy the entire linked-list */
-  while (func_field) {
-    FuncField* next_func_field = func_field->next;
-    delete func_field;
-    func_field = next_func_field;
+void destroy_module_field_list(ModuleFieldList* fields) {
+  ModuleField* field = fields->first;
+  while (field) {
+    ModuleField* next = field->next;
+    delete field;
+    field = next;
   }
 }
 

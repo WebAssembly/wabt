@@ -3,7 +3,7 @@
   (func
     block $b
       i32.const 0
-      if f32
+      if (result f32)
         nop
       else
         f32.const 0

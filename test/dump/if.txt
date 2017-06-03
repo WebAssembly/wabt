@@ -7,7 +7,7 @@
       nop
     end
     i32.const 0
-    if f32
+    if (result f32)
       f32.const 1.0
     else
       f32.const 2.0 

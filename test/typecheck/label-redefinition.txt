@@ -1,10 +1,10 @@
 (module
   (func (result i32)
-    block $l1 i32
-      block $l1 i32
+    block $l1 (result i32)
+      block $l1 (result i32)
         i32.const 2
       end
-      block $l1 i32
+      block $l1 (result i32)
         i32.const 3
         br $l1
       end

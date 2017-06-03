@@ -279,34 +279,34 @@ out/third_party/testsuite/unreached-invalid.wast:549: assert_invalid passed:
 out/third_party/testsuite/unreached-invalid.wast:555: assert_invalid passed:
   error: type mismatch in block, expected i32 but got i64.
   error: @0x00000027: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:561: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:563: assert_invalid passed:
   error: type stack at end of block is 1, expected 0
   error: @0x00000024: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:568: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:570: assert_invalid passed:
   error: type stack at end of block is 1, expected 0
   error: @0x00000020: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:574: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:576: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x00000022: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:580: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:582: assert_invalid passed:
   error: type mismatch in implicit return, expected i32 but got i64.
   error: @0x00000024: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:586: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:588: assert_invalid passed:
   error: type stack at end of block is 1, expected 0
   error: @0x00000025: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:594: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:596: assert_invalid passed:
   error: type stack at end of loop is 1, expected 0
   error: @0x00000020: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:600: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:602: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x00000020: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:606: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:608: assert_invalid passed:
   error: type mismatch in implicit return, expected i32 but got i64.
   error: @0x00000022: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:613: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:615: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001f: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:619: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:621: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x00000020: EndFunctionBody callback failed
 100/100 tests passed.

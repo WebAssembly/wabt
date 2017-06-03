@@ -11,20 +11,20 @@
     f32.add)
 
   (func $fold-block-br-value (result i32)
-    block i32
+    block (result i32)
       i32.const 1
       br 0
     end)
 
   (func $fold-loop
-    loop i64
+    loop (result i64)
       br 0
       i64.const 1
     end
     drop)
 
   (func $fold-loop-br (result i32)
-    loop i32
+    loop (result i32)
       i32.const 1
       br 0
     end)
@@ -38,7 +38,7 @@
 
   (func $fold-if-else
     i32.const 1
-    if i32
+    if (result i32)
       i32.const 2
     else
       i32.const 3
@@ -47,7 +47,7 @@
 
   (func $fold-if-else-br
     i32.const 1
-    if i32
+    if (result i32)
       i32.const 2
       br 0
     else
@@ -67,16 +67,16 @@
     (f32.const 0x1p+0 (;=1;))
     (f32.add))
   (func $fold-block-br-value (type 1) (result i32)
-    (block i32  ;; label = @1
+    (block (result i32)  ;; label = @1
       (br 0 (;@1;)
         (i32.const 1))))
   (func $fold-loop (type 2)
     (drop
-      (loop i64  ;; label = @1
+      (loop (result i64)  ;; label = @1
         (br 0 (;@1;))
         (i64.const 1))))
   (func $fold-loop-br (type 1) (result i32)
-    (loop i32  ;; label = @1
+    (loop (result i32)  ;; label = @1
       (i32.const 1)
       (br 0 (;@1;))))
   (func $fold-if (type 2)
@@ -87,7 +87,7 @@
         (nop))))
   (func $fold-if-else (type 2)
     (drop
-      (if i32  ;; label = @1
+      (if (result i32)  ;; label = @1
         (i32.const 1)
         (then
           (i32.const 2))
@@ -95,7 +95,7 @@
           (i32.const 3)))))
   (func $fold-if-else-br (type 2)
     (drop
-      (if i32  ;; label = @1
+      (if (result i32)  ;; label = @1
         (i32.const 1)
         (then
           (br 0 (;@1;)

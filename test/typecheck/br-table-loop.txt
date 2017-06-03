@@ -2,7 +2,7 @@
  (table 0 anyfunc)
  (memory $0 17)
  (func $foo (param $0 i32) (result i32)
-  (loop $label$1 i32
+  (loop $label$1 (result i32)
    (block $label$2
     (br_table $label$1 $label$2 $label$2
      (get_local $0)

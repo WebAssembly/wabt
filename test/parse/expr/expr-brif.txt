@@ -1,6 +1,6 @@
 (module
   (func (result i32)
-    block $exit i32
+    block $exit (result i32)
       i32.const 0
       i32.const 0
       br_if 0

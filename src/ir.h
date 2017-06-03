@@ -269,9 +269,9 @@ struct Import {
   StringSlice field_name;
   ExternalKind kind;
   union {
-    /* an imported func is has the type Func so it can be more easily
-     * included in the Module's vector of funcs; but only the
-     * FuncDeclaration will have any useful information */
+    // An imported func has the type Func so it can be more easily included in
+    // the Module's vector of funcs, but only the FuncDeclaration will have any
+    // useful information.
     Func* func;
     Table* table;
     Memory* memory;
@@ -305,6 +305,7 @@ enum class ModuleFieldType {
 struct ModuleField {
   WABT_DISALLOW_COPY_AND_ASSIGN(ModuleField);
   ModuleField();
+  explicit ModuleField(ModuleFieldType);
   ~ModuleField();
 
   Location loc;

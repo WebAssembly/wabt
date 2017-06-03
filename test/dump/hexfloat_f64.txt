@@ -141,7 +141,7 @@ Code Disassembly:
  00005e: 1a                         | drop
  00005f: 44 c0 ff ff ff ff ff cf 7f | f64.const 0x1.fffffffffffcp+1021
  000068: 1a                         | drop
- 000069: 44 00 00 00 00 00 00 f0 7f | f64.const infinity
+ 000069: 44 00 00 00 00 00 00 f0 7f | f64.const inf
  000072: 1a                         | drop
  000073: 44 fc ff ff ff ff ff ef 7f | f64.const 0x1.ffffffffffffcp+1023
  00007c: 1a                         | drop

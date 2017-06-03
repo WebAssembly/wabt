@@ -40,11 +40,11 @@
     drop
     f32.const +nan:0xabc
     drop
-    f32.const infinity
+    f32.const inf
     drop
-    f32.const -infinity
+    f32.const -inf
     drop
-    f32.const +infinity 
+    f32.const +inf
     drop
     f32.const -0x1p-1
     drop
@@ -58,25 +58,25 @@
     drop
     f64.const 6.283185307179586
     drop
-    f64.const nan 
+    f64.const nan
     drop
     f64.const -nan
     drop
     f64.const +nan
     drop
-    f64.const nan:0xabc 
+    f64.const nan:0xabc
     drop
     f64.const -nan:0xabc
     drop
     f64.const +nan:0xabc
     drop
-    f64.const infinity 
+    f64.const inf
     drop
-    f64.const -infinity
+    f64.const -inf
     drop
-    f64.const +infinity
+    f64.const +inf
     drop
-    f64.const -0x1p-1 
+    f64.const -0x1p-1
     drop
     f64.const 0x1.921fb54442d18p+2
     drop))

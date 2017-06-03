@@ -3,7 +3,7 @@
   (memory 1)
   (memory 2))
 (;; STDERR ;;;
-out/test/parse/module/bad-memory-too-many.txt:4:3: only one memory block allowed
+out/test/parse/module/bad-memory-too-many.txt:4:4: only one memory block allowed
   (memory 2))
-  ^^^^^^^^^^
+   ^^^^^^
 ;;; STDERR ;;)

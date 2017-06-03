@@ -1,7 +1,7 @@
 ;;; TOOL: run-interp
 (module
   (func (param i32) (result i32)
-    (block $exit i32
+    (block $exit (result i32)
       (i32.sub
         (br_if $exit (i32.const 42) (get_local 0))
         (i32.const 13))))
