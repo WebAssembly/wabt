@@ -1,0 +1,14 @@
+;;; ERROR: 1
+(module
+  (func
+    loop i32 i32
+      i32.const 1
+      i32.const 2
+    end
+    drop
+    drop))
+(;; STDERR ;;;
+out/test/parse/expr/bad-loop-sig-multi.txt:4:5: multiple loop signature result types not currently supported.
+    loop i32 i32
+    ^^^^
+;;; STDERR ;;)

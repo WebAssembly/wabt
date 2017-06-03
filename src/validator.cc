@@ -100,6 +100,9 @@ class Validator {
                                 const char* desc);
   void CheckExprList(const Location* loc, const Expr* first);
   void CheckHasMemory(const Location* loc, Opcode opcode);
+  void CheckBlockSig(const Location* loc,
+                     Opcode opcode,
+                     const BlockSignature* sig);
   void CheckExpr(const Expr* expr);
   void CheckFuncSignatureMatchesFuncType(const Location* loc,
                                          const FuncSignature& sig,
@@ -404,6 +407,16 @@ void Validator::CheckHasMemory(const Location* loc, Opcode opcode) {
   }
 }
 
+void Validator::CheckBlockSig(const Location* loc,
+                              Opcode opcode,
+                              const BlockSignature* sig) {
+  if (sig->size() > 1) {
+    PrintError(loc,
+               "multiple %s signature result types not currently supported.",
+               get_opcode_name(opcode));
+  }
+}
+
 void Validator::CheckExpr(const Expr* expr) {
   expr_loc_ = &expr->loc;
 
@@ -413,6 +426,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Block:
+      CheckBlockSig(&expr->loc, Opcode::Block, &expr->block->sig);
       typechecker_.OnBlock(&expr->block->sig);
       CheckExprList(&expr->loc, expr->block->first);
       typechecker_.OnEnd();
@@ -488,6 +502,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::If:
+      CheckBlockSig(&expr->loc, Opcode::If, &expr->if_.true_->sig);
       typechecker_.OnIf(&expr->if_.true_->sig);
       CheckExprList(&expr->loc, expr->if_.true_->first);
       if (expr->if_.false_) {
@@ -506,6 +521,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Loop:
+      CheckBlockSig(&expr->loc, Opcode::Loop, &expr->loop->sig);
       typechecker_.OnLoop(&expr->loop->sig);
       CheckExprList(&expr->loc, expr->loop->first);
       typechecker_.OnEnd();
