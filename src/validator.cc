@@ -48,6 +48,8 @@ struct Context {
   WABT_DISALLOW_COPY_AND_ASSIGN(Context);
   Context(SourceErrorHandler*, WastLexer*, const Script*);
 
+  void OnTypecheckerError(const char* msg);
+
   SourceErrorHandler* error_handler = nullptr;
   WastLexer* lexer = nullptr;
   const Script* script = nullptr;
@@ -58,7 +60,7 @@ struct Context {
   Index current_global_index = 0;
   Index num_imported_globals = 0;
   TypeChecker typechecker;
-  /* Cached for access by on_typechecker_error */
+  // Cached for access by OnTypecheckerError.
   const Location* expr_loc = nullptr;
   Result result = Result::Ok;
 };
@@ -66,7 +68,10 @@ struct Context {
 Context::Context(SourceErrorHandler* error_handler,
                  WastLexer* lexer,
                  const Script* script)
-    : error_handler(error_handler), lexer(lexer), script(script) {}
+    : error_handler(error_handler), lexer(lexer), script(script) {
+  typechecker.set_error_callback(
+      [this](const char* msg) { OnTypecheckerError(msg); });
+}
 
 }  // namespace
 
@@ -79,9 +84,8 @@ static void WABT_PRINTF_FORMAT(3, 4)
   va_end(args);
 }
 
-static void on_typechecker_error(const char* msg, void* user_data) {
-  Context* ctx = static_cast<Context*>(user_data);
-  print_error(ctx, ctx->expr_loc, "%s", msg);
+void Context::OnTypecheckerError(const char* msg) {
+  print_error(this, expr_loc, "%s", msg);
 }
 
 static bool is_power_of_two(uint32_t x) {
@@ -348,39 +352,38 @@ static void check_expr(Context* ctx, const Expr* expr) {
 
   switch (expr->type) {
     case ExprType::Binary:
-      typechecker_on_binary(&ctx->typechecker, expr->binary.opcode);
+      ctx->typechecker.OnBinary(expr->binary.opcode);
       break;
 
     case ExprType::Block:
-      typechecker_on_block(&ctx->typechecker, &expr->block->sig);
+      ctx->typechecker.OnBlock(&expr->block->sig);
       check_expr_list(ctx, &expr->loc, expr->block->first);
-      typechecker_on_end(&ctx->typechecker);
+      ctx->typechecker.OnEnd();
       break;
 
     case ExprType::Br:
-      typechecker_on_br(&ctx->typechecker, expr->br.var.index);
+      ctx->typechecker.OnBr(expr->br.var.index);
       break;
 
     case ExprType::BrIf:
-      typechecker_on_br_if(&ctx->typechecker, expr->br_if.var.index);
+      ctx->typechecker.OnBrIf(expr->br_if.var.index);
       break;
 
     case ExprType::BrTable: {
-      typechecker_begin_br_table(&ctx->typechecker);
+      ctx->typechecker.BeginBrTable();
       for (Var& var: *expr->br_table.targets) {
-        typechecker_on_br_table_target(&ctx->typechecker, var.index);
+        ctx->typechecker.OnBrTableTarget(var.index);
       }
-      typechecker_on_br_table_target(&ctx->typechecker,
-                                     expr->br_table.default_target.index);
-      typechecker_end_br_table(&ctx->typechecker);
+      ctx->typechecker.OnBrTableTarget(expr->br_table.default_target.index);
+      ctx->typechecker.EndBrTable();
       break;
     }
 
     case ExprType::Call: {
       const Func* callee;
       if (WABT_SUCCEEDED(check_func_var(ctx, &expr->call.var, &callee))) {
-        typechecker_on_call(&ctx->typechecker, &callee->decl.sig.param_types,
-                            &callee->decl.sig.result_types);
+        ctx->typechecker.OnCall(&callee->decl.sig.param_types,
+                                &callee->decl.sig.result_types);
       }
       break;
     }
@@ -393,54 +396,51 @@ static void check_expr(Context* ctx, const Expr* expr) {
       }
       if (WABT_SUCCEEDED(
               check_func_type_var(ctx, &expr->call_indirect.var, &func_type))) {
-        typechecker_on_call_indirect(&ctx->typechecker,
-                                     &func_type->sig.param_types,
-                                     &func_type->sig.result_types);
+        ctx->typechecker.OnCallIndirect(&func_type->sig.param_types,
+                                        &func_type->sig.result_types);
       }
       break;
     }
 
     case ExprType::Compare:
-      typechecker_on_compare(&ctx->typechecker, expr->compare.opcode);
+      ctx->typechecker.OnCompare(expr->compare.opcode);
       break;
 
     case ExprType::Const:
-      typechecker_on_const(&ctx->typechecker, expr->const_.type);
+      ctx->typechecker.OnConst(expr->const_.type);
       break;
 
     case ExprType::Convert:
-      typechecker_on_convert(&ctx->typechecker, expr->convert.opcode);
+      ctx->typechecker.OnConvert(expr->convert.opcode);
       break;
 
     case ExprType::Drop:
-      typechecker_on_drop(&ctx->typechecker);
+      ctx->typechecker.OnDrop();
       break;
 
     case ExprType::GetGlobal:
-      typechecker_on_get_global(
-          &ctx->typechecker,
+      ctx->typechecker.OnGetGlobal(
           get_global_var_type_or_any(ctx, &expr->get_global.var));
       break;
 
     case ExprType::GetLocal:
-      typechecker_on_get_local(
-          &ctx->typechecker,
+      ctx->typechecker.OnGetLocal(
           get_local_var_type_or_any(ctx, &expr->get_local.var));
       break;
 
     case ExprType::GrowMemory:
       check_has_memory(ctx, &expr->loc, Opcode::GrowMemory);
-      typechecker_on_grow_memory(&ctx->typechecker);
+      ctx->typechecker.OnGrowMemory();
       break;
 
     case ExprType::If:
-      typechecker_on_if(&ctx->typechecker, &expr->if_.true_->sig);
+      ctx->typechecker.OnIf(&expr->if_.true_->sig);
       check_expr_list(ctx, &expr->loc, expr->if_.true_->first);
       if (expr->if_.false_) {
-        typechecker_on_else(&ctx->typechecker);
+        ctx->typechecker.OnElse();
         check_expr_list(ctx, &expr->loc, expr->if_.false_);
       }
-      typechecker_on_end(&ctx->typechecker);
+      ctx->typechecker.OnEnd();
       break;
 
     case ExprType::Load:
@@ -448,40 +448,38 @@ static void check_expr(Context* ctx, const Expr* expr) {
       check_align(ctx, &expr->loc, expr->load.align,
                   get_opcode_natural_alignment(expr->load.opcode));
       check_offset(ctx, &expr->loc, expr->load.offset);
-      typechecker_on_load(&ctx->typechecker, expr->load.opcode);
+      ctx->typechecker.OnLoad(expr->load.opcode);
       break;
 
     case ExprType::Loop:
-      typechecker_on_loop(&ctx->typechecker, &expr->loop->sig);
+      ctx->typechecker.OnLoop(&expr->loop->sig);
       check_expr_list(ctx, &expr->loc, expr->loop->first);
-      typechecker_on_end(&ctx->typechecker);
+      ctx->typechecker.OnEnd();
       break;
 
     case ExprType::CurrentMemory:
       check_has_memory(ctx, &expr->loc, Opcode::CurrentMemory);
-      typechecker_on_current_memory(&ctx->typechecker);
+      ctx->typechecker.OnCurrentMemory();
       break;
 
     case ExprType::Nop:
       break;
 
     case ExprType::Return:
-      typechecker_on_return(&ctx->typechecker);
+      ctx->typechecker.OnReturn();
       break;
 
     case ExprType::Select:
-      typechecker_on_select(&ctx->typechecker);
+      ctx->typechecker.OnSelect();
       break;
 
     case ExprType::SetGlobal:
-      typechecker_on_set_global(
-          &ctx->typechecker,
+      ctx->typechecker.OnSetGlobal(
           get_global_var_type_or_any(ctx, &expr->set_global.var));
       break;
 
     case ExprType::SetLocal:
-      typechecker_on_set_local(
-          &ctx->typechecker,
+      ctx->typechecker.OnSetLocal(
           get_local_var_type_or_any(ctx, &expr->set_local.var));
       break;
 
@@ -490,21 +488,20 @@ static void check_expr(Context* ctx, const Expr* expr) {
       check_align(ctx, &expr->loc, expr->store.align,
                   get_opcode_natural_alignment(expr->store.opcode));
       check_offset(ctx, &expr->loc, expr->store.offset);
-      typechecker_on_store(&ctx->typechecker, expr->store.opcode);
+      ctx->typechecker.OnStore(expr->store.opcode);
       break;
 
     case ExprType::TeeLocal:
-      typechecker_on_tee_local(
-          &ctx->typechecker,
+      ctx->typechecker.OnTeeLocal(
           get_local_var_type_or_any(ctx, &expr->tee_local.var));
       break;
 
     case ExprType::Unary:
-      typechecker_on_unary(&ctx->typechecker, expr->unary.opcode);
+      ctx->typechecker.OnUnary(expr->unary.opcode);
       break;
 
     case ExprType::Unreachable:
-      typechecker_on_unreachable(&ctx->typechecker);
+      ctx->typechecker.OnUnreachable();
       break;
   }
 }
@@ -536,9 +533,9 @@ static void check_func(Context* ctx, const Location* loc, const Func* func) {
   }
 
   ctx->expr_loc = loc;
-  typechecker_begin_function(&ctx->typechecker, &func->decl.sig.result_types);
+  ctx->typechecker.BeginFunction(&func->decl.sig.result_types);
   check_expr_list(ctx, loc, func->first_expr);
-  typechecker_end_function(&ctx->typechecker);
+  ctx->typechecker.EndFunction();
   ctx->current_func = nullptr;
 }
 
@@ -1006,11 +1003,6 @@ Result validate_script(WastLexer* lexer,
                        const struct Script* script,
                        SourceErrorHandler* error_handler) {
   Context ctx(error_handler, lexer, script);
-
-  TypeCheckerErrorHandler tc_error_handler;
-  tc_error_handler.on_error = on_typechecker_error;
-  tc_error_handler.user_data = &ctx;
-  ctx.typechecker.error_handler = &tc_error_handler;
 
   for (const std::unique_ptr<Command>& command : script->commands)
     check_command(&ctx, command.get());
