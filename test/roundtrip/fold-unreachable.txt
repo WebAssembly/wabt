@@ -1,0 +1,54 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --fold-exprs
+(module
+  (func (result i32)
+    i32.const 1
+    unreachable
+    i32.add)
+
+  (func
+    br 0
+    drop)
+
+  (func
+    block
+      block
+        block
+          i32.const 1
+          br_table 0 1 2 0
+          i32.const 2
+          i32.div_s
+          return
+        end
+      end
+    end)
+
+  (func (result i32)
+    i32.const 0
+    return
+    i32.eqz))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (type (;1;) (func))
+  (func (;0;) (type 0) (result i32)
+    (i32.add
+      (i32.const 1)
+      (unreachable)))
+  (func (;1;) (type 1)
+    (drop
+      (br 0 (;@0;))))
+  (func (;2;) (type 1)
+    (block  ;; label = @1
+      (block  ;; label = @2
+        (block  ;; label = @3
+          (i32.div_s
+            (br_table 0 (;@3;) 1 (;@2;) 2 (;@1;) 0 (;@3;)
+              (i32.const 1))
+            (i32.const 2))
+          (return)))))
+  (func (;3;) (type 0) (result i32)
+    (i32.eqz
+      (return
+        (i32.const 0)))))
+;;; STDOUT ;;)

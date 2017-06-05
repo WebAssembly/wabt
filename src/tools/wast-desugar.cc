@@ -38,11 +38,13 @@ using namespace wabt;
 
 static const char* s_infile;
 static const char* s_outfile;
+static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
 
 enum {
   FLAG_HELP,
   FLAG_OUTPUT,
+  FLAG_FOLD_EXPRS,
   FLAG_GENERATE_NAMES,
   NUM_FLAGS
 };
@@ -65,6 +67,8 @@ static Option s_options[] = {
      "print this help message"},
     {FLAG_OUTPUT, 'o', "output", "FILE", HasArgument::Yes,
      "output file for the formatted file"},
+    {FLAG_FOLD_EXPRS, 'f', "fold-exprs", nullptr, HasArgument::No,
+     "Write folded expressions where possible"},
     {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, HasArgument::No,
      "Give auto-generated names to non-named functions, types, etc."},
 };
@@ -81,6 +85,10 @@ static void on_option(struct OptionParser* parser,
 
     case FLAG_OUTPUT:
       s_outfile = argument;
+      break;
+
+    case FLAG_FOLD_EXPRS:
+      s_write_wat_options.fold_exprs = true;
       break;
 
     case FLAG_GENERATE_NAMES:
@@ -128,13 +136,13 @@ int ProgramMain(int argc, char** argv) {
   init_stdio();
   parse_options(argc, argv);
 
-  WastLexer* lexer = new_wast_file_lexer(s_infile);
+  std::unique_ptr<WastLexer> lexer(WastLexer::CreateFileLexer(s_infile));
   if (!lexer)
     WABT_FATAL("unable to read %s\n", s_infile);
 
   SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_wast(lexer, &script, &error_handler);
+  Result result = parse_wast(lexer.get(), &script, &error_handler);
 
   if (WABT_SUCCEEDED(result)) {
     Module* module = get_first_module(script);
@@ -149,11 +157,10 @@ int ProgramMain(int argc, char** argv) {
 
     if (WABT_SUCCEEDED(result)) {
       FileWriter writer(s_outfile ? FileWriter(s_outfile) : FileWriter(stdout));
-      result = write_wat(&writer, module);
+      result = write_wat(&writer, module, &s_write_wat_options);
     }
   }
 
-  destroy_wast_lexer(lexer);
   delete script;
   return result != Result::Ok;
 }

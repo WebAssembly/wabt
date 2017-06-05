@@ -115,15 +115,17 @@ enum class ExprType {
 
 typedef TypeVector BlockSignature;
 
+struct Expr;
+
 struct Block {
   WABT_DISALLOW_COPY_AND_ASSIGN(Block);
   Block();
-  explicit Block(struct Expr* first);
+  explicit Block(Expr* first);
   ~Block();
 
   Label label;
   BlockSignature sig;
-  struct Expr* first;
+  Expr* first;
 };
 
 struct Expr {
@@ -150,9 +152,9 @@ struct Expr {
   static Expr* CreateGetGlobal(Var);
   static Expr* CreateGetLocal(Var);
   static Expr* CreateGrowMemory();
-  static Expr* CreateIf(struct Block* true_, struct Expr* false_ = nullptr);
+  static Expr* CreateIf(Block* true_, Expr* false_ = nullptr);
   static Expr* CreateLoad(Opcode, Address align, uint64_t offset);
-  static Expr* CreateLoop(struct Block*);
+  static Expr* CreateLoop(Block*);
   static Expr* CreateNop();
   static Expr* CreateRethrow(Var);
   static Expr* CreateReturn();
@@ -181,7 +183,7 @@ struct Expr {
     struct Const const_;
     struct { Var var; } get_global, set_global;
     struct { Var var; } get_local, set_local, tee_local;
-    struct { struct Block* true_; struct Expr* false_; } if_;
+    struct { Block* true_; Expr* false_; } if_;
     struct { Opcode opcode; Address align; uint64_t offset; } load, store;
   };
 };
@@ -322,7 +324,7 @@ struct ModuleField {
 
   Location loc;
   ModuleFieldType type;
-  struct ModuleField* next;
+  ModuleField* next;
   union {
     Func* func;
     Global* global;
@@ -481,41 +483,6 @@ struct Script {
   BindingHash module_bindings;
 };
 
-struct ExprVisitor {
-  void* user_data;
-  Result (*on_binary_expr)(Expr*, void* user_data);
-  Result (*begin_block_expr)(Expr*, void* user_data);
-  Result (*end_block_expr)(Expr*, void* user_data);
-  Result (*on_br_expr)(Expr*, void* user_data);
-  Result (*on_br_if_expr)(Expr*, void* user_data);
-  Result (*on_br_table_expr)(Expr*, void* user_data);
-  Result (*on_call_expr)(Expr*, void* user_data);
-  Result (*on_call_indirect_expr)(Expr*, void* user_data);
-  Result (*on_compare_expr)(Expr*, void* user_data);
-  Result (*on_const_expr)(Expr*, void* user_data);
-  Result (*on_convert_expr)(Expr*, void* user_data);
-  Result (*on_current_memory_expr)(Expr*, void* user_data);
-  Result (*on_drop_expr)(Expr*, void* user_data);
-  Result (*on_get_global_expr)(Expr*, void* user_data);
-  Result (*on_get_local_expr)(Expr*, void* user_data);
-  Result (*on_grow_memory_expr)(Expr*, void* user_data);
-  Result (*begin_if_expr)(Expr*, void* user_data);
-  Result (*after_if_true_expr)(Expr*, void* user_data);
-  Result (*end_if_expr)(Expr*, void* user_data);
-  Result (*on_load_expr)(Expr*, void* user_data);
-  Result (*begin_loop_expr)(Expr*, void* user_data);
-  Result (*end_loop_expr)(Expr*, void* user_data);
-  Result (*on_nop_expr)(Expr*, void* user_data);
-  Result (*on_return_expr)(Expr*, void* user_data);
-  Result (*on_select_expr)(Expr*, void* user_data);
-  Result (*on_set_global_expr)(Expr*, void* user_data);
-  Result (*on_set_local_expr)(Expr*, void* user_data);
-  Result (*on_store_expr)(Expr*, void* user_data);
-  Result (*on_tee_local_expr)(Expr*, void* user_data);
-  Result (*on_unary_expr)(Expr*, void* user_data);
-  Result (*on_unreachable_expr)(Expr*, void* user_data);
-};
-
 ModuleField* append_module_field(Module*);
 /* ownership of the function signature is passed to the module */
 FuncType* append_implicit_func_type(Location*, Module*, FuncSignature*);
@@ -524,10 +491,6 @@ FuncType* append_implicit_func_type(Location*, Module*, FuncSignature*);
  elements */
 void destroy_expr_list(Expr*);
 void destroy_var(Var*);
-
-/* traversal functions */
-Result visit_func(Func* func, ExprVisitor*);
-Result visit_expr_list(Expr* expr, ExprVisitor*);
 
 /* convenience functions for looking through the IR */
 Index get_index_from_var(const BindingHash* bindings, const Var* var);

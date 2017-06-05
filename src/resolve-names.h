@@ -21,7 +21,7 @@
 
 namespace wabt {
 
-struct WastLexer;
+class WastLexer;
 struct Module;
 struct Script;
 class SourceErrorHandler;

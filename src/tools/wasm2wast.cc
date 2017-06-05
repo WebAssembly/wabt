@@ -38,6 +38,7 @@ static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
 static ReadBinaryOptions s_read_binary_options = {nullptr, true};
+static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
 static std::unique_ptr<FileStream> s_log_stream;
 
@@ -50,6 +51,8 @@ enum {
   FLAG_OUTPUT,
   FLAG_NO_DEBUG_NAMES,
   FLAG_GENERATE_NAMES,
+  FLAG_FOLD_EXPRS,
+  FLAG_INLINE_EXPORTS,
   NUM_FLAGS
 };
 
@@ -70,6 +73,10 @@ static Option s_options[] = {
     {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
     {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
      "output file for the generated wast file, by default use stdout"},
+    {FLAG_FOLD_EXPRS, 'f', "fold-exprs", nullptr, NOPE,
+     "Write folded expressions where possible"},
+    {FLAG_INLINE_EXPORTS, 0, "inline-exports", nullptr, NOPE,
+     "Write all exports inline"},
     {FLAG_NO_DEBUG_NAMES, 0, "no-debug-names", nullptr, NOPE,
      "Ignore debug names in the binary file"},
     {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, NOPE,
@@ -94,6 +101,14 @@ static void on_option(struct OptionParser* parser,
 
     case FLAG_OUTPUT:
       s_outfile = argument;
+      break;
+
+    case FLAG_FOLD_EXPRS:
+      s_write_wat_options.fold_exprs = true;
+      break;
+
+    case FLAG_INLINE_EXPORTS:
+      s_write_wat_options.inline_export = true;
       break;
 
     case FLAG_NO_DEBUG_NAMES:
@@ -159,7 +174,7 @@ int ProgramMain(int argc, char** argv) {
       if (WABT_SUCCEEDED(result)) {
         FileWriter writer(s_outfile ? FileWriter(s_outfile)
                                     : FileWriter(stdout));
-        result = write_wat(&writer, &module);
+        result = write_wat(&writer, &module, &s_write_wat_options);
       }
     }
     delete[] data;

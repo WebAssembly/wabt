@@ -1,0 +1,27 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+;; This test file contains two functions, but their names are listed in the
+;; names section out of order (1 first, then 0) which is an error.
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[2] type[0] type[0] }
+section(CODE) {
+  count[2]
+  func { locals[decl_count[0]] }
+  func { locals[decl_count[0]] }
+}
+section("name") {
+  subsection[1]
+  length[9]
+  func_count[2]
+  index[1]
+  str("F1")
+  index[0]
+  str("F0")
+}
+(;; STDERR ;;;
+Error running "wasm2wast":
+error: @0x0000002c: function index out of order: 0
+
+;;; STDERR ;;)

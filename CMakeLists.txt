@@ -228,6 +228,9 @@ add_library(libwabt STATIC
   src/hash-util.cc
   src/string-view.cc
   src/ir.cc
+  src/expr-visitor.cc
+  src/lexer-source.cc
+  src/lexer-source-line-finder.cc
   src/wast-parser-lexer-shared.cc
   ${WAST_LEXER_GEN_CC}
   ${WAST_PARSER_GEN_CC}
@@ -283,12 +286,13 @@ if (NOT EMSCRIPTEN)
   # wasm2wast
   wabt_executable(wasm2wast src/tools/wasm2wast.cc)
 
-  # wasmopcodecnt
-  wabt_executable(wasmopcodecnt
-    src/tools/wasmopcodecnt.cc src/binary-reader-opcnt.cc)
+  # wasm-opcodecnt
+  wabt_executable(wasm-opcodecnt
+    src/tools/wasm-opcodecnt.cc src/binary-reader-opcnt.cc)
 
-  # wasmdump
-  wabt_executable(wasmdump src/tools/wasmdump.cc src/binary-reader-objdump.cc)
+  # wasm-objdump
+  wabt_executable(wasm-objdump
+    src/tools/wasm-objdump.cc src/binary-reader-objdump.cc)
 
   # wasm-link
   wabt_executable(wasm-link src/tools/wasm-link.cc src/binary-reader-linker.cc)

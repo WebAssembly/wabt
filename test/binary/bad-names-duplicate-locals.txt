@@ -1,0 +1,34 @@
+;;; ERROR: 1
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[decl_count[1] i32_count[2] i32]
+    get_local 0
+  }
+}
+section("name") {
+  subsection[1]
+  length[5]
+  func_count[1]
+  index[0]
+  str("F0")
+  subsection[2]
+  length[11]
+  func_count[1]
+  index[0]
+  local_count[2]
+  index[0]
+  str("L0")
+  index[0]
+  str("L1")
+}
+(;; STDERR ;;;
+Error running "wasm2wast":
+error: @0x00000035: duplicate local index: 0
+
+;;; STDERR ;;)

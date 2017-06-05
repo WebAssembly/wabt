@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: --headers --spec
 (module
   (func (param $param2 i64))

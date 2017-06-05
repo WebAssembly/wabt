@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: -v
 (module
   (import "foo" "bar" (func (param i32 f32) (result i32)))

@@ -25,7 +25,7 @@
 #include "binary-reader.h"
 #include "binary-reader-objdump.h"
 
-#define PROGRAM_NAME "wasmdump"
+#define PROGRAM_NAME "wasm-objdump"
 
 #define NOPE HasArgument::No
 #define YEP HasArgument::Yes
@@ -48,7 +48,7 @@ static const char s_description[] =
     "  Print information about the contents of wasm binaries.\n"
     "\n"
     "examples:\n"
-    "  $ wasmdump test.wasm\n";
+    "  $ wasm-objdump test.wasm\n";
 
 static Option s_options[] = {
     {FLAG_HEADERS, 'h', "headers", nullptr, NOPE, "print headers"},

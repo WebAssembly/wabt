@@ -115,6 +115,8 @@ def main(args):
   parser.add_argument('--no-check', action='store_true')
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
+  parser.add_argument('--fold-exprs', action='store_true')
+  parser.add_argument('--inline-exports', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -130,6 +132,8 @@ def main(args):
       find_exe.GetWasm2WastExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
+      '--fold-exprs': options.fold_exprs,
+      '--inline-exports': options.inline_exports,
       '--no-debug-names': not options.debug_names,
       '--generate-names': options.generate_names,
   })

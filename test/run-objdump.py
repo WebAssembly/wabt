@@ -75,10 +75,10 @@ def main(args):
       '-c': options.compile_only,
   })
 
-  wasmdump = utils.Executable(
+  wasm_objdump = utils.Executable(
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wasmdump.AppendOptionalArgs({
+  wasm_objdump.AppendOptionalArgs({
       '-h': options.headers,
       '-x': options.dump_verbose,
       '--debug': options.dump_debug,
@@ -86,11 +86,11 @@ def main(args):
 
   gen_wasm.verbose = options.print_cmd
   wast2wasm.verbose = options.print_cmd
-  wasmdump.verbose = options.print_cmd
+  wasm_objdump.verbose = options.print_cmd
 
   filename = options.file
 
-  with utils.TempDirectory(options.out_dir, 'wasmdump-') as out_dir:
+  with utils.TempDirectory(options.out_dir, 'objdump-') as out_dir:
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
     if options.gen_wasm:
@@ -109,7 +109,7 @@ def main(args):
     else:
       wasm_files = [out_file]
 
-    wasmdump.RunWithArgs('-r', '-d', *wasm_files)
+    wasm_objdump.RunWithArgs('-r', '-d', *wasm_files)
 
 
 if __name__ == '__main__':

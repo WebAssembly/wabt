@@ -1,0 +1,69 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --fold-exprs
+(module
+  (type $i_i (func (param i32) (result i32)))
+
+  (func $i_i (type $i_i)
+    i32.const 1)
+
+  (func $if_f (param i32 f32) (result f32)
+    f32.const 0)
+
+  (func $ffff_v (param f32 f32 f32 f32))
+
+  (func $fold-call (result i32)
+    i32.const 1
+    call $i_i
+    drop
+    i32.const 2
+    call $i_i)
+
+  (func $fold-call-2
+    f32.const 0
+    f32.const 1
+    f32.const 2
+    i32.const 3
+    f32.const 4
+    call $if_f
+    call $ffff_v)
+
+  (table anyfunc (elem $i_i $if_f))
+  (func $fold-call-indirect (result i32)
+    i32.const 1
+    i32.const 2
+    call_indirect $i_i)
+)
+
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32) (result i32)))
+  (type (;1;) (func (param i32 f32) (result f32)))
+  (type (;2;) (func (param f32 f32 f32 f32)))
+  (type (;3;) (func (result i32)))
+  (type (;4;) (func))
+  (func (;0;) (type 0) (param i32) (result i32)
+    (i32.const 1))
+  (func (;1;) (type 1) (param i32 f32) (result f32)
+    (f32.const 0x0p+0 (;=0;)))
+  (func (;2;) (type 2) (param f32 f32 f32 f32))
+  (func (;3;) (type 3) (result i32)
+    (drop
+      (call 0
+        (i32.const 1)))
+    (call 0
+      (i32.const 2)))
+  (func (;4;) (type 4)
+    (call 2
+      (f32.const 0x0p+0 (;=0;))
+      (f32.const 0x1p+0 (;=1;))
+      (f32.const 0x1p+1 (;=2;))
+      (call 1
+        (i32.const 3)
+        (f32.const 0x1p+2 (;=4;)))))
+  (func (;5;) (type 3) (result i32)
+    (call_indirect 0
+      (i32.const 1)
+      (i32.const 2)))
+  (table (;0;) 2 2 anyfunc)
+  (elem (i32.const 0) 0 1))
+;;; STDOUT ;;)

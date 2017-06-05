@@ -83,15 +83,14 @@ class BinaryReaderLinker : public BinaryReaderNop {
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
 
  private:
-  LinkerInputBinary* binary;
+  LinkerInputBinary* binary_;
 
-  Section* reloc_section = nullptr;
-  Section* current_section = nullptr;
-  Index function_count = 0;
+  Section* reloc_section_ = nullptr;
+  Section* current_section_ = nullptr;
 };
 
 BinaryReaderLinker::BinaryReaderLinker(LinkerInputBinary* binary)
-    : binary(binary) {}
+    : binary_(binary) {}
 
 Result BinaryReaderLinker::OnRelocCount(Index count,
                                         BinarySection section_code,
@@ -100,10 +99,10 @@ Result BinaryReaderLinker::OnRelocCount(Index count,
     WABT_FATAL("relocation for custom sections not yet supported\n");
   }
 
-  for (const std::unique_ptr<Section>& section : binary->sections) {
+  for (const std::unique_ptr<Section>& section : binary_->sections) {
     if (section->section_code != section_code)
       continue;
-    reloc_section = section.get();
+    reloc_section_ = section.get();
     return Result::Ok;
   }
 
@@ -115,11 +114,11 @@ Result BinaryReaderLinker::OnReloc(RelocType type,
                                    Offset offset,
                                    Index index,
                                    uint32_t addend) {
-  if (offset + RELOC_SIZE > reloc_section->size) {
+  if (offset + RELOC_SIZE > reloc_section_->size) {
     WABT_FATAL("invalid relocation offset: %#" PRIoffset "\n", offset);
   }
 
-  reloc_section->relocations.emplace_back(type, offset, index, addend);
+  reloc_section_->relocations.emplace_back(type, offset, index, addend);
 
   return Result::Ok;
 }
@@ -129,13 +128,13 @@ Result BinaryReaderLinker::OnImportFunc(Index import_index,
                                         StringSlice field_name,
                                         Index global_index,
                                         Index sig_index) {
-  binary->function_imports.emplace_back();
-  FunctionImport* import = &binary->function_imports.back();
+  binary_->function_imports.emplace_back();
+  FunctionImport* import = &binary_->function_imports.back();
   import->module_name = module_name;
   import->name = field_name;
   import->sig_index = sig_index;
   import->active = true;
-  binary->active_function_imports++;
+  binary_->active_function_imports++;
   return Result::Ok;
 }
 
@@ -145,35 +144,35 @@ Result BinaryReaderLinker::OnImportGlobal(Index import_index,
                                           Index global_index,
                                           Type type,
                                           bool mutable_) {
-  binary->global_imports.emplace_back();
-  GlobalImport* import = &binary->global_imports.back();
+  binary_->global_imports.emplace_back();
+  GlobalImport* import = &binary_->global_imports.back();
   import->module_name = module_name;
   import->name = field_name;
   import->type = type;
   import->mutable_ = mutable_;
-  binary->active_global_imports++;
+  binary_->active_global_imports++;
   return Result::Ok;
 }
 
 Result BinaryReaderLinker::OnFunctionCount(Index count) {
-  function_count = count;
+  binary_->function_count = count;
   return Result::Ok;
 }
 
 Result BinaryReaderLinker::BeginSection(BinarySection section_code,
                                         Offset size) {
   Section* sec = new Section();
-  binary->sections.emplace_back(sec);
-  current_section = sec;
+  binary_->sections.emplace_back(sec);
+  current_section_ = sec;
   sec->section_code = section_code;
   sec->size = size;
   sec->offset = state->offset;
-  sec->binary = binary;
+  sec->binary = binary_;
 
   if (sec->section_code != BinarySection::Custom &&
       sec->section_code != BinarySection::Start) {
     size_t bytes_read = read_u32_leb128(
-        &binary->data[sec->offset], &binary->data[binary->size], &sec->count);
+        &binary_->data[sec->offset], &binary_->data[binary_->size], &sec->count);
     if (bytes_read == 0)
       WABT_FATAL("error reading section element count\n");
     sec->payload_offset = sec->offset + bytes_read;
@@ -188,13 +187,13 @@ Result BinaryReaderLinker::OnTable(Index index,
   if (elem_limits->has_max && (elem_limits->max != elem_limits->initial))
     WABT_FATAL("Tables with max != initial not supported by wabt-link\n");
 
-  binary->table_elem_count = elem_limits->initial;
+  binary_->table_elem_count = elem_limits->initial;
   return Result::Ok;
 }
 
 Result BinaryReaderLinker::OnElemSegmentFunctionIndexCount(Index index,
                                                            Index count) {
-  Section* sec = current_section;
+  Section* sec = current_section_;
 
   /* Modify the payload to include only the actual function indexes */
   size_t delta = state->offset - sec->payload_offset;
@@ -204,14 +203,14 @@ Result BinaryReaderLinker::OnElemSegmentFunctionIndexCount(Index index,
 }
 
 Result BinaryReaderLinker::OnMemory(Index index, const Limits* page_limits) {
-  Section* sec = current_section;
+  Section* sec = current_section_;
   sec->data.memory_limits = *page_limits;
-  binary->memory_page_count = page_limits->initial;
+  binary_->memory_page_count = page_limits->initial;
   return Result::Ok;
 }
 
 Result BinaryReaderLinker::BeginDataSegment(Index index, Index memory_index) {
-  Section* sec = current_section;
+  Section* sec = current_section_;
   if (!sec->data.data_segments) {
     sec->data.data_segments = new std::vector<DataSegment>();
   }
@@ -222,7 +221,7 @@ Result BinaryReaderLinker::BeginDataSegment(Index index, Index memory_index) {
 }
 
 Result BinaryReaderLinker::OnInitExprI32ConstExpr(Index index, uint32_t value) {
-  Section* sec = current_section;
+  Section* sec = current_section_;
   if (sec->section_code != BinarySection::Data)
     return Result::Ok;
   DataSegment& segment = sec->data.data_segments->back();
@@ -233,7 +232,7 @@ Result BinaryReaderLinker::OnInitExprI32ConstExpr(Index index, uint32_t value) {
 Result BinaryReaderLinker::OnDataSegmentData(Index index,
                                              const void* src_data,
                                              Address size) {
-  Section* sec = current_section;
+  Section* sec = current_section_;
   DataSegment& segment = sec->data.data_segments->back();
   segment.data = static_cast<const uint8_t*>(src_data);
   segment.size = size;
@@ -244,8 +243,8 @@ Result BinaryReaderLinker::OnExport(Index index,
                                     ExternalKind kind,
                                     Index item_index,
                                     StringSlice name) {
-  binary->exports.emplace_back();
-  Export* export_ = &binary->exports.back();
+  binary_->exports.emplace_back();
+  Export* export_ = &binary_->exports.back();
   export_->name = name;
   export_->kind = kind;
   export_->index = item_index;
@@ -253,12 +252,13 @@ Result BinaryReaderLinker::OnExport(Index index,
 }
 
 Result BinaryReaderLinker::BeginNamesSection(Offset size) {
-  binary->debug_names.resize(function_count + binary->function_imports.size());
+  binary_->debug_names.resize(binary_->function_count +
+                              binary_->function_imports.size());
   return Result::Ok;
 }
 
 Result BinaryReaderLinker::OnFunctionName(Index index, StringSlice name) {
-  binary->debug_names[index] = string_slice_to_string(name);
+  binary_->debug_names[index] = string_slice_to_string(name);
   return Result::Ok;
 }
 

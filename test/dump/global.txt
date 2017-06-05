@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: -v --dump-verbose
 (module
   (import "foo" "i32_global" (global i32))

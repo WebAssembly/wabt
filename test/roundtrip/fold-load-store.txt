@@ -1,0 +1,59 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --fold-exprs
+(module
+  (memory 1)
+  (func $fold-load
+    i32.const 1
+    i32.load
+    drop
+    i32.const 2
+    i32.load
+    drop)
+
+  (func $fold-store
+    i32.const 1
+    i32.load
+    f32.const 2
+    f32.store)
+
+  (func $fold-current-memory (result i32)
+    current_memory
+    i32.const 1
+    i32.add
+    drop
+    i32.const 2)
+
+  (func $fold-grow-memory (result i32)
+    i32.const 1
+    i32.const 2
+    grow_memory
+    i32.lt_s))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (type (;1;) (func (result i32)))
+  (func (;0;) (type 0)
+    (drop
+      (i32.load
+        (i32.const 1)))
+    (drop
+      (i32.load
+        (i32.const 2))))
+  (func (;1;) (type 0)
+    (f32.store
+      (i32.load
+        (i32.const 1))
+      (f32.const 0x1p+1 (;=2;))))
+  (func (;2;) (type 1) (result i32)
+    (drop
+      (i32.add
+        (current_memory)
+        (i32.const 1)))
+    (i32.const 2))
+  (func (;3;) (type 1) (result i32)
+    (i32.lt_s
+      (i32.const 1)
+      (grow_memory
+        (i32.const 2))))
+  (memory (;0;) 1))
+;;; STDOUT ;;)

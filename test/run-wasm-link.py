@@ -69,7 +69,7 @@ def main(args):
       '-r': options.relocatable,
   })
 
-  wasmdump = utils.Executable(
+  wasm_objdump = utils.Executable(
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
@@ -78,7 +78,7 @@ def main(args):
 
   wast2wasm.verbose = options.print_cmd
   wasm_link.verbose = options.print_cmd
-  wasmdump.verbose = options.print_cmd
+  wasm_objdump.verbose = options.print_cmd
   wasm_interp.verbose = options.print_cmd
 
   filename = options.file
@@ -104,11 +104,11 @@ def main(args):
             os.remove(partially_linked)
           os.rename(output, partially_linked)
           wasm_link.RunWithArgs('-r', '-o', output, partially_linked, f)
-        #wasmdump.RunWithArgs('-d', '-h', output)
-      wasmdump.RunWithArgs('-d', '-x', '-r', '-h', output)
+        #wasm_objdump.RunWithArgs('-d', '-h', output)
+      wasm_objdump.RunWithArgs('-d', '-x', '-r', '-h', output)
     else:
       wasm_link.RunWithArgs('-o', output, *wasm_files)
-      wasmdump.RunWithArgs('-d', '-x', '-r', '-h', output)
+      wasm_objdump.RunWithArgs('-d', '-x', '-r', '-h', output)
 
     if options.spec:
       with open(out_file) as json_file:

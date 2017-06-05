@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 ;;; FLAGS: -v --no-canonicalize-leb128s
 (module
   (import "stdio" "print" (func (param i32)))

@@ -173,12 +173,6 @@ int wast_lexer_lex(union Token*,
                    struct Location*,
                    WastLexer*,
                    struct WastParser*);
-Result wast_lexer_get_source_line(WastLexer*,
-                                  const struct Location*,
-                                  size_t line_max_length,
-                                  char* line,
-                                  size_t* out_line_length,
-                                  int* out_column_offset);
 void WABT_PRINTF_FORMAT(4, 5) wast_parser_error(struct Location*,
                                                 WastLexer*,
                                                 struct WastParser*,

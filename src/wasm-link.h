@@ -26,7 +26,7 @@
 namespace wabt {
 namespace link {
 
-struct LinkerInputBinary;
+class LinkerInputBinary;
 
 struct FunctionImport {
   StringSlice module_name;
@@ -34,7 +34,7 @@ struct FunctionImport {
   Index sig_index;
   bool active; /* Is this import present in the linked binary */
   Index relocated_function_index;
-  struct LinkerInputBinary* foreign_binary;
+  LinkerInputBinary* foreign_binary;
   Index foreign_index;
 };
 
@@ -69,7 +69,7 @@ struct Section {
   ~Section();
 
   /* The binary to which this section belongs */
-  struct LinkerInputBinary* binary;
+  LinkerInputBinary* binary;
   std::vector<Reloc> relocations; /* The relocations for this section */
 
   BinarySection section_code;
@@ -98,10 +98,19 @@ struct Section {
 
 typedef std::vector<Section*> SectionPtrVector;
 
-struct LinkerInputBinary {
+class LinkerInputBinary {
+ public:
   WABT_DISALLOW_COPY_AND_ASSIGN(LinkerInputBinary);
   LinkerInputBinary(const char* filename, uint8_t* data, size_t size);
   ~LinkerInputBinary();
+
+  Index RelocateFuncIndex(Index findex);
+  Index RelocateTypeIndex(Index index);
+  Index RelocateGlobalIndex(Index index);
+
+  bool IsValidFunctionIndex(Index index);
+  bool IsFunctionImport(Index index);
+  bool IsInactiveFunctionImport(Index index);
 
   const char* filename;
   uint8_t* data;
@@ -123,7 +132,8 @@ struct LinkerInputBinary {
   Index memory_page_count;
   Index memory_page_offset;
 
-  Index table_elem_count;
+  Index table_elem_count = 0;
+  Index function_count = 0;
 
   std::vector<std::string> debug_names;
 };

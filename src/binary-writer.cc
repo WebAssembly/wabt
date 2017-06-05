@@ -202,9 +202,9 @@ class BinaryWriter {
  private:
   void WriteHeader(const char* name, int index);
   Offset WriteU32Leb128Space(Offset leb_size_guess, const char* desc);
-  void WriteFixupU32Leb128Size(Offset offset,
-                               Offset leb_size_guess,
-                               const char* desc);
+  Offset WriteFixupU32Leb128Size(Offset offset,
+                                 Offset leb_size_guess,
+                                 const char* desc);
   void BeginKnownSection(BinarySection section_code, size_t leb_size_guess);
   void BeginCustomSection(const char* name, size_t leb_size_guess);
   void EndSection();
@@ -277,22 +277,25 @@ Offset BinaryWriter::WriteU32Leb128Space(Offset leb_size_guess,
   return result;
 }
 
-void BinaryWriter::WriteFixupU32Leb128Size(Offset offset,
-                                           Offset leb_size_guess,
-                                           const char* desc) {
+Offset BinaryWriter::WriteFixupU32Leb128Size(Offset offset,
+                                             Offset leb_size_guess,
+                                             const char* desc) {
   if (options_->canonicalize_lebs) {
     Offset size = stream_.offset() - offset - leb_size_guess;
     Offset leb_size = u32_leb128_length(size);
-    if (leb_size != leb_size_guess) {
+    Offset delta = leb_size - leb_size_guess;
+    if (delta != 0) {
       Offset src_offset = offset + leb_size_guess;
       Offset dst_offset = offset + leb_size;
       stream_.MoveData(dst_offset, src_offset, size);
     }
     write_u32_leb128_at(&stream_, offset, size, desc);
-    stream_.AddOffset(leb_size - leb_size_guess);
+    stream_.AddOffset(delta);
+    return delta;
   } else {
     Offset size = stream_.offset() - offset - MAX_U32_LEB128_BYTES;
     write_fixed_u32_leb128_at(&stream_, offset, size, desc);
+    return 0;
   }
 }
 
@@ -341,8 +344,12 @@ void BinaryWriter::BeginCustomSection(const char* name, size_t leb_size_guess) {
 
 void BinaryWriter::EndSection() {
   assert(last_section_leb_size_guess_ != 0);
-  WriteFixupU32Leb128Size(last_section_offset_, last_section_leb_size_guess_,
-                          "FIXUP section size");
+  Offset delta = WriteFixupU32Leb128Size(
+      last_section_offset_, last_section_leb_size_guess_, "FIXUP section size");
+  if (current_reloc_section_ && delta != 0) {
+    for (Reloc& reloc: current_reloc_section_->relocations)
+      reloc.offset += delta;
+  }
   last_section_leb_size_guess_ = 0;
 }
 

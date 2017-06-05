@@ -29,6 +29,8 @@ namespace wabt {
 struct OutputBuffer {
   Result WriteToFile(const char* filename) const;
 
+  size_t size() const { return data.size(); }
+
   std::vector<uint8_t> data;
 };
 

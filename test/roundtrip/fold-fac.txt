@@ -1,0 +1,60 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --fold-exprs --debug-names --generate-names
+(module
+  (func $fac-stack-raw (param $n i64) (result i64)
+    (local $i i64)
+    (local $res i64)
+    get_local $n
+    set_local $i
+    i64.const 1
+    set_local $res
+    block $done
+      loop $loop
+        get_local $i
+        i64.const 0
+        i64.eq
+        if $body
+          br $done
+        else $body
+          get_local $i
+          get_local $res
+          i64.mul
+          set_local $res
+          get_local $i
+          i64.const 1
+          i64.sub
+          set_local $i
+        end $body
+        br $loop
+      end $loop
+    end $done
+    get_local $res))
+(;; STDOUT ;;;
+(module
+  (type $t0 (func (param i64) (result i64)))
+  (func $fac-stack-raw (type $t0) (param $n i64) (result i64)
+    (local $i i64) (local $res i64)
+    (set_local $i
+      (get_local $n))
+    (set_local $res
+      (i64.const 1))
+    (block $B0
+      (loop $L1
+        (if $I2
+          (i64.eq
+            (get_local $i)
+            (i64.const 0))
+          (then
+            (br $B0))
+          (else
+            (set_local $res
+              (i64.mul
+                (get_local $i)
+                (get_local $res)))
+            (set_local $i
+              (i64.sub
+                (get_local $i)
+                (i64.const 1)))))
+        (br $L1)))
+    (get_local $res)))
+;;; STDOUT ;;)

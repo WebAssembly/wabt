@@ -1,0 +1,166 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS: -r
+;; Verify that relocations are generated correctly in sections longer than
+;; 128 bytes.  We had an issue where the size relocation offsets we not correct
+;; due to section payload changing once the section size LEB was fixed up.
+(module
+  (func $local_func (param i32)
+     call $local_func
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0
+     set_local 0
+     get_local 0)
+)
+(;; STDOUT ;;;
+
+linked.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+ Function start=0x00000015 end=0x00000017 (size=0x00000002) count: 1
+     Code start=0x0000001a end=0x000000a1 (size=0x00000087) count: 1
+   Custom start=0x000000a7 end=0x000000bf (size=0x00000018) "name"
+   Custom start=0x000000c5 end=0x000000d5 (size=0x00000010) "reloc.Code"
+
+Section Details:
+
+Type:
+ - [0] (i32) -> nil
+Function:
+ - func[0] sig=0 <local_func>
+Custom:
+ - name: "name"
+ - func[0] local_func
+Custom:
+ - name: "reloc.Code"
+  - section: Code
+   - R_FUNC_INDEX_LEB   offset=0x000005(file=0x00001f) index=0
+
+Code Disassembly:
+
+00001b <local_func>:
+ 00001e: 10 80 80 80 80 00          | call 0 <local_func>
+           00001f: R_FUNC_INDEX_LEB   0 <local_func>
+ 000024: 21 00                      | set_local 0
+ 000026: 20 00                      | get_local 0
+ 000028: 21 00                      | set_local 0
+ 00002a: 20 00                      | get_local 0
+ 00002c: 21 00                      | set_local 0
+ 00002e: 20 00                      | get_local 0
+ 000030: 21 00                      | set_local 0
+ 000032: 20 00                      | get_local 0
+ 000034: 21 00                      | set_local 0
+ 000036: 20 00                      | get_local 0
+ 000038: 21 00                      | set_local 0
+ 00003a: 20 00                      | get_local 0
+ 00003c: 21 00                      | set_local 0
+ 00003e: 20 00                      | get_local 0
+ 000040: 21 00                      | set_local 0
+ 000042: 20 00                      | get_local 0
+ 000044: 21 00                      | set_local 0
+ 000046: 20 00                      | get_local 0
+ 000048: 21 00                      | set_local 0
+ 00004a: 20 00                      | get_local 0
+ 00004c: 21 00                      | set_local 0
+ 00004e: 20 00                      | get_local 0
+ 000050: 21 00                      | set_local 0
+ 000052: 20 00                      | get_local 0
+ 000054: 21 00                      | set_local 0
+ 000056: 20 00                      | get_local 0
+ 000058: 21 00                      | set_local 0
+ 00005a: 20 00                      | get_local 0
+ 00005c: 21 00                      | set_local 0
+ 00005e: 20 00                      | get_local 0
+ 000060: 21 00                      | set_local 0
+ 000062: 20 00                      | get_local 0
+ 000064: 21 00                      | set_local 0
+ 000066: 20 00                      | get_local 0
+ 000068: 21 00                      | set_local 0
+ 00006a: 20 00                      | get_local 0
+ 00006c: 21 00                      | set_local 0
+ 00006e: 20 00                      | get_local 0
+ 000070: 21 00                      | set_local 0
+ 000072: 20 00                      | get_local 0
+ 000074: 21 00                      | set_local 0
+ 000076: 20 00                      | get_local 0
+ 000078: 21 00                      | set_local 0
+ 00007a: 20 00                      | get_local 0
+ 00007c: 21 00                      | set_local 0
+ 00007e: 20 00                      | get_local 0
+ 000080: 21 00                      | set_local 0
+ 000082: 20 00                      | get_local 0
+ 000084: 21 00                      | set_local 0
+ 000086: 20 00                      | get_local 0
+ 000088: 21 00                      | set_local 0
+ 00008a: 20 00                      | get_local 0
+ 00008c: 21 00                      | set_local 0
+ 00008e: 20 00                      | get_local 0
+ 000090: 21 00                      | set_local 0
+ 000092: 20 00                      | get_local 0
+ 000094: 21 00                      | set_local 0
+ 000096: 20 00                      | get_local 0
+ 000098: 21 00                      | set_local 0
+ 00009a: 20 00                      | get_local 0
+ 00009c: 21 00                      | set_local 0
+ 00009e: 20 00                      | get_local 0
+ 0000a0: 0b                         | end
+;;; STDOUT ;;)

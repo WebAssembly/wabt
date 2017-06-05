@@ -24,7 +24,12 @@ namespace wabt {
 struct Module;
 class Writer;
 
-Result write_wat(Writer*, const Module*);
+struct WriteWatOptions {
+  bool fold_exprs = false;  // Write folded expressions.
+  bool inline_export = false;
+};
+
+Result write_wat(Writer*, const Module*, const WriteWatOptions*);
 
 }  // namespace wabt
 

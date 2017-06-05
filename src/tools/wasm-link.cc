@@ -31,6 +31,7 @@
 #define NOPE HasArgument::No
 #define YEP HasArgument::Yes
 #define FIRST_KNOWN_SECTION static_cast<size_t>(BinarySection::Type)
+#define LOG_DEBUG(fmt, ...) if (s_debug) s_log_stream->Writef(fmt, __VA_ARGS__);
 
 using namespace wabt;
 using namespace wabt::link;
@@ -154,47 +155,53 @@ LinkerInputBinary::~LinkerInputBinary() {
   delete[] data;
 }
 
-static Index relocate_func_index(LinkerInputBinary* binary,
-                                 Index function_index) {
+bool LinkerInputBinary::IsFunctionImport(Index index) {
+  assert(IsValidFunctionIndex(index));
+  return index < function_imports.size();
+}
+
+bool LinkerInputBinary::IsInactiveFunctionImport(Index index){
+  return IsFunctionImport(index) && !function_imports[index].active;
+}
+
+bool LinkerInputBinary::IsValidFunctionIndex(Index index) {
+  return index < function_imports.size() + function_count;
+}
+
+Index LinkerInputBinary::RelocateFuncIndex(Index function_index) {
   Index offset;
-  if (function_index >= binary->function_imports.size()) {
+  if (!IsFunctionImport(function_index)) {
     /* locally declared function call */
-    offset = binary->function_index_offset;
-    if (s_debug)
-      s_log_stream->Writef("func reloc %d + %d\n", function_index, offset);
+    offset = function_index_offset;
+    LOG_DEBUG("func reloc %d + %d\n", function_index, offset);
   } else {
     /* imported function call */
-    FunctionImport* import = &binary->function_imports[function_index];
+    FunctionImport* import = &function_imports[function_index];
     if (!import->active) {
       function_index = import->foreign_index;
       offset = import->foreign_binary->function_index_offset;
-      if (s_debug)
-        s_log_stream->Writef("reloc for disabled import. new index = %d + %d\n",
-                             function_index, offset);
+      LOG_DEBUG("reloc for disabled import. new index = %d + %d\n",
+                function_index, offset);
     } else {
       Index new_index = import->relocated_function_index;
-      if (s_debug)
-        s_log_stream->Writef(
-            "reloc for active import. old index = %d, new index = %d\n",
-            function_index, new_index);
+      LOG_DEBUG("reloc for active import. old index = %d, new index = %d\n",
+                function_index, new_index);
       return new_index;
     }
   }
   return function_index + offset;
 }
 
-static Index relocate_type_index(LinkerInputBinary* binary,
-                                 Index type_index) {
-  return type_index + binary->type_index_offset;
+Index LinkerInputBinary::RelocateTypeIndex(Index type_index) {
+  return type_index + type_index_offset;
 }
 
-static Index relocate_global_index(LinkerInputBinary* binary,
-                                   Index global_index) {
+Index LinkerInputBinary::RelocateGlobalIndex(Index global_index) {
   Index offset;
-  if (global_index >= binary->global_imports.size()) {
-    offset = binary->global_index_offset;
+  if (global_index >= global_imports.size()) {
+    offset = global_index_offset;
   } else {
-    offset = binary->imported_global_index_offset;
+    offset = imported_global_index_offset;
   }
   return global_index + offset;
 }
@@ -210,16 +217,16 @@ static void apply_relocation(Section* section, Reloc* r) {
 
   switch (r->type) {
     case RelocType::FuncIndexLEB:
-      new_value = relocate_func_index(binary, cur_value);
+      new_value = binary->RelocateFuncIndex(cur_value);
       break;
     case RelocType::TypeIndexLEB:
-      new_value = relocate_type_index(binary, cur_value);
+      new_value = binary->RelocateTypeIndex(cur_value);
       break;
     case RelocType::TableIndexSLEB:
       new_value = cur_value + binary->table_index_offset;
       break;
     case RelocType::GlobalIndexLEB:
-      new_value = relocate_global_index(binary, cur_value);
+      new_value = binary->RelocateGlobalIndex(cur_value);
       break;
     default:
       WABT_FATAL("unhandled relocation type: %s\n",
@@ -235,10 +242,7 @@ static void apply_relocations(Section* section) {
   if (!section->relocations.size())
     return;
 
-  if (s_debug) {
-    s_log_stream->Writef("apply_relocations: %s\n",
-                         get_section_name(section->section_code));
-  }
+  LOG_DEBUG("apply_relocations: %s\n", get_section_name(section->section_code));
 
   /* Perform relocations in-place */
   for (Reloc& reloc: section->relocations) {
@@ -321,7 +325,7 @@ static void write_export_section(Context* ctx) {
       Index index = export_.index;
       switch (export_.kind) {
         case ExternalKind::Func:
-          index = relocate_func_index(binary.get(), index);
+          index = binary->RelocateFuncIndex(index);
           break;
         default:
           WABT_FATAL("unsupport export type: %d\n",
@@ -451,7 +455,8 @@ static void write_function_section(Context* ctx,
         &sec->binary->data[sec->payload_offset + sec->payload_size];
     while (count--) {
       input_offset += read_u32_leb128(start + input_offset, end, &sig_index);
-      write_u32_leb128(stream, relocate_type_index(sec->binary, sig_index), "sig");
+      write_u32_leb128(stream, sec->binary->RelocateTypeIndex(sig_index),
+                       "sig");
     }
   }
 
@@ -495,10 +500,8 @@ static void write_names_section(Context* ctx) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
       if (binary->debug_names[i].empty())
         continue;
-      if (i < binary->function_imports.size()) {
-        if (!binary->function_imports[i].active)
-          continue;
-      }
+      if (binary->IsInactiveFunctionImport(i))
+        continue;
       total_count++;
     }
   }
@@ -514,18 +517,25 @@ static void write_names_section(Context* ctx) {
   stream->WriteU8Enum(NameSectionSubsection::Function, "subsection code");
   WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_count, "element count");
+
+  // Write import names
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
-      if (i < binary->function_imports.size()) {
-        if (!binary->function_imports[i].active) {
-          continue;
-        }
-      }
-
-      if (binary->debug_names[i].empty())
+      if (binary->debug_names[i].empty() || !binary->IsFunctionImport(i))
         continue;
-      write_u32_leb128(stream, relocate_func_index(&*binary, i),
-                       "function index");
+      if (binary->IsInactiveFunctionImport(i))
+        continue;
+      write_u32_leb128(stream, binary->RelocateFuncIndex(i), "function index");
+      write_string(stream, binary->debug_names[i], "function name");
+    }
+  }
+
+  // Write non-import names
+  for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
+    for (size_t i = 0; i < binary->debug_names.size(); i++) {
+      if (binary->debug_names[i].empty() || binary->IsFunctionImport(i))
+        continue;
+      write_u32_leb128(stream, binary->RelocateFuncIndex(i), "function index");
       write_string(stream, binary->debug_names[i], "function name");
     }
   }
@@ -566,13 +576,13 @@ static void write_reloc_section(Context* ctx,
       Index relocated_index;
       switch (reloc.type) {
         case RelocType::FuncIndexLEB:
-          relocated_index = relocate_func_index(sec->binary, reloc.index);
+          relocated_index = sec->binary->RelocateFuncIndex(reloc.index);
           break;
         case RelocType::TypeIndexLEB:
-          relocated_index = relocate_type_index(sec->binary, reloc.index);
+          relocated_index = sec->binary->RelocateTypeIndex(reloc.index);
           break;
         case RelocType::GlobalIndexLEB:
-          relocated_index = relocate_global_index(sec->binary, reloc.index);
+          relocated_index = sec->binary->RelocateGlobalIndex(reloc.index);
           break;
         // TODO(sbc): Handle other relocation types.
         default:
@@ -799,29 +809,28 @@ static void dump_reloc_offsets(Context* ctx) {
   if (s_debug) {
     for (size_t i = 0; i < ctx->inputs.size(); i++) {
       LinkerInputBinary* binary = ctx->inputs[i].get();
-      s_log_stream->Writef("Relocation info for: %s\n", binary->filename);
-      s_log_stream->Writef(" - type index offset       : %d\n",
+      LOG_DEBUG("Relocation info for: %s\n", binary->filename);
+      LOG_DEBUG(" - type index offset       : %d\n",
                            binary->type_index_offset);
-      s_log_stream->Writef(" - mem page offset         : %d\n",
+      LOG_DEBUG(" - mem page offset         : %d\n",
                            binary->memory_page_offset);
-      s_log_stream->Writef(" - function index offset   : %d\n",
+      LOG_DEBUG(" - function index offset   : %d\n",
                            binary->function_index_offset);
-      s_log_stream->Writef(" - global index offset     : %d\n",
+      LOG_DEBUG(" - global index offset     : %d\n",
                            binary->global_index_offset);
-      s_log_stream->Writef(" - imported function offset: %d\n",
+      LOG_DEBUG(" - imported function offset: %d\n",
                            binary->imported_function_index_offset);
-      s_log_stream->Writef(" - imported global offset  : %d\n",
+      LOG_DEBUG(" - imported global offset  : %d\n",
                            binary->imported_global_index_offset);
     }
   }
 }
 
 static Result perform_link(Context* ctx) {
-  if (s_debug) {
+  if (s_debug)
     ctx->stream.set_log_stream(s_log_stream.get());
-    s_log_stream->Writef("writing file: %s\n", s_outfile);
-  }
 
+  LOG_DEBUG("writing file: %s\n", s_outfile);
   calculate_reloc_offsets(ctx);
   resolve_symbols(ctx);
   calculate_reloc_offsets(ctx);
@@ -845,8 +854,7 @@ int ProgramMain(int argc, char** argv) {
   Result result = Result::Ok;
   for (size_t i = 0; i < s_infiles.size(); i++) {
     const std::string& input_filename = s_infiles[i];
-    if (s_debug)
-      s_log_stream->Writef("reading file: %s\n", input_filename.c_str());
+    LOG_DEBUG("reading file: %s\n", input_filename.c_str());
     char* data;
     size_t size;
     result = read_file(input_filename.c_str(), &data, &size);

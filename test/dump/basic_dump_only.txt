@@ -1,4 +1,4 @@
-;;; TOOL: run-wasmdump
+;;; TOOL: run-objdump
 (module
   (memory 1)
   (func $f (param i32 i32) (result i32)
