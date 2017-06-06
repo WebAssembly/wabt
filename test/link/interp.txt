@@ -57,11 +57,11 @@ Sections:
 Section Details:
 
 Type:
- - [0] () -> i32
- - [1] () -> i64
- - [2] () -> f32
- - [3] () -> i32
- - [4] () -> i64
+ - type[0] () -> i32
+ - type[1] () -> i64
+ - type[2] () -> f32
+ - type[3] () -> i32
+ - type[4] () -> i64
 Import:
 Function:
  - func[0] sig=2 <export1>

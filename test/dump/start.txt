@@ -63,7 +63,7 @@ Sections:
 Section Details:
 
 Type:
- - [0] () -> nil
+ - type[0] () -> nil
 Function:
  - func[0] sig=0
  - func[1] sig=0

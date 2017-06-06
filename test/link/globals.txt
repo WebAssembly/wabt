@@ -36,8 +36,8 @@ Sections:
 Section Details:
 
 Type:
- - [0] (i32) -> nil
- - [1] (i64, i64) -> nil
+ - type[0] (i32) -> nil
+ - type[1] (i64, i64) -> nil
 Import:
  - global[0] i32 mutable=0 <- __extern.bar
  - global[1] i64 mutable=0 <- __extern.baz

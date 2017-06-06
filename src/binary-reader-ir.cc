@@ -756,10 +756,10 @@ Result BinaryReaderIR::OnElemSegmentFunctionIndexCount(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnElemSegmentFunctionIndex(Index index,
+Result BinaryReaderIR::OnElemSegmentFunctionIndex(Index segment_index,
                                                   Index func_index) {
-  assert(index == module->elem_segments.size() - 1);
-  ElemSegment* segment = module->elem_segments[index];
+  assert(segment_index == module->elem_segments.size() - 1);
+  ElemSegment* segment = module->elem_segments[segment_index];
   segment->vars.emplace_back();
   Var* var = &segment->vars.back();
   var->type = VarType::Index;

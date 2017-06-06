@@ -92,9 +92,9 @@ table.wasm:	file format wasm 0x1
 Section Details:
 
 Type:
- - [0] (i32) -> nil
- - [1] (i32, i64) -> nil
- - [2] () -> f64
+ - type[0] (i32) -> nil
+ - type[1] (i32, i64) -> nil
+ - type[2] () -> f64
 Function:
  - func[0] sig=0
  - func[1] sig=1
@@ -104,10 +104,10 @@ Table:
 Elem:
  - segment[0] table=0
  - init i32=0
-  - func[0]
-  - func[0]
-  - func[1]
-  - func[2]
+  - elem[0] = func[0]
+  - elem[1] = func[0]
+  - elem[2] = func[1]
+  - elem[3] = func[2]
 
 Code Disassembly:
 

@@ -37,10 +37,10 @@ Sections:
 Section Details:
 
 Type:
- - [0] () -> nil
- - [1] (i32) -> nil
- - [2] (i64) -> nil
- - [3] (i32) -> nil
+ - type[0] () -> nil
+ - type[1] (i32) -> nil
+ - type[2] (i64) -> nil
+ - type[3] (i32) -> nil
 Import:
  - func[0] sig=0 <import_func0> <- __extern.missing0
  - func[1] sig=0 <- _extern1.missing1

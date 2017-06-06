@@ -463,8 +463,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
 
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index, Index table_index) override;
-  Result OnElemSegmentFunctionIndex(Index index,
-                                            Index func_index) override;
+  Result OnElemSegmentFunctionIndex(Index segment_index,
+                                    Index func_index) override;
 
   Result OnDataSegmentCount(Index count) override;
   Result BeginDataSegment(Index index, Index memory_index) override;
@@ -498,6 +498,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnCount(Index count);
 
   std::unique_ptr<FileStream> out_stream_;
+  Index elem_index_ = 0;
 };
 
 BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
@@ -601,7 +602,7 @@ Result BinaryReaderObjdump::OnType(Index index,
                                    Type* result_types) {
   if (!ShouldPrintDetails())
     return Result::Ok;
-  printf(" - [%" PRIindex "] (", index);
+  printf(" - type[%" PRIindex "] (", index);
   for (Index i = 0; i < param_count; i++) {
     if (i != 0) {
       printf(", ");
@@ -747,12 +748,14 @@ Result BinaryReaderObjdump::OnExport(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnElemSegmentFunctionIndex(Index index,
+Result BinaryReaderObjdump::OnElemSegmentFunctionIndex(Index segment_index,
                                                        Index func_index) {
-  PrintDetails("  - func[%" PRIindex "]", func_index);
+  PrintDetails("  - elem[%" PRIindex "] = func[%" PRIindex "]", elem_index_,
+               func_index);
   if (const char* name = GetFunctionName(func_index))
     PrintDetails(" <%s>", name);
   PrintDetails("\n");
+  elem_index_++;
   return Result::Ok;
 }
 
@@ -763,6 +766,7 @@ Result BinaryReaderObjdump::OnElemSegmentCount(Index count) {
 Result BinaryReaderObjdump::BeginElemSegment(Index index, Index table_index) {
   PrintDetails(" - segment[%" PRIindex "] table=%" PRIindex "\n", index,
                table_index);
+  elem_index_ = 0;
   return Result::Ok;
 }
 
