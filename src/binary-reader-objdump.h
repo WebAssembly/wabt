@@ -47,13 +47,19 @@ struct ObjdumpOptions {
   ObjdumpMode mode;
   const char* filename;
   const char* section_name;
-  std::vector<std::string> function_names;
+};
+
+// read_binary_objdump uses this state to store information from previous runs
+// and use it to display more useful information.
+struct ObjdumpState {
   std::vector<Reloc> code_relocations;
+  std::vector<std::string> function_names;
 };
 
 Result read_binary_objdump(const uint8_t* data,
                            size_t size,
-                           ObjdumpOptions* options);
+                           ObjdumpOptions* options,
+                           ObjdumpState* state);
 
 }  // namespace wabt
 

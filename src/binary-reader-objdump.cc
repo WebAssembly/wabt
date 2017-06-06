@@ -34,7 +34,8 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
  public:
   BinaryReaderObjdumpBase(const uint8_t* data,
                           size_t size,
-                          ObjdumpOptions* options);
+                          ObjdumpOptions* options,
+                          ObjdumpState* state);
 
   Result BeginModule(uint32_t version) override;
   Result BeginSection(BinarySection section_type, Offset size) override;
@@ -46,9 +47,10 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
  protected:
   const char* GetFunctionName(Index index);
 
-  ObjdumpOptions* options = nullptr;
-  const uint8_t* data = nullptr;
-  size_t size = 0;
+  ObjdumpOptions* options;
+  ObjdumpState* objdump_state_;
+  const uint8_t* data;
+  size_t size;
   bool print_details = false;
   BinarySection reloc_section = BinarySection::Invalid;
   Offset section_starts[kBinarySectionCount];
@@ -57,8 +59,10 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
 
 BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
                                                  size_t size,
-                                                 ObjdumpOptions* options)
+                                                 ObjdumpOptions* options,
+                                                 ObjdumpState* objdump_state)
     : options(options),
+      objdump_state_(objdump_state),
       data(data),
       size(size) {
   WABT_ZERO_MEMORY(section_starts);
@@ -109,11 +113,11 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
 }
 
 const char* BinaryReaderObjdumpBase::GetFunctionName(Index index) {
-  if (index >= options->function_names.size() ||
-      options->function_names[index].empty())
+  if (index >= objdump_state_->function_names.size() ||
+      objdump_state_->function_names[index].empty())
     return nullptr;
 
-  return options->function_names[index].c_str();
+  return objdump_state_->function_names[index].c_str();
 }
 
 Result BinaryReaderObjdumpBase::OnRelocCount(Index count,
@@ -125,9 +129,7 @@ Result BinaryReaderObjdumpBase::OnRelocCount(Index count,
 
 class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
  public:
-  BinaryReaderObjdumpPrepass(const uint8_t* data,
-                             size_t size,
-                             ObjdumpOptions* options);
+  using BinaryReaderObjdumpBase::BinaryReaderObjdumpBase;
 
   Result OnFunctionName(Index function_index,
                         StringSlice function_name) override;
@@ -137,15 +139,10 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                  uint32_t addend) override;
 };
 
-BinaryReaderObjdumpPrepass::BinaryReaderObjdumpPrepass(const uint8_t* data,
-                                                       size_t size,
-                                                       ObjdumpOptions* options)
-    : BinaryReaderObjdumpBase(data, size, options) {}
-
 Result BinaryReaderObjdumpPrepass::OnFunctionName(Index index,
                                                   StringSlice name) {
-  options->function_names.resize(index + 1);
-  options->function_names[index] = string_slice_to_string(name);
+  objdump_state_->function_names.resize(index + 1);
+  objdump_state_->function_names[index] = string_slice_to_string(name);
   return Result::Ok;
 }
 
@@ -155,16 +152,14 @@ Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
                                            uint32_t addend) {
   BinaryReaderObjdumpBase::OnReloc(type, offset, index, addend);
   if (reloc_section == BinarySection::Code) {
-    options->code_relocations.emplace_back(type, offset, index, addend);
+    objdump_state_->code_relocations.emplace_back(type, offset, index, addend);
   }
   return Result::Ok;
 }
 
 class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
  public:
-  BinaryReaderObjdumpDisassemble(const uint8_t* data,
-                                size_t size,
-                                ObjdumpOptions* options);
+  using BinaryReaderObjdumpBase::BinaryReaderObjdumpBase;
 
   Result BeginFunctionBody(Index index) override;
 
@@ -193,12 +188,6 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   int indent_level = 0;
   Index next_reloc = 0;
 };
-
-BinaryReaderObjdumpDisassemble::BinaryReaderObjdumpDisassemble(
-    const uint8_t* data,
-    size_t size,
-    ObjdumpOptions* options)
-    : BinaryReaderObjdumpBase(data, size, options) {}
 
 Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
   if (options->debug) {
@@ -266,8 +255,8 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
 
   last_opcode_end = current_opcode_offset + data_size;
 
-  if (options->relocs && next_reloc < options->code_relocations.size()) {
-    Reloc* reloc = &options->code_relocations[next_reloc];
+  if (options->relocs && next_reloc < objdump_state_->code_relocations.size()) {
+    Reloc* reloc = &objdump_state_->code_relocations[next_reloc];
     Offset code_start =
         section_starts[static_cast<size_t>(BinarySection::Code)];
     Offset abs_offset = code_start + reloc->offset;
@@ -410,7 +399,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
  public:
   BinaryReaderObjdump(const uint8_t* data,
                       size_t size,
-                      ObjdumpOptions* options);
+                      ObjdumpOptions* options,
+                      ObjdumpState* state);
 
   Result EndModule() override;
   Result BeginSection(BinarySection section_type, Offset size) override;
@@ -507,14 +497,15 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   void PrintDetails(const char* fmt, ...);
   Result OnCount(Index count);
 
-  std::unique_ptr<FileStream> out_stream;
+  std::unique_ptr<FileStream> out_stream_;
 };
 
 BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
                                          size_t size,
-                                         ObjdumpOptions* options)
-    : BinaryReaderObjdumpBase(data, size, options),
-      out_stream(FileStream::CreateStdout()) {}
+                                         ObjdumpOptions* options,
+                                         ObjdumpState* objdump_state)
+    : BinaryReaderObjdumpBase(data, size, options, objdump_state),
+      out_stream_(FileStream::CreateStdout()) {}
 
 Result BinaryReaderObjdump::BeginCustomSection(Offset size,
                                                StringSlice section_name) {
@@ -556,8 +547,8 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
     case ObjdumpMode::RawData:
       if (section_match) {
         printf("\nContents of section %s:\n", name);
-        out_stream->WriteMemoryDump(data + state->offset, size, state->offset,
-                                    nullptr, nullptr, PrintChars::Yes);
+        out_stream_->WriteMemoryDump(data + state->offset, size, state->offset,
+                                     nullptr, nullptr, PrintChars::Yes);
       }
       break;
     case ObjdumpMode::Prepass:
@@ -849,8 +840,8 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
                                               const void* src_data,
                                               Address size) {
   if (ShouldPrintDetails()) {
-    out_stream->WriteMemoryDump(src_data, size, state->offset - size, "  - ",
-                                nullptr, PrintChars::Yes);
+    out_stream_->WriteMemoryDump(src_data, size, state->offset - size, "  - ",
+                                 nullptr, PrintChars::Yes);
   }
   return Result::Ok;
 }
@@ -890,22 +881,23 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
 
 Result read_binary_objdump(const uint8_t* data,
                            size_t size,
-                           ObjdumpOptions* options) {
+                           ObjdumpOptions* options,
+                           ObjdumpState* state) {
   ReadBinaryOptions read_options = WABT_READ_BINARY_OPTIONS_DEFAULT;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
 
   switch (options->mode) {
     case ObjdumpMode::Prepass: {
-      BinaryReaderObjdumpPrepass reader(data, size, options);
+      BinaryReaderObjdumpPrepass reader(data, size, options, state);
       return read_binary(data, size, &reader, &read_options);
     }
     case ObjdumpMode::Disassemble: {
-      BinaryReaderObjdumpDisassemble reader(data, size, options);
+      BinaryReaderObjdumpDisassemble reader(data, size, options, state);
       return read_binary(data, size, &reader, &read_options);
     }
     default: {
-      BinaryReaderObjdump reader(data, size, options);
+      BinaryReaderObjdump reader(data, size, options, state);
       return read_binary(data, size, &reader, &read_options);
     }
   }
