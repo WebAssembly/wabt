@@ -6,5 +6,5 @@
 (;; STDERR ;;;
 out/test/parse/expr/bad-return-multi.txt:2:9: multiple result values not currently supported.
 (module (func (result f32 f32)
-        ^^^^^^^^^
+        ^
 ;;; STDERR ;;)

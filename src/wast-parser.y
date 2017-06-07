@@ -63,7 +63,10 @@
       (Current).filename = YYRHSLOC(Rhs, 1).filename;         \
       (Current).line = YYRHSLOC(Rhs, 1).line;                 \
       (Current).first_column = YYRHSLOC(Rhs, 1).first_column; \
-      (Current).last_column = YYRHSLOC(Rhs, N).last_column;   \
+      if (YYRHSLOC(Rhs, N).line == (Current).line)            \
+        (Current).last_column = YYRHSLOC(Rhs, N).last_column; \
+      else                                                    \
+        (Current).last_column = YYRHSLOC(Rhs, 1).last_column; \
     } else {                                                  \
       (Current).filename = nullptr;                           \
       (Current).line = YYRHSLOC(Rhs, 0).line;                 \

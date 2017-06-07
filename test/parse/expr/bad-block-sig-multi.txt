@@ -1,0 +1,14 @@
+;;; ERROR: 1
+(module
+  (func
+    block i32 i32
+      i32.const 1
+      i32.const 1
+    end
+    drop
+    drop))
+(;; STDERR ;;;
+out/test/parse/expr/bad-block-sig-multi.txt:4:5: multiple block signature result types not currently supported.
+    block i32 i32
+    ^^^^^
+;;; STDERR ;;)
