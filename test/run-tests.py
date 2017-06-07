@@ -548,7 +548,9 @@ def RunTest(info, options, variables, verbose_level=0):
   gen_input_path = info.CreateInputFile()
   rel_gen_input_path = os.path.relpath(gen_input_path, cwd)
 
-  out_dir = os.path.splitext(rel_gen_input_path)[0] + "_out"
+  # Each test runs with a unique output directory which is removed before
+  # we run the test.
+  out_dir = os.path.splitext(rel_gen_input_path)[0]
   if os.path.isdir(out_dir):
     shutil.rmtree(out_dir)
   os.makedirs(out_dir)

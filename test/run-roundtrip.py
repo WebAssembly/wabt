@@ -98,7 +98,7 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
-  parser.add_argument('-o', '--out-dir', metavar='PATH',
+  parser.add_argument('-o', '--out-dir', metavar='PATH', required=True,
                       help='output directory for files.')
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
@@ -146,14 +146,11 @@ def main(args):
     sys.stderr.write('File not found: %s\n' % filename)
     return ERROR
 
-  out_dir = options.out_dir
-  assert(out_dir)
-
   if options.stdout:
-    result, msg = OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir,
+    result, msg = OneRoundtripToStdout(wast2wasm, wasm2wast, options.out_dir,
                                        filename, options.verbose)
   else:
-    result, msg = TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename,
+    result, msg = TwoRoundtrips(wast2wasm, wasm2wast, options.out_dir, filename,
                                 options.verbose)
   if result == ERROR:
     sys.stderr.write(msg)

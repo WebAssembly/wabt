@@ -30,7 +30,7 @@ GEN_WASM_PY = os.path.join(SCRIPT_DIR, 'gen-wasm.py')
 
 def main(args):
   parser = argparse.ArgumentParser()
-  parser.add_argument('-o', '--out-dir', metavar='PATH',
+  parser.add_argument('-o', '--out-dir', metavar='PATH', required=True,
                       help='output directory for files.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
@@ -65,13 +65,10 @@ def main(args):
   gen_wasm.verbose = options.print_cmd
   wasm_interp.verbose = options.print_cmd
 
-  out_dir = options.out_dir
-  assert(out_dir)
-
-  out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
+  out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'),
+                             options.out_dir)
   gen_wasm.RunWithArgs(options.file, '-o', out_file)
   wasm_interp.RunWithArgs(out_file)
-
   return 0
 
 

@@ -29,7 +29,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def main(args):
   parser = argparse.ArgumentParser()
-  parser.add_argument('-o', '--out-dir', metavar='PATH',
+  parser.add_argument('-o', '--out-dir', metavar='PATH', required=True,
                       help='output directory for files.')
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
@@ -70,14 +70,11 @@ def main(args):
   wast2wasm.verbose = options.print_cmd
   wasm_interp.verbose = options.print_cmd
 
-  out_dir = options.out_dir
-  assert(out_dir)
-
   new_ext = '.json' if options.spec else '.wasm'
-  out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
+  out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext),
+                             options.out_dir)
   wast2wasm.RunWithArgs(options.file, '-o', out_file)
   wasm_interp.RunWithArgs(out_file)
-
   return 0
 
 

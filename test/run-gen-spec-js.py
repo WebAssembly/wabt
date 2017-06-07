@@ -30,7 +30,7 @@ GEN_SPEC_JS_PY = os.path.join(SCRIPT_DIR, 'gen-spec-js.py')
 
 def main(args):
   parser = argparse.ArgumentParser()
-  parser.add_argument('-o', '--out-dir', metavar='PATH',
+  parser.add_argument('-o', '--out-dir', metavar='PATH', required=True,
                       help='output directory for files.')
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
@@ -57,16 +57,13 @@ def main(args):
   parser.add_argument('file', help='wast file.')
   options = parser.parse_args(args)
 
-  out_dir = options.out_dir
-  assert(out_dir)
-
   wast2wasm = utils.Executable(
       find_exe.GetWast2WasmExecutable(options.bindir), '--spec',
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({'-v': options.verbose})
 
   gen_spec_js = utils.Executable(sys.executable, GEN_SPEC_JS_PY,
-                                 '--temp-dir', out_dir,
+                                 '--temp-dir', options.out_dir,
                                  error_cmdline=options.error_cmdline)
   gen_spec_js.AppendOptionalArgs({
       '--bindir': options.bindir,
@@ -75,7 +72,7 @@ def main(args):
   gen_spec_js.verbose = options.print_cmd
 
   json_file = utils.ChangeDir(
-      utils.ChangeExt(options.file, '.json'), out_dir)
+      utils.ChangeExt(options.file, '.json'), options.out_dir)
   js_file = utils.ChangeExt(json_file, '.js')
   wast2wasm.RunWithArgs(options.file, '-o', json_file)
 

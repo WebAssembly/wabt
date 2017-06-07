@@ -32,7 +32,7 @@ def main(args):
                       action='store_true')
   parser.add_argument('-r', '--relocatable', action='store_true',
                       help='final output is relocatable')
-  parser.add_argument('-o', '--out-dir', metavar='PATH',
+  parser.add_argument('-o', '--out-dir', metavar='PATH', required=True,
                       help='output directory for files.')
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
@@ -83,19 +83,16 @@ def main(args):
 
   filename = options.file
 
-  out_dir = options.out_dir
-  assert(out_dir)
-
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
-  out_file = os.path.join(out_dir, basename_noext + '.json')
+  out_file = os.path.join(options.out_dir, basename_noext + '.json')
   wast2wasm.RunWithArgs('--spec', '--debug-names', '--no-check', '-r', '-o',
                         out_file, filename)
 
   wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
-  wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
+  wasm_files = [utils.ChangeDir(f, options.out_dir) for f in wasm_files]
 
-  output = os.path.join(out_dir, 'linked.wasm')
+  output = os.path.join(options.out_dir, 'linked.wasm')
   if options.incremental:
     partially_linked = output + '.partial'
     for i, f in enumerate(wasm_files):

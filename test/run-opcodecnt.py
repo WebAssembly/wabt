@@ -29,7 +29,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 def main(args):
   parser = argparse.ArgumentParser()
-  parser.add_argument('-o', '--out-dir', metavar='PATH',
+  parser.add_argument('-o', '--out-dir', metavar='PATH', required=True,
                       help='output directory for files.')
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
@@ -59,13 +59,10 @@ def main(args):
   wast2wasm.verbose = options.print_cmd
   wasm_opcodecnt.verbose = options.print_cmd
 
-  out_dir = options.out_dir
-  assert(out_dir)
-
-  out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
+  out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'),
+                             options.out_dir)
   wast2wasm.RunWithArgs(options.file, '-o', out_file)
   wasm_opcodecnt.RunWithArgs(out_file)
-
   return 0
 
 

@@ -481,7 +481,7 @@ def main(args):
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
-  parser.add_argument('--temp-dir', metavar='PATH',
+  parser.add_argument('--temp-dir', metavar='PATH', required=True,
                       help='set the directory that temporary wasm/wast'
                       ' files are written.')
   parser.add_argument('--no-error-cmdline',
@@ -513,7 +513,6 @@ def main(args):
   modules = CollectInvalidModuleCommands(all_commands)
 
   temp_dir = options.temp_dir
-  assert(temp_dir)
 
   extender = ModuleExtender(wast2wasm, wasm2wast, temp_dir)
   for module_command, assert_commands in modules:
