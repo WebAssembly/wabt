@@ -2,7 +2,7 @@
 (module
   (func
     i32.const 1
-    if i32 i32
+    if (result i32 i32)
       i32.const 1
       i32.const 2
     else
@@ -13,6 +13,6 @@
     drop))
 (;; STDERR ;;;
 out/test/parse/expr/bad-if-sig-multi.txt:5:5: multiple if signature result types not currently supported.
-    if i32 i32
+    if (result i32 i32)
     ^^
 ;;; STDERR ;;)

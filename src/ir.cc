@@ -599,7 +599,9 @@ void destroy_table(Table* table) {
   destroy_string_slice(&table->name);
 }
 
-ModuleField::ModuleField() : type(ModuleFieldType::Start), next(nullptr) {
+ModuleField::ModuleField() : ModuleField(ModuleFieldType::Start) {}
+
+ModuleField::ModuleField(ModuleFieldType type) : type(type), next(nullptr) {
   WABT_ZERO_MEMORY(loc);
   WABT_ZERO_MEMORY(start);
 }

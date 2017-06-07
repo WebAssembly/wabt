@@ -3,7 +3,7 @@
   (type $t (func (param i32) (result f32)))
   (func (type $t) (param i32)))
 (;; STDERR ;;;
-out/test/parse/func/bad-sig-result-type-void.txt:4:3: expected 1 results, got 0
+out/test/parse/func/bad-sig-result-type-void.txt:4:4: expected 1 results, got 0
   (func (type $t) (param i32)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   ^^^^
 ;;; STDERR ;;)

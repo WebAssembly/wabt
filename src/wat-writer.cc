@@ -395,7 +395,7 @@ void WatWriter::WriteBeginBlock(LabelType label_type,
                                 const char* text) {
   WritePutsSpace(text);
   bool has_label = WriteStringSliceOpt(&block->label, NextChar::Space);
-  WriteTypes(block->sig, nullptr);
+  WriteTypes(block->sig, "result");
   if (!has_label)
     Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
   WriteNewline(FORCE_NEWLINE);

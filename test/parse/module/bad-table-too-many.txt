@@ -4,7 +4,7 @@
   (table anyfunc (elem 0))
   (table anyfunc (elem 0)))
 (;; STDERR ;;;
-out/test/parse/module/bad-table-too-many.txt:5:3: only one table allowed
+out/test/parse/module/bad-table-too-many.txt:5:4: only one table allowed
   (table anyfunc (elem 0)))
-  ^^^^^^^^^^^^^^^^^^^^^^^^
+   ^^^^^
 ;;; STDERR ;;)

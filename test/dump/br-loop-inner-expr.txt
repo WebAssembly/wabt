@@ -2,8 +2,8 @@
 ;;; FLAGS: -v
 (module
   (func (result i32)
-    block $exit i32 
-      loop $cont i32
+    block $exit (result i32)
+      loop $cont (result i32)
         i32.const 1
         if 
           br $cont

@@ -30,8 +30,6 @@
 #define YYSTYPE WABT_WAST_PARSER_STYPE
 #define YYLTYPE WABT_WAST_PARSER_LTYPE
 
-#define WABT_INVALID_LINE_OFFSET (static_cast<size_t>(~0))
-
 namespace wabt {
 
 struct ExprList {
@@ -50,66 +48,9 @@ struct TextList {
   TextListNode* last;
 };
 
-struct OptionalExport {
-  std::unique_ptr<Export> export_;
-  bool has_export;
-};
-
-struct ExportedFunc {
-  std::unique_ptr<Func> func;
-  OptionalExport export_;
-};
-
-struct ExportedGlobal {
-  std::unique_ptr<Global> global;
-  OptionalExport export_;
-};
-
-struct ExportedTable {
-  std::unique_ptr<Table> table;
-  std::unique_ptr<ElemSegment> elem_segment;
-  OptionalExport export_;
-  bool has_elem_segment;
-};
-
-struct ExportedMemory {
-  std::unique_ptr<Memory> memory;
-  std::unique_ptr<DataSegment> data_segment;
-  OptionalExport export_;
-  bool has_data_segment;
-};
-
-enum class FuncFieldType {
-  Exprs,
-  ParamTypes,
-  BoundParam,
-  ResultTypes,
-  LocalTypes,
-  BoundLocal,
-};
-
-struct BoundType {
-  WABT_DISALLOW_COPY_AND_ASSIGN(BoundType);
-  BoundType();
-  ~BoundType();
-
-  Location loc;
-  StringSlice name;
-  Type type;
-};
-
-struct FuncField {
-  WABT_DISALLOW_COPY_AND_ASSIGN(FuncField);
-  FuncField();
-  ~FuncField();
-
-  FuncFieldType type;
-  union {
-    Expr* first_expr;     /* WABT_FUNC_FIELD_TYPE_EXPRS */
-    TypeVector* types;    /* WABT_FUNC_FIELD_TYPE_*_TYPES */
-    BoundType bound_type; /* WABT_FUNC_FIELD_TYPE_BOUND_{LOCAL, PARAM} */
-  };
-  struct FuncField* next;
+struct ModuleFieldList {
+  ModuleField* first;
+  ModuleField* last;
 };
 
 union Token {
@@ -131,22 +72,18 @@ union Token {
   DataSegment* data_segment;
   ElemSegment* elem_segment;
   Export* export_;
-  ExportedFunc* exported_func;
-  ExportedGlobal* exported_global;
-  ExportedMemory* exported_memory;
-  ExportedTable* exported_table;
   Expr* expr;
   ExprList expr_list;
-  FuncField* func_fields;
   Func* func;
   FuncSignature* func_sig;
   FuncType* func_type;
   Global* global;
   Import* import;
   Limits limits;
-  OptionalExport* optional_export;
   Memory* memory;
   Module* module;
+  ModuleField* module_field;
+  ModuleFieldList module_fields;
   RawModule* raw_module;
   Script* script;
   Table* table;
@@ -182,8 +119,8 @@ void wast_format_error(SourceErrorHandler*,
                        WastLexer*,
                        const char* format,
                        va_list);
-void destroy_func_fields(FuncField*);
 void destroy_text_list(TextList*);
+void destroy_module_field_list(ModuleFieldList*);
 
 }  // namespace wabt
 

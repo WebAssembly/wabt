@@ -2,7 +2,7 @@
 (module
   (func
     i32.const 0
-    if i32
+    if (result i32)
       f32.const 0
     else
       i32.const 0

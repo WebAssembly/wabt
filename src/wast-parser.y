@@ -75,50 +75,6 @@
     }                                                         \
   while (0)
 
-#define APPEND_FIELD_TO_LIST(module, field, Kind, kind, loc_, item) \
-  do {                                                              \
-    field = append_module_field(module);                            \
-    field->loc = loc_;                                              \
-    field->type = ModuleFieldType::Kind;                            \
-    field->kind = item;                                             \
-  } while (0)
-
-#define APPEND_ITEM_TO_VECTOR(module, kinds, item_ptr) \
-  (module)->kinds.push_back(item_ptr)
-
-#define INSERT_BINDING(module, kind, kinds, loc_, name) \
-  do                                                    \
-    if ((name).start) {                                 \
-      (module)->kind##_bindings.emplace(                \
-          string_slice_to_string(name),                 \
-          Binding(loc_, (module)->kinds.size() - 1));   \
-    }                                                   \
-  while (0)
-
-#define APPEND_INLINE_EXPORT(module, Kind, loc_, value, index_)         \
-  do                                                                    \
-    if ((value)->export_.has_export) {                                  \
-      ModuleField* export_field;                                        \
-      APPEND_FIELD_TO_LIST(module, export_field, Export, export_, loc_, \
-                           (value)->export_.export_.release());         \
-      export_field->export_->kind = ExternalKind::Kind;                 \
-      export_field->export_->var.loc = loc_;                            \
-      export_field->export_->var.index = index_;                        \
-      APPEND_ITEM_TO_VECTOR(module, exports, export_field->export_);    \
-      INSERT_BINDING(module, export, exports, export_field->loc,        \
-                     export_field->export_->name);                      \
-    }                                                                   \
-  while (0)
-
-#define CHECK_IMPORT_ORDERING(module, kind, kinds, loc_)            \
-  do {                                                              \
-    if ((module)->kinds.size() != (module)->num_##kind##_imports) { \
-      wast_parser_error(                                            \
-          &loc_, lexer, parser,                                     \
-          "imports must occur before all non-import definitions");  \
-    }                                                               \
-  } while (0)
-
 #define CHECK_END_LABEL(loc, begin_label, end_label)                       \
   do {                                                                     \
     if (!string_slice_is_empty(&(end_label))) {                            \
@@ -144,23 +100,28 @@
 
 namespace wabt {
 
-ExprList join_exprs1(Location* loc, Expr* expr1);
-ExprList join_exprs2(Location* loc,
-                         ExprList* expr1,
-                         Expr* expr2);
+static ExprList join_exprs1(Location* loc, Expr* expr1);
+static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
 
-Result parse_const(Type type,
-                       LiteralType literal_type,
-                       const char* s,
-                       const char* end,
-                       Const* out);
-void dup_text_list(TextList* text_list, char** out_data, size_t* out_size);
+static Result parse_const(Type type,
+                          LiteralType literal_type,
+                          const char* s,
+                          const char* end,
+                          Const* out);
+static void dup_text_list(TextList* text_list,
+                          char** out_data,
+                          size_t* out_size);
 
-bool is_empty_signature(const FuncSignature* sig);
+static void reverse_bindings(TypeVector*, BindingHash*);
 
-void append_implicit_func_declaration(Location*,
-                                      Module*,
-                                      FuncDeclaration*);
+static bool is_empty_signature(const FuncSignature* sig);
+
+static void check_import_ordering(Location* loc,
+                                  WastLexer* lexer,
+                                  WastParser* parser,
+                                  Module* module,
+                                  ModuleField* first);
+static void append_module_fields(Module*, ModuleField*);
 
 class BinaryErrorHandlerModule : public BinaryErrorHandler {
  public:
@@ -215,36 +176,29 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<commands> cmd_list
 %type<const_> const
 %type<consts> const_list
-%type<data_segment> data
-%type<elem_segment> elem
-%type<export_> export export_kind
-%type<exported_func> func
-%type<exported_global> global
-%type<exported_table> table
-%type<exported_memory> memory
+%type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
-%type<expr_list> instr instr_list expr expr1 expr_list if_ const_expr offset
-%type<func_fields> func_fields func_body
-%type<func> func_info
+%type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
+%type<func> func_fields_body func_fields_body1 func_body func_body1 func_fields_import func_fields_import1
 %type<func_sig> func_sig func_type
-%type<func_type> type_def
 %type<global> global_type
-%type<import> import import_kind inline_import
+%type<import> import_desc inline_import
 %type<limits> limits
 %type<memory> memory_sig
-%type<module> module module_fields
-%type<optional_export> inline_export inline_export_opt
+%type<module> module module_fields_opt module_fields inline_module
+%type<module_field> type_def start data elem import export
+%type<module_fields> func func_fields table table_fields memory memory_fields global global_fields module_field
 %type<raw_module> raw_module
 %type<literal> literal
 %type<script> script
 %type<table> table_sig
 %type<text> bind_var bind_var_opt labeling_opt quoted_text
-%type<text_list> non_empty_text_list text_list
-%type<types> value_type_list
+%type<text_list> text_list text_list_opt
+%type<types> block_sig value_type_list
 %type<u32> align_opt
 %type<u64> nat offset_opt
 %type<vars> var_list
-%type<var> start type_use var script_var_opt
+%type<var> type_use var script_var_opt
 
 /* These non-terminals use the types below that have destructors, but the
  * memory is shared with the lexer, so should not be destroyed. */
@@ -256,21 +210,14 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %destructor { delete $$; } <command>
 %destructor { delete $$; } <commands>
 %destructor { delete $$; } <consts>
-%destructor { delete $$; } <data_segment>
-%destructor { delete $$; } <elem_segment>
 %destructor { delete $$; } <export_>
-%destructor { delete $$; } <exported_func>
-%destructor { delete $$; } <exported_memory>
-%destructor { delete $$; } <exported_table>
 %destructor { delete $$; } <expr>
 %destructor { destroy_expr_list($$.first); } <expr_list>
-%destructor { destroy_func_fields($$); } <func_fields>
+%destructor { destroy_module_field_list(&$$); } <module_fields>
 %destructor { delete $$; } <func>
 %destructor { delete $$; } <func_sig>
-%destructor { delete $$; } <func_type>
 %destructor { delete $$; } <global>
 %destructor { delete $$; } <import>
-%destructor { delete $$; } <optional_export>
 %destructor { delete $$; } <memory>
 %destructor { delete $$; } <module>
 %destructor { delete $$; } <raw_module>
@@ -290,14 +237,14 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 
 /* Auxiliaries */
 
-non_empty_text_list :
+text_list :
     TEXT {
       TextListNode* node = new TextListNode();
       DUPTEXT(node->text, $1);
       node->next = nullptr;
       $$.first = $$.last = node;
     }
-  | non_empty_text_list TEXT {
+  | text_list TEXT {
       $$ = $1;
       TextListNode* node = new TextListNode();
       DUPTEXT(node->text, $2);
@@ -306,9 +253,9 @@ non_empty_text_list :
       $$.last = node;
     }
 ;
-text_list :
+text_list_opt :
     /* empty */ { $$.first = $$.last = nullptr; }
-  | non_empty_text_list
+  | text_list
 ;
 
 quoted_text :
@@ -598,12 +545,18 @@ block_instr :
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
 ;
+block_sig :
+    LPAR RESULT value_type_list RPAR { $$ = $3; }
+;
 block :
-    value_type_list instr_list {
-      $$ = new Block();
-      $$->sig = std::move(*$1);
+    block_sig block {
+      $$ = $2;
+      $$->sig.insert($$->sig.end(), $1->begin(), $1->end());
       delete $1;
-      $$->first = $2.first;
+    }
+  | instr_list {
+      $$ = new Block();
+      $$->first = $1.first;
     }
 ;
 
@@ -625,14 +578,23 @@ expr1 :
       expr->loop->label = $2;
       $$ = join_exprs1(&@1, expr);
     }
-  | IF labeling_opt value_type_list if_ {
-      $$ = $4;
-      Expr* if_ = $4.last;
+  | IF labeling_opt if_block {
+      $$ = $3;
+      Expr* if_ = $3.last;
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
-      if_->if_.true_->sig = std::move(*$3);
-      delete $3;
     }
+;
+if_block :
+    block_sig if_block {
+      Expr* if_ = $2.last;
+      assert(if_->type == ExprType::If);
+      $$ = $2;
+      Block* true_ = if_->if_.true_;
+      true_->sig.insert(true_->sig.end(), $1->begin(), $1->end());
+      delete $1;
+    }
+  | if_
 ;
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
@@ -684,133 +646,142 @@ const_expr :
 ;
 
 /* Functions */
-func_fields :
-    func_body
-  | LPAR RESULT value_type_list RPAR func_body {
-      $$ = new FuncField();
-      $$->type = FuncFieldType::ResultTypes;
-      $$->types = $3;
-      $$->next = $5;
-    }
-  | LPAR PARAM value_type_list RPAR func_fields {
-      $$ = new FuncField();
-      $$->type = FuncFieldType::ParamTypes;
-      $$->types = $3;
-      $$->next = $5;
-    }
-  | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields {
-      $$ = new FuncField();
-      $$->type = FuncFieldType::BoundParam;
-      $$->bound_type.loc = @2;
-      $$->bound_type.name = $3;
-      $$->bound_type.type = $4;
-      $$->next = $6;
-    }
-;
-func_body :
-    instr_list {
-      $$ = new FuncField();
-      $$->type = FuncFieldType::Exprs;
-      $$->first_expr = $1.first;
-      $$->next = nullptr;
-    }
-  | LPAR LOCAL value_type_list RPAR func_body {
-      $$ = new FuncField();
-      $$->type = FuncFieldType::LocalTypes;
-      $$->types = $3;
-      $$->next = $5;
-    }
-  | LPAR LOCAL bind_var VALUE_TYPE RPAR func_body {
-      $$ = new FuncField();
-      $$->type = FuncFieldType::BoundLocal;
-      $$->bound_type.loc = @2;
-      $$->bound_type.name = $3;
-      $$->bound_type.type = $4;
-      $$->next = $6;
-    }
-;
-func_info :
-    func_fields {
-      $$ = new Func();
-      FuncField* field = $1;
-
-      while (field) {
-        FuncField* next = field->next;
-        switch (field->type) {
-          case FuncFieldType::Exprs:
-            $$->first_expr = field->first_expr;
-            field->first_expr = nullptr;
-            break;
-
-          case FuncFieldType::ParamTypes:
-          case FuncFieldType::LocalTypes: {
-            TypeVector& types = field->type == FuncFieldType::ParamTypes
-                                    ? $$->decl.sig.param_types
-                                    : $$->local_types;
-            types.insert(types.end(), field->types->begin(),
-                         field->types->end());
-            break;
-          }
-
-          case FuncFieldType::BoundParam:
-          case FuncFieldType::BoundLocal: {
-            TypeVector* types;
-            BindingHash* bindings;
-            if (field->type == FuncFieldType::BoundParam) {
-              types = &$$->decl.sig.param_types;
-              bindings = &$$->param_bindings;
-            } else {
-              types = &$$->local_types;
-              bindings = &$$->local_bindings;
-            }
-
-            types->push_back(field->bound_type.type);
-            bindings->emplace(
-                string_slice_to_string(field->bound_type.name),
-                Binding(field->bound_type.loc, types->size() - 1));
-            break;
-          }
-
-          case FuncFieldType::ResultTypes:
-            $$->decl.sig.result_types = std::move(*field->types);
-            break;
-        }
-
-        delete field;
-        field = next;
+func :
+    LPAR FUNC bind_var_opt func_fields RPAR {
+      $$ = $4;
+      ModuleField* main = $$.first;
+      main->loc = @2;
+      if (main->type == ModuleFieldType::Func) {
+        main->func->name = $3;
+      } else {
+        assert(main->type == ModuleFieldType::Import);
+        main->import->func->name = $3;
       }
     }
 ;
-func :
-    LPAR FUNC bind_var_opt inline_export type_use func_info RPAR {
-      $$ = new ExportedFunc();
-      $$->func.reset($6);
-      $$->func->decl.has_func_type = true;
-      $$->func->decl.type_var = $5;
-      $$->func->name = $3;
-      $$->export_ = std::move(*$4);
-      delete $4;
+
+func_fields :
+    type_use func_fields_body {
+      ModuleField* field = new ModuleField(ModuleFieldType::Func);
+      field->func = $2;
+      field->func->decl.has_func_type = true;
+      field->func->decl.type_var = $1;
+      $$.first = $$.last = field;
     }
-  /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
-  | LPAR FUNC bind_var_opt type_use func_info RPAR {
-      $$ = new ExportedFunc();
-      $$->func.reset($5);
-      $$->func->decl.has_func_type = true;
-      $$->func->decl.type_var = $4;
-      $$->func->name = $3;
+  | func_fields_body {
+      ModuleField* field = new ModuleField(ModuleFieldType::Func);
+      field->func = $1;
+      $$.first = $$.last = field;
     }
-  | LPAR FUNC bind_var_opt inline_export func_info RPAR {
-      $$ = new ExportedFunc();
-      $$->func.reset($5);
-      $$->func->name = $3;
-      $$->export_ = std::move(*$4);
-      delete $4;
+  | inline_import type_use func_fields_import {
+      ModuleField* field = new ModuleField(ModuleFieldType::Import);
+      field->loc = @1;
+      field->import = $1;
+      field->import->kind = ExternalKind::Func;
+      field->import->func = $3;
+      field->import->func->decl.has_func_type = true;
+      field->import->func->decl.type_var = $2;
+      $$.first = $$.last = field;
     }
-  /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
-  | LPAR FUNC bind_var_opt func_info RPAR {
-      $$ = new ExportedFunc();
-      $$->func.reset($4);
-      $$->func->name = $3;
+  | inline_import func_fields_import {
+      ModuleField* field = new ModuleField(ModuleFieldType::Import);
+      field->loc = @1;
+      field->import = $1;
+      field->import->kind = ExternalKind::Func;
+      field->import->func = $2;
+      $$.first = $$.last = field;
+    }
+  | inline_export func_fields {
+      ModuleField* field = new ModuleField(ModuleFieldType::Export);
+      field->loc = @1;
+      field->export_ = $1;
+      field->export_->kind = ExternalKind::Func;
+      $$.first = $2.first;
+      $$.last = $2.last->next = field;
+    }
+;
+
+func_fields_import :
+    func_fields_import1 {
+      $$ = $1;
+      reverse_bindings(&$$->decl.sig.param_types, &$$->param_bindings);
+    }
+;
+
+func_fields_import1 :
+    /* empty */ { $$ = new Func(); }
+  | LPAR RESULT value_type_list RPAR {
+      $$ = new Func();
+      $$->decl.sig.result_types = std::move(*$3);
+      delete $3;
+    }
+  | LPAR PARAM value_type_list RPAR func_fields_import1 {
+      $$ = $5;
+      $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(),
+                                      $3->begin(), $3->end());
+      delete $3;
+    }
+  | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields_import1 {
+      $$ = $6;
+      $$->param_bindings.emplace(string_slice_to_string($3),
+                                 Binding(@3, $$->decl.sig.param_types.size()));
+      destroy_string_slice(&$3);
+      $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(), $4);
+    }
+;
+
+func_fields_body :
+    func_fields_body1 {
+      $$ = $1;
+      reverse_bindings(&$$->decl.sig.param_types, &$$->param_bindings);
+    }
+;
+
+func_fields_body1 :
+    func_body
+  | LPAR RESULT value_type_list RPAR func_body {
+      $$ = $5;
+      $$->decl.sig.result_types = std::move(*$3);
+      delete $3;
+    }
+  | LPAR PARAM value_type_list RPAR func_fields_body1 {
+      $$ = $5;
+      $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(),
+                                      $3->begin(), $3->end());
+      delete $3;
+    }
+  | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields_body1 {
+      $$ = $6;
+      $$->param_bindings.emplace(string_slice_to_string($3),
+                                 Binding(@3, $$->decl.sig.param_types.size()));
+      destroy_string_slice(&$3);
+      $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(), $4);
+    }
+;
+
+func_body :
+    func_body1 {
+      $$ = $1;
+      reverse_bindings(&$$->local_types, &$$->local_bindings);
+    }
+;
+
+func_body1 :
+    instr_list {
+      $$ = new Func();
+      $$->first_expr = $1.first;
+    }
+  | LPAR LOCAL value_type_list RPAR func_body1 {
+      $$ = $5;
+      $$->local_types.insert($$->local_types.begin(), $3->begin(), $3->end());
+      delete $3;
+    }
+  | LPAR LOCAL bind_var VALUE_TYPE RPAR func_body1 {
+      $$ = $6;
+      $$->local_bindings.emplace(string_slice_to_string($3),
+                                 Binding(@3, $$->local_types.size()));
+      destroy_string_slice(&$3);
+      $$->local_types.insert($$->local_types.begin(), $4);
     }
 ;
 
@@ -825,145 +796,205 @@ offset :
 
 elem :
     LPAR ELEM var offset var_list RPAR {
-      $$ = new ElemSegment();
-      $$->table_var = $3;
-      $$->offset = $4.first;
-      $$->vars = std::move(*$5);
+      $$ = new ModuleField(ModuleFieldType::ElemSegment);
+      $$->loc = @2;
+      $$->elem_segment = new ElemSegment();
+      $$->elem_segment->table_var = $3;
+      $$->elem_segment->offset = $4.first;
+      $$->elem_segment->vars = std::move(*$5);
       delete $5;
     }
   | LPAR ELEM offset var_list RPAR {
-      $$ = new ElemSegment();
-      $$->table_var.loc = @2;
-      $$->table_var.type = VarType::Index;
-      $$->table_var.index = 0;
-      $$->offset = $3.first;
-      $$->vars = std::move(*$4);
+      $$ = new ModuleField(ModuleFieldType::ElemSegment);
+      $$->loc = @2;
+      $$->elem_segment = new ElemSegment();
+      $$->elem_segment->table_var.loc = @2;
+      $$->elem_segment->table_var.type = VarType::Index;
+      $$->elem_segment->table_var.index = 0;
+      $$->elem_segment->offset = $3.first;
+      $$->elem_segment->vars = std::move(*$4);
       delete $4;
     }
 ;
 
 table :
-    LPAR TABLE bind_var_opt inline_export_opt table_sig RPAR {
-      $$ = new ExportedTable();
-      $$->table.reset($5);
-      $$->table->name = $3;
-      $$->has_elem_segment = false;
-      $$->export_ = std::move(*$4);
-      delete $4;
+    LPAR TABLE bind_var_opt table_fields RPAR {
+      $$ = $4;
+      ModuleField* main = $$.first;
+      main->loc = @2;
+      if (main->type == ModuleFieldType::Table) {
+        main->table->name = $3;
+      } else {
+        assert(main->type == ModuleFieldType::Import);
+        main->import->table->name = $3;
+      }
     }
-  | LPAR TABLE bind_var_opt inline_export_opt elem_type
-         LPAR ELEM var_list RPAR RPAR {
-      Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
-      expr->loc = @2;
+;
 
-      $$ = new ExportedTable();
-      $$->table.reset(new Table());
-      $$->table->name = $3;
-      $$->table->elem_limits.initial = $8->size();
-      $$->table->elem_limits.max = $8->size();
-      $$->table->elem_limits.has_max = true;
-      $$->has_elem_segment = true;
-      $$->elem_segment.reset(new ElemSegment());
-      $$->elem_segment->offset = expr;
-      $$->elem_segment->vars = std::move(*$8);
-      delete $8;
-      $$->export_ = std::move(*$4);
+table_fields :
+    table_sig {
+      ModuleField* field = new ModuleField(ModuleFieldType::Table);
+      field->loc = @1;
+      field->table = $1;
+      $$.first = $$.last = field;
+    }
+  | inline_import table_sig {
+      ModuleField* field = new ModuleField(ModuleFieldType::Import);
+      field->loc = @1;
+      field->import = $1;
+      field->import->kind = ExternalKind::Table;
+      field->import->table = $2;
+      $$.first = $$.last = field;
+    }
+  | inline_export table_fields {
+      ModuleField* field = new ModuleField(ModuleFieldType::Export);
+      field->loc = @1;
+      field->export_ = $1;
+      field->export_->kind = ExternalKind::Table;
+      $$.first = $2.first;
+      $$.last = $2.last->next = field;
+    }
+  | elem_type LPAR ELEM var_list RPAR {
+      ModuleField* table_field = new ModuleField(ModuleFieldType::Table);
+      Table* table = table_field->table = new Table();
+      table->elem_limits.initial = $4->size();
+      table->elem_limits.max = $4->size();
+      table->elem_limits.has_max = true;
+      ModuleField* elem_field = new ModuleField(ModuleFieldType::ElemSegment);
+      elem_field->loc = @3;
+      ElemSegment* elem_segment = elem_field->elem_segment = new ElemSegment();
+      elem_segment->offset = Expr::CreateConst(Const(Const::I32(), 0));
+      elem_segment->offset->loc = @3;
+      elem_segment->vars = std::move(*$4);
       delete $4;
+      $$.first = table_field;
+      $$.last = table_field->next = elem_field;
     }
 ;
 
 data :
-    LPAR DATA var offset text_list RPAR {
-      $$ = new DataSegment();
-      $$->memory_var = $3;
-      $$->offset = $4.first;
-      dup_text_list(&$5, &$$->data, &$$->size);
+    LPAR DATA var offset text_list_opt RPAR {
+      $$ = new ModuleField(ModuleFieldType::DataSegment);
+      $$->loc = @2;
+      $$->data_segment = new DataSegment();
+      $$->data_segment->memory_var = $3;
+      $$->data_segment->offset = $4.first;
+      dup_text_list(&$5, &$$->data_segment->data, &$$->data_segment->size);
       destroy_text_list(&$5);
     }
-  | LPAR DATA offset text_list RPAR {
-      $$ = new DataSegment();
-      $$->memory_var.loc = @2;
-      $$->memory_var.type = VarType::Index;
-      $$->memory_var.index = 0;
-      $$->offset = $3.first;
-      dup_text_list(&$4, &$$->data, &$$->size);
+  | LPAR DATA offset text_list_opt RPAR {
+      $$ = new ModuleField(ModuleFieldType::DataSegment);
+      $$->loc = @2;
+      $$->data_segment = new DataSegment();
+      $$->data_segment->memory_var.loc = @2;
+      $$->data_segment->memory_var.type = VarType::Index;
+      $$->data_segment->memory_var.index = 0;
+      $$->data_segment->offset = $3.first;
+      dup_text_list(&$4, &$$->data_segment->data, &$$->data_segment->size);
       destroy_text_list(&$4);
     }
 ;
 
 memory :
-    LPAR MEMORY bind_var_opt inline_export_opt memory_sig RPAR {
-      $$ = new ExportedMemory();
-      $$->memory.reset($5);
-      $$->memory->name = $3;
-      $$->has_data_segment = false;
-      $$->export_ = std::move(*$4);
-      delete $4;
+    LPAR MEMORY bind_var_opt memory_fields RPAR {
+      $$ = $4;
+      ModuleField* main = $$.first;
+      main->loc = @2;
+      if (main->type == ModuleFieldType::Memory) {
+        main->memory->name = $3;
+      } else {
+        assert(main->type == ModuleFieldType::Import);
+        main->import->memory->name = $3;
+      }
     }
-  | LPAR MEMORY bind_var_opt inline_export LPAR DATA text_list RPAR RPAR {
-      Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
-      expr->loc = @2;
+;
 
-      $$ = new ExportedMemory();
-      $$->has_data_segment = true;
-      $$->data_segment.reset(new DataSegment());
-      $$->data_segment->offset = expr;
-      dup_text_list(&$7, &$$->data_segment->data, &$$->data_segment->size);
-      destroy_text_list(&$7);
-      uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE($$->data_segment->size);
-      uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
-      $$->memory.reset(new Memory());
-      $$->memory->name = $3;
-      $$->memory->page_limits.initial = page_size;
-      $$->memory->page_limits.max = page_size;
-      $$->memory->page_limits.has_max = true;
-      $$->export_ = std::move(*$4);
-      delete $4;
+memory_fields :
+    memory_sig {
+      ModuleField* field = new ModuleField(ModuleFieldType::Memory);
+      field->memory = $1;
+      $$.first = $$.last = field;
     }
-  /* Duplicate above for empty inline_export_opt to avoid LR(1) conflict. */
-  | LPAR MEMORY bind_var_opt LPAR DATA text_list RPAR RPAR {
-      Expr* expr = Expr::CreateConst(Const(Const::I32(), 0));
-      expr->loc = @2;
-
-      $$ = new ExportedMemory();
-      $$->has_data_segment = true;
-      $$->data_segment.reset(new DataSegment());
-      $$->data_segment->offset = expr;
-      dup_text_list(&$6, &$$->data_segment->data, &$$->data_segment->size);
-      destroy_text_list(&$6);
-      uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE($$->data_segment->size);
+  | inline_import memory_sig {
+      ModuleField* field = new ModuleField(ModuleFieldType::Import);
+      field->loc = @1;
+      field->import = $1;
+      field->import->kind = ExternalKind::Memory;
+      field->import->memory = $2;
+      $$.first = $$.last = field;
+    }
+  | inline_export memory_fields {
+      ModuleField* field = new ModuleField(ModuleFieldType::Export);
+      field->loc = @1;
+      field->export_ = $1;
+      field->export_->kind = ExternalKind::Memory;
+      $$.first = $2.first;
+      $$.last = $2.last->next = field;
+    }
+  | LPAR DATA text_list_opt RPAR {
+      ModuleField* data_field = new ModuleField(ModuleFieldType::DataSegment);
+      data_field->loc = @2;
+      DataSegment* data_segment = data_field->data_segment = new DataSegment();
+      data_segment->offset = Expr::CreateConst(Const(Const::I32(), 0));
+      data_segment->offset->loc = @2;
+      dup_text_list(&$3, &data_segment->data, &data_segment->size);
+      destroy_text_list(&$3);
+      uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment->size);
       uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
-      $$->memory.reset(new Memory());
-      $$->memory->name = $3;
-      $$->memory->page_limits.initial = page_size;
-      $$->memory->page_limits.max = page_size;
-      $$->memory->page_limits.has_max = true;
-      $$->export_.has_export = false;
+
+      ModuleField* memory_field = new ModuleField(ModuleFieldType::Memory);
+      memory_field->loc = @2;
+      Memory* memory = memory_field->memory = new Memory();
+      memory->page_limits.initial = page_size;
+      memory->page_limits.max = page_size;
+      memory->page_limits.has_max = true;
+      $$.first = memory_field;
+      $$.last = memory_field->next = data_field;
     }
 ;
 
 global :
-    LPAR GLOBAL bind_var_opt inline_export global_type const_expr RPAR {
-      $$ = new ExportedGlobal();
-      $$->global.reset($5);
-      $$->global->name = $3;
-      $$->global->init_expr = $6.first;
-      $$->export_ = std::move(*$4);
-      delete $4;
-    }
-  | LPAR GLOBAL bind_var_opt global_type const_expr RPAR {
-      $$ = new ExportedGlobal();
-      $$->global.reset($4);
-      $$->global->name = $3;
-      $$->global->init_expr = $5.first;
-      $$->export_.has_export = false;
+    LPAR GLOBAL bind_var_opt global_fields RPAR {
+      $$ = $4;
+      ModuleField* main = $$.first;
+      main->loc = @2;
+      if (main->type == ModuleFieldType::Global) {
+        main->global->name = $3;
+      } else {
+        assert(main->type == ModuleFieldType::Import);
+        main->import->global->name = $3;
+      }
     }
 ;
 
+global_fields :
+    global_type const_expr {
+      ModuleField* field = new ModuleField(ModuleFieldType::Global);
+      field->global = $1;
+      field->global->init_expr = $2.first;
+      $$.first = $$.last = field;
+    }
+  | inline_import global_type {
+      ModuleField* field = new ModuleField(ModuleFieldType::Import);
+      field->loc = @1;
+      field->import = $1;
+      field->import->kind = ExternalKind::Global;
+      field->import->global = $2;
+      $$.first = $$.last = field;
+    }
+  | inline_export global_fields {
+      ModuleField* field = new ModuleField(ModuleFieldType::Export);
+      field->loc = @1;
+      field->export_ = $1;
+      field->export_->kind = ExternalKind::Global;
+      $$.first = $2.first;
+      $$.last = $2.last->next = field;
+    }
+;
 
 /* Imports & Exports */
 
-import_kind :
+import_desc :
     LPAR FUNC bind_var_opt type_use RPAR {
       $$ = new Import();
       $$->kind = ExternalKind::Func;
@@ -999,45 +1030,14 @@ import_kind :
       $$->global->name = $3;
     }
 ;
+
 import :
-    LPAR IMPORT quoted_text quoted_text import_kind RPAR {
-      $$ = $5;
-      $$->module_name = $3;
-      $$->field_name = $4;
-    }
-  | LPAR FUNC bind_var_opt inline_import type_use RPAR {
-      $$ = $4;
-      $$->kind = ExternalKind::Func;
-      $$->func = new Func();
-      $$->func->name = $3;
-      $$->func->decl.has_func_type = true;
-      $$->func->decl.type_var = $5;
-    }
-  | LPAR FUNC bind_var_opt inline_import func_sig RPAR {
-      $$ = $4;
-      $$->kind = ExternalKind::Func;
-      $$->func = new Func();
-      $$->func->name = $3;
-      $$->func->decl.sig = std::move(*$5);
-      delete $5;
-    }
-  | LPAR TABLE bind_var_opt inline_import table_sig RPAR {
-      $$ = $4;
-      $$->kind = ExternalKind::Table;
-      $$->table = $5;
-      $$->table->name = $3;
-    }
-  | LPAR MEMORY bind_var_opt inline_import memory_sig RPAR {
-      $$ = $4;
-      $$->kind = ExternalKind::Memory;
-      $$->memory = $5;
-      $$->memory->name = $3;
-    }
-  | LPAR GLOBAL bind_var_opt inline_import global_type RPAR {
-      $$ = $4;
-      $$->kind = ExternalKind::Global;
-      $$->global = $5;
-      $$->global->name = $3;
+    LPAR IMPORT quoted_text quoted_text import_desc RPAR {
+      $$ = new ModuleField(ModuleFieldType::Import);
+      $$->loc = @2;
+      $$->import = $5;
+      $$->import->module_name = $3;
+      $$->import->field_name = $4;
     }
 ;
 
@@ -1049,7 +1049,7 @@ inline_import :
     }
 ;
 
-export_kind :
+export_desc :
     LPAR FUNC var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Func;
@@ -1072,25 +1072,18 @@ export_kind :
     }
 ;
 export :
-    LPAR EXPORT quoted_text export_kind RPAR {
-      $$ = $4;
-      $$->name = $3;
+    LPAR EXPORT quoted_text export_desc RPAR {
+      $$ = new ModuleField(ModuleFieldType::Export);
+      $$->loc = @2;
+      $$->export_ = $4;
+      $$->export_->name = $3;
     }
 ;
 
-inline_export_opt :
-    /* empty */ {
-      $$ = new OptionalExport();
-      $$->has_export = false;
-    }
-  | inline_export
-;
 inline_export :
     LPAR EXPORT quoted_text RPAR {
-      $$ = new OptionalExport();
-      $$->has_export = true;
-      $$->export_.reset(new Export());
-      $$->export_->name = $3;
+      $$ = new Export();
+      $$->name = $3;
     }
 ;
 
@@ -1099,150 +1092,63 @@ inline_export :
 
 type_def :
     LPAR TYPE func_type RPAR {
-      $$ = new FuncType();
-      $$->sig = std::move(*$3);
+      $$ = new ModuleField(ModuleFieldType::FuncType);
+      $$->loc = @2;
+      $$->func_type = new FuncType();
+      $$->func_type->sig = std::move(*$3);
       delete $3;
     }
   | LPAR TYPE bind_var func_type RPAR {
-      $$ = new FuncType();
-      $$->name = $3;
-      $$->sig = std::move(*$4);
+      $$ = new ModuleField(ModuleFieldType::FuncType);
+      $$->loc = @2;
+      $$->func_type = new FuncType();
+      $$->func_type->name = $3;
+      $$->func_type->sig = std::move(*$4);
       delete $4;
     }
 ;
 
 start :
-    LPAR START var RPAR { $$ = $3; }
+    LPAR START var RPAR {
+      $$ = new ModuleField(ModuleFieldType::Start);
+      $$->loc = @2;
+      $$->start = $3;
+    }
+;
+
+module_field :
+    type_def { $$.first = $$.last = $1; }
+  | global
+  | table
+  | memory
+  | func
+  | elem { $$.first = $$.last = $1; }
+  | data { $$.first = $$.last = $1; }
+  | start { $$.first = $$.last = $1; }
+  | import { $$.first = $$.last = $1; }
+  | export { $$.first = $$.last = $1; }
+;
+
+module_fields_opt :
+    /* empty */ { $$ = new Module(); }
+  | module_fields
 ;
 
 module_fields :
-    /* empty */ {
+    module_field {
       $$ = new Module();
+      check_import_ordering(&@1, lexer, parser, $$, $1.first);
+      append_module_fields($$, $1.first);
     }
-  | module_fields type_def {
+  | module_fields module_field {
       $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, FuncType, func_type, @2, $2);
-      APPEND_ITEM_TO_VECTOR($$, func_types, field->func_type);
-      INSERT_BINDING($$, func_type, func_types, @2, $2->name);
-    }
-  | module_fields global {
-      $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, Global, global, @2, $2->global.release());
-      APPEND_ITEM_TO_VECTOR($$, globals, field->global);
-      INSERT_BINDING($$, global, globals, @2, field->global->name);
-      APPEND_INLINE_EXPORT($$, Global, @2, $2, $$->globals.size() - 1);
-      delete $2;
-    }
-  | module_fields table {
-      $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, Table, table, @2, $2->table.release());
-      APPEND_ITEM_TO_VECTOR($$, tables, field->table);
-      INSERT_BINDING($$, table, tables, @2, field->table->name);
-      APPEND_INLINE_EXPORT($$, Table, @2, $2, $$->tables.size() - 1);
-
-      if ($2->has_elem_segment) {
-        ModuleField* elem_segment_field;
-        APPEND_FIELD_TO_LIST($$, elem_segment_field, ElemSegment, elem_segment,
-                             @2, $2->elem_segment.release());
-        APPEND_ITEM_TO_VECTOR($$, elem_segments,
-                              elem_segment_field->elem_segment);
-      }
-      delete $2;
-    }
-  | module_fields memory {
-      $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, Memory, memory, @2, $2->memory.release());
-      APPEND_ITEM_TO_VECTOR($$, memories, field->memory);
-      INSERT_BINDING($$, memory, memories, @2, field->memory->name);
-      APPEND_INLINE_EXPORT($$, Memory, @2, $2, $$->memories.size() - 1);
-
-      if ($2->has_data_segment) {
-        ModuleField* data_segment_field;
-        APPEND_FIELD_TO_LIST($$, data_segment_field, DataSegment, data_segment,
-                             @2, $2->data_segment.release());
-        APPEND_ITEM_TO_VECTOR($$, data_segments,
-                              data_segment_field->data_segment);
-      }
-      delete $2;
-    }
-  | module_fields func {
-      $$ = $1;
-      ModuleField* field;
-      // Append the implicit func declaration first so it occurs before the
-      // func definition when serialized out to the text format.
-      append_implicit_func_declaration(&@2, $$, &$2->func->decl);
-      APPEND_FIELD_TO_LIST($$, field, Func, func, @2, $2->func.release());
-      APPEND_ITEM_TO_VECTOR($$, funcs, field->func);
-      INSERT_BINDING($$, func, funcs, @2, field->func->name);
-      APPEND_INLINE_EXPORT($$, Func, @2, $2, $$->funcs.size() - 1);
-      delete $2;
-    }
-  | module_fields elem {
-      $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, ElemSegment, elem_segment, @2, $2);
-      APPEND_ITEM_TO_VECTOR($$, elem_segments, field->elem_segment);
-    }
-  | module_fields data {
-      $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, DataSegment, data_segment, @2, $2);
-      APPEND_ITEM_TO_VECTOR($$, data_segments, field->data_segment);
-    }
-  | module_fields start {
-      $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, Start, start, @2, $2);
-      $$->start = &field->start;
-    }
-  | module_fields import {
-      $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, Import, import, @2, $2);
-      CHECK_IMPORT_ORDERING($$, func, funcs, @2);
-      CHECK_IMPORT_ORDERING($$, table, tables, @2);
-      CHECK_IMPORT_ORDERING($$, memory, memories, @2);
-      CHECK_IMPORT_ORDERING($$, global, globals, @2);
-      switch ($2->kind) {
-        case ExternalKind::Func:
-          append_implicit_func_declaration(&@2, $$, &field->import->func->decl);
-          APPEND_ITEM_TO_VECTOR($$, funcs, field->import->func);
-          INSERT_BINDING($$, func, funcs, @2, field->import->func->name);
-          $$->num_func_imports++;
-          break;
-        case ExternalKind::Table:
-          APPEND_ITEM_TO_VECTOR($$, tables, field->import->table);
-          INSERT_BINDING($$, table, tables, @2, field->import->table->name);
-          $$->num_table_imports++;
-          break;
-        case ExternalKind::Memory:
-          APPEND_ITEM_TO_VECTOR($$, memories, field->import->memory);
-          INSERT_BINDING($$, memory, memories, @2, field->import->memory->name);
-          $$->num_memory_imports++;
-          break;
-        case ExternalKind::Global:
-          APPEND_ITEM_TO_VECTOR($$, globals, field->import->global);
-          INSERT_BINDING($$, global, globals, @2, field->import->global->name);
-          $$->num_global_imports++;
-          break;
-      }
-      APPEND_ITEM_TO_VECTOR($$, imports, field->import);
-    }
-  | module_fields export {
-      $$ = $1;
-      ModuleField* field;
-      APPEND_FIELD_TO_LIST($$, field, Export, export_, @2, $2);
-      APPEND_ITEM_TO_VECTOR($$, exports, field->export_);
-      INSERT_BINDING($$, export, exports, @2, field->export_->name);
+      check_import_ordering(&@2, lexer, parser, $$, $2.first);
+      append_module_fields($$, $2.first);
     }
 ;
 
 raw_module :
-    LPAR MODULE bind_var_opt module_fields RPAR {
+    LPAR MODULE bind_var_opt module_fields_opt RPAR {
       $$ = new RawModule();
       $$->type = RawModuleType::Text;
       $$->text = $4;
@@ -1262,7 +1168,7 @@ raw_module :
         }
       }
     }
-  | LPAR MODULE bind_var_opt non_empty_text_list RPAR {
+  | LPAR MODULE bind_var_opt text_list RPAR {
       $$ = new RawModule();
       $$->type = RawModuleType::Binary;
       $$->binary.name = $3;
@@ -1291,6 +1197,11 @@ module :
       delete $1;
     }
 ;
+
+inline_module :
+    module_fields
+;
+
 
 /* Scripts */
 
@@ -1403,7 +1314,10 @@ cmd :
     }
 ;
 cmd_list :
-    /* empty */ { $$ = new CommandPtrVector(); }
+    cmd {
+      $$ = new CommandPtrVector();
+      $$->emplace_back($1);
+    }
   | cmd_list cmd {
       $$ = $1;
       $$->emplace_back($2);
@@ -1431,7 +1345,10 @@ const_list :
 ;
 
 script :
-    cmd_list {
+    /* empty */ {
+      $$ = new Script();
+    }
+  | cmd_list {
       $$ = new Script();
       $$->commands = std::move(*$1);
       delete $1;
@@ -1490,14 +1407,20 @@ script :
             break;
         }
       }
-      parser->script = $$;
+    }
+  | inline_module {
+      $$ = new Script();
+      Command* command = new Command();
+      command->type = CommandType::Module;
+      command->module = $1;
+      $$->commands.emplace_back(command);
     }
 ;
 
 /* bison destroys the start symbol even on a successful parse. We want to keep
  script from being destroyed, so create a dummy start symbol. */
 script_start :
-    script
+    script { parser->script = $1; }
 ;
 
 %%
@@ -1574,6 +1497,9 @@ size_t copy_string_contents(StringSlice* text, char* dest) {
         case 'n':
           *dest++ = '\n';
           break;
+        case 'r':
+          *dest++ = '\r';
+          break;
         case 't':
           *dest++ = '\t';
           break;
@@ -1587,8 +1513,8 @@ size_t copy_string_contents(StringSlice* text, char* dest) {
           *dest++ = '\"';
           break;
         default: {
-          /* The string should be validated already, so we know this is a hex
-           * sequence */
+          // The string should be validated already, so we know this is a hex
+          // sequence.
           uint32_t hi;
           uint32_t lo;
           if (WABT_SUCCEEDED(parse_hexdigit(src[0], &hi)) &&
@@ -1632,6 +1558,12 @@ void dup_text_list(TextList* text_list, char** out_data, size_t* out_size) {
   *out_size = dest - result;
 }
 
+void reverse_bindings(TypeVector* types, BindingHash* bindings) {
+  for (auto& pair : *bindings) {
+    pair.second.index = types->size() - pair.second.index - 1;
+  }
+}
+
 bool is_empty_signature(const FuncSignature* sig) {
   return sig->result_types.empty() && sig->param_types.empty();
 }
@@ -1647,6 +1579,160 @@ void append_implicit_func_declaration(Location* loc,
     append_implicit_func_type(loc, module, &decl->sig);
   } else {
     decl->sig = module->func_types[sig_index]->sig;
+  }
+}
+
+void check_import_ordering(Location* loc, WastLexer* lexer, WastParser* parser,
+                           Module* module, ModuleField* first) {
+  for (ModuleField* field = first; field; field = field->next) {
+    if (field->type == ModuleFieldType::Import) {
+      if (module->funcs.size() != module->num_func_imports ||
+          module->tables.size() != module->num_table_imports ||
+          module->memories.size() != module->num_memory_imports ||
+          module->globals.size() != module->num_global_imports) {
+        wast_parser_error(
+            loc, lexer, parser,
+            "imports must occur before all non-import definitions");
+      }
+    }
+  }
+}
+
+void append_module_fields(Module* module, ModuleField* first) {
+  ModuleField* main_field = first;
+  Index main_index = kInvalidIndex;
+
+  for (ModuleField* field = first; field; field = field->next) {
+    StringSlice* name = nullptr;
+    BindingHash* bindings = nullptr;
+    Index index = kInvalidIndex;
+
+    switch (field->type) {
+      case ModuleFieldType::Func:
+        append_implicit_func_declaration(&field->loc, module,
+                                         &field->func->decl);
+        name = &field->func->name;
+        bindings = &module->func_bindings;
+        index = module->funcs.size();
+        module->funcs.push_back(field->func);
+        break;
+
+      case ModuleFieldType::Global:
+        name = &field->global->name;
+        bindings = &module->global_bindings;
+        index = module->globals.size();
+        module->globals.push_back(field->global);
+        break;
+
+      case ModuleFieldType::Import:
+        switch (field->import->kind) {
+          case ExternalKind::Func:
+            append_implicit_func_declaration(&field->loc, module,
+                                             &field->import->func->decl);
+            name = &field->import->func->name;
+            bindings = &module->func_bindings;
+            index = module->funcs.size();
+            module->funcs.push_back(field->import->func);
+            ++module->num_func_imports;
+            break;
+          case ExternalKind::Table:
+            name = &field->import->table->name;
+            bindings = &module->table_bindings;
+            index = module->tables.size();
+            module->tables.push_back(field->import->table);
+            ++module->num_table_imports;
+            break;
+          case ExternalKind::Memory:
+            name = &field->import->memory->name;
+            bindings = &module->memory_bindings;
+            index = module->memories.size();
+            module->memories.push_back(field->import->memory);
+            ++module->num_memory_imports;
+            break;
+          case ExternalKind::Global:
+            name = &field->import->global->name;
+            bindings = &module->global_bindings;
+            index = module->globals.size();
+            module->globals.push_back(field->import->global);
+            ++module->num_global_imports;
+            break;
+        }
+        module->imports.push_back(field->import);
+        break;
+
+      case ModuleFieldType::Export:
+        if (field != main_field) {
+          // If this is not the main field, it must be an inline export.
+          field->export_->var.type = VarType::Index;
+          field->export_->var.index = main_index;
+        }
+        name = &field->export_->name;
+        bindings = &module->export_bindings;
+        index = module->exports.size();
+        module->exports.push_back(field->export_);
+        break;
+
+      case ModuleFieldType::FuncType:
+        name = &field->func_type->name;
+        bindings = &module->func_type_bindings;
+        index = module->func_types.size();
+        module->func_types.push_back(field->func_type);
+        break;
+
+      case ModuleFieldType::Table:
+        name = &field->table->name;
+        bindings = &module->table_bindings;
+        index = module->tables.size();
+        module->tables.push_back(field->table);
+        break;
+
+      case ModuleFieldType::ElemSegment:
+        if (field != main_field) {
+          // If this is not the main field, it must be an inline elem segment.
+          field->elem_segment->table_var.type = VarType::Index;
+          field->elem_segment->table_var.index = main_index;
+        }
+        module->elem_segments.push_back(field->elem_segment);
+        break;
+
+      case ModuleFieldType::Memory:
+        name = &field->memory->name;
+        bindings = &module->memory_bindings;
+        index = module->memories.size();
+        module->memories.push_back(field->memory);
+        break;
+
+      case ModuleFieldType::DataSegment:
+        if (field != main_field) {
+          // If this is not the main field, it must be an inline data segment.
+          field->data_segment->memory_var.type = VarType::Index;
+          field->data_segment->memory_var.index = main_index;
+        }
+        module->data_segments.push_back(field->data_segment);
+        break;
+
+      case ModuleFieldType::Start:
+        module->start = &field->start;
+        break;
+    }
+
+    if (field == main_field)
+      main_index = index;
+
+    if (module->last_field)
+      module->last_field->next = field;
+    else
+      module->first_field = field;
+    module->last_field = field;
+
+    if (name && bindings) {
+      // Exported names are allowed to be empty; other names aren't.
+      if (bindings == &module->export_bindings ||
+          !string_slice_is_empty(name)) {
+        bindings->emplace(string_slice_to_string(*name),
+                          Binding(field->loc, index));
+      }
+    }
   }
 }
 

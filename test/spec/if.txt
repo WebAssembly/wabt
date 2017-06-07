@@ -89,19 +89,19 @@ out/third_party/testsuite/if.wast:348: assert_invalid passed:
 out/third_party/testsuite/if.wast:354: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
   error: @0x0000001e: OnBrExpr callback failed
-out/third_party/testsuite/if.wast:360: assert_invalid passed:
+out/third_party/testsuite/if.wast:363: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
   error: @0x00000021: OnBrExpr callback failed
-out/third_party/testsuite/if.wast:366: assert_invalid passed:
-  error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001f: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:372: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
+  error: @0x0000001f: OnBrExpr callback failed
+out/third_party/testsuite/if.wast:381: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
   error: @0x00000022: OnBrExpr callback failed
-out/third_party/testsuite/if.wast:379: assert_invalid passed:
+out/third_party/testsuite/if.wast:391: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
   error: @0x00000020: OnBrExpr callback failed
-out/third_party/testsuite/if.wast:385: assert_invalid passed:
+out/third_party/testsuite/if.wast:400: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
   error: @0x00000023: OnBrExpr callback failed
 72/72 tests passed.

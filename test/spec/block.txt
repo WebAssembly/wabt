@@ -1,70 +1,70 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/block.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/block.wast:133: assert_invalid passed:
+out/third_party/testsuite/block.wast:159: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001c: EndFunctionBody callback failed
-out/third_party/testsuite/block.wast:137: assert_invalid passed:
+out/third_party/testsuite/block.wast:163: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001c: EndFunctionBody callback failed
-out/third_party/testsuite/block.wast:141: assert_invalid passed:
+out/third_party/testsuite/block.wast:167: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001c: EndFunctionBody callback failed
-out/third_party/testsuite/block.wast:145: assert_invalid passed:
+out/third_party/testsuite/block.wast:171: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   error: @0x0000001c: EndFunctionBody callback failed
-out/third_party/testsuite/block.wast:150: assert_invalid passed:
+out/third_party/testsuite/block.wast:176: assert_invalid passed:
   error: type stack at end of block is 1, expected 0
   error: @0x0000001c: OnEndExpr callback failed
-out/third_party/testsuite/block.wast:156: assert_invalid passed:
+out/third_party/testsuite/block.wast:182: assert_invalid passed:
   error: type stack size too small at block. got 0, expected at least 1
   error: @0x0000001b: OnEndExpr callback failed
-out/third_party/testsuite/block.wast:162: assert_invalid passed:
+out/third_party/testsuite/block.wast:188: assert_invalid passed:
   error: type stack size too small at block. got 0, expected at least 1
   error: @0x0000001c: OnEndExpr callback failed
-out/third_party/testsuite/block.wast:168: assert_invalid passed:
+out/third_party/testsuite/block.wast:194: assert_invalid passed:
   error: type mismatch in block, expected i32 but got f32.
   error: @0x00000020: OnEndExpr callback failed
-out/third_party/testsuite/block.wast:174: assert_invalid passed:
+out/third_party/testsuite/block.wast:200: assert_invalid passed:
   error: type mismatch in implicit return, expected i32 but got i64.
   error: @0x00000020: EndFunctionBody callback failed
-out/third_party/testsuite/block.wast:181: assert_invalid passed:
+out/third_party/testsuite/block.wast:207: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
   error: @0x0000001c: OnBrExpr callback failed
-out/third_party/testsuite/block.wast:187: assert_invalid passed:
+out/third_party/testsuite/block.wast:213: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
   error: @0x0000001c: OnBrExpr callback failed
-out/third_party/testsuite/block.wast:194: assert_invalid passed:
+out/third_party/testsuite/block.wast:220: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
   error: @0x0000001d: OnBrExpr callback failed
-out/third_party/testsuite/block.wast:200: assert_invalid passed:
+out/third_party/testsuite/block.wast:226: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
-  error: @0x0000001e: OnBrExpr callback failed
-out/third_party/testsuite/block.wast:206: assert_invalid passed:
-  error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001d: OnBrExpr callback failed
-out/third_party/testsuite/block.wast:212: assert_invalid passed:
-  error: type mismatch in br, expected i32 but got i64.
-  error: @0x0000001e: OnBrExpr callback failed
-out/third_party/testsuite/block.wast:219: assert_invalid passed:
-  error: type stack at end of function is 1, expected 0
-  error: @0x00000024: EndFunctionBody callback failed
-out/third_party/testsuite/block.wast:225: assert_invalid passed:
-  error: type stack size too small at br. got 0, expected at least 1
   error: @0x0000001e: OnBrExpr callback failed
 out/third_party/testsuite/block.wast:232: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001f: OnBrExpr callback failed
+  error: @0x0000001d: OnBrExpr callback failed
 out/third_party/testsuite/block.wast:238: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
-  error: @0x00000020: OnBrExpr callback failed
+  error: @0x0000001e: OnBrExpr callback failed
 out/third_party/testsuite/block.wast:245: assert_invalid passed:
+  error: type stack at end of function is 1, expected 0
+  error: @0x00000024: EndFunctionBody callback failed
+out/third_party/testsuite/block.wast:251: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x0000001e: OnBrExpr callback failed
+out/third_party/testsuite/block.wast:258: assert_invalid passed:
+  error: type stack size too small at br. got 0, expected at least 1
+  error: @0x0000001f: OnBrExpr callback failed
+out/third_party/testsuite/block.wast:264: assert_invalid passed:
+  error: type mismatch in br, expected i32 but got i64.
+  error: @0x00000020: OnBrExpr callback failed
+out/third_party/testsuite/block.wast:273: assert_invalid passed:
   error: type stack size too small at i32.ctz. got 0, expected at least 1
   error: @0x0000001e: OnUnaryExpr callback failed
-out/third_party/testsuite/block.wast:251: assert_invalid passed:
+out/third_party/testsuite/block.wast:279: assert_invalid passed:
   error: type stack size too small at i64.ctz. got 0, expected at least 1
   error: @0x0000001f: OnUnaryExpr callback failed
-out/third_party/testsuite/block.wast:257: assert_invalid passed:
+out/third_party/testsuite/block.wast:285: assert_invalid passed:
   error: type stack size too small at i64.ctz. got 0, expected at least 1
   error: @0x00000020: OnUnaryExpr callback failed
 36/36 tests passed.

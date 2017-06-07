@@ -148,7 +148,7 @@ src/prebuilt/wast-parser-gen.cc: src/wast-parser.y
 	bison -o $@ $< --defines=src/prebuilt/wast-parser-gen.hh --report=state
 
 src/prebuilt/wast-lexer-gen.cc: src/wast-lexer.cc
-	re2c --no-generation-date -bc -o $@ $<
+	re2c --no-generation-date -bc8 -o $@ $<
 
 # running CMake
 $(foreach CONFIG,$(CONFIGS), \

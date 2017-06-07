@@ -1,6 +1,6 @@
 (module
   (func (result i32)
-    block i32
+    block (result i32)
       f32.const 1
       i32.const 1
       br 0
