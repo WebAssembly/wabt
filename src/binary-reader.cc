@@ -184,6 +184,7 @@ class BinaryReader {
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNamesSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadImportSection(Offset section_size) WABT_WARN_UNUSED;
@@ -1138,6 +1139,54 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadLinkingSection(Offset section_size) {
+  CALLBACK(BeginLinkingSection, section_size);
+  Offset previous_read_end = read_end_;
+  while (state_.offset < read_end_) {
+    uint32_t linking_type;
+    Offset subsection_size;
+    CHECK_RESULT(ReadU32Leb128(&linking_type, "type"));
+    CHECK_RESULT(ReadOffset(&subsection_size, "subsection size"));
+    size_t subsection_end = state_.offset + subsection_size;
+    ERROR_UNLESS(subsection_end <= read_end_,
+                 "invalid sub-section size: extends past end");
+    read_end_ = subsection_end;
+
+    switch (static_cast<LinkingEntryType>(linking_type)) {
+      case LinkingEntryType::StackPointer: {
+        uint32_t stack_ptr;
+        CHECK_RESULT(ReadU32Leb128(&stack_ptr, "stack pointer index"));
+        CALLBACK(OnStackGlobal, stack_ptr);
+        break;
+      }
+      case LinkingEntryType::SymbolInfo: {
+        uint32_t info_count;
+        CHECK_RESULT(ReadU32Leb128(&info_count, "info count"));
+        CALLBACK(OnSymbolInfoCount, info_count);
+        while (info_count--) {
+          uint32_t info, index;
+          uint8_t is_import;
+          CHECK_RESULT(ReadU8(&is_import, "is import"));
+          CHECK_RESULT(ReadU32Leb128(&index, "sym index"));
+          CHECK_RESULT(ReadU32Leb128(&info, "sym flags"));
+          CALLBACK(OnSymbolInfo, is_import, index, info);
+        }
+        break;
+      }
+      default:
+        /* unknown subsection, skip it */
+        state_.offset = subsection_end;
+        break;
+    }
+    ERROR_UNLESS(state_.offset == subsection_end,
+                 "unfinished sub-section (expected end: 0x%" PRIzx ")",
+                 subsection_end);
+    read_end_ = previous_read_end;
+  }
+  CALLBACK0(EndLinkingSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadCustomSection(Offset section_size) {
   StringSlice section_name;
   CHECK_RESULT(ReadStr(&section_name, "section name"));
@@ -1151,6 +1200,9 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
   } else if (strncmp(section_name.start, WABT_BINARY_SECTION_RELOC,
                      strlen(WABT_BINARY_SECTION_RELOC)) == 0) {
     CHECK_RESULT(ReadRelocSection(section_size));
+  } else if (strncmp(section_name.start, WABT_BINARY_SECTION_LINKING,
+                     strlen(WABT_BINARY_SECTION_LINKING)) == 0) {
+    CHECK_RESULT(ReadLinkingSection(section_size));
   } else {
     /* This is an unknown custom section, skip it. */
     state_.offset = read_end_;

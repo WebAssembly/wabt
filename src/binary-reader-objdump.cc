@@ -491,6 +491,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                  Index index,
                  uint32_t addend) override;
 
+  Result OnStackGlobal(Index stack_global) override;
+  Result OnSymbolInfoCount(Index count) override;
+  Result OnSymbolInfo(bool import, Index index, uint32_t flags) override;
+
  private:
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
@@ -877,6 +881,26 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
     PrintDetails("%#x", signed_addend);
   }
   PrintDetails("\n");
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnStackGlobal(Index stack_global) {
+  PrintDetails("stack pointer global: %d\n", stack_global);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnSymbolInfoCount(Index count) {
+  PrintDetails("  - symbol info [count=%d]\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnSymbolInfo(bool import,
+                                         Index index,
+                                         uint32_t flags) {
+  if (import)
+    PrintDetails("   - import[%d] flags=0x%x\n", index, flags);
+  else
+    PrintDetails("   - export[%d] flags=0x%x\n", index, flags);
   return Result::Ok;
 }
 

@@ -421,6 +421,15 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   return reader->OnReloc(type, offset, index, addend);
 }
 
+Result BinaryReaderLogging::OnSymbolInfo(bool import,
+                                         Index index,
+                                         uint32_t flags) {
+  LOGF("(OnSymbolInfo import: %d, index: %" PRIindex ", flags: 0x%x)\n", import,
+       index, flags);
+  return reader->OnSymbolInfo(import, index, flags);
+}
+
+
 #define DEFINE_BEGIN(name)                        \
   Result BinaryReaderLogging::name(Offset size) { \
     LOGF(#name "(%" PRIzd ")\n", size);           \
@@ -560,6 +569,11 @@ DEFINE_END(EndNamesSection)
 DEFINE_BEGIN(BeginRelocSection)
 DEFINE_END(EndRelocSection)
 DEFINE_INDEX_INDEX(OnInitExprGetGlobalExpr, "index", "global_index")
+
+DEFINE_BEGIN(BeginLinkingSection)
+DEFINE_INDEX(OnSymbolInfoCount)
+DEFINE_INDEX(OnStackGlobal)
+DEFINE_END(EndLinkingSection)
 
 // We don't need to log these (the individual opcodes are logged instead), but
 // we still need to forward the calls.

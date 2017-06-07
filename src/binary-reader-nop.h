@@ -303,6 +303,15 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result EndRelocSection() override { return Result::Ok; }
 
+  /* Linking section */
+  Result BeginLinkingSection(Offset size) override { return Result::Ok; }
+  Result OnStackGlobal(Index stack_global) override { return Result::Ok; }
+  Result OnSymbolInfoCount(Index count) override { return Result::Ok; }
+  Result OnSymbolInfo(bool import, Index index, uint32_t flags) override {
+    return Result::Ok;
+  }
+  Result EndLinkingSection() override { return Result::Ok; }
+
   /* InitExpr - used by elem, data and global sections; these functions are
    * only called between calls to Begin*InitExpr and End*InitExpr */
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override {
