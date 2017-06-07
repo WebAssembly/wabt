@@ -48,7 +48,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   const char* GetFunctionName(Index index);
 
   ObjdumpOptions* options;
-  ObjdumpState* objdump_state_;
+  ObjdumpState* objdump_state;
   const uint8_t* data;
   size_t size;
   bool print_details = false;
@@ -62,7 +62,7 @@ BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
                                                  ObjdumpOptions* options,
                                                  ObjdumpState* objdump_state)
     : options(options),
-      objdump_state_(objdump_state),
+      objdump_state(objdump_state),
       data(data),
       size(size) {
   WABT_ZERO_MEMORY(section_starts);
@@ -113,11 +113,11 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
 }
 
 const char* BinaryReaderObjdumpBase::GetFunctionName(Index index) {
-  if (index >= objdump_state_->function_names.size() ||
-      objdump_state_->function_names[index].empty())
+  if (index >= objdump_state->function_names.size() ||
+      objdump_state->function_names[index].empty())
     return nullptr;
 
-  return objdump_state_->function_names[index].c_str();
+  return objdump_state->function_names[index].c_str();
 }
 
 Result BinaryReaderObjdumpBase::OnRelocCount(Index count,
@@ -141,8 +141,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
 
 Result BinaryReaderObjdumpPrepass::OnFunctionName(Index index,
                                                   StringSlice name) {
-  objdump_state_->function_names.resize(index + 1);
-  objdump_state_->function_names[index] = string_slice_to_string(name);
+  objdump_state->function_names.resize(index + 1);
+  objdump_state->function_names[index] = string_slice_to_string(name);
   return Result::Ok;
 }
 
@@ -152,7 +152,7 @@ Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
                                            uint32_t addend) {
   BinaryReaderObjdumpBase::OnReloc(type, offset, index, addend);
   if (reloc_section == BinarySection::Code) {
-    objdump_state_->code_relocations.emplace_back(type, offset, index, addend);
+    objdump_state->code_relocations.emplace_back(type, offset, index, addend);
   }
   return Result::Ok;
 }
@@ -255,8 +255,8 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
 
   last_opcode_end = current_opcode_offset + data_size;
 
-  if (options->relocs && next_reloc < objdump_state_->code_relocations.size()) {
-    Reloc* reloc = &objdump_state_->code_relocations[next_reloc];
+  if (options->relocs && next_reloc < objdump_state->code_relocations.size()) {
+    Reloc* reloc = &objdump_state->code_relocations[next_reloc];
     Offset code_start =
         section_starts[static_cast<size_t>(BinarySection::Code)];
     Offset abs_offset = code_start + reloc->offset;
