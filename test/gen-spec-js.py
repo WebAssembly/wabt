@@ -422,8 +422,10 @@ class JSWriter(object):
                                                   command.get('name', '$$')))
 
   def _WriteAssertModuleCommand(self, command):
-    self.out_file.write('%s("%s");\n' % (command['type'],
-                                         self._Module(command['filename'])))
+    # Don't bother writing out text modules; they can't be parsed by JS.
+    if command['module_type'] == 'binary':
+      self.out_file.write('%s("%s");\n' % (command['type'],
+                                           self._Module(command['filename'])))
 
   def _WriteAssertReturnCommand(self, command):
     expected = command['expected']

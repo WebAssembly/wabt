@@ -39,7 +39,8 @@ class SourceErrorHandler {
   std::string DefaultErrorMessage(const Location*,
                                   const std::string& error,
                                   const std::string& source_line,
-                                  size_t source_line_column_offset);
+                                  size_t source_line_column_offset,
+                                  int indent);
 };
 
 class SourceErrorHandlerNop : public SourceErrorHandler {

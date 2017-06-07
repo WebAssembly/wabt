@@ -84,7 +84,7 @@ union Token {
   Module* module;
   ModuleField* module_field;
   ModuleFieldList module_fields;
-  RawModule* raw_module;
+  ScriptModule* script_module;
   Script* script;
   Table* table;
   TextList text_list;

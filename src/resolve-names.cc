@@ -74,7 +74,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitGlobal(Global* global);
   void VisitElemSegment(ElemSegment* segment);
   void VisitDataSegment(DataSegment* segment);
-  void VisitRawModule(RawModule* raw_module);
+  void VisitScriptModule(ScriptModule* script_module);
   void VisitCommand(Command* command);
 
   SourceErrorHandler* error_handler_ = nullptr;
@@ -353,9 +353,9 @@ Result NameResolver::VisitModule(Module* module) {
   return result_;
 }
 
-void NameResolver::VisitRawModule(RawModule* raw_module) {
-  if (raw_module->type == RawModuleType::Text)
-    VisitModule(raw_module->text);
+void NameResolver::VisitScriptModule(ScriptModule* script_module) {
+  if (script_module->type == ScriptModule::Type::Text)
+    VisitModule(script_module->text);
 }
 
 void NameResolver::VisitCommand(Command* command) {
@@ -387,7 +387,7 @@ void NameResolver::VisitCommand(Command* command) {
       SourceErrorHandlerNop new_error_handler;
 
       NameResolver new_resolver(lexer_, script_, &new_error_handler);
-      new_resolver.VisitRawModule(command->assert_invalid.module);
+      new_resolver.VisitScriptModule(command->assert_invalid.module);
       if (WABT_FAILED(new_resolver.result_)) {
         command->type = CommandType::AssertInvalidNonBinary;
       }
@@ -401,11 +401,11 @@ void NameResolver::VisitCommand(Command* command) {
       break;
 
     case CommandType::AssertUnlinkable:
-      VisitRawModule(command->assert_unlinkable.module);
+      VisitScriptModule(command->assert_unlinkable.module);
       break;
 
     case CommandType::AssertUninstantiable:
-      VisitRawModule(command->assert_uninstantiable.module);
+      VisitScriptModule(command->assert_uninstantiable.module);
       break;
   }
 }

@@ -111,7 +111,7 @@ Result LexerSourceLineFinder::GetLineOffsets(int find_line,
     if (eof_) {
       // Add the final line as an empty range.
       Offset end = buffer_file_offset + read_size;
-      line_ranges_.emplace_back(end, end);
+      line_ranges_.emplace_back(next_line_start_, end);
     }
   }
 

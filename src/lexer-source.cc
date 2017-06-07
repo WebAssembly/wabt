@@ -121,9 +121,9 @@ Result LexerSourceBuffer::ReadRange(OffsetRange range,
   clamped.start = std::min(clamped.start, size_);
   clamped.end = std::min(clamped.end, size_);
   if (clamped.size()) {
-    std::vector<char> result(clamped.size());
+    out_data->resize(clamped.size());
     const void* src = static_cast<const char*>(data_) + clamped.start;
-    memcpy(result.data(), src, clamped.size());
+    memcpy(out_data->data(), src, clamped.size());
   }
   return Result::Ok;
 }

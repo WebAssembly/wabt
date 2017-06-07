@@ -546,7 +546,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
     case ExprType::Load:
       WritePutsSpace(get_opcode_name(expr->load.opcode));
       if (expr->load.offset)
-        Writef("offset=%" PRIu64, expr->load.offset);
+        Writef("offset=%u", expr->load.offset);
       if (!is_naturally_aligned(expr->load.opcode, expr->load.align))
         Writef("align=%u", expr->load.align);
       WriteNewline(NO_FORCE_NEWLINE);
@@ -585,7 +585,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
     case ExprType::Store:
       WritePutsSpace(get_opcode_name(expr->store.opcode));
       if (expr->store.offset)
-        Writef("offset=%" PRIu64, expr->store.offset);
+        Writef("offset=%u", expr->store.offset);
       if (!is_naturally_aligned(expr->store.opcode, expr->store.align))
         Writef("align=%u", expr->store.align);
       WriteNewline(NO_FORCE_NEWLINE);

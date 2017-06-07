@@ -28,7 +28,10 @@
 #include "interpreter.h"
 #include "literal.h"
 #include "option-parser.h"
+#include "source-error-handler.h"
 #include "stream.h"
+#include "wast-lexer.h"
+#include "wast-parser.h"
 
 #define PROGRAM_NAME "wasm-interp"
 
@@ -173,6 +176,11 @@ static void parse_options(int argc, char** argv) {
     WABT_FATAL("No filename given.\n");
   }
 }
+
+enum class ModuleType {
+  Text,
+  Binary,
+};
 
 static StringSlice get_dirname(const char* s) {
   /* strip everything after and including the last slash (or backslash), e.g.:
@@ -909,6 +917,24 @@ static wabt::Result parse_action(Context* ctx, Action* out_action) {
   return wabt::Result::Ok;
 }
 
+static wabt::Result parse_module_type(Context* ctx, ModuleType* out_type) {
+  StringSlice module_type_str;
+  WABT_ZERO_MEMORY(module_type_str);
+
+  PARSE_KEY_STRING_VALUE("module_type", &module_type_str);
+  if (string_slice_eq_cstr(&module_type_str, "text")) {
+    *out_type = ModuleType::Text;
+    return wabt::Result::Ok;
+  } else if (string_slice_eq_cstr(&module_type_str, "binary")) {
+    *out_type = ModuleType::Binary;
+    return wabt::Result::Ok;
+  } else {
+    print_parse_error(ctx, "unknown module type: \"" PRIstringslice "\"",
+                      WABT_PRINTF_STRING_SLICE_ARG(module_type_str));
+    return wabt::Result::Error;
+  }
+}
+
 static char* create_module_path(Context* ctx, StringSlice filename) {
   const char* spec_json_filename = ctx->loc.filename;
   StringSlice dirname = get_dirname(spec_json_filename);
@@ -1020,30 +1046,53 @@ static wabt::Result on_action_command(Context* ctx, Action* action) {
   return result;
 }
 
-class BinaryErrorHandlerAssert : public BinaryErrorHandlerFile {
- public:
-  BinaryErrorHandlerAssert(Context* ctx, const char* desc)
-      : BinaryErrorHandlerFile(stdout, Header(ctx, desc), PrintHeader::Once) {}
+static wabt::Result read_invalid_text_module(
+    const char* module_filename,
+    Environment* env,
+    SourceErrorHandler* source_error_handler) {
+  std::unique_ptr<WastLexer> lexer =
+      WastLexer::CreateFileLexer(module_filename);
+  wabt::Result result = parse_wast(lexer.get(), nullptr, source_error_handler);
+  return result;
+}
 
- private:
-  std::string Header(Context* ctx, const char* desc) {
-    return string_printf(PRIstringslice ":%d: %s passed",
-                         WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
-                         ctx->command_line_number, desc);
+static wabt::Result read_invalid_module(Context* ctx,
+                                        const char* module_filename,
+                                        Environment* env,
+                                        ModuleType module_type,
+                                        const char* desc) {
+  std::string header =
+      string_printf(PRIstringslice ":%d: %s passed",
+                    WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
+                    ctx->command_line_number, desc);
+
+  switch (module_type) {
+    case ModuleType::Text: {
+      SourceErrorHandlerFile error_handler(
+          stdout, header, SourceErrorHandlerFile::PrintHeader::Once);
+      return read_invalid_text_module(module_filename, env, &error_handler);
+    }
+
+    case ModuleType::Binary: {
+      DefinedModule* module;
+      BinaryErrorHandlerFile error_handler(
+          stdout, header, BinaryErrorHandlerFile::PrintHeader::Once);
+      return read_module(module_filename, env, &error_handler, &module);
+    }
   }
-};
+}
 
 static wabt::Result on_assert_malformed_command(Context* ctx,
                                                 StringSlice filename,
-                                                StringSlice text) {
-  BinaryErrorHandlerAssert error_handler(ctx, "assert_malformed");
+                                                StringSlice text,
+                                                ModuleType module_type) {
   Environment env;
   init_environment(&env);
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
-  DefinedModule* module;
-  wabt::Result result = read_module(path, &env, &error_handler, &module);
+  wabt::Result result =
+      read_invalid_module(ctx, path, &env, module_type, "assert_malformed");
   if (WABT_FAILED(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
@@ -1078,14 +1127,13 @@ static wabt::Result on_register_command(Context* ctx,
 
 static wabt::Result on_assert_unlinkable_command(Context* ctx,
                                                  StringSlice filename,
-                                                 StringSlice text) {
-  BinaryErrorHandlerAssert error_handler(ctx, "assert_unlinkable");
-
+                                                 StringSlice text,
+                                                 ModuleType module_type) {
   ctx->total++;
   char* path = create_module_path(ctx, filename);
-  DefinedModule* module;
   Environment::MarkPoint mark = ctx->env.Mark();
-  wabt::Result result = read_module(path, &ctx->env, &error_handler, &module);
+  wabt::Result result = read_invalid_module(ctx, path, &ctx->env, module_type,
+                                            "assert_unlinkable");
   ctx->env.ResetToMarkPoint(mark);
 
   if (WABT_FAILED(result)) {
@@ -1102,15 +1150,15 @@ static wabt::Result on_assert_unlinkable_command(Context* ctx,
 
 static wabt::Result on_assert_invalid_command(Context* ctx,
                                               StringSlice filename,
-                                              StringSlice text) {
-  BinaryErrorHandlerAssert error_handler(ctx, "assert_invalid");
+                                              StringSlice text,
+                                              ModuleType module_type) {
   Environment env;
   init_environment(&env);
 
   ctx->total++;
   char* path = create_module_path(ctx, filename);
-  DefinedModule* module;
-  wabt::Result result = read_module(path, &env, &error_handler, &module);
+  wabt::Result result =
+      read_invalid_module(ctx, path, &env, module_type, "assert_invalid");
   if (WABT_FAILED(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
@@ -1125,7 +1173,8 @@ static wabt::Result on_assert_invalid_command(Context* ctx,
 
 static wabt::Result on_assert_uninstantiable_command(Context* ctx,
                                                      StringSlice filename,
-                                                     StringSlice text) {
+                                                     StringSlice text,
+                                                     ModuleType module_type) {
   BinaryErrorHandlerFile error_handler;
   ctx->total++;
   char* path = create_module_path(ctx, filename);
@@ -1370,6 +1419,7 @@ static wabt::Result parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_malformed\"")) {
     StringSlice filename;
     StringSlice text;
+    ModuleType module_type;
     WABT_ZERO_MEMORY(filename);
     WABT_ZERO_MEMORY(text);
 
@@ -1379,20 +1429,29 @@ static wabt::Result parse_command(Context* ctx) {
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
-    on_assert_malformed_command(ctx, filename, text);
+    EXPECT(",");
+    CHECK_RESULT(parse_module_type(ctx, &module_type));
+    on_assert_malformed_command(ctx, filename, text, module_type);
   } else if (match(ctx, "\"assert_invalid\"")) {
     StringSlice filename;
     StringSlice text;
+    ModuleType module_type;
+    WABT_ZERO_MEMORY(filename);
+    WABT_ZERO_MEMORY(text);
+
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
-    on_assert_invalid_command(ctx, filename, text);
+    EXPECT(",");
+    CHECK_RESULT(parse_module_type(ctx, &module_type));
+    on_assert_invalid_command(ctx, filename, text, module_type);
   } else if (match(ctx, "\"assert_unlinkable\"")) {
     StringSlice filename;
     StringSlice text;
+    ModuleType module_type;
     WABT_ZERO_MEMORY(filename);
     WABT_ZERO_MEMORY(text);
 
@@ -1402,10 +1461,13 @@ static wabt::Result parse_command(Context* ctx) {
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
-    on_assert_unlinkable_command(ctx, filename, text);
+    EXPECT(",");
+    CHECK_RESULT(parse_module_type(ctx, &module_type));
+    on_assert_unlinkable_command(ctx, filename, text, module_type);
   } else if (match(ctx, "\"assert_uninstantiable\"")) {
     StringSlice filename;
     StringSlice text;
+    ModuleType module_type;
     WABT_ZERO_MEMORY(filename);
     WABT_ZERO_MEMORY(text);
 
@@ -1415,7 +1477,9 @@ static wabt::Result parse_command(Context* ctx) {
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
-    on_assert_uninstantiable_command(ctx, filename, text);
+    EXPECT(",");
+    CHECK_RESULT(parse_module_type(ctx, &module_type));
+    on_assert_uninstantiable_command(ctx, filename, text, module_type);
   } else if (match(ctx, "\"assert_return\"")) {
     Action action;
     std::vector<TypedValue> expected;

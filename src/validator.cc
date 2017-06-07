@@ -23,6 +23,7 @@
 #include <cstdio>
 
 #include "binary-reader.h"
+#include "source-error-handler.h"
 #include "type-checker.h"
 #include "wast-parser-lexer-shared.h"
 
@@ -71,7 +72,6 @@ class Validator {
   void CheckAlign(const Location* loc,
                   Address alignment,
                   Address natural_alignment);
-  void CheckOffset(const Location* loc, uint64_t offset);
   void CheckType(const Location* loc,
                  Type actual,
                  Type expected,
@@ -311,12 +311,6 @@ void Validator::CheckAlign(const Location* loc,
   }
 }
 
-void Validator::CheckOffset(const Location* loc, uint64_t offset) {
-  if (offset > UINT32_MAX) {
-    PrintError(loc, "offset must be less than or equal to 0xffffffff");
-  }
-}
-
 void Validator::CheckType(const Location* loc,
                           Type actual,
                           Type expected,
@@ -524,7 +518,6 @@ void Validator::CheckExpr(const Expr* expr) {
       CheckHasMemory(&expr->loc, expr->load.opcode);
       CheckAlign(&expr->loc, expr->load.align,
                  get_opcode_natural_alignment(expr->load.opcode));
-      CheckOffset(&expr->loc, expr->load.offset);
       typechecker_.OnLoad(expr->load.opcode);
       break;
 
@@ -568,7 +561,6 @@ void Validator::CheckExpr(const Expr* expr) {
       CheckHasMemory(&expr->loc, expr->store.opcode);
       CheckAlign(&expr->loc, expr->store.align,
                  get_opcode_natural_alignment(expr->store.opcode));
-      CheckOffset(&expr->loc, expr->store.offset);
       typechecker_.OnStore(expr->store.opcode);
       break;
 

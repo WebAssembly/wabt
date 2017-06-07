@@ -1,9 +1,9 @@
 ;;; ERROR: 1
-(module
+(module binary
   "\00ASM"
   "\0b\00\00\00")
 (;; STDERR ;;;
 out/test/parse/module/bad-binary-module-magic.txt:2:2: error in binary module: @0x00000004: bad magic value
-(module
+(module binary
  ^^^^^^
 ;;; STDERR ;;)

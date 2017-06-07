@@ -67,5 +67,13 @@ out/third_party/testsuite/block.wast:279: assert_invalid passed:
 out/third_party/testsuite/block.wast:285: assert_invalid passed:
   error: type stack size too small at i64.ctz. got 0, expected at least 1
   error: @0x00000020: OnUnaryExpr callback failed
-36/36 tests passed.
+out/third_party/testsuite/block.wast:293: assert_malformed passed:
+  out/third_party/testsuite/block/block.23.wast:1:17: unexpected label "$l"
+  (func block end $l)
+                  ^^
+out/third_party/testsuite/block.wast:297: assert_malformed passed:
+  out/third_party/testsuite/block/block.24.wast:1:20: mismatching label "$a" != "$l"
+  (func block $a end $l)
+                     ^^
+38/38 tests passed.
 ;;; STDOUT ;;)

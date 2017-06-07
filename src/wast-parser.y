@@ -110,6 +110,10 @@
 
 namespace wabt {
 
+static bool is_power_of_two(uint32_t x) {
+  return x && ((x & (x - 1)) == 0);
+}
+
 static ExprList join_exprs1(Location* loc, Expr* expr1);
 static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
 static ExprList join_expr_lists(ExprList* expr1, ExprList* expr2);
@@ -169,7 +173,8 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token UNREACHABLE CURRENT_MEMORY GROW_MEMORY
 %token FUNC START TYPE PARAM RESULT LOCAL GLOBAL
-%token MODULE TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT
+%token TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT
+%token MODULE BIN QUOTE
 %token REGISTER INVOKE GET
 %token ASSERT_MALFORMED ASSERT_INVALID ASSERT_UNLINKABLE
 %token ASSERT_RETURN ASSERT_RETURN_CANONICAL_NAN ASSERT_RETURN_ARITHMETIC_NAN
@@ -192,8 +197,9 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<expr> plain_instr block_instr
 %type<expr_list> catch_instr catch_list catch_instr_list
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
-%type<func> func_fields_body func_fields_body1 func_body func_body1 func_fields_import func_fields_import1
-%type<func_sig> func_sig func_type
+%type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
+%type<func> func_fields_import func_fields_import1 func_fields_import_result
+%type<func_sig> func_sig func_sig_result func_type
 %type<global> global_type
 %type<import> import_desc inline_import
 %type<limits> limits
@@ -201,7 +207,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<module> module module_fields_opt module_fields inline_module
 %type<module_field> type_def start data elem import export
 %type<module_fields> func func_fields table table_fields memory memory_fields global global_fields module_field
-%type<raw_module> raw_module
+%type<script_module> script_module
 %type<literal> literal
 %type<script> script
 %type<table> table_sig
@@ -233,7 +239,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %destructor { delete $$; } <import>
 %destructor { delete $$; } <memory>
 %destructor { delete $$; } <module>
-%destructor { delete $$; } <raw_module>
+%destructor { delete $$; } <script_module>
 %destructor { delete $$; } <script>
 %destructor { destroy_text_list(&$$); } <text_list>
 %destructor { delete $$; } <types>
@@ -311,26 +317,31 @@ global_type :
       $$->mutable_ = true;
     }
 ;
+
 func_type :
     LPAR FUNC func_sig RPAR { $$ = $3; }
 ;
+
 func_sig :
+    func_sig_result
+  | LPAR PARAM value_type_list RPAR func_sig {
+      $$ = $5;
+      $$->param_types.insert($$->param_types.begin(), $3->begin(), $3->end());
+      delete $3;
+    }
+  | LPAR PARAM bind_var VALUE_TYPE RPAR func_sig {
+      $$ = $6;
+      $$->param_types.insert($$->param_types.begin(), $4);
+      // Ignore bind_var.
+      destroy_string_slice(&$3);
+    }
+;
+
+func_sig_result :
     /* empty */ { $$ = new FuncSignature(); }
-  | LPAR PARAM value_type_list RPAR {
-      $$ = new FuncSignature();
-      $$->param_types = std::move(*$3);
-      delete $3;
-    }
-  | LPAR PARAM value_type_list RPAR LPAR RESULT value_type_list RPAR {
-      $$ = new FuncSignature();
-      $$->param_types = std::move(*$3);
-      delete $3;
-      $$->result_types = std::move(*$7);
-      delete $7;
-    }
-  | LPAR RESULT value_type_list RPAR {
-      $$ = new FuncSignature();
-      $$->result_types = std::move(*$3);
+  | LPAR RESULT value_type_list RPAR func_sig_result {
+      $$ = $5;
+      $$->result_types.insert($$->result_types.begin(), $3->begin(), $3->end());
       delete $3;
     }
 ;
@@ -426,22 +437,32 @@ labeling_opt :
 offset_opt :
     /* empty */ { $$ = 0; }
   | OFFSET_EQ_NAT {
-    if (WABT_FAILED(parse_int64($1.start, $1.start + $1.length, &$$,
-                                ParseIntType::SignedAndUnsigned))) {
-      wast_parser_error(&@1, lexer, parser,
-                        "invalid offset \"" PRIstringslice "\"",
-                        WABT_PRINTF_STRING_SLICE_ARG($1));
+      uint64_t offset64;
+      if (WABT_FAILED(parse_int64($1.start, $1.start + $1.length, &offset64,
+                                  ParseIntType::SignedAndUnsigned))) {
+        wast_parser_error(&@1, lexer, parser,
+                          "invalid offset \"" PRIstringslice "\"",
+                          WABT_PRINTF_STRING_SLICE_ARG($1));
       }
+      if (offset64 > UINT32_MAX) {
+        wast_parser_error(&@1, lexer, parser,
+                          "offset must be less than or equal to 0xffffffff");
+      }
+      $$ = static_cast<uint32_t>(offset64);
     }
 ;
 align_opt :
     /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN_EQ_NAT {
-    if (WABT_FAILED(parse_int32($1.start, $1.start + $1.length, &$$,
-                                ParseIntType::UnsignedOnly))) {
-      wast_parser_error(&@1, lexer, parser,
-                        "invalid alignment \"" PRIstringslice "\"",
-                        WABT_PRINTF_STRING_SLICE_ARG($1));
+      if (WABT_FAILED(parse_int32($1.start, $1.start + $1.length, &$$,
+                                  ParseIntType::UnsignedOnly))) {
+        wast_parser_error(&@1, lexer, parser,
+                          "invalid alignment \"" PRIstringslice "\"",
+                          WABT_PRINTF_STRING_SLICE_ARG($1));
+      }
+
+      if ($$ != WABT_USE_NATURAL_ALIGNMENT && !is_power_of_two($$)) {
+        wast_parser_error(&@1, lexer, parser, "alignment must be power-of-two");
       }
     }
 ;
@@ -786,12 +807,7 @@ func_fields_import :
 ;
 
 func_fields_import1 :
-    /* empty */ { $$ = new Func(); }
-  | LPAR RESULT value_type_list RPAR {
-      $$ = new Func();
-      $$->decl.sig.result_types = std::move(*$3);
-      delete $3;
-    }
+    func_fields_import_result
   | LPAR PARAM value_type_list RPAR func_fields_import1 {
       $$ = $5;
       $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(),
@@ -807,6 +823,16 @@ func_fields_import1 :
     }
 ;
 
+func_fields_import_result :
+    /* empty */ { $$ = new Func(); }
+  | LPAR RESULT value_type_list RPAR func_fields_import_result {
+      $$ = $5;
+      $$->decl.sig.result_types.insert($$->decl.sig.result_types.begin(),
+                                       $3->begin(), $3->end());
+      delete $3;
+    }
+;
+
 func_fields_body :
     func_fields_body1 {
       $$ = $1;
@@ -815,12 +841,7 @@ func_fields_body :
 ;
 
 func_fields_body1 :
-    func_body
-  | LPAR RESULT value_type_list RPAR func_body {
-      $$ = $5;
-      $$->decl.sig.result_types = std::move(*$3);
-      delete $3;
-    }
+    func_result_body
   | LPAR PARAM value_type_list RPAR func_fields_body1 {
       $$ = $5;
       $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(),
@@ -833,6 +854,16 @@ func_fields_body1 :
                                  Binding(@3, $$->decl.sig.param_types.size()));
       destroy_string_slice(&$3);
       $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(), $4);
+    }
+;
+
+func_result_body :
+    func_body
+  | LPAR RESULT value_type_list RPAR func_result_body {
+      $$ = $5;
+      $$->decl.sig.result_types.insert($$->decl.sig.result_types.begin(),
+                                       $3->begin(), $3->end());
+      delete $3;
     }
 ;
 
@@ -1224,44 +1255,13 @@ module_fields :
     }
 ;
 
-raw_module :
-    LPAR MODULE bind_var_opt module_fields_opt RPAR {
-      $$ = new RawModule();
-      $$->type = RawModuleType::Text;
-      $$->text = $4;
-      $$->text->name = $3;
-      $$->text->loc = @2;
-
-      /* resolve func type variables where the signature was not specified
-       * explicitly */
-      for (Func* func: $4->funcs) {
-        if (decl_has_func_type(&func->decl) &&
-            is_empty_signature(&func->decl.sig)) {
-          FuncType* func_type =
-              get_func_type_by_var($4, &func->decl.type_var);
-          if (func_type) {
-            func->decl.sig = func_type->sig;
-          }
-        }
-      }
-    }
-  | LPAR MODULE bind_var_opt text_list RPAR {
-      $$ = new RawModule();
-      $$->type = RawModuleType::Binary;
-      $$->binary.name = $3;
-      $$->binary.loc = @2;
-      dup_text_list(&$4, &$$->binary.data, &$$->binary.size);
-      destroy_text_list(&$4);
-    }
-;
-
 module :
-    raw_module {
-      if ($1->type == RawModuleType::Text) {
+    script_module {
+      if ($1->type == ScriptModule::Type::Text) {
         $$ = $1->text;
         $1->text = nullptr;
       } else {
-        assert($1->type == RawModuleType::Binary);
+        assert($1->type == ScriptModule::Type::Binary);
         $$ = new Module();
         ReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
         BinaryErrorHandlerModule error_handler(&$1->binary.loc, lexer, parser);
@@ -1295,6 +1295,45 @@ script_var_opt :
     }
 ;
 
+script_module :
+    LPAR MODULE bind_var_opt module_fields_opt RPAR {
+      $$ = new ScriptModule();
+      $$->type = ScriptModule::Type::Text;
+      $$->text = $4;
+      $$->text->name = $3;
+      $$->text->loc = @2;
+
+      // Resolve func type variables where the signature was not specified
+      // explicitly.
+      for (Func* func: $4->funcs) {
+        if (decl_has_func_type(&func->decl) &&
+            is_empty_signature(&func->decl.sig)) {
+          FuncType* func_type =
+              get_func_type_by_var($4, &func->decl.type_var);
+          if (func_type) {
+            func->decl.sig = func_type->sig;
+          }
+        }
+      }
+    }
+  | LPAR MODULE bind_var_opt BIN text_list RPAR {
+      $$ = new ScriptModule();
+      $$->type = ScriptModule::Type::Binary;
+      $$->binary.name = $3;
+      $$->binary.loc = @2;
+      dup_text_list(&$5, &$$->binary.data, &$$->binary.size);
+      destroy_text_list(&$5);
+    }
+  | LPAR MODULE bind_var_opt QUOTE text_list RPAR {
+      $$ = new ScriptModule();
+      $$->type = ScriptModule::Type::Quoted;
+      $$->quoted.name = $3;
+      $$->quoted.loc = @2;
+      dup_text_list(&$5, &$$->quoted.data, &$$->quoted.size);
+      destroy_text_list(&$5);
+    }
+;
+
 action :
     LPAR INVOKE script_var_opt quoted_text const_list RPAR {
       $$ = new Action();
@@ -1316,25 +1355,25 @@ action :
 ;
 
 assertion :
-    LPAR ASSERT_MALFORMED raw_module quoted_text RPAR {
+    LPAR ASSERT_MALFORMED script_module quoted_text RPAR {
       $$ = new Command();
       $$->type = CommandType::AssertMalformed;
       $$->assert_malformed.module = $3;
       $$->assert_malformed.text = $4;
     }
-  | LPAR ASSERT_INVALID raw_module quoted_text RPAR {
+  | LPAR ASSERT_INVALID script_module quoted_text RPAR {
       $$ = new Command();
       $$->type = CommandType::AssertInvalid;
       $$->assert_invalid.module = $3;
       $$->assert_invalid.text = $4;
     }
-  | LPAR ASSERT_UNLINKABLE raw_module quoted_text RPAR {
+  | LPAR ASSERT_UNLINKABLE script_module quoted_text RPAR {
       $$ = new Command();
       $$->type = CommandType::AssertUnlinkable;
       $$->assert_unlinkable.module = $3;
       $$->assert_unlinkable.text = $4;
     }
-  | LPAR ASSERT_TRAP raw_module quoted_text RPAR {
+  | LPAR ASSERT_TRAP script_module quoted_text RPAR {
       $$ = new Command();
       $$->type = CommandType::AssertUninstantiable;
       $$->assert_uninstantiable.module = $3;
@@ -1836,7 +1875,11 @@ Result parse_wast(WastLexer* lexer, Script** out_script,
   delete [] parser.yyssa;
   delete [] parser.yyvsa;
   delete [] parser.yylsa;
-  *out_script = parser.script;
+  if (out_script) {
+    *out_script = parser.script;
+  } else {
+    delete parser.script;
+  }
   return result == 0 && parser.errors == 0 ? Result::Ok : Result::Error;
 }
 

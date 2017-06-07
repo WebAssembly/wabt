@@ -1,0 +1,19 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/token.wast
+(;; STDOUT ;;;
+out/third_party/testsuite/token.wast:4: assert_malformed passed:
+  out/third_party/testsuite/token/token.0.wast:1:14: unexpected token "i32.const0"
+  (func (drop (i32.const0)))
+               ^^^^^^^^^^
+  out/third_party/testsuite/token/token.0.wast:1:24: syntax error, unexpected )
+  (func (drop (i32.const0)))
+                         ^
+out/third_party/testsuite/token.wast:8: assert_malformed passed:
+  out/third_party/testsuite/token/token.1.wast:1:10: unexpected token "0drop"
+  (func br 0drop)
+           ^^^^^
+  out/third_party/testsuite/token/token.1.wast:1:15: syntax error, unexpected ), expecting NAT or VAR
+  (func br 0drop)
+                ^
+2/2 tests passed.
+;;; STDOUT ;;)

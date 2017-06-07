@@ -24,12 +24,17 @@ std::string SourceErrorHandler::DefaultErrorMessage(
     const Location* loc,
     const std::string& error,
     const std::string& source_line,
-    size_t source_line_column_offset) {
-  std::string result = string_printf("%s:%d:%d: %s\n", loc->filename, loc->line,
-                                     loc->first_column, error.c_str());
+    size_t source_line_column_offset,
+    int indent) {
+  std::string indent_str(indent, ' ');
+  std::string result =
+      string_printf("%s%s:%d:%d: %s\n", indent_str.c_str(), loc->filename,
+                    loc->line, loc->first_column, error.c_str());
+  result += indent_str;
   if (!source_line.empty()) {
     result += source_line;
     result += '\n';
+    result += indent_str;
 
     size_t num_spaces = (loc->first_column - 1) - source_line_column_offset;
     size_t num_carets = loc->last_column - loc->first_column;
@@ -56,8 +61,9 @@ bool SourceErrorHandlerFile::OnError(const Location* loc,
                                      const std::string& source_line,
                                      size_t source_line_column_offset) {
   PrintErrorHeader();
-  std::string message =
-      DefaultErrorMessage(loc, error, source_line, source_line_column_offset);
+  int indent = header_.empty() ? 0 : 2;
+  std::string message = DefaultErrorMessage(loc, error, source_line,
+                                            source_line_column_offset, indent);
   fwrite(message.data(), 1, message.size(), file_);
   return true;
 }
@@ -78,8 +84,6 @@ void SourceErrorHandlerFile::PrintErrorHeader() {
       fprintf(file_, "%s:\n", header_.c_str());
       break;
   }
-  // If there's a header, indent the following message.
-  fprintf(file_, "  ");
 }
 
 SourceErrorHandlerBuffer::SourceErrorHandlerBuffer(
@@ -90,8 +94,8 @@ bool SourceErrorHandlerBuffer::OnError(const Location* loc,
                                        const std::string& error,
                                        const std::string& source_line,
                                        size_t source_line_column_offset) {
-  buffer_ +=
-      DefaultErrorMessage(loc, error, source_line, source_line_column_offset);
+  buffer_ += DefaultErrorMessage(loc, error, source_line,
+                                 source_line_column_offset, 0);
   return true;
 }
 

@@ -439,6 +439,8 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> "local"               { RETURN(LOCAL); }
       <i> "global"              { RETURN(GLOBAL); }
       <i> "module"              { RETURN(MODULE); }
+      <i> "binary"              { RETURN(BIN); }
+      <i> "quote"               { RETURN(QUOTE); }
       <i> "table"               { RETURN(TABLE); }
       <i> "memory"              { RETURN(MEMORY); }
       <i> "start"               { RETURN(START); }
