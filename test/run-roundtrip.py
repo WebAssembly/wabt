@@ -146,16 +146,19 @@ def main(args):
     sys.stderr.write('File not found: %s\n' % filename)
     return ERROR
 
-  with utils.TempDirectory(options.out_dir, 'roundtrip-') as out_dir:
-    if options.stdout:
-      result, msg = OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir,
-                                         filename, options.verbose)
-    else:
-      result, msg = TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename,
-                                  options.verbose)
-    if result == ERROR:
-      sys.stderr.write(msg)
-    return result
+  out_dir = options.out_dir
+  assert(out_dir)
+
+  if options.stdout:
+    result, msg = OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir,
+                                       filename, options.verbose)
+  else:
+    result, msg = TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename,
+                                options.verbose)
+  if result == ERROR:
+    sys.stderr.write(msg)
+
+  return result
 
 
 if __name__ == '__main__':

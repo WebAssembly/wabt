@@ -90,26 +90,30 @@ def main(args):
 
   filename = options.file
 
-  with utils.TempDirectory(options.out_dir, 'objdump-') as out_dir:
-    basename = os.path.basename(filename)
-    basename_noext = os.path.splitext(basename)[0]
-    if options.gen_wasm:
-      out_file = os.path.join(out_dir, basename_noext + '.wasm')
-      gen_wasm.RunWithArgs('-o', out_file, filename)
-    else:
-      if options.spec:
-        out_file = os.path.join(out_dir, basename_noext + '.json')
-      else:
-        out_file = os.path.join(out_dir, basename_noext + '.wasm')
-      wast2wasm.RunWithArgs('-o', out_file, filename)
+  out_dir = options.out_dir
+  assert(out_dir)
 
+  basename = os.path.basename(filename)
+  basename_noext = os.path.splitext(basename)[0]
+  if options.gen_wasm:
+    out_file = os.path.join(out_dir, basename_noext + '.wasm')
+    gen_wasm.RunWithArgs('-o', out_file, filename)
+  else:
     if options.spec:
-      wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
-      wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
+      out_file = os.path.join(out_dir, basename_noext + '.json')
     else:
-      wasm_files = [out_file]
+      out_file = os.path.join(out_dir, basename_noext + '.wasm')
+    wast2wasm.RunWithArgs('-o', out_file, filename)
 
-    wasm_objdump.RunWithArgs('-r', '-d', *wasm_files)
+  if options.spec:
+    wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
+    wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
+  else:
+    wasm_files = [out_file]
+
+  wasm_objdump.RunWithArgs('-r', '-d', *wasm_files)
+
+  return 0
 
 
 if __name__ == '__main__':

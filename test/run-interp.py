@@ -70,11 +70,13 @@ def main(args):
   wast2wasm.verbose = options.print_cmd
   wasm_interp.verbose = options.print_cmd
 
-  with utils.TempDirectory(options.out_dir, 'run-interp-') as out_dir:
-    new_ext = '.json' if options.spec else '.wasm'
-    out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
-    wast2wasm.RunWithArgs(options.file, '-o', out_file)
-    wasm_interp.RunWithArgs(out_file)
+  out_dir = options.out_dir
+  assert(out_dir)
+
+  new_ext = '.json' if options.spec else '.wasm'
+  out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
+  wast2wasm.RunWithArgs(options.file, '-o', out_file)
+  wasm_interp.RunWithArgs(out_file)
 
   return 0
 

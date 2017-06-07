@@ -51,12 +51,16 @@ TOOLS = {
     },
     'run-objdump': {
         'EXE': 'test/run-objdump.py',
-        'FLAGS': ['--bindir=%(bindir)s', '--no-error-cmdline'],
+        'FLAGS': [
+                '--bindir=%(bindir)s',
+                '--no-error-cmdline',
+                '-o', '%(out_dir)s'
+                ],
         'VERBOSE-FLAGS': ['-v']
     },
     'run-wasm-link': {
         'EXE': 'test/run-wasm-link.py',
-        'FLAGS': ['--bindir=%(bindir)s'],
+        'FLAGS': ['--bindir=%(bindir)s', '-o', '%(out_dir)s'],
         'VERBOSE-FLAGS': ['-v']
     },
     'run-roundtrip': {
@@ -115,7 +119,12 @@ TOOLS = {
     },
     'run-opcodecnt': {
         'EXE': 'test/run-opcodecnt.py',
-        'FLAGS': ['--bindir=%(bindir)s', '--no-error-cmdline'],
+        'FLAGS': [
+                '--bindir=%(bindir)s',
+                '--no-error-cmdline',
+                '-o',
+                '%(out_dir)s'
+        ],
         'VERBOSE-FLAGS': ['--print-cmd', '-v']
     },
     'run-gen-spec-js': {
@@ -238,7 +247,7 @@ class TestInfo(object):
     result.expected_stderr = ''
     result.tool = 'run-roundtrip'
     result.exe = ROUNDTRIP_PY
-    result.flags = ['--bindir', '%(bindir)s', '-v']
+    result.flags = ['--bindir', '%(bindir)s', '-v', '-o', '%(out_dir)s']
     if fold_exprs:
       result.flags.append('--fold-exprs')
     result.expected_error = 0
@@ -267,7 +276,11 @@ class TestInfo(object):
     if self.is_roundtrip:
       dirname = os.path.dirname(path)
       basename = os.path.basename(path)
-      path = os.path.join(dirname, 'roundtrip', basename)
+      if self.fold_exprs:
+        path = os.path.join(dirname, 'roundtrip_folded', basename)
+      else:
+        path = os.path.join(dirname, 'roundtrip', basename)
+
     return path
 
   def ShouldCreateRoundtrip(self):
@@ -534,7 +547,13 @@ def RunTest(info, options, variables, verbose_level=0):
   cwd = REPO_ROOT_DIR
   gen_input_path = info.CreateInputFile()
   rel_gen_input_path = os.path.relpath(gen_input_path, cwd)
-  variables['out_dir'] = os.path.dirname(rel_gen_input_path)
+
+  out_dir = os.path.splitext(rel_gen_input_path)[0] + "_out"
+  if os.path.isdir(out_dir):
+    shutil.rmtree(out_dir)
+  os.makedirs(out_dir)
+  variables['out_dir'] = out_dir
+
   cmd = info.GetCommand(rel_gen_input_path, variables, options.arg,
                         verbose_level)
   if options.print_cmd:

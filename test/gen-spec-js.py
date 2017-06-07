@@ -512,22 +512,24 @@ def main(args):
   # modules is a list of pairs: [(module_command, [assert_command, ...]), ...]
   modules = CollectInvalidModuleCommands(all_commands)
 
-  with utils.TempDirectory(options.temp_dir, 'gen-spec-js-') as temp_dir:
-    extender = ModuleExtender(wast2wasm, wasm2wast, temp_dir)
-    for module_command, assert_commands in modules:
-      if assert_commands:
-        wasm_path = os.path.join(json_dir, module_command['filename'])
-        new_module_filename = extender.Extend(wasm_path, assert_commands)
-        module_command['filename'] = os.path.relpath(new_module_filename,
-                                                     json_dir)
+  temp_dir = options.temp_dir
+  assert(temp_dir)
 
-    output = StringIO()
-    if options.prefix:
-      with open(options.prefix) as prefix_file:
-        output.write(prefix_file.read())
-        output.write('\n')
+  extender = ModuleExtender(wast2wasm, wasm2wast, temp_dir)
+  for module_command, assert_commands in modules:
+    if assert_commands:
+      wasm_path = os.path.join(json_dir, module_command['filename'])
+      new_module_filename = extender.Extend(wasm_path, assert_commands)
+      module_command['filename'] = os.path.relpath(new_module_filename,
+                                                   json_dir)
 
-    JSWriter(json_dir, all_commands, output).Write()
+  output = StringIO()
+  if options.prefix:
+    with open(options.prefix) as prefix_file:
+      output.write(prefix_file.read())
+      output.write('\n')
+
+  JSWriter(json_dir, all_commands, output).Write()
 
   if options.output:
     out_file = open(options.output, 'w')

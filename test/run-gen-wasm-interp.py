@@ -65,10 +65,12 @@ def main(args):
   gen_wasm.verbose = options.print_cmd
   wasm_interp.verbose = options.print_cmd
 
-  with utils.TempDirectory(options.out_dir, 'run-gen-wasm-interp-') as out_dir:
-    out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
-    gen_wasm.RunWithArgs(options.file, '-o', out_file)
-    wasm_interp.RunWithArgs(out_file)
+  out_dir = options.out_dir
+  assert(out_dir)
+
+  out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
+  gen_wasm.RunWithArgs(options.file, '-o', out_file)
+  wasm_interp.RunWithArgs(out_file)
 
   return 0
 

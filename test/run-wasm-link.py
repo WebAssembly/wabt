@@ -83,47 +83,51 @@ def main(args):
 
   filename = options.file
 
-  with utils.TempDirectory(options.out_dir, 'wasm-link-') as out_dir:
-    basename = os.path.basename(filename)
-    basename_noext = os.path.splitext(basename)[0]
-    out_file = os.path.join(out_dir, basename_noext + '.json')
-    wast2wasm.RunWithArgs('--spec', '--debug-names', '--no-check', '-r', '-o',
-                          out_file, filename)
+  out_dir = options.out_dir
+  assert(out_dir)
 
-    wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
-    wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
+  basename = os.path.basename(filename)
+  basename_noext = os.path.splitext(basename)[0]
+  out_file = os.path.join(out_dir, basename_noext + '.json')
+  wast2wasm.RunWithArgs('--spec', '--debug-names', '--no-check', '-r', '-o',
+                        out_file, filename)
 
-    output = os.path.join(out_dir, 'linked.wasm')
-    if options.incremental:
-      partially_linked = output + '.partial'
-      for i, f in enumerate(wasm_files):
-        if i == 0:
-          wasm_link.RunWithArgs('-o', output, f)
-        else:
-          if os.path.exists(partially_linked):
-            os.remove(partially_linked)
-          os.rename(output, partially_linked)
-          wasm_link.RunWithArgs('-r', '-o', output, partially_linked, f)
-        #wasm_objdump.RunWithArgs('-d', '-h', output)
-      wasm_objdump.RunWithArgs('-d', '-x', '-r', '-h', output)
-    else:
-      wasm_link.RunWithArgs('-o', output, *wasm_files)
-      wasm_objdump.RunWithArgs('-d', '-x', '-r', '-h', output)
+  wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
+  wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
 
-    if options.spec:
-      with open(out_file) as json_file:
-        spec = json.load(json_file, object_pairs_hook=OrderedDict)
-        spec['commands'] = [c for c in spec['commands']
-                            if c['type'] != 'module']
-        module = OrderedDict([('type', 'module'),
-                              ('line', 0),
-                              ('filename', os.path.basename(output)),])
-        spec['commands'].insert(0, module)
+  output = os.path.join(out_dir, 'linked.wasm')
+  if options.incremental:
+    partially_linked = output + '.partial'
+    for i, f in enumerate(wasm_files):
+      if i == 0:
+        wasm_link.RunWithArgs('-o', output, f)
+      else:
+        if os.path.exists(partially_linked):
+          os.remove(partially_linked)
+        os.rename(output, partially_linked)
+        wasm_link.RunWithArgs('-r', '-o', output, partially_linked, f)
+      #wasm_objdump.RunWithArgs('-d', '-h', output)
+    wasm_objdump.RunWithArgs('-d', '-x', '-r', '-h', output)
+  else:
+    wasm_link.RunWithArgs('-o', output, *wasm_files)
+    wasm_objdump.RunWithArgs('-d', '-x', '-r', '-h', output)
 
-      with open(out_file, 'wb') as json_file:
-        json.dump(spec, json_file, indent=4)
+  if options.spec:
+    with open(out_file) as json_file:
+      spec = json.load(json_file, object_pairs_hook=OrderedDict)
+      spec['commands'] = [c for c in spec['commands']
+                          if c['type'] != 'module']
+      module = OrderedDict([('type', 'module'),
+                            ('line', 0),
+                            ('filename', os.path.basename(output)),])
+      spec['commands'].insert(0, module)
 
-      wasm_interp.RunWithArgs('--spec', out_file)
+    with open(out_file, 'wb') as json_file:
+      json.dump(spec, json_file, indent=4)
+
+    wasm_interp.RunWithArgs('--spec', out_file)
+
+  return 0
 
 
 if __name__ == '__main__':

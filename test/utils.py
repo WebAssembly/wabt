@@ -106,23 +106,6 @@ class Executable(object):
           self.AppendArg('%s=%s' % (option, value))
 
 
-@contextlib.contextmanager
-def TempDirectory(out_dir, prefix=None):
-  if out_dir:
-    out_dir_is_temp = False
-    if not os.path.exists(out_dir):
-      os.makedirs(out_dir)
-  else:
-    out_dir = tempfile.mkdtemp(prefix=prefix)
-    out_dir_is_temp = True
-
-  try:
-    yield out_dir
-  finally:
-    if out_dir_is_temp:
-      shutil.rmtree(out_dir)
-
-
 def ChangeExt(path, new_ext):
   return os.path.splitext(path)[0] + new_ext
 

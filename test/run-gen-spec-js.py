@@ -57,33 +57,37 @@ def main(args):
   parser.add_argument('file', help='wast file.')
   options = parser.parse_args(args)
 
-  with utils.TempDirectory(options.out_dir, 'run-gen-spec-js-') as out_dir:
-    wast2wasm = utils.Executable(
-        find_exe.GetWast2WasmExecutable(options.bindir), '--spec',
-        error_cmdline=options.error_cmdline)
-    wast2wasm.AppendOptionalArgs({'-v': options.verbose})
+  out_dir = options.out_dir
+  assert(out_dir)
 
-    gen_spec_js = utils.Executable(sys.executable, GEN_SPEC_JS_PY,
-                                   '--temp-dir', out_dir,
-                                   error_cmdline=options.error_cmdline)
-    gen_spec_js.AppendOptionalArgs({
-        '--bindir': options.bindir,
-        '--prefix': options.prefix_js,
-    })
-    gen_spec_js.verbose = options.print_cmd
+  wast2wasm = utils.Executable(
+      find_exe.GetWast2WasmExecutable(options.bindir), '--spec',
+      error_cmdline=options.error_cmdline)
+  wast2wasm.AppendOptionalArgs({'-v': options.verbose})
 
-    json_file = utils.ChangeDir(
-        utils.ChangeExt(options.file, '.json'), out_dir)
-    js_file = utils.ChangeExt(json_file, '.js')
-    wast2wasm.RunWithArgs(options.file, '-o', json_file)
+  gen_spec_js = utils.Executable(sys.executable, GEN_SPEC_JS_PY,
+                                 '--temp-dir', out_dir,
+                                 error_cmdline=options.error_cmdline)
+  gen_spec_js.AppendOptionalArgs({
+      '--bindir': options.bindir,
+      '--prefix': options.prefix_js,
+  })
+  gen_spec_js.verbose = options.print_cmd
 
-    if options.js_engine:
-      gen_spec_js.RunWithArgs(json_file, '-o', js_file)
-      js = utils.Executable(options.js_engine, *options.js_engine_flags)
-      js.RunWithArgs(js_file)
-    else:
-      # Write JavaScript output to stdout
-      gen_spec_js.RunWithArgs(json_file)
+  json_file = utils.ChangeDir(
+      utils.ChangeExt(options.file, '.json'), out_dir)
+  js_file = utils.ChangeExt(json_file, '.js')
+  wast2wasm.RunWithArgs(options.file, '-o', json_file)
+
+  if options.js_engine:
+    gen_spec_js.RunWithArgs(json_file, '-o', js_file)
+    js = utils.Executable(options.js_engine, *options.js_engine_flags)
+    js.RunWithArgs(js_file)
+  else:
+    # Write JavaScript output to stdout
+    gen_spec_js.RunWithArgs(json_file)
+
+  return 0
 
 
 if __name__ == '__main__':
