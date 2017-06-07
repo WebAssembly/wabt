@@ -16,7 +16,7 @@ Sections:
 Section Details:
 
 Type:
- - [0] () -> nil
+ - type[0] () -> nil
 Import:
  - func[0] sig=0 <import_func1> <- env.baz
 Custom:

@@ -32,10 +32,10 @@ Sections:
 Section Details:
 
 Type:
- - [0] (i32) -> nil
- - [1] (i64) -> nil
- - [2] (f64) -> nil
- - [3] () -> nil
+ - type[0] (i32) -> nil
+ - type[1] (i64) -> nil
+ - type[2] (f64) -> nil
+ - type[3] () -> nil
 Function:
  - func[0] sig=0 <func1>
  - func[1] sig=1 <func2>
@@ -46,11 +46,11 @@ Table:
 Elem:
  - segment[0] table=0
  - init i32=0
-  - func[0] <func1>
-  - func[0] <func1>
-  - func[2] <func3>
-  - func[1] <func2>
-  - func[1] <func2>
+  - elem[0] = func[0] <func1>
+  - elem[1] = func[0] <func1>
+  - elem[2] = func[2] <func3>
+  - elem[3] = func[1] <func2>
+  - elem[4] = func[1] <func2>
 Custom:
  - name: "name"
  - func[0] func1

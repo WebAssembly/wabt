@@ -124,8 +124,8 @@ debug-names.wasm:	file format wasm 0x1
 Section Details:
 
 Type:
- - [0] (i32) -> nil
- - [1] (f32) -> nil
+ - type[0] (i32) -> nil
+ - type[1] (f32) -> nil
 Function:
  - func[0] sig=0 <F1>
  - func[1] sig=1

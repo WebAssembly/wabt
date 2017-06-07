@@ -84,7 +84,7 @@ Sections:
 Section Details:
 
 Type:
- - [0] (i32) -> nil
+ - type[0] (i32) -> nil
 Function:
  - func[0] sig=0 <local_func>
 Custom:
