@@ -481,7 +481,7 @@ def main(args):
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
-  parser.add_argument('--temp-dir', metavar='PATH', required=True,
+  parser.add_argument('--temp-dir', metavar='PATH',
                       help='set the directory that temporary wasm/wast'
                       ' files are written.')
   parser.add_argument('--no-error-cmdline',
@@ -512,23 +512,22 @@ def main(args):
   # modules is a list of pairs: [(module_command, [assert_command, ...]), ...]
   modules = CollectInvalidModuleCommands(all_commands)
 
-  temp_dir = options.temp_dir
+  with utils.TempDirectory(options.temp_dir, 'gen-spec-js-') as temp_dir:
+    extender = ModuleExtender(wast2wasm, wasm2wast, temp_dir)
+    for module_command, assert_commands in modules:
+      if assert_commands:
+        wasm_path = os.path.join(json_dir, module_command['filename'])
+        new_module_filename = extender.Extend(wasm_path, assert_commands)
+        module_command['filename'] = os.path.relpath(new_module_filename,
+                                                     json_dir)
 
-  extender = ModuleExtender(wast2wasm, wasm2wast, temp_dir)
-  for module_command, assert_commands in modules:
-    if assert_commands:
-      wasm_path = os.path.join(json_dir, module_command['filename'])
-      new_module_filename = extender.Extend(wasm_path, assert_commands)
-      module_command['filename'] = os.path.relpath(new_module_filename,
-                                                   json_dir)
+    output = StringIO()
+    if options.prefix:
+      with open(options.prefix) as prefix_file:
+        output.write(prefix_file.read())
+        output.write('\n')
 
-  output = StringIO()
-  if options.prefix:
-    with open(options.prefix) as prefix_file:
-      output.write(prefix_file.read())
-      output.write('\n')
-
-  JSWriter(json_dir, all_commands, output).Write()
+    JSWriter(json_dir, all_commands, output).Write()
 
   if options.output:
     out_file = open(options.output, 'w')

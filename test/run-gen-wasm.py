@@ -34,7 +34,7 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
-  parser.add_argument('-o', '--out-dir', metavar='PATH', required=True,
+  parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
@@ -65,11 +65,10 @@ def main(args):
   wasm2wast.verbose = options.print_cmd
   wasm2wast.AppendOptionalArgs({'--verbose': options.verbose,})
 
-  out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'),
-                             options.out_dir)
-  gen_wasm.RunWithArgs(options.file, '-o', out_file)
-  wasm2wast.RunWithArgs(out_file)
-  return 0
+  with utils.TempDirectory(options.out_dir, 'run-gen-wasm-') as out_dir:
+    out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
+    gen_wasm.RunWithArgs(options.file, '-o', out_file)
+    wasm2wast.RunWithArgs(out_file)
 
 
 if __name__ == '__main__':

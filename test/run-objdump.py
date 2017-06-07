@@ -30,7 +30,7 @@ def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
-  parser.add_argument('-o', '--out-dir', metavar='PATH', required=True,
+  parser.add_argument('-o', '--out-dir', metavar='PATH',
                       help='output directory for files.')
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
@@ -90,26 +90,26 @@ def main(args):
 
   filename = options.file
 
-  basename = os.path.basename(filename)
-  basename_noext = os.path.splitext(basename)[0]
-  if options.gen_wasm:
-    out_file = os.path.join(options.out_dir, basename_noext + '.wasm')
-    gen_wasm.RunWithArgs('-o', out_file, filename)
-  else:
-    if options.spec:
-      out_file = os.path.join(options.out_dir, basename_noext + '.json')
+  with utils.TempDirectory(options.out_dir, 'objdump-') as out_dir:
+    basename = os.path.basename(filename)
+    basename_noext = os.path.splitext(basename)[0]
+    if options.gen_wasm:
+      out_file = os.path.join(out_dir, basename_noext + '.wasm')
+      gen_wasm.RunWithArgs('-o', out_file, filename)
     else:
-      out_file = os.path.join(options.out_dir, basename_noext + '.wasm')
-    wast2wasm.RunWithArgs('-o', out_file, filename)
+      if options.spec:
+        out_file = os.path.join(out_dir, basename_noext + '.json')
+      else:
+        out_file = os.path.join(out_dir, basename_noext + '.wasm')
+      wast2wasm.RunWithArgs('-o', out_file, filename)
 
-  if options.spec:
-    wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
-    wasm_files = [utils.ChangeDir(f, options.out_dir) for f in wasm_files]
-  else:
-    wasm_files = [out_file]
+    if options.spec:
+      wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)
+      wasm_files = [utils.ChangeDir(f, out_dir) for f in wasm_files]
+    else:
+      wasm_files = [out_file]
 
-  wasm_objdump.RunWithArgs('-r', '-d', *wasm_files)
-  return 0
+    wasm_objdump.RunWithArgs('-r', '-d', *wasm_files)
 
 
 if __name__ == '__main__':
