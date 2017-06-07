@@ -152,9 +152,11 @@ Result dump_file(const char* filename) {
   s_objdump_options.filename = filename;
   printf("\n");
 
+  ObjdumpState state;
+
   // Pass 0: Prepass
   s_objdump_options.mode = ObjdumpMode::Prepass;
-  result = read_binary_objdump(data, size, &s_objdump_options);
+  result = read_binary_objdump(data, size, &s_objdump_options, &state);
   if (WABT_FAILED(result))
     goto done;
   s_objdump_options.log_stream = nullptr;
@@ -162,7 +164,7 @@ Result dump_file(const char* filename) {
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {
     s_objdump_options.mode = ObjdumpMode::Headers;
-    result = read_binary_objdump(data, size, &s_objdump_options);
+    result = read_binary_objdump(data, size, &s_objdump_options, &state);
     if (WABT_FAILED(result))
       goto done;
   }
@@ -170,7 +172,7 @@ Result dump_file(const char* filename) {
   // Pass 2: Print extra information based on section type
   if (s_objdump_options.details) {
     s_objdump_options.mode = ObjdumpMode::Details;
-    result = read_binary_objdump(data, size, &s_objdump_options);
+    result = read_binary_objdump(data, size, &s_objdump_options, &state);
     if (WABT_FAILED(result))
       goto done;
   }
@@ -178,7 +180,7 @@ Result dump_file(const char* filename) {
   // Pass 3: Disassemble code section
   if (s_objdump_options.disassemble) {
     s_objdump_options.mode = ObjdumpMode::Disassemble;
-    result = read_binary_objdump(data, size, &s_objdump_options);
+    result = read_binary_objdump(data, size, &s_objdump_options, &state);
     if (WABT_FAILED(result))
       goto done;
   }
@@ -186,7 +188,7 @@ Result dump_file(const char* filename) {
   // Pass 4: Dump to raw contents of the sections
   if (s_objdump_options.raw) {
     s_objdump_options.mode = ObjdumpMode::RawData;
-    result = read_binary_objdump(data, size, &s_objdump_options);
+    result = read_binary_objdump(data, size, &s_objdump_options, &state);
   }
 
 done:
