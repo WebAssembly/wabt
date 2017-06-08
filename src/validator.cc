@@ -125,8 +125,6 @@ class Validator {
   void CheckImport(const Location* loc, const Import* import);
   void CheckExport(const Export* export_);
 
-  void OnDuplicateBinding(const BindingHash::value_type& a,
-                          const BindingHash::value_type& b);
   void CheckDuplicateExportBindings(const Module* module);
   void CheckModule(const Module* module);
   const TypeVector* CheckInvoke(const Action* action);
@@ -779,22 +777,15 @@ void Validator::CheckExport(const Export* export_) {
   }
 }
 
-void Validator::OnDuplicateBinding(const BindingHash::value_type& a,
-                                   const BindingHash::value_type& b) {
-  // Choose the location that is later in the file.
-  const Location& a_loc = a.second.loc;
-  const Location& b_loc = b.second.loc;
-  const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
-  PrintError(&loc, "redefinition of export \"%s\"", a.first.c_str());
-}
-
 void Validator::CheckDuplicateExportBindings(const Module* module) {
-  module->export_bindings.find_duplicates(
-      [](const BindingHash::value_type& a, const BindingHash::value_type& b,
-         void* user_data) {
-        static_cast<Validator*>(user_data)->OnDuplicateBinding(a, b);
-      },
-      this);
+  module->export_bindings.FindDuplicates([this](
+      const BindingHash::value_type& a, const BindingHash::value_type& b) {
+    // Choose the location that is later in the file.
+    const Location& a_loc = a.second.loc;
+    const Location& b_loc = b.second.loc;
+    const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
+    PrintError(&loc, "redefinition of export \"%s\"", a.first.c_str());
+  });
 }
 
 void Validator::CheckModule(const Module* module) {

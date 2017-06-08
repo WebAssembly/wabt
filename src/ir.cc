@@ -23,12 +23,12 @@ namespace wabt {
 
 Index get_index_from_var(const BindingHash* hash, const Var* var) {
   if (var->type == VarType::Name)
-    return hash->find_index(var->name);
+    return hash->FindIndex(var->name);
   return var->index;
 }
 
 Export* get_export_by_name(const Module* module, const StringSlice* name) {
-  Index index = module->export_bindings.find_index(*name);
+  Index index = module->export_bindings.FindIndex(*name);
   if (index >= module->exports.size())
     return nullptr;
   return module->exports[index];
@@ -58,11 +58,11 @@ Index get_local_index_by_var(const Func* func, const Var* var) {
   if (var->type == VarType::Index)
     return var->index;
 
-  Index result = func->param_bindings.find_index(var->name);
+  Index result = func->param_bindings.FindIndex(var->name);
   if (result != kInvalidIndex)
     return result;
 
-  result = func->local_bindings.find_index(var->name);
+  result = func->local_bindings.FindIndex(var->name);
   if (result == kInvalidIndex)
     return result;
 

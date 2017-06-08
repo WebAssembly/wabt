@@ -17,6 +17,7 @@
 #ifndef WABT_BINDING_HASH_H_
 #define WABT_BINDING_HASH_H_
 
+#include <functional>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -40,13 +41,12 @@ struct Binding {
 // object through a pointer to std::unordered_multimap.
 class BindingHash : public std::unordered_multimap<std::string, Binding> {
  public:
-  typedef void (*DuplicateCallback)(const value_type& a,
-                                    const value_type& b,
-                                    void* user_data);
+  typedef std::function<void(const value_type&, const value_type&)>
+      DuplicateCallback;
 
-  void find_duplicates(DuplicateCallback callback, void* user_data) const;
+  void FindDuplicates(DuplicateCallback callback) const;
 
-  int find_index(const StringSlice& name) const {
+  int FindIndex(const StringSlice& name) const {
     auto iter = find(string_slice_to_string(name));
     if (iter != end())
       return iter->second.index;
@@ -56,11 +56,10 @@ class BindingHash : public std::unordered_multimap<std::string, Binding> {
  private:
   typedef std::vector<const value_type*> ValueTypeVector;
 
-  void create_duplicates_vector(ValueTypeVector* out_duplicates) const;
-  void sort_duplicates_vector_by_location(ValueTypeVector* duplicates) const;
-  void call_callbacks(const ValueTypeVector& duplicates,
-                      DuplicateCallback callback,
-                      void* user_data) const;
+  void CreateDuplicatesVector(ValueTypeVector* out_duplicates) const;
+  void SortDuplicatesVectorByLocation(ValueTypeVector* duplicates) const;
+  void CallCallbacks(const ValueTypeVector& duplicates,
+                     DuplicateCallback callback) const;
 };
 
 }  // namespace wabt

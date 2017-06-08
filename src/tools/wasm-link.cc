@@ -693,7 +693,7 @@ static void resolve_symbols(Context* ctx) {
     LinkerInputBinary* binary = ctx->inputs[i].get();
     for (size_t j = 0; j < binary->function_imports.size(); j++) {
       FunctionImport* import = &binary->function_imports[j];
-      int export_index = export_map.find_index(import->name);
+      int export_index = export_map.FindIndex(import->name);
       if (export_index == -1) {
         if (!s_relocatable)
           WABT_FATAL("undefined symbol: " PRIstringslice "\n",
