@@ -1079,6 +1079,9 @@ static wabt::Result read_invalid_module(Context* ctx,
           stdout, header, BinaryErrorHandlerFile::PrintHeader::Once);
       return read_module(module_filename, env, &error_handler, &module);
     }
+
+    default:
+      return wabt::Result::Error;
   }
 }
 
