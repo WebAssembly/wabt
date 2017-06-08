@@ -1,0 +1,43 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS:
+(module
+  (memory $0 1)
+  (export "customMemoryName" (memory $0))
+)
+(module
+  (memory $0 1)
+  (export "foo" (func $foo))
+  (func $foo (result i32)
+    (i32.const 41)
+  )
+)
+(;; STDOUT ;;;
+
+linked.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+ Function start=0x00000015 end=0x00000017 (size=0x00000002) count: 1
+   Memory start=0x0000001d end=0x00000021 (size=0x00000004) count: 1
+   Export start=0x00000027 end=0x00000041 (size=0x0000001a) count: 2
+     Code start=0x00000043 end=0x00000049 (size=0x00000006) count: 1
+
+Section Details:
+
+Type:
+ - [0] () -> i32
+Function:
+ - func[0] sig=0
+Memory:
+ - memory[0] pages: initial=2 max=2
+Export:
+ - memory[0] -> "customMemoryName"
+ - func[0] -> "foo"
+
+Code Disassembly:
+
+000044 func[0]:
+ 000046: 41 29                      | i32.const 0x29
+ 000048: 0b                         | end
+;;; STDOUT ;;)

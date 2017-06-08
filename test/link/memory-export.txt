@@ -1,0 +1,29 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS:
+(module
+  (memory $0 1)
+  (export "memory" (memory $0))
+)
+(module
+  (memory $0 1)
+  (export "memory" (memory $0))
+)
+(;; STDOUT ;;;
+
+linked.wasm:	file format wasm 0x1
+
+Sections:
+
+   Memory start=0x0000000e end=0x00000012 (size=0x00000004) count: 1
+   Export start=0x00000018 end=0x00000022 (size=0x0000000a) count: 1
+
+Section Details:
+
+Memory:
+ - memory[0] pages: initial=2 max=2
+Export:
+ - memory[0] -> "memory"
+
+Code Disassembly:
+
+;;; STDOUT ;;)

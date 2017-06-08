@@ -309,29 +309,53 @@ static void write_table_section(Context* ctx,
 }
 
 static void write_export_section(Context* ctx) {
+  bool seen_memory = false;
+  StringSlice memory_export_name;
+
   Index total_exports = 0;
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
-    total_exports += binary->exports.size();
+    for (const Export& export_ : binary->exports) {
+      if (export_.kind == ExternalKind::Memory) {
+        if (seen_memory) {
+          if (!string_slices_are_equal(&memory_export_name, &export_.name)) {
+            WABT_FATAL("Unable to link memory exports using different names.");
+          }
+          continue;
+        }
+        else {
+          memory_export_name = export_.name;
+          seen_memory = true;
+        }
+      }
+      total_exports++;
+    }
   }
 
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
   write_u32_leb128(stream, total_exports, "export count");
 
+  seen_memory = false;
   for (const std::unique_ptr<LinkerInputBinary>& binary : ctx->inputs) {
     for (const Export& export_ : binary->exports) {
-      write_slice(stream, export_.name, "export name");
-      stream->WriteU8Enum(export_.kind, "export kind");
       Index index = export_.index;
       switch (export_.kind) {
         case ExternalKind::Func:
           index = binary->RelocateFuncIndex(index);
+          break;
+        case ExternalKind::Memory:
+          if (seen_memory) {
+            continue;
+          }
+          seen_memory = true;
           break;
         default:
           WABT_FATAL("unsupport export type: %d\n",
                      static_cast<int>(export_.kind));
           break;
       }
+      write_slice(stream, export_.name, "export name");
+      stream->WriteU8Enum(export_.kind, "export kind");
       write_u32_leb128(stream, index, "export index");
     }
   }
