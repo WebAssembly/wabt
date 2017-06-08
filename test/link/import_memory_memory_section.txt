@@ -1,0 +1,46 @@
+;;; TOOL: run-wasm-link
+;;; FLAGS:
+(module
+  (import "envA" "memory" (memory $0 1))
+)
+(module
+  (import "envB" "memory" (memory $0 1))
+  (func $foo (result i32)
+    (i32.const 41)
+  )
+)
+(module
+  (memory $mem 2)
+)
+(;; STDOUT ;;;
+
+linked.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+   Import start=0x00000015 end=0x00000025 (size=0x00000010) count: 1
+ Function start=0x0000002b end=0x0000002d (size=0x00000002) count: 1
+   Memory start=0x00000033 end=0x00000034 (size=0x00000001) count: 0
+     Code start=0x00000036 end=0x0000003c (size=0x00000006) count: 1
+   Custom start=0x00000042 end=0x00000053 (size=0x00000011) "name"
+
+Section Details:
+
+Type:
+ - [0] () -> i32
+Import:
+ - envA.memory -> memory
+Function:
+ - func[0] sig=0 <foo>
+Memory:
+Custom:
+ - name: "name"
+ - func[0] foo
+
+Code Disassembly:
+
+000037 <foo>:
+ 000039: 41 29                      | i32.const 41
+ 00003b: 0b                         | end
+;;; STDOUT ;;)
