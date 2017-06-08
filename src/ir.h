@@ -142,8 +142,8 @@ struct Expr {
   static Expr* CreateCall(Var);
   static Expr* CreateCallIndirect(Var);
   static Expr* CreateCatch(Var);
-  static Expr* CreateCatchAll(Var);
-  static Expr* CreateCatchBlock(Expr*, Block*);
+  static Expr* CreateCatchAll();
+  static Expr* CreateCatchBlock(Expr* catch_, Expr* first);
   static Expr* CreateCompare(Opcode);
   static Expr* CreateConst(const Const&);
   static Expr* CreateConvert(Opcode);
@@ -164,7 +164,7 @@ struct Expr {
   static Expr* CreateStore(Opcode, Address align, uint64_t offset);
   static Expr* CreateTeeLocal(Var);
   static Expr* CreateThrow(Var);
-  static Expr* CreateTryBlock(Block* block, Expr* CatchBlocks);
+  static Expr* CreateTry(Block* block, Expr* first_catch);
   static Expr* CreateUnary(Opcode);
   static Expr* CreateUnreachable();
 
@@ -175,8 +175,8 @@ struct Expr {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
     struct { Block* block; Expr* first_catch; } try_block;
-    struct { Expr* catch_; Block* block; } catch_block;
-    struct { Var var; } throw_, rethrow_, catch_, catch_all;
+    struct { Expr* catch_; Expr* first; } catch_block;
+    struct { Var var; } throw_, rethrow_, catch_;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;
     struct { Var var; } call, call_indirect;

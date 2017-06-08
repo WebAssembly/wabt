@@ -221,7 +221,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<exported_table> table
 %type<exported_memory> memory
 %type<expr> plain_instr block_instr
-%type<expr> catch_instr catch_block
+%type<expr> try_ catch_
 %type<expr_list> instr instr_list expr expr1 expr_list if_ const_expr offset
 %type<expr_list> catch_list
 %type<func_fields> func_fields func_body
@@ -603,17 +603,20 @@ block_instr :
       CHECK_END_LABEL(@5, $$->if_.true_->label, $5);
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
+    /*
   | try_check labeling_opt block catch_list END labeling_opt {
       $$ = Expr::CreateTryBlock($3, $4.first);
       $$->try_block.block->label = $2;
       CHECK_END_LABEL(@6, $$->try_block.block->label, $6);
     }
+    */
 ;
 
 try_check :  TRY {
       if (!WastParser::AllowExceptions) {
         wast_parser_error(&@1, lexer, parser, "Try blocks not allowed");
       }
+      @$ = @1;
     }
   ;
 
@@ -621,6 +624,7 @@ catch_check : CATCH {
       if (!WastParser::AllowExceptions) {
         wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
       }
+      @$ = @1;
     }
   ;
 
@@ -628,6 +632,7 @@ catch_all_check : CATCH_ALL {
       if (!WastParser::AllowExceptions) {
         wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
       }
+      @$ = @1;
     }
   ;
 
@@ -635,6 +640,7 @@ throw_check : THROW {
       if (!WastParser::AllowExceptions) {
         wast_parser_error(&@1, lexer, parser, "Throw instruction not allowed");
       }
+      @$ = @1;
     }
   ;
 
@@ -642,11 +648,13 @@ rethrow_check : RETHROW {
       if (!WastParser::AllowExceptions) {
         wast_parser_error(&@1, lexer, parser, "Rethrow instruction not allowed");
       }
+      @$ = @1;
     }
   ;
 
+    /*
 catch_list :
-    /* empty */ { WABT_ZERO_MEMORY($$); }
+    / empty / { WABT_ZERO_MEMORY($$); }
   | catch_block catch_list {
       $$.first = $1;
       $1->next = $2.first;
@@ -669,6 +677,7 @@ catch_instr :
       $$ = Expr::CreateCatchAll($2);
     }
   ;
+    */
 
 block :
     value_type_list instr_list {
@@ -705,11 +714,37 @@ expr1 :
       if_->if_.true_->sig = std::move(*$3);
       delete $3;
     }
-    /*
-  | try_check labeling_opt block try_ {
+  | try_check try_ {
+      $$ = join_exprs1(&@1, $2);
     }
-    */
 ;
+
+try_ :
+    LPAR labeling_opt block RPAR catch_list {
+      $3->label = $2;
+      $$ = Expr::CreateTry($3, $5.first);
+    }
+  ;
+
+catch_list :
+    catch_ {
+      $$ = join_exprs1(&@1, $1);
+    }
+  | catch_list catch_ {
+      $$ = join_exprs2(&@1, &$1, $2);
+    }
+  ;
+
+catch_ :
+    LPAR catch_check var instr_list RPAR {
+      Expr* catch_ = Expr::CreateCatch($3);
+      $$ = Expr::CreateCatchBlock(catch_, $4.first);
+    }
+    | LPAR catch_all_check instr_list RPAR {
+      Expr* catch_ = Expr::CreateCatchAll();
+      $$ = Expr::CreateCatchBlock(catch_, $3.first);
+    }
+  ;
 
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {

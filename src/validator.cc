@@ -411,28 +411,22 @@ void Validator::CheckExpr(const Expr* expr) {
 #if 1
     // TODO(karlschimpf) Fill these out.
     case ExprType::Catch:
-      print_error(ctx, &expr->loc,
-                  "Catch: don't know how to validate");
+      PrintError(&expr->loc, "Catch: don't know how to validate");
       break;
     case ExprType::CatchAll:
-      print_error(ctx, &expr->loc,
-                  "CatchAll: don't know how to validate");
+      PrintError(&expr->loc, "CatchAll: don't know how to validate");
       break;
     case ExprType::CatchBlock:
-      print_error(ctx, &expr->loc,
-                  "CatchBlock: don't know how to validate");
+      PrintError(&expr->loc, "CatchBlock: don't know how to validate");
       break;
     case ExprType::Throw:
-      print_error(ctx, &expr->loc,
-                  "Throw: don't know how to validate");
+      PrintError(&expr->loc, "Throw: don't know how to validate");
       break;
     case ExprType::Rethrow:
-      print_error(ctx, &expr->loc,
-                  "Rethrow: don't know how to validate");
+      PrintError(&expr->loc, "Rethrow: don't know how to validate");
       break;
     case ExprType::TryBlock:
-      print_error(ctx, &expr->loc,
-                  "TryBlock: don't know how to validate");
+      PrintError(&expr->loc, "TryBlock: don't know how to validate");
       break;
 #endif
     case ExprType::Binary:
