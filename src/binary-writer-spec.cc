@@ -377,8 +377,8 @@ void BinaryWriterSpec::WriteScriptModule(char* filename,
 
 void BinaryWriterSpec::WriteInvalidModule(const ScriptModule* module,
                                           StringSlice text) {
-  const char* extension;
-  const char* module_type;
+  const char* extension = "";
+  const char* module_type = "";
   switch (module->type) {
     case ScriptModule::Type::Text:
       extension = kWasmExtension;
