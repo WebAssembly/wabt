@@ -259,8 +259,7 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
                             Index item_index,
                             StringSlice name);
 
-  PrintErrorCallback MakePrintErrorCallback();
-  static void OnHostImportPrintError(const char* msg, void* user_data);
+  HostImportDelegate::ErrorCallback MakePrintErrorCallback();
 
   BinaryErrorHandler* error_handler = nullptr;
   Environment* env = nullptr;
@@ -664,17 +663,9 @@ wabt::Result BinaryReaderInterpreter::AppendExport(Module* module,
   return wabt::Result::Ok;
 }
 
-// static
-void BinaryReaderInterpreter::OnHostImportPrintError(const char* msg,
-                                                     void* user_data) {
-  static_cast<BinaryReaderInterpreter*>(user_data)->PrintError("%s", msg);
-}
-
-PrintErrorCallback BinaryReaderInterpreter::MakePrintErrorCallback() {
-  PrintErrorCallback result;
-  result.print_error = OnHostImportPrintError;
-  result.user_data = this;
-  return result;
+HostImportDelegate::ErrorCallback
+BinaryReaderInterpreter::MakePrintErrorCallback() {
+  return [this](const char* msg) { PrintError("%s", msg); };
 }
 
 wabt::Result BinaryReaderInterpreter::OnImportFunc(Index import_index,
@@ -691,10 +682,9 @@ wabt::Result BinaryReaderInterpreter::OnImportFunc(Index import_index,
                                   import->func.sig_index);
     env->EmplaceBackFunc(func);
 
-    HostImportDelegate* host_delegate = &host_import_module->import_delegate;
     FuncSignature* sig = env->GetFuncSignature(func->sig_index);
-    CHECK_RESULT(host_delegate->import_func(
-        import, func, sig, MakePrintErrorCallback(), host_delegate->user_data));
+    CHECK_RESULT(host_import_module->import_delegate->ImportFunc(
+        import, func, sig, MakePrintErrorCallback()));
     assert(func->callback);
 
     func_env_index = env->GetFuncCount() - 1;
@@ -731,9 +721,8 @@ wabt::Result BinaryReaderInterpreter::OnImportTable(Index import_index,
   if (is_host_import) {
     Table* table = env->EmplaceBackTable(*elem_limits);
 
-    HostImportDelegate* host_delegate = &host_import_module->import_delegate;
-    CHECK_RESULT(host_delegate->import_table(
-        import, table, MakePrintErrorCallback(), host_delegate->user_data));
+    CHECK_RESULT(host_import_module->import_delegate->ImportTable(
+        import, table, MakePrintErrorCallback()));
 
     CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
 
@@ -767,9 +756,8 @@ wabt::Result BinaryReaderInterpreter::OnImportMemory(
   if (is_host_import) {
     Memory* memory = env->EmplaceBackMemory();
 
-    HostImportDelegate* host_delegate = &host_import_module->import_delegate;
-    CHECK_RESULT(host_delegate->import_memory(
-        import, memory, MakePrintErrorCallback(), host_delegate->user_data));
+    CHECK_RESULT(host_import_module->import_delegate->ImportMemory(
+        import, memory, MakePrintErrorCallback()));
 
     CHECK_RESULT(CheckImportLimits(page_limits, &memory->page_limits));
 
@@ -799,9 +787,8 @@ wabt::Result BinaryReaderInterpreter::OnImportGlobal(Index import_index,
   if (is_host_import) {
     Global* global = env->EmplaceBackGlobal(TypedValue(type), mutable_);
 
-    HostImportDelegate* host_delegate = &host_import_module->import_delegate;
-    CHECK_RESULT(host_delegate->import_global(
-        import, global, MakePrintErrorCallback(), host_delegate->user_data));
+    CHECK_RESULT(host_import_module->import_delegate->ImportGlobal(
+        import, global, MakePrintErrorCallback()));
 
     global_env_index = env->GetGlobalCount() - 1;
     AppendExport(host_import_module, ExternalKind::Global, global_env_index,

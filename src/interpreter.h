@@ -19,6 +19,7 @@
 
 #include <stdint.h>
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -253,30 +254,18 @@ struct Export {
   Index index;
 };
 
-struct PrintErrorCallback {
-  void* user_data;
-  void (*print_error)(const char* msg, void* user_data);
-};
+class HostImportDelegate {
+ public:
+  typedef std::function<void(const char* msg)> ErrorCallback;
 
-struct HostImportDelegate {
-  void* user_data;
-  ::wabt::Result (*import_func)(Import*,
-                                Func*,
-                                FuncSignature*,
-                                PrintErrorCallback,
-                                void* user_data);
-  ::wabt::Result (*import_table)(Import*,
-                                 Table*,
-                                 PrintErrorCallback,
-                                 void* user_data);
-  ::wabt::Result (*import_memory)(Import*,
-                                  Memory*,
-                                  PrintErrorCallback,
-                                  void* user_data);
-  ::wabt::Result (*import_global)(Import*,
-                                  Global*,
-                                  PrintErrorCallback,
-                                  void* user_data);
+  virtual ~HostImportDelegate() {}
+  virtual wabt::Result ImportFunc(Import*,
+                                  Func*,
+                                  FuncSignature*,
+                                  const ErrorCallback&) = 0;
+  virtual wabt::Result ImportTable(Import*, Table*, const ErrorCallback&) = 0;
+  virtual wabt::Result ImportMemory(Import*, Memory*, const ErrorCallback&) = 0;
+  virtual wabt::Result ImportGlobal(Import*, Global*, const ErrorCallback&) = 0;
 };
 
 struct Module {
@@ -308,9 +297,9 @@ struct DefinedModule : Module {
 };
 
 struct HostModule : Module {
-  HostModule(const StringSlice& name);
+  explicit HostModule(const StringSlice& name);
 
-  HostImportDelegate import_delegate;
+  std::unique_ptr<HostImportDelegate> import_delegate;
 };
 
 DefinedModule* Module::as_defined() {

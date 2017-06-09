@@ -401,107 +401,103 @@ static interpreter::Result default_host_callback(const HostFunc* func,
   WABT_PRINTF_STRING_SLICE_ARG((x).module_name) \
   , WABT_PRINTF_STRING_SLICE_ARG((x).field_name)
 
-static void WABT_PRINTF_FORMAT(2, 3)
-    print_error(PrintErrorCallback callback, const char* format, ...) {
-  WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  callback.print_error(buffer, callback.user_data);
-}
-
-static wabt::Result spectest_import_func(Import* import,
-                                         Func* func,
-                                         FuncSignature* sig,
-                                         PrintErrorCallback callback,
-                                         void* user_data) {
-  if (string_slice_eq_cstr(&import->field_name, "print")) {
-    func->as_host()->callback = default_host_callback;
-    return wabt::Result::Ok;
-  } else {
-    print_error(callback, "unknown host function import " PRIimport,
-                PRINTF_IMPORT_ARG(*import));
-    return wabt::Result::Error;
-  }
-}
-
-static wabt::Result spectest_import_table(Import* import,
-                                          Table* table,
-                                          PrintErrorCallback callback,
-                                          void* user_data) {
-  if (string_slice_eq_cstr(&import->field_name, "table")) {
-    table->limits.has_max = true;
-    table->limits.initial = 10;
-    table->limits.max = 20;
-    return wabt::Result::Ok;
-  } else {
-    print_error(callback, "unknown host table import " PRIimport,
-                PRINTF_IMPORT_ARG(*import));
-    return wabt::Result::Error;
-  }
-}
-
-static wabt::Result spectest_import_memory(Import* import,
-                                           Memory* memory,
-                                           PrintErrorCallback callback,
-                                           void* user_data) {
-  if (string_slice_eq_cstr(&import->field_name, "memory")) {
-    memory->page_limits.has_max = true;
-    memory->page_limits.initial = 1;
-    memory->page_limits.max = 2;
-    memory->data.resize(memory->page_limits.initial * WABT_MAX_PAGES);
-    return wabt::Result::Ok;
-  } else {
-    print_error(callback, "unknown host memory import " PRIimport,
-                PRINTF_IMPORT_ARG(*import));
-    return wabt::Result::Error;
-  }
-}
-
-static wabt::Result spectest_import_global(Import* import,
-                                           Global* global,
-                                           PrintErrorCallback callback,
-                                           void* user_data) {
-  if (string_slice_eq_cstr(&import->field_name, "global")) {
-    switch (global->typed_value.type) {
-      case Type::I32:
-        global->typed_value.value.i32 = 666;
-        break;
-
-      case Type::F32: {
-        float value = 666.6f;
-        memcpy(&global->typed_value.value.f32_bits, &value, sizeof(value));
-        break;
-      }
-
-      case Type::I64:
-        global->typed_value.value.i64 = 666;
-        break;
-
-      case Type::F64: {
-        double value = 666.6;
-        memcpy(&global->typed_value.value.f64_bits, &value, sizeof(value));
-        break;
-      }
-
-      default:
-        print_error(callback, "bad type for host global import " PRIimport,
-                    PRINTF_IMPORT_ARG(*import));
-        return wabt::Result::Error;
+class SpectestHostImportDelegate : public HostImportDelegate {
+ public:
+  wabt::Result ImportFunc(Import* import,
+                          Func* func,
+                          FuncSignature* func_sig,
+                          const ErrorCallback& callback) override {
+    if (string_slice_eq_cstr(&import->field_name, "print")) {
+      func->as_host()->callback = default_host_callback;
+      return wabt::Result::Ok;
+    } else {
+      PrintError(callback, "unknown host function import " PRIimport,
+                 PRINTF_IMPORT_ARG(*import));
+      return wabt::Result::Error;
     }
-
-    return wabt::Result::Ok;
-  } else {
-    print_error(callback, "unknown host global import " PRIimport,
-                PRINTF_IMPORT_ARG(*import));
-    return wabt::Result::Error;
   }
-}
+
+  wabt::Result ImportTable(Import* import,
+                           Table* table,
+                           const ErrorCallback& callback) override {
+    if (string_slice_eq_cstr(&import->field_name, "table")) {
+      table->limits.has_max = true;
+      table->limits.initial = 10;
+      table->limits.max = 20;
+      return wabt::Result::Ok;
+    } else {
+      PrintError(callback, "unknown host table import " PRIimport,
+                 PRINTF_IMPORT_ARG(*import));
+      return wabt::Result::Error;
+    }
+  }
+
+  wabt::Result ImportMemory(Import* import,
+                            Memory* memory,
+                            const ErrorCallback& callback) override {
+    if (string_slice_eq_cstr(&import->field_name, "memory")) {
+      memory->page_limits.has_max = true;
+      memory->page_limits.initial = 1;
+      memory->page_limits.max = 2;
+      memory->data.resize(memory->page_limits.initial * WABT_MAX_PAGES);
+      return wabt::Result::Ok;
+    } else {
+      PrintError(callback, "unknown host memory import " PRIimport,
+                 PRINTF_IMPORT_ARG(*import));
+      return wabt::Result::Error;
+    }
+  }
+
+  wabt::Result ImportGlobal(Import* import,
+                            Global* global,
+                            const ErrorCallback& callback) override {
+    if (string_slice_eq_cstr(&import->field_name, "global")) {
+      switch (global->typed_value.type) {
+        case Type::I32:
+          global->typed_value.value.i32 = 666;
+          break;
+
+        case Type::F32: {
+          float value = 666.6f;
+          memcpy(&global->typed_value.value.f32_bits, &value, sizeof(value));
+          break;
+        }
+
+        case Type::I64:
+          global->typed_value.value.i64 = 666;
+          break;
+
+        case Type::F64: {
+          double value = 666.6;
+          memcpy(&global->typed_value.value.f64_bits, &value, sizeof(value));
+          break;
+        }
+
+        default:
+          PrintError(callback, "bad type for host global import " PRIimport,
+                     PRINTF_IMPORT_ARG(*import));
+          return wabt::Result::Error;
+      }
+
+      return wabt::Result::Ok;
+    } else {
+      PrintError(callback, "unknown host global import " PRIimport,
+                 PRINTF_IMPORT_ARG(*import));
+      return wabt::Result::Error;
+    }
+  }
+
+ private:
+  void PrintError(const ErrorCallback& callback, const char* format, ...) {
+    WABT_SNPRINTF_ALLOCA(buffer, length, format);
+    callback(buffer);
+  }
+};
 
 static void init_environment(Environment* env) {
   HostModule* host_module =
       env->AppendHostModule(string_slice_from_cstr("spectest"));
-  host_module->import_delegate.import_func = spectest_import_func;
-  host_module->import_delegate.import_table = spectest_import_table;
-  host_module->import_delegate.import_memory = spectest_import_memory;
-  host_module->import_delegate.import_global = spectest_import_global;
+  host_module->import_delegate.reset(new SpectestHostImportDelegate());
 }
 
 static wabt::Result read_and_run_module(const char* module_filename) {
