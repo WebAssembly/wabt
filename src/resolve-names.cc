@@ -60,9 +60,6 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void PrintError(const Location* loc, const char* fmt, ...);
   void PushLabel(Label* label);
   void PopLabel();
-  static void OnDuplicateBinding(const BindingHash::value_type& a,
-                                 const BindingHash::value_type& b,
-                                 void* user_data);
   void CheckDuplicateBindings(const BindingHash* bindings, const char* desc);
   void ResolveLabelVar(Var* var);
   void ResolveVar(const BindingHash* bindings, Var* var, const char* desc);
@@ -118,31 +115,17 @@ void NameResolver::PopLabel() {
   labels_.pop_back();
 }
 
-struct FindDuplicateBindingContext {
-  NameResolver* resolver;
-  const char* desc;
-};
-
-// static
-void NameResolver::OnDuplicateBinding(const BindingHash::value_type& a,
-                                      const BindingHash::value_type& b,
-                                      void* user_data) {
-  FindDuplicateBindingContext* fdbc =
-      static_cast<FindDuplicateBindingContext*>(user_data);
-  /* choose the location that is later in the file */
-  const Location& a_loc = a.second.loc;
-  const Location& b_loc = b.second.loc;
-  const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
-  fdbc->resolver->PrintError(&loc, "redefinition of %s \"%s\"", fdbc->desc,
-                             a.first.c_str());
-}
-
 void NameResolver::CheckDuplicateBindings(const BindingHash* bindings,
                                           const char* desc) {
-  FindDuplicateBindingContext fdbc;
-  fdbc.resolver = this;
-  fdbc.desc = desc;
-  bindings->find_duplicates(OnDuplicateBinding, &fdbc);
+  bindings->FindDuplicates([this, desc](const BindingHash::value_type& a,
+                                        const BindingHash::value_type& b) {
+    // Choose the location that is later in the file.
+    const Location& a_loc = a.second.loc;
+    const Location& b_loc = b.second.loc;
+    const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
+    PrintError(&loc, "redefinition of %s \"%s\"", desc, a.first.c_str());
+
+  });
 }
 
 void NameResolver::ResolveLabelVar(Var* var) {

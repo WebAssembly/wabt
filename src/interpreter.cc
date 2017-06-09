@@ -164,7 +164,7 @@ Module::~Module() {
 }
 
 Export* Module::GetExport(StringSlice name) {
-  int field_index = export_bindings.find_index(name);
+  int field_index = export_bindings.FindIndex(name);
   if (field_index < 0)
     return nullptr;
   return &exports[field_index];

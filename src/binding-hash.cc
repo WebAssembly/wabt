@@ -21,17 +21,16 @@
 
 namespace wabt {
 
-void BindingHash::find_duplicates(DuplicateCallback callback,
-                                  void* user_data) const {
+void BindingHash::FindDuplicates(DuplicateCallback callback) const {
   if (size() > 0) {
     ValueTypeVector duplicates;
-    create_duplicates_vector(&duplicates);
-    sort_duplicates_vector_by_location(&duplicates);
-    call_callbacks(duplicates, callback, user_data);
+    CreateDuplicatesVector(&duplicates);
+    SortDuplicatesVectorByLocation(&duplicates);
+    CallCallbacks(duplicates, callback);
   }
 }
 
-void BindingHash::create_duplicates_vector(
+void BindingHash::CreateDuplicatesVector(
     ValueTypeVector* out_duplicates) const {
   // This relies on the fact that in an unordered_multimap, all values with the
   // same key are adjacent in iteration order.
@@ -50,7 +49,7 @@ void BindingHash::create_duplicates_vector(
   }
 }
 
-void BindingHash::sort_duplicates_vector_by_location(
+void BindingHash::SortDuplicatesVectorByLocation(
     ValueTypeVector* duplicates) const {
   std::sort(
       duplicates->begin(), duplicates->end(),
@@ -61,9 +60,8 @@ void BindingHash::sort_duplicates_vector_by_location(
       });
 }
 
-void BindingHash::call_callbacks(const ValueTypeVector& duplicates,
-                                 DuplicateCallback callback,
-                                 void* user_data) const {
+void BindingHash::CallCallbacks(const ValueTypeVector& duplicates,
+                                DuplicateCallback callback) const {
   // Loop through all duplicates in order, and call callback with first
   // occurrence.
   for (auto iter = duplicates.begin(), end = duplicates.end(); iter != end;
@@ -75,7 +73,7 @@ void BindingHash::call_callbacks(const ValueTypeVector& duplicates,
     if (first == iter)
       continue;
     assert(first != duplicates.end());
-    callback(**first, **iter, user_data);
+    callback(**first, **iter);
   }
 }
 
