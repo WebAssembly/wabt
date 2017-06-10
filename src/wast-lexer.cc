@@ -259,13 +259,8 @@ Result WastLexer::Fill(Location* loc, WastParser* parser, size_t need) {
 }
 
 int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
-  enum {
-    YYCOND_INIT,
-    YYCOND_BAD_TEXT,
-    YYCOND_LINE_COMMENT,
-    YYCOND_BLOCK_COMMENT,
-    YYCOND_i = YYCOND_INIT,
-  } cond = YYCOND_INIT;
+  /*!types:re2c*/
+  YYCONDTYPE cond = YYCOND_i;  // i is the initial state.
 
   if (!lookahead_->tokens_.empty()) {
     return PopLookaheadToken(lval, loc);
@@ -292,7 +287,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       num =       digit+;
       hexnum =    hexdigit+;
       letter =    [a-zA-Z];
-      symbol =    [+\-*\/\\\^~=<>!?@#$%&|:`.'];
+      symbol =    [+\-*\\/^~=<>!?@#$%&|:`.'];
       character = [^"\\\x00-\x1f]
                 | "\\" [nrt\\'"]
                 | "\\" hexdigit hexdigit;
@@ -553,11 +548,11 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
 
       <i> ";;" => LINE_COMMENT  { continue; }
       <LINE_COMMENT> "\n" => i  { NEWLINE; continue; }
-      <LINE_COMMENT> [^\n]*     { continue; }
+      <LINE_COMMENT> [^\n]+     { continue; }
       <i> "(;" => BLOCK_COMMENT { COMMENT_NESTING = 1; continue; }
       <BLOCK_COMMENT> "(;"      { COMMENT_NESTING++; continue; }
       <BLOCK_COMMENT> ";)"      { if (--COMMENT_NESTING == 0)
-                                    BEGIN(YYCOND_INIT);
+                                    BEGIN(YYCOND_i);
                                   continue; }
       <BLOCK_COMMENT> "\n"      { NEWLINE; continue; }
       <BLOCK_COMMENT> [^]       { continue; }
@@ -567,7 +562,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> reserved              { ERROR("unexpected token \"%.*s\"",
                                         static_cast<int>(yyleng), yytext);
                                   continue; }
-      <*> [^]                   { ERROR("unexpected char"); continue; }
+      <i> [^]                   { ERROR("unexpected char"); continue; }
       <*> *                     { MAYBE_MALFORMED_UTF8(""); }
      */
   }

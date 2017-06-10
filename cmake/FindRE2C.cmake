@@ -83,7 +83,7 @@ if(${RE2C_PUBLIC_VAR_NS}_EXECUTABLE)
 
     include(CMakeParseArguments)
     macro(RE2C_TARGET)
-        cmake_parse_arguments(PARSED_ARGS "" "NAME;INPUT;OUTPUT;OPTIONS" "DEPENDS" ${ARGN})
+      cmake_parse_arguments(PARSED_ARGS "" "NAME;INPUT;OUTPUT" "OPTIONS;DEPENDS" ${ARGN})
 
         if(NOT PARSED_ARGS_OUTPUT)
             message(FATAL_ERROR "RE2C_TARGET expect an output filename")
