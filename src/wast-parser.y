@@ -151,6 +151,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %token RPAR ")"
 %token NAT INT FLOAT TEXT VAR VALUE_TYPE ANYFUNC MUT
 %token NOP DROP BLOCK END IF THEN ELSE LOOP BR BR_IF BR_TABLE
+%token TRY CATCH CATCH_ALL THROW RETHROW
 %token CALL CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL TEE_LOCAL GET_GLOBAL SET_GLOBAL
 %token LOAD STORE OFFSET_EQ_NAT ALIGN_EQ_NAT
@@ -178,6 +179,8 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<consts> const_list
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
+%type<expr> try_ catch_
+%type<expr_list> catch_list
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_body func_body1 func_fields_import func_fields_import1
 %type<func_sig> func_sig func_type
@@ -521,6 +524,12 @@ plain_instr :
   | GROW_MEMORY {
       $$ = Expr::CreateGrowMemory();
     }
+  | throw_check var {
+      $$ = Expr::CreateThrow($2);
+    }
+  | rethrow_check var {
+      $$ = Expr::CreateRethrow($2);
+    }
 ;
 block_instr :
     BLOCK labeling_opt block END labeling_opt {
@@ -544,10 +553,82 @@ block_instr :
       CHECK_END_LABEL(@5, $$->if_.true_->label, $5);
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
+    /*
+  | try_check labeling_opt block catch_list END labeling_opt {
+      $$ = Expr::CreateTryBlock($3, $4.first);
+      $$->try_block.block->label = $2;
+      CHECK_END_LABEL(@6, $$->try_block.block->label, $6);
+    }
+    */
 ;
-block_sig :
-    LPAR RESULT value_type_list RPAR { $$ = $3; }
-;
+
+try_check :  TRY {
+      if (!WastParser::AllowExceptions) {
+        wast_parser_error(&@1, lexer, parser, "Try blocks not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+
+catch_check : CATCH {
+      if (!WastParser::AllowExceptions) {
+        wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+
+catch_all_check : CATCH_ALL {
+      if (!WastParser::AllowExceptions) {
+        wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+
+throw_check : THROW {
+      if (!WastParser::AllowExceptions) {
+        wast_parser_error(&@1, lexer, parser, "Throw instruction not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+
+rethrow_check : RETHROW {
+      if (!WastParser::AllowExceptions) {
+        wast_parser_error(&@1, lexer, parser, "Rethrow instruction not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+
+    /*
+catch_list :
+    / empty / { WABT_ZERO_MEMORY($$); }
+  | catch_block catch_list {
+      $$.first = $1;
+      $1->next = $2.first;
+      $$.last = $2.last ? $2.last : $1;
+      $$.size = 1 + $2.size;
+    }
+  ;
+
+catch_block :
+    catch_instr block {
+      $$ = Expr::CreateCatchBlock($1, $2);
+    }
+  ;
+
+catch_instr :
+    catch_check var {
+      $$ = Expr::CreateCatch($2);
+    }
+  | catch_all_check var {
+      $$ = Expr::CreateCatchAll($2);
+    }
+  ;
+    */
+
 block :
     block_sig block {
       $$ = $2;
@@ -584,18 +665,38 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-;
-if_block :
-    block_sig if_block {
-      Expr* if_ = $2.last;
-      assert(if_->type == ExprType::If);
-      $$ = $2;
-      Block* true_ = if_->if_.true_;
-      true_->sig.insert(true_->sig.end(), $1->begin(), $1->end());
-      delete $1;
+  | try_check try_ {
+      $$ = join_exprs1(&@1, $2);
     }
-  | if_
 ;
+
+try_ :
+    LPAR labeling_opt block RPAR catch_list {
+      $3->label = $2;
+      $$ = Expr::CreateTry($3, $5.first);
+    }
+  ;
+
+catch_list :
+    catch_ {
+      $$ = join_exprs1(&@1, $1);
+    }
+  | catch_list catch_ {
+      $$ = join_exprs2(&@1, &$1, $2);
+    }
+  ;
+
+catch_ :
+    LPAR catch_check var instr_list RPAR {
+      Expr* catch_ = Expr::CreateCatch($3);
+      $$ = Expr::CreateCatchBlock(catch_, $4.first);
+    }
+    | LPAR catch_all_check instr_list RPAR {
+      Expr* catch_ = Expr::CreateCatchAll();
+      $$ = Expr::CreateCatchBlock(catch_, $3.first);
+    }
+  ;
+
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
       Expr* expr = Expr::CreateIf(new Block($3.first), $7.first);

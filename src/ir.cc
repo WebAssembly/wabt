@@ -21,6 +21,12 @@
 
 namespace wabt {
 
+#if 1
+// TODO(karlschimpf) remove the need for this
+#define ERROR(Message)            \
+  fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, (Message));
+#endif
+
 Index get_index_from_var(const BindingHash* hash, const Var* var) {
   if (var->type == VarType::Name)
     return hash->FindIndex(var->name);
@@ -275,6 +281,9 @@ Expr::~Expr() {
     case ExprType::Loop:
       delete loop;
       break;
+    case ExprType::Rethrow:
+      destroy_var(&rethrow_.var);
+      break;
     case ExprType::SetGlobal:
       destroy_var(&set_global.var);
       break;
@@ -284,6 +293,25 @@ Expr::~Expr() {
     case ExprType::TeeLocal:
       destroy_var(&tee_local.var);
       break;
+    case ExprType::Throw:
+      destroy_var(&throw_.var);
+      break;
+
+#if 1
+    // TODO(karlschimpf): Define these cases.
+    case ExprType::Catch:
+      ERROR("Catch: Don't know how to clean up");
+      break;
+    case ExprType::CatchAll:
+      ERROR("CatchAll: Don't know how to clean up");
+      break;
+    case ExprType::CatchBlock:
+      ERROR("CatchBlock: Don't know how to clean up");
+      break;
+    case ExprType::TryBlock:
+      ERROR("TryBlock: Don't know how to clean up");
+      break;
+#endif
 
     case ExprType::Binary:
     case ExprType::Compare:
@@ -350,6 +378,26 @@ Expr* Expr::CreateCall(Var var) {
 Expr* Expr::CreateCallIndirect(Var var) {
   Expr* expr = new Expr(ExprType::CallIndirect);
   expr->call_indirect.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateCatch(Var var) {
+  Expr* expr = new Expr(ExprType::Catch);
+  expr->catch_.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateCatchAll() {
+  return new Expr(ExprType::CatchAll);
+}
+
+// static
+Expr* Expr::CreateCatchBlock(Expr* catch_, Expr* first) {
+  Expr* expr = new Expr(ExprType::CatchBlock);
+  expr->catch_block.catch_ = catch_;
+  expr->catch_block.first = first;
   return expr;
 }
 
@@ -433,6 +481,13 @@ Expr* Expr::CreateNop() {
 }
 
 // static
+Expr* Expr::CreateRethrow(Var var) {
+  Expr* expr = new Expr(ExprType::Rethrow);
+  expr->rethrow_.var = var;
+  return expr;
+}
+
+// static
 Expr* Expr::CreateReturn() {
   return new Expr(ExprType::Return);
 }
@@ -469,6 +524,21 @@ Expr* Expr::CreateStore(Opcode opcode, Address align, uint64_t offset) {
 Expr* Expr::CreateTeeLocal(Var var) {
   Expr* expr = new Expr(ExprType::TeeLocal);
   expr->tee_local.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateThrow(Var var) {
+  Expr* expr = new Expr(ExprType::Throw);
+  expr->throw_.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateTry(Block* block, Expr* first_catch) {
+  Expr* expr = new Expr(ExprType::TryBlock);
+  expr->try_block.block = block;
+  expr->try_block.first_catch = first_catch;
   return expr;
 }
 

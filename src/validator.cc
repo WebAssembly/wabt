@@ -419,6 +419,27 @@ void Validator::CheckExpr(const Expr* expr) {
   expr_loc_ = &expr->loc;
 
   switch (expr->type) {
+#if 1
+    // TODO(karlschimpf) Fill these out.
+    case ExprType::Catch:
+      PrintError(&expr->loc, "Catch: don't know how to validate");
+      break;
+    case ExprType::CatchAll:
+      PrintError(&expr->loc, "CatchAll: don't know how to validate");
+      break;
+    case ExprType::CatchBlock:
+      PrintError(&expr->loc, "CatchBlock: don't know how to validate");
+      break;
+    case ExprType::Throw:
+      PrintError(&expr->loc, "Throw: don't know how to validate");
+      break;
+    case ExprType::Rethrow:
+      PrintError(&expr->loc, "Rethrow: don't know how to validate");
+      break;
+    case ExprType::TryBlock:
+      PrintError(&expr->loc, "TryBlock: don't know how to validate");
+      break;
+#endif
     case ExprType::Binary:
       typechecker_.OnBinary(expr->binary.opcode);
       break;

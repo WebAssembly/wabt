@@ -33,6 +33,28 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     case ExprType::Binary:
       CHECK_RESULT(delegate_->OnBinaryExpr(expr));
       break;
+#if 1
+    // TODO(karlschimpf): Define these cases.
+    case ExprType::Catch:
+      CHECK_RESULT(Result::Error);
+      break;
+    case ExprType::CatchAll:
+      CHECK_RESULT(Result::Error);
+      break;
+    case ExprType::CatchBlock:
+      CHECK_RESULT(Result::Error);
+      break;
+    case ExprType::Rethrow:
+      CHECK_RESULT(Result::Error);
+      break;
+    case ExprType::Throw:
+      CHECK_RESULT(Result::Error);
+      break;
+    case ExprType::TryBlock:
+      CHECK_RESULT(Result::Error);
+      break;
+      break;
+#endif
 
     case ExprType::Block:
       CHECK_RESULT(delegate_->BeginBlockExpr(expr));

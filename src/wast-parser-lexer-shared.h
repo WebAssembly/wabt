@@ -103,6 +103,7 @@ struct WastParser {
   int16_t* yyssa;
   YYSTYPE* yyvsa;
   YYLTYPE* yylsa;
+  static bool AllowExceptions;
 };
 
 int wast_lexer_lex(union Token*,
