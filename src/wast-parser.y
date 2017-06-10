@@ -1849,6 +1849,9 @@ Result parse_wast(WastLexer* lexer, Script** out_script,
                   WastParseFlags* flags) {
   WastParser parser;
   WABT_ZERO_MEMORY(parser);
+  static WastParseFlags default_flags;
+  if (flags == nullptr)
+    flags = &default_flags;
   parser.flags = flags;
   parser.error_handler = error_handler;
   wabt_wast_parser_debug = int(flags->debug_parsing);
