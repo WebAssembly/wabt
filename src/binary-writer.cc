@@ -400,7 +400,6 @@ void BinaryWriter::WriteExpr(const Module* module,
                              const Func* func,
                              const Expr* expr) {
   switch (expr->type) {
-    // TODO(karlschimpf) Fix these cases.
     case ExprType::Binary:
       write_opcode(&stream_, expr->binary.opcode);
       break;
