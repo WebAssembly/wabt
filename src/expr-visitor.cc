@@ -33,28 +33,6 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     case ExprType::Binary:
       CHECK_RESULT(delegate_->OnBinaryExpr(expr));
       break;
-#if 1
-    // TODO(karlschimpf): Define these cases.
-    case ExprType::Catch:
-      CHECK_RESULT(Result::Error);
-      break;
-    case ExprType::CatchAll:
-      CHECK_RESULT(Result::Error);
-      break;
-    case ExprType::CatchBlock:
-      CHECK_RESULT(Result::Error);
-      break;
-    case ExprType::Rethrow:
-      CHECK_RESULT(Result::Error);
-      break;
-    case ExprType::Throw:
-      CHECK_RESULT(Result::Error);
-      break;
-    case ExprType::TryBlock:
-      CHECK_RESULT(Result::Error);
-      break;
-      break;
-#endif
 
     case ExprType::Block:
       CHECK_RESULT(delegate_->BeginBlockExpr(expr));
@@ -81,6 +59,21 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     case ExprType::CallIndirect:
       CHECK_RESULT(delegate_->OnCallIndirectExpr(expr));
       break;
+
+    case ExprType::Catch:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Catch: don't know how to visit\n");
+      return Result::Error;
+
+    case ExprType::CatchAll:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("CatchAll: don't know how to visit\n");
+      return Result::Error;
+
+    case ExprType::CatchBlock:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("CatchBlock: don't know how to visit\n");
+      return Result::Error;
 
     case ExprType::Compare:
       CHECK_RESULT(delegate_->OnCompareExpr(expr));
@@ -136,6 +129,11 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       CHECK_RESULT(delegate_->OnNopExpr(expr));
       break;
 
+    case ExprType::Rethrow:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Rethrow: don't know how to visit\n");
+      return Result::Error;
+
     case ExprType::Return:
       CHECK_RESULT(delegate_->OnReturnExpr(expr));
       break;
@@ -158,6 +156,17 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
 
     case ExprType::TeeLocal:
       CHECK_RESULT(delegate_->OnTeeLocalExpr(expr));
+      break;
+
+    case ExprType::Throw:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Throw: don't know how to visit\n");
+      return Result::Error;
+
+    case ExprType::TryBlock:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("TryBlock: don't know how to visit\n");
+      return Result::Error;
       break;
 
     case ExprType::Unary:

@@ -29,6 +29,8 @@
 #include "wast-parser.h"
 #include "wast-parser-lexer-shared.h"
 
+#define YYDEBUG 1
+
 #define RELOCATE_STACK(type, array, stack_base, old_size, new_size)   \
   do {                                                                \
     type* new_stack = new type[new_size]();                           \
@@ -179,9 +181,9 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<consts> const_list
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
-%type<expr> try_ catch_
-%type<expr_list> catch_list
+%type<expr> catch_instr
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
+%type<expr_list> catch_ catch_list catch_instr_list
 %type<func> func_fields_body func_fields_body1 func_body func_body1 func_fields_import func_fields_import1
 %type<func_sig> func_sig func_type
 %type<global> global_type
@@ -531,6 +533,7 @@ plain_instr :
       $$ = Expr::CreateRethrow($2);
     }
 ;
+
 block_instr :
     BLOCK labeling_opt block END labeling_opt {
       $$ = Expr::CreateBlock($3);
@@ -553,82 +556,16 @@ block_instr :
       CHECK_END_LABEL(@5, $$->if_.true_->label, $5);
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
-    /*
-  | try_check labeling_opt block catch_list END labeling_opt {
-      $$ = Expr::CreateTryBlock($3, $4.first);
-      $$->try_block.block->label = $2;
-      CHECK_END_LABEL(@6, $$->try_block.block->label, $6);
+  | try_check labeling_opt block catch_instr_list END labeling_opt {
+      $3->label = $2;
+      $$ = Expr::CreateTry($3, $4.first);
+      CHECK_END_LABEL(@6, $3->label, $6);
     }
-    */
 ;
 
-try_check :  TRY {
-      if (!WastParser::AllowExceptions) {
-        wast_parser_error(&@1, lexer, parser, "Try blocks not allowed");
-      }
-      @$ = @1;
-    }
-  ;
-
-catch_check : CATCH {
-      if (!WastParser::AllowExceptions) {
-        wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
-      }
-      @$ = @1;
-    }
-  ;
-
-catch_all_check : CATCH_ALL {
-      if (!WastParser::AllowExceptions) {
-        wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
-      }
-      @$ = @1;
-    }
-  ;
-
-throw_check : THROW {
-      if (!WastParser::AllowExceptions) {
-        wast_parser_error(&@1, lexer, parser, "Throw instruction not allowed");
-      }
-      @$ = @1;
-    }
-  ;
-
-rethrow_check : RETHROW {
-      if (!WastParser::AllowExceptions) {
-        wast_parser_error(&@1, lexer, parser, "Rethrow instruction not allowed");
-      }
-      @$ = @1;
-    }
-  ;
-
-    /*
-catch_list :
-    / empty / { WABT_ZERO_MEMORY($$); }
-  | catch_block catch_list {
-      $$.first = $1;
-      $1->next = $2.first;
-      $$.last = $2.last ? $2.last : $1;
-      $$.size = 1 + $2.size;
-    }
-  ;
-
-catch_block :
-    catch_instr block {
-      $$ = Expr::CreateCatchBlock($1, $2);
-    }
-  ;
-
-catch_instr :
-    catch_check var {
-      $$ = Expr::CreateCatch($2);
-    }
-  | catch_all_check var {
-      $$ = Expr::CreateCatchAll($2);
-    }
-  ;
-    */
-
+block_sig :
+    LPAR RESULT value_type_list RPAR { $$ = $3; }
+;
 block :
     block_sig block {
       $$ = $2;
@@ -640,6 +577,41 @@ block :
       $$->first = $1.first;
     }
 ;
+
+
+catch_all_check : CATCH_ALL {
+      if (!parser->flags->allow_exceptions) {
+        wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+catch_check : CATCH {
+      if (!parser->flags->allow_exceptions) {
+        wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+catch_instr :
+    catch_check var instr_list {
+      Expr* catch_ = Expr::CreateCatch($2);
+      $$ = Expr::CreateCatchBlock(catch_, $3.first);
+
+    }
+  | catch_all_check instr_list {
+      Expr* catch_ = Expr::CreateCatchAll();
+      $$ = Expr::CreateCatchBlock(catch_, $2.first);
+    }
+  ;
+catch_instr_list :
+    catch_instr {
+      $$ = join_exprs1(&@1, $1);
+    }
+  | catch_instr_list catch_instr {
+      $$ = join_exprs2(&@1, &$1, $2);
+    }
+  ;
 
 expr :
     LPAR expr1 RPAR { $$ = $2; }
@@ -665,38 +637,50 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-  | try_check try_ {
-      $$ = join_exprs1(&@1, $2);
-    }
-;
-
-try_ :
-    LPAR labeling_opt block RPAR catch_list {
+  | try_check labeling_opt block RPAR catch_list {
       $3->label = $2;
-      $$ = Expr::CreateTry($3, $5.first);
+      Expr* try_ = Expr::CreateTry($3, $5.first);
+      $$ = join_exprs1(&@1, try_);
     }
   ;
 
 catch_list :
     catch_ {
-      $$ = join_exprs1(&@1, $1);
+      $$ = $1;
     }
-  | catch_list catch_ {
-      $$ = join_exprs2(&@1, &$1, $2);
+  | catch_ catch_list {
+      $$.first = $1.first;
+      $1.last->next = $2.first;
+      $$.last = $2.last ? $2.last : $1.last;
+      $$.size = $1.size + $2.size;
     }
   ;
 
 catch_ :
     LPAR catch_check var instr_list RPAR {
       Expr* catch_ = Expr::CreateCatch($3);
-      $$ = Expr::CreateCatchBlock(catch_, $4.first);
+      Expr* block = Expr::CreateCatchBlock(catch_, $4.first);
+      $$ = join_exprs1(&@1, block);
     }
     | LPAR catch_all_check instr_list RPAR {
       Expr* catch_ = Expr::CreateCatchAll();
-      $$ = Expr::CreateCatchBlock(catch_, $3.first);
+      Expr* block = Expr::CreateCatchBlock(catch_, $3.first);
+      $$ = join_exprs1(&@1, block);
     }
   ;
+;
 
+if_block :
+    block_sig if_block {
+      Expr* if_ = $2.last;
+      assert(if_->type == ExprType::If);
+      $$ = $2;
+      Block* true_ = if_->if_.true_;
+      true_->sig.insert(true_->sig.end(), $1->begin(), $1->end());
+      delete $1;
+    }
+  | if_
+;
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
       Expr* expr = Expr::CreateIf(new Block($3.first), $7.first);
@@ -723,6 +707,29 @@ if_ :
       $$ = join_exprs2(&@1, &$1, expr);
     }
 ;
+
+rethrow_check : RETHROW {
+      if (!parser->flags->allow_exceptions) {
+        wast_parser_error(&@1, lexer, parser, "Rethrow instruction not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+throw_check : THROW {
+      if (!parser->flags->allow_exceptions) {
+        wast_parser_error(&@1, lexer, parser, "Throw instruction not allowed");
+      }
+      @$ = @1;
+    }
+  ;
+
+try_check :  TRY {
+      if (!parser->flags->allow_exceptions) {
+        wast_parser_error(&@1, lexer, parser, "Try blocks not allowed");
+      }
+      @$ = @1;
+    }
+  ;
 
 instr_list :
     /* empty */ { WABT_ZERO_MEMORY($$); }
@@ -1838,10 +1845,13 @@ void append_module_fields(Module* module, ModuleField* first) {
 }
 
 Result parse_wast(WastLexer* lexer, Script** out_script,
-                 SourceErrorHandler* error_handler) {
+                  SourceErrorHandler* error_handler,
+                  WastParseFlags* flags) {
   WastParser parser;
   WABT_ZERO_MEMORY(parser);
+  parser.flags = flags;
   parser.error_handler = error_handler;
+  wabt_wast_parser_debug = int(flags->debug_parsing);
   int result = wabt_wast_parser_parse(lexer, &parser);
   delete [] parser.yyssa;
   delete [] parser.yyvsa;

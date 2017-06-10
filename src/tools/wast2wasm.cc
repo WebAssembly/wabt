@@ -48,6 +48,7 @@ static WriteBinarySpecOptions s_write_binary_spec_options =
     WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
 static bool s_spec;
 static bool s_validate = true;
+static WastParseFlags s_parse_flags;
 
 static std::unique_ptr<FileStream> s_log_stream;
 
@@ -64,6 +65,8 @@ enum {
   FLAG_NO_CANONICALIZE_LEB128S,
   FLAG_DEBUG_NAMES,
   FLAG_NO_CHECK,
+  FLAG_EXCEPTIONS,
+  FLAG_DEBUG_PARSER,
   NUM_FLAGS
 };
 
@@ -90,8 +93,12 @@ static Option s_options[] = {
     {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
      "use multiple times for more info"},
     {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
+    {FLAG_DEBUG_PARSER, 0, "debug-parser", nullptr, NOPE,
+     "Turn on debugging the parser of wast files"},
     {FLAG_DUMP_MODULE, 'd', "dump-module", nullptr, NOPE,
      "print a hexdump of the module to stdout"},
+    {FLAG_EXCEPTIONS, 0, "except", nullptr, NOPE,
+     "Test extension for exception handling"},
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
     {FLAG_RELOCATABLE, 'r', nullptr, nullptr, NOPE,
      "create a relocatable wasm binary (suitable for linking with wasm-link)"},
@@ -103,7 +110,7 @@ static Option s_options[] = {
     {FLAG_DEBUG_NAMES, 0, "debug-names", nullptr, NOPE,
      "Write debug names to the generated binary file"},
     {FLAG_NO_CHECK, 0, "no-check", nullptr, NOPE,
-     "Don't check for invalid modules"},
+     "Don't check for invalid modules"}
 };
 WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
 
@@ -148,6 +155,14 @@ static void on_option(struct OptionParser* parser,
 
     case FLAG_NO_CHECK:
       s_validate = false;
+      break;
+
+    case FLAG_EXCEPTIONS:
+      s_parse_flags.allow_exceptions = true;
+      break;
+
+    case FLAG_DEBUG_PARSER:
+      s_parse_flags.debug_parsing = true;
       break;
   }
 }
@@ -204,7 +219,8 @@ int ProgramMain(int argc, char** argv) {
 
   SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_wast(lexer.get(), &script, &error_handler);
+  Result result = parse_wast(lexer.get(), &script, &error_handler,
+                             &s_parse_flags);
 
   if (WABT_SUCCEEDED(result)) {
     result = resolve_names_script(lexer.get(), script, &error_handler);

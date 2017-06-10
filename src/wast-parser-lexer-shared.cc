@@ -23,8 +23,6 @@
 
 namespace wabt {
 
-bool WastParser::AllowExceptions = false;
-
 void wast_parser_error(Location* loc,
                        WastLexer* lexer,
                        WastParser* parser,

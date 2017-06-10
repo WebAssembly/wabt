@@ -21,12 +21,6 @@
 
 namespace wabt {
 
-#if 1
-// TODO(karlschimpf) remove the need for this
-#define ERROR(Message)            \
-  fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, (Message));
-#endif
-
 Index get_index_from_var(const BindingHash* hash, const Var* var) {
   if (var->type == VarType::Name)
     return hash->FindIndex(var->name);
@@ -268,6 +262,13 @@ Expr::~Expr() {
     case ExprType::CallIndirect:
       destroy_var(&call_indirect.var);
       break;
+    case ExprType::Catch:
+      destroy_var(&catch_.var);
+      break;
+    case ExprType::CatchBlock:
+      delete catch_block.catch_;
+      destroy_expr_list(catch_block.first);
+      break;
     case ExprType::GetGlobal:
       destroy_var(&get_global.var);
       break;
@@ -296,24 +297,12 @@ Expr::~Expr() {
     case ExprType::Throw:
       destroy_var(&throw_.var);
       break;
-
-#if 1
-    // TODO(karlschimpf): Define these cases.
-    case ExprType::Catch:
-      ERROR("Catch: Don't know how to clean up");
-      break;
-    case ExprType::CatchAll:
-      ERROR("CatchAll: Don't know how to clean up");
-      break;
-    case ExprType::CatchBlock:
-      ERROR("CatchBlock: Don't know how to clean up");
-      break;
     case ExprType::TryBlock:
-      ERROR("TryBlock: Don't know how to clean up");
+      delete try_block.block;
+      destroy_expr_list(try_block.first_catch);
       break;
-#endif
-
     case ExprType::Binary:
+    case ExprType::CatchAll:
     case ExprType::Compare:
     case ExprType::Const:
     case ExprType::Convert:
