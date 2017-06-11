@@ -60,6 +60,16 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       CHECK_RESULT(delegate_->OnCallIndirectExpr(expr));
       break;
 
+    case ExprType::Catch:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Catch: don't know how to visit\n");
+      return Result::Error;
+
+    case ExprType::CatchAll:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("CatchAll: don't know how to visit\n");
+      return Result::Error;
+
     case ExprType::Compare:
       CHECK_RESULT(delegate_->OnCompareExpr(expr));
       break;
@@ -114,6 +124,11 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       CHECK_RESULT(delegate_->OnNopExpr(expr));
       break;
 
+    case ExprType::Rethrow:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Rethrow: don't know how to visit\n");
+      return Result::Error;
+
     case ExprType::Return:
       CHECK_RESULT(delegate_->OnReturnExpr(expr));
       break;
@@ -136,6 +151,17 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
 
     case ExprType::TeeLocal:
       CHECK_RESULT(delegate_->OnTeeLocalExpr(expr));
+      break;
+
+    case ExprType::Throw:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Throw: don't know how to visit\n");
+      return Result::Error;
+
+    case ExprType::TryBlock:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("TryBlock: don't know how to visit\n");
+      return Result::Error;
       break;
 
     case ExprType::Unary:

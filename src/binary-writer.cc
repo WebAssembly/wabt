@@ -444,6 +444,14 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_u32_leb128(&stream_, 0, "call_indirect reserved");
       break;
     }
+    case ExprType::Catch:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Catch: Don't know how to write\n");
+      break;
+    case ExprType::CatchAll:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("CatchAll: Don't know how to write\n");
+      break;
     case ExprType::Compare:
       write_opcode(&stream_, expr->compare.opcode);
       break;
@@ -522,6 +530,10 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::Nop:
       write_opcode(&stream_, Opcode::Nop);
       break;
+    case ExprType::Rethrow:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Rethrow: Don't know how to write\n");
+      break;
     case ExprType::Return:
       write_opcode(&stream_, Opcode::Return);
       break;
@@ -554,6 +566,14 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_u32_leb128(&stream_, index, "local index");
       break;
     }
+    case ExprType::Throw:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("Throw: Don't know how to write\n");
+      break;
+    case ExprType::TryBlock:
+      // TODO(karlschimpf): Define
+      WABT_FATAL("TryBlock: Don't know how to write\n");
+      break;
     case ExprType::Unary:
       write_opcode(&stream_, expr->unary.opcode);
       break;

@@ -1,0 +1,23 @@
+;;; TOOL: wast2wasm
+;;; ERROR: 1
+(module
+  (func (result i32)
+    (try
+      (block (result i32)
+        (nop)
+        (i32.const 7)
+      )
+      (catch 1
+        (i32.const 8)
+      )
+      (catch_all 0
+        (i32.const 9)
+      )
+    )
+  )
+) 
+(;; STDERR ;;;
+out/test/exceptions/bad-try.txt:5:6: opcode not allowed: try
+    (try
+     ^^^
+;;; STDERR ;;)

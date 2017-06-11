@@ -470,6 +470,16 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
     }
 
+    case ExprType::Catch:
+      // TODO(karlschimpf) Define.
+      PrintError(&expr->loc, "Catch: don't know how to validate");
+      break;
+
+    case ExprType::CatchAll:
+      // TODO(karlschimpf) Define.
+      PrintError(&expr->loc, "CatchAll: don't know how to validate");
+      break;
+
     case ExprType::Compare:
       typechecker_.OnCompare(expr->compare.opcode);
       break;
@@ -533,6 +543,11 @@ void Validator::CheckExpr(const Expr* expr) {
     case ExprType::Nop:
       break;
 
+    case ExprType::Rethrow:
+      // TODO(karlschimpf) Define.
+      PrintError(&expr->loc, "Rethrow: don't know how to validate");
+      break;
+
     case ExprType::Return:
       typechecker_.OnReturn();
       break;
@@ -559,6 +574,16 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::TeeLocal:
       typechecker_.OnTeeLocal(GetLocalVarTypeOrAny(&expr->tee_local.var));
+      break;
+
+    case ExprType::Throw:
+      // TODO(karlschimpf) Define.
+      PrintError(&expr->loc, "Throw: don't know how to validate");
+      break;
+
+    case ExprType::TryBlock:
+      // TODO(karlschimpf) Define.
+      PrintError(&expr->loc, "TryBlock: don't know how to validate");
       break;
 
     case ExprType::Unary:

@@ -262,6 +262,11 @@ Expr::~Expr() {
     case ExprType::CallIndirect:
       destroy_var(&call_indirect.var);
       break;
+    case ExprType::Catch:
+    case ExprType::CatchAll:
+      destroy_var(&catch_.var);
+      destroy_expr_list(catch_.first);
+      break;
     case ExprType::GetGlobal:
       destroy_var(&get_global.var);
       break;
@@ -275,6 +280,9 @@ Expr::~Expr() {
     case ExprType::Loop:
       delete loop;
       break;
+    case ExprType::Rethrow:
+      destroy_var(&rethrow_.var);
+      break;
     case ExprType::SetGlobal:
       destroy_var(&set_global.var);
       break;
@@ -284,7 +292,13 @@ Expr::~Expr() {
     case ExprType::TeeLocal:
       destroy_var(&tee_local.var);
       break;
-
+    case ExprType::Throw:
+      destroy_var(&throw_.var);
+      break;
+    case ExprType::TryBlock:
+      delete try_block.block;
+      destroy_expr_list(try_block.first_catch);
+      break;
     case ExprType::Binary:
     case ExprType::Compare:
     case ExprType::Const:
@@ -350,6 +364,22 @@ Expr* Expr::CreateCall(Var var) {
 Expr* Expr::CreateCallIndirect(Var var) {
   Expr* expr = new Expr(ExprType::CallIndirect);
   expr->call_indirect.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateCatch(Var var, Expr* first) {
+  Expr* expr = new Expr(ExprType::Catch);
+  expr->catch_.var = var;
+  expr->catch_.first = first;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateCatchAll(Var var, Expr* first) {
+  Expr* expr = new Expr(ExprType::CatchAll);
+  expr->catch_.var = var;
+  expr->catch_.first = first;
   return expr;
 }
 
@@ -433,6 +463,13 @@ Expr* Expr::CreateNop() {
 }
 
 // static
+Expr* Expr::CreateRethrow(Var var) {
+  Expr* expr = new Expr(ExprType::Rethrow);
+  expr->rethrow_.var = var;
+  return expr;
+}
+
+// static
 Expr* Expr::CreateReturn() {
   return new Expr(ExprType::Return);
 }
@@ -469,6 +506,21 @@ Expr* Expr::CreateStore(Opcode opcode, Address align, uint64_t offset) {
 Expr* Expr::CreateTeeLocal(Var var) {
   Expr* expr = new Expr(ExprType::TeeLocal);
   expr->tee_local.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateThrow(Var var) {
+  Expr* expr = new Expr(ExprType::Throw);
+  expr->throw_.var = var;
+  return expr;
+}
+
+// static
+Expr* Expr::CreateTry(Block* block, Expr* first_catch) {
+  Expr* expr = new Expr(ExprType::TryBlock);
+  expr->try_block.block = block;
+  expr->try_block.first_catch = first_catch;
   return expr;
 }
 
