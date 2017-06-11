@@ -721,6 +721,10 @@ Result BinaryWriter::WriteModule(const Module* module) {
         case ExternalKind::Global:
           WriteGlobalHeader(import->global);
           break;
+        case ExternalKind::Except:
+          // TODO(karlschimpf) Define.
+          WABT_FATAL("write import except not implemented\n");
+          break;
       }
     }
     EndSection();
@@ -812,6 +816,10 @@ Result BinaryWriter::WriteModule(const Module* module) {
           write_u32_leb128(&stream_, index, "export global index");
           break;
         }
+        case ExternalKind::Except:
+          // TODO(karlschimpf) Define.
+          WABT_FATAL("write export except not implemented\n");
+          break;
       }
     }
     EndSection();

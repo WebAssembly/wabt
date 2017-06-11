@@ -120,6 +120,10 @@ Import& Import::operator=(Import&& other) {
       global.type = other.global.type;
       global.mutable_ = other.global.mutable_;
       break;
+    case ExternalKind::Except:
+      // TODO(karlschimpf) Define
+      WABT_FATAL("Import::operator=() not implemented for exceptions");
+      break;
   }
   return *this;
 }

@@ -310,6 +310,10 @@ void NameResolver::VisitExport(Export* export_) {
     case ExternalKind::Global:
       ResolveGlobalVar(&export_->var);
       break;
+
+    case ExternalKind::Except:
+      WABT_FATAL("NameResolver::VisitExport(except) not defined\n");
+      break;
   }
 }
 
