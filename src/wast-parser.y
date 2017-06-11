@@ -157,7 +157,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token UNREACHABLE CURRENT_MEMORY GROW_MEMORY
 %token FUNC START TYPE PARAM RESULT LOCAL GLOBAL
-%token MODULE TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT
+%token MODULE TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT EXCEPT
 %token REGISTER INVOKE GET
 %token ASSERT_MALFORMED ASSERT_INVALID ASSERT_UNLINKABLE
 %token ASSERT_RETURN ASSERT_RETURN_CANONICAL_NAN ASSERT_RETURN_ARITHMETIC_NAN
@@ -179,6 +179,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
+%type<expr_list> except_list
 %type<func> func_fields_body func_fields_body1 func_body func_body1 func_fields_import func_fields_import1
 %type<func_sig> func_sig func_type
 %type<global> global_type
@@ -186,7 +187,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<limits> limits
 %type<memory> memory_sig
 %type<module> module module_fields_opt module_fields inline_module
-%type<module_field> type_def start data elem import export
+%type<module_field> type_def start data elem import export exceptions
 %type<module_fields> func func_fields table table_fields memory memory_fields global global_fields module_field
 %type<raw_module> raw_module
 %type<literal> literal
@@ -645,6 +646,24 @@ const_expr :
     instr_list
 ;
 
+/* Exceptions */
+except :
+    LPAR TYPE value_type_list RPAR
+  ;
+    
+except_list :
+    /* empty */ { WABT_ZERO_MEMORY($$); }
+  | except except_list {
+      $$ = join_expr_list($1.first, $2);
+    }
+  ;
+
+exceptions :
+    LPAR EXCEPT except_list RPAR {
+      $$ = Expr::createExceptions($3.first);
+    }
+  ;
+        
 /* Functions */
 func :
     LPAR FUNC bind_var_opt func_fields RPAR {
@@ -1127,6 +1146,7 @@ module_field :
   | start { $$.first = $$.last = $1; }
   | import { $$.first = $$.last = $1; }
   | export { $$.first = $$.last = $1; }
+  | exceptions { $$.first = $$.last = $1; }
 ;
 
 module_fields_opt :

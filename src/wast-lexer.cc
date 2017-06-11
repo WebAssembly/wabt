@@ -447,6 +447,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> "offset"              { RETURN(OFFSET); }
       <i> "import"              { RETURN(IMPORT); }
       <i> "export"              { RETURN(EXPORT); }
+      <i> "except"              { RETURN(EXCEPT); }
       <i> "register"            { RETURN(REGISTER); }
       <i> "invoke"              { RETURN(INVOKE); }
       <i> "get"                 { RETURN(GET); }
