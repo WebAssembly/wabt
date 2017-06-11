@@ -578,6 +578,9 @@ Import::~Import() {
     case ExternalKind::Global:
       delete global;
       break;
+    case ExternalKind::Except:
+      delete except;
+      break;
   }
 }
 
@@ -608,6 +611,9 @@ ModuleField::ModuleField(ModuleFieldType type) : type(type), next(nullptr) {
 
 ModuleField::~ModuleField() {
   switch (type) {
+    case ModuleFieldType::Except:
+      delete except;
+      break;
     case ModuleFieldType::Func:
       delete func;
       break;
@@ -644,6 +650,7 @@ ModuleField::~ModuleField() {
 Module::Module()
     : first_field(nullptr),
       last_field(nullptr),
+      num_except_imports(0),
       num_func_imports(0),
       num_table_imports(0),
       num_memory_imports(0),

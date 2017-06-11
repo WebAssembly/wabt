@@ -732,6 +732,8 @@ void Validator::CheckDataSegments(const Module* module) {
 
 void Validator::CheckImport(const Location* loc, const Import* import) {
   switch (import->kind) {
+    case ExternalKind::Except:
+      break;
     case ExternalKind::Func:
       if (decl_has_func_type(&import->func->decl))
         CheckFuncTypeVar(&import->func->decl.type_var, nullptr);
