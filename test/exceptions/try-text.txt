@@ -1,4 +1,4 @@
-;;; EXE: %(wast2wasm)s
+;;; TOOL: wast2wasm
 ;;; FLAGS: --future-exceptions
 ;;; ERROR: 1
 (module

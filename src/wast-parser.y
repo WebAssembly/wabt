@@ -112,8 +112,7 @@ namespace wabt {
 
 static ExprList join_exprs1(Location* loc, Expr* expr1);
 static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
-static ExprList join_expr_lists(Location* loc, ExprList* expr1,
-                                ExprList* expr2);
+static ExprList join_expr_lists(ExprList* expr1, ExprList* expr2);
 
 static Result parse_const(Type type,
                           LiteralType literal_type,
@@ -602,7 +601,7 @@ catch_instr :
 catch_instr_list :
     catch_instr
   | catch_instr catch_instr_list {
-      $$ = join_expr_lists(&@1, &$1, &$2);
+      $$ = join_expr_lists(&$1, &$2);
     }
   ;
 
@@ -642,7 +641,7 @@ catch_list :
       $$ = $2;
     }
   | LPAR catch_instr RPAR catch_list {
-      $$ = join_expr_lists(&@2, &$2, &$4);
+      $$ = join_expr_lists(&$2, &$4);
     }
   ;
     
@@ -1540,16 +1539,11 @@ ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2) {
   return result;
 }
 
-ExprList join_expr_lists(Location* loc, ExprList* expr1, ExprList* expr2) {
-  if (expr1->size == 0)
-    return *expr2;
-  if (expr2->size == 0)
-    return *expr1;
+ExprList join_expr_lists(ExprList* expr1, ExprList* expr2) {
   ExprList result;
-  result.first = expr1->first;
-  result.last = expr2->last;
-  result.size = expr1->size + expr2->size;
-  expr1->last->next = expr2->first;
+  WABT_ZERO_MEMORY(result);
+  append_expr_list(&result, expr1);
+  append_expr_list(&result, expr2);
   return result;
 }
 

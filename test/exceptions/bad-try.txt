@@ -1,4 +1,4 @@
-;;; EXE: %(wast2wasm)s
+;;; TOOL: wast2wasm
 ;;; ERROR: 1
 (module
   (func (result i32)
