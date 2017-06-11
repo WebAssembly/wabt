@@ -267,13 +267,13 @@ Result Validator::CheckMemoryVar(const Var* var, const Memory** out_memory) {
 
 Result Validator::CheckLocalVar(const Var* var, Type* out_type) {
   const Func* func = current_func_;
-  Index max_index = get_num_params_and_locals(func);
-  Index index = get_local_index_by_var(func, var);
+  Index max_index = func->GetNumParamsAndLocals();
+  Index index = func->GetLocalIndex(*var);
   if (index < max_index) {
     if (out_type) {
-      Index num_params = get_num_params(func);
+      Index num_params = func->GetNumParams();
       if (index < num_params) {
-        *out_type = get_param_type(func, index);
+        *out_type = func->GetParamType(index);
       } else {
         *out_type = current_func_->local_types[index - num_params];
       }
@@ -599,12 +599,12 @@ void Validator::CheckFuncSignatureMatchesFuncType(const Location* loc,
 
 void Validator::CheckFunc(const Location* loc, const Func* func) {
   current_func_ = func;
-  if (get_num_results(func) > 1) {
+  if (func->GetNumResults() > 1) {
     PrintError(loc, "multiple result values not currently supported.");
     // Don't run any other checks, the won't test the result_type properly.
     return;
   }
-  if (decl_has_func_type(&func->decl)) {
+  if (func->decl.has_func_type) {
     const FuncType* func_type;
     if (WABT_SUCCEEDED(CheckFuncTypeVar(&func->decl.type_var, &func_type))) {
       CheckFuncSignatureMatchesFuncType(loc, func->decl.sig, func_type);
@@ -750,7 +750,7 @@ void Validator::CheckDataSegments(const Module* module) {
 void Validator::CheckImport(const Location* loc, const Import* import) {
   switch (import->kind) {
     case ExternalKind::Func:
-      if (decl_has_func_type(&import->func->decl))
+      if (import->func->decl.has_func_type)
         CheckFuncTypeVar(&import->func->decl.type_var, nullptr);
       break;
     case ExternalKind::Table:
@@ -862,11 +862,11 @@ void Validator::CheckModule(const Module* module) {
         const Func* start_func = nullptr;
         CheckFuncVar(&field->start, &start_func);
         if (start_func) {
-          if (get_num_params(start_func) != 0) {
+          if (start_func->GetNumParams() != 0) {
             PrintError(&field->loc, "start function must be nullary");
           }
 
-          if (get_num_results(start_func) != 0) {
+          if (start_func->GetNumResults() != 0) {
             PrintError(&field->loc, "start function must not return anything");
           }
         }
@@ -886,27 +886,27 @@ void Validator::CheckModule(const Module* module) {
 // should be ignored.
 const TypeVector* Validator::CheckInvoke(const Action* action) {
   const ActionInvoke* invoke = action->invoke;
-  const Module* module = get_module_by_var(script_, &action->module_var);
+  const Module* module = script_->GetModule(action->module_var);
   if (!module) {
     PrintError(&action->loc, "unknown module");
     return nullptr;
   }
 
-  Export* export_ = get_export_by_name(module, &action->name);
+  const Export* export_ = module->GetExport(action->name);
   if (!export_) {
     PrintError(&action->loc, "unknown function export \"" PRIstringslice "\"",
                WABT_PRINTF_STRING_SLICE_ARG(action->name));
     return nullptr;
   }
 
-  Func* func = get_func_by_var(module, &export_->var);
+  const Func* func = module->GetFunc(export_->var);
   if (!func) {
     // This error will have already been reported, just skip it.
     return nullptr;
   }
 
   size_t actual_args = invoke->args.size();
-  size_t expected_args = get_num_params(func);
+  size_t expected_args = func->GetNumParams();
   if (expected_args != actual_args) {
     PrintError(&action->loc, "too %s parameters to function. got %" PRIzd
                              ", expected %" PRIzd,
@@ -916,28 +916,28 @@ const TypeVector* Validator::CheckInvoke(const Action* action) {
   }
   for (size_t i = 0; i < actual_args; ++i) {
     const Const* const_ = &invoke->args[i];
-    CheckTypeIndex(&const_->loc, const_->type, get_param_type(func, i),
-                   "invoke", i, "argument");
+    CheckTypeIndex(&const_->loc, const_->type, func->GetParamType(i), "invoke",
+                   i, "argument");
   }
 
   return &func->decl.sig.result_types;
 }
 
 Result Validator::CheckGet(const Action* action, Type* out_type) {
-  const Module* module = get_module_by_var(script_, &action->module_var);
+  const Module* module = script_->GetModule(action->module_var);
   if (!module) {
     PrintError(&action->loc, "unknown module");
     return Result::Error;
   }
 
-  Export* export_ = get_export_by_name(module, &action->name);
+  const Export* export_ = module->GetExport(action->name);
   if (!export_) {
     PrintError(&action->loc, "unknown global export \"" PRIstringslice "\"",
                WABT_PRINTF_STRING_SLICE_ARG(action->name));
     return Result::Error;
   }
 
-  Global* global = get_global_by_var(module, &export_->var);
+  const Global* global = module->GetGlobal(export_->var);
   if (!global) {
     // This error will have already been reported, just skip it.
     return Result::Error;

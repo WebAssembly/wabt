@@ -148,8 +148,8 @@ void NameResolver::ResolveVar(const BindingHash* bindings,
                               Var* var,
                               const char* desc) {
   if (var->type == VarType::Name) {
-    int index = get_index_from_var(bindings, var);
-    if (index == -1) {
+    Index index = bindings->FindIndex(*var);
+    if (index == kInvalidIndex) {
       PrintError(&var->loc, "undefined %s variable \"" PRIstringslice "\"",
                  desc, WABT_PRINTF_STRING_SLICE_ARG(var->name));
       return;
@@ -186,8 +186,8 @@ void NameResolver::ResolveLocalVar(Var* var) {
     if (!current_func_)
       return;
 
-    int index = get_local_index_by_var(current_func_, var);
-    if (index == -1) {
+    Index index = current_func_->GetLocalIndex(*var);
+    if (index == kInvalidIndex) {
       PrintError(&var->loc, "undefined local variable \"" PRIstringslice "\"",
                  WABT_PRINTF_STRING_SLICE_ARG(var->name));
       return;
@@ -283,7 +283,7 @@ Result NameResolver::OnTeeLocalExpr(Expr* expr) {
 
 void NameResolver::VisitFunc(Func* func) {
   current_func_ = func;
-  if (decl_has_func_type(&func->decl))
+  if (func->decl.has_func_type)
     ResolveFuncTypeVar(&func->decl.type_var);
 
   CheckDuplicateBindings(&func->param_bindings, "parameter");

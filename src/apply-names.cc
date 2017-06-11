@@ -119,7 +119,7 @@ void NameApplier::UseNameForVar(StringSlice* name, Var* var) {
 }
 
 Result NameApplier::UseNameForFuncTypeVar(Module* module, Var* var) {
-  FuncType* func_type = get_func_type_by_var(module, var);
+  FuncType* func_type = module->GetFuncType(*var);
   if (!func_type)
     return Result::Error;
   UseNameForVar(&func_type->name, var);
@@ -127,7 +127,7 @@ Result NameApplier::UseNameForFuncTypeVar(Module* module, Var* var) {
 }
 
 Result NameApplier::UseNameForFuncVar(Module* module, Var* var) {
-  Func* func = get_func_by_var(module, var);
+  Func* func = module->GetFunc(*var);
   if (!func)
     return Result::Error;
   UseNameForVar(&func->name, var);
@@ -135,7 +135,7 @@ Result NameApplier::UseNameForFuncVar(Module* module, Var* var) {
 }
 
 Result NameApplier::UseNameForGlobalVar(Module* module, Var* var) {
-  Global* global = get_global_by_var(module, var);
+  Global* global = module->GetGlobal(*var);
   if (!global)
     return Result::Error;
   UseNameForVar(&global->name, var);
@@ -143,7 +143,7 @@ Result NameApplier::UseNameForGlobalVar(Module* module, Var* var) {
 }
 
 Result NameApplier::UseNameForTableVar(Module* module, Var* var) {
-  Table* table = get_table_by_var(module, var);
+  Table* table = module->GetTable(*var);
   if (!table)
     return Result::Error;
   UseNameForVar(&table->name, var);
@@ -151,7 +151,7 @@ Result NameApplier::UseNameForTableVar(Module* module, Var* var) {
 }
 
 Result NameApplier::UseNameForMemoryVar(Module* module, Var* var) {
-  Memory* memory = get_memory_by_var(module, var);
+  Memory* memory = module->GetMemory(*var);
   if (!memory)
     return Result::Error;
   UseNameForVar(&memory->name, var);
@@ -159,11 +159,11 @@ Result NameApplier::UseNameForMemoryVar(Module* module, Var* var) {
 }
 
 Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
-  Index local_index = get_local_index_by_var(func, var);
-  if (local_index >= get_num_params_and_locals(func))
+  Index local_index = func->GetLocalIndex(*var);
+  if (local_index >= func->GetNumParamsAndLocals())
     return Result::Error;
 
-  Index num_params = get_num_params(func);
+  Index num_params = func->GetNumParams();
   std::string* name;
   if (local_index < num_params) {
     /* param */
@@ -280,15 +280,15 @@ Result NameApplier::OnTeeLocalExpr(Expr* expr) {
 
 Result NameApplier::VisitFunc(Index func_index, Func* func) {
   current_func_ = func;
-  if (decl_has_func_type(&func->decl)) {
+  if (func->decl.has_func_type) {
     CHECK_RESULT(UseNameForFuncTypeVar(module_, &func->decl.type_var));
   }
 
-  make_type_binding_reverse_mapping(
-      func->decl.sig.param_types, func->param_bindings, &param_index_to_name_);
+  MakeTypeBindingReverseMapping(func->decl.sig.param_types,
+                                func->param_bindings, &param_index_to_name_);
 
-  make_type_binding_reverse_mapping(func->local_types, func->local_bindings,
-                                    &local_index_to_name_);
+  MakeTypeBindingReverseMapping(func->local_types, func->local_bindings,
+                                &local_index_to_name_);
 
   CHECK_RESULT(visitor_.VisitFunc(func));
   current_func_ = nullptr;
