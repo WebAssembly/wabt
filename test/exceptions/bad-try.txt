@@ -16,7 +16,7 @@
     )
   )
 ) 
-(;; SDERR ;;;
+(;; STDERR ;;;
 out/test/exceptions/bad-try.txt:5:6: opcode not allowed: try
     (try
      ^^^
