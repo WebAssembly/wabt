@@ -85,6 +85,8 @@ enum class ExprType {
   BrTable,
   Call,
   CallIndirect,
+  Catch,
+  CatchAll,
   Compare,
   Const,
   Convert,
@@ -97,12 +99,15 @@ enum class ExprType {
   Load,
   Loop,
   Nop,
+  Rethrow,
   Return,
   Select,
   SetGlobal,
   SetLocal,
   Store,
   TeeLocal,
+  Throw,
+  TryBlock,
   Unary,
   Unreachable,
 };
@@ -135,6 +140,8 @@ struct Expr {
   static Expr* CreateBrTable(VarVector* targets, Var default_target);
   static Expr* CreateCall(Var);
   static Expr* CreateCallIndirect(Var);
+  static Expr* CreateCatch(Var v, Expr* first);
+  static Expr* CreateCatchAll(Var v, Expr* first);
   static Expr* CreateCompare(Opcode);
   static Expr* CreateConst(const Const&);
   static Expr* CreateConvert(Opcode);
@@ -147,12 +154,15 @@ struct Expr {
   static Expr* CreateLoad(Opcode, Address align, uint64_t offset);
   static Expr* CreateLoop(Block*);
   static Expr* CreateNop();
+  static Expr* CreateRethrow(Var);
   static Expr* CreateReturn();
   static Expr* CreateSelect();
   static Expr* CreateSetGlobal(Var);
   static Expr* CreateSetLocal(Var);
   static Expr* CreateStore(Opcode, Address align, uint64_t offset);
   static Expr* CreateTeeLocal(Var);
+  static Expr* CreateThrow(Var);
+  static Expr* CreateTry(Block* block, Expr* first_catch);
   static Expr* CreateUnary(Opcode);
   static Expr* CreateUnreachable();
 
@@ -162,6 +172,9 @@ struct Expr {
   union {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
+    struct { Block* block; Expr* first_catch; } try_block;
+    struct { Var var; Expr* first; } catch_;
+    struct { Var var; } throw_, rethrow_;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;
     struct { Var var; } call, call_indirect;

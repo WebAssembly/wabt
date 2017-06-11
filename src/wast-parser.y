@@ -29,6 +29,8 @@
 #include "wast-parser.h"
 #include "wast-parser-lexer-shared.h"
 
+#define YYDEBUG 1
+
 #define RELOCATE_STACK(type, array, stack_base, old_size, new_size)   \
   do {                                                                \
     type* new_stack = new type[new_size]();                           \
@@ -93,6 +95,14 @@
     }                                                                      \
   } while (0)
 
+#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                       \
+  do {                                                                 \
+    if (!parser->options->allow_exceptions) {                          \
+      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s",  \
+                        opcode_name);                                  \
+    }                                                                  \
+ } while (0)
+
 #define YYMALLOC(size) new char [size]
 #define YYFREE(p) delete [] (p)
 
@@ -102,6 +112,7 @@ namespace wabt {
 
 static ExprList join_exprs1(Location* loc, Expr* expr1);
 static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
+static ExprList join_expr_lists(ExprList* expr1, ExprList* expr2);
 
 static Result parse_const(Type type,
                           LiteralType literal_type,
@@ -151,6 +162,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %token RPAR ")"
 %token NAT INT FLOAT TEXT VAR VALUE_TYPE ANYFUNC MUT
 %token NOP DROP BLOCK END IF THEN ELSE LOOP BR BR_IF BR_TABLE
+%token TRY CATCH CATCH_ALL THROW RETHROW
 %token CALL CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL TEE_LOCAL GET_GLOBAL SET_GLOBAL
 %token LOAD STORE OFFSET_EQ_NAT ALIGN_EQ_NAT
@@ -178,6 +190,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<consts> const_list
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
+%type<expr_list> catch_instr catch_list catch_instr_list
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_body func_body1 func_fields_import func_fields_import1
 %type<func_sig> func_sig func_type
@@ -436,8 +449,9 @@ align_opt :
 instr :
     plain_instr { $$ = join_exprs1(&@1, $1); }
   | block_instr { $$ = join_exprs1(&@1, $1); }
-  | expr { $$ = $1; }
+  | expr
 ;
+
 plain_instr :
     UNREACHABLE {
       $$ = Expr::CreateUnreachable();
@@ -521,7 +535,14 @@ plain_instr :
   | GROW_MEMORY {
       $$ = Expr::CreateGrowMemory();
     }
+  | throw_check var {
+      $$ = Expr::CreateThrow($2);
+    }
+  | rethrow_check var {
+      $$ = Expr::CreateRethrow($2);
+    }
 ;
+
 block_instr :
     BLOCK labeling_opt block END labeling_opt {
       $$ = Expr::CreateBlock($3);
@@ -544,7 +565,13 @@ block_instr :
       CHECK_END_LABEL(@5, $$->if_.true_->label, $5);
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
+  | try_check labeling_opt block catch_instr_list END labeling_opt {
+      $3->label = $2;
+      $$ = Expr::CreateTry($3, $4.first);
+      CHECK_END_LABEL(@6, $3->label, $6);
+    }
 ;
+
 block_sig :
     LPAR RESULT value_type_list RPAR { $$ = $3; }
 ;
@@ -559,6 +586,24 @@ block :
       $$->first = $1.first;
     }
 ;
+
+catch_instr :
+    CATCH var instr_list {
+      Expr* expr = Expr::CreateCatch($2, $3.first);
+      $$ = join_exprs1(&@1, expr);
+    }
+  | CATCH_ALL var instr_list {
+      Expr* expr = Expr::CreateCatchAll($2, $3.first);
+      $$ = join_exprs1(&@1, expr);
+    }
+  ;
+
+catch_instr_list :
+    catch_instr
+  | catch_instr catch_instr_list {
+      $$ = join_expr_lists(&$1, &$2);
+    }
+  ;
 
 expr :
     LPAR expr1 RPAR { $$ = $2; }
@@ -584,7 +629,22 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-;
+  | try_check LPAR BLOCK labeling_opt block RPAR catch_list {
+      $5->label = $4;
+      Expr* try_ = Expr::CreateTry($5, $7.first);
+      $$ = join_exprs1(&@1, try_);
+    }
+  ;
+
+catch_list :
+    LPAR catch_instr RPAR {
+      $$ = $2;
+    }
+  | LPAR catch_instr RPAR catch_list {
+      $$ = join_expr_lists(&$2, &$4);
+    }
+  ;
+    
 if_block :
     block_sig if_block {
       Expr* if_ = $2.last;
@@ -622,6 +682,23 @@ if_ :
       $$ = join_exprs2(&@1, &$1, expr);
     }
 ;
+
+rethrow_check :
+    RETHROW {
+     CHECK_ALLOW_EXCEPTIONS(&@1, "rethrow");
+    }
+  ;
+throw_check :
+    THROW {
+      CHECK_ALLOW_EXCEPTIONS(&@1, "throw");
+    }
+  ;
+
+try_check :
+    TRY {
+      CHECK_ALLOW_EXCEPTIONS(&@1, "try");      
+    }
+  ;
 
 instr_list :
     /* empty */ { WABT_ZERO_MEMORY($$); }
@@ -1462,6 +1539,14 @@ ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2) {
   return result;
 }
 
+ExprList join_expr_lists(ExprList* expr1, ExprList* expr2) {
+  ExprList result;
+  WABT_ZERO_MEMORY(result);
+  append_expr_list(&result, expr1);
+  append_expr_list(&result, expr2);
+  return result;
+}
+
 Result parse_const(Type type,
                    LiteralType literal_type,
                    const char* s,
@@ -1737,10 +1822,16 @@ void append_module_fields(Module* module, ModuleField* first) {
 }
 
 Result parse_wast(WastLexer* lexer, Script** out_script,
-                 SourceErrorHandler* error_handler) {
+                  SourceErrorHandler* error_handler,
+                  WastParseOptions* options) {
   WastParser parser;
   WABT_ZERO_MEMORY(parser);
+  static WastParseOptions default_options;
+  if (options == nullptr)
+    options = &default_options;
+  parser.options = options;
   parser.error_handler = error_handler;
+  wabt_wast_parser_debug = int(options->debug_parsing);
   int result = wabt_wast_parser_parse(lexer, &parser);
   delete [] parser.yyssa;
   delete [] parser.yyvsa;

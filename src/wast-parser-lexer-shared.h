@@ -23,7 +23,7 @@
 #include "common.h"
 #include "ir.h"
 #include "source-error-handler.h"
-#include "wast-lexer.h"
+#include "wast-parser.h"
 
 #define WABT_WAST_PARSER_STYPE Token
 #define WABT_WAST_PARSER_LTYPE Location
@@ -103,6 +103,7 @@ struct WastParser {
   int16_t* yyssa;
   YYSTYPE* yyvsa;
   YYLTYPE* yylsa;
+  WastParseOptions* options;
 };
 
 int wast_lexer_lex(union Token*,
