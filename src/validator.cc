@@ -123,7 +123,7 @@ class Validator {
   void CheckMemory(const Location* loc, const Memory* memory);
   void CheckDataSegments(const Module* module);
   void CheckImport(const Location* loc, const Import* import);
-  void CheckExport(const Export* export_);
+  void CheckExport(const Location* loc, const Export* export_);
 
   void CheckDuplicateExportBindings(const Module* module);
   void CheckModule(const Module* module);
@@ -733,6 +733,8 @@ void Validator::CheckDataSegments(const Module* module) {
 void Validator::CheckImport(const Location* loc, const Import* import) {
   switch (import->kind) {
     case ExternalKind::Except:
+      // TODO(karlschimpf) Define.
+      PrintError(loc, "import except: don't know how to validate");
       break;
     case ExternalKind::Func:
       if (decl_has_func_type(&import->func->decl))
@@ -756,8 +758,12 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
   }
 }
 
-void Validator::CheckExport(const Export* export_) {
+void Validator::CheckExport(const Location* loc, const Export* export_) {
   switch (export_->kind) {
+    case ExternalKind::Except:
+      // TODO(karlschimpf) Define.
+      PrintError(loc, "except except: don't know how to validate");
+      break;
     case ExternalKind::Func:
       CheckFuncVar(&export_->var, nullptr);
       break;
@@ -801,6 +807,10 @@ void Validator::CheckModule(const Module* module) {
 
   for (ModuleField* field = module->first_field; field; field = field->next) {
     switch (field->type) {
+      case ModuleFieldType::Except:
+        // TODO(karlschimpf) Define.
+        PrintError(&field->loc, "except clause: don't know how to validate");
+        break;
       case ModuleFieldType::Func:
         CheckFunc(&field->loc, field->func);
         break;
@@ -815,7 +825,7 @@ void Validator::CheckModule(const Module* module) {
         break;
 
       case ModuleFieldType::Export:
-        CheckExport(field->export_);
+        CheckExport(&field->loc, field->export_);
         break;
 
       case ModuleFieldType::Table:
