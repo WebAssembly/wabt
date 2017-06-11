@@ -452,10 +452,6 @@ void BinaryWriter::WriteExpr(const Module* module,
       // TODO(karlschimpf): Define
       WABT_FATAL("CatchAll: Don't know how to write\n");
       break;
-    case ExprType::CatchBlock:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("CatchBlock: Don't know how to write\n");
-      break;
     case ExprType::Compare:
       write_opcode(&stream_, expr->compare.opcode);
       break;

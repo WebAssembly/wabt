@@ -48,7 +48,7 @@ static WriteBinarySpecOptions s_write_binary_spec_options =
     WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
 static bool s_spec;
 static bool s_validate = true;
-static WastParseFlags s_parse_flags;
+static WastParseOptions s_parse_options;
 
 static std::unique_ptr<FileStream> s_log_stream;
 
@@ -97,8 +97,8 @@ static Option s_options[] = {
      "Turn on debugging the parser of wast files"},
     {FLAG_DUMP_MODULE, 'd', "dump-module", nullptr, NOPE,
      "print a hexdump of the module to stdout"},
-    {FLAG_EXCEPTIONS, 0, "except", nullptr, NOPE,
-     "Test extension for exception handling"},
+    {FLAG_EXCEPTIONS, 0, "future-exceptions", nullptr, NOPE,
+     "Test future extension for exception handling"},
     {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
     {FLAG_RELOCATABLE, 'r', nullptr, nullptr, NOPE,
      "create a relocatable wasm binary (suitable for linking with wasm-link)"},
@@ -158,11 +158,11 @@ static void on_option(struct OptionParser* parser,
       break;
 
     case FLAG_EXCEPTIONS:
-      s_parse_flags.allow_exceptions = true;
+      s_parse_options.allow_exceptions = true;
       break;
 
     case FLAG_DEBUG_PARSER:
-      s_parse_flags.debug_parsing = true;
+      s_parse_options.debug_parsing = true;
       break;
   }
 }
@@ -220,7 +220,7 @@ int ProgramMain(int argc, char** argv) {
   SourceErrorHandlerFile error_handler;
   Script* script;
   Result result = parse_wast(lexer.get(), &script, &error_handler,
-                             &s_parse_flags);
+                             &s_parse_options);
 
   if (WABT_SUCCEEDED(result)) {
     result = resolve_names_script(lexer.get(), script, &error_handler);

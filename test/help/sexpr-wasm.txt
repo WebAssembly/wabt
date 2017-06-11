@@ -26,7 +26,7 @@ options:
   -h, --help                           print this help message
       --debug-parser                   Turn on debugging the parser of wast files
   -d, --dump-module                    print a hexdump of the module to stdout
-      --except                         Test extension for exception handling
+      --future-exceptions              Test future extension for exception handling
   -o, --output=FILE                    output wasm binary file
   -r,                                  create a relocatable wasm binary (suitable for linking with wasm-link)
       --spec                           parse a file with multiple modules and assertions, like the spec tests

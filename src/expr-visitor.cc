@@ -70,11 +70,6 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       WABT_FATAL("CatchAll: don't know how to visit\n");
       return Result::Error;
 
-    case ExprType::CatchBlock:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("CatchBlock: don't know how to visit\n");
-      return Result::Error;
-
     case ExprType::Compare:
       CHECK_RESULT(delegate_->OnCompareExpr(expr));
       break;

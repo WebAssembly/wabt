@@ -95,6 +95,14 @@
     }                                                                      \
   } while (0)
 
+#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                       \
+  do {                                                                 \
+    if (!parser->options->allow_exceptions) {                          \
+      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s",  \
+                        opcode_name);                                  \
+    }                                                                  \
+ } while (0)
+
 #define YYMALLOC(size) new char [size]
 #define YYFREE(p) delete [] (p)
 
@@ -104,6 +112,8 @@ namespace wabt {
 
 static ExprList join_exprs1(Location* loc, Expr* expr1);
 static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
+static ExprList join_expr_lists(Location* loc, ExprList* expr1,
+                                ExprList* expr2);
 
 static Result parse_const(Type type,
                           LiteralType literal_type,
@@ -181,9 +191,8 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<consts> const_list
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
-%type<expr> catch_instr
+%type<expr_list> catch_instr catch_list catch_instr_list
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
-%type<expr_list> catch_ catch_list catch_instr_list
 %type<func> func_fields_body func_fields_body1 func_body func_body1 func_fields_import func_fields_import1
 %type<func_sig> func_sig func_type
 %type<global> global_type
@@ -441,8 +450,9 @@ align_opt :
 instr :
     plain_instr { $$ = join_exprs1(&@1, $1); }
   | block_instr { $$ = join_exprs1(&@1, $1); }
-  | expr { $$ = $1; }
+  | expr
 ;
+
 plain_instr :
     UNREACHABLE {
       $$ = Expr::CreateUnreachable();
@@ -578,38 +588,21 @@ block :
     }
 ;
 
-
-catch_all_check : CATCH_ALL {
-      if (!parser->flags->allow_exceptions) {
-        wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
-      }
-      @$ = @1;
-    }
-  ;
-catch_check : CATCH {
-      if (!parser->flags->allow_exceptions) {
-        wast_parser_error(&@1, lexer, parser, "Catch blocks not allowed");
-      }
-      @$ = @1;
-    }
-  ;
 catch_instr :
-    catch_check var instr_list {
-      Expr* catch_ = Expr::CreateCatch($2);
-      $$ = Expr::CreateCatchBlock(catch_, $3.first);
-
+    CATCH var instr_list {
+      Expr* expr = Expr::CreateCatch($2, $3.first);
+      $$ = join_exprs1(&@1, expr);
     }
-  | catch_all_check instr_list {
-      Expr* catch_ = Expr::CreateCatchAll();
-      $$ = Expr::CreateCatchBlock(catch_, $2.first);
+  | CATCH_ALL var instr_list {
+      Expr* expr = Expr::CreateCatchAll($2, $3.first);
+      $$ = join_exprs1(&@1, expr);
     }
   ;
+
 catch_instr_list :
-    catch_instr {
-      $$ = join_exprs1(&@1, $1);
-    }
-  | catch_instr_list catch_instr {
-      $$ = join_exprs2(&@1, &$1, $2);
+    catch_instr
+  | catch_instr catch_instr_list {
+      $$ = join_expr_lists(&@1, &$1, &$2);
     }
   ;
 
@@ -637,39 +630,22 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-  | try_check labeling_opt block RPAR catch_list {
-      $3->label = $2;
-      Expr* try_ = Expr::CreateTry($3, $5.first);
+  | try_check LPAR BLOCK labeling_opt block RPAR catch_list {
+      $5->label = $4;
+      Expr* try_ = Expr::CreateTry($5, $7.first);
       $$ = join_exprs1(&@1, try_);
     }
   ;
 
 catch_list :
-    catch_ {
-      $$ = $1;
+    LPAR catch_instr RPAR {
+      $$ = $2;
     }
-  | catch_ catch_list {
-      $$.first = $1.first;
-      $1.last->next = $2.first;
-      $$.last = $2.last ? $2.last : $1.last;
-      $$.size = $1.size + $2.size;
+  | LPAR catch_instr RPAR catch_list {
+      $$ = join_expr_lists(&@2, &$2, &$4);
     }
   ;
-
-catch_ :
-    LPAR catch_check var instr_list RPAR {
-      Expr* catch_ = Expr::CreateCatch($3);
-      Expr* block = Expr::CreateCatchBlock(catch_, $4.first);
-      $$ = join_exprs1(&@1, block);
-    }
-    | LPAR catch_all_check instr_list RPAR {
-      Expr* catch_ = Expr::CreateCatchAll();
-      Expr* block = Expr::CreateCatchBlock(catch_, $3.first);
-      $$ = join_exprs1(&@1, block);
-    }
-  ;
-;
-
+    
 if_block :
     block_sig if_block {
       Expr* if_ = $2.last;
@@ -708,26 +684,20 @@ if_ :
     }
 ;
 
-rethrow_check : RETHROW {
-      if (!parser->flags->allow_exceptions) {
-        wast_parser_error(&@1, lexer, parser, "Rethrow instruction not allowed");
-      }
-      @$ = @1;
+rethrow_check :
+    RETHROW {
+     CHECK_ALLOW_EXCEPTIONS(&@1, "rethrow");
     }
   ;
-throw_check : THROW {
-      if (!parser->flags->allow_exceptions) {
-        wast_parser_error(&@1, lexer, parser, "Throw instruction not allowed");
-      }
-      @$ = @1;
+throw_check :
+    THROW {
+      CHECK_ALLOW_EXCEPTIONS(&@1, "throw");
     }
   ;
 
-try_check :  TRY {
-      if (!parser->flags->allow_exceptions) {
-        wast_parser_error(&@1, lexer, parser, "Try blocks not allowed");
-      }
-      @$ = @1;
+try_check :
+    TRY {
+      CHECK_ALLOW_EXCEPTIONS(&@1, "try");      
     }
   ;
 
@@ -1570,6 +1540,19 @@ ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2) {
   return result;
 }
 
+ExprList join_expr_lists(Location* loc, ExprList* expr1, ExprList* expr2) {
+  if (expr1->size == 0)
+    return *expr2;
+  if (expr2->size == 0)
+    return *expr1;
+  ExprList result;
+  result.first = expr1->first;
+  result.last = expr2->last;
+  result.size = expr1->size + expr2->size;
+  expr1->last->next = expr2->first;
+  return result;
+}
+
 Result parse_const(Type type,
                    LiteralType literal_type,
                    const char* s,
@@ -1846,15 +1829,15 @@ void append_module_fields(Module* module, ModuleField* first) {
 
 Result parse_wast(WastLexer* lexer, Script** out_script,
                   SourceErrorHandler* error_handler,
-                  WastParseFlags* flags) {
+                  WastParseOptions* options) {
   WastParser parser;
   WABT_ZERO_MEMORY(parser);
-  static WastParseFlags default_flags;
-  if (flags == nullptr)
-    flags = &default_flags;
-  parser.flags = flags;
+  static WastParseOptions default_options;
+  if (options == nullptr)
+    options = &default_options;
+  parser.options = options;
   parser.error_handler = error_handler;
-  wabt_wast_parser_debug = int(flags->debug_parsing);
+  wabt_wast_parser_debug = int(options->debug_parsing);
   int result = wabt_wast_parser_parse(lexer, &parser);
   delete [] parser.yyssa;
   delete [] parser.yyvsa;

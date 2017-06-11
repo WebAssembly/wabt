@@ -263,11 +263,9 @@ Expr::~Expr() {
       destroy_var(&call_indirect.var);
       break;
     case ExprType::Catch:
+    case ExprType::CatchAll:
       destroy_var(&catch_.var);
-      break;
-    case ExprType::CatchBlock:
-      delete catch_block.catch_;
-      destroy_expr_list(catch_block.first);
+      destroy_expr_list(catch_.first);
       break;
     case ExprType::GetGlobal:
       destroy_var(&get_global.var);
@@ -302,7 +300,6 @@ Expr::~Expr() {
       destroy_expr_list(try_block.first_catch);
       break;
     case ExprType::Binary:
-    case ExprType::CatchAll:
     case ExprType::Compare:
     case ExprType::Const:
     case ExprType::Convert:
@@ -371,22 +368,18 @@ Expr* Expr::CreateCallIndirect(Var var) {
 }
 
 // static
-Expr* Expr::CreateCatch(Var var) {
+Expr* Expr::CreateCatch(Var var, Expr* first) {
   Expr* expr = new Expr(ExprType::Catch);
   expr->catch_.var = var;
+  expr->catch_.first = first;
   return expr;
 }
 
 // static
-Expr* Expr::CreateCatchAll() {
-  return new Expr(ExprType::CatchAll);
-}
-
-// static
-Expr* Expr::CreateCatchBlock(Expr* catch_, Expr* first) {
-  Expr* expr = new Expr(ExprType::CatchBlock);
-  expr->catch_block.catch_ = catch_;
-  expr->catch_block.first = first;
+Expr* Expr::CreateCatchAll(Var var, Expr* first) {
+  Expr* expr = new Expr(ExprType::CatchAll);
+  expr->catch_.var = var;
+  expr->catch_.first = first;
   return expr;
 }
 

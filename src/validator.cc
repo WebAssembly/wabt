@@ -480,11 +480,6 @@ void Validator::CheckExpr(const Expr* expr) {
       PrintError(&expr->loc, "CatchAll: don't know how to validate");
       break;
 
-    case ExprType::CatchBlock:
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "CatchBlock: don't know how to validate");
-      break;
-
     case ExprType::Compare:
       typechecker_.OnCompare(expr->compare.opcode);
       break;

@@ -1,0 +1,22 @@
+;;; EXE: %(wast2wasm)s
+;;; FLAGS: --future-exceptions
+;;; ERROR: 1
+(module
+  (func (result i32)
+    (try
+      (block (result i32)
+        (nop)
+        (i32.const 7)
+      )
+      (catch 1
+        (i32.const 8)
+      )
+      (catch_all 0
+        (i32.const 9)
+      )
+    )
+  )
+) 
+(;; STDERR ;;;
+TryBlock: don't know how to visit
+;;; STDERR ;;)

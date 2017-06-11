@@ -87,7 +87,6 @@ enum class ExprType {
   CallIndirect,
   Catch,
   CatchAll,
-  CatchBlock,
   Compare,
   Const,
   Convert,
@@ -141,9 +140,8 @@ struct Expr {
   static Expr* CreateBrTable(VarVector* targets, Var default_target);
   static Expr* CreateCall(Var);
   static Expr* CreateCallIndirect(Var);
-  static Expr* CreateCatch(Var);
-  static Expr* CreateCatchAll();
-  static Expr* CreateCatchBlock(Expr* catch_, Expr* first);
+  static Expr* CreateCatch(Var v, Expr* first);
+  static Expr* CreateCatchAll(Var v, Expr* first);
   static Expr* CreateCompare(Opcode);
   static Expr* CreateConst(const Const&);
   static Expr* CreateConvert(Opcode);
@@ -175,8 +173,8 @@ struct Expr {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
     struct { Block* block; Expr* first_catch; } try_block;
-    struct { Expr* catch_; Expr* first; } catch_block;
-    struct { Var var; } throw_, rethrow_, catch_;
+    struct { Var var; Expr* first; } catch_;
+    struct { Var var; } throw_, rethrow_;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;
     struct { Var var; } call, call_indirect;
