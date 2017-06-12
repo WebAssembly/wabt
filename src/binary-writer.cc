@@ -208,6 +208,7 @@ class BinaryWriter {
   void BeginSubsection(const char* name, size_t leb_size_guess);
   void EndSubsection();
   Index GetLabelVarDepth(const Var* var);
+  Index GetLocalIndex(const Func* func, const Var& var);
   void AddReloc(RelocType reloc_type, Index index);
   void WriteU32Leb128WithReloc(Index index,
                                const char* desc,
@@ -396,6 +397,18 @@ void BinaryWriter::WriteU32Leb128WithReloc(Index index,
   }
 }
 
+Index BinaryWriter::GetLocalIndex(const Func* func, const Var& var) {
+  // func can be nullptr when using get_local/set_local/tee_local in an
+  // init_expr.
+  if (func) {
+    return func->GetLocalIndex(var);
+  } else if (var.type == VarType::Index) {
+    return var.index;
+  } else {
+    return kInvalidIndex;
+  }
+}
+
 void BinaryWriter::WriteExpr(const Module* module,
                              const Func* func,
                              const Expr* expr) {
@@ -495,7 +508,7 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     }
     case ExprType::GetLocal: {
-      Index index = func->GetLocalIndex(expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->get_local.var);
       write_opcode(&stream_, Opcode::GetLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;
@@ -547,7 +560,7 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     }
     case ExprType::SetLocal: {
-      Index index = func->GetLocalIndex(expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->get_local.var);
       write_opcode(&stream_, Opcode::SetLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;
@@ -561,7 +574,7 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     }
     case ExprType::TeeLocal: {
-      Index index = func->GetLocalIndex(expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->get_local.var);
       write_opcode(&stream_, Opcode::TeeLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;

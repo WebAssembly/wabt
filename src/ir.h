@@ -438,7 +438,12 @@ struct ScriptModule {
   ~ScriptModule();
 
   const Location& GetLocation() const {
-    return type == Type::Binary ? binary.loc : text->loc;
+    switch (type) {
+      case Type::Binary: return binary.loc;
+      case Type::Quoted: return quoted.loc;
+      default: assert(0); // Fallthrough.
+      case Type::Text: return text->loc;
+    }
   }
 
   Type type;
