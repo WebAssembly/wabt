@@ -231,7 +231,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %destructor { delete $$; } <consts>
 %destructor { delete $$; } <export_>
 %destructor { delete $$; } <expr>
-%destructor { destroy_expr_list($$.first); } <expr_list>
+%destructor { DestroyExprList($$.first); } <expr_list>
 %destructor { destroy_module_field_list(&$$); } <module_fields>
 %destructor { delete $$; } <func>
 %destructor { delete $$; } <func_sig>
@@ -243,7 +243,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %destructor { delete $$; } <script>
 %destructor { destroy_text_list(&$$); } <text_list>
 %destructor { delete $$; } <types>
-%destructor { destroy_var(&$$); } <var>
+%destructor { delete $$; } <var>
 %destructor { delete $$; } <vars>
 
 
@@ -404,21 +404,22 @@ literal :
 
 var :
     nat {
-      $$.loc = @1;
-      $$.type = VarType::Index;
-      $$.index = $1;
+      $$ = new Var($1);
+      $$->loc = @1;
     }
   | VAR {
-      $$.loc = @1;
-      $$.type = VarType::Name;
-      DUPTEXT($$.name, $1);
+      StringSlice name;
+      DUPTEXT(name, $1);
+      $$ = new Var(name);
+      $$->loc = @1;
     }
 ;
 var_list :
     /* empty */ { $$ = new VarVector(); }
   | var_list var {
       $$ = $1;
-      $$->push_back($2);
+      $$->emplace_back(std::move(*$2));
+      delete $2;
     }
 ;
 bind_var_opt :
@@ -487,37 +488,47 @@ plain_instr :
       $$ = Expr::CreateSelect();
     }
   | BR var {
-      $$ = Expr::CreateBr($2);
+      $$ = Expr::CreateBr(std::move(*$2));
+      delete $2;
     }
   | BR_IF var {
-      $$ = Expr::CreateBrIf($2);
+      $$ = Expr::CreateBrIf(std::move(*$2));
+      delete $2;
     }
   | BR_TABLE var_list var {
-      $$ = Expr::CreateBrTable($2, $3);
+      $$ = Expr::CreateBrTable($2, std::move(*$3));
+      delete $3;
     }
   | RETURN {
       $$ = Expr::CreateReturn();
     }
   | CALL var {
-      $$ = Expr::CreateCall($2);
+      $$ = Expr::CreateCall(std::move(*$2));
+      delete $2;
     }
   | CALL_INDIRECT var {
-      $$ = Expr::CreateCallIndirect($2);
+      $$ = Expr::CreateCallIndirect(std::move(*$2));
+      delete $2;
     }
   | GET_LOCAL var {
-      $$ = Expr::CreateGetLocal($2);
+      $$ = Expr::CreateGetLocal(std::move(*$2));
+      delete $2;
     }
   | SET_LOCAL var {
-      $$ = Expr::CreateSetLocal($2);
+      $$ = Expr::CreateSetLocal(std::move(*$2));
+      delete $2;
     }
   | TEE_LOCAL var {
-      $$ = Expr::CreateTeeLocal($2);
+      $$ = Expr::CreateTeeLocal(std::move(*$2));
+      delete $2;
     }
   | GET_GLOBAL var {
-      $$ = Expr::CreateGetGlobal($2);
+      $$ = Expr::CreateGetGlobal(std::move(*$2));
+      delete $2;
     }
   | SET_GLOBAL var {
-      $$ = Expr::CreateSetGlobal($2);
+      $$ = Expr::CreateSetGlobal(std::move(*$2));
+      delete $2;
     }
   | LOAD offset_opt align_opt {
       $$ = Expr::CreateLoad($1, $3, $2);
@@ -557,10 +568,12 @@ plain_instr :
       $$ = Expr::CreateGrowMemory();
     }
   | throw_check var {
-      $$ = Expr::CreateThrow($2);
+      $$ = Expr::CreateThrow(std::move(*$2));
+      delete $2;
     }
   | rethrow_check var {
-      $$ = Expr::CreateRethrow($2);
+      $$ = Expr::CreateRethrow(std::move(*$2));
+      delete $2;
     }
 ;
 
@@ -610,11 +623,13 @@ block :
 
 catch_instr :
     CATCH var instr_list {
-      Expr* expr = Expr::CreateCatch($2, $3.first);
+      Expr* expr = Expr::CreateCatch(std::move(*$2), $3.first);
+      delete $2;
       $$ = join_exprs1(&@1, expr);
     }
   | CATCH_ALL var instr_list {
-      Expr* expr = Expr::CreateCatchAll($2, $3.first);
+      Expr* expr = Expr::CreateCatchAll(std::move(*$2), $3.first);
+      delete $2;
       $$ = join_exprs1(&@1, expr);
     }
   ;
@@ -763,7 +778,8 @@ func_fields :
       ModuleField* field = new ModuleField(ModuleFieldType::Func);
       field->func = $2;
       field->func->decl.has_func_type = true;
-      field->func->decl.type_var = $1;
+      field->func->decl.type_var = std::move(*$1);
+      delete $1;
       $$.first = $$.last = field;
     }
   | func_fields_body {
@@ -778,7 +794,8 @@ func_fields :
       field->import->kind = ExternalKind::Func;
       field->import->func = $3;
       field->import->func->decl.has_func_type = true;
-      field->import->func->decl.type_var = $2;
+      field->import->func->decl.type_var = std::move(*$2);
+      delete $2;
       $$.first = $$.last = field;
     }
   | inline_import func_fields_import {
@@ -907,7 +924,8 @@ elem :
       $$ = new ModuleField(ModuleFieldType::ElemSegment);
       $$->loc = @2;
       $$->elem_segment = new ElemSegment();
-      $$->elem_segment->table_var = $3;
+      $$->elem_segment->table_var = std::move(*$3);
+      delete $3;
       $$->elem_segment->offset = $4.first;
       $$->elem_segment->vars = std::move(*$5);
       delete $5;
@@ -971,6 +989,7 @@ table_fields :
       ModuleField* elem_field = new ModuleField(ModuleFieldType::ElemSegment);
       elem_field->loc = @3;
       ElemSegment* elem_segment = elem_field->elem_segment = new ElemSegment();
+      elem_segment->table_var = Var(kInvalidIndex);
       elem_segment->offset = Expr::CreateConst(Const(Const::I32(), 0));
       elem_segment->offset->loc = @3;
       elem_segment->vars = std::move(*$4);
@@ -985,7 +1004,8 @@ data :
       $$ = new ModuleField(ModuleFieldType::DataSegment);
       $$->loc = @2;
       $$->data_segment = new DataSegment();
-      $$->data_segment->memory_var = $3;
+      $$->data_segment->memory_var = std::move(*$3);
+      delete $3;
       $$->data_segment->offset = $4.first;
       dup_text_list(&$5, &$$->data_segment->data, &$$->data_segment->size);
       destroy_text_list(&$5);
@@ -1043,6 +1063,7 @@ memory_fields :
       ModuleField* data_field = new ModuleField(ModuleFieldType::DataSegment);
       data_field->loc = @2;
       DataSegment* data_segment = data_field->data_segment = new DataSegment();
+      data_segment->memory_var = Var(kInvalidIndex);
       data_segment->offset = Expr::CreateConst(Const(Const::I32(), 0));
       data_segment->offset->loc = @2;
       dup_text_list(&$3, &data_segment->data, &data_segment->size);
@@ -1109,7 +1130,8 @@ import_desc :
       $$->func = new Func();
       $$->func->name = $3;
       $$->func->decl.has_func_type = true;
-      $$->func->decl.type_var = $4;
+      $$->func->decl.type_var = std::move(*$4);
+      delete $4;
     }
   | LPAR FUNC bind_var_opt func_sig RPAR {
       $$ = new Import();
@@ -1161,22 +1183,26 @@ export_desc :
     LPAR FUNC var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Func;
-      $$->var = $3;
+      $$->var = std::move(*$3);
+      delete $3;
     }
   | LPAR TABLE var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Table;
-      $$->var = $3;
+      $$->var = std::move(*$3);
+      delete $3;
     }
   | LPAR MEMORY var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Memory;
-      $$->var = $3;
+      $$->var = std::move(*$3);
+      delete $3;
     }
   | LPAR GLOBAL var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Global;
-      $$->var = $3;
+      $$->var = std::move(*$3);
+      delete $3;
     }
 ;
 export :
@@ -1220,7 +1246,8 @@ start :
     LPAR START var RPAR {
       $$ = new ModuleField(ModuleFieldType::Start);
       $$->loc = @2;
-      $$->start = $3;
+      $$->start = std::move(*$3);
+      delete $3;
     }
 ;
 
@@ -1284,14 +1311,12 @@ inline_module :
 
 script_var_opt :
     /* empty */ {
-      WABT_ZERO_MEMORY($$);
-      $$.type = VarType::Index;
-      $$.index = kInvalidIndex;
+      $$ = new Var(kInvalidIndex);
     }
   | VAR {
-      WABT_ZERO_MEMORY($$);
-      $$.type = VarType::Name;
-      DUPTEXT($$.name, $1);
+      StringSlice name;
+      DUPTEXT(name, $1);
+      $$ = new Var(name);
     }
 ;
 
@@ -1306,10 +1331,8 @@ script_module :
       // Resolve func type variables where the signature was not specified
       // explicitly.
       for (Func* func: $4->funcs) {
-        if (decl_has_func_type(&func->decl) &&
-            is_empty_signature(&func->decl.sig)) {
-          FuncType* func_type =
-              get_func_type_by_var($4, &func->decl.type_var);
+        if (func->decl.has_func_type && is_empty_signature(&func->decl.sig)) {
+          FuncType* func_type = $4->GetFuncType(func->decl.type_var);
           if (func_type) {
             func->decl.sig = func_type->sig;
           }
@@ -1338,7 +1361,8 @@ action :
     LPAR INVOKE script_var_opt quoted_text const_list RPAR {
       $$ = new Action();
       $$->loc = @2;
-      $$->module_var = $3;
+      $$->module_var = std::move(*$3);
+      delete $3;
       $$->type = ActionType::Invoke;
       $$->name = $4;
       $$->invoke = new ActionInvoke();
@@ -1348,7 +1372,8 @@ action :
   | LPAR GET script_var_opt quoted_text RPAR {
       $$ = new Action();
       $$->loc = @2;
-      $$->module_var = $3;
+      $$->module_var = std::move(*$3);
+      delete $3;
       $$->type = ActionType::Get;
       $$->name = $4;
     }
@@ -1425,7 +1450,8 @@ cmd :
       $$ = new Command();
       $$->type = CommandType::Register;
       $$->register_.module_name = $3;
-      $$->register_.var = $4;
+      $$->register_.var = std::move(*$4);
+      delete $4;
       $$->register_.var.loc = @4;
     }
 ;
@@ -1695,12 +1721,12 @@ bool is_empty_signature(const FuncSignature* sig) {
 void append_implicit_func_declaration(Location* loc,
                                       Module* module,
                                       FuncDeclaration* decl) {
-  if (decl_has_func_type(decl))
+  if (decl->has_func_type)
     return;
 
-  int sig_index = get_func_type_index_by_decl(module, decl);
+  int sig_index = module->GetFuncTypeIndex(*decl);
   if (sig_index == -1) {
-    append_implicit_func_type(loc, module, &decl->sig);
+    module->AppendImplicitFuncType(*loc, decl->sig);
   } else {
     decl->sig = module->func_types[sig_index]->sig;
   }

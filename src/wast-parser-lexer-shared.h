@@ -91,7 +91,7 @@ union Token {
   TypeVector* types;
   uint32_t u32;
   uint64_t u64;
-  Var var;
+  Var* var;
   VarVector* vars;
 };
 

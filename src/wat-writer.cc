@@ -637,23 +637,23 @@ Index WatWriter::GetLabelArity(const Var* var) {
 }
 
 Index WatWriter::GetFuncParamCount(const Var* var) {
-  Func* func = get_func_by_var(module_, var);
-  return func ? get_num_params(func) : 0;
+  const Func* func = module_->GetFunc(*var);
+  return func ? func->GetNumParams() : 0;
 }
 
 Index WatWriter::GetFuncResultCount(const Var* var) {
-  Func* func = get_func_by_var(module_, var);
-  return func ? get_num_results(func) : 0;
+  const Func* func = module_->GetFunc(*var);
+  return func ? func->GetNumResults() : 0;
 }
 
 Index WatWriter::GetFuncSigParamCount(const Var* var) {
-  FuncType* func_type = get_func_type_by_var(module_, var);
-  return func_type ? get_func_type_num_params(func_type) : 0;
+  const FuncType* func_type = module_->GetFuncType(*var);
+  return func_type ? func_type->GetNumParams() : 0;
 }
 
 Index WatWriter::GetFuncSigResultCount(const Var* var) {
-  FuncType* func_type = get_func_type_by_var(module_, var);
-  return func_type ? get_func_type_num_results(func_type) : 0;
+  const FuncType* func_type = module_->GetFuncType(*var);
+  return func_type ? func_type->GetNumResults() : 0;
 }
 
 void WatWriter::WriteFoldedExpr(const Expr* expr) {
@@ -838,7 +838,7 @@ void WatWriter::WriteTypeBindings(const char* prefix,
                                   const Func* func,
                                   const TypeVector& types,
                                   const BindingHash& bindings) {
-  make_type_binding_reverse_mapping(types, bindings, &index_to_name_);
+  MakeTypeBindingReverseMapping(types, bindings, &index_to_name_);
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
@@ -869,7 +869,7 @@ void WatWriter::WriteFunc(const Module* module, const Func* func) {
   WriteOpenSpace("func");
   WriteNameOrIndex(&func->name, func_index_, NextChar::Space);
   WriteInlineExport(func_to_export_map_[func_index_]);
-  if (decl_has_func_type(&func->decl)) {
+  if (func->decl.has_func_type) {
     WriteOpenSpace("type");
     WriteVar(&func->decl.type_var, NextChar::None);
     WriteCloseSpace();
@@ -965,7 +965,7 @@ void WatWriter::WriteImport(const Import* import) {
     case ExternalKind::Func:
       WriteOpenSpace("func");
       WriteNameOrIndex(&import->func->name, func_index_++, NextChar::Space);
-      if (decl_has_func_type(&import->func->decl)) {
+      if (import->func->decl.has_func_type) {
         WriteOpenSpace("type");
         WriteVar(&import->func->decl.type_var, NextChar::None);
         WriteCloseSpace();
@@ -1074,28 +1074,28 @@ void WatWriter::BuildExportMaps() {
   for (Export* export_ : module_->exports) {
     switch (export_->kind) {
       case ExternalKind::Func: {
-        Index func_index = get_func_index_by_var(module_, &export_->var);
+        Index func_index = module_->GetFuncIndex(export_->var);
         if (func_index != kInvalidIndex)
           func_to_export_map_[func_index] = export_;
         break;
       }
 
       case ExternalKind::Table: {
-        Index table_index = get_table_index_by_var(module_, &export_->var);
+        Index table_index = module_->GetTableIndex(export_->var);
         if (table_index != kInvalidIndex)
           table_to_export_map_[table_index] = export_;
         break;
       }
 
       case ExternalKind::Memory: {
-        Index memory_index = get_memory_index_by_var(module_, &export_->var);
+        Index memory_index = module_->GetMemoryIndex(export_->var);
         if (memory_index != kInvalidIndex)
           memory_to_export_map_[memory_index] = export_;
         break;
       }
 
       case ExternalKind::Global: {
-        Index global_index = get_global_index_by_var(module_, &export_->var);
+        Index global_index = module_->GetGlobalIndex(export_->var);
         if (global_index != kInvalidIndex)
           global_to_export_map_[global_index] = export_;
         break;

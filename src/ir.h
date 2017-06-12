@@ -36,10 +36,13 @@ enum class VarType {
 };
 
 struct Var {
-  // Keep the default constructor trivial so it can be used as a union member.
-  Var() = default;
-  explicit Var(int64_t index);
+  explicit Var(Index index = kInvalidIndex);
   explicit Var(const StringSlice& name);
+  Var(Var&&);
+  Var(const Var&);
+  Var& operator =(const Var&);
+  Var& operator =(Var&&);
+  ~Var();
 
   Location loc;
   VarType type;
@@ -189,12 +192,24 @@ struct Expr {
 struct FuncSignature {
   TypeVector param_types;
   TypeVector result_types;
+
+  Index GetNumParams() const { return param_types.size(); }
+  Index GetNumResults() const { return result_types.size(); }
+  Type GetParamType(Index index) const { return param_types[index]; }
+  Type GetResultType(Index index) const { return result_types[index]; }
+
+  bool operator==(const FuncSignature&) const;
 };
 
 struct FuncType {
   WABT_DISALLOW_COPY_AND_ASSIGN(FuncType);
   FuncType();
   ~FuncType();
+
+  Index GetNumParams() const { return sig.GetNumParams(); }
+  Index GetNumResults() const { return sig.GetNumResults(); }
+  Type GetParamType(Index index) const { return sig.GetParamType(index); }
+  Type GetResultType(Index index) const { return sig.GetResultType(index); }
 
   StringSlice name;
   FuncSignature sig;
@@ -205,6 +220,11 @@ struct FuncDeclaration {
   FuncDeclaration();
   ~FuncDeclaration();
 
+  Index GetNumParams() const { return sig.GetNumParams(); }
+  Index GetNumResults() const { return sig.GetNumResults(); }
+  Type GetParamType(Index index) const { return sig.GetParamType(index); }
+  Type GetResultType(Index index) const { return sig.GetResultType(index); }
+
   bool has_func_type;
   Var type_var;
   FuncSignature sig;
@@ -214,6 +234,16 @@ struct Func {
   WABT_DISALLOW_COPY_AND_ASSIGN(Func);
   Func();
   ~Func();
+
+  Type GetParamType(Index index) const { return decl.GetParamType(index); }
+  Type GetResultType(Index index) const { return decl.GetResultType(index); }
+  Index GetNumParams() const { return decl.GetNumParams(); }
+  Index GetNumLocals() const { return local_types.size(); }
+  Index GetNumParamsAndLocals() const {
+    return GetNumParams() + GetNumLocals();
+  }
+  Index GetNumResults() const { return decl.GetNumResults(); }
+  Index GetLocalIndex(const Var&) const;
 
   StringSlice name;
   FuncDeclaration decl;
@@ -343,6 +373,26 @@ struct Module {
   Module();
   ~Module();
 
+  ModuleField* AppendField();
+  FuncType* AppendImplicitFuncType(const Location&, const FuncSignature&);
+
+  Index GetFuncTypeIndex(const Var&) const;
+  Index GetFuncTypeIndex(const FuncDeclaration&) const;
+  Index GetFuncTypeIndex(const FuncSignature&) const;
+  const FuncType* GetFuncType(const Var&) const;
+  FuncType* GetFuncType(const Var&);
+  Index GetFuncIndex(const Var&) const;
+  const Func* GetFunc(const Var&) const;
+  Func* GetFunc(const Var&);
+  Index GetTableIndex(const Var&) const;
+  Table* GetTable(const Var&);
+  Index GetMemoryIndex(const Var&) const;
+  Memory* GetMemory(const Var&);
+  Index GetGlobalIndex(const Var&) const;
+  const Global* GetGlobal(const Var&) const;
+  Global* GetGlobal(const Var&);
+  const Export* GetExport(const StringSlice&) const;
+
   Location loc;
   StringSlice name;
   ModuleField* first_field;
@@ -353,8 +403,8 @@ struct Module {
   Index num_memory_imports;
   Index num_global_imports;
 
-  /* cached for convenience; the pointers are shared with values that are
-   * stored in either ModuleField or Import. */
+  // Cached for convenience; the pointers are shared with values that are
+  // stored in either ModuleField or Import.
   std::vector<Func*> funcs;
   std::vector<Global*> globals;
   std::vector<Import*> imports;
@@ -387,7 +437,17 @@ struct ScriptModule {
   ScriptModule();
   ~ScriptModule();
 
+  const Location& GetLocation() const {
+    switch (type) {
+      case Type::Binary: return binary.loc;
+      case Type::Quoted: return quoted.loc;
+      default: assert(0); // Fallthrough.
+      case Type::Text: return text->loc;
+    }
+  }
+
   Type type;
+
   union {
     Module* text;
     struct {
@@ -476,122 +536,20 @@ struct Script {
   WABT_DISALLOW_COPY_AND_ASSIGN(Script);
   Script();
 
+  const Module* GetFirstModule() const;
+  Module* GetFirstModule();
+  const Module* GetModule(const Var&) const;
+
   CommandPtrVector commands;
   BindingHash module_bindings;
 };
 
-ModuleField* append_module_field(Module*);
-/* ownership of the function signature is passed to the module */
-FuncType* append_implicit_func_type(Location*, Module*, FuncSignature*);
+void DestroyExprList(Expr*);
 
-/* destruction functions. not needed unless you're creating your own IR
- elements */
-void destroy_expr_list(Expr*);
-void destroy_var(Var*);
-
-/* convenience functions for looking through the IR */
-Index get_index_from_var(const BindingHash* bindings, const Var* var);
-Index get_func_index_by_var(const Module* module, const Var* var);
-Index get_global_index_by_var(const Module* func, const Var* var);
-Index get_func_type_index_by_var(const Module* module, const Var* var);
-Index get_func_type_index_by_sig(const Module* module,
-                                 const FuncSignature* sig);
-Index get_func_type_index_by_decl(const Module* module,
-                                  const FuncDeclaration* decl);
-Index get_table_index_by_var(const Module* module, const Var* var);
-Index get_memory_index_by_var(const Module* module, const Var* var);
-Index get_import_index_by_var(const Module* module, const Var* var);
-Index get_local_index_by_var(const Func* func, const Var* var);
-Index get_module_index_by_var(const Script* script, const Var* var);
-
-Func* get_func_by_var(const Module* module, const Var* var);
-Global* get_global_by_var(const Module* func, const Var* var);
-FuncType* get_func_type_by_var(const Module* module, const Var* var);
-Table* get_table_by_var(const Module* module, const Var* var);
-Memory* get_memory_by_var(const Module* module, const Var* var);
-Import* get_import_by_var(const Module* module, const Var* var);
-Export* get_export_by_name(const Module* module, const StringSlice* name);
-Module* get_first_module(const Script* script);
-Module* get_module_by_var(const Script* script, const Var* var);
-
-void make_type_binding_reverse_mapping(
+void MakeTypeBindingReverseMapping(
     const TypeVector&,
     const BindingHash&,
     std::vector<std::string>* out_reverse_mapping);
-
-static WABT_INLINE bool decl_has_func_type(const FuncDeclaration* decl) {
-  return decl->has_func_type;
-}
-
-static WABT_INLINE bool signatures_are_equal(const FuncSignature* sig1,
-                                             const FuncSignature* sig2) {
-  return sig1->param_types == sig2->param_types &&
-         sig1->result_types == sig2->result_types;
-}
-
-static WABT_INLINE size_t get_num_params(const Func* func) {
-  return func->decl.sig.param_types.size();
-}
-
-static WABT_INLINE size_t get_num_results(const Func* func) {
-  return func->decl.sig.result_types.size();
-}
-
-static WABT_INLINE size_t get_num_locals(const Func* func) {
-  return func->local_types.size();
-}
-
-static WABT_INLINE size_t get_num_params_and_locals(const Func* func) {
-  return get_num_params(func) + get_num_locals(func);
-}
-
-static WABT_INLINE Type get_param_type(const Func* func, Index index) {
-  assert(static_cast<size_t>(index) < func->decl.sig.param_types.size());
-  return func->decl.sig.param_types[index];
-}
-
-static WABT_INLINE Type get_local_type(const Func* func, Index index) {
-  assert(static_cast<size_t>(index) < get_num_locals(func));
-  return func->local_types[index];
-}
-
-static WABT_INLINE Type get_result_type(const Func* func, Index index) {
-  assert(static_cast<size_t>(index) < func->decl.sig.result_types.size());
-  return func->decl.sig.result_types[index];
-}
-
-static WABT_INLINE Type get_func_type_param_type(const FuncType* func_type,
-                                                 Index index) {
-  return func_type->sig.param_types[index];
-}
-
-static WABT_INLINE size_t get_func_type_num_params(const FuncType* func_type) {
-  return func_type->sig.param_types.size();
-}
-
-static WABT_INLINE Type get_func_type_result_type(const FuncType* func_type,
-                                                  Index index) {
-  return func_type->sig.result_types[index];
-}
-
-static WABT_INLINE size_t get_func_type_num_results(const FuncType* func_type) {
-  return func_type->sig.result_types.size();
-}
-
-static WABT_INLINE const Location* get_script_module_location(
-    const ScriptModule* script) {
-  switch (script->type) {
-    case ScriptModule::Type::Text:
-      return &script->text->loc;
-    case ScriptModule::Type::Binary:
-      return &script->binary.loc;
-    case ScriptModule::Type::Quoted:
-      return &script->quoted.loc;
-    default:
-      assert(0);
-      return nullptr;
-  }
-}
 
 }  // namespace wabt
 

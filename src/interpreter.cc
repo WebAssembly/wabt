@@ -202,7 +202,7 @@ void Environment::ResetToMarkPoint(const MarkPoint& mark) {
   // so we have to iterate through the entire table to find entries to remove.
   auto iter = registered_module_bindings_.begin();
   while (iter != registered_module_bindings_.end()) {
-    if (iter->second.index >= static_cast<int>(mark.modules_size))
+    if (iter->second.index >= mark.modules_size)
       iter = registered_module_bindings_.erase(iter);
     else
       ++iter;

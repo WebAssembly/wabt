@@ -649,7 +649,7 @@ wabt::Result BinaryReaderInterpreter::AppendExport(Module* module,
                                                    ExternalKind kind,
                                                    Index item_index,
                                                    StringSlice name) {
-  if (module->export_bindings.FindIndex(name) != -1) {
+  if (module->export_bindings.FindIndex(name) != kInvalidIndex) {
     PrintError("duplicate export \"" PRIstringslice "\"",
                WABT_PRINTF_STRING_SLICE_ARG(name));
     return wabt::Result::Error;
