@@ -186,6 +186,11 @@ struct Expr {
   };
 };
 
+struct Exception {
+  StringSlice name;
+  TypeVector sig;
+};
+
 struct FuncSignature {
   TypeVector param_types;
   TypeVector result_types;
@@ -289,6 +294,7 @@ struct Import {
     Table* table;
     Memory* memory;
     Global* global;
+    Exception* except;
   };
 };
 
@@ -313,6 +319,7 @@ enum class ModuleFieldType {
   Memory,
   DataSegment,
   Start,
+  Except
 };
 
 struct ModuleField {
@@ -334,6 +341,7 @@ struct ModuleField {
     ElemSegment* elem_segment;
     Memory* memory;
     DataSegment* data_segment;
+    Exception* except;
     Var start;
   };
 };
@@ -348,6 +356,7 @@ struct Module {
   ModuleField* first_field;
   ModuleField* last_field;
 
+  Index num_except_imports;
   Index num_func_imports;
   Index num_table_imports;
   Index num_memory_imports;
@@ -355,6 +364,7 @@ struct Module {
 
   /* cached for convenience; the pointers are shared with values that are
    * stored in either ModuleField or Import. */
+  std::vector<Exception*> excepts;
   std::vector<Func*> funcs;
   std::vector<Global*> globals;
   std::vector<Import*> imports;
@@ -366,6 +376,7 @@ struct Module {
   std::vector<DataSegment*> data_segments;
   Var* start;
 
+  BindingHash except_bindings;
   BindingHash func_bindings;
   BindingHash global_bindings;
   BindingHash export_bindings;

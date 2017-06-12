@@ -71,6 +71,7 @@ union Token {
   ConstVector* consts;
   DataSegment* data_segment;
   ElemSegment* elem_segment;
+  Exception* exception;
   Export* export_;
   Expr* expr;
   ExprList expr_list;

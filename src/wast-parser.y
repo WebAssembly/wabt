@@ -173,7 +173,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token UNREACHABLE CURRENT_MEMORY GROW_MEMORY
 %token FUNC START TYPE PARAM RESULT LOCAL GLOBAL
-%token TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT
+%token TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT EXPORT EXCEPT
 %token MODULE BIN QUOTE
 %token REGISTER INVOKE GET
 %token ASSERT_MALFORMED ASSERT_INVALID ASSERT_UNLINKABLE
@@ -193,6 +193,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<commands> cmd_list
 %type<const_> const
 %type<consts> const_list
+%type<exception> exception
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
 %type<expr_list> catch_instr catch_list catch_instr_list
@@ -205,7 +206,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<limits> limits
 %type<memory> memory_sig
 %type<module> module module_fields_opt module_fields inline_module
-%type<module_field> type_def start data elem import export
+%type<module_field> type_def start data elem import export except
 %type<module_fields> func func_fields table table_fields memory memory_fields global global_fields module_field
 %type<script_module> script_module
 %type<literal> literal
@@ -743,6 +744,23 @@ const_expr :
     instr_list
 ;
 
+/* Exceptions */
+except :
+    exception {
+      $$ = new ModuleField(ModuleFieldType::Except);
+      $$->loc = @1;
+      $$->except = $1;
+    }
+  ;
+exception :
+    LPAR EXCEPT bind_var_opt value_type_list RPAR {
+      $$ = new Exception();
+      $$->name = $3;
+      $$->sig = std::move(*$4);
+      delete $4;
+    }
+  ;
+    
 /* Functions */
 func :
     LPAR FUNC bind_var_opt func_fields RPAR {
@@ -1235,6 +1253,7 @@ module_field :
   | start { $$.first = $$.last = $1; }
   | import { $$.first = $$.last = $1; }
   | export { $$.first = $$.last = $1; }
+  | except { $$.first = $$.last = $1; }
 ;
 
 module_fields_opt :
@@ -1732,6 +1751,12 @@ void append_module_fields(Module* module, ModuleField* first) {
     Index index = kInvalidIndex;
 
     switch (field->type) {
+      case ModuleFieldType::Except:
+        name = &field->import->except->name;        
+        bindings = &module->except_bindings;
+        index = module->excepts.size();
+        module->excepts.push_back(field->except);
+        break;
       case ModuleFieldType::Func:
         append_implicit_func_declaration(&field->loc, module,
                                          &field->func->decl);
@@ -1750,6 +1775,12 @@ void append_module_fields(Module* module, ModuleField* first) {
 
       case ModuleFieldType::Import:
         switch (field->import->kind) {
+          case ExternalKind::Except:
+            name = &field->import->except->name;
+            bindings = &module->except_bindings;
+            index = module->excepts.size();
+            module->excepts.push_back(field->except);
+            break;
           case ExternalKind::Func:
             append_implicit_func_declaration(&field->loc, module,
                                              &field->import->func->decl);

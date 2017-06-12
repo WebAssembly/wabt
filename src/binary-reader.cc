@@ -48,6 +48,8 @@
     }                           \
   } while (0)
 
+#define ERROR(...) ERROR_UNLESS(false, __VA_ARGS__)
+
 #define CALLBACK0(member)                                   \
   ERROR_UNLESS(WABT_SUCCEEDED(delegate_->member()), #member \
                " callback "                                 \
@@ -1360,6 +1362,10 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
       case ExternalKind::Global:
         ERROR_UNLESS(item_index < NumTotalGlobals(),
                      "invalid export global index: %" PRIindex, item_index);
+        break;
+      case ExternalKind::Except:
+        // TODO(karlschimpf) Define.
+        ERROR("read export except not implemented");
         break;
     }
 
