@@ -935,6 +935,12 @@ static wabt::Result parse_module_type(Context* ctx, ModuleType* out_type) {
   }
 }
 
+static void convert_backslash_to_slash(char* s, size_t length) {
+  for (size_t i = 0; i < length; ++i)
+    if (s[i] == '\\')
+      s[i] = '/';
+}
+
 static char* create_module_path(Context* ctx, StringSlice filename) {
   const char* spec_json_filename = ctx->loc.filename;
   StringSlice dirname = get_dirname(spec_json_filename);
@@ -950,6 +956,7 @@ static char* create_module_path(Context* ctx, StringSlice filename) {
              WABT_PRINTF_STRING_SLICE_ARG(filename));
   }
 
+  convert_backslash_to_slash(path, path_len);
   return path;
 }
 
