@@ -35,7 +35,7 @@ using namespace wabt;
 static int s_verbose;
 static const char* s_infile;
 static const char* s_outfile;
-static ReadBinaryOptions s_read_binary_options = {nullptr, true};
+static ReadBinaryOptions s_read_binary_options(nullptr, true);
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
 static std::unique_ptr<FileStream> s_log_stream;
