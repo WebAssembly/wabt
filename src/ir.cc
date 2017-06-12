@@ -275,7 +275,7 @@ Block::Block(Expr* first) : first(first) {
 
 Block::~Block() {
   destroy_string_slice(&label);
-  delete first;
+  DestroyExprList(first);
 }
 
 Expr::Expr() : type(ExprType::Binary), next(nullptr) {
@@ -321,7 +321,7 @@ Expr::~Expr() {
       break;
     case ExprType::If:
       delete if_.true_;
-      delete if_.false_;
+      DestroyExprList(if_.false_);
       break;
     case ExprType::Loop:
       delete loop;
@@ -601,7 +601,7 @@ Func::Func() : first_expr(nullptr) {
 
 Func::~Func() {
   destroy_string_slice(&name);
-  delete first_expr;
+  DestroyExprList(first_expr);
 }
 
 Global::Global() : type(Type::Void), mutable_(false), init_expr(nullptr) {
@@ -610,7 +610,7 @@ Global::Global() : type(Type::Void), mutable_(false), init_expr(nullptr) {
 
 Global::~Global() {
   destroy_string_slice(&name);
-  delete init_expr;
+  DestroyExprList(init_expr);
 }
 
 Table::Table() {
@@ -625,13 +625,13 @@ Table::~Table() {
 ElemSegment::ElemSegment() : table_var(kInvalidIndex), offset(nullptr) {}
 
 ElemSegment::~ElemSegment() {
-  delete offset;
+  DestroyExprList(offset);
 }
 
 DataSegment::DataSegment() : offset(nullptr), data(nullptr), size(0) {}
 
 DataSegment::~DataSegment() {
-  delete offset;
+  DestroyExprList(offset);
   delete[] data;
 }
 
