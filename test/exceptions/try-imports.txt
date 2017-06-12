@@ -1,26 +1,23 @@
 ;;; TOOL: wast2wasm
+;;; FLAGS: --future-exceptions
 ;;; ERROR: 1
 (module
+  (import "c++" "except" (except $ex i32))
   (func (result i32)
     (try $try1
       (block (result i32)
         (nop)
         (i32.const 7)
       )
-      (catch 1
-        (i32.const 8)
+      (catch $ex
+        (nop)
       )
       (catch_all
         (rethrow $try1)
       )
     )
   )
-) 
+)
 (;; STDERR ;;;
-out/test/exceptions/bad-try.txt:5:6: opcode not allowed: try
-    (try $try1
-     ^^^
-out/test/exceptions/bad-try.txt:14:10: opcode not allowed: rethrow
-        (rethrow $try1)
-         ^^^^^^^
+TryBlock: don't know how to visit
 ;;; STDERR ;;)

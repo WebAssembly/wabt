@@ -590,6 +590,7 @@ block_instr :
   | try_check labeling_opt block catch_instr_list END labeling_opt {
       $3->label = $2;
       $$ = Expr::CreateTry($3, $4.first);
+      $$->try_block.label = $2;
       CHECK_END_LABEL(@6, $3->label, $6);
     }
 ;
@@ -614,8 +615,8 @@ catch_instr :
       Expr* expr = Expr::CreateCatch($2, $3.first);
       $$ = join_exprs1(&@1, expr);
     }
-  | CATCH_ALL var instr_list {
-      Expr* expr = Expr::CreateCatchAll($2, $3.first);
+  | CATCH_ALL instr_list {
+      Expr* expr = Expr::CreateCatchAll($2.first);
       $$ = join_exprs1(&@1, expr);
     }
   ;
@@ -651,9 +652,10 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-  | try_check LPAR BLOCK labeling_opt block RPAR catch_list {
-      $5->label = $4;
-      Expr* try_ = Expr::CreateTry($5, $7.first);
+  | try_check labeling_opt LPAR BLOCK labeling_opt block RPAR catch_list {
+      $6->label = $5;
+      Expr* try_ = Expr::CreateTry($6, $8.first);
+      try_->try_block.label = $2;
       $$ = join_exprs1(&@1, try_);
     }
   ;
@@ -1155,6 +1157,11 @@ import_desc :
       $$->global = $4;
       $$->global->name = $3;
     }
+  | exception {
+      $$ = new Import();
+      $$->kind = ExternalKind::Except;
+      $$->except = $1;
+    }
 ;
 
 import :
@@ -1194,6 +1201,11 @@ export_desc :
   | LPAR GLOBAL var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Global;
+      $$->var = $3;
+    }
+  | LPAR EXCEPT var RPAR {
+      $$ = new Export();
+      $$->kind = ExternalKind::Except;
       $$->var = $3;
     }
 ;
@@ -1732,7 +1744,8 @@ void check_import_ordering(Location* loc, WastLexer* lexer, WastParser* parser,
       if (module->funcs.size() != module->num_func_imports ||
           module->tables.size() != module->num_table_imports ||
           module->memories.size() != module->num_memory_imports ||
-          module->globals.size() != module->num_global_imports) {
+          module->globals.size() != module->num_global_imports ||
+          module->excepts.size() != module->num_except_imports) {
         wast_parser_error(
             loc, lexer, parser,
             "imports must occur before all non-import definitions");
@@ -1752,7 +1765,7 @@ void append_module_fields(Module* module, ModuleField* first) {
 
     switch (field->type) {
       case ModuleFieldType::Except:
-        name = &field->import->except->name;        
+        name = &field->except->name;        
         bindings = &module->except_bindings;
         index = module->excepts.size();
         module->excepts.push_back(field->except);
@@ -1780,6 +1793,7 @@ void append_module_fields(Module* module, ModuleField* first) {
             bindings = &module->except_bindings;
             index = module->excepts.size();
             module->excepts.push_back(field->except);
+            ++module->num_except_imports;
             break;
           case ExternalKind::Func:
             append_implicit_func_declaration(&field->loc, module,

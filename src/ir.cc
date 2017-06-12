@@ -376,9 +376,8 @@ Expr* Expr::CreateCatch(Var var, Expr* first) {
 }
 
 // static
-Expr* Expr::CreateCatchAll(Var var, Expr* first) {
+Expr* Expr::CreateCatchAll(Expr* first) {
   Expr* expr = new Expr(ExprType::CatchAll);
-  expr->catch_.var = var;
   expr->catch_.first = first;
   return expr;
 }

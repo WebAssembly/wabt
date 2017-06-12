@@ -141,7 +141,7 @@ struct Expr {
   static Expr* CreateCall(Var);
   static Expr* CreateCallIndirect(Var);
   static Expr* CreateCatch(Var v, Expr* first);
-  static Expr* CreateCatchAll(Var v, Expr* first);
+  static Expr* CreateCatchAll(Expr* first);
   static Expr* CreateCompare(Opcode);
   static Expr* CreateConst(const Const&);
   static Expr* CreateConvert(Opcode);
@@ -172,8 +172,9 @@ struct Expr {
   union {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
-    struct { Block* block; Expr* first_catch; } try_block;
+    struct { Label label;  Block* block; Expr* first_catch; } try_block;
     struct { Var var; Expr* first; } catch_;
+    struct { Expr* first; } catch_all;
     struct { Var var; } throw_, rethrow_;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;
