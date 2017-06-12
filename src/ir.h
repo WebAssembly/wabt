@@ -151,7 +151,7 @@ struct Expr {
   static Expr* CreateGetLocal(Var);
   static Expr* CreateGrowMemory();
   static Expr* CreateIf(Block* true_, Expr* false_ = nullptr);
-  static Expr* CreateLoad(Opcode, Address align, uint64_t offset);
+  static Expr* CreateLoad(Opcode, Address align, uint32_t offset);
   static Expr* CreateLoop(Block*);
   static Expr* CreateNop();
   static Expr* CreateRethrow(Var);
@@ -159,7 +159,7 @@ struct Expr {
   static Expr* CreateSelect();
   static Expr* CreateSetGlobal(Var);
   static Expr* CreateSetLocal(Var);
-  static Expr* CreateStore(Opcode, Address align, uint64_t offset);
+  static Expr* CreateStore(Opcode, Address align, uint32_t offset);
   static Expr* CreateTeeLocal(Var);
   static Expr* CreateThrow(Var);
   static Expr* CreateTry(Block* block, Expr* first_catch);
@@ -182,7 +182,7 @@ struct Expr {
     struct { Var var; } get_global, set_global;
     struct { Var var; } get_local, set_local, tee_local;
     struct { Block* true_; Expr* false_; } if_;
-    struct { Opcode opcode; Address align; uint64_t offset; } load, store;
+    struct { Opcode opcode; Address align; uint32_t offset; } load, store;
   };
 };
 
@@ -374,22 +374,20 @@ struct Module {
   BindingHash memory_bindings;
 };
 
-enum class RawModuleType {
-  Text,
-  Binary,
-};
+// A ScriptModule is a module that may not yet be decoded. This allows for text
+// and binary parsing errors to be deferred until validation time.
+struct ScriptModule {
+  enum class Type {
+    Text,
+    Binary,
+    Quoted,
+  };
 
-/* "raw" means that the binary module has not yet been decoded. This is only
- * necessary when embedded in assert_invalid. In that case we want to defer
- * decoding errors until wabt_check_assert_invalid is called. This isn't needed
- * when parsing text, as assert_invalid always assumes that text parsing
- * succeeds. */
-struct RawModule {
-  WABT_DISALLOW_COPY_AND_ASSIGN(RawModule);
-  RawModule();
-  ~RawModule();
+  WABT_DISALLOW_COPY_AND_ASSIGN(ScriptModule);
+  ScriptModule();
+  ~ScriptModule();
 
-  RawModuleType type;
+  Type type;
   union {
     Module* text;
     struct {
@@ -397,7 +395,7 @@ struct RawModule {
       StringSlice name;
       char* data;
       size_t size;
-    } binary;
+    } binary, quoted;
   };
 };
 
@@ -466,7 +464,7 @@ struct Command {
     } assert_return_canonical_nan, assert_return_arithmetic_nan;
     struct { Action* action; StringSlice text; } assert_trap;
     struct {
-      RawModule* module;
+      ScriptModule* module;
       StringSlice text;
     } assert_malformed, assert_invalid, assert_unlinkable,
         assert_uninstantiable;
@@ -580,13 +578,15 @@ static WABT_INLINE size_t get_func_type_num_results(const FuncType* func_type) {
   return func_type->sig.result_types.size();
 }
 
-static WABT_INLINE const Location* get_raw_module_location(
-    const RawModule* raw) {
-  switch (raw->type) {
-    case RawModuleType::Binary:
-      return &raw->binary.loc;
-    case RawModuleType::Text:
-      return &raw->text->loc;
+static WABT_INLINE const Location* get_script_module_location(
+    const ScriptModule* script) {
+  switch (script->type) {
+    case ScriptModule::Type::Text:
+      return &script->text->loc;
+    case ScriptModule::Type::Binary:
+      return &script->binary.loc;
+    case ScriptModule::Type::Quoted:
+      return &script->quoted.loc;
     default:
       assert(0);
       return nullptr;

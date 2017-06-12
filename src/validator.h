@@ -25,9 +25,9 @@ struct Module;
 struct Script;
 class SourceErrorHandler;
 
-/* perform all checks on the script; the module is valid if and only if this
- * function succeeds. */
-Result validate_script(WastLexer*, const struct Script*, SourceErrorHandler*);
+// Perform all checks on the script. It is valid if and only if this function
+// succeeds.
+Result validate_script(WastLexer*, const Script*, SourceErrorHandler*);
 
 }  // namespace wabt
 

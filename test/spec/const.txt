@@ -1,0 +1,37 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/const.wast
+(;; STDOUT ;;;
+out/third_party/testsuite/const.wast:8: assert_malformed passed:
+  out/third_party/testsuite/const/const.2.wast:1:18: invalid literal "0x100000000"
+  (func (i32.const 0x100000000) drop)
+                   ^^^^^^^^^^^
+out/third_party/testsuite/const.wast:12: assert_malformed passed:
+  out/third_party/testsuite/const/const.3.wast:1:18: invalid literal "-0x80000001"
+  (func (i32.const -0x80000001) drop)
+                   ^^^^^^^^^^^
+out/third_party/testsuite/const.wast:19: assert_malformed passed:
+  out/third_party/testsuite/const/const.6.wast:1:18: invalid literal "4294967296"
+  (func (i32.const 4294967296) drop)
+                   ^^^^^^^^^^
+out/third_party/testsuite/const.wast:23: assert_malformed passed:
+  out/third_party/testsuite/const/const.7.wast:1:18: invalid literal "-2147483649"
+  (func (i32.const -2147483649) drop)
+                   ^^^^^^^^^^^
+out/third_party/testsuite/const.wast:30: assert_malformed passed:
+  out/third_party/testsuite/const/const.10.wast:1:18: invalid literal "0x10000000000000000"
+  (func (i64.const 0x10000000000000000) drop)
+                   ^^^^^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:34: assert_malformed passed:
+  out/third_party/testsuite/const/const.11.wast:1:18: invalid literal "-0x8000000000000001"
+  (func (i64.const -0x8000000000000001) drop)
+                   ^^^^^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:41: assert_malformed passed:
+  out/third_party/testsuite/const/const.14.wast:1:18: invalid literal "18446744073709551616"
+  (func (i64.const 18446744073709551616) drop)
+                   ^^^^^^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:45: assert_malformed passed:
+  out/third_party/testsuite/const/const.15.wast:1:18: invalid literal "-9223372036854775809"
+  (func (i64.const -9223372036854775809) drop)
+                   ^^^^^^^^^^^^^^^^^^^^
+8/8 tests passed.
+;;; STDOUT ;;)

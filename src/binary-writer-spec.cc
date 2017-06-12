@@ -94,7 +94,7 @@ class BinaryWriterSpec {
   Result WriteScript(Script* script);
 
  private:
-  char* GetModuleFilename();
+  char* GetModuleFilename(const char* extension);
   void WriteString(const char* s);
   void WriteKey(const char* key);
   void WriteSeparator();
@@ -108,8 +108,8 @@ class BinaryWriterSpec {
   void WriteAction(const Action* action);
   void WriteActionResultType(Script* script, const Action* action);
   void WriteModule(char* filename, const Module* module);
-  void WriteRawModule(char* filename, const RawModule* raw_module);
-  void WriteInvalidModule(const RawModule* module, StringSlice text);
+  void WriteScriptModule(char* filename, const ScriptModule* script_module);
+  void WriteInvalidModule(const ScriptModule* module, StringSlice text);
   void WriteCommands(Script* script);
 
   MemoryStream json_stream_;
@@ -119,7 +119,15 @@ class BinaryWriterSpec {
   const WriteBinarySpecOptions* spec_options_ = nullptr;
   Result result_ = Result::Ok;
   size_t num_modules_ = 0;
+
+  static const char* kWasmExtension;
+  static const char* kWastExtension;
 };
+
+// static
+const char* BinaryWriterSpec::kWasmExtension = ".wasm";
+// static
+const char* BinaryWriterSpec::kWastExtension = ".wast";
 
 BinaryWriterSpec::BinaryWriterSpec(const char* source_filename,
                                    const WriteBinarySpecOptions* spec_options)
@@ -132,12 +140,13 @@ BinaryWriterSpec::BinaryWriterSpec(const char* source_filename,
   write_modules_ = !!spec_options_->json_filename;
 }
 
-char* BinaryWriterSpec::GetModuleFilename() {
+char* BinaryWriterSpec::GetModuleFilename(const char* extension) {
   size_t buflen = module_filename_noext_.length + 20;
   char* str = new char[buflen];
-  size_t length = wabt_snprintf(
-      str, buflen, PRIstringslice ".%" PRIzd ".wasm",
-      WABT_PRINTF_STRING_SLICE_ARG(module_filename_noext_), num_modules_);
+  size_t length =
+      wabt_snprintf(str, buflen, PRIstringslice ".%" PRIzd "%s",
+                    WABT_PRINTF_STRING_SLICE_ARG(module_filename_noext_),
+                    num_modules_, extension);
   convert_backslash_to_slash(str, length);
   return str;
 }
@@ -331,33 +340,74 @@ void BinaryWriterSpec::WriteModule(char* filename, const Module* module) {
     result_ = memory_stream.WriteToFile(filename);
 }
 
-void BinaryWriterSpec::WriteRawModule(char* filename,
-                                      const RawModule* raw_module) {
-  if (raw_module->type == RawModuleType::Text) {
-    WriteModule(filename, raw_module->text);
-  } else if (write_modules_) {
-    FileStream file_stream(filename);
-    if (file_stream.is_open()) {
-      file_stream.WriteData(raw_module->binary.data, raw_module->binary.size,
-                            "");
-      result_ = file_stream.result();
-    } else {
-      result_ = Result::Error;
-    }
+void BinaryWriterSpec::WriteScriptModule(char* filename,
+                                         const ScriptModule* script_module) {
+  switch (script_module->type) {
+    case ScriptModule::Type::Text:
+      WriteModule(filename, script_module->text);
+      break;
+
+    case ScriptModule::Type::Binary:
+      if (write_modules_) {
+        FileStream file_stream(filename);
+        if (file_stream.is_open()) {
+          file_stream.WriteData(script_module->binary.data,
+                                script_module->binary.size, "");
+          result_ = file_stream.result();
+        } else {
+          result_ = Result::Error;
+        }
+      }
+      break;
+
+    case ScriptModule::Type::Quoted:
+      if (write_modules_) {
+        FileStream file_stream(filename);
+        if (file_stream.is_open()) {
+          file_stream.WriteData(script_module->quoted.data,
+                                script_module->quoted.size, "");
+          result_ = file_stream.result();
+        } else {
+          result_ = Result::Error;
+        }
+      }
+      break;
   }
 }
 
-void BinaryWriterSpec::WriteInvalidModule(const RawModule* module,
+void BinaryWriterSpec::WriteInvalidModule(const ScriptModule* module,
                                           StringSlice text) {
-  char* filename = GetModuleFilename();
-  WriteLocation(get_raw_module_location(module));
+  const char* extension = "";
+  const char* module_type = "";
+  switch (module->type) {
+    case ScriptModule::Type::Text:
+      extension = kWasmExtension;
+      module_type = "binary";
+      break;
+
+    case ScriptModule::Type::Binary:
+      extension = kWasmExtension;
+      module_type = "binary";
+      break;
+
+    case ScriptModule::Type::Quoted:
+      extension = kWastExtension;
+      module_type = "text";
+      break;
+  }
+
+  WriteLocation(get_script_module_location(module));
   WriteSeparator();
+  char* filename = GetModuleFilename(extension);
   WriteKey("filename");
   WriteEscapedStringSlice(get_basename(filename));
   WriteSeparator();
   WriteKey("text");
   WriteEscapedStringSlice(text);
-  WriteRawModule(filename, module);
+  WriteSeparator();
+  WriteKey("module_type");
+  WriteString(module_type);
+  WriteScriptModule(filename, module);
   delete [] filename;
 }
 
@@ -372,9 +422,10 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
     if (command.type == CommandType::AssertInvalidNonBinary)
       continue;
 
-    if (i != 0)
+    if (i != 0) {
       WriteSeparator();
-    json_stream_.Writef("\n");
+      json_stream_.Writef("\n");
+    }
 
     json_stream_.Writef("  {");
     WriteCommandType(command);
@@ -383,7 +434,7 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
     switch (command.type) {
       case CommandType::Module: {
         Module* module = command.module;
-        char* filename = GetModuleFilename();
+        char* filename = GetModuleFilename(kWasmExtension);
         WriteLocation(&module->loc);
         WriteSeparator();
         if (module->name.start) {
@@ -431,7 +482,7 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
 
       case CommandType::AssertInvalid:
         WriteInvalidModule(command.assert_invalid.module,
-                             command.assert_invalid.text);
+                           command.assert_invalid.text);
         num_modules_++;
         break;
 

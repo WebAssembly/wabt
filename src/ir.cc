@@ -442,7 +442,7 @@ Expr* Expr::CreateIf(Block* true_, Expr* false_) {
 }
 
 // static
-Expr* Expr::CreateLoad(Opcode opcode, Address align, uint64_t offset) {
+Expr* Expr::CreateLoad(Opcode opcode, Address align, uint32_t offset) {
   Expr* expr = new Expr(ExprType::Load);
   expr->load.opcode = opcode;
   expr->load.align = align;
@@ -494,7 +494,7 @@ Expr* Expr::CreateSetLocal(Var var) {
 }
 
 // static
-Expr* Expr::CreateStore(Opcode opcode, Address align, uint64_t offset) {
+Expr* Expr::CreateStore(Opcode opcode, Address align, uint32_t offset) {
   Expr* expr = new Expr(ExprType::Store);
   expr->store.opcode = opcode;
   expr->store.align = align;
@@ -716,14 +716,21 @@ Module::~Module() {
   }
 }
 
-RawModule::RawModule() : type(RawModuleType::Text), text(nullptr) {}
+ScriptModule::ScriptModule() : type(ScriptModule::Type::Text), text(nullptr) {}
 
-RawModule::~RawModule() {
-  if (type == RawModuleType::Text) {
-    delete text;
-  } else {
-    destroy_string_slice(&binary.name);
-    delete [] binary.data;
+ScriptModule::~ScriptModule() {
+  switch (type) {
+    case ScriptModule::Type::Text:
+      delete text;
+      break;
+    case ScriptModule::Type::Binary:
+      destroy_string_slice(&binary.name);
+      delete [] binary.data;
+      break;
+    case ScriptModule::Type::Quoted:
+      destroy_string_slice(&quoted.name);
+      delete [] binary.data;
+      break;
   }
 }
 

@@ -106,5 +106,145 @@ out/third_party/testsuite/memory.wast:194: assert_invalid passed:
 out/third_party/testsuite/memory.wast:198: assert_invalid passed:
   error: alignment must not be larger than natural alignment (1)
   error: @0x00000023: OnStoreExpr callback failed
-86/86 tests passed.
+out/third_party/testsuite/memory.wast:390: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.63.wast:1:43: unexpected token "i32.load32"
+  (memory 1)(func (param i32) (result i32) (i32.load32 (get_local 0)))
+                                            ^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.63.wast:1:54: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i32) (i32.load32 (get_local 0)))
+                                                       ^
+out/third_party/testsuite/memory.wast:397: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.64.wast:1:43: unexpected token "i32.load32_u"
+  (memory 1)(func (param i32) (result i32) (i32.load32_u (get_local 0)))
+                                            ^^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.64.wast:1:56: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i32) (i32.load32_u (get_local 0)))
+                                                         ^
+out/third_party/testsuite/memory.wast:404: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.65.wast:1:43: unexpected token "i32.load32_s"
+  (memory 1)(func (param i32) (result i32) (i32.load32_s (get_local 0)))
+                                            ^^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.65.wast:1:56: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i32) (i32.load32_s (get_local 0)))
+                                                         ^
+out/third_party/testsuite/memory.wast:411: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.66.wast:1:43: unexpected token "i32.load64"
+  (memory 1)(func (param i32) (result i32) (i32.load64 (get_local 0)))
+                                            ^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.66.wast:1:54: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i32) (i32.load64 (get_local 0)))
+                                                       ^
+out/third_party/testsuite/memory.wast:418: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.67.wast:1:43: unexpected token "i32.load64_u"
+  (memory 1)(func (param i32) (result i32) (i32.load64_u (get_local 0)))
+                                            ^^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.67.wast:1:56: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i32) (i32.load64_u (get_local 0)))
+                                                         ^
+out/third_party/testsuite/memory.wast:425: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.68.wast:1:43: unexpected token "i32.load64_s"
+  (memory 1)(func (param i32) (result i32) (i32.load64_s (get_local 0)))
+                                            ^^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.68.wast:1:56: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i32) (i32.load64_s (get_local 0)))
+                                                         ^
+out/third_party/testsuite/memory.wast:432: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.69.wast:1:30: unexpected token "i32.store32"
+  (memory 1)(func (param i32) (i32.store32 (get_local 0) (i32.const 0)))
+                               ^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.69.wast:1:42: syntax error, unexpected (
+  (memory 1)(func (param i32) (i32.store32 (get_local 0) (i32.const 0)))
+                                           ^
+out/third_party/testsuite/memory.wast:439: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.70.wast:1:30: unexpected token "i32.store64"
+  (memory 1)(func (param i32) (i32.store64 (get_local 0) (i64.const 0)))
+                               ^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.70.wast:1:42: syntax error, unexpected (
+  (memory 1)(func (param i32) (i32.store64 (get_local 0) (i64.const 0)))
+                                           ^
+out/third_party/testsuite/memory.wast:447: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.71.wast:1:43: unexpected token "i64.load64"
+  (memory 1)(func (param i32) (result i64) (i64.load64 (get_local 0)))
+                                            ^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.71.wast:1:54: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i64) (i64.load64 (get_local 0)))
+                                                       ^
+out/third_party/testsuite/memory.wast:454: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.72.wast:1:43: unexpected token "i64.load64_u"
+  (memory 1)(func (param i32) (result i64) (i64.load64_u (get_local 0)))
+                                            ^^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.72.wast:1:56: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i64) (i64.load64_u (get_local 0)))
+                                                         ^
+out/third_party/testsuite/memory.wast:461: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.73.wast:1:43: unexpected token "i64.load64_s"
+  (memory 1)(func (param i32) (result i64) (i64.load64_s (get_local 0)))
+                                            ^^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.73.wast:1:56: syntax error, unexpected (
+  (memory 1)(func (param i32) (result i64) (i64.load64_s (get_local 0)))
+                                                         ^
+out/third_party/testsuite/memory.wast:468: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.74.wast:1:30: unexpected token "i64.store64"
+  (memory 1)(func (param i32) (i64.store64 (get_local 0) (i64.const 0)))
+                               ^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.74.wast:1:42: syntax error, unexpected (
+  (memory 1)(func (param i32) (i64.store64 (get_local 0) (i64.const 0)))
+                                           ^
+out/third_party/testsuite/memory.wast:476: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.75.wast:1:43: unexpected token "f32.load32"
+  (memory 1)(func (param i32) (result f32) (f32.load32 (get_local 0)))
+                                            ^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.75.wast:1:54: syntax error, unexpected (
+  (memory 1)(func (param i32) (result f32) (f32.load32 (get_local 0)))
+                                                       ^
+out/third_party/testsuite/memory.wast:483: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.76.wast:1:43: unexpected token "f32.load64"
+  (memory 1)(func (param i32) (result f32) (f32.load64 (get_local 0)))
+                                            ^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.76.wast:1:54: syntax error, unexpected (
+  (memory 1)(func (param i32) (result f32) (f32.load64 (get_local 0)))
+                                                       ^
+out/third_party/testsuite/memory.wast:490: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.77.wast:1:30: unexpected token "f32.store32"
+  (memory 1)(func (param i32) (f32.store32 (get_local 0) (f32.const 0)))
+                               ^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.77.wast:1:42: syntax error, unexpected (
+  (memory 1)(func (param i32) (f32.store32 (get_local 0) (f32.const 0)))
+                                           ^
+out/third_party/testsuite/memory.wast:497: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.78.wast:1:30: unexpected token "f32.store64"
+  (memory 1)(func (param i32) (f32.store64 (get_local 0) (f64.const 0)))
+                               ^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.78.wast:1:42: syntax error, unexpected (
+  (memory 1)(func (param i32) (f32.store64 (get_local 0) (f64.const 0)))
+                                           ^
+out/third_party/testsuite/memory.wast:505: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.79.wast:1:43: unexpected token "f64.load32"
+  (memory 1)(func (param i32) (result f64) (f64.load32 (get_local 0)))
+                                            ^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.79.wast:1:54: syntax error, unexpected (
+  (memory 1)(func (param i32) (result f64) (f64.load32 (get_local 0)))
+                                                       ^
+out/third_party/testsuite/memory.wast:512: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.80.wast:1:43: unexpected token "f64.load64"
+  (memory 1)(func (param i32) (result f64) (f64.load64 (get_local 0)))
+                                            ^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.80.wast:1:54: syntax error, unexpected (
+  (memory 1)(func (param i32) (result f64) (f64.load64 (get_local 0)))
+                                                       ^
+out/third_party/testsuite/memory.wast:519: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.81.wast:1:30: unexpected token "f64.store32"
+  (memory 1)(func (param i32) (f64.store32 (get_local 0) (f32.const 0)))
+                               ^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.81.wast:1:42: syntax error, unexpected (
+  (memory 1)(func (param i32) (f64.store32 (get_local 0) (f32.const 0)))
+                                           ^
+out/third_party/testsuite/memory.wast:526: assert_malformed passed:
+  out/third_party/testsuite/memory/memory.82.wast:1:30: unexpected token "f64.store64"
+  (memory 1)(func (param i32) (f64.store64 (get_local 0) (f64.const 0)))
+                               ^^^^^^^^^^^
+  out/third_party/testsuite/memory/memory.82.wast:1:42: syntax error, unexpected (
+  (memory 1)(func (param i32) (f64.store64 (get_local 0) (f64.const 0)))
+                                           ^
+106/106 tests passed.
 ;;; STDOUT ;;)

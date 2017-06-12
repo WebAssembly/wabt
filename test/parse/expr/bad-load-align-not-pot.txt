@@ -6,7 +6,7 @@
     i32.load align=3 
     drop))
 (;; STDERR ;;;
-out/test/parse/expr/bad-load-align-not-pot.txt:6:5: alignment must be power-of-two
+out/test/parse/expr/bad-load-align-not-pot.txt:6:14: alignment must be power-of-two
     i32.load align=3 
-    ^^^^^^^^^^^^^^^^
+             ^^^^^^^
 ;;; STDERR ;;)
