@@ -4863,12 +4863,6 @@ void append_module_fields(Module* module, ModuleField* first) {
     Index index = kInvalidIndex;
 
     switch (field->type) {
-      case ModuleFieldType::Except:
-        name = &field->except->name;        
-        bindings = &module->except_bindings;
-        index = module->excepts.size();
-        module->excepts.push_back(field->except);
-        break;
       case ModuleFieldType::Func:
         append_implicit_func_declaration(&field->loc, module,
                                          &field->func->decl);
@@ -4887,13 +4881,6 @@ void append_module_fields(Module* module, ModuleField* first) {
 
       case ModuleFieldType::Import:
         switch (field->import->kind) {
-          case ExternalKind::Except:
-            name = &field->import->except->name;
-            bindings = &module->except_bindings;
-            index = module->excepts.size();
-            module->excepts.push_back(field->except);
-            ++module->num_except_imports;
-            break;
           case ExternalKind::Func:
             append_implicit_func_declaration(&field->loc, module,
                                              &field->import->func->decl);
@@ -4923,6 +4910,13 @@ void append_module_fields(Module* module, ModuleField* first) {
             index = module->globals.size();
             module->globals.push_back(field->import->global);
             ++module->num_global_imports;
+            break;
+          case ExternalKind::Except:
+            name = &field->import->except->name;
+            bindings = &module->except_bindings;
+            index = module->excepts.size();
+            module->excepts.push_back(field->except);
+            ++module->num_except_imports;
             break;
         }
         module->imports.push_back(field->import);
@@ -4977,6 +4971,13 @@ void append_module_fields(Module* module, ModuleField* first) {
           field->data_segment->memory_var.index = main_index;
         }
         module->data_segments.push_back(field->data_segment);
+        break;
+
+      case ModuleFieldType::Except:
+        name = &field->except->name;        
+        bindings = &module->except_bindings;
+        index = module->excepts.size();
+        module->excepts.push_back(field->except);
         break;
 
       case ModuleFieldType::Start:
