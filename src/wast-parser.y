@@ -601,7 +601,6 @@ block_instr :
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
   | try_check labeling_opt block catch_instr_list END labeling_opt {
-      $3->label = $2;
       $$ = Expr::CreateTry($3, $4.first);
       $$->try_block.label = $2;
       CHECK_END_LABEL(@6, $3->label, $6);
