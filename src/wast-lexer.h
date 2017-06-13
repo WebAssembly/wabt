@@ -68,6 +68,8 @@ class WastLexer {
   struct LookaheadToken* lookahead_;
   size_t lookahead_index;
   size_t lookahead_size;
+  Token* get_lval;
+  Location* get_loc;
 
   // TODO(karlschimpf): Make the lookahead a circular queue where you can
   // both prepend and append tokens.

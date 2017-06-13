@@ -113,11 +113,11 @@ struct WastLexer::LookaheadToken {
   Token tok_;
   Location loc_;
   int value_;
-  int install(WastLexer* lexer, Location* Loc);
+  int install(WastLexer* lexer);
 };
 
-int WastLexer::LookaheadToken::install(WastLexer* lexer, Location* Loc) {
-  *Loc = loc_;
+int WastLexer::LookaheadToken::install(WastLexer* lexer) {
+  *lexer->get_loc = loc_;
   switch (kind_) {
     default:
       break;
@@ -166,7 +166,7 @@ void WastLexer::AppendSimpleToken(int name) {
 int WastLexer::RemoveFirstToken(Location* Loc) {
   assert(lookahead_);
   assert(lookahead_index < lookahead_size);
-  int result = lookahead_[lookahead_index++].install(this, Loc);
+  int result = lookahead_[lookahead_index++].install(this);
   if (lookahead_index  == lookahead_size) {
     lookahead_index = lookahead_size = 0;
   }
@@ -249,6 +249,9 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
     YYCOND_BLOCK_COMMENT,
     YYCOND_i = YYCOND_INIT,
   } cond = YYCOND_INIT;
+
+  get_lval = lval;
+  get_loc = loc;
 
   for (;;) {
     token_ = cursor_;
