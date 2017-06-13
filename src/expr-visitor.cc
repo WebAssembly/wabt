@@ -61,14 +61,24 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       break;
 
     case ExprType::Catch:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Catch: don't know how to visit\n");
-      return Result::Error;
+      if (!CommonClOptions.allow_exceptions) {
+        WABT_FATAL("Catch: don't know how to visit\n");
+        return Result::Error;
+      }
+      CHECK_RESULT(delegate_->OnBeginCatch(expr));
+      CHECK_RESULT(VisitExprList(expr->catch_.first));
+      CHECK_RESULT(delegate_->OnEndCatch(expr));
+      break;
 
     case ExprType::CatchAll:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("CatchAll: don't know how to visit\n");
-      return Result::Error;
+      if (!CommonClOptions.allow_exceptions) {
+        WABT_FATAL("CatchAll: don't know how to visit\n");
+        return Result::Error;
+      }
+      CHECK_RESULT(delegate_->OnBeginCatchAll(expr));
+      CHECK_RESULT(VisitExprList(expr->catch_.first));
+      CHECK_RESULT(delegate_->OnEndCatchAll(expr));
+      break;
 
     case ExprType::Compare:
       CHECK_RESULT(delegate_->OnCompareExpr(expr));
@@ -125,9 +135,12 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Rethrow: don't know how to visit\n");
-      return Result::Error;
+      if (!CommonClOptions.allow_exceptions) {
+        WABT_FATAL("Rethrow: don't know how to visit\n");
+        return Result::Error;
+      }
+      CHECK_RESULT(delegate_->OnRthrowExpr(expr));
+      break;
 
     case ExprType::Return:
       CHECK_RESULT(delegate_->OnReturnExpr(expr));
@@ -154,14 +167,22 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       break;
 
     case ExprType::Throw:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Throw: don't know how to visit\n");
-      return Result::Error;
+      if (!CommonClOptions.allow_exceptions) {
+        WABT_FATAL("Throw: don't know how to visit\n");
+        return Result::Error;
+      }
+      CHECK_RESULT(delegate_->OnThrow(expr));
+      break;
 
     case ExprType::TryBlock:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("TryBlock: don't know how to visit\n");
-      return Result::Error;
+      if (!CommonClOptions.allow_exceptions) {
+        WABT_FATAL("TryBlock: don't know how to visit\n");
+        return Result::Error;
+      }
+      CHECK_RESULT(delegate_->OnBeginTryBlock(expr));
+      CHECK_RESULT(VisitExpr(expr->try_block.block));
+      CHECK_RESULT(VisitExprList(expr->try_block.first_catch));
+      CHECK_RESULT(delegate_->OnEndTryBlock(expr));
       break;
 
     case ExprType::Unary:

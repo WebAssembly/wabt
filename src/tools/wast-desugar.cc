@@ -40,12 +40,15 @@ static const char* s_infile;
 static const char* s_outfile;
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
+static WastParseOptions s_parse_options;
 
 enum {
   FLAG_HELP,
   FLAG_OUTPUT,
   FLAG_FOLD_EXPRS,
   FLAG_GENERATE_NAMES,
+  FLAG_EXCEPTIONS,
+  FLAG_DEBUG_PARSER,
   NUM_FLAGS
 };
 
@@ -65,6 +68,10 @@ static const char s_description[] =
 static Option s_options[] = {
     {FLAG_HELP, 'h', "help", nullptr, HasArgument::No,
      "print this help message"},
+    {FLAG_DEBUG_PARSER, 0, "debug-parser", nullptr, HasArgument::No,
+     "Turn on debugging the parser of wast files"},
+    {FLAG_EXCEPTIONS, 0, "future-exceptions", nullptr, HasArgument::No,
+     "Test future extension for exception handling"},
     {FLAG_OUTPUT, 'o', "output", "FILE", HasArgument::Yes,
      "output file for the formatted file"},
     {FLAG_FOLD_EXPRS, 'f', "fold-exprs", nullptr, HasArgument::No,
@@ -93,6 +100,14 @@ static void on_option(struct OptionParser* parser,
 
     case FLAG_GENERATE_NAMES:
       s_generate_names = true;
+      break;
+
+    case FLAG_EXCEPTIONS:
+      CommonClOptions.allow_exceptions = true;
+      break;
+
+    case FLAG_DEBUG_PARSER:
+      s_parse_options.debug_parsing = true;
       break;
   }
 }
@@ -142,7 +157,8 @@ int ProgramMain(int argc, char** argv) {
 
   SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_wast(lexer.get(), &script, &error_handler);
+  Result result = parse_wast(lexer.get(), &script, &error_handler,
+                             &s_parse_options);
 
   if (WABT_SUCCEEDED(result)) {
     Module* module = get_first_module(script);

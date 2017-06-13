@@ -516,7 +516,7 @@ Expr* Expr::CreateThrow(Var var) {
 }
 
 // static
-Expr* Expr::CreateTry(Block* block, Expr* first_catch) {
+Expr* Expr::CreateTry(Expr* block, Expr* first_catch) {
   Expr* expr = new Expr(ExprType::TryBlock);
   expr->try_block.block = block;
   expr->try_block.first_catch = first_catch;

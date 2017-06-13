@@ -158,7 +158,7 @@ static void on_option(struct OptionParser* parser,
       break;
 
     case FLAG_EXCEPTIONS:
-      s_parse_options.allow_exceptions = true;
+      CommonClOptions.allow_exceptions = true;
       break;
 
     case FLAG_DEBUG_PARSER:

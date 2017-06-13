@@ -95,12 +95,12 @@
     }                                                                      \
   } while (0)
 
-#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                       \
-  do {                                                                 \
-    if (!parser->options->allow_exceptions) {                          \
-      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s",  \
-                        opcode_name);                                  \
-    }                                                                  \
+#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                      \
+  do {                                                                \
+    if (!CommonClOptions.allow_exceptions) {                          \
+      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s", \
+                        opcode_name);                                 \
+    }                                                                 \
  } while (0)
 
 #define YYMALLOC(size) new char [size]
@@ -588,10 +588,11 @@ block_instr :
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
   | try_check labeling_opt block catch_instr_list END labeling_opt {
-      $3->label = $2;
-      $$ = Expr::CreateTry($3, $4.first);
+      Expr* block = Expr::CreateBlock($3);
+      block->block->label = $2;
+      $$ = Expr::CreateTry(block, $4.first);
       $$->try_block.label = $2;
-      CHECK_END_LABEL(@6, $3->label, $6);
+      CHECK_END_LABEL(@6, $2, $6);
     }
 ;
 
@@ -653,8 +654,9 @@ expr1 :
       if_->if_.true_->label = $2;
     }
   | try_check labeling_opt LPAR BLOCK labeling_opt block RPAR catch_list {
-      $6->label = $5;
-      Expr* try_ = Expr::CreateTry($6, $8.first);
+      Expr* block = Expr::CreateBlock($6);
+      block->block->label = $5;
+      Expr* try_ = Expr::CreateTry(block, $8.first);
       try_->try_block.label = $2;
       $$ = join_exprs1(&@1, try_);
     }
