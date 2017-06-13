@@ -602,11 +602,9 @@ block_instr :
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
   | try_check labeling_opt block catch_instr_list END labeling_opt {
-      Expr* block = Expr::CreateBlock($3);
-      block->block->label = $2;
-      $$ = Expr::CreateTry(block, $4.first);
-      $$->try_block.label = $2;
-      CHECK_END_LABEL(@6, $2, $6);
+      $3->label = $2;
+      $$ = Expr::CreateTry($3, $4.first);
+      CHECK_END_LABEL(@6, $3->label, $6);
     }
 ;
 
@@ -1268,8 +1266,7 @@ export :
       $$ = new ModuleField(ModuleFieldType::Export);
       $$->loc = @2;
       $$->export_ = $4;
-      $$->export_->name = std::move(*$3);
-      delete $3;
+      $$->export_->name = $3;
     }
 ;
 
