@@ -32,6 +32,9 @@
 
 #define INITIAL_LEXER_BUFFER_SIZE (64 * 1024)
 
+#define RETURN_LOOKAHEAD \
+  return RemoveFirstToken(loc);
+
 #define YY_USER_ACTION(loc)             \
   {                                     \
     (loc)->filename = filename_;        \
@@ -146,21 +149,21 @@ WastLexer::~WastLexer() {
   delete[] lookahead_;
 }
 
-WastLexer::LookaheadToken* WastLexer::PeekPushToken() {
+WastLexer::LookaheadToken* WastLexer::GetAppendToken() {
   if (lookahead_ == nullptr)
     lookahead_ = new LookaheadToken[kMaxLookahead];
   assert(lookahead_size < kMaxLookahead);
   return &lookahead_[lookahead_size++];
 }
 
-void WastLexer::PeekPushReturn(int name) {
-  WastLexer::LookaheadToken* Tok = PeekPushToken();
+void WastLexer::AppendSimpleToken(int name) {
+  WastLexer::LookaheadToken* Tok = GetAppendToken();
   YY_USER_ACTION(&Tok->loc_);
   Tok->kind_ = TokenKind::Simple;
   Tok->value_ = name;
 };
 
-int WastLexer::PeekPopToken(Location* Loc) {
+int WastLexer::RemoveFirstToken(Location* Loc) {
   assert(lookahead_);
   assert(lookahead_index < lookahead_size);
   int result = lookahead_[lookahead_index++].install(this, Loc);
@@ -519,6 +522,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> "assert_exhaustion"   { RETURN(ASSERT_EXHAUSTION); }
       <i> "try"                 { RETURN(TRY); }
       <i> "catch"               { RETURN(CATCH); }
+      <i> "catch"               { AppendSimpleToken(CATCH); RETURN_LOOKAHEAD; }
       <i> "catch_all"           { RETURN(CATCH_ALL); }
       <i> "throw"               { RETURN(THROW); }
       <i> "rethrow"             { RETURN(RETHROW); }
