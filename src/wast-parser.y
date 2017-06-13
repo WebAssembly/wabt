@@ -196,6 +196,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<exception> exception
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
+%type<expr> try_  try_instr_list
 %type<expr_list> catch_instr catch_list catch_instr_list
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
@@ -206,7 +207,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<limits> limits
 %type<memory> memory_sig
 %type<module> module module_fields_opt module_fields inline_module
-%type<module_field> type_def start data elem import export except
+%type<module_field> type_def start data elem import export exception_field
 %type<module_fields> func func_fields table table_fields memory memory_fields global global_fields module_field
 %type<script_module> script_module
 %type<literal> literal
@@ -667,14 +668,39 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-  | try_check labeling_opt LPAR BLOCK labeling_opt block RPAR catch_list {
-      Expr* block = Expr::CreateBlock($6);
-      block->block->label = $5;
-      Expr* try_ = Expr::CreateTry(block, $8.first);
-      try_->try_block.label = $2;
-      $$ = join_exprs1(&@1, try_);
+  | try_check labeling_opt try_ {
+      Block* block = $3->try_block.block;
+      block->label = $2;
+      $$ = join_exprs1(&@1, $3);
     }
   ;
+
+try_ :
+    block_sig try_ {
+      $$ = $2;
+      Block* block = $$->try_block.block;
+      block->sig.insert(block->sig.end(), $1->begin(), $1->end());
+      delete $1;
+    }
+  | try_instr_list
+  ;
+
+try_instr_list :
+      catch_list {
+        Block* block = new Block();
+        $$ = Expr::CreateTry(block, $1.first);
+      }
+    | instr try_instr_list {
+        $$ = $2;
+        Block* block = $$->try_block.block;
+        if ($1.last) {
+          $1.last->next = block->first;
+        } else {
+          $1.first->next = block->first;
+        }
+        block->first = $1.first;
+      }
+    ;
 
 catch_list :
     LPAR catch_instr RPAR {
@@ -763,19 +789,19 @@ const_expr :
 ;
 
 /* Exceptions */
-except :
-    exception {
-      $$ = new ModuleField(ModuleFieldType::Except);
-      $$->loc = @1;
-      $$->except = $1;
-    }
-  ;
 exception :
     LPAR EXCEPT bind_var_opt value_type_list RPAR {
       $$ = new Exception();
       $$->name = $3;
       $$->sig = std::move(*$4);
       delete $4;
+    }
+  ;
+exception_field :
+    exception {
+      $$ = new ModuleField(ModuleFieldType::Except);
+      $$->loc = @1;
+      $$->except = $1;
     }
   ;
     
@@ -1295,7 +1321,7 @@ module_field :
   | start { $$.first = $$.last = $1; }
   | import { $$.first = $$.last = $1; }
   | export { $$.first = $$.last = $1; }
-  | except { $$.first = $$.last = $1; }
+  | exception_field { $$.first = $$.last = $1; }
 ;
 
 module_fields_opt :

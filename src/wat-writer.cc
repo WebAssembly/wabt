@@ -999,13 +999,9 @@ void WatWriter::WriteImport(const Import* import) {
 void WatWriter::WriteExport(const Export* export_) {
   if (options_->inline_export)
     return;
-  static const char* s_kind_names[] = {"func", "table", "memory", "global",
-                                       "except"};
-  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_kind_names) == kExternalKindCount);
   WriteOpenSpace("export");
   WriteQuotedStringSlice(&export_->name, NextChar::Space);
-  assert(static_cast<size_t>(export_->kind) < WABT_ARRAY_SIZE(s_kind_names));
-  WriteOpenSpace(s_kind_names[static_cast<size_t>(export_->kind)]);
+  WriteOpenSpace(get_kind_name(export_->kind));
   WriteVar(&export_->var, NextChar::Space);
   WriteCloseSpace();
   WriteCloseNewline();

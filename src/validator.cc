@@ -779,7 +779,7 @@ void Validator::CheckExport(const Location* loc, const Export* export_) {
   switch (export_->kind) {
     case ExternalKind::Except:
       // TODO(karlschimpf) Define.
-      PrintError(loc, "except except: don't know how to validate");
+      PrintError(loc, "except: don't know how to validate export");
       break;
     case ExternalKind::Func:
       CheckFuncVar(&export_->var, nullptr);
