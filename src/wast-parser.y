@@ -196,7 +196,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<exception> exception
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
-%type<expr> try_  try_inst_list
+%type<expr> try_  try_instr_list
 %type<expr_list> catch_instr catch_list catch_instr_list
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
@@ -677,19 +677,18 @@ try_ :
     block_sig try_ {
       $$ = $2;
       Block* block = $$->try_block.block;
-      $$->try_block.block->sig.insert(block->sig.end(), $1->begin(), $1->end());
+      block->sig.insert(block->sig.end(), $1->begin(), $1->end());
       delete $1;
     }
-  | try_inst_list
+  | try_instr_list
   ;
 
-try_inst_list :
-      instr catch_list {
+try_instr_list :
+      catch_list {
         Block* block = new Block();
-        block->first = $1.first;
-        $$ = Expr::CreateTry(block, $2.first);
+        $$ = Expr::CreateTry(block, $1.first);
       }
-    | instr try_inst_list {
+    | instr try_instr_list {
         $$ = $2;
         Block* block = $$->try_block.block;
         if ($1.last) {
