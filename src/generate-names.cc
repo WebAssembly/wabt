@@ -153,12 +153,12 @@ Result NameGenerator::VisitFunc(Index func_index, Func* func) {
   MaybeGenerateAndBindName(&module_->func_bindings, "$f", func_index,
                            &func->name);
 
-  make_type_binding_reverse_mapping(func->decl.sig.param_types,
-                                    func->param_bindings, &index_to_name_);
+  MakeTypeBindingReverseMapping(func->decl.sig.param_types,
+                                func->param_bindings, &index_to_name_);
   GenerateAndBindLocalNames(&func->param_bindings, "$p");
 
-  make_type_binding_reverse_mapping(func->local_types, func->local_bindings,
-                                    &index_to_name_);
+  MakeTypeBindingReverseMapping(func->local_types, func->local_bindings,
+                                &index_to_name_);
   GenerateAndBindLocalNames(&func->local_bindings, "$l");
 
   label_count_ = 0;

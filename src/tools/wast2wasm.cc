@@ -237,7 +237,7 @@ int ProgramMain(int argc, char** argv) {
                                           &s_write_binary_spec_options);
       } else {
         MemoryWriter writer;
-        Module* module = get_first_module(script);
+        const Module* module = script->GetFirstModule();
         if (module) {
           result =
               write_binary_module(&writer, module, &s_write_binary_options);

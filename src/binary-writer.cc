@@ -208,6 +208,7 @@ class BinaryWriter {
   void BeginSubsection(const char* name, size_t leb_size_guess);
   void EndSubsection();
   Index GetLabelVarDepth(const Var* var);
+  Index GetLocalIndex(const Func* func, const Var& var);
   void AddReloc(RelocType reloc_type, Index index);
   void WriteU32Leb128WithReloc(Index index,
                                const char* desc,
@@ -396,6 +397,18 @@ void BinaryWriter::WriteU32Leb128WithReloc(Index index,
   }
 }
 
+Index BinaryWriter::GetLocalIndex(const Func* func, const Var& var) {
+  // func can be nullptr when using get_local/set_local/tee_local in an
+  // init_expr.
+  if (func) {
+    return func->GetLocalIndex(var);
+  } else if (var.type == VarType::Index) {
+    return var.index;
+  } else {
+    return kInvalidIndex;
+  }
+}
+
 void BinaryWriter::WriteExpr(const Module* module,
                              const Func* func,
                              const Expr* expr) {
@@ -432,13 +445,13 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     }
     case ExprType::Call: {
-      int index = get_func_index_by_var(module, &expr->call.var);
+      Index index = module->GetFuncIndex(expr->call.var);
       write_opcode(&stream_, Opcode::Call);
       WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
       break;
     }
     case ExprType::CallIndirect: {
-      int index = get_func_type_index_by_var(module, &expr->call_indirect.var);
+      Index index = module->GetFuncTypeIndex(expr->call_indirect.var);
       write_opcode(&stream_, Opcode::CallIndirect);
       WriteU32Leb128WithReloc(index, "signature index", RelocType::TypeIndexLEB);
       write_u32_leb128(&stream_, 0, "call_indirect reserved");
@@ -489,13 +502,13 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_opcode(&stream_, Opcode::Drop);
       break;
     case ExprType::GetGlobal: {
-      int index = get_global_index_by_var(module, &expr->get_global.var);
+      Index index = module->GetGlobalIndex(expr->get_global.var);
       write_opcode(&stream_, Opcode::GetGlobal);
       WriteU32Leb128WithReloc(index, "global index", RelocType::GlobalIndexLEB);
       break;
     }
     case ExprType::GetLocal: {
-      int index = get_local_index_by_var(func, &expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->get_local.var);
       write_opcode(&stream_, Opcode::GetLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;
@@ -541,13 +554,13 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_opcode(&stream_, Opcode::Select);
       break;
     case ExprType::SetGlobal: {
-      int index = get_global_index_by_var(module, &expr->get_global.var);
+      Index index = module->GetGlobalIndex(expr->get_global.var);
       write_opcode(&stream_, Opcode::SetGlobal);
       WriteU32Leb128WithReloc(index, "global index", RelocType::GlobalIndexLEB);
       break;
     }
     case ExprType::SetLocal: {
-      int index = get_local_index_by_var(func, &expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->get_local.var);
       write_opcode(&stream_, Opcode::SetLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;
@@ -561,7 +574,7 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     }
     case ExprType::TeeLocal: {
-      int index = get_local_index_by_var(func, &expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->get_local.var);
       write_opcode(&stream_, Opcode::TeeLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;
@@ -604,7 +617,7 @@ void BinaryWriter::WriteFuncLocals(const Module* module,
     return;
   }
 
-  Index num_params = get_num_params(func);
+  Index num_params = func->GetNumParams();
 
 #define FIRST_LOCAL_INDEX (num_params)
 #define LAST_LOCAL_INDEX (num_params + local_types.size())
@@ -727,10 +740,9 @@ Result BinaryWriter::WriteModule(const Module* module) {
       stream_.WriteU8Enum(import->kind, "import kind");
       switch (import->kind) {
         case ExternalKind::Func:
-          write_u32_leb128(
-              &stream_,
-              get_func_type_index_by_decl(module, &import->func->decl),
-              "import signature index");
+          write_u32_leb128(&stream_,
+                           module->GetFuncTypeIndex(import->func->decl),
+                           "import signature index");
           break;
         case ExternalKind::Table:
           WriteTable(import->table);
@@ -761,8 +773,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
       char desc[100];
       wabt_snprintf(desc, sizeof(desc), "function %" PRIzd " signature index",
                     i);
-      write_u32_leb128(&stream_,
-                       get_func_type_index_by_decl(module, &func->decl), desc);
+      write_u32_leb128(&stream_, module->GetFuncTypeIndex(func->decl), desc);
     }
     EndSection();
   }
@@ -817,22 +828,22 @@ Result BinaryWriter::WriteModule(const Module* module) {
       stream_.WriteU8Enum(export_->kind, "export kind");
       switch (export_->kind) {
         case ExternalKind::Func: {
-          int index = get_func_index_by_var(module, &export_->var);
+          Index index = module->GetFuncIndex(export_->var);
           write_u32_leb128(&stream_, index, "export func index");
           break;
         }
         case ExternalKind::Table: {
-          int index = get_table_index_by_var(module, &export_->var);
+          Index index = module->GetTableIndex(export_->var);
           write_u32_leb128(&stream_, index, "export table index");
           break;
         }
         case ExternalKind::Memory: {
-          int index = get_memory_index_by_var(module, &export_->var);
+          Index index = module->GetMemoryIndex(export_->var);
           write_u32_leb128(&stream_, index, "export memory index");
           break;
         }
         case ExternalKind::Global: {
-          int index = get_global_index_by_var(module, &export_->var);
+          Index index = module->GetGlobalIndex(export_->var);
           write_u32_leb128(&stream_, index, "export global index");
           break;
         }
@@ -846,8 +857,8 @@ Result BinaryWriter::WriteModule(const Module* module) {
   }
 
   if (module->start) {
-    int start_func_index = get_func_index_by_var(module, module->start);
-    if (start_func_index != -1) {
+    Index start_func_index = module->GetFuncIndex(*module->start);
+    if (start_func_index != kInvalidIndex) {
       BeginKnownSection(BinarySection::Start, LEB_SECTION_SIZE_GUESS);
       write_u32_leb128(&stream_, start_func_index, "start func index");
       EndSection();
@@ -860,13 +871,13 @@ Result BinaryWriter::WriteModule(const Module* module) {
                      "num elem segments");
     for (size_t i = 0; i < module->elem_segments.size(); ++i) {
       ElemSegment* segment = module->elem_segments[i];
-      int table_index = get_table_index_by_var(module, &segment->table_var);
+      Index table_index = module->GetTableIndex(segment->table_var);
       WriteHeader("elem segment header", i);
       write_u32_leb128(&stream_, table_index, "table index");
       WriteInitExpr(module, segment->offset);
       write_u32_leb128(&stream_, segment->vars.size(), "num function indices");
       for (const Var& var : segment->vars) {
-        int index = get_func_index_by_var(module, &var);
+        Index index = module->GetFuncIndex(var);
         WriteU32Leb128WithReloc(index, "function index",
                                 RelocType::FuncIndexLEB);
       }
@@ -900,7 +911,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
     for (size_t i = 0; i < module->data_segments.size(); ++i) {
       const DataSegment* segment = module->data_segments[i];
       WriteHeader("data segment header", i);
-      int memory_index = get_memory_index_by_var(module, &segment->memory_var);
+      Index memory_index = module->GetMemoryIndex(segment->memory_var);
       write_u32_leb128(&stream_, memory_index, "memory index");
       WriteInitExpr(module, segment->offset);
       write_u32_leb128(&stream_, segment->size, "data segment size");
@@ -944,15 +955,15 @@ Result BinaryWriter::WriteModule(const Module* module) {
     write_u32_leb128(&stream_, module->funcs.size(), "num functions");
     for (size_t i = 0; i < module->funcs.size(); ++i) {
       const Func* func = module->funcs[i];
-      Index num_params = get_num_params(func);
+      Index num_params = func->GetNumParams();
       Index num_locals = func->local_types.size();
-      Index num_params_and_locals = get_num_params_and_locals(func);
+      Index num_params_and_locals = func->GetNumParamsAndLocals();
 
       write_u32_leb128(&stream_, i, "function index");
       write_u32_leb128(&stream_, num_params_and_locals, "num locals");
 
-      make_type_binding_reverse_mapping(func->decl.sig.param_types,
-                                        func->param_bindings, &index_to_name);
+      MakeTypeBindingReverseMapping(func->decl.sig.param_types,
+                                    func->param_bindings, &index_to_name);
       for (size_t j = 0; j < num_params; ++j) {
         const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
@@ -960,8 +971,8 @@ Result BinaryWriter::WriteModule(const Module* module) {
         write_debug_name(&stream_, string_to_string_slice(name), desc);
       }
 
-      make_type_binding_reverse_mapping(func->local_types, func->local_bindings,
-                                        &index_to_name);
+      MakeTypeBindingReverseMapping(func->local_types, func->local_bindings,
+                                    &index_to_name);
       for (size_t j = 0; j < num_locals; ++j) {
         const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, num_params + j);

@@ -307,24 +307,24 @@ void BinaryWriterSpec::WriteAction(const Action* action) {
 
 void BinaryWriterSpec::WriteActionResultType(Script* script,
                                              const Action* action) {
-  const Module* module = get_module_by_var(script, &action->module_var);
+  const Module* module = script->GetModule(action->module_var);
   const Export* export_;
   json_stream_.Writef("[");
   switch (action->type) {
     case ActionType::Invoke: {
-      export_ = get_export_by_name(module, &action->name);
+      export_ = module->GetExport(action->name);
       assert(export_->kind == ExternalKind::Func);
-      Func* func = get_func_by_var(module, &export_->var);
-      size_t num_results = get_num_results(func);
-      for (size_t i = 0; i < num_results; ++i)
-        WriteTypeObject(get_result_type(func, i));
+      const Func* func = module->GetFunc(export_->var);
+      Index num_results = func->GetNumResults();
+      for (Index i = 0; i < num_results; ++i)
+        WriteTypeObject(func->GetResultType(i));
       break;
     }
 
     case ActionType::Get: {
-      export_ = get_export_by_name(module, &action->name);
+      export_ = module->GetExport(action->name);
       assert(export_->kind == ExternalKind::Global);
-      Global* global = get_global_by_var(module, &export_->var);
+      const Global* global = module->GetGlobal(export_->var);
       WriteTypeObject(global->type);
       break;
     }
@@ -396,7 +396,7 @@ void BinaryWriterSpec::WriteInvalidModule(const ScriptModule* module,
       break;
   }
 
-  WriteLocation(get_script_module_location(module));
+  WriteLocation(&module->GetLocation());
   WriteSeparator();
   char* filename = GetModuleFilename(extension);
   WriteKey("filename");

@@ -19,6 +19,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "ir.h"
+
 namespace wabt {
 
 void BindingHash::FindDuplicates(DuplicateCallback callback) const {
@@ -28,6 +30,12 @@ void BindingHash::FindDuplicates(DuplicateCallback callback) const {
     SortDuplicatesVectorByLocation(&duplicates);
     CallCallbacks(duplicates, callback);
   }
+}
+
+Index BindingHash::FindIndex(const Var& var) const {
+  if (var.type == VarType::Name)
+    return FindIndex(var.name);
+  return var.index;
 }
 
 void BindingHash::CreateDuplicatesVector(
