@@ -32,8 +32,6 @@
 #include "wat-writer.h"
 #include "writer.h"
 
-#define PROGRAM_NAME "wast-desugar"
-
 using namespace wabt;
 
 static const char* s_infile;
@@ -41,96 +39,37 @@ static const char* s_outfile;
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
 
-enum {
-  FLAG_HELP,
-  FLAG_OUTPUT,
-  FLAG_FOLD_EXPRS,
-  FLAG_GENERATE_NAMES,
-  NUM_FLAGS
-};
-
 static const char s_description[] =
-    "  read a file in the wasm s-expression format and format it.\n"
-    "\n"
-    "examples:\n"
-    "  # write output to stdout\n"
-    "  $ wast-desugar test.wast\n"
-    "\n"
-    "  # write output to test2.wast\n"
-    "  $ wast-desugar test.wast -o test2.wast\n"
-    "\n"
-    "  # generate names for indexed variables\n"
-    "  $ wast-desugar --generate-names test.wast\n";
+R"(  read a file in the wasm s-expression format and format it.
 
-static Option s_options[] = {
-    {FLAG_HELP, 'h', "help", nullptr, HasArgument::No,
-     "print this help message"},
-    {FLAG_OUTPUT, 'o', "output", "FILE", HasArgument::Yes,
-     "output file for the formatted file"},
-    {FLAG_FOLD_EXPRS, 'f', "fold-exprs", nullptr, HasArgument::No,
-     "Write folded expressions where possible"},
-    {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, HasArgument::No,
-     "Give auto-generated names to non-named functions, types, etc."},
-};
-WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
+examples:
+  # write output to stdout
+  $ wast-desugar test.wast
 
-static void on_option(struct OptionParser* parser,
-                      struct Option* option,
-                      const char* argument) {
-  switch (option->id) {
-    case FLAG_HELP:
-      print_help(parser, PROGRAM_NAME);
-      exit(0);
-      break;
+  # write output to test2.wast
+  $ wast-desugar test.wast -o test2.wast
 
-    case FLAG_OUTPUT:
-      s_outfile = argument;
-      break;
-
-    case FLAG_FOLD_EXPRS:
-      s_write_wat_options.fold_exprs = true;
-      break;
-
-    case FLAG_GENERATE_NAMES:
-      s_generate_names = true;
-      break;
-  }
-}
-
-static void on_argument(struct OptionParser* parser, const char* argument) {
-  s_infile = argument;
-}
-
-static void on_option_error(struct OptionParser* parser,
-                            const char* message) {
-  WABT_FATAL("%s\n", message);
-}
+  # generate names for indexed variables
+  $ wast-desugar --generate-names test.wast
+)";
 
 static void parse_options(int argc, char** argv) {
-  OptionParser parser;
-  WABT_ZERO_MEMORY(parser);
-  parser.description = s_description;
-  parser.options = s_options;
-  parser.num_options = WABT_ARRAY_SIZE(s_options);
-  parser.on_option = on_option;
-  parser.on_argument = on_argument;
-  parser.on_error = on_option_error;
-  parse_options(&parser, argc, argv);
+  OptionParser parser("wast-desugar", s_description);
 
-  if (!s_infile) {
-    print_help(&parser, PROGRAM_NAME);
-    WABT_FATAL("No filename given.\n");
-  }
+  parser.AddHelpOption();
+  parser.AddOption('o', "output", "FILE", "Output file for the formatted file",
+                   [](const char* argument) { s_outfile = argument; });
+  parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
+                   []() { s_write_wat_options.fold_exprs = true; });
+  parser.AddOption(
+      "generate-names",
+      "Give auto-generated names to non-named functions, types, etc.",
+      []() { s_generate_names = true; });
+
+  parser.AddArgument("filename", OptionParser::ArgumentCount::One,
+                     [](const char* argument) { s_infile = argument; });
+  parser.Parse(argc, argv);
 }
-
-struct Context {
-  MemoryWriter json_writer;
-  MemoryWriter module_writer;
-  Stream json_stream;
-  StringSlice output_filename_noext;
-  char* module_filename;
-  Result result;
-};
 
 int ProgramMain(int argc, char** argv) {
   init_stdio();

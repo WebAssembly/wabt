@@ -24,11 +24,11 @@ examples:
   $ wasm-interp test.wasm -V 100 --run-all-exports
 
 options:
-  -v, --verbose                      use multiple times for more info
-  -h, --help                         print this help message
-  -V, --value-stack-size=SIZE        size in elements of the value stack
-  -C, --call-stack-size=SIZE         size in frames of the call stack
-  -t, --trace                        trace execution
-      --spec                         run spec tests (input file should be .json)
-      --run-all-exports              run all the exported functions, in order. useful for testing
+  -v, --verbose                      Use multiple times for more info
+  -h, --help                         Print this help message
+  -V, --value-stack-size=SIZE        Size in elements of the value stack
+  -C, --call-stack-size=SIZE         Size in elements of the call stack
+  -t, --trace                        Trace execution
+      --spec                         Run spec tests (input file should be .json)
+      --run-all-exports              Run all the exported functions, in order. Useful for testing
 ;;; STDOUT ;;)

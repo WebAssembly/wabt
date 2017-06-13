@@ -14,9 +14,9 @@ examples:
   $ wasm2wast test.wasm --no-debug-names -o test.wast
 
 options:
-  -v, --verbose                use multiple times for more info
-  -h, --help                   print this help message
-  -o, --output=FILENAME        output file for the generated wast file, by default use stdout
+  -v, --verbose                Use multiple times for more info
+  -h, --help                   Print this help message
+  -o, --output=FILENAME        Output file for the generated wast file, by default use stdout
   -f, --fold-exprs             Write folded expressions where possible
       --inline-exports         Write all exports inline
       --no-debug-names         Ignore debug names in the binary file

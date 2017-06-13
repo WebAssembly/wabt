@@ -1,0 +1,14 @@
+;;; EXE: %(wasm-link)s
+;;; FLAGS: --help
+(;; STDOUT ;;;
+usage: wasm-link [options] filename+
+
+  link one or more wasm binary modules into a single binary module.
+  $ wasm-link m1.wasm m2.wasm -o out.wasm
+
+options:
+      --debug              Log extra information when reading and writing wasm files
+  -o, --output=FILE        Output wasm binary file
+  -r, --relocatable        Output a relocatable object file
+  -h, --help               Print this help message
+;;; STDOUT ;;)

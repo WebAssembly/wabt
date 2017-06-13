@@ -26,8 +26,6 @@
 #include "option-parser.h"
 #include "stream.h"
 
-#define PROGRAM_NAME "wasm-opcodecnt"
-
 #define ERROR(fmt, ...) \
   fprintf(stderr, "%s:%d: " fmt, __FILE__, __LINE__, __VA_ARGS__)
 
@@ -44,91 +42,40 @@ static ReadBinaryOptions s_read_binary_options =
 
 static std::unique_ptr<FileStream> s_log_stream;
 
-#define NOPE HasArgument::No
-#define YEP HasArgument::Yes
-
-enum {
-  FLAG_VERBOSE,
-  FLAG_HELP,
-  FLAG_OUTPUT,
-  FLAG_CUTOFF,
-  FLAG_SEPARATOR,
-  NUM_FLAGS
-};
-
 static const char s_description[] =
-    "  Read a file in the wasm binary format, and count opcode usage for\n"
-    "  instructions.\n"
-    "\n"
-    "examples:\n"
-    "  # parse binary file test.wasm and write pcode dist file test.dist\n"
-    "  $ wasm-opcodecnt test.wasm -o test.dist\n";
+R"(  Read a file in the wasm binary format, and count opcode usage for
+  instructions.
 
-static Option s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
-     "use multiple times for more info"},
-    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
-    {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
-     "output file for the opcode counts, by default use stdout"},
-    {FLAG_CUTOFF, 'c', "cutoff", "N", YEP,
-     "cutoff for reporting counts less than N"},
-    {FLAG_SEPARATOR, 's', "separator", "SEPARATOR", YEP,
-     "Separator text between element and count when reporting counts"}};
-
-WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
-
-static void on_option(struct OptionParser* parser,
-                      struct Option* option,
-                      const char* argument) {
-  switch (option->id) {
-    case FLAG_VERBOSE:
-      s_verbose++;
-      s_log_stream = FileStream::CreateStdout();
-      s_read_binary_options.log_stream = s_log_stream.get();
-      break;
-
-    case FLAG_HELP:
-      print_help(parser, PROGRAM_NAME);
-      exit(0);
-      break;
-
-    case FLAG_OUTPUT:
-      s_outfile = argument;
-      break;
-
-    case FLAG_CUTOFF:
-      s_cutoff = atol(argument);
-      break;
-
-    case FLAG_SEPARATOR:
-      s_separator = argument;
-      break;
-  }
-}
-
-static void on_argument(struct OptionParser* parser, const char* argument) {
-  s_infile = argument;
-}
-
-static void on_option_error(struct OptionParser* parser, const char* message) {
-  WABT_FATAL("%s\n", message);
-}
+examples:
+  # parse binary file test.wasm and write pcode dist file test.dist
+  $ wasm-opcodecnt test.wasm -o test.dist
+)";
 
 static void parse_options(int argc, char** argv) {
-  OptionParser parser;
-  WABT_ZERO_MEMORY(parser);
-  parser.description = s_description;
-  parser.options = s_options;
-  parser.num_options = WABT_ARRAY_SIZE(s_options);
-  parser.on_option = on_option;
-  parser.on_argument = on_argument;
-  parser.on_error = on_option_error;
-  parse_options(&parser, argc, argv);
+  OptionParser parser("wasm-opcodecnt", s_description);
 
-  if (!s_infile) {
-    print_help(&parser, PROGRAM_NAME);
-    WABT_FATAL("No filename given.\n");
-  }
+  parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
+    s_verbose++;
+    s_log_stream = FileStream::CreateStdout();
+    s_read_binary_options.log_stream = s_log_stream.get();
+  });
+  parser.AddOption('h', "help", "Print this help message", [&parser]() {
+    parser.PrintHelp();
+    exit(0);
+  });
+  parser.AddOption('o', "output", "FILENAME",
+                   "Output file for the opcode counts, by default use stdout",
+                   [](const char* argument) { s_outfile = argument; });
+  parser.AddOption(
+      'c', "cutoff", "N", "Cutoff for reporting counts less than N",
+      [](const std::string& argument) { s_cutoff = atol(argument.c_str()); });
+  parser.AddOption(
+      's', "separator", "SEPARATOR",
+      "Separator text between element and count when reporting counts",
+      [](const char* argument) { s_separator = argument; });
+  parser.AddArgument("filename", OptionParser::ArgumentCount::OneOrMore,
+                     [](const char* argument) { s_infile = argument; });
+  parser.Parse(argc, argv);
 }
 
 typedef int(int_counter_lt_fcn)(const IntCounter&, const IntCounter&);

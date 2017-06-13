@@ -22,14 +22,14 @@ examples:
   $ wast2wasm spec-test.wast --spec -o spec-test.json
 
 options:
-  -v, --verbose                        use multiple times for more info
-  -h, --help                           print this help message
+  -v, --verbose                        Use multiple times for more info
+  -h, --help                           Print this help message
       --debug-parser                   Turn on debugging the parser of wast files
-  -d, --dump-module                    print a hexdump of the module to stdout
+  -d, --dump-module                    Print a hexdump of the module to stdout
       --future-exceptions              Test future extension for exception handling
   -o, --output=FILE                    output wasm binary file
-  -r,                                  create a relocatable wasm binary (suitable for linking with wasm-link)
-      --spec                           parse a file with multiple modules and assertions, like the spec tests
+  -r, --relocatable                    Create a relocatable wasm binary (suitable for linking with wasm-link)
+      --spec                           Parse a file with multiple modules and assertions, like the spec tests
       --no-canonicalize-leb128s        Write all LEB128 sizes as 5-bytes instead of their minimal size
       --debug-names                    Write debug names to the generated binary file
       --no-check                       Don't check for invalid modules

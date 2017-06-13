@@ -25,46 +25,14 @@
 #include "binary-reader.h"
 #include "binary-reader-objdump.h"
 
-#define PROGRAM_NAME "wasm-objdump"
-
-#define NOPE HasArgument::No
-#define YEP HasArgument::Yes
-
 using namespace wabt;
 
-enum {
-  FLAG_HEADERS,
-  FLAG_SECTION,
-  FLAG_RAW,
-  FLAG_DISASSEMBLE,
-  FLAG_DEBUG,
-  FLAG_DETAILS,
-  FLAG_RELOCS,
-  FLAG_HELP,
-  NUM_FLAGS
-};
-
 static const char s_description[] =
-    "  Print information about the contents of wasm binaries.\n"
-    "\n"
-    "examples:\n"
-    "  $ wasm-objdump test.wasm\n";
+R"(  Print information about the contents of wasm binaries.
 
-static Option s_options[] = {
-    {FLAG_HEADERS, 'h', "headers", nullptr, NOPE, "print headers"},
-    {FLAG_SECTION, 'j', "section", nullptr, YEP, "select just one section"},
-    {FLAG_RAW, 's', "full-contents", nullptr, NOPE,
-     "print raw section contents"},
-    {FLAG_DISASSEMBLE, 'd', "disassemble", nullptr, NOPE,
-     "disassemble function bodies"},
-    {FLAG_DEBUG, '\0', "debug", nullptr, NOPE, "print extra debug information"},
-    {FLAG_DETAILS, 'x', "details", nullptr, NOPE, "Show section details"},
-    {FLAG_RELOCS, 'r', "reloc", nullptr, NOPE,
-     "show relocations inline with disassembly"},
-    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
-};
-
-WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
+examples:
+  $ wasm-objdump test.wasm
+)";
 
 static ObjdumpOptions s_objdump_options;
 
@@ -72,70 +40,33 @@ static std::vector<const char*> s_infiles;
 
 static std::unique_ptr<FileStream> s_log_stream;
 
-static void on_argument(struct OptionParser* parser, const char* argument) {
-  s_infiles.push_back(argument);
-}
-
-static void on_option(struct OptionParser* parser,
-                      struct Option* option,
-                      const char* argument) {
-  switch (option->id) {
-    case FLAG_HEADERS:
-      s_objdump_options.headers = true;
-      break;
-
-    case FLAG_RAW:
-      s_objdump_options.raw = true;
-      break;
-
-    case FLAG_DEBUG:
-      s_objdump_options.debug = true;
-      s_log_stream = FileStream::CreateStdout();
-      s_objdump_options.log_stream = s_log_stream.get();
-      break;
-
-    case FLAG_DISASSEMBLE:
-      s_objdump_options.disassemble = true;
-      break;
-
-    case FLAG_DETAILS:
-      s_objdump_options.details = true;
-      break;
-
-    case FLAG_RELOCS:
-      s_objdump_options.relocs = true;
-      break;
-
-    case FLAG_SECTION:
-      s_objdump_options.section_name = argument;
-      break;
-
-    case FLAG_HELP:
-      print_help(parser, PROGRAM_NAME);
-      exit(0);
-      break;
-  }
-}
-
-static void on_option_error(struct OptionParser* parser, const char* message) {
-  WABT_FATAL("%s\n", message);
-}
-
 static void parse_options(int argc, char** argv) {
-  OptionParser parser;
-  WABT_ZERO_MEMORY(parser);
-  parser.description = s_description;
-  parser.options = s_options;
-  parser.num_options = WABT_ARRAY_SIZE(s_options);
-  parser.on_option = on_option;
-  parser.on_argument = on_argument;
-  parser.on_error = on_option_error;
-  parse_options(&parser, argc, argv);
+  OptionParser parser("wasm-objdump", s_description);
 
-  if (s_infiles.size() == 0) {
-    print_help(&parser, PROGRAM_NAME);
-    WABT_FATAL("No filename given.\n");
-  }
+  parser.AddOption('h', "headers", "Print headers",
+                   []() { s_objdump_options.headers = true; });
+  parser.AddOption(
+      'j', "section", "SECTION", "Select just one section",
+      [](const char* argument) { s_objdump_options.section_name = argument; });
+  parser.AddOption('s', "full-contents", "Print raw section contents",
+                   []() { s_objdump_options.raw = true; });
+  parser.AddOption('d', "disassemble", "Disassemble function bodies",
+                   []() { s_objdump_options.disassemble = true; });
+  parser.AddOption("debug", "Print extra debug information", []() {
+    s_objdump_options.debug = true;
+    s_log_stream = FileStream::CreateStdout();
+    s_objdump_options.log_stream = s_log_stream.get();
+  });
+  parser.AddOption('x', "details", "Show section details",
+                   []() { s_objdump_options.details = true; });
+  parser.AddOption('r', "reloc", "Show relocations inline with disassembly",
+                   []() { s_objdump_options.relocs = true; });
+  parser.AddHelpOption();
+  parser.AddArgument(
+      "filename", OptionParser::ArgumentCount::OneOrMore,
+      [](const char* argument) { s_infiles.push_back(argument); });
+
+  parser.Parse(argc, argv);
 }
 
 Result dump_file(const char* filename) {

@@ -1,0 +1,6 @@
+;;; EXE: %(wast2wasm)s
+;;; FLAGS: foo.txt bar.txt
+;;; ERROR: 1
+(;; STDERR ;;;
+unexpected argument "bar.txt"
+;;; STDERR ;;)

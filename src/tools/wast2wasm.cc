@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstdio>
+#include <string>
 
 #include "config.h"
 
@@ -33,8 +34,6 @@
 #include "validator.h"
 #include "wast-parser.h"
 #include "writer.h"
-
-#define PROGRAM_NAME "wast2wasm"
 
 using namespace wabt;
 
@@ -52,145 +51,66 @@ static WastParseOptions s_parse_options;
 
 static std::unique_ptr<FileStream> s_log_stream;
 
-#define NOPE HasArgument::No
-#define YEP HasArgument::Yes
-
-enum {
-  FLAG_VERBOSE,
-  FLAG_HELP,
-  FLAG_DUMP_MODULE,
-  FLAG_OUTPUT,
-  FLAG_RELOCATABLE,
-  FLAG_SPEC,
-  FLAG_NO_CANONICALIZE_LEB128S,
-  FLAG_DEBUG_NAMES,
-  FLAG_NO_CHECK,
-  FLAG_EXCEPTIONS,
-  FLAG_DEBUG_PARSER,
-  NUM_FLAGS
-};
-
 static const char s_description[] =
-    "  read a file in the wasm s-expression format, check it for errors, and\n"
-    "  convert it to the wasm binary format.\n"
-    "\n"
-    "examples:\n"
-    "  # parse and typecheck test.wast\n"
-    "  $ wast2wasm test.wast\n"
-    "\n"
-    "  # parse test.wast and write to binary file test.wasm\n"
-    "  $ wast2wasm test.wast -o test.wasm\n"
-    "\n"
-    "  # parse spec-test.wast, and write verbose output to stdout (including\n"
-    "  # the meaning of every byte)\n"
-    "  $ wast2wasm spec-test.wast -v\n"
-    "\n"
-    "  # parse spec-test.wast, and write files to spec-test.json. Modules are\n"
-    "  # written to spec-test.0.wasm, spec-test.1.wasm, etc.\n"
-    "  $ wast2wasm spec-test.wast --spec -o spec-test.json\n";
+R"(  read a file in the wasm s-expression format, check it for errors, and
+  convert it to the wasm binary format.
 
-static Option s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
-     "use multiple times for more info"},
-    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
-    {FLAG_DEBUG_PARSER, 0, "debug-parser", nullptr, NOPE,
-     "Turn on debugging the parser of wast files"},
-    {FLAG_DUMP_MODULE, 'd', "dump-module", nullptr, NOPE,
-     "print a hexdump of the module to stdout"},
-    {FLAG_EXCEPTIONS, 0, "future-exceptions", nullptr, NOPE,
-     "Test future extension for exception handling"},
-    {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
-    {FLAG_RELOCATABLE, 'r', nullptr, nullptr, NOPE,
-     "create a relocatable wasm binary (suitable for linking with wasm-link)"},
-    {FLAG_SPEC, 0, "spec", nullptr, NOPE,
-     "parse a file with multiple modules and assertions, like the spec "
-     "tests"},
-    {FLAG_NO_CANONICALIZE_LEB128S, 0, "no-canonicalize-leb128s", nullptr, NOPE,
-     "Write all LEB128 sizes as 5-bytes instead of their minimal size"},
-    {FLAG_DEBUG_NAMES, 0, "debug-names", nullptr, NOPE,
-     "Write debug names to the generated binary file"},
-    {FLAG_NO_CHECK, 0, "no-check", nullptr, NOPE,
-     "Don't check for invalid modules"}
-};
-WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
+examples:
+  # parse and typecheck test.wast
+  $ wast2wasm test.wast
 
-static void on_option(struct OptionParser* parser,
-                      struct Option* option,
-                      const char* argument) {
-  switch (option->id) {
-    case FLAG_VERBOSE:
-      s_verbose++;
-      s_log_stream = FileStream::CreateStdout();
-      s_write_binary_options.log_stream = s_log_stream.get();
-      break;
+  # parse test.wast and write to binary file test.wasm
+  $ wast2wasm test.wast -o test.wasm
 
-    case FLAG_HELP:
-      print_help(parser, PROGRAM_NAME);
-      exit(0);
-      break;
+  # parse spec-test.wast, and write verbose output to stdout (including
+  # the meaning of every byte)
+  $ wast2wasm spec-test.wast -v
 
-    case FLAG_DUMP_MODULE:
-      s_dump_module = true;
-      break;
+  # parse spec-test.wast, and write files to spec-test.json. Modules are
+  # written to spec-test.0.wasm, spec-test.1.wasm, etc.
+  $ wast2wasm spec-test.wast --spec -o spec-test.json
+)";
 
-    case FLAG_OUTPUT:
-      s_outfile = argument;
-      break;
+static void parse_options(int argc, char* argv[]) {
+  OptionParser parser("wast2wasm", s_description);
 
-    case FLAG_RELOCATABLE:
-      s_write_binary_options.relocatable = true;
-      break;
+  parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
+    s_verbose++;
+    s_log_stream = FileStream::CreateStdout();
+    s_write_binary_options.log_stream = s_log_stream.get();
+  });
+  parser.AddHelpOption();
+  parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
+                   []() { s_parse_options.debug_parsing = true; });
+  parser.AddOption('d', "dump-module",
+                   "Print a hexdump of the module to stdout",
+                   []() { s_dump_module = true; });
+  parser.AddOption("future-exceptions",
+                   "Test future extension for exception handling",
+                   []() { s_parse_options.allow_exceptions = true; });
+  parser.AddOption('o', "output", "FILE", "output wasm binary file",
+                   [](const char* argument) { s_outfile = argument; });
+  parser.AddOption(
+      'r', "relocatable",
+      "Create a relocatable wasm binary (suitable for linking with wasm-link)",
+      []() { s_write_binary_options.relocatable = true; });
+  parser.AddOption(
+      "spec",
+      "Parse a file with multiple modules and assertions, like the spec tests",
+      []() { s_spec = true; });
+  parser.AddOption(
+      "no-canonicalize-leb128s",
+      "Write all LEB128 sizes as 5-bytes instead of their minimal size",
+      []() { s_write_binary_options.canonicalize_lebs = false; });
+  parser.AddOption("debug-names",
+                   "Write debug names to the generated binary file",
+                   []() { s_write_binary_options.write_debug_names = true; });
+  parser.AddOption("no-check", "Don't check for invalid modules",
+                   []() { s_validate = false; });
+  parser.AddArgument("filename", OptionParser::ArgumentCount::One,
+                     [](const char* argument) { s_infile = argument; });
 
-    case FLAG_SPEC:
-      s_spec = true;
-      break;
-
-    case FLAG_NO_CANONICALIZE_LEB128S:
-      s_write_binary_options.canonicalize_lebs = false;
-      break;
-
-    case FLAG_DEBUG_NAMES:
-      s_write_binary_options.write_debug_names = true;
-      break;
-
-    case FLAG_NO_CHECK:
-      s_validate = false;
-      break;
-
-    case FLAG_EXCEPTIONS:
-      s_parse_options.allow_exceptions = true;
-      break;
-
-    case FLAG_DEBUG_PARSER:
-      s_parse_options.debug_parsing = true;
-      break;
-  }
-}
-
-static void on_argument(struct OptionParser* parser, const char* argument) {
-  s_infile = argument;
-}
-
-static void on_option_error(struct OptionParser* parser,
-                            const char* message) {
-  WABT_FATAL("%s\n", message);
-}
-
-static void parse_options(int argc, char** argv) {
-  OptionParser parser;
-  WABT_ZERO_MEMORY(parser);
-  parser.description = s_description;
-  parser.options = s_options;
-  parser.num_options = WABT_ARRAY_SIZE(s_options);
-  parser.on_option = on_option;
-  parser.on_argument = on_argument;
-  parser.on_error = on_option_error;
-  parse_options(&parser, argc, argv);
-
-  if (!s_infile) {
-    print_help(&parser, PROGRAM_NAME);
-    WABT_FATAL("No filename given.\n");
-  }
+  parser.Parse(argc, argv);
 }
 
 static void write_buffer_to_file(const char* filename,

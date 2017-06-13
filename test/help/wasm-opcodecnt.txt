@@ -1,0 +1,19 @@
+;;; EXE: %(wasm-opcodecnt)s
+;;; FLAGS: --help
+(;; STDOUT ;;;
+usage: wasm-opcodecnt [options] filename+
+
+  Read a file in the wasm binary format, and count opcode usage for
+  instructions.
+
+examples:
+  # parse binary file test.wasm and write pcode dist file test.dist
+  $ wasm-opcodecnt test.wasm -o test.dist
+
+options:
+  -v, --verbose                    Use multiple times for more info
+  -h, --help                       Print this help message
+  -o, --output=FILENAME            Output file for the opcode counts, by default use stdout
+  -c, --cutoff=N                   Cutoff for reporting counts less than N
+  -s, --separator=SEPARATOR        Separator text between element and count when reporting counts
+;;; STDOUT ;;)
