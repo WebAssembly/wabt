@@ -2,5 +2,5 @@
 ;;; FLAGS: foo.txt bar.txt
 ;;; ERROR: 1
 (;; STDERR ;;;
-unexpected argument "bar.txt"
+unexpected argument 'bar.txt'
 ;;; STDERR ;;)

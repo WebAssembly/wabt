@@ -37,7 +37,7 @@ OptionParser::Option::Option(char short_name,
     : short_name(short_name),
       long_name(long_name),
       metavar(metavar),
-      has_argument(has_argument),
+      has_argument(has_argument == HasArgument::Yes),
       help(help),
       callback(callback) {}
 
@@ -99,7 +99,7 @@ void OptionParser::AddHelpOption() {
 // static
 int OptionParser::Match(const char* s,
                         const std::string& full,
-                        HasArgument has_argument) {
+                        bool has_argument) {
   int i;
   for (i = 0;; i++) {
     if (full[i] == '\0') {
@@ -110,7 +110,7 @@ int OptionParser::Match(const char* s,
 
       // We want to fail if s is longer than full, e.g. --foobar vs. --foo.
       // However, if s ends with an '=', it's OK.
-      if (!(has_argument == HasArgument::Yes && s[i] == '='))
+      if (!(has_argument && s[i] == '='))
         return -1;
       break;
     }
@@ -133,7 +133,7 @@ void OptionParser::DefaultError(const std::string& message) {
 
 void OptionParser::HandleArgument(size_t* arg_index, const char* arg_value) {
   if (*arg_index >= arguments_.size()) {
-    Errorf("unexpected argument \"%s\"", arg_value);
+    Errorf("unexpected argument '%s'", arg_value);
     return;
   }
   Argument& argument = arguments_[*arg_index];
@@ -172,21 +172,21 @@ void OptionParser::Parse(int argc, char* argv[]) {
         }
 
         if (best_count > 1) {
-          Errorf("ambiguous option \"%s\"", arg);
+          Errorf("ambiguous option '%s'", arg);
           continue;
         } else if (best_count == 0) {
-          Errorf("unknown option \"%s\"", arg);
+          Errorf("unknown option '%s'", arg);
           continue;
         }
 
         const Option& best_option = options_[best_index];
         const char* option_argument = nullptr;
-        if (best_option.has_argument == HasArgument::Yes) {
+        if (best_option.has_argument) {
           if (arg[best_length] == '=') {
             option_argument = &arg[best_length + 1];
           } else {
             if (i + 1 == argc || argv[i + 1][0] == '-') {
-              Errorf("option \"--%s\" requires argument",
+              Errorf("option '--%s' requires argument",
                      best_option.long_name.c_str());
               continue;
             }
@@ -209,16 +209,16 @@ void OptionParser::Parse(int argc, char* argv[]) {
           for (const Option& option: options_) {
             if (option.short_name && arg[k] == option.short_name) {
               const char* option_argument = nullptr;
-              if (option.has_argument == HasArgument::Yes) {
+              if (option.has_argument) {
                 // A short option with a required argument cannot be followed
                 // by other short options_.
                 if (arg[k + 1] != '\0') {
-                  Errorf("option \"-%c\" requires argument", option.short_name);
+                  Errorf("option '-%c' requires argument", option.short_name);
                   break;
                 }
 
                 if (i + 1 == argc || argv[i + 1][0] == '-') {
-                  Errorf("option \"-%c\" requires argument", option.short_name);
+                  Errorf("option '-%c' requires argument", option.short_name);
                   break;
                 }
                 ++i;
@@ -231,7 +231,7 @@ void OptionParser::Parse(int argc, char* argv[]) {
           }
 
           if (!matched) {
-            Errorf("unknown option \"-%c\"", arg[k]);
+            Errorf("unknown option '-%c'", arg[k]);
             continue;
           }
         }
