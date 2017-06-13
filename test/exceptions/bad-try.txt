@@ -2,11 +2,9 @@
 ;;; ERROR: 1
 (module
   (func (result i32)
-    (try $try1
-      (block (result i32)
-        (nop)
-        (i32.const 7)
-      )
+    (try $try1 (result i32)
+      (nop)
+      (i32.const 7)
       (catch 1
         (i32.const 8)
       )
@@ -18,9 +16,9 @@
 ) 
 (;; STDERR ;;;
 out/test/exceptions/bad-try.txt:5:6: opcode not allowed: try
-    (try $try1
+    (try $try1 (result i32)
      ^^^
-out/test/exceptions/bad-try.txt:14:10: opcode not allowed: rethrow
+out/test/exceptions/bad-try.txt:12:10: opcode not allowed: rethrow
         (rethrow $try1)
          ^^^^^^^
 ;;; STDERR ;;)

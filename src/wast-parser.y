@@ -95,12 +95,12 @@
     }                                                                      \
   } while (0)
 
-#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                       \
-  do {                                                                 \
-    if (!parser->options->allow_exceptions) {                          \
-      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s",  \
-                        opcode_name);                                  \
-    }                                                                  \
+#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                      \
+  do {                                                                \
+    if (!parser->options->allow_exceptions) {                         \
+      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s", \
+                        opcode_name);                                 \
+    }                                                                 \
  } while (0)
 
 #define YYMALLOC(size) new char [size]
@@ -196,6 +196,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<exception> exception
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
+%type<expr> try_  try_inst_list
 %type<expr_list> catch_instr catch_list catch_instr_list
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
@@ -601,8 +602,8 @@ block_instr :
       CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
     }
   | try_check labeling_opt block catch_instr_list END labeling_opt {
+      $3->label = $2;
       $$ = Expr::CreateTry($3, $4.first);
-      $$->try_block.label = $2;
       CHECK_END_LABEL(@6, $3->label, $6);
     }
 ;
@@ -665,12 +666,40 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-  | try_check labeling_opt LPAR BLOCK block RPAR catch_list {
-      Expr* try_ = Expr::CreateTry($5, $7.first);
-      try_->try_block.label = $2;
-      $$ = join_exprs1(&@1, try_);
+  | try_check labeling_opt try_ {
+      Block* block = $3->try_block.block;
+      block->label = $2;
+      $$ = join_exprs1(&@1, $3);
     }
   ;
+
+try_ :
+    block_sig try_ {
+      $$ = $2;
+      Block* block = $$->try_block.block;
+      $$->try_block.block->sig.insert(block->sig.end(), $1->begin(), $1->end());
+      delete $1;
+    }
+  | try_inst_list
+  ;
+
+try_inst_list :
+      instr catch_list {
+        Block* block = new Block();
+        block->first = $1.first;
+        $$ = Expr::CreateTry(block, $2.first);
+      }
+    | instr try_inst_list {
+        $$ = $2;
+        Block* block = $$->try_block.block;
+        if ($1.last) {
+          $1.last->next = block->first;
+        } else {
+          $1.first->next = block->first;
+        }
+        block->first = $1.first;
+      }
+    ;
 
 catch_list :
     LPAR catch_instr RPAR {
