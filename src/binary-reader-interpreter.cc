@@ -939,6 +939,11 @@ wabt::Result BinaryReaderInterpreter::OnExport(Index index,
       }
       break;
     }
+
+    case ExternalKind::Except:
+      // TODO(karlschimpf) Define
+      WABT_FATAL("BinaryReaderInterpreter::OnExport(except) not implemented");
+      break;
   }
   return AppendExport(module, kind, item_index, name);
 }

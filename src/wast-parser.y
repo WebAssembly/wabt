@@ -95,12 +95,12 @@
     }                                                                      \
   } while (0)
 
-#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                       \
-  do {                                                                 \
-    if (!parser->options->allow_exceptions) {                          \
-      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s",  \
-                        opcode_name);                                  \
-    }                                                                  \
+#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                      \
+  do {                                                                \
+    if (!parser->options->allow_exceptions) {                         \
+      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s", \
+                        opcode_name);                                 \
+    }                                                                 \
  } while (0)
 
 #define YYMALLOC(size) new char [size]
@@ -173,7 +173,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %token CONST UNARY BINARY COMPARE CONVERT SELECT
 %token UNREACHABLE CURRENT_MEMORY GROW_MEMORY
 %token FUNC START TYPE PARAM RESULT LOCAL GLOBAL
-%token TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT
+%token TABLE ELEM MEMORY DATA OFFSET IMPORT EXPORT EXCEPT
 %token MODULE BIN QUOTE
 %token REGISTER INVOKE GET
 %token ASSERT_MALFORMED ASSERT_INVALID ASSERT_UNLINKABLE
@@ -193,8 +193,10 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<commands> cmd_list
 %type<const_> const
 %type<consts> const_list
+%type<exception> exception
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
+%type<expr> try_  try_instr_list
 %type<expr_list> catch_instr catch_list catch_instr_list
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
@@ -205,7 +207,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<limits> limits
 %type<memory> memory_sig
 %type<module> module module_fields_opt module_fields inline_module
-%type<module_field> type_def start data elem import export
+%type<module_field> type_def start data elem import export exception_field
 %type<module_fields> func func_fields table table_fields memory memory_fields global global_fields module_field
 %type<script_module> script_module
 %type<literal> literal
@@ -627,9 +629,8 @@ catch_instr :
       delete $2;
       $$ = join_exprs1(&@1, expr);
     }
-  | CATCH_ALL var instr_list {
-      Expr* expr = Expr::CreateCatchAll(std::move(*$2), $3.first);
-      delete $2;
+  | CATCH_ALL instr_list {
+      Expr* expr = Expr::CreateCatchAll($2.first);
       $$ = join_exprs1(&@1, expr);
     }
   ;
@@ -665,12 +666,39 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-  | try_check LPAR BLOCK labeling_opt block RPAR catch_list {
-      $5->label = $4;
-      Expr* try_ = Expr::CreateTry($5, $7.first);
-      $$ = join_exprs1(&@1, try_);
+  | try_check labeling_opt try_ {
+      Block* block = $3->try_block.block;
+      block->label = $2;
+      $$ = join_exprs1(&@1, $3);
     }
   ;
+
+try_ :
+    block_sig try_ {
+      $$ = $2;
+      Block* block = $$->try_block.block;
+      block->sig.insert(block->sig.end(), $1->begin(), $1->end());
+      delete $1;
+    }
+  | try_instr_list
+  ;
+
+try_instr_list :
+      catch_list {
+        Block* block = new Block();
+        $$ = Expr::CreateTry(block, $1.first);
+      }
+    | instr try_instr_list {
+        $$ = $2;
+        Block* block = $$->try_block.block;
+        if ($1.last) {
+          $1.last->next = block->first;
+        } else {
+          $1.first->next = block->first;
+        }
+        block->first = $1.first;
+      }
+    ;
 
 catch_list :
     LPAR catch_instr RPAR {
@@ -758,6 +786,23 @@ const_expr :
     instr_list
 ;
 
+/* Exceptions */
+exception :
+    LPAR EXCEPT bind_var_opt value_type_list RPAR {
+      $$ = new Exception();
+      $$->name = $3;
+      $$->sig = std::move(*$4);
+      delete $4;
+    }
+  ;
+exception_field :
+    exception {
+      $$ = new ModuleField(ModuleFieldType::Except);
+      $$->loc = @1;
+      $$->except = $1;
+    }
+  ;
+    
 /* Functions */
 func :
     LPAR FUNC bind_var_opt func_fields RPAR {
@@ -1159,6 +1204,11 @@ import_desc :
       $$->global = $4;
       $$->global->name = $3;
     }
+  | exception {
+      $$ = new Import();
+      $$->kind = ExternalKind::Except;
+      $$->except = $1;
+    }
 ;
 
 import :
@@ -1201,6 +1251,12 @@ export_desc :
   | LPAR GLOBAL var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Global;
+      $$->var = std::move(*$3);
+      delete $3;
+    }
+  | LPAR EXCEPT var RPAR {
+      $$ = new Export();
+      $$->kind = ExternalKind::Except;
       $$->var = std::move(*$3);
       delete $3;
     }
@@ -1262,6 +1318,7 @@ module_field :
   | start { $$.first = $$.last = $1; }
   | import { $$.first = $$.last = $1; }
   | export { $$.first = $$.last = $1; }
+  | exception_field { $$.first = $$.last = $1; }
 ;
 
 module_fields_opt :
@@ -1739,7 +1796,8 @@ void check_import_ordering(Location* loc, WastLexer* lexer, WastParser* parser,
       if (module->funcs.size() != module->num_func_imports ||
           module->tables.size() != module->num_table_imports ||
           module->memories.size() != module->num_memory_imports ||
-          module->globals.size() != module->num_global_imports) {
+          module->globals.size() != module->num_global_imports ||
+          module->excepts.size() != module->num_except_imports) {
         wast_parser_error(
             loc, lexer, parser,
             "imports must occur before all non-import definitions");
@@ -1806,6 +1864,13 @@ void append_module_fields(Module* module, ModuleField* first) {
             module->globals.push_back(field->import->global);
             ++module->num_global_imports;
             break;
+          case ExternalKind::Except:
+            name = &field->import->except->name;
+            bindings = &module->except_bindings;
+            index = module->excepts.size();
+            module->excepts.push_back(field->except);
+            ++module->num_except_imports;
+            break;
         }
         module->imports.push_back(field->import);
         break;
@@ -1859,6 +1924,13 @@ void append_module_fields(Module* module, ModuleField* first) {
           field->data_segment->memory_var.index = main_index;
         }
         module->data_segments.push_back(field->data_segment);
+        break;
+
+      case ModuleFieldType::Except:
+        name = &field->except->name;        
+        bindings = &module->except_bindings;
+        index = module->excepts.size();
+        module->excepts.push_back(field->except);
         break;
 
       case ModuleFieldType::Start:

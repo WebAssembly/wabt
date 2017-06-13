@@ -144,7 +144,7 @@ struct Expr {
   static Expr* CreateCall(Var);
   static Expr* CreateCallIndirect(Var);
   static Expr* CreateCatch(Var v, Expr* first);
-  static Expr* CreateCatchAll(Var v, Expr* first);
+  static Expr* CreateCatchAll(Expr* first);
   static Expr* CreateCompare(Opcode);
   static Expr* CreateConst(const Const&);
   static Expr* CreateConvert(Opcode);
@@ -177,6 +177,7 @@ struct Expr {
     struct Block *block, *loop;
     struct { Block* block; Expr* first_catch; } try_block;
     struct { Var var; Expr* first; } catch_;
+    struct { Expr* first; } catch_all;
     struct { Var var; } throw_, rethrow_;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;
@@ -187,6 +188,11 @@ struct Expr {
     struct { Block* true_; Expr* false_; } if_;
     struct { Opcode opcode; Address align; uint32_t offset; } load, store;
   };
+};
+
+struct Exception {
+  StringSlice name;
+  TypeVector sig;
 };
 
 struct FuncSignature {
@@ -319,6 +325,7 @@ struct Import {
     Table* table;
     Memory* memory;
     Global* global;
+    Exception* except;
   };
 };
 
@@ -343,6 +350,7 @@ enum class ModuleFieldType {
   Memory,
   DataSegment,
   Start,
+  Except
 };
 
 struct ModuleField {
@@ -364,6 +372,7 @@ struct ModuleField {
     ElemSegment* elem_segment;
     Memory* memory;
     DataSegment* data_segment;
+    Exception* except;
     Var start;
   };
 };
@@ -398,6 +407,7 @@ struct Module {
   ModuleField* first_field;
   ModuleField* last_field;
 
+  Index num_except_imports;
   Index num_func_imports;
   Index num_table_imports;
   Index num_memory_imports;
@@ -405,6 +415,7 @@ struct Module {
 
   // Cached for convenience; the pointers are shared with values that are
   // stored in either ModuleField or Import.
+  std::vector<Exception*> excepts;
   std::vector<Func*> funcs;
   std::vector<Global*> globals;
   std::vector<Import*> imports;
@@ -416,6 +427,7 @@ struct Module {
   std::vector<DataSegment*> data_segments;
   Var* start;
 
+  BindingHash except_bindings;
   BindingHash func_bindings;
   BindingHash global_bindings;
   BindingHash export_bindings;

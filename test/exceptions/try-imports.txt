@@ -2,7 +2,7 @@
 ;;; FLAGS: --future-exceptions
 ;;; ERROR: 1
 (module
-  (except $ex i32)
+  (import "c++" "except" (except $ex i32))
   (func (result i32)
     (try $try1 (result i32)
       (nop)
@@ -15,7 +15,7 @@
       )
     )
   )
-) 
+)
 (;; STDERR ;;;
 TryBlock: don't know how to visit
 ;;; STDERR ;;)

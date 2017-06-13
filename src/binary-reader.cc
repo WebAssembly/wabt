@@ -1361,6 +1361,10 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
         ERROR_UNLESS(item_index < NumTotalGlobals(),
                      "invalid export global index: %" PRIindex, item_index);
         break;
+      case ExternalKind::Except:
+        // TODO(karlschimpf) Define.
+        WABT_FATAL("read export except not implemented");
+        break;
     }
 
     CALLBACK(OnExport, i, static_cast<ExternalKind>(external_kind), item_index,

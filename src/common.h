@@ -187,9 +187,10 @@ enum class ExternalKind {
   Table = 1,
   Memory = 2,
   Global = 3,
+  Except = 4,
 
   First = Func,
-  Last = Global,
+  Last = Except,
 };
 static const int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
 
