@@ -206,7 +206,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<limits> limits
 %type<memory> memory_sig
 %type<module> module module_fields_opt module_fields inline_module
-%type<module_field> type_def start data elem import export except
+%type<module_field> type_def start data elem import export exception_field
 %type<module_fields> func func_fields table table_fields memory memory_fields global global_fields module_field
 %type<script_module> script_module
 %type<literal> literal
@@ -666,9 +666,8 @@ expr1 :
       assert(if_->type == ExprType::If);
       if_->if_.true_->label = $2;
     }
-  | try_check labeling_opt LPAR BLOCK labeling_opt block RPAR catch_list {
-      $6->label = $5;
-      Expr* try_ = Expr::CreateTry($6, $8.first);
+  | try_check labeling_opt LPAR BLOCK block RPAR catch_list {
+      Expr* try_ = Expr::CreateTry($5, $7.first);
       try_->try_block.label = $2;
       $$ = join_exprs1(&@1, try_);
     }
@@ -761,19 +760,19 @@ const_expr :
 ;
 
 /* Exceptions */
-except :
-    exception {
-      $$ = new ModuleField(ModuleFieldType::Except);
-      $$->loc = @1;
-      $$->except = $1;
-    }
-  ;
 exception :
     LPAR EXCEPT bind_var_opt value_type_list RPAR {
       $$ = new Exception();
       $$->name = $3;
       $$->sig = std::move(*$4);
       delete $4;
+    }
+  ;
+exception_field :
+    exception {
+      $$ = new ModuleField(ModuleFieldType::Except);
+      $$->loc = @1;
+      $$->except = $1;
     }
   ;
     
@@ -1231,7 +1230,8 @@ export_desc :
   | LPAR EXCEPT var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Except;
-      $$->var = $3;
+      $$->var = std::move(*$3);
+      delete $3;
     }
 ;
 export :
@@ -1291,7 +1291,7 @@ module_field :
   | start { $$.first = $$.last = $1; }
   | import { $$.first = $$.last = $1; }
   | export { $$.first = $$.last = $1; }
-  | except { $$.first = $$.last = $1; }
+  | exception_field { $$.first = $$.last = $1; }
 ;
 
 module_fields_opt :
