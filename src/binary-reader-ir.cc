@@ -278,7 +278,7 @@ Result BinaryReaderIR::OnType(Index index,
                                Type* param_types,
                                Index result_count,
                                Type* result_types) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::FuncType;
   field->func_type = new FuncType();
 
@@ -297,7 +297,7 @@ Result BinaryReaderIR::OnImportCount(Index count) {
 Result BinaryReaderIR::OnImport(Index index,
                                  StringSlice module_name,
                                  StringSlice field_name) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::Import;
   field->import = new Import();
 
@@ -382,7 +382,7 @@ Result BinaryReaderIR::OnFunctionCount(Index count) {
 }
 
 Result BinaryReaderIR::OnFunction(Index index, Index sig_index) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::Func;
   field->func = new Func();
 
@@ -404,7 +404,7 @@ Result BinaryReaderIR::OnTableCount(Index count) {
 Result BinaryReaderIR::OnTable(Index index,
                                Type elem_type,
                                const Limits* elem_limits) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::Table;
   field->table = new Table();
   field->table->elem_limits = *elem_limits;
@@ -418,7 +418,7 @@ Result BinaryReaderIR::OnMemoryCount(Index count) {
 }
 
 Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::Memory;
   field->memory = new Memory();
   field->memory->page_limits = *page_limits;
@@ -432,7 +432,7 @@ Result BinaryReaderIR::OnGlobalCount(Index count) {
 }
 
 Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::Global;
   field->global = new Global();
   field->global->type = type;
@@ -462,7 +462,7 @@ Result BinaryReaderIR::OnExport(Index index,
                                 ExternalKind kind,
                                 Index item_index,
                                 StringSlice name) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::Export;
   field->export_ = new Export();
 
@@ -493,7 +493,7 @@ Result BinaryReaderIR::OnExport(Index index,
 }
 
 Result BinaryReaderIR::OnStartFunction(Index func_index) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::Start;
 
   field->start.type = VarType::Index;
@@ -730,7 +730,7 @@ Result BinaryReaderIR::OnElemSegmentCount(Index count) {
 }
 
 Result BinaryReaderIR::BeginElemSegment(Index index, Index table_index) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::ElemSegment;
   field->elem_segment = new ElemSegment();
   field->elem_segment->table_var.type = VarType::Index;
@@ -776,7 +776,7 @@ Result BinaryReaderIR::OnDataSegmentCount(Index count) {
 }
 
 Result BinaryReaderIR::BeginDataSegment(Index index, Index memory_index) {
-  ModuleField* field = append_module_field(module);
+  ModuleField* field = module->AppendField();
   field->type = ModuleFieldType::DataSegment;
   field->data_segment = new DataSegment();
   field->data_segment->memory_var.type = VarType::Index;
@@ -832,7 +832,7 @@ Result BinaryReaderIR::OnFunctionName(Index index, StringSlice name) {
 Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
   assert(index < module->funcs.size());
   Func* func = module->funcs[index];
-  Index num_params_and_locals = get_num_params_and_locals(func);
+  Index num_params_and_locals = func->GetNumParamsAndLocals();
   if (count > num_params_and_locals) {
     PrintError("expected local name count (%" PRIindex
                ") <= local count (%" PRIindex ")",
@@ -875,7 +875,7 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
     return Result::Ok;
 
   Func* func = module->funcs[func_index];
-  Index num_params = get_num_params(func);
+  Index num_params = func->GetNumParams();
   BindingHash* bindings;
   Index index;
   if (local_index < num_params) {

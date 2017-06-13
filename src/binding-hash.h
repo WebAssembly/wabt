@@ -26,14 +26,16 @@
 
 namespace wabt {
 
+struct Var;
+
 struct Binding {
-  explicit Binding(int index) : index(index) {
+  explicit Binding(Index index) : index(index) {
     WABT_ZERO_MEMORY(loc);
   }
-  Binding(const Location& loc, int index) : loc(loc), index(index) {}
+  Binding(const Location& loc, Index index) : loc(loc), index(index) {}
 
   Location loc;
-  int index;
+  Index index;
 };
 
 // This class derives from a C++ container, which is usually not advisable
@@ -46,11 +48,13 @@ class BindingHash : public std::unordered_multimap<std::string, Binding> {
 
   void FindDuplicates(DuplicateCallback callback) const;
 
-  int FindIndex(const StringSlice& name) const {
+  Index FindIndex(const Var&) const;
+
+  Index FindIndex(const StringSlice& name) const {
     auto iter = find(string_slice_to_string(name));
     if (iter != end())
       return iter->second.index;
-    return -1;
+    return kInvalidIndex;
   }
 
  private:

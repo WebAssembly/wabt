@@ -145,7 +145,7 @@ int ProgramMain(int argc, char** argv) {
   Result result = parse_wast(lexer.get(), &script, &error_handler);
 
   if (WABT_SUCCEEDED(result)) {
-    Module* module = get_first_module(script);
+    Module* module = script->GetFirstModule();
     if (!module)
       WABT_FATAL("no module in file.\n");
 
