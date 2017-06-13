@@ -165,7 +165,7 @@ struct Expr {
   static Expr* CreateStore(Opcode, Address align, uint32_t offset);
   static Expr* CreateTeeLocal(Var);
   static Expr* CreateThrow(Var);
-  static Expr* CreateTry(Expr* block, Expr* first_catch);
+  static Expr* CreateTry(Block* block, Expr* first_catch);
   static Expr* CreateUnary(Opcode);
   static Expr* CreateUnreachable();
 
@@ -175,7 +175,7 @@ struct Expr {
   union {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
-    struct { Label label;  Expr* block; Expr* first_catch; } try_block;
+    struct { Label label;  Block* block; Expr* first_catch; } try_block;
     struct { Var var; Expr* first; } catch_;
     struct { Expr* first; } catch_all;
     struct { Var var; } throw_, rethrow_;

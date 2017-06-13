@@ -75,6 +75,7 @@ class ExprVisitor::Delegate {
   virtual Result OnUnaryExpr(Expr*) = 0;
   virtual Result OnUnreachableExpr(Expr*) = 0;
   virtual Result OnBeginTryBlockExpr(Expr*) = 0;
+  virtual Result OnEndTryBodyExpr(Expr*) = 0;
   virtual Result OnEndTryBlockExpr(Expr*) = 0;
   virtual Result OnBeginCatchExpr(Expr*) = 0;
   virtual Result OnEndCatchExpr(Expr*) = 0;
@@ -118,6 +119,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnUnaryExpr(Expr*) override { return Result::Ok; }
   Result OnUnreachableExpr(Expr*) override { return Result::Ok; }
   Result OnBeginTryBlockExpr(Expr*) override { return Result::Ok; }
+  Result OnEndTryBodyExpr(Expr*) override { return Result::Ok; }
   Result OnEndTryBlockExpr(Expr*) override { return Result::Ok; }
   Result OnBeginCatchExpr(Expr*) override { return Result::Ok; }
   Result OnEndCatchExpr(Expr*) override { return Result::Ok; }
