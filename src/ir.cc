@@ -422,9 +422,8 @@ Expr* Expr::CreateCatch(Var var, Expr* first) {
 }
 
 // static
-Expr* Expr::CreateCatchAll(Var var, Expr* first) {
+Expr* Expr::CreateCatchAll(Expr* first) {
   Expr* expr = new Expr(ExprType::CatchAll);
-  expr->catch_.var = var;
   expr->catch_.first = first;
   return expr;
 }
@@ -665,6 +664,9 @@ Import::~Import() {
     case ExternalKind::Global:
       delete global;
       break;
+    case ExternalKind::Except:
+      delete except;
+      break;
   }
 }
 
@@ -693,6 +695,9 @@ ModuleField::ModuleField(ModuleFieldType type)
 
 ModuleField::~ModuleField() {
   switch (type) {
+    case ModuleFieldType::Except:
+      delete except;
+      break;
     case ModuleFieldType::Func:
       delete func;
       break;
@@ -729,6 +734,7 @@ ModuleField::~ModuleField() {
 Module::Module()
     : first_field(nullptr),
       last_field(nullptr),
+      num_except_imports(0),
       num_func_imports(0),
       num_table_imports(0),
       num_memory_imports(0),

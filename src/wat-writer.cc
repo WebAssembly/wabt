@@ -987,6 +987,11 @@ void WatWriter::WriteImport(const Import* import) {
       WriteBeginGlobal(import->global);
       WriteCloseSpace();
       break;
+
+    case ExternalKind::Except:
+      // TODO(karlschimpf) Define
+      WABT_FATAL("WriteImport(except) not implemented");
+      break;
   }
   WriteCloseNewline();
 }
@@ -994,12 +999,9 @@ void WatWriter::WriteImport(const Import* import) {
 void WatWriter::WriteExport(const Export* export_) {
   if (options_->inline_export)
     return;
-  static const char* s_kind_names[] = {"func", "table", "memory", "global"};
-  WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_kind_names) == kExternalKindCount);
   WriteOpenSpace("export");
   WriteQuotedStringSlice(&export_->name, NextChar::Space);
-  assert(static_cast<size_t>(export_->kind) < WABT_ARRAY_SIZE(s_kind_names));
-  WriteOpenSpace(s_kind_names[static_cast<size_t>(export_->kind)]);
+  WriteOpenSpace(get_kind_name(export_->kind));
   WriteVar(&export_->var, NextChar::Space);
   WriteCloseSpace();
   WriteCloseNewline();
@@ -1035,6 +1037,10 @@ Result WatWriter::WriteModule(const Module* module) {
         break;
       case ModuleFieldType::Import:
         WriteImport(field->import);
+        break;
+      case ModuleFieldType::Except:
+        // TODO(karlschimpf) Define
+        WABT_FATAL("WriteModule(except) not implemented");
         break;
       case ModuleFieldType::Export:
         WriteExport(field->export_);
@@ -1100,6 +1106,10 @@ void WatWriter::BuildExportMaps() {
           global_to_export_map_[global_index] = export_;
         break;
       }
+
+      case ExternalKind::Except:
+        WABT_FATAL("BuildExportMaps(except) not implemented");
+        break;
     }
   }
 }

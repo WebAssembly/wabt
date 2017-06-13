@@ -481,6 +481,9 @@ Result BinaryReaderIR::OnExport(Index index,
     case ExternalKind::Global:
       assert(item_index < module->globals.size());
       break;
+    case ExternalKind::Except:
+      WABT_FATAL("OnExport(except) not implemented\n");
+      break;
   }
   export_->var.type = VarType::Index;
   export_->var.index = item_index;
