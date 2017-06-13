@@ -64,6 +64,15 @@ class WastLexer {
   char* cursor_;
   char* limit_;
 
+  struct LookaheadToken;
+  struct LookaheadToken* lookahead_;
+  size_t lookahead_index;
+  size_t lookahead_size;
+
+  LookaheadToken* PeekPushToken();
+  int PeekPopToken(Location* Loc);
+  void PeekPushReturn(int name);
+
   WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 };
 

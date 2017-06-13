@@ -32,20 +32,20 @@
 
 #define INITIAL_LEXER_BUFFER_SIZE (64 * 1024)
 
-#define YY_USER_ACTION                  \
+#define YY_USER_ACTION(loc)             \
   {                                     \
-    loc->filename = filename_;          \
-    loc->line = line_;                  \
-    loc->first_column = COLUMN(token_); \
-    loc->last_column = COLUMN(cursor_); \
+    (loc)->filename = filename_;        \
+    (loc)->line = line_;                \
+    (loc)->first_column = COLUMN(token_);       \
+    (loc)->last_column = COLUMN(cursor_);       \
   }
 
-#define RETURN(name) \
-  YY_USER_ACTION;    \
+#define RETURN(name)            \
+  YY_USER_ACTION(loc);          \
   return WABT_TOKEN_TYPE_##name
 
-#define ERROR(...) \
-  YY_USER_ACTION;  \
+#define ERROR(...)                                  \
+  YY_USER_ACTION(loc);                              \
   wast_parser_error(loc, this, parser, __VA_ARGS__)
 
 #define BEGIN(c) cond = (c)
@@ -95,6 +95,33 @@
 
 namespace wabt {
 
+namespace {
+
+enum class TokenKind {
+  Simple, Text, Type, Opcode, Literal
+};
+
+static constexpr size_t kMaxLookahead = 2;
+
+}
+
+struct WastLexer::LookaheadToken {
+  TokenKind kind_;
+  Token tok_;
+  Location loc_;
+  int value_;
+  int install(WastLexer* lexer, Location* Loc);
+};
+
+int WastLexer::LookaheadToken::install(WastLexer* lexer, Location* Loc) {
+  *Loc = loc_;
+  switch (kind_) {
+    default:
+      break;
+  }
+  return value_;
+}
+
 WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
     : source_(std::move(source)),
       line_finder_(source_->Clone()),
@@ -109,10 +136,38 @@ WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
       marker_(nullptr),
       token_(nullptr),
       cursor_(nullptr),
-      limit_(nullptr) {}
+      limit_(nullptr),
+      lookahead_(nullptr),
+      lookahead_index (0),
+      lookahead_size(0) {}
 
 WastLexer::~WastLexer() {
   delete[] buffer_;
+  delete[] lookahead_;
+}
+
+WastLexer::LookaheadToken* WastLexer::PeekPushToken() {
+  if (lookahead_ == nullptr)
+    lookahead_ = new LookaheadToken[kMaxLookahead];
+  assert(lookahead_size < kMaxLookahead);
+  return &lookahead_[lookahead_size++];
+}
+
+void WastLexer::PeekPushReturn(int name) {
+  WastLexer::LookaheadToken* Tok = PeekPushToken();
+  YY_USER_ACTION(&Tok->loc_);
+  Tok->kind_ = TokenKind::Simple;
+  Tok->value_ = name;
+};
+
+int WastLexer::PeekPopToken(Location* Loc) {
+  assert(lookahead_);
+  assert(lookahead_index < lookahead_size);
+  int result = lookahead_[lookahead_index++].install(this, Loc);
+  if (lookahead_index  == lookahead_size) {
+    lookahead_index = lookahead_size = 0;
+  }
+  return result;
 }
 
 // static
