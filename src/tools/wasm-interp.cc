@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "binary-error-handler.h"
@@ -32,8 +33,6 @@
 #include "stream.h"
 #include "wast-lexer.h"
 #include "wast-parser.h"
-
-#define PROGRAM_NAME "wasm-interp"
 
 using namespace wabt;
 using namespace wabt::interpreter;
@@ -54,127 +53,68 @@ static bool s_run_all_exports;
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
 
-#define NOPE HasArgument::No
-#define YEP HasArgument::Yes
-
 enum class RunVerbosity {
   Quiet = 0,
   Verbose = 1,
 };
 
-enum {
-  FLAG_VERBOSE,
-  FLAG_HELP,
-  FLAG_VALUE_STACK_SIZE,
-  FLAG_CALL_STACK_SIZE,
-  FLAG_TRACE,
-  FLAG_SPEC,
-  FLAG_RUN_ALL_EXPORTS,
-  NUM_FLAGS
-};
-
 static const char s_description[] =
-    "  read a file in the wasm binary format, and run in it a stack-based\n"
-    "  interpreter.\n"
-    "\n"
-    "examples:\n"
-    "  # parse binary file test.wasm, and type-check it\n"
-    "  $ wasm-interp test.wasm\n"
-    "\n"
-    "  # parse test.wasm and run all its exported functions\n"
-    "  $ wasm-interp test.wasm --run-all-exports\n"
-    "\n"
-    "  # parse test.wasm, run the exported functions and trace the output\n"
-    "  $ wasm-interp test.wasm --run-all-exports --trace\n"
-    "\n"
-    "  # parse test.json and run the spec tests\n"
-    "  $ wasm-interp test.json --spec\n"
-    "\n"
-    "  # parse test.wasm and run all its exported functions, setting the\n"
-    "  # value stack size to 100 elements\n"
-    "  $ wasm-interp test.wasm -V 100 --run-all-exports\n";
+R"(  read a file in the wasm binary format, and run in it a stack-based
+  interpreter.
 
-static Option s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
-     "use multiple times for more info"},
-    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
-    {FLAG_VALUE_STACK_SIZE, 'V', "value-stack-size", "SIZE", YEP,
-     "size in elements of the value stack"},
-    {FLAG_CALL_STACK_SIZE, 'C', "call-stack-size", "SIZE", YEP,
-     "size in frames of the call stack"},
-    {FLAG_TRACE, 't', "trace", nullptr, NOPE, "trace execution"},
-    {FLAG_SPEC, 0, "spec", nullptr, NOPE,
-     "run spec tests (input file should be .json)"},
-    {FLAG_RUN_ALL_EXPORTS, 0, "run-all-exports", nullptr, NOPE,
-     "run all the exported functions, in order. useful for testing"},
-};
-WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
+examples:
+  # parse binary file test.wasm, and type-check it
+  $ wasm-interp test.wasm
 
-static void on_option(struct OptionParser* parser,
-                      struct Option* option,
-                      const char* argument) {
-  switch (option->id) {
-    case FLAG_VERBOSE:
-      s_verbose++;
-      s_log_stream = FileStream::CreateStdout();
-      s_read_binary_options.log_stream = s_log_stream.get();
-      break;
+  # parse test.wasm and run all its exported functions
+  $ wasm-interp test.wasm --run-all-exports
 
-    case FLAG_HELP:
-      print_help(parser, PROGRAM_NAME);
-      exit(0);
-      break;
+  # parse test.wasm, run the exported functions and trace the output
+  $ wasm-interp test.wasm --run-all-exports --trace
 
-    case FLAG_VALUE_STACK_SIZE:
-      /* TODO(binji): validate */
-      s_thread_options.value_stack_size = atoi(argument);
-      break;
+  # parse test.json and run the spec tests
+  $ wasm-interp test.json --spec
 
-    case FLAG_CALL_STACK_SIZE:
-      /* TODO(binji): validate */
-      s_thread_options.call_stack_size = atoi(argument);
-      break;
-
-    case FLAG_TRACE:
-      s_trace = true;
-      break;
-
-    case FLAG_SPEC:
-      s_spec = true;
-      break;
-
-    case FLAG_RUN_ALL_EXPORTS:
-      s_run_all_exports = true;
-      break;
-  }
-}
-
-static void on_argument(struct OptionParser* parser, const char* argument) {
-  s_infile = argument;
-}
-
-static void on_option_error(struct OptionParser* parser, const char* message) {
-  WABT_FATAL("%s\n", message);
-}
+  # parse test.wasm and run all its exported functions, setting the
+  # value stack size to 100 elements
+  $ wasm-interp test.wasm -V 100 --run-all-exports
+)";
 
 static void parse_options(int argc, char** argv) {
-  OptionParser parser;
-  WABT_ZERO_MEMORY(parser);
-  parser.description = s_description;
-  parser.options = s_options;
-  parser.num_options = WABT_ARRAY_SIZE(s_options);
-  parser.on_option = on_option;
-  parser.on_argument = on_argument;
-  parser.on_error = on_option_error;
-  parse_options(&parser, argc, argv);
+  OptionParser parser("wasm-interp", s_description);
+
+  parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
+    s_verbose++;
+    s_log_stream = FileStream::CreateStdout();
+    s_read_binary_options.log_stream = s_log_stream.get();
+  });
+  parser.AddHelpOption();
+  parser.AddOption('V', "value-stack-size", "SIZE",
+                   "Size in elements of the value stack",
+                   [](const std::string& argument) {
+                     // TODO(binji): validate.
+                     s_thread_options.value_stack_size = atoi(argument.c_str());
+                   });
+  parser.AddOption('C', "call-stack-size", "SIZE",
+                   "Size in elements of the call stack",
+                   [](const std::string& argument) {
+                     // TODO(binji): validate.
+                     s_thread_options.call_stack_size = atoi(argument.c_str());
+                   });
+  parser.AddOption('t', "trace", "Trace execution", []() { s_trace = true; });
+  parser.AddOption("spec", "Run spec tests (input file should be .json)",
+                   []() { s_spec = true; });
+  parser.AddOption(
+      "run-all-exports",
+      "Run all the exported functions, in order. Useful for testing",
+      []() { s_run_all_exports = true; });
+
+  parser.AddArgument("filename", OptionParser::ArgumentCount::One,
+                     [](const char* argument) { s_infile = argument; });
+  parser.Parse(argc, argv);
 
   if (s_spec && s_run_all_exports)
     WABT_FATAL("--spec and --run-all-exports are incompatible.\n");
-
-  if (!s_infile) {
-    print_help(&parser, PROGRAM_NAME);
-    WABT_FATAL("No filename given.\n");
-  }
 }
 
 enum class ModuleType {

@@ -30,8 +30,6 @@
 #include "wat-writer.h"
 #include "writer.h"
 
-#define PROGRAM_NAME "wasm2wast"
-
 using namespace wabt;
 
 static int s_verbose;
@@ -42,108 +40,44 @@ static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
 static std::unique_ptr<FileStream> s_log_stream;
 
-#define NOPE HasArgument::No
-#define YEP HasArgument::Yes
-
-enum {
-  FLAG_VERBOSE,
-  FLAG_HELP,
-  FLAG_OUTPUT,
-  FLAG_NO_DEBUG_NAMES,
-  FLAG_GENERATE_NAMES,
-  FLAG_FOLD_EXPRS,
-  FLAG_INLINE_EXPORTS,
-  NUM_FLAGS
-};
-
 static const char s_description[] =
-    "  read a file in the wasm binary format, and convert it to the wasm\n"
-    "  s-expression file format.\n"
-    "\n"
-    "examples:\n"
-    "  # parse binary file test.wasm and write s-expression file test.wast\n"
-    "  $ wasm2wast test.wasm -o test.wast\n"
-    "\n"
-    "  # parse test.wasm, write test.wast, but ignore the debug names, if any\n"
-    "  $ wasm2wast test.wasm --no-debug-names -o test.wast\n";
+R"(  read a file in the wasm binary format, and convert it to the wasm
+  s-expression file format.
 
-static Option s_options[] = {
-    {FLAG_VERBOSE, 'v', "verbose", nullptr, NOPE,
-     "use multiple times for more info"},
-    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
-    {FLAG_OUTPUT, 'o', "output", "FILENAME", YEP,
-     "output file for the generated wast file, by default use stdout"},
-    {FLAG_FOLD_EXPRS, 'f', "fold-exprs", nullptr, NOPE,
-     "Write folded expressions where possible"},
-    {FLAG_INLINE_EXPORTS, 0, "inline-exports", nullptr, NOPE,
-     "Write all exports inline"},
-    {FLAG_NO_DEBUG_NAMES, 0, "no-debug-names", nullptr, NOPE,
-     "Ignore debug names in the binary file"},
-    {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, NOPE,
-     "Give auto-generated names to non-named functions, types, etc."},
-};
-WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
+examples:
+  # parse binary file test.wasm and write s-expression file test.wast
+  $ wasm2wast test.wasm -o test.wast
 
-static void on_option(struct OptionParser* parser,
-                      struct Option* option,
-                      const char* argument) {
-  switch (option->id) {
-    case FLAG_VERBOSE:
-      s_verbose++;
-      s_log_stream = FileStream::CreateStdout();
-      s_read_binary_options.log_stream = s_log_stream.get();
-      break;
-
-    case FLAG_HELP:
-      print_help(parser, PROGRAM_NAME);
-      exit(0);
-      break;
-
-    case FLAG_OUTPUT:
-      s_outfile = argument;
-      break;
-
-    case FLAG_FOLD_EXPRS:
-      s_write_wat_options.fold_exprs = true;
-      break;
-
-    case FLAG_INLINE_EXPORTS:
-      s_write_wat_options.inline_export = true;
-      break;
-
-    case FLAG_NO_DEBUG_NAMES:
-      s_read_binary_options.read_debug_names = false;
-      break;
-
-    case FLAG_GENERATE_NAMES:
-      s_generate_names = true;
-      break;
-  }
-}
-
-static void on_argument(struct OptionParser* parser, const char* argument) {
-  s_infile = argument;
-}
-
-static void on_option_error(struct OptionParser* parser, const char* message) {
-  WABT_FATAL("%s\n", message);
-}
+  # parse test.wasm, write test.wast, but ignore the debug names, if any
+  $ wasm2wast test.wasm --no-debug-names -o test.wast
+)";
 
 static void parse_options(int argc, char** argv) {
-  OptionParser parser;
-  WABT_ZERO_MEMORY(parser);
-  parser.description = s_description;
-  parser.options = s_options;
-  parser.num_options = WABT_ARRAY_SIZE(s_options);
-  parser.on_option = on_option;
-  parser.on_argument = on_argument;
-  parser.on_error = on_option_error;
-  parse_options(&parser, argc, argv);
+  OptionParser parser("wasm2wast", s_description);
 
-  if (!s_infile) {
-    print_help(&parser, PROGRAM_NAME);
-    WABT_FATAL("No filename given.\n");
-  }
+  parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
+    s_verbose++;
+    s_log_stream = FileStream::CreateStdout();
+    s_read_binary_options.log_stream = s_log_stream.get();
+  });
+  parser.AddHelpOption();
+  parser.AddOption(
+      'o', "output", "FILENAME",
+      "Output file for the generated wast file, by default use stdout",
+      [](const char* argument) { s_outfile = argument; });
+  parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
+                   []() { s_write_wat_options.fold_exprs = true; });
+  parser.AddOption("inline-exports", "Write all exports inline",
+                   []() { s_write_wat_options.inline_export = true; });
+  parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
+                   []() { s_read_binary_options.read_debug_names = false; });
+  parser.AddOption(
+      "generate-names",
+      "Give auto-generated names to non-named functions, types, etc.",
+      []() { s_generate_names = true; });
+  parser.AddArgument("filename", OptionParser::ArgumentCount::One,
+                     [](const char* argument) { s_infile = argument; });
+  parser.Parse(argc, argv);
 }
 
 int ProgramMain(int argc, char** argv) {

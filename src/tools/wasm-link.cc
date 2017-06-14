@@ -16,6 +16,9 @@
 
 #include "wasm-link.h"
 
+#include <memory>
+#include <vector>
+
 #include "binary-reader.h"
 #include "binding-hash.h"
 #include "binary-writer.h"
@@ -24,34 +27,16 @@
 #include "writer.h"
 #include "binary-reader-linker.h"
 
-#include <memory>
-#include <vector>
-
-#define PROGRAM_NAME "wasm-link"
-#define NOPE HasArgument::No
-#define YEP HasArgument::Yes
 #define FIRST_KNOWN_SECTION static_cast<size_t>(BinarySection::Type)
 #define LOG_DEBUG(fmt, ...) if (s_debug) s_log_stream->Writef(fmt, __VA_ARGS__);
 
 using namespace wabt;
 using namespace wabt::link;
 
-enum { FLAG_DEBUG, FLAG_OUTPUT, FLAG_RELOCATABLE, FLAG_HELP, NUM_FLAGS };
-
 static const char s_description[] =
-    "  link one or more wasm binary modules into a single binary module."
-    "\n"
-    "  $ wasm-link m1.wasm m2.wasm -o out.wasm\n";
-
-static Option s_options[] = {
-    {FLAG_DEBUG, '\0', "debug", nullptr, NOPE,
-     "log extra information when reading and writing wasm files"},
-    {FLAG_OUTPUT, 'o', "output", "FILE", YEP, "output wasm binary file"},
-    {FLAG_RELOCATABLE, 'r', "relocatable", nullptr, NOPE,
-     "output a relocatable object file"},
-    {FLAG_HELP, 'h', "help", nullptr, NOPE, "print this help message"},
-};
-WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
+R"(  link one or more wasm binary modules into a single binary module.
+  $ wasm-link m1.wasm m2.wasm -o out.wasm
+)";
 
 static bool s_debug;
 static bool s_relocatable;
@@ -68,53 +53,26 @@ struct Context {
   ssize_t current_section_payload_offset = 0;
 };
 
-static void on_option(struct OptionParser* parser,
-                      struct Option* option,
-                      const char* argument) {
-  switch (option->id) {
-    case FLAG_DEBUG:
-      s_debug = true;
-      s_log_stream = FileStream::CreateStdout();
-      break;
-
-    case FLAG_OUTPUT:
-      s_outfile = argument;
-      break;
-
-    case FLAG_RELOCATABLE:
-      s_relocatable = true;
-      break;
-
-    case FLAG_HELP:
-      print_help(parser, PROGRAM_NAME);
-      exit(0);
-      break;
-  }
-}
-
-static void on_argument(struct OptionParser* parser, const char* argument) {
-  s_infiles.emplace_back(argument);
-}
-
-static void on_option_error(struct OptionParser* parser, const char* message) {
-  WABT_FATAL("%s\n", message);
-}
-
 static void parse_options(int argc, char** argv) {
-  OptionParser parser;
-  WABT_ZERO_MEMORY(parser);
-  parser.description = s_description;
-  parser.options = s_options;
-  parser.num_options = WABT_ARRAY_SIZE(s_options);
-  parser.on_option = on_option;
-  parser.on_argument = on_argument;
-  parser.on_error = on_option_error;
-  parse_options(&parser, argc, argv);
+  OptionParser parser("wasm-link", s_description);
 
-  if (!s_infiles.size()) {
-    print_help(&parser, PROGRAM_NAME);
-    WABT_FATAL("No inputs files specified.\n");
-  }
+  parser.AddOption("debug",
+                   "Log extra information when reading and writing wasm files",
+                   []() {
+                     s_debug = true;
+                     s_log_stream = FileStream::CreateStdout();
+                   });
+  parser.AddOption('o', "output", "FILE", "Output wasm binary file",
+                   [](const char* argument) { s_outfile = argument; });
+  parser.AddOption('r', "relocatable", "Output a relocatable object file",
+                   []() { s_relocatable = true; });
+  parser.AddHelpOption();
+
+  parser.AddArgument(
+      "filename", OptionParser::ArgumentCount::OneOrMore,
+      [](const std::string& argument) { s_infiles.emplace_back(argument); });
+
+  parser.Parse(argc, argv);
 }
 
 Section::Section()
