@@ -48,7 +48,9 @@ extern "C" {
 wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
                                             const void* data,
                                             size_t size) {
-  return wabt::new_wast_buffer_lexer(filename, data, size);
+  std::unique_ptr<wabt::WastLexer> lexer =
+      wabt::WastLexer::CreateBufferLexer(filename, data, size);
+  return lexer.release();
 }
 
 WabtParseWastResult* wabt_parse_wast(
@@ -88,7 +90,7 @@ WabtWriteBinaryModuleResult* wabt_write_binary_module(wabt::Script* script,
   options.write_debug_names = write_debug_names;
 
   wabt::MemoryWriter writer;
-  wabt::Module* module = wabt::get_first_module(script);
+  wabt::Module* module = script->GetFirstModule();
   WabtWriteBinaryModuleResult* result = new WabtWriteBinaryModuleResult();
   result->result = write_binary_module(&writer, module, &options);
   if (result->result == wabt::Result::Ok) {
@@ -103,7 +105,7 @@ void wabt_destroy_script(wabt::Script* script) {
 }
 
 void wabt_destroy_wast_lexer(wabt::WastLexer* lexer) {
-  destroy_wast_lexer(lexer);
+  delete lexer;
 }
 
 // SourceErrorHandlerBuffer

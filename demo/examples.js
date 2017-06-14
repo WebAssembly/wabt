@@ -39,7 +39,7 @@ var examples = [
       '    get_local 0\n' +
       '    i64.const 1\n' +
       '    i64.lt_s\n' +
-      '    if i64\n' +
+      '    if (result i64)\n' +
       '      i64.const 1\n' +
       '    else\n' +
       '      get_local 0\n' +
