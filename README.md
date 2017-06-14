@@ -4,8 +4,8 @@
 
 WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
 
- - **wast2wasm**: translate from [s-expressions](https://github.com/WebAssembly/spec) to the WebAssembly [binary-encoding](https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md)
- - **wasm2wast**: the inverse of wast2wasm, translate from the binary encoding back to an s-expression source file (also known as a .wast)
+ - **wast2wasm**: translate from [WebAssembly text format](http://webassembly.github.io/spec/text/index.html) to the [WebAssembly binary format](http://webassembly.github.io/spec/binary/index.html)
+ - **wasm2wast**: the inverse of wast2wasm, translate from the binary format back to the text format (also known as a .wast)
  - **wasm-objdump**: print information about a wasm binary. Similiar to objdump.
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
  - **wast-desugar**: parse .wast text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and print "canonical" flat format
@@ -19,6 +19,14 @@ other systems. Unlike [Binaryen](https://github.com/WebAssembly/binaryen) these
 tools do not aim to provide an optimization platform or a higher-level compiler
 target; instead they aim for full fidelity and compliance with the spec (e.g.
 1:1 round-trips with no changes to instructions).
+
+## Online Demos
+
+Wabt has been compiled to JavaScript via emscripten. Some of the functionality is available in the following demos:
+
+- [index](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/index.html)
+- [wast2wasm](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/wast2wasm/)
+- [wasm2wast](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/wasm2wast/)
 
 ## Cloning
 
@@ -110,7 +118,7 @@ You can use `-h` to get additional help:
 $ out/wast2wasm -h
 ```
 
-Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/ab4290e57d39ef079e82377d91bd27dcde4d73ae/demo/index.html).
+Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/wast2wasm/).
 
 ## Running wasm2wast
 
@@ -129,6 +137,8 @@ You can use `-h` to get additional help:
 ```console
 $ out/wasm2wast -h
 ```
+
+Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/wasm2wast/).
 
 ## Running wasm-interp
 
