@@ -1,0 +1,12 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --inline-export --debug-names
+(module
+  (func $foo
+    nop)
+  (export "foo" (func $foo)))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func $foo (export "foo") (type 0)
+    nop))
+;;; STDOUT ;;)
