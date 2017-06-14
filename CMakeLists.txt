@@ -386,12 +386,14 @@ else ()
   target_link_libraries(libwabtjs libwabt)
   set_target_properties(libwabtjs PROPERTIES OUTPUT_NAME libwabt)
 
-  set(WABT_JS ${WABT_SOURCE_DIR}/src/wabt.js)
+  set(WABT_PRE_JS ${WABT_SOURCE_DIR}/src/wabt.pre.js)
+  set(WABT_POST_JS ${WABT_SOURCE_DIR}/src/wabt.post.js)
   set(EMSCRIPTEN_EXPORTED_JSON ${WABT_SOURCE_DIR}/src/emscripten-exported.json)
 
   set(LIBWABT_LINK_FLAGS
     --memory-init-file 0
-    --pre-js ${WABT_JS}
+    --pre-js ${WABT_PRE_JS}
+    --post-js ${WABT_POST_JS}
     -s EXPORTED_FUNCTIONS=\"@${EMSCRIPTEN_EXPORTED_JSON}\"
     -s RESERVED_FUNCTION_POINTERS=10
     -s NO_EXIT_RUNTIME=1
@@ -401,6 +403,6 @@ else ()
   set_target_properties(libwabtjs
     PROPERTIES
     LINK_FLAGS "${LIBWABT_LINK_FLAGS_STR}"
-    LINK_DEPENDS "${WABT_JS};${EMSCRIPTEN_EXPORTED_JSON}"
+    LINK_DEPENDS "${WABT_PRE_JS};${WABT_POST_JS};${EMSCRIPTEN_EXPORTED_JSON}"
   )
 endif ()

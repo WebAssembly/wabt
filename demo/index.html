@@ -1,5 +1,5 @@
 <!--
- Copyright 2016 WebAssembly Community Group participants
+ Copyright 2017 WebAssembly Community Group participants
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,43 +18,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
-  <title>wast2wasm demo</title>
-  <link href="third_party/codemirror/codemirror.css" rel="stylesheet">
+  <title>wabt demos</title>
   <link href="primer.css" rel="stylesheet">
   <link href="custom.css" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>wast2wasm demo</h1>
+    <h1>wabt demos</h1>
     <hr>
-    <p>
-      Type a <a href="https://github.com/WebAssembly/spec/tree/master/ml-proto#s-expression-syntax">.wast</a>
-      file into the textarea on the left. The right side will
-      either show an error, or will show a log with a description of the
-      generated <a href="https://github.com/WebAssembly/design/blob/master/BinaryEncoding.md">.wasm</a>
-      file.
-    </p>
-    <div class="columns">
-      <div class="two-fifths column">
-        <textarea class="editor" autofocus autocomplete="off" autocorrect="off"
-            autocapitalize="off" spellcheck="false" hidden></textarea>
-        <div class="right">
-          <label>example:</label>
-          <select id="select" class="form-select"></select>
-          <button class="btn disabled" type="button" id="download">Download</button>
-          <a id="downloadLink" download="test.wasm" class="hidden"></a>
-        </div>
-      </div>
-      <div class="three-fifths column">
-        <pre id="output"></pre>
-      </div>
-    </div>
+    <ul>
+      <li>
+        <a href="wast2wasm/">wast2wasm demo</a>
+        <p>
+          Example showing converting text to binary.
+        </p>
+      </li>
+      <li>
+        <a href="wasm2wast/">wasm2wast demo</a>
+        <p>
+          Example showing converting binary to text.
+        </p>
+      </li>
+    </ul>
   </div>
-  <script src="third_party/codemirror/codemirror.js"></script>
-  <script src="third_party/codemirror/simple-mode.js"></script>
-  <script src="wast-mode.js"></script>
-  <script src="libwabt.js"></script>
-  <script src="examples.js"></script>
-  <script src="demo.js"></script>
 </body>
 </html>

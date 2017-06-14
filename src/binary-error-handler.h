@@ -31,6 +31,8 @@ class BinaryErrorHandler {
 
   // Returns true if the error was handled.
   virtual bool OnError(Offset offset, const std::string& error) = 0;
+
+  std::string DefaultErrorMessage(Offset offset, const std::string& error);
 };
 
 class BinaryErrorHandlerFile : public BinaryErrorHandler {
@@ -53,6 +55,18 @@ class BinaryErrorHandlerFile : public BinaryErrorHandler {
   FILE* file_;
   std::string header_;
   PrintHeader print_header_;
+};
+
+class BinaryErrorHandlerBuffer : public BinaryErrorHandler {
+ public:
+  BinaryErrorHandlerBuffer() = default;
+
+  bool OnError(Offset offset, const std::string& error) override;
+
+  const std::string& buffer() const { return buffer_; }
+
+ private:
+  std::string buffer_;
 };
 
 }  // namespace wabt

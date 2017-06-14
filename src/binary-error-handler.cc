@@ -20,6 +20,14 @@
 
 namespace wabt {
 
+std::string BinaryErrorHandler::DefaultErrorMessage(Offset offset,
+                                                    const std::string& error) {
+  if (offset == kInvalidOffset)
+    return string_printf("error: %s\n", error.c_str());
+  else
+    return string_printf("error: @0x%08" PRIzx ": %s\n", offset, error.c_str());
+}
+
 BinaryErrorHandlerFile::BinaryErrorHandlerFile(FILE* file,
                                                const std::string& header,
                                                PrintHeader print_header)
@@ -27,10 +35,8 @@ BinaryErrorHandlerFile::BinaryErrorHandlerFile(FILE* file,
 
 bool BinaryErrorHandlerFile::OnError(Offset offset, const std::string& error) {
   PrintErrorHeader();
-  if (offset == kInvalidOffset)
-    fprintf(file_, "error: %s\n", error.c_str());
-  else
-    fprintf(file_, "error: @0x%08" PRIzx ": %s\n", offset, error.c_str());
+  std::string message = DefaultErrorMessage(offset, error);
+  fwrite(message.data(), 1, message.size(), file_);
   fflush(file_);
   return true;
 }
@@ -53,6 +59,12 @@ void BinaryErrorHandlerFile::PrintErrorHeader() {
   }
   // If there's a header, indent the following message.
   fprintf(file_, "  ");
+}
+
+bool BinaryErrorHandlerBuffer::OnError(Offset offset,
+                                       const std::string& error) {
+  buffer_ += DefaultErrorMessage(offset, error);
+  return true;
 }
 
 }  // namespace wabt
