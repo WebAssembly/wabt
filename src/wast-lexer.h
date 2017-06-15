@@ -75,6 +75,8 @@ class WastLexer {
 
   bool lookahead_contains_lpar();
 
+  void describe(const char* name);
+
   WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 };
 

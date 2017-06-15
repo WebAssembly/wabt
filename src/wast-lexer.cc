@@ -32,43 +32,90 @@
 
 #define INITIAL_LEXER_BUFFER_SIZE (64 * 1024)
 
+#define PUSH_LOOKAHEAD_TOKEN \
+  do { \
+    Lookahead::Lval tok; \
+    lookahead_->tokens_.push_back(tok); \
+    describe("PUSH_TOKEN"); \
+  } while (0)
+
 #define YY_USER_ACTION(loc)               \
   {                                       \
     (loc)->filename = filename_;          \
     (loc)->line = line_;                  \
     (loc)->first_column = COLUMN(token_); \
     (loc)->last_column = COLUMN(cursor_); \
+    fprintf(stderr, "LOC(%s, %u[%u:%u]\n", \
+      (loc)->filename, unsigned((loc)->line), \
+      unsigned((loc)->first_column), \
+      unsigned((loc)->last_column)); \
   }
 
+#define TOKEN_VALUE(name) WABT_TOKEN_TYPE_##name
+
+#define DEFINE_VALUE(value) \
+  do { \
+    Lookahead::Lval* tok = &lookahead_->tokens_.back(); \
+    YY_USER_ACTION(&tok->loc_); \
+    tok->value_ = value; \
+    token_ = cursor_;                           \
+    fprintf(stderr, "define(%d) - ", value);          \
+    describe("DEFINE_VALUE");  \
+  } while(0)
+
+#define LOOKAHEAD_VALUE(value) \
+  do { \
+    describe("LOOKAHEAD_VALUE"); \
+    DEFINE_VALUE(value);             \
+    PUSH_LOOKAHEAD_TOKEN;                      \
+  } while (0)
+
 #define LOOKAHEAD(name) \
-  do {                         \
-    Lookahead::Lval lval;      \
-   YY_USER_ACTION(&lval.loc_);  \
-   lval.value_ = WABT_TOKEN_TYPE_##name;       \
-   lookahead_->tokens_.push_back(lval);  \
-   token_ = cursor_; \
-  } while (0); continue
+    do { \
+      int value = TOKEN_VALUE(name); \
+      LOOKAHEAD_VALUE(value); \
+      token_ = cursor_; \
+    } while (0); \
+    continue
 
 #define RETURN_LOOKAHEAD return pop_lookahead_token(loc)
 
-#define RETURN_NOLOOKAHEAD(name) \
+#define RETURN_NOLOOKAHEAD_VALUE(value) \
   YY_USER_ACTION(loc);             \
-  return WABT_TOKEN_TYPE_##name
-  
-#define RETURN(name)            \
-  if (lookahead_->tokens_.empty()) {           \
-    YY_USER_ACTION(loc);            \
-    return WABT_TOKEN_TYPE_##name; \
-  } else {  \
-    Lookahead::Lval lval;       \
-    YY_USER_ACTION(&lval.loc_);  \
-    lval.value_ = WABT_TOKEN_TYPE_##name;       \
-    lookahead_->tokens_.push_back(lval);  \
-    token_ = cursor_;           \
+  return 
+
+#define RETURN_NOLOOKAHEAD(name) \
+  do { \
+    YY_USER_ACTION(loc);           \
+    return TOKEN_VALUE(name); \
+  } while (0)
+
+#define RETURN_VALUE(value)            \
+  do {                          \
+    DEFINE_VALUE(value); \
+    RETURN_LOOKAHEAD;           \
+  } while (0)
+
+
+#define RETURN(name) \
+  do { \
+    int value = TOKEN_VALUE(name); \
+    DEFINE_VALUE(value); \
     RETURN_LOOKAHEAD; \
-  }
+  } while (0)
 
 #define RETURN_LPAR(name) \
+  describe("RETURN_LPAR"); \
+  int value = TOKEN_VALUE(name); \
+  DEFINE_VALUE(value); \
+  if (lookahead_contains_lpar()) { \
+    value = TOKEN_VALUE(LPAR_##name); \
+    YY_USER_ACTION(loc); \
+    return value; \
+  } \
+  RETURN_LOOKAHEAD
+
+#if 0
   if (lookahead_contains_lpar()) {  \
     Lookahead::Lval lval;           \
     YY_USER_ACTION(&lval.loc_);  \
@@ -78,6 +125,7 @@
     RETURN_NOLOOKAHEAD(LPAR_##name);  \
   }                                  \
   RETURN(name);
+#endif
 
 #define ERROR(...)                                  \
   YY_USER_ACTION(loc);                              \
@@ -87,7 +135,8 @@
 #define FILL(n)                                \
   do {                                         \
     if (WABT_FAILED(Fill(loc, parser, (n)))) { \
-      RETURN(EOF);                             \
+      int value = TOKEN_VALUE(EOF);   \
+      RETURN_VALUE(value);           \
     }                                          \
   } while (0)
 
@@ -111,11 +160,11 @@
     line_file_offset_ = FILE_OFFSET(cursor_); \
   } while (0)
 
-#define TEXT                 \
+#define SET_TEXT                 \
   lval->text.start = yytext; \
   lval->text.length = yyleng
 
-#define TEXT_AT(offset)               \
+#define SET_TEXT_AT(offset)               \
   lval->text.start = yytext + offset; \
   lval->text.length = yyleng - offset
 
@@ -136,7 +185,7 @@ struct WastLexer::Lookahead {
     int value_;
     Token lval_;
   };
-  circ_array<Lval, 2> tokens_;
+  circ_array<Lval, 3> tokens_;
 };
 
 WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
@@ -159,6 +208,15 @@ WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
 
 WastLexer::~WastLexer() {
   delete[] buffer_;
+}
+
+void WastLexer::describe(const char* name) {
+  fprintf(stderr, "%s<%u> {\n", name, unsigned(lookahead_->tokens_.size()));
+  for (size_t i = 0, size = lookahead_->tokens_.size(); i < size; ++i) {
+    fprintf(stderr, "  [%u] %d\n",
+            unsigned(i), unsigned(lookahead_->tokens_[i].value_));
+  }
+  fprintf(stderr, "}\n");
 }
 
 // static
@@ -184,8 +242,8 @@ int WastLexer::pop_lookahead_token(Location* loc) {
 }
 
 bool WastLexer::lookahead_contains_lpar() {
-  return lookahead_->tokens_.size() == 1
-  && lookahead_->tokens_[0].value_ == WABT_TOKEN_TYPE_LPAR;
+  return lookahead_->tokens_.size() == 2
+      && lookahead_->tokens_[0].value_ == WABT_TOKEN_TYPE_LPAR;
 }
 
 Result WastLexer::Fill(Location* loc, WastParser* parser, size_t need) {
@@ -253,12 +311,18 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
 
   get_loc = loc;
 
+  describe("GetToken");
+
   if (!lookahead_->tokens_.empty()) {
     RETURN_LOOKAHEAD;
   }
 
+  lookahead_->tokens_.reset();
+  PUSH_LOOKAHEAD_TOKEN;
+
   for (;;) {
     token_ = cursor_;
+    describe("GetToken.loop");
     /*!re2c
       re2c:condprefix = YYCOND_;
       re2c:condenumprefix = YYCOND_;
@@ -303,7 +367,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> hexfloat              { LITERAL(Hexfloat); RETURN(FLOAT); }
       <i> infinity              { LITERAL(Infinity); RETURN(FLOAT); }
       <i> nan                   { LITERAL(Nan); RETURN(FLOAT); }
-      <i> text                  { TEXT; RETURN(TEXT); }
+      <i> text                  { SET_TEXT; RETURN(TEXT); }
       <i> '"' => BAD_TEXT       { continue; }
       <BAD_TEXT> character      { continue; }
       <BAD_TEXT> "\n" => i      { ERROR("newline in string");
@@ -312,7 +376,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <BAD_TEXT> "\\".          { ERROR("bad escape \"%.*s\"",
                                         static_cast<int>(yyleng), yytext);
                                   continue; }
-      <BAD_TEXT> '"' => i       { TEXT; RETURN(TEXT); }
+      <BAD_TEXT> '"' => i       { SET_TEXT; RETURN(TEXT); }
       <BAD_TEXT> [^]            { ERROR("illegal character in string");
                                   continue; }
       <BAD_TEXT> *              { MAYBE_MALFORMED_UTF8(" in string"); }
@@ -364,8 +428,8 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> "i32.store16"         { OPCODE(I32Store16); RETURN(STORE); }
       <i> "i64.store16"         { OPCODE(I64Store16); RETURN(STORE); }
       <i> "i64.store32"         { OPCODE(I64Store32); RETURN(STORE); }
-      <i> "offset=" nat         { TEXT_AT(7); RETURN(OFFSET_EQ_NAT); }
-      <i> "align=" nat          { TEXT_AT(6); RETURN(ALIGN_EQ_NAT); }
+      <i> "offset=" nat         { SET_TEXT_AT(7); RETURN(OFFSET_EQ_NAT); }
+      <i> "align=" nat          { SET_TEXT_AT(6); RETURN(ALIGN_EQ_NAT); }
       <i> "i32.const"           { TYPE(I32); RETURN(CONST); }
       <i> "i64.const"           { TYPE(I64); RETURN(CONST); }
       <i> "f32.const"           { TYPE(F32); RETURN(CONST); }
@@ -503,7 +567,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> "result"              { RETURN(RESULT); }
       <i> "local"               { RETURN(LOCAL); }
       <i> "global"              { RETURN(GLOBAL); }
-      <i> "module"              { RETURN(MODULE); }
+      <i> "module"              { fprintf(stderr, "module\n"); RETURN(MODULE); }
       <i> "binary"              { RETURN(BIN); }
       <i> "quote"               { RETURN(QUOTE); }
       <i> "table"               { RETURN(TABLE); }
@@ -533,7 +597,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> "catch_all"           { RETURN_LPAR(CATCH_ALL); }
       <i> "throw"               { RETURN(THROW); }
       <i> "rethrow"             { RETURN(RETHROW); }
-      <i> name                  { TEXT; RETURN(VAR); }
+      <i> name                  { SET_TEXT; RETURN(VAR); }
 
       <i> ";;" => LINE_COMMENT  { continue; }
       <LINE_COMMENT> "\n" => i  { NEWLINE; continue; }
