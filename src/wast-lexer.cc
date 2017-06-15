@@ -42,10 +42,10 @@
 
 #define LOOKAHEAD(name) \
   do {                         \
-   LookaheadToken Tok;         \
-   YY_USER_ACTION(&Tok.loc_);  \
-   Tok.value_ = WABT_TOKEN_TYPE_##name;       \
-   lookahead_.push_back(Tok);  \
+    Lookahead::Lval lval;      \
+   YY_USER_ACTION(&lval.loc_);  \
+   lval.value_ = WABT_TOKEN_TYPE_##name;       \
+   lookahead_->tokens_.push_back(lval);  \
    token_ = cursor_; \
   } while (0); continue
 
@@ -56,24 +56,24 @@
   return WABT_TOKEN_TYPE_##name
   
 #define RETURN(name)            \
-  if (lookahead_.empty()) {       \
+  if (lookahead_->tokens_.empty()) {           \
     YY_USER_ACTION(loc);            \
     return WABT_TOKEN_TYPE_##name; \
   } else {  \
-    LookaheadToken Tok;         \
-    YY_USER_ACTION(&Tok.loc_);  \
-    Tok.value_ = WABT_TOKEN_TYPE_##name;       \
-    lookahead_.push_back(Tok);  \
+    Lookahead::Lval lval;       \
+    YY_USER_ACTION(&lval.loc_);  \
+    lval.value_ = WABT_TOKEN_TYPE_##name;       \
+    lookahead_->tokens_.push_back(lval);  \
     token_ = cursor_;           \
     RETURN_LOOKAHEAD; \
   }
 
 #define RETURN_LPAR(name) \
   if (lookahead_contains_lpar()) {  \
-    LookaheadToken Tok;         \
-    YY_USER_ACTION(&Tok.loc_);  \
-    Tok.value_ = WABT_TOKEN_TYPE_##name;       \
-    lookahead_.push_back(Tok);  \
+    Lookahead::Lval lval;           \
+    YY_USER_ACTION(&lval.loc_);  \
+    lval.value_ = WABT_TOKEN_TYPE_##name;       \
+    lookahead_->tokens_.push_back(lval);  \
     token_ = cursor_;           \
     RETURN_NOLOOKAHEAD(LPAR_##name);  \
   }                                  \
@@ -130,6 +130,15 @@
 
 namespace wabt {
 
+struct WastLexer::Lookahead {
+  struct Lval {
+    Location loc_;
+    int value_;
+    Token lval_;
+  };
+  circ_array<Lval, 2> tokens_;
+};
+
 WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
     : source_(std::move(source)),
       line_finder_(source_->Clone()),
@@ -144,7 +153,9 @@ WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
       marker_(nullptr),
       token_(nullptr),
       cursor_(nullptr),
-      limit_(nullptr) {}
+      limit_(nullptr) {
+  lookahead_ = new WastLexer::Lookahead();
+}
 
 WastLexer::~WastLexer() {
   delete[] buffer_;
@@ -165,16 +176,16 @@ std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(const char* filename,
 }
 
 int WastLexer::pop_lookahead_token(Location* loc) {
-  LookaheadToken& Tok = lookahead_.front();
-  *loc = Tok.loc_;
-  int Result = Tok.value_;
-  lookahead_.pop_front();
+  Lookahead::Lval* lval = &lookahead_->tokens_.front();
+  *loc = lval->loc_;
+  int Result = lval->value_;
+  lookahead_->tokens_.pop_front();
   return Result;
 }
 
 bool WastLexer::lookahead_contains_lpar() {
-  return lookahead_.size() == 1
-  && lookahead_[0].value_ == WABT_TOKEN_TYPE_LPAR;
+  return lookahead_->tokens_.size() == 1
+  && lookahead_->tokens_[0].value_ == WABT_TOKEN_TYPE_LPAR;
 }
 
 Result WastLexer::Fill(Location* loc, WastParser* parser, size_t need) {
@@ -242,7 +253,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
 
   get_loc = loc;
 
-  if (!lookahead_.empty()) {
+  if (!lookahead_->tokens_.empty()) {
     RETURN_LOOKAHEAD;
   }
 

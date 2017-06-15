@@ -67,11 +67,8 @@ class WastLexer {
 
   // The following defines a lookahead queue for inserting EXPECTS_PAREN_NAME
   // for the token list: "(" NAME
-  struct LookaheadToken {
-    Location loc_;
-    int value_;
-  };
-  circ_array<LookaheadToken, 2> lookahead_;
+  struct Lookahead;
+  Lookahead* lookahead_;
   Location* get_loc;
 
   int pop_lookahead_token(Location* loc);
