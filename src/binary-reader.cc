@@ -155,6 +155,7 @@ class BinaryReader {
 
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
+  Result ReadOpcode(Opcode* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadU8(uint8_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadU32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadF32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
@@ -251,6 +252,15 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
   memcpy(out_value, state_.data + state_.offset, sizeof(type)); \
   state_.offset += sizeof(type);                                \
   return Result::Ok
+
+Result BinaryReader::ReadOpcode(Opcode* out_value, const char* desc) {
+  uint8_t value = 0;
+  if (WABT_FAILED(ReadU8(&value, desc))) {
+    return Result::Error;
+  }
+  *out_value = Opcode::FromCode(value);
+  return Result::Ok;
+}
 
 Result BinaryReader::ReadU8(uint8_t* out_value, const char* desc) {
   IN_SIZE(uint8_t);
@@ -456,9 +466,9 @@ Index BinaryReader::NumTotalGlobals() {
 }
 
 Result BinaryReader::ReadInitExpr(Index index) {
-  uint8_t opcode = 0;
-  CHECK_RESULT(ReadU8(&opcode, "opcode"));
-  switch (static_cast<Opcode>(opcode)) {
+  Opcode opcode;
+  CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
+  switch (opcode) {
     case Opcode::I32Const: {
       uint32_t value = 0;
       CHECK_RESULT(ReadI32Leb128(&value, "init_expr i32.const value"));
@@ -499,12 +509,12 @@ Result BinaryReader::ReadInitExpr(Index index) {
 
     default:
       PrintError("unexpected opcode in initializer expression: %d (0x%x)",
-                 opcode, opcode);
+                 opcode.GetCode(), opcode.GetCode());
       return Result::Error;
   }
 
-  CHECK_RESULT(ReadU8(&opcode, "opcode"));
-  ERROR_UNLESS(static_cast<Opcode>(opcode) == Opcode::End,
+  CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
+  ERROR_UNLESS(opcode == Opcode::End,
                "expected END opcode after initializer expression");
   return Result::Ok;
 }
@@ -570,9 +580,8 @@ Result BinaryReader::ReadGlobalHeader(Type* out_type, bool* out_mutable) {
 Result BinaryReader::ReadFunctionBody(Offset end_offset) {
   bool seen_end_opcode = false;
   while (state_.offset < end_offset) {
-    uint8_t opcode_u8 = 0;
-    CHECK_RESULT(ReadU8(&opcode_u8, "opcode"));
-    Opcode opcode = static_cast<Opcode>(opcode_u8);
+    Opcode opcode;
+    CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
     CALLBACK(OnOpcode, opcode);
     switch (opcode) {
       case Opcode::Unreachable:

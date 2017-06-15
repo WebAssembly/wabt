@@ -406,7 +406,7 @@ void WatWriter::WriteBeginBlock(LabelType label_type,
 void WatWriter::WriteEndBlock() {
   Dedent();
   label_stack_.pop_back();
-  WritePutsNewline(get_opcode_name(Opcode::End));
+  WritePutsNewline(Opcode::End_Opcode.GetName());
 }
 
 void WatWriter::WriteBlock(LabelType label_type,
@@ -420,19 +420,19 @@ void WatWriter::WriteBlock(LabelType label_type,
 void WatWriter::WriteConst(const Const* const_) {
   switch (const_->type) {
     case Type::I32:
-      WritePutsSpace(get_opcode_name(Opcode::I32Const));
+      WritePutsSpace(Opcode::I32Const_Opcode.GetName());
       Writef("%d", static_cast<int32_t>(const_->u32));
       WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case Type::I64:
-      WritePutsSpace(get_opcode_name(Opcode::I64Const));
+      WritePutsSpace(Opcode::I64Const_Opcode.GetName());
       Writef("%" PRId64, static_cast<int64_t>(const_->u64));
       WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case Type::F32: {
-      WritePutsSpace(get_opcode_name(Opcode::F32Const));
+      WritePutsSpace(Opcode::F32Const_Opcode.GetName());
       char buffer[128];
       write_float_hex(buffer, 128, const_->f32_bits);
       WritePutsSpace(buffer);
@@ -444,7 +444,7 @@ void WatWriter::WriteConst(const Const* const_) {
     }
 
     case Type::F64: {
-      WritePutsSpace(get_opcode_name(Opcode::F64Const));
+      WritePutsSpace(Opcode::F64Const_Opcode.GetName());
       char buffer[128];
       write_double_hex(buffer, 128, const_->f64_bits);
       WritePutsSpace(buffer);
@@ -464,25 +464,25 @@ void WatWriter::WriteConst(const Const* const_) {
 void WatWriter::WriteExpr(const Expr* expr) {
   switch (expr->type) {
     case ExprType::Binary:
-      WritePutsNewline(get_opcode_name(expr->binary.opcode));
+      WritePutsNewline(expr->binary.opcode.GetName());
       break;
 
     case ExprType::Block:
-      WriteBlock(LabelType::Block, expr->block, get_opcode_name(Opcode::Block));
+      WriteBlock(LabelType::Block, expr->block, Opcode::Block_Opcode.GetName());
       break;
 
     case ExprType::Br:
-      WritePutsSpace(get_opcode_name(Opcode::Br));
+      WritePutsSpace(Opcode::Br_Opcode.GetName());
       WriteBrVar(&expr->br.var, NextChar::Newline);
       break;
 
     case ExprType::BrIf:
-      WritePutsSpace(get_opcode_name(Opcode::BrIf));
+      WritePutsSpace(Opcode::BrIf_Opcode.GetName());
       WriteBrVar(&expr->br_if.var, NextChar::Newline);
       break;
 
     case ExprType::BrTable: {
-      WritePutsSpace(get_opcode_name(Opcode::BrTable));
+      WritePutsSpace(Opcode::BrTable_Opcode.GetName());
       for (const Var& var : *expr->br_table.targets)
         WriteBrVar(&var, NextChar::Space);
       WriteBrVar(&expr->br_table.default_target, NextChar::Newline);
@@ -490,17 +490,17 @@ void WatWriter::WriteExpr(const Expr* expr) {
     }
 
     case ExprType::Call:
-      WritePutsSpace(get_opcode_name(Opcode::Call));
+      WritePutsSpace(Opcode::Call_Opcode.GetName());
       WriteVar(&expr->call.var, NextChar::Newline);
       break;
 
     case ExprType::CallIndirect:
-      WritePutsSpace(get_opcode_name(Opcode::CallIndirect));
+      WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
       WriteVar(&expr->call_indirect.var, NextChar::Newline);
       break;
 
     case ExprType::Compare:
-      WritePutsNewline(get_opcode_name(expr->compare.opcode));
+      WritePutsNewline(expr->compare.opcode.GetName());
       break;
 
     case ExprType::Const:
@@ -508,34 +508,34 @@ void WatWriter::WriteExpr(const Expr* expr) {
       break;
 
     case ExprType::Convert:
-      WritePutsNewline(get_opcode_name(expr->convert.opcode));
+      WritePutsNewline(expr->convert.opcode.GetName());
       break;
 
     case ExprType::Drop:
-      WritePutsNewline(get_opcode_name(Opcode::Drop));
+      WritePutsNewline(Opcode::Drop_Opcode.GetName());
       break;
 
     case ExprType::GetGlobal:
-      WritePutsSpace(get_opcode_name(Opcode::GetGlobal));
+      WritePutsSpace(Opcode::GetGlobal_Opcode.GetName());
       WriteVar(&expr->get_global.var, NextChar::Newline);
       break;
 
     case ExprType::GetLocal:
-      WritePutsSpace(get_opcode_name(Opcode::GetLocal));
+      WritePutsSpace(Opcode::GetLocal_Opcode.GetName());
       WriteVar(&expr->get_local.var, NextChar::Newline);
       break;
 
     case ExprType::GrowMemory:
-      WritePutsNewline(get_opcode_name(Opcode::GrowMemory));
+      WritePutsNewline(Opcode::GrowMemory_Opcode.GetName());
       break;
 
     case ExprType::If:
       WriteBeginBlock(LabelType::If, expr->if_.true_,
-                      get_opcode_name(Opcode::If));
+                      Opcode::If_Opcode.GetName());
       WriteExprList(expr->if_.true_->first);
       if (expr->if_.false_) {
         Dedent();
-        WritePutsSpace(get_opcode_name(Opcode::Else));
+        WritePutsSpace(Opcode::Else_Opcode.GetName());
         Indent();
         WriteNewline(FORCE_NEWLINE);
         WriteExprList(expr->if_.false_);
@@ -544,64 +544,64 @@ void WatWriter::WriteExpr(const Expr* expr) {
       break;
 
     case ExprType::Load:
-      WritePutsSpace(get_opcode_name(expr->load.opcode));
+      WritePutsSpace(expr->load.opcode.GetName());
       if (expr->load.offset)
         Writef("offset=%u", expr->load.offset);
-      if (!is_naturally_aligned(expr->load.opcode, expr->load.align))
+      if (!expr->load.opcode.IsNaturallyAligned(expr->load.align))
         Writef("align=%u", expr->load.align);
       WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case ExprType::Loop:
-      WriteBlock(LabelType::Loop, expr->loop, get_opcode_name(Opcode::Loop));
+      WriteBlock(LabelType::Loop, expr->loop, Opcode::Loop_Opcode.GetName());
       break;
 
     case ExprType::CurrentMemory:
-      WritePutsNewline(get_opcode_name(Opcode::CurrentMemory));
+      WritePutsNewline(Opcode::CurrentMemory_Opcode.GetName());
       break;
 
     case ExprType::Nop:
-      WritePutsNewline(get_opcode_name(Opcode::Nop));
+      WritePutsNewline(Opcode::Nop_Opcode.GetName());
       break;
 
     case ExprType::Return:
-      WritePutsNewline(get_opcode_name(Opcode::Return));
+      WritePutsNewline(Opcode::Return_Opcode.GetName());
       break;
 
     case ExprType::Select:
-      WritePutsNewline(get_opcode_name(Opcode::Select));
+      WritePutsNewline(Opcode::Select_Opcode.GetName());
       break;
 
     case ExprType::SetGlobal:
-      WritePutsSpace(get_opcode_name(Opcode::SetGlobal));
+      WritePutsSpace(Opcode::SetGlobal_Opcode.GetName());
       WriteVar(&expr->set_global.var, NextChar::Newline);
       break;
 
     case ExprType::SetLocal:
-      WritePutsSpace(get_opcode_name(Opcode::SetLocal));
+      WritePutsSpace(Opcode::SetLocal_Opcode.GetName());
       WriteVar(&expr->set_local.var, NextChar::Newline);
       break;
 
     case ExprType::Store:
-      WritePutsSpace(get_opcode_name(expr->store.opcode));
+      WritePutsSpace(expr->store.opcode.GetName());
       if (expr->store.offset)
         Writef("offset=%u", expr->store.offset);
-      if (!is_naturally_aligned(expr->store.opcode, expr->store.align))
+      if (!expr->store.opcode.IsNaturallyAligned(expr->store.align))
         Writef("align=%u", expr->store.align);
       WriteNewline(NO_FORCE_NEWLINE);
       break;
 
     case ExprType::TeeLocal:
-      WritePutsSpace(get_opcode_name(Opcode::TeeLocal));
+      WritePutsSpace(Opcode::TeeLocal_Opcode.GetName());
       WriteVar(&expr->tee_local.var, NextChar::Newline);
       break;
 
     case ExprType::Unary:
-      WritePutsNewline(get_opcode_name(expr->unary.opcode));
+      WritePutsNewline(expr->unary.opcode.GetName());
       break;
 
     case ExprType::Unreachable:
-      WritePutsNewline(get_opcode_name(Opcode::Unreachable));
+      WritePutsNewline(Opcode::Unreachable_Opcode.GetName());
       break;
 
     default:
@@ -769,7 +769,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
     case ExprType::Block:
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::Block, expr_tree.expr->block,
-                      get_opcode_name(Opcode::Block));
+                      Opcode::Block_Opcode.GetName());
       WriteFoldedExprList(expr_tree.expr->block->first);
       FlushExprTreeStack();
       WriteCloseNewline();
@@ -778,7 +778,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
     case ExprType::Loop:
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::Loop, expr_tree.expr->loop,
-                      get_opcode_name(Opcode::Loop));
+                      Opcode::Loop_Opcode.GetName());
       WriteFoldedExprList(expr_tree.expr->loop->first);
       FlushExprTreeStack();
       WriteCloseNewline();
@@ -787,7 +787,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
     case ExprType::If:
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::If, expr_tree.expr->if_.true_,
-                      get_opcode_name(Opcode::If));
+                      Opcode::If_Opcode.GetName());
       FlushExprTreeVector(expr_tree.children);
       WriteOpenNewline("then");
       WriteFoldedExprList(expr_tree.expr->if_.true_->first);

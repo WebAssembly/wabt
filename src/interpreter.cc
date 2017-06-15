@@ -27,12 +27,12 @@
 namespace wabt {
 namespace interpreter {
 
-static const char* s_opcode_name[256] = {
-
+static const char* s_opcode_name[] = {
 #define WABT_OPCODE(rtype, type1, type2, mem_size, code, NAME, text) text,
 #include "interpreter-opcode.def"
 #undef WABT_OPCODE
 
+  "<invalid>",
 };
 
 #define CHECK_RESULT(expr)  \
@@ -41,8 +41,11 @@ static const char* s_opcode_name[256] = {
       return Result::Error; \
   } while (0)
 
-static const char* get_opcode_name(Opcode opcode) {
-  return s_opcode_name[static_cast<int>(opcode)];
+static const char* GetOpcodeName(Opcode opcode) {
+  int value = static_cast<int>(opcode);
+  return value < static_cast<int>(WABT_ARRAY_SIZE(s_opcode_name))
+             ? s_opcode_name[value]
+             : "<invalid>";
 }
 
 Environment::Environment() : istream_(new OutputBuffer()) {}
@@ -1803,17 +1806,16 @@ void Thread::Trace(Stream* stream) {
   Opcode opcode = static_cast<Opcode>(*pc++);
   switch (opcode) {
     case Opcode::Select:
-      stream->Writef("%s %u, %" PRIu64 ", %" PRIu64 "\n",
-                     get_opcode_name(opcode), PICK(3).i32, PICK(2).i64,
-                     PICK(1).i64);
+      stream->Writef("%s %u, %" PRIu64 ", %" PRIu64 "\n", GetOpcodeName(opcode),
+                     PICK(3).i32, PICK(2).i64, PICK(1).i64);
       break;
 
     case Opcode::Br:
-      stream->Writef("%s @%u\n", get_opcode_name(opcode), read_u32_at(pc));
+      stream->Writef("%s @%u\n", GetOpcodeName(opcode), read_u32_at(pc));
       break;
 
     case Opcode::BrIf:
-      stream->Writef("%s @%u, %u\n", get_opcode_name(opcode), read_u32_at(pc),
+      stream->Writef("%s @%u, %u\n", GetOpcodeName(opcode), read_u32_at(pc),
                      TOP().i32);
       break;
 
@@ -1822,7 +1824,7 @@ void Thread::Trace(Stream* stream) {
       IstreamOffset table_offset = read_u32_at(pc + 4);
       VALUE_TYPE_I32 key = TOP().i32;
       stream->Writef("%s %u, $#%" PRIindex ", table:$%u\n",
-                     get_opcode_name(opcode), key, num_targets, table_offset);
+                     GetOpcodeName(opcode), key, num_targets, table_offset);
       break;
     }
 
@@ -1830,58 +1832,58 @@ void Thread::Trace(Stream* stream) {
     case Opcode::Return:
     case Opcode::Unreachable:
     case Opcode::Drop:
-      stream->Writef("%s\n", get_opcode_name(opcode));
+      stream->Writef("%s\n", GetOpcodeName(opcode));
       break;
 
     case Opcode::CurrentMemory: {
       Index memory_index = read_u32(&pc);
-      stream->Writef("%s $%" PRIindex "\n", get_opcode_name(opcode),
+      stream->Writef("%s $%" PRIindex "\n", GetOpcodeName(opcode),
                      memory_index);
       break;
     }
 
     case Opcode::I32Const:
-      stream->Writef("%s $%u\n", get_opcode_name(opcode), read_u32_at(pc));
+      stream->Writef("%s $%u\n", GetOpcodeName(opcode), read_u32_at(pc));
       break;
 
     case Opcode::I64Const:
-      stream->Writef("%s $%" PRIu64 "\n", get_opcode_name(opcode),
+      stream->Writef("%s $%" PRIu64 "\n", GetOpcodeName(opcode),
                      read_u64_at(pc));
       break;
 
     case Opcode::F32Const:
-      stream->Writef("%s $%g\n", get_opcode_name(opcode),
+      stream->Writef("%s $%g\n", GetOpcodeName(opcode),
                      bitcast_u32_to_f32(read_u32_at(pc)));
       break;
 
     case Opcode::F64Const:
-      stream->Writef("%s $%g\n", get_opcode_name(opcode),
+      stream->Writef("%s $%g\n", GetOpcodeName(opcode),
                      bitcast_u64_to_f64(read_u64_at(pc)));
       break;
 
     case Opcode::GetLocal:
     case Opcode::GetGlobal:
-      stream->Writef("%s $%u\n", get_opcode_name(opcode), read_u32_at(pc));
+      stream->Writef("%s $%u\n", GetOpcodeName(opcode), read_u32_at(pc));
       break;
 
     case Opcode::SetLocal:
     case Opcode::SetGlobal:
     case Opcode::TeeLocal:
-      stream->Writef("%s $%u, %u\n", get_opcode_name(opcode), read_u32_at(pc),
+      stream->Writef("%s $%u, %u\n", GetOpcodeName(opcode), read_u32_at(pc),
                      TOP().i32);
       break;
 
     case Opcode::Call:
-      stream->Writef("%s @%u\n", get_opcode_name(opcode), read_u32_at(pc));
+      stream->Writef("%s @%u\n", GetOpcodeName(opcode), read_u32_at(pc));
       break;
 
     case Opcode::CallIndirect:
-      stream->Writef("%s $%u, %u\n", get_opcode_name(opcode), read_u32_at(pc),
+      stream->Writef("%s $%u, %u\n", GetOpcodeName(opcode), read_u32_at(pc),
                      TOP().i32);
       break;
 
     case Opcode::CallHost:
-      stream->Writef("%s $%u\n", get_opcode_name(opcode), read_u32_at(pc));
+      stream->Writef("%s $%u\n", GetOpcodeName(opcode), read_u32_at(pc));
       break;
 
     case Opcode::I32Load8S:
@@ -1899,7 +1901,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32Load:
     case Opcode::F64Load: {
       Index memory_index = read_u32(&pc);
-      stream->Writef("%s $%" PRIindex ":%u+$%u\n", get_opcode_name(opcode),
+      stream->Writef("%s $%" PRIindex ":%u+$%u\n", GetOpcodeName(opcode),
                      memory_index, TOP().i32, read_u32_at(pc));
       break;
     }
@@ -1908,7 +1910,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32Store16:
     case Opcode::I32Store: {
       Index memory_index = read_u32(&pc);
-      stream->Writef("%s $%" PRIindex ":%u+$%u, %u\n", get_opcode_name(opcode),
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %u\n", GetOpcodeName(opcode),
                      memory_index, PICK(2).i32, read_u32_at(pc), PICK(1).i32);
       break;
     }
@@ -1919,14 +1921,14 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64Store: {
       Index memory_index = read_u32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %" PRIu64 "\n",
-                     get_opcode_name(opcode), memory_index, PICK(2).i32,
+                     GetOpcodeName(opcode), memory_index, PICK(2).i32,
                      read_u32_at(pc), PICK(1).i64);
       break;
     }
 
     case Opcode::F32Store: {
       Index memory_index = read_u32(&pc);
-      stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n", get_opcode_name(opcode),
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n", GetOpcodeName(opcode),
                      memory_index, PICK(2).i32, read_u32_at(pc),
                      bitcast_u32_to_f32(PICK(1).f32_bits));
       break;
@@ -1934,7 +1936,7 @@ void Thread::Trace(Stream* stream) {
 
     case Opcode::F64Store: {
       Index memory_index = read_u32(&pc);
-      stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n", get_opcode_name(opcode),
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n", GetOpcodeName(opcode),
                      memory_index, PICK(2).i32, read_u32_at(pc),
                      bitcast_u64_to_f64(PICK(1).f64_bits));
       break;
@@ -1942,7 +1944,7 @@ void Thread::Trace(Stream* stream) {
 
     case Opcode::GrowMemory: {
       Index memory_index = read_u32(&pc);
-      stream->Writef("%s $%" PRIindex ":%u\n", get_opcode_name(opcode),
+      stream->Writef("%s $%" PRIindex ":%u\n", GetOpcodeName(opcode),
                      memory_index, TOP().i32);
       break;
     }
@@ -1972,7 +1974,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32GeU:
     case Opcode::I32Rotr:
     case Opcode::I32Rotl:
-      stream->Writef("%s %u, %u\n", get_opcode_name(opcode), PICK(2).i32,
+      stream->Writef("%s %u, %u\n", GetOpcodeName(opcode), PICK(2).i32,
                      PICK(1).i32);
       break;
 
@@ -1980,7 +1982,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32Ctz:
     case Opcode::I32Popcnt:
     case Opcode::I32Eqz:
-      stream->Writef("%s %u\n", get_opcode_name(opcode), TOP().i32);
+      stream->Writef("%s %u\n", GetOpcodeName(opcode), TOP().i32);
       break;
 
     case Opcode::I64Add:
@@ -2008,7 +2010,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64GeU:
     case Opcode::I64Rotr:
     case Opcode::I64Rotl:
-      stream->Writef("%s %" PRIu64 ", %" PRIu64 "\n", get_opcode_name(opcode),
+      stream->Writef("%s %" PRIu64 ", %" PRIu64 "\n", GetOpcodeName(opcode),
                      PICK(2).i64, PICK(1).i64);
       break;
 
@@ -2016,7 +2018,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64Ctz:
     case Opcode::I64Popcnt:
     case Opcode::I64Eqz:
-      stream->Writef("%s %" PRIu64 "\n", get_opcode_name(opcode), TOP().i64);
+      stream->Writef("%s %" PRIu64 "\n", GetOpcodeName(opcode), TOP().i64);
       break;
 
     case Opcode::F32Add:
@@ -2032,7 +2034,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32Le:
     case Opcode::F32Gt:
     case Opcode::F32Ge:
-      stream->Writef("%s %g, %g\n", get_opcode_name(opcode),
+      stream->Writef("%s %g, %g\n", GetOpcodeName(opcode),
                      bitcast_u32_to_f32(PICK(2).i32),
                      bitcast_u32_to_f32(PICK(1).i32));
       break;
@@ -2044,7 +2046,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32Trunc:
     case Opcode::F32Nearest:
     case Opcode::F32Sqrt:
-      stream->Writef("%s %g\n", get_opcode_name(opcode),
+      stream->Writef("%s %g\n", GetOpcodeName(opcode),
                      bitcast_u32_to_f32(TOP().i32));
       break;
 
@@ -2061,7 +2063,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F64Le:
     case Opcode::F64Gt:
     case Opcode::F64Ge:
-      stream->Writef("%s %g, %g\n", get_opcode_name(opcode),
+      stream->Writef("%s %g, %g\n", GetOpcodeName(opcode),
                      bitcast_u64_to_f64(PICK(2).i64),
                      bitcast_u64_to_f64(PICK(1).i64));
       break;
@@ -2073,7 +2075,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F64Trunc:
     case Opcode::F64Nearest:
     case Opcode::F64Sqrt:
-      stream->Writef("%s %g\n", get_opcode_name(opcode),
+      stream->Writef("%s %g\n", GetOpcodeName(opcode),
                      bitcast_u64_to_f64(TOP().i64));
       break;
 
@@ -2083,7 +2085,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64TruncUF32:
     case Opcode::F64PromoteF32:
     case Opcode::I32ReinterpretF32:
-      stream->Writef("%s %g\n", get_opcode_name(opcode),
+      stream->Writef("%s %g\n", GetOpcodeName(opcode),
                      bitcast_u32_to_f32(TOP().i32));
       break;
 
@@ -2093,7 +2095,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64TruncUF64:
     case Opcode::F32DemoteF64:
     case Opcode::I64ReinterpretF64:
-      stream->Writef("%s %g\n", get_opcode_name(opcode),
+      stream->Writef("%s %g\n", GetOpcodeName(opcode),
                      bitcast_u64_to_f64(TOP().i64));
       break;
 
@@ -2103,7 +2105,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F64ConvertSI64:
     case Opcode::F64ConvertUI64:
     case Opcode::F64ReinterpretI64:
-      stream->Writef("%s %" PRIu64 "\n", get_opcode_name(opcode), TOP().i64);
+      stream->Writef("%s %" PRIu64 "\n", GetOpcodeName(opcode), TOP().i64);
       break;
 
     case Opcode::I64ExtendSI32:
@@ -2113,20 +2115,20 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32ReinterpretI32:
     case Opcode::F64ConvertSI32:
     case Opcode::F64ConvertUI32:
-      stream->Writef("%s %u\n", get_opcode_name(opcode), TOP().i32);
+      stream->Writef("%s %u\n", GetOpcodeName(opcode), TOP().i32);
       break;
 
     case Opcode::Alloca:
-      stream->Writef("%s $%u\n", get_opcode_name(opcode), read_u32_at(pc));
+      stream->Writef("%s $%u\n", GetOpcodeName(opcode), read_u32_at(pc));
       break;
 
     case Opcode::BrUnless:
-      stream->Writef("%s @%u, %u\n", get_opcode_name(opcode), read_u32_at(pc),
+      stream->Writef("%s @%u, %u\n", GetOpcodeName(opcode), read_u32_at(pc),
                      TOP().i32);
       break;
 
     case Opcode::DropKeep:
-      stream->Writef("%s $%u $%u\n", get_opcode_name(opcode), read_u32_at(pc),
+      stream->Writef("%s $%u $%u\n", GetOpcodeName(opcode), read_u32_at(pc),
                      *(pc + 4));
       break;
 
@@ -2158,15 +2160,15 @@ void Environment::Disassemble(Stream* stream,
     Opcode opcode = static_cast<Opcode>(*pc++);
     switch (opcode) {
       case Opcode::Select:
-        stream->Writef("%s %%[-3], %%[-2], %%[-1]\n", get_opcode_name(opcode));
+        stream->Writef("%s %%[-3], %%[-2], %%[-1]\n", GetOpcodeName(opcode));
         break;
 
       case Opcode::Br:
-        stream->Writef("%s @%u\n", get_opcode_name(opcode), read_u32(&pc));
+        stream->Writef("%s @%u\n", GetOpcodeName(opcode), read_u32(&pc));
         break;
 
       case Opcode::BrIf:
-        stream->Writef("%s @%u, %%[-1]\n", get_opcode_name(opcode),
+        stream->Writef("%s @%u, %%[-1]\n", GetOpcodeName(opcode),
                        read_u32(&pc));
         break;
 
@@ -2174,7 +2176,7 @@ void Environment::Disassemble(Stream* stream,
         Index num_targets = read_u32(&pc);
         IstreamOffset table_offset = read_u32(&pc);
         stream->Writef("%s %%[-1], $#%" PRIindex ", table:$%u\n",
-                       get_opcode_name(opcode), num_targets, table_offset);
+                       GetOpcodeName(opcode), num_targets, table_offset);
         break;
       }
 
@@ -2182,60 +2184,60 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::Return:
       case Opcode::Unreachable:
       case Opcode::Drop:
-        stream->Writef("%s\n", get_opcode_name(opcode));
+        stream->Writef("%s\n", GetOpcodeName(opcode));
         break;
 
       case Opcode::CurrentMemory: {
         Index memory_index = read_u32(&pc);
-        stream->Writef("%s $%" PRIindex "\n", get_opcode_name(opcode),
+        stream->Writef("%s $%" PRIindex "\n", GetOpcodeName(opcode),
                        memory_index);
         break;
       }
 
       case Opcode::I32Const:
-        stream->Writef("%s $%u\n", get_opcode_name(opcode), read_u32(&pc));
+        stream->Writef("%s $%u\n", GetOpcodeName(opcode), read_u32(&pc));
         break;
 
       case Opcode::I64Const:
-        stream->Writef("%s $%" PRIu64 "\n", get_opcode_name(opcode),
+        stream->Writef("%s $%" PRIu64 "\n", GetOpcodeName(opcode),
                        read_u64(&pc));
         break;
 
       case Opcode::F32Const:
-        stream->Writef("%s $%g\n", get_opcode_name(opcode),
+        stream->Writef("%s $%g\n", GetOpcodeName(opcode),
                        bitcast_u32_to_f32(read_u32(&pc)));
         break;
 
       case Opcode::F64Const:
-        stream->Writef("%s $%g\n", get_opcode_name(opcode),
+        stream->Writef("%s $%g\n", GetOpcodeName(opcode),
                        bitcast_u64_to_f64(read_u64(&pc)));
         break;
 
       case Opcode::GetLocal:
       case Opcode::GetGlobal:
-        stream->Writef("%s $%u\n", get_opcode_name(opcode), read_u32(&pc));
+        stream->Writef("%s $%u\n", GetOpcodeName(opcode), read_u32(&pc));
         break;
 
       case Opcode::SetLocal:
       case Opcode::SetGlobal:
       case Opcode::TeeLocal:
-        stream->Writef("%s $%u, %%[-1]\n", get_opcode_name(opcode),
+        stream->Writef("%s $%u, %%[-1]\n", GetOpcodeName(opcode),
                        read_u32(&pc));
         break;
 
       case Opcode::Call:
-        stream->Writef("%s @%u\n", get_opcode_name(opcode), read_u32(&pc));
+        stream->Writef("%s @%u\n", GetOpcodeName(opcode), read_u32(&pc));
         break;
 
       case Opcode::CallIndirect: {
         Index table_index = read_u32(&pc);
-        stream->Writef("%s $%" PRIindex ":%u, %%[-1]\n",
-                       get_opcode_name(opcode), table_index, read_u32(&pc));
+        stream->Writef("%s $%" PRIindex ":%u, %%[-1]\n", GetOpcodeName(opcode),
+                       table_index, read_u32(&pc));
         break;
       }
 
       case Opcode::CallHost:
-        stream->Writef("%s $%u\n", get_opcode_name(opcode), read_u32(&pc));
+        stream->Writef("%s $%u\n", GetOpcodeName(opcode), read_u32(&pc));
         break;
 
       case Opcode::I32Load8S:
@@ -2253,8 +2255,8 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F32Load:
       case Opcode::F64Load: {
         Index memory_index = read_u32(&pc);
-        stream->Writef("%s $%" PRIindex ":%%[-1]+$%u\n",
-                       get_opcode_name(opcode), memory_index, read_u32(&pc));
+        stream->Writef("%s $%" PRIindex ":%%[-1]+$%u\n", GetOpcodeName(opcode),
+                       memory_index, read_u32(&pc));
         break;
       }
 
@@ -2269,7 +2271,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64Store: {
         Index memory_index = read_u32(&pc);
         stream->Writef("%s %%[-2]+$%" PRIindex ", $%u:%%[-1]\n",
-                       get_opcode_name(opcode), memory_index, read_u32(&pc));
+                       GetOpcodeName(opcode), memory_index, read_u32(&pc));
         break;
       }
 
@@ -2349,7 +2351,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64Le:
       case Opcode::F64Gt:
       case Opcode::F64Ge:
-        stream->Writef("%s %%[-2], %%[-1]\n", get_opcode_name(opcode));
+        stream->Writef("%s %%[-2], %%[-1]\n", GetOpcodeName(opcode));
         break;
 
       case Opcode::I32Clz:
@@ -2399,35 +2401,35 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F32ReinterpretI32:
       case Opcode::F64ConvertSI32:
       case Opcode::F64ConvertUI32:
-        stream->Writef("%s %%[-1]\n", get_opcode_name(opcode));
+        stream->Writef("%s %%[-1]\n", GetOpcodeName(opcode));
         break;
 
       case Opcode::GrowMemory: {
         Index memory_index = read_u32(&pc);
-        stream->Writef("%s $%" PRIindex ":%%[-1]\n", get_opcode_name(opcode),
+        stream->Writef("%s $%" PRIindex ":%%[-1]\n", GetOpcodeName(opcode),
                        memory_index);
         break;
       }
 
       case Opcode::Alloca:
-        stream->Writef("%s $%u\n", get_opcode_name(opcode), read_u32(&pc));
+        stream->Writef("%s $%u\n", GetOpcodeName(opcode), read_u32(&pc));
         break;
 
       case Opcode::BrUnless:
-        stream->Writef("%s @%u, %%[-1]\n", get_opcode_name(opcode),
+        stream->Writef("%s @%u, %%[-1]\n", GetOpcodeName(opcode),
                        read_u32(&pc));
         break;
 
       case Opcode::DropKeep: {
         uint32_t drop = read_u32(&pc);
         uint8_t keep = *pc++;
-        stream->Writef("%s $%u $%u\n", get_opcode_name(opcode), drop, keep);
+        stream->Writef("%s $%u $%u\n", GetOpcodeName(opcode), drop, keep);
         break;
       }
 
       case Opcode::Data: {
         uint32_t num_bytes = read_u32(&pc);
-        stream->Writef("%s $%u\n", get_opcode_name(opcode), num_bytes);
+        stream->Writef("%s $%u\n", GetOpcodeName(opcode), num_bytes);
         /* for now, the only reason this is emitted is for br_table, so display
          * it as a list of table entries */
         if (num_bytes % WABT_TABLE_ENTRY_SIZE == 0) {

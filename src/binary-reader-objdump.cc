@@ -191,17 +191,17 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
 Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
   if (options->debug) {
-    const char* opcode_name = get_opcode_name(opcode);
+    const char* opcode_name = opcode.GetName();
     printf("on_opcode: %#" PRIzx ": %s\n", state->offset, opcode_name);
   }
 
   if (last_opcode_end) {
     if (state->offset != last_opcode_end + 1) {
-      uint8_t missing_opcode = data[last_opcode_end];
-      const char* opcode_name =
-          get_opcode_name(static_cast<Opcode>(missing_opcode));
-      fprintf(stderr, "warning: %#" PRIzx " missing opcode callback at %#" PRIzx
-                      " (%#02x=%s)\n",
+      Opcode missing_opcode = Opcode::FromCode(data[last_opcode_end]);
+      const char* opcode_name = missing_opcode.GetName();
+      fprintf(stderr,
+              "warning: %#" PRIzx " missing opcode callback at %#" PRIzx
+              " (%#02x=%s)\n",
               state->offset, last_opcode_end + 1, data[last_opcode_end],
               opcode_name);
       return Result::Error;
@@ -222,8 +222,7 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
   Offset offset = current_opcode_offset;
 
   // Print binary data
-  printf(" %06" PRIzx ": %02x", offset - 1,
-         static_cast<unsigned>(current_opcode));
+  printf(" %06" PRIzx ": %02x", offset - 1, current_opcode.GetCode());
   for (size_t i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT;
        i++, offset++) {
     printf(" %02x", data[offset]);
@@ -241,7 +240,7 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
     printf("  ");
   }
 
-  const char* opcode_name = get_opcode_name(current_opcode);
+  const char* opcode_name = current_opcode.GetName();
   printf("%s", opcode_name);
   if (fmt) {
     printf(" ");

@@ -16,25 +16,52 @@
 
 #include "opcode.h"
 
+#include <algorithm>
+
 namespace wabt {
 
-OpcodeInfo g_opcode_info[kOpcodeCount] = {
+// static
+Opcode::Info Opcode::infos_[] = {
+#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) \
+  {text, Type::rtype, Type::type1, Type::type2, mem_size, code},
+#include "opcode.def"
+#undef WABT_OPCODE
+};
 
 #define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) \
-  {text, Type::rtype, Type::type1, Type::type2, mem_size},
+  /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
 #include "opcode.def"
 #undef WABT_OPCODE
 
+// static
+Opcode::Info Opcode::invalid_info_ = {
+    "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0,
 };
 
-bool is_naturally_aligned(Opcode opcode, Address alignment) {
-  Address opcode_align = get_opcode_memory_size(opcode);
+// static
+Opcode Opcode::FromCode(uint32_t code) {
+  auto iter = std::lower_bound(
+      infos_, infos_ + WABT_ARRAY_SIZE(infos_), code,
+      [](const Info& info, uint32_t code) { return info.code < code; });
+
+  if (iter->code != code)
+    return Opcode(Invalid);
+
+  return Opcode(static_cast<Enum>(iter - infos_));
+}
+
+Opcode::Info Opcode::GetInfo() const {
+  return enum_ < Invalid ? infos_[enum_] : invalid_info_;
+}
+
+bool Opcode::IsNaturallyAligned(Address alignment) const {
+  Address opcode_align = GetMemorySize();
   return alignment == WABT_USE_NATURAL_ALIGNMENT || alignment == opcode_align;
 }
 
-Address get_opcode_alignment(Opcode opcode, Address alignment) {
+Address Opcode::GetAlignment(Address alignment) const {
   if (alignment == WABT_USE_NATURAL_ALIGNMENT)
-    return get_opcode_memory_size(opcode);
+    return GetMemorySize();
   return alignment;
 }
 

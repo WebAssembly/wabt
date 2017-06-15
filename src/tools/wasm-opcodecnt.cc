@@ -86,10 +86,7 @@ typedef int(int_pair_counter_lt_fcn)(const IntPairCounter&,
 typedef void (*display_name_fcn)(FILE* out, intmax_t value);
 
 static void display_opcode_name(FILE* out, intmax_t opcode) {
-  if (opcode >= 0 && opcode < kOpcodeCount)
-    fprintf(out, "%s", get_opcode_name(static_cast<Opcode>(opcode)));
-  else
-    fprintf(out, "?(%" PRIdMAX ")", opcode);
+  fprintf(out, "%s", Opcode(Opcode::Enum(opcode)).GetName());
 }
 
 static void display_intmax(FILE* out, intmax_t value) {
@@ -137,20 +134,8 @@ static int opcode_counter_gt(const IntCounter& counter_1,
     return 1;
   if (counter_1.count < counter_2.count)
     return 0;
-  const char* name_1 = "?1";
-  const char* name_2 = "?2";
-  if (counter_1.value < kOpcodeCount) {
-    const char* opcode_name =
-        get_opcode_name(static_cast<Opcode>(counter_1.value));
-    if (opcode_name)
-      name_1 = opcode_name;
-  }
-  if (counter_2.value < kOpcodeCount) {
-    const char* opcode_name =
-        get_opcode_name(static_cast<Opcode>(counter_2.value));
-    if (opcode_name)
-      name_2 = opcode_name;
-  }
+  const char* name_1 = Opcode(Opcode::Enum(counter_1.value)).GetName();
+  const char* name_2 = Opcode(Opcode::Enum(counter_2.value)).GetName();
   int diff = strcmp(name_1, name_2);
   if (diff > 0)
     return 1;
@@ -259,22 +244,22 @@ int ProgramMain(int argc, char** argv) {
           display_opcode_name, nullptr);
       display_sorted_int_counter_vector(
           out, "\ni32.const:", opcnt_data.i32_const_vec, int_counter_gt,
-          display_intmax, get_opcode_name(Opcode::I32Const));
+          display_intmax, Opcode::I32Const_Opcode.GetName());
       display_sorted_int_counter_vector(
           out, "\nget_local:", opcnt_data.get_local_vec, int_counter_gt,
-          display_intmax, get_opcode_name(Opcode::GetLocal));
+          display_intmax, Opcode::GetLocal_Opcode.GetName());
       display_sorted_int_counter_vector(
           out, "\nset_local:", opcnt_data.set_local_vec, int_counter_gt,
-          display_intmax, get_opcode_name(Opcode::SetLocal));
+          display_intmax, Opcode::SetLocal_Opcode.GetName());
       display_sorted_int_counter_vector(
           out, "\ntee_local:", opcnt_data.tee_local_vec, int_counter_gt,
-          display_intmax, get_opcode_name(Opcode::TeeLocal));
+          display_intmax, Opcode::TeeLocal_Opcode.GetName());
       display_sorted_int_pair_counter_vector(
           out, "\ni32.load:", opcnt_data.i32_load_vec, int_pair_counter_gt,
-          display_intmax, display_intmax, get_opcode_name(Opcode::I32Load));
+          display_intmax, display_intmax, Opcode::I32Load_Opcode.GetName());
       display_sorted_int_pair_counter_vector(
           out, "\ni32.store:", opcnt_data.i32_store_vec, int_pair_counter_gt,
-          display_intmax, display_intmax, get_opcode_name(Opcode::I32Store));
+          display_intmax, display_intmax, Opcode::I32Store_Opcode.GetName());
     }
   }
   delete[] data;

@@ -141,7 +141,7 @@ void write_str(Stream* stream,
 }
 
 void write_opcode(Stream* stream, Opcode opcode) {
-  stream->WriteU8Enum(opcode, get_opcode_name(opcode));
+  stream->WriteU8Enum(opcode.GetCode(), opcode.GetName());
 }
 
 void write_type(Stream* stream, Type type) {
@@ -529,7 +529,7 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     case ExprType::Load: {
       write_opcode(&stream_, expr->load.opcode);
-      Address align = get_opcode_alignment(expr->load.opcode, expr->load.align);
+      Address align = expr->load.opcode.GetAlignment(expr->load.align);
       stream_.WriteU8(log2_u32(align), "alignment");
       write_u32_leb128(&stream_, expr->load.offset, "load offset");
       break;
@@ -567,8 +567,7 @@ void BinaryWriter::WriteExpr(const Module* module,
     }
     case ExprType::Store: {
       write_opcode(&stream_, expr->store.opcode);
-      Address align =
-          get_opcode_alignment(expr->store.opcode, expr->store.align);
+      Address align = expr->store.opcode.GetAlignment(expr->store.align);
       stream_.WriteU8(log2_u32(align), "alignment");
       write_u32_leb128(&stream_, expr->store.offset, "store offset");
       break;
