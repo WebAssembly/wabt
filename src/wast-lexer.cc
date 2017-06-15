@@ -46,16 +46,38 @@
    YY_USER_ACTION(&Tok.loc_);  \
    Tok.value_ = WABT_TOKEN_TYPE_##name;       \
    lookahead_.push_back(Tok);  \
-  } while (0)
+   token_ = cursor_; \
+  } while (0); continue
 
-#define RETURN_LOOKAHEAD              \
-  do {                                \
-    return pop_lookahead_token(loc);  \
-  } while (0)
+#define RETURN_LOOKAHEAD return pop_lookahead_token(loc)
 
-#define RETURN(name)            \
-  YY_USER_ACTION(loc);          \
+#define RETURN_NOLOOKAHEAD(name) \
+  YY_USER_ACTION(loc);             \
   return WABT_TOKEN_TYPE_##name
+  
+#define RETURN(name)            \
+  if (lookahead_.empty()) {       \
+    YY_USER_ACTION(loc);            \
+    return WABT_TOKEN_TYPE_##name; \
+  } else {  \
+    LookaheadToken Tok;         \
+    YY_USER_ACTION(&Tok.loc_);  \
+    Tok.value_ = WABT_TOKEN_TYPE_##name;       \
+    lookahead_.push_back(Tok);  \
+    token_ = cursor_;           \
+    RETURN_LOOKAHEAD; \
+  }
+
+#define RETURN_LPAR(name) \
+  if (lookahead_contains_lpar()) {  \
+    LookaheadToken Tok;         \
+    YY_USER_ACTION(&Tok.loc_);  \
+    Tok.value_ = WABT_TOKEN_TYPE_##name;       \
+    lookahead_.push_back(Tok);  \
+    token_ = cursor_;           \
+    RETURN_NOLOOKAHEAD(LPAR_##name);  \
+  }                                  \
+  RETURN(name);
 
 #define ERROR(...)                                  \
   YY_USER_ACTION(loc);                              \
@@ -142,6 +164,19 @@ std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(const char* filename,
   return std::unique_ptr<WastLexer>(new WastLexer(std::move(source), filename));
 }
 
+int WastLexer::pop_lookahead_token(Location* loc) {
+  LookaheadToken& Tok = lookahead_.front();
+  *loc = Tok.loc_;
+  int Result = Tok.value_;
+  lookahead_.pop_front();
+  return Result;
+}
+
+bool WastLexer::lookahead_contains_lpar() {
+  return lookahead_.size() == 1
+  && lookahead_[0].value_ == WABT_TOKEN_TYPE_LPAR;
+}
+
 Result WastLexer::Fill(Location* loc, WastParser* parser, size_t need) {
   if (eof_)
     return Result::Error;
@@ -207,6 +242,10 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
 
   get_loc = loc;
 
+  if (!lookahead_.empty()) {
+    RETURN_LOOKAHEAD;
+  }
+
   for (;;) {
     token_ = cursor_;
     /*!re2c
@@ -245,7 +284,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       // Should be ([\x21-\x7e] \ [()"; ])+ , but re2c doesn't like this...
       reserved =  [\x21\x23-\x27\x2a-\x3a\x3c-\x7e]+;  
 
-      <i> "("                   { RETURN(LPAR); }
+      <i> "("                   { LOOKAHEAD(LPAR); }
       <i> ")"                   { RETURN(RPAR); }
       <i> nat                   { LITERAL(Int); RETURN(NAT); }
       <i> int                   { LITERAL(Int); RETURN(INT); }
@@ -479,8 +518,8 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> "assert_trap"         { RETURN(ASSERT_TRAP); }
       <i> "assert_exhaustion"   { RETURN(ASSERT_EXHAUSTION); }
       <i> "try"                 { RETURN(TRY); }
-      <i> "catch"               { LOOKAHEAD(CATCH); RETURN_LOOKAHEAD; }
-      <i> "catch_all"           { RETURN(CATCH_ALL); }
+      <i> "catch"               { RETURN_LPAR(CATCH); }
+      <i> "catch_all"           { RETURN_LPAR(CATCH_ALL); }
       <i> "throw"               { RETURN(THROW); }
       <i> "rethrow"             { RETURN(RETHROW); }
       <i> name                  { TEXT; RETURN(VAR); }

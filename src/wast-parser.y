@@ -167,6 +167,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %token NAT INT FLOAT TEXT VAR VALUE_TYPE ANYFUNC MUT
 %token NOP DROP BLOCK END IF THEN ELSE LOOP BR BR_IF BR_TABLE
 %token TRY CATCH CATCH_ALL THROW RETHROW
+%token LPAR_CATCH LPAR_CATCH_ALL
 %token CALL CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL TEE_LOCAL GET_GLOBAL SET_GLOBAL
 %token LOAD STORE OFFSET_EQ_NAT ALIGN_EQ_NAT
@@ -197,7 +198,8 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
 %type<expr> try_  try_instr_list
-%type<expr_list> catch_instr catch_list catch_instr_list
+%type<expr_list> plain_catch plain_catch_all
+%type<expr_list> catch_instr catch_sexp catch_sexp_list catch_instr_list     
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
 %type<func> func_fields_import func_fields_import1 func_fields_import_result
@@ -623,16 +625,23 @@ block :
     }
 ;
 
-catch_instr :
+plain_catch :
     CATCH var instr_list {
       Expr* expr = Expr::CreateCatch(std::move(*$2), $3.first);
       delete $2;
       $$ = join_exprs1(&@1, expr);
     }
-  | CATCH_ALL instr_list {
+  ;
+plain_catch_all :
+    CATCH_ALL instr_list {
       Expr* expr = Expr::CreateCatchAll($2.first);
       $$ = join_exprs1(&@1, expr);
     }
+  ;
+
+catch_instr :
+    plain_catch
+  | plain_catch_all
   ;
 
 catch_instr_list :
@@ -684,7 +693,7 @@ try_ :
   ;
 
 try_instr_list :
-      catch_list {
+      catch_sexp_list {
         Block* block = new Block();
         $$ = Expr::CreateTry(block, $1.first);
       }
@@ -700,12 +709,19 @@ try_instr_list :
       }
     ;
 
-catch_list :
-    LPAR catch_instr RPAR {
-      $$ = $2;
+catch_sexp :
+    LPAR_CATCH LPAR plain_catch RPAR {
+      $$ = $3;
     }
-  | LPAR catch_instr RPAR catch_list {
-      $$ = join_expr_lists(&$2, &$4);
+  | LPAR_CATCH_ALL LPAR plain_catch_all RPAR {
+      $$ = $3;
+    }
+  ;
+
+catch_sexp_list :
+    catch_sexp
+  | catch_sexp catch_sexp_list {
+      $$ = join_expr_lists(&$1, &$2);
     }
   ;
     

@@ -74,13 +74,9 @@ class WastLexer {
   circ_array<LookaheadToken, 2> lookahead_;
   Location* get_loc;
 
-  int pop_lookahead_token(Location* loc) {
-    LookaheadToken& Tok = lookahead_.front();
-    *loc = Tok.loc_;
-    int Result = Tok.value_;
-    lookahead_.pop_front();
-    return Result;
-  }
+  int pop_lookahead_token(Location* loc);
+
+  bool lookahead_contains_lpar();
 
   WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 };
