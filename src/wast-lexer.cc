@@ -32,16 +32,26 @@
 
 #define INITIAL_LEXER_BUFFER_SIZE (64 * 1024)
 
-#define RETURN_LOOKAHEAD \
-  return RemoveFirstToken(loc);
-
-#define YY_USER_ACTION(loc)             \
-  {                                     \
-    (loc)->filename = filename_;        \
-    (loc)->line = line_;                \
-    (loc)->first_column = COLUMN(token_);       \
-    (loc)->last_column = COLUMN(cursor_);       \
+#define YY_USER_ACTION(loc)               \
+  {                                       \
+    (loc)->filename = filename_;          \
+    (loc)->line = line_;                  \
+    (loc)->first_column = COLUMN(token_); \
+    (loc)->last_column = COLUMN(cursor_); \
   }
+
+#define LOOKAHEAD(name) \
+  do {                         \
+   LookaheadToken Tok;         \
+   YY_USER_ACTION(&Tok.loc_);  \
+   Tok.value_ = WABT_TOKEN_TYPE_##name;       \
+   lookahead_.push_back(Tok);  \
+  } while (0)
+
+#define RETURN_LOOKAHEAD              \
+  do {                                \
+    return pop_lookahead_token(loc);  \
+  } while (0)
 
 #define RETURN(name)            \
   YY_USER_ACTION(loc);          \
@@ -98,33 +108,6 @@
 
 namespace wabt {
 
-namespace {
-
-enum class TokenKind {
-  Simple, Text, Type, Opcode, Literal
-};
-
-static constexpr size_t kMaxLookahead = 2;
-
-}
-
-struct WastLexer::LookaheadToken {
-  TokenKind kind_;
-  Token tok_;
-  Location loc_;
-  int value_;
-  int install(WastLexer* lexer);
-};
-
-int WastLexer::LookaheadToken::install(WastLexer* lexer) {
-  *lexer->get_loc = loc_;
-  switch (kind_) {
-    default:
-      break;
-  }
-  return value_;
-}
-
 WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
     : source_(std::move(source)),
       line_finder_(source_->Clone()),
@@ -139,38 +122,10 @@ WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
       marker_(nullptr),
       token_(nullptr),
       cursor_(nullptr),
-      limit_(nullptr),
-      lookahead_(nullptr),
-      lookahead_index (0),
-      lookahead_size(0) {}
+      limit_(nullptr) {}
 
 WastLexer::~WastLexer() {
   delete[] buffer_;
-  delete[] lookahead_;
-}
-
-WastLexer::LookaheadToken* WastLexer::GetAppendToken() {
-  if (lookahead_ == nullptr)
-    lookahead_ = new LookaheadToken[kMaxLookahead];
-  assert(lookahead_size < kMaxLookahead);
-  return &lookahead_[lookahead_size++];
-}
-
-void WastLexer::AppendSimpleToken(int name) {
-  WastLexer::LookaheadToken* Tok = GetAppendToken();
-  YY_USER_ACTION(&Tok->loc_);
-  Tok->kind_ = TokenKind::Simple;
-  Tok->value_ = name;
-};
-
-int WastLexer::RemoveFirstToken(Location* Loc) {
-  assert(lookahead_);
-  assert(lookahead_index < lookahead_size);
-  int result = lookahead_[lookahead_index++].install(this);
-  if (lookahead_index  == lookahead_size) {
-    lookahead_index = lookahead_size = 0;
-  }
-  return result;
 }
 
 // static
@@ -250,7 +205,6 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
     YYCOND_i = YYCOND_INIT,
   } cond = YYCOND_INIT;
 
-  get_lval = lval;
   get_loc = loc;
 
   for (;;) {
@@ -525,8 +479,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       <i> "assert_trap"         { RETURN(ASSERT_TRAP); }
       <i> "assert_exhaustion"   { RETURN(ASSERT_EXHAUSTION); }
       <i> "try"                 { RETURN(TRY); }
-      <i> "catch"               { RETURN(CATCH); }
-      <i> "catch"               { AppendSimpleToken(CATCH); RETURN_LOOKAHEAD; }
+      <i> "catch"               { LOOKAHEAD(CATCH); RETURN_LOOKAHEAD; }
       <i> "catch_all"           { RETURN(CATCH_ALL); }
       <i> "throw"               { RETURN(THROW); }
       <i> "rethrow"             { RETURN(RETHROW); }

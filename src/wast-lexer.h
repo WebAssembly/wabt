@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "common.h"
+#include "circ_array.h"
 #include "lexer-source-line-finder.h"
 
 namespace wabt {
@@ -64,18 +65,22 @@ class WastLexer {
   char* cursor_;
   char* limit_;
 
-  struct LookaheadToken;
-  struct LookaheadToken* lookahead_;
-  size_t lookahead_index;
-  size_t lookahead_size;
-  Token* get_lval;
+  // The following defines a lookahead queue for inserting EXPECTS_PAREN_NAME
+  // for the token list: "(" NAME
+  struct LookaheadToken {
+    Location loc_;
+    int value_;
+  };
+  circ_array<LookaheadToken, 2> lookahead_;
   Location* get_loc;
 
-  // TODO(karlschimpf): Make the lookahead a circular queue where you can
-  // both prepend and append tokens.
-  LookaheadToken* GetAppendToken();
-  void AppendSimpleToken(int name);
-  int RemoveFirstToken(Location* Loc);
+  int pop_lookahead_token(Location* loc) {
+    LookaheadToken& Tok = lookahead_.front();
+    *loc = Tok.loc_;
+    int Result = Tok.value_;
+    lookahead_.pop_front();
+    return Result;
+  }
 
   WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 };
