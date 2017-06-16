@@ -39,7 +39,7 @@ $ cd wabt
 
 This will fetch the testsuite and gtest repos, which are needed for some tests.
 
-## Building
+## Building (macOS and Linux)
 
 You'll need [CMake](https://cmake.org). If you just run `make`, it will run
 CMake for you, and put the result in `out/clang/Debug/` by default:
@@ -51,8 +51,7 @@ $ make
 ```
 
 This will build the default version of the tools: a debug build using the Clang
-compiler. It will also create a symlinks to the built binaries in the `out/`
-directory.
+compiler.
 
 There are many make targets available for other configurations as well. They
 are generated from every combination of a compiler, build type and
@@ -81,11 +80,53 @@ $ cmake ..
 ...
 ```
 
+## Building (Windows)
+
+You'll need [CMake](https://cmake.org). You'll also need
+[Visual Studio](https://www.visualstudio.com/) (2015 or newer) or 
+[MinGW](http://www.mingw.org/).
+
+You can run CMake from the command prompt, or use the CMake GUI tool. See
+[Running CMake](https://cmake.org/runningcmake/) for more information.
+
+When running from the commandline, create a new directory for the build
+artifacts, then run cmake from this directory:
+
+```console
+> cd [build dir]
+> cmake [wabt project root] -DCMAKE_BUILD_TYPE=[config] -DCMAKE_INSTALL_PREFIX=[install directory] -G [generator]
+```
+
+The `[config]` parameter should be a CMake build type, typically `DEBUG` or `RELEASE`.
+
+The `[generator]` parameter should be the type of project you want to generate,
+for example `"Visual Studio 14 2015"`. You can see the list of available
+generators by running `cmake --help`.
+
+To build the project, you can use Visual Studio, or you can tell CMake to do it:
+
+```console
+> cmake --build [wabt project root] --config [config] --target install
+```
+
+This will build and install to the installation directory you provided above.
+
+So, for example, if you want to build the debug configuration on Visual Studio 2015:
+
+```
+> mkdir build
+> cd build
+> cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_INSTALL_PREFIX=..\bin -G "Visual Studio 14 2015"
+> cmake --build .. --config DEBUG --target install
+```
+
+## Changing the parser or lexer
+
 If you make changes to `src/wast-parser.y`, you'll need to install Bison.
 Before you upload your PR, please run `make update-bison` to update the
 prebuilt C sources in `src/prebuilt/`.
 
-If you make changes to `src/wast-lexer.c`, you'll need to install
+If you make changes to `src/wast-lexer.cc`, you'll need to install
 [re2c](http://re2c.org). Before you upload your PR, please run `make
 update-re2c` to update the prebuilt C sources in `src/prebuilt/`.
 
