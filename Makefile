@@ -106,7 +106,7 @@ $(call CMAKE_DIR,$(1),$(2),$(3)):
 
 $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE): | $(call CMAKE_DIR,$(1),$(2),$(3))
 	cd $(call CMAKE_DIR,$(1),$(2),$(3)) && \
-	$$(CMAKE_CMD) -G $$(GENERATOR) -DCMAKE_INSTALL_PREFIX=$$(ROOT_DIR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
+	$$(CMAKE_CMD) -G $$(GENERATOR) $$(ROOT_DIR) $$($(1)_FLAG) $$($(2)_FLAG) $$($(3)_FLAG)
 endef
 
 define BUILD
@@ -117,7 +117,7 @@ endef
 
 define INSTALL
 .PHONY: $(call INSTALL_TARGET,$(1),$(2),$(3))
-$(call INSTALL_TARGET,$(1),$(2),$(3)): $(call BUILD_TARGET,$(1),$(2),$(3))
+$(call INSTALL_TARGET,$(1),$(2),$(3)): $(call CMAKE_DIR,$(1),$(2),$(3))$$(BUILD_FILE)
 	$$(BUILD_CMD) -C $(call CMAKE_DIR,$(1),$(2),$(3)) install
 endef
 

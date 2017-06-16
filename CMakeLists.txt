@@ -274,6 +274,7 @@ if (NOT EMSCRIPTEN)
     # ARGV contains all arguments; remove the first one, ${name}, so it's just
     # a list of sources.
     list(REMOVE_AT ARGV 0)
+
     add_executable(${name} ${ARGV})
     add_dependencies(everything ${name})
     target_link_libraries(${name} libwabt)
@@ -281,6 +282,12 @@ if (NOT EMSCRIPTEN)
     set_property(TARGET ${name} PROPERTY CXX_STANDARD_REQUIRED ON)
     list(APPEND WABT_EXECUTABLES ${name})
     set(WABT_EXECUTABLES ${WABT_EXECUTABLES} PARENT_SCOPE)
+
+    add_custom_target(${name}-copy-to-bin ALL
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin
+      COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${name}> ${WABT_SOURCE_DIR}/bin
+      DEPENDS ${name}
+    )
   endfunction()
 
   # wast2wasm
@@ -308,23 +315,6 @@ if (NOT EMSCRIPTEN)
 
   # wast-desugar
   wabt_executable(wast-desugar src/tools/wast-desugar.cc)
-
-  # symlinks for wast2wasm and wasm2wast
-  if (NOT WIN32)
-    add_custom_command(
-      TARGET wast2wasm
-      POST_BUILD
-      COMMAND ln -sf wast2wasm sexpr-wasm
-    )
-    add_custom_command(
-      TARGET wasm2wast
-      POST_BUILD
-      COMMAND ln -sf wasm2wast wasm-wast
-    )
-  endif ()
-  set_property(
-    DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
-    "sexpr-wasm" "wasm-wast")
 
   find_package(Threads)
   if (BUILD_TESTS)
