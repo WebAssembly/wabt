@@ -1,0 +1,194 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout
+(module
+  ;; This used to cause an infinite loop in wat-writer when writing out long
+  ;; indentation.
+  (func
+    block block block block block block block block
+    block block block block block block block block
+    block block block block block block block block
+    block block block block block block block block
+    block block block block block block block block
+    block block block block block block block block
+    block block block block block block block block
+    block block block block block block block block
+    block block block block block block block block
+    block block block block block block block block
+    nop
+    end end end end end end end end
+    end end end end end end end end
+    end end end end end end end end
+    end end end end end end end end
+    end end end end end end end end
+    end end end end end end end end
+    end end end end end end end end
+    end end end end end end end end
+    end end end end end end end end
+    end end end end end end end end
+    ))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    block  ;; label = @1
+      block  ;; label = @2
+        block  ;; label = @3
+          block  ;; label = @4
+            block  ;; label = @5
+              block  ;; label = @6
+                block  ;; label = @7
+                  block  ;; label = @8
+                    block  ;; label = @9
+                      block  ;; label = @10
+                        block  ;; label = @11
+                          block  ;; label = @12
+                            block  ;; label = @13
+                              block  ;; label = @14
+                                block  ;; label = @15
+                                  block  ;; label = @16
+                                    block  ;; label = @17
+                                      block  ;; label = @18
+                                        block  ;; label = @19
+                                          block  ;; label = @20
+                                            block  ;; label = @21
+                                              block  ;; label = @22
+                                                block  ;; label = @23
+                                                  block  ;; label = @24
+                                                    block  ;; label = @25
+                                                      block  ;; label = @26
+                                                        block  ;; label = @27
+                                                          block  ;; label = @28
+                                                            block  ;; label = @29
+                                                              block  ;; label = @30
+                                                                block  ;; label = @31
+                                                                  block  ;; label = @32
+                                                                    block  ;; label = @33
+                                                                      block  ;; label = @34
+                                                                        block  ;; label = @35
+                                                                          block  ;; label = @36
+                                                                            block  ;; label = @37
+                                                                              block  ;; label = @38
+                                                                                block  ;; label = @39
+                                                                                  block  ;; label = @40
+                                                                                    block  ;; label = @41
+                                                                                      block  ;; label = @42
+                                                                                        block  ;; label = @43
+                                                                                          block  ;; label = @44
+                                                                                            block  ;; label = @45
+                                                                                              block  ;; label = @46
+                                                                                                block  ;; label = @47
+                                                                                                  block  ;; label = @48
+                                                                                                    block  ;; label = @49
+                                                                                                      block  ;; label = @50
+                                                                                                        block  ;; label = @51
+                                                                                                          block  ;; label = @52
+                                                                                                            block  ;; label = @53
+                                                                                                              block  ;; label = @54
+                                                                                                                block  ;; label = @55
+                                                                                                                  block  ;; label = @56
+                                                                                                                    block  ;; label = @57
+                                                                                                                      block  ;; label = @58
+                                                                                                                        block  ;; label = @59
+                                                                                                                          block  ;; label = @60
+                                                                                                                            block  ;; label = @61
+                                                                                                                              block  ;; label = @62
+                                                                                                                                block  ;; label = @63
+                                                                                                                                  block  ;; label = @64
+                                                                                                                                    block  ;; label = @65
+                                                                                                                                      block  ;; label = @66
+                                                                                                                                        block  ;; label = @67
+                                                                                                                                          block  ;; label = @68
+                                                                                                                                            block  ;; label = @69
+                                                                                                                                              block  ;; label = @70
+                                                                                                                                                block  ;; label = @71
+                                                                                                                                                  block  ;; label = @72
+                                                                                                                                                    block  ;; label = @73
+                                                                                                                                                      block  ;; label = @74
+                                                                                                                                                        block  ;; label = @75
+                                                                                                                                                          block  ;; label = @76
+                                                                                                                                                            block  ;; label = @77
+                                                                                                                                                              block  ;; label = @78
+                                                                                                                                                                block  ;; label = @79
+                                                                                                                                                                  block  ;; label = @80
+                                                                                                                                                                    nop
+                                                                                                                                                                  end
+                                                                                                                                                                end
+                                                                                                                                                              end
+                                                                                                                                                            end
+                                                                                                                                                          end
+                                                                                                                                                        end
+                                                                                                                                                      end
+                                                                                                                                                    end
+                                                                                                                                                  end
+                                                                                                                                                end
+                                                                                                                                              end
+                                                                                                                                            end
+                                                                                                                                          end
+                                                                                                                                        end
+                                                                                                                                      end
+                                                                                                                                    end
+                                                                                                                                  end
+                                                                                                                                end
+                                                                                                                              end
+                                                                                                                            end
+                                                                                                                          end
+                                                                                                                        end
+                                                                                                                      end
+                                                                                                                    end
+                                                                                                                  end
+                                                                                                                end
+                                                                                                              end
+                                                                                                            end
+                                                                                                          end
+                                                                                                        end
+                                                                                                      end
+                                                                                                    end
+                                                                                                  end
+                                                                                                end
+                                                                                              end
+                                                                                            end
+                                                                                          end
+                                                                                        end
+                                                                                      end
+                                                                                    end
+                                                                                  end
+                                                                                end
+                                                                              end
+                                                                            end
+                                                                          end
+                                                                        end
+                                                                      end
+                                                                    end
+                                                                  end
+                                                                end
+                                                              end
+                                                            end
+                                                          end
+                                                        end
+                                                      end
+                                                    end
+                                                  end
+                                                end
+                                              end
+                                            end
+                                          end
+                                        end
+                                      end
+                                    end
+                                  end
+                                end
+                              end
+                            end
+                          end
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+            end
+          end
+        end
+      end
+    end))
+;;; STDOUT ;;)
