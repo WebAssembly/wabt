@@ -129,7 +129,7 @@ Grammar
    91           | LPAR_CATCH_ALL "(" plain_catch_all ")"
 
    92 catch_sexp_list: catch_sexp
-   93                | catch_sexp catch_sexp_list
+   93                | catch_sexp_list catch_sexp
 
    94 if_block: block_sig if_block
    95         | if_
@@ -5298,22 +5298,21 @@ State 392
 State 393
 
    92 catch_sexp_list: catch_sexp .
-   93                | catch_sexp . catch_sexp_list
-
-    LPAR_CATCH      shift, and go to state 391
-    LPAR_CATCH_ALL  shift, and go to state 392
 
     $default  reduce using rule 92 (catch_sexp_list)
-
-    catch_sexp       go to state 393
-    catch_sexp_list  go to state 435
 
 
 State 394
 
    89 try_: instr_list catch_sexp_list .
+   93 catch_sexp_list: catch_sexp_list . catch_sexp
+
+    LPAR_CATCH      shift, and go to state 391
+    LPAR_CATCH_ALL  shift, and go to state 392
 
     $default  reduce using rule 89 (try_)
+
+    catch_sexp  go to state 435
 
 
 State 395
@@ -5935,7 +5934,7 @@ State 434
 
 State 435
 
-   93 catch_sexp_list: catch_sexp catch_sexp_list .
+   93 catch_sexp_list: catch_sexp_list catch_sexp .
 
     $default  reduce using rule 93 (catch_sexp_list)
 

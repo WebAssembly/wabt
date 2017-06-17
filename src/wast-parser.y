@@ -117,6 +117,7 @@ static bool is_power_of_two(uint32_t x) {
 static ExprList join_exprs1(Location* loc, Expr* expr1);
 static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
 static ExprList join_expr_lists(ExprList* expr1, ExprList* expr2);
+static void append_expr_list(ExprList* expr_list, ExprList* expr);
 
 static Result parse_const(Type type,
                           LiteralType literal_type,
@@ -707,8 +708,9 @@ catch_sexp :
 
 catch_sexp_list :
     catch_sexp
-  | catch_sexp catch_sexp_list {
-      $$ = join_expr_lists(&$1, &$2);
+  | catch_sexp_list catch_sexp {
+      $$ = $1;
+      append_expr_list(&$1, &$2);
     }
   ;
 
