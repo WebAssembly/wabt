@@ -71,7 +71,7 @@ class WastLexer {
   Lookahead* lookahead_;
   Location* get_loc;
 
-  int pop_lookahead_token(Location* loc);
+  int pop_lookahead_token();
 
   bool lookahead_contains_lpar();
 

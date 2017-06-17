@@ -78,11 +78,7 @@
     } while (0); \
     continue
 
-#define RETURN_LOOKAHEAD return pop_lookahead_token(loc)
-
-#define RETURN_NOLOOKAHEAD_VALUE(value) \
-  YY_USER_ACTION(loc);             \
-  return 
+#define RETURN_LOOKAHEAD return pop_lookahead_token()
 
 #define RETURN_NOLOOKAHEAD(name) \
   do { \
@@ -114,18 +110,6 @@
     return value; \
   } \
   RETURN_LOOKAHEAD
-
-#if 0
-  if (lookahead_contains_lpar()) {  \
-    Lookahead::Lval lval;           \
-    YY_USER_ACTION(&lval.loc_);  \
-    lval.value_ = WABT_TOKEN_TYPE_##name;       \
-    lookahead_->tokens_.push_back(lval);  \
-    token_ = cursor_;           \
-    RETURN_NOLOOKAHEAD(LPAR_##name);  \
-  }                                  \
-  RETURN(name);
-#endif
 
 #define ERROR(...)                                  \
   YY_USER_ACTION(loc);                              \
@@ -233,9 +217,9 @@ std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(const char* filename,
   return std::unique_ptr<WastLexer>(new WastLexer(std::move(source), filename));
 }
 
-int WastLexer::pop_lookahead_token(Location* loc) {
+int WastLexer::pop_lookahead_token() {
   Lookahead::Lval* lval = &lookahead_->tokens_.front();
-  *loc = lval->loc_;
+  *get_loc = lval->loc_;
   int Result = lval->value_;
   lookahead_->tokens_.pop_front();
   return Result;
@@ -322,7 +306,6 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
 
   for (;;) {
     token_ = cursor_;
-    describe("GetToken.loop");
     /*!re2c
       re2c:condprefix = YYCOND_;
       re2c:condenumprefix = YYCOND_;
