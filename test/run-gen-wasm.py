@@ -51,7 +51,8 @@ def main(args):
   options = parser.parse_args(args)
 
   gen_wasm = utils.Executable(sys.executable, GEN_WASM_PY,
-                              error_cmdline=options.error_cmdline)
+                              error_cmdline=options.error_cmdline,
+                              basename=os.path.basename(GEN_WASM_PY))
 
   wasm2wast = utils.Executable(
       find_exe.GetWasm2WastExecutable(options.bindir),
