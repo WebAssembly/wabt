@@ -14,28 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef WABT_CIRC_ARRAY_H_
-#define WABT_CIRC_ARRAY_H_
-
-#include <iterator>
+#ifndef WABT_CIRCULAR_ARRAY_H_
+#define WABT_CIRCULAR_ARRAY_H_
 
 namespace wabt {
 
 // TODO(karlschimpf) Complete the API
 // TODO(karlschimpf) Apply constructors/destructors on base type T
 //                   as collection size changes (if not POD).
-// TODO(karlschimpf) Deal with "front" overflow after adding max<ize_t>
-//                   elements.
-template<class T, const size_t kCapacity>
-class circ_array {
+// Note: Capacity must be a power of 2.
+template<class T, size_t kCapacity>
+class CircularArray {
  public:
   typedef T value_type;
   typedef value_type& reference;
   typedef const value_type& const_reference;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
-  circ_array() : size_(0), front_(0) {}
-  ~circ_array() {}
+  CircularArray() : size_(0), front_(0), mask_(kCapacity - 1) {
+    assert(kCapacity && ((kCapacity & (kCapacity - 1)) == 0));
+  }
+  ~CircularArray() {}
 
   reference at(size_type index) {
     assert(index < size_);
@@ -82,7 +81,7 @@ class circ_array {
 
   void pop_front() {
     assert(size_ > 0);
-    ++front_;
+    front_ = (front_ + 1) & mask_;
     --size_;
   }
 
@@ -97,19 +96,15 @@ class circ_array {
     size_ = 0;
   }
 
-  void reset() {
-    size_ = 0;
-    front_ = 0;
-  }
-
  private:
   T contents_[kCapacity];
   size_type size_;
   size_type front_;
+  size_type mask_;
 
-  size_t position(size_t index) const { return (front_ + index) % kCapacity; }
+  size_t position(size_t index) const { return (front_ + index) & mask_; }
 };
 
 }
 
-#endif // WABT_CIRC_ARRAY_H_
+#endif // WABT_CIRCULAR_ARRAY_H_
