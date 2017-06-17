@@ -91,13 +91,6 @@ class circ_array {
     contents_[position(size_++)] = value;
   }
 
-  void push_front(value_type& value) {
-    assert(size_ < kCapacity);
-    contents_[position(kCapacity - 1)] = value;
-    ++size_;
-    front_ = (front + kCapacity + -1) % kCapacity;
-  }
-
   size_type size() const { return size_; }
 
   void clear() {
