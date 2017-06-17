@@ -117,6 +117,7 @@ static bool is_power_of_two(uint32_t x) {
 static ExprList join_exprs1(Location* loc, Expr* expr1);
 static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
 static ExprList join_expr_lists(ExprList* expr1, ExprList* expr2);
+static void append_expr_list(ExprList* expr_list, ExprList* expr);
 
 static Result parse_const(Type type,
                           LiteralType literal_type,
@@ -167,6 +168,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %token NAT INT FLOAT TEXT VAR VALUE_TYPE ANYFUNC MUT
 %token NOP DROP BLOCK END IF THEN ELSE LOOP BR BR_IF BR_TABLE
 %token TRY CATCH CATCH_ALL THROW RETHROW
+%token LPAR_CATCH LPAR_CATCH_ALL
 %token CALL CALL_INDIRECT RETURN
 %token GET_LOCAL SET_LOCAL TEE_LOCAL GET_GLOBAL SET_GLOBAL
 %token LOAD STORE OFFSET_EQ_NAT ALIGN_EQ_NAT
@@ -196,8 +198,9 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<exception> exception
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
-%type<expr> try_  try_instr_list
-%type<expr_list> catch_instr catch_list catch_instr_list
+%type<expr> try_
+%type<expr_list> plain_catch plain_catch_all
+%type<expr_list> catch_instr catch_sexp catch_sexp_list catch_instr_list     
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
 %type<func> func_fields_import func_fields_import1 func_fields_import_result
@@ -623,16 +626,23 @@ block :
     }
 ;
 
-catch_instr :
+plain_catch :
     CATCH var instr_list {
       Expr* expr = Expr::CreateCatch(std::move(*$2), $3.first);
       delete $2;
       $$ = join_exprs1(&@1, expr);
     }
-  | CATCH_ALL instr_list {
+  ;
+plain_catch_all :
+    CATCH_ALL instr_list {
       Expr* expr = Expr::CreateCatchAll($2.first);
       $$ = join_exprs1(&@1, expr);
     }
+  ;
+
+catch_instr :
+    plain_catch
+  | plain_catch_all
   ;
 
 catch_instr_list :
@@ -680,34 +690,30 @@ try_ :
       block->sig.insert(block->sig.end(), $1->begin(), $1->end());
       delete $1;
     }
-  | try_instr_list
-  ;
-
-try_instr_list :
-      catch_list {
-        Block* block = new Block();
-        $$ = Expr::CreateTry(block, $1.first);
-      }
-    | instr try_instr_list {
-        $$ = $2;
-        Block* block = $$->try_block.block;
-        if ($1.last) {
-          $1.last->next = block->first;
-        } else {
-          $1.first->next = block->first;
-        }
-        block->first = $1.first;
-      }
-    ;
-
-catch_list :
-    LPAR catch_instr RPAR {
-      $$ = $2;
-    }
-  | LPAR catch_instr RPAR catch_list {
-      $$ = join_expr_lists(&$2, &$4);
+  | instr_list catch_sexp_list {
+      Block* block = new Block();
+      block->first = $1.first;
+     $$ = Expr::CreateTry(block, $2.first);
     }
   ;
+
+catch_sexp :
+    LPAR_CATCH LPAR plain_catch RPAR {
+      $$ = $3;
+    }
+  | LPAR_CATCH_ALL LPAR plain_catch_all RPAR {
+      $$ = $3;
+    }
+  ;
+
+catch_sexp_list :
+    catch_sexp
+  | catch_sexp_list catch_sexp {
+      $$ = $1;
+      append_expr_list(&$1, &$2);
+    }
+  ;
+
     
 if_block :
     block_sig if_block {

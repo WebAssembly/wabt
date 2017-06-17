@@ -22,6 +22,7 @@
 #include <memory>
 
 #include "common.h"
+#include "interpreter.h"
 #include "lexer-source-line-finder.h"
 
 namespace wabt {
@@ -47,6 +48,8 @@ class WastLexer {
   LexerSourceLineFinder& line_finder() { return line_finder_; }
 
  private:
+  struct Lookahead;
+  struct LexToken;
   std::unique_ptr<LexerSource> source_;
   LexerSourceLineFinder line_finder_;
   const char* filename_;
@@ -54,15 +57,29 @@ class WastLexer {
   int comment_nesting_;
   size_t buffer_file_offset_; // File offset of the start of the buffer.
   size_t line_file_offset_;   // File offset of the start of the current line.
+  Lookahead* lookahead_;
+  LexToken* token_;
 
   // Lexing data needed by re2c.
   bool eof_;
   char* buffer_;
   size_t buffer_size_;
   char* marker_;
-  char* token_;
+  char* next_pos_;
   char* cursor_;
   char* limit_;
+
+  bool IsLookaheadLpar();
+  int PopLookaheadToken(Token* lval, Location* loc);
+  void PushLookaheadToken();
+  void SetLiteral(LiteralType typ);
+  void SetLocation(Location* Loc);
+  void SetLookaheadToken(int value);
+  void SetOpcode(Opcode opc);
+  void SetText();
+  void SetTextAt(size_t offset);
+  void SetToken(int value);
+  void SetType(Type ty);
 
   WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 };
