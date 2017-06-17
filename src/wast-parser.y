@@ -197,7 +197,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<exception> exception
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
-%type<expr> try_  try_instr_list
+%type<expr> try_
 %type<expr_list> plain_catch plain_catch_all
 %type<expr_list> catch_instr catch_sexp catch_sexp_list catch_instr_list     
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
@@ -689,25 +689,12 @@ try_ :
       block->sig.insert(block->sig.end(), $1->begin(), $1->end());
       delete $1;
     }
-  | try_instr_list
+  | instr_list catch_sexp_list {
+      Block* block = new Block();
+      block->first = $1.first;
+     $$ = Expr::CreateTry(block, $2.first);
+    }
   ;
-
-try_instr_list :
-      catch_sexp_list {
-        Block* block = new Block();
-        $$ = Expr::CreateTry(block, $1.first);
-      }
-    | instr try_instr_list {
-        $$ = $2;
-        Block* block = $$->try_block.block;
-        if ($1.last) {
-          $1.last->next = block->first;
-        } else {
-          $1.first->next = block->first;
-        }
-        block->first = $1.first;
-      }
-    ;
 
 catch_sexp :
     LPAR_CATCH LPAR plain_catch RPAR {
@@ -724,6 +711,7 @@ catch_sexp_list :
       $$ = join_expr_lists(&$1, &$2);
     }
   ;
+
     
 if_block :
     block_sig if_block {
