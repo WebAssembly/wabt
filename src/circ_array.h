@@ -37,28 +37,6 @@ class circ_array {
   circ_array() : size_(0), front_(0) {}
   ~circ_array() {}
 
-  struct iterator : public std::iterator<std::forward_iterator_tag, T> {
-    iterator(circ_array* arr, size_type pos)
-        : arr_(arr), pos_(pos) {}
-    iterator& operator=(const iterator& iter) {
-      arr_ = iter.arr_;
-      pos_ = iter.pos_;
-    }
-    void operator++() { ++pos_; }
-    reference operator++(int) {
-      reference tmp = (*arr_).at(pos_);
-      ++pos_;
-    }
-    bool operator==(const iterator& iter) { return pos_ == iter.pos_; }
-    bool operator!=(const iterator& iter) { return pos_ != iter.pos_; }
-    value_type* operator->() { return &(*arr_).at(pos_); }
-    reference operator*() { return (*arr_).at(pos_); }
-   private:
-    circ_array& arr_;
-    value_type* pos_;
-  };
-  typedef const iterator const_iterator;
-
   reference at(size_type index) {
     assert(index < size_);
     return (*this)[index];
@@ -85,15 +63,7 @@ class circ_array {
     return at(size_  - 1);
   }
 
-  iterator begin() { return iterator(this, 0); }
-
-  const_iterator begin() const { return iterator(this, 0); }
-
   bool empty() const { return size_ == 0; }
-
-  iterator end() { return iterator(this, size_ - 1); }
-
-  const_iterator end() const { return iterator(this, size_ - 1); }
 
   reference front() {
     return at(0);
@@ -139,13 +109,12 @@ class circ_array {
     front_ = 0;
   }
 
+ private:
   T contents_[kCapacity];
   size_type size_;
   size_type front_;
 
-  size_t position(size_t index) const {
-    return (front_ + index) % kCapacity;
-  }
+  size_t position(size_t index) const { return (front_ + index) % kCapacity; }
 };
 
 }

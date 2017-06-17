@@ -61,22 +61,17 @@ class WastLexer {
   char* buffer_;
   size_t buffer_size_;
   char* marker_;
-  char* token_;
+  char* next_pos_;
   char* cursor_;
   char* limit_;
 
   // The following defines a lookahead queue for inserting EXPECTS_PAREN_NAME
   // for the token list: "(" NAME
   struct Lookahead;
+  struct LexToken;
   Lookahead* lookahead_;
-  Location* get_loc;
-  Token* get_lval;
-
-  int pop_lookahead_token();
-
-  bool lookahead_contains_lpar();
-
-  void describe(const char* name);
+  LexToken* token_;
+  bool lookahead_is_lpar();
 
   WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 };
