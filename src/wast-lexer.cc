@@ -80,12 +80,6 @@
 
 #define RETURN_LOOKAHEAD return pop_lookahead_token()
 
-#define RETURN_NOLOOKAHEAD(name) \
-  do { \
-    YY_USER_ACTION(loc);           \
-    return TOKEN_VALUE(name); \
-  } while (0)
-
 #define RETURN_VALUE(value)            \
   do {                          \
     DEFINE_VALUE(value); \
@@ -145,21 +139,38 @@
   } while (0)
 
 #define SET_TEXT                 \
-  lval->text.start = yytext; \
-  lval->text.length = yyleng
+  do { \
+    Lookahead::Lval* tok = &lookahead_->tokens_.back();   \
+    tok->lval_.text.start = yytext;                             \
+    tok->lval_.text.length = yyleng; \
+  } while(0)
 
 #define SET_TEXT_AT(offset)               \
-  lval->text.start = yytext + offset; \
-  lval->text.length = yyleng - offset
+  do { \
+    Lookahead::Lval* tok = &lookahead_->tokens_.back();  \
+    tok->lval_.text.start = yytext + offset;                   \
+    tok->lval_.text.length = yyleng - offset; \
+  } while (0)
 
-#define TYPE(type_) lval->type = Type::type_
+#define TYPE(type_) \
+  do { \
+    Lookahead::Lval* tok = &lookahead_->tokens_.back();        \
+    tok->lval_.type = Type::type_;                                   \
+  } while(0)
 
-#define OPCODE(name) lval->opcode = Opcode::name
+#define OPCODE(name) \
+  do { \
+    Lookahead::Lval* tok = &lookahead_->tokens_.back();  \
+    tok->lval_.opcode = Opcode::name; \
+  } while(0)
 
 #define LITERAL(type_)                     \
-  lval->literal.type = LiteralType::type_; \
-  lval->literal.text.start = yytext;       \
-  lval->literal.text.length = yyleng
+  do { \
+    Lookahead::Lval* tok = &lookahead_->tokens_.back();   \
+    tok->lval_.literal.type = LiteralType::type_;              \
+    tok->lval_.literal.text.start = yytext;                         \
+    tok->lval_.literal.text.length = yyleng;                             \
+  } while (0)
 
 namespace wabt {
 
@@ -218,9 +229,10 @@ std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(const char* filename,
 }
 
 int WastLexer::pop_lookahead_token() {
-  Lookahead::Lval* lval = &lookahead_->tokens_.front();
-  *get_loc = lval->loc_;
-  int Result = lval->value_;
+  Lookahead::Lval* tok = &lookahead_->tokens_.front();
+  *get_loc = tok->loc_;
+  *get_lval = tok->lval_;
+  int Result = tok->value_;
   lookahead_->tokens_.pop_front();
   return Result;
 }
@@ -294,6 +306,7 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
   } cond = YYCOND_INIT;
 
   get_loc = loc;
+  get_lval = lval;
 
   describe("GetToken");
 

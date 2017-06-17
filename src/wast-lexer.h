@@ -70,6 +70,7 @@ class WastLexer {
   struct Lookahead;
   Lookahead* lookahead_;
   Location* get_loc;
+  Token* get_lval;
 
   int pop_lookahead_token();
 
