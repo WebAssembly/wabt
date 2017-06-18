@@ -105,6 +105,11 @@ struct WastParser {
   YYSTYPE* yyvsa;
   YYLTYPE* yylsa;
   WastParseOptions* options;
+  Module* module_;
+  Module* CreateModule() {
+    module_ = new Module();
+    return module_;
+  }
 };
 
 int wast_lexer_lex(union Token*,

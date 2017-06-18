@@ -628,8 +628,10 @@ block :
 
 plain_catch :
     CATCH var instr_list {
+      $2->type = VarType::Name;
       Expr* expr = Expr::CreateCatch(std::move(*$2), $3.first);
       delete $2;
+      parser->module_->unresolved_catches.push_back(expr);
       $$ = join_exprs1(&@1, expr);
     }
   ;
@@ -1328,13 +1330,13 @@ module_field :
 ;
 
 module_fields_opt :
-    /* empty */ { $$ = new Module(); }
+    /* empty */ { $$ = parser->CreateModule(); }
   | module_fields
 ;
 
 module_fields :
     module_field {
-      $$ = new Module();
+      $$ = parser->CreateModule();
       check_import_ordering(&@1, lexer, parser, $$, $1.first);
       append_module_fields($$, $1.first);
     }
@@ -1352,7 +1354,7 @@ module :
         $1->text = nullptr;
       } else {
         assert($1->type == ScriptModule::Type::Binary);
-        $$ = new Module();
+        $$ = parser->CreateModule();
         ReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
         BinaryErrorHandlerModule error_handler(&$1->binary.loc, lexer, parser);
         read_binary_ir($1->binary.data, $1->binary.size, &options,
