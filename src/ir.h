@@ -417,7 +417,6 @@ struct Module {
   // Cached for convenience; the pointers are shared with values that are
   // stored in either ModuleField or Import.
   std::vector<Exception*> excepts;
-  std::vector<Expr*> unresolved_catches;
   std::vector<Func*> funcs;
   std::vector<Global*> globals;
   std::vector<Import*> imports;

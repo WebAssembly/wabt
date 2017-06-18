@@ -359,10 +359,6 @@ Result NameResolver::VisitModule(Module* module) {
     VisitDataSegment(data_segment);
   if (module->start)
     ResolveFuncVar(module->start);
-  for (Expr* expr : module->catches) {
-    assert(expr->type == ExprType::Catch);
-    ResolveCatchVar(&expr->catch_.var);
-  }
   current_module_ = nullptr;
   return result_;
 }
