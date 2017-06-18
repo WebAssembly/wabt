@@ -31,6 +31,8 @@
 
 namespace wabt {
 
+CommonClOptionsStruct CommonClOptions;
+
 Reloc::Reloc(RelocType type, Offset offset, Index index, int32_t addend)
     : type(type), offset(offset), index(index), addend(addend) {}
 

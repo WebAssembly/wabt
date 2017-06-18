@@ -52,6 +52,7 @@ static WastParseOptions s_parse_options;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
+<<<<<<< HEAD
 R"(  read a file in the wasm s-expression format, check it for errors, and
   convert it to the wasm binary format.
 
