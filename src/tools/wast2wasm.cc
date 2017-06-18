@@ -52,7 +52,6 @@ static WastParseOptions s_parse_options;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-<<<<<<< HEAD
 R"(  read a file in the wasm s-expression format, check it for errors, and
   convert it to the wasm binary format.
 
@@ -88,7 +87,7 @@ static void parse_options(int argc, char* argv[]) {
                    []() { s_dump_module = true; });
   parser.AddOption("future-exceptions",
                    "Test future extension for exception handling",
-                   []() { s_parse_options.allow_exceptions = true; });
+                   []() { CommonClOptions.allow_exceptions = true; });
   parser.AddOption('o', "output", "FILE", "output wasm binary file",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption(

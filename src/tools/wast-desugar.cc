@@ -40,16 +40,6 @@ static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
 static WastParseOptions s_parse_options;
 
-enum {
-  FLAG_HELP,
-  FLAG_OUTPUT,
-  FLAG_FOLD_EXPRS,
-  FLAG_GENERATE_NAMES,
-  FLAG_EXCEPTIONS,
-  FLAG_DEBUG_PARSER,
-  NUM_FLAGS
-};
-
 static const char s_description[] =
 R"(  read a file in the wasm s-expression format and format it.
 
@@ -64,60 +54,19 @@ examples:
   $ wast-desugar --generate-names test.wast
 )";
 
-static Option s_options[] = {
-    {FLAG_HELP, 'h', "help", nullptr, HasArgument::No,
-     "print this help message"},
-    {FLAG_DEBUG_PARSER, 0, "debug-parser", nullptr, HasArgument::No,
-     "Turn on debugging the parser of wast files"},
-    {FLAG_EXCEPTIONS, 0, "future-exceptions", nullptr, HasArgument::No,
-     "Test future extension for exception handling"},
-    {FLAG_OUTPUT, 'o', "output", "FILE", HasArgument::Yes,
-     "output file for the formatted file"},
-    {FLAG_FOLD_EXPRS, 'f', "fold-exprs", nullptr, HasArgument::No,
-     "Write folded expressions where possible"},
-    {FLAG_GENERATE_NAMES, 0, "generate-names", nullptr, HasArgument::No,
-     "Give auto-generated names to non-named functions, types, etc."},
-};
-WABT_STATIC_ASSERT(NUM_FLAGS == WABT_ARRAY_SIZE(s_options));
-
-static void on_option(struct OptionParser* parser,
-                      struct Option* option,
-                      const char* argument) {
-  switch (option->id) {
-    case FLAG_HELP:
-      print_help(parser, PROGRAM_NAME);
-      exit(0);
-      break;
-
-    case FLAG_OUTPUT:
-      s_outfile = argument;
-      break;
-
-    case FLAG_FOLD_EXPRS:
-      s_write_wat_options.fold_exprs = true;
-      break;
-
-    case FLAG_GENERATE_NAMES:
-      s_generate_names = true;
-      break;
-
-    case FLAG_EXCEPTIONS:
-      CommonClOptions.allow_exceptions = true;
-      break;
-
-    case FLAG_DEBUG_PARSER:
-      s_parse_options.debug_parsing = true;
-      break;
-  }
-}
 static void parse_options(int argc, char** argv) {
   OptionParser parser("wast-desugar", s_description);
 
   parser.AddHelpOption();
   parser.AddOption('o', "output", "FILE", "Output file for the formatted file",
                    [](const char* argument) { s_outfile = argument; });
+  parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
+                   []() { s_parse_options.debug_parsing = true; });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
+  parser.AddOption("future-exceptions",
+                   "Test future extension for exception handling",
+                   []() { CommonClOptions.allow_exceptions = true; });
   parser.AddOption(
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",
