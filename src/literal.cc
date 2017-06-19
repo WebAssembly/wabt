@@ -26,20 +26,6 @@ namespace wabt {
 
 namespace {
 
-#ifndef NDEBUG
-// Return 1 if the non-NULL-terminated string starting with |start| and ending
-// with |end| starts with the NULL-terminated string |prefix|.
-bool StringStartsWith(const char* start, const char* end, const char* prefix) {
-  while (start < end && *prefix) {
-    if (*start != *prefix)
-      return false;
-    start++;
-    prefix++;
-  }
-  return *prefix == 0;
-}
-#endif
-
 int Clz(uint32_t value) {
   return wabt_clz_u32(value);
 }
@@ -103,6 +89,9 @@ class FloatParser {
                       Uint* out_bits);
 
  private:
+  static bool StringStartsWith(const char* start,
+                               const char* end,
+                               const char* prefix);
   static Float Strto(const char* s, char** endptr);
   static Uint Make(bool sign, int exp, Uint sig);
   static Uint ShiftAndRoundToNearest(Uint significand, int shift);
@@ -120,6 +109,22 @@ class FloatWriter {
 
   static void WriteHex(char* out, size_t size, Uint bits);
 };
+
+// Return 1 if the non-NULL-terminated string starting with |start| and ending
+// with |end| starts with the NULL-terminated string |prefix|.
+template <typename T>
+// static
+bool FloatParser<T>::StringStartsWith(const char* start,
+                                      const char* end,
+                                      const char* prefix) {
+  while (start < end && *prefix) {
+    if (*start != *prefix)
+      return false;
+    start++;
+    prefix++;
+  }
+  return *prefix == 0;
+}
 
 // static
 template <>
