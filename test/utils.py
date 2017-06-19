@@ -54,8 +54,9 @@ class Executable(object):
     if self.verbose:
       print(cmd_str)
 
-    err_cmd_str = cmd_str.replace('.exe', '')
-    if not self.error_cmdline:
+    if self.error_cmdline:
+      err_cmd_str = cmd_str.replace('.exe', '')
+    else:
       err_cmd_str = self.basename
 
     stdout = ''

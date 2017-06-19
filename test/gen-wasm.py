@@ -491,7 +491,7 @@ def p_data_empty(p):
 
 
 def p_error(p):
-  print('%d: syntax error, %s' % (p.lineno, p))
+  raise Error('%d: syntax error, %s' % (p.lineno, p))
 
 
 parser = yacc.yacc(tabmodule='gen_wasm', debugfile='gen_wasm_debug.txt',
