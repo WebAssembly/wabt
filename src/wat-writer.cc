@@ -196,13 +196,13 @@ void WatWriter::WriteIndent() {
       "                                                                       "
       "                                                                       ";
   static size_t s_indent_len = sizeof(s_indent) - 1;
-  size_t indent = indent_;
-  while (static_cast<size_t>(indent_) > s_indent_len) {
+  size_t to_write = indent_;
+  while (to_write >= s_indent_len) {
     stream_.WriteData(s_indent, s_indent_len);
-    indent -= s_indent_len;
+    to_write -= s_indent_len;
   }
-  if (indent > 0) {
-    stream_.WriteData(s_indent, indent);
+  if (to_write > 0) {
+    stream_.WriteData(s_indent, to_write);
   }
 }
 
