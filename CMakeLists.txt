@@ -215,7 +215,7 @@ if (RUN_RE2C AND RE2C_EXECUTABLE AND (NOT ${RE2C_VERSION} VERSION_LESS "0.16"))
     NAME WAST_LEXER_GEN_CC
     INPUT ${WAST_LEXER_CC}
     OUTPUT ${WAST_LEXER_GEN_CC}
-    OPTIONS -bc8
+    OPTIONS -bc8 -W -Werror
   )
 else ()
   message(STATUS "Using prebuilt re2c lexer")
