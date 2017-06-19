@@ -65,9 +65,9 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
         WABT_FATAL("Catch: don't know how to visit\n");
         return Result::Error;
       }
-      CHECK_RESULT(delegate_->OnBeginCatchExpr(expr));
+      CHECK_RESULT(delegate_->BeginCatchExpr(expr));
       CHECK_RESULT(VisitExprList(expr->catch_.first));
-      CHECK_RESULT(delegate_->OnEndCatchExpr(expr));
+      CHECK_RESULT(delegate_->EndCatchExpr(expr));
       break;
 
     case ExprType::CatchAll:
@@ -75,9 +75,9 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
         WABT_FATAL("CatchAll: don't know how to visit\n");
         return Result::Error;
       }
-      CHECK_RESULT(delegate_->OnBeginCatchAllExpr(expr));
+      CHECK_RESULT(delegate_->BeginCatchAllExpr(expr));
       CHECK_RESULT(VisitExprList(expr->catch_.first));
-      CHECK_RESULT(delegate_->OnEndCatchAllExpr(expr));
+      CHECK_RESULT(delegate_->EndCatchAllExpr(expr));
       break;
 
     case ExprType::Compare:
@@ -179,11 +179,12 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
         WABT_FATAL("TryBlock: don't know how to visit\n");
         return Result::Error;
       }
-      CHECK_RESULT(delegate_->OnBeginTryBlockExpr(expr));
+      CHECK_RESULT(delegate_->BeginTryExpr(expr));
+      CHECK_RESULT(delegate_->BeginTryBlockExpr(expr));
       CHECK_RESULT(VisitExprList(expr->try_block.block->first));
-      CHECK_RESULT(delegate_->OnEndTryBodyExpr(expr));
+      CHECK_RESULT(delegate_->EndTryBlockExpr(expr));
       CHECK_RESULT(VisitExprList(expr->try_block.first_catch));
-      CHECK_RESULT(delegate_->OnEndTryBlockExpr(expr));
+      CHECK_RESULT(delegate_->EndTryExpr(expr));
       break;
 
     case ExprType::Unary:

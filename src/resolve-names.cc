@@ -46,6 +46,10 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnBrTableExpr(Expr*) override;
   Result OnCallExpr(Expr*) override;
   Result OnCallIndirectExpr(Expr*) override;
+  Result BeginCatchExpr(Expr*) override;
+  Result EndCatchExpr(Expr*) override;
+  Result BeginCatchAllExpr(Expr*) override;
+  Result EndCatchAllExpr(Expr*) override;
   Result OnGetGlobalExpr(Expr*) override;
   Result OnGetLocalExpr(Expr*) override;
   Result BeginIfExpr(Expr*) override;
@@ -55,6 +59,12 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnSetGlobalExpr(Expr*) override;
   Result OnSetLocalExpr(Expr*) override;
   Result OnTeeLocalExpr(Expr*) override;
+  Result BeginTryExpr(Expr*) override;
+  Result EndTryExpr(Expr*) override;
+  Result BeginTryBlockExpr(Expr*) override;
+  Result EndTryBlockExpr(Expr*) override;
+  Result OnThrowExpr(Expr*) override;
+  Result OnRethrowExpr(Expr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -85,6 +95,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Func* current_func_ = nullptr;
   ExprVisitor visitor_;
   std::vector<Label*> labels_;
+  std::vector<Expr*> try_blocks;
   Result result_ = Result::Ok;
 };
 
@@ -183,7 +194,7 @@ void NameResolver::ResolveMemoryVar(Var* var) {
 }
 
 void NameResolver::ResolveCatchVar(Var* var) {
-  PrintError(&var->loc, "Don't know how to resolve name");
+  ResolveVar(&current_module_->except_bindings, var, "except");
 }
 
 void NameResolver::ResolveLocalVar(Var* var) {
@@ -213,6 +224,7 @@ Result NameResolver::EndBlockExpr(Expr* expr) {
   PopLabel();
   return Result::Ok;
 }
+
 
 Result NameResolver::BeginLoopExpr(Expr* expr) {
   PushLabel(&expr->loop->label);
@@ -283,6 +295,67 @@ Result NameResolver::OnSetLocalExpr(Expr* expr) {
 
 Result NameResolver::OnTeeLocalExpr(Expr* expr) {
   ResolveLocalVar(&expr->tee_local.var);
+  return Result::Ok;
+}
+
+Result NameResolver::BeginTryExpr(Expr* expr) {
+  try_blocks.push_back(expr);
+  return Result::Ok;
+}
+
+Result NameResolver::EndTryExpr(Expr*) {
+  try_blocks.pop_back();
+  return Result::Ok;
+}
+
+Result NameResolver::BeginTryBlockExpr(Expr* expr) {
+  PushLabel(&expr->try_block.block->label);
+  return Result::Ok;
+}
+
+Result NameResolver::EndTryBlockExpr(Expr* expr) {
+  PopLabel();
+  return Result::Ok;
+}
+
+Result NameResolver::BeginCatchExpr(Expr* expr) {
+  if (try_blocks.empty()) {
+    PrintError(&expr->loc, "Catch not in try block");
+    return Result::Error;
+  }
+  PushLabel(&try_blocks.back()->try_block.block->label);
+  ResolveCatchVar(&expr->catch_.var);
+  return Result::Ok;
+}
+
+Result NameResolver::EndCatchExpr(Expr*) {
+  if (!try_blocks.empty())
+    PopLabel();
+  return Result::Ok;
+}
+
+Result NameResolver::BeginCatchAllExpr(Expr* expr) {
+  if (try_blocks.empty()) {
+    PrintError(&expr->loc, "Catch not in try block");
+    return Result::Error;
+  }
+  PushLabel(&try_blocks.back()->try_block.block->label);
+  return Result::Ok;
+}
+
+Result NameResolver::EndCatchAllExpr(Expr*) {
+  if (!try_blocks.empty())
+    PopLabel();
+  return Result::Ok;
+}
+
+Result NameResolver::OnThrowExpr(Expr* expr) {
+  ResolveCatchVar(&expr->throw_.var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnRethrowExpr(Expr* expr) {
+  ResolveLabelVar(&expr->rethrow_.var);
   return Result::Ok;
 }
 

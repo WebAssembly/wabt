@@ -105,7 +105,6 @@ struct WastParser {
   YYSTYPE* yyvsa;
   YYLTYPE* yylsa;
   WastParseOptions* options;
-  std::vector<Expr*>* unresolved_catches;
 };
 
 int wast_lexer_lex(union Token*,
