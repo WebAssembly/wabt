@@ -68,6 +68,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveFuncTypeVar(Var* var);
   void ResolveTableVar(Var* var);
   void ResolveMemoryVar(Var* var);
+  void ResolveCatchVar(Var* var);
   void ResolveLocalVar(Var* var);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
@@ -179,6 +180,10 @@ void NameResolver::ResolveTableVar(Var* var) {
 
 void NameResolver::ResolveMemoryVar(Var* var) {
   ResolveVar(&current_module_->memory_bindings, var, "memory");
+}
+
+void NameResolver::ResolveCatchVar(Var* var) {
+  PrintError(&var->loc, "Don't know how to resolve name");
 }
 
 void NameResolver::ResolveLocalVar(Var* var) {
@@ -340,6 +345,7 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->func_type_bindings, "function type");
   CheckDuplicateBindings(&module->table_bindings, "table");
   CheckDuplicateBindings(&module->memory_bindings, "memory");
+  CheckDuplicateBindings(&module->except_bindings, "except");
 
   for (Func* func : module->funcs)
     VisitFunc(func);

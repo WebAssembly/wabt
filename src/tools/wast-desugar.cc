@@ -38,6 +38,7 @@ static const char* s_infile;
 static const char* s_outfile;
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
+static WastParseOptions s_parse_options;
 
 static const char s_description[] =
 R"(  read a file in the wasm s-expression format and format it.
@@ -59,8 +60,13 @@ static void parse_options(int argc, char** argv) {
   parser.AddHelpOption();
   parser.AddOption('o', "output", "FILE", "Output file for the formatted file",
                    [](const char* argument) { s_outfile = argument; });
+  parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
+                   []() { s_parse_options.debug_parsing = true; });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
+  parser.AddOption("future-exceptions",
+                   "Test future extension for exception handling",
+                   []() { CommonClOptions.allow_exceptions = true; });
   parser.AddOption(
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",
@@ -81,7 +87,8 @@ int ProgramMain(int argc, char** argv) {
 
   SourceErrorHandlerFile error_handler;
   Script* script;
-  Result result = parse_wast(lexer.get(), &script, &error_handler);
+  Result result = parse_wast(lexer.get(), &script, &error_handler,
+                             &s_parse_options);
 
   if (WABT_SUCCEEDED(result)) {
     Module* module = script->GetFirstModule();

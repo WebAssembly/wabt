@@ -52,6 +52,10 @@ Index Module::GetFuncTypeIndex(const Var& var) const {
   return func_type_bindings.FindIndex(var);
 }
 
+Index Module::GetExceptIndex(const Var& var) const {
+  return except_bindings.FindIndex(var);
+}
+
 Index Func::GetLocalIndex(const Var& var) const {
   if (var.type == VarType::Index)
     return var.index;

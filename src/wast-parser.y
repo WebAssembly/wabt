@@ -97,7 +97,7 @@
 
 #define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                      \
   do {                                                                \
-    if (!parser->options->allow_exceptions) {                         \
+    if (!CommonClOptions.allow_exceptions) {                          \
       wast_parser_error(loc, lexer, parser, "opcode not allowed: %s", \
                         opcode_name);                                 \
     }                                                                 \
@@ -138,6 +138,8 @@ static void check_import_ordering(Location* loc,
                                   Module* module,
                                   ModuleField* first);
 static void append_module_fields(Module*, ModuleField*);
+
+static void append_unresolved_catch(WastParser* parser, Expr* catch_);
 
 class BinaryErrorHandlerModule : public BinaryErrorHandler {
  public:
@@ -628,8 +630,10 @@ block :
 
 plain_catch :
     CATCH var instr_list {
+      $2->type = VarType::Name;
       Expr* expr = Expr::CreateCatch(std::move(*$2), $3.first);
       delete $2;
+      append_unresolved_catch(parser, expr);
       $$ = join_exprs1(&@1, expr);
     }
   ;
@@ -1964,6 +1968,13 @@ void append_module_fields(Module* module, ModuleField* first) {
   }
 }
 
+// static
+void append_unresolved_catch(WastParser* parser, Expr* catch_) {
+  if (parser->unresolved_catches == nullptr)
+    parser->unresolved_catches = new std::vector<Expr*>();
+  parser->unresolved_catches->push_back(catch_);
+}
+
 Result parse_wast(WastLexer* lexer, Script** out_script,
                   SourceErrorHandler* error_handler,
                   WastParseOptions* options) {
@@ -1976,6 +1987,15 @@ Result parse_wast(WastLexer* lexer, Script** out_script,
   parser.error_handler = error_handler;
   wabt_wast_parser_debug = int(options->debug_parsing);
   int result = wabt_wast_parser_parse(lexer, &parser);
+  if (parser.unresolved_catches) {
+    for (Expr* expr : *parser.unresolved_catches)
+      wast_parser_error(
+          &expr->loc, lexer, &parser,
+          "internal error: catch not properly attached to function body");
+
+    delete parser.unresolved_catches;
+    parser.unresolved_catches = nullptr;
+  }
   delete [] parser.yyssa;
   delete [] parser.yyvsa;
   delete [] parser.yylsa;

@@ -175,7 +175,7 @@ struct Expr {
   union {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
-    struct { Block* block; Expr* first_catch; } try_block;
+    struct { Label label;  Block* block; Expr* first_catch; } try_block;
     struct { Var var; Expr* first; } catch_;
     struct { Expr* first; } catch_all;
     struct { Var var; } throw_, rethrow_;
@@ -401,6 +401,7 @@ struct Module {
   const Global* GetGlobal(const Var&) const;
   Global* GetGlobal(const Var&);
   const Export* GetExport(const StringSlice&) const;
+  Index GetExceptIndex(const Var&) const;
 
   Location loc;
   StringSlice name;

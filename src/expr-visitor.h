@@ -74,6 +74,15 @@ class ExprVisitor::Delegate {
   virtual Result OnTeeLocalExpr(Expr*) = 0;
   virtual Result OnUnaryExpr(Expr*) = 0;
   virtual Result OnUnreachableExpr(Expr*) = 0;
+  virtual Result OnBeginTryBlockExpr(Expr*) = 0;
+  virtual Result OnEndTryBodyExpr(Expr*) = 0;
+  virtual Result OnEndTryBlockExpr(Expr*) = 0;
+  virtual Result OnBeginCatchExpr(Expr*) = 0;
+  virtual Result OnEndCatchExpr(Expr*) = 0;
+  virtual Result OnBeginCatchAllExpr(Expr*) = 0;
+  virtual Result OnEndCatchAllExpr(Expr*) = 0;
+  virtual Result OnThrowExpr(Expr*) = 0;
+  virtual Result OnRethrowExpr(Expr*) = 0;
 };
 
 class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
@@ -109,6 +118,15 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnTeeLocalExpr(Expr*) override { return Result::Ok; }
   Result OnUnaryExpr(Expr*) override { return Result::Ok; }
   Result OnUnreachableExpr(Expr*) override { return Result::Ok; }
+  Result OnBeginTryBlockExpr(Expr*) override { return Result::Ok; }
+  Result OnEndTryBodyExpr(Expr*) override { return Result::Ok; }
+  Result OnEndTryBlockExpr(Expr*) override { return Result::Ok; }
+  Result OnBeginCatchExpr(Expr*) override { return Result::Ok; }
+  Result OnEndCatchExpr(Expr*) override { return Result::Ok; }
+  Result OnBeginCatchAllExpr(Expr*) override { return Result::Ok; }
+  Result OnEndCatchAllExpr(Expr*) override { return Result::Ok; }
+  Result OnThrowExpr(Expr*) override { return Result::Ok; }
+  Result OnRethrowExpr(Expr*) override { return Result::Ok; }
 };
 
 }  // namespace wabt
