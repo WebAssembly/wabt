@@ -824,12 +824,10 @@ Result BinaryReaderIR::OnFunctionName(Index index, StringSlice name) {
 
   Func* func = module->funcs[index];
   std::string dollar_name = std::string("$") + string_slice_to_string(name);
-  if (module->func_bindings.count(dollar_name) != 0) {
-    std::string orig_name = dollar_name;
-    int counter = 1;
-    do {
-      dollar_name = orig_name + "." + std::to_string(counter++);
-    } while (module->func_bindings.count(dollar_name) != 0);
+  int counter = 1;
+  std::string orig_name = dollar_name;
+  while (module->func_bindings.count(dollar_name) != 0) {
+    dollar_name = orig_name + "." + std::to_string(counter++);
   }
   func->name = dup_string_slice(string_to_string_slice(dollar_name));
   module->func_bindings.emplace(dollar_name, Binding(index));
