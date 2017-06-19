@@ -1102,8 +1102,7 @@ wabt::Result BinaryReaderInterpreter::OnLocalDecl(Index decl_index,
 
 wabt::Result BinaryReaderInterpreter::CheckHasMemory(wabt::Opcode opcode) {
   if (module->memory_index == kInvalidIndex) {
-    PrintError("%s requires an imported or defined memory.",
-               get_opcode_name(opcode));
+    PrintError("%s requires an imported or defined memory.", opcode.GetName());
     return wabt::Result::Error;
   }
   return wabt::Result::Ok;
@@ -1374,7 +1373,7 @@ wabt::Result BinaryReaderInterpreter::OnLoadExpr(wabt::Opcode opcode,
                                                  uint32_t alignment_log2,
                                                  Address offset) {
   CHECK_RESULT(CheckHasMemory(opcode));
-  CHECK_RESULT(CheckAlign(alignment_log2, get_opcode_memory_size(opcode)));
+  CHECK_RESULT(CheckAlign(alignment_log2, opcode.GetMemorySize()));
   CHECK_RESULT(typechecker.OnLoad(opcode));
   CHECK_RESULT(EmitOpcode(opcode));
   CHECK_RESULT(EmitI32(module->memory_index));
@@ -1386,7 +1385,7 @@ wabt::Result BinaryReaderInterpreter::OnStoreExpr(wabt::Opcode opcode,
                                                   uint32_t alignment_log2,
                                                   Address offset) {
   CHECK_RESULT(CheckHasMemory(opcode));
-  CHECK_RESULT(CheckAlign(alignment_log2, get_opcode_memory_size(opcode)));
+  CHECK_RESULT(CheckAlign(alignment_log2, opcode.GetMemorySize()));
   CHECK_RESULT(typechecker.OnStore(opcode));
   CHECK_RESULT(EmitOpcode(opcode));
   CHECK_RESULT(EmitI32(module->memory_index));

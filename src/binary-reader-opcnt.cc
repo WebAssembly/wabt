@@ -77,10 +77,10 @@ BinaryReaderOpcnt::BinaryReaderOpcnt(OpcntData* data) : opcnt_data(data) {}
 
 Result BinaryReaderOpcnt::OnOpcode(Opcode opcode) {
   IntCounterVector& opcnt_vec = opcnt_data->opcode_vec;
-  while (static_cast<size_t>(opcode) >= opcnt_vec.size()) {
+  while (opcode >= opcnt_vec.size()) {
     opcnt_vec.emplace_back(opcnt_vec.size(), 0);
   }
-  ++opcnt_vec[static_cast<size_t>(opcode)].count;
+  ++opcnt_vec[opcode].count;
   return Result::Ok;
 }
 

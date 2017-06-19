@@ -173,7 +173,7 @@ static bool is_power_of_two(uint32_t x) {
 }
 
 static Address get_opcode_natural_alignment(Opcode opcode) {
-  Address memory_size = get_opcode_memory_size(opcode);
+  Address memory_size = opcode.GetMemorySize();
   assert(memory_size != 0);
   return memory_size;
 }
@@ -395,7 +395,7 @@ void Validator::CheckExprList(const Location* loc, const Expr* first) {
 void Validator::CheckHasMemory(const Location* loc, Opcode opcode) {
   if (current_module_->memories.size() == 0) {
     PrintError(loc, "%s requires an imported or defined memory.",
-               get_opcode_name(opcode));
+               opcode.GetName());
   }
 }
 
@@ -405,7 +405,7 @@ void Validator::CheckBlockSig(const Location* loc,
   if (sig->size() > 1) {
     PrintError(loc,
                "multiple %s signature result types not currently supported.",
-               get_opcode_name(opcode));
+               opcode.GetName());
   }
 }
 

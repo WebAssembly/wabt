@@ -306,8 +306,7 @@ Result BinaryReaderLogging::OnLoadExpr(Opcode opcode,
                                        Address offset) {
   LOGF("OnLoadExpr(opcode: \"%s\" (%u), align log2: %u, offset: %" PRIaddress
        ")\n",
-       get_opcode_name(opcode), static_cast<unsigned>(opcode), alignment_log2,
-       offset);
+       opcode.GetName(), opcode.GetCode(), alignment_log2, offset);
   return reader->OnLoadExpr(opcode, alignment_log2, offset);
 }
 
@@ -323,8 +322,7 @@ Result BinaryReaderLogging::OnStoreExpr(Opcode opcode,
                                         Address offset) {
   LOGF("OnStoreExpr(opcode: \"%s\" (%u), align log2: %u, offset: %" PRIaddress
        ")\n",
-       get_opcode_name(opcode), static_cast<unsigned>(opcode), alignment_log2,
-       offset);
+       opcode.GetName(), opcode.GetCode(), alignment_log2, offset);
   return reader->OnStoreExpr(opcode, alignment_log2, offset);
 }
 
@@ -456,11 +454,10 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
     return reader->name(value0, value1);                                 \
   }
 
-#define DEFINE_OPCODE(name)                                \
-  Result BinaryReaderLogging::name(Opcode opcode) {        \
-    LOGF(#name "(\"%s\" (%u))\n", get_opcode_name(opcode), \
-         static_cast<unsigned>(opcode));                   \
-    return reader->name(opcode);                           \
+#define DEFINE_OPCODE(name)                                            \
+  Result BinaryReaderLogging::name(Opcode opcode) {                    \
+    LOGF(#name "(\"%s\" (%u))\n", opcode.GetName(), opcode.GetCode()); \
+    return reader->name(opcode);                                       \
   }
 
 #define DEFINE0(name)                  \
