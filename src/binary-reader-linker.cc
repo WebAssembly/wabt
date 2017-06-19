@@ -284,7 +284,7 @@ Result BinaryReaderLinker::OnFunctionName(Index index, StringSlice name) {
 Result read_binary_linker(LinkerInputBinary* input_info, LinkOptions* options) {
   BinaryReaderLinker reader(input_info);
 
-  ReadBinaryOptions read_options = WABT_READ_BINARY_OPTIONS_DEFAULT;
+  ReadBinaryOptions read_options;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
   return read_binary(input_info->data, input_info->size, &reader,

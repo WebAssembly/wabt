@@ -23,11 +23,8 @@
 
 namespace wabt {
 
-#define WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT \
-  { nullptr, WABT_WRITE_BINARY_OPTIONS_DEFAULT }
-
 struct WriteBinarySpecOptions {
-  const char* json_filename;
+  const char* json_filename = nullptr;
   WriteBinaryOptions write_binary_options;
 };
 

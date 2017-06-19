@@ -41,10 +41,8 @@ static const char* s_infile;
 static const char* s_outfile;
 static bool s_dump_module;
 static int s_verbose;
-static WriteBinaryOptions s_write_binary_options =
-    WABT_WRITE_BINARY_OPTIONS_DEFAULT;
-static WriteBinarySpecOptions s_write_binary_spec_options =
-    WABT_WRITE_BINARY_SPEC_OPTIONS_DEFAULT;
+static WriteBinaryOptions s_write_binary_options;
+static WriteBinarySpecOptions s_write_binary_spec_options;
 static bool s_spec;
 static bool s_validate = true;
 static WastParseOptions s_parse_options;
