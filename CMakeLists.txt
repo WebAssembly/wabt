@@ -354,6 +354,10 @@ if (NOT EMSCRIPTEN)
     target_link_libraries(wabt-unittests libgtest ${CMAKE_THREAD_LIBS_INIT})
   endif ()
 
+  if (NOT CMAKE_VERSION VERSION_LESS "3.2")
+    set(USES_TERMINAL USES_TERMINAL)
+  endif ()
+
   # test running
   find_package(PythonInterp 2.7 REQUIRED)
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
@@ -361,7 +365,7 @@ if (NOT EMSCRIPTEN)
     COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir ${CMAKE_BINARY_DIR}
     DEPENDS ${WABT_EXECUTABLES}
     WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-    USES_TERMINAL
+    ${USES_TERMINAL}
   )
 
   # install
