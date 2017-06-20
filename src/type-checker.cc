@@ -249,17 +249,15 @@ Result TypeChecker::PopAndCheck2TypesAreEqual(Type* out_type,
 }
 
 Result TypeChecker::CheckOpcode1(Opcode opcode) {
-  Result result = PopAndCheck1Type(get_opcode_param_type_1(opcode),
-                                   get_opcode_name(opcode));
-  PushType(get_opcode_result_type(opcode));
+  Result result = PopAndCheck1Type(opcode.GetParamType1(), opcode.GetName());
+  PushType(opcode.GetResultType());
   return result;
 }
 
 Result TypeChecker::CheckOpcode2(Opcode opcode) {
-  Result result = PopAndCheck2Types(get_opcode_param_type_1(opcode),
-                                    get_opcode_param_type_2(opcode),
-                                    get_opcode_name(opcode));
-  PushType(get_opcode_result_type(opcode));
+  Result result = PopAndCheck2Types(opcode.GetParamType1(),
+                                    opcode.GetParamType2(), opcode.GetName());
+  PushType(opcode.GetResultType());
   return result;
 }
 

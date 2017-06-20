@@ -24,16 +24,17 @@
 #include "common.h"
 #include "opcode.h"
 
-#define WABT_READ_BINARY_OPTIONS_DEFAULT \
-  { nullptr, false }
-
 namespace wabt {
 
 class Stream;
 
 struct ReadBinaryOptions {
-  Stream* log_stream;
-  bool read_debug_names;
+  ReadBinaryOptions() = default;
+  ReadBinaryOptions(Stream* log_stream, bool read_debug_names)
+      : log_stream(log_stream), read_debug_names(read_debug_names) {}
+
+  Stream* log_stream = nullptr;
+  bool read_debug_names = false;
 };
 
 class BinaryReaderDelegate {

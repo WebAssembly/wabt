@@ -4148,7 +4148,7 @@ yyreduce:
       } else {
         assert((yyvsp[0].script_module)->type == ScriptModule::Type::Binary);
         (yyval.module) = new Module();
-        ReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
+        ReadBinaryOptions options;
         BinaryErrorHandlerModule error_handler(&(yyvsp[0].script_module)->binary.loc, lexer, parser);
         read_binary_ir((yyvsp[0].script_module)->binary.data, (yyvsp[0].script_module)->binary.size, &options,
                        &error_handler, (yyval.module));

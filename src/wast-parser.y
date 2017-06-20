@@ -1354,7 +1354,7 @@ module :
       } else {
         assert($1->type == ScriptModule::Type::Binary);
         $$ = new Module();
-        ReadBinaryOptions options = WABT_READ_BINARY_OPTIONS_DEFAULT;
+        ReadBinaryOptions options;
         BinaryErrorHandlerModule error_handler(&$1->binary.loc, lexer, parser);
         read_binary_ir($1->binary.data, $1->binary.size, &options,
                        &error_handler, $$);

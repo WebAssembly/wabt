@@ -43,8 +43,7 @@ static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
 
 static int s_verbose;
 static const char* s_infile;
-static ReadBinaryOptions s_read_binary_options =
-    WABT_READ_BINARY_OPTIONS_DEFAULT;
+static ReadBinaryOptions s_read_binary_options;
 static Thread::Options s_thread_options;
 static bool s_trace;
 static bool s_spec;

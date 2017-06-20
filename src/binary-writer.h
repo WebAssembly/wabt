@@ -27,14 +27,11 @@ class Writer;
 struct Module;
 struct Script;
 
-#define WABT_WRITE_BINARY_OPTIONS_DEFAULT \
-  { nullptr, true, false, false }
-
 struct WriteBinaryOptions {
-  Stream* log_stream;
-  bool canonicalize_lebs;
-  bool relocatable;
-  bool write_debug_names;
+  Stream* log_stream = nullptr;
+  bool canonicalize_lebs = true;
+  bool relocatable = false;
+  bool write_debug_names = false;
 };
 
 Result write_binary_module(Writer*, const Module*, const WriteBinaryOptions*);
