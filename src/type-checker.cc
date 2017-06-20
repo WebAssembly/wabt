@@ -355,7 +355,7 @@ Result TypeChecker::OnCatchBlock(const TypeVector* sig) {
   CHECK_RESULT(TopLabel(&label));
   COMBINE_RESULT(result, CheckLabelType(label, LabelType::Try));
   COMBINE_RESULT(result, PopAndCheckSignature(label->sig, "try block"));
-  COMBINE_RESULT(result, CheckTypeStackEnd("if true branch"));
+  COMBINE_RESULT(result, CheckTypeStackEnd("try block"));
   ResetTypeStackToLabel(label);
   label->label_type = LabelType::Catch;
   label->unreachable = false;

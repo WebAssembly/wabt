@@ -1037,13 +1037,13 @@ Result Validator::CheckExceptVar(const Var* var, const Exception** out_except) {
 void Validator::CheckExcept(const Location* loc, const Exception* except) {
   for (Type ty : except->sig) {
     switch (ty) {
-      default:
-        PrintError(loc, "Invalid exception type: %s", get_type_name(ty));
-        break;
       case Type::I32:
       case Type::I64:
       case Type::F32:
       case Type::F64:
+        break;
+      default:
+        PrintError(loc, "Invalid exception type: %s", get_type_name(ty));
         break;
     }
   }

@@ -225,7 +225,6 @@ Result NameResolver::EndBlockExpr(Expr* expr) {
   return Result::Ok;
 }
 
-
 Result NameResolver::BeginLoopExpr(Expr* expr) {
   PushLabel(&expr->loop->label);
   return Result::Ok;
