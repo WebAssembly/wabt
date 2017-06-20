@@ -132,9 +132,11 @@ enum class LabelType {
   Loop,
   If,
   Else,
+  Try,
+  Catch,
 
   First = Func,
-  Last = Else,
+  Last = Catch,
 };
 static const int kLabelTypeCount = WABT_ENUM_COUNT(LabelType);
 

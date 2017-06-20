@@ -10,5 +10,5 @@
   )
 )
 (;; STDERR ;;;
-Throw: don't know how to visit
+write export except not implemented
 ;;; STDERR ;;)

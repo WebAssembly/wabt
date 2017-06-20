@@ -628,7 +628,6 @@ block :
 
 plain_catch :
     CATCH var instr_list {
-      $2->type = VarType::Name;
       Expr* expr = Expr::CreateCatch(std::move(*$2), $3.first);
       delete $2;
       $$ = join_exprs1(&@1, expr);
@@ -1875,7 +1874,7 @@ void append_module_fields(Module* module, ModuleField* first) {
             name = &field->import->except->name;
             bindings = &module->except_bindings;
             index = module->excepts.size();
-            module->excepts.push_back(field->except);
+            module->excepts.push_back(field->import->except);
             ++module->num_except_imports;
             break;
         }

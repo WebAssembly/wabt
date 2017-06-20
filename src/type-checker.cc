@@ -344,6 +344,24 @@ Result TypeChecker::OnCompare(Opcode opcode) {
   return CheckOpcode2(opcode);
 }
 
+Result TypeChecker::OnCatch(const TypeVector* sig) {
+  PushTypes(*sig);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnCatchBlock(const TypeVector* sig) {
+  Result result = Result::Ok;
+  Label* label;
+  CHECK_RESULT(TopLabel(&label));
+  COMBINE_RESULT(result, CheckLabelType(label, LabelType::Try));
+  COMBINE_RESULT(result, PopAndCheckSignature(label->sig, "try block"));
+  COMBINE_RESULT(result, CheckTypeStackEnd("if true branch"));
+  ResetTypeStackToLabel(label);
+  label->label_type = LabelType::Catch;
+  label->unreachable = false;
+  return result;
+}
+
 Result TypeChecker::OnConst(Type type) {
   PushType(type);
   return Result::Ok;
@@ -394,7 +412,8 @@ Result TypeChecker::OnEnd(Label* label,
 Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
   static const char* s_label_type_name[] = {"function", "block", "loop", "if",
-                                            "if false branch"};
+                                            "if false branch", "try",
+                                            "try catch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
@@ -439,6 +458,28 @@ Result TypeChecker::OnLoop(const TypeVector* sig) {
   return Result::Ok;
 }
 
+Result TypeChecker::OnRethrow(Index depth) {
+  Result result = Result::Ok;
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  if (label->label_type != LabelType::Catch) {
+    PrintError("invalid rethrow depth: %" PRIindex " (max %" PRIzd ")", depth,
+               label_stack_.size() - 1);
+    result = Result::Error;
+  }
+  CHECK_RESULT(SetUnreachable());
+  return result;
+}
+
+Result TypeChecker::OnThrow(const TypeVector* sig) {
+  Result result = Result::Ok;
+  Label* func_label;
+  CHECK_RESULT(GetLabel(label_stack_.size() - 1, &func_label));
+  COMBINE_RESULT(result, PopAndCheckSignature(*sig, "throw"));
+  CHECK_RESULT(SetUnreachable());
+  return result;
+}
+
 Result TypeChecker::OnReturn() {
   Result result = Result::Ok;
   Label* func_label;
@@ -467,6 +508,11 @@ Result TypeChecker::OnSetLocal(Type type) {
 
 Result TypeChecker::OnStore(Opcode opcode) {
   return CheckOpcode2(opcode);
+}
+
+Result TypeChecker::OnTryBlock(const TypeVector* sig) {
+  PushLabel(LabelType::Try, *sig);
+  return Result::Ok;
 }
 
 Result TypeChecker::OnTeeLocal(Type type) {

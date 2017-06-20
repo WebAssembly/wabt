@@ -10,10 +10,10 @@
     catch $ex
       nop
     catch_all
-      rethrow $try 
+      rethrow $try1
     end
   )
 )
 (;; STDERR ;;;
-TryBlock: don't know how to visit
+TryBlock: Don't know how to write
 ;;; STDERR ;;)

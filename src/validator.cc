@@ -53,8 +53,8 @@ class Validator {
   };
 
   struct TryContext {
-    const Expr* try_;
-    const Expr* catch_;
+    const Expr* try_ = nullptr;
+    const Expr* catch_ = nullptr;
   };
 
   void WABT_PRINTF_FORMAT(3, 4)
@@ -140,7 +140,8 @@ class Validator {
 
   void CheckExcept(const Location* loc, const Exception* Except);
   Result CheckExceptVar(const Var* var, const Exception** out_except);
-  Result CheckCatchContext(const Location *loc, const Expr* catch_);
+  Result CheckCatchContext(const Location *loc, const Expr* catch_,
+                           const Expr** try_);
 
   SourceErrorHandler* error_handler_ = nullptr;
   WastLexer* lexer_ = nullptr;
@@ -151,6 +152,7 @@ class Validator {
   Index current_memory_index_ = 0;
   Index current_global_index_ = 0;
   Index num_imported_globals_ = 0;
+  Index current_except_index = 0;
   TypeChecker typechecker_;
   // Cached for access by OnTypecheckerError.
   const Location* expr_loc_ = nullptr;
@@ -475,29 +477,28 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Catch: {
-      if (WABT_FAILED(CheckCatchContext(&expr->loc, expr)))
+      const Expr* try_;
+      if (WABT_FAILED(CheckCatchContext(&expr->loc, expr, &try_)))
         break;
-      const Expr* try_ = try_contexts.back().try_;
       const Exception* except;
-      if (WABT_SUCCEEDED(
-              CheckExceptVar(&expr->catch_.var, &except))) {
-        PrintError(&expr->loc, "Found exception: \"" PRIstringslice "\"",
-                   WABT_PRINTF_STRING_SLICE_ARG(except->name));
+      if (WABT_SUCCEEDED(CheckExceptVar(&expr->catch_.var, &except))) {
+        typechecker_.OnCatchBlock(&try_->try_block.block->sig);
+        typechecker_.OnCatch(&except->sig);
+        CheckExprList(&expr->loc, expr->catch_.first);
       }
-      typechecker_.OnBlock(&try_->try_block.block->sig);
-      CheckExprList(&expr->loc, expr->catch_.first);
-      typechecker_.OnEnd();
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "Catch: don't know how to validate");
+      try_contexts.back().catch_ = nullptr;
       break;
     }
 
-    case ExprType::CatchAll:
-      if (WABT_FAILED(CheckCatchContext(&expr->loc, expr)))
+    case ExprType::CatchAll: {
+      const Expr* try_;
+      if (WABT_FAILED(CheckCatchContext(&expr->loc, expr, &try_)))
         break;
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "CatchAll: don't know how to validate");
+      typechecker_.OnCatchBlock(&try_->try_block.block->sig);
+      CheckExprList(&expr->loc, expr->catch_.first);
+      try_contexts.back().catch_ = nullptr;
       break;
+    }
 
     case ExprType::Compare:
       typechecker_.OnCompare(expr->compare.opcode);
@@ -564,6 +565,9 @@ void Validator::CheckExpr(const Expr* expr) {
     case ExprType::Rethrow:
       if (try_contexts.empty() || try_contexts.back().catch_ == nullptr)
         PrintError(&expr->loc, "Rethrow not in try catch block");
+      if (WABT_FAILED(typechecker_.OnRethrow(expr->rethrow_.var.index))) {
+        PrintError(&expr->loc, "Target of throw is invalid");
+      }
       break;
 
     case ExprType::Return:
@@ -594,8 +598,12 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Throw:
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "Throw: don't know how to validate");
+      const Exception* except;
+      if (WABT_SUCCEEDED(CheckExceptVar(&expr->throw_.var, &except))) {
+        if (WABT_FAILED(typechecker_.OnThrow(&except->sig))) {
+          PrintError(&expr->loc, "Signature of throw is invalid");
+        }
+      }
       break;
 
     case ExprType::TryBlock: {
@@ -603,14 +611,14 @@ void Validator::CheckExpr(const Expr* expr) {
         PrintError(&expr->loc, "Try blocks are not allowed");
         break;
       }
+
       TryContext context;
       context.try_ = expr;
       try_contexts.push_back(context);
       CheckBlockSig(&expr->loc, Opcode::Try, &expr->try_block.block->sig);
 
-      typechecker_.OnBlock(&expr->try_block.block->sig);
+      typechecker_.OnTryBlock(&expr->try_block.block->sig);
       CheckExprList(&expr->loc, expr->try_block.block->first);
-      typechecker_.OnEnd();
 
       if (expr->try_block.first_catch == nullptr) {
         PrintError(&expr->loc, "TryBlock: doens't have any catch clauses");
@@ -628,6 +636,7 @@ void Validator::CheckExpr(const Expr* expr) {
             break;
         }
       }
+      typechecker_.OnEnd();
       try_contexts.pop_back();
       break;
     }
@@ -804,8 +813,8 @@ void Validator::CheckDataSegments(const Module* module) {
 void Validator::CheckImport(const Location* loc, const Import* import) {
   switch (import->kind) {
     case ExternalKind::Except:
-      // TODO(karlschimpf) Define.
-      PrintError(loc, "import except: don't know how to validate");
+      ++current_except_index;
+      CheckExcept(loc, import->except);
       break;
     case ExternalKind::Func:
       if (import->func->decl.has_func_type)
@@ -832,8 +841,7 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
 void Validator::CheckExport(const Location* loc, const Export* export_) {
   switch (export_->kind) {
     case ExternalKind::Except:
-      // TODO(karlschimpf) Define.
-      PrintError(loc, "except: don't know how to validate export");
+      CheckExceptVar(&export_->var, nullptr);
       break;
     case ExternalKind::Func:
       CheckFuncVar(&export_->var, nullptr);
@@ -875,10 +883,12 @@ void Validator::CheckModule(const Module* module) {
   current_memory_index_ = 0;
   current_global_index_ = 0;
   num_imported_globals_ = 0;
+  current_except_index = 0;
 
   for (ModuleField* field = module->first_field; field; field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Except:
+        ++current_except_index;
         CheckExcept(&field->loc, field->except);
         break;
 
@@ -1014,23 +1024,14 @@ Result Validator::CheckGet(const Action* action, Type* out_type) {
 }
 
 Result Validator::CheckExceptVar(const Var* var, const Exception** out_except) {
-#if 0
-  assert(var->type == VarType::Name);
-  var->index = current_module_->GetExceptIndex(*var);
-  Index max_index = current_module_->excepts.size();
-  if (var->index >= max_index) {
-    PrintError(&var->loc, "exception variable \"" PRIstringSlice
-               "\" is out of range (max %" PRIIdex ")",
-               WABT_FORMAT_STRING_SLICE_ARG(var->name), max_index);
+  Index index;
+  if (WABT_FAILED(
+          CheckVar(current_module_->excepts.size(), var, "except", &index))) {
     return Result::Error;
   }
   if (out_except)
     *out_except = current_module_->excepts[index];
   return Result::Ok;
-#else
-  PrintError(&var->loc, "Do not know how to check variable index");
-  return Result::Error;
-#endif
 }
 
 void Validator::CheckExcept(const Location* loc, const Exception* except) {
@@ -1048,12 +1049,13 @@ void Validator::CheckExcept(const Location* loc, const Exception* except) {
   }
 }
 
-Result Validator::CheckCatchContext(const Location* loc, const Expr* catch_) {
-  // TODO(karlschimpf)
+Result Validator::CheckCatchContext(const Location* loc, const Expr* catch_,
+                                    const Expr** try_) {
   if (try_contexts.empty() || try_contexts.back().catch_ != catch_) {
     PrintError(loc, "Catch not part of a try block");
     return Result::Error;
   }
+  *try_ = try_contexts.back().try_;
   return Result::Ok;
 }
 

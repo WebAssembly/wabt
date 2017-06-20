@@ -78,7 +78,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveFuncTypeVar(Var* var);
   void ResolveTableVar(Var* var);
   void ResolveMemoryVar(Var* var);
-  void ResolveCatchVar(Var* var);
+  void ResolveExceptionVar(Var* var);
   void ResolveLocalVar(Var* var);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
@@ -193,8 +193,8 @@ void NameResolver::ResolveMemoryVar(Var* var) {
   ResolveVar(&current_module_->memory_bindings, var, "memory");
 }
 
-void NameResolver::ResolveCatchVar(Var* var) {
-  ResolveVar(&current_module_->except_bindings, var, "except");
+void NameResolver::ResolveExceptionVar(Var* var) {
+  ResolveVar(&current_module_->except_bindings, var, "exception");
 }
 
 void NameResolver::ResolveLocalVar(Var* var) {
@@ -324,7 +324,7 @@ Result NameResolver::BeginCatchExpr(Expr* expr) {
     return Result::Error;
   }
   PushLabel(&try_blocks.back()->try_block.block->label);
-  ResolveCatchVar(&expr->catch_.var);
+  ResolveExceptionVar(&expr->catch_.var);
   return Result::Ok;
 }
 
@@ -350,7 +350,7 @@ Result NameResolver::EndCatchAllExpr(Expr*) {
 }
 
 Result NameResolver::OnThrowExpr(Expr* expr) {
-  ResolveCatchVar(&expr->throw_.var);
+  ResolveExceptionVar(&expr->throw_.var);
   return Result::Ok;
 }
 
@@ -390,7 +390,7 @@ void NameResolver::VisitExport(Export* export_) {
       break;
 
     case ExternalKind::Except:
-      WABT_FATAL("NameResolver::VisitExport(except) not defined\n");
+      ResolveExceptionVar(&export_->var);
       break;
   }
 }
