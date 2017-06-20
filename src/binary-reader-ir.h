@@ -25,7 +25,8 @@ struct Module;
 struct ReadBinaryOptions;
 class BinaryErrorHandler;
 
-Result read_binary_ir(const void* data,
+Result read_binary_ir(const char* filename,
+                      const void* data,
                       size_t size,
                       const ReadBinaryOptions* options,
                       BinaryErrorHandler*,

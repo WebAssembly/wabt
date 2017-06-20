@@ -139,10 +139,28 @@ struct StringSlice {
 };
 
 struct Location {
+  // TODO(binji): The type is not stored directly on the location because we
+  // don't currently have a default constructor. We eventually should add a
+  // default constructor, but it will be tricky since this struct is used in
+  // classes that are trivially constructible.
+  enum class Type {
+    Text,
+    Binary,
+  };
+
   const char* filename;
-  int line;
-  int first_column;
-  int last_column;
+  union {
+    // For text files.
+    struct {
+      int line;
+      int first_column;
+      int last_column;
+    };
+    // For binary files.
+    struct {
+      size_t offset;
+    };
+  };
 };
 
 /* matches binary format, do not change */

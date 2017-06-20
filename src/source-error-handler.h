@@ -25,6 +25,8 @@ namespace wabt {
 
 class SourceErrorHandler {
  public:
+  explicit SourceErrorHandler(Location::Type);
+
   virtual ~SourceErrorHandler() {}
 
   // Returns true if the error was handled.
@@ -41,10 +43,15 @@ class SourceErrorHandler {
                                   const std::string& source_line,
                                   size_t source_line_column_offset,
                                   int indent);
+
+ protected:
+  Location::Type location_type_;
 };
 
 class SourceErrorHandlerNop : public SourceErrorHandler {
  public:
+  SourceErrorHandlerNop();
+
   bool OnError(const Location*,
                const std::string& error,
                const std::string& source_line,
@@ -66,7 +73,8 @@ class SourceErrorHandlerFile : public SourceErrorHandler {
   SourceErrorHandlerFile(FILE* file = stderr,
                          const std::string& header = std::string(),
                          PrintHeader print_header = PrintHeader::Never,
-                         size_t source_line_max_length = 80);
+                         size_t source_line_max_length = 80,
+                         Location::Type = Location::Type::Text);
 
   bool OnError(const Location*,
                const std::string& error,
@@ -89,7 +97,8 @@ class SourceErrorHandlerFile : public SourceErrorHandler {
 
 class SourceErrorHandlerBuffer : public SourceErrorHandler {
  public:
-  explicit SourceErrorHandlerBuffer(size_t source_line_max_length = 80);
+  explicit SourceErrorHandlerBuffer(size_t source_line_max_length = 80,
+                                    Location::Type = Location::Type::Text);
 
   bool OnError(const Location*,
                const std::string& error,

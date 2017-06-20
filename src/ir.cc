@@ -208,6 +208,14 @@ Var::Var(const StringSlice& name) : type(VarType::Name), name(name) {
   WABT_ZERO_MEMORY(loc);
 }
 
+Var::Var(Index index, const Location& loc_) : Var(index) {
+  loc = loc;
+}
+
+Var::Var(const StringSlice& name, const Location& loc_) : Var(name) {
+  loc = loc;
+}
+
 Var::Var(Var&& rhs) : loc(rhs.loc), type(rhs.type) {
   if (rhs.type == VarType::Index) {
     index = rhs.index;
@@ -268,6 +276,27 @@ Const::Const(F32, uint32_t value) : type(Type::F32), f32_bits(value) {
 Const::Const(F64, uint64_t value) : type(Type::F64), f64_bits(value) {
   WABT_ZERO_MEMORY(loc);
 }
+
+Const::Const(I32 tag, uint32_t value, const Location& loc_)
+    : Const(tag, value) {
+  loc = loc_;
+}
+
+Const::Const(I64 tag, uint64_t value, const Location& loc_)
+    : Const(tag, value) {
+  loc = loc_;
+}
+
+Const::Const(F32 tag, uint32_t value, const Location& loc_)
+    : Const(tag, value) {
+  loc = loc_;
+}
+
+Const::Const(F64 tag, uint64_t value, const Location& loc_)
+    : Const(tag, value) {
+  loc = loc_;
+}
+
 
 Block::Block(): first(nullptr) {
   WABT_ZERO_MEMORY(label);

@@ -136,6 +136,7 @@ def main(args):
       '--inline-exports': options.inline_exports,
       '--no-debug-names': not options.debug_names,
       '--generate-names': options.generate_names,
+      '--no-check': options.no_check,
   })
 
   wast2wasm.verbose = options.print_cmd

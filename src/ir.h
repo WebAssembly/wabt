@@ -38,6 +38,8 @@ enum class VarType {
 struct Var {
   explicit Var(Index index = kInvalidIndex);
   explicit Var(const StringSlice& name);
+  Var(Index index, const Location& loc);
+  Var(const StringSlice& name, const Location& loc);
   Var(Var&&);
   Var(const Var&);
   Var& operator =(const Var&);
@@ -68,6 +70,12 @@ struct Const {
   Const(I64, uint64_t);
   Const(F32, uint32_t);
   Const(F64, uint64_t);
+  // TODO(binji): Make these default arguments on the constructors above when
+  // Location has a constructor.
+  Const(I32, uint32_t, const Location& loc);
+  Const(I64, uint64_t, const Location& loc);
+  Const(F32, uint32_t, const Location& loc);
+  Const(F64, uint64_t, const Location& loc);
 
   Location loc;
   Type type;

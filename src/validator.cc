@@ -36,6 +36,7 @@ class Validator {
   WABT_DISALLOW_COPY_AND_ASSIGN(Validator);
   Validator(SourceErrorHandler*, WastLexer*, const Script*);
 
+  Result CheckModule(const Module* module);
   Result CheckScript(const Script* script);
 
  private:
@@ -131,7 +132,6 @@ class Validator {
   void CheckExport(const Location* loc, const Export* export_);
 
   void CheckDuplicateExportBindings(const Module* module);
-  void CheckModule(const Module* module);
   const TypeVector* CheckInvoke(const Action* action);
   Result CheckGet(const Action* action, Type* out_type);
   ActionResult CheckAction(const Action* action);
@@ -841,7 +841,7 @@ void Validator::CheckDuplicateExportBindings(const Module* module) {
   });
 }
 
-void Validator::CheckModule(const Module* module) {
+Result Validator::CheckModule(const Module* module) {
   bool seen_start = false;
 
   current_module_ = module;
@@ -921,6 +921,8 @@ void Validator::CheckModule(const Module* module) {
   CheckElemSegments(module);
   CheckDataSegments(module);
   CheckDuplicateExportBindings(module);
+
+  return result_;
 }
 
 // Returns the result type of the invoked function, checked by the caller;
@@ -1130,6 +1132,14 @@ Result validate_script(WastLexer* lexer,
   Validator validator(error_handler, lexer, script);
 
   return validator.CheckScript(script);
+}
+
+Result validate_module(WastLexer* lexer,
+                       const Module* module,
+                       SourceErrorHandler* error_handler) {
+  Validator validator(error_handler, lexer, nullptr);
+
+  return validator.CheckModule(module);
 }
 
 }  // namespace wabt
