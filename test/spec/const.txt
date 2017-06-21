@@ -33,5 +33,69 @@ out/third_party/testsuite/const.wast:45: assert_malformed passed:
   out/third_party/testsuite/const/const.15.wast:1:18: invalid literal "-9223372036854775809"
   (func (i64.const -9223372036854775809) drop)
                    ^^^^^^^^^^^^^^^^^^^^
-8/8 tests passed.
+out/third_party/testsuite/const.wast:56: assert_malformed passed:
+  out/third_party/testsuite/const/const.22.wast:1:18: invalid literal "0x1p128"
+  (func (f32.const 0x1p128) drop)
+                   ^^^^^^^
+out/third_party/testsuite/const.wast:60: assert_malformed passed:
+  out/third_party/testsuite/const/const.23.wast:1:18: invalid literal "-0x1p128"
+  (func (f32.const -0x1p128) drop)
+                   ^^^^^^^^
+out/third_party/testsuite/const.wast:64: assert_malformed passed:
+  out/third_party/testsuite/const/const.24.wast:1:18: invalid literal "0x1.ffffffp127"
+  (func (f32.const 0x1.ffffffp127) drop)
+                   ^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:68: assert_malformed passed:
+  out/third_party/testsuite/const/const.25.wast:1:18: invalid literal "-0x1.ffffffp127"
+  (func (f32.const -0x1.ffffffp127) drop)
+                   ^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:75: assert_malformed passed:
+  out/third_party/testsuite/const/const.28.wast:1:18: invalid literal "1e39"
+  (func (f32.const 1e39) drop)
+                   ^^^^
+out/third_party/testsuite/const.wast:79: assert_malformed passed:
+  out/third_party/testsuite/const/const.29.wast:1:18: invalid literal "-1e39"
+  (func (f32.const -1e39) drop)
+                   ^^^^^
+out/third_party/testsuite/const.wast:86: assert_malformed passed:
+  out/third_party/testsuite/const/const.32.wast:1:18: invalid literal "340282356779733661637539395458142568448"
+  (func (f32.const 340282356779733661637539395458142568448) drop)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:90: assert_malformed passed:
+  out/third_party/testsuite/const/const.33.wast:1:18: invalid literal "-340282356779733661637539395458142568448"
+  (func (f32.const -340282356779733661637539395458142568448) drop)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:101: assert_malformed passed:
+  out/third_party/testsuite/const/const.40.wast:1:18: invalid literal "0x1p1024"
+  (func (f64.const 0x1p1024) drop)
+                   ^^^^^^^^
+out/third_party/testsuite/const.wast:105: assert_malformed passed:
+  out/third_party/testsuite/const/const.41.wast:1:18: invalid literal "-0x1p1024"
+  (func (f64.const -0x1p1024) drop)
+                   ^^^^^^^^^
+out/third_party/testsuite/const.wast:109: assert_malformed passed:
+  out/third_party/testsuite/const/const.42.wast:1:18: invalid literal "0x1.fffffffffffff8p1023"
+  (func (f64.const 0x1.fffffffffffff8p1023) drop)
+                   ^^^^^^^^^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:113: assert_malformed passed:
+  out/third_party/testsuite/const/const.43.wast:1:18: invalid literal "-0x1.fffffffffffff8p1023"
+  (func (f64.const -0x1.fffffffffffff8p1023) drop)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:120: assert_malformed passed:
+  out/third_party/testsuite/const/const.46.wast:1:18: invalid literal "1e309"
+  (func (f64.const 1e309) drop)
+                   ^^^^^
+out/third_party/testsuite/const.wast:124: assert_malformed passed:
+  out/third_party/testsuite/const/const.47.wast:1:18: invalid literal "-1e309"
+  (func (f64.const -1e309) drop)
+                   ^^^^^^
+out/third_party/testsuite/const.wast:131: assert_malformed passed:
+  out/third_party/testsuite/const/const.50.wast:1:18: invalid literal "269653970229347356221791135597556535197105851288767494898376215204735891170042808140884337949150317257310688430271573696351481990334196274152701320055306275479074865864826923114368235135583993416113802762682700913456874855354834422248712838998185022412196739306217084753107265771378949821875606039276187287552"
+  (func (f64.const 269653970229347356221791135597556535197105851288767494898376...
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+out/third_party/testsuite/const.wast:135: assert_malformed passed:
+  out/third_party/testsuite/const/const.51.wast:1:18: invalid literal "-269653970229347356221791135597556535197105851288767494898376215204735891170042808140884337949150317257310688430271573696351481990334196274152701320055306275479074865864826923114368235135583993416113802762682700913456874855354834422248712838998185022412196739306217084753107265771378949821875606039276187287552"
+  (func (f64.const -26965397022934735622179113559755653519710585128876749489837...
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24/24 tests passed.
 ;;; STDOUT ;;)
