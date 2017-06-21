@@ -313,7 +313,6 @@ Expr::~Expr() {
       call_indirect.var.~Var();
       break;
     case ExprType::Catch:
-    case ExprType::CatchAll:
       catch_.var.~Var();
       DestroyExprList(catch_.first);
       break;
@@ -427,7 +426,7 @@ Expr* Expr::CreateCatch(Var var, Expr* first) {
 
 // static
 Expr* Expr::CreateCatchAll(Expr* first) {
-  Expr* expr = new Expr(ExprType::CatchAll);
+  Expr* expr = new Expr(ExprType::Catch);
   expr->catch_.first = first;
   return expr;
 }

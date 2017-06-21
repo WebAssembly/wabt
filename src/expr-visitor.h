@@ -80,8 +80,6 @@ class ExprVisitor::Delegate {
   virtual Result EndTryBlockExpr(Expr*) = 0;
   virtual Result BeginCatchExpr(Expr*) = 0;
   virtual Result EndCatchExpr(Expr*) = 0;
-  virtual Result BeginCatchAllExpr(Expr*) = 0;
-  virtual Result EndCatchAllExpr(Expr*) = 0;
   virtual Result OnThrowExpr(Expr*) = 0;
   virtual Result OnRethrowExpr(Expr*) = 0;
 };
@@ -125,8 +123,6 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result EndTryBlockExpr(Expr*) override { return Result::Ok; }
   Result BeginCatchExpr(Expr*) override { return Result::Ok; }
   Result EndCatchExpr(Expr*) override { return Result::Ok; }
-  Result BeginCatchAllExpr(Expr*) override { return Result::Ok; }
-  Result EndCatchAllExpr(Expr*) override { return Result::Ok; }
   Result OnThrowExpr(Expr*) override { return Result::Ok; }
   Result OnRethrowExpr(Expr*) override { return Result::Ok; }
 };

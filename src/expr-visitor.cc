@@ -61,23 +61,9 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       break;
 
     case ExprType::Catch:
-      if (!CommonClOptions.allow_exceptions) {
-        WABT_FATAL("Catch: don't know how to visit\n");
-        return Result::Error;
-      }
       CHECK_RESULT(delegate_->BeginCatchExpr(expr));
       CHECK_RESULT(VisitExprList(expr->catch_.first));
       CHECK_RESULT(delegate_->EndCatchExpr(expr));
-      break;
-
-    case ExprType::CatchAll:
-      if (!CommonClOptions.allow_exceptions) {
-        WABT_FATAL("CatchAll: don't know how to visit\n");
-        return Result::Error;
-      }
-      CHECK_RESULT(delegate_->BeginCatchAllExpr(expr));
-      CHECK_RESULT(VisitExprList(expr->catch_.first));
-      CHECK_RESULT(delegate_->EndCatchAllExpr(expr));
       break;
 
     case ExprType::Compare:

@@ -480,22 +480,14 @@ void Validator::CheckExpr(const Expr* expr) {
       const Expr* try_;
       if (WABT_FAILED(CheckCatchContext(&expr->loc, expr, &try_)))
         break;
-      const Exception* except;
-      if (WABT_SUCCEEDED(CheckExceptVar(&expr->catch_.var, &except))) {
+      const Exception* except = nullptr;
+      if (!expr->catch_.IsCatchAll()) {
+        CheckExceptVar(&expr->catch_.var, &except);
         typechecker_.OnCatchBlock(&try_->try_block.block->sig);
-        typechecker_.OnCatch(&except->sig);
+        if (except)
+          typechecker_.OnCatch(&except->sig);
         CheckExprList(&expr->loc, expr->catch_.first);
       }
-      try_contexts.back().catch_ = nullptr;
-      break;
-    }
-
-    case ExprType::CatchAll: {
-      const Expr* try_;
-      if (WABT_FAILED(CheckCatchContext(&expr->loc, expr, &try_)))
-        break;
-      typechecker_.OnCatchBlock(&try_->try_block.block->sig);
-      CheckExprList(&expr->loc, expr->catch_.first);
       try_contexts.back().catch_ = nullptr;
       break;
     }
@@ -625,16 +617,9 @@ void Validator::CheckExpr(const Expr* expr) {
       }
       for (const Expr* catch_= expr->try_block.first_catch;
            catch_; catch_ = catch_->next) {
-        switch (catch_->type) {
-          case ExprType::Catch:
-          case ExprType::CatchAll:
-            try_contexts.back().catch_ = catch_;
-            CheckExpr(catch_);
-            break;
-          default:
-            PrintError(&catch_->loc, "TryBlock: expected catch clause");
-            break;
-        }
+        // TODO(karlschimpf): Move this to the CheckExpr of catch.
+        try_contexts.back().catch_ = catch_;
+        CheckExpr(catch_);
       }
       typechecker_.OnEnd();
       try_contexts.pop_back();

@@ -89,7 +89,6 @@ enum class ExprType {
   Call,
   CallIndirect,
   Catch,
-  CatchAll,
   Compare,
   Const,
   Convert,
@@ -128,6 +127,14 @@ struct Block {
   Label label;
   BlockSignature sig;
   Expr* first;
+};
+
+struct Catch {
+  Var var;
+  struct Expr* first;
+  bool IsCatchAll() const {
+    return var.type == VarType::Index && var.index == kInvalidIndex;
+  }
 };
 
 struct Expr {
@@ -176,8 +183,7 @@ struct Expr {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
     struct { Block* block; Expr* first_catch; } try_block;
-    struct { Var var; Expr* first; } catch_;
-    struct { Expr* first; } catch_all;
+    struct Catch catch_;
     struct { Var var; } throw_, rethrow_;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;
