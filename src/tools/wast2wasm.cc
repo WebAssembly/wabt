@@ -85,7 +85,7 @@ static void parse_options(int argc, char* argv[]) {
                    []() { s_dump_module = true; });
   parser.AddOption("future-exceptions",
                    "Test future extension for exception handling",
-                   []() { CommonClOptions.allow_exceptions = true; });
+                   []() { s_parse_options.allow_future_exceptions = true; });
   parser.AddOption('o', "output", "FILE", "output wasm binary file",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption(

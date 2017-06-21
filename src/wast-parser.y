@@ -97,7 +97,7 @@
 
 #define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                      \
   do {                                                                \
-    if (!CommonClOptions.allow_exceptions) {                          \
+    if (!parser->options->allow_future_exceptions) {                   \
       wast_parser_error(loc, lexer, parser, "opcode not allowed: %s", \
                         opcode_name);                                 \
     }                                                                 \

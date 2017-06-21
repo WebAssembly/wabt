@@ -474,24 +474,6 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
     }
 
-#if 0
-    case ExprType::Catch: {
-      // TODO(karlschimpf) Should we fold into try?
-      try_contexts.back().catch_ = expr;
-      const Expr* try_ = try_contexts.back().try_;
-      const Exception* except = nullptr;
-      if (!expr->catch_.IsCatchAll()) {
-        CheckExceptVar(&expr->catch_.var, &except);
-        typechecker_.OnCatchBlock(&try_->try_block.block->sig);
-        if (except)
-          typechecker_.OnCatch(&except->sig);
-        CheckExprList(&expr->loc, expr->catch_.first);
-      }
-      try_contexts.back().catch_ = nullptr;
-      break;
-    }
-#endif
-
     case ExprType::Compare:
       typechecker_.OnCompare(expr->compare.opcode);
       break;

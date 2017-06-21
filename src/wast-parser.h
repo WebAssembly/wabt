@@ -25,6 +25,7 @@ struct Script;
 class SourceErrorHandler;
 
 struct WastParseOptions {
+  bool allow_future_exceptions = false;
   bool debug_parsing = false;
 };
 

@@ -66,7 +66,7 @@ static void parse_options(int argc, char** argv) {
                    []() { s_write_wat_options.fold_exprs = true; });
   parser.AddOption("future-exceptions",
                    "Test future extension for exception handling",
-                   []() { CommonClOptions.allow_exceptions = true; });
+                   []() { s_parse_options.allow_future_exceptions = true; });
   parser.AddOption(
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",

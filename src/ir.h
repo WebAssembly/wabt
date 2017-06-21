@@ -188,9 +188,6 @@ struct Expr {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
     struct { Block* block; CatchVector* catches; } try_block;
-#if 0
-    struct Catch catch_;
-#endif
     struct { Var var; } throw_, rethrow_;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;

@@ -97,13 +97,6 @@ static const Address kInvalidAddress = ~0;
 static const Index kInvalidIndex = ~0;
 static const Offset kInvalidOffset = ~0;
 
-/* Common CL options. */
-struct CommonClOptionsStruct {
-  bool allow_exceptions = false;
-};
-
-extern CommonClOptionsStruct CommonClOptions;
-
 enum class Result {
   Ok,
   Error,
