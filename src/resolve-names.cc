@@ -46,7 +46,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnBrTableExpr(Expr*) override;
   Result OnCallExpr(Expr*) override;
   Result OnCallIndirectExpr(Expr*) override;
-  Result OnCatchExpr(Expr*) override;
+  Result OnCatchExpr(Expr*, Catch*) override;
   Result OnGetGlobalExpr(Expr*) override;
   Result OnGetLocalExpr(Expr*) override;
   Result BeginIfExpr(Expr*) override;
@@ -303,10 +303,9 @@ Result NameResolver::EndTryExpr(Expr*) {
   return Result::Ok;
 }
 
-Result NameResolver::OnCatchExpr(Expr* expr) {
-  PushLabel(&try_blocks.back()->try_block.block->label);
-  if (!expr->catch_.IsCatchAll())
-    ResolveExceptionVar(&expr->catch_.var);
+Result NameResolver::OnCatchExpr(Expr* expr, Catch* catch_) {
+  if (!catch_->IsCatchAll())
+    ResolveExceptionVar(&catch_->var);
   return Result::Ok;
 }
 

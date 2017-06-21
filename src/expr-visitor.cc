@@ -60,11 +60,6 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       CHECK_RESULT(delegate_->OnCallIndirectExpr(expr));
       break;
 
-    case ExprType::Catch:
-      CHECK_RESULT(delegate_->OnCatchExpr(expr));
-      CHECK_RESULT(VisitExprList(expr->catch_.first));
-      break;
-
     case ExprType::Compare:
       CHECK_RESULT(delegate_->OnCompareExpr(expr));
       break;
@@ -154,7 +149,10 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     case ExprType::TryBlock:
       CHECK_RESULT(delegate_->BeginTryExpr(expr));
       CHECK_RESULT(VisitExprList(expr->try_block.block->first));
-      CHECK_RESULT(VisitExprList(expr->try_block.first_catch));
+      for (Catch* catch_ : *expr->try_block.catches) {
+        CHECK_RESULT(delegate_->OnCatchExpr(expr, catch_));
+        CHECK_RESULT(VisitExprList(catch_->first));
+      }
       CHECK_RESULT(delegate_->EndTryExpr(expr));
       break;
 

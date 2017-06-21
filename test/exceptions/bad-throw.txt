@@ -1,0 +1,15 @@
+;;; TOOL: wast2wasm
+;;; FLAGS: --future-exceptions
+;;; ERROR: 1
+(module
+  (except $ex i32)
+  (func (result i32)
+    (i64.const 8)
+    (throw $ex)
+  )
+) 
+(;; STDERR ;;;
+out/test/exceptions/bad-throw.txt:8:6: type mismatch in throw, expected i32 but got i64.
+    (throw $ex)
+     ^^^^^^^^^
+;;; STDERR ;;)

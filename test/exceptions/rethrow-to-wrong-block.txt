@@ -1,0 +1,20 @@
+;;; TOOL: wast2wasm
+;;; FLAGS: --future-exceptions
+;;; ERROR: 1
+(module
+  (func (result i32)
+    (block $b (result i32)
+      (try $try1 (result i32)
+        (i32.const 7)
+        (catch_all
+          (rethrow $b)
+        )
+      )
+    )
+  )
+) 
+(;; STDERR ;;;
+out/test/exceptions/rethrow-to-wrong-block.txt:10:12: invalid rethrow depth: 1 (max 2)
+          (rethrow $b)
+           ^^^^^^^^^^
+;;; STDERR ;;)

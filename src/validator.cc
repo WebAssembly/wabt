@@ -54,7 +54,7 @@ class Validator {
 
   struct TryContext {
     const Expr* try_ = nullptr;
-    const Expr* catch_ = nullptr;
+    const Catch* catch_ = nullptr;
   };
 
   void WABT_PRINTF_FORMAT(3, 4)
@@ -474,6 +474,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
     }
 
+#if 0
     case ExprType::Catch: {
       // TODO(karlschimpf) Should we fold into try?
       try_contexts.back().catch_ = expr;
@@ -489,6 +490,7 @@ void Validator::CheckExpr(const Expr* expr) {
       try_contexts.back().catch_ = nullptr;
       break;
     }
+#endif
 
     case ExprType::Compare:
       typechecker_.OnCompare(expr->compare.opcode);
@@ -555,9 +557,7 @@ void Validator::CheckExpr(const Expr* expr) {
     case ExprType::Rethrow:
       if (try_contexts.empty() || try_contexts.back().catch_ == nullptr)
         PrintError(&expr->loc, "Rethrow not in try catch block");
-      if (WABT_FAILED(typechecker_.OnRethrow(expr->rethrow_.var.index))) {
-        PrintError(&expr->loc, "Target of throw is invalid");
-      }
+      typechecker_.OnRethrow(expr->rethrow_.var.index);
       break;
 
     case ExprType::Return:
@@ -590,18 +590,11 @@ void Validator::CheckExpr(const Expr* expr) {
     case ExprType::Throw:
       const Exception* except;
       if (WABT_SUCCEEDED(CheckExceptVar(&expr->throw_.var, &except))) {
-        if (WABT_FAILED(typechecker_.OnThrow(&except->sig))) {
-          PrintError(&expr->loc, "Signature of throw is invalid");
-        }
+        typechecker_.OnThrow(&except->sig);
       }
       break;
 
     case ExprType::TryBlock: {
-      if (!CommonClOptions.allow_exceptions) {
-        PrintError(&expr->loc, "Try blocks are not allowed");
-        break;
-      }
-
       TryContext context;
       context.try_ = expr;
       try_contexts.push_back(context);
@@ -610,14 +603,22 @@ void Validator::CheckExpr(const Expr* expr) {
       typechecker_.OnTryBlock(&expr->try_block.block->sig);
       CheckExprList(&expr->loc, expr->try_block.block->first);
 
-      if (expr->try_block.first_catch == nullptr) {
-        PrintError(&expr->loc, "TryBlock: doens't have any catch clauses");
-      }
-      for (const Expr* catch_= expr->try_block.first_catch;
-           catch_; catch_ = catch_->next) {
-        // TODO(karlschimpf): Move this to the CheckExpr of catch.
+      if (expr->try_block.catches->empty())
+        PrintError(&expr->loc, "TryBlock: doesn't have any catch clauses");
+      bool found_catch_all = false;
+      for (const Catch* catch_ : *expr->try_block.catches) {
         try_contexts.back().catch_ = catch_;
-        CheckExpr(catch_);
+        typechecker_.OnCatchBlock(&expr->try_block.block->sig);
+        if (catch_->IsCatchAll()) {
+          found_catch_all = true;
+        } else {
+          if (found_catch_all)
+            PrintError(&catch_->loc, "Appears after catch all block");
+          const Exception* except = nullptr;
+          CheckExceptVar(&catch_->var, &except);
+          typechecker_.OnCatch(&except->sig);
+        }
+        CheckExprList(&catch_->loc, catch_->first);
       }
       typechecker_.OnEnd();
       try_contexts.pop_back();

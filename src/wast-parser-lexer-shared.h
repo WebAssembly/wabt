@@ -65,6 +65,7 @@ union Token {
    tokens is a hotspot when parsing large files. */
   Action* action;
   Block* block;
+  Catch* catch_;
   Command* command;
   CommandPtrVector* commands;
   Const const_;

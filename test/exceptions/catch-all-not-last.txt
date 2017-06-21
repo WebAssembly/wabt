@@ -1,0 +1,26 @@
+;;; TOOL: wast2wasm
+;;; FLAGS: --future-exceptions
+;;; ERROR: 1
+(module
+  (except $ex i32)
+  (func (result i32)
+    (try $try1 (result i32)
+      (nop)
+      (i32.const 7)
+      (catch $ex
+        (nop)
+      )
+      (catch_all
+        (rethrow $try1)
+      )
+      (catch $ex
+        (nop)
+      )
+    )
+  )
+) 
+(;; STDERR ;;;
+out/test/exceptions/catch-all-not-last.txt:16:8: Appears after catch all block
+      (catch $ex
+       ^^^^^
+;;; STDERR ;;)

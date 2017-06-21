@@ -1,0 +1,23 @@
+;;; TOOL: wast2wasm
+;;; FLAGS: --future-exceptions
+;;; ERROR: 1
+(module
+  (except $ex i32)
+  (func (result i32)
+    (try $try1 (result i32)
+      (nop)
+      (rethrow $try1)
+      (catch $ex
+        (nop)
+      )
+    )
+  )
+) 
+(;; STDERR ;;;
+out/test/exceptions/rethow-not-in-catch.txt:9:8: Rethrow not in try catch block
+      (rethrow $try1)
+       ^^^^^^^^^^^^^
+out/test/exceptions/rethow-not-in-catch.txt:9:8: invalid rethrow depth: 0 (max 1)
+      (rethrow $try1)
+       ^^^^^^^^^^^^^
+;;; STDERR ;;)

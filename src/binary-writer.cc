@@ -457,10 +457,6 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_u32_leb128(&stream_, 0, "call_indirect reserved");
       break;
     }
-    case ExprType::Catch:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Catch: Don't know how to write\n");
-      break;
     case ExprType::Compare:
       write_opcode(&stream_, expr->compare.opcode);
       break;
