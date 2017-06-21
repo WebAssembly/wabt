@@ -121,10 +121,6 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      if (!CommonClOptions.allow_exceptions) {
-        WABT_FATAL("Rethrow: don't know how to visit\n");
-        return Result::Error;
-      }
       CHECK_RESULT(delegate_->OnRethrowExpr(expr));
       break;
 
@@ -153,24 +149,23 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       break;
 
     case ExprType::Throw:
-      if (!CommonClOptions.allow_exceptions) {
-        WABT_FATAL("Throw: don't know how to visit\n");
-        return Result::Error;
-      }
       CHECK_RESULT(delegate_->OnThrowExpr(expr));
       break;
 
     case ExprType::TryBlock:
-      if (!CommonClOptions.allow_exceptions) {
-        WABT_FATAL("TryBlock: don't know how to visit\n");
-        return Result::Error;
-      }
+#if 0
       CHECK_RESULT(delegate_->BeginTryExpr(expr));
       CHECK_RESULT(delegate_->BeginTryBlockExpr(expr));
       CHECK_RESULT(VisitExprList(expr->try_block.block->first));
       CHECK_RESULT(delegate_->EndTryBlockExpr(expr));
       CHECK_RESULT(VisitExprList(expr->try_block.first_catch));
       CHECK_RESULT(delegate_->EndTryExpr(expr));
+#else
+      CHECK_RESULT(delegate_->BeginTryExpr(expr));
+      CHECK_RESULT(VisitExprList(expr->try_block.block->first));
+      CHECK_RESULT(VisitExprList(expr->try_block.first_catch));
+      CHECK_RESULT(delegate_->EndTryExpr(expr));
+#endif
       break;
 
     case ExprType::Unary:

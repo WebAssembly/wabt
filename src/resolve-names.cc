@@ -47,7 +47,6 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnCallExpr(Expr*) override;
   Result OnCallIndirectExpr(Expr*) override;
   Result BeginCatchExpr(Expr*) override;
-  Result EndCatchExpr(Expr*) override;
   Result OnGetGlobalExpr(Expr*) override;
   Result OnGetLocalExpr(Expr*) override;
   Result BeginIfExpr(Expr*) override;
@@ -59,8 +58,6 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTeeLocalExpr(Expr*) override;
   Result BeginTryExpr(Expr*) override;
   Result EndTryExpr(Expr*) override;
-  Result BeginTryBlockExpr(Expr*) override;
-  Result EndTryBlockExpr(Expr*) override;
   Result OnThrowExpr(Expr*) override;
   Result OnRethrowExpr(Expr*) override;
 
@@ -297,6 +294,7 @@ Result NameResolver::OnTeeLocalExpr(Expr* expr) {
 
 Result NameResolver::BeginTryExpr(Expr* expr) {
   try_blocks.push_back(expr);
+  PushLabel(&expr->try_block.block->label);
   return Result::Ok;
 }
 
@@ -305,25 +303,10 @@ Result NameResolver::EndTryExpr(Expr*) {
   return Result::Ok;
 }
 
-Result NameResolver::BeginTryBlockExpr(Expr* expr) {
-  PushLabel(&expr->try_block.block->label);
-  return Result::Ok;
-}
-
-Result NameResolver::EndTryBlockExpr(Expr* expr) {
-  PopLabel();
-  return Result::Ok;
-}
-
 Result NameResolver::BeginCatchExpr(Expr* expr) {
   PushLabel(&try_blocks.back()->try_block.block->label);
   if (!expr->catch_.IsCatchAll())
     ResolveExceptionVar(&expr->catch_.var);
-  return Result::Ok;
-}
-
-Result NameResolver::EndCatchExpr(Expr*) {
-  PopLabel();
   return Result::Ok;
 }
 

@@ -140,8 +140,6 @@ class Validator {
 
   void CheckExcept(const Location* loc, const Exception* Except);
   Result CheckExceptVar(const Var* var, const Exception** out_except);
-  Result CheckCatchContext(const Location *loc, const Expr* catch_,
-                           const Expr** try_);
 
   SourceErrorHandler* error_handler_ = nullptr;
   WastLexer* lexer_ = nullptr;
@@ -477,9 +475,9 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Catch: {
-      const Expr* try_;
-      if (WABT_FAILED(CheckCatchContext(&expr->loc, expr, &try_)))
-        break;
+      // TODO(karlschimpf) Should we fold into try?
+      try_contexts.back().catch_ = expr;
+      const Expr* try_ = try_contexts.back().try_;
       const Exception* except = nullptr;
       if (!expr->catch_.IsCatchAll()) {
         CheckExceptVar(&expr->catch_.var, &except);
@@ -1032,16 +1030,6 @@ void Validator::CheckExcept(const Location* loc, const Exception* except) {
         break;
     }
   }
-}
-
-Result Validator::CheckCatchContext(const Location* loc, const Expr* catch_,
-                                    const Expr** try_) {
-  if (try_contexts.empty() || try_contexts.back().catch_ != catch_) {
-    PrintError(loc, "Catch not part of a try block");
-    return Result::Error;
-  }
-  *try_ = try_contexts.back().try_;
-  return Result::Ok;
 }
 
 Validator::ActionResult Validator::CheckAction(const Action* action) {
