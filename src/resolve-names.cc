@@ -90,7 +90,9 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Func* current_func_ = nullptr;
   ExprVisitor visitor_;
   std::vector<Label*> labels_;
+#if 0
   std::vector<Expr*> try_blocks;
+#endif
   Result result_ = Result::Ok;
 };
 
@@ -293,13 +295,12 @@ Result NameResolver::OnTeeLocalExpr(Expr* expr) {
 }
 
 Result NameResolver::BeginTryExpr(Expr* expr) {
-  try_blocks.push_back(expr);
   PushLabel(&expr->try_block.block->label);
   return Result::Ok;
 }
 
 Result NameResolver::EndTryExpr(Expr*) {
-  try_blocks.pop_back();
+  PopLabel();
   return Result::Ok;
 }
 
@@ -315,6 +316,8 @@ Result NameResolver::OnThrowExpr(Expr* expr) {
 }
 
 Result NameResolver::OnRethrowExpr(Expr* expr) {
+  // Note: the variable refers to corresponding (enclosing) catch, using the try
+  // block label for context.
   ResolveLabelVar(&expr->rethrow_.var);
   return Result::Ok;
 }

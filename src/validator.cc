@@ -150,12 +150,12 @@ class Validator {
   Index current_memory_index_ = 0;
   Index current_global_index_ = 0;
   Index num_imported_globals_ = 0;
-  Index current_except_index = 0;
+  Index current_except_index_ = 0;
   TypeChecker typechecker_;
   // Cached for access by OnTypecheckerError.
   const Location* expr_loc_ = nullptr;
   Result result_ = Result::Ok;
-  std::vector<TryContext> try_contexts;
+  std::vector<TryContext> try_contexts_;
 };
 
 Validator::Validator(SourceErrorHandler* error_handler,
@@ -537,7 +537,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      if (try_contexts.empty() || try_contexts.back().catch_ == nullptr)
+      if (try_contexts_.empty() || try_contexts_.back().catch_ == nullptr)
         PrintError(&expr->loc, "Rethrow not in try catch block");
       typechecker_.OnRethrow(expr->rethrow_.var.index);
       break;
@@ -579,7 +579,7 @@ void Validator::CheckExpr(const Expr* expr) {
     case ExprType::TryBlock: {
       TryContext context;
       context.try_ = expr;
-      try_contexts.push_back(context);
+      try_contexts_.push_back(context);
       CheckBlockSig(&expr->loc, Opcode::Try, &expr->try_block.block->sig);
 
       typechecker_.OnTryBlock(&expr->try_block.block->sig);
@@ -589,7 +589,7 @@ void Validator::CheckExpr(const Expr* expr) {
         PrintError(&expr->loc, "TryBlock: doesn't have any catch clauses");
       bool found_catch_all = false;
       for (const Catch* catch_ : *expr->try_block.catches) {
-        try_contexts.back().catch_ = catch_;
+        try_contexts_.back().catch_ = catch_;
         typechecker_.OnCatchBlock(&expr->try_block.block->sig);
         if (catch_->IsCatchAll()) {
           found_catch_all = true;
@@ -603,7 +603,7 @@ void Validator::CheckExpr(const Expr* expr) {
         CheckExprList(&catch_->loc, catch_->first);
       }
       typechecker_.OnEnd();
-      try_contexts.pop_back();
+      try_contexts_.pop_back();
       break;
     }
 
@@ -779,7 +779,7 @@ void Validator::CheckDataSegments(const Module* module) {
 void Validator::CheckImport(const Location* loc, const Import* import) {
   switch (import->kind) {
     case ExternalKind::Except:
-      ++current_except_index;
+      ++current_except_index_;
       CheckExcept(loc, import->except);
       break;
     case ExternalKind::Func:
@@ -788,18 +788,18 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
       break;
     case ExternalKind::Table:
       CheckTable(loc, import->table);
-      current_table_index_++;
+      ++current_table_index_;
       break;
     case ExternalKind::Memory:
       CheckMemory(loc, import->memory);
-      current_memory_index_++;
+      ++current_memory_index_;
       break;
     case ExternalKind::Global:
       if (import->global->mutable_) {
         PrintError(loc, "mutable globals cannot be imported");
       }
-      num_imported_globals_++;
-      current_global_index_++;
+      ++num_imported_globals_;
+      ++current_global_index_;
       break;
   }
 }
@@ -849,12 +849,12 @@ void Validator::CheckModule(const Module* module) {
   current_memory_index_ = 0;
   current_global_index_ = 0;
   num_imported_globals_ = 0;
-  current_except_index = 0;
+  current_except_index_ = 0;
 
   for (ModuleField* field = module->first_field; field; field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Except:
-        ++current_except_index;
+        ++current_except_index_;
         CheckExcept(&field->loc, field->except);
         break;
 

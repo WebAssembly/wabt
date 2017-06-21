@@ -473,8 +473,6 @@ Result TypeChecker::OnRethrow(Index depth) {
 
 Result TypeChecker::OnThrow(const TypeVector* sig) {
   Result result = Result::Ok;
-  Label* func_label;
-  CHECK_RESULT(GetLabel(label_stack_.size() - 1, &func_label));
   COMBINE_RESULT(result, PopAndCheckSignature(*sig, "throw"));
   CHECK_RESULT(SetUnreachable());
   return result;
