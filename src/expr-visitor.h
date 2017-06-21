@@ -76,12 +76,7 @@ class ExprVisitor::Delegate {
   virtual Result OnUnreachableExpr(Expr*) = 0;
   virtual Result BeginTryExpr(Expr*) = 0;
   virtual Result EndTryExpr(Expr*) = 0;
-#if 0
-  virtual Result BeginTryBlockExpr(Expr*) = 0;
-  virtual Result EndTryBlockExpr(Expr*) = 0;
-#endif
-  virtual Result BeginCatchExpr(Expr*) = 0;
-  virtual Result EndCatchExpr(Expr*) = 0;
+  virtual Result OnCatchExpr(Expr*) = 0;
   virtual Result OnThrowExpr(Expr*) = 0;
   virtual Result OnRethrowExpr(Expr*) = 0;
 };
@@ -121,12 +116,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnUnreachableExpr(Expr*) override { return Result::Ok; }
   Result BeginTryExpr(Expr*) override { return Result::Ok; }
   Result EndTryExpr(Expr*) override { return Result::Ok; }
-#if 0
-  Result BeginTryBlockExpr(Expr*) override { return Result::Ok; }
-  Result EndTryBlockExpr(Expr*) override { return Result::Ok; }
-#endif
-  Result BeginCatchExpr(Expr*) override { return Result::Ok; }
-  Result EndCatchExpr(Expr*) override { return Result::Ok; }
+  Result OnCatchExpr(Expr*) override { return Result::Ok; }
   Result OnThrowExpr(Expr*) override { return Result::Ok; }
   Result OnRethrowExpr(Expr*) override { return Result::Ok; }
 };
