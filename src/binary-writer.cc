@@ -543,7 +543,7 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     case ExprType::Rethrow:
       write_opcode(&stream_, Opcode::Rethrow);
-      write_u32_leb128(&stream_, GetExceptVarDepth(&expr->rethrow_.var),
+      write_u32_leb128(&stream_, GetLabelVarDepth(&expr->rethrow_.var),
                        "rethrow exception");
       break;
     case ExprType::Return:
@@ -588,11 +588,11 @@ void BinaryWriter::WriteExpr(const Module* module,
       WriteExprList(module, func, expr->try_block.block->first);
       for (Catch* catch_ : *expr->try_block.catches) {
         if (catch_->IsCatchAll()) {
+          write_opcode(&stream_, Opcode::CatchAll);
+        } else {
           write_opcode(&stream_, Opcode::Catch);
           write_u32_leb128(&stream_, GetExceptVarDepth(&catch_->var),
                            "catch exception");
-        } else {
-          write_opcode(&stream_, Opcode::CatchAll);
         }
         WriteExprList(module, func, catch_->first);
       }
