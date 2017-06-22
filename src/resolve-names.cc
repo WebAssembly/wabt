@@ -90,9 +90,6 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Func* current_func_ = nullptr;
   ExprVisitor visitor_;
   std::vector<Label*> labels_;
-#if 0
-  std::vector<Expr*> try_blocks;
-#endif
   Result result_ = Result::Ok;
 };
 

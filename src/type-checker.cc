@@ -463,6 +463,8 @@ Result TypeChecker::OnRethrow(Index depth) {
   Label* label;
   CHECK_RESULT(GetLabel(depth, &label));
   if (label->label_type != LabelType::Catch) {
+    // TODO(karlschimpf) Make this error more readable (readers
+    // typically think in terms of try/catch clauses, not all blocks).
     PrintError("invalid rethrow depth: %" PRIindex " (max %" PRIzd ")", depth,
                label_stack_.size() - 1);
     result = Result::Error;

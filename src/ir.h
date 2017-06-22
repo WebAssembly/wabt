@@ -203,6 +203,7 @@ struct Expr {
 struct Exception {
   StringSlice name;
   TypeVector sig;
+  ~Exception() { destroy_string_slice(&name); }
 };
 
 struct FuncSignature {
