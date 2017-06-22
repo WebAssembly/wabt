@@ -24,6 +24,7 @@ SourceErrorHandler::SourceErrorHandler(Location::Type location_type)
     : location_type_(location_type) {}
 
 std::string SourceErrorHandler::DefaultErrorMessage(
+    const Color& color,
     const Location* loc,
     const std::string& error,
     const std::string& source_line,
@@ -31,12 +32,14 @@ std::string SourceErrorHandler::DefaultErrorMessage(
     int indent) {
   std::string indent_str(indent, ' ');
   std::string result = indent_str;
+  result += color.MaybeBoldCode();
   if (location_type_ == Location::Type::Text) {
     result += string_printf("%s:%d:%d: ", loc->filename, loc->line,
                            loc->first_column);
   } else {
     result += string_printf("%s:%" PRIzd ": ", loc->filename, loc->offset);
   }
+  result += color.MaybeDefaultCode();
   result += error;
   result += '\n';
   result += indent_str;
@@ -50,7 +53,10 @@ std::string SourceErrorHandler::DefaultErrorMessage(
     num_carets = std::min(num_carets, source_line.size() - num_spaces);
     num_carets = std::max<size_t>(num_carets, 1);
     result.append(num_spaces, ' ');
+    result += color.MaybeBoldCode();
+    result += color.MaybeGreenCode();
     result.append(num_carets, '^');
+    result += color.MaybeDefaultCode();
     result += '\n';
   }
   return result;
@@ -69,7 +75,8 @@ SourceErrorHandlerFile::SourceErrorHandlerFile(FILE* file,
       file_(file),
       header_(header),
       print_header_(print_header),
-      source_line_max_length_(source_line_max_length) {}
+      source_line_max_length_(source_line_max_length),
+      color_(file) {}
 
 bool SourceErrorHandlerFile::OnError(const Location* loc,
                                      const std::string& error,
@@ -77,7 +84,7 @@ bool SourceErrorHandlerFile::OnError(const Location* loc,
                                      size_t source_line_column_offset) {
   PrintErrorHeader();
   int indent = header_.empty() ? 0 : 2;
-  std::string message = DefaultErrorMessage(loc, error, source_line,
+  std::string message = DefaultErrorMessage(color_, loc, error, source_line,
                                             source_line_column_offset, indent);
   fwrite(message.data(), 1, message.size(), file_);
   return true;
@@ -105,13 +112,14 @@ SourceErrorHandlerBuffer::SourceErrorHandlerBuffer(
     size_t source_line_max_length,
     Location::Type location_type)
     : SourceErrorHandler(location_type),
-      source_line_max_length_(source_line_max_length) {}
+      source_line_max_length_(source_line_max_length),
+      color_(nullptr, false) {}
 
 bool SourceErrorHandlerBuffer::OnError(const Location* loc,
                                        const std::string& error,
                                        const std::string& source_line,
                                        size_t source_line_column_offset) {
-  buffer_ += DefaultErrorMessage(loc, error, source_line,
+  buffer_ += DefaultErrorMessage(color_, loc, error, source_line,
                                  source_line_column_offset, 0);
   return true;
 }

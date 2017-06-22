@@ -254,6 +254,7 @@ add_library(libwabt STATIC
   src/resolve-names.cc
 
   src/binary.cc
+  src/color.cc
   src/common.cc
   src/config.cc
   src/literal.cc
