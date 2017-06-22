@@ -544,7 +544,7 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::Rethrow:
       write_opcode(&stream_, Opcode::Rethrow);
       write_u32_leb128(&stream_, GetLabelVarDepth(&expr->rethrow_.var),
-                       "rethrow exception");
+                       "rethrow depth");
       break;
     case ExprType::Return:
       write_opcode(&stream_, Opcode::Return);
@@ -999,6 +999,11 @@ Result BinaryWriter::WriteModule(const Module* module) {
     for (RelocSection& section : reloc_sections_) {
       WriteRelocSection(&section);
     }
+  }
+
+  if (module->excepts.size()) {
+    // TODO(karlschimpf) Define.
+    WABT_FATAL("write exception section not implemented");
   }
 
   return stream_.result();
