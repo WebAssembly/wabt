@@ -221,6 +221,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                  uint32_t addend) override;
   Result EndRelocSection() override;
 
+  Result BeginLinkingSection(Offset size) override;
+  Result OnStackGlobal(Index stack_global) override;
+  Result OnSymbolInfo(StringSlice name, uint32_t flags) override;
+  Result OnSymbolInfoCount(Index count) override;
+  Result EndLinkingSection() override;
+
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprGetGlobalExpr(Index index,

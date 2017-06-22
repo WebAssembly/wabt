@@ -491,6 +491,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                  Index index,
                  uint32_t addend) override;
 
+  Result OnStackGlobal(Index stack_global) override;
+  Result OnSymbolInfoCount(Index count) override;
+  Result OnSymbolInfo(StringSlice name, uint32_t flags) override;
+
  private:
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
@@ -877,6 +881,23 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
     PrintDetails("%#x", signed_addend);
   }
   PrintDetails("\n");
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnStackGlobal(Index stack_global) {
+  PrintDetails("  - stack pointer global: %d\n", stack_global);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnSymbolInfoCount(Index count) {
+  PrintDetails("  - symbol info [count=%d]\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnSymbolInfo(StringSlice name,
+                                         uint32_t flags) {
+  PrintDetails("   - <" PRIstringslice "> flags=0x%x\n",
+               WABT_PRINTF_STRING_SLICE_ARG(name), flags);
   return Result::Ok;
 }
 

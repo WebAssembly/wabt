@@ -183,6 +183,11 @@ struct Reloc {
   int32_t addend;
 };
 
+enum class LinkingEntryType {
+  StackPointer = 1,
+  SymbolInfo = 2,
+};
+
 /* matches binary format, do not change */
 enum class ExternalKind {
   Func = 0,

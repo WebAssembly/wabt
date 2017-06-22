@@ -1,0 +1,26 @@
+;;; TOOL: run-gen-wasm
+;;; FLAGS: --objdump
+magic
+version
+section("linking") {
+  subsection[1]
+  length[1]
+  stack_galbal[3]
+  subsection[2]
+  length[6]
+  num_symbols[1]
+  str("foo")
+  flags[1]
+}
+(;; STDOUT ;;;
+
+linking_section.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "linking"
+  - stack pointer global: 3
+  - symbol info [count=1]
+   - <foo> flags=0x1
+;;; STDOUT ;;)
