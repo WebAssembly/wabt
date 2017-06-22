@@ -1,0 +1,27 @@
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[3] type[0] type[0] type[0] }
+section(CODE) {
+  count[3]
+  func { locals[decl_count[0]] }
+  func { locals[decl_count[0]] }
+  func { locals[decl_count[0]] }
+}
+section("name") {
+  subsection[1]
+  length[13]
+  func_count[3]
+
+  index[0] str("F1")
+  index[1] str("F1")
+  index[2] str("F1")
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func $F1 (type 0))
+  (func $F1.1 (type 0))
+  (func $F1.2 (type 0)))
+;;; STDOUT ;;)
