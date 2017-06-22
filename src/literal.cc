@@ -27,11 +27,11 @@ namespace wabt {
 namespace {
 
 int Clz(uint32_t value) {
-  return wabt_clz_u32(value);
+  return value == 0 ? 32 : wabt_clz_u32(value);
 }
 
 int Clz(uint64_t value) {
-  return wabt_clz_u64(value);
+  return value == 0 ? 64 : wabt_clz_u64(value);
 }
 
 template <typename T>
@@ -47,6 +47,8 @@ struct FloatTraitsBase<float> {
   static constexpr int kSigBits = 23;
   static constexpr float kHugeVal = HUGE_VALF;
   static constexpr int kMaxHexBufferSize = WABT_MAX_FLOAT_HEX;
+
+  static float Strto(const char* s, char** endptr) { return strtof(s, endptr); }
 };
 
 template <>
@@ -56,6 +58,10 @@ struct FloatTraitsBase<double> {
   static constexpr int kSigBits = 52;
   static constexpr float kHugeVal = HUGE_VAL;
   static constexpr int kMaxHexBufferSize = WABT_MAX_DOUBLE_HEX;
+
+  static double Strto(const char* s, char** endptr) {
+    return strtod(s, endptr);
+  }
 };
 
 template <typename T>
@@ -92,12 +98,12 @@ class FloatParser {
   static bool StringStartsWith(const char* start,
                                const char* end,
                                const char* prefix);
-  static Float Strto(const char* s, char** endptr);
   static Uint Make(bool sign, int exp, Uint sig);
   static Uint ShiftAndRoundToNearest(Uint significand, int shift);
 
+  static Result ParseFloat(const char* s, const char* end, Uint* out_bits);
   static Result ParseNan(const char* s, const char* end, Uint* out_bits);
-  static void ParseHex(const char* s, const char* end, Uint* out_bits);
+  static Result ParseHex(const char* s, const char* end, Uint* out_bits);
   static void ParseInfinity(const char* s, const char* end, Uint* out_bits);
 };
 
@@ -127,17 +133,39 @@ bool FloatParser<T>::StringStartsWith(const char* start,
 }
 
 // static
-template <>
-float FloatParser<float>::Strto(const char* s, char** endptr) {
-  return strtof(s, endptr);
-}
+template <typename T>
+Result FloatParser<T>::ParseFloat(const char* s,
+                                  const char* end,
+                                  Uint* out_bits) {
+  // Here is the normal behavior for strtof/strtod:
+  //
+  // input     | errno  |   output   |
+  // ---------------------------------
+  // overflow  | ERANGE | +-HUGE_VAL |
+  // underflow | ERANGE |        0.0 |
+  // otherwise |      0 |      value |
+  //
+  // So normally we need to clear errno before calling strto{f,d}, and check
+  // afterward whether it was set to ERANGE.
+  //
+  // glibc seems to have a bug where
+  // strtof("340282356779733661637539395458142568448") will return HUGE_VAL,
+  // but will not set errno to ERANGE. Since this function is only called when
+  // we know that we have parsed a "normal" number (i.e. not "inf"), we know
+  // that if we ever get HUGE_VAL, it must be overflow.
+  //
+  // The WebAssembly spec also ignores underflow, so we don't need to check for
+  // ERANGE at all.
+  char* endptr;
+  Float value = Traits::Strto(s, &endptr);
+  if (endptr != end ||
+      (value == Traits::kHugeVal || value == -Traits::kHugeVal)) {
+    return Result::Error;
+  }
 
-// static
-template <>
-double FloatParser<double>::Strto(const char* s, char** endptr) {
-  return strtod(s, endptr);
+  memcpy(out_bits, &value, sizeof(value));
+  return Result::Ok;
 }
-
 
 // static
 template <typename T>
@@ -207,9 +235,9 @@ Result FloatParser<T>::ParseNan(const char* s,
 
 // static
 template <typename T>
-void FloatParser<T>::ParseHex(const char* s, const char* end, Uint* out_bits) {
-  static constexpr int kHexDigitBits = 4;
-
+Result FloatParser<T>::ParseHex(const char* s,
+                                const char* end,
+                                Uint* out_bits) {
   bool is_neg = false;
   if (*s == '-') {
     is_neg = true;
@@ -229,42 +257,28 @@ void FloatParser<T>::ParseHex(const char* s, const char* end, Uint* out_bits) {
   // 0x0.000001p0 => significand = 1, significand_exponent = -24
   bool seen_dot = false;
   Uint significand = 0;
-  // How much to shift |significand| if a non-zero value is appended.
-  int significand_shift = 0;
-  int significand_bits = 0;      // Bits of |significand|.
   int significand_exponent = 0;  // Exponent adjustment due to dot placement.
   for (; s < end; ++s) {
     uint32_t digit;
     if (*s == '.') {
-      if (significand != 0)
-        significand_exponent += significand_shift;
-      significand_shift = 0;
       seen_dot = true;
-      continue;
-    } else if (WABT_FAILED(parse_hexdigit(*s, &digit))) {
+    } else if (WABT_SUCCEEDED(parse_hexdigit(*s, &digit))) {
+      if (Traits::kBits - Clz(significand) <= Traits::kSigPlusOneBits) {
+        significand = (significand << 4) + digit;
+        if (seen_dot)
+          significand_exponent -= 4;
+      } else if (!seen_dot) {
+        significand_exponent += 4;
+      }
+    } else {
       break;
     }
-    significand_shift += kHexDigitBits;
-    if (digit != 0 &&
-        (significand == 0 || significand_bits + significand_shift <=
-                                 Traits::kSigBits + 1 + kHexDigitBits)) {
-      if (significand != 0)
-        significand <<= significand_shift;
-      if (seen_dot)
-        significand_exponent -= significand_shift;
-      significand += digit;
-      significand_shift = 0;
-      significand_bits += kHexDigitBits;
-    }
   }
-
-  if (!seen_dot)
-    significand_exponent += significand_shift;
 
   if (significand == 0) {
     // 0 or -0.
     *out_bits = Make(is_neg, Traits::kMinExp, 0);
-    return;
+    return Result::Ok;
   }
 
   int exponent = 0;
@@ -297,14 +311,11 @@ void FloatParser<T>::ParseHex(const char* s, const char* end, Uint* out_bits) {
   if (exponent_is_neg)
     exponent = -exponent;
 
-  significand_bits = Traits::kBits - Clz(significand);
+  int significand_bits = Traits::kBits - Clz(significand);
   // -1 for the implicit 1 bit of the significand.
   exponent += significand_exponent + significand_bits - 1;
 
-  if (exponent >= Traits::kMaxExp) {
-    // inf or -inf.
-    *out_bits = Make(is_neg, Traits::kMaxExp, 0);
-  } else if (exponent <= Traits::kMinExp) {
+  if (exponent <= Traits::kMinExp) {
     // Maybe subnormal.
     if (significand_bits > Traits::kSigBits) {
       significand = ShiftAndRoundToNearest(significand,
@@ -323,14 +334,14 @@ void FloatParser<T>::ParseHex(const char* s, const char* end, Uint* out_bits) {
 
       if (significand != 0) {
         *out_bits = Make(is_neg, exponent, significand);
-        return;
+        return Result::Ok;
       }
     }
 
     // Not subnormal, too small; return 0 or -0.
     *out_bits = Make(is_neg, Traits::kMinExp, 0);
   } else {
-    // Normal value.
+    // Maybe Normal value.
     if (significand_bits > Traits::kSigPlusOneBits) {
       significand = ShiftAndRoundToNearest(
           significand, significand_bits - Traits::kSigPlusOneBits);
@@ -340,8 +351,16 @@ void FloatParser<T>::ParseHex(const char* s, const char* end, Uint* out_bits) {
       significand <<= (Traits::kSigPlusOneBits - significand_bits);
     }
 
+    if (exponent >= Traits::kMaxExp) {
+      // Would be inf or -inf, but the spec doesn't allow rounding hex-floats to
+      // infinity.
+      return Result::Error;
+    }
+
     *out_bits = Make(is_neg, exponent, significand & Traits::kSigMask);
   }
+
+  return Result::Ok;
 }
 
 // static
@@ -374,23 +393,11 @@ Result FloatParser<T>::Parse(LiteralType literal_type,
 #endif
   switch (literal_type) {
     case LiteralType::Int:
-    case LiteralType::Float: {
-      errno = 0;
-      char* endptr;
-      Float value;
-      value = Strto(s, &endptr);
-      if (endptr != end || ((value == 0 || value == Traits::kHugeVal ||
-                             value == -Traits::kHugeVal) &&
-                            errno != 0))
-        return Result::Error;
-
-      memcpy(out_bits, &value, sizeof(value));
-      return Result::Ok;
-    }
+    case LiteralType::Float:
+      return ParseFloat(s, end, out_bits);
 
     case LiteralType::Hexfloat:
-      ParseHex(s, end, out_bits);
-      return Result::Ok;
+      return ParseHex(s, end, out_bits);
 
     case LiteralType::Infinity:
       ParseInfinity(s, end, out_bits);

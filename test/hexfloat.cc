@@ -114,7 +114,8 @@ class AllFloatsParseTest : public ThreadedTest {
       int len = snprintf(buffer, sizeof(buffer), "%a", value);
 
       uint32_t me;
-      parse_float(LiteralType::Hexfloat, buffer, buffer + len, &me);
+      ASSERT_EQ(Result::Ok,
+                parse_float(LiteralType::Hexfloat, buffer, buffer + len, &me));
       ASSERT_EQ(me, bits);
     }
     LOG_DONE();
@@ -171,7 +172,8 @@ class AllFloatsRoundtripTest : public ThreadedTest {
       int len = strlen(buffer);
 
       uint32_t new_bits;
-      parse_float(ClassifyFloat(bits), buffer, buffer + len, &new_bits);
+      ASSERT_EQ(Result::Ok, parse_float(ClassifyFloat(bits), buffer,
+                                        buffer + len, &new_bits));
       ASSERT_EQ(new_bits, bits);
     }
     LOG_DONE();
@@ -197,7 +199,8 @@ class ManyDoublesParseTest : public ThreadedTest {
       int len = snprintf(buffer, sizeof(buffer), "%a", value);
 
       uint64_t me;
-      parse_double(LiteralType::Hexfloat, buffer, buffer + len, &me);
+      ASSERT_EQ(Result::Ok,
+                parse_double(LiteralType::Hexfloat, buffer, buffer + len, &me));
       ASSERT_EQ(me, bits);
     }
     LOG_DONE();
@@ -256,7 +259,8 @@ class ManyDoublesRoundtripTest : public ThreadedTest {
       int len = strlen(buffer);
 
       uint64_t new_bits;
-      parse_double(ClassifyDouble(bits), buffer, buffer + len, &new_bits);
+      ASSERT_EQ(Result::Ok, parse_double(ClassifyDouble(bits), buffer,
+                                         buffer + len, &new_bits));
       ASSERT_EQ(new_bits, bits);
     }
     LOG_DONE();
@@ -265,4 +269,86 @@ class ManyDoublesRoundtripTest : public ThreadedTest {
 
 TEST_F(ManyDoublesRoundtripTest, Run) {
   RunThreads();
+}
+
+static void AssertHexFloatEquals(uint32_t expected_bits, const char* s) {
+  uint32_t actual_bits;
+  ASSERT_EQ(Result::Ok,
+            parse_float(LiteralType::Hexfloat, s, s + strlen(s), &actual_bits));
+  ASSERT_EQ(expected_bits, actual_bits);
+}
+
+static void AssertHexFloatFails(const char* s) {
+  uint32_t actual_bits;
+  ASSERT_EQ(Result::Error,
+            parse_float(LiteralType::Hexfloat, s, s + strlen(s), &actual_bits));
+}
+
+static void AssertHexDoubleEquals(uint64_t expected_bits, const char* s) {
+  uint64_t actual_bits;
+  ASSERT_EQ(Result::Ok, parse_double(LiteralType::Hexfloat, s, s + strlen(s),
+                                     &actual_bits));
+  ASSERT_EQ(expected_bits, actual_bits);
+}
+
+static void AssertHexDoubleFails(const char* s) {
+  uint64_t actual_bits;
+  ASSERT_EQ(Result::Error, parse_double(LiteralType::Hexfloat, s, s + strlen(s),
+                                        &actual_bits));
+}
+
+TEST(ParseFloat, NonCanonical) {
+  AssertHexFloatEquals(0x3f800000, "0x00000000000000000000001.0p0");
+  AssertHexFloatEquals(0x3f800000, "0x1.00000000000000000000000p0");
+  AssertHexFloatEquals(0x3f800000, "0x0.0000000000000000000001p88");
+}
+
+TEST(ParseFloat, Rounding) {
+  // |------- 23 bits -----| V-- extra bit
+  //
+  // 11111111111111111111101 0  ==> no rounding
+  AssertHexFloatEquals(0x7f7ffffd, "0x1.fffffap127");
+  // 11111111111111111111101 1  ==> round up
+  AssertHexFloatEquals(0x7f7ffffe, "0x1.fffffbp127");
+  // 11111111111111111111110 0  ==> no rounding
+  AssertHexFloatEquals(0x7f7ffffe, "0x1.fffffcp127");
+  // 11111111111111111111110 1  ==> round down
+  AssertHexFloatEquals(0x7f7ffffe, "0x1.fffffdp127");
+  // 11111111111111111111111 0  ==> no rounding
+  AssertHexFloatEquals(0x7f7fffff, "0x1.fffffep127");
+}
+
+TEST(ParseFloat, OutOfRange) {
+  AssertHexFloatFails("0x1p128");
+  AssertHexFloatFails("-0x1p128");
+  AssertHexFloatFails("0x1.ffffffp127");
+  AssertHexFloatFails("-0x1.ffffffp127");
+}
+
+TEST(ParseDouble, NonCanonical) {
+  AssertHexDoubleEquals(0x3ff0000000000000, "0x00000000000000000000001.0p0");
+  AssertHexDoubleEquals(0x3ff0000000000000, "0x1.00000000000000000000000p0");
+  AssertHexDoubleEquals(0x3ff0000000000000, "0x0.0000000000000000000001p88");
+}
+
+TEST(ParseDouble, Rounding) {
+  // |-------------------- 52 bits ---------------------| V-- extra bit
+  //
+  // 1111111111111111111111111111111111111111111111111101 0  ==> no rounding
+  AssertHexDoubleEquals(0x7feffffffffffffd, "0x1.ffffffffffffd0p1023");
+  // 1111111111111111111111111111111111111111111111111101 1  ==> round up
+  AssertHexDoubleEquals(0x7feffffffffffffe, "0x1.ffffffffffffd8p1023");
+  // 1111111111111111111111111111111111111111111111111110 0  ==> no rounding
+  AssertHexDoubleEquals(0x7feffffffffffffe, "0x1.ffffffffffffe0p1023");
+  // 1111111111111111111111111111111111111111111111111110 1  ==> round down
+  AssertHexDoubleEquals(0x7feffffffffffffe, "0x1.ffffffffffffe8p1023");
+  // 1111111111111111111111111111111111111111111111111111 0  ==> no rounding
+  AssertHexDoubleEquals(0x7fefffffffffffff, "0x1.fffffffffffff0p1023");
+}
+
+TEST(ParseDouble, OutOfRange) {
+  AssertHexDoubleFails("0x1p1024");
+  AssertHexDoubleFails("-0x1p1024");
+  AssertHexDoubleFails("0x1.fffffffffffff8p1023");
+  AssertHexDoubleFails("-0x1.fffffffffffff8p1023");
 }

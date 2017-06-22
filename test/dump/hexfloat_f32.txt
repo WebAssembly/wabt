@@ -18,7 +18,7 @@
     drop
     f32.const 0x0.7fffffp127
     drop
-    f32.const 0x0.ffffffffp128
+    f32.const 0x0.ffffffffp127
     drop
     f32.const 0x1.ffff88p127
     drop
@@ -88,7 +88,7 @@
 0000042: feff 7f7e                                 ; f32 literal
 0000046: 1a                                        ; drop
 0000047: 43                                        ; f32.const
-0000048: 0000 807f                                 ; f32 literal
+0000048: 0000 007f                                 ; f32 literal
 000004c: 1a                                        ; drop
 000004d: 43                                        ; f32.const
 000004e: c4ff 7f7f                                 ; f32 literal
@@ -139,7 +139,7 @@ Code Disassembly:
  000040: 1a                         | drop
  000041: 43 fe ff 7f 7e             | f32.const 0x1.fffffcp+125
  000046: 1a                         | drop
- 000047: 43 00 00 80 7f             | f32.const inf
+ 000047: 43 00 00 00 7f             | f32.const 0x1p+127
  00004c: 1a                         | drop
  00004d: 43 c4 ff 7f 7f             | f32.const 0x1.ffff88p+127
  000052: 1a                         | drop
