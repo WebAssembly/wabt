@@ -1363,7 +1363,8 @@ module :
         $$ = new Module();
         ReadBinaryOptions options;
         BinaryErrorHandlerModule error_handler(&$1->binary.loc, lexer, parser);
-        read_binary_ir($1->binary.data, $1->binary.size, &options,
+        const char* filename = "<text>";
+        read_binary_ir(filename, $1->binary.data, $1->binary.size, &options,
                        &error_handler, $$);
         $$->name = $1->binary.name;
         $$->loc = $1->binary.loc;

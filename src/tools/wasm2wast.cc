@@ -26,19 +26,23 @@
 #include "generate-names.h"
 #include "ir.h"
 #include "option-parser.h"
+#include "source-error-handler.h"
 #include "stream.h"
+#include "validator.h"
+#include "wast-lexer.h"
 #include "wat-writer.h"
 #include "writer.h"
 
 using namespace wabt;
 
 static int s_verbose;
-static const char* s_infile;
-static const char* s_outfile;
+static std::string s_infile;
+static std::string s_outfile;
 static ReadBinaryOptions s_read_binary_options(nullptr, true);
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
 static std::unique_ptr<FileStream> s_log_stream;
+static bool s_validate = true;
 
 static const char s_description[] =
 R"(  read a file in the wasm binary format, and convert it to the wasm
@@ -64,7 +68,10 @@ static void parse_options(int argc, char** argv) {
   parser.AddOption(
       'o', "output", "FILENAME",
       "Output file for the generated wast file, by default use stdout",
-      [](const char* argument) { s_outfile = argument; });
+      [](const char* argument) {
+        s_outfile = argument;
+        ConvertBackslashToSlash(&s_outfile);
+      });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
   parser.AddOption("inline-exports", "Write all exports inline",
@@ -75,8 +82,13 @@ static void parse_options(int argc, char** argv) {
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",
       []() { s_generate_names = true; });
+  parser.AddOption("no-check", "Don't check for invalid modules",
+                   []() { s_validate = false; });
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
-                     [](const char* argument) { s_infile = argument; });
+                     [](const char* argument) {
+                       s_infile = argument;
+                       ConvertBackslashToSlash(&s_infile);
+                     });
   parser.Parse(argc, argv);
 }
 
@@ -88,13 +100,26 @@ int ProgramMain(int argc, char** argv) {
 
   char* data;
   size_t size;
-  result = read_file(s_infile, &data, &size);
+  result = read_file(s_infile.c_str(), &data, &size);
   if (WABT_SUCCEEDED(result)) {
     BinaryErrorHandlerFile error_handler;
     Module module;
-    result = read_binary_ir(data, size, &s_read_binary_options, &error_handler,
-                            &module);
+    result = read_binary_ir(s_infile.c_str(), data, size,
+                            &s_read_binary_options, &error_handler, &module);
     if (WABT_SUCCEEDED(result)) {
+      if (WABT_SUCCEEDED(result) && s_validate) {
+        // TODO(binji): Would be nicer to use a builder pattern for an option
+        // struct here, e.g.:
+        //
+        //   SourceErrorHandlerFile::Options()
+        //      .LocationType(Location::Type::Binary)
+        SourceErrorHandlerFile error_handler(
+            stderr, std::string(), SourceErrorHandlerFile::PrintHeader::Never,
+            80, Location::Type::Binary);
+        WastLexer* lexer = nullptr;
+        result = validate_module(lexer, &module, &error_handler);
+      }
+
       if (s_generate_names)
         result = generate_names(&module);
 
@@ -106,8 +131,8 @@ int ProgramMain(int argc, char** argv) {
       }
 
       if (WABT_SUCCEEDED(result)) {
-        FileWriter writer(s_outfile ? FileWriter(s_outfile)
-                                    : FileWriter(stdout));
+        FileWriter writer(!s_outfile.empty() ? FileWriter(s_outfile.c_str())
+                                             : FileWriter(stdout));
         result = write_wat(&writer, &module, &s_write_wat_options);
       }
     }

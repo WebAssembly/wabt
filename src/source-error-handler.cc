@@ -20,6 +20,9 @@
 
 namespace wabt {
 
+SourceErrorHandler::SourceErrorHandler(Location::Type location_type)
+    : location_type_(location_type) {}
+
 std::string SourceErrorHandler::DefaultErrorMessage(
     const Location* loc,
     const std::string& error,
@@ -27,9 +30,15 @@ std::string SourceErrorHandler::DefaultErrorMessage(
     size_t source_line_column_offset,
     int indent) {
   std::string indent_str(indent, ' ');
-  std::string result =
-      string_printf("%s%s:%d:%d: %s\n", indent_str.c_str(), loc->filename,
-                    loc->line, loc->first_column, error.c_str());
+  std::string result = indent_str;
+  if (location_type_ == Location::Type::Text) {
+    result += string_printf("%s:%d:%d: ", loc->filename, loc->line,
+                           loc->first_column);
+  } else {
+    result += string_printf("%s:%" PRIzd ": ", loc->filename, loc->offset);
+  }
+  result += error;
+  result += '\n';
   result += indent_str;
   if (!source_line.empty()) {
     result += source_line;
@@ -47,11 +56,17 @@ std::string SourceErrorHandler::DefaultErrorMessage(
   return result;
 }
 
+SourceErrorHandlerNop::SourceErrorHandlerNop()
+    // The Location::Type is irrelevant since we never display an error.
+    : SourceErrorHandler(Location::Type::Text) {}
+
 SourceErrorHandlerFile::SourceErrorHandlerFile(FILE* file,
                                                const std::string& header,
                                                PrintHeader print_header,
-                                               size_t source_line_max_length)
-    : file_(file),
+                                               size_t source_line_max_length,
+                                               Location::Type location_type)
+    : SourceErrorHandler(location_type),
+      file_(file),
       header_(header),
       print_header_(print_header),
       source_line_max_length_(source_line_max_length) {}
@@ -87,8 +102,10 @@ void SourceErrorHandlerFile::PrintErrorHeader() {
 }
 
 SourceErrorHandlerBuffer::SourceErrorHandlerBuffer(
-    size_t source_line_max_length)
-    : source_line_max_length_(source_line_max_length) {}
+    size_t source_line_max_length,
+    Location::Type location_type)
+    : SourceErrorHandler(location_type),
+      source_line_max_length_(source_line_max_length) {}
 
 bool SourceErrorHandlerBuffer::OnError(const Location* loc,
                                        const std::string& error,

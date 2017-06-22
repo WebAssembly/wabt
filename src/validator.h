@@ -28,6 +28,7 @@ class SourceErrorHandler;
 // Perform all checks on the script. It is valid if and only if this function
 // succeeds.
 Result validate_script(WastLexer*, const Script*, SourceErrorHandler*);
+Result validate_module(WastLexer*, const Module*, SourceErrorHandler*);
 
 }  // namespace wabt
 

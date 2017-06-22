@@ -17,6 +17,7 @@
 #ifndef WABT_COMMON_H_
 #define WABT_COMMON_H_
 
+#include <algorithm>
 #include <cassert>
 #include <cstdarg>
 #include <cstddef>
@@ -139,10 +140,28 @@ struct StringSlice {
 };
 
 struct Location {
+  // TODO(binji): The type is not stored directly on the location because we
+  // don't currently have a default constructor. We eventually should add a
+  // default constructor, but it will be tricky since this struct is used in
+  // classes that are trivially constructible.
+  enum class Type {
+    Text,
+    Binary,
+  };
+
   const char* filename;
-  int line;
-  int first_column;
-  int last_column;
+  union {
+    // For text files.
+    struct {
+      int line;
+      int first_column;
+      int last_column;
+    };
+    // For binary files.
+    struct {
+      size_t offset;
+    };
+  };
 };
 
 /* matches binary format, do not change */
@@ -313,6 +332,23 @@ static WABT_INLINE const char* get_type_name(Type type) {
     default:
       return nullptr;
   }
+}
+
+template <typename T>
+void ConvertBackslashToSlash(T begin, T end) {
+  std::replace(begin, end, '\\', '/');
+}
+
+inline void ConvertBackslashToSlash(char* s, size_t length) {
+  ConvertBackslashToSlash(s, s + length);
+}
+
+inline void ConvertBackslashToSlash(char* s) {
+  ConvertBackslashToSlash(s, strlen(s));
+}
+
+inline void ConvertBackslashToSlash(std::string* s) {
+  ConvertBackslashToSlash(s->begin(), s->end());
 }
 
 }  // namespace

@@ -85,8 +85,10 @@ WabtReadBinaryResult* wabt_read_binary(
 
   WabtReadBinaryResult* result = new WabtReadBinaryResult();
   wabt::Module* module = new wabt::Module();
-  result->result =
-      wabt::read_binary_ir(data, size, &options, error_handler, module);
+  // TODO(binji): Pass through from wabt_read_binary parameter.
+  const char* filename = "<binary>";
+  result->result = wabt::read_binary_ir(filename, data, size, &options,
+                                        error_handler, module);
   result->module.reset(module);
   return result;
 }
