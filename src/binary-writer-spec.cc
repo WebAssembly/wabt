@@ -28,12 +28,6 @@
 
 namespace wabt {
 
-static void convert_backslash_to_slash(char* s, size_t length) {
-  for (size_t i = 0; i < length; ++i)
-    if (s[i] == '\\')
-      s[i] = '/';
-}
-
 static StringSlice strip_extension(const char* s) {
   /* strip .json or .wasm, but leave other extensions, e.g.:
    *
@@ -147,7 +141,7 @@ char* BinaryWriterSpec::GetModuleFilename(const char* extension) {
       wabt_snprintf(str, buflen, PRIstringslice ".%" PRIzd "%s",
                     WABT_PRINTF_STRING_SLICE_ARG(module_filename_noext_),
                     num_modules_, extension);
-  convert_backslash_to_slash(str, length);
+  ConvertBackslashToSlash(str, length);
   return str;
 }
 

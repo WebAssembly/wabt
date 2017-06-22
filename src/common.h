@@ -17,6 +17,7 @@
 #ifndef WABT_COMMON_H_
 #define WABT_COMMON_H_
 
+#include <algorithm>
 #include <cassert>
 #include <cstdarg>
 #include <cstddef>
@@ -326,6 +327,23 @@ static WABT_INLINE const char* get_type_name(Type type) {
     default:
       return nullptr;
   }
+}
+
+template <typename T>
+void ConvertBackslashToSlash(T begin, T end) {
+  std::replace(begin, end, '\\', '/');
+}
+
+inline void ConvertBackslashToSlash(char* s, size_t length) {
+  ConvertBackslashToSlash(s, s + length);
+}
+
+inline void ConvertBackslashToSlash(char* s) {
+  ConvertBackslashToSlash(s, strlen(s));
+}
+
+inline void ConvertBackslashToSlash(std::string* s) {
+  ConvertBackslashToSlash(s->begin(), s->end());
 }
 
 }  // namespace
