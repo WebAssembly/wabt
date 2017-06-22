@@ -57,6 +57,7 @@ class Color {
 #undef WABT_COLOR
 
  private:
+  static bool SupportsColor(FILE*);
   void WriteCode(const char*) const;
 
   FILE* file_;

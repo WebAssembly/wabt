@@ -58,6 +58,10 @@ check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
 check_symbol_exists(sysconf "unistd.h" HAVE_SYSCONF)
 check_symbol_exists(strcasecmp "strings.h" HAVE_STRCASECMP)
 
+if (WIN32)
+  check_symbol_exists(ENABLE_VIRTUAL_TERMINAL_PROCESSING "windows.h" HAVE_WIN32_VT100)
+endif ()
+
 if (EMSCRIPTEN)
   set(SIZEOF_SSIZE_T 4)
   set(SIZEOF_SIZE_T 4)

@@ -16,6 +16,8 @@
 
 #include "color.h"
 
+#include <cstdlib>
+
 #include "common.h"
 
 #if _WIN32
@@ -27,9 +29,15 @@
 
 namespace wabt {
 
-Color::Color(FILE* file, bool enabled) : file_(file), enabled_(enabled) {
-  if (!enabled) {
-    goto nocolor;
+Color::Color(FILE* file, bool enabled) : file_(file) {
+  enabled_ = enabled && SupportsColor(file_);
+}
+
+// static
+bool Color::SupportsColor(FILE* file) {
+  char* force = getenv("FORCE_COLOR");
+  if (force) {
+    return atoi(force) != 0;
   }
 
 #if _WIN32
@@ -43,28 +51,27 @@ Color::Color(FILE* file, bool enabled) : file_(file), enabled_(enabled) {
     } else {
       goto nocolor;
     }
-    if (!SetConsoleMode(handle, ENABLE_VIRTUAL_TERMINAL_PROCESSING) ||
-        !_isatty(_fileno(file))) {
-      goto nocolor;
+#if HAVE_WIN32_VT100
+    DWORD mode;
+    if (!_isatty(_fileno(file)) || !GetConsoleMode(handle, mode) ||
+        !SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
+      return false;
     }
+    return true;
+#else
+    // TODO(binji): Support older Windows by using SetConsoleTextAttribute?
+#endif
   }
 
 #elif HAVE_UNISTD_H
 
-  if (!isatty(fileno(file))) {
-    goto nocolor;
-  }
+  return isatty(fileno(file));
 
 #else
 
-  goto nocolor;
+  return false;
 
 #endif
-
-  return;
-
-nocolor:
-  enabled_ = false;
 }
 
 void Color::WriteCode(const char* code) const {
