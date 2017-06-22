@@ -208,6 +208,7 @@ class BinaryWriter {
   void BeginSubsection(const char* name, size_t leb_size_guess);
   void EndSubsection();
   Index GetLabelVarDepth(const Var* var);
+  Index GetExceptVarDepth(const Var* var);
   Index GetLocalIndex(const Func* func, const Var& var);
   void AddReloc(RelocType reloc_type, Index index);
   void WriteU32Leb128WithReloc(Index index,
@@ -368,6 +369,11 @@ void BinaryWriter::EndSubsection() {
 }
 
 Index BinaryWriter::GetLabelVarDepth(const Var* var) {
+  assert(var->type == VarType::Index);
+  return var->index;
+}
+
+Index BinaryWriter::GetExceptVarDepth(const Var* var) {
   assert(var->type == VarType::Index);
   return var->index;
 }
@@ -536,8 +542,9 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_opcode(&stream_, Opcode::Nop);
       break;
     case ExprType::Rethrow:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Rethrow: Don't know how to write\n");
+      write_opcode(&stream_, Opcode::Rethrow);
+      write_u32_leb128(&stream_, GetExceptVarDepth(&expr->rethrow_.var),
+                       "rethrow exception");
       break;
     case ExprType::Return:
       write_opcode(&stream_, Opcode::Return);
@@ -571,12 +578,25 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     }
     case ExprType::Throw:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Throw: Don't know how to write\n");
+      write_opcode(&stream_, Opcode::Throw);
+      write_u32_leb128(&stream_, GetExceptVarDepth(&expr->throw_.var),
+                       "throw exception");
       break;
     case ExprType::TryBlock:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("TryBlock: Don't know how to write\n");
+      write_opcode(&stream_, Opcode::Try);
+      write_inline_signature_type(&stream_, expr->try_block.block->sig);
+      WriteExprList(module, func, expr->try_block.block->first);
+      for (Catch* catch_ : *expr->try_block.catches) {
+        if (catch_->IsCatchAll()) {
+          write_opcode(&stream_, Opcode::Catch);
+          write_u32_leb128(&stream_, GetExceptVarDepth(&catch_->var),
+                           "catch exception");
+        } else {
+          write_opcode(&stream_, Opcode::CatchAll);
+        }
+        WriteExprList(module, func, catch_->first);
+      }
+      write_opcode(&stream_, Opcode::End);
       break;
     case ExprType::Unary:
       write_opcode(&stream_, expr->unary.opcode);
