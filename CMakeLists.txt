@@ -283,10 +283,9 @@ if (NOT EMSCRIPTEN)
     list(APPEND WABT_EXECUTABLES ${name})
     set(WABT_EXECUTABLES ${WABT_EXECUTABLES} PARENT_SCOPE)
 
-    add_custom_target(${name}-copy-to-bin ALL
+    add_custom_command(TARGET ${name} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin
       COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${name}> ${WABT_SOURCE_DIR}/bin
-      DEPENDS ${name}
     )
   endfunction()
 
