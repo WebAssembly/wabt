@@ -1164,12 +1164,11 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CHECK_RESULT(ReadU32Leb128(&info_count, "info count"));
         CALLBACK(OnSymbolInfoCount, info_count);
         while (info_count--) {
-          uint32_t info, index;
-          uint8_t is_import;
-          CHECK_RESULT(ReadU8(&is_import, "is import"));
-          CHECK_RESULT(ReadU32Leb128(&index, "sym index"));
+          StringSlice name;
+          uint32_t info;
+          CHECK_RESULT(ReadStr(&name, "symbol name"));
           CHECK_RESULT(ReadU32Leb128(&info, "sym flags"));
-          CALLBACK(OnSymbolInfo, is_import, index, info);
+          CALLBACK(OnSymbolInfo, name, info);
         }
         break;
       }

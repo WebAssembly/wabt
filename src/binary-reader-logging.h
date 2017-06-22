@@ -223,7 +223,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginLinkingSection(Offset size) override;
   Result OnStackGlobal(Index stack_global) override;
-  Result OnSymbolInfo(bool import, Index index, uint32_t flags) override;
+  Result OnSymbolInfo(StringSlice name, uint32_t flags) override;
   Result OnSymbolInfoCount(Index count) override;
   Result EndLinkingSection() override;
 

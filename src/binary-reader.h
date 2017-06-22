@@ -264,7 +264,7 @@ class BinaryReaderDelegate {
   virtual Result BeginLinkingSection(Offset size) = 0;
   virtual Result OnStackGlobal(Index stack_global) = 0;
   virtual Result OnSymbolInfoCount(Index count) = 0;
-  virtual Result OnSymbolInfo(bool import, Index index, uint32_t flags) = 0;
+  virtual Result OnSymbolInfo(StringSlice name, uint32_t flags) = 0;
   virtual Result EndLinkingSection() = 0;
 
   /* InitExpr - used by elem, data and global sections; these functions are

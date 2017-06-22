@@ -493,7 +493,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
 
   Result OnStackGlobal(Index stack_global) override;
   Result OnSymbolInfoCount(Index count) override;
-  Result OnSymbolInfo(bool import, Index index, uint32_t flags) override;
+  Result OnSymbolInfo(StringSlice name, uint32_t flags) override;
 
  private:
   bool ShouldPrintDetails();
@@ -894,13 +894,10 @@ Result BinaryReaderObjdump::OnSymbolInfoCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnSymbolInfo(bool import,
-                                         Index index,
+Result BinaryReaderObjdump::OnSymbolInfo(StringSlice name,
                                          uint32_t flags) {
-  if (import)
-    PrintDetails("   - import[%d] flags=0x%x\n", index, flags);
-  else
-    PrintDetails("   - export[%d] flags=0x%x\n", index, flags);
+  PrintDetails("   - <" PRIstringslice "> flags=0x%x\n",
+               WABT_PRINTF_STRING_SLICE_ARG(name), flags);
   return Result::Ok;
 }
 
