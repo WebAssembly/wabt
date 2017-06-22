@@ -46,7 +46,8 @@ def main(args):
   parser.add_argument('-p', '--print-cmd', action='store_true',
                       help='print the commands that are run.')
   parser.add_argument('--no-debug-names', action='store_true')
-  parser.add_argument('--generate-names', action='store_true')
+  parser.add_argument('--objdump', action='store_true',
+                      help="objdump the resulting binary")
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -54,22 +55,29 @@ def main(args):
                               error_cmdline=options.error_cmdline,
                               basename=os.path.basename(GEN_WASM_PY))
 
+  objdump = utils.Executable(
+      find_exe.GetWasmdumpExecutable(options.bindir),
+      error_cmdline=options.error_cmdline)
+
   wasm2wast = utils.Executable(
       find_exe.GetWasm2WastExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
       '--no-debug-names': options.no_debug_names,
-      '--generate-names': options.generate_names,
   })
+  wasm2wast.AppendOptionalArgs({'--verbose': options.verbose,})
 
   gen_wasm.verbose = options.print_cmd
   wasm2wast.verbose = options.print_cmd
-  wasm2wast.AppendOptionalArgs({'--verbose': options.verbose,})
+  objdump.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-gen-wasm-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
     gen_wasm.RunWithArgs(options.file, '-o', out_file)
-    wasm2wast.RunWithArgs(out_file)
+    if options.objdump:
+      objdump.RunWithArgs(out_file, '-x')
+    else:
+      wasm2wast.RunWithArgs(out_file)
 
 
 if __name__ == '__main__':

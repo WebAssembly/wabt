@@ -885,7 +885,7 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
 }
 
 Result BinaryReaderObjdump::OnStackGlobal(Index stack_global) {
-  PrintDetails("stack pointer global: %d\n", stack_global);
+  PrintDetails("  - stack pointer global: %d\n", stack_global);
   return Result::Ok;
 }
 
