@@ -97,7 +97,7 @@
 
 #define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                      \
   do {                                                                \
-    if (!parser->options->allow_exceptions) {                         \
+    if (!parser->options->allow_future_exceptions) {                   \
       wast_parser_error(loc, lexer, parser, "opcode not allowed: %s", \
                         opcode_name);                                 \
     }                                                                 \
@@ -116,7 +116,6 @@ static bool is_power_of_two(uint32_t x) {
 
 static ExprList join_exprs1(Location* loc, Expr* expr1);
 static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
-static ExprList join_expr_lists(ExprList* expr1, ExprList* expr2);
 static void append_expr_list(ExprList* expr_list, ExprList* expr);
 
 static Result parse_const(Type type,
@@ -199,8 +198,8 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
 %type<expr> try_
-%type<expr_list> plain_catch plain_catch_all
-%type<expr_list> catch_instr catch_sexp catch_sexp_list catch_instr_list     
+%type<catch_> plain_catch plain_catch_all catch_instr catch_sexp
+%type<expr> catch_sexp_list catch_instr_list     
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
 %type<func> func_fields_import func_fields_import1 func_fields_import_result
@@ -606,7 +605,8 @@ block_instr :
     }
   | try_check labeling_opt block catch_instr_list END labeling_opt {
       $3->label = $2;
-      $$ = Expr::CreateTry($3, $4.first);
+      $$ = $4;
+      $$->try_block.block = $3;
       CHECK_END_LABEL(@6, $3->label, $6);
     }
 ;
@@ -628,15 +628,15 @@ block :
 
 plain_catch :
     CATCH var instr_list {
-      Expr* expr = Expr::CreateCatch(std::move(*$2), $3.first);
+      $$ = new Catch(std::move(*$2), $3.first);
+      $$->loc = @1;
       delete $2;
-      $$ = join_exprs1(&@1, expr);
     }
   ;
 plain_catch_all :
     CATCH_ALL instr_list {
-      Expr* expr = Expr::CreateCatchAll($2.first);
-      $$ = join_exprs1(&@1, expr);
+      $$ = new Catch($2.first);
+      $$->loc = @1;
     }
   ;
 
@@ -646,9 +646,13 @@ catch_instr :
   ;
 
 catch_instr_list :
-    catch_instr
-  | catch_instr catch_instr_list {
-      $$ = join_expr_lists(&$1, &$2);
+    catch_instr {
+      $$ = Expr::CreateTry();
+      $$->try_block.catches->push_back($1);
+    }
+  | catch_instr_list catch_instr {
+      $$ = $1;
+      $$->try_block.catches->push_back($2);
     }
   ;
 
@@ -693,7 +697,8 @@ try_ :
   | instr_list catch_sexp_list {
       Block* block = new Block();
       block->first = $1.first;
-     $$ = Expr::CreateTry(block, $2.first);
+      $$ = $2;
+      $$->try_block.block = block;
     }
   ;
 
@@ -707,10 +712,13 @@ catch_sexp :
   ;
 
 catch_sexp_list :
-    catch_sexp
+    catch_sexp {
+      $$ = Expr::CreateTry();
+      $$->try_block.catches->push_back($1);
+    }
   | catch_sexp_list catch_sexp {
       $$ = $1;
-      append_expr_list(&$1, &$2);
+      $$->try_block.catches->push_back($2);
     }
   ;
 
@@ -1667,14 +1675,6 @@ ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2) {
   return result;
 }
 
-ExprList join_expr_lists(ExprList* expr1, ExprList* expr2) {
-  ExprList result;
-  WABT_ZERO_MEMORY(result);
-  append_expr_list(&result, expr1);
-  append_expr_list(&result, expr2);
-  return result;
-}
-
 Result parse_const(Type type,
                    LiteralType literal_type,
                    const char* s,
@@ -1874,7 +1874,7 @@ void append_module_fields(Module* module, ModuleField* first) {
             name = &field->import->except->name;
             bindings = &module->except_bindings;
             index = module->excepts.size();
-            module->excepts.push_back(field->except);
+            module->excepts.push_back(field->import->except);
             ++module->num_except_imports;
             break;
         }

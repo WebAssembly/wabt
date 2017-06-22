@@ -60,16 +60,6 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       CHECK_RESULT(delegate_->OnCallIndirectExpr(expr));
       break;
 
-    case ExprType::Catch:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Catch: don't know how to visit\n");
-      return Result::Error;
-
-    case ExprType::CatchAll:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("CatchAll: don't know how to visit\n");
-      return Result::Error;
-
     case ExprType::Compare:
       CHECK_RESULT(delegate_->OnCompareExpr(expr));
       break;
@@ -125,9 +115,8 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Rethrow: don't know how to visit\n");
-      return Result::Error;
+      CHECK_RESULT(delegate_->OnRethrowExpr(expr));
+      break;
 
     case ExprType::Return:
       CHECK_RESULT(delegate_->OnReturnExpr(expr));
@@ -154,14 +143,17 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       break;
 
     case ExprType::Throw:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("Throw: don't know how to visit\n");
-      return Result::Error;
+      CHECK_RESULT(delegate_->OnThrowExpr(expr));
+      break;
 
     case ExprType::TryBlock:
-      // TODO(karlschimpf): Define
-      WABT_FATAL("TryBlock: don't know how to visit\n");
-      return Result::Error;
+      CHECK_RESULT(delegate_->BeginTryExpr(expr));
+      CHECK_RESULT(VisitExprList(expr->try_block.block->first));
+      for (Catch* catch_ : *expr->try_block.catches) {
+        CHECK_RESULT(delegate_->OnCatchExpr(expr, catch_));
+        CHECK_RESULT(VisitExprList(catch_->first));
+      }
+      CHECK_RESULT(delegate_->EndTryExpr(expr));
       break;
 
     case ExprType::Unary:

@@ -52,6 +52,11 @@ class Validator {
     };
   };
 
+  struct TryContext {
+    const Expr* try_ = nullptr;
+    const Catch* catch_ = nullptr;
+  };
+
   void WABT_PRINTF_FORMAT(3, 4)
       PrintError(const Location* loc, const char* fmt, ...);
   void OnTypecheckerError(const char* msg);
@@ -133,6 +138,9 @@ class Validator {
   void CheckAssertReturnNanCommand(const Action* action);
   void CheckCommand(const Command* command);
 
+  void CheckExcept(const Location* loc, const Exception* Except);
+  Result CheckExceptVar(const Var* var, const Exception** out_except);
+
   SourceErrorHandler* error_handler_ = nullptr;
   WastLexer* lexer_ = nullptr;
   const Script* script_ = nullptr;
@@ -142,10 +150,12 @@ class Validator {
   Index current_memory_index_ = 0;
   Index current_global_index_ = 0;
   Index num_imported_globals_ = 0;
+  Index current_except_index_ = 0;
   TypeChecker typechecker_;
   // Cached for access by OnTypecheckerError.
   const Location* expr_loc_ = nullptr;
   Result result_ = Result::Ok;
+  std::vector<TryContext> try_contexts_;
 };
 
 Validator::Validator(SourceErrorHandler* error_handler,
@@ -464,16 +474,6 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
     }
 
-    case ExprType::Catch:
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "Catch: don't know how to validate");
-      break;
-
-    case ExprType::CatchAll:
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "CatchAll: don't know how to validate");
-      break;
-
     case ExprType::Compare:
       typechecker_.OnCompare(expr->compare.opcode);
       break;
@@ -537,8 +537,9 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "Rethrow: don't know how to validate");
+      if (try_contexts_.empty() || try_contexts_.back().catch_ == nullptr)
+        PrintError(&expr->loc, "Rethrow not in try catch block");
+      typechecker_.OnRethrow(expr->rethrow_.var.index);
       break;
 
     case ExprType::Return:
@@ -569,14 +570,42 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Throw:
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "Throw: don't know how to validate");
+      const Exception* except;
+      if (WABT_SUCCEEDED(CheckExceptVar(&expr->throw_.var, &except))) {
+        typechecker_.OnThrow(&except->sig);
+      }
       break;
 
-    case ExprType::TryBlock:
-      // TODO(karlschimpf) Define.
-      PrintError(&expr->loc, "TryBlock: don't know how to validate");
+    case ExprType::TryBlock: {
+      TryContext context;
+      context.try_ = expr;
+      try_contexts_.push_back(context);
+      CheckBlockSig(&expr->loc, Opcode::Try, &expr->try_block.block->sig);
+
+      typechecker_.OnTryBlock(&expr->try_block.block->sig);
+      CheckExprList(&expr->loc, expr->try_block.block->first);
+
+      if (expr->try_block.catches->empty())
+        PrintError(&expr->loc, "TryBlock: doesn't have any catch clauses");
+      bool found_catch_all = false;
+      for (const Catch* catch_ : *expr->try_block.catches) {
+        try_contexts_.back().catch_ = catch_;
+        typechecker_.OnCatchBlock(&expr->try_block.block->sig);
+        if (catch_->IsCatchAll()) {
+          found_catch_all = true;
+        } else {
+          if (found_catch_all)
+            PrintError(&catch_->loc, "Appears after catch all block");
+          const Exception* except = nullptr;
+          CheckExceptVar(&catch_->var, &except);
+          typechecker_.OnCatch(&except->sig);
+        }
+        CheckExprList(&catch_->loc, catch_->first);
+      }
+      typechecker_.OnEnd();
+      try_contexts_.pop_back();
       break;
+    }
 
     case ExprType::Unary:
       typechecker_.OnUnary(expr->unary.opcode);
@@ -750,8 +779,8 @@ void Validator::CheckDataSegments(const Module* module) {
 void Validator::CheckImport(const Location* loc, const Import* import) {
   switch (import->kind) {
     case ExternalKind::Except:
-      // TODO(karlschimpf) Define.
-      PrintError(loc, "import except: don't know how to validate");
+      ++current_except_index_;
+      CheckExcept(loc, import->except);
       break;
     case ExternalKind::Func:
       if (import->func->decl.has_func_type)
@@ -759,18 +788,18 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
       break;
     case ExternalKind::Table:
       CheckTable(loc, import->table);
-      current_table_index_++;
+      ++current_table_index_;
       break;
     case ExternalKind::Memory:
       CheckMemory(loc, import->memory);
-      current_memory_index_++;
+      ++current_memory_index_;
       break;
     case ExternalKind::Global:
       if (import->global->mutable_) {
         PrintError(loc, "mutable globals cannot be imported");
       }
-      num_imported_globals_++;
-      current_global_index_++;
+      ++num_imported_globals_;
+      ++current_global_index_;
       break;
   }
 }
@@ -778,8 +807,7 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
 void Validator::CheckExport(const Location* loc, const Export* export_) {
   switch (export_->kind) {
     case ExternalKind::Except:
-      // TODO(karlschimpf) Define.
-      PrintError(loc, "except: don't know how to validate export");
+      CheckExceptVar(&export_->var, nullptr);
       break;
     case ExternalKind::Func:
       CheckFuncVar(&export_->var, nullptr);
@@ -821,13 +849,15 @@ void Validator::CheckModule(const Module* module) {
   current_memory_index_ = 0;
   current_global_index_ = 0;
   num_imported_globals_ = 0;
+  current_except_index_ = 0;
 
   for (ModuleField* field = module->first_field; field; field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Except:
-        // TODO(karlschimpf) Define.
-        PrintError(&field->loc, "except clause: don't know how to validate");
+        ++current_except_index_;
+        CheckExcept(&field->loc, field->except);
         break;
+
       case ModuleFieldType::Func:
         CheckFunc(&field->loc, field->func);
         break;
@@ -957,6 +987,32 @@ Result Validator::CheckGet(const Action* action, Type* out_type) {
 
   *out_type = global->type;
   return Result::Ok;
+}
+
+Result Validator::CheckExceptVar(const Var* var, const Exception** out_except) {
+  Index index;
+  if (WABT_FAILED(
+          CheckVar(current_module_->excepts.size(), var, "except", &index))) {
+    return Result::Error;
+  }
+  if (out_except)
+    *out_except = current_module_->excepts[index];
+  return Result::Ok;
+}
+
+void Validator::CheckExcept(const Location* loc, const Exception* except) {
+  for (Type ty : except->sig) {
+    switch (ty) {
+      case Type::I32:
+      case Type::I64:
+      case Type::F32:
+      case Type::F64:
+        break;
+      default:
+        PrintError(loc, "Invalid exception type: %s", get_type_name(ty));
+        break;
+    }
+  }
 }
 
 Validator::ActionResult Validator::CheckAction(const Action* action) {

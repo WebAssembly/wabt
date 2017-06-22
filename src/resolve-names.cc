@@ -46,6 +46,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnBrTableExpr(Expr*) override;
   Result OnCallExpr(Expr*) override;
   Result OnCallIndirectExpr(Expr*) override;
+  Result OnCatchExpr(Expr*, Catch*) override;
   Result OnGetGlobalExpr(Expr*) override;
   Result OnGetLocalExpr(Expr*) override;
   Result BeginIfExpr(Expr*) override;
@@ -55,6 +56,10 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnSetGlobalExpr(Expr*) override;
   Result OnSetLocalExpr(Expr*) override;
   Result OnTeeLocalExpr(Expr*) override;
+  Result BeginTryExpr(Expr*) override;
+  Result EndTryExpr(Expr*) override;
+  Result OnThrowExpr(Expr*) override;
+  Result OnRethrowExpr(Expr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -68,6 +73,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveFuncTypeVar(Var* var);
   void ResolveTableVar(Var* var);
   void ResolveMemoryVar(Var* var);
+  void ResolveExceptionVar(Var* var);
   void ResolveLocalVar(Var* var);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
@@ -181,6 +187,10 @@ void NameResolver::ResolveMemoryVar(Var* var) {
   ResolveVar(&current_module_->memory_bindings, var, "memory");
 }
 
+void NameResolver::ResolveExceptionVar(Var* var) {
+  ResolveVar(&current_module_->except_bindings, var, "exception");
+}
+
 void NameResolver::ResolveLocalVar(Var* var) {
   if (var->type == VarType::Name) {
     if (!current_func_)
@@ -281,6 +291,34 @@ Result NameResolver::OnTeeLocalExpr(Expr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::BeginTryExpr(Expr* expr) {
+  PushLabel(&expr->try_block.block->label);
+  return Result::Ok;
+}
+
+Result NameResolver::EndTryExpr(Expr*) {
+  PopLabel();
+  return Result::Ok;
+}
+
+Result NameResolver::OnCatchExpr(Expr* expr, Catch* catch_) {
+  if (!catch_->IsCatchAll())
+    ResolveExceptionVar(&catch_->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnThrowExpr(Expr* expr) {
+  ResolveExceptionVar(&expr->throw_.var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnRethrowExpr(Expr* expr) {
+  // Note: the variable refers to corresponding (enclosing) catch, using the try
+  // block label for context.
+  ResolveLabelVar(&expr->rethrow_.var);
+  return Result::Ok;
+}
+
 void NameResolver::VisitFunc(Func* func) {
   current_func_ = func;
   if (func->decl.has_func_type)
@@ -312,7 +350,7 @@ void NameResolver::VisitExport(Export* export_) {
       break;
 
     case ExternalKind::Except:
-      WABT_FATAL("NameResolver::VisitExport(except) not defined\n");
+      ResolveExceptionVar(&export_->var);
       break;
   }
 }
@@ -340,6 +378,7 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->func_type_bindings, "function type");
   CheckDuplicateBindings(&module->table_bindings, "table");
   CheckDuplicateBindings(&module->memory_bindings, "memory");
+  CheckDuplicateBindings(&module->except_bindings, "except");
 
   for (Func* func : module->funcs)
     VisitFunc(func);

@@ -13,9 +13,14 @@
       (catch_all
         (rethrow $try1)
       )
+      (catch $ex
+        (nop)
+      )
     )
   )
 ) 
 (;; STDERR ;;;
-TryBlock: Don't know how to write
+out/test/exceptions/catch-all-not-last.txt:16:8: Appears after catch all block
+      (catch $ex
+       ^^^^^
 ;;; STDERR ;;)

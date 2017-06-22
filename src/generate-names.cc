@@ -65,6 +65,7 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   Result VisitFuncType(Index func_type_index, FuncType* func_type);
   Result VisitTable(Index table_index, Table* table);
   Result VisitMemory(Index memory_index, Memory* memory);
+  Result VisitExcept(Index except_index, Exception* except);
 
   Module* module_ = nullptr;
   ExprVisitor visitor_;
@@ -191,6 +192,12 @@ Result NameGenerator::VisitMemory(Index memory_index, Memory* memory) {
   return Result::Ok;
 }
 
+Result NameGenerator::VisitExcept(Index except_index, Exception* except) {
+  MaybeGenerateAndBindName(&module_->except_bindings, "$e", except_index,
+                           &except->name);
+  return Result::Ok;
+}
+
 Result NameGenerator::VisitModule(Module* module) {
   module_ = module;
   for (Index i = 0; i < module->globals.size(); ++i)
@@ -203,6 +210,8 @@ Result NameGenerator::VisitModule(Module* module) {
     CHECK_RESULT(VisitTable(i, module->tables[i]));
   for (Index i = 0; i < module->memories.size(); ++i)
     CHECK_RESULT(VisitMemory(i, module->memories[i]));
+  for (Index i = 0; i < module->excepts.size(); ++i)
+    CHECK_RESULT(VisitExcept(i, module->excepts[i]));
   module_ = nullptr;
   return Result::Ok;
 }

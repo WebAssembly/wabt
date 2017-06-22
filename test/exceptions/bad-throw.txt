@@ -3,12 +3,13 @@
 ;;; ERROR: 1
 (module
   (except $ex i32)
-  (export "except" (except $ex))
   (func (result i32)
-    (i32.const 7)
+    (i64.const 8)
     (throw $ex)
   )
-)
+) 
 (;; STDERR ;;;
-write export except not implemented
+out/test/exceptions/bad-throw.txt:8:6: type mismatch in throw, expected i32 but got i64.
+    (throw $ex)
+     ^^^^^^^^^
 ;;; STDERR ;;)

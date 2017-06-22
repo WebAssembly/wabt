@@ -112,7 +112,7 @@ Grammar
    79            | plain_catch_all
 
    80 catch_instr_list: catch_instr
-   81                 | catch_instr catch_instr_list
+   81                 | catch_instr_list catch_instr
 
    82 expr: "(" expr1 ")"
 
@@ -5071,24 +5071,22 @@ State 375
 State 376
 
    80 catch_instr_list: catch_instr .
-   81                 | catch_instr . catch_instr_list
-
-    CATCH      shift, and go to state 372
-    CATCH_ALL  shift, and go to state 373
 
     $default  reduce using rule 80 (catch_instr_list)
-
-    plain_catch       go to state 374
-    plain_catch_all   go to state 375
-    catch_instr       go to state 376
-    catch_instr_list  go to state 421
 
 
 State 377
 
    72 block_instr: try_check labeling_opt block catch_instr_list . END labeling_opt
+   81 catch_instr_list: catch_instr_list . catch_instr
 
-    END  shift, and go to state 422
+    END        shift, and go to state 421
+    CATCH      shift, and go to state 372
+    CATCH_ALL  shift, and go to state 373
+
+    plain_catch      go to state 374
+    plain_catch_all  go to state 375
+    catch_instr      go to state 422
 
 
 State 378
@@ -5766,13 +5764,6 @@ State 420
 
 State 421
 
-   81 catch_instr_list: catch_instr catch_instr_list .
-
-    $default  reduce using rule 81 (catch_instr_list)
-
-
-State 422
-
    72 block_instr: try_check labeling_opt block catch_instr_list END . labeling_opt
 
     VAR  shift, and go to state 53
@@ -5781,6 +5772,13 @@ State 422
 
     bind_var      go to state 205
     labeling_opt  go to state 448
+
+
+State 422
+
+   81 catch_instr_list: catch_instr_list catch_instr .
+
+    $default  reduce using rule 81 (catch_instr_list)
 
 
 State 423

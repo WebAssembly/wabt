@@ -88,8 +88,6 @@ enum class ExprType {
   BrTable,
   Call,
   CallIndirect,
-  Catch,
-  CatchAll,
   Compare,
   Const,
   Convert,
@@ -130,6 +128,22 @@ struct Block {
   Expr* first;
 };
 
+struct Catch {
+  WABT_DISALLOW_COPY_AND_ASSIGN(Catch);
+  Catch() = delete;
+  explicit Catch(Expr* first);
+  Catch(Var var, Expr* first);
+  ~Catch();
+  Location loc;
+  Var var;
+  struct Expr* first;
+  bool IsCatchAll() const {
+    return var.type == VarType::Index && var.index == kInvalidIndex;
+  }
+};
+
+typedef std::vector<Catch*> CatchVector;
+
 struct Expr {
   WABT_DISALLOW_COPY_AND_ASSIGN(Expr);
   Expr();
@@ -143,8 +157,6 @@ struct Expr {
   static Expr* CreateBrTable(VarVector* targets, Var default_target);
   static Expr* CreateCall(Var);
   static Expr* CreateCallIndirect(Var);
-  static Expr* CreateCatch(Var v, Expr* first);
-  static Expr* CreateCatchAll(Expr* first);
   static Expr* CreateCompare(Opcode);
   static Expr* CreateConst(const Const&);
   static Expr* CreateConvert(Opcode);
@@ -165,7 +177,7 @@ struct Expr {
   static Expr* CreateStore(Opcode, Address align, uint32_t offset);
   static Expr* CreateTeeLocal(Var);
   static Expr* CreateThrow(Var);
-  static Expr* CreateTry(Block* block, Expr* first_catch);
+  static Expr* CreateTry();
   static Expr* CreateUnary(Opcode);
   static Expr* CreateUnreachable();
 
@@ -175,9 +187,7 @@ struct Expr {
   union {
     struct { Opcode opcode; } binary, compare, convert, unary;
     struct Block *block, *loop;
-    struct { Block* block; Expr* first_catch; } try_block;
-    struct { Var var; Expr* first; } catch_;
-    struct { Expr* first; } catch_all;
+    struct { Block* block; CatchVector* catches; } try_block;
     struct { Var var; } throw_, rethrow_;
     struct { Var var; } br, br_if;
     struct { VarVector* targets; Var default_target; } br_table;
@@ -193,6 +203,7 @@ struct Expr {
 struct Exception {
   StringSlice name;
   TypeVector sig;
+  ~Exception() { destroy_string_slice(&name); }
 };
 
 struct FuncSignature {
@@ -401,6 +412,7 @@ struct Module {
   const Global* GetGlobal(const Var&) const;
   Global* GetGlobal(const Var&);
   const Export* GetExport(const StringSlice&) const;
+  Index GetExceptIndex(const Var&) const;
 
   Location loc;
   StringSlice name;

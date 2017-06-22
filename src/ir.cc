@@ -52,6 +52,10 @@ Index Module::GetFuncTypeIndex(const Var& var) const {
   return func_type_bindings.FindIndex(var);
 }
 
+Index Module::GetExceptIndex(const Var& var) const {
+  return except_bindings.FindIndex(var);
+}
+
 Index Func::GetLocalIndex(const Var& var) const {
   if (var.type == VarType::Index)
     return var.index;
@@ -278,6 +282,25 @@ Block::~Block() {
   DestroyExprList(first);
 }
 
+Catch::Catch(Expr* first) : first(first) {
+  WABT_ZERO_MEMORY(loc);
+}
+
+Catch::Catch(Var var, Expr* first) : var(var), first(first) {
+  WABT_ZERO_MEMORY(loc);
+}
+
+Catch::~Catch() {
+  delete first;
+}
+
+void destroy_catches(CatchVector* catches) {
+  for (Catch* catch_ : *catches)
+    delete catch_;
+  delete catches;
+}
+
+
 Expr::Expr() : type(ExprType::Binary), next(nullptr) {
   WABT_ZERO_MEMORY(loc);
   binary.opcode = Opcode::Nop;
@@ -307,11 +330,6 @@ Expr::~Expr() {
       break;
     case ExprType::CallIndirect:
       call_indirect.var.~Var();
-      break;
-    case ExprType::Catch:
-    case ExprType::CatchAll:
-      catch_.var.~Var();
-      DestroyExprList(catch_.first);
       break;
     case ExprType::GetGlobal:
       get_global.var.~Var();
@@ -343,7 +361,7 @@ Expr::~Expr() {
       break;
     case ExprType::TryBlock:
       delete try_block.block;
-      DestroyExprList(try_block.first_catch);
+      destroy_catches(try_block.catches);
       break;
     case ExprType::Binary:
     case ExprType::Compare:
@@ -410,21 +428,6 @@ Expr* Expr::CreateCall(Var var) {
 Expr* Expr::CreateCallIndirect(Var var) {
   Expr* expr = new Expr(ExprType::CallIndirect);
   expr->call_indirect.var = var;
-  return expr;
-}
-
-// static
-Expr* Expr::CreateCatch(Var var, Expr* first) {
-  Expr* expr = new Expr(ExprType::Catch);
-  expr->catch_.var = var;
-  expr->catch_.first = first;
-  return expr;
-}
-
-// static
-Expr* Expr::CreateCatchAll(Expr* first) {
-  Expr* expr = new Expr(ExprType::CatchAll);
-  expr->catch_.first = first;
   return expr;
 }
 
@@ -562,10 +565,10 @@ Expr* Expr::CreateThrow(Var var) {
 }
 
 // static
-Expr* Expr::CreateTry(Block* block, Expr* first_catch) {
+Expr* Expr::CreateTry() {
   Expr* expr = new Expr(ExprType::TryBlock);
-  expr->try_block.block = block;
-  expr->try_block.first_catch = first_catch;
+  expr->try_block.block = nullptr;
+  expr->try_block.catches = new CatchVector();
   return expr;
 }
 
