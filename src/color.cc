@@ -43,15 +43,15 @@ bool Color::SupportsColor(FILE* file) {
 #if _WIN32
 
   {
+#if HAVE_WIN32_VT100
     HANDLE handle;
     if (file == stdout) {
       handle = GetStdHandle(STD_OUTPUT_HANDLE);
     } else if (file == stderr) {
       handle = GetStdHandle(STD_ERROR_HANDLE);
     } else {
-      goto nocolor;
+      return false;
     }
-#if HAVE_WIN32_VT100
     DWORD mode;
     if (!_isatty(_fileno(file)) || !GetConsoleMode(handle, mode) ||
         !SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
@@ -60,6 +60,7 @@ bool Color::SupportsColor(FILE* file) {
     return true;
 #else
     // TODO(binji): Support older Windows by using SetConsoleTextAttribute?
+    return false;
 #endif
   }
 
