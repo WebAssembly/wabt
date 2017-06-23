@@ -963,15 +963,13 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
     case InitExprType::I32:
       voffset = data_init_expr_.value.i32;
       break;
-    case InitExprType::I64:
-      voffset = data_init_expr_.value.i64;
+    case InitExprType::Global:
       break;
+    case InitExprType::I64:
     case InitExprType::F32:
     case InitExprType::F64:
-      fprintf(stderr, "Floating point value not valid for data segement offset");
+      fprintf(stderr, "Segment offset must be an i32 init expr");
       return Result::Error;
-      break;
-    case InitExprType::Global:
       break;
   }
 
