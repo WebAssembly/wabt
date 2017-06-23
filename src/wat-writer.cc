@@ -1122,7 +1122,7 @@ void WatWriter::WriteInlineExport(const Export* export_) {
   }
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result write_wat(Writer* writer,
                  const Module* module,

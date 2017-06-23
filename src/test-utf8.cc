@@ -48,7 +48,7 @@ bool is_in_range(int x, int low, int high) {
   return x >= low && x < high;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 #define FOR_RANGE(var, low, high) for (int var = low; var < high; var++)
 #define FOR_EACH_BYTE(var) FOR_RANGE(var, 0, 0x100)

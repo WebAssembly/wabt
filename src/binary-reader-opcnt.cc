@@ -121,7 +121,7 @@ Result BinaryReaderOpcnt::OnStoreExpr(Opcode opcode,
   return Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result read_binary_opcnt(const void* data,
                          size_t size,

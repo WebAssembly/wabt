@@ -101,7 +101,7 @@ NameResolver::NameResolver(WastLexer* lexer,
       script_(script),
       visitor_(this) {}
 
-}  // namespace
+}  // end anonymous namespace
 
 void WABT_PRINTF_FORMAT(3, 4) NameResolver::PrintError(const Location* loc,
                                                        const char* fmt,

@@ -927,7 +927,7 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   return Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result read_binary_ir(const char* filename,
                       const void* data,

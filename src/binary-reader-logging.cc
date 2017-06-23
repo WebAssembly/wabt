@@ -46,7 +46,7 @@ void sprint_limits(char* dst, size_t size, const Limits* limits) {
   assert(static_cast<size_t>(result) < size);
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 BinaryReaderLogging::BinaryReaderLogging(Stream* stream,
                                          BinaryReaderDelegate* forward)

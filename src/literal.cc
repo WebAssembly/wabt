@@ -508,7 +508,7 @@ void FloatWriter<T>::WriteHex(char* out, size_t size, Uint bits) {
   out[len] = '\0';
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result parse_hexdigit(char c, uint32_t* out) {
   if (static_cast<unsigned int>(c - '0') <= 9) {

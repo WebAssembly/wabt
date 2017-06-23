@@ -1124,7 +1124,7 @@ Result Validator::CheckScript(const Script* script) {
   return result_;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result validate_script(WastLexer* lexer,
                        const Script* script,
