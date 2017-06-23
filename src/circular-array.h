@@ -36,8 +36,6 @@ class CircularArray {
   CircularArray() : size_(0), front_(0), mask_(kCapacity - 1) {
     assert(kCapacity && ((kCapacity & (kCapacity - 1)) == 0));
   }
-  ~CircularArray() {
-  }
 
   reference at(size_type index) {
     assert(index < size_);
