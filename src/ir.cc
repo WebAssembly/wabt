@@ -329,6 +329,7 @@ IfExpr::~IfExpr() {
 }
 
 TryExpr::~TryExpr() {
+  delete block;
   for (Catch* catch_ : catches)
     delete catch_;
 }
