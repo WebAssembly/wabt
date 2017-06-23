@@ -24,14 +24,14 @@ Section Details:
 Memory:
  - memory[0] pages: initial=2 max=2
 Data:
- - memory[0] - init i32=0
-  - 000001e: 666f 6f                                  foo
- - memory[0] - init i32=10
-  - 0000026: 6261 72                                  bar
- - memory[0] - init i32=65536
-  - 0000030: 6865 6c6c 6f                             hello
- - memory[0] - init i32=65636
-  - 000003c: 776f 726c 64                             world
+ - segment[0] size=3 - init i32=0
+  - 0000000: 666f 6f                                  foo
+ - segment[1] size=3 - init i32=10
+  - 000000a: 6261 72                                  bar
+ - segment[2] size=5 - init i32=65536
+  - 0010000: 6865 6c6c 6f                             hello
+ - segment[3] size=5 - init i32=65636
+  - 0010064: 776f 726c 64                             world
 
 Code Disassembly:
 

@@ -53,6 +53,7 @@ struct ObjdumpOptions {
 // and use it to display more useful information.
 struct ObjdumpState {
   std::vector<Reloc> code_relocations;
+  std::vector<Reloc> data_relocations;
   std::vector<std::string> function_names;
 };
 

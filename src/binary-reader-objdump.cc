@@ -45,7 +45,11 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
                       StringSlice section_name) override;
 
  protected:
-  const char* GetFunctionName(Index index);
+  const char* GetFunctionName(Index index) const;
+  void PrintRelocation(const Reloc& reloc, Offset offset) const;
+  Offset GetSectionStart(BinarySection section_code) const {
+    return section_starts[static_cast<size_t>(section_code)];
+  }
 
   ObjdumpOptions* options;
   ObjdumpState* objdump_state;
@@ -112,12 +116,32 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
   return Result::Ok;
 }
 
-const char* BinaryReaderObjdumpBase::GetFunctionName(Index index) {
+const char* BinaryReaderObjdumpBase::GetFunctionName(Index index) const {
   if (index >= objdump_state->function_names.size() ||
       objdump_state->function_names[index].empty())
     return nullptr;
 
   return objdump_state->function_names[index].c_str();
+}
+
+void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
+                                              Offset offset) const {
+  printf("           %06" PRIzx ": %-18s %" PRIindex "", offset,
+         get_reloc_type_name(reloc.type), reloc.index);
+  switch (reloc.type) {
+    case RelocType::GlobalAddressLEB:
+    case RelocType::GlobalAddressSLEB:
+    case RelocType::GlobalAddressI32:
+      printf(" + %d", reloc.addend);
+      break;
+    case RelocType::FuncIndexLEB:
+      if (const char* name = GetFunctionName(reloc.index)) {
+        printf(" <%s>", name);
+      }
+    default:
+      break;
+  }
+  printf("\n");
 }
 
 Result BinaryReaderObjdumpBase::OnRelocCount(Index count,
@@ -153,6 +177,8 @@ Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
   BinaryReaderObjdumpBase::OnReloc(type, offset, index, addend);
   if (reloc_section == BinarySection::Code) {
     objdump_state->code_relocations.emplace_back(type, offset, index, addend);
+  } else if (reloc_section == BinarySection::Data) {
+    objdump_state->data_relocations.emplace_back(type, offset, index, addend);
   }
   return Result::Ok;
 }
@@ -216,9 +242,9 @@ Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
 #define IMMEDIATE_OCTET_COUNT 9
 
 void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
-                                              size_t data_size,
-                                              const char* fmt,
-                                              ...) {
+                                               size_t data_size,
+                                               const char* fmt,
+                                               ...) {
   Offset offset = current_opcode_offset;
 
   // Print binary data
@@ -255,27 +281,11 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
   last_opcode_end = current_opcode_offset + data_size;
 
   if (options->relocs && next_reloc < objdump_state->code_relocations.size()) {
-    Reloc* reloc = &objdump_state->code_relocations[next_reloc];
-    Offset code_start =
-        section_starts[static_cast<size_t>(BinarySection::Code)];
-    Offset abs_offset = code_start + reloc->offset;
+    const Reloc& reloc = objdump_state->code_relocations[next_reloc];
+    Offset code_start = GetSectionStart(BinarySection::Code);
+    Offset abs_offset = code_start + reloc.offset;
     if (last_opcode_end > abs_offset) {
-      printf("           %06" PRIzx ": %-18s %" PRIindex "", abs_offset,
-             get_reloc_type_name(reloc->type), reloc->index);
-      switch (reloc->type) {
-        case RelocType::GlobalAddressLEB:
-        case RelocType::GlobalAddressSLEB:
-        case RelocType::GlobalAddressI32:
-          printf(" + %d", reloc->addend);
-          break;
-        case RelocType::FuncIndexLEB:
-          if (const char* name = GetFunctionName(reloc->index)) {
-            printf(" <%s>", name);
-          }
-        default:
-          break;
-      }
-      printf("\n");
+      PrintRelocation(reloc, abs_offset);
       next_reloc++;
     }
   }
@@ -394,6 +404,25 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Index num_types,
   return Result::Ok;
 }
 
+enum class InitExprType {
+  I32,
+  F32,
+  I64,
+  F64,
+  Global,
+};
+
+struct InitExpr {
+  InitExprType type;
+  union {
+    Index global;
+    uint32_t i32;
+    uint32_t f32;
+    uint64_t i64;
+    uint64_t f64;
+  } value;
+};
+
 class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
  public:
   BinaryReaderObjdump(const uint8_t* data,
@@ -465,6 +494,14 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnElemSegmentFunctionIndex(Index segment_index,
                                     Index func_index) override;
 
+  Result BeginDataSection(Offset size) override {
+    in_data_section_ = true;
+    return Result::Ok;
+  }
+  Result EndDataSection() override {
+    in_data_section_ = false;
+    return Result::Ok;
+  }
   Result OnDataSegmentCount(Index count) override;
   Result BeginDataSegment(Index index, Index memory_index) override;
   Result OnDataSegmentData(Index index,
@@ -498,10 +535,14 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
  private:
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
+  void PrintInitExpr(const InitExpr &expr);
   Result OnCount(Index count);
 
   std::unique_ptr<FileStream> out_stream_;
   Index elem_index_ = 0;
+  Index next_data_reloc_ = 0;
+  bool in_data_section_ = false;
+  InitExpr data_init_expr_;
 };
 
 BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
@@ -552,7 +593,7 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
       if (section_match) {
         printf("\nContents of section %s:\n", name);
         out_stream_->WriteMemoryDump(data + state->offset, size, state->offset,
-                                     nullptr, nullptr, PrintChars::Yes);
+                                     PrintChars::Yes);
       }
       break;
     case ObjdumpMode::Prepass:
@@ -587,8 +628,15 @@ Result BinaryReaderObjdump::OnCount(Index count) {
 
 Result BinaryReaderObjdump::EndModule() {
   if (options->section_name && !section_found) {
-    printf("Section not found: %s\n", options->section_name);
+    fprintf(stderr, "Section not found: %s\n", options->section_name);
     return Result::Error;
+  }
+
+  if (options->relocs) {
+    if (next_data_reloc_ != objdump_state->data_relocations.size()) {
+      fprintf(stderr, "Data reloctions outside of segments\n");
+      return Result::Error;
+    }
   }
 
   return Result::Ok;
@@ -783,37 +831,94 @@ Result BinaryReaderObjdump::BeginGlobal(Index index, Type type, bool mutable_) {
   return Result::Ok;
 }
 
+void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
+  switch (expr.type) {
+    case InitExprType::I32:
+      PrintDetails(" - init i32=%d\n", expr.value.i32);
+      break;
+    case InitExprType::I64:
+      PrintDetails(" - init i64=%" PRId64 "\n", expr.value.i64);
+      break;
+    case InitExprType::F64: {
+      char buffer[WABT_MAX_DOUBLE_HEX];
+      write_float_hex(buffer, sizeof(buffer), expr.value.f64);
+      PrintDetails(" - init f64=%s\n", buffer);
+      break;
+    }
+    case InitExprType::F32: {
+      char buffer[WABT_MAX_FLOAT_HEX];
+      write_float_hex(buffer, sizeof(buffer), expr.value.f32);
+      PrintDetails(" - init f32=%s\n", buffer);
+      break;
+    }
+    case InitExprType::Global:
+      PrintDetails(" - init global=%" PRIindex "\n", expr.value.global);
+      break;
+  }
+}
+
 Result BinaryReaderObjdump::OnInitExprF32ConstExpr(Index index,
                                                    uint32_t value) {
-  char buffer[WABT_MAX_FLOAT_HEX];
-  write_float_hex(buffer, sizeof(buffer), value);
-  PrintDetails(" - init f32=%s\n", buffer);
+  InitExpr expr;
+  expr.type = InitExprType::F32;
+  expr.value.f32 = value;
+  if (in_data_section_) {
+    data_init_expr_ = expr;
+  } else {
+    PrintInitExpr(expr);
+  }
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnInitExprF64ConstExpr(Index index,
                                                    uint64_t value) {
-  char buffer[WABT_MAX_DOUBLE_HEX];
-  write_float_hex(buffer, sizeof(buffer), value);
-  PrintDetails(" - init f64=%s\n", buffer);
+  InitExpr expr;
+  expr.type = InitExprType::F64;
+  expr.value.f64 = value;
+  if (in_data_section_) {
+    data_init_expr_ = expr;
+  } else {
+    PrintInitExpr(expr);
+  }
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnInitExprGetGlobalExpr(Index index,
                                                     Index global_index) {
-  PrintDetails(" - init global=%" PRIindex "\n", global_index);
+  InitExpr expr;
+  expr.type = InitExprType::Global;
+  expr.value.global = global_index;
+  if (in_data_section_) {
+    data_init_expr_ = expr;
+  } else {
+    PrintInitExpr(expr);
+  }
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnInitExprI32ConstExpr(Index index,
                                                    uint32_t value) {
-  PrintDetails(" - init i32=%d\n", value);
+  InitExpr expr;
+  expr.type = InitExprType::I32;
+  expr.value.i32 = value;
+  if (in_data_section_) {
+    data_init_expr_ = expr;
+  } else {
+    PrintInitExpr(expr);
+  }
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnInitExprI64ConstExpr(Index index,
                                                    uint64_t value) {
-  PrintDetails(" - init i64=%" PRId64 "\n", value);
+  InitExpr expr;
+  expr.type = InitExprType::I64;
+  expr.value.i64 = value;
+  if (in_data_section_) {
+    data_init_expr_ = expr;
+  } else {
+    PrintInitExpr(expr);
+  }
   return Result::Ok;
 }
 
@@ -839,17 +944,54 @@ Result BinaryReaderObjdump::OnDataSegmentCount(Index count) {
 }
 
 Result BinaryReaderObjdump::BeginDataSegment(Index index, Index memory_index) {
-  PrintDetails(" - memory[%" PRIindex "]", memory_index);
+  // TODO(sbc): Display memory_index once multiple memories become a thing
+  //PrintDetails(" - memory[%" PRIindex "]", memory_index);
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnDataSegmentData(Index index,
                                               const void* src_data,
                                               Address size) {
-  if (ShouldPrintDetails()) {
-    out_stream_->WriteMemoryDump(src_data, size, state->offset - size, "  - ",
-                                 nullptr, PrintChars::Yes);
+  if (!ShouldPrintDetails())
+    return Result::Ok;
+
+  PrintDetails(" - segment[%" PRIindex "] size=%" PRIaddress, index, size);
+  PrintInitExpr(data_init_expr_);
+
+  size_t voffset = 0;
+  switch (data_init_expr_.type) {
+    case InitExprType::I32:
+      voffset = data_init_expr_.value.i32;
+      break;
+    case InitExprType::Global:
+      break;
+    case InitExprType::I64:
+    case InitExprType::F32:
+    case InitExprType::F64:
+      fprintf(stderr, "Segment offset must be an i32 init expr");
+      return Result::Error;
+      break;
   }
+
+  out_stream_->WriteMemoryDump(src_data, size, voffset, PrintChars::Yes,
+                               "  - ");
+
+  // Print relocations from this segment.
+  if (!options->relocs)
+    return Result::Ok;
+
+  Offset data_start = GetSectionStart(BinarySection::Data);
+  Offset segment_start = state->offset - size;
+  Offset segment_offset = segment_start - data_start;
+  while (next_data_reloc_ < objdump_state->data_relocations.size()) {
+    const Reloc& reloc = objdump_state->data_relocations[next_data_reloc_];
+    Offset abs_offset = data_start + reloc.offset;
+    if (abs_offset > state->offset)
+      break;
+    PrintRelocation(reloc, reloc.offset - segment_offset + voffset);
+    next_data_reloc_++;
+  }
+
   return Result::Ok;
 }
 
@@ -865,8 +1007,7 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
                                     Offset offset,
                                     Index index,
                                     uint32_t addend) {
-  Offset total_offset =
-      section_starts[static_cast<size_t>(reloc_section)] + offset;
+  Offset total_offset = GetSectionStart(reloc_section) + offset;
   PrintDetails("   - %-18s offset=%#08" PRIoffset "(file=%#08" PRIoffset
                ") index=%" PRIindex,
                get_reloc_type_name(type), offset, total_offset, index);

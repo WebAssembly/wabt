@@ -95,9 +95,9 @@ class Stream {
   void WriteMemoryDump(const void* start,
                        size_t size,
                        size_t offset = 0,
+                       PrintChars print_chars = PrintChars::No,
                        const char* prefix = nullptr,
-                       const char* desc = nullptr,
-                       PrintChars print_chars = PrintChars::No);
+                       const char* desc = nullptr);
 
   // Convenience functions for writing enums.
   template <typename T>
