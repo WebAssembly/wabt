@@ -17,6 +17,8 @@
 #ifndef WABT_CIRCULAR_ARRAY_H_
 #define WABT_CIRCULAR_ARRAY_H_
 
+#include <array>
+
 namespace wabt {
 
 // TODO(karlschimpf) Complete the API
@@ -34,7 +36,6 @@ class CircularArray {
   CircularArray() : size_(0), front_(0), mask_(kCapacity - 1) {
     assert(kCapacity && ((kCapacity & (kCapacity - 1)) == 0));
   }
-  ~CircularArray() {}
 
   reference at(size_type index) {
     assert(index < size_);
@@ -97,7 +98,7 @@ class CircularArray {
   }
 
  private:
-  T contents_[kCapacity];
+  std::array<T, kCapacity> contents_;
   size_type size_;
   size_type front_;
   size_type mask_;
