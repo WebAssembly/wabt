@@ -38,7 +38,7 @@ class CircularArray {
   }
   ~CircularArray() {
     for (size_t i = 0; i < kCapacity; ++i)
-      contents_[i].~T();
+      contents_[i].~value_type();
   }
 
   reference at(size_type index) {
