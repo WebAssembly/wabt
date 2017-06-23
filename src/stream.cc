@@ -42,7 +42,7 @@ void Stream::WriteDataAt(size_t at,
   if (WABT_FAILED(result_))
     return;
   if (log_stream_) {
-    log_stream_->WriteMemoryDump(src, size, at, nullptr, desc, print_chars);
+    log_stream_->WriteMemoryDump(src, size, at, print_chars, nullptr, desc);
   }
   result_ = writer_->WriteData(at, src, size);
 }
@@ -74,9 +74,9 @@ void Stream::Writef(const char* format, ...) {
 void Stream::WriteMemoryDump(const void* start,
                              size_t size,
                              size_t offset,
+                             PrintChars print_chars,
                              const char* prefix,
-                             const char* desc,
-                             PrintChars print_chars) {
+                             const char* desc) {
   const uint8_t* p = static_cast<const uint8_t*>(start);
   const uint8_t* end = p + size;
   while (p < end) {
