@@ -39,27 +39,27 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result VisitScript(Script* script);
 
   // Implementation of ExprVisitor::DelegateNop.
-  Result BeginBlockExpr(Expr*) override;
-  Result EndBlockExpr(Expr*) override;
-  Result OnBrExpr(Expr*) override;
-  Result OnBrIfExpr(Expr*) override;
-  Result OnBrTableExpr(Expr*) override;
-  Result OnCallExpr(Expr*) override;
-  Result OnCallIndirectExpr(Expr*) override;
-  Result OnCatchExpr(Expr*, Catch*) override;
-  Result OnGetGlobalExpr(Expr*) override;
-  Result OnGetLocalExpr(Expr*) override;
-  Result BeginIfExpr(Expr*) override;
-  Result EndIfExpr(Expr*) override;
-  Result BeginLoopExpr(Expr*) override;
-  Result EndLoopExpr(Expr*) override;
-  Result OnSetGlobalExpr(Expr*) override;
-  Result OnSetLocalExpr(Expr*) override;
-  Result OnTeeLocalExpr(Expr*) override;
-  Result BeginTryExpr(Expr*) override;
-  Result EndTryExpr(Expr*) override;
-  Result OnThrowExpr(Expr*) override;
-  Result OnRethrowExpr(Expr*) override;
+  Result BeginBlockExpr(BlockExpr*) override;
+  Result EndBlockExpr(BlockExpr*) override;
+  Result OnBrExpr(BrExpr*) override;
+  Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrTableExpr(BrTableExpr*) override;
+  Result OnCallExpr(CallExpr*) override;
+  Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnGetGlobalExpr(GetGlobalExpr*) override;
+  Result OnGetLocalExpr(GetLocalExpr*) override;
+  Result BeginIfExpr(IfExpr*) override;
+  Result EndIfExpr(IfExpr*) override;
+  Result BeginLoopExpr(LoopExpr*) override;
+  Result EndLoopExpr(LoopExpr*) override;
+  Result OnSetGlobalExpr(SetGlobalExpr*) override;
+  Result OnSetLocalExpr(SetLocalExpr*) override;
+  Result OnTeeLocalExpr(TeeLocalExpr*) override;
+  Result BeginTryExpr(TryExpr*) override;
+  Result EndTryExpr(TryExpr*) override;
+  Result OnThrowExpr(ThrowExpr*) override;
+  Result OnRethrowExpr(RethrowExpr*) override;
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
@@ -209,113 +209,113 @@ void NameResolver::ResolveLocalVar(Var* var) {
   }
 }
 
-Result NameResolver::BeginBlockExpr(Expr* expr) {
+Result NameResolver::BeginBlockExpr(BlockExpr* expr) {
   PushLabel(&expr->block->label);
   return Result::Ok;
 }
 
-Result NameResolver::EndBlockExpr(Expr* expr) {
+Result NameResolver::EndBlockExpr(BlockExpr* expr) {
   PopLabel();
   return Result::Ok;
 }
 
-Result NameResolver::BeginLoopExpr(Expr* expr) {
-  PushLabel(&expr->loop->label);
+Result NameResolver::BeginLoopExpr(LoopExpr* expr) {
+  PushLabel(&expr->block->label);
   return Result::Ok;
 }
 
-Result NameResolver::EndLoopExpr(Expr* expr) {
+Result NameResolver::EndLoopExpr(LoopExpr* expr) {
   PopLabel();
   return Result::Ok;
 }
 
-Result NameResolver::OnBrExpr(Expr* expr) {
-  ResolveLabelVar(&expr->br.var);
+Result NameResolver::OnBrExpr(BrExpr* expr) {
+  ResolveLabelVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnBrIfExpr(Expr* expr) {
-  ResolveLabelVar(&expr->br_if.var);
+Result NameResolver::OnBrIfExpr(BrIfExpr* expr) {
+  ResolveLabelVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnBrTableExpr(Expr* expr) {
-  for (Var& target : *expr->br_table.targets)
+Result NameResolver::OnBrTableExpr(BrTableExpr* expr) {
+  for (Var& target : *expr->targets)
     ResolveLabelVar(&target);
-  ResolveLabelVar(&expr->br_table.default_target);
+  ResolveLabelVar(&expr->default_target);
   return Result::Ok;
 }
 
-Result NameResolver::OnCallExpr(Expr* expr) {
-  ResolveFuncVar(&expr->call.var);
+Result NameResolver::OnCallExpr(CallExpr* expr) {
+  ResolveFuncVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnCallIndirectExpr(Expr* expr) {
-  ResolveFuncTypeVar(&expr->call_indirect.var);
+Result NameResolver::OnCallIndirectExpr(CallIndirectExpr* expr) {
+  ResolveFuncTypeVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnGetGlobalExpr(Expr* expr) {
-  ResolveGlobalVar(&expr->get_global.var);
+Result NameResolver::OnGetGlobalExpr(GetGlobalExpr* expr) {
+  ResolveGlobalVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnGetLocalExpr(Expr* expr) {
-  ResolveLocalVar(&expr->get_local.var);
+Result NameResolver::OnGetLocalExpr(GetLocalExpr* expr) {
+  ResolveLocalVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::BeginIfExpr(Expr* expr) {
-  PushLabel(&expr->if_.true_->label);
+Result NameResolver::BeginIfExpr(IfExpr* expr) {
+  PushLabel(&expr->true_->label);
   return Result::Ok;
 }
 
-Result NameResolver::EndIfExpr(Expr* expr) {
+Result NameResolver::EndIfExpr(IfExpr* expr) {
   PopLabel();
   return Result::Ok;
 }
 
-Result NameResolver::OnSetGlobalExpr(Expr* expr) {
-  ResolveGlobalVar(&expr->set_global.var);
+Result NameResolver::OnSetGlobalExpr(SetGlobalExpr* expr) {
+  ResolveGlobalVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnSetLocalExpr(Expr* expr) {
-  ResolveLocalVar(&expr->set_local.var);
+Result NameResolver::OnSetLocalExpr(SetLocalExpr* expr) {
+  ResolveLocalVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnTeeLocalExpr(Expr* expr) {
-  ResolveLocalVar(&expr->tee_local.var);
+Result NameResolver::OnTeeLocalExpr(TeeLocalExpr* expr) {
+  ResolveLocalVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::BeginTryExpr(Expr* expr) {
-  PushLabel(&expr->try_block.block->label);
+Result NameResolver::BeginTryExpr(TryExpr* expr) {
+  PushLabel(&expr->block->label);
   return Result::Ok;
 }
 
-Result NameResolver::EndTryExpr(Expr*) {
+Result NameResolver::EndTryExpr(TryExpr*) {
   PopLabel();
   return Result::Ok;
 }
 
-Result NameResolver::OnCatchExpr(Expr* expr, Catch* catch_) {
+Result NameResolver::OnCatchExpr(TryExpr* expr, Catch* catch_) {
   if (!catch_->IsCatchAll())
     ResolveExceptionVar(&catch_->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnThrowExpr(Expr* expr) {
-  ResolveExceptionVar(&expr->throw_.var);
+Result NameResolver::OnThrowExpr(ThrowExpr* expr) {
+  ResolveExceptionVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnRethrowExpr(Expr* expr) {
+Result NameResolver::OnRethrowExpr(RethrowExpr* expr) {
   // Note: the variable refers to corresponding (enclosing) catch, using the try
   // block label for context.
-  ResolveLabelVar(&expr->rethrow_.var);
+  ResolveLabelVar(&expr->var);
   return Result::Ok;
 }
 

@@ -40,22 +40,22 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result VisitModule(Module* module);
 
   // Implementation of ExprVisitor::DelegateNop.
-  Result BeginBlockExpr(Expr*) override;
-  Result EndBlockExpr(Expr*) override;
-  Result OnBrExpr(Expr*) override;
-  Result OnBrIfExpr(Expr*) override;
-  Result OnBrTableExpr(Expr*) override;
-  Result OnCallExpr(Expr*) override;
-  Result OnCallIndirectExpr(Expr*) override;
-  Result OnGetGlobalExpr(Expr*) override;
-  Result OnGetLocalExpr(Expr*) override;
-  Result BeginIfExpr(Expr*) override;
-  Result EndIfExpr(Expr*) override;
-  Result BeginLoopExpr(Expr*) override;
-  Result EndLoopExpr(Expr*) override;
-  Result OnSetGlobalExpr(Expr*) override;
-  Result OnSetLocalExpr(Expr*) override;
-  Result OnTeeLocalExpr(Expr*) override;
+  Result BeginBlockExpr(BlockExpr*) override;
+  Result EndBlockExpr(BlockExpr*) override;
+  Result OnBrExpr(BrExpr*) override;
+  Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrTableExpr(BrTableExpr*) override;
+  Result OnCallExpr(CallExpr*) override;
+  Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnGetGlobalExpr(GetGlobalExpr*) override;
+  Result OnGetLocalExpr(GetLocalExpr*) override;
+  Result BeginIfExpr(IfExpr*) override;
+  Result EndIfExpr(IfExpr*) override;
+  Result BeginLoopExpr(LoopExpr*) override;
+  Result EndLoopExpr(LoopExpr*) override;
+  Result OnSetGlobalExpr(SetGlobalExpr*) override;
+  Result OnSetLocalExpr(SetLocalExpr*) override;
+  Result OnTeeLocalExpr(TeeLocalExpr*) override;
 
  private:
   void PushLabel(Label* label);
@@ -189,92 +189,92 @@ Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
   return Result::Ok;
 }
 
-Result NameApplier::BeginBlockExpr(Expr* expr) {
+Result NameApplier::BeginBlockExpr(BlockExpr* expr) {
   PushLabel(&expr->block->label);
   return Result::Ok;
 }
 
-Result NameApplier::EndBlockExpr(Expr* expr) {
+Result NameApplier::EndBlockExpr(BlockExpr* expr) {
   PopLabel();
   return Result::Ok;
 }
 
-Result NameApplier::BeginLoopExpr(Expr* expr) {
-  PushLabel(&expr->loop->label);
+Result NameApplier::BeginLoopExpr(LoopExpr* expr) {
+  PushLabel(&expr->block->label);
   return Result::Ok;
 }
 
-Result NameApplier::EndLoopExpr(Expr* expr) {
+Result NameApplier::EndLoopExpr(LoopExpr* expr) {
   PopLabel();
   return Result::Ok;
 }
 
-Result NameApplier::OnBrExpr(Expr* expr) {
-  Label* label = FindLabelByVar(&expr->br.var);
-  UseNameForVar(label, &expr->br.var);
+Result NameApplier::OnBrExpr(BrExpr* expr) {
+  Label* label = FindLabelByVar(&expr->var);
+  UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
-Result NameApplier::OnBrIfExpr(Expr* expr) {
-  Label* label = FindLabelByVar(&expr->br_if.var);
-  UseNameForVar(label, &expr->br_if.var);
+Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
+  Label* label = FindLabelByVar(&expr->var);
+  UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
-Result NameApplier::OnBrTableExpr(Expr* expr) {
-  VarVector& targets = *expr->br_table.targets;
+Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
+  VarVector& targets = *expr->targets;
   for (Var& target : targets) {
     Label* label = FindLabelByVar(&target);
     UseNameForVar(label, &target);
   }
 
-  Label* label = FindLabelByVar(&expr->br_table.default_target);
-  UseNameForVar(label, &expr->br_table.default_target);
+  Label* label = FindLabelByVar(&expr->default_target);
+  UseNameForVar(label, &expr->default_target);
   return Result::Ok;
 }
 
-Result NameApplier::OnCallExpr(Expr* expr) {
-  CHECK_RESULT(UseNameForFuncVar(module_, &expr->call.var));
+Result NameApplier::OnCallExpr(CallExpr* expr) {
+  CHECK_RESULT(UseNameForFuncVar(module_, &expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnCallIndirectExpr(Expr* expr) {
-  CHECK_RESULT(UseNameForFuncTypeVar(module_, &expr->call_indirect.var));
+Result NameApplier::OnCallIndirectExpr(CallIndirectExpr* expr) {
+  CHECK_RESULT(UseNameForFuncTypeVar(module_, &expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnGetGlobalExpr(Expr* expr) {
-  CHECK_RESULT(UseNameForGlobalVar(module_, &expr->get_global.var));
+Result NameApplier::OnGetGlobalExpr(GetGlobalExpr* expr) {
+  CHECK_RESULT(UseNameForGlobalVar(module_, &expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnGetLocalExpr(Expr* expr) {
-  CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->get_local.var));
+Result NameApplier::OnGetLocalExpr(GetLocalExpr* expr) {
+  CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::BeginIfExpr(Expr* expr) {
-  PushLabel(&expr->if_.true_->label);
+Result NameApplier::BeginIfExpr(IfExpr* expr) {
+  PushLabel(&expr->true_->label);
   return Result::Ok;
 }
 
-Result NameApplier::EndIfExpr(Expr* expr) {
+Result NameApplier::EndIfExpr(IfExpr* expr) {
   PopLabel();
   return Result::Ok;
 }
 
-Result NameApplier::OnSetGlobalExpr(Expr* expr) {
-  CHECK_RESULT(UseNameForGlobalVar(module_, &expr->set_global.var));
+Result NameApplier::OnSetGlobalExpr(SetGlobalExpr* expr) {
+  CHECK_RESULT(UseNameForGlobalVar(module_, &expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnSetLocalExpr(Expr* expr) {
-  CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->set_local.var));
+Result NameApplier::OnSetLocalExpr(SetLocalExpr* expr) {
+  CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnTeeLocalExpr(Expr* expr) {
-  CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->tee_local.var));
+Result NameApplier::OnTeeLocalExpr(TeeLocalExpr* expr) {
+  CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->var));
   return Result::Ok;
 }
 

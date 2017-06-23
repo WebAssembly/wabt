@@ -420,77 +420,81 @@ void BinaryWriter::WriteExpr(const Module* module,
                              const Expr* expr) {
   switch (expr->type) {
     case ExprType::Binary:
-      write_opcode(&stream_, expr->binary.opcode);
+      write_opcode(&stream_, expr->As<BinaryExpr>()->opcode);
       break;
     case ExprType::Block:
       write_opcode(&stream_, Opcode::Block);
-      write_inline_signature_type(&stream_, expr->block->sig);
-      WriteExprList(module, func, expr->block->first);
+      write_inline_signature_type(&stream_, expr->As<BlockExpr>()->block->sig);
+      WriteExprList(module, func, expr->As<BlockExpr>()->block->first);
       write_opcode(&stream_, Opcode::End);
       break;
     case ExprType::Br:
       write_opcode(&stream_, Opcode::Br);
-      write_u32_leb128(&stream_, GetLabelVarDepth(&expr->br.var),
+      write_u32_leb128(&stream_, GetLabelVarDepth(&expr->As<BrExpr>()->var),
                        "break depth");
       break;
     case ExprType::BrIf:
       write_opcode(&stream_, Opcode::BrIf);
-      write_u32_leb128(&stream_, GetLabelVarDepth(&expr->br_if.var),
+      write_u32_leb128(&stream_, GetLabelVarDepth(&expr->As<BrIfExpr>()->var),
                        "break depth");
       break;
     case ExprType::BrTable: {
+      auto br_table_expr = expr->As<BrTableExpr>();
       write_opcode(&stream_, Opcode::BrTable);
-      write_u32_leb128(&stream_, expr->br_table.targets->size(), "num targets");
+      write_u32_leb128(&stream_, br_table_expr->targets->size(), "num targets");
       Index depth;
-      for (const Var& var : *expr->br_table.targets) {
+      for (const Var& var : *br_table_expr->targets) {
         depth = GetLabelVarDepth(&var);
         write_u32_leb128(&stream_, depth, "break depth");
       }
-      depth = GetLabelVarDepth(&expr->br_table.default_target);
+      depth = GetLabelVarDepth(&br_table_expr->default_target);
       write_u32_leb128(&stream_, depth, "break depth for default");
       break;
     }
     case ExprType::Call: {
-      Index index = module->GetFuncIndex(expr->call.var);
+      Index index = module->GetFuncIndex(expr->As<CallExpr>()->var);
       write_opcode(&stream_, Opcode::Call);
       WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
       break;
     }
     case ExprType::CallIndirect: {
-      Index index = module->GetFuncTypeIndex(expr->call_indirect.var);
+      Index index = module->GetFuncTypeIndex(expr->As<CallIndirectExpr>()->var);
       write_opcode(&stream_, Opcode::CallIndirect);
-      WriteU32Leb128WithReloc(index, "signature index", RelocType::TypeIndexLEB);
+      WriteU32Leb128WithReloc(index, "signature index",
+                              RelocType::TypeIndexLEB);
       write_u32_leb128(&stream_, 0, "call_indirect reserved");
       break;
     }
     case ExprType::Compare:
-      write_opcode(&stream_, expr->compare.opcode);
+      write_opcode(&stream_, expr->As<CompareExpr>()->opcode);
       break;
-    case ExprType::Const:
-      switch (expr->const_.type) {
+    case ExprType::Const: {
+      const Const& const_ = expr->As<ConstExpr>()->const_;
+      switch (const_.type) {
         case Type::I32: {
           write_opcode(&stream_, Opcode::I32Const);
-          write_i32_leb128(&stream_, expr->const_.u32, "i32 literal");
+          write_i32_leb128(&stream_, const_.u32, "i32 literal");
           break;
         }
         case Type::I64:
           write_opcode(&stream_, Opcode::I64Const);
-          write_i64_leb128(&stream_, expr->const_.u64, "i64 literal");
+          write_i64_leb128(&stream_, const_.u64, "i64 literal");
           break;
         case Type::F32:
           write_opcode(&stream_, Opcode::F32Const);
-          stream_.WriteU32(expr->const_.f32_bits, "f32 literal");
+          stream_.WriteU32(const_.f32_bits, "f32 literal");
           break;
         case Type::F64:
           write_opcode(&stream_, Opcode::F64Const);
-          stream_.WriteU64(expr->const_.f64_bits, "f64 literal");
+          stream_.WriteU64(const_.f64_bits, "f64 literal");
           break;
         default:
           assert(0);
       }
       break;
+    }
     case ExprType::Convert:
-      write_opcode(&stream_, expr->convert.opcode);
+      write_opcode(&stream_, expr->As<ConvertExpr>()->opcode);
       break;
     case ExprType::CurrentMemory:
       write_opcode(&stream_, Opcode::CurrentMemory);
@@ -500,13 +504,13 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_opcode(&stream_, Opcode::Drop);
       break;
     case ExprType::GetGlobal: {
-      Index index = module->GetGlobalIndex(expr->get_global.var);
+      Index index = module->GetGlobalIndex(expr->As<GetGlobalExpr>()->var);
       write_opcode(&stream_, Opcode::GetGlobal);
       WriteU32Leb128WithReloc(index, "global index", RelocType::GlobalIndexLEB);
       break;
     }
     case ExprType::GetLocal: {
-      Index index = GetLocalIndex(func, expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->As<GetLocalExpr>()->var);
       write_opcode(&stream_, Opcode::GetLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;
@@ -515,27 +519,30 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_opcode(&stream_, Opcode::GrowMemory);
       write_u32_leb128(&stream_, 0, "grow_memory reserved");
       break;
-    case ExprType::If:
+    case ExprType::If: {
+      auto if_expr = expr->As<IfExpr>();
       write_opcode(&stream_, Opcode::If);
-      write_inline_signature_type(&stream_, expr->if_.true_->sig);
-      WriteExprList(module, func, expr->if_.true_->first);
-      if (expr->if_.false_) {
+      write_inline_signature_type(&stream_, if_expr->true_->sig);
+      WriteExprList(module, func, if_expr->true_->first);
+      if (if_expr->false_) {
         write_opcode(&stream_, Opcode::Else);
-        WriteExprList(module, func, expr->if_.false_);
+        WriteExprList(module, func, if_expr->false_);
       }
       write_opcode(&stream_, Opcode::End);
       break;
+    }
     case ExprType::Load: {
-      write_opcode(&stream_, expr->load.opcode);
-      Address align = expr->load.opcode.GetAlignment(expr->load.align);
+      auto load_expr = expr->As<LoadExpr>();
+      write_opcode(&stream_, load_expr->opcode);
+      Address align = load_expr->opcode.GetAlignment(load_expr->align);
       stream_.WriteU8(log2_u32(align), "alignment");
-      write_u32_leb128(&stream_, expr->load.offset, "load offset");
+      write_u32_leb128(&stream_, load_expr->offset, "load offset");
       break;
     }
     case ExprType::Loop:
       write_opcode(&stream_, Opcode::Loop);
-      write_inline_signature_type(&stream_, expr->loop->sig);
-      WriteExprList(module, func, expr->loop->first);
+      write_inline_signature_type(&stream_, expr->As<LoopExpr>()->block->sig);
+      WriteExprList(module, func, expr->As<LoopExpr>()->block->first);
       write_opcode(&stream_, Opcode::End);
       break;
     case ExprType::Nop:
@@ -543,7 +550,8 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     case ExprType::Rethrow:
       write_opcode(&stream_, Opcode::Rethrow);
-      write_u32_leb128(&stream_, GetLabelVarDepth(&expr->rethrow_.var),
+      write_u32_leb128(&stream_,
+                       GetLabelVarDepth(&expr->As<RethrowExpr>()->var),
                        "rethrow depth");
       break;
     case ExprType::Return:
@@ -553,40 +561,42 @@ void BinaryWriter::WriteExpr(const Module* module,
       write_opcode(&stream_, Opcode::Select);
       break;
     case ExprType::SetGlobal: {
-      Index index = module->GetGlobalIndex(expr->get_global.var);
+      Index index = module->GetGlobalIndex(expr->As<SetGlobalExpr>()->var);
       write_opcode(&stream_, Opcode::SetGlobal);
       WriteU32Leb128WithReloc(index, "global index", RelocType::GlobalIndexLEB);
       break;
     }
     case ExprType::SetLocal: {
-      Index index = GetLocalIndex(func, expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->As<SetLocalExpr>()->var);
       write_opcode(&stream_, Opcode::SetLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;
     }
     case ExprType::Store: {
-      write_opcode(&stream_, expr->store.opcode);
-      Address align = expr->store.opcode.GetAlignment(expr->store.align);
+      auto store_expr = expr->As<StoreExpr>();
+      write_opcode(&stream_, store_expr->opcode);
+      Address align = store_expr->opcode.GetAlignment(store_expr->align);
       stream_.WriteU8(log2_u32(align), "alignment");
-      write_u32_leb128(&stream_, expr->store.offset, "store offset");
+      write_u32_leb128(&stream_, store_expr->offset, "store offset");
       break;
     }
     case ExprType::TeeLocal: {
-      Index index = GetLocalIndex(func, expr->get_local.var);
+      Index index = GetLocalIndex(func, expr->As<TeeLocalExpr>()->var);
       write_opcode(&stream_, Opcode::TeeLocal);
       write_u32_leb128(&stream_, index, "local index");
       break;
     }
     case ExprType::Throw:
       write_opcode(&stream_, Opcode::Throw);
-      write_u32_leb128(&stream_, GetExceptVarDepth(&expr->throw_.var),
+      write_u32_leb128(&stream_, GetExceptVarDepth(&expr->As<ThrowExpr>()->var),
                        "throw exception");
       break;
-    case ExprType::TryBlock:
+    case ExprType::TryBlock: {
+      auto try_expr = expr->As<TryExpr>();
       write_opcode(&stream_, Opcode::Try);
-      write_inline_signature_type(&stream_, expr->try_block.block->sig);
-      WriteExprList(module, func, expr->try_block.block->first);
-      for (Catch* catch_ : *expr->try_block.catches) {
+      write_inline_signature_type(&stream_, try_expr->block->sig);
+      WriteExprList(module, func, try_expr->block->first);
+      for (Catch* catch_ : try_expr->catches) {
         if (catch_->IsCatchAll()) {
           write_opcode(&stream_, Opcode::CatchAll);
         } else {
@@ -598,8 +608,9 @@ void BinaryWriter::WriteExpr(const Module* module,
       }
       write_opcode(&stream_, Opcode::End);
       break;
+    }
     case ExprType::Unary:
-      write_opcode(&stream_, expr->unary.opcode);
+      write_opcode(&stream_, expr->As<UnaryExpr>()->opcode);
       break;
     case ExprType::Unreachable:
       write_opcode(&stream_, Opcode::Unreachable);

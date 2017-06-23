@@ -92,6 +92,7 @@ union Token {
   Script* script;
   Table* table;
   TextList text_list;
+  TryExpr* try_expr;
   TypeVector* types;
   uint32_t u32;
   uint64_t u64;

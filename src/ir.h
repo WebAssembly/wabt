@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #include "binding-hash.h"
 #include "common.h"
@@ -123,7 +124,7 @@ enum class ExprType {
 
 typedef TypeVector BlockSignature;
 
-struct Expr;
+class Expr;
 
 struct Block {
   WABT_DISALLOW_COPY_AND_ASSIGN(Block);
@@ -144,7 +145,7 @@ struct Catch {
   ~Catch();
   Location loc;
   Var var;
-  struct Expr* first;
+  Expr* first;
   bool IsCatchAll() const {
     return var.type == VarType::Index && var.index == kInvalidIndex;
   }
@@ -152,61 +153,147 @@ struct Catch {
 
 typedef std::vector<Catch*> CatchVector;
 
-struct Expr {
+class Expr {
+ public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Expr);
-  Expr();
-  explicit Expr(ExprType);
-  ~Expr();
+  Expr() = delete;
+  virtual ~Expr() {}
 
-  static Expr* CreateBinary(Opcode);
-  static Expr* CreateBlock(Block*);
-  static Expr* CreateBr(Var);
-  static Expr* CreateBrIf(Var);
-  static Expr* CreateBrTable(VarVector* targets, Var default_target);
-  static Expr* CreateCall(Var);
-  static Expr* CreateCallIndirect(Var);
-  static Expr* CreateCompare(Opcode);
-  static Expr* CreateConst(const Const&);
-  static Expr* CreateConvert(Opcode);
-  static Expr* CreateCurrentMemory();
-  static Expr* CreateDrop();
-  static Expr* CreateGetGlobal(Var);
-  static Expr* CreateGetLocal(Var);
-  static Expr* CreateGrowMemory();
-  static Expr* CreateIf(Block* true_, Expr* false_ = nullptr);
-  static Expr* CreateLoad(Opcode, Address align, uint32_t offset);
-  static Expr* CreateLoop(Block*);
-  static Expr* CreateNop();
-  static Expr* CreateRethrow(Var);
-  static Expr* CreateReturn();
-  static Expr* CreateSelect();
-  static Expr* CreateSetGlobal(Var);
-  static Expr* CreateSetLocal(Var);
-  static Expr* CreateStore(Opcode, Address align, uint32_t offset);
-  static Expr* CreateTeeLocal(Var);
-  static Expr* CreateThrow(Var);
-  static Expr* CreateTry();
-  static Expr* CreateUnary(Opcode);
-  static Expr* CreateUnreachable();
+  template <typename T>
+  bool Is() const {
+    WABT_STATIC_ASSERT((std::is_base_of<Expr, T>::value));
+    return type == T::kStaticType;
+  };
+
+  template <typename T>
+  const T* As() const {
+    assert(Is<T>());
+    return static_cast<const T*>(this);
+  }
+
+  template <typename T>
+  T* As() {
+    assert(Is<T>());
+    return static_cast<T*>(this);
+  }
 
   Location loc;
   ExprType type;
   Expr* next;
-  union {
-    struct { Opcode opcode; } binary, compare, convert, unary;
-    struct Block *block, *loop;
-    struct { Block* block; CatchVector* catches; } try_block;
-    struct { Var var; } throw_, rethrow_;
-    struct { Var var; } br, br_if;
-    struct { VarVector* targets; Var default_target; } br_table;
-    struct { Var var; } call, call_indirect;
-    struct Const const_;
-    struct { Var var; } get_global, set_global;
-    struct { Var var; } get_local, set_local, tee_local;
-    struct { Block* true_; Expr* false_; } if_;
-    struct { Opcode opcode; Address align; uint32_t offset; } load, store;
-  };
+
+ protected:
+  explicit Expr(ExprType);
 };
+
+template <ExprType T>
+class ExprMixin : public Expr {
+ public:
+  static const ExprType kStaticType = T;
+  ExprMixin() : Expr(T) {}
+};
+
+typedef ExprMixin<ExprType::CurrentMemory> CurrentMemoryExpr;
+typedef ExprMixin<ExprType::Drop> DropExpr;
+typedef ExprMixin<ExprType::GrowMemory> GrowMemoryExpr;
+typedef ExprMixin<ExprType::Nop> NopExpr;
+typedef ExprMixin<ExprType::Return> ReturnExpr;
+typedef ExprMixin<ExprType::Select> SelectExpr;
+typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
+
+template <ExprType T>
+class OpcodeExpr : public ExprMixin<T> {
+ public:
+  OpcodeExpr(Opcode opcode) : opcode(opcode) {}
+
+  Opcode opcode;
+};
+
+typedef OpcodeExpr<ExprType::Binary> BinaryExpr;
+typedef OpcodeExpr<ExprType::Compare> CompareExpr;
+typedef OpcodeExpr<ExprType::Convert> ConvertExpr;
+typedef OpcodeExpr<ExprType::Unary> UnaryExpr;
+
+template <ExprType T>
+class VarExpr : public ExprMixin<T> {
+ public:
+  VarExpr(const Var& var) : var(var) {}
+
+  Var var;
+};
+
+typedef VarExpr<ExprType::Br> BrExpr;
+typedef VarExpr<ExprType::BrIf> BrIfExpr;
+typedef VarExpr<ExprType::Call> CallExpr;
+typedef VarExpr<ExprType::CallIndirect> CallIndirectExpr;
+typedef VarExpr<ExprType::GetGlobal> GetGlobalExpr;
+typedef VarExpr<ExprType::GetLocal> GetLocalExpr;
+typedef VarExpr<ExprType::Rethrow> RethrowExpr;
+typedef VarExpr<ExprType::SetGlobal> SetGlobalExpr;
+typedef VarExpr<ExprType::SetLocal> SetLocalExpr;
+typedef VarExpr<ExprType::TeeLocal> TeeLocalExpr;
+typedef VarExpr<ExprType::Throw> ThrowExpr;
+
+template <ExprType type>
+class BlockExprBase : public ExprMixin<type> {
+ public:
+  explicit BlockExprBase(Block* block) : block(block) {}
+  ~BlockExprBase() { delete block; }
+
+  Block* block;
+};
+
+typedef BlockExprBase<ExprType::Block> BlockExpr;
+typedef BlockExprBase<ExprType::Loop> LoopExpr;
+
+class IfExpr : public ExprMixin<ExprType::If> {
+ public:
+  explicit IfExpr(Block* true_block, Expr* false_expr = nullptr)
+      : true_(true_block), false_(false_expr) {}
+  ~IfExpr();
+
+  Block* true_;
+  Expr* false_;
+};
+
+class TryExpr : public ExprMixin<ExprType::TryBlock> {
+ public:
+  TryExpr() : block(nullptr) {}
+  ~TryExpr();
+
+  Block* block;
+  CatchVector catches;
+};
+
+class BrTableExpr : public ExprMixin<ExprType::BrTable> {
+ public:
+  BrTableExpr(VarVector* targets, Var default_target)
+      : targets(targets), default_target(default_target) {}
+  ~BrTableExpr() { delete targets; }
+
+  VarVector* targets;
+  Var default_target;
+};
+
+class ConstExpr : public ExprMixin<ExprType::Const> {
+ public:
+  ConstExpr(const Const& c) : const_(c) {}
+
+  Const const_;
+};
+
+template <ExprType T>
+class LoadStoreExpr : public ExprMixin<T> {
+ public:
+  LoadStoreExpr(Opcode opcode, Address align, uint32_t offset)
+      : opcode(opcode), align(align), offset(offset) {}
+
+  Opcode opcode;
+  Address align;
+  uint32_t offset;
+};
+
+typedef LoadStoreExpr<ExprType::Load> LoadExpr;
+typedef LoadStoreExpr<ExprType::Store> StoreExpr;
 
 struct Exception {
   StringSlice name;
