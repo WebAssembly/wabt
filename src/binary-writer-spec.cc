@@ -554,7 +554,7 @@ Result BinaryWriterSpec::WriteScript(Script* script) {
   return result_;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result write_binary_spec_script(Script* script,
                                 const char* source_filename,

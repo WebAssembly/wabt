@@ -351,6 +351,6 @@ inline void ConvertBackslashToSlash(std::string* s) {
   ConvertBackslashToSlash(s->begin(), s->end());
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 #endif /* WABT_COMMON_H_ */

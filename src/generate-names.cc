@@ -216,7 +216,7 @@ Result NameGenerator::VisitModule(Module* module) {
   return Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result generate_names(Module* module) {
   NameGenerator generator;

@@ -5,7 +5,7 @@ version
 section("linking") {
   subsection[1]
   length[1]
-  stack_galbal[3]
+  stack_global[3]
   subsection[2]
   length[6]
   num_symbols[1]

@@ -958,13 +958,13 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   PrintDetails(" - segment[%" PRIindex "] size=%" PRIaddress, index, size);
   PrintInitExpr(data_init_expr_);
 
-  size_t offset = 0;
+  size_t voffset = 0;
   switch (data_init_expr_.type) {
     case InitExprType::I32:
-      offset = data_init_expr_.value.i32;
+      voffset = data_init_expr_.value.i32;
       break;
     case InitExprType::I64:
-      offset = data_init_expr_.value.i64;
+      voffset = data_init_expr_.value.i64;
       break;
     case InitExprType::F32:
     case InitExprType::F64:
@@ -975,19 +975,22 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
       break;
   }
 
-  out_stream_->WriteMemoryDump(src_data, size, offset, PrintChars::Yes, "  - ");
+  out_stream_->WriteMemoryDump(src_data, size, voffset, PrintChars::Yes,
+                               "  - ");
 
-  // Print relocations from this section.
+  // Print relocations from this segment.
   if (!options->relocs)
     return Result::Ok;
 
   Offset data_start = GetSectionStart(BinarySection::Data);
+  Offset segment_start = state->offset - size;
+  Offset segment_offset = segment_start - data_start;
   while (next_data_reloc_ < objdump_state->data_relocations.size()) {
     const Reloc& reloc = objdump_state->data_relocations[next_data_reloc_];
     Offset abs_offset = data_start + reloc.offset;
     if (abs_offset > state->offset)
       break;
-    PrintRelocation(reloc, abs_offset);
+    PrintRelocation(reloc, reloc.offset - segment_offset + voffset);
     next_data_reloc_++;
   }
 
@@ -1041,7 +1044,7 @@ Result BinaryReaderObjdump::OnSymbolInfo(StringSlice name,
   return Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result read_binary_objdump(const uint8_t* data,
                            size_t size,

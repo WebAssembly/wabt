@@ -1605,7 +1605,7 @@ Result BinaryReader::ReadModule() {
   return Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result read_binary(const void* data,
                    size_t size,
