@@ -1,5 +1,5 @@
 ;;; TOOL: wast2wasm
-;;; FLAGS: --future-exceptions
+;;; FLAGS: --future-exceptions -v
 ;;; ERROR: 1
 (module
   (import "c++" "except" (except $ex i32))
@@ -19,3 +19,27 @@
 (;; STDERR ;;;
 write import except not implemented
 ;;; STDERR ;;)
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 01                                        ; num results
+000000e: 7f                                        ; i32
+0000009: 05                                        ; FIXUP section size
+; section "Import" (2)
+000000f: 02                                        ; section code
+0000010: 00                                        ; section size (guess)
+0000011: 01                                        ; num imports
+; import header 0
+0000012: 03                                        ; string length
+0000013: 632b 2b                                  c++  ; import module name
+0000016: 06                                        ; string length
+0000017: 6578 6365 7074                           except  ; import field name
+000001d: 04                                        ; import kind
+;;; STDOUT ;;)
