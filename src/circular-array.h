@@ -33,8 +33,13 @@ class CircularArray {
   typedef ptrdiff_t difference_type;
   CircularArray() : size_(0), front_(0), mask_(kCapacity - 1) {
     assert(kCapacity && ((kCapacity & (kCapacity - 1)) == 0));
+    for (size_t i = 0; i < kCapacity; ++i)
+      new (&contents_[i]) value_type();
   }
-  ~CircularArray() {}
+  ~CircularArray() {
+    for (size_t i = 0; i < kCapacity; ++i)
+      contents_[i].~T();
+  }
 
   reference at(size_type index) {
     assert(index < size_);
