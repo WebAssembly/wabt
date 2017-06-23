@@ -597,8 +597,9 @@ void Validator::CheckExpr(const Expr* expr) {
           if (found_catch_all)
             PrintError(&catch_->loc, "Appears after catch all block");
           const Exception* except = nullptr;
-          CheckExceptVar(&catch_->var, &except);
-          typechecker_.OnCatch(&except->sig);
+          if (WABT_SUCCEEDED(CheckExceptVar(&catch_->var, &except))) {
+            typechecker_.OnCatch(&except->sig);
+          }
         }
         CheckExprList(&catch_->loc, catch_->first);
       }
