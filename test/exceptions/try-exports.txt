@@ -1,5 +1,5 @@
 ;;; TOOL: wast2wasm
-;;; FLAGS: --future-exceptions
+;;; FLAGS: --future-exceptions -v
 ;;; ERROR: 1
 (module
   (except $ex i32)
@@ -35,6 +35,7 @@
 0000016: 06                                        ; string length
 0000017: 6578 6365 7074                           except  ; export name
 000001d: 04                                        ; export kind
+<<<<<<< HEAD
 000001e: 00                                        ; export exception index
 0000014: 0a                                        ; FIXUP section size
 ; section "Code" (10)
@@ -60,4 +61,6 @@
 0000036: 01                                        ; exception type count
 0000037: 7f                                        ; i32
 000002a: 0d                                        ; FIXUP section size
+=======
+>>>>>>> master
 ;;; STDOUT ;;)

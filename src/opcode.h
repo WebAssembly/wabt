@@ -78,6 +78,6 @@ struct Opcode {
   Enum enum_;
 };
 
-}  // namespace
+}  // end anonymous namespace
 
 #endif  // WABT_OPCODE_H_

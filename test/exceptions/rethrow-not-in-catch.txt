@@ -1,5 +1,5 @@
 ;;; TOOL: wast2wasm
-;;; FLAGS: --future-exceptions
+;;; FLAGS: --future-exceptions -v
 ;;; ERROR: 1
 (module
   (except $ex i32)

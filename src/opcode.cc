@@ -65,4 +65,4 @@ Address Opcode::GetAlignment(Address alignment) const {
   return alignment;
 }
 
-}  // namespace
+}  // end anonymous namespace

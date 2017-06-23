@@ -1020,7 +1020,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
   return stream_.result();
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result write_binary_module(Writer* writer,
                            const Module* module,

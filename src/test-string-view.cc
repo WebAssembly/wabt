@@ -35,7 +35,7 @@ void assert_string_view_eq(const char* s, const string_view& sv) {
 
 constexpr string_view::size_type npos = string_view::npos;
 
-}  // namespace
+}  // end anonymous namespace
 
 TEST(string_view, default_constructor) {
   assert_string_view_eq("", string_view());

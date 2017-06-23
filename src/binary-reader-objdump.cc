@@ -901,7 +901,7 @@ Result BinaryReaderObjdump::OnSymbolInfo(StringSlice name,
   return Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result read_binary_objdump(const uint8_t* data,
                            size_t size,

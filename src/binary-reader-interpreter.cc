@@ -1436,7 +1436,7 @@ wabt::Result BinaryReaderInterpreter::EndModule() {
   return wabt::Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 wabt::Result read_binary_interpreter(Environment* env,
                                      const void* data,
