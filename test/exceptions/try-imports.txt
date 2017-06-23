@@ -1,6 +1,5 @@
 ;;; TOOL: wast2wasm
 ;;; FLAGS: --future-exceptions -v
-;;; ERROR: 1
 (module
   (import "c++" "except" (except $ex i32))
   (func (result i32)
@@ -39,7 +38,6 @@
 0000016: 06                                        ; string length
 0000017: 6578 6365 7074                           except  ; import field name
 000001d: 04                                        ; import kind
-<<<<<<< HEAD
 000001e: 01                                        ; exception type count
 000001f: 7f                                        ; i32
 0000010: 0f                                        ; FIXUP section size
@@ -80,6 +78,4 @@
 0000043: 01                                        ; exception type count
 0000044: 7f                                        ; i32
 0000037: 0d                                        ; FIXUP section size
-=======
->>>>>>> master
 ;;; STDOUT ;;)
