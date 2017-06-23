@@ -17,6 +17,8 @@
 #ifndef WABT_CIRCULAR_ARRAY_H_
 #define WABT_CIRCULAR_ARRAY_H_
 
+#include <array>
+
 namespace wabt {
 
 // TODO(karlschimpf) Complete the API
@@ -33,12 +35,8 @@ class CircularArray {
   typedef ptrdiff_t difference_type;
   CircularArray() : size_(0), front_(0), mask_(kCapacity - 1) {
     assert(kCapacity && ((kCapacity & (kCapacity - 1)) == 0));
-    for (size_t i = 0; i < kCapacity; ++i)
-      new (&contents_[i]) value_type();
   }
   ~CircularArray() {
-    for (size_t i = 0; i < kCapacity; ++i)
-      contents_[i].~value_type();
   }
 
   reference at(size_type index) {
@@ -102,7 +100,7 @@ class CircularArray {
   }
 
  private:
-  T contents_[kCapacity];
+  std::array<T, kCapacity> contents_;
   size_type size_;
   size_type front_;
   size_type mask_;
