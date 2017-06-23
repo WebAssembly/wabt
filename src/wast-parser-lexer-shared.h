@@ -60,6 +60,8 @@ union Token {
   Opcode opcode;
   Literal literal;
 
+  Token() {}
+
   /* non-terminals */
   /* some of these use pointers to keep the size of Token down; copying the
    tokens is a hotspot when parsing large files. */
