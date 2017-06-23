@@ -7,10 +7,14 @@ section("linking") {
   length[1]
   stack_global[3]
   subsection[2]
-  length[6]
-  num_symbols[1]
+  length[16]
+  num_symbols[3]
   str("foo")
   flags[1]
+  str("bar")
+  flags[2]
+  str("baz")
+  flags[0]
 }
 (;; STDOUT ;;;
 
@@ -21,6 +25,8 @@ Section Details:
 Custom:
  - name: "linking"
   - stack pointer global: 3
-  - symbol info [count=1]
-   - <foo> flags=0x1
+  - symbol info [count=3]
+   - WEAK   <foo>
+   - LOCAL  <bar>
+   - GLOBAL <baz>
 ;;; STDOUT ;;)
