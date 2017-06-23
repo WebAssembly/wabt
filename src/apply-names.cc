@@ -331,7 +331,7 @@ Result NameApplier::VisitModule(Module* module) {
   return Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result apply_names(Module* module) {
   NameApplier applier;

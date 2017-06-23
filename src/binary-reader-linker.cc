@@ -279,7 +279,7 @@ Result BinaryReaderLinker::OnFunctionName(Index index, StringSlice name) {
   return Result::Ok;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 Result read_binary_linker(LinkerInputBinary* input_info, LinkOptions* options) {
   BinaryReaderLinker reader(input_info);

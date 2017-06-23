@@ -47,7 +47,7 @@ bool is_cont(uint8_t c) {
   return (c & 0xc0) == 0x80;
 }
 
-}  // namespace
+}  // end anonymous namespace
 
 bool is_valid_utf8(const char* s, size_t s_length) {
   const uint8_t* p = reinterpret_cast<const uint8_t*>(s);
