@@ -98,7 +98,7 @@ else ()
   # disable -Wpointer-arith: this is a GCC extension, and doesn't work in MSVC.
   add_definitions(
     -Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -g -std=c++11
-    -Wold-style-cast
+    -Wold-style-cast -Wuninitialized
   )
 
   if (NOT WITH_EXCEPTIONS)
