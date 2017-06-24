@@ -19,6 +19,7 @@
 
 #include <string>
 
+#include "color.h"
 #include "common.h"
 
 namespace wabt {
@@ -38,7 +39,8 @@ class SourceErrorHandler {
   // OnError will be called with with source_line trimmed to this length.
   virtual size_t source_line_max_length() const = 0;
 
-  std::string DefaultErrorMessage(const Location*,
+  std::string DefaultErrorMessage(const Color&,
+                                  const Location*,
                                   const std::string& error,
                                   const std::string& source_line,
                                   size_t source_line_column_offset,
@@ -93,6 +95,7 @@ class SourceErrorHandlerFile : public SourceErrorHandler {
   std::string header_;
   PrintHeader print_header_;
   size_t source_line_max_length_;
+  Color color_;
 };
 
 class SourceErrorHandlerBuffer : public SourceErrorHandler {
@@ -114,6 +117,7 @@ class SourceErrorHandlerBuffer : public SourceErrorHandler {
  private:
   size_t source_line_max_length_;
   std::string buffer_;
+  Color color_;
 };
 
 }  // namespace wabt

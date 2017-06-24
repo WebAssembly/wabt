@@ -1,0 +1,14 @@
+;;; ERROR: 1
+;;; TOOL: wast2wasm
+;;; ENV: FORCE_COLOR=1
+(module
+  (func badname (param i32) (result badtype)
+    drop))
+(;; STDERR ;;;
+[1mout/test/parse/force-color.txt:5:9: [0munexpected token "badname"
+  (func badname (param i32) (result badtype)
+        [1m[32m^^^^^^^[0m
+[1mout/test/parse/force-color.txt:5:37: [0munexpected token "badtype"
+  (func badname (param i32) (result badtype)
+                                    [1m[32m^^^^^^^[0m
+;;; STDERR ;;)
