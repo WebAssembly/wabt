@@ -1165,6 +1165,7 @@ void WatWriter::BuildExportMaps() {
       }
 
       case ExternalKind::Except:
+        // TODO(karlschimpf): Build for inline exceptions.
         break;
     }
   }
