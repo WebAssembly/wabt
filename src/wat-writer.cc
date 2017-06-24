@@ -133,6 +133,8 @@ class WatWriter {
   void WriteFunc(const Module* module, const Func* func);
   void WriteBeginGlobal(const Global* global);
   void WriteGlobal(const Global* global);
+  void WriteBeginException(const Exception* except);
+  void WriteException(const Exception* except);
   void WriteLimits(const Limits* limits);
   void WriteTable(const Table* table);
   void WriteElemSegment(const ElemSegment* segment);
@@ -570,6 +572,11 @@ void WatWriter::WriteExpr(const Expr* expr) {
       WritePutsNewline(Opcode::Nop_Opcode.GetName());
       break;
 
+    case ExprType::Rethrow:
+      WritePutsSpace(Opcode::Rethrow_Opcode.GetName());
+      WriteBrVar(&expr->As<RethrowExpr>()->var, NextChar::Newline);
+      break;
+
     case ExprType::Return:
       WritePutsNewline(Opcode::Return_Opcode.GetName());
       break;
@@ -603,6 +610,32 @@ void WatWriter::WriteExpr(const Expr* expr) {
       WritePutsSpace(Opcode::TeeLocal_Opcode.GetName());
       WriteVar(&expr->As<TeeLocalExpr>()->var, NextChar::Newline);
       break;
+
+    case ExprType::Throw:
+      WritePutsSpace(Opcode::Throw_Opcode.GetName());
+      WriteVar(&expr->As<ThrowExpr>()->var, NextChar::Newline);
+      break;
+
+    case ExprType::TryBlock: {
+      auto try_ = expr->As<TryExpr>();
+      WriteBeginBlock(LabelType::Try, try_->block,
+                      Opcode::Try_Opcode.GetName());
+      WriteExprList(try_->block->first);
+      for (const Catch* catch_ : try_->catches) {
+        Dedent();
+        if (catch_->IsCatchAll()) {
+          WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
+        } else {
+          WritePutsSpace(Opcode::Catch_Opcode.GetName());
+          WriteVar(&catch_->var, NextChar::Newline);
+        }
+        Indent();
+        label_stack_.back().label_type = LabelType::Catch;
+        WriteExprList(catch_->first);
+      }
+      WriteEndBlock();
+      break;
+    }
 
     case ExprType::Unary:
       WritePutsNewline(expr->As<UnaryExpr>()->opcode.GetName());
@@ -931,6 +964,17 @@ void WatWriter::WriteGlobal(const Global* global) {
   WriteCloseNewline();
 }
 
+void WatWriter::WriteBeginException(const Exception* except) {
+  WriteOpenSpace("except");
+  WriteName(&except->name, NextChar::Space);
+  WriteTypes(except->sig, nullptr);
+}
+
+void WatWriter::WriteException(const Exception* except) {
+  WriteBeginException(except);
+  WriteCloseNewline();
+}
+
 void WatWriter::WriteLimits(const Limits* limits) {
   Writef("%" PRIu64, limits->initial);
   if (limits->has_max)
@@ -1003,8 +1047,8 @@ void WatWriter::WriteImport(const Import* import) {
       break;
 
     case ExternalKind::Except:
-      // TODO(karlschimpf) Define
-      WABT_FATAL("WriteImport(except) not implemented");
+      WriteBeginException(import->except);
+      WriteCloseSpace();
       break;
   }
   WriteCloseNewline();
@@ -1053,8 +1097,7 @@ Result WatWriter::WriteModule(const Module* module) {
         WriteImport(field->import);
         break;
       case ModuleFieldType::Except:
-        // TODO(karlschimpf) Define
-        WABT_FATAL("WriteModule(except) not implemented");
+        WriteException(field->except);
         break;
       case ModuleFieldType::Export:
         WriteExport(field->export_);
@@ -1122,7 +1165,6 @@ void WatWriter::BuildExportMaps() {
       }
 
       case ExternalKind::Except:
-        WABT_FATAL("BuildExportMaps(except) not implemented");
         break;
     }
   }

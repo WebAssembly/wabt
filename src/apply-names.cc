@@ -56,17 +56,23 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnSetGlobalExpr(SetGlobalExpr*) override;
   Result OnSetLocalExpr(SetLocalExpr*) override;
   Result OnTeeLocalExpr(TeeLocalExpr*) override;
+  Result BeginTryExpr(TryExpr*) override;
+  Result EndTryExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnThrowExpr(ThrowExpr*) override;
+  Result OnRethrowExpr(RethrowExpr*) override;
 
  private:
   void PushLabel(Label* label);
   void PopLabel();
   Label* FindLabelByVar(Var* var);
   void UseNameForVar(StringSlice* name, Var* var);
-  Result UseNameForFuncTypeVar(Module* module, Var* var);
-  Result UseNameForFuncVar(Module* module, Var* var);
-  Result UseNameForGlobalVar(Module* module, Var* var);
-  Result UseNameForTableVar(Module* module, Var* var);
-  Result UseNameForMemoryVar(Module* module, Var* var);
+  Result UseNameForFuncTypeVar(Var* var);
+  Result UseNameForFuncVar(Var* var);
+  Result UseNameForGlobalVar(Var* var);
+  Result UseNameForTableVar(Var* var);
+  Result UseNameForMemoryVar(Var* var);
+  Result UseNameForExceptVar(Var* var);
   Result UseNameForParamAndLocalVar(Func* func, Var* var);
   Result VisitFunc(Index func_index, Func* func);
   Result VisitExport(Index export_index, Export* export_);
@@ -110,6 +116,7 @@ Label* NameApplier::FindLabelByVar(Var* var) {
 void NameApplier::UseNameForVar(StringSlice* name, Var* var) {
   if (var->type == VarType::Name) {
     assert(string_slices_are_equal(name, &var->name));
+    return;
   }
 
   if (name && name->start) {
@@ -118,43 +125,51 @@ void NameApplier::UseNameForVar(StringSlice* name, Var* var) {
   }
 }
 
-Result NameApplier::UseNameForFuncTypeVar(Module* module, Var* var) {
-  FuncType* func_type = module->GetFuncType(*var);
+Result NameApplier::UseNameForFuncTypeVar(Var* var) {
+  FuncType* func_type = module_->GetFuncType(*var);
   if (!func_type)
     return Result::Error;
   UseNameForVar(&func_type->name, var);
   return Result::Ok;
 }
 
-Result NameApplier::UseNameForFuncVar(Module* module, Var* var) {
-  Func* func = module->GetFunc(*var);
+Result NameApplier::UseNameForFuncVar(Var* var) {
+  Func* func = module_->GetFunc(*var);
   if (!func)
     return Result::Error;
   UseNameForVar(&func->name, var);
   return Result::Ok;
 }
 
-Result NameApplier::UseNameForGlobalVar(Module* module, Var* var) {
-  Global* global = module->GetGlobal(*var);
+Result NameApplier::UseNameForGlobalVar(Var* var) {
+  Global* global = module_->GetGlobal(*var);
   if (!global)
     return Result::Error;
   UseNameForVar(&global->name, var);
   return Result::Ok;
 }
 
-Result NameApplier::UseNameForTableVar(Module* module, Var* var) {
-  Table* table = module->GetTable(*var);
+Result NameApplier::UseNameForTableVar(Var* var) {
+  Table* table = module_->GetTable(*var);
   if (!table)
     return Result::Error;
   UseNameForVar(&table->name, var);
   return Result::Ok;
 }
 
-Result NameApplier::UseNameForMemoryVar(Module* module, Var* var) {
-  Memory* memory = module->GetMemory(*var);
+Result NameApplier::UseNameForMemoryVar(Var* var) {
+  Memory* memory = module_->GetMemory(*var);
   if (!memory)
     return Result::Error;
   UseNameForVar(&memory->name, var);
+  return Result::Ok;
+}
+
+Result NameApplier::UseNameForExceptVar(Var* var) {
+  Exception* except = module_->GetExcept(*var);
+  if (!except)
+    return Result::Error;
+  UseNameForVar(&except->name, var);
   return Result::Ok;
 }
 
@@ -233,18 +248,46 @@ Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
   return Result::Ok;
 }
 
+Result NameApplier::BeginTryExpr(TryExpr* expr) {
+  PushLabel(&expr->block->label);
+  return Result::Ok;
+}
+
+Result NameApplier::EndTryExpr(TryExpr*) {
+  PopLabel();
+  return Result::Ok;
+}
+
+Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
+  if (!expr->IsCatchAll()) {
+    CHECK_RESULT(UseNameForExceptVar(&expr->var));
+  }
+  return Result::Ok;
+}
+
+Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
+  CHECK_RESULT(UseNameForExceptVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnRethrowExpr(RethrowExpr* expr) {
+  Label* label = FindLabelByVar(&expr->var);
+  UseNameForVar(label, &expr->var);
+  return Result::Ok;
+}
+
 Result NameApplier::OnCallExpr(CallExpr* expr) {
-  CHECK_RESULT(UseNameForFuncVar(module_, &expr->var));
+  CHECK_RESULT(UseNameForFuncVar(&expr->var));
   return Result::Ok;
 }
 
 Result NameApplier::OnCallIndirectExpr(CallIndirectExpr* expr) {
-  CHECK_RESULT(UseNameForFuncTypeVar(module_, &expr->var));
+  CHECK_RESULT(UseNameForFuncTypeVar(&expr->var));
   return Result::Ok;
 }
 
 Result NameApplier::OnGetGlobalExpr(GetGlobalExpr* expr) {
-  CHECK_RESULT(UseNameForGlobalVar(module_, &expr->var));
+  CHECK_RESULT(UseNameForGlobalVar(&expr->var));
   return Result::Ok;
 }
 
@@ -264,7 +307,7 @@ Result NameApplier::EndIfExpr(IfExpr* expr) {
 }
 
 Result NameApplier::OnSetGlobalExpr(SetGlobalExpr* expr) {
-  CHECK_RESULT(UseNameForGlobalVar(module_, &expr->var));
+  CHECK_RESULT(UseNameForGlobalVar(&expr->var));
   return Result::Ok;
 }
 
@@ -281,7 +324,7 @@ Result NameApplier::OnTeeLocalExpr(TeeLocalExpr* expr) {
 Result NameApplier::VisitFunc(Index func_index, Func* func) {
   current_func_ = func;
   if (func->decl.has_func_type) {
-    CHECK_RESULT(UseNameForFuncTypeVar(module_, &func->decl.type_var));
+    CHECK_RESULT(UseNameForFuncTypeVar(&func->decl.type_var));
   }
 
   MakeTypeBindingReverseMapping(func->decl.sig.param_types,
@@ -297,23 +340,23 @@ Result NameApplier::VisitFunc(Index func_index, Func* func) {
 
 Result NameApplier::VisitExport(Index export_index, Export* export_) {
   if (export_->kind == ExternalKind::Func) {
-    UseNameForFuncVar(module_, &export_->var);
+    UseNameForFuncVar(&export_->var);
   }
   return Result::Ok;
 }
 
 Result NameApplier::VisitElemSegment(Index elem_segment_index,
                                      ElemSegment* segment) {
-  CHECK_RESULT(UseNameForTableVar(module_, &segment->table_var));
+  CHECK_RESULT(UseNameForTableVar(&segment->table_var));
   for (Var& var : segment->vars) {
-    CHECK_RESULT(UseNameForFuncVar(module_, &var));
+    CHECK_RESULT(UseNameForFuncVar(&var));
   }
   return Result::Ok;
 }
 
 Result NameApplier::VisitDataSegment(Index data_segment_index,
                                      DataSegment* segment) {
-  CHECK_RESULT(UseNameForMemoryVar(module_, &segment->memory_var));
+  CHECK_RESULT(UseNameForMemoryVar(&segment->memory_var));
   return Result::Ok;
 }
 
