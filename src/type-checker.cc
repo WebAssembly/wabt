@@ -463,10 +463,21 @@ Result TypeChecker::OnRethrow(Index depth) {
   Label* label;
   CHECK_RESULT(GetLabel(depth, &label));
   if (label->label_type != LabelType::Catch) {
-    // TODO(karlschimpf) Make this error more readable (readers
-    // typically think in terms of try/catch clauses, not all blocks).
-    PrintError("invalid rethrow depth: %" PRIindex " (max %" PRIzd ")", depth,
-               label_stack_.size() - 1);
+    std::string candidates;
+    size_t last = label_stack_.size() - 1;
+    for (size_t i = 0; i < label_stack_.size(); ++i) {
+      if (label_stack_[last - i].label_type == LabelType::Catch) {
+        if (!candidates.empty())
+          candidates.append(", ");
+        candidates.append(std::to_string(i));
+      }
+    }
+    if (candidates.empty()) {
+      PrintError("Rethrow not in try catch block");
+    } else {
+      PrintError("invalid rethrow depth: %" PRIindex " (catches: %s)", depth,
+                 candidates.c_str());
+    }
     result = Result::Error;
   }
   CHECK_RESULT(SetUnreachable());
