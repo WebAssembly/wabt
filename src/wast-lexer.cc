@@ -98,6 +98,8 @@ struct WastLexer::LexToken {
   Location loc_;
   int value_;
   Token lval_;
+
+  LexToken(void): value_(0) {}
 };
 
 struct WastLexer::Lookahead {
