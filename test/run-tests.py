@@ -550,6 +550,8 @@ def RunTest(info, options, variables, verbose_level=0):
   variables = dict(variables)
 
   cwd = REPO_ROOT_DIR
+  env = dict(os.environ)
+  env.update(info.env)
   gen_input_path = info.CreateInputFile()
   rel_gen_input_path = os.path.relpath(gen_input_path, cwd)
 
@@ -567,7 +569,7 @@ def RunTest(info, options, variables, verbose_level=0):
     print(' '.join(cmd))
 
   try:
-    return RunCommandWithTimeout(cmd, cwd, timeout, verbose_level > 0, info.env)
+    return RunCommandWithTimeout(cmd, cwd, timeout, verbose_level > 0, env)
   except (Error, KeyboardInterrupt) as e:
     return e
 
