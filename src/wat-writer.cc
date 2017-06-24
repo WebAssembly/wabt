@@ -464,51 +464,52 @@ void WatWriter::WriteConst(const Const* const_) {
 void WatWriter::WriteExpr(const Expr* expr) {
   switch (expr->type) {
     case ExprType::Binary:
-      WritePutsNewline(expr->binary.opcode.GetName());
+      WritePutsNewline(expr->As<BinaryExpr>()->opcode.GetName());
       break;
 
     case ExprType::Block:
-      WriteBlock(LabelType::Block, expr->block, Opcode::Block_Opcode.GetName());
+      WriteBlock(LabelType::Block, expr->As<BlockExpr>()->block,
+                 Opcode::Block_Opcode.GetName());
       break;
 
     case ExprType::Br:
       WritePutsSpace(Opcode::Br_Opcode.GetName());
-      WriteBrVar(&expr->br.var, NextChar::Newline);
+      WriteBrVar(&expr->As<BrExpr>()->var, NextChar::Newline);
       break;
 
     case ExprType::BrIf:
       WritePutsSpace(Opcode::BrIf_Opcode.GetName());
-      WriteBrVar(&expr->br_if.var, NextChar::Newline);
+      WriteBrVar(&expr->As<BrIfExpr>()->var, NextChar::Newline);
       break;
 
     case ExprType::BrTable: {
       WritePutsSpace(Opcode::BrTable_Opcode.GetName());
-      for (const Var& var : *expr->br_table.targets)
+      for (const Var& var : *expr->As<BrTableExpr>()->targets)
         WriteBrVar(&var, NextChar::Space);
-      WriteBrVar(&expr->br_table.default_target, NextChar::Newline);
+      WriteBrVar(&expr->As<BrTableExpr>()->default_target, NextChar::Newline);
       break;
     }
 
     case ExprType::Call:
       WritePutsSpace(Opcode::Call_Opcode.GetName());
-      WriteVar(&expr->call.var, NextChar::Newline);
+      WriteVar(&expr->As<CallExpr>()->var, NextChar::Newline);
       break;
 
     case ExprType::CallIndirect:
       WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
-      WriteVar(&expr->call_indirect.var, NextChar::Newline);
+      WriteVar(&expr->As<CallIndirectExpr>()->var, NextChar::Newline);
       break;
 
     case ExprType::Compare:
-      WritePutsNewline(expr->compare.opcode.GetName());
+      WritePutsNewline(expr->As<CompareExpr>()->opcode.GetName());
       break;
 
     case ExprType::Const:
-      WriteConst(&expr->const_);
+      WriteConst(&expr->As<ConstExpr>()->const_);
       break;
 
     case ExprType::Convert:
-      WritePutsNewline(expr->convert.opcode.GetName());
+      WritePutsNewline(expr->As<ConvertExpr>()->opcode.GetName());
       break;
 
     case ExprType::Drop:
@@ -517,43 +518,48 @@ void WatWriter::WriteExpr(const Expr* expr) {
 
     case ExprType::GetGlobal:
       WritePutsSpace(Opcode::GetGlobal_Opcode.GetName());
-      WriteVar(&expr->get_global.var, NextChar::Newline);
+      WriteVar(&expr->As<GetGlobalExpr>()->var, NextChar::Newline);
       break;
 
     case ExprType::GetLocal:
       WritePutsSpace(Opcode::GetLocal_Opcode.GetName());
-      WriteVar(&expr->get_local.var, NextChar::Newline);
+      WriteVar(&expr->As<GetLocalExpr>()->var, NextChar::Newline);
       break;
 
     case ExprType::GrowMemory:
       WritePutsNewline(Opcode::GrowMemory_Opcode.GetName());
       break;
 
-    case ExprType::If:
-      WriteBeginBlock(LabelType::If, expr->if_.true_,
+    case ExprType::If: {
+      auto if_expr = expr->As<IfExpr>();
+      WriteBeginBlock(LabelType::If, if_expr->true_,
                       Opcode::If_Opcode.GetName());
-      WriteExprList(expr->if_.true_->first);
-      if (expr->if_.false_) {
+      WriteExprList(if_expr->true_->first);
+      if (if_expr->false_) {
         Dedent();
         WritePutsSpace(Opcode::Else_Opcode.GetName());
         Indent();
         WriteNewline(FORCE_NEWLINE);
-        WriteExprList(expr->if_.false_);
+        WriteExprList(if_expr->false_);
       }
       WriteEndBlock();
       break;
+    }
 
-    case ExprType::Load:
-      WritePutsSpace(expr->load.opcode.GetName());
-      if (expr->load.offset)
-        Writef("offset=%u", expr->load.offset);
-      if (!expr->load.opcode.IsNaturallyAligned(expr->load.align))
-        Writef("align=%u", expr->load.align);
+    case ExprType::Load: {
+      auto load_expr = expr->As<LoadExpr>();
+      WritePutsSpace(load_expr->opcode.GetName());
+      if (load_expr->offset)
+        Writef("offset=%u", load_expr->offset);
+      if (!load_expr->opcode.IsNaturallyAligned(load_expr->align))
+        Writef("align=%u", load_expr->align);
       WriteNewline(NO_FORCE_NEWLINE);
       break;
+    }
 
     case ExprType::Loop:
-      WriteBlock(LabelType::Loop, expr->loop, Opcode::Loop_Opcode.GetName());
+      WriteBlock(LabelType::Loop, expr->As<LoopExpr>()->block,
+                 Opcode::Loop_Opcode.GetName());
       break;
 
     case ExprType::CurrentMemory:
@@ -574,30 +580,32 @@ void WatWriter::WriteExpr(const Expr* expr) {
 
     case ExprType::SetGlobal:
       WritePutsSpace(Opcode::SetGlobal_Opcode.GetName());
-      WriteVar(&expr->set_global.var, NextChar::Newline);
+      WriteVar(&expr->As<SetGlobalExpr>()->var, NextChar::Newline);
       break;
 
     case ExprType::SetLocal:
       WritePutsSpace(Opcode::SetLocal_Opcode.GetName());
-      WriteVar(&expr->set_local.var, NextChar::Newline);
+      WriteVar(&expr->As<SetLocalExpr>()->var, NextChar::Newline);
       break;
 
-    case ExprType::Store:
-      WritePutsSpace(expr->store.opcode.GetName());
-      if (expr->store.offset)
-        Writef("offset=%u", expr->store.offset);
-      if (!expr->store.opcode.IsNaturallyAligned(expr->store.align))
-        Writef("align=%u", expr->store.align);
+    case ExprType::Store: {
+      auto store_expr = expr->As<StoreExpr>();
+      WritePutsSpace(store_expr->opcode.GetName());
+      if (store_expr->offset)
+        Writef("offset=%u", store_expr->offset);
+      if (!store_expr->opcode.IsNaturallyAligned(store_expr->align))
+        Writef("align=%u", store_expr->align);
       WriteNewline(NO_FORCE_NEWLINE);
       break;
+    }
 
     case ExprType::TeeLocal:
       WritePutsSpace(Opcode::TeeLocal_Opcode.GetName());
-      WriteVar(&expr->tee_local.var, NextChar::Newline);
+      WriteVar(&expr->As<TeeLocalExpr>()->var, NextChar::Newline);
       break;
 
     case ExprType::Unary:
-      WritePutsNewline(expr->unary.opcode.GetName());
+      WritePutsNewline(expr->As<UnaryExpr>()->opcode.GetName());
       break;
 
     case ExprType::Unreachable:
@@ -665,32 +673,36 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::Block:
-      PushExpr(expr, 0, expr->block->sig.size());
+      PushExpr(expr, 0, expr->As<BlockExpr>()->block->sig.size());
       break;
 
     case ExprType::Br:
-      PushExpr(expr, GetLabelArity(&expr->br.var), 1);
+      PushExpr(expr, GetLabelArity(&expr->As<BrExpr>()->var), 1);
       break;
 
     case ExprType::BrIf: {
-      Index arity = GetLabelArity(&expr->br_if.var);
+      Index arity = GetLabelArity(&expr->As<BrIfExpr>()->var);
       PushExpr(expr, arity + 1, arity);
       break;
     }
 
     case ExprType::BrTable:
-      PushExpr(expr, GetLabelArity(&expr->br_table.default_target) + 1, 1);
+      PushExpr(expr,
+               GetLabelArity(&expr->As<BrTableExpr>()->default_target) + 1, 1);
       break;
 
-    case ExprType::Call:
-      PushExpr(expr, GetFuncParamCount(&expr->call.var),
-               GetFuncResultCount(&expr->call.var));
+    case ExprType::Call: {
+      const Var& var = expr->As<CallExpr>()->var;
+      PushExpr(expr, GetFuncParamCount(&var), GetFuncResultCount(&var));
       break;
+    }
 
-    case ExprType::CallIndirect:
-      PushExpr(expr, GetFuncSigParamCount(&expr->call_indirect.var) + 1,
-               GetFuncSigResultCount(&expr->call_indirect.var));
+    case ExprType::CallIndirect: {
+      const Var& var = expr->As<CallIndirectExpr>()->var;
+      PushExpr(expr, GetFuncSigParamCount(&var) + 1,
+               GetFuncSigResultCount(&var));
       break;
+    }
 
     case ExprType::Const:
     case ExprType::CurrentMemory:
@@ -715,11 +727,11 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::If:
-      PushExpr(expr, 1, expr->if_.true_->sig.size());
+      PushExpr(expr, 1, expr->As<IfExpr>()->true_->sig.size());
       break;
 
     case ExprType::Loop:
-      PushExpr(expr, 0, expr->loop->sig.size());
+      PushExpr(expr, 0, expr->As<LoopExpr>()->block->sig.size());
       break;
 
     case ExprType::Nop:
@@ -768,39 +780,41 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
   switch (expr_tree.expr->type) {
     case ExprType::Block:
       WritePuts("(", NextChar::None);
-      WriteBeginBlock(LabelType::Block, expr_tree.expr->block,
+      WriteBeginBlock(LabelType::Block, expr_tree.expr->As<BlockExpr>()->block,
                       Opcode::Block_Opcode.GetName());
-      WriteFoldedExprList(expr_tree.expr->block->first);
+      WriteFoldedExprList(expr_tree.expr->As<BlockExpr>()->block->first);
       FlushExprTreeStack();
       WriteCloseNewline();
       break;
 
     case ExprType::Loop:
       WritePuts("(", NextChar::None);
-      WriteBeginBlock(LabelType::Loop, expr_tree.expr->loop,
+      WriteBeginBlock(LabelType::Loop, expr_tree.expr->As<LoopExpr>()->block,
                       Opcode::Loop_Opcode.GetName());
-      WriteFoldedExprList(expr_tree.expr->loop->first);
+      WriteFoldedExprList(expr_tree.expr->As<LoopExpr>()->block->first);
       FlushExprTreeStack();
       WriteCloseNewline();
       break;
 
-    case ExprType::If:
+    case ExprType::If: {
+      auto if_expr = expr_tree.expr->As<IfExpr>();
       WritePuts("(", NextChar::None);
-      WriteBeginBlock(LabelType::If, expr_tree.expr->if_.true_,
+      WriteBeginBlock(LabelType::If, if_expr->true_,
                       Opcode::If_Opcode.GetName());
       FlushExprTreeVector(expr_tree.children);
       WriteOpenNewline("then");
-      WriteFoldedExprList(expr_tree.expr->if_.true_->first);
+      WriteFoldedExprList(if_expr->true_->first);
       FlushExprTreeStack();
       WriteCloseNewline();
-      if (expr_tree.expr->if_.false_) {
+      if (if_expr->false_) {
         WriteOpenNewline("else");
-        WriteFoldedExprList(expr_tree.expr->if_.false_);
+        WriteFoldedExprList(if_expr->false_);
         FlushExprTreeStack();
         WriteCloseNewline();
       }
       WriteCloseNewline();
       break;
+    }
 
     default: {
       WritePuts("(", NextChar::None);

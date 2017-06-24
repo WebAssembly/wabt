@@ -197,9 +197,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<exception> exception
 %type<export_> export_desc inline_export
 %type<expr> plain_instr block_instr
-%type<expr> try_
 %type<catch_> plain_catch plain_catch_all catch_instr catch_sexp
-%type<expr> catch_sexp_list catch_instr_list     
 %type<expr_list> instr instr_list expr expr1 expr_list if_ if_block const_expr offset
 %type<func> func_fields_body func_fields_body1 func_result_body func_body func_body1
 %type<func> func_fields_import func_fields_import1 func_fields_import_result
@@ -217,6 +215,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %type<table> table_sig
 %type<text> bind_var bind_var_opt labeling_opt quoted_text
 %type<text_list> text_list text_list_opt
+%type<try_expr> try_ catch_sexp_list catch_instr_list
 %type<types> block_sig value_type_list
 %type<u32> align_opt
 %type<u64> nat offset_opt
@@ -480,65 +479,65 @@ instr :
 
 plain_instr :
     UNREACHABLE {
-      $$ = Expr::CreateUnreachable();
+      $$ = new UnreachableExpr();
     }
   | NOP {
-      $$ = Expr::CreateNop();
+      $$ = new NopExpr();
     }
   | DROP {
-      $$ = Expr::CreateDrop();
+      $$ = new DropExpr();
     }
   | SELECT {
-      $$ = Expr::CreateSelect();
+      $$ = new SelectExpr();
     }
   | BR var {
-      $$ = Expr::CreateBr(std::move(*$2));
+      $$ = new BrExpr(std::move(*$2));
       delete $2;
     }
   | BR_IF var {
-      $$ = Expr::CreateBrIf(std::move(*$2));
+      $$ = new BrIfExpr(std::move(*$2));
       delete $2;
     }
   | BR_TABLE var_list var {
-      $$ = Expr::CreateBrTable($2, std::move(*$3));
+      $$ = new BrTableExpr($2, std::move(*$3));
       delete $3;
     }
   | RETURN {
-      $$ = Expr::CreateReturn();
+      $$ = new ReturnExpr();
     }
   | CALL var {
-      $$ = Expr::CreateCall(std::move(*$2));
+      $$ = new CallExpr(std::move(*$2));
       delete $2;
     }
   | CALL_INDIRECT var {
-      $$ = Expr::CreateCallIndirect(std::move(*$2));
+      $$ = new CallIndirectExpr(std::move(*$2));
       delete $2;
     }
   | GET_LOCAL var {
-      $$ = Expr::CreateGetLocal(std::move(*$2));
+      $$ = new GetLocalExpr(std::move(*$2));
       delete $2;
     }
   | SET_LOCAL var {
-      $$ = Expr::CreateSetLocal(std::move(*$2));
+      $$ = new SetLocalExpr(std::move(*$2));
       delete $2;
     }
   | TEE_LOCAL var {
-      $$ = Expr::CreateTeeLocal(std::move(*$2));
+      $$ = new TeeLocalExpr(std::move(*$2));
       delete $2;
     }
   | GET_GLOBAL var {
-      $$ = Expr::CreateGetGlobal(std::move(*$2));
+      $$ = new GetGlobalExpr(std::move(*$2));
       delete $2;
     }
   | SET_GLOBAL var {
-      $$ = Expr::CreateSetGlobal(std::move(*$2));
+      $$ = new SetGlobalExpr(std::move(*$2));
       delete $2;
     }
   | LOAD offset_opt align_opt {
-      $$ = Expr::CreateLoad($1, $3, $2);
+      $$ = new LoadExpr($1, $3, $2);
     }
   | STORE offset_opt align_opt {
-      $$ = Expr::CreateStore($1, $3, $2);
+      $$ = new StoreExpr($1, $3, $2);
     }
   | CONST literal {
       Const const_;
@@ -551,62 +550,66 @@ plain_instr :
                           WABT_PRINTF_STRING_SLICE_ARG($2.text));
       }
       delete [] $2.text.start;
-      $$ = Expr::CreateConst(const_);
+      $$ = new ConstExpr(const_);
     }
   | UNARY {
-      $$ = Expr::CreateUnary($1);
+      $$ = new UnaryExpr($1);
     }
   | BINARY {
-      $$ = Expr::CreateBinary($1);
+      $$ = new BinaryExpr($1);
     }
   | COMPARE {
-      $$ = Expr::CreateCompare($1);
+      $$ = new CompareExpr($1);
     }
   | CONVERT {
-      $$ = Expr::CreateConvert($1);
+      $$ = new ConvertExpr($1);
     }
   | CURRENT_MEMORY {
-      $$ = Expr::CreateCurrentMemory();
+      $$ = new CurrentMemoryExpr();
     }
   | GROW_MEMORY {
-      $$ = Expr::CreateGrowMemory();
+      $$ = new GrowMemoryExpr();
     }
   | throw_check var {
-      $$ = Expr::CreateThrow(std::move(*$2));
+      $$ = new ThrowExpr(std::move(*$2));
       delete $2;
     }
   | rethrow_check var {
-      $$ = Expr::CreateRethrow(std::move(*$2));
+      $$ = new RethrowExpr(std::move(*$2));
       delete $2;
     }
 ;
 
 block_instr :
     BLOCK labeling_opt block END labeling_opt {
-      $$ = Expr::CreateBlock($3);
-      $$->block->label = $2;
-      CHECK_END_LABEL(@5, $$->block->label, $5);
+      auto expr = new BlockExpr($3);
+      expr->block->label = $2;
+      CHECK_END_LABEL(@5, expr->block->label, $5);
+      $$ = expr;
     }
   | LOOP labeling_opt block END labeling_opt {
-      $$ = Expr::CreateLoop($3);
-      $$->loop->label = $2;
-      CHECK_END_LABEL(@5, $$->loop->label, $5);
+      auto expr = new LoopExpr($3);
+      expr->block->label = $2;
+      CHECK_END_LABEL(@5, expr->block->label, $5);
+      $$ = expr;
     }
   | IF labeling_opt block END labeling_opt {
-      $$ = Expr::CreateIf($3, nullptr);
-      $$->if_.true_->label = $2;
-      CHECK_END_LABEL(@5, $$->if_.true_->label, $5);
+      auto expr = new IfExpr($3, nullptr);
+      expr->true_->label = $2;
+      CHECK_END_LABEL(@5, expr->true_->label, $5);
+      $$ = expr;
     }
   | IF labeling_opt block ELSE labeling_opt instr_list END labeling_opt {
-      $$ = Expr::CreateIf($3, $6.first);
-      $$->if_.true_->label = $2;
-      CHECK_END_LABEL(@5, $$->if_.true_->label, $5);
-      CHECK_END_LABEL(@8, $$->if_.true_->label, $8);
+      auto expr = new IfExpr($3, $6.first);
+      expr->true_->label = $2;
+      CHECK_END_LABEL(@5, expr->true_->label, $5);
+      CHECK_END_LABEL(@8, expr->true_->label, $8);
+      $$ = expr;
     }
   | try_check labeling_opt block catch_instr_list END labeling_opt {
       $3->label = $2;
       $$ = $4;
-      $$->try_block.block = $3;
+      $$->As<TryExpr>()->block = $3;
       CHECK_END_LABEL(@6, $3->label, $6);
     }
 ;
@@ -647,12 +650,13 @@ catch_instr :
 
 catch_instr_list :
     catch_instr {
-      $$ = Expr::CreateTry();
-      $$->try_block.catches->push_back($1);
+      auto expr = new TryExpr();
+      expr->catches.push_back($1);
+      $$ = expr;
     }
   | catch_instr_list catch_instr {
       $$ = $1;
-      $$->try_block.catches->push_back($2);
+      $$->As<TryExpr>()->catches.push_back($2);
     }
   ;
 
@@ -665,23 +669,22 @@ expr1 :
       $$ = join_exprs2(&@1, &$2, $1);
     }
   | BLOCK labeling_opt block {
-      Expr* expr = Expr::CreateBlock($3);
+      auto expr = new BlockExpr($3);
       expr->block->label = $2;
       $$ = join_exprs1(&@1, expr);
     }
   | LOOP labeling_opt block {
-      Expr* expr = Expr::CreateLoop($3);
-      expr->loop->label = $2;
+      auto expr = new LoopExpr($3);
+      expr->block->label = $2;
       $$ = join_exprs1(&@1, expr);
     }
   | IF labeling_opt if_block {
       $$ = $3;
-      Expr* if_ = $3.last;
-      assert(if_->type == ExprType::If);
-      if_->if_.true_->label = $2;
+      IfExpr* if_ = $3.last->As<IfExpr>();
+      if_->true_->label = $2;
     }
   | try_check labeling_opt try_ {
-      Block* block = $3->try_block.block;
+      Block* block = $3->block;
       block->label = $2;
       $$ = join_exprs1(&@1, $3);
     }
@@ -690,7 +693,7 @@ expr1 :
 try_ :
     block_sig try_ {
       $$ = $2;
-      Block* block = $$->try_block.block;
+      Block* block = $$->block;
       block->sig.insert(block->sig.end(), $1->begin(), $1->end());
       delete $1;
     }
@@ -698,7 +701,7 @@ try_ :
       Block* block = new Block();
       block->first = $1.first;
       $$ = $2;
-      $$->try_block.block = block;
+      $$->block = block;
     }
   ;
 
@@ -713,22 +716,22 @@ catch_sexp :
 
 catch_sexp_list :
     catch_sexp {
-      $$ = Expr::CreateTry();
-      $$->try_block.catches->push_back($1);
+      auto expr = new TryExpr();
+      expr->catches.push_back($1);
+      $$ = expr;
     }
   | catch_sexp_list catch_sexp {
       $$ = $1;
-      $$->try_block.catches->push_back($2);
+      $$->As<TryExpr>()->catches.push_back($2);
     }
   ;
 
-    
+
 if_block :
     block_sig if_block {
-      Expr* if_ = $2.last;
-      assert(if_->type == ExprType::If);
+      IfExpr* if_ = $2.last->As<IfExpr>();
       $$ = $2;
-      Block* true_ = if_->if_.true_;
+      Block* true_ = if_->true_;
       true_->sig.insert(true_->sig.end(), $1->begin(), $1->end());
       delete $1;
     }
@@ -736,27 +739,27 @@ if_block :
 ;
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      Expr* expr = Expr::CreateIf(new Block($3.first), $7.first);
+      Expr* expr = new IfExpr(new Block($3.first), $7.first);
       $$ = join_exprs1(&@1, expr);
     }
   | LPAR THEN instr_list RPAR {
-      Expr* expr = Expr::CreateIf(new Block($3.first), nullptr);
+      Expr* expr = new IfExpr(new Block($3.first), nullptr);
       $$ = join_exprs1(&@1, expr);
     }
   | expr LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      Expr* expr = Expr::CreateIf(new Block($4.first), $8.first);
+      Expr* expr = new IfExpr(new Block($4.first), $8.first);
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr LPAR THEN instr_list RPAR {
-      Expr* expr = Expr::CreateIf(new Block($4.first), nullptr);
+      Expr* expr = new IfExpr(new Block($4.first), nullptr);
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr expr expr {
-      Expr* expr = Expr::CreateIf(new Block($2.first), $3.first);
+      Expr* expr = new IfExpr(new Block($2.first), $3.first);
       $$ = join_exprs2(&@1, &$1, expr);
     }
   | expr expr {
-      Expr* expr = Expr::CreateIf(new Block($2.first), nullptr);
+      Expr* expr = new IfExpr(new Block($2.first), nullptr);
       $$ = join_exprs2(&@1, &$1, expr);
     }
 ;
@@ -774,7 +777,7 @@ throw_check :
 
 try_check :
     TRY {
-      CHECK_ALLOW_EXCEPTIONS(&@1, "try");      
+      CHECK_ALLOW_EXCEPTIONS(&@1, "try");
     }
   ;
 
@@ -816,7 +819,7 @@ exception_field :
       $$->except = $1;
     }
   ;
-    
+
 /* Functions */
 func :
     LPAR FUNC bind_var_opt func_fields RPAR {
@@ -1049,7 +1052,7 @@ table_fields :
       elem_field->loc = @3;
       ElemSegment* elem_segment = elem_field->elem_segment = new ElemSegment();
       elem_segment->table_var = Var(kInvalidIndex);
-      elem_segment->offset = Expr::CreateConst(Const(Const::I32(), 0));
+      elem_segment->offset = new ConstExpr(Const(Const::I32(), 0));
       elem_segment->offset->loc = @3;
       elem_segment->vars = std::move(*$4);
       delete $4;
@@ -1123,7 +1126,7 @@ memory_fields :
       data_field->loc = @2;
       DataSegment* data_segment = data_field->data_segment = new DataSegment();
       data_segment->memory_var = Var(kInvalidIndex);
-      data_segment->offset = Expr::CreateConst(Const(Const::I32(), 0));
+      data_segment->offset = new ConstExpr(Const(Const::I32(), 0));
       data_segment->offset->loc = @2;
       dup_text_list(&$3, &data_segment->data, &data_segment->size);
       destroy_text_list(&$3);
@@ -1934,7 +1937,7 @@ void append_module_fields(Module* module, ModuleField* first) {
         break;
 
       case ModuleFieldType::Except:
-        name = &field->except->name;        
+        name = &field->except->name;
         bindings = &module->except_bindings;
         index = module->excepts.size();
         module->excepts.push_back(field->except);

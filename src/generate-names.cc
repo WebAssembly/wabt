@@ -41,9 +41,9 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   Result VisitModule(Module* module);
 
   // Implementation of ExprVisitor::DelegateNop.
-  Result BeginBlockExpr(Expr* expr) override;
-  Result BeginLoopExpr(Expr* expr) override;
-  Result BeginIfExpr(Expr* expr) override;
+  Result BeginBlockExpr(BlockExpr* expr) override;
+  Result BeginLoopExpr(LoopExpr* expr) override;
+  Result BeginIfExpr(IfExpr* expr) override;
 
  private:
   static bool HasName(StringSlice* str);
@@ -135,18 +135,18 @@ void NameGenerator::GenerateAndBindLocalNames(BindingHash* bindings,
   }
 }
 
-Result NameGenerator::BeginBlockExpr(Expr* expr) {
+Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
   MaybeGenerateName("$B", label_count_++, &expr->block->label);
   return Result::Ok;
 }
 
-Result NameGenerator::BeginLoopExpr(Expr* expr) {
-  MaybeGenerateName("$L", label_count_++, &expr->loop->label);
+Result NameGenerator::BeginLoopExpr(LoopExpr* expr) {
+  MaybeGenerateName("$L", label_count_++, &expr->block->label);
   return Result::Ok;
 }
 
-Result NameGenerator::BeginIfExpr(Expr* expr) {
-  MaybeGenerateName("$I", label_count_++, &expr->if_.true_->label);
+Result NameGenerator::BeginIfExpr(IfExpr* expr) {
+  MaybeGenerateName("$I", label_count_++, &expr->true_->label);
   return Result::Ok;
 }
 
