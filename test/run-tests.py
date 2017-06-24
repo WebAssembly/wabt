@@ -171,7 +171,7 @@ class Cell(object):
     return self.value[0]
 
 
-def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
+def RunCommandWithTimeout(command, cwd, timeout, console_out=False, env=None):
   process = None
   is_timeout = Cell(False)
 
@@ -196,10 +196,10 @@ def RunCommandWithTimeout(command, cwd, timeout, console_out=False):
 
     # http://stackoverflow.com/a/10012262: subprocess with a timeout
     # http://stackoverflow.com/a/22582602: kill subprocess and children
-    process = subprocess.Popen(command, cwd=cwd, stdout=None if console_out
-                               else subprocess.PIPE, stderr=None if console_out
-                               else subprocess.PIPE, universal_newlines=True,
-                               **kwargs)
+    process = subprocess.Popen(command, cwd=cwd, env=env,
+                               stdout=None if console_out else subprocess.PIPE,
+                               stderr=None if console_out else subprocess.PIPE,
+                               universal_newlines=True, **kwargs)
     timer = threading.Timer(timeout, KillProcess)
     try:
       timer.start()
@@ -231,6 +231,7 @@ class TestInfo(object):
     self.tool = 'wast2wasm'
     self.exe = '%(wast2wasm)s'
     self.flags = []
+    self.env = {}
     self.last_cmd = ''
     self.expected_error = 0
     self.slow = False
@@ -250,6 +251,7 @@ class TestInfo(object):
     result.flags = ['--bindir', '%(bindir)s', '-v', '-o', '%(out_dir)s']
     if fold_exprs:
       result.flags.append('--fold-exprs')
+    result.env = self.env
     result.expected_error = 0
     result.slow = self.slow
     result.skip = self.skip
@@ -311,6 +313,9 @@ class TestInfo(object):
       self.tool = value
       for tool_key, tool_value in TOOLS[value].items():
         self.ParseDirective(tool_key, tool_value)
+    elif key == 'ENV':
+      # Pattern: FOO=1 BAR=stuff
+      self.env = dict(x.split('=') for x in value.split())
     else:
       raise Error('Unknown directive: %s' % key)
 
@@ -562,7 +567,7 @@ def RunTest(info, options, variables, verbose_level=0):
     print(' '.join(cmd))
 
   try:
-    return RunCommandWithTimeout(cmd, cwd, timeout, verbose_level > 0)
+    return RunCommandWithTimeout(cmd, cwd, timeout, verbose_level > 0, info.env)
   except (Error, KeyboardInterrupt) as e:
     return e
 
