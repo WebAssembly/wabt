@@ -108,6 +108,13 @@ Memory* Module::GetMemory(const Var& var) {
   return memories[index];
 }
 
+Exception* Module::GetExcept(const Var& var) const {
+  Index index = GetExceptIndex(var);
+  if (index >= excepts.size())
+    return nullptr;
+  return excepts[index];
+}
+
 const FuncType* Module::GetFuncType(const Var& var) const {
   return const_cast<Module*>(this)->GetFuncType(var);
 }

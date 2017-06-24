@@ -507,6 +507,7 @@ struct Module {
   const Global* GetGlobal(const Var&) const;
   Global* GetGlobal(const Var&);
   const Export* GetExport(const StringSlice&) const;
+  Exception* GetExcept(const Var&) const;
   Index GetExceptIndex(const Var&) const;
 
   Location loc;
