@@ -548,8 +548,6 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      if (try_contexts_.empty() || try_contexts_.back().catch_ == nullptr)
-        PrintError(&expr->loc, "Rethrow not in try catch block");
       typechecker_.OnRethrow(expr->As<RethrowExpr>()->var.index);
       break;
 

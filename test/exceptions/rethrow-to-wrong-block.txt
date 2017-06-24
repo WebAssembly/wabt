@@ -14,7 +14,7 @@
   )
 ) 
 (;; STDERR ;;;
-out/test/exceptions/rethrow-to-wrong-block.txt:10:12: invalid rethrow depth: 1 (max 2)
+out/test/exceptions/rethrow-to-wrong-block.txt:10:12: invalid rethrow depth: 1 (catches: 0)
           (rethrow $b)
            ^^^^^^^^^^
 ;;; STDERR ;;)

@@ -17,7 +17,4 @@
 out/test/exceptions/rethrow-not-in-catch.txt:9:8: Rethrow not in try catch block
       (rethrow $try1)
        ^^^^^^^^^^^^^
-out/test/exceptions/rethrow-not-in-catch.txt:9:8: invalid rethrow depth: 0 (max 1)
-      (rethrow $try1)
-       ^^^^^^^^^^^^^
 ;;; STDERR ;;)
