@@ -224,6 +224,7 @@ class BinaryWriter {
   void WriteTable(const Table* table);
   void WriteMemory(const Memory* memory);
   void WriteGlobalHeader(const Global* global);
+  void WriteExceptType(const TypeVector* except_types);
   void WriteRelocSection(const RelocSection* reloc_section);
 
   Stream stream_;
@@ -694,6 +695,12 @@ void BinaryWriter::WriteGlobalHeader(const Global* global) {
   stream_.WriteU8(global->mutable_, "global mutability");
 }
 
+void BinaryWriter::WriteExceptType(const TypeVector* except_types) {
+  write_u32_leb128(&stream_, except_types->size(), "exception type count");
+  for (Type ty : *except_types)
+    write_type(&stream_, ty);
+}
+
 void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
   char section_name[128];
   wabt_snprintf(section_name, sizeof(section_name), "%s.%s",
@@ -776,8 +783,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
           WriteGlobalHeader(import->global);
           break;
         case ExternalKind::Except:
-          // TODO(karlschimpf) Define.
-          WABT_FATAL("write import except not implemented\n");
+          WriteExceptType(&import->except->sig);
           break;
       }
     }
@@ -869,10 +875,11 @@ Result BinaryWriter::WriteModule(const Module* module) {
           write_u32_leb128(&stream_, index, "export global index");
           break;
         }
-        case ExternalKind::Except:
-          // TODO(karlschimpf) Define.
-          WABT_FATAL("write export except not implemented\n");
+        case ExternalKind::Except: {
+          Index index = module->GetExceptIndex(export_->var);
+          write_u32_leb128(&stream_, index, "export exception index");
           break;
+        }
       }
     }
     EndSection();
@@ -1013,8 +1020,12 @@ Result BinaryWriter::WriteModule(const Module* module) {
   }
 
   if (module->excepts.size()) {
-    // TODO(karlschimpf) Define.
-    WABT_FATAL("write exception section not implemented");
+    BeginCustomSection("exception", LEB_SECTION_SIZE_GUESS);
+    write_u32_leb128(&stream_, module->excepts.size(), "exception count");
+    for (Exception* except : module->excepts) {
+      WriteExceptType(&except->sig);
+    }
+    EndSection();
   }
 
   return stream_.result();

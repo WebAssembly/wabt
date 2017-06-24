@@ -1,6 +1,5 @@
 ;;; TOOL: wast2wasm
 ;;; FLAGS: --future-exceptions -v
-;;; ERROR: 1
 (module
   (except $ex i32)
   (func (result i32)
@@ -16,9 +15,6 @@
     )
   )
 ) 
-(;; STDERR ;;;
-write exception section not implemented
-;;; STDERR ;;)
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
@@ -60,4 +56,13 @@ write exception section not implemented
 0000024: 0b                                        ; end
 0000016: 0e                                        ; FIXUP func body size
 0000014: 10                                        ; FIXUP section size
+; section "exception"
+0000025: 00                                        ; custom section code
+0000026: 00                                        ; section size (guess)
+0000027: 09                                        ; string length
+0000028: 6578 6365 7074 696f 6e                   exception  ; custom section name
+0000031: 01                                        ; exception count
+0000032: 01                                        ; exception type count
+0000033: 7f                                        ; i32
+0000026: 0d                                        ; FIXUP section size
 ;;; STDOUT ;;)
