@@ -40,6 +40,9 @@ namespace wabt {
 
 namespace {
 
+// Set to true to turn on runtime tracing of calls.
+static constexpr bool s_trace = false;
+
 static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -61,9 +64,24 @@ enum class NextChar {
 };
 
 struct ExprTree {
-  explicit ExprTree(const Expr* expr) : expr(expr) {}
+  ExprTree() : expr(nullptr), catch_(nullptr) {}
+  explicit ExprTree(const Expr* expr) : expr(expr), catch_(nullptr)  {}
+  explicit ExprTree(const Expr* expr, const Catch* catch_)
+      : expr(expr), catch_(catch_) {}
+
+  bool IsTryCatch() const { return catch_ != nullptr; }
+
+  std::string describe() const {
+    std::string result("ExprTree(");
+    if (expr)
+      result.append(GetExprTypeName(*expr));
+    if (catch_)
+      result.append(", catch");
+    return result + ")";
+  }
 
   const Expr* expr;
+  const Catch* catch_;
   std::vector<ExprTree> children;
 };
 
@@ -153,7 +171,9 @@ class WatWriter {
   Index GetFuncSigParamCount(const Var* var);
   Index GetFuncSigResultCount(const Var* var);
   void PushExpr(const Expr* expr, Index operand_count, Index result_count);
+  void PushCatch(const TryExpr* try_, const Catch* catch_, Index result_count);
   void FlushExprTree(const ExprTree& expr_tree);
+  void FlushCatchTree(const ExprTree& expr_tree);
   void FlushExprTreeVector(const std::vector<ExprTree>&);
   void FlushExprTreeStack();
   void WriteFoldedExpr(const Expr* first);
@@ -464,6 +484,8 @@ void WatWriter::WriteConst(const Const* const_) {
 }
 
 void WatWriter::WriteExpr(const Expr* expr) {
+  if (s_trace)
+    fprintf(stderr, "-> WriteExpr(%s)\n", GetExprTypeName(*expr));
   switch (expr->type) {
     case ExprType::Binary:
       WritePutsNewline(expr->As<BinaryExpr>()->opcode.GetName());
@@ -646,15 +668,21 @@ void WatWriter::WriteExpr(const Expr* expr) {
       break;
 
     default:
-      fprintf(stderr, "bad expr type: %d\n", static_cast<int>(expr->type));
+      fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(*expr));
       assert(0);
       break;
   }
+  if (s_trace)
+    fprintf(stderr, "-> WriteExpr(%s)\n", GetExprTypeName(*expr));
 }
 
 void WatWriter::WriteExprList(const Expr* first) {
+  if (s_trace)
+    fprintf(stderr, "-> WriteExprList\n");
   for (const Expr* expr = first; expr; expr = expr->next)
     WriteExpr(expr);
+  if (s_trace)
+    fprintf(stderr, "<- WriteExprList\n");
 }
 
 Label* WatWriter::GetLabel(const Var* var) {
@@ -698,6 +726,8 @@ Index WatWriter::GetFuncSigResultCount(const Var* var) {
 }
 
 void WatWriter::WriteFoldedExpr(const Expr* expr) {
+  if (s_trace)
+    fprintf(stderr, "-> WriteFoldedExpr(%s)\n", GetExprTypeName(*expr));
   switch (expr->type) {
     case ExprType::Binary:
     case ExprType::Compare:
@@ -775,25 +805,52 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       PushExpr(expr, current_func_->decl.sig.result_types.size(), 1);
       break;
 
+    case ExprType::Rethrow:
+      PushExpr(expr, 0, 0);
+      break;
+
     case ExprType::Select:
       PushExpr(expr, 3, 1);
       break;
 
+    case ExprType::Throw: {
+      auto throw_ = expr->As<ThrowExpr>();
+      Index operand_count = 0;
+      if (Exception* except = module_->GetExcept(throw_->var)) {
+        operand_count = except->sig.size();
+      }
+      PushExpr(expr, operand_count, 0);
+      break;
+    }
+
+    case ExprType::TryBlock:
+      PushExpr(expr, 0, expr->As<TryExpr>()->block->sig.size());
+      break;
+
     default:
-      fprintf(stderr, "bad expr type: %d\n", static_cast<int>(expr->type));
+      fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(*expr));
       assert(0);
       break;
   }
+  if (s_trace)
+    fprintf(stderr, "<- WriteFoldedExpr(%s)\n", GetExprTypeName(*expr));
 }
 
 void WatWriter::WriteFoldedExprList(const Expr* first) {
+  if (s_trace)
+    fprintf(stderr, "-> WriteFoledExprList()\n");
   for (const Expr* expr = first; expr; expr = expr->next)
     WriteFoldedExpr(expr);
+  if (s_trace)
+    fprintf(stderr, "<- WriteFoledExprList()\n");
 }
 
 void WatWriter::PushExpr(const Expr* expr,
                          Index operand_count,
-                         Index result_count) {
+                        Index result_count) {
+  if (s_trace)
+    fprintf(stderr, "-> PushExpr(%s, %u, %u)\n", GetExprTypeName(*expr),
+            operand_count, result_count);
   if (operand_count <= expr_tree_stack_.size()) {
     auto last_operand = expr_tree_stack_.end();
     auto first_operand = last_operand - operand_count;
@@ -807,9 +864,47 @@ void WatWriter::PushExpr(const Expr* expr,
     expr_tree_stack_.emplace_back(expr);
     FlushExprTreeStack();
   }
+  if (s_trace)
+    fprintf(stderr, "<- PushExpr(%s, %u, %u)\n", GetExprTypeName(*expr),
+            operand_count, result_count);
+}
+
+void WatWriter::PushCatch(const TryExpr* try_,
+                          const Catch* catch_,
+                          Index result_count) {
+  if (s_trace)
+    fprintf(stderr, "-> PushCatch(%u)\n", result_count);
+  ExprTree tree(try_, catch_);
+  expr_tree_stack_.push_back(std::move(tree));
+  FlushExprTreeStack();
+  if (s_trace)
+    fprintf(stderr, "<- PushCatch(%u)\n", result_count);
+}
+
+void WatWriter::FlushCatchTree(const ExprTree& expr_tree) {
+  if (s_trace)
+    fprintf(stderr, "-> FlushCatchTree(%s)\n", expr_tree.describe().c_str());
+  assert(expr_tree.IsTryCatch());
+  WritePuts("(", NextChar::None);
+  if (expr_tree.catch_->IsCatchAll()) {
+    WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
+  } else {
+    WritePutsSpace(Opcode::Catch_Opcode.GetName());
+    WriteVar(&expr_tree.catch_->var, NextChar::Space);
+  }
+  Indent();
+  label_stack_.back().label_type = LabelType::Catch;
+  WriteFoldedExprList(expr_tree.catch_->first);
+  FlushExprTreeStack();
+  WriteCloseNewline();
+  if (s_trace)
+    fprintf(stderr, "<- FlushCatchTree(%s)\n", expr_tree.describe().c_str());
 }
 
 void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
+  if (s_trace)
+    fprintf(stderr, "-> FlushExprTree(%s)\n", GetExprTypeName(*expr_tree.expr));
+  assert(!expr_tree.IsTryCatch());
   switch (expr_tree.expr->type) {
     case ExprType::Block:
       WritePuts("(", NextChar::None);
@@ -849,6 +944,20 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       break;
     }
 
+    case ExprType::TryBlock: {
+      auto try_ = expr_tree.expr->As<TryExpr>();
+      WritePuts("(", NextChar::None);
+      WriteBeginBlock(LabelType::Try, try_->block,
+                      Opcode::Try_Opcode.GetName());
+      WriteFoldedExprList(try_->block->first);
+      FlushExprTreeStack();
+      for (const Catch* catch_ : try_->catches) {
+        PushCatch(try_, catch_, try_->block->sig.size());
+      }
+      WriteCloseNewline();
+      break;
+    }
+
     default: {
       WritePuts("(", NextChar::None);
       WriteExpr(expr_tree.expr);
@@ -858,11 +967,20 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       break;
     }
   }
+  if (s_trace)
+    fprintf(stderr, "<- FlushExprTree(%s)\n", GetExprTypeName(*expr_tree.expr));
 }
 
 void WatWriter::FlushExprTreeVector(const std::vector<ExprTree>& expr_trees) {
+  if (s_trace)
+    fprintf(stderr, "-> FlushExprTreeVector(%zu)\n:", expr_trees.size());
   for (auto expr_tree : expr_trees)
-    FlushExprTree(expr_tree);
+    if (expr_tree.IsTryCatch())
+      FlushCatchTree(expr_tree);
+    else
+      FlushExprTree(expr_tree);
+  if (s_trace)
+    fprintf(stderr, "<- FlushExprTreeVector()\n");
 }
 
 void WatWriter::FlushExprTreeStack() {
