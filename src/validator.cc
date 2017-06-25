@@ -23,6 +23,7 @@
 #include <cstdio>
 
 #include "binary-reader.h"
+#include "cast.h"
 #include "source-error-handler.h"
 #include "type-checker.h"
 #include "wast-parser-lexer-shared.h"
@@ -424,11 +425,11 @@ void Validator::CheckExpr(const Expr* expr) {
 
   switch (expr->type) {
     case ExprType::Binary:
-      typechecker_.OnBinary(expr->As<BinaryExpr>()->opcode);
+      typechecker_.OnBinary(cast<BinaryExpr>(expr)->opcode);
       break;
 
     case ExprType::Block: {
-      auto block_expr = expr->As<BlockExpr>();
+      auto block_expr = cast<BlockExpr>(expr);
       CheckBlockSig(&block_expr->loc, Opcode::Block, &block_expr->block->sig);
       typechecker_.OnBlock(&block_expr->block->sig);
       CheckExprList(&block_expr->loc, block_expr->block->first);
@@ -437,15 +438,15 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Br:
-      typechecker_.OnBr(expr->As<BrExpr>()->var.index);
+      typechecker_.OnBr(cast<BrExpr>(expr)->var.index);
       break;
 
     case ExprType::BrIf:
-      typechecker_.OnBrIf(expr->As<BrIfExpr>()->var.index);
+      typechecker_.OnBrIf(cast<BrIfExpr>(expr)->var.index);
       break;
 
     case ExprType::BrTable: {
-      auto br_table_expr = expr->As<BrTableExpr>();
+      auto br_table_expr = cast<BrTableExpr>(expr);
       typechecker_.BeginBrTable();
       for (Var& var : *br_table_expr->targets) {
         typechecker_.OnBrTableTarget(var.index);
@@ -457,7 +458,7 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::Call: {
       const Func* callee;
-      if (WABT_SUCCEEDED(CheckFuncVar(&expr->As<CallExpr>()->var, &callee))) {
+      if (WABT_SUCCEEDED(CheckFuncVar(&cast<CallExpr>(expr)->var, &callee))) {
         typechecker_.OnCall(&callee->decl.sig.param_types,
                             &callee->decl.sig.result_types);
       }
@@ -469,7 +470,7 @@ void Validator::CheckExpr(const Expr* expr) {
       if (current_module_->tables.size() == 0) {
         PrintError(&expr->loc, "found call_indirect operator, but no table");
       }
-      if (WABT_SUCCEEDED(CheckFuncTypeVar(&expr->As<CallIndirectExpr>()->var,
+      if (WABT_SUCCEEDED(CheckFuncTypeVar(&cast<CallIndirectExpr>(expr)->var,
                                           &func_type))) {
         typechecker_.OnCallIndirect(&func_type->sig.param_types,
                                     &func_type->sig.result_types);
@@ -478,15 +479,15 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Compare:
-      typechecker_.OnCompare(expr->As<CompareExpr>()->opcode);
+      typechecker_.OnCompare(cast<CompareExpr>(expr)->opcode);
       break;
 
     case ExprType::Const:
-      typechecker_.OnConst(expr->As<ConstExpr>()->const_.type);
+      typechecker_.OnConst(cast<ConstExpr>(expr)->const_.type);
       break;
 
     case ExprType::Convert:
-      typechecker_.OnConvert(expr->As<ConvertExpr>()->opcode);
+      typechecker_.OnConvert(cast<ConvertExpr>(expr)->opcode);
       break;
 
     case ExprType::Drop:
@@ -495,12 +496,12 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::GetGlobal:
       typechecker_.OnGetGlobal(
-          GetGlobalVarTypeOrAny(&expr->As<GetGlobalExpr>()->var));
+          GetGlobalVarTypeOrAny(&cast<GetGlobalExpr>(expr)->var));
       break;
 
     case ExprType::GetLocal:
       typechecker_.OnGetLocal(
-          GetLocalVarTypeOrAny(&expr->As<GetLocalExpr>()->var));
+          GetLocalVarTypeOrAny(&cast<GetLocalExpr>(expr)->var));
       break;
 
     case ExprType::GrowMemory:
@@ -509,7 +510,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::If: {
-      auto if_expr = expr->As<IfExpr>();
+      auto if_expr = cast<IfExpr>(expr);
       CheckBlockSig(&if_expr->loc, Opcode::If, &if_expr->true_->sig);
       typechecker_.OnIf(&if_expr->true_->sig);
       CheckExprList(&if_expr->loc, if_expr->true_->first);
@@ -522,7 +523,7 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Load: {
-      auto load_expr = expr->As<LoadExpr>();
+      auto load_expr = cast<LoadExpr>(expr);
       CheckHasMemory(&load_expr->loc, load_expr->opcode);
       CheckAlign(&load_expr->loc, load_expr->align,
                  get_opcode_natural_alignment(load_expr->opcode));
@@ -531,7 +532,7 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Loop: {
-      auto loop_expr = expr->As<LoopExpr>();
+      auto loop_expr = cast<LoopExpr>(expr);
       CheckBlockSig(&loop_expr->loc, Opcode::Loop, &loop_expr->block->sig);
       typechecker_.OnLoop(&loop_expr->block->sig);
       CheckExprList(&loop_expr->loc, loop_expr->block->first);
@@ -548,7 +549,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      typechecker_.OnRethrow(expr->As<RethrowExpr>()->var.index);
+      typechecker_.OnRethrow(cast<RethrowExpr>(expr)->var.index);
       break;
 
     case ExprType::Return:
@@ -561,16 +562,16 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::SetGlobal:
       typechecker_.OnSetGlobal(
-          GetGlobalVarTypeOrAny(&expr->As<SetGlobalExpr>()->var));
+          GetGlobalVarTypeOrAny(&cast<SetGlobalExpr>(expr)->var));
       break;
 
     case ExprType::SetLocal:
       typechecker_.OnSetLocal(
-          GetLocalVarTypeOrAny(&expr->As<SetLocalExpr>()->var));
+          GetLocalVarTypeOrAny(&cast<SetLocalExpr>(expr)->var));
       break;
 
     case ExprType::Store: {
-      auto store_expr = expr->As<StoreExpr>();
+      auto store_expr = cast<StoreExpr>(expr);
       CheckHasMemory(&store_expr->loc, store_expr->opcode);
       CheckAlign(&store_expr->loc, store_expr->align,
                  get_opcode_natural_alignment(store_expr->opcode));
@@ -580,19 +581,19 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::TeeLocal:
       typechecker_.OnTeeLocal(
-          GetLocalVarTypeOrAny(&expr->As<TeeLocalExpr>()->var));
+          GetLocalVarTypeOrAny(&cast<TeeLocalExpr>(expr)->var));
       break;
 
     case ExprType::Throw:
       const Exception* except;
       if (WABT_SUCCEEDED(
-              CheckExceptVar(&expr->As<ThrowExpr>()->var, &except))) {
+              CheckExceptVar(&cast<ThrowExpr>(expr)->var, &except))) {
         typechecker_.OnThrow(&except->sig);
       }
       break;
 
     case ExprType::TryBlock: {
-      auto try_expr = expr->As<TryExpr>();
+      auto try_expr = cast<TryExpr>(expr);
       TryContext context;
       context.try_ = try_expr;
       try_contexts_.push_back(context);
@@ -625,7 +626,7 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Unary:
-      typechecker_.OnUnary(expr->As<UnaryExpr>()->opcode);
+      typechecker_.OnUnary(cast<UnaryExpr>(expr)->opcode);
       break;
 
     case ExprType::Unreachable:
@@ -684,13 +685,13 @@ void Validator::CheckConstInitExpr(const Location* loc,
 
     switch (expr->type) {
       case ExprType::Const:
-        type = expr->As<ConstExpr>()->const_.type;
+        type = cast<ConstExpr>(expr)->const_.type;
         break;
 
       case ExprType::GetGlobal: {
         const Global* ref_global = nullptr;
         Index ref_global_index;
-        if (WABT_FAILED(CheckGlobalVar(&expr->As<GetGlobalExpr>()->var,
+        if (WABT_FAILED(CheckGlobalVar(&cast<GetGlobalExpr>(expr)->var,
                                        &ref_global, &ref_global_index))) {
           return;
         }
@@ -754,21 +755,20 @@ void Validator::CheckTable(const Location* loc, const Table* table) {
 
 void Validator::CheckElemSegments(const Module* module) {
   for (ModuleField* field = module->first_field; field; field = field->next) {
-    if (field->type != ModuleFieldType::ElemSegment)
-      continue;
-
-    ElemSegment* elem_segment = field->elem_segment;
-    const Table* table;
-    if (!WABT_SUCCEEDED(CheckTableVar(&elem_segment->table_var, &table)))
-      continue;
-
-    for (const Var& var : elem_segment->vars) {
-      if (!WABT_SUCCEEDED(CheckFuncVar(&var, nullptr)))
+    if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(field)) {
+      ElemSegment* elem_segment = elem_segment_field->elem_segment;
+      const Table* table;
+      if (!WABT_SUCCEEDED(CheckTableVar(&elem_segment->table_var, &table)))
         continue;
-    }
 
-    CheckConstInitExpr(&field->loc, elem_segment->offset, Type::I32,
-                       "elem segment offset");
+      for (const Var& var : elem_segment->vars) {
+        if (!WABT_SUCCEEDED(CheckFuncVar(&var, nullptr)))
+          continue;
+      }
+
+      CheckConstInitExpr(&field->loc, elem_segment->offset, Type::I32,
+                         "elem segment offset");
+    }
   }
 }
 
@@ -780,16 +780,15 @@ void Validator::CheckMemory(const Location* loc, const Memory* memory) {
 
 void Validator::CheckDataSegments(const Module* module) {
   for (ModuleField* field = module->first_field; field; field = field->next) {
-    if (field->type != ModuleFieldType::DataSegment)
-      continue;
+    if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(field)) {
+      DataSegment* data_segment = data_segment_field->data_segment;
+      const Memory* memory;
+      if (!WABT_SUCCEEDED(CheckMemoryVar(&data_segment->memory_var, &memory)))
+        continue;
 
-    DataSegment* data_segment = field->data_segment;
-    const Memory* memory;
-    if (!WABT_SUCCEEDED(CheckMemoryVar(&data_segment->memory_var, &memory)))
-      continue;
-
-    CheckConstInitExpr(&field->loc, data_segment->offset, Type::I32,
-                       "data segment offset");
+      CheckConstInitExpr(&field->loc, data_segment->offset, Type::I32,
+                         "data segment offset");
+    }
   }
 }
 
@@ -872,28 +871,28 @@ Result Validator::CheckModule(const Module* module) {
     switch (field->type) {
       case ModuleFieldType::Except:
         ++current_except_index_;
-        CheckExcept(&field->loc, field->except);
+        CheckExcept(&field->loc, cast<ExceptionModuleField>(field)->except);
         break;
 
       case ModuleFieldType::Func:
-        CheckFunc(&field->loc, field->func);
+        CheckFunc(&field->loc, cast<FuncModuleField>(field)->func);
         break;
 
       case ModuleFieldType::Global:
-        CheckGlobal(&field->loc, field->global);
+        CheckGlobal(&field->loc, cast<GlobalModuleField>(field)->global);
         current_global_index_++;
         break;
 
       case ModuleFieldType::Import:
-        CheckImport(&field->loc, field->import);
+        CheckImport(&field->loc, cast<ImportModuleField>(field)->import);
         break;
 
       case ModuleFieldType::Export:
-        CheckExport(&field->loc, field->export_);
+        CheckExport(&field->loc, cast<ExportModuleField>(field)->export_);
         break;
 
       case ModuleFieldType::Table:
-        CheckTable(&field->loc, field->table);
+        CheckTable(&field->loc, cast<TableModuleField>(field)->table);
         current_table_index_++;
         break;
 
@@ -902,7 +901,7 @@ Result Validator::CheckModule(const Module* module) {
         break;
 
       case ModuleFieldType::Memory:
-        CheckMemory(&field->loc, field->memory);
+        CheckMemory(&field->loc, cast<MemoryModuleField>(field)->memory);
         current_memory_index_++;
         break;
 
@@ -919,7 +918,7 @@ Result Validator::CheckModule(const Module* module) {
         }
 
         const Func* start_func = nullptr;
-        CheckFuncVar(&field->start, &start_func);
+        CheckFuncVar(&cast<StartModuleField>(field)->start, &start_func);
         if (start_func) {
           if (start_func->GetNumParams() != 0) {
             PrintError(&field->loc, "start function must be nullary");

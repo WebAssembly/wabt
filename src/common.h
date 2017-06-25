@@ -164,6 +164,10 @@ struct Location {
   };
 };
 
+// TODO(binji): This should be a default constructor, but can't currently; see
+// comment above.
+Location EmptyLocation();
+
 /* matches binary format, do not change */
 enum class Type {
   I32 = -0x01,
