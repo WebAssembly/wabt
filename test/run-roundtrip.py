@@ -117,7 +117,6 @@ def main(args):
   parser.add_argument('--generate-names', action='store_true')
   parser.add_argument('--fold-exprs', action='store_true')
   parser.add_argument('--inline-exports', action='store_true')
-  parser.add_argument('--future-exceptions', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
