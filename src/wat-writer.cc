@@ -26,6 +26,7 @@
 #include <string>
 #include <vector>
 
+#include "cast.h"
 #include "common.h"
 #include "ir.h"
 #include "literal.h"
@@ -466,52 +467,52 @@ void WatWriter::WriteConst(const Const* const_) {
 void WatWriter::WriteExpr(const Expr* expr) {
   switch (expr->type) {
     case ExprType::Binary:
-      WritePutsNewline(expr->As<BinaryExpr>()->opcode.GetName());
+      WritePutsNewline(cast<BinaryExpr>(expr)->opcode.GetName());
       break;
 
     case ExprType::Block:
-      WriteBlock(LabelType::Block, expr->As<BlockExpr>()->block,
+      WriteBlock(LabelType::Block, cast<BlockExpr>(expr)->block,
                  Opcode::Block_Opcode.GetName());
       break;
 
     case ExprType::Br:
       WritePutsSpace(Opcode::Br_Opcode.GetName());
-      WriteBrVar(&expr->As<BrExpr>()->var, NextChar::Newline);
+      WriteBrVar(&cast<BrExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::BrIf:
       WritePutsSpace(Opcode::BrIf_Opcode.GetName());
-      WriteBrVar(&expr->As<BrIfExpr>()->var, NextChar::Newline);
+      WriteBrVar(&cast<BrIfExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::BrTable: {
       WritePutsSpace(Opcode::BrTable_Opcode.GetName());
-      for (const Var& var : *expr->As<BrTableExpr>()->targets)
+      for (const Var& var : *cast<BrTableExpr>(expr)->targets)
         WriteBrVar(&var, NextChar::Space);
-      WriteBrVar(&expr->As<BrTableExpr>()->default_target, NextChar::Newline);
+      WriteBrVar(&cast<BrTableExpr>(expr)->default_target, NextChar::Newline);
       break;
     }
 
     case ExprType::Call:
       WritePutsSpace(Opcode::Call_Opcode.GetName());
-      WriteVar(&expr->As<CallExpr>()->var, NextChar::Newline);
+      WriteVar(&cast<CallExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::CallIndirect:
       WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
-      WriteVar(&expr->As<CallIndirectExpr>()->var, NextChar::Newline);
+      WriteVar(&cast<CallIndirectExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::Compare:
-      WritePutsNewline(expr->As<CompareExpr>()->opcode.GetName());
+      WritePutsNewline(cast<CompareExpr>(expr)->opcode.GetName());
       break;
 
     case ExprType::Const:
-      WriteConst(&expr->As<ConstExpr>()->const_);
+      WriteConst(&cast<ConstExpr>(expr)->const_);
       break;
 
     case ExprType::Convert:
-      WritePutsNewline(expr->As<ConvertExpr>()->opcode.GetName());
+      WritePutsNewline(cast<ConvertExpr>(expr)->opcode.GetName());
       break;
 
     case ExprType::Drop:
@@ -520,12 +521,12 @@ void WatWriter::WriteExpr(const Expr* expr) {
 
     case ExprType::GetGlobal:
       WritePutsSpace(Opcode::GetGlobal_Opcode.GetName());
-      WriteVar(&expr->As<GetGlobalExpr>()->var, NextChar::Newline);
+      WriteVar(&cast<GetGlobalExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::GetLocal:
       WritePutsSpace(Opcode::GetLocal_Opcode.GetName());
-      WriteVar(&expr->As<GetLocalExpr>()->var, NextChar::Newline);
+      WriteVar(&cast<GetLocalExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::GrowMemory:
@@ -533,7 +534,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
       break;
 
     case ExprType::If: {
-      auto if_expr = expr->As<IfExpr>();
+      auto if_expr = cast<IfExpr>(expr);
       WriteBeginBlock(LabelType::If, if_expr->true_,
                       Opcode::If_Opcode.GetName());
       WriteExprList(if_expr->true_->first);
@@ -549,7 +550,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
     }
 
     case ExprType::Load: {
-      auto load_expr = expr->As<LoadExpr>();
+      auto load_expr = cast<LoadExpr>(expr);
       WritePutsSpace(load_expr->opcode.GetName());
       if (load_expr->offset)
         Writef("offset=%u", load_expr->offset);
@@ -560,7 +561,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
     }
 
     case ExprType::Loop:
-      WriteBlock(LabelType::Loop, expr->As<LoopExpr>()->block,
+      WriteBlock(LabelType::Loop, cast<LoopExpr>(expr)->block,
                  Opcode::Loop_Opcode.GetName());
       break;
 
@@ -574,7 +575,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
 
     case ExprType::Rethrow:
       WritePutsSpace(Opcode::Rethrow_Opcode.GetName());
-      WriteBrVar(&expr->As<RethrowExpr>()->var, NextChar::Newline);
+      WriteBrVar(&cast<RethrowExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::Return:
@@ -587,16 +588,16 @@ void WatWriter::WriteExpr(const Expr* expr) {
 
     case ExprType::SetGlobal:
       WritePutsSpace(Opcode::SetGlobal_Opcode.GetName());
-      WriteVar(&expr->As<SetGlobalExpr>()->var, NextChar::Newline);
+      WriteVar(&cast<SetGlobalExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::SetLocal:
       WritePutsSpace(Opcode::SetLocal_Opcode.GetName());
-      WriteVar(&expr->As<SetLocalExpr>()->var, NextChar::Newline);
+      WriteVar(&cast<SetLocalExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::Store: {
-      auto store_expr = expr->As<StoreExpr>();
+      auto store_expr = cast<StoreExpr>(expr);
       WritePutsSpace(store_expr->opcode.GetName());
       if (store_expr->offset)
         Writef("offset=%u", store_expr->offset);
@@ -608,16 +609,16 @@ void WatWriter::WriteExpr(const Expr* expr) {
 
     case ExprType::TeeLocal:
       WritePutsSpace(Opcode::TeeLocal_Opcode.GetName());
-      WriteVar(&expr->As<TeeLocalExpr>()->var, NextChar::Newline);
+      WriteVar(&cast<TeeLocalExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::Throw:
       WritePutsSpace(Opcode::Throw_Opcode.GetName());
-      WriteVar(&expr->As<ThrowExpr>()->var, NextChar::Newline);
+      WriteVar(&cast<ThrowExpr>(expr)->var, NextChar::Newline);
       break;
 
     case ExprType::TryBlock: {
-      auto try_ = expr->As<TryExpr>();
+      auto try_ = cast<TryExpr>(expr);
       WriteBeginBlock(LabelType::Try, try_->block,
                       Opcode::Try_Opcode.GetName());
       WriteExprList(try_->block->first);
@@ -638,7 +639,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
     }
 
     case ExprType::Unary:
-      WritePutsNewline(expr->As<UnaryExpr>()->opcode.GetName());
+      WritePutsNewline(cast<UnaryExpr>(expr)->opcode.GetName());
       break;
 
     case ExprType::Unreachable:
@@ -706,32 +707,32 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::Block:
-      PushExpr(expr, 0, expr->As<BlockExpr>()->block->sig.size());
+      PushExpr(expr, 0, cast<BlockExpr>(expr)->block->sig.size());
       break;
 
     case ExprType::Br:
-      PushExpr(expr, GetLabelArity(&expr->As<BrExpr>()->var), 1);
+      PushExpr(expr, GetLabelArity(&cast<BrExpr>(expr)->var), 1);
       break;
 
     case ExprType::BrIf: {
-      Index arity = GetLabelArity(&expr->As<BrIfExpr>()->var);
+      Index arity = GetLabelArity(&cast<BrIfExpr>(expr)->var);
       PushExpr(expr, arity + 1, arity);
       break;
     }
 
     case ExprType::BrTable:
       PushExpr(expr,
-               GetLabelArity(&expr->As<BrTableExpr>()->default_target) + 1, 1);
+               GetLabelArity(&cast<BrTableExpr>(expr)->default_target) + 1, 1);
       break;
 
     case ExprType::Call: {
-      const Var& var = expr->As<CallExpr>()->var;
+      const Var& var = cast<CallExpr>(expr)->var;
       PushExpr(expr, GetFuncParamCount(&var), GetFuncResultCount(&var));
       break;
     }
 
     case ExprType::CallIndirect: {
-      const Var& var = expr->As<CallIndirectExpr>()->var;
+      const Var& var = cast<CallIndirectExpr>(expr)->var;
       PushExpr(expr, GetFuncSigParamCount(&var) + 1,
                GetFuncSigResultCount(&var));
       break;
@@ -760,11 +761,11 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::If:
-      PushExpr(expr, 1, expr->As<IfExpr>()->true_->sig.size());
+      PushExpr(expr, 1, cast<IfExpr>(expr)->true_->sig.size());
       break;
 
     case ExprType::Loop:
-      PushExpr(expr, 0, expr->As<LoopExpr>()->block->sig.size());
+      PushExpr(expr, 0, cast<LoopExpr>(expr)->block->sig.size());
       break;
 
     case ExprType::Nop:
@@ -813,24 +814,24 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
   switch (expr_tree.expr->type) {
     case ExprType::Block:
       WritePuts("(", NextChar::None);
-      WriteBeginBlock(LabelType::Block, expr_tree.expr->As<BlockExpr>()->block,
+      WriteBeginBlock(LabelType::Block, cast<BlockExpr>(expr_tree.expr)->block,
                       Opcode::Block_Opcode.GetName());
-      WriteFoldedExprList(expr_tree.expr->As<BlockExpr>()->block->first);
+      WriteFoldedExprList(cast<BlockExpr>(expr_tree.expr)->block->first);
       FlushExprTreeStack();
       WriteCloseNewline();
       break;
 
     case ExprType::Loop:
       WritePuts("(", NextChar::None);
-      WriteBeginBlock(LabelType::Loop, expr_tree.expr->As<LoopExpr>()->block,
+      WriteBeginBlock(LabelType::Loop, cast<LoopExpr>(expr_tree.expr)->block,
                       Opcode::Loop_Opcode.GetName());
-      WriteFoldedExprList(expr_tree.expr->As<LoopExpr>()->block->first);
+      WriteFoldedExprList(cast<LoopExpr>(expr_tree.expr)->block->first);
       FlushExprTreeStack();
       WriteCloseNewline();
       break;
 
     case ExprType::If: {
-      auto if_expr = expr_tree.expr->As<IfExpr>();
+      auto if_expr = cast<IfExpr>(expr_tree.expr);
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::If, if_expr->true_,
                       Opcode::If_Opcode.GetName());
@@ -1088,37 +1089,37 @@ Result WatWriter::WriteModule(const Module* module) {
        field = field->next) {
     switch (field->type) {
       case ModuleFieldType::Func:
-        WriteFunc(module, field->func);
+        WriteFunc(module, cast<FuncModuleField>(field)->func);
         break;
       case ModuleFieldType::Global:
-        WriteGlobal(field->global);
+        WriteGlobal(cast<GlobalModuleField>(field)->global);
         break;
       case ModuleFieldType::Import:
-        WriteImport(field->import);
+        WriteImport(cast<ImportModuleField>(field)->import);
         break;
       case ModuleFieldType::Except:
-        WriteException(field->except);
+        WriteException(cast<ExceptionModuleField>(field)->except);
         break;
       case ModuleFieldType::Export:
-        WriteExport(field->export_);
+        WriteExport(cast<ExportModuleField>(field)->export_);
         break;
       case ModuleFieldType::Table:
-        WriteTable(field->table);
+        WriteTable(cast<TableModuleField>(field)->table);
         break;
       case ModuleFieldType::ElemSegment:
-        WriteElemSegment(field->elem_segment);
+        WriteElemSegment(cast<ElemSegmentModuleField>(field)->elem_segment);
         break;
       case ModuleFieldType::Memory:
-        WriteMemory(field->memory);
+        WriteMemory(cast<MemoryModuleField>(field)->memory);
         break;
       case ModuleFieldType::DataSegment:
-        WriteDataSegment(field->data_segment);
+        WriteDataSegment(cast<DataSegmentModuleField>(field)->data_segment);
         break;
       case ModuleFieldType::FuncType:
-        WriteFuncType(field->func_type);
+        WriteFuncType(cast<FuncTypeModuleField>(field)->func_type);
         break;
       case ModuleFieldType::Start:
-        WriteStartFunction(&field->start);
+        WriteStartFunction(&cast<StartModuleField>(field)->start);
         break;
     }
   }

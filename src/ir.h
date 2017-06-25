@@ -159,24 +159,6 @@ class Expr {
   Expr() = delete;
   virtual ~Expr() {}
 
-  template <typename T>
-  bool Is() const {
-    WABT_STATIC_ASSERT((std::is_base_of<Expr, T>::value));
-    return type == T::kStaticType;
-  };
-
-  template <typename T>
-  const T* As() const {
-    assert(Is<T>());
-    return static_cast<const T*>(this);
-  }
-
-  template <typename T>
-  T* As() {
-    assert(Is<T>());
-    return static_cast<T*>(this);
-  }
-
   Location loc;
   ExprType type;
   Expr* next;
@@ -185,11 +167,12 @@ class Expr {
   explicit Expr(ExprType);
 };
 
-template <ExprType T>
+template <ExprType TypeEnum>
 class ExprMixin : public Expr {
  public:
-  static const ExprType kStaticType = T;
-  ExprMixin() : Expr(T) {}
+  static bool classof(const Expr* expr) { return expr->type == TypeEnum; }
+
+  ExprMixin() : Expr(TypeEnum) {}
 };
 
 typedef ExprMixin<ExprType::CurrentMemory> CurrentMemoryExpr;
@@ -200,8 +183,8 @@ typedef ExprMixin<ExprType::Return> ReturnExpr;
 typedef ExprMixin<ExprType::Select> SelectExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
 
-template <ExprType T>
-class OpcodeExpr : public ExprMixin<T> {
+template <ExprType TypeEnum>
+class OpcodeExpr : public ExprMixin<TypeEnum> {
  public:
   OpcodeExpr(Opcode opcode) : opcode(opcode) {}
 
@@ -213,8 +196,8 @@ typedef OpcodeExpr<ExprType::Compare> CompareExpr;
 typedef OpcodeExpr<ExprType::Convert> ConvertExpr;
 typedef OpcodeExpr<ExprType::Unary> UnaryExpr;
 
-template <ExprType T>
-class VarExpr : public ExprMixin<T> {
+template <ExprType TypeEnum>
+class VarExpr : public ExprMixin<TypeEnum> {
  public:
   VarExpr(const Var& var) : var(var) {}
 
@@ -233,8 +216,8 @@ typedef VarExpr<ExprType::SetLocal> SetLocalExpr;
 typedef VarExpr<ExprType::TeeLocal> TeeLocalExpr;
 typedef VarExpr<ExprType::Throw> ThrowExpr;
 
-template <ExprType type>
-class BlockExprBase : public ExprMixin<type> {
+template <ExprType TypeEnum>
+class BlockExprBase : public ExprMixin<TypeEnum> {
  public:
   explicit BlockExprBase(Block* block) : block(block) {}
   ~BlockExprBase() { delete block; }
@@ -281,8 +264,8 @@ class ConstExpr : public ExprMixin<ExprType::Const> {
   Const const_;
 };
 
-template <ExprType T>
-class LoadStoreExpr : public ExprMixin<T> {
+template <ExprType TypeEnum>
+class LoadStoreExpr : public ExprMixin<TypeEnum> {
  public:
   LoadStoreExpr(Opcode opcode, Address align, uint32_t offset)
       : opcode(opcode), align(align), offset(offset) {}
@@ -459,28 +442,140 @@ enum class ModuleFieldType {
   Except
 };
 
-struct ModuleField {
+class ModuleField {
+ public:
   WABT_DISALLOW_COPY_AND_ASSIGN(ModuleField);
-  ModuleField();
-  explicit ModuleField(ModuleFieldType);
-  ~ModuleField();
+  ModuleField() = delete;
+  virtual ~ModuleField() {}
 
   Location loc;
   ModuleFieldType type;
   ModuleField* next;
-  union {
-    Func* func;
-    Global* global;
-    Import* import;
-    Export* export_;
-    FuncType* func_type;
-    Table* table;
-    ElemSegment* elem_segment;
-    Memory* memory;
-    DataSegment* data_segment;
-    Exception* except;
-    Var start;
-  };
+
+ protected:
+  explicit ModuleField(ModuleFieldType, const Location& loc);
+};
+
+template <ModuleFieldType TypeEnum>
+class ModuleFieldMixin : public ModuleField {
+ public:
+  static bool classof(const ModuleField* field) {
+    return field->type == TypeEnum;
+  }
+
+  explicit ModuleFieldMixin(const Location& loc) : ModuleField(TypeEnum, loc) {}
+};
+
+class FuncModuleField : public ModuleFieldMixin<ModuleFieldType::Func> {
+ public:
+  explicit FuncModuleField(Func* func, const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::Func>(loc), func(func) {}
+  ~FuncModuleField() { delete func; }
+
+  Func* func;
+};
+
+class GlobalModuleField : public ModuleFieldMixin<ModuleFieldType::Global> {
+ public:
+  explicit GlobalModuleField(Global* global,
+                             const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::Global>(loc), global(global) {}
+  ~GlobalModuleField() { delete global; }
+
+  Global* global;
+};
+
+class ImportModuleField : public ModuleFieldMixin<ModuleFieldType::Import> {
+ public:
+  explicit ImportModuleField(Import* import,
+                             const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::Import>(loc), import(import) {}
+  ~ImportModuleField() { delete import; }
+
+  Import* import;
+};
+
+class ExportModuleField : public ModuleFieldMixin<ModuleFieldType::Export> {
+ public:
+  explicit ExportModuleField(Export* export_,
+                             const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::Export>(loc), export_(export_) {}
+  ~ExportModuleField() { delete export_; }
+
+  Export* export_;
+};
+
+class FuncTypeModuleField : public ModuleFieldMixin<ModuleFieldType::FuncType> {
+ public:
+  explicit FuncTypeModuleField(FuncType* func_type,
+                               const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::FuncType>(loc),
+        func_type(func_type) {}
+  ~FuncTypeModuleField() { delete func_type; }
+
+  FuncType* func_type;
+};
+
+class TableModuleField : public ModuleFieldMixin<ModuleFieldType::Table> {
+ public:
+  explicit TableModuleField(Table* table, const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::Table>(loc), table(table) {}
+  ~TableModuleField() { delete table; }
+
+  Table* table;
+};
+
+class ElemSegmentModuleField
+    : public ModuleFieldMixin<ModuleFieldType::ElemSegment> {
+ public:
+  explicit ElemSegmentModuleField(ElemSegment* elem_segment,
+                                  const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::ElemSegment>(loc),
+        elem_segment(elem_segment) {}
+  ~ElemSegmentModuleField() { delete elem_segment; }
+
+  ElemSegment* elem_segment;
+};
+
+class MemoryModuleField : public ModuleFieldMixin<ModuleFieldType::Memory> {
+ public:
+  explicit MemoryModuleField(Memory* memory,
+                             const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::Memory>(loc), memory(memory) {}
+  ~MemoryModuleField() { delete memory; }
+
+  Memory* memory;
+};
+
+class DataSegmentModuleField
+    : public ModuleFieldMixin<ModuleFieldType::DataSegment> {
+ public:
+  explicit DataSegmentModuleField(DataSegment* data_segment,
+                                  const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::DataSegment>(loc),
+        data_segment(data_segment) {}
+  ~DataSegmentModuleField() { delete data_segment; }
+
+  DataSegment* data_segment;
+};
+
+class ExceptionModuleField : public ModuleFieldMixin<ModuleFieldType::Except> {
+ public:
+  explicit ExceptionModuleField(Exception* except,
+                                const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::Except>(loc), except(except) {}
+  ~ExceptionModuleField() { delete except; }
+
+  Exception* except;
+};
+
+class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
+ public:
+  explicit StartModuleField(Var start = Var(),
+                            const Location& loc = EmptyLocation())
+      : ModuleFieldMixin<ModuleFieldType::Start>(loc), start(start) {}
+
+  Var start;
 };
 
 struct Module {
@@ -488,7 +583,7 @@ struct Module {
   Module();
   ~Module();
 
-  ModuleField* AppendField();
+  void AppendField(ModuleField*);
   FuncType* AppendImplicitFuncType(const Location&, const FuncSignature&);
 
   Index GetFuncTypeIndex(const Var&) const;

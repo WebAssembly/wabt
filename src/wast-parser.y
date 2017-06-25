@@ -25,6 +25,7 @@
 #include "binary-error-handler.h"
 #include "binary-reader.h"
 #include "binary-reader-ir.h"
+#include "cast.h"
 #include "literal.h"
 #include "wast-parser.h"
 #include "wast-parser-lexer-shared.h"
@@ -609,7 +610,7 @@ block_instr :
   | try_check labeling_opt block catch_instr_list END labeling_opt {
       $3->label = $2;
       $$ = $4;
-      $$->As<TryExpr>()->block = $3;
+      cast<TryExpr>($$)->block = $3;
       CHECK_END_LABEL(@6, $3->label, $6);
     }
 ;
@@ -656,7 +657,7 @@ catch_instr_list :
     }
   | catch_instr_list catch_instr {
       $$ = $1;
-      $$->As<TryExpr>()->catches.push_back($2);
+      cast<TryExpr>($$)->catches.push_back($2);
     }
   ;
 
@@ -680,7 +681,7 @@ expr1 :
     }
   | IF labeling_opt if_block {
       $$ = $3;
-      IfExpr* if_ = $3.last->As<IfExpr>();
+      IfExpr* if_ = cast<IfExpr>($3.last);
       if_->true_->label = $2;
     }
   | try_check labeling_opt try_ {
@@ -722,14 +723,14 @@ catch_sexp_list :
     }
   | catch_sexp_list catch_sexp {
       $$ = $1;
-      $$->As<TryExpr>()->catches.push_back($2);
+      cast<TryExpr>($$)->catches.push_back($2);
     }
   ;
 
 
 if_block :
     block_sig if_block {
-      IfExpr* if_ = $2.last->As<IfExpr>();
+      IfExpr* if_ = cast<IfExpr>($2.last);
       $$ = $2;
       Block* true_ = if_->true_;
       true_->sig.insert(true_->sig.end(), $1->begin(), $1->end());
@@ -814,9 +815,7 @@ exception :
   ;
 exception_field :
     exception {
-      $$ = new ModuleField(ModuleFieldType::Except);
-      $$->loc = @1;
-      $$->except = $1;
+      $$ = new ExceptionModuleField($1);
     }
   ;
 
@@ -824,35 +823,30 @@ exception_field :
 func :
     LPAR FUNC bind_var_opt func_fields RPAR {
       $$ = $4;
-      ModuleField* main = $$.first;
-      main->loc = @2;
-      if (main->type == ModuleFieldType::Func) {
-        main->func->name = $3;
+      ModuleField* main_field = $$.first;
+      main_field->loc = @2;
+      if (auto func_field = dyn_cast<FuncModuleField>(main_field)) {
+        func_field->func->name = $3;
       } else {
-        assert(main->type == ModuleFieldType::Import);
-        main->import->func->name = $3;
+        cast<ImportModuleField>(main_field)->import->func->name = $3;
       }
     }
 ;
 
 func_fields :
     type_use func_fields_body {
-      ModuleField* field = new ModuleField(ModuleFieldType::Func);
-      field->func = $2;
+      auto field = new FuncModuleField($2);
       field->func->decl.has_func_type = true;
       field->func->decl.type_var = std::move(*$1);
       delete $1;
       $$.first = $$.last = field;
     }
   | func_fields_body {
-      ModuleField* field = new ModuleField(ModuleFieldType::Func);
-      field->func = $1;
+      auto field = new FuncModuleField($1);
       $$.first = $$.last = field;
     }
   | inline_import type_use func_fields_import {
-      ModuleField* field = new ModuleField(ModuleFieldType::Import);
-      field->loc = @1;
-      field->import = $1;
+      auto field = new ImportModuleField($1, @1);
       field->import->kind = ExternalKind::Func;
       field->import->func = $3;
       field->import->func->decl.has_func_type = true;
@@ -861,17 +855,13 @@ func_fields :
       $$.first = $$.last = field;
     }
   | inline_import func_fields_import {
-      ModuleField* field = new ModuleField(ModuleFieldType::Import);
-      field->loc = @1;
-      field->import = $1;
+      auto field = new ImportModuleField($1, @1);
       field->import->kind = ExternalKind::Func;
       field->import->func = $2;
       $$.first = $$.last = field;
     }
   | inline_export func_fields {
-      ModuleField* field = new ModuleField(ModuleFieldType::Export);
-      field->loc = @1;
-      field->export_ = $1;
+      auto field = new ExportModuleField($1, @1);
       field->export_->kind = ExternalKind::Func;
       $$.first = $2.first;
       $$.last = $2.last->next = field;
@@ -983,79 +973,70 @@ offset :
 
 elem :
     LPAR ELEM var offset var_list RPAR {
-      $$ = new ModuleField(ModuleFieldType::ElemSegment);
-      $$->loc = @2;
-      $$->elem_segment = new ElemSegment();
-      $$->elem_segment->table_var = std::move(*$3);
+      auto elem_segment = new ElemSegment();
+      elem_segment->table_var = std::move(*$3);
       delete $3;
-      $$->elem_segment->offset = $4.first;
-      $$->elem_segment->vars = std::move(*$5);
+      elem_segment->offset = $4.first;
+      elem_segment->vars = std::move(*$5);
       delete $5;
+      $$ = new ElemSegmentModuleField(elem_segment, @2);
     }
   | LPAR ELEM offset var_list RPAR {
-      $$ = new ModuleField(ModuleFieldType::ElemSegment);
-      $$->loc = @2;
-      $$->elem_segment = new ElemSegment();
-      $$->elem_segment->table_var.loc = @2;
-      $$->elem_segment->table_var.type = VarType::Index;
-      $$->elem_segment->table_var.index = 0;
-      $$->elem_segment->offset = $3.first;
-      $$->elem_segment->vars = std::move(*$4);
+      auto elem_segment = new ElemSegment();
+      elem_segment->table_var.loc = @2;
+      elem_segment->table_var.type = VarType::Index;
+      elem_segment->table_var.index = 0;
+      elem_segment->offset = $3.first;
+      elem_segment->vars = std::move(*$4);
       delete $4;
+      $$ = new ElemSegmentModuleField(elem_segment, @2);
     }
 ;
 
 table :
     LPAR TABLE bind_var_opt table_fields RPAR {
       $$ = $4;
-      ModuleField* main = $$.first;
-      main->loc = @2;
-      if (main->type == ModuleFieldType::Table) {
-        main->table->name = $3;
+      ModuleField* main_field = $$.first;
+      main_field->loc = @2;
+      if (auto table_field = dyn_cast<TableModuleField>(main_field)) {
+        table_field->table->name = $3;
       } else {
-        assert(main->type == ModuleFieldType::Import);
-        main->import->table->name = $3;
+        cast<ImportModuleField>(main_field)->import->table->name = $3;
       }
     }
 ;
 
 table_fields :
     table_sig {
-      ModuleField* field = new ModuleField(ModuleFieldType::Table);
-      field->loc = @1;
-      field->table = $1;
+      auto field = new TableModuleField($1);
       $$.first = $$.last = field;
     }
   | inline_import table_sig {
-      ModuleField* field = new ModuleField(ModuleFieldType::Import);
-      field->loc = @1;
-      field->import = $1;
+      auto field = new ImportModuleField($1);
       field->import->kind = ExternalKind::Table;
       field->import->table = $2;
       $$.first = $$.last = field;
     }
   | inline_export table_fields {
-      ModuleField* field = new ModuleField(ModuleFieldType::Export);
-      field->loc = @1;
-      field->export_ = $1;
+      auto field = new ExportModuleField($1, @1);
       field->export_->kind = ExternalKind::Table;
       $$.first = $2.first;
       $$.last = $2.last->next = field;
     }
   | elem_type LPAR ELEM var_list RPAR {
-      ModuleField* table_field = new ModuleField(ModuleFieldType::Table);
-      Table* table = table_field->table = new Table();
+      auto table = new Table();
       table->elem_limits.initial = $4->size();
       table->elem_limits.max = $4->size();
       table->elem_limits.has_max = true;
-      ModuleField* elem_field = new ModuleField(ModuleFieldType::ElemSegment);
-      elem_field->loc = @3;
-      ElemSegment* elem_segment = elem_field->elem_segment = new ElemSegment();
+      auto table_field = new TableModuleField(table);
+
+      auto elem_segment = new ElemSegment();
       elem_segment->table_var = Var(kInvalidIndex);
       elem_segment->offset = new ConstExpr(Const(Const::I32(), 0));
       elem_segment->offset->loc = @3;
       elem_segment->vars = std::move(*$4);
       delete $4;
+      auto elem_field = new ElemSegmentModuleField(elem_segment, @3);
       $$.first = table_field;
       $$.last = table_field->next = elem_field;
     }
@@ -1063,82 +1044,73 @@ table_fields :
 
 data :
     LPAR DATA var offset text_list_opt RPAR {
-      $$ = new ModuleField(ModuleFieldType::DataSegment);
-      $$->loc = @2;
-      $$->data_segment = new DataSegment();
-      $$->data_segment->memory_var = std::move(*$3);
+      auto data_segment = new DataSegment();
+      data_segment->memory_var = std::move(*$3);
       delete $3;
-      $$->data_segment->offset = $4.first;
-      dup_text_list(&$5, &$$->data_segment->data, &$$->data_segment->size);
+      data_segment->offset = $4.first;
+      dup_text_list(&$5, &data_segment->data, &data_segment->size);
       destroy_text_list(&$5);
+      $$ = new DataSegmentModuleField(data_segment, @2);
     }
   | LPAR DATA offset text_list_opt RPAR {
-      $$ = new ModuleField(ModuleFieldType::DataSegment);
-      $$->loc = @2;
-      $$->data_segment = new DataSegment();
-      $$->data_segment->memory_var.loc = @2;
-      $$->data_segment->memory_var.type = VarType::Index;
-      $$->data_segment->memory_var.index = 0;
-      $$->data_segment->offset = $3.first;
-      dup_text_list(&$4, &$$->data_segment->data, &$$->data_segment->size);
+      auto data_segment = new DataSegment();
+      data_segment->memory_var.loc = @2;
+      data_segment->memory_var.type = VarType::Index;
+      data_segment->memory_var.index = 0;
+      data_segment->offset = $3.first;
+      dup_text_list(&$4, &data_segment->data, &data_segment->size);
       destroy_text_list(&$4);
+      $$ = new DataSegmentModuleField(data_segment, @2);
     }
 ;
 
 memory :
     LPAR MEMORY bind_var_opt memory_fields RPAR {
       $$ = $4;
-      ModuleField* main = $$.first;
-      main->loc = @2;
-      if (main->type == ModuleFieldType::Memory) {
-        main->memory->name = $3;
+      ModuleField* main_field = $$.first;
+      main_field->loc = @2;
+      if (auto memory_field = dyn_cast<MemoryModuleField>(main_field)) {
+        memory_field->memory->name = $3;
       } else {
-        assert(main->type == ModuleFieldType::Import);
-        main->import->memory->name = $3;
+        cast<ImportModuleField>(main_field)->import->memory->name = $3;
       }
     }
 ;
 
 memory_fields :
     memory_sig {
-      ModuleField* field = new ModuleField(ModuleFieldType::Memory);
-      field->memory = $1;
+      auto field = new MemoryModuleField($1);
       $$.first = $$.last = field;
     }
   | inline_import memory_sig {
-      ModuleField* field = new ModuleField(ModuleFieldType::Import);
-      field->loc = @1;
-      field->import = $1;
+      auto field = new ImportModuleField($1);
       field->import->kind = ExternalKind::Memory;
       field->import->memory = $2;
       $$.first = $$.last = field;
     }
   | inline_export memory_fields {
-      ModuleField* field = new ModuleField(ModuleFieldType::Export);
-      field->loc = @1;
-      field->export_ = $1;
+      auto field = new ExportModuleField($1, @1);
       field->export_->kind = ExternalKind::Memory;
       $$.first = $2.first;
       $$.last = $2.last->next = field;
     }
   | LPAR DATA text_list_opt RPAR {
-      ModuleField* data_field = new ModuleField(ModuleFieldType::DataSegment);
-      data_field->loc = @2;
-      DataSegment* data_segment = data_field->data_segment = new DataSegment();
+      auto data_segment = new DataSegment();
       data_segment->memory_var = Var(kInvalidIndex);
       data_segment->offset = new ConstExpr(Const(Const::I32(), 0));
       data_segment->offset->loc = @2;
       dup_text_list(&$3, &data_segment->data, &data_segment->size);
       destroy_text_list(&$3);
+      auto data_field = new DataSegmentModuleField(data_segment, @2);
+
       uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment->size);
       uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
 
-      ModuleField* memory_field = new ModuleField(ModuleFieldType::Memory);
-      memory_field->loc = @2;
-      Memory* memory = memory_field->memory = new Memory();
+      auto memory = new Memory();
       memory->page_limits.initial = page_size;
       memory->page_limits.max = page_size;
       memory->page_limits.has_max = true;
+      auto memory_field = new MemoryModuleField(memory);
       $$.first = memory_field;
       $$.last = memory_field->next = data_field;
     }
@@ -1147,36 +1119,30 @@ memory_fields :
 global :
     LPAR GLOBAL bind_var_opt global_fields RPAR {
       $$ = $4;
-      ModuleField* main = $$.first;
-      main->loc = @2;
-      if (main->type == ModuleFieldType::Global) {
-        main->global->name = $3;
+      ModuleField* main_field = $$.first;
+      main_field->loc = @2;
+      if (auto global_field = dyn_cast<GlobalModuleField>(main_field)) {
+        global_field->global->name = $3;
       } else {
-        assert(main->type == ModuleFieldType::Import);
-        main->import->global->name = $3;
+        cast<ImportModuleField>(main_field)->import->global->name = $3;
       }
     }
 ;
 
 global_fields :
     global_type const_expr {
-      ModuleField* field = new ModuleField(ModuleFieldType::Global);
-      field->global = $1;
+      auto field = new GlobalModuleField($1);
       field->global->init_expr = $2.first;
       $$.first = $$.last = field;
     }
   | inline_import global_type {
-      ModuleField* field = new ModuleField(ModuleFieldType::Import);
-      field->loc = @1;
-      field->import = $1;
+      auto field = new ImportModuleField($1);
       field->import->kind = ExternalKind::Global;
       field->import->global = $2;
       $$.first = $$.last = field;
     }
   | inline_export global_fields {
-      ModuleField* field = new ModuleField(ModuleFieldType::Export);
-      field->loc = @1;
-      field->export_ = $1;
+      auto field = new ExportModuleField($1, @1);
       field->export_->kind = ExternalKind::Global;
       $$.first = $2.first;
       $$.last = $2.last->next = field;
@@ -1230,11 +1196,10 @@ import_desc :
 
 import :
     LPAR IMPORT quoted_text quoted_text import_desc RPAR {
-      $$ = new ModuleField(ModuleFieldType::Import);
-      $$->loc = @2;
-      $$->import = $5;
-      $$->import->module_name = $3;
-      $$->import->field_name = $4;
+      auto field = new ImportModuleField($5, @2);
+      field->import->module_name = $3;
+      field->import->field_name = $4;
+      $$ = field;
     }
 ;
 
@@ -1280,10 +1245,9 @@ export_desc :
 ;
 export :
     LPAR EXPORT quoted_text export_desc RPAR {
-      $$ = new ModuleField(ModuleFieldType::Export);
-      $$->loc = @2;
-      $$->export_ = $4;
-      $$->export_->name = $3;
+      auto field = new ExportModuleField($4, @2);
+      field->export_->name = $3;
+      $$ = field;
     }
 ;
 
@@ -1299,27 +1263,23 @@ inline_export :
 
 type_def :
     LPAR TYPE func_type RPAR {
-      $$ = new ModuleField(ModuleFieldType::FuncType);
-      $$->loc = @2;
-      $$->func_type = new FuncType();
-      $$->func_type->sig = std::move(*$3);
+      auto func_type = new FuncType();
+      func_type->sig = std::move(*$3);
       delete $3;
+      $$ = new FuncTypeModuleField(func_type, @2);
     }
   | LPAR TYPE bind_var func_type RPAR {
-      $$ = new ModuleField(ModuleFieldType::FuncType);
-      $$->loc = @2;
-      $$->func_type = new FuncType();
-      $$->func_type->name = $3;
-      $$->func_type->sig = std::move(*$4);
+      auto func_type = new FuncType();
+      func_type->name = $3;
+      func_type->sig = std::move(*$4);
       delete $4;
+      $$ = new FuncTypeModuleField(func_type, @2);
     }
 ;
 
 start :
     LPAR START var RPAR {
-      $$ = new ModuleField(ModuleFieldType::Start);
-      $$->loc = @2;
-      $$->start = std::move(*$3);
+      $$ = new StartModuleField(*$3, @2);
       delete $3;
     }
 ;
@@ -1826,125 +1786,147 @@ void append_module_fields(Module* module, ModuleField* first) {
     Index index = kInvalidIndex;
 
     switch (field->type) {
-      case ModuleFieldType::Func:
-        append_implicit_func_declaration(&field->loc, module,
-                                         &field->func->decl);
-        name = &field->func->name;
+      case ModuleFieldType::Func: {
+        Func* func = cast<FuncModuleField>(field)->func;
+        append_implicit_func_declaration(&field->loc, module, &func->decl);
+        name = &func->name;
         bindings = &module->func_bindings;
         index = module->funcs.size();
-        module->funcs.push_back(field->func);
+        module->funcs.push_back(func);
         break;
+      }
 
-      case ModuleFieldType::Global:
-        name = &field->global->name;
+      case ModuleFieldType::Global: {
+        Global* global = cast<GlobalModuleField>(field)->global;
+        name = &global->name;
         bindings = &module->global_bindings;
         index = module->globals.size();
-        module->globals.push_back(field->global);
+        module->globals.push_back(global);
         break;
+      }
 
-      case ModuleFieldType::Import:
-        switch (field->import->kind) {
+      case ModuleFieldType::Import: {
+        Import* import = cast<ImportModuleField>(field)->import;
+
+        switch (import->kind) {
           case ExternalKind::Func:
             append_implicit_func_declaration(&field->loc, module,
-                                             &field->import->func->decl);
-            name = &field->import->func->name;
+                                             &import->func->decl);
+            name = &import->func->name;
             bindings = &module->func_bindings;
             index = module->funcs.size();
-            module->funcs.push_back(field->import->func);
+            module->funcs.push_back(import->func);
             ++module->num_func_imports;
             break;
           case ExternalKind::Table:
-            name = &field->import->table->name;
+            name = &import->table->name;
             bindings = &module->table_bindings;
             index = module->tables.size();
-            module->tables.push_back(field->import->table);
+            module->tables.push_back(import->table);
             ++module->num_table_imports;
             break;
           case ExternalKind::Memory:
-            name = &field->import->memory->name;
+            name = &import->memory->name;
             bindings = &module->memory_bindings;
             index = module->memories.size();
-            module->memories.push_back(field->import->memory);
+            module->memories.push_back(import->memory);
             ++module->num_memory_imports;
             break;
           case ExternalKind::Global:
-            name = &field->import->global->name;
+            name = &import->global->name;
             bindings = &module->global_bindings;
             index = module->globals.size();
-            module->globals.push_back(field->import->global);
+            module->globals.push_back(import->global);
             ++module->num_global_imports;
             break;
           case ExternalKind::Except:
-            name = &field->import->except->name;
+            name = &import->except->name;
             bindings = &module->except_bindings;
             index = module->excepts.size();
-            module->excepts.push_back(field->import->except);
+            module->excepts.push_back(import->except);
             ++module->num_except_imports;
             break;
         }
-        module->imports.push_back(field->import);
+        module->imports.push_back(import);
         break;
+      }
 
-      case ModuleFieldType::Export:
+      case ModuleFieldType::Export: {
+        Export* export_ = cast<ExportModuleField>(field)->export_;
         if (field != main_field) {
           // If this is not the main field, it must be an inline export.
-          field->export_->var.type = VarType::Index;
-          field->export_->var.index = main_index;
+          export_->var.type = VarType::Index;
+          export_->var.index = main_index;
         }
-        name = &field->export_->name;
+        name = &export_->name;
         bindings = &module->export_bindings;
         index = module->exports.size();
-        module->exports.push_back(field->export_);
+        module->exports.push_back(export_);
         break;
+      }
 
-      case ModuleFieldType::FuncType:
-        name = &field->func_type->name;
+      case ModuleFieldType::FuncType: {
+        FuncType* func_type = cast<FuncTypeModuleField>(field)->func_type;
+        name = &func_type->name;
         bindings = &module->func_type_bindings;
         index = module->func_types.size();
-        module->func_types.push_back(field->func_type);
+        module->func_types.push_back(func_type);
         break;
+      }
 
-      case ModuleFieldType::Table:
-        name = &field->table->name;
+      case ModuleFieldType::Table: {
+        Table* table = cast<TableModuleField>(field)->table;
+        name = &table->name;
         bindings = &module->table_bindings;
         index = module->tables.size();
-        module->tables.push_back(field->table);
+        module->tables.push_back(table);
         break;
+      }
 
-      case ModuleFieldType::ElemSegment:
+      case ModuleFieldType::ElemSegment: {
+        ElemSegment* elem_segment =
+            cast<ElemSegmentModuleField>(field)->elem_segment;
         if (field != main_field) {
           // If this is not the main field, it must be an inline elem segment.
-          field->elem_segment->table_var.type = VarType::Index;
-          field->elem_segment->table_var.index = main_index;
+          elem_segment->table_var.type = VarType::Index;
+          elem_segment->table_var.index = main_index;
         }
-        module->elem_segments.push_back(field->elem_segment);
+        module->elem_segments.push_back(elem_segment);
         break;
+      }
 
-      case ModuleFieldType::Memory:
-        name = &field->memory->name;
+      case ModuleFieldType::Memory: {
+        Memory* memory = cast<MemoryModuleField>(field)->memory;
+        name = &memory->name;
         bindings = &module->memory_bindings;
         index = module->memories.size();
-        module->memories.push_back(field->memory);
+        module->memories.push_back(memory);
         break;
+      }
 
-      case ModuleFieldType::DataSegment:
+      case ModuleFieldType::DataSegment: {
+        DataSegment* data_segment =
+            cast<DataSegmentModuleField>(field)->data_segment;
         if (field != main_field) {
           // If this is not the main field, it must be an inline data segment.
-          field->data_segment->memory_var.type = VarType::Index;
-          field->data_segment->memory_var.index = main_index;
+          data_segment->memory_var.type = VarType::Index;
+          data_segment->memory_var.index = main_index;
         }
-        module->data_segments.push_back(field->data_segment);
+        module->data_segments.push_back(data_segment);
         break;
+      }
 
-      case ModuleFieldType::Except:
-        name = &field->except->name;
+      case ModuleFieldType::Except: {
+        Exception* except = cast<ExceptionModuleField>(field)->except;
+        name = &except->name;
         bindings = &module->except_bindings;
         index = module->excepts.size();
-        module->excepts.push_back(field->except);
+        module->excepts.push_back(except);
         break;
+      }
 
       case ModuleFieldType::Start:
-        module->start = &field->start;
+        module->start = &cast<StartModuleField>(field)->start;
         break;
     }
 

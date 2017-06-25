@@ -25,6 +25,7 @@
 
 #include "binary-error-handler.h"
 #include "binary-reader-nop.h"
+#include "cast.h"
 #include "common.h"
 #include "ir.h"
 
@@ -293,15 +294,11 @@ Result BinaryReaderIR::OnType(Index index,
                                Type* param_types,
                                Index result_count,
                                Type* result_types) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::FuncType;
-  field->func_type = new FuncType();
-
-  FuncType* func_type = field->func_type;
+  auto func_type = new FuncType();
   func_type->sig.param_types.assign(param_types, param_types + param_count);
   func_type->sig.result_types.assign(result_types, result_types + result_count);
   module->func_types.push_back(func_type);
+  module->AppendField(new FuncTypeModuleField(func_type, GetLocation()));
   return Result::Ok;
 }
 
@@ -313,15 +310,11 @@ Result BinaryReaderIR::OnImportCount(Index count) {
 Result BinaryReaderIR::OnImport(Index index,
                                  StringSlice module_name,
                                  StringSlice field_name) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::Import;
-  field->import = new Import();
-
-  Import* import = field->import;
+  auto import = new Import();
   import->module_name = dup_string_slice(module_name);
   import->field_name = dup_string_slice(field_name);
   module->imports.push_back(import);
+  module->AppendField(new ImportModuleField(import, GetLocation()));
   return Result::Ok;
 }
 
@@ -398,17 +391,13 @@ Result BinaryReaderIR::OnFunctionCount(Index count) {
 }
 
 Result BinaryReaderIR::OnFunction(Index index, Index sig_index) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::Func;
-  field->func = new Func();
-
-  Func* func = field->func;
+  auto func = new Func();
   func->decl.has_func_type = true;
   func->decl.type_var = Var(sig_index, GetLocation());
   func->decl.sig = module->func_types[sig_index]->sig;
 
   module->funcs.push_back(func);
+  module->AppendField(new FuncModuleField(func, GetLocation()));
   return Result::Ok;
 }
 
@@ -420,12 +409,10 @@ Result BinaryReaderIR::OnTableCount(Index count) {
 Result BinaryReaderIR::OnTable(Index index,
                                Type elem_type,
                                const Limits* elem_limits) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::Table;
-  field->table = new Table();
-  field->table->elem_limits = *elem_limits;
-  module->tables.push_back(field->table);
+  auto table = new Table();
+  table->elem_limits = *elem_limits;
+  module->tables.push_back(table);
+  module->AppendField(new TableModuleField(table, GetLocation()));
   return Result::Ok;
 }
 
@@ -435,12 +422,10 @@ Result BinaryReaderIR::OnMemoryCount(Index count) {
 }
 
 Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::Memory;
-  field->memory = new Memory();
-  field->memory->page_limits = *page_limits;
-  module->memories.push_back(field->memory);
+  auto memory = new Memory();
+  memory->page_limits = *page_limits;
+  module->memories.push_back(memory);
+  module->AppendField(new MemoryModuleField(memory, GetLocation()));
   return Result::Ok;
 }
 
@@ -450,13 +435,11 @@ Result BinaryReaderIR::OnGlobalCount(Index count) {
 }
 
 Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::Global;
-  field->global = new Global();
-  field->global->type = type;
-  field->global->mutable_ = mutable_;
-  module->globals.push_back(field->global);
+  auto global = new Global();
+  global->type = type;
+  global->mutable_ = mutable_;
+  module->globals.push_back(global);
+  module->AppendField(new GlobalModuleField(global, GetLocation()));
   return Result::Ok;
 }
 
@@ -481,12 +464,7 @@ Result BinaryReaderIR::OnExport(Index index,
                                 ExternalKind kind,
                                 Index item_index,
                                 StringSlice name) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::Export;
-  field->export_ = new Export();
-
-  Export* export_ = field->export_;
+  auto export_ = new Export();
   export_->name = dup_string_slice(name);
   switch (kind) {
     case ExternalKind::Func:
@@ -508,18 +486,14 @@ Result BinaryReaderIR::OnExport(Index index,
   export_->var = Var(item_index, GetLocation());
   export_->kind = kind;
   module->exports.push_back(export_);
+  module->AppendField(new ExportModuleField(export_, GetLocation()));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnStartFunction(Index func_index) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::Start;
-
   assert(func_index < module->funcs.size());
-  field->start = Var(func_index, GetLocation());
-
-  module->start = &field->start;
+  Var start(func_index, GetLocation());
+  module->AppendField(new StartModuleField(start, GetLocation()));
   return Result::Ok;
 }
 
@@ -621,7 +595,7 @@ Result BinaryReaderIR::OnElseExpr() {
   CHECK_RESULT(GetLabelAt(&parent_label, 1));
 
   label->label_type = LabelType::Else;
-  label->first = &parent_label->last->As<IfExpr>()->false_;
+  label->first = &cast<IfExpr>(parent_label->last)->false_;
   label->last = nullptr;
   return Result::Ok;
 }
@@ -748,12 +722,10 @@ Result BinaryReaderIR::OnElemSegmentCount(Index count) {
 }
 
 Result BinaryReaderIR::BeginElemSegment(Index index, Index table_index) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::ElemSegment;
-  field->elem_segment = new ElemSegment();
-  field->elem_segment->table_var = Var(table_index, GetLocation());
-  module->elem_segments.push_back(field->elem_segment);
+  auto elem_segment = new ElemSegment();
+  elem_segment->table_var = Var(table_index, GetLocation());
+  module->elem_segments.push_back(elem_segment);
+  module->AppendField(new ElemSegmentModuleField(elem_segment, GetLocation()));
   return Result::Ok;
 }
 
@@ -793,12 +765,10 @@ Result BinaryReaderIR::OnDataSegmentCount(Index count) {
 }
 
 Result BinaryReaderIR::BeginDataSegment(Index index, Index memory_index) {
-  ModuleField* field = module->AppendField();
-  field->loc = GetLocation();
-  field->type = ModuleFieldType::DataSegment;
-  field->data_segment = new DataSegment();
-  field->data_segment->memory_var = Var(memory_index, GetLocation());
-  module->data_segments.push_back(field->data_segment);
+  auto data_segment = new DataSegment();
+  data_segment->memory_var = Var(memory_index, GetLocation());
+  module->data_segments.push_back(data_segment);
+  module->AppendField(new DataSegmentModuleField(data_segment, GetLocation()));
   return Result::Ok;
 }
 

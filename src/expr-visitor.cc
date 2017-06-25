@@ -16,6 +16,7 @@
 
 #include "expr-visitor.h"
 
+#include "cast.h"
 #include "ir.h"
 
 #define CHECK_RESULT(expr)   \
@@ -31,11 +32,11 @@ ExprVisitor::ExprVisitor(Delegate* delegate) : delegate_(delegate) {}
 Result ExprVisitor::VisitExpr(Expr* expr) {
   switch (expr->type) {
     case ExprType::Binary:
-      CHECK_RESULT(delegate_->OnBinaryExpr(expr->As<BinaryExpr>()));
+      CHECK_RESULT(delegate_->OnBinaryExpr(cast<BinaryExpr>(expr)));
       break;
 
     case ExprType::Block: {
-      auto block_expr = expr->As<BlockExpr>();
+      auto block_expr = cast<BlockExpr>(expr);
       CHECK_RESULT(delegate_->BeginBlockExpr(block_expr));
       CHECK_RESULT(VisitExprList(block_expr->block->first));
       CHECK_RESULT(delegate_->EndBlockExpr(block_expr));
@@ -43,60 +44,60 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     }
 
     case ExprType::Br:
-      CHECK_RESULT(delegate_->OnBrExpr(expr->As<BrExpr>()));
+      CHECK_RESULT(delegate_->OnBrExpr(cast<BrExpr>(expr)));
       break;
 
     case ExprType::BrIf:
-      CHECK_RESULT(delegate_->OnBrIfExpr(expr->As<BrIfExpr>()));
+      CHECK_RESULT(delegate_->OnBrIfExpr(cast<BrIfExpr>(expr)));
       break;
 
     case ExprType::BrTable:
-      CHECK_RESULT(delegate_->OnBrTableExpr(expr->As<BrTableExpr>()));
+      CHECK_RESULT(delegate_->OnBrTableExpr(cast<BrTableExpr>(expr)));
       break;
 
     case ExprType::Call:
-      CHECK_RESULT(delegate_->OnCallExpr(expr->As<CallExpr>()));
+      CHECK_RESULT(delegate_->OnCallExpr(cast<CallExpr>(expr)));
       break;
 
     case ExprType::CallIndirect:
-      CHECK_RESULT(delegate_->OnCallIndirectExpr(expr->As<CallIndirectExpr>()));
+      CHECK_RESULT(delegate_->OnCallIndirectExpr(cast<CallIndirectExpr>(expr)));
       break;
 
     case ExprType::Compare:
-      CHECK_RESULT(delegate_->OnCompareExpr(expr->As<CompareExpr>()));
+      CHECK_RESULT(delegate_->OnCompareExpr(cast<CompareExpr>(expr)));
       break;
 
     case ExprType::Const:
-      CHECK_RESULT(delegate_->OnConstExpr(expr->As<ConstExpr>()));
+      CHECK_RESULT(delegate_->OnConstExpr(cast<ConstExpr>(expr)));
       break;
 
     case ExprType::Convert:
-      CHECK_RESULT(delegate_->OnConvertExpr(expr->As<ConvertExpr>()));
+      CHECK_RESULT(delegate_->OnConvertExpr(cast<ConvertExpr>(expr)));
       break;
 
     case ExprType::CurrentMemory:
       CHECK_RESULT(
-          delegate_->OnCurrentMemoryExpr(expr->As<CurrentMemoryExpr>()));
+          delegate_->OnCurrentMemoryExpr(cast<CurrentMemoryExpr>(expr)));
       break;
 
     case ExprType::Drop:
-      CHECK_RESULT(delegate_->OnDropExpr(expr->As<DropExpr>()));
+      CHECK_RESULT(delegate_->OnDropExpr(cast<DropExpr>(expr)));
       break;
 
     case ExprType::GetGlobal:
-      CHECK_RESULT(delegate_->OnGetGlobalExpr(expr->As<GetGlobalExpr>()));
+      CHECK_RESULT(delegate_->OnGetGlobalExpr(cast<GetGlobalExpr>(expr)));
       break;
 
     case ExprType::GetLocal:
-      CHECK_RESULT(delegate_->OnGetLocalExpr(expr->As<GetLocalExpr>()));
+      CHECK_RESULT(delegate_->OnGetLocalExpr(cast<GetLocalExpr>(expr)));
       break;
 
     case ExprType::GrowMemory:
-      CHECK_RESULT(delegate_->OnGrowMemoryExpr(expr->As<GrowMemoryExpr>()));
+      CHECK_RESULT(delegate_->OnGrowMemoryExpr(cast<GrowMemoryExpr>(expr)));
       break;
 
     case ExprType::If: {
-      auto if_expr = expr->As<IfExpr>();
+      auto if_expr = cast<IfExpr>(expr);
       CHECK_RESULT(delegate_->BeginIfExpr(if_expr));
       CHECK_RESULT(VisitExprList(if_expr->true_->first));
       CHECK_RESULT(delegate_->AfterIfTrueExpr(if_expr));
@@ -106,11 +107,11 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     }
 
     case ExprType::Load:
-      CHECK_RESULT(delegate_->OnLoadExpr(expr->As<LoadExpr>()));
+      CHECK_RESULT(delegate_->OnLoadExpr(cast<LoadExpr>(expr)));
       break;
 
     case ExprType::Loop: {
-      auto loop_expr = expr->As<LoopExpr>();
+      auto loop_expr = cast<LoopExpr>(expr);
       CHECK_RESULT(delegate_->BeginLoopExpr(loop_expr));
       CHECK_RESULT(VisitExprList(loop_expr->block->first));
       CHECK_RESULT(delegate_->EndLoopExpr(loop_expr));
@@ -118,43 +119,43 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     }
 
     case ExprType::Nop:
-      CHECK_RESULT(delegate_->OnNopExpr(expr->As<NopExpr>()));
+      CHECK_RESULT(delegate_->OnNopExpr(cast<NopExpr>(expr)));
       break;
 
     case ExprType::Rethrow:
-      CHECK_RESULT(delegate_->OnRethrowExpr(expr->As<RethrowExpr>()));
+      CHECK_RESULT(delegate_->OnRethrowExpr(cast<RethrowExpr>(expr)));
       break;
 
     case ExprType::Return:
-      CHECK_RESULT(delegate_->OnReturnExpr(expr->As<ReturnExpr>()));
+      CHECK_RESULT(delegate_->OnReturnExpr(cast<ReturnExpr>(expr)));
       break;
 
     case ExprType::Select:
-      CHECK_RESULT(delegate_->OnSelectExpr(expr->As<SelectExpr>()));
+      CHECK_RESULT(delegate_->OnSelectExpr(cast<SelectExpr>(expr)));
       break;
 
     case ExprType::SetGlobal:
-      CHECK_RESULT(delegate_->OnSetGlobalExpr(expr->As<SetGlobalExpr>()));
+      CHECK_RESULT(delegate_->OnSetGlobalExpr(cast<SetGlobalExpr>(expr)));
       break;
 
     case ExprType::SetLocal:
-      CHECK_RESULT(delegate_->OnSetLocalExpr(expr->As<SetLocalExpr>()));
+      CHECK_RESULT(delegate_->OnSetLocalExpr(cast<SetLocalExpr>(expr)));
       break;
 
     case ExprType::Store:
-      CHECK_RESULT(delegate_->OnStoreExpr(expr->As<StoreExpr>()));
+      CHECK_RESULT(delegate_->OnStoreExpr(cast<StoreExpr>(expr)));
       break;
 
     case ExprType::TeeLocal:
-      CHECK_RESULT(delegate_->OnTeeLocalExpr(expr->As<TeeLocalExpr>()));
+      CHECK_RESULT(delegate_->OnTeeLocalExpr(cast<TeeLocalExpr>(expr)));
       break;
 
     case ExprType::Throw:
-      CHECK_RESULT(delegate_->OnThrowExpr(expr->As<ThrowExpr>()));
+      CHECK_RESULT(delegate_->OnThrowExpr(cast<ThrowExpr>(expr)));
       break;
 
     case ExprType::TryBlock: {
-      auto try_expr = expr->As<TryExpr>();
+      auto try_expr = cast<TryExpr>(expr);
       CHECK_RESULT(delegate_->BeginTryExpr(try_expr));
       CHECK_RESULT(VisitExprList(try_expr->block->first));
       for (Catch* catch_ : try_expr->catches) {
@@ -166,11 +167,11 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     }
 
     case ExprType::Unary:
-      CHECK_RESULT(delegate_->OnUnaryExpr(expr->As<UnaryExpr>()));
+      CHECK_RESULT(delegate_->OnUnaryExpr(cast<UnaryExpr>(expr)));
       break;
 
     case ExprType::Unreachable:
-      CHECK_RESULT(delegate_->OnUnreachableExpr(expr->As<UnreachableExpr>()));
+      CHECK_RESULT(delegate_->OnUnreachableExpr(cast<UnreachableExpr>(expr)));
       break;
   }
 

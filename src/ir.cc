@@ -176,26 +176,21 @@ void MakeTypeBindingReverseMapping(
   }
 }
 
-ModuleField* Module::AppendField() {
-  ModuleField* result = new ModuleField();
+void Module::AppendField(ModuleField* field) {
   if (!first_field)
-    first_field = result;
+    first_field = field;
   else if (last_field)
-    last_field->next = result;
-  last_field = result;
-  return result;
+    last_field->next = field;
+  last_field = field;
 }
 
 FuncType* Module::AppendImplicitFuncType(const Location& loc,
                                          const FuncSignature& sig) {
-  ModuleField* field = AppendField();
-  field->loc = loc;
-  field->type = ModuleFieldType::FuncType;
-  field->func_type = new FuncType();
-  field->func_type->sig = sig;
-
-  func_types.push_back(field->func_type);
-  return field->func_type;
+  FuncType* func_type = new FuncType();
+  func_type->sig = sig;
+  func_types.push_back(func_type);
+  AppendField(new FuncTypeModuleField(func_type, loc));
+  return func_type;
 }
 
 void DestroyExprList(Expr* first) {
@@ -442,58 +437,8 @@ Export::~Export() {
   destroy_string_slice(&name);
 }
 
-void destroy_memory(Memory* memory) {
-  destroy_string_slice(&memory->name);
-}
-
-void destroy_table(Table* table) {
-  destroy_string_slice(&table->name);
-}
-
-ModuleField::ModuleField() : ModuleField(ModuleFieldType::Start) {}
-
-ModuleField::ModuleField(ModuleFieldType type)
-    : type(type), next(nullptr), start(kInvalidIndex) {
-  WABT_ZERO_MEMORY(loc);
-}
-
-ModuleField::~ModuleField() {
-  switch (type) {
-    case ModuleFieldType::Except:
-      delete except;
-      break;
-    case ModuleFieldType::Func:
-      delete func;
-      break;
-    case ModuleFieldType::Global:
-      delete global;
-      break;
-    case ModuleFieldType::Import:
-      delete import;
-      break;
-    case ModuleFieldType::Export:
-      delete export_;
-      break;
-    case ModuleFieldType::FuncType:
-      delete func_type;
-      break;
-    case ModuleFieldType::Table:
-      delete table;
-      break;
-    case ModuleFieldType::ElemSegment:
-      delete elem_segment;
-      break;
-    case ModuleFieldType::Memory:
-      delete memory;
-      break;
-    case ModuleFieldType::DataSegment:
-      delete data_segment;
-      break;
-    case ModuleFieldType::Start:
-      start.~Var();
-      break;
-  }
-}
+ModuleField::ModuleField(ModuleFieldType type, const Location& loc)
+    : loc(loc), type(type), next(nullptr) {}
 
 Module::Module()
     : first_field(nullptr),
