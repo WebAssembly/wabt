@@ -326,6 +326,13 @@ Result BinaryReaderLogging::OnStoreExpr(Opcode opcode,
   return reader->OnStoreExpr(opcode, alignment_log2, offset);
 }
 
+Result BinaryReaderLogging::OnTryExpr(Index num_types, Type* sig_types) {
+  LOGF("OnTryExpr(sig: ");
+  LogTypes(num_types, sig_types);
+  LOGF_NOINDENT(")\n");
+  return reader->OnTryExpr(num_types, sig_types);
+}
+
 Result BinaryReaderLogging::OnDataSegmentData(Index index,
                                               const void* data,
                                               Address size) {

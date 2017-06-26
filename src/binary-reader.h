@@ -35,6 +35,7 @@ struct ReadBinaryOptions {
 
   Stream* log_stream = nullptr;
   bool read_debug_names = false;
+  bool allow_future_exceptions = false;
 };
 
 class BinaryReaderDelegate {
@@ -201,6 +202,7 @@ class BinaryReaderDelegate {
                              uint32_t alignment_log2,
                              Address offset) = 0;
   virtual Result OnTeeLocalExpr(Index local_index) = 0;
+  virtual Result OnTryExpr(Index num_types, Type* sig_types) = 0;
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
   virtual Result EndFunctionBody(Index index) = 0;

@@ -198,6 +198,7 @@ class BinaryReader {
   Result ReadCodeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadSections() WABT_WARN_UNUSED;
+  Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
   size_t read_end_ = 0; /* Either the section end or data_size. */
   BinaryReaderDelegate::State state_;
@@ -253,6 +254,16 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
   memcpy(out_value, state_.data + state_.offset, sizeof(type)); \
   state_.offset += sizeof(type);                                \
   return Result::Ok
+
+Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
+                                            const char* message) {
+  const char* maybe_space = " ";
+  if (!message)
+    message = maybe_space = "";
+  PrintError("unexpected opcode%s%s: %d (0x%x)",
+             maybe_space, message, opcode.GetCode(), opcode.GetCode());
+  return Result::Error;
+}
 
 Result BinaryReader::ReadOpcode(Opcode* out_value, const char* desc) {
   uint8_t value = 0;
@@ -509,9 +520,7 @@ Result BinaryReader::ReadInitExpr(Index index) {
       return Result::Ok;
 
     default:
-      PrintError("unexpected opcode in initializer expression: %d (0x%x)",
-                 opcode.GetCode(), opcode.GetCode());
-      return Result::Error;
+      return ReportUnexpectedOpcode(opcode, "in initializer expression");
   }
 
   CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
@@ -990,10 +999,20 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
+      case Opcode::Try: {
+        Type sig_type;
+        CHECK_RESULT(ReadType(&sig_type, "try signature type"));
+        ERROR_UNLESS(is_inline_sig_type(sig_type),
+                     "expected valid block signature type");
+        Index num_types = sig_type == Type::Void ? 0 : 1;
+        CALLBACK(OnTryExpr, num_types, &sig_type);
+        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
+        // TODO(karlschimpf) Add catches.
+        break;
+      }
+
       default:
-        PrintError("unexpected opcode: %d (0x%x)", static_cast<int>(opcode),
-                   static_cast<unsigned>(opcode));
-        return Result::Error;
+        return ReportUnexpectedOpcode(opcode);
     }
   }
   ERROR_UNLESS(state_.offset == end_offset,

@@ -74,6 +74,10 @@ static void parse_options(int argc, char** argv) {
       });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
+  parser.AddOption("future-exceptions",
+                   "Test future extension for exception handling",
+                   []() { s_read_binary_options.allow_future_exceptions = true;
+                   });
   parser.AddOption("inline-exports", "Write all exports inline",
                    []() { s_write_wat_options.inline_export = true; });
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",

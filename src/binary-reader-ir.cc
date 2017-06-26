@@ -156,6 +156,7 @@ class BinaryReaderIR : public BinaryReaderNop {
                      uint32_t alignment_log2,
                      Address offset) override;
   Result OnTeeLocalExpr(Index local_index) override;
+  Result OnTryExpr(Index num_types, Type* sig_types) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
@@ -698,6 +699,15 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
 Result BinaryReaderIR::OnTeeLocalExpr(Index local_index) {
   auto expr = new TeeLocalExpr(Var(local_index, GetLocation()));
   return AppendExpr(expr);
+}
+
+Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
+  auto expr = new TryExpr();
+  expr->block = new Block();
+  expr->block->sig.assign(sig_types, sig_types + num_types);
+  AppendExpr(expr);
+  PushLabel(LabelType::Try, &expr->block->first);
+  return Result::Ok;
 }
 
 Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {
