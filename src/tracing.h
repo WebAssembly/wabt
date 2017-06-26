@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WABT_WAT_TRACING_H_
-#define WABT_WAT_TRACING_H_
+#ifndef WABT_TRACING_H_
+#define WABT_TRACING_H_
 
 // Provides a simple tracing class that automatically generates enter/exit
 // messages using the scope of the instance.
@@ -56,10 +56,10 @@ struct TraceScope {
   void PrintNewline();
 };
 
-#define WABT_TRACE(method_name) TraceScope _trace_##method_name##_(#method_name);
+#define WABT_TRACE(method_name) TraceScope _func_(#method_name)
 
 #define WABT_TRACE_ARGS(method_name, format, ...) \
-  TraceScope trace_##method_name##_(#method_name, format, __VA_ARGS__);
+  TraceScope _func_(#method_name, format, __VA_ARGS__)
 
 #else
 
@@ -70,4 +70,4 @@ struct TraceScope {
 
 }  // end namespace wabt
 
-#endif // WABT_WAT_TRACING_H_
+#endif // WABT_TRACING_H_
