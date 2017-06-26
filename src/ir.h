@@ -119,8 +119,10 @@ enum class ExprType {
   Throw,
   TryBlock,
   Unary,
-  Unreachable,
+  Unreachable,  // Unreachable must appear last
 };
+
+const char* GetExprTypeName(ExprType type);
 
 typedef TypeVector BlockSignature;
 
@@ -166,6 +168,8 @@ class Expr {
  protected:
   explicit Expr(ExprType);
 };
+
+const char* GetExprTypeName(const Expr& expr);
 
 template <ExprType TypeEnum>
 class ExprMixin : public Expr {

@@ -45,7 +45,6 @@ struct Opcode {
   operator Enum() const { return enum_; }
 
   static Opcode FromCode(uint32_t);
-
   uint32_t GetCode() const { return GetInfo().code; }
   const char* GetName() const { return GetInfo().name; }
   Type GetResultType() const { return GetInfo().result_type; }
