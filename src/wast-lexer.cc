@@ -96,10 +96,8 @@ namespace wabt {
 
 struct WastLexer::LexToken {
   Location loc_;
-  int value_;
+  int value_ = 0;
   Token lval_;
-
-  LexToken(void): value_(0) {}
 };
 
 struct WastLexer::Lookahead {
