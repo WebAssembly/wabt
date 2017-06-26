@@ -19,7 +19,54 @@
 #include <cassert>
 #include <cstddef>
 
+namespace {
+
+const char* ExprTypeName[] = {
+  "Binary",
+  "Block",
+  "Br",
+  "BrIf",
+  "BrTable",
+  "Call",
+  "CallIndirect",
+  "Compare",
+  "Const",
+  "Convert",
+  "CurrentMemory",
+  "Drop",
+  "GetGlobal",
+  "GetLocal",
+  "GrowMemory",
+  "If",
+  "Load",
+  "Loop",
+  "Nop",
+  "Rethrow",
+  "Return",
+  "Select",
+  "SetGlobal",
+  "SetLocal",
+  "Store",
+  "TeeLocal",
+  "Throw",
+  "TryBlock",
+  "Unary",
+  "Unreachable"
+};
+
+}  // end of anonymous namespace
+
 namespace wabt {
+
+const char* GetExprTypeName(ExprType type) {
+  static_assert(WABT_ENUM_COUNT(ExprType) == WABT_ARRAY_SIZE(ExprTypeName),
+                "Malformed ExprTypeName array");
+  return ExprTypeName[size_t(type)];
+}
+
+const char* GetExprTypeName(const Expr& expr) {
+  return GetExprTypeName(expr.type);
+}
 
 bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return param_types == rhs.param_types && result_types == rhs.result_types;
