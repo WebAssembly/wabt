@@ -181,7 +181,6 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
                            uint32_t alignment_log2,
                            Address offset) override;
   wabt::Result OnTeeLocalExpr(Index local_index) override;
-  wabt::Result OnTryExpr(Index num_types, Type* sig_types) override;
   wabt::Result OnUnaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnUnreachableExpr() override;
   wabt::Result EndFunctionBody(Index index) override;
@@ -1360,14 +1359,6 @@ wabt::Result BinaryReaderInterpreter::OnTeeLocalExpr(Index local_index) {
   CHECK_RESULT(EmitOpcode(interpreter::Opcode::TeeLocal));
   CHECK_RESULT(EmitI32(TranslateLocalIndex(local_index)));
   return wabt::Result::Ok;
-}
-
-wabt::Result BinaryReaderInterpreter::OnTryExpr(Index num_types,
-                                               Type* sig_types) {
-  TypeVector sig(sig_types, sig_types + num_types);
-  CHECK_RESULT(typechecker.OnIf(&sig));
-  PrintError("Don't know how to interpret try block: not implemented");
-  return wabt::Result::Error;
 }
 
 wabt::Result BinaryReaderInterpreter::OnGrowMemoryExpr() {
