@@ -821,7 +821,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::Throw: {
-      auto throw_ = expr->As<ThrowExpr>();
+      auto throw_ = cast<ThrowExpr>(expr);
       Index operand_count = 0;
       if (Exception* except = module_->GetExcept(throw_->var)) {
         operand_count = except->sig.size();
@@ -831,7 +831,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     }
 
     case ExprType::TryBlock:
-      PushExpr(expr, 0, expr->As<TryExpr>()->block->sig.size());
+      PushExpr(expr, 0, cast<TryExpr>(expr)->block->sig.size());
       break;
 
     default:
@@ -952,7 +952,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
     }
 
     case ExprType::TryBlock: {
-      auto try_ = expr_tree.expr->As<TryExpr>();
+      auto try_ = cast<TryExpr>(expr_tree.expr);
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::Try, try_->block,
                       Opcode::Try_Opcode.GetName());
