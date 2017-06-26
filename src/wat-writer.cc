@@ -65,8 +65,7 @@ enum class NextChar {
 };
 
 struct ExprTree {
-  ExprTree() : expr(nullptr) {}
-  explicit ExprTree(const Expr* expr) : expr(expr) {}
+  explicit ExprTree(const Expr* expr = nullptr) : expr(expr) {}
   // For debugging.
   std::string describe() const {
     std::string result("ExprTree(");
