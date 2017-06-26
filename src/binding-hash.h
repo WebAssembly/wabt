@@ -29,9 +29,7 @@ namespace wabt {
 struct Var;
 
 struct Binding {
-  explicit Binding(Index index) : index(index) {
-    WABT_ZERO_MEMORY(loc);
-  }
+  explicit Binding(Index index) : index(index) {}
   Binding(const Location& loc, Index index) : loc(loc), index(index) {}
 
   Location loc;

@@ -250,11 +250,9 @@ void DestroyExprList(Expr* first) {
 }
 
 Var::Var(Index index) : type(VarType::Index), index(index) {
-  WABT_ZERO_MEMORY(loc);
 }
 
 Var::Var(const StringSlice& name) : type(VarType::Name), name(name) {
-  WABT_ZERO_MEMORY(loc);
 }
 
 Var::Var(Index index, const Location& loc_) : Var(index) {
@@ -310,40 +308,20 @@ Var::~Var() {
     destroy_string_slice(&name);
 }
 
-Const::Const(I32, uint32_t value) : type(Type::I32), u32(value) {
-  WABT_ZERO_MEMORY(loc);
+Const::Const(I32, uint32_t value, const Location& loc_)
+    : loc(loc_), type(Type::I32), u32(value) {
 }
 
-Const::Const(I64, uint64_t value) : type(Type::I64), u64(value) {
-  WABT_ZERO_MEMORY(loc);
+Const::Const(I64, uint64_t value, const Location& loc_)
+    : loc(loc_), type(Type::I64), u64(value) {
 }
 
-Const::Const(F32, uint32_t value) : type(Type::F32), f32_bits(value) {
-  WABT_ZERO_MEMORY(loc);
+Const::Const(F32, uint32_t value, const Location& loc_)
+    : loc(loc_), type(Type::F32), f32_bits(value) {
 }
 
-Const::Const(F64, uint64_t value) : type(Type::F64), f64_bits(value) {
-  WABT_ZERO_MEMORY(loc);
-}
-
-Const::Const(I32 tag, uint32_t value, const Location& loc_)
-    : Const(tag, value) {
-  loc = loc_;
-}
-
-Const::Const(I64 tag, uint64_t value, const Location& loc_)
-    : Const(tag, value) {
-  loc = loc_;
-}
-
-Const::Const(F32 tag, uint32_t value, const Location& loc_)
-    : Const(tag, value) {
-  loc = loc_;
-}
-
-Const::Const(F64 tag, uint64_t value, const Location& loc_)
-    : Const(tag, value) {
-  loc = loc_;
+Const::Const(F64, uint64_t value, const Location& loc_)
+    : loc(loc_), type(Type::F64), f64_bits(value) {
 }
 
 
@@ -361,11 +339,9 @@ Block::~Block() {
 }
 
 Catch::Catch(Expr* first) : first(first) {
-  WABT_ZERO_MEMORY(loc);
 }
 
 Catch::Catch(Var var, Expr* first) : var(var), first(first) {
-  WABT_ZERO_MEMORY(loc);
 }
 
 Catch::~Catch() {
@@ -384,7 +360,6 @@ TryExpr::~TryExpr() {
 }
 
 Expr::Expr(ExprType type) : type(type), next(nullptr) {
-  WABT_ZERO_MEMORY(loc);
 }
 
 FuncType::FuncType() {
@@ -496,7 +471,6 @@ Module::Module()
       num_memory_imports(0),
       num_global_imports(0),
       start(0) {
-  WABT_ZERO_MEMORY(loc);
   WABT_ZERO_MEMORY(name);
 }
 
@@ -532,7 +506,6 @@ ScriptModule::~ScriptModule() {
 ActionInvoke::ActionInvoke() {}
 
 Action::Action() : type(ActionType::Get), module_var(kInvalidIndex) {
-  WABT_ZERO_MEMORY(loc);
   WABT_ZERO_MEMORY(name);
 }
 

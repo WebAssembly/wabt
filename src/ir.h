@@ -65,18 +65,11 @@ struct Const {
   struct F32 {};
   struct F64 {};
 
-  // Keep the default constructor trivial so it can be used as a union member.
-  Const() = default;
-  Const(I32, uint32_t);
-  Const(I64, uint64_t);
-  Const(F32, uint32_t);
-  Const(F64, uint64_t);
-  // TODO(binji): Make these default arguments on the constructors above when
-  // Location has a constructor.
-  Const(I32, uint32_t, const Location& loc);
-  Const(I64, uint64_t, const Location& loc);
-  Const(F32, uint32_t, const Location& loc);
-  Const(F64, uint64_t, const Location& loc);
+  Const() : Const(I32(), 0, Location()) {}
+  Const(I32, uint32_t val = 0, const Location& loc = Location());
+  Const(I64, uint64_t val = 0, const Location& loc = Location());
+  Const(F32, uint32_t val = 0, const Location& loc = Location());
+  Const(F64, uint64_t val = 0, const Location& loc = Location());
 
   Location loc;
   Type type;
@@ -475,7 +468,7 @@ class ModuleFieldMixin : public ModuleField {
 
 class FuncModuleField : public ModuleFieldMixin<ModuleFieldType::Func> {
  public:
-  explicit FuncModuleField(Func* func, const Location& loc = EmptyLocation())
+  explicit FuncModuleField(Func* func, const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Func>(loc), func(func) {}
   ~FuncModuleField() { delete func; }
 
@@ -485,7 +478,7 @@ class FuncModuleField : public ModuleFieldMixin<ModuleFieldType::Func> {
 class GlobalModuleField : public ModuleFieldMixin<ModuleFieldType::Global> {
  public:
   explicit GlobalModuleField(Global* global,
-                             const Location& loc = EmptyLocation())
+                             const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Global>(loc), global(global) {}
   ~GlobalModuleField() { delete global; }
 
@@ -495,7 +488,7 @@ class GlobalModuleField : public ModuleFieldMixin<ModuleFieldType::Global> {
 class ImportModuleField : public ModuleFieldMixin<ModuleFieldType::Import> {
  public:
   explicit ImportModuleField(Import* import,
-                             const Location& loc = EmptyLocation())
+                             const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Import>(loc), import(import) {}
   ~ImportModuleField() { delete import; }
 
@@ -505,7 +498,7 @@ class ImportModuleField : public ModuleFieldMixin<ModuleFieldType::Import> {
 class ExportModuleField : public ModuleFieldMixin<ModuleFieldType::Export> {
  public:
   explicit ExportModuleField(Export* export_,
-                             const Location& loc = EmptyLocation())
+                             const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Export>(loc), export_(export_) {}
   ~ExportModuleField() { delete export_; }
 
@@ -515,7 +508,7 @@ class ExportModuleField : public ModuleFieldMixin<ModuleFieldType::Export> {
 class FuncTypeModuleField : public ModuleFieldMixin<ModuleFieldType::FuncType> {
  public:
   explicit FuncTypeModuleField(FuncType* func_type,
-                               const Location& loc = EmptyLocation())
+                               const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::FuncType>(loc),
         func_type(func_type) {}
   ~FuncTypeModuleField() { delete func_type; }
@@ -525,7 +518,7 @@ class FuncTypeModuleField : public ModuleFieldMixin<ModuleFieldType::FuncType> {
 
 class TableModuleField : public ModuleFieldMixin<ModuleFieldType::Table> {
  public:
-  explicit TableModuleField(Table* table, const Location& loc = EmptyLocation())
+  explicit TableModuleField(Table* table, const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Table>(loc), table(table) {}
   ~TableModuleField() { delete table; }
 
@@ -536,7 +529,7 @@ class ElemSegmentModuleField
     : public ModuleFieldMixin<ModuleFieldType::ElemSegment> {
  public:
   explicit ElemSegmentModuleField(ElemSegment* elem_segment,
-                                  const Location& loc = EmptyLocation())
+                                  const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::ElemSegment>(loc),
         elem_segment(elem_segment) {}
   ~ElemSegmentModuleField() { delete elem_segment; }
@@ -547,7 +540,7 @@ class ElemSegmentModuleField
 class MemoryModuleField : public ModuleFieldMixin<ModuleFieldType::Memory> {
  public:
   explicit MemoryModuleField(Memory* memory,
-                             const Location& loc = EmptyLocation())
+                             const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Memory>(loc), memory(memory) {}
   ~MemoryModuleField() { delete memory; }
 
@@ -558,7 +551,7 @@ class DataSegmentModuleField
     : public ModuleFieldMixin<ModuleFieldType::DataSegment> {
  public:
   explicit DataSegmentModuleField(DataSegment* data_segment,
-                                  const Location& loc = EmptyLocation())
+                                  const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::DataSegment>(loc),
         data_segment(data_segment) {}
   ~DataSegmentModuleField() { delete data_segment; }
@@ -569,7 +562,7 @@ class DataSegmentModuleField
 class ExceptionModuleField : public ModuleFieldMixin<ModuleFieldType::Except> {
  public:
   explicit ExceptionModuleField(Exception* except,
-                                const Location& loc = EmptyLocation())
+                                const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Except>(loc), except(except) {}
   ~ExceptionModuleField() { delete except; }
 
@@ -579,7 +572,7 @@ class ExceptionModuleField : public ModuleFieldMixin<ModuleFieldType::Except> {
 class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
  public:
   explicit StartModuleField(Var start = Var(),
-                            const Location& loc = EmptyLocation())
+                            const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Start>(loc), start(start) {}
 
   Var start;

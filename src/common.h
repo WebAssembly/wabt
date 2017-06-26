@@ -140,14 +140,12 @@ struct StringSlice {
 };
 
 struct Location {
-  // TODO(binji): The type is not stored directly on the location because we
-  // don't currently have a default constructor. We eventually should add a
-  // default constructor, but it will be tricky since this struct is used in
-  // classes that are trivially constructible.
   enum class Type {
     Text,
     Binary,
   };
+
+  Location() : filename(NULL), line(0), first_column(0), last_column(0) {}
 
   const char* filename;
   union {
@@ -163,10 +161,6 @@ struct Location {
     };
   };
 };
-
-// TODO(binji): This should be a default constructor, but can't currently; see
-// comment above.
-Location EmptyLocation();
 
 /* matches binary format, do not change */
 enum class Type {

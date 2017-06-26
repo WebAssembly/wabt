@@ -482,8 +482,6 @@ struct Context {
         passed(0),
         total(0) {
     WABT_ZERO_MEMORY(source_filename);
-    WABT_ZERO_MEMORY(loc);
-    WABT_ZERO_MEMORY(prev_loc);
   }
 
   Environment env;
