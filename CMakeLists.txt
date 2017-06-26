@@ -264,6 +264,7 @@ add_library(libwabt STATIC
   src/literal.cc
   src/option-parser.cc
   src/stream.cc
+  src/tracing.cc
   src/utf8.cc
   src/writer.cc
 )
