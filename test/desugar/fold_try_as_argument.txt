@@ -1,0 +1,35 @@
+;;; TOOL: wast-desugar
+;;; FLAGS: --future-exceptions --fold-expr
+(module
+  (except $ex i32)
+  (func (result i32)
+    i32.const 1
+    try $try1 (result i32)
+      nop
+      i32.const 7
+    catch $ex
+      nop
+    catch_all
+      rethrow $try1
+    end
+    i32.add
+    i32.const 8
+    i32.sub
+  )
+)
+(;; STDOUT ;;;
+(module
+  (except $ex i32)
+  (type (;0;) (func (result i32)))
+  (func (;0;) (result i32)
+    (i32.sub
+      (i32.add
+        (i32.const 1)
+        (try $try1 (result i32)
+          (nop)
+          (i32.const 7)
+          (catch $ex (nop))
+          (catch_all
+            (rethrow $try1))))
+      (i32.const 8))))
+;;; STDOUT ;;)
