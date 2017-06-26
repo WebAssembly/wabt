@@ -21,7 +21,7 @@
 
 namespace {
 
-const char* ExprTypeName[size_t(wabt::ExprType::Unreachable) + 1] = {
+const char* ExprTypeName[] = {
   "Binary",
   "Block",
   "Br",
@@ -59,8 +59,7 @@ const char* ExprTypeName[size_t(wabt::ExprType::Unreachable) + 1] = {
 namespace wabt {
 
 const char* GetExprTypeName(ExprType type) {
-  static_assert(size_t(ExprType::Unreachable) + 1
-                == WABT_ARRAY_SIZE(ExprTypeName),
+  static_assert(WABT_ENUM_COUNT(ExprType) == WABT_ARRAY_SIZE(ExprTypeName),
                 "Malformed ExprTypeName array");
   return ExprTypeName[size_t(type)];
 }

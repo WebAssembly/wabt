@@ -21,7 +21,8 @@
     (try $try1 (result i32)
       (nop)
       (i32.const 7)
-      (catch $ex (i32.const 9))
+      (catch $ex
+        (i32.const 9))
       (catch_all
         (i32.const 11)))))
 ;;; STDOUT ;;)

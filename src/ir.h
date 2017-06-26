@@ -119,7 +119,10 @@ enum class ExprType {
   Throw,
   TryBlock,
   Unary,
-  Unreachable,  // Unreachable must appear last
+  Unreachable,
+
+  First = Binary,
+  Last = Unreachable
 };
 
 const char* GetExprTypeName(ExprType type);

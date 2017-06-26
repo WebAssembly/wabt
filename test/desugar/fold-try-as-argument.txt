@@ -28,7 +28,8 @@
         (try $try1 (result i32)
           (nop)
           (i32.const 7)
-          (catch $ex (nop))
+          (catch $ex
+            (nop))
           (catch_all
             (rethrow $try1))))
       (i32.const 8))))
