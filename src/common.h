@@ -137,8 +137,6 @@ static const int kLabelTypeCount = WABT_ENUM_COUNT(LabelType);
 struct StringSlice {
   const char* start;
   size_t length;
-
-  bool HasName() const { return length > 0; }
 };
 
 struct Location {

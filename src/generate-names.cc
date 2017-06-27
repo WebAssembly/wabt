@@ -80,7 +80,7 @@ NameGenerator::NameGenerator() : visitor_(this) {}
 
 // static
 bool NameGenerator::HasName(StringSlice* str) {
-  return str->HasName();
+  return str->length > 0;
 }
 
 // static
