@@ -1080,35 +1080,35 @@ void Validator::CheckAssertReturnNanCommand(const Action* action) {
 void Validator::CheckCommand(const Command* command) {
   switch (command->type) {
     case CommandType::Module:
-      CheckModule(command->module);
+      CheckModule(cast<ModuleCommand>(command)->module);
       break;
 
     case CommandType::Action:
       // Ignore result type.
-      CheckAction(command->action);
+      CheckAction(cast<ActionCommand>(command)->action);
       break;
 
     case CommandType::Register:
     case CommandType::AssertMalformed:
     case CommandType::AssertInvalid:
-    case CommandType::AssertInvalidNonBinary:
     case CommandType::AssertUnlinkable:
     case CommandType::AssertUninstantiable:
       // Ignore.
       break;
 
     case CommandType::AssertReturn: {
-      const Action* action = command->assert_return.action;
+      auto* assert_return_command = cast<AssertReturnCommand>(command);
+      const Action* action = assert_return_command->action;
       ActionResult result = CheckAction(action);
       switch (result.kind) {
         case ActionResult::Kind::Types:
           CheckConstTypes(&action->loc, *result.types,
-                          *command->assert_return.expected, "action");
+                          *assert_return_command->expected, "action");
           break;
 
         case ActionResult::Kind::Type:
           CheckConstType(&action->loc, result.type,
-                         *command->assert_return.expected, "action");
+                         *assert_return_command->expected, "action");
           break;
 
         case ActionResult::Kind::Error:
@@ -1119,17 +1119,22 @@ void Validator::CheckCommand(const Command* command) {
     }
 
     case CommandType::AssertReturnCanonicalNan:
-      CheckAssertReturnNanCommand(command->assert_return_canonical_nan.action);
+      CheckAssertReturnNanCommand(
+          cast<AssertReturnCanonicalNanCommand>(command)->action);
       break;
 
     case CommandType::AssertReturnArithmeticNan:
-      CheckAssertReturnNanCommand(command->assert_return_arithmetic_nan.action);
+      CheckAssertReturnNanCommand(
+          cast<AssertReturnArithmeticNanCommand>(command)->action);
       break;
 
     case CommandType::AssertTrap:
+      // ignore result type.
+      CheckAction(cast<AssertTrapCommand>(command)->action);
+      break;
     case CommandType::AssertExhaustion:
       // ignore result type.
-      CheckAction(command->assert_trap.action);
+      CheckAction(cast<AssertExhaustionCommand>(command)->action);
       break;
   }
 }

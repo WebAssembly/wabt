@@ -707,9 +707,6 @@ enum class CommandType {
   Register,
   AssertMalformed,
   AssertInvalid,
-  /* This is a module that is invalid, but cannot be written as a binary module
-   * (e.g. it has unresolvable names.) */
-  AssertInvalidNonBinary,
   AssertUnlinkable,
   AssertUninstantiable,
   AssertReturn,
@@ -723,28 +720,111 @@ enum class CommandType {
 };
 static const int kCommandTypeCount = WABT_ENUM_COUNT(CommandType);
 
-struct Command {
+class Command {
+ public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Command);
-  Command();
-  ~Command();
+  Command() = delete;
+  virtual ~Command() {}
 
   CommandType type;
-  union {
-    Module* module;
-    Action* action;
-    struct { StringSlice module_name; Var var; } register_;
-    struct { Action* action; ConstVector* expected; } assert_return;
-    struct {
-      Action* action;
-    } assert_return_canonical_nan, assert_return_arithmetic_nan;
-    struct { Action* action; StringSlice text; } assert_trap;
-    struct {
-      ScriptModule* module;
-      StringSlice text;
-    } assert_malformed, assert_invalid, assert_unlinkable,
-        assert_uninstantiable;
-  };
+
+ protected:
+  explicit Command(CommandType type) : type(type) {}
 };
+
+template <CommandType TypeEnum>
+class CommandMixin : public Command {
+ public:
+  static bool classof(const Command* cmd) { return cmd->type == TypeEnum; }
+  CommandMixin() : Command(TypeEnum) {}
+};
+
+class ModuleCommand : public CommandMixin<CommandType::Module> {
+ public:
+  explicit ModuleCommand(Module* module) : module(module) {}
+  ~ModuleCommand() { delete module; }
+
+  Module* module;
+};
+
+template <CommandType TypeEnum>
+class ActionCommandBase : public CommandMixin<TypeEnum> {
+ public:
+  explicit ActionCommandBase(Action* action) : action(action) {}
+  ~ActionCommandBase() { delete action; }
+
+  Action* action;
+};
+
+typedef ActionCommandBase<CommandType::Action> ActionCommand;
+typedef ActionCommandBase<CommandType::AssertReturnCanonicalNan>
+    AssertReturnCanonicalNanCommand;
+typedef ActionCommandBase<CommandType::AssertReturnArithmeticNan>
+    AssertReturnArithmeticNanCommand;
+
+class RegisterCommand : public CommandMixin<CommandType::Register> {
+ public:
+  RegisterCommand(StringSlice module_name, const Var& var)
+      : module_name(module_name), var(var) {}
+  ~RegisterCommand() { destroy_string_slice(&module_name); }
+
+  StringSlice module_name;
+  Var var;
+};
+
+class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
+ public:
+  AssertReturnCommand(Action* action, ConstVector* expected)
+      : action(action), expected(expected) {}
+  ~AssertReturnCommand() {
+    delete action;
+    delete expected;
+  }
+
+  Action* action;
+  ConstVector* expected;
+};
+
+template <CommandType TypeEnum>
+class AssertTrapCommandBase : public CommandMixin<TypeEnum> {
+ public:
+  AssertTrapCommandBase(Action* action, StringSlice text)
+      : action(action), text(text) {}
+  ~AssertTrapCommandBase() {
+    delete action;
+    destroy_string_slice(&text);
+  }
+
+  Action* action;
+  StringSlice text;
+};
+
+typedef AssertTrapCommandBase<CommandType::AssertTrap> AssertTrapCommand;
+typedef AssertTrapCommandBase<CommandType::AssertExhaustion>
+    AssertExhaustionCommand;
+
+template <CommandType TypeEnum>
+class AssertModuleCommand : public CommandMixin<TypeEnum> {
+ public:
+  AssertModuleCommand(ScriptModule* module, StringSlice text)
+      : module(module), text(text) {}
+  ~AssertModuleCommand() {
+    delete module;
+    destroy_string_slice(&text);
+  }
+
+  ScriptModule* module;
+  StringSlice text;
+};
+
+typedef AssertModuleCommand<CommandType::AssertMalformed>
+    AssertMalformedCommand;
+typedef AssertModuleCommand<CommandType::AssertInvalid> AssertInvalidCommand;
+typedef AssertModuleCommand<CommandType::AssertUnlinkable>
+    AssertUnlinkableCommand;
+typedef AssertModuleCommand<CommandType::AssertUninstantiable>
+    AssertUninstantiableCommand;
+
 typedef std::vector<std::unique_ptr<Command>> CommandPtrVector;
 
 struct Script {

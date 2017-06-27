@@ -1415,78 +1415,47 @@ action :
 
 assertion :
     LPAR ASSERT_MALFORMED script_module quoted_text RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertMalformed;
-      $$->assert_malformed.module = $3;
-      $$->assert_malformed.text = $4;
+      $$ = new AssertMalformedCommand($3, $4);
     }
   | LPAR ASSERT_INVALID script_module quoted_text RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertInvalid;
-      $$->assert_invalid.module = $3;
-      $$->assert_invalid.text = $4;
+      $$ = new AssertInvalidCommand($3, $4);
     }
   | LPAR ASSERT_UNLINKABLE script_module quoted_text RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertUnlinkable;
-      $$->assert_unlinkable.module = $3;
-      $$->assert_unlinkable.text = $4;
+      $$ = new AssertUnlinkableCommand($3, $4);
     }
   | LPAR ASSERT_TRAP script_module quoted_text RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertUninstantiable;
-      $$->assert_uninstantiable.module = $3;
-      $$->assert_uninstantiable.text = $4;
+      $$ = new AssertUninstantiableCommand($3, $4);
     }
   | LPAR ASSERT_RETURN action const_list RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertReturn;
-      $$->assert_return.action = $3;
-      $$->assert_return.expected = $4;
+      $$ = new AssertReturnCommand($3, $4);
     }
   | LPAR ASSERT_RETURN_CANONICAL_NAN action RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertReturnCanonicalNan;
-      $$->assert_return_canonical_nan.action = $3;
+      $$ = new AssertReturnCanonicalNanCommand($3);
     }
   | LPAR ASSERT_RETURN_ARITHMETIC_NAN action RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertReturnArithmeticNan;
-      $$->assert_return_arithmetic_nan.action = $3;
+      $$ = new AssertReturnArithmeticNanCommand($3);
     }
   | LPAR ASSERT_TRAP action quoted_text RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertTrap;
-      $$->assert_trap.action = $3;
-      $$->assert_trap.text = $4;
+      $$ = new AssertTrapCommand($3, $4);
     }
   | LPAR ASSERT_EXHAUSTION action quoted_text RPAR {
-      $$ = new Command();
-      $$->type = CommandType::AssertExhaustion;
-      $$->assert_trap.action = $3;
-      $$->assert_trap.text = $4;
+      $$ = new AssertExhaustionCommand($3, $4);
     }
 ;
 
 cmd :
     action {
-      $$ = new Command();
-      $$->type = CommandType::Action;
-      $$->action = $1;
+      $$ = new ActionCommand($1);
     }
   | assertion
   | module {
-      $$ = new Command();
-      $$->type = CommandType::Module;
-      $$->module = $1;
+      $$ = new ModuleCommand($1);
     }
   | LPAR REGISTER quoted_text script_var_opt RPAR {
-      $$ = new Command();
-      $$->type = CommandType::Register;
-      $$->register_.module_name = $3;
-      $$->register_.var = std::move(*$4);
+      auto* command = new RegisterCommand($3, *$4);
       delete $4;
-      $$->register_.var.loc = @4;
+      command->var.loc = @4;
+      $$ = command;
     }
 ;
 cmd_list :
@@ -1531,14 +1500,14 @@ script :
 
       int last_module_index = -1;
       for (size_t i = 0; i < $$->commands.size(); ++i) {
-        Command& command = *$$->commands[i].get();
+        Command* command = $$->commands[i].get();
         Var* module_var = nullptr;
-        switch (command.type) {
+        switch (command->type) {
           case CommandType::Module: {
             last_module_index = i;
 
-            /* Wire up module name bindings. */
-            Module* module = command.module;
+            // Wire up module name bindings.
+            Module* module = cast<ModuleCommand>(command)->module;
             if (module->name.length == 0)
               continue;
 
@@ -1548,25 +1517,29 @@ script :
           }
 
           case CommandType::AssertReturn:
-            module_var = &command.assert_return.action->module_var;
+            module_var =
+                &cast<AssertReturnCommand>(command)->action->module_var;
             goto has_module_var;
           case CommandType::AssertReturnCanonicalNan:
-            module_var =
-                &command.assert_return_canonical_nan.action->module_var;
+            module_var = &cast<AssertReturnCanonicalNanCommand>(command)
+                              ->action->module_var;
             goto has_module_var;
           case CommandType::AssertReturnArithmeticNan:
-            module_var =
-                &command.assert_return_arithmetic_nan.action->module_var;
+            module_var = &cast<AssertReturnArithmeticNanCommand>(command)
+                              ->action->module_var;
             goto has_module_var;
           case CommandType::AssertTrap:
+            module_var = &cast<AssertTrapCommand>(command)->action->module_var;
+            goto has_module_var;
           case CommandType::AssertExhaustion:
-            module_var = &command.assert_trap.action->module_var;
+            module_var =
+                &cast<AssertExhaustionCommand>(command)->action->module_var;
             goto has_module_var;
           case CommandType::Action:
-            module_var = &command.action->module_var;
+            module_var = &cast<ActionCommand>(command)->action->module_var;
             goto has_module_var;
           case CommandType::Register:
-            module_var = &command.register_.var;
+            module_var = &cast<RegisterCommand>(command)->var;
             goto has_module_var;
 
           has_module_var: {
@@ -1586,10 +1559,7 @@ script :
     }
   | inline_module {
       $$ = new Script();
-      Command* command = new Command();
-      command->type = CommandType::Module;
-      command->module = $1;
-      $$->commands.emplace_back(command);
+      $$->commands.emplace_back(new ModuleCommand($1));
     }
 ;
 

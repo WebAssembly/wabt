@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cstdio>
 
+#include "cast.h"
 #include "expr-visitor.h"
 #include "ir.h"
 #include "wast-parser-lexer-shared.h"
@@ -404,7 +405,7 @@ void NameResolver::VisitScriptModule(ScriptModule* script_module) {
 void NameResolver::VisitCommand(Command* command) {
   switch (command->type) {
     case CommandType::Module:
-      VisitModule(command->module);
+      VisitModule(cast<ModuleCommand>(command)->module);
       break;
 
     case CommandType::Action:
@@ -424,31 +425,22 @@ void NameResolver::VisitCommand(Command* command) {
       break;
 
     case CommandType::AssertInvalid: {
+      auto* assert_invalid_command = cast<AssertInvalidCommand>(command);
       /* The module may be invalid because the names cannot be resolved; we
        * don't want to print errors or fail if that's the case, but we still
        * should try to resolve names when possible. */
       SourceErrorHandlerNop new_error_handler;
-
       NameResolver new_resolver(lexer_, script_, &new_error_handler);
-      new_resolver.VisitScriptModule(command->assert_invalid.module);
-      if (WABT_FAILED(new_resolver.result_)) {
-        command->type = CommandType::AssertInvalidNonBinary;
-      }
+      new_resolver.VisitScriptModule(assert_invalid_command->module);
       break;
     }
 
-    case CommandType::AssertInvalidNonBinary:
-      /* The only reason a module would be "non-binary" is if the names cannot
-       * be resolved. So we assume name resolution has already been tried and
-       * failed, so skip it. */
-      break;
-
     case CommandType::AssertUnlinkable:
-      VisitScriptModule(command->assert_unlinkable.module);
+      VisitScriptModule(cast<AssertUnlinkableCommand>(command)->module);
       break;
 
     case CommandType::AssertUninstantiable:
-      VisitScriptModule(command->assert_uninstantiable.module);
+      VisitScriptModule(cast<AssertUninstantiableCommand>(command)->module);
       break;
   }
 }
