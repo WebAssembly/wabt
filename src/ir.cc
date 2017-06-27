@@ -19,6 +19,8 @@
 #include <cassert>
 #include <cstddef>
 
+#include "cast.h"
+
 namespace {
 
 const char* ExprTypeName[] = {
@@ -195,8 +197,8 @@ const Module* Script::GetFirstModule() const {
 
 Module* Script::GetFirstModule() {
   for (const std::unique_ptr<Command>& command : commands) {
-    if (command->type == CommandType::Module)
-      return command->module;
+    if (auto* module_command = dyn_cast<ModuleCommand>(command.get()))
+      return module_command->module;
   }
   return nullptr;
 }
@@ -205,9 +207,8 @@ const Module* Script::GetModule(const Var& var) const {
   Index index = module_bindings.FindIndex(var);
   if (index >= commands.size())
     return nullptr;
-  const Command& command = *commands[index].get();
-  assert(command.type == CommandType::Module);
-  return command.module;
+  auto* command = cast<ModuleCommand>(commands[index].get());
+  return command->module;
 }
 
 void MakeTypeBindingReverseMapping(
@@ -516,55 +517,6 @@ Action::~Action() {
       delete invoke;
       break;
     case ActionType::Get:
-      break;
-  }
-}
-
-Command::Command() : type(CommandType::Module), module(nullptr) {}
-
-Command::~Command() {
-  switch (type) {
-    case CommandType::Module:
-      delete module;
-      break;
-    case CommandType::Action:
-      delete action;
-      break;
-    case CommandType::Register:
-      destroy_string_slice(&register_.module_name);
-      register_.var.~Var();
-      break;
-    case CommandType::AssertMalformed:
-      delete assert_malformed.module;
-      destroy_string_slice(&assert_malformed.text);
-      break;
-    case CommandType::AssertInvalid:
-    case CommandType::AssertInvalidNonBinary:
-      delete assert_invalid.module;
-      destroy_string_slice(&assert_invalid.text);
-      break;
-    case CommandType::AssertUnlinkable:
-      delete assert_unlinkable.module;
-      destroy_string_slice(&assert_unlinkable.text);
-      break;
-    case CommandType::AssertUninstantiable:
-      delete assert_uninstantiable.module;
-      destroy_string_slice(&assert_uninstantiable.text);
-      break;
-    case CommandType::AssertReturn:
-      delete assert_return.action;
-      delete assert_return.expected;
-      break;
-    case CommandType::AssertReturnCanonicalNan:
-      delete assert_return_arithmetic_nan.action;
-      break;
-    case CommandType::AssertReturnArithmeticNan:
-      delete assert_return_canonical_nan.action;
-      break;
-    case CommandType::AssertTrap:
-    case CommandType::AssertExhaustion:
-      delete assert_trap.action;
-      destroy_string_slice(&assert_trap.text);
       break;
   }
 }

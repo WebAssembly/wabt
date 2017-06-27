@@ -21,6 +21,7 @@
 
 #include "binary.h"
 #include "binary-writer.h"
+#include "cast.h"
 #include "config.h"
 #include "ir.h"
 #include "stream.h"
@@ -177,8 +178,6 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "register",
       "assert_malformed",
       "assert_invalid",
-      nullptr, /* ASSERT_INVALID_NON_BINARY, this command will never be
-                  written */
       "assert_unlinkable",
       "assert_uninstantiable",
       "assert_return",
@@ -411,10 +410,7 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
   json_stream_.Writef(",\n \"commands\": [\n");
   Index last_module_index = kInvalidIndex;
   for (size_t i = 0; i < script->commands.size(); ++i) {
-    const Command& command = *script->commands[i].get();
-
-    if (command.type == CommandType::AssertInvalidNonBinary)
-      continue;
+    const Command* command = script->commands[i].get();
 
     if (i != 0) {
       WriteSeparator();
@@ -422,12 +418,12 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
     }
 
     json_stream_.Writef("  {");
-    WriteCommandType(command);
+    WriteCommandType(*command);
     WriteSeparator();
 
-    switch (command.type) {
+    switch (command->type) {
       case CommandType::Module: {
-        Module* module = command.module;
+        Module* module = cast<ModuleCommand>(command)->module;
         char* filename = GetModuleFilename(kWasmExtension);
         WriteLocation(&module->loc);
         WriteSeparator();
@@ -445,100 +441,124 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
         break;
       }
 
-      case CommandType::Action:
-        WriteLocation(&command.action->loc);
+      case CommandType::Action: {
+        const Action* action = cast<ActionCommand>(command)->action;
+        WriteLocation(&action->loc);
         WriteSeparator();
-        WriteAction(command.action);
+        WriteAction(action);
         break;
+      }
 
-      case CommandType::Register:
-        WriteLocation(&command.register_.var.loc);
+      case CommandType::Register: {
+        auto* register_command = cast<RegisterCommand>(command);
+        const Var& var = register_command->var;
+        WriteLocation(&var.loc);
         WriteSeparator();
-        if (command.register_.var.type == VarType::Name) {
+        if (var.type == VarType::Name) {
           WriteKey("name");
-          WriteVar(&command.register_.var);
+          WriteVar(&var);
           WriteSeparator();
         } else {
           /* If we're not registering by name, then we should only be
            * registering the last module. */
           WABT_USE(last_module_index);
-          assert(command.register_.var.index == last_module_index);
+          assert(var.index == last_module_index);
         }
         WriteKey("as");
-        WriteEscapedStringSlice(command.register_.module_name);
+        WriteEscapedStringSlice(register_command->module_name);
         break;
+      }
 
-      case CommandType::AssertMalformed:
-        WriteInvalidModule(command.assert_malformed.module,
-                           command.assert_malformed.text);
+      case CommandType::AssertMalformed: {
+        auto* assert_malformed_command = cast<AssertMalformedCommand>(command);
+        WriteInvalidModule(assert_malformed_command->module,
+                           assert_malformed_command->text);
         num_modules_++;
         break;
+      }
 
-      case CommandType::AssertInvalid:
-        WriteInvalidModule(command.assert_invalid.module,
-                           command.assert_invalid.text);
+      case CommandType::AssertInvalid: {
+        auto* assert_invalid_command = cast<AssertInvalidCommand>(command);
+        WriteInvalidModule(assert_invalid_command->module,
+                           assert_invalid_command->text);
         num_modules_++;
         break;
+      }
 
-      case CommandType::AssertUnlinkable:
-        WriteInvalidModule(command.assert_unlinkable.module,
-                           command.assert_unlinkable.text);
+      case CommandType::AssertUnlinkable: {
+        auto* assert_unlinkable_command =
+            cast<AssertUnlinkableCommand>(command);
+        WriteInvalidModule(assert_unlinkable_command->module,
+                           assert_unlinkable_command->text);
         num_modules_++;
         break;
+      }
 
-      case CommandType::AssertUninstantiable:
-        WriteInvalidModule(command.assert_uninstantiable.module,
-                           command.assert_uninstantiable.text);
+      case CommandType::AssertUninstantiable: {
+        auto* assert_uninstantiable_command =
+            cast<AssertUninstantiableCommand>(command);
+        WriteInvalidModule(assert_uninstantiable_command->module,
+                           assert_uninstantiable_command->text);
         num_modules_++;
         break;
+      }
 
-      case CommandType::AssertReturn:
-        WriteLocation(&command.assert_return.action->loc);
+      case CommandType::AssertReturn: {
+        auto* assert_return_command = cast<AssertReturnCommand>(command);
+        WriteLocation(&assert_return_command->action->loc);
         WriteSeparator();
-        WriteAction(command.assert_return.action);
+        WriteAction(assert_return_command->action);
         WriteSeparator();
         WriteKey("expected");
-        WriteConstVector(*command.assert_return.expected);
+        WriteConstVector(*assert_return_command->expected);
         break;
+      }
 
-      case CommandType::AssertReturnCanonicalNan:
-        WriteLocation(&command.assert_return_canonical_nan.action->loc);
+      case CommandType::AssertReturnCanonicalNan: {
+        auto* assert_return_canonical_nan_command =
+            cast<AssertReturnCanonicalNanCommand>(command);
+        WriteLocation(&assert_return_canonical_nan_command->action->loc);
         WriteSeparator();
-        WriteAction(command.assert_return_canonical_nan.action);
+        WriteAction(assert_return_canonical_nan_command->action);
         WriteSeparator();
         WriteKey("expected");
         WriteActionResultType(script,
-                              command.assert_return_canonical_nan.action);
+                              assert_return_canonical_nan_command->action);
         break;
+      }
 
-      case CommandType::AssertReturnArithmeticNan:
-        WriteLocation(&command.assert_return_arithmetic_nan.action->loc);
+      case CommandType::AssertReturnArithmeticNan: {
+        auto* assert_return_arithmetic_nan_command =
+            cast<AssertReturnArithmeticNanCommand>(command);
+        WriteLocation(&assert_return_arithmetic_nan_command->action->loc);
         WriteSeparator();
-        WriteAction(command.assert_return_arithmetic_nan.action);
+        WriteAction(assert_return_arithmetic_nan_command->action);
         WriteSeparator();
         WriteKey("expected");
         WriteActionResultType(script,
-                              command.assert_return_arithmetic_nan.action);
+                              assert_return_arithmetic_nan_command->action);
         break;
+      }
 
-      case CommandType::AssertTrap:
-        WriteLocation(&command.assert_trap.action->loc);
+      case CommandType::AssertTrap: {
+        auto* assert_trap_command = cast<AssertTrapCommand>(command);
+        WriteLocation(&assert_trap_command->action->loc);
         WriteSeparator();
-        WriteAction(command.assert_trap.action);
+        WriteAction(assert_trap_command->action);
         WriteSeparator();
         WriteKey("text");
-        WriteEscapedStringSlice(command.assert_trap.text);
+        WriteEscapedStringSlice(assert_trap_command->text);
         break;
+      }
 
-      case CommandType::AssertExhaustion:
-        WriteLocation(&command.assert_trap.action->loc);
+      case CommandType::AssertExhaustion: {
+        auto* assert_exhaustion_command =
+            cast<AssertExhaustionCommand>(command);
+        WriteLocation(&assert_exhaustion_command->action->loc);
         WriteSeparator();
-        WriteAction(command.assert_trap.action);
+        WriteAction(assert_exhaustion_command->action);
         break;
-
-      case CommandType::AssertInvalidNonBinary:
-        assert(0);
-        break;
+      }
     }
 
     json_stream_.Writef("}");
