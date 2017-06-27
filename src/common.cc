@@ -31,12 +31,6 @@
 
 namespace wabt {
 
-Location EmptyLocation() {
-  Location result;
-  WABT_ZERO_MEMORY(result);
-  return result;
-}
-
 Reloc::Reloc(RelocType type, Offset offset, Index index, int32_t addend)
     : type(type), offset(offset), index(index), addend(addend) {}
 

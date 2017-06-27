@@ -542,7 +542,6 @@ plain_instr :
     }
   | CONST literal {
       Const const_;
-      WABT_ZERO_MEMORY(const_);
       const_.loc = @1;
       if (WABT_FAILED(parse_const($1, $2.type, $2.text.start,
                                   $2.text.start + $2.text.length, &const_))) {

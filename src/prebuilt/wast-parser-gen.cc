@@ -679,22 +679,22 @@ static const yytype_uint16 yyrline[] =
      423,   430,   431,   434,   438,   439,   443,   444,   460,   461,
      476,   477,   478,   482,   485,   488,   491,   494,   498,   502,
      506,   509,   513,   517,   521,   525,   529,   533,   537,   540,
-     543,   556,   559,   562,   565,   568,   571,   574,   578,   585,
-     591,   597,   603,   610,   619,   622,   627,   634,   641,   648,
-     649,   653,   658,   665,   669,   672,   677,   682,   687,   695,
-     701,   710,   713,   719,   724,   732,   739,   742,   746,   750,
-     754,   758,   762,   769,   774,   780,   786,   787,   795,   796,
-     804,   809,   817,   824,   837,   844,   848,   857,   863,   872,
-     879,   880,   886,   896,   897,   906,   913,   914,   920,   930,
-     931,   940,   947,   951,   956,   968,   971,   975,   984,   997,
-    1010,  1014,  1020,  1026,  1046,  1055,  1068,  1081,  1085,  1091,
-    1097,  1120,  1133,  1138,  1144,  1155,  1164,  1172,  1178,  1184,
-    1190,  1198,  1207,  1215,  1221,  1227,  1233,  1239,  1247,  1255,
-    1265,  1271,  1281,  1288,  1289,  1290,  1291,  1292,  1293,  1294,
-    1295,  1296,  1297,  1298,  1302,  1303,  1307,  1312,  1320,  1341,
-    1348,  1351,  1359,  1377,  1385,  1396,  1407,  1418,  1424,  1430,
-    1436,  1442,  1448,  1453,  1458,  1464,  1473,  1478,  1479,  1484,
-    1494,  1498,  1505,  1517,  1518,  1525,  1528,  1588,  1600
+     543,   555,   558,   561,   564,   567,   570,   573,   577,   584,
+     590,   596,   602,   609,   618,   621,   626,   633,   640,   647,
+     648,   652,   657,   664,   668,   671,   676,   681,   686,   694,
+     700,   709,   712,   718,   723,   731,   738,   741,   745,   749,
+     753,   757,   761,   768,   773,   779,   785,   786,   794,   795,
+     803,   808,   816,   823,   836,   843,   847,   856,   862,   871,
+     878,   879,   885,   895,   896,   905,   912,   913,   919,   929,
+     930,   939,   946,   950,   955,   967,   970,   974,   983,   996,
+    1009,  1013,  1019,  1025,  1045,  1054,  1067,  1080,  1084,  1090,
+    1096,  1119,  1132,  1137,  1143,  1154,  1163,  1171,  1177,  1183,
+    1189,  1197,  1206,  1214,  1220,  1226,  1232,  1238,  1246,  1254,
+    1264,  1270,  1280,  1287,  1288,  1289,  1290,  1291,  1292,  1293,
+    1294,  1295,  1296,  1297,  1301,  1302,  1306,  1311,  1319,  1340,
+    1347,  1350,  1358,  1376,  1384,  1395,  1406,  1417,  1423,  1429,
+    1435,  1441,  1447,  1452,  1457,  1463,  1472,  1477,  1478,  1483,
+    1493,  1497,  1504,  1516,  1517,  1524,  1527,  1587,  1599
 };
 #endif
 
@@ -2906,7 +2906,6 @@ yyreduce:
 #line 543 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Const const_;
-      WABT_ZERO_MEMORY(const_);
       const_.loc = (yylsp[-1]);
       if (WABT_FAILED(parse_const((yyvsp[-1].type), (yyvsp[0].literal).type, (yyvsp[0].literal).text.start,
                                   (yyvsp[0].literal).text.start + (yyvsp[0].literal).text.length, &const_))) {
@@ -2917,110 +2916,110 @@ yyreduce:
       delete [] (yyvsp[0].literal).text.start;
       (yyval.expr) = new ConstExpr(const_);
     }
-#line 2921 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2920 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 556 "src/wast-parser.y" /* yacc.c:1646  */
+#line 555 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = new UnaryExpr((yyvsp[0].opcode));
     }
-#line 2929 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2928 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 559 "src/wast-parser.y" /* yacc.c:1646  */
+#line 558 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = new BinaryExpr((yyvsp[0].opcode));
     }
-#line 2937 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2936 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 562 "src/wast-parser.y" /* yacc.c:1646  */
+#line 561 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = new CompareExpr((yyvsp[0].opcode));
     }
-#line 2945 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2944 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 565 "src/wast-parser.y" /* yacc.c:1646  */
+#line 564 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = new ConvertExpr((yyvsp[0].opcode));
     }
-#line 2953 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2952 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 568 "src/wast-parser.y" /* yacc.c:1646  */
+#line 567 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = new CurrentMemoryExpr();
     }
-#line 2961 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2960 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 571 "src/wast-parser.y" /* yacc.c:1646  */
+#line 570 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = new GrowMemoryExpr();
     }
-#line 2969 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2968 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 574 "src/wast-parser.y" /* yacc.c:1646  */
+#line 573 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = new ThrowExpr(std::move(*(yyvsp[0].var)));
       delete (yyvsp[0].var);
     }
-#line 2978 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2977 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 578 "src/wast-parser.y" /* yacc.c:1646  */
+#line 577 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr) = new RethrowExpr(std::move(*(yyvsp[0].var)));
       delete (yyvsp[0].var);
     }
-#line 2987 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2986 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 585 "src/wast-parser.y" /* yacc.c:1646  */
+#line 584 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto expr = new BlockExpr((yyvsp[-2].block));
       expr->block->label = (yyvsp[-3].text);
       CHECK_END_LABEL((yylsp[0]), expr->block->label, (yyvsp[0].text));
       (yyval.expr) = expr;
     }
-#line 2998 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 2997 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 591 "src/wast-parser.y" /* yacc.c:1646  */
+#line 590 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto expr = new LoopExpr((yyvsp[-2].block));
       expr->block->label = (yyvsp[-3].text);
       CHECK_END_LABEL((yylsp[0]), expr->block->label, (yyvsp[0].text));
       (yyval.expr) = expr;
     }
-#line 3009 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3008 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 597 "src/wast-parser.y" /* yacc.c:1646  */
+#line 596 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto expr = new IfExpr((yyvsp[-2].block), nullptr);
       expr->true_->label = (yyvsp[-3].text);
       CHECK_END_LABEL((yylsp[0]), expr->true_->label, (yyvsp[0].text));
       (yyval.expr) = expr;
     }
-#line 3020 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3019 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 603 "src/wast-parser.y" /* yacc.c:1646  */
+#line 602 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto expr = new IfExpr((yyvsp[-5].block), (yyvsp[-2].expr_list).first);
       expr->true_->label = (yyvsp[-6].text);
@@ -3028,196 +3027,196 @@ yyreduce:
       CHECK_END_LABEL((yylsp[0]), expr->true_->label, (yyvsp[0].text));
       (yyval.expr) = expr;
     }
-#line 3032 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3031 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 610 "src/wast-parser.y" /* yacc.c:1646  */
+#line 609 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyvsp[-3].block)->label = (yyvsp[-4].text);
       (yyval.expr) = (yyvsp[-2].try_expr);
       cast<TryExpr>((yyval.expr))->block = (yyvsp[-3].block);
       CHECK_END_LABEL((yylsp[0]), (yyvsp[-3].block)->label, (yyvsp[0].text));
     }
-#line 3043 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3042 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 619 "src/wast-parser.y" /* yacc.c:1646  */
+#line 618 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.types) = (yyvsp[-1].types); }
-#line 3049 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3048 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 622 "src/wast-parser.y" /* yacc.c:1646  */
+#line 621 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.block) = (yyvsp[0].block);
       (yyval.block)->sig.insert((yyval.block)->sig.end(), (yyvsp[-1].types)->begin(), (yyvsp[-1].types)->end());
       delete (yyvsp[-1].types);
     }
-#line 3059 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3058 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 627 "src/wast-parser.y" /* yacc.c:1646  */
+#line 626 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.block) = new Block();
       (yyval.block)->first = (yyvsp[0].expr_list).first;
     }
-#line 3068 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3067 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 634 "src/wast-parser.y" /* yacc.c:1646  */
+#line 633 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.catch_) = new Catch(std::move(*(yyvsp[-1].var)), (yyvsp[0].expr_list).first);
       (yyval.catch_)->loc = (yylsp[-2]);
       delete (yyvsp[-1].var);
     }
-#line 3078 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3077 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 641 "src/wast-parser.y" /* yacc.c:1646  */
+#line 640 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.catch_) = new Catch((yyvsp[0].expr_list).first);
       (yyval.catch_)->loc = (yylsp[-1]);
     }
-#line 3087 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3086 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 81:
-#line 653 "src/wast-parser.y" /* yacc.c:1646  */
+#line 652 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto expr = new TryExpr();
       expr->catches.push_back((yyvsp[0].catch_));
       (yyval.try_expr) = expr;
     }
-#line 3097 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3096 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 658 "src/wast-parser.y" /* yacc.c:1646  */
+#line 657 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.try_expr) = (yyvsp[-1].try_expr);
       cast<TryExpr>((yyval.try_expr))->catches.push_back((yyvsp[0].catch_));
     }
-#line 3106 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3105 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 665 "src/wast-parser.y" /* yacc.c:1646  */
+#line 664 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.expr_list) = (yyvsp[-1].expr_list); }
-#line 3112 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3111 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 669 "src/wast-parser.y" /* yacc.c:1646  */
+#line 668 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = join_exprs2(&(yylsp[-1]), &(yyvsp[0].expr_list), (yyvsp[-1].expr));
     }
-#line 3120 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3119 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 672 "src/wast-parser.y" /* yacc.c:1646  */
+#line 671 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto expr = new BlockExpr((yyvsp[0].block));
       expr->block->label = (yyvsp[-1].text);
       (yyval.expr_list) = join_exprs1(&(yylsp[-2]), expr);
     }
-#line 3130 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3129 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 677 "src/wast-parser.y" /* yacc.c:1646  */
+#line 676 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto expr = new LoopExpr((yyvsp[0].block));
       expr->block->label = (yyvsp[-1].text);
       (yyval.expr_list) = join_exprs1(&(yylsp[-2]), expr);
     }
-#line 3140 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3139 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 682 "src/wast-parser.y" /* yacc.c:1646  */
+#line 681 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = (yyvsp[0].expr_list);
       IfExpr* if_ = cast<IfExpr>((yyvsp[0].expr_list).last);
       if_->true_->label = (yyvsp[-1].text);
     }
-#line 3150 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3149 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 88:
-#line 687 "src/wast-parser.y" /* yacc.c:1646  */
+#line 686 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Block* block = (yyvsp[0].try_expr)->block;
       block->label = (yyvsp[-1].text);
       (yyval.expr_list) = join_exprs1(&(yylsp[-2]), (yyvsp[0].try_expr));
     }
-#line 3160 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3159 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 89:
-#line 695 "src/wast-parser.y" /* yacc.c:1646  */
+#line 694 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.try_expr) = (yyvsp[0].try_expr);
       Block* block = (yyval.try_expr)->block;
       block->sig.insert(block->sig.end(), (yyvsp[-1].types)->begin(), (yyvsp[-1].types)->end());
       delete (yyvsp[-1].types);
     }
-#line 3171 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3170 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 701 "src/wast-parser.y" /* yacc.c:1646  */
+#line 700 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Block* block = new Block();
       block->first = (yyvsp[-1].expr_list).first;
       (yyval.try_expr) = (yyvsp[0].try_expr);
       (yyval.try_expr)->block = block;
     }
-#line 3182 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3181 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 710 "src/wast-parser.y" /* yacc.c:1646  */
+#line 709 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.catch_) = (yyvsp[-1].catch_);
     }
-#line 3190 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3189 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 713 "src/wast-parser.y" /* yacc.c:1646  */
+#line 712 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.catch_) = (yyvsp[-1].catch_);
     }
-#line 3198 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3197 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 719 "src/wast-parser.y" /* yacc.c:1646  */
+#line 718 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto expr = new TryExpr();
       expr->catches.push_back((yyvsp[0].catch_));
       (yyval.try_expr) = expr;
     }
-#line 3208 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3207 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 724 "src/wast-parser.y" /* yacc.c:1646  */
+#line 723 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.try_expr) = (yyvsp[-1].try_expr);
       cast<TryExpr>((yyval.try_expr))->catches.push_back((yyvsp[0].catch_));
     }
-#line 3217 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3216 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 732 "src/wast-parser.y" /* yacc.c:1646  */
+#line 731 "src/wast-parser.y" /* yacc.c:1646  */
     {
       IfExpr* if_ = cast<IfExpr>((yyvsp[0].expr_list).last);
       (yyval.expr_list) = (yyvsp[0].expr_list);
@@ -3225,142 +3224,142 @@ yyreduce:
       true_->sig.insert(true_->sig.end(), (yyvsp[-1].types)->begin(), (yyvsp[-1].types)->end());
       delete (yyvsp[-1].types);
     }
-#line 3229 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3228 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 742 "src/wast-parser.y" /* yacc.c:1646  */
+#line 741 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = new IfExpr(new Block((yyvsp[-5].expr_list).first), (yyvsp[-1].expr_list).first);
       (yyval.expr_list) = join_exprs1(&(yylsp[-7]), expr);
     }
-#line 3238 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3237 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 746 "src/wast-parser.y" /* yacc.c:1646  */
+#line 745 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = new IfExpr(new Block((yyvsp[-1].expr_list).first), nullptr);
       (yyval.expr_list) = join_exprs1(&(yylsp[-3]), expr);
     }
-#line 3247 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3246 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 99:
-#line 750 "src/wast-parser.y" /* yacc.c:1646  */
+#line 749 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = new IfExpr(new Block((yyvsp[-5].expr_list).first), (yyvsp[-1].expr_list).first);
       (yyval.expr_list) = join_exprs2(&(yylsp[-8]), &(yyvsp[-8].expr_list), expr);
     }
-#line 3256 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3255 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 100:
-#line 754 "src/wast-parser.y" /* yacc.c:1646  */
+#line 753 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = new IfExpr(new Block((yyvsp[-1].expr_list).first), nullptr);
       (yyval.expr_list) = join_exprs2(&(yylsp[-4]), &(yyvsp[-4].expr_list), expr);
     }
-#line 3265 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3264 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 101:
-#line 758 "src/wast-parser.y" /* yacc.c:1646  */
+#line 757 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = new IfExpr(new Block((yyvsp[-1].expr_list).first), (yyvsp[0].expr_list).first);
       (yyval.expr_list) = join_exprs2(&(yylsp[-2]), &(yyvsp[-2].expr_list), expr);
     }
-#line 3274 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3273 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 102:
-#line 762 "src/wast-parser.y" /* yacc.c:1646  */
+#line 761 "src/wast-parser.y" /* yacc.c:1646  */
     {
       Expr* expr = new IfExpr(new Block((yyvsp[0].expr_list).first), nullptr);
       (yyval.expr_list) = join_exprs2(&(yylsp[-1]), &(yyvsp[-1].expr_list), expr);
     }
-#line 3283 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3282 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 103:
-#line 769 "src/wast-parser.y" /* yacc.c:1646  */
+#line 768 "src/wast-parser.y" /* yacc.c:1646  */
     {
      CHECK_ALLOW_EXCEPTIONS(&(yylsp[0]), "rethrow");
     }
-#line 3291 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3290 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 104:
-#line 774 "src/wast-parser.y" /* yacc.c:1646  */
+#line 773 "src/wast-parser.y" /* yacc.c:1646  */
     {
       CHECK_ALLOW_EXCEPTIONS(&(yylsp[0]), "throw");
     }
-#line 3299 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3298 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 105:
-#line 780 "src/wast-parser.y" /* yacc.c:1646  */
+#line 779 "src/wast-parser.y" /* yacc.c:1646  */
     {
       CHECK_ALLOW_EXCEPTIONS(&(yylsp[0]), "try");
     }
-#line 3307 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3306 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 106:
-#line 786 "src/wast-parser.y" /* yacc.c:1646  */
+#line 785 "src/wast-parser.y" /* yacc.c:1646  */
     { WABT_ZERO_MEMORY((yyval.expr_list)); }
-#line 3313 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3312 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 107:
-#line 787 "src/wast-parser.y" /* yacc.c:1646  */
+#line 786 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list).first = (yyvsp[-1].expr_list).first;
       (yyvsp[-1].expr_list).last->next = (yyvsp[0].expr_list).first;
       (yyval.expr_list).last = (yyvsp[0].expr_list).last ? (yyvsp[0].expr_list).last : (yyvsp[-1].expr_list).last;
       (yyval.expr_list).size = (yyvsp[-1].expr_list).size + (yyvsp[0].expr_list).size;
     }
-#line 3324 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3323 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 108:
-#line 795 "src/wast-parser.y" /* yacc.c:1646  */
+#line 794 "src/wast-parser.y" /* yacc.c:1646  */
     { WABT_ZERO_MEMORY((yyval.expr_list)); }
-#line 3330 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3329 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 109:
-#line 796 "src/wast-parser.y" /* yacc.c:1646  */
+#line 795 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list).first = (yyvsp[-1].expr_list).first;
       (yyvsp[-1].expr_list).last->next = (yyvsp[0].expr_list).first;
       (yyval.expr_list).last = (yyvsp[0].expr_list).last ? (yyvsp[0].expr_list).last : (yyvsp[-1].expr_list).last;
       (yyval.expr_list).size = (yyvsp[-1].expr_list).size + (yyvsp[0].expr_list).size;
     }
-#line 3341 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3340 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 111:
-#line 809 "src/wast-parser.y" /* yacc.c:1646  */
+#line 808 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.exception) = new Exception();
       (yyval.exception)->name = (yyvsp[-2].text);
       (yyval.exception)->sig = std::move(*(yyvsp[-1].types));
       delete (yyvsp[-1].types);
     }
-#line 3352 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3351 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 112:
-#line 817 "src/wast-parser.y" /* yacc.c:1646  */
+#line 816 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_field) = new ExceptionModuleField((yyvsp[0].exception));
     }
-#line 3360 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3359 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 113:
-#line 824 "src/wast-parser.y" /* yacc.c:1646  */
+#line 823 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       ModuleField* main_field = (yyval.module_fields).first;
@@ -3371,11 +3370,11 @@ yyreduce:
         cast<ImportModuleField>(main_field)->import->func->name = (yyvsp[-2].text);
       }
     }
-#line 3375 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3374 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 114:
-#line 837 "src/wast-parser.y" /* yacc.c:1646  */
+#line 836 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new FuncModuleField((yyvsp[0].func));
       field->func->decl.has_func_type = true;
@@ -3383,20 +3382,20 @@ yyreduce:
       delete (yyvsp[-1].var);
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3387 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3386 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 115:
-#line 844 "src/wast-parser.y" /* yacc.c:1646  */
+#line 843 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new FuncModuleField((yyvsp[0].func));
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3396 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3395 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 116:
-#line 848 "src/wast-parser.y" /* yacc.c:1646  */
+#line 847 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ImportModuleField((yyvsp[-2].import), (yylsp[-2]));
       field->import->kind = ExternalKind::Func;
@@ -3406,53 +3405,53 @@ yyreduce:
       delete (yyvsp[-1].var);
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3410 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3409 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 117:
-#line 857 "src/wast-parser.y" /* yacc.c:1646  */
+#line 856 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ImportModuleField((yyvsp[-1].import), (yylsp[-1]));
       field->import->kind = ExternalKind::Func;
       field->import->func = (yyvsp[0].func);
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3421 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3420 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 118:
-#line 863 "src/wast-parser.y" /* yacc.c:1646  */
+#line 862 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ExportModuleField((yyvsp[-1].export_), (yylsp[-1]));
       field->export_->kind = ExternalKind::Func;
       (yyval.module_fields).first = (yyvsp[0].module_fields).first;
       (yyval.module_fields).last = (yyvsp[0].module_fields).last->next = field;
     }
-#line 3432 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3431 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 119:
-#line 872 "src/wast-parser.y" /* yacc.c:1646  */
+#line 871 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       reverse_bindings(&(yyval.func)->decl.sig.param_types, &(yyval.func)->param_bindings);
     }
-#line 3441 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3440 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 121:
-#line 880 "src/wast-parser.y" /* yacc.c:1646  */
+#line 879 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       (yyval.func)->decl.sig.param_types.insert((yyval.func)->decl.sig.param_types.begin(),
                                       (yyvsp[-2].types)->begin(), (yyvsp[-2].types)->end());
       delete (yyvsp[-2].types);
     }
-#line 3452 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3451 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 122:
-#line 886 "src/wast-parser.y" /* yacc.c:1646  */
+#line 885 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       (yyval.func)->param_bindings.emplace(string_slice_to_string((yyvsp[-3].text)),
@@ -3460,48 +3459,48 @@ yyreduce:
       destroy_string_slice(&(yyvsp[-3].text));
       (yyval.func)->decl.sig.param_types.insert((yyval.func)->decl.sig.param_types.begin(), (yyvsp[-2].type));
     }
-#line 3464 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3463 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 123:
-#line 896 "src/wast-parser.y" /* yacc.c:1646  */
+#line 895 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.func) = new Func(); }
-#line 3470 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3469 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 124:
-#line 897 "src/wast-parser.y" /* yacc.c:1646  */
+#line 896 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       (yyval.func)->decl.sig.result_types.insert((yyval.func)->decl.sig.result_types.begin(),
                                        (yyvsp[-2].types)->begin(), (yyvsp[-2].types)->end());
       delete (yyvsp[-2].types);
     }
-#line 3481 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3480 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 125:
-#line 906 "src/wast-parser.y" /* yacc.c:1646  */
+#line 905 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       reverse_bindings(&(yyval.func)->decl.sig.param_types, &(yyval.func)->param_bindings);
     }
-#line 3490 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3489 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 127:
-#line 914 "src/wast-parser.y" /* yacc.c:1646  */
+#line 913 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       (yyval.func)->decl.sig.param_types.insert((yyval.func)->decl.sig.param_types.begin(),
                                       (yyvsp[-2].types)->begin(), (yyvsp[-2].types)->end());
       delete (yyvsp[-2].types);
     }
-#line 3501 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3500 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 128:
-#line 920 "src/wast-parser.y" /* yacc.c:1646  */
+#line 919 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       (yyval.func)->param_bindings.emplace(string_slice_to_string((yyvsp[-3].text)),
@@ -3509,50 +3508,50 @@ yyreduce:
       destroy_string_slice(&(yyvsp[-3].text));
       (yyval.func)->decl.sig.param_types.insert((yyval.func)->decl.sig.param_types.begin(), (yyvsp[-2].type));
     }
-#line 3513 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3512 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 130:
-#line 931 "src/wast-parser.y" /* yacc.c:1646  */
+#line 930 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       (yyval.func)->decl.sig.result_types.insert((yyval.func)->decl.sig.result_types.begin(),
                                        (yyvsp[-2].types)->begin(), (yyvsp[-2].types)->end());
       delete (yyvsp[-2].types);
     }
-#line 3524 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3523 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 131:
-#line 940 "src/wast-parser.y" /* yacc.c:1646  */
+#line 939 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       reverse_bindings(&(yyval.func)->local_types, &(yyval.func)->local_bindings);
     }
-#line 3533 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3532 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 132:
-#line 947 "src/wast-parser.y" /* yacc.c:1646  */
+#line 946 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = new Func();
       (yyval.func)->first_expr = (yyvsp[0].expr_list).first;
     }
-#line 3542 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3541 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 133:
-#line 951 "src/wast-parser.y" /* yacc.c:1646  */
+#line 950 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       (yyval.func)->local_types.insert((yyval.func)->local_types.begin(), (yyvsp[-2].types)->begin(), (yyvsp[-2].types)->end());
       delete (yyvsp[-2].types);
     }
-#line 3552 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3551 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 134:
-#line 956 "src/wast-parser.y" /* yacc.c:1646  */
+#line 955 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.func) = (yyvsp[0].func);
       (yyval.func)->local_bindings.emplace(string_slice_to_string((yyvsp[-3].text)),
@@ -3560,19 +3559,19 @@ yyreduce:
       destroy_string_slice(&(yyvsp[-3].text));
       (yyval.func)->local_types.insert((yyval.func)->local_types.begin(), (yyvsp[-2].type));
     }
-#line 3564 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3563 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 135:
-#line 968 "src/wast-parser.y" /* yacc.c:1646  */
+#line 967 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.expr_list) = (yyvsp[-1].expr_list);
     }
-#line 3572 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3571 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 137:
-#line 975 "src/wast-parser.y" /* yacc.c:1646  */
+#line 974 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto elem_segment = new ElemSegment();
       elem_segment->table_var = std::move(*(yyvsp[-3].var));
@@ -3582,11 +3581,11 @@ yyreduce:
       delete (yyvsp[-1].vars);
       (yyval.module_field) = new ElemSegmentModuleField(elem_segment, (yylsp[-4]));
     }
-#line 3586 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3585 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 138:
-#line 984 "src/wast-parser.y" /* yacc.c:1646  */
+#line 983 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto elem_segment = new ElemSegment();
       elem_segment->table_var.loc = (yylsp[-3]);
@@ -3597,11 +3596,11 @@ yyreduce:
       delete (yyvsp[-1].vars);
       (yyval.module_field) = new ElemSegmentModuleField(elem_segment, (yylsp[-3]));
     }
-#line 3601 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3600 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 139:
-#line 997 "src/wast-parser.y" /* yacc.c:1646  */
+#line 996 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       ModuleField* main_field = (yyval.module_fields).first;
@@ -3612,42 +3611,42 @@ yyreduce:
         cast<ImportModuleField>(main_field)->import->table->name = (yyvsp[-2].text);
       }
     }
-#line 3616 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3615 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 140:
-#line 1010 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1009 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new TableModuleField((yyvsp[0].table));
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3625 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3624 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 141:
-#line 1014 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1013 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ImportModuleField((yyvsp[-1].import));
       field->import->kind = ExternalKind::Table;
       field->import->table = (yyvsp[0].table);
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3636 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3635 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 142:
-#line 1020 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1019 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ExportModuleField((yyvsp[-1].export_), (yylsp[-1]));
       field->export_->kind = ExternalKind::Table;
       (yyval.module_fields).first = (yyvsp[0].module_fields).first;
       (yyval.module_fields).last = (yyvsp[0].module_fields).last->next = field;
     }
-#line 3647 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3646 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 143:
-#line 1026 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1025 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto table = new Table();
       table->elem_limits.initial = (yyvsp[-1].vars)->size();
@@ -3665,11 +3664,11 @@ yyreduce:
       (yyval.module_fields).first = table_field;
       (yyval.module_fields).last = table_field->next = elem_field;
     }
-#line 3669 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3668 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 144:
-#line 1046 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1045 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto data_segment = new DataSegment();
       data_segment->memory_var = std::move(*(yyvsp[-3].var));
@@ -3679,11 +3678,11 @@ yyreduce:
       destroy_text_list(&(yyvsp[-1].text_list));
       (yyval.module_field) = new DataSegmentModuleField(data_segment, (yylsp[-4]));
     }
-#line 3683 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3682 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 145:
-#line 1055 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1054 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto data_segment = new DataSegment();
       data_segment->memory_var.loc = (yylsp[-3]);
@@ -3694,11 +3693,11 @@ yyreduce:
       destroy_text_list(&(yyvsp[-1].text_list));
       (yyval.module_field) = new DataSegmentModuleField(data_segment, (yylsp[-3]));
     }
-#line 3698 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3697 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 146:
-#line 1068 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1067 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       ModuleField* main_field = (yyval.module_fields).first;
@@ -3709,42 +3708,42 @@ yyreduce:
         cast<ImportModuleField>(main_field)->import->memory->name = (yyvsp[-2].text);
       }
     }
-#line 3713 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3712 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 147:
-#line 1081 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1080 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new MemoryModuleField((yyvsp[0].memory));
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3722 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3721 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 148:
-#line 1085 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1084 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ImportModuleField((yyvsp[-1].import));
       field->import->kind = ExternalKind::Memory;
       field->import->memory = (yyvsp[0].memory);
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3733 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3732 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 149:
-#line 1091 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1090 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ExportModuleField((yyvsp[-1].export_), (yylsp[-1]));
       field->export_->kind = ExternalKind::Memory;
       (yyval.module_fields).first = (yyvsp[0].module_fields).first;
       (yyval.module_fields).last = (yyvsp[0].module_fields).last->next = field;
     }
-#line 3744 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3743 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 150:
-#line 1097 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1096 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto data_segment = new DataSegment();
       data_segment->memory_var = Var(kInvalidIndex);
@@ -3765,11 +3764,11 @@ yyreduce:
       (yyval.module_fields).first = memory_field;
       (yyval.module_fields).last = memory_field->next = data_field;
     }
-#line 3769 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3768 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 151:
-#line 1120 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1119 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_fields) = (yyvsp[-1].module_fields);
       ModuleField* main_field = (yyval.module_fields).first;
@@ -3780,43 +3779,43 @@ yyreduce:
         cast<ImportModuleField>(main_field)->import->global->name = (yyvsp[-2].text);
       }
     }
-#line 3784 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3783 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 152:
-#line 1133 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1132 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new GlobalModuleField((yyvsp[-1].global));
       field->global->init_expr = (yyvsp[0].expr_list).first;
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3794 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3793 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 153:
-#line 1138 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1137 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ImportModuleField((yyvsp[-1].import));
       field->import->kind = ExternalKind::Global;
       field->import->global = (yyvsp[0].global);
       (yyval.module_fields).first = (yyval.module_fields).last = field;
     }
-#line 3805 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3804 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 154:
-#line 1144 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1143 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ExportModuleField((yyvsp[-1].export_), (yylsp[-1]));
       field->export_->kind = ExternalKind::Global;
       (yyval.module_fields).first = (yyvsp[0].module_fields).first;
       (yyval.module_fields).last = (yyvsp[0].module_fields).last->next = field;
     }
-#line 3816 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3815 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 155:
-#line 1155 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1154 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Func;
@@ -3826,11 +3825,11 @@ yyreduce:
       (yyval.import)->func->decl.type_var = std::move(*(yyvsp[-1].var));
       delete (yyvsp[-1].var);
     }
-#line 3830 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3829 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 156:
-#line 1164 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1163 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Func;
@@ -3839,160 +3838,160 @@ yyreduce:
       (yyval.import)->func->decl.sig = std::move(*(yyvsp[-1].func_sig));
       delete (yyvsp[-1].func_sig);
     }
-#line 3843 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3842 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 157:
-#line 1172 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1171 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Table;
       (yyval.import)->table = (yyvsp[-1].table);
       (yyval.import)->table->name = (yyvsp[-2].text);
     }
-#line 3854 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3853 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 158:
-#line 1178 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1177 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Memory;
       (yyval.import)->memory = (yyvsp[-1].memory);
       (yyval.import)->memory->name = (yyvsp[-2].text);
     }
-#line 3865 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3864 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 159:
-#line 1184 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1183 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Global;
       (yyval.import)->global = (yyvsp[-1].global);
       (yyval.import)->global->name = (yyvsp[-2].text);
     }
-#line 3876 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3875 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 160:
-#line 1190 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1189 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->kind = ExternalKind::Except;
       (yyval.import)->except = (yyvsp[0].exception);
     }
-#line 3886 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3885 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 161:
-#line 1198 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1197 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ImportModuleField((yyvsp[-1].import), (yylsp[-4]));
       field->import->module_name = (yyvsp[-3].text);
       field->import->field_name = (yyvsp[-2].text);
       (yyval.module_field) = field;
     }
-#line 3897 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3896 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 162:
-#line 1207 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1206 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.import) = new Import();
       (yyval.import)->module_name = (yyvsp[-2].text);
       (yyval.import)->field_name = (yyvsp[-1].text);
     }
-#line 3907 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3906 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 163:
-#line 1215 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1214 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Func;
       (yyval.export_)->var = std::move(*(yyvsp[-1].var));
       delete (yyvsp[-1].var);
     }
-#line 3918 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3917 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 164:
-#line 1221 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1220 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Table;
       (yyval.export_)->var = std::move(*(yyvsp[-1].var));
       delete (yyvsp[-1].var);
     }
-#line 3929 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3928 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 165:
-#line 1227 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1226 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Memory;
       (yyval.export_)->var = std::move(*(yyvsp[-1].var));
       delete (yyvsp[-1].var);
     }
-#line 3940 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3939 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 166:
-#line 1233 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1232 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Global;
       (yyval.export_)->var = std::move(*(yyvsp[-1].var));
       delete (yyvsp[-1].var);
     }
-#line 3951 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3950 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 167:
-#line 1239 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1238 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->kind = ExternalKind::Except;
       (yyval.export_)->var = std::move(*(yyvsp[-1].var));
       delete (yyvsp[-1].var);
     }
-#line 3962 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3961 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 168:
-#line 1247 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1246 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto field = new ExportModuleField((yyvsp[-1].export_), (yylsp[-3]));
       field->export_->name = (yyvsp[-2].text);
       (yyval.module_field) = field;
     }
-#line 3972 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3971 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 169:
-#line 1255 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1254 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.export_) = new Export();
       (yyval.export_)->name = (yyvsp[-1].text);
     }
-#line 3981 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3980 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 170:
-#line 1265 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1264 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto func_type = new FuncType();
       func_type->sig = std::move(*(yyvsp[-1].func_sig));
       delete (yyvsp[-1].func_sig);
       (yyval.module_field) = new FuncTypeModuleField(func_type, (yylsp[-2]));
     }
-#line 3992 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 3991 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 171:
-#line 1271 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1270 "src/wast-parser.y" /* yacc.c:1646  */
     {
       auto func_type = new FuncType();
       func_type->name = (yyvsp[-2].text);
@@ -4000,88 +3999,88 @@ yyreduce:
       delete (yyvsp[-1].func_sig);
       (yyval.module_field) = new FuncTypeModuleField(func_type, (yylsp[-3]));
     }
-#line 4004 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4003 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 172:
-#line 1281 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1280 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module_field) = new StartModuleField(*(yyvsp[-1].var), (yylsp[-2]));
       delete (yyvsp[-1].var);
     }
-#line 4013 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4012 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 173:
-#line 1288 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1287 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.module_fields).first = (yyval.module_fields).last = (yyvsp[0].module_field); }
-#line 4019 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4018 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 178:
-#line 1293 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1292 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.module_fields).first = (yyval.module_fields).last = (yyvsp[0].module_field); }
-#line 4025 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4024 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 179:
-#line 1294 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1293 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.module_fields).first = (yyval.module_fields).last = (yyvsp[0].module_field); }
-#line 4031 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4030 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 180:
-#line 1295 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1294 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.module_fields).first = (yyval.module_fields).last = (yyvsp[0].module_field); }
-#line 4037 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4036 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 181:
-#line 1296 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1295 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.module_fields).first = (yyval.module_fields).last = (yyvsp[0].module_field); }
-#line 4043 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4042 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 182:
-#line 1297 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1296 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.module_fields).first = (yyval.module_fields).last = (yyvsp[0].module_field); }
-#line 4049 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4048 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 183:
-#line 1298 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1297 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.module_fields).first = (yyval.module_fields).last = (yyvsp[0].module_field); }
-#line 4055 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4054 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 184:
-#line 1302 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1301 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.module) = new Module(); }
-#line 4061 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4060 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 186:
-#line 1307 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1306 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = new Module();
       check_import_ordering(&(yylsp[0]), lexer, parser, (yyval.module), (yyvsp[0].module_fields).first);
       append_module_fields((yyval.module), (yyvsp[0].module_fields).first);
     }
-#line 4071 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4070 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 187:
-#line 1312 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1311 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.module) = (yyvsp[-1].module);
       check_import_ordering(&(yylsp[0]), lexer, parser, (yyval.module), (yyvsp[0].module_fields).first);
       append_module_fields((yyval.module), (yyvsp[0].module_fields).first);
     }
-#line 4081 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4080 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 188:
-#line 1320 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1319 "src/wast-parser.y" /* yacc.c:1646  */
     {
       if ((yyvsp[0].script_module)->type == ScriptModule::Type::Text) {
         (yyval.module) = (yyvsp[0].script_module)->text;
@@ -4100,29 +4099,29 @@ yyreduce:
       }
       delete (yyvsp[0].script_module);
     }
-#line 4104 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4103 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 190:
-#line 1348 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1347 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.var) = new Var(kInvalidIndex);
     }
-#line 4112 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4111 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 191:
-#line 1351 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1350 "src/wast-parser.y" /* yacc.c:1646  */
     {
       StringSlice name;
       DUPTEXT(name, (yyvsp[0].text));
       (yyval.var) = new Var(name);
     }
-#line 4122 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4121 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 192:
-#line 1359 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1358 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.script_module) = new ScriptModule();
       (yyval.script_module)->type = ScriptModule::Type::Text;
@@ -4141,11 +4140,11 @@ yyreduce:
         }
       }
     }
-#line 4145 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4144 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 193:
-#line 1377 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1376 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.script_module) = new ScriptModule();
       (yyval.script_module)->type = ScriptModule::Type::Binary;
@@ -4154,11 +4153,11 @@ yyreduce:
       dup_text_list(&(yyvsp[-1].text_list), &(yyval.script_module)->binary.data, &(yyval.script_module)->binary.size);
       destroy_text_list(&(yyvsp[-1].text_list));
     }
-#line 4158 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4157 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 194:
-#line 1385 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1384 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.script_module) = new ScriptModule();
       (yyval.script_module)->type = ScriptModule::Type::Quoted;
@@ -4167,11 +4166,11 @@ yyreduce:
       dup_text_list(&(yyvsp[-1].text_list), &(yyval.script_module)->quoted.data, &(yyval.script_module)->quoted.size);
       destroy_text_list(&(yyvsp[-1].text_list));
     }
-#line 4171 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4170 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 195:
-#line 1396 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1395 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.action) = new Action();
       (yyval.action)->loc = (yylsp[-4]);
@@ -4183,11 +4182,11 @@ yyreduce:
       (yyval.action)->invoke->args = std::move(*(yyvsp[-1].consts));
       delete (yyvsp[-1].consts);
     }
-#line 4187 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4186 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 196:
-#line 1407 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1406 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.action) = new Action();
       (yyval.action)->loc = (yylsp[-3]);
@@ -4196,128 +4195,128 @@ yyreduce:
       (yyval.action)->type = ActionType::Get;
       (yyval.action)->name = (yyvsp[-1].text);
     }
-#line 4200 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4199 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 197:
-#line 1418 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1417 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertMalformed;
       (yyval.command)->assert_malformed.module = (yyvsp[-2].script_module);
       (yyval.command)->assert_malformed.text = (yyvsp[-1].text);
     }
-#line 4211 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4210 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 198:
-#line 1424 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1423 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertInvalid;
       (yyval.command)->assert_invalid.module = (yyvsp[-2].script_module);
       (yyval.command)->assert_invalid.text = (yyvsp[-1].text);
     }
-#line 4222 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4221 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 199:
-#line 1430 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1429 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertUnlinkable;
       (yyval.command)->assert_unlinkable.module = (yyvsp[-2].script_module);
       (yyval.command)->assert_unlinkable.text = (yyvsp[-1].text);
     }
-#line 4233 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4232 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 200:
-#line 1436 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1435 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertUninstantiable;
       (yyval.command)->assert_uninstantiable.module = (yyvsp[-2].script_module);
       (yyval.command)->assert_uninstantiable.text = (yyvsp[-1].text);
     }
-#line 4244 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4243 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 201:
-#line 1442 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1441 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertReturn;
       (yyval.command)->assert_return.action = (yyvsp[-2].action);
       (yyval.command)->assert_return.expected = (yyvsp[-1].consts);
     }
-#line 4255 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4254 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 202:
-#line 1448 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1447 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertReturnCanonicalNan;
       (yyval.command)->assert_return_canonical_nan.action = (yyvsp[-1].action);
     }
-#line 4265 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4264 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 203:
-#line 1453 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1452 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertReturnArithmeticNan;
       (yyval.command)->assert_return_arithmetic_nan.action = (yyvsp[-1].action);
     }
-#line 4275 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4274 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 204:
-#line 1458 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1457 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertTrap;
       (yyval.command)->assert_trap.action = (yyvsp[-2].action);
       (yyval.command)->assert_trap.text = (yyvsp[-1].text);
     }
-#line 4286 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4285 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 205:
-#line 1464 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1463 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::AssertExhaustion;
       (yyval.command)->assert_trap.action = (yyvsp[-2].action);
       (yyval.command)->assert_trap.text = (yyvsp[-1].text);
     }
-#line 4297 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4296 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 206:
-#line 1473 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1472 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::Action;
       (yyval.command)->action = (yyvsp[0].action);
     }
-#line 4307 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4306 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 208:
-#line 1479 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1478 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::Module;
       (yyval.command)->module = (yyvsp[0].module);
     }
-#line 4317 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4316 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 209:
-#line 1484 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1483 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.command) = new Command();
       (yyval.command)->type = CommandType::Register;
@@ -4326,29 +4325,29 @@ yyreduce:
       delete (yyvsp[-1].var);
       (yyval.command)->register_.var.loc = (yylsp[-1]);
     }
-#line 4330 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4329 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 210:
-#line 1494 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1493 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.commands) = new CommandPtrVector();
       (yyval.commands)->emplace_back((yyvsp[0].command));
     }
-#line 4339 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4338 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 211:
-#line 1498 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1497 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.commands) = (yyvsp[-1].commands);
       (yyval.commands)->emplace_back((yyvsp[0].command));
     }
-#line 4348 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4347 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 212:
-#line 1505 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1504 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.const_).loc = (yylsp[-2]);
       if (WABT_FAILED(parse_const((yyvsp[-2].type), (yyvsp[-1].literal).type, (yyvsp[-1].literal).text.start,
@@ -4359,34 +4358,34 @@ yyreduce:
       }
       delete [] (yyvsp[-1].literal).text.start;
     }
-#line 4363 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4362 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 213:
-#line 1517 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1516 "src/wast-parser.y" /* yacc.c:1646  */
     { (yyval.consts) = new ConstVector(); }
-#line 4369 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4368 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 214:
-#line 1518 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1517 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.consts) = (yyvsp[-1].consts);
       (yyval.consts)->push_back((yyvsp[0].const_));
     }
-#line 4378 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4377 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 215:
-#line 1525 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1524 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.script) = new Script();
     }
-#line 4386 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4385 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 216:
-#line 1528 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1527 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.script) = new Script();
       (yyval.script)->commands = std::move(*(yyvsp[0].commands));
@@ -4447,11 +4446,11 @@ yyreduce:
         }
       }
     }
-#line 4451 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4450 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 217:
-#line 1588 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1587 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.script) = new Script();
       Command* command = new Command();
@@ -4459,17 +4458,17 @@ yyreduce:
       command->module = (yyvsp[0].module);
       (yyval.script)->commands.emplace_back(command);
     }
-#line 4463 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4462 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
   case 218:
-#line 1600 "src/wast-parser.y" /* yacc.c:1646  */
+#line 1599 "src/wast-parser.y" /* yacc.c:1646  */
     { parser->script = (yyvsp[0].script); }
-#line 4469 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4468 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
 
-#line 4473 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
+#line 4472 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -4704,7 +4703,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 1603 "src/wast-parser.y" /* yacc.c:1906  */
+#line 1602 "src/wast-parser.y" /* yacc.c:1906  */
 
 
 void append_expr_list(ExprList* expr_list, ExprList* expr) {
