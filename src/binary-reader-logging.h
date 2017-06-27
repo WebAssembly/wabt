@@ -235,6 +235,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnStackGlobal(Index stack_global) override;
   Result OnSymbolInfo(StringSlice name, uint32_t flags) override;
   Result OnSymbolInfoCount(Index count) override;
+  Result OnDataSize(uint32_t data_size) override;
+  Result OnDataAlignment(uint32_t data_alignment) override;
   Result EndLinkingSection() override;
 
   Result BeginExceptionSection(Offset size) override;

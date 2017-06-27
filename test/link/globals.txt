@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS: 
+;;; FLAGS: -r
 (module
   (import "__extern" "bar" (global i32))
   (global i32 (i32.const 1))
@@ -31,7 +31,8 @@ Sections:
  Function start=0x00000041 end=0x00000044 (size=0x00000003) count: 2
    Global start=0x00000046 end=0x00000056 (size=0x00000010) count: 3
      Code start=0x00000058 end=0x0000008b (size=0x00000033) count: 2
-   Custom start=0x00000091 end=0x000000b3 (size=0x00000022) "reloc.Code"
+   Custom start=0x00000091 end=0x000000a7 (size=0x00000016) "linking"
+   Custom start=0x000000ad end=0x000000cf (size=0x00000022) "reloc.Code"
 
 Section Details:
 
@@ -48,6 +49,10 @@ Global:
  - global[2] i32 mutable=0 - init i32=1
  - global[3] i32 mutable=0 - init i32=2
  - global[4] i64 mutable=0 - init i64=2
+Custom:
+ - name: "linking"
+  - data size : 0
+  - data align: 0
 Custom:
  - name: "reloc.Code"
   - section: Code

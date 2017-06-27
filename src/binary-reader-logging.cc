@@ -608,6 +608,8 @@ DEFINE_INDEX_INDEX(OnInitExprGetGlobalExpr, "index", "global_index")
 DEFINE_BEGIN(BeginLinkingSection)
 DEFINE_INDEX(OnSymbolInfoCount)
 DEFINE_INDEX(OnStackGlobal)
+DEFINE_INDEX(OnDataSize)
+DEFINE_INDEX(OnDataAlignment)
 DEFINE_END(EndLinkingSection)
 
 DEFINE_BEGIN(BeginExceptionSection);

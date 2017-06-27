@@ -79,7 +79,8 @@ Sections:
  Function start=0x00000015 end=0x00000017 (size=0x00000002) count: 1
      Code start=0x0000001a end=0x000000a1 (size=0x00000087) count: 1
    Custom start=0x000000a7 end=0x000000bf (size=0x00000018) "name"
-   Custom start=0x000000c5 end=0x000000d5 (size=0x00000010) "reloc.Code"
+   Custom start=0x000000c5 end=0x000000db (size=0x00000016) "linking"
+   Custom start=0x000000e1 end=0x000000f1 (size=0x00000010) "reloc.Code"
 
 Section Details:
 
@@ -90,6 +91,10 @@ Function:
 Custom:
  - name: "name"
  - func[0] local_func
+Custom:
+ - name: "linking"
+  - data size : 0
+  - data align: 0
 Custom:
  - name: "reloc.Code"
   - section: Code

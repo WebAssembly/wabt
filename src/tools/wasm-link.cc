@@ -503,6 +503,33 @@ static void write_names_section(Context* ctx) {
   FIXUP_SIZE(stream);
 }
 
+static void write_linking_section(Context* ctx,
+                                  uint32_t data_size,
+                                  uint32_t data_alignment) {
+  Stream* stream = &ctx->stream;
+  stream->WriteU8Enum(BinarySection::Custom, "section code");
+  WRITE_UNKNOWN_SIZE(stream);
+  write_c_str(stream, "linking", "linking section name");
+
+  {
+    write_u32_leb128_enum(&ctx->stream, LinkingEntryType::DataSize,
+                          "subsection code");
+    WRITE_UNKNOWN_SIZE(stream);
+    write_u32_leb128(stream, data_size, "data size");
+    FIXUP_SIZE(stream);
+  }
+
+  {
+    write_u32_leb128_enum(&ctx->stream, LinkingEntryType::DataAlignment,
+                          "subsection code");
+    WRITE_UNKNOWN_SIZE(stream);
+    write_u32_leb128(stream, data_alignment, "data alignment");
+    FIXUP_SIZE(stream);
+  }
+
+  FIXUP_SIZE(stream);
+}
+
 static void write_reloc_section(Context* ctx,
                                 BinarySection section_code,
                                 const SectionPtrVector& sections) {
@@ -758,8 +785,11 @@ static void write_binary(Context* ctx) {
   write_names_section(ctx);
 
   /* Generate a new set of reloction sections */
-  for (size_t i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
-    write_reloc_section(ctx, static_cast<BinarySection>(i), sections[i]);
+  if (s_relocatable) {
+    write_linking_section(ctx, 0, 0);
+    for (size_t i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
+      write_reloc_section(ctx, static_cast<BinarySection>(i), sections[i]);
+    }
   }
 }
 
