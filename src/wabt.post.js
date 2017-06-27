@@ -350,10 +350,17 @@ WasmModule.prototype.destroy = function() {
   Module._wabt_destroy_module(this.module_addr);
 };
 
-return {
+var exports = {
   ready: Promise.resolve(),
   parseWast: parseWast,
   readWasm: readWasm,
 };
+
+if (typeof module !== "undefined" && module && module.exports)
+  module.exports = exports;
+else if (typeof define === "function" && define.amd)
+  define(function() { return exports; });
+else
+  (typeof global !== "undefined" && global || typeof window !== "undefined" && window || this).wabt = exports;
 
 })();  // Call IIFE from wabt.pre.js.
