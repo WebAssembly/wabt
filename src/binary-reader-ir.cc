@@ -128,6 +128,8 @@ class BinaryReaderIR : public BinaryReaderNop {
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
+  Result OnCatchExpr(Index except_index) override;
+  Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
@@ -148,6 +150,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLoopExpr(Index num_types, Type* sig_types) override;
   Result OnCurrentMemoryExpr() override;
   Result OnNopExpr() override;
+  Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
   Result OnSelectExpr() override;
   Result OnSetGlobalExpr(Index global_index) override;
@@ -155,6 +158,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnStoreExpr(Opcode opcode,
                      uint32_t alignment_log2,
                      Address offset) override;
+  Result OnThrowExpr(Index except_index) override;
   Result OnTeeLocalExpr(Index local_index) override;
   Result OnTryExpr(Index num_types, Type* sig_types) override;
   Result OnUnaryExpr(Opcode opcode) override;
@@ -202,12 +206,15 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result GetLabelAt(LabelNode** label, Index depth);
   Result TopLabel(LabelNode** label);
   Result AppendExpr(Expr* expr);
+  bool InsideTryBlock();
+  Result AppendCatch(Catch* catch_);
 
   BinaryErrorHandler* error_handler = nullptr;
   Module* module = nullptr;
 
   Func* current_func = nullptr;
   std::vector<LabelNode> label_stack;
+  std::vector<TryExpr*> try_stack;
   Expr** current_init_expr = nullptr;
   const char* filename_;
 };
@@ -602,6 +609,8 @@ Result BinaryReaderIR::OnElseExpr() {
 }
 
 Result BinaryReaderIR::OnEndExpr() {
+  if (InsideTryBlock())
+    try_stack.pop_back();
   return PopLabel();
 }
 
@@ -669,6 +678,10 @@ Result BinaryReaderIR::OnNopExpr() {
   return AppendExpr(expr);
 }
 
+Result BinaryReaderIR::OnRethrowExpr(Index depth) {
+  return AppendExpr(new RethrowExpr(Var(depth)));
+}
+
 Result BinaryReaderIR::OnReturnExpr() {
   auto expr = new ReturnExpr();
   return AppendExpr(expr);
@@ -696,6 +709,10 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
   return AppendExpr(expr);
 }
 
+Result BinaryReaderIR::OnThrowExpr(Index except_index) {
+  return AppendExpr(new ThrowExpr(Var(except_index)));
+}
+
 Result BinaryReaderIR::OnTeeLocalExpr(Index local_index) {
   auto expr = new TeeLocalExpr(Var(local_index, GetLocation()));
   return AppendExpr(expr);
@@ -707,7 +724,32 @@ Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
   expr->block->sig.assign(sig_types, sig_types + num_types);
   AppendExpr(expr);
   PushLabel(LabelType::Try, &expr->block->first);
+  try_stack.push_back(expr);
   return Result::Ok;
+}
+
+bool BinaryReaderIR::InsideTryBlock() {
+  LabelNode* label;
+  return !try_stack.empty()
+      && WABT_SUCCEEDED(TopLabel(&label))
+      && label->label_type == LabelType::Try;
+}
+
+Result BinaryReaderIR::AppendCatch(Catch* catch_) {
+  if (!InsideTryBlock())
+    return Result::Error;
+  // TODO(karlschimpf) Probably should be set in the Catch constructor.
+  catch_->loc = GetLocation();
+  try_stack.back()->catches.push_back(catch_);
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnCatchExpr(Index except_index) {
+  return AppendCatch(new Catch(Var(except_index)));
+}
+
+Result BinaryReaderIR::OnCatchAllExpr() {
+  return AppendCatch(new Catch());
 }
 
 Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {

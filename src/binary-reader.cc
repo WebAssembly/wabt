@@ -1007,7 +1007,35 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         Index num_types = sig_type == Type::Void ? 0 : 1;
         CALLBACK(OnTryExpr, num_types, &sig_type);
         CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
-        // TODO(karlschimpf) Add catches.
+        break;
+      }
+
+      case Opcode::Catch: {
+        Index index;
+        CHECK_RESULT(ReadIndex(&index, "exception index"));
+        CALLBACK(OnCatchExpr, index);
+        CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
+      case Opcode::CatchAll: {
+        CALLBACK(OnCatchAllExpr);
+        break;
+      }
+
+      case Opcode::Rethrow: {
+        Index depth;
+        CHECK_RESULT(ReadIndex(&depth, "catch depth"));
+        CALLBACK(OnRethrowExpr, depth);
+        CALLBACK(OnOpcodeIndex, depth);
+        break;
+      }
+
+      case Opcode::Throw: {
+        Index index;
+        CHECK_RESULT(ReadIndex(&index, "exception index"));
+        CALLBACK(OnThrowExpr, index);
+        CALLBACK(OnOpcodeIndex, index);
         break;
       }
 

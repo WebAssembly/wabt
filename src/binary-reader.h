@@ -174,6 +174,8 @@ class BinaryReaderDelegate {
                                Index default_target_depth) = 0;
   virtual Result OnCallExpr(Index func_index) = 0;
   virtual Result OnCallIndirectExpr(Index sig_index) = 0;
+  virtual Result OnCatchExpr(Index except_index) = 0;
+  virtual Result OnCatchAllExpr() = 0;
   virtual Result OnCompareExpr(Opcode opcode) = 0;
   virtual Result OnConvertExpr(Opcode opcode) = 0;
   virtual Result OnCurrentMemoryExpr() = 0;
@@ -194,6 +196,7 @@ class BinaryReaderDelegate {
                             Address offset) = 0;
   virtual Result OnLoopExpr(Index num_types, Type* sig_types) = 0;
   virtual Result OnNopExpr() = 0;
+  virtual Result OnRethrowExpr(Index depth) = 0;
   virtual Result OnReturnExpr() = 0;
   virtual Result OnSelectExpr() = 0;
   virtual Result OnSetGlobalExpr(Index global_index) = 0;
@@ -202,7 +205,9 @@ class BinaryReaderDelegate {
                              uint32_t alignment_log2,
                              Address offset) = 0;
   virtual Result OnTeeLocalExpr(Index local_index) = 0;
+  virtual Result OnThrowExpr(Index except_index) = 0;
   virtual Result OnTryExpr(Index num_types, Type* sig_types) = 0;
+
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
   virtual Result EndFunctionBody(Index index) = 0;

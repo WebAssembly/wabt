@@ -136,6 +136,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
+  Result OnCatchExpr(Index except_index) override;
+  Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
@@ -157,6 +159,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                     Address offset) override;
   Result OnLoopExpr(Index num_types, Type* sig_types) override;
   Result OnNopExpr() override;
+  Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
   Result OnSelectExpr() override;
   Result OnSetGlobalExpr(Index global_index) override;
@@ -165,6 +168,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                      uint32_t alignment_log2,
                      Address offset) override;
   Result OnTeeLocalExpr(Index local_index) override;
+  Result OnThrowExpr(Index except_index) override;
   Result OnTryExpr(Index num_types, Type* sig_types) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;

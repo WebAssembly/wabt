@@ -144,9 +144,8 @@ struct Block {
 
 struct Catch {
   WABT_DISALLOW_COPY_AND_ASSIGN(Catch);
-  Catch() = delete;
-  explicit Catch(Expr* first);
-  Catch(Var var, Expr* first);
+  explicit Catch(Expr* first = nullptr);
+  Catch(Var var, Expr* first = nullptr);
   ~Catch();
   Location loc;
   Var var;
