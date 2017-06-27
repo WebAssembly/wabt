@@ -197,6 +197,7 @@ class BinaryReader {
   Result ReadElemSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCodeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadExceptionSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadSections() WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
@@ -220,6 +221,7 @@ class BinaryReader {
   Index num_globals_ = 0;
   Index num_exports_ = 0;
   Index num_function_bodies_ = 0;
+  Index num_exceptions_ = 0;
 };
 
 BinaryReader::BinaryReader(const void* data,
@@ -1233,6 +1235,34 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadExceptionSection(Offset section_size) {
+  CALLBACK(BeginExceptionSection, section_size);
+  CHECK_RESULT(ReadIndex(&num_exceptions_, "exception count"));
+  CALLBACK(OnExceptionCount, num_exceptions_);
+
+  for (Index i = 0; i < num_exceptions_; ++i) {
+    Index num_values;
+    CHECK_RESULT(ReadIndex(&num_values, "exception type count"));
+
+    param_types_.resize(num_values);
+
+    for (Index j = 0; j < num_values; ++j) {
+      Type value_type;
+      CHECK_RESULT(ReadType(&value_type, "exception value type"));
+      ERROR_UNLESS(is_concrete_type(value_type),
+                   "excepted valid exception value type (got %d)",
+                   static_cast<int>(value_type));
+      param_types_[j] = value_type;
+    }
+
+    Type* value_types = num_values ? param_types_.data() : nullptr;
+    CALLBACK(OnExceptionType, i, num_values, value_types);
+  }
+
+  CALLBACK(EndExceptionSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadCustomSection(Offset section_size) {
   StringSlice section_name;
   CHECK_RESULT(ReadStr(&section_name, "section name"));
@@ -1249,6 +1279,10 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
   } else if (strncmp(section_name.start, WABT_BINARY_SECTION_LINKING,
                      strlen(WABT_BINARY_SECTION_LINKING)) == 0) {
     CHECK_RESULT(ReadLinkingSection(section_size));
+  } else if (options_->allow_future_exceptions &&
+             strncmp(section_name.start, WABT_BINARY_SECTION_EXCEPTION,
+                     strlen(WABT_BINARY_SECTION_EXCEPTION)) == 0) {
+    CHECK_RESULT(ReadExceptionSection(section_size));
   } else {
     /* This is an unknown custom section, skip it. */
     state_.offset = read_end_;

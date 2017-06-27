@@ -24,6 +24,9 @@
 #include "expr-visitor.h"
 #include "ir.h"
 
+#define WABT_TRACING 1
+#include "tracing.h"
+
 #define CHECK_RESULT(expr)  \
   do {                      \
     if (WABT_FAILED(expr))  \
@@ -77,7 +80,7 @@ NameGenerator::NameGenerator() : visitor_(this) {}
 
 // static
 bool NameGenerator::HasName(StringSlice* str) {
-  return str->length > 0;
+  return str->HasName();
 }
 
 // static
@@ -193,6 +196,7 @@ Result NameGenerator::VisitMemory(Index memory_index, Memory* memory) {
 }
 
 Result NameGenerator::VisitExcept(Index except_index, Exception* except) {
+  WABT_TRACE_ARGS(VisitExcept, "%" PRIindex "", except_index);
   MaybeGenerateAndBindName(&module_->except_bindings, "$e", except_index,
                            &except->name);
   return Result::Ok;

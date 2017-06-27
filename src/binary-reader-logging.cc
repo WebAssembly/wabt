@@ -270,6 +270,14 @@ Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
                                default_target_depth);
 }
 
+Result BinaryReaderLogging::OnExceptionType(Index index, Index value_count,
+                                            Type* value_types) {
+  LOGF("OnType(index: %" PRIindex ", values: ", index);
+  LogTypes(value_count, value_types);
+  LOGF_NOINDENT(")\n");
+  return reader->OnExceptionType(index, value_count, value_types);
+}
+
 Result BinaryReaderLogging::OnF32ConstExpr(uint32_t value_bits) {
   float value;
   memcpy(&value, &value_bits, sizeof(value));
@@ -584,6 +592,11 @@ DEFINE_BEGIN(BeginLinkingSection)
 DEFINE_INDEX(OnSymbolInfoCount)
 DEFINE_INDEX(OnStackGlobal)
 DEFINE_END(EndLinkingSection)
+
+DEFINE_BEGIN(BeginExceptionSection);
+DEFINE_INDEX(OnExceptionCount);
+
+DEFINE_END(EndExceptionSection);
 
 // We don't need to log these (the individual opcodes are logged instead), but
 // we still need to forward the calls.

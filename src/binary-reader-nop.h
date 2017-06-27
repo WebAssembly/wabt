@@ -311,6 +311,15 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result EndRelocSection() override { return Result::Ok; }
 
+  /* Exception section */
+  Result BeginExceptionSection(Offset size) override { return Result::Error; }
+  Result OnExceptionCount(Index count) override { return Result::Error; }
+  Result OnExceptionType(Index index, Index value_count,
+                         Type* value_types) override {
+    return Result::Error;
+  }
+  Result EndExceptionSection() override { return Result::Error; }
+
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
   Result OnStackGlobal(Index stack_global) override { return Result::Ok; }

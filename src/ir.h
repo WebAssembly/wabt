@@ -768,8 +768,8 @@ struct Script {
 void DestroyExprList(Expr*);
 
 void MakeTypeBindingReverseMapping(
-    const TypeVector&,
-    const BindingHash&,
+    const TypeVector& types,
+    const BindingHash&  bindings,
     std::vector<std::string>* out_reverse_mapping);
 
 }  // namespace wabt

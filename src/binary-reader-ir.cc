@@ -29,6 +29,7 @@
 #include "common.h"
 #include "ir.h"
 
+
 #define CHECK_RESULT(expr) \
   do {                     \
     if (WABT_FAILED(expr)) \
@@ -40,15 +41,17 @@ namespace wabt {
 namespace {
 
 struct LabelNode {
+  LabelNode();
   LabelNode(LabelType, Expr** first);
 
   LabelType label_type;
   Expr** first;
   Expr* last;
+  Expr* context;
 };
 
 LabelNode::LabelNode(LabelType label_type, Expr** first)
-    : label_type(label_type), first(first), last(nullptr) {}
+    : label_type(label_type), first(first), last(nullptr), context(nullptr) {}
 
 class BinaryReaderIR : public BinaryReaderNop {
  public:
@@ -191,6 +194,12 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Index local_index,
                      StringSlice local_name) override;
 
+  Result BeginExceptionSection(Offset size) override { return Result::Ok; }
+  Result OnExceptionCount(Index count) override { return Result::Ok; }
+  Result OnExceptionType(Index index, Index value_count,
+                         Type* value_types) override;
+  Result EndExceptionSection() override { return Result::Ok; }
+
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprGetGlobalExpr(Index index, Index global_index) override;
@@ -206,7 +215,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result GetLabelAt(LabelNode** label, Index depth);
   Result TopLabel(LabelNode** label);
   Result AppendExpr(Expr* expr);
-  bool InsideTryBlock();
   Result AppendCatch(Catch* catch_);
 
   BinaryErrorHandler* error_handler = nullptr;
@@ -214,7 +222,6 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Func* current_func = nullptr;
   std::vector<LabelNode> label_stack;
-  std::vector<TryExpr*> try_stack;
   Expr** current_init_expr = nullptr;
   const char* filename_;
 };
@@ -609,8 +616,6 @@ Result BinaryReaderIR::OnElseExpr() {
 }
 
 Result BinaryReaderIR::OnEndExpr() {
-  if (InsideTryBlock())
-    try_stack.pop_back();
   return PopLabel();
 }
 
@@ -722,26 +727,37 @@ Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
   auto expr = new TryExpr();
   expr->block = new Block();
   expr->block->sig.assign(sig_types, sig_types + num_types);
-  AppendExpr(expr);
+  if (WABT_FAILED(AppendExpr(expr))) {
+    delete expr;
+    return Result::Error;
+  }
   PushLabel(LabelType::Try, &expr->block->first);
-  try_stack.push_back(expr);
-  return Result::Ok;
-}
-
-bool BinaryReaderIR::InsideTryBlock() {
   LabelNode* label;
-  return !try_stack.empty()
-      && WABT_SUCCEEDED(TopLabel(&label))
-      && label->label_type == LabelType::Try;
+  if (WABT_FAILED(TopLabel(&label))) {
+    PrintError("Internal error installing try block");
+    delete expr;
+    return Result::Error;
+  }
+  label->context = expr;
+  return Result::Ok;
 }
 
 Result BinaryReaderIR::AppendCatch(Catch* catch_) {
-  if (!InsideTryBlock())
-    return Result::Error;
-  // TODO(karlschimpf) Probably should be set in the Catch constructor.
-  catch_->loc = GetLocation();
-  try_stack.back()->catches.push_back(catch_);
-  return Result::Ok;
+  LabelNode* label = nullptr;
+  if (WABT_SUCCEEDED(TopLabel(&label))
+      && label->label_type == LabelType::Try) {
+    if (auto try_ = dyn_cast<TryExpr>(label->context)) {
+      // TODO(karlschimpf) Probably should be set in the Catch constructor.
+      catch_->loc = GetLocation();
+      try_->catches.push_back(catch_);
+      label->first = &catch_->first;
+      return Result::Ok;
+    }
+  }
+  if (label != nullptr)
+    PrintError("catch not inside try block");
+  delete catch_;
+  return Result::Error;
 }
 
 Result BinaryReaderIR::OnCatchExpr(Index except_index) {
@@ -943,6 +959,19 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   }
   bindings->emplace(std::string("$") + string_slice_to_string(name),
                     Binding(index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnExceptionType(Index index, Index value_count,
+                                       Type* value_types) {
+  auto except = new Exception();
+  StringSlice empty;
+  WABT_ZERO_MEMORY(empty);
+  except->name = empty;
+  for (Index i = 0; i < value_count; ++i)
+    except->sig.push_back(value_types[i]);
+  module->excepts.push_back(except);
+  module->AppendField(new ExceptionModuleField(except));
   return Result::Ok;
 }
 

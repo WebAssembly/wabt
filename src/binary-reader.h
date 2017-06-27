@@ -274,6 +274,13 @@ class BinaryReaderDelegate {
   virtual Result OnSymbolInfo(StringSlice name, uint32_t flags) = 0;
   virtual Result EndLinkingSection() = 0;
 
+  /* Exception section */
+  virtual Result BeginExceptionSection(Offset size) = 0;
+  virtual Result OnExceptionCount(Index count) = 0;
+  virtual Result OnExceptionType(Index index, Index value_count,
+                                 Type* value_types) = 0;
+  virtual Result EndExceptionSection() = 0;
+
   /* InitExpr - used by elem, data and global sections; these functions are
    * only called between calls to Begin*InitExpr and End*InitExpr */
   virtual Result OnInitExprF32ConstExpr(Index index, uint32_t value) = 0;
