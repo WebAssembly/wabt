@@ -94,9 +94,9 @@ FuncSignature::FuncSignature(Index param_count,
       result_types(result_types, result_types + result_count) {}
 
 Import::Import() : kind(ExternalKind::Func) {
-  WABT_ZERO_MEMORY(module_name);
-  WABT_ZERO_MEMORY(field_name);
-  WABT_ZERO_MEMORY(func.sig_index);
+  ZeroMemory(module_name);
+  ZeroMemory(field_name);
+  ZeroMemory(func.sig_index);
 }
 
 Import::Import(Import&& other) {
@@ -106,9 +106,9 @@ Import::Import(Import&& other) {
 Import& Import::operator=(Import&& other) {
   kind = other.kind;
   module_name = other.module_name;
-  WABT_ZERO_MEMORY(other.module_name);
+  ZeroMemory(other.module_name);
   field_name = other.field_name;
-  WABT_ZERO_MEMORY(other.field_name);
+  ZeroMemory(other.field_name);
   switch (kind) {
     case ExternalKind::Func:
       func.sig_index = other.func.sig_index;
@@ -138,14 +138,14 @@ Import::~Import() {
 
 Export::Export(Export&& other)
     : name(other.name), kind(other.kind), index(other.index) {
-  WABT_ZERO_MEMORY(other.name);
+  ZeroMemory(other.name);
 }
 
 Export& Export::operator=(Export&& other) {
   name = other.name;
   kind = other.kind;
   index = other.index;
-  WABT_ZERO_MEMORY(other.name);
+  ZeroMemory(other.name);
   return *this;
 }
 
@@ -157,7 +157,7 @@ Module::Module(bool is_host)
     : memory_index(kInvalidIndex),
       table_index(kInvalidIndex),
       is_host(is_host) {
-  WABT_ZERO_MEMORY(name);
+  ZeroMemory(name);
 }
 
 Module::Module(const StringSlice& name, bool is_host)

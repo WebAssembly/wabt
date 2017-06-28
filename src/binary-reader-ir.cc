@@ -29,10 +29,10 @@
 #include "common.h"
 #include "ir.h"
 
-#define CHECK_RESULT(expr) \
-  do {                     \
-    if (WABT_FAILED(expr)) \
-      return Result::Error;   \
+#define CHECK_RESULT(expr)  \
+  do {                      \
+    if (Failed(expr))       \
+      return Result::Error; \
   } while (0)
 
 namespace wabt {
@@ -263,7 +263,7 @@ Result BinaryReaderIR::AppendExpr(Expr* expr) {
   expr->loc = GetLocation();
 
   LabelNode* label;
-  if (WABT_FAILED(TopLabel(&label))) {
+  if (Failed(TopLabel(&label))) {
     delete expr;
     return Result::Error;
   }

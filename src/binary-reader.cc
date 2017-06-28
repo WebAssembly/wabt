@@ -36,7 +36,7 @@
 
 #define CHECK_RESULT(expr)  \
   do {                      \
-    if (WABT_FAILED(expr))  \
+    if (Failed(expr))       \
       return Result::Error; \
   } while (0)
 
@@ -48,13 +48,12 @@
     }                           \
   } while (0)
 
-#define CALLBACK0(member)                                   \
-  ERROR_UNLESS(WABT_SUCCEEDED(delegate_->member()), #member \
-               " callback "                                 \
-               "failed")
+#define CALLBACK0(member)                              \
+  ERROR_UNLESS(Succeeded(delegate_->member()), #member \
+               " callback failed")
 
-#define CALLBACK(member, ...)                                  \
-  ERROR_UNLESS(WABT_SUCCEEDED(delegate_->member(__VA_ARGS__)), \
+#define CALLBACK(member, ...)                             \
+  ERROR_UNLESS(Succeeded(delegate_->member(__VA_ARGS__)), \
                #member " callback failed")
 
 namespace wabt {
@@ -256,7 +255,7 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
 
 Result BinaryReader::ReadOpcode(Opcode* out_value, const char* desc) {
   uint8_t value = 0;
-  if (WABT_FAILED(ReadU8(&value, desc))) {
+  if (Failed(ReadU8(&value, desc))) {
     return Result::Error;
   }
   *out_value = Opcode::FromCode(value);
@@ -1109,7 +1108,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
   uint32_t section;
   CHECK_RESULT(ReadU32Leb128(&section, "section"));
   StringSlice section_name;
-  WABT_ZERO_MEMORY(section_name);
+  ZeroMemory(section_name);
   if (static_cast<BinarySection>(section) == BinarySection::Custom)
     CHECK_RESULT(ReadStr(&section_name, "section name"));
   Index num_relocs;

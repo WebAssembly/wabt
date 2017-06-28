@@ -329,7 +329,7 @@ void BinaryWriterSpec::WriteModule(char* filename, const Module* module) {
   MemoryStream memory_stream;
   result_ = write_binary_module(&memory_stream.writer(), module,
                                 &spec_options_->write_binary_options);
-  if (WABT_SUCCEEDED(result_) && write_modules_)
+  if (Succeeded(result_) && write_modules_)
     result_ = memory_stream.WriteToFile(filename);
 }
 

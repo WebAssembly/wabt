@@ -382,8 +382,8 @@ type_use :
 
 nat :
     NAT {
-      if (WABT_FAILED(parse_uint64($1.text.start,
-                                        $1.text.start + $1.text.length, &$$))) {
+      if (Failed(parse_uint64($1.text.start,
+                              $1.text.start + $1.text.length, &$$))) {
         wast_parser_error(&@1, lexer, parser,
                           "invalid int " PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG($1.text));
@@ -427,7 +427,7 @@ var_list :
     }
 ;
 bind_var_opt :
-    /* empty */ { WABT_ZERO_MEMORY($$); }
+    /* empty */ { ZeroMemory($$); }
   | bind_var
 ;
 bind_var :
@@ -435,7 +435,7 @@ bind_var :
 ;
 
 labeling_opt :
-    /* empty */ %prec LOW { WABT_ZERO_MEMORY($$); }
+    /* empty */ %prec LOW { ZeroMemory($$); }
   | bind_var
 ;
 
@@ -443,8 +443,8 @@ offset_opt :
     /* empty */ { $$ = 0; }
   | OFFSET_EQ_NAT {
       uint64_t offset64;
-      if (WABT_FAILED(parse_int64($1.start, $1.start + $1.length, &offset64,
-                                  ParseIntType::SignedAndUnsigned))) {
+      if (Failed(parse_int64($1.start, $1.start + $1.length, &offset64,
+                             ParseIntType::SignedAndUnsigned))) {
         wast_parser_error(&@1, lexer, parser,
                           "invalid offset \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG($1));
@@ -459,8 +459,8 @@ offset_opt :
 align_opt :
     /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN_EQ_NAT {
-      if (WABT_FAILED(parse_int32($1.start, $1.start + $1.length, &$$,
-                                  ParseIntType::UnsignedOnly))) {
+      if (Failed(parse_int32($1.start, $1.start + $1.length, &$$,
+                             ParseIntType::UnsignedOnly))) {
         wast_parser_error(&@1, lexer, parser,
                           "invalid alignment \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG($1));
@@ -543,8 +543,8 @@ plain_instr :
   | CONST literal {
       Const const_;
       const_.loc = @1;
-      if (WABT_FAILED(parse_const($1, $2.type, $2.text.start,
-                                  $2.text.start + $2.text.length, &const_))) {
+      if (Failed(parse_const($1, $2.type, $2.text.start,
+                             $2.text.start + $2.text.length, &const_))) {
         wast_parser_error(&@2, lexer, parser,
                           "invalid literal \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG($2.text));
@@ -782,7 +782,7 @@ try_check :
   ;
 
 instr_list :
-    /* empty */ { WABT_ZERO_MEMORY($$); }
+    /* empty */ { ZeroMemory($$); }
   | instr instr_list {
       $$.first = $1.first;
       $1.last->next = $2.first;
@@ -791,7 +791,7 @@ instr_list :
     }
 ;
 expr_list :
-    /* empty */ { WABT_ZERO_MEMORY($$); }
+    /* empty */ { ZeroMemory($$); }
   | expr expr_list {
       $$.first = $1.first;
       $1.last->next = $2.first;
@@ -1330,7 +1330,7 @@ module :
                        &error_handler, $$);
         $$->name = $1->binary.name;
         $$->loc = $1->binary.loc;
-        WABT_ZERO_MEMORY($1->binary.name);
+        ZeroMemory($1->binary.name);
       }
       delete $1;
     }
@@ -1472,8 +1472,8 @@ cmd_list :
 const :
     LPAR CONST literal RPAR {
       $$.loc = @2;
-      if (WABT_FAILED(parse_const($2, $3.type, $3.text.start,
-                                  $3.text.start + $3.text.length, &$$))) {
+      if (Failed(parse_const($2, $3.type, $3.text.start,
+                             $3.text.start + $3.text.length, &$$))) {
         wast_parser_error(&@3, lexer, parser,
                           "invalid literal \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG($3.text));
@@ -1593,7 +1593,7 @@ void append_expr(ExprList* expr_list, Expr* expr) {
 
 ExprList join_exprs1(Location* loc, Expr* expr1) {
   ExprList result;
-  WABT_ZERO_MEMORY(result);
+  ZeroMemory(result);
   append_expr(&result, expr1);
   expr1->loc = *loc;
   return result;
@@ -1601,7 +1601,7 @@ ExprList join_exprs1(Location* loc, Expr* expr1) {
 
 ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2) {
   ExprList result;
-  WABT_ZERO_MEMORY(result);
+  ZeroMemory(result);
   append_expr_list(&result, expr1);
   append_expr(&result, expr2);
   expr2->loc = *loc;
@@ -1663,8 +1663,8 @@ size_t copy_string_contents(StringSlice* text, char* dest) {
           // sequence.
           uint32_t hi;
           uint32_t lo;
-          if (WABT_SUCCEEDED(parse_hexdigit(src[0], &hi)) &&
-              WABT_SUCCEEDED(parse_hexdigit(src[1], &lo))) {
+          if (Succeeded(parse_hexdigit(src[0], &hi)) &&
+              Succeeded(parse_hexdigit(src[1], &lo))) {
             *dest++ = (hi << 4) | lo;
           } else {
             assert(0);
@@ -1923,7 +1923,7 @@ Result parse_wast(WastLexer* lexer, Script** out_script,
                   SourceErrorHandler* error_handler,
                   WastParseOptions* options) {
   WastParser parser;
-  WABT_ZERO_MEMORY(parser);
+  ZeroMemory(parser);
   static WastParseOptions default_options;
   if (options == nullptr)
     options = &default_options;

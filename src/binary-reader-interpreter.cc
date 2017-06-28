@@ -30,7 +30,7 @@
 
 #define CHECK_RESULT(expr)        \
   do {                            \
-    if (WABT_FAILED(expr))        \
+    if (Failed(expr))             \
       return wabt::Result::Error; \
   } while (0)
 
@@ -474,8 +474,8 @@ wabt::Result BinaryReaderInterpreter::GetBrDropKeepCount(
 wabt::Result BinaryReaderInterpreter::GetReturnDropKeepCount(
     Index* out_drop_count,
     Index* out_keep_count) {
-  if (WABT_FAILED(GetBrDropKeepCount(label_stack.size() - 1, out_drop_count,
-                                     out_keep_count))) {
+  if (Failed(GetBrDropKeepCount(label_stack.size() - 1, out_drop_count,
+                                out_keep_count))) {
     return wabt::Result::Error;
   }
 
@@ -1458,7 +1458,7 @@ wabt::Result read_binary_interpreter(Environment* env,
   wabt::Result result = read_binary(data, size, &reader, options);
   env->SetIstream(reader.ReleaseOutputBuffer());
 
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     module->istream_start = istream_offset;
     module->istream_end = env->istream().size();
     *out_module = module;

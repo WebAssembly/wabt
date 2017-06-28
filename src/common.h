@@ -33,10 +33,6 @@
 
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-#define WABT_ZERO_MEMORY(var)                                          \
-  WABT_STATIC_ASSERT(                                                  \
-      std::is_pod<std::remove_reference<decltype(var)>::type>::value); \
-  memset(static_cast<void*>(&(var)), 0, sizeof(var))
 
 #define WABT_USE(x) static_cast<void>(x)
 
@@ -103,8 +99,13 @@ enum class Result {
   Error,
 };
 
-#define WABT_SUCCEEDED(x) ((x) == ::wabt::Result::Ok)
-#define WABT_FAILED(x) ((x) == ::wabt::Result::Error)
+template<typename T>
+void ZeroMemory(T& v) {
+  memset(&v, 0, sizeof(v));
+}
+
+inline bool Succeeded(Result result) { return result == Result::Ok; }
+inline bool Failed(Result result) { return result == Result::Error; }
 
 inline std::string WABT_PRINTF_FORMAT(1, 2)
     string_printf(const char* format, ...) {
