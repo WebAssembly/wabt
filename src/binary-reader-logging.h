@@ -74,6 +74,11 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
+  Result OnImportException(Index import_index,
+                           StringSlice module_name,
+                           StringSlice field_name,
+                           Index except_index,
+                           TypeVector& sig) override;
   Result EndImportSection() override;
 
   Result BeginFunctionSection(Offset size) override;
@@ -234,7 +239,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginExceptionSection(Offset size) override;
   Result OnExceptionCount(Index count) override;
-  Result OnExceptionType(Index index, Index value_count, Type* types) override;
+  Result OnExceptionType(Index index, TypeVector& sig) override;
   Result EndExceptionSection() override;
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
@@ -249,6 +254,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   void Dedent();
   void WriteIndent();
   void LogTypes(Index type_count, Type* types);
+  void LogTypes(TypeVector& types);
 
   Stream* stream;
   BinaryReaderDelegate* reader;

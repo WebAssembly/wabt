@@ -103,6 +103,12 @@ enum class Result {
   Error,
 };
 
+template<typename T>
+void ZeroMemory(T& loc) {
+  memset(&loc, 0, sizeof(T));
+}
+
+
 #define WABT_SUCCEEDED(x) ((x) == ::wabt::Result::Ok)
 #define WABT_FAILED(x) ((x) == ::wabt::Result::Error)
 

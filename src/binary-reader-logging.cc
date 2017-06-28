@@ -86,6 +86,10 @@ void BinaryReaderLogging::LogTypes(Index type_count, Type* types) {
   LOGF_NOINDENT("]");
 }
 
+void BinaryReaderLogging::LogTypes(TypeVector& types) {
+  LogTypes(types.size(), types.data());
+}
+
 bool BinaryReaderLogging::OnError(const char* message) {
   return reader->OnError(message);
 }
@@ -194,6 +198,20 @@ Result BinaryReaderLogging::OnImportGlobal(Index import_index,
                                 global_index, type, mutable_);
 }
 
+Result BinaryReaderLogging::OnImportException(Index import_index,
+                                              StringSlice module_name,
+                                              StringSlice field_name,
+                                              Index except_index,
+                                              TypeVector& sig) {
+  LOGF("OnImportException(import_index: %" PRIindex ", except_index: %" PRIindex
+       ", sig: ", import_index, except_index);
+  LogTypes(sig);
+  LOGF_NOINDENT(")\n");
+  return reader->OnImportException(import_index, module_name,field_name,
+                                   except_index, sig);
+}
+
+
 Result BinaryReaderLogging::OnTable(Index index,
                                     Type elem_type,
                                     const Limits* elem_limits) {
@@ -270,12 +288,11 @@ Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
                                default_target_depth);
 }
 
-Result BinaryReaderLogging::OnExceptionType(Index index, Index value_count,
-                                            Type* value_types) {
+Result BinaryReaderLogging::OnExceptionType(Index index, TypeVector& sig) {
   LOGF("OnType(index: %" PRIindex ", values: ", index);
-  LogTypes(value_count, value_types);
+  LogTypes(sig);
   LOGF_NOINDENT(")\n");
-  return reader->OnExceptionType(index, value_count, value_types);
+  return reader->OnExceptionType(index, sig);
 }
 
 Result BinaryReaderLogging::OnF32ConstExpr(uint32_t value_bits) {

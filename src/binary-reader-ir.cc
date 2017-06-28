@@ -9,7 +9,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WRRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -41,7 +41,7 @@ namespace wabt {
 namespace {
 
 struct LabelNode {
-  LabelNode();
+  LabelNode() { ZeroMemory(*this); }
   LabelNode(LabelType, Expr** first);
 
   LabelType label_type;
@@ -94,6 +94,11 @@ class BinaryReaderIR : public BinaryReaderNop {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
+  Result OnImportException(Index import_index,
+                           StringSlice module_name,
+                           StringSlice field_name,
+                           Index except_index,
+                           TypeVector& sig) override;
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -196,8 +201,7 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result BeginExceptionSection(Offset size) override { return Result::Ok; }
   Result OnExceptionCount(Index count) override { return Result::Ok; }
-  Result OnExceptionType(Index index, Index value_count,
-                         Type* value_types) override;
+  Result OnExceptionType(Index index, TypeVector& types) override;
   Result EndExceptionSection() override { return Result::Ok; }
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
@@ -216,6 +220,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result TopLabel(LabelNode** label);
   Result AppendExpr(Expr* expr);
   Result AppendCatch(Catch* catch_);
+  Exception* CreateException(TypeVector& sig);
 
   BinaryErrorHandler* error_handler = nullptr;
   Module* module = nullptr;
@@ -289,6 +294,13 @@ Result BinaryReaderIR::AppendExpr(Expr* expr) {
     *label->first = label->last = expr;
   }
   return Result::Ok;
+}
+
+Exception* BinaryReaderIR::CreateException(TypeVector& sig) {
+  auto except = new Exception();
+  ZeroMemory(except->name);
+  except->sig = sig;
+  return except;
 }
 
 bool BinaryReaderIR::HandleError(Offset offset, const char* message) {
@@ -400,6 +412,18 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   return Result::Ok;
 }
 
+Result BinaryReaderIR::OnImportException(Index import_index,
+                                         StringSlice module_name,
+                                         StringSlice field_name,
+                                         Index except_index,
+                                         TypeVector& sig) {
+  assert(import_index == module->imports.size() - 1);
+  Import* import = module->imports[import_index];
+  import->kind = ExternalKind::Except;
+  import->except = CreateException(sig);
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::OnFunctionCount(Index count) {
   module->funcs.reserve(module->num_func_imports + count);
   return Result::Ok;
@@ -495,7 +519,7 @@ Result BinaryReaderIR::OnExport(Index index,
       assert(item_index < module->globals.size());
       break;
     case ExternalKind::Except:
-      WABT_FATAL("OnExport(except) not implemented\n");
+      // Note: Can't check if index valid, exceptions section comes later.
       break;
   }
   export_->var = Var(item_index, GetLocation());
@@ -962,14 +986,8 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnExceptionType(Index index, Index value_count,
-                                       Type* value_types) {
-  auto except = new Exception();
-  StringSlice empty;
-  WABT_ZERO_MEMORY(empty);
-  except->name = empty;
-  for (Index i = 0; i < value_count; ++i)
-    except->sig.push_back(value_types[i]);
+Result BinaryReaderIR::OnExceptionType(Index index, TypeVector& sig) {
+  auto except = CreateException(sig);
   module->excepts.push_back(except);
   module->AppendField(new ExceptionModuleField(except));
   return Result::Ok;

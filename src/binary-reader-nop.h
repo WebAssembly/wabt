@@ -89,6 +89,13 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                         bool mutable_) override {
     return Result::Ok;
   }
+  Result OnImportException(Index import_index,
+                           StringSlice module_name,
+                           StringSlice field_name,
+                           Index except_index,
+                           TypeVector& sig) override {
+    return Result::Error;
+  }
   Result EndImportSection() override { return Result::Ok; }
 
   /* Function section */
@@ -314,8 +321,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Exception section */
   Result BeginExceptionSection(Offset size) override { return Result::Error; }
   Result OnExceptionCount(Index count) override { return Result::Error; }
-  Result OnExceptionType(Index index, Index value_count,
-                         Type* value_types) override {
+  Result OnExceptionType(Index index, TypeVector& sig) override {
     return Result::Error;
   }
   Result EndExceptionSection() override { return Result::Error; }

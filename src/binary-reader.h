@@ -102,6 +102,11 @@ class BinaryReaderDelegate {
                                 Index global_index,
                                 Type type,
                                 bool mutable_) = 0;
+  virtual Result OnImportException(Index import_index,
+                                   StringSlice module_name,
+                                   StringSlice field_name,
+                                   Index except_index,
+                                   TypeVector& sig) = 0;
   virtual Result EndImportSection() = 0;
 
   /* Function section */
@@ -277,8 +282,7 @@ class BinaryReaderDelegate {
   /* Exception section */
   virtual Result BeginExceptionSection(Offset size) = 0;
   virtual Result OnExceptionCount(Index count) = 0;
-  virtual Result OnExceptionType(Index index, Index value_count,
-                                 Type* value_types) = 0;
+  virtual Result OnExceptionType(Index index, TypeVector& sig) = 0;
   virtual Result EndExceptionSection() = 0;
 
   /* InitExpr - used by elem, data and global sections; these functions are

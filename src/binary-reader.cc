@@ -181,6 +181,7 @@ class BinaryReader {
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
   Result ReadGlobalHeader(Type* out_type, bool* out_mutable) WABT_WARN_UNUSED;
+  Result ReadExceptionType(TypeVector& sig) WABT_WARN_UNUSED;
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNamesSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
@@ -215,6 +216,7 @@ class BinaryReader {
   Index num_table_imports_ = 0;
   Index num_memory_imports_ = 0;
   Index num_global_imports_ = 0;
+  Index num_exception_imports_ = 0;
   Index num_function_signatures_ = 0;
   Index num_tables_ = 0;
   Index num_memories_ = 0;
@@ -1235,28 +1237,30 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadExceptionType(TypeVector& sig) {
+  Index num_values;
+  CHECK_RESULT(ReadIndex(&num_values, "exception type count"));
+  sig.resize(num_values);
+  for (Index j = 0; j < num_values; ++j) {
+    Type value_type;
+    CHECK_RESULT(ReadType(&value_type, "exception value type"));
+    ERROR_UNLESS(is_concrete_type(value_type),
+                 "excepted valid exception value type (got %d)",
+                 static_cast<int>(value_type));
+    sig[j] = value_type;
+  }
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadExceptionSection(Offset section_size) {
   CALLBACK(BeginExceptionSection, section_size);
   CHECK_RESULT(ReadIndex(&num_exceptions_, "exception count"));
   CALLBACK(OnExceptionCount, num_exceptions_);
 
   for (Index i = 0; i < num_exceptions_; ++i) {
-    Index num_values;
-    CHECK_RESULT(ReadIndex(&num_values, "exception type count"));
-
-    param_types_.resize(num_values);
-
-    for (Index j = 0; j < num_values; ++j) {
-      Type value_type;
-      CHECK_RESULT(ReadType(&value_type, "exception value type"));
-      ERROR_UNLESS(is_concrete_type(value_type),
-                   "excepted valid exception value type (got %d)",
-                   static_cast<int>(value_type));
-      param_types_[j] = value_type;
-    }
-
-    Type* value_types = num_values ? param_types_.data() : nullptr;
-    CALLBACK(OnExceptionType, i, num_values, value_types);
+    TypeVector sig;
+    CHECK_RESULT(ReadExceptionType(sig));
+    CALLBACK(OnExceptionType, i, sig);
   }
 
   CALLBACK(EndExceptionSection);
@@ -1393,6 +1397,16 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         break;
       }
 
+      case ExternalKind::Except: {
+        TypeVector sig;
+        CHECK_RESULT(ReadExceptionType(sig));
+        CALLBACK(OnImport, i, module_name, field_name);
+        CALLBACK(OnImportException, i, module_name, field_name,
+                 num_exception_imports_, sig);
+        num_exception_imports_++;
+        break;
+      }
+
       default:
         PrintError("invalid import kind: %d", kind);
         return Result::Error;
@@ -1503,8 +1517,9 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
                      "invalid export global index: %" PRIindex, item_index);
         break;
       case ExternalKind::Except:
-        // TODO(karlschimpf) Define.
-        WABT_FATAL("read export except not implemented");
+        // Note: Can't check if index valid, exceptions section comes later.
+        if (!options_->allow_future_exceptions)
+          PrintError("invalid export exception entry, exceptions not allowed");
         break;
     }
 
