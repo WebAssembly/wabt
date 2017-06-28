@@ -53,7 +53,7 @@ bool Color::SupportsColor(FILE* file) {
       return false;
     }
     DWORD mode;
-    if (!_isatty(_fileno(file)) || !GetConsoleMode(handle, mode) ||
+    if (!_isatty(_fileno(file)) || !GetConsoleMode(handle, &mode) ||
         !SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
       return false;
     }
