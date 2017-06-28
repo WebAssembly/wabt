@@ -84,7 +84,7 @@ Section::Section()
       payload_offset(0),
       count(0),
       output_payload_offset(0) {
-  WABT_ZERO_MEMORY(data);
+  ZeroMemory(data);
 }
 
 Section::~Section() {
@@ -331,7 +331,7 @@ static void write_memory_section(Context* ctx,
   write_u32_leb128(stream, 1, "memory count");
 
   Limits limits;
-  WABT_ZERO_MEMORY(limits);
+  ZeroMemory(limits);
   limits.has_max = true;
   for (size_t i = 0; i < sections.size(); i++) {
     Section* sec = sections[i];
@@ -795,7 +795,7 @@ static Result perform_link(Context* ctx) {
   dump_reloc_offsets(ctx);
   write_binary(ctx);
 
-  if (WABT_FAILED(ctx->stream.WriteToFile(s_outfile))) {
+  if (Failed(ctx->stream.WriteToFile(s_outfile))) {
     WABT_FATAL("error writing linked output to file\n");
   }
 
@@ -816,7 +816,7 @@ int ProgramMain(int argc, char** argv) {
     char* data;
     size_t size;
     result = read_file(input_filename.c_str(), &data, &size);
-    if (WABT_FAILED(result))
+    if (Failed(result))
       return result != Result::Ok;
     LinkerInputBinary* b = new LinkerInputBinary(
         input_filename.c_str(), reinterpret_cast<uint8_t*>(data), size);
@@ -825,7 +825,7 @@ int ProgramMain(int argc, char** argv) {
     if (s_debug)
       options.log_stream = s_log_stream.get();
     result = read_binary_linker(b, &options);
-    if (WABT_FAILED(result))
+    if (Failed(result))
       WABT_FATAL("error parsing file: %s\n", input_filename.c_str());
   }
 

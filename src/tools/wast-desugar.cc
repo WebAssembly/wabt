@@ -90,7 +90,7 @@ int ProgramMain(int argc, char** argv) {
   Result result = parse_wast(lexer.get(), &script, &error_handler,
                              &s_parse_options);
 
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     Module* module = script->GetFirstModule();
     if (!module)
       WABT_FATAL("no module in file.\n");
@@ -98,10 +98,10 @@ int ProgramMain(int argc, char** argv) {
     if (s_generate_names)
       result = generate_names(module);
 
-    if (WABT_SUCCEEDED(result))
+    if (Succeeded(result))
       result = apply_names(module);
 
-    if (WABT_SUCCEEDED(result)) {
+    if (Succeeded(result)) {
       FileWriter writer(s_outfile ? FileWriter(s_outfile) : FileWriter(stdout));
       result = write_wat(&writer, module, &s_write_wat_options);
     }

@@ -214,7 +214,7 @@ Result FloatParser<T>::ParseNan(const char* s,
 
     for (; s < end; ++s) {
       uint32_t digit;
-      if (WABT_FAILED(parse_hexdigit(*s, &digit)))
+      if (Failed(parse_hexdigit(*s, &digit)))
         return Result::Error;
       tag = tag * 16 + digit;
       // Check for overflow.
@@ -262,7 +262,7 @@ Result FloatParser<T>::ParseHex(const char* s,
     uint32_t digit;
     if (*s == '.') {
       seen_dot = true;
-    } else if (WABT_SUCCEEDED(parse_hexdigit(*s, &digit))) {
+    } else if (Succeeded(parse_hexdigit(*s, &digit))) {
       if (Traits::kBits - Clz(significand) <= Traits::kSigPlusOneBits) {
         significand = (significand << 4) + digit;
         if (seen_dot)
@@ -534,7 +534,7 @@ Result parse_uint64(const char* s, const char* end, uint64_t* out) {
       return Result::Error;
     for (; s < end; ++s) {
       uint32_t digit;
-      if (WABT_FAILED(parse_hexdigit(*s, &digit)))
+      if (Failed(parse_hexdigit(*s, &digit)))
         return Result::Error;
       uint64_t old_value = value;
       value = value * 16 + digit;
@@ -597,7 +597,7 @@ Result parse_int32(const char* s,
       has_sign = true;
     s++;
   }
-  if (WABT_FAILED(parse_uint64(s, end, &value)))
+  if (Failed(parse_uint64(s, end, &value)))
     return Result::Error;
 
   if (has_sign) {

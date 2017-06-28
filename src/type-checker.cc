@@ -18,7 +18,7 @@
 
 #define CHECK_RESULT(expr)  \
   do {                      \
-    if (WABT_FAILED(expr))  \
+    if (Failed(expr))       \
       return Result::Error; \
   } while (0)
 
@@ -66,7 +66,7 @@ Result TypeChecker::TopLabel(Label** out_label) {
 
 bool TypeChecker::IsUnreachable() {
   Label* label;
-  if (WABT_FAILED(TopLabel(&label)))
+  if (Failed(TopLabel(&label)))
     return true;
   return label->unreachable;
 }

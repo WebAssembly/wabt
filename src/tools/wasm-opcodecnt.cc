@@ -221,7 +221,7 @@ int ProgramMain(int argc, char** argv) {
   char* data;
   size_t size;
   Result result = read_file(s_infile, &data, &size);
-  if (WABT_FAILED(result)) {
+  if (Failed(result)) {
     const char* input_name = s_infile ? s_infile : "stdin";
     ERROR("Unable to parse: %s", input_name);
     delete[] data;
@@ -233,10 +233,10 @@ int ProgramMain(int argc, char** argv) {
       ERROR("fopen \"%s\" failed, errno=%d\n", s_outfile, errno);
     result = Result::Error;
   }
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     OpcntData opcnt_data;
     result = read_binary_opcnt(data, size, &s_read_binary_options, &opcnt_data);
-    if (WABT_SUCCEEDED(result)) {
+    if (Succeeded(result)) {
       display_sorted_int_counter_vector(
           out, "Opcode counts:", opcnt_data.opcode_vec, opcode_counter_gt,
           display_opcode_name, nullptr);

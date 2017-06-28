@@ -327,11 +327,11 @@ Const::Const(F64, uint64_t value, const Location& loc_)
 
 
 Block::Block(): first(nullptr) {
-  WABT_ZERO_MEMORY(label);
+  ZeroMemory(label);
 }
 
 Block::Block(Expr* first) : first(first) {
-  WABT_ZERO_MEMORY(label);
+  ZeroMemory(label);
 }
 
 Block::~Block() {
@@ -364,7 +364,7 @@ Expr::Expr(ExprType type) : type(type), next(nullptr) {
 }
 
 FuncType::FuncType() {
-  WABT_ZERO_MEMORY(name);
+  ZeroMemory(name);
 }
 
 FuncType::~FuncType() {
@@ -377,7 +377,7 @@ FuncDeclaration::FuncDeclaration()
 FuncDeclaration::~FuncDeclaration() {}
 
 Func::Func() : first_expr(nullptr) {
-  WABT_ZERO_MEMORY(name);
+  ZeroMemory(name);
 }
 
 Func::~Func() {
@@ -386,7 +386,7 @@ Func::~Func() {
 }
 
 Global::Global() : type(Type::Void), mutable_(false), init_expr(nullptr) {
-  WABT_ZERO_MEMORY(name);
+  ZeroMemory(name);
 }
 
 Global::~Global() {
@@ -395,8 +395,8 @@ Global::~Global() {
 }
 
 Table::Table() {
-  WABT_ZERO_MEMORY(name);
-  WABT_ZERO_MEMORY(elem_limits);
+  ZeroMemory(name);
+  ZeroMemory(elem_limits);
 }
 
 Table::~Table() {
@@ -417,8 +417,8 @@ DataSegment::~DataSegment() {
 }
 
 Memory::Memory() {
-  WABT_ZERO_MEMORY(name);
-  WABT_ZERO_MEMORY(page_limits);
+  ZeroMemory(name);
+  ZeroMemory(page_limits);
 }
 
 Memory::~Memory() {
@@ -426,8 +426,8 @@ Memory::~Memory() {
 }
 
 Import::Import() : kind(ExternalKind::Func), func(nullptr) {
-  WABT_ZERO_MEMORY(module_name);
-  WABT_ZERO_MEMORY(field_name);
+  ZeroMemory(module_name);
+  ZeroMemory(field_name);
 }
 
 Import::~Import() {
@@ -453,7 +453,7 @@ Import::~Import() {
 }
 
 Export::Export() {
-  WABT_ZERO_MEMORY(name);
+  ZeroMemory(name);
 }
 
 Export::~Export() {
@@ -472,7 +472,7 @@ Module::Module()
       num_memory_imports(0),
       num_global_imports(0),
       start(0) {
-  WABT_ZERO_MEMORY(name);
+  ZeroMemory(name);
 }
 
 Module::~Module() {
@@ -507,7 +507,7 @@ ScriptModule::~ScriptModule() {
 ActionInvoke::ActionInvoke() {}
 
 Action::Action() : type(ActionType::Get), module_var(kInvalidIndex) {
-  WABT_ZERO_MEMORY(name);
+  ZeroMemory(name);
 }
 
 Action::~Action() {

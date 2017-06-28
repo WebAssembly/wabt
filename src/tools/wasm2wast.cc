@@ -101,13 +101,13 @@ int ProgramMain(int argc, char** argv) {
   char* data;
   size_t size;
   result = read_file(s_infile.c_str(), &data, &size);
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     BinaryErrorHandlerFile error_handler;
     Module module;
     result = read_binary_ir(s_infile.c_str(), data, size,
                             &s_read_binary_options, &error_handler, &module);
-    if (WABT_SUCCEEDED(result)) {
-      if (WABT_SUCCEEDED(result) && s_validate) {
+    if (Succeeded(result)) {
+      if (Succeeded(result) && s_validate) {
         // TODO(binji): Would be nicer to use a builder pattern for an option
         // struct here, e.g.:
         //
@@ -123,14 +123,14 @@ int ProgramMain(int argc, char** argv) {
       if (s_generate_names)
         result = generate_names(&module);
 
-      if (WABT_SUCCEEDED(result)) {
+      if (Succeeded(result)) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied
          * (because the index is invalid, say) it should just be skipped. */
         Result dummy_result = apply_names(&module);
         WABT_USE(dummy_result);
       }
 
-      if (WABT_SUCCEEDED(result)) {
+      if (Succeeded(result)) {
         FileWriter writer(!s_outfile.empty() ? FileWriter(s_outfile.c_str())
                                              : FileWriter(stdout));
         result = write_wat(&writer, &module, &s_write_wat_options);

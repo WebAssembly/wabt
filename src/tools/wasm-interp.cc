@@ -310,11 +310,11 @@ static wabt::Result read_module(const char* module_filename,
   *out_module = nullptr;
 
   result = read_file(module_filename, &data, &size);
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     result = read_binary_interpreter(env, data, size, &s_read_binary_options,
                                      error_handler, out_module);
 
-    if (WABT_SUCCEEDED(result)) {
+    if (Succeeded(result)) {
       if (s_verbose)
         env->DisassembleModule(s_stdout_stream.get(), *out_module);
     }
@@ -455,7 +455,7 @@ static wabt::Result read_and_run_module(const char* module_filename) {
   BinaryErrorHandlerFile error_handler;
   DefinedModule* module = nullptr;
   result = read_module(module_filename, &env, &error_handler, &module);
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     Thread thread(&env, s_thread_options);
     interpreter::Result iresult = run_start_function(&thread, module);
     if (iresult == interpreter::Result::Ok) {
@@ -481,7 +481,7 @@ struct Context {
         command_line_number(0),
         passed(0),
         total(0) {
-    WABT_ZERO_MEMORY(source_filename);
+    ZeroMemory(source_filename);
   }
 
   Environment env;
@@ -510,8 +510,8 @@ enum class ActionType {
 
 struct Action {
   Action() {
-    WABT_ZERO_MEMORY(module_name);
-    WABT_ZERO_MEMORY(field_name);
+    ZeroMemory(module_name);
+    ZeroMemory(field_name);
   }
 
   ActionType type = ActionType::Invoke;
@@ -522,7 +522,7 @@ struct Action {
 
 #define CHECK_RESULT(x)           \
   do {                            \
-    if (WABT_FAILED(x))           \
+    if (Failed(x))                \
       return wabt::Result::Error; \
   } while (0)
 
@@ -644,7 +644,7 @@ static wabt::Result parse_uint32(Context* ctx, uint32_t* out_int) {
 }
 
 static wabt::Result parse_string(Context* ctx, StringSlice* out_string) {
-  WABT_ZERO_MEMORY(*out_string);
+  ZeroMemory(*out_string);
 
   skip_whitespace(ctx);
   if (read_char(ctx) != '"') {
@@ -703,14 +703,14 @@ static wabt::Result parse_string(Context* ctx, StringSlice* out_string) {
 static wabt::Result parse_key_string_value(Context* ctx,
                                            const char* key,
                                            StringSlice* out_string) {
-  WABT_ZERO_MEMORY(*out_string);
+  ZeroMemory(*out_string);
   EXPECT_KEY(key);
   return parse_string(ctx, out_string);
 }
 
 static wabt::Result parse_opt_name_string_value(Context* ctx,
                                                 StringSlice* out_string) {
-  WABT_ZERO_MEMORY(*out_string);
+  ZeroMemory(*out_string);
   if (match(ctx, "\"name\"")) {
     EXPECT(":");
     CHECK_RESULT(parse_string(ctx, out_string));
@@ -856,7 +856,7 @@ static wabt::Result parse_action(Context* ctx, Action* out_action) {
 
 static wabt::Result parse_module_type(Context* ctx, ModuleType* out_type) {
   StringSlice module_type_str;
-  WABT_ZERO_MEMORY(module_type_str);
+  ZeroMemory(module_type_str);
 
   PARSE_KEY_STRING_VALUE("module_type", &module_type_str);
   if (string_slice_eq_cstr(&module_type_str, "text")) {
@@ -900,7 +900,7 @@ static wabt::Result on_module_command(Context* ctx,
   wabt::Result result =
       read_module(path, &ctx->env, &error_handler, &ctx->last_module);
 
-  if (WABT_FAILED(result)) {
+  if (Failed(result)) {
     ctx->env.ResetToMarkPoint(mark);
     print_command_error(ctx, "error reading module: \"%s\"", path);
     delete[] path;
@@ -971,7 +971,7 @@ static wabt::Result on_action_command(Context* ctx, Action* action) {
   ctx->total++;
   wabt::Result result =
       run_action(ctx, action, &iresult, &results, RunVerbosity::Verbose);
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
       ctx->passed++;
     } else {
@@ -1034,7 +1034,7 @@ static wabt::Result on_assert_malformed_command(Context* ctx,
   char* path = create_module_path(ctx, filename);
   wabt::Result result =
       read_invalid_module(ctx, path, &env, module_type, "assert_malformed");
-  if (WABT_FAILED(result)) {
+  if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
@@ -1077,7 +1077,7 @@ static wabt::Result on_assert_unlinkable_command(Context* ctx,
                                             "assert_unlinkable");
   ctx->env.ResetToMarkPoint(mark);
 
-  if (WABT_FAILED(result)) {
+  if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
@@ -1100,7 +1100,7 @@ static wabt::Result on_assert_invalid_command(Context* ctx,
   char* path = create_module_path(ctx, filename);
   wabt::Result result =
       read_invalid_module(ctx, path, &env, module_type, "assert_invalid");
-  if (WABT_FAILED(result)) {
+  if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
@@ -1123,7 +1123,7 @@ static wabt::Result on_assert_uninstantiable_command(Context* ctx,
   Environment::MarkPoint mark = ctx->env.Mark();
   wabt::Result result = read_module(path, &ctx->env, &error_handler, &module);
 
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     interpreter::Result iresult = run_start_function(&ctx->thread, module);
     if (iresult == interpreter::Result::Ok) {
       print_command_error(ctx, "expected error running start function: \"%s\"",
@@ -1174,7 +1174,7 @@ static wabt::Result on_assert_return_command(
   wabt::Result result =
       run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
 
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
       if (results.size() == expected.size()) {
         for (size_t i = 0; i < results.size(); ++i) {
@@ -1207,7 +1207,7 @@ static wabt::Result on_assert_return_command(
     }
   }
 
-  if (WABT_SUCCEEDED(result))
+  if (Succeeded(result))
     ctx->passed++;
 
   return result;
@@ -1222,7 +1222,7 @@ static wabt::Result on_assert_return_nan_command(Context* ctx,
   ctx->total++;
   wabt::Result result =
       run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
       if (results.size() != 1) {
         print_command_error(ctx, "expected one result, got %" PRIzd,
@@ -1274,7 +1274,7 @@ static wabt::Result on_assert_return_nan_command(Context* ctx,
     }
   }
 
-  if (WABT_SUCCEEDED(result))
+  if (Succeeded(result))
     ctx->passed++;
 
   return wabt::Result::Ok;
@@ -1289,7 +1289,7 @@ static wabt::Result on_assert_trap_command(Context* ctx,
   ctx->total++;
   wabt::Result result =
       run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     if (iresult != interpreter::Result::Ok) {
       ctx->passed++;
     } else {
@@ -1309,7 +1309,7 @@ static wabt::Result on_assert_exhaustion_command(Context* ctx, Action* action) {
   ctx->total++;
   wabt::Result result =
       run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     if (iresult == interpreter::Result::TrapCallStackExhausted ||
         iresult == interpreter::Result::TrapValueStackExhausted) {
       ctx->passed++;
@@ -1328,8 +1328,8 @@ static wabt::Result parse_command(Context* ctx) {
   if (match(ctx, "\"module\"")) {
     StringSlice name;
     StringSlice filename;
-    WABT_ZERO_MEMORY(name);
-    WABT_ZERO_MEMORY(filename);
+    ZeroMemory(name);
+    ZeroMemory(filename);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1348,8 +1348,8 @@ static wabt::Result parse_command(Context* ctx) {
   } else if (match(ctx, "\"register\"")) {
     StringSlice as;
     StringSlice name;
-    WABT_ZERO_MEMORY(as);
-    WABT_ZERO_MEMORY(name);
+    ZeroMemory(as);
+    ZeroMemory(name);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1361,8 +1361,8 @@ static wabt::Result parse_command(Context* ctx) {
     StringSlice filename;
     StringSlice text;
     ModuleType module_type;
-    WABT_ZERO_MEMORY(filename);
-    WABT_ZERO_MEMORY(text);
+    ZeroMemory(filename);
+    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1377,8 +1377,8 @@ static wabt::Result parse_command(Context* ctx) {
     StringSlice filename;
     StringSlice text;
     ModuleType module_type;
-    WABT_ZERO_MEMORY(filename);
-    WABT_ZERO_MEMORY(text);
+    ZeroMemory(filename);
+    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1393,8 +1393,8 @@ static wabt::Result parse_command(Context* ctx) {
     StringSlice filename;
     StringSlice text;
     ModuleType module_type;
-    WABT_ZERO_MEMORY(filename);
-    WABT_ZERO_MEMORY(text);
+    ZeroMemory(filename);
+    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1409,8 +1409,8 @@ static wabt::Result parse_command(Context* ctx) {
     StringSlice filename;
     StringSlice text;
     ModuleType module_type;
-    WABT_ZERO_MEMORY(filename);
-    WABT_ZERO_MEMORY(text);
+    ZeroMemory(filename);
+    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1462,7 +1462,7 @@ static wabt::Result parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_trap\"")) {
     Action action;
     StringSlice text;
-    WABT_ZERO_MEMORY(text);
+    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1474,7 +1474,7 @@ static wabt::Result parse_command(Context* ctx) {
   } else if (match(ctx, "\"assert_exhaustion\"")) {
     Action action;
     StringSlice text;
-    WABT_ZERO_MEMORY(text);
+    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1520,7 +1520,7 @@ static wabt::Result read_and_run_spec_json(const char* spec_json_filename) {
   char* data;
   size_t size;
   wabt::Result result = read_file(spec_json_filename, &data, &size);
-  if (WABT_FAILED(result))
+  if (Failed(result))
     return wabt::Result::Error;
 
   ctx.json_data = data;

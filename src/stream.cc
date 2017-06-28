@@ -39,7 +39,7 @@ void Stream::WriteDataAt(size_t at,
                          size_t size,
                          const char* desc,
                          PrintChars print_chars) {
-  if (WABT_FAILED(result_))
+  if (Failed(result_))
     return;
   if (log_stream_) {
     log_stream_->WriteMemoryDump(src, size, at, print_chars, nullptr, desc);
@@ -56,7 +56,7 @@ void Stream::WriteData(const void* src,
 }
 
 void Stream::MoveData(size_t dst_offset, size_t src_offset, size_t size) {
-  if (WABT_FAILED(result_))
+  if (Failed(result_))
     return;
   if (log_stream_) {
     log_stream_->Writef(

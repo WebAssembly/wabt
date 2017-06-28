@@ -73,7 +73,7 @@ Result dump_file(const char* filename) {
   char* char_data;
   size_t size;
   Result result = read_file(filename, &char_data, &size);
-  if (WABT_FAILED(result))
+  if (Failed(result))
     return result;
 
   uint8_t* data = reinterpret_cast<uint8_t*>(char_data);
@@ -88,7 +88,7 @@ Result dump_file(const char* filename) {
   // Pass 0: Prepass
   s_objdump_options.mode = ObjdumpMode::Prepass;
   result = read_binary_objdump(data, size, &s_objdump_options, &state);
-  if (WABT_FAILED(result))
+  if (Failed(result))
     goto done;
   s_objdump_options.log_stream = nullptr;
 
@@ -96,7 +96,7 @@ Result dump_file(const char* filename) {
   if (s_objdump_options.headers) {
     s_objdump_options.mode = ObjdumpMode::Headers;
     result = read_binary_objdump(data, size, &s_objdump_options, &state);
-    if (WABT_FAILED(result))
+    if (Failed(result))
       goto done;
   }
 
@@ -104,7 +104,7 @@ Result dump_file(const char* filename) {
   if (s_objdump_options.details) {
     s_objdump_options.mode = ObjdumpMode::Details;
     result = read_binary_objdump(data, size, &s_objdump_options, &state);
-    if (WABT_FAILED(result))
+    if (Failed(result))
       goto done;
   }
 
@@ -112,7 +112,7 @@ Result dump_file(const char* filename) {
   if (s_objdump_options.disassemble) {
     s_objdump_options.mode = ObjdumpMode::Disassemble;
     result = read_binary_objdump(data, size, &s_objdump_options, &state);
-    if (WABT_FAILED(result))
+    if (Failed(result))
       goto done;
   }
 
@@ -142,7 +142,7 @@ int ProgramMain(int argc, char** argv) {
   }
 
   for (const char* filename: s_infiles) {
-    if (WABT_FAILED(dump_file(filename))) {
+    if (Failed(dump_file(filename))) {
       return 1;
     }
   }

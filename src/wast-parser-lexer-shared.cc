@@ -55,7 +55,7 @@ void wast_format_error(SourceErrorHandler* error_handler,
     size_t source_line_max_length = error_handler->source_line_max_length();
     Result result = lexer->line_finder().GetSourceLine(
         *loc, source_line_max_length, &source_line);
-    if (WABT_FAILED(result)) {
+    if (Failed(result)) {
       // If this fails, it means that we've probably screwed up the lexer. Blow
       // up.
       WABT_FATAL("error getting the source line.\n");

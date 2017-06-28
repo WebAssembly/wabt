@@ -69,7 +69,7 @@ BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
       objdump_state(objdump_state),
       data(data),
       size(size) {
-  WABT_ZERO_MEMORY(section_starts);
+  ZeroMemory(section_starts);
 }
 
 Result BinaryReaderObjdumpBase::BeginSection(BinarySection section_code,

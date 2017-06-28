@@ -59,7 +59,7 @@
 #define BEGIN(c) cond = (c)
 #define FILL(n)                                \
   do {                                         \
-    if (WABT_FAILED(Fill(loc, parser, (n)))) { \
+    if (Failed(Fill(loc, parser, (n)))) {      \
       int value = NAME_TO_VALUE(EOF);          \
       SetToken(value);                         \
       return PopLookaheadToken(lval, loc);     \

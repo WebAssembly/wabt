@@ -140,13 +140,13 @@ int ProgramMain(int argc, char** argv) {
   Result result = parse_wast(lexer.get(), &script, &error_handler,
                              &s_parse_options);
 
-  if (WABT_SUCCEEDED(result)) {
+  if (Succeeded(result)) {
     result = resolve_names_script(lexer.get(), script, &error_handler);
 
-    if (WABT_SUCCEEDED(result) && s_validate)
+    if (Succeeded(result) && s_validate)
       result = validate_script(lexer.get(), script, &error_handler);
 
-    if (WABT_SUCCEEDED(result)) {
+    if (Succeeded(result)) {
       if (s_spec) {
         s_write_binary_spec_options.json_filename = s_outfile;
         s_write_binary_spec_options.write_binary_options =
@@ -163,7 +163,7 @@ int ProgramMain(int argc, char** argv) {
           WABT_FATAL("no module found\n");
         }
 
-        if (WABT_SUCCEEDED(result))
+        if (Succeeded(result))
           write_buffer_to_file(s_outfile, writer.output_buffer());
       }
     }

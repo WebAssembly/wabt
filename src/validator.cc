@@ -206,7 +206,7 @@ Result Validator::CheckVar(Index max_index,
 
 Result Validator::CheckFuncVar(const Var* var, const Func** out_func) {
   Index index;
-  if (WABT_FAILED(
+  if (Failed(
           CheckVar(current_module_->funcs.size(), var, "function", &index))) {
     return Result::Error;
   }
@@ -220,7 +220,7 @@ Result Validator::CheckGlobalVar(const Var* var,
                                  const Global** out_global,
                                  Index* out_global_index) {
   Index index;
-  if (WABT_FAILED(
+  if (Failed(
           CheckVar(current_module_->globals.size(), var, "global", &index))) {
     return Result::Error;
   }
@@ -234,7 +234,7 @@ Result Validator::CheckGlobalVar(const Var* var,
 
 Type Validator::GetGlobalVarTypeOrAny(const Var* var) {
   const Global* global;
-  if (WABT_SUCCEEDED(CheckGlobalVar(var, &global, nullptr)))
+  if (Succeeded(CheckGlobalVar(var, &global, nullptr)))
     return global->type;
   return Type::Any;
 }
@@ -242,8 +242,8 @@ Type Validator::GetGlobalVarTypeOrAny(const Var* var) {
 Result Validator::CheckFuncTypeVar(const Var* var,
                                    const FuncType** out_func_type) {
   Index index;
-  if (WABT_FAILED(CheckVar(current_module_->func_types.size(), var,
-                           "function type", &index))) {
+  if (Failed(CheckVar(current_module_->func_types.size(), var,
+                      "function type", &index))) {
     return Result::Error;
   }
 
@@ -254,8 +254,7 @@ Result Validator::CheckFuncTypeVar(const Var* var,
 
 Result Validator::CheckTableVar(const Var* var, const Table** out_table) {
   Index index;
-  if (WABT_FAILED(
-          CheckVar(current_module_->tables.size(), var, "table", &index))) {
+  if (Failed(CheckVar(current_module_->tables.size(), var, "table", &index))) {
     return Result::Error;
   }
 
@@ -266,7 +265,7 @@ Result Validator::CheckTableVar(const Var* var, const Table** out_table) {
 
 Result Validator::CheckMemoryVar(const Var* var, const Memory** out_memory) {
   Index index;
-  if (WABT_FAILED(
+  if (Failed(
           CheckVar(current_module_->memories.size(), var, "memory", &index))) {
     return Result::Error;
   }
@@ -458,7 +457,7 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::Call: {
       const Func* callee;
-      if (WABT_SUCCEEDED(CheckFuncVar(&cast<CallExpr>(expr)->var, &callee))) {
+      if (Succeeded(CheckFuncVar(&cast<CallExpr>(expr)->var, &callee))) {
         typechecker_.OnCall(&callee->decl.sig.param_types,
                             &callee->decl.sig.result_types);
       }
@@ -470,8 +469,8 @@ void Validator::CheckExpr(const Expr* expr) {
       if (current_module_->tables.size() == 0) {
         PrintError(&expr->loc, "found call_indirect operator, but no table");
       }
-      if (WABT_SUCCEEDED(CheckFuncTypeVar(&cast<CallIndirectExpr>(expr)->var,
-                                          &func_type))) {
+      if (Succeeded(CheckFuncTypeVar(&cast<CallIndirectExpr>(expr)->var,
+                                     &func_type))) {
         typechecker_.OnCallIndirect(&func_type->sig.param_types,
                                     &func_type->sig.result_types);
       }
@@ -586,8 +585,7 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::Throw:
       const Exception* except;
-      if (WABT_SUCCEEDED(
-              CheckExceptVar(&cast<ThrowExpr>(expr)->var, &except))) {
+      if (Succeeded(CheckExceptVar(&cast<ThrowExpr>(expr)->var, &except))) {
         typechecker_.OnThrow(&except->sig);
       }
       break;
@@ -614,7 +612,7 @@ void Validator::CheckExpr(const Expr* expr) {
           if (found_catch_all)
             PrintError(&catch_->loc, "Appears after catch all block");
           const Exception* except = nullptr;
-          if (WABT_SUCCEEDED(CheckExceptVar(&catch_->var, &except))) {
+          if (Succeeded(CheckExceptVar(&catch_->var, &except))) {
             typechecker_.OnCatch(&except->sig);
           }
         }
@@ -653,7 +651,7 @@ void Validator::CheckFunc(const Location* loc, const Func* func) {
   }
   if (func->decl.has_func_type) {
     const FuncType* func_type;
-    if (WABT_SUCCEEDED(CheckFuncTypeVar(&func->decl.type_var, &func_type))) {
+    if (Succeeded(CheckFuncTypeVar(&func->decl.type_var, &func_type))) {
       CheckFuncSignatureMatchesFuncType(loc, func->decl.sig, func_type);
     }
   }
@@ -691,8 +689,8 @@ void Validator::CheckConstInitExpr(const Location* loc,
       case ExprType::GetGlobal: {
         const Global* ref_global = nullptr;
         Index ref_global_index;
-        if (WABT_FAILED(CheckGlobalVar(&cast<GetGlobalExpr>(expr)->var,
-                                       &ref_global, &ref_global_index))) {
+        if (Failed(CheckGlobalVar(&cast<GetGlobalExpr>(expr)->var,
+                                  &ref_global, &ref_global_index))) {
           return;
         }
 
@@ -758,11 +756,11 @@ void Validator::CheckElemSegments(const Module* module) {
     if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(field)) {
       ElemSegment* elem_segment = elem_segment_field->elem_segment;
       const Table* table;
-      if (!WABT_SUCCEEDED(CheckTableVar(&elem_segment->table_var, &table)))
+      if (!Succeeded(CheckTableVar(&elem_segment->table_var, &table)))
         continue;
 
       for (const Var& var : elem_segment->vars) {
-        if (!WABT_SUCCEEDED(CheckFuncVar(&var, nullptr)))
+        if (!Succeeded(CheckFuncVar(&var, nullptr)))
           continue;
       }
 
@@ -783,7 +781,7 @@ void Validator::CheckDataSegments(const Module* module) {
     if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(field)) {
       DataSegment* data_segment = data_segment_field->data_segment;
       const Memory* memory;
-      if (!WABT_SUCCEEDED(CheckMemoryVar(&data_segment->memory_var, &memory)))
+      if (!Succeeded(CheckMemoryVar(&data_segment->memory_var, &memory)))
         continue;
 
       CheckConstInitExpr(&field->loc, data_segment->offset, Type::I32,
@@ -836,7 +834,7 @@ void Validator::CheckExport(const Location* loc, const Export* export_) {
       break;
     case ExternalKind::Global: {
       const Global* global;
-      if (WABT_SUCCEEDED(CheckGlobalVar(&export_->var, &global, nullptr))) {
+      if (Succeeded(CheckGlobalVar(&export_->var, &global, nullptr))) {
         if (global->mutable_) {
           PrintError(&export_->var.loc, "mutable globals cannot be exported");
         }
@@ -1009,7 +1007,7 @@ Result Validator::CheckGet(const Action* action, Type* out_type) {
 
 Result Validator::CheckExceptVar(const Var* var, const Exception** out_except) {
   Index index;
-  if (WABT_FAILED(
+  if (Failed(
           CheckVar(current_module_->excepts.size(), var, "except", &index))) {
     return Result::Error;
   }
@@ -1035,7 +1033,7 @@ void Validator::CheckExcept(const Location* loc, const Exception* except) {
 
 Validator::ActionResult Validator::CheckAction(const Action* action) {
   ActionResult result;
-  WABT_ZERO_MEMORY(result);
+  ZeroMemory(result);
 
   switch (action->type) {
     case ActionType::Invoke:
@@ -1045,7 +1043,7 @@ Validator::ActionResult Validator::CheckAction(const Action* action) {
       break;
 
     case ActionType::Get:
-      if (WABT_SUCCEEDED(CheckGet(action, &result.type)))
+      if (Succeeded(CheckGet(action, &result.type)))
         result.kind = ActionResult::Kind::Type;
       else
         result.kind = ActionResult::Kind::Error;

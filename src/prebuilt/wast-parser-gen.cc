@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.0.4.  */
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "3.0.4"
+#define YYBISON_VERSION "3.0.2"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -2605,8 +2605,8 @@ yyreduce:
   case 23:
 #line 384 "src/wast-parser.y" /* yacc.c:1646  */
     {
-      if (WABT_FAILED(parse_uint64((yyvsp[0].literal).text.start,
-                                        (yyvsp[0].literal).text.start + (yyvsp[0].literal).text.length, &(yyval.u64)))) {
+      if (Failed(parse_uint64((yyvsp[0].literal).text.start,
+                              (yyvsp[0].literal).text.start + (yyvsp[0].literal).text.length, &(yyval.u64)))) {
         wast_parser_error(&(yylsp[0]), lexer, parser,
                           "invalid int " PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].literal).text));
@@ -2680,7 +2680,7 @@ yyreduce:
 
   case 31:
 #line 430 "src/wast-parser.y" /* yacc.c:1646  */
-    { WABT_ZERO_MEMORY((yyval.text)); }
+    { ZeroMemory((yyval.text)); }
 #line 2685 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
@@ -2692,7 +2692,7 @@ yyreduce:
 
   case 34:
 #line 438 "src/wast-parser.y" /* yacc.c:1646  */
-    { WABT_ZERO_MEMORY((yyval.text)); }
+    { ZeroMemory((yyval.text)); }
 #line 2697 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
@@ -2706,8 +2706,8 @@ yyreduce:
 #line 444 "src/wast-parser.y" /* yacc.c:1646  */
     {
       uint64_t offset64;
-      if (WABT_FAILED(parse_int64((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &offset64,
-                                  ParseIntType::SignedAndUnsigned))) {
+      if (Failed(parse_int64((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &offset64,
+                             ParseIntType::SignedAndUnsigned))) {
         wast_parser_error(&(yylsp[0]), lexer, parser,
                           "invalid offset \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
@@ -2730,8 +2730,8 @@ yyreduce:
   case 39:
 #line 461 "src/wast-parser.y" /* yacc.c:1646  */
     {
-      if (WABT_FAILED(parse_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32),
-                                  ParseIntType::UnsignedOnly))) {
+      if (Failed(parse_int32((yyvsp[0].text).start, (yyvsp[0].text).start + (yyvsp[0].text).length, &(yyval.u32),
+                             ParseIntType::UnsignedOnly))) {
         wast_parser_error(&(yylsp[0]), lexer, parser,
                           "invalid alignment \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].text)));
@@ -2907,8 +2907,8 @@ yyreduce:
     {
       Const const_;
       const_.loc = (yylsp[-1]);
-      if (WABT_FAILED(parse_const((yyvsp[-1].type), (yyvsp[0].literal).type, (yyvsp[0].literal).text.start,
-                                  (yyvsp[0].literal).text.start + (yyvsp[0].literal).text.length, &const_))) {
+      if (Failed(parse_const((yyvsp[-1].type), (yyvsp[0].literal).type, (yyvsp[0].literal).text.start,
+                             (yyvsp[0].literal).text.start + (yyvsp[0].literal).text.length, &const_))) {
         wast_parser_error(&(yylsp[0]), lexer, parser,
                           "invalid literal \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG((yyvsp[0].literal).text));
@@ -3307,7 +3307,7 @@ yyreduce:
 
   case 106:
 #line 785 "src/wast-parser.y" /* yacc.c:1646  */
-    { WABT_ZERO_MEMORY((yyval.expr_list)); }
+    { ZeroMemory((yyval.expr_list)); }
 #line 3312 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
@@ -3324,7 +3324,7 @@ yyreduce:
 
   case 108:
 #line 794 "src/wast-parser.y" /* yacc.c:1646  */
-    { WABT_ZERO_MEMORY((yyval.expr_list)); }
+    { ZeroMemory((yyval.expr_list)); }
 #line 3329 "src/prebuilt/wast-parser-gen.cc" /* yacc.c:1646  */
     break;
 
@@ -4095,7 +4095,7 @@ yyreduce:
                        &error_handler, (yyval.module));
         (yyval.module)->name = (yyvsp[0].script_module)->binary.name;
         (yyval.module)->loc = (yyvsp[0].script_module)->binary.loc;
-        WABT_ZERO_MEMORY((yyvsp[0].script_module)->binary.name);
+        ZeroMemory((yyvsp[0].script_module)->binary.name);
       }
       delete (yyvsp[0].script_module);
     }
@@ -4319,8 +4319,8 @@ yyreduce:
 #line 1473 "src/wast-parser.y" /* yacc.c:1646  */
     {
       (yyval.const_).loc = (yylsp[-2]);
-      if (WABT_FAILED(parse_const((yyvsp[-2].type), (yyvsp[-1].literal).type, (yyvsp[-1].literal).text.start,
-                                  (yyvsp[-1].literal).text.start + (yyvsp[-1].literal).text.length, &(yyval.const_)))) {
+      if (Failed(parse_const((yyvsp[-2].type), (yyvsp[-1].literal).type, (yyvsp[-1].literal).text.start,
+                             (yyvsp[-1].literal).text.start + (yyvsp[-1].literal).text.length, &(yyval.const_)))) {
         wast_parser_error(&(yylsp[-1]), lexer, parser,
                           "invalid literal \"" PRIstringslice "\"",
                           WABT_PRINTF_STRING_SLICE_ARG((yyvsp[-1].literal).text));
@@ -4698,7 +4698,7 @@ void append_expr(ExprList* expr_list, Expr* expr) {
 
 ExprList join_exprs1(Location* loc, Expr* expr1) {
   ExprList result;
-  WABT_ZERO_MEMORY(result);
+  ZeroMemory(result);
   append_expr(&result, expr1);
   expr1->loc = *loc;
   return result;
@@ -4706,7 +4706,7 @@ ExprList join_exprs1(Location* loc, Expr* expr1) {
 
 ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2) {
   ExprList result;
-  WABT_ZERO_MEMORY(result);
+  ZeroMemory(result);
   append_expr_list(&result, expr1);
   append_expr(&result, expr2);
   expr2->loc = *loc;
@@ -4768,8 +4768,8 @@ size_t copy_string_contents(StringSlice* text, char* dest) {
           // sequence.
           uint32_t hi;
           uint32_t lo;
-          if (WABT_SUCCEEDED(parse_hexdigit(src[0], &hi)) &&
-              WABT_SUCCEEDED(parse_hexdigit(src[1], &lo))) {
+          if (Succeeded(parse_hexdigit(src[0], &hi)) &&
+              Succeeded(parse_hexdigit(src[1], &lo))) {
             *dest++ = (hi << 4) | lo;
           } else {
             assert(0);
@@ -5028,7 +5028,7 @@ Result parse_wast(WastLexer* lexer, Script** out_script,
                   SourceErrorHandler* error_handler,
                   WastParseOptions* options) {
   WastParser parser;
-  WABT_ZERO_MEMORY(parser);
+  ZeroMemory(parser);
   static WastParseOptions default_options;
   if (options == nullptr)
     options = &default_options;
