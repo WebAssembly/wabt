@@ -352,6 +352,7 @@ if (NOT EMSCRIPTEN)
 
     # wabt-unittests
     set(UNITTESTS_SRCS
+      src/test-intrusive-list.cc
       src/test-string-view.cc
       src/test-utf8.cc
       third_party/gtest/googletest/src/gtest_main.cc
