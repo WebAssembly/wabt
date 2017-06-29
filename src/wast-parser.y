@@ -115,10 +115,6 @@ static bool is_power_of_two(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static ExprList join_exprs1(Location* loc, Expr* expr1);
-static ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2);
-static void append_expr_list(ExprList* expr_list, ExprList* expr);
-
 static Result parse_const(Type type,
                           LiteralType literal_type,
                           const char* s,
@@ -235,7 +231,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %destructor { delete $$; } <consts>
 %destructor { delete $$; } <export_>
 %destructor { delete $$; } <expr>
-%destructor { DestroyExprList($$.first); } <expr_list>
+%destructor { delete $$; } <expr_list>
 %destructor { destroy_module_field_list(&$$); } <module_fields>
 %destructor { delete $$; } <func>
 %destructor { delete $$; } <func_sig>
@@ -473,8 +469,14 @@ align_opt :
 ;
 
 instr :
-    plain_instr { $$ = join_exprs1(&@1, $1); }
-  | block_instr { $$ = join_exprs1(&@1, $1); }
+    plain_instr {
+      $$ = new ExprList($1);
+      $$->back().loc = @1;
+    }
+  | block_instr {
+      $$ = new ExprList($1);
+      $$->back().loc = @1;
+    }
   | expr
 ;
 
@@ -594,13 +596,14 @@ block_instr :
       $$ = expr;
     }
   | IF labeling_opt block END labeling_opt {
-      auto expr = new IfExpr($3, nullptr);
+      auto expr = new IfExpr($3);
       expr->true_->label = $2;
       CHECK_END_LABEL(@5, expr->true_->label, $5);
       $$ = expr;
     }
   | IF labeling_opt block ELSE labeling_opt instr_list END labeling_opt {
-      auto expr = new IfExpr($3, $6.first);
+      auto expr = new IfExpr($3, std::move(*$6));
+      delete $6;
       expr->true_->label = $2;
       CHECK_END_LABEL(@5, expr->true_->label, $5);
       CHECK_END_LABEL(@8, expr->true_->label, $8);
@@ -624,21 +627,22 @@ block :
       delete $1;
     }
   | instr_list {
-      $$ = new Block();
-      $$->first = $1.first;
+      $$ = new Block(std::move(*$1));
+      delete $1;
     }
 ;
 
 plain_catch :
     CATCH var instr_list {
-      $$ = new Catch(std::move(*$2), $3.first);
-      $$->loc = @1;
+      $$ = new Catch(std::move(*$2), std::move(*$3));
       delete $2;
+      delete $3;
+      $$->loc = @1;
     }
   ;
 plain_catch_all :
     CATCH_ALL instr_list {
-      $$ = new Catch($2.first);
+      $$ = new Catch(std::move(*$2));
       $$->loc = @1;
     }
   ;
@@ -666,27 +670,32 @@ expr :
 
 expr1 :
     plain_instr expr_list {
-      $$ = join_exprs2(&@1, &$2, $1);
+      $$ = $2;
+      $$->push_back($1);
+      $1->loc = @1;
     }
   | BLOCK labeling_opt block {
       auto expr = new BlockExpr($3);
       expr->block->label = $2;
-      $$ = join_exprs1(&@1, expr);
+      expr->loc = @1;
+      $$ = new ExprList(expr);
     }
   | LOOP labeling_opt block {
       auto expr = new LoopExpr($3);
       expr->block->label = $2;
-      $$ = join_exprs1(&@1, expr);
+      expr->loc = @1;
+      $$ = new ExprList(expr);
     }
   | IF labeling_opt if_block {
       $$ = $3;
-      IfExpr* if_ = cast<IfExpr>($3.last);
+      IfExpr* if_ = cast<IfExpr>(&$3->back());
       if_->true_->label = $2;
     }
   | try_check labeling_opt try_ {
       Block* block = $3->block;
       block->label = $2;
-      $$ = join_exprs1(&@1, $3);
+      $3->loc = @1;
+      $$ = new ExprList($3);
     }
   ;
 
@@ -699,7 +708,8 @@ try_ :
     }
   | instr_list catch_sexp_list {
       Block* block = new Block();
-      block->first = $1.first;
+      block->exprs = std::move(*$1);
+      delete $1;
       $$ = $2;
       $$->block = block;
     }
@@ -729,7 +739,7 @@ catch_sexp_list :
 
 if_block :
     block_sig if_block {
-      IfExpr* if_ = cast<IfExpr>($2.last);
+      IfExpr* if_ = cast<IfExpr>(&$2->back());
       $$ = $2;
       Block* true_ = if_->true_;
       true_->sig.insert(true_->sig.end(), $1->begin(), $1->end());
@@ -739,28 +749,47 @@ if_block :
 ;
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      Expr* expr = new IfExpr(new Block($3.first), $7.first);
-      $$ = join_exprs1(&@1, expr);
+      Expr* expr = new IfExpr(new Block(std::move(*$3)), std::move(*$7));
+      delete $3;
+      delete $7;
+      expr->loc = @1;
+      $$ = new ExprList(expr);
     }
   | LPAR THEN instr_list RPAR {
-      Expr* expr = new IfExpr(new Block($3.first), nullptr);
-      $$ = join_exprs1(&@1, expr);
+      Expr* expr = new IfExpr(new Block(std::move(*$3)));
+      delete $3;
+      expr->loc = @1;
+      $$ = new ExprList(expr);
     }
   | expr LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      Expr* expr = new IfExpr(new Block($4.first), $8.first);
-      $$ = join_exprs2(&@1, &$1, expr);
+      Expr* expr = new IfExpr(new Block(std::move(*$4)), std::move(*$8));
+      delete $4;
+      delete $8;
+      expr->loc = @1;
+      $$ = $1;
+      $$->push_back(expr);
     }
   | expr LPAR THEN instr_list RPAR {
-      Expr* expr = new IfExpr(new Block($4.first), nullptr);
-      $$ = join_exprs2(&@1, &$1, expr);
+      Expr* expr = new IfExpr(new Block(std::move(*$4)));
+      delete $4;
+      expr->loc = @1;
+      $$ = $1;
+      $$->push_back(expr);
     }
   | expr expr expr {
-      Expr* expr = new IfExpr(new Block($2.first), $3.first);
-      $$ = join_exprs2(&@1, &$1, expr);
+      Expr* expr = new IfExpr(new Block(std::move(*$2)), std::move(*$3));
+      delete $2;
+      delete $3;
+      expr->loc = @1;
+      $$ = $1;
+      $$->push_back(expr);
     }
   | expr expr {
-      Expr* expr = new IfExpr(new Block($2.first), nullptr);
-      $$ = join_exprs2(&@1, &$1, expr);
+      Expr* expr = new IfExpr(new Block(std::move(*$2)));
+      delete $2;
+      expr->loc = @1;
+      $$ = $1;
+      $$->push_back(expr);
     }
 ;
 
@@ -782,21 +811,19 @@ try_check :
   ;
 
 instr_list :
-    /* empty */ { ZeroMemory($$); }
+    /* empty */ { $$ = new ExprList(); }
   | instr instr_list {
-      $$.first = $1.first;
-      $1.last->next = $2.first;
-      $$.last = $2.last ? $2.last : $1.last;
-      $$.size = $1.size + $2.size;
+      $$ = $2;
+      $$->splice($$->begin(), std::move(*$1));
+      delete $1;
     }
 ;
 expr_list :
-    /* empty */ { ZeroMemory($$); }
+    /* empty */ { $$ = new ExprList(); }
   | expr expr_list {
-      $$.first = $1.first;
-      $1.last->next = $2.first;
-      $$.last = $2.last ? $2.last : $1.last;
-      $$.size = $1.size + $2.size;
+      $$ = $2;
+      $$->splice($$->begin(), std::move(*$1));
+      delete $1;
     }
 
 const_expr :
@@ -945,7 +972,8 @@ func_body :
 func_body1 :
     instr_list {
       $$ = new Func();
-      $$->first_expr = $1.first;
+      $$->exprs = std::move(*$1);
+      delete $1;
     }
   | LPAR LOCAL value_type_list RPAR func_body1 {
       $$ = $5;
@@ -975,7 +1003,8 @@ elem :
       auto elem_segment = new ElemSegment();
       elem_segment->table_var = std::move(*$3);
       delete $3;
-      elem_segment->offset = $4.first;
+      elem_segment->offset = std::move(*$4);
+      delete $4;
       elem_segment->vars = std::move(*$5);
       delete $5;
       $$ = new ElemSegmentModuleField(elem_segment, @2);
@@ -985,7 +1014,8 @@ elem :
       elem_segment->table_var.loc = @2;
       elem_segment->table_var.type = VarType::Index;
       elem_segment->table_var.index = 0;
-      elem_segment->offset = $3.first;
+      elem_segment->offset = std::move(*$3);
+      delete $3;
       elem_segment->vars = std::move(*$4);
       delete $4;
       $$ = new ElemSegmentModuleField(elem_segment, @2);
@@ -1031,8 +1061,8 @@ table_fields :
 
       auto elem_segment = new ElemSegment();
       elem_segment->table_var = Var(kInvalidIndex);
-      elem_segment->offset = new ConstExpr(Const(Const::I32(), 0));
-      elem_segment->offset->loc = @3;
+      elem_segment->offset.push_back(new ConstExpr(Const(Const::I32(), 0)));
+      elem_segment->offset.back().loc = @3;
       elem_segment->vars = std::move(*$4);
       delete $4;
       auto elem_field = new ElemSegmentModuleField(elem_segment, @3);
@@ -1046,7 +1076,8 @@ data :
       auto data_segment = new DataSegment();
       data_segment->memory_var = std::move(*$3);
       delete $3;
-      data_segment->offset = $4.first;
+      data_segment->offset = std::move(*$4);
+      delete $4;
       dup_text_list(&$5, &data_segment->data, &data_segment->size);
       destroy_text_list(&$5);
       $$ = new DataSegmentModuleField(data_segment, @2);
@@ -1056,7 +1087,8 @@ data :
       data_segment->memory_var.loc = @2;
       data_segment->memory_var.type = VarType::Index;
       data_segment->memory_var.index = 0;
-      data_segment->offset = $3.first;
+      data_segment->offset = std::move(*$3);
+      delete $3;
       dup_text_list(&$4, &data_segment->data, &data_segment->size);
       destroy_text_list(&$4);
       $$ = new DataSegmentModuleField(data_segment, @2);
@@ -1096,8 +1128,8 @@ memory_fields :
   | LPAR DATA text_list_opt RPAR {
       auto data_segment = new DataSegment();
       data_segment->memory_var = Var(kInvalidIndex);
-      data_segment->offset = new ConstExpr(Const(Const::I32(), 0));
-      data_segment->offset->loc = @2;
+      data_segment->offset.push_back(new ConstExpr(Const(Const::I32(), 0)));
+      data_segment->offset.back().loc = @2;
       dup_text_list(&$3, &data_segment->data, &data_segment->size);
       destroy_text_list(&$3);
       auto data_field = new DataSegmentModuleField(data_segment, @2);
@@ -1131,7 +1163,8 @@ global :
 global_fields :
     global_type const_expr {
       auto field = new GlobalModuleField($1);
-      field->global->init_expr = $2.first;
+      field->global->init_expr = std::move(*$2);
+      delete $2;
       $$.first = $$.last = field;
     }
   | inline_import global_type {
@@ -1570,43 +1603,6 @@ script_start :
 ;
 
 %%
-
-void append_expr_list(ExprList* expr_list, ExprList* expr) {
-  if (!expr->first)
-    return;
-  if (expr_list->last)
-    expr_list->last->next = expr->first;
-  else
-    expr_list->first = expr->first;
-  expr_list->last = expr->last;
-  expr_list->size += expr->size;
-}
-
-void append_expr(ExprList* expr_list, Expr* expr) {
-  if (expr_list->last)
-    expr_list->last->next = expr;
-  else
-    expr_list->first = expr;
-  expr_list->last = expr;
-  expr_list->size++;
-}
-
-ExprList join_exprs1(Location* loc, Expr* expr1) {
-  ExprList result;
-  ZeroMemory(result);
-  append_expr(&result, expr1);
-  expr1->loc = *loc;
-  return result;
-}
-
-ExprList join_exprs2(Location* loc, ExprList* expr1, Expr* expr2) {
-  ExprList result;
-  ZeroMemory(result);
-  append_expr_list(&result, expr1);
-  append_expr(&result, expr2);
-  expr2->loc = *loc;
-  return result;
-}
 
 Result parse_const(Type type,
                    LiteralType literal_type,

@@ -105,7 +105,7 @@ class Validator {
   void CheckAssertReturnNanType(const Location* loc,
                                 Type actual,
                                 const char* desc);
-  void CheckExprList(const Location* loc, const Expr* first);
+  void CheckExprList(const Location* loc, const ExprList& exprs);
   void CheckHasMemory(const Location* loc, Opcode opcode);
   void CheckBlockSig(const Location* loc,
                      Opcode opcode,
@@ -117,7 +117,7 @@ class Validator {
   void CheckFunc(const Location* loc, const Func* func);
   void PrintConstExprError(const Location* loc, const char* desc);
   void CheckConstInitExpr(const Location* loc,
-                          const Expr* expr,
+                          const ExprList& expr,
                           Type expected_type,
                           const char* desc);
   void CheckGlobal(const Location* loc, const Global* global);
@@ -395,11 +395,9 @@ void Validator::CheckAssertReturnNanType(const Location* loc,
   }
 }
 
-void Validator::CheckExprList(const Location* loc, const Expr* first) {
-  if (first) {
-    for (const Expr* expr = first; expr; expr = expr->next)
-      CheckExpr(expr);
-  }
+void Validator::CheckExprList(const Location* loc, const ExprList& exprs) {
+  for (const Expr& expr : exprs)
+    CheckExpr(&expr);
 }
 
 void Validator::CheckHasMemory(const Location* loc, Opcode opcode) {
@@ -431,7 +429,7 @@ void Validator::CheckExpr(const Expr* expr) {
       auto block_expr = cast<BlockExpr>(expr);
       CheckBlockSig(&block_expr->loc, Opcode::Block, &block_expr->block->sig);
       typechecker_.OnBlock(&block_expr->block->sig);
-      CheckExprList(&block_expr->loc, block_expr->block->first);
+      CheckExprList(&block_expr->loc, block_expr->block->exprs);
       typechecker_.OnEnd();
       break;
     }
@@ -512,8 +510,8 @@ void Validator::CheckExpr(const Expr* expr) {
       auto if_expr = cast<IfExpr>(expr);
       CheckBlockSig(&if_expr->loc, Opcode::If, &if_expr->true_->sig);
       typechecker_.OnIf(&if_expr->true_->sig);
-      CheckExprList(&if_expr->loc, if_expr->true_->first);
-      if (if_expr->false_) {
+      CheckExprList(&if_expr->loc, if_expr->true_->exprs);
+      if (!if_expr->false_.empty()) {
         typechecker_.OnElse();
         CheckExprList(&if_expr->loc, if_expr->false_);
       }
@@ -534,7 +532,7 @@ void Validator::CheckExpr(const Expr* expr) {
       auto loop_expr = cast<LoopExpr>(expr);
       CheckBlockSig(&loop_expr->loc, Opcode::Loop, &loop_expr->block->sig);
       typechecker_.OnLoop(&loop_expr->block->sig);
-      CheckExprList(&loop_expr->loc, loop_expr->block->first);
+      CheckExprList(&loop_expr->loc, loop_expr->block->exprs);
       typechecker_.OnEnd();
       break;
     }
@@ -598,7 +596,7 @@ void Validator::CheckExpr(const Expr* expr) {
       CheckBlockSig(&try_expr->loc, Opcode::Try, &try_expr->block->sig);
 
       typechecker_.OnTryBlock(&try_expr->block->sig);
-      CheckExprList(&try_expr->loc, try_expr->block->first);
+      CheckExprList(&try_expr->loc, try_expr->block->exprs);
 
       if (try_expr->catches.empty())
         PrintError(&try_expr->loc, "TryBlock: doesn't have any catch clauses");
@@ -616,7 +614,7 @@ void Validator::CheckExpr(const Expr* expr) {
             typechecker_.OnCatch(&except->sig);
           }
         }
-        CheckExprList(&catch_->loc, catch_->first);
+        CheckExprList(&catch_->loc, catch_->exprs);
       }
       typechecker_.OnEnd();
       try_contexts_.pop_back();
@@ -658,7 +656,7 @@ void Validator::CheckFunc(const Location* loc, const Func* func) {
 
   expr_loc_ = loc;
   typechecker_.BeginFunction(&func->decl.sig.result_types);
-  CheckExprList(loc, func->first_expr);
+  CheckExprList(loc, func->exprs);
   typechecker_.EndFunction();
   current_func_ = nullptr;
 }
@@ -671,15 +669,18 @@ void Validator::PrintConstExprError(const Location* loc, const char* desc) {
 }
 
 void Validator::CheckConstInitExpr(const Location* loc,
-                                   const Expr* expr,
+                                   const ExprList& exprs,
                                    Type expected_type,
                                    const char* desc) {
   Type type = Type::Void;
-  if (expr) {
-    if (expr->next) {
+  if (!exprs.empty()) {
+    if (exprs.size() > 1) {
       PrintConstExprError(loc, desc);
       return;
     }
+
+    const Expr* expr = &exprs.front();
+    loc = &expr->loc;
 
     switch (expr->type) {
       case ExprType::Const:
@@ -714,7 +715,7 @@ void Validator::CheckConstInitExpr(const Location* loc,
     }
   }
 
-  CheckType(expr ? &expr->loc : loc, type, expected_type, desc);
+  CheckType(loc, type, expected_type, desc);
 }
 
 void Validator::CheckGlobal(const Location* loc, const Global* global) {

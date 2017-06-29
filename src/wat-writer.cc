@@ -135,8 +135,8 @@ class WatWriter {
                   const char* start_text);
   void WriteConst(const Const* const_);
   void WriteExpr(const Expr* expr);
-  void WriteExprList(const Expr* first);
-  void WriteInitExpr(const Expr* expr);
+  void WriteExprList(const ExprList& exprs);
+  void WriteInitExpr(const ExprList& expr);
   void WriteTypeBindings(const char* prefix,
                          const Func* func,
                          const TypeVector& types,
@@ -167,8 +167,8 @@ class WatWriter {
   void FlushExprTree(const ExprTree& expr_tree);
   void FlushExprTreeVector(const std::vector<ExprTree>&);
   void FlushExprTreeStack();
-  void WriteFoldedExpr(const Expr* first);
-  void WriteFoldedExprList(const Expr* first);
+  void WriteFoldedExpr(const Expr*);
+  void WriteFoldedExprList(const ExprList&);
 
   void BuildExportMaps();
   void WriteInlineExport(const Export* export_);
@@ -426,7 +426,7 @@ void WatWriter::WriteBlock(LabelType label_type,
                            const Block* block,
                            const char* start_text) {
   WriteBeginBlock(label_type, block, start_text);
-  WriteExprList(block->first);
+  WriteExprList(block->exprs);
   WriteEndBlock();
 }
 
@@ -548,8 +548,8 @@ void WatWriter::WriteExpr(const Expr* expr) {
       auto if_expr = cast<IfExpr>(expr);
       WriteBeginBlock(LabelType::If, if_expr->true_,
                       Opcode::If_Opcode.GetName());
-      WriteExprList(if_expr->true_->first);
-      if (if_expr->false_) {
+      WriteExprList(if_expr->true_->exprs);
+      if (!if_expr->false_.empty()) {
         Dedent();
         WritePutsSpace(Opcode::Else_Opcode.GetName());
         Indent();
@@ -632,7 +632,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
       auto try_ = cast<TryExpr>(expr);
       WriteBeginBlock(LabelType::Try, try_->block,
                       Opcode::Try_Opcode.GetName());
-      WriteExprList(try_->block->first);
+      WriteExprList(try_->block->exprs);
       for (const Catch* catch_ : try_->catches) {
         Dedent();
         if (catch_->IsCatchAll()) {
@@ -643,7 +643,7 @@ void WatWriter::WriteExpr(const Expr* expr) {
         }
         Indent();
         label_stack_.back().label_type = LabelType::Catch;
-        WriteExprList(catch_->first);
+        WriteExprList(catch_->exprs);
       }
       WriteEndBlock();
       break;
@@ -664,10 +664,10 @@ void WatWriter::WriteExpr(const Expr* expr) {
   }
 }
 
-void WatWriter::WriteExprList(const Expr* first) {
+void WatWriter::WriteExprList(const ExprList& exprs) {
   WABT_TRACE(WriteExprList);
-  for (const Expr* expr = first; expr; expr = expr->next)
-    WriteExpr(expr);
+  for (const Expr& expr : exprs)
+    WriteExpr(&expr);
 }
 
 Label* WatWriter::GetLabel(const Var* var) {
@@ -818,10 +818,10 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
   }
 }
 
-void WatWriter::WriteFoldedExprList(const Expr* first) {
+void WatWriter::WriteFoldedExprList(const ExprList& exprs) {
   WABT_TRACE(WriteFoldedExprList);
-  for (const Expr* expr = first; expr; expr = expr->next)
-    WriteFoldedExpr(expr);
+  for (const Expr& expr : exprs)
+    WriteFoldedExpr(&expr);
 }
 
 void WatWriter::PushExpr(const Expr* expr,
@@ -851,7 +851,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::Block, cast<BlockExpr>(expr_tree.expr)->block,
                       Opcode::Block_Opcode.GetName());
-      WriteFoldedExprList(cast<BlockExpr>(expr_tree.expr)->block->first);
+      WriteFoldedExprList(cast<BlockExpr>(expr_tree.expr)->block->exprs);
       FlushExprTreeStack();
       WriteCloseNewline();
       break;
@@ -860,7 +860,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::Loop, cast<LoopExpr>(expr_tree.expr)->block,
                       Opcode::Loop_Opcode.GetName());
-      WriteFoldedExprList(cast<LoopExpr>(expr_tree.expr)->block->first);
+      WriteFoldedExprList(cast<LoopExpr>(expr_tree.expr)->block->exprs);
       FlushExprTreeStack();
       WriteCloseNewline();
       break;
@@ -872,10 +872,10 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
                       Opcode::If_Opcode.GetName());
       FlushExprTreeVector(expr_tree.children);
       WriteOpenNewline("then");
-      WriteFoldedExprList(if_expr->true_->first);
+      WriteFoldedExprList(if_expr->true_->exprs);
       FlushExprTreeStack();
       WriteCloseNewline();
-      if (if_expr->false_) {
+      if (!if_expr->false_.empty()) {
         WriteOpenNewline("else");
         WriteFoldedExprList(if_expr->false_);
         FlushExprTreeStack();
@@ -890,7 +890,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       WritePuts("(", NextChar::None);
       WriteBeginBlock(LabelType::Try, try_->block,
                       Opcode::Try_Opcode.GetName());
-      WriteFoldedExprList(try_->block->first);
+      WriteFoldedExprList(try_->block->exprs);
       FlushExprTreeStack();
       for (const Catch* catch_ : try_->catches) {
         WritePuts("(", NextChar::None);
@@ -902,7 +902,7 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
         }
         Indent();
         label_stack_.back().label_type = LabelType::Catch;
-        WriteFoldedExprList(catch_->first);
+        WriteFoldedExprList(catch_->exprs);
         FlushExprTreeStack();
         WriteCloseNewline();
       }
@@ -933,10 +933,10 @@ void WatWriter::FlushExprTreeStack() {
   FlushExprTreeVector(stack_copy);
 }
 
-void WatWriter::WriteInitExpr(const Expr* expr) {
-  if (expr) {
+void WatWriter::WriteInitExpr(const ExprList& expr) {
+  if (!expr.empty()) {
     WritePuts("(", NextChar::None);
-    WriteExpr(expr);
+    WriteExprList(expr);
     /* clear the next char, so we don't write a newline after the expr */
     next_char_ = NextChar::None;
     WritePuts(")", NextChar::Space);
@@ -996,10 +996,10 @@ void WatWriter::WriteFunc(const Module* module, const Func* func) {
                             func->decl.sig.result_types);
   current_func_ = func;
   if (options_->fold_exprs) {
-    WriteFoldedExprList(func->first_expr);
+    WriteFoldedExprList(func->exprs);
     FlushExprTreeStack();
   } else {
-    WriteExprList(func->first_expr);
+    WriteExprList(func->exprs);
   }
   current_func_ = nullptr;
   WriteCloseNewline();
