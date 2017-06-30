@@ -643,6 +643,7 @@ plain_catch :
 plain_catch_all :
     CATCH_ALL instr_list {
       $$ = new Catch(std::move(*$2));
+      delete $2;
       $$->loc = @1;
     }
   ;
