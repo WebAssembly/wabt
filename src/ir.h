@@ -27,6 +27,7 @@
 
 #include "binding-hash.h"
 #include "common.h"
+#include "intrusive-list.h"
 #include "opcode.h"
 
 namespace wabt {
@@ -123,26 +124,27 @@ const char* GetExprTypeName(ExprType type);
 typedef TypeVector BlockSignature;
 
 class Expr;
+typedef intrusive_list<Expr> ExprList;
 
 struct Block {
   WABT_DISALLOW_COPY_AND_ASSIGN(Block);
   Block();
-  explicit Block(Expr* first);
+  explicit Block(ExprList exprs);
   ~Block();
 
   Label label;
   BlockSignature sig;
-  Expr* first;
+  ExprList exprs;
 };
 
 struct Catch {
   WABT_DISALLOW_COPY_AND_ASSIGN(Catch);
-  explicit Catch(Expr* first = nullptr);
-  Catch(Var var, Expr* first = nullptr);
-  ~Catch();
+  Catch() = delete;
+  explicit Catch(ExprList exprs);
+  Catch(Var var, ExprList exprs);
   Location loc;
   Var var;
-  Expr* first;
+  ExprList exprs;
   bool IsCatchAll() const {
     return var.type == VarType::Index && var.index == kInvalidIndex;
   }
@@ -150,15 +152,14 @@ struct Catch {
 
 typedef std::vector<Catch*> CatchVector;
 
-class Expr {
+class Expr : public intrusive_list_base<Expr> {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Expr);
   Expr() = delete;
-  virtual ~Expr() {}
+  virtual ~Expr() = default;
 
   Location loc;
   ExprType type;
-  Expr* next;
 
  protected:
   explicit Expr(ExprType);
@@ -229,12 +230,12 @@ typedef BlockExprBase<ExprType::Loop> LoopExpr;
 
 class IfExpr : public ExprMixin<ExprType::If> {
  public:
-  explicit IfExpr(Block* true_block, Expr* false_expr = nullptr)
-      : true_(true_block), false_(false_expr) {}
+  explicit IfExpr(Block* true_block, ExprList false_expr = ExprList())
+      : true_(true_block), false_(std::move(false_expr)) {}
   ~IfExpr();
 
   Block* true_;
-  Expr* false_;
+  ExprList false_;
 };
 
 class TryExpr : public ExprMixin<ExprType::TryBlock> {
@@ -312,7 +313,6 @@ struct FuncType {
 struct FuncDeclaration {
   WABT_DISALLOW_COPY_AND_ASSIGN(FuncDeclaration);
   FuncDeclaration();
-  ~FuncDeclaration();
 
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
@@ -344,7 +344,7 @@ struct Func {
   TypeVector local_types;
   BindingHash param_bindings;
   BindingHash local_bindings;
-  Expr* first_expr;
+  ExprList exprs;
 };
 
 struct Global {
@@ -355,7 +355,7 @@ struct Global {
   StringSlice name;
   Type type;
   bool mutable_;
-  Expr* init_expr;
+  ExprList init_expr;
 };
 
 struct Table {
@@ -370,10 +370,9 @@ struct Table {
 struct ElemSegment {
   WABT_DISALLOW_COPY_AND_ASSIGN(ElemSegment);
   ElemSegment();
-  ~ElemSegment();
 
   Var table_var;
-  Expr* offset;
+  ExprList offset;
   VarVector vars;
 };
 
@@ -392,7 +391,7 @@ struct DataSegment {
   ~DataSegment();
 
   Var memory_var;
-  Expr* offset;
+  ExprList offset;
   char* data;
   size_t size;
 };
@@ -837,8 +836,6 @@ struct Script {
   CommandPtrVector commands;
   BindingHash module_bindings;
 };
-
-void DestroyExprList(Expr*);
 
 void MakeTypeBindingReverseMapping(
     const TypeVector& types,

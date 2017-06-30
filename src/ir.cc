@@ -241,15 +241,6 @@ FuncType* Module::AppendImplicitFuncType(const Location& loc,
   return func_type;
 }
 
-void DestroyExprList(Expr* first) {
-  Expr* expr = first;
-  while (expr) {
-    Expr* next = expr->next;
-    delete expr;
-    expr = next;
-  }
-}
-
 Var::Var(Index index) : type(VarType::Index), index(index) {
 }
 
@@ -325,33 +316,24 @@ Const::Const(F64, uint64_t value, const Location& loc_)
     : loc(loc_), type(Type::F64), f64_bits(value) {
 }
 
-
-Block::Block(): first(nullptr) {
+Block::Block() {
   ZeroMemory(label);
 }
 
-Block::Block(Expr* first) : first(first) {
+Block::Block(ExprList exprs) : exprs(std::move(exprs)) {
   ZeroMemory(label);
 }
 
 Block::~Block() {
   destroy_string_slice(&label);
-  DestroyExprList(first);
 }
 
-Catch::Catch(Expr* first) : first(first) {
-}
+Catch::Catch(ExprList exprs) : exprs(std::move(exprs)) {}
 
-Catch::Catch(Var var, Expr* first) : var(var), first(first) {
-}
-
-Catch::~Catch() {
-  delete first;
-}
+Catch::Catch(Var var, ExprList exprs) : var(var), exprs(std::move(exprs)) {}
 
 IfExpr::~IfExpr() {
   delete true_;
-  DestroyExprList(false_);
 }
 
 TryExpr::~TryExpr() {
@@ -360,8 +342,7 @@ TryExpr::~TryExpr() {
     delete catch_;
 }
 
-Expr::Expr(ExprType type) : type(type), next(nullptr) {
-}
+Expr::Expr(ExprType type) : type(type) {}
 
 FuncType::FuncType() {
   ZeroMemory(name);
@@ -374,24 +355,20 @@ FuncType::~FuncType() {
 FuncDeclaration::FuncDeclaration()
     : has_func_type(false), type_var(kInvalidIndex) {}
 
-FuncDeclaration::~FuncDeclaration() {}
-
-Func::Func() : first_expr(nullptr) {
+Func::Func() {
   ZeroMemory(name);
 }
 
 Func::~Func() {
   destroy_string_slice(&name);
-  DestroyExprList(first_expr);
 }
 
-Global::Global() : type(Type::Void), mutable_(false), init_expr(nullptr) {
+Global::Global() : type(Type::Void), mutable_(false) {
   ZeroMemory(name);
 }
 
 Global::~Global() {
   destroy_string_slice(&name);
-  DestroyExprList(init_expr);
 }
 
 Table::Table() {
@@ -403,16 +380,11 @@ Table::~Table() {
   destroy_string_slice(&name);
 }
 
-ElemSegment::ElemSegment() : table_var(kInvalidIndex), offset(nullptr) {}
+ElemSegment::ElemSegment() : table_var(kInvalidIndex) {}
 
-ElemSegment::~ElemSegment() {
-  DestroyExprList(offset);
-}
-
-DataSegment::DataSegment() : offset(nullptr), data(nullptr), size(0) {}
+DataSegment::DataSegment() : data(nullptr), size(0) {}
 
 DataSegment::~DataSegment() {
-  DestroyExprList(offset);
   delete[] data;
 }
 
