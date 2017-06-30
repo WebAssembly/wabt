@@ -747,7 +747,7 @@ Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
     delete expr;
     return Result::Error;
   }
-  PushLabel(LabelType::Try, &expr->block->first);
+  PushLabel(LabelType::Try, &expr->block->exprs);
   LabelNode* label;
   if (Failed(TopLabel(&label))) {
     PrintError("Internal error installing try block");
@@ -766,7 +766,7 @@ Result BinaryReaderIR::AppendCatch(Catch* catch_) {
       // TODO(karlschimpf) Probably should be set in the Catch constructor.
       catch_->loc = GetLocation();
       try_->catches.push_back(catch_);
-      label->first = &catch_->first;
+      label->exprs = &catch_->exprs;
       return Result::Ok;
     }
   }
@@ -777,11 +777,14 @@ Result BinaryReaderIR::AppendCatch(Catch* catch_) {
 }
 
 Result BinaryReaderIR::OnCatchExpr(Index except_index) {
-  return AppendCatch(new Catch(Var(except_index)));
+  ExprList empty;
+  return AppendCatch(new Catch(Var(except_index), std::move(empty)));
+  return Result::Error;
 }
 
 Result BinaryReaderIR::OnCatchAllExpr() {
-  return AppendCatch(new Catch());
+  ExprList empty;
+  return AppendCatch(new Catch(std::move(empty)));
 }
 
 Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {
