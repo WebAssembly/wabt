@@ -40,15 +40,14 @@ namespace wabt {
 namespace {
 
 struct LabelNode {
-  LabelNode(LabelType, Expr** first);
+  LabelNode(LabelType, ExprList* exprs);
 
   LabelType label_type;
-  Expr** first;
-  Expr* last;
+  ExprList* exprs;
 };
 
-LabelNode::LabelNode(LabelType label_type, Expr** first)
-    : label_type(label_type), first(first), last(nullptr) {}
+LabelNode::LabelNode(LabelType label_type, ExprList* exprs)
+    : label_type(label_type), exprs(exprs) {}
 
 class BinaryReaderIR : public BinaryReaderNop {
  public:
@@ -196,7 +195,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   bool HandleError(Offset offset, const char* message);
   Location GetLocation() const;
   void PrintError(const char* format, ...);
-  void PushLabel(LabelType label_type, Expr** first);
+  void PushLabel(LabelType label_type, ExprList* first);
   Result PopLabel();
   Result GetLabelAt(LabelNode** label, Index depth);
   Result TopLabel(LabelNode** label);
@@ -207,7 +206,7 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Func* current_func = nullptr;
   std::vector<LabelNode> label_stack;
-  Expr** current_init_expr = nullptr;
+  ExprList* current_init_expr = nullptr;
   const char* filename_;
 };
 
@@ -229,7 +228,7 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReaderIR::PrintError(const char* format,
   HandleError(kInvalidOffset, buffer);
 }
 
-void BinaryReaderIR::PushLabel(LabelType label_type, Expr** first) {
+void BinaryReaderIR::PushLabel(LabelType label_type, ExprList* first) {
   label_stack.emplace_back(label_type, first);
 }
 
@@ -267,12 +266,7 @@ Result BinaryReaderIR::AppendExpr(Expr* expr) {
     delete expr;
     return Result::Error;
   }
-  if (*label->first) {
-    label->last->next = expr;
-    label->last = expr;
-  } else {
-    *label->first = label->last = expr;
-  }
+  label->exprs->push_back(expr);
   return Result::Ok;
 }
 
@@ -504,7 +498,7 @@ Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
 
 Result BinaryReaderIR::BeginFunctionBody(Index index) {
   current_func = module->funcs[index];
-  PushLabel(LabelType::Func, &current_func->first_expr);
+  PushLabel(LabelType::Func, &current_func->exprs);
   return Result::Ok;
 }
 
@@ -525,7 +519,7 @@ Result BinaryReaderIR::OnBlockExpr(Index num_types, Type* sig_types) {
   auto expr = new BlockExpr(new Block());
   expr->block->sig.assign(sig_types, sig_types + num_types);
   AppendExpr(expr);
-  PushLabel(LabelType::Block, &expr->block->first);
+  PushLabel(LabelType::Block, &expr->block->exprs);
   return Result::Ok;
 }
 
@@ -595,8 +589,7 @@ Result BinaryReaderIR::OnElseExpr() {
   CHECK_RESULT(GetLabelAt(&parent_label, 1));
 
   label->label_type = LabelType::Else;
-  label->first = &cast<IfExpr>(parent_label->last)->false_;
-  label->last = nullptr;
+  label->exprs = &cast<IfExpr>(&parent_label->exprs->back())->false_;
   return Result::Ok;
 }
 
@@ -642,9 +635,8 @@ Result BinaryReaderIR::OnI64ConstExpr(uint64_t value) {
 Result BinaryReaderIR::OnIfExpr(Index num_types, Type* sig_types) {
   auto expr = new IfExpr(new Block());
   expr->true_->sig.assign(sig_types, sig_types + num_types);
-  expr->false_ = nullptr;
   AppendExpr(expr);
-  PushLabel(LabelType::If, &expr->true_->first);
+  PushLabel(LabelType::If, &expr->true_->exprs);
   return Result::Ok;
 }
 
@@ -659,7 +651,7 @@ Result BinaryReaderIR::OnLoopExpr(Index num_types, Type* sig_types) {
   auto expr = new LoopExpr(new Block());
   expr->block->sig.assign(sig_types, sig_types + num_types);
   AppendExpr(expr);
-  PushLabel(LabelType::Loop, &expr->block->first);
+  PushLabel(LabelType::Loop, &expr->block->exprs);
   return Result::Ok;
 }
 
@@ -837,14 +829,14 @@ Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
 Result BinaryReaderIR::OnInitExprF32ConstExpr(Index index, uint32_t value) {
   auto expr = new ConstExpr(Const(Const::F32(), value, GetLocation()));
   expr->loc = GetLocation();
-  *current_init_expr = expr;
+  current_init_expr->push_back(expr);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprF64ConstExpr(Index index, uint64_t value) {
   auto expr = new ConstExpr(Const(Const::F64(), value, GetLocation()));
   expr->loc = GetLocation();
-  *current_init_expr = expr;
+  current_init_expr->push_back(expr);
   return Result::Ok;
 }
 
@@ -852,21 +844,21 @@ Result BinaryReaderIR::OnInitExprGetGlobalExpr(Index index,
                                                Index global_index) {
   auto expr = new GetGlobalExpr(Var(global_index, GetLocation()));
   expr->loc = GetLocation();
-  *current_init_expr = expr;
+  current_init_expr->push_back(expr);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprI32ConstExpr(Index index, uint32_t value) {
   auto expr = new ConstExpr(Const(Const::I32(), value, GetLocation()));
   expr->loc = GetLocation();
-  *current_init_expr = expr;
+  current_init_expr->push_back(expr);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
   auto expr = new ConstExpr(Const(Const::I64(), value, GetLocation()));
   expr->loc = GetLocation();
-  *current_init_expr = expr;
+  current_init_expr->push_back(expr);
   return Result::Ok;
 }
 

@@ -30,7 +30,7 @@ class ExprVisitor {
   explicit ExprVisitor(Delegate* delegate);
 
   Result VisitExpr(Expr*);
-  Result VisitExprList(Expr*);
+  Result VisitExprList(ExprList&);
   Result VisitFunc(Func*);
 
  private:

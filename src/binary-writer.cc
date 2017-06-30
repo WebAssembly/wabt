@@ -216,8 +216,10 @@ class BinaryWriter {
                                const char* desc,
                                RelocType reloc_type);
   void WriteExpr(const Module* module, const Func* func, const Expr* expr);
-  void WriteExprList(const Module* module, const Func* func, const Expr* first);
-  void WriteInitExpr(const Module* module, const Expr* expr);
+  void WriteExprList(const Module* module,
+                     const Func* func,
+                     const ExprList& exprs);
+  void WriteInitExpr(const Module* module, const ExprList& expr);
   void WriteFuncLocals(const Module* module,
                        const Func* func,
                        const TypeVector& local_types);
@@ -427,7 +429,7 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::Block:
       write_opcode(&stream_, Opcode::Block);
       write_inline_signature_type(&stream_, cast<BlockExpr>(expr)->block->sig);
-      WriteExprList(module, func, cast<BlockExpr>(expr)->block->first);
+      WriteExprList(module, func, cast<BlockExpr>(expr)->block->exprs);
       write_opcode(&stream_, Opcode::End);
       break;
     case ExprType::Br:
@@ -525,8 +527,8 @@ void BinaryWriter::WriteExpr(const Module* module,
       auto if_expr = cast<IfExpr>(expr);
       write_opcode(&stream_, Opcode::If);
       write_inline_signature_type(&stream_, if_expr->true_->sig);
-      WriteExprList(module, func, if_expr->true_->first);
-      if (if_expr->false_) {
+      WriteExprList(module, func, if_expr->true_->exprs);
+      if (!if_expr->false_.empty()) {
         write_opcode(&stream_, Opcode::Else);
         WriteExprList(module, func, if_expr->false_);
       }
@@ -544,7 +546,7 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::Loop:
       write_opcode(&stream_, Opcode::Loop);
       write_inline_signature_type(&stream_, cast<LoopExpr>(expr)->block->sig);
-      WriteExprList(module, func, cast<LoopExpr>(expr)->block->first);
+      WriteExprList(module, func, cast<LoopExpr>(expr)->block->exprs);
       write_opcode(&stream_, Opcode::End);
       break;
     case ExprType::Nop:
@@ -597,7 +599,7 @@ void BinaryWriter::WriteExpr(const Module* module,
       auto try_expr = cast<TryExpr>(expr);
       write_opcode(&stream_, Opcode::Try);
       write_inline_signature_type(&stream_, try_expr->block->sig);
-      WriteExprList(module, func, try_expr->block->first);
+      WriteExprList(module, func, try_expr->block->exprs);
       for (Catch* catch_ : try_expr->catches) {
         if (catch_->IsCatchAll()) {
           write_opcode(&stream_, Opcode::CatchAll);
@@ -606,7 +608,7 @@ void BinaryWriter::WriteExpr(const Module* module,
           write_u32_leb128(&stream_, GetExceptVarDepth(&catch_->var),
                            "catch exception");
         }
-        WriteExprList(module, func, catch_->first);
+        WriteExprList(module, func, catch_->exprs);
       }
       write_opcode(&stream_, Opcode::End);
       break;
@@ -622,14 +624,13 @@ void BinaryWriter::WriteExpr(const Module* module,
 
 void BinaryWriter::WriteExprList(const Module* module,
                                  const Func* func,
-                                 const Expr* first) {
-  for (const Expr* expr = first; expr; expr = expr->next)
-    WriteExpr(module, func, expr);
+                                 const ExprList& exprs) {
+  for (const Expr& expr : exprs)
+    WriteExpr(module, func, &expr);
 }
 
-void BinaryWriter::WriteInitExpr(const Module* module, const Expr* expr) {
-  if (expr)
-    WriteExprList(module, nullptr, expr);
+void BinaryWriter::WriteInitExpr(const Module* module, const ExprList& expr) {
+  WriteExprList(module, nullptr, expr);
   write_opcode(&stream_, Opcode::End);
 }
 
@@ -678,7 +679,7 @@ void BinaryWriter::WriteFuncLocals(const Module* module,
 
 void BinaryWriter::WriteFunc(const Module* module, const Func* func) {
   WriteFuncLocals(module, func, func->local_types);
-  WriteExprList(module, func, func->first_expr);
+  WriteExprList(module, func, func->exprs);
   write_opcode(&stream_, Opcode::End);
 }
 

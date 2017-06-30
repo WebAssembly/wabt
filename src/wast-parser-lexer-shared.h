@@ -32,12 +32,6 @@
 
 namespace wabt {
 
-struct ExprList {
-  Expr* first;
-  Expr* last;
-  size_t size;
-};
-
 struct TextListNode {
   StringSlice text;
   struct TextListNode* next;
@@ -77,7 +71,7 @@ union Token {
   Exception* exception;
   Export* export_;
   Expr* expr;
-  ExprList expr_list;
+  ExprList* expr_list;
   Func* func;
   FuncSignature* func_sig;
   FuncType* func_type;
