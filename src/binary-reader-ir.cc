@@ -40,7 +40,7 @@ namespace wabt {
 namespace {
 
 struct LabelNode {
-  LabelNode() { ZeroMemory(*this); }
+  LabelNode();
   LabelNode(LabelType, Expr** first);
 
   LabelType label_type;
@@ -48,6 +48,12 @@ struct LabelNode {
   Expr* last;
   Expr* context;
 };
+
+LabelNode::LabelNode()
+    : label_type(LabelType::First),
+      first(nullptr),
+      last(nullptr),
+      context(nullptr) {}
 
 LabelNode::LabelNode(LabelType label_type, Expr** first)
     : label_type(label_type), first(first), last(nullptr), context(nullptr) {}
@@ -750,13 +756,13 @@ Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
   auto expr = new TryExpr();
   expr->block = new Block();
   expr->block->sig.assign(sig_types, sig_types + num_types);
-  if (WABT_FAILED(AppendExpr(expr))) {
+  if (Failed(AppendExpr(expr))) {
     delete expr;
     return Result::Error;
   }
   PushLabel(LabelType::Try, &expr->block->first);
   LabelNode* label;
-  if (WABT_FAILED(TopLabel(&label))) {
+  if (Failed(TopLabel(&label))) {
     PrintError("Internal error installing try block");
     delete expr;
     return Result::Error;
@@ -767,7 +773,7 @@ Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
 
 Result BinaryReaderIR::AppendCatch(Catch* catch_) {
   LabelNode* label = nullptr;
-  if (WABT_SUCCEEDED(TopLabel(&label))
+  if (Succeeded(TopLabel(&label))
       && label->label_type == LabelType::Try) {
     if (auto try_ = dyn_cast<TryExpr>(label->context)) {
       // TODO(karlschimpf) Probably should be set in the Catch constructor.
