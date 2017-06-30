@@ -9,7 +9,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WRRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -40,7 +40,6 @@ namespace wabt {
 namespace {
 
 struct LabelNode {
-  LabelNode();
   LabelNode(LabelType, ExprList* exprs);
 
   LabelType label_type;
@@ -760,8 +759,7 @@ Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
 
 Result BinaryReaderIR::AppendCatch(Catch* catch_) {
   LabelNode* label = nullptr;
-  if (Succeeded(TopLabel(&label))
-      && label->label_type == LabelType::Try) {
+  if (Succeeded(TopLabel(&label)) && label->label_type == LabelType::Try) {
     if (auto try_ = dyn_cast<TryExpr>(label->context)) {
       // TODO(karlschimpf) Probably should be set in the Catch constructor.
       catch_->loc = GetLocation();

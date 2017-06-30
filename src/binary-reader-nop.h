@@ -229,7 +229,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnTeeLocalExpr(Index local_index) override { return Result::Ok; }
   Result OnThrowExpr(Index depth) override { return Result::Error; }
   Result OnTryExpr(Index num_types, Type* sig_types) override {
-    // TODO(karlschimpf) Allow this.
     return Result::Error;
   }
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }

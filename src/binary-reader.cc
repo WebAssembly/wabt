@@ -48,6 +48,12 @@
     }                           \
   } while (0)
 
+#define ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode) \
+  do {                                                \
+    if (!options_->allow_future_exceptions)            \
+      return ReportUnexpectedOpcode(opcode);          \
+  } while (0)
+
 #define CALLBACK0(member)                              \
   ERROR_UNLESS(Succeeded(delegate_->member()), #member \
                " callback failed")
@@ -174,6 +180,7 @@ class BinaryReader {
   Index NumTotalTables();
   Index NumTotalMemories();
   Index NumTotalGlobals();
+  Index NumTotalExceptions();
 
   Result ReadInitExpr(Index index) WABT_WARN_UNUSED;
   Result ReadTable(Type* out_elem_type,
@@ -478,6 +485,10 @@ Index BinaryReader::NumTotalMemories() {
 
 Index BinaryReader::NumTotalGlobals() {
   return num_global_imports_ + num_globals_;
+}
+
+Index BinaryReader::NumTotalExceptions() {
+  return num_exception_imports_ + num_exceptions_;
 }
 
 Result BinaryReader::ReadInitExpr(Index index) {
@@ -1003,6 +1014,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       case Opcode::Try: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "try signature type"));
         ERROR_UNLESS(is_inline_sig_type(sig_type),
@@ -1014,6 +1026,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Catch: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
         Index index;
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnCatchExpr, index);
@@ -1022,11 +1035,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::CatchAll: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
         CALLBACK(OnCatchAllExpr);
         break;
       }
 
       case Opcode::Rethrow: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
         Index depth;
         CHECK_RESULT(ReadIndex(&depth, "catch depth"));
         CALLBACK(OnRethrowExpr, depth);
@@ -1035,6 +1050,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Throw: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
         Index index;
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnThrowExpr, index);
@@ -1397,6 +1413,8 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       }
 
       case ExternalKind::Except: {
+        if (!options_->allow_future_exceptions)
+          PrintError("invalid import exception kind: exceptions not allowed");
         TypeVector sig;
         CHECK_RESULT(ReadExceptionType(sig));
         CALLBACK(OnImport, i, module_name, field_name);
@@ -1518,7 +1536,7 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
       case ExternalKind::Except:
         // Note: Can't check if index valid, exceptions section comes later.
         if (!options_->allow_future_exceptions)
-          PrintError("invalid export exception entry, exceptions not allowed");
+          PrintError("invalid export exception kind: exceptions not allowed");
         break;
     }
 
