@@ -89,6 +89,13 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                         bool mutable_) override {
     return Result::Ok;
   }
+  Result OnImportException(Index import_index,
+                           StringSlice module_name,
+                           StringSlice field_name,
+                           Index except_index,
+                           TypeVector& sig) override {
+    return Result::Error;
+  }
   Result EndImportSection() override { return Result::Ok; }
 
   /* Function section */
@@ -181,6 +188,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnCallExpr(Index func_index) override { return Result::Ok; }
   Result OnCallIndirectExpr(Index sig_index) override { return Result::Ok; }
+  Result OnCatchExpr(Index except_index) override { return Result::Error; }
+  Result OnCatchAllExpr() override { return Result::Error; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
   Result OnConvertExpr(Opcode opcode) override { return Result::Ok; }
   Result OnCurrentMemoryExpr() override { return Result::Ok; }
@@ -207,6 +216,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnNopExpr() override { return Result::Ok; }
+  Result OnRethrowExpr(Index depth) override { return Result::Error; }
   Result OnReturnExpr() override { return Result::Ok; }
   Result OnSelectExpr() override { return Result::Ok; }
   Result OnSetGlobalExpr(Index global_index) override { return Result::Ok; }
@@ -217,6 +227,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnTeeLocalExpr(Index local_index) override { return Result::Ok; }
+  Result OnThrowExpr(Index depth) override { return Result::Error; }
+  Result OnTryExpr(Index num_types, Type* sig_types) override {
+    // TODO(karlschimpf) Allow this.
+    return Result::Error;
+  }
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnUnreachableExpr() override { return Result::Ok; }
   Result EndFunctionBody(Index index) override { return Result::Ok; }
@@ -302,6 +317,14 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result EndRelocSection() override { return Result::Ok; }
+
+  /* Exception section */
+  Result BeginExceptionSection(Offset size) override { return Result::Error; }
+  Result OnExceptionCount(Index count) override { return Result::Error; }
+  Result OnExceptionType(Index index, TypeVector& sig) override {
+    return Result::Error;
+  }
+  Result EndExceptionSection() override { return Result::Error; }
 
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }

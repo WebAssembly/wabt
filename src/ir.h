@@ -137,9 +137,8 @@ struct Block {
 
 struct Catch {
   WABT_DISALLOW_COPY_AND_ASSIGN(Catch);
-  Catch() = delete;
-  explicit Catch(Expr* first);
-  Catch(Var var, Expr* first);
+  explicit Catch(Expr* first = nullptr);
+  Catch(Var var, Expr* first = nullptr);
   ~Catch();
   Location loc;
   Var var;
@@ -842,8 +841,8 @@ struct Script {
 void DestroyExprList(Expr*);
 
 void MakeTypeBindingReverseMapping(
-    const TypeVector&,
-    const BindingHash&,
+    const TypeVector& types,
+    const BindingHash&  bindings,
     std::vector<std::string>* out_reverse_mapping);
 
 }  // namespace wabt

@@ -35,6 +35,7 @@ struct ReadBinaryOptions {
 
   Stream* log_stream = nullptr;
   bool read_debug_names = false;
+  bool allow_future_exceptions = false;
 };
 
 class BinaryReaderDelegate {
@@ -101,6 +102,11 @@ class BinaryReaderDelegate {
                                 Index global_index,
                                 Type type,
                                 bool mutable_) = 0;
+  virtual Result OnImportException(Index import_index,
+                                   StringSlice module_name,
+                                   StringSlice field_name,
+                                   Index except_index,
+                                   TypeVector& sig) = 0;
   virtual Result EndImportSection() = 0;
 
   /* Function section */
@@ -173,6 +179,8 @@ class BinaryReaderDelegate {
                                Index default_target_depth) = 0;
   virtual Result OnCallExpr(Index func_index) = 0;
   virtual Result OnCallIndirectExpr(Index sig_index) = 0;
+  virtual Result OnCatchExpr(Index except_index) = 0;
+  virtual Result OnCatchAllExpr() = 0;
   virtual Result OnCompareExpr(Opcode opcode) = 0;
   virtual Result OnConvertExpr(Opcode opcode) = 0;
   virtual Result OnCurrentMemoryExpr() = 0;
@@ -193,6 +201,7 @@ class BinaryReaderDelegate {
                             Address offset) = 0;
   virtual Result OnLoopExpr(Index num_types, Type* sig_types) = 0;
   virtual Result OnNopExpr() = 0;
+  virtual Result OnRethrowExpr(Index depth) = 0;
   virtual Result OnReturnExpr() = 0;
   virtual Result OnSelectExpr() = 0;
   virtual Result OnSetGlobalExpr(Index global_index) = 0;
@@ -201,6 +210,9 @@ class BinaryReaderDelegate {
                              uint32_t alignment_log2,
                              Address offset) = 0;
   virtual Result OnTeeLocalExpr(Index local_index) = 0;
+  virtual Result OnThrowExpr(Index except_index) = 0;
+  virtual Result OnTryExpr(Index num_types, Type* sig_types) = 0;
+
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
   virtual Result EndFunctionBody(Index index) = 0;
@@ -266,6 +278,12 @@ class BinaryReaderDelegate {
   virtual Result OnSymbolInfoCount(Index count) = 0;
   virtual Result OnSymbolInfo(StringSlice name, uint32_t flags) = 0;
   virtual Result EndLinkingSection() = 0;
+
+  /* Exception section */
+  virtual Result BeginExceptionSection(Offset size) = 0;
+  virtual Result OnExceptionCount(Index count) = 0;
+  virtual Result OnExceptionType(Index index, TypeVector& sig) = 0;
+  virtual Result EndExceptionSection() = 0;
 
   /* InitExpr - used by elem, data and global sections; these functions are
    * only called between calls to Begin*InitExpr and End*InitExpr */
