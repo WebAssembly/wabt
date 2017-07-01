@@ -741,7 +741,7 @@ Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
   if (Failed(AppendExpr(expr)))
     return Result::Error;
   PushLabel(LabelType::Try, &expr->block->exprs);
-  LabelNode* label;
+  LabelNode* label = nullptr;
   { Result result = TopLabel(&label);
     (void) result;
     assert(Succeeded(result));
