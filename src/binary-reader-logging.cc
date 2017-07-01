@@ -86,6 +86,10 @@ void BinaryReaderLogging::LogTypes(Index type_count, Type* types) {
   LOGF_NOINDENT("]");
 }
 
+void BinaryReaderLogging::LogTypes(TypeVector& types) {
+  LogTypes(types.size(), types.data());
+}
+
 bool BinaryReaderLogging::OnError(const char* message) {
   return reader->OnError(message);
 }
@@ -194,6 +198,20 @@ Result BinaryReaderLogging::OnImportGlobal(Index import_index,
                                 global_index, type, mutable_);
 }
 
+Result BinaryReaderLogging::OnImportException(Index import_index,
+                                              StringSlice module_name,
+                                              StringSlice field_name,
+                                              Index except_index,
+                                              TypeVector& sig) {
+  LOGF("OnImportException(import_index: %" PRIindex ", except_index: %" PRIindex
+       ", sig: ", import_index, except_index);
+  LogTypes(sig);
+  LOGF_NOINDENT(")\n");
+  return reader->OnImportException(import_index, module_name,field_name,
+                                   except_index, sig);
+}
+
+
 Result BinaryReaderLogging::OnTable(Index index,
                                     Type elem_type,
                                     const Limits* elem_limits) {
@@ -270,6 +288,13 @@ Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
                                default_target_depth);
 }
 
+Result BinaryReaderLogging::OnExceptionType(Index index, TypeVector& sig) {
+  LOGF("OnType(index: %" PRIindex ", values: ", index);
+  LogTypes(sig);
+  LOGF_NOINDENT(")\n");
+  return reader->OnExceptionType(index, sig);
+}
+
 Result BinaryReaderLogging::OnF32ConstExpr(uint32_t value_bits) {
   float value;
   memcpy(&value, &value_bits, sizeof(value));
@@ -324,6 +349,13 @@ Result BinaryReaderLogging::OnStoreExpr(Opcode opcode,
        ")\n",
        opcode.GetName(), opcode.GetCode(), alignment_log2, offset);
   return reader->OnStoreExpr(opcode, alignment_log2, offset);
+}
+
+Result BinaryReaderLogging::OnTryExpr(Index num_types, Type* sig_types) {
+  LOGF("OnTryExpr(sig: ");
+  LogTypes(num_types, sig_types);
+  LOGF_NOINDENT(")\n");
+  return reader->OnTryExpr(num_types, sig_types);
 }
 
 Result BinaryReaderLogging::OnDataSegmentData(Index index,
@@ -522,6 +554,8 @@ DEFINE_INDEX(OnLocalDeclCount)
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_DESC(OnCallIndirectExpr, "sig_index")
+DEFINE_INDEX_DESC(OnCatchExpr, "except_index");
+DEFINE0(OnCatchAllExpr)
 DEFINE_OPCODE(OnCompareExpr)
 DEFINE_OPCODE(OnConvertExpr)
 DEFINE0(OnCurrentMemoryExpr)
@@ -532,11 +566,13 @@ DEFINE_INDEX_DESC(OnGetGlobalExpr, "index")
 DEFINE_INDEX_DESC(OnGetLocalExpr, "index")
 DEFINE0(OnGrowMemoryExpr)
 DEFINE0(OnNopExpr)
+DEFINE_INDEX_DESC(OnRethrowExpr, "depth");
 DEFINE0(OnReturnExpr)
 DEFINE0(OnSelectExpr)
 DEFINE_INDEX_DESC(OnSetGlobalExpr, "index")
 DEFINE_INDEX_DESC(OnSetLocalExpr, "index")
 DEFINE_INDEX_DESC(OnTeeLocalExpr, "index")
+DEFINE_INDEX_DESC(OnThrowExpr, "except_index")
 DEFINE0(OnUnreachableExpr)
 DEFINE_OPCODE(OnUnaryExpr)
 DEFINE_END(EndCodeSection)
@@ -573,6 +609,11 @@ DEFINE_BEGIN(BeginLinkingSection)
 DEFINE_INDEX(OnSymbolInfoCount)
 DEFINE_INDEX(OnStackGlobal)
 DEFINE_END(EndLinkingSection)
+
+DEFINE_BEGIN(BeginExceptionSection);
+DEFINE_INDEX(OnExceptionCount);
+
+DEFINE_END(EndExceptionSection);
 
 // We don't need to log these (the individual opcodes are logged instead), but
 // we still need to forward the calls.

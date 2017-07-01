@@ -834,9 +834,7 @@ const_expr :
 /* Exceptions */
 exception :
     LPAR EXCEPT bind_var_opt value_type_list RPAR {
-      $$ = new Exception();
-      $$->name = $3;
-      $$->sig = std::move(*$4);
+      $$ = new Exception($3, *$4);
       delete $4;
     }
   ;

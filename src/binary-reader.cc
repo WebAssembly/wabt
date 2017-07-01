@@ -48,6 +48,12 @@
     }                           \
   } while (0)
 
+#define ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode) \
+  do {                                                \
+    if (!options_->allow_future_exceptions)            \
+      return ReportUnexpectedOpcode(opcode);          \
+  } while (0)
+
 #define CALLBACK0(member)                              \
   ERROR_UNLESS(Succeeded(delegate_->member()), #member \
                " callback failed")
@@ -180,6 +186,7 @@ class BinaryReader {
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
   Result ReadGlobalHeader(Type* out_type, bool* out_mutable) WABT_WARN_UNUSED;
+  Result ReadExceptionType(TypeVector& sig) WABT_WARN_UNUSED;
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNamesSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
@@ -196,7 +203,9 @@ class BinaryReader {
   Result ReadElemSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCodeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadExceptionSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadSections() WABT_WARN_UNUSED;
+  Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
   size_t read_end_ = 0; /* Either the section end or data_size. */
   BinaryReaderDelegate::State state_;
@@ -212,12 +221,14 @@ class BinaryReader {
   Index num_table_imports_ = 0;
   Index num_memory_imports_ = 0;
   Index num_global_imports_ = 0;
+  Index num_exception_imports_ = 0;
   Index num_function_signatures_ = 0;
   Index num_tables_ = 0;
   Index num_memories_ = 0;
   Index num_globals_ = 0;
   Index num_exports_ = 0;
   Index num_function_bodies_ = 0;
+  Index num_exceptions_ = 0;
 };
 
 BinaryReader::BinaryReader(const void* data,
@@ -252,6 +263,16 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
   memcpy(out_value, state_.data + state_.offset, sizeof(type)); \
   state_.offset += sizeof(type);                                \
   return Result::Ok
+
+Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
+                                            const char* message) {
+  const char* maybe_space = " ";
+  if (!message)
+    message = maybe_space = "";
+  PrintError("unexpected opcode%s%s: %d (0x%x)",
+             maybe_space, message, opcode.GetCode(), opcode.GetCode());
+  return Result::Error;
+}
 
 Result BinaryReader::ReadOpcode(Opcode* out_value, const char* desc) {
   uint8_t value = 0;
@@ -508,9 +529,7 @@ Result BinaryReader::ReadInitExpr(Index index) {
       return Result::Ok;
 
     default:
-      PrintError("unexpected opcode in initializer expression: %d (0x%x)",
-                 opcode.GetCode(), opcode.GetCode());
-      return Result::Error;
+      return ReportUnexpectedOpcode(opcode, "in initializer expression");
   }
 
   CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
@@ -989,10 +1008,54 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
+      case Opcode::Try: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        Type sig_type;
+        CHECK_RESULT(ReadType(&sig_type, "try signature type"));
+        ERROR_UNLESS(is_inline_sig_type(sig_type),
+                     "expected valid block signature type");
+        Index num_types = sig_type == Type::Void ? 0 : 1;
+        CALLBACK(OnTryExpr, num_types, &sig_type);
+        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
+        break;
+      }
+
+      case Opcode::Catch: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        Index index;
+        CHECK_RESULT(ReadIndex(&index, "exception index"));
+        CALLBACK(OnCatchExpr, index);
+        CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
+      case Opcode::CatchAll: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        CALLBACK(OnCatchAllExpr);
+        CALLBACK0(OnOpcodeBare);
+        break;
+      }
+
+      case Opcode::Rethrow: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        Index depth;
+        CHECK_RESULT(ReadIndex(&depth, "catch depth"));
+        CALLBACK(OnRethrowExpr, depth);
+        CALLBACK(OnOpcodeIndex, depth);
+        break;
+      }
+
+      case Opcode::Throw: {
+        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        Index index;
+        CHECK_RESULT(ReadIndex(&index, "exception index"));
+        CALLBACK(OnThrowExpr, index);
+        CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
       default:
-        PrintError("unexpected opcode: %d (0x%x)", static_cast<int>(opcode),
-                   static_cast<unsigned>(opcode));
-        return Result::Error;
+        return ReportUnexpectedOpcode(opcode);
     }
   }
   ERROR_UNLESS(state_.offset == end_offset,
@@ -1185,6 +1248,36 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadExceptionType(TypeVector& sig) {
+  Index num_values;
+  CHECK_RESULT(ReadIndex(&num_values, "exception type count"));
+  sig.resize(num_values);
+  for (Index j = 0; j < num_values; ++j) {
+    Type value_type;
+    CHECK_RESULT(ReadType(&value_type, "exception value type"));
+    ERROR_UNLESS(is_concrete_type(value_type),
+                 "excepted valid exception value type (got %d)",
+                 static_cast<int>(value_type));
+    sig[j] = value_type;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadExceptionSection(Offset section_size) {
+  CALLBACK(BeginExceptionSection, section_size);
+  CHECK_RESULT(ReadIndex(&num_exceptions_, "exception count"));
+  CALLBACK(OnExceptionCount, num_exceptions_);
+
+  for (Index i = 0; i < num_exceptions_; ++i) {
+    TypeVector sig;
+    CHECK_RESULT(ReadExceptionType(sig));
+    CALLBACK(OnExceptionType, i, sig);
+  }
+
+  CALLBACK(EndExceptionSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadCustomSection(Offset section_size) {
   StringSlice section_name;
   CHECK_RESULT(ReadStr(&section_name, "section name"));
@@ -1201,6 +1294,10 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
   } else if (strncmp(section_name.start, WABT_BINARY_SECTION_LINKING,
                      strlen(WABT_BINARY_SECTION_LINKING)) == 0) {
     CHECK_RESULT(ReadLinkingSection(section_size));
+  } else if (options_->allow_future_exceptions &&
+             strncmp(section_name.start, WABT_BINARY_SECTION_EXCEPTION,
+                     strlen(WABT_BINARY_SECTION_EXCEPTION)) == 0) {
+    CHECK_RESULT(ReadExceptionSection(section_size));
   } else {
     /* This is an unknown custom section, skip it. */
     state_.offset = read_end_;
@@ -1308,6 +1405,18 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         CALLBACK(OnImportGlobal, i, module_name, field_name,
                  num_global_imports_, type, mutable_);
         num_global_imports_++;
+        break;
+      }
+
+      case ExternalKind::Except: {
+        if (!options_->allow_future_exceptions)
+          PrintError("invalid import exception kind: exceptions not allowed");
+        TypeVector sig;
+        CHECK_RESULT(ReadExceptionType(sig));
+        CALLBACK(OnImport, i, module_name, field_name);
+        CALLBACK(OnImportException, i, module_name, field_name,
+                 num_exception_imports_, sig);
+        num_exception_imports_++;
         break;
       }
 
@@ -1421,8 +1530,9 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
                      "invalid export global index: %" PRIindex, item_index);
         break;
       case ExternalKind::Except:
-        // TODO(karlschimpf) Define.
-        WABT_FATAL("read export except not implemented");
+        // Note: Can't check if index valid, exceptions section comes later.
+        if (!options_->allow_future_exceptions)
+          PrintError("invalid export exception kind: exceptions not allowed");
         break;
     }
 

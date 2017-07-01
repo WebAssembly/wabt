@@ -193,6 +193,7 @@ class WatWriter {
   Index table_index_ = 0;
   Index memory_index_ = 0;
   Index func_type_index_ = 0;
+  Index except_index_ = 0;
 };
 
 void WatWriter::Indent() {
@@ -1028,7 +1029,7 @@ void WatWriter::WriteGlobal(const Global* global) {
 
 void WatWriter::WriteBeginException(const Exception* except) {
   WriteOpenSpace("except");
-  WriteName(&except->name, NextChar::Space);
+  WriteNameOrIndex(&except->name, except_index_++, NextChar::Space);
   WriteTypes(except->sig, nullptr);
 }
 

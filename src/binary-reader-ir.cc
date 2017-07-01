@@ -44,10 +44,12 @@ struct LabelNode {
 
   LabelType label_type;
   ExprList* exprs;
+  Expr* context;
 };
 
 LabelNode::LabelNode(LabelType label_type, ExprList* exprs)
-    : label_type(label_type), exprs(exprs) {}
+    : label_type(label_type), exprs(exprs), context(nullptr) {}
+
 
 class BinaryReaderIR : public BinaryReaderNop {
  public:
@@ -90,6 +92,11 @@ class BinaryReaderIR : public BinaryReaderNop {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
+  Result OnImportException(Index import_index,
+                           StringSlice module_name,
+                           StringSlice field_name,
+                           Index except_index,
+                           TypeVector& sig) override;
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -127,6 +134,8 @@ class BinaryReaderIR : public BinaryReaderNop {
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
+  Result OnCatchExpr(Index except_index) override;
+  Result OnCatchAllExpr() override;
   Result OnCallIndirectExpr(Index sig_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
@@ -147,6 +156,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLoopExpr(Index num_types, Type* sig_types) override;
   Result OnCurrentMemoryExpr() override;
   Result OnNopExpr() override;
+  Result OnRethrowExpr(Index depth) override;
   Result OnReturnExpr() override;
   Result OnSelectExpr() override;
   Result OnSetGlobalExpr(Index global_index) override;
@@ -154,7 +164,9 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnStoreExpr(Opcode opcode,
                      uint32_t alignment_log2,
                      Address offset) override;
+  Result OnThrowExpr(Index except_index) override;
   Result OnTeeLocalExpr(Index local_index) override;
+  Result OnTryExpr(Index num_types, Type* sig_types) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
@@ -185,6 +197,11 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Index local_index,
                      StringSlice local_name) override;
 
+  Result BeginExceptionSection(Offset size) override { return Result::Ok; }
+  Result OnExceptionCount(Index count) override { return Result::Ok; }
+  Result OnExceptionType(Index index, TypeVector& types) override;
+  Result EndExceptionSection() override { return Result::Ok; }
+
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprGetGlobalExpr(Index index, Index global_index) override;
@@ -200,6 +217,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result GetLabelAt(LabelNode** label, Index depth);
   Result TopLabel(LabelNode** label);
   Result AppendExpr(Expr* expr);
+  Result AppendCatch(Catch* catch_);
 
   BinaryErrorHandler* error_handler = nullptr;
   Module* module = nullptr;
@@ -379,6 +397,18 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   return Result::Ok;
 }
 
+Result BinaryReaderIR::OnImportException(Index import_index,
+                                         StringSlice module_name,
+                                         StringSlice field_name,
+                                         Index except_index,
+                                         TypeVector& sig) {
+  assert(import_index == module->imports.size() - 1);
+  Import* import = module->imports[import_index];
+  import->kind = ExternalKind::Except;
+  import->except = new Exception(sig);
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::OnFunctionCount(Index count) {
   module->funcs.reserve(module->num_func_imports + count);
   return Result::Ok;
@@ -474,7 +504,7 @@ Result BinaryReaderIR::OnExport(Index index,
       assert(item_index < module->globals.size());
       break;
     case ExternalKind::Except:
-      WABT_FATAL("OnExport(except) not implemented\n");
+      // Note: Can't check if index valid, exceptions section comes later.
       break;
   }
   export_->var = Var(item_index, GetLocation());
@@ -518,18 +548,19 @@ Result BinaryReaderIR::OnBinaryExpr(Opcode opcode) {
 Result BinaryReaderIR::OnBlockExpr(Index num_types, Type* sig_types) {
   auto expr = new BlockExpr(new Block());
   expr->block->sig.assign(sig_types, sig_types + num_types);
-  AppendExpr(expr);
+  if (Failed(AppendExpr(expr)))
+      return Result::Error;
   PushLabel(LabelType::Block, &expr->block->exprs);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnBrExpr(Index depth) {
-  auto expr = new BrExpr(Var(depth));
+  auto expr = new BrExpr(Var(depth, GetLocation()));
   return AppendExpr(expr);
 }
 
 Result BinaryReaderIR::OnBrIfExpr(Index depth) {
-  auto expr = new BrIfExpr(Var(depth));
+  auto expr = new BrIfExpr(Var(depth, GetLocation()));
   return AppendExpr(expr);
 }
 
@@ -541,19 +572,20 @@ Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
   for (Index i = 0; i < num_targets; ++i) {
     (*targets)[i] = Var(target_depths[i]);
   }
-  auto expr = new BrTableExpr(targets, Var(default_target_depth));
+  auto expr = new BrTableExpr(targets,
+                              Var(default_target_depth, GetLocation()));
   return AppendExpr(expr);
 }
 
 Result BinaryReaderIR::OnCallExpr(Index func_index) {
   assert(func_index < module->funcs.size());
-  auto expr = new CallExpr(Var(func_index));
+  auto expr = new CallExpr(Var(func_index, GetLocation()));
   return AppendExpr(expr);
 }
 
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index) {
   assert(sig_index < module->func_types.size());
-  auto expr = new CallIndirectExpr(Var(sig_index));
+  auto expr = new CallIndirectExpr(Var(sig_index, GetLocation()));
   return AppendExpr(expr);
 }
 
@@ -635,7 +667,8 @@ Result BinaryReaderIR::OnI64ConstExpr(uint64_t value) {
 Result BinaryReaderIR::OnIfExpr(Index num_types, Type* sig_types) {
   auto expr = new IfExpr(new Block());
   expr->true_->sig.assign(sig_types, sig_types + num_types);
-  AppendExpr(expr);
+  if (Failed(AppendExpr(expr)))
+    return Result::Error;
   PushLabel(LabelType::If, &expr->true_->exprs);
   return Result::Ok;
 }
@@ -650,7 +683,8 @@ Result BinaryReaderIR::OnLoadExpr(Opcode opcode,
 Result BinaryReaderIR::OnLoopExpr(Index num_types, Type* sig_types) {
   auto expr = new LoopExpr(new Block());
   expr->block->sig.assign(sig_types, sig_types + num_types);
-  AppendExpr(expr);
+  if (Failed(AppendExpr(expr)))
+    return Result::Error;
   PushLabel(LabelType::Loop, &expr->block->exprs);
   return Result::Ok;
 }
@@ -658,6 +692,10 @@ Result BinaryReaderIR::OnLoopExpr(Index num_types, Type* sig_types) {
 Result BinaryReaderIR::OnNopExpr() {
   auto expr = new NopExpr();
   return AppendExpr(expr);
+}
+
+Result BinaryReaderIR::OnRethrowExpr(Index depth) {
+  return AppendExpr(new RethrowExpr(Var(depth, GetLocation())));
 }
 
 Result BinaryReaderIR::OnReturnExpr() {
@@ -687,9 +725,57 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
   return AppendExpr(expr);
 }
 
+Result BinaryReaderIR::OnThrowExpr(Index except_index) {
+  return AppendExpr(new ThrowExpr(Var(except_index, GetLocation())));
+}
+
 Result BinaryReaderIR::OnTeeLocalExpr(Index local_index) {
   auto expr = new TeeLocalExpr(Var(local_index, GetLocation()));
   return AppendExpr(expr);
+}
+
+Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
+  auto expr = new TryExpr();
+  expr->block = new Block();
+  expr->block->sig.assign(sig_types, sig_types + num_types);
+  if (Failed(AppendExpr(expr)))
+    return Result::Error;
+  PushLabel(LabelType::Try, &expr->block->exprs);
+  LabelNode* label = nullptr;
+  { Result result = TopLabel(&label);
+    (void) result;
+    assert(Succeeded(result));
+  }
+  label->context = expr;
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::AppendCatch(Catch* catch_) {
+  LabelNode* label = nullptr;
+  if (Succeeded(TopLabel(&label)) && label->label_type == LabelType::Try) {
+    if (auto try_ = dyn_cast<TryExpr>(label->context)) {
+      // TODO(karlschimpf) Probably should be set in the Catch constructor.
+      catch_->loc = GetLocation();
+      try_->catches.push_back(catch_);
+      label->exprs = &catch_->exprs;
+      return Result::Ok;
+    }
+  }
+  if (label != nullptr)
+    PrintError("catch not inside try block");
+  delete catch_;
+  return Result::Error;
+}
+
+Result BinaryReaderIR::OnCatchExpr(Index except_index) {
+  ExprList empty;
+  return AppendCatch(new Catch(Var(except_index, GetLocation())));
+  return Result::Error;
+}
+
+Result BinaryReaderIR::OnCatchAllExpr() {
+  ExprList empty;
+  return AppendCatch(new Catch());
 }
 
 Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {
@@ -883,6 +969,13 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   }
   bindings->emplace(std::string("$") + string_slice_to_string(name),
                     Binding(index));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnExceptionType(Index index, TypeVector& sig) {
+  auto except = new Exception(sig);
+  module->excepts.push_back(except);
+  module->AppendField(new ExceptionModuleField(except));
   return Result::Ok;
 }
 

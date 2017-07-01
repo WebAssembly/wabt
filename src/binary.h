@@ -26,6 +26,7 @@
 #define WABT_BINARY_SECTION_NAME "name"
 #define WABT_BINARY_SECTION_RELOC "reloc"
 #define WABT_BINARY_SECTION_LINKING "linking"
+#define WABT_BINARY_SECTION_EXCEPTION "exception"
 
 #define WABT_FOREACH_BINARY_SECTION(V) \
   V(Custom, custom, 0)                 \

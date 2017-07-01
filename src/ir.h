@@ -139,9 +139,10 @@ struct Block {
 
 struct Catch {
   WABT_DISALLOW_COPY_AND_ASSIGN(Catch);
-  Catch() = delete;
+  Catch();
+  explicit Catch(const Var& var);
   explicit Catch(ExprList exprs);
-  Catch(Var var, ExprList exprs);
+  Catch(const Var& var, ExprList exprs);
   Location loc;
   Var var;
   ExprList exprs;
@@ -281,6 +282,10 @@ typedef LoadStoreExpr<ExprType::Store> StoreExpr;
 struct Exception {
   StringSlice name;
   TypeVector sig;
+  Exception();
+  Exception(const TypeVector& sig);
+  Exception(StringSlice name, const TypeVector& sig);
+  Exception& operator =(const Exception& except);
   ~Exception() { destroy_string_slice(&name); }
 };
 
@@ -838,8 +843,8 @@ struct Script {
 };
 
 void MakeTypeBindingReverseMapping(
-    const TypeVector&,
-    const BindingHash&,
+    const TypeVector& types,
+    const BindingHash&  bindings,
     std::vector<std::string>* out_reverse_mapping);
 
 }  // namespace wabt
