@@ -180,7 +180,6 @@ class BinaryReader {
   Index NumTotalTables();
   Index NumTotalMemories();
   Index NumTotalGlobals();
-  Index NumTotalExceptions();
 
   Result ReadInitExpr(Index index) WABT_WARN_UNUSED;
   Result ReadTable(Type* out_elem_type,
@@ -485,10 +484,6 @@ Index BinaryReader::NumTotalMemories() {
 
 Index BinaryReader::NumTotalGlobals() {
   return num_global_imports_ + num_globals_;
-}
-
-Index BinaryReader::NumTotalExceptions() {
-  return num_exception_imports_ + num_exceptions_;
 }
 
 Result BinaryReader::ReadInitExpr(Index index) {
@@ -1037,6 +1032,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::CatchAll: {
         ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
         CALLBACK(OnCatchAllExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
       }
 

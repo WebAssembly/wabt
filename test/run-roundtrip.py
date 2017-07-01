@@ -116,7 +116,6 @@ def main(args):
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
   parser.add_argument('--fold-exprs', action='store_true')
-  parser.add_argument('--no-fold-exprs', action='store_true')
   parser.add_argument('--future-exceptions', action='store_true')
   parser.add_argument('--inline-exports', action='store_true')
   parser.add_argument('file', help='test file.')
@@ -139,7 +138,6 @@ def main(args):
       '--future-exceptions': options.future_exceptions,
       '--inline-exports': options.inline_exports,
       '--no-debug-names': not options.debug_names,
-      '--no-fold-exprs': options.no_fold_exprs,
       '--generate-names': options.generate_names,
       '--no-check': options.no_check,
   })

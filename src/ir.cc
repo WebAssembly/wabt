@@ -328,9 +328,32 @@ Block::~Block() {
   destroy_string_slice(&label);
 }
 
+Exception::Exception() {
+  ZeroMemory(name);
+}
+
+Exception::Exception(const TypeVector& sig)
+    : sig(sig) {
+  ZeroMemory(name);
+}
+
+Exception::Exception(StringSlice name, const TypeVector& sig)
+    : name(name), sig(sig) {}
+
+Exception& Exception::operator =(const Exception& except) {
+  name = dup_string_slice(except.name);
+  sig = except.sig;
+  return *this;
+}
+
+Catch::Catch() {}
+
+Catch::Catch(const Var& var) : var(var) {}
+
 Catch::Catch(ExprList exprs) : exprs(std::move(exprs)) {}
 
-Catch::Catch(Var var, ExprList exprs) : var(var), exprs(std::move(exprs)) {}
+Catch::Catch(const Var& var, ExprList exprs)
+    : var(var), exprs(std::move(exprs)) {}
 
 IfExpr::~IfExpr() {
   delete true_;

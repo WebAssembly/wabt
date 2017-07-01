@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --no-fold-exprs --future-exceptions
+;;; FLAGS: --stdout --future-exceptions
 (module
   (except $ex i32)
   (export "except" (except $ex))
