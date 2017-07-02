@@ -69,13 +69,4 @@
 0000035: 0b                                        ; end
 0000027: 0e                                        ; FIXUP func body size
 0000025: 10                                        ; FIXUP section size
-; section "exception"
-0000036: 00                                        ; custom section code
-0000037: 00                                        ; section size (guess)
-0000038: 09                                        ; string length
-0000039: 6578 6365 7074 696f 6e                   exception  ; custom section name
-0000042: 01                                        ; exception count
-0000043: 01                                        ; exception type count
-0000044: 7f                                        ; i32
-0000037: 0d                                        ; FIXUP section size
 ;;; STDOUT ;;)

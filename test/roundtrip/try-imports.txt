@@ -25,6 +25,5 @@
       nop
     catch_all
       rethrow 0 (;@1;)
-    end)
-  (except (;1;) i32))
+    end))
 ;;; STDOUT ;;)
