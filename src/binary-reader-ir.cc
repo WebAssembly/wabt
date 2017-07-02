@@ -406,6 +406,7 @@ Result BinaryReaderIR::OnImportException(Index import_index,
   Import* import = module->imports[import_index];
   import->kind = ExternalKind::Except;
   import->except = new Exception(sig);
+  module->excepts.push_back(import->except);
   return Result::Ok;
 }
 
