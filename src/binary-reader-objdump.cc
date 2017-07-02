@@ -1051,18 +1051,22 @@ Result read_binary_objdump(const uint8_t* data,
   ReadBinaryOptions read_options;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
+  read_options.allow_future_exceptions = options->allow_future_exceptions;
 
   switch (options->mode) {
     case ObjdumpMode::Prepass: {
       BinaryReaderObjdumpPrepass reader(data, size, options, state);
+      reader.allow_future_exceptions = options->allow_future_exceptions;
       return read_binary(data, size, &reader, &read_options);
     }
     case ObjdumpMode::Disassemble: {
       BinaryReaderObjdumpDisassemble reader(data, size, options, state);
+      reader.allow_future_exceptions = options->allow_future_exceptions;
       return read_binary(data, size, &reader, &read_options);
     }
     default: {
       BinaryReaderObjdump reader(data, size, options, state);
+      reader.allow_future_exceptions = options->allow_future_exceptions;
       return read_binary(data, size, &reader, &read_options);
     }
   }
