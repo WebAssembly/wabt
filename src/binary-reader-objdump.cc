@@ -70,6 +70,7 @@ BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
       data(data),
       size(size) {
   ZeroMemory(section_starts);
+  BinaryReaderNop::allow_future_exceptions = options->allow_future_exceptions;
 }
 
 Result BinaryReaderObjdumpBase::BeginSection(BinarySection section_code,
@@ -260,8 +261,14 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
 
   // Print disassemble
   int indent_level = this->indent_level;
-  if (current_opcode == Opcode::Else)
-    indent_level--;
+  switch (current_opcode) {
+    case Opcode::Else:
+    case Opcode::Catch:
+    case Opcode::CatchAll:
+      indent_level--;
+    default:
+      break;
+  }
   for (int j = 0; j < indent_level; j++) {
     printf("  ");
   }
@@ -464,6 +471,12 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
+  Result OnImportException(Index import_index,
+                           StringSlice module_name,
+                           StringSlice field_name,
+                           Index except_index,
+                           TypeVector& sig) override;
+
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -531,6 +544,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnStackGlobal(Index stack_global) override;
   Result OnSymbolInfoCount(Index count) override;
   Result OnSymbolInfo(StringSlice name, uint32_t flags) override;
+
+  Result OnExceptionCount(Index count) override;
+  Result OnExceptionType(Index index, TypeVector& sig)  override;
 
  private:
   bool ShouldPrintDetails();
@@ -747,6 +763,24 @@ Result BinaryReaderObjdump::OnImportGlobal(Index import_index,
   PrintDetails(" - global[%" PRIindex "] %s mutable=%d <- " PRIstringslice
                "." PRIstringslice "\n",
                global_index, get_type_name(type), mutable_,
+               WABT_PRINTF_STRING_SLICE_ARG(module_name),
+               WABT_PRINTF_STRING_SLICE_ARG(field_name));
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnImportException(Index import_index,
+                                              StringSlice module_name,
+                                              StringSlice field_name,
+                                              Index except_index,
+                                              TypeVector& sig) {
+  PrintDetails(" - except[%" PRIindex "] (", except_index);
+  for (Index i = 0; i < sig.size(); ++i) {
+    if (i != 0) {
+      PrintDetails(", ");
+    }
+    PrintDetails("%s", type_name(sig[i]));
+  }
+  PrintDetails(") <- " PRIstringslice "." PRIstringslice "\n",
                WABT_PRINTF_STRING_SLICE_ARG(module_name),
                WABT_PRINTF_STRING_SLICE_ARG(field_name));
   return Result::Ok;
@@ -1042,6 +1076,25 @@ Result BinaryReaderObjdump::OnSymbolInfo(StringSlice name,
   return Result::Ok;
 }
 
+Result BinaryReaderObjdump::OnExceptionCount(Index count) {
+  return OnCount(count);
+}
+
+Result BinaryReaderObjdump::OnExceptionType(
+    Index index, TypeVector& sig) {
+  if (!ShouldPrintDetails())
+    return Result::Ok;
+  printf(" - except[%" PRIindex "] (", index);
+  for (Index i = 0; i < sig.size(); ++i) {
+    if (i != 0) {
+      printf(", ");
+    }
+    printf("%s", type_name(sig[i]));
+  }
+  printf(")\n");
+  return Result::Ok;
+}
+
 }  // end anonymous namespace
 
 Result read_binary_objdump(const uint8_t* data,
@@ -1056,17 +1109,14 @@ Result read_binary_objdump(const uint8_t* data,
   switch (options->mode) {
     case ObjdumpMode::Prepass: {
       BinaryReaderObjdumpPrepass reader(data, size, options, state);
-      reader.allow_future_exceptions = options->allow_future_exceptions;
       return read_binary(data, size, &reader, &read_options);
     }
     case ObjdumpMode::Disassemble: {
       BinaryReaderObjdumpDisassemble reader(data, size, options, state);
-      reader.allow_future_exceptions = options->allow_future_exceptions;
       return read_binary(data, size, &reader, &read_options);
     }
     default: {
       BinaryReaderObjdump reader(data, size, options, state);
-      reader.allow_future_exceptions = options->allow_future_exceptions;
       return read_binary(data, size, &reader, &read_options);
     }
   }
