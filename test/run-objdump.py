@@ -47,6 +47,7 @@ def main(args):
   parser.add_argument('-c', '--compile-only', action='store_true')
   parser.add_argument('--dump-verbose', action='store_true')
   parser.add_argument('--dump-debug', action='store_true')
+  parser.add_argument('--future-exceptions', action='store_true')
   parser.add_argument('--gen-wasm', action='store_true',
                       help='parse with gen-wasm')
   parser.add_argument('--spec', action='store_true')
@@ -67,6 +68,7 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
       '--debug-names': options.debug_names,
+      '--future-exceptions': options.future_exceptions,
       '--no-check': options.no_check,
       '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
       '--spec': options.spec,
@@ -79,6 +81,7 @@ def main(args):
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm_objdump.AppendOptionalArgs({
+      '--future-exceptions': options.future_exceptions,
       '-h': options.headers,
       '-x': options.dump_verbose,
       '--debug': options.dump_debug,
