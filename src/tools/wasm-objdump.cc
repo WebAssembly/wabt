@@ -57,6 +57,10 @@ static void parse_options(int argc, char** argv) {
     s_log_stream = FileStream::CreateStdout();
     s_objdump_options.log_stream = s_log_stream.get();
   });
+  parser.AddOption("future-exceptions",
+                   "Test future extension for exception handling",
+                   []() { s_objdump_options.allow_future_exceptions = true;
+                   });
   parser.AddOption('x', "details", "Show section details",
                    []() { s_objdump_options.details = true; });
   parser.AddOption('r', "reloc", "Show relocations inline with disassembly",

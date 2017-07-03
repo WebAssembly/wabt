@@ -1,0 +1,84 @@
+;;; TOOL: run-objdump
+;;; FLAGS: -v --headers --future-exceptions
+(module
+  (except $ex i32)
+  (func (result i32)
+    try $try1 (result i32)
+      nop
+      i32.const 7
+    catch $ex
+      nop
+    catch_all
+      rethrow $try1
+    end
+  )
+)
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 01                                        ; num results
+000000e: 7f                                        ; i32
+0000009: 05                                        ; FIXUP section size
+; section "Function" (3)
+000000f: 03                                        ; section code
+0000010: 00                                        ; section size (guess)
+0000011: 01                                        ; num functions
+0000012: 00                                        ; function 0 signature index
+0000010: 02                                        ; FIXUP section size
+; section "Code" (10)
+0000013: 0a                                        ; section code
+0000014: 00                                        ; section size (guess)
+0000015: 01                                        ; num functions
+; function body 0
+0000016: 00                                        ; func body size (guess)
+0000017: 00                                        ; local decl count
+0000018: 06                                        ; try
+0000019: 7f                                        ; i32
+000001a: 01                                        ; nop
+000001b: 41                                        ; i32.const
+000001c: 07                                        ; i32 literal
+000001d: 07                                        ; catch
+000001e: 00                                        ; catch exception
+000001f: 01                                        ; nop
+0000020: 0a                                        ; catch_all
+0000021: 09                                        ; rethrow
+0000022: 00                                        ; rethrow depth
+0000023: 0b                                        ; end
+0000024: 0b                                        ; end
+0000016: 0e                                        ; FIXUP func body size
+0000014: 10                                        ; FIXUP section size
+; section "exception"
+0000025: 00                                        ; custom section code
+0000026: 00                                        ; section size (guess)
+0000027: 09                                        ; string length
+0000028: 6578 6365 7074 696f 6e                   exception  ; custom section name
+0000031: 01                                        ; exception count
+0000032: 01                                        ; exception type count
+0000033: 7f                                        ; i32
+0000026: 0d                                        ; FIXUP section size
+try.wasm:	file format wasm 0x1
+Sections:
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+ Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
+     Code start=0x00000015 end=0x00000025 (size=0x00000010) count: 1
+   Custom start=0x00000027 end=0x00000034 (size=0x0000000d) "exception"
+count: 1
+Code Disassembly:
+000016 func[0]:
+ 000018: 06 7f                      | try i32
+ 00001a: 01                         |   nop
+ 00001b: 41 07                      |   i32.const 7
+ 00001d: 07 00                      | catch 0
+ 00001f: 01                         |   nop
+ 000020: 0a                         | catch_all
+ 000021: 09 00                      |   rethrow 0
+ 000023: 0b                         | end
+ 000024: 0b                         | end
+;;; STDOUT ;;)
