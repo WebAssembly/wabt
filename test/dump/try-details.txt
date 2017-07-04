@@ -1,0 +1,37 @@
+;;; TOOL: run-objdump
+;;; FLAGS: --details --future-exceptions
+(module
+  (except $ex i32)
+  (func (result i32)
+    try $try1 (result i32)
+      nop
+      i32.const 7
+    catch $ex
+      nop
+    catch_all
+      rethrow $try1
+    end
+  )
+)
+(;; STDOUT ;;;
+try-details.wasm:	file format wasm 0x1
+Section Details:
+Type:
+ - type[0] () -> i32
+Function:
+ - func[0] sig=0
+Custom:
+ - name: "exception"
+ - except[0] (i32)
+Code Disassembly:
+000016 func[0]:
+ 000018: 06 7f                      | try i32
+ 00001a: 01                         |   nop
+ 00001b: 41 07                      |   i32.const 7
+ 00001d: 07 00                      | catch 0
+ 00001f: 01                         |   nop
+ 000020: 0a                         | catch_all
+ 000021: 09 00                      |   rethrow 0
+ 000023: 0b                         | end
+ 000024: 0b                         | end
+;;; STDOUT ;;)

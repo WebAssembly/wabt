@@ -1,0 +1,28 @@
+;;; TOOL: run-objdump
+;;; FLAGS: --details --future-exceptions
+(module
+  (except $ex i32)
+  (export "except" (except $ex))
+  (func (result i32)
+    (i32.const 7)
+    (throw $ex)
+  )
+)
+(;; STDOUT ;;;
+try-exports-details.wasm:	file format wasm 0x1
+Section Details:
+Type:
+ - type[0] () -> i32
+Function:
+ - func[0] sig=0
+Export:
+ - except[0] -> "except"
+Custom:
+ - name: "exception"
+ - except[0] (i32)
+Code Disassembly:
+000022 func[0]:
+ 000024: 41 07                      | i32.const 7
+ 000026: 08 00                      | throw 0
+ 000028: 0b                         | end
+;;; STDOUT ;;)

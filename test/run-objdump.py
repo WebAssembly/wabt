@@ -45,6 +45,8 @@ def main(args):
   parser.add_argument('--headers', action='store_true')
   parser.add_argument('--no-check', action='store_true')
   parser.add_argument('-c', '--compile-only', action='store_true')
+  parser.add_argument('--details', action='store_true',
+                      help='Show section details')
   parser.add_argument('--dump-verbose', action='store_true')
   parser.add_argument('--dump-debug', action='store_true')
   parser.add_argument('--future-exceptions', action='store_true')
@@ -81,6 +83,7 @@ def main(args):
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm_objdump.AppendOptionalArgs({
+      '--details': options.details,
       '--future-exceptions': options.future_exceptions,
       '-h': options.headers,
       '-x': options.dump_verbose,
