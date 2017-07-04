@@ -1,0 +1,27 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --inline-export
+(module
+  (func $func nop)
+  (export "func0" (func $func))
+  (export "func1" (func $func))
+
+  (global $global i32 (i32.const 0))
+  (export "global0" (global $global))
+  (export "global1" (global $global))
+
+  (table $table 1 1 anyfunc)
+  (export "table0" (table $table))
+  (export "table1" (table $table))
+
+  (memory $memory 0)
+  (export "memory0" (memory $memory))
+  (export "memory1" (memory $memory)))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (export "func0") (export "func1") (type 0)
+    nop)
+  (table (;0;) (export "table0") (export "table1") 1 1 anyfunc)
+  (memory (;0;) (export "memory0") (export "memory1") 0)
+  (global (;0;) (export "global0") (export "global1") i32 (i32.const 0)))
+;;; STDOUT ;;)
