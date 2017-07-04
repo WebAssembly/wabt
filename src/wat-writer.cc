@@ -187,6 +187,7 @@ class WatWriter {
   std::vector<const Export*> global_to_export_map_;
   std::vector<const Export*> table_to_export_map_;
   std::vector<const Export*> memory_to_export_map_;
+  std::vector<const Export*> exception_to_export_map_;
 
   Index func_index_ = 0;
   Index global_index_ = 0;
@@ -1029,8 +1030,10 @@ void WatWriter::WriteGlobal(const Global* global) {
 
 void WatWriter::WriteBeginException(const Exception* except) {
   WriteOpenSpace("except");
-  WriteNameOrIndex(&except->name, except_index_++, NextChar::Space);
+  WriteNameOrIndex(&except->name, except_index_, NextChar::Space);
+  WriteInlineExport(exception_to_export_map_[except_index_]);
   WriteTypes(except->sig, nullptr);
+  ++except_index_;
 }
 
 void WatWriter::WriteException(const Exception* except) {
@@ -1197,6 +1200,7 @@ void WatWriter::BuildExportMaps() {
   global_to_export_map_.resize(module_->globals.size());
   table_to_export_map_.resize(module_->tables.size());
   memory_to_export_map_.resize(module_->memories.size());
+  exception_to_export_map_.resize(module_->excepts.size());
   for (Export* export_ : module_->exports) {
     switch (export_->kind) {
       case ExternalKind::Func: {
@@ -1228,7 +1232,9 @@ void WatWriter::BuildExportMaps() {
       }
 
       case ExternalKind::Except:
-        // TODO(karlschimpf): Build for inline exceptions.
+        Index except_index = module_->GetExceptIndex(export_->var);
+        if (except_index != kInvalidIndex)
+          exception_to_export_map_[except_index] = export_;
         break;
     }
   }
