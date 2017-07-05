@@ -916,6 +916,17 @@ Result BinaryWriter::WriteModule(const Module* module) {
     EndSection();
   }
 
+  assert(module->excepts.size() >= module->num_except_imports);
+  Index num_exceptions = module->excepts.size() - module->num_except_imports;
+  if (num_exceptions) {
+    BeginCustomSection("exception", LEB_SECTION_SIZE_GUESS);
+    write_u32_leb128(&stream_, num_exceptions, "exception count");
+    for (Index i = module->num_except_imports; i < num_exceptions; ++i) {
+      WriteExceptType(&module->excepts[i]->sig);
+    }
+    EndSection();
+  }
+
   if (num_funcs) {
     BeginKnownSection(BinarySection::Code, LEB_SECTION_SIZE_GUESS);
     write_u32_leb128(&stream_, num_funcs, "num functions");
@@ -1021,16 +1032,6 @@ Result BinaryWriter::WriteModule(const Module* module) {
     }
   }
 
-  assert(module->excepts.size() >= module->num_except_imports);
-  Index num_exceptions = module->excepts.size() - module->num_except_imports;
-  if (num_exceptions) {
-    BeginCustomSection("exception", LEB_SECTION_SIZE_GUESS);
-    write_u32_leb128(&stream_, num_exceptions, "exception count");
-    for (Index i = module->num_except_imports; i < num_exceptions; ++i) {
-      WriteExceptType(&module->excepts[i]->sig);
-    }
-    EndSection();
-  }
 
   return stream_.result();
 }

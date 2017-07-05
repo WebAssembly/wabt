@@ -34,35 +34,35 @@
 0000011: 01                                        ; num functions
 0000012: 00                                        ; function 0 signature index
 0000010: 02                                        ; FIXUP section size
-; section "Code" (10)
-0000013: 0a                                        ; section code
-0000014: 00                                        ; section size (guess)
-0000015: 01                                        ; num functions
-; function body 0
-0000016: 00                                        ; func body size (guess)
-0000017: 00                                        ; local decl count
-0000018: 06                                        ; try
-0000019: 7f                                        ; i32
-000001a: 01                                        ; nop
-000001b: 41                                        ; i32.const
-000001c: 07                                        ; i32 literal
-000001d: 07                                        ; catch
-000001e: 00                                        ; catch exception
-000001f: 01                                        ; nop
-0000020: 0a                                        ; catch_all
-0000021: 09                                        ; rethrow
-0000022: 00                                        ; rethrow depth
-0000023: 0b                                        ; end
-0000024: 0b                                        ; end
-0000016: 0e                                        ; FIXUP func body size
-0000014: 10                                        ; FIXUP section size
 ; section "exception"
-0000025: 00                                        ; custom section code
-0000026: 00                                        ; section size (guess)
-0000027: 09                                        ; string length
-0000028: 6578 6365 7074 696f 6e                   exception  ; custom section name
-0000031: 01                                        ; exception count
-0000032: 01                                        ; exception type count
-0000033: 7f                                        ; i32
-0000026: 0d                                        ; FIXUP section size
+0000013: 00                                        ; custom section code
+0000014: 00                                        ; section size (guess)
+0000015: 09                                        ; string length
+0000016: 6578 6365 7074 696f 6e                   exception  ; custom section name
+000001f: 01                                        ; exception count
+0000020: 01                                        ; exception type count
+0000021: 7f                                        ; i32
+0000014: 0d                                        ; FIXUP section size
+; section "Code" (10)
+0000022: 0a                                        ; section code
+0000023: 00                                        ; section size (guess)
+0000024: 01                                        ; num functions
+; function body 0
+0000025: 00                                        ; func body size (guess)
+0000026: 00                                        ; local decl count
+0000027: 06                                        ; try
+0000028: 7f                                        ; i32
+0000029: 01                                        ; nop
+000002a: 41                                        ; i32.const
+000002b: 07                                        ; i32 literal
+000002c: 07                                        ; catch
+000002d: 00                                        ; catch exception
+000002e: 01                                        ; nop
+000002f: 0a                                        ; catch_all
+0000030: 09                                        ; rethrow
+0000031: 00                                        ; rethrow depth
+0000032: 0b                                        ; end
+0000033: 0b                                        ; end
+0000025: 0e                                        ; FIXUP func body size
+0000023: 10                                        ; FIXUP section size
 ;;; STDOUT ;;)

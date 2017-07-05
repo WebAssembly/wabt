@@ -24,14 +24,14 @@ Custom:
  - name: "exception"
  - except[0] (i32)
 Code Disassembly:
-000016 func[0]:
- 000018: 06 7f                      | try i32
- 00001a: 01                         |   nop
- 00001b: 41 07                      |   i32.const 7
- 00001d: 07 00                      | catch 0
- 00001f: 01                         |   nop
- 000020: 0a                         | catch_all
- 000021: 09 00                      |   rethrow 0
- 000023: 0b                         | end
- 000024: 0b                         | end
+000025 func[0]:
+ 000027: 06 7f                      | try i32
+ 000029: 01                         |   nop
+ 00002a: 41 07                      |   i32.const 7
+ 00002c: 07 00                      | catch 0
+ 00002e: 01                         |   nop
+ 00002f: 0a                         | catch_all
+ 000030: 09 00                      |   rethrow 0
+ 000032: 0b                         | end
+ 000033: 0b                         | end
 ;;; STDOUT ;;)
