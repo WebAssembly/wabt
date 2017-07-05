@@ -36,40 +36,40 @@
 000001d: 04                                        ; export kind
 000001e: 00                                        ; export exception index
 0000014: 0a                                        ; FIXUP section size
-; section "Code" (10)
-000001f: 0a                                        ; section code
-0000020: 00                                        ; section size (guess)
-0000021: 01                                        ; num functions
-; function body 0
-0000022: 00                                        ; func body size (guess)
-0000023: 00                                        ; local decl count
-0000024: 41                                        ; i32.const
-0000025: 07                                        ; i32 literal
-0000026: 08                                        ; throw
-0000027: 00                                        ; throw exception
-0000028: 0b                                        ; end
-0000022: 06                                        ; FIXUP func body size
-0000020: 08                                        ; FIXUP section size
 ; section "exception"
-0000029: 00                                        ; custom section code
-000002a: 00                                        ; section size (guess)
-000002b: 09                                        ; string length
-000002c: 6578 6365 7074 696f 6e                   exception  ; custom section name
-0000035: 01                                        ; exception count
-0000036: 01                                        ; exception type count
-0000037: 7f                                        ; i32
-000002a: 0d                                        ; FIXUP section size
+000001f: 00                                        ; custom section code
+0000020: 00                                        ; section size (guess)
+0000021: 09                                        ; string length
+0000022: 6578 6365 7074 696f 6e                   exception  ; custom section name
+000002b: 01                                        ; exception count
+000002c: 01                                        ; exception type count
+000002d: 7f                                        ; i32
+0000020: 0d                                        ; FIXUP section size
+; section "Code" (10)
+000002e: 0a                                        ; section code
+000002f: 00                                        ; section size (guess)
+0000030: 01                                        ; num functions
+; function body 0
+0000031: 00                                        ; func body size (guess)
+0000032: 00                                        ; local decl count
+0000033: 41                                        ; i32.const
+0000034: 07                                        ; i32 literal
+0000035: 08                                        ; throw
+0000036: 00                                        ; throw exception
+0000037: 0b                                        ; end
+0000031: 06                                        ; FIXUP func body size
+000002f: 08                                        ; FIXUP section size
 try-exports.wasm:	file format wasm 0x1
 Sections:
      Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
  Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
    Export start=0x00000015 end=0x0000001f (size=0x0000000a) count: 1
-     Code start=0x00000021 end=0x00000029 (size=0x00000008) count: 1
-   Custom start=0x0000002b end=0x00000038 (size=0x0000000d) "exception"
+   Custom start=0x00000021 end=0x0000002e (size=0x0000000d) "exception"
 count: 1
+     Code start=0x00000030 end=0x00000038 (size=0x00000008) count: 1
 Code Disassembly:
-000022 func[0]:
- 000024: 41 07                      | i32.const 7
- 000026: 08 00                      | throw 0
- 000028: 0b                         | end
+000031 func[0]:
+ 000033: 41 07                      | i32.const 7
+ 000035: 08 00                      | throw 0
+ 000037: 0b                         | end
 ;;; STDOUT ;;)

@@ -21,8 +21,8 @@ Custom:
  - name: "exception"
  - except[0] (i32)
 Code Disassembly:
-000022 func[0]:
- 000024: 41 07                      | i32.const 7
- 000026: 08 00                      | throw 0
- 000028: 0b                         | end
+000031 func[0]:
+ 000033: 41 07                      | i32.const 7
+ 000035: 08 00                      | throw 0
+ 000037: 0b                         | end
 ;;; STDOUT ;;)
