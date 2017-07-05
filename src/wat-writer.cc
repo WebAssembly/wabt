@@ -1027,8 +1027,10 @@ void WatWriter::WriteGlobal(const Global* global) {
 
 void WatWriter::WriteBeginException(const Exception* except) {
   WriteOpenSpace("except");
-  WriteNameOrIndex(&except->name, except_index_++, NextChar::Space);
+  WriteNameOrIndex(&except->name, except_index_, NextChar::Space);
+  WriteInlineExports(ExternalKind::Except, except_index_);
   WriteTypes(except->sig, nullptr);
+  ++except_index_;
 }
 
 void WatWriter::WriteException(const Exception* except) {
@@ -1212,7 +1214,7 @@ void WatWriter::BuildExportMap() {
         break;
 
       case ExternalKind::Except:
-        // TODO(karlschimpf): Build for inline exceptions.
+        index = module_->GetExceptIndex(export_->var);
         break;
     }
 

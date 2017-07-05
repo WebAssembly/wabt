@@ -1,0 +1,18 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --future-exceptions --inline-exports
+(module
+  (except $ex i32)
+  (export "except" (except $ex))
+  (func (result i32)
+    i32.const 7
+    throw $ex
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (func (;0;) (type 0) (result i32)
+    i32.const 7
+    throw 0)
+  (except (;0;) (export "except") i32))
+;;; STDOUT ;;)
