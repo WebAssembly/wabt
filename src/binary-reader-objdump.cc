@@ -1094,6 +1094,7 @@ Result BinaryReaderObjdump::OnExceptionType(
     printf("%s", type_name(sig[i]));
   }
   printf(")\n");
+  return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnDataSize(uint32_t data_size) {

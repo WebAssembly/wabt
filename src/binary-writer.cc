@@ -1032,11 +1032,6 @@ Result BinaryWriter::WriteModule(const Module* module) {
     }
   }
 
-  if (module->excepts.size()) {
-    // TODO(karlschimpf) Define.
-    WABT_FATAL("write exception section not implemented\n");
-  }
-
   return stream_.result();
 }
 
