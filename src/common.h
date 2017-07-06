@@ -147,7 +147,8 @@ struct Location {
     Binary,
   };
 
-  Location() : filename(NULL), line(0), first_column(0), last_column(0) {}
+  Location() : filename(nullptr), line(0), first_column(0), last_column(0) {}
+  explicit Location(size_t offset) : filename(nullptr), offset(offset) {}
 
   const char* filename;
   union {

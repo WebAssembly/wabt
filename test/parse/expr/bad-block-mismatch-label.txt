@@ -4,7 +4,7 @@
     block $foo
     end $bar))
 (;; STDERR ;;;
-out/test/parse/expr/bad-block-mismatch-label.txt:5:9: mismatching label "$foo" != "$bar"
+out/test/parse/expr/bad-block-mismatch-label.txt:5:9: error: mismatching label "$foo" != "$bar"
     end $bar))
         ^^^^
 ;;; STDERR ;;)

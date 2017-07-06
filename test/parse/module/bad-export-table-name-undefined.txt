@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (export "foo" (table $bar)))
 (;; STDERR ;;;
-out/test/parse/module/bad-export-table-name-undefined.txt:2:30: undefined table variable "$bar"
+out/test/parse/module/bad-export-table-name-undefined.txt:2:30: error: undefined table variable "$bar"
 (module (export "foo" (table $bar)))
                              ^^^^
 ;;; STDERR ;;)

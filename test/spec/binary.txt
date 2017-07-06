@@ -2,60 +2,60 @@
 ;;; STDIN_FILE: third_party/testsuite/binary.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/binary.wast:6: assert_malformed passed:
-  error: @0x00000000: unable to read uint32_t: magic
+  0000000: error: unable to read uint32_t: magic
 out/third_party/testsuite/binary.wast:7: assert_malformed passed:
-  error: @0x00000000: unable to read uint32_t: magic
+  0000000: error: unable to read uint32_t: magic
 out/third_party/testsuite/binary.wast:8: assert_malformed passed:
-  error: @0x00000000: unable to read uint32_t: magic
+  0000000: error: unable to read uint32_t: magic
 out/third_party/testsuite/binary.wast:9: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:10: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:11: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:12: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:13: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:14: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:15: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:16: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:17: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:18: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:21: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:24: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:25: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:28: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:31: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:34: assert_malformed passed:
-  error: @0x00000004: bad magic value
+  0000004: error: bad magic value
 out/third_party/testsuite/binary.wast:36: assert_malformed passed:
-  error: @0x00000004: unable to read uint32_t: version
+  0000004: error: unable to read uint32_t: version
 out/third_party/testsuite/binary.wast:37: assert_malformed passed:
-  error: @0x00000004: unable to read uint32_t: version
+  0000004: error: unable to read uint32_t: version
 out/third_party/testsuite/binary.wast:38: assert_malformed passed:
-  error: @0x00000004: unable to read uint32_t: version
+  0000004: error: unable to read uint32_t: version
 out/third_party/testsuite/binary.wast:39: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0 (expected 0x1)
+  0000008: error: bad wasm file version: 0 (expected 0x1)
 out/third_party/testsuite/binary.wast:40: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0xd (expected 0x1)
+  0000008: error: bad wasm file version: 0xd (expected 0x1)
 out/third_party/testsuite/binary.wast:41: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0xe (expected 0x1)
+  0000008: error: bad wasm file version: 0xe (expected 0x1)
 out/third_party/testsuite/binary.wast:42: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0x100 (expected 0x1)
+  0000008: error: bad wasm file version: 0x100 (expected 0x1)
 out/third_party/testsuite/binary.wast:43: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0x10000 (expected 0x1)
+  0000008: error: bad wasm file version: 0x10000 (expected 0x1)
 out/third_party/testsuite/binary.wast:44: assert_malformed passed:
-  error: @0x00000008: bad wasm file version: 0x1000000 (expected 0x1)
+  0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
 28/28 tests passed.
 ;;; STDOUT ;;)

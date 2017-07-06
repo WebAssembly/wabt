@@ -29,6 +29,6 @@ section("name") {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000035: local index out of order: 0
+0000035: error: local index out of order: 0
 
 ;;; STDERR ;;)

@@ -20,6 +20,6 @@ section("name") {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000027: unable to read u32 leb128: function index
+0000027: error: unable to read u32 leb128: function index
 
 ;;; STDERR ;;)

@@ -24,6 +24,6 @@ section("name") {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000002c: unfinished sub-section (expected end: 0x30)
+000002c: error: unfinished sub-section (expected end: 0x30)
 
 ;;; STDERR ;;)

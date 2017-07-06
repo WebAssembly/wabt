@@ -22,10 +22,10 @@
 #include <cstdlib>
 #include <utility>
 
-#include "binary-error-handler.h"
 #include "binary-reader.h"
 #include "binary-reader-ir.h"
 #include "cast.h"
+#include "error-handler.h"
 #include "literal.h"
 #include "wast-parser.h"
 #include "wast-parser-lexer-shared.h"
@@ -135,10 +135,16 @@ static void check_import_ordering(Location* loc,
                                   const ModuleFieldList&);
 static void append_module_fields(Module*, ModuleFieldList*);
 
-class BinaryErrorHandlerModule : public BinaryErrorHandler {
+class BinaryErrorHandlerModule : public ErrorHandler {
  public:
   BinaryErrorHandlerModule(Location* loc, WastLexer* lexer, WastParser* parser);
-  bool OnError(Offset offset, const std::string& error) override;
+  bool OnError(const Location&,
+               const std::string& error,
+               const std::string& source_line,
+               size_t source_line_column_offset) override;
+
+  // Unused.
+  size_t source_line_max_length() const override { return 0; }
 
  private:
   Location* loc_;
@@ -1910,7 +1916,7 @@ void append_module_fields(Module* module, ModuleFieldList* fields) {
 }
 
 Result parse_wast(WastLexer* lexer, Script** out_script,
-                  SourceErrorHandler* error_handler,
+                  ErrorHandler* error_handler,
                   WastParseOptions* options) {
   WastParser parser;
   ZeroMemory(parser);
@@ -1934,17 +1940,21 @@ Result parse_wast(WastLexer* lexer, Script** out_script,
 
 BinaryErrorHandlerModule::BinaryErrorHandlerModule(
     Location* loc, WastLexer* lexer, WastParser* parser)
-  : loc_(loc), lexer_(lexer), parser_(parser) {}
+    : ErrorHandler(Location::Type::Binary),
+      loc_(loc),
+      lexer_(lexer),
+      parser_(parser) {}
 
-bool BinaryErrorHandlerModule::OnError(Offset offset,
-                                       const std::string& error) {
-  if (offset == kInvalidOffset) {
+bool BinaryErrorHandlerModule::OnError(
+    const Location& binary_loc, const std::string& error,
+    const std::string& source_line, size_t source_line_column_offset) {
+  if (binary_loc.offset == kInvalidOffset) {
     wast_parser_error(loc_, lexer_, parser_, "error in binary module: %s",
                       error.c_str());
   } else {
     wast_parser_error(loc_, lexer_, parser_,
-                      "error in binary module: @0x%08" PRIzx ": %s", offset,
-                      error.c_str());
+                      "error in binary module: @0x%08" PRIzx ": %s",
+                      binary_loc.offset, error.c_str());
   }
   return true;
 }

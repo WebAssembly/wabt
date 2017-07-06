@@ -1,10 +1,10 @@
 ;;; ERROR: 1
 (module (func (local $f f32) get_local f))
 (;; STDERR ;;;
-out/test/parse/expr/bad-getlocal-name.txt:2:40: unexpected token "f"
+out/test/parse/expr/bad-getlocal-name.txt:2:40: error: unexpected token "f"
 (module (func (local $f f32) get_local f))
                                        ^
-out/test/parse/expr/bad-getlocal-name.txt:2:41: syntax error, unexpected ), expecting NAT or VAR
+out/test/parse/expr/bad-getlocal-name.txt:2:41: error: syntax error, unexpected ), expecting NAT or VAR
 (module (func (local $f f32) get_local f))
                                         ^
 ;;; STDERR ;;)

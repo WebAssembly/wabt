@@ -7,7 +7,7 @@
 
 (assert_return_arithmetic_nan (invoke "foo"))
 (;; STDERR ;;;
-out/test/parse/assert/bad-assert-return-arithmetic-nan-invalid-return-type.txt:8:32: type mismatch at action. got i32, expected f32 or f64
+out/test/parse/assert/bad-assert-return-arithmetic-nan-invalid-return-type.txt:8:32: error: type mismatch at action. got i32, expected f32 or f64
 (assert_return_arithmetic_nan (invoke "foo"))
                                ^^^^^^
 ;;; STDERR ;;)

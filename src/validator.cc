@@ -24,7 +24,7 @@
 
 #include "binary-reader.h"
 #include "cast.h"
-#include "source-error-handler.h"
+#include "error-handler.h"
 #include "type-checker.h"
 #include "wast-parser-lexer-shared.h"
 
@@ -35,7 +35,7 @@ namespace {
 class Validator {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Validator);
-  Validator(SourceErrorHandler*, WastLexer*, const Script*);
+  Validator(ErrorHandler*, WastLexer*, const Script*);
 
   Result CheckModule(const Module* module);
   Result CheckScript(const Script* script);
@@ -142,7 +142,7 @@ class Validator {
   void CheckExcept(const Location* loc, const Exception* Except);
   Result CheckExceptVar(const Var* var, const Exception** out_except);
 
-  SourceErrorHandler* error_handler_ = nullptr;
+  ErrorHandler* error_handler_ = nullptr;
   WastLexer* lexer_ = nullptr;
   const Script* script_ = nullptr;
   const Module* current_module_ = nullptr;
@@ -159,7 +159,7 @@ class Validator {
   std::vector<TryContext> try_contexts_;
 };
 
-Validator::Validator(SourceErrorHandler* error_handler,
+Validator::Validator(ErrorHandler* error_handler,
                      WastLexer* lexer,
                      const Script* script)
     : error_handler_(error_handler), lexer_(lexer), script_(script) {
@@ -1148,7 +1148,7 @@ Result Validator::CheckScript(const Script* script) {
 
 Result validate_script(WastLexer* lexer,
                        const Script* script,
-                       SourceErrorHandler* error_handler) {
+                       ErrorHandler* error_handler) {
   Validator validator(error_handler, lexer, script);
 
   return validator.CheckScript(script);
@@ -1156,7 +1156,7 @@ Result validate_script(WastLexer* lexer,
 
 Result validate_module(WastLexer* lexer,
                        const Module* module,
-                       SourceErrorHandler* error_handler) {
+                       ErrorHandler* error_handler) {
   Validator validator(error_handler, lexer, nullptr);
 
   return validator.CheckModule(module);

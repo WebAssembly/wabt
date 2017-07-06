@@ -16,15 +16,20 @@
   )
 )
 (;; STDOUT ;;;
+
 try-imports-details.wasm:	file format wasm 0x1
+
 Section Details:
+
 Type:
  - type[0] () -> i32
 Import:
  - except[0] (i32) <- c++.except
 Function:
  - func[0] sig=0
+
 Code Disassembly:
+
 000027 func[0]:
  000029: 06 7f                      | try i32
  00002b: 01                         |   nop

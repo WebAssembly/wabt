@@ -69,13 +69,18 @@
 0000035: 0b                                        ; end
 0000027: 0e                                        ; FIXUP func body size
 0000025: 10                                        ; FIXUP section size
+
 try-imports.wasm:	file format wasm 0x1
+
 Sections:
+
      Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
    Import start=0x00000011 end=0x00000020 (size=0x0000000f) count: 1
  Function start=0x00000022 end=0x00000024 (size=0x00000002) count: 1
      Code start=0x00000026 end=0x00000036 (size=0x00000010) count: 1
+
 Code Disassembly:
+
 000027 func[0]:
  000029: 06 7f                      | try i32
  00002b: 01                         |   nop

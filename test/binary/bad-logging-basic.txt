@@ -13,7 +13,7 @@ section(CODE) {
 }
 (;; STDERR ;;;
 Error running "wasm-interp":
-error: @0x00000015: function signature count != function body count
+0000015: error: function signature count != function body count
 
 ;;; STDERR ;;)
 (;; STDOUT ;;;

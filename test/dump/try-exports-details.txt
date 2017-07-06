@@ -9,8 +9,11 @@
   )
 )
 (;; STDOUT ;;;
+
 try-exports-details.wasm:	file format wasm 0x1
+
 Section Details:
+
 Type:
  - type[0] () -> i32
 Function:
@@ -20,7 +23,9 @@ Export:
 Custom:
  - name: "exception"
  - except[0] (i32)
+
 Code Disassembly:
+
 000031 func[0]:
  000033: 41 07                      | i32.const 7
  000035: 08 00                      | throw 0

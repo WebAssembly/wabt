@@ -1,10 +1,10 @@
 ;;; ERROR: 1
 (module (import "foo" "bar" (func (param i32) (resalt i32))))
 (;; STDERR ;;;
-out/test/parse/module/bad-import-func-not-result.txt:2:48: unexpected token "resalt"
+out/test/parse/module/bad-import-func-not-result.txt:2:48: error: unexpected token "resalt"
 (module (import "foo" "bar" (func (param i32) (resalt i32))))
                                                ^^^^^^
-out/test/parse/module/bad-import-func-not-result.txt:2:55: syntax error, unexpected VALUE_TYPE, expecting PARAM or RESULT
+out/test/parse/module/bad-import-func-not-result.txt:2:55: error: syntax error, unexpected VALUE_TYPE, expecting PARAM or RESULT
 (module (import "foo" "bar" (func (param i32) (resalt i32))))
                                                       ^^^
 ;;; STDERR ;;)

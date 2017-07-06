@@ -4,10 +4,10 @@
             br foo 
           end))
 (;; STDERR ;;;
-out/test/parse/expr/bad-br-name.txt:4:16: unexpected token "foo"
+out/test/parse/expr/bad-br-name.txt:4:16: error: unexpected token "foo"
             br foo 
                ^^^
-out/test/parse/expr/bad-br-name.txt:5:11: syntax error, unexpected END, expecting NAT or VAR
+out/test/parse/expr/bad-br-name.txt:5:11: error: syntax error, unexpected END, expecting NAT or VAR
           end))
           ^^^
 ;;; STDERR ;;)

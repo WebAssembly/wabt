@@ -1,8 +1,8 @@
 ;;; ERROR: 1
 (module (func) (export "
 (;; STDERR ;;;
-out/test/parse/bad-string-eof.txt:2:25: newline in string
+out/test/parse/bad-string-eof.txt:2:25: error: newline in string
 (module (func) (export "
                         ^
-out/test/parse/bad-string-eof.txt:3:2: syntax error, unexpected EOF, expecting TEXT
+out/test/parse/bad-string-eof.txt:3:2: error: syntax error, unexpected EOF, expecting TEXT
 ;;; STDERR ;;)

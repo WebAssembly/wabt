@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (memory 0 65537))
 (;; STDERR ;;;
-out/test/parse/module/bad-memory-max-size-too-big.txt:2:10: max pages (65537) must be <= (65536)
+out/test/parse/module/bad-memory-max-size-too-big.txt:2:10: error: max pages (65537) must be <= (65536)
 (module (memory 0 65537))
          ^^^^^^
 ;;; STDERR ;;)

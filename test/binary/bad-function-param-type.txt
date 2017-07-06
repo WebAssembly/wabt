@@ -8,6 +8,6 @@ section(TYPE) {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000000e: expected valid param type (got -64)
+000000e: error: expected valid param type (got -64)
 
 ;;; STDERR ;;)

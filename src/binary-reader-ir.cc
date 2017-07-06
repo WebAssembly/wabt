@@ -23,10 +23,10 @@
 #include <cstdio>
 #include <vector>
 
-#include "binary-error-handler.h"
 #include "binary-reader-nop.h"
 #include "cast.h"
 #include "common.h"
+#include "error-handler.h"
 #include "ir.h"
 
 #define CHECK_RESULT(expr)  \
@@ -55,7 +55,7 @@ class BinaryReaderIR : public BinaryReaderNop {
  public:
   BinaryReaderIR(Module* out_module,
                  const char* filename,
-                 BinaryErrorHandler* error_handler);
+                 ErrorHandler* error_handler);
 
   bool OnError(const char* message) override;
 
@@ -219,7 +219,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result AppendExpr(Expr* expr);
   Result AppendCatch(Catch* catch_);
 
-  BinaryErrorHandler* error_handler = nullptr;
+  ErrorHandler* error_handler = nullptr;
   Module* module = nullptr;
 
   Func* current_func = nullptr;
@@ -230,7 +230,7 @@ class BinaryReaderIR : public BinaryReaderNop {
 
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
                                const char* filename,
-                               BinaryErrorHandler* error_handler)
+                               ErrorHandler* error_handler)
     : error_handler(error_handler), module(out_module), filename_(filename) {}
 
 Location BinaryReaderIR::GetLocation() const {
@@ -289,7 +289,7 @@ Result BinaryReaderIR::AppendExpr(Expr* expr) {
 }
 
 bool BinaryReaderIR::HandleError(Offset offset, const char* message) {
-  return error_handler->OnError(offset, message);
+  return error_handler->OnError(Location(offset), message, std::string(), 0);
 }
 
 bool BinaryReaderIR::OnError(const char* message) {
@@ -986,7 +986,7 @@ Result read_binary_ir(const char* filename,
                       const void* data,
                       size_t size,
                       const ReadBinaryOptions* options,
-                      BinaryErrorHandler* error_handler,
+                      ErrorHandler* error_handler,
                       struct Module* out_module) {
   BinaryReaderIR reader(out_module, filename, error_handler);
   Result result = read_binary(data, size, &reader, options);

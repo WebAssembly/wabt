@@ -20,7 +20,7 @@
   )
 ) 
 (;; STDERR ;;;
-out/test/exceptions/catch-all-not-last.txt:16:8: Appears after catch all block
+out/test/exceptions/catch-all-not-last.txt:16:8: error: Appears after catch all block
       (catch $ex
        ^^^^^
 ;;; STDERR ;;)

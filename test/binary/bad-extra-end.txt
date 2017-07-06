@@ -15,6 +15,6 @@ section(CODE) {
 (;; STDERR ;;;
 Error running "wasm2wast":
 error: popping empty label stack
-error: @0x0000001a: OnEndExpr callback failed
+000001a: error: OnEndExpr callback failed
 
 ;;; STDERR ;;)

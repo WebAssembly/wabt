@@ -5,7 +5,7 @@
       br
     end))
 (;; STDERR ;;;
-out/test/parse/expr/bad-br-no-depth.txt:6:5: syntax error, unexpected END, expecting NAT or VAR
+out/test/parse/expr/bad-br-no-depth.txt:6:5: error: syntax error, unexpected END, expecting NAT or VAR
     end))
     ^^^
 ;;; STDERR ;;)

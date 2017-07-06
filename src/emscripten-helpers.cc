@@ -25,12 +25,11 @@
 #include "binary-reader.h"
 #include "binary-reader-ir.h"
 #include "binary-writer.h"
-#include "binary-error-handler.h"
 #include "common.h"
+#include "error-handler.h"
 #include "ir.h"
 #include "generate-names.h"
 #include "resolve-names.h"
-#include "source-error-handler.h"
 #include "stream.h"
 #include "validator.h"
 #include "wast-lexer.h"
@@ -64,9 +63,8 @@ wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
   return lexer.release();
 }
 
-WabtParseWastResult* wabt_parse_wast(
-    wabt::WastLexer* lexer,
-    wabt::SourceErrorHandlerBuffer* error_handler) {
+WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
+                                     wabt::ErrorHandlerBuffer* error_handler) {
   WabtParseWastResult* result = new WabtParseWastResult();
   wabt::Script* script = nullptr;
   result->result = wabt::parse_wast(lexer, &script, error_handler);
@@ -78,7 +76,7 @@ WabtReadBinaryResult* wabt_read_binary(
     const void* data,
     size_t size,
     int read_debug_names,
-    wabt::BinaryErrorHandlerBuffer* error_handler) {
+    wabt::ErrorHandlerBuffer* error_handler) {
   wabt::ReadBinaryOptions options;
   options.log_stream = nullptr;
   options.read_debug_names = read_debug_names;
@@ -96,21 +94,20 @@ WabtReadBinaryResult* wabt_read_binary(
 wabt::Result wabt_resolve_names_script(
     wabt::WastLexer* lexer,
     wabt::Script* script,
-    wabt::SourceErrorHandlerBuffer* error_handler) {
+    wabt::ErrorHandlerBuffer* error_handler) {
   return resolve_names_script(lexer, script, error_handler);
 }
 
 wabt::Result wabt_resolve_names_module(
     wabt::WastLexer* lexer,
     wabt::Module* module,
-    wabt::SourceErrorHandlerBuffer* error_handler) {
+    wabt::ErrorHandlerBuffer* error_handler) {
   return resolve_names_module(lexer, module, error_handler);
 }
 
-wabt::Result wabt_validate_script(
-    wabt::WastLexer* lexer,
-    wabt::Script* script,
-    wabt::SourceErrorHandlerBuffer* error_handler) {
+wabt::Result wabt_validate_script(wabt::WastLexer* lexer,
+                                  wabt::Script* script,
+                                  wabt::ErrorHandlerBuffer* error_handler) {
   return validate_script(lexer, script, error_handler);
 }
 
@@ -177,43 +174,27 @@ void wabt_destroy_wast_lexer(wabt::WastLexer* lexer) {
   delete lexer;
 }
 
-// SourceErrorHandlerBuffer
-wabt::SourceErrorHandlerBuffer* wabt_new_source_error_handler_buffer(void) {
-  return new wabt::SourceErrorHandlerBuffer();
+// ErrorHandlerBuffer
+wabt::ErrorHandlerBuffer* wabt_new_text_error_handler_buffer(void) {
+  return new wabt::ErrorHandlerBuffer(wabt::Location::Type::Text);
 }
 
-const void* wabt_source_error_handler_buffer_get_data(
-    wabt::SourceErrorHandlerBuffer* error_handler) {
+wabt::ErrorHandlerBuffer* wabt_new_binary_error_handler_buffer(void) {
+  return new wabt::ErrorHandlerBuffer(wabt::Location::Type::Binary);
+}
+
+const void* wabt_error_handler_buffer_get_data(
+    wabt::ErrorHandlerBuffer* error_handler) {
   return error_handler->buffer().data();
 }
 
-size_t wabt_source_error_handler_buffer_get_size(
-    wabt::SourceErrorHandlerBuffer* error_handler) {
+size_t wabt_error_handler_buffer_get_size(
+    wabt::ErrorHandlerBuffer* error_handler) {
   return error_handler->buffer().size();
 }
 
-void wabt_destroy_source_error_handler_buffer(
-    wabt::SourceErrorHandlerBuffer* error_handler) {
-  delete error_handler;
-}
-
-// BinaryErrorHandlerBuffer
-wabt::BinaryErrorHandlerBuffer* wabt_new_binary_error_handler_buffer(void) {
-  return new wabt::BinaryErrorHandlerBuffer();
-}
-
-const void* wabt_binary_error_handler_buffer_get_data(
-    wabt::BinaryErrorHandlerBuffer* error_handler) {
-  return error_handler->buffer().data();
-}
-
-size_t wabt_binary_error_handler_buffer_get_size(
-    wabt::BinaryErrorHandlerBuffer* error_handler) {
-  return error_handler->buffer().size();
-}
-
-void wabt_destroy_binary_error_handler_buffer(
-    wabt::BinaryErrorHandlerBuffer* error_handler) {
+void wabt_destroy_error_handler_buffer(
+    wabt::ErrorHandlerBuffer* error_handler) {
   delete error_handler;
 }
 

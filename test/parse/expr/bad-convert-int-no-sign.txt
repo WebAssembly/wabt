@@ -3,10 +3,10 @@
           i32.const 
           i32.convert.i32))
 (;; STDERR ;;;
-out/test/parse/expr/bad-convert-int-no-sign.txt:4:11: unexpected token "i32.convert.i32"
+out/test/parse/expr/bad-convert-int-no-sign.txt:4:11: error: unexpected token "i32.convert.i32"
           i32.convert.i32))
           ^^^^^^^^^^^^^^^
-out/test/parse/expr/bad-convert-int-no-sign.txt:4:26: syntax error, unexpected ), expecting NAT or INT or FLOAT
+out/test/parse/expr/bad-convert-int-no-sign.txt:4:26: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
           i32.convert.i32))
                          ^
 ;;; STDERR ;;)

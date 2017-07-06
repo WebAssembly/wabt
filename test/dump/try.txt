@@ -63,14 +63,19 @@
 0000033: 0b                                        ; end
 0000025: 0e                                        ; FIXUP func body size
 0000023: 10                                        ; FIXUP section size
+
 try.wasm:	file format wasm 0x1
+
 Sections:
+
      Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
  Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
    Custom start=0x00000015 end=0x00000022 (size=0x0000000d) "exception"
 count: 1
      Code start=0x00000024 end=0x00000034 (size=0x00000010) count: 1
+
 Code Disassembly:
+
 000025 func[0]:
  000027: 06 7f                      | try i32
  000029: 01                         |   nop
