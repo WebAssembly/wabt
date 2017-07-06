@@ -8,7 +8,7 @@
     drop
     drop))
 (;; STDERR ;;;
-out/test/parse/expr/bad-loop-sig-multi.txt:4:5: multiple loop signature result types not currently supported.
+out/test/parse/expr/bad-loop-sig-multi.txt:4:5: error: multiple loop signature result types not currently supported.
     loop (result i32 i32)
     ^^^^
 ;;; STDERR ;;)

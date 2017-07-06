@@ -3,24 +3,24 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/br.wast:411: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001c: OnBrExpr callback failed
+  000001c: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:418: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
-  error: @0x0000001d: OnBrExpr callback failed
+  000001d: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:424: assert_invalid passed:
   error: type stack size too small at br. got 0, expected at least 1
-  error: @0x00000020: OnBrExpr callback failed
+  0000020: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:430: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
-  error: @0x0000001e: OnBrExpr callback failed
+  000001e: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:437: assert_invalid passed:
   error: invalid depth: 1 (max 0)
-  error: @0x00000019: OnBrExpr callback failed
+  0000019: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:441: assert_invalid passed:
   error: invalid depth: 5 (max 2)
-  error: @0x0000001d: OnBrExpr callback failed
+  000001d: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:445: assert_invalid passed:
   error: invalid depth: 268435457 (max 0)
-  error: @0x0000001d: OnBrExpr callback failed
+  000001d: error: OnBrExpr callback failed
 68/68 tests passed.
 ;;; STDOUT ;;)

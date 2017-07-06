@@ -20,13 +20,12 @@
 #include <cstdlib>
 
 #include "apply-names.h"
-#include "binary-error-handler.h"
 #include "binary-reader.h"
 #include "binary-reader-ir.h"
+#include "error-handler.h"
 #include "generate-names.h"
 #include "ir.h"
 #include "option-parser.h"
-#include "source-error-handler.h"
 #include "stream.h"
 #include "validator.h"
 #include "wast-lexer.h"
@@ -106,22 +105,16 @@ int ProgramMain(int argc, char** argv) {
   size_t size;
   result = read_file(s_infile.c_str(), &data, &size);
   if (Succeeded(result)) {
-    BinaryErrorHandlerFile error_handler;
+    ErrorHandlerFile binary_error_handler(Location::Type::Binary);
     Module module;
-    result = read_binary_ir(s_infile.c_str(), data, size,
-                            &s_read_binary_options, &error_handler, &module);
+    result =
+        read_binary_ir(s_infile.c_str(), data, size, &s_read_binary_options,
+                       &binary_error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result) && s_validate) {
-        // TODO(binji): Would be nicer to use a builder pattern for an option
-        // struct here, e.g.:
-        //
-        //   SourceErrorHandlerFile::Options()
-        //      .LocationType(Location::Type::Binary)
-        SourceErrorHandlerFile error_handler(
-            stderr, std::string(), SourceErrorHandlerFile::PrintHeader::Never,
-            80, Location::Type::Binary);
+        ErrorHandlerFile text_error_handler(Location::Type::Text);
         WastLexer* lexer = nullptr;
-        result = validate_module(lexer, &module, &error_handler);
+        result = validate_module(lexer, &module, &text_error_handler);
       }
 
       if (s_generate_names)

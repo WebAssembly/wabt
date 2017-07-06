@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (export))
 (;; STDERR ;;;
-out/test/parse/module/bad-export-func-empty.txt:2:16: syntax error, unexpected ), expecting TEXT
+out/test/parse/module/bad-export-func-empty.txt:2:16: error: syntax error, unexpected ), expecting TEXT
 (module (export))
                ^
 ;;; STDERR ;;)

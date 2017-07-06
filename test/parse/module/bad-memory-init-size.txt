@@ -1,10 +1,10 @@
 ;;; ERROR: 1
 (module (memory foo))
 (;; STDERR ;;;
-out/test/parse/module/bad-memory-init-size.txt:2:17: unexpected token "foo"
+out/test/parse/module/bad-memory-init-size.txt:2:17: error: unexpected token "foo"
 (module (memory foo))
                 ^^^
-out/test/parse/module/bad-memory-init-size.txt:2:20: syntax error, unexpected ), expecting ( or NAT
+out/test/parse/module/bad-memory-init-size.txt:2:20: error: syntax error, unexpected ), expecting ( or NAT
 (module (memory foo))
                    ^
 ;;; STDERR ;;)

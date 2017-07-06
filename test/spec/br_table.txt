@@ -3,48 +3,48 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/br_table.wast:1413: assert_invalid passed:
   error: type stack at end of block is 1, expected 0
-  error: @0x00000022: OnEndExpr callback failed
+  0000022: error: OnEndExpr callback failed
 out/third_party/testsuite/br_table.wast:1420: assert_invalid passed:
   error: type stack size too small at br_table. got 0, expected at least 1
-  error: @0x00000020: OnBrTableExpr callback failed
+  0000020: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1426: assert_invalid passed:
   error: type mismatch in br_table, expected i32 but got i64.
-  error: @0x00000023: OnBrTableExpr callback failed
+  0000023: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1434: assert_invalid passed:
   error: type mismatch in br_table, expected void but got f32.
-  error: @0x00000026: OnBrTableExpr callback failed
+  0000026: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1446: assert_invalid passed:
   error: type stack size too small at br_table. got 0, expected at least 1
-  error: @0x0000001f: OnBrTableExpr callback failed
+  000001f: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1452: assert_invalid passed:
   error: type mismatch in br_table, expected i32 but got i64.
-  error: @0x0000001e: OnBrTableExpr callback failed
+  000001e: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1458: assert_invalid passed:
   error: type stack size too small at br_table. got 0, expected at least 1
-  error: @0x00000021: OnBrTableExpr callback failed
+  0000021: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1464: assert_invalid passed:
   error: type stack size too small at br_table. got 0, expected at least 1
-  error: @0x00000023: OnBrTableExpr callback failed
+  0000023: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1470: assert_invalid passed:
   error: type mismatch in br_table, expected i32 but got i64.
-  error: @0x00000022: OnBrTableExpr callback failed
+  0000022: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1479: assert_invalid passed:
   error: invalid depth: 2 (max 1)
-  error: @0x0000001f: OnBrTableExpr callback failed
+  000001f: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1485: assert_invalid passed:
   error: invalid depth: 5 (max 2)
-  error: @0x00000021: OnBrTableExpr callback failed
+  0000021: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1491: assert_invalid passed:
   error: invalid depth: 268435457 (max 1)
-  error: @0x00000024: OnBrTableExpr callback failed
+  0000024: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1498: assert_invalid passed:
   error: invalid depth: 2 (max 1)
-  error: @0x0000001f: OnBrTableExpr callback failed
+  000001f: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1504: assert_invalid passed:
   error: invalid depth: 5 (max 2)
-  error: @0x00000021: OnBrTableExpr callback failed
+  0000021: error: OnBrTableExpr callback failed
 out/third_party/testsuite/br_table.wast:1510: assert_invalid passed:
   error: invalid depth: 268435457 (max 1)
-  error: @0x00000024: OnBrTableExpr callback failed
+  0000024: error: OnBrTableExpr callback failed
 159/159 tests passed.
 ;;; STDOUT ;;)

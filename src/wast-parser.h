@@ -22,14 +22,16 @@
 namespace wabt {
 
 struct Script;
-class SourceErrorHandler;
+class ErrorHandler;
 
 struct WastParseOptions {
   bool allow_future_exceptions = false;
   bool debug_parsing = false;
 };
 
-Result parse_wast(WastLexer* lexer, Script** out_script, SourceErrorHandler*,
+Result parse_wast(WastLexer* lexer,
+                  Script** out_script,
+                  ErrorHandler*,
                   WastParseOptions* options = nullptr);
 
 }  // namespace wabt

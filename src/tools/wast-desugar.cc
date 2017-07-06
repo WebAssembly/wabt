@@ -23,10 +23,10 @@
 #include "apply-names.h"
 #include "common.h"
 #include "config.h"
+#include "error-handler.h"
 #include "generate-names.h"
 #include "ir.h"
 #include "option-parser.h"
-#include "source-error-handler.h"
 #include "stream.h"
 #include "wast-parser.h"
 #include "wat-writer.h"
@@ -85,10 +85,10 @@ int ProgramMain(int argc, char** argv) {
   if (!lexer)
     WABT_FATAL("unable to read %s\n", s_infile);
 
-  SourceErrorHandlerFile error_handler;
+  ErrorHandlerFile error_handler(Location::Type::Text);
   Script* script;
-  Result result = parse_wast(lexer.get(), &script, &error_handler,
-                             &s_parse_options);
+  Result result =
+      parse_wast(lexer.get(), &script, &error_handler, &s_parse_options);
 
   if (Succeeded(result)) {
     Module* module = script->GetFirstModule();

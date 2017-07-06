@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (if (i32.const 0))))
 (;; STDERR ;;;
-out/test/parse/expr/bad-if-no-then.txt:2:32: syntax error, unexpected ), expecting (
+out/test/parse/expr/bad-if-no-then.txt:2:32: error: syntax error, unexpected ), expecting (
 (module (func (if (i32.const 0))))
                                ^
 ;;; STDERR ;;)

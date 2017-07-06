@@ -21,6 +21,6 @@ section("name") {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000028: duplicate sub-section
+0000028: error: duplicate sub-section
 
 ;;; STDERR ;;)

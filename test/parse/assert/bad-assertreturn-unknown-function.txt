@@ -3,7 +3,7 @@
 (module)
 (assert_return (invoke "foo") (i32.const 0))
 (;; STDERR ;;;
-out/test/parse/assert/bad-assertreturn-unknown-function.txt:4:17: unknown function export "foo"
+out/test/parse/assert/bad-assertreturn-unknown-function.txt:4:17: error: unknown function export "foo"
 (assert_return (invoke "foo") (i32.const 0))
                 ^^^^^^
 ;;; STDERR ;;)

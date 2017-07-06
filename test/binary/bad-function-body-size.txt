@@ -14,6 +14,6 @@ section(CODE) {
 }
 (;; STDERR ;;;
 Error running "wasm-interp":
-error: @0x00000019: function body longer than given size
+0000019: error: function body longer than given size
 
 ;;; STDERR ;;)

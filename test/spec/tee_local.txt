@@ -3,72 +3,72 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/tee_local.wast:132: assert_invalid passed:
   error: type mismatch in implicit return, expected i64 but got i32.
-  error: @0x0000001f: EndFunctionBody callback failed
+  000001f: error: EndFunctionBody callback failed
 out/third_party/testsuite/tee_local.wast:136: assert_invalid passed:
   error: type mismatch in i32.eqz, expected i32 but got f32.
-  error: @0x00000021: OnConvertExpr callback failed
+  0000021: error: OnConvertExpr callback failed
 out/third_party/testsuite/tee_local.wast:140: assert_invalid passed:
   error: type mismatch in f64.neg, expected f64 but got i64.
-  error: @0x00000020: OnUnaryExpr callback failed
+  0000020: error: OnUnaryExpr callback failed
 out/third_party/testsuite/tee_local.wast:145: assert_invalid passed:
   error: type stack size too small at tee_local. got 0, expected at least 1
-  error: @0x0000001c: OnTeeLocalExpr callback failed
+  000001c: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:149: assert_invalid passed:
   error: type mismatch in tee_local, expected i32 but got f32.
-  error: @0x00000020: OnTeeLocalExpr callback failed
+  0000020: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:153: assert_invalid passed:
   error: type mismatch in tee_local, expected f32 but got f64.
-  error: @0x00000024: OnTeeLocalExpr callback failed
+  0000024: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:157: assert_invalid passed:
   error: type mismatch in tee_local, expected i64 but got f64.
-  error: @0x00000026: OnTeeLocalExpr callback failed
+  0000026: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:165: assert_invalid passed:
   error: type mismatch in implicit return, expected i64 but got i32.
-  error: @0x0000001c: EndFunctionBody callback failed
+  000001c: error: EndFunctionBody callback failed
 out/third_party/testsuite/tee_local.wast:169: assert_invalid passed:
   error: type mismatch in i32.eqz, expected i32 but got f32.
-  error: @0x0000001b: OnConvertExpr callback failed
+  000001b: error: OnConvertExpr callback failed
 out/third_party/testsuite/tee_local.wast:173: assert_invalid passed:
   error: type mismatch in f64.neg, expected f64 but got i64.
-  error: @0x0000001c: OnUnaryExpr callback failed
+  000001c: error: OnUnaryExpr callback failed
 out/third_party/testsuite/tee_local.wast:178: assert_invalid passed:
   error: type stack size too small at tee_local. got 0, expected at least 1
-  error: @0x0000001b: OnTeeLocalExpr callback failed
+  000001b: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:182: assert_invalid passed:
   error: type mismatch in tee_local, expected i32 but got f32.
-  error: @0x0000001f: OnTeeLocalExpr callback failed
+  000001f: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:186: assert_invalid passed:
   error: type mismatch in tee_local, expected f32 but got f64.
-  error: @0x00000023: OnTeeLocalExpr callback failed
+  0000023: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:190: assert_invalid passed:
   error: type mismatch in tee_local, expected i64 but got f64.
-  error: @0x00000024: OnTeeLocalExpr callback failed
+  0000024: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:198: assert_invalid passed:
   error: invalid local_index: 3 (max 2)
-  error: @0x0000001d: OnGetLocalExpr callback failed
+  000001d: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:202: assert_invalid passed:
   error: invalid local_index: 14324343 (max 2)
-  error: @0x00000020: OnGetLocalExpr callback failed
+  0000020: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:207: assert_invalid passed:
   error: invalid local_index: 2 (max 2)
-  error: @0x0000001b: OnGetLocalExpr callback failed
+  000001b: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:211: assert_invalid passed:
   error: invalid local_index: 714324343 (max 2)
-  error: @0x00000021: OnGetLocalExpr callback failed
+  0000021: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:216: assert_invalid passed:
   error: invalid local_index: 3 (max 3)
-  error: @0x0000001e: OnGetLocalExpr callback failed
+  000001e: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:220: assert_invalid passed:
   error: invalid local_index: 214324343 (max 3)
-  error: @0x00000021: OnGetLocalExpr callback failed
+  0000021: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:225: assert_invalid passed:
   error: type mismatch in tee_local, expected i32 but got f32.
-  error: @0x00000021: OnTeeLocalExpr callback failed
+  0000021: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:229: assert_invalid passed:
   error: type mismatch in tee_local, expected i32 but got f32.
-  error: @0x00000022: OnTeeLocalExpr callback failed
+  0000022: error: OnTeeLocalExpr callback failed
 out/third_party/testsuite/tee_local.wast:233: assert_invalid passed:
   error: type mismatch in tee_local, expected f64 but got i64.
-  error: @0x00000020: OnTeeLocalExpr callback failed
+  0000020: error: OnTeeLocalExpr callback failed
 34/34 tests passed.
 ;;; STDOUT ;;)

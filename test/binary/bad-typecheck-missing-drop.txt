@@ -15,6 +15,6 @@ section(CODE) {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-out/test/binary/bad-typecheck-missing-drop/bad-typecheck-missing-drop.wasm:28: type stack at end of function is 1, expected 0
+out/test/binary/bad-typecheck-missing-drop/bad-typecheck-missing-drop.wasm:28:0: error: type stack at end of function is 1, expected 0
 
 ;;; STDERR ;;)

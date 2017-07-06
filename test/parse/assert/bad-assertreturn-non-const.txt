@@ -11,7 +11,7 @@
     (f32.add (f32.const 1) (f32.const 10)))
   (f32.const 11))
 (;; STDERR ;;;
-out/test/parse/assert/bad-assertreturn-non-const.txt:11:6: syntax error, unexpected BINARY, expecting CONST
+out/test/parse/assert/bad-assertreturn-non-const.txt:11:6: error: syntax error, unexpected BINARY, expecting CONST
     (f32.add (f32.const 1) (f32.const 10)))
      ^^^^^^^
 ;;; STDERR ;;)

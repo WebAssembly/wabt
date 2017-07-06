@@ -117,7 +117,7 @@
     (i64.const 0))  ;; deliberate type-check error
 )
 (;; STDERR ;;;
-out/test/regress/regress-5.txt:117:6: type mismatch in implicit return, expected i32 but got i64.
+out/test/regress/regress-5.txt:117:6: error: type mismatch in implicit return, expected i32 but got i64.
     (i64.const 0))  ;; deliberate type-check error
      ^^^^^^^^^^^
 ;;; STDERR ;;)

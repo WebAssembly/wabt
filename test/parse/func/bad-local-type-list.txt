@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (local i32 i64 foo f32)))
 (;; STDERR ;;;
-out/test/parse/func/bad-local-type-list.txt:2:30: unexpected token "foo"
+out/test/parse/func/bad-local-type-list.txt:2:30: error: unexpected token "foo"
 (module (func (local i32 i64 foo f32)))
                              ^^^
 ;;; STDERR ;;)

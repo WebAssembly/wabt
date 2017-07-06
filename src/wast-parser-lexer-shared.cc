@@ -35,7 +35,7 @@ void wast_parser_error(Location* loc,
   va_end(args);
 }
 
-void wast_format_error(SourceErrorHandler* error_handler,
+void wast_format_error(ErrorHandler* error_handler,
                        const struct Location* loc,
                        WastLexer* lexer,
                        const char* format,
@@ -62,7 +62,7 @@ void wast_format_error(SourceErrorHandler* error_handler,
     }
   }
 
-  error_handler->OnError(loc, std::string(buffer), source_line.line,
+  error_handler->OnError(*loc, std::string(buffer), source_line.line,
                          source_line.column_offset);
   va_end(args_copy);
 }

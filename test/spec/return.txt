@@ -3,12 +3,12 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/return.wast:276: assert_invalid passed:
   error: type stack size too small at return. got 0, expected at least 1
-  error: @0x00000019: OnReturnExpr callback failed
+  0000019: error: OnReturnExpr callback failed
 out/third_party/testsuite/return.wast:280: assert_invalid passed:
   error: type stack size too small at return. got 0, expected at least 1
-  error: @0x0000001a: OnReturnExpr callback failed
+  000001a: error: OnReturnExpr callback failed
 out/third_party/testsuite/return.wast:284: assert_invalid passed:
   error: type mismatch in return, expected f64 but got i64.
-  error: @0x0000001b: OnReturnExpr callback failed
+  000001b: error: OnReturnExpr callback failed
 60/60 tests passed.
 ;;; STDOUT ;;)

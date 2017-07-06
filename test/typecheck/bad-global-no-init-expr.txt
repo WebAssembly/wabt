@@ -3,10 +3,10 @@
   (global i32)
   (global (mut f32)))
 (;; STDERR ;;;
-out/test/typecheck/bad-global-no-init-expr.txt:3:4: type mismatch at global initializer expression. got void, expected i32
+out/test/typecheck/bad-global-no-init-expr.txt:3:4: error: type mismatch at global initializer expression. got void, expected i32
   (global i32)
    ^^^^^^
-out/test/typecheck/bad-global-no-init-expr.txt:4:4: type mismatch at global initializer expression. got void, expected f32
+out/test/typecheck/bad-global-no-init-expr.txt:4:4: error: type mismatch at global initializer expression. got void, expected f32
   (global (mut f32)))
    ^^^^^^
 ;;; STDERR ;;)

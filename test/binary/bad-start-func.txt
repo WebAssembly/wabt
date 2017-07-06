@@ -7,6 +7,6 @@ section(FUNCTION) { count[1] sig[0] }
 section(START) { func[1] }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000015: invalid start function index: 1
+0000015: error: invalid start function index: 1
 
 ;;; STDERR ;;)

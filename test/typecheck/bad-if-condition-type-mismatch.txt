@@ -10,7 +10,7 @@
     drop)
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-if-condition-type-mismatch.txt:5:5: type mismatch in if, expected i32 but got f32.
+out/test/typecheck/bad-if-condition-type-mismatch.txt:5:5: error: type mismatch in if, expected i32 but got f32.
     if (result i32)
     ^^
 ;;; STDERR ;;)

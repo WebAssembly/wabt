@@ -26,10 +26,10 @@
 #include "binary-writer.h"
 #include "binary-writer-spec.h"
 #include "common.h"
+#include "error-handler.h"
 #include "ir.h"
 #include "option-parser.h"
 #include "resolve-names.h"
-#include "source-error-handler.h"
 #include "stream.h"
 #include "validator.h"
 #include "wast-parser.h"
@@ -135,10 +135,10 @@ int ProgramMain(int argc, char** argv) {
   if (!lexer)
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
-  SourceErrorHandlerFile error_handler;
+  ErrorHandlerFile error_handler(Location::Type::Text);
   Script* script;
-  Result result = parse_wast(lexer.get(), &script, &error_handler,
-                             &s_parse_options);
+  Result result =
+      parse_wast(lexer.get(), &script, &error_handler, &s_parse_options);
 
   if (Succeeded(result)) {
     result = resolve_names_script(lexer.get(), script, &error_handler);

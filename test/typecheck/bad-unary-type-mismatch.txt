@@ -5,7 +5,7 @@
     f32.neg
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-unary-type-mismatch.txt:5:5: type mismatch in f32.neg, expected f32 but got f64.
+out/test/typecheck/bad-unary-type-mismatch.txt:5:5: error: type mismatch in f32.neg, expected f32 but got f64.
     f32.neg
     ^^^^^^^
 ;;; STDERR ;;)

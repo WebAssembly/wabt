@@ -13,250 +13,250 @@ called host spectest.print(f64:24.000000) =>
 called host spectest.print(f64:24.000000) =>
 out/third_party/testsuite/imports.wast:95: assert_unlinkable passed:
   error: unknown module field "unknown"
-  error: @0x00000020: OnImport callback failed
+  0000020: error: OnImport callback failed
 out/third_party/testsuite/imports.wast:99: assert_unlinkable passed:
   error: unknown host function import "spectest.unknown"
-  error: @0x00000024: OnImportFunc callback failed
+  0000024: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:104: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x0000001e: OnImportFunc callback failed
+  000001e: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:108: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x0000001e: OnImportFunc callback failed
+  000001e: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:112: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x0000001f: OnImportFunc callback failed
+  000001f: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:116: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000021: OnImportFunc callback failed
+  0000021: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:120: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000022: OnImportFunc callback failed
+  0000022: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:124: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000022: OnImportFunc callback failed
+  0000022: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:128: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000022: OnImportFunc callback failed
+  0000022: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:132: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000023: OnImportFunc callback failed
+  0000023: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:136: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000022: OnImportFunc callback failed
+  0000022: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:140: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000023: OnImportFunc callback failed
+  0000023: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:144: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000023: OnImportFunc callback failed
+  0000023: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:148: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000023: OnImportFunc callback failed
+  0000023: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:152: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000024: OnImportFunc callback failed
+  0000024: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:156: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000026: OnImportFunc callback failed
+  0000026: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:160: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000027: OnImportFunc callback failed
+  0000027: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:164: assert_unlinkable passed:
   error: import signature mismatch
-  error: @0x00000027: OnImportFunc callback failed
+  0000027: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:169: assert_unlinkable passed:
   error: expected import "test.global-i32" to have kind func, not global
-  error: @0x00000024: OnImportFunc callback failed
+  0000024: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:173: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind func, not table
-  error: @0x00000025: OnImportFunc callback failed
+  0000025: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:177: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind func, not memory
-  error: @0x00000025: OnImportFunc callback failed
+  0000025: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:181: assert_unlinkable passed:
   error: unknown host function import "spectest.global"
-  error: @0x00000023: OnImportFunc callback failed
+  0000023: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:185: assert_unlinkable passed:
   error: unknown host function import "spectest.table"
-  error: @0x00000022: OnImportFunc callback failed
+  0000022: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:189: assert_unlinkable passed:
   error: unknown host function import "spectest.memory"
-  error: @0x00000023: OnImportFunc callback failed
+  0000023: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:223: assert_unlinkable passed:
   error: unknown module field "unknown"
-  error: @0x0000001b: OnImport callback failed
+  000001b: error: OnImport callback failed
 out/third_party/testsuite/imports.wast:227: assert_unlinkable passed:
   error: unknown host global import "spectest.unknown"
-  error: @0x0000001f: OnImportGlobal callback failed
+  000001f: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:232: assert_unlinkable passed:
   error: expected import "test.func" to have kind global, not func
-  error: @0x00000018: OnImportGlobal callback failed
+  0000018: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:236: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind global, not table
-  error: @0x00000020: OnImportGlobal callback failed
+  0000020: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:240: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind global, not memory
-  error: @0x00000020: OnImportGlobal callback failed
+  0000020: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:244: assert_unlinkable passed:
   error: unknown host global import "spectest.print"
-  error: @0x0000001d: OnImportGlobal callback failed
+  000001d: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:248: assert_unlinkable passed:
   error: unknown host global import "spectest.table"
-  error: @0x0000001d: OnImportGlobal callback failed
+  000001d: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:252: assert_unlinkable passed:
   error: unknown host global import "spectest.memory"
-  error: @0x0000001e: OnImportGlobal callback failed
+  000001e: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:294: assert_invalid passed:
   error: unknown import module ""
-  error: @0x00000011: OnImport callback failed
+  0000011: error: OnImport callback failed
 out/third_party/testsuite/imports.wast:298: assert_invalid passed:
   error: unknown import module ""
-  error: @0x00000011: OnImport callback failed
+  0000011: error: OnImport callback failed
 out/third_party/testsuite/imports.wast:302: assert_invalid passed:
-  error: @0x0000000b: table count (2) must be 0 or 1
+  000000b: error: table count (2) must be 0 or 1
 out/third_party/testsuite/imports.wast:319: assert_unlinkable passed:
   error: unknown module field "unknown"
-  error: @0x0000001c: OnImport callback failed
+  000001c: error: OnImport callback failed
 out/third_party/testsuite/imports.wast:323: assert_unlinkable passed:
   error: unknown host table import "spectest.unknown"
-  error: @0x00000020: OnImportTable callback failed
+  0000020: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:328: assert_unlinkable passed:
   error: actual size (10) smaller than declared (12)
-  error: @0x00000021: OnImportTable callback failed
+  0000021: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:332: assert_unlinkable passed:
   error: max size (unspecified) larger than declared (20)
-  error: @0x00000022: OnImportTable callback failed
+  0000022: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:336: assert_unlinkable passed:
   error: actual size (10) smaller than declared (12)
-  error: @0x0000001e: OnImportTable callback failed
+  000001e: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:340: assert_unlinkable passed:
   error: max size (20) larger than declared (15)
-  error: @0x0000001f: OnImportTable callback failed
+  000001f: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:345: assert_unlinkable passed:
   error: expected import "test.func" to have kind table, not func
-  error: @0x00000019: OnImportTable callback failed
+  0000019: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:349: assert_unlinkable passed:
   error: expected import "test.global-i32" to have kind table, not global
-  error: @0x0000001f: OnImportTable callback failed
+  000001f: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:353: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind table, not memory
-  error: @0x00000021: OnImportTable callback failed
+  0000021: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:357: assert_unlinkable passed:
   error: unknown host table import "spectest.print"
-  error: @0x0000001e: OnImportTable callback failed
+  000001e: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:389: assert_invalid passed:
   error: unknown import module ""
-  error: @0x00000010: OnImport callback failed
+  0000010: error: OnImport callback failed
 out/third_party/testsuite/imports.wast:393: assert_invalid passed:
   error: unknown import module ""
-  error: @0x00000010: OnImport callback failed
+  0000010: error: OnImport callback failed
 out/third_party/testsuite/imports.wast:397: assert_invalid passed:
-  error: @0x0000000b: memory count must be 0 or 1
+  000000b: error: memory count must be 0 or 1
 out/third_party/testsuite/imports.wast:412: assert_unlinkable passed:
   error: unknown module field "unknown"
-  error: @0x0000001b: OnImport callback failed
+  000001b: error: OnImport callback failed
 out/third_party/testsuite/imports.wast:416: assert_unlinkable passed:
   error: unknown host memory import "spectest.unknown"
-  error: @0x0000001f: OnImportMemory callback failed
+  000001f: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:421: assert_unlinkable passed:
   error: actual size (2) smaller than declared (3)
-  error: @0x00000020: OnImportMemory callback failed
+  0000020: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:425: assert_unlinkable passed:
   error: max size (unspecified) larger than declared (3)
-  error: @0x00000021: OnImportMemory callback failed
+  0000021: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:429: assert_unlinkable passed:
   error: actual size (1) smaller than declared (2)
-  error: @0x0000001e: OnImportMemory callback failed
+  000001e: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:433: assert_unlinkable passed:
   error: max size (2) larger than declared (1)
-  error: @0x0000001f: OnImportMemory callback failed
+  000001f: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:438: assert_unlinkable passed:
   error: expected import "test.func-i32" to have kind memory, not func
-  error: @0x0000001c: OnImportMemory callback failed
+  000001c: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:442: assert_unlinkable passed:
   error: expected import "test.global-i32" to have kind memory, not global
-  error: @0x0000001e: OnImportMemory callback failed
+  000001e: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:446: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind memory, not table
-  error: @0x00000020: OnImportMemory callback failed
+  0000020: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:450: assert_unlinkable passed:
   error: unknown host memory import "spectest.print"
-  error: @0x0000001d: OnImportMemory callback failed
+  000001d: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:454: assert_unlinkable passed:
   error: unknown host memory import "spectest.global"
-  error: @0x0000001e: OnImportMemory callback failed
+  000001e: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:458: assert_unlinkable passed:
   error: unknown host memory import "spectest.table"
-  error: @0x0000001d: OnImportMemory callback failed
+  000001d: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:463: assert_unlinkable passed:
   error: actual size (1) smaller than declared (2)
-  error: @0x0000001e: OnImportMemory callback failed
+  000001e: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:467: assert_unlinkable passed:
   error: max size (2) larger than declared (1)
-  error: @0x0000001f: OnImportMemory callback failed
+  000001f: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:485: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.99.wast:1:8: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.99.wast:1:8: error: imports must occur before all non-import definitions
   (func) (import "" "" (func))
          ^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:489: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.100.wast:1:8: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.100.wast:1:8: error: imports must occur before all non-import definitions
   (func) (import "" "" (global i64))
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:493: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.101.wast:1:8: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.101.wast:1:8: error: imports must occur before all non-import definitions
   (func) (import "" "" (table 0 anyfunc))
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:497: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.102.wast:1:8: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.102.wast:1:8: error: imports must occur before all non-import definitions
   (func) (import "" "" (memory 0))
          ^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:502: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.103.wast:1:28: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.103.wast:1:28: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (func))
                              ^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:506: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.104.wast:1:28: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.104.wast:1:28: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (global f32))
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:510: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.105.wast:1:28: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.105.wast:1:28: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (table 0 anyfunc))
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:514: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.106.wast:1:28: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.106.wast:1:28: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (memory 0))
                              ^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:519: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.107.wast:1:19: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.107.wast:1:19: error: imports must occur before all non-import definitions
   (table 0 anyfunc) (import "" "" (func))
                     ^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:523: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.108.wast:1:19: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.108.wast:1:19: error: imports must occur before all non-import definitions
   (table 0 anyfunc) (import "" "" (global i32))
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:527: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.109.wast:1:19: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.109.wast:1:19: error: imports must occur before all non-import definitions
   (table 0 anyfunc) (import "" "" (table 0 anyfunc))
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:531: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.110.wast:1:19: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.110.wast:1:19: error: imports must occur before all non-import definitions
   (table 0 anyfunc) (import "" "" (memory 0))
                     ^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:536: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.111.wast:1:12: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.111.wast:1:12: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (func))
              ^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:540: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.112.wast:1:12: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.112.wast:1:12: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (global i32))
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:544: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.113.wast:1:12: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.113.wast:1:12: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (table 1 3 anyfunc))
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/third_party/testsuite/imports.wast:548: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.114.wast:1:12: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.114.wast:1:12: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (memory 1 2))
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 107/107 tests passed.

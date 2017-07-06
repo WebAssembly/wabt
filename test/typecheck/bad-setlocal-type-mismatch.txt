@@ -4,7 +4,7 @@
     f32.const 0
     set_local 0))
 (;; STDERR ;;;
-out/test/typecheck/bad-setlocal-type-mismatch.txt:5:5: type mismatch in set_local, expected i32 but got f32.
+out/test/typecheck/bad-setlocal-type-mismatch.txt:5:5: error: type mismatch in set_local, expected i32 but got f32.
     set_local 0))
     ^^^^^^^^^^^
 ;;; STDERR ;;)
