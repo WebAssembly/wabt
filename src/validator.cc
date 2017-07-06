@@ -193,10 +193,9 @@ Result Validator::CheckVar(Index max_index,
                            const Var* var,
                            const char* desc,
                            Index* out_index) {
-  assert(var->type == VarType::Index);
-  if (var->index < max_index) {
+  if (var->index() < max_index) {
     if (out_index)
-      *out_index = var->index;
+      *out_index = var->index();
     return Result::Ok;
   }
   PrintError(&var->loc, "%s variable out of range (max %" PRIindex ")", desc,
@@ -291,9 +290,9 @@ Result Validator::CheckLocalVar(const Var* var, Type* out_type) {
     return Result::Ok;
   }
 
-  if (var->type == VarType::Name) {
-    PrintError(&var->loc, "undefined local variable \"" PRIstringslice "\"",
-               WABT_PRINTF_STRING_SLICE_ARG(var->name));
+  if (var->is_name()) {
+    PrintError(&var->loc, "undefined local variable \"%s\"",
+               var->name().c_str());
   } else {
     PrintError(&var->loc, "local variable out of range (max %" PRIindex ")",
                max_index);
@@ -435,20 +434,20 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Br:
-      typechecker_.OnBr(cast<BrExpr>(expr)->var.index);
+      typechecker_.OnBr(cast<BrExpr>(expr)->var.index());
       break;
 
     case ExprType::BrIf:
-      typechecker_.OnBrIf(cast<BrIfExpr>(expr)->var.index);
+      typechecker_.OnBrIf(cast<BrIfExpr>(expr)->var.index());
       break;
 
     case ExprType::BrTable: {
       auto br_table_expr = cast<BrTableExpr>(expr);
       typechecker_.BeginBrTable();
       for (Var& var : *br_table_expr->targets) {
-        typechecker_.OnBrTableTarget(var.index);
+        typechecker_.OnBrTableTarget(var.index());
       }
-      typechecker_.OnBrTableTarget(br_table_expr->default_target.index);
+      typechecker_.OnBrTableTarget(br_table_expr->default_target.index());
       typechecker_.EndBrTable();
       break;
     }
@@ -546,7 +545,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      typechecker_.OnRethrow(cast<RethrowExpr>(expr)->var.index);
+      typechecker_.OnRethrow(cast<RethrowExpr>(expr)->var.index());
       break;
 
     case ExprType::Return:

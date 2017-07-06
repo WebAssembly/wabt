@@ -373,13 +373,11 @@ void BinaryWriter::EndSubsection() {
 }
 
 Index BinaryWriter::GetLabelVarDepth(const Var* var) {
-  assert(var->type == VarType::Index);
-  return var->index;
+  return var->index();
 }
 
 Index BinaryWriter::GetExceptVarDepth(const Var* var) {
-  assert(var->type == VarType::Index);
-  return var->index;
+  return var->index();
 }
 
 void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
@@ -412,8 +410,8 @@ Index BinaryWriter::GetLocalIndex(const Func* func, const Var& var) {
   // init_expr.
   if (func) {
     return func->GetLocalIndex(var);
-  } else if (var.type == VarType::Index) {
-    return var.index;
+  } else if (var.is_index()) {
+    return var.index();
   } else {
     return kInvalidIndex;
   }
