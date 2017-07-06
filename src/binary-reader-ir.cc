@@ -289,7 +289,7 @@ Result BinaryReaderIR::AppendExpr(Expr* expr) {
 }
 
 bool BinaryReaderIR::HandleError(Offset offset, const char* message) {
-  return error_handler->OnError(Location(offset), message, std::string(), 0);
+  return error_handler->OnError(offset, message);
 }
 
 bool BinaryReaderIR::OnError(const char* message) {

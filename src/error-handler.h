@@ -36,6 +36,11 @@ class ErrorHandler {
                        const std::string& source_line,
                        size_t source_line_column_offset) = 0;
 
+  // Helper function for binary locations.
+  bool OnError(size_t offset, const std::string& error) {
+    return OnError(Location(offset), error, std::string(), 0);
+  }
+
   // OnError will be called with with source_line trimmed to this length.
   virtual size_t source_line_max_length() const = 0;
 

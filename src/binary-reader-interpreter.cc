@@ -322,7 +322,7 @@ Label* BinaryReaderInterpreter::TopLabel() {
 }
 
 bool BinaryReaderInterpreter::HandleError(Offset offset, const char* message) {
-  return error_handler->OnError(Location(offset), message, std::string(), 0);
+  return error_handler->OnError(offset, message);
 }
 
 void WABT_PRINTF_FORMAT(2, 3)
