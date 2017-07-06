@@ -310,7 +310,7 @@ Result BinaryReaderIR::OnType(Index index,
   func_type->sig.param_types.assign(param_types, param_types + param_count);
   func_type->sig.result_types.assign(result_types, result_types + result_count);
   module->func_types.push_back(func_type);
-  module->AppendField(new FuncTypeModuleField(func_type, GetLocation()));
+  module->fields.push_back(new FuncTypeModuleField(func_type, GetLocation()));
   return Result::Ok;
 }
 
@@ -326,7 +326,7 @@ Result BinaryReaderIR::OnImport(Index index,
   import->module_name = dup_string_slice(module_name);
   import->field_name = dup_string_slice(field_name);
   module->imports.push_back(import);
-  module->AppendField(new ImportModuleField(import, GetLocation()));
+  module->fields.push_back(new ImportModuleField(import, GetLocation()));
   return Result::Ok;
 }
 
@@ -422,7 +422,7 @@ Result BinaryReaderIR::OnFunction(Index index, Index sig_index) {
   func->decl.sig = module->func_types[sig_index]->sig;
 
   module->funcs.push_back(func);
-  module->AppendField(new FuncModuleField(func, GetLocation()));
+  module->fields.push_back(new FuncModuleField(func, GetLocation()));
   return Result::Ok;
 }
 
@@ -437,7 +437,7 @@ Result BinaryReaderIR::OnTable(Index index,
   auto table = new Table();
   table->elem_limits = *elem_limits;
   module->tables.push_back(table);
-  module->AppendField(new TableModuleField(table, GetLocation()));
+  module->fields.push_back(new TableModuleField(table, GetLocation()));
   return Result::Ok;
 }
 
@@ -450,7 +450,7 @@ Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
   auto memory = new Memory();
   memory->page_limits = *page_limits;
   module->memories.push_back(memory);
-  module->AppendField(new MemoryModuleField(memory, GetLocation()));
+  module->fields.push_back(new MemoryModuleField(memory, GetLocation()));
   return Result::Ok;
 }
 
@@ -464,7 +464,7 @@ Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
   global->type = type;
   global->mutable_ = mutable_;
   module->globals.push_back(global);
-  module->AppendField(new GlobalModuleField(global, GetLocation()));
+  module->fields.push_back(new GlobalModuleField(global, GetLocation()));
   return Result::Ok;
 }
 
@@ -511,14 +511,14 @@ Result BinaryReaderIR::OnExport(Index index,
   export_->var = Var(item_index, GetLocation());
   export_->kind = kind;
   module->exports.push_back(export_);
-  module->AppendField(new ExportModuleField(export_, GetLocation()));
+  module->fields.push_back(new ExportModuleField(export_, GetLocation()));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnStartFunction(Index func_index) {
   assert(func_index < module->funcs.size());
   Var start(func_index, GetLocation());
-  module->AppendField(new StartModuleField(start, GetLocation()));
+  module->fields.push_back(new StartModuleField(start, GetLocation()));
   return Result::Ok;
 }
 
@@ -804,7 +804,7 @@ Result BinaryReaderIR::BeginElemSegment(Index index, Index table_index) {
   auto elem_segment = new ElemSegment();
   elem_segment->table_var = Var(table_index, GetLocation());
   module->elem_segments.push_back(elem_segment);
-  module->AppendField(new ElemSegmentModuleField(elem_segment, GetLocation()));
+  module->fields.push_back(new ElemSegmentModuleField(elem_segment, GetLocation()));
   return Result::Ok;
 }
 
@@ -847,7 +847,7 @@ Result BinaryReaderIR::BeginDataSegment(Index index, Index memory_index) {
   auto data_segment = new DataSegment();
   data_segment->memory_var = Var(memory_index, GetLocation());
   module->data_segments.push_back(data_segment);
-  module->AppendField(new DataSegmentModuleField(data_segment, GetLocation()));
+  module->fields.push_back(new DataSegmentModuleField(data_segment, GetLocation()));
   return Result::Ok;
 }
 
@@ -976,7 +976,7 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
 Result BinaryReaderIR::OnExceptionType(Index index, TypeVector& sig) {
   auto except = new Exception(sig);
   module->excepts.push_back(except);
-  module->AppendField(new ExceptionModuleField(except));
+  module->fields.push_back(new ExceptionModuleField(except));
   return Result::Ok;
 }
 

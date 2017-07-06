@@ -42,11 +42,6 @@ struct TextList {
   TextListNode* last;
 };
 
-struct ModuleFieldList {
-  ModuleField* first;
-  ModuleField* last;
-};
-
 union Token {
   /* terminals */
   StringSlice text;
@@ -81,7 +76,7 @@ union Token {
   Memory* memory;
   Module* module;
   ModuleField* module_field;
-  ModuleFieldList module_fields;
+  ModuleFieldList* module_fields;
   ScriptModule* script_module;
   Script* script;
   Table* table;

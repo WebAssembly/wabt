@@ -445,7 +445,7 @@ enum class ModuleFieldType {
   Except
 };
 
-class ModuleField {
+class ModuleField : public intrusive_list_base<ModuleField> {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(ModuleField);
   ModuleField() = delete;
@@ -453,11 +453,12 @@ class ModuleField {
 
   Location loc;
   ModuleFieldType type;
-  ModuleField* next;
 
  protected:
   explicit ModuleField(ModuleFieldType, const Location& loc);
 };
+
+typedef intrusive_list<ModuleField> ModuleFieldList;
 
 template <ModuleFieldType TypeEnum>
 class ModuleFieldMixin : public ModuleField {
@@ -586,7 +587,6 @@ struct Module {
   Module();
   ~Module();
 
-  void AppendField(ModuleField*);
   FuncType* AppendImplicitFuncType(const Location&, const FuncSignature&);
 
   Index GetFuncTypeIndex(const Var&) const;
@@ -610,8 +610,7 @@ struct Module {
 
   Location loc;
   StringSlice name;
-  ModuleField* first_field;
-  ModuleField* last_field;
+  ModuleFieldList fields;
 
   Index num_except_imports;
   Index num_func_imports;

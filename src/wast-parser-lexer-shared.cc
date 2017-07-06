@@ -77,13 +77,4 @@ void destroy_text_list(TextList* text_list) {
   }
 }
 
-void destroy_module_field_list(ModuleFieldList* fields) {
-  ModuleField* field = fields->first;
-  while (field) {
-    ModuleField* next = field->next;
-    delete field;
-    field = next;
-  }
-}
-
 }  // namespace wabt
