@@ -224,20 +224,12 @@ void MakeTypeBindingReverseMapping(
   }
 }
 
-void Module::AppendField(ModuleField* field) {
-  if (!first_field)
-    first_field = field;
-  else if (last_field)
-    last_field->next = field;
-  last_field = field;
-}
-
 FuncType* Module::AppendImplicitFuncType(const Location& loc,
                                          const FuncSignature& sig) {
   FuncType* func_type = new FuncType();
   func_type->sig = sig;
   func_types.push_back(func_type);
-  AppendField(new FuncTypeModuleField(func_type, loc));
+  fields.push_back(new FuncTypeModuleField(func_type, loc));
   return func_type;
 }
 
@@ -456,12 +448,10 @@ Export::~Export() {
 }
 
 ModuleField::ModuleField(ModuleFieldType type, const Location& loc)
-    : loc(loc), type(type), next(nullptr) {}
+    : loc(loc), type(type) {}
 
 Module::Module()
-    : first_field(nullptr),
-      last_field(nullptr),
-      num_except_imports(0),
+    : num_except_imports(0),
       num_func_imports(0),
       num_table_imports(0),
       num_memory_imports(0),
@@ -472,13 +462,6 @@ Module::Module()
 
 Module::~Module() {
   destroy_string_slice(&name);
-
-  ModuleField* field = first_field;
-  while (field) {
-    ModuleField* next_field = field->next;
-    delete field;
-    field = next_field;
-  }
 }
 
 ScriptModule::ScriptModule() : type(ScriptModule::Type::Text), text(nullptr) {}

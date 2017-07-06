@@ -1147,41 +1147,40 @@ Result WatWriter::WriteModule(const Module* module) {
   module_ = module;
   BuildExportMap();
   WriteOpenNewline("module");
-  for (const ModuleField* field = module->first_field; field;
-       field = field->next) {
-    switch (field->type) {
+  for (const ModuleField& field : module->fields) {
+    switch (field.type) {
       case ModuleFieldType::Func:
-        WriteFunc(module, cast<FuncModuleField>(field)->func);
+        WriteFunc(module, cast<FuncModuleField>(&field)->func);
         break;
       case ModuleFieldType::Global:
-        WriteGlobal(cast<GlobalModuleField>(field)->global);
+        WriteGlobal(cast<GlobalModuleField>(&field)->global);
         break;
       case ModuleFieldType::Import:
-        WriteImport(cast<ImportModuleField>(field)->import);
+        WriteImport(cast<ImportModuleField>(&field)->import);
         break;
       case ModuleFieldType::Except:
-        WriteException(cast<ExceptionModuleField>(field)->except);
+        WriteException(cast<ExceptionModuleField>(&field)->except);
         break;
       case ModuleFieldType::Export:
-        WriteExport(cast<ExportModuleField>(field)->export_);
+        WriteExport(cast<ExportModuleField>(&field)->export_);
         break;
       case ModuleFieldType::Table:
-        WriteTable(cast<TableModuleField>(field)->table);
+        WriteTable(cast<TableModuleField>(&field)->table);
         break;
       case ModuleFieldType::ElemSegment:
-        WriteElemSegment(cast<ElemSegmentModuleField>(field)->elem_segment);
+        WriteElemSegment(cast<ElemSegmentModuleField>(&field)->elem_segment);
         break;
       case ModuleFieldType::Memory:
-        WriteMemory(cast<MemoryModuleField>(field)->memory);
+        WriteMemory(cast<MemoryModuleField>(&field)->memory);
         break;
       case ModuleFieldType::DataSegment:
-        WriteDataSegment(cast<DataSegmentModuleField>(field)->data_segment);
+        WriteDataSegment(cast<DataSegmentModuleField>(&field)->data_segment);
         break;
       case ModuleFieldType::FuncType:
-        WriteFuncType(cast<FuncTypeModuleField>(field)->func_type);
+        WriteFuncType(cast<FuncTypeModuleField>(&field)->func_type);
         break;
       case ModuleFieldType::Start:
-        WriteStartFunction(&cast<StartModuleField>(field)->start);
+        WriteStartFunction(&cast<StartModuleField>(&field)->start);
         break;
     }
   }
