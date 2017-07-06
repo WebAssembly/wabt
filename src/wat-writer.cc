@@ -113,7 +113,6 @@ class WatWriter {
   void WriteCloseNewline();
   void WriteCloseSpace();
   void WriteString(const std::string& str, NextChar next_char);
-  void WriteString(const string_view& str, NextChar next_char);
   void WriteStringSlice(const StringSlice* str, NextChar next_char);
   bool WriteStringSliceOpt(const StringSlice* str, NextChar next_char);
   void WriteName(const StringSlice* str, NextChar next_char);
@@ -305,11 +304,6 @@ void WatWriter::WriteCloseSpace() {
 
 void WatWriter::WriteString(const std::string& str, NextChar next_char) {
   WritePuts(str.c_str(), next_char);
-}
-
-void WatWriter::WriteString(const string_view& str, NextChar next_char) {
-  Writef(PRIstringview, WABT_PRINTF_STRING_VIEW_ARG(str));
-  next_char_ = next_char;
 }
 
 void WatWriter::WriteStringSlice(const StringSlice* str, NextChar next_char) {

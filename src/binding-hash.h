@@ -49,14 +49,13 @@ class BindingHash : public std::unordered_multimap<std::string, Binding> {
 
   Index FindIndex(const Var&) const;
 
-  Index FindIndex(const string_view& name) const {
-    auto iter = find(name.to_string());
+  Index FindIndex(const std::string& name) const {
+    auto iter = find(name);
     return iter != end() ? iter->second.index : kInvalidIndex;
   }
 
   Index FindIndex(const StringSlice& name) const {
-    auto iter = find(string_slice_to_string(name));
-    return iter != end() ? iter->second.index : kInvalidIndex;
+    return FindIndex(string_slice_to_string(name));
   }
 
  private:
