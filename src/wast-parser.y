@@ -27,6 +27,7 @@
 #include "cast.h"
 #include "error-handler.h"
 #include "literal.h"
+#include "string-view.h"
 #include "wast-parser.h"
 #include "wast-parser-lexer-shared.h"
 
@@ -410,14 +411,10 @@ literal :
 
 var :
     nat {
-      $$ = new Var($1);
-      $$->loc = @1;
+      $$ = new Var($1, @1);
     }
   | VAR {
-      StringSlice name;
-      DUPTEXT(name, $1);
-      $$ = new Var(name);
-      $$->loc = @1;
+      $$ = new Var(string_view($1.start, $1.length), @1);
     }
 ;
 var_list :
@@ -1015,9 +1012,7 @@ elem :
     }
   | LPAR ELEM offset var_list RPAR {
       auto elem_segment = new ElemSegment();
-      elem_segment->table_var.loc = @2;
-      elem_segment->table_var.type = VarType::Index;
-      elem_segment->table_var.index = 0;
+      elem_segment->table_var = Var(0, @2);
       elem_segment->offset = std::move(*$3);
       delete $3;
       elem_segment->vars = std::move(*$4);
@@ -1087,9 +1082,7 @@ data :
     }
   | LPAR DATA offset text_list_opt RPAR {
       auto data_segment = new DataSegment();
-      data_segment->memory_var.loc = @2;
-      data_segment->memory_var.type = VarType::Index;
-      data_segment->memory_var.index = 0;
+      data_segment->memory_var = Var(0, @2);
       data_segment->offset = std::move(*$3);
       delete $3;
       dup_text_list(&$4, &data_segment->data, &data_segment->size);
@@ -1385,9 +1378,7 @@ script_var_opt :
       $$ = new Var(kInvalidIndex);
     }
   | VAR {
-      StringSlice name;
-      DUPTEXT(name, $1);
-      $$ = new Var(name);
+      $$ = new Var(string_view($1.start, $1.length), @1);
     }
 ;
 
@@ -1580,11 +1571,11 @@ script :
             goto has_module_var;
 
           has_module_var: {
-            /* Resolve actions with an invalid index to use the preceding
-             * module. */
-            if (module_var->type == VarType::Index &&
-                module_var->index == kInvalidIndex) {
-              module_var->index = last_module_index;
+            // Resolve actions with an invalid index to use the preceding
+            // module.
+            if (module_var->is_index() &&
+                module_var->index() == kInvalidIndex) {
+              module_var->set_index(last_module_index);
             }
             break;
           }
@@ -1824,8 +1815,7 @@ void append_module_fields(Module* module, ModuleFieldList* fields) {
         Export* export_ = cast<ExportModuleField>(&field)->export_;
         if (&field != main_field) {
           // If this is not the main field, it must be an inline export.
-          export_->var.type = VarType::Index;
-          export_->var.index = main_index;
+          export_->var.set_index(main_index);
         }
         name = &export_->name;
         bindings = &module->export_bindings;
@@ -1857,8 +1847,7 @@ void append_module_fields(Module* module, ModuleFieldList* fields) {
             cast<ElemSegmentModuleField>(&field)->elem_segment;
         if (&field != main_field) {
           // If this is not the main field, it must be an inline elem segment.
-          elem_segment->table_var.type = VarType::Index;
-          elem_segment->table_var.index = main_index;
+          elem_segment->table_var.set_index(main_index);
         }
         module->elem_segments.push_back(elem_segment);
         break;
@@ -1878,8 +1867,7 @@ void append_module_fields(Module* module, ModuleFieldList* fields) {
             cast<DataSegmentModuleField>(&field)->data_segment;
         if (&field != main_field) {
           // If this is not the main field, it must be an inline data segment.
-          data_segment->memory_var.type = VarType::Index;
-          data_segment->memory_var.index = main_index;
+          data_segment->memory_var.set_index(main_index);
         }
         module->data_segments.push_back(data_segment);
         break;

@@ -23,6 +23,7 @@
 #include <unordered_map>
 
 #include "common.h"
+#include "string-view.h"
 
 namespace wabt {
 
@@ -48,11 +49,13 @@ class BindingHash : public std::unordered_multimap<std::string, Binding> {
 
   Index FindIndex(const Var&) const;
 
+  Index FindIndex(const std::string& name) const {
+    auto iter = find(name);
+    return iter != end() ? iter->second.index : kInvalidIndex;
+  }
+
   Index FindIndex(const StringSlice& name) const {
-    auto iter = find(string_slice_to_string(name));
-    if (iter != end())
-      return iter->second.index;
-    return kInvalidIndex;
+    return FindIndex(string_slice_to_string(name));
   }
 
  private:

@@ -106,14 +106,14 @@ Index Module::GetExceptIndex(const Var& var) const {
 }
 
 Index Func::GetLocalIndex(const Var& var) const {
-  if (var.type == VarType::Index)
-    return var.index;
+  if (var.is_index())
+    return var.index();
 
-  Index result = param_bindings.FindIndex(var.name);
+  Index result = param_bindings.FindIndex(var);
   if (result != kInvalidIndex)
     return result;
 
-  result = local_bindings.FindIndex(var.name);
+  result = local_bindings.FindIndex(var);
   if (result == kInvalidIndex)
     return result;
 
@@ -233,63 +233,64 @@ FuncType* Module::AppendImplicitFuncType(const Location& loc,
   return func_type;
 }
 
-Var::Var(Index index) : type(VarType::Index), index(index) {
+Var::Var(Index index, const Location& loc)
+    : loc(loc), type_(VarType::Index), index_(index) {}
+
+Var::Var(const string_view& name, const Location& loc)
+    : loc(loc), type_(VarType::Name), name_(name) {}
+
+Var::Var(Var&& rhs) : Var(kInvalidIndex) {
+  *this = std::move(rhs);
 }
 
-Var::Var(const StringSlice& name) : type(VarType::Name), name(name) {
+Var::Var(const Var& rhs) : Var(kInvalidIndex) {
+  *this = rhs;
 }
 
-Var::Var(Index index, const Location& loc_) : Var(index) {
-  loc = loc;
-}
-
-Var::Var(const StringSlice& name, const Location& loc_) : Var(name) {
-  loc = loc;
-}
-
-Var::Var(Var&& rhs) : loc(rhs.loc), type(rhs.type) {
-  if (rhs.type == VarType::Index) {
-    index = rhs.index;
-  } else {
-    name = rhs.name;
-    rhs = Var(kInvalidIndex);
-  }
-}
-
-Var::Var(const Var& rhs) : loc(rhs.loc), type(rhs.type) {
-  if (rhs.type == VarType::Index) {
-    index = rhs.index;
-  } else {
-    name = dup_string_slice(rhs.name);
-  }
-}
-
-Var& Var::operator =(Var&& rhs) {
+Var& Var::operator=(Var&& rhs) {
   loc = rhs.loc;
-  type = rhs.type;
-  if (rhs.type == VarType::Index) {
-    index = rhs.index;
+  if (rhs.is_index()) {
+    set_index(rhs.index_);
   } else {
-    name = rhs.name;
-    rhs = Var(kInvalidIndex);
+    set_name(rhs.name_);
   }
   return *this;
 }
 
-Var& Var::operator =(const Var& rhs) {
+Var& Var::operator=(const Var& rhs) {
   loc = rhs.loc;
-  type = rhs.type;
-  if (rhs.type == VarType::Index) {
-    index = rhs.index;
+  if (rhs.is_index()) {
+    set_index(rhs.index_);
   } else {
-    name = dup_string_slice(rhs.name);
+    set_name(rhs.name_);
   }
   return *this;
 }
 
 Var::~Var() {
-  if (type == VarType::Name)
-    destroy_string_slice(&name);
+  Destroy();
+}
+
+void Var::set_index(Index index) {
+  Destroy();
+  type_ = VarType::Index;
+  index_ = index;
+}
+
+void Var::set_name(std::string&& name) {
+  Destroy();
+  type_ = VarType::Name;
+  new (&name_) std::string(std::move(name));
+}
+
+void Var::set_name(const string_view& name) {
+  set_name(name.to_string());
+}
+
+void Var::Destroy() {
+  typedef std::string std_string;
+  if (is_name())
+    name_.~std_string();
 }
 
 Const::Const(I32, uint32_t value, const Location& loc_)

@@ -134,35 +134,31 @@ void NameResolver::CheckDuplicateBindings(const BindingHash* bindings,
 }
 
 void NameResolver::ResolveLabelVar(Var* var) {
-  if (var->type == VarType::Name) {
+  if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
       Label* label = labels_[i];
-      if (string_slices_are_equal(label, &var->name)) {
-        destroy_string_slice(&var->name);
-        var->type = VarType::Index;
-        var->index = labels_.size() - i - 1;
+      if (string_slice_to_string(*label) == var->name()) {
+        var->set_index(labels_.size() - i - 1);
         return;
       }
     }
-    PrintError(&var->loc, "undefined label variable \"" PRIstringslice "\"",
-               WABT_PRINTF_STRING_SLICE_ARG(var->name));
+    PrintError(&var->loc, "undefined label variable \"%s\"",
+               var->name().c_str());
   }
 }
 
 void NameResolver::ResolveVar(const BindingHash* bindings,
                               Var* var,
                               const char* desc) {
-  if (var->type == VarType::Name) {
+  if (var->is_name()) {
     Index index = bindings->FindIndex(*var);
     if (index == kInvalidIndex) {
-      PrintError(&var->loc, "undefined %s variable \"" PRIstringslice "\"",
-                 desc, WABT_PRINTF_STRING_SLICE_ARG(var->name));
+      PrintError(&var->loc, "undefined %s variable \"%s\"", desc,
+                 var->name().c_str());
       return;
     }
 
-    destroy_string_slice(&var->name);
-    var->index = index;
-    var->type = VarType::Index;
+    var->set_index(index);
   }
 }
 
@@ -191,20 +187,18 @@ void NameResolver::ResolveExceptionVar(Var* var) {
 }
 
 void NameResolver::ResolveLocalVar(Var* var) {
-  if (var->type == VarType::Name) {
+  if (var->is_name()) {
     if (!current_func_)
       return;
 
     Index index = current_func_->GetLocalIndex(*var);
     if (index == kInvalidIndex) {
-      PrintError(&var->loc, "undefined local variable \"" PRIstringslice "\"",
-                 WABT_PRINTF_STRING_SLICE_ARG(var->name));
+      PrintError(&var->loc, "undefined local variable \"%s\"",
+                 var->name().c_str());
       return;
     }
 
-    destroy_string_slice(&var->name);
-    var->index = index;
-    var->type = VarType::Index;
+    var->set_index(index);
   }
 }
 

@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "config.h"
+#include "string-view.h"
 
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
@@ -44,6 +45,10 @@
 
 #define PRIstringslice "%.*s"
 #define WABT_PRINTF_STRING_SLICE_ARG(x) static_cast<int>((x).length), (x).start
+
+#define PRIstringview "%.*s"
+#define WABT_PRINTF_STRING_VIEW_ARG(x) \
+  static_cast<int>((x).length()), (x).data()
 
 #define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
 #define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \
@@ -281,6 +286,13 @@ Result read_file(const char* filename, char** out_data, size_t* out_size);
 
 inline std::string string_slice_to_string(const StringSlice& ss) {
   return std::string(ss.start, ss.length);
+}
+
+inline StringSlice string_view_to_string_slice(const string_view& view) {
+  StringSlice ss;
+  ss.start = view.data();
+  ss.length = view.length();
+  return ss;
 }
 
 inline StringSlice string_to_string_slice(const std::string& s) {
