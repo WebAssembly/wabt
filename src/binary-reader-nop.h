@@ -34,7 +34,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
 
   /* Custom section */
-  Result BeginCustomSection(Offset size, StringSlice section_name) override {
+  Result BeginCustomSection(Offset size,
+                            const string_view& section_name) override {
     return Result::Ok;
   }
   Result EndCustomSection() override { return Result::Ok; }
@@ -55,43 +56,43 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result BeginImportSection(Offset size) override { return Result::Ok; }
   Result OnImportCount(Index count) override { return Result::Ok; }
   Result OnImport(Index index,
-                  StringSlice module_name,
-                  StringSlice field_name) override {
+                  const string_view& module_name,
+                  const string_view& field_name) override {
     return Result::Ok;
   }
   Result OnImportFunc(Index import_index,
-                      StringSlice module_name,
-                      StringSlice field_name,
+                      const string_view& module_name,
+                      const string_view& field_name,
                       Index func_index,
                       Index sig_index) override {
     return Result::Ok;
   }
   Result OnImportTable(Index import_index,
-                       StringSlice module_name,
-                       StringSlice field_name,
+                       const string_view& module_name,
+                       const string_view& field_name,
                        Index table_index,
                        Type elem_type,
                        const Limits* elem_limits) override {
     return Result::Ok;
   }
   Result OnImportMemory(Index import_index,
-                        StringSlice module_name,
-                        StringSlice field_name,
+                        const string_view& module_name,
+                        const string_view& field_name,
                         Index memory_index,
                         const Limits* page_limits) override {
     return Result::Ok;
   }
   Result OnImportGlobal(Index import_index,
-                        StringSlice module_name,
-                        StringSlice field_name,
+                        const string_view& module_name,
+                        const string_view& field_name,
                         Index global_index,
                         Type type,
                         bool mutable_) override {
     return Result::Ok;
   }
   Result OnImportException(Index import_index,
-                           StringSlice module_name,
-                           StringSlice field_name,
+                           const string_view& module_name,
+                           const string_view& field_name,
                            Index except_index,
                            TypeVector& sig) override {
     return AllowIfFutureExceptions();
@@ -141,7 +142,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
-                  StringSlice name) override {
+                  const string_view& name) override {
     return Result::Ok;
   }
   Result EndExportSection() override { return Result::Ok; }
@@ -288,7 +289,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnFunctionName(Index function_index,
-                        StringSlice function_name) override {
+                        const string_view& function_name) override {
     return Result::Ok;
   }
   Result OnLocalNameSubsection(Index index,
@@ -305,7 +306,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnLocalName(Index function_index,
                      Index local_index,
-                     StringSlice local_name) override {
+                     const string_view& local_name) override {
     return Result::Ok;
   }
   Result EndNamesSection() override { return Result::Ok; }
@@ -314,7 +315,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result BeginRelocSection(Offset size) override { return Result::Ok; }
   Result OnRelocCount(Index count,
                       BinarySection section_code,
-                      StringSlice section_name) override {
+                      const string_view& section_name) override {
     return Result::Ok;
   }
   Result OnReloc(RelocType type,
@@ -343,7 +344,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
   Result OnStackGlobal(Index stack_global) override { return Result::Ok; }
   Result OnSymbolInfoCount(Index count) override { return Result::Ok; }
-  Result OnSymbolInfo(StringSlice name, uint32_t flags) override {
+  Result OnSymbolInfo(const string_view& name, uint32_t flags) override {
     return Result::Ok;
   }
   Result EndLinkingSection() override { return Result::Ok; }
