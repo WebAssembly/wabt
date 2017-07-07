@@ -105,16 +105,14 @@ int ProgramMain(int argc, char** argv) {
   size_t size;
   result = read_file(s_infile.c_str(), &data, &size);
   if (Succeeded(result)) {
-    ErrorHandlerFile binary_error_handler(Location::Type::Binary);
+    ErrorHandlerFile error_handler(Location::Type::Binary);
     Module module;
-    result =
-        read_binary_ir(s_infile.c_str(), data, size, &s_read_binary_options,
-                       &binary_error_handler, &module);
+    result = read_binary_ir(s_infile.c_str(), data, size,
+                            &s_read_binary_options, &error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result) && s_validate) {
-        ErrorHandlerFile text_error_handler(Location::Type::Text);
         WastLexer* lexer = nullptr;
-        result = validate_module(lexer, &module, &text_error_handler);
+        result = validate_module(lexer, &module, &error_handler);
       }
 
       if (s_generate_names)
