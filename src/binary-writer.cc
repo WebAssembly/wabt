@@ -28,6 +28,7 @@
 #include "cast.h"
 #include "ir.h"
 #include "stream.h"
+#include "string-view.h"
 #include "writer.h"
 
 #define PRINT_HEADER_NO_INDEX -1
@@ -133,12 +134,11 @@ static void write_i64_leb128(Stream* stream, int64_t value, const char* desc) {
 #undef LEB128_LOOP_UNTIL
 
 void write_str(Stream* stream,
-               const char* s,
-               size_t length,
+               const string_view& s,
                const char* desc,
                PrintChars print_chars) {
-  write_u32_leb128(stream, length, "string length");
-  stream->WriteData(s, length, desc, print_chars);
+  write_u32_leb128(stream, s.length(), "string length");
+  stream->WriteData(s.data(), s.length(), desc, print_chars);
 }
 
 void write_opcode(Stream* stream, Opcode opcode) {
@@ -158,15 +158,15 @@ void write_limits(Stream* stream, const Limits* limits) {
 }
 
 void write_debug_name(Stream* stream,
-                      StringSlice name,
+                      const string_view& name,
                       const char* desc) {
-  if (name.length > 0) {
+  string_view stripped_name = name;
+  if (!stripped_name.empty()) {
     // Strip leading $ from name
-    assert(*name.start == '$');
-    name.start++;
-    name.length--;
+    assert(stripped_name.front() == '$');
+    stripped_name.remove_prefix(1);
   }
-  write_str(stream, name.start, name.length, desc, PrintChars::Yes);
+  write_str(stream, stripped_name, desc, PrintChars::Yes);
 }
 
 namespace {
@@ -341,8 +341,7 @@ void BinaryWriter::BeginCustomSection(const char* name, size_t leb_size_guess) {
   last_section_offset_ =
       WriteU32Leb128Space(leb_size_guess, "section size (guess)");
   last_section_payload_offset_ = stream_.offset();
-  write_str(&stream_, name, strlen(name), "custom section name",
-            PrintChars::Yes);
+  write_str(&stream_, name, "custom section name", PrintChars::Yes);
 }
 
 void BinaryWriter::EndSection() {
@@ -762,10 +761,10 @@ Result BinaryWriter::WriteModule(const Module* module) {
     for (size_t i = 0; i < module->imports.size(); ++i) {
       const Import* import = module->imports[i];
       WriteHeader("import header", i);
-      write_str(&stream_, import->module_name.start, import->module_name.length,
-                "import module name", PrintChars::Yes);
-      write_str(&stream_, import->field_name.start, import->field_name.length,
-                "import field name", PrintChars::Yes);
+      write_str(&stream_, import->module_name, "import module name",
+                PrintChars::Yes);
+      write_str(&stream_, import->field_name, "import field name",
+                PrintChars::Yes);
       stream_.WriteU8Enum(import->kind, "import kind");
       switch (import->kind) {
         case ExternalKind::Func:
@@ -851,8 +850,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
     write_u32_leb128(&stream_, module->exports.size(), "num exports");
 
     for (const Export* export_ : module->exports) {
-      write_str(&stream_, export_->name.start, export_->name.length,
-                "export name", PrintChars::Yes);
+      write_str(&stream_, export_->name, "export name", PrintChars::Yes);
       stream_.WriteU8Enum(export_->kind, "export kind");
       switch (export_->kind) {
         case ExternalKind::Func: {
@@ -969,7 +967,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
 
     size_t named_functions = 0;
     for (const Func* func : module->funcs) {
-      if (func->name.length > 0)
+      if (!func->name.empty())
         named_functions++;
     }
 
@@ -980,7 +978,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
       write_u32_leb128(&stream_, named_functions, "num functions");
       for (size_t i = 0; i < module->funcs.size(); ++i) {
         const Func* func = module->funcs[i];
-        if (func->name.length == 0)
+        if (func->name.empty())
           continue;
         write_u32_leb128(&stream_, i, "function index");
         wabt_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
@@ -1008,7 +1006,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
         const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
         write_u32_leb128(&stream_, j, "local index");
-        write_debug_name(&stream_, string_to_string_slice(name), desc);
+        write_debug_name(&stream_, name, desc);
       }
 
       MakeTypeBindingReverseMapping(func->local_types, func->local_bindings,
@@ -1017,7 +1015,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
         const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, num_params + j);
         write_u32_leb128(&stream_, num_params + j, "local index");
-        write_debug_name(&stream_, string_to_string_slice(name), desc);
+        write_debug_name(&stream_, name, desc);
       }
     }
     EndSubsection();

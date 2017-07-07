@@ -323,8 +323,8 @@ Result BinaryReaderIR::OnImport(Index index,
                                  StringSlice module_name,
                                  StringSlice field_name) {
   auto import = new Import();
-  import->module_name = dup_string_slice(module_name);
-  import->field_name = dup_string_slice(field_name);
+  import->module_name = string_slice_to_string(module_name);
+  import->field_name = string_slice_to_string(field_name);
   module->imports.push_back(import);
   module->fields.push_back(new ImportModuleField(import, GetLocation()));
   return Result::Ok;
@@ -490,7 +490,7 @@ Result BinaryReaderIR::OnExport(Index index,
                                 Index item_index,
                                 StringSlice name) {
   auto export_ = new Export();
-  export_->name = dup_string_slice(name);
+  export_->name = string_slice_to_string(name);
   switch (kind) {
     case ExternalKind::Func:
       assert(item_index < module->funcs.size());
@@ -895,7 +895,7 @@ Result BinaryReaderIR::OnFunctionName(Index index, StringSlice name) {
   while (module->func_bindings.count(dollar_name) != 0) {
     dollar_name = orig_name + "." + std::to_string(counter++);
   }
-  func->name = dup_string_slice(string_to_string_slice(dollar_name));
+  func->name = dollar_name;
   module->func_bindings.emplace(dollar_name, Binding(index));
   return Result::Ok;
 }

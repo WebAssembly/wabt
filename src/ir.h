@@ -71,8 +71,6 @@ struct Var {
 };
 typedef std::vector<Var> VarVector;
 
-typedef StringSlice Label;
-
 struct Const {
   // Struct tags to differentiate constructors.
   struct I32 {};
@@ -141,12 +139,10 @@ class Expr;
 typedef intrusive_list<Expr> ExprList;
 
 struct Block {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Block);
-  Block();
+  Block() = default;
   explicit Block(ExprList exprs);
-  ~Block();
 
-  Label label;
+  std::string label;
   BlockSignature sig;
   ExprList exprs;
 };
@@ -294,13 +290,13 @@ typedef LoadStoreExpr<ExprType::Load> LoadExpr;
 typedef LoadStoreExpr<ExprType::Store> StoreExpr;
 
 struct Exception {
-  StringSlice name;
+  Exception() = default;
+  Exception(const TypeVector& sig) : sig(sig) {}
+  Exception(const string_view& name, const TypeVector& sig)
+      : name(name), sig(sig) {}
+
+  std::string name;
   TypeVector sig;
-  Exception();
-  Exception(const TypeVector& sig);
-  Exception(StringSlice name, const TypeVector& sig);
-  Exception& operator =(const Exception& except);
-  ~Exception() { destroy_string_slice(&name); }
 };
 
 struct FuncSignature {
@@ -316,38 +312,27 @@ struct FuncSignature {
 };
 
 struct FuncType {
-  WABT_DISALLOW_COPY_AND_ASSIGN(FuncType);
-  FuncType();
-  ~FuncType();
-
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
   Type GetParamType(Index index) const { return sig.GetParamType(index); }
   Type GetResultType(Index index) const { return sig.GetResultType(index); }
 
-  StringSlice name;
+  std::string name;
   FuncSignature sig;
 };
 
 struct FuncDeclaration {
-  WABT_DISALLOW_COPY_AND_ASSIGN(FuncDeclaration);
-  FuncDeclaration();
-
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
   Type GetParamType(Index index) const { return sig.GetParamType(index); }
   Type GetResultType(Index index) const { return sig.GetResultType(index); }
 
-  bool has_func_type;
+  bool has_func_type = false;
   Var type_var;
   FuncSignature sig;
 };
 
 struct Func {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Func);
-  Func();
-  ~Func();
-
   Type GetParamType(Index index) const { return decl.GetParamType(index); }
   Type GetResultType(Index index) const { return decl.GetResultType(index); }
   Index GetNumParams() const { return decl.GetNumParams(); }
@@ -358,7 +343,7 @@ struct Func {
   Index GetNumResults() const { return decl.GetNumResults(); }
   Index GetLocalIndex(const Var&) const;
 
-  StringSlice name;
+  std::string name;
   FuncDeclaration decl;
   TypeVector local_types;
   BindingHash param_bindings;
@@ -367,40 +352,29 @@ struct Func {
 };
 
 struct Global {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Global);
-  Global();
-  ~Global();
-
-  StringSlice name;
-  Type type;
-  bool mutable_;
+  std::string name;
+  Type type = Type::Void;
+  bool mutable_ = false;
   ExprList init_expr;
 };
 
 struct Table {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Table);
   Table();
-  ~Table();
 
-  StringSlice name;
+  std::string name;
   Limits elem_limits;
 };
 
 struct ElemSegment {
-  WABT_DISALLOW_COPY_AND_ASSIGN(ElemSegment);
-  ElemSegment();
-
   Var table_var;
   ExprList offset;
   VarVector vars;
 };
 
 struct Memory {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Memory);
   Memory();
-  ~Memory();
 
-  StringSlice name;
+  std::string name;
   Limits page_limits;
 };
 
@@ -420,8 +394,8 @@ struct Import {
   Import();
   ~Import();
 
-  StringSlice module_name;
-  StringSlice field_name;
+  std::string module_name;
+  std::string field_name;
   ExternalKind kind;
   union {
     // An imported func has the type Func so it can be more easily included in
@@ -436,11 +410,7 @@ struct Import {
 };
 
 struct Export {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Export);
-  Export();
-  ~Export();
-
-  StringSlice name;
+  std::string name;
   ExternalKind kind;
   Var var;
 };
@@ -597,10 +567,6 @@ class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
 };
 
 struct Module {
-  WABT_DISALLOW_COPY_AND_ASSIGN(Module);
-  Module();
-  ~Module();
-
   FuncType* AppendImplicitFuncType(const Location&, const FuncSignature&);
 
   Index GetFuncTypeIndex(const Var&) const;
@@ -618,19 +584,19 @@ struct Module {
   Index GetGlobalIndex(const Var&) const;
   const Global* GetGlobal(const Var&) const;
   Global* GetGlobal(const Var&);
-  const Export* GetExport(const StringSlice&) const;
+  const Export* GetExport(const string_view&) const;
   Exception* GetExcept(const Var&) const;
   Index GetExceptIndex(const Var&) const;
 
   Location loc;
-  StringSlice name;
+  std::string name;
   ModuleFieldList fields;
 
-  Index num_except_imports;
-  Index num_func_imports;
-  Index num_table_imports;
-  Index num_memory_imports;
-  Index num_global_imports;
+  Index num_except_imports = 0;
+  Index num_func_imports = 0;
+  Index num_table_imports = 0;
+  Index num_memory_imports = 0;
+  Index num_global_imports = 0;
 
   // Cached for convenience; the pointers are shared with values that are
   // stored in either ModuleField or Import.
@@ -644,7 +610,7 @@ struct Module {
   std::vector<ElemSegment*> elem_segments;
   std::vector<Memory*> memories;
   std::vector<DataSegment*> data_segments;
-  Var* start;
+  Var* start = nullptr;
 
   BindingHash except_bindings;
   BindingHash func_bindings;
@@ -665,7 +631,7 @@ struct ScriptModule {
   };
 
   WABT_DISALLOW_COPY_AND_ASSIGN(ScriptModule);
-  ScriptModule();
+  explicit ScriptModule(Type);
   ~ScriptModule();
 
   const Location& GetLocation() const {
@@ -683,7 +649,7 @@ struct ScriptModule {
     Module* text;
     struct {
       Location loc;
-      StringSlice name;
+      std::string name;
       char* data;
       size_t size;
     } binary, quoted;
@@ -697,7 +663,7 @@ enum class ActionType {
 
 struct ActionInvoke {
   WABT_DISALLOW_COPY_AND_ASSIGN(ActionInvoke);
-  ActionInvoke();
+  ActionInvoke() = default;
 
   ConstVector args;
 };
@@ -710,7 +676,7 @@ struct Action {
   Location loc;
   ActionType type;
   Var module_var;
-  StringSlice name;
+  std::string name;
   union {
     ActionInvoke* invoke;
     struct {} get;
@@ -780,11 +746,10 @@ typedef ActionCommandBase<CommandType::AssertReturnArithmeticNan>
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
-  RegisterCommand(StringSlice module_name, const Var& var)
+  RegisterCommand(const string_view& module_name, const Var& var)
       : module_name(module_name), var(var) {}
-  ~RegisterCommand() { destroy_string_slice(&module_name); }
 
-  StringSlice module_name;
+  std::string module_name;
   Var var;
 };
 
@@ -804,15 +769,14 @@ class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
 template <CommandType TypeEnum>
 class AssertTrapCommandBase : public CommandMixin<TypeEnum> {
  public:
-  AssertTrapCommandBase(Action* action, StringSlice text)
+  AssertTrapCommandBase(Action* action, const string_view& text)
       : action(action), text(text) {}
   ~AssertTrapCommandBase() {
     delete action;
-    destroy_string_slice(&text);
   }
 
   Action* action;
-  StringSlice text;
+  std::string text;
 };
 
 typedef AssertTrapCommandBase<CommandType::AssertTrap> AssertTrapCommand;
@@ -822,15 +786,12 @@ typedef AssertTrapCommandBase<CommandType::AssertExhaustion>
 template <CommandType TypeEnum>
 class AssertModuleCommand : public CommandMixin<TypeEnum> {
  public:
-  AssertModuleCommand(ScriptModule* module, StringSlice text)
+  AssertModuleCommand(ScriptModule* module, const string_view& text)
       : module(module), text(text) {}
-  ~AssertModuleCommand() {
-    delete module;
-    destroy_string_slice(&text);
-  }
+  ~AssertModuleCommand() { delete module; }
 
   ScriptModule* module;
-  StringSlice text;
+  std::string text;
 };
 
 typedef AssertModuleCommand<CommandType::AssertMalformed>
@@ -845,7 +806,7 @@ typedef std::vector<std::unique_ptr<Command>> CommandPtrVector;
 
 struct Script {
   WABT_DISALLOW_COPY_AND_ASSIGN(Script);
-  Script();
+  Script() = default;
 
   const Module* GetFirstModule() const;
   Module* GetFirstModule();

@@ -46,19 +46,21 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   Result BeginIfExpr(IfExpr* expr) override;
 
  private:
-  static bool HasName(StringSlice* str);
-  static void GenerateName(const char* prefix, Index index, StringSlice* str);
+  static bool HasName(const std::string& str);
+  static void GenerateName(const char* prefix,
+                           Index index,
+                           std::string* out_str);
   static void MaybeGenerateName(const char* prefix,
                                 Index index,
-                                StringSlice* str);
+                                std::string* out_str);
   static void GenerateAndBindName(BindingHash* bindings,
                                   const char* prefix,
                                   Index index,
-                                  StringSlice* str);
+                                  std::string* out_str);
   static void MaybeGenerateAndBindName(BindingHash* bindings,
                                        const char* prefix,
                                        Index index,
-                                       StringSlice* str);
+                                       std::string* out_str);
   void GenerateAndBindLocalNames(BindingHash* bindings, const char* prefix);
   Result VisitFunc(Index func_index, Func* func);
   Result VisitGlobal(Index global_index, Global* global);
@@ -76,30 +78,26 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 NameGenerator::NameGenerator() : visitor_(this) {}
 
 // static
-bool NameGenerator::HasName(StringSlice* str) {
-  return str->length > 0;
+bool NameGenerator::HasName(const std::string& str) {
+  return !str.empty();
 }
 
 // static
 void NameGenerator::GenerateName(const char* prefix,
                                  Index index,
-                                 StringSlice* str) {
+                                 std::string* str) {
   size_t prefix_len = strlen(prefix);
   size_t buffer_len = prefix_len + 20; /* add space for the number */
   char* buffer = static_cast<char*>(alloca(buffer_len));
   int actual_len = wabt_snprintf(buffer, buffer_len, "%s%u", prefix, index);
-
-  StringSlice buf;
-  buf.length = actual_len;
-  buf.start = buffer;
-  *str = dup_string_slice(buf);
+  str->assign(buffer, actual_len);
 }
 
 // static
 void NameGenerator::MaybeGenerateName(const char* prefix,
                                       Index index,
-                                      StringSlice* str) {
-  if (!HasName(str))
+                                      std::string* str) {
+  if (!HasName(*str))
     GenerateName(prefix, index, str);
 }
 
@@ -107,17 +105,17 @@ void NameGenerator::MaybeGenerateName(const char* prefix,
 void NameGenerator::GenerateAndBindName(BindingHash* bindings,
                                         const char* prefix,
                                         Index index,
-                                        StringSlice* str) {
+                                        std::string* str) {
   GenerateName(prefix, index, str);
-  bindings->emplace(string_slice_to_string(*str), Binding(index));
+  bindings->emplace(*str, Binding(index));
 }
 
 // static
 void NameGenerator::MaybeGenerateAndBindName(BindingHash* bindings,
                                              const char* prefix,
                                              Index index,
-                                             StringSlice* str) {
-  if (!HasName(str))
+                                             std::string* str) {
+  if (!HasName(*str))
     GenerateAndBindName(bindings, prefix, index, str);
 }
 
@@ -128,10 +126,9 @@ void NameGenerator::GenerateAndBindLocalNames(BindingHash* bindings,
     if (!old_name.empty())
       continue;
 
-    StringSlice new_name;
+    std::string new_name;
     GenerateAndBindName(bindings, prefix, i, &new_name);
-    index_to_name_[i] = string_slice_to_string(new_name);
-    destroy_string_slice(&new_name);
+    index_to_name_[i] = new_name;
   }
 }
 

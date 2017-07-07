@@ -28,8 +28,6 @@ namespace wabt {
 
 namespace {
 
-typedef Label* LabelPtr;
-
 class NameResolver : public ExprVisitor::DelegateNop {
  public:
   NameResolver(WastLexer* lexer, Script* script, ErrorHandler* error_handler);
@@ -62,7 +60,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
-  void PushLabel(Label* label);
+  void PushLabel(const std::string& label);
   void PopLabel();
   void CheckDuplicateBindings(const BindingHash* bindings, const char* desc);
   void ResolveLabelVar(Var* var);
@@ -88,7 +86,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Module* current_module_ = nullptr;
   Func* current_func_ = nullptr;
   ExprVisitor visitor_;
-  std::vector<Label*> labels_;
+  std::vector<std::string> labels_;
   Result result_ = Result::Ok;
 };
 
@@ -112,7 +110,7 @@ void WABT_PRINTF_FORMAT(3, 4) NameResolver::PrintError(const Location* loc,
   va_end(args);
 }
 
-void NameResolver::PushLabel(Label* label) {
+void NameResolver::PushLabel(const std::string& label) {
   labels_.push_back(label);
 }
 
@@ -136,8 +134,8 @@ void NameResolver::CheckDuplicateBindings(const BindingHash* bindings,
 void NameResolver::ResolveLabelVar(Var* var) {
   if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
-      Label* label = labels_[i];
-      if (string_slice_to_string(*label) == var->name()) {
+      const std::string& label = labels_[i];
+      if (label == var->name()) {
         var->set_index(labels_.size() - i - 1);
         return;
       }
@@ -203,7 +201,7 @@ void NameResolver::ResolveLocalVar(Var* var) {
 }
 
 Result NameResolver::BeginBlockExpr(BlockExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block->label);
   return Result::Ok;
 }
 
@@ -213,7 +211,7 @@ Result NameResolver::EndBlockExpr(BlockExpr* expr) {
 }
 
 Result NameResolver::BeginLoopExpr(LoopExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block->label);
   return Result::Ok;
 }
 
@@ -260,7 +258,7 @@ Result NameResolver::OnGetLocalExpr(GetLocalExpr* expr) {
 }
 
 Result NameResolver::BeginIfExpr(IfExpr* expr) {
-  PushLabel(&expr->true_->label);
+  PushLabel(expr->true_->label);
   return Result::Ok;
 }
 
@@ -285,7 +283,7 @@ Result NameResolver::OnTeeLocalExpr(TeeLocalExpr* expr) {
 }
 
 Result NameResolver::BeginTryExpr(TryExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block->label);
   return Result::Ok;
 }
 

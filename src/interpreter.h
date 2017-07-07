@@ -121,7 +121,7 @@ struct Table {
 };
 
 struct Memory {
-  Memory() { ZeroMemory(page_limits); }
+  Memory() = default;
   explicit Memory(const Limits& limits)
       : page_limits(limits), data(limits.initial * WABT_PAGE_SIZE) {}
 
