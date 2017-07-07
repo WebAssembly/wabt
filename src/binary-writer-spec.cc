@@ -67,7 +67,7 @@ class BinaryWriterSpec {
   Result WriteScript(Script* script);
 
  private:
-  char* GetModuleFilename(const char* extension);
+  std::string GetModuleFilename(const char* extension);
   void WriteString(const char* s);
   void WriteKey(const char* key);
   void WriteSeparator();
@@ -80,8 +80,9 @@ class BinaryWriterSpec {
   void WriteConstVector(const ConstVector& consts);
   void WriteAction(const Action* action);
   void WriteActionResultType(Script* script, const Action* action);
-  void WriteModule(char* filename, const Module* module);
-  void WriteScriptModule(char* filename, const ScriptModule* script_module);
+  void WriteModule(const string_view& filename, const Module* module);
+  void WriteScriptModule(const string_view& filename,
+                         const ScriptModule* script_module);
   void WriteInvalidModule(const ScriptModule* module, const string_view& text);
   void WriteCommands(Script* script);
 
@@ -113,14 +114,13 @@ BinaryWriterSpec::BinaryWriterSpec(const char* source_filename,
   write_modules_ = !!spec_options_->json_filename;
 }
 
-char* BinaryWriterSpec::GetModuleFilename(const char* extension) {
-  size_t buflen = module_filename_noext_.length() + 20;
-  char* str = new char[buflen];
-  size_t length =
-      wabt_snprintf(str, buflen, "%s.%" PRIzd "%s",
-                    module_filename_noext_.c_str(), num_modules_, extension);
-  ConvertBackslashToSlash(str, length);
-  return str;
+std::string BinaryWriterSpec::GetModuleFilename(const char* extension) {
+  std::string result = module_filename_noext_;
+  result += '.';
+  result += std::to_string(num_modules_);
+  result += extension;
+  ConvertBackslashToSlash(&result);
+  return result;
 }
 
 void BinaryWriterSpec::WriteString(const char* s) {
@@ -302,7 +302,8 @@ void BinaryWriterSpec::WriteActionResultType(Script* script,
   json_stream_.Writef("]");
 }
 
-void BinaryWriterSpec::WriteModule(char* filename, const Module* module) {
+void BinaryWriterSpec::WriteModule(const string_view& filename,
+                                   const Module* module) {
   MemoryStream memory_stream;
   result_ = write_binary_module(&memory_stream.writer(), module,
                                 &spec_options_->write_binary_options);
@@ -310,7 +311,7 @@ void BinaryWriterSpec::WriteModule(char* filename, const Module* module) {
     result_ = memory_stream.WriteToFile(filename);
 }
 
-void BinaryWriterSpec::WriteScriptModule(char* filename,
+void BinaryWriterSpec::WriteScriptModule(const string_view& filename,
                                          const ScriptModule* script_module) {
   switch (script_module->type) {
     case ScriptModule::Type::Text:
@@ -368,7 +369,7 @@ void BinaryWriterSpec::WriteInvalidModule(const ScriptModule* module,
 
   WriteLocation(&module->GetLocation());
   WriteSeparator();
-  char* filename = GetModuleFilename(extension);
+  std::string filename = GetModuleFilename(extension);
   WriteKey("filename");
   WriteEscapedString(get_basename(filename));
   WriteSeparator();
@@ -378,7 +379,6 @@ void BinaryWriterSpec::WriteInvalidModule(const ScriptModule* module,
   WriteKey("module_type");
   WriteString(module_type);
   WriteScriptModule(filename, module);
-  delete [] filename;
 }
 
 void BinaryWriterSpec::WriteCommands(Script* script) {
@@ -401,7 +401,7 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
     switch (command->type) {
       case CommandType::Module: {
         Module* module = cast<ModuleCommand>(command)->module;
-        char* filename = GetModuleFilename(kWasmExtension);
+        std::string filename = GetModuleFilename(kWasmExtension);
         WriteLocation(&module->loc);
         WriteSeparator();
         if (!module->name.empty()) {
@@ -412,7 +412,6 @@ void BinaryWriterSpec::WriteCommands(Script* script) {
         WriteKey("filename");
         WriteEscapedString(get_basename(filename));
         WriteModule(filename, module);
-        delete [] filename;
         num_modules_++;
         last_module_index = i;
         break;
