@@ -63,14 +63,6 @@ bool string_slice_eq_cstr(const StringSlice* s1, const char* s2) {
   return strncmp(s1->start, s2, s2_len) == 0;
 }
 
-bool string_slice_startswith(const StringSlice* s1, const char* s2) {
-  size_t s2_len = strlen(s2);
-  if (s2_len > s1->length)
-    return false;
-
-  return strncmp(s1->start, s2, s2_len) == 0;
-}
-
 StringSlice string_slice_from_cstr(const char* string) {
   StringSlice result;
   result.start = string;
@@ -81,12 +73,6 @@ StringSlice string_slice_from_cstr(const char* string) {
 bool string_slice_is_empty(const StringSlice* str) {
   assert(str);
   return !str->start || str->length == 0;
-}
-
-bool string_slices_are_equal(const StringSlice* a, const StringSlice* b) {
-  assert(a && b);
-  return a->start && b->start && a->length == b->length &&
-         memcmp(a->start, b->start, a->length) == 0;
 }
 
 void destroy_string_slice(StringSlice* str) {

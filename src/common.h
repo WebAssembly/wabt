@@ -277,10 +277,8 @@ static WABT_INLINE StringSlice dup_string_slice(StringSlice str) {
 
 StringSlice empty_string_slice(void);
 bool string_slice_eq_cstr(const StringSlice* s1, const char* s2);
-bool string_slice_startswith(const StringSlice* s1, const char* s2);
 StringSlice string_slice_from_cstr(const char* string);
 bool string_slice_is_empty(const StringSlice*);
-bool string_slices_are_equal(const StringSlice*, const StringSlice*);
 void destroy_string_slice(StringSlice*);
 Result read_file(const char* filename, char** out_data, size_t* out_size);
 
@@ -292,13 +290,6 @@ inline StringSlice string_view_to_string_slice(const string_view& view) {
   StringSlice ss;
   ss.start = view.data();
   ss.length = view.length();
-  return ss;
-}
-
-inline StringSlice string_to_string_slice(const std::string& s) {
-  StringSlice ss;
-  ss.start = s.data();
-  ss.length = s.length();
   return ss;
 }
 

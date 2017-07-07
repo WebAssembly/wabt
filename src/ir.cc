@@ -74,7 +74,7 @@ bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return param_types == rhs.param_types && result_types == rhs.result_types;
 }
 
-const Export* Module::GetExport(const StringSlice& name) const {
+const Export* Module::GetExport(const string_view& name) const {
   Index index = export_bindings.FindIndex(name);
   if (index >= exports.size())
     return nullptr;
@@ -309,35 +309,7 @@ Const::Const(F64, uint64_t value, const Location& loc_)
     : loc(loc_), type(Type::F64), f64_bits(value) {
 }
 
-Block::Block() {
-  ZeroMemory(label);
-}
-
-Block::Block(ExprList exprs) : exprs(std::move(exprs)) {
-  ZeroMemory(label);
-}
-
-Block::~Block() {
-  destroy_string_slice(&label);
-}
-
-Exception::Exception() {
-  ZeroMemory(name);
-}
-
-Exception::Exception(const TypeVector& sig)
-    : sig(sig) {
-  ZeroMemory(name);
-}
-
-Exception::Exception(StringSlice name, const TypeVector& sig)
-    : name(name), sig(sig) {}
-
-Exception& Exception::operator =(const Exception& except) {
-  name = dup_string_slice(except.name);
-  sig = except.sig;
-  return *this;
-}
+Block::Block(ExprList exprs) : exprs(std::move(exprs)) {}
 
 Catch::Catch() {}
 
@@ -360,44 +332,9 @@ TryExpr::~TryExpr() {
 
 Expr::Expr(ExprType type) : type(type) {}
 
-FuncType::FuncType() {
-  ZeroMemory(name);
-}
-
-FuncType::~FuncType() {
-  destroy_string_slice(&name);
-}
-
-FuncDeclaration::FuncDeclaration()
-    : has_func_type(false), type_var(kInvalidIndex) {}
-
-Func::Func() {
-  ZeroMemory(name);
-}
-
-Func::~Func() {
-  destroy_string_slice(&name);
-}
-
-Global::Global() : type(Type::Void), mutable_(false) {
-  ZeroMemory(name);
-}
-
-Global::~Global() {
-  destroy_string_slice(&name);
-}
-
 Table::Table() {
-  ZeroMemory(name);
   ZeroMemory(elem_limits);
 }
-
-Table::~Table() {
-  destroy_string_slice(&name);
-}
-
-ElemSegment::ElemSegment() : table_var(kInvalidIndex) {}
-
 DataSegment::DataSegment() : data(nullptr), size(0) {}
 
 DataSegment::~DataSegment() {
@@ -405,22 +342,12 @@ DataSegment::~DataSegment() {
 }
 
 Memory::Memory() {
-  ZeroMemory(name);
   ZeroMemory(page_limits);
 }
 
-Memory::~Memory() {
-  destroy_string_slice(&name);
-}
-
-Import::Import() : kind(ExternalKind::Func), func(nullptr) {
-  ZeroMemory(module_name);
-  ZeroMemory(field_name);
-}
+Import::Import() : kind(ExternalKind::Func), func(nullptr) {}
 
 Import::~Import() {
-  destroy_string_slice(&module_name);
-  destroy_string_slice(&field_name);
   switch (kind) {
     case ExternalKind::Func:
       delete func;
@@ -440,57 +367,51 @@ Import::~Import() {
   }
 }
 
-Export::Export() {
-  ZeroMemory(name);
-}
-
-Export::~Export() {
-  destroy_string_slice(&name);
-}
-
 ModuleField::ModuleField(ModuleFieldType type, const Location& loc)
     : loc(loc), type(type) {}
 
-Module::Module()
-    : num_except_imports(0),
-      num_func_imports(0),
-      num_table_imports(0),
-      num_memory_imports(0),
-      num_global_imports(0),
-      start(0) {
-  ZeroMemory(name);
-}
+ScriptModule::ScriptModule(Type type) : type(type) {
+  switch (type) {
+    case ScriptModule::Type::Text:
+      text = nullptr;
+      break;
 
-Module::~Module() {
-  destroy_string_slice(&name);
-}
+    case ScriptModule::Type::Binary:
+      new (&binary.loc) Location();
+      new (&binary.name) std::string();
+      binary.data = nullptr;
+      binary.size = 0;
+      break;
 
-ScriptModule::ScriptModule() : type(ScriptModule::Type::Text), text(nullptr) {}
+    case ScriptModule::Type::Quoted:
+      new (&quoted.loc) Location();
+      new (&quoted.name) std::string();
+      quoted.data = nullptr;
+      quoted.size = 0;
+      break;
+  }
+}
 
 ScriptModule::~ScriptModule() {
+  typedef std::string std_string;
   switch (type) {
     case ScriptModule::Type::Text:
       delete text;
       break;
     case ScriptModule::Type::Binary:
-      destroy_string_slice(&binary.name);
+      binary.name.~std_string();
       delete [] binary.data;
       break;
     case ScriptModule::Type::Quoted:
-      destroy_string_slice(&quoted.name);
+      quoted.name.~std_string();
       delete [] binary.data;
       break;
   }
 }
 
-ActionInvoke::ActionInvoke() {}
-
-Action::Action() : type(ActionType::Get), module_var(kInvalidIndex) {
-  ZeroMemory(name);
-}
+Action::Action() : type(ActionType::Get), module_var(kInvalidIndex) {}
 
 Action::~Action() {
-  destroy_string_slice(&name);
   switch (type) {
     case ActionType::Invoke:
       delete invoke;
@@ -499,7 +420,5 @@ Action::~Action() {
       break;
   }
 }
-
-Script::Script() {}
 
 }  // namespace wabt

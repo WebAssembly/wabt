@@ -218,18 +218,8 @@ static void write_section_payload(Context* ctx, Section* sec) {
   ctx->stream.WriteData(payload, sec->payload_size, "section content");
 }
 
-static void write_c_str(Stream* stream, const char* str, const char* desc) {
-  write_str(stream, str, strlen(str), desc, PrintChars::Yes);
-}
-
 static void write_slice(Stream* stream, StringSlice str, const char* desc) {
-  write_str(stream, str.start, str.length, desc, PrintChars::Yes);
-}
-
-static void write_string(Stream* stream,
-                         const std::string& str,
-                         const char* desc) {
-  write_str(stream, str.data(), str.length(), desc, PrintChars::Yes);
+  write_str(stream, string_slice_to_string(str), desc, PrintChars::Yes);
 }
 
 #define WRITE_UNKNOWN_SIZE(STREAM)                            \
@@ -470,7 +460,7 @@ static void write_names_section(Context* ctx) {
   Stream* stream = &ctx->stream;
   stream->WriteU8Enum(BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
-  write_c_str(stream, "name", "custom section name");
+  write_str(stream, "name", "custom section name");
 
   stream->WriteU8Enum(NameSectionSubsection::Function, "subsection code");
   WRITE_UNKNOWN_SIZE(stream);
@@ -484,7 +474,7 @@ static void write_names_section(Context* ctx) {
       if (binary->IsInactiveFunctionImport(i))
         continue;
       write_u32_leb128(stream, binary->RelocateFuncIndex(i), "function index");
-      write_string(stream, binary->debug_names[i], "function name");
+      write_str(stream, binary->debug_names[i], "function name");
     }
   }
 
@@ -494,7 +484,7 @@ static void write_names_section(Context* ctx) {
       if (binary->debug_names[i].empty() || binary->IsFunctionImport(i))
         continue;
       write_u32_leb128(stream, binary->RelocateFuncIndex(i), "function index");
-      write_string(stream, binary->debug_names[i], "function name");
+      write_str(stream, binary->debug_names[i], "function name");
     }
   }
 
@@ -522,7 +512,7 @@ static void write_reloc_section(Context* ctx,
   Stream* stream = &ctx->stream;
   stream->WriteU8Enum(BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
-  write_c_str(stream, section_name, "reloc section name");
+  write_str(stream, section_name, "reloc section name");
   write_u32_leb128_enum(&ctx->stream, section_code, "reloc section");
   write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
 

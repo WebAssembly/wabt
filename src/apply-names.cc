@@ -22,6 +22,7 @@
 
 #include "expr-visitor.h"
 #include "ir.h"
+#include "string-view.h"
 
 #define CHECK_RESULT(expr)  \
   do {                      \
@@ -63,10 +64,10 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnRethrowExpr(RethrowExpr*) override;
 
  private:
-  void PushLabel(Label* label);
+  void PushLabel(const std::string& label);
   void PopLabel();
-  Label* FindLabelByVar(Var* var);
-  void UseNameForVar(StringSlice* name, Var* var);
+  string_view FindLabelByVar(Var* var);
+  void UseNameForVar(const string_view& name, Var* var);
   Result UseNameForFuncTypeVar(Var* var);
   Result UseNameForFuncVar(Var* var);
   Result UseNameForGlobalVar(Var* var);
@@ -85,12 +86,12 @@ class NameApplier : public ExprVisitor::DelegateNop {
   /* mapping from param index to its name, if any, for the current func */
   std::vector<std::string> param_index_to_name_;
   std::vector<std::string> local_index_to_name_;
-  std::vector<Label*> labels_;
+  std::vector<std::string> labels_;
 };
 
 NameApplier::NameApplier() : visitor_(this) {}
 
-void NameApplier::PushLabel(Label* label) {
+void NameApplier::PushLabel(const std::string& label) {
   labels_.push_back(label);
 }
 
@@ -98,37 +99,36 @@ void NameApplier::PopLabel() {
   labels_.pop_back();
 }
 
-Label* NameApplier::FindLabelByVar(Var* var) {
+string_view NameApplier::FindLabelByVar(Var* var) {
   if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
-      Label* label = labels_[i];
-      if (string_slice_to_string(*label) == var->name())
+      const std::string& label = labels_[i];
+      if (label == var->name())
         return label;
     }
-    return nullptr;
+    return string_view();
   } else {
     if (var->index() >= labels_.size())
-      return nullptr;
+      return string_view();
     return labels_[labels_.size() - 1 - var->index()];
   }
 }
 
-void NameApplier::UseNameForVar(StringSlice* name, Var* var) {
+void NameApplier::UseNameForVar(const string_view& name, Var* var) {
   if (var->is_name()) {
-    assert(string_slice_to_string(*name) == var->name());
+    assert(name == var->name());
     return;
   }
 
-  if (name && name->start) {
-    var->set_name(string_slice_to_string(*name));
-  }
+  if (!name.empty())
+    var->set_name(name);
 }
 
 Result NameApplier::UseNameForFuncTypeVar(Var* var) {
   FuncType* func_type = module_->GetFuncType(*var);
   if (!func_type)
     return Result::Error;
-  UseNameForVar(&func_type->name, var);
+  UseNameForVar(func_type->name, var);
   return Result::Ok;
 }
 
@@ -136,7 +136,7 @@ Result NameApplier::UseNameForFuncVar(Var* var) {
   Func* func = module_->GetFunc(*var);
   if (!func)
     return Result::Error;
-  UseNameForVar(&func->name, var);
+  UseNameForVar(func->name, var);
   return Result::Ok;
 }
 
@@ -144,7 +144,7 @@ Result NameApplier::UseNameForGlobalVar(Var* var) {
   Global* global = module_->GetGlobal(*var);
   if (!global)
     return Result::Error;
-  UseNameForVar(&global->name, var);
+  UseNameForVar(global->name, var);
   return Result::Ok;
 }
 
@@ -152,7 +152,7 @@ Result NameApplier::UseNameForTableVar(Var* var) {
   Table* table = module_->GetTable(*var);
   if (!table)
     return Result::Error;
-  UseNameForVar(&table->name, var);
+  UseNameForVar(table->name, var);
   return Result::Ok;
 }
 
@@ -160,7 +160,7 @@ Result NameApplier::UseNameForMemoryVar(Var* var) {
   Memory* memory = module_->GetMemory(*var);
   if (!memory)
     return Result::Error;
-  UseNameForVar(&memory->name, var);
+  UseNameForVar(memory->name, var);
   return Result::Ok;
 }
 
@@ -168,7 +168,7 @@ Result NameApplier::UseNameForExceptVar(Var* var) {
   Exception* except = module_->GetExcept(*var);
   if (!except)
     return Result::Error;
-  UseNameForVar(&except->name, var);
+  UseNameForVar(except->name, var);
   return Result::Ok;
 }
 
@@ -202,7 +202,7 @@ Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
 }
 
 Result NameApplier::BeginBlockExpr(BlockExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block->label);
   return Result::Ok;
 }
 
@@ -212,7 +212,7 @@ Result NameApplier::EndBlockExpr(BlockExpr* expr) {
 }
 
 Result NameApplier::BeginLoopExpr(LoopExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block->label);
   return Result::Ok;
 }
 
@@ -222,13 +222,13 @@ Result NameApplier::EndLoopExpr(LoopExpr* expr) {
 }
 
 Result NameApplier::OnBrExpr(BrExpr* expr) {
-  Label* label = FindLabelByVar(&expr->var);
+  string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
 Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
-  Label* label = FindLabelByVar(&expr->var);
+  string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
@@ -236,17 +236,17 @@ Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
 Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
   VarVector& targets = *expr->targets;
   for (Var& target : targets) {
-    Label* label = FindLabelByVar(&target);
+    string_view label = FindLabelByVar(&target);
     UseNameForVar(label, &target);
   }
 
-  Label* label = FindLabelByVar(&expr->default_target);
+  string_view label = FindLabelByVar(&expr->default_target);
   UseNameForVar(label, &expr->default_target);
   return Result::Ok;
 }
 
 Result NameApplier::BeginTryExpr(TryExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block->label);
   return Result::Ok;
 }
 
@@ -268,7 +268,7 @@ Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
 }
 
 Result NameApplier::OnRethrowExpr(RethrowExpr* expr) {
-  Label* label = FindLabelByVar(&expr->var);
+  string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
@@ -294,7 +294,7 @@ Result NameApplier::OnGetLocalExpr(GetLocalExpr* expr) {
 }
 
 Result NameApplier::BeginIfExpr(IfExpr* expr) {
-  PushLabel(&expr->true_->label);
+  PushLabel(expr->true_->label);
   return Result::Ok;
 }
 

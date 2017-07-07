@@ -79,6 +79,7 @@ union Token {
   ModuleFieldList* module_fields;
   ScriptModule* script_module;
   Script* script;
+  std::string* string;
   Table* table;
   TextList text_list;
   TryExpr* try_expr;
