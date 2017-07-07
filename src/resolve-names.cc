@@ -32,9 +32,7 @@ typedef Label* LabelPtr;
 
 class NameResolver : public ExprVisitor::DelegateNop {
  public:
-  NameResolver(WastLexer* lexer,
-               Script* script,
-               SourceErrorHandler* error_handler);
+  NameResolver(WastLexer* lexer, Script* script, ErrorHandler* error_handler);
 
   Result VisitModule(Module* module);
   Result VisitScript(Script* script);
@@ -84,7 +82,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitScriptModule(ScriptModule* script_module);
   void VisitCommand(Command* command);
 
-  SourceErrorHandler* error_handler_ = nullptr;
+  ErrorHandler* error_handler_ = nullptr;
   WastLexer* lexer_ = nullptr;
   Script* script_ = nullptr;
   Module* current_module_ = nullptr;
@@ -96,7 +94,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
 
 NameResolver::NameResolver(WastLexer* lexer,
                            Script* script,
-                           SourceErrorHandler* error_handler)
+                           ErrorHandler* error_handler)
     : error_handler_(error_handler),
       lexer_(lexer),
       script_(script),
@@ -136,35 +134,31 @@ void NameResolver::CheckDuplicateBindings(const BindingHash* bindings,
 }
 
 void NameResolver::ResolveLabelVar(Var* var) {
-  if (var->type == VarType::Name) {
+  if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
       Label* label = labels_[i];
-      if (string_slices_are_equal(label, &var->name)) {
-        destroy_string_slice(&var->name);
-        var->type = VarType::Index;
-        var->index = labels_.size() - i - 1;
+      if (string_slice_to_string(*label) == var->name()) {
+        var->set_index(labels_.size() - i - 1);
         return;
       }
     }
-    PrintError(&var->loc, "undefined label variable \"" PRIstringslice "\"",
-               WABT_PRINTF_STRING_SLICE_ARG(var->name));
+    PrintError(&var->loc, "undefined label variable \"%s\"",
+               var->name().c_str());
   }
 }
 
 void NameResolver::ResolveVar(const BindingHash* bindings,
                               Var* var,
                               const char* desc) {
-  if (var->type == VarType::Name) {
+  if (var->is_name()) {
     Index index = bindings->FindIndex(*var);
     if (index == kInvalidIndex) {
-      PrintError(&var->loc, "undefined %s variable \"" PRIstringslice "\"",
-                 desc, WABT_PRINTF_STRING_SLICE_ARG(var->name));
+      PrintError(&var->loc, "undefined %s variable \"%s\"", desc,
+                 var->name().c_str());
       return;
     }
 
-    destroy_string_slice(&var->name);
-    var->index = index;
-    var->type = VarType::Index;
+    var->set_index(index);
   }
 }
 
@@ -193,20 +187,18 @@ void NameResolver::ResolveExceptionVar(Var* var) {
 }
 
 void NameResolver::ResolveLocalVar(Var* var) {
-  if (var->type == VarType::Name) {
+  if (var->is_name()) {
     if (!current_func_)
       return;
 
     Index index = current_func_->GetLocalIndex(*var);
     if (index == kInvalidIndex) {
-      PrintError(&var->loc, "undefined local variable \"" PRIstringslice "\"",
-                 WABT_PRINTF_STRING_SLICE_ARG(var->name));
+      PrintError(&var->loc, "undefined local variable \"%s\"",
+                 var->name().c_str());
       return;
     }
 
-    destroy_string_slice(&var->name);
-    var->index = index;
-    var->type = VarType::Index;
+    var->set_index(index);
   }
 }
 
@@ -429,7 +421,7 @@ void NameResolver::VisitCommand(Command* command) {
       /* The module may be invalid because the names cannot be resolved; we
        * don't want to print errors or fail if that's the case, but we still
        * should try to resolve names when possible. */
-      SourceErrorHandlerNop new_error_handler;
+      ErrorHandlerNop new_error_handler;
       NameResolver new_resolver(lexer_, script_, &new_error_handler);
       new_resolver.VisitScriptModule(assert_invalid_command->module);
       break;
@@ -453,14 +445,14 @@ Result NameResolver::VisitScript(Script* script) {
 
 Result resolve_names_module(WastLexer* lexer,
                             Module* module,
-                            SourceErrorHandler* error_handler) {
+                            ErrorHandler* error_handler) {
   NameResolver resolver(lexer, nullptr, error_handler);
   return resolver.VisitModule(module);
 }
 
 Result resolve_names_script(WastLexer* lexer,
                             Script* script,
-                            SourceErrorHandler* error_handler) {
+                            ErrorHandler* error_handler) {
   NameResolver resolver(lexer, script, error_handler);
   return resolver.VisitScript(script);
 }

@@ -22,8 +22,8 @@
 #include <cstdio>
 #include <vector>
 
-#include "binary-error-handler.h"
 #include "binary-reader-nop.h"
+#include "error-handler.h"
 #include "interpreter.h"
 #include "type-checker.h"
 #include "writer.h"
@@ -76,7 +76,7 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
   BinaryReaderInterpreter(Environment* env,
                           DefinedModule* module,
                           std::unique_ptr<OutputBuffer> istream,
-                          BinaryErrorHandler* error_handler);
+                          ErrorHandler* error_handler);
 
   wabt::Result ReadBinary(DefinedModule* out_module);
 
@@ -261,7 +261,7 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
 
   HostImportDelegate::ErrorCallback MakePrintErrorCallback();
 
-  BinaryErrorHandler* error_handler = nullptr;
+  ErrorHandler* error_handler = nullptr;
   Environment* env = nullptr;
   DefinedModule* module = nullptr;
   DefinedFunc* current_func = nullptr;
@@ -298,7 +298,7 @@ BinaryReaderInterpreter::BinaryReaderInterpreter(
     Environment* env,
     DefinedModule* module,
     std::unique_ptr<OutputBuffer> istream,
-    BinaryErrorHandler* error_handler)
+    ErrorHandler* error_handler)
     : error_handler(error_handler),
       env(env),
       module(module),
@@ -1442,7 +1442,7 @@ wabt::Result read_binary_interpreter(Environment* env,
                                      const void* data,
                                      size_t size,
                                      const ReadBinaryOptions* options,
-                                     BinaryErrorHandler* error_handler,
+                                     ErrorHandler* error_handler,
                                      DefinedModule** out_module) {
   // Need to mark before taking ownership of env->istream.
   Environment::MarkPoint mark = env->Mark();

@@ -15,10 +15,10 @@
   )
 ) 
 (;; STDERR ;;;
-out/test/exceptions/bad-try.txt:5:6: opcode not allowed: try
+out/test/exceptions/bad-try.txt:5:6: error: opcode not allowed: try
     (try $try1 (result i32)
      ^^^
-out/test/exceptions/bad-try.txt:12:10: opcode not allowed: rethrow
+out/test/exceptions/bad-try.txt:12:10: error: opcode not allowed: rethrow
         (rethrow $try1)
          ^^^^^^^
 ;;; STDERR ;;)

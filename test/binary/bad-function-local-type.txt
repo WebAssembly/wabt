@@ -13,6 +13,6 @@ section(CODE) {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000019: expected valid local type
+0000019: error: expected valid local type
 
 ;;; STDERR ;;)

@@ -2,66 +2,66 @@
 ;;; STDIN_FILE: third_party/testsuite/exports.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/exports.wast:29: assert_invalid passed:
-  error: @0x00000019: invalid export func index: 1
+  0000019: error: invalid export func index: 1
 out/third_party/testsuite/exports.wast:33: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001d: OnExport callback failed
+  000001d: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:37: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001e: OnExport callback failed
+  000001e: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:41: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000025: OnExport callback failed
+  0000025: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:45: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000023: OnExport callback failed
+  0000023: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:49: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000022: OnExport callback failed
+  0000022: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:78: assert_invalid passed:
-  error: @0x00000017: invalid export global index: 1
+  0000017: error: invalid export global index: 1
 out/third_party/testsuite/exports.wast:82: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001b: OnExport callback failed
+  000001b: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:86: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000020: OnExport callback failed
+  0000020: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:90: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000025: OnExport callback failed
+  0000025: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:94: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000021: OnExport callback failed
+  0000021: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:98: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000020: OnExport callback failed
+  0000020: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:126: assert_invalid passed:
-  error: @0x00000015: invalid export table index: 1
+  0000015: error: invalid export table index: 1
 out/third_party/testsuite/exports.wast:130: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000019: OnExport callback failed
+  0000019: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:139: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000023: OnExport callback failed
+  0000023: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:143: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000021: OnExport callback failed
+  0000021: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:147: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001e: OnExport callback failed
+  000001e: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:175: assert_invalid passed:
-  error: @0x00000014: invalid export memory index: 1
+  0000014: error: invalid export memory index: 1
 out/third_party/testsuite/exports.wast:179: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000018: OnExport callback failed
+  0000018: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:188: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000022: OnExport callback failed
+  0000022: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:192: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x00000020: OnExport callback failed
+  0000020: error: OnExport callback failed
 out/third_party/testsuite/exports.wast:196: assert_invalid passed:
   error: duplicate export "a"
-  error: @0x0000001e: OnExport callback failed
+  000001e: error: OnExport callback failed
 28/28 tests passed.
 ;;; STDOUT ;;)

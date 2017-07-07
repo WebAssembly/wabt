@@ -21,6 +21,6 @@ section("name") {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000002c: duplicate function name: 0
+000002c: error: duplicate function name: 0
 
 ;;; STDERR ;;)

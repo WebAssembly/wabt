@@ -59,15 +59,20 @@
 0000037: 0b                                        ; end
 0000031: 06                                        ; FIXUP func body size
 000002f: 08                                        ; FIXUP section size
+
 try-exports.wasm:	file format wasm 0x1
+
 Sections:
+
      Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
  Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
    Export start=0x00000015 end=0x0000001f (size=0x0000000a) count: 1
    Custom start=0x00000021 end=0x0000002e (size=0x0000000d) "exception"
 count: 1
      Code start=0x00000030 end=0x00000038 (size=0x00000008) count: 1
+
 Code Disassembly:
+
 000031 func[0]:
  000033: 41 07                      | i32.const 7
  000035: 08 00                      | throw 0

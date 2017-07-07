@@ -22,11 +22,12 @@
 #include <cstdlib>
 #include <utility>
 
-#include "binary-error-handler.h"
 #include "binary-reader.h"
 #include "binary-reader-ir.h"
 #include "cast.h"
+#include "error-handler.h"
 #include "literal.h"
+#include "string-view.h"
 #include "wast-parser.h"
 #include "wast-parser-lexer-shared.h"
 
@@ -132,13 +133,19 @@ static void check_import_ordering(Location* loc,
                                   WastLexer* lexer,
                                   WastParser* parser,
                                   Module* module,
-                                  ModuleField* first);
-static void append_module_fields(Module*, ModuleField*);
+                                  const ModuleFieldList&);
+static void append_module_fields(Module*, ModuleFieldList*);
 
-class BinaryErrorHandlerModule : public BinaryErrorHandler {
+class BinaryErrorHandlerModule : public ErrorHandler {
  public:
   BinaryErrorHandlerModule(Location* loc, WastLexer* lexer, WastParser* parser);
-  bool OnError(Offset offset, const std::string& error) override;
+  bool OnError(const Location&,
+               const std::string& error,
+               const std::string& source_line,
+               size_t source_line_column_offset) override;
+
+  // Unused.
+  size_t source_line_max_length() const override { return 0; }
 
  private:
   Location* loc_;
@@ -232,7 +239,7 @@ class BinaryErrorHandlerModule : public BinaryErrorHandler {
 %destructor { delete $$; } <export_>
 %destructor { delete $$; } <expr>
 %destructor { delete $$; } <expr_list>
-%destructor { destroy_module_field_list(&$$); } <module_fields>
+%destructor { delete $$; } <module_fields>
 %destructor { delete $$; } <func>
 %destructor { delete $$; } <func_sig>
 %destructor { delete $$; } <global>
@@ -404,14 +411,10 @@ literal :
 
 var :
     nat {
-      $$ = new Var($1);
-      $$->loc = @1;
+      $$ = new Var($1, @1);
     }
   | VAR {
-      StringSlice name;
-      DUPTEXT(name, $1);
-      $$ = new Var(name);
-      $$->loc = @1;
+      $$ = new Var(string_view($1.start, $1.length), @1);
     }
 ;
 var_list :
@@ -848,7 +851,7 @@ exception_field :
 func :
     LPAR FUNC bind_var_opt func_fields RPAR {
       $$ = $4;
-      ModuleField* main_field = $$.first;
+      ModuleField* main_field = &$$->front();
       main_field->loc = @2;
       if (auto func_field = dyn_cast<FuncModuleField>(main_field)) {
         func_field->func->name = $3;
@@ -864,11 +867,10 @@ func_fields :
       field->func->decl.has_func_type = true;
       field->func->decl.type_var = std::move(*$1);
       delete $1;
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(field);
     }
   | func_fields_body {
-      auto field = new FuncModuleField($1);
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(new FuncModuleField($1));
     }
   | inline_import type_use func_fields_import {
       auto field = new ImportModuleField($1, @1);
@@ -877,19 +879,19 @@ func_fields :
       field->import->func->decl.has_func_type = true;
       field->import->func->decl.type_var = std::move(*$2);
       delete $2;
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(field);
     }
   | inline_import func_fields_import {
       auto field = new ImportModuleField($1, @1);
       field->import->kind = ExternalKind::Func;
       field->import->func = $2;
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(field);
     }
   | inline_export func_fields {
       auto field = new ExportModuleField($1, @1);
       field->export_->kind = ExternalKind::Func;
-      $$.first = $2.first;
-      $$.last = $2.last->next = field;
+      $$ = $2;
+      $$->push_back(field);
     }
 ;
 
@@ -1010,9 +1012,7 @@ elem :
     }
   | LPAR ELEM offset var_list RPAR {
       auto elem_segment = new ElemSegment();
-      elem_segment->table_var.loc = @2;
-      elem_segment->table_var.type = VarType::Index;
-      elem_segment->table_var.index = 0;
+      elem_segment->table_var = Var(0, @2);
       elem_segment->offset = std::move(*$3);
       delete $3;
       elem_segment->vars = std::move(*$4);
@@ -1024,7 +1024,7 @@ elem :
 table :
     LPAR TABLE bind_var_opt table_fields RPAR {
       $$ = $4;
-      ModuleField* main_field = $$.first;
+      ModuleField* main_field = &$$->front();
       main_field->loc = @2;
       if (auto table_field = dyn_cast<TableModuleField>(main_field)) {
         table_field->table->name = $3;
@@ -1036,27 +1036,25 @@ table :
 
 table_fields :
     table_sig {
-      auto field = new TableModuleField($1);
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(new TableModuleField($1));
     }
   | inline_import table_sig {
       auto field = new ImportModuleField($1);
       field->import->kind = ExternalKind::Table;
       field->import->table = $2;
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(field);
     }
   | inline_export table_fields {
       auto field = new ExportModuleField($1, @1);
       field->export_->kind = ExternalKind::Table;
-      $$.first = $2.first;
-      $$.last = $2.last->next = field;
+      $$ = $2;
+      $$->push_back(field);
     }
   | elem_type LPAR ELEM var_list RPAR {
       auto table = new Table();
       table->elem_limits.initial = $4->size();
       table->elem_limits.max = $4->size();
       table->elem_limits.has_max = true;
-      auto table_field = new TableModuleField(table);
 
       auto elem_segment = new ElemSegment();
       elem_segment->table_var = Var(kInvalidIndex);
@@ -1064,9 +1062,10 @@ table_fields :
       elem_segment->offset.back().loc = @3;
       elem_segment->vars = std::move(*$4);
       delete $4;
-      auto elem_field = new ElemSegmentModuleField(elem_segment, @3);
-      $$.first = table_field;
-      $$.last = table_field->next = elem_field;
+
+      $$ = new ModuleFieldList();
+      $$->push_back(new TableModuleField(table));
+      $$->push_back(new ElemSegmentModuleField(elem_segment, @3));
     }
 ;
 
@@ -1083,9 +1082,7 @@ data :
     }
   | LPAR DATA offset text_list_opt RPAR {
       auto data_segment = new DataSegment();
-      data_segment->memory_var.loc = @2;
-      data_segment->memory_var.type = VarType::Index;
-      data_segment->memory_var.index = 0;
+      data_segment->memory_var = Var(0, @2);
       data_segment->offset = std::move(*$3);
       delete $3;
       dup_text_list(&$4, &data_segment->data, &data_segment->size);
@@ -1097,7 +1094,7 @@ data :
 memory :
     LPAR MEMORY bind_var_opt memory_fields RPAR {
       $$ = $4;
-      ModuleField* main_field = $$.first;
+      ModuleField* main_field = &$$->front();
       main_field->loc = @2;
       if (auto memory_field = dyn_cast<MemoryModuleField>(main_field)) {
         memory_field->memory->name = $3;
@@ -1109,20 +1106,19 @@ memory :
 
 memory_fields :
     memory_sig {
-      auto field = new MemoryModuleField($1);
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(new MemoryModuleField($1));
     }
   | inline_import memory_sig {
       auto field = new ImportModuleField($1);
       field->import->kind = ExternalKind::Memory;
       field->import->memory = $2;
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(field);
     }
   | inline_export memory_fields {
       auto field = new ExportModuleField($1, @1);
       field->export_->kind = ExternalKind::Memory;
-      $$.first = $2.first;
-      $$.last = $2.last->next = field;
+      $$ = $2;
+      $$->push_back(field);
     }
   | LPAR DATA text_list_opt RPAR {
       auto data_segment = new DataSegment();
@@ -1131,7 +1127,6 @@ memory_fields :
       data_segment->offset.back().loc = @2;
       dup_text_list(&$3, &data_segment->data, &data_segment->size);
       destroy_text_list(&$3);
-      auto data_field = new DataSegmentModuleField(data_segment, @2);
 
       uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment->size);
       uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
@@ -1140,16 +1135,17 @@ memory_fields :
       memory->page_limits.initial = page_size;
       memory->page_limits.max = page_size;
       memory->page_limits.has_max = true;
-      auto memory_field = new MemoryModuleField(memory);
-      $$.first = memory_field;
-      $$.last = memory_field->next = data_field;
+
+      $$ = new ModuleFieldList();
+      $$->push_back(new MemoryModuleField(memory));
+      $$->push_back(new DataSegmentModuleField(data_segment, @2));
     }
 ;
 
 global :
     LPAR GLOBAL bind_var_opt global_fields RPAR {
       $$ = $4;
-      ModuleField* main_field = $$.first;
+      ModuleField* main_field = &$$->front();
       main_field->loc = @2;
       if (auto global_field = dyn_cast<GlobalModuleField>(main_field)) {
         global_field->global->name = $3;
@@ -1164,19 +1160,19 @@ global_fields :
       auto field = new GlobalModuleField($1);
       field->global->init_expr = std::move(*$2);
       delete $2;
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(field);
     }
   | inline_import global_type {
       auto field = new ImportModuleField($1);
       field->import->kind = ExternalKind::Global;
       field->import->global = $2;
-      $$.first = $$.last = field;
+      $$ = new ModuleFieldList(field);
     }
   | inline_export global_fields {
       auto field = new ExportModuleField($1, @1);
       field->export_->kind = ExternalKind::Global;
-      $$.first = $2.first;
-      $$.last = $2.last->next = field;
+      $$ = $2;
+      $$->push_back(field);
     }
 ;
 
@@ -1316,17 +1312,17 @@ start :
 ;
 
 module_field :
-    type_def { $$.first = $$.last = $1; }
+    type_def { $$ = new ModuleFieldList($1); }
   | global
   | table
   | memory
   | func
-  | elem { $$.first = $$.last = $1; }
-  | data { $$.first = $$.last = $1; }
-  | start { $$.first = $$.last = $1; }
-  | import { $$.first = $$.last = $1; }
-  | export { $$.first = $$.last = $1; }
-  | exception_field { $$.first = $$.last = $1; }
+  | elem { $$ = new ModuleFieldList($1); }
+  | data { $$ = new ModuleFieldList($1); }
+  | start { $$ = new ModuleFieldList($1); }
+  | import { $$ = new ModuleFieldList($1); }
+  | export { $$ = new ModuleFieldList($1); }
+  | exception_field { $$ = new ModuleFieldList($1); }
 ;
 
 module_fields_opt :
@@ -1337,13 +1333,15 @@ module_fields_opt :
 module_fields :
     module_field {
       $$ = new Module();
-      check_import_ordering(&@1, lexer, parser, $$, $1.first);
-      append_module_fields($$, $1.first);
+      check_import_ordering(&@1, lexer, parser, $$, *$1);
+      append_module_fields($$, $1);
+      delete $1;
     }
   | module_fields module_field {
       $$ = $1;
-      check_import_ordering(&@2, lexer, parser, $$, $2.first);
-      append_module_fields($$, $2.first);
+      check_import_ordering(&@2, lexer, parser, $$, *$2);
+      append_module_fields($$, $2);
+      delete $2;
     }
 ;
 
@@ -1380,9 +1378,7 @@ script_var_opt :
       $$ = new Var(kInvalidIndex);
     }
   | VAR {
-      StringSlice name;
-      DUPTEXT(name, $1);
-      $$ = new Var(name);
+      $$ = new Var(string_view($1.start, $1.length), @1);
     }
 ;
 
@@ -1575,11 +1571,11 @@ script :
             goto has_module_var;
 
           has_module_var: {
-            /* Resolve actions with an invalid index to use the preceding
-             * module. */
-            if (module_var->type == VarType::Index &&
-                module_var->index == kInvalidIndex) {
-              module_var->index = last_module_index;
+            // Resolve actions with an invalid index to use the preceding
+            // module.
+            if (module_var->is_index() &&
+                module_var->index() == kInvalidIndex) {
+              module_var->set_index(last_module_index);
             }
             break;
           }
@@ -1724,9 +1720,9 @@ void append_implicit_func_declaration(Location* loc,
 }
 
 void check_import_ordering(Location* loc, WastLexer* lexer, WastParser* parser,
-                           Module* module, ModuleField* first) {
-  for (ModuleField* field = first; field; field = field->next) {
-    if (field->type == ModuleFieldType::Import) {
+                           Module* module, const ModuleFieldList& fields) {
+  for (const ModuleField& field: fields) {
+    if (field.type == ModuleFieldType::Import) {
       if (module->funcs.size() != module->num_func_imports ||
           module->tables.size() != module->num_table_imports ||
           module->memories.size() != module->num_memory_imports ||
@@ -1740,19 +1736,19 @@ void check_import_ordering(Location* loc, WastLexer* lexer, WastParser* parser,
   }
 }
 
-void append_module_fields(Module* module, ModuleField* first) {
-  ModuleField* main_field = first;
+void append_module_fields(Module* module, ModuleFieldList* fields) {
+  ModuleField* main_field = &fields->front();
   Index main_index = kInvalidIndex;
 
-  for (ModuleField* field = first; field; field = field->next) {
+  for (ModuleField& field : *fields) {
     StringSlice* name = nullptr;
     BindingHash* bindings = nullptr;
     Index index = kInvalidIndex;
 
-    switch (field->type) {
+    switch (field.type) {
       case ModuleFieldType::Func: {
-        Func* func = cast<FuncModuleField>(field)->func;
-        append_implicit_func_declaration(&field->loc, module, &func->decl);
+        Func* func = cast<FuncModuleField>(&field)->func;
+        append_implicit_func_declaration(&field.loc, module, &func->decl);
         name = &func->name;
         bindings = &module->func_bindings;
         index = module->funcs.size();
@@ -1761,7 +1757,7 @@ void append_module_fields(Module* module, ModuleField* first) {
       }
 
       case ModuleFieldType::Global: {
-        Global* global = cast<GlobalModuleField>(field)->global;
+        Global* global = cast<GlobalModuleField>(&field)->global;
         name = &global->name;
         bindings = &module->global_bindings;
         index = module->globals.size();
@@ -1770,11 +1766,11 @@ void append_module_fields(Module* module, ModuleField* first) {
       }
 
       case ModuleFieldType::Import: {
-        Import* import = cast<ImportModuleField>(field)->import;
+        Import* import = cast<ImportModuleField>(&field)->import;
 
         switch (import->kind) {
           case ExternalKind::Func:
-            append_implicit_func_declaration(&field->loc, module,
+            append_implicit_func_declaration(&field.loc, module,
                                              &import->func->decl);
             name = &import->func->name;
             bindings = &module->func_bindings;
@@ -1816,11 +1812,10 @@ void append_module_fields(Module* module, ModuleField* first) {
       }
 
       case ModuleFieldType::Export: {
-        Export* export_ = cast<ExportModuleField>(field)->export_;
-        if (field != main_field) {
+        Export* export_ = cast<ExportModuleField>(&field)->export_;
+        if (&field != main_field) {
           // If this is not the main field, it must be an inline export.
-          export_->var.type = VarType::Index;
-          export_->var.index = main_index;
+          export_->var.set_index(main_index);
         }
         name = &export_->name;
         bindings = &module->export_bindings;
@@ -1830,7 +1825,7 @@ void append_module_fields(Module* module, ModuleField* first) {
       }
 
       case ModuleFieldType::FuncType: {
-        FuncType* func_type = cast<FuncTypeModuleField>(field)->func_type;
+        FuncType* func_type = cast<FuncTypeModuleField>(&field)->func_type;
         name = &func_type->name;
         bindings = &module->func_type_bindings;
         index = module->func_types.size();
@@ -1839,7 +1834,7 @@ void append_module_fields(Module* module, ModuleField* first) {
       }
 
       case ModuleFieldType::Table: {
-        Table* table = cast<TableModuleField>(field)->table;
+        Table* table = cast<TableModuleField>(&field)->table;
         name = &table->name;
         bindings = &module->table_bindings;
         index = module->tables.size();
@@ -1849,18 +1844,17 @@ void append_module_fields(Module* module, ModuleField* first) {
 
       case ModuleFieldType::ElemSegment: {
         ElemSegment* elem_segment =
-            cast<ElemSegmentModuleField>(field)->elem_segment;
-        if (field != main_field) {
+            cast<ElemSegmentModuleField>(&field)->elem_segment;
+        if (&field != main_field) {
           // If this is not the main field, it must be an inline elem segment.
-          elem_segment->table_var.type = VarType::Index;
-          elem_segment->table_var.index = main_index;
+          elem_segment->table_var.set_index(main_index);
         }
         module->elem_segments.push_back(elem_segment);
         break;
       }
 
       case ModuleFieldType::Memory: {
-        Memory* memory = cast<MemoryModuleField>(field)->memory;
+        Memory* memory = cast<MemoryModuleField>(&field)->memory;
         name = &memory->name;
         bindings = &module->memory_bindings;
         index = module->memories.size();
@@ -1870,18 +1864,17 @@ void append_module_fields(Module* module, ModuleField* first) {
 
       case ModuleFieldType::DataSegment: {
         DataSegment* data_segment =
-            cast<DataSegmentModuleField>(field)->data_segment;
-        if (field != main_field) {
+            cast<DataSegmentModuleField>(&field)->data_segment;
+        if (&field != main_field) {
           // If this is not the main field, it must be an inline data segment.
-          data_segment->memory_var.type = VarType::Index;
-          data_segment->memory_var.index = main_index;
+          data_segment->memory_var.set_index(main_index);
         }
         module->data_segments.push_back(data_segment);
         break;
       }
 
       case ModuleFieldType::Except: {
-        Exception* except = cast<ExceptionModuleField>(field)->except;
+        Exception* except = cast<ExceptionModuleField>(&field)->except;
         name = &except->name;
         bindings = &module->except_bindings;
         index = module->excepts.size();
@@ -1890,32 +1883,28 @@ void append_module_fields(Module* module, ModuleField* first) {
       }
 
       case ModuleFieldType::Start:
-        module->start = &cast<StartModuleField>(field)->start;
+        module->start = &cast<StartModuleField>(&field)->start;
         break;
     }
 
-    if (field == main_field)
+    if (&field == main_field)
       main_index = index;
-
-    if (module->last_field)
-      module->last_field->next = field;
-    else
-      module->first_field = field;
-    module->last_field = field;
 
     if (name && bindings) {
       // Exported names are allowed to be empty; other names aren't.
       if (bindings == &module->export_bindings ||
           !string_slice_is_empty(name)) {
         bindings->emplace(string_slice_to_string(*name),
-                          Binding(field->loc, index));
+                          Binding(field.loc, index));
       }
     }
   }
+
+  module->fields.splice(module->fields.end(), *fields);
 }
 
 Result parse_wast(WastLexer* lexer, Script** out_script,
-                  SourceErrorHandler* error_handler,
+                  ErrorHandler* error_handler,
                   WastParseOptions* options) {
   WastParser parser;
   ZeroMemory(parser);
@@ -1939,17 +1928,21 @@ Result parse_wast(WastLexer* lexer, Script** out_script,
 
 BinaryErrorHandlerModule::BinaryErrorHandlerModule(
     Location* loc, WastLexer* lexer, WastParser* parser)
-  : loc_(loc), lexer_(lexer), parser_(parser) {}
+    : ErrorHandler(Location::Type::Binary),
+      loc_(loc),
+      lexer_(lexer),
+      parser_(parser) {}
 
-bool BinaryErrorHandlerModule::OnError(Offset offset,
-                                       const std::string& error) {
-  if (offset == kInvalidOffset) {
+bool BinaryErrorHandlerModule::OnError(
+    const Location& binary_loc, const std::string& error,
+    const std::string& source_line, size_t source_line_column_offset) {
+  if (binary_loc.offset == kInvalidOffset) {
     wast_parser_error(loc_, lexer_, parser_, "error in binary module: %s",
                       error.c_str());
   } else {
     wast_parser_error(loc_, lexer_, parser_,
-                      "error in binary module: @0x%08" PRIzx ": %s", offset,
-                      error.c_str());
+                      "error in binary module: @0x%08" PRIzx ": %s",
+                      binary_loc.offset, error.c_str());
   }
   return true;
 }

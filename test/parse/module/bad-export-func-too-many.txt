@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func nop) (export "nop" (func 0 foo)))
 (;; STDERR ;;;
-out/test/parse/module/bad-export-func-too-many.txt:2:42: unexpected token "foo"
+out/test/parse/module/bad-export-func-too-many.txt:2:42: error: unexpected token "foo"
 (module (func nop) (export "nop" (func 0 foo)))
                                          ^^^
 ;;; STDERR ;;)

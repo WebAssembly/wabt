@@ -23,13 +23,12 @@
 #include <string>
 #include <vector>
 
-#include "binary-error-handler.h"
 #include "binary-reader-interpreter.h"
 #include "binary-reader.h"
+#include "error-handler.h"
 #include "interpreter.h"
 #include "literal.h"
 #include "option-parser.h"
-#include "source-error-handler.h"
 #include "stream.h"
 #include "wast-lexer.h"
 #include "wast-parser.h"
@@ -301,7 +300,7 @@ static void run_all_exports(Module* module,
 
 static wabt::Result read_module(const char* module_filename,
                                 Environment* env,
-                                BinaryErrorHandler* error_handler,
+                                ErrorHandler* error_handler,
                                 DefinedModule** out_module) {
   wabt::Result result;
   char* data;
@@ -452,7 +451,7 @@ static wabt::Result read_and_run_module(const char* module_filename) {
   Environment env;
   init_environment(&env);
 
-  BinaryErrorHandlerFile error_handler;
+  ErrorHandlerFile error_handler(Location::Type::Binary);
   DefinedModule* module = nullptr;
   result = read_module(module_filename, &env, &error_handler, &module);
   if (Succeeded(result)) {
@@ -896,7 +895,7 @@ static wabt::Result on_module_command(Context* ctx,
                                       StringSlice name) {
   char* path = create_module_path(ctx, filename);
   Environment::MarkPoint mark = ctx->env.Mark();
-  BinaryErrorHandlerFile error_handler;
+  ErrorHandlerFile error_handler(Location::Type::Binary);
   wabt::Result result =
       read_module(path, &ctx->env, &error_handler, &ctx->last_module);
 
@@ -984,13 +983,12 @@ static wabt::Result on_action_command(Context* ctx, Action* action) {
   return result;
 }
 
-static wabt::Result read_invalid_text_module(
-    const char* module_filename,
-    Environment* env,
-    SourceErrorHandler* source_error_handler) {
+static wabt::Result read_invalid_text_module(const char* module_filename,
+                                             Environment* env,
+                                             ErrorHandler* error_handler) {
   std::unique_ptr<WastLexer> lexer =
       WastLexer::CreateFileLexer(module_filename);
-  wabt::Result result = parse_wast(lexer.get(), nullptr, source_error_handler);
+  wabt::Result result = parse_wast(lexer.get(), nullptr, error_handler);
   return result;
 }
 
@@ -1006,15 +1004,15 @@ static wabt::Result read_invalid_module(Context* ctx,
 
   switch (module_type) {
     case ModuleType::Text: {
-      SourceErrorHandlerFile error_handler(
-          stdout, header, SourceErrorHandlerFile::PrintHeader::Once);
+      ErrorHandlerFile error_handler(Location::Type::Text, stdout, header,
+                                     ErrorHandlerFile::PrintHeader::Once);
       return read_invalid_text_module(module_filename, env, &error_handler);
     }
 
     case ModuleType::Binary: {
       DefinedModule* module;
-      BinaryErrorHandlerFile error_handler(
-          stdout, header, BinaryErrorHandlerFile::PrintHeader::Once);
+      ErrorHandlerFile error_handler(Location::Type::Binary, stdout, header,
+                                     ErrorHandlerFile::PrintHeader::Once);
       return read_module(module_filename, env, &error_handler, &module);
     }
 
@@ -1116,7 +1114,7 @@ static wabt::Result on_assert_uninstantiable_command(Context* ctx,
                                                      StringSlice filename,
                                                      StringSlice text,
                                                      ModuleType module_type) {
-  BinaryErrorHandlerFile error_handler;
+  ErrorHandlerFile error_handler(Location::Type::Binary);
   ctx->total++;
   char* path = create_module_path(ctx, filename);
   DefinedModule* module;

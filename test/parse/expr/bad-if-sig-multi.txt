@@ -12,7 +12,7 @@
     drop
     drop))
 (;; STDERR ;;;
-out/test/parse/expr/bad-if-sig-multi.txt:5:5: multiple if signature result types not currently supported.
+out/test/parse/expr/bad-if-sig-multi.txt:5:5: error: multiple if signature result types not currently supported.
     if (result i32 i32)
     ^^
 ;;; STDERR ;;)

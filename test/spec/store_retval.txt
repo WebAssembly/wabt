@@ -3,42 +3,42 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/store_retval.wast:2: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x0000001e: EndFunctionBody callback failed
+  000001e: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:6: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x0000001e: EndFunctionBody callback failed
+  000001e: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:10: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000021: EndFunctionBody callback failed
+  0000021: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:14: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000025: EndFunctionBody callback failed
+  0000025: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:19: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000026: EndFunctionBody callback failed
+  0000026: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:23: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000026: EndFunctionBody callback failed
+  0000026: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:27: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000029: EndFunctionBody callback failed
+  0000029: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:31: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x0000002d: EndFunctionBody callback failed
+  000002d: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:36: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000026: EndFunctionBody callback failed
+  0000026: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:40: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000026: EndFunctionBody callback failed
+  0000026: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:44: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000026: EndFunctionBody callback failed
+  0000026: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:48: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000026: EndFunctionBody callback failed
+  0000026: error: EndFunctionBody callback failed
 out/third_party/testsuite/store_retval.wast:52: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
-  error: @0x00000026: EndFunctionBody callback failed
+  0000026: error: EndFunctionBody callback failed
 13/13 tests passed.
 ;;; STDOUT ;;)

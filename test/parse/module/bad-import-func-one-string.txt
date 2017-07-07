@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (import "foo" (param i32)))
 (;; STDERR ;;;
-out/test/parse/module/bad-import-func-one-string.txt:2:23: syntax error, unexpected (, expecting TEXT
+out/test/parse/module/bad-import-func-one-string.txt:2:23: error: syntax error, unexpected (, expecting TEXT
 (module (import "foo" (param i32)))
                       ^
 ;;; STDERR ;;)

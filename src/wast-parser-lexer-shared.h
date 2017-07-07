@@ -22,7 +22,7 @@
 
 #include "common.h"
 #include "ir.h"
-#include "source-error-handler.h"
+#include "error-handler.h"
 #include "wast-parser.h"
 
 #define WABT_WAST_PARSER_STYPE Token
@@ -40,11 +40,6 @@ struct TextListNode {
 struct TextList {
   TextListNode* first;
   TextListNode* last;
-};
-
-struct ModuleFieldList {
-  ModuleField* first;
-  ModuleField* last;
 };
 
 union Token {
@@ -81,7 +76,7 @@ union Token {
   Memory* memory;
   Module* module;
   ModuleField* module_field;
-  ModuleFieldList module_fields;
+  ModuleFieldList* module_fields;
   ScriptModule* script_module;
   Script* script;
   Table* table;
@@ -96,7 +91,7 @@ union Token {
 
 struct WastParser {
   Script* script;
-  SourceErrorHandler* error_handler;
+  ErrorHandler* error_handler;
   int errors;
   /* Cached pointers to reallocated parser buffers, so they don't leak. */
   int16_t* yyssa;
@@ -114,7 +109,7 @@ void WABT_PRINTF_FORMAT(4, 5) wast_parser_error(struct Location*,
                                                 struct WastParser*,
                                                 const char*,
                                                 ...);
-void wast_format_error(SourceErrorHandler*,
+void wast_format_error(ErrorHandler*,
                        const struct Location*,
                        WastLexer*,
                        const char* format,

@@ -99,29 +99,28 @@ void NameApplier::PopLabel() {
 }
 
 Label* NameApplier::FindLabelByVar(Var* var) {
-  if (var->type == VarType::Name) {
+  if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
       Label* label = labels_[i];
-      if (string_slices_are_equal(label, &var->name))
+      if (string_slice_to_string(*label) == var->name())
         return label;
     }
     return nullptr;
   } else {
-    if (var->index >= labels_.size())
+    if (var->index() >= labels_.size())
       return nullptr;
-    return labels_[labels_.size() - 1 - var->index];
+    return labels_[labels_.size() - 1 - var->index()];
   }
 }
 
 void NameApplier::UseNameForVar(StringSlice* name, Var* var) {
-  if (var->type == VarType::Name) {
-    assert(string_slices_are_equal(name, &var->name));
+  if (var->is_name()) {
+    assert(string_slice_to_string(*name) == var->name());
     return;
   }
 
   if (name && name->start) {
-    var->type = VarType::Name;
-    var->name = dup_string_slice(*name);
+    var->set_name(string_slice_to_string(*name));
   }
 }
 
@@ -191,15 +190,13 @@ Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
     name = &local_index_to_name_[local_index];
   }
 
-  if (var->type == VarType::Name) {
-    assert(*name == string_slice_to_string(var->name));
+  if (var->is_name()) {
+    assert(*name == var->name());
     return Result::Ok;
   }
 
   if (!name->empty()) {
-    var->type = VarType::Name;
-    var->name = dup_string_slice(string_to_string_slice(*name));
-    return var->name.start ? Result::Ok : Result::Error;
+    var->set_name(*name);
   }
   return Result::Ok;
 }

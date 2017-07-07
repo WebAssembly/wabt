@@ -116,6 +116,7 @@ class WatWriter {
   void WriteStringSlice(const StringSlice* str, NextChar next_char);
   bool WriteStringSliceOpt(const StringSlice* str, NextChar next_char);
   void WriteName(const StringSlice* str, NextChar next_char);
+  void WriteName(const string_view& str, NextChar next_char);
   void WriteNameOrIndex(const StringSlice* str,
                         Index index,
                         NextChar next_char);
@@ -323,6 +324,11 @@ void WatWriter::WriteName(const StringSlice* str, NextChar next_char) {
   WriteStringSlice(str, next_char);
 }
 
+void WatWriter::WriteName(const string_view& str, NextChar next_char) {
+  StringSlice ss = string_view_to_string_slice(str);
+  WriteName(&ss, next_char);
+}
+
 void WatWriter::WriteNameOrIndex(const StringSlice* str,
                                  Index index,
                                  NextChar next_char) {
@@ -358,25 +364,25 @@ void WatWriter::WriteQuotedStringSlice(const StringSlice* str,
 }
 
 void WatWriter::WriteVar(const Var* var, NextChar next_char) {
-  if (var->type == VarType::Index) {
-    Writef("%" PRIindex, var->index);
+  if (var->is_index()) {
+    Writef("%" PRIindex, var->index());
     next_char_ = next_char;
   } else {
-    WriteName(&var->name, next_char);
+    WriteName(var->name(), next_char);
   }
 }
 
 void WatWriter::WriteBrVar(const Var* var, NextChar next_char) {
-  if (var->type == VarType::Index) {
-    if (var->index < GetLabelStackSize()) {
-      Writef("%" PRIindex " (;@%" PRIindex ";)", var->index,
-             GetLabelStackSize() - var->index - 1);
+  if (var->is_index()) {
+    if (var->index() < GetLabelStackSize()) {
+      Writef("%" PRIindex " (;@%" PRIindex ";)", var->index(),
+             GetLabelStackSize() - var->index() - 1);
     } else {
-      Writef("%" PRIindex " (; INVALID ;)", var->index);
+      Writef("%" PRIindex " (; INVALID ;)", var->index());
     }
     next_char_ = next_char;
   } else {
-    WriteStringSlice(&var->name, next_char);
+    WriteString(var->name(), next_char);
   }
 }
 
@@ -670,14 +676,14 @@ void WatWriter::WriteExprList(const ExprList& exprs) {
 }
 
 Label* WatWriter::GetLabel(const Var* var) {
-  if (var->type == VarType::Name) {
+  if (var->is_name()) {
     for (Index i = GetLabelStackSize(); i > 0; --i) {
       Label* label = &label_stack_[i - 1];
-      if (string_slices_are_equal(&label->name, &var->name))
+      if (string_slice_to_string(label->name) == var->name())
         return label;
     }
-  } else if (var->index < GetLabelStackSize()) {
-    Label* label = &label_stack_[GetLabelStackSize() - var->index - 1];
+  } else if (var->index() < GetLabelStackSize()) {
+    Label* label = &label_stack_[GetLabelStackSize() - var->index() - 1];
     return label;
   }
   return nullptr;
@@ -1147,41 +1153,40 @@ Result WatWriter::WriteModule(const Module* module) {
   module_ = module;
   BuildExportMap();
   WriteOpenNewline("module");
-  for (const ModuleField* field = module->first_field; field;
-       field = field->next) {
-    switch (field->type) {
+  for (const ModuleField& field : module->fields) {
+    switch (field.type) {
       case ModuleFieldType::Func:
-        WriteFunc(module, cast<FuncModuleField>(field)->func);
+        WriteFunc(module, cast<FuncModuleField>(&field)->func);
         break;
       case ModuleFieldType::Global:
-        WriteGlobal(cast<GlobalModuleField>(field)->global);
+        WriteGlobal(cast<GlobalModuleField>(&field)->global);
         break;
       case ModuleFieldType::Import:
-        WriteImport(cast<ImportModuleField>(field)->import);
+        WriteImport(cast<ImportModuleField>(&field)->import);
         break;
       case ModuleFieldType::Except:
-        WriteException(cast<ExceptionModuleField>(field)->except);
+        WriteException(cast<ExceptionModuleField>(&field)->except);
         break;
       case ModuleFieldType::Export:
-        WriteExport(cast<ExportModuleField>(field)->export_);
+        WriteExport(cast<ExportModuleField>(&field)->export_);
         break;
       case ModuleFieldType::Table:
-        WriteTable(cast<TableModuleField>(field)->table);
+        WriteTable(cast<TableModuleField>(&field)->table);
         break;
       case ModuleFieldType::ElemSegment:
-        WriteElemSegment(cast<ElemSegmentModuleField>(field)->elem_segment);
+        WriteElemSegment(cast<ElemSegmentModuleField>(&field)->elem_segment);
         break;
       case ModuleFieldType::Memory:
-        WriteMemory(cast<MemoryModuleField>(field)->memory);
+        WriteMemory(cast<MemoryModuleField>(&field)->memory);
         break;
       case ModuleFieldType::DataSegment:
-        WriteDataSegment(cast<DataSegmentModuleField>(field)->data_segment);
+        WriteDataSegment(cast<DataSegmentModuleField>(&field)->data_segment);
         break;
       case ModuleFieldType::FuncType:
-        WriteFuncType(cast<FuncTypeModuleField>(field)->func_type);
+        WriteFuncType(cast<FuncTypeModuleField>(&field)->func_type);
         break;
       case ModuleFieldType::Start:
-        WriteStartFunction(&cast<StartModuleField>(field)->start);
+        WriteStartFunction(&cast<StartModuleField>(&field)->start);
         break;
     }
   }

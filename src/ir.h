@@ -29,6 +29,7 @@
 #include "common.h"
 #include "intrusive-list.h"
 #include "opcode.h"
+#include "string-view.h"
 
 namespace wabt {
 
@@ -38,21 +39,34 @@ enum class VarType {
 };
 
 struct Var {
-  explicit Var(Index index = kInvalidIndex);
-  explicit Var(const StringSlice& name);
-  Var(Index index, const Location& loc);
-  Var(const StringSlice& name, const Location& loc);
+  explicit Var(Index index = kInvalidIndex, const Location& loc = Location());
+  explicit Var(const string_view& name, const Location& loc = Location());
   Var(Var&&);
   Var(const Var&);
   Var& operator =(const Var&);
   Var& operator =(Var&&);
   ~Var();
 
+  VarType type() const { return type_; }
+  bool is_index() const { return type_ == VarType::Index; }
+  bool is_name() const { return type_ == VarType::Name; }
+
+  Index index() const { assert(is_index()); return index_; }
+  const std::string& name() const { assert(is_name()); return name_; }
+
+  void set_index(Index);
+  void set_name(std::string&&);
+  void set_name(const string_view&);
+
   Location loc;
-  VarType type;
+
+ private:
+  void Destroy();
+
+  VarType type_;
   union {
-    Index index;
-    StringSlice name;
+    Index index_;
+    std::string name_;
   };
 };
 typedef std::vector<Var> VarVector;
@@ -147,7 +161,7 @@ struct Catch {
   Var var;
   ExprList exprs;
   bool IsCatchAll() const {
-    return var.type == VarType::Index && var.index == kInvalidIndex;
+    return var.is_index() && var.index() == kInvalidIndex;
   }
 };
 
@@ -445,7 +459,7 @@ enum class ModuleFieldType {
   Except
 };
 
-class ModuleField {
+class ModuleField : public intrusive_list_base<ModuleField> {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(ModuleField);
   ModuleField() = delete;
@@ -453,11 +467,12 @@ class ModuleField {
 
   Location loc;
   ModuleFieldType type;
-  ModuleField* next;
 
  protected:
   explicit ModuleField(ModuleFieldType, const Location& loc);
 };
+
+typedef intrusive_list<ModuleField> ModuleFieldList;
 
 template <ModuleFieldType TypeEnum>
 class ModuleFieldMixin : public ModuleField {
@@ -586,7 +601,6 @@ struct Module {
   Module();
   ~Module();
 
-  void AppendField(ModuleField*);
   FuncType* AppendImplicitFuncType(const Location&, const FuncSignature&);
 
   Index GetFuncTypeIndex(const Var&) const;
@@ -610,8 +624,7 @@ struct Module {
 
   Location loc;
   StringSlice name;
-  ModuleField* first_field;
-  ModuleField* last_field;
+  ModuleFieldList fields;
 
   Index num_except_imports;
   Index num_func_imports;

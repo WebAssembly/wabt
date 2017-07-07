@@ -2,13 +2,13 @@
 ; foo bar
 (module)
 (;; STDERR ;;;
-out/test/parse/bad-single-semicolon.txt:2:1: unexpected char
+out/test/parse/bad-single-semicolon.txt:2:1: error: unexpected char
 ; foo bar
 ^
-out/test/parse/bad-single-semicolon.txt:2:3: unexpected token "foo"
+out/test/parse/bad-single-semicolon.txt:2:3: error: unexpected token "foo"
 ; foo bar
   ^^^
-out/test/parse/bad-single-semicolon.txt:2:7: unexpected token "bar"
+out/test/parse/bad-single-semicolon.txt:2:7: error: unexpected token "bar"
 ; foo bar
       ^^^
 ;;; STDERR ;;)

@@ -230,8 +230,7 @@ add_custom_target(everything)
 
 add_library(libwabt STATIC
   src/opcode.cc
-  src/binary-error-handler.cc
-  src/source-error-handler.cc
+  src/error-handler.cc
   src/hash-util.cc
   src/string-view.cc
   src/ir.cc

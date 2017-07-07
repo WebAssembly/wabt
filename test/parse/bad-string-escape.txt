@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func) (export "foobar\x\n" (func 0)))
 (;; STDERR ;;;
-out/test/parse/bad-string-escape.txt:2:31: bad escape "\x"
+out/test/parse/bad-string-escape.txt:2:31: error: bad escape "\x"
 (module (func) (export "foobar\x\n" (func 0)))
                               ^^
 ;;; STDERR ;;)

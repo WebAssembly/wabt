@@ -3,39 +3,39 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/get_local.wast:91: assert_invalid passed:
   error: type mismatch in implicit return, expected i64 but got i32.
-  error: @0x0000001d: EndFunctionBody callback failed
+  000001d: error: EndFunctionBody callback failed
 out/third_party/testsuite/get_local.wast:95: assert_invalid passed:
   error: type mismatch in i32.eqz, expected i32 but got f32.
-  error: @0x0000001c: OnConvertExpr callback failed
+  000001c: error: OnConvertExpr callback failed
 out/third_party/testsuite/get_local.wast:99: assert_invalid passed:
   error: type mismatch in f64.neg, expected f64 but got i64.
-  error: @0x0000001e: OnUnaryExpr callback failed
+  000001e: error: OnUnaryExpr callback failed
 out/third_party/testsuite/get_local.wast:107: assert_invalid passed:
   error: type mismatch in implicit return, expected i64 but got i32.
-  error: @0x0000001c: EndFunctionBody callback failed
+  000001c: error: EndFunctionBody callback failed
 out/third_party/testsuite/get_local.wast:111: assert_invalid passed:
   error: type mismatch in i32.eqz, expected i32 but got f32.
-  error: @0x0000001b: OnConvertExpr callback failed
+  000001b: error: OnConvertExpr callback failed
 out/third_party/testsuite/get_local.wast:115: assert_invalid passed:
   error: type mismatch in f64.neg, expected f64 but got i64.
-  error: @0x0000001c: OnUnaryExpr callback failed
+  000001c: error: OnUnaryExpr callback failed
 out/third_party/testsuite/get_local.wast:123: assert_invalid passed:
   error: invalid local_index: 3 (max 2)
-  error: @0x0000001d: OnGetLocalExpr callback failed
+  000001d: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/get_local.wast:127: assert_invalid passed:
   error: invalid local_index: 14324343 (max 2)
-  error: @0x00000020: OnGetLocalExpr callback failed
+  0000020: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/get_local.wast:132: assert_invalid passed:
   error: invalid local_index: 2 (max 2)
-  error: @0x0000001b: OnGetLocalExpr callback failed
+  000001b: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/get_local.wast:136: assert_invalid passed:
   error: invalid local_index: 714324343 (max 2)
-  error: @0x00000021: OnGetLocalExpr callback failed
+  0000021: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/get_local.wast:141: assert_invalid passed:
   error: invalid local_index: 3 (max 3)
-  error: @0x0000001e: OnGetLocalExpr callback failed
+  000001e: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/get_local.wast:145: assert_invalid passed:
   error: invalid local_index: 214324343 (max 3)
-  error: @0x00000021: OnGetLocalExpr callback failed
+  0000021: error: OnGetLocalExpr callback failed
 22/22 tests passed.
 ;;; STDOUT ;;)

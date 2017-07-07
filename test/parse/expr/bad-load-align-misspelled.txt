@@ -4,7 +4,7 @@
     i32.const 0
     i32.load aline=64))
 (;; STDERR ;;;
-out/test/parse/expr/bad-load-align-misspelled.txt:5:14: unexpected token "aline=64"
+out/test/parse/expr/bad-load-align-misspelled.txt:5:14: error: unexpected token "aline=64"
     i32.load aline=64))
              ^^^^^^^^
 ;;; STDERR ;;)

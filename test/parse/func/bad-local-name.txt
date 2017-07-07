@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (local 0 i32)))
 (;; STDERR ;;;
-out/test/parse/func/bad-local-name.txt:2:22: syntax error, unexpected NAT, expecting ) or VALUE_TYPE
+out/test/parse/func/bad-local-name.txt:2:22: error: syntax error, unexpected NAT, expecting ) or VALUE_TYPE
 (module (func (local 0 i32)))
                      ^
 ;;; STDERR ;;)

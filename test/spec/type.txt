@@ -3,16 +3,16 @@
 ;;; NOTE: Two tests don't pass because they use quoted modules with assert_invalid, which isn't currently supported by wabt.
 (;; STDOUT ;;;
 out/third_party/testsuite/type.wast:44: assert_malformed passed:
-  out/third_party/testsuite/type/type.1.wast:1:27: syntax error, unexpected PARAM, expecting RESULT
+  out/third_party/testsuite/type/type.1.wast:1:27: error: syntax error, unexpected PARAM, expecting RESULT
   (type (func (result i32) (param i32)))
                             ^^^^^
 out/third_party/testsuite/type.wast:48: assert_malformed passed:
-  out/third_party/testsuite/type/type.2.wast:1:21: syntax error, unexpected VAR, expecting ) or VALUE_TYPE
+  out/third_party/testsuite/type/type.2.wast:1:21: error: syntax error, unexpected VAR, expecting ) or VALUE_TYPE
   (type (func (result $x i32)))
                       ^^
 out/third_party/testsuite/type.wast:53: assert_invalid passed:
-  error: @0x0000000e: result count must be 0 or 1
+  000000e: error: result count must be 0 or 1
 out/third_party/testsuite/type.wast:57: assert_invalid passed:
-  error: @0x0000000e: result count must be 0 or 1
+  000000e: error: result count must be 0 or 1
 4/4 tests passed.
 ;;; STDOUT ;;)

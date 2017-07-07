@@ -15,6 +15,6 @@ dummy[0]
 dummy[0]
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000000b: unfinished section (expected end: 0xf)
+000000b: error: unfinished section (expected end: 0xf)
 
 ;;; STDERR ;;)

@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (memory 100 foo))
 (;; STDERR ;;;
-out/test/parse/module/bad-memory-max-size.txt:2:21: unexpected token "foo"
+out/test/parse/module/bad-memory-max-size.txt:2:21: error: unexpected token "foo"
 (module (memory 100 foo))
                     ^^^
 ;;; STDERR ;;)

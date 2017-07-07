@@ -6,7 +6,7 @@
     f32.lt
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-compare-type-mismatch-2.txt:6:5: type mismatch in f32.lt, expected f32 but got i32.
+out/test/typecheck/bad-compare-type-mismatch-2.txt:6:5: error: type mismatch in f32.lt, expected f32 but got i32.
     f32.lt
     ^^^^^^
 ;;; STDERR ;;)

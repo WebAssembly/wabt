@@ -24,7 +24,7 @@
 
 #include "binary-reader.h"
 #include "cast.h"
-#include "source-error-handler.h"
+#include "error-handler.h"
 #include "type-checker.h"
 #include "wast-parser-lexer-shared.h"
 
@@ -35,7 +35,7 @@ namespace {
 class Validator {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Validator);
-  Validator(SourceErrorHandler*, WastLexer*, const Script*);
+  Validator(ErrorHandler*, WastLexer*, const Script*);
 
   Result CheckModule(const Module* module);
   Result CheckScript(const Script* script);
@@ -142,7 +142,7 @@ class Validator {
   void CheckExcept(const Location* loc, const Exception* Except);
   Result CheckExceptVar(const Var* var, const Exception** out_except);
 
-  SourceErrorHandler* error_handler_ = nullptr;
+  ErrorHandler* error_handler_ = nullptr;
   WastLexer* lexer_ = nullptr;
   const Script* script_ = nullptr;
   const Module* current_module_ = nullptr;
@@ -159,7 +159,7 @@ class Validator {
   std::vector<TryContext> try_contexts_;
 };
 
-Validator::Validator(SourceErrorHandler* error_handler,
+Validator::Validator(ErrorHandler* error_handler,
                      WastLexer* lexer,
                      const Script* script)
     : error_handler_(error_handler), lexer_(lexer), script_(script) {
@@ -193,10 +193,9 @@ Result Validator::CheckVar(Index max_index,
                            const Var* var,
                            const char* desc,
                            Index* out_index) {
-  assert(var->type == VarType::Index);
-  if (var->index < max_index) {
+  if (var->index() < max_index) {
     if (out_index)
-      *out_index = var->index;
+      *out_index = var->index();
     return Result::Ok;
   }
   PrintError(&var->loc, "%s variable out of range (max %" PRIindex ")", desc,
@@ -291,9 +290,9 @@ Result Validator::CheckLocalVar(const Var* var, Type* out_type) {
     return Result::Ok;
   }
 
-  if (var->type == VarType::Name) {
-    PrintError(&var->loc, "undefined local variable \"" PRIstringslice "\"",
-               WABT_PRINTF_STRING_SLICE_ARG(var->name));
+  if (var->is_name()) {
+    PrintError(&var->loc, "undefined local variable \"%s\"",
+               var->name().c_str());
   } else {
     PrintError(&var->loc, "local variable out of range (max %" PRIindex ")",
                max_index);
@@ -435,20 +434,20 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::Br:
-      typechecker_.OnBr(cast<BrExpr>(expr)->var.index);
+      typechecker_.OnBr(cast<BrExpr>(expr)->var.index());
       break;
 
     case ExprType::BrIf:
-      typechecker_.OnBrIf(cast<BrIfExpr>(expr)->var.index);
+      typechecker_.OnBrIf(cast<BrIfExpr>(expr)->var.index());
       break;
 
     case ExprType::BrTable: {
       auto br_table_expr = cast<BrTableExpr>(expr);
       typechecker_.BeginBrTable();
       for (Var& var : *br_table_expr->targets) {
-        typechecker_.OnBrTableTarget(var.index);
+        typechecker_.OnBrTableTarget(var.index());
       }
-      typechecker_.OnBrTableTarget(br_table_expr->default_target.index);
+      typechecker_.OnBrTableTarget(br_table_expr->default_target.index());
       typechecker_.EndBrTable();
       break;
     }
@@ -546,7 +545,7 @@ void Validator::CheckExpr(const Expr* expr) {
       break;
 
     case ExprType::Rethrow:
-      typechecker_.OnRethrow(cast<RethrowExpr>(expr)->var.index);
+      typechecker_.OnRethrow(cast<RethrowExpr>(expr)->var.index());
       break;
 
     case ExprType::Return:
@@ -753,8 +752,8 @@ void Validator::CheckTable(const Location* loc, const Table* table) {
 }
 
 void Validator::CheckElemSegments(const Module* module) {
-  for (ModuleField* field = module->first_field; field; field = field->next) {
-    if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(field)) {
+  for (const ModuleField& field : module->fields) {
+    if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(&field)) {
       ElemSegment* elem_segment = elem_segment_field->elem_segment;
       const Table* table;
       if (!Succeeded(CheckTableVar(&elem_segment->table_var, &table)))
@@ -765,7 +764,7 @@ void Validator::CheckElemSegments(const Module* module) {
           continue;
       }
 
-      CheckConstInitExpr(&field->loc, elem_segment->offset, Type::I32,
+      CheckConstInitExpr(&field.loc, elem_segment->offset, Type::I32,
                          "elem segment offset");
     }
   }
@@ -778,14 +777,14 @@ void Validator::CheckMemory(const Location* loc, const Memory* memory) {
 }
 
 void Validator::CheckDataSegments(const Module* module) {
-  for (ModuleField* field = module->first_field; field; field = field->next) {
-    if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(field)) {
+  for (const ModuleField& field : module->fields) {
+    if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(&field)) {
       DataSegment* data_segment = data_segment_field->data_segment;
       const Memory* memory;
       if (!Succeeded(CheckMemoryVar(&data_segment->memory_var, &memory)))
         continue;
 
-      CheckConstInitExpr(&field->loc, data_segment->offset, Type::I32,
+      CheckConstInitExpr(&field.loc, data_segment->offset, Type::I32,
                          "data segment offset");
     }
   }
@@ -866,32 +865,32 @@ Result Validator::CheckModule(const Module* module) {
   num_imported_globals_ = 0;
   current_except_index_ = 0;
 
-  for (ModuleField* field = module->first_field; field; field = field->next) {
-    switch (field->type) {
+  for (const ModuleField& field : module->fields) {
+    switch (field.type) {
       case ModuleFieldType::Except:
         ++current_except_index_;
-        CheckExcept(&field->loc, cast<ExceptionModuleField>(field)->except);
+        CheckExcept(&field.loc, cast<ExceptionModuleField>(&field)->except);
         break;
 
       case ModuleFieldType::Func:
-        CheckFunc(&field->loc, cast<FuncModuleField>(field)->func);
+        CheckFunc(&field.loc, cast<FuncModuleField>(&field)->func);
         break;
 
       case ModuleFieldType::Global:
-        CheckGlobal(&field->loc, cast<GlobalModuleField>(field)->global);
+        CheckGlobal(&field.loc, cast<GlobalModuleField>(&field)->global);
         current_global_index_++;
         break;
 
       case ModuleFieldType::Import:
-        CheckImport(&field->loc, cast<ImportModuleField>(field)->import);
+        CheckImport(&field.loc, cast<ImportModuleField>(&field)->import);
         break;
 
       case ModuleFieldType::Export:
-        CheckExport(&field->loc, cast<ExportModuleField>(field)->export_);
+        CheckExport(&field.loc, cast<ExportModuleField>(&field)->export_);
         break;
 
       case ModuleFieldType::Table:
-        CheckTable(&field->loc, cast<TableModuleField>(field)->table);
+        CheckTable(&field.loc, cast<TableModuleField>(&field)->table);
         current_table_index_++;
         break;
 
@@ -900,7 +899,7 @@ Result Validator::CheckModule(const Module* module) {
         break;
 
       case ModuleFieldType::Memory:
-        CheckMemory(&field->loc, cast<MemoryModuleField>(field)->memory);
+        CheckMemory(&field.loc, cast<MemoryModuleField>(&field)->memory);
         current_memory_index_++;
         break;
 
@@ -913,18 +912,18 @@ Result Validator::CheckModule(const Module* module) {
 
       case ModuleFieldType::Start: {
         if (seen_start) {
-          PrintError(&field->loc, "only one start function allowed");
+          PrintError(&field.loc, "only one start function allowed");
         }
 
         const Func* start_func = nullptr;
-        CheckFuncVar(&cast<StartModuleField>(field)->start, &start_func);
+        CheckFuncVar(&cast<StartModuleField>(&field)->start, &start_func);
         if (start_func) {
           if (start_func->GetNumParams() != 0) {
-            PrintError(&field->loc, "start function must be nullary");
+            PrintError(&field.loc, "start function must be nullary");
           }
 
           if (start_func->GetNumResults() != 0) {
-            PrintError(&field->loc, "start function must not return anything");
+            PrintError(&field.loc, "start function must not return anything");
           }
         }
         seen_start = true;
@@ -1148,7 +1147,7 @@ Result Validator::CheckScript(const Script* script) {
 
 Result validate_script(WastLexer* lexer,
                        const Script* script,
-                       SourceErrorHandler* error_handler) {
+                       ErrorHandler* error_handler) {
   Validator validator(error_handler, lexer, script);
 
   return validator.CheckScript(script);
@@ -1156,7 +1155,7 @@ Result validate_script(WastLexer* lexer,
 
 Result validate_module(WastLexer* lexer,
                        const Module* module,
-                       SourceErrorHandler* error_handler) {
+                       ErrorHandler* error_handler) {
   Validator validator(error_handler, lexer, nullptr);
 
   return validator.CheckModule(module);

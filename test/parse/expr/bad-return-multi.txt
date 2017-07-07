@@ -4,7 +4,7 @@
           f32.const 3.14
           return))
 (;; STDERR ;;;
-out/test/parse/expr/bad-return-multi.txt:2:10: multiple result values not currently supported.
+out/test/parse/expr/bad-return-multi.txt:2:10: error: multiple result values not currently supported.
 (module (func (result f32 f32)
          ^^^^
 ;;; STDERR ;;)

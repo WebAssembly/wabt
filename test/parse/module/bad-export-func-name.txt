@@ -1,10 +1,10 @@
 ;;; ERROR: 1
 (module (export "foo" (func foo)))
 (;; STDERR ;;;
-out/test/parse/module/bad-export-func-name.txt:2:29: unexpected token "foo"
+out/test/parse/module/bad-export-func-name.txt:2:29: error: unexpected token "foo"
 (module (export "foo" (func foo)))
                             ^^^
-out/test/parse/module/bad-export-func-name.txt:2:32: syntax error, unexpected ), expecting NAT or VAR
+out/test/parse/module/bad-export-func-name.txt:2:32: error: syntax error, unexpected ), expecting NAT or VAR
 (module (export "foo" (func foo)))
                                ^
 ;;; STDERR ;;)

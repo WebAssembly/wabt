@@ -22,6 +22,6 @@ section("name") {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000002c: function index out of order: 0
+000002c: error: function index out of order: 0
 
 ;;; STDERR ;;)

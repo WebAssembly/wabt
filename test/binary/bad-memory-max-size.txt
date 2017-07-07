@@ -10,6 +10,6 @@ section(MEMORY) {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000010: invalid memory max size
+0000010: error: invalid memory max size
 
 ;;; STDERR ;;)

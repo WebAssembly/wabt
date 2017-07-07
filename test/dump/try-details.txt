@@ -14,8 +14,11 @@
   )
 )
 (;; STDOUT ;;;
+
 try-details.wasm:	file format wasm 0x1
+
 Section Details:
+
 Type:
  - type[0] () -> i32
 Function:
@@ -23,7 +26,9 @@ Function:
 Custom:
  - name: "exception"
  - except[0] (i32)
+
 Code Disassembly:
+
 000025 func[0]:
  000027: 06 7f                      | try i32
  000029: 01                         |   nop

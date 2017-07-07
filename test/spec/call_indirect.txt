@@ -3,60 +3,60 @@
 (;; STDOUT ;;;
 out/third_party/testsuite/call_indirect.wast:237: assert_invalid passed:
   error: found call_indirect operator, but no table
-  error: @0x0000001c: OnCallIndirectExpr callback failed
+  000001c: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:245: assert_invalid passed:
   error: type stack size too small at i32.eqz. got 0, expected at least 1
-  error: @0x00000023: OnConvertExpr callback failed
+  0000023: error: OnConvertExpr callback failed
 out/third_party/testsuite/call_indirect.wast:253: assert_invalid passed:
   error: type mismatch in i32.eqz, expected i32 but got i64.
-  error: @0x00000027: OnConvertExpr callback failed
+  0000027: error: OnConvertExpr callback failed
 out/third_party/testsuite/call_indirect.wast:262: assert_invalid passed:
   error: type stack size too small at call_indirect. got 0, expected at least 1
-  error: @0x00000026: OnCallIndirectExpr callback failed
+  0000026: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:270: assert_invalid passed:
   error: type stack size too small at call_indirect. got 0, expected at least 2
-  error: @0x00000027: OnCallIndirectExpr callback failed
+  0000027: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:278: assert_invalid passed:
   error: type stack at end of function is 1, expected 0
-  error: @0x00000025: EndFunctionBody callback failed
+  0000025: error: EndFunctionBody callback failed
 out/third_party/testsuite/call_indirect.wast:286: assert_invalid passed:
   error: type stack at end of function is 2, expected 0
-  error: @0x0000002e: EndFunctionBody callback failed
+  000002e: error: EndFunctionBody callback failed
 out/third_party/testsuite/call_indirect.wast:297: assert_invalid passed:
   error: type stack size too small at call_indirect. got 0, expected at least 1
-  error: @0x00000027: OnCallIndirectExpr callback failed
+  0000027: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:305: assert_invalid passed:
   error: type mismatch in call_indirect, expected i32 but got i64.
-  error: @0x00000028: OnCallIndirectExpr callback failed
+  0000028: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:314: assert_invalid passed:
   error: type stack size too small at call_indirect. got 1, expected at least 2
-  error: @0x0000002a: OnCallIndirectExpr callback failed
+  000002a: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:324: assert_invalid passed:
   error: type stack size too small at call_indirect. got 1, expected at least 2
-  error: @0x0000002a: OnCallIndirectExpr callback failed
+  000002a: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:334: assert_invalid passed:
   error: type mismatch in call_indirect, expected i32 but got f64.
   error: type mismatch in call_indirect, expected f64 but got i32.
-  error: @0x00000032: OnCallIndirectExpr callback failed
+  0000032: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:344: assert_invalid passed:
   error: type mismatch in call_indirect, expected f64 but got i32.
   error: type mismatch in call_indirect, expected i32 but got f64.
-  error: @0x00000032: OnCallIndirectExpr callback failed
+  0000032: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:358: assert_invalid passed:
-  error: @0x00000021: invalid call_indirect signature index
+  0000021: error: invalid call_indirect signature index
 out/third_party/testsuite/call_indirect.wast:365: assert_invalid passed:
-  error: @0x00000025: invalid call_indirect signature index
+  0000025: error: invalid call_indirect signature index
 out/third_party/testsuite/call_indirect.wast:376: assert_invalid passed:
   error: invalid func_index: 0 (max 0)
-  error: @0x00000018: OnElemSegmentFunctionIndex callback failed
+  0000018: error: OnElemSegmentFunctionIndex callback failed
 out/third_party/testsuite/call_indirect.wast:384: assert_unlinkable passed:
   error: elem segment offset is out of bounds: 10 >= max value 10
-  error: @0x00000021: OnElemSegmentFunctionIndex callback failed
+  0000021: error: OnElemSegmentFunctionIndex callback failed
 out/third_party/testsuite/call_indirect.wast:393: assert_unlinkable passed:
   error: elem segment offset is out of bounds: 4294967295 >= max value 10
-  error: @0x00000021: OnElemSegmentFunctionIndex callback failed
+  0000021: error: OnElemSegmentFunctionIndex callback failed
 out/third_party/testsuite/call_indirect.wast:402: assert_unlinkable passed:
   error: elem segment offset is out of bounds: 4294967286 >= max value 10
-  error: @0x00000021: OnElemSegmentFunctionIndex callback failed
+  0000021: error: OnElemSegmentFunctionIndex callback failed
 67/67 tests passed.
 ;;; STDOUT ;;)

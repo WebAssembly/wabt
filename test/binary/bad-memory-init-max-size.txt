@@ -10,6 +10,6 @@ section(MEMORY) {
 }
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x0000000e: memory initial size must be <= max size
+000000e: error: memory initial size must be <= max size
 
 ;;; STDERR ;;)

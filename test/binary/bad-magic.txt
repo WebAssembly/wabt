@@ -4,6 +4,6 @@
 version
 (;; STDERR ;;;
 Error running "wasm2wast":
-error: @0x00000004: bad magic value
+0000004: error: bad magic value
 
 ;;; STDERR ;;)

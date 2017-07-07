@@ -3,7 +3,7 @@
           i32.const 0
           f32.loads))
 (;; STDERR ;;;
-out/test/parse/expr/bad-load-float-sign.txt:4:11: unexpected token "f32.loads"
+out/test/parse/expr/bad-load-float-sign.txt:4:11: error: unexpected token "f32.loads"
           f32.loads))
           ^^^^^^^^^
 ;;; STDERR ;;)
