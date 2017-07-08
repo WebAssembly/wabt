@@ -35,19 +35,19 @@ class BinaryReaderLinker : public BinaryReaderNop {
   Result BeginSection(BinarySection section_type, Offset size) override;
 
   Result OnImportFunc(Index import_index,
-                      const string_view& module_name,
-                      const string_view& field_name,
+                      string_view module_name,
+                      string_view field_name,
                       Index func_index,
                       Index sig_index) override;
   Result OnImportGlobal(Index import_index,
-                        const string_view& module_name,
-                        const string_view& field_name,
+                        string_view module_name,
+                        string_view field_name,
                         Index global_index,
                         Type type,
                         bool mutable_) override;
   Result OnImportMemory(Index import_index,
-                        const string_view& module_name,
-                        const string_view& field_name,
+                        string_view module_name,
+                        string_view field_name,
                         Index memory_index,
                         const Limits* page_limits) override;
 
@@ -62,7 +62,7 @@ class BinaryReaderLinker : public BinaryReaderNop {
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
-                  const string_view& name) override;
+                  string_view name) override;
 
   Result OnElemSegmentFunctionIndexCount(Index index,
                                          Index count) override;
@@ -75,11 +75,11 @@ class BinaryReaderLinker : public BinaryReaderNop {
   Result BeginNamesSection(Offset size) override;
 
   Result OnFunctionName(Index function_index,
-                        const string_view& function_name) override;
+                        string_view function_name) override;
 
   Result OnRelocCount(Index count,
                       BinarySection section_code,
-                      const string_view& section_name) override;
+                      string_view section_name) override;
   Result OnReloc(RelocType type,
                  Offset offset,
                  Index index,
@@ -99,7 +99,7 @@ BinaryReaderLinker::BinaryReaderLinker(LinkerInputBinary* binary)
 
 Result BinaryReaderLinker::OnRelocCount(Index count,
                                         BinarySection section_code,
-                                        const string_view& section_name) {
+                                        string_view section_name) {
   if (section_code == BinarySection::Custom) {
     WABT_FATAL("relocation for custom sections not yet supported\n");
   }
@@ -129,8 +129,8 @@ Result BinaryReaderLinker::OnReloc(RelocType type,
 }
 
 Result BinaryReaderLinker::OnImportFunc(Index import_index,
-                                        const string_view& module_name,
-                                        const string_view& field_name,
+                                        string_view module_name,
+                                        string_view field_name,
                                         Index global_index,
                                         Index sig_index) {
   binary_->function_imports.emplace_back();
@@ -144,8 +144,8 @@ Result BinaryReaderLinker::OnImportFunc(Index import_index,
 }
 
 Result BinaryReaderLinker::OnImportGlobal(Index import_index,
-                                          const string_view& module_name,
-                                          const string_view& field_name,
+                                          string_view module_name,
+                                          string_view field_name,
                                           Index global_index,
                                           Type type,
                                           bool mutable_) {
@@ -160,8 +160,8 @@ Result BinaryReaderLinker::OnImportGlobal(Index import_index,
 }
 
 Result BinaryReaderLinker::OnImportMemory(Index import_index,
-                                          const string_view& module_name,
-                                          const string_view& field_name,
+                                          string_view module_name,
+                                          string_view field_name,
                                           Index memory_index,
                                           const Limits* page_limits) {
   WABT_FATAL("Linker does not support imported memories");
@@ -256,7 +256,7 @@ Result BinaryReaderLinker::OnDataSegmentData(Index index,
 Result BinaryReaderLinker::OnExport(Index index,
                                     ExternalKind kind,
                                     Index item_index,
-                                    const string_view& name) {
+                                    string_view name) {
   if (kind == ExternalKind::Memory) {
     WABT_FATAL("Linker does not support exported memories");
   }
@@ -274,8 +274,7 @@ Result BinaryReaderLinker::BeginNamesSection(Offset size) {
   return Result::Ok;
 }
 
-Result BinaryReaderLinker::OnFunctionName(Index index,
-                                          const string_view& name) {
+Result BinaryReaderLinker::OnFunctionName(Index index, string_view name) {
   binary_->debug_names[index] = name.to_string();
   return Result::Ok;
 }

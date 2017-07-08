@@ -110,9 +110,8 @@ Result BinaryReaderLogging::BeginSection(BinarySection section_type,
   return reader->BeginSection(section_type, size);
 }
 
-Result BinaryReaderLogging::BeginCustomSection(
-    Offset size,
-    const string_view& section_name) {
+Result BinaryReaderLogging::BeginCustomSection(Offset size,
+                                               string_view section_name) {
   LOGF("BeginCustomSection('" PRIstringview "', size: %" PRIzd ")\n",
        WABT_PRINTF_STRING_VIEW_ARG(section_name), size);
   Indent();
@@ -134,8 +133,8 @@ Result BinaryReaderLogging::OnType(Index index,
 }
 
 Result BinaryReaderLogging::OnImport(Index index,
-                                     const string_view& module_name,
-                                     const string_view& field_name) {
+                                     string_view module_name,
+                                     string_view field_name) {
   LOGF("OnImport(index: %" PRIindex ", module: \"" PRIstringview
        "\", field: \"" PRIstringview "\")\n",
        index, WABT_PRINTF_STRING_VIEW_ARG(module_name),
@@ -144,8 +143,8 @@ Result BinaryReaderLogging::OnImport(Index index,
 }
 
 Result BinaryReaderLogging::OnImportFunc(Index import_index,
-                                         const string_view& module_name,
-                                         const string_view& field_name,
+                                         string_view module_name,
+                                         string_view field_name,
                                          Index func_index,
                                          Index sig_index) {
   LOGF("OnImportFunc(import_index: %" PRIindex ", func_index: %" PRIindex
@@ -156,8 +155,8 @@ Result BinaryReaderLogging::OnImportFunc(Index import_index,
 }
 
 Result BinaryReaderLogging::OnImportTable(Index import_index,
-                                          const string_view& module_name,
-                                          const string_view& field_name,
+                                          string_view module_name,
+                                          string_view field_name,
                                           Index table_index,
                                           Type elem_type,
                                           const Limits* elem_limits) {
@@ -171,8 +170,8 @@ Result BinaryReaderLogging::OnImportTable(Index import_index,
 }
 
 Result BinaryReaderLogging::OnImportMemory(Index import_index,
-                                           const string_view& module_name,
-                                           const string_view& field_name,
+                                           string_view module_name,
+                                           string_view field_name,
                                            Index memory_index,
                                            const Limits* page_limits) {
   char buf[100];
@@ -185,8 +184,8 @@ Result BinaryReaderLogging::OnImportMemory(Index import_index,
 }
 
 Result BinaryReaderLogging::OnImportGlobal(Index import_index,
-                                           const string_view& module_name,
-                                           const string_view& field_name,
+                                           string_view module_name,
+                                           string_view field_name,
                                            Index global_index,
                                            Type type,
                                            bool mutable_) {
@@ -200,8 +199,8 @@ Result BinaryReaderLogging::OnImportGlobal(Index import_index,
 }
 
 Result BinaryReaderLogging::OnImportException(Index import_index,
-                                              const string_view& module_name,
-                                              const string_view& field_name,
+                                              string_view module_name,
+                                              string_view field_name,
                                               Index except_index,
                                               TypeVector& sig) {
   LOGF("OnImportException(import_index: %" PRIindex ", except_index: %" PRIindex
@@ -239,7 +238,7 @@ Result BinaryReaderLogging::BeginGlobal(Index index, Type type, bool mutable_) {
 Result BinaryReaderLogging::OnExport(Index index,
                                      ExternalKind kind,
                                      Index item_index,
-                                     const string_view& name) {
+                                     string_view name) {
   LOGF("OnExport(index: %" PRIindex ", kind: %s, item_index: %" PRIindex
        ", name: \"" PRIstringview "\")\n",
        index, get_kind_name(kind), item_index,
@@ -373,8 +372,7 @@ Result BinaryReaderLogging::OnFunctionNameSubsection(Index index,
   return reader->OnFunctionNameSubsection(index, name_type, subsection_size);
 }
 
-Result BinaryReaderLogging::OnFunctionName(Index index,
-                                           const string_view& name) {
+Result BinaryReaderLogging::OnFunctionName(Index index, string_view name) {
   LOGF("OnFunctionName(index: %" PRIindex ", name: \"" PRIstringview "\")\n",
        index, WABT_PRINTF_STRING_VIEW_ARG(name));
   return reader->OnFunctionName(index, name);
@@ -391,7 +389,7 @@ Result BinaryReaderLogging::OnLocalNameSubsection(Index index,
 
 Result BinaryReaderLogging::OnLocalName(Index func_index,
                                         Index local_index,
-                                        const string_view& name) {
+                                        string_view name) {
   LOGF("OnLocalName(func_index: %" PRIindex ", local_index: %" PRIindex
        ", name: \"" PRIstringview "\")\n",
        func_index, local_index, WABT_PRINTF_STRING_VIEW_ARG(name));
@@ -433,7 +431,7 @@ Result BinaryReaderLogging::OnInitExprI64ConstExpr(Index index,
 
 Result BinaryReaderLogging::OnRelocCount(Index count,
                                          BinarySection section_code,
-                                         const string_view& section_name) {
+                                         string_view section_name) {
   LOGF("OnRelocCount(count: %" PRIindex
        ", section: %s, section_name: " PRIstringview ")\n",
        count, get_section_name(section_code),
@@ -452,8 +450,7 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   return reader->OnReloc(type, offset, index, addend);
 }
 
-Result BinaryReaderLogging::OnSymbolInfo(const string_view& name,
-                                         uint32_t flags) {
+Result BinaryReaderLogging::OnSymbolInfo(string_view name, uint32_t flags) {
   LOGF("(OnSymbolInfo name: " PRIstringview ", flags: 0x%x)\n",
        WABT_PRINTF_STRING_VIEW_ARG(name), flags);
   return reader->OnSymbolInfo(name, flags);

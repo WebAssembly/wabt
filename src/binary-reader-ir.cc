@@ -68,33 +68,33 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnImportCount(Index count) override;
   Result OnImport(Index index,
-                  const string_view& module_name,
-                  const string_view& field_name) override;
+                  string_view module_name,
+                  string_view field_name) override;
   Result OnImportFunc(Index import_index,
-                      const string_view& module_name,
-                      const string_view& field_name,
+                      string_view module_name,
+                      string_view field_name,
                       Index func_index,
                       Index sig_index) override;
   Result OnImportTable(Index import_index,
-                       const string_view& module_name,
-                       const string_view& field_name,
+                       string_view module_name,
+                       string_view field_name,
                        Index table_index,
                        Type elem_type,
                        const Limits* elem_limits) override;
   Result OnImportMemory(Index import_index,
-                        const string_view& module_name,
-                        const string_view& field_name,
+                        string_view module_name,
+                        string_view field_name,
                         Index memory_index,
                         const Limits* page_limits) override;
   Result OnImportGlobal(Index import_index,
-                        const string_view& module_name,
-                        const string_view& field_name,
+                        string_view module_name,
+                        string_view field_name,
                         Index global_index,
                         Type type,
                         bool mutable_) override;
   Result OnImportException(Index import_index,
-                           const string_view& module_name,
-                           const string_view& field_name,
+                           string_view module_name,
+                           string_view field_name,
                            Index except_index,
                            TypeVector& sig) override;
 
@@ -118,7 +118,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
-                  const string_view& name) override;
+                  string_view name) override;
 
   Result OnStartFunction(Index func_index) override;
 
@@ -190,12 +190,12 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnFunctionNamesCount(Index num_functions) override;
   Result OnFunctionName(Index function_index,
-                        const string_view& function_name) override;
+                        string_view function_name) override;
   Result OnLocalNameLocalCount(Index function_index,
                                Index num_locals) override;
   Result OnLocalName(Index function_index,
                      Index local_index,
-                     const string_view& local_name) override;
+                     string_view local_name) override;
 
   Result BeginExceptionSection(Offset size) override { return Result::Ok; }
   Result OnExceptionCount(Index count) override { return Result::Ok; }
@@ -320,8 +320,8 @@ Result BinaryReaderIR::OnImportCount(Index count) {
 }
 
 Result BinaryReaderIR::OnImport(Index index,
-                                 const string_view& module_name,
-                                 const string_view& field_name) {
+                                string_view module_name,
+                                string_view field_name) {
   auto import = new Import();
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
@@ -331,8 +331,8 @@ Result BinaryReaderIR::OnImport(Index index,
 }
 
 Result BinaryReaderIR::OnImportFunc(Index import_index,
-                                    const string_view& module_name,
-                                    const string_view& field_name,
+                                    string_view module_name,
+                                    string_view field_name,
                                     Index func_index,
                                     Index sig_index) {
   assert(import_index == module->imports.size() - 1);
@@ -350,8 +350,8 @@ Result BinaryReaderIR::OnImportFunc(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportTable(Index import_index,
-                                     const string_view& module_name,
-                                     const string_view& field_name,
+                                     string_view module_name,
+                                     string_view field_name,
                                      Index table_index,
                                      Type elem_type,
                                      const Limits* elem_limits) {
@@ -366,8 +366,8 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportMemory(Index import_index,
-                                      const string_view& module_name,
-                                      const string_view& field_name,
+                                      string_view module_name,
+                                      string_view field_name,
                                       Index memory_index,
                                       const Limits* page_limits) {
   assert(import_index == module->imports.size() - 1);
@@ -381,8 +381,8 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportGlobal(Index import_index,
-                                      const string_view& module_name,
-                                      const string_view& field_name,
+                                      string_view module_name,
+                                      string_view field_name,
                                       Index global_index,
                                       Type type,
                                       bool mutable_) {
@@ -398,8 +398,8 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportException(Index import_index,
-                                         const string_view& module_name,
-                                         const string_view& field_name,
+                                         string_view module_name,
+                                         string_view field_name,
                                          Index except_index,
                                          TypeVector& sig) {
   assert(import_index == module->imports.size() - 1);
@@ -488,7 +488,7 @@ Result BinaryReaderIR::OnExportCount(Index count) {
 Result BinaryReaderIR::OnExport(Index index,
                                 ExternalKind kind,
                                 Index item_index,
-                                const string_view& name) {
+                                string_view name) {
   auto export_ = new Export();
   export_->name = name.to_string();
   switch (kind) {
@@ -884,7 +884,7 @@ Result BinaryReaderIR::OnFunctionNamesCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionName(Index index, const string_view& name) {
+Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
   if (name.empty())
     return Result::Ok;
 
@@ -951,7 +951,7 @@ Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
 
 Result BinaryReaderIR::OnLocalName(Index func_index,
                                    Index local_index,
-                                   const string_view& name) {
+                                   string_view name) {
   if (name.empty())
     return Result::Ok;
 

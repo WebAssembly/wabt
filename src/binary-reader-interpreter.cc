@@ -96,27 +96,27 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
 
   wabt::Result OnImportCount(Index count) override;
   wabt::Result OnImport(Index index,
-                        const string_view& module_name,
-                        const string_view& field_name) override;
+                        string_view module_name,
+                        string_view field_name) override;
   wabt::Result OnImportFunc(Index import_index,
-                            const string_view& module_name,
-                            const string_view& field_name,
+                            string_view module_name,
+                            string_view field_name,
                             Index func_index,
                             Index sig_index) override;
   wabt::Result OnImportTable(Index import_index,
-                             const string_view& module_name,
-                             const string_view& field_name,
+                             string_view module_name,
+                             string_view field_name,
                              Index table_index,
                              Type elem_type,
                              const Limits* elem_limits) override;
   wabt::Result OnImportMemory(Index import_index,
-                              const string_view& module_name,
-                              const string_view& field_name,
+                              string_view module_name,
+                              string_view field_name,
                               Index memory_index,
                               const Limits* page_limits) override;
   wabt::Result OnImportGlobal(Index import_index,
-                              const string_view& module_name,
-                              const string_view& field_name,
+                              string_view module_name,
+                              string_view field_name,
                               Index global_index,
                               Type type,
                               bool mutable_) override;
@@ -137,7 +137,7 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
   wabt::Result OnExport(Index index,
                         ExternalKind kind,
                         Index item_index,
-                        const string_view& name) override;
+                        string_view name) override;
 
   wabt::Result OnStartFunction(Index func_index) override;
 
@@ -257,7 +257,7 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
   wabt::Result AppendExport(Module* module,
                             ExternalKind kind,
                             Index item_index,
-                            const string_view& name);
+                            string_view name);
 
   HostImportDelegate::ErrorCallback MakePrintErrorCallback();
 
@@ -555,8 +555,8 @@ wabt::Result BinaryReaderInterpreter::OnImportCount(Index count) {
 }
 
 wabt::Result BinaryReaderInterpreter::OnImport(Index index,
-                                               const string_view& module_name,
-                                               const string_view& field_name) {
+                                               string_view module_name,
+                                               string_view field_name) {
   Import* import = &module->imports[index];
   import->module_name =
       dup_string_slice(string_view_to_string_slice(module_name));
@@ -650,7 +650,7 @@ wabt::Result BinaryReaderInterpreter::CheckImportLimits(
 wabt::Result BinaryReaderInterpreter::AppendExport(Module* module,
                                                    ExternalKind kind,
                                                    Index item_index,
-                                                   const string_view& name) {
+                                                   string_view name) {
   if (module->export_bindings.FindIndex(name) != kInvalidIndex) {
     PrintError("duplicate export \"" PRIstringview "\"",
                WABT_PRINTF_STRING_VIEW_ARG(name));
@@ -671,12 +671,11 @@ BinaryReaderInterpreter::MakePrintErrorCallback() {
   return [this](const char* msg) { PrintError("%s", msg); };
 }
 
-wabt::Result BinaryReaderInterpreter::OnImportFunc(
-    Index import_index,
-    const string_view& module_name,
-    const string_view& field_name,
-    Index func_index,
-    Index sig_index) {
+wabt::Result BinaryReaderInterpreter::OnImportFunc(Index import_index,
+                                                   string_view module_name,
+                                                   string_view field_name,
+                                                   Index func_index,
+                                                   Index sig_index) {
   Import* import = &module->imports[import_index];
   import->func.sig_index = TranslateSigIndexToEnv(sig_index);
 
@@ -709,13 +708,12 @@ wabt::Result BinaryReaderInterpreter::OnImportFunc(
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterpreter::OnImportTable(
-    Index import_index,
-    const string_view& module_name,
-    const string_view& field_name,
-    Index table_index,
-    Type elem_type,
-    const Limits* elem_limits) {
+wabt::Result BinaryReaderInterpreter::OnImportTable(Index import_index,
+                                                    string_view module_name,
+                                                    string_view field_name,
+                                                    Index table_index,
+                                                    Type elem_type,
+                                                    const Limits* elem_limits) {
   if (module->table_index != kInvalidIndex) {
     PrintError("only one table allowed");
     return wabt::Result::Error;
@@ -747,8 +745,8 @@ wabt::Result BinaryReaderInterpreter::OnImportTable(
 
 wabt::Result BinaryReaderInterpreter::OnImportMemory(
     Index import_index,
-    const string_view& module_name,
-    const string_view& field_name,
+    string_view module_name,
+    string_view field_name,
     Index memory_index,
     const Limits* page_limits) {
   if (module->memory_index != kInvalidIndex) {
@@ -780,13 +778,12 @@ wabt::Result BinaryReaderInterpreter::OnImportMemory(
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterpreter::OnImportGlobal(
-    Index import_index,
-    const string_view& module_name,
-    const string_view& field_name,
-    Index global_index,
-    Type type,
-    bool mutable_) {
+wabt::Result BinaryReaderInterpreter::OnImportGlobal(Index import_index,
+                                                     string_view module_name,
+                                                     string_view field_name,
+                                                     Index global_index,
+                                                     Type type,
+                                                     bool mutable_) {
   Import* import = &module->imports[import_index];
 
   Index global_env_index = env->GetGlobalCount() - 1;
@@ -922,7 +919,7 @@ wabt::Result BinaryReaderInterpreter::OnInitExprI64ConstExpr(Index index,
 wabt::Result BinaryReaderInterpreter::OnExport(Index index,
                                                ExternalKind kind,
                                                Index item_index,
-                                               const string_view& name) {
+                                               string_view name) {
   switch (kind) {
     case ExternalKind::Func:
       item_index = TranslateFuncIndexToEnv(item_index);
