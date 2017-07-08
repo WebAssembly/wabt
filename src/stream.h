@@ -130,7 +130,7 @@ class MemoryStream : public Stream {
     return writer_.ReleaseOutputBuffer();
   }
 
-  Result WriteToFile(const string_view& filename) {
+  Result WriteToFile(string_view filename) {
     return writer_.output_buffer().WriteToFile(filename);
   }
 
@@ -140,7 +140,7 @@ class MemoryStream : public Stream {
 
 class FileStream : public Stream {
  public:
-  explicit FileStream(const string_view& filename);
+  explicit FileStream(string_view filename);
   explicit FileStream(FILE*);
 
   FileWriter& writer() { return writer_; }

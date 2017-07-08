@@ -74,7 +74,7 @@ bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return param_types == rhs.param_types && result_types == rhs.result_types;
 }
 
-const Export* Module::GetExport(const string_view& name) const {
+const Export* Module::GetExport(string_view name) const {
   Index index = export_bindings.FindIndex(name);
   if (index >= exports.size())
     return nullptr;
@@ -236,7 +236,7 @@ FuncType* Module::AppendImplicitFuncType(const Location& loc,
 Var::Var(Index index, const Location& loc)
     : loc(loc), type_(VarType::Index), index_(index) {}
 
-Var::Var(const string_view& name, const Location& loc)
+Var::Var(string_view name, const Location& loc)
     : loc(loc), type_(VarType::Name), name_(name) {}
 
 Var::Var(Var&& rhs) : Var(kInvalidIndex) {
@@ -283,7 +283,7 @@ void Var::set_name(std::string&& name) {
   new (&name_) std::string(std::move(name));
 }
 
-void Var::set_name(const string_view& name) {
+void Var::set_name(string_view name) {
   set_name(name.to_string());
 }
 

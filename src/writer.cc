@@ -28,7 +28,7 @@
 
 namespace wabt {
 
-Result OutputBuffer::WriteToFile(const string_view& filename) const {
+Result OutputBuffer::WriteToFile(string_view filename) const {
   std::string filename_str = filename.to_string();
   FILE* file = fopen(filename_str.c_str(), "wb");
   if (!file) {
@@ -95,7 +95,7 @@ Result MemoryWriter::MoveData(size_t dst_offset,
 FileWriter::FileWriter(FILE* file)
     : file_(file), offset_(0), should_close_(false) {}
 
-FileWriter::FileWriter(const string_view& filename)
+FileWriter::FileWriter(string_view filename)
     : file_(nullptr), offset_(0), should_close_(false) {
   std::string filename_str = filename.to_string();
   file_ = fopen(filename_str.c_str(), "wb");

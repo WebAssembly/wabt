@@ -115,12 +115,10 @@ class WatWriter {
   void WriteCloseNewline();
   void WriteCloseSpace();
   void WriteString(const std::string& str, NextChar next_char);
-  void WriteName(const string_view& str, NextChar next_char);
-  void WriteNameOrIndex(const string_view& str,
-                        Index index,
-                        NextChar next_char);
+  void WriteName(string_view str, NextChar next_char);
+  void WriteNameOrIndex(string_view str, Index index, NextChar next_char);
   void WriteQuotedData(const void* data, size_t length);
-  void WriteQuotedString(const string_view& str, NextChar next_char);
+  void WriteQuotedString(string_view str, NextChar next_char);
   void WriteVar(const Var* var, NextChar next_char);
   void WriteBrVar(const Var* var, NextChar next_char);
   void WriteType(Type type, NextChar next_char);
@@ -305,14 +303,14 @@ void WatWriter::WriteString(const std::string& str, NextChar next_char) {
   WritePuts(str.c_str(), next_char);
 }
 
-void WatWriter::WriteName(const string_view& str, NextChar next_char) {
+void WatWriter::WriteName(string_view str, NextChar next_char) {
   // Debug names must begin with a $ for for wast file to be valid
   assert(!str.empty() && str.front() == '$');
   WriteDataWithNextChar(str.data(), str.length());
   next_char_ = next_char;
 }
 
-void WatWriter::WriteNameOrIndex(const string_view& str,
+void WatWriter::WriteNameOrIndex(string_view str,
                                  Index index,
                                  NextChar next_char) {
   if (!str.empty())
@@ -340,7 +338,7 @@ void WatWriter::WriteQuotedData(const void* data, size_t length) {
   next_char_ = NextChar::Space;
 }
 
-void WatWriter::WriteQuotedString(const string_view& str, NextChar next_char) {
+void WatWriter::WriteQuotedString(string_view str, NextChar next_char) {
   WriteQuotedData(str.data(), str.length());
   next_char_ = next_char;
 }

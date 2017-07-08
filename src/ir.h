@@ -40,7 +40,7 @@ enum class VarType {
 
 struct Var {
   explicit Var(Index index = kInvalidIndex, const Location& loc = Location());
-  explicit Var(const string_view& name, const Location& loc = Location());
+  explicit Var(string_view name, const Location& loc = Location());
   Var(Var&&);
   Var(const Var&);
   Var& operator =(const Var&);
@@ -56,7 +56,7 @@ struct Var {
 
   void set_index(Index);
   void set_name(std::string&&);
-  void set_name(const string_view&);
+  void set_name(string_view);
 
   Location loc;
 
@@ -292,8 +292,7 @@ typedef LoadStoreExpr<ExprType::Store> StoreExpr;
 struct Exception {
   Exception() = default;
   Exception(const TypeVector& sig) : sig(sig) {}
-  Exception(const string_view& name, const TypeVector& sig)
-      : name(name), sig(sig) {}
+  Exception(string_view name, const TypeVector& sig) : name(name), sig(sig) {}
 
   std::string name;
   TypeVector sig;
@@ -584,7 +583,7 @@ struct Module {
   Index GetGlobalIndex(const Var&) const;
   const Global* GetGlobal(const Var&) const;
   Global* GetGlobal(const Var&);
-  const Export* GetExport(const string_view&) const;
+  const Export* GetExport(string_view) const;
   Exception* GetExcept(const Var&) const;
   Index GetExceptIndex(const Var&) const;
 
@@ -746,7 +745,7 @@ typedef ActionCommandBase<CommandType::AssertReturnArithmeticNan>
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
-  RegisterCommand(const string_view& module_name, const Var& var)
+  RegisterCommand(string_view module_name, const Var& var)
       : module_name(module_name), var(var) {}
 
   std::string module_name;
@@ -769,7 +768,7 @@ class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
 template <CommandType TypeEnum>
 class AssertTrapCommandBase : public CommandMixin<TypeEnum> {
  public:
-  AssertTrapCommandBase(Action* action, const string_view& text)
+  AssertTrapCommandBase(Action* action, string_view text)
       : action(action), text(text) {}
   ~AssertTrapCommandBase() {
     delete action;
@@ -786,7 +785,7 @@ typedef AssertTrapCommandBase<CommandType::AssertExhaustion>
 template <CommandType TypeEnum>
 class AssertModuleCommand : public CommandMixin<TypeEnum> {
  public:
-  AssertModuleCommand(ScriptModule* module, const string_view& text)
+  AssertModuleCommand(ScriptModule* module, string_view text)
       : module(module), text(text) {}
   ~AssertModuleCommand() { delete module; }
 

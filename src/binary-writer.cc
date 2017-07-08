@@ -134,7 +134,7 @@ static void write_i64_leb128(Stream* stream, int64_t value, const char* desc) {
 #undef LEB128_LOOP_UNTIL
 
 void write_str(Stream* stream,
-               const string_view& s,
+               string_view s,
                const char* desc,
                PrintChars print_chars) {
   write_u32_leb128(stream, s.length(), "string length");
@@ -157,9 +157,7 @@ void write_limits(Stream* stream, const Limits* limits) {
     write_u32_leb128(stream, limits->max, "limits: max");
 }
 
-void write_debug_name(Stream* stream,
-                      const string_view& name,
-                      const char* desc) {
+void write_debug_name(Stream* stream, string_view name, const char* desc) {
   string_view stripped_name = name;
   if (!stripped_name.empty()) {
     // Strip leading $ from name
