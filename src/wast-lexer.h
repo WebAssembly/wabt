@@ -22,8 +22,8 @@
 #include <memory>
 
 #include "common.h"
-#include "interpreter.h"
 #include "lexer-source-line-finder.h"
+#include "opcode.h"
 
 namespace wabt {
 
