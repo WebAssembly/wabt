@@ -30,7 +30,8 @@ namespace wabt {
 namespace interpreter {
 
 static const char* s_opcode_name[] = {
-#define WABT_OPCODE(rtype, type1, type2, mem_size, code, NAME, text) text,
+#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, NAME, text) \
+  text,
 #include "interpreter-opcode.def"
 #undef WABT_OPCODE
 
@@ -1053,6 +1054,23 @@ Result IntTrunc(ValueTypeRep<T> v_rep, ValueTypeRep<R>* out_result) {
   return Result::Ok;
 }
 
+// i{32,64}.trunc_{s,u}:sat/f{32,64}
+template <typename R, typename T>
+ValueTypeRep<R> IntTruncSat(ValueTypeRep<T> v_rep) {
+  typedef FloatTraits<T> Traits;
+  if (WABT_UNLIKELY(Traits::IsNan(v_rep))) {
+    return 0;
+  } else if (WABT_UNLIKELY((!IsConversionInRange<R, T>(v_rep)))) {
+    if (v_rep & Traits::kSignMask) {
+      return ToRep(std::numeric_limits<R>::min());
+    } else {
+      return ToRep(std::numeric_limits<R>::max());
+    }
+  } else {
+    return ToRep(static_cast<R>(FromRep<T>(v_rep)));
+  }
+}
+
 bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
                                          Index sig_index_1) const {
   if (sig_index_0 == sig_index_1)
@@ -1797,16 +1815,32 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         CHECK_TRAP(UnopTrap(IntTrunc<int32_t, float>));
         break;
 
+      case Opcode::I32TruncSSatF32:
+        CHECK_TRAP(Unop(IntTruncSat<int32_t, float>));
+        break;
+
       case Opcode::I32TruncSF64:
         CHECK_TRAP(UnopTrap(IntTrunc<int32_t, double>));
+        break;
+
+      case Opcode::I32TruncSSatF64:
+        CHECK_TRAP(Unop(IntTruncSat<int32_t, double>));
         break;
 
       case Opcode::I32TruncUF32:
         CHECK_TRAP(UnopTrap(IntTrunc<uint32_t, float>));
         break;
 
+      case Opcode::I32TruncUSatF32:
+        CHECK_TRAP(Unop(IntTruncSat<uint32_t, float>));
+        break;
+
       case Opcode::I32TruncUF64:
         CHECK_TRAP(UnopTrap(IntTrunc<uint32_t, double>));
+        break;
+
+      case Opcode::I32TruncUSatF64:
+        CHECK_TRAP(Unop(IntTruncSat<uint32_t, double>));
         break;
 
       case Opcode::I32WrapI64:
@@ -1817,16 +1851,32 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         CHECK_TRAP(UnopTrap(IntTrunc<int64_t, float>));
         break;
 
+      case Opcode::I64TruncSSatF32:
+        CHECK_TRAP(Unop(IntTruncSat<int64_t, float>));
+        break;
+
       case Opcode::I64TruncSF64:
         CHECK_TRAP(UnopTrap(IntTrunc<int64_t, double>));
+        break;
+
+      case Opcode::I64TruncSSatF64:
+        CHECK_TRAP(Unop(IntTruncSat<int64_t, double>));
         break;
 
       case Opcode::I64TruncUF32:
         CHECK_TRAP(UnopTrap(IntTrunc<uint64_t, float>));
         break;
 
+      case Opcode::I64TruncUSatF32:
+        CHECK_TRAP(Unop(IntTruncSat<uint64_t, float>));
+        break;
+
       case Opcode::I64TruncUF64:
         CHECK_TRAP(UnopTrap(IntTrunc<uint64_t, double>));
+        break;
+
+      case Opcode::I64TruncUSatF64:
+        CHECK_TRAP(Unop(IntTruncSat<uint64_t, double>));
         break;
 
       case Opcode::I64ExtendSI32:
@@ -2270,6 +2320,10 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64TruncUF32:
     case Opcode::F64PromoteF32:
     case Opcode::I32ReinterpretF32:
+    case Opcode::I32TruncSSatF32:
+    case Opcode::I32TruncUSatF32:
+    case Opcode::I64TruncSSatF32:
+    case Opcode::I64TruncUSatF32:
       stream->Writef("%s %g\n", GetOpcodeName(opcode),
                      Bitcast<float>(Top().i32));
       break;
@@ -2280,6 +2334,10 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64TruncUF64:
     case Opcode::F32DemoteF64:
     case Opcode::I64ReinterpretF64:
+    case Opcode::I32TruncSSatF64:
+    case Opcode::I32TruncUSatF64:
+    case Opcode::I64TruncSSatF64:
+    case Opcode::I64TruncUSatF64:
       stream->Writef("%s %g\n", GetOpcodeName(opcode),
                      Bitcast<double>(Top().i64));
       break;
@@ -2586,6 +2644,14 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F32ReinterpretI32:
       case Opcode::F64ConvertSI32:
       case Opcode::F64ConvertUI32:
+      case Opcode::I32TruncSSatF32:
+      case Opcode::I32TruncUSatF32:
+      case Opcode::I64TruncSSatF32:
+      case Opcode::I64TruncUSatF32:
+      case Opcode::I32TruncSSatF64:
+      case Opcode::I32TruncUSatF64:
+      case Opcode::I64TruncSSatF64:
+      case Opcode::I64TruncUSatF64:
         stream->Writef("%s %%[-1]\n", GetOpcodeName(opcode));
         break;
 

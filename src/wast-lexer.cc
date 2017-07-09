@@ -547,6 +547,14 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i64.trunc_u/f32"     { RETURN_OPCODE(Convert, I64TruncUF32); }
       <i> "i32.trunc_u/f64"     { RETURN_OPCODE(Convert, I32TruncUF64); }
       <i> "i64.trunc_u/f64"     { RETURN_OPCODE(Convert, I64TruncUF64); }
+      <i> "i32.trunc_s:sat/f32" { RETURN_OPCODE(Convert, I32TruncSSatF32); }
+      <i> "i64.trunc_s:sat/f32" { RETURN_OPCODE(Convert, I64TruncSSatF32); }
+      <i> "i32.trunc_s:sat/f64" { RETURN_OPCODE(Convert, I32TruncSSatF64); }
+      <i> "i64.trunc_s:sat/f64" { RETURN_OPCODE(Convert, I64TruncSSatF64); }
+      <i> "i32.trunc_u:sat/f32" { RETURN_OPCODE(Convert, I32TruncUSatF32); }
+      <i> "i64.trunc_u:sat/f32" { RETURN_OPCODE(Convert, I64TruncUSatF32); }
+      <i> "i32.trunc_u:sat/f64" { RETURN_OPCODE(Convert, I32TruncUSatF64); }
+      <i> "i64.trunc_u:sat/f64" { RETURN_OPCODE(Convert, I64TruncUSatF64); }
       <i> "f32.convert_s/i32"   { RETURN_OPCODE(Convert, F32ConvertSI32); }
       <i> "f64.convert_s/i32"   { RETURN_OPCODE(Convert, F64ConvertSI32); }
       <i> "f32.convert_s/i64"   { RETURN_OPCODE(Convert, F32ConvertSI64); }

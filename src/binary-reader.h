@@ -36,7 +36,6 @@ struct ReadBinaryOptions {
 
   Stream* log_stream = nullptr;
   bool read_debug_names = false;
-  bool allow_future_exceptions = false;
 };
 
 class BinaryReaderDelegate {

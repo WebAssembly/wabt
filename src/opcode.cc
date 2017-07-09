@@ -22,29 +22,38 @@ namespace wabt {
 
 // static
 Opcode::Info Opcode::infos_[] = {
-#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) \
-  {text, Type::rtype, Type::type1, Type::type2, mem_size, code},
+#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
+  {text,     Type::rtype, Type::type1, Type::type2,                          \
+   mem_size, prefix,      code,        PrefixCode(prefix, code)},
 #include "opcode.def"
 #undef WABT_OPCODE
 };
 
-#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) \
+#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
   /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
 #include "opcode.def"
 #undef WABT_OPCODE
 
 // static
 Opcode::Info Opcode::invalid_info_ = {
-    "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0,
+    "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0, 0, 0,
 };
 
 // static
 Opcode Opcode::FromCode(uint32_t code) {
-  auto iter = std::lower_bound(
-      infos_, infos_ + WABT_ARRAY_SIZE(infos_), code,
-      [](const Info& info, uint32_t code) { return info.code < code; });
+  return FromCode(0, code);
+}
 
-  if (iter->code != code)
+// static
+Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
+  uint32_t prefix_code = PrefixCode(prefix, code);
+  auto iter =
+      std::lower_bound(infos_, infos_ + WABT_ARRAY_SIZE(infos_), prefix_code,
+                       [](const Info& info, uint32_t prefix_code) {
+                         return info.prefix_code < prefix_code;
+                       });
+
+  if (iter->prefix_code != prefix_code)
     return Opcode(Invalid);
 
   return Opcode(static_cast<Enum>(iter - infos_));
