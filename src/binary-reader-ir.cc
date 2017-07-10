@@ -68,33 +68,33 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnImportCount(Index count) override;
   Result OnImport(Index index,
-                  StringSlice module_name,
-                  StringSlice field_name) override;
+                  string_view module_name,
+                  string_view field_name) override;
   Result OnImportFunc(Index import_index,
-                      StringSlice module_name,
-                      StringSlice field_name,
+                      string_view module_name,
+                      string_view field_name,
                       Index func_index,
                       Index sig_index) override;
   Result OnImportTable(Index import_index,
-                       StringSlice module_name,
-                       StringSlice field_name,
+                       string_view module_name,
+                       string_view field_name,
                        Index table_index,
                        Type elem_type,
                        const Limits* elem_limits) override;
   Result OnImportMemory(Index import_index,
-                        StringSlice module_name,
-                        StringSlice field_name,
+                        string_view module_name,
+                        string_view field_name,
                         Index memory_index,
                         const Limits* page_limits) override;
   Result OnImportGlobal(Index import_index,
-                        StringSlice module_name,
-                        StringSlice field_name,
+                        string_view module_name,
+                        string_view field_name,
                         Index global_index,
                         Type type,
                         bool mutable_) override;
   Result OnImportException(Index import_index,
-                           StringSlice module_name,
-                           StringSlice field_name,
+                           string_view module_name,
+                           string_view field_name,
                            Index except_index,
                            TypeVector& sig) override;
 
@@ -118,7 +118,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
-                  StringSlice name) override;
+                  string_view name) override;
 
   Result OnStartFunction(Index func_index) override;
 
@@ -190,12 +190,12 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnFunctionNamesCount(Index num_functions) override;
   Result OnFunctionName(Index function_index,
-                        StringSlice function_name) override;
+                        string_view function_name) override;
   Result OnLocalNameLocalCount(Index function_index,
                                Index num_locals) override;
   Result OnLocalName(Index function_index,
                      Index local_index,
-                     StringSlice local_name) override;
+                     string_view local_name) override;
 
   Result BeginExceptionSection(Offset size) override { return Result::Ok; }
   Result OnExceptionCount(Index count) override { return Result::Ok; }
@@ -320,19 +320,19 @@ Result BinaryReaderIR::OnImportCount(Index count) {
 }
 
 Result BinaryReaderIR::OnImport(Index index,
-                                 StringSlice module_name,
-                                 StringSlice field_name) {
+                                string_view module_name,
+                                string_view field_name) {
   auto import = new Import();
-  import->module_name = string_slice_to_string(module_name);
-  import->field_name = string_slice_to_string(field_name);
+  import->module_name = module_name.to_string();
+  import->field_name = field_name.to_string();
   module->imports.push_back(import);
   module->fields.push_back(new ImportModuleField(import, GetLocation()));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnImportFunc(Index import_index,
-                                    StringSlice module_name,
-                                    StringSlice field_name,
+                                    string_view module_name,
+                                    string_view field_name,
                                     Index func_index,
                                     Index sig_index) {
   assert(import_index == module->imports.size() - 1);
@@ -350,8 +350,8 @@ Result BinaryReaderIR::OnImportFunc(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportTable(Index import_index,
-                                     StringSlice module_name,
-                                     StringSlice field_name,
+                                     string_view module_name,
+                                     string_view field_name,
                                      Index table_index,
                                      Type elem_type,
                                      const Limits* elem_limits) {
@@ -366,8 +366,8 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportMemory(Index import_index,
-                                      StringSlice module_name,
-                                      StringSlice field_name,
+                                      string_view module_name,
+                                      string_view field_name,
                                       Index memory_index,
                                       const Limits* page_limits) {
   assert(import_index == module->imports.size() - 1);
@@ -381,8 +381,8 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportGlobal(Index import_index,
-                                      StringSlice module_name,
-                                      StringSlice field_name,
+                                      string_view module_name,
+                                      string_view field_name,
                                       Index global_index,
                                       Type type,
                                       bool mutable_) {
@@ -398,8 +398,8 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
 }
 
 Result BinaryReaderIR::OnImportException(Index import_index,
-                                         StringSlice module_name,
-                                         StringSlice field_name,
+                                         string_view module_name,
+                                         string_view field_name,
                                          Index except_index,
                                          TypeVector& sig) {
   assert(import_index == module->imports.size() - 1);
@@ -488,9 +488,9 @@ Result BinaryReaderIR::OnExportCount(Index count) {
 Result BinaryReaderIR::OnExport(Index index,
                                 ExternalKind kind,
                                 Index item_index,
-                                StringSlice name) {
+                                string_view name) {
   auto export_ = new Export();
-  export_->name = string_slice_to_string(name);
+  export_->name = name.to_string();
   switch (kind) {
     case ExternalKind::Func:
       assert(item_index < module->funcs.size());
@@ -884,12 +884,12 @@ Result BinaryReaderIR::OnFunctionNamesCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnFunctionName(Index index, StringSlice name) {
-  if (string_slice_is_empty(&name))
+Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
+  if (name.empty())
     return Result::Ok;
 
   Func* func = module->funcs[index];
-  std::string dollar_name = std::string("$") + string_slice_to_string(name);
+  std::string dollar_name = std::string("$") + name.to_string();
   int counter = 1;
   std::string orig_name = dollar_name;
   while (module->func_bindings.count(dollar_name) != 0) {
@@ -951,8 +951,8 @@ Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
 
 Result BinaryReaderIR::OnLocalName(Index func_index,
                                    Index local_index,
-                                   StringSlice name) {
-  if (string_slice_is_empty(&name))
+                                   string_view name) {
+  if (name.empty())
     return Result::Ok;
 
   Func* func = module->funcs[func_index];
@@ -968,8 +968,7 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
     bindings = &func->local_bindings;
     index = local_index - num_params;
   }
-  bindings->emplace(std::string("$") + string_slice_to_string(name),
-                    Binding(index));
+  bindings->emplace(std::string("$") + name.to_string(), Binding(index));
   return Result::Ok;
 }
 

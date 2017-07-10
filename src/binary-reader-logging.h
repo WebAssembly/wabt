@@ -35,7 +35,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginSection(BinarySection section_type, Offset size) override;
 
-  Result BeginCustomSection(Offset size, StringSlice section_name) override;
+  Result BeginCustomSection(Offset size, string_view section_name) override;
   Result EndCustomSection() override;
 
   Result BeginTypeSection(Offset size) override;
@@ -50,33 +50,33 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result BeginImportSection(Offset size) override;
   Result OnImportCount(Index count) override;
   Result OnImport(Index index,
-                  StringSlice module_name,
-                  StringSlice field_name) override;
+                  string_view module_name,
+                  string_view field_name) override;
   Result OnImportFunc(Index import_index,
-                      StringSlice module_name,
-                      StringSlice field_name,
+                      string_view module_name,
+                      string_view field_name,
                       Index func_index,
                       Index sig_index) override;
   Result OnImportTable(Index import_index,
-                       StringSlice module_name,
-                       StringSlice field_name,
+                       string_view module_name,
+                       string_view field_name,
                        Index table_index,
                        Type elem_type,
                        const Limits* elem_limits) override;
   Result OnImportMemory(Index import_index,
-                        StringSlice module_name,
-                        StringSlice field_name,
+                        string_view module_name,
+                        string_view field_name,
                         Index memory_index,
                         const Limits* page_limits) override;
   Result OnImportGlobal(Index import_index,
-                        StringSlice module_name,
-                        StringSlice field_name,
+                        string_view module_name,
+                        string_view field_name,
                         Index global_index,
                         Type type,
                         bool mutable_) override;
   Result OnImportException(Index import_index,
-                           StringSlice module_name,
-                           StringSlice field_name,
+                           string_view module_name,
+                           string_view field_name,
                            Index except_index,
                            TypeVector& sig) override;
   Result EndImportSection() override;
@@ -111,7 +111,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnExport(Index index,
                   ExternalKind kind,
                   Index item_index,
-                  StringSlice name) override;
+                  string_view name) override;
   Result EndExportSection() override;
 
   Result BeginStartSection(Offset size) override;
@@ -209,7 +209,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                                   Offset subsection_size) override;
   Result OnFunctionNamesCount(Index num_functions) override;
   Result OnFunctionName(Index function_index,
-                        StringSlice function_name) override;
+                        string_view function_name) override;
   Result OnLocalNameSubsection(Index index,
                                uint32_t name_type,
                                Offset subsection_size) override;
@@ -218,13 +218,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                                Index num_locals) override;
   Result OnLocalName(Index function_index,
                      Index local_index,
-                     StringSlice local_name) override;
+                     string_view local_name) override;
   Result EndNamesSection() override;
 
   Result BeginRelocSection(Offset size) override;
   Result OnRelocCount(Index count,
                       BinarySection section_code,
-                      StringSlice section_name) override;
+                      string_view section_name) override;
   Result OnReloc(RelocType type,
                  Offset offset,
                  Index index,
@@ -233,7 +233,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginLinkingSection(Offset size) override;
   Result OnStackGlobal(Index stack_global) override;
-  Result OnSymbolInfo(StringSlice name, uint32_t flags) override;
+  Result OnSymbolInfo(string_view name, uint32_t flags) override;
   Result OnSymbolInfoCount(Index count) override;
   Result EndLinkingSection() override;
 
