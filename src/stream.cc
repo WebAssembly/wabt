@@ -114,7 +114,7 @@ void Stream::WriteMemoryDump(const void* start,
 
 MemoryStream::MemoryStream() : Stream(&writer_) {}
 
-FileStream::FileStream(const string_view& filename)
+FileStream::FileStream(string_view filename)
     : Stream(&writer_), writer_(filename) {}
 
 FileStream::FileStream(FILE* file) : Stream(&writer_), writer_(file) {}

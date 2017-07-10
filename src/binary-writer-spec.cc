@@ -30,7 +30,7 @@
 
 namespace wabt {
 
-static string_view strip_extension(const string_view& s) {
+static string_view strip_extension(string_view s) {
   // Strip .json or .wasm, but leave other extensions, e.g.:
   //
   // s = "foo", => "foo"
@@ -45,7 +45,7 @@ static string_view strip_extension(const string_view& s) {
   return result;
 }
 
-static string_view get_basename(const string_view& s) {
+static string_view get_basename(string_view s) {
   // Strip everything up to and including the last slash, e.g.:
   //
   // s = "/foo/bar/baz", => "baz"
@@ -71,7 +71,7 @@ class BinaryWriterSpec {
   void WriteString(const char* s);
   void WriteKey(const char* key);
   void WriteSeparator();
-  void WriteEscapedString(const string_view&);
+  void WriteEscapedString(string_view);
   void WriteCommandType(const Command& command);
   void WriteLocation(const Location* loc);
   void WriteVar(const Var* var);
@@ -80,10 +80,10 @@ class BinaryWriterSpec {
   void WriteConstVector(const ConstVector& consts);
   void WriteAction(const Action* action);
   void WriteActionResultType(Script* script, const Action* action);
-  void WriteModule(const string_view& filename, const Module* module);
-  void WriteScriptModule(const string_view& filename,
+  void WriteModule(string_view filename, const Module* module);
+  void WriteScriptModule(string_view filename,
                          const ScriptModule* script_module);
-  void WriteInvalidModule(const ScriptModule* module, const string_view& text);
+  void WriteInvalidModule(const ScriptModule* module, string_view text);
   void WriteCommands(Script* script);
 
   MemoryStream json_stream_;
@@ -135,7 +135,7 @@ void BinaryWriterSpec::WriteSeparator() {
   json_stream_.Writef(", ");
 }
 
-void BinaryWriterSpec::WriteEscapedString(const string_view& s) {
+void BinaryWriterSpec::WriteEscapedString(string_view s) {
   json_stream_.WriteChar('"');
   for (size_t i = 0; i < s.length(); ++i) {
     uint8_t c = s[i];
@@ -302,8 +302,7 @@ void BinaryWriterSpec::WriteActionResultType(Script* script,
   json_stream_.Writef("]");
 }
 
-void BinaryWriterSpec::WriteModule(const string_view& filename,
-                                   const Module* module) {
+void BinaryWriterSpec::WriteModule(string_view filename, const Module* module) {
   MemoryStream memory_stream;
   result_ = write_binary_module(&memory_stream.writer(), module,
                                 &spec_options_->write_binary_options);
@@ -311,7 +310,7 @@ void BinaryWriterSpec::WriteModule(const string_view& filename,
     result_ = memory_stream.WriteToFile(filename);
 }
 
-void BinaryWriterSpec::WriteScriptModule(const string_view& filename,
+void BinaryWriterSpec::WriteScriptModule(string_view filename,
                                          const ScriptModule* script_module) {
   switch (script_module->type) {
     case ScriptModule::Type::Text:
@@ -347,7 +346,7 @@ void BinaryWriterSpec::WriteScriptModule(const string_view& filename,
 }
 
 void BinaryWriterSpec::WriteInvalidModule(const ScriptModule* module,
-                                          const string_view& text) {
+                                          string_view text) {
   const char* extension = "";
   const char* module_type = "";
   switch (module->type) {

@@ -25,7 +25,7 @@ using namespace wabt;
 
 namespace {
 
-void assert_string_view_eq(const char* s, const string_view& sv) {
+void assert_string_view_eq(const char* s, string_view sv) {
   size_t len = std::strlen(s);
   ASSERT_EQ(len, sv.size());
   for (size_t i = 0; i < len; ++i) {

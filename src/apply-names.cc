@@ -67,7 +67,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   void PushLabel(const std::string& label);
   void PopLabel();
   string_view FindLabelByVar(Var* var);
-  void UseNameForVar(const string_view& name, Var* var);
+  void UseNameForVar(string_view name, Var* var);
   Result UseNameForFuncTypeVar(Var* var);
   Result UseNameForFuncVar(Var* var);
   Result UseNameForGlobalVar(Var* var);
@@ -114,7 +114,7 @@ string_view NameApplier::FindLabelByVar(Var* var) {
   }
 }
 
-void NameApplier::UseNameForVar(const string_view& name, Var* var) {
+void NameApplier::UseNameForVar(string_view name, Var* var) {
   if (var->is_name()) {
     assert(name == var->name());
     return;

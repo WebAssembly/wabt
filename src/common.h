@@ -286,7 +286,7 @@ inline std::string string_slice_to_string(const StringSlice& ss) {
   return std::string(ss.start, ss.length);
 }
 
-inline StringSlice string_view_to_string_slice(const string_view& view) {
+inline StringSlice string_view_to_string_slice(string_view view) {
   StringSlice ss;
   ss.start = view.data();
   ss.length = view.length();
