@@ -950,9 +950,9 @@ Result BinaryWriter::WriteModule(const Module* module) {
       Index memory_index = module->GetMemoryIndex(segment->memory_var);
       write_u32_leb128(&stream_, memory_index, "memory index");
       WriteInitExpr(module, segment->offset);
-      write_u32_leb128(&stream_, segment->size, "data segment size");
+      write_u32_leb128(&stream_, segment->data.size(), "data segment size");
       WriteHeader("data segment data", i);
-      stream_.WriteData(segment->data, segment->size, "data segment data");
+      stream_.WriteData(segment->data, "data segment data");
     }
     EndSection();
   }

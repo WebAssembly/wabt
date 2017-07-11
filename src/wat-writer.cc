@@ -1062,7 +1062,7 @@ void WatWriter::WriteMemory(const Memory* memory) {
 void WatWriter::WriteDataSegment(const DataSegment* segment) {
   WriteOpenSpace("data");
   WriteInitExpr(segment->offset);
-  WriteQuotedData(segment->data, segment->size);
+  WriteQuotedData(segment->data.data(), segment->data.size());
   WriteCloseNewline();
 }
 
