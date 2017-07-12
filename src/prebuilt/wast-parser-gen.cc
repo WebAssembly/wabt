@@ -98,7 +98,7 @@
       delete[](stack_base);                                           \
     } else {                                                          \
       for (size_t i = 0; i < (old_size); ++i) {                       \
-        Destruct(stack_base[i]);                                      \
+        (stack_base)[i].~type();                                      \
       }                                                               \
     }                                                                 \
     /* Cache the pointer in the parser struct to be deleted later. */ \
