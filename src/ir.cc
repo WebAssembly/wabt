@@ -280,7 +280,7 @@ void Var::set_index(Index index) {
 void Var::set_name(std::string&& name) {
   Destroy();
   type_ = VarType::Name;
-  new (&name_) std::string(std::move(name));
+  Construct(name_, std::move(name));
 }
 
 void Var::set_name(string_view name) {
@@ -288,9 +288,8 @@ void Var::set_name(string_view name) {
 }
 
 void Var::Destroy() {
-  typedef std::string std_string;
   if (is_name())
-    name_.~std_string();
+    Destruct(name_);
 }
 
 Const::Const(I32, uint32_t value, const Location& loc_)
@@ -377,15 +376,15 @@ ScriptModule::ScriptModule(Type type) : type(type) {
       break;
 
     case ScriptModule::Type::Binary:
-      new (&binary.loc) Location();
-      new (&binary.name) std::string();
+      Construct(binary.loc);
+      Construct(binary.name);
       binary.data = nullptr;
       binary.size = 0;
       break;
 
     case ScriptModule::Type::Quoted:
-      new (&quoted.loc) Location();
-      new (&quoted.name) std::string();
+      Construct(quoted.loc);
+      Construct(quoted.name);
       quoted.data = nullptr;
       quoted.size = 0;
       break;
@@ -393,17 +392,18 @@ ScriptModule::ScriptModule(Type type) : type(type) {
 }
 
 ScriptModule::~ScriptModule() {
-  typedef std::string std_string;
   switch (type) {
     case ScriptModule::Type::Text:
       delete text;
       break;
     case ScriptModule::Type::Binary:
-      binary.name.~std_string();
+      Destruct(binary.loc);
+      Destruct(binary.name);
       delete [] binary.data;
       break;
     case ScriptModule::Type::Quoted:
-      quoted.name.~std_string();
+      Destruct(quoted.loc);
+      Destruct(quoted.name);
       delete [] binary.data;
       break;
   }
