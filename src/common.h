@@ -110,6 +110,18 @@ void ZeroMemory(T& v) {
   memset(&v, 0, sizeof(v));
 }
 
+// Placement construct
+template <typename T, typename... Args>
+void Construct(T& placement, Args... args) {
+  new (&placement) T(args...);
+}
+
+// Placement destruct
+template <typename T>
+void Destruct(T& placement) {
+  placement.~T();
+}
+
 inline bool Succeeded(Result result) { return result == Result::Ok; }
 inline bool Failed(Result result) { return result == Result::Error; }
 
