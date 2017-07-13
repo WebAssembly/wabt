@@ -558,14 +558,12 @@ wabt::Result BinaryReaderInterpreter::OnImport(Index index,
                                                string_view module_name,
                                                string_view field_name) {
   Import* import = &module->imports[index];
-  import->module_name =
-      dup_string_slice(string_view_to_string_slice(module_name));
-  import->field_name =
-      dup_string_slice(string_view_to_string_slice(field_name));
+  import->module_name = module_name.to_string();
+  import->field_name = field_name.to_string();
   Module* module = env->FindRegisteredModule(import->module_name);
   if (!module) {
-    PrintError("unknown import module \"" PRIstringslice "\"",
-               WABT_PRINTF_STRING_SLICE_ARG(import->module_name));
+    PrintError("unknown import module \"" PRIstringview "\"",
+               WABT_PRINTF_STRING_VIEW_ARG(import->module_name));
     return wabt::Result::Error;
   }
   if (module->is_host) {
@@ -577,8 +575,8 @@ wabt::Result BinaryReaderInterpreter::OnImport(Index index,
   } else {
     Export* export_ = module->GetExport(import->field_name);
     if (!export_) {
-      PrintError("unknown module field \"" PRIstringslice "\"",
-                 WABT_PRINTF_STRING_SLICE_ARG(import->field_name));
+      PrintError("unknown module field \"" PRIstringview "\"",
+                 WABT_PRINTF_STRING_VIEW_ARG(import->field_name));
       return wabt::Result::Error;
     }
 
@@ -613,10 +611,10 @@ wabt::Result BinaryReaderInterpreter::CheckImportKind(
     Import* import,
     ExternalKind expected_kind) {
   if (import->kind != expected_kind) {
-    PrintError("expected import \"" PRIstringslice "." PRIstringslice
+    PrintError("expected import \"" PRIstringview "." PRIstringview
                "\" to have kind %s, not %s",
-               WABT_PRINTF_STRING_SLICE_ARG(import->module_name),
-               WABT_PRINTF_STRING_SLICE_ARG(import->field_name),
+               WABT_PRINTF_STRING_VIEW_ARG(import->module_name),
+               WABT_PRINTF_STRING_VIEW_ARG(import->field_name),
                get_kind_name(expected_kind), get_kind_name(import->kind));
     return wabt::Result::Error;
   }
@@ -657,11 +655,10 @@ wabt::Result BinaryReaderInterpreter::AppendExport(Module* module,
     return wabt::Result::Error;
   }
 
-  module->exports.emplace_back(
-      dup_string_slice(string_view_to_string_slice(name)), kind, item_index);
+  module->exports.emplace_back(name, kind, item_index);
   Export* export_ = &module->exports.back();
 
-  module->export_bindings.emplace(string_slice_to_string(export_->name),
+  module->export_bindings.emplace(export_->name,
                                   Binding(module->exports.size() - 1));
   return wabt::Result::Ok;
 }
@@ -692,7 +689,7 @@ wabt::Result BinaryReaderInterpreter::OnImportFunc(Index import_index,
 
     func_env_index = env->GetFuncCount() - 1;
     AppendExport(host_import_module, ExternalKind::Func, func_env_index,
-                 string_slice_to_string(import->field_name));
+                 import->field_name);
   } else {
     CHECK_RESULT(CheckImportKind(import, ExternalKind::Func));
     Func* func = env->GetFunc(import_env_index);
@@ -731,7 +728,7 @@ wabt::Result BinaryReaderInterpreter::OnImportTable(Index import_index,
 
     module->table_index = env->GetTableCount() - 1;
     AppendExport(host_import_module, ExternalKind::Table, module->table_index,
-                 string_slice_to_string(import->field_name));
+                 import->field_name);
   } else {
     CHECK_RESULT(CheckImportKind(import, ExternalKind::Table));
     Table* table = env->GetTable(import_env_index);
@@ -766,7 +763,7 @@ wabt::Result BinaryReaderInterpreter::OnImportMemory(
 
     module->memory_index = env->GetMemoryCount() - 1;
     AppendExport(host_import_module, ExternalKind::Memory, module->memory_index,
-                 string_slice_to_string(import->field_name));
+                 import->field_name);
   } else {
     CHECK_RESULT(CheckImportKind(import, ExternalKind::Memory));
     Memory* memory = env->GetMemory(import_env_index);
@@ -795,7 +792,7 @@ wabt::Result BinaryReaderInterpreter::OnImportGlobal(Index import_index,
 
     global_env_index = env->GetGlobalCount() - 1;
     AppendExport(host_import_module, ExternalKind::Global, global_env_index,
-                 string_slice_to_string(import->field_name));
+                 import->field_name);
   } else {
     CHECK_RESULT(CheckImportKind(import, ExternalKind::Global));
     // TODO: check type and mutability

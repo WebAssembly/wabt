@@ -120,25 +120,21 @@ enum class ModuleType {
   Binary,
 };
 
-static StringSlice get_dirname(const char* s) {
-  /* strip everything after and including the last slash (or backslash), e.g.:
-   *
-   * s = "foo/bar/baz", => "foo/bar"
-   * s = "/usr/local/include/stdio.h", => "/usr/local/include"
-   * s = "foo.bar", => ""
-   * s = "some\windows\directory", => "some\windows"
-   */
-  const char* last_slash = strrchr(s, '/');
-  const char* last_backslash = strrchr(s, '\\');
-  if (!last_slash)
-    last_slash = s;
-  if (!last_backslash)
-    last_backslash = s;
+static string_view get_dirname(string_view path) {
+  // Strip everything after and including the last slash (or backslash), e.g.:
+  //
+  // s = "foo/bar/baz", => "foo/bar"
+  // s = "/usr/local/include/stdio.h", => "/usr/local/include"
+  // s = "foo.bar", => ""
+  // s = "some\windows\directory", => "some\windows"
+  size_t last_slash = path.find_last_of('/');
+  size_t last_backslash = path.find_last_of('\\');
+  if (last_slash == string_view::npos)
+    last_slash = 0;
+  if (last_backslash == string_view::npos)
+    last_backslash = 0;
 
-  StringSlice result;
-  result.start = s;
-  result.length = std::max(last_slash, last_backslash) - s;
-  return result;
+  return path.substr(0, std::max(last_slash, last_backslash));
 }
 
 /* Not sure, but 100 chars is probably safe */
@@ -195,14 +191,14 @@ static void print_interpreter_result(const char* desc,
   printf("%s: %s\n", desc, s_trap_strings[static_cast<size_t>(iresult)]);
 }
 
-static void print_call(StringSlice module_name,
-                       StringSlice func_name,
+static void print_call(string_view module_name,
+                       string_view func_name,
                        const std::vector<TypedValue>& args,
                        const std::vector<TypedValue>& results,
                        interpreter::Result iresult) {
-  if (module_name.length)
-    printf(PRIstringslice ".", WABT_PRINTF_STRING_SLICE_ARG(module_name));
-  printf(PRIstringslice "(", WABT_PRINTF_STRING_SLICE_ARG(func_name));
+  if (!module_name.empty())
+    printf(PRIstringview ".", WABT_PRINTF_STRING_VIEW_ARG(module_name));
+  printf(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(func_name));
   print_typed_value_vector(args);
   printf(") =>");
   if (iresult == interpreter::Result::Ok) {
@@ -245,8 +241,8 @@ static interpreter::Result run_export(Thread* thread,
                                       const std::vector<TypedValue>& args,
                                       std::vector<TypedValue>* out_results) {
   if (s_trace) {
-    printf(">>> running export \"" PRIstringslice "\":\n",
-           WABT_PRINTF_STRING_SLICE_ARG(export_->name));
+    printf(">>> running export \"" PRIstringview "\":\n",
+           WABT_PRINTF_STRING_VIEW_ARG(export_->name));
   }
 
   assert(export_->kind == ExternalKind::Func);
@@ -256,11 +252,11 @@ static interpreter::Result run_export(Thread* thread,
 static interpreter::Result run_export_by_name(
     Thread* thread,
     Module* module,
-    const StringSlice* name,
+    string_view name,
     const std::vector<TypedValue>& args,
     std::vector<TypedValue>* out_results,
     RunVerbosity verbose) {
-  Export* export_ = module->GetExport(*name);
+  Export* export_ = module->GetExport(name);
   if (!export_)
     return interpreter::Result::UnknownExport;
   if (export_->kind != ExternalKind::Func)
@@ -271,9 +267,9 @@ static interpreter::Result run_export_by_name(
 static interpreter::Result get_global_export_by_name(
     Thread* thread,
     Module* module,
-    const StringSlice* name,
+    string_view name,
     std::vector<TypedValue>* out_results) {
-  Export* export_ = module->GetExport(*name);
+  Export* export_ = module->GetExport(name);
   if (!export_)
     return interpreter::Result::UnknownExport;
   if (export_->kind != ExternalKind::Global)
@@ -293,7 +289,7 @@ static void run_all_exports(Module* module,
   for (const Export& export_ : module->exports) {
     interpreter::Result iresult = run_export(thread, &export_, args, &results);
     if (verbose == RunVerbosity::Verbose) {
-      print_call(empty_string_slice(), export_.name, args, results, iresult);
+      print_call(string_view(), export_.name, args, results, iresult);
     }
   }
 }
@@ -342,10 +338,10 @@ static interpreter::Result default_host_callback(const HostFunc* func,
   return interpreter::Result::Ok;
 }
 
-#define PRIimport "\"" PRIstringslice "." PRIstringslice "\""
+#define PRIimport "\"" PRIstringview "." PRIstringview "\""
 #define PRINTF_IMPORT_ARG(x)                    \
-  WABT_PRINTF_STRING_SLICE_ARG((x).module_name) \
-  , WABT_PRINTF_STRING_SLICE_ARG((x).field_name)
+  WABT_PRINTF_STRING_VIEW_ARG((x).module_name) \
+  , WABT_PRINTF_STRING_VIEW_ARG((x).field_name)
 
 class SpectestHostImportDelegate : public HostImportDelegate {
  public:
@@ -353,7 +349,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
                           Func* func,
                           FuncSignature* func_sig,
                           const ErrorCallback& callback) override {
-    if (string_slice_eq_cstr(&import->field_name, "print")) {
+    if (import->field_name == "print") {
       func->as_host()->callback = default_host_callback;
       return wabt::Result::Ok;
     } else {
@@ -366,7 +362,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
   wabt::Result ImportTable(Import* import,
                            Table* table,
                            const ErrorCallback& callback) override {
-    if (string_slice_eq_cstr(&import->field_name, "table")) {
+    if (import->field_name == "table") {
       table->limits.has_max = true;
       table->limits.initial = 10;
       table->limits.max = 20;
@@ -381,7 +377,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
   wabt::Result ImportMemory(Import* import,
                             Memory* memory,
                             const ErrorCallback& callback) override {
-    if (string_slice_eq_cstr(&import->field_name, "memory")) {
+    if (import->field_name == "memory") {
       memory->page_limits.has_max = true;
       memory->page_limits.initial = 1;
       memory->page_limits.max = 2;
@@ -397,7 +393,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
   wabt::Result ImportGlobal(Import* import,
                             Global* global,
                             const ErrorCallback& callback) override {
-    if (string_slice_eq_cstr(&import->field_name, "global")) {
+    if (import->field_name == "global") {
       switch (global->typed_value.type) {
         case Type::I32:
           global->typed_value.value.i32 = 666;
@@ -441,8 +437,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
 };
 
 static void init_environment(Environment* env) {
-  HostModule* host_module =
-      env->AppendHostModule(string_slice_from_cstr("spectest"));
+  HostModule* host_module = env->AppendHostModule("spectest");
   host_module->import_delegate.reset(new SpectestHostImportDelegate());
 }
 
@@ -479,9 +474,7 @@ struct Context {
         has_prev_loc(0),
         command_line_number(0),
         passed(0),
-        total(0) {
-    ZeroMemory(source_filename);
-  }
+        total(0) {}
 
   Environment env;
   Thread thread;
@@ -490,7 +483,7 @@ struct Context {
   /* Parsing info */
   char* json_data;
   size_t json_data_size;
-  StringSlice source_filename;
+  std::string source_filename;
   size_t json_offset;
   Location loc;
   Location prev_loc;
@@ -508,14 +501,9 @@ enum class ActionType {
 };
 
 struct Action {
-  Action() {
-    ZeroMemory(module_name);
-    ZeroMemory(field_name);
-  }
-
   ActionType type = ActionType::Invoke;
-  StringSlice module_name;
-  StringSlice field_name;
+  std::string module_name;
+  std::string field_name;
   std::vector<TypedValue> args;
 };
 
@@ -540,8 +528,8 @@ static void WABT_PRINTF_FORMAT(2, 3)
 static void WABT_PRINTF_FORMAT(2, 3)
     print_command_error(Context* ctx, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  printf(PRIstringslice ":%u: %s\n",
-         WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
+  printf(PRIstringview ":%u: %s\n",
+         WABT_PRINTF_STRING_VIEW_ARG(ctx->source_filename),
          ctx->command_line_number, buffer);
 }
 
@@ -642,21 +630,15 @@ static wabt::Result parse_uint32(Context* ctx, uint32_t* out_int) {
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_string(Context* ctx, StringSlice* out_string) {
-  ZeroMemory(*out_string);
+static wabt::Result parse_string(Context* ctx, std::string* out_string) {
+  out_string->clear();
 
   skip_whitespace(ctx);
   if (read_char(ctx) != '"') {
     print_parse_error(ctx, "expected string");
     return wabt::Result::Error;
   }
-  /* Modify json_data in-place so we can use the StringSlice directly
-   * without having to allocate additional memory; this is only necessary when
-   * the string contains an escape, but we do it always because the code is
-   * simpler. */
-  char* start = &ctx->json_data[ctx->json_offset];
-  char* p = start;
-  out_string->start = start;
+
   while (1) {
     int c = read_char(ctx);
     if (c == '"') {
@@ -686,30 +668,29 @@ static wabt::Result parse_string(Context* ctx, StringSlice* out_string) {
       }
 
       if (code < 256) {
-        *p++ = code;
+        *out_string += code;
       } else {
         print_parse_error(ctx, "only escape codes < 256 allowed, got %u\n",
                           code);
       }
     } else {
-      *p++ = c;
+      *out_string += c;
     }
   }
-  out_string->length = p - start;
   return wabt::Result::Ok;
 }
 
 static wabt::Result parse_key_string_value(Context* ctx,
                                            const char* key,
-                                           StringSlice* out_string) {
-  ZeroMemory(*out_string);
+                                           std::string* out_string) {
+  out_string->clear();
   EXPECT_KEY(key);
   return parse_string(ctx, out_string);
 }
 
 static wabt::Result parse_opt_name_string_value(Context* ctx,
-                                                StringSlice* out_string) {
-  ZeroMemory(*out_string);
+                                                std::string* out_string) {
+  out_string->clear();
   if (match(ctx, "\"name\"")) {
     EXPECT(":");
     CHECK_RESULT(parse_string(ctx, out_string));
@@ -725,26 +706,26 @@ static wabt::Result parse_line(Context* ctx) {
 }
 
 static wabt::Result parse_type_object(Context* ctx, Type* out_type) {
-  StringSlice type_str;
+  std::string type_str;
   EXPECT("{");
   PARSE_KEY_STRING_VALUE("type", &type_str);
   EXPECT("}");
 
-  if (string_slice_eq_cstr(&type_str, "i32")) {
+  if (type_str == "i32") {
     *out_type = Type::I32;
     return wabt::Result::Ok;
-  } else if (string_slice_eq_cstr(&type_str, "f32")) {
+  } else if (type_str == "f32") {
     *out_type = Type::F32;
     return wabt::Result::Ok;
-  } else if (string_slice_eq_cstr(&type_str, "i64")) {
+  } else if (type_str == "i64") {
     *out_type = Type::I64;
     return wabt::Result::Ok;
-  } else if (string_slice_eq_cstr(&type_str, "f64")) {
+  } else if (type_str == "f64") {
     *out_type = Type::F64;
     return wabt::Result::Ok;
   } else {
-    print_parse_error(ctx, "unknown type: \"" PRIstringslice "\"",
-                      WABT_PRINTF_STRING_SLICE_ARG(type_str));
+    print_parse_error(ctx, "unknown type: \"" PRIstringview "\"",
+                      WABT_PRINTF_STRING_VIEW_ARG(type_str));
     return wabt::Result::Error;
   }
 }
@@ -765,39 +746,39 @@ static wabt::Result parse_type_vector(Context* ctx, TypeVector* out_types) {
 }
 
 static wabt::Result parse_const(Context* ctx, TypedValue* out_value) {
-  StringSlice type_str;
-  StringSlice value_str;
+  std::string type_str;
+  std::string value_str;
   EXPECT("{");
   PARSE_KEY_STRING_VALUE("type", &type_str);
   EXPECT(",");
   PARSE_KEY_STRING_VALUE("value", &value_str);
   EXPECT("}");
 
-  const char* value_start = value_str.start;
-  const char* value_end = value_str.start + value_str.length;
+  const char* value_start = value_str.data();
+  const char* value_end = value_str.data() + value_str.size();
 
-  if (string_slice_eq_cstr(&type_str, "i32")) {
+  if (type_str == "i32") {
     uint32_t value;
     CHECK_RESULT(parse_int32(value_start, value_end, &value,
                              ParseIntType::UnsignedOnly));
     out_value->type = Type::I32;
     out_value->value.i32 = value;
     return wabt::Result::Ok;
-  } else if (string_slice_eq_cstr(&type_str, "f32")) {
+  } else if (type_str == "f32") {
     uint32_t value_bits;
     CHECK_RESULT(parse_int32(value_start, value_end, &value_bits,
                              ParseIntType::UnsignedOnly));
     out_value->type = Type::F32;
     out_value->value.f32_bits = value_bits;
     return wabt::Result::Ok;
-  } else if (string_slice_eq_cstr(&type_str, "i64")) {
+  } else if (type_str == "i64") {
     uint64_t value;
     CHECK_RESULT(parse_int64(value_start, value_end, &value,
                              ParseIntType::UnsignedOnly));
     out_value->type = Type::I64;
     out_value->value.i64 = value;
     return wabt::Result::Ok;
-  } else if (string_slice_eq_cstr(&type_str, "f64")) {
+  } else if (type_str == "f64") {
     uint64_t value_bits;
     CHECK_RESULT(parse_int64(value_start, value_end, &value_bits,
                              ParseIntType::UnsignedOnly));
@@ -805,8 +786,8 @@ static wabt::Result parse_const(Context* ctx, TypedValue* out_value) {
     out_value->value.f64_bits = value_bits;
     return wabt::Result::Ok;
   } else {
-    print_parse_error(ctx, "unknown type: \"" PRIstringslice "\"",
-                      WABT_PRINTF_STRING_SLICE_ARG(type_str));
+    print_parse_error(ctx, "unknown type: \"" PRIstringview "\"",
+                      WABT_PRINTF_STRING_VIEW_ARG(type_str));
     return wabt::Result::Error;
   }
 }
@@ -854,59 +835,53 @@ static wabt::Result parse_action(Context* ctx, Action* out_action) {
 }
 
 static wabt::Result parse_module_type(Context* ctx, ModuleType* out_type) {
-  StringSlice module_type_str;
-  ZeroMemory(module_type_str);
+  std::string module_type_str;
 
   PARSE_KEY_STRING_VALUE("module_type", &module_type_str);
-  if (string_slice_eq_cstr(&module_type_str, "text")) {
+  if (module_type_str == "text") {
     *out_type = ModuleType::Text;
     return wabt::Result::Ok;
-  } else if (string_slice_eq_cstr(&module_type_str, "binary")) {
+  } else if (module_type_str == "binary") {
     *out_type = ModuleType::Binary;
     return wabt::Result::Ok;
   } else {
-    print_parse_error(ctx, "unknown module type: \"" PRIstringslice "\"",
-                      WABT_PRINTF_STRING_SLICE_ARG(module_type_str));
+    print_parse_error(ctx, "unknown module type: \"" PRIstringview "\"",
+                      WABT_PRINTF_STRING_VIEW_ARG(module_type_str));
     return wabt::Result::Error;
   }
 }
 
-static char* create_module_path(Context* ctx, StringSlice filename) {
+static std::string CreateModulePath(Context* ctx, string_view filename) {
   const char* spec_json_filename = ctx->loc.filename;
-  StringSlice dirname = get_dirname(spec_json_filename);
-  size_t path_len = dirname.length + 1 + filename.length + 1;
-  char* path = new char[path_len];
+  string_view dirname = get_dirname(spec_json_filename);
+  std::string path;
 
-  if (dirname.length == 0) {
-    snprintf(path, path_len, PRIstringslice,
-             WABT_PRINTF_STRING_SLICE_ARG(filename));
+  if (dirname.size() == 0) {
+    path = filename.to_string();
   } else {
-    snprintf(path, path_len, PRIstringslice "/" PRIstringslice,
-             WABT_PRINTF_STRING_SLICE_ARG(dirname),
-             WABT_PRINTF_STRING_SLICE_ARG(filename));
+    path = dirname.to_string();
+    path += '/';
+    path += filename.to_string();
   }
 
-  ConvertBackslashToSlash(path, path_len);
+  ConvertBackslashToSlash(&path);
   return path;
 }
 
 static wabt::Result on_module_command(Context* ctx,
-                                      StringSlice filename,
-                                      StringSlice name) {
-  char* path = create_module_path(ctx, filename);
+                                      string_view filename,
+                                      string_view name) {
+  std::string path = CreateModulePath(ctx, filename);
   Environment::MarkPoint mark = ctx->env.Mark();
   ErrorHandlerFile error_handler(Location::Type::Binary);
   wabt::Result result =
-      read_module(path, &ctx->env, &error_handler, &ctx->last_module);
+      read_module(path.c_str(), &ctx->env, &error_handler, &ctx->last_module);
 
   if (Failed(result)) {
     ctx->env.ResetToMarkPoint(mark);
-    print_command_error(ctx, "error reading module: \"%s\"", path);
-    delete[] path;
+    print_command_error(ctx, "error reading module: \"%s\"", path.c_str());
     return wabt::Result::Error;
   }
-
-  delete[] path;
 
   interpreter::Result iresult =
       run_start_function(&ctx->thread, ctx->last_module);
@@ -916,9 +891,9 @@ static wabt::Result on_module_command(Context* ctx,
     return wabt::Result::Error;
   }
 
-  if (!string_slice_is_empty(&name)) {
-    ctx->last_module->name = dup_string_slice(name);
-    ctx->env.EmplaceModuleBinding(string_slice_to_string(name),
+  if (!name.empty()) {
+    ctx->last_module->name = name.to_string();
+    ctx->env.EmplaceModuleBinding(name.to_string(),
                                   Binding(ctx->env.GetModuleCount() - 1));
   }
   return wabt::Result::Ok;
@@ -932,7 +907,7 @@ static wabt::Result run_action(Context* ctx,
   out_results->clear();
 
   Module* module;
-  if (!string_slice_is_empty(&action->module_name)) {
+  if (!action->module_name.empty()) {
     module = ctx->env.FindModule(action->module_name);
   } else {
     module = ctx->env.GetLastModule();
@@ -942,17 +917,17 @@ static wabt::Result run_action(Context* ctx,
   switch (action->type) {
     case ActionType::Invoke:
       *out_iresult =
-          run_export_by_name(&ctx->thread, module, &action->field_name,
+          run_export_by_name(&ctx->thread, module, action->field_name,
                              action->args, out_results, verbose);
       if (verbose == RunVerbosity::Verbose) {
-        print_call(empty_string_slice(), action->field_name, action->args,
+        print_call(string_view(), action->field_name, action->args,
                    *out_results, *out_iresult);
       }
       return wabt::Result::Ok;
 
     case ActionType::Get: {
-      *out_iresult = get_global_export_by_name(
-          &ctx->thread, module, &action->field_name, out_results);
+      *out_iresult = get_global_export_by_name(&ctx->thread, module,
+                                               action->field_name, out_results);
       return wabt::Result::Ok;
     }
 
@@ -998,8 +973,8 @@ static wabt::Result read_invalid_module(Context* ctx,
                                         ModuleType module_type,
                                         const char* desc) {
   std::string header =
-      string_printf(PRIstringslice ":%d: %s passed",
-                    WABT_PRINTF_STRING_SLICE_ARG(ctx->source_filename),
+      string_printf(PRIstringview ":%d: %s passed",
+                    WABT_PRINTF_STRING_VIEW_ARG(ctx->source_filename),
                     ctx->command_line_number, desc);
 
   switch (module_type) {
@@ -1022,33 +997,33 @@ static wabt::Result read_invalid_module(Context* ctx,
 }
 
 static wabt::Result on_assert_malformed_command(Context* ctx,
-                                                StringSlice filename,
-                                                StringSlice text,
+                                                string_view filename,
+                                                string_view text,
                                                 ModuleType module_type) {
   Environment env;
   init_environment(&env);
 
   ctx->total++;
-  char* path = create_module_path(ctx, filename);
-  wabt::Result result =
-      read_invalid_module(ctx, path, &env, module_type, "assert_malformed");
+  std::string path = CreateModulePath(ctx, filename);
+  wabt::Result result = read_invalid_module(ctx, path.c_str(), &env,
+                                            module_type, "assert_malformed");
   if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
-    print_command_error(ctx, "expected module to be malformed: \"%s\"", path);
+    print_command_error(ctx, "expected module to be malformed: \"%s\"",
+                        path.c_str());
     result = wabt::Result::Error;
   }
 
-  delete[] path;
   return result;
 }
 
 static wabt::Result on_register_command(Context* ctx,
-                                        StringSlice name,
-                                        StringSlice as) {
+                                        string_view name,
+                                        string_view as) {
   Index module_index;
-  if (!string_slice_is_empty(&name)) {
+  if (!name.empty()) {
     module_index = ctx->env.FindModuleIndex(name);
   } else {
     module_index = ctx->env.GetLastModuleIndex();
@@ -1059,85 +1034,85 @@ static wabt::Result on_register_command(Context* ctx,
     return wabt::Result::Error;
   }
 
-  ctx->env.EmplaceRegisteredModuleBinding(string_slice_to_string(as),
+  ctx->env.EmplaceRegisteredModuleBinding(as.to_string(),
                                           Binding(module_index));
   return wabt::Result::Ok;
 }
 
 static wabt::Result on_assert_unlinkable_command(Context* ctx,
-                                                 StringSlice filename,
-                                                 StringSlice text,
+                                                 string_view filename,
+                                                 string_view text,
                                                  ModuleType module_type) {
   ctx->total++;
-  char* path = create_module_path(ctx, filename);
+  std::string path = CreateModulePath(ctx, filename);
   Environment::MarkPoint mark = ctx->env.Mark();
-  wabt::Result result = read_invalid_module(ctx, path, &ctx->env, module_type,
-                                            "assert_unlinkable");
+  wabt::Result result = read_invalid_module(ctx, path.c_str(), &ctx->env,
+                                            module_type, "assert_unlinkable");
   ctx->env.ResetToMarkPoint(mark);
 
   if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
-    print_command_error(ctx, "expected module to be unlinkable: \"%s\"", path);
+    print_command_error(ctx, "expected module to be unlinkable: \"%s\"",
+                        path.c_str());
     result = wabt::Result::Error;
   }
 
-  delete[] path;
   return result;
 }
 
 static wabt::Result on_assert_invalid_command(Context* ctx,
-                                              StringSlice filename,
-                                              StringSlice text,
+                                              string_view filename,
+                                              string_view text,
                                               ModuleType module_type) {
   Environment env;
   init_environment(&env);
 
   ctx->total++;
-  char* path = create_module_path(ctx, filename);
-  wabt::Result result =
-      read_invalid_module(ctx, path, &env, module_type, "assert_invalid");
+  std::string path = CreateModulePath(ctx, filename);
+  wabt::Result result = read_invalid_module(ctx, path.c_str(), &env,
+                                            module_type, "assert_invalid");
   if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
-    print_command_error(ctx, "expected module to be invalid: \"%s\"", path);
+    print_command_error(ctx, "expected module to be invalid: \"%s\"",
+                        path.c_str());
     result = wabt::Result::Error;
   }
 
-  delete[] path;
   return result;
 }
 
 static wabt::Result on_assert_uninstantiable_command(Context* ctx,
-                                                     StringSlice filename,
-                                                     StringSlice text,
+                                                     string_view filename,
+                                                     string_view text,
                                                      ModuleType module_type) {
   ErrorHandlerFile error_handler(Location::Type::Binary);
   ctx->total++;
-  char* path = create_module_path(ctx, filename);
+  std::string path = CreateModulePath(ctx, filename);
   DefinedModule* module;
   Environment::MarkPoint mark = ctx->env.Mark();
-  wabt::Result result = read_module(path, &ctx->env, &error_handler, &module);
+  wabt::Result result =
+      read_module(path.c_str(), &ctx->env, &error_handler, &module);
 
   if (Succeeded(result)) {
     interpreter::Result iresult = run_start_function(&ctx->thread, module);
     if (iresult == interpreter::Result::Ok) {
       print_command_error(ctx, "expected error running start function: \"%s\"",
-                          path);
+                          path.c_str());
       result = wabt::Result::Error;
     } else {
       ctx->passed++;
       result = wabt::Result::Ok;
     }
   } else {
-    print_command_error(ctx, "error reading module: \"%s\"", path);
+    print_command_error(ctx, "error reading module: \"%s\"", path.c_str());
     result = wabt::Result::Error;
   }
 
   ctx->env.ResetToMarkPoint(mark);
-  delete[] path;
   return result;
 }
 
@@ -1280,7 +1255,7 @@ static wabt::Result on_assert_return_nan_command(Context* ctx,
 
 static wabt::Result on_assert_trap_command(Context* ctx,
                                            Action* action,
-                                           StringSlice text) {
+                                           string_view text) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
@@ -1291,8 +1266,8 @@ static wabt::Result on_assert_trap_command(Context* ctx,
     if (iresult != interpreter::Result::Ok) {
       ctx->passed++;
     } else {
-      print_command_error(ctx, "expected trap: \"" PRIstringslice "\"",
-                          WABT_PRINTF_STRING_SLICE_ARG(text));
+      print_command_error(ctx, "expected trap: \"" PRIstringview "\"",
+                          WABT_PRINTF_STRING_VIEW_ARG(text));
       result = wabt::Result::Error;
     }
   }
@@ -1324,10 +1299,8 @@ static wabt::Result parse_command(Context* ctx) {
   EXPECT("{");
   EXPECT_KEY("type");
   if (match(ctx, "\"module\"")) {
-    StringSlice name;
-    StringSlice filename;
-    ZeroMemory(name);
-    ZeroMemory(filename);
+    std::string name;
+    std::string filename;
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1344,10 +1317,8 @@ static wabt::Result parse_command(Context* ctx) {
     CHECK_RESULT(parse_action(ctx, &action));
     on_action_command(ctx, &action);
   } else if (match(ctx, "\"register\"")) {
-    StringSlice as;
-    StringSlice name;
-    ZeroMemory(as);
-    ZeroMemory(name);
+    std::string as;
+    std::string name;
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1356,11 +1327,9 @@ static wabt::Result parse_command(Context* ctx) {
     PARSE_KEY_STRING_VALUE("as", &as);
     on_register_command(ctx, name, as);
   } else if (match(ctx, "\"assert_malformed\"")) {
-    StringSlice filename;
-    StringSlice text;
+    std::string filename;
+    std::string text;
     ModuleType module_type;
-    ZeroMemory(filename);
-    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1372,11 +1341,9 @@ static wabt::Result parse_command(Context* ctx) {
     CHECK_RESULT(parse_module_type(ctx, &module_type));
     on_assert_malformed_command(ctx, filename, text, module_type);
   } else if (match(ctx, "\"assert_invalid\"")) {
-    StringSlice filename;
-    StringSlice text;
+    std::string filename;
+    std::string text;
     ModuleType module_type;
-    ZeroMemory(filename);
-    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1388,11 +1355,9 @@ static wabt::Result parse_command(Context* ctx) {
     CHECK_RESULT(parse_module_type(ctx, &module_type));
     on_assert_invalid_command(ctx, filename, text, module_type);
   } else if (match(ctx, "\"assert_unlinkable\"")) {
-    StringSlice filename;
-    StringSlice text;
+    std::string filename;
+    std::string text;
     ModuleType module_type;
-    ZeroMemory(filename);
-    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1404,11 +1369,9 @@ static wabt::Result parse_command(Context* ctx) {
     CHECK_RESULT(parse_module_type(ctx, &module_type));
     on_assert_unlinkable_command(ctx, filename, text, module_type);
   } else if (match(ctx, "\"assert_uninstantiable\"")) {
-    StringSlice filename;
-    StringSlice text;
+    std::string filename;
+    std::string text;
     ModuleType module_type;
-    ZeroMemory(filename);
-    ZeroMemory(text);
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1459,8 +1422,7 @@ static wabt::Result parse_command(Context* ctx) {
     on_assert_return_nan_command(ctx, &action, false);
   } else if (match(ctx, "\"assert_trap\"")) {
     Action action;
-    StringSlice text;
-    ZeroMemory(text);
+    std::string text;
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
@@ -1471,8 +1433,7 @@ static wabt::Result parse_command(Context* ctx) {
     on_assert_trap_command(ctx, &action, text);
   } else if (match(ctx, "\"assert_exhaustion\"")) {
     Action action;
-    StringSlice text;
-    ZeroMemory(text);
+    std::string text;
 
     EXPECT(",");
     CHECK_RESULT(parse_line(ctx));
