@@ -321,8 +321,7 @@ void BinaryWriterSpec::WriteScriptModule(string_view filename,
       if (write_modules_) {
         FileStream file_stream(filename);
         if (file_stream.is_open()) {
-          file_stream.WriteData(script_module->binary.data,
-                                script_module->binary.size, "");
+          file_stream.WriteData(script_module->binary.data, "");
           result_ = file_stream.result();
         } else {
           result_ = Result::Error;
@@ -334,8 +333,7 @@ void BinaryWriterSpec::WriteScriptModule(string_view filename,
       if (write_modules_) {
         FileStream file_stream(filename);
         if (file_stream.is_open()) {
-          file_stream.WriteData(script_module->quoted.data,
-                                script_module->quoted.size, "");
+          file_stream.WriteData(script_module->quoted.data, "");
           result_ = file_stream.result();
         } else {
           result_ = Result::Error;

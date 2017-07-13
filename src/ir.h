@@ -378,14 +378,9 @@ struct Memory {
 };
 
 struct DataSegment {
-  WABT_DISALLOW_COPY_AND_ASSIGN(DataSegment);
-  DataSegment();
-  ~DataSegment();
-
   Var memory_var;
   ExprList offset;
-  char* data;
-  size_t size;
+  std::vector<uint8_t> data;
 };
 
 struct Import {
@@ -649,8 +644,7 @@ struct ScriptModule {
     struct {
       Location loc;
       std::string name;
-      char* data;
-      size_t size;
+      std::vector<uint8_t> data;
     } binary, quoted;
   };
 };

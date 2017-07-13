@@ -868,9 +868,9 @@ Result BinaryReaderIR::OnDataSegmentData(Index index,
                                          Address size) {
   assert(index == module->data_segments.size() - 1);
   DataSegment* segment = module->data_segments[index];
-  segment->data = new char[size];
-  segment->size = size;
-  memcpy(segment->data, data, size);
+  segment->data.resize(size);
+  if (size > 0)
+    memcpy(segment->data.data(), data, size);
   return Result::Ok;
 }
 

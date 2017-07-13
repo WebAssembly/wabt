@@ -118,9 +118,8 @@ static Result parse_const(Type type,
                           const char* s,
                           const char* end,
                           Const* out);
-static void dup_text_list(TextList* text_list,
-                          char** out_data,
-                          size_t* out_size);
+static size_t CopyStringContents(StringSlice* text, char* dest);
+static void DupTextList(TextList* text_list, std::vector<uint8_t>* out_data);
 
 static void reverse_bindings(TypeVector*, BindingHash*);
 
@@ -285,17 +284,10 @@ text_list_opt :
 
 quoted_text :
     TEXT {
-      TextListNode node;
-      node.text = $1;
-      node.next = nullptr;
-      TextList text_list;
-      text_list.first = &node;
-      text_list.last = &node;
-      char* data;
-      size_t size;
-      dup_text_list(&text_list, &data, &size);
+      char* data = new char[$1.length + 1];
+      size_t actual_size = CopyStringContents(&$1, data);
       $$.start = data;
-      $$.length = size;
+      $$.length = actual_size;
     }
 ;
 
@@ -1088,7 +1080,7 @@ data :
       delete $3;
       data_segment->offset = std::move(*$4);
       delete $4;
-      dup_text_list(&$5, &data_segment->data, &data_segment->size);
+      DupTextList(&$5, &data_segment->data);
       destroy_text_list(&$5);
       $$ = new DataSegmentModuleField(data_segment, @2);
     }
@@ -1097,7 +1089,7 @@ data :
       data_segment->memory_var = Var(0, @2);
       data_segment->offset = std::move(*$3);
       delete $3;
-      dup_text_list(&$4, &data_segment->data, &data_segment->size);
+      DupTextList(&$4, &data_segment->data);
       destroy_text_list(&$4);
       $$ = new DataSegmentModuleField(data_segment, @2);
     }
@@ -1139,10 +1131,10 @@ memory_fields :
       data_segment->memory_var = Var(kInvalidIndex);
       data_segment->offset.push_back(new ConstExpr(Const(Const::I32(), 0)));
       data_segment->offset.back().loc = @2;
-      dup_text_list(&$3, &data_segment->data, &data_segment->size);
+      DupTextList(&$3, &data_segment->data);
       destroy_text_list(&$3);
 
-      uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment->size);
+      uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment->data.size());
       uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
 
       auto memory = new Memory();
@@ -1384,8 +1376,8 @@ module :
         ReadBinaryOptions options;
         BinaryErrorHandlerModule error_handler(&$1->binary.loc, lexer, parser);
         const char* filename = "<text>";
-        read_binary_ir(filename, $1->binary.data, $1->binary.size, &options,
-                       &error_handler, $$);
+        read_binary_ir(filename, $1->binary.data.data(), $1->binary.data.size(),
+                       &options, &error_handler, $$);
         $$->name = $1->binary.name;
         $$->loc = $1->binary.loc;
       }
@@ -1433,7 +1425,7 @@ script_module :
       $$->binary.name = std::move(*$3);
       delete $3;
       $$->binary.loc = @2;
-      dup_text_list(&$5, &$$->binary.data, &$$->binary.size);
+      DupTextList(&$5, &$$->binary.data);
       destroy_text_list(&$5);
     }
   | LPAR MODULE bind_var_opt QUOTE text_list RPAR {
@@ -1441,7 +1433,7 @@ script_module :
       $$->quoted.name = std::move(*$3);
       delete $3;
       $$->quoted.loc = @2;
-      dup_text_list(&$5, &$$->quoted.data, &$$->quoted.size);
+      DupTextList(&$5, &$$->quoted.data);
       destroy_text_list(&$5);
     }
 ;
@@ -1656,7 +1648,7 @@ Result parse_const(Type type,
   return Result::Error;
 }
 
-size_t copy_string_contents(StringSlice* text, char* dest) {
+size_t CopyStringContents(StringSlice* text, char* dest) {
   const char* src = text->start + 1;
   const char* end = text->start + text->length - 1;
 
@@ -1708,7 +1700,7 @@ size_t copy_string_contents(StringSlice* text, char* dest) {
   return dest - dest_start;
 }
 
-void dup_text_list(TextList* text_list, char** out_data, size_t* out_size) {
+void DupTextList(TextList* text_list, std::vector<uint8_t>* out_data) {
   /* walk the linked list to see how much total space is needed */
   size_t total_size = 0;
   for (TextListNode* node = text_list->first; node; node = node->next) {
@@ -1720,14 +1712,16 @@ void dup_text_list(TextList* text_list, char** out_data, size_t* out_size) {
     size_t size = (end > src) ? (end - src) : 0;
     total_size += size;
   }
-  char* result = new char [total_size];
-  char* dest = result;
-  for (TextListNode* node = text_list->first; node; node = node->next) {
-    size_t actual_size = copy_string_contents(&node->text, dest);
-    dest += actual_size;
+  out_data->resize(total_size);
+  if (total_size > 0) {
+    char* start = reinterpret_cast<char*>(out_data->data());
+    char* dest = start;
+    for (TextListNode* node = text_list->first; node; node = node->next) {
+      size_t actual_size = CopyStringContents(&node->text, dest);
+      dest += actual_size;
+    }
+    out_data->resize(dest - start);
   }
-  *out_data = result;
-  *out_size = dest - result;
 }
 
 void reverse_bindings(TypeVector* types, BindingHash* bindings) {

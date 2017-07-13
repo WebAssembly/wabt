@@ -334,11 +334,6 @@ Expr::Expr(ExprType type) : type(type) {}
 Table::Table() {
   ZeroMemory(elem_limits);
 }
-DataSegment::DataSegment() : data(nullptr), size(0) {}
-
-DataSegment::~DataSegment() {
-  delete[] data;
-}
 
 Memory::Memory() {
   ZeroMemory(page_limits);
@@ -378,15 +373,13 @@ ScriptModule::ScriptModule(Type type) : type(type) {
     case ScriptModule::Type::Binary:
       Construct(binary.loc);
       Construct(binary.name);
-      binary.data = nullptr;
-      binary.size = 0;
+      Construct(binary.data);
       break;
 
     case ScriptModule::Type::Quoted:
       Construct(quoted.loc);
       Construct(quoted.name);
-      quoted.data = nullptr;
-      quoted.size = 0;
+      Construct(quoted.data);
       break;
   }
 }
@@ -399,12 +392,12 @@ ScriptModule::~ScriptModule() {
     case ScriptModule::Type::Binary:
       Destruct(binary.loc);
       Destruct(binary.name);
-      delete [] binary.data;
+      Destruct(binary.data);
       break;
     case ScriptModule::Type::Quoted:
       Destruct(quoted.loc);
       Destruct(quoted.name);
-      delete [] binary.data;
+      Destruct(quoted.data);
       break;
   }
 }
