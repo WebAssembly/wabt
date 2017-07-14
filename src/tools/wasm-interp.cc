@@ -299,21 +299,20 @@ static wabt::Result read_module(const char* module_filename,
                                 ErrorHandler* error_handler,
                                 DefinedModule** out_module) {
   wabt::Result result;
-  char* data;
-  size_t size;
+  std::vector<uint8_t> file_data;
 
   *out_module = nullptr;
 
-  result = read_file(module_filename, &data, &size);
+  result = ReadFile(module_filename, &file_data);
   if (Succeeded(result)) {
-    result = read_binary_interpreter(env, data, size, &s_read_binary_options,
+    result = read_binary_interpreter(env, DataOrNull(file_data),
+                                     file_data.size(), &s_read_binary_options,
                                      error_handler, out_module);
 
     if (Succeeded(result)) {
       if (s_verbose)
         env->DisassembleModule(s_stdout_stream.get(), *out_module);
     }
-    delete[] data;
   }
   return result;
 }
@@ -468,8 +467,6 @@ struct Context {
   Context()
       : thread(&env, s_thread_options),
         last_module(nullptr),
-        json_data(nullptr),
-        json_data_size(0),
         json_offset(0),
         has_prev_loc(0),
         command_line_number(0),
@@ -481,8 +478,7 @@ struct Context {
   DefinedModule* last_module;
 
   /* Parsing info */
-  char* json_data;
-  size_t json_data_size;
+  std::vector<uint8_t> json_data;
   std::string source_filename;
   size_t json_offset;
   Location loc;
@@ -541,7 +537,7 @@ static void putback_char(Context* ctx) {
 }
 
 static int read_char(Context* ctx) {
-  if (ctx->json_offset >= ctx->json_data_size)
+  if (ctx->json_offset >= ctx->json_data.size())
     return -1;
   ctx->prev_loc = ctx->loc;
   char c = ctx->json_data[ctx->json_offset++];
@@ -1463,10 +1459,6 @@ static wabt::Result parse_commands(Context* ctx) {
   return wabt::Result::Ok;
 }
 
-static void destroy_context(Context* ctx) {
-  delete[] ctx->json_data;
-}
-
 static wabt::Result read_and_run_spec_json(const char* spec_json_filename) {
   Context ctx;
   ctx.loc.filename = spec_json_filename;
@@ -1474,18 +1466,12 @@ static wabt::Result read_and_run_spec_json(const char* spec_json_filename) {
   ctx.loc.first_column = 1;
   init_environment(&ctx.env);
 
-  char* data;
-  size_t size;
-  wabt::Result result = read_file(spec_json_filename, &data, &size);
+  wabt::Result result = ReadFile(spec_json_filename, &ctx.json_data);
   if (Failed(result))
     return wabt::Result::Error;
 
-  ctx.json_data = data;
-  ctx.json_data_size = size;
-
   result = parse_commands(&ctx);
   printf("%d/%d tests passed.\n", ctx.passed, ctx.total);
-  destroy_context(&ctx);
   return result;
 }
 

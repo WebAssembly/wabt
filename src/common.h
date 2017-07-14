@@ -122,6 +122,15 @@ void Destruct(T& placement) {
   placement.~T();
 }
 
+// Calls data() on vector, string, etc. but will return nullptr if the
+// container is empty.
+// TODO(binji): this should probably be removed when there is a more direct way
+// to represent a memory slice (e.g. something similar to GSL's span)
+template <typename T>
+typename T::value_type* DataOrNull(T& container) {
+  return container.empty() ? nullptr : container.data();
+}
+
 inline bool Succeeded(Result result) { return result == Result::Ok; }
 inline bool Failed(Result result) { return result == Result::Error; }
 
@@ -292,7 +301,6 @@ bool string_slice_eq_cstr(const StringSlice* s1, const char* s2);
 StringSlice string_slice_from_cstr(const char* string);
 bool string_slice_is_empty(const StringSlice*);
 void destroy_string_slice(StringSlice*);
-Result read_file(const char* filename, char** out_data, size_t* out_size);
 
 inline std::string string_slice_to_string(const StringSlice& ss) {
   return std::string(ss.start, ss.length);
@@ -304,6 +312,8 @@ inline StringSlice string_view_to_string_slice(string_view view) {
   ss.length = view.length();
   return ss;
 }
+
+Result ReadFile(const char* filename, std::vector<uint8_t>* out_data);
 
 void init_stdio();
 

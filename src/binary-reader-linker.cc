@@ -185,8 +185,10 @@ Result BinaryReaderLinker::BeginSection(BinarySection section_code,
 
   if (sec->section_code != BinarySection::Custom &&
       sec->section_code != BinarySection::Start) {
-    size_t bytes_read = read_u32_leb128(
-        &binary_->data[sec->offset], &binary_->data[binary_->size], &sec->count);
+    const uint8_t* start = &binary_->data[sec->offset];
+    // Must point to one-past-the-end, but we can't dereference end().
+    const uint8_t* end = &binary_->data.back() + 1;
+    size_t bytes_read = read_u32_leb128(start, end, &sec->count);
     if (bytes_read == 0)
       WABT_FATAL("error reading section element count\n");
     sec->payload_offset = sec->offset + bytes_read;
@@ -287,8 +289,8 @@ Result read_binary_linker(LinkerInputBinary* input_info, LinkOptions* options) {
   ReadBinaryOptions read_options;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
-  return read_binary(input_info->data, input_info->size, &reader,
-                     &read_options);
+  return read_binary(DataOrNull(input_info->data), input_info->data.size(),
+                     &reader, &read_options);
 }
 
 }  // namespace link

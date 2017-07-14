@@ -94,11 +94,9 @@ Section::~Section() {
 }
 
 LinkerInputBinary::LinkerInputBinary(const char* filename,
-                                     uint8_t* data,
-                                     size_t size)
+                                     const std::vector<uint8_t>& data)
     : filename(filename),
       data(data),
-      size(size),
       active_function_imports(0),
       active_global_imports(0),
       type_index_offset(0),
@@ -108,10 +106,6 @@ LinkerInputBinary::LinkerInputBinary(const char* filename,
       memory_page_count(0),
       memory_page_offset(0),
       table_elem_count(0) {}
-
-LinkerInputBinary::~LinkerInputBinary() {
-  delete[] data;
-}
 
 bool LinkerInputBinary::IsFunctionImport(Index index) {
   assert(IsValidFunctionIndex(index));
@@ -803,13 +797,12 @@ int ProgramMain(int argc, char** argv) {
   for (size_t i = 0; i < s_infiles.size(); i++) {
     const std::string& input_filename = s_infiles[i];
     LOG_DEBUG("reading file: %s\n", input_filename.c_str());
-    char* data;
-    size_t size;
-    result = read_file(input_filename.c_str(), &data, &size);
+    std::vector<uint8_t> file_data;
+    result = ReadFile(input_filename.c_str(), &file_data);
     if (Failed(result))
       return result != Result::Ok;
-    LinkerInputBinary* b = new LinkerInputBinary(
-        input_filename.c_str(), reinterpret_cast<uint8_t*>(data), size);
+    LinkerInputBinary* b =
+        new LinkerInputBinary(input_filename.c_str(), file_data);
     context.inputs.emplace_back(b);
     LinkOptions options = { NULL };
     if (s_debug)
