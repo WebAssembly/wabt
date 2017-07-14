@@ -74,13 +74,13 @@ static void parse_options(int argc, char** argv) {
 }
 
 Result dump_file(const char* filename) {
-  char* char_data;
-  size_t size;
-  Result result = read_file(filename, &char_data, &size);
+  std::vector<uint8_t> file_data;
+  Result result = ReadFile(filename, &file_data);
   if (Failed(result))
     return result;
 
-  uint8_t* data = reinterpret_cast<uint8_t*>(char_data);
+  uint8_t* data = file_data.data();
+  size_t size = file_data.size();
 
   // Perform serveral passed over the binary in order to print out different
   // types of information.
@@ -93,7 +93,7 @@ Result dump_file(const char* filename) {
   s_objdump_options.mode = ObjdumpMode::Prepass;
   result = read_binary_objdump(data, size, &s_objdump_options, &state);
   if (Failed(result))
-    goto done;
+    return result;
   s_objdump_options.log_stream = nullptr;
 
   // Pass 1: Print the section headers
@@ -101,7 +101,7 @@ Result dump_file(const char* filename) {
     s_objdump_options.mode = ObjdumpMode::Headers;
     result = read_binary_objdump(data, size, &s_objdump_options, &state);
     if (Failed(result))
-      goto done;
+      return result;
   }
 
   // Pass 2: Print extra information based on section type
@@ -109,7 +109,7 @@ Result dump_file(const char* filename) {
     s_objdump_options.mode = ObjdumpMode::Details;
     result = read_binary_objdump(data, size, &s_objdump_options, &state);
     if (Failed(result))
-      goto done;
+      return result;
   }
 
   // Pass 3: Disassemble code section
@@ -117,7 +117,7 @@ Result dump_file(const char* filename) {
     s_objdump_options.mode = ObjdumpMode::Disassemble;
     result = read_binary_objdump(data, size, &s_objdump_options, &state);
     if (Failed(result))
-      goto done;
+      return result;
   }
 
   // Pass 4: Dump to raw contents of the sections
@@ -126,8 +126,6 @@ Result dump_file(const char* filename) {
     result = read_binary_objdump(data, size, &s_objdump_options, &state);
   }
 
-done:
-  delete[] data;
   return result;
 }
 

@@ -80,7 +80,7 @@ void destroy_string_slice(StringSlice* str) {
   delete [] str->start;
 }
 
-Result read_file(const char* filename, char** out_data, size_t* out_size) {
+Result ReadFile(const char* filename, std::vector<uint8_t>* out_data) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
     const char format[] = "unable to read file %s";
@@ -92,28 +92,30 @@ Result read_file(const char* filename, char** out_data, size_t* out_size) {
 
   if (fseek(infile, 0, SEEK_END) < 0) {
     perror("fseek to end failed");
+    fclose(infile);
     return Result::Error;
   }
 
   long size = ftell(infile);
   if (size < 0) {
     perror("ftell failed");
+    fclose(infile);
     return Result::Error;
   }
 
   if (fseek(infile, 0, SEEK_SET) < 0) {
     perror("fseek to beginning failed");
+    fclose(infile);
     return Result::Error;
   }
 
-  char* data = new char [size];
-  if (size != 0 && fread(data, size, 1, infile) != 1) {
+  out_data->resize(size);
+  if (size != 0 && fread(out_data->data(), size, 1, infile) != 1) {
     perror("fread failed");
+    fclose(infile);
     return Result::Error;
   }
 
-  *out_data = data;
-  *out_size = size;
   fclose(infile);
   return Result::Ok;
 }

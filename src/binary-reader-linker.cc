@@ -185,8 +185,9 @@ Result BinaryReaderLinker::BeginSection(BinarySection section_code,
 
   if (sec->section_code != BinarySection::Custom &&
       sec->section_code != BinarySection::Start) {
-    size_t bytes_read = read_u32_leb128(
-        &binary_->data[sec->offset], &binary_->data[binary_->size], &sec->count);
+    size_t bytes_read =
+        read_u32_leb128(&binary_->data[sec->offset],
+                        &binary_->data[binary_->data.size()], &sec->count);
     if (bytes_read == 0)
       WABT_FATAL("error reading section element count\n");
     sec->payload_offset = sec->offset + bytes_read;
@@ -287,7 +288,7 @@ Result read_binary_linker(LinkerInputBinary* input_info, LinkOptions* options) {
   ReadBinaryOptions read_options;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
-  return read_binary(input_info->data, input_info->size, &reader,
+  return read_binary(input_info->data.data(), input_info->data.size(), &reader,
                      &read_options);
 }
 

@@ -218,13 +218,11 @@ int ProgramMain(int argc, char** argv) {
   init_stdio();
   parse_options(argc, argv);
 
-  char* data;
-  size_t size;
-  Result result = read_file(s_infile, &data, &size);
+  std::vector<uint8_t> file_data;
+  Result result = ReadFile(s_infile, &file_data);
   if (Failed(result)) {
     const char* input_name = s_infile ? s_infile : "stdin";
     ERROR("Unable to parse: %s", input_name);
-    delete[] data;
   }
   FILE* out = stdout;
   if (s_outfile) {
@@ -235,7 +233,8 @@ int ProgramMain(int argc, char** argv) {
   }
   if (Succeeded(result)) {
     OpcntData opcnt_data;
-    result = read_binary_opcnt(data, size, &s_read_binary_options, &opcnt_data);
+    result = read_binary_opcnt(file_data.data(), file_data.size(),
+                               &s_read_binary_options, &opcnt_data);
     if (Succeeded(result)) {
       display_sorted_int_counter_vector(
           out, "Opcode counts:", opcnt_data.opcode_vec, opcode_counter_gt,
@@ -260,7 +259,6 @@ int ProgramMain(int argc, char** argv) {
           display_intmax, display_intmax, Opcode::I32Store_Opcode.GetName());
     }
   }
-  delete[] data;
   return result != Result::Ok;
 }
 

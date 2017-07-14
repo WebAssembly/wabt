@@ -101,14 +101,14 @@ int ProgramMain(int argc, char** argv) {
   init_stdio();
   parse_options(argc, argv);
 
-  char* data;
-  size_t size;
-  result = read_file(s_infile.c_str(), &data, &size);
+  std::vector<uint8_t> file_data;
+  result = ReadFile(s_infile.c_str(), &file_data);
   if (Succeeded(result)) {
     ErrorHandlerFile error_handler(Location::Type::Binary);
     Module module;
-    result = read_binary_ir(s_infile.c_str(), data, size,
-                            &s_read_binary_options, &error_handler, &module);
+    result =
+        read_binary_ir(s_infile.c_str(), file_data.data(), file_data.size(),
+                       &s_read_binary_options, &error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result) && s_validate) {
         WastLexer* lexer = nullptr;
@@ -131,7 +131,6 @@ int ProgramMain(int argc, char** argv) {
         result = write_wat(&writer, &module, &s_write_wat_options);
       }
     }
-    delete[] data;
   }
   return result != Result::Ok;
 }

@@ -101,8 +101,7 @@ typedef std::vector<Section*> SectionPtrVector;
 class LinkerInputBinary {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(LinkerInputBinary);
-  LinkerInputBinary(const char* filename, uint8_t* data, size_t size);
-  ~LinkerInputBinary();
+  LinkerInputBinary(const char* filename, const std::vector<uint8_t>& data);
 
   Index RelocateFuncIndex(Index findex);
   Index RelocateTypeIndex(Index index);
@@ -113,8 +112,7 @@ class LinkerInputBinary {
   bool IsInactiveFunctionImport(Index index);
 
   const char* filename;
-  uint8_t* data;
-  size_t size;
+  std::vector<uint8_t> data;
   std::vector<std::unique_ptr<Section>> sections;
   std::vector<Export> exports;
 
