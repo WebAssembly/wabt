@@ -129,11 +129,26 @@ struct Memory {
   std::vector<char> data;
 };
 
+// ValueTypeRep converts from one type to its representation on the
+// stack. For example, float -> uint32_t. See Value below.
+template <typename T>
+struct ValueTypeRepT;
+
+template <> struct ValueTypeRepT<int32_t> { typedef uint32_t type; };
+template <> struct ValueTypeRepT<uint32_t> { typedef uint32_t type; };
+template <> struct ValueTypeRepT<int64_t> { typedef uint64_t type; };
+template <> struct ValueTypeRepT<uint64_t> { typedef uint64_t type; };
+template <> struct ValueTypeRepT<float> { typedef uint32_t type; };
+template <> struct ValueTypeRepT<double> { typedef uint64_t type; };
+
+template <typename T>
+using ValueTypeRep = typename ValueTypeRepT<T>::type;
+
 union Value {
   uint32_t i32;
   uint64_t i64;
-  uint32_t f32_bits;
-  uint64_t f64_bits;
+  ValueTypeRep<float> f32_bits;
+  ValueTypeRep<double> f64_bits;
 };
 
 struct TypedValue {
@@ -468,12 +483,62 @@ class Thread {
                        std::vector<TypedValue>* out_results);
 
  private:
-  Result PushValue(Value);
+  const uint8_t* GetIstream() const { return env_->istream_->data.data(); }
+
   Result PushArgs(const FuncSignature*, const std::vector<TypedValue>& args);
   void CopyResults(const FuncSignature*, std::vector<TypedValue>* out_results);
 
   Result Run(int num_instructions, IstreamOffset* call_stack_return_top);
   void Trace(Stream*);
+
+  Memory* ReadMemory(const uint8_t** pc);
+
+  Value& Top();
+  Value& Pick(Index depth);
+
+  Result Push(Value) WABT_WARN_UNUSED;
+  Value Pop();
+
+  // Push/Pop values with conversions, e.g. Push<float> will convert to the
+  // ValueTypeRep (uint32_t) and push that. Similarly, Pop<float> will pop the
+  // value and convert to float.
+  template <typename T>
+  Result Push(T) WABT_WARN_UNUSED;
+  template <typename T>
+  T Pop();
+
+  // Push/Pop values without conversions, e.g. Push<float> will take a uint32_t
+  // argument which is the integer representation of that float value.
+  // Similarly, PopRep<float> will not convert the value to a float.
+  template <typename T>
+  Result PushRep(ValueTypeRep<T>) WABT_WARN_UNUSED;
+  template <typename T>
+  ValueTypeRep<T> PopRep();
+
+  void DropKeep(uint32_t drop_count, uint8_t keep_count);
+
+  Result PushCall(const uint8_t* pc) WABT_WARN_UNUSED;
+  IstreamOffset PopCall();
+
+  template <typename MemType, typename ResultType = MemType>
+  Result Load(const uint8_t** pc) WABT_WARN_UNUSED;
+  template <typename MemType, typename ResultType = MemType>
+  Result Store(const uint8_t** pc) WABT_WARN_UNUSED;
+
+  template <typename R, typename T> using UnopFunc      = R(T);
+  template <typename R, typename T> using UnopTrapFunc  = Result(T, R*);
+  template <typename R, typename T> using BinopFunc     = R(T, T);
+  template <typename R, typename T> using BinopTrapFunc = Result(T, T, R*);
+
+  template <typename R, typename T = R>
+  Result Unop(UnopFunc<R, T> func) WABT_WARN_UNUSED;
+  template <typename R, typename T = R>
+  Result UnopTrap(UnopTrapFunc<R, T> func) WABT_WARN_UNUSED;
+
+  template <typename R, typename T = R>
+  Result Binop(BinopFunc<R, T> func) WABT_WARN_UNUSED;
+  template <typename R, typename T = R>
+  Result BinopTrap(BinopTrapFunc<R, T> func) WABT_WARN_UNUSED;
 
   Result RunDefinedFunction(IstreamOffset);
   Result TraceDefinedFunction(IstreamOffset, Stream*);
@@ -490,10 +555,10 @@ class Thread {
   IstreamOffset pc_;
 };
 
-bool is_canonical_nan_f32(uint32_t f32_bits);
-bool is_canonical_nan_f64(uint64_t f64_bits);
-bool is_arithmetic_nan_f32(uint32_t f32_bits);
-bool is_arithmetic_nan_f64(uint64_t f64_bits);
+bool IsCanonicalNan(uint32_t f32_bits);
+bool IsCanonicalNan(uint64_t f64_bits);
+bool IsArithmeticNan(uint32_t f32_bits);
+bool IsArithmeticNan(uint64_t f64_bits);
 
 }  // namespace interpreter
 }  // namespace wabt

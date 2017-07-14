@@ -1231,10 +1231,9 @@ static wabt::Result on_assert_return_nan_command(Context* ctx,
       const TypedValue& actual = results[0];
       switch (actual.type) {
         case Type::F32: {
-          typedef bool (*IsNanFunc)(uint32_t);
-          IsNanFunc is_nan_func =
-              canonical ? is_canonical_nan_f32 : is_arithmetic_nan_f32;
-          if (!is_nan_func(actual.value.f32_bits)) {
+          bool is_nan = canonical ? IsCanonicalNan(actual.value.f32_bits)
+                                  : IsArithmeticNan(actual.value.f32_bits);
+          if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
             sprint_typed_value(actual_str, sizeof(actual_str), &actual);
             print_command_error(ctx, "expected result to be nan, got %s",
@@ -1245,10 +1244,9 @@ static wabt::Result on_assert_return_nan_command(Context* ctx,
         }
 
         case Type::F64: {
-          typedef bool (*IsNanFunc)(uint64_t);
-          IsNanFunc is_nan_func =
-              canonical ? is_canonical_nan_f64 : is_arithmetic_nan_f64;
-          if (!is_nan_func(actual.value.f64_bits)) {
+          bool is_nan = canonical ? IsCanonicalNan(actual.value.f64_bits)
+                                  : IsArithmeticNan(actual.value.f64_bits);
+          if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
             sprint_typed_value(actual_str, sizeof(actual_str), &actual);
             print_command_error(ctx, "expected result to be nan, got %s",
