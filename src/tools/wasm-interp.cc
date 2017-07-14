@@ -305,9 +305,9 @@ static wabt::Result read_module(const char* module_filename,
 
   result = ReadFile(module_filename, &file_data);
   if (Succeeded(result)) {
-    result = read_binary_interpreter(env, file_data.data(), file_data.size(),
-                                     &s_read_binary_options, error_handler,
-                                     out_module);
+    result = read_binary_interpreter(env, DataOrNull(file_data),
+                                     file_data.size(), &s_read_binary_options,
+                                     error_handler, out_module);
 
     if (Succeeded(result)) {
       if (s_verbose)

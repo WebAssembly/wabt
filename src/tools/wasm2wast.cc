@@ -106,9 +106,9 @@ int ProgramMain(int argc, char** argv) {
   if (Succeeded(result)) {
     ErrorHandlerFile error_handler(Location::Type::Binary);
     Module module;
-    result =
-        read_binary_ir(s_infile.c_str(), file_data.data(), file_data.size(),
-                       &s_read_binary_options, &error_handler, &module);
+    result = read_binary_ir(s_infile.c_str(), DataOrNull(file_data),
+                            file_data.size(), &s_read_binary_options,
+                            &error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result) && s_validate) {
         WastLexer* lexer = nullptr;

@@ -233,7 +233,7 @@ int ProgramMain(int argc, char** argv) {
   }
   if (Succeeded(result)) {
     OpcntData opcnt_data;
-    result = read_binary_opcnt(file_data.data(), file_data.size(),
+    result = read_binary_opcnt(DataOrNull(file_data), file_data.size(),
                                &s_read_binary_options, &opcnt_data);
     if (Succeeded(result)) {
       display_sorted_int_counter_vector(

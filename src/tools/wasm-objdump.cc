@@ -79,7 +79,7 @@ Result dump_file(const char* filename) {
   if (Failed(result))
     return result;
 
-  uint8_t* data = file_data.data();
+  uint8_t* data = DataOrNull(file_data);
   size_t size = file_data.size();
 
   // Perform serveral passed over the binary in order to print out different

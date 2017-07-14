@@ -122,6 +122,15 @@ void Destruct(T& placement) {
   placement.~T();
 }
 
+// Calls data() on vector, string, etc. but will return nullptr if the
+// container is empty.
+// TODO(binji): this should probably be removed when there is a more direct way
+// to represent a memory slice (e.g. something similar to GSL's span)
+template <typename T>
+typename T::value_type* DataOrNull(T& container) {
+  return container.empty() ? nullptr : container.data();
+}
+
 inline bool Succeeded(Result result) { return result == Result::Ok; }
 inline bool Failed(Result result) { return result == Result::Error; }
 

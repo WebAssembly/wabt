@@ -288,8 +288,8 @@ Result read_binary_linker(LinkerInputBinary* input_info, LinkOptions* options) {
   ReadBinaryOptions read_options;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
-  return read_binary(input_info->data.data(), input_info->data.size(), &reader,
-                     &read_options);
+  return read_binary(DataOrNull(input_info->data), input_info->data.size(),
+                     &reader, &read_options);
 }
 
 }  // namespace link
