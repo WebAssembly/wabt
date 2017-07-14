@@ -20,14 +20,13 @@ Function:
  - func[0] sig=0
 Export:
  - except[0] -> "except"
-Custom:
- - name: "exception"
+Exception:
  - except[0] (i32)
 
 Code Disassembly:
 
-000031 func[0]:
- 000033: 41 07                      | i32.const 7
- 000035: 08 00                      | throw 0
- 000037: 0b                         | end
+000027 func[0]:
+ 000029: 41 07                      | i32.const 7
+ 00002b: 08 00                      | throw 0
+ 00002d: 0b                         | end
 ;;; STDOUT ;;)

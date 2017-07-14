@@ -8,7 +8,7 @@ out/third_party/testsuite/custom_section.wast:69: assert_malformed passed:
 out/third_party/testsuite/custom_section.wast:77: assert_malformed passed:
   000000a: error: invalid section size: extends past end
 out/third_party/testsuite/custom_section.wast:85: assert_malformed passed:
-  0000031: error: invalid section code: 36; max is 11
+  0000031: error: invalid section code: 36; max is 13
 out/third_party/testsuite/custom_section.wast:94: assert_malformed passed:
   000003e: error: function signature count != function body count
 out/third_party/testsuite/custom_section.wast:107: assert_malformed passed:

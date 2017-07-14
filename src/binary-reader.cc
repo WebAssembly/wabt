@@ -1291,9 +1291,6 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
-  } else if (options_->allow_future_exceptions &&
-             section_name == WABT_BINARY_SECTION_EXCEPTION) {
-    CHECK_RESULT(ReadExceptionSection(section_size));
   } else {
     /* This is an unknown custom section, skip it. */
     state_.offset = read_end_;
@@ -1662,12 +1659,18 @@ Result BinaryReader::ReadSections() {
     ERROR_UNLESS(read_end_ <= state_.size,
                  "invalid section size: extends past end");
 
+    if (section == BinarySection::Exception &&
+        !options_->allow_future_exceptions) {
+      section = BinarySection::Invalid;
+    }
+
     ERROR_UNLESS(last_known_section_ == BinarySection::Invalid ||
-                     section == BinarySection::Custom ||
-                     section > last_known_section_,
+                 section == BinarySection::Custom ||
+                 section > last_known_section_,
                  "section %s out of order", get_section_name(section));
 
     CALLBACK(BeginSection, section, section_size);
+
 
 #define V(Name, name, code)                          \
   case BinarySection::Name:                          \
@@ -1687,8 +1690,13 @@ Result BinaryReader::ReadSections() {
     ERROR_UNLESS(state_.offset == read_end_,
                  "unfinished section (expected end: 0x%" PRIzx ")", read_end_);
 
-    if (section != BinarySection::Custom)
-      last_known_section_ = section;
+    switch (section) {
+      case BinarySection::Custom:
+      case BinarySection::Exception:
+        break;
+      default:
+        last_known_section_ = section;
+    }
   }
   return Result::Ok;
 }
