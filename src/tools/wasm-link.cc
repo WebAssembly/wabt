@@ -212,10 +212,6 @@ static void write_section_payload(Context* ctx, Section* sec) {
   ctx->stream.WriteData(payload, sec->payload_size, "section content");
 }
 
-static void write_slice(Stream* stream, StringSlice str, const char* desc) {
-  write_str(stream, string_slice_to_string(str), desc, PrintChars::Yes);
-}
-
 #define WRITE_UNKNOWN_SIZE(STREAM)                            \
   {                                                           \
     Offset fixup_offset = (STREAM)->offset();                 \
@@ -262,7 +258,7 @@ static void write_export_section(Context* ctx) {
 
   for (const std::unique_ptr<LinkerInputBinary>& binary : ctx->inputs) {
     for (const Export& export_ : binary->exports) {
-      write_slice(stream, export_.name, "export name");
+      write_str(stream, export_.name, "export name");
       stream->WriteU8Enum(export_.kind, "export kind");
       Index index = export_.index;
       switch (export_.kind) {
@@ -330,16 +326,16 @@ static void write_memory_section(Context* ctx,
 static void write_function_import(Context* ctx,
                                   FunctionImport* import,
                                   Index offset) {
-  write_slice(&ctx->stream, import->module_name, "import module name");
-  write_slice(&ctx->stream, import->name, "import field name");
+  write_str(&ctx->stream, import->module_name, "import module name");
+  write_str(&ctx->stream, import->name, "import field name");
   ctx->stream.WriteU8Enum(ExternalKind::Func, "import kind");
   write_u32_leb128(&ctx->stream, import->sig_index + offset,
                    "import signature index");
 }
 
 static void write_global_import(Context* ctx, GlobalImport* import) {
-  write_slice(&ctx->stream, import->module_name, "import module name");
-  write_slice(&ctx->stream, import->name, "import field name");
+  write_str(&ctx->stream, import->module_name, "import module name");
+  write_str(&ctx->stream, import->name, "import field name");
   ctx->stream.WriteU8Enum(ExternalKind::Global, "import kind");
   write_type(&ctx->stream, import->type);
   ctx->stream.WriteU8(import->mutable_, "global mutability");
@@ -622,8 +618,7 @@ static void resolve_symbols(Context* ctx) {
       export_list.emplace_back(export_, binary);
 
       /* TODO(sbc): Handle duplicate names */
-      export_map.emplace(string_slice_to_string(export_->name),
-                         Binding(export_list.size() - 1));
+      export_map.emplace(export_->name, Binding(export_list.size() - 1));
     }
   }
 
@@ -638,8 +633,7 @@ static void resolve_symbols(Context* ctx) {
       int export_index = export_map.FindIndex(import->name);
       if (export_index == -1) {
         if (!s_relocatable)
-          WABT_FATAL("undefined symbol: " PRIstringslice "\n",
-                     WABT_PRINTF_STRING_SLICE_ARG(import->name));
+          WABT_FATAL("undefined symbol: %s\n", import->name.c_str());
         continue;
       }
 

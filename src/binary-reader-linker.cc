@@ -135,8 +135,8 @@ Result BinaryReaderLinker::OnImportFunc(Index import_index,
                                         Index sig_index) {
   binary_->function_imports.emplace_back();
   FunctionImport* import = &binary_->function_imports.back();
-  import->module_name = string_view_to_string_slice(module_name);
-  import->name = string_view_to_string_slice(field_name);
+  import->module_name = module_name.to_string();
+  import->name = field_name.to_string();
   import->sig_index = sig_index;
   import->active = true;
   binary_->active_function_imports++;
@@ -151,8 +151,8 @@ Result BinaryReaderLinker::OnImportGlobal(Index import_index,
                                           bool mutable_) {
   binary_->global_imports.emplace_back();
   GlobalImport* import = &binary_->global_imports.back();
-  import->module_name = string_view_to_string_slice(module_name);
-  import->name = string_view_to_string_slice(field_name);
+  import->module_name = module_name.to_string();
+  import->name = field_name.to_string();
   import->type = type;
   import->mutable_ = mutable_;
   binary_->active_global_imports++;
@@ -264,7 +264,7 @@ Result BinaryReaderLinker::OnExport(Index index,
   }
   binary_->exports.emplace_back();
   Export* export_ = &binary_->exports.back();
-  export_->name = string_view_to_string_slice(name);
+  export_->name = name.to_string();
   export_->kind = kind;
   export_->index = item_index;
   return Result::Ok;
