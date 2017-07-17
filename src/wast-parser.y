@@ -106,26 +106,22 @@
 
 namespace wabt {
 
-static bool is_power_of_two(uint32_t x) {
+static bool IsPowerOfTwo(uint32_t x) {
   return x && ((x & (x - 1)) == 0);
 }
 
-static Result parse_const(Type type,
-                          LiteralType literal_type,
-                          const char* s,
-                          const char* end,
-                          Const* out);
+Result ParseConst(Type type, const Literal& literal, Const* out);
 
-static void reverse_bindings(TypeVector*, BindingHash*);
+static void ReverseBindings(TypeVector*, BindingHash*);
 
-static bool is_empty_signature(const FuncSignature* sig);
+static bool IsEmptySignature(const FuncSignature* sig);
 
-static void check_import_ordering(Location* loc,
-                                  WastLexer* lexer,
-                                  WastParser* parser,
-                                  Module* module,
-                                  const ModuleFieldList&);
-static void append_module_fields(Module*, ModuleFieldList*);
+static void CheckImportOrdering(Location* loc,
+                                WastLexer* lexer,
+                                WastParser* parser,
+                                Module* module,
+                                const ModuleFieldList&);
+static void AppendModuleFields(Module*, ModuleFieldList&&);
 
 class BinaryErrorHandlerModule : public ErrorHandler {
  public:
@@ -206,6 +202,24 @@ void RemoveEscapes(const TextVector& texts, OutputIter out) {
     RemoveEscapes(text, out);
 }
 
+template <typename T>
+T MoveAndDelete(T* ptr) {
+  T result = std::move(*ptr);
+  delete ptr;
+  return result;
+}
+
+template <typename T, typename U>
+void PrependAndDelete(T& dest, U* source) {
+  dest.insert(dest.begin(), std::begin(*source), std::end(*source));
+  delete source;
+}
+
+template <typename T, typename U>
+void AppendAndDelete(T& dest, U* source) {
+  dest.insert(dest.end(), std::begin(*source), std::end(*source));
+  delete source;
+}
 
 #define wabt_wast_parser_lex(...) lexer->GetToken(__VA_ARGS__, parser)
 #define wabt_wast_parser_error wast_parser_error
@@ -368,8 +382,7 @@ func_sig :
     func_sig_result
   | LPAR PARAM value_type_list RPAR func_sig {
       $$ = $5;
-      $$->param_types.insert($$->param_types.begin(), $3->begin(), $3->end());
-      delete $3;
+      PrependAndDelete($$->param_types, $3);
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR func_sig {
       $$ = $6;
@@ -383,8 +396,7 @@ func_sig_result :
     /* empty */ { $$ = new FuncSignature(); }
   | LPAR RESULT value_type_list RPAR func_sig_result {
       $$ = $5;
-      $$->result_types.insert($$->result_types.begin(), $3->begin(), $3->end());
-      delete $3;
+      PrependAndDelete($$->result_types, $3);
     }
 ;
 
@@ -453,8 +465,7 @@ var_list :
     /* empty */ { $$ = new VarVector(); }
   | var_list var {
       $$ = $1;
-      $$->emplace_back(std::move(*$2));
-      delete $2;
+      $$->emplace_back(MoveAndDelete($2));
     }
 ;
 bind_var_opt :
@@ -499,7 +510,7 @@ align_opt :
                           WABT_PRINTF_STRING_VIEW_ARG(sv));
       }
 
-      if ($$ != WABT_USE_NATURAL_ALIGNMENT && !is_power_of_two($$)) {
+      if ($$ != WABT_USE_NATURAL_ALIGNMENT && !IsPowerOfTwo($$)) {
         wast_parser_error(&@1, lexer, parser, "alignment must be power-of-two");
       }
     }
@@ -531,47 +542,37 @@ plain_instr :
       $$ = new SelectExpr();
     }
   | BR var {
-      $$ = new BrExpr(std::move(*$2));
-      delete $2;
+      $$ = new BrExpr(MoveAndDelete($2));
     }
   | BR_IF var {
-      $$ = new BrIfExpr(std::move(*$2));
-      delete $2;
+      $$ = new BrIfExpr(MoveAndDelete($2));
     }
   | BR_TABLE var_list var {
-      $$ = new BrTableExpr($2, std::move(*$3));
-      delete $3;
+      $$ = new BrTableExpr($2, MoveAndDelete($3));
     }
   | RETURN {
       $$ = new ReturnExpr();
     }
   | CALL var {
-      $$ = new CallExpr(std::move(*$2));
-      delete $2;
+      $$ = new CallExpr(MoveAndDelete($2));
     }
   | CALL_INDIRECT var {
-      $$ = new CallIndirectExpr(std::move(*$2));
-      delete $2;
+      $$ = new CallIndirectExpr(MoveAndDelete($2));
     }
   | GET_LOCAL var {
-      $$ = new GetLocalExpr(std::move(*$2));
-      delete $2;
+      $$ = new GetLocalExpr(MoveAndDelete($2));
     }
   | SET_LOCAL var {
-      $$ = new SetLocalExpr(std::move(*$2));
-      delete $2;
+      $$ = new SetLocalExpr(MoveAndDelete($2));
     }
   | TEE_LOCAL var {
-      $$ = new TeeLocalExpr(std::move(*$2));
-      delete $2;
+      $$ = new TeeLocalExpr(MoveAndDelete($2));
     }
   | GET_GLOBAL var {
-      $$ = new GetGlobalExpr(std::move(*$2));
-      delete $2;
+      $$ = new GetGlobalExpr(MoveAndDelete($2));
     }
   | SET_GLOBAL var {
-      $$ = new SetGlobalExpr(std::move(*$2));
-      delete $2;
+      $$ = new SetGlobalExpr(MoveAndDelete($2));
     }
   | LOAD offset_opt align_opt {
       $$ = new LoadExpr($1, $3, $2);
@@ -582,12 +583,11 @@ plain_instr :
   | CONST literal {
       Const const_;
       const_.loc = @1;
-      string_view sv = $2->text;
-      if (Failed(parse_const($1, $2->type, sv.begin(), sv.end(), &const_))) {
+      auto literal = MoveAndDelete($2);
+      if (Failed(ParseConst($1, literal, &const_))) {
         wast_parser_error(&@2, lexer, parser, "invalid literal \"%s\"",
-                          $2->text.c_str());
+                          literal.text.c_str());
       }
-      delete $2;
       $$ = new ConstExpr(const_);
     }
   | UNARY {
@@ -609,49 +609,41 @@ plain_instr :
       $$ = new GrowMemoryExpr();
     }
   | throw_check var {
-      $$ = new ThrowExpr(std::move(*$2));
-      delete $2;
+      $$ = new ThrowExpr(MoveAndDelete($2));
     }
   | rethrow_check var {
-      $$ = new RethrowExpr(std::move(*$2));
-      delete $2;
+      $$ = new RethrowExpr(MoveAndDelete($2));
     }
 ;
 
 block_instr :
     BLOCK labeling_opt block END labeling_opt {
       auto expr = new BlockExpr($3);
-      expr->block->label = std::move(*$2);
-      delete $2;
+      expr->block->label = MoveAndDelete($2);
       CHECK_END_LABEL(@5, expr->block->label, $5);
       $$ = expr;
     }
   | LOOP labeling_opt block END labeling_opt {
       auto expr = new LoopExpr($3);
-      expr->block->label = std::move(*$2);
-      delete $2;
+      expr->block->label = MoveAndDelete($2);
       CHECK_END_LABEL(@5, expr->block->label, $5);
       $$ = expr;
     }
   | IF labeling_opt block END labeling_opt {
       auto expr = new IfExpr($3);
-      expr->true_->label = std::move(*$2);
-      delete $2;
+      expr->true_->label = MoveAndDelete($2);
       CHECK_END_LABEL(@5, expr->true_->label, $5);
       $$ = expr;
     }
   | IF labeling_opt block ELSE labeling_opt instr_list END labeling_opt {
-      auto expr = new IfExpr($3, std::move(*$6));
-      delete $6;
-      expr->true_->label = std::move(*$2);
-      delete $2;
+      auto expr = new IfExpr($3, MoveAndDelete($6));
+      expr->true_->label = MoveAndDelete($2);
       CHECK_END_LABEL(@5, expr->true_->label, $5);
       CHECK_END_LABEL(@8, expr->true_->label, $8);
       $$ = expr;
     }
   | try_check labeling_opt block catch_instr_list END labeling_opt {
-      $3->label = std::move(*$2);
-      delete $2;
+      $3->label = MoveAndDelete($2);
       $$ = $4;
       cast<TryExpr>($$)->block = $3;
       CHECK_END_LABEL(@6, $3->label, $6);
@@ -664,27 +656,22 @@ block_sig :
 block :
     block_sig block {
       $$ = $2;
-      $$->sig.insert($$->sig.end(), $1->begin(), $1->end());
-      delete $1;
+      AppendAndDelete($$->sig, $1);
     }
   | instr_list {
-      $$ = new Block(std::move(*$1));
-      delete $1;
+      $$ = new Block(MoveAndDelete($1));
     }
 ;
 
 plain_catch :
     CATCH var instr_list {
-      $$ = new Catch(std::move(*$2), std::move(*$3));
-      delete $2;
-      delete $3;
+      $$ = new Catch(MoveAndDelete($2), MoveAndDelete($3));
       $$->loc = @1;
     }
   ;
 plain_catch_all :
     CATCH_ALL instr_list {
-      $$ = new Catch(std::move(*$2));
-      delete $2;
+      $$ = new Catch(MoveAndDelete($2));
       $$->loc = @1;
     }
   ;
@@ -718,28 +705,24 @@ expr1 :
     }
   | BLOCK labeling_opt block {
       auto expr = new BlockExpr($3);
-      expr->block->label = std::move(*$2);
-      delete $2;
+      expr->block->label = MoveAndDelete($2);
       expr->loc = @1;
       $$ = new ExprList(expr);
     }
   | LOOP labeling_opt block {
       auto expr = new LoopExpr($3);
-      expr->block->label = std::move(*$2);
-      delete $2;
+      expr->block->label = MoveAndDelete($2);
       expr->loc = @1;
       $$ = new ExprList(expr);
     }
   | IF labeling_opt if_block {
       $$ = $3;
       IfExpr* if_ = cast<IfExpr>(&$3->back());
-      if_->true_->label = std::move(*$2);
-      delete $2;
+      if_->true_->label = MoveAndDelete($2);
     }
   | try_check labeling_opt try_ {
       Block* block = $3->block;
-      block->label = std::move(*$2);
-      delete $2;
+      block->label = MoveAndDelete($2);
       $3->loc = @1;
       $$ = new ExprList($3);
     }
@@ -749,13 +732,11 @@ try_ :
     block_sig try_ {
       $$ = $2;
       Block* block = $$->block;
-      block->sig.insert(block->sig.end(), $1->begin(), $1->end());
-      delete $1;
+      AppendAndDelete(block->sig, $1);
     }
   | instr_list catch_sexp_list {
       Block* block = new Block();
-      block->exprs = std::move(*$1);
-      delete $1;
+      block->exprs = MoveAndDelete($1);
       $$ = $2;
       $$->block = block;
     }
@@ -788,51 +769,41 @@ if_block :
       IfExpr* if_ = cast<IfExpr>(&$2->back());
       $$ = $2;
       Block* true_ = if_->true_;
-      true_->sig.insert(true_->sig.end(), $1->begin(), $1->end());
-      delete $1;
+      AppendAndDelete(true_->sig, $1);
     }
   | if_
 ;
 if_ :
     LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      Expr* expr = new IfExpr(new Block(std::move(*$3)), std::move(*$7));
-      delete $3;
-      delete $7;
+      Expr* expr = new IfExpr(new Block(MoveAndDelete($3)), MoveAndDelete($7));
       expr->loc = @1;
       $$ = new ExprList(expr);
     }
   | LPAR THEN instr_list RPAR {
-      Expr* expr = new IfExpr(new Block(std::move(*$3)));
-      delete $3;
+      Expr* expr = new IfExpr(new Block(MoveAndDelete($3)));
       expr->loc = @1;
       $$ = new ExprList(expr);
     }
   | expr LPAR THEN instr_list RPAR LPAR ELSE instr_list RPAR {
-      Expr* expr = new IfExpr(new Block(std::move(*$4)), std::move(*$8));
-      delete $4;
-      delete $8;
+      Expr* expr = new IfExpr(new Block(MoveAndDelete($4)), MoveAndDelete($8));
       expr->loc = @1;
       $$ = $1;
       $$->push_back(expr);
     }
   | expr LPAR THEN instr_list RPAR {
-      Expr* expr = new IfExpr(new Block(std::move(*$4)));
-      delete $4;
+      Expr* expr = new IfExpr(new Block(MoveAndDelete($4)));
       expr->loc = @1;
       $$ = $1;
       $$->push_back(expr);
     }
   | expr expr expr {
-      Expr* expr = new IfExpr(new Block(std::move(*$2)), std::move(*$3));
-      delete $2;
-      delete $3;
+      Expr* expr = new IfExpr(new Block(MoveAndDelete($2)), MoveAndDelete($3));
       expr->loc = @1;
       $$ = $1;
       $$->push_back(expr);
     }
   | expr expr {
-      Expr* expr = new IfExpr(new Block(std::move(*$2)));
-      delete $2;
+      Expr* expr = new IfExpr(new Block(MoveAndDelete($2)));
       expr->loc = @1;
       $$ = $1;
       $$->push_back(expr);
@@ -860,16 +831,14 @@ instr_list :
     /* empty */ { $$ = new ExprList(); }
   | instr instr_list {
       $$ = $2;
-      $$->splice($$->begin(), std::move(*$1));
-      delete $1;
+      $$->splice($$->begin(), MoveAndDelete($1));
     }
 ;
 expr_list :
     /* empty */ { $$ = new ExprList(); }
   | expr expr_list {
       $$ = $2;
-      $$->splice($$->begin(), std::move(*$1));
-      delete $1;
+      $$->splice($$->begin(), MoveAndDelete($1));
     }
 
 const_expr :
@@ -879,9 +848,7 @@ const_expr :
 /* Exceptions */
 exception :
     LPAR EXCEPT bind_var_opt value_type_list RPAR {
-      $$ = new Exception(*$3, *$4);
-      delete $3;
-      delete $4;
+      $$ = new Exception(MoveAndDelete($3), MoveAndDelete($4));
     }
   ;
 exception_field :
@@ -897,12 +864,11 @@ func :
       ModuleField* main_field = &$$->front();
       main_field->loc = @2;
       if (auto func_field = dyn_cast<FuncModuleField>(main_field)) {
-        func_field->func->name = std::move(*$3);
+        func_field->func->name = MoveAndDelete($3);
       } else {
         cast<ImportModuleField>(main_field)->import->func->name =
-            std::move(*$3);
+            MoveAndDelete($3);
       }
-      delete $3;
     }
 ;
 
@@ -910,8 +876,7 @@ func_fields :
     type_use func_fields_body {
       auto field = new FuncModuleField($2);
       field->func->decl.has_func_type = true;
-      field->func->decl.type_var = std::move(*$1);
-      delete $1;
+      field->func->decl.type_var = MoveAndDelete($1);
       $$ = new ModuleFieldList(field);
     }
   | func_fields_body {
@@ -922,8 +887,7 @@ func_fields :
       field->import->kind = ExternalKind::Func;
       field->import->func = $3;
       field->import->func->decl.has_func_type = true;
-      field->import->func->decl.type_var = std::move(*$2);
-      delete $2;
+      field->import->func->decl.type_var = MoveAndDelete($2);
       $$ = new ModuleFieldList(field);
     }
   | inline_import func_fields_import {
@@ -943,7 +907,7 @@ func_fields :
 func_fields_import :
     func_fields_import1 {
       $$ = $1;
-      reverse_bindings(&$$->decl.sig.param_types, &$$->param_bindings);
+      ReverseBindings(&$$->decl.sig.param_types, &$$->param_bindings);
     }
 ;
 
@@ -951,15 +915,12 @@ func_fields_import1 :
     func_fields_import_result
   | LPAR PARAM value_type_list RPAR func_fields_import1 {
       $$ = $5;
-      $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(),
-                                      $3->begin(), $3->end());
-      delete $3;
+      PrependAndDelete($$->decl.sig.param_types, $3);
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields_import1 {
       $$ = $6;
-      $$->param_bindings.emplace(*$3,
+      $$->param_bindings.emplace(MoveAndDelete($3),
                                  Binding(@3, $$->decl.sig.param_types.size()));
-      delete $3;
       $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(), $4);
     }
 ;
@@ -968,16 +929,14 @@ func_fields_import_result :
     /* empty */ { $$ = new Func(); }
   | LPAR RESULT value_type_list RPAR func_fields_import_result {
       $$ = $5;
-      $$->decl.sig.result_types.insert($$->decl.sig.result_types.begin(),
-                                       $3->begin(), $3->end());
-      delete $3;
+      PrependAndDelete($$->decl.sig.result_types, $3);
     }
 ;
 
 func_fields_body :
     func_fields_body1 {
       $$ = $1;
-      reverse_bindings(&$$->decl.sig.param_types, &$$->param_bindings);
+      ReverseBindings(&$$->decl.sig.param_types, &$$->param_bindings);
     }
 ;
 
@@ -985,15 +944,12 @@ func_fields_body1 :
     func_result_body
   | LPAR PARAM value_type_list RPAR func_fields_body1 {
       $$ = $5;
-      $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(),
-                                      $3->begin(), $3->end());
-      delete $3;
+      PrependAndDelete($$->decl.sig.param_types, $3);
     }
   | LPAR PARAM bind_var VALUE_TYPE RPAR func_fields_body1 {
       $$ = $6;
-      $$->param_bindings.emplace(*$3,
+      $$->param_bindings.emplace(MoveAndDelete($3),
                                  Binding(@3, $$->decl.sig.param_types.size()));
-      delete $3;
       $$->decl.sig.param_types.insert($$->decl.sig.param_types.begin(), $4);
     }
 ;
@@ -1002,34 +958,30 @@ func_result_body :
     func_body
   | LPAR RESULT value_type_list RPAR func_result_body {
       $$ = $5;
-      $$->decl.sig.result_types.insert($$->decl.sig.result_types.begin(),
-                                       $3->begin(), $3->end());
-      delete $3;
+      PrependAndDelete($$->decl.sig.result_types, $3);
     }
 ;
 
 func_body :
     func_body1 {
       $$ = $1;
-      reverse_bindings(&$$->local_types, &$$->local_bindings);
+      ReverseBindings(&$$->local_types, &$$->local_bindings);
     }
 ;
 
 func_body1 :
     instr_list {
       $$ = new Func();
-      $$->exprs = std::move(*$1);
-      delete $1;
+      $$->exprs = MoveAndDelete($1);
     }
   | LPAR LOCAL value_type_list RPAR func_body1 {
       $$ = $5;
-      $$->local_types.insert($$->local_types.begin(), $3->begin(), $3->end());
-      delete $3;
+      PrependAndDelete($$->local_types, $3);
     }
   | LPAR LOCAL bind_var VALUE_TYPE RPAR func_body1 {
       $$ = $6;
-      $$->local_bindings.emplace(*$3, Binding(@3, $$->local_types.size()));
-      delete $3;
+      $$->local_bindings.emplace(MoveAndDelete($3),
+                                 Binding(@3, $$->local_types.size()));
       $$->local_types.insert($$->local_types.begin(), $4);
     }
 ;
@@ -1046,21 +998,16 @@ offset :
 elem :
     LPAR ELEM var offset var_list RPAR {
       auto elem_segment = new ElemSegment();
-      elem_segment->table_var = std::move(*$3);
-      delete $3;
-      elem_segment->offset = std::move(*$4);
-      delete $4;
-      elem_segment->vars = std::move(*$5);
-      delete $5;
+      elem_segment->table_var = MoveAndDelete($3);
+      elem_segment->offset = MoveAndDelete($4);
+      elem_segment->vars = MoveAndDelete($5);
       $$ = new ElemSegmentModuleField(elem_segment, @2);
     }
   | LPAR ELEM offset var_list RPAR {
       auto elem_segment = new ElemSegment();
       elem_segment->table_var = Var(0, @2);
-      elem_segment->offset = std::move(*$3);
-      delete $3;
-      elem_segment->vars = std::move(*$4);
-      delete $4;
+      elem_segment->offset = MoveAndDelete($3);
+      elem_segment->vars = MoveAndDelete($4);
       $$ = new ElemSegmentModuleField(elem_segment, @2);
     }
 ;
@@ -1071,12 +1018,11 @@ table :
       ModuleField* main_field = &$$->front();
       main_field->loc = @2;
       if (auto table_field = dyn_cast<TableModuleField>(main_field)) {
-        table_field->table->name = std::move(*$3);
+        table_field->table->name = MoveAndDelete($3);
       } else {
         cast<ImportModuleField>(main_field)->import->table->name =
-            std::move(*$3);
+            MoveAndDelete($3);
       }
-      delete $3;
     }
 ;
 
@@ -1106,8 +1052,7 @@ table_fields :
       elem_segment->table_var = Var(kInvalidIndex);
       elem_segment->offset.push_back(new ConstExpr(Const(Const::I32(), 0)));
       elem_segment->offset.back().loc = @3;
-      elem_segment->vars = std::move(*$4);
-      delete $4;
+      elem_segment->vars = MoveAndDelete($4);
 
       $$ = new ModuleFieldList();
       $$->push_back(new TableModuleField(table));
@@ -1118,21 +1063,16 @@ table_fields :
 data :
     LPAR DATA var offset text_list_opt RPAR {
       auto data_segment = new DataSegment();
-      data_segment->memory_var = std::move(*$3);
-      delete $3;
-      data_segment->offset = std::move(*$4);
-      delete $4;
-      RemoveEscapes(*$5, std::back_inserter(data_segment->data));
-      delete $5;
+      data_segment->memory_var = MoveAndDelete($3);
+      data_segment->offset = MoveAndDelete($4);
+      RemoveEscapes(MoveAndDelete($5), std::back_inserter(data_segment->data));
       $$ = new DataSegmentModuleField(data_segment, @2);
     }
   | LPAR DATA offset text_list_opt RPAR {
       auto data_segment = new DataSegment();
       data_segment->memory_var = Var(0, @2);
-      data_segment->offset = std::move(*$3);
-      delete $3;
-      RemoveEscapes(*$4, std::back_inserter(data_segment->data));
-      delete $4;
+      data_segment->offset = MoveAndDelete($3);
+      RemoveEscapes(MoveAndDelete($4), std::back_inserter(data_segment->data));
       $$ = new DataSegmentModuleField(data_segment, @2);
     }
 ;
@@ -1143,12 +1083,11 @@ memory :
       ModuleField* main_field = &$$->front();
       main_field->loc = @2;
       if (auto memory_field = dyn_cast<MemoryModuleField>(main_field)) {
-        memory_field->memory->name = std::move(*$3);
+        memory_field->memory->name = MoveAndDelete($3);
       } else {
         cast<ImportModuleField>(main_field)->import->memory->name =
-            std::move(*$3);
+            MoveAndDelete($3);
       }
-      delete $3;
     }
 ;
 
@@ -1173,8 +1112,7 @@ memory_fields :
       data_segment->memory_var = Var(kInvalidIndex);
       data_segment->offset.push_back(new ConstExpr(Const(Const::I32(), 0)));
       data_segment->offset.back().loc = @2;
-      RemoveEscapes(*$3, std::back_inserter(data_segment->data));
-      delete $3;
+      RemoveEscapes(MoveAndDelete($3), std::back_inserter(data_segment->data));
 
       uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment->data.size());
       uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
@@ -1196,20 +1134,18 @@ global :
       ModuleField* main_field = &$$->front();
       main_field->loc = @2;
       if (auto global_field = dyn_cast<GlobalModuleField>(main_field)) {
-        global_field->global->name = std::move(*$3);
+        global_field->global->name = MoveAndDelete($3);
       } else {
         cast<ImportModuleField>(main_field)->import->global->name =
-            std::move(*$3);
+            MoveAndDelete($3);
       }
-      delete $3;
     }
 ;
 
 global_fields :
     global_type const_expr {
       auto field = new GlobalModuleField($1);
-      field->global->init_expr = std::move(*$2);
-      delete $2;
+      field->global->init_expr = MoveAndDelete($2);
       $$ = new ModuleFieldList(field);
     }
   | inline_import global_type {
@@ -1233,41 +1169,34 @@ import_desc :
       $$ = new Import();
       $$->kind = ExternalKind::Func;
       $$->func = new Func();
-      $$->func->name = std::move(*$3);
-      delete $3;
+      $$->func->name = MoveAndDelete($3);
       $$->func->decl.has_func_type = true;
-      $$->func->decl.type_var = std::move(*$4);
-      delete $4;
+      $$->func->decl.type_var = MoveAndDelete($4);
     }
   | LPAR FUNC bind_var_opt func_sig RPAR {
       $$ = new Import();
       $$->kind = ExternalKind::Func;
       $$->func = new Func();
-      $$->func->name = std::move(*$3);
-      delete $3;
-      $$->func->decl.sig = std::move(*$4);
-      delete $4;
+      $$->func->name = MoveAndDelete($3);
+      $$->func->decl.sig = MoveAndDelete($4);
     }
   | LPAR TABLE bind_var_opt table_sig RPAR {
       $$ = new Import();
       $$->kind = ExternalKind::Table;
       $$->table = $4;
-      $$->table->name = std::move(*$3);
-      delete $3;
+      $$->table->name = MoveAndDelete($3);
     }
   | LPAR MEMORY bind_var_opt memory_sig RPAR {
       $$ = new Import();
       $$->kind = ExternalKind::Memory;
       $$->memory = $4;
-      $$->memory->name = std::move(*$3);
-      delete $3;
+      $$->memory->name = MoveAndDelete($3);
     }
   | LPAR GLOBAL bind_var_opt global_type RPAR {
       $$ = new Import();
       $$->kind = ExternalKind::Global;
       $$->global = $4;
-      $$->global->name = std::move(*$3);
-      delete $3;
+      $$->global->name = MoveAndDelete($3);
     }
   | exception {
       $$ = new Import();
@@ -1279,10 +1208,8 @@ import_desc :
 import :
     LPAR IMPORT quoted_text quoted_text import_desc RPAR {
       auto field = new ImportModuleField($5, @2);
-      field->import->module_name = std::move(*$3);
-      delete $3;
-      field->import->field_name = std::move(*$4);
-      delete $4;
+      field->import->module_name = MoveAndDelete($3);
+      field->import->field_name = MoveAndDelete($4);
       $$ = field;
     }
 ;
@@ -1290,10 +1217,8 @@ import :
 inline_import :
     LPAR IMPORT quoted_text quoted_text RPAR {
       $$ = new Import();
-      $$->module_name = std::move(*$3);
-      delete $3;
-      $$->field_name = std::move(*$4);
-      delete $4;
+      $$->module_name = MoveAndDelete($3);
+      $$->field_name = MoveAndDelete($4);
     }
 ;
 
@@ -1301,39 +1226,33 @@ export_desc :
     LPAR FUNC var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Func;
-      $$->var = std::move(*$3);
-      delete $3;
+      $$->var = MoveAndDelete($3);
     }
   | LPAR TABLE var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Table;
-      $$->var = std::move(*$3);
-      delete $3;
+      $$->var = MoveAndDelete($3);
     }
   | LPAR MEMORY var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Memory;
-      $$->var = std::move(*$3);
-      delete $3;
+      $$->var = MoveAndDelete($3);
     }
   | LPAR GLOBAL var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Global;
-      $$->var = std::move(*$3);
-      delete $3;
+      $$->var = MoveAndDelete($3);
     }
   | LPAR EXCEPT var RPAR {
       $$ = new Export();
       $$->kind = ExternalKind::Except;
-      $$->var = std::move(*$3);
-      delete $3;
+      $$->var = MoveAndDelete($3);
     }
 ;
 export :
     LPAR EXPORT quoted_text export_desc RPAR {
       auto field = new ExportModuleField($4, @2);
-      field->export_->name = std::move(*$3);
-      delete $3;
+      field->export_->name = MoveAndDelete($3);
       $$ = field;
     }
 ;
@@ -1341,8 +1260,7 @@ export :
 inline_export :
     LPAR EXPORT quoted_text RPAR {
       $$ = new Export();
-      $$->name = std::move(*$3);
-      delete $3;
+      $$->name = MoveAndDelete($3);
     }
 ;
 
@@ -1352,24 +1270,20 @@ inline_export :
 type_def :
     LPAR TYPE func_type RPAR {
       auto func_type = new FuncType();
-      func_type->sig = std::move(*$3);
-      delete $3;
+      func_type->sig = MoveAndDelete($3);
       $$ = new FuncTypeModuleField(func_type, @2);
     }
   | LPAR TYPE bind_var func_type RPAR {
       auto func_type = new FuncType();
-      func_type->name = std::move(*$3);
-      delete $3;
-      func_type->sig = std::move(*$4);
-      delete $4;
+      func_type->name = MoveAndDelete($3);
+      func_type->sig = MoveAndDelete($4);
       $$ = new FuncTypeModuleField(func_type, @2);
     }
 ;
 
 start :
     LPAR START var RPAR {
-      $$ = new StartModuleField(*$3, @2);
-      delete $3;
+      $$ = new StartModuleField(MoveAndDelete($3), @2);
     }
 ;
 
@@ -1395,15 +1309,13 @@ module_fields_opt :
 module_fields :
     module_field {
       $$ = new Module();
-      check_import_ordering(&@1, lexer, parser, $$, *$1);
-      append_module_fields($$, $1);
-      delete $1;
+      CheckImportOrdering(&@1, lexer, parser, $$, *$1);
+      AppendModuleFields($$, MoveAndDelete($1));
     }
   | module_fields module_field {
       $$ = $1;
-      check_import_ordering(&@2, lexer, parser, $$, *$2);
-      append_module_fields($$, $2);
-      delete $2;
+      CheckImportOrdering(&@2, lexer, parser, $$, *$2);
+      AppendModuleFields($$, MoveAndDelete($2));
     }
 ;
 
@@ -1447,14 +1359,13 @@ script_module :
     LPAR MODULE bind_var_opt module_fields_opt RPAR {
       $$ = new ScriptModule(ScriptModule::Type::Text);
       $$->text = $4;
-      $$->text->name = std::move(*$3);
-      delete $3;
+      $$->text->name = MoveAndDelete($3);
       $$->text->loc = @2;
 
       // Resolve func type variables where the signature was not specified
       // explicitly.
       for (Func* func: $4->funcs) {
-        if (func->decl.has_func_type && is_empty_signature(&func->decl.sig)) {
+        if (func->decl.has_func_type && IsEmptySignature(&func->decl.sig)) {
           FuncType* func_type = $4->GetFuncType(func->decl.type_var);
           if (func_type) {
             func->decl.sig = func_type->sig;
@@ -1464,19 +1375,15 @@ script_module :
     }
   | LPAR MODULE bind_var_opt BIN text_list RPAR {
       $$ = new ScriptModule(ScriptModule::Type::Binary);
-      $$->binary.name = std::move(*$3);
-      delete $3;
+      $$->binary.name = MoveAndDelete($3);
       $$->binary.loc = @2;
-      RemoveEscapes(*$5, std::back_inserter($$->binary.data));
-      delete $5;
+      RemoveEscapes(MoveAndDelete($5), std::back_inserter($$->binary.data));
     }
   | LPAR MODULE bind_var_opt QUOTE text_list RPAR {
       $$ = new ScriptModule(ScriptModule::Type::Quoted);
-      $$->quoted.name = std::move(*$3);
-      delete $3;
+      $$->quoted.name = MoveAndDelete($3);
       $$->quoted.loc = @2;
-      RemoveEscapes(*$5, std::back_inserter($$->quoted.data));
-      delete $5;
+      RemoveEscapes(MoveAndDelete($5), std::back_inserter($$->quoted.data));
     }
 ;
 
@@ -1484,42 +1391,33 @@ action :
     LPAR INVOKE script_var_opt quoted_text const_list RPAR {
       $$ = new Action();
       $$->loc = @2;
-      $$->module_var = std::move(*$3);
-      delete $3;
+      $$->module_var = MoveAndDelete($3);
       $$->type = ActionType::Invoke;
-      $$->name = std::move(*$4);
-      delete $4;
+      $$->name = MoveAndDelete($4);
       $$->invoke = new ActionInvoke();
-      $$->invoke->args = std::move(*$5);
-      delete $5;
+      $$->invoke->args = MoveAndDelete($5);
     }
   | LPAR GET script_var_opt quoted_text RPAR {
       $$ = new Action();
       $$->loc = @2;
-      $$->module_var = std::move(*$3);
-      delete $3;
+      $$->module_var = MoveAndDelete($3);
       $$->type = ActionType::Get;
-      $$->name = std::move(*$4);
-      delete $4;
+      $$->name = MoveAndDelete($4);
     }
 ;
 
 assertion :
     LPAR ASSERT_MALFORMED script_module quoted_text RPAR {
-      $$ = new AssertMalformedCommand($3, std::move(*$4));
-      delete $4;
+      $$ = new AssertMalformedCommand($3, MoveAndDelete($4));
     }
   | LPAR ASSERT_INVALID script_module quoted_text RPAR {
-      $$ = new AssertInvalidCommand($3, std::move(*$4));
-      delete $4;
+      $$ = new AssertInvalidCommand($3, MoveAndDelete($4));
     }
   | LPAR ASSERT_UNLINKABLE script_module quoted_text RPAR {
-      $$ = new AssertUnlinkableCommand($3, std::move(*$4));
-      delete $4;
+      $$ = new AssertUnlinkableCommand($3, MoveAndDelete($4));
     }
   | LPAR ASSERT_TRAP script_module quoted_text RPAR {
-      $$ = new AssertUninstantiableCommand($3, std::move(*$4));
-      delete $4;
+      $$ = new AssertUninstantiableCommand($3, MoveAndDelete($4));
     }
   | LPAR ASSERT_RETURN action const_list RPAR {
       $$ = new AssertReturnCommand($3, $4);
@@ -1531,12 +1429,10 @@ assertion :
       $$ = new AssertReturnArithmeticNanCommand($3);
     }
   | LPAR ASSERT_TRAP action quoted_text RPAR {
-      $$ = new AssertTrapCommand($3, std::move(*$4));
-      delete $4;
+      $$ = new AssertTrapCommand($3, MoveAndDelete($4));
     }
   | LPAR ASSERT_EXHAUSTION action quoted_text RPAR {
-      $$ = new AssertExhaustionCommand($3, std::move(*$4));
-      delete $4;
+      $$ = new AssertExhaustionCommand($3, MoveAndDelete($4));
     }
 ;
 
@@ -1549,9 +1445,7 @@ cmd :
       $$ = new ModuleCommand($1);
     }
   | LPAR REGISTER quoted_text script_var_opt RPAR {
-      auto* command = new RegisterCommand(std::move(*$3), *$4);
-      delete $3;
-      delete $4;
+      auto* command = new RegisterCommand(MoveAndDelete($3), MoveAndDelete($4));
       command->var.loc = @4;
       $$ = command;
     }
@@ -1570,12 +1464,11 @@ cmd_list :
 const :
     LPAR CONST literal RPAR {
       $$.loc = @2;
-      string_view sv = $3->text;
-      if (Failed(parse_const($2, $3->type, sv.begin(), sv.end(), &$$))) {
+      auto literal = MoveAndDelete($3);
+      if (Failed(ParseConst($2, literal, &$$))) {
         wast_parser_error(&@3, lexer, parser, "invalid literal \"%s\"",
-                          $3->text.c_str());
+                          literal.text.c_str());
       }
-      delete $3;
     }
 ;
 const_list :
@@ -1592,8 +1485,7 @@ script :
     }
   | cmd_list {
       $$ = new Script();
-      $$->commands = std::move(*$1);
-      delete $1;
+      $$->commands = MoveAndDelete($1);
 
       int last_module_index = -1;
       for (size_t i = 0; i < $$->commands.size(); ++i) {
@@ -1667,11 +1559,11 @@ script_start :
 
 %%
 
-Result parse_const(Type type,
-                   LiteralType literal_type,
-                   const char* s,
-                   const char* end,
-                   Const* out) {
+Result ParseConst(Type type, const Literal& literal, Const* out) {
+  string_view sv = literal.text;
+  const char* s = sv.begin();
+  const char* end = sv.end();
+
   out->type = type;
   switch (type) {
     case Type::I32:
@@ -1679,9 +1571,9 @@ Result parse_const(Type type,
     case Type::I64:
       return parse_int64(s, end, &out->u64, ParseIntType::SignedAndUnsigned);
     case Type::F32:
-      return parse_float(literal_type, s, end, &out->f32_bits);
+      return parse_float(literal.type, s, end, &out->f32_bits);
     case Type::F64:
-      return parse_double(literal_type, s, end, &out->f64_bits);
+      return parse_double(literal.type, s, end, &out->f64_bits);
     default:
       assert(0);
       break;
@@ -1689,13 +1581,13 @@ Result parse_const(Type type,
   return Result::Error;
 }
 
-void reverse_bindings(TypeVector* types, BindingHash* bindings) {
+void ReverseBindings(TypeVector* types, BindingHash* bindings) {
   for (auto& pair : *bindings) {
     pair.second.index = types->size() - pair.second.index - 1;
   }
 }
 
-bool is_empty_signature(const FuncSignature* sig) {
+bool IsEmptySignature(const FuncSignature* sig) {
   return sig->result_types.empty() && sig->param_types.empty();
 }
 
@@ -1713,8 +1605,8 @@ void append_implicit_func_declaration(Location* loc,
   }
 }
 
-void check_import_ordering(Location* loc, WastLexer* lexer, WastParser* parser,
-                           Module* module, const ModuleFieldList& fields) {
+void CheckImportOrdering(Location* loc, WastLexer* lexer, WastParser* parser,
+                         Module* module, const ModuleFieldList& fields) {
   for (const ModuleField& field: fields) {
     if (field.type == ModuleFieldType::Import) {
       if (module->funcs.size() != module->num_func_imports ||
@@ -1730,11 +1622,11 @@ void check_import_ordering(Location* loc, WastLexer* lexer, WastParser* parser,
   }
 }
 
-void append_module_fields(Module* module, ModuleFieldList* fields) {
-  ModuleField* main_field = &fields->front();
+void AppendModuleFields(Module* module, ModuleFieldList&& fields) {
+  ModuleField* main_field = &fields.front();
   Index main_index = kInvalidIndex;
 
-  for (ModuleField& field : *fields) {
+  for (ModuleField& field : fields) {
     std::string* name = nullptr;
     BindingHash* bindings = nullptr;
     Index index = kInvalidIndex;
@@ -1892,7 +1784,7 @@ void append_module_fields(Module* module, ModuleFieldList* fields) {
     }
   }
 
-  module->fields.splice(module->fields.end(), *fields);
+  module->fields.splice(module->fields.end(), fields);
 }
 
 Result parse_wast(WastLexer* lexer, Script** out_script,
