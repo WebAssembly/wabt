@@ -145,7 +145,7 @@ class BinaryErrorHandlerModule : public ErrorHandler {
 };
 
 template <typename OutputIter>
-void UnescapeString(string_view text, OutputIter dest) {
+void RemoveEscapes(string_view text, OutputIter dest) {
   // Remove surrounding quotes; if any. This may be empty if the string was
   // invalid (e.g. if it contained a bad escape sequence).
   if (text.size() <= 2)
@@ -200,8 +200,12 @@ void UnescapeString(string_view text, OutputIter dest) {
   }
 }
 
-static void UnescapeTextVector(const TextVector& text_vector,
-                               std::vector<uint8_t>* out_data);
+template <typename OutputIter>
+void RemoveEscapes(const TextVector& texts, OutputIter out) {
+  for (const std::string& text: texts)
+    RemoveEscapes(text, out);
+}
+
 
 #define wabt_wast_parser_lex(...) lexer->GetToken(__VA_ARGS__, parser)
 #define wabt_wast_parser_error wast_parser_error
@@ -327,7 +331,7 @@ text_list_opt :
 quoted_text :
     TEXT {
       $$ = new std::string();
-      UnescapeString($1.to_string_view(), std::back_inserter(*$$));
+      RemoveEscapes($1.to_string_view(), std::back_inserter(*$$));
     }
 ;
 
@@ -1118,7 +1122,7 @@ data :
       delete $3;
       data_segment->offset = std::move(*$4);
       delete $4;
-      UnescapeTextVector(*$5, &data_segment->data);
+      RemoveEscapes(*$5, std::back_inserter(data_segment->data));
       delete $5;
       $$ = new DataSegmentModuleField(data_segment, @2);
     }
@@ -1127,7 +1131,7 @@ data :
       data_segment->memory_var = Var(0, @2);
       data_segment->offset = std::move(*$3);
       delete $3;
-      UnescapeTextVector(*$4, &data_segment->data);
+      RemoveEscapes(*$4, std::back_inserter(data_segment->data));
       delete $4;
       $$ = new DataSegmentModuleField(data_segment, @2);
     }
@@ -1169,7 +1173,7 @@ memory_fields :
       data_segment->memory_var = Var(kInvalidIndex);
       data_segment->offset.push_back(new ConstExpr(Const(Const::I32(), 0)));
       data_segment->offset.back().loc = @2;
-      UnescapeTextVector(*$3, &data_segment->data);
+      RemoveEscapes(*$3, std::back_inserter(data_segment->data));
       delete $3;
 
       uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment->data.size());
@@ -1463,7 +1467,7 @@ script_module :
       $$->binary.name = std::move(*$3);
       delete $3;
       $$->binary.loc = @2;
-      UnescapeTextVector(*$5, &$$->binary.data);
+      RemoveEscapes(*$5, std::back_inserter($$->binary.data));
       delete $5;
     }
   | LPAR MODULE bind_var_opt QUOTE text_list RPAR {
@@ -1471,7 +1475,7 @@ script_module :
       $$->quoted.name = std::move(*$3);
       delete $3;
       $$->quoted.loc = @2;
-      UnescapeTextVector(*$5, &$$->quoted.data);
+      RemoveEscapes(*$5, std::back_inserter($$->quoted.data));
       delete $5;
     }
 ;
@@ -1683,18 +1687,6 @@ Result parse_const(Type type,
       break;
   }
   return Result::Error;
-}
-
-void UnescapeTextVector(const TextVector& texts,
-                        std::vector<uint8_t>* out_data) {
-  size_t total_size = 0;
-  for (const std::string& text: texts)
-    total_size += text.size();
-
-  out_data->reserve(total_size);
-
-  for (const std::string& text: texts)
-    UnescapeString(text, std::back_inserter(*out_data));
 }
 
 void reverse_bindings(TypeVector* types, BindingHash* bindings) {
