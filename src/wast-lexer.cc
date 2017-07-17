@@ -163,9 +163,9 @@ void WastLexer::PushLookaheadToken() {
 }
 
 void WastLexer::SetLiteral(LiteralType lit_typ) {
-  token_->lval_.literal.type = lit_typ;
-  token_->lval_.literal.text.start = yytext;
-  token_->lval_.literal.text.length = yyleng;
+  token_->lval_.t_literal.type = lit_typ;
+  token_->lval_.t_literal.text.data = yytext;
+  token_->lval_.t_literal.text.size = yyleng;
 }
 
 void WastLexer::SetLocation(Location* loc) {
@@ -181,17 +181,17 @@ void WastLexer::SetLookaheadToken(int value) {
 }
 
 void WastLexer::SetOpcode(Opcode opc) {
-  token_->lval_.opcode = opc;
+  token_->lval_.t_opcode = opc;
 }
 
 void WastLexer::SetText() {
-  token_->lval_.text.start = yytext;
-  token_->lval_.text.length = yyleng;
+  token_->lval_.t_text.data = yytext;
+  token_->lval_.t_text.size = yyleng;
 }
 
 void WastLexer::SetTextAt(size_t offset) {
-  token_->lval_.text.start = yytext + offset;
-  token_->lval_.text.length = yyleng - offset;
+  token_->lval_.t_text.data = yytext + offset;
+  token_->lval_.t_text.size = yyleng - offset;
 }
 
 void WastLexer::SetToken(int value) {
@@ -201,7 +201,7 @@ void WastLexer::SetToken(int value) {
 }
 
 void WastLexer::SetType(Type ty) {
-  token_->lval_.type = ty;
+  token_->lval_.t_type = ty;
 }
 
 Result WastLexer::Fill(Location* loc, WastParser* parser, size_t need) {

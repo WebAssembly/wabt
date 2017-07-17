@@ -20,6 +20,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
+#include <iterator>
 #include <utility>
 
 #include "binary-reader.h"
@@ -56,10 +57,6 @@
     RELOCATE_STACK(YYSTYPE, yyvsa, *(vs), old_size, *(new_size));            \
     RELOCATE_STACK(YYLTYPE, yylsa, *(ls), old_size, *(new_size));            \
   } while (0)
-
-#define DUPTEXT(dst, src)                                \
-  (dst).start = wabt_strndup((src).start, (src).length); \
-  (dst).length = (src).length
 
 #define YYLLOC_DEFAULT(Current, Rhs, N)                       \
   do                                                          \
@@ -118,8 +115,6 @@ static Result parse_const(Type type,
                           const char* s,
                           const char* end,
                           Const* out);
-static size_t CopyStringContents(StringSlice* text, char* dest);
-static void DupTextList(TextList* text_list, std::vector<uint8_t>* out_data);
 
 static void reverse_bindings(TypeVector*, BindingHash*);
 
@@ -148,6 +143,65 @@ class BinaryErrorHandlerModule : public ErrorHandler {
   WastLexer* lexer_;
   WastParser* parser_;
 };
+
+template <typename OutputIter>
+void UnescapeString(string_view text, OutputIter dest) {
+  // Remove surrounding quotes; if any. This may be empty if the string was
+  // invalid (e.g. if it contained a bad escape sequence).
+  if (text.size() <= 2)
+    return;
+
+  text = text.substr(1, text.size() - 2);
+
+  const char* src = text.data();
+  const char* end = text.data() + text.size();
+
+  while (src < end) {
+    if (*src == '\\') {
+      src++;
+      switch (*src) {
+        case 'n':
+          *dest++ = '\n';
+          break;
+        case 'r':
+          *dest++ = '\r';
+          break;
+        case 't':
+          *dest++ = '\t';
+          break;
+        case '\\':
+          *dest++ = '\\';
+          break;
+        case '\'':
+          *dest++ = '\'';
+          break;
+        case '\"':
+          *dest++ = '\"';
+          break;
+        default: {
+          // The string should be validated already, so we know this is a hex
+          // sequence.
+          uint32_t hi;
+          uint32_t lo;
+          if (Succeeded(parse_hexdigit(src[0], &hi)) &&
+              Succeeded(parse_hexdigit(src[1], &lo))) {
+            *dest++ = (hi << 4) | lo;
+          } else {
+            assert(0);
+          }
+          src++;
+          break;
+        }
+      }
+      src++;
+    } else {
+      *dest++ = *src++;
+    }
+  }
+}
+
+static void UnescapeTextVector(const TextVector& text_vector,
+                               std::vector<uint8_t>* out_data);
 
 #define wabt_wast_parser_lex(...) lexer->GetToken(__VA_ARGS__, parser)
 #define wabt_wast_parser_error wast_parser_error
@@ -182,11 +236,11 @@ class BinaryErrorHandlerModule : public ErrorHandler {
 %token ASSERT_TRAP ASSERT_EXHAUSTION
 %token EOF 0 "EOF"
 
-%type<opcode> BINARY COMPARE CONVERT LOAD STORE UNARY
-%type<text> ALIGN_EQ_NAT OFFSET_EQ_NAT TEXT VAR
-%type<type> SELECT
-%type<type> CONST VALUE_TYPE
-%type<literal> NAT INT FLOAT
+%type<t_opcode> BINARY COMPARE CONVERT LOAD STORE UNARY
+%type<t_text> ALIGN_EQ_NAT OFFSET_EQ_NAT TEXT VAR
+%type<t_type> SELECT
+%type<t_type> CONST VALUE_TYPE
+%type<t_literal> NAT INT FLOAT
 
 %type<action> action
 %type<block> block
@@ -212,10 +266,9 @@ class BinaryErrorHandlerModule : public ErrorHandler {
 %type<script_module> script_module
 %type<literal> literal
 %type<script> script
-%type<string> bind_var bind_var_opt labeling_opt
+%type<string> bind_var bind_var_opt labeling_opt quoted_text
 %type<table> table_sig
-%type<text> quoted_text
-%type<text_list> text_list text_list_opt
+%type<texts> text_list text_list_opt
 %type<try_expr> try_ catch_sexp_list catch_instr_list
 %type<types> block_sig value_type_list
 %type<u32> align_opt
@@ -223,11 +276,6 @@ class BinaryErrorHandlerModule : public ErrorHandler {
 %type<vars> var_list
 %type<var> type_use var script_var_opt
 
-/* These non-terminals use the types below that have destructors, but the
- * memory is shared with the lexer, so should not be destroyed. */
-%destructor {} ALIGN_EQ_NAT OFFSET_EQ_NAT TEXT VAR NAT INT FLOAT
-%destructor { destroy_string_slice(&$$); } <text>
-%destructor { destroy_string_slice(&$$.text); } <literal>
 %destructor { delete $$; } <action>
 %destructor { delete $$; } <block>
 %destructor { delete $$; } <command>
@@ -246,7 +294,7 @@ class BinaryErrorHandlerModule : public ErrorHandler {
 %destructor { delete $$; } <script_module>
 %destructor { delete $$; } <script>
 %destructor { delete $$; } <string>
-%destructor { destroy_text_list(&$$); } <text_list>
+%destructor { delete $$; } <texts>
 %destructor { delete $$; } <types>
 %destructor { delete $$; } <var>
 %destructor { delete $$; } <vars>
@@ -263,31 +311,23 @@ class BinaryErrorHandlerModule : public ErrorHandler {
 
 text_list :
     TEXT {
-      TextListNode* node = new TextListNode();
-      DUPTEXT(node->text, $1);
-      node->next = nullptr;
-      $$.first = $$.last = node;
+      $$ = new TextVector();
+      $$->emplace_back($1.to_string());
     }
   | text_list TEXT {
       $$ = $1;
-      TextListNode* node = new TextListNode();
-      DUPTEXT(node->text, $2);
-      node->next = nullptr;
-      $$.last->next = node;
-      $$.last = node;
+      $$->emplace_back($2.to_string());
     }
 ;
 text_list_opt :
-    /* empty */ { $$.first = $$.last = nullptr; }
+    /* empty */ { $$ = new TextVector(); }
   | text_list
 ;
 
 quoted_text :
     TEXT {
-      char* data = new char[$1.length + 1];
-      size_t actual_size = CopyStringContents(&$1, data);
-      $$.start = data;
-      $$.length = actual_size;
+      $$ = new std::string();
+      UnescapeString($1.to_string_view(), std::back_inserter(*$$));
     }
 ;
 
@@ -376,27 +416,24 @@ type_use :
 
 nat :
     NAT {
-      if (Failed(parse_uint64($1.text.start,
-                              $1.text.start + $1.text.length, &$$))) {
+      string_view sv = $1.text.to_string_view();
+      if (Failed(parse_uint64(sv.begin(), sv.end(), &$$))) {
         wast_parser_error(&@1, lexer, parser,
-                          "invalid int " PRIstringslice "\"",
-                          WABT_PRINTF_STRING_SLICE_ARG($1.text));
+                          "invalid int \"" PRIstringview "\"",
+                          WABT_PRINTF_STRING_VIEW_ARG(sv));
       }
     }
 ;
 
 literal :
     NAT {
-      $$.type = $1.type;
-      DUPTEXT($$.text, $1.text);
+      $$ = new Literal($1);
     }
   | INT {
-      $$.type = $1.type;
-      DUPTEXT($$.text, $1.text);
+      $$ = new Literal($1);
     }
   | FLOAT {
-      $$.type = $1.type;
-      DUPTEXT($$.text, $1.text);
+      $$ = new Literal($1);
     }
 ;
 
@@ -405,7 +442,7 @@ var :
       $$ = new Var($1, @1);
     }
   | VAR {
-      $$ = new Var(string_view($1.start, $1.length), @1);
+      $$ = new Var($1.to_string_view(), @1);
     }
 ;
 var_list :
@@ -421,7 +458,7 @@ bind_var_opt :
   | bind_var
 ;
 bind_var :
-    VAR { $$ = new std::string(string_slice_to_string($1)); }
+    VAR { $$ = new std::string($1.to_string()); }
 ;
 
 labeling_opt :
@@ -433,11 +470,12 @@ offset_opt :
     /* empty */ { $$ = 0; }
   | OFFSET_EQ_NAT {
       uint64_t offset64;
-      if (Failed(parse_int64($1.start, $1.start + $1.length, &offset64,
+      string_view sv = $1.to_string_view();
+      if (Failed(parse_int64(sv.begin(), sv.end(), &offset64,
                              ParseIntType::SignedAndUnsigned))) {
         wast_parser_error(&@1, lexer, parser,
-                          "invalid offset \"" PRIstringslice "\"",
-                          WABT_PRINTF_STRING_SLICE_ARG($1));
+                          "invalid offset \"" PRIstringview "\"",
+                          WABT_PRINTF_STRING_VIEW_ARG(sv));
       }
       if (offset64 > UINT32_MAX) {
         wast_parser_error(&@1, lexer, parser,
@@ -449,11 +487,12 @@ offset_opt :
 align_opt :
     /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN_EQ_NAT {
-      if (Failed(parse_int32($1.start, $1.start + $1.length, &$$,
+      string_view sv = $1.to_string_view();
+      if (Failed(parse_int32(sv.begin(), sv.end(), &$$,
                              ParseIntType::UnsignedOnly))) {
         wast_parser_error(&@1, lexer, parser,
-                          "invalid alignment \"" PRIstringslice "\"",
-                          WABT_PRINTF_STRING_SLICE_ARG($1));
+                          "invalid alignment \"" PRIstringview "\"",
+                          WABT_PRINTF_STRING_VIEW_ARG(sv));
       }
 
       if ($$ != WABT_USE_NATURAL_ALIGNMENT && !is_power_of_two($$)) {
@@ -539,13 +578,12 @@ plain_instr :
   | CONST literal {
       Const const_;
       const_.loc = @1;
-      if (Failed(parse_const($1, $2.type, $2.text.start,
-                             $2.text.start + $2.text.length, &const_))) {
-        wast_parser_error(&@2, lexer, parser,
-                          "invalid literal \"" PRIstringslice "\"",
-                          WABT_PRINTF_STRING_SLICE_ARG($2.text));
+      string_view sv = $2->text;
+      if (Failed(parse_const($1, $2->type, sv.begin(), sv.end(), &const_))) {
+        wast_parser_error(&@2, lexer, parser, "invalid literal \"%s\"",
+                          $2->text.c_str());
       }
-      delete [] $2.text.start;
+      delete $2;
       $$ = new ConstExpr(const_);
     }
   | UNARY {
@@ -1080,8 +1118,8 @@ data :
       delete $3;
       data_segment->offset = std::move(*$4);
       delete $4;
-      DupTextList(&$5, &data_segment->data);
-      destroy_text_list(&$5);
+      UnescapeTextVector(*$5, &data_segment->data);
+      delete $5;
       $$ = new DataSegmentModuleField(data_segment, @2);
     }
   | LPAR DATA offset text_list_opt RPAR {
@@ -1089,8 +1127,8 @@ data :
       data_segment->memory_var = Var(0, @2);
       data_segment->offset = std::move(*$3);
       delete $3;
-      DupTextList(&$4, &data_segment->data);
-      destroy_text_list(&$4);
+      UnescapeTextVector(*$4, &data_segment->data);
+      delete $4;
       $$ = new DataSegmentModuleField(data_segment, @2);
     }
 ;
@@ -1131,8 +1169,8 @@ memory_fields :
       data_segment->memory_var = Var(kInvalidIndex);
       data_segment->offset.push_back(new ConstExpr(Const(Const::I32(), 0)));
       data_segment->offset.back().loc = @2;
-      DupTextList(&$3, &data_segment->data);
-      destroy_text_list(&$3);
+      UnescapeTextVector(*$3, &data_segment->data);
+      delete $3;
 
       uint32_t byte_size = WABT_ALIGN_UP_TO_PAGE(data_segment->data.size());
       uint32_t page_size = WABT_BYTES_TO_PAGES(byte_size);
@@ -1237,10 +1275,10 @@ import_desc :
 import :
     LPAR IMPORT quoted_text quoted_text import_desc RPAR {
       auto field = new ImportModuleField($5, @2);
-      field->import->module_name = string_slice_to_string($3);
-      destroy_string_slice(&$3);
-      field->import->field_name = string_slice_to_string($4);
-      destroy_string_slice(&$4);
+      field->import->module_name = std::move(*$3);
+      delete $3;
+      field->import->field_name = std::move(*$4);
+      delete $4;
       $$ = field;
     }
 ;
@@ -1248,10 +1286,10 @@ import :
 inline_import :
     LPAR IMPORT quoted_text quoted_text RPAR {
       $$ = new Import();
-      $$->module_name = string_slice_to_string($3);
-      destroy_string_slice(&$3);
-      $$->field_name = string_slice_to_string($4);
-      destroy_string_slice(&$4);
+      $$->module_name = std::move(*$3);
+      delete $3;
+      $$->field_name = std::move(*$4);
+      delete $4;
     }
 ;
 
@@ -1290,8 +1328,8 @@ export_desc :
 export :
     LPAR EXPORT quoted_text export_desc RPAR {
       auto field = new ExportModuleField($4, @2);
-      field->export_->name = string_slice_to_string($3);
-      destroy_string_slice(&$3);
+      field->export_->name = std::move(*$3);
+      delete $3;
       $$ = field;
     }
 ;
@@ -1299,8 +1337,8 @@ export :
 inline_export :
     LPAR EXPORT quoted_text RPAR {
       $$ = new Export();
-      $$->name = string_slice_to_string($3);
-      destroy_string_slice(&$3);
+      $$->name = std::move(*$3);
+      delete $3;
     }
 ;
 
@@ -1397,7 +1435,7 @@ script_var_opt :
       $$ = new Var(kInvalidIndex);
     }
   | VAR {
-      $$ = new Var(string_view($1.start, $1.length), @1);
+      $$ = new Var($1.to_string_view(), @1);
     }
 ;
 
@@ -1425,16 +1463,16 @@ script_module :
       $$->binary.name = std::move(*$3);
       delete $3;
       $$->binary.loc = @2;
-      DupTextList(&$5, &$$->binary.data);
-      destroy_text_list(&$5);
+      UnescapeTextVector(*$5, &$$->binary.data);
+      delete $5;
     }
   | LPAR MODULE bind_var_opt QUOTE text_list RPAR {
       $$ = new ScriptModule(ScriptModule::Type::Quoted);
       $$->quoted.name = std::move(*$3);
       delete $3;
       $$->quoted.loc = @2;
-      DupTextList(&$5, &$$->quoted.data);
-      destroy_text_list(&$5);
+      UnescapeTextVector(*$5, &$$->quoted.data);
+      delete $5;
     }
 ;
 
@@ -1445,8 +1483,8 @@ action :
       $$->module_var = std::move(*$3);
       delete $3;
       $$->type = ActionType::Invoke;
-      $$->name = string_slice_to_string($4);
-      destroy_string_slice(&$4);
+      $$->name = std::move(*$4);
+      delete $4;
       $$->invoke = new ActionInvoke();
       $$->invoke->args = std::move(*$5);
       delete $5;
@@ -1457,27 +1495,27 @@ action :
       $$->module_var = std::move(*$3);
       delete $3;
       $$->type = ActionType::Get;
-      $$->name = string_slice_to_string($4);
-      destroy_string_slice(&$4);
+      $$->name = std::move(*$4);
+      delete $4;
     }
 ;
 
 assertion :
     LPAR ASSERT_MALFORMED script_module quoted_text RPAR {
-      $$ = new AssertMalformedCommand($3, string_slice_to_string($4));
-      destroy_string_slice(&$4);
+      $$ = new AssertMalformedCommand($3, std::move(*$4));
+      delete $4;
     }
   | LPAR ASSERT_INVALID script_module quoted_text RPAR {
-      $$ = new AssertInvalidCommand($3, string_slice_to_string($4));
-      destroy_string_slice(&$4);
+      $$ = new AssertInvalidCommand($3, std::move(*$4));
+      delete $4;
     }
   | LPAR ASSERT_UNLINKABLE script_module quoted_text RPAR {
-      $$ = new AssertUnlinkableCommand($3, string_slice_to_string($4));
-      destroy_string_slice(&$4);
+      $$ = new AssertUnlinkableCommand($3, std::move(*$4));
+      delete $4;
     }
   | LPAR ASSERT_TRAP script_module quoted_text RPAR {
-      $$ = new AssertUninstantiableCommand($3, string_slice_to_string($4));
-      destroy_string_slice(&$4);
+      $$ = new AssertUninstantiableCommand($3, std::move(*$4));
+      delete $4;
     }
   | LPAR ASSERT_RETURN action const_list RPAR {
       $$ = new AssertReturnCommand($3, $4);
@@ -1489,12 +1527,12 @@ assertion :
       $$ = new AssertReturnArithmeticNanCommand($3);
     }
   | LPAR ASSERT_TRAP action quoted_text RPAR {
-      $$ = new AssertTrapCommand($3, string_slice_to_string($4));
-      destroy_string_slice(&$4);
+      $$ = new AssertTrapCommand($3, std::move(*$4));
+      delete $4;
     }
   | LPAR ASSERT_EXHAUSTION action quoted_text RPAR {
-      $$ = new AssertExhaustionCommand($3, string_slice_to_string($4));
-      destroy_string_slice(&$4);
+      $$ = new AssertExhaustionCommand($3, std::move(*$4));
+      delete $4;
     }
 ;
 
@@ -1507,8 +1545,8 @@ cmd :
       $$ = new ModuleCommand($1);
     }
   | LPAR REGISTER quoted_text script_var_opt RPAR {
-      auto* command = new RegisterCommand(string_slice_to_string($3), *$4);
-      destroy_string_slice(&$3);
+      auto* command = new RegisterCommand(std::move(*$3), *$4);
+      delete $3;
       delete $4;
       command->var.loc = @4;
       $$ = command;
@@ -1528,13 +1566,12 @@ cmd_list :
 const :
     LPAR CONST literal RPAR {
       $$.loc = @2;
-      if (Failed(parse_const($2, $3.type, $3.text.start,
-                             $3.text.start + $3.text.length, &$$))) {
-        wast_parser_error(&@3, lexer, parser,
-                          "invalid literal \"" PRIstringslice "\"",
-                          WABT_PRINTF_STRING_SLICE_ARG($3.text));
+      string_view sv = $3->text;
+      if (Failed(parse_const($2, $3->type, sv.begin(), sv.end(), &$$))) {
+        wast_parser_error(&@3, lexer, parser, "invalid literal \"%s\"",
+                          $3->text.c_str());
       }
-      delete [] $3.text.start;
+      delete $3;
     }
 ;
 const_list :
@@ -1648,80 +1685,16 @@ Result parse_const(Type type,
   return Result::Error;
 }
 
-size_t CopyStringContents(StringSlice* text, char* dest) {
-  const char* src = text->start + 1;
-  const char* end = text->start + text->length - 1;
-
-  char* dest_start = dest;
-
-  while (src < end) {
-    if (*src == '\\') {
-      src++;
-      switch (*src) {
-        case 'n':
-          *dest++ = '\n';
-          break;
-        case 'r':
-          *dest++ = '\r';
-          break;
-        case 't':
-          *dest++ = '\t';
-          break;
-        case '\\':
-          *dest++ = '\\';
-          break;
-        case '\'':
-          *dest++ = '\'';
-          break;
-        case '\"':
-          *dest++ = '\"';
-          break;
-        default: {
-          // The string should be validated already, so we know this is a hex
-          // sequence.
-          uint32_t hi;
-          uint32_t lo;
-          if (Succeeded(parse_hexdigit(src[0], &hi)) &&
-              Succeeded(parse_hexdigit(src[1], &lo))) {
-            *dest++ = (hi << 4) | lo;
-          } else {
-            assert(0);
-          }
-          src++;
-          break;
-        }
-      }
-      src++;
-    } else {
-      *dest++ = *src++;
-    }
-  }
-  /* return the data length */
-  return dest - dest_start;
-}
-
-void DupTextList(TextList* text_list, std::vector<uint8_t>* out_data) {
-  /* walk the linked list to see how much total space is needed */
+void UnescapeTextVector(const TextVector& texts,
+                        std::vector<uint8_t>* out_data) {
   size_t total_size = 0;
-  for (TextListNode* node = text_list->first; node; node = node->next) {
-    /* Always allocate enough space for the entire string including the escape
-     * characters. It will only get shorter, and this way we only have to
-     * iterate through the string once. */
-    const char* src = node->text.start + 1;
-    const char* end = node->text.start + node->text.length - 1;
-    size_t size = (end > src) ? (end - src) : 0;
-    total_size += size;
-  }
-  out_data->resize(total_size);
-  if (total_size > 0) {
-    char* start = reinterpret_cast<char*>(out_data->data());
-    char* dest = start;
-    for (TextListNode* node = text_list->first; node; node = node->next) {
-      size_t actual_size = CopyStringContents(&node->text, dest);
-      dest += actual_size;
-    }
-    out_data->resize(dest - start);
-  }
+  for (const std::string& text: texts)
+    total_size += text.size();
+
+  out_data->reserve(total_size);
+
+  for (const std::string& text: texts)
+    UnescapeString(text, std::back_inserter(*out_data));
 }
 
 void reverse_bindings(TypeVector* types, BindingHash* bindings) {

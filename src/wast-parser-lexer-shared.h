@@ -21,8 +21,9 @@
 #include <memory>
 
 #include "common.h"
-#include "ir.h"
 #include "error-handler.h"
+#include "ir.h"
+#include "literal.h"
 #include "wast-parser.h"
 
 #define WABT_WAST_PARSER_STYPE Token
@@ -32,28 +33,46 @@
 
 namespace wabt {
 
-struct TextListNode {
-  StringSlice text;
-  struct TextListNode* next;
+// Terminal types are C-style structs so they don't need to be allocated. Any
+// string memory used by terminals is shared with the lexer and does not need
+// to be dellocated.
+
+struct StringTerminal {
+  const char* data;
+  size_t size;
+
+  // Helper functions.
+  std::string to_string() const { return std::string(data, size); }
+  string_view to_string_view() const { return string_view(data, size); }
 };
 
-struct TextList {
-  TextListNode* first;
-  TextListNode* last;
+struct LiteralTerminal {
+  LiteralType type;
+  StringTerminal text;
 };
+
+struct Literal {
+  explicit Literal(LiteralTerminal terminal)
+      : type(terminal.type), text(terminal.text.to_string()) {}
+
+  LiteralType type;
+  std::string text;
+};
+
+typedef std::vector<std::string> TextVector;
 
 union Token {
-  /* terminals */
-  StringSlice text;
-  Type type;
-  Opcode opcode;
-  Literal literal;
+  // Terminals
+  StringTerminal t_text;
+  Type t_type;
+  Opcode t_opcode;
+  LiteralTerminal t_literal;
 
   Token() {}
 
-  /* non-terminals */
-  /* some of these use pointers to keep the size of Token down; copying the
-   tokens is a hotspot when parsing large files. */
+  // Non-terminals
+  // Some of these use pointers to keep the size of Token down; copying the
+  // tokens is a hotspot when parsing large files.
   Action* action;
   Block* block;
   Catch* catch_;
@@ -73,6 +92,7 @@ union Token {
   Global* global;
   Import* import;
   Limits limits;
+  Literal* literal;
   Memory* memory;
   Module* module;
   ModuleField* module_field;
@@ -81,7 +101,7 @@ union Token {
   Script* script;
   std::string* string;
   Table* table;
-  TextList text_list;
+  TextVector* texts;
   TryExpr* try_expr;
   TypeVector* types;
   uint32_t u32;
@@ -115,8 +135,6 @@ void wast_format_error(ErrorHandler*,
                        WastLexer*,
                        const char* format,
                        va_list);
-void destroy_text_list(TextList*);
-void destroy_module_field_list(ModuleFieldList*);
 
 }  // namespace wabt
 

@@ -30,6 +30,14 @@ namespace wabt {
  * result, the only validation that is done is for overflow, not for otherwise
  * bogus input. */
 
+enum class LiteralType {
+  Int,
+  Float,
+  Hexfloat,
+  Infinity,
+  Nan,
+};
+
 enum class ParseIntType {
   UnsignedOnly = 0,
   SignedAndUnsigned = 1,

@@ -58,10 +58,6 @@ class BindingHash : public std::unordered_multimap<std::string, Binding> {
     return FindIndex(name.to_string());
   }
 
-  Index FindIndex(const StringSlice& name) const {
-    return FindIndex(string_slice_to_string(name));
-  }
-
  private:
   typedef std::vector<const value_type*> ValueTypeVector;
 

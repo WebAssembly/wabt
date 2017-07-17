@@ -23,6 +23,7 @@
 
 #include "common.h"
 #include "lexer-source-line-finder.h"
+#include "literal.h"
 #include "opcode.h"
 
 namespace wabt {
