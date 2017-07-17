@@ -48,38 +48,6 @@ const char* g_reloc_type_name[] = {"R_FUNC_INDEX_LEB",
                                    };
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
 
-StringSlice empty_string_slice(void) {
-  StringSlice result;
-  result.start = "";
-  result.length = 0;
-  return result;
-}
-
-bool string_slice_eq_cstr(const StringSlice* s1, const char* s2) {
-  size_t s2_len = strlen(s2);
-  if (s2_len != s1->length)
-    return false;
-
-  return strncmp(s1->start, s2, s2_len) == 0;
-}
-
-StringSlice string_slice_from_cstr(const char* string) {
-  StringSlice result;
-  result.start = string;
-  result.length = strlen(string);
-  return result;
-}
-
-bool string_slice_is_empty(const StringSlice* str) {
-  assert(str);
-  return !str->start || str->length == 0;
-}
-
-void destroy_string_slice(StringSlice* str) {
-  assert(str);
-  delete [] str->start;
-}
-
 Result ReadFile(const char* filename, std::vector<uint8_t>* out_data) {
   FILE* infile = fopen(filename, "rb");
   if (!infile) {
