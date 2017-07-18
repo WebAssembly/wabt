@@ -109,8 +109,8 @@ void ZeroMemory(T& v) {
 
 // Placement construct
 template <typename T, typename... Args>
-void Construct(T& placement, Args... args) {
-  new (&placement) T(args...);
+void Construct(T& placement, Args&&... args) {
+  new (&placement) T(std::forward<Args>(args)...);
 }
 
 // Placement destruct
