@@ -83,9 +83,9 @@ namespace wabt {
    SHIFT_AMOUNT(type, sign_bit))
 
 // TODO(binji): move LEB functions elsewhere
-size_t read_u32_leb128(const uint8_t* p,
-                       const uint8_t* end,
-                       uint32_t* out_value) {
+size_t ReadU32Leb128(const uint8_t* p,
+                     const uint8_t* end,
+                     uint32_t* out_value) {
   if (p < end && (p[0] & 0x80) == 0) {
     *out_value = LEB128_1(uint32_t);
     return 1;
@@ -111,9 +111,9 @@ size_t read_u32_leb128(const uint8_t* p,
   }
 }
 
-size_t read_i32_leb128(const uint8_t* p,
-                       const uint8_t* end,
-                       uint32_t* out_value) {
+size_t ReadI32Leb128(const uint8_t* p,
+                     const uint8_t* end,
+                     uint32_t* out_value) {
   if (p < end && (p[0] & 0x80) == 0) {
     uint32_t result = LEB128_1(uint32_t);
     *out_value = SIGN_EXTEND(int32_t, result, 6);
@@ -304,7 +304,7 @@ Result BinaryReader::ReadF64(uint64_t* out_value, const char* desc) {
 Result BinaryReader::ReadU32Leb128(uint32_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
-  size_t bytes_read = read_u32_leb128(p, end, out_value);
+  size_t bytes_read = wabt::ReadU32Leb128(p, end, out_value);
   ERROR_UNLESS(bytes_read > 0, "unable to read u32 leb128: %s", desc);
   state_.offset += bytes_read;
   return Result::Ok;
@@ -313,7 +313,7 @@ Result BinaryReader::ReadU32Leb128(uint32_t* out_value, const char* desc) {
 Result BinaryReader::ReadI32Leb128(uint32_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
-  size_t bytes_read = read_i32_leb128(p, end, out_value);
+  size_t bytes_read = wabt::ReadI32Leb128(p, end, out_value);
   ERROR_UNLESS(bytes_read > 0, "unable to read i32 leb128: %s", desc);
   state_.offset += bytes_read;
   return Result::Ok;
@@ -415,7 +415,7 @@ Result BinaryReader::ReadStr(string_view* out_str, const char* desc) {
       reinterpret_cast<const char*>(state_.data) + state_.offset, str_len);
   state_.offset += str_len;
 
-  ERROR_UNLESS(is_valid_utf8(out_str->data(), out_str->length()),
+  ERROR_UNLESS(IsValidUtf8(out_str->data(), out_str->length()),
                "invalid utf-8 encoding: %s", desc);
   return Result::Ok;
 }
@@ -1665,7 +1665,7 @@ Result BinaryReader::ReadSections() {
     ERROR_UNLESS(last_known_section_ == BinarySection::Invalid ||
                      section == BinarySection::Custom ||
                      section > last_known_section_,
-                 "section %s out of order", get_section_name(section));
+                 "section %s out of order", GetSectionName(section));
 
     CALLBACK(BeginSection, section, section_size);
 
@@ -1712,10 +1712,10 @@ Result BinaryReader::ReadModule() {
 
 }  // end anonymous namespace
 
-Result read_binary(const void* data,
-                   size_t size,
-                   BinaryReaderDelegate* delegate,
-                   const ReadBinaryOptions* options) {
+Result ReadBinary(const void* data,
+                  size_t size,
+                  BinaryReaderDelegate* delegate,
+                  const ReadBinaryOptions* options) {
   BinaryReader reader(data, size, delegate, options);
   return reader.ReadModule();
 }

@@ -78,7 +78,7 @@ examples:
   $ wasm-interp test.wasm -V 100 --run-all-exports
 )";
 
-static void parse_options(int argc, char** argv) {
+static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-interp", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
@@ -120,7 +120,7 @@ enum class ModuleType {
   Binary,
 };
 
-static string_view get_dirname(string_view path) {
+static string_view GetDirname(string_view path) {
   // Strip everything after and including the last slash (or backslash), e.g.:
   //
   // s = "foo/bar/baz", => "foo/bar"
@@ -140,9 +140,7 @@ static string_view get_dirname(string_view path) {
 /* Not sure, but 100 chars is probably safe */
 #define MAX_TYPED_VALUE_CHARS 100
 
-static void sprint_typed_value(char* buffer,
-                               size_t size,
-                               const TypedValue* tv) {
+static void SPrintTypedValue(char* buffer, size_t size, const TypedValue* tv) {
   switch (tv->type) {
     case Type::I32:
       snprintf(buffer, size, "i32:%u", tv->value.i32);
@@ -172,57 +170,57 @@ static void sprint_typed_value(char* buffer,
   }
 }
 
-static void print_typed_value(const TypedValue* tv) {
+static void PrintTypedValue(const TypedValue* tv) {
   char buffer[MAX_TYPED_VALUE_CHARS];
-  sprint_typed_value(buffer, sizeof(buffer), tv);
+  SPrintTypedValue(buffer, sizeof(buffer), tv);
   printf("%s", buffer);
 }
 
-static void print_typed_value_vector(const std::vector<TypedValue>& values) {
+static void PrintTypedValueVector(const std::vector<TypedValue>& values) {
   for (size_t i = 0; i < values.size(); ++i) {
-    print_typed_value(&values[i]);
+    PrintTypedValue(&values[i]);
     if (i != values.size() - 1)
       printf(", ");
   }
 }
 
-static void print_interpreter_result(const char* desc,
-                                     interpreter::Result iresult) {
+static void PrintInterpreterResult(const char* desc,
+                                   interpreter::Result iresult) {
   printf("%s: %s\n", desc, s_trap_strings[static_cast<size_t>(iresult)]);
 }
 
-static void print_call(string_view module_name,
-                       string_view func_name,
-                       const std::vector<TypedValue>& args,
-                       const std::vector<TypedValue>& results,
-                       interpreter::Result iresult) {
+static void PrintCall(string_view module_name,
+                      string_view func_name,
+                      const std::vector<TypedValue>& args,
+                      const std::vector<TypedValue>& results,
+                      interpreter::Result iresult) {
   if (!module_name.empty())
     printf(PRIstringview ".", WABT_PRINTF_STRING_VIEW_ARG(module_name));
   printf(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(func_name));
-  print_typed_value_vector(args);
+  PrintTypedValueVector(args);
   printf(") =>");
   if (iresult == interpreter::Result::Ok) {
     if (results.size() > 0) {
       printf(" ");
-      print_typed_value_vector(results);
+      PrintTypedValueVector(results);
     }
     printf("\n");
   } else {
-    print_interpreter_result(" error", iresult);
+    PrintInterpreterResult(" error", iresult);
   }
 }
 
-static interpreter::Result run_function(Thread* thread,
-                                        Index func_index,
-                                        const std::vector<TypedValue>& args,
-                                        std::vector<TypedValue>* out_results) {
+static interpreter::Result RunFunction(Thread* thread,
+                                       Index func_index,
+                                       const std::vector<TypedValue>& args,
+                                       std::vector<TypedValue>* out_results) {
   return s_trace ? thread->TraceFunction(func_index, s_stdout_stream.get(),
                                          args, out_results)
                  : thread->RunFunction(func_index, args, out_results);
 }
 
-static interpreter::Result run_start_function(Thread* thread,
-                                              DefinedModule* module) {
+static interpreter::Result RunStartFunction(Thread* thread,
+                                            DefinedModule* module) {
   if (module->start_func_index == kInvalidIndex)
     return interpreter::Result::Ok;
 
@@ -231,40 +229,39 @@ static interpreter::Result run_start_function(Thread* thread,
   std::vector<TypedValue> args;
   std::vector<TypedValue> results;
   interpreter::Result iresult =
-      run_function(thread, module->start_func_index, args, &results);
+      RunFunction(thread, module->start_func_index, args, &results);
   assert(results.size() == 0);
   return iresult;
 }
 
-static interpreter::Result run_export(Thread* thread,
-                                      const Export* export_,
-                                      const std::vector<TypedValue>& args,
-                                      std::vector<TypedValue>* out_results) {
+static interpreter::Result RunExport(Thread* thread,
+                                     const Export* export_,
+                                     const std::vector<TypedValue>& args,
+                                     std::vector<TypedValue>* out_results) {
   if (s_trace) {
     printf(">>> running export \"" PRIstringview "\":\n",
            WABT_PRINTF_STRING_VIEW_ARG(export_->name));
   }
 
   assert(export_->kind == ExternalKind::Func);
-  return run_function(thread, export_->index, args, out_results);
+  return RunFunction(thread, export_->index, args, out_results);
 }
 
-static interpreter::Result run_export_by_name(
-    Thread* thread,
-    Module* module,
-    string_view name,
-    const std::vector<TypedValue>& args,
-    std::vector<TypedValue>* out_results,
-    RunVerbosity verbose) {
+static interpreter::Result RunExportByName(Thread* thread,
+                                           Module* module,
+                                           string_view name,
+                                           const std::vector<TypedValue>& args,
+                                           std::vector<TypedValue>* out_results,
+                                           RunVerbosity verbose) {
   Export* export_ = module->GetExport(name);
   if (!export_)
     return interpreter::Result::UnknownExport;
   if (export_->kind != ExternalKind::Func)
     return interpreter::Result::ExportKindMismatch;
-  return run_export(thread, export_, args, out_results);
+  return RunExport(thread, export_, args, out_results);
 }
 
-static interpreter::Result get_global_export_by_name(
+static interpreter::Result GetGlobalExportByName(
     Thread* thread,
     Module* module,
     string_view name,
@@ -281,23 +278,23 @@ static interpreter::Result get_global_export_by_name(
   return interpreter::Result::Ok;
 }
 
-static void run_all_exports(Module* module,
-                            Thread* thread,
-                            RunVerbosity verbose) {
+static void RunAllExports(Module* module,
+                          Thread* thread,
+                          RunVerbosity verbose) {
   std::vector<TypedValue> args;
   std::vector<TypedValue> results;
   for (const Export& export_ : module->exports) {
-    interpreter::Result iresult = run_export(thread, &export_, args, &results);
+    interpreter::Result iresult = RunExport(thread, &export_, args, &results);
     if (verbose == RunVerbosity::Verbose) {
-      print_call(string_view(), export_.name, args, results, iresult);
+      PrintCall(string_view(), export_.name, args, results, iresult);
     }
   }
 }
 
-static wabt::Result read_module(const char* module_filename,
-                                Environment* env,
-                                ErrorHandler* error_handler,
-                                DefinedModule** out_module) {
+static wabt::Result ReadModule(const char* module_filename,
+                               Environment* env,
+                               ErrorHandler* error_handler,
+                               DefinedModule** out_module) {
   wabt::Result result;
   std::vector<uint8_t> file_data;
 
@@ -305,9 +302,9 @@ static wabt::Result read_module(const char* module_filename,
 
   result = ReadFile(module_filename, &file_data);
   if (Succeeded(result)) {
-    result = read_binary_interpreter(env, DataOrNull(file_data),
-                                     file_data.size(), &s_read_binary_options,
-                                     error_handler, out_module);
+    result = ReadBinaryInterpreter(env, DataOrNull(file_data), file_data.size(),
+                                   &s_read_binary_options, error_handler,
+                                   out_module);
 
     if (Succeeded(result)) {
       if (s_verbose)
@@ -332,8 +329,8 @@ static interpreter::Result default_host_callback(const HostFunc* func,
   std::vector<TypedValue> vec_results(out_results, out_results + num_results);
 
   printf("called host ");
-  print_call(func->module_name, func->field_name, vec_args, vec_results,
-             interpreter::Result::Ok);
+  PrintCall(func->module_name, func->field_name, vec_args, vec_results,
+            interpreter::Result::Ok);
   return interpreter::Result::Ok;
 }
 
@@ -435,27 +432,27 @@ class SpectestHostImportDelegate : public HostImportDelegate {
   }
 };
 
-static void init_environment(Environment* env) {
+static void InitEnvironment(Environment* env) {
   HostModule* host_module = env->AppendHostModule("spectest");
   host_module->import_delegate.reset(new SpectestHostImportDelegate());
 }
 
-static wabt::Result read_and_run_module(const char* module_filename) {
+static wabt::Result ReadAndRunModule(const char* module_filename) {
   wabt::Result result;
   Environment env;
-  init_environment(&env);
+  InitEnvironment(&env);
 
   ErrorHandlerFile error_handler(Location::Type::Binary);
   DefinedModule* module = nullptr;
-  result = read_module(module_filename, &env, &error_handler, &module);
+  result = ReadModule(module_filename, &env, &error_handler, &module);
   if (Succeeded(result)) {
     Thread thread(&env, s_thread_options);
-    interpreter::Result iresult = run_start_function(&thread, module);
+    interpreter::Result iresult = RunStartFunction(&thread, module);
     if (iresult == interpreter::Result::Ok) {
       if (s_run_all_exports)
-        run_all_exports(module, &thread, RunVerbosity::Verbose);
+        RunAllExports(module, &thread, RunVerbosity::Verbose);
     } else {
-      print_interpreter_result("error running start function", iresult);
+      PrintInterpreterResult("error running start function", iresult);
     }
   }
   return result;
@@ -509,34 +506,34 @@ struct Action {
       return wabt::Result::Error; \
   } while (0)
 
-#define EXPECT(x) CHECK_RESULT(expect(ctx, x))
-#define EXPECT_KEY(x) CHECK_RESULT(expect_key(ctx, x))
+#define EXPECT(x) CHECK_RESULT(Expect(ctx, x))
+#define EXPECT_KEY(x) CHECK_RESULT(ExpectKey(ctx, x))
 #define PARSE_KEY_STRING_VALUE(key, value) \
-  CHECK_RESULT(parse_key_string_value(ctx, key, value))
+  CHECK_RESULT(ParseKeyStringValue(ctx, key, value))
 
 static void WABT_PRINTF_FORMAT(2, 3)
-    print_parse_error(Context* ctx, const char* format, ...) {
+    PrintParseError(Context* ctx, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   fprintf(stderr, "%s:%d:%d: %s\n", ctx->loc.filename, ctx->loc.line,
           ctx->loc.first_column, buffer);
 }
 
 static void WABT_PRINTF_FORMAT(2, 3)
-    print_command_error(Context* ctx, const char* format, ...) {
+    PrintCommandError(Context* ctx, const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   printf(PRIstringview ":%u: %s\n",
          WABT_PRINTF_STRING_VIEW_ARG(ctx->source_filename),
          ctx->command_line_number, buffer);
 }
 
-static void putback_char(Context* ctx) {
+static void PutbackChar(Context* ctx) {
   assert(ctx->has_prev_loc);
   ctx->json_offset--;
   ctx->loc = ctx->prev_loc;
   ctx->has_prev_loc = false;
 }
 
-static int read_char(Context* ctx) {
+static int ReadChar(Context* ctx) {
   if (ctx->json_offset >= ctx->json_data.size())
     return -1;
   ctx->prev_loc = ctx->loc;
@@ -551,9 +548,9 @@ static int read_char(Context* ctx) {
   return c;
 }
 
-static void skip_whitespace(Context* ctx) {
+static void SkipWhitespace(Context* ctx) {
   while (1) {
-    switch (read_char(ctx)) {
+    switch (ReadChar(ctx)) {
       case -1:
         return;
 
@@ -564,17 +561,17 @@ static void skip_whitespace(Context* ctx) {
         break;
 
       default:
-        putback_char(ctx);
+        PutbackChar(ctx);
         return;
     }
   }
 }
 
-static bool match(Context* ctx, const char* s) {
-  skip_whitespace(ctx);
+static bool Match(Context* ctx, const char* s) {
+  SkipWhitespace(ctx);
   Location start_loc = ctx->loc;
   size_t start_offset = ctx->json_offset;
-  while (*s && *s == read_char(ctx))
+  while (*s && *s == ReadChar(ctx))
     s++;
 
   if (*s == 0) {
@@ -586,16 +583,16 @@ static bool match(Context* ctx, const char* s) {
   }
 }
 
-static wabt::Result expect(Context* ctx, const char* s) {
-  if (match(ctx, s)) {
+static wabt::Result Expect(Context* ctx, const char* s) {
+  if (Match(ctx, s)) {
     return wabt::Result::Ok;
   } else {
-    print_parse_error(ctx, "expected %s", s);
+    PrintParseError(ctx, "expected %s", s);
     return wabt::Result::Error;
   }
 }
 
-static wabt::Result expect_key(Context* ctx, const char* key) {
+static wabt::Result ExpectKey(Context* ctx, const char* key) {
   size_t keylen = strlen(key);
   size_t quoted_len = keylen + 2 + 1;
   char* quoted = static_cast<char*>(alloca(quoted_len));
@@ -605,20 +602,20 @@ static wabt::Result expect_key(Context* ctx, const char* key) {
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_uint32(Context* ctx, uint32_t* out_int) {
+static wabt::Result ParseUint32(Context* ctx, uint32_t* out_int) {
   uint32_t result = 0;
-  skip_whitespace(ctx);
+  SkipWhitespace(ctx);
   while (1) {
-    int c = read_char(ctx);
+    int c = ReadChar(ctx);
     if (c >= '0' && c <= '9') {
       uint32_t last_result = result;
       result = result * 10 + static_cast<uint32_t>(c - '0');
       if (result < last_result) {
-        print_parse_error(ctx, "uint32 overflow");
+        PrintParseError(ctx, "uint32 overflow");
         return wabt::Result::Error;
       }
     } else {
-      putback_char(ctx);
+      PutbackChar(ctx);
       break;
     }
   }
@@ -626,29 +623,29 @@ static wabt::Result parse_uint32(Context* ctx, uint32_t* out_int) {
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_string(Context* ctx, std::string* out_string) {
+static wabt::Result ParseString(Context* ctx, std::string* out_string) {
   out_string->clear();
 
-  skip_whitespace(ctx);
-  if (read_char(ctx) != '"') {
-    print_parse_error(ctx, "expected string");
+  SkipWhitespace(ctx);
+  if (ReadChar(ctx) != '"') {
+    PrintParseError(ctx, "expected string");
     return wabt::Result::Error;
   }
 
   while (1) {
-    int c = read_char(ctx);
+    int c = ReadChar(ctx);
     if (c == '"') {
       break;
     } else if (c == '\\') {
       /* The only escape supported is \uxxxx. */
-      c = read_char(ctx);
+      c = ReadChar(ctx);
       if (c != 'u') {
-        print_parse_error(ctx, "expected escape: \\uxxxx");
+        PrintParseError(ctx, "expected escape: \\uxxxx");
         return wabt::Result::Error;
       }
       uint16_t code = 0;
       for (int i = 0; i < 4; ++i) {
-        c = read_char(ctx);
+        c = ReadChar(ctx);
         int cval;
         if (c >= '0' && c <= '9') {
           cval = c - '0';
@@ -657,7 +654,7 @@ static wabt::Result parse_string(Context* ctx, std::string* out_string) {
         } else if (c >= 'A' && c <= 'F') {
           cval = c - 'A' + 10;
         } else {
-          print_parse_error(ctx, "expected hex char");
+          PrintParseError(ctx, "expected hex char");
           return wabt::Result::Error;
         }
         code = (code << 4) + cval;
@@ -666,8 +663,7 @@ static wabt::Result parse_string(Context* ctx, std::string* out_string) {
       if (code < 256) {
         *out_string += code;
       } else {
-        print_parse_error(ctx, "only escape codes < 256 allowed, got %u\n",
-                          code);
+        PrintParseError(ctx, "only escape codes < 256 allowed, got %u\n", code);
       }
     } else {
       *out_string += c;
@@ -676,32 +672,32 @@ static wabt::Result parse_string(Context* ctx, std::string* out_string) {
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_key_string_value(Context* ctx,
-                                           const char* key,
-                                           std::string* out_string) {
+static wabt::Result ParseKeyStringValue(Context* ctx,
+                                        const char* key,
+                                        std::string* out_string) {
   out_string->clear();
   EXPECT_KEY(key);
-  return parse_string(ctx, out_string);
+  return ParseString(ctx, out_string);
 }
 
-static wabt::Result parse_opt_name_string_value(Context* ctx,
-                                                std::string* out_string) {
+static wabt::Result ParseOptNameStringValue(Context* ctx,
+                                            std::string* out_string) {
   out_string->clear();
-  if (match(ctx, "\"name\"")) {
+  if (Match(ctx, "\"name\"")) {
     EXPECT(":");
-    CHECK_RESULT(parse_string(ctx, out_string));
+    CHECK_RESULT(ParseString(ctx, out_string));
     EXPECT(",");
   }
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_line(Context* ctx) {
+static wabt::Result ParseLine(Context* ctx) {
   EXPECT_KEY("line");
-  CHECK_RESULT(parse_uint32(ctx, &ctx->command_line_number));
+  CHECK_RESULT(ParseUint32(ctx, &ctx->command_line_number));
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_type_object(Context* ctx, Type* out_type) {
+static wabt::Result ParseTypeObject(Context* ctx, Type* out_type) {
   std::string type_str;
   EXPECT("{");
   PARSE_KEY_STRING_VALUE("type", &type_str);
@@ -720,28 +716,28 @@ static wabt::Result parse_type_object(Context* ctx, Type* out_type) {
     *out_type = Type::F64;
     return wabt::Result::Ok;
   } else {
-    print_parse_error(ctx, "unknown type: \"" PRIstringview "\"",
-                      WABT_PRINTF_STRING_VIEW_ARG(type_str));
+    PrintParseError(ctx, "unknown type: \"" PRIstringview "\"",
+                    WABT_PRINTF_STRING_VIEW_ARG(type_str));
     return wabt::Result::Error;
   }
 }
 
-static wabt::Result parse_type_vector(Context* ctx, TypeVector* out_types) {
+static wabt::Result ParseTypeVector(Context* ctx, TypeVector* out_types) {
   out_types->clear();
   EXPECT("[");
   bool first = true;
-  while (!match(ctx, "]")) {
+  while (!Match(ctx, "]")) {
     if (!first)
       EXPECT(",");
     Type type;
-    CHECK_RESULT(parse_type_object(ctx, &type));
+    CHECK_RESULT(ParseTypeObject(ctx, &type));
     first = false;
     out_types->push_back(type);
   }
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_const(Context* ctx, TypedValue* out_value) {
+static wabt::Result ParseConst(Context* ctx, TypedValue* out_value) {
   std::string type_str;
   std::string value_str;
   EXPECT("{");
@@ -755,82 +751,82 @@ static wabt::Result parse_const(Context* ctx, TypedValue* out_value) {
 
   if (type_str == "i32") {
     uint32_t value;
-    CHECK_RESULT(parse_int32(value_start, value_end, &value,
-                             ParseIntType::UnsignedOnly));
+    CHECK_RESULT(
+        ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly));
     out_value->type = Type::I32;
     out_value->value.i32 = value;
     return wabt::Result::Ok;
   } else if (type_str == "f32") {
     uint32_t value_bits;
-    CHECK_RESULT(parse_int32(value_start, value_end, &value_bits,
-                             ParseIntType::UnsignedOnly));
+    CHECK_RESULT(ParseInt32(value_start, value_end, &value_bits,
+                            ParseIntType::UnsignedOnly));
     out_value->type = Type::F32;
     out_value->value.f32_bits = value_bits;
     return wabt::Result::Ok;
   } else if (type_str == "i64") {
     uint64_t value;
-    CHECK_RESULT(parse_int64(value_start, value_end, &value,
-                             ParseIntType::UnsignedOnly));
+    CHECK_RESULT(
+        ParseInt64(value_start, value_end, &value, ParseIntType::UnsignedOnly));
     out_value->type = Type::I64;
     out_value->value.i64 = value;
     return wabt::Result::Ok;
   } else if (type_str == "f64") {
     uint64_t value_bits;
-    CHECK_RESULT(parse_int64(value_start, value_end, &value_bits,
-                             ParseIntType::UnsignedOnly));
+    CHECK_RESULT(ParseInt64(value_start, value_end, &value_bits,
+                            ParseIntType::UnsignedOnly));
     out_value->type = Type::F64;
     out_value->value.f64_bits = value_bits;
     return wabt::Result::Ok;
   } else {
-    print_parse_error(ctx, "unknown type: \"" PRIstringview "\"",
-                      WABT_PRINTF_STRING_VIEW_ARG(type_str));
+    PrintParseError(ctx, "unknown type: \"" PRIstringview "\"",
+                    WABT_PRINTF_STRING_VIEW_ARG(type_str));
     return wabt::Result::Error;
   }
 }
 
-static wabt::Result parse_const_vector(Context* ctx,
-                                       std::vector<TypedValue>* out_values) {
+static wabt::Result ParseConstVector(Context* ctx,
+                                     std::vector<TypedValue>* out_values) {
   out_values->clear();
   EXPECT("[");
   bool first = true;
-  while (!match(ctx, "]")) {
+  while (!Match(ctx, "]")) {
     if (!first)
       EXPECT(",");
     TypedValue value;
-    CHECK_RESULT(parse_const(ctx, &value));
+    CHECK_RESULT(ParseConst(ctx, &value));
     out_values->push_back(value);
     first = false;
   }
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_action(Context* ctx, Action* out_action) {
+static wabt::Result ParseAction(Context* ctx, Action* out_action) {
   EXPECT_KEY("action");
   EXPECT("{");
   EXPECT_KEY("type");
-  if (match(ctx, "\"invoke\"")) {
+  if (Match(ctx, "\"invoke\"")) {
     out_action->type = ActionType::Invoke;
   } else {
     EXPECT("\"get\"");
     out_action->type = ActionType::Get;
   }
   EXPECT(",");
-  if (match(ctx, "\"module\"")) {
+  if (Match(ctx, "\"module\"")) {
     EXPECT(":");
-    CHECK_RESULT(parse_string(ctx, &out_action->module_name));
+    CHECK_RESULT(ParseString(ctx, &out_action->module_name));
     EXPECT(",");
   }
   PARSE_KEY_STRING_VALUE("field", &out_action->field_name);
   if (out_action->type == ActionType::Invoke) {
     EXPECT(",");
     EXPECT_KEY("args");
-    CHECK_RESULT(parse_const_vector(ctx, &out_action->args));
+    CHECK_RESULT(ParseConstVector(ctx, &out_action->args));
   }
   EXPECT("}");
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_module_type(Context* ctx, ModuleType* out_type) {
+static wabt::Result ParseModuleType(Context* ctx, ModuleType* out_type) {
   std::string module_type_str;
 
   PARSE_KEY_STRING_VALUE("module_type", &module_type_str);
@@ -841,15 +837,15 @@ static wabt::Result parse_module_type(Context* ctx, ModuleType* out_type) {
     *out_type = ModuleType::Binary;
     return wabt::Result::Ok;
   } else {
-    print_parse_error(ctx, "unknown module type: \"" PRIstringview "\"",
-                      WABT_PRINTF_STRING_VIEW_ARG(module_type_str));
+    PrintParseError(ctx, "unknown module type: \"" PRIstringview "\"",
+                    WABT_PRINTF_STRING_VIEW_ARG(module_type_str));
     return wabt::Result::Error;
   }
 }
 
 static std::string CreateModulePath(Context* ctx, string_view filename) {
   const char* spec_json_filename = ctx->loc.filename;
-  string_view dirname = get_dirname(spec_json_filename);
+  string_view dirname = GetDirname(spec_json_filename);
   std::string path;
 
   if (dirname.size() == 0) {
@@ -864,26 +860,26 @@ static std::string CreateModulePath(Context* ctx, string_view filename) {
   return path;
 }
 
-static wabt::Result on_module_command(Context* ctx,
-                                      string_view filename,
-                                      string_view name) {
+static wabt::Result OnModuleCommand(Context* ctx,
+                                    string_view filename,
+                                    string_view name) {
   std::string path = CreateModulePath(ctx, filename);
   Environment::MarkPoint mark = ctx->env.Mark();
   ErrorHandlerFile error_handler(Location::Type::Binary);
   wabt::Result result =
-      read_module(path.c_str(), &ctx->env, &error_handler, &ctx->last_module);
+      ReadModule(path.c_str(), &ctx->env, &error_handler, &ctx->last_module);
 
   if (Failed(result)) {
     ctx->env.ResetToMarkPoint(mark);
-    print_command_error(ctx, "error reading module: \"%s\"", path.c_str());
+    PrintCommandError(ctx, "error reading module: \"%s\"", path.c_str());
     return wabt::Result::Error;
   }
 
   interpreter::Result iresult =
-      run_start_function(&ctx->thread, ctx->last_module);
+      RunStartFunction(&ctx->thread, ctx->last_module);
   if (iresult != interpreter::Result::Ok) {
     ctx->env.ResetToMarkPoint(mark);
-    print_interpreter_result("error running start function", iresult);
+    PrintInterpreterResult("error running start function", iresult);
     return wabt::Result::Error;
   }
 
@@ -895,11 +891,11 @@ static wabt::Result on_module_command(Context* ctx,
   return wabt::Result::Ok;
 }
 
-static wabt::Result run_action(Context* ctx,
-                               Action* action,
-                               interpreter::Result* out_iresult,
-                               std::vector<TypedValue>* out_results,
-                               RunVerbosity verbose) {
+static wabt::Result RunAction(Context* ctx,
+                              Action* action,
+                              interpreter::Result* out_iresult,
+                              std::vector<TypedValue>* out_results,
+                              RunVerbosity verbose) {
   out_results->clear();
 
   Module* module;
@@ -912,41 +908,40 @@ static wabt::Result run_action(Context* ctx,
 
   switch (action->type) {
     case ActionType::Invoke:
-      *out_iresult =
-          run_export_by_name(&ctx->thread, module, action->field_name,
-                             action->args, out_results, verbose);
+      *out_iresult = RunExportByName(&ctx->thread, module, action->field_name,
+                                     action->args, out_results, verbose);
       if (verbose == RunVerbosity::Verbose) {
-        print_call(string_view(), action->field_name, action->args,
-                   *out_results, *out_iresult);
+        PrintCall(string_view(), action->field_name, action->args, *out_results,
+                  *out_iresult);
       }
       return wabt::Result::Ok;
 
     case ActionType::Get: {
-      *out_iresult = get_global_export_by_name(&ctx->thread, module,
-                                               action->field_name, out_results);
+      *out_iresult = GetGlobalExportByName(&ctx->thread, module,
+                                           action->field_name, out_results);
       return wabt::Result::Ok;
     }
 
     default:
-      print_command_error(ctx, "invalid action type %d",
-                          static_cast<int>(action->type));
+      PrintCommandError(ctx, "invalid action type %d",
+                        static_cast<int>(action->type));
       return wabt::Result::Error;
   }
 }
 
-static wabt::Result on_action_command(Context* ctx, Action* action) {
+static wabt::Result OnActionCommand(Context* ctx, Action* action) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
   ctx->total++;
   wabt::Result result =
-      run_action(ctx, action, &iresult, &results, RunVerbosity::Verbose);
+      RunAction(ctx, action, &iresult, &results, RunVerbosity::Verbose);
   if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
       ctx->passed++;
     } else {
-      print_command_error(ctx, "unexpected trap: %s",
-                          s_trap_strings[static_cast<size_t>(iresult)]);
+      PrintCommandError(ctx, "unexpected trap: %s",
+                        s_trap_strings[static_cast<size_t>(iresult)]);
       result = wabt::Result::Error;
     }
   }
@@ -954,37 +949,37 @@ static wabt::Result on_action_command(Context* ctx, Action* action) {
   return result;
 }
 
-static wabt::Result read_invalid_text_module(const char* module_filename,
-                                             Environment* env,
-                                             ErrorHandler* error_handler) {
+static wabt::Result ReadInvalidTextModule(const char* module_filename,
+                                          Environment* env,
+                                          ErrorHandler* error_handler) {
   std::unique_ptr<WastLexer> lexer =
       WastLexer::CreateFileLexer(module_filename);
-  wabt::Result result = parse_wast(lexer.get(), nullptr, error_handler);
+  wabt::Result result = ParseWast(lexer.get(), nullptr, error_handler);
   return result;
 }
 
-static wabt::Result read_invalid_module(Context* ctx,
-                                        const char* module_filename,
-                                        Environment* env,
-                                        ModuleType module_type,
-                                        const char* desc) {
+static wabt::Result ReadInvalidModule(Context* ctx,
+                                      const char* module_filename,
+                                      Environment* env,
+                                      ModuleType module_type,
+                                      const char* desc) {
   std::string header =
-      string_printf(PRIstringview ":%d: %s passed",
-                    WABT_PRINTF_STRING_VIEW_ARG(ctx->source_filename),
-                    ctx->command_line_number, desc);
+      StringPrintf(PRIstringview ":%d: %s passed",
+                   WABT_PRINTF_STRING_VIEW_ARG(ctx->source_filename),
+                   ctx->command_line_number, desc);
 
   switch (module_type) {
     case ModuleType::Text: {
       ErrorHandlerFile error_handler(Location::Type::Text, stdout, header,
                                      ErrorHandlerFile::PrintHeader::Once);
-      return read_invalid_text_module(module_filename, env, &error_handler);
+      return ReadInvalidTextModule(module_filename, env, &error_handler);
     }
 
     case ModuleType::Binary: {
       DefinedModule* module;
       ErrorHandlerFile error_handler(Location::Type::Binary, stdout, header,
                                      ErrorHandlerFile::PrintHeader::Once);
-      return read_module(module_filename, env, &error_handler, &module);
+      return ReadModule(module_filename, env, &error_handler, &module);
     }
 
     default:
@@ -992,32 +987,32 @@ static wabt::Result read_invalid_module(Context* ctx,
   }
 }
 
-static wabt::Result on_assert_malformed_command(Context* ctx,
-                                                string_view filename,
-                                                string_view text,
-                                                ModuleType module_type) {
+static wabt::Result OnAssertMalformedCommand(Context* ctx,
+                                             string_view filename,
+                                             string_view text,
+                                             ModuleType module_type) {
   Environment env;
-  init_environment(&env);
+  InitEnvironment(&env);
 
   ctx->total++;
   std::string path = CreateModulePath(ctx, filename);
-  wabt::Result result = read_invalid_module(ctx, path.c_str(), &env,
-                                            module_type, "assert_malformed");
+  wabt::Result result = ReadInvalidModule(ctx, path.c_str(), &env, module_type,
+                                          "assert_malformed");
   if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
-    print_command_error(ctx, "expected module to be malformed: \"%s\"",
-                        path.c_str());
+    PrintCommandError(ctx, "expected module to be malformed: \"%s\"",
+                      path.c_str());
     result = wabt::Result::Error;
   }
 
   return result;
 }
 
-static wabt::Result on_register_command(Context* ctx,
-                                        string_view name,
-                                        string_view as) {
+static wabt::Result OnRegisterCommand(Context* ctx,
+                                      string_view name,
+                                      string_view as) {
   Index module_index;
   if (!name.empty()) {
     module_index = ctx->env.FindModuleIndex(name);
@@ -1026,7 +1021,7 @@ static wabt::Result on_register_command(Context* ctx,
   }
 
   if (module_index == kInvalidIndex) {
-    print_command_error(ctx, "unknown module in register");
+    PrintCommandError(ctx, "unknown module in register");
     return wabt::Result::Error;
   }
 
@@ -1035,76 +1030,76 @@ static wabt::Result on_register_command(Context* ctx,
   return wabt::Result::Ok;
 }
 
-static wabt::Result on_assert_unlinkable_command(Context* ctx,
-                                                 string_view filename,
-                                                 string_view text,
-                                                 ModuleType module_type) {
+static wabt::Result OnAssertUnlinkableCommand(Context* ctx,
+                                              string_view filename,
+                                              string_view text,
+                                              ModuleType module_type) {
   ctx->total++;
   std::string path = CreateModulePath(ctx, filename);
   Environment::MarkPoint mark = ctx->env.Mark();
-  wabt::Result result = read_invalid_module(ctx, path.c_str(), &ctx->env,
-                                            module_type, "assert_unlinkable");
+  wabt::Result result = ReadInvalidModule(ctx, path.c_str(), &ctx->env,
+                                          module_type, "assert_unlinkable");
   ctx->env.ResetToMarkPoint(mark);
 
   if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
-    print_command_error(ctx, "expected module to be unlinkable: \"%s\"",
-                        path.c_str());
+    PrintCommandError(ctx, "expected module to be unlinkable: \"%s\"",
+                      path.c_str());
     result = wabt::Result::Error;
   }
 
   return result;
 }
 
-static wabt::Result on_assert_invalid_command(Context* ctx,
-                                              string_view filename,
-                                              string_view text,
-                                              ModuleType module_type) {
+static wabt::Result OnAssertInvalidCommand(Context* ctx,
+                                           string_view filename,
+                                           string_view text,
+                                           ModuleType module_type) {
   Environment env;
-  init_environment(&env);
+  InitEnvironment(&env);
 
   ctx->total++;
   std::string path = CreateModulePath(ctx, filename);
-  wabt::Result result = read_invalid_module(ctx, path.c_str(), &env,
-                                            module_type, "assert_invalid");
+  wabt::Result result =
+      ReadInvalidModule(ctx, path.c_str(), &env, module_type, "assert_invalid");
   if (Failed(result)) {
     ctx->passed++;
     result = wabt::Result::Ok;
   } else {
-    print_command_error(ctx, "expected module to be invalid: \"%s\"",
-                        path.c_str());
+    PrintCommandError(ctx, "expected module to be invalid: \"%s\"",
+                      path.c_str());
     result = wabt::Result::Error;
   }
 
   return result;
 }
 
-static wabt::Result on_assert_uninstantiable_command(Context* ctx,
-                                                     string_view filename,
-                                                     string_view text,
-                                                     ModuleType module_type) {
+static wabt::Result OnAssertUninstantiableCommand(Context* ctx,
+                                                  string_view filename,
+                                                  string_view text,
+                                                  ModuleType module_type) {
   ErrorHandlerFile error_handler(Location::Type::Binary);
   ctx->total++;
   std::string path = CreateModulePath(ctx, filename);
   DefinedModule* module;
   Environment::MarkPoint mark = ctx->env.Mark();
   wabt::Result result =
-      read_module(path.c_str(), &ctx->env, &error_handler, &module);
+      ReadModule(path.c_str(), &ctx->env, &error_handler, &module);
 
   if (Succeeded(result)) {
-    interpreter::Result iresult = run_start_function(&ctx->thread, module);
+    interpreter::Result iresult = RunStartFunction(&ctx->thread, module);
     if (iresult == interpreter::Result::Ok) {
-      print_command_error(ctx, "expected error running start function: \"%s\"",
-                          path.c_str());
+      PrintCommandError(ctx, "expected error running start function: \"%s\"",
+                        path.c_str());
       result = wabt::Result::Error;
     } else {
       ctx->passed++;
       result = wabt::Result::Ok;
     }
   } else {
-    print_command_error(ctx, "error reading module: \"%s\"", path.c_str());
+    PrintCommandError(ctx, "error reading module: \"%s\"", path.c_str());
     result = wabt::Result::Error;
   }
 
@@ -1112,8 +1107,7 @@ static wabt::Result on_assert_uninstantiable_command(Context* ctx,
   return result;
 }
 
-static bool typed_values_are_equal(const TypedValue* tv1,
-                                   const TypedValue* tv2) {
+static bool TypedValuesAreEqual(const TypedValue* tv1, const TypedValue* tv2) {
   if (tv1->type != tv2->type)
     return false;
 
@@ -1132,7 +1126,7 @@ static bool typed_values_are_equal(const TypedValue* tv1,
   }
 }
 
-static wabt::Result on_assert_return_command(
+static wabt::Result OnAssertReturnCommand(
     Context* ctx,
     Action* action,
     const std::vector<TypedValue>& expected) {
@@ -1141,7 +1135,7 @@ static wabt::Result on_assert_return_command(
 
   ctx->total++;
   wabt::Result result =
-      run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
+      RunAction(ctx, action, &iresult, &results, RunVerbosity::Quiet);
 
   if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
@@ -1149,20 +1143,20 @@ static wabt::Result on_assert_return_command(
         for (size_t i = 0; i < results.size(); ++i) {
           const TypedValue* expected_tv = &expected[i];
           const TypedValue* actual_tv = &results[i];
-          if (!typed_values_are_equal(expected_tv, actual_tv)) {
+          if (!TypedValuesAreEqual(expected_tv, actual_tv)) {
             char expected_str[MAX_TYPED_VALUE_CHARS];
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            sprint_typed_value(expected_str, sizeof(expected_str), expected_tv);
-            sprint_typed_value(actual_str, sizeof(actual_str), actual_tv);
-            print_command_error(ctx,
-                                "mismatch in result %" PRIzd
-                                " of assert_return: expected %s, got %s",
-                                i, expected_str, actual_str);
+            SPrintTypedValue(expected_str, sizeof(expected_str), expected_tv);
+            SPrintTypedValue(actual_str, sizeof(actual_str), actual_tv);
+            PrintCommandError(ctx,
+                              "mismatch in result %" PRIzd
+                              " of assert_return: expected %s, got %s",
+                              i, expected_str, actual_str);
             result = wabt::Result::Error;
           }
         }
       } else {
-        print_command_error(
+        PrintCommandError(
             ctx,
             "result length mismatch in assert_return: expected %" PRIzd
             ", got %" PRIzd,
@@ -1170,8 +1164,8 @@ static wabt::Result on_assert_return_command(
         result = wabt::Result::Error;
       }
     } else {
-      print_command_error(ctx, "unexpected trap: %s",
-                          s_trap_strings[static_cast<size_t>(iresult)]);
+      PrintCommandError(ctx, "unexpected trap: %s",
+                        s_trap_strings[static_cast<size_t>(iresult)]);
       result = wabt::Result::Error;
     }
   }
@@ -1182,20 +1176,20 @@ static wabt::Result on_assert_return_command(
   return result;
 }
 
-static wabt::Result on_assert_return_nan_command(Context* ctx,
-                                                 Action* action,
-                                                 bool canonical) {
+static wabt::Result OnAssertReturnNanCommand(Context* ctx,
+                                             Action* action,
+                                             bool canonical) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
   ctx->total++;
   wabt::Result result =
-      run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
+      RunAction(ctx, action, &iresult, &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
       if (results.size() != 1) {
-        print_command_error(ctx, "expected one result, got %" PRIzd,
-                            results.size());
+        PrintCommandError(ctx, "expected one result, got %" PRIzd,
+                          results.size());
         result = wabt::Result::Error;
       }
 
@@ -1206,9 +1200,9 @@ static wabt::Result on_assert_return_nan_command(Context* ctx,
                                   : IsArithmeticNan(actual.value.f32_bits);
           if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            sprint_typed_value(actual_str, sizeof(actual_str), &actual);
-            print_command_error(ctx, "expected result to be nan, got %s",
-                                actual_str);
+            SPrintTypedValue(actual_str, sizeof(actual_str), &actual);
+            PrintCommandError(ctx, "expected result to be nan, got %s",
+                              actual_str);
             result = wabt::Result::Error;
           }
           break;
@@ -1219,24 +1213,24 @@ static wabt::Result on_assert_return_nan_command(Context* ctx,
                                   : IsArithmeticNan(actual.value.f64_bits);
           if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            sprint_typed_value(actual_str, sizeof(actual_str), &actual);
-            print_command_error(ctx, "expected result to be nan, got %s",
-                                actual_str);
+            SPrintTypedValue(actual_str, sizeof(actual_str), &actual);
+            PrintCommandError(ctx, "expected result to be nan, got %s",
+                              actual_str);
             result = wabt::Result::Error;
           }
           break;
         }
 
         default:
-          print_command_error(ctx,
-                              "expected result type to be f32 or f64, got %s",
-                              get_type_name(actual.type));
+          PrintCommandError(ctx,
+                            "expected result type to be f32 or f64, got %s",
+                            GetTypeName(actual.type));
           result = wabt::Result::Error;
           break;
       }
     } else {
-      print_command_error(ctx, "unexpected trap: %s",
-                          s_trap_strings[static_cast<int>(iresult)]);
+      PrintCommandError(ctx, "unexpected trap: %s",
+                        s_trap_strings[static_cast<int>(iresult)]);
       result = wabt::Result::Error;
     }
   }
@@ -1247,21 +1241,21 @@ static wabt::Result on_assert_return_nan_command(Context* ctx,
   return wabt::Result::Ok;
 }
 
-static wabt::Result on_assert_trap_command(Context* ctx,
-                                           Action* action,
-                                           string_view text) {
+static wabt::Result OnAssertTrapCommand(Context* ctx,
+                                        Action* action,
+                                        string_view text) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
   ctx->total++;
   wabt::Result result =
-      run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
+      RunAction(ctx, action, &iresult, &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
     if (iresult != interpreter::Result::Ok) {
       ctx->passed++;
     } else {
-      print_command_error(ctx, "expected trap: \"" PRIstringview "\"",
-                          WABT_PRINTF_STRING_VIEW_ARG(text));
+      PrintCommandError(ctx, "expected trap: \"" PRIstringview "\"",
+                        WABT_PRINTF_STRING_VIEW_ARG(text));
       result = wabt::Result::Error;
     }
   }
@@ -1269,19 +1263,19 @@ static wabt::Result on_assert_trap_command(Context* ctx,
   return result;
 }
 
-static wabt::Result on_assert_exhaustion_command(Context* ctx, Action* action) {
+static wabt::Result OnAssertExhaustionCommand(Context* ctx, Action* action) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
   ctx->total++;
   wabt::Result result =
-      run_action(ctx, action, &iresult, &results, RunVerbosity::Quiet);
+      RunAction(ctx, action, &iresult, &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
     if (iresult == interpreter::Result::TrapCallStackExhausted ||
         iresult == interpreter::Result::TrapValueStackExhausted) {
       ctx->passed++;
     } else {
-      print_command_error(ctx, "expected call stack exhaustion");
+      PrintCommandError(ctx, "expected call stack exhaustion");
       result = wabt::Result::Error;
     }
   }
@@ -1289,203 +1283,203 @@ static wabt::Result on_assert_exhaustion_command(Context* ctx, Action* action) {
   return result;
 }
 
-static wabt::Result parse_command(Context* ctx) {
+static wabt::Result ParseCommand(Context* ctx) {
   EXPECT("{");
   EXPECT_KEY("type");
-  if (match(ctx, "\"module\"")) {
+  if (Match(ctx, "\"module\"")) {
     std::string name;
     std::string filename;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
-    CHECK_RESULT(parse_opt_name_string_value(ctx, &name));
+    CHECK_RESULT(ParseOptNameStringValue(ctx, &name));
     PARSE_KEY_STRING_VALUE("filename", &filename);
-    on_module_command(ctx, filename, name);
-  } else if (match(ctx, "\"action\"")) {
+    OnModuleCommand(ctx, filename, name);
+  } else if (Match(ctx, "\"action\"")) {
     Action action;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
-    CHECK_RESULT(parse_action(ctx, &action));
-    on_action_command(ctx, &action);
-  } else if (match(ctx, "\"register\"")) {
+    CHECK_RESULT(ParseAction(ctx, &action));
+    OnActionCommand(ctx, &action);
+  } else if (Match(ctx, "\"register\"")) {
     std::string as;
     std::string name;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
-    CHECK_RESULT(parse_opt_name_string_value(ctx, &name));
+    CHECK_RESULT(ParseOptNameStringValue(ctx, &name));
     PARSE_KEY_STRING_VALUE("as", &as);
-    on_register_command(ctx, name, as);
-  } else if (match(ctx, "\"assert_malformed\"")) {
+    OnRegisterCommand(ctx, name, as);
+  } else if (Match(ctx, "\"assert_malformed\"")) {
     std::string filename;
     std::string text;
     ModuleType module_type;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     EXPECT(",");
-    CHECK_RESULT(parse_module_type(ctx, &module_type));
-    on_assert_malformed_command(ctx, filename, text, module_type);
-  } else if (match(ctx, "\"assert_invalid\"")) {
+    CHECK_RESULT(ParseModuleType(ctx, &module_type));
+    OnAssertMalformedCommand(ctx, filename, text, module_type);
+  } else if (Match(ctx, "\"assert_invalid\"")) {
     std::string filename;
     std::string text;
     ModuleType module_type;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     EXPECT(",");
-    CHECK_RESULT(parse_module_type(ctx, &module_type));
-    on_assert_invalid_command(ctx, filename, text, module_type);
-  } else if (match(ctx, "\"assert_unlinkable\"")) {
+    CHECK_RESULT(ParseModuleType(ctx, &module_type));
+    OnAssertInvalidCommand(ctx, filename, text, module_type);
+  } else if (Match(ctx, "\"assert_unlinkable\"")) {
     std::string filename;
     std::string text;
     ModuleType module_type;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     EXPECT(",");
-    CHECK_RESULT(parse_module_type(ctx, &module_type));
-    on_assert_unlinkable_command(ctx, filename, text, module_type);
-  } else if (match(ctx, "\"assert_uninstantiable\"")) {
+    CHECK_RESULT(ParseModuleType(ctx, &module_type));
+    OnAssertUnlinkableCommand(ctx, filename, text, module_type);
+  } else if (Match(ctx, "\"assert_uninstantiable\"")) {
     std::string filename;
     std::string text;
     ModuleType module_type;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     EXPECT(",");
-    CHECK_RESULT(parse_module_type(ctx, &module_type));
-    on_assert_uninstantiable_command(ctx, filename, text, module_type);
-  } else if (match(ctx, "\"assert_return\"")) {
+    CHECK_RESULT(ParseModuleType(ctx, &module_type));
+    OnAssertUninstantiableCommand(ctx, filename, text, module_type);
+  } else if (Match(ctx, "\"assert_return\"")) {
     Action action;
     std::vector<TypedValue> expected;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
-    CHECK_RESULT(parse_action(ctx, &action));
+    CHECK_RESULT(ParseAction(ctx, &action));
     EXPECT(",");
     EXPECT_KEY("expected");
-    CHECK_RESULT(parse_const_vector(ctx, &expected));
-    on_assert_return_command(ctx, &action, expected);
-  } else if (match(ctx, "\"assert_return_canonical_nan\"")) {
+    CHECK_RESULT(ParseConstVector(ctx, &expected));
+    OnAssertReturnCommand(ctx, &action, expected);
+  } else if (Match(ctx, "\"assert_return_canonical_nan\"")) {
     Action action;
     TypeVector expected;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
-    CHECK_RESULT(parse_action(ctx, &action));
+    CHECK_RESULT(ParseAction(ctx, &action));
     EXPECT(",");
     /* Not needed for wabt-interp, but useful for other parsers. */
     EXPECT_KEY("expected");
-    CHECK_RESULT(parse_type_vector(ctx, &expected));
-    on_assert_return_nan_command(ctx, &action, true);
-  } else if (match(ctx, "\"assert_return_arithmetic_nan\"")) {
+    CHECK_RESULT(ParseTypeVector(ctx, &expected));
+    OnAssertReturnNanCommand(ctx, &action, true);
+  } else if (Match(ctx, "\"assert_return_arithmetic_nan\"")) {
     Action action;
     TypeVector expected;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
-    CHECK_RESULT(parse_action(ctx, &action));
+    CHECK_RESULT(ParseAction(ctx, &action));
     EXPECT(",");
     /* Not needed for wabt-interp, but useful for other parsers. */
     EXPECT_KEY("expected");
-    CHECK_RESULT(parse_type_vector(ctx, &expected));
-    on_assert_return_nan_command(ctx, &action, false);
-  } else if (match(ctx, "\"assert_trap\"")) {
+    CHECK_RESULT(ParseTypeVector(ctx, &expected));
+    OnAssertReturnNanCommand(ctx, &action, false);
+  } else if (Match(ctx, "\"assert_trap\"")) {
     Action action;
     std::string text;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
-    CHECK_RESULT(parse_action(ctx, &action));
+    CHECK_RESULT(ParseAction(ctx, &action));
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
-    on_assert_trap_command(ctx, &action, text);
-  } else if (match(ctx, "\"assert_exhaustion\"")) {
+    OnAssertTrapCommand(ctx, &action, text);
+  } else if (Match(ctx, "\"assert_exhaustion\"")) {
     Action action;
     std::string text;
 
     EXPECT(",");
-    CHECK_RESULT(parse_line(ctx));
+    CHECK_RESULT(ParseLine(ctx));
     EXPECT(",");
-    CHECK_RESULT(parse_action(ctx, &action));
-    on_assert_exhaustion_command(ctx, &action);
+    CHECK_RESULT(ParseAction(ctx, &action));
+    OnAssertExhaustionCommand(ctx, &action);
   } else {
-    print_command_error(ctx, "unknown command type");
+    PrintCommandError(ctx, "unknown command type");
     return wabt::Result::Error;
   }
   EXPECT("}");
   return wabt::Result::Ok;
 }
 
-static wabt::Result parse_commands(Context* ctx) {
+static wabt::Result ParseCommands(Context* ctx) {
   EXPECT("{");
   PARSE_KEY_STRING_VALUE("source_filename", &ctx->source_filename);
   EXPECT(",");
   EXPECT_KEY("commands");
   EXPECT("[");
   bool first = true;
-  while (!match(ctx, "]")) {
+  while (!Match(ctx, "]")) {
     if (!first)
       EXPECT(",");
-    CHECK_RESULT(parse_command(ctx));
+    CHECK_RESULT(ParseCommand(ctx));
     first = false;
   }
   EXPECT("}");
   return wabt::Result::Ok;
 }
 
-static wabt::Result read_and_run_spec_json(const char* spec_json_filename) {
+static wabt::Result ReadAndRunSpecJson(const char* spec_json_filename) {
   Context ctx;
   ctx.loc.filename = spec_json_filename;
   ctx.loc.line = 1;
   ctx.loc.first_column = 1;
-  init_environment(&ctx.env);
+  InitEnvironment(&ctx.env);
 
   wabt::Result result = ReadFile(spec_json_filename, &ctx.json_data);
   if (Failed(result))
     return wabt::Result::Error;
 
-  result = parse_commands(&ctx);
+  result = ParseCommands(&ctx);
   printf("%d/%d tests passed.\n", ctx.passed, ctx.total);
   return result;
 }
 
 int ProgramMain(int argc, char** argv) {
-  init_stdio();
-  parse_options(argc, argv);
+  InitStdio();
+  ParseOptions(argc, argv);
 
   s_stdout_stream = FileStream::CreateStdout();
 
   wabt::Result result;
   if (s_spec) {
-    result = read_and_run_spec_json(s_infile);
+    result = ReadAndRunSpecJson(s_infile);
   } else {
-    result = read_and_run_module(s_infile);
+    result = ReadAndRunModule(s_infile);
   }
   return result != wabt::Result::Ok;
 }

@@ -53,7 +53,7 @@ struct Context {
   ssize_t current_section_payload_offset = 0;
 };
 
-static void parse_options(int argc, char** argv) {
+static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-link", s_description);
 
   parser.AddOption("debug",
@@ -164,8 +164,8 @@ static void apply_relocation(Section* section, Reloc* r) {
   size_t section_size = section->size;
 
   Index cur_value = 0, new_value = 0;
-  read_u32_leb128(section_data + r->offset, section_data + section_size,
-                  &cur_value);
+  ReadU32Leb128(section_data + r->offset, section_data + section_size,
+                &cur_value);
 
   switch (r->type) {
     case RelocType::FuncIndexLEB:
@@ -181,20 +181,19 @@ static void apply_relocation(Section* section, Reloc* r) {
       new_value = binary->RelocateGlobalIndex(cur_value);
       break;
     default:
-      WABT_FATAL("unhandled relocation type: %s\n",
-                 get_reloc_type_name(r->type));
+      WABT_FATAL("unhandled relocation type: %s\n", GetRelocTypeName(r->type));
       break;
   }
 
-  write_fixed_u32_leb128_raw(section_data + r->offset,
-                             section_data + section_size, new_value);
+  WriteFixedU32Leb128Raw(section_data + r->offset, section_data + section_size,
+                         new_value);
 }
 
 static void apply_relocations(Section* section) {
   if (!section->relocations.size())
     return;
 
-  LOG_DEBUG("apply_relocations: %s\n", get_section_name(section->section_code));
+  LOG_DEBUG("apply_relocations: %s\n", GetSectionName(section->section_code));
 
   /* Perform relocations in-place */
   for (Reloc& reloc: section->relocations) {
@@ -215,13 +214,13 @@ static void write_section_payload(Context* ctx, Section* sec) {
 #define WRITE_UNKNOWN_SIZE(STREAM)                            \
   {                                                           \
     Offset fixup_offset = (STREAM)->offset();                 \
-    write_fixed_u32_leb128(STREAM, 0, "unknown size");        \
+    WriteFixedU32Leb128(STREAM, 0, "unknown size");           \
     ctx->current_section_payload_offset = (STREAM)->offset(); \
     Offset start = (STREAM)->offset();
 
-#define FIXUP_SIZE(STREAM)                                                    \
-  write_fixed_u32_leb128_at(STREAM, fixup_offset, (STREAM)->offset() - start, \
-                            "fixup size");                                    \
+#define FIXUP_SIZE(STREAM)                                                \
+  WriteFixedU32Leb128At(STREAM, fixup_offset, (STREAM)->offset() - start, \
+                        "fixup size");                                    \
   }
 
 static void write_table_section(Context* ctx,
@@ -238,11 +237,11 @@ static void write_table_section(Context* ctx,
 
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
-  write_u32_leb128(stream, table_count, "table count");
-  write_type(stream, Type::Anyfunc);
-  write_u32_leb128(stream, flags, "table elem flags");
-  write_u32_leb128(stream, elem_count, "table initial length");
-  write_u32_leb128(stream, elem_count, "table max length");
+  WriteU32Leb128(stream, table_count, "table count");
+  WriteType(stream, Type::Anyfunc);
+  WriteU32Leb128(stream, flags, "table elem flags");
+  WriteU32Leb128(stream, elem_count, "table initial length");
+  WriteU32Leb128(stream, elem_count, "table max length");
   FIXUP_SIZE(stream);
 }
 
@@ -254,11 +253,11 @@ static void write_export_section(Context* ctx) {
 
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
-  write_u32_leb128(stream, total_exports, "export count");
+  WriteU32Leb128(stream, total_exports, "export count");
 
   for (const std::unique_ptr<LinkerInputBinary>& binary : ctx->inputs) {
     for (const Export& export_ : binary->exports) {
-      write_str(stream, export_.name, "export name");
+      WriteStr(stream, export_.name, "export name");
       stream->WriteU8Enum(export_.kind, "export kind");
       Index index = export_.index;
       switch (export_.kind) {
@@ -270,7 +269,7 @@ static void write_export_section(Context* ctx) {
                      static_cast<int>(export_.kind));
           break;
       }
-      write_u32_leb128(stream, index, "export index");
+      WriteU32Leb128(stream, index, "export index");
     }
   }
   FIXUP_SIZE(stream);
@@ -286,12 +285,12 @@ static void write_elem_section(Context* ctx,
     total_elem_count += section->binary->table_elem_count;
   }
 
-  write_u32_leb128(stream, 1, "segment count");
-  write_u32_leb128(stream, 0, "table index");
-  write_opcode(&ctx->stream, Opcode::I32Const);
-  write_i32_leb128(&ctx->stream, 0, "elem init literal");
-  write_opcode(&ctx->stream, Opcode::End);
-  write_u32_leb128(stream, total_elem_count, "num elements");
+  WriteU32Leb128(stream, 1, "segment count");
+  WriteU32Leb128(stream, 0, "table index");
+  WriteOpcode(&ctx->stream, Opcode::I32Const);
+  WriteI32Leb128(&ctx->stream, 0, "elem init literal");
+  WriteOpcode(&ctx->stream, Opcode::End);
+  WriteU32Leb128(stream, total_elem_count, "num elements");
 
   ctx->current_section_payload_offset = stream->offset();
 
@@ -308,7 +307,7 @@ static void write_memory_section(Context* ctx,
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  write_u32_leb128(stream, 1, "memory count");
+  WriteU32Leb128(stream, 1, "memory count");
 
   Limits limits;
   ZeroMemory(limits);
@@ -318,7 +317,7 @@ static void write_memory_section(Context* ctx,
     limits.initial += sec->data.memory_limits.initial;
   }
   limits.max = limits.initial;
-  write_limits(stream, &limits);
+  WriteLimits(stream, &limits);
 
   FIXUP_SIZE(stream);
 }
@@ -326,18 +325,18 @@ static void write_memory_section(Context* ctx,
 static void write_function_import(Context* ctx,
                                   FunctionImport* import,
                                   Index offset) {
-  write_str(&ctx->stream, import->module_name, "import module name");
-  write_str(&ctx->stream, import->name, "import field name");
+  WriteStr(&ctx->stream, import->module_name, "import module name");
+  WriteStr(&ctx->stream, import->name, "import field name");
   ctx->stream.WriteU8Enum(ExternalKind::Func, "import kind");
-  write_u32_leb128(&ctx->stream, import->sig_index + offset,
-                   "import signature index");
+  WriteU32Leb128(&ctx->stream, import->sig_index + offset,
+                 "import signature index");
 }
 
 static void write_global_import(Context* ctx, GlobalImport* import) {
-  write_str(&ctx->stream, import->module_name, "import module name");
-  write_str(&ctx->stream, import->name, "import field name");
+  WriteStr(&ctx->stream, import->module_name, "import module name");
+  WriteStr(&ctx->stream, import->name, "import field name");
   ctx->stream.WriteU8Enum(ExternalKind::Global, "import kind");
-  write_type(&ctx->stream, import->type);
+  WriteType(&ctx->stream, import->type);
   ctx->stream.WriteU8(import->mutable_, "global mutability");
 }
 
@@ -355,7 +354,7 @@ static void write_import_section(Context* ctx) {
   }
 
   WRITE_UNKNOWN_SIZE(&ctx->stream);
-  write_u32_leb128(&ctx->stream, num_imports, "num imports");
+  WriteU32Leb128(&ctx->stream, num_imports, "num imports");
 
   for (size_t i = 0; i < ctx->inputs.size(); i++) {
     LinkerInputBinary* binary = ctx->inputs[i].get();
@@ -381,7 +380,7 @@ static void write_function_section(Context* ctx,
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  write_u32_leb128(stream, total_count, "function count");
+  WriteU32Leb128(stream, total_count, "function count");
 
   for (size_t i = 0; i < sections.size(); i++) {
     Section* sec = sections[i];
@@ -392,9 +391,8 @@ static void write_function_section(Context* ctx,
     const uint8_t* end =
         &sec->binary->data[sec->payload_offset + sec->payload_size];
     while (count--) {
-      input_offset += read_u32_leb128(start + input_offset, end, &sig_index);
-      write_u32_leb128(stream, sec->binary->RelocateTypeIndex(sig_index),
-                       "sig");
+      input_offset += ReadU32Leb128(start + input_offset, end, &sig_index);
+      WriteU32Leb128(stream, sec->binary->RelocateTypeIndex(sig_index), "sig");
     }
   }
 
@@ -405,11 +403,11 @@ static void write_data_segment(Stream* stream,
                                const DataSegment& segment,
                                Address offset) {
   assert(segment.memory_index == 0);
-  write_u32_leb128(stream, segment.memory_index, "memory index");
-  write_opcode(stream, Opcode::I32Const);
-  write_u32_leb128(stream, segment.offset + offset, "offset");
-  write_opcode(stream, Opcode::End);
-  write_u32_leb128(stream, segment.size, "segment size");
+  WriteU32Leb128(stream, segment.memory_index, "memory index");
+  WriteOpcode(stream, Opcode::I32Const);
+  WriteU32Leb128(stream, segment.offset + offset, "offset");
+  WriteOpcode(stream, Opcode::End);
+  WriteU32Leb128(stream, segment.size, "segment size");
   stream->WriteData(segment.data, segment.size, "segment data");
 }
 
@@ -419,7 +417,7 @@ static void write_data_section(Context* ctx,
   Stream* stream = &ctx->stream;
   WRITE_UNKNOWN_SIZE(stream);
 
-  write_u32_leb128(stream, total_count, "data segment count");
+  WriteU32Leb128(stream, total_count, "data segment count");
   for (size_t i = 0; i < sections.size(); i++) {
     Section* sec = sections[i];
     for (size_t j = 0; j < sec->data.data_segments->size(); j++) {
@@ -450,11 +448,11 @@ static void write_names_section(Context* ctx) {
   Stream* stream = &ctx->stream;
   stream->WriteU8Enum(BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
-  write_str(stream, "name", "custom section name");
+  WriteStr(stream, "name", "custom section name");
 
   stream->WriteU8Enum(NameSectionSubsection::Function, "subsection code");
   WRITE_UNKNOWN_SIZE(stream);
-  write_u32_leb128(stream, total_count, "element count");
+  WriteU32Leb128(stream, total_count, "element count");
 
   // Write import names
   for (const std::unique_ptr<LinkerInputBinary>& binary: ctx->inputs) {
@@ -463,8 +461,8 @@ static void write_names_section(Context* ctx) {
         continue;
       if (binary->IsInactiveFunctionImport(i))
         continue;
-      write_u32_leb128(stream, binary->RelocateFuncIndex(i), "function index");
-      write_str(stream, binary->debug_names[i], "function name");
+      WriteU32Leb128(stream, binary->RelocateFuncIndex(i), "function index");
+      WriteStr(stream, binary->debug_names[i], "function name");
     }
   }
 
@@ -473,8 +471,8 @@ static void write_names_section(Context* ctx) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
       if (binary->debug_names[i].empty() || binary->IsFunctionImport(i))
         continue;
-      write_u32_leb128(stream, binary->RelocateFuncIndex(i), "function index");
-      write_str(stream, binary->debug_names[i], "function name");
+      WriteU32Leb128(stream, binary->RelocateFuncIndex(i), "function index");
+      WriteStr(stream, binary->debug_names[i], "function name");
     }
   }
 
@@ -497,20 +495,20 @@ static void write_reloc_section(Context* ctx,
 
   char section_name[128];
   snprintf(section_name, sizeof(section_name), "%s.%s",
-           WABT_BINARY_SECTION_RELOC, get_section_name(section_code));
+           WABT_BINARY_SECTION_RELOC, GetSectionName(section_code));
 
   Stream* stream = &ctx->stream;
   stream->WriteU8Enum(BinarySection::Custom, "section code");
   WRITE_UNKNOWN_SIZE(stream);
-  write_str(stream, section_name, "reloc section name");
-  write_u32_leb128_enum(&ctx->stream, section_code, "reloc section");
-  write_u32_leb128(&ctx->stream, total_relocs, "num relocs");
+  WriteStr(stream, section_name, "reloc section name");
+  WriteU32Leb128Enum(&ctx->stream, section_code, "reloc section");
+  WriteU32Leb128(&ctx->stream, total_relocs, "num relocs");
 
   for (Section* sec: sections) {
     for (const Reloc& reloc: sec->relocations) {
-      write_u32_leb128_enum(&ctx->stream, reloc.type, "reloc type");
+      WriteU32Leb128Enum(&ctx->stream, reloc.type, "reloc type");
       Offset new_offset = reloc.offset + sec->output_payload_offset;
-      write_u32_leb128(&ctx->stream, new_offset, "reloc offset");
+      WriteU32Leb128(&ctx->stream, new_offset, "reloc offset");
       Index relocated_index;
       switch (reloc.type) {
         case RelocType::FuncIndexLEB:
@@ -524,10 +522,11 @@ static void write_reloc_section(Context* ctx,
           break;
         // TODO(sbc): Handle other relocation types.
         default:
-          WABT_FATAL("Unhandled reloc type: %s\n", get_reloc_type_name(reloc.type));
+          WABT_FATAL("Unhandled reloc type: %s\n",
+                     GetRelocTypeName(reloc.type));
           break;
       }
-      write_u32_leb128(&ctx->stream, relocated_index, "reloc index");
+      WriteU32Leb128(&ctx->stream, relocated_index, "reloc index");
     }
   }
 
@@ -542,7 +541,7 @@ static bool write_combined_section(Context* ctx,
 
   if (section_code == BinarySection::Start && sections.size() > 1) {
     WABT_FATAL("Don't know how to combine sections of type: %s\n",
-               get_section_name(section_code));
+               GetSectionName(section_code));
   }
 
   Index total_count = 0;
@@ -581,12 +580,12 @@ static bool write_combined_section(Context* ctx,
       break;
     default: {
       /* Total section size includes the element count leb128. */
-      total_size += u32_leb128_length(total_count);
+      total_size += U32Leb128Length(total_count);
 
       /* Write section to stream */
       Stream* stream = &ctx->stream;
-      write_u32_leb128(stream, total_size, "section size");
-      write_u32_leb128(stream, total_count, "element count");
+      WriteU32Leb128(stream, total_size, "section size");
+      WriteU32Leb128(stream, total_count, "element count");
       ctx->current_section_payload_offset = ctx->stream.offset();
       for (Section* sec: sections) {
         apply_relocations(sec);
@@ -781,11 +780,11 @@ static Result perform_link(Context* ctx) {
 }
 
 int ProgramMain(int argc, char** argv) {
-  init_stdio();
+  InitStdio();
 
   Context context;
 
-  parse_options(argc, argv);
+  ParseOptions(argc, argv);
 
   Result result = Result::Ok;
   for (size_t i = 0; i < s_infiles.size(); i++) {
@@ -801,7 +800,7 @@ int ProgramMain(int argc, char** argv) {
     LinkOptions options = { NULL };
     if (s_debug)
       options.log_stream = s_log_stream.get();
-    result = read_binary_linker(b, &options);
+    result = ReadBinaryLinker(b, &options);
     if (Failed(result))
       WABT_FATAL("error parsing file: %s\n", input_filename.c_str());
   }

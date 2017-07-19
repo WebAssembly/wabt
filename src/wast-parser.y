@@ -76,28 +76,28 @@
     }                                                         \
   while (0)
 
-#define CHECK_END_LABEL(loc, begin_label, end_label)                      \
-  do {                                                                    \
-    if (!end_label->empty()) {                                            \
-      if (begin_label.empty()) {                                          \
-        wast_parser_error(&loc, lexer, parser, "unexpected label \"%s\"", \
-                          end_label->c_str());                            \
-      } else if (begin_label != *end_label) {                             \
-        wast_parser_error(&loc, lexer, parser,                            \
-                          "mismatching label \"%s\" != \"%s\"",           \
-                          begin_label.c_str(), end_label->c_str());       \
-      }                                                                   \
-    }                                                                     \
-    delete (end_label);                                                   \
+#define CHECK_END_LABEL(loc, begin_label, end_label)                    \
+  do {                                                                  \
+    if (!end_label->empty()) {                                          \
+      if (begin_label.empty()) {                                        \
+        WastParserError(&loc, lexer, parser, "unexpected label \"%s\"", \
+                        end_label->c_str());                            \
+      } else if (begin_label != *end_label) {                           \
+        WastParserError(&loc, lexer, parser,                            \
+                        "mismatching label \"%s\" != \"%s\"",           \
+                        begin_label.c_str(), end_label->c_str());       \
+      }                                                                 \
+    }                                                                   \
+    delete (end_label);                                                 \
   } while (0)
 
-#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                      \
-  do {                                                                \
-    if (!parser->options->allow_future_exceptions) {                   \
-      wast_parser_error(loc, lexer, parser, "opcode not allowed: %s", \
-                        opcode_name);                                 \
-    }                                                                 \
- } while (0)
+#define CHECK_ALLOW_EXCEPTIONS(loc, opcode_name)                    \
+  do {                                                              \
+    if (!parser->options->allow_future_exceptions) {                \
+      WastParserError(loc, lexer, parser, "opcode not allowed: %s", \
+                      opcode_name);                                 \
+    }                                                               \
+  } while (0)
 
 #define YYMALLOC(size) new char [size]
 #define YYFREE(p) delete [] (p)
@@ -179,8 +179,8 @@ void RemoveEscapes(string_view text, OutputIter dest) {
           // sequence.
           uint32_t hi;
           uint32_t lo;
-          if (Succeeded(parse_hexdigit(src[0], &hi)) &&
-              Succeeded(parse_hexdigit(src[1], &lo))) {
+          if (Succeeded(ParseHexdigit(src[0], &hi)) &&
+              Succeeded(ParseHexdigit(src[1], &lo))) {
             *dest++ = (hi << 4) | lo;
           } else {
             assert(0);
@@ -222,7 +222,7 @@ void AppendAndDelete(T& dest, U* source) {
 }
 
 #define wabt_wast_parser_lex(...) lexer->GetToken(__VA_ARGS__, parser)
-#define wabt_wast_parser_error wast_parser_error
+#define wabt_wast_parser_error WastParserError
 
 %}
 
@@ -433,10 +433,9 @@ type_use :
 nat :
     NAT {
       string_view sv = $1.text.to_string_view();
-      if (Failed(parse_uint64(sv.begin(), sv.end(), &$$))) {
-        wast_parser_error(&@1, lexer, parser,
-                          "invalid int \"" PRIstringview "\"",
-                          WABT_PRINTF_STRING_VIEW_ARG(sv));
+      if (Failed(ParseUint64(sv.begin(), sv.end(), &$$))) {
+        WastParserError(&@1, lexer, parser, "invalid int \"" PRIstringview "\"",
+                        WABT_PRINTF_STRING_VIEW_ARG(sv));
       }
     }
 ;
@@ -486,15 +485,15 @@ offset_opt :
   | OFFSET_EQ_NAT {
       uint64_t offset64;
       string_view sv = $1.to_string_view();
-      if (Failed(parse_int64(sv.begin(), sv.end(), &offset64,
-                             ParseIntType::SignedAndUnsigned))) {
-        wast_parser_error(&@1, lexer, parser,
-                          "invalid offset \"" PRIstringview "\"",
-                          WABT_PRINTF_STRING_VIEW_ARG(sv));
+      if (Failed(ParseInt64(sv.begin(), sv.end(), &offset64,
+                            ParseIntType::SignedAndUnsigned))) {
+        WastParserError(&@1, lexer, parser,
+                        "invalid offset \"" PRIstringview "\"",
+                        WABT_PRINTF_STRING_VIEW_ARG(sv));
       }
       if (offset64 > UINT32_MAX) {
-        wast_parser_error(&@1, lexer, parser,
-                          "offset must be less than or equal to 0xffffffff");
+        WastParserError(&@1, lexer, parser,
+                        "offset must be less than or equal to 0xffffffff");
       }
       $$ = static_cast<uint32_t>(offset64);
     }
@@ -503,15 +502,15 @@ align_opt :
     /* empty */ { $$ = USE_NATURAL_ALIGNMENT; }
   | ALIGN_EQ_NAT {
       string_view sv = $1.to_string_view();
-      if (Failed(parse_int32(sv.begin(), sv.end(), &$$,
-                             ParseIntType::UnsignedOnly))) {
-        wast_parser_error(&@1, lexer, parser,
-                          "invalid alignment \"" PRIstringview "\"",
-                          WABT_PRINTF_STRING_VIEW_ARG(sv));
+      if (Failed(ParseInt32(sv.begin(), sv.end(), &$$,
+                            ParseIntType::UnsignedOnly))) {
+        WastParserError(&@1, lexer, parser,
+                        "invalid alignment \"" PRIstringview "\"",
+                        WABT_PRINTF_STRING_VIEW_ARG(sv));
       }
 
       if ($$ != WABT_USE_NATURAL_ALIGNMENT && !IsPowerOfTwo($$)) {
-        wast_parser_error(&@1, lexer, parser, "alignment must be power-of-two");
+        WastParserError(&@1, lexer, parser, "alignment must be power-of-two");
       }
     }
 ;
@@ -585,8 +584,8 @@ plain_instr :
       const_.loc = @1;
       auto literal = MoveAndDelete($2);
       if (Failed(ParseConst($1, literal, &const_))) {
-        wast_parser_error(&@2, lexer, parser, "invalid literal \"%s\"",
-                          literal.text.c_str());
+        WastParserError(&@2, lexer, parser, "invalid literal \"%s\"",
+                        literal.text.c_str());
       }
       $$ = new ConstExpr(const_);
     }
@@ -1330,8 +1329,8 @@ module :
         ReadBinaryOptions options;
         BinaryErrorHandlerModule error_handler(&$1->binary.loc, lexer, parser);
         const char* filename = "<text>";
-        read_binary_ir(filename, $1->binary.data.data(), $1->binary.data.size(),
-                       &options, &error_handler, $$);
+        ReadBinaryIr(filename, $1->binary.data.data(), $1->binary.data.size(),
+                     &options, &error_handler, $$);
         $$->name = $1->binary.name;
         $$->loc = $1->binary.loc;
       }
@@ -1466,8 +1465,8 @@ const :
       $$.loc = @2;
       auto literal = MoveAndDelete($3);
       if (Failed(ParseConst($2, literal, &$$))) {
-        wast_parser_error(&@3, lexer, parser, "invalid literal \"%s\"",
-                          literal.text.c_str());
+        WastParserError(&@3, lexer, parser, "invalid literal \"%s\"",
+                        literal.text.c_str());
       }
     }
 ;
@@ -1567,13 +1566,13 @@ Result ParseConst(Type type, const Literal& literal, Const* out) {
   out->type = type;
   switch (type) {
     case Type::I32:
-      return parse_int32(s, end, &out->u32, ParseIntType::SignedAndUnsigned);
+      return ParseInt32(s, end, &out->u32, ParseIntType::SignedAndUnsigned);
     case Type::I64:
-      return parse_int64(s, end, &out->u64, ParseIntType::SignedAndUnsigned);
+      return ParseInt64(s, end, &out->u64, ParseIntType::SignedAndUnsigned);
     case Type::F32:
-      return parse_float(literal.type, s, end, &out->f32_bits);
+      return ParseFloat(literal.type, s, end, &out->f32_bits);
     case Type::F64:
-      return parse_double(literal.type, s, end, &out->f64_bits);
+      return ParseDouble(literal.type, s, end, &out->f64_bits);
     default:
       assert(0);
       break;
@@ -1614,9 +1613,8 @@ void CheckImportOrdering(Location* loc, WastLexer* lexer, WastParser* parser,
           module->memories.size() != module->num_memory_imports ||
           module->globals.size() != module->num_global_imports ||
           module->excepts.size() != module->num_except_imports) {
-        wast_parser_error(
-            loc, lexer, parser,
-            "imports must occur before all non-import definitions");
+        WastParserError(loc, lexer, parser,
+                        "imports must occur before all non-import definitions");
       }
     }
   }
@@ -1787,9 +1785,8 @@ void AppendModuleFields(Module* module, ModuleFieldList&& fields) {
   module->fields.splice(module->fields.end(), fields);
 }
 
-Result parse_wast(WastLexer* lexer, Script** out_script,
-                  ErrorHandler* error_handler,
-                  WastParseOptions* options) {
+Result ParseWast(WastLexer * lexer, Script * *out_script,
+                 ErrorHandler * error_handler, WastParseOptions * options) {
   WastParser parser;
   ZeroMemory(parser);
   static WastParseOptions default_options;
@@ -1821,12 +1818,12 @@ bool BinaryErrorHandlerModule::OnError(
     const Location& binary_loc, const std::string& error,
     const std::string& source_line, size_t source_line_column_offset) {
   if (binary_loc.offset == kInvalidOffset) {
-    wast_parser_error(loc_, lexer_, parser_, "error in binary module: %s",
-                      error.c_str());
+    WastParserError(loc_, lexer_, parser_, "error in binary module: %s",
+                    error.c_str());
   } else {
-    wast_parser_error(loc_, lexer_, parser_,
-                      "error in binary module: @0x%08" PRIzx ": %s",
-                      binary_loc.offset, error.c_str());
+    WastParserError(loc_, lexer_, parser_,
+                    "error in binary module: @0x%08" PRIzx ": %s",
+                    binary_loc.offset, error.c_str());
   }
   return true;
 }

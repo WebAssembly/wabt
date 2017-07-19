@@ -297,18 +297,18 @@ class BinaryReaderDelegate {
   const State* state = nullptr;
 };
 
-Result read_binary(const void* data,
-                   size_t size,
-                   BinaryReaderDelegate* reader,
-                   const ReadBinaryOptions* options);
+Result ReadBinary(const void* data,
+                  size_t size,
+                  BinaryReaderDelegate* reader,
+                  const ReadBinaryOptions* options);
 
-size_t read_u32_leb128(const uint8_t* ptr,
-                       const uint8_t* end,
-                       uint32_t* out_value);
+size_t ReadU32Leb128(const uint8_t* ptr,
+                     const uint8_t* end,
+                     uint32_t* out_value);
 
-size_t read_i32_leb128(const uint8_t* ptr,
-                       const uint8_t* end,
-                       uint32_t* out_value);
+size_t ReadI32Leb128(const uint8_t* ptr,
+                     const uint8_t* end,
+                     uint32_t* out_value);
 
 }  // namespace wabt
 

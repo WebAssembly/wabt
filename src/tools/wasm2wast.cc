@@ -55,7 +55,7 @@ examples:
   $ wasm2wast test.wasm --no-debug-names -o test.wast
 )";
 
-static void parse_options(int argc, char** argv) {
+static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm2wast", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
@@ -98,37 +98,37 @@ static void parse_options(int argc, char** argv) {
 int ProgramMain(int argc, char** argv) {
   Result result;
 
-  init_stdio();
-  parse_options(argc, argv);
+  InitStdio();
+  ParseOptions(argc, argv);
 
   std::vector<uint8_t> file_data;
   result = ReadFile(s_infile.c_str(), &file_data);
   if (Succeeded(result)) {
     ErrorHandlerFile error_handler(Location::Type::Binary);
     Module module;
-    result = read_binary_ir(s_infile.c_str(), DataOrNull(file_data),
-                            file_data.size(), &s_read_binary_options,
-                            &error_handler, &module);
+    result =
+        ReadBinaryIr(s_infile.c_str(), DataOrNull(file_data), file_data.size(),
+                     &s_read_binary_options, &error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result) && s_validate) {
         WastLexer* lexer = nullptr;
-        result = validate_module(lexer, &module, &error_handler);
+        result = ValidateModule(lexer, &module, &error_handler);
       }
 
       if (s_generate_names)
-        result = generate_names(&module);
+        result = GenerateNames(&module);
 
       if (Succeeded(result)) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied
          * (because the index is invalid, say) it should just be skipped. */
-        Result dummy_result = apply_names(&module);
+        Result dummy_result = ApplyNames(&module);
         WABT_USE(dummy_result);
       }
 
       if (Succeeded(result)) {
         FileWriter writer(!s_outfile.empty() ? FileWriter(s_outfile.c_str())
                                              : FileWriter(stdout));
-        result = write_wat(&writer, &module, &s_write_wat_options);
+        result = WriteWat(&writer, &module, &s_write_wat_options);
       }
     }
   }

@@ -615,7 +615,7 @@ wabt::Result BinaryReaderInterpreter::CheckImportKind(
                "\" to have kind %s, not %s",
                WABT_PRINTF_STRING_VIEW_ARG(import->module_name),
                WABT_PRINTF_STRING_VIEW_ARG(import->field_name),
-               get_kind_name(expected_kind), get_kind_name(import->kind));
+               GetKindName(expected_kind), GetKindName(import->kind));
     return wabt::Result::Error;
   }
   return wabt::Result::Ok;
@@ -859,8 +859,8 @@ wabt::Result BinaryReaderInterpreter::EndGlobalInitExpr(Index index) {
   Global* global = GetGlobalByModuleIndex(index);
   if (init_expr_value.type != global->typed_value.type) {
     PrintError("type mismatch in global, expected %s but got %s.",
-               get_type_name(global->typed_value.type),
-               get_type_name(init_expr_value.type));
+               GetTypeName(global->typed_value.type),
+               GetTypeName(init_expr_value.type));
     return wabt::Result::Error;
   }
   global->typed_value = init_expr_value;
@@ -967,7 +967,7 @@ wabt::Result BinaryReaderInterpreter::OnStartFunction(Index func_index) {
 wabt::Result BinaryReaderInterpreter::EndElemSegmentInitExpr(Index index) {
   if (init_expr_value.type != Type::I32) {
     PrintError("type mismatch in elem segment, expected i32 but got %s",
-               get_type_name(init_expr_value.type));
+               GetTypeName(init_expr_value.type));
     return wabt::Result::Error;
   }
   table_offset = init_expr_value.value.i32;
@@ -1004,7 +1004,7 @@ wabt::Result BinaryReaderInterpreter::OnDataSegmentData(Index index,
   Memory* memory = env->GetMemory(module->memory_index);
   if (init_expr_value.type != Type::I32) {
     PrintError("type mismatch in data segment, expected i32 but got %s",
-               get_type_name(init_expr_value.type));
+               GetTypeName(init_expr_value.type));
     return wabt::Result::Error;
   }
   Address address = init_expr_value.value.i32;
@@ -1438,12 +1438,12 @@ wabt::Result BinaryReaderInterpreter::EndModule() {
 
 }  // end anonymous namespace
 
-wabt::Result read_binary_interpreter(Environment* env,
-                                     const void* data,
-                                     size_t size,
-                                     const ReadBinaryOptions* options,
-                                     ErrorHandler* error_handler,
-                                     DefinedModule** out_module) {
+wabt::Result ReadBinaryInterpreter(Environment* env,
+                                   const void* data,
+                                   size_t size,
+                                   const ReadBinaryOptions* options,
+                                   ErrorHandler* error_handler,
+                                   DefinedModule** out_module) {
   // Need to mark before taking ownership of env->istream.
   Environment::MarkPoint mark = env->Mark();
 
@@ -1455,7 +1455,7 @@ wabt::Result read_binary_interpreter(Environment* env,
                                  error_handler);
   env->EmplaceBackModule(module);
 
-  wabt::Result result = read_binary(data, size, &reader, options);
+  wabt::Result result = ReadBinary(data, size, &reader, options);
   env->SetIstream(reader.ReleaseOutputBuffer());
 
   if (Succeeded(result)) {

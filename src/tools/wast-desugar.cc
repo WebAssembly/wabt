@@ -54,7 +54,7 @@ examples:
   $ wast-desugar --generate-names test.wast
 )";
 
-static void parse_options(int argc, char** argv) {
+static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wast-desugar", s_description);
 
   parser.AddHelpOption();
@@ -78,8 +78,8 @@ static void parse_options(int argc, char** argv) {
 }
 
 int ProgramMain(int argc, char** argv) {
-  init_stdio();
-  parse_options(argc, argv);
+  InitStdio();
+  ParseOptions(argc, argv);
 
   std::unique_ptr<WastLexer> lexer(WastLexer::CreateFileLexer(s_infile));
   if (!lexer)
@@ -88,7 +88,7 @@ int ProgramMain(int argc, char** argv) {
   ErrorHandlerFile error_handler(Location::Type::Text);
   Script* script;
   Result result =
-      parse_wast(lexer.get(), &script, &error_handler, &s_parse_options);
+      ParseWast(lexer.get(), &script, &error_handler, &s_parse_options);
 
   if (Succeeded(result)) {
     Module* module = script->GetFirstModule();
@@ -96,14 +96,14 @@ int ProgramMain(int argc, char** argv) {
       WABT_FATAL("no module in file.\n");
 
     if (s_generate_names)
-      result = generate_names(module);
+      result = GenerateNames(module);
 
     if (Succeeded(result))
-      result = apply_names(module);
+      result = ApplyNames(module);
 
     if (Succeeded(result)) {
       FileWriter writer(s_outfile ? FileWriter(s_outfile) : FileWriter(stdout));
-      result = write_wat(&writer, module, &s_write_wat_options);
+      result = WriteWat(&writer, module, &s_write_wat_options);
     }
   }
 

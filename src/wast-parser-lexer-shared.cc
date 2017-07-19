@@ -23,23 +23,23 @@
 
 namespace wabt {
 
-void wast_parser_error(Location* loc,
-                       WastLexer* lexer,
-                       WastParser* parser,
-                       const char* format,
-                       ...) {
+void WastParserError(Location* loc,
+                     WastLexer* lexer,
+                     WastParser* parser,
+                     const char* format,
+                     ...) {
   parser->errors++;
   va_list args;
   va_start(args, format);
-  wast_format_error(parser->error_handler, loc, lexer, format, args);
+  WastFormatError(parser->error_handler, loc, lexer, format, args);
   va_end(args);
 }
 
-void wast_format_error(ErrorHandler* error_handler,
-                       const struct Location* loc,
-                       WastLexer* lexer,
-                       const char* format,
-                       va_list args) {
+void WastFormatError(ErrorHandler* error_handler,
+                     const struct Location* loc,
+                     WastLexer* lexer,
+                     const char* format,
+                     va_list args) {
   va_list args_copy;
   va_copy(args_copy, args);
   char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];

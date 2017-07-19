@@ -57,10 +57,10 @@ struct OpcntData {
 void init_opcnt_data(OpcntData* data);
 void destroy_opcnt_data(OpcntData* data);
 
-Result read_binary_opcnt(const void* data,
-                         size_t size,
-                         const struct ReadBinaryOptions* options,
-                         OpcntData* opcnt_data);
+Result ReadBinaryOpcnt(const void* data,
+                       size_t size,
+                       const struct ReadBinaryOptions* options,
+                       OpcntData* opcnt_data);
 
 }  // namespace wabt
 

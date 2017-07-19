@@ -172,7 +172,7 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
 Result TypeChecker::CheckType(Type actual, Type expected, const char* desc) {
   if (expected != actual && expected != Type::Any && actual != Type::Any) {
     PrintError("type mismatch in %s, expected %s but got %s.", desc,
-               get_type_name(expected), get_type_name(actual));
+               GetTypeName(expected), GetTypeName(actual));
     return Result::Error;
   }
   return Result::Ok;

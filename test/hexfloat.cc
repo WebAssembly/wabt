@@ -115,7 +115,7 @@ class AllFloatsParseTest : public ThreadedTest {
 
       uint32_t me;
       ASSERT_EQ(Result::Ok,
-                parse_float(LiteralType::Hexfloat, buffer, buffer + len, &me));
+                ParseFloat(LiteralType::Hexfloat, buffer, buffer + len, &me));
       ASSERT_EQ(me, bits);
     }
     LOG_DONE();
@@ -135,7 +135,7 @@ class AllFloatsWriteTest : public ThreadedTest {
       if (is_infinity_or_nan(bits))
         continue;
 
-      write_float_hex(buffer, sizeof(buffer), bits);
+      WriteFloatHex(buffer, sizeof(buffer), bits);
 
       char* endptr;
       float them_float = strtof(buffer, &endptr);
@@ -168,12 +168,12 @@ class AllFloatsRoundtripTest : public ThreadedTest {
     char buffer[100];
     FOREACH_UINT32(bits) {
       LOG_COMPLETION(bits);
-      write_float_hex(buffer, sizeof(buffer), bits);
+      WriteFloatHex(buffer, sizeof(buffer), bits);
       int len = strlen(buffer);
 
       uint32_t new_bits;
-      ASSERT_EQ(Result::Ok, parse_float(ClassifyFloat(bits), buffer,
-                                        buffer + len, &new_bits));
+      ASSERT_EQ(Result::Ok, ParseFloat(ClassifyFloat(bits), buffer,
+                                       buffer + len, &new_bits));
       ASSERT_EQ(new_bits, bits);
     }
     LOG_DONE();
@@ -200,7 +200,7 @@ class ManyDoublesParseTest : public ThreadedTest {
 
       uint64_t me;
       ASSERT_EQ(Result::Ok,
-                parse_double(LiteralType::Hexfloat, buffer, buffer + len, &me));
+                ParseDouble(LiteralType::Hexfloat, buffer, buffer + len, &me));
       ASSERT_EQ(me, bits);
     }
     LOG_DONE();
@@ -221,7 +221,7 @@ class ManyDoublesWriteTest : public ThreadedTest {
       if (is_infinity_or_nan(bits))
         continue;
 
-      write_double_hex(buffer, sizeof(buffer), bits);
+      WriteDoubleHex(buffer, sizeof(buffer), bits);
 
       char* endptr;
       double them_double = strtod(buffer, &endptr);
@@ -255,12 +255,12 @@ class ManyDoublesRoundtripTest : public ThreadedTest {
     FOREACH_UINT32(halfbits) {
       LOG_COMPLETION(halfbits);
       uint64_t bits = (static_cast<uint64_t>(halfbits) << 32) | halfbits;
-      write_double_hex(buffer, sizeof(buffer), bits);
+      WriteDoubleHex(buffer, sizeof(buffer), bits);
       int len = strlen(buffer);
 
       uint64_t new_bits;
-      ASSERT_EQ(Result::Ok, parse_double(ClassifyDouble(bits), buffer,
-                                         buffer + len, &new_bits));
+      ASSERT_EQ(Result::Ok, ParseDouble(ClassifyDouble(bits), buffer,
+                                        buffer + len, &new_bits));
       ASSERT_EQ(new_bits, bits);
     }
     LOG_DONE();
@@ -274,27 +274,27 @@ TEST_F(ManyDoublesRoundtripTest, Run) {
 static void AssertHexFloatEquals(uint32_t expected_bits, const char* s) {
   uint32_t actual_bits;
   ASSERT_EQ(Result::Ok,
-            parse_float(LiteralType::Hexfloat, s, s + strlen(s), &actual_bits));
+            ParseFloat(LiteralType::Hexfloat, s, s + strlen(s), &actual_bits));
   ASSERT_EQ(expected_bits, actual_bits);
 }
 
 static void AssertHexFloatFails(const char* s) {
   uint32_t actual_bits;
   ASSERT_EQ(Result::Error,
-            parse_float(LiteralType::Hexfloat, s, s + strlen(s), &actual_bits));
+            ParseFloat(LiteralType::Hexfloat, s, s + strlen(s), &actual_bits));
 }
 
 static void AssertHexDoubleEquals(uint64_t expected_bits, const char* s) {
   uint64_t actual_bits;
-  ASSERT_EQ(Result::Ok, parse_double(LiteralType::Hexfloat, s, s + strlen(s),
-                                     &actual_bits));
+  ASSERT_EQ(Result::Ok,
+            ParseDouble(LiteralType::Hexfloat, s, s + strlen(s), &actual_bits));
   ASSERT_EQ(expected_bits, actual_bits);
 }
 
 static void AssertHexDoubleFails(const char* s) {
   uint64_t actual_bits;
-  ASSERT_EQ(Result::Error, parse_double(LiteralType::Hexfloat, s, s + strlen(s),
-                                        &actual_bits));
+  ASSERT_EQ(Result::Error,
+            ParseDouble(LiteralType::Hexfloat, s, s + strlen(s), &actual_bits));
 }
 
 TEST(ParseFloat, NonCanonical) {

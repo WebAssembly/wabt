@@ -373,7 +373,7 @@ Result NameApplier::VisitModule(Module* module) {
 
 }  // end anonymous namespace
 
-Result apply_names(Module* module) {
+Result ApplyNames(Module* module) {
   NameApplier applier;
   return applier.VisitModule(module);
 }

@@ -981,14 +981,14 @@ Result BinaryReaderIR::OnExceptionType(Index index, TypeVector& sig) {
 
 }  // end anonymous namespace
 
-Result read_binary_ir(const char* filename,
-                      const void* data,
-                      size_t size,
-                      const ReadBinaryOptions* options,
-                      ErrorHandler* error_handler,
-                      struct Module* out_module) {
+Result ReadBinaryIr(const char* filename,
+                    const void* data,
+                    size_t size,
+                    const ReadBinaryOptions* options,
+                    ErrorHandler* error_handler,
+                    struct Module* out_module) {
   BinaryReaderIR reader(out_module, filename, error_handler);
-  Result result = read_binary(data, size, &reader, options);
+  Result result = ReadBinary(data, size, &reader, options);
   return result;
 }
 

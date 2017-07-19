@@ -28,9 +28,9 @@ struct WriteBinarySpecOptions {
   WriteBinaryOptions write_binary_options;
 };
 
-Result write_binary_spec_script(struct Script*,
-                                const char* source_filename,
-                                const WriteBinarySpecOptions*);
+Result WriteBinarySpecScript(struct Script*,
+                             const char* source_filename,
+                             const WriteBinarySpecOptions*);
 
 }  // namespace wabt
 

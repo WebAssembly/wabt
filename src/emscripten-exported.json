@@ -11,7 +11,6 @@
 "_wabt_destroy_write_module_result",
 "_wabt_generate_names_module",
 "_wabt_get_first_module",
-"_wabt_new_error_handler_buffer",
 "_wabt_new_wast_buffer_lexer",
 "_wabt_output_buffer_get_data",
 "_wabt_output_buffer_get_size",

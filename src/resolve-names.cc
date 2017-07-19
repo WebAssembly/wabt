@@ -106,7 +106,7 @@ void WABT_PRINTF_FORMAT(3, 4) NameResolver::PrintError(const Location* loc,
   result_ = Result::Error;
   va_list args;
   va_start(args, fmt);
-  wast_format_error(error_handler_, loc, lexer_, fmt, args);
+  WastFormatError(error_handler_, loc, lexer_, fmt, args);
   va_end(args);
 }
 
@@ -441,16 +441,16 @@ Result NameResolver::VisitScript(Script* script) {
   return result_;
 }
 
-Result resolve_names_module(WastLexer* lexer,
-                            Module* module,
-                            ErrorHandler* error_handler) {
+Result ResolveNamesModule(WastLexer* lexer,
+                          Module* module,
+                          ErrorHandler* error_handler) {
   NameResolver resolver(lexer, nullptr, error_handler);
   return resolver.VisitModule(module);
 }
 
-Result resolve_names_script(WastLexer* lexer,
-                            Script* script,
-                            ErrorHandler* error_handler) {
+Result ResolveNamesScript(WastLexer* lexer,
+                          Script* script,
+                          ErrorHandler* error_handler) {
   NameResolver resolver(lexer, script, error_handler);
   return resolver.VisitScript(script);
 }

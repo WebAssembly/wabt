@@ -34,7 +34,7 @@ namespace wabt {
 
 namespace {
 
-void sprint_limits(char* dst, size_t size, const Limits* limits) {
+void SPrintLimits(char* dst, size_t size, const Limits* limits) {
   int result;
   if (limits->has_max) {
     result = wabt_snprintf(dst, size, "initial: %" PRIu64 ", max: %" PRIu64,
@@ -79,7 +79,7 @@ void BinaryReaderLogging::WriteIndent() {
 void BinaryReaderLogging::LogTypes(Index type_count, Type* types) {
   LOGF_NOINDENT("[");
   for (Index i = 0; i < type_count; ++i) {
-    LOGF_NOINDENT("%s", get_type_name(types[i]));
+    LOGF_NOINDENT("%s", GetTypeName(types[i]));
     if (i != type_count - 1)
       LOGF_NOINDENT(", ");
   }
@@ -161,10 +161,10 @@ Result BinaryReaderLogging::OnImportTable(Index import_index,
                                           Type elem_type,
                                           const Limits* elem_limits) {
   char buf[100];
-  sprint_limits(buf, sizeof(buf), elem_limits);
+  SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnImportTable(import_index: %" PRIindex ", table_index: %" PRIindex
        ", elem_type: %s, %s)\n",
-       import_index, table_index, get_type_name(elem_type), buf);
+       import_index, table_index, GetTypeName(elem_type), buf);
   return reader->OnImportTable(import_index, module_name, field_name,
                                table_index, elem_type, elem_limits);
 }
@@ -175,7 +175,7 @@ Result BinaryReaderLogging::OnImportMemory(Index import_index,
                                            Index memory_index,
                                            const Limits* page_limits) {
   char buf[100];
-  sprint_limits(buf, sizeof(buf), page_limits);
+  SPrintLimits(buf, sizeof(buf), page_limits);
   LOGF("OnImportMemory(import_index: %" PRIindex ", memory_index: %" PRIindex
        ", %s)\n",
        import_index, memory_index, buf);
@@ -192,7 +192,7 @@ Result BinaryReaderLogging::OnImportGlobal(Index import_index,
   LOGF("OnImportGlobal(import_index: %" PRIindex ", global_index: %" PRIindex
        ", type: %s, mutable: "
        "%s)\n",
-       import_index, global_index, get_type_name(type),
+       import_index, global_index, GetTypeName(type),
        mutable_ ? "true" : "false");
   return reader->OnImportGlobal(import_index, module_name, field_name,
                                 global_index, type, mutable_);
@@ -216,22 +216,22 @@ Result BinaryReaderLogging::OnTable(Index index,
                                     Type elem_type,
                                     const Limits* elem_limits) {
   char buf[100];
-  sprint_limits(buf, sizeof(buf), elem_limits);
+  SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnTable(index: %" PRIindex ", elem_type: %s, %s)\n", index,
-       get_type_name(elem_type), buf);
+       GetTypeName(elem_type), buf);
   return reader->OnTable(index, elem_type, elem_limits);
 }
 
 Result BinaryReaderLogging::OnMemory(Index index, const Limits* page_limits) {
   char buf[100];
-  sprint_limits(buf, sizeof(buf), page_limits);
+  SPrintLimits(buf, sizeof(buf), page_limits);
   LOGF("OnMemory(index: %" PRIindex ", %s)\n", index, buf);
   return reader->OnMemory(index, page_limits);
 }
 
 Result BinaryReaderLogging::BeginGlobal(Index index, Type type, bool mutable_) {
   LOGF("BeginGlobal(index: %" PRIindex ", type: %s, mutable: %s)\n", index,
-       get_type_name(type), mutable_ ? "true" : "false");
+       GetTypeName(type), mutable_ ? "true" : "false");
   return reader->BeginGlobal(index, type, mutable_);
 }
 
@@ -241,8 +241,7 @@ Result BinaryReaderLogging::OnExport(Index index,
                                      string_view name) {
   LOGF("OnExport(index: %" PRIindex ", kind: %s, item_index: %" PRIindex
        ", name: \"" PRIstringview "\")\n",
-       index, get_kind_name(kind), item_index,
-       WABT_PRINTF_STRING_VIEW_ARG(name));
+       index, GetKindName(kind), item_index, WABT_PRINTF_STRING_VIEW_ARG(name));
   return reader->OnExport(index, kind, item_index, name);
 }
 
@@ -250,7 +249,7 @@ Result BinaryReaderLogging::OnLocalDecl(Index decl_index,
                                         Index count,
                                         Type type) {
   LOGF("OnLocalDecl(index: %" PRIindex ", count: %" PRIindex ", type: %s)\n",
-       decl_index, count, get_type_name(type));
+       decl_index, count, GetTypeName(type));
   return reader->OnLocalDecl(decl_index, count, type);
 }
 
@@ -434,7 +433,7 @@ Result BinaryReaderLogging::OnRelocCount(Index count,
                                          string_view section_name) {
   LOGF("OnRelocCount(count: %" PRIindex
        ", section: %s, section_name: " PRIstringview ")\n",
-       count, get_section_name(section_code),
+       count, GetSectionName(section_code),
        WABT_PRINTF_STRING_VIEW_ARG(section_name));
   return reader->OnRelocCount(count, section_code, section_name);
 }
@@ -446,7 +445,7 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   int32_t signed_addend = static_cast<int32_t>(addend);
   LOGF("OnReloc(type: %s, offset: %" PRIzd ", index: %" PRIindex
        ", addend: %d)\n",
-       get_reloc_type_name(type), offset, index, signed_addend);
+       GetRelocTypeName(type), offset, index, signed_addend);
   return reader->OnReloc(type, offset, index, addend);
 }
 

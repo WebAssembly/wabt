@@ -121,20 +121,20 @@ struct WastParser {
   WastParseOptions* options;
 };
 
-int wast_lexer_lex(union Token*,
-                   struct Location*,
-                   WastLexer*,
-                   struct WastParser*);
-void WABT_PRINTF_FORMAT(4, 5) wast_parser_error(struct Location*,
-                                                WastLexer*,
-                                                struct WastParser*,
-                                                const char*,
-                                                ...);
-void wast_format_error(ErrorHandler*,
-                       const struct Location*,
-                       WastLexer*,
-                       const char* format,
-                       va_list);
+int WastLexerLex(union Token*,
+                 struct Location*,
+                 WastLexer*,
+                 struct WastParser*);
+void WABT_PRINTF_FORMAT(4, 5) WastParserError(struct Location*,
+                                              WastLexer*,
+                                              struct WastParser*,
+                                              const char*,
+                                              ...);
+void WastFormatError(ErrorHandler*,
+                     const struct Location*,
+                     WastLexer*,
+                     const char* format,
+                     va_list);
 
 }  // namespace wabt
 

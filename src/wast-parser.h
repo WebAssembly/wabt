@@ -29,10 +29,10 @@ struct WastParseOptions {
   bool debug_parsing = false;
 };
 
-Result parse_wast(WastLexer* lexer,
-                  Script** out_script,
-                  ErrorHandler*,
-                  WastParseOptions* options = nullptr);
+Result ParseWast(WastLexer* lexer,
+                 Script** out_script,
+                 ErrorHandler*,
+                 WastParseOptions* options = nullptr);
 
 }  // namespace wabt
 

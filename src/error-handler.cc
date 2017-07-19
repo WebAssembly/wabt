@@ -40,9 +40,9 @@ std::string ErrorHandler::DefaultErrorMessage(const Color& color,
   }
 
   if (location_type_ == Location::Type::Text) {
-    result += string_printf("%d:%d: ", loc.line, loc.first_column);
+    result += StringPrintf("%d:%d: ", loc.line, loc.first_column);
   } else if (loc.offset != kInvalidOffset) {
-    result += string_printf("%07" PRIzx ": ", loc.offset);
+    result += StringPrintf("%07" PRIzx ": ", loc.offset);
   }
 
   result += color.MaybeRedCode();
