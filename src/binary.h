@@ -40,7 +40,9 @@
   V(Start, start, 8)                   \
   V(Elem, elem, 9)                     \
   V(Code, code, 10)                    \
-  V(Data, data, 11)
+  V(Data, data, 11)                    \
+  V(Names, name, 12)                   \
+  V(Exception, exception, 13)
 
 namespace wabt {
 
@@ -52,7 +54,7 @@ enum class BinarySection {
   Invalid,
 
   First = Custom,
-  Last = Data,
+  Last = Exception,
 };
 /* clang-format on */
 static const int kBinarySectionCount = WABT_ENUM_COUNT(BinarySection);

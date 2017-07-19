@@ -23,20 +23,19 @@ Type:
  - type[0] () -> i32
 Function:
  - func[0] sig=0
-Custom:
- - name: "exception"
+Exception:
  - except[0] (i32)
 
 Code Disassembly:
 
-000025 func[0]:
- 000027: 06 7f                      | try i32
- 000029: 01                         |   nop
- 00002a: 41 07                      |   i32.const 7
- 00002c: 07 00                      | catch 0
- 00002e: 01                         |   nop
- 00002f: 0a                         | catch_all
- 000030: 09 00                      |   rethrow 0
- 000032: 0b                         | end
- 000033: 0b                         | end
+00001b func[0]:
+ 00001d: 06 7f                      | try i32
+ 00001f: 01                         |   nop
+ 000020: 41 07                      |   i32.const 7
+ 000022: 07 00                      | catch 0
+ 000024: 01                         |   nop
+ 000025: 0a                         | catch_all
+ 000026: 09 00                      |   rethrow 0
+ 000028: 0b                         | end
+ 000029: 0b                         | end
 ;;; STDOUT ;;)

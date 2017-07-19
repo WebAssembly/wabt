@@ -32,58 +32,50 @@
 0000011: 01                                        ; num functions
 0000012: 00                                        ; function 0 signature index
 0000010: 02                                        ; FIXUP section size
-; section "exception"
-0000013: 00                                        ; custom section code
+; section "Exception" (13)
+0000013: 0d                                        ; section code
 0000014: 00                                        ; section size (guess)
-0000015: 09                                        ; string length
-0000016: 6578 6365 7074 696f 6e                   exception  ; custom section name
-000001f: 01                                        ; exception count
-0000020: 01                                        ; exception type count
-0000021: 7f                                        ; i32
-0000014: 0d                                        ; FIXUP section size
+0000015: 01                                        ; exception count
+0000016: 01                                        ; exception type count
+0000017: 7f                                        ; i32
+0000014: 03                                        ; FIXUP section size
 ; section "Code" (10)
-0000022: 0a                                        ; section code
-0000023: 00                                        ; section size (guess)
-0000024: 01                                        ; num functions
+0000018: 0a                                        ; section code
+0000019: 00                                        ; section size (guess)
+000001a: 01                                        ; num functions
 ; function body 0
-0000025: 00                                        ; func body size (guess)
-0000026: 00                                        ; local decl count
-0000027: 06                                        ; try
-0000028: 7f                                        ; i32
-0000029: 01                                        ; nop
-000002a: 41                                        ; i32.const
-000002b: 07                                        ; i32 literal
-000002c: 07                                        ; catch
-000002d: 00                                        ; catch exception
-000002e: 01                                        ; nop
-000002f: 0a                                        ; catch_all
-0000030: 09                                        ; rethrow
-0000031: 00                                        ; rethrow depth
-0000032: 0b                                        ; end
-0000033: 0b                                        ; end
-0000025: 0e                                        ; FIXUP func body size
-0000023: 10                                        ; FIXUP section size
-
+000001b: 00                                        ; func body size (guess)
+000001c: 00                                        ; local decl count
+000001d: 06                                        ; try
+000001e: 7f                                        ; i32
+000001f: 01                                        ; nop
+0000020: 41                                        ; i32.const
+0000021: 07                                        ; i32 literal
+0000022: 07                                        ; catch
+0000023: 00                                        ; catch exception
+0000024: 01                                        ; nop
+0000025: 0a                                        ; catch_all
+0000026: 09                                        ; rethrow
+0000027: 00                                        ; rethrow depth
+0000028: 0b                                        ; end
+0000029: 0b                                        ; end
+000001b: 0e                                        ; FIXUP func body size
+0000019: 10                                        ; FIXUP section size
 try.wasm:	file format wasm 0x1
-
 Sections:
-
      Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
  Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
-   Custom start=0x00000015 end=0x00000022 (size=0x0000000d) "exception"
-count: 1
-     Code start=0x00000024 end=0x00000034 (size=0x00000010) count: 1
-
+Exception start=0x00000015 end=0x00000018 (size=0x00000003) count: 1
+     Code start=0x0000001a end=0x0000002a (size=0x00000010) count: 1
 Code Disassembly:
-
-000025 func[0]:
- 000027: 06 7f                      | try i32
- 000029: 01                         |   nop
- 00002a: 41 07                      |   i32.const 7
- 00002c: 07 00                      | catch 0
- 00002e: 01                         |   nop
- 00002f: 0a                         | catch_all
- 000030: 09 00                      |   rethrow 0
- 000032: 0b                         | end
- 000033: 0b                         | end
+00001b func[0]:
+ 00001d: 06 7f                      | try i32
+ 00001f: 01                         |   nop
+ 000020: 41 07                      |   i32.const 7
+ 000022: 07 00                      | catch 0
+ 000024: 01                         |   nop
+ 000025: 0a                         | catch_all
+ 000026: 09 00                      |   rethrow 0
+ 000028: 0b                         | end
+ 000029: 0b                         | end
 ;;; STDOUT ;;)

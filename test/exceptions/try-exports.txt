@@ -36,27 +36,25 @@
 000001d: 04                                        ; export kind
 000001e: 00                                        ; export exception index
 0000014: 0a                                        ; FIXUP section size
-; section "exception"
-000001f: 00                                        ; custom section code
+; section "Exception" (13)
+000001f: 0d                                        ; section code
 0000020: 00                                        ; section size (guess)
-0000021: 09                                        ; string length
-0000022: 6578 6365 7074 696f 6e                   exception  ; custom section name
-000002b: 01                                        ; exception count
-000002c: 01                                        ; exception type count
-000002d: 7f                                        ; i32
-0000020: 0d                                        ; FIXUP section size
+0000021: 01                                        ; exception count
+0000022: 01                                        ; exception type count
+0000023: 7f                                        ; i32
+0000020: 03                                        ; FIXUP section size
 ; section "Code" (10)
-000002e: 0a                                        ; section code
-000002f: 00                                        ; section size (guess)
-0000030: 01                                        ; num functions
+0000024: 0a                                        ; section code
+0000025: 00                                        ; section size (guess)
+0000026: 01                                        ; num functions
 ; function body 0
-0000031: 00                                        ; func body size (guess)
-0000032: 00                                        ; local decl count
-0000033: 41                                        ; i32.const
-0000034: 07                                        ; i32 literal
-0000035: 08                                        ; throw
-0000036: 00                                        ; throw exception
-0000037: 0b                                        ; end
-0000031: 06                                        ; FIXUP func body size
-000002f: 08                                        ; FIXUP section size
+0000027: 00                                        ; func body size (guess)
+0000028: 00                                        ; local decl count
+0000029: 41                                        ; i32.const
+000002a: 07                                        ; i32 literal
+000002b: 08                                        ; throw
+000002c: 00                                        ; throw exception
+000002d: 0b                                        ; end
+0000027: 06                                        ; FIXUP func body size
+0000025: 08                                        ; FIXUP section size
 ;;; STDOUT ;;)
