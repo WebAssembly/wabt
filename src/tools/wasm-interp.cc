@@ -140,9 +140,7 @@ static string_view GetDirname(string_view path) {
 /* Not sure, but 100 chars is probably safe */
 #define MAX_TYPED_VALUE_CHARS 100
 
-static void sprint_typed_value(char* buffer,
-                               size_t size,
-                               const TypedValue* tv) {
+static void SprintTypedValue(char* buffer, size_t size, const TypedValue* tv) {
   switch (tv->type) {
     case Type::I32:
       snprintf(buffer, size, "i32:%u", tv->value.i32);
@@ -172,57 +170,57 @@ static void sprint_typed_value(char* buffer,
   }
 }
 
-static void print_typed_value(const TypedValue* tv) {
+static void PrintTypedValue(const TypedValue* tv) {
   char buffer[MAX_TYPED_VALUE_CHARS];
-  sprint_typed_value(buffer, sizeof(buffer), tv);
+  SprintTypedValue(buffer, sizeof(buffer), tv);
   printf("%s", buffer);
 }
 
-static void print_typed_value_vector(const std::vector<TypedValue>& values) {
+static void PrintTypedValueVector(const std::vector<TypedValue>& values) {
   for (size_t i = 0; i < values.size(); ++i) {
-    print_typed_value(&values[i]);
+    PrintTypedValue(&values[i]);
     if (i != values.size() - 1)
       printf(", ");
   }
 }
 
-static void print_interpreter_result(const char* desc,
-                                     interpreter::Result iresult) {
+static void PrintInterpreterResult(const char* desc,
+                                   interpreter::Result iresult) {
   printf("%s: %s\n", desc, s_trap_strings[static_cast<size_t>(iresult)]);
 }
 
-static void print_call(string_view module_name,
-                       string_view func_name,
-                       const std::vector<TypedValue>& args,
-                       const std::vector<TypedValue>& results,
-                       interpreter::Result iresult) {
+static void PrintCall(string_view module_name,
+                      string_view func_name,
+                      const std::vector<TypedValue>& args,
+                      const std::vector<TypedValue>& results,
+                      interpreter::Result iresult) {
   if (!module_name.empty())
     printf(PRIstringview ".", WABT_PRINTF_STRING_VIEW_ARG(module_name));
   printf(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(func_name));
-  print_typed_value_vector(args);
+  PrintTypedValueVector(args);
   printf(") =>");
   if (iresult == interpreter::Result::Ok) {
     if (results.size() > 0) {
       printf(" ");
-      print_typed_value_vector(results);
+      PrintTypedValueVector(results);
     }
     printf("\n");
   } else {
-    print_interpreter_result(" error", iresult);
+    PrintInterpreterResult(" error", iresult);
   }
 }
 
-static interpreter::Result run_function(Thread* thread,
-                                        Index func_index,
-                                        const std::vector<TypedValue>& args,
-                                        std::vector<TypedValue>* out_results) {
+static interpreter::Result RunFunction(Thread* thread,
+                                       Index func_index,
+                                       const std::vector<TypedValue>& args,
+                                       std::vector<TypedValue>* out_results) {
   return s_trace ? thread->TraceFunction(func_index, s_stdout_stream.get(),
                                          args, out_results)
                  : thread->RunFunction(func_index, args, out_results);
 }
 
-static interpreter::Result run_start_function(Thread* thread,
-                                              DefinedModule* module) {
+static interpreter::Result RunStartFunction(Thread* thread,
+                                            DefinedModule* module) {
   if (module->start_func_index == kInvalidIndex)
     return interpreter::Result::Ok;
 
@@ -231,40 +229,39 @@ static interpreter::Result run_start_function(Thread* thread,
   std::vector<TypedValue> args;
   std::vector<TypedValue> results;
   interpreter::Result iresult =
-      run_function(thread, module->start_func_index, args, &results);
+      RunFunction(thread, module->start_func_index, args, &results);
   assert(results.size() == 0);
   return iresult;
 }
 
-static interpreter::Result run_export(Thread* thread,
-                                      const Export* export_,
-                                      const std::vector<TypedValue>& args,
-                                      std::vector<TypedValue>* out_results) {
+static interpreter::Result RunExport(Thread* thread,
+                                     const Export* export_,
+                                     const std::vector<TypedValue>& args,
+                                     std::vector<TypedValue>* out_results) {
   if (s_trace) {
     printf(">>> running export \"" PRIstringview "\":\n",
            WABT_PRINTF_STRING_VIEW_ARG(export_->name));
   }
 
   assert(export_->kind == ExternalKind::Func);
-  return run_function(thread, export_->index, args, out_results);
+  return RunFunction(thread, export_->index, args, out_results);
 }
 
-static interpreter::Result run_export_by_name(
-    Thread* thread,
-    Module* module,
-    string_view name,
-    const std::vector<TypedValue>& args,
-    std::vector<TypedValue>* out_results,
-    RunVerbosity verbose) {
+static interpreter::Result RunExportByName(Thread* thread,
+                                           Module* module,
+                                           string_view name,
+                                           const std::vector<TypedValue>& args,
+                                           std::vector<TypedValue>* out_results,
+                                           RunVerbosity verbose) {
   Export* export_ = module->GetExport(name);
   if (!export_)
     return interpreter::Result::UnknownExport;
   if (export_->kind != ExternalKind::Func)
     return interpreter::Result::ExportKindMismatch;
-  return run_export(thread, export_, args, out_results);
+  return RunExport(thread, export_, args, out_results);
 }
 
-static interpreter::Result get_global_export_by_name(
+static interpreter::Result GetGlobalExportByName(
     Thread* thread,
     Module* module,
     string_view name,
@@ -281,23 +278,23 @@ static interpreter::Result get_global_export_by_name(
   return interpreter::Result::Ok;
 }
 
-static void run_all_exports(Module* module,
-                            Thread* thread,
-                            RunVerbosity verbose) {
+static void RunAllExports(Module* module,
+                          Thread* thread,
+                          RunVerbosity verbose) {
   std::vector<TypedValue> args;
   std::vector<TypedValue> results;
   for (const Export& export_ : module->exports) {
-    interpreter::Result iresult = run_export(thread, &export_, args, &results);
+    interpreter::Result iresult = RunExport(thread, &export_, args, &results);
     if (verbose == RunVerbosity::Verbose) {
-      print_call(string_view(), export_.name, args, results, iresult);
+      PrintCall(string_view(), export_.name, args, results, iresult);
     }
   }
 }
 
-static wabt::Result read_module(const char* module_filename,
-                                Environment* env,
-                                ErrorHandler* error_handler,
-                                DefinedModule** out_module) {
+static wabt::Result ReadModule(const char* module_filename,
+                               Environment* env,
+                               ErrorHandler* error_handler,
+                               DefinedModule** out_module) {
   wabt::Result result;
   std::vector<uint8_t> file_data;
 
@@ -332,8 +329,8 @@ static interpreter::Result default_host_callback(const HostFunc* func,
   std::vector<TypedValue> vec_results(out_results, out_results + num_results);
 
   printf("called host ");
-  print_call(func->module_name, func->field_name, vec_args, vec_results,
-             interpreter::Result::Ok);
+  PrintCall(func->module_name, func->field_name, vec_args, vec_results,
+            interpreter::Result::Ok);
   return interpreter::Result::Ok;
 }
 
@@ -447,15 +444,15 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
 
   ErrorHandlerFile error_handler(Location::Type::Binary);
   DefinedModule* module = nullptr;
-  result = read_module(module_filename, &env, &error_handler, &module);
+  result = ReadModule(module_filename, &env, &error_handler, &module);
   if (Succeeded(result)) {
     Thread thread(&env, s_thread_options);
-    interpreter::Result iresult = run_start_function(&thread, module);
+    interpreter::Result iresult = RunStartFunction(&thread, module);
     if (iresult == interpreter::Result::Ok) {
       if (s_run_all_exports)
-        run_all_exports(module, &thread, RunVerbosity::Verbose);
+        RunAllExports(module, &thread, RunVerbosity::Verbose);
     } else {
-      print_interpreter_result("error running start function", iresult);
+      PrintInterpreterResult("error running start function", iresult);
     }
   }
   return result;
@@ -870,7 +867,7 @@ static wabt::Result OnModuleCommand(Context* ctx,
   Environment::MarkPoint mark = ctx->env.Mark();
   ErrorHandlerFile error_handler(Location::Type::Binary);
   wabt::Result result =
-      read_module(path.c_str(), &ctx->env, &error_handler, &ctx->last_module);
+      ReadModule(path.c_str(), &ctx->env, &error_handler, &ctx->last_module);
 
   if (Failed(result)) {
     ctx->env.ResetToMarkPoint(mark);
@@ -879,10 +876,10 @@ static wabt::Result OnModuleCommand(Context* ctx,
   }
 
   interpreter::Result iresult =
-      run_start_function(&ctx->thread, ctx->last_module);
+      RunStartFunction(&ctx->thread, ctx->last_module);
   if (iresult != interpreter::Result::Ok) {
     ctx->env.ResetToMarkPoint(mark);
-    print_interpreter_result("error running start function", iresult);
+    PrintInterpreterResult("error running start function", iresult);
     return wabt::Result::Error;
   }
 
@@ -911,18 +908,17 @@ static wabt::Result RunAction(Context* ctx,
 
   switch (action->type) {
     case ActionType::Invoke:
-      *out_iresult =
-          run_export_by_name(&ctx->thread, module, action->field_name,
-                             action->args, out_results, verbose);
+      *out_iresult = RunExportByName(&ctx->thread, module, action->field_name,
+                                     action->args, out_results, verbose);
       if (verbose == RunVerbosity::Verbose) {
-        print_call(string_view(), action->field_name, action->args,
-                   *out_results, *out_iresult);
+        PrintCall(string_view(), action->field_name, action->args, *out_results,
+                  *out_iresult);
       }
       return wabt::Result::Ok;
 
     case ActionType::Get: {
-      *out_iresult = get_global_export_by_name(&ctx->thread, module,
-                                               action->field_name, out_results);
+      *out_iresult = GetGlobalExportByName(&ctx->thread, module,
+                                           action->field_name, out_results);
       return wabt::Result::Ok;
     }
 
@@ -983,7 +979,7 @@ static wabt::Result ReadInvalidModule(Context* ctx,
       DefinedModule* module;
       ErrorHandlerFile error_handler(Location::Type::Binary, stdout, header,
                                      ErrorHandlerFile::PrintHeader::Once);
-      return read_module(module_filename, env, &error_handler, &module);
+      return ReadModule(module_filename, env, &error_handler, &module);
     }
 
     default:
@@ -1090,10 +1086,10 @@ static wabt::Result OnAssertUninstantiableCommand(Context* ctx,
   DefinedModule* module;
   Environment::MarkPoint mark = ctx->env.Mark();
   wabt::Result result =
-      read_module(path.c_str(), &ctx->env, &error_handler, &module);
+      ReadModule(path.c_str(), &ctx->env, &error_handler, &module);
 
   if (Succeeded(result)) {
-    interpreter::Result iresult = run_start_function(&ctx->thread, module);
+    interpreter::Result iresult = RunStartFunction(&ctx->thread, module);
     if (iresult == interpreter::Result::Ok) {
       PrintCommandError(ctx, "expected error running start function: \"%s\"",
                         path.c_str());
@@ -1150,8 +1146,8 @@ static wabt::Result OnAssertReturnCommand(
           if (!TypedValuesAreEqual(expected_tv, actual_tv)) {
             char expected_str[MAX_TYPED_VALUE_CHARS];
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            sprint_typed_value(expected_str, sizeof(expected_str), expected_tv);
-            sprint_typed_value(actual_str, sizeof(actual_str), actual_tv);
+            SprintTypedValue(expected_str, sizeof(expected_str), expected_tv);
+            SprintTypedValue(actual_str, sizeof(actual_str), actual_tv);
             PrintCommandError(ctx,
                               "mismatch in result %" PRIzd
                               " of assert_return: expected %s, got %s",
@@ -1204,7 +1200,7 @@ static wabt::Result OnAssertReturnNanCommand(Context* ctx,
                                   : IsArithmeticNan(actual.value.f32_bits);
           if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            sprint_typed_value(actual_str, sizeof(actual_str), &actual);
+            SprintTypedValue(actual_str, sizeof(actual_str), &actual);
             PrintCommandError(ctx, "expected result to be nan, got %s",
                               actual_str);
             result = wabt::Result::Error;
@@ -1217,7 +1213,7 @@ static wabt::Result OnAssertReturnNanCommand(Context* ctx,
                                   : IsArithmeticNan(actual.value.f64_bits);
           if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            sprint_typed_value(actual_str, sizeof(actual_str), &actual);
+            SprintTypedValue(actual_str, sizeof(actual_str), &actual);
             PrintCommandError(ctx, "expected result to be nan, got %s",
                               actual_str);
             result = wabt::Result::Error;
