@@ -140,7 +140,7 @@ static string_view GetDirname(string_view path) {
 /* Not sure, but 100 chars is probably safe */
 #define MAX_TYPED_VALUE_CHARS 100
 
-static void SprintTypedValue(char* buffer, size_t size, const TypedValue* tv) {
+static void SPrintTypedValue(char* buffer, size_t size, const TypedValue* tv) {
   switch (tv->type) {
     case Type::I32:
       snprintf(buffer, size, "i32:%u", tv->value.i32);
@@ -172,7 +172,7 @@ static void SprintTypedValue(char* buffer, size_t size, const TypedValue* tv) {
 
 static void PrintTypedValue(const TypedValue* tv) {
   char buffer[MAX_TYPED_VALUE_CHARS];
-  SprintTypedValue(buffer, sizeof(buffer), tv);
+  SPrintTypedValue(buffer, sizeof(buffer), tv);
   printf("%s", buffer);
 }
 
@@ -1146,8 +1146,8 @@ static wabt::Result OnAssertReturnCommand(
           if (!TypedValuesAreEqual(expected_tv, actual_tv)) {
             char expected_str[MAX_TYPED_VALUE_CHARS];
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            SprintTypedValue(expected_str, sizeof(expected_str), expected_tv);
-            SprintTypedValue(actual_str, sizeof(actual_str), actual_tv);
+            SPrintTypedValue(expected_str, sizeof(expected_str), expected_tv);
+            SPrintTypedValue(actual_str, sizeof(actual_str), actual_tv);
             PrintCommandError(ctx,
                               "mismatch in result %" PRIzd
                               " of assert_return: expected %s, got %s",
@@ -1200,7 +1200,7 @@ static wabt::Result OnAssertReturnNanCommand(Context* ctx,
                                   : IsArithmeticNan(actual.value.f32_bits);
           if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            SprintTypedValue(actual_str, sizeof(actual_str), &actual);
+            SPrintTypedValue(actual_str, sizeof(actual_str), &actual);
             PrintCommandError(ctx, "expected result to be nan, got %s",
                               actual_str);
             result = wabt::Result::Error;
@@ -1213,7 +1213,7 @@ static wabt::Result OnAssertReturnNanCommand(Context* ctx,
                                   : IsArithmeticNan(actual.value.f64_bits);
           if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
-            SprintTypedValue(actual_str, sizeof(actual_str), &actual);
+            SPrintTypedValue(actual_str, sizeof(actual_str), &actual);
             PrintCommandError(ctx, "expected result to be nan, got %s",
                               actual_str);
             result = wabt::Result::Error;

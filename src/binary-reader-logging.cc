@@ -34,7 +34,7 @@ namespace wabt {
 
 namespace {
 
-void SprintLimits(char* dst, size_t size, const Limits* limits) {
+void SPrintLimits(char* dst, size_t size, const Limits* limits) {
   int result;
   if (limits->has_max) {
     result = wabt_snprintf(dst, size, "initial: %" PRIu64 ", max: %" PRIu64,
@@ -161,7 +161,7 @@ Result BinaryReaderLogging::OnImportTable(Index import_index,
                                           Type elem_type,
                                           const Limits* elem_limits) {
   char buf[100];
-  SprintLimits(buf, sizeof(buf), elem_limits);
+  SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnImportTable(import_index: %" PRIindex ", table_index: %" PRIindex
        ", elem_type: %s, %s)\n",
        import_index, table_index, GetTypeName(elem_type), buf);
@@ -175,7 +175,7 @@ Result BinaryReaderLogging::OnImportMemory(Index import_index,
                                            Index memory_index,
                                            const Limits* page_limits) {
   char buf[100];
-  SprintLimits(buf, sizeof(buf), page_limits);
+  SPrintLimits(buf, sizeof(buf), page_limits);
   LOGF("OnImportMemory(import_index: %" PRIindex ", memory_index: %" PRIindex
        ", %s)\n",
        import_index, memory_index, buf);
@@ -216,7 +216,7 @@ Result BinaryReaderLogging::OnTable(Index index,
                                     Type elem_type,
                                     const Limits* elem_limits) {
   char buf[100];
-  SprintLimits(buf, sizeof(buf), elem_limits);
+  SPrintLimits(buf, sizeof(buf), elem_limits);
   LOGF("OnTable(index: %" PRIindex ", elem_type: %s, %s)\n", index,
        GetTypeName(elem_type), buf);
   return reader->OnTable(index, elem_type, elem_limits);
@@ -224,7 +224,7 @@ Result BinaryReaderLogging::OnTable(Index index,
 
 Result BinaryReaderLogging::OnMemory(Index index, const Limits* page_limits) {
   char buf[100];
-  SprintLimits(buf, sizeof(buf), page_limits);
+  SPrintLimits(buf, sizeof(buf), page_limits);
   LOGF("OnMemory(index: %" PRIindex ", %s)\n", index, buf);
   return reader->OnMemory(index, page_limits);
 }
