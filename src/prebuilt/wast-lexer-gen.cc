@@ -56,7 +56,7 @@
 
 #define ERROR(...)                                  \
   SetLocation(loc);                                 \
-  wast_parser_error(loc, this, parser, __VA_ARGS__)
+  WastParserError(loc, this, parser, __VA_ARGS__)
 
 #define BEGIN(c) cond = (c)
 #define FILL(n)                                \
