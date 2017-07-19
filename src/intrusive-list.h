@@ -410,13 +410,13 @@ inline typename intrusive_list<T>::const_reference intrusive_list<T>::back()
 template <typename T>
 template <class... Args>
 inline void intrusive_list<T>::emplace_front(Args&&... args) {
-  push_front(new T(args...));
+  push_front(new T(std::forward<Args>(args)...));
 }
 
 template <typename T>
 template <class... Args>
 inline void intrusive_list<T>::emplace_back(Args&&... args) {
-  push_back(new T(args...));
+  push_back(new T(std::forward<Args>(args)...));
 }
 
 template <typename T>
@@ -504,7 +504,7 @@ template <class... Args>
 inline typename intrusive_list<T>::iterator intrusive_list<T>::emplace(
     iterator pos,
     Args&&... args) {
-  return insert(pos, new T(args...));
+  return insert(pos, new T(std::forward<Args>(args)...));
 }
 
 template <typename T>

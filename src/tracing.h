@@ -42,10 +42,10 @@ struct TraceScope {
   TraceScope() = delete;
   TraceScope(const char* method);
   template<typename... Args>
-  TraceScope(const char* method, const char* format, Args... args)
+  TraceScope(const char* method, const char* format, Args&&... args)
       : method_(method) {
     PrintEnter(method);
-    fprintf(stderr, format, args...);
+    fprintf(stderr, format, std::forward<Args>(args)...);
     PrintNewline();
   }
   ~TraceScope();

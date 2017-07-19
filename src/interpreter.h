@@ -381,48 +381,48 @@ class Environment {
 
   template <typename... Args>
   FuncSignature* EmplaceBackFuncSignature(Args&&... args) {
-    sigs_.emplace_back(args...);
+    sigs_.emplace_back(std::forward<Args>(args)...);
     return &sigs_.back();
   }
 
   template <typename... Args>
   Func* EmplaceBackFunc(Args&&... args) {
-    funcs_.emplace_back(args...);
+    funcs_.emplace_back(std::forward<Args>(args)...);
     return funcs_.back().get();
   }
 
   template <typename... Args>
   Global* EmplaceBackGlobal(Args&&... args) {
-    globals_.emplace_back(args...);
+    globals_.emplace_back(std::forward<Args>(args)...);
     return &globals_.back();
   }
 
   template <typename... Args>
   Table* EmplaceBackTable(Args&&... args) {
-    tables_.emplace_back(args...);
+    tables_.emplace_back(std::forward<Args>(args)...);
     return &tables_.back();
   }
 
   template <typename... Args>
   Memory* EmplaceBackMemory(Args&&... args) {
-    memories_.emplace_back(args...);
+    memories_.emplace_back(std::forward<Args>(args)...);
     return &memories_.back();
   }
 
   template <typename... Args>
   Module* EmplaceBackModule(Args&&... args) {
-    modules_.emplace_back(args...);
+    modules_.emplace_back(std::forward<Args>(args)...);
     return modules_.back().get();
   }
 
   template <typename... Args>
   void EmplaceModuleBinding(Args&&... args) {
-    module_bindings_.emplace(args...);
+    module_bindings_.emplace(std::forward<Args>(args)...);
   }
 
   template <typename... Args>
   void EmplaceRegisteredModuleBinding(Args&&... args) {
-    registered_module_bindings_.emplace(args...);
+    registered_module_bindings_.emplace(std::forward<Args>(args)...);
   }
 
   HostModule* AppendHostModule(string_view name);
