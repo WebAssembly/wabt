@@ -123,12 +123,12 @@ Result BinaryReaderOpcnt::OnStoreExpr(Opcode opcode,
 
 }  // end anonymous namespace
 
-Result read_binary_opcnt(const void* data,
-                         size_t size,
-                         const struct ReadBinaryOptions* options,
-                         OpcntData* opcnt_data) {
+Result ReadBinaryOpcnt(const void* data,
+                       size_t size,
+                       const struct ReadBinaryOptions* options,
+                       OpcntData* opcnt_data) {
   BinaryReaderOpcnt reader(opcnt_data);
-  return read_binary(data, size, &reader, options);
+  return ReadBinary(data, size, &reader, options);
 }
 
 }  // namespace wabt

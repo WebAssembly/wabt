@@ -132,7 +132,7 @@ inline bool Succeeded(Result result) { return result == Result::Ok; }
 inline bool Failed(Result result) { return result == Result::Error; }
 
 inline std::string WABT_PRINTF_FORMAT(1, 2)
-    string_printf(const char* format, ...) {
+    StringPrintf(const char* format, ...) {
   va_list args;
   va_list args_copy;
   va_start(args, format);
@@ -254,13 +254,13 @@ enum class NameSectionSubsection {
 
 Result ReadFile(const char* filename, std::vector<uint8_t>* out_data);
 
-void init_stdio();
+void InitStdio();
 
 /* external kind */
 
 extern const char* g_kind_name[];
 
-static WABT_INLINE const char* get_kind_name(ExternalKind kind) {
+static WABT_INLINE const char* GetKindName(ExternalKind kind) {
   assert(static_cast<int>(kind) < kExternalKindCount);
   return g_kind_name[static_cast<size_t>(kind)];
 }
@@ -269,14 +269,14 @@ static WABT_INLINE const char* get_kind_name(ExternalKind kind) {
 
 extern const char* g_reloc_type_name[];
 
-static WABT_INLINE const char* get_reloc_type_name(RelocType reloc) {
+static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
   assert(static_cast<int>(reloc) < kRelocTypeCount);
   return g_reloc_type_name[static_cast<size_t>(reloc)];
 }
 
 /* type */
 
-static WABT_INLINE const char* get_type_name(Type type) {
+static WABT_INLINE const char* GetTypeName(Type type) {
   switch (type) {
     case Type::I32:
       return "i32";

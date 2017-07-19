@@ -40,7 +40,7 @@ static std::vector<const char*> s_infiles;
 
 static std::unique_ptr<FileStream> s_log_stream;
 
-static void parse_options(int argc, char** argv) {
+static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-objdump", s_description);
 
   parser.AddOption('h', "headers", "Print headers",
@@ -91,7 +91,7 @@ Result dump_file(const char* filename) {
 
   // Pass 0: Prepass
   s_objdump_options.mode = ObjdumpMode::Prepass;
-  result = read_binary_objdump(data, size, &s_objdump_options, &state);
+  result = ReadBinaryObjdump(data, size, &s_objdump_options, &state);
   if (Failed(result))
     return result;
   s_objdump_options.log_stream = nullptr;
@@ -99,7 +99,7 @@ Result dump_file(const char* filename) {
   // Pass 1: Print the section headers
   if (s_objdump_options.headers) {
     s_objdump_options.mode = ObjdumpMode::Headers;
-    result = read_binary_objdump(data, size, &s_objdump_options, &state);
+    result = ReadBinaryObjdump(data, size, &s_objdump_options, &state);
     if (Failed(result))
       return result;
   }
@@ -107,7 +107,7 @@ Result dump_file(const char* filename) {
   // Pass 2: Print extra information based on section type
   if (s_objdump_options.details) {
     s_objdump_options.mode = ObjdumpMode::Details;
-    result = read_binary_objdump(data, size, &s_objdump_options, &state);
+    result = ReadBinaryObjdump(data, size, &s_objdump_options, &state);
     if (Failed(result))
       return result;
   }
@@ -115,7 +115,7 @@ Result dump_file(const char* filename) {
   // Pass 3: Disassemble code section
   if (s_objdump_options.disassemble) {
     s_objdump_options.mode = ObjdumpMode::Disassemble;
-    result = read_binary_objdump(data, size, &s_objdump_options, &state);
+    result = ReadBinaryObjdump(data, size, &s_objdump_options, &state);
     if (Failed(result))
       return result;
   }
@@ -123,16 +123,16 @@ Result dump_file(const char* filename) {
   // Pass 4: Dump to raw contents of the sections
   if (s_objdump_options.raw) {
     s_objdump_options.mode = ObjdumpMode::RawData;
-    result = read_binary_objdump(data, size, &s_objdump_options, &state);
+    result = ReadBinaryObjdump(data, size, &s_objdump_options, &state);
   }
 
   return result;
 }
 
 int ProgramMain(int argc, char** argv) {
-  init_stdio();
+  InitStdio();
 
-  parse_options(argc, argv);
+  ParseOptions(argc, argv);
   if (!s_objdump_options.headers && !s_objdump_options.details &&
       !s_objdump_options.disassemble && !s_objdump_options.raw) {
     fprintf(stderr, "At least one of the following switches must be given:\n");

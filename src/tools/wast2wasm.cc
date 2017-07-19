@@ -69,7 +69,7 @@ examples:
   $ wast2wasm spec-test.wast --spec -o spec-test.json
 )";
 
-static void parse_options(int argc, char* argv[]) {
+static void ParseOptions(int argc, char* argv[]) {
   OptionParser parser("wast2wasm", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
@@ -111,8 +111,8 @@ static void parse_options(int argc, char* argv[]) {
   parser.Parse(argc, argv);
 }
 
-static void write_buffer_to_file(const char* filename,
-                                 const OutputBuffer& buffer) {
+static void WriteBufferToFile(const char* filename,
+                              const OutputBuffer& buffer) {
   if (s_dump_module) {
     if (s_verbose)
       s_log_stream->Writef(";; dump\n");
@@ -127,9 +127,9 @@ static void write_buffer_to_file(const char* filename,
 }
 
 int ProgramMain(int argc, char** argv) {
-  init_stdio();
+  InitStdio();
 
-  parse_options(argc, argv);
+  ParseOptions(argc, argv);
 
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateFileLexer(s_infile);
   if (!lexer)
@@ -138,33 +138,32 @@ int ProgramMain(int argc, char** argv) {
   ErrorHandlerFile error_handler(Location::Type::Text);
   Script* script;
   Result result =
-      parse_wast(lexer.get(), &script, &error_handler, &s_parse_options);
+      ParseWast(lexer.get(), &script, &error_handler, &s_parse_options);
 
   if (Succeeded(result)) {
-    result = resolve_names_script(lexer.get(), script, &error_handler);
+    result = ResolveNamesScript(lexer.get(), script, &error_handler);
 
     if (Succeeded(result) && s_validate)
-      result = validate_script(lexer.get(), script, &error_handler);
+      result = ValidateScript(lexer.get(), script, &error_handler);
 
     if (Succeeded(result)) {
       if (s_spec) {
         s_write_binary_spec_options.json_filename = s_outfile;
         s_write_binary_spec_options.write_binary_options =
             s_write_binary_options;
-        result = write_binary_spec_script(script, s_infile,
-                                          &s_write_binary_spec_options);
+        result = WriteBinarySpecScript(script, s_infile,
+                                       &s_write_binary_spec_options);
       } else {
         MemoryWriter writer;
         const Module* module = script->GetFirstModule();
         if (module) {
-          result =
-              write_binary_module(&writer, module, &s_write_binary_options);
+          result = WriteBinaryModule(&writer, module, &s_write_binary_options);
         } else {
           WABT_FATAL("no module found\n");
         }
 
         if (Succeeded(result))
-          write_buffer_to_file(s_outfile, writer.output_buffer());
+          WriteBufferToFile(s_outfile, writer.output_buffer());
       }
     }
   }

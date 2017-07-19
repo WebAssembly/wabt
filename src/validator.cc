@@ -171,7 +171,7 @@ void Validator::PrintError(const Location* loc, const char* fmt, ...) {
   result_ = Result::Error;
   va_list args;
   va_start(args, fmt);
-  wast_format_error(error_handler_, loc, lexer_, fmt, args);
+  WastFormatError(error_handler_, loc, lexer_, fmt, args);
   va_end(args);
 }
 
@@ -326,7 +326,7 @@ void Validator::CheckType(const Location* loc,
                           const char* desc) {
   if (expected != actual) {
     PrintError(loc, "type mismatch at %s. got %s, expected %s", desc,
-               get_type_name(actual), get_type_name(expected));
+               GetTypeName(actual), GetTypeName(expected));
   }
 }
 
@@ -337,10 +337,9 @@ void Validator::CheckTypeIndex(const Location* loc,
                                Index index,
                                const char* index_kind) {
   if (expected != actual && expected != Type::Any && actual != Type::Any) {
-    PrintError(loc,
-               "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
-               index_kind, index, desc, get_type_name(actual),
-               get_type_name(expected));
+    PrintError(
+        loc, "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
+        index_kind, index, desc, GetTypeName(actual), GetTypeName(expected));
   }
 }
 
@@ -390,7 +389,7 @@ void Validator::CheckAssertReturnNanType(const Location* loc,
   // so we special case it here.
   if (actual != Type::F32 && actual != Type::F64) {
     PrintError(loc, "type mismatch at %s. got %s, expected f32 or f64", desc,
-               get_type_name(actual));
+               GetTypeName(actual));
   }
 }
 
@@ -1025,7 +1024,7 @@ void Validator::CheckExcept(const Location* loc, const Exception* except) {
       case Type::F64:
         break;
       default:
-        PrintError(loc, "Invalid exception type: %s", get_type_name(ty));
+        PrintError(loc, "Invalid exception type: %s", GetTypeName(ty));
         break;
     }
   }
@@ -1145,17 +1144,17 @@ Result Validator::CheckScript(const Script* script) {
 
 }  // end anonymous namespace
 
-Result validate_script(WastLexer* lexer,
-                       const Script* script,
-                       ErrorHandler* error_handler) {
+Result ValidateScript(WastLexer* lexer,
+                      const Script* script,
+                      ErrorHandler* error_handler) {
   Validator validator(error_handler, lexer, script);
 
   return validator.CheckScript(script);
 }
 
-Result validate_module(WastLexer* lexer,
-                       const Module* module,
-                       ErrorHandler* error_handler) {
+Result ValidateModule(WastLexer* lexer,
+                      const Module* module,
+                      ErrorHandler* error_handler) {
   Validator validator(error_handler, lexer, nullptr);
 
   return validator.CheckModule(module);

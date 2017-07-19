@@ -214,7 +214,7 @@ Result FloatParser<T>::ParseNan(const char* s,
 
     for (; s < end; ++s) {
       uint32_t digit;
-      if (Failed(parse_hexdigit(*s, &digit)))
+      if (Failed(ParseHexdigit(*s, &digit)))
         return Result::Error;
       tag = tag * 16 + digit;
       // Check for overflow.
@@ -262,7 +262,7 @@ Result FloatParser<T>::ParseHex(const char* s,
     uint32_t digit;
     if (*s == '.') {
       seen_dot = true;
-    } else if (Succeeded(parse_hexdigit(*s, &digit))) {
+    } else if (Succeeded(ParseHexdigit(*s, &digit))) {
       if (Traits::kBits - Clz(significand) <= Traits::kSigPlusOneBits) {
         significand = (significand << 4) + digit;
         if (seen_dot)
@@ -510,7 +510,7 @@ void FloatWriter<T>::WriteHex(char* out, size_t size, Uint bits) {
 
 }  // end anonymous namespace
 
-Result parse_hexdigit(char c, uint32_t* out) {
+Result ParseHexdigit(char c, uint32_t* out) {
   if (static_cast<unsigned int>(c - '0') <= 9) {
     *out = c - '0';
     return Result::Ok;
@@ -524,7 +524,7 @@ Result parse_hexdigit(char c, uint32_t* out) {
   return Result::Error;
 }
 
-Result parse_uint64(const char* s, const char* end, uint64_t* out) {
+Result ParseUint64(const char* s, const char* end, uint64_t* out) {
   if (s == end)
     return Result::Error;
   uint64_t value = 0;
@@ -534,7 +534,7 @@ Result parse_uint64(const char* s, const char* end, uint64_t* out) {
       return Result::Error;
     for (; s < end; ++s) {
       uint32_t digit;
-      if (Failed(parse_hexdigit(*s, &digit)))
+      if (Failed(ParseHexdigit(*s, &digit)))
         return Result::Error;
       uint64_t old_value = value;
       value = value * 16 + digit;
@@ -560,10 +560,10 @@ Result parse_uint64(const char* s, const char* end, uint64_t* out) {
   return Result::Ok;
 }
 
-Result parse_int64(const char* s,
-                   const char* end,
-                   uint64_t* out,
-                   ParseIntType parse_type) {
+Result ParseInt64(const char* s,
+                  const char* end,
+                  uint64_t* out,
+                  ParseIntType parse_type) {
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
     if (parse_type == ParseIntType::UnsignedOnly)
@@ -573,7 +573,7 @@ Result parse_int64(const char* s,
     s++;
   }
   uint64_t value = 0;
-  Result result = parse_uint64(s, end, &value);
+  Result result = ParseUint64(s, end, &value);
   if (has_sign) {
     // abs(INT64_MIN) == INT64_MAX + 1.
     if (value > static_cast<uint64_t>(INT64_MAX) + 1)
@@ -584,10 +584,10 @@ Result parse_int64(const char* s,
   return result;
 }
 
-Result parse_int32(const char* s,
-                   const char* end,
-                   uint32_t* out,
-                   ParseIntType parse_type) {
+Result ParseInt32(const char* s,
+                  const char* end,
+                  uint32_t* out,
+                  ParseIntType parse_type) {
   uint64_t value;
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
@@ -597,7 +597,7 @@ Result parse_int32(const char* s,
       has_sign = true;
     s++;
   }
-  if (Failed(parse_uint64(s, end, &value)))
+  if (Failed(ParseUint64(s, end, &value)))
     return Result::Error;
 
   if (has_sign) {
@@ -613,26 +613,25 @@ Result parse_int32(const char* s,
   return Result::Ok;
 }
 
-
-Result parse_float(LiteralType literal_type,
-                   const char* s,
-                   const char* end,
-                   uint32_t* out_bits) {
+Result ParseFloat(LiteralType literal_type,
+                  const char* s,
+                  const char* end,
+                  uint32_t* out_bits) {
   return FloatParser<float>::Parse(literal_type, s, end, out_bits);
 }
 
-Result parse_double(LiteralType literal_type,
-                    const char* s,
-                    const char* end,
-                    uint64_t* out_bits) {
+Result ParseDouble(LiteralType literal_type,
+                   const char* s,
+                   const char* end,
+                   uint64_t* out_bits) {
   return FloatParser<double>::Parse(literal_type, s, end, out_bits);
 }
 
-void write_float_hex(char* buffer, size_t size, uint32_t bits) {
+void WriteFloatHex(char* buffer, size_t size, uint32_t bits) {
   return FloatWriter<float>::WriteHex(buffer, size, bits);
 }
 
-void write_double_hex(char* buffer, size_t size, uint64_t bits) {
+void WriteDoubleHex(char* buffer, size_t size, uint64_t bits) {
   return FloatWriter<double>::WriteHex(buffer, size, bits);
 }
 

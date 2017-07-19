@@ -88,7 +88,7 @@ Result ReadFile(const char* filename, std::vector<uint8_t>* out_data) {
   return Result::Ok;
 }
 
-void init_stdio() {
+void InitStdio() {
 #if COMPILER_IS_MSVC
   int result = _setmode(_fileno(stdout), _O_BINARY);
   if (result == -1)

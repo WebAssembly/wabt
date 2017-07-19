@@ -188,7 +188,7 @@ Result BinaryReaderLinker::BeginSection(BinarySection section_code,
     const uint8_t* start = &binary_->data[sec->offset];
     // Must point to one-past-the-end, but we can't dereference end().
     const uint8_t* end = &binary_->data.back() + 1;
-    size_t bytes_read = read_u32_leb128(start, end, &sec->count);
+    size_t bytes_read = ReadU32Leb128(start, end, &sec->count);
     if (bytes_read == 0)
       WABT_FATAL("error reading section element count\n");
     sec->payload_offset = sec->offset + bytes_read;
@@ -283,14 +283,14 @@ Result BinaryReaderLinker::OnFunctionName(Index index, string_view name) {
 
 }  // end anonymous namespace
 
-Result read_binary_linker(LinkerInputBinary* input_info, LinkOptions* options) {
+Result ReadBinaryLinker(LinkerInputBinary* input_info, LinkOptions* options) {
   BinaryReaderLinker reader(input_info);
 
   ReadBinaryOptions read_options;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
-  return read_binary(DataOrNull(input_info->data), input_info->data.size(),
-                     &reader, &read_options);
+  return ReadBinary(DataOrNull(input_info->data), input_info->data.size(),
+                    &reader, &read_options);
 }
 
 }  // namespace link

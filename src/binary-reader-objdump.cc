@@ -128,7 +128,7 @@ const char* BinaryReaderObjdumpBase::GetFunctionName(Index index) const {
 void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
                                               Offset offset) const {
   printf("           %06" PRIzx ": %-18s %" PRIindex "", offset,
-         get_reloc_type_name(reloc.type), reloc.index);
+         GetRelocTypeName(reloc.type), reloc.index);
   switch (reloc.type) {
     case RelocType::GlobalAddressLEB:
     case RelocType::GlobalAddressSLEB:
@@ -335,7 +335,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeUint64(uint64_t value) {
 Result BinaryReaderObjdumpDisassemble::OnOpcodeF32(uint32_t value) {
   Offset immediate_len = state->offset - current_opcode_offset;
   char buffer[WABT_MAX_FLOAT_HEX];
-  write_float_hex(buffer, sizeof(buffer), value);
+  WriteFloatHex(buffer, sizeof(buffer), value);
   LogOpcode(data, immediate_len, buffer);
   return Result::Ok;
 }
@@ -343,7 +343,7 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeF32(uint32_t value) {
 Result BinaryReaderObjdumpDisassemble::OnOpcodeF64(uint64_t value) {
   Offset immediate_len = state->offset - current_opcode_offset;
   char buffer[WABT_MAX_DOUBLE_HEX];
-  write_double_hex(buffer, sizeof(buffer), value);
+  WriteDoubleHex(buffer, sizeof(buffer), value);
   LogOpcode(data, immediate_len, buffer);
   return Result::Ok;
 }
@@ -583,7 +583,7 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
                                          Offset size) {
   BinaryReaderObjdumpBase::BeginSection(section_code, size);
 
-  const char* name = get_section_name(section_code);
+  const char* name = GetSectionName(section_code);
 
   bool section_match =
       !options->section_name || !strcasecmp(options->section_name, name);
@@ -737,9 +737,8 @@ Result BinaryReaderObjdump::OnImportTable(Index import_index,
   PrintDetails(" - " PRIstringview "." PRIstringview
                " -> table elem_type=%s init=%" PRId64 " max=%" PRId64 "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
-               WABT_PRINTF_STRING_VIEW_ARG(field_name),
-               get_type_name(elem_type), elem_limits->initial,
-               elem_limits->max);
+               WABT_PRINTF_STRING_VIEW_ARG(field_name), GetTypeName(elem_type),
+               elem_limits->initial, elem_limits->max);
   return Result::Ok;
 }
 
@@ -762,7 +761,7 @@ Result BinaryReaderObjdump::OnImportGlobal(Index import_index,
                                            bool mutable_) {
   PrintDetails(" - global[%" PRIindex "] %s mutable=%d <- " PRIstringview
                "." PRIstringview "\n",
-               global_index, get_type_name(type), mutable_,
+               global_index, GetTypeName(type), mutable_,
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
   return Result::Ok;
@@ -807,7 +806,7 @@ Result BinaryReaderObjdump::OnTable(Index index,
                                     Type elem_type,
                                     const Limits* elem_limits) {
   PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, index,
-               get_type_name(elem_type), elem_limits->initial);
+               GetTypeName(elem_type), elem_limits->initial);
   if (elem_limits->has_max)
     PrintDetails(" max=%" PRId64, elem_limits->max);
   PrintDetails("\n");
@@ -822,7 +821,7 @@ Result BinaryReaderObjdump::OnExport(Index index,
                                      ExternalKind kind,
                                      Index item_index,
                                      string_view name) {
-  PrintDetails(" - %s[%" PRIindex "]", get_kind_name(kind), item_index);
+  PrintDetails(" - %s[%" PRIindex "]", GetKindName(kind), item_index);
   if (kind == ExternalKind::Func) {
     if (const char* name = GetFunctionName(item_index))
       PrintDetails(" <%s>", name);
@@ -861,7 +860,7 @@ Result BinaryReaderObjdump::OnGlobalCount(Index count) {
 
 Result BinaryReaderObjdump::BeginGlobal(Index index, Type type, bool mutable_) {
   PrintDetails(" - global[%" PRIindex "] %s mutable=%d", index,
-               get_type_name(type), mutable_);
+               GetTypeName(type), mutable_);
   return Result::Ok;
 }
 
@@ -875,13 +874,13 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
       break;
     case InitExprType::F64: {
       char buffer[WABT_MAX_DOUBLE_HEX];
-      write_float_hex(buffer, sizeof(buffer), expr.value.f64);
+      WriteFloatHex(buffer, sizeof(buffer), expr.value.f64);
       PrintDetails(" - init f64=%s\n", buffer);
       break;
     }
     case InitExprType::F32: {
       char buffer[WABT_MAX_FLOAT_HEX];
-      write_float_hex(buffer, sizeof(buffer), expr.value.f32);
+      WriteFloatHex(buffer, sizeof(buffer), expr.value.f32);
       PrintDetails(" - init f32=%s\n", buffer);
       break;
     }
@@ -1033,7 +1032,7 @@ Result BinaryReaderObjdump::OnRelocCount(Index count,
                                          BinarySection section_code,
                                          string_view section_name) {
   BinaryReaderObjdumpBase::OnRelocCount(count, section_code, section_name);
-  PrintDetails("  - section: %s\n", get_section_name(section_code));
+  PrintDetails("  - section: %s\n", GetSectionName(section_code));
   return Result::Ok;
 }
 
@@ -1044,7 +1043,7 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
   Offset total_offset = GetSectionStart(reloc_section) + offset;
   PrintDetails("   - %-18s offset=%#08" PRIoffset "(file=%#08" PRIoffset
                ") index=%" PRIindex,
-               get_reloc_type_name(type), offset, total_offset, index);
+               GetRelocTypeName(type), offset, total_offset, index);
   if (addend) {
     int32_t signed_addend = static_cast<int32_t>(addend);
     if (signed_addend < 0) {
@@ -1096,10 +1095,10 @@ Result BinaryReaderObjdump::OnExceptionType(
 
 }  // end anonymous namespace
 
-Result read_binary_objdump(const uint8_t* data,
-                           size_t size,
-                           ObjdumpOptions* options,
-                           ObjdumpState* state) {
+Result ReadBinaryObjdump(const uint8_t* data,
+                         size_t size,
+                         ObjdumpOptions* options,
+                         ObjdumpState* state) {
   ReadBinaryOptions read_options;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
@@ -1108,15 +1107,15 @@ Result read_binary_objdump(const uint8_t* data,
   switch (options->mode) {
     case ObjdumpMode::Prepass: {
       BinaryReaderObjdumpPrepass reader(data, size, options, state);
-      return read_binary(data, size, &reader, &read_options);
+      return ReadBinary(data, size, &reader, &read_options);
     }
     case ObjdumpMode::Disassemble: {
       BinaryReaderObjdumpDisassemble reader(data, size, options, state);
-      return read_binary(data, size, &reader, &read_options);
+      return ReadBinary(data, size, &reader, &read_options);
     }
     default: {
       BinaryReaderObjdump reader(data, size, options, state);
-      return read_binary(data, size, &reader, &read_options);
+      return ReadBinary(data, size, &reader, &read_options);
     }
   }
 }

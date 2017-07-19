@@ -26,8 +26,8 @@ struct Module;
 struct Script;
 class ErrorHandler;
 
-Result resolve_names_module(WastLexer*, Module*, ErrorHandler*);
-Result resolve_names_script(WastLexer*, Script*, ErrorHandler*);
+Result ResolveNamesModule(WastLexer*, Module*, ErrorHandler*);
+Result ResolveNamesScript(WastLexer*, Script*, ErrorHandler*);
 
 }  // namespace wabt
 

@@ -367,7 +367,7 @@ void WatWriter::WriteBrVar(const Var* var, NextChar next_char) {
 }
 
 void WatWriter::WriteType(Type type, NextChar next_char) {
-  const char* type_name = get_type_name(type);
+  const char* type_name = GetTypeName(type);
   assert(type_name);
   WritePuts(type_name, next_char);
 }
@@ -434,7 +434,7 @@ void WatWriter::WriteConst(const Const* const_) {
     case Type::F32: {
       WritePutsSpace(Opcode::F32Const_Opcode.GetName());
       char buffer[128];
-      write_float_hex(buffer, 128, const_->f32_bits);
+      WriteFloatHex(buffer, 128, const_->f32_bits);
       WritePutsSpace(buffer);
       float f32;
       memcpy(&f32, &const_->f32_bits, sizeof(f32));
@@ -446,7 +446,7 @@ void WatWriter::WriteConst(const Const* const_) {
     case Type::F64: {
       WritePutsSpace(Opcode::F64Const_Opcode.GetName());
       char buffer[128];
-      write_double_hex(buffer, 128, const_->f64_bits);
+      WriteDoubleHex(buffer, 128, const_->f64_bits);
       WritePutsSpace(buffer);
       double f64;
       memcpy(&f64, &const_->f64_bits, sizeof(f64));
@@ -1110,7 +1110,7 @@ void WatWriter::WriteExport(const Export* export_) {
     return;
   WriteOpenSpace("export");
   WriteQuotedString(export_->name, NextChar::Space);
-  WriteOpenSpace(get_kind_name(export_->kind));
+  WriteOpenSpace(GetKindName(export_->kind));
   WriteVar(&export_->var, NextChar::Space);
   WriteCloseSpace();
   WriteCloseNewline();
@@ -1231,9 +1231,9 @@ void WatWriter::WriteInlineExport(const Export* export_) {
 
 }  // end anonymous namespace
 
-Result write_wat(Writer* writer,
-                 const Module* module,
-                 const WriteWatOptions* options) {
+Result WriteWat(Writer* writer,
+                const Module* module,
+                const WriteWatOptions* options) {
   WatWriter wat_writer(writer, options);
   return wat_writer.WriteModule(module);
 }

@@ -185,7 +185,7 @@ void BinaryWriterSpec::WriteVar(const Var* var) {
 void BinaryWriterSpec::WriteTypeObject(Type type) {
   json_stream_.Writef("{");
   WriteKey("type");
-  WriteString(get_type_name(type));
+  WriteString(GetTypeName(type));
   json_stream_.Writef("}");
 }
 
@@ -304,8 +304,8 @@ void BinaryWriterSpec::WriteActionResultType(Script* script,
 
 void BinaryWriterSpec::WriteModule(string_view filename, const Module* module) {
   MemoryStream memory_stream;
-  result_ = write_binary_module(&memory_stream.writer(), module,
-                                &spec_options_->write_binary_options);
+  result_ = WriteBinaryModule(&memory_stream.writer(), module,
+                              &spec_options_->write_binary_options);
   if (Succeeded(result_) && write_modules_)
     result_ = memory_stream.WriteToFile(filename);
 }
@@ -549,9 +549,9 @@ Result BinaryWriterSpec::WriteScript(Script* script) {
 
 }  // end anonymous namespace
 
-Result write_binary_spec_script(Script* script,
-                                const char* source_filename,
-                                const WriteBinarySpecOptions* spec_options) {
+Result WriteBinarySpecScript(Script* script,
+                             const char* source_filename,
+                             const WriteBinarySpecOptions* spec_options) {
   assert(source_filename);
   BinaryWriterSpec binary_writer_spec(source_filename, spec_options);
   return binary_writer_spec.WriteScript(script);

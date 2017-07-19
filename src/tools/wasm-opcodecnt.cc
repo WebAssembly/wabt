@@ -49,7 +49,7 @@ examples:
   $ wasm-opcodecnt test.wasm -o test.dist
 )";
 
-static void parse_options(int argc, char** argv) {
+static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-opcodecnt", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
@@ -83,18 +83,18 @@ typedef int(int_pair_counter_lt_fcn)(const IntPairCounter&,
 
 typedef void (*display_name_fcn)(FILE* out, intmax_t value);
 
-static void display_opcode_name(FILE* out, intmax_t opcode) {
+static void DisplayOpcodeName(FILE* out, intmax_t opcode) {
   fprintf(out, "%s", Opcode(Opcode::Enum(opcode)).GetName());
 }
 
-static void display_intmax(FILE* out, intmax_t value) {
+static void DisplayIntmax(FILE* out, intmax_t value) {
   fprintf(out, "%" PRIdMAX, value);
 }
 
-static void display_int_counter_vector(FILE* out,
-                                       const IntCounterVector& vec,
-                                       display_name_fcn display_fcn,
-                                       const char* opcode_name) {
+static void DisplayIntCounterVector(FILE* out,
+                                    const IntCounterVector& vec,
+                                    display_name_fcn display_fcn,
+                                    const char* opcode_name) {
   for (const IntCounter& counter : vec) {
     if (counter.count == 0)
       continue;
@@ -107,11 +107,11 @@ static void display_int_counter_vector(FILE* out,
   }
 }
 
-static void display_int_pair_counter_vector(FILE* out,
-                                            const IntPairCounterVector& vec,
-                                            display_name_fcn display_first_fcn,
-                                            display_name_fcn display_second_fcn,
-                                            const char* opcode_name) {
+static void DisplayIntPairCounterVector(FILE* out,
+                                        const IntPairCounterVector& vec,
+                                        display_name_fcn display_first_fcn,
+                                        display_name_fcn display_second_fcn,
+                                        const char* opcode_name) {
   for (const IntPairCounter& pair : vec) {
     if (pair.count == 0)
       continue;
@@ -126,8 +126,8 @@ static void display_int_pair_counter_vector(FILE* out,
   }
 }
 
-static int opcode_counter_gt(const IntCounter& counter_1,
-                             const IntCounter& counter_2) {
+static int OpcodeCounterGt(const IntCounter& counter_1,
+                           const IntCounter& counter_2) {
   if (counter_1.count > counter_2.count)
     return 1;
   if (counter_1.count < counter_2.count)
@@ -140,8 +140,8 @@ static int opcode_counter_gt(const IntCounter& counter_1,
   return 0;
 }
 
-static int int_counter_gt(const IntCounter& counter_1,
-                          const IntCounter& counter_2) {
+static int IntCounterGt(const IntCounter& counter_1,
+                        const IntCounter& counter_2) {
   if (counter_1.count < counter_2.count)
     return 0;
   if (counter_1.count > counter_2.count)
@@ -153,8 +153,8 @@ static int int_counter_gt(const IntCounter& counter_1,
   return 0;
 }
 
-static int int_pair_counter_gt(const IntPairCounter& counter_1,
-                               const IntPairCounter& counter_2) {
+static int IntPairCounterGt(const IntPairCounter& counter_1,
+                            const IntPairCounter& counter_2) {
   if (counter_1.count < counter_2.count)
     return 0;
   if (counter_1.count > counter_2.count)
@@ -170,12 +170,12 @@ static int int_pair_counter_gt(const IntPairCounter& counter_1,
   return 0;
 }
 
-static void display_sorted_int_counter_vector(FILE* out,
-                                              const char* title,
-                                              const IntCounterVector& vec,
-                                              int_counter_lt_fcn lt_fcn,
-                                              display_name_fcn display_fcn,
-                                              const char* opcode_name) {
+static void DisplaySortedIntCounterVector(FILE* out,
+                                          const char* title,
+                                          const IntCounterVector& vec,
+                                          int_counter_lt_fcn lt_fcn,
+                                          display_name_fcn display_fcn,
+                                          const char* opcode_name) {
   if (vec.size() == 0)
     return;
 
@@ -188,10 +188,10 @@ static void display_sorted_int_counter_vector(FILE* out,
   }
   std::sort(filtered_vec.begin(), filtered_vec.end(), lt_fcn);
   fprintf(out, "%s\n", title);
-  display_int_counter_vector(out, filtered_vec, display_fcn, opcode_name);
+  DisplayIntCounterVector(out, filtered_vec, display_fcn, opcode_name);
 }
 
-static void display_sorted_int_pair_counter_vector(
+static void DisplaySortedIntPairCounterVector(
     FILE* out,
     const char* title,
     const IntPairCounterVector& vec,
@@ -210,13 +210,13 @@ static void display_sorted_int_pair_counter_vector(
   }
   std::sort(filtered_vec.begin(), filtered_vec.end(), lt_fcn);
   fprintf(out, "%s\n", title);
-  display_int_pair_counter_vector(out, filtered_vec, display_first_fcn,
-                                  display_second_fcn, opcode_name);
+  DisplayIntPairCounterVector(out, filtered_vec, display_first_fcn,
+                              display_second_fcn, opcode_name);
 }
 
 int ProgramMain(int argc, char** argv) {
-  init_stdio();
-  parse_options(argc, argv);
+  InitStdio();
+  ParseOptions(argc, argv);
 
   std::vector<uint8_t> file_data;
   Result result = ReadFile(s_infile, &file_data);
@@ -233,30 +233,30 @@ int ProgramMain(int argc, char** argv) {
   }
   if (Succeeded(result)) {
     OpcntData opcnt_data;
-    result = read_binary_opcnt(DataOrNull(file_data), file_data.size(),
-                               &s_read_binary_options, &opcnt_data);
+    result = ReadBinaryOpcnt(DataOrNull(file_data), file_data.size(),
+                             &s_read_binary_options, &opcnt_data);
     if (Succeeded(result)) {
-      display_sorted_int_counter_vector(
-          out, "Opcode counts:", opcnt_data.opcode_vec, opcode_counter_gt,
-          display_opcode_name, nullptr);
-      display_sorted_int_counter_vector(
-          out, "\ni32.const:", opcnt_data.i32_const_vec, int_counter_gt,
-          display_intmax, Opcode::I32Const_Opcode.GetName());
-      display_sorted_int_counter_vector(
-          out, "\nget_local:", opcnt_data.get_local_vec, int_counter_gt,
-          display_intmax, Opcode::GetLocal_Opcode.GetName());
-      display_sorted_int_counter_vector(
-          out, "\nset_local:", opcnt_data.set_local_vec, int_counter_gt,
-          display_intmax, Opcode::SetLocal_Opcode.GetName());
-      display_sorted_int_counter_vector(
-          out, "\ntee_local:", opcnt_data.tee_local_vec, int_counter_gt,
-          display_intmax, Opcode::TeeLocal_Opcode.GetName());
-      display_sorted_int_pair_counter_vector(
-          out, "\ni32.load:", opcnt_data.i32_load_vec, int_pair_counter_gt,
-          display_intmax, display_intmax, Opcode::I32Load_Opcode.GetName());
-      display_sorted_int_pair_counter_vector(
-          out, "\ni32.store:", opcnt_data.i32_store_vec, int_pair_counter_gt,
-          display_intmax, display_intmax, Opcode::I32Store_Opcode.GetName());
+      DisplaySortedIntCounterVector(
+          out, "Opcode counts:", opcnt_data.opcode_vec, OpcodeCounterGt,
+          DisplayOpcodeName, nullptr);
+      DisplaySortedIntCounterVector(
+          out, "\ni32.const:", opcnt_data.i32_const_vec, IntCounterGt,
+          DisplayIntmax, Opcode::I32Const_Opcode.GetName());
+      DisplaySortedIntCounterVector(
+          out, "\nget_local:", opcnt_data.get_local_vec, IntCounterGt,
+          DisplayIntmax, Opcode::GetLocal_Opcode.GetName());
+      DisplaySortedIntCounterVector(
+          out, "\nset_local:", opcnt_data.set_local_vec, IntCounterGt,
+          DisplayIntmax, Opcode::SetLocal_Opcode.GetName());
+      DisplaySortedIntCounterVector(
+          out, "\ntee_local:", opcnt_data.tee_local_vec, IntCounterGt,
+          DisplayIntmax, Opcode::TeeLocal_Opcode.GetName());
+      DisplaySortedIntPairCounterVector(
+          out, "\ni32.load:", opcnt_data.i32_load_vec, IntPairCounterGt,
+          DisplayIntmax, DisplayIntmax, Opcode::I32Load_Opcode.GetName());
+      DisplaySortedIntPairCounterVector(
+          out, "\ni32.store:", opcnt_data.i32_store_vec, IntPairCounterGt,
+          DisplayIntmax, DisplayIntmax, Opcode::I32Store_Opcode.GetName());
     }
   }
   return result != Result::Ok;
