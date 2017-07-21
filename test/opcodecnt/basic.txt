@@ -24,20 +24,21 @@ Opcode counts:
 get_local: 5
 i32.const: 3
 f32.const: 2
-end: 2
 br: 2
-i32.load: 1
+end: 2
 f32.add: 1
+i32.load: 1
 
-i32.const:
-(i32.const 2): 1
-(i32.const 1): 1
-(i32.const 0): 1
-
-get_local:
-(get_local 0): 3
-(get_local 1): 2
-
-i32.load:
-(i32.load 2 0): 1
+Opcode counts with immediates:
+get_local 0: 3
+br 0: 2
+get_local 1: 2
+end: 2
+f32.add: 1
+f32.const 2: 1
+f32.const 1: 1
+i32.const 0: 1
+i32.const 1: 1
+i32.const 2: 1
+i32.load 2, 0: 1
 ;;; STDOUT ;;)

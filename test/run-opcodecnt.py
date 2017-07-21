@@ -42,6 +42,7 @@ def main(args):
                       action='store_false')
   parser.add_argument('--print-cmd', help='print the commands that are run.',
                       action='store_true')
+  parser.add_argument('-c', '--cutoff', type=int, default=0)
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
@@ -62,7 +63,7 @@ def main(args):
   with utils.TempDirectory(options.out_dir, 'run-opcodecnt-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
     wast2wasm.RunWithArgs(options.file, '-o', out_file)
-    wasm_opcodecnt.RunWithArgs(out_file)
+    wasm_opcodecnt.RunWithArgs(out_file, '-c', str(options.cutoff))
 
   return 0
 
