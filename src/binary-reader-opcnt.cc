@@ -34,8 +34,10 @@ OpcodeInfo::OpcodeInfo(Opcode opcode, Kind kind)
 template <typename T>
 OpcodeInfo::OpcodeInfo(Opcode opcode, Kind kind, T* data, size_t count)
     : OpcodeInfo(opcode, kind) {
-  data_.resize(sizeof(T) * count);
-  memcpy(data_.data(), data, data_.size());
+  if (count > 0) {
+    data_.resize(sizeof(T) * count);
+    memcpy(data_.data(), data, data_.size());
+  }
 }
 
 template <typename T>
@@ -118,7 +120,7 @@ void OpcodeInfo::Write(Stream& stream) {
 }
 
 bool operator==(const OpcodeInfo& lhs, const OpcodeInfo& rhs) {
-  return lhs.opcode_ == rhs.opcode_ || lhs.kind_ == rhs.kind_ ||
+  return lhs.opcode_ == rhs.opcode_ && lhs.kind_ == rhs.kind_ &&
          lhs.data_ == rhs.data_;
 }
 

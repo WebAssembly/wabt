@@ -81,9 +81,7 @@ static void ParseOptions(int argc, char** argv) {
 template <typename T>
 struct SortByCountDescending {
   bool operator()(const T& lhs, const T& rhs) const {
-    if (lhs.second > rhs.second) return true;
-    if (lhs.second < rhs.second) return false;
-    return lhs.first > rhs.first;
+    return lhs.second > rhs.second;
   }
 };
 
@@ -108,8 +106,10 @@ void WriteCounts(Stream& stream, const OpcodeInfoCounts& info_counts) {
   std::copy_if(counts.begin(), counts.end(), std::back_inserter(sorted),
                WithinCutoff<OpcodeCountPair>());
 
-  std::sort(sorted.begin(), sorted.end(),
-            SortByCountDescending<OpcodeCountPair>());
+  // Use a stable sort to keep the elements with the same count in opcode
+  // order (since the Opcode map is sorted).
+  std::stable_sort(sorted.begin(), sorted.end(),
+                   SortByCountDescending<OpcodeCountPair>());
 
   for (auto& pair : sorted) {
     Opcode opcode = pair.first;
@@ -129,8 +129,10 @@ void WriteCountsWithImmediates(Stream& stream,
   std::copy_if(counts.begin(), counts.end(), std::back_inserter(sorted),
                WithinCutoff<OpcodeInfoCountPair>());
 
-  std::sort(sorted.begin(), sorted.end(),
-            SortByCountDescending<OpcodeInfoCountPair>());
+  // Use a stable sort to keep the elements with the same count in opcode info
+  // order (since the OpcodeInfoCounts map is sorted).
+  std::stable_sort(sorted.begin(), sorted.end(),
+                   SortByCountDescending<OpcodeInfoCountPair>());
 
   for (auto& pair : sorted) {
     auto&& info = pair.first;
