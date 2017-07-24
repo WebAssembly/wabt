@@ -119,6 +119,14 @@ FileStream::FileStream(string_view filename)
 
 FileStream::FileStream(FILE* file) : Stream(&writer_), writer_(file) {}
 
+FileStream::FileStream(FileStream&& other)
+    : Stream(&writer_), writer_(std::move(other.writer_)) {}
+
+FileStream& FileStream::operator=(FileStream&& other) {
+  writer_ = std::move(other.writer_);
+  return *this;
+}
+
 // static
 std::unique_ptr<FileStream> FileStream::CreateStdout() {
   return std::unique_ptr<FileStream>(new FileStream(stdout));

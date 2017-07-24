@@ -37,7 +37,6 @@ matrix:
     - os: linux
       dist: trusty
       sudo: required
-      compiler: clang
       # ubsan requires a newer clang for blacklisting to work.
       addons:
         apt:

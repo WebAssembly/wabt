@@ -132,6 +132,7 @@ class Stream {
 
 class MemoryStream : public Stream {
  public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(MemoryStream);
   MemoryStream();
 
   MemoryWriter& writer() { return writer_; }
@@ -150,8 +151,11 @@ class MemoryStream : public Stream {
 
 class FileStream : public Stream {
  public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(FileStream);
   explicit FileStream(string_view filename);
   explicit FileStream(FILE*);
+  FileStream(FileStream&&);
+  FileStream& operator=(FileStream&&);
 
   FileWriter& writer() { return writer_; }
 
