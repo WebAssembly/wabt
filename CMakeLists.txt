@@ -182,7 +182,9 @@ endfunction()
 SANITIZER(USE_ASAN "-fsanitize=address")
 SANITIZER(USE_MSAN "-fsanitize=memory")
 SANITIZER(USE_LSAN "-fsanitize=leak")
-SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover")
+
+set(UBSAN_BLACKLIST ${WABT_SOURCE_DIR}/ubsan.blacklist)
+SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover -fsanitize-blacklist=${UBSAN_BLACKLIST}")
 
 find_package(BISON)
 if (RUN_BISON AND BISON_FOUND AND (NOT ${BISON_VERSION} VERSION_LESS "3.0"))

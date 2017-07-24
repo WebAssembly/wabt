@@ -49,6 +49,10 @@ OpcodeInfo::OpcodeInfo(Opcode opcode, Kind kind, T* data, size_t count, T extra)
 
 template <typename T>
 std::pair<const T*, size_t> OpcodeInfo::GetDataArray() const {
+  if (data_.empty()) {
+    return std::pair<const T*, size_t>(nullptr, 0);
+  }
+
   assert(data_.size() % sizeof(T) == 0);
   return std::make_pair(reinterpret_cast<const T*>(data_.data()),
                         data_.size() / sizeof(T));
