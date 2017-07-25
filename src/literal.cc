@@ -160,10 +160,11 @@ Result FloatParser<T>::ParseFloat(const char* s,
   // WebAssembly floats can contain underscores, but strto* can't parse those,
   // so remove them first.
   assert(s <= end);
-  char buffer[end - s + 1];
+  const size_t kBufferSize = end - s + 1;  // +1 for \0.
+  char* buffer = static_cast<char*>(alloca(kBufferSize));
   auto buffer_end =
       std::copy_if(s, end, buffer, [](char c) -> bool { return c != '_'; });
-  assert(buffer_end < buffer + sizeof(buffer));
+  assert(buffer_end < buffer + kBufferSize);
   *buffer_end = 0;
 
   char* endptr;
