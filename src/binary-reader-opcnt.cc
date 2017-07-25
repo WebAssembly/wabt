@@ -177,20 +177,21 @@ class BinaryReaderOpcnt : public BinaryReaderNop {
 
  private:
   template <typename... Args>
-  void Emplace(Args&&... args);
+  Result Emplace(Args&&... args);
 
   OpcodeInfoCounts* opcode_counts_;
   Opcode current_opcode_;
 };
 
 template <typename... Args>
-void BinaryReaderOpcnt::Emplace(Args&&... args) {
+Result BinaryReaderOpcnt::Emplace(Args&&... args) {
   auto pair = opcode_counts_->emplace(
       std::piecewise_construct, std::make_tuple(std::forward<Args>(args)...),
       std::make_tuple(0));
 
   auto& count = pair.first->second;
   count++;
+  return Result::Ok;
 }
 
 BinaryReaderOpcnt::BinaryReaderOpcnt(OpcodeInfoCounts* counts)
@@ -202,63 +203,53 @@ Result BinaryReaderOpcnt::OnOpcode(Opcode opcode) {
 }
 
 Result BinaryReaderOpcnt::OnOpcodeBare() {
-  Emplace(current_opcode_, OpcodeInfo::Kind::Bare);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Bare);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeUint32(uint32_t value) {
-  Emplace(current_opcode_, OpcodeInfo::Kind::Uint32, &value);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Uint32, &value);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeIndex(Index value) {
-  Emplace(current_opcode_, OpcodeInfo::Kind::Index, &value);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Index, &value);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeUint32Uint32(uint32_t value0,
                                                uint32_t value1) {
   uint32_t array[2] = {value0, value1};
-  Emplace(current_opcode_, OpcodeInfo::Kind::Uint32Uint32, array, 2);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Uint32Uint32, array, 2);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeUint64(uint64_t value) {
-  Emplace(current_opcode_, OpcodeInfo::Kind::Uint64, &value);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Uint64, &value);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeF32(uint32_t value) {
-  Emplace(current_opcode_, OpcodeInfo::Kind::Float32, &value);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Float32, &value);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeF64(uint64_t value) {
-  Emplace(current_opcode_, OpcodeInfo::Kind::Float64, &value);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::Float64, &value);
 }
 
 Result BinaryReaderOpcnt::OnOpcodeBlockSig(Index num_types, Type* sig_types) {
-  Emplace(current_opcode_, OpcodeInfo::Kind::BlockSig, sig_types, num_types);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::BlockSig, sig_types,
+                 num_types);
 }
 
 Result BinaryReaderOpcnt::OnBrTableExpr(Index num_targets,
                                         Index* target_depths,
                                         Index default_target_depth) {
-  Emplace(current_opcode_, OpcodeInfo::Kind::BrTable, target_depths,
-          num_targets, default_target_depth);
-  return Result::Ok;
+  return Emplace(current_opcode_, OpcodeInfo::Kind::BrTable, target_depths,
+                 num_targets, default_target_depth);
 }
 
 Result BinaryReaderOpcnt::OnEndExpr() {
-  Emplace(Opcode::End, OpcodeInfo::Kind::Bare);
-  return Result::Ok;
+  return Emplace(Opcode::End, OpcodeInfo::Kind::Bare);
 }
 
 Result BinaryReaderOpcnt::OnEndFunc() {
-  Emplace(Opcode::End, OpcodeInfo::Kind::Bare);
-  return Result::Ok;
+  return Emplace(Opcode::End, OpcodeInfo::Kind::Bare);
 }
 
 }  // end anonymous namespace
