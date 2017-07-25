@@ -1,0 +1,21 @@
+;;; TOOL: run-opcodecnt
+;;; FLAGS: --cutoff 3
+(module
+  (func
+    i32.const 1
+    i32.const 2
+    i32.const 3
+    i32.const 4
+    i32.const 5
+    f32.const 6
+    f32.const 7
+    f32.const 8
+    f64.const 9
+    return))
+(;; STDOUT ;;;
+Opcode counts:
+i32.const: 5
+f32.const: 3
+
+Opcode counts with immediates:
+;;; STDOUT ;;)

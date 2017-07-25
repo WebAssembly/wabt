@@ -1,0 +1,67 @@
+;;; TOOL: run-opcodecnt
+(module
+  (memory 1)
+  (func
+    ;; constants
+    i32.const 1
+    i64.const 2
+    f32.const 3.125
+    f64.const 4.5
+
+    ;; load
+    i32.const 0
+    i32.load offset=1 align=4
+
+    ;; store
+    i32.const 0
+    i32.const 0
+    i32.store offset=3 align=4
+
+    ;; bare block
+    block
+    end
+
+    ;; block with signature
+    block (result i64)
+      unreachable
+    end
+
+    ;; br
+    br 0
+
+    ;; br_table
+    i32.const 0
+    br_table 0 0 0 0 0 0
+
+    return))
+(;; STDOUT ;;;
+Opcode counts:
+i32.const: 5
+end: 3
+block: 2
+unreachable: 1
+br: 1
+br_table: 1
+return: 1
+i32.load: 1
+i32.store: 1
+i64.const: 1
+f32.const: 1
+f64.const: 1
+
+Opcode counts with immediates:
+i32.const 0: 4
+end: 3
+unreachable: 1
+block: 1
+block i64: 1
+br 0: 1
+br_table 0, 0, 0, 0, 0, 0: 1
+return: 1
+i32.load 2, 1: 1
+i32.store 2, 3: 1
+i32.const 1: 1
+i64.const 2: 1
+f32.const 3.125: 1
+f64.const 4.5: 1
+;;; STDOUT ;;)
