@@ -224,15 +224,6 @@ void MakeTypeBindingReverseMapping(
   }
 }
 
-FuncType* Module::AppendImplicitFuncType(const Location& loc,
-                                         const FuncSignature& sig) {
-  FuncType* func_type = new FuncType();
-  func_type->sig = sig;
-  func_types.push_back(func_type);
-  fields.push_back(new FuncTypeModuleField(func_type, loc));
-  return func_type;
-}
-
 Var::Var(Index index, const Location& loc)
     : loc(loc), type_(VarType::Index), index_(index) {}
 

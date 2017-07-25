@@ -122,6 +122,7 @@ static void CheckImportOrdering(Location* loc,
                                 Module* module,
                                 const ModuleFieldList&);
 static void AppendModuleFields(Module*, ModuleFieldList&&);
+static void ResolveFuncTypes(Module*);
 
 class BinaryErrorHandlerModule : public ErrorHandler {
  public:
@@ -1339,7 +1340,10 @@ module :
 ;
 
 inline_module :
-    module_fields
+    module_fields {
+      $$ = $1;
+      ResolveFuncTypes($$);
+    }
 ;
 
 
@@ -1357,20 +1361,11 @@ script_var_opt :
 script_module :
     LPAR MODULE bind_var_opt module_fields_opt RPAR {
       $$ = new ScriptModule(ScriptModule::Type::Text);
-      $$->text = $4;
+      auto module = $4;
+      $$->text = module;
       $$->text->name = MoveAndDelete($3);
       $$->text->loc = @2;
-
-      // Resolve func type variables where the signature was not specified
-      // explicitly.
-      for (Func* func: $4->funcs) {
-        if (func->decl.has_func_type && IsEmptySignature(&func->decl.sig)) {
-          FuncType* func_type = $4->GetFuncType(func->decl.type_var);
-          if (func_type) {
-            func->decl.sig = func_type->sig;
-          }
-        }
-      }
+      ResolveFuncTypes(module);
     }
   | LPAR MODULE bind_var_opt BIN text_list RPAR {
       $$ = new ScriptModule(ScriptModule::Type::Binary);
@@ -1590,20 +1585,6 @@ bool IsEmptySignature(const FuncSignature* sig) {
   return sig->result_types.empty() && sig->param_types.empty();
 }
 
-void append_implicit_func_declaration(Location* loc,
-                                      Module* module,
-                                      FuncDeclaration* decl) {
-  if (decl->has_func_type)
-    return;
-
-  int sig_index = module->GetFuncTypeIndex(*decl);
-  if (sig_index == -1) {
-    module->AppendImplicitFuncType(*loc, decl->sig);
-  } else {
-    decl->sig = module->func_types[sig_index]->sig;
-  }
-}
-
 void CheckImportOrdering(Location* loc, WastLexer* lexer, WastParser* parser,
                          Module* module, const ModuleFieldList& fields) {
   for (const ModuleField& field: fields) {
@@ -1632,7 +1613,6 @@ void AppendModuleFields(Module* module, ModuleFieldList&& fields) {
     switch (field.type) {
       case ModuleFieldType::Func: {
         Func* func = cast<FuncModuleField>(&field)->func;
-        append_implicit_func_declaration(&field.loc, module, &func->decl);
         name = &func->name;
         bindings = &module->func_bindings;
         index = module->funcs.size();
@@ -1654,8 +1634,6 @@ void AppendModuleFields(Module* module, ModuleFieldList&& fields) {
 
         switch (import->kind) {
           case ExternalKind::Func:
-            append_implicit_func_declaration(&field.loc, module,
-                                             &import->func->decl);
             name = &import->func->name;
             bindings = &module->func_bindings;
             index = module->funcs.size();
@@ -1783,6 +1761,45 @@ void AppendModuleFields(Module* module, ModuleFieldList&& fields) {
   }
 
   module->fields.splice(module->fields.end(), fields);
+}
+
+void ResolveFuncTypes(Module* module) {
+  for (ModuleField& field : module->fields) {
+    Func* func = nullptr;
+    if (field.type == ModuleFieldType::Func) {
+      func = dyn_cast<FuncModuleField>(&field)->func;
+    } else if (field.type == ModuleFieldType::Import) {
+      Import* import = dyn_cast<ImportModuleField>(&field)->import;
+      if (import->kind == ExternalKind::Func) {
+        func = import->func;
+      } else {
+        continue;
+      }
+    } else {
+      continue;
+    }
+
+    // Resolve func type variables where the signature was not specified
+    // explicitly, e.g.: (func (type 1) ...)
+    if (func->decl.has_func_type && IsEmptySignature(&func->decl.sig)) {
+      FuncType* func_type = module->GetFuncType(func->decl.type_var);
+      if (func_type) {
+        func->decl.sig = func_type->sig;
+      }
+    }
+
+    // Resolve implicitly defined function types, e.g.: (func (param i32) ...)
+    if (!func->decl.has_func_type) {
+      Index func_type_index = module->GetFuncTypeIndex(func->decl.sig);
+      if (func_type_index == kInvalidIndex) {
+        auto func_type = new FuncType();
+        func_type->sig = func->decl.sig;
+        ModuleFieldList fields;
+        fields.push_back(new FuncTypeModuleField(func_type, field.loc));
+        AppendModuleFields(module, std::move(fields));
+      }
+    }
+  }
 }
 
 Result ParseWast(WastLexer * lexer, Script * *out_script,
