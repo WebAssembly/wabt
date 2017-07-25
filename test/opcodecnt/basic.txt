@@ -35,10 +35,10 @@ end: 2
 br 0: 2
 get_local 1: 2
 i32.load 2, 0: 1
-i32.const 0: 1
-i32.const 1: 1
-i32.const 2: 1
-f32.const 2: 1
-f32.const 1: 1
+i32.const 0 (0x0): 1
+i32.const 1 (0x1): 1
+i32.const 2 (0x2): 1
+f32.const 2 (0x1p+1): 1
+f32.const 1 (0x1p+0): 1
 f32.add: 1
 ;;; STDOUT ;;)
