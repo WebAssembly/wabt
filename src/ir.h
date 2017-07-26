@@ -561,8 +561,6 @@ class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
 };
 
 struct Module {
-  FuncType* AppendImplicitFuncType(const Location&, const FuncSignature&);
-
   Index GetFuncTypeIndex(const Var&) const;
   Index GetFuncTypeIndex(const FuncDeclaration&) const;
   Index GetFuncTypeIndex(const FuncSignature&) const;

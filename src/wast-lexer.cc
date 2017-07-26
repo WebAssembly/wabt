@@ -284,8 +284,8 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
 
       digit =     [0-9];
       hexdigit =  [0-9a-fA-F];
-      num =       digit+;
-      hexnum =    hexdigit+;
+      num =       digit ("_"? digit)*;
+      hexnum =    hexdigit ("_"? hexdigit)*;
       letter =    [a-zA-Z];
       symbol =    [+\-*\\/^~=<>!?@#$%&|:`.'];
       character = [^"\\\x00-\x1f]
@@ -294,12 +294,15 @@ int WastLexer::GetToken(Token* lval, Location* loc, WastParser* parser) {
       sign =      [+-];
       nat =       num | "0x" hexnum;
       int =       sign nat;
-      hexfloat =  sign? "0x" hexnum ("." hexdigit*)? "p" sign? num;
+      frac =      num;
+      hexfrac =   hexnum;
+      hexfloat =  sign? "0x" hexnum "." hexfrac?
+               |  sign? "0x" hexnum ("." hexfrac?)? [pP] sign? num;
       infinity =  sign? "inf";
       nan =       sign? "nan"
           |       sign? "nan:0x" hexnum;
-      float =     sign? num "." digit*
-            |     sign? num ("." digit*)? [eE] sign? num;
+      float =     sign? num "." frac?
+            |     sign? num ("." frac?)? [eE] sign? num;
       text =      '"' character* '"';
       name =      "$" (letter | digit | "_" | symbol)+;
 

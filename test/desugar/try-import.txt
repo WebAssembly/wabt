@@ -18,7 +18,6 @@
 (;; STDOUT ;;;
 (module
   (import "c++" "except" (except $ex i32))
-  (type (;0;) (func (result i32)))
   (func (;0;) (result i32)
     try $try1 (result i32)
       nop
@@ -27,5 +26,6 @@
       nop
     catch_all
       rethrow $try1
-    end))
+    end)
+  (type (;0;) (func (result i32))))
 ;;; STDOUT ;;)

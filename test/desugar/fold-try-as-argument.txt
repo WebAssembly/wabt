@@ -20,7 +20,6 @@
 (;; STDOUT ;;;
 (module
   (except $ex i32)
-  (type (;0;) (func (result i32)))
   (func (;0;) (result i32)
     (i32.sub
       (i32.add
@@ -32,5 +31,6 @@
             (nop))
           (catch_all
             (rethrow $try1))))
-      (i32.const 8))))
+      (i32.const 8)))
+  (type (;0;) (func (result i32))))
 ;;; STDOUT ;;)

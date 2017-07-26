@@ -1,49 +1,9 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/address.wast
 (;; STDOUT ;;;
-called host spectest.print(i32:97) =>
-called host spectest.print(i32:98) =>
-called host spectest.print(i32:99) =>
-called host spectest.print(i32:122) =>
-called host spectest.print(i32:25185) =>
-called host spectest.print(i32:25185) =>
-called host spectest.print(i32:25442) =>
-called host spectest.print(i32:25699) =>
-called host spectest.print(i32:122) =>
-called host spectest.print(i32:1684234849) =>
-called host spectest.print(i32:1701077858) =>
-called host spectest.print(i32:1717920867) =>
-called host spectest.print(i32:122) =>
-good(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-good(i32:65507) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-called host spectest.print(i32:0) =>
-out/third_party/testsuite/address.wast:37: assert_malformed passed:
+out/third_party/testsuite/address.wast:98: assert_malformed passed:
   out/third_party/testsuite/address/address.1.wast:1:33: error: offset must be less than or equal to 0xffffffff
   (memory 1)(func (drop (i32.load offset=4294967296 (i32.const 0))))
                                   ^^^^^^^^^^^^^^^^^
-6/6 tests passed.
+42/42 tests passed.
 ;;; STDOUT ;;)

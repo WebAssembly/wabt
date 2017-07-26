@@ -156,9 +156,20 @@ Result FloatParser<T>::ParseFloat(const char* s,
   //
   // The WebAssembly spec also ignores underflow, so we don't need to check for
   // ERANGE at all.
+
+  // WebAssembly floats can contain underscores, but strto* can't parse those,
+  // so remove them first.
+  assert(s <= end);
+  const size_t kBufferSize = end - s + 1;  // +1 for \0.
+  char* buffer = static_cast<char*>(alloca(kBufferSize));
+  auto buffer_end =
+      std::copy_if(s, end, buffer, [](char c) -> bool { return c != '_'; });
+  assert(buffer_end < buffer + kBufferSize);
+  *buffer_end = 0;
+
   char* endptr;
-  Float value = Traits::Strto(s, &endptr);
-  if (endptr != end ||
+  Float value = Traits::Strto(buffer, &endptr);
+  if (endptr != buffer_end ||
       (value == Traits::kHugeVal || value == -Traits::kHugeVal)) {
     return Result::Error;
   }
@@ -260,7 +271,9 @@ Result FloatParser<T>::ParseHex(const char* s,
   int significand_exponent = 0;  // Exponent adjustment due to dot placement.
   for (; s < end; ++s) {
     uint32_t digit;
-    if (*s == '.') {
+    if (*s == '_') {
+      continue;
+    } else if (*s == '.') {
       seen_dot = true;
     } else if (Succeeded(ParseHexdigit(*s, &digit))) {
       if (Traits::kBits - Clz(significand) <= Traits::kSigPlusOneBits) {
@@ -284,7 +297,7 @@ Result FloatParser<T>::ParseHex(const char* s,
   int exponent = 0;
   bool exponent_is_neg = false;
   if (s < end) {
-    assert(*s == 'p');
+    assert(*s == 'p' || *s == 'P');
     s++;
     // Exponent is always positive, but significand_exponent is signed.
     // significand_exponent_add is negated if exponent will be negative, so it
@@ -300,6 +313,9 @@ Result FloatParser<T>::ParseHex(const char* s,
     }
 
     for (; s < end; ++s) {
+      if (*s == '_')
+        continue;
+
       uint32_t digit = (*s - '0');
       assert(digit <= 9);
       exponent = exponent * 10 + digit;
@@ -534,6 +550,8 @@ Result ParseUint64(const char* s, const char* end, uint64_t* out) {
       return Result::Error;
     for (; s < end; ++s) {
       uint32_t digit;
+      if (*s == '_')
+        continue;
       if (Failed(ParseHexdigit(*s, &digit)))
         return Result::Error;
       uint64_t old_value = value;
@@ -544,6 +562,8 @@ Result ParseUint64(const char* s, const char* end, uint64_t* out) {
     }
   } else {
     for (; s < end; ++s) {
+      if (*s == '_')
+        continue;
       uint32_t digit = (*s - '0');
       if (digit > 9)
         return Result::Error;
