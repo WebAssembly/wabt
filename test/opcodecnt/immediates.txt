@@ -50,7 +50,7 @@ f32.const: 1
 f64.const: 1
 
 Opcode counts with immediates:
-i32.const 0: 4
+i32.const 0 (0x0): 4
 end: 3
 unreachable: 1
 block: 1
@@ -60,8 +60,8 @@ br_table 0, 0, 0, 0, 0, 0: 1
 return: 1
 i32.load 2, 1: 1
 i32.store 2, 3: 1
-i32.const 1: 1
-i64.const 2: 1
-f32.const 3.125: 1
-f64.const 4.5: 1
+i32.const 1 (0x1): 1
+i64.const 2 (0x2): 1
+f32.const 3.125 (0x1.9p+1): 1
+f64.const 4.5 (0x1.2p+2): 1
 ;;; STDOUT ;;)

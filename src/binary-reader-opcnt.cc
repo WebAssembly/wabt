@@ -24,6 +24,7 @@
 
 #include "binary-reader-nop.h"
 #include "common.h"
+#include "literal.h"
 #include "stream.h"
 
 namespace wabt {
@@ -84,24 +85,33 @@ void OpcodeInfo::Write(Stream& stream) {
       break;
 
     case Kind::Uint32:
-      stream.Writef(" %u", *GetData<uint32_t>());
+      stream.Writef(" %u (0x%x)", *GetData<uint32_t>(), *GetData<uint32_t>());
       break;
 
     case Kind::Uint64:
-      stream.Writef(" %" PRIu64, *GetData<uint64_t>());
+      stream.Writef(" %" PRIu64 " (0x%" PRIx64 ")", *GetData<uint64_t>(),
+                    *GetData<uint64_t>());
       break;
 
     case Kind::Index:
       stream.Writef(" %" PRIindex, *GetData<Index>());
       break;
 
-    case Kind::Float32:
+    case Kind::Float32: {
       stream.Writef(" %g", *GetData<float>());
+      char buffer[WABT_MAX_FLOAT_HEX + 1];
+      WriteFloatHex(buffer, sizeof(buffer), *GetData<uint32_t>());
+      stream.Writef(" (%s)", buffer);
       break;
+    }
 
-    case Kind::Float64:
+    case Kind::Float64: {
       stream.Writef(" %g", *GetData<double>());
+      char buffer[WABT_MAX_DOUBLE_HEX + 1];
+      WriteDoubleHex(buffer, sizeof(buffer), *GetData<uint64_t>());
+      stream.Writef(" (%s)", buffer);
       break;
+    }
 
     case Kind::Uint32Uint32:
       WriteArray<uint32_t>(
