@@ -314,13 +314,13 @@ static wabt::Result ReadModule(const char* module_filename,
   return result;
 }
 
-static interpreter::Result default_host_callback(const HostFunc* func,
-                                                 const FuncSignature* sig,
-                                                 Index num_args,
-                                                 TypedValue* args,
-                                                 Index num_results,
-                                                 TypedValue* out_results,
-                                                 void* user_data) {
+static interpreter::Result DefaultHostCallback(const HostFunc* func,
+                                               const FuncSignature* sig,
+                                               Index num_args,
+                                               TypedValue* args,
+                                               Index num_results,
+                                               TypedValue* out_results,
+                                               void* user_data) {
   memset(out_results, 0, sizeof(TypedValue) * num_results);
   for (Index i = 0; i < num_results; ++i)
     out_results[i].type = sig->result_types[i];
@@ -346,7 +346,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
                           FuncSignature* func_sig,
                           const ErrorCallback& callback) override {
     if (import->field_name == "print") {
-      func->as_host()->callback = default_host_callback;
+      func->as_host()->callback = DefaultHostCallback;
       return wabt::Result::Ok;
     } else {
       PrintError(callback, "unknown host function import " PRIimport,
@@ -458,36 +458,6 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
   return result;
 }
 
-/* An extremely simple JSON parser that only knows how to parse the expected
- * format from wast2wasm. */
-struct Context {
-  Context()
-      : thread(&env, s_thread_options),
-        last_module(nullptr),
-        json_offset(0),
-        has_prev_loc(0),
-        command_line_number(0),
-        passed(0),
-        total(0) {}
-
-  Environment env;
-  Thread thread;
-  DefinedModule* last_module;
-
-  /* Parsing info */
-  std::vector<uint8_t> json_data;
-  std::string source_filename;
-  size_t json_offset;
-  Location loc;
-  Location prev_loc;
-  bool has_prev_loc;
-  uint32_t command_line_number;
-
-  /* Test info */
-  int passed;
-  int total;
-};
-
 enum class ActionType {
   Invoke,
   Get,
@@ -500,57 +470,151 @@ struct Action {
   std::vector<TypedValue> args;
 };
 
+// An extremely simple JSON parser that only knows how to parse the expected
+// format from wast2wasm.
+class SpecJSONParser {
+ public:
+  SpecJSONParser() : thread_(&env_, s_thread_options) {}
+
+  wabt::Result ReadFile(const char* spec_json_filename);
+  wabt::Result ParseCommands();
+
+  int passed() const { return passed_; }
+  int total() const { return total_; }
+
+ private:
+  void WABT_PRINTF_FORMAT(2, 3) PrintParseError(const char* format, ...);
+  void WABT_PRINTF_FORMAT(2, 3) PrintCommandError(const char* format, ...);
+
+  void PutbackChar();
+  int ReadChar();
+  void SkipWhitespace();
+  bool Match(const char* s);
+  wabt::Result Expect(const char* s);
+  wabt::Result ExpectKey(const char* key);
+  wabt::Result ParseUint32(uint32_t* out_int);
+  wabt::Result ParseString(std::string* out_string);
+  wabt::Result ParseKeyStringValue(const char* key, std::string* out_string);
+  wabt::Result ParseOptNameStringValue(std::string* out_string);
+  wabt::Result ParseLine();
+  wabt::Result ParseTypeObject(Type* out_type);
+  wabt::Result ParseTypeVector(TypeVector* out_types);
+  wabt::Result ParseConst(TypedValue* out_value);
+  wabt::Result ParseConstVector(std::vector<TypedValue>* out_values);
+  wabt::Result ParseAction(Action* out_action);
+  wabt::Result ParseModuleType(ModuleType* out_type);
+
+  std::string CreateModulePath(string_view filename);
+
+  wabt::Result OnModuleCommand(string_view filename, string_view name);
+  wabt::Result RunAction(Action* action,
+                         interpreter::Result* out_iresult,
+                         std::vector<TypedValue>* out_results,
+                         RunVerbosity verbose);
+  wabt::Result OnActionCommand(Action* action);
+  wabt::Result ReadInvalidTextModule(const char* module_filename,
+                                     Environment* env,
+                                     ErrorHandler* error_handler);
+  wabt::Result ReadInvalidModule(const char* module_filename,
+                                 Environment* env,
+                                 ModuleType module_type,
+                                 const char* desc);
+  wabt::Result OnAssertMalformedCommand(string_view filename,
+                                        string_view text,
+                                        ModuleType module_type);
+  wabt::Result OnRegisterCommand(string_view name, string_view as);
+  wabt::Result OnAssertUnlinkableCommand(string_view filename,
+                                         string_view text,
+                                         ModuleType module_type);
+  wabt::Result OnAssertInvalidCommand(string_view filename,
+                                      string_view text,
+                                      ModuleType module_type);
+  wabt::Result OnAssertUninstantiableCommand(string_view filename,
+                                             string_view text,
+                                             ModuleType module_type);
+  wabt::Result OnAssertReturnCommand(Action* action,
+                                     const std::vector<TypedValue>& expected);
+  wabt::Result OnAssertReturnNanCommand(Action* action, bool canonical);
+  wabt::Result OnAssertTrapCommand(Action* action, string_view text);
+  wabt::Result OnAssertExhaustionCommand(Action* action);
+  wabt::Result ParseCommand();
+
+  Environment env_;
+  Thread thread_;
+  DefinedModule* last_module_ = nullptr;
+
+  // Parsing info.
+  std::vector<uint8_t> json_data_;
+  std::string source_filename_;
+  size_t json_offset_ = 0;
+  Location loc_;
+  Location prev_loc_;
+  bool has_prev_loc_ = false;
+  uint32_t command_line_number_ = 0;
+
+  // Test info.
+  int passed_ = 0;
+  int total_ = 0;
+};
+
 #define CHECK_RESULT(x)           \
   do {                            \
     if (Failed(x))                \
       return wabt::Result::Error; \
   } while (0)
 
-#define EXPECT(x) CHECK_RESULT(Expect(ctx, x))
-#define EXPECT_KEY(x) CHECK_RESULT(ExpectKey(ctx, x))
+#define EXPECT(x) CHECK_RESULT(Expect(x))
+#define EXPECT_KEY(x) CHECK_RESULT(ExpectKey(x))
 #define PARSE_KEY_STRING_VALUE(key, value) \
-  CHECK_RESULT(ParseKeyStringValue(ctx, key, value))
+  CHECK_RESULT(ParseKeyStringValue(key, value))
 
-static void WABT_PRINTF_FORMAT(2, 3)
-    PrintParseError(Context* ctx, const char* format, ...) {
-  WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  fprintf(stderr, "%s:%d:%d: %s\n", ctx->loc.filename, ctx->loc.line,
-          ctx->loc.first_column, buffer);
+wabt::Result SpecJSONParser::ReadFile(const char* spec_json_filename) {
+  loc_.filename = spec_json_filename;
+  loc_.line = 1;
+  loc_.first_column = 1;
+  InitEnvironment(&env_);
+
+  return wabt::ReadFile(spec_json_filename, &json_data_);
 }
 
-static void WABT_PRINTF_FORMAT(2, 3)
-    PrintCommandError(Context* ctx, const char* format, ...) {
+void SpecJSONParser::PrintParseError(const char* format, ...) {
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  fprintf(stderr, "%s:%d:%d: %s\n", loc_.filename, loc_.line, loc_.first_column,
+          buffer);
+}
+
+void SpecJSONParser::PrintCommandError(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
   printf(PRIstringview ":%u: %s\n",
-         WABT_PRINTF_STRING_VIEW_ARG(ctx->source_filename),
-         ctx->command_line_number, buffer);
+         WABT_PRINTF_STRING_VIEW_ARG(source_filename_), command_line_number_,
+         buffer);
 }
 
-static void PutbackChar(Context* ctx) {
-  assert(ctx->has_prev_loc);
-  ctx->json_offset--;
-  ctx->loc = ctx->prev_loc;
-  ctx->has_prev_loc = false;
+void SpecJSONParser::PutbackChar() {
+  assert(has_prev_loc_);
+  json_offset_--;
+  loc_ = prev_loc_;
+  has_prev_loc_ = false;
 }
 
-static int ReadChar(Context* ctx) {
-  if (ctx->json_offset >= ctx->json_data.size())
+int SpecJSONParser::ReadChar() {
+  if (json_offset_ >= json_data_.size())
     return -1;
-  ctx->prev_loc = ctx->loc;
-  char c = ctx->json_data[ctx->json_offset++];
+  prev_loc_ = loc_;
+  char c = json_data_[json_offset_++];
   if (c == '\n') {
-    ctx->loc.line++;
-    ctx->loc.first_column = 1;
+    loc_.line++;
+    loc_.first_column = 1;
   } else {
-    ctx->loc.first_column++;
+    loc_.first_column++;
   }
-  ctx->has_prev_loc = true;
+  has_prev_loc_ = true;
   return c;
 }
 
-static void SkipWhitespace(Context* ctx) {
+void SpecJSONParser::SkipWhitespace() {
   while (1) {
-    switch (ReadChar(ctx)) {
+    switch (ReadChar()) {
       case -1:
         return;
 
@@ -561,38 +625,38 @@ static void SkipWhitespace(Context* ctx) {
         break;
 
       default:
-        PutbackChar(ctx);
+        PutbackChar();
         return;
     }
   }
 }
 
-static bool Match(Context* ctx, const char* s) {
-  SkipWhitespace(ctx);
-  Location start_loc = ctx->loc;
-  size_t start_offset = ctx->json_offset;
-  while (*s && *s == ReadChar(ctx))
+bool SpecJSONParser::Match(const char* s) {
+  SkipWhitespace();
+  Location start_loc = loc_;
+  size_t start_offset = json_offset_;
+  while (*s && *s == ReadChar())
     s++;
 
   if (*s == 0) {
     return true;
   } else {
-    ctx->json_offset = start_offset;
-    ctx->loc = start_loc;
+    json_offset_ = start_offset;
+    loc_ = start_loc;
     return false;
   }
 }
 
-static wabt::Result Expect(Context* ctx, const char* s) {
-  if (Match(ctx, s)) {
+wabt::Result SpecJSONParser::Expect(const char* s) {
+  if (Match(s)) {
     return wabt::Result::Ok;
   } else {
-    PrintParseError(ctx, "expected %s", s);
+    PrintParseError("expected %s", s);
     return wabt::Result::Error;
   }
 }
 
-static wabt::Result ExpectKey(Context* ctx, const char* key) {
+wabt::Result SpecJSONParser::ExpectKey(const char* key) {
   size_t keylen = strlen(key);
   size_t quoted_len = keylen + 2 + 1;
   char* quoted = static_cast<char*>(alloca(quoted_len));
@@ -602,20 +666,20 @@ static wabt::Result ExpectKey(Context* ctx, const char* key) {
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseUint32(Context* ctx, uint32_t* out_int) {
+wabt::Result SpecJSONParser::ParseUint32(uint32_t* out_int) {
   uint32_t result = 0;
-  SkipWhitespace(ctx);
+  SkipWhitespace();
   while (1) {
-    int c = ReadChar(ctx);
+    int c = ReadChar();
     if (c >= '0' && c <= '9') {
       uint32_t last_result = result;
       result = result * 10 + static_cast<uint32_t>(c - '0');
       if (result < last_result) {
-        PrintParseError(ctx, "uint32 overflow");
+        PrintParseError("uint32 overflow");
         return wabt::Result::Error;
       }
     } else {
-      PutbackChar(ctx);
+      PutbackChar();
       break;
     }
   }
@@ -623,29 +687,29 @@ static wabt::Result ParseUint32(Context* ctx, uint32_t* out_int) {
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseString(Context* ctx, std::string* out_string) {
+wabt::Result SpecJSONParser::ParseString(std::string* out_string) {
   out_string->clear();
 
-  SkipWhitespace(ctx);
-  if (ReadChar(ctx) != '"') {
-    PrintParseError(ctx, "expected string");
+  SkipWhitespace();
+  if (ReadChar() != '"') {
+    PrintParseError("expected string");
     return wabt::Result::Error;
   }
 
   while (1) {
-    int c = ReadChar(ctx);
+    int c = ReadChar();
     if (c == '"') {
       break;
     } else if (c == '\\') {
       /* The only escape supported is \uxxxx. */
-      c = ReadChar(ctx);
+      c = ReadChar();
       if (c != 'u') {
-        PrintParseError(ctx, "expected escape: \\uxxxx");
+        PrintParseError("expected escape: \\uxxxx");
         return wabt::Result::Error;
       }
       uint16_t code = 0;
       for (int i = 0; i < 4; ++i) {
-        c = ReadChar(ctx);
+        c = ReadChar();
         int cval;
         if (c >= '0' && c <= '9') {
           cval = c - '0';
@@ -654,7 +718,7 @@ static wabt::Result ParseString(Context* ctx, std::string* out_string) {
         } else if (c >= 'A' && c <= 'F') {
           cval = c - 'A' + 10;
         } else {
-          PrintParseError(ctx, "expected hex char");
+          PrintParseError("expected hex char");
           return wabt::Result::Error;
         }
         code = (code << 4) + cval;
@@ -663,7 +727,7 @@ static wabt::Result ParseString(Context* ctx, std::string* out_string) {
       if (code < 256) {
         *out_string += code;
       } else {
-        PrintParseError(ctx, "only escape codes < 256 allowed, got %u\n", code);
+        PrintParseError("only escape codes < 256 allowed, got %u\n", code);
       }
     } else {
       *out_string += c;
@@ -672,32 +736,30 @@ static wabt::Result ParseString(Context* ctx, std::string* out_string) {
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseKeyStringValue(Context* ctx,
-                                        const char* key,
-                                        std::string* out_string) {
+wabt::Result SpecJSONParser::ParseKeyStringValue(const char* key,
+                                                 std::string* out_string) {
   out_string->clear();
   EXPECT_KEY(key);
-  return ParseString(ctx, out_string);
+  return ParseString(out_string);
 }
 
-static wabt::Result ParseOptNameStringValue(Context* ctx,
-                                            std::string* out_string) {
+wabt::Result SpecJSONParser::ParseOptNameStringValue(std::string* out_string) {
   out_string->clear();
-  if (Match(ctx, "\"name\"")) {
+  if (Match("\"name\"")) {
     EXPECT(":");
-    CHECK_RESULT(ParseString(ctx, out_string));
+    CHECK_RESULT(ParseString(out_string));
     EXPECT(",");
   }
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseLine(Context* ctx) {
+wabt::Result SpecJSONParser::ParseLine() {
   EXPECT_KEY("line");
-  CHECK_RESULT(ParseUint32(ctx, &ctx->command_line_number));
+  CHECK_RESULT(ParseUint32(&command_line_number_));
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseTypeObject(Context* ctx, Type* out_type) {
+wabt::Result SpecJSONParser::ParseTypeObject(Type* out_type) {
   std::string type_str;
   EXPECT("{");
   PARSE_KEY_STRING_VALUE("type", &type_str);
@@ -716,28 +778,28 @@ static wabt::Result ParseTypeObject(Context* ctx, Type* out_type) {
     *out_type = Type::F64;
     return wabt::Result::Ok;
   } else {
-    PrintParseError(ctx, "unknown type: \"" PRIstringview "\"",
+    PrintParseError("unknown type: \"" PRIstringview "\"",
                     WABT_PRINTF_STRING_VIEW_ARG(type_str));
     return wabt::Result::Error;
   }
 }
 
-static wabt::Result ParseTypeVector(Context* ctx, TypeVector* out_types) {
+wabt::Result SpecJSONParser::ParseTypeVector(TypeVector* out_types) {
   out_types->clear();
   EXPECT("[");
   bool first = true;
-  while (!Match(ctx, "]")) {
+  while (!Match("]")) {
     if (!first)
       EXPECT(",");
     Type type;
-    CHECK_RESULT(ParseTypeObject(ctx, &type));
+    CHECK_RESULT(ParseTypeObject(&type));
     first = false;
     out_types->push_back(type);
   }
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseConst(Context* ctx, TypedValue* out_value) {
+wabt::Result SpecJSONParser::ParseConst(TypedValue* out_value) {
   std::string type_str;
   std::string value_str;
   EXPECT("{");
@@ -778,55 +840,55 @@ static wabt::Result ParseConst(Context* ctx, TypedValue* out_value) {
     out_value->value.f64_bits = value_bits;
     return wabt::Result::Ok;
   } else {
-    PrintParseError(ctx, "unknown type: \"" PRIstringview "\"",
+    PrintParseError("unknown type: \"" PRIstringview "\"",
                     WABT_PRINTF_STRING_VIEW_ARG(type_str));
     return wabt::Result::Error;
   }
 }
 
-static wabt::Result ParseConstVector(Context* ctx,
-                                     std::vector<TypedValue>* out_values) {
+wabt::Result SpecJSONParser::ParseConstVector(
+    std::vector<TypedValue>* out_values) {
   out_values->clear();
   EXPECT("[");
   bool first = true;
-  while (!Match(ctx, "]")) {
+  while (!Match("]")) {
     if (!first)
       EXPECT(",");
     TypedValue value;
-    CHECK_RESULT(ParseConst(ctx, &value));
+    CHECK_RESULT(ParseConst(&value));
     out_values->push_back(value);
     first = false;
   }
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseAction(Context* ctx, Action* out_action) {
+wabt::Result SpecJSONParser::ParseAction(Action* out_action) {
   EXPECT_KEY("action");
   EXPECT("{");
   EXPECT_KEY("type");
-  if (Match(ctx, "\"invoke\"")) {
+  if (Match("\"invoke\"")) {
     out_action->type = ActionType::Invoke;
   } else {
     EXPECT("\"get\"");
     out_action->type = ActionType::Get;
   }
   EXPECT(",");
-  if (Match(ctx, "\"module\"")) {
+  if (Match("\"module\"")) {
     EXPECT(":");
-    CHECK_RESULT(ParseString(ctx, &out_action->module_name));
+    CHECK_RESULT(ParseString(&out_action->module_name));
     EXPECT(",");
   }
   PARSE_KEY_STRING_VALUE("field", &out_action->field_name);
   if (out_action->type == ActionType::Invoke) {
     EXPECT(",");
     EXPECT_KEY("args");
-    CHECK_RESULT(ParseConstVector(ctx, &out_action->args));
+    CHECK_RESULT(ParseConstVector(&out_action->args));
   }
   EXPECT("}");
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseModuleType(Context* ctx, ModuleType* out_type) {
+wabt::Result SpecJSONParser::ParseModuleType(ModuleType* out_type) {
   std::string module_type_str;
 
   PARSE_KEY_STRING_VALUE("module_type", &module_type_str);
@@ -837,14 +899,14 @@ static wabt::Result ParseModuleType(Context* ctx, ModuleType* out_type) {
     *out_type = ModuleType::Binary;
     return wabt::Result::Ok;
   } else {
-    PrintParseError(ctx, "unknown module type: \"" PRIstringview "\"",
+    PrintParseError("unknown module type: \"" PRIstringview "\"",
                     WABT_PRINTF_STRING_VIEW_ARG(module_type_str));
     return wabt::Result::Error;
   }
 }
 
-static std::string CreateModulePath(Context* ctx, string_view filename) {
-  const char* spec_json_filename = ctx->loc.filename;
+std::string SpecJSONParser::CreateModulePath(string_view filename) {
+  const char* spec_json_filename = loc_.filename;
   string_view dirname = GetDirname(spec_json_filename);
   std::string path;
 
@@ -860,55 +922,52 @@ static std::string CreateModulePath(Context* ctx, string_view filename) {
   return path;
 }
 
-static wabt::Result OnModuleCommand(Context* ctx,
-                                    string_view filename,
-                                    string_view name) {
-  std::string path = CreateModulePath(ctx, filename);
-  Environment::MarkPoint mark = ctx->env.Mark();
+wabt::Result SpecJSONParser::OnModuleCommand(string_view filename,
+                                             string_view name) {
+  std::string path = CreateModulePath(filename);
+  Environment::MarkPoint mark = env_.Mark();
   ErrorHandlerFile error_handler(Location::Type::Binary);
   wabt::Result result =
-      ReadModule(path.c_str(), &ctx->env, &error_handler, &ctx->last_module);
+      ReadModule(path.c_str(), &env_, &error_handler, &last_module_);
 
   if (Failed(result)) {
-    ctx->env.ResetToMarkPoint(mark);
-    PrintCommandError(ctx, "error reading module: \"%s\"", path.c_str());
+    env_.ResetToMarkPoint(mark);
+    PrintCommandError("error reading module: \"%s\"", path.c_str());
     return wabt::Result::Error;
   }
 
-  interpreter::Result iresult =
-      RunStartFunction(&ctx->thread, ctx->last_module);
+  interpreter::Result iresult = RunStartFunction(&thread_, last_module_);
   if (iresult != interpreter::Result::Ok) {
-    ctx->env.ResetToMarkPoint(mark);
+    env_.ResetToMarkPoint(mark);
     PrintInterpreterResult("error running start function", iresult);
     return wabt::Result::Error;
   }
 
   if (!name.empty()) {
-    ctx->last_module->name = name.to_string();
-    ctx->env.EmplaceModuleBinding(name.to_string(),
-                                  Binding(ctx->env.GetModuleCount() - 1));
+    last_module_->name = name.to_string();
+    env_.EmplaceModuleBinding(name.to_string(),
+                             Binding(env_.GetModuleCount() - 1));
   }
   return wabt::Result::Ok;
 }
 
-static wabt::Result RunAction(Context* ctx,
-                              Action* action,
-                              interpreter::Result* out_iresult,
-                              std::vector<TypedValue>* out_results,
-                              RunVerbosity verbose) {
+wabt::Result SpecJSONParser::RunAction(Action* action,
+                                       interpreter::Result* out_iresult,
+                                       std::vector<TypedValue>* out_results,
+                                       RunVerbosity verbose) {
   out_results->clear();
 
   Module* module;
   if (!action->module_name.empty()) {
-    module = ctx->env.FindModule(action->module_name);
+    module = env_.FindModule(action->module_name);
   } else {
-    module = ctx->env.GetLastModule();
+    module = env_.GetLastModule();
   }
   assert(module);
 
   switch (action->type) {
     case ActionType::Invoke:
-      *out_iresult = RunExportByName(&ctx->thread, module, action->field_name,
+      *out_iresult = RunExportByName(&thread_, module, action->field_name,
                                      action->args, out_results, verbose);
       if (verbose == RunVerbosity::Verbose) {
         PrintCall(string_view(), action->field_name, action->args, *out_results,
@@ -917,30 +976,30 @@ static wabt::Result RunAction(Context* ctx,
       return wabt::Result::Ok;
 
     case ActionType::Get: {
-      *out_iresult = GetGlobalExportByName(&ctx->thread, module,
-                                           action->field_name, out_results);
+      *out_iresult = GetGlobalExportByName(&thread_, module, action->field_name,
+                                           out_results);
       return wabt::Result::Ok;
     }
 
     default:
-      PrintCommandError(ctx, "invalid action type %d",
+      PrintCommandError("invalid action type %d",
                         static_cast<int>(action->type));
       return wabt::Result::Error;
   }
 }
 
-static wabt::Result OnActionCommand(Context* ctx, Action* action) {
+wabt::Result SpecJSONParser::OnActionCommand(Action* action) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
-  ctx->total++;
+  total_++;
   wabt::Result result =
-      RunAction(ctx, action, &iresult, &results, RunVerbosity::Verbose);
+      RunAction(action, &iresult, &results, RunVerbosity::Verbose);
   if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
-      ctx->passed++;
+      passed_++;
     } else {
-      PrintCommandError(ctx, "unexpected trap: %s",
+      PrintCommandError("unexpected trap: %s",
                         s_trap_strings[static_cast<size_t>(iresult)]);
       result = wabt::Result::Error;
     }
@@ -949,24 +1008,24 @@ static wabt::Result OnActionCommand(Context* ctx, Action* action) {
   return result;
 }
 
-static wabt::Result ReadInvalidTextModule(const char* module_filename,
-                                          Environment* env,
-                                          ErrorHandler* error_handler) {
+wabt::Result SpecJSONParser::ReadInvalidTextModule(
+    const char* module_filename,
+    Environment* env,
+    ErrorHandler* error_handler) {
   std::unique_ptr<WastLexer> lexer =
       WastLexer::CreateFileLexer(module_filename);
   wabt::Result result = ParseWast(lexer.get(), nullptr, error_handler);
   return result;
 }
 
-static wabt::Result ReadInvalidModule(Context* ctx,
-                                      const char* module_filename,
-                                      Environment* env,
-                                      ModuleType module_type,
-                                      const char* desc) {
+wabt::Result SpecJSONParser::ReadInvalidModule(const char* module_filename,
+                                               Environment* env,
+                                               ModuleType module_type,
+                                               const char* desc) {
   std::string header =
       StringPrintf(PRIstringview ":%d: %s passed",
-                   WABT_PRINTF_STRING_VIEW_ARG(ctx->source_filename),
-                   ctx->command_line_number, desc);
+                   WABT_PRINTF_STRING_VIEW_ARG(source_filename_),
+                   command_line_number_, desc);
 
   switch (module_type) {
     case ModuleType::Text: {
@@ -987,123 +1046,115 @@ static wabt::Result ReadInvalidModule(Context* ctx,
   }
 }
 
-static wabt::Result OnAssertMalformedCommand(Context* ctx,
-                                             string_view filename,
-                                             string_view text,
-                                             ModuleType module_type) {
+wabt::Result SpecJSONParser::OnAssertMalformedCommand(string_view filename,
+                                                      string_view text,
+                                                      ModuleType module_type) {
   Environment env;
   InitEnvironment(&env);
 
-  ctx->total++;
-  std::string path = CreateModulePath(ctx, filename);
-  wabt::Result result = ReadInvalidModule(ctx, path.c_str(), &env, module_type,
-                                          "assert_malformed");
+  total_++;
+  std::string path = CreateModulePath(filename);
+  wabt::Result result =
+      ReadInvalidModule(path.c_str(), &env, module_type, "assert_malformed");
   if (Failed(result)) {
-    ctx->passed++;
+    passed_++;
     result = wabt::Result::Ok;
   } else {
-    PrintCommandError(ctx, "expected module to be malformed: \"%s\"",
-                      path.c_str());
+    PrintCommandError("expected module to be malformed: \"%s\"", path.c_str());
     result = wabt::Result::Error;
   }
 
   return result;
 }
 
-static wabt::Result OnRegisterCommand(Context* ctx,
-                                      string_view name,
-                                      string_view as) {
+wabt::Result SpecJSONParser::OnRegisterCommand(string_view name,
+                                               string_view as) {
   Index module_index;
   if (!name.empty()) {
-    module_index = ctx->env.FindModuleIndex(name);
+    module_index = env_.FindModuleIndex(name);
   } else {
-    module_index = ctx->env.GetLastModuleIndex();
+    module_index = env_.GetLastModuleIndex();
   }
 
   if (module_index == kInvalidIndex) {
-    PrintCommandError(ctx, "unknown module in register");
+    PrintCommandError("unknown module in register");
     return wabt::Result::Error;
   }
 
-  ctx->env.EmplaceRegisteredModuleBinding(as.to_string(),
-                                          Binding(module_index));
+  env_.EmplaceRegisteredModuleBinding(as.to_string(), Binding(module_index));
   return wabt::Result::Ok;
 }
 
-static wabt::Result OnAssertUnlinkableCommand(Context* ctx,
-                                              string_view filename,
-                                              string_view text,
-                                              ModuleType module_type) {
-  ctx->total++;
-  std::string path = CreateModulePath(ctx, filename);
-  Environment::MarkPoint mark = ctx->env.Mark();
-  wabt::Result result = ReadInvalidModule(ctx, path.c_str(), &ctx->env,
-                                          module_type, "assert_unlinkable");
-  ctx->env.ResetToMarkPoint(mark);
+wabt::Result SpecJSONParser::OnAssertUnlinkableCommand(string_view filename,
+                                                       string_view text,
+                                                       ModuleType module_type) {
+  total_++;
+  std::string path = CreateModulePath(filename);
+  Environment::MarkPoint mark = env_.Mark();
+  wabt::Result result =
+      ReadInvalidModule(path.c_str(), &env_, module_type, "assert_unlinkable");
+  env_.ResetToMarkPoint(mark);
 
   if (Failed(result)) {
-    ctx->passed++;
+    passed_++;
     result = wabt::Result::Ok;
   } else {
-    PrintCommandError(ctx, "expected module to be unlinkable: \"%s\"",
-                      path.c_str());
+    PrintCommandError("expected module to be unlinkable: \"%s\"", path.c_str());
     result = wabt::Result::Error;
   }
 
   return result;
 }
 
-static wabt::Result OnAssertInvalidCommand(Context* ctx,
-                                           string_view filename,
-                                           string_view text,
-                                           ModuleType module_type) {
+wabt::Result SpecJSONParser::OnAssertInvalidCommand(string_view filename,
+                                                    string_view text,
+                                                    ModuleType module_type) {
   Environment env;
   InitEnvironment(&env);
 
-  ctx->total++;
-  std::string path = CreateModulePath(ctx, filename);
+  total_++;
+  std::string path = CreateModulePath(filename);
   wabt::Result result =
-      ReadInvalidModule(ctx, path.c_str(), &env, module_type, "assert_invalid");
+      ReadInvalidModule(path.c_str(), &env, module_type, "assert_invalid");
   if (Failed(result)) {
-    ctx->passed++;
+    passed_++;
     result = wabt::Result::Ok;
   } else {
-    PrintCommandError(ctx, "expected module to be invalid: \"%s\"",
-                      path.c_str());
+    PrintCommandError("expected module to be invalid: \"%s\"", path.c_str());
     result = wabt::Result::Error;
   }
 
   return result;
 }
 
-static wabt::Result OnAssertUninstantiableCommand(Context* ctx,
-                                                  string_view filename,
-                                                  string_view text,
-                                                  ModuleType module_type) {
+wabt::Result SpecJSONParser::OnAssertUninstantiableCommand(
+    string_view filename,
+    string_view text,
+    ModuleType module_type) {
   ErrorHandlerFile error_handler(Location::Type::Binary);
-  ctx->total++;
-  std::string path = CreateModulePath(ctx, filename);
+  total_++;
+  std::string path = CreateModulePath(filename);
   DefinedModule* module;
-  Environment::MarkPoint mark = ctx->env.Mark();
+  Environment::MarkPoint mark = env_.Mark();
   wabt::Result result =
-      ReadModule(path.c_str(), &ctx->env, &error_handler, &module);
+      ReadModule(path.c_str(), &env_, &error_handler, &module);
 
   if (Succeeded(result)) {
-    interpreter::Result iresult = RunStartFunction(&ctx->thread, module);
+    interpreter::Result iresult = RunStartFunction(&thread_, module);
     if (iresult == interpreter::Result::Ok) {
-      PrintCommandError(ctx, "expected error running start function: \"%s\"",
+      PrintCommandError("expected error running start function: \"%s\"",
                         path.c_str());
       result = wabt::Result::Error;
     } else {
-      ctx->passed++;
+      passed_++;
       result = wabt::Result::Ok;
     }
   } else {
-    PrintCommandError(ctx, "error reading module: \"%s\"", path.c_str());
+    PrintCommandError("error reading module: \"%s\"", path.c_str());
     result = wabt::Result::Error;
   }
 
-  ctx->env.ResetToMarkPoint(mark);
+  env_.ResetToMarkPoint(mark);
   return result;
 }
 
@@ -1126,16 +1177,15 @@ static bool TypedValuesAreEqual(const TypedValue* tv1, const TypedValue* tv2) {
   }
 }
 
-static wabt::Result OnAssertReturnCommand(
-    Context* ctx,
+wabt::Result SpecJSONParser::OnAssertReturnCommand(
     Action* action,
     const std::vector<TypedValue>& expected) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
-  ctx->total++;
+  total_++;
   wabt::Result result =
-      RunAction(ctx, action, &iresult, &results, RunVerbosity::Quiet);
+      RunAction(action, &iresult, &results, RunVerbosity::Quiet);
 
   if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
@@ -1148,8 +1198,7 @@ static wabt::Result OnAssertReturnCommand(
             char actual_str[MAX_TYPED_VALUE_CHARS];
             SPrintTypedValue(expected_str, sizeof(expected_str), expected_tv);
             SPrintTypedValue(actual_str, sizeof(actual_str), actual_tv);
-            PrintCommandError(ctx,
-                              "mismatch in result %" PRIzd
+            PrintCommandError("mismatch in result %" PRIzd
                               " of assert_return: expected %s, got %s",
                               i, expected_str, actual_str);
             result = wabt::Result::Error;
@@ -1157,39 +1206,36 @@ static wabt::Result OnAssertReturnCommand(
         }
       } else {
         PrintCommandError(
-            ctx,
             "result length mismatch in assert_return: expected %" PRIzd
             ", got %" PRIzd,
             expected.size(), results.size());
         result = wabt::Result::Error;
       }
     } else {
-      PrintCommandError(ctx, "unexpected trap: %s",
+      PrintCommandError("unexpected trap: %s",
                         s_trap_strings[static_cast<size_t>(iresult)]);
       result = wabt::Result::Error;
     }
   }
 
   if (Succeeded(result))
-    ctx->passed++;
+    passed_++;
 
   return result;
 }
 
-static wabt::Result OnAssertReturnNanCommand(Context* ctx,
-                                             Action* action,
-                                             bool canonical) {
+wabt::Result SpecJSONParser::OnAssertReturnNanCommand(Action* action,
+                                                      bool canonical) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
-  ctx->total++;
+  total_++;
   wabt::Result result =
-      RunAction(ctx, action, &iresult, &results, RunVerbosity::Quiet);
+      RunAction(action, &iresult, &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
     if (iresult == interpreter::Result::Ok) {
       if (results.size() != 1) {
-        PrintCommandError(ctx, "expected one result, got %" PRIzd,
-                          results.size());
+        PrintCommandError("expected one result, got %" PRIzd, results.size());
         result = wabt::Result::Error;
       }
 
@@ -1201,8 +1247,7 @@ static wabt::Result OnAssertReturnNanCommand(Context* ctx,
           if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
             SPrintTypedValue(actual_str, sizeof(actual_str), &actual);
-            PrintCommandError(ctx, "expected result to be nan, got %s",
-                              actual_str);
+            PrintCommandError("expected result to be nan, got %s", actual_str);
             result = wabt::Result::Error;
           }
           break;
@@ -1214,47 +1259,44 @@ static wabt::Result OnAssertReturnNanCommand(Context* ctx,
           if (!is_nan) {
             char actual_str[MAX_TYPED_VALUE_CHARS];
             SPrintTypedValue(actual_str, sizeof(actual_str), &actual);
-            PrintCommandError(ctx, "expected result to be nan, got %s",
-                              actual_str);
+            PrintCommandError("expected result to be nan, got %s", actual_str);
             result = wabt::Result::Error;
           }
           break;
         }
 
         default:
-          PrintCommandError(ctx,
-                            "expected result type to be f32 or f64, got %s",
+          PrintCommandError("expected result type to be f32 or f64, got %s",
                             GetTypeName(actual.type));
           result = wabt::Result::Error;
           break;
       }
     } else {
-      PrintCommandError(ctx, "unexpected trap: %s",
+      PrintCommandError("unexpected trap: %s",
                         s_trap_strings[static_cast<int>(iresult)]);
       result = wabt::Result::Error;
     }
   }
 
   if (Succeeded(result))
-    ctx->passed++;
+    passed_++;
 
   return wabt::Result::Ok;
 }
 
-static wabt::Result OnAssertTrapCommand(Context* ctx,
-                                        Action* action,
-                                        string_view text) {
+wabt::Result SpecJSONParser::OnAssertTrapCommand(Action* action,
+                                                 string_view text) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
-  ctx->total++;
+  total_++;
   wabt::Result result =
-      RunAction(ctx, action, &iresult, &results, RunVerbosity::Quiet);
+      RunAction(action, &iresult, &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
     if (iresult != interpreter::Result::Ok) {
-      ctx->passed++;
+      passed_++;
     } else {
-      PrintCommandError(ctx, "expected trap: \"" PRIstringview "\"",
+      PrintCommandError("expected trap: \"" PRIstringview "\"",
                         WABT_PRINTF_STRING_VIEW_ARG(text));
       result = wabt::Result::Error;
     }
@@ -1263,19 +1305,19 @@ static wabt::Result OnAssertTrapCommand(Context* ctx,
   return result;
 }
 
-static wabt::Result OnAssertExhaustionCommand(Context* ctx, Action* action) {
+wabt::Result SpecJSONParser::OnAssertExhaustionCommand(Action* action) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
-  ctx->total++;
+  total_++;
   wabt::Result result =
-      RunAction(ctx, action, &iresult, &results, RunVerbosity::Quiet);
+      RunAction(action, &iresult, &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
     if (iresult == interpreter::Result::TrapCallStackExhausted ||
         iresult == interpreter::Result::TrapValueStackExhausted) {
-      ctx->passed++;
+      passed_++;
     } else {
-      PrintCommandError(ctx, "expected call stack exhaustion");
+      PrintCommandError("expected call stack exhaustion");
       result = wabt::Result::Error;
     }
   }
@@ -1283,189 +1325,181 @@ static wabt::Result OnAssertExhaustionCommand(Context* ctx, Action* action) {
   return result;
 }
 
-static wabt::Result ParseCommand(Context* ctx) {
+wabt::Result SpecJSONParser::ParseCommand() {
   EXPECT("{");
   EXPECT_KEY("type");
-  if (Match(ctx, "\"module\"")) {
+  if (Match("\"module\"")) {
     std::string name;
     std::string filename;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
-    CHECK_RESULT(ParseOptNameStringValue(ctx, &name));
+    CHECK_RESULT(ParseOptNameStringValue(&name));
     PARSE_KEY_STRING_VALUE("filename", &filename);
-    OnModuleCommand(ctx, filename, name);
-  } else if (Match(ctx, "\"action\"")) {
+    OnModuleCommand(filename, name);
+  } else if (Match("\"action\"")) {
     Action action;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
-    CHECK_RESULT(ParseAction(ctx, &action));
-    OnActionCommand(ctx, &action);
-  } else if (Match(ctx, "\"register\"")) {
+    CHECK_RESULT(ParseAction(&action));
+    OnActionCommand(&action);
+  } else if (Match("\"register\"")) {
     std::string as;
     std::string name;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
-    CHECK_RESULT(ParseOptNameStringValue(ctx, &name));
+    CHECK_RESULT(ParseOptNameStringValue(&name));
     PARSE_KEY_STRING_VALUE("as", &as);
-    OnRegisterCommand(ctx, name, as);
-  } else if (Match(ctx, "\"assert_malformed\"")) {
+    OnRegisterCommand(name, as);
+  } else if (Match("\"assert_malformed\"")) {
     std::string filename;
     std::string text;
     ModuleType module_type;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     EXPECT(",");
-    CHECK_RESULT(ParseModuleType(ctx, &module_type));
-    OnAssertMalformedCommand(ctx, filename, text, module_type);
-  } else if (Match(ctx, "\"assert_invalid\"")) {
+    CHECK_RESULT(ParseModuleType(&module_type));
+    OnAssertMalformedCommand(filename, text, module_type);
+  } else if (Match("\"assert_invalid\"")) {
     std::string filename;
     std::string text;
     ModuleType module_type;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     EXPECT(",");
-    CHECK_RESULT(ParseModuleType(ctx, &module_type));
-    OnAssertInvalidCommand(ctx, filename, text, module_type);
-  } else if (Match(ctx, "\"assert_unlinkable\"")) {
+    CHECK_RESULT(ParseModuleType(&module_type));
+    OnAssertInvalidCommand(filename, text, module_type);
+  } else if (Match("\"assert_unlinkable\"")) {
     std::string filename;
     std::string text;
     ModuleType module_type;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     EXPECT(",");
-    CHECK_RESULT(ParseModuleType(ctx, &module_type));
-    OnAssertUnlinkableCommand(ctx, filename, text, module_type);
-  } else if (Match(ctx, "\"assert_uninstantiable\"")) {
+    CHECK_RESULT(ParseModuleType(&module_type));
+    OnAssertUnlinkableCommand(filename, text, module_type);
+  } else if (Match("\"assert_uninstantiable\"")) {
     std::string filename;
     std::string text;
     ModuleType module_type;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("filename", &filename);
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
     EXPECT(",");
-    CHECK_RESULT(ParseModuleType(ctx, &module_type));
-    OnAssertUninstantiableCommand(ctx, filename, text, module_type);
-  } else if (Match(ctx, "\"assert_return\"")) {
+    CHECK_RESULT(ParseModuleType(&module_type));
+    OnAssertUninstantiableCommand(filename, text, module_type);
+  } else if (Match("\"assert_return\"")) {
     Action action;
     std::vector<TypedValue> expected;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
-    CHECK_RESULT(ParseAction(ctx, &action));
+    CHECK_RESULT(ParseAction(&action));
     EXPECT(",");
     EXPECT_KEY("expected");
-    CHECK_RESULT(ParseConstVector(ctx, &expected));
-    OnAssertReturnCommand(ctx, &action, expected);
-  } else if (Match(ctx, "\"assert_return_canonical_nan\"")) {
+    CHECK_RESULT(ParseConstVector(&expected));
+    OnAssertReturnCommand(&action, expected);
+  } else if (Match("\"assert_return_canonical_nan\"")) {
     Action action;
     TypeVector expected;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
-    CHECK_RESULT(ParseAction(ctx, &action));
+    CHECK_RESULT(ParseAction(&action));
     EXPECT(",");
     /* Not needed for wabt-interp, but useful for other parsers. */
     EXPECT_KEY("expected");
-    CHECK_RESULT(ParseTypeVector(ctx, &expected));
-    OnAssertReturnNanCommand(ctx, &action, true);
-  } else if (Match(ctx, "\"assert_return_arithmetic_nan\"")) {
+    CHECK_RESULT(ParseTypeVector(&expected));
+    OnAssertReturnNanCommand(&action, true);
+  } else if (Match("\"assert_return_arithmetic_nan\"")) {
     Action action;
     TypeVector expected;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
-    CHECK_RESULT(ParseAction(ctx, &action));
+    CHECK_RESULT(ParseAction(&action));
     EXPECT(",");
     /* Not needed for wabt-interp, but useful for other parsers. */
     EXPECT_KEY("expected");
-    CHECK_RESULT(ParseTypeVector(ctx, &expected));
-    OnAssertReturnNanCommand(ctx, &action, false);
-  } else if (Match(ctx, "\"assert_trap\"")) {
+    CHECK_RESULT(ParseTypeVector(&expected));
+    OnAssertReturnNanCommand(&action, false);
+  } else if (Match("\"assert_trap\"")) {
     Action action;
     std::string text;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
-    CHECK_RESULT(ParseAction(ctx, &action));
+    CHECK_RESULT(ParseAction(&action));
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &text);
-    OnAssertTrapCommand(ctx, &action, text);
-  } else if (Match(ctx, "\"assert_exhaustion\"")) {
+    OnAssertTrapCommand(&action, text);
+  } else if (Match("\"assert_exhaustion\"")) {
     Action action;
     std::string text;
 
     EXPECT(",");
-    CHECK_RESULT(ParseLine(ctx));
+    CHECK_RESULT(ParseLine());
     EXPECT(",");
-    CHECK_RESULT(ParseAction(ctx, &action));
-    OnAssertExhaustionCommand(ctx, &action);
+    CHECK_RESULT(ParseAction(&action));
+    OnAssertExhaustionCommand(&action);
   } else {
-    PrintCommandError(ctx, "unknown command type");
+    PrintCommandError("unknown command type");
     return wabt::Result::Error;
   }
   EXPECT("}");
   return wabt::Result::Ok;
 }
 
-static wabt::Result ParseCommands(Context* ctx) {
+wabt::Result SpecJSONParser::ParseCommands() {
   EXPECT("{");
-  PARSE_KEY_STRING_VALUE("source_filename", &ctx->source_filename);
+  PARSE_KEY_STRING_VALUE("source_filename", &source_filename_);
   EXPECT(",");
   EXPECT_KEY("commands");
   EXPECT("[");
   bool first = true;
-  while (!Match(ctx, "]")) {
+  while (!Match("]")) {
     if (!first)
       EXPECT(",");
-    CHECK_RESULT(ParseCommand(ctx));
+    CHECK_RESULT(ParseCommand());
     first = false;
   }
   EXPECT("}");
   return wabt::Result::Ok;
 }
 
-static wabt::Result ReadAndRunSpecJson(const char* spec_json_filename) {
-  Context ctx;
-  ctx.loc.filename = spec_json_filename;
-  ctx.loc.line = 1;
-  ctx.loc.first_column = 1;
-  InitEnvironment(&ctx.env);
-
-  wabt::Result result = ReadFile(spec_json_filename, &ctx.json_data);
-  if (Failed(result))
-    return wabt::Result::Error;
-
-  result = ParseCommands(&ctx);
-  printf("%d/%d tests passed.\n", ctx.passed, ctx.total);
+static wabt::Result ReadAndRunSpecJSON(const char* spec_json_filename) {
+  SpecJSONParser parser;
+  CHECK_RESULT(parser.ReadFile(spec_json_filename));
+  wabt::Result result = parser.ParseCommands();
+  printf("%d/%d tests passed.\n", parser.passed(), parser.total());
   return result;
 }
 
@@ -1477,7 +1511,7 @@ int ProgramMain(int argc, char** argv) {
 
   wabt::Result result;
   if (s_spec) {
-    result = ReadAndRunSpecJson(s_infile);
+    result = ReadAndRunSpecJSON(s_infile);
   } else {
     result = ReadAndRunModule(s_infile);
   }
