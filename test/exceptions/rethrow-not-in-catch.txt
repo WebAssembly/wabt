@@ -16,5 +16,5 @@
 (;; STDERR ;;;
 out/test/exceptions/rethrow-not-in-catch.txt:9:8: error: Rethrow not in try catch block
       (rethrow $try1)
-       ^^^^^^^^^^^^^
+       ^^^^^^^
 ;;; STDERR ;;)

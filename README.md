@@ -59,7 +59,7 @@ configuration.
 
  - compilers: `gcc`, `clang`, `gcc-i686`, `gcc-fuzz`
  - build types: `debug`, `release`
- - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `no-re2c-bison`,
+ - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `no-re2c`,
    `no-tests`
 
 They are combined with dashes, for example:
@@ -68,7 +68,7 @@ They are combined with dashes, for example:
 $ make clang-debug
 $ make gcc-i686-release
 $ make clang-debug-lsan
-$ make gcc-debug-no-re2c-bison
+$ make gcc-debug-no-re2c
 ```
 
 You can also run CMake yourself, the normal way:
@@ -120,18 +120,14 @@ So, for example, if you want to build the debug configuration on Visual Studio 2
 > cmake --build .. --config DEBUG --target install
 ```
 
-## Changing the parser or lexer
-
-If you make changes to `src/wast-parser.y`, you'll need to install Bison.
-Before you upload your PR, please run `make update-bison` to update the
-prebuilt C sources in `src/prebuilt/`.
+## Changing the lexer
 
 If you make changes to `src/wast-lexer.cc`, you'll need to install
 [re2c](http://re2c.org). Before you upload your PR, please run `make
 update-re2c` to update the prebuilt C sources in `src/prebuilt/`.
 
-CMake will detect if you don't have re2c or Bison installed and use the
-prebuilt source files instead.
+CMake will detect if you don't have re2c installed and use the prebuilt source
+files instead.
 
 ## Running wast2wasm
 

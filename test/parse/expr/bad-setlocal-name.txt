@@ -4,10 +4,7 @@
   i32.const 0
   set_local n))
 (;; STDERR ;;;
-out/test/parse/expr/bad-setlocal-name.txt:5:13: error: unexpected token "n"
+out/test/parse/expr/bad-setlocal-name.txt:5:13: error: unexpected token "n", expected a numeric index or a name (e.g. 12 or $foo).
   set_local n))
             ^
-out/test/parse/expr/bad-setlocal-name.txt:5:14: error: syntax error, unexpected ), expecting NAT or VAR
-  set_local n))
-             ^
 ;;; STDERR ;;)

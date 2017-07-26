@@ -196,68 +196,68 @@ out/third_party/testsuite/imports.wast:471: assert_unlinkable passed:
   error: max size (2) larger than declared (1)
   000001f: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:489: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.99.wast:1:8: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.99.wast:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (func))
-         ^^^^^^^^^^^^^^^^^^^^^
+          ^^^^^^
 out/third_party/testsuite/imports.wast:493: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.100.wast:1:8: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.100.wast:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (global i64))
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^^^
 out/third_party/testsuite/imports.wast:497: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.101.wast:1:8: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.101.wast:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (table 0 anyfunc))
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^^^
 out/third_party/testsuite/imports.wast:501: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.102.wast:1:8: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.102.wast:1:9: error: imports must occur before all non-import definitions
   (func) (import "" "" (memory 0))
-         ^^^^^^^^^^^^^^^^^^^^^^^^^
+          ^^^^^^
 out/third_party/testsuite/imports.wast:506: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.103.wast:1:28: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.103.wast:1:29: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (func))
-                             ^^^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^
 out/third_party/testsuite/imports.wast:510: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.104.wast:1:28: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.104.wast:1:29: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (global f32))
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^
 out/third_party/testsuite/imports.wast:514: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.105.wast:1:28: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.105.wast:1:29: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (table 0 anyfunc))
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^
 out/third_party/testsuite/imports.wast:518: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.106.wast:1:28: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.106.wast:1:29: error: imports must occur before all non-import definitions
   (global i64 (i64.const 0)) (import "" "" (memory 0))
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^
+                              ^^^^^^
 out/third_party/testsuite/imports.wast:523: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.107.wast:1:19: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.107.wast:1:20: error: imports must occur before all non-import definitions
   (table 0 anyfunc) (import "" "" (func))
-                    ^^^^^^^^^^^^^^^^^^^^^
+                     ^^^^^^
 out/third_party/testsuite/imports.wast:527: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.108.wast:1:19: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.108.wast:1:20: error: imports must occur before all non-import definitions
   (table 0 anyfunc) (import "" "" (global i32))
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ^^^^^^
 out/third_party/testsuite/imports.wast:531: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.109.wast:1:19: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.109.wast:1:20: error: imports must occur before all non-import definitions
   (table 0 anyfunc) (import "" "" (table 0 anyfunc))
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ^^^^^^
 out/third_party/testsuite/imports.wast:535: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.110.wast:1:19: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.110.wast:1:20: error: imports must occur before all non-import definitions
   (table 0 anyfunc) (import "" "" (memory 0))
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+                     ^^^^^^
 out/third_party/testsuite/imports.wast:540: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.111.wast:1:12: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.111.wast:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (func))
-             ^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^
 out/third_party/testsuite/imports.wast:544: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.112.wast:1:12: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.112.wast:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (global i32))
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^
 out/third_party/testsuite/imports.wast:548: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.113.wast:1:12: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.113.wast:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (table 1 3 anyfunc))
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^
 out/third_party/testsuite/imports.wast:552: assert_malformed passed:
-  out/third_party/testsuite/imports/imports.114.wast:1:12: error: imports must occur before all non-import definitions
+  out/third_party/testsuite/imports/imports.114.wast:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (memory 1 2))
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+              ^^^^^^
 107/107 tests passed.
 ;;; STDOUT ;;)

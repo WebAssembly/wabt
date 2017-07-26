@@ -25,6 +25,7 @@
 #include "binary-reader.h"
 #include "cast.h"
 #include "error-handler.h"
+#include "ir.h"
 #include "type-checker.h"
 #include "wast-parser-lexer-shared.h"
 

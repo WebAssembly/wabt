@@ -16,27 +16,14 @@
 
 #include "wast-parser-lexer-shared.h"
 
-#include <cstdarg>
-#include <cstdio>
-#include <cstring>
-#include <string>
+#include "common.h"
+#include "error-handler.h"
+#include "wast-lexer.h"
 
 namespace wabt {
 
-void WastParserError(Location* loc,
-                     WastLexer* lexer,
-                     WastParser* parser,
-                     const char* format,
-                     ...) {
-  parser->errors++;
-  va_list args;
-  va_start(args, format);
-  WastFormatError(parser->error_handler, loc, lexer, format, args);
-  va_end(args);
-}
-
 void WastFormatError(ErrorHandler* error_handler,
-                     const struct Location* loc,
+                     const Location* loc,
                      WastLexer* lexer,
                      const char* format,
                      va_list args) {

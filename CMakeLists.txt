@@ -18,7 +18,6 @@ cmake_minimum_required(VERSION 2.6)
 project(WABT)
 
 option(BUILD_TESTS "Build GTest-based tests" ON)
-option(RUN_BISON "Run bison" ON)
 option(RUN_RE2C "Run re2c" ON)
 option(USE_ASAN "Use address sanitizer" OFF)
 option(USE_MSAN "Use memory sanitizer" OFF)
@@ -186,31 +185,6 @@ SANITIZER(USE_LSAN "-fsanitize=leak")
 set(UBSAN_BLACKLIST ${WABT_SOURCE_DIR}/ubsan.blacklist)
 SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover -fsanitize-blacklist=${UBSAN_BLACKLIST}")
 
-find_package(BISON)
-if (RUN_BISON AND BISON_FOUND AND (NOT ${BISON_VERSION} VERSION_LESS "3.0"))
-  message(STATUS "Using generated bison parser")
-  set(WAST_PARSER_GEN_CC ${WABT_BINARY_DIR}/wast-parser-gen.cc)
-  BISON_TARGET(WAST_PARSER_GEN_CC
-    ${WABT_SOURCE_DIR}/src/wast-parser.y
-    ${WAST_PARSER_GEN_CC}
-    COMPILE_FLAGS --defines=${WABT_BINARY_DIR}/wast-parser-gen.hh
-  )
-else ()
-  message(STATUS "Using prebuilt bison parser")
-  set(WAST_PARSER_GEN_CC src/prebuilt/wast-parser-gen.cc)
-  include_directories(src/prebuilt)
-endif ()
-
-if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
-  # yyerror passes a non-string-literal to a printf-like function, which is a
-  # warning.
-  set_source_files_properties(
-    ${WAST_PARSER_GEN_CC}
-    PROPERTIES
-    COMPILE_FLAGS "-Wno-format-security -Wno-old-style-cast"
-  )
-endif ()
-
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 find_package(RE2C)
 if (RUN_RE2C AND RE2C_EXECUTABLE AND (NOT ${RE2C_VERSION} VERSION_LESS "0.16"))
@@ -241,7 +215,7 @@ add_library(libwabt STATIC
   src/lexer-source-line-finder.cc
   src/wast-parser-lexer-shared.cc
   ${WAST_LEXER_GEN_CC}
-  ${WAST_PARSER_GEN_CC}
+  src/wast-parser.cc
   src/type-checker.cc
   src/validator.cc
 

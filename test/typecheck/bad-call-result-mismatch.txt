@@ -1,29 +1,44 @@
 ;;; ERROR: 1
 (module
-  (import $import "foo" "bar" (result f32))
+  (import "foo" "bar" (func $import (result f32)))
   (func $direct (result i64) (i64.const 0))
   (type $indirect (func (result i64)))
   (table anyfunc (elem $direct))
 
   (func
-    if 
+    if
       call $direct
     else
       nop
     end
-    if 
-      call_import $import 
-    else 
-      nop 
+    if
+      call $import
+    else
+      nop
     end
     if
-      i32.const 0 
-      call_indirect $indirect 
-    else 
+      i32.const 0
+      call_indirect $indirect
+    else
       nop
     end))
 (;; STDERR ;;;
-out/test/typecheck/bad-call-result-mismatch.txt:3:11: error: syntax error, unexpected VAR, expecting TEXT
-  (import $import "foo" "bar" (result f32))
-          ^^^^^^^
+out/test/typecheck/bad-call-result-mismatch.txt:9:5: error: type stack size too small at if. got 0, expected at least 1
+    if
+    ^^
+out/test/typecheck/bad-call-result-mismatch.txt:10:7: error: type stack at end of if true branch is 1, expected 0
+      call $direct
+      ^^^^
+out/test/typecheck/bad-call-result-mismatch.txt:14:5: error: type stack size too small at if. got 0, expected at least 1
+    if
+    ^^
+out/test/typecheck/bad-call-result-mismatch.txt:15:7: error: type stack at end of if true branch is 1, expected 0
+      call $import
+      ^^^^
+out/test/typecheck/bad-call-result-mismatch.txt:19:5: error: type stack size too small at if. got 0, expected at least 1
+    if
+    ^^
+out/test/typecheck/bad-call-result-mismatch.txt:21:7: error: type stack at end of if true branch is 1, expected 0
+      call_indirect $indirect
+      ^^^^^^^^^^^^^
 ;;; STDERR ;;)

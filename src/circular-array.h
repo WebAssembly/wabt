@@ -18,6 +18,9 @@
 #define WABT_CIRCULAR_ARRAY_H_
 
 #include <array>
+#include <cassert>
+#include <cstddef>
+#include <type_traits>
 
 namespace wabt {
 
@@ -33,8 +36,10 @@ class CircularArray {
   typedef const value_type& const_reference;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
+
   CircularArray() : size_(0), front_(0), mask_(kCapacity - 1) {
-    assert(kCapacity && ((kCapacity & (kCapacity - 1)) == 0));
+    static_assert(kCapacity && ((kCapacity & (kCapacity - 1)) == 0),
+                  "Capacity must be a power of 2.");
   }
 
   reference at(size_type index) {
@@ -86,7 +91,7 @@ class CircularArray {
     --size_;
   }
 
-  void push_back(value_type& value) {
+  void push_back(const value_type& value) {
     assert(size_ < kCapacity);
     contents_[position(size_++)] = value;
   }

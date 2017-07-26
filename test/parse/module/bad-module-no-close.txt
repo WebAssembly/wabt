@@ -1,5 +1,5 @@
 ;;; ERROR: 1
 (module
 (;; STDERR ;;;
-out/test/parse/module/bad-module-no-close.txt:3:2: error: syntax error, unexpected EOF, expecting )
+out/test/parse/module/bad-module-no-close.txt:3:2: error: unexpected token EOF, expected ).
 ;;; STDERR ;;)

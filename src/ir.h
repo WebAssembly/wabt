@@ -174,6 +174,7 @@ class Expr : public intrusive_list_base<Expr> {
 
  protected:
   explicit Expr(ExprType);
+  Expr(ExprType, Location);
 };
 
 const char* GetExprTypeName(const Expr& expr);
@@ -184,6 +185,7 @@ class ExprMixin : public Expr {
   static bool classof(const Expr* expr) { return expr->type == TypeEnum; }
 
   ExprMixin() : Expr(TypeEnum) {}
+  explicit ExprMixin(Location loc) : Expr(TypeEnum, loc) {}
 };
 
 typedef ExprMixin<ExprType::CurrentMemory> CurrentMemoryExpr;
@@ -197,7 +199,8 @@ typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
 template <ExprType TypeEnum>
 class OpcodeExpr : public ExprMixin<TypeEnum> {
  public:
-  OpcodeExpr(Opcode opcode) : opcode(opcode) {}
+  OpcodeExpr(Opcode opcode, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), opcode(opcode) {}
 
   Opcode opcode;
 };
@@ -210,7 +213,8 @@ typedef OpcodeExpr<ExprType::Unary> UnaryExpr;
 template <ExprType TypeEnum>
 class VarExpr : public ExprMixin<TypeEnum> {
  public:
-  VarExpr(const Var& var) : var(var) {}
+  VarExpr(const Var& var, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), var(var) {}
 
   Var var;
 };
@@ -230,7 +234,8 @@ typedef VarExpr<ExprType::Throw> ThrowExpr;
 template <ExprType TypeEnum>
 class BlockExprBase : public ExprMixin<TypeEnum> {
  public:
-  explicit BlockExprBase(Block* block) : block(block) {}
+  explicit BlockExprBase(Block* block, const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc), block(block) {}
   ~BlockExprBase() { delete block; }
 
   Block* block;
@@ -241,8 +246,13 @@ typedef BlockExprBase<ExprType::Loop> LoopExpr;
 
 class IfExpr : public ExprMixin<ExprType::If> {
  public:
-  explicit IfExpr(Block* true_block, ExprList false_expr = ExprList())
-      : true_(true_block), false_(std::move(false_expr)) {}
+  explicit IfExpr(Block* true_block,
+                  ExprList false_expr = ExprList(),
+                  const Location& loc = Location())
+      : ExprMixin<ExprType::If>(loc),
+        true_(true_block),
+        false_(std::move(false_expr)) {}
+
   ~IfExpr();
 
   Block* true_;
@@ -251,7 +261,8 @@ class IfExpr : public ExprMixin<ExprType::If> {
 
 class TryExpr : public ExprMixin<ExprType::TryBlock> {
  public:
-  TryExpr() : block(nullptr) {}
+  explicit TryExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::TryBlock>(loc), block(nullptr) {}
   ~TryExpr();
 
   Block* block;
@@ -260,8 +271,12 @@ class TryExpr : public ExprMixin<ExprType::TryBlock> {
 
 class BrTableExpr : public ExprMixin<ExprType::BrTable> {
  public:
-  BrTableExpr(VarVector* targets, Var default_target)
-      : targets(targets), default_target(default_target) {}
+  BrTableExpr(VarVector* targets,
+              Var default_target,
+              const Location& loc = Location())
+      : ExprMixin<ExprType::BrTable>(loc),
+        targets(targets),
+        default_target(default_target) {}
   ~BrTableExpr() { delete targets; }
 
   VarVector* targets;
@@ -270,7 +285,8 @@ class BrTableExpr : public ExprMixin<ExprType::BrTable> {
 
 class ConstExpr : public ExprMixin<ExprType::Const> {
  public:
-  ConstExpr(const Const& c) : const_(c) {}
+  ConstExpr(const Const& c, const Location& loc = Location())
+      : ExprMixin<ExprType::Const>(loc), const_(c) {}
 
   Const const_;
 };
@@ -278,8 +294,14 @@ class ConstExpr : public ExprMixin<ExprType::Const> {
 template <ExprType TypeEnum>
 class LoadStoreExpr : public ExprMixin<TypeEnum> {
  public:
-  LoadStoreExpr(Opcode opcode, Address align, uint32_t offset)
-      : opcode(opcode), align(align), offset(offset) {}
+  LoadStoreExpr(Opcode opcode,
+                Address align,
+                uint32_t offset,
+                const Location& loc = Location())
+      : ExprMixin<TypeEnum>(loc),
+        opcode(opcode),
+        align(align),
+        offset(offset) {}
 
   Opcode opcode;
   Address align;
@@ -580,6 +602,21 @@ struct Module {
   Exception* GetExcept(const Var&) const;
   Index GetExceptIndex(const Var&) const;
 
+  // TODO(binji): move this into a builder class?
+  void AppendField(DataSegmentModuleField*);
+  void AppendField(ElemSegmentModuleField*);
+  void AppendField(ExceptionModuleField*);
+  void AppendField(ExportModuleField*);
+  void AppendField(FuncModuleField*);
+  void AppendField(FuncTypeModuleField*);
+  void AppendField(GlobalModuleField*);
+  void AppendField(ImportModuleField*);
+  void AppendField(MemoryModuleField*);
+  void AppendField(StartModuleField*);
+  void AppendField(TableModuleField*);
+  void AppendField(ModuleField*);
+  void AppendFields(ModuleFieldList*);
+
   Location loc;
   std::string name;
   ModuleFieldList fields;
@@ -793,7 +830,8 @@ typedef AssertModuleCommand<CommandType::AssertUnlinkable>
 typedef AssertModuleCommand<CommandType::AssertUninstantiable>
     AssertUninstantiableCommand;
 
-typedef std::vector<std::unique_ptr<Command>> CommandPtrVector;
+typedef std::unique_ptr<Command> CommandPtr;
+typedef std::vector<CommandPtr> CommandPtrVector;
 
 struct Script {
   WABT_DISALLOW_COPY_AND_ASSIGN(Script);

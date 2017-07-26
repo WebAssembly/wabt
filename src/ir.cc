@@ -191,6 +191,187 @@ Index Module::GetFuncTypeIndex(const FuncDeclaration& decl) const {
   }
 }
 
+void Module::AppendField(DataSegmentModuleField* field) {
+  fields.push_back(field);
+  data_segments.push_back(field->data_segment);
+}
+
+void Module::AppendField(ElemSegmentModuleField* field) {
+  fields.push_back(field);
+  elem_segments.push_back(field->elem_segment);
+}
+
+void Module::AppendField(ExceptionModuleField* field) {
+  auto except = field->except;
+  if (!except->name.empty())
+    except_bindings.emplace(except->name, Binding(field->loc, excepts.size()));
+  excepts.push_back(except);
+  fields.push_back(field);
+}
+
+void Module::AppendField(ExportModuleField* field) {
+  // Exported names are allowed to be empty.
+  auto export_ = field->export_;
+  export_bindings.emplace(export_->name, Binding(field->loc, exports.size()));
+  exports.push_back(export_);
+  fields.push_back(field);
+}
+
+void Module::AppendField(FuncModuleField* field) {
+  auto func = field->func;
+  if (!func->name.empty())
+    func_bindings.emplace(func->name, Binding(field->loc, funcs.size()));
+  funcs.push_back(func);
+  fields.push_back(field);
+}
+
+void Module::AppendField(FuncTypeModuleField* field) {
+  auto func_type = field->func_type;
+  if (!func_type->name.empty()) {
+    func_type_bindings.emplace(func_type->name,
+                               Binding(field->loc, func_types.size()));
+  }
+  func_types.push_back(func_type);
+  fields.push_back(field);
+}
+
+void Module::AppendField(GlobalModuleField* field) {
+  auto global = field->global;
+  if (!global->name.empty())
+    global_bindings.emplace(global->name, Binding(field->loc, globals.size()));
+  globals.push_back(global);
+  fields.push_back(field);
+}
+
+void Module::AppendField(ImportModuleField* field) {
+  auto import = field->import;
+  std::string* name = nullptr;
+  BindingHash* bindings = nullptr;
+  Index index = kInvalidIndex;
+
+  switch (import->kind) {
+    case ExternalKind::Func:
+      name = &import->func->name;
+      bindings = &func_bindings;
+      index = funcs.size();
+      funcs.push_back(import->func);
+      ++num_func_imports;
+      break;
+
+    case ExternalKind::Table:
+      name = &import->table->name;
+      bindings = &table_bindings;
+      index = tables.size();
+      tables.push_back(import->table);
+      ++num_table_imports;
+      break;
+
+    case ExternalKind::Memory:
+      name = &import->memory->name;
+      bindings = &memory_bindings;
+      index = memories.size();
+      memories.push_back(import->memory);
+      ++num_memory_imports;
+      break;
+
+    case ExternalKind::Global:
+      name = &import->global->name;
+      bindings = &global_bindings;
+      index = globals.size();
+      globals.push_back(import->global);
+      ++num_global_imports;
+      break;
+
+    case ExternalKind::Except:
+      name = &import->except->name;
+      bindings = &except_bindings;
+      index = excepts.size();
+      excepts.push_back(import->except);
+      ++num_except_imports;
+      break;
+  }
+
+  assert(name && bindings && index != kInvalidIndex);
+  if (!name->empty())
+    bindings->emplace(*name, Binding(field->loc, index));
+  imports.push_back(import);
+  fields.push_back(field);
+}
+
+void Module::AppendField(MemoryModuleField* field) {
+  auto memory = field->memory;
+  if (!memory->name.empty())
+    memory_bindings.emplace(memory->name, Binding(field->loc, memories.size()));
+  memories.push_back(memory);
+  fields.push_back(field);
+}
+
+void Module::AppendField(StartModuleField* field) {
+  fields.push_back(field);
+  start = &field->start;
+}
+
+void Module::AppendField(TableModuleField* field) {
+  auto table = field->table;
+  if (!table->name.empty())
+    table_bindings.emplace(table->name, Binding(field->loc, tables.size()));
+  tables.push_back(table);
+  fields.push_back(field);
+}
+
+void Module::AppendField(ModuleField* field) {
+  switch (field->type) {
+    case ModuleFieldType::Func:
+      AppendField(dyn_cast<FuncModuleField>(field));
+      break;
+
+    case ModuleFieldType::Global:
+      AppendField(dyn_cast<GlobalModuleField>(field));
+      break;
+
+    case ModuleFieldType::Import:
+      AppendField(dyn_cast<ImportModuleField>(field));
+      break;
+
+    case ModuleFieldType::Export:
+      AppendField(dyn_cast<ExportModuleField>(field));
+      break;
+
+    case ModuleFieldType::FuncType:
+      AppendField(dyn_cast<FuncTypeModuleField>(field));
+      break;
+
+    case ModuleFieldType::Table:
+      AppendField(dyn_cast<TableModuleField>(field));
+      break;
+
+    case ModuleFieldType::ElemSegment:
+      AppendField(dyn_cast<ElemSegmentModuleField>(field));
+      break;
+
+    case ModuleFieldType::Memory:
+      AppendField(dyn_cast<MemoryModuleField>(field));
+      break;
+
+    case ModuleFieldType::DataSegment:
+      AppendField(dyn_cast<DataSegmentModuleField>(field));
+      break;
+
+    case ModuleFieldType::Start:
+      AppendField(dyn_cast<StartModuleField>(field));
+      break;
+
+    case ModuleFieldType::Except:
+      AppendField(dyn_cast<ExceptionModuleField>(field));
+      break;
+  }
+}
+
+void Module::AppendFields(ModuleFieldList* fields) {
+  while (!fields->empty())
+    AppendField(fields->extract_front());
+}
+
 const Module* Script::GetFirstModule() const {
   return const_cast<Script*>(this)->GetFirstModule();
 }
@@ -321,6 +502,8 @@ TryExpr::~TryExpr() {
 }
 
 Expr::Expr(ExprType type) : type(type) {}
+
+Expr::Expr(ExprType type, Location loc) : loc(loc), type(type) {}
 
 Table::Table() {
   ZeroMemory(elem_limits);

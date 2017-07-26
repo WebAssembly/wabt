@@ -20,8 +20,10 @@
 #include <cstdio>
 
 #include "cast.h"
+#include "error-handler.h"
 #include "expr-visitor.h"
 #include "ir.h"
+#include "wast-lexer.h"
 #include "wast-parser-lexer-shared.h"
 
 namespace wabt {

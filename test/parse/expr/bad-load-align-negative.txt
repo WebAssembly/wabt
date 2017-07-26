@@ -3,7 +3,7 @@
           i32.const 0 
           i32.load8_s align=-1))
 (;; STDERR ;;;
-out/test/parse/expr/bad-load-align-negative.txt:4:23: error: unexpected token "align=-1"
+out/test/parse/expr/bad-load-align-negative.txt:4:23: error: unexpected token align=-1, expected ).
           i32.load8_s align=-1))
                       ^^^^^^^^
 ;;; STDERR ;;)
