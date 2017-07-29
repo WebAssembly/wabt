@@ -1,0 +1,13 @@
+;;; ERROR: 1
+(module
+  (func
+    (local i32)
+    block
+      unreachable
+      tee_local 0
+    end))
+(;; STDERR ;;;
+out/test/regress/regress-10.txt:7:7: error: type stack at end of block is 1, expected 0
+      tee_local 0
+      ^^^^^^^^^^^
+;;; STDERR ;;)

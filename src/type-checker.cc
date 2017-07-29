@@ -528,10 +528,8 @@ Result TypeChecker::OnTryBlock(const TypeVector* sig) {
 
 Result TypeChecker::OnTeeLocal(Type type) {
   Result result = Result::Ok;
-  Type value = Type::Any;
-  COMBINE_RESULT(result, CheckTypeStackLimit(1, "tee_local"));
-  COMBINE_RESULT(result, TopType(&value));
-  COMBINE_RESULT(result, CheckType(value, type, "tee_local"));
+  COMBINE_RESULT(result, PopAndCheck1Type(type, "tee_local"));
+  PushType(type);
   return result;
 }
 
