@@ -1,0 +1,10 @@
+;;; ERROR: 1
+(module
+  (func (result i32)
+    block (result i32)
+      block
+        unreachable
+        br_if 1
+      end
+      i32.const 1
+    end))

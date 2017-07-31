@@ -292,8 +292,10 @@ Result TypeChecker::OnBrIf(Index depth) {
   COMBINE_RESULT(result, PopAndCheck1Type(Type::I32, "br_if"));
   Label* label;
   CHECK_RESULT(GetLabel(depth, &label));
-  if (label->label_type != LabelType::Loop)
-    COMBINE_RESULT(result, CheckSignature(label->sig, "br_if"));
+  if (label->label_type != LabelType::Loop) {
+    COMBINE_RESULT(result, PopAndCheckSignature(label->sig, "br_if"));
+    PushTypes(label->sig);
+  }
   return result;
 }
 
