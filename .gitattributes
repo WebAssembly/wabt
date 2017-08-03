@@ -17,3 +17,11 @@ demo/third_party/codemirror/codemirror.js binary
 # Mark this test as binary so git doesn't change the line endings, since this
 # test is testing \r\n.
 test/parse/bad-crlf.txt binary
+
+# Highlight tests like .wast files when displayed on GitHub.
+test/**/*.txt linguist-language=WebAssembly
+
+# Mark test-files as "vendored". This tells GitHub to exclude them when it
+# calculates the repository's languages summary, and preserves the current
+# classification as a C++ project. See https://git.io/vr2pO
+test/**/*.txt linguist-vendored
