@@ -113,7 +113,7 @@ This will build and install to the installation directory you provided above.
 
 So, for example, if you want to build the debug configuration on Visual Studio 2015:
 
-```
+```console
 > mkdir build
 > cd build
 > cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_INSTALL_PREFIX=..\bin -G "Visual Studio 14 2015"
