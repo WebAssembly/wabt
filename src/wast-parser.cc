@@ -643,46 +643,20 @@ Result WastParser::ParseScript(Script* script) {
   WABT_TRACE(ParseScript);
   script_ = script;
 
-  if (PeekMatch(TokenType::Lpar)) {
-    switch (PeekAfter()) {
-      case TokenType::Data:
-      case TokenType::Elem:
-      case TokenType::Except:
-      case TokenType::Export:
-      case TokenType::Func:
-      case TokenType::Type:
-      case TokenType::Global:
-      case TokenType::Import:
-      case TokenType::Memory:
-      case TokenType::Start:
-      case TokenType::Table: {
-        auto module = make_unique<Module>();
-        module->loc = GetLocation();
-        CHECK_RESULT(ParseModuleFieldList(module.get()));
-        script->commands.emplace_back(
-            make_unique<ModuleCommand>(module.release()));
-        break;
-      }
-
-      case TokenType::AssertExhaustion:
-      case TokenType::AssertInvalid:
-      case TokenType::AssertMalformed:
-      case TokenType::AssertReturn:
-      case TokenType::AssertReturnArithmeticNan:
-      case TokenType::AssertReturnCanonicalNan:
-      case TokenType::AssertTrap:
-      case TokenType::AssertUnlinkable:
-      case TokenType::Get:
-      case TokenType::Invoke:
-      case TokenType::Module:
-      case TokenType::Register:
-        CHECK_RESULT(ParseCommandList(&script->commands));
-        break;
-
-      default:
-        return ErrorExpected({"a module field", "a command"});
-    }
+  // Don't consume the Lpar yet, even though it is required. This way the
+  // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
+  // the parsing structure more regular.
+  if (IsModuleField(Peek(), PeekAfter())) {
+    // Parse an inline module (i.e. one with no surrounding (module)).
+    auto module = make_unique<Module>();
+    module->loc = GetLocation();
+    CHECK_RESULT(ParseModuleFieldList(module.get()));
+    script->commands.emplace_back(make_unique<ModuleCommand>(module.release()));
+  } else if (IsCommand(Peek(), PeekAfter())) {
+    CHECK_RESULT(ParseCommandList(&script->commands));
   } else {
+    // Consume an Lpar if there is one to produce a better error message.
+    Match(TokenType::Lpar);
     ErrorExpected({"a module field", "a command"});
   }
 
