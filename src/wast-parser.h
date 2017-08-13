@@ -56,6 +56,9 @@ class WastParser {
   bool MatchLpar(TokenType);
   Result Expect(TokenType);
   Token Consume();
+  // Give the Match() function a clearer name when used to optionally consume a
+  // token (used for printing better error messages).
+  void ConsumeIfLpar() { Match(TokenType::Lpar); }
 
   typedef bool SynchronizeFunc(TokenType peek, TokenType peek_after);
   Result Synchronize(SynchronizeFunc);

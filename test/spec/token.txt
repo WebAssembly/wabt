@@ -2,10 +2,7 @@
 ;;; STDIN_FILE: third_party/testsuite/token.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/token.wast:4: assert_malformed passed:
-  out/third_party/testsuite/token/token.0.wast:1:13: error: unexpected token (, expected ).
-  (func (drop (i32.const0)))
-              ^
-  out/third_party/testsuite/token/token.0.wast:1:14: error: unexpected token i32.const0.
+  out/third_party/testsuite/token/token.0.wast:1:14: error: unexpected token "i32.const0", expected an expr.
   (func (drop (i32.const0)))
                ^^^^^^^^^^
 out/third_party/testsuite/token.wast:8: assert_malformed passed:

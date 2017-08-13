@@ -655,8 +655,7 @@ Result WastParser::ParseScript(Script* script) {
   } else if (IsCommand(Peek(), PeekAfter())) {
     CHECK_RESULT(ParseCommandList(&script->commands));
   } else {
-    // Consume an Lpar if there is one to produce a better error message.
-    Match(TokenType::Lpar);
+    ConsumeIfLpar();
     ErrorExpected({"a module field", "a command"});
   }
 
@@ -689,7 +688,10 @@ Result WastParser::ParseModuleField(Module* module) {
     case TokenType::Memory: return ParseMemoryModuleField(module);
     case TokenType::Start:  return ParseStartModuleField(module);
     case TokenType::Table:  return ParseTableModuleField(module);
-    default:                return ErrorExpected({"a module field"});
+    default:
+      assert(
+          !"ParseModuleField should only be called if IsModuleField() is true");
+      return Result::Error;
   }
 }
 
@@ -1152,8 +1154,8 @@ Result WastParser::ParseInstr(ExprList* exprs) {
   } else if (PeekMatchExpr()) {
     return ParseExpr(exprs);
   } else {
-    return ErrorExpected(
-        {"a plain instr", "a block instr", "a parenthesized expr"});
+    assert(!"ParseInstr should only be called when IsInstr() is true");
+    return Result::Error;
   }
 }
 
@@ -1315,7 +1317,9 @@ Result WastParser::ParsePlainInstr(Expr** out_expr) {
       break;
 
     default:
-      return ErrorExpected({"a plain instr"});
+      assert(
+          !"ParsePlainInstr should only be called when IsPlainInstr() is true");
+      return Result::Error;
   }
 
   return Result::Ok;
@@ -1368,8 +1372,8 @@ Result WastParser::ParseConst(Const* const_) {
       break;
 
     default:
-      return ErrorExpected(
-          {"i32.const", "i64.const", "f32.const", "f64.const"});
+      assert(!"ParseConst called with invalid opcode");
+      return Result::Error;
   }
 
   if (Failed(result)) {
@@ -1452,7 +1456,9 @@ Result WastParser::ParseBlockInstr(Expr** out_expr) {
     }
 
     default:
-      return ErrorExpected({"a block instr"});
+      assert(
+          !"ParseBlockInstr should only be called when IsBlockInstr() is true");
+      return Result::Error;
   }
 
   return Result::Ok;
@@ -1514,6 +1520,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
     Expr* expr = nullptr;
     CHECK_RESULT(ParsePlainInstr(&expr));
     CHECK_RESULT(ParseExprList(exprs));
+    CHECK_RESULT(ErrorIfLpar({"an expr"}));
     exprs->push_back(expr);
   } else {
     auto loc = GetLocation();
@@ -1570,6 +1577,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
             CHECK_RESULT(ParseExpr(&false_));
           }
         } else {
+          ConsumeIfLpar();
           return ErrorExpected({"then block"}, "(then ...)");
         }
 
@@ -1596,6 +1604,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
       }
 
       default:
+        assert(!"ParseExpr should only be called when IsExpr() is true");
         return Result::Error;
     }
   }
@@ -1703,7 +1712,8 @@ Result WastParser::ParseCommand(CommandPtr* out_command) {
       return ParseRegisterCommand(out_command);
 
     default:
-      return ErrorExpected({"a command"});
+      assert(!"ParseCommand should only be called when IsCommand() is true");
+      return Result::Error;
   }
 }
 
