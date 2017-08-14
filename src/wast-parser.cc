@@ -1142,14 +1142,14 @@ Result WastParser::ParseTerminatingInstrList(ExprList* exprs) {
 Result WastParser::ParseInstr(ExprList* exprs) {
   WABT_TRACE(ParseInstr);
   if (IsPlainInstr(Peek())) {
-    Expr* expr = nullptr;
+    std::unique_ptr<Expr> expr;
     CHECK_RESULT(ParsePlainInstr(&expr));
-    exprs->push_back(expr);
+    exprs->push_back(expr.release());
     return Result::Ok;
   } else if (IsBlockInstr(Peek())) {
-    Expr* expr = nullptr;
+    std::unique_ptr<Expr> expr;
     CHECK_RESULT(ParseBlockInstr(&expr));
-    exprs->push_back(expr);
+    exprs->push_back(expr.release());
     return Result::Ok;
   } else if (PeekMatchExpr()) {
     return ParseExpr(exprs);
@@ -1160,35 +1160,36 @@ Result WastParser::ParseInstr(ExprList* exprs) {
 }
 
 template <typename T>
-Result WastParser::ParsePlainInstrVar(Location loc, Expr** out_expr) {
+Result WastParser::ParsePlainInstrVar(Location loc,
+                                      std::unique_ptr<Expr>* out_expr) {
   Var var;
   CHECK_RESULT(ParseVar(&var));
-  *out_expr = new T(var, loc);
+  out_expr->reset(new T(var, loc));
   return Result::Ok;
 }
 
-Result WastParser::ParsePlainInstr(Expr** out_expr) {
+Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   WABT_TRACE(ParsePlainInstr);
   auto loc = GetLocation();
   switch (Peek()) {
     case TokenType::Unreachable:
       Consume();
-      *out_expr = new UnreachableExpr(loc);
+      out_expr->reset(new UnreachableExpr(loc));
       break;
 
     case TokenType::Nop:
       Consume();
-      *out_expr = new NopExpr(loc);
+      out_expr->reset(new NopExpr(loc));
       break;
 
     case TokenType::Drop:
       Consume();
-      *out_expr = new DropExpr(loc);
+      out_expr->reset(new DropExpr(loc));
       break;
 
     case TokenType::Select:
       Consume();
-      *out_expr = new SelectExpr(loc);
+      out_expr->reset(new SelectExpr(loc));
       break;
 
     case TokenType::Br:
@@ -1207,13 +1208,13 @@ Result WastParser::ParsePlainInstr(Expr** out_expr) {
       CHECK_RESULT(ParseVarList(var_list.get()));
       Var var = var_list->back();
       var_list->pop_back();
-      *out_expr = new BrTableExpr(var_list.release(), var, loc);
+      out_expr->reset(new BrTableExpr(var_list.release(), var, loc));
       break;
     }
 
     case TokenType::Return:
       Consume();
-      *out_expr = new ReturnExpr(loc);
+      out_expr->reset(new ReturnExpr(loc));
       break;
 
     case TokenType::Call:
@@ -1257,7 +1258,7 @@ Result WastParser::ParsePlainInstr(Expr** out_expr) {
       uint32_t align;
       ParseOffsetOpt(&offset);
       ParseAlignOpt(&align);
-      *out_expr = new LoadExpr(opcode, align, offset, loc);
+      out_expr->reset(new LoadExpr(opcode, align, offset, loc));
       break;
     }
 
@@ -1267,41 +1268,41 @@ Result WastParser::ParsePlainInstr(Expr** out_expr) {
       uint32_t align;
       ParseOffsetOpt(&offset);
       ParseAlignOpt(&align);
-      *out_expr = new StoreExpr(opcode, align, offset, loc);
+      out_expr->reset(new StoreExpr(opcode, align, offset, loc));
       break;
     }
 
     case TokenType::Const: {
       Const const_;
       CHECK_RESULT(ParseConst(&const_));
-      *out_expr = new ConstExpr(const_, loc);
+      out_expr->reset(new ConstExpr(const_, loc));
       break;
     }
 
     case TokenType::Unary:
-      *out_expr = new UnaryExpr(Consume().opcode, loc);
+      out_expr->reset(new UnaryExpr(Consume().opcode, loc));
       break;
 
     case TokenType::Binary:
-      *out_expr = new BinaryExpr(Consume().opcode, loc);
+      out_expr->reset(new BinaryExpr(Consume().opcode, loc));
       break;
 
     case TokenType::Compare:
-      *out_expr = new CompareExpr(Consume().opcode, loc);
+      out_expr->reset(new CompareExpr(Consume().opcode, loc));
       break;
 
     case TokenType::Convert:
-      *out_expr = new ConvertExpr(Consume().opcode, loc);
+      out_expr->reset(new ConvertExpr(Consume().opcode, loc));
       break;
 
     case TokenType::CurrentMemory:
       Consume();
-      *out_expr = new CurrentMemoryExpr(loc);
+      out_expr->reset(new CurrentMemoryExpr(loc));
       break;
 
     case TokenType::GrowMemory:
       Consume();
-      *out_expr = new GrowMemoryExpr(loc);
+      out_expr->reset(new GrowMemoryExpr(loc));
       break;
 
     case TokenType::Throw:
@@ -1396,7 +1397,7 @@ Result WastParser::ParseConstList(ConstVector* consts) {
   return Result::Ok;
 }
 
-Result WastParser::ParseBlockInstr(Expr** out_expr) {
+Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
   WABT_TRACE(ParseBlockInstr);
   auto loc = GetLocation();
 
@@ -1408,7 +1409,7 @@ Result WastParser::ParseBlockInstr(Expr** out_expr) {
       CHECK_RESULT(ParseBlock(block.get()));
       EXPECT(End);
       CHECK_RESULT(ParseEndLabelOpt(block->label));
-      *out_expr = new BlockExpr(block.release(), loc);
+      out_expr->reset(new BlockExpr(block.release(), loc));
       break;
     }
 
@@ -1419,7 +1420,7 @@ Result WastParser::ParseBlockInstr(Expr** out_expr) {
       CHECK_RESULT(ParseBlock(block.get()));
       EXPECT(End);
       CHECK_RESULT(ParseEndLabelOpt(block->label));
-      *out_expr = new LoopExpr(block.release(), loc);
+      out_expr->reset(new LoopExpr(block.release(), loc));
       break;
     }
 
@@ -1435,7 +1436,7 @@ Result WastParser::ParseBlockInstr(Expr** out_expr) {
       }
       EXPECT(End);
       CHECK_RESULT(ParseEndLabelOpt(true_->label));
-      *out_expr = new IfExpr(true_.release(), std::move(false_), loc);
+      out_expr->reset(new IfExpr(true_.release(), std::move(false_), loc));
       break;
     }
 
@@ -1451,7 +1452,7 @@ Result WastParser::ParseBlockInstr(Expr** out_expr) {
       CHECK_RESULT(ErrorIfLpar({"a catch expr"}));
       EXPECT(End);
       CHECK_RESULT(ParseEndLabelOpt(expr->block->label));
-      *out_expr = expr.release();
+      *out_expr = std::move(expr);
       break;
     }
 
@@ -1517,11 +1518,11 @@ Result WastParser::ParseExpr(ExprList* exprs) {
 
   if (IsPlainInstr(PeekAfter())) {
     Consume();
-    Expr* expr = nullptr;
+    std::unique_ptr<Expr> expr;
     CHECK_RESULT(ParsePlainInstr(&expr));
     CHECK_RESULT(ParseExprList(exprs));
     CHECK_RESULT(ErrorIfLpar({"an expr"}));
-    exprs->push_back(expr);
+    exprs->push_back(expr.release());
   } else {
     auto loc = GetLocation();
 

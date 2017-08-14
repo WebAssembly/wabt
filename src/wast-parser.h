@@ -103,10 +103,10 @@ class WastParser {
   Result ParseInstrList(ExprList*);
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
-  Result ParsePlainInstr(Expr**);
+  Result ParsePlainInstr(std::unique_ptr<Expr>*);
   Result ParseConst(Const*);
   Result ParseConstList(ConstVector*);
-  Result ParseBlockInstr(Expr**);
+  Result ParseBlockInstr(std::unique_ptr<Expr>*);
   Result ParseLabelOpt(std::string*);
   Result ParseEndLabelOpt(const std::string&);
   Result ParseBlock(Block*);
@@ -117,7 +117,7 @@ class WastParser {
   Result ParseGlobalType(Global*);
 
   template <typename T>
-  Result ParsePlainInstrVar(Location, Expr**);
+  Result ParsePlainInstrVar(Location, std::unique_ptr<Expr>*);
 
   Result ParseCommandList(CommandPtrVector*);
   Result ParseCommand(CommandPtr*);
