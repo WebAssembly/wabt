@@ -1,10 +1,7 @@
 ;;; ERROR: 1
 (module (func i32.const one-hundred))
 (;; STDERR ;;;
-out/test/parse/expr/bad-const-i32-garbage.txt:2:25: error: unexpected token "one-hundred"
+out/test/parse/expr/bad-const-i32-garbage.txt:2:25: error: unexpected token "one-hundred", expected a numeric literal (e.g. 123, -45, 6.7e8).
 (module (func i32.const one-hundred))
                         ^^^^^^^^^^^
-out/test/parse/expr/bad-const-i32-garbage.txt:2:36: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-(module (func i32.const one-hundred))
-                                   ^
 ;;; STDERR ;;)

@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -119,6 +120,11 @@ void Destruct(T& placement) {
   placement.~T();
 }
 
+template <typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args&&... args) {
+  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+}
+
 // Calls data() on vector, string, etc. but will return nullptr if the
 // container is empty.
 // TODO(binji): this should probably be removed when there is a more direct way
@@ -166,6 +172,11 @@ struct Location {
   };
 
   Location() : line(0), first_column(0), last_column(0) {}
+  Location(const char* filename, int line, int first_column, int last_column)
+      : filename(filename),
+        line(line),
+        first_column(first_column),
+        last_column(last_column) {}
   explicit Location(size_t offset) : offset(offset) {}
 
   const char* filename = nullptr;

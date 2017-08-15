@@ -1,13 +1,10 @@
 ;;; ERROR: 1
 (foo bar)
 (;; STDERR ;;;
-out/test/parse/bad-toplevel.txt:2:2: error: unexpected token "foo"
+out/test/parse/bad-toplevel.txt:2:2: error: unexpected token "foo", expected a module field or a command.
 (foo bar)
  ^^^
-out/test/parse/bad-toplevel.txt:2:6: error: unexpected token "bar"
+out/test/parse/bad-toplevel.txt:2:6: error: unexpected token bar, expected EOF.
 (foo bar)
      ^^^
-out/test/parse/bad-toplevel.txt:2:9: error: syntax error, unexpected )
-(foo bar)
-        ^
 ;;; STDERR ;;)

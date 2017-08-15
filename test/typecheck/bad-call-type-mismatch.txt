@@ -7,5 +7,5 @@
 (;; STDERR ;;;
 out/test/typecheck/bad-call-type-mismatch.txt:6:5: error: type mismatch in call, expected i32 but got i64.
     call 0))
-    ^^^^^^
+    ^^^^
 ;;; STDERR ;;)

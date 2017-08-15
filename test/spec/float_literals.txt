@@ -2,536 +2,308 @@
 ;;; STDIN_FILE: third_party/testsuite/float_literals.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/float_literals.wast:184: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.1.wast:1:24: error: unexpected token "_100"
+  out/third_party/testsuite/float_literals/float_literals.1.wast:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _100))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.1.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const _100))
-                             ^
 out/third_party/testsuite/float_literals.wast:188: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.2.wast:1:24: error: unexpected token "+_100"
+  out/third_party/testsuite/float_literals/float_literals.2.wast:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const +_100))
                          ^^^^^
-  out/third_party/testsuite/float_literals/float_literals.2.wast:1:29: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const +_100))
-                              ^
 out/third_party/testsuite/float_literals.wast:192: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.3.wast:1:24: error: unexpected token "-_100"
+  out/third_party/testsuite/float_literals/float_literals.3.wast:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const -_100))
                          ^^^^^
-  out/third_party/testsuite/float_literals/float_literals.3.wast:1:29: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const -_100))
-                              ^
 out/third_party/testsuite/float_literals.wast:196: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.4.wast:1:24: error: unexpected token "99_"
+  out/third_party/testsuite/float_literals/float_literals.4.wast:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 99_))
                          ^^^
-  out/third_party/testsuite/float_literals/float_literals.4.wast:1:27: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 99_))
-                            ^
 out/third_party/testsuite/float_literals.wast:200: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.5.wast:1:24: error: unexpected token "1__000"
+  out/third_party/testsuite/float_literals/float_literals.5.wast:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1__000))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.5.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1__000))
-                               ^
 out/third_party/testsuite/float_literals.wast:204: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.6.wast:1:24: error: unexpected token "_1.0"
+  out/third_party/testsuite/float_literals/float_literals.6.wast:1:24: error: unexpected token "_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _1.0))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.6.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const _1.0))
-                             ^
 out/third_party/testsuite/float_literals.wast:208: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.7.wast:1:24: error: unexpected token "1.0_"
+  out/third_party/testsuite/float_literals/float_literals.7.wast:1:24: error: unexpected token "1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0_))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.7.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1.0_))
-                             ^
 out/third_party/testsuite/float_literals.wast:212: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.8.wast:1:24: error: unexpected token "1_.0"
+  out/third_party/testsuite/float_literals/float_literals.8.wast:1:24: error: unexpected token "1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1_.0))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.8.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1_.0))
-                             ^
 out/third_party/testsuite/float_literals.wast:216: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.9.wast:1:24: error: unexpected token "1._0"
+  out/third_party/testsuite/float_literals/float_literals.9.wast:1:24: error: unexpected token "1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1._0))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.9.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1._0))
-                             ^
 out/third_party/testsuite/float_literals.wast:220: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.10.wast:1:24: error: unexpected token "_1e1"
+  out/third_party/testsuite/float_literals/float_literals.10.wast:1:24: error: unexpected token "_1e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _1e1))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.10.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const _1e1))
-                             ^
 out/third_party/testsuite/float_literals.wast:224: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.11.wast:1:24: error: unexpected token "1e1_"
+  out/third_party/testsuite/float_literals/float_literals.11.wast:1:24: error: unexpected token "1e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1e1_))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.11.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1e1_))
-                             ^
 out/third_party/testsuite/float_literals.wast:228: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.12.wast:1:24: error: unexpected token "1_e1"
+  out/third_party/testsuite/float_literals/float_literals.12.wast:1:24: error: unexpected token "1_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1_e1))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.12.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1_e1))
-                             ^
 out/third_party/testsuite/float_literals.wast:232: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.13.wast:1:24: error: unexpected token "1e_1"
+  out/third_party/testsuite/float_literals/float_literals.13.wast:1:24: error: unexpected token "1e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1e_1))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.13.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1e_1))
-                             ^
 out/third_party/testsuite/float_literals.wast:236: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.14.wast:1:24: error: unexpected token "_1.0e1"
+  out/third_party/testsuite/float_literals/float_literals.14.wast:1:24: error: unexpected token "_1.0e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _1.0e1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.14.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const _1.0e1))
-                               ^
 out/third_party/testsuite/float_literals.wast:240: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.15.wast:1:24: error: unexpected token "1.0e1_"
+  out/third_party/testsuite/float_literals/float_literals.15.wast:1:24: error: unexpected token "1.0e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0e1_))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.15.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1.0e1_))
-                               ^
 out/third_party/testsuite/float_literals.wast:244: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.16.wast:1:24: error: unexpected token "1.0_e1"
+  out/third_party/testsuite/float_literals/float_literals.16.wast:1:24: error: unexpected token "1.0_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0_e1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.16.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1.0_e1))
-                               ^
 out/third_party/testsuite/float_literals.wast:248: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.17.wast:1:24: error: unexpected token "1.0e_1"
+  out/third_party/testsuite/float_literals/float_literals.17.wast:1:24: error: unexpected token "1.0e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0e_1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.17.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1.0e_1))
-                               ^
 out/third_party/testsuite/float_literals.wast:252: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.18.wast:1:24: error: unexpected token "1.0e+_1"
+  out/third_party/testsuite/float_literals/float_literals.18.wast:1:24: error: unexpected token "1.0e+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0e+_1))
                          ^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.18.wast:1:31: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1.0e+_1))
-                                ^
 out/third_party/testsuite/float_literals.wast:256: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.19.wast:1:24: error: unexpected token "1.0e_+1"
+  out/third_party/testsuite/float_literals/float_literals.19.wast:1:24: error: unexpected token "1.0e_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0e_+1))
                          ^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.19.wast:1:31: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 1.0e_+1))
-                                ^
 out/third_party/testsuite/float_literals.wast:260: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.20.wast:1:24: error: unexpected token "_0x100"
+  out/third_party/testsuite/float_literals/float_literals.20.wast:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _0x100))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.20.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const _0x100))
-                               ^
 out/third_party/testsuite/float_literals.wast:264: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.21.wast:1:24: error: unexpected token "0_x100"
+  out/third_party/testsuite/float_literals/float_literals.21.wast:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0_x100))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.21.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0_x100))
-                               ^
 out/third_party/testsuite/float_literals.wast:268: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.22.wast:1:24: error: unexpected token "0x_100"
+  out/third_party/testsuite/float_literals/float_literals.22.wast:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x_100))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.22.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x_100))
-                               ^
 out/third_party/testsuite/float_literals.wast:272: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.23.wast:1:24: error: unexpected token "0x00_"
+  out/third_party/testsuite/float_literals/float_literals.23.wast:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x00_))
                          ^^^^^
-  out/third_party/testsuite/float_literals/float_literals.23.wast:1:29: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x00_))
-                              ^
 out/third_party/testsuite/float_literals.wast:276: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.24.wast:1:24: error: unexpected token "0xff__ffff"
+  out/third_party/testsuite/float_literals/float_literals.24.wast:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0xff__ffff))
                          ^^^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.24.wast:1:34: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0xff__ffff))
-                                   ^
 out/third_party/testsuite/float_literals.wast:280: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.25.wast:1:24: error: unexpected token "0x_1.0"
+  out/third_party/testsuite/float_literals/float_literals.25.wast:1:24: error: unexpected token "0x_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x_1.0))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.25.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x_1.0))
-                               ^
 out/third_party/testsuite/float_literals.wast:284: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.26.wast:1:24: error: unexpected token "0x1.0_"
+  out/third_party/testsuite/float_literals/float_literals.26.wast:1:24: error: unexpected token "0x1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0_))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.26.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1.0_))
-                               ^
 out/third_party/testsuite/float_literals.wast:288: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.27.wast:1:24: error: unexpected token "0x1_.0"
+  out/third_party/testsuite/float_literals/float_literals.27.wast:1:24: error: unexpected token "0x1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1_.0))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.27.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1_.0))
-                               ^
 out/third_party/testsuite/float_literals.wast:292: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.28.wast:1:24: error: unexpected token "0x1._0"
+  out/third_party/testsuite/float_literals/float_literals.28.wast:1:24: error: unexpected token "0x1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1._0))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.28.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1._0))
-                               ^
 out/third_party/testsuite/float_literals.wast:296: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.29.wast:1:24: error: unexpected token "0x_1p1"
+  out/third_party/testsuite/float_literals/float_literals.29.wast:1:24: error: unexpected token "0x_1p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x_1p1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.29.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x_1p1))
-                               ^
 out/third_party/testsuite/float_literals.wast:300: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.30.wast:1:24: error: unexpected token "0x1p1_"
+  out/third_party/testsuite/float_literals/float_literals.30.wast:1:24: error: unexpected token "0x1p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1p1_))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.30.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1p1_))
-                               ^
 out/third_party/testsuite/float_literals.wast:304: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.31.wast:1:24: error: unexpected token "0x1_p1"
+  out/third_party/testsuite/float_literals/float_literals.31.wast:1:24: error: unexpected token "0x1_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1_p1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.31.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1_p1))
-                               ^
 out/third_party/testsuite/float_literals.wast:308: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.32.wast:1:24: error: unexpected token "0x1p_1"
+  out/third_party/testsuite/float_literals/float_literals.32.wast:1:24: error: unexpected token "0x1p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1p_1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.32.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1p_1))
-                               ^
 out/third_party/testsuite/float_literals.wast:312: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.33.wast:1:24: error: unexpected token "0x_1.0p1"
+  out/third_party/testsuite/float_literals/float_literals.33.wast:1:24: error: unexpected token "0x_1.0p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x_1.0p1))
                          ^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.33.wast:1:32: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x_1.0p1))
-                                 ^
 out/third_party/testsuite/float_literals.wast:316: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.34.wast:1:24: error: unexpected token "0x1.0p1_"
+  out/third_party/testsuite/float_literals/float_literals.34.wast:1:24: error: unexpected token "0x1.0p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0p1_))
                          ^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.34.wast:1:32: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1.0p1_))
-                                 ^
 out/third_party/testsuite/float_literals.wast:320: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.35.wast:1:24: error: unexpected token "0x1.0_p1"
+  out/third_party/testsuite/float_literals/float_literals.35.wast:1:24: error: unexpected token "0x1.0_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0_p1))
                          ^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.35.wast:1:32: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1.0_p1))
-                                 ^
 out/third_party/testsuite/float_literals.wast:324: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.36.wast:1:24: error: unexpected token "0x1.0p_1"
+  out/third_party/testsuite/float_literals/float_literals.36.wast:1:24: error: unexpected token "0x1.0p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0p_1))
                          ^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.36.wast:1:32: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1.0p_1))
-                                 ^
 out/third_party/testsuite/float_literals.wast:328: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.37.wast:1:24: error: unexpected token "0x1.0p+_1"
+  out/third_party/testsuite/float_literals/float_literals.37.wast:1:24: error: unexpected token "0x1.0p+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0p+_1))
                          ^^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.37.wast:1:33: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1.0p+_1))
-                                  ^
 out/third_party/testsuite/float_literals.wast:332: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.38.wast:1:24: error: unexpected token "0x1.0p_+1"
+  out/third_party/testsuite/float_literals/float_literals.38.wast:1:24: error: unexpected token "0x1.0p_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0p_+1))
                          ^^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.38.wast:1:33: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f32 (f32.const 0x1.0p_+1))
-                                  ^
 out/third_party/testsuite/float_literals.wast:337: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.39.wast:1:24: error: unexpected token "_100"
+  out/third_party/testsuite/float_literals/float_literals.39.wast:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _100))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.39.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const _100))
-                             ^
 out/third_party/testsuite/float_literals.wast:341: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.40.wast:1:24: error: unexpected token "+_100"
+  out/third_party/testsuite/float_literals/float_literals.40.wast:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const +_100))
                          ^^^^^
-  out/third_party/testsuite/float_literals/float_literals.40.wast:1:29: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const +_100))
-                              ^
 out/third_party/testsuite/float_literals.wast:345: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.41.wast:1:24: error: unexpected token "-_100"
+  out/third_party/testsuite/float_literals/float_literals.41.wast:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const -_100))
                          ^^^^^
-  out/third_party/testsuite/float_literals/float_literals.41.wast:1:29: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const -_100))
-                              ^
 out/third_party/testsuite/float_literals.wast:349: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.42.wast:1:24: error: unexpected token "99_"
+  out/third_party/testsuite/float_literals/float_literals.42.wast:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 99_))
                          ^^^
-  out/third_party/testsuite/float_literals/float_literals.42.wast:1:27: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 99_))
-                            ^
 out/third_party/testsuite/float_literals.wast:353: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.43.wast:1:24: error: unexpected token "1__000"
+  out/third_party/testsuite/float_literals/float_literals.43.wast:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1__000))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.43.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1__000))
-                               ^
 out/third_party/testsuite/float_literals.wast:357: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.44.wast:1:24: error: unexpected token "_1.0"
+  out/third_party/testsuite/float_literals/float_literals.44.wast:1:24: error: unexpected token "_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _1.0))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.44.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const _1.0))
-                             ^
 out/third_party/testsuite/float_literals.wast:361: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.45.wast:1:24: error: unexpected token "1.0_"
+  out/third_party/testsuite/float_literals/float_literals.45.wast:1:24: error: unexpected token "1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0_))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.45.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1.0_))
-                             ^
 out/third_party/testsuite/float_literals.wast:365: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.46.wast:1:24: error: unexpected token "1_.0"
+  out/third_party/testsuite/float_literals/float_literals.46.wast:1:24: error: unexpected token "1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1_.0))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.46.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1_.0))
-                             ^
 out/third_party/testsuite/float_literals.wast:369: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.47.wast:1:24: error: unexpected token "1._0"
+  out/third_party/testsuite/float_literals/float_literals.47.wast:1:24: error: unexpected token "1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1._0))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.47.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1._0))
-                             ^
 out/third_party/testsuite/float_literals.wast:373: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.48.wast:1:24: error: unexpected token "_1e1"
+  out/third_party/testsuite/float_literals/float_literals.48.wast:1:24: error: unexpected token "_1e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _1e1))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.48.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const _1e1))
-                             ^
 out/third_party/testsuite/float_literals.wast:377: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.49.wast:1:24: error: unexpected token "1e1_"
+  out/third_party/testsuite/float_literals/float_literals.49.wast:1:24: error: unexpected token "1e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1e1_))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.49.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1e1_))
-                             ^
 out/third_party/testsuite/float_literals.wast:381: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.50.wast:1:24: error: unexpected token "1_e1"
+  out/third_party/testsuite/float_literals/float_literals.50.wast:1:24: error: unexpected token "1_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1_e1))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.50.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1_e1))
-                             ^
 out/third_party/testsuite/float_literals.wast:385: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.51.wast:1:24: error: unexpected token "1e_1"
+  out/third_party/testsuite/float_literals/float_literals.51.wast:1:24: error: unexpected token "1e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1e_1))
                          ^^^^
-  out/third_party/testsuite/float_literals/float_literals.51.wast:1:28: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1e_1))
-                             ^
 out/third_party/testsuite/float_literals.wast:389: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.52.wast:1:24: error: unexpected token "_1.0e1"
+  out/third_party/testsuite/float_literals/float_literals.52.wast:1:24: error: unexpected token "_1.0e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _1.0e1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.52.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const _1.0e1))
-                               ^
 out/third_party/testsuite/float_literals.wast:393: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.53.wast:1:24: error: unexpected token "1.0e1_"
+  out/third_party/testsuite/float_literals/float_literals.53.wast:1:24: error: unexpected token "1.0e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0e1_))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.53.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1.0e1_))
-                               ^
 out/third_party/testsuite/float_literals.wast:397: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.54.wast:1:24: error: unexpected token "1.0_e1"
+  out/third_party/testsuite/float_literals/float_literals.54.wast:1:24: error: unexpected token "1.0_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0_e1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.54.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1.0_e1))
-                               ^
 out/third_party/testsuite/float_literals.wast:401: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.55.wast:1:24: error: unexpected token "1.0e_1"
+  out/third_party/testsuite/float_literals/float_literals.55.wast:1:24: error: unexpected token "1.0e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0e_1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.55.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1.0e_1))
-                               ^
 out/third_party/testsuite/float_literals.wast:405: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.56.wast:1:24: error: unexpected token "1.0e+_1"
+  out/third_party/testsuite/float_literals/float_literals.56.wast:1:24: error: unexpected token "1.0e+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0e+_1))
                          ^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.56.wast:1:31: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1.0e+_1))
-                                ^
 out/third_party/testsuite/float_literals.wast:409: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.57.wast:1:24: error: unexpected token "1.0e_+1"
+  out/third_party/testsuite/float_literals/float_literals.57.wast:1:24: error: unexpected token "1.0e_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0e_+1))
                          ^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.57.wast:1:31: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 1.0e_+1))
-                                ^
 out/third_party/testsuite/float_literals.wast:413: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.58.wast:1:24: error: unexpected token "_0x100"
+  out/third_party/testsuite/float_literals/float_literals.58.wast:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _0x100))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.58.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const _0x100))
-                               ^
 out/third_party/testsuite/float_literals.wast:417: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.59.wast:1:24: error: unexpected token "0_x100"
+  out/third_party/testsuite/float_literals/float_literals.59.wast:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0_x100))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.59.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0_x100))
-                               ^
 out/third_party/testsuite/float_literals.wast:421: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.60.wast:1:24: error: unexpected token "0x_100"
+  out/third_party/testsuite/float_literals/float_literals.60.wast:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x_100))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.60.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x_100))
-                               ^
 out/third_party/testsuite/float_literals.wast:425: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.61.wast:1:24: error: unexpected token "0x00_"
+  out/third_party/testsuite/float_literals/float_literals.61.wast:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x00_))
                          ^^^^^
-  out/third_party/testsuite/float_literals/float_literals.61.wast:1:29: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x00_))
-                              ^
 out/third_party/testsuite/float_literals.wast:429: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.62.wast:1:24: error: unexpected token "0xff__ffff"
+  out/third_party/testsuite/float_literals/float_literals.62.wast:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0xff__ffff))
                          ^^^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.62.wast:1:34: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0xff__ffff))
-                                   ^
 out/third_party/testsuite/float_literals.wast:433: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.63.wast:1:24: error: unexpected token "0x_1.0"
+  out/third_party/testsuite/float_literals/float_literals.63.wast:1:24: error: unexpected token "0x_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x_1.0))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.63.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x_1.0))
-                               ^
 out/third_party/testsuite/float_literals.wast:437: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.64.wast:1:24: error: unexpected token "0x1.0_"
+  out/third_party/testsuite/float_literals/float_literals.64.wast:1:24: error: unexpected token "0x1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0_))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.64.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1.0_))
-                               ^
 out/third_party/testsuite/float_literals.wast:441: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.65.wast:1:24: error: unexpected token "0x1_.0"
+  out/third_party/testsuite/float_literals/float_literals.65.wast:1:24: error: unexpected token "0x1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1_.0))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.65.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1_.0))
-                               ^
 out/third_party/testsuite/float_literals.wast:445: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.66.wast:1:24: error: unexpected token "0x1._0"
+  out/third_party/testsuite/float_literals/float_literals.66.wast:1:24: error: unexpected token "0x1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1._0))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.66.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1._0))
-                               ^
 out/third_party/testsuite/float_literals.wast:449: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.67.wast:1:24: error: unexpected token "0x_1p1"
+  out/third_party/testsuite/float_literals/float_literals.67.wast:1:24: error: unexpected token "0x_1p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x_1p1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.67.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x_1p1))
-                               ^
 out/third_party/testsuite/float_literals.wast:453: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.68.wast:1:24: error: unexpected token "0x1p1_"
+  out/third_party/testsuite/float_literals/float_literals.68.wast:1:24: error: unexpected token "0x1p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1p1_))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.68.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1p1_))
-                               ^
 out/third_party/testsuite/float_literals.wast:457: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.69.wast:1:24: error: unexpected token "0x1_p1"
+  out/third_party/testsuite/float_literals/float_literals.69.wast:1:24: error: unexpected token "0x1_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1_p1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.69.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1_p1))
-                               ^
 out/third_party/testsuite/float_literals.wast:461: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.70.wast:1:24: error: unexpected token "0x1p_1"
+  out/third_party/testsuite/float_literals/float_literals.70.wast:1:24: error: unexpected token "0x1p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1p_1))
                          ^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.70.wast:1:30: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1p_1))
-                               ^
 out/third_party/testsuite/float_literals.wast:465: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.71.wast:1:24: error: unexpected token "0x_1.0p1"
+  out/third_party/testsuite/float_literals/float_literals.71.wast:1:24: error: unexpected token "0x_1.0p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x_1.0p1))
                          ^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.71.wast:1:32: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x_1.0p1))
-                                 ^
 out/third_party/testsuite/float_literals.wast:469: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.72.wast:1:24: error: unexpected token "0x1.0p1_"
+  out/third_party/testsuite/float_literals/float_literals.72.wast:1:24: error: unexpected token "0x1.0p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p1_))
                          ^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.72.wast:1:32: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1.0p1_))
-                                 ^
 out/third_party/testsuite/float_literals.wast:473: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.73.wast:1:24: error: unexpected token "0x1.0_p1"
+  out/third_party/testsuite/float_literals/float_literals.73.wast:1:24: error: unexpected token "0x1.0_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0_p1))
                          ^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.73.wast:1:32: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1.0_p1))
-                                 ^
 out/third_party/testsuite/float_literals.wast:477: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.74.wast:1:24: error: unexpected token "0x1.0p_1"
+  out/third_party/testsuite/float_literals/float_literals.74.wast:1:24: error: unexpected token "0x1.0p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p_1))
                          ^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.74.wast:1:32: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1.0p_1))
-                                 ^
 out/third_party/testsuite/float_literals.wast:481: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.75.wast:1:24: error: unexpected token "0x1.0p+_1"
+  out/third_party/testsuite/float_literals/float_literals.75.wast:1:24: error: unexpected token "0x1.0p+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p+_1))
                          ^^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.75.wast:1:33: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1.0p+_1))
-                                  ^
 out/third_party/testsuite/float_literals.wast:485: assert_malformed passed:
-  out/third_party/testsuite/float_literals/float_literals.76.wast:1:24: error: unexpected token "0x1.0p_+1"
+  out/third_party/testsuite/float_literals/float_literals.76.wast:1:24: error: unexpected token "0x1.0p_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p_+1))
                          ^^^^^^^^^
-  out/third_party/testsuite/float_literals/float_literals.76.wast:1:33: error: syntax error, unexpected ), expecting NAT or INT or FLOAT
-  (global f64 (f64.const 0x1.0p_+1))
-                                  ^
 156/156 tests passed.
 ;;; STDOUT ;;)

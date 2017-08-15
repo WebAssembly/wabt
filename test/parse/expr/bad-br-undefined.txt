@@ -3,5 +3,5 @@
 (;; STDERR ;;;
 out/test/parse/expr/bad-br-undefined.txt:2:15: error: invalid depth: 1 (max 0)
 (module (func br 1))
-              ^^^^
+              ^^
 ;;; STDERR ;;)

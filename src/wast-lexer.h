@@ -28,12 +28,143 @@
 
 namespace wabt {
 
-union Token;
-struct WastParser;
+class ErrorHandler;
 class LexerSource;
+class WastParser;
+
+struct StringTerminal {
+  StringTerminal() = default;
+  StringTerminal(const char* data, size_t size) : data(data), size(size) {}
+
+  const char* data;
+  size_t size;
+
+  // Helper functions.
+  std::string to_string() const { return std::string(data, size); }
+  string_view to_string_view() const { return string_view(data, size); }
+};
+
+struct LiteralTerminal {
+  LiteralTerminal() = default;
+  LiteralTerminal(LiteralType type, StringTerminal text)
+      : type(type), text(text) {}
+
+  LiteralType type;
+  StringTerminal text;
+};
+
+enum class TokenType {
+  Invalid,
+  Reserved,
+  Eof,
+  Lpar,
+  Rpar,
+  Nat,
+  Int,
+  Float,
+  Text,
+  Var,
+  ValueType,
+  Anyfunc,
+  Mut,
+  Nop,
+  Drop,
+  Block,
+  End,
+  If,
+  Then,
+  Else,
+  Loop,
+  Br,
+  BrIf,
+  BrTable,
+  Try,
+  Catch,
+  CatchAll,
+  Throw,
+  Rethrow,
+  Call,
+  CallIndirect,
+  Return,
+  GetLocal,
+  SetLocal,
+  TeeLocal,
+  GetGlobal,
+  SetGlobal,
+  Load,
+  Store,
+  OffsetEqNat,
+  AlignEqNat,
+  Const,
+  Unary,
+  Binary,
+  Compare,
+  Convert,
+  Select,
+  Unreachable,
+  CurrentMemory,
+  GrowMemory,
+  Func,
+  Start,
+  Type,
+  Param,
+  Result,
+  Local,
+  Global,
+  Table,
+  Elem,
+  Memory,
+  Data,
+  Offset,
+  Import,
+  Export,
+  Except,
+  Module,
+  Bin,
+  Quote,
+  Register,
+  Invoke,
+  Get,
+  AssertMalformed,
+  AssertInvalid,
+  AssertUnlinkable,
+  AssertReturn,
+  AssertReturnCanonicalNan,
+  AssertReturnArithmeticNan,
+  AssertTrap,
+  AssertExhaustion,
+
+  First = Invalid,
+  Last = AssertExhaustion,
+};
+
+const char* GetTokenTypeName(TokenType);
+
+struct Token {
+  Token() : token_type(TokenType::Invalid) {}
+  Token(Location, TokenType);
+  Token(Location, TokenType, Type);
+  Token(Location, TokenType, StringTerminal);
+  Token(Location, TokenType, Opcode);
+  Token(Location, TokenType, LiteralTerminal);
+
+  Location loc;
+  TokenType token_type;
+
+  union {
+    StringTerminal text;
+    Type type;
+    Opcode opcode;
+    LiteralTerminal literal;
+  };
+
+  std::string to_string() const;
+};
 
 class WastLexer {
  public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
+
   WastLexer(std::unique_ptr<LexerSource> source, const char* filename);
   ~WastLexer();
 
@@ -43,14 +174,17 @@ class WastLexer {
                                                       const void* data,
                                                       size_t size);
 
-  int GetToken(Token* lval, Location* loc, WastParser* parser);
-  Result Fill(Location* loc, WastParser* parser, size_t need);
+  Token GetToken(WastParser* parser);
+  Result Fill(size_t need);
 
+  // TODO(binji): Move this out of the lexer.
   LexerSourceLineFinder& line_finder() { return line_finder_; }
 
  private:
-  struct Lookahead;
-  struct LexToken;
+  Location GetLocation();
+  LiteralTerminal MakeLiteral(LiteralType);
+  StringTerminal GetText(size_t at = 0);
+
   std::unique_ptr<LexerSource> source_;
   LexerSourceLineFinder line_finder_;
   const char* filename_;
@@ -58,8 +192,6 @@ class WastLexer {
   int comment_nesting_;
   size_t buffer_file_offset_; // File offset of the start of the buffer.
   size_t line_file_offset_;   // File offset of the start of the current line.
-  Lookahead* lookahead_;
-  LexToken* token_;
 
   // Lexing data needed by re2c.
   bool eof_;
@@ -69,20 +201,6 @@ class WastLexer {
   char* next_pos_;
   char* cursor_;
   char* limit_;
-
-  bool IsLookaheadLpar();
-  int PopLookaheadToken(Token* lval, Location* loc);
-  void PushLookaheadToken();
-  void SetLiteral(LiteralType typ);
-  void SetLocation(Location* Loc);
-  void SetLookaheadToken(int value);
-  void SetOpcode(Opcode opc);
-  void SetText();
-  void SetTextAt(size_t offset);
-  void SetToken(int value);
-  void SetType(Type ty);
-
-  WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 };
 
 }  // namespace wabt

@@ -235,7 +235,7 @@ static interpreter::Result RunStartFunction(Thread* thread,
 }
 
 static interpreter::Result RunExport(Thread* thread,
-                                     const Export* export_,
+                                     const interpreter::Export* export_,
                                      const std::vector<TypedValue>& args,
                                      std::vector<TypedValue>* out_results) {
   if (s_trace) {
@@ -248,12 +248,12 @@ static interpreter::Result RunExport(Thread* thread,
 }
 
 static interpreter::Result RunExportByName(Thread* thread,
-                                           Module* module,
+                                           interpreter::Module* module,
                                            string_view name,
                                            const std::vector<TypedValue>& args,
                                            std::vector<TypedValue>* out_results,
                                            RunVerbosity verbose) {
-  Export* export_ = module->GetExport(name);
+  interpreter::Export* export_ = module->GetExport(name);
   if (!export_)
     return interpreter::Result::UnknownExport;
   if (export_->kind != ExternalKind::Func)
@@ -263,27 +263,27 @@ static interpreter::Result RunExportByName(Thread* thread,
 
 static interpreter::Result GetGlobalExportByName(
     Thread* thread,
-    Module* module,
+    interpreter::Module* module,
     string_view name,
     std::vector<TypedValue>* out_results) {
-  Export* export_ = module->GetExport(name);
+  interpreter::Export* export_ = module->GetExport(name);
   if (!export_)
     return interpreter::Result::UnknownExport;
   if (export_->kind != ExternalKind::Global)
     return interpreter::Result::ExportKindMismatch;
 
-  Global* global = thread->env()->GetGlobal(export_->index);
+  interpreter::Global* global = thread->env()->GetGlobal(export_->index);
   out_results->clear();
   out_results->push_back(global->typed_value);
   return interpreter::Result::Ok;
 }
 
-static void RunAllExports(Module* module,
+static void RunAllExports(interpreter::Module* module,
                           Thread* thread,
                           RunVerbosity verbose) {
   std::vector<TypedValue> args;
   std::vector<TypedValue> results;
-  for (const Export& export_ : module->exports) {
+  for (const interpreter::Export& export_ : module->exports) {
     interpreter::Result iresult = RunExport(thread, &export_, args, &results);
     if (verbose == RunVerbosity::Verbose) {
       PrintCall(string_view(), export_.name, args, results, iresult);
@@ -314,13 +314,14 @@ static wabt::Result ReadModule(const char* module_filename,
   return result;
 }
 
-static interpreter::Result DefaultHostCallback(const HostFunc* func,
-                                               const FuncSignature* sig,
-                                               Index num_args,
-                                               TypedValue* args,
-                                               Index num_results,
-                                               TypedValue* out_results,
-                                               void* user_data) {
+static interpreter::Result DefaultHostCallback(
+    const HostFunc* func,
+    const interpreter::FuncSignature* sig,
+    Index num_args,
+    TypedValue* args,
+    Index num_results,
+    TypedValue* out_results,
+    void* user_data) {
   memset(out_results, 0, sizeof(TypedValue) * num_results);
   for (Index i = 0; i < num_results; ++i)
     out_results[i].type = sig->result_types[i];
@@ -341,9 +342,9 @@ static interpreter::Result DefaultHostCallback(const HostFunc* func,
 
 class SpectestHostImportDelegate : public HostImportDelegate {
  public:
-  wabt::Result ImportFunc(Import* import,
-                          Func* func,
-                          FuncSignature* func_sig,
+  wabt::Result ImportFunc(interpreter::Import* import,
+                          interpreter::Func* func,
+                          interpreter::FuncSignature* func_sig,
                           const ErrorCallback& callback) override {
     if (import->field_name == "print") {
       func->as_host()->callback = DefaultHostCallback;
@@ -355,8 +356,8 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportTable(Import* import,
-                           Table* table,
+  wabt::Result ImportTable(interpreter::Import* import,
+                           interpreter::Table* table,
                            const ErrorCallback& callback) override {
     if (import->field_name == "table") {
       table->limits.has_max = true;
@@ -370,8 +371,8 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportMemory(Import* import,
-                            Memory* memory,
+  wabt::Result ImportMemory(interpreter::Import* import,
+                            interpreter::Memory* memory,
                             const ErrorCallback& callback) override {
     if (import->field_name == "memory") {
       memory->page_limits.has_max = true;
@@ -386,8 +387,8 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportGlobal(Import* import,
-                            Global* global,
+  wabt::Result ImportGlobal(interpreter::Import* import,
+                            interpreter::Global* global,
                             const ErrorCallback& callback) override {
     if (import->field_name == "global") {
       switch (global->typed_value.type) {
@@ -464,7 +465,7 @@ enum class ActionType {
 };
 
 struct Action {
-  ActionType type = ActionType::Invoke;
+  ::ActionType type = ::ActionType::Invoke;
   std::string module_name;
   std::string field_name;
   std::vector<TypedValue> args;
@@ -501,17 +502,17 @@ class SpecJSONParser {
   wabt::Result ParseTypeVector(TypeVector* out_types);
   wabt::Result ParseConst(TypedValue* out_value);
   wabt::Result ParseConstVector(std::vector<TypedValue>* out_values);
-  wabt::Result ParseAction(Action* out_action);
+  wabt::Result ParseAction(::Action* out_action);
   wabt::Result ParseModuleType(ModuleType* out_type);
 
   std::string CreateModulePath(string_view filename);
 
   wabt::Result OnModuleCommand(string_view filename, string_view name);
-  wabt::Result RunAction(Action* action,
+  wabt::Result RunAction(::Action* action,
                          interpreter::Result* out_iresult,
                          std::vector<TypedValue>* out_results,
                          RunVerbosity verbose);
-  wabt::Result OnActionCommand(Action* action);
+  wabt::Result OnActionCommand(::Action* action);
   wabt::Result ReadInvalidTextModule(const char* module_filename,
                                      Environment* env,
                                      ErrorHandler* error_handler);
@@ -532,11 +533,11 @@ class SpecJSONParser {
   wabt::Result OnAssertUninstantiableCommand(string_view filename,
                                              string_view text,
                                              ModuleType module_type);
-  wabt::Result OnAssertReturnCommand(Action* action,
+  wabt::Result OnAssertReturnCommand(::Action* action,
                                      const std::vector<TypedValue>& expected);
-  wabt::Result OnAssertReturnNanCommand(Action* action, bool canonical);
-  wabt::Result OnAssertTrapCommand(Action* action, string_view text);
-  wabt::Result OnAssertExhaustionCommand(Action* action);
+  wabt::Result OnAssertReturnNanCommand(::Action* action, bool canonical);
+  wabt::Result OnAssertTrapCommand(::Action* action, string_view text);
+  wabt::Result OnAssertExhaustionCommand(::Action* action);
   wabt::Result ParseCommand();
 
   Environment env_;
@@ -862,15 +863,15 @@ wabt::Result SpecJSONParser::ParseConstVector(
   return wabt::Result::Ok;
 }
 
-wabt::Result SpecJSONParser::ParseAction(Action* out_action) {
+wabt::Result SpecJSONParser::ParseAction(::Action* out_action) {
   EXPECT_KEY("action");
   EXPECT("{");
   EXPECT_KEY("type");
   if (Match("\"invoke\"")) {
-    out_action->type = ActionType::Invoke;
+    out_action->type = ::ActionType::Invoke;
   } else {
     EXPECT("\"get\"");
-    out_action->type = ActionType::Get;
+    out_action->type = ::ActionType::Get;
   }
   EXPECT(",");
   if (Match("\"module\"")) {
@@ -879,7 +880,7 @@ wabt::Result SpecJSONParser::ParseAction(Action* out_action) {
     EXPECT(",");
   }
   PARSE_KEY_STRING_VALUE("field", &out_action->field_name);
-  if (out_action->type == ActionType::Invoke) {
+  if (out_action->type == ::ActionType::Invoke) {
     EXPECT(",");
     EXPECT_KEY("args");
     CHECK_RESULT(ParseConstVector(&out_action->args));
@@ -951,13 +952,13 @@ wabt::Result SpecJSONParser::OnModuleCommand(string_view filename,
   return wabt::Result::Ok;
 }
 
-wabt::Result SpecJSONParser::RunAction(Action* action,
+wabt::Result SpecJSONParser::RunAction(::Action* action,
                                        interpreter::Result* out_iresult,
                                        std::vector<TypedValue>* out_results,
                                        RunVerbosity verbose) {
   out_results->clear();
 
-  Module* module;
+  interpreter::Module* module;
   if (!action->module_name.empty()) {
     module = env_.FindModule(action->module_name);
   } else {
@@ -966,7 +967,7 @@ wabt::Result SpecJSONParser::RunAction(Action* action,
   assert(module);
 
   switch (action->type) {
-    case ActionType::Invoke:
+    case ::ActionType::Invoke:
       *out_iresult = RunExportByName(&thread_, module, action->field_name,
                                      action->args, out_results, verbose);
       if (verbose == RunVerbosity::Verbose) {
@@ -975,7 +976,7 @@ wabt::Result SpecJSONParser::RunAction(Action* action,
       }
       return wabt::Result::Ok;
 
-    case ActionType::Get: {
+    case ::ActionType::Get: {
       *out_iresult = GetGlobalExportByName(&thread_, module, action->field_name,
                                            out_results);
       return wabt::Result::Ok;
@@ -988,7 +989,7 @@ wabt::Result SpecJSONParser::RunAction(Action* action,
   }
 }
 
-wabt::Result SpecJSONParser::OnActionCommand(Action* action) {
+wabt::Result SpecJSONParser::OnActionCommand(::Action* action) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
@@ -1178,7 +1179,7 @@ static bool TypedValuesAreEqual(const TypedValue* tv1, const TypedValue* tv2) {
 }
 
 wabt::Result SpecJSONParser::OnAssertReturnCommand(
-    Action* action,
+    ::Action* action,
     const std::vector<TypedValue>& expected) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
@@ -1224,7 +1225,7 @@ wabt::Result SpecJSONParser::OnAssertReturnCommand(
   return result;
 }
 
-wabt::Result SpecJSONParser::OnAssertReturnNanCommand(Action* action,
+wabt::Result SpecJSONParser::OnAssertReturnNanCommand(::Action* action,
                                                       bool canonical) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
@@ -1284,7 +1285,7 @@ wabt::Result SpecJSONParser::OnAssertReturnNanCommand(Action* action,
   return wabt::Result::Ok;
 }
 
-wabt::Result SpecJSONParser::OnAssertTrapCommand(Action* action,
+wabt::Result SpecJSONParser::OnAssertTrapCommand(::Action* action,
                                                  string_view text) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
@@ -1305,7 +1306,7 @@ wabt::Result SpecJSONParser::OnAssertTrapCommand(Action* action,
   return result;
 }
 
-wabt::Result SpecJSONParser::OnAssertExhaustionCommand(Action* action) {
+wabt::Result SpecJSONParser::OnAssertExhaustionCommand(::Action* action) {
   std::vector<TypedValue> results;
   interpreter::Result iresult;
 
@@ -1339,7 +1340,7 @@ wabt::Result SpecJSONParser::ParseCommand() {
     PARSE_KEY_STRING_VALUE("filename", &filename);
     OnModuleCommand(filename, name);
   } else if (Match("\"action\"")) {
-    Action action;
+    ::Action action;
 
     EXPECT(",");
     CHECK_RESULT(ParseLine());
@@ -1413,7 +1414,7 @@ wabt::Result SpecJSONParser::ParseCommand() {
     CHECK_RESULT(ParseModuleType(&module_type));
     OnAssertUninstantiableCommand(filename, text, module_type);
   } else if (Match("\"assert_return\"")) {
-    Action action;
+    ::Action action;
     std::vector<TypedValue> expected;
 
     EXPECT(",");
@@ -1425,7 +1426,7 @@ wabt::Result SpecJSONParser::ParseCommand() {
     CHECK_RESULT(ParseConstVector(&expected));
     OnAssertReturnCommand(&action, expected);
   } else if (Match("\"assert_return_canonical_nan\"")) {
-    Action action;
+    ::Action action;
     TypeVector expected;
 
     EXPECT(",");
@@ -1438,7 +1439,7 @@ wabt::Result SpecJSONParser::ParseCommand() {
     CHECK_RESULT(ParseTypeVector(&expected));
     OnAssertReturnNanCommand(&action, true);
   } else if (Match("\"assert_return_arithmetic_nan\"")) {
-    Action action;
+    ::Action action;
     TypeVector expected;
 
     EXPECT(",");
@@ -1451,7 +1452,7 @@ wabt::Result SpecJSONParser::ParseCommand() {
     CHECK_RESULT(ParseTypeVector(&expected));
     OnAssertReturnNanCommand(&action, false);
   } else if (Match("\"assert_trap\"")) {
-    Action action;
+    ::Action action;
     std::string text;
 
     EXPECT(",");
@@ -1462,7 +1463,7 @@ wabt::Result SpecJSONParser::ParseCommand() {
     PARSE_KEY_STRING_VALUE("text", &text);
     OnAssertTrapCommand(&action, text);
   } else if (Match("\"assert_exhaustion\"")) {
-    Action action;
+    ::Action action;
     std::string text;
 
     EXPECT(",");

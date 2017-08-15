@@ -8,5 +8,5 @@
 (;; STDERR ;;;
 out/test/parse/expr/bad-brtable-bad-depth.txt:6:7: error: invalid depth: 2 (max 1)
       br_table 2
-      ^^^^^^^^^^
+      ^^^^^^^^
 ;;; STDERR ;;)

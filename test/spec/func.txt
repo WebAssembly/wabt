@@ -92,27 +92,27 @@ out/third_party/testsuite/func.wast:526: assert_invalid passed:
   error: type mismatch in br, expected i32 but got i64.
   000001e: error: OnBrExpr callback failed
 out/third_party/testsuite/func.wast:536: assert_malformed passed:
-  out/third_party/testsuite/func/func.34.wast:1:14: error: syntax error, unexpected LOCAL
+  out/third_party/testsuite/func/func.34.wast:1:14: error: unexpected token "local", expected an instr.
   (func (nop) (local i32))
                ^^^^^
 out/third_party/testsuite/func.wast:540: assert_malformed passed:
-  out/third_party/testsuite/func/func.35.wast:1:14: error: syntax error, unexpected PARAM
+  out/third_party/testsuite/func/func.35.wast:1:14: error: unexpected token "param", expected an instr.
   (func (nop) (param i32))
                ^^^^^
 out/third_party/testsuite/func.wast:544: assert_malformed passed:
-  out/third_party/testsuite/func/func.36.wast:1:14: error: syntax error, unexpected RESULT
+  out/third_party/testsuite/func/func.36.wast:1:14: error: unexpected token "result", expected an instr.
   (func (nop) (result i32))
                ^^^^^^
 out/third_party/testsuite/func.wast:548: assert_malformed passed:
-  out/third_party/testsuite/func/func.37.wast:1:20: error: syntax error, unexpected PARAM
+  out/third_party/testsuite/func/func.37.wast:1:20: error: unexpected token "param", expected an instr.
   (func (local i32) (param i32))
                      ^^^^^
 out/third_party/testsuite/func.wast:552: assert_malformed passed:
-  out/third_party/testsuite/func/func.38.wast:1:20: error: syntax error, unexpected RESULT
+  out/third_party/testsuite/func/func.38.wast:1:20: error: unexpected token "result", expected an instr.
   (func (local i32) (result i32) (get_local 0))
                      ^^^^^^
 out/third_party/testsuite/func.wast:556: assert_malformed passed:
-  out/third_party/testsuite/func/func.39.wast:1:21: error: syntax error, unexpected PARAM
+  out/third_party/testsuite/func/func.39.wast:1:21: error: unexpected token "param", expected an instr.
   (func (result i32) (param i32) (get_local 0))
                       ^^^^^
 103/103 tests passed.

@@ -11,5 +11,5 @@
 (;; STDERR ;;;
 out/test/typecheck/bad-callindirect-type-mismatch.txt:9:5: error: type mismatch in call_indirect, expected i32 but got f32.
     call_indirect $t
-    ^^^^^^^^^^^^^^^^
+    ^^^^^^^^^^^^^
 ;;; STDERR ;;)

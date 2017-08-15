@@ -1,7 +1,7 @@
 ;;; ERROR: 1
                                                                                                                                                                          whoops                      (; some text at the end of the line ;)
 (;; STDERR ;;;
-out/test/parse/bad-error-long-line.txt:2:170: error: unexpected token "whoops"
+out/test/parse/bad-error-long-line.txt:2:170: error: unexpected token "whoops", expected a module field or a command.
 ...                                  whoops                      (; some text...
                                      ^^^^^^
 ;;; STDERR ;;)

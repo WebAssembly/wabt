@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (local $n)))
 (;; STDERR ;;;
-out/test/parse/func/bad-local-binding-no-type.txt:2:24: error: syntax error, unexpected ), expecting VALUE_TYPE
+out/test/parse/func/bad-local-binding-no-type.txt:2:24: error: unexpected token ")", expected i32, i64, f32 or f64.
 (module (func (local $n)))
                        ^
 ;;; STDERR ;;)
