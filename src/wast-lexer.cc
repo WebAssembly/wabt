@@ -81,7 +81,7 @@
 namespace wabt {
 
 const char* GetTokenTypeName(TokenType token_type) {
-  const char* s_names[] = {
+  static const char* s_names[] = {
       "Invalid",
       "Reserved",
       "EOF",

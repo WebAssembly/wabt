@@ -188,23 +188,23 @@ bool IsPlainOrBlockInstr(TokenType token_type) {
   return IsPlainInstr(token_type) || IsBlockInstr(token_type);
 }
 
-bool IsExpr(TokenType peek, TokenType peek_after) {
-  return peek == TokenType::Lpar && IsPlainOrBlockInstr(peek_after);
+bool IsExpr(TokenTypePair pair) {
+  return pair[0] == TokenType::Lpar && IsPlainOrBlockInstr(pair[1]);
 }
 
-bool IsInstr(TokenType peek, TokenType peek_after) {
-  return IsPlainOrBlockInstr(peek) || IsExpr(peek, peek_after);
+bool IsInstr(TokenTypePair pair) {
+  return IsPlainOrBlockInstr(pair[0]) || IsExpr(pair);
 }
 
 bool IsCatch(TokenType token_type) {
   return token_type == TokenType::Catch || token_type == TokenType::CatchAll;
 }
 
-bool IsModuleField(TokenType peek, TokenType peek_after) {
-  if (peek != TokenType::Lpar)
+bool IsModuleField(TokenTypePair pair) {
+  if (pair[0] != TokenType::Lpar)
     return false;
 
-  switch (peek_after) {
+  switch (pair[1]) {
     case TokenType::Data:
     case TokenType::Elem:
     case TokenType::Except:
@@ -222,11 +222,11 @@ bool IsModuleField(TokenType peek, TokenType peek_after) {
   }
 }
 
-bool IsCommand(TokenType peek, TokenType peek_after) {
-  if (peek != TokenType::Lpar)
+bool IsCommand(TokenTypePair pair) {
+  if (pair[0] != TokenType::Lpar)
     return false;
 
-  switch (peek_after) {
+  switch (pair[1]) {
     case TokenType::AssertExhaustion:
     case TokenType::AssertInvalid:
     case TokenType::AssertMalformed:
@@ -324,17 +324,14 @@ Location WastParser::GetLocation() {
   return GetToken().loc;
 }
 
-TokenType WastParser::Peek() {
-  return GetToken().token_type;
+TokenType WastParser::Peek(size_t n) {
+  while (tokens_.size() <= n)
+    tokens_.push_back(lexer_->GetToken(this));
+  return tokens_.at(n).token_type;
 }
 
-TokenType WastParser::PeekAfter() {
-  if (tokens_.empty())
-    tokens_.push_back(lexer_->GetToken(this));
-  if (tokens_.size() < 2)
-    tokens_.push_back(lexer_->GetToken(this));
-
-  return tokens_.at(1).token_type;
+TokenTypePair WastParser::PeekPair() {
+  return TokenTypePair{{Peek(), Peek(1)}};
 }
 
 bool WastParser::PeekMatch(TokenType type) {
@@ -342,11 +339,11 @@ bool WastParser::PeekMatch(TokenType type) {
 }
 
 bool WastParser::PeekMatchLpar(TokenType type) {
-  return Peek() == TokenType::Lpar && PeekAfter() == type;
+  return Peek() == TokenType::Lpar && Peek(1) == type;
 }
 
 bool WastParser::PeekMatchExpr() {
-  return IsExpr(Peek(), PeekAfter());
+  return IsExpr(PeekPair());
 }
 
 bool WastParser::Match(TokenType type) {
@@ -387,7 +384,7 @@ Token WastParser::Consume() {
 Result WastParser::Synchronize(SynchronizeFunc func) {
   static const int kMaxConsumed = 10;
   for (int i = 0; i < kMaxConsumed; ++i) {
-    if (func(Peek(), PeekAfter()))
+    if (func(PeekPair()))
       return Result::Ok;
 
     auto token = Consume();
@@ -646,13 +643,13 @@ Result WastParser::ParseScript(Script* script) {
   // Don't consume the Lpar yet, even though it is required. This way the
   // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
   // the parsing structure more regular.
-  if (IsModuleField(Peek(), PeekAfter())) {
+  if (IsModuleField(PeekPair())) {
     // Parse an inline module (i.e. one with no surrounding (module)).
     auto module = make_unique<Module>();
     module->loc = GetLocation();
     CHECK_RESULT(ParseModuleFieldList(module.get()));
     script->commands.emplace_back(make_unique<ModuleCommand>(module.release()));
-  } else if (IsCommand(Peek(), PeekAfter())) {
+  } else if (IsCommand(PeekPair())) {
     CHECK_RESULT(ParseCommandList(&script->commands));
   } else {
     ConsumeIfLpar();
@@ -676,7 +673,7 @@ Result WastParser::ParseModuleFieldList(Module* module) {
 
 Result WastParser::ParseModuleField(Module* module) {
   WABT_TRACE(ParseModuleField);
-  switch (PeekAfter()) {
+  switch (Peek(1)) {
     case TokenType::Data:   return ParseDataModuleField(module);
     case TokenType::Elem:   return ParseElemModuleField(module);
     case TokenType::Except: return ParseExceptModuleField(module);
@@ -1119,7 +1116,7 @@ Result WastParser::ParseResultList(TypeVector* result_types) {
 Result WastParser::ParseInstrList(ExprList* exprs) {
   WABT_TRACE(ParseInstrList);
   ExprList new_exprs;
-  while (IsInstr(Peek(), PeekAfter())) {
+  while (IsInstr(PeekPair())) {
     if (Succeeded(ParseInstr(&new_exprs))) {
       exprs->splice(exprs->end(), new_exprs);
     } else {
@@ -1516,7 +1513,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
   if (!PeekMatch(TokenType::Lpar))
     return Result::Error;
 
-  if (IsPlainInstr(PeekAfter())) {
+  if (IsPlainInstr(Peek(1))) {
     Consume();
     std::unique_ptr<Expr> expr;
     CHECK_RESULT(ParsePlainInstr(&expr));
@@ -1526,7 +1523,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
   } else {
     auto loc = GetLocation();
 
-    switch (PeekAfter()) {
+    switch (Peek(1)) {
       case TokenType::Block: {
         Consume();
         Consume();
@@ -1632,7 +1629,7 @@ Result WastParser::ParseCatchInstrList(CatchVector* catches) {
 
 Result WastParser::ParseCatchExprList(CatchVector* catches) {
   WABT_TRACE(ParseCatchExprList);
-  while (PeekMatch(TokenType::Lpar) && IsCatch(PeekAfter())) {
+  while (PeekMatch(TokenType::Lpar) && IsCatch(Peek(1))) {
     Consume();
     auto catch_ = make_unique<Catch>();
     catch_->loc = GetLocation();
@@ -1677,7 +1674,7 @@ Result WastParser::ParseCommandList(CommandPtrVector* commands) {
 
 Result WastParser::ParseCommand(CommandPtr* out_command) {
   WABT_TRACE(ParseCommand);
-  switch (PeekAfter()) {
+  switch (Peek(1)) {
     case TokenType::AssertExhaustion:
       return ParseAssertExhaustionCommand(out_command);
 

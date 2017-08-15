@@ -17,6 +17,8 @@
 #ifndef WABT_WAST_PARSER_H_
 #define WABT_WAST_PARSER_H_
 
+#include <array>
+
 #include "circular-array.h"
 #include "ir.h"
 #include "intrusive-list.h"
@@ -31,6 +33,8 @@ struct WastParseOptions {
   bool debug_parsing = false;
 };
 
+typedef std::array<TokenType, 2> TokenTypePair;
+
 class WastParser {
  public:
   WastParser(WastLexer*, ErrorHandler*, WastParseOptions*);
@@ -40,27 +44,68 @@ class WastParser {
 
  private:
   void ErrorUnlessExceptionsAllowed();
+
+  // Print an error message listing the expected tokens, as well as an example
+  // of expected input.
   Result ErrorExpected(const std::vector<std::string>& expected,
                        const char* example = nullptr);
+
+  // Print an error message, and and return Result::Error if the next token is
+  // '('. This is commonly used after parsing a sequence of s-expressions -- if
+  // no more can be parsed, we know that a following '(' is invalid. This
+  // function consumes the '(' so a better error message can be provided
+  // (assuming the following token was unexpected).
   Result ErrorIfLpar(const std::vector<std::string>& expected,
                      const char* example = nullptr);
 
+  // Returns the next token without consuming it.
   Token GetToken();
+
+  // Returns the location of the next token.
   Location GetLocation();
-  TokenType Peek();
-  TokenType PeekAfter();
+
+  // Returns the type of the next token.
+  TokenType Peek(size_t n = 0);
+
+  // Returns the types of the next two tokens.
+  TokenTypePair PeekPair();
+
+  // Returns true if the next token's type is equal to the parameter.
   bool PeekMatch(TokenType);
+
+  // Returns true if the next token's type is '(' and the following token is
+  // equal to the parameter.
   bool PeekMatchLpar(TokenType);
+
+  // Returns true if the next two tokens can start an Expr. This allows for
+  // folded expressions, plain instructions and block instructions.
   bool PeekMatchExpr();
+
+  // Returns true if the next token's type is equal to the parameter. If so,
+  // then the token is consumed.
   bool Match(TokenType);
+
+  // Returns true if the next token's type is equal to '(' and the following
+  // token is equal to the parameter. If so, then the token is consumed.
   bool MatchLpar(TokenType);
+
+  // Like Match(), but prints an error message if the token doesn't match, and
+  // returns Result::Error.
   Result Expect(TokenType);
+
+  // Consume one token and return it.
   Token Consume();
+
   // Give the Match() function a clearer name when used to optionally consume a
   // token (used for printing better error messages).
   void ConsumeIfLpar() { Match(TokenType::Lpar); }
 
-  typedef bool SynchronizeFunc(TokenType peek, TokenType peek_after);
+  typedef bool SynchronizeFunc(TokenTypePair pair);
+
+  // Attempt to synchronize the token stream by dropping tokens until the
+  // SynchronizeFunc returns true, or until a token limit is reached. This
+  // function returns Result::Error if the stream was not able to be
+  // synchronized.
   Result Synchronize(SynchronizeFunc);
 
   void ParseBindVarOpt(std::string* name);
