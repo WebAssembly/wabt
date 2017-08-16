@@ -144,7 +144,7 @@ void WriteStr(Stream* stream,
 void WriteOpcode(Stream* stream, Opcode opcode) {
   if (opcode.HasPrefix()) {
     stream->WriteU8(opcode.GetPrefix(), "prefix");
-    write_u32_leb128(stream, opcode.GetCode(), opcode.GetName());
+    WriteU32Leb128(stream, opcode.GetCode(), opcode.GetName());
   } else {
     stream->WriteU8(opcode.GetCode(), opcode.GetName());
   }

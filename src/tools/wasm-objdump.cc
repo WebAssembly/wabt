@@ -19,6 +19,7 @@
 #include <cstring>
 
 #include "common.h"
+#include "feature.h"
 #include "option-parser.h"
 #include "stream.h"
 #include "writer.h"
@@ -35,6 +36,7 @@ examples:
 )";
 
 static ObjdumpOptions s_objdump_options;
+static Features s_features;
 
 static std::vector<const char*> s_infiles;
 
@@ -57,10 +59,13 @@ static void ParseOptions(int argc, char** argv) {
     s_log_stream = FileStream::CreateStdout();
     s_objdump_options.log_stream = s_log_stream.get();
   });
+  s_features.AddOptions(&parser);
+#if 0
   parser.AddOption("future-exceptions",
                    "Test future extension for exception handling",
                    []() { s_objdump_options.allow_future_exceptions = true;
                    });
+#endif
   parser.AddOption('x', "details", "Show section details",
                    []() { s_objdump_options.details = true; });
   parser.AddOption('r', "reloc", "Show relocations inline with disassembly",

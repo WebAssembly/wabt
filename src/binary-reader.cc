@@ -53,7 +53,7 @@
 
 #define ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode) \
   do {                                                \
-    if (!options_->allow_future_exceptions)            \
+    if (!options_->features.exceptions_enabled())     \
       return ReportUnexpectedOpcode(opcode);          \
   } while (0)
 
@@ -1283,7 +1283,8 @@ Result BinaryReader::ReadExceptionType(TypeVector& sig) {
 }
 
 Result BinaryReader::ReadExceptionSection(Offset section_size) {
-  ERROR_UNLESS_FEATURE_ENABLED_SECTION(exceptions);
+  ERROR_UNLESS_FEATURE_ENABLED_SECTION(exceptions, "Unknown section %s",
+                                       WABT_BINARY_SECTION_EXCEPTION);
   CALLBACK(BeginExceptionSection, section_size);
   CHECK_RESULT(ReadIndex(&num_exceptions_, "exception count"));
   CALLBACK(OnExceptionCount, num_exceptions_);
@@ -1312,7 +1313,7 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
-  } else if (options_->allow_future_exceptions &&
+  } else if (options_->features.exceptions_enabled() &&
              section_name == WABT_BINARY_SECTION_EXCEPTION) {
     CHECK_RESULT(ReadExceptionSection(section_size));
   } else {
@@ -1426,7 +1427,7 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       }
 
       case ExternalKind::Except: {
-        if (!options_->allow_future_exceptions)
+        if (!options_->features.exceptions_enabled())
           PrintError("invalid import exception kind: exceptions not allowed");
         TypeVector sig;
         CHECK_RESULT(ReadExceptionType(sig));
@@ -1548,7 +1549,7 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
         break;
       case ExternalKind::Except:
         // Note: Can't check if index valid, exceptions section comes later.
-        if (!options_->allow_future_exceptions)
+        if (!options_->features.exceptions_enabled())
           PrintError("invalid export exception kind: exceptions not allowed");
         break;
     }

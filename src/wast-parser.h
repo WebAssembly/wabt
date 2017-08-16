@@ -20,6 +20,7 @@
 #include <array>
 
 #include "circular-array.h"
+#include "feature.h"
 #include "ir.h"
 #include "intrusive-list.h"
 #include "wast-lexer.h"
@@ -29,7 +30,9 @@ namespace wabt {
 class ErrorHandler;
 
 struct WastParseOptions {
-  bool allow_future_exceptions = false;
+  WastParseOptions(const Features& features) : features(features) {}
+
+  Features features;
   bool debug_parsing = false;
 };
 

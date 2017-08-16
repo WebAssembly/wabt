@@ -397,7 +397,7 @@ Result WastParser::Synchronize(SynchronizeFunc func) {
 }
 
 void WastParser::ErrorUnlessExceptionsAllowed() {
-  if (!options_->allow_future_exceptions) {
+  if (!options_->features.exceptions_enabled()) {
     Error(GetLocation(), "opcode not allowed: %s",
           GetToken().to_string().c_str());
   }

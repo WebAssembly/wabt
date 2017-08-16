@@ -22,6 +22,7 @@
 
 #include "binary.h"
 #include "common.h"
+#include "feature.h"
 #include "opcode.h"
 #include "string-view.h"
 
@@ -31,9 +32,14 @@ class Stream;
 
 struct ReadBinaryOptions {
   ReadBinaryOptions() = default;
-  ReadBinaryOptions(Stream* log_stream, bool read_debug_names)
-      : log_stream(log_stream), read_debug_names(read_debug_names) {}
+  ReadBinaryOptions(const Features& features,
+                    Stream* log_stream,
+                    bool read_debug_names)
+      : features(features),
+        log_stream(log_stream),
+        read_debug_names(read_debug_names) {}
 
+  Features features;
   Stream* log_stream = nullptr;
   bool read_debug_names = false;
 };

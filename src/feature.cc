@@ -14,31 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef WABT_FEATURE_H_
-#define WABT_FEATURE_H_
+#include "feature.h"
 
-#include "common.h"
+#include "option-parser.h"
 
 namespace wabt {
 
-class OptionParser;
+void Features::AddOptions(OptionParser* parser) {
+#define WABT_FEATURE(variable, flag, help)  \
+  parser->AddOption("--enable-" flag, help, \
+                    [this]() { variable##_enabled_ = true; });
 
-class Features {
- public:
-  void AddOptions(OptionParser*);
-
-#define WABT_FEATURE(variable, flag, help) \
-  bool variable##_enabled() const { return variable##_enabled_; }
 #include "feature.def"
 #undef WABT_FEATURE
-
- private:
-#define WABT_FEATURE(variable, flag, help) \
-  bool variable##_enabled_ = false;
-#include "feature.def"
-#undef WABT_FEATURE
-};
+}
 
 }  // namespace wabt
-
-#endif // WABT_FEATURE_H_

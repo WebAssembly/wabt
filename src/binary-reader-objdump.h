@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "common.h"
-#include "features.h"
+#include "feature.h"
 #include "stream.h"
 
 namespace wabt {
