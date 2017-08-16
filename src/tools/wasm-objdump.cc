@@ -60,12 +60,6 @@ static void ParseOptions(int argc, char** argv) {
     s_objdump_options.log_stream = s_log_stream.get();
   });
   s_features.AddOptions(&parser);
-#if 0
-  parser.AddOption("future-exceptions",
-                   "Test future extension for exception handling",
-                   []() { s_objdump_options.allow_future_exceptions = true;
-                   });
-#endif
   parser.AddOption('x', "details", "Show section details",
                    []() { s_objdump_options.details = true; });
   parser.AddOption('r', "reloc", "Show relocations inline with disassembly",
@@ -90,6 +84,7 @@ Result dump_file(const char* filename) {
   // Perform serveral passed over the binary in order to print out different
   // types of information.
   s_objdump_options.filename = filename;
+  s_objdump_options.features = s_features;
   printf("\n");
 
   ObjdumpState state;

@@ -46,7 +46,7 @@ class WastParser {
   Result ParseScript(Script*);
 
  private:
-  void ErrorUnlessExceptionsAllowed();
+  void ErrorUnlessOpcodeEnabled(const Token&);
 
   // Print an error message listing the expected tokens, as well as an example
   // of expected input.

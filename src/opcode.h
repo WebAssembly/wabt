@@ -21,6 +21,8 @@
 
 namespace wabt {
 
+class Features;
+
 struct Opcode {
   // Opcode enumerations.
   //
@@ -65,6 +67,8 @@ struct Opcode {
   Address GetAlignment(Address alignment) const;
 
   static bool IsPrefixByte(uint8_t byte) { return byte >= kFirstPrefix; }
+
+  bool IsEnabled(const Features& features) const;
 
  private:
   static const uint32_t kFirstPrefix = 0xfc;

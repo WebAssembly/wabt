@@ -21,8 +21,8 @@
 namespace wabt {
 
 void Features::AddOptions(OptionParser* parser) {
-#define WABT_FEATURE(variable, flag, help)  \
-  parser->AddOption("--enable-" flag, help, \
+#define WABT_FEATURE(variable, flag, help) \
+  parser->AddOption("enable-" flag, help,  \
                     [this]() { variable##_enabled_ = true; });
 
 #include "feature.def"

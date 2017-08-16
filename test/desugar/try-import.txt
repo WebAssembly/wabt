@@ -1,5 +1,5 @@
 ;;; TOOL: wast-desugar
-;;; FLAGS: --future-exceptions
+;;; FLAGS: --enable-exceptions
 (module
   (import "c++" "except" (except $ex i32))
   (func (result i32)

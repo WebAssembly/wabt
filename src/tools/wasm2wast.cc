@@ -23,6 +23,7 @@
 #include "binary-reader.h"
 #include "binary-reader-ir.h"
 #include "error-handler.h"
+#include "feature.h"
 #include "generate-names.h"
 #include "ir.h"
 #include "option-parser.h"
@@ -37,9 +38,10 @@ using namespace wabt;
 static int s_verbose;
 static std::string s_infile;
 static std::string s_outfile;
-static ReadBinaryOptions s_read_binary_options(nullptr, true);
+static Features s_features;
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
+static bool s_read_debug_names = true;
 static std::unique_ptr<FileStream> s_log_stream;
 static bool s_validate = true;
 
@@ -61,7 +63,6 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
     s_log_stream = FileStream::CreateStdout();
-    s_read_binary_options.log_stream = s_log_stream.get();
   });
   parser.AddHelpOption();
   parser.AddOption(
@@ -73,14 +74,11 @@ static void ParseOptions(int argc, char** argv) {
       });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
-  parser.AddOption("future-exceptions",
-                   "Test future extension for exception handling",
-                   []() { s_read_binary_options.allow_future_exceptions = true;
-                   });
+  s_features.AddOptions(&parser);
   parser.AddOption("inline-exports", "Write all exports inline",
                    []() { s_write_wat_options.inline_export = true; });
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
-                   []() { s_read_binary_options.read_debug_names = false; });
+                   []() { s_read_debug_names = false; });
   parser.AddOption(
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",
@@ -106,9 +104,10 @@ int ProgramMain(int argc, char** argv) {
   if (Succeeded(result)) {
     ErrorHandlerFile error_handler(Location::Type::Binary);
     Module module;
-    result =
-        ReadBinaryIr(s_infile.c_str(), DataOrNull(file_data), file_data.size(),
-                     &s_read_binary_options, &error_handler, &module);
+    ReadBinaryOptions options(s_features, s_log_stream.get(),
+                              s_read_debug_names);
+    result = ReadBinaryIr(s_infile.c_str(), DataOrNull(file_data),
+                          file_data.size(), &options, &error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result) && s_validate) {
         WastLexer* lexer = nullptr;

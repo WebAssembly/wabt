@@ -396,11 +396,10 @@ Result WastParser::Synchronize(SynchronizeFunc func) {
   return Result::Error;
 }
 
-void WastParser::ErrorUnlessExceptionsAllowed() {
-  if (!options_->features.exceptions_enabled()) {
-    Error(GetLocation(), "opcode not allowed: %s",
-          GetToken().to_string().c_str());
-  }
+void WastParser::ErrorUnlessOpcodeEnabled(const Token& token) {
+  Opcode opcode = token.opcode;
+  if (!opcode.IsEnabled(options_->features))
+    Error(token.loc, "opcode not allowed: %s", opcode.GetName());
 }
 
 Result WastParser::ErrorExpected(const std::vector<std::string>& expected,
@@ -1288,9 +1287,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       out_expr->reset(new CompareExpr(Consume().opcode, loc));
       break;
 
-    case TokenType::Convert:
-      out_expr->reset(new ConvertExpr(Consume().opcode, loc));
+    case TokenType::Convert: {
+      auto token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      out_expr->reset(new ConvertExpr(token.opcode, loc));
       break;
+    }
 
     case TokenType::CurrentMemory:
       Consume();
@@ -1303,14 +1305,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
 
     case TokenType::Throw:
-      ErrorUnlessExceptionsAllowed();
-      Consume();
+      ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<ThrowExpr>(loc, out_expr));
       break;
 
     case TokenType::Rethrow:
-      ErrorUnlessExceptionsAllowed();
-      Consume();
+      ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<RethrowExpr>(loc, out_expr));
       break;
 
@@ -1438,8 +1438,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
     }
 
     case TokenType::Try: {
-      ErrorUnlessExceptionsAllowed();
-      Consume();
+      ErrorUnlessOpcodeEnabled(Consume());
       auto expr = make_unique<TryExpr>(loc);
       expr->block = new Block();
       CatchVector catches;
@@ -1585,8 +1584,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
 
       case TokenType::Try: {
         Consume();
-        ErrorUnlessExceptionsAllowed();
-        Consume();
+        ErrorUnlessOpcodeEnabled(Consume());
 
         auto block = make_unique<Block>();
         CHECK_RESULT(ParseLabelOpt(&block->label));

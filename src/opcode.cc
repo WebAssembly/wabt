@@ -18,6 +18,8 @@
 
 #include <algorithm>
 
+#include "feature.h"
+
 namespace wabt {
 
 // static
@@ -72,6 +74,30 @@ Address Opcode::GetAlignment(Address alignment) const {
   if (alignment == WABT_USE_NATURAL_ALIGNMENT)
     return GetMemorySize();
   return alignment;
+}
+
+bool Opcode::IsEnabled(const Features& features) const {
+  switch (enum_) {
+    case Opcode::Try:
+    case Opcode::Catch:
+    case Opcode::Throw:
+    case Opcode::Rethrow:
+    case Opcode::CatchAll:
+      return features.exceptions_enabled();
+
+    case Opcode::I32TruncSSatF32:
+    case Opcode::I32TruncUSatF32:
+    case Opcode::I32TruncSSatF64:
+    case Opcode::I32TruncUSatF64:
+    case Opcode::I64TruncSSatF32:
+    case Opcode::I64TruncUSatF32:
+    case Opcode::I64TruncSSatF64:
+    case Opcode::I64TruncUSatF64:
+      return features.sat_float_to_int_enabled();
+
+    default:
+      return true;
+  }
 }
 
 }  // end anonymous namespace

@@ -26,6 +26,7 @@
 #include "binary-reader-interpreter.h"
 #include "binary-reader.h"
 #include "error-handler.h"
+#include "feature.h"
 #include "interpreter.h"
 #include "literal.h"
 #include "option-parser.h"
@@ -42,11 +43,11 @@ static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
 
 static int s_verbose;
 static const char* s_infile;
-static ReadBinaryOptions s_read_binary_options;
 static Thread::Options s_thread_options;
 static bool s_trace;
 static bool s_spec;
 static bool s_run_all_exports;
+static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
 static std::unique_ptr<FileStream> s_stdout_stream;
@@ -84,9 +85,9 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
     s_log_stream = FileStream::CreateStdout();
-    s_read_binary_options.log_stream = s_log_stream.get();
   });
   parser.AddHelpOption();
+  s_features.AddOptions(&parser);
   parser.AddOption('V', "value-stack-size", "SIZE",
                    "Size in elements of the value stack",
                    [](const std::string& argument) {
@@ -302,9 +303,10 @@ static wabt::Result ReadModule(const char* module_filename,
 
   result = ReadFile(module_filename, &file_data);
   if (Succeeded(result)) {
+    ReadBinaryOptions options(s_features, s_log_stream.get(),
+                              true /* read_debug_names */);
     result = ReadBinaryInterpreter(env, DataOrNull(file_data), file_data.size(),
-                                   &s_read_binary_options, error_handler,
-                                   out_module);
+                                   &options, error_handler, out_module);
 
     if (Succeeded(result)) {
       if (s_verbose)

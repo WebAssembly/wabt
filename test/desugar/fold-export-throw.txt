@@ -1,5 +1,5 @@
 ;;; TOOL: wast-desugar
-;;; FLAGS: --future-exceptions --fold-exprs
+;;; FLAGS: --enable-exceptions --fold-exprs
 (module
   (except $ex i32)
   (export "except" (except $ex))

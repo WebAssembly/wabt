@@ -48,13 +48,10 @@
     }                           \
   } while (0)
 
-#define ERROR_UNLESS_FEATURE_ENABLED_SECTION(feature, ...) \
-  ERROR_UNLESS(options_->features.feature##_enabled(), __VA_ARGS__)
-
-#define ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode) \
-  do {                                                \
-    if (!options_->features.exceptions_enabled())     \
-      return ReportUnexpectedOpcode(opcode);          \
+#define ERROR_UNLESS_OPCODE_ENABLED(opcode)    \
+  do {                                         \
+    if (!opcode.IsEnabled(options_->features)) \
+      return ReportUnexpectedOpcode(opcode);   \
   } while (0)
 
 #define CALLBACK0(member)                              \
@@ -272,8 +269,14 @@ Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
   const char* maybe_space = " ";
   if (!message)
     message = maybe_space = "";
-  PrintError("unexpected opcode%s%s: %d (0x%x)",
-             maybe_space, message, opcode.GetCode(), opcode.GetCode());
+  if (opcode.HasPrefix()) {
+    PrintError("unexpected opcode%s%s: %d %d (0x%x 0x%x)", maybe_space, message,
+               opcode.GetPrefix(), opcode.GetCode(), opcode.GetPrefix(),
+               opcode.GetCode());
+  } else {
+    PrintError("unexpected opcode%s%s: %d (0x%x)",
+               maybe_space, message, opcode.GetCode(), opcode.GetCode());
+  }
   return Result::Error;
 }
 
@@ -1017,7 +1020,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       case Opcode::Try: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "try signature type"));
         ERROR_UNLESS(is_inline_sig_type(sig_type),
@@ -1029,7 +1032,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Catch: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index index;
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnCatchExpr, index);
@@ -1038,14 +1041,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::CatchAll: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnCatchAllExpr);
         CALLBACK0(OnOpcodeBare);
         break;
       }
 
       case Opcode::Rethrow: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index depth;
         CHECK_RESULT(ReadIndex(&depth, "catch depth"));
         CALLBACK(OnRethrowExpr, depth);
@@ -1054,7 +1057,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Throw: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index index;
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnThrowExpr, index);
@@ -1070,6 +1073,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64TruncUSatF32:
       case Opcode::I64TruncSSatF64:
       case Opcode::I64TruncUSatF64:
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnConvertExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1283,8 +1287,6 @@ Result BinaryReader::ReadExceptionType(TypeVector& sig) {
 }
 
 Result BinaryReader::ReadExceptionSection(Offset section_size) {
-  ERROR_UNLESS_FEATURE_ENABLED_SECTION(exceptions, "Unknown section %s",
-                                       WABT_BINARY_SECTION_EXCEPTION);
   CALLBACK(BeginExceptionSection, section_size);
   CHECK_RESULT(ReadIndex(&num_exceptions_, "exception count"));
   CALLBACK(OnExceptionCount, num_exceptions_);
@@ -1427,8 +1429,8 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       }
 
       case ExternalKind::Except: {
-        if (!options_->features.exceptions_enabled())
-          PrintError("invalid import exception kind: exceptions not allowed");
+        ERROR_UNLESS(options_->features.exceptions_enabled(),
+                     "invalid import exception kind: exceptions not allowed");
         TypeVector sig;
         CHECK_RESULT(ReadExceptionType(sig));
         CALLBACK(OnImport, i, module_name, field_name);
@@ -1549,8 +1551,8 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
         break;
       case ExternalKind::Except:
         // Note: Can't check if index valid, exceptions section comes later.
-        if (!options_->features.exceptions_enabled())
-          PrintError("invalid export exception kind: exceptions not allowed");
+        ERROR_UNLESS(options_->features.exceptions_enabled(),
+                     "invalid export exception kind: exceptions not allowed");
         break;
     }
 

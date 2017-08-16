@@ -1,5 +1,5 @@
 ;;; TOOL: wast2wasm
-;;; FLAGS: --future-exceptions -v
+;;; FLAGS: --enable-exceptions -v
 (module
   (except $ex i32)
   (export "except" (except $ex))
