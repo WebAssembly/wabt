@@ -142,7 +142,12 @@ void WriteStr(Stream* stream,
 }
 
 void WriteOpcode(Stream* stream, Opcode opcode) {
-  stream->WriteU8Enum(opcode.GetCode(), opcode.GetName());
+  if (opcode.HasPrefix()) {
+    stream->WriteU8(opcode.GetPrefix(), "prefix");
+    WriteU32Leb128(stream, opcode.GetCode(), opcode.GetName());
+  } else {
+    stream->WriteU8(opcode.GetCode(), opcode.GetName());
+  }
 }
 
 void WriteType(Stream* stream, Type type) {

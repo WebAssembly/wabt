@@ -21,21 +21,23 @@
 
 namespace wabt {
 
+class Features;
+
 struct Opcode {
   // Opcode enumerations.
   //
   // NOTE: this enum does not match the binary encoding.
   //
   enum Enum {
-#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) Name,
+#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
+  Name,
 #include "opcode.def"
 #undef WABT_OPCODE
-
     Invalid,
   };
 
   // Static opcode objects.
-#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) \
+#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
   static Opcode Name##_Opcode;
 #include "opcode.def"
 #undef WABT_OPCODE
@@ -45,7 +47,11 @@ struct Opcode {
   operator Enum() const { return enum_; }
 
   static Opcode FromCode(uint32_t);
+  static Opcode FromCode(uint8_t prefix, uint32_t code);
+  bool HasPrefix() const { return GetInfo().prefix != 0; }
+  uint8_t GetPrefix() const { return GetInfo().prefix; }
   uint32_t GetCode() const { return GetInfo().code; }
+  size_t GetLength() const { return HasPrefix() ? 2 : 1; }
   const char* GetName() const { return GetInfo().name; }
   Type GetResultType() const { return GetInfo().result_type; }
   Type GetParamType1() const { return GetInfo().param1_type; }
@@ -60,15 +66,29 @@ struct Opcode {
   // |opcode|, else return |alignment|.
   Address GetAlignment(Address alignment) const;
 
+  static bool IsPrefixByte(uint8_t byte) { return byte >= kFirstPrefix; }
+
+  bool IsEnabled(const Features& features) const;
+
  private:
+  static const uint32_t kFirstPrefix = 0xfc;
+
   struct Info {
     const char* name;
     Type result_type;
     Type param1_type;
     Type param2_type;
     Address memory_size;
+    uint8_t prefix;
     uint32_t code;
+    uint32_t prefix_code;  // See PrefixCode below. Used for fast lookup.
   };
+
+  static uint32_t PrefixCode(uint8_t prefix, uint32_t code) {
+    // For now, 8 bits is enough for all codes.
+    assert(code < 0x100);
+    return (prefix << 8) | code;
+  }
 
   Info GetInfo() const;
   static Info infos_[];

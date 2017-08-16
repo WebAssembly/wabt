@@ -48,10 +48,10 @@
     }                           \
   } while (0)
 
-#define ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode) \
-  do {                                                \
-    if (!options_->allow_future_exceptions)            \
-      return ReportUnexpectedOpcode(opcode);          \
+#define ERROR_UNLESS_OPCODE_ENABLED(opcode)    \
+  do {                                         \
+    if (!opcode.IsEnabled(options_->features)) \
+      return ReportUnexpectedOpcode(opcode);   \
   } while (0)
 
 #define CALLBACK0(member)                              \
@@ -269,17 +269,28 @@ Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
   const char* maybe_space = " ";
   if (!message)
     message = maybe_space = "";
-  PrintError("unexpected opcode%s%s: %d (0x%x)",
-             maybe_space, message, opcode.GetCode(), opcode.GetCode());
+  if (opcode.HasPrefix()) {
+    PrintError("unexpected opcode%s%s: %d %d (0x%x 0x%x)", maybe_space, message,
+               opcode.GetPrefix(), opcode.GetCode(), opcode.GetPrefix(),
+               opcode.GetCode());
+  } else {
+    PrintError("unexpected opcode%s%s: %d (0x%x)",
+               maybe_space, message, opcode.GetCode(), opcode.GetCode());
+  }
   return Result::Error;
 }
 
 Result BinaryReader::ReadOpcode(Opcode* out_value, const char* desc) {
   uint8_t value = 0;
-  if (Failed(ReadU8(&value, desc))) {
-    return Result::Error;
+  CHECK_RESULT(ReadU8(&value, desc));
+
+  if (Opcode::IsPrefixByte(value)) {
+    uint32_t code;
+    CHECK_RESULT(ReadU32Leb128(&code, desc));
+    *out_value = Opcode::FromCode(value, code);
+  } else {
+    *out_value = Opcode::FromCode(value);
   }
-  *out_value = Opcode::FromCode(value);
   return Result::Ok;
 }
 
@@ -1009,7 +1020,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       case Opcode::Try: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "try signature type"));
         ERROR_UNLESS(is_inline_sig_type(sig_type),
@@ -1021,7 +1032,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Catch: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index index;
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnCatchExpr, index);
@@ -1030,14 +1041,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::CatchAll: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnCatchAllExpr);
         CALLBACK0(OnOpcodeBare);
         break;
       }
 
       case Opcode::Rethrow: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index depth;
         CHECK_RESULT(ReadIndex(&depth, "catch depth"));
         CALLBACK(OnRethrowExpr, depth);
@@ -1046,13 +1057,26 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Throw: {
-        ERROR_UNLESS_FUTURE_EXCEPTIONS_OPCODE(opcode);
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index index;
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnThrowExpr, index);
         CALLBACK(OnOpcodeIndex, index);
         break;
       }
+
+      case Opcode::I32TruncSSatF32:
+      case Opcode::I32TruncUSatF32:
+      case Opcode::I32TruncSSatF64:
+      case Opcode::I32TruncUSatF64:
+      case Opcode::I64TruncSSatF32:
+      case Opcode::I64TruncUSatF32:
+      case Opcode::I64TruncSSatF64:
+      case Opcode::I64TruncUSatF64:
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        CALLBACK(OnConvertExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
+        break;
 
       default:
         return ReportUnexpectedOpcode(opcode);
@@ -1291,7 +1315,7 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
-  } else if (options_->allow_future_exceptions &&
+  } else if (options_->features.exceptions_enabled() &&
              section_name == WABT_BINARY_SECTION_EXCEPTION) {
     CHECK_RESULT(ReadExceptionSection(section_size));
   } else {
@@ -1405,8 +1429,8 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       }
 
       case ExternalKind::Except: {
-        if (!options_->allow_future_exceptions)
-          PrintError("invalid import exception kind: exceptions not allowed");
+        ERROR_UNLESS(options_->features.exceptions_enabled(),
+                     "invalid import exception kind: exceptions not allowed");
         TypeVector sig;
         CHECK_RESULT(ReadExceptionType(sig));
         CALLBACK(OnImport, i, module_name, field_name);
@@ -1527,8 +1551,8 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
         break;
       case ExternalKind::Except:
         // Note: Can't check if index valid, exceptions section comes later.
-        if (!options_->allow_future_exceptions)
-          PrintError("invalid export exception kind: exceptions not allowed");
+        ERROR_UNLESS(options_->features.exceptions_enabled(),
+                     "invalid export exception kind: exceptions not allowed");
         break;
     }
 

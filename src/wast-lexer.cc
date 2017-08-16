@@ -69,6 +69,9 @@
 #define RETURN_TYPE(token, type) \
   return Token(GetLocation(), TokenType::token, Type::type)
 
+#define RETURN_OPCODE0(token) \
+  return Token(GetLocation(), TokenType::token, Opcode::token)
+
 #define RETURN_OPCODE(token, opcode) \
   return Token(GetLocation(), TokenType::token, Opcode::opcode)
 
@@ -392,23 +395,23 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "mut"                 { RETURN(Mut); }
       <i> "nop"                 { RETURN(Nop); }
       <i> "block"               { RETURN(Block); }
-      <i> "if"                  { RETURN(If); }
+      <i> "if"                  { RETURN_OPCODE0(If); }
       <i> "then"                { RETURN(Then); }
       <i> "else"                { RETURN(Else); }
-      <i> "loop"                { RETURN(Loop); }
-      <i> "br"                  { RETURN(Br); }
-      <i> "br_if"               { RETURN(BrIf); }
-      <i> "br_table"            { RETURN(BrTable); }
-      <i> "call"                { RETURN(Call); }
-      <i> "call_indirect"       { RETURN(CallIndirect); }
-      <i> "drop"                { RETURN(Drop); }
-      <i> "end"                 { RETURN(End); }
-      <i> "return"              { RETURN(Return); }
-      <i> "get_local"           { RETURN(GetLocal); }
-      <i> "set_local"           { RETURN(SetLocal); }
-      <i> "tee_local"           { RETURN(TeeLocal); }
-      <i> "get_global"          { RETURN(GetGlobal); }
-      <i> "set_global"          { RETURN(SetGlobal); }
+      <i> "loop"                { RETURN_OPCODE0(Loop); }
+      <i> "br"                  { RETURN_OPCODE0(Br); }
+      <i> "br_if"               { RETURN_OPCODE0(BrIf); }
+      <i> "br_table"            { RETURN_OPCODE0(BrTable); }
+      <i> "call"                { RETURN_OPCODE0(Call); }
+      <i> "call_indirect"       { RETURN_OPCODE0(CallIndirect); }
+      <i> "drop"                { RETURN_OPCODE0(Drop); }
+      <i> "end"                 { RETURN_OPCODE0(End); }
+      <i> "return"              { RETURN_OPCODE0(Return); }
+      <i> "get_local"           { RETURN_OPCODE0(GetLocal); }
+      <i> "set_local"           { RETURN_OPCODE0(SetLocal); }
+      <i> "tee_local"           { RETURN_OPCODE0(TeeLocal); }
+      <i> "get_global"          { RETURN_OPCODE0(GetGlobal); }
+      <i> "set_global"          { RETURN_OPCODE0(SetGlobal); }
       <i> "i32.load"            { RETURN_OPCODE(Load, I32Load); }
       <i> "i64.load"            { RETURN_OPCODE(Load, I64Load); }
       <i> "f32.load"            { RETURN_OPCODE(Load, F32Load); }
@@ -547,6 +550,14 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i64.trunc_u/f32"     { RETURN_OPCODE(Convert, I64TruncUF32); }
       <i> "i32.trunc_u/f64"     { RETURN_OPCODE(Convert, I32TruncUF64); }
       <i> "i64.trunc_u/f64"     { RETURN_OPCODE(Convert, I64TruncUF64); }
+      <i> "i32.trunc_s:sat/f32" { RETURN_OPCODE(Convert, I32TruncSSatF32); }
+      <i> "i64.trunc_s:sat/f32" { RETURN_OPCODE(Convert, I64TruncSSatF32); }
+      <i> "i32.trunc_s:sat/f64" { RETURN_OPCODE(Convert, I32TruncSSatF64); }
+      <i> "i64.trunc_s:sat/f64" { RETURN_OPCODE(Convert, I64TruncSSatF64); }
+      <i> "i32.trunc_u:sat/f32" { RETURN_OPCODE(Convert, I32TruncUSatF32); }
+      <i> "i64.trunc_u:sat/f32" { RETURN_OPCODE(Convert, I64TruncUSatF32); }
+      <i> "i32.trunc_u:sat/f64" { RETURN_OPCODE(Convert, I32TruncUSatF64); }
+      <i> "i64.trunc_u:sat/f64" { RETURN_OPCODE(Convert, I64TruncUSatF64); }
       <i> "f32.convert_s/i32"   { RETURN_OPCODE(Convert, F32ConvertSI32); }
       <i> "f64.convert_s/i32"   { RETURN_OPCODE(Convert, F64ConvertSI32); }
       <i> "f32.convert_s/i64"   { RETURN_OPCODE(Convert, F32ConvertSI64); }
@@ -561,10 +572,10 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i32.reinterpret/f32" { RETURN_OPCODE(Convert, I32ReinterpretF32); }
       <i> "f64.reinterpret/i64" { RETURN_OPCODE(Convert, F64ReinterpretI64); }
       <i> "i64.reinterpret/f64" { RETURN_OPCODE(Convert, I64ReinterpretF64); }
-      <i> "select"              { RETURN(Select); }
-      <i> "unreachable"         { RETURN(Unreachable); }
-      <i> "current_memory"      { RETURN(CurrentMemory); }
-      <i> "grow_memory"         { RETURN(GrowMemory); }
+      <i> "select"              { RETURN_OPCODE0(Select); }
+      <i> "unreachable"         { RETURN_OPCODE0(Unreachable); }
+      <i> "current_memory"      { RETURN_OPCODE0(CurrentMemory); }
+      <i> "grow_memory"         { RETURN_OPCODE0(GrowMemory); }
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
       <i> "param"               { RETURN(Param); }
@@ -594,11 +605,11 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "assert_return_arithmetic_nan" { RETURN(AssertReturnArithmeticNan); }
       <i> "assert_trap"         { RETURN(AssertTrap); }
       <i> "assert_exhaustion"   { RETURN(AssertExhaustion); }
-      <i> "try"                 { RETURN(Try); }
-      <i> "catch"               { RETURN(Catch); }
-      <i> "catch_all"           { RETURN(CatchAll); }
-      <i> "throw"               { RETURN(Throw); }
-      <i> "rethrow"             { RETURN(Rethrow); }
+      <i> "try"                 { RETURN_OPCODE0(Try); }
+      <i> "catch"               { RETURN_OPCODE0(Catch); }
+      <i> "catch_all"           { RETURN_OPCODE0(CatchAll); }
+      <i> "throw"               { RETURN_OPCODE0(Throw); }
+      <i> "rethrow"             { RETURN_OPCODE0(Rethrow); }
       <i> name                  { RETURN_TEXT(Var); }
 
       <i> ";;" => LINE_COMMENT  { continue; }

@@ -24,6 +24,7 @@
 #include "common.h"
 #include "config.h"
 #include "error-handler.h"
+#include "feature.h"
 #include "generate-names.h"
 #include "ir.h"
 #include "option-parser.h"
@@ -38,7 +39,8 @@ static const char* s_infile;
 static const char* s_outfile;
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
-static WastParseOptions s_parse_options;
+static bool s_debug_parsing;
+static Features s_features;
 
 static const char s_description[] =
 R"(  read a file in the wasm s-expression format and format it.
@@ -61,12 +63,10 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption('o', "output", "FILE", "Output file for the formatted file",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
-                   []() { s_parse_options.debug_parsing = true; });
+                   []() { s_debug_parsing = true; });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
-  parser.AddOption("future-exceptions",
-                   "Test future extension for exception handling",
-                   []() { s_parse_options.allow_future_exceptions = true; });
+  s_features.AddOptions(&parser);
   parser.AddOption(
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",
@@ -87,8 +87,9 @@ int ProgramMain(int argc, char** argv) {
 
   ErrorHandlerFile error_handler(Location::Type::Text);
   Script* script;
+  WastParseOptions parse_wast_options(s_features);
   Result result =
-      ParseWast(lexer.get(), &script, &error_handler, &s_parse_options);
+      ParseWast(lexer.get(), &script, &error_handler, &parse_wast_options);
 
   if (Succeeded(result)) {
     Module* module = script->GetFirstModule();

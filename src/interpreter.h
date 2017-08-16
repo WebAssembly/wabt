@@ -95,7 +95,8 @@ static const IstreamOffset kInvalidIstreamOffset = ~0;
 
 // NOTE: These enumeration values do not match the standard binary encoding.
 enum class Opcode {
-#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) Name,
+#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
+  Name,
 #include "interpreter-opcode.def"
 #undef WABT_OPCODE
   Invalid,

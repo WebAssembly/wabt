@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: --dump-verbose --future-exceptions
+;;; FLAGS: --dump-verbose --enable-exceptions
 (module
   (except $ex i32)
   (export "except" (except $ex))

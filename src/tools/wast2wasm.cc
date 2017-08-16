@@ -27,6 +27,7 @@
 #include "binary-writer-spec.h"
 #include "common.h"
 #include "error-handler.h"
+#include "feature.h"
 #include "ir.h"
 #include "option-parser.h"
 #include "resolve-names.h"
@@ -42,10 +43,10 @@ static const char* s_outfile;
 static bool s_dump_module;
 static int s_verbose;
 static WriteBinaryOptions s_write_binary_options;
-static WriteBinarySpecOptions s_write_binary_spec_options;
 static bool s_spec;
 static bool s_validate = true;
-static WastParseOptions s_parse_options;
+static bool s_debug_parsing;
+static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
 
@@ -79,13 +80,11 @@ static void ParseOptions(int argc, char* argv[]) {
   });
   parser.AddHelpOption();
   parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
-                   []() { s_parse_options.debug_parsing = true; });
+                   []() { s_debug_parsing = true; });
   parser.AddOption('d', "dump-module",
                    "Print a hexdump of the module to stdout",
                    []() { s_dump_module = true; });
-  parser.AddOption("future-exceptions",
-                   "Test future extension for exception handling",
-                   []() { s_parse_options.allow_future_exceptions = true; });
+  s_features.AddOptions(&parser);
   parser.AddOption('o', "output", "FILE", "output wasm binary file",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption(
@@ -137,8 +136,9 @@ int ProgramMain(int argc, char** argv) {
 
   ErrorHandlerFile error_handler(Location::Type::Text);
   Script* script;
+  WastParseOptions parse_wast_options(s_features);
   Result result =
-      ParseWast(lexer.get(), &script, &error_handler, &s_parse_options);
+      ParseWast(lexer.get(), &script, &error_handler, &parse_wast_options);
 
   if (Succeeded(result)) {
     result = ResolveNamesScript(lexer.get(), script, &error_handler);
@@ -148,11 +148,11 @@ int ProgramMain(int argc, char** argv) {
 
     if (Succeeded(result)) {
       if (s_spec) {
-        s_write_binary_spec_options.json_filename = s_outfile;
-        s_write_binary_spec_options.write_binary_options =
-            s_write_binary_options;
-        result = WriteBinarySpecScript(script, s_infile,
-                                       &s_write_binary_spec_options);
+        WriteBinarySpecOptions write_binary_spec_options;
+        write_binary_spec_options.json_filename = s_outfile;
+        write_binary_spec_options.write_binary_options = s_write_binary_options;
+        result =
+            WriteBinarySpecScript(script, s_infile, &write_binary_spec_options);
       } else {
         MemoryWriter writer;
         const Module* module = script->GetFirstModule();

@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "common.h"
+#include "feature.h"
 #include "stream.h"
 
 namespace wabt {
@@ -44,7 +45,7 @@ struct ObjdumpOptions {
   bool disassemble;
   bool debug;
   bool relocs;
-  bool allow_future_exceptions = false;
+  Features features;
   ObjdumpMode mode;
   const char* filename;
   const char* section_name;

@@ -248,7 +248,10 @@ class TestInfo(object):
     result.expected_stderr = ''
     result.tool = 'run-roundtrip'
     result.exe = ROUNDTRIP_PY
-    result.flags = ['--bindir', '%(bindir)s', '-v', '-o', '%(out_dir)s']
+    # TODO(binji): It's kind of cheesy to keep the enable flag based on prefix.
+    # Maybe it would be nicer to add a new directive ENABLE instead.
+    result.flags = [flag for flag in self.flags if flag.startswith('--enable')]
+    result.flags += ['--bindir', '%(bindir)s', '-v', '-o', '%(out_dir)s']
     if fold_exprs:
       result.flags.append('--fold-exprs')
     result.env = self.env
