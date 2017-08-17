@@ -6,10 +6,10 @@ out/third_party/testsuite/globals.wast:50: assert_invalid passed:
   0000026: error: OnSetGlobalExpr callback failed
 out/third_party/testsuite/globals.wast:55: assert_invalid passed:
   error: unknown import module "m"
-  0000012: error: OnImport callback failed
+  0000012: error: OnImportGlobal callback failed
 out/third_party/testsuite/globals.wast:60: assert_invalid passed:
   error: unknown import module "m"
-  0000012: error: OnImport callback failed
+  0000012: error: OnImportGlobal callback failed
 out/third_party/testsuite/globals.wast:65: assert_invalid passed:
   error: mutable globals cannot be exported
   000001a: error: OnExport callback failed

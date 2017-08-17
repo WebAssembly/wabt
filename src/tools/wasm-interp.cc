@@ -25,6 +25,7 @@
 
 #include "binary-reader-interpreter.h"
 #include "binary-reader.h"
+#include "cast.h"
 #include "error-handler.h"
 #include "feature.h"
 #include "interpreter.h"
@@ -344,12 +345,12 @@ static interpreter::Result DefaultHostCallback(
 
 class SpectestHostImportDelegate : public HostImportDelegate {
  public:
-  wabt::Result ImportFunc(interpreter::Import* import,
+  wabt::Result ImportFunc(interpreter::FuncImport* import,
                           interpreter::Func* func,
                           interpreter::FuncSignature* func_sig,
                           const ErrorCallback& callback) override {
     if (import->field_name == "print") {
-      func->as_host()->callback = DefaultHostCallback;
+      cast<HostFunc>(func)->callback = DefaultHostCallback;
       return wabt::Result::Ok;
     } else {
       PrintError(callback, "unknown host function import " PRIimport,
@@ -358,7 +359,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportTable(interpreter::Import* import,
+  wabt::Result ImportTable(interpreter::TableImport* import,
                            interpreter::Table* table,
                            const ErrorCallback& callback) override {
     if (import->field_name == "table") {
@@ -373,7 +374,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportMemory(interpreter::Import* import,
+  wabt::Result ImportMemory(interpreter::MemoryImport* import,
                             interpreter::Memory* memory,
                             const ErrorCallback& callback) override {
     if (import->field_name == "memory") {
@@ -389,7 +390,7 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportGlobal(interpreter::Import* import,
+  wabt::Result ImportGlobal(interpreter::GlobalImport* import,
                             interpreter::Global* global,
                             const ErrorCallback& callback) override {
     if (import->field_name == "global") {
