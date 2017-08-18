@@ -133,17 +133,17 @@ void NameGenerator::GenerateAndBindLocalNames(BindingHash* bindings,
 }
 
 Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
-  MaybeGenerateName("$B", label_count_++, &expr->block->label);
+  MaybeGenerateName("$B", label_count_++, &expr->block.label);
   return Result::Ok;
 }
 
 Result NameGenerator::BeginLoopExpr(LoopExpr* expr) {
-  MaybeGenerateName("$L", label_count_++, &expr->block->label);
+  MaybeGenerateName("$L", label_count_++, &expr->block.label);
   return Result::Ok;
 }
 
 Result NameGenerator::BeginIfExpr(IfExpr* expr) {
-  MaybeGenerateName("$I", label_count_++, &expr->true_->label);
+  MaybeGenerateName("$I", label_count_++, &expr->true_.label);
   return Result::Ok;
 }
 

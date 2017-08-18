@@ -81,7 +81,7 @@ struct Section {
     /* DATA section data */
     std::vector<DataSegment>* data_segments;
     /* MEMORY section data */
-    Limits memory_limits;
+    uint64_t initial;
   } data;
 
   /* The offset at which this section appears within the combined output

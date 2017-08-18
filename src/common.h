@@ -251,9 +251,9 @@ enum class ExternalKind {
 static const int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
 
 struct Limits {
-  uint64_t initial;
-  uint64_t max;
-  bool has_max;
+  uint64_t initial = 0;
+  uint64_t max = 0;
+  bool has_max = false;
 };
 
 enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };

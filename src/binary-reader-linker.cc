@@ -220,7 +220,7 @@ Result BinaryReaderLinker::OnElemSegmentFunctionIndexCount(Index index,
 
 Result BinaryReaderLinker::OnMemory(Index index, const Limits* page_limits) {
   Section* sec = current_section_;
-  sec->data.memory_limits = *page_limits;
+  sec->data.initial = page_limits->initial;
   binary_->memory_page_count = page_limits->initial;
   return Result::Ok;
 }

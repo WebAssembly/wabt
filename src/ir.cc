@@ -67,7 +67,7 @@ const char* GetExprTypeName(ExprType type) {
 }
 
 const char* GetExprTypeName(const Expr& expr) {
-  return GetExprTypeName(expr.type);
+  return GetExprTypeName(expr.type());
 }
 
 bool FuncSignature::operator==(const FuncSignature& rhs) const {
@@ -193,100 +193,100 @@ Index Module::GetFuncTypeIndex(const FuncDeclaration& decl) const {
 
 void Module::AppendField(DataSegmentModuleField* field) {
   fields.push_back(field);
-  data_segments.push_back(field->data_segment);
+  data_segments.push_back(&field->data_segment);
 }
 
 void Module::AppendField(ElemSegmentModuleField* field) {
   fields.push_back(field);
-  elem_segments.push_back(field->elem_segment);
+  elem_segments.push_back(&field->elem_segment);
 }
 
 void Module::AppendField(ExceptionModuleField* field) {
-  auto except = field->except;
-  if (!except->name.empty())
-    except_bindings.emplace(except->name, Binding(field->loc, excepts.size()));
-  excepts.push_back(except);
+  auto&& except = field->except;
+  if (!except.name.empty())
+    except_bindings.emplace(except.name, Binding(field->loc, excepts.size()));
+  excepts.push_back(&except);
   fields.push_back(field);
 }
 
 void Module::AppendField(ExportModuleField* field) {
   // Exported names are allowed to be empty.
-  auto export_ = field->export_;
-  export_bindings.emplace(export_->name, Binding(field->loc, exports.size()));
-  exports.push_back(export_);
+  auto&& export_ = field->export_;
+  export_bindings.emplace(export_.name, Binding(field->loc, exports.size()));
+  exports.push_back(&export_);
   fields.push_back(field);
 }
 
 void Module::AppendField(FuncModuleField* field) {
-  auto func = field->func;
-  if (!func->name.empty())
-    func_bindings.emplace(func->name, Binding(field->loc, funcs.size()));
-  funcs.push_back(func);
+  auto&& func = field->func;
+  if (!func.name.empty())
+    func_bindings.emplace(func.name, Binding(field->loc, funcs.size()));
+  funcs.push_back(&func);
   fields.push_back(field);
 }
 
 void Module::AppendField(FuncTypeModuleField* field) {
-  auto func_type = field->func_type;
-  if (!func_type->name.empty()) {
-    func_type_bindings.emplace(func_type->name,
+  auto&& func_type = field->func_type;
+  if (!func_type.name.empty()) {
+    func_type_bindings.emplace(func_type.name,
                                Binding(field->loc, func_types.size()));
   }
-  func_types.push_back(func_type);
+  func_types.push_back(&func_type);
   fields.push_back(field);
 }
 
 void Module::AppendField(GlobalModuleField* field) {
-  auto global = field->global;
-  if (!global->name.empty())
-    global_bindings.emplace(global->name, Binding(field->loc, globals.size()));
-  globals.push_back(global);
+  auto&& global = field->global;
+  if (!global.name.empty())
+    global_bindings.emplace(global.name, Binding(field->loc, globals.size()));
+  globals.push_back(&global);
   fields.push_back(field);
 }
 
 void Module::AppendField(ImportModuleField* field) {
-  auto import = field->import;
+  auto&& import = field->import;
   std::string* name = nullptr;
   BindingHash* bindings = nullptr;
   Index index = kInvalidIndex;
 
-  switch (import->kind) {
+  switch (import.kind) {
     case ExternalKind::Func:
-      name = &import->func->name;
+      name = &import.func->name;
       bindings = &func_bindings;
       index = funcs.size();
-      funcs.push_back(import->func);
+      funcs.push_back(import.func);
       ++num_func_imports;
       break;
 
     case ExternalKind::Table:
-      name = &import->table->name;
+      name = &import.table->name;
       bindings = &table_bindings;
       index = tables.size();
-      tables.push_back(import->table);
+      tables.push_back(import.table);
       ++num_table_imports;
       break;
 
     case ExternalKind::Memory:
-      name = &import->memory->name;
+      name = &import.memory->name;
       bindings = &memory_bindings;
       index = memories.size();
-      memories.push_back(import->memory);
+      memories.push_back(import.memory);
       ++num_memory_imports;
       break;
 
     case ExternalKind::Global:
-      name = &import->global->name;
+      name = &import.global->name;
       bindings = &global_bindings;
       index = globals.size();
-      globals.push_back(import->global);
+      globals.push_back(import.global);
       ++num_global_imports;
       break;
 
     case ExternalKind::Except:
-      name = &import->except->name;
+      name = &import.except->name;
       bindings = &except_bindings;
       index = excepts.size();
-      excepts.push_back(import->except);
+      excepts.push_back(import.except);
       ++num_except_imports;
       break;
   }
@@ -294,15 +294,15 @@ void Module::AppendField(ImportModuleField* field) {
   assert(name && bindings && index != kInvalidIndex);
   if (!name->empty())
     bindings->emplace(*name, Binding(field->loc, index));
-  imports.push_back(import);
+  imports.push_back(&import);
   fields.push_back(field);
 }
 
 void Module::AppendField(MemoryModuleField* field) {
-  auto memory = field->memory;
-  if (!memory->name.empty())
-    memory_bindings.emplace(memory->name, Binding(field->loc, memories.size()));
-  memories.push_back(memory);
+  auto&& memory = field->memory;
+  if (!memory.name.empty())
+    memory_bindings.emplace(memory.name, Binding(field->loc, memories.size()));
+  memories.push_back(&memory);
   fields.push_back(field);
 }
 
@@ -312,15 +312,15 @@ void Module::AppendField(StartModuleField* field) {
 }
 
 void Module::AppendField(TableModuleField* field) {
-  auto table = field->table;
-  if (!table->name.empty())
-    table_bindings.emplace(table->name, Binding(field->loc, tables.size()));
-  tables.push_back(table);
+  auto&& table = field->table;
+  if (!table.name.empty())
+    table_bindings.emplace(table.name, Binding(field->loc, tables.size()));
+  tables.push_back(&table);
   fields.push_back(field);
 }
 
 void Module::AppendField(ModuleField* field) {
-  switch (field->type) {
+  switch (field->type()) {
     case ModuleFieldType::Func:
       AppendField(dyn_cast<FuncModuleField>(field));
       break;
@@ -379,7 +379,7 @@ const Module* Script::GetFirstModule() const {
 Module* Script::GetFirstModule() {
   for (const std::unique_ptr<Command>& command : commands) {
     if (auto* module_command = dyn_cast<ModuleCommand>(command.get()))
-      return module_command->module;
+      return &module_command->module;
   }
   return nullptr;
 }
@@ -389,7 +389,7 @@ const Module* Script::GetModule(const Var& var) const {
   if (index >= commands.size())
     return nullptr;
   auto* command = cast<ModuleCommand>(commands[index].get());
-  return command->module;
+  return &command->module;
 }
 
 void MakeTypeBindingReverseMapping(
@@ -464,127 +464,39 @@ void Var::Destroy() {
     Destruct(name_);
 }
 
-Const::Const(I32, uint32_t value, const Location& loc_)
+Const::Const(I32Tag, uint32_t value, const Location& loc_)
     : loc(loc_), type(Type::I32), u32(value) {
 }
 
-Const::Const(I64, uint64_t value, const Location& loc_)
+Const::Const(I64Tag, uint64_t value, const Location& loc_)
     : loc(loc_), type(Type::I64), u64(value) {
 }
 
-Const::Const(F32, uint32_t value, const Location& loc_)
+Const::Const(F32Tag, uint32_t value, const Location& loc_)
     : loc(loc_), type(Type::F32), f32_bits(value) {
 }
 
-Const::Const(F64, uint64_t value, const Location& loc_)
+Const::Const(F64Tag, uint64_t value, const Location& loc_)
     : loc(loc_), type(Type::F64), f64_bits(value) {
 }
 
-Block::Block(ExprList exprs) : exprs(std::move(exprs)) {}
-
-Catch::Catch() {}
-
-Catch::Catch(const Var& var) : var(var) {}
-
-Catch::Catch(ExprList exprs) : exprs(std::move(exprs)) {}
-
-Catch::Catch(const Var& var, ExprList exprs)
-    : var(var), exprs(std::move(exprs)) {}
-
-IfExpr::~IfExpr() {
-  delete true_;
+Import::Import(ExternalKind kind, string_view name) : kind(kind) {
+  switch (kind) {
+    case ExternalKind::Func: func = new Func(name); break;
+    case ExternalKind::Table: table = new Table(name); break;
+    case ExternalKind::Memory: memory = new Memory(name); break;
+    case ExternalKind::Global: global = new Global(name); break;
+    case ExternalKind::Except: except = new Exception(name); break;
+  }
 }
-
-TryExpr::~TryExpr() {
-  delete block;
-  for (Catch* catch_ : catches)
-    delete catch_;
-}
-
-Expr::Expr(ExprType type) : type(type) {}
-
-Expr::Expr(ExprType type, Location loc) : loc(loc), type(type) {}
-
-Table::Table() {
-  ZeroMemory(elem_limits);
-}
-
-Memory::Memory() {
-  ZeroMemory(page_limits);
-}
-
-Import::Import() : kind(ExternalKind::Func), func(nullptr) {}
 
 Import::~Import() {
   switch (kind) {
-    case ExternalKind::Func:
-      delete func;
-      break;
-    case ExternalKind::Table:
-      delete table;
-      break;
-    case ExternalKind::Memory:
-      delete memory;
-      break;
-    case ExternalKind::Global:
-      delete global;
-      break;
-    case ExternalKind::Except:
-      delete except;
-      break;
-  }
-}
-
-ModuleField::ModuleField(ModuleFieldType type, const Location& loc)
-    : loc(loc), type(type) {}
-
-ScriptModule::ScriptModule(Type type) : type(type) {
-  switch (type) {
-    case ScriptModule::Type::Text:
-      text = nullptr;
-      break;
-
-    case ScriptModule::Type::Binary:
-      Construct(binary.loc);
-      Construct(binary.name);
-      Construct(binary.data);
-      break;
-
-    case ScriptModule::Type::Quoted:
-      Construct(quoted.loc);
-      Construct(quoted.name);
-      Construct(quoted.data);
-      break;
-  }
-}
-
-ScriptModule::~ScriptModule() {
-  switch (type) {
-    case ScriptModule::Type::Text:
-      delete text;
-      break;
-    case ScriptModule::Type::Binary:
-      Destruct(binary.loc);
-      Destruct(binary.name);
-      Destruct(binary.data);
-      break;
-    case ScriptModule::Type::Quoted:
-      Destruct(quoted.loc);
-      Destruct(quoted.name);
-      Destruct(quoted.data);
-      break;
-  }
-}
-
-Action::Action() : type(ActionType::Get), module_var(kInvalidIndex) {}
-
-Action::~Action() {
-  switch (type) {
-    case ActionType::Invoke:
-      delete invoke;
-      break;
-    case ActionType::Get:
-      break;
+    case ExternalKind::Func: delete func; break;
+    case ExternalKind::Table: delete table; break;
+    case ExternalKind::Memory: delete memory; break;
+    case ExternalKind::Global: delete global; break;
+    case ExternalKind::Except: delete except; break;
   }
 }
 
