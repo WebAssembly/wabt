@@ -13,7 +13,7 @@ called host spectest.print(f64:24.000000) =>
 called host spectest.print(f64:24.000000) =>
 out/third_party/testsuite/imports.wast:99: assert_unlinkable passed:
   error: unknown module field "unknown"
-  0000020: error: OnImport callback failed
+  0000020: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:103: assert_unlinkable passed:
   error: unknown host function import "spectest.unknown"
   0000024: error: OnImportFunc callback failed
@@ -85,7 +85,7 @@ out/third_party/testsuite/imports.wast:193: assert_unlinkable passed:
   0000023: error: OnImportFunc callback failed
 out/third_party/testsuite/imports.wast:227: assert_unlinkable passed:
   error: unknown module field "unknown"
-  000001b: error: OnImport callback failed
+  000001b: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:231: assert_unlinkable passed:
   error: unknown host global import "spectest.unknown"
   000001f: error: OnImportGlobal callback failed
@@ -109,15 +109,15 @@ out/third_party/testsuite/imports.wast:256: assert_unlinkable passed:
   000001e: error: OnImportGlobal callback failed
 out/third_party/testsuite/imports.wast:298: assert_invalid passed:
   error: unknown import module ""
-  0000011: error: OnImport callback failed
+  0000011: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:302: assert_invalid passed:
   error: unknown import module ""
-  0000011: error: OnImport callback failed
+  0000011: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:306: assert_invalid passed:
   000000b: error: table count (2) must be 0 or 1
 out/third_party/testsuite/imports.wast:323: assert_unlinkable passed:
   error: unknown module field "unknown"
-  000001c: error: OnImport callback failed
+  000001c: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:327: assert_unlinkable passed:
   error: unknown host table import "spectest.unknown"
   0000020: error: OnImportTable callback failed
@@ -147,15 +147,15 @@ out/third_party/testsuite/imports.wast:361: assert_unlinkable passed:
   000001e: error: OnImportTable callback failed
 out/third_party/testsuite/imports.wast:393: assert_invalid passed:
   error: unknown import module ""
-  0000010: error: OnImport callback failed
+  0000010: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:397: assert_invalid passed:
   error: unknown import module ""
-  0000010: error: OnImport callback failed
+  0000010: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:401: assert_invalid passed:
   000000b: error: memory count must be 0 or 1
 out/third_party/testsuite/imports.wast:416: assert_unlinkable passed:
   error: unknown module field "unknown"
-  000001b: error: OnImport callback failed
+  000001b: error: OnImportMemory callback failed
 out/third_party/testsuite/imports.wast:420: assert_unlinkable passed:
   error: unknown host memory import "spectest.unknown"
   000001f: error: OnImportMemory callback failed

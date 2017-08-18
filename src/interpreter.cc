@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "cast.h"
 #include "stream.h"
 
 namespace wabt {
@@ -106,40 +107,6 @@ FuncSignature::FuncSignature(Index param_count,
                              Type* result_types)
     : param_types(param_types, param_types + param_count),
       result_types(result_types, result_types + result_count) {}
-
-Import::Import() : kind(ExternalKind::Func) {
-  func.sig_index = kInvalidIndex;
-}
-
-Import::Import(Import&& other) {
-  *this = std::move(other);
-}
-
-Import& Import::operator=(Import&& other) {
-  kind = other.kind;
-  module_name = std::move(other.module_name);
-  field_name = std::move(other.field_name);
-  switch (kind) {
-    case ExternalKind::Func:
-      func.sig_index = other.func.sig_index;
-      break;
-    case ExternalKind::Table:
-      table.limits = other.table.limits;
-      break;
-    case ExternalKind::Memory:
-      memory.limits = other.memory.limits;
-      break;
-    case ExternalKind::Global:
-      global.type = other.global.type;
-      global.mutable_ = other.global.mutable_;
-      break;
-    case ExternalKind::Except:
-      // TODO(karlschimpf) Define
-      WABT_FATAL("Import::operator=() not implemented for exceptions");
-      break;
-  }
-  return *this;
-}
 
 Module::Module(bool is_host)
     : memory_index(kInvalidIndex),
@@ -1089,8 +1056,9 @@ Result Thread::RunFunction(Index func_index,
 
   Result result = PushArgs(sig, args);
   if (result == Result::Ok) {
-    result = func->is_host ? CallHost(func->as_host())
-                           : RunDefinedFunction(func->as_defined()->offset);
+    result = func->is_host
+                 ? CallHost(cast<HostFunc>(func))
+                 : RunDefinedFunction(cast<DefinedFunc>(func)->offset);
     if (result == Result::Ok)
       CopyResults(sig, out_results);
   }
@@ -1110,9 +1078,9 @@ Result Thread::TraceFunction(Index func_index,
 
   Result result = PushArgs(sig, args);
   if (result == Result::Ok) {
-    result = func->is_host
-                 ? CallHost(func->as_host())
-                 : TraceDefinedFunction(func->as_defined()->offset, stream);
+    result = func->is_host ? CallHost(cast<HostFunc>(func))
+                           : TraceDefinedFunction(
+                                 cast<DefinedFunc>(func)->offset, stream);
     if (result == Result::Ok)
       CopyResults(sig, out_results);
   }
@@ -1302,17 +1270,17 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         TRAP_UNLESS(env_->FuncSignaturesAreEqual(func->sig_index, sig_index),
                     IndirectCallSignatureMismatch);
         if (func->is_host) {
-          CallHost(func->as_host());
+          CallHost(cast<HostFunc>(func));
         } else {
           CHECK_TRAP(PushCall(pc));
-          GOTO(func->as_defined()->offset);
+          GOTO(cast<DefinedFunc>(func)->offset);
         }
         break;
       }
 
       case Opcode::CallHost: {
         Index func_index = read_u32(&pc);
-        CallHost(env_->funcs_[func_index]->as_host());
+        CallHost(cast<HostFunc>(env_->funcs_[func_index].get()));
         break;
       }
 
@@ -2713,8 +2681,9 @@ void Environment::Disassemble(Stream* stream,
 
 void Environment::DisassembleModule(Stream* stream, Module* module) {
   assert(!module->is_host);
-  Disassemble(stream, module->as_defined()->istream_start,
-              module->as_defined()->istream_end);
+  auto* defined_module = cast<DefinedModule>(module);
+  Disassemble(stream, defined_module->istream_start,
+              defined_module->istream_end);
 }
 
 }  // namespace interpreter

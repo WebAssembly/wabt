@@ -172,26 +172,54 @@ struct Global {
 };
 
 struct Import {
-  Import();
-  Import(Import&&);
-  Import& operator=(Import&&);
-  ~Import() = default;
+  explicit Import(ExternalKind kind) : kind(kind) {}
+  Import(ExternalKind kind, string_view module_name, string_view field_name)
+      : kind(kind),
+        module_name(module_name.to_string()),
+        field_name(field_name.to_string()) {}
 
+  ExternalKind kind;
   std::string module_name;
   std::string field_name;
-  ExternalKind kind;
-  union {
-    struct {
-      Index sig_index;
-    } func;
-    struct {
-      Limits limits;
-    } table, memory;
-    struct {
-      Type type;
-      bool mutable_;
-    } global;
-  };
+};
+
+struct FuncImport : Import {
+  FuncImport() : Import(ExternalKind::Func) {}
+  FuncImport(string_view module_name, string_view field_name)
+      : Import(ExternalKind::Func, module_name, field_name) {}
+
+  Index sig_index = kInvalidIndex;
+};
+
+struct TableImport : Import {
+  TableImport() : Import(ExternalKind::Table) { ZeroMemory(limits); }
+  TableImport(string_view module_name, string_view field_name)
+      : Import(ExternalKind::Table, module_name, field_name) {}
+
+  Limits limits;
+};
+
+struct MemoryImport : Import {
+  MemoryImport() : Import(ExternalKind::Memory) { ZeroMemory(limits); }
+  MemoryImport(string_view module_name, string_view field_name)
+      : Import(ExternalKind::Memory, module_name, field_name) {}
+
+  Limits limits;
+};
+
+struct GlobalImport : Import {
+  GlobalImport() : Import(ExternalKind::Global) {}
+  GlobalImport(string_view module_name, string_view field_name)
+      : Import(ExternalKind::Global, module_name, field_name) {}
+
+  Type type = Type::Void;
+  bool mutable_ = false;
+};
+
+struct ExceptImport : Import {
+  ExceptImport() : Import(ExternalKind::Except) {}
+  ExceptImport(string_view module_name, string_view field_name)
+      : Import(ExternalKind::Except, module_name, field_name) {}
 };
 
 struct Func;
@@ -210,9 +238,6 @@ struct Func {
       : sig_index(sig_index), is_host(is_host) {}
   virtual ~Func() {}
 
-  inline struct DefinedFunc* as_defined();
-  inline struct HostFunc* as_host();
-
   Index sig_index;
   bool is_host;
 };
@@ -223,6 +248,8 @@ struct DefinedFunc : Func {
         offset(kInvalidIstreamOffset),
         local_decl_count(0),
         local_count(0) {}
+
+  static bool classof(const Func* func) { return !func->is_host; }
 
   IstreamOffset offset;
   Index local_decl_count;
@@ -236,21 +263,13 @@ struct HostFunc : Func {
         module_name(module_name.to_string()),
         field_name(field_name.to_string()) {}
 
+  static bool classof(const Func* func) { return func->is_host; }
+
   std::string module_name;
   std::string field_name;
   HostFuncCallback callback;
   void* user_data;
 };
-
-DefinedFunc* Func::as_defined() {
-  assert(!is_host);
-  return static_cast<DefinedFunc*>(this);
-}
-
-HostFunc* Func::as_host() {
-  assert(is_host);
-  return static_cast<HostFunc*>(this);
-}
 
 struct Export {
   Export(string_view name, ExternalKind kind, Index index)
@@ -266,13 +285,19 @@ class HostImportDelegate {
   typedef std::function<void(const char* msg)> ErrorCallback;
 
   virtual ~HostImportDelegate() {}
-  virtual wabt::Result ImportFunc(Import*,
+  virtual wabt::Result ImportFunc(FuncImport*,
                                   Func*,
                                   FuncSignature*,
                                   const ErrorCallback&) = 0;
-  virtual wabt::Result ImportTable(Import*, Table*, const ErrorCallback&) = 0;
-  virtual wabt::Result ImportMemory(Import*, Memory*, const ErrorCallback&) = 0;
-  virtual wabt::Result ImportGlobal(Import*, Global*, const ErrorCallback&) = 0;
+  virtual wabt::Result ImportTable(TableImport*,
+                                   Table*,
+                                   const ErrorCallback&) = 0;
+  virtual wabt::Result ImportMemory(MemoryImport*,
+                                    Memory*,
+                                    const ErrorCallback&) = 0;
+  virtual wabt::Result ImportGlobal(GlobalImport*,
+                                    Global*,
+                                    const ErrorCallback&) = 0;
 };
 
 struct Module {
@@ -280,9 +305,6 @@ struct Module {
   explicit Module(bool is_host);
   Module(string_view name, bool is_host);
   virtual ~Module() = default;
-
-  inline struct DefinedModule* as_defined();
-  inline struct HostModule* as_host();
 
   Export* GetExport(string_view name);
 
@@ -296,8 +318,13 @@ struct Module {
 
 struct DefinedModule : Module {
   DefinedModule();
+  static bool classof(const Module* module) { return !module->is_host; }
 
-  std::vector<Import> imports;
+  std::vector<FuncImport> func_imports;
+  std::vector<TableImport> table_imports;
+  std::vector<MemoryImport> memory_imports;
+  std::vector<GlobalImport> global_imports;
+  std::vector<ExceptImport> except_imports;
   Index start_func_index; /* kInvalidIndex if not defined */
   IstreamOffset istream_start;
   IstreamOffset istream_end;
@@ -305,19 +332,10 @@ struct DefinedModule : Module {
 
 struct HostModule : Module {
   explicit HostModule(string_view name);
+  static bool classof(const Module* module) { return module->is_host; }
 
   std::unique_ptr<HostImportDelegate> import_delegate;
 };
-
-DefinedModule* Module::as_defined() {
-  assert(!is_host);
-  return static_cast<DefinedModule*>(this);
-}
-
-HostModule* Module::as_host() {
-  assert(is_host);
-  return static_cast<HostModule*>(this);
-}
 
 class Environment {
  public:
