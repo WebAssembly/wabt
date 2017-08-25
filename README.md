@@ -24,9 +24,9 @@ target; instead they aim for full fidelity and compliance with the spec (e.g.
 
 Wabt has been compiled to JavaScript via emscripten. Some of the functionality is available in the following demos:
 
-- [index](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/index.html)
-- [wast2wasm](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/wast2wasm/)
-- [wasm2wast](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/wasm2wast/)
+- [index](https://cdn.rawgit.com/WebAssembly/wabt/7e56ca56/demo/index.html)
+- [wast2wasm](https://cdn.rawgit.com/WebAssembly/wabt/7e56ca56/demo/wast2wasm/)
+- [wasm2wast](https://cdn.rawgit.com/WebAssembly/wabt/7e56ca56/demo/wasm2wast/)
 
 ## Cloning
 
