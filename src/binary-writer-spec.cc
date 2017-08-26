@@ -78,8 +78,8 @@ class BinaryWriterSpec {
   void WriteTypeObject(Type type);
   void WriteConst(const Const& const_);
   void WriteConstVector(const ConstVector& consts);
-  void WriteAction(const Action* action);
-  void WriteActionResultType(const Script& script, const Action* action);
+  void WriteAction(const Action& action);
+  void WriteActionResultType(const Script& script, const Action& action);
   void WriteModule(string_view filename, const Module& module);
   void WriteScriptModule(string_view filename,
                          const ScriptModule& script_module);
@@ -246,43 +246,43 @@ void BinaryWriterSpec::WriteConstVector(const ConstVector& consts) {
   json_stream_.Writef("]");
 }
 
-void BinaryWriterSpec::WriteAction(const Action* action) {
+void BinaryWriterSpec::WriteAction(const Action& action) {
   WriteKey("action");
   json_stream_.Writef("{");
   WriteKey("type");
-  if (action->type() == ActionType::Invoke) {
+  if (action.type() == ActionType::Invoke) {
     WriteString("invoke");
   } else {
-    assert(action->type() == ActionType::Get);
+    assert(action.type() == ActionType::Get);
     WriteString("get");
   }
   WriteSeparator();
-  if (action->module_var.is_name()) {
+  if (action.module_var.is_name()) {
     WriteKey("module");
-    WriteVar(action->module_var);
+    WriteVar(action.module_var);
     WriteSeparator();
   }
-  if (action->type() == ActionType::Invoke) {
+  if (action.type() == ActionType::Invoke) {
     WriteKey("field");
-    WriteEscapedString(action->name);
+    WriteEscapedString(action.name);
     WriteSeparator();
     WriteKey("args");
-    WriteConstVector(cast<InvokeAction>(action)->args);
+    WriteConstVector(cast<InvokeAction>(&action)->args);
   } else {
     WriteKey("field");
-    WriteEscapedString(action->name);
+    WriteEscapedString(action.name);
   }
   json_stream_.Writef("}");
 }
 
 void BinaryWriterSpec::WriteActionResultType(const Script& script,
-                                             const Action* action) {
-  const Module* module = script.GetModule(action->module_var);
+                                             const Action& action) {
+  const Module* module = script.GetModule(action.module_var);
   const Export* export_;
   json_stream_.Writef("[");
-  switch (action->type()) {
+  switch (action.type()) {
     case ActionType::Invoke: {
-      export_ = module->GetExport(action->name);
+      export_ = module->GetExport(action.name);
       assert(export_->kind == ExternalKind::Func);
       const Func* func = module->GetFunc(export_->var);
       Index num_results = func->GetNumResults();
@@ -292,7 +292,7 @@ void BinaryWriterSpec::WriteActionResultType(const Script& script,
     }
 
     case ActionType::Get: {
-      export_ = module->GetExport(action->name);
+      export_ = module->GetExport(action.name);
       assert(export_->kind == ExternalKind::Global);
       const Global* global = module->GetGlobal(export_->var);
       WriteTypeObject(global->type);
@@ -417,8 +417,8 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
       }
 
       case CommandType::Action: {
-        const Action* action = cast<ActionCommand>(command)->action.get();
-        WriteLocation(action->loc);
+        const Action& action = *cast<ActionCommand>(command)->action;
+        WriteLocation(action.loc);
         WriteSeparator();
         WriteAction(action);
         break;
@@ -482,7 +482,7 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
         auto* assert_return_command = cast<AssertReturnCommand>(command);
         WriteLocation(assert_return_command->action->loc);
         WriteSeparator();
-        WriteAction(assert_return_command->action.get());
+        WriteAction(*assert_return_command->action);
         WriteSeparator();
         WriteKey("expected");
         WriteConstVector(assert_return_command->expected);
@@ -494,11 +494,11 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
             cast<AssertReturnCanonicalNanCommand>(command);
         WriteLocation(assert_return_canonical_nan_command->action->loc);
         WriteSeparator();
-        WriteAction(assert_return_canonical_nan_command->action.get());
+        WriteAction(*assert_return_canonical_nan_command->action);
         WriteSeparator();
         WriteKey("expected");
-        WriteActionResultType(
-            script, assert_return_canonical_nan_command->action.get());
+        WriteActionResultType(script,
+                              *assert_return_canonical_nan_command->action);
         break;
       }
 
@@ -507,11 +507,11 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
             cast<AssertReturnArithmeticNanCommand>(command);
         WriteLocation(assert_return_arithmetic_nan_command->action->loc);
         WriteSeparator();
-        WriteAction(assert_return_arithmetic_nan_command->action.get());
+        WriteAction(*assert_return_arithmetic_nan_command->action);
         WriteSeparator();
         WriteKey("expected");
-        WriteActionResultType(
-            script, assert_return_arithmetic_nan_command->action.get());
+        WriteActionResultType(script,
+                              *assert_return_arithmetic_nan_command->action);
         break;
       }
 
@@ -519,7 +519,7 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
         auto* assert_trap_command = cast<AssertTrapCommand>(command);
         WriteLocation(assert_trap_command->action->loc);
         WriteSeparator();
-        WriteAction(assert_trap_command->action.get());
+        WriteAction(*assert_trap_command->action);
         WriteSeparator();
         WriteKey("text");
         WriteEscapedString(assert_trap_command->text);
@@ -531,7 +531,7 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
             cast<AssertExhaustionCommand>(command);
         WriteLocation(assert_exhaustion_command->action->loc);
         WriteSeparator();
-        WriteAction(assert_exhaustion_command->action.get());
+        WriteAction(*assert_exhaustion_command->action);
         break;
       }
     }
