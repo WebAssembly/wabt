@@ -420,24 +420,71 @@ struct DataSegment {
   std::vector<uint8_t> data;
 };
 
-struct Import {
+class Import {
+ public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Import);
-  explicit Import(ExternalKind, string_view name);
-  ~Import();
+  Import() = delete;
+  virtual ~Import() = default;
+
+  ExternalKind kind() const { return kind_; }
 
   std::string module_name;
   std::string field_name;
-  ExternalKind kind;
-  union {
-    // An imported func has the type Func so it can be more easily included in
-    // the Module's vector of funcs, but only the FuncDeclaration will have any
-    // useful information.
-    Func* func;
-    Table* table;
-    Memory* memory;
-    Global* global;
-    Exception* except;
-  };
+
+ protected:
+  Import(ExternalKind kind) : kind_(kind) {}
+
+  ExternalKind kind_;
+};
+
+template <ExternalKind TypeEnum>
+class ImportMixin : public Import {
+ public:
+  static bool classof(const Import* import) {
+    return import->kind() == TypeEnum;
+  }
+
+  ImportMixin() : Import(TypeEnum) {}
+};
+
+class FuncImport : public ImportMixin<ExternalKind::Func> {
+ public:
+  explicit FuncImport(string_view name = string_view())
+      : ImportMixin<ExternalKind::Func>(), func(name) {}
+
+  Func func;
+};
+
+class TableImport : public ImportMixin<ExternalKind::Table> {
+ public:
+  explicit TableImport(string_view name = string_view())
+      : ImportMixin<ExternalKind::Table>(), table(name) {}
+
+  Table table;
+};
+
+class MemoryImport : public ImportMixin<ExternalKind::Memory> {
+ public:
+  explicit MemoryImport(string_view name = string_view())
+      : ImportMixin<ExternalKind::Memory>(), memory(name) {}
+
+  Memory memory;
+};
+
+class GlobalImport : public ImportMixin<ExternalKind::Global> {
+ public:
+  explicit GlobalImport(string_view name = string_view())
+      : ImportMixin<ExternalKind::Global>(), global(name) {}
+
+  Global global;
+};
+
+class ExceptionImport : public ImportMixin<ExternalKind::Except> {
+ public:
+  explicit ExceptionImport(string_view name = string_view())
+      : ImportMixin<ExternalKind::Except>(), except(name) {}
+
+  Exception except;
 };
 
 struct Export {
@@ -509,12 +556,14 @@ class GlobalModuleField : public ModuleFieldMixin<ModuleFieldType::Global> {
 
 class ImportModuleField : public ModuleFieldMixin<ModuleFieldType::Import> {
  public:
-  explicit ImportModuleField(ExternalKind kind,
-                             const Location& loc = Location(),
-                             string_view name = string_view())
-      : ModuleFieldMixin<ModuleFieldType::Import>(loc), import(kind, name) {}
+  explicit ImportModuleField(const Location& loc = Location())
+      : ModuleFieldMixin<ModuleFieldType::Import>(loc) {}
+  explicit ImportModuleField(std::unique_ptr<Import> import,
+                             const Location& loc = Location())
+      : ModuleFieldMixin<ModuleFieldType::Import>(loc),
+        import(std::move(import)) {}
 
-  Import import;
+  std::unique_ptr<Import> import;
 };
 
 class ExportModuleField : public ModuleFieldMixin<ModuleFieldType::Export> {
@@ -686,7 +735,7 @@ class ScriptModuleMixin : public ScriptModule {
     return script_module->type() == TypeEnum;
   }
 
-  explicit ScriptModuleMixin() : ScriptModule(TypeEnum) {}
+  ScriptModuleMixin() : ScriptModule(TypeEnum) {}
 };
 
 class TextScriptModule : public ScriptModuleMixin<ScriptModuleType::Text> {

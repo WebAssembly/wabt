@@ -321,18 +321,16 @@ Result BinaryReaderIR::OnImportFunc(Index import_index,
                                     string_view field_name,
                                     Index func_index,
                                     Index sig_index) {
-  auto field =
-      make_unique<ImportModuleField>(ExternalKind::Func, GetLocation());
-  auto&& import = field->import;
+  auto import = make_unique<FuncImport>();
+  import->module_name = module_name.to_string();
+  import->field_name = field_name.to_string();
+  import->func.decl.has_func_type = true;
+  import->func.decl.type_var = Var(sig_index, GetLocation());
+  import->func.decl.sig = module->func_types[sig_index]->sig;
+  module->funcs.push_back(&import->func);
+  module->imports.push_back(import.get());
 
-  import.module_name = module_name.to_string();
-  import.field_name = field_name.to_string();
-  import.func->decl.has_func_type = true;
-  import.func->decl.type_var = Var(sig_index, GetLocation());
-  import.func->decl.sig = module->func_types[sig_index]->sig;
-
-  module->funcs.push_back(import.func);
-  module->imports.push_back(&import);
+  auto field = make_unique<ImportModuleField>(std::move(import), GetLocation());
   module->fields.push_back(field.release());
   module->num_func_imports++;
   return Result::Ok;
@@ -344,15 +342,14 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
                                      Index table_index,
                                      Type elem_type,
                                      const Limits* elem_limits) {
-  auto field =
-      make_unique<ImportModuleField>(ExternalKind::Table, GetLocation());
-  auto&& import = field->import;
-  import.module_name = module_name.to_string();
-  import.field_name = field_name.to_string();
-  import.table->elem_limits = *elem_limits;
+  auto import = make_unique<TableImport>();
+  import->module_name = module_name.to_string();
+  import->field_name = field_name.to_string();
+  import->table.elem_limits = *elem_limits;
+  module->tables.push_back(&import->table);
+  module->imports.push_back(import.get());
 
-  module->tables.push_back(import.table);
-  module->imports.push_back(&import);
+  auto field = make_unique<ImportModuleField>(std::move(import), GetLocation());
   module->fields.push_back(field.release());
   module->num_table_imports++;
   return Result::Ok;
@@ -363,15 +360,14 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
                                       string_view field_name,
                                       Index memory_index,
                                       const Limits* page_limits) {
-  auto field =
-      make_unique<ImportModuleField>(ExternalKind::Memory, GetLocation());
-  auto&& import = field->import;
-  import.module_name = module_name.to_string();
-  import.field_name = field_name.to_string();
-  import.memory->page_limits = *page_limits;
+  auto import = make_unique<MemoryImport>();
+  import->module_name = module_name.to_string();
+  import->field_name = field_name.to_string();
+  import->memory.page_limits = *page_limits;
+  module->memories.push_back(&import->memory);
+  module->imports.push_back(import.get());
 
-  module->memories.push_back(import.memory);
-  module->imports.push_back(&import);
+  auto field = make_unique<ImportModuleField>(std::move(import), GetLocation());
   module->fields.push_back(field.release());
   module->num_memory_imports++;
   return Result::Ok;
@@ -383,16 +379,15 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
                                       Index global_index,
                                       Type type,
                                       bool mutable_) {
-  auto field =
-      make_unique<ImportModuleField>(ExternalKind::Global, GetLocation());
-  auto&& import = field->import;
-  import.module_name = module_name.to_string();
-  import.field_name = field_name.to_string();
-  import.global->type = type;
-  import.global->mutable_ = mutable_;
+  auto import = make_unique<GlobalImport>();
+  import->module_name = module_name.to_string();
+  import->field_name = field_name.to_string();
+  import->global.type = type;
+  import->global.mutable_ = mutable_;
+  module->globals.push_back(&import->global);
+  module->imports.push_back(import.get());
 
-  module->globals.push_back(import.global);
-  module->imports.push_back(&import);
+  auto field = make_unique<ImportModuleField>(std::move(import), GetLocation());
   module->fields.push_back(field.release());
   module->num_global_imports++;
   return Result::Ok;
@@ -403,15 +398,14 @@ Result BinaryReaderIR::OnImportException(Index import_index,
                                          string_view field_name,
                                          Index except_index,
                                          TypeVector& sig) {
-  auto field =
-      make_unique<ImportModuleField>(ExternalKind::Except, GetLocation());
-  auto&& import = field->import;
-  import.module_name = module_name.to_string();
-  import.field_name = field_name.to_string();
-  import.except->sig = sig;
+  auto import = make_unique<ExceptionImport>();
+  import->module_name = module_name.to_string();
+  import->field_name = field_name.to_string();
+  import->except.sig = sig;
+  module->excepts.push_back(&import->except);
+  module->imports.push_back(import.get());
 
-  module->excepts.push_back(import.except);
-  module->imports.push_back(&import);
+  auto field = make_unique<ImportModuleField>(std::move(import), GetLocation());
   module->fields.push_back(field.release());
   return Result::Ok;
 }

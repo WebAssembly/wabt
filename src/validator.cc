@@ -780,30 +780,38 @@ void Validator::CheckDataSegments(const Module* module) {
 }
 
 void Validator::CheckImport(const Location* loc, const Import* import) {
-  switch (import->kind) {
+  switch (import->kind()) {
     case ExternalKind::Except:
       ++current_except_index_;
-      CheckExcept(loc, import->except);
+      CheckExcept(loc, &cast<ExceptionImport>(import)->except);
       break;
-    case ExternalKind::Func:
-      if (import->func->decl.has_func_type)
-        CheckFuncTypeVar(&import->func->decl.type_var, nullptr);
+
+    case ExternalKind::Func: {
+      auto* func_import = cast<FuncImport>(import);
+      if (func_import->func.decl.has_func_type)
+        CheckFuncTypeVar(&func_import->func.decl.type_var, nullptr);
       break;
+    }
+
     case ExternalKind::Table:
-      CheckTable(loc, import->table);
+      CheckTable(loc, &cast<TableImport>(import)->table);
       ++current_table_index_;
       break;
+
     case ExternalKind::Memory:
-      CheckMemory(loc, import->memory);
+      CheckMemory(loc, &cast<MemoryImport>(import)->memory);
       ++current_memory_index_;
       break;
-    case ExternalKind::Global:
-      if (import->global->mutable_) {
+
+    case ExternalKind::Global: {
+      auto* global_import = cast<GlobalImport>(import);
+      if (global_import->global.mutable_) {
         PrintError(loc, "mutable globals cannot be imported");
       }
       ++num_imported_globals_;
       ++current_global_index_;
       break;
+    }
   }
 }
 
@@ -871,7 +879,7 @@ Result Validator::CheckModule(const Module* module) {
         break;
 
       case ModuleFieldType::Import:
-        CheckImport(&field.loc, &cast<ImportModuleField>(&field)->import);
+        CheckImport(&field.loc, cast<ImportModuleField>(&field)->import.get());
         break;
 
       case ModuleFieldType::Export:

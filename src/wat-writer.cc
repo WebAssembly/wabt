@@ -1070,35 +1070,37 @@ void WatWriter::WriteImport(const Import& import) {
   WriteOpenSpace("import");
   WriteQuotedString(import.module_name, NextChar::Space);
   WriteQuotedString(import.field_name, NextChar::Space);
-  switch (import.kind) {
-    case ExternalKind::Func:
+  switch (import.kind()) {
+    case ExternalKind::Func: {
+      auto* func_import = cast<FuncImport>(&import);
       WriteOpenSpace("func");
-      WriteNameOrIndex(import.func->name, func_index_++, NextChar::Space);
-      if (import.func->decl.has_func_type) {
+      WriteNameOrIndex(func_import->func.name, func_index_++, NextChar::Space);
+      if (func_import->func.decl.has_func_type) {
         WriteOpenSpace("type");
-        WriteVar(import.func->decl.type_var, NextChar::None);
+        WriteVar(func_import->func.decl.type_var, NextChar::None);
         WriteCloseSpace();
       } else {
-        WriteFuncSigSpace(import.func->decl.sig);
+        WriteFuncSigSpace(func_import->func.decl.sig);
       }
       WriteCloseSpace();
       break;
+    }
 
     case ExternalKind::Table:
-      WriteTable(*import.table);
+      WriteTable(cast<TableImport>(&import)->table);
       break;
 
     case ExternalKind::Memory:
-      WriteMemory(*import.memory);
+      WriteMemory(cast<MemoryImport>(&import)->memory);
       break;
 
     case ExternalKind::Global:
-      WriteBeginGlobal(*import.global);
+      WriteBeginGlobal(cast<GlobalImport>(&import)->global);
       WriteCloseSpace();
       break;
 
     case ExternalKind::Except:
-      WriteBeginException(*import.except);
+      WriteBeginException(cast<ExceptionImport>(&import)->except);
       WriteCloseSpace();
       break;
   }
@@ -1144,7 +1146,7 @@ Result WatWriter::WriteModule(const Module& module) {
         WriteGlobal(cast<GlobalModuleField>(&field)->global);
         break;
       case ModuleFieldType::Import:
-        WriteImport(cast<ImportModuleField>(&field)->import);
+        WriteImport(*cast<ImportModuleField>(&field)->import);
         break;
       case ModuleFieldType::Except:
         WriteException(cast<ExceptionModuleField>(&field)->except);

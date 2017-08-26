@@ -767,23 +767,28 @@ Result BinaryWriter::WriteModule(const Module* module) {
                PrintChars::Yes);
       WriteStr(&stream_, import->field_name, "import field name",
                PrintChars::Yes);
-      stream_.WriteU8Enum(import->kind, "import kind");
-      switch (import->kind) {
+      stream_.WriteU8Enum(import->kind(), "import kind");
+      switch (import->kind()) {
         case ExternalKind::Func:
-          WriteU32Leb128(&stream_, module->GetFuncTypeIndex(import->func->decl),
+          WriteU32Leb128(&stream_, module->GetFuncTypeIndex(
+                                       cast<FuncImport>(import)->func.decl),
                          "import signature index");
           break;
+
         case ExternalKind::Table:
-          WriteTable(import->table);
+          WriteTable(&cast<TableImport>(import)->table);
           break;
+
         case ExternalKind::Memory:
-          WriteMemory(import->memory);
+          WriteMemory(&cast<MemoryImport>(import)->memory);
           break;
+
         case ExternalKind::Global:
-          WriteGlobalHeader(import->global);
+          WriteGlobalHeader(&cast<GlobalImport>(import)->global);
           break;
+
         case ExternalKind::Except:
-          WriteExceptType(&import->except->sig);
+          WriteExceptType(&cast<ExceptionImport>(import)->except.sig);
           break;
       }
     }

@@ -252,12 +252,12 @@ bool IsEmptySignature(const FuncSignature* sig) {
 void ResolveFuncTypes(Module* module) {
   for (ModuleField& field : module->fields) {
     Func* func = nullptr;
-    if (field.type() == ModuleFieldType::Func) {
-      func = &dyn_cast<FuncModuleField>(&field)->func;
-    } else if (field.type() == ModuleFieldType::Import) {
-      auto&& import = dyn_cast<ImportModuleField>(&field)->import;
-      if (import.kind == ExternalKind::Func) {
-        func = import.func;
+    if (auto* func_field = dyn_cast<FuncModuleField>(&field)) {
+      func = &func_field->func;
+    } else if (auto* import_field = dyn_cast<ImportModuleField>(&field)) {
+      auto&& import = import_field->import;
+      if (auto* func_import = dyn_cast<FuncImport>(import.get())) {
+        func = &func_import->func;
       } else {
         continue;
       }
@@ -756,13 +756,14 @@ Result WastParser::ParseFuncModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto field =
-        make_unique<ImportModuleField>(ExternalKind::Func, GetLocation(), name);
-    auto* func = field->import.func;
-    CHECK_RESULT(ParseInlineImport(&field->import));
-    CHECK_RESULT(ParseTypeUseOpt(&func->decl));
-    CHECK_RESULT(ParseFuncSignature(&func->decl.sig, &func->param_bindings));
+    auto import = make_unique<FuncImport>(name);
+    auto&& func = import->func;
+    CHECK_RESULT(ParseInlineImport(import.get()));
+    CHECK_RESULT(ParseTypeUseOpt(&func.decl));
+    CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.param_bindings));
     CHECK_RESULT(ErrorIfLpar({"type", "param", "result"}));
+    auto field =
+        make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(field.release());
   } else {
     auto field = make_unique<FuncModuleField>(loc, name);
@@ -811,10 +812,11 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto field = make_unique<ImportModuleField>(ExternalKind::Global,
-                                                GetLocation(), name);
-    CHECK_RESULT(ParseInlineImport(&field->import));
-    CHECK_RESULT(ParseGlobalType(field->import.global));
+    auto import = make_unique<GlobalImport>(name);
+    CHECK_RESULT(ParseInlineImport(import.get()));
+    CHECK_RESULT(ParseGlobalType(&import->global));
+    auto field =
+        make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(field.release());
   } else {
     auto field = make_unique<GlobalModuleField>(loc, name);
@@ -842,65 +844,74 @@ Result WastParser::ParseImportModuleField(Module* module) {
   EXPECT(Lpar);
 
   std::unique_ptr<ImportModuleField> field;
+  std::string name;
 
   switch (Peek()) {
     case TokenType::Func: {
       Consume();
-      field = make_unique<ImportModuleField>(ExternalKind::Func, loc);
-      auto* func = field->import.func;
-      ParseBindVarOpt(&func->name);
+      ParseBindVarOpt(&name);
+      auto import = make_unique<FuncImport>(name);
       if (PeekMatchLpar(TokenType::Type)) {
-        func->decl.has_func_type = true;
-        CHECK_RESULT(ParseTypeUseOpt(&func->decl));
+        import->func.decl.has_func_type = true;
+        CHECK_RESULT(ParseTypeUseOpt(&import->func.decl));
         EXPECT(Rpar);
       } else {
-        CHECK_RESULT(
-            ParseFuncSignature(&func->decl.sig, &func->param_bindings));
+        CHECK_RESULT(ParseFuncSignature(&import->func.decl.sig,
+                                        &import->func.param_bindings));
         CHECK_RESULT(ErrorIfLpar({"param", "result"}));
         EXPECT(Rpar);
       }
+      field = make_unique<ImportModuleField>(std::move(import), loc);
       break;
     }
 
-    case TokenType::Table:
+    case TokenType::Table: {
       Consume();
-      field = make_unique<ImportModuleField>(ExternalKind::Table, loc);
-      ParseBindVarOpt(&field->import.table->name);
-      CHECK_RESULT(ParseLimits(&field->import.table->elem_limits));
+      ParseBindVarOpt(&name);
+      auto import = make_unique<TableImport>(name);
+      CHECK_RESULT(ParseLimits(&import->table.elem_limits));
       EXPECT(Anyfunc);
       EXPECT(Rpar);
+      field = make_unique<ImportModuleField>(std::move(import), loc);
       break;
+    }
 
-    case TokenType::Memory:
+    case TokenType::Memory: {
       Consume();
-      field = make_unique<ImportModuleField>(ExternalKind::Memory, loc);
-      ParseBindVarOpt(&field->import.memory->name);
-      CHECK_RESULT(ParseLimits(&field->import.memory->page_limits));
+      ParseBindVarOpt(&name);
+      auto import = make_unique<MemoryImport>(name);
+      CHECK_RESULT(ParseLimits(&import->memory.page_limits));
       EXPECT(Rpar);
+      field = make_unique<ImportModuleField>(std::move(import), loc);
       break;
+    }
 
-    case TokenType::Global:
+    case TokenType::Global: {
       Consume();
-      field = make_unique<ImportModuleField>(ExternalKind::Global, loc);
-      ParseBindVarOpt(&field->import.global->name);
-      CHECK_RESULT(ParseGlobalType(field->import.global));
+      ParseBindVarOpt(&name);
+      auto import = make_unique<GlobalImport>(name);
+      CHECK_RESULT(ParseGlobalType(&import->global));
       EXPECT(Rpar);
+      field = make_unique<ImportModuleField>(std::move(import), loc);
       break;
+    }
 
-    case TokenType::Except:
+    case TokenType::Except: {
       Consume();
-      field = make_unique<ImportModuleField>(ExternalKind::Except, loc);
-      ParseBindVarOpt(&field->import.except->name);
-      ParseValueTypeList(&field->import.except->sig);
+      ParseBindVarOpt(&name);
+      auto import = make_unique<ExceptionImport>(name);
+      ParseValueTypeList(&import->except.sig);
       EXPECT(Rpar);
+      field = make_unique<ImportModuleField>(std::move(import), loc);
       break;
+    }
 
     default:
       return ErrorExpected({"an external kind"});
   }
 
-  field->import.module_name = module_name;
-  field->import.field_name = field_name;
+  field->import->module_name = module_name;
+  field->import->field_name = field_name;
 
   module->AppendField(field.release());
   EXPECT(Rpar);
@@ -920,10 +931,11 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto field = make_unique<ImportModuleField>(ExternalKind::Memory,
-                                                GetLocation(), name);
-    CHECK_RESULT(ParseInlineImport(&field->import));
-    CHECK_RESULT(ParseLimits(&field->import.memory->page_limits));
+    auto import = make_unique<MemoryImport>(name);
+    CHECK_RESULT(ParseInlineImport(import.get()));
+    CHECK_RESULT(ParseLimits(&import->memory.page_limits));
+    auto field =
+        make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(field.release());
   } else if (MatchLpar(TokenType::Data)) {
     auto data_segment_field = make_unique<DataSegmentModuleField>(loc);
@@ -980,11 +992,12 @@ Result WastParser::ParseTableModuleField(Module* module) {
 
   if (PeekMatchLpar(TokenType::Import)) {
     CheckImportOrdering(module);
-    auto field = make_unique<ImportModuleField>(ExternalKind::Table,
-                                                GetLocation(), name);
-    CHECK_RESULT(ParseInlineImport(&field->import));
-    CHECK_RESULT(ParseLimits(&field->import.table->elem_limits));
+    auto import = make_unique<TableImport>(name);
+    CHECK_RESULT(ParseInlineImport(import.get()));
+    CHECK_RESULT(ParseLimits(&import->table.elem_limits));
     EXPECT(Anyfunc);
+    auto field =
+        make_unique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(field.release());
   } else if (Match(TokenType::Anyfunc)) {
     EXPECT(Lpar);

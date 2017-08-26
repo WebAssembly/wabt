@@ -244,57 +244,67 @@ void Module::AppendField(GlobalModuleField* field) {
 }
 
 void Module::AppendField(ImportModuleField* field) {
-  auto&& import = field->import;
-  std::string* name = nullptr;
+  auto* import = field->import.get();
+  const std::string* name = nullptr;
   BindingHash* bindings = nullptr;
   Index index = kInvalidIndex;
 
-  switch (import.kind) {
-    case ExternalKind::Func:
-      name = &import.func->name;
+  switch (import->kind()) {
+    case ExternalKind::Func: {
+      auto&& func = cast<FuncImport>(import)->func;
+      name = &func.name;
       bindings = &func_bindings;
       index = funcs.size();
-      funcs.push_back(import.func);
+      funcs.push_back(&func);
       ++num_func_imports;
       break;
+    }
 
-    case ExternalKind::Table:
-      name = &import.table->name;
+    case ExternalKind::Table: {
+      auto&& table = cast<TableImport>(import)->table;
+      name = &table.name;
       bindings = &table_bindings;
       index = tables.size();
-      tables.push_back(import.table);
+      tables.push_back(&table);
       ++num_table_imports;
       break;
+    }
 
-    case ExternalKind::Memory:
-      name = &import.memory->name;
+    case ExternalKind::Memory: {
+      auto&& memory = cast<MemoryImport>(import)->memory;
+      name = &memory.name;
       bindings = &memory_bindings;
       index = memories.size();
-      memories.push_back(import.memory);
+      memories.push_back(&memory);
       ++num_memory_imports;
       break;
+    }
 
-    case ExternalKind::Global:
-      name = &import.global->name;
+    case ExternalKind::Global: {
+      auto&& global = cast<GlobalImport>(import)->global;
+      name = &global.name;
       bindings = &global_bindings;
       index = globals.size();
-      globals.push_back(import.global);
+      globals.push_back(&global);
       ++num_global_imports;
       break;
+    }
 
-    case ExternalKind::Except:
-      name = &import.except->name;
+    case ExternalKind::Except: {
+      auto&& except = cast<ExceptionImport>(import)->except;
+      name = &except.name;
       bindings = &except_bindings;
       index = excepts.size();
-      excepts.push_back(import.except);
+      excepts.push_back(&except);
       ++num_except_imports;
       break;
+    }
   }
 
   assert(name && bindings && index != kInvalidIndex);
   if (!name->empty())
     bindings->emplace(*name, Binding(field->loc, index));
-  imports.push_back(&import);
+  imports.push_back(import);
   fields.push_back(field);
 }
 
@@ -478,26 +488,6 @@ Const::Const(F32Tag, uint32_t value, const Location& loc_)
 
 Const::Const(F64Tag, uint64_t value, const Location& loc_)
     : loc(loc_), type(Type::F64), f64_bits(value) {
-}
-
-Import::Import(ExternalKind kind, string_view name) : kind(kind) {
-  switch (kind) {
-    case ExternalKind::Func: func = new Func(name); break;
-    case ExternalKind::Table: table = new Table(name); break;
-    case ExternalKind::Memory: memory = new Memory(name); break;
-    case ExternalKind::Global: global = new Global(name); break;
-    case ExternalKind::Except: except = new Exception(name); break;
-  }
-}
-
-Import::~Import() {
-  switch (kind) {
-    case ExternalKind::Func: delete func; break;
-    case ExternalKind::Table: delete table; break;
-    case ExternalKind::Memory: delete memory; break;
-    case ExternalKind::Global: delete global; break;
-    case ExternalKind::Except: delete except; break;
-  }
 }
 
 }  // namespace wabt
