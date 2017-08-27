@@ -335,10 +335,9 @@ void Linker::WriteMemorySection(const SectionPtrVector& sections) {
   WriteU32Leb128(&stream_, 1, "memory count");
 
   Limits limits;
-  ZeroMemory(limits);
   limits.has_max = true;
   for (Section* section: sections) {
-    limits.initial += section->data.memory_limits.initial;
+    limits.initial += section->data.initial;
   }
   limits.max = limits.initial;
   WriteLimits(&stream_, &limits);

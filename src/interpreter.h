@@ -192,7 +192,7 @@ struct FuncImport : Import {
 };
 
 struct TableImport : Import {
-  TableImport() : Import(ExternalKind::Table) { ZeroMemory(limits); }
+  TableImport() : Import(ExternalKind::Table) {}
   TableImport(string_view module_name, string_view field_name)
       : Import(ExternalKind::Table, module_name, field_name) {}
 
@@ -200,7 +200,7 @@ struct TableImport : Import {
 };
 
 struct MemoryImport : Import {
-  MemoryImport() : Import(ExternalKind::Memory) { ZeroMemory(limits); }
+  MemoryImport() : Import(ExternalKind::Memory) {}
   MemoryImport(string_view module_name, string_view field_name)
       : Import(ExternalKind::Memory, module_name, field_name) {}
 

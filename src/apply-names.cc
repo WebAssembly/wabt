@@ -202,7 +202,7 @@ Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
 }
 
 Result NameApplier::BeginBlockExpr(BlockExpr* expr) {
-  PushLabel(expr->block->label);
+  PushLabel(expr->block.label);
   return Result::Ok;
 }
 
@@ -212,7 +212,7 @@ Result NameApplier::EndBlockExpr(BlockExpr* expr) {
 }
 
 Result NameApplier::BeginLoopExpr(LoopExpr* expr) {
-  PushLabel(expr->block->label);
+  PushLabel(expr->block.label);
   return Result::Ok;
 }
 
@@ -234,8 +234,7 @@ Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
 }
 
 Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
-  VarVector& targets = *expr->targets;
-  for (Var& target : targets) {
+  for (Var& target : expr->targets) {
     string_view label = FindLabelByVar(&target);
     UseNameForVar(label, &target);
   }
@@ -246,7 +245,7 @@ Result NameApplier::OnBrTableExpr(BrTableExpr* expr) {
 }
 
 Result NameApplier::BeginTryExpr(TryExpr* expr) {
-  PushLabel(expr->block->label);
+  PushLabel(expr->block.label);
   return Result::Ok;
 }
 
@@ -294,7 +293,7 @@ Result NameApplier::OnGetLocalExpr(GetLocalExpr* expr) {
 }
 
 Result NameApplier::BeginIfExpr(IfExpr* expr) {
-  PushLabel(expr->true_->label);
+  PushLabel(expr->true_.label);
   return Result::Ok;
 }
 

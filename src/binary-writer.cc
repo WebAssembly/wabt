@@ -422,14 +422,14 @@ Index BinaryWriter::GetLocalIndex(const Func* func, const Var& var) {
 void BinaryWriter::WriteExpr(const Module* module,
                              const Func* func,
                              const Expr* expr) {
-  switch (expr->type) {
+  switch (expr->type()) {
     case ExprType::Binary:
       WriteOpcode(&stream_, cast<BinaryExpr>(expr)->opcode);
       break;
     case ExprType::Block:
       WriteOpcode(&stream_, Opcode::Block);
-      write_inline_signature_type(&stream_, cast<BlockExpr>(expr)->block->sig);
-      WriteExprList(module, func, cast<BlockExpr>(expr)->block->exprs);
+      write_inline_signature_type(&stream_, cast<BlockExpr>(expr)->block.sig);
+      WriteExprList(module, func, cast<BlockExpr>(expr)->block.exprs);
       WriteOpcode(&stream_, Opcode::End);
       break;
     case ExprType::Br:
@@ -445,9 +445,9 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::BrTable: {
       auto br_table_expr = cast<BrTableExpr>(expr);
       WriteOpcode(&stream_, Opcode::BrTable);
-      WriteU32Leb128(&stream_, br_table_expr->targets->size(), "num targets");
+      WriteU32Leb128(&stream_, br_table_expr->targets.size(), "num targets");
       Index depth;
-      for (const Var& var : *br_table_expr->targets) {
+      for (const Var& var : br_table_expr->targets) {
         depth = GetLabelVarDepth(&var);
         WriteU32Leb128(&stream_, depth, "break depth");
       }
@@ -526,8 +526,8 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::If: {
       auto if_expr = cast<IfExpr>(expr);
       WriteOpcode(&stream_, Opcode::If);
-      write_inline_signature_type(&stream_, if_expr->true_->sig);
-      WriteExprList(module, func, if_expr->true_->exprs);
+      write_inline_signature_type(&stream_, if_expr->true_.sig);
+      WriteExprList(module, func, if_expr->true_.exprs);
       if (!if_expr->false_.empty()) {
         WriteOpcode(&stream_, Opcode::Else);
         WriteExprList(module, func, if_expr->false_);
@@ -545,8 +545,8 @@ void BinaryWriter::WriteExpr(const Module* module,
     }
     case ExprType::Loop:
       WriteOpcode(&stream_, Opcode::Loop);
-      write_inline_signature_type(&stream_, cast<LoopExpr>(expr)->block->sig);
-      WriteExprList(module, func, cast<LoopExpr>(expr)->block->exprs);
+      write_inline_signature_type(&stream_, cast<LoopExpr>(expr)->block.sig);
+      WriteExprList(module, func, cast<LoopExpr>(expr)->block.exprs);
       WriteOpcode(&stream_, Opcode::End);
       break;
     case ExprType::Nop:
@@ -597,17 +597,17 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::TryBlock: {
       auto try_expr = cast<TryExpr>(expr);
       WriteOpcode(&stream_, Opcode::Try);
-      write_inline_signature_type(&stream_, try_expr->block->sig);
-      WriteExprList(module, func, try_expr->block->exprs);
-      for (Catch* catch_ : try_expr->catches) {
-        if (catch_->IsCatchAll()) {
+      write_inline_signature_type(&stream_, try_expr->block.sig);
+      WriteExprList(module, func, try_expr->block.exprs);
+      for (const Catch& catch_ : try_expr->catches) {
+        if (catch_.IsCatchAll()) {
           WriteOpcode(&stream_, Opcode::CatchAll);
         } else {
           WriteOpcode(&stream_, Opcode::Catch);
-          WriteU32Leb128(&stream_, GetExceptVarDepth(&catch_->var),
+          WriteU32Leb128(&stream_, GetExceptVarDepth(&catch_.var),
                          "catch exception");
         }
-        WriteExprList(module, func, catch_->exprs);
+        WriteExprList(module, func, catch_.exprs);
       }
       WriteOpcode(&stream_, Opcode::End);
       break;
@@ -767,23 +767,28 @@ Result BinaryWriter::WriteModule(const Module* module) {
                PrintChars::Yes);
       WriteStr(&stream_, import->field_name, "import field name",
                PrintChars::Yes);
-      stream_.WriteU8Enum(import->kind, "import kind");
-      switch (import->kind) {
+      stream_.WriteU8Enum(import->kind(), "import kind");
+      switch (import->kind()) {
         case ExternalKind::Func:
-          WriteU32Leb128(&stream_, module->GetFuncTypeIndex(import->func->decl),
+          WriteU32Leb128(&stream_, module->GetFuncTypeIndex(
+                                       cast<FuncImport>(import)->func.decl),
                          "import signature index");
           break;
+
         case ExternalKind::Table:
-          WriteTable(import->table);
+          WriteTable(&cast<TableImport>(import)->table);
           break;
+
         case ExternalKind::Memory:
-          WriteMemory(import->memory);
+          WriteMemory(&cast<MemoryImport>(import)->memory);
           break;
+
         case ExternalKind::Global:
-          WriteGlobalHeader(import->global);
+          WriteGlobalHeader(&cast<GlobalImport>(import)->global);
           break;
+
         case ExternalKind::Except:
-          WriteExceptType(&import->except->sig);
+          WriteExceptType(&cast<ExceptionImport>(import)->except.sig);
           break;
       }
     }
