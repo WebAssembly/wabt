@@ -202,7 +202,7 @@ void Module::AppendField(ElemSegmentModuleField* field) {
 }
 
 void Module::AppendField(ExceptionModuleField* field) {
-  auto&& except = field->except;
+  Exception& except = field->except;
   if (!except.name.empty())
     except_bindings.emplace(except.name, Binding(field->loc, excepts.size()));
   excepts.push_back(&except);
@@ -211,14 +211,14 @@ void Module::AppendField(ExceptionModuleField* field) {
 
 void Module::AppendField(ExportModuleField* field) {
   // Exported names are allowed to be empty.
-  auto&& export_ = field->export_;
+  Export& export_ = field->export_;
   export_bindings.emplace(export_.name, Binding(field->loc, exports.size()));
   exports.push_back(&export_);
   fields.push_back(field);
 }
 
 void Module::AppendField(FuncModuleField* field) {
-  auto&& func = field->func;
+  Func& func = field->func;
   if (!func.name.empty())
     func_bindings.emplace(func.name, Binding(field->loc, funcs.size()));
   funcs.push_back(&func);
@@ -226,7 +226,7 @@ void Module::AppendField(FuncModuleField* field) {
 }
 
 void Module::AppendField(FuncTypeModuleField* field) {
-  auto&& func_type = field->func_type;
+  FuncType& func_type = field->func_type;
   if (!func_type.name.empty()) {
     func_type_bindings.emplace(func_type.name,
                                Binding(field->loc, func_types.size()));
@@ -236,7 +236,7 @@ void Module::AppendField(FuncTypeModuleField* field) {
 }
 
 void Module::AppendField(GlobalModuleField* field) {
-  auto&& global = field->global;
+  Global& global = field->global;
   if (!global.name.empty())
     global_bindings.emplace(global.name, Binding(field->loc, globals.size()));
   globals.push_back(&global);
@@ -244,14 +244,14 @@ void Module::AppendField(GlobalModuleField* field) {
 }
 
 void Module::AppendField(ImportModuleField* field) {
-  auto* import = field->import.get();
+  Import* import = field->import.get();
   const std::string* name = nullptr;
   BindingHash* bindings = nullptr;
   Index index = kInvalidIndex;
 
   switch (import->kind()) {
     case ExternalKind::Func: {
-      auto&& func = cast<FuncImport>(import)->func;
+      Func& func = cast<FuncImport>(import)->func;
       name = &func.name;
       bindings = &func_bindings;
       index = funcs.size();
@@ -261,7 +261,7 @@ void Module::AppendField(ImportModuleField* field) {
     }
 
     case ExternalKind::Table: {
-      auto&& table = cast<TableImport>(import)->table;
+      Table& table = cast<TableImport>(import)->table;
       name = &table.name;
       bindings = &table_bindings;
       index = tables.size();
@@ -271,7 +271,7 @@ void Module::AppendField(ImportModuleField* field) {
     }
 
     case ExternalKind::Memory: {
-      auto&& memory = cast<MemoryImport>(import)->memory;
+      Memory& memory = cast<MemoryImport>(import)->memory;
       name = &memory.name;
       bindings = &memory_bindings;
       index = memories.size();
@@ -281,7 +281,7 @@ void Module::AppendField(ImportModuleField* field) {
     }
 
     case ExternalKind::Global: {
-      auto&& global = cast<GlobalImport>(import)->global;
+      Global& global = cast<GlobalImport>(import)->global;
       name = &global.name;
       bindings = &global_bindings;
       index = globals.size();
@@ -291,7 +291,7 @@ void Module::AppendField(ImportModuleField* field) {
     }
 
     case ExternalKind::Except: {
-      auto&& except = cast<ExceptionImport>(import)->except;
+      Exception& except = cast<ExceptionImport>(import)->except;
       name = &except.name;
       bindings = &except_bindings;
       index = excepts.size();
@@ -309,7 +309,7 @@ void Module::AppendField(ImportModuleField* field) {
 }
 
 void Module::AppendField(MemoryModuleField* field) {
-  auto&& memory = field->memory;
+  Memory& memory = field->memory;
   if (!memory.name.empty())
     memory_bindings.emplace(memory.name, Binding(field->loc, memories.size()));
   memories.push_back(&memory);
@@ -322,7 +322,7 @@ void Module::AppendField(StartModuleField* field) {
 }
 
 void Module::AppendField(TableModuleField* field) {
-  auto&& table = field->table;
+  Table& table = field->table;
   if (!table.name.empty())
     table_bindings.emplace(table.name, Binding(field->loc, tables.size()));
   tables.push_back(&table);
