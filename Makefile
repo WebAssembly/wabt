@@ -38,7 +38,6 @@ GCC_DIR := gcc/
 GCC_I686_DIR := gcc-i686/
 GCC_FUZZ_DIR := gcc-fuzz/
 CLANG_DIR := clang/
-EMSCRIPTEN_DIR := emscripten/
 DEBUG_DIR := Debug/
 RELEASE_DIR := Release/
 NORMAL_DIR :=
