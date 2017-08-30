@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-#include "wast-lexer.h"
+#include "src/wast-lexer.h"
 
 #include <cassert>
 #include <cstdio>
 
 #include "config.h"
 
-#include "circular-array.h"
-#include "error-handler.h"
-#include "lexer-source.h"
-#include "wast-parser.h"
+#include "src/circular-array.h"
+#include "src/error-handler.h"
+#include "src/lexer-source.h"
+#include "src/wast-parser.h"
 
 /*!max:re2c */
 

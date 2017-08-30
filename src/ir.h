@@ -25,11 +25,11 @@
 #include <vector>
 #include <type_traits>
 
-#include "binding-hash.h"
-#include "common.h"
-#include "intrusive-list.h"
-#include "opcode.h"
-#include "string-view.h"
+#include "src/binding-hash.h"
+#include "src/common.h"
+#include "src/intrusive-list.h"
+#include "src/opcode.h"
+#include "src/string-view.h"
 
 namespace wabt {
 

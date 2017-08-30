@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "type-checker.h"
+#include "src/type-checker.h"
 
 namespace wabt {
 

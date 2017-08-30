@@ -20,7 +20,7 @@
 
 #include "gtest/gtest.h"
 
-#include "literal.h"
+#include "src/literal.h"
 
 #if HAVE_SYSCONF
 #include <unistd.h>

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#include "apply-names.h"
+#include "src/apply-names.h"
 
 #include <cassert>
 #include <cstdio>
 #include <vector>
 
-#include "expr-visitor.h"
-#include "ir.h"
-#include "string-view.h"
+#include "src/expr-visitor.h"
+#include "src/ir.h"
+#include "src/string-view.h"
 
 namespace wabt {
 

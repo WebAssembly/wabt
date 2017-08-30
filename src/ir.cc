@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#include "ir.h"
+#include "src/ir.h"
 
 #include <cassert>
 #include <cstddef>
 
-#include "cast.h"
+#include "src/cast.h"
 
 namespace {
 

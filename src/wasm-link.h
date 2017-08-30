@@ -20,8 +20,8 @@
 #include <memory>
 #include <vector>
 
-#include "binary.h"
-#include "common.h"
+#include "src/binary.h"
+#include "src/common.h"
 
 namespace wabt {
 namespace link {

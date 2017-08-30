@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "lexer-source.h"
+#include "src/lexer-source.h"
 
 #include <algorithm>
 

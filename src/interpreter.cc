@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "interpreter.h"
+#include "src/interpreter.h"
 
 #include <algorithm>
 #include <cassert>
@@ -24,8 +24,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "cast.h"
-#include "stream.h"
+#include "src/cast.h"
+#include "src/stream.h"
 
 namespace wabt {
 namespace interpreter {
@@ -33,7 +33,7 @@ namespace interpreter {
 static const char* s_opcode_name[] = {
 #define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, NAME, text) \
   text,
-#include "interpreter-opcode.def"
+#include "src/interpreter-opcode.def"
 #undef WABT_OPCODE
 
   "<invalid>",

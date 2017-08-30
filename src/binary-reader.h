@@ -20,11 +20,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "binary.h"
-#include "common.h"
-#include "feature.h"
-#include "opcode.h"
-#include "string-view.h"
+#include "src/binary.h"
+#include "src/common.h"
+#include "src/feature.h"
+#include "src/opcode.h"
+#include "src/string-view.h"
 
 namespace wabt {
 

@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "intrusive-list.h"
+#include "src/intrusive-list.h"
 
 using namespace wabt;
 

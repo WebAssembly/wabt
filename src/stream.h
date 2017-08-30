@@ -21,8 +21,8 @@
 #include <memory>
 #include <vector>
 
-#include "common.h"
-#include "writer.h"
+#include "src/common.h"
+#include "src/writer.h"
 
 namespace wabt {
 

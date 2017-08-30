@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "expr-visitor.h"
+#include "src/expr-visitor.h"
 
-#include "cast.h"
-#include "ir.h"
+#include "src/cast.h"
+#include "src/ir.h"
 
 namespace wabt {
 

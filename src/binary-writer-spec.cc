@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-#include "binary-writer-spec.h"
+#include "src/binary-writer-spec.h"
 
 #include <cassert>
 #include <cinttypes>
 
-#include "binary.h"
-#include "binary-writer.h"
-#include "cast.h"
 #include "config.h"
-#include "ir.h"
-#include "stream.h"
-#include "string-view.h"
-#include "writer.h"
+
+#include "src/binary.h"
+#include "src/binary-writer.h"
+#include "src/cast.h"
+#include "src/ir.h"
+#include "src/stream.h"
+#include "src/string-view.h"
+#include "src/writer.h"
 
 namespace wabt {
 

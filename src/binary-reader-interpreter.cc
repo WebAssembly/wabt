@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "binary-reader-interpreter.h"
+#include "src/binary-reader-interpreter.h"
 
 #include <cassert>
 #include <cinttypes>
@@ -22,12 +22,12 @@
 #include <cstdio>
 #include <vector>
 
-#include "binary-reader-nop.h"
-#include "cast.h"
-#include "error-handler.h"
-#include "interpreter.h"
-#include "type-checker.h"
-#include "writer.h"
+#include "src/binary-reader-nop.h"
+#include "src/cast.h"
+#include "src/error-handler.h"
+#include "src/interpreter.h"
+#include "src/type-checker.h"
+#include "src/writer.h"
 
 namespace wabt {
 

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "lexer-source-line-finder.h"
+#include "src/lexer-source-line-finder.h"
 
 #include <algorithm>
 
-#include "lexer-source.h"
+#include "src/lexer-source.h"
 
 namespace wabt {
 

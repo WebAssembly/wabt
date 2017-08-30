@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-#include "validator.h"
-#include "config.h"
+#include "src/validator.h"
 
 #include <cassert>
 #include <cinttypes>
 #include <cstdarg>
 #include <cstdio>
 
-#include "binary-reader.h"
-#include "cast.h"
-#include "error-handler.h"
-#include "ir.h"
-#include "type-checker.h"
-#include "wast-parser-lexer-shared.h"
+#include "config.h"
+
+#include "src/binary-reader.h"
+#include "src/cast.h"
+#include "src/error-handler.h"
+#include "src/ir.h"
+#include "src/type-checker.h"
+#include "src/wast-parser-lexer-shared.h"
 
 namespace wabt {
 
