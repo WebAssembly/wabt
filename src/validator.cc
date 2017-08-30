@@ -200,11 +200,7 @@ Result Validator::CheckVar(Index max_index,
 
 Result Validator::CheckFuncVar(const Var* var, const Func** out_func) {
   Index index;
-  if (Failed(
-          CheckVar(current_module_->funcs.size(), var, "function", &index))) {
-    return Result::Error;
-  }
-
+  CHECK_RESULT(CheckVar(current_module_->funcs.size(), var, "function", &index));
   if (out_func)
     *out_func = current_module_->funcs[index];
   return Result::Ok;
@@ -214,11 +210,8 @@ Result Validator::CheckGlobalVar(const Var* var,
                                  const Global** out_global,
                                  Index* out_global_index) {
   Index index;
-  if (Failed(
-          CheckVar(current_module_->globals.size(), var, "global", &index))) {
-    return Result::Error;
-  }
-
+  CHECK_RESULT(
+      CheckVar(current_module_->globals.size(), var, "global", &index));
   if (out_global)
     *out_global = current_module_->globals[index];
   if (out_global_index)
@@ -236,11 +229,8 @@ Type Validator::GetGlobalVarTypeOrAny(const Var* var) {
 Result Validator::CheckFuncTypeVar(const Var* var,
                                    const FuncType** out_func_type) {
   Index index;
-  if (Failed(CheckVar(current_module_->func_types.size(), var,
-                      "function type", &index))) {
-    return Result::Error;
-  }
-
+  CHECK_RESULT(CheckVar(current_module_->func_types.size(), var,
+                        "function type", &index));
   if (out_func_type)
     *out_func_type = current_module_->func_types[index];
   return Result::Ok;
@@ -248,10 +238,7 @@ Result Validator::CheckFuncTypeVar(const Var* var,
 
 Result Validator::CheckTableVar(const Var* var, const Table** out_table) {
   Index index;
-  if (Failed(CheckVar(current_module_->tables.size(), var, "table", &index))) {
-    return Result::Error;
-  }
-
+  CHECK_RESULT(CheckVar(current_module_->tables.size(), var, "table", &index));
   if (out_table)
     *out_table = current_module_->tables[index];
   return Result::Ok;
@@ -259,11 +246,8 @@ Result Validator::CheckTableVar(const Var* var, const Table** out_table) {
 
 Result Validator::CheckMemoryVar(const Var* var, const Memory** out_memory) {
   Index index;
-  if (Failed(
-          CheckVar(current_module_->memories.size(), var, "memory", &index))) {
-    return Result::Error;
-  }
-
+  CHECK_RESULT(
+      CheckVar(current_module_->memories.size(), var, "memory", &index));
   if (out_memory)
     *out_memory = current_module_->memories[index];
   return Result::Ok;
@@ -745,12 +729,11 @@ void Validator::CheckElemSegments(const Module* module) {
     if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(&field)) {
       auto&& elem_segment = elem_segment_field->elem_segment;
       const Table* table;
-      if (!Succeeded(CheckTableVar(&elem_segment.table_var, &table)))
+      if (Failed(CheckTableVar(&elem_segment.table_var, &table)))
         continue;
 
       for (const Var& var : elem_segment.vars) {
-        if (!Succeeded(CheckFuncVar(&var, nullptr)))
-          continue;
+        CheckFuncVar(&var, nullptr);
       }
 
       CheckConstInitExpr(&field.loc, elem_segment.offset, Type::I32,
@@ -770,7 +753,7 @@ void Validator::CheckDataSegments(const Module* module) {
     if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(&field)) {
       auto&& data_segment = data_segment_field->data_segment;
       const Memory* memory;
-      if (!Succeeded(CheckMemoryVar(&data_segment.memory_var, &memory)))
+      if (Failed(CheckMemoryVar(&data_segment.memory_var, &memory)))
         continue;
 
       CheckConstInitExpr(&field.loc, data_segment.offset, Type::I32,
@@ -1003,10 +986,8 @@ Result Validator::CheckGet(const GetAction* action, Type* out_type) {
 
 Result Validator::CheckExceptVar(const Var* var, const Exception** out_except) {
   Index index;
-  if (Failed(
-          CheckVar(current_module_->excepts.size(), var, "except", &index))) {
-    return Result::Error;
-  }
+  CHECK_RESULT(
+      CheckVar(current_module_->excepts.size(), var, "except", &index));
   if (out_except)
     *out_except = current_module_->excepts[index];
   return Result::Ok;

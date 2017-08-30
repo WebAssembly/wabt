@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "config.h"
+#include "result.h"
 #include "string-view.h"
 
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
@@ -97,11 +98,6 @@ static const Address kInvalidAddress = ~0;
 static const Index kInvalidIndex = ~0;
 static const Offset kInvalidOffset = ~0;
 
-enum class Result {
-  Ok,
-  Error,
-};
-
 template<typename T>
 void ZeroMemory(T& v) {
   WABT_STATIC_ASSERT(std::is_pod<T>::value);
@@ -144,9 +140,6 @@ template <typename T>
 typename T::value_type* DataOrNull(T& container) {
   return container.empty() ? nullptr : container.data();
 }
-
-inline bool Succeeded(Result result) { return result == Result::Ok; }
-inline bool Failed(Result result) { return result == Result::Error; }
 
 inline std::string WABT_PRINTF_FORMAT(1, 2)
     StringPrintf(const char* format, ...) {
@@ -338,6 +331,6 @@ inline void ConvertBackslashToSlash(std::string* s) {
   ConvertBackslashToSlash(s->begin(), s->end());
 }
 
-}  // end anonymous namespace
+}  // namespace wabt
 
-#endif /* WABT_COMMON_H_ */
+#endif // WABT_COMMON_H_

@@ -561,12 +561,6 @@ class SpecJSONParser {
   int total_ = 0;
 };
 
-#define CHECK_RESULT(x)           \
-  do {                            \
-    if (Failed(x))                \
-      return wabt::Result::Error; \
-  } while (0)
-
 #define EXPECT(x) CHECK_RESULT(Expect(x))
 #define EXPECT_KEY(x) CHECK_RESULT(ExpectKey(x))
 #define PARSE_KEY_STRING_VALUE(key, value) \

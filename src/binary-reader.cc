@@ -34,12 +34,6 @@
 #include <alloca.h>
 #endif
 
-#define CHECK_RESULT(expr)  \
-  do {                      \
-    if (Failed(expr))       \
-      return Result::Error; \
-  } while (0)
-
 #define ERROR_UNLESS(expr, ...) \
   do {                          \
     if (!(expr)) {              \

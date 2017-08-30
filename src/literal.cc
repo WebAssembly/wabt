@@ -225,8 +225,7 @@ Result FloatParser<T>::ParseNan(const char* s,
 
     for (; s < end; ++s) {
       uint32_t digit;
-      if (Failed(ParseHexdigit(*s, &digit)))
-        return Result::Error;
+      CHECK_RESULT(ParseHexdigit(*s, &digit));
       tag = tag * 16 + digit;
       // Check for overflow.
       if (tag > Traits::kSigMask)
@@ -552,8 +551,7 @@ Result ParseUint64(const char* s, const char* end, uint64_t* out) {
       uint32_t digit;
       if (*s == '_')
         continue;
-      if (Failed(ParseHexdigit(*s, &digit)))
-        return Result::Error;
+      CHECK_RESULT(ParseHexdigit(*s, &digit));
       uint64_t old_value = value;
       value = value * 16 + digit;
       // Check for overflow.
@@ -617,8 +615,7 @@ Result ParseInt32(const char* s,
       has_sign = true;
     s++;
   }
-  if (Failed(ParseUint64(s, end, &value)))
-    return Result::Error;
+  CHECK_RESULT(ParseUint64(s, end, &value));
 
   if (has_sign) {
     // abs(INT32_MIN) == INT32_MAX + 1.

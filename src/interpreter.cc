@@ -39,6 +39,9 @@ static const char* s_opcode_name[] = {
   "<invalid>",
 };
 
+// Differs from the normal CHECK_RESULT because this one is meant to return the
+// interpreter Result type.
+#undef CHECK_RESULT
 #define CHECK_RESULT(expr)  \
   do {                      \
     if (WABT_FAILED(expr))  \
