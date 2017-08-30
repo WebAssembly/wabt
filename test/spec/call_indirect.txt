@@ -49,14 +49,5 @@ out/third_party/testsuite/call_indirect.wast:365: assert_invalid passed:
 out/third_party/testsuite/call_indirect.wast:376: assert_invalid passed:
   error: invalid func_index: 0 (max 0)
   0000018: error: OnElemSegmentFunctionIndex callback failed
-out/third_party/testsuite/call_indirect.wast:384: assert_unlinkable passed:
-  error: elem segment offset is out of bounds: 10 >= max value 10
-  0000021: error: OnElemSegmentFunctionIndex callback failed
-out/third_party/testsuite/call_indirect.wast:393: assert_unlinkable passed:
-  error: elem segment offset is out of bounds: 4294967295 >= max value 10
-  0000021: error: OnElemSegmentFunctionIndex callback failed
-out/third_party/testsuite/call_indirect.wast:402: assert_unlinkable passed:
-  error: elem segment offset is out of bounds: 4294967286 >= max value 10
-  0000021: error: OnElemSegmentFunctionIndex callback failed
-67/67 tests passed.
+64/64 tests passed.
 ;;; STDOUT ;;)

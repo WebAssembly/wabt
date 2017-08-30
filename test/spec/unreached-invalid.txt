@@ -238,76 +238,91 @@ out/third_party/testsuite/unreached-invalid.wast:454: assert_invalid passed:
   error: type mismatch in br_if, expected i32 but got f32.
   0000021: error: OnBrIfExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:460: assert_invalid passed:
+  error: type stack at end of block is 1, expected 0
+  0000024: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:468: assert_invalid passed:
+  error: type mismatch in block, expected f32 but got i32.
+  0000024: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:477: assert_invalid passed:
+  error: type stack at end of block is 1, expected 0
+  0000024: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:485: assert_invalid passed:
   error: type mismatch in br_table, expected i32 but got f32.
   0000022: error: OnBrTableExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:466: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:491: assert_invalid passed:
   error: type mismatch in br_table, expected i32 but got f32.
   0000025: error: OnBrTableExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:472: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:497: assert_invalid passed:
   error: type mismatch in br_table, expected void but got f32.
   0000023: error: OnBrTableExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:484: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:509: assert_invalid passed:
   error: type mismatch in br_table, expected f64 but got f32.
   0000023: error: OnBrTableExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:499: assert_invalid passed:
-  error: type stack at end of block is 1, expected 0
-  0000020: error: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:505: assert_invalid passed:
-  error: type stack size too small at implicit return. got 0, expected at least 1
-  0000020: error: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:511: assert_invalid passed:
-  error: type mismatch in implicit return, expected i32 but got i64.
-  0000022: error: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:517: assert_invalid passed:
-  error: type stack at end of block is 1, expected 0
-  0000023: error: OnEndExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:524: assert_invalid passed:
   error: type stack at end of block is 1, expected 0
-  0000021: error: OnEndExpr callback failed
+  0000020: error: OnEndExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:530: assert_invalid passed:
-  error: type stack size too small at block. got 0, expected at least 1
-  0000022: error: OnEndExpr callback failed
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  0000020: error: EndFunctionBody callback failed
 out/third_party/testsuite/unreached-invalid.wast:536: assert_invalid passed:
-  error: type mismatch in block, expected i32 but got i64.
-  0000024: error: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:543: assert_invalid passed:
+  error: type mismatch in implicit return, expected i32 but got i64.
+  0000022: error: EndFunctionBody callback failed
+out/third_party/testsuite/unreached-invalid.wast:542: assert_invalid passed:
   error: type stack at end of block is 1, expected 0
   0000023: error: OnEndExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:549: assert_invalid passed:
+  error: type stack at end of block is 1, expected 0
+  0000021: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:555: assert_invalid passed:
+  error: type stack size too small at block. got 0, expected at least 1
+  0000022: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:561: assert_invalid passed:
+  error: type mismatch in block, expected i32 but got i64.
+  0000024: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:568: assert_invalid passed:
+  error: type stack at end of block is 1, expected 0
+  0000023: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:574: assert_invalid passed:
   error: type stack size too small at block. got 0, expected at least 1
   0000025: error: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:555: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:580: assert_invalid passed:
   error: type mismatch in block, expected i32 but got i64.
   0000027: error: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:563: assert_invalid passed:
-  error: type stack at end of block is 1, expected 0
-  0000024: error: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:570: assert_invalid passed:
-  error: type stack at end of block is 1, expected 0
-  0000020: error: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:576: assert_invalid passed:
-  error: type stack size too small at implicit return. got 0, expected at least 1
-  0000022: error: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:582: assert_invalid passed:
-  error: type mismatch in implicit return, expected i32 but got i64.
-  0000024: error: EndFunctionBody callback failed
 out/third_party/testsuite/unreached-invalid.wast:588: assert_invalid passed:
   error: type stack at end of block is 1, expected 0
+  0000024: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:595: assert_invalid passed:
+  error: type stack at end of block is 1, expected 0
+  0000020: error: OnEndExpr callback failed
+out/third_party/testsuite/unreached-invalid.wast:601: assert_invalid passed:
+  error: type stack size too small at implicit return. got 0, expected at least 1
+  0000022: error: EndFunctionBody callback failed
+out/third_party/testsuite/unreached-invalid.wast:607: assert_invalid passed:
+  error: type mismatch in implicit return, expected i32 but got i64.
+  0000024: error: EndFunctionBody callback failed
+out/third_party/testsuite/unreached-invalid.wast:613: assert_invalid passed:
+  error: type stack at end of block is 1, expected 0
   0000025: error: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:596: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:621: assert_invalid passed:
   error: type stack at end of loop is 1, expected 0
   0000020: error: OnEndExpr callback failed
-out/third_party/testsuite/unreached-invalid.wast:602: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:627: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   0000020: error: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:608: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:633: assert_invalid passed:
   error: type mismatch in implicit return, expected i32 but got i64.
   0000022: error: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:615: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:640: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   000001f: error: EndFunctionBody callback failed
-out/third_party/testsuite/unreached-invalid.wast:621: assert_invalid passed:
+out/third_party/testsuite/unreached-invalid.wast:646: assert_invalid passed:
   error: type stack size too small at implicit return. got 0, expected at least 1
   0000020: error: EndFunctionBody callback failed
-100/100 tests passed.
+out/third_party/testsuite/unreached-invalid.wast:653: assert_invalid passed:
+  error: type stack at end of function is 1, expected 0
+  000001d: error: EndFunctionBody callback failed
+out/third_party/testsuite/unreached-invalid.wast:660: assert_invalid passed:
+  error: type stack at end of block is 1, expected 0
+  0000022: error: OnEndExpr callback failed
+105/105 tests passed.
 ;;; STDOUT ;;)
