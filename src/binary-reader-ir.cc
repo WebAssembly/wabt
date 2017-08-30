@@ -303,8 +303,7 @@ Result BinaryReaderIR::OnType(Index index,
   FuncType& func_type = field->func_type;
   func_type.sig.param_types.assign(param_types, param_types + param_count);
   func_type.sig.result_types.assign(result_types, result_types + result_count);
-  module->func_types.push_back(&func_type);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
@@ -324,12 +323,7 @@ Result BinaryReaderIR::OnImportFunc(Index import_index,
   import->func.decl.has_func_type = true;
   import->func.decl.type_var = Var(sig_index, GetLocation());
   import->func.decl.sig = module->func_types[sig_index]->sig;
-  module->funcs.push_back(&import->func);
-  module->imports.push_back(import.get());
-
-  auto field = MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-  module->fields.push_back(field.release());
-  module->num_func_imports++;
+  module->AppendField(new ImportModuleField(std::move(import), GetLocation()));
   return Result::Ok;
 }
 
@@ -343,12 +337,7 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
   import->table.elem_limits = *elem_limits;
-  module->tables.push_back(&import->table);
-  module->imports.push_back(import.get());
-
-  auto field = MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-  module->fields.push_back(field.release());
-  module->num_table_imports++;
+  module->AppendField(new ImportModuleField(std::move(import), GetLocation()));
   return Result::Ok;
 }
 
@@ -361,12 +350,7 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
   import->memory.page_limits = *page_limits;
-  module->memories.push_back(&import->memory);
-  module->imports.push_back(import.get());
-
-  auto field = MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-  module->fields.push_back(field.release());
-  module->num_memory_imports++;
+  module->AppendField(new ImportModuleField(std::move(import), GetLocation()));
   return Result::Ok;
 }
 
@@ -381,12 +365,7 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   import->field_name = field_name.to_string();
   import->global.type = type;
   import->global.mutable_ = mutable_;
-  module->globals.push_back(&import->global);
-  module->imports.push_back(import.get());
-
-  auto field = MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-  module->fields.push_back(field.release());
-  module->num_global_imports++;
+  module->AppendField(new ImportModuleField(std::move(import), GetLocation()));
   return Result::Ok;
 }
 
@@ -399,11 +378,7 @@ Result BinaryReaderIR::OnImportException(Index import_index,
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
   import->except.sig = sig;
-  module->excepts.push_back(&import->except);
-  module->imports.push_back(import.get());
-
-  auto field = MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-  module->fields.push_back(field.release());
+  module->AppendField(new ImportModuleField(std::move(import), GetLocation()));
   return Result::Ok;
 }
 
@@ -418,9 +393,7 @@ Result BinaryReaderIR::OnFunction(Index index, Index sig_index) {
   func.decl.has_func_type = true;
   func.decl.type_var = Var(sig_index, GetLocation());
   func.decl.sig = module->func_types[sig_index]->sig;
-
-  module->funcs.push_back(&func);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
@@ -435,8 +408,7 @@ Result BinaryReaderIR::OnTable(Index index,
   auto field = MakeUnique<TableModuleField>(GetLocation());
   Table& table = field->table;
   table.elem_limits = *elem_limits;
-  module->tables.push_back(&table);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
@@ -449,8 +421,7 @@ Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
   auto field = MakeUnique<MemoryModuleField>(GetLocation());
   Memory& memory = field->memory;
   memory.page_limits = *page_limits;
-  module->memories.push_back(&memory);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
@@ -464,8 +435,7 @@ Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
   Global& global = field->global;
   global.type = type;
   global.mutable_ = mutable_;
-  module->globals.push_back(&global);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
@@ -512,15 +482,14 @@ Result BinaryReaderIR::OnExport(Index index,
   }
   export_.var = Var(item_index, GetLocation());
   export_.kind = kind;
-  module->exports.push_back(&export_);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnStartFunction(Index func_index) {
   assert(func_index < module->funcs.size());
   Var start(func_index, GetLocation());
-  module->fields.push_back(new StartModuleField(start, GetLocation()));
+  module->AppendField(new StartModuleField(start, GetLocation()));
   return Result::Ok;
 }
 
@@ -774,8 +743,7 @@ Result BinaryReaderIR::BeginElemSegment(Index index, Index table_index) {
   auto field = MakeUnique<ElemSegmentModuleField>(GetLocation());
   ElemSegment& elem_segment = field->elem_segment;
   elem_segment.table_var = Var(table_index, GetLocation());
-  module->elem_segments.push_back(&elem_segment);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
@@ -818,8 +786,7 @@ Result BinaryReaderIR::BeginDataSegment(Index index, Index memory_index) {
   auto field = MakeUnique<DataSegmentModuleField>(GetLocation());
   DataSegment& data_segment = field->data_segment;
   data_segment.memory_var = Var(memory_index, GetLocation());
-  module->data_segments.push_back(&data_segment);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
@@ -886,38 +853,33 @@ Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
 }
 
 Result BinaryReaderIR::OnInitExprF32ConstExpr(Index index, uint32_t value) {
-  auto expr = new ConstExpr(Const::F32(value, GetLocation()));
-  expr->loc = GetLocation();
-  current_init_expr->push_back(expr);
+  Location loc = GetLocation();
+  current_init_expr->push_back(new ConstExpr(Const::F32(value, loc), loc));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprF64ConstExpr(Index index, uint64_t value) {
-  auto expr = new ConstExpr(Const::F64(value, GetLocation()));
-  expr->loc = GetLocation();
-  current_init_expr->push_back(expr);
+  Location loc = GetLocation();
+  current_init_expr->push_back(new ConstExpr(Const::F64(value, loc), loc));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprGetGlobalExpr(Index index,
                                                Index global_index) {
-  auto expr = new GetGlobalExpr(Var(global_index, GetLocation()));
-  expr->loc = GetLocation();
-  current_init_expr->push_back(expr);
+  Location loc = GetLocation();
+  current_init_expr->push_back(new GetGlobalExpr(Var(global_index, loc), loc));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprI32ConstExpr(Index index, uint32_t value) {
-  auto expr = new ConstExpr(Const::I32(value, GetLocation()));
-  expr->loc = GetLocation();
-  current_init_expr->push_back(expr);
+  Location loc = GetLocation();
+  current_init_expr->push_back(new ConstExpr(Const::I32(value, loc), loc));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
-  auto expr = new ConstExpr(Const::I64(value, GetLocation()));
-  expr->loc = GetLocation();
-  current_init_expr->push_back(expr);
+  Location loc = GetLocation();
+  current_init_expr->push_back(new ConstExpr(Const::I64(value, loc), loc));
   return Result::Ok;
 }
 
@@ -948,8 +910,7 @@ Result BinaryReaderIR::OnExceptionType(Index index, TypeVector& sig) {
   auto field = MakeUnique<ExceptionModuleField>(GetLocation());
   Exception& except = field->except;
   except.sig = sig;
-  module->excepts.push_back(&except);
-  module->fields.push_back(field.release());
+  module->AppendField(field.release());
   return Result::Ok;
 }
 
