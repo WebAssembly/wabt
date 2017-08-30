@@ -29,12 +29,6 @@
 #include "error-handler.h"
 #include "ir.h"
 
-#define CHECK_RESULT(expr)  \
-  do {                      \
-    if (Failed(expr))       \
-      return Result::Error; \
-  } while (0)
-
 namespace wabt {
 
 namespace {
@@ -274,9 +268,7 @@ Result BinaryReaderIR::TopLabel(LabelNode** label) {
 
 Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
   LabelNode* label;
-  if (Failed(TopLabel(&label))) {
-    return Result::Error;
-  }
+  CHECK_RESULT(TopLabel(&label));
   label->exprs->push_back(expr.release());
   return Result::Ok;
 }

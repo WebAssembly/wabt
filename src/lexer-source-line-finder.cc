@@ -20,12 +20,6 @@
 
 #include "lexer-source.h"
 
-#define CHECK_RESULT(expr)  \
-  do {                      \
-    if (Failed(expr))       \
-      return Result::Error; \
-  } while (0)
-
 namespace wabt {
 
 LexerSourceLineFinder::LexerSourceLineFinder(

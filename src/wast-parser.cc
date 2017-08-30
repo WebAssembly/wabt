@@ -25,12 +25,6 @@
 #define WABT_TRACING 0
 #include "tracing.h"
 
-#define CHECK_RESULT(expr)  \
-  do {                      \
-    if (Failed(expr))       \
-      return Result::Error; \
-  } while (0)
-
 #define EXPECT(token_type) CHECK_RESULT(Expect(TokenType::token_type))
 
 namespace wabt {

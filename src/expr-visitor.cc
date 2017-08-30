@@ -19,12 +19,6 @@
 #include "cast.h"
 #include "ir.h"
 
-#define CHECK_RESULT(expr)   \
-  do {                       \
-    if (Failed((expr)))      \
-      return Result::Error;  \
-  } while (0)
-
 namespace wabt {
 
 ExprVisitor::ExprVisitor(Delegate* delegate) : delegate_(delegate) {}

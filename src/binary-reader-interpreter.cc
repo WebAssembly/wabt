@@ -29,12 +29,6 @@
 #include "type-checker.h"
 #include "writer.h"
 
-#define CHECK_RESULT(expr)        \
-  do {                            \
-    if (Failed(expr))             \
-      return wabt::Result::Error; \
-  } while (0)
-
 namespace wabt {
 
 using namespace interpreter;
@@ -473,11 +467,8 @@ wabt::Result BinaryReaderInterpreter::GetBrDropKeepCount(
 wabt::Result BinaryReaderInterpreter::GetReturnDropKeepCount(
     Index* out_drop_count,
     Index* out_keep_count) {
-  if (Failed(GetBrDropKeepCount(label_stack.size() - 1, out_drop_count,
-                                out_keep_count))) {
-    return wabt::Result::Error;
-  }
-
+  CHECK_RESULT(GetBrDropKeepCount(label_stack.size() - 1, out_drop_count,
+                                  out_keep_count));
   *out_drop_count += current_func->param_and_local_types.size();
   return wabt::Result::Ok;
 }
