@@ -191,59 +191,59 @@ Index Module::GetFuncTypeIndex(const FuncDeclaration& decl) const {
   }
 }
 
-void Module::AppendField(DataSegmentModuleField* field) {
-  fields.push_back(field);
+void Module::AppendField(std::unique_ptr<DataSegmentModuleField> field) {
   data_segments.push_back(&field->data_segment);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(ElemSegmentModuleField* field) {
-  fields.push_back(field);
+void Module::AppendField(std::unique_ptr<ElemSegmentModuleField> field) {
   elem_segments.push_back(&field->elem_segment);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(ExceptionModuleField* field) {
+void Module::AppendField(std::unique_ptr<ExceptionModuleField> field) {
   Exception& except = field->except;
   if (!except.name.empty())
     except_bindings.emplace(except.name, Binding(field->loc, excepts.size()));
   excepts.push_back(&except);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(ExportModuleField* field) {
+void Module::AppendField(std::unique_ptr<ExportModuleField> field) {
   // Exported names are allowed to be empty.
   Export& export_ = field->export_;
   export_bindings.emplace(export_.name, Binding(field->loc, exports.size()));
   exports.push_back(&export_);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(FuncModuleField* field) {
+void Module::AppendField(std::unique_ptr<FuncModuleField> field) {
   Func& func = field->func;
   if (!func.name.empty())
     func_bindings.emplace(func.name, Binding(field->loc, funcs.size()));
   funcs.push_back(&func);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(FuncTypeModuleField* field) {
+void Module::AppendField(std::unique_ptr<FuncTypeModuleField> field) {
   FuncType& func_type = field->func_type;
   if (!func_type.name.empty()) {
     func_type_bindings.emplace(func_type.name,
                                Binding(field->loc, func_types.size()));
   }
   func_types.push_back(&func_type);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(GlobalModuleField* field) {
+void Module::AppendField(std::unique_ptr<GlobalModuleField> field) {
   Global& global = field->global;
   if (!global.name.empty())
     global_bindings.emplace(global.name, Binding(field->loc, globals.size()));
   globals.push_back(&global);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(ImportModuleField* field) {
+void Module::AppendField(std::unique_ptr<ImportModuleField> field) {
   Import* import = field->import.get();
   const std::string* name = nullptr;
   BindingHash* bindings = nullptr;
@@ -305,81 +305,81 @@ void Module::AppendField(ImportModuleField* field) {
   if (!name->empty())
     bindings->emplace(*name, Binding(field->loc, index));
   imports.push_back(import);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(MemoryModuleField* field) {
+void Module::AppendField(std::unique_ptr<MemoryModuleField> field) {
   Memory& memory = field->memory;
   if (!memory.name.empty())
     memory_bindings.emplace(memory.name, Binding(field->loc, memories.size()));
   memories.push_back(&memory);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(StartModuleField* field) {
-  fields.push_back(field);
+void Module::AppendField(std::unique_ptr<StartModuleField> field) {
   start = &field->start;
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(TableModuleField* field) {
+void Module::AppendField(std::unique_ptr<TableModuleField> field) {
   Table& table = field->table;
   if (!table.name.empty())
     table_bindings.emplace(table.name, Binding(field->loc, tables.size()));
   tables.push_back(&table);
-  fields.push_back(field);
+  fields.push_back(std::move(field));
 }
 
-void Module::AppendField(ModuleField* field) {
+void Module::AppendField(std::unique_ptr<ModuleField> field) {
   switch (field->type()) {
     case ModuleFieldType::Func:
-      AppendField(dyn_cast<FuncModuleField>(field));
+      AppendField(cast<FuncModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::Global:
-      AppendField(dyn_cast<GlobalModuleField>(field));
+      AppendField(cast<GlobalModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::Import:
-      AppendField(dyn_cast<ImportModuleField>(field));
+      AppendField(cast<ImportModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::Export:
-      AppendField(dyn_cast<ExportModuleField>(field));
+      AppendField(cast<ExportModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::FuncType:
-      AppendField(dyn_cast<FuncTypeModuleField>(field));
+      AppendField(cast<FuncTypeModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::Table:
-      AppendField(dyn_cast<TableModuleField>(field));
+      AppendField(cast<TableModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::ElemSegment:
-      AppendField(dyn_cast<ElemSegmentModuleField>(field));
+      AppendField(cast<ElemSegmentModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::Memory:
-      AppendField(dyn_cast<MemoryModuleField>(field));
+      AppendField(cast<MemoryModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::DataSegment:
-      AppendField(dyn_cast<DataSegmentModuleField>(field));
+      AppendField(cast<DataSegmentModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::Start:
-      AppendField(dyn_cast<StartModuleField>(field));
+      AppendField(cast<StartModuleField>(std::move(field)));
       break;
 
     case ModuleFieldType::Except:
-      AppendField(dyn_cast<ExceptionModuleField>(field));
+      AppendField(cast<ExceptionModuleField>(std::move(field)));
       break;
   }
 }
 
 void Module::AppendFields(ModuleFieldList* fields) {
   while (!fields->empty())
-    AppendField(fields->extract_front());
+    AppendField(std::unique_ptr<ModuleField>(fields->extract_front()));
 }
 
 const Module* Script::GetFirstModule() const {
