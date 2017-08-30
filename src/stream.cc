@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "stream.h"
+#include "src/stream.h"
 
 #include <cassert>
 #include <cctype>

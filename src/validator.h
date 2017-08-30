@@ -17,7 +17,7 @@
 #ifndef WABT_VALIDATOR_H_
 #define WABT_VALIDATOR_H_
 
-#include "wast-lexer.h"
+#include "src/wast-lexer.h"
 
 namespace wabt {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "writer.h"
+#include "src/writer.h"
 
 #include <cassert>
 #include <cerrno>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "binary-reader.h"
+#include "src/binary-reader.h"
 
 #include <cassert>
 #include <cinttypes>
@@ -24,11 +24,12 @@
 #include <cstring>
 #include <vector>
 
-#include "binary.h"
-#include "binary-reader-logging.h"
 #include "config.h"
-#include "stream.h"
-#include "utf8.h"
+
+#include "src/binary.h"
+#include "src/binary-reader-logging.h"
+#include "src/stream.h"
+#include "src/utf8.h"
 
 #if HAVE_ALLOCA
 #include <alloca.h>

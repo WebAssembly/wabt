@@ -81,7 +81,7 @@ configure_file(
   ${WABT_BINARY_DIR}/config.h
 )
 
-include_directories(src ${WABT_BINARY_DIR})
+include_directories(${WABT_SOURCE_DIR} ${WABT_BINARY_DIR})
 
 if (COMPILER_IS_MSVC)
   # disable warning C4018: signed/unsigned mismatch

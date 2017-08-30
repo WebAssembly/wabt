@@ -19,7 +19,7 @@
 
 #include <type_traits>
 
-#include "common.h"
+#include "src/common.h"
 
 // Modeled after LLVM's dynamic casts:
 // http://llvm.org/docs/ProgrammersManual.html#the-isa-cast-and-dyn-cast-templates

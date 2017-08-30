@@ -19,19 +19,19 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "apply-names.h"
-#include "binary-reader.h"
-#include "binary-reader-ir.h"
-#include "error-handler.h"
-#include "feature.h"
-#include "generate-names.h"
-#include "ir.h"
-#include "option-parser.h"
-#include "stream.h"
-#include "validator.h"
-#include "wast-lexer.h"
-#include "wat-writer.h"
-#include "writer.h"
+#include "src/apply-names.h"
+#include "src/binary-reader.h"
+#include "src/binary-reader-ir.h"
+#include "src/error-handler.h"
+#include "src/feature.h"
+#include "src/generate-names.h"
+#include "src/ir.h"
+#include "src/option-parser.h"
+#include "src/stream.h"
+#include "src/validator.h"
+#include "src/wast-lexer.h"
+#include "src/wat-writer.h"
+#include "src/writer.h"
 
 using namespace wabt;
 

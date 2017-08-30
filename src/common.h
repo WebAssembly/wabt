@@ -31,8 +31,9 @@
 #include <vector>
 
 #include "config.h"
-#include "result.h"
-#include "string-view.h"
+
+#include "src/result.h"
+#include "src/string-view.h"
 
 #define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
 #define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))

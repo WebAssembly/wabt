@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-#include "opcode.h"
+#include "src/opcode.h"
 
 #include <algorithm>
 
-#include "feature.h"
+#include "src/feature.h"
 
 namespace wabt {
 
@@ -27,13 +27,13 @@ Opcode::Info Opcode::infos_[] = {
 #define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
   {text,     Type::rtype, Type::type1, Type::type2,                          \
    mem_size, prefix,      code,        PrefixCode(prefix, code)},
-#include "opcode.def"
+#include "src/opcode.def"
 #undef WABT_OPCODE
 };
 
 #define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
   /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
-#include "opcode.def"
+#include "src/opcode.def"
 #undef WABT_OPCODE
 
 // static

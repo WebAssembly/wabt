@@ -30,7 +30,7 @@
  *          tr  t1    t2   m  prefix code  Name text
  * ============================================================  */
 
-#include "opcode.def"
+#include "src/opcode.def"
 WABT_OPCODE(___, ___, ___, 0, 0,     0xc0, Alloca, "alloca")
 WABT_OPCODE(___, ___, ___, 0, 0,     0xc1, BrUnless, "br_unless")
 WABT_OPCODE(___, ___, ___, 0, 0,     0xc2, CallHost, "call_host")

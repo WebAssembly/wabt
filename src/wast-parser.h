@@ -19,11 +19,11 @@
 
 #include <array>
 
-#include "circular-array.h"
-#include "feature.h"
-#include "ir.h"
-#include "intrusive-list.h"
-#include "wast-lexer.h"
+#include "src/circular-array.h"
+#include "src/feature.h"
+#include "src/ir.h"
+#include "src/intrusive-list.h"
+#include "src/wast-lexer.h"
 
 namespace wabt {
 

@@ -23,17 +23,17 @@
 #include <string>
 #include <vector>
 
-#include "binary-reader-interpreter.h"
-#include "binary-reader.h"
-#include "cast.h"
-#include "error-handler.h"
-#include "feature.h"
-#include "interpreter.h"
-#include "literal.h"
-#include "option-parser.h"
-#include "stream.h"
-#include "wast-lexer.h"
-#include "wast-parser.h"
+#include "src/binary-reader-interpreter.h"
+#include "src/binary-reader.h"
+#include "src/cast.h"
+#include "src/error-handler.h"
+#include "src/feature.h"
+#include "src/interpreter.h"
+#include "src/literal.h"
+#include "src/option-parser.h"
+#include "src/stream.h"
+#include "src/wast-lexer.h"
+#include "src/wast-parser.h"
 
 using namespace wabt;
 using namespace wabt::interpreter;

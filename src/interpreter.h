@@ -23,10 +23,10 @@
 #include <memory>
 #include <vector>
 
-#include "binding-hash.h"
-#include "common.h"
-#include "opcode.h"
-#include "writer.h"
+#include "src/binding-hash.h"
+#include "src/common.h"
+#include "src/opcode.h"
+#include "src/writer.h"
 
 namespace wabt {
 
@@ -97,7 +97,7 @@ static const IstreamOffset kInvalidIstreamOffset = ~0;
 enum class Opcode {
 #define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
   Name,
-#include "interpreter-opcode.def"
+#include "src/interpreter-opcode.def"
 #undef WABT_OPCODE
   Invalid,
 };

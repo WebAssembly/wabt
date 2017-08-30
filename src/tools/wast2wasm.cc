@@ -23,18 +23,18 @@
 
 #include "config.h"
 
-#include "binary-writer.h"
-#include "binary-writer-spec.h"
-#include "common.h"
-#include "error-handler.h"
-#include "feature.h"
-#include "ir.h"
-#include "option-parser.h"
-#include "resolve-names.h"
-#include "stream.h"
-#include "validator.h"
-#include "wast-parser.h"
-#include "writer.h"
+#include "src/binary-writer.h"
+#include "src/binary-writer-spec.h"
+#include "src/common.h"
+#include "src/error-handler.h"
+#include "src/feature.h"
+#include "src/ir.h"
+#include "src/option-parser.h"
+#include "src/resolve-names.h"
+#include "src/stream.h"
+#include "src/validator.h"
+#include "src/wast-parser.h"
+#include "src/writer.h"
 
 using namespace wabt;
 

@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-#include "resolve-names.h"
+#include "src/resolve-names.h"
 
 #include <cassert>
 #include <cstdio>
 
-#include "cast.h"
-#include "error-handler.h"
-#include "expr-visitor.h"
-#include "ir.h"
-#include "wast-lexer.h"
-#include "wast-parser-lexer-shared.h"
+#include "src/cast.h"
+#include "src/error-handler.h"
+#include "src/expr-visitor.h"
+#include "src/ir.h"
+#include "src/wast-lexer.h"
+#include "src/wast-parser-lexer-shared.h"
 
 namespace wabt {
 

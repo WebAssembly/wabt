@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "wat-writer.h"
+#include "src/wat-writer.h"
 
 #include <algorithm>
 #include <cassert>
@@ -26,15 +26,15 @@
 #include <string>
 #include <vector>
 
-#include "cast.h"
-#include "common.h"
-#include "ir.h"
-#include "literal.h"
-#include "stream.h"
-#include "writer.h"
+#include "src/cast.h"
+#include "src/common.h"
+#include "src/ir.h"
+#include "src/literal.h"
+#include "src/stream.h"
+#include "src/writer.h"
 
 #define WABT_TRACING 0
-#include "tracing.h"
+#include "src/tracing.h"
 
 #define INDENT_SIZE 2
 #define NO_FORCE_NEWLINE 0

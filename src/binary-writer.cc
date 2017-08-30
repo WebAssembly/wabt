@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-#include "binary-writer.h"
-#include "config.h"
+#include "src/binary-writer.h"
 
 #include <cassert>
 #include <cmath>
@@ -24,12 +23,14 @@
 #include <cstdio>
 #include <vector>
 
-#include "binary.h"
-#include "cast.h"
-#include "ir.h"
-#include "stream.h"
-#include "string-view.h"
-#include "writer.h"
+#include "config.h"
+
+#include "src/binary.h"
+#include "src/cast.h"
+#include "src/ir.h"
+#include "src/stream.h"
+#include "src/string-view.h"
+#include "src/writer.h"
 
 #define PRINT_HEADER_NO_INDEX -1
 #define MAX_U32_LEB128_BYTES 5

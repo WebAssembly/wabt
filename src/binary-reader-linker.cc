@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#include "binary-reader-linker.h"
+#include "src/binary-reader-linker.h"
 
 #include <vector>
 
-#include "binary-reader-nop.h"
-#include "wasm-link.h"
+#include "src/binary-reader-nop.h"
+#include "src/wasm-link.h"
 
 #define RELOC_SIZE 5
 

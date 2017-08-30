@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-#include "wast-parser.h"
+#include "src/wast-parser.h"
 
-#include "binary-reader.h"
-#include "binary-reader-ir.h"
-#include "cast.h"
-#include "error-handler.h"
-#include "wast-parser-lexer-shared.h"
+#include "src/binary-reader.h"
+#include "src/binary-reader-ir.h"
+#include "src/cast.h"
+#include "src/error-handler.h"
+#include "src/wast-parser-lexer-shared.h"
 
 #define WABT_TRACING 0
-#include "tracing.h"
+#include "src/tracing.h"
 
 #define EXPECT(token_type) CHECK_RESULT(Expect(TokenType::token_type))
 

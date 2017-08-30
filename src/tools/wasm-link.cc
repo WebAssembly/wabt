@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-#include "wasm-link.h"
+#include "src/wasm-link.h"
 
 #include <memory>
 #include <vector>
 
-#include "binary-reader.h"
-#include "binding-hash.h"
-#include "binary-writer.h"
-#include "option-parser.h"
-#include "stream.h"
-#include "writer.h"
-#include "binary-reader-linker.h"
+#include "src/binary-reader.h"
+#include "src/binding-hash.h"
+#include "src/binary-writer.h"
+#include "src/option-parser.h"
+#include "src/stream.h"
+#include "src/writer.h"
+#include "src/binary-reader-linker.h"
 
 #define FIRST_KNOWN_SECTION static_cast<size_t>(BinarySection::Type)
 #define LOG_DEBUG(fmt, ...) if (s_debug) s_log_stream->Writef(fmt, __VA_ARGS__);

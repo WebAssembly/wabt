@@ -19,7 +19,7 @@
 
 #include <stdio.h>
 
-#include "common.h"
+#include "src/common.h"
 
 #include <memory>
 #include <vector>
