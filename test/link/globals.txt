@@ -51,34 +51,34 @@ Global:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_GLOBAL_INDEX_LEB offset=0x000004(file=0x00005c) index=3
-   - R_GLOBAL_INDEX_LEB offset=0x00000a(file=0x000062) index=2
-   - R_GLOBAL_INDEX_LEB offset=0x000011(file=0x000069) index=0
-   - R_FUNC_INDEX_LEB   offset=0x000018(file=0x000070) index=0
-   - R_GLOBAL_INDEX_LEB offset=0x000021(file=0x000079) index=1
-   - R_GLOBAL_INDEX_LEB offset=0x000027(file=0x00007f) index=4
-   - R_FUNC_INDEX_LEB   offset=0x00002d(file=0x000085) index=1
+   - R_WEBASSEMBLY_GLOBAL_INDEX_LEB offset=0x000004(file=0x00005c) index=3
+   - R_WEBASSEMBLY_GLOBAL_INDEX_LEB offset=0x00000a(file=0x000062) index=2
+   - R_WEBASSEMBLY_GLOBAL_INDEX_LEB offset=0x000011(file=0x000069) index=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000018(file=0x000070) index=0
+   - R_WEBASSEMBLY_GLOBAL_INDEX_LEB offset=0x000021(file=0x000079) index=1
+   - R_WEBASSEMBLY_GLOBAL_INDEX_LEB offset=0x000027(file=0x00007f) index=4
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00002d(file=0x000085) index=1
 
 Code Disassembly:
 
 000059 func[0]:
  00005b: 23 83 80 80 80 00          | get_global 3
-           00005c: R_GLOBAL_INDEX_LEB 3
+           00005c: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 3
  000061: 23 82 80 80 80 00          | get_global 2
-           000062: R_GLOBAL_INDEX_LEB 2
+           000062: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 2
  000067: 6a                         | i32.add
  000068: 23 80 80 80 80 00          | get_global 0
-           000069: R_GLOBAL_INDEX_LEB 0
+           000069: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 0
  00006e: 6a                         | i32.add
  00006f: 10 80 80 80 80 00          | call 0
-           000070: R_FUNC_INDEX_LEB   0
+           000070: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 0
  000075: 0b                         | end
 000076 func[1]:
  000078: 23 81 80 80 80 00          | get_global 1
-           000079: R_GLOBAL_INDEX_LEB 1
+           000079: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 1
  00007e: 23 84 80 80 80 00          | get_global 4
-           00007f: R_GLOBAL_INDEX_LEB 4
+           00007f: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 4
  000084: 10 81 80 80 80 00          | call 1
-           000085: R_FUNC_INDEX_LEB   1
+           000085: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 1
  00008a: 0b                         | end
 ;;; STDOUT ;;)

@@ -56,29 +56,29 @@ Custom:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x00005f) index=2
-   - R_FUNC_INDEX_LEB   offset=0x00000c(file=0x000065) index=3
-   - R_FUNC_INDEX_LEB   offset=0x000012(file=0x00006b) index=0
-   - R_FUNC_INDEX_LEB   offset=0x000024(file=0x00007d) index=1
-   - R_FUNC_INDEX_LEB   offset=0x00002c(file=0x000085) index=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x00005f) index=2
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000c(file=0x000065) index=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000012(file=0x00006b) index=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000024(file=0x00007d) index=1
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00002c(file=0x000085) index=3
 
 Code Disassembly:
 
 00005a <local_func>:
  00005c: 20 00                      | get_local 0
  00005e: 10 82 80 80 80 00          | call 2 <local_func>
-           00005f: R_FUNC_INDEX_LEB   2 <local_func>
+           00005f: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 2 <local_func>
  000064: 10 83 80 80 80 00          | call 3 <m2_local_func>
-           000065: R_FUNC_INDEX_LEB   3 <m2_local_func>
+           000065: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 3 <m2_local_func>
  00006a: 10 80 80 80 80 00          | call 0 <import1>
-           00006b: R_FUNC_INDEX_LEB   0 <import1>
+           00006b: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 0 <import1>
  000070: 0b                         | end
 000071 <m2_local_func>:
  000073: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
  00007c: 10 81 80 80 80 00          | call 1 <m2_import0>
-           00007d: R_FUNC_INDEX_LEB   1 <m2_import0>
+           00007d: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 1 <m2_import0>
  000082: 42 0a                      | i64.const 10
  000084: 10 83 80 80 80 00          | call 3 <m2_local_func>
-           000085: R_FUNC_INDEX_LEB   3 <m2_local_func>
+           000085: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 3 <m2_local_func>
  00008a: 0b                         | end
 ;;; STDOUT ;;)

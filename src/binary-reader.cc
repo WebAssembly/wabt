@@ -1205,9 +1205,9 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
     CHECK_RESULT(ReadIndex(&index, "index"));
     RelocType type = static_cast<RelocType>(reloc_type);
     switch (type) {
-      case RelocType::GlobalAddressLEB:
-      case RelocType::GlobalAddressSLEB:
-      case RelocType::GlobalAddressI32:
+      case RelocType::MemoryAddressLEB:
+      case RelocType::MemoryAddressSLEB:
+      case RelocType::MemoryAddressI32:
         CHECK_RESULT(ReadI32Leb128(&addend, "addend"));
         break;
       default:

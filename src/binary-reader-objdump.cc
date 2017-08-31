@@ -129,9 +129,9 @@ void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
   printf("           %06" PRIzx ": %-18s %" PRIindex "", offset,
          GetRelocTypeName(reloc.type), reloc.index);
   switch (reloc.type) {
-    case RelocType::GlobalAddressLEB:
-    case RelocType::GlobalAddressSLEB:
-    case RelocType::GlobalAddressI32:
+    case RelocType::MemoryAddressLEB:
+    case RelocType::MemoryAddressSLEB:
+    case RelocType::MemoryAddressI32:
       printf(" + %d", reloc.addend);
       break;
     case RelocType::FuncIndexLEB:

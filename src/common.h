@@ -199,14 +199,14 @@ enum class Type {
 typedef std::vector<Type> TypeVector;
 
 enum class RelocType {
-  FuncIndexLEB = 0,   /* e.g. immediate of call instruction */
-  TableIndexSLEB = 1, /* e.g. loading address of function */
-  TableIndexI32 = 2,  /* e.g. function address in DATA */
-  GlobalAddressLEB = 3,
-  GlobalAddressSLEB = 4,
-  GlobalAddressI32 = 5,
-  TypeIndexLEB = 6, /* e.g immediate type in call_indirect */
-  GlobalIndexLEB = 7, /* e.g immediate of get_global inst */
+  FuncIndexLEB = 0,       // e.g. Immediate of call instruction
+  TableIndexSLEB = 1,     // e.g. Loading address of function
+  TableIndexI32 = 2,      // e.g. Function address in DATA
+  MemoryAddressLEB = 3,   // e.g. Memory address in load/store offset immediate
+  MemoryAddressSLEB = 4,  // e.g. Memory address in i32.const
+  MemoryAddressI32 = 5,   // e.g. Memory address in DATA
+  TypeIndexLEB = 6,       // e.g. Immediate type in call_indirect
+  GlobalIndexLEB = 7,     // e.g. Immediate of get_global inst
 
   First = FuncIndexLEB,
   Last = GlobalIndexLEB,
