@@ -60,15 +60,15 @@ Custom:
 Custom:
  - name: "reloc.Elem"
   - section: Elem
-   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x00003c) index=0
-   - R_FUNC_INDEX_LEB   offset=0x00000b(file=0x000041) index=0
-   - R_FUNC_INDEX_LEB   offset=0x000010(file=0x000046) index=2
-   - R_FUNC_INDEX_LEB   offset=0x000015(file=0x00004b) index=1
-   - R_FUNC_INDEX_LEB   offset=0x00001a(file=0x000050) index=1
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x00003c) index=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000b(file=0x000041) index=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000010(file=0x000046) index=2
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000015(file=0x00004b) index=1
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001a(file=0x000050) index=1
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_TYPE_INDEX_LEB   offset=0x00000f(file=0x000066) index=1
+   - R_WEBASSEMBLY_TYPE_INDEX_LEB offset=0x00000f(file=0x000066) index=1
 
 Code Disassembly:
 
@@ -81,6 +81,6 @@ Code Disassembly:
 000061 <func4>:
  000063: 42 07                      | i64.const 7
  000065: 11 81 80 80 80 00 00       | call_indirect 1 0
-           000066: R_TYPE_INDEX_LEB   1
+           000066: R_WEBASSEMBLY_TYPE_INDEX_LEB 1
  00006c: 0b                         | end
 ;;; STDOUT ;;)

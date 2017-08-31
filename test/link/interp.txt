@@ -85,8 +85,8 @@ Custom:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   offset=0x00000d(file=0x000084) index=3
-   - R_FUNC_INDEX_LEB   offset=0x000017(file=0x00008e) index=4
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000d(file=0x000084) index=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000017(file=0x00008e) index=4
 
 Code Disassembly:
 
@@ -96,12 +96,12 @@ Code Disassembly:
  000080: 0b                         | end
 000081 <call_import1>:
  000083: 10 83 80 80 80 00          | call 3 <export2>
-           000084: R_FUNC_INDEX_LEB   3 <export2>
+           000084: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 3 <export2>
  000089: 0f                         | return
  00008a: 0b                         | end
 00008b <call_import2>:
  00008d: 10 84 80 80 80 00          | call 4 <export3>
-           00008e: R_FUNC_INDEX_LEB   4 <export3>
+           00008e: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 4 <export3>
  000093: 0f                         | return
  000094: 0b                         | end
 000095 <export2>:
