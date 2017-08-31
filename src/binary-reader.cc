@@ -176,6 +176,7 @@ class BinaryReader {
   Index NumTotalMemories();
   Index NumTotalGlobals();
 
+  Result ReadI32InitExpr(Index index) WABT_WARN_UNUSED;
   Result ReadInitExpr(Index index, bool require_i32 = false) WABT_WARN_UNUSED;
   Result ReadTable(Type* out_elem_type,
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
@@ -490,6 +491,10 @@ Index BinaryReader::NumTotalMemories() {
 
 Index BinaryReader::NumTotalGlobals() {
   return num_global_imports_ + num_globals_;
+}
+
+Result BinaryReader::ReadI32InitExpr(Index index) {
+  return ReadInitExpr(index, true);
 }
 
 Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
@@ -1588,7 +1593,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     CALLBACK(BeginElemSegment, i, table_index);
     CALLBACK(BeginElemSegmentInitExpr, i);
-    CHECK_RESULT(ReadInitExpr(i));
+    CHECK_RESULT(ReadI32InitExpr(i));
     CALLBACK(EndElemSegmentInitExpr, i);
 
     Index num_function_indexes;
@@ -1654,7 +1659,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));
     CALLBACK(BeginDataSegment, i, memory_index);
     CALLBACK(BeginDataSegmentInitExpr, i);
-    CHECK_RESULT(ReadInitExpr(i, true/*require_i32*/));
+    CHECK_RESULT(ReadI32InitExpr(i));
     CALLBACK(EndDataSegmentInitExpr, i);
 
     Address data_size;
