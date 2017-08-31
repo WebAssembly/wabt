@@ -272,9 +272,9 @@ void ResolveFuncTypes(Module* module) {
     if (!func->decl.has_func_type) {
       Index func_type_index = module->GetFuncTypeIndex(func->decl.sig);
       if (func_type_index == kInvalidIndex) {
-        auto* func_type_field = new FuncTypeModuleField(field.loc);
+        auto func_type_field = MakeUnique<FuncTypeModuleField>(field.loc);
         func_type_field->func_type.sig = func->decl.sig;
-        module->AppendField(func_type_field);
+        module->AppendField(std::move(func_type_field));
       }
     }
   }
@@ -695,7 +695,7 @@ Result WastParser::ParseDataModuleField(Module* module) {
   CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
   ParseTextListOpt(&field->data_segment.data);
   EXPECT(Rpar);
-  module->AppendField(field.release());
+  module->AppendField(std::move(field));
   return Result::Ok;
 }
 
@@ -709,7 +709,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
   ParseVarListOpt(&field->elem_segment.vars);
   EXPECT(Rpar);
-  module->AppendField(field.release());
+  module->AppendField(std::move(field));
   return Result::Ok;
 }
 
@@ -721,7 +721,7 @@ Result WastParser::ParseExceptModuleField(Module* module) {
   ParseBindVarOpt(&field->except.name);
   ParseValueTypeList(&field->except.sig);
   EXPECT(Rpar);
-  module->AppendField(field.release());
+  module->AppendField(std::move(field));
   return Result::Ok;
 }
 
@@ -733,7 +733,7 @@ Result WastParser::ParseExportModuleField(Module* module) {
   CHECK_RESULT(ParseQuotedText(&field->export_.name));
   CHECK_RESULT(ParseExportDesc(&field->export_));
   EXPECT(Rpar);
-  module->AppendField(field.release());
+  module->AppendField(std::move(field));
   return Result::Ok;
 }
 
@@ -758,7 +758,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     CHECK_RESULT(ErrorIfLpar({"type", "param", "result"}));
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-    module->AppendField(field.release());
+    module->AppendField(std::move(field));
   } else {
     auto field = MakeUnique<FuncModuleField>(loc, name);
     Func& func = field->func;
@@ -767,7 +767,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     CHECK_RESULT(ParseBoundValueTypeList(TokenType::Local, &func.local_types,
                                          &func.local_bindings));
     CHECK_RESULT(ParseTerminatingInstrList(&func.exprs));
-    module->AppendField(field.release());
+    module->AppendField(std::move(field));
   }
 
   AppendInlineExportFields(module, &export_fields, module->funcs.size() - 1);
@@ -789,7 +789,7 @@ Result WastParser::ParseTypeModuleField(Module* module) {
   CHECK_RESULT(ErrorIfLpar({"param", "result"}));
   EXPECT(Rpar);
   EXPECT(Rpar);
-  module->AppendField(field.release());
+  module->AppendField(std::move(field));
   return Result::Ok;
 }
 
@@ -811,12 +811,12 @@ Result WastParser::ParseGlobalModuleField(Module* module) {
     CHECK_RESULT(ParseGlobalType(&import->global));
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-    module->AppendField(field.release());
+    module->AppendField(std::move(field));
   } else {
     auto field = MakeUnique<GlobalModuleField>(loc, name);
     CHECK_RESULT(ParseGlobalType(&field->global));
     CHECK_RESULT(ParseTerminatingInstrList(&field->global.init_expr));
-    module->AppendField(field.release());
+    module->AppendField(std::move(field));
   }
 
   AppendInlineExportFields(module, &export_fields, module->globals.size() - 1);
@@ -907,7 +907,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
   field->import->module_name = module_name;
   field->import->field_name = field_name;
 
-  module->AppendField(field.release());
+  module->AppendField(std::move(field));
   EXPECT(Rpar);
   return Result::Ok;
 }
@@ -930,12 +930,12 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
     CHECK_RESULT(ParseLimits(&import->memory.page_limits));
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-    module->AppendField(field.release());
+    module->AppendField(std::move(field));
   } else if (MatchLpar(TokenType::Data)) {
     auto data_segment_field = MakeUnique<DataSegmentModuleField>(loc);
     DataSegment& data_segment = data_segment_field->data_segment;
     data_segment.memory_var = Var(module->memories.size());
-    data_segment.offset.push_back(new ConstExpr(Const::I32(0)));
+    data_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     data_segment.offset.back().loc = loc;
     ParseTextListOpt(&data_segment.data);
     EXPECT(Rpar);
@@ -947,12 +947,12 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
     memory_field->memory.page_limits.max = page_size;
     memory_field->memory.page_limits.has_max = true;
 
-    module->AppendField(memory_field.release());
-    module->AppendField(data_segment_field.release());
+    module->AppendField(std::move(memory_field));
+    module->AppendField(std::move(data_segment_field));
   } else {
     auto field = MakeUnique<MemoryModuleField>(loc, name);
     CHECK_RESULT(ParseLimits(&field->memory.page_limits));
-    module->AppendField(field.release());
+    module->AppendField(std::move(field));
   }
 
   AppendInlineExportFields(module, &export_fields, module->memories.size() - 1);
@@ -969,7 +969,7 @@ Result WastParser::ParseStartModuleField(Module* module) {
   Var var;
   CHECK_RESULT(ParseVar(&var));
   EXPECT(Rpar);
-  module->AppendField(new StartModuleField(var, loc));
+  module->AppendField(MakeUnique<StartModuleField>(var, loc));
   return Result::Ok;
 }
 
@@ -992,7 +992,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
     EXPECT(Anyfunc);
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
-    module->AppendField(field.release());
+    module->AppendField(std::move(field));
   } else if (Match(TokenType::Anyfunc)) {
     EXPECT(Lpar);
     EXPECT(Elem);
@@ -1000,7 +1000,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
     elem_segment.table_var = Var(module->tables.size());
-    elem_segment.offset.push_back(new ConstExpr(Const::I32(0)));
+    elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     CHECK_RESULT(ParseVarList(&elem_segment.vars));
     EXPECT(Rpar);
@@ -1009,13 +1009,13 @@ Result WastParser::ParseTableModuleField(Module* module) {
     table_field->table.elem_limits.initial = elem_segment.vars.size();
     table_field->table.elem_limits.max = elem_segment.vars.size();
     table_field->table.elem_limits.has_max = true;
-    module->AppendField(table_field.release());
-    module->AppendField(elem_segment_field.release());
+    module->AppendField(std::move(table_field));
+    module->AppendField(std::move(elem_segment_field));
   } else {
     auto field = MakeUnique<TableModuleField>(loc, name);
     CHECK_RESULT(ParseLimits(&field->table.elem_limits));
     EXPECT(Anyfunc);
-    module->AppendField(field.release());
+    module->AppendField(std::move(field));
   }
 
   AppendInlineExportFields(module, &export_fields, module->tables.size() - 1);
@@ -1052,7 +1052,7 @@ Result WastParser::ParseInlineExports(ModuleFieldList* fields,
     EXPECT(Export);
     CHECK_RESULT(ParseQuotedText(&field->export_.name));
     EXPECT(Rpar);
-    fields->push_back(field.release());
+    fields->push_back(std::move(field));
   }
   return Result::Ok;
 }
@@ -1146,12 +1146,12 @@ Result WastParser::ParseInstr(ExprList* exprs) {
   if (IsPlainInstr(Peek())) {
     std::unique_ptr<Expr> expr;
     CHECK_RESULT(ParsePlainInstr(&expr));
-    exprs->push_back(expr.release());
+    exprs->push_back(std::move(expr));
     return Result::Ok;
   } else if (IsBlockInstr(Peek())) {
     std::unique_ptr<Expr> expr;
     CHECK_RESULT(ParseBlockInstr(&expr));
-    exprs->push_back(expr.release());
+    exprs->push_back(std::move(expr));
     return Result::Ok;
   } else if (PeekMatchExpr()) {
     return ParseExpr(exprs);
@@ -1522,7 +1522,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
     CHECK_RESULT(ParsePlainInstr(&expr));
     CHECK_RESULT(ParseExprList(exprs));
     CHECK_RESULT(ErrorIfLpar({"an expr"}));
-    exprs->push_back(expr.release());
+    exprs->push_back(std::move(expr));
   } else {
     Location loc = GetLocation();
 
@@ -1533,7 +1533,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         auto expr = MakeUnique<BlockExpr>(loc);
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseBlock(&expr->block));
-        exprs->push_back(expr.release());
+        exprs->push_back(std::move(expr));
         break;
       }
 
@@ -1543,7 +1543,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         auto expr = MakeUnique<LoopExpr>();
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseBlock(&expr->block));
-        exprs->push_back(expr.release());
+        exprs->push_back(std::move(expr));
         break;
       }
 
@@ -1581,7 +1581,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
           return ErrorExpected({"then block"}, "(then ...)");
         }
 
-        exprs->push_back(expr.release());
+        exprs->push_back(std::move(expr));
         break;
       }
 
@@ -1596,7 +1596,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         CHECK_RESULT(ParseCatchExprList(&expr->catches));
         CHECK_RESULT(ErrorIfLpar({"a catch expr"}));
 
-        exprs->push_back(expr.release());
+        exprs->push_back(std::move(expr));
         break;
       }
 

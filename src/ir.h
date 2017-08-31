@@ -658,18 +658,18 @@ struct Module {
   Index GetExceptIndex(const Var&) const;
 
   // TODO(binji): move this into a builder class?
-  void AppendField(DataSegmentModuleField*);
-  void AppendField(ElemSegmentModuleField*);
-  void AppendField(ExceptionModuleField*);
-  void AppendField(ExportModuleField*);
-  void AppendField(FuncModuleField*);
-  void AppendField(FuncTypeModuleField*);
-  void AppendField(GlobalModuleField*);
-  void AppendField(ImportModuleField*);
-  void AppendField(MemoryModuleField*);
-  void AppendField(StartModuleField*);
-  void AppendField(TableModuleField*);
-  void AppendField(ModuleField*);
+  void AppendField(std::unique_ptr<DataSegmentModuleField>);
+  void AppendField(std::unique_ptr<ElemSegmentModuleField>);
+  void AppendField(std::unique_ptr<ExceptionModuleField>);
+  void AppendField(std::unique_ptr<ExportModuleField>);
+  void AppendField(std::unique_ptr<FuncModuleField>);
+  void AppendField(std::unique_ptr<FuncTypeModuleField>);
+  void AppendField(std::unique_ptr<GlobalModuleField>);
+  void AppendField(std::unique_ptr<ImportModuleField>);
+  void AppendField(std::unique_ptr<MemoryModuleField>);
+  void AppendField(std::unique_ptr<StartModuleField>);
+  void AppendField(std::unique_ptr<TableModuleField>);
+  void AppendField(std::unique_ptr<ModuleField>);
   void AppendFields(ModuleFieldList*);
 
   Location loc;
