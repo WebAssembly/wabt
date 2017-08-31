@@ -20,17 +20,19 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "apply-names.h"
-#include "common.h"
 #include "config.h"
-#include "error-handler.h"
-#include "generate-names.h"
-#include "ir.h"
-#include "option-parser.h"
-#include "stream.h"
-#include "wast-parser.h"
-#include "wat-writer.h"
-#include "writer.h"
+
+#include "src/apply-names.h"
+#include "src/common.h"
+#include "src/error-handler.h"
+#include "src/feature.h"
+#include "src/generate-names.h"
+#include "src/ir.h"
+#include "src/option-parser.h"
+#include "src/stream.h"
+#include "src/wast-parser.h"
+#include "src/wat-writer.h"
+#include "src/writer.h"
 
 using namespace wabt;
 
@@ -38,7 +40,8 @@ static const char* s_infile;
 static const char* s_outfile;
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
-static WastParseOptions s_parse_options;
+static bool s_debug_parsing;
+static Features s_features;
 
 static const char s_description[] =
 R"(  read a file in the wasm s-expression format and format it.
@@ -54,19 +57,17 @@ examples:
   $ wast-desugar --generate-names test.wast
 )";
 
-static void parse_options(int argc, char** argv) {
+static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wast-desugar", s_description);
 
   parser.AddHelpOption();
   parser.AddOption('o', "output", "FILE", "Output file for the formatted file",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
-                   []() { s_parse_options.debug_parsing = true; });
+                   []() { s_debug_parsing = true; });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
-  parser.AddOption("future-exceptions",
-                   "Test future extension for exception handling",
-                   []() { s_parse_options.allow_future_exceptions = true; });
+  s_features.AddOptions(&parser);
   parser.AddOption(
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",
@@ -78,8 +79,8 @@ static void parse_options(int argc, char** argv) {
 }
 
 int ProgramMain(int argc, char** argv) {
-  init_stdio();
-  parse_options(argc, argv);
+  InitStdio();
+  ParseOptions(argc, argv);
 
   std::unique_ptr<WastLexer> lexer(WastLexer::CreateFileLexer(s_infile));
   if (!lexer)
@@ -87,8 +88,9 @@ int ProgramMain(int argc, char** argv) {
 
   ErrorHandlerFile error_handler(Location::Type::Text);
   Script* script;
+  WastParseOptions parse_wast_options(s_features);
   Result result =
-      parse_wast(lexer.get(), &script, &error_handler, &s_parse_options);
+      ParseWast(lexer.get(), &script, &error_handler, &parse_wast_options);
 
   if (Succeeded(result)) {
     Module* module = script->GetFirstModule();
@@ -96,14 +98,14 @@ int ProgramMain(int argc, char** argv) {
       WABT_FATAL("no module in file.\n");
 
     if (s_generate_names)
-      result = generate_names(module);
+      result = GenerateNames(module);
 
     if (Succeeded(result))
-      result = apply_names(module);
+      result = ApplyNames(module);
 
     if (Succeeded(result)) {
       FileWriter writer(s_outfile ? FileWriter(s_outfile) : FileWriter(stdout));
-      result = write_wat(&writer, module, &s_write_wat_options);
+      result = WriteWat(&writer, module, &s_write_wat_options);
     }
   }
 

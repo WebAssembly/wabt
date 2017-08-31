@@ -21,21 +21,21 @@
 
 #include <memory>
 
-#include "apply-names.h"
-#include "binary-reader.h"
-#include "binary-reader-ir.h"
-#include "binary-writer.h"
-#include "common.h"
-#include "error-handler.h"
-#include "ir.h"
-#include "generate-names.h"
-#include "resolve-names.h"
-#include "stream.h"
-#include "validator.h"
-#include "wast-lexer.h"
-#include "wast-parser.h"
-#include "wat-writer.h"
-#include "writer.h"
+#include "src/apply-names.h"
+#include "src/binary-reader.h"
+#include "src/binary-reader-ir.h"
+#include "src/binary-writer.h"
+#include "src/common.h"
+#include "src/error-handler.h"
+#include "src/ir.h"
+#include "src/generate-names.h"
+#include "src/resolve-names.h"
+#include "src/stream.h"
+#include "src/validator.h"
+#include "src/wast-lexer.h"
+#include "src/wast-parser.h"
+#include "src/wat-writer.h"
+#include "src/writer.h"
 
 struct WabtParseWastResult {
   wabt::Result result;
@@ -67,7 +67,7 @@ WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
                                      wabt::ErrorHandlerBuffer* error_handler) {
   WabtParseWastResult* result = new WabtParseWastResult();
   wabt::Script* script = nullptr;
-  result->result = wabt::parse_wast(lexer, &script, error_handler);
+  result->result = wabt::ParseWast(lexer, &script, error_handler);
   result->script.reset(script);
   return result;
 }
@@ -85,8 +85,8 @@ WabtReadBinaryResult* wabt_read_binary(
   wabt::Module* module = new wabt::Module();
   // TODO(binji): Pass through from wabt_read_binary parameter.
   const char* filename = "<binary>";
-  result->result = wabt::read_binary_ir(filename, data, size, &options,
-                                        error_handler, module);
+  result->result =
+      wabt::ReadBinaryIr(filename, data, size, &options, error_handler, module);
   result->module.reset(module);
   return result;
 }
@@ -95,28 +95,28 @@ wabt::Result wabt_resolve_names_script(
     wabt::WastLexer* lexer,
     wabt::Script* script,
     wabt::ErrorHandlerBuffer* error_handler) {
-  return resolve_names_script(lexer, script, error_handler);
+  return ResolveNamesScript(lexer, script, error_handler);
 }
 
 wabt::Result wabt_resolve_names_module(
     wabt::WastLexer* lexer,
     wabt::Module* module,
     wabt::ErrorHandlerBuffer* error_handler) {
-  return resolve_names_module(lexer, module, error_handler);
+  return ResolveNamesModule(lexer, module, error_handler);
 }
 
 wabt::Result wabt_validate_script(wabt::WastLexer* lexer,
                                   wabt::Script* script,
                                   wabt::ErrorHandlerBuffer* error_handler) {
-  return validate_script(lexer, script, error_handler);
+  return ValidateScript(lexer, script, error_handler);
 }
 
 wabt::Result wabt_apply_names_module(wabt::Module* module) {
-  return apply_names(module);
+  return ApplyNames(module);
 }
 
 wabt::Result wabt_generate_names_module(wabt::Module* module) {
-  return generate_names(module);
+  return GenerateNames(module);
 }
 
 wabt::Module* wabt_get_first_module(wabt::Script* script) {
@@ -137,7 +137,7 @@ WabtWriteModuleResult* wabt_write_binary_module(wabt::Module* module,
 
   wabt::MemoryWriter writer;
   WabtWriteModuleResult* result = new WabtWriteModuleResult();
-  result->result = write_binary_module(&writer, module, &options);
+  result->result = WriteBinaryModule(&writer, module, &options);
   if (result->result == wabt::Result::Ok) {
     result->buffer = writer.ReleaseOutputBuffer();
     result->log_buffer = log ? stream.ReleaseOutputBuffer() : nullptr;
@@ -155,7 +155,7 @@ WabtWriteModuleResult* wabt_write_text_module(wabt::Module* module,
 
   wabt::MemoryWriter writer;
   WabtWriteModuleResult* result = new WabtWriteModuleResult();
-  result->result = write_wat(&writer, module, &options);
+  result->result = WriteWat(&writer, module, &options);
   if (result->result == wabt::Result::Ok) {
     result->buffer = writer.ReleaseOutputBuffer();
   }

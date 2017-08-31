@@ -23,17 +23,18 @@
 
 #include "config.h"
 
-#include "binary-writer.h"
-#include "binary-writer-spec.h"
-#include "common.h"
-#include "error-handler.h"
-#include "ir.h"
-#include "option-parser.h"
-#include "resolve-names.h"
-#include "stream.h"
-#include "validator.h"
-#include "wast-parser.h"
-#include "writer.h"
+#include "src/binary-writer.h"
+#include "src/binary-writer-spec.h"
+#include "src/common.h"
+#include "src/error-handler.h"
+#include "src/feature.h"
+#include "src/ir.h"
+#include "src/option-parser.h"
+#include "src/resolve-names.h"
+#include "src/stream.h"
+#include "src/validator.h"
+#include "src/wast-parser.h"
+#include "src/writer.h"
 
 using namespace wabt;
 
@@ -42,10 +43,10 @@ static const char* s_outfile;
 static bool s_dump_module;
 static int s_verbose;
 static WriteBinaryOptions s_write_binary_options;
-static WriteBinarySpecOptions s_write_binary_spec_options;
 static bool s_spec;
 static bool s_validate = true;
-static WastParseOptions s_parse_options;
+static bool s_debug_parsing;
+static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
 
@@ -69,7 +70,7 @@ examples:
   $ wast2wasm spec-test.wast --spec -o spec-test.json
 )";
 
-static void parse_options(int argc, char* argv[]) {
+static void ParseOptions(int argc, char* argv[]) {
   OptionParser parser("wast2wasm", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
@@ -79,13 +80,11 @@ static void parse_options(int argc, char* argv[]) {
   });
   parser.AddHelpOption();
   parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
-                   []() { s_parse_options.debug_parsing = true; });
+                   []() { s_debug_parsing = true; });
   parser.AddOption('d', "dump-module",
                    "Print a hexdump of the module to stdout",
                    []() { s_dump_module = true; });
-  parser.AddOption("future-exceptions",
-                   "Test future extension for exception handling",
-                   []() { s_parse_options.allow_future_exceptions = true; });
+  s_features.AddOptions(&parser);
   parser.AddOption('o', "output", "FILE", "output wasm binary file",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption(
@@ -111,8 +110,8 @@ static void parse_options(int argc, char* argv[]) {
   parser.Parse(argc, argv);
 }
 
-static void write_buffer_to_file(const char* filename,
-                                 const OutputBuffer& buffer) {
+static void WriteBufferToFile(const char* filename,
+                              const OutputBuffer& buffer) {
   if (s_dump_module) {
     if (s_verbose)
       s_log_stream->Writef(";; dump\n");
@@ -127,9 +126,9 @@ static void write_buffer_to_file(const char* filename,
 }
 
 int ProgramMain(int argc, char** argv) {
-  init_stdio();
+  InitStdio();
 
-  parse_options(argc, argv);
+  ParseOptions(argc, argv);
 
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateFileLexer(s_infile);
   if (!lexer)
@@ -137,34 +136,34 @@ int ProgramMain(int argc, char** argv) {
 
   ErrorHandlerFile error_handler(Location::Type::Text);
   Script* script;
+  WastParseOptions parse_wast_options(s_features);
   Result result =
-      parse_wast(lexer.get(), &script, &error_handler, &s_parse_options);
+      ParseWast(lexer.get(), &script, &error_handler, &parse_wast_options);
 
   if (Succeeded(result)) {
-    result = resolve_names_script(lexer.get(), script, &error_handler);
+    result = ResolveNamesScript(lexer.get(), script, &error_handler);
 
     if (Succeeded(result) && s_validate)
-      result = validate_script(lexer.get(), script, &error_handler);
+      result = ValidateScript(lexer.get(), script, &error_handler);
 
     if (Succeeded(result)) {
       if (s_spec) {
-        s_write_binary_spec_options.json_filename = s_outfile;
-        s_write_binary_spec_options.write_binary_options =
-            s_write_binary_options;
-        result = write_binary_spec_script(script, s_infile,
-                                          &s_write_binary_spec_options);
+        WriteBinarySpecOptions write_binary_spec_options;
+        write_binary_spec_options.json_filename = s_outfile;
+        write_binary_spec_options.write_binary_options = s_write_binary_options;
+        result =
+            WriteBinarySpecScript(script, s_infile, &write_binary_spec_options);
       } else {
         MemoryWriter writer;
         const Module* module = script->GetFirstModule();
         if (module) {
-          result =
-              write_binary_module(&writer, module, &s_write_binary_options);
+          result = WriteBinaryModule(&writer, module, &s_write_binary_options);
         } else {
           WABT_FATAL("no module found\n");
         }
 
         if (Succeeded(result))
-          write_buffer_to_file(s_outfile, writer.output_buffer());
+          WriteBufferToFile(s_outfile, writer.output_buffer());
       }
     }
   }

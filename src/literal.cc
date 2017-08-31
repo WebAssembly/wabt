@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "literal.h"
+#include "src/literal.h"
 
 #include <cassert>
 #include <cerrno>
@@ -156,9 +156,20 @@ Result FloatParser<T>::ParseFloat(const char* s,
   //
   // The WebAssembly spec also ignores underflow, so we don't need to check for
   // ERANGE at all.
+
+  // WebAssembly floats can contain underscores, but strto* can't parse those,
+  // so remove them first.
+  assert(s <= end);
+  const size_t kBufferSize = end - s + 1;  // +1 for \0.
+  char* buffer = static_cast<char*>(alloca(kBufferSize));
+  auto buffer_end =
+      std::copy_if(s, end, buffer, [](char c) -> bool { return c != '_'; });
+  assert(buffer_end < buffer + kBufferSize);
+  *buffer_end = 0;
+
   char* endptr;
-  Float value = Traits::Strto(s, &endptr);
-  if (endptr != end ||
+  Float value = Traits::Strto(buffer, &endptr);
+  if (endptr != buffer_end ||
       (value == Traits::kHugeVal || value == -Traits::kHugeVal)) {
     return Result::Error;
   }
@@ -214,8 +225,7 @@ Result FloatParser<T>::ParseNan(const char* s,
 
     for (; s < end; ++s) {
       uint32_t digit;
-      if (Failed(parse_hexdigit(*s, &digit)))
-        return Result::Error;
+      CHECK_RESULT(ParseHexdigit(*s, &digit));
       tag = tag * 16 + digit;
       // Check for overflow.
       if (tag > Traits::kSigMask)
@@ -260,9 +270,11 @@ Result FloatParser<T>::ParseHex(const char* s,
   int significand_exponent = 0;  // Exponent adjustment due to dot placement.
   for (; s < end; ++s) {
     uint32_t digit;
-    if (*s == '.') {
+    if (*s == '_') {
+      continue;
+    } else if (*s == '.') {
       seen_dot = true;
-    } else if (Succeeded(parse_hexdigit(*s, &digit))) {
+    } else if (Succeeded(ParseHexdigit(*s, &digit))) {
       if (Traits::kBits - Clz(significand) <= Traits::kSigPlusOneBits) {
         significand = (significand << 4) + digit;
         if (seen_dot)
@@ -284,7 +296,7 @@ Result FloatParser<T>::ParseHex(const char* s,
   int exponent = 0;
   bool exponent_is_neg = false;
   if (s < end) {
-    assert(*s == 'p');
+    assert(*s == 'p' || *s == 'P');
     s++;
     // Exponent is always positive, but significand_exponent is signed.
     // significand_exponent_add is negated if exponent will be negative, so it
@@ -300,6 +312,9 @@ Result FloatParser<T>::ParseHex(const char* s,
     }
 
     for (; s < end; ++s) {
+      if (*s == '_')
+        continue;
+
       uint32_t digit = (*s - '0');
       assert(digit <= 9);
       exponent = exponent * 10 + digit;
@@ -510,7 +525,7 @@ void FloatWriter<T>::WriteHex(char* out, size_t size, Uint bits) {
 
 }  // end anonymous namespace
 
-Result parse_hexdigit(char c, uint32_t* out) {
+Result ParseHexdigit(char c, uint32_t* out) {
   if (static_cast<unsigned int>(c - '0') <= 9) {
     *out = c - '0';
     return Result::Ok;
@@ -524,7 +539,7 @@ Result parse_hexdigit(char c, uint32_t* out) {
   return Result::Error;
 }
 
-Result parse_uint64(const char* s, const char* end, uint64_t* out) {
+Result ParseUint64(const char* s, const char* end, uint64_t* out) {
   if (s == end)
     return Result::Error;
   uint64_t value = 0;
@@ -534,8 +549,9 @@ Result parse_uint64(const char* s, const char* end, uint64_t* out) {
       return Result::Error;
     for (; s < end; ++s) {
       uint32_t digit;
-      if (Failed(parse_hexdigit(*s, &digit)))
-        return Result::Error;
+      if (*s == '_')
+        continue;
+      CHECK_RESULT(ParseHexdigit(*s, &digit));
       uint64_t old_value = value;
       value = value * 16 + digit;
       // Check for overflow.
@@ -544,6 +560,8 @@ Result parse_uint64(const char* s, const char* end, uint64_t* out) {
     }
   } else {
     for (; s < end; ++s) {
+      if (*s == '_')
+        continue;
       uint32_t digit = (*s - '0');
       if (digit > 9)
         return Result::Error;
@@ -560,10 +578,10 @@ Result parse_uint64(const char* s, const char* end, uint64_t* out) {
   return Result::Ok;
 }
 
-Result parse_int64(const char* s,
-                   const char* end,
-                   uint64_t* out,
-                   ParseIntType parse_type) {
+Result ParseInt64(const char* s,
+                  const char* end,
+                  uint64_t* out,
+                  ParseIntType parse_type) {
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
     if (parse_type == ParseIntType::UnsignedOnly)
@@ -573,7 +591,7 @@ Result parse_int64(const char* s,
     s++;
   }
   uint64_t value = 0;
-  Result result = parse_uint64(s, end, &value);
+  Result result = ParseUint64(s, end, &value);
   if (has_sign) {
     // abs(INT64_MIN) == INT64_MAX + 1.
     if (value > static_cast<uint64_t>(INT64_MAX) + 1)
@@ -584,10 +602,10 @@ Result parse_int64(const char* s,
   return result;
 }
 
-Result parse_int32(const char* s,
-                   const char* end,
-                   uint32_t* out,
-                   ParseIntType parse_type) {
+Result ParseInt32(const char* s,
+                  const char* end,
+                  uint32_t* out,
+                  ParseIntType parse_type) {
   uint64_t value;
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
@@ -597,8 +615,7 @@ Result parse_int32(const char* s,
       has_sign = true;
     s++;
   }
-  if (Failed(parse_uint64(s, end, &value)))
-    return Result::Error;
+  CHECK_RESULT(ParseUint64(s, end, &value));
 
   if (has_sign) {
     // abs(INT32_MIN) == INT32_MAX + 1.
@@ -613,26 +630,25 @@ Result parse_int32(const char* s,
   return Result::Ok;
 }
 
-
-Result parse_float(LiteralType literal_type,
-                   const char* s,
-                   const char* end,
-                   uint32_t* out_bits) {
+Result ParseFloat(LiteralType literal_type,
+                  const char* s,
+                  const char* end,
+                  uint32_t* out_bits) {
   return FloatParser<float>::Parse(literal_type, s, end, out_bits);
 }
 
-Result parse_double(LiteralType literal_type,
-                    const char* s,
-                    const char* end,
-                    uint64_t* out_bits) {
+Result ParseDouble(LiteralType literal_type,
+                   const char* s,
+                   const char* end,
+                   uint64_t* out_bits) {
   return FloatParser<double>::Parse(literal_type, s, end, out_bits);
 }
 
-void write_float_hex(char* buffer, size_t size, uint32_t bits) {
+void WriteFloatHex(char* buffer, size_t size, uint32_t bits) {
   return FloatWriter<float>::WriteHex(buffer, size, bits);
 }
 
-void write_double_hex(char* buffer, size_t size, uint64_t bits) {
+void WriteDoubleHex(char* buffer, size_t size, uint64_t bits) {
   return FloatWriter<double>::WriteHex(buffer, size, bits);
 }
 

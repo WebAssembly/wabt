@@ -3,10 +3,7 @@
   (memory 100)
   (data foo))
 (;; STDERR ;;;
-out/test/parse/module/bad-memory-segment-address.txt:4:9: error: unexpected token "foo"
+out/test/parse/module/bad-memory-segment-address.txt:4:9: error: unexpected token "foo", expected an offset expr (e.g. (i32.const 123)).
   (data foo))
         ^^^
-out/test/parse/module/bad-memory-segment-address.txt:4:12: error: syntax error, unexpected ), expecting ( or NAT or VAR
-  (data foo))
-           ^
 ;;; STDERR ;;)

@@ -19,9 +19,10 @@
 
 #include <cassert>
 #include <memory>
+#include <vector>
 
-#include "common.h"
-#include "writer.h"
+#include "src/common.h"
+#include "src/writer.h"
 
 namespace wabt {
 
@@ -57,13 +58,22 @@ class Stream {
                  size_t size,
                  const char* desc = nullptr,
                  PrintChars = PrintChars::No);
-  void MoveData(size_t dst_offset, size_t src_offset, size_t size);
+
+  template <typename T>
+  void WriteData(const std::vector<T> src,
+                 const char* desc,
+                 PrintChars print_chars = PrintChars::No) {
+    if (!src.empty())
+      WriteData(src.data(), src.size() * sizeof(T), desc, print_chars);
+  }
 
   void WriteDataAt(size_t offset,
                    const void* src,
                    size_t size,
                    const char* desc = nullptr,
                    PrintChars = PrintChars::No);
+
+  void MoveData(size_t dst_offset, size_t src_offset, size_t size);
 
   void WABT_PRINTF_FORMAT(2, 3) Writef(const char* format, ...);
 
@@ -122,6 +132,7 @@ class Stream {
 
 class MemoryStream : public Stream {
  public:
+  WABT_DISALLOW_COPY_AND_ASSIGN(MemoryStream);
   MemoryStream();
 
   MemoryWriter& writer() { return writer_; }
@@ -130,7 +141,7 @@ class MemoryStream : public Stream {
     return writer_.ReleaseOutputBuffer();
   }
 
-  Result WriteToFile(const char* filename) {
+  Result WriteToFile(string_view filename) {
     return writer_.output_buffer().WriteToFile(filename);
   }
 
@@ -140,8 +151,11 @@ class MemoryStream : public Stream {
 
 class FileStream : public Stream {
  public:
-  explicit FileStream(const char* filename);
+  WABT_DISALLOW_COPY_AND_ASSIGN(FileStream);
+  explicit FileStream(string_view filename);
   explicit FileStream(FILE*);
+  FileStream(FileStream&&);
+  FileStream& operator=(FileStream&&);
 
   FileWriter& writer() { return writer_; }
 

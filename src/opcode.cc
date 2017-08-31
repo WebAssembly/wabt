@@ -14,37 +14,48 @@
  * limitations under the License.
  */
 
-#include "opcode.h"
+#include "src/opcode.h"
 
 #include <algorithm>
+
+#include "src/feature.h"
 
 namespace wabt {
 
 // static
 Opcode::Info Opcode::infos_[] = {
-#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) \
-  {text, Type::rtype, Type::type1, Type::type2, mem_size, code},
-#include "opcode.def"
+#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
+  {text,     Type::rtype, Type::type1, Type::type2,                          \
+   mem_size, prefix,      code,        PrefixCode(prefix, code)},
+#include "src/opcode.def"
 #undef WABT_OPCODE
 };
 
-#define WABT_OPCODE(rtype, type1, type2, mem_size, code, Name, text) \
+#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
   /* static */ Opcode Opcode::Name##_Opcode(Opcode::Name);
-#include "opcode.def"
+#include "src/opcode.def"
 #undef WABT_OPCODE
 
 // static
 Opcode::Info Opcode::invalid_info_ = {
-    "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0,
+    "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0, 0, 0,
 };
 
 // static
 Opcode Opcode::FromCode(uint32_t code) {
-  auto iter = std::lower_bound(
-      infos_, infos_ + WABT_ARRAY_SIZE(infos_), code,
-      [](const Info& info, uint32_t code) { return info.code < code; });
+  return FromCode(0, code);
+}
 
-  if (iter->code != code)
+// static
+Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
+  uint32_t prefix_code = PrefixCode(prefix, code);
+  auto iter =
+      std::lower_bound(infos_, infos_ + WABT_ARRAY_SIZE(infos_), prefix_code,
+                       [](const Info& info, uint32_t prefix_code) {
+                         return info.prefix_code < prefix_code;
+                       });
+
+  if (iter->prefix_code != prefix_code)
     return Opcode(Invalid);
 
   return Opcode(static_cast<Enum>(iter - infos_));
@@ -63,6 +74,30 @@ Address Opcode::GetAlignment(Address alignment) const {
   if (alignment == WABT_USE_NATURAL_ALIGNMENT)
     return GetMemorySize();
   return alignment;
+}
+
+bool Opcode::IsEnabled(const Features& features) const {
+  switch (enum_) {
+    case Opcode::Try:
+    case Opcode::Catch:
+    case Opcode::Throw:
+    case Opcode::Rethrow:
+    case Opcode::CatchAll:
+      return features.exceptions_enabled();
+
+    case Opcode::I32TruncSSatF32:
+    case Opcode::I32TruncUSatF32:
+    case Opcode::I32TruncSSatF64:
+    case Opcode::I32TruncUSatF64:
+    case Opcode::I64TruncSSatF32:
+    case Opcode::I64TruncUSatF32:
+    case Opcode::I64TruncSSatF64:
+    case Opcode::I64TruncUSatF64:
+      return features.sat_float_to_int_enabled();
+
+    default:
+      return true;
+  }
 }
 
 }  // end anonymous namespace

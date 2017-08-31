@@ -17,9 +17,9 @@
 #ifndef WABT_BINARY_WRITER_H_
 #define WABT_BINARY_WRITER_H_
 
-#include "common.h"
-#include "opcode.h"
-#include "stream.h"
+#include "src/common.h"
+#include "src/opcode.h"
+#include "src/stream.h"
 
 namespace wabt {
 
@@ -34,45 +34,44 @@ struct WriteBinaryOptions {
   bool write_debug_names = false;
 };
 
-Result write_binary_module(Writer*, const Module*, const WriteBinaryOptions*);
+Result WriteBinaryModule(Writer*, const Module*, const WriteBinaryOptions*);
 
 /* returns the length of the leb128 */
-Offset u32_leb128_length(uint32_t value);
+Offset U32Leb128Length(uint32_t value);
 
-void write_u32_leb128(Stream* stream, uint32_t value, const char* desc);
+void WriteU32Leb128(Stream* stream, uint32_t value, const char* desc);
 
-void write_i32_leb128(Stream* stream, int32_t value, const char* desc);
+void WriteI32Leb128(Stream* stream, int32_t value, const char* desc);
 
-void write_fixed_u32_leb128(Stream* stream, uint32_t value, const char* desc);
+void WriteFixedU32Leb128(Stream* stream, uint32_t value, const char* desc);
 
-Offset write_fixed_u32_leb128_at(Stream* stream,
-                                 Offset offset,
-                                 uint32_t value,
-                                 const char* desc);
+Offset WriteFixedU32Leb128At(Stream* stream,
+                             Offset offset,
+                             uint32_t value,
+                             const char* desc);
 
-Offset write_fixed_u32_leb128_raw(uint8_t* data, uint8_t* end, uint32_t value);
+Offset WriteFixedU32Leb128Raw(uint8_t* data, uint8_t* end, uint32_t value);
 
-void write_type(Stream* stream, Type type);
+void WriteType(Stream* stream, Type type);
 
-void write_str(Stream* stream,
-               const char* s,
-               size_t length,
-               const char* desc,
-               PrintChars print_chars = PrintChars::No);
+void WriteStr(Stream* stream,
+              string_view s,
+              const char* desc,
+              PrintChars print_chars = PrintChars::No);
 
-void write_opcode(Stream* stream, Opcode opcode);
+void WriteOpcode(Stream* stream, Opcode opcode);
 
-void write_limits(Stream* stream, const Limits* limits);
+void WriteLimits(Stream* stream, const Limits* limits);
 
 /* Convenience functions for writing enums as LEB128s. */
 template <typename T>
-void write_u32_leb128_enum(Stream* stream, T value, const char* desc) {
-  write_u32_leb128(stream, static_cast<uint32_t>(value), desc);
+void WriteU32Leb128Enum(Stream* stream, T value, const char* desc) {
+  WriteU32Leb128(stream, static_cast<uint32_t>(value), desc);
 }
 
 template <typename T>
-void write_i32_leb128_enum(Stream* stream, T value, const char* desc) {
-  write_i32_leb128(stream, static_cast<int32_t>(value), desc);
+void WriteI32Leb128Enum(Stream* stream, T value, const char* desc) {
+  WriteI32Leb128(stream, static_cast<int32_t>(value), desc);
 }
 
 }  // namespace wabt

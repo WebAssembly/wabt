@@ -19,27 +19,29 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "apply-names.h"
-#include "binary-reader.h"
-#include "binary-reader-ir.h"
-#include "error-handler.h"
-#include "generate-names.h"
-#include "ir.h"
-#include "option-parser.h"
-#include "stream.h"
-#include "validator.h"
-#include "wast-lexer.h"
-#include "wat-writer.h"
-#include "writer.h"
+#include "src/apply-names.h"
+#include "src/binary-reader.h"
+#include "src/binary-reader-ir.h"
+#include "src/error-handler.h"
+#include "src/feature.h"
+#include "src/generate-names.h"
+#include "src/ir.h"
+#include "src/option-parser.h"
+#include "src/stream.h"
+#include "src/validator.h"
+#include "src/wast-lexer.h"
+#include "src/wat-writer.h"
+#include "src/writer.h"
 
 using namespace wabt;
 
 static int s_verbose;
 static std::string s_infile;
 static std::string s_outfile;
-static ReadBinaryOptions s_read_binary_options(nullptr, true);
+static Features s_features;
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
+static bool s_read_debug_names = true;
 static std::unique_ptr<FileStream> s_log_stream;
 static bool s_validate = true;
 
@@ -55,13 +57,12 @@ examples:
   $ wasm2wast test.wasm --no-debug-names -o test.wast
 )";
 
-static void parse_options(int argc, char** argv) {
+static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm2wast", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
     s_log_stream = FileStream::CreateStdout();
-    s_read_binary_options.log_stream = s_log_stream.get();
   });
   parser.AddHelpOption();
   parser.AddOption(
@@ -73,14 +74,11 @@ static void parse_options(int argc, char** argv) {
       });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
-  parser.AddOption("future-exceptions",
-                   "Test future extension for exception handling",
-                   []() { s_read_binary_options.allow_future_exceptions = true;
-                   });
+  s_features.AddOptions(&parser);
   parser.AddOption("inline-exports", "Write all exports inline",
                    []() { s_write_wat_options.inline_export = true; });
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
-                   []() { s_read_binary_options.read_debug_names = false; });
+                   []() { s_read_debug_names = false; });
   parser.AddOption(
       "generate-names",
       "Give auto-generated names to non-named functions, types, etc.",
@@ -98,42 +96,40 @@ static void parse_options(int argc, char** argv) {
 int ProgramMain(int argc, char** argv) {
   Result result;
 
-  init_stdio();
-  parse_options(argc, argv);
+  InitStdio();
+  ParseOptions(argc, argv);
 
-  char* data;
-  size_t size;
-  result = read_file(s_infile.c_str(), &data, &size);
+  std::vector<uint8_t> file_data;
+  result = ReadFile(s_infile.c_str(), &file_data);
   if (Succeeded(result)) {
-    ErrorHandlerFile binary_error_handler(Location::Type::Binary);
+    ErrorHandlerFile error_handler(Location::Type::Binary);
     Module module;
-    result =
-        read_binary_ir(s_infile.c_str(), data, size, &s_read_binary_options,
-                       &binary_error_handler, &module);
+    ReadBinaryOptions options(s_features, s_log_stream.get(),
+                              s_read_debug_names);
+    result = ReadBinaryIr(s_infile.c_str(), DataOrNull(file_data),
+                          file_data.size(), &options, &error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result) && s_validate) {
-        ErrorHandlerFile text_error_handler(Location::Type::Text);
         WastLexer* lexer = nullptr;
-        result = validate_module(lexer, &module, &text_error_handler);
+        result = ValidateModule(lexer, &module, &error_handler);
       }
 
       if (s_generate_names)
-        result = generate_names(&module);
+        result = GenerateNames(&module);
 
       if (Succeeded(result)) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied
          * (because the index is invalid, say) it should just be skipped. */
-        Result dummy_result = apply_names(&module);
+        Result dummy_result = ApplyNames(&module);
         WABT_USE(dummy_result);
       }
 
       if (Succeeded(result)) {
         FileWriter writer(!s_outfile.empty() ? FileWriter(s_outfile.c_str())
                                              : FileWriter(stdout));
-        result = write_wat(&writer, &module, &s_write_wat_options);
+        result = WriteWat(&writer, &module, &s_write_wat_options);
       }
     }
-    delete[] data;
   }
   return result != Result::Ok;
 }

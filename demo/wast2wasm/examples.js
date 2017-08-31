@@ -62,7 +62,7 @@ var examples = [
       '  (start 1)\n' +
       '  (table 0 1 anyfunc)\n' +
       '  (func)\n' +
-      '  (func (type 0)\n' +
+      '  (func (type 1)\n' +
       '    i32.const 42\n' +
       '    drop)\n' +
       '  (export "e" (func 1)))\n'

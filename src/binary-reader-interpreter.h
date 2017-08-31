@@ -17,7 +17,7 @@
 #ifndef WABT_BINARY_READER_INTERPRETER_H_
 #define WABT_BINARY_READER_INTERPRETER_H_
 
-#include "common.h"
+#include "src/common.h"
 
 namespace wabt {
 
@@ -31,12 +31,12 @@ class Environment;
 class ErrorHandler;
 struct ReadBinaryOptions;
 
-Result read_binary_interpreter(interpreter::Environment* env,
-                               const void* data,
-                               size_t size,
-                               const ReadBinaryOptions* options,
-                               ErrorHandler*,
-                               interpreter::DefinedModule** out_module);
+Result ReadBinaryInterpreter(interpreter::Environment* env,
+                             const void* data,
+                             size_t size,
+                             const ReadBinaryOptions* options,
+                             ErrorHandler*,
+                             interpreter::DefinedModule** out_module);
 
 }  // namespace wabt
 

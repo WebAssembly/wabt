@@ -20,8 +20,9 @@
 #include <string>
 #include <vector>
 
-#include "common.h"
-#include "stream.h"
+#include "src/common.h"
+#include "src/feature.h"
+#include "src/stream.h"
 
 namespace wabt {
 
@@ -44,7 +45,7 @@ struct ObjdumpOptions {
   bool disassemble;
   bool debug;
   bool relocs;
-  bool allow_future_exceptions = false;
+  Features features;
   ObjdumpMode mode;
   const char* filename;
   const char* section_name;
@@ -58,10 +59,10 @@ struct ObjdumpState {
   std::vector<std::string> function_names;
 };
 
-Result read_binary_objdump(const uint8_t* data,
-                           size_t size,
-                           ObjdumpOptions* options,
-                           ObjdumpState* state);
+Result ReadBinaryObjdump(const uint8_t* data,
+                         size_t size,
+                         ObjdumpOptions* options,
+                         ObjdumpState* state);
 
 }  // namespace wabt
 

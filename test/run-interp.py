@@ -47,6 +47,7 @@ def main(args):
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('-t', '--trace', action='store_true')
   parser.add_argument('file', help='test file.')
+  parser.add_argument('--enable-saturating-float-to-int', action='store_true')
   options = parser.parse_args(args)
 
   wast2wasm = utils.Executable(
@@ -55,6 +56,8 @@ def main(args):
   wast2wasm.AppendOptionalArgs({
       '-v': options.verbose,
       '--spec': options.spec,
+      '--enable-saturating-float-to-int':
+          options.enable_saturating_float_to_int,
   })
 
   wasm_interp = utils.Executable(
@@ -65,6 +68,8 @@ def main(args):
       '--run-all-exports': options.run_all_exports,
       '--spec': options.spec,
       '--trace': options.trace,
+      '--enable-saturating-float-to-int':
+          options.enable_saturating_float_to_int,
   })
 
   wast2wasm.verbose = options.print_cmd

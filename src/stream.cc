@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "stream.h"
+#include "src/stream.h"
 
 #include <cassert>
 #include <cctype>
@@ -114,10 +114,18 @@ void Stream::WriteMemoryDump(const void* start,
 
 MemoryStream::MemoryStream() : Stream(&writer_) {}
 
-FileStream::FileStream(const char* filename)
+FileStream::FileStream(string_view filename)
     : Stream(&writer_), writer_(filename) {}
 
 FileStream::FileStream(FILE* file) : Stream(&writer_), writer_(file) {}
+
+FileStream::FileStream(FileStream&& other)
+    : Stream(&writer_), writer_(std::move(other.writer_)) {}
+
+FileStream& FileStream::operator=(FileStream&& other) {
+  writer_ = std::move(other.writer_);
+  return *this;
+}
 
 // static
 std::unique_ptr<FileStream> FileStream::CreateStdout() {

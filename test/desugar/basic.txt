@@ -12,7 +12,6 @@
     (i32.add (call 0) (i32.load8_s (i32.const 1)))))
 (;; STDOUT ;;;
 (module
-  (type (;0;) (func (result i32)))
   (import "foo" "bar" (func (;0;) (result i32)))
   (global (;0;) i32 (i32.const 1))
   (table (;0;) 1 1 anyfunc)
@@ -23,5 +22,6 @@
     call 0
     i32.const 1
     i32.load8_s
-    i32.add))
+    i32.add)
+  (type (;0;) (func (result i32))))
 ;;; STDOUT ;;)

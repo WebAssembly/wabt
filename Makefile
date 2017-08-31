@@ -28,17 +28,17 @@ CMAKE_CMD ?= cmake
 
 DEFAULT_SUFFIX = clang-debug
 
-COMPILERS := GCC GCC_I686 GCC_FUZZ CLANG EMSCRIPTEN
+COMPILERS := GCC GCC_I686 GCC_FUZZ CLANG EMCC
 BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := ASAN MSAN LSAN UBSAN
-CONFIGS := NORMAL $(SANITIZERS) COV NO_RE2C_BISON NO_TESTS
+CONFIGS := NORMAL $(SANITIZERS) COV NO_RE2C NO_TESTS
 
 # directory names
 GCC_DIR := gcc/
 GCC_I686_DIR := gcc-i686/
 GCC_FUZZ_DIR := gcc-fuzz/
 CLANG_DIR := clang/
-EMSCRIPTEN_DIR := emscripten/
+EMCC_DIR := emscripten/
 DEBUG_DIR := Debug/
 RELEASE_DIR := Release/
 NORMAL_DIR :=
@@ -46,7 +46,7 @@ ASAN_DIR := asan/
 MSAN_DIR := msan/
 LSAN_DIR := lsan/
 UBSAN_DIR := ubsan/
-NO_RE2C_BISON_DIR := no-re2c-bison/
+NO_RE2C_DIR := no-re2c/
 COV_DIR := cov/
 NO_TESTS_DIR := no-tests/
 
@@ -56,7 +56,7 @@ GCC_I686_FLAG := -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
 	-DCMAKE_C_FLAGS=-m32 -DCMAKE_CXX_FLAGS=-m32
 GCC_FUZZ_FLAG := -DCMAKE_C_COMPILER=${GCC_FUZZ_CC} -DCMAKE_CXX_COMPILER=${GCC_FUZZ_CXX} -DWITH_EXCEPTIONS=ON
 CLANG_FLAG := -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-EMSCRIPTEN_FLAG := -DCMAKE_TOOLCHAIN_FILE=${EMSCRIPTEN_DIR}/cmake/Modules/Platform/Emscripten.cmake
+EMCC_FLAG := -DCMAKE_TOOLCHAIN_FILE=${EMSCRIPTEN_DIR}/cmake/Modules/Platform/Emscripten.cmake
 DEBUG_FLAG := -DCMAKE_BUILD_TYPE=Debug
 RELEASE_FLAG := -DCMAKE_BUILD_TYPE=Release
 NORMAL_FLAG :=
@@ -65,7 +65,7 @@ MSAN_FLAG := -DUSE_MSAN=ON
 LSAN_FLAG := -DUSE_LSAN=ON
 UBSAN_FLAG := -DUSE_UBSAN=ON
 COV_FLAG := -DCODE_COVERAGE=ON
-NO_RE2C_BISON_FLAG := -DRUN_BISON=OFF -DRUN_RE2C=OFF
+NO_RE2C_FLAG := -DRUN_RE2C=OFF
 NO_TESTS_FLAG := -DBUILD_TESTS=OFF
 
 # make target prefixes
@@ -73,7 +73,7 @@ GCC_PREFIX := gcc
 GCC_I686_PREFIX := gcc-i686
 GCC_FUZZ_PREFIX := gcc-fuzz
 CLANG_PREFIX := clang
-EMSCRIPTEN_PREFIX := emscripten
+EMCC_PREFIX := emscripten
 DEBUG_PREFIX := -debug
 RELEASE_PREFIX := -release
 NORMAL_PREFIX :=
@@ -82,7 +82,7 @@ MSAN_PREFIX := -msan
 LSAN_PREFIX := -lsan
 UBSAN_PREFIX := -ubsan
 COV_PREFIX := -cov
-NO_RE2C_BISON_PREFIX := -no-re2c-bison
+NO_RE2C_PREFIX := -no-re2c
 NO_TESTS_PREFIX := -no-tests
 
 ifeq ($(USE_NINJA),1)
@@ -140,12 +140,8 @@ clean:
 .PHONY: test-everything
 test-everything:
 
-.PHONY: update-bison update-re2c
-update-bison: src/prebuilt/wast-parser-gen.cc
+.PHONY: update-re2c
 update-re2c: src/prebuilt/wast-lexer-gen.cc
-
-src/prebuilt/wast-parser-gen.cc: src/wast-parser.y
-	bison -o $@ $< --defines=src/prebuilt/wast-parser-gen.hh --report=state
 
 src/prebuilt/wast-lexer-gen.cc: src/wast-lexer.cc
 	re2c -W -Werror --no-generation-date -bc8 -o $@ $<

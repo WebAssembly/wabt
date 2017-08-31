@@ -5,10 +5,10 @@
 out/test/parse/bad-single-semicolon.txt:2:1: error: unexpected char
 ; foo bar
 ^
-out/test/parse/bad-single-semicolon.txt:2:3: error: unexpected token "foo"
+out/test/parse/bad-single-semicolon.txt:2:3: error: unexpected token "foo", expected a module field or a command.
 ; foo bar
   ^^^
-out/test/parse/bad-single-semicolon.txt:2:7: error: unexpected token "bar"
+out/test/parse/bad-single-semicolon.txt:2:7: error: unexpected token bar, expected EOF.
 ; foo bar
       ^^^
 ;;; STDERR ;;)

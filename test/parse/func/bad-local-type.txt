@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (local foo)))
 (;; STDERR ;;;
-out/test/parse/func/bad-local-type.txt:2:22: error: unexpected token "foo"
+out/test/parse/func/bad-local-type.txt:2:22: error: unexpected token foo, expected ).
 (module (func (local foo)))
                      ^^^
 ;;; STDERR ;;)

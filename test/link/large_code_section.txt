@@ -98,13 +98,13 @@ Custom:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   offset=0x000005(file=0x00001f) index=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000005(file=0x00001f) index=0
 
 Code Disassembly:
 
 00001b <local_func>:
  00001e: 10 80 80 80 80 00          | call 0 <local_func>
-           00001f: R_FUNC_INDEX_LEB   0 <local_func>
+           00001f: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 0 <local_func>
  000024: 21 00                      | set_local 0
  000026: 20 00                      | get_local 0
  000028: 21 00                      | set_local 0

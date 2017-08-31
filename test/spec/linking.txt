@@ -12,7 +12,7 @@ out/third_party/testsuite/linking.wast:166: assert_unlinkable passed:
   0000029: error: OnElemSegmentFunctionIndex callback failed
 out/third_party/testsuite/linking.wast:175: assert_unlinkable passed:
   error: unknown module field "mem"
-  0000027: error: OnImport callback failed
+  0000027: error: OnImportMemory callback failed
 out/third_party/testsuite/linking.wast:187: assert_unlinkable passed:
   error: elem segment offset is out of bounds: 12 >= max value 10
   0000030: error: OnElemSegmentFunctionIndex callback failed
@@ -25,7 +25,7 @@ out/third_party/testsuite/linking.wast:258: assert_unlinkable passed:
 out/third_party/testsuite/linking.wast:283: assert_unlinkable passed:
   error: duplicate export "print"
   error: unknown module field "tab"
-  0000037: error: OnImport callback failed
+  0000037: error: OnImportTable callback failed
 out/third_party/testsuite/linking.wast:294: assert_unlinkable passed:
   error: data segment is out of bounds: [327680, 327681) >= max value 327680
   0000028: error: OnDataSegmentData callback failed

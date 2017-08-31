@@ -9,5 +9,5 @@
 (;; STDERR ;;;
 out/test/parse/expr/bad-br-bad-depth.txt:6:9: error: invalid depth: 3 (max 2)
         br 3
-        ^^^^
+        ^^
 ;;; STDERR ;;)

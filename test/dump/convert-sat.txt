@@ -1,0 +1,135 @@
+;;; TOOL: run-objdump
+;;; FLAGS: -v --enable-saturating-float-to-int
+(module
+  (func
+    f32.const 0
+    i32.trunc_s:sat/f32
+    drop
+
+    f32.const 0
+    i32.trunc_u:sat/f32
+    drop
+
+    f64.const 0
+    i32.trunc_s:sat/f64
+    drop
+
+    f64.const 0
+    i32.trunc_u:sat/f64
+    drop
+
+    f32.const 0
+    i64.trunc_s:sat/f32
+    drop
+
+    f32.const 0
+    i64.trunc_u:sat/f32
+    drop
+
+    f64.const 0
+    i64.trunc_s:sat/f64
+    drop
+
+    f64.const 0
+    i64.trunc_u:sat/f64
+    drop))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
+; section "Function" (3)
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+000000f: 02                                        ; FIXUP section size
+; section "Code" (10)
+0000012: 0a                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num functions
+; function body 0
+0000015: 00                                        ; func body size (guess)
+0000016: 00                                        ; local decl count
+0000017: 43                                        ; f32.const
+0000018: 0000 0000                                 ; f32 literal
+000001c: fc                                        ; prefix
+000001d: 00                                        ; i32.trunc_s:sat/f32
+000001e: 1a                                        ; drop
+000001f: 43                                        ; f32.const
+0000020: 0000 0000                                 ; f32 literal
+0000024: fc                                        ; prefix
+0000025: 01                                        ; i32.trunc_u:sat/f32
+0000026: 1a                                        ; drop
+0000027: 44                                        ; f64.const
+0000028: 0000 0000 0000 0000                       ; f64 literal
+0000030: fc                                        ; prefix
+0000031: 02                                        ; i32.trunc_s:sat/f64
+0000032: 1a                                        ; drop
+0000033: 44                                        ; f64.const
+0000034: 0000 0000 0000 0000                       ; f64 literal
+000003c: fc                                        ; prefix
+000003d: 03                                        ; i32.trunc_u:sat/f64
+000003e: 1a                                        ; drop
+000003f: 43                                        ; f32.const
+0000040: 0000 0000                                 ; f32 literal
+0000044: fc                                        ; prefix
+0000045: 04                                        ; i64.trunc_s:sat/f32
+0000046: 1a                                        ; drop
+0000047: 43                                        ; f32.const
+0000048: 0000 0000                                 ; f32 literal
+000004c: fc                                        ; prefix
+000004d: 05                                        ; i64.trunc_u:sat/f32
+000004e: 1a                                        ; drop
+000004f: 44                                        ; f64.const
+0000050: 0000 0000 0000 0000                       ; f64 literal
+0000058: fc                                        ; prefix
+0000059: 06                                        ; i64.trunc_s:sat/f64
+000005a: 1a                                        ; drop
+000005b: 44                                        ; f64.const
+000005c: 0000 0000 0000 0000                       ; f64 literal
+0000064: fc                                        ; prefix
+0000065: 07                                        ; i64.trunc_u:sat/f64
+0000066: 1a                                        ; drop
+0000067: 0b                                        ; end
+0000015: 52                                        ; FIXUP func body size
+0000013: 54                                        ; FIXUP section size
+
+convert-sat.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000015 func[0]:
+ 000017: 43 00 00 00 00             | f32.const 0x0p+0
+ 00001d: fc 00                      | i32.trunc_s:sat/f32
+ 00001e: 1a                         | drop
+ 00001f: 43 00 00 00 00             | f32.const 0x0p+0
+ 000025: fc 01                      | i32.trunc_u:sat/f32
+ 000026: 1a                         | drop
+ 000027: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 000031: fc 02                      | i32.trunc_s:sat/f64
+ 000032: 1a                         | drop
+ 000033: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 00003d: fc 03                      | i32.trunc_u:sat/f64
+ 00003e: 1a                         | drop
+ 00003f: 43 00 00 00 00             | f32.const 0x0p+0
+ 000045: fc 04                      | i64.trunc_s:sat/f32
+ 000046: 1a                         | drop
+ 000047: 43 00 00 00 00             | f32.const 0x0p+0
+ 00004d: fc 05                      | i64.trunc_u:sat/f32
+ 00004e: 1a                         | drop
+ 00004f: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 000059: fc 06                      | i64.trunc_s:sat/f64
+ 00005a: 1a                         | drop
+ 00005b: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 000065: fc 07                      | i64.trunc_u:sat/f64
+ 000066: 1a                         | drop
+ 000067: 0b                         | end
+;;; STDOUT ;;)

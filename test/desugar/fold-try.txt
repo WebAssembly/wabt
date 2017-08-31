@@ -1,5 +1,5 @@
 ;;; TOOL: wast-desugar
-;;; FLAGS: --future-exceptions --fold-expr
+;;; FLAGS: --enable-exceptions --fold-expr
 (module
   (except $ex i32)
   (func (result i32)
@@ -16,7 +16,6 @@
 (;; STDOUT ;;;
 (module
   (except $ex i32)
-  (type (;0;) (func (result i32)))
   (func (;0;) (result i32)
     (try $try1 (result i32)
       (nop)
@@ -24,5 +23,6 @@
       (catch $ex
         (nop))
       (catch_all
-        (rethrow $try1)))))
+        (rethrow $try1))))
+  (type (;0;) (func (result i32))))
 ;;; STDOUT ;;)

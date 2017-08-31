@@ -5,5 +5,5 @@
 (;; STDERR ;;;
 out/test/typecheck/bad-global-getglobal-type-mismatch.txt:4:16: error: type mismatch at global initializer expression. got i32, expected f32
   (global f32 (get_global 0)))
-               ^^^^^^^^^^^^
+               ^^^^^^^^^^
 ;;; STDERR ;;)

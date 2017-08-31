@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#include "ir.h"
+#include "src/ir.h"
 
 #include <cassert>
 #include <cstddef>
 
-#include "cast.h"
+#include "src/cast.h"
 
 namespace {
 
@@ -67,14 +67,14 @@ const char* GetExprTypeName(ExprType type) {
 }
 
 const char* GetExprTypeName(const Expr& expr) {
-  return GetExprTypeName(expr.type);
+  return GetExprTypeName(expr.type());
 }
 
 bool FuncSignature::operator==(const FuncSignature& rhs) const {
   return param_types == rhs.param_types && result_types == rhs.result_types;
 }
 
-const Export* Module::GetExport(const StringSlice& name) const {
+const Export* Module::GetExport(string_view name) const {
   Index index = export_bindings.FindIndex(name);
   if (index >= exports.size())
     return nullptr;
@@ -191,6 +191,197 @@ Index Module::GetFuncTypeIndex(const FuncDeclaration& decl) const {
   }
 }
 
+void Module::AppendField(std::unique_ptr<DataSegmentModuleField> field) {
+  data_segments.push_back(&field->data_segment);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<ElemSegmentModuleField> field) {
+  elem_segments.push_back(&field->elem_segment);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<ExceptionModuleField> field) {
+  Exception& except = field->except;
+  if (!except.name.empty())
+    except_bindings.emplace(except.name, Binding(field->loc, excepts.size()));
+  excepts.push_back(&except);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<ExportModuleField> field) {
+  // Exported names are allowed to be empty.
+  Export& export_ = field->export_;
+  export_bindings.emplace(export_.name, Binding(field->loc, exports.size()));
+  exports.push_back(&export_);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<FuncModuleField> field) {
+  Func& func = field->func;
+  if (!func.name.empty())
+    func_bindings.emplace(func.name, Binding(field->loc, funcs.size()));
+  funcs.push_back(&func);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<FuncTypeModuleField> field) {
+  FuncType& func_type = field->func_type;
+  if (!func_type.name.empty()) {
+    func_type_bindings.emplace(func_type.name,
+                               Binding(field->loc, func_types.size()));
+  }
+  func_types.push_back(&func_type);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<GlobalModuleField> field) {
+  Global& global = field->global;
+  if (!global.name.empty())
+    global_bindings.emplace(global.name, Binding(field->loc, globals.size()));
+  globals.push_back(&global);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<ImportModuleField> field) {
+  Import* import = field->import.get();
+  const std::string* name = nullptr;
+  BindingHash* bindings = nullptr;
+  Index index = kInvalidIndex;
+
+  switch (import->kind()) {
+    case ExternalKind::Func: {
+      Func& func = cast<FuncImport>(import)->func;
+      name = &func.name;
+      bindings = &func_bindings;
+      index = funcs.size();
+      funcs.push_back(&func);
+      ++num_func_imports;
+      break;
+    }
+
+    case ExternalKind::Table: {
+      Table& table = cast<TableImport>(import)->table;
+      name = &table.name;
+      bindings = &table_bindings;
+      index = tables.size();
+      tables.push_back(&table);
+      ++num_table_imports;
+      break;
+    }
+
+    case ExternalKind::Memory: {
+      Memory& memory = cast<MemoryImport>(import)->memory;
+      name = &memory.name;
+      bindings = &memory_bindings;
+      index = memories.size();
+      memories.push_back(&memory);
+      ++num_memory_imports;
+      break;
+    }
+
+    case ExternalKind::Global: {
+      Global& global = cast<GlobalImport>(import)->global;
+      name = &global.name;
+      bindings = &global_bindings;
+      index = globals.size();
+      globals.push_back(&global);
+      ++num_global_imports;
+      break;
+    }
+
+    case ExternalKind::Except: {
+      Exception& except = cast<ExceptionImport>(import)->except;
+      name = &except.name;
+      bindings = &except_bindings;
+      index = excepts.size();
+      excepts.push_back(&except);
+      ++num_except_imports;
+      break;
+    }
+  }
+
+  assert(name && bindings && index != kInvalidIndex);
+  if (!name->empty())
+    bindings->emplace(*name, Binding(field->loc, index));
+  imports.push_back(import);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<MemoryModuleField> field) {
+  Memory& memory = field->memory;
+  if (!memory.name.empty())
+    memory_bindings.emplace(memory.name, Binding(field->loc, memories.size()));
+  memories.push_back(&memory);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<StartModuleField> field) {
+  start = &field->start;
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<TableModuleField> field) {
+  Table& table = field->table;
+  if (!table.name.empty())
+    table_bindings.emplace(table.name, Binding(field->loc, tables.size()));
+  tables.push_back(&table);
+  fields.push_back(std::move(field));
+}
+
+void Module::AppendField(std::unique_ptr<ModuleField> field) {
+  switch (field->type()) {
+    case ModuleFieldType::Func:
+      AppendField(cast<FuncModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::Global:
+      AppendField(cast<GlobalModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::Import:
+      AppendField(cast<ImportModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::Export:
+      AppendField(cast<ExportModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::FuncType:
+      AppendField(cast<FuncTypeModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::Table:
+      AppendField(cast<TableModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::ElemSegment:
+      AppendField(cast<ElemSegmentModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::Memory:
+      AppendField(cast<MemoryModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::DataSegment:
+      AppendField(cast<DataSegmentModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::Start:
+      AppendField(cast<StartModuleField>(std::move(field)));
+      break;
+
+    case ModuleFieldType::Except:
+      AppendField(cast<ExceptionModuleField>(std::move(field)));
+      break;
+  }
+}
+
+void Module::AppendFields(ModuleFieldList* fields) {
+  while (!fields->empty())
+    AppendField(std::unique_ptr<ModuleField>(fields->extract_front()));
+}
+
 const Module* Script::GetFirstModule() const {
   return const_cast<Script*>(this)->GetFirstModule();
 }
@@ -198,7 +389,7 @@ const Module* Script::GetFirstModule() const {
 Module* Script::GetFirstModule() {
   for (const std::unique_ptr<Command>& command : commands) {
     if (auto* module_command = dyn_cast<ModuleCommand>(command.get()))
-      return module_command->module;
+      return &module_command->module;
   }
   return nullptr;
 }
@@ -208,7 +399,7 @@ const Module* Script::GetModule(const Var& var) const {
   if (index >= commands.size())
     return nullptr;
   auto* command = cast<ModuleCommand>(commands[index].get());
-  return command->module;
+  return &command->module;
 }
 
 void MakeTypeBindingReverseMapping(
@@ -224,19 +415,10 @@ void MakeTypeBindingReverseMapping(
   }
 }
 
-FuncType* Module::AppendImplicitFuncType(const Location& loc,
-                                         const FuncSignature& sig) {
-  FuncType* func_type = new FuncType();
-  func_type->sig = sig;
-  func_types.push_back(func_type);
-  fields.push_back(new FuncTypeModuleField(func_type, loc));
-  return func_type;
-}
-
 Var::Var(Index index, const Location& loc)
     : loc(loc), type_(VarType::Index), index_(index) {}
 
-Var::Var(const string_view& name, const Location& loc)
+Var::Var(string_view name, const Location& loc)
     : loc(loc), type_(VarType::Name), name_(name) {}
 
 Var::Var(Var&& rhs) : Var(kInvalidIndex) {
@@ -280,226 +462,32 @@ void Var::set_index(Index index) {
 void Var::set_name(std::string&& name) {
   Destroy();
   type_ = VarType::Name;
-  new (&name_) std::string(std::move(name));
+  Construct(name_, std::move(name));
 }
 
-void Var::set_name(const string_view& name) {
+void Var::set_name(string_view name) {
   set_name(name.to_string());
 }
 
 void Var::Destroy() {
-  typedef std::string std_string;
   if (is_name())
-    name_.~std_string();
+    Destruct(name_);
 }
 
-Const::Const(I32, uint32_t value, const Location& loc_)
+Const::Const(I32Tag, uint32_t value, const Location& loc_)
     : loc(loc_), type(Type::I32), u32(value) {
 }
 
-Const::Const(I64, uint64_t value, const Location& loc_)
+Const::Const(I64Tag, uint64_t value, const Location& loc_)
     : loc(loc_), type(Type::I64), u64(value) {
 }
 
-Const::Const(F32, uint32_t value, const Location& loc_)
+Const::Const(F32Tag, uint32_t value, const Location& loc_)
     : loc(loc_), type(Type::F32), f32_bits(value) {
 }
 
-Const::Const(F64, uint64_t value, const Location& loc_)
+Const::Const(F64Tag, uint64_t value, const Location& loc_)
     : loc(loc_), type(Type::F64), f64_bits(value) {
 }
-
-Block::Block() {
-  ZeroMemory(label);
-}
-
-Block::Block(ExprList exprs) : exprs(std::move(exprs)) {
-  ZeroMemory(label);
-}
-
-Block::~Block() {
-  destroy_string_slice(&label);
-}
-
-Exception::Exception() {
-  ZeroMemory(name);
-}
-
-Exception::Exception(const TypeVector& sig)
-    : sig(sig) {
-  ZeroMemory(name);
-}
-
-Exception::Exception(StringSlice name, const TypeVector& sig)
-    : name(name), sig(sig) {}
-
-Exception& Exception::operator =(const Exception& except) {
-  name = dup_string_slice(except.name);
-  sig = except.sig;
-  return *this;
-}
-
-Catch::Catch() {}
-
-Catch::Catch(const Var& var) : var(var) {}
-
-Catch::Catch(ExprList exprs) : exprs(std::move(exprs)) {}
-
-Catch::Catch(const Var& var, ExprList exprs)
-    : var(var), exprs(std::move(exprs)) {}
-
-IfExpr::~IfExpr() {
-  delete true_;
-}
-
-TryExpr::~TryExpr() {
-  delete block;
-  for (Catch* catch_ : catches)
-    delete catch_;
-}
-
-Expr::Expr(ExprType type) : type(type) {}
-
-FuncType::FuncType() {
-  ZeroMemory(name);
-}
-
-FuncType::~FuncType() {
-  destroy_string_slice(&name);
-}
-
-FuncDeclaration::FuncDeclaration()
-    : has_func_type(false), type_var(kInvalidIndex) {}
-
-Func::Func() {
-  ZeroMemory(name);
-}
-
-Func::~Func() {
-  destroy_string_slice(&name);
-}
-
-Global::Global() : type(Type::Void), mutable_(false) {
-  ZeroMemory(name);
-}
-
-Global::~Global() {
-  destroy_string_slice(&name);
-}
-
-Table::Table() {
-  ZeroMemory(name);
-  ZeroMemory(elem_limits);
-}
-
-Table::~Table() {
-  destroy_string_slice(&name);
-}
-
-ElemSegment::ElemSegment() : table_var(kInvalidIndex) {}
-
-DataSegment::DataSegment() : data(nullptr), size(0) {}
-
-DataSegment::~DataSegment() {
-  delete[] data;
-}
-
-Memory::Memory() {
-  ZeroMemory(name);
-  ZeroMemory(page_limits);
-}
-
-Memory::~Memory() {
-  destroy_string_slice(&name);
-}
-
-Import::Import() : kind(ExternalKind::Func), func(nullptr) {
-  ZeroMemory(module_name);
-  ZeroMemory(field_name);
-}
-
-Import::~Import() {
-  destroy_string_slice(&module_name);
-  destroy_string_slice(&field_name);
-  switch (kind) {
-    case ExternalKind::Func:
-      delete func;
-      break;
-    case ExternalKind::Table:
-      delete table;
-      break;
-    case ExternalKind::Memory:
-      delete memory;
-      break;
-    case ExternalKind::Global:
-      delete global;
-      break;
-    case ExternalKind::Except:
-      delete except;
-      break;
-  }
-}
-
-Export::Export() {
-  ZeroMemory(name);
-}
-
-Export::~Export() {
-  destroy_string_slice(&name);
-}
-
-ModuleField::ModuleField(ModuleFieldType type, const Location& loc)
-    : loc(loc), type(type) {}
-
-Module::Module()
-    : num_except_imports(0),
-      num_func_imports(0),
-      num_table_imports(0),
-      num_memory_imports(0),
-      num_global_imports(0),
-      start(0) {
-  ZeroMemory(name);
-}
-
-Module::~Module() {
-  destroy_string_slice(&name);
-}
-
-ScriptModule::ScriptModule() : type(ScriptModule::Type::Text), text(nullptr) {}
-
-ScriptModule::~ScriptModule() {
-  switch (type) {
-    case ScriptModule::Type::Text:
-      delete text;
-      break;
-    case ScriptModule::Type::Binary:
-      destroy_string_slice(&binary.name);
-      delete [] binary.data;
-      break;
-    case ScriptModule::Type::Quoted:
-      destroy_string_slice(&quoted.name);
-      delete [] binary.data;
-      break;
-  }
-}
-
-ActionInvoke::ActionInvoke() {}
-
-Action::Action() : type(ActionType::Get), module_var(kInvalidIndex) {
-  ZeroMemory(name);
-}
-
-Action::~Action() {
-  destroy_string_slice(&name);
-  switch (type) {
-    case ActionType::Invoke:
-      delete invoke;
-      break;
-    case ActionType::Get:
-      break;
-  }
-}
-
-Script::Script() {}
 
 }  // namespace wabt

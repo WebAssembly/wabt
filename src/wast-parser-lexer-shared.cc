@@ -14,32 +14,19 @@
  * limitations under the License.
  */
 
-#include "wast-parser-lexer-shared.h"
+#include "src/wast-parser-lexer-shared.h"
 
-#include <cstdarg>
-#include <cstdio>
-#include <cstring>
-#include <string>
+#include "src/common.h"
+#include "src/error-handler.h"
+#include "src/wast-lexer.h"
 
 namespace wabt {
 
-void wast_parser_error(Location* loc,
-                       WastLexer* lexer,
-                       WastParser* parser,
-                       const char* format,
-                       ...) {
-  parser->errors++;
-  va_list args;
-  va_start(args, format);
-  wast_format_error(parser->error_handler, loc, lexer, format, args);
-  va_end(args);
-}
-
-void wast_format_error(ErrorHandler* error_handler,
-                       const struct Location* loc,
-                       WastLexer* lexer,
-                       const char* format,
-                       va_list args) {
+void WastFormatError(ErrorHandler* error_handler,
+                     const Location* loc,
+                     WastLexer* lexer,
+                     const char* format,
+                     va_list args) {
   va_list args_copy;
   va_copy(args_copy, args);
   char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
@@ -65,16 +52,6 @@ void wast_format_error(ErrorHandler* error_handler,
   error_handler->OnError(*loc, std::string(buffer), source_line.line,
                          source_line.column_offset);
   va_end(args_copy);
-}
-
-void destroy_text_list(TextList* text_list) {
-  TextListNode* node = text_list->first;
-  while (node) {
-    TextListNode* next = node->next;
-    destroy_string_slice(&node->text);
-    delete node;
-    node = next;
-  }
 }
 
 }  // namespace wabt

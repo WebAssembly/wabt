@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (module)))
 (;; STDERR ;;;
-out/test/parse/expr/bad-unexpected.txt:2:16: error: syntax error, unexpected MODULE
+out/test/parse/expr/bad-unexpected.txt:2:16: error: unexpected token "module", expected an instr.
 (module (func (module)))
                ^^^^^^
 ;;; STDERR ;;)

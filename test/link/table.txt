@@ -34,14 +34,14 @@ Section Details:
 
 Type:
  - type[0] (i32) -> nil
- - type[1] (i64) -> nil
- - type[2] (f64) -> nil
- - type[3] () -> nil
+ - type[1] () -> nil
+ - type[2] (i64) -> nil
+ - type[3] (f64) -> nil
 Function:
  - func[0] sig=0 <func1>
- - func[1] sig=1 <func2>
- - func[2] sig=2 <func3>
- - func[3] sig=3 <func4>
+ - func[1] sig=2 <func2>
+ - func[2] sig=3 <func3>
+ - func[3] sig=1 <func4>
 Table:
  - table[0] type=anyfunc initial=5 max=5
 Elem:
@@ -65,15 +65,15 @@ Custom:
 Custom:
  - name: "reloc.Elem"
   - section: Elem
-   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x00003c) index=0
-   - R_FUNC_INDEX_LEB   offset=0x00000b(file=0x000041) index=0
-   - R_FUNC_INDEX_LEB   offset=0x000010(file=0x000046) index=2
-   - R_FUNC_INDEX_LEB   offset=0x000015(file=0x00004b) index=1
-   - R_FUNC_INDEX_LEB   offset=0x00001a(file=0x000050) index=1
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x00003c) index=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000b(file=0x000041) index=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000010(file=0x000046) index=2
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000015(file=0x00004b) index=1
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001a(file=0x000050) index=1
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_TYPE_INDEX_LEB   offset=0x00000f(file=0x000066) index=3
+   - R_WEBASSEMBLY_TYPE_INDEX_LEB offset=0x00000f(file=0x000066) index=1
 
 Code Disassembly:
 
@@ -85,7 +85,7 @@ Code Disassembly:
  000060: 0b                         | end
 000061 <func4>:
  000063: 42 07                      | i64.const 7
- 000065: 11 83 80 80 80 00 00       | call_indirect 3 0
-           000066: R_TYPE_INDEX_LEB   3
+ 000065: 11 81 80 80 80 00 00       | call_indirect 1 0
+           000066: R_WEBASSEMBLY_TYPE_INDEX_LEB 1
  00006c: 0b                         | end
 ;;; STDOUT ;;)

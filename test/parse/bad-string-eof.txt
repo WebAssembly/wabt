@@ -4,5 +4,5 @@
 out/test/parse/bad-string-eof.txt:2:25: error: newline in string
 (module (func) (export "
                         ^
-out/test/parse/bad-string-eof.txt:3:2: error: syntax error, unexpected EOF, expecting TEXT
+out/test/parse/bad-string-eof.txt:3:2: error: unexpected token "EOF", expected a quoted string (e.g. "foo").
 ;;; STDERR ;;)

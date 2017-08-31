@@ -20,9 +20,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "binary.h"
-#include "common.h"
-#include "opcode.h"
+#include "src/binary.h"
+#include "src/common.h"
+#include "src/feature.h"
+#include "src/opcode.h"
+#include "src/string-view.h"
 
 namespace wabt {
 
@@ -30,12 +32,16 @@ class Stream;
 
 struct ReadBinaryOptions {
   ReadBinaryOptions() = default;
-  ReadBinaryOptions(Stream* log_stream, bool read_debug_names)
-      : log_stream(log_stream), read_debug_names(read_debug_names) {}
+  ReadBinaryOptions(const Features& features,
+                    Stream* log_stream,
+                    bool read_debug_names)
+      : features(features),
+        log_stream(log_stream),
+        read_debug_names(read_debug_names) {}
 
+  Features features;
   Stream* log_stream = nullptr;
   bool read_debug_names = false;
-  bool allow_future_exceptions = false;
 };
 
 class BinaryReaderDelegate {
@@ -61,7 +67,7 @@ class BinaryReaderDelegate {
   virtual Result BeginSection(BinarySection section_type, Offset size) = 0;
 
   /* Custom section */
-  virtual Result BeginCustomSection(Offset size, StringSlice section_name) = 0;
+  virtual Result BeginCustomSection(Offset size, string_view section_name) = 0;
   virtual Result EndCustomSection() = 0;
 
   /* Type section */
@@ -78,33 +84,33 @@ class BinaryReaderDelegate {
   virtual Result BeginImportSection(Offset size) = 0;
   virtual Result OnImportCount(Index count) = 0;
   virtual Result OnImport(Index index,
-                          StringSlice module_name,
-                          StringSlice field_name) = 0;
+                          string_view module_name,
+                          string_view field_name) = 0;
   virtual Result OnImportFunc(Index import_index,
-                              StringSlice module_name,
-                              StringSlice field_name,
+                              string_view module_name,
+                              string_view field_name,
                               Index func_index,
                               Index sig_index) = 0;
   virtual Result OnImportTable(Index import_index,
-                               StringSlice module_name,
-                               StringSlice field_name,
+                               string_view module_name,
+                               string_view field_name,
                                Index table_index,
                                Type elem_type,
                                const Limits* elem_limits) = 0;
   virtual Result OnImportMemory(Index import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
+                                string_view module_name,
+                                string_view field_name,
                                 Index memory_index,
                                 const Limits* page_limits) = 0;
   virtual Result OnImportGlobal(Index import_index,
-                                StringSlice module_name,
-                                StringSlice field_name,
+                                string_view module_name,
+                                string_view field_name,
                                 Index global_index,
                                 Type type,
                                 bool mutable_) = 0;
   virtual Result OnImportException(Index import_index,
-                                   StringSlice module_name,
-                                   StringSlice field_name,
+                                   string_view module_name,
+                                   string_view field_name,
                                    Index except_index,
                                    TypeVector& sig) = 0;
   virtual Result EndImportSection() = 0;
@@ -144,7 +150,7 @@ class BinaryReaderDelegate {
   virtual Result OnExport(Index index,
                           ExternalKind kind,
                           Index item_index,
-                          StringSlice name) = 0;
+                          string_view name) = 0;
   virtual Result EndExportSection() = 0;
 
   /* Start section */
@@ -249,7 +255,7 @@ class BinaryReaderDelegate {
                                           Offset subsection_size) = 0;
   virtual Result OnFunctionNamesCount(Index num_functions) = 0;
   virtual Result OnFunctionName(Index function_index,
-                                StringSlice function_name) = 0;
+                                string_view function_name) = 0;
   virtual Result OnLocalNameSubsection(Index index,
                                        uint32_t name_type,
                                        Offset subsection_size) = 0;
@@ -258,14 +264,14 @@ class BinaryReaderDelegate {
                                        Index num_locals) = 0;
   virtual Result OnLocalName(Index function_index,
                              Index local_index,
-                             StringSlice local_name) = 0;
+                             string_view local_name) = 0;
   virtual Result EndNamesSection() = 0;
 
   /* Reloc section */
   virtual Result BeginRelocSection(Offset size) = 0;
   virtual Result OnRelocCount(Index count,
                               BinarySection section_code,
-                              StringSlice section_name) = 0;
+                              string_view section_name) = 0;
   virtual Result OnReloc(RelocType type,
                          Offset offset,
                          Index index,
@@ -276,7 +282,7 @@ class BinaryReaderDelegate {
   virtual Result BeginLinkingSection(Offset size) = 0;
   virtual Result OnStackGlobal(Index stack_global) = 0;
   virtual Result OnSymbolInfoCount(Index count) = 0;
-  virtual Result OnSymbolInfo(StringSlice name, uint32_t flags) = 0;
+  virtual Result OnSymbolInfo(string_view name, uint32_t flags) = 0;
   virtual Result OnDataSize(uint32_t data_size) = 0;
   virtual Result OnDataAlignment(uint32_t data_alignment) = 0;
   virtual Result EndLinkingSection() = 0;
@@ -298,18 +304,18 @@ class BinaryReaderDelegate {
   const State* state = nullptr;
 };
 
-Result read_binary(const void* data,
-                   size_t size,
-                   BinaryReaderDelegate* reader,
-                   const ReadBinaryOptions* options);
+Result ReadBinary(const void* data,
+                  size_t size,
+                  BinaryReaderDelegate* reader,
+                  const ReadBinaryOptions* options);
 
-size_t read_u32_leb128(const uint8_t* ptr,
-                       const uint8_t* end,
-                       uint32_t* out_value);
+size_t ReadU32Leb128(const uint8_t* ptr,
+                     const uint8_t* end,
+                     uint32_t* out_value);
 
-size_t read_i32_leb128(const uint8_t* ptr,
-                       const uint8_t* end,
-                       uint32_t* out_value);
+size_t ReadI32Leb128(const uint8_t* ptr,
+                     const uint8_t* end,
+                     uint32_t* out_value);
 
 }  // namespace wabt
 

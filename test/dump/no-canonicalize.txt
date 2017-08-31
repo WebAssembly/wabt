@@ -32,13 +32,13 @@
 000000f: 60                                        ; func
 0000010: 01                                        ; num params
 0000011: 7f                                        ; i32
-0000012: 00                                        ; num results
+0000012: 01                                        ; num results
+0000013: 7f                                        ; i32
 ; type 1
-0000013: 60                                        ; func
-0000014: 01                                        ; num params
-0000015: 7f                                        ; i32
-0000016: 01                                        ; num results
-0000017: 7f                                        ; i32
+0000014: 60                                        ; func
+0000015: 01                                        ; num params
+0000016: 7f                                        ; i32
+0000017: 00                                        ; num results
 ; type 2
 0000018: 60                                        ; func
 0000019: 02                                        ; num params
@@ -56,15 +56,15 @@
 000002a: 05                                        ; string length
 000002b: 7072 696e 74                             print  ; import field name
 0000030: 00                                        ; import kind
-0000031: 00                                        ; import signature index
+0000031: 01                                        ; import signature index
 000001e: 8f80 8080 00                              ; FIXUP section size
 ; section "Function" (3)
 0000032: 03                                        ; section code
 0000033: 0000 0000 00                              ; section size (guess)
 0000038: 03                                        ; num functions
 0000039: 02                                        ; function 0 signature index
-000003a: 00                                        ; function 1 signature index
-000003b: 00                                        ; function 2 signature index
+000003a: 01                                        ; function 1 signature index
+000003b: 01                                        ; function 2 signature index
 0000033: 8480 8080 00                              ; FIXUP section size
 ; section "Table" (4)
 000003c: 04                                        ; section code
@@ -118,7 +118,7 @@
 0000079: 20                                        ; get_local
 000007a: 01                                        ; local index
 000007b: 11                                        ; call_indirect
-000007c: 01                                        ; signature index
+000007c: 00                                        ; signature index
 000007d: 00                                        ; call_indirect reserved
 000007e: 1a                                        ; drop
 000007f: 0b                                        ; end
@@ -154,7 +154,7 @@ Code Disassembly:
 000071 func[1]:
  000077: 20 00                      | get_local 0
  000079: 20 01                      | get_local 1
- 00007b: 11 01 00                   | call_indirect 1 0
+ 00007b: 11 00 00                   | call_indirect 0 0
  00007e: 1a                         | drop
  00007f: 0b                         | end
 000080 func[2]:

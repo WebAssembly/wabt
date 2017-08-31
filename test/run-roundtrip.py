@@ -116,7 +116,7 @@ def main(args):
   parser.add_argument('--debug-names', action='store_true')
   parser.add_argument('--generate-names', action='store_true')
   parser.add_argument('--fold-exprs', action='store_true')
-  parser.add_argument('--future-exceptions', action='store_true')
+  parser.add_argument('--enable-exceptions', action='store_true')
   parser.add_argument('--inline-exports', action='store_true')
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
@@ -126,7 +126,7 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wast2wasm.AppendOptionalArgs({
       '--debug-names': options.debug_names,
-      '--future-exceptions': options.future_exceptions,
+      '--enable-exceptions': options.enable_exceptions,
       '--no-check': options.no_check,
   })
 
@@ -135,7 +135,7 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wasm2wast.AppendOptionalArgs({
       '--fold-exprs': options.fold_exprs,
-      '--future-exceptions': options.future_exceptions,
+      '--enable-exceptions': options.enable_exceptions,
       '--inline-exports': options.inline_exports,
       '--no-debug-names': not options.debug_names,
       '--generate-names': options.generate_names,

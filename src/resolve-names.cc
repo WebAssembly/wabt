@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-#include "resolve-names.h"
+#include "src/resolve-names.h"
 
 #include <cassert>
 #include <cstdio>
 
-#include "cast.h"
-#include "expr-visitor.h"
-#include "ir.h"
-#include "wast-parser-lexer-shared.h"
+#include "src/cast.h"
+#include "src/error-handler.h"
+#include "src/expr-visitor.h"
+#include "src/ir.h"
+#include "src/wast-lexer.h"
+#include "src/wast-parser-lexer-shared.h"
 
 namespace wabt {
 
 namespace {
-
-typedef Label* LabelPtr;
 
 class NameResolver : public ExprVisitor::DelegateNop {
  public:
@@ -62,7 +62,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
 
  private:
   void PrintError(const Location* loc, const char* fmt, ...);
-  void PushLabel(Label* label);
+  void PushLabel(const std::string& label);
   void PopLabel();
   void CheckDuplicateBindings(const BindingHash* bindings, const char* desc);
   void ResolveLabelVar(Var* var);
@@ -88,7 +88,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Module* current_module_ = nullptr;
   Func* current_func_ = nullptr;
   ExprVisitor visitor_;
-  std::vector<Label*> labels_;
+  std::vector<std::string> labels_;
   Result result_ = Result::Ok;
 };
 
@@ -108,11 +108,11 @@ void WABT_PRINTF_FORMAT(3, 4) NameResolver::PrintError(const Location* loc,
   result_ = Result::Error;
   va_list args;
   va_start(args, fmt);
-  wast_format_error(error_handler_, loc, lexer_, fmt, args);
+  WastFormatError(error_handler_, loc, lexer_, fmt, args);
   va_end(args);
 }
 
-void NameResolver::PushLabel(Label* label) {
+void NameResolver::PushLabel(const std::string& label) {
   labels_.push_back(label);
 }
 
@@ -136,8 +136,8 @@ void NameResolver::CheckDuplicateBindings(const BindingHash* bindings,
 void NameResolver::ResolveLabelVar(Var* var) {
   if (var->is_name()) {
     for (int i = labels_.size() - 1; i >= 0; --i) {
-      Label* label = labels_[i];
-      if (string_slice_to_string(*label) == var->name()) {
+      const std::string& label = labels_[i];
+      if (label == var->name()) {
         var->set_index(labels_.size() - i - 1);
         return;
       }
@@ -203,7 +203,7 @@ void NameResolver::ResolveLocalVar(Var* var) {
 }
 
 Result NameResolver::BeginBlockExpr(BlockExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block.label);
   return Result::Ok;
 }
 
@@ -213,7 +213,7 @@ Result NameResolver::EndBlockExpr(BlockExpr* expr) {
 }
 
 Result NameResolver::BeginLoopExpr(LoopExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block.label);
   return Result::Ok;
 }
 
@@ -233,7 +233,7 @@ Result NameResolver::OnBrIfExpr(BrIfExpr* expr) {
 }
 
 Result NameResolver::OnBrTableExpr(BrTableExpr* expr) {
-  for (Var& target : *expr->targets)
+  for (Var& target : expr->targets)
     ResolveLabelVar(&target);
   ResolveLabelVar(&expr->default_target);
   return Result::Ok;
@@ -260,7 +260,7 @@ Result NameResolver::OnGetLocalExpr(GetLocalExpr* expr) {
 }
 
 Result NameResolver::BeginIfExpr(IfExpr* expr) {
-  PushLabel(&expr->true_->label);
+  PushLabel(expr->true_.label);
   return Result::Ok;
 }
 
@@ -285,7 +285,7 @@ Result NameResolver::OnTeeLocalExpr(TeeLocalExpr* expr) {
 }
 
 Result NameResolver::BeginTryExpr(TryExpr* expr) {
-  PushLabel(&expr->block->label);
+  PushLabel(expr->block.label);
   return Result::Ok;
 }
 
@@ -390,14 +390,14 @@ Result NameResolver::VisitModule(Module* module) {
 }
 
 void NameResolver::VisitScriptModule(ScriptModule* script_module) {
-  if (script_module->type == ScriptModule::Type::Text)
-    VisitModule(script_module->text);
+  if (auto* tsm = dyn_cast<TextScriptModule>(script_module))
+    VisitModule(&tsm->module);
 }
 
 void NameResolver::VisitCommand(Command* command) {
   switch (command->type) {
     case CommandType::Module:
-      VisitModule(cast<ModuleCommand>(command)->module);
+      VisitModule(&cast<ModuleCommand>(command)->module);
       break;
 
     case CommandType::Action:
@@ -423,16 +423,17 @@ void NameResolver::VisitCommand(Command* command) {
        * should try to resolve names when possible. */
       ErrorHandlerNop new_error_handler;
       NameResolver new_resolver(lexer_, script_, &new_error_handler);
-      new_resolver.VisitScriptModule(assert_invalid_command->module);
+      new_resolver.VisitScriptModule(assert_invalid_command->module.get());
       break;
     }
 
     case CommandType::AssertUnlinkable:
-      VisitScriptModule(cast<AssertUnlinkableCommand>(command)->module);
+      VisitScriptModule(cast<AssertUnlinkableCommand>(command)->module.get());
       break;
 
     case CommandType::AssertUninstantiable:
-      VisitScriptModule(cast<AssertUninstantiableCommand>(command)->module);
+      VisitScriptModule(
+          cast<AssertUninstantiableCommand>(command)->module.get());
       break;
   }
 }
@@ -443,16 +444,16 @@ Result NameResolver::VisitScript(Script* script) {
   return result_;
 }
 
-Result resolve_names_module(WastLexer* lexer,
-                            Module* module,
-                            ErrorHandler* error_handler) {
+Result ResolveNamesModule(WastLexer* lexer,
+                          Module* module,
+                          ErrorHandler* error_handler) {
   NameResolver resolver(lexer, nullptr, error_handler);
   return resolver.VisitModule(module);
 }
 
-Result resolve_names_script(WastLexer* lexer,
-                            Script* script,
-                            ErrorHandler* error_handler) {
+Result ResolveNamesScript(WastLexer* lexer,
+                          Script* script,
+                          ErrorHandler* error_handler) {
   NameResolver resolver(lexer, script, error_handler);
   return resolver.VisitScript(script);
 }

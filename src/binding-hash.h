@@ -22,8 +22,8 @@
 #include <vector>
 #include <unordered_map>
 
-#include "common.h"
-#include "string-view.h"
+#include "src/common.h"
+#include "src/string-view.h"
 
 namespace wabt {
 
@@ -54,8 +54,8 @@ class BindingHash : public std::unordered_multimap<std::string, Binding> {
     return iter != end() ? iter->second.index : kInvalidIndex;
   }
 
-  Index FindIndex(const StringSlice& name) const {
-    return FindIndex(string_slice_to_string(name));
+  Index FindIndex(string_view name) const {
+    return FindIndex(name.to_string());
   }
 
  private:

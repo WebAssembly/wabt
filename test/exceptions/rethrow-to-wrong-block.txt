@@ -1,5 +1,5 @@
 ;;; TOOL: wast2wasm
-;;; FLAGS: --future-exceptions -v
+;;; FLAGS: --enable-exceptions -v
 ;;; ERROR: 1
 (module
   (func (result i32)
@@ -16,5 +16,5 @@
 (;; STDERR ;;;
 out/test/exceptions/rethrow-to-wrong-block.txt:10:12: error: invalid rethrow depth: 1 (catches: 0)
           (rethrow $b)
-           ^^^^^^^^^^
+           ^^^^^^^
 ;;; STDERR ;;)

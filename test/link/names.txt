@@ -68,27 +68,27 @@ Custom:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_FUNC_INDEX_LEB   offset=0x000006(file=0x000082) index=6
-   - R_FUNC_INDEX_LEB   offset=0x000011(file=0x00008d) index=2
-   - R_FUNC_INDEX_LEB   offset=0x00001f(file=0x00009b) index=6
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x000082) index=6
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000011(file=0x00008d) index=2
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001f(file=0x00009b) index=6
 
 Code Disassembly:
 
 00007d <name1>:
  00007f: 41 01                      | i32.const 1
  000081: 10 86 80 80 80 00          | call 6 <name3>
-           000082: R_FUNC_INDEX_LEB   6 <name3>
+           000082: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 6 <name3>
  000087: 0b                         | end
 000088 <name2>:
  00008a: 42 01                      | i64.const 1
  00008c: 10 82 80 80 80 00          | call 2 <import_func2>
-           00008d: R_FUNC_INDEX_LEB   2 <import_func2>
+           00008d: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 2 <import_func2>
  000092: 0b                         | end
 000093 func[5]:
  000095: 0b                         | end
 000096 <name3>:
  000098: 41 02                      | i32.const 2
  00009a: 10 86 80 80 80 00          | call 6 <name3>
-           00009b: R_FUNC_INDEX_LEB   6 <name3>
+           00009b: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 6 <name3>
  0000a0: 0b                         | end
 ;;; STDOUT ;;)

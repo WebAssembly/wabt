@@ -17,7 +17,7 @@
 #ifndef WABT_VALIDATOR_H_
 #define WABT_VALIDATOR_H_
 
-#include "wast-lexer.h"
+#include "src/wast-lexer.h"
 
 namespace wabt {
 
@@ -27,8 +27,8 @@ class ErrorHandler;
 
 // Perform all checks on the script. It is valid if and only if this function
 // succeeds.
-Result validate_script(WastLexer*, const Script*, ErrorHandler*);
-Result validate_module(WastLexer*, const Module*, ErrorHandler*);
+Result ValidateScript(WastLexer*, const Script*, ErrorHandler*);
+Result ValidateModule(WastLexer*, const Module*, ErrorHandler*);
 
 }  // namespace wabt
 

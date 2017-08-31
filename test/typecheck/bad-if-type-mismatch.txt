@@ -11,5 +11,5 @@
 (;; STDERR ;;;
 out/test/typecheck/bad-if-type-mismatch.txt:6:7: error: type mismatch in if true branch, expected i32 but got f32.
       f32.const 0
-      ^^^^^^^^^^^
+      ^^^^^^^^^
 ;;; STDERR ;;)

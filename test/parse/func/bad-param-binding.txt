@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (param $bar $baz)))
 (;; STDERR ;;;
-out/test/parse/func/bad-param-binding.txt:2:27: error: syntax error, unexpected VAR, expecting VALUE_TYPE
+out/test/parse/func/bad-param-binding.txt:2:27: error: unexpected token "$baz", expected i32, i64, f32 or f64.
 (module (func (param $bar $baz)))
                           ^^^^
 ;;; STDERR ;;)
