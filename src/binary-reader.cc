@@ -176,7 +176,8 @@ class BinaryReader {
   Index NumTotalMemories();
   Index NumTotalGlobals();
 
-  Result ReadInitExpr(Index index) WABT_WARN_UNUSED;
+  Result ReadI32InitExpr(Index index) WABT_WARN_UNUSED;
+  Result ReadInitExpr(Index index, bool require_i32 = false) WABT_WARN_UNUSED;
   Result ReadTable(Type* out_elem_type,
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
@@ -492,9 +493,14 @@ Index BinaryReader::NumTotalGlobals() {
   return num_global_imports_ + num_globals_;
 }
 
-Result BinaryReader::ReadInitExpr(Index index) {
+Result BinaryReader::ReadI32InitExpr(Index index) {
+  return ReadInitExpr(index, true);
+}
+
+Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
   Opcode opcode;
   CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
+
   switch (opcode) {
     case Opcode::I32Const: {
       uint32_t value = 0;
@@ -536,6 +542,12 @@ Result BinaryReader::ReadInitExpr(Index index) {
 
     default:
       return ReportUnexpectedOpcode(opcode, "in initializer expression");
+  }
+
+  if (require_i32 && opcode != Opcode::I32Const &&
+      opcode != Opcode::GetGlobal) {
+    PrintError("expected i32 init_expr");
+    return Result::Error;
   }
 
   CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
@@ -1581,7 +1593,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     CALLBACK(BeginElemSegment, i, table_index);
     CALLBACK(BeginElemSegmentInitExpr, i);
-    CHECK_RESULT(ReadInitExpr(i));
+    CHECK_RESULT(ReadI32InitExpr(i));
     CALLBACK(EndElemSegmentInitExpr, i);
 
     Index num_function_indexes;
@@ -1647,7 +1659,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));
     CALLBACK(BeginDataSegment, i, memory_index);
     CALLBACK(BeginDataSegmentInitExpr, i);
-    CHECK_RESULT(ReadInitExpr(i));
+    CHECK_RESULT(ReadI32InitExpr(i));
     CALLBACK(EndDataSegmentInitExpr, i);
 
     Address data_size;

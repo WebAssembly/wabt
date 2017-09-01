@@ -973,11 +973,7 @@ wabt::Result BinaryReaderInterpreter::OnStartFunction(Index func_index) {
 }
 
 wabt::Result BinaryReaderInterpreter::EndElemSegmentInitExpr(Index index) {
-  if (init_expr_value.type != Type::I32) {
-    PrintError("type mismatch in elem segment, expected i32 but got %s",
-               GetTypeName(init_expr_value.type));
-    return wabt::Result::Error;
-  }
+  assert(init_expr_value.type == Type::I32);
   table_offset = init_expr_value.value.i32;
   return wabt::Result::Ok;
 }
@@ -1010,11 +1006,7 @@ wabt::Result BinaryReaderInterpreter::OnDataSegmentData(Index index,
                                                         Address size) {
   assert(module->memory_index != kInvalidIndex);
   Memory* memory = env->GetMemory(module->memory_index);
-  if (init_expr_value.type != Type::I32) {
-    PrintError("type mismatch in data segment, expected i32 but got %s",
-               GetTypeName(init_expr_value.type));
-    return wabt::Result::Error;
-  }
+  assert(init_expr_value.type == Type::I32);
   Address address = init_expr_value.value.i32;
   uint64_t end_address =
       static_cast<uint64_t>(address) + static_cast<uint64_t>(size);
