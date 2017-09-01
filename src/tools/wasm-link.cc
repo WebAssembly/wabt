@@ -187,7 +187,7 @@ static void ApplyRelocations(const Section* section) {
   LOG_DEBUG("ApplyRelocations: %s\n", GetSectionName(section->section_code));
 
   // Perform relocations in-place.
-  for (const auto& reloc: section->relocations) {
+  for (const Reloc& reloc: section->relocations) {
     ApplyRelocation(section, &reloc);
   }
 }
@@ -266,7 +266,7 @@ void Linker::WriteTableSection(const SectionPtrVector& sections) {
     elem_count += section->binary->table_elem_count;
   }
 
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
   WriteU32Leb128(&stream_, table_count, "table count");
   WriteType(&stream_, Type::Anyfunc);
   WriteU32Leb128(&stream_, flags, "table elem flags");
@@ -281,7 +281,7 @@ void Linker::WriteExportSection() {
     total_exports += binary->exports.size();
   }
 
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
   WriteU32Leb128(&stream_, total_exports, "export count");
 
   for (const std::unique_ptr<LinkerInputBinary>& binary : inputs_) {
@@ -306,7 +306,7 @@ void Linker::WriteExportSection() {
 }
 
 void Linker::WriteElemSection(const SectionPtrVector& sections) {
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
 
   Index total_elem_count = 0;
   for (Section* section : sections) {
@@ -331,7 +331,7 @@ void Linker::WriteElemSection(const SectionPtrVector& sections) {
 }
 
 void Linker::WriteMemorySection(const SectionPtrVector& sections) {
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
 
   WriteU32Leb128(&stream_, 1, "memory count");
 
@@ -363,24 +363,24 @@ void Linker::WriteGlobalImport(const GlobalImport& import) {
 
 void Linker::WriteImportSection() {
   Index num_imports = 0;
-  for (const auto& binary: inputs_) {
-    for (const auto& import : binary->function_imports) {
+  for (const std::unique_ptr<LinkerInputBinary>& binary: inputs_) {
+    for (const FunctionImport& import : binary->function_imports) {
       if (import.active)
         num_imports++;
     }
     num_imports += binary->global_imports.size();
   }
 
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
   WriteU32Leb128(&stream_, num_imports, "num imports");
 
-  for (const auto& binary: inputs_) {
-    for (const auto& function_import : binary->function_imports) {
+  for (const std::unique_ptr<LinkerInputBinary>& binary: inputs_) {
+    for (const FunctionImport& function_import : binary->function_imports) {
       if (function_import.active)
         WriteFunctionImport(function_import, binary->type_index_offset);
     }
 
-    for (const auto& global_import : binary->global_imports) {
+    for (const GlobalImport& global_import : binary->global_imports) {
       WriteGlobalImport(global_import);
     }
   }
@@ -390,7 +390,7 @@ void Linker::WriteImportSection() {
 
 void Linker::WriteFunctionSection(const SectionPtrVector& sections,
                                   Index total_count) {
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
 
   WriteU32Leb128(&stream_, total_count, "function count");
 
@@ -423,11 +423,11 @@ void Linker::WriteDataSegment(const DataSegment& segment, Address offset) {
 
 void Linker::WriteDataSection(const SectionPtrVector& sections,
                               Index total_count) {
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
 
   WriteU32Leb128(&stream_, total_count, "data segment count");
   for (const Section* sec: sections) {
-    for (const auto& segment: *sec->data.data_segments) {
+    for (const DataSegment& segment: *sec->data.data_segments) {
       WriteDataSegment(segment,
                        sec->binary->memory_page_offset * WABT_PAGE_SIZE);
     }
@@ -438,7 +438,7 @@ void Linker::WriteDataSection(const SectionPtrVector& sections,
 
 void Linker::WriteNamesSection() {
   Index total_count = 0;
-  for (const auto& binary : inputs_) {
+  for (const std::unique_ptr<LinkerInputBinary>& binary : inputs_) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
       if (binary->debug_names[i].empty())
         continue;
@@ -452,15 +452,15 @@ void Linker::WriteNamesSection() {
     return;
 
   stream_.WriteU8Enum(BinarySection::Custom, "section code");
-  auto fixup_section = WriteUnknownSize();
+  Fixup fixup_section = WriteUnknownSize();
   WriteStr(&stream_, "name", "custom section name");
 
   stream_.WriteU8Enum(NameSectionSubsection::Function, "subsection code");
-  auto fixup_subsection = WriteUnknownSize();
+  Fixup fixup_subsection = WriteUnknownSize();
   WriteU32Leb128(&stream_, total_count, "element count");
 
   // Write import names.
-  for (const auto& binary : inputs_) {
+  for (const std::unique_ptr<LinkerInputBinary>& binary : inputs_) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
       if (binary->debug_names[i].empty() || !binary->IsFunctionImport(i))
         continue;
@@ -472,7 +472,7 @@ void Linker::WriteNamesSection() {
   }
 
   // Write non-import names.
-  for (const auto& binary : inputs_) {
+  for (const std::unique_ptr<LinkerInputBinary>& binary : inputs_) {
     for (size_t i = 0; i < binary->debug_names.size(); i++) {
       if (binary->debug_names[i].empty() || binary->IsFunctionImport(i))
         continue;
@@ -487,13 +487,13 @@ void Linker::WriteNamesSection() {
 
 void Linker::WriteLinkingSection(uint32_t data_size, uint32_t data_alignment) {
   stream_.WriteU8Enum(BinarySection::Custom, "section code");
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
 
   WriteStr(&stream_, "linking", "linking section name");
 
   {
     WriteU32Leb128Enum(&stream_, LinkingEntryType::DataSize, "subsection code");
-    auto fixup_subsection = WriteUnknownSize();
+    Fixup fixup_subsection = WriteUnknownSize();
     WriteU32Leb128(&stream_, data_size, "data size");
     FixupSize(fixup_subsection);
   }
@@ -501,7 +501,7 @@ void Linker::WriteLinkingSection(uint32_t data_size, uint32_t data_alignment) {
   {
     WriteU32Leb128Enum(&stream_, LinkingEntryType::DataAlignment,
                        "subsection code");
-    auto fixup_subsection = WriteUnknownSize();
+    Fixup fixup_subsection = WriteUnknownSize();
     WriteU32Leb128(&stream_, data_alignment, "data alignment");
     FixupSize(fixup_subsection);
   }
@@ -524,7 +524,7 @@ void Linker::WriteRelocSection(BinarySection section_code,
                                           GetSectionName(section_code));
 
   stream_.WriteU8Enum(BinarySection::Custom, "section code");
-  auto fixup = WriteUnknownSize();
+  Fixup fixup = WriteUnknownSize();
   WriteStr(&stream_, section_name, "reloc section name");
   WriteU32Leb128Enum(&stream_, section_code, "reloc section");
   WriteU32Leb128(&stream_, total_relocs, "num relocs");
@@ -621,10 +621,10 @@ bool Linker::WriteCombinedSection(BinarySection section_code,
 }
 
 struct ExportInfo {
-  ExportInfo(Export* export_, LinkerInputBinary* binary)
+  ExportInfo(const Export* export_, LinkerInputBinary* binary)
       : export_(export_), binary(binary) {}
 
-  Export* export_;
+  const Export* export_;
   LinkerInputBinary* binary;
 };
 
@@ -633,8 +633,8 @@ void Linker::ResolveSymbols() {
   BindingHash export_map;
   std::vector<ExportInfo> export_list;
 
-  for (const auto& binary: inputs_) {
-    for (auto& export_ : binary->exports) {
+  for (const std::unique_ptr<LinkerInputBinary>& binary: inputs_) {
+    for (const Export& export_ : binary->exports) {
       export_list.emplace_back(&export_, binary.get());
 
       // TODO(sbc): Handle duplicate names.
@@ -644,8 +644,8 @@ void Linker::ResolveSymbols() {
 
   // Iterate through all imported functions resolving them against exported
   // ones.
-  for (auto& binary: inputs_) {
-    for (auto& import: binary->function_imports) {
+  for (std::unique_ptr<LinkerInputBinary>& binary: inputs_) {
+    for (FunctionImport& import: binary->function_imports) {
       Index export_index = export_map.FindIndex(import.name);
       if (export_index == kInvalidIndex) {
         if (!s_relocatable)
@@ -674,7 +674,7 @@ void Linker::CalculateRelocOffsets() {
   Index total_function_imports = 0;
   Index total_global_imports = 0;
 
-  for (auto& binary : inputs_) {
+  for (std::unique_ptr<LinkerInputBinary>& binary : inputs_) {
     // The imported_function_index_offset is the sum of all the function
     // imports from objects that precede this one.  i.e. the current running
     // total.
@@ -697,10 +697,10 @@ void Linker::CalculateRelocOffsets() {
     total_global_imports += binary->global_imports.size();
   }
 
-  for (auto& binary : inputs_) {
+  for (std::unique_ptr<LinkerInputBinary>& binary : inputs_) {
     binary->table_index_offset = table_elem_count;
     table_elem_count += binary->table_elem_count;
-    for (auto& sec : binary->sections) {
+    for (std::unique_ptr<Section>& sec : binary->sections) {
       switch (sec->section_code) {
         case BinarySection::Type:
           binary->type_index_offset = type_count;
@@ -729,8 +729,8 @@ void Linker::WriteBinary() {
   // Find all the sections of each type.
   SectionPtrVector sections[kBinarySectionCount];
 
-  for (auto& binary : inputs_) {
-    for (auto& sec : binary->sections) {
+  for (std::unique_ptr<LinkerInputBinary>& binary : inputs_) {
+    for (std::unique_ptr<Section>& sec : binary->sections) {
       SectionPtrVector& sec_list =
           sections[static_cast<int>(sec->section_code)];
       sec_list.push_back(sec.get());
@@ -759,7 +759,7 @@ void Linker::WriteBinary() {
 
 void Linker::DumpRelocOffsets() {
   if (s_debug) {
-    for (const auto& binary : inputs_) {
+    for (const std::unique_ptr<LinkerInputBinary>& binary : inputs_) {
       LOG_DEBUG("Relocation info for: %s\n", binary->filename);
       LOG_DEBUG(" - type index offset       : %d\n", binary->type_index_offset);
       LOG_DEBUG(" - mem page offset         : %d\n",
@@ -802,7 +802,7 @@ int ProgramMain(int argc, char** argv) {
   ParseOptions(argc, argv);
 
   Result result = Result::Ok;
-  for (const auto& input_filename: s_infiles) {
+  for (const std::string& input_filename: s_infiles) {
     LOG_DEBUG("reading file: %s\n", input_filename.c_str());
     std::vector<uint8_t> file_data;
     result = ReadFile(input_filename.c_str(), &file_data);
