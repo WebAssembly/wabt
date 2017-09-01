@@ -547,6 +547,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnStackGlobal(Index stack_global) override;
   Result OnSymbolInfoCount(Index count) override;
   Result OnSymbolInfo(string_view name, uint32_t flags) override;
+  Result OnDataSize(uint32_t data_size) override;
+  Result OnDataAlignment(uint32_t data_alignment) override;
 
   Result OnExceptionCount(Index count) override;
   Result OnExceptionType(Index index, TypeVector& sig)  override;
@@ -1107,6 +1109,16 @@ Result BinaryReaderObjdump::OnExceptionType(
     printf("%s", type_name(sig[i]));
   }
   printf(")\n");
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDataSize(uint32_t data_size) {
+  PrintDetails("  - data size : %d\n", data_size);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDataAlignment(uint32_t data_alignment) {
+  PrintDetails("  - data align: %d\n", data_alignment);
   return Result::Ok;
 }
 

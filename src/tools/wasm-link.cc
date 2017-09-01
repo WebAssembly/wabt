@@ -218,6 +218,7 @@ class Linker {
   void WriteDataSegment(const DataSegment& segment, Address offset);
   void WriteDataSection(const SectionPtrVector& sections, Index total_count);
   void WriteNamesSection();
+  void WriteLinkingSection(uint32_t data_size, uint32_t data_alignment);
   void WriteRelocSection(BinarySection section_code,
                          const SectionPtrVector& sections);
   bool WriteCombinedSection(BinarySection section_code,
@@ -484,6 +485,30 @@ void Linker::WriteNamesSection() {
   FixupSize(fixup_section);
 }
 
+void Linker::WriteLinkingSection(uint32_t data_size, uint32_t data_alignment) {
+  stream_.WriteU8Enum(BinarySection::Custom, "section code");
+  auto fixup = WriteUnknownSize();
+
+  WriteStr(&stream_, "linking", "linking section name");
+
+  {
+    WriteU32Leb128Enum(&stream_, LinkingEntryType::DataSize, "subsection code");
+    auto fixup_subsection = WriteUnknownSize();
+    WriteU32Leb128(&stream_, data_size, "data size");
+    FixupSize(fixup_subsection);
+  }
+
+  {
+    WriteU32Leb128Enum(&stream_, LinkingEntryType::DataAlignment,
+                       "subsection code");
+    auto fixup_subsection = WriteUnknownSize();
+    WriteU32Leb128(&stream_, data_alignment, "data alignment");
+    FixupSize(fixup_subsection);
+  }
+
+  FixupSize(fixup);
+}
+
 void Linker::WriteRelocSection(BinarySection section_code,
                                const SectionPtrVector& sections) {
   Index total_relocs = 0;
@@ -723,9 +748,12 @@ void Linker::WriteBinary() {
 
   WriteNamesSection();
 
-  // Generate a new set of reloction sections.
-  for (size_t i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
-    WriteRelocSection(static_cast<BinarySection>(i), sections[i]);
+  /* Generate a new set of reloction sections */
+  if (s_relocatable) {
+    WriteLinkingSection(0, 0);
+    for (size_t i = FIRST_KNOWN_SECTION; i < kBinarySectionCount; i++) {
+      WriteRelocSection(static_cast<BinarySection>(i), sections[i]);
+    }
   }
 }
 

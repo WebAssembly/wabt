@@ -1264,6 +1264,18 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         }
         break;
       }
+      case LinkingEntryType::DataSize: {
+        uint32_t data_size;
+        CHECK_RESULT(ReadU32Leb128(&data_size, "data size"));
+        CALLBACK(OnDataSize, data_size);
+        break;
+      }
+      case LinkingEntryType::DataAlignment: {
+        uint32_t data_alignment;
+        CHECK_RESULT(ReadU32Leb128(&data_alignment, "data alignment"));
+        CALLBACK(OnDataAlignment, data_alignment);
+        break;
+      }
       default:
         /* unknown subsection, skip it */
         state_.offset = subsection_end;

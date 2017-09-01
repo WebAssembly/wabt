@@ -225,6 +225,8 @@ struct Reloc {
 enum class LinkingEntryType {
   StackPointer = 1,
   SymbolInfo = 2,
+  DataSize = 3,
+  DataAlignment = 4,
 };
 
 enum class SymbolBinding {

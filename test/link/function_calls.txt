@@ -30,7 +30,8 @@ Sections:
    Export start=0x00000050 end=0x00000057 (size=0x00000007) count: 1
      Code start=0x00000059 end=0x0000008b (size=0x00000032) count: 2
    Custom start=0x00000091 end=0x000000cd (size=0x0000003c) "name"
-   Custom start=0x000000d3 end=0x000000ef (size=0x0000001c) "reloc.Code"
+   Custom start=0x000000d3 end=0x000000e9 (size=0x00000016) "linking"
+   Custom start=0x000000ef end=0x0000010b (size=0x0000001c) "reloc.Code"
 
 Section Details:
 
@@ -53,6 +54,10 @@ Custom:
  - func[1] m2_import0
  - func[2] local_func
  - func[3] m2_local_func
+Custom:
+ - name: "linking"
+  - data size : 0
+  - data align: 0
 Custom:
  - name: "reloc.Code"
   - section: Code

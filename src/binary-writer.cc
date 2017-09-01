@@ -1033,7 +1033,6 @@ Result BinaryWriter::WriteModule(const Module* module) {
     }
   }
 
-
   return stream_.result();
 }
 
