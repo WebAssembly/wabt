@@ -1072,8 +1072,22 @@ Result BinaryReaderObjdump::OnSymbolInfoCount(Index count) {
 }
 
 Result BinaryReaderObjdump::OnSymbolInfo(string_view name, uint32_t flags) {
-  PrintDetails("   - <" PRIstringview "> flags=0x%x\n",
-               WABT_PRINTF_STRING_VIEW_ARG(name), flags);
+  const char* binding_name = nullptr;
+  SymbolBinding binding = static_cast<SymbolBinding>(flags & 0x3);
+  switch (binding) {
+    case SymbolBinding::Global:
+      binding_name = "GLOBAL";
+      break;
+    case SymbolBinding::Local:
+      binding_name = "LOCAL ";
+      break;
+    case SymbolBinding::Weak:
+      binding_name = "WEAK  ";
+      break;
+  }
+
+  PrintDetails("   - %s <" PRIstringview ">\n", binding_name,
+               WABT_PRINTF_STRING_VIEW_ARG(name));
   return Result::Ok;
 }
 

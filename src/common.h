@@ -227,6 +227,12 @@ enum class LinkingEntryType {
   SymbolInfo = 2,
 };
 
+enum class SymbolBinding {
+  Global = 0,
+  Weak = 1,
+  Local = 2,
+};
+
 /* matches binary format, do not change */
 enum class ExternalKind {
   Func = 0,
