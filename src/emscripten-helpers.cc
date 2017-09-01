@@ -66,9 +66,9 @@ wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
 WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
                                      wabt::ErrorHandlerBuffer* error_handler) {
   WabtParseWastResult* result = new WabtParseWastResult();
-  wabt::Script* script = nullptr;
+  std::unique_ptr<wabt::Script> script;
   result->result = wabt::ParseWast(lexer, &script, error_handler);
-  result->script.reset(script);
+  result->script = std::move(script);
   return result;
 }
 
@@ -91,31 +91,31 @@ WabtReadBinaryResult* wabt_read_binary(
   return result;
 }
 
-wabt::Result wabt_resolve_names_script(
+wabt::Result::Enum wabt_resolve_names_script(
     wabt::WastLexer* lexer,
     wabt::Script* script,
     wabt::ErrorHandlerBuffer* error_handler) {
   return ResolveNamesScript(lexer, script, error_handler);
 }
 
-wabt::Result wabt_resolve_names_module(
+wabt::Result::Enum wabt_resolve_names_module(
     wabt::WastLexer* lexer,
     wabt::Module* module,
     wabt::ErrorHandlerBuffer* error_handler) {
   return ResolveNamesModule(lexer, module, error_handler);
 }
 
-wabt::Result wabt_validate_script(wabt::WastLexer* lexer,
+wabt::Result::Enum wabt_validate_script(wabt::WastLexer* lexer,
                                   wabt::Script* script,
                                   wabt::ErrorHandlerBuffer* error_handler) {
   return ValidateScript(lexer, script, error_handler);
 }
 
-wabt::Result wabt_apply_names_module(wabt::Module* module) {
+wabt::Result::Enum wabt_apply_names_module(wabt::Module* module) {
   return ApplyNames(module);
 }
 
-wabt::Result wabt_generate_names_module(wabt::Module* module) {
+wabt::Result::Enum wabt_generate_names_module(wabt::Module* module) {
   return GenerateNames(module);
 }
 
@@ -199,7 +199,8 @@ void wabt_destroy_error_handler_buffer(
 }
 
 // WabtParseWastResult
-wabt::Result wabt_parse_wast_result_get_result(WabtParseWastResult* result) {
+wabt::Result::Enum wabt_parse_wast_result_get_result(
+    WabtParseWastResult* result) {
   return result->result;
 }
 
@@ -213,7 +214,8 @@ void wabt_destroy_parse_wast_result(WabtParseWastResult* result) {
 }
 
 // WabtReadBinaryResult
-wabt::Result wabt_read_binary_result_get_result(WabtReadBinaryResult* result) {
+wabt::Result::Enum wabt_read_binary_result_get_result(
+    WabtReadBinaryResult* result) {
   return result->result;
 }
 
@@ -227,7 +229,7 @@ void wabt_destroy_read_binary_result(WabtReadBinaryResult* result) {
 }
 
 // WabtWriteModuleResult
-wabt::Result wabt_write_module_result_get_result(
+wabt::Result::Enum wabt_write_module_result_get_result(
     WabtWriteModuleResult* result) {
   return result->result;
 }

@@ -1012,8 +1012,8 @@ wabt::Result SpecJSONParser::ReadInvalidTextModule(
     ErrorHandler* error_handler) {
   std::unique_ptr<WastLexer> lexer =
       WastLexer::CreateFileLexer(module_filename);
-  wabt::Result result = ParseWast(lexer.get(), nullptr, error_handler);
-  return result;
+  std::unique_ptr<Script> script;
+  return ParseWast(lexer.get(), &script, error_handler);
 }
 
 wabt::Result SpecJSONParser::ReadInvalidModule(const char* module_filename,

@@ -87,7 +87,7 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read %s\n", s_infile);
 
   ErrorHandlerFile error_handler(Location::Type::Text);
-  Script* script;
+  std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
   Result result =
       ParseWast(lexer.get(), &script, &error_handler, &parse_wast_options);
@@ -109,7 +109,6 @@ int ProgramMain(int argc, char** argv) {
     }
   }
 
-  delete script;
   return result != Result::Ok;
 }
 
