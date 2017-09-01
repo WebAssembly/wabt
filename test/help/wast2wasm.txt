@@ -28,6 +28,7 @@ options:
   -d, --dump-module                           Print a hexdump of the module to stdout
       --enable-exceptions                     Experimental exception handling
       --enable-saturating-float-to-int        Saturating float-to-int operators
+      --enable-threads                        Threading support
   -o, --output=FILE                           output wasm binary file
   -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with wasm-link)
       --spec                                  Parse a file with multiple modules and assertions, like the spec tests

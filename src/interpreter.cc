@@ -1041,6 +1041,21 @@ ValueTypeRep<R> IntTruncSat(ValueTypeRep<T> v_rep) {
   }
 }
 
+// i{32,64}.extend{8,16,32}_s
+template <typename T, typename E>
+ValueTypeRep<T> IntExtendS(ValueTypeRep<T> v_rep) {
+  // To avoid undefined/implementation-defined behavior, convert from unsigned
+  // type (T), to an unsigned value of the smaller size (EU), then bitcast from
+  // unsigned to signed, then cast from the smaller signed type to the larger
+  // signed type (TS) to sign extend. ToRep then will bitcast back from signed
+  // to unsigned.
+  static_assert(std::is_unsigned<ValueTypeRep<T>>::value, "T must be unsigned");
+  static_assert(std::is_signed<E>::value, "E must be signed");
+  typedef typename std::make_unsigned<E>::type EU;
+  typedef typename std::make_signed<T>::type TS;
+  return ToRep(static_cast<TS>(Bitcast<E>(static_cast<EU>(v_rep))));
+}
+
 bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
                                          Index sig_index_1) const {
   if (sig_index_0 == sig_index_1)
@@ -1953,6 +1968,26 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
 
       case Opcode::I64Eqz:
         CHECK_TRAP(Unop(IntEqz<uint32_t, uint64_t>));
+        break;
+
+      case Opcode::I32Extend8S:
+        CHECK_TRAP(Unop(IntExtendS<uint32_t, int8_t>));
+        break;
+
+      case Opcode::I32Extend16S:
+        CHECK_TRAP(Unop(IntExtendS<uint32_t, int16_t>));
+        break;
+
+      case Opcode::I64Extend8S:
+        CHECK_TRAP(Unop(IntExtendS<uint64_t, int8_t>));
+        break;
+
+      case Opcode::I64Extend16S:
+        CHECK_TRAP(Unop(IntExtendS<uint64_t, int16_t>));
+        break;
+
+      case Opcode::I64Extend32S:
+        CHECK_TRAP(Unop(IntExtendS<uint64_t, int32_t>));
         break;
 
       case Opcode::Alloca: {

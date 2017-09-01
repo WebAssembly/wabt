@@ -1,0 +1,54 @@
+;;; TOOL: run-interp
+;;; FLAGS: --enable-threads
+(module
+  (func (export "i32.extend8_s 0x7f") (result i32)
+    i32.const 0x7f
+    i32.extend8_s)
+
+  (func (export "i32.extend8_s 0x80") (result i32)
+    i32.const 0x80
+    i32.extend8_s)
+
+  (func (export "i32.extend16_s 0x7fff") (result i32)
+    i32.const 0x7fff
+    i32.extend16_s)
+
+  (func (export "i32.extend16_s 0x8000") (result i32)
+    i32.const 0x8000
+    i32.extend16_s)
+
+  (func (export "i64.extend8_s 0x7f") (result i64)
+    i64.const 0x7f
+    i64.extend8_s)
+
+  (func (export "i64.extend8_s 0x80") (result i64)
+    i64.const 0x80
+    i64.extend8_s)
+
+  (func (export "i64.extend16_s 0x7fff") (result i64)
+    i64.const 0x7fff
+    i64.extend16_s)
+
+  (func (export "i64.extend16_s 0x8000") (result i64)
+    i64.const 0x8000
+    i64.extend16_s)
+
+  (func (export "i64.extend32_s 0x7fffffff") (result i64)
+    i64.const 0x7fffffff
+    i64.extend32_s)
+
+  (func (export "i64.extend32_s 0x80000000") (result i64)
+    i64.const 0x80000000
+    i64.extend32_s))
+(;; STDOUT ;;;
+i32.extend8_s 0x7f() => i32:127
+i32.extend8_s 0x80() => i32:4294967168
+i32.extend16_s 0x7fff() => i32:32767
+i32.extend16_s 0x8000() => i32:4294934528
+i64.extend8_s 0x7f() => i64:127
+i64.extend8_s 0x80() => i64:18446744073709551488
+i64.extend16_s 0x7fff() => i64:32767
+i64.extend16_s 0x8000() => i64:18446744073709518848
+i64.extend32_s 0x7fffffff() => i64:2147483647
+i64.extend32_s 0x80000000() => i64:18446744071562067968
+;;; STDOUT ;;)

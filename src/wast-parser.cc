@@ -1282,9 +1282,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
-    case TokenType::Unary:
-      out_expr->reset(new UnaryExpr(Consume().opcode, loc));
+    case TokenType::Unary: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      out_expr->reset(new UnaryExpr(token.opcode, loc));
       break;
+    }
 
     case TokenType::Binary:
       out_expr->reset(new BinaryExpr(Consume().opcode, loc));

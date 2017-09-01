@@ -1,0 +1,94 @@
+;;; TOOL: run-objdump
+;;; FLAGS: -v --enable-threads
+(module
+  (func
+    i32.const 0
+    i32.extend8_s
+    drop
+
+    i32.const 0
+    i32.extend16_s
+    drop
+
+    i64.const 0
+    i64.extend8_s
+    drop
+
+    i64.const 0
+    i64.extend16_s
+    drop
+
+    i64.const 0
+    i64.extend32_s
+    drop))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
+; section "Function" (3)
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+000000f: 02                                        ; FIXUP section size
+; section "Code" (10)
+0000012: 0a                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 01                                        ; num functions
+; function body 0
+0000015: 00                                        ; func body size (guess)
+0000016: 00                                        ; local decl count
+0000017: 41                                        ; i32.const
+0000018: 00                                        ; i32 literal
+0000019: c0                                        ; i32.extend8_s
+000001a: 1a                                        ; drop
+000001b: 41                                        ; i32.const
+000001c: 00                                        ; i32 literal
+000001d: c1                                        ; i32.extend16_s
+000001e: 1a                                        ; drop
+000001f: 42                                        ; i64.const
+0000020: 00                                        ; i64 literal
+0000021: c2                                        ; i64.extend8_s
+0000022: 1a                                        ; drop
+0000023: 42                                        ; i64.const
+0000024: 00                                        ; i64 literal
+0000025: c3                                        ; i64.extend16_s
+0000026: 1a                                        ; drop
+0000027: 42                                        ; i64.const
+0000028: 00                                        ; i64 literal
+0000029: c4                                        ; i64.extend32_s
+000002a: 1a                                        ; drop
+000002b: 0b                                        ; end
+0000015: 16                                        ; FIXUP func body size
+0000013: 18                                        ; FIXUP section size
+
+unary-extend.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000015 func[0]:
+ 000017: 41 00                      | i32.const 0
+ 000019: c0                         | i32.extend8_s
+ 00001a: 1a                         | drop
+ 00001b: 41 00                      | i32.const 0
+ 00001d: c1                         | i32.extend16_s
+ 00001e: 1a                         | drop
+ 00001f: 42 00                      | i64.const 0
+ 000021: c2                         | i64.extend8_s
+ 000022: 1a                         | drop
+ 000023: 42 00                      | i64.const 0
+ 000025: c3                         | i64.extend16_s
+ 000026: 1a                         | drop
+ 000027: 42 00                      | i64.const 0
+ 000029: c4                         | i64.extend32_s
+ 00002a: 1a                         | drop
+ 00002b: 0b                         | end
+;;; STDOUT ;;)

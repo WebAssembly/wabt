@@ -49,6 +49,7 @@ def main(args):
   parser.add_argument('--dump-debug', action='store_true')
   parser.add_argument('--enable-exceptions', action='store_true')
   parser.add_argument('--enable-saturating-float-to-int', action='store_true')
+  parser.add_argument('--enable-threads', action='store_true')
   parser.add_argument('--gen-wasm', action='store_true',
                       help='parse with gen-wasm')
   parser.add_argument('--spec', action='store_true')
@@ -72,6 +73,7 @@ def main(args):
       '--enable-exceptions': options.enable_exceptions,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
+      '--enable-threads': options.enable_threads,
       '--no-check': options.no_check,
       '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
       '--spec': options.spec,
@@ -87,6 +89,7 @@ def main(args):
       '--enable-exceptions': options.enable_exceptions,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
+      '--enable-threads': options.enable_threads,
       '-h': options.headers,
       '-x': options.dump_verbose,
       '--debug': options.dump_debug,
