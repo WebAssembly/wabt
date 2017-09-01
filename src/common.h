@@ -303,8 +303,6 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "void";
     case Type::Any:
       return "any";
-    default:
-      return nullptr;
   }
 }
 

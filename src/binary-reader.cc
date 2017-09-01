@@ -1458,10 +1458,6 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         num_exception_imports_++;
         break;
       }
-
-      default:
-        PrintError("invalid import kind: %d", kind);
-        return Result::Error;
     }
   }
   CALLBACK0(EndImportSection);
@@ -1719,10 +1715,8 @@ Result BinaryReader::ReadSections() {
 
     switch (section) {
       WABT_FOREACH_BINARY_SECTION(V)
-
-      default:
-        assert(0);
-        break;
+      case BinarySection::Invalid:
+        WABT_UNREACHABLE;
     }
 
 #undef V

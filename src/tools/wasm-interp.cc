@@ -167,8 +167,7 @@ static void SPrintTypedValue(char* buffer, size_t size, const TypedValue* tv) {
     }
 
     default:
-      assert(0);
-      break;
+      WABT_UNREACHABLE;
   }
 }
 
@@ -1038,10 +1037,9 @@ wabt::Result SpecJSONParser::ReadInvalidModule(const char* module_filename,
                                      ErrorHandlerFile::PrintHeader::Once);
       return ReadModule(module_filename, env, &error_handler, &module);
     }
-
-    default:
-      return wabt::Result::Error;
   }
+
+  WABT_UNREACHABLE;
 }
 
 wabt::Result SpecJSONParser::OnAssertMalformedCommand(string_view filename,
@@ -1170,8 +1168,7 @@ static bool TypedValuesAreEqual(const TypedValue* tv1, const TypedValue* tv2) {
     case Type::F64:
       return tv1->value.f64_bits == tv2->value.f64_bits;
     default:
-      assert(0);
-      return false;
+      WABT_UNREACHABLE;
   }
 }
 

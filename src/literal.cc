@@ -420,11 +420,9 @@ Result FloatParser<T>::Parse(LiteralType literal_type,
 
     case LiteralType::Nan:
       return ParseNan(s, end, out_bits);
-
-    default:
-      assert(0);
-      return Result::Error;
   }
+
+  WABT_UNREACHABLE;
 }
 
 // static

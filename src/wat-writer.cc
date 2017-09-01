@@ -226,8 +226,6 @@ void WatWriter::WriteNextChar() {
       stream_.WriteChar('\n');
       WriteIndent();
       break;
-
-    default:
     case NextChar::None:
       break;
   }
