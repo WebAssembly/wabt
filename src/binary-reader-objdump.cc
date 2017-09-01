@@ -1072,7 +1072,7 @@ Result BinaryReaderObjdump::OnSymbolInfoCount(Index count) {
 }
 
 Result BinaryReaderObjdump::OnSymbolInfo(string_view name, uint32_t flags) {
-  const char* binding_name;
+  const char* binding_name = nullptr;
   SymbolBinding binding = static_cast<SymbolBinding>(flags & 0x3);
   switch (binding) {
     case SymbolBinding::Global:
