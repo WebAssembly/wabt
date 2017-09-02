@@ -304,6 +304,7 @@ static WABT_INLINE const char* GetTypeName(Type type) {
     case Type::Any:
       return "any";
   }
+  WABT_UNREACHABLE;
 }
 
 template <typename T>
