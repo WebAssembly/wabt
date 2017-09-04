@@ -1659,7 +1659,7 @@ Result WastParser::ParseGlobalType(Global* global) {
 
 Result WastParser::ParseCommandList(CommandPtrVector* commands) {
   WABT_TRACE(ParseCommandList);
-  while (PeekMatch(TokenType::Lpar)) {
+  while (IsCommand(PeekPair())) {
     CommandPtr command;
     if (Succeeded(ParseCommand(&command))) {
       commands->push_back(std::move(command));
