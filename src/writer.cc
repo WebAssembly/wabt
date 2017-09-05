@@ -37,6 +37,7 @@ Result OutputBuffer::WriteToFile(string_view filename) const {
   }
 
   if (data.empty()) {
+    fclose(file);
     return Result::Ok;
   }
 
@@ -44,6 +45,7 @@ Result OutputBuffer::WriteToFile(string_view filename) const {
   if (bytes < 0 || static_cast<size_t>(bytes) != data.size()) {
     ERROR("failed to write %" PRIzd " bytes to %s\n", data.size(),
           filename_str.c_str());
+    fclose(file);
     return Result::Error;
   }
 
