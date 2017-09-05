@@ -41,6 +41,7 @@ class Validator {
 
   Result CheckModule(const Module* module);
   Result CheckScript(const Script* script);
+  Result CheckAllFuncSignatures(const Module* module);
 
  private:
   struct ActionResult {
@@ -108,9 +109,7 @@ class Validator {
                      Opcode opcode,
                      const BlockSignature* sig);
   void CheckExpr(const Expr* expr);
-  void CheckFuncSignatureMatchesFuncType(const Location* loc,
-                                         const FuncSignature& sig,
-                                         const FuncType* func_type);
+  void CheckFuncSignature(const Location* loc, const Func* func);
   void CheckFunc(const Location* loc, const Func* func);
   void PrintConstExprError(const Location* loc, const char* desc);
   void CheckConstInitExpr(const Location* loc,
@@ -604,27 +603,25 @@ void Validator::CheckExpr(const Expr* expr) {
   }
 }
 
-void Validator::CheckFuncSignatureMatchesFuncType(const Location* loc,
-                                                  const FuncSignature& sig,
-                                                  const FuncType* func_type) {
-  CheckTypes(loc, sig.result_types, func_type->sig.result_types, "function",
-             "result");
-  CheckTypes(loc, sig.param_types, func_type->sig.param_types, "function",
-             "argument");
+void Validator::CheckFuncSignature(const Location* loc, const Func* func) {
+  if (func->decl.has_func_type) {
+    const FuncType* func_type;
+    if (Succeeded(CheckFuncTypeVar(&func->decl.type_var, &func_type))) {
+      CheckTypes(loc, func->decl.sig.result_types, func_type->sig.result_types,
+                 "function", "result");
+      CheckTypes(loc, func->decl.sig.param_types, func_type->sig.param_types,
+                 "function", "argument");
+    }
+  }
 }
 
 void Validator::CheckFunc(const Location* loc, const Func* func) {
   current_func_ = func;
+  CheckFuncSignature(loc, func);
   if (func->GetNumResults() > 1) {
     PrintError(loc, "multiple result values not currently supported.");
     // Don't run any other checks, the won't test the result_type properly.
     return;
-  }
-  if (func->decl.has_func_type) {
-    const FuncType* func_type;
-    if (Succeeded(CheckFuncTypeVar(&func->decl.type_var, &func_type))) {
-      CheckFuncSignatureMatchesFuncType(loc, func->decl.sig, func_type);
-    }
   }
 
   expr_loc_ = loc;
@@ -1121,6 +1118,21 @@ Result Validator::CheckScript(const Script* script) {
   return result_;
 }
 
+Result Validator::CheckAllFuncSignatures(const Module* module) {
+  current_module_ = module;
+  for (const ModuleField& field : module->fields) {
+    switch (field.type()) {
+      case ModuleFieldType::Func:
+        CheckFuncSignature(&field.loc, &cast<FuncModuleField>(&field)->func);
+        break;
+
+      default:
+        break;
+    }
+  }
+  return result_;
+}
+
 }  // end anonymous namespace
 
 Result ValidateScript(WastLexer* lexer,
@@ -1137,6 +1149,14 @@ Result ValidateModule(WastLexer* lexer,
   Validator validator(error_handler, lexer, nullptr);
 
   return validator.CheckModule(module);
+}
+
+Result ValidateFuncSignatures(WastLexer* lexer,
+                              const Module* module,
+                              ErrorHandler* error_handler) {
+  Validator validator(error_handler, lexer, nullptr);
+
+  return validator.CheckAllFuncSignatures(module);
 }
 
 }  // namespace wabt

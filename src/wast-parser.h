@@ -43,7 +43,8 @@ class WastParser {
   WastParser(WastLexer*, ErrorHandler*, WastParseOptions*);
 
   void WABT_PRINTF_FORMAT(3, 4) Error(Location, const char* format, ...);
-  Result ParseScript(Script*);
+  Result ParseScript();
+  std::unique_ptr<Script> ReleaseScript();
 
  private:
   void ErrorUnlessOpcodeEnabled(const Token&);
@@ -196,7 +197,7 @@ class WastParser {
   void CheckImportOrdering(Module*);
 
   WastLexer* lexer_;
-  Script* script_ = nullptr;
+  std::unique_ptr<Script> script_;
   Index last_module_index_ = kInvalidIndex;
   ErrorHandler* error_handler_;
   int errors_ = 0;
@@ -206,7 +207,7 @@ class WastParser {
 };
 
 Result ParseWast(WastLexer* lexer,
-                 Script** out_script,
+                 std::unique_ptr<Script>* out_script,
                  ErrorHandler*,
                  WastParseOptions* options = nullptr);
 

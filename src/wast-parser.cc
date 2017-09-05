@@ -20,6 +20,7 @@
 #include "src/binary-reader-ir.h"
 #include "src/cast.h"
 #include "src/error-handler.h"
+#include "src/make-unique.h"
 #include "src/wast-parser-lexer-shared.h"
 
 #define WABT_TRACING 0
@@ -629,9 +630,9 @@ Result WastParser::ParseNat(uint64_t* out_nat) {
   return Result::Ok;
 }
 
-Result WastParser::ParseScript(Script* script) {
+Result WastParser::ParseScript() {
   WABT_TRACE(ParseScript);
-  script_ = script;
+  script_ = MakeUnique<Script>();
 
   // Don't consume the Lpar yet, even though it is required. This way the
   // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
@@ -641,9 +642,9 @@ Result WastParser::ParseScript(Script* script) {
     auto command = MakeUnique<ModuleCommand>();
     command->module.loc = GetLocation();
     CHECK_RESULT(ParseModuleFieldList(&command->module));
-    script->commands.emplace_back(std::move(command));
+    script_->commands.emplace_back(std::move(command));
   } else if (IsCommand(PeekPair())) {
-    CHECK_RESULT(ParseCommandList(&script->commands));
+    CHECK_RESULT(ParseCommandList(&script_->commands));
   } else {
     ConsumeIfLpar();
     ErrorExpected({"a module field", "a command"});
@@ -1658,7 +1659,7 @@ Result WastParser::ParseGlobalType(Global* global) {
 
 Result WastParser::ParseCommandList(CommandPtrVector* commands) {
   WABT_TRACE(ParseCommandList);
-  while (PeekMatch(TokenType::Lpar)) {
+  while (IsCommand(PeekPair())) {
     CommandPtr command;
     if (Succeeded(ParseCommand(&command))) {
       commands->push_back(std::move(command));
@@ -1978,17 +1979,18 @@ void WastParser::CheckImportOrdering(Module* module) {
   }
 }
 
+std::unique_ptr<Script> WastParser::ReleaseScript() {
+  return std::move(script_);
+}
+
 Result ParseWast(WastLexer* lexer,
-                 Script** out_script,
+                 std::unique_ptr<Script>* out_script,
                  ErrorHandler* error_handler,
                  WastParseOptions* options) {
-  auto script = MakeUnique<Script>();
+  assert(out_script != nullptr);
   WastParser parser(lexer, error_handler, options);
-  Result result = parser.ParseScript(script.get());
-
-  if (out_script)
-    *out_script = script.release();
-
+  Result result = parser.ParseScript();
+  *out_script = parser.ReleaseScript();
   return result;
 }
 

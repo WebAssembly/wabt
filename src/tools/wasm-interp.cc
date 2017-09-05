@@ -31,7 +31,9 @@
 #include "src/interpreter.h"
 #include "src/literal.h"
 #include "src/option-parser.h"
+#include "src/resolve-names.h"
 #include "src/stream.h"
+#include "src/validator.h"
 #include "src/wast-lexer.h"
 #include "src/wast-parser.h"
 
@@ -1011,7 +1013,16 @@ wabt::Result SpecJSONParser::ReadInvalidTextModule(
     ErrorHandler* error_handler) {
   std::unique_ptr<WastLexer> lexer =
       WastLexer::CreateFileLexer(module_filename);
-  wabt::Result result = ParseWast(lexer.get(), nullptr, error_handler);
+  std::unique_ptr<Script> script;
+  wabt::Result result = ParseWast(lexer.get(), &script, error_handler);
+  if (Succeeded(result)) {
+    wabt::Module* module = script->GetFirstModule();
+    result = ResolveNamesModule(lexer.get(), module, error_handler);
+    if (Succeeded(result)) {
+      // Don't do a full validation, just validate the function signatures.
+      result = ValidateFuncSignatures(lexer.get(), module, error_handler);
+    }
+  }
   return result;
 }
 

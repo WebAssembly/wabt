@@ -135,24 +135,24 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
   ErrorHandlerFile error_handler(Location::Type::Text);
-  Script* script;
+  std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
   Result result =
       ParseWast(lexer.get(), &script, &error_handler, &parse_wast_options);
 
   if (Succeeded(result)) {
-    result = ResolveNamesScript(lexer.get(), script, &error_handler);
+    result = ResolveNamesScript(lexer.get(), script.get(), &error_handler);
 
     if (Succeeded(result) && s_validate)
-      result = ValidateScript(lexer.get(), script, &error_handler);
+      result = ValidateScript(lexer.get(), script.get(), &error_handler);
 
     if (Succeeded(result)) {
       if (s_spec) {
         WriteBinarySpecOptions write_binary_spec_options;
         write_binary_spec_options.json_filename = s_outfile;
         write_binary_spec_options.write_binary_options = s_write_binary_options;
-        result =
-            WriteBinarySpecScript(script, s_infile, &write_binary_spec_options);
+        result = WriteBinarySpecScript(script.get(), s_infile,
+                                       &write_binary_spec_options);
       } else {
         MemoryWriter writer;
         const Module* module = script->GetFirstModule();
@@ -168,7 +168,6 @@ int ProgramMain(int argc, char** argv) {
     }
   }
 
-  delete script;
   return result != Result::Ok;
 }
 
