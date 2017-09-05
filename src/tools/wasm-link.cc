@@ -171,9 +171,11 @@ static void ApplyRelocation(const Section* section, const Reloc* r) {
     case RelocType::GlobalIndexLEB:
       new_value = binary->RelocateGlobalIndex(cur_value);
       break;
-    default:
+    case RelocType::TableIndexI32:
+    case RelocType::MemoryAddressLEB:
+    case RelocType::MemoryAddressSLEB:
+    case RelocType::MemoryAddressI32:
       WABT_FATAL("unhandled relocation type: %s\n", GetRelocTypeName(r->type));
-      break;
   }
 
   WriteFixedU32Leb128Raw(section_data + r->offset, section_data + section_size,
@@ -534,7 +536,7 @@ void Linker::WriteRelocSection(BinarySection section_code,
       WriteU32Leb128Enum(&stream_, reloc.type, "reloc type");
       Offset new_offset = reloc.offset + sec->output_payload_offset;
       WriteU32Leb128(&stream_, new_offset, "reloc offset");
-      Index relocated_index;
+      Index relocated_index = 0;
       switch (reloc.type) {
         case RelocType::FuncIndexLEB:
           relocated_index = sec->binary->RelocateFuncIndex(reloc.index);
@@ -545,11 +547,13 @@ void Linker::WriteRelocSection(BinarySection section_code,
         case RelocType::GlobalIndexLEB:
           relocated_index = sec->binary->RelocateGlobalIndex(reloc.index);
           break;
-        // TODO(sbc): Handle other relocation types.
-        default:
+        case RelocType::MemoryAddressLEB:
+        case RelocType::MemoryAddressSLEB:
+        case RelocType::MemoryAddressI32:
+        case RelocType::TableIndexSLEB:
+        case RelocType::TableIndexI32:
           WABT_FATAL("Unhandled reloc type: %s\n",
                      GetRelocTypeName(reloc.type));
-          break;
       }
       WriteU32Leb128(&stream_, relocated_index, "reloc index");
     }
