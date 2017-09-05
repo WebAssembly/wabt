@@ -1072,6 +1072,16 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::I32Extend8S:
+      case Opcode::I32Extend16S:
+      case Opcode::I64Extend8S:
+      case Opcode::I64Extend16S:
+      case Opcode::I64Extend32S:
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        CALLBACK(OnUnaryExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
+        break;
+
       case Opcode::I32TruncSSatF32:
       case Opcode::I32TruncUSatF32:
       case Opcode::I32TruncSSatF64:

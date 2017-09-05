@@ -28,6 +28,7 @@ options:
   -h, --help                                  Print this help message
       --enable-exceptions                     Experimental exception handling
       --enable-saturating-float-to-int        Saturating float-to-int operators
+      --enable-threads                        Threading support
   -V, --value-stack-size=SIZE                 Size in elements of the value stack
   -C, --call-stack-size=SIZE                  Size in elements of the call stack
   -t, --trace                                 Trace execution

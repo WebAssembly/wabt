@@ -95,6 +95,13 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64TruncUSatF64:
       return features.sat_float_to_int_enabled();
 
+    case Opcode::I32Extend8S:
+    case Opcode::I32Extend16S:
+    case Opcode::I64Extend8S:
+    case Opcode::I64Extend16S:
+    case Opcode::I64Extend32S:
+      return features.threads_enabled();
+
     default:
       return true;
   }
