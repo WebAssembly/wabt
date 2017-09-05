@@ -536,7 +536,7 @@ void Linker::WriteRelocSection(BinarySection section_code,
       WriteU32Leb128Enum(&stream_, reloc.type, "reloc type");
       Offset new_offset = reloc.offset + sec->output_payload_offset;
       WriteU32Leb128(&stream_, new_offset, "reloc offset");
-      Index relocated_index;
+      Index relocated_index = 0;
       switch (reloc.type) {
         case RelocType::FuncIndexLEB:
           relocated_index = sec->binary->RelocateFuncIndex(reloc.index);
