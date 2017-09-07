@@ -18,6 +18,7 @@
 
 #include <cassert>
 #include <cctype>
+#include <cerrno>
 
 #define DUMP_OCTETS_PER_LINE 16
 #define DUMP_OCTETS_PER_GROUP 2
