@@ -174,7 +174,7 @@ class WatWriter {
   const WriteWatOptions* options_ = nullptr;
   const Module* module_ = nullptr;
   const Func* current_func_ = nullptr;
-  Stream* stream_;
+  Stream* stream_ = nullptr;
   Result result_ = Result::Ok;
   int indent_ = 0;
   NextChar next_char_ = NextChar::None;

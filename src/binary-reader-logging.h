@@ -258,9 +258,9 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   void LogTypes(Index type_count, Type* types);
   void LogTypes(TypeVector& types);
 
-  Stream* stream;
-  BinaryReaderDelegate* reader;
-  int indent;
+  Stream* stream_;
+  BinaryReaderDelegate* reader_;
+  int indent_;
 };
 
 }  // namespace wabt
