@@ -297,10 +297,12 @@ Result NameGenerator::VisitImport(Index import_index, Import* import) {
 Result NameGenerator::VisitExport(Index export_index, Export* export_) {
   BindingHash* bindings = nullptr;
   std::string* name = nullptr;
+  Index index = kInvalidIndex;
 
   switch (export_->kind) {
     case ExternalKind::Func:
       if (Func* func = module_->GetFunc(export_->var)) {
+        index = module_->GetFuncIndex(export_->var);
         bindings = &module_->func_bindings;
         name = &func->name;
       }
@@ -308,6 +310,7 @@ Result NameGenerator::VisitExport(Index export_index, Export* export_) {
 
     case ExternalKind::Table:
       if (Table* table = module_->GetTable(export_->var)) {
+        index = module_->GetTableIndex(export_->var);
         bindings = &module_->table_bindings;
         name = &table->name;
       }
@@ -315,6 +318,7 @@ Result NameGenerator::VisitExport(Index export_index, Export* export_) {
 
     case ExternalKind::Memory:
       if (Memory* memory = module_->GetMemory(export_->var)) {
+        index = module_->GetMemoryIndex(export_->var);
         bindings = &module_->memory_bindings;
         name = &memory->name;
       }
@@ -322,6 +326,7 @@ Result NameGenerator::VisitExport(Index export_index, Export* export_) {
 
     case ExternalKind::Global:
       if (Global* global = module_->GetGlobal(export_->var)) {
+        index = module_->GetGlobalIndex(export_->var);
         bindings = &module_->global_bindings;
         name = &global->name;
       }
@@ -329,6 +334,7 @@ Result NameGenerator::VisitExport(Index export_index, Export* export_) {
 
     case ExternalKind::Except:
       if (Exception* except = module_->GetExcept(export_->var)) {
+        index = module_->GetExceptIndex(export_->var);
         bindings = &module_->except_bindings;
         name = &except->name;
       }
@@ -337,7 +343,7 @@ Result NameGenerator::VisitExport(Index export_index, Export* export_) {
 
   if (bindings && name) {
     std::string new_name = '$' + export_->name;
-    MaybeUseAndBindName(bindings, new_name.c_str(), export_index, name);
+    MaybeUseAndBindName(bindings, new_name.c_str(), index, name);
   }
 
   return Result::Ok;
