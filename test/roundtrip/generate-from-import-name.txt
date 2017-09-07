@@ -1,0 +1,29 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --debug-names --generate-names
+
+(module
+  (func (import "m1" "my_func"))
+  (table (import "m2" "my_table") 1 anyfunc)
+  (memory (import "m3" "my_memory") 1)
+  (global (import "m4" "my_global") i32)
+
+  ;; Handle name collisions
+  (func (import "m5" "foo_1") (result f32))
+  (func (import "m5" "foo") (result i32))
+  (func $m5.foo (result i32)
+    (i32.const 123))
+)
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (type $t1 (func (result f32)))
+  (type $t2 (func (result i32)))
+  (import "m1" "my_func" (func $m1.my_func (type $t0)))
+  (import "m2" "my_table" (table $m2.my_table 1 anyfunc))
+  (import "m3" "my_memory" (memory $m3.my_memory 1))
+  (import "m4" "my_global" (global $m4.my_global i32))
+  (import "m5" "foo_1" (func $m5.foo_1 (type $t1)))
+  (import "m5" "foo" (func $m5.foo_2 (type $t2)))
+  (func $m5.foo (type $t2) (result i32)
+    i32.const 123))
+;;; STDOUT ;;)

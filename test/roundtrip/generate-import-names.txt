@@ -13,11 +13,11 @@
   (type $t0 (func (param i32)))
   (type $t1 (func (param f32)))
   (type $t2 (func))
-  (import "an" "import" (func $f0 (type $t0)))
-  (import "another" "import" (func $f1 (type $t1)))
+  (import "an" "import" (func $an.import (type $t0)))
+  (import "another" "import" (func $another.import (type $t1)))
   (func $f2 (type $t2)
     i32.const 0
-    call $f0
+    call $an.import
     f32.const 0x0p+0 (;=0;)
-    call $f1))
+    call $another.import))
 ;;; STDOUT ;;)
