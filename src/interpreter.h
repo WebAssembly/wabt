@@ -26,11 +26,9 @@
 #include "src/binding-hash.h"
 #include "src/common.h"
 #include "src/opcode.h"
-#include "src/writer.h"
+#include "src/stream.h"
 
 namespace wabt {
-
-class Stream;
 
 namespace interpreter {
 

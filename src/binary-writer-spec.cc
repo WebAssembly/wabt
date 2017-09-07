@@ -27,7 +27,6 @@
 #include "src/ir.h"
 #include "src/stream.h"
 #include "src/string-view.h"
-#include "src/writer.h"
 
 namespace wabt {
 
@@ -304,8 +303,8 @@ void BinaryWriterSpec::WriteActionResultType(const Script& script,
 }
 
 void BinaryWriterSpec::WriteModule(string_view filename, const Module& module) {
-  MemoryStream memory_stream;
-  result_ = WriteBinaryModule(&memory_stream.writer(), &module,
+  MemoryStream memory_stream(spec_options_->log_stream);
+  result_ = WriteBinaryModule(&memory_stream, &module,
                               &spec_options_->write_binary_options);
   if (Succeeded(result_) && write_modules_)
     result_ = memory_stream.WriteToFile(filename);

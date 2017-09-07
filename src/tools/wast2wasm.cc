@@ -34,7 +34,6 @@
 #include "src/stream.h"
 #include "src/validator.h"
 #include "src/wast-parser.h"
-#include "src/writer.h"
 
 using namespace wabt;
 
@@ -76,7 +75,6 @@ static void ParseOptions(int argc, char* argv[]) {
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
     s_log_stream = FileStream::CreateStdout();
-    s_write_binary_options.log_stream = s_log_stream.get();
   });
   parser.AddHelpOption();
   parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
@@ -149,21 +147,22 @@ int ProgramMain(int argc, char** argv) {
     if (Succeeded(result)) {
       if (s_spec) {
         WriteBinarySpecOptions write_binary_spec_options;
+        write_binary_spec_options.log_stream = s_log_stream.get();
         write_binary_spec_options.json_filename = s_outfile;
         write_binary_spec_options.write_binary_options = s_write_binary_options;
         result = WriteBinarySpecScript(script.get(), s_infile,
                                        &write_binary_spec_options);
       } else {
-        MemoryWriter writer;
+        MemoryStream stream(s_log_stream.get());
         const Module* module = script->GetFirstModule();
         if (module) {
-          result = WriteBinaryModule(&writer, module, &s_write_binary_options);
+          result = WriteBinaryModule(&stream, module, &s_write_binary_options);
         } else {
           WABT_FATAL("no module found\n");
         }
 
         if (Succeeded(result))
-          WriteBufferToFile(s_outfile, writer.output_buffer());
+          WriteBufferToFile(s_outfile, stream.output_buffer());
       }
     }
   }

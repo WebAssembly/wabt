@@ -31,7 +31,6 @@
 #include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
-#include "src/writer.h"
 
 #define WABT_TRACING 0
 #include "src/tracing.h"
@@ -91,8 +90,8 @@ struct Label {
 
 class WatWriter {
  public:
-  WatWriter(Writer* writer, const WriteWatOptions* options)
-      : options_(options), stream_(writer) {}
+  WatWriter(Stream* stream, const WriteWatOptions* options)
+      : options_(options), stream_(stream) {}
 
   Result WriteModule(const Module& module);
 
@@ -175,7 +174,7 @@ class WatWriter {
   const WriteWatOptions* options_ = nullptr;
   const Module* module_ = nullptr;
   const Func* current_func_ = nullptr;
-  Stream stream_;
+  Stream* stream_;
   Result result_ = Result::Ok;
   int indent_ = 0;
   NextChar next_char_ = NextChar::None;
@@ -208,22 +207,22 @@ void WatWriter::WriteIndent() {
   static size_t s_indent_len = sizeof(s_indent) - 1;
   size_t to_write = indent_;
   while (to_write >= s_indent_len) {
-    stream_.WriteData(s_indent, s_indent_len);
+    stream_->WriteData(s_indent, s_indent_len);
     to_write -= s_indent_len;
   }
   if (to_write > 0) {
-    stream_.WriteData(s_indent, to_write);
+    stream_->WriteData(s_indent, to_write);
   }
 }
 
 void WatWriter::WriteNextChar() {
   switch (next_char_) {
     case NextChar::Space:
-      stream_.WriteChar(' ');
+      stream_->WriteChar(' ');
       break;
     case NextChar::Newline:
     case NextChar::ForceNewline:
-      stream_.WriteChar('\n');
+      stream_->WriteChar('\n');
       WriteIndent();
       break;
     case NextChar::None:
@@ -234,7 +233,7 @@ void WatWriter::WriteNextChar() {
 
 void WatWriter::WriteDataWithNextChar(const void* src, size_t size) {
   WriteNextChar();
-  stream_.WriteData(src, size);
+  stream_->WriteData(src, size);
 }
 
 void WABT_PRINTF_FORMAT(2, 3) WatWriter::Writef(const char* format, ...) {
@@ -245,7 +244,7 @@ void WABT_PRINTF_FORMAT(2, 3) WatWriter::Writef(const char* format, ...) {
 }
 
 void WatWriter::WritePutc(char c) {
-  stream_.WriteChar(c);
+  stream_->WriteChar(c);
 }
 
 void WatWriter::WritePuts(const char* s, NextChar next_char) {
@@ -1231,10 +1230,10 @@ void WatWriter::WriteInlineExport(const Export* export_) {
 
 }  // end anonymous namespace
 
-Result WriteWat(Writer* writer,
+Result WriteWat(Stream* stream,
                 const Module* module,
                 const WriteWatOptions* options) {
-  WatWriter wat_writer(writer, options);
+  WatWriter wat_writer(stream, options);
   return wat_writer.WriteModule(*module);
 }
 

@@ -24,6 +24,7 @@
 namespace wabt {
 
 struct WriteBinarySpecOptions {
+  Stream* log_stream = nullptr;
   const char* json_filename = nullptr;
   WriteBinaryOptions write_binary_options;
 };

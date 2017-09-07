@@ -22,7 +22,6 @@
 #include "src/feature.h"
 #include "src/option-parser.h"
 #include "src/stream.h"
-#include "src/writer.h"
 #include "src/binary-reader.h"
 #include "src/binary-reader-objdump.h"
 

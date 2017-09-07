@@ -243,7 +243,6 @@ add_library(libwabt STATIC
   src/stream.cc
   src/tracing.cc
   src/utf8.cc
-  src/writer.cc
 )
 set_target_properties(libwabt PROPERTIES OUTPUT_NAME wabt)
 
