@@ -26,8 +26,8 @@
 #include "src/cast.h"
 #include "src/error-handler.h"
 #include "src/interpreter.h"
+#include "src/stream.h"
 #include "src/type-checker.h"
-#include "src/writer.h"
 
 namespace wabt {
 
@@ -265,7 +265,7 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
   std::vector<Label> label_stack;
   IstreamOffsetVectorVector func_fixups;
   IstreamOffsetVectorVector depth_fixups;
-  MemoryWriter istream_writer;
+  MemoryStream istream_;
   IstreamOffset istream_offset = 0;
   /* mappings from module index space to env index space; this won't just be a
    * translation, because imported values will be resolved as well */
@@ -295,14 +295,14 @@ BinaryReaderInterpreter::BinaryReaderInterpreter(
     : error_handler(error_handler),
       env(env),
       module(module),
-      istream_writer(std::move(istream)),
-      istream_offset(istream_writer.output_buffer().size()) {
+      istream_(std::move(istream)),
+      istream_offset(istream_.output_buffer().size()) {
   typechecker.set_error_callback(
       [this](const char* msg) { PrintError("%s", msg); });
 }
 
 std::unique_ptr<OutputBuffer> BinaryReaderInterpreter::ReleaseOutputBuffer() {
-  return istream_writer.ReleaseOutputBuffer();
+  return istream_.ReleaseOutputBuffer();
 }
 
 Label* BinaryReaderInterpreter::GetLabel(Index depth) {
@@ -374,7 +374,8 @@ IstreamOffset BinaryReaderInterpreter::GetIstreamOffset() {
 wabt::Result BinaryReaderInterpreter::EmitDataAt(IstreamOffset offset,
                                                  const void* data,
                                                  IstreamOffset size) {
-  return istream_writer.WriteData(offset, data, size);
+  istream_.WriteDataAt(offset, data, size);
+  return istream_.result();
 }
 
 wabt::Result BinaryReaderInterpreter::EmitData(const void* data,

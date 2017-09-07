@@ -23,18 +23,16 @@
 
 namespace wabt {
 
-class Writer;
 struct Module;
 struct Script;
 
 struct WriteBinaryOptions {
-  Stream* log_stream = nullptr;
   bool canonicalize_lebs = true;
   bool relocatable = false;
   bool write_debug_names = false;
 };
 
-Result WriteBinaryModule(Writer*, const Module*, const WriteBinaryOptions*);
+Result WriteBinaryModule(Stream*, const Module*, const WriteBinaryOptions*);
 
 void WriteType(Stream* stream, Type type);
 

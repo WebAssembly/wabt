@@ -32,7 +32,6 @@
 #include "src/stream.h"
 #include "src/wast-parser.h"
 #include "src/wat-writer.h"
-#include "src/writer.h"
 
 using namespace wabt;
 
@@ -104,8 +103,8 @@ int ProgramMain(int argc, char** argv) {
       result = ApplyNames(module);
 
     if (Succeeded(result)) {
-      FileWriter writer(s_outfile ? FileWriter(s_outfile) : FileWriter(stdout));
-      result = WriteWat(&writer, module, &s_write_wat_options);
+      FileStream stream(s_outfile ? FileStream(s_outfile) : FileStream(stdout));
+      result = WriteWat(&stream, module, &s_write_wat_options);
     }
   }
 

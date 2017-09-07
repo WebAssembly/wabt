@@ -25,7 +25,6 @@
 #include "src/leb128.h"
 #include "src/option-parser.h"
 #include "src/stream.h"
-#include "src/writer.h"
 #include "src/binary-reader-linker.h"
 
 #define FIRST_KNOWN_SECTION static_cast<size_t>(BinarySection::Type)

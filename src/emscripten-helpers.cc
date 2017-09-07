@@ -35,7 +35,6 @@
 #include "src/wast-lexer.h"
 #include "src/wast-parser.h"
 #include "src/wat-writer.h"
-#include "src/writer.h"
 
 struct WabtParseWastResult {
   wabt::Result result;
@@ -78,7 +77,6 @@ WabtReadBinaryResult* wabt_read_binary(
     int read_debug_names,
     wabt::ErrorHandlerBuffer* error_handler) {
   wabt::ReadBinaryOptions options;
-  options.log_stream = nullptr;
   options.read_debug_names = read_debug_names;
 
   WabtReadBinaryResult* result = new WabtReadBinaryResult();
@@ -128,18 +126,17 @@ WabtWriteModuleResult* wabt_write_binary_module(wabt::Module* module,
                                                 int canonicalize_lebs,
                                                 int relocatable,
                                                 int write_debug_names) {
-  wabt::MemoryStream stream;
+  wabt::MemoryStream log_stream;
   wabt::WriteBinaryOptions options;
-  options.log_stream = log ? &stream : nullptr;
   options.canonicalize_lebs = canonicalize_lebs;
   options.relocatable = relocatable;
   options.write_debug_names = write_debug_names;
 
-  wabt::MemoryWriter writer;
+  wabt::MemoryStream stream(log ? &log_stream : nullptr);
   WabtWriteModuleResult* result = new WabtWriteModuleResult();
-  result->result = WriteBinaryModule(&writer, module, &options);
+  result->result = WriteBinaryModule(&stream, module, &options);
   if (result->result == wabt::Result::Ok) {
-    result->buffer = writer.ReleaseOutputBuffer();
+    result->buffer = stream.ReleaseOutputBuffer();
     result->log_buffer = log ? stream.ReleaseOutputBuffer() : nullptr;
   }
   return result;
@@ -148,16 +145,15 @@ WabtWriteModuleResult* wabt_write_binary_module(wabt::Module* module,
 WabtWriteModuleResult* wabt_write_text_module(wabt::Module* module,
                                               int fold_exprs,
                                               int inline_export) {
-  wabt::MemoryStream stream;
   wabt::WriteWatOptions options;
   options.fold_exprs = fold_exprs;
   options.inline_export = inline_export;
 
-  wabt::MemoryWriter writer;
+  wabt::MemoryStream stream;
   WabtWriteModuleResult* result = new WabtWriteModuleResult();
-  result->result = WriteWat(&writer, module, &options);
+  result->result = WriteWat(&stream, module, &options);
   if (result->result == wabt::Result::Ok) {
-    result->buffer = writer.ReleaseOutputBuffer();
+    result->buffer = stream.ReleaseOutputBuffer();
   }
   return result;
 }

@@ -31,7 +31,6 @@
 #include "src/validator.h"
 #include "src/wast-lexer.h"
 #include "src/wat-writer.h"
-#include "src/writer.h"
 
 using namespace wabt;
 
@@ -125,9 +124,9 @@ int ProgramMain(int argc, char** argv) {
       }
 
       if (Succeeded(result)) {
-        FileWriter writer(!s_outfile.empty() ? FileWriter(s_outfile.c_str())
-                                             : FileWriter(stdout));
-        result = WriteWat(&writer, &module, &s_write_wat_options);
+        FileStream stream(!s_outfile.empty() ? FileStream(s_outfile.c_str())
+                                             : FileStream(stdout));
+        result = WriteWat(&stream, &module, &s_write_wat_options);
       }
     }
   }
