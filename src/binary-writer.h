@@ -36,22 +36,6 @@ struct WriteBinaryOptions {
 
 Result WriteBinaryModule(Writer*, const Module*, const WriteBinaryOptions*);
 
-/* returns the length of the leb128 */
-Offset U32Leb128Length(uint32_t value);
-
-void WriteU32Leb128(Stream* stream, uint32_t value, const char* desc);
-
-void WriteI32Leb128(Stream* stream, int32_t value, const char* desc);
-
-void WriteFixedU32Leb128(Stream* stream, uint32_t value, const char* desc);
-
-Offset WriteFixedU32Leb128At(Stream* stream,
-                             Offset offset,
-                             uint32_t value,
-                             const char* desc);
-
-Offset WriteFixedU32Leb128Raw(uint8_t* data, uint8_t* end, uint32_t value);
-
 void WriteType(Stream* stream, Type type);
 
 void WriteStr(Stream* stream,
@@ -62,17 +46,6 @@ void WriteStr(Stream* stream,
 void WriteOpcode(Stream* stream, Opcode opcode);
 
 void WriteLimits(Stream* stream, const Limits* limits);
-
-/* Convenience functions for writing enums as LEB128s. */
-template <typename T>
-void WriteU32Leb128Enum(Stream* stream, T value, const char* desc) {
-  WriteU32Leb128(stream, static_cast<uint32_t>(value), desc);
-}
-
-template <typename T>
-void WriteI32Leb128Enum(Stream* stream, T value, const char* desc) {
-  WriteI32Leb128(stream, static_cast<int32_t>(value), desc);
-}
 
 }  // namespace wabt
 

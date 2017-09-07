@@ -237,6 +237,7 @@ add_library(libwabt STATIC
   src/common.cc
   src/config.cc
   src/feature.cc
+  src/leb128.cc
   src/literal.cc
   src/option-parser.cc
   src/stream.cc

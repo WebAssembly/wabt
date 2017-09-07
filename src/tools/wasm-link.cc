@@ -22,6 +22,7 @@
 #include "src/binary-reader.h"
 #include "src/binding-hash.h"
 #include "src/binary-writer.h"
+#include "src/leb128.h"
 #include "src/option-parser.h"
 #include "src/stream.h"
 #include "src/writer.h"
@@ -318,7 +319,7 @@ void Linker::WriteElemSection(const SectionPtrVector& sections) {
   WriteU32Leb128(&stream_, 1, "segment count");
   WriteU32Leb128(&stream_, 0, "table index");
   WriteOpcode(&stream_, Opcode::I32Const);
-  WriteI32Leb128(&stream_, 0, "elem init literal");
+  WriteS32Leb128(&stream_, 0U, "elem init literal");
   WriteOpcode(&stream_, Opcode::End);
   WriteU32Leb128(&stream_, total_elem_count, "num elements");
 
@@ -494,15 +495,14 @@ void Linker::WriteLinkingSection(uint32_t data_size, uint32_t data_alignment) {
   WriteStr(&stream_, "linking", "linking section name");
 
   {
-    WriteU32Leb128Enum(&stream_, LinkingEntryType::DataSize, "subsection code");
+    WriteU32Leb128(&stream_, LinkingEntryType::DataSize, "subsection code");
     Fixup fixup_subsection = WriteUnknownSize();
     WriteU32Leb128(&stream_, data_size, "data size");
     FixupSize(fixup_subsection);
   }
 
   {
-    WriteU32Leb128Enum(&stream_, LinkingEntryType::DataAlignment,
-                       "subsection code");
+    WriteU32Leb128(&stream_, LinkingEntryType::DataAlignment, "subsection code");
     Fixup fixup_subsection = WriteUnknownSize();
     WriteU32Leb128(&stream_, data_alignment, "data alignment");
     FixupSize(fixup_subsection);
@@ -528,12 +528,12 @@ void Linker::WriteRelocSection(BinarySection section_code,
   stream_.WriteU8Enum(BinarySection::Custom, "section code");
   Fixup fixup = WriteUnknownSize();
   WriteStr(&stream_, section_name, "reloc section name");
-  WriteU32Leb128Enum(&stream_, section_code, "reloc section");
+  WriteU32Leb128(&stream_, section_code, "reloc section");
   WriteU32Leb128(&stream_, total_relocs, "num relocs");
 
   for (Section* sec: sections) {
     for (const Reloc& reloc: sec->relocations) {
-      WriteU32Leb128Enum(&stream_, reloc.type, "reloc type");
+      WriteU32Leb128(&stream_, reloc.type, "reloc type");
       Offset new_offset = reloc.offset + sec->output_payload_offset;
       WriteU32Leb128(&stream_, new_offset, "reloc offset");
       Index relocated_index = 0;
