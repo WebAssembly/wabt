@@ -1,0 +1,43 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --fold-exprs --generate-names
+(module
+  (import "a" "b" (func (param i32) (result i32)))
+
+  (func (export "c") (param i64) (result i32)
+    get_local 0
+    i32.wrap/i64)
+
+  ;; Make sure that calls are folded properly when referencing generated names
+  ;; (there was a bug here).
+
+  (func (result i32)
+    i32.const 1
+    call 0
+    i32.const 2
+    call 0
+    i32.add
+
+    i64.const 3
+    call 1
+    drop))
+
+(;; STDOUT ;;;
+(module
+  (type $t0 (func (param i32) (result i32)))
+  (type $t1 (func (param i64) (result i32)))
+  (type $t2 (func (result i32)))
+  (import "a" "b" (func $a.b (type $t0)))
+  (func $c (type $t1) (param $p0 i64) (result i32)
+    (i32.wrap/i64
+      (get_local $p0)))
+  (func $f2 (type $t2) (result i32)
+    (i32.add
+      (call $a.b
+        (i32.const 1))
+      (call $a.b
+        (i32.const 2)))
+    (drop
+      (call $c
+        (i64.const 3))))
+  (export "c" (func $c)))
+;;; STDOUT ;;)

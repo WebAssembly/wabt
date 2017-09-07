@@ -1,0 +1,25 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --debug-names --generate-names
+
+;; The name generator should choose a different name if it already exists. This
+;; can only be tested for funcs/locals, since no other names are roundtrippable
+;; yet.
+
+(module
+  ;; Test func
+  (func)
+  (func $f0)
+
+  ;; Test local
+  (func
+    (local i32)
+    (local $l0 i32))
+)
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0_1 (type $t0))
+  (func $f0 (type $t0))
+  (func $f2 (type $t0)
+    (local $l0_1 i32) (local $l0 i32)))
+;;; STDOUT ;;)
