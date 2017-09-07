@@ -42,21 +42,41 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 
  private:
   static bool HasName(const std::string& str);
+
+  // Generate a name with the given prefix, followed by the index and
+  // optionally a disambiguating number. If index == kInvalidIndex, the index
+  // is not appended.
   static void GenerateName(const char* prefix,
                            Index index,
                            unsigned disambiguator,
                            std::string* out_str);
+
+  // Like GenerateName, but only generates a name if |out_str| is empty.
   static void MaybeGenerateName(const char* prefix,
                                 Index index,
                                 std::string* out_str);
+
+  // Generate a name via GenerateName and bind it to the given binding hash. If
+  // the name already exists, the name will be disambiguated until it can be
+  // added.
   static void GenerateAndBindName(BindingHash* bindings,
                                   const char* prefix,
                                   Index index,
                                   std::string* out_str);
+
+  // Like GenerateAndBindName, but only  generates a name if |out_str| is empty.
   static void MaybeGenerateAndBindName(BindingHash* bindings,
                                        const char* prefix,
                                        Index index,
                                        std::string* out_str);
+
+  // Like MaybeGenerateAndBindName but uses the name directly, without
+  // appending the index. If the name already exists, a disambiguating suffix
+  // is added.
+  static void MaybeUseAndBindName(BindingHash* bindings,
+                                  const char* name,
+                                  Index index,
+                                  std::string* out_str);
 
   void GenerateAndBindLocalNames(BindingHash* bindings, const char* prefix);
   Result VisitFunc(Index func_index, Func* func);
@@ -128,6 +148,25 @@ void NameGenerator::MaybeGenerateAndBindName(BindingHash* bindings,
                                              std::string* str) {
   if (!HasName(*str))
     GenerateAndBindName(bindings, prefix, index, str);
+}
+
+// static
+void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
+                                        const char* name,
+                                        Index index,
+                                        std::string* str) {
+  if (!HasName(*str)) {
+    unsigned disambiguator = 0;
+    while (true) {
+      GenerateName(name, kInvalidIndex, disambiguator, str);
+      if (bindings->find(*str) == bindings->end()) {
+        bindings->emplace(*str, Binding(index));
+        break;
+      }
+
+      disambiguator++;
+    }
+  }
 }
 
 void NameGenerator::GenerateAndBindLocalNames(BindingHash* bindings,
@@ -249,7 +288,7 @@ Result NameGenerator::VisitImport(Index import_index, Import* import) {
 
   if (bindings && name) {
     std::string new_name = '$' + import->module_name + '.' + import->field_name;
-    MaybeGenerateAndBindName(bindings, new_name.c_str(), kInvalidIndex, name);
+    MaybeUseAndBindName(bindings, new_name.c_str(), import_index, name);
   }
 
   return Result::Ok;
@@ -298,7 +337,7 @@ Result NameGenerator::VisitExport(Index export_index, Export* export_) {
 
   if (bindings && name) {
     std::string new_name = '$' + export_->name;
-    MaybeGenerateAndBindName(bindings, new_name.c_str(), kInvalidIndex, name);
+    MaybeUseAndBindName(bindings, new_name.c_str(), export_index, name);
   }
 
   return Result::Ok;
