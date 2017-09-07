@@ -214,14 +214,6 @@ void Thread::CopyResults(const FuncSignature* sig,
     out_results->emplace_back(sig->result_types[i], value_stack_[i]);
 }
 
-template <typename Dst, typename Src>
-Dst Bitcast(Src value) {
-  static_assert(sizeof(Src) == sizeof(Dst), "Bitcast sizes must match.");
-  Dst result;
-  memcpy(&result, &value, sizeof(result));
-  return result;
-}
-
 uint32_t ToRep(bool x) { return x ? 1 : 0; }
 uint32_t ToRep(uint32_t x) { return x; }
 uint64_t ToRep(uint64_t x) { return x; }
