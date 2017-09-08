@@ -208,19 +208,19 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result AppendExpr(std::unique_ptr<Expr> expr);
   Result AppendCatch(Catch&& catch_);
 
-  ErrorHandler* error_handler = nullptr;
-  Module* module = nullptr;
+  ErrorHandler* error_handler_ = nullptr;
+  Module* module_ = nullptr;
 
-  Func* current_func = nullptr;
-  std::vector<LabelNode> label_stack;
-  ExprList* current_init_expr = nullptr;
+  Func* current_func_ = nullptr;
+  std::vector<LabelNode> label_stack_;
+  ExprList* current_init_expr_ = nullptr;
   const char* filename_;
 };
 
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
                                const char* filename,
                                ErrorHandler* error_handler)
-    : error_handler(error_handler), module(out_module), filename_(filename) {}
+    : error_handler_(error_handler), module_(out_module), filename_(filename) {}
 
 Location BinaryReaderIR::GetLocation() const {
   Location loc;
@@ -238,27 +238,27 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReaderIR::PrintError(const char* format,
 void BinaryReaderIR::PushLabel(LabelType label_type,
                                ExprList* first,
                                Expr* context) {
-  label_stack.emplace_back(label_type, first, context);
+  label_stack_.emplace_back(label_type, first, context);
 }
 
 Result BinaryReaderIR::PopLabel() {
-  if (label_stack.size() == 0) {
+  if (label_stack_.size() == 0) {
     PrintError("popping empty label stack");
     return Result::Error;
   }
 
-  label_stack.pop_back();
+  label_stack_.pop_back();
   return Result::Ok;
 }
 
 Result BinaryReaderIR::GetLabelAt(LabelNode** label, Index depth) {
-  if (depth >= label_stack.size()) {
+  if (depth >= label_stack_.size()) {
     PrintError("accessing stack depth: %" PRIindex " >= max: %" PRIzd, depth,
-               label_stack.size());
+               label_stack_.size());
     return Result::Error;
   }
 
-  *label = &label_stack[label_stack.size() - depth - 1];
+  *label = &label_stack_[label_stack_.size() - depth - 1];
   return Result::Ok;
 }
 
@@ -274,7 +274,7 @@ Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
 }
 
 bool BinaryReaderIR::HandleError(Offset offset, const char* message) {
-  return error_handler->OnError(offset, message);
+  return error_handler_->OnError(offset, message);
 }
 
 bool BinaryReaderIR::OnError(const char* message) {
@@ -282,7 +282,7 @@ bool BinaryReaderIR::OnError(const char* message) {
 }
 
 Result BinaryReaderIR::OnTypeCount(Index count) {
-  module->func_types.reserve(count);
+  module_->func_types.reserve(count);
   return Result::Ok;
 }
 
@@ -295,12 +295,12 @@ Result BinaryReaderIR::OnType(Index index,
   FuncType& func_type = field->func_type;
   func_type.sig.param_types.assign(param_types, param_types + param_count);
   func_type.sig.result_types.assign(result_types, result_types + result_count);
-  module->AppendField(std::move(field));
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnImportCount(Index count) {
-  module->imports.reserve(count);
+  module_->imports.reserve(count);
   return Result::Ok;
 }
 
@@ -314,8 +314,8 @@ Result BinaryReaderIR::OnImportFunc(Index import_index,
   import->field_name = field_name.to_string();
   import->func.decl.has_func_type = true;
   import->func.decl.type_var = Var(sig_index, GetLocation());
-  import->func.decl.sig = module->func_types[sig_index]->sig;
-  module->AppendField(
+  import->func.decl.sig = module_->func_types[sig_index]->sig;
+  module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
 }
@@ -330,7 +330,7 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
   import->table.elem_limits = *elem_limits;
-  module->AppendField(
+  module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
 }
@@ -344,7 +344,7 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
   import->memory.page_limits = *page_limits;
-  module->AppendField(
+  module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
 }
@@ -360,7 +360,7 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   import->field_name = field_name.to_string();
   import->global.type = type;
   import->global.mutable_ = mutable_;
-  module->AppendField(
+  module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
 }
@@ -374,13 +374,13 @@ Result BinaryReaderIR::OnImportException(Index import_index,
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
   import->except.sig = sig;
-  module->AppendField(
+  module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnFunctionCount(Index count) {
-  module->funcs.reserve(module->num_func_imports + count);
+  module_->funcs.reserve(module_->num_func_imports + count);
   return Result::Ok;
 }
 
@@ -389,13 +389,13 @@ Result BinaryReaderIR::OnFunction(Index index, Index sig_index) {
   Func& func = field->func;
   func.decl.has_func_type = true;
   func.decl.type_var = Var(sig_index, GetLocation());
-  func.decl.sig = module->func_types[sig_index]->sig;
-  module->AppendField(std::move(field));
+  func.decl.sig = module_->func_types[sig_index]->sig;
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnTableCount(Index count) {
-  module->tables.reserve(module->num_table_imports + count);
+  module_->tables.reserve(module_->num_table_imports + count);
   return Result::Ok;
 }
 
@@ -405,12 +405,12 @@ Result BinaryReaderIR::OnTable(Index index,
   auto field = MakeUnique<TableModuleField>(GetLocation());
   Table& table = field->table;
   table.elem_limits = *elem_limits;
-  module->AppendField(std::move(field));
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnMemoryCount(Index count) {
-  module->memories.reserve(module->num_memory_imports + count);
+  module_->memories.reserve(module_->num_memory_imports + count);
   return Result::Ok;
 }
 
@@ -418,12 +418,12 @@ Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
   auto field = MakeUnique<MemoryModuleField>(GetLocation());
   Memory& memory = field->memory;
   memory.page_limits = *page_limits;
-  module->AppendField(std::move(field));
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnGlobalCount(Index count) {
-  module->globals.reserve(module->num_global_imports + count);
+  module_->globals.reserve(module_->num_global_imports + count);
   return Result::Ok;
 }
 
@@ -432,24 +432,24 @@ Result BinaryReaderIR::BeginGlobal(Index index, Type type, bool mutable_) {
   Global& global = field->global;
   global.type = type;
   global.mutable_ = mutable_;
-  module->AppendField(std::move(field));
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::BeginGlobalInitExpr(Index index) {
-  assert(index == module->globals.size() - 1);
-  Global* global = module->globals[index];
-  current_init_expr = &global->init_expr;
+  assert(index == module_->globals.size() - 1);
+  Global* global = module_->globals[index];
+  current_init_expr_ = &global->init_expr;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::EndGlobalInitExpr(Index index) {
-  current_init_expr = nullptr;
+  current_init_expr_ = nullptr;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnExportCount(Index count) {
-  module->exports.reserve(count);
+  module_->exports.reserve(count);
   return Result::Ok;
 }
 
@@ -462,16 +462,16 @@ Result BinaryReaderIR::OnExport(Index index,
   export_.name = name.to_string();
   switch (kind) {
     case ExternalKind::Func:
-      assert(item_index < module->funcs.size());
+      assert(item_index < module_->funcs.size());
       break;
     case ExternalKind::Table:
-      assert(item_index < module->tables.size());
+      assert(item_index < module_->tables.size());
       break;
     case ExternalKind::Memory:
-      assert(item_index < module->memories.size());
+      assert(item_index < module_->memories.size());
       break;
     case ExternalKind::Global:
-      assert(item_index < module->globals.size());
+      assert(item_index < module_->globals.size());
       break;
     case ExternalKind::Except:
       // Note: Can't check if index valid, exceptions section comes later.
@@ -479,30 +479,30 @@ Result BinaryReaderIR::OnExport(Index index,
   }
   export_.var = Var(item_index, GetLocation());
   export_.kind = kind;
-  module->AppendField(std::move(field));
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnStartFunction(Index func_index) {
-  assert(func_index < module->funcs.size());
+  assert(func_index < module_->funcs.size());
   Var start(func_index, GetLocation());
-  module->AppendField(MakeUnique<StartModuleField>(start, GetLocation()));
+  module_->AppendField(MakeUnique<StartModuleField>(start, GetLocation()));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
-  assert(module->num_func_imports + count == module->funcs.size());
+  assert(module_->num_func_imports + count == module_->funcs.size());
   return Result::Ok;
 }
 
 Result BinaryReaderIR::BeginFunctionBody(Index index) {
-  current_func = module->funcs[index];
-  PushLabel(LabelType::Func, &current_func->exprs);
+  current_func_ = module_->funcs[index];
+  PushLabel(LabelType::Func, &current_func_->exprs);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
-  TypeVector& types = current_func->local_types;
+  TypeVector& types = current_func_->local_types;
   types.reserve(types.size() + count);
   for (size_t i = 0; i < count; ++i)
     types.push_back(type);
@@ -543,12 +543,12 @@ Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
 }
 
 Result BinaryReaderIR::OnCallExpr(Index func_index) {
-  assert(func_index < module->funcs.size());
+  assert(func_index < module_->funcs.size());
   return AppendExpr(MakeUnique<CallExpr>(Var(func_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index) {
-  assert(sig_index < module->func_types.size());
+  assert(sig_index < module_->func_types.size());
   return AppendExpr(
       MakeUnique<CallIndirectExpr>(Var(sig_index, GetLocation())));
 }
@@ -727,12 +727,12 @@ Result BinaryReaderIR::OnUnreachableExpr() {
 
 Result BinaryReaderIR::EndFunctionBody(Index index) {
   CHECK_RESULT(PopLabel());
-  current_func = nullptr;
+  current_func_ = nullptr;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnElemSegmentCount(Index count) {
-  module->elem_segments.reserve(count);
+  module_->elem_segments.reserve(count);
   return Result::Ok;
 }
 
@@ -740,34 +740,34 @@ Result BinaryReaderIR::BeginElemSegment(Index index, Index table_index) {
   auto field = MakeUnique<ElemSegmentModuleField>(GetLocation());
   ElemSegment& elem_segment = field->elem_segment;
   elem_segment.table_var = Var(table_index, GetLocation());
-  module->AppendField(std::move(field));
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::BeginElemSegmentInitExpr(Index index) {
-  assert(index == module->elem_segments.size() - 1);
-  ElemSegment* segment = module->elem_segments[index];
-  current_init_expr = &segment->offset;
+  assert(index == module_->elem_segments.size() - 1);
+  ElemSegment* segment = module_->elem_segments[index];
+  current_init_expr_ = &segment->offset;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::EndElemSegmentInitExpr(Index index) {
-  current_init_expr = nullptr;
+  current_init_expr_ = nullptr;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnElemSegmentFunctionIndexCount(Index index,
                                                        Index count) {
-  assert(index == module->elem_segments.size() - 1);
-  ElemSegment* segment = module->elem_segments[index];
+  assert(index == module_->elem_segments.size() - 1);
+  ElemSegment* segment = module_->elem_segments[index];
   segment->vars.reserve(count);
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnElemSegmentFunctionIndex(Index segment_index,
                                                   Index func_index) {
-  assert(segment_index == module->elem_segments.size() - 1);
-  ElemSegment* segment = module->elem_segments[segment_index];
+  assert(segment_index == module_->elem_segments.size() - 1);
+  ElemSegment* segment = module_->elem_segments[segment_index];
   segment->vars.emplace_back();
   Var* var = &segment->vars.back();
   *var = Var(func_index, GetLocation());
@@ -775,7 +775,7 @@ Result BinaryReaderIR::OnElemSegmentFunctionIndex(Index segment_index,
 }
 
 Result BinaryReaderIR::OnDataSegmentCount(Index count) {
-  module->data_segments.reserve(count);
+  module_->data_segments.reserve(count);
   return Result::Ok;
 }
 
@@ -783,27 +783,27 @@ Result BinaryReaderIR::BeginDataSegment(Index index, Index memory_index) {
   auto field = MakeUnique<DataSegmentModuleField>(GetLocation());
   DataSegment& data_segment = field->data_segment;
   data_segment.memory_var = Var(memory_index, GetLocation());
-  module->AppendField(std::move(field));
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::BeginDataSegmentInitExpr(Index index) {
-  assert(index == module->data_segments.size() - 1);
-  DataSegment* segment = module->data_segments[index];
-  current_init_expr = &segment->offset;
+  assert(index == module_->data_segments.size() - 1);
+  DataSegment* segment = module_->data_segments[index];
+  current_init_expr_ = &segment->offset;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::EndDataSegmentInitExpr(Index index) {
-  current_init_expr = nullptr;
+  current_init_expr_ = nullptr;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnDataSegmentData(Index index,
                                          const void* data,
                                          Address size) {
-  assert(index == module->data_segments.size() - 1);
-  DataSegment* segment = module->data_segments[index];
+  assert(index == module_->data_segments.size() - 1);
+  DataSegment* segment = module_->data_segments[index];
   segment->data.resize(size);
   if (size > 0)
     memcpy(segment->data.data(), data, size);
@@ -811,10 +811,10 @@ Result BinaryReaderIR::OnDataSegmentData(Index index,
 }
 
 Result BinaryReaderIR::OnFunctionNamesCount(Index count) {
-  if (count > module->funcs.size()) {
+  if (count > module_->funcs.size()) {
     PrintError("expected function name count (%" PRIindex
                ") <= function count (%" PRIzd ")",
-               count, module->funcs.size());
+               count, module_->funcs.size());
     return Result::Error;
   }
   return Result::Ok;
@@ -824,21 +824,21 @@ Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
   if (name.empty())
     return Result::Ok;
 
-  Func* func = module->funcs[index];
+  Func* func = module_->funcs[index];
   std::string dollar_name = std::string("$") + name.to_string();
   int counter = 1;
   std::string orig_name = dollar_name;
-  while (module->func_bindings.count(dollar_name) != 0) {
+  while (module_->func_bindings.count(dollar_name) != 0) {
     dollar_name = orig_name + "." + std::to_string(counter++);
   }
   func->name = dollar_name;
-  module->func_bindings.emplace(dollar_name, Binding(index));
+  module_->func_bindings.emplace(dollar_name, Binding(index));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
-  assert(index < module->funcs.size());
-  Func* func = module->funcs[index];
+  assert(index < module_->funcs.size());
+  Func* func = module_->funcs[index];
   Index num_params_and_locals = func->GetNumParamsAndLocals();
   if (count > num_params_and_locals) {
     PrintError("expected local name count (%" PRIindex
@@ -851,14 +851,14 @@ Result BinaryReaderIR::OnLocalNameLocalCount(Index index, Index count) {
 
 Result BinaryReaderIR::OnInitExprF32ConstExpr(Index index, uint32_t value) {
   Location loc = GetLocation();
-  current_init_expr->push_back(
+  current_init_expr_->push_back(
       MakeUnique<ConstExpr>(Const::F32(value, loc), loc));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprF64ConstExpr(Index index, uint64_t value) {
   Location loc = GetLocation();
-  current_init_expr->push_back(
+  current_init_expr_->push_back(
       MakeUnique<ConstExpr>(Const::F64(value, loc), loc));
   return Result::Ok;
 }
@@ -866,21 +866,21 @@ Result BinaryReaderIR::OnInitExprF64ConstExpr(Index index, uint64_t value) {
 Result BinaryReaderIR::OnInitExprGetGlobalExpr(Index index,
                                                Index global_index) {
   Location loc = GetLocation();
-  current_init_expr->push_back(
+  current_init_expr_->push_back(
       MakeUnique<GetGlobalExpr>(Var(global_index, loc), loc));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprI32ConstExpr(Index index, uint32_t value) {
   Location loc = GetLocation();
-  current_init_expr->push_back(
+  current_init_expr_->push_back(
       MakeUnique<ConstExpr>(Const::I32(value, loc), loc));
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
   Location loc = GetLocation();
-  current_init_expr->push_back(
+  current_init_expr_->push_back(
       MakeUnique<ConstExpr>(Const::I64(value, loc), loc));
   return Result::Ok;
 }
@@ -891,7 +891,7 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   if (name.empty())
     return Result::Ok;
 
-  Func* func = module->funcs[func_index];
+  Func* func = module_->funcs[func_index];
   Index num_params = func->GetNumParams();
   BindingHash* bindings;
   Index index;
@@ -912,7 +912,7 @@ Result BinaryReaderIR::OnExceptionType(Index index, TypeVector& sig) {
   auto field = MakeUnique<ExceptionModuleField>(GetLocation());
   Exception& except = field->except;
   except.sig = sig;
-  module->AppendField(std::move(field));
+  module_->AppendField(std::move(field));
   return Result::Ok;
 }
 
