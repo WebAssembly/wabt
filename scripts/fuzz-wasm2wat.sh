@@ -21,4 +21,4 @@ set -o errexit
 SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
 
-${FUZZ_BIN_DIR}/afl-fuzz -i fuzz-in/wasm/ -o fuzz-out -- out/gcc-fuzz/Debug/wasm2wast @@
+${FUZZ_BIN_DIR}/afl-fuzz -i fuzz-in/wasm/ -o fuzz-out -- out/gcc-fuzz/Debug/wasm2wat @@

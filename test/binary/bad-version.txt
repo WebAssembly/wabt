@@ -3,7 +3,7 @@
 magic
 0xe 0 0 0
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000008: error: bad wasm file version: 0xe (expected 0x1)
 
 ;;; STDERR ;;)

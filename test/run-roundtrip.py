@@ -57,7 +57,7 @@ def FilesAreEqual(filename1, filename2, verbose=False):
   return (OK, '')
 
 
-def TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename, verbose):
+def TwoRoundtrips(wast2wasm, wasm2wat, out_dir, filename, verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm1_file = os.path.join(out_dir, basename_noext + '-1.wasm')
@@ -70,14 +70,14 @@ def TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename, verbose):
     # test)
     return (SKIPPED, None)
   try:
-    wasm2wast.RunWithArgs('-o', wast2_file, wasm1_file)
+    wasm2wat.RunWithArgs('-o', wast2_file, wasm1_file)
     wast2wasm.RunWithArgs('-o', wasm3_file, wast2_file)
   except Error as e:
     return (ERROR, str(e))
   return FilesAreEqual(wasm1_file, wasm3_file, verbose)
 
 
-def OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir, filename, verbose):
+def OneRoundtripToStdout(wast2wasm, wasm2wat, out_dir, filename, verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm_file = os.path.join(out_dir, basename_noext + '.wasm')
@@ -88,7 +88,7 @@ def OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir, filename, verbose):
     # test)
     return (SKIPPED, None)
   try:
-    wasm2wast.RunWithArgs(wasm_file)
+    wasm2wat.RunWithArgs(wasm_file)
   except Error as e:
     return (ERROR, str(e))
   return (OK, '')
@@ -130,10 +130,10 @@ def main(args):
       '--no-check': options.no_check,
   })
 
-  wasm2wast = utils.Executable(
-      find_exe.GetWasm2WastExecutable(options.bindir),
+  wasm2wat = utils.Executable(
+      find_exe.GetWasm2WatExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wasm2wast.AppendOptionalArgs({
+  wasm2wat.AppendOptionalArgs({
       '--fold-exprs': options.fold_exprs,
       '--enable-exceptions': options.enable_exceptions,
       '--inline-exports': options.inline_exports,
@@ -143,7 +143,7 @@ def main(args):
   })
 
   wast2wasm.verbose = options.print_cmd
-  wasm2wast.verbose = options.print_cmd
+  wasm2wat.verbose = options.print_cmd
 
   filename = options.file
   if not os.path.exists(filename):
@@ -152,10 +152,10 @@ def main(args):
 
   with utils.TempDirectory(options.out_dir, 'roundtrip-') as out_dir:
     if options.stdout:
-      result, msg = OneRoundtripToStdout(wast2wasm, wasm2wast, out_dir,
+      result, msg = OneRoundtripToStdout(wast2wasm, wasm2wat, out_dir,
                                          filename, options.verbose)
     else:
-      result, msg = TwoRoundtrips(wast2wasm, wasm2wast, out_dir, filename,
+      result, msg = TwoRoundtrips(wast2wasm, wasm2wat, out_dir, filename,
                                   options.verbose)
     if result == ERROR:
       sys.stderr.write(msg)

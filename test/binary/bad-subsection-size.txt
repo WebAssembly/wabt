@@ -19,7 +19,7 @@ section("name") {
   str("$F0")
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000027: error: unable to read u32 leb128: function index
 
 ;;; STDERR ;;)

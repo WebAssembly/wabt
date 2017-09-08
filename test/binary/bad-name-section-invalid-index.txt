@@ -19,7 +19,7 @@ section("name") {
   str("$F0")
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000028: error: invalid function index: 8
 
 ;;; STDERR ;;)

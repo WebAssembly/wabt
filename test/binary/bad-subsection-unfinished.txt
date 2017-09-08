@@ -23,7 +23,7 @@ section("name") {
   data[1]
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 000002c: error: unfinished sub-section (expected end: 0x30)
 
 ;;; STDERR ;;)

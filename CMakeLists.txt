@@ -275,8 +275,8 @@ if (NOT EMSCRIPTEN)
   # wast2wasm
   wabt_executable(wast2wasm src/tools/wast2wasm.cc)
 
-  # wasm2wast
-  wabt_executable(wasm2wast src/tools/wasm2wast.cc)
+  # wasm2wat
+  wabt_executable(wasm2wat src/tools/wasm2wat.cc)
 
   # wasm-opcodecnt
   wabt_executable(wasm-opcodecnt
