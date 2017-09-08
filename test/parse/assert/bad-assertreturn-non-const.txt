@@ -1,5 +1,5 @@
+;;; TOOL: wast2json
 ;;; ERROR: 1
-;;; FLAGS: --spec
 (module
   (func $bar (param f32) (result f32) 
     get_local 0)

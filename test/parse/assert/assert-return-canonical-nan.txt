@@ -1,4 +1,4 @@
-;;; FLAGS: --spec
+;;; TOOL: wast2json
 (module
   (func $foo (param f32) (result f32)
     get_local 0

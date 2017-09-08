@@ -272,8 +272,11 @@ if (NOT EMSCRIPTEN)
     )
   endfunction()
 
-  # wast2wasm
-  wabt_executable(wast2wasm src/tools/wast2wasm.cc)
+  # wat2wasm
+  wabt_executable(wat2wasm src/tools/wat2wasm.cc)
+
+  # wast2json
+  wabt_executable(wast2json src/tools/wast2json.cc)
 
   # wasm2wat
   wabt_executable(wasm2wat src/tools/wasm2wat.cc)

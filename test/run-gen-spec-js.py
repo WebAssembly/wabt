@@ -54,14 +54,14 @@ def main(args):
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',
                       action='store_true')
-  parser.add_argument('file', help='wast file.')
+  parser.add_argument('file', help='wat file.')
   options = parser.parse_args(args)
 
   with utils.TempDirectory(options.out_dir, 'run-gen-spec-js-') as out_dir:
-    wast2wasm = utils.Executable(
-        find_exe.GetWast2WasmExecutable(options.bindir), '--spec',
+    wast2json = utils.Executable(
+        find_exe.GetWast2JsonExecutable(options.bindir),
         error_cmdline=options.error_cmdline)
-    wast2wasm.AppendOptionalArgs({'-v': options.verbose})
+    wast2json.AppendOptionalArgs({'-v': options.verbose})
 
     gen_spec_js = utils.Executable(sys.executable, GEN_SPEC_JS_PY,
                                    '--temp-dir', out_dir,
@@ -75,7 +75,7 @@ def main(args):
     json_file = utils.ChangeDir(
         utils.ChangeExt(options.file, '.json'), out_dir)
     js_file = utils.ChangeExt(json_file, '.js')
-    wast2wasm.RunWithArgs(options.file, '-o', json_file)
+    wast2json.RunWithArgs(options.file, '-o', json_file)
 
     if options.js_engine:
       gen_spec_js.RunWithArgs(json_file, '-o', js_file)

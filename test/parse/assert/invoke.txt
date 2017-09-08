@@ -1,4 +1,4 @@
-;;; FLAGS: --spec
+;;; TOOL: wast2json
 (module
   (export "test" (func $test))
   (func $test (param i32) (result i32)

@@ -53,10 +53,10 @@ def main(args):
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.bindir),
+  wast2json = utils.Executable(
+      find_exe.GetWast2JsonExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wast2wasm.AppendOptionalArgs({
+  wast2json.AppendOptionalArgs({
       '--debug-names': options.debug_names,
       '-v': options.dump_verbose,
   })
@@ -76,7 +76,7 @@ def main(args):
   wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
       options.bindir), error_cmdline=options.error_cmdline)
 
-  wast2wasm.verbose = options.print_cmd
+  wast2json.verbose = options.print_cmd
   wasm_link.verbose = options.print_cmd
   wasm_objdump.verbose = options.print_cmd
   wasm_interp.verbose = options.print_cmd
@@ -87,7 +87,7 @@ def main(args):
     basename = os.path.basename(filename)
     basename_noext = os.path.splitext(basename)[0]
     out_file = os.path.join(out_dir, basename_noext + '.json')
-    wast2wasm.RunWithArgs('--spec', '--debug-names', '--no-check', '-r', '-o',
+    wast2json.RunWithArgs('--debug-names', '--no-check', '-r', '-o',
                           out_file, filename)
 
     wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)

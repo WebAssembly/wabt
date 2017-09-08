@@ -44,7 +44,6 @@ def main(args):
                       action='store_true')
   parser.add_argument('--headers', action='store_true')
   parser.add_argument('--no-check', action='store_true')
-  parser.add_argument('-c', '--compile-only', action='store_true')
   parser.add_argument('--dump-verbose', action='store_true')
   parser.add_argument('--dump-debug', action='store_true')
   parser.add_argument('--enable-exceptions', action='store_true')
@@ -65,10 +64,17 @@ def main(args):
   gen_wasm = utils.Executable(sys.executable, GEN_WASM_PY,
                               error_cmdline=options.error_cmdline)
 
-  wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.bindir),
-      error_cmdline=options.error_cmdline)
-  wast2wasm.AppendOptionalArgs({
+  wat_tool = None
+  if options.spec:
+    wat_tool = utils.Executable(
+        find_exe.GetWast2JsonExecutable(options.bindir),
+        error_cmdline=options.error_cmdline)
+  else:
+    wat_tool = utils.Executable(
+        find_exe.GetWat2WasmExecutable(options.bindir),
+        error_cmdline=options.error_cmdline)
+
+  wat_tool.AppendOptionalArgs({
       '--debug-names': options.debug_names,
       '--enable-exceptions': options.enable_exceptions,
       '--enable-saturating-float-to-int':
@@ -76,10 +82,8 @@ def main(args):
       '--enable-threads': options.enable_threads,
       '--no-check': options.no_check,
       '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
-      '--spec': options.spec,
       '-v': options.verbose,
       '-r': options.relocatable,
-      '-c': options.compile_only,
   })
 
   wasm_objdump = utils.Executable(
@@ -96,7 +100,7 @@ def main(args):
   })
 
   gen_wasm.verbose = options.print_cmd
-  wast2wasm.verbose = options.print_cmd
+  wat_tool.verbose = options.print_cmd
   wasm_objdump.verbose = options.print_cmd
 
   filename = options.file
@@ -112,7 +116,7 @@ def main(args):
         out_file = os.path.join(out_dir, basename_noext + '.json')
       else:
         out_file = os.path.join(out_dir, basename_noext + '.wasm')
-      wast2wasm.RunWithArgs('-o', out_file, filename)
+      wat_tool.RunWithArgs('-o', out_file, filename)
 
     if options.spec:
       wasm_files = utils.GetModuleFilenamesFromSpecJSON(out_file)

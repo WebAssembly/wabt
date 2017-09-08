@@ -476,7 +476,7 @@ struct Action {
 };
 
 // An extremely simple JSON parser that only knows how to parse the expected
-// format from wast2wasm.
+// format from wat2wasm.
 class SpecJSONParser {
  public:
   SpecJSONParser() : thread_(&env_, s_thread_options) {}

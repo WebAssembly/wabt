@@ -46,10 +46,10 @@ def main(args):
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.bindir),
+  wat2wasm = utils.Executable(
+      find_exe.GetWat2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wast2wasm.AppendOptionalArgs({
+  wat2wasm.AppendOptionalArgs({
       '-v': options.verbose,
   })
 
@@ -57,12 +57,12 @@ def main(args):
       find_exe.GetWasmOpcodeCntExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
-  wast2wasm.verbose = options.print_cmd
+  wat2wasm.verbose = options.print_cmd
   wasm_opcodecnt.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-opcodecnt-') as out_dir:
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, '.wasm'), out_dir)
-    wast2wasm.RunWithArgs(options.file, '-o', out_file)
+    wat2wasm.RunWithArgs(options.file, '-o', out_file)
     wasm_opcodecnt.RunWithArgs(out_file, '-c', str(options.cutoff))
 
   return 0
