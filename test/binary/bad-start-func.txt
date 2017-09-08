@@ -6,7 +6,7 @@ section(TYPE) { count[1] function params[0] results[0] }
 section(FUNCTION) { count[1] sig[0] }
 section(START) { func[1] }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000015: error: invalid start function index: 1
 
 ;;; STDERR ;;)

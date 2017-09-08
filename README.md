@@ -5,7 +5,7 @@
 WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
 
  - **wast2wasm**: translate from [WebAssembly text format](http://webassembly.github.io/spec/text/index.html) to the [WebAssembly binary format](http://webassembly.github.io/spec/binary/index.html)
- - **wasm2wast**: the inverse of wast2wasm, translate from the binary format back to the text format (also known as a .wast)
+ - **wasm2wat**: the inverse of wast2wasm, translate from the binary format back to the text format (also known as a .wat)
  - **wasm-objdump**: print information about a wasm binary. Similiar to objdump.
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
  - **wast-desugar**: parse .wast text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and print "canonical" flat format
@@ -26,7 +26,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 
 - [index](https://cdn.rawgit.com/WebAssembly/wabt/7e56ca56/demo/index.html)
 - [wast2wasm](https://cdn.rawgit.com/WebAssembly/wabt/7e56ca56/demo/wast2wasm/)
-- [wasm2wast](https://cdn.rawgit.com/WebAssembly/wabt/7e56ca56/demo/wasm2wast/)
+- [wasm2wat](https://cdn.rawgit.com/WebAssembly/wabt/7e56ca56/demo/wasm2wast/)
 
 ## Cloning
 
@@ -157,22 +157,22 @@ $ out/wast2wasm -h
 
 Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/wast2wasm/).
 
-## Running wasm2wast
+## Running wasm2wat
 
 Some examples:
 
 ```sh
-# parse binary file test.wasm and write s-expression file test.wast
-$ out/wasm2wast test.wasm -o test.wast
+# parse binary file test.wasm and write text file test.wat
+$ out/wasm2wat test.wasm -o test.wat
 
-# parse test.wasm and write test.wast
-$ out/wasm2wast test.wasm -o test.wast
+# parse test.wasm and write test.wat
+$ out/wasm2wat test.wasm -o test.wat
 ```
 
 You can use `-h` to get additional help:
 
 ```console
-$ out/wasm2wast -h
+$ out/wasm2wat -h
 ```
 
 Or try the [online demo](https://cdn.rawgit.com/WebAssembly/wabt/013802ca01035365e2459c70f0508481393ac075/demo/wasm2wast/).

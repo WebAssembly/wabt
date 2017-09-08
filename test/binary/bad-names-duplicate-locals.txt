@@ -28,7 +28,7 @@ section("name") {
   str("L1")
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000035: error: duplicate local index: 0
 
 ;;; STDERR ;;)

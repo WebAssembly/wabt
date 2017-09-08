@@ -59,16 +59,16 @@ def main(args):
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
-  wasm2wast = utils.Executable(
-      find_exe.GetWasm2WastExecutable(options.bindir),
+  wasm2wat = utils.Executable(
+      find_exe.GetWasm2WatExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wasm2wast.AppendOptionalArgs({
+  wasm2wat.AppendOptionalArgs({
       '--no-debug-names': options.no_debug_names,
   })
-  wasm2wast.AppendOptionalArgs({'--verbose': options.verbose,})
+  wasm2wat.AppendOptionalArgs({'--verbose': options.verbose,})
 
   gen_wasm.verbose = options.print_cmd
-  wasm2wast.verbose = options.print_cmd
+  wasm2wat.verbose = options.print_cmd
   objdump.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-gen-wasm-') as out_dir:
@@ -77,7 +77,7 @@ def main(args):
     if options.objdump:
       objdump.RunWithArgs(out_file, '-x')
     else:
-      wasm2wast.RunWithArgs(out_file)
+      wasm2wat.RunWithArgs(out_file)
 
 
 if __name__ == '__main__':

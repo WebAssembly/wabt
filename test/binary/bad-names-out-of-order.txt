@@ -21,7 +21,7 @@ section("name") {
   str("F0")
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 000002c: error: function index out of order: 0
 
 ;;; STDERR ;;)

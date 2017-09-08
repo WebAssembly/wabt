@@ -20,7 +20,7 @@ section("name") {
   count[0]
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000028: error: out-of-order sub-section
 
 ;;; STDERR ;;)

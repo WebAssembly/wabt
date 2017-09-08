@@ -135,7 +135,7 @@ def F64ToJS(f64_bits):
 
 def UnescapeWasmString(s):
   # Wast allows for more escape characters than this, but we assume that
-  # wasm2wast will only use the \xx escapes.
+  # wasm2wat will only use the \xx escapes.
   result = ''
   i = 0
   while i < len(s):
@@ -218,15 +218,15 @@ def CollectInvalidModuleCommands(commands):
 
 class ModuleExtender(object):
 
-  def __init__(self, wast2wasm, wasm2wast, temp_dir):
+  def __init__(self, wast2wasm, wasm2wat, temp_dir):
     self.wast2wasm = wast2wasm
-    self.wasm2wast = wasm2wast
+    self.wasm2wat = wasm2wat
     self.temp_dir = temp_dir
     self.lines = []
     self.exports = {}
 
   def Extend(self, wasm_path, commands):
-    wast_path = self._RunWasm2Wast(wasm_path)
+    wast_path = self._RunWasm2Wat(wasm_path)
     with open(wast_path) as wast_file:
       wast = wast_file.read()
 
@@ -365,9 +365,9 @@ class ModuleExtender(object):
       inst = F64ToWasm(int(const['value']))
     self.lines.append(inst)
 
-  def _RunWasm2Wast(self, wasm_path):
+  def _RunWasm2Wat(self, wasm_path):
     wast_path = ChangeDir(ChangeExt(wasm_path, '.wast'), self.temp_dir)
-    self.wasm2wast.RunWithArgs(wasm_path, '-o', wast_path)
+    self.wasm2wat.RunWithArgs(wasm_path, '-o', wast_path)
     return wast_path
 
   def _RunWast2Wasm(self, wast_path):
@@ -499,12 +499,12 @@ def main(args):
   wast2wasm = Executable(
       find_exe.GetWast2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wasm2wast = Executable(
-      find_exe.GetWasm2WastExecutable(options.bindir),
+  wasm2wat = Executable(
+      find_exe.GetWasm2WatExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
   wast2wasm.verbose = options.print_cmd
-  wasm2wast.verbose = options.print_cmd
+  wasm2wat.verbose = options.print_cmd
 
   with open(options.file) as json_file:
     json_dir = os.path.dirname(options.file)
@@ -515,7 +515,7 @@ def main(args):
   modules = CollectInvalidModuleCommands(all_commands)
 
   with utils.TempDirectory(options.temp_dir, 'gen-spec-js-') as temp_dir:
-    extender = ModuleExtender(wast2wasm, wasm2wast, temp_dir)
+    extender = ModuleExtender(wast2wasm, wasm2wat, temp_dir)
     for module_command, assert_commands in modules:
       if assert_commands:
         wasm_path = os.path.join(json_dir, module_command['filename'])

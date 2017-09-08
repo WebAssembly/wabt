@@ -7,7 +7,7 @@ section(TYPE) {
   function params[1] void results[0]
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 000000e: error: expected valid param type (got -64)
 
 ;;; STDERR ;;)

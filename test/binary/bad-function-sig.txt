@@ -5,7 +5,7 @@ version
 section(TYPE) { count[1] function params[1] i32 results[1] i32 }
 section(FUNCTION) { count[1] type[1] }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000014: error: invalid function signature index: 1
 
 ;;; STDERR ;;)

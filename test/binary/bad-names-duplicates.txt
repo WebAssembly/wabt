@@ -20,7 +20,7 @@ section("name") {
   str("F1")
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 000002c: error: duplicate function name: 0
 
 ;;; STDERR ;;)

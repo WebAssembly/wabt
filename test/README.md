@@ -130,7 +130,7 @@ The currently supported list of tools (see
   a collection of `.wasm` and `.wast` files, then run `wasm-interp` on the JSON
   file.
 - `run-gen-wasm`: parse a "gen-wasm" text file (which can describe invalid
-  binary files), then parse via `wasm2wast` and display the result
+  binary files), then parse via `wasm2wat` and display the result
 - `run-gen-wasm-interp`: parse a "gen-wasm" text file, generate a wasm file,
   the run `wasm-interp` on it, which runes all exported functions in an
   interpreter

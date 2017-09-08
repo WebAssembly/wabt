@@ -7,7 +7,7 @@ section(TYPE) {
   0x20
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 000000c: error: unexpected type form: 32
 
 ;;; STDERR ;;)

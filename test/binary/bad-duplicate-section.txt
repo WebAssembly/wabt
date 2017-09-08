@@ -5,7 +5,7 @@ version
 section(TYPE) { count[0] }
 section(TYPE) { count[0] }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 000000d: error: section Type out of order
 
 ;;; STDERR ;;)

@@ -6,7 +6,7 @@ section(TYPE) { count[0] }
 section("foo") { 1 2 3 4 }
 section(TYPE) { count[0] }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000017: error: section Type out of order
 
 ;;; STDERR ;;)

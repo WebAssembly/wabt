@@ -14,7 +14,7 @@ dummy[0]
 dummy[0]
 dummy[0]
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 000000b: error: unfinished section (expected end: 0xf)
 
 ;;; STDERR ;;)

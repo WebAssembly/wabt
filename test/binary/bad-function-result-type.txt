@@ -7,7 +7,7 @@ section(TYPE) {
   function params[1] i32 results[1] void
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 0000010: error: expected valid result type: -64
 
 ;;; STDERR ;;)

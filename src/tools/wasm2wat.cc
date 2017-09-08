@@ -45,19 +45,19 @@ static std::unique_ptr<FileStream> s_log_stream;
 static bool s_validate = true;
 
 static const char s_description[] =
-R"(  read a file in the wasm binary format, and convert it to the wasm
-  s-expression file format.
+R"(  Read a file in the WebAssembly binary format, and convert it to
+  the WebAssembly text format.
 
 examples:
-  # parse binary file test.wasm and write s-expression file test.wast
-  $ wasm2wast test.wasm -o test.wast
+  # parse binary file test.wasm and write text file test.wast
+  $ wasm2wat test.wasm -o test.wat
 
-  # parse test.wasm, write test.wast, but ignore the debug names, if any
-  $ wasm2wast test.wasm --no-debug-names -o test.wast
+  # parse test.wasm, write test.wat, but ignore the debug names, if any
+  $ wasm2wat test.wasm --no-debug-names -o test.wat
 )";
 
 static void ParseOptions(int argc, char** argv) {
-  OptionParser parser("wasm2wast", s_description);
+  OptionParser parser("wasm2wat", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;

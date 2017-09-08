@@ -8,7 +8,7 @@ section(DATA) {
   data[str("hi")]
 }
 (;; STDERR ;;;
-Error running "wasm2wast":
+Error running "wasm2wat":
 000000b: error: data section without memory section
 
 ;;; STDERR ;;)

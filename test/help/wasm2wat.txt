@@ -1,17 +1,17 @@
-;;; EXE: %(wasm2wast)s
+;;; EXE: %(wasm2wat)s
 ;;; FLAGS: --help
 (;; STDOUT ;;;
-usage: wasm2wast [options] filename
+usage: wasm2wat [options] filename
 
-  read a file in the wasm binary format, and convert it to the wasm
-  s-expression file format.
+  Read a file in the WebAssembly binary format, and convert it to
+  the WebAssembly text format.
 
 examples:
-  # parse binary file test.wasm and write s-expression file test.wast
-  $ wasm2wast test.wasm -o test.wast
+  # parse binary file test.wasm and write text file test.wast
+  $ wasm2wat test.wasm -o test.wat
 
-  # parse test.wasm, write test.wast, but ignore the debug names, if any
-  $ wasm2wast test.wasm --no-debug-names -o test.wast
+  # parse test.wasm, write test.wat, but ignore the debug names, if any
+  $ wasm2wat test.wasm --no-debug-names -o test.wat
 
 options:
   -v, --verbose                               Use multiple times for more info
