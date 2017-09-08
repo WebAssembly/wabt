@@ -102,6 +102,14 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64Extend32S:
       return features.threads_enabled();
 
+    // Interpreter opcodes are never "enabled".
+    case Opcode::InterpreterAlloca:
+    case Opcode::InterpreterBrUnless:
+    case Opcode::InterpreterCallHost:
+    case Opcode::InterpreterData:
+    case Opcode::InterpreterDropKeep:
+      return false;
+
     default:
       return true;
   }

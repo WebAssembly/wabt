@@ -91,15 +91,6 @@ static const IstreamOffset kInvalidIstreamOffset = ~0;
 #define WABT_TABLE_ENTRY_DROP_OFFSET sizeof(uint32_t)
 #define WABT_TABLE_ENTRY_KEEP_OFFSET (sizeof(IstreamOffset) + sizeof(uint32_t))
 
-// NOTE: These enumeration values do not match the standard binary encoding.
-enum class Opcode {
-#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
-  Name,
-#include "src/interpreter-opcode.def"
-#undef WABT_OPCODE
-  Invalid,
-};
-
 struct FuncSignature {
   FuncSignature() = default;
   FuncSignature(Index param_count,
