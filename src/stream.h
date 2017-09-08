@@ -34,7 +34,8 @@ enum class PrintChars {
 
 class Stream {
  public:
-  Stream(Stream* log_stream = nullptr);
+  explicit Stream(Stream* log_stream = nullptr);
+  virtual ~Stream() = default;
 
   size_t offset() { return offset_; }
   Result result() { return result_; }
