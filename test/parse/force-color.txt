@@ -1,5 +1,5 @@
 ;;; ERROR: 1
-;;; TOOL: wast2wasm
+;;; TOOL: wat2wasm
 ;;; ENV: FORCE_COLOR=1
 (module
   (func badname (param i32) (result badtype)

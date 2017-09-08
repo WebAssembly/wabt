@@ -57,32 +57,32 @@ def FilesAreEqual(filename1, filename2, verbose=False):
   return (OK, '')
 
 
-def TwoRoundtrips(wast2wasm, wasm2wat, out_dir, filename, verbose):
+def TwoRoundtrips(wat2wasm, wasm2wat, out_dir, filename, verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm1_file = os.path.join(out_dir, basename_noext + '-1.wasm')
   wast2_file = os.path.join(out_dir, basename_noext + '-2.wast')
   wasm3_file = os.path.join(out_dir, basename_noext + '-3.wasm')
   try:
-    wast2wasm.RunWithArgs('-o', wasm1_file, filename)
+    wat2wasm.RunWithArgs('-o', wasm1_file, filename)
   except Error as e:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
     # test)
     return (SKIPPED, None)
   try:
     wasm2wat.RunWithArgs('-o', wast2_file, wasm1_file)
-    wast2wasm.RunWithArgs('-o', wasm3_file, wast2_file)
+    wat2wasm.RunWithArgs('-o', wasm3_file, wast2_file)
   except Error as e:
     return (ERROR, str(e))
   return FilesAreEqual(wasm1_file, wasm3_file, verbose)
 
 
-def OneRoundtripToStdout(wast2wasm, wasm2wat, out_dir, filename, verbose):
+def OneRoundtripToStdout(wat2wasm, wasm2wat, out_dir, filename, verbose):
   basename = os.path.basename(filename)
   basename_noext = os.path.splitext(basename)[0]
   wasm_file = os.path.join(out_dir, basename_noext + '.wasm')
   try:
-    wast2wasm.RunWithArgs('-o', wasm_file, filename)
+    wat2wasm.RunWithArgs('-o', wasm_file, filename)
   except Error as e:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
     # test)
@@ -121,10 +121,10 @@ def main(args):
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.bindir),
+  wat2wasm = utils.Executable(
+      find_exe.GetWat2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
-  wast2wasm.AppendOptionalArgs({
+  wat2wasm.AppendOptionalArgs({
       '--debug-names': options.debug_names,
       '--enable-exceptions': options.enable_exceptions,
       '--no-check': options.no_check,
@@ -142,7 +142,7 @@ def main(args):
       '--no-check': options.no_check,
   })
 
-  wast2wasm.verbose = options.print_cmd
+  wat2wasm.verbose = options.print_cmd
   wasm2wat.verbose = options.print_cmd
 
   filename = options.file
@@ -152,10 +152,10 @@ def main(args):
 
   with utils.TempDirectory(options.out_dir, 'roundtrip-') as out_dir:
     if options.stdout:
-      result, msg = OneRoundtripToStdout(wast2wasm, wasm2wat, out_dir,
+      result, msg = OneRoundtripToStdout(wat2wasm, wasm2wat, out_dir,
                                          filename, options.verbose)
     else:
-      result, msg = TwoRoundtrips(wast2wasm, wasm2wat, out_dir, filename,
+      result, msg = TwoRoundtrips(wat2wasm, wasm2wat, out_dir, filename,
                                   options.verbose)
     if result == ERROR:
       sys.stderr.write(msg)

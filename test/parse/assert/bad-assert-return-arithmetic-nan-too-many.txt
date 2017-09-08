@@ -1,5 +1,5 @@
+;;; TOOL: wast2json
 ;;; ERROR: 1
-;;; FLAGS: --spec
 (module
   (func $foo (result f32) 
     f32.const 0)

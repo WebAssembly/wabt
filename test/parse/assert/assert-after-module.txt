@@ -1,4 +1,4 @@
-;;; FLAGS: --spec
+;;; TOOL: wast2json
 (module
   (export "f" (func 0))
   (func (result i32)

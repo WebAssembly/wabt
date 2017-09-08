@@ -1,5 +1,5 @@
+;;; TOOL: wast2json
 ;;; ERROR: 1
-;;; FLAGS: --spec
 (module)
 (assert_return_canonical_nan (invoke "foo"))
 (;; STDERR ;;;

@@ -1,37 +1,32 @@
-;;; EXE: %(wast2wasm)s
+;;; EXE: %(wat2wasm)s
 ;;; FLAGS: --help
 (;; STDOUT ;;;
-usage: wast2wasm [options] filename
+usage: wat2wasm [options] filename
 
-  read a file in the wasm s-expression format, check it for errors, and
+  read a file in the wasm text format, check it for errors, and
   convert it to the wasm binary format.
 
 examples:
-  # parse and typecheck test.wast
-  $ wast2wasm test.wast
+  # parse and typecheck test.wat
+  $ wat2wasm test.wat
 
-  # parse test.wast and write to binary file test.wasm
-  $ wast2wasm test.wast -o test.wasm
+  # parse test.wat and write to binary file test.wasm
+  $ wat2wasm test.wat -o test.wasm
 
   # parse spec-test.wast, and write verbose output to stdout (including
   # the meaning of every byte)
-  $ wast2wasm spec-test.wast -v
-
-  # parse spec-test.wast, and write files to spec-test.json. Modules are
-  # written to spec-test.0.wasm, spec-test.1.wasm, etc.
-  $ wast2wasm spec-test.wast --spec -o spec-test.json
+  $ wat2wasm spec-test.wast -v
 
 options:
   -v, --verbose                               Use multiple times for more info
   -h, --help                                  Print this help message
-      --debug-parser                          Turn on debugging the parser of wast files
+      --debug-parser                          Turn on debugging the parser of wat files
   -d, --dump-module                           Print a hexdump of the module to stdout
       --enable-exceptions                     Experimental exception handling
       --enable-saturating-float-to-int        Saturating float-to-int operators
       --enable-threads                        Threading support
   -o, --output=FILE                           output wasm binary file
   -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with wasm-link)
-      --spec                                  Parse a file with multiple modules and assertions, like the spec tests
       --no-canonicalize-leb128s               Write all LEB128 sizes as 5-bytes instead of their minimal size
       --debug-names                           Write debug names to the generated binary file
       --no-check                              Don't check for invalid modules

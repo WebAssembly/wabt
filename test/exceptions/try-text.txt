@@ -1,4 +1,4 @@
-;;; TOOL: wast2wasm
+;;; TOOL: wat2wasm
 ;;; FLAGS: --enable-exceptions -v
 (module
   (except $ex i32)

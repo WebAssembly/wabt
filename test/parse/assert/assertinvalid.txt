@@ -1,4 +1,4 @@
-;;; FLAGS: --spec
+;;; TOOL: wast2json
 (assert_invalid
   (module
     (func 

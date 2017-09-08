@@ -24,7 +24,6 @@
 #include "config.h"
 
 #include "src/binary-writer.h"
-#include "src/binary-writer-spec.h"
 #include "src/common.h"
 #include "src/error-handler.h"
 #include "src/feature.h"
@@ -42,7 +41,6 @@ static const char* s_outfile;
 static bool s_dump_module;
 static int s_verbose;
 static WriteBinaryOptions s_write_binary_options;
-static bool s_spec;
 static bool s_validate = true;
 static bool s_debug_parsing;
 static Features s_features;
@@ -50,34 +48,30 @@ static Features s_features;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
-R"(  read a file in the wasm s-expression format, check it for errors, and
+R"(  read a file in the wasm text format, check it for errors, and
   convert it to the wasm binary format.
 
 examples:
-  # parse and typecheck test.wast
-  $ wast2wasm test.wast
+  # parse and typecheck test.wat
+  $ wat2wasm test.wat
 
-  # parse test.wast and write to binary file test.wasm
-  $ wast2wasm test.wast -o test.wasm
+  # parse test.wat and write to binary file test.wasm
+  $ wat2wasm test.wat -o test.wasm
 
   # parse spec-test.wast, and write verbose output to stdout (including
   # the meaning of every byte)
-  $ wast2wasm spec-test.wast -v
-
-  # parse spec-test.wast, and write files to spec-test.json. Modules are
-  # written to spec-test.0.wasm, spec-test.1.wasm, etc.
-  $ wast2wasm spec-test.wast --spec -o spec-test.json
+  $ wat2wasm spec-test.wast -v
 )";
 
 static void ParseOptions(int argc, char* argv[]) {
-  OptionParser parser("wast2wasm", s_description);
+  OptionParser parser("wat2wasm", s_description);
 
   parser.AddOption('v', "verbose", "Use multiple times for more info", []() {
     s_verbose++;
     s_log_stream = FileStream::CreateStdout();
   });
   parser.AddHelpOption();
-  parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
+  parser.AddOption("debug-parser", "Turn on debugging the parser of wat files",
                    []() { s_debug_parsing = true; });
   parser.AddOption('d', "dump-module",
                    "Print a hexdump of the module to stdout",
@@ -89,10 +83,6 @@ static void ParseOptions(int argc, char* argv[]) {
       'r', "relocatable",
       "Create a relocatable wasm binary (suitable for linking with wasm-link)",
       []() { s_write_binary_options.relocatable = true; });
-  parser.AddOption(
-      "spec",
-      "Parse a file with multiple modules and assertions, like the spec tests",
-      []() { s_spec = true; });
   parser.AddOption(
       "no-canonicalize-leb128s",
       "Write all LEB128 sizes as 5-bytes instead of their minimal size",
@@ -133,6 +123,7 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
   ErrorHandlerFile error_handler(Location::Type::Text);
+  // TODO(binji): Parse Module instead of Script.
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
   Result result =
@@ -145,25 +136,16 @@ int ProgramMain(int argc, char** argv) {
       result = ValidateScript(lexer.get(), script.get(), &error_handler);
 
     if (Succeeded(result)) {
-      if (s_spec) {
-        WriteBinarySpecOptions write_binary_spec_options;
-        write_binary_spec_options.log_stream = s_log_stream.get();
-        write_binary_spec_options.json_filename = s_outfile;
-        write_binary_spec_options.write_binary_options = s_write_binary_options;
-        result = WriteBinarySpecScript(script.get(), s_infile,
-                                       &write_binary_spec_options);
+      MemoryStream stream(s_log_stream.get());
+      const Module* module = script->GetFirstModule();
+      if (module) {
+        result = WriteBinaryModule(&stream, module, &s_write_binary_options);
       } else {
-        MemoryStream stream(s_log_stream.get());
-        const Module* module = script->GetFirstModule();
-        if (module) {
-          result = WriteBinaryModule(&stream, module, &s_write_binary_options);
-        } else {
-          WABT_FATAL("no module found\n");
-        }
-
-        if (Succeeded(result))
-          WriteBufferToFile(s_outfile, stream.output_buffer());
+        WABT_FATAL("no module found\n");
       }
+
+      if (Succeeded(result))
+        WriteBufferToFile(s_outfile, stream.output_buffer());
     }
   }
 

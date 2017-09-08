@@ -1,4 +1,4 @@
-;;; TOOL: wast2wasm
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func (result i32)

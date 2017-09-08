@@ -51,12 +51,18 @@ def main(args):
   parser.add_argument('--enable-threads', action='store_true')
   options = parser.parse_args(args)
 
-  wast2wasm = utils.Executable(
-      find_exe.GetWast2WasmExecutable(options.bindir),
-      error_cmdline=options.error_cmdline)
-  wast2wasm.AppendOptionalArgs({
+  wast_tool = None
+  if options.spec:
+    wast_tool = utils.Executable(
+        find_exe.GetWast2JsonExecutable(options.bindir),
+        error_cmdline=options.error_cmdline)
+  else:
+    wast_tool = utils.Executable(
+        find_exe.GetWat2WasmExecutable(options.bindir),
+        error_cmdline=options.error_cmdline)
+
+  wast_tool.AppendOptionalArgs({
       '-v': options.verbose,
-      '--spec': options.spec,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
       '--enable-threads': options.enable_threads,
@@ -75,13 +81,13 @@ def main(args):
       '--enable-threads': options.enable_threads,
   })
 
-  wast2wasm.verbose = options.print_cmd
+  wast_tool.verbose = options.print_cmd
   wasm_interp.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-interp-') as out_dir:
     new_ext = '.json' if options.spec else '.wasm'
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
-    wast2wasm.RunWithArgs(options.file, '-o', out_file)
+    wast_tool.RunWithArgs(options.file, '-o', out_file)
     wasm_interp.RunWithArgs(out_file)
 
   return 0

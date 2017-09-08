@@ -1,0 +1,26 @@
+;;; EXE: %(wast2json)s
+;;; FLAGS: --help
+(;; STDOUT ;;;
+usage: wast2json [options] filename
+
+  read a file in the wasm spec test format, check it for errors, and
+  convert it to a JSON file and associated wasm binary files.
+
+examples:
+  # parse spec-test.wast, and write files to spec-test.json. Modules are
+  # written to spec-test.0.wasm, spec-test.1.wasm, etc.
+  $ wast2json spec-test.wast -o spec-test.json
+
+options:
+  -v, --verbose                               Use multiple times for more info
+  -h, --help                                  Print this help message
+      --debug-parser                          Turn on debugging the parser of wast files
+      --enable-exceptions                     Experimental exception handling
+      --enable-saturating-float-to-int        Saturating float-to-int operators
+      --enable-threads                        Threading support
+  -o, --output=FILE                           output wasm binary file
+  -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with wasm-link)
+      --no-canonicalize-leb128s               Write all LEB128 sizes as 5-bytes instead of their minimal size
+      --debug-names                           Write debug names to the generated binary file
+      --no-check                              Don't check for invalid modules
+;;; STDOUT ;;)

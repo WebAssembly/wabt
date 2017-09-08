@@ -24,8 +24,8 @@ IS_WINDOWS = sys.platform == 'win32'
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 EXECUTABLES = [
-    'wast2wasm', 'wasm2wat', 'wasm-objdump', 'wasm-interp', 'wasm-opcodecnt',
-    'wast-desugar', 'wasm-link'
+    'wat2wasm', 'wast2json', 'wasm2wat', 'wasm-objdump', 'wasm-interp',
+    'wasm-opcodecnt', 'wast-desugar', 'wasm-link'
 ]
 
 
@@ -64,8 +64,12 @@ def FindExecutable(basename, override=None):
   return FindExeWithFallback(basename, [GetDefaultExe(basename)], override)
 
 
-def GetWast2WasmExecutable(override=None):
-  return FindExecutable('wast2wasm', override)
+def GetWat2WasmExecutable(override=None):
+  return FindExecutable('wat2wasm', override)
+
+
+def GetWast2JsonExecutable(override=None):
+  return FindExecutable('wast2json', override)
 
 
 def GetWasm2WatExecutable(override=None):

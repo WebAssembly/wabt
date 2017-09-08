@@ -134,7 +134,7 @@ def F64ToJS(f64_bits):
 
 
 def UnescapeWasmString(s):
-  # Wast allows for more escape characters than this, but we assume that
+  # Wat allows for more escape characters than this, but we assume that
   # wasm2wat will only use the \xx escapes.
   result = ''
   i = 0
@@ -218,29 +218,29 @@ def CollectInvalidModuleCommands(commands):
 
 class ModuleExtender(object):
 
-  def __init__(self, wast2wasm, wasm2wat, temp_dir):
-    self.wast2wasm = wast2wasm
+  def __init__(self, wat2wasm, wasm2wat, temp_dir):
+    self.wat2wasm = wat2wasm
     self.wasm2wat = wasm2wat
     self.temp_dir = temp_dir
     self.lines = []
     self.exports = {}
 
   def Extend(self, wasm_path, commands):
-    wast_path = self._RunWasm2Wat(wasm_path)
-    with open(wast_path) as wast_file:
-      wast = wast_file.read()
+    wat_path = self._RunWasm2Wat(wasm_path)
+    with open(wat_path) as wat_file:
+      wat = wat_file.read()
 
     self.lines = []
-    self.exports = self._GetExports(wast)
+    self.exports = self._GetExports(wat)
     for i, command in enumerate(commands):
       self._Command(i, command)
 
-    wast = wast[:wast.rindex(')')] + '\n\n'
-    wast += '\n'.join(self.lines) + ')'
-    # print wast
-    with open(wast_path, 'w') as wast_file:
-      wast_file.write(wast)
-    return self._RunWast2Wasm(wast_path)
+    wat = wat[:wat.rindex(')')] + '\n\n'
+    wat += '\n'.join(self.lines) + ')'
+    # print wat
+    with open(wat_path, 'w') as wat_file:
+      wat_file.write(wat)
+    return self._RunWat2Wasm(wat_path)
 
   def _Command(self, index, command):
     command_type = command['type']
@@ -288,10 +288,10 @@ class ModuleExtender(object):
       # Change the command to assert_return, it won't return NaN anymore.
       command['type'] = 'assert_return'
 
-  def _GetExports(self, wast):
+  def _GetExports(self, wat):
     result = {}
     pattern = r'^\s*\(export \"(.*?)\"\s*\((\w+) (\d+)'
-    for name, type_, index in re.findall(pattern, wast, re.MULTILINE):
+    for name, type_, index in re.findall(pattern, wat, re.MULTILINE):
       result[UnescapeWasmString(name)] = (type_, index)
     return result
 
@@ -366,13 +366,13 @@ class ModuleExtender(object):
     self.lines.append(inst)
 
   def _RunWasm2Wat(self, wasm_path):
-    wast_path = ChangeDir(ChangeExt(wasm_path, '.wast'), self.temp_dir)
-    self.wasm2wat.RunWithArgs(wasm_path, '-o', wast_path)
-    return wast_path
+    wat_path = ChangeDir(ChangeExt(wasm_path, '.wat'), self.temp_dir)
+    self.wasm2wat.RunWithArgs(wasm_path, '-o', wat_path)
+    return wat_path
 
-  def _RunWast2Wasm(self, wast_path):
-    wasm_path = ChangeDir(ChangeExt(wast_path, '.wasm'), self.temp_dir)
-    self.wast2wasm.RunWithArgs(wast_path, '-o', wasm_path)
+  def _RunWat2Wasm(self, wat_path):
+    wasm_path = ChangeDir(ChangeExt(wat_path, '.wasm'), self.temp_dir)
+    self.wat2wasm.RunWithArgs(wat_path, '-o', wasm_path)
     return wasm_path
 
 
@@ -484,7 +484,7 @@ def main(args):
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
   parser.add_argument('--temp-dir', metavar='PATH',
-                      help='set the directory that temporary wasm/wast'
+                      help='set the directory that temporary wasm/wat'
                       ' files are written.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when'
@@ -496,14 +496,14 @@ def main(args):
   parser.add_argument('file', help='spec json file.')
   options = parser.parse_args(args)
 
-  wast2wasm = Executable(
-      find_exe.GetWast2WasmExecutable(options.bindir),
+  wat2wasm = Executable(
+      find_exe.GetWat2WasmExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm2wat = Executable(
       find_exe.GetWasm2WatExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
-  wast2wasm.verbose = options.print_cmd
+  wat2wasm.verbose = options.print_cmd
   wasm2wat.verbose = options.print_cmd
 
   with open(options.file) as json_file:
@@ -515,7 +515,7 @@ def main(args):
   modules = CollectInvalidModuleCommands(all_commands)
 
   with utils.TempDirectory(options.temp_dir, 'gen-spec-js-') as temp_dir:
-    extender = ModuleExtender(wast2wasm, wasm2wat, temp_dir)
+    extender = ModuleExtender(wat2wasm, wasm2wat, temp_dir)
     for module_command, assert_commands in modules:
       if assert_commands:
         wasm_path = os.path.join(json_dir, module_command['filename'])

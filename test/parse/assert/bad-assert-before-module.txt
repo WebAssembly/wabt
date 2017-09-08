@@ -1,4 +1,4 @@
-;;; FLAGS: --spec
+;;; TOOL: wast2json
 ;;; ERROR: 1
 (assert_return (invoke "f") (i32.const 0))
 (;; STDERR ;;;

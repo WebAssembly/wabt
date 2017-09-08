@@ -42,8 +42,12 @@ SLOW_TIMEOUT_MULTIPLIER = 2
 
 # default configurations for tests
 TOOLS = {
-    'wast2wasm': {
-        'EXE': '%(wast2wasm)s',
+    'wat2wasm': {
+        'EXE': '%(wat2wasm)s',
+        'VERBOSE-FLAGS': ['-v']
+    },
+    'wast2json': {
+        'EXE': '%(wast2json)s',
         'VERBOSE-FLAGS': ['-v']
     },
     'wast-desugar': {
@@ -139,7 +143,7 @@ TOOLS = {
     },
 }
 
-ROUNDTRIP_TOOLS = ('wast2wasm',)
+ROUNDTRIP_TOOLS = ('wat2wasm',)
 
 
 def Indent(s, spaces):
@@ -228,8 +232,8 @@ class TestInfo(object):
     self.input_ = ''
     self.expected_stdout = ''
     self.expected_stderr = ''
-    self.tool = 'wast2wasm'
-    self.exe = '%(wast2wasm)s'
+    self.tool = 'wat2wasm'
+    self.exe = '%(wat2wasm)s'
     self.flags = []
     self.env = {}
     self.last_cmd = ''
