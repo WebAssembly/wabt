@@ -65,6 +65,10 @@ const char* GetTokenTypeName(TokenType token_type) {
       "INT",
 
       // Opcode.
+      "ATOMIC_LOAD",
+      "ATOMIC_RMW",
+      "ATOMIC_RMW_CMPXCHG",
+      "ATOMIC_STORE",
       "BINARY",
       "block",
       "br",

@@ -1100,6 +1100,109 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
+      case Opcode::I32AtomicLoad8U:
+      case Opcode::I32AtomicLoad16U:
+      case Opcode::I64AtomicLoad8U:
+      case Opcode::I64AtomicLoad16U:
+      case Opcode::I64AtomicLoad32U:
+      case Opcode::I32AtomicLoad:
+      case Opcode::I64AtomicLoad: {
+        uint32_t alignment_log2;
+        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        Address offset;
+        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+
+        CALLBACK(OnAtomicLoadExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        break;
+      }
+
+      case Opcode::I32AtomicStore8:
+      case Opcode::I32AtomicStore16:
+      case Opcode::I64AtomicStore8:
+      case Opcode::I64AtomicStore16:
+      case Opcode::I64AtomicStore32:
+      case Opcode::I32AtomicStore:
+      case Opcode::I64AtomicStore: {
+        uint32_t alignment_log2;
+        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "store alignment"));
+        Address offset;
+        CHECK_RESULT(ReadU32Leb128(&offset, "store offset"));
+
+        CALLBACK(OnAtomicStoreExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        break;
+      }
+
+      case Opcode::I32AtomicRmwAdd:
+      case Opcode::I64AtomicRmwAdd:
+      case Opcode::I32AtomicRmw8UAdd:
+      case Opcode::I32AtomicRmw16UAdd:
+      case Opcode::I64AtomicRmw8UAdd:
+      case Opcode::I64AtomicRmw16UAdd:
+      case Opcode::I64AtomicRmw32UAdd:
+      case Opcode::I32AtomicRmwSub:
+      case Opcode::I64AtomicRmwSub:
+      case Opcode::I32AtomicRmw8USub:
+      case Opcode::I32AtomicRmw16USub:
+      case Opcode::I64AtomicRmw8USub:
+      case Opcode::I64AtomicRmw16USub:
+      case Opcode::I64AtomicRmw32USub:
+      case Opcode::I32AtomicRmwAnd:
+      case Opcode::I64AtomicRmwAnd:
+      case Opcode::I32AtomicRmw8UAnd:
+      case Opcode::I32AtomicRmw16UAnd:
+      case Opcode::I64AtomicRmw8UAnd:
+      case Opcode::I64AtomicRmw16UAnd:
+      case Opcode::I64AtomicRmw32UAnd:
+      case Opcode::I32AtomicRmwOr:
+      case Opcode::I64AtomicRmwOr:
+      case Opcode::I32AtomicRmw8UOr:
+      case Opcode::I32AtomicRmw16UOr:
+      case Opcode::I64AtomicRmw8UOr:
+      case Opcode::I64AtomicRmw16UOr:
+      case Opcode::I64AtomicRmw32UOr:
+      case Opcode::I32AtomicRmwXor:
+      case Opcode::I64AtomicRmwXor:
+      case Opcode::I32AtomicRmw8UXor:
+      case Opcode::I32AtomicRmw16UXor:
+      case Opcode::I64AtomicRmw8UXor:
+      case Opcode::I64AtomicRmw16UXor:
+      case Opcode::I64AtomicRmw32UXor:
+      case Opcode::I32AtomicRmwXchg:
+      case Opcode::I64AtomicRmwXchg:
+      case Opcode::I32AtomicRmw8UXchg:
+      case Opcode::I32AtomicRmw16UXchg:
+      case Opcode::I64AtomicRmw8UXchg:
+      case Opcode::I64AtomicRmw16UXchg:
+      case Opcode::I64AtomicRmw32UXchg: {
+        uint32_t alignment_log2;
+        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "memory alignment"));
+        Address offset;
+        CHECK_RESULT(ReadU32Leb128(&offset, "memory offset"));
+
+        CALLBACK(OnAtomicRmwExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        break;
+      }
+
+      case Opcode::I32AtomicRmwCmpxchg:
+      case Opcode::I64AtomicRmwCmpxchg:
+      case Opcode::I32AtomicRmw8UCmpxchg:
+      case Opcode::I32AtomicRmw16UCmpxchg:
+      case Opcode::I64AtomicRmw8UCmpxchg:
+      case Opcode::I64AtomicRmw16UCmpxchg:
+      case Opcode::I64AtomicRmw32UCmpxchg: {
+        uint32_t alignment_log2;
+        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "memory alignment"));
+        Address offset;
+        CHECK_RESULT(ReadU32Leb128(&offset, "memory offset"));
+
+        CALLBACK(OnAtomicRmwCmpxchgExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        break;
+      }
+
       default:
         return ReportUnexpectedOpcode(opcode);
     }

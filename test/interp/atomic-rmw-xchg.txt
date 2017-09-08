@@ -1,0 +1,110 @@
+;;; TOOL: run-interp
+;;; FLAGS: --enable-threads
+(module
+  (memory 1)
+
+  ;; i32
+
+  (func (export "i32.atomic.rmw8_u.xchg-result") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 1       i32.atomic.rmw8_u.xchg)
+
+  (func (export "i32.atomic.rmw8_u.xchg-memory") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 1       i32.atomic.rmw8_u.xchg drop
+    i32.const 0 i32.load8_u)
+
+  (func (export "i32.atomic.rmw16_u.xchg-result") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 1       i32.atomic.rmw16_u.xchg)
+
+  (func (export "i32.atomic.rmw16_u.xchg-memory") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 1       i32.atomic.rmw16_u.xchg drop
+    i32.const 0 i32.load16_u)
+
+  (func (export "i32.atomic.rmw.xchg-result") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 1       i32.atomic.rmw.xchg)
+
+  (func (export "i32.atomic.rmw.xchg-memory") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 1       i32.atomic.rmw.xchg drop
+    i32.const 0 i32.load)
+
+
+  ;; i64
+
+  (func (export "i64.atomic.rmw8_u.xchg-result") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1           i64.atomic.rmw8_u.xchg)
+
+  (func (export "i64.atomic.rmw8_u.xchg-memory") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1           i64.atomic.rmw8_u.xchg drop
+    i32.const 0 i64.load8_u)
+
+  (func (export "i64.atomic.rmw16_u.xchg-result") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1           i64.atomic.rmw16_u.xchg)
+
+  (func (export "i64.atomic.rmw16_u.xchg-memory") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1           i64.atomic.rmw16_u.xchg drop
+    i32.const 0 i64.load16_u)
+
+  (func (export "i64.atomic.rmw32_u.xchg-result") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1           i64.atomic.rmw32_u.xchg)
+
+  (func (export "i64.atomic.rmw32_u.xchg-memory") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1           i64.atomic.rmw32_u.xchg drop
+    i32.const 0 i64.load32_u)
+
+  (func (export "i64.atomic.rmw.xchg-result") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1           i64.atomic.rmw.xchg)
+
+  (func (export "i64.atomic.rmw.xchg-memory") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1           i64.atomic.rmw.xchg drop
+    i32.const 0 i64.load)
+
+
+  ;; Test bad alignment
+
+  (func (export "bad_align-i32.atomic.rmw16_u.xchg")
+    i32.const 1 i32.const 0 i32.atomic.rmw16_u.xchg drop)
+  (func (export "bad_align-i32.atomic.rmw.xchg")
+    i32.const 2 i32.const 0 i32.atomic.rmw.xchg drop)
+
+  (func (export "bad_align-i64.atomic.rmw16_u.xchg")
+    i32.const 1 i64.const 0 i64.atomic.rmw16_u.xchg drop)
+  (func (export "bad_align-i64.atomic.rmw32_u.xchg")
+    i32.const 2 i64.const 0 i64.atomic.rmw32_u.xchg drop)
+  (func (export "bad_align-i64.atomic.rmw.xchg")
+    i32.const 4 i64.const 0 i64.atomic.rmw.xchg drop)
+
+)
+(;; STDOUT ;;;
+i32.atomic.rmw8_u.xchg-result() => i32:64
+i32.atomic.rmw8_u.xchg-memory() => i32:1
+i32.atomic.rmw16_u.xchg-result() => i32:16960
+i32.atomic.rmw16_u.xchg-memory() => i32:1
+i32.atomic.rmw.xchg-result() => i32:1000000
+i32.atomic.rmw.xchg-memory() => i32:1
+i64.atomic.rmw8_u.xchg-result() => i64:0
+i64.atomic.rmw8_u.xchg-memory() => i64:1
+i64.atomic.rmw16_u.xchg-result() => i64:58368
+i64.atomic.rmw16_u.xchg-memory() => i64:1
+i64.atomic.rmw32_u.xchg-result() => i64:1410065408
+i64.atomic.rmw32_u.xchg-memory() => i64:1
+i64.atomic.rmw.xchg-result() => i64:10000000000
+i64.atomic.rmw.xchg-memory() => i64:1
+bad_align-i32.atomic.rmw16_u.xchg() => error: atomic memory access is unaligned
+bad_align-i32.atomic.rmw.xchg() => error: atomic memory access is unaligned
+bad_align-i64.atomic.rmw16_u.xchg() => error: atomic memory access is unaligned
+bad_align-i64.atomic.rmw32_u.xchg() => error: atomic memory access is unaligned
+bad_align-i64.atomic.rmw.xchg() => error: atomic memory access is unaligned
+;;; STDOUT ;;)

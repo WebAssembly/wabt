@@ -77,6 +77,9 @@ class Validator {
   void CheckAlign(const Location* loc,
                   Address alignment,
                   Address natural_alignment);
+  void CheckAtomicAlign(const Location* loc,
+                        Address alignment,
+                        Address natural_alignment);
   void CheckType(const Location* loc,
                  Type actual,
                  Type expected,
@@ -298,6 +301,19 @@ void Validator::CheckAlign(const Location* loc,
   }
 }
 
+void Validator::CheckAtomicAlign(const Location* loc,
+                                 Address alignment,
+                                 Address natural_alignment) {
+  if (alignment != WABT_USE_NATURAL_ALIGNMENT) {
+    if (!is_power_of_two(alignment))
+      PrintError(loc, "alignment must be power-of-two");
+    if (alignment != natural_alignment) {
+      PrintError(loc, "alignment must be equal to natural alignment (%u)",
+                 natural_alignment);
+    }
+  }
+}
+
 void Validator::CheckType(const Location* loc,
                           Type actual,
                           Type expected,
@@ -397,6 +413,42 @@ void Validator::CheckExpr(const Expr* expr) {
   expr_loc_ = &expr->loc;
 
   switch (expr->type()) {
+    case ExprType::AtomicLoad: {
+      auto load_expr = cast<AtomicLoadExpr>(expr);
+      CheckHasMemory(&load_expr->loc, load_expr->opcode);
+      CheckAtomicAlign(&load_expr->loc, load_expr->align,
+                       get_opcode_natural_alignment(load_expr->opcode));
+      typechecker_.OnAtomicLoad(load_expr->opcode);
+      break;
+    }
+
+    case ExprType::AtomicRmw: {
+      auto rmw_expr = cast<AtomicRmwExpr>(expr);
+      CheckHasMemory(&rmw_expr->loc, rmw_expr->opcode);
+      CheckAtomicAlign(&rmw_expr->loc, rmw_expr->align,
+                       get_opcode_natural_alignment(rmw_expr->opcode));
+      typechecker_.OnAtomicRmw(rmw_expr->opcode);
+      break;
+    }
+
+    case ExprType::AtomicRmwCmpxchg: {
+      auto cmpxchg_expr = cast<AtomicRmwCmpxchgExpr>(expr);
+      CheckHasMemory(&cmpxchg_expr->loc, cmpxchg_expr->opcode);
+      CheckAtomicAlign(&cmpxchg_expr->loc, cmpxchg_expr->align,
+                       get_opcode_natural_alignment(cmpxchg_expr->opcode));
+      typechecker_.OnAtomicRmwCmpxchg(cmpxchg_expr->opcode);
+      break;
+    }
+
+    case ExprType::AtomicStore: {
+      auto store_expr = cast<AtomicStoreExpr>(expr);
+      CheckHasMemory(&store_expr->loc, store_expr->opcode);
+      CheckAtomicAlign(&store_expr->loc, store_expr->align,
+                       get_opcode_natural_alignment(store_expr->opcode));
+      typechecker_.OnAtomicStore(store_expr->opcode);
+      break;
+    }
+
     case ExprType::Binary:
       typechecker_.OnBinary(cast<BinaryExpr>(expr)->opcode);
       break;

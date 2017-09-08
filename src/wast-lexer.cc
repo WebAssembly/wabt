@@ -442,6 +442,71 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "unreachable"         { RETURN_OPCODE0(Unreachable); }
       <i> "current_memory"      { RETURN_OPCODE0(CurrentMemory); }
       <i> "grow_memory"         { RETURN_OPCODE0(GrowMemory); }
+
+      <i> "i32.atomic.load"     { RETURN_OPCODE(AtomicLoad, I32AtomicLoad); }
+      <i> "i64.atomic.load"     { RETURN_OPCODE(AtomicLoad, I64AtomicLoad); }
+      <i> "i32.atomic.load8_u"  { RETURN_OPCODE(AtomicLoad, I32AtomicLoad8U); }
+      <i> "i32.atomic.load16_u" { RETURN_OPCODE(AtomicLoad, I32AtomicLoad16U); }
+      <i> "i64.atomic.load8_u"  { RETURN_OPCODE(AtomicLoad, I64AtomicLoad8U); }
+      <i> "i64.atomic.load16_u" { RETURN_OPCODE(AtomicLoad, I64AtomicLoad16U); }
+      <i> "i64.atomic.load32_u" { RETURN_OPCODE(AtomicLoad, I64AtomicLoad32U); }
+      <i> "i32.atomic.store"    { RETURN_OPCODE(AtomicStore, I32AtomicStore); }
+      <i> "i64.atomic.store"    { RETURN_OPCODE(AtomicStore, I64AtomicStore); }
+      <i> "i32.atomic.store8"   { RETURN_OPCODE(AtomicStore, I32AtomicStore8); }
+      <i> "i32.atomic.store16"  { RETURN_OPCODE(AtomicStore, I32AtomicStore16); }
+      <i> "i64.atomic.store8"   { RETURN_OPCODE(AtomicStore, I64AtomicStore8); }
+      <i> "i64.atomic.store16"  { RETURN_OPCODE(AtomicStore, I64AtomicStore16); }
+      <i> "i64.atomic.store32"  { RETURN_OPCODE(AtomicStore, I64AtomicStore32); }
+      <i> "i32.atomic.rmw.add"         { RETURN_OPCODE(AtomicRmw, I32AtomicRmwAdd); }
+      <i> "i64.atomic.rmw.add"         { RETURN_OPCODE(AtomicRmw, I64AtomicRmwAdd); }
+      <i> "i32.atomic.rmw8_u.add"      { RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UAdd); }
+      <i> "i32.atomic.rmw16_u.add"     { RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UAdd); }
+      <i> "i64.atomic.rmw8_u.add"      { RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UAdd); }
+      <i> "i64.atomic.rmw16_u.add"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UAdd); }
+      <i> "i64.atomic.rmw32_u.add"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UAdd); }
+      <i> "i32.atomic.rmw.sub"         { RETURN_OPCODE(AtomicRmw, I32AtomicRmwSub); }
+      <i> "i64.atomic.rmw.sub"         { RETURN_OPCODE(AtomicRmw, I64AtomicRmwSub); }
+      <i> "i32.atomic.rmw8_u.sub"      { RETURN_OPCODE(AtomicRmw, I32AtomicRmw8USub); }
+      <i> "i32.atomic.rmw16_u.sub"     { RETURN_OPCODE(AtomicRmw, I32AtomicRmw16USub); }
+      <i> "i64.atomic.rmw8_u.sub"      { RETURN_OPCODE(AtomicRmw, I64AtomicRmw8USub); }
+      <i> "i64.atomic.rmw16_u.sub"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw16USub); }
+      <i> "i64.atomic.rmw32_u.sub"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw32USub); }
+      <i> "i32.atomic.rmw.and"         { RETURN_OPCODE(AtomicRmw, I32AtomicRmwAnd); }
+      <i> "i64.atomic.rmw.and"         { RETURN_OPCODE(AtomicRmw, I64AtomicRmwAnd); }
+      <i> "i32.atomic.rmw8_u.and"      { RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UAnd); }
+      <i> "i32.atomic.rmw16_u.and"     { RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UAnd); }
+      <i> "i64.atomic.rmw8_u.and"      { RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UAnd); }
+      <i> "i64.atomic.rmw16_u.and"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UAnd); }
+      <i> "i64.atomic.rmw32_u.and"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UAnd); }
+      <i> "i32.atomic.rmw.or"          { RETURN_OPCODE(AtomicRmw, I32AtomicRmwOr); }
+      <i> "i64.atomic.rmw.or"          { RETURN_OPCODE(AtomicRmw, I64AtomicRmwOr); }
+      <i> "i32.atomic.rmw8_u.or"       { RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UOr); }
+      <i> "i32.atomic.rmw16_u.or"      { RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UOr); }
+      <i> "i64.atomic.rmw8_u.or"       { RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UOr); }
+      <i> "i64.atomic.rmw16_u.or"      { RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UOr); }
+      <i> "i64.atomic.rmw32_u.or"      { RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UOr); }
+      <i> "i32.atomic.rmw.xor"         { RETURN_OPCODE(AtomicRmw, I32AtomicRmwXor); }
+      <i> "i64.atomic.rmw.xor"         { RETURN_OPCODE(AtomicRmw, I64AtomicRmwXor); }
+      <i> "i32.atomic.rmw8_u.xor"      { RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UXor); }
+      <i> "i32.atomic.rmw16_u.xor"     { RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UXor); }
+      <i> "i64.atomic.rmw8_u.xor"      { RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UXor); }
+      <i> "i64.atomic.rmw16_u.xor"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UXor); }
+      <i> "i64.atomic.rmw32_u.xor"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UXor); }
+      <i> "i32.atomic.rmw.xchg"        { RETURN_OPCODE(AtomicRmw, I32AtomicRmwXchg); }
+      <i> "i64.atomic.rmw.xchg"        { RETURN_OPCODE(AtomicRmw, I64AtomicRmwXchg); }
+      <i> "i32.atomic.rmw8_u.xchg"     { RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UXchg); }
+      <i> "i32.atomic.rmw16_u.xchg"    { RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UXchg); }
+      <i> "i64.atomic.rmw8_u.xchg"     { RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UXchg); }
+      <i> "i64.atomic.rmw16_u.xchg"    { RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UXchg); }
+      <i> "i64.atomic.rmw32_u.xchg"    { RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UXchg); }
+      <i> "i32.atomic.rmw.cmpxchg"     { RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmwCmpxchg); }
+      <i> "i64.atomic.rmw.cmpxchg"     { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmwCmpxchg); }
+      <i> "i32.atomic.rmw8_u.cmpxchg"  { RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmw8UCmpxchg); }
+      <i> "i32.atomic.rmw16_u.cmpxchg" { RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmw16UCmpxchg); }
+      <i> "i64.atomic.rmw8_u.cmpxchg"  { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw8UCmpxchg); }
+      <i> "i64.atomic.rmw16_u.cmpxchg" { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw16UCmpxchg); }
+      <i> "i64.atomic.rmw32_u.cmpxchg" { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw32UCmpxchg); }
+
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
       <i> "param"               { RETURN(Param); }
