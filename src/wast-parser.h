@@ -43,7 +43,9 @@ class WastParser {
   WastParser(WastLexer*, ErrorHandler*, WastParseOptions*);
 
   void WABT_PRINTF_FORMAT(3, 4) Error(Location, const char* format, ...);
-  Result ParseScript();
+  Result ParseModule(std::unique_ptr<Module>* out_module);
+  Result ParseScript(std::unique_ptr<Script>* out_script);
+
   std::unique_ptr<Script> ReleaseScript();
 
  private:
@@ -168,8 +170,8 @@ class WastParser {
   template <typename T>
   Result ParsePlainInstrVar(Location, std::unique_ptr<Expr>*);
 
-  Result ParseCommandList(CommandPtrVector*);
-  Result ParseCommand(CommandPtr*);
+  Result ParseCommandList(Script*, CommandPtrVector*);
+  Result ParseCommand(Script*, CommandPtr*);
   Result ParseAssertExhaustionCommand(CommandPtr*);
   Result ParseAssertInvalidCommand(CommandPtr*);
   Result ParseAssertMalformedCommand(CommandPtr*);
@@ -179,7 +181,7 @@ class WastParser {
   Result ParseAssertTrapCommand(CommandPtr*);
   Result ParseAssertUnlinkableCommand(CommandPtr*);
   Result ParseActionCommand(CommandPtr*);
-  Result ParseModuleCommand(CommandPtr*);
+  Result ParseModuleCommand(Script*, CommandPtr*);
   Result ParseRegisterCommand(CommandPtr*);
 
   Result ParseAction(ActionPtr*);
@@ -197,7 +199,6 @@ class WastParser {
   void CheckImportOrdering(Module*);
 
   WastLexer* lexer_;
-  std::unique_ptr<Script> script_;
   Index last_module_index_ = kInvalidIndex;
   ErrorHandler* error_handler_;
   int errors_ = 0;
@@ -206,10 +207,15 @@ class WastParser {
   CircularArray<Token, 2> tokens_;
 };
 
-Result ParseWast(WastLexer* lexer,
-                 std::unique_ptr<Script>* out_script,
-                 ErrorHandler*,
-                 WastParseOptions* options = nullptr);
+Result ParseWatModule(WastLexer* lexer,
+                      std::unique_ptr<Module>* out_module,
+                      ErrorHandler*,
+                      WastParseOptions* options = nullptr);
+
+Result ParseWastScript(WastLexer* lexer,
+                       std::unique_ptr<Script>* out_script,
+                       ErrorHandler*,
+                       WastParseOptions* options = nullptr);
 
 }  // namespace wabt
 

@@ -101,8 +101,8 @@ int ProgramMain(int argc, char** argv) {
   ErrorHandlerFile error_handler(Location::Type::Text);
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
-  Result result =
-      ParseWast(lexer.get(), &script, &error_handler, &parse_wast_options);
+  Result result = ParseWastScript(lexer.get(), &script, &error_handler,
+                                  &parse_wast_options);
 
   if (Succeeded(result)) {
     result = ResolveNamesScript(lexer.get(), script.get(), &error_handler);

@@ -630,9 +630,37 @@ Result WastParser::ParseNat(uint64_t* out_nat) {
   return Result::Ok;
 }
 
-Result WastParser::ParseScript() {
+Result WastParser::ParseModule(std::unique_ptr<Module>* out_module) {
+  WABT_TRACE(ParseModule);
+  auto module = MakeUnique<Module>();
+
+  if (PeekMatchLpar(TokenType::Module)) {
+    // Starts with "(module". Allow text and binary modules, but no quoted
+    // modules.
+    CommandPtr command;
+    CHECK_RESULT(ParseModuleCommand(nullptr, &command));
+    auto module_command = cast<ModuleCommand>(std::move(command));
+    *module = std::move(module_command->module);
+  } else if (IsModuleField(PeekPair())) {
+    // Parse an inline module (i.e. one with no surrounding (module)).
+    CHECK_RESULT(ParseModuleFieldList(module.get()));
+  } else {
+    ConsumeIfLpar();
+    ErrorExpected({"a module field", "a module"});
+  }
+
+  EXPECT(Eof);
+  if (errors_ == 0) {
+    *out_module = std::move(module);
+    return Result::Ok;
+  } else {
+    return Result::Error;
+  }
+}
+
+Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
   WABT_TRACE(ParseScript);
-  script_ = MakeUnique<Script>();
+  auto script = MakeUnique<Script>();
 
   // Don't consume the Lpar yet, even though it is required. This way the
   // sub-parser functions (e.g. ParseFuncModuleField) can consume it and keep
@@ -642,16 +670,21 @@ Result WastParser::ParseScript() {
     auto command = MakeUnique<ModuleCommand>();
     command->module.loc = GetLocation();
     CHECK_RESULT(ParseModuleFieldList(&command->module));
-    script_->commands.emplace_back(std::move(command));
+    script->commands.emplace_back(std::move(command));
   } else if (IsCommand(PeekPair())) {
-    CHECK_RESULT(ParseCommandList(&script_->commands));
+    CHECK_RESULT(ParseCommandList(script.get(), &script->commands));
   } else {
     ConsumeIfLpar();
     ErrorExpected({"a module field", "a command"});
   }
 
   EXPECT(Eof);
-  return errors_ == 0 ? Result::Ok : Result::Error;
+  if (errors_ == 0) {
+    *out_script = std::move(script);
+    return Result::Ok;
+  } else {
+    return Result::Error;
+  }
 }
 
 Result WastParser::ParseModuleFieldList(Module* module) {
@@ -1660,11 +1693,12 @@ Result WastParser::ParseGlobalType(Global* global) {
   return Result::Ok;
 }
 
-Result WastParser::ParseCommandList(CommandPtrVector* commands) {
+Result WastParser::ParseCommandList(Script* script,
+                                    CommandPtrVector* commands) {
   WABT_TRACE(ParseCommandList);
   while (IsCommand(PeekPair())) {
     CommandPtr command;
-    if (Succeeded(ParseCommand(&command))) {
+    if (Succeeded(ParseCommand(script, &command))) {
       commands->push_back(std::move(command));
     } else {
       CHECK_RESULT(Synchronize(IsCommand));
@@ -1673,7 +1707,7 @@ Result WastParser::ParseCommandList(CommandPtrVector* commands) {
   return Result::Ok;
 }
 
-Result WastParser::ParseCommand(CommandPtr* out_command) {
+Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
   WABT_TRACE(ParseCommand);
   switch (Peek(1)) {
     case TokenType::AssertExhaustion:
@@ -1705,7 +1739,7 @@ Result WastParser::ParseCommand(CommandPtr* out_command) {
       return ParseActionCommand(out_command);
 
     case TokenType::Module:
-      return ParseModuleCommand(out_command);
+      return ParseModuleCommand(script, out_command);
 
     case TokenType::Register:
       return ParseRegisterCommand(out_command);
@@ -1793,7 +1827,7 @@ Result WastParser::ParseActionCommand(CommandPtr* out_command) {
   return Result::Ok;
 }
 
-Result WastParser::ParseModuleCommand(CommandPtr* out_command) {
+Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
   WABT_TRACE(ParseModuleCommand);
   std::unique_ptr<ScriptModule> script_module;
   CHECK_RESULT(ParseScriptModule(&script_module));
@@ -1822,14 +1856,18 @@ Result WastParser::ParseModuleCommand(CommandPtr* out_command) {
       return ErrorExpected({"a binary module", "a text module"});
   }
 
-  Index command_index = script_->commands.size();
+  // script is nullptr when ParseModuleCommand is called from ParseModule.
+  if (script) {
+    Index command_index = script->commands.size();
 
-  if (!module.name.empty()) {
-    script_->module_bindings.emplace(module.name,
-                                     Binding(module.loc, command_index));
+    if (!module.name.empty()) {
+      script->module_bindings.emplace(module.name,
+                                      Binding(module.loc, command_index));
+    }
+
+    last_module_index_ = command_index;
   }
 
-  last_module_index_ = command_index;
   *out_command = std::move(command);
   return Result::Ok;
 }
@@ -1982,19 +2020,23 @@ void WastParser::CheckImportOrdering(Module* module) {
   }
 }
 
-std::unique_ptr<Script> WastParser::ReleaseScript() {
-  return std::move(script_);
+Result ParseWatModule(WastLexer* lexer,
+                       std::unique_ptr<Module>* out_module,
+                       ErrorHandler* error_handler,
+                       WastParseOptions* options) {
+  assert(out_module != nullptr);
+  WastParser parser(lexer, error_handler, options);
+  return parser.ParseModule(out_module);
 }
 
-Result ParseWast(WastLexer* lexer,
-                 std::unique_ptr<Script>* out_script,
-                 ErrorHandler* error_handler,
-                 WastParseOptions* options) {
+
+Result ParseWastScript(WastLexer* lexer,
+                       std::unique_ptr<Script>* out_script,
+                       ErrorHandler* error_handler,
+                       WastParseOptions* options) {
   assert(out_script != nullptr);
   WastParser parser(lexer, error_handler, options);
-  Result result = parser.ParseScript();
-  *out_script = parser.ReleaseScript();
-  return result;
+  return parser.ParseScript(out_script);
 }
 
 }  // namespace wabt

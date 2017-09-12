@@ -66,7 +66,7 @@ WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
                                      wabt::ErrorHandlerBuffer* error_handler) {
   WabtParseWastResult* result = new WabtParseWastResult();
   std::unique_ptr<wabt::Script> script;
-  result->result = wabt::ParseWast(lexer, &script, error_handler);
+  result->result = wabt::ParseWastScript(lexer, &script, error_handler);
   result->script = std::move(script);
   return result;
 }
