@@ -123,26 +123,21 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
 
   ErrorHandlerFile error_handler(Location::Type::Text);
-  // TODO(binji): Parse Module instead of Script.
-  std::unique_ptr<Script> script;
+  std::unique_ptr<Module> module;
   WastParseOptions parse_wast_options(s_features);
   Result result =
-      ParseWast(lexer.get(), &script, &error_handler, &parse_wast_options);
+      ParseWatModule(lexer.get(), &module, &error_handler, &parse_wast_options);
 
   if (Succeeded(result)) {
-    result = ResolveNamesScript(lexer.get(), script.get(), &error_handler);
+    result = ResolveNamesModule(lexer.get(), module.get(), &error_handler);
 
     if (Succeeded(result) && s_validate)
-      result = ValidateScript(lexer.get(), script.get(), &error_handler);
+      result = ValidateModule(lexer.get(), module.get(), &error_handler);
 
     if (Succeeded(result)) {
       MemoryStream stream(s_log_stream.get());
-      const Module* module = script->GetFirstModule();
-      if (module) {
-        result = WriteBinaryModule(&stream, module, &s_write_binary_options);
-      } else {
-        WABT_FATAL("no module found\n");
-      }
+      result =
+          WriteBinaryModule(&stream, module.get(), &s_write_binary_options);
 
       if (Succeeded(result))
         WriteBufferToFile(s_outfile, stream.output_buffer());
