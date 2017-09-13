@@ -32,6 +32,11 @@ class Features {
 #include "src/feature.def"
 #undef WABT_FEATURE
 
+#define WABT_FEATURE(variable, flag, help) \
+  void variable##_enable() { variable##_enabled_ = true; }
+#include "src/feature.def"
+#undef WABT_FEATURE
+
  private:
 #define WABT_FEATURE(variable, flag, help) \
   bool variable##_enabled_ = false;
