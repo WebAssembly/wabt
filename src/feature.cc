@@ -23,7 +23,7 @@ namespace wabt {
 void Features::AddOptions(OptionParser* parser) {
 #define WABT_FEATURE(variable, flag, help) \
   parser->AddOption("enable-" flag, help,  \
-                    [this]() { variable##_enable(); });
+                    [this]() { enable_##variable(); });
 
 #include "src/feature.def"
 #undef WABT_FEATURE
