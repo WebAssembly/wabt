@@ -205,6 +205,7 @@ endif ()
 add_custom_target(everything)
 
 add_library(libwabt STATIC
+  src/token.cc
   src/opcode.cc
   src/error-handler.cc
   src/hash-util.cc
@@ -331,9 +332,11 @@ if (NOT EMSCRIPTEN)
 
     # wabt-unittests
     set(UNITTESTS_SRCS
+      src/test-circular-array.cc
       src/test-intrusive-list.cc
       src/test-string-view.cc
       src/test-utf8.cc
+      src/test-wast-parser.cc
       third_party/gtest/googletest/src/gtest_main.cc
     )
     wabt_executable(wabt-unittests ${UNITTESTS_SRCS})
