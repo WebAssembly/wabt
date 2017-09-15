@@ -90,10 +90,6 @@ def main(args):
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
   wasm_objdump.AppendOptionalArgs({
-      '--enable-exceptions': options.enable_exceptions,
-      '--enable-saturating-float-to-int':
-          options.enable_saturating_float_to_int,
-      '--enable-threads': options.enable_threads,
       '-h': options.headers,
       '-x': options.dump_verbose,
       '--debug': options.dump_debug,
