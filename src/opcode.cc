@@ -37,9 +37,6 @@ Opcode::Info Opcode::infos_[] = {
 #undef WABT_OPCODE
 
 // static
-Opcode::Info Opcode::invalid_info_ = {
-    "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0, 0, 0,
-};
 
 // static
 Opcode Opcode::FromCode(uint32_t code) {
@@ -62,7 +59,9 @@ Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
 }
 
 Opcode::Info Opcode::GetInfo() const {
-  return enum_ < Invalid ? infos_[enum_] : invalid_info_;
+  if (enum_ >= Invalid)
+    return { "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0, enum_, 0 };
+  return infos_[enum_];
 }
 
 bool Opcode::IsNaturallyAligned(Address alignment) const {

@@ -1,0 +1,23 @@
+;;; TOOL: run-gen-wasm
+;;; FLAGS: --objdump
+;;; ERROR: 1
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    invalid_op[0xff]
+  }
+}
+(;; STDERR ;;;
+Error running "wasm-objdump":
+*ERROR*: @0x0000001a: unexpected opcode: 195 (0xc3)
+
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+bad-opcode.wasm:	file format wasm 0x1
+;;; STDOUT ;;)
