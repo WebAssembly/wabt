@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include "src/circular-array.h"
 #include "src/error-handler.h"
 #include "src/lexer-source.h"
 #include "src/wast-parser.h"
@@ -83,144 +82,6 @@
 
 namespace wabt {
 
-const char* GetTokenTypeName(TokenType token_type) {
-  static const char* s_names[] = {
-      "Invalid",
-      "Reserved",
-      "EOF",
-      "(",
-      ")",
-      "NAT",
-      "INT",
-      "FLOAT",
-      "TEXT",
-      "VAR",
-      "VALUETYPE",
-      "anyfunc",
-      "mut",
-      "nop",
-      "drop",
-      "block",
-      "end",
-      "if",
-      "then",
-      "else",
-      "loop",
-      "br",
-      "br_if",
-      "br_table",
-      "try",
-      "catch",
-      "catch_all",
-      "throw",
-      "rethrow",
-      "call",
-      "call_indirect",
-      "return",
-      "get_local",
-      "set_local",
-      "tee_local",
-      "get_global",
-      "set_global",
-      "LOAD",
-      "STORE",
-      "offset=",
-      "align=",
-      "CONST",
-      "UNARY",
-      "BINARY",
-      "COMPARE",
-      "CONVERT",
-      "select",
-      "unreachable",
-      "current_memory",
-      "grow_memory",
-      "func",
-      "start",
-      "type",
-      "param",
-      "result",
-      "local",
-      "global",
-      "table",
-      "elem",
-      "memory",
-      "data",
-      "offset",
-      "import",
-      "export",
-      "except",
-      "module",
-      "bin",
-      "quote",
-      "register",
-      "invoke",
-      "get",
-      "assert_malformed",
-      "assert_invalid",
-      "assert_unlinkable",
-      "assert_return",
-      "assert_return_canonical_nan",
-      "assert_return_arithmetic_nan",
-      "assert_trap",
-      "assert_exhaustion",
-  };
-
-  static_assert(
-      WABT_ARRAY_SIZE(s_names) == WABT_ENUM_COUNT(TokenType),
-      "Expected TokenType names list length to match number of TokenTypes.");
-
-  int x = static_cast<int>(token_type);
-  if (x < WABT_ENUM_COUNT(TokenType))
-    return s_names[x];
-
-  return "Invalid";
-}
-
-Token::Token(Location loc, TokenType token_type)
-    : loc(loc), token_type(token_type) {}
-
-Token::Token(Location loc, TokenType token_type, Type type)
-    : loc(loc), token_type(token_type), type(type) {}
-
-Token::Token(Location loc, TokenType token_type, StringTerminal text)
-    : loc(loc), token_type(token_type), text(text) {}
-
-Token::Token(Location loc, TokenType token_type, Opcode opcode)
-    : loc(loc), token_type(token_type), opcode(opcode) {}
-
-Token::Token(Location loc, TokenType token_type, LiteralTerminal literal)
-    : loc(loc), token_type(token_type), literal(literal) {}
-
-std::string Token::to_string() const {
-  switch (token_type) {
-    case TokenType::Nat:
-    case TokenType::Int:
-    case TokenType::Float:
-      return literal.text.to_string();
-
-    case TokenType::Reserved:
-    case TokenType::Text:
-    case TokenType::Var:
-      return text.to_string();
-
-    case TokenType::ValueType:
-      return GetTypeName(type);
-
-    case TokenType::Load:
-    case TokenType::Store:
-    case TokenType::Const:
-    case TokenType::Unary:
-    case TokenType::Binary:
-    case TokenType::Compare:
-    case TokenType::Convert:
-      return opcode.GetName();
-
-    default:
-      return GetTokenTypeName(token_type);
-  }
-}
-
 WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
     : source_(std::move(source)),
       line_finder_(source_->Clone()),
@@ -259,12 +120,12 @@ Location WastLexer::GetLocation() {
   return Location(filename_, line_, COLUMN(next_pos_), COLUMN(cursor_));
 }
 
-LiteralTerminal WastLexer::MakeLiteral(LiteralType type) {
-  return LiteralTerminal(type, GetText());
+Literal WastLexer::MakeLiteral(LiteralType type) {
+  return Literal(type, GetText());
 }
 
-StringTerminal WastLexer::GetText(size_t offset) {
-  return StringTerminal(yytext + offset, yyleng - offset);
+std::string WastLexer::GetText(size_t offset) {
+  return std::string(yytext + offset, yyleng - offset);
 }
 
 Result WastLexer::Fill(size_t need) {
@@ -393,11 +254,11 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "f64"                 { RETURN_TYPE(ValueType, F64); }
       <i> "anyfunc"             { RETURN(Anyfunc); }
       <i> "mut"                 { RETURN(Mut); }
-      <i> "nop"                 { RETURN(Nop); }
-      <i> "block"               { RETURN(Block); }
+      <i> "nop"                 { RETURN_OPCODE0(Nop); }
+      <i> "block"               { RETURN_OPCODE0(Block); }
       <i> "if"                  { RETURN_OPCODE0(If); }
       <i> "then"                { RETURN(Then); }
-      <i> "else"                { RETURN(Else); }
+      <i> "else"                { RETURN_OPCODE0(Else); }
       <i> "loop"                { RETURN_OPCODE0(Loop); }
       <i> "br"                  { RETURN_OPCODE0(Br); }
       <i> "br_if"               { RETURN_OPCODE0(BrIf); }
