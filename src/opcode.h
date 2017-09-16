@@ -28,7 +28,7 @@ struct Opcode {
   //
   // NOTE: this enum does not match the binary encoding.
   //
-  enum Enum {
+  enum Enum : uint32_t {
 #define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
   Name,
 #include "src/opcode.def"
@@ -66,12 +66,15 @@ struct Opcode {
   // |opcode|, else return |alignment|.
   Address GetAlignment(Address alignment) const;
 
-  static bool IsPrefixByte(uint8_t byte) { return byte >= kFirstPrefix; }
+  static bool IsPrefixByte(uint8_t byte) {
+    return byte == kMathPrefix || byte == kThreadsPrefix;
+  }
 
   bool IsEnabled(const Features& features) const;
 
  private:
-  static const uint32_t kFirstPrefix = 0xfc;
+  static const uint32_t kMathPrefix = 0xfc;
+  static const uint32_t kThreadsPrefix = 0xfe;
 
   struct Info {
     const char* name;
@@ -90,9 +93,15 @@ struct Opcode {
     return (prefix << 8) | code;
   }
 
+  static void SplitPrefixCode(uint32_t prefix_code,
+                              uint8_t* out_prefix,
+                              uint32_t* out_code) {
+    *out_prefix = prefix_code >> 8;
+    *out_code = prefix_code & 0xff;
+  }
+
   Info GetInfo() const;
   static Info infos_[];
-  static Info invalid_info_;
 
   Enum enum_;
 };

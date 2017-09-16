@@ -37,11 +37,6 @@ Opcode::Info Opcode::infos_[] = {
 #undef WABT_OPCODE
 
 // static
-Opcode::Info Opcode::invalid_info_ = {
-    "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0, 0, 0,
-};
-
-// static
 Opcode Opcode::FromCode(uint32_t code) {
   return FromCode(0, code);
 }
@@ -55,14 +50,29 @@ Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
                          return info.prefix_code < prefix_code;
                        });
 
-  if (iter->prefix_code != prefix_code)
-    return Opcode(Invalid);
+  if (iter->prefix_code != prefix_code) {
+    // Store prefix code as -enum. This way we can extract the prefix code in
+    // GetInfo below.
+    return Opcode(static_cast<Enum>(-prefix_code));
+  }
 
   return Opcode(static_cast<Enum>(iter - infos_));
 }
 
 Opcode::Info Opcode::GetInfo() const {
-  return enum_ < Invalid ? infos_[enum_] : invalid_info_;
+  if (enum_ < Invalid) {
+    return infos_[enum_];
+  }
+
+  uint32_t prefix_code = static_cast<uint32_t>(-enum_);
+  uint8_t prefix;
+  uint32_t code;
+  SplitPrefixCode(prefix_code, &prefix, &code);
+  const Info invalid_info = {
+      "<invalid>", Type::Void, Type::Void, Type::Void,
+      0,           prefix,     code,       prefix_code,
+  };
+  return invalid_info;
 }
 
 bool Opcode::IsNaturallyAligned(Address alignment) const {
