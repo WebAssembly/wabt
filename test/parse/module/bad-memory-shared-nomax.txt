@@ -1,0 +1,6 @@
+;;; ERROR: 1
+(module (memory 1 shared))
+
+(;; STDERR ;;;
+Halp I'm getting the wrong error!
+;;; STDERR ;;)
