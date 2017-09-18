@@ -70,6 +70,7 @@ enum class TokenType {
   Table,
   Then,
   Type,
+  Shared,
   First_Bare = Invalid,
   Last_Bare = Type,
 

@@ -616,6 +616,10 @@ Result WastParser::ParseLimits(Limits* out_limits) {
   } else {
     out_limits->has_max = false;
   }
+  if (PeekMatch(TokenType::Shared)) {
+    out_limits->is_shared = true;
+    Consume();
+  }
 
   return Result::Ok;
 }
