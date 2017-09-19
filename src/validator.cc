@@ -120,7 +120,8 @@ class Validator {
   void CheckLimits(const Location* loc,
                    const Limits* limits,
                    uint64_t absolute_max,
-                   const char* desc);
+                   const char* desc,
+                   LimitsShareable sharing);
   void CheckTable(const Location* loc, const Table* table);
   void CheckElemSegments(const Module* module);
   void CheckMemory(const Location* loc, const Memory* memory);
@@ -696,7 +697,8 @@ void Validator::CheckGlobal(const Location* loc, const Global* global) {
 void Validator::CheckLimits(const Location* loc,
                             const Limits* limits,
                             uint64_t absolute_max,
-                            const char* desc) {
+                            const char* desc,
+                            LimitsShareable sharing) {
   if (limits->initial > absolute_max) {
     PrintError(loc, "initial %s (%" PRIu64 ") must be <= (%" PRIu64 ")", desc,
                limits->initial, absolute_max);
@@ -714,12 +716,21 @@ void Validator::CheckLimits(const Location* loc,
                  desc, limits->max, desc, limits->initial);
     }
   }
+  if (limits->is_shared) {
+    if (sharing == LimitsShareable::NotAllowed) {
+      PrintError(loc, "tables may not be shared");
+      return;
+    }
+    if (!limits->has_max) {
+      PrintError(loc, "shared memories must have max sizes");
+    }
+  }
 }
 
 void Validator::CheckTable(const Location* loc, const Table* table) {
   if (current_table_index_ == 1)
     PrintError(loc, "only one table allowed");
-  CheckLimits(loc, &table->elem_limits, UINT32_MAX, "elems");
+  CheckLimits(loc, &table->elem_limits, UINT32_MAX, "elems", LimitsShareable::NotAllowed);
 }
 
 void Validator::CheckElemSegments(const Module* module) {
@@ -743,7 +754,7 @@ void Validator::CheckElemSegments(const Module* module) {
 void Validator::CheckMemory(const Location* loc, const Memory* memory) {
   if (current_memory_index_ == 1)
     PrintError(loc, "only one memory block allowed");
-  CheckLimits(loc, &memory->page_limits, WABT_MAX_PAGES, "pages");
+  CheckLimits(loc, &memory->page_limits, WABT_MAX_PAGES, "pages", LimitsShareable::Allowed);
 }
 
 void Validator::CheckDataSegments(const Module* module) {

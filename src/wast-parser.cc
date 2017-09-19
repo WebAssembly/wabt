@@ -606,15 +606,13 @@ bool WastParser::ParseAlignOpt(uint32_t* out_align) {
   }
 }
 
-Result WastParser::ParseLimits(Limits* out_limits, Sharing allowed) {
+Result WastParser::ParseLimits(Limits* out_limits) {
   WABT_TRACE(ParseLimits);
-  Token sharing_tok;
-  if (PeekMatch(TokenType::Shared)) {
+
+  if (PeekMatch(TokenType::Lpar)) {
+    Consume();
+    EXPECT(Shared);
     out_limits->is_shared = true;
-    sharing_tok = Consume();
-    if (allowed == Sharing::NotAllowed) {
-      Error(sharing_tok.loc, "tables may not be shared");
-    }
   }
   CHECK_RESULT(ParseNat(&out_limits->initial));
   if (PeekMatch(TokenType::Nat)) {
@@ -623,8 +621,8 @@ Result WastParser::ParseLimits(Limits* out_limits, Sharing allowed) {
   } else {
     out_limits->has_max = false;
   }
-  if (out_limits->is_shared && !out_limits->has_max) {
-    Error(sharing_tok.loc, "shared memories must have max sizes");
+  if (out_limits->is_shared) {
+    EXPECT(Rpar);
   }
 
   return Result::Ok;
@@ -913,7 +911,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       ParseBindVarOpt(&name);
       auto import = MakeUnique<TableImport>(name);
       CHECK_RESULT(
-          ParseLimits(&import->table.elem_limits, Sharing::NotAllowed));
+          ParseLimits(&import->table.elem_limits));
       EXPECT(Anyfunc);
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
@@ -924,7 +922,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = MakeUnique<MemoryImport>(name);
-      CHECK_RESULT(ParseLimits(&import->memory.page_limits, Sharing::Allowed));
+      CHECK_RESULT(ParseLimits(&import->memory.page_limits));
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
       break;
@@ -977,7 +975,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
     CheckImportOrdering(module);
     auto import = MakeUnique<MemoryImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
-    CHECK_RESULT(ParseLimits(&import->memory.page_limits, Sharing::Allowed));
+    CHECK_RESULT(ParseLimits(&import->memory.page_limits));
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
@@ -1001,7 +999,7 @@ Result WastParser::ParseMemoryModuleField(Module* module) {
     module->AppendField(std::move(data_segment_field));
   } else {
     auto field = MakeUnique<MemoryModuleField>(loc, name);
-    CHECK_RESULT(ParseLimits(&field->memory.page_limits, Sharing::Allowed));
+    CHECK_RESULT(ParseLimits(&field->memory.page_limits));
     module->AppendField(std::move(field));
   }
 
@@ -1038,7 +1036,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
     CheckImportOrdering(module);
     auto import = MakeUnique<TableImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
-    CHECK_RESULT(ParseLimits(&import->table.elem_limits, Sharing::Allowed));
+    CHECK_RESULT(ParseLimits(&import->table.elem_limits));
     EXPECT(Anyfunc);
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
@@ -1063,7 +1061,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
     module->AppendField(std::move(elem_segment_field));
   } else {
     auto field = MakeUnique<TableModuleField>(loc, name);
-    CHECK_RESULT(ParseLimits(&field->table.elem_limits, Sharing::NotAllowed));
+    CHECK_RESULT(ParseLimits(&field->table.elem_limits));
     EXPECT(Anyfunc);
     module->AppendField(std::move(field));
   }

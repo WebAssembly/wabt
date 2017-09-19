@@ -262,6 +262,8 @@ struct Limits {
   bool has_max = false;
   bool is_shared = false;
 };
+enum class LimitsShareable { Allowed, NotAllowed };
+
 
 enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
