@@ -1024,11 +1024,11 @@ void WatWriter::WriteException(const Exception& except) {
 }
 
 void WatWriter::WriteLimits(const Limits& limits) {
+  if (limits.is_shared)
+    WritePutsSpace("shared");
   Writef("%" PRIu64, limits.initial);
   if (limits.has_max)
     Writef("%" PRIu64, limits.max);
-  if (limits.is_shared)
-    WritePutsSpace("shared");
 }
 
 void WatWriter::WriteTable(const Table& table) {
