@@ -37,11 +37,6 @@ Opcode::Info Opcode::infos_[] = {
 #undef WABT_OPCODE
 
 // static
-Opcode::Info Opcode::invalid_info_ = {
-    "<invalid>", Type::Void, Type::Void, Type::Void, 0, 0, 0, 0,
-};
-
-// static
 Opcode Opcode::FromCode(uint32_t code) {
   return FromCode(0, code);
 }
@@ -49,20 +44,32 @@ Opcode Opcode::FromCode(uint32_t code) {
 // static
 Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
   uint32_t prefix_code = PrefixCode(prefix, code);
-  auto iter =
-      std::lower_bound(infos_, infos_ + WABT_ARRAY_SIZE(infos_), prefix_code,
-                       [](const Info& info, uint32_t prefix_code) {
-                         return info.prefix_code < prefix_code;
-                       });
-
-  if (iter->prefix_code != prefix_code)
-    return Opcode(Invalid);
+  auto begin = infos_;
+  auto end = infos_ + WABT_ARRAY_SIZE(infos_);
+  auto iter = std::lower_bound(begin, end, prefix_code,
+                               [](const Info& info, uint32_t prefix_code) {
+                                 return info.prefix_code < prefix_code;
+                               });
+  if (iter == end || iter->prefix_code != prefix_code) {
+    return Opcode(EncodeInvalidOpcode(prefix_code));
+  }
 
   return Opcode(static_cast<Enum>(iter - infos_));
 }
 
 Opcode::Info Opcode::GetInfo() const {
-  return enum_ < Invalid ? infos_[enum_] : invalid_info_;
+  if (enum_ < Invalid) {
+    return infos_[enum_];
+  }
+
+  uint8_t prefix;
+  uint32_t code;
+  DecodeInvalidOpcode(enum_, &prefix, &code);
+  const Info invalid_info = {
+      "<invalid>", Type::Void, Type::Void, Type::Void,
+      0,           prefix,     code,       PrefixCode(prefix, code),
+  };
+  return invalid_info;
 }
 
 bool Opcode::IsNaturallyAligned(Address alignment) const {
