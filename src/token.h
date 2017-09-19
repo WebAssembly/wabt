@@ -66,11 +66,11 @@ enum class TokenType {
   Register,
   Result,
   Rpar,
+  Shared,
   Start,
   Table,
   Then,
   Type,
-  Shared,
   First_Bare = Invalid,
   Last_Bare = Type,
 

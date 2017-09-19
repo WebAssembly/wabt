@@ -1,1 +1,1 @@
-(module (memory 1 1 shared))
+(module (memory shared 1 1))

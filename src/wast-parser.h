@@ -127,7 +127,9 @@ class WastParser {
   Result ParseQuotedText(std::string* text);
   bool ParseOffsetOpt(uint32_t* offset);
   bool ParseAlignOpt(uint32_t* align);
-  Result ParseLimits(Limits*, bool);
+
+  enum class Sharing { Allowed, NotAllowed };
+  Result ParseLimits(Limits*, Sharing);
   Result ParseNat(uint64_t*);
 
   Result ParseModuleFieldList(Module*);

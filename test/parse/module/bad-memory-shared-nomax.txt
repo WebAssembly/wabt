@@ -1,6 +1,8 @@
 ;;; ERROR: 1
-(module (memory 1 shared))
+(module (memory shared 1))
 
 (;; STDERR ;;;
-Halp I'm getting the wrong error!
+out/test/parse/module/bad-memory-shared-nomax.txt:2:17: error: shared memories must have max sizes
+(module (memory shared 1))
+                ^^^^^^
 ;;; STDERR ;;)
