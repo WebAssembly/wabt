@@ -93,9 +93,28 @@ struct Opcode {
     return (prefix << 8) | code;
   }
 
-  static void SplitPrefixCode(uint32_t prefix_code,
-                              uint8_t* out_prefix,
-                              uint32_t* out_code) {
+  // The Opcode struct only stores an enumeration (Opcode::Enum) of all valid
+  // opcodes, densely packed. We want to be able to store invalid opcodes as
+  // well, for display to the user. To encode these, we use PrefixCode() to
+  // generate a uint32_t of the prefix/code pair, then negate the value so it
+  // doesn't overlap with the valid enum values. The negation is done using
+  // `~code + 1` since prefix_code is unsigned, and MSVC warns if you use - on
+  // an unsigned value.
+  //
+  // | 0             | Opcode::Invalid         | INT32_MAX+1    UINT32_MAX |
+  // |---------------|-------------------------|---------------------------|
+  // | valid opcodes |      unused space       |      invalid opcodes      |
+  //
+  static Enum EncodeInvalidOpcode(uint32_t prefix_code) {
+    Enum result = static_cast<Enum>(~prefix_code + 1);
+    assert(result >= Invalid);
+    return result;
+  }
+
+  static void DecodeInvalidOpcode(Enum e,
+                                  uint8_t* out_prefix,
+                                  uint32_t* out_code) {
+    uint32_t prefix_code = ~static_cast<uint32_t>(e) + 1;
     *out_prefix = prefix_code >> 8;
     *out_code = prefix_code & 0xff;
   }

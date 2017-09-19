@@ -44,16 +44,14 @@ Opcode Opcode::FromCode(uint32_t code) {
 // static
 Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
   uint32_t prefix_code = PrefixCode(prefix, code);
-  auto iter =
-      std::lower_bound(infos_, infos_ + WABT_ARRAY_SIZE(infos_), prefix_code,
-                       [](const Info& info, uint32_t prefix_code) {
-                         return info.prefix_code < prefix_code;
-                       });
-
-  if (iter->prefix_code != prefix_code) {
-    // Store prefix code as -enum. This way we can extract the prefix code in
-    // GetInfo below.
-    return Opcode(static_cast<Enum>(-prefix_code));
+  auto begin = infos_;
+  auto end = infos_ + WABT_ARRAY_SIZE(infos_);
+  auto iter = std::lower_bound(begin, end, prefix_code,
+                               [](const Info& info, uint32_t prefix_code) {
+                                 return info.prefix_code < prefix_code;
+                               });
+  if (iter == end || iter->prefix_code != prefix_code) {
+    return Opcode(EncodeInvalidOpcode(prefix_code));
   }
 
   return Opcode(static_cast<Enum>(iter - infos_));
@@ -64,13 +62,12 @@ Opcode::Info Opcode::GetInfo() const {
     return infos_[enum_];
   }
 
-  uint32_t prefix_code = static_cast<uint32_t>(-enum_);
   uint8_t prefix;
   uint32_t code;
-  SplitPrefixCode(prefix_code, &prefix, &code);
+  DecodeInvalidOpcode(enum_, &prefix, &code);
   const Info invalid_info = {
       "<invalid>", Type::Void, Type::Void, Type::Void,
-      0,           prefix,     code,       prefix_code,
+      0,           prefix,     code,       PrefixCode(prefix, code),
   };
   return invalid_info;
 }
