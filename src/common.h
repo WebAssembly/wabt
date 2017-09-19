@@ -264,7 +264,6 @@ struct Limits {
 };
 enum class LimitsShareable { Allowed, NotAllowed };
 
-
 enum { WABT_USE_NATURAL_ALIGNMENT = 0xFFFFFFFF };
 
 enum class NameSectionSubsection {

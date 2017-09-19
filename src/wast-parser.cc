@@ -910,8 +910,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = MakeUnique<TableImport>(name);
-      CHECK_RESULT(
-          ParseLimits(&import->table.elem_limits));
+      CHECK_RESULT(ParseLimits(&import->table.elem_limits));
       EXPECT(Anyfunc);
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
