@@ -1,0 +1,2 @@
+(module
+  (import "foo" "2" (memory (shared 0 2))))

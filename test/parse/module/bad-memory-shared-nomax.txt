@@ -1,0 +1,8 @@
+;;; ERROR: 1
+(module (memory (shared 1)))
+
+(;; STDERR ;;;
+out/test/parse/module/bad-memory-shared-nomax.txt:2:10: error: shared memories must have max sizes
+(module (memory (shared 1)))
+         ^^^^^^
+;;; STDERR ;;)

@@ -66,6 +66,7 @@ enum class TokenType {
   Register,
   Result,
   Rpar,
+  Shared,
   Start,
   Table,
   Then,

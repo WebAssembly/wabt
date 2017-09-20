@@ -53,6 +53,7 @@ const char* GetTokenTypeName(TokenType token_type) {
       "register",
       "result",
       ")",
+      "shared",
       "start",
       "table",
       "then",

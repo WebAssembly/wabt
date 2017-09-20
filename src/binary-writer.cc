@@ -60,6 +60,7 @@ void WriteType(Stream* stream, Type type) {
 
 void WriteLimits(Stream* stream, const Limits* limits) {
   uint32_t flags = limits->has_max ? WABT_BINARY_LIMITS_HAS_MAX_FLAG : 0;
+  flags |= limits->is_shared ? WABT_BINARY_LIMITS_IS_SHARED_FLAG : 0;
   WriteU32Leb128(stream, flags, "limits: flags");
   WriteU32Leb128(stream, limits->initial, "limits: initial");
   if (limits->has_max)

@@ -1,0 +1,9 @@
+;;; ERROR: 1
+(module
+  (import "foo" "bar" (table (shared 0 3) anyfunc))
+)
+(;; STDERR ;;;
+out/test/parse/module/bad-import-table-shared.txt:3:4: error: tables may not be shared
+  (import "foo" "bar" (table (shared 0 3) anyfunc))
+   ^^^^^^
+;;; STDERR ;;)

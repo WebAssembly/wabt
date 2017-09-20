@@ -608,13 +608,21 @@ bool WastParser::ParseAlignOpt(uint32_t* out_align) {
 
 Result WastParser::ParseLimits(Limits* out_limits) {
   WABT_TRACE(ParseLimits);
-  CHECK_RESULT(ParseNat(&out_limits->initial));
 
+  if (PeekMatch(TokenType::Lpar)) {
+    Consume();
+    EXPECT(Shared);
+    out_limits->is_shared = true;
+  }
+  CHECK_RESULT(ParseNat(&out_limits->initial));
   if (PeekMatch(TokenType::Nat)) {
     CHECK_RESULT(ParseNat(&out_limits->max));
     out_limits->has_max = true;
   } else {
     out_limits->has_max = false;
+  }
+  if (out_limits->is_shared) {
+    EXPECT(Rpar);
   }
 
   return Result::Ok;

@@ -567,6 +567,8 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadU32Leb128(&flags, "table flags"));
   CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
+  bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
+  ERROR_UNLESS(!is_shared, "tables may not be shared");
   if (has_max) {
     CHECK_RESULT(ReadU32Leb128(&max, "table max elem count"));
     ERROR_UNLESS(initial <= max,
@@ -585,8 +587,10 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   uint32_t max = 0;
   CHECK_RESULT(ReadU32Leb128(&flags, "memory flags"));
   CHECK_RESULT(ReadU32Leb128(&initial, "memory initial page count"));
-  bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   ERROR_UNLESS(initial <= WABT_MAX_PAGES, "invalid memory initial size");
+  bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
+  bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
+  ERROR_UNLESS(!is_shared || has_max, "shared memory must have a max size");
   if (has_max) {
     CHECK_RESULT(ReadU32Leb128(&max, "memory max page count"));
     ERROR_UNLESS(max <= WABT_MAX_PAGES, "invalid memory max size");
@@ -594,6 +598,7 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   }
 
   out_page_limits->has_max = has_max;
+  out_page_limits->is_shared = is_shared;
   out_page_limits->initial = initial;
   out_page_limits->max = max;
   return Result::Ok;
