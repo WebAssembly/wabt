@@ -29,7 +29,8 @@ struct Opcode {
   // NOTE: this enum does not match the binary encoding.
   //
   enum Enum : uint32_t {
-#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
+#define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
+                    text)                                                     \
   Name,
 #include "src/opcode.def"
 #undef WABT_OPCODE
@@ -37,7 +38,8 @@ struct Opcode {
   };
 
   // Static opcode objects.
-#define WABT_OPCODE(rtype, type1, type2, mem_size, prefix, code, Name, text) \
+#define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
+                    text)                                                     \
   static Opcode Name##_Opcode;
 #include "src/opcode.def"
 #undef WABT_OPCODE
@@ -56,6 +58,7 @@ struct Opcode {
   Type GetResultType() const { return GetInfo().result_type; }
   Type GetParamType1() const { return GetInfo().param1_type; }
   Type GetParamType2() const { return GetInfo().param2_type; }
+  Type GetParamType3() const { return GetInfo().param3_type; }
   Address GetMemorySize() const { return GetInfo().memory_size; }
 
   // Return 1 if |alignment| matches the alignment of |opcode|, or if
@@ -81,6 +84,7 @@ struct Opcode {
     Type result_type;
     Type param1_type;
     Type param2_type;
+    Type param3_type;
     Address memory_size;
     uint8_t prefix;
     uint32_t code;

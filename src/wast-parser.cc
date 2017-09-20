@@ -163,6 +163,10 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::GrowMemory:
     case TokenType::Throw:
     case TokenType::Rethrow:
+    case TokenType::AtomicLoad:
+    case TokenType::AtomicStore:
+    case TokenType::AtomicRmw:
+    case TokenType::AtomicRmwCmpxchg:
       return true;
     default:
       return false;
@@ -1217,6 +1221,20 @@ Result WastParser::ParsePlainInstrVar(Location loc,
   return Result::Ok;
 }
 
+template <typename T>
+Result WastParser::ParsePlainLoadStoreInstr(Location loc,
+                                            Token token,
+                                            std::unique_ptr<Expr>* out_expr) {
+  Opcode opcode = token.opcode();
+  uint32_t offset;
+  uint32_t align;
+  ParseOffsetOpt(&offset);
+  ParseAlignOpt(&align);
+  out_expr->reset(new T(opcode, align, offset, loc));
+  return Result::Ok;
+}
+
+
 Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   WABT_TRACE(ParsePlainInstr);
   Location loc = GetLocation();
@@ -1301,25 +1319,15 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParsePlainInstrVar<SetGlobalExpr>(loc, out_expr));
       break;
 
-    case TokenType::Load: {
-      Opcode opcode = Consume().opcode();
-      uint32_t offset;
-      uint32_t align;
-      ParseOffsetOpt(&offset);
-      ParseAlignOpt(&align);
-      out_expr->reset(new LoadExpr(opcode, align, offset, loc));
+    case TokenType::Load:
+      CHECK_RESULT(
+          ParsePlainLoadStoreInstr<LoadExpr>(loc, Consume(), out_expr));
       break;
-    }
 
-    case TokenType::Store: {
-      Opcode opcode = Consume().opcode();
-      uint32_t offset;
-      uint32_t align;
-      ParseOffsetOpt(&offset);
-      ParseAlignOpt(&align);
-      out_expr->reset(new StoreExpr(opcode, align, offset, loc));
+    case TokenType::Store:
+      CHECK_RESULT(
+          ParsePlainLoadStoreInstr<StoreExpr>(loc, Consume(), out_expr));
       break;
-    }
 
     case TokenType::Const: {
       Const const_;
@@ -1369,6 +1377,38 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<RethrowExpr>(loc, out_expr));
       break;
+
+    case TokenType::AtomicLoad: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(
+          ParsePlainLoadStoreInstr<AtomicLoadExpr>(loc, token, out_expr));
+      break;
+    }
+
+    case TokenType::AtomicStore: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(
+          ParsePlainLoadStoreInstr<AtomicStoreExpr>(loc, token, out_expr));
+      break;
+    }
+
+    case TokenType::AtomicRmw: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(
+          ParsePlainLoadStoreInstr<AtomicRmwExpr>(loc, token, out_expr));
+      break;
+    }
+
+    case TokenType::AtomicRmwCmpxchg: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(
+          ParsePlainLoadStoreInstr<AtomicRmwCmpxchgExpr>(loc, token, out_expr));
+      break;
+    }
 
     default:
       assert(

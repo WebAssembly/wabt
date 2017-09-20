@@ -1,0 +1,110 @@
+;;; TOOL: run-interp
+;;; FLAGS: --enable-threads
+(module
+  (memory 1)
+
+  ;; i32
+
+  (func (export "i32.atomic.rmw8_u.xor-result") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 65      i32.atomic.rmw8_u.xor)
+
+  (func (export "i32.atomic.rmw8_u.xor-memory") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 65      i32.atomic.rmw8_u.xor drop
+    i32.const 0 i32.load8_u)
+
+  (func (export "i32.atomic.rmw16_u.xor-result") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 65      i32.atomic.rmw16_u.xor)
+
+  (func (export "i32.atomic.rmw16_u.xor-memory") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 65      i32.atomic.rmw16_u.xor drop
+    i32.const 0 i32.load16_u)
+
+  (func (export "i32.atomic.rmw.xor-result") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 65      i32.atomic.rmw.xor)
+
+  (func (export "i32.atomic.rmw.xor-memory") (result i32)
+    i32.const 0 i32.const 1000000 i32.store
+    i32.const 0 i32.const 65      i32.atomic.rmw.xor drop
+    i32.const 0 i32.load)
+
+
+  ;; i64
+
+  (func (export "i64.atomic.rmw8_u.xor-result") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 65          i64.atomic.rmw8_u.xor)
+
+  (func (export "i64.atomic.rmw8_u.xor-memory") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 65        i64.atomic.rmw8_u.xor drop
+    i32.const 0 i64.load8_u)
+
+  (func (export "i64.atomic.rmw16_u.xor-result") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1025        i64.atomic.rmw16_u.xor)
+
+  (func (export "i64.atomic.rmw16_u.xor-memory") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1025        i64.atomic.rmw16_u.xor drop
+    i32.const 0 i64.load16_u)
+
+  (func (export "i64.atomic.rmw32_u.xor-result") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1025        i64.atomic.rmw32_u.xor)
+
+  (func (export "i64.atomic.rmw32_u.xor-memory") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1025        i64.atomic.rmw32_u.xor drop
+    i32.const 0 i64.load32_u)
+
+  (func (export "i64.atomic.rmw.xor-result") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1025        i64.atomic.rmw.xor)
+
+  (func (export "i64.atomic.rmw.xor-memory") (result i64)
+    i32.const 0 i64.const 10000000000 i64.store
+    i32.const 0 i64.const 1025        i64.atomic.rmw.xor drop
+    i32.const 0 i64.load)
+
+
+  ;; Test bad alignment
+
+  (func (export "bad_align-i32.atomic.rmw16_u.xor")
+    i32.const 1 i32.const 0 i32.atomic.rmw16_u.xor drop)
+  (func (export "bad_align-i32.atomic.rmw.xor")
+    i32.const 2 i32.const 0 i32.atomic.rmw.xor drop)
+
+  (func (export "bad_align-i64.atomic.rmw16_u.xor")
+    i32.const 1 i64.const 0 i64.atomic.rmw16_u.xor drop)
+  (func (export "bad_align-i64.atomic.rmw32_u.xor")
+    i32.const 2 i64.const 0 i64.atomic.rmw32_u.xor drop)
+  (func (export "bad_align-i64.atomic.rmw.xor")
+    i32.const 4 i64.const 0 i64.atomic.rmw.xor drop)
+
+)
+(;; STDOUT ;;;
+i32.atomic.rmw8_u.xor-result() => i32:64
+i32.atomic.rmw8_u.xor-memory() => i32:1
+i32.atomic.rmw16_u.xor-result() => i32:16960
+i32.atomic.rmw16_u.xor-memory() => i32:16897
+i32.atomic.rmw.xor-result() => i32:1000000
+i32.atomic.rmw.xor-memory() => i32:999937
+i64.atomic.rmw8_u.xor-result() => i64:0
+i64.atomic.rmw8_u.xor-memory() => i64:65
+i64.atomic.rmw16_u.xor-result() => i64:58368
+i64.atomic.rmw16_u.xor-memory() => i64:57345
+i64.atomic.rmw32_u.xor-result() => i64:1410065408
+i64.atomic.rmw32_u.xor-memory() => i64:1410064385
+i64.atomic.rmw.xor-result() => i64:10000000000
+i64.atomic.rmw.xor-memory() => i64:9999998977
+bad_align-i32.atomic.rmw16_u.xor() => error: atomic memory access is unaligned
+bad_align-i32.atomic.rmw.xor() => error: atomic memory access is unaligned
+bad_align-i64.atomic.rmw16_u.xor() => error: atomic memory access is unaligned
+bad_align-i64.atomic.rmw32_u.xor() => error: atomic memory access is unaligned
+bad_align-i64.atomic.rmw.xor() => error: atomic memory access is unaligned
+;;; STDOUT ;;)
