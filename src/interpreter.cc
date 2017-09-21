@@ -2256,8 +2256,10 @@ void Thread::Trace(Stream* stream) {
   assert(!opcode.IsInvalid());
   switch (opcode) {
     case Opcode::Select:
-      stream->Writef("%s %u, %" PRIu64 ", %" PRIu64 "\n", opcode.GetName(),
-                     Pick(3).i32, Pick(2).i64, Pick(1).i64);
+      // TODO(binji): We don't know the type here so we can't display the value
+      // to the user. This used to display the full 64-bit value, but that
+      // will potentially display garbage if the value is 32-bit.
+      stream->Writef("%s %u, %%[-2], %%[-1]\n", opcode.GetName(), Pick(3).i32);
       break;
 
     case Opcode::Br:
