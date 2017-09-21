@@ -1257,6 +1257,7 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
   const uint8_t* pc = &istream[pc_];
   for (int i = 0; i < num_instructions; ++i) {
     Opcode opcode = ReadOpcode(&pc);
+    assert(!opcode.IsInvalid());
     switch (opcode) {
       case Opcode::Select: {
         uint32_t cond = Pop<uint32_t>();
@@ -2215,16 +2216,24 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         break;
       }
 
-      case Opcode::InterpreterData:
-        /* shouldn't ever execute this */
-        assert(0);
-        break;
-
       case Opcode::Nop:
         break;
 
-      default:
-        assert(0);
+      // The following opcodes are either never generated or should never be
+      // executed.
+      case Opcode::Block:
+      case Opcode::Catch:
+      case Opcode::CatchAll:
+      case Opcode::Else:
+      case Opcode::End:
+      case Opcode::If:
+      case Opcode::InterpreterData:
+      case Opcode::Invalid:
+      case Opcode::Loop:
+      case Opcode::Rethrow:
+      case Opcode::Throw:
+      case Opcode::Try:
+        WABT_UNREACHABLE;
         break;
     }
   }
@@ -2244,6 +2253,7 @@ void Thread::Trace(Stream* stream) {
                  pc - istream, value_stack_depth);
 
   Opcode opcode = ReadOpcode(&pc);
+  assert(!opcode.IsInvalid());
   switch (opcode) {
     case Opcode::Select:
       stream->Writef("%s %u, %" PRIu64 ", %" PRIu64 "\n", opcode.GetName(),
@@ -2324,6 +2334,13 @@ void Thread::Trace(Stream* stream) {
       stream->Writef("%s $%u\n", opcode.GetName(), ReadU32At(pc));
       break;
 
+    case Opcode::I32AtomicLoad8U:
+    case Opcode::I32AtomicLoad16U:
+    case Opcode::I32AtomicLoad:
+    case Opcode::I64AtomicLoad8U:
+    case Opcode::I64AtomicLoad16U:
+    case Opcode::I64AtomicLoad32U:
+    case Opcode::I64AtomicLoad:
     case Opcode::I32Load8S:
     case Opcode::I32Load8U:
     case Opcode::I32Load16S:
@@ -2344,6 +2361,27 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
+    case Opcode::I32AtomicStore:
+    case Opcode::I32AtomicStore8:
+    case Opcode::I32AtomicStore16:
+    case Opcode::I32AtomicRmw8UAdd:
+    case Opcode::I32AtomicRmw16UAdd:
+    case Opcode::I32AtomicRmwAdd:
+    case Opcode::I32AtomicRmw8USub:
+    case Opcode::I32AtomicRmw16USub:
+    case Opcode::I32AtomicRmwSub:
+    case Opcode::I32AtomicRmw8UAnd:
+    case Opcode::I32AtomicRmw16UAnd:
+    case Opcode::I32AtomicRmwAnd:
+    case Opcode::I32AtomicRmw8UOr:
+    case Opcode::I32AtomicRmw16UOr:
+    case Opcode::I32AtomicRmwOr:
+    case Opcode::I32AtomicRmw8UXor:
+    case Opcode::I32AtomicRmw16UXor:
+    case Opcode::I32AtomicRmwXor:
+    case Opcode::I32AtomicRmw8UXchg:
+    case Opcode::I32AtomicRmw16UXchg:
+    case Opcode::I32AtomicRmwXchg:
     case Opcode::I32Store8:
     case Opcode::I32Store16:
     case Opcode::I32Store: {
@@ -2353,6 +2391,44 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
+    case Opcode::I32AtomicRmwCmpxchg:
+    case Opcode::I32AtomicRmw8UCmpxchg:
+    case Opcode::I32AtomicRmw16UCmpxchg: {
+      Index memory_index = ReadU32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %u, %u\n", opcode.GetName(),
+                     memory_index, Pick(3).i32, ReadU32At(pc), Pick(2).i32,
+                     Pick(1).i32);
+      break;
+    }
+
+    case Opcode::I64AtomicStore8:
+    case Opcode::I64AtomicStore16:
+    case Opcode::I64AtomicStore32:
+    case Opcode::I64AtomicStore:
+    case Opcode::I64AtomicRmw8UAdd:
+    case Opcode::I64AtomicRmw16UAdd:
+    case Opcode::I64AtomicRmw32UAdd:
+    case Opcode::I64AtomicRmwAdd:
+    case Opcode::I64AtomicRmw8USub:
+    case Opcode::I64AtomicRmw16USub:
+    case Opcode::I64AtomicRmw32USub:
+    case Opcode::I64AtomicRmwSub:
+    case Opcode::I64AtomicRmw8UAnd:
+    case Opcode::I64AtomicRmw16UAnd:
+    case Opcode::I64AtomicRmw32UAnd:
+    case Opcode::I64AtomicRmwAnd:
+    case Opcode::I64AtomicRmw8UOr:
+    case Opcode::I64AtomicRmw16UOr:
+    case Opcode::I64AtomicRmw32UOr:
+    case Opcode::I64AtomicRmwOr:
+    case Opcode::I64AtomicRmw8UXor:
+    case Opcode::I64AtomicRmw16UXor:
+    case Opcode::I64AtomicRmw32UXor:
+    case Opcode::I64AtomicRmwXor:
+    case Opcode::I64AtomicRmw8UXchg:
+    case Opcode::I64AtomicRmw16UXchg:
+    case Opcode::I64AtomicRmw32UXchg:
+    case Opcode::I64AtomicRmwXchg:
     case Opcode::I64Store8:
     case Opcode::I64Store16:
     case Opcode::I64Store32:
@@ -2361,6 +2437,17 @@ void Thread::Trace(Stream* stream) {
       stream->Writef("%s $%" PRIindex ":%u+$%u, %" PRIu64 "\n",
                      opcode.GetName(), memory_index, Pick(2).i32, ReadU32At(pc),
                      Pick(1).i64);
+      break;
+    }
+
+    case Opcode::I64AtomicRmwCmpxchg:
+    case Opcode::I64AtomicRmw8UCmpxchg:
+    case Opcode::I64AtomicRmw16UCmpxchg:
+    case Opcode::I64AtomicRmw32UCmpxchg: {
+      Index memory_index = ReadU32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u+$%u, %" PRIu64 ", %" PRIu64 "\n",
+                     opcode.GetName(), memory_index, Pick(3).i32, ReadU32At(pc),
+                     Pick(2).i64, Pick(1).i64);
       break;
     }
 
@@ -2419,6 +2506,8 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32Ctz:
     case Opcode::I32Popcnt:
     case Opcode::I32Eqz:
+    case Opcode::I32Extend16S:
+    case Opcode::I32Extend8S:
       stream->Writef("%s %u\n", opcode.GetName(), Top().i32);
       break;
 
@@ -2455,6 +2544,9 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64Ctz:
     case Opcode::I64Popcnt:
     case Opcode::I64Eqz:
+    case Opcode::I64Extend16S:
+    case Opcode::I64Extend32S:
+    case Opcode::I64Extend8S:
       stream->Writef("%s %" PRIu64 "\n", opcode.GetName(), Top().i64);
       break;
 
@@ -2572,13 +2664,21 @@ void Thread::Trace(Stream* stream) {
                      *(pc + 4));
       break;
 
+    // The following opcodes are either never generated or should never be
+    // executed.
+    case Opcode::Block:
+    case Opcode::Catch:
+    case Opcode::CatchAll:
+    case Opcode::Else:
+    case Opcode::End:
+    case Opcode::If:
     case Opcode::InterpreterData:
-      /* shouldn't ever execute this */
-      assert(0);
-      break;
-
-    default:
-      assert(0);
+    case Opcode::Invalid:
+    case Opcode::Loop:
+    case Opcode::Rethrow:
+    case Opcode::Throw:
+    case Opcode::Try:
+      WABT_UNREACHABLE;
       break;
   }
 }
@@ -2598,6 +2698,7 @@ void Environment::Disassemble(Stream* stream,
     stream->Writef("%4" PRIzd "| ", pc - istream);
 
     Opcode opcode = ReadOpcode(&pc);
+    assert(!opcode.IsInvalid());
     switch (opcode) {
       case Opcode::Select:
         stream->Writef("%s %%[-3], %%[-2], %%[-1]\n", opcode.GetName());
@@ -2676,6 +2777,13 @@ void Environment::Disassemble(Stream* stream,
         stream->Writef("%s $%u\n", opcode.GetName(), ReadU32(&pc));
         break;
 
+      case Opcode::I32AtomicLoad:
+      case Opcode::I64AtomicLoad:
+      case Opcode::I32AtomicLoad8U:
+      case Opcode::I32AtomicLoad16U:
+      case Opcode::I64AtomicLoad8U:
+      case Opcode::I64AtomicLoad16U:
+      case Opcode::I64AtomicLoad32U:
       case Opcode::I32Load8S:
       case Opcode::I32Load8U:
       case Opcode::I32Load16S:
@@ -2696,6 +2804,55 @@ void Environment::Disassemble(Stream* stream,
         break;
       }
 
+      case Opcode::I32AtomicStore:
+      case Opcode::I64AtomicStore:
+      case Opcode::I32AtomicStore8:
+      case Opcode::I32AtomicStore16:
+      case Opcode::I64AtomicStore8:
+      case Opcode::I64AtomicStore16:
+      case Opcode::I64AtomicStore32:
+      case Opcode::I32AtomicRmwAdd:
+      case Opcode::I64AtomicRmwAdd:
+      case Opcode::I32AtomicRmw8UAdd:
+      case Opcode::I32AtomicRmw16UAdd:
+      case Opcode::I64AtomicRmw8UAdd:
+      case Opcode::I64AtomicRmw16UAdd:
+      case Opcode::I64AtomicRmw32UAdd:
+      case Opcode::I32AtomicRmwSub:
+      case Opcode::I64AtomicRmwSub:
+      case Opcode::I32AtomicRmw8USub:
+      case Opcode::I32AtomicRmw16USub:
+      case Opcode::I64AtomicRmw8USub:
+      case Opcode::I64AtomicRmw16USub:
+      case Opcode::I64AtomicRmw32USub:
+      case Opcode::I32AtomicRmwAnd:
+      case Opcode::I64AtomicRmwAnd:
+      case Opcode::I32AtomicRmw8UAnd:
+      case Opcode::I32AtomicRmw16UAnd:
+      case Opcode::I64AtomicRmw8UAnd:
+      case Opcode::I64AtomicRmw16UAnd:
+      case Opcode::I64AtomicRmw32UAnd:
+      case Opcode::I32AtomicRmwOr:
+      case Opcode::I64AtomicRmwOr:
+      case Opcode::I32AtomicRmw8UOr:
+      case Opcode::I32AtomicRmw16UOr:
+      case Opcode::I64AtomicRmw8UOr:
+      case Opcode::I64AtomicRmw16UOr:
+      case Opcode::I64AtomicRmw32UOr:
+      case Opcode::I32AtomicRmwXor:
+      case Opcode::I64AtomicRmwXor:
+      case Opcode::I32AtomicRmw8UXor:
+      case Opcode::I32AtomicRmw16UXor:
+      case Opcode::I64AtomicRmw8UXor:
+      case Opcode::I64AtomicRmw16UXor:
+      case Opcode::I64AtomicRmw32UXor:
+      case Opcode::I32AtomicRmwXchg:
+      case Opcode::I64AtomicRmwXchg:
+      case Opcode::I32AtomicRmw8UXchg:
+      case Opcode::I32AtomicRmw16UXchg:
+      case Opcode::I64AtomicRmw8UXchg:
+      case Opcode::I64AtomicRmw16UXchg:
+      case Opcode::I64AtomicRmw32UXchg:
       case Opcode::I32Store8:
       case Opcode::I32Store16:
       case Opcode::I32Store:
@@ -2706,7 +2863,20 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F32Store:
       case Opcode::F64Store: {
         Index memory_index = ReadU32(&pc);
-        stream->Writef("%s %%[-2]+$%" PRIindex ", $%u:%%[-1]\n",
+        stream->Writef("%s $%" PRIindex ":%%[-2]+$%u, %%[-1]\n",
+                       opcode.GetName(), memory_index, ReadU32(&pc));
+        break;
+      }
+
+      case Opcode::I32AtomicRmwCmpxchg:
+      case Opcode::I64AtomicRmwCmpxchg:
+      case Opcode::I32AtomicRmw8UCmpxchg:
+      case Opcode::I32AtomicRmw16UCmpxchg:
+      case Opcode::I64AtomicRmw8UCmpxchg:
+      case Opcode::I64AtomicRmw16UCmpxchg:
+      case Opcode::I64AtomicRmw32UCmpxchg: {
+        Index memory_index = ReadU32(&pc);
+        stream->Writef("%s $%" PRIindex ":%%[-3]+$%u, %%[-2], %%[-1]\n",
                        opcode.GetName(), memory_index, ReadU32(&pc));
         break;
       }
@@ -2845,6 +3015,11 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I32TruncUSatF64:
       case Opcode::I64TruncSSatF64:
       case Opcode::I64TruncUSatF64:
+      case Opcode::I32Extend16S:
+      case Opcode::I32Extend8S:
+      case Opcode::I64Extend16S:
+      case Opcode::I64Extend32S:
+      case Opcode::I64Extend8S:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
@@ -2896,8 +3071,20 @@ void Environment::Disassemble(Stream* stream,
         break;
       }
 
-      default:
-        assert(0);
+      // The following opcodes are either never generated or should never be
+      // executed.
+      case Opcode::Block:
+      case Opcode::Catch:
+      case Opcode::CatchAll:
+      case Opcode::Else:
+      case Opcode::End:
+      case Opcode::If:
+      case Opcode::Invalid:
+      case Opcode::Loop:
+      case Opcode::Rethrow:
+      case Opcode::Throw:
+      case Opcode::Try:
+        WABT_UNREACHABLE;
         break;
     }
   }
