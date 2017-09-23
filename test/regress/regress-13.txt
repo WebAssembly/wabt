@@ -1,0 +1,7 @@
+;;; ERROR: 1
+(module (test))
+(;; STDERR ;;;
+out/test/regress/regress-13.txt:2:10: error: unexpected token "test", expected a module field.
+(module (test))
+         ^^^^
+;;; STDERR ;;)
