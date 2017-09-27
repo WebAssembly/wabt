@@ -74,6 +74,10 @@ class BinaryReader {
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
   Result ReadOpcode(Opcode* out_value, const char* desc) WABT_WARN_UNUSED;
+  template <typename T>
+  Result ReadT(T* out_value,
+               const char* type_name,
+               const char* desc) WABT_WARN_UNUSED;
   Result ReadU8(uint8_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadU32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadF32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
@@ -121,7 +125,7 @@ class BinaryReader {
   Result ReadSections() WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
-  size_t read_end_ = 0; /* Either the section end or data_size. */
+  size_t read_end_ = 0; // Either the section end or data_size.
   BinaryReaderDelegate::State state_;
   BinaryReaderLogging logging_delegate_;
   BinaryReaderDelegate* delegate_ = nullptr;
@@ -164,19 +168,10 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
   bool handled = delegate_->OnError(buffer);
 
   if (!handled) {
-    /* Not great to just print, but we don't want to eat the error either. */
+    // Not great to just print, but we don't want to eat the error either.
     fprintf(stderr, "*ERROR*: @0x%08zx: %s\n", state_.offset, buffer);
   }
 }
-
-#define IN_SIZE(type)                                           \
-  if (state_.offset + sizeof(type) > read_end_) {               \
-    PrintError("unable to read " #type ": %s", desc);           \
-    return Result::Error;                                       \
-  }                                                             \
-  memcpy(out_value, state_.data + state_.offset, sizeof(type)); \
-  state_.offset += sizeof(type);                                \
-  return Result::Ok
 
 Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
                                             const char* message) {
@@ -208,23 +203,34 @@ Result BinaryReader::ReadOpcode(Opcode* out_value, const char* desc) {
   return Result::Ok;
 }
 
+template <typename T>
+Result BinaryReader::ReadT(T* out_value,
+                           const char* type_name,
+                           const char* desc) {
+  if (state_.offset + sizeof(T) > read_end_) {
+    PrintError("unable to read %s: %s", type_name, desc);
+    return Result::Error;
+  }
+  memcpy(out_value, state_.data + state_.offset, sizeof(T));
+  state_.offset += sizeof(T);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadU8(uint8_t* out_value, const char* desc) {
-  IN_SIZE(uint8_t);
+  return ReadT(out_value, "uint8_t", desc);
 }
 
 Result BinaryReader::ReadU32(uint32_t* out_value, const char* desc) {
-  IN_SIZE(uint32_t);
+  return ReadT(out_value, "uint32_t", desc);
 }
 
 Result BinaryReader::ReadF32(uint32_t* out_value, const char* desc) {
-  IN_SIZE(float);
+  return ReadT(out_value, "float", desc);
 }
 
 Result BinaryReader::ReadF64(uint64_t* out_value, const char* desc) {
-  IN_SIZE(double);
+  return ReadT(out_value, "double", desc);
 }
-
-#undef IN_SIZE
 
 Result BinaryReader::ReadU32Leb128(uint32_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
@@ -256,7 +262,7 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
   uint32_t type = 0;
   CHECK_RESULT(ReadS32Leb128(&type, desc));
-  /* Must be in the vs7 range: [-128, 127). */
+  // Must be in the vs7 range: [-128, 127).
   ERROR_UNLESS(
       static_cast<int32_t>(type) >= -128 && static_cast<int32_t>(type) <= 127,
       "invalid type: %d", type);
@@ -1154,7 +1160,7 @@ Result BinaryReader::ReadNamesSection(Offset section_size) {
         }
         break;
       default:
-        /* unknown subsection, skip it */
+        // Unknown subsection, skip it.
         state_.offset = subsection_end;
         break;
     }
@@ -1248,7 +1254,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         break;
       }
       default:
-        /* unknown subsection, skip it */
+        // Unknown subsection, skip it.
         state_.offset = subsection_end;
         break;
     }
@@ -1309,7 +1315,7 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
              section_name == WABT_BINARY_SECTION_EXCEPTION) {
     CHECK_RESULT(ReadExceptionSection(section_size));
   } else {
-    /* This is an unknown custom section, skip it. */
+    // This is an unknown custom section, skip it.
     state_.offset = read_end_;
   }
   CALLBACK0(EndCustomSection);
@@ -1655,8 +1661,8 @@ Result BinaryReader::ReadSections() {
   while (state_.offset < state_.size) {
     uint32_t section_code;
     Offset section_size;
-    /* Temporarily reset read_end_ to the full data size so the next section
-     * can be read. */
+    // Temporarily reset read_end_ to the full data size so the next section
+    // can be read.
     read_end_ = state_.size;
     CHECK_RESULT(ReadU32Leb128(&section_code, "section code"));
     CHECK_RESULT(ReadOffset(&section_size, "section size"));
