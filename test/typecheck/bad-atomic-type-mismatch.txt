@@ -2,7 +2,7 @@
 ;;; FLAGS: --enable-threads
 
 (module
-  (memory 1)
+  (memory (shared 1 1))
 
   ;; Mismatch address.
   (func f32.const 0 i32.atomic.load drop)
