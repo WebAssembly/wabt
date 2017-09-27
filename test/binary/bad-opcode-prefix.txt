@@ -20,4 +20,11 @@ Error running "wasm-objdump":
 (;; STDOUT ;;;
 
 bad-opcode-prefix.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type:
+ - type[0] () -> i32
+Function:
+ - func[0] sig=0
 ;;; STDOUT ;;)

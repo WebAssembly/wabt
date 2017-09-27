@@ -305,8 +305,10 @@ static wabt::Result ReadModule(const char* module_filename,
 
   result = ReadFile(module_filename, &file_data);
   if (Succeeded(result)) {
-    ReadBinaryOptions options(s_features, s_log_stream.get(),
-                              true /* read_debug_names */);
+    const bool kReadDebugNames = true;
+    const bool kStopOnFirstError = true;
+    ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
+                              kStopOnFirstError);
     result = ReadBinaryInterpreter(env, DataOrNull(file_data), file_data.size(),
                                    &options, error_handler, out_module);
 
