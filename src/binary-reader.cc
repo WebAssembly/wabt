@@ -1658,6 +1658,8 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
 }
 
 Result BinaryReader::ReadSections() {
+  Result result = Result::Ok;
+
   while (state_.offset < state_.size) {
     uint32_t section_code;
     Offset section_size;
@@ -1685,10 +1687,13 @@ Result BinaryReader::ReadSections() {
 
     CALLBACK(BeginSection, section, section_size);
 
-#define V(Name, name, code)                          \
-  case BinarySection::Name:                          \
-    CHECK_RESULT(Read##Name##Section(section_size)); \
+#define V(Name, name, code)                             \
+  case BinarySection::Name:                             \
+    section_result = Read##Name##Section(section_size); \
+    result |= section_result;                           \
     break;
+
+    Result section_result = Result::Error;
 
     switch (section) {
       WABT_FOREACH_BINARY_SECTION(V)
@@ -1698,13 +1703,25 @@ Result BinaryReader::ReadSections() {
 
 #undef V
 
+    if (Failed(section_result)) {
+      if (options_->stop_on_first_error) {
+        return Result::Error;
+      }
+
+      // If we're continuing after failing to read this section, move the
+      // offset to the expected section end. This way we may be able to read
+      // further sections.
+      state_.offset = read_end_;
+    }
+
     ERROR_UNLESS(state_.offset == read_end_,
                  "unfinished section (expected end: 0x%" PRIzx ")", read_end_);
 
     if (section != BinarySection::Custom)
       last_known_section_ = section;
   }
-  return Result::Ok;
+
+  return result;
 }
 
 Result BinaryReader::ReadModule() {
