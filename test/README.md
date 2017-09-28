@@ -113,7 +113,7 @@ The currently supported list of tools (see
 [run-tests.py](https://github.com/WebAssembly/wabt/blob/master/test/run-tests.py#L44)):
 
 - `wat2wasm`: parse a wasm text file and validate it.
-- `wast-desugar`: parse the wasm text file and rewrite it in the canonical text
+- `wat-desugar`: parse the wasm text file and rewrite it in the canonical text
   format.
 - `run-objdump`: parse a wasm text file, convert it to binary, then run
   `wasm-objdump` on it.
@@ -153,7 +153,7 @@ subdirectory:
 - `binary`: Tests binary files that are impossible to generate via wat2wasm.
   Typically these are illegal binary files, to ensure binary file reading is
   robust.
-- `desugar`: Tests the `wast-desugar` tool.
+- `desugar`: Tests the `wat-desugar` tool.
 - `dump`: Tests the verbose output of `wat2wasm` and the output of
   `wasm-objdump`.
 - `exceptions`: Tests the new experimental exceptions feature.

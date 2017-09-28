@@ -299,8 +299,8 @@ if (NOT EMSCRIPTEN)
     target_link_libraries(wasm-interp m)
   endif ()
 
-  # wast-desugar
-  wabt_executable(wast-desugar src/tools/wast-desugar.cc)
+  # wat-desugar
+  wabt_executable(wat-desugar src/tools/wat-desugar.cc)
 
   find_package(Threads)
   if (BUILD_TESTS)

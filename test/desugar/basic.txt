@@ -1,4 +1,4 @@
-;;; TOOL: wast-desugar
+;;; TOOL: wat-desugar
 (module
   (import "foo" "bar" (func (result i32)))
 

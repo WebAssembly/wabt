@@ -50,8 +50,8 @@ TOOLS = {
         'EXE': '%(wast2json)s',
         'VERBOSE-FLAGS': ['-v']
     },
-    'wast-desugar': {
-        'EXE': '%(wast-desugar)s'
+    'wat-desugar': {
+        'EXE': '%(wat-desugar)s'
     },
     'run-objdump': {
         'EXE': 'test/run-objdump.py',

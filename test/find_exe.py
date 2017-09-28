@@ -25,7 +25,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 EXECUTABLES = [
     'wat2wasm', 'wast2json', 'wasm2wat', 'wasm-objdump', 'wasm-interp',
-    'wasm-opcodecnt', 'wast-desugar', 'wasm-link'
+    'wasm-opcodecnt', 'wat-desugar', 'wasm-link'
 ]
 
 
@@ -92,5 +92,5 @@ def GetWasmOpcodeCntExecutable(override=None):
   return FindExecutable('wasm-opcodecnt', override)
 
 
-def GetWastDesugarExecutable(override=None):
-  return FindExecutable('wast-desugar', override)
+def GetWatDesugarExecutable(override=None):
+  return FindExecutable('wat-desugar', override)
