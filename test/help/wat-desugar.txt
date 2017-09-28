@@ -1,24 +1,24 @@
-;;; EXE: %(wast-desugar)s
+;;; EXE: %(wat-desugar)s
 ;;; FLAGS: --help
 (;; STDOUT ;;;
-usage: wast-desugar [options] filename
+usage: wat-desugar [options] filename
 
   read a file in the wasm s-expression format and format it.
 
 examples:
   # write output to stdout
-  $ wast-desugar test.wast
+  $ wat-desugar test.wat
 
-  # write output to test2.wast
-  $ wast-desugar test.wast -o test2.wast
+  # write output to test2.wat
+  $ wat-desugar test.wat -o test2.wat
 
   # generate names for indexed variables
-  $ wast-desugar --generate-names test.wast
+  $ wat-desugar --generate-names test.wat
 
 options:
   -h, --help                                  Print this help message
   -o, --output=FILE                           Output file for the formatted file
-      --debug-parser                          Turn on debugging the parser of wast files
+      --debug-parser                          Turn on debugging the parser of wat files
   -f, --fold-exprs                            Write folded expressions where possible
       --enable-exceptions                     Experimental exception handling
       --enable-saturating-float-to-int        Saturating float-to-int operators

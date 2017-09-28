@@ -1,4 +1,4 @@
-;;; TOOL: wast-desugar
+;;; TOOL: wat-desugar
 (module
   ;; The implicitly defined function type should come before the function,
   ;; otherwise the function will not "see" it and define its own.

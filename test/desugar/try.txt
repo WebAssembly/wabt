@@ -1,4 +1,4 @@
-;;; TOOL: wast-desugar
+;;; TOOL: wat-desugar
 ;;; FLAGS: --enable-exceptions
 (module
   (except $ex i32)
