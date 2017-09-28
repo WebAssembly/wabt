@@ -2,7 +2,7 @@
 ;;; FLAGS: --stdout --fold-exprs --enable-threads
 
 (module
-  (memory 1)
+  (memory (shared 1 1))
   (func
     i32.const 0 i32.atomic.load drop
     i32.const 0 i64.atomic.load drop
@@ -326,5 +326,5 @@
         (i32.const 0)
         (i64.const 0)
         (i64.const 0))))
-  (memory (;0;) 1))
+  (memory (;0;) (shared 1 1)))
 ;;; STDOUT ;;)
