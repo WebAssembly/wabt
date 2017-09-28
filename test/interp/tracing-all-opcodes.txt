@@ -6,7 +6,7 @@
 
   (type $empty (func))
   (func $empty)
-  (memory 1)
+  (memory (shared 1 1))
   (table anyfunc (elem $empty $empty))
   (global $g (mut i32) (i32.const 0))
 
