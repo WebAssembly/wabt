@@ -299,6 +299,12 @@ if (NOT EMSCRIPTEN)
     target_link_libraries(wasm-interp m)
   endif ()
 
+  # spectest-interp
+  wabt_executable(spectest-interp src/tools/spectest-interp.cc)
+  if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
+    target_link_libraries(spectest-interp m)
+  endif ()
+
   # wat-desugar
   wabt_executable(wat-desugar src/tools/wat-desugar.cc)
 
