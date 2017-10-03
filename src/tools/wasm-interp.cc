@@ -40,14 +40,9 @@
 using namespace wabt;
 using namespace wabt::interpreter;
 
-#define V(name, str) str,
-static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
-#undef V
-
 static int s_verbose;
 static const char* s_infile;
 static Thread::Options s_thread_options;
-static bool s_trace;
 static bool s_run_all_exports;
 static bool s_host_print;
 static Features s_features;
@@ -100,7 +95,9 @@ static void ParseOptions(int argc, char** argv) {
                      // TODO(binji): validate.
                      s_thread_options.call_stack_size = atoi(argument.c_str());
                    });
-  parser.AddOption('t', "trace", "Trace execution", []() { s_trace = true; });
+  parser.AddOption('t', "trace", "Trace execution", []() {
+    s_thread_options.trace_stream = s_stdout_stream.get();
+  });
   parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
@@ -115,126 +112,16 @@ static void ParseOptions(int argc, char** argv) {
   parser.Parse(argc, argv);
 }
 
-// TODO(binji): Share these helper functions w/ spectest-interp as well.
-
-/* Not sure, but 100 chars is probably safe */
-#define MAX_TYPED_VALUE_CHARS 100
-
-static void SPrintTypedValue(char* buffer, size_t size, const TypedValue* tv) {
-  switch (tv->type) {
-    case Type::I32:
-      snprintf(buffer, size, "i32:%u", tv->value.i32);
-      break;
-
-    case Type::I64:
-      snprintf(buffer, size, "i64:%" PRIu64, tv->value.i64);
-      break;
-
-    case Type::F32: {
-      float value;
-      memcpy(&value, &tv->value.f32_bits, sizeof(float));
-      snprintf(buffer, size, "f32:%f", value);
-      break;
-    }
-
-    case Type::F64: {
-      double value;
-      memcpy(&value, &tv->value.f64_bits, sizeof(double));
-      snprintf(buffer, size, "f64:%f", value);
-      break;
-    }
-
-    default:
-      WABT_UNREACHABLE;
-  }
-}
-
-static void PrintTypedValue(const TypedValue* tv) {
-  char buffer[MAX_TYPED_VALUE_CHARS];
-  SPrintTypedValue(buffer, sizeof(buffer), tv);
-  printf("%s", buffer);
-}
-
-static void PrintTypedValueVector(const std::vector<TypedValue>& values) {
-  for (size_t i = 0; i < values.size(); ++i) {
-    PrintTypedValue(&values[i]);
-    if (i != values.size() - 1)
-      printf(", ");
-  }
-}
-
-static void PrintInterpreterResult(const char* desc,
-                                   interpreter::Result iresult) {
-  printf("%s: %s\n", desc, s_trap_strings[static_cast<size_t>(iresult)]);
-}
-
-static void PrintCall(string_view module_name,
-                      string_view func_name,
-                      const std::vector<TypedValue>& args,
-                      const std::vector<TypedValue>& results,
-                      interpreter::Result iresult) {
-  if (!module_name.empty())
-    printf(PRIstringview ".", WABT_PRINTF_STRING_VIEW_ARG(module_name));
-  printf(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(func_name));
-  PrintTypedValueVector(args);
-  printf(") =>");
-  if (iresult == interpreter::Result::Ok) {
-    if (results.size() > 0) {
-      printf(" ");
-      PrintTypedValueVector(results);
-    }
-    printf("\n");
-  } else {
-    PrintInterpreterResult(" error", iresult);
-  }
-}
-
-static interpreter::Result RunFunction(Thread* thread,
-                                       Index func_index,
-                                       const std::vector<TypedValue>& args,
-                                       std::vector<TypedValue>* out_results) {
-  return s_trace ? thread->TraceFunction(func_index, s_stdout_stream.get(),
-                                         args, out_results)
-                 : thread->RunFunction(func_index, args, out_results);
-}
-
-static interpreter::Result RunStartFunction(Thread* thread,
-                                            DefinedModule* module) {
-  if (module->start_func_index == kInvalidIndex)
-    return interpreter::Result::Ok;
-
-  if (s_trace)
-    printf(">>> running start function:\n");
-  std::vector<TypedValue> args;
-  std::vector<TypedValue> results;
-  interpreter::Result iresult =
-      RunFunction(thread, module->start_func_index, args, &results);
-  assert(results.size() == 0);
-  return iresult;
-}
-
-static interpreter::Result RunExport(Thread* thread,
-                                     const interpreter::Export* export_,
-                                     const std::vector<TypedValue>& args,
-                                     std::vector<TypedValue>* out_results) {
-  if (s_trace) {
-    printf(">>> running export \"" PRIstringview "\":\n",
-           WABT_PRINTF_STRING_VIEW_ARG(export_->name));
-  }
-
-  assert(export_->kind == ExternalKind::Func);
-  return RunFunction(thread, export_->index, args, out_results);
-}
-
 static void RunAllExports(interpreter::Module* module,
                           Thread* thread,
                           RunVerbosity verbose) {
-  std::vector<TypedValue> args;
-  std::vector<TypedValue> results;
+  TypedValues args;
+  TypedValues results;
   for (const interpreter::Export& export_ : module->exports) {
-    interpreter::Result iresult = RunExport(thread, &export_, args, &results);
+    interpreter::Result iresult = thread->RunExport(&export_, args, &results);
     if (verbose == RunVerbosity::Verbose) {
-      PrintCall(string_view(), export_.name, args, results, iresult);
+      WriteCall(s_stdout_stream.get(), string_view(), export_.name, args,
+                results, iresult);
     }
   }
 }
@@ -317,12 +204,12 @@ class WasmInterpHostImportDelegate : public HostImportDelegate {
     for (Index i = 0; i < num_results; ++i)
       out_results[i].type = sig->result_types[i];
 
-    std::vector<TypedValue> vec_args(args, args + num_args);
-    std::vector<TypedValue> vec_results(out_results, out_results + num_results);
+    TypedValues vec_args(args, args + num_args);
+    TypedValues vec_results(out_results, out_results + num_results);
 
     printf("called host ");
-    PrintCall(func->module_name, func->field_name, vec_args, vec_results,
-              interpreter::Result::Ok);
+    WriteCall(s_stdout_stream.get(), func->module_name, func->field_name,
+              vec_args, vec_results, interpreter::Result::Ok);
     return interpreter::Result::Ok;
   }
 
@@ -349,12 +236,13 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
   result = ReadModule(module_filename, &env, &error_handler, &module);
   if (Succeeded(result)) {
     Thread thread(&env, s_thread_options);
-    interpreter::Result iresult = RunStartFunction(&thread, module);
+    interpreter::Result iresult = thread.RunStartFunction(module);
     if (iresult == interpreter::Result::Ok) {
       if (s_run_all_exports)
         RunAllExports(module, &thread, RunVerbosity::Verbose);
     } else {
-      PrintInterpreterResult("error running start function", iresult);
+      WriteResult(s_stdout_stream.get(), "error running start function",
+                  iresult);
     }
   }
   return result;
@@ -362,9 +250,9 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
 
 int ProgramMain(int argc, char** argv) {
   InitStdio();
-  ParseOptions(argc, argv);
-
   s_stdout_stream = FileStream::CreateStdout();
+
+  ParseOptions(argc, argv);
 
   wabt::Result result = ReadAndRunModule(s_infile);
   return result != wabt::Result::Ok;
