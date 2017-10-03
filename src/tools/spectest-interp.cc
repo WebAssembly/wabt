@@ -40,14 +40,9 @@
 using namespace wabt;
 using namespace wabt::interpreter;
 
-#define V(name, str) str,
-static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
-#undef V
-
 static int s_verbose;
 static const char* s_infile;
 static Thread::Options s_thread_options;
-static bool s_trace;
 static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
@@ -87,7 +82,9 @@ static void ParseOptions(int argc, char** argv) {
                      // TODO(binji): validate.
                      s_thread_options.call_stack_size = atoi(argument.c_str());
                    });
-  parser.AddOption('t', "trace", "Trace execution", []() { s_trace = true; });
+  parser.AddOption('t', "trace", "Trace execution", []() {
+    s_thread_options.trace_stream = s_stdout_stream.get();
+  });
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) { s_infile = argument; });
@@ -116,134 +113,10 @@ static string_view GetDirname(string_view path) {
   return path.substr(0, std::max(last_slash, last_backslash));
 }
 
-/* Not sure, but 100 chars is probably safe */
-#define MAX_TYPED_VALUE_CHARS 100
-
-static void SPrintTypedValue(char* buffer, size_t size, const TypedValue* tv) {
-  switch (tv->type) {
-    case Type::I32:
-      snprintf(buffer, size, "i32:%u", tv->value.i32);
-      break;
-
-    case Type::I64:
-      snprintf(buffer, size, "i64:%" PRIu64, tv->value.i64);
-      break;
-
-    case Type::F32: {
-      float value;
-      memcpy(&value, &tv->value.f32_bits, sizeof(float));
-      snprintf(buffer, size, "f32:%f", value);
-      break;
-    }
-
-    case Type::F64: {
-      double value;
-      memcpy(&value, &tv->value.f64_bits, sizeof(double));
-      snprintf(buffer, size, "f64:%f", value);
-      break;
-    }
-
-    default:
-      WABT_UNREACHABLE;
-  }
-}
-
-static void PrintTypedValue(const TypedValue* tv) {
-  char buffer[MAX_TYPED_VALUE_CHARS];
-  SPrintTypedValue(buffer, sizeof(buffer), tv);
-  printf("%s", buffer);
-}
-
-static void PrintTypedValueVector(const std::vector<TypedValue>& values) {
-  for (size_t i = 0; i < values.size(); ++i) {
-    PrintTypedValue(&values[i]);
-    if (i != values.size() - 1)
-      printf(", ");
-  }
-}
-
-static void PrintInterpreterResult(const char* desc,
-                                   interpreter::Result iresult) {
-  printf("%s: %s\n", desc, s_trap_strings[static_cast<size_t>(iresult)]);
-}
-
-static void PrintCall(string_view module_name,
-                      string_view func_name,
-                      const std::vector<TypedValue>& args,
-                      const std::vector<TypedValue>& results,
-                      interpreter::Result iresult) {
-  if (!module_name.empty())
-    printf(PRIstringview ".", WABT_PRINTF_STRING_VIEW_ARG(module_name));
-  printf(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(func_name));
-  PrintTypedValueVector(args);
-  printf(") =>");
-  if (iresult == interpreter::Result::Ok) {
-    if (results.size() > 0) {
-      printf(" ");
-      PrintTypedValueVector(results);
-    }
-    printf("\n");
-  } else {
-    PrintInterpreterResult(" error", iresult);
-  }
-}
-
-static interpreter::Result RunFunction(Thread* thread,
-                                       Index func_index,
-                                       const std::vector<TypedValue>& args,
-                                       std::vector<TypedValue>* out_results) {
-  return s_trace ? thread->TraceFunction(func_index, s_stdout_stream.get(),
-                                         args, out_results)
-                 : thread->RunFunction(func_index, args, out_results);
-}
-
-static interpreter::Result RunStartFunction(Thread* thread,
-                                            DefinedModule* module) {
-  if (module->start_func_index == kInvalidIndex)
-    return interpreter::Result::Ok;
-
-  if (s_trace)
-    printf(">>> running start function:\n");
-  std::vector<TypedValue> args;
-  std::vector<TypedValue> results;
-  interpreter::Result iresult =
-      RunFunction(thread, module->start_func_index, args, &results);
-  assert(results.size() == 0);
-  return iresult;
-}
-
-static interpreter::Result RunExport(Thread* thread,
-                                     const interpreter::Export* export_,
-                                     const std::vector<TypedValue>& args,
-                                     std::vector<TypedValue>* out_results) {
-  if (s_trace) {
-    printf(">>> running export \"" PRIstringview "\":\n",
-           WABT_PRINTF_STRING_VIEW_ARG(export_->name));
-  }
-
-  assert(export_->kind == ExternalKind::Func);
-  return RunFunction(thread, export_->index, args, out_results);
-}
-
-static interpreter::Result RunExportByName(Thread* thread,
-                                           interpreter::Module* module,
-                                           string_view name,
-                                           const std::vector<TypedValue>& args,
-                                           std::vector<TypedValue>* out_results,
-                                           RunVerbosity verbose) {
-  interpreter::Export* export_ = module->GetExport(name);
-  if (!export_)
-    return interpreter::Result::UnknownExport;
-  if (export_->kind != ExternalKind::Func)
-    return interpreter::Result::ExportKindMismatch;
-  return RunExport(thread, export_, args, out_results);
-}
-
-static interpreter::Result GetGlobalExportByName(
-    Thread* thread,
-    interpreter::Module* module,
-    string_view name,
-    std::vector<TypedValue>* out_results) {
+static interpreter::Result GetGlobalExportByName(Thread* thread,
+                                                 interpreter::Module* module,
+                                                 string_view name,
+                                                 TypedValues* out_results) {
   interpreter::Export* export_ = module->GetExport(name);
   if (!export_)
     return interpreter::Result::UnknownExport;
@@ -294,12 +167,12 @@ static interpreter::Result DefaultHostCallback(
   for (Index i = 0; i < num_results; ++i)
     out_results[i].type = sig->result_types[i];
 
-  std::vector<TypedValue> vec_args(args, args + num_args);
-  std::vector<TypedValue> vec_results(out_results, out_results + num_results);
+  TypedValues vec_args(args, args + num_args);
+  TypedValues vec_results(out_results, out_results + num_results);
 
   printf("called host ");
-  PrintCall(func->module_name, func->field_name, vec_args, vec_results,
-            interpreter::Result::Ok);
+  WriteCall(s_stdout_stream.get(), func->module_name, func->field_name,
+            vec_args, vec_results, interpreter::Result::Ok);
   return interpreter::Result::Ok;
 }
 
@@ -415,7 +288,7 @@ struct Action {
   ::ActionType type = ::ActionType::Invoke;
   std::string module_name;
   std::string field_name;
-  std::vector<TypedValue> args;
+  TypedValues args;
 };
 
 // An extremely simple JSON parser that only knows how to parse the expected
@@ -448,7 +321,7 @@ class SpecJSONParser {
   wabt::Result ParseTypeObject(Type* out_type);
   wabt::Result ParseTypeVector(TypeVector* out_types);
   wabt::Result ParseConst(TypedValue* out_value);
-  wabt::Result ParseConstVector(std::vector<TypedValue>* out_values);
+  wabt::Result ParseConstVector(TypedValues* out_values);
   wabt::Result ParseAction(::Action* out_action);
   wabt::Result ParseModuleType(ModuleType* out_type);
 
@@ -457,7 +330,7 @@ class SpecJSONParser {
   wabt::Result OnModuleCommand(string_view filename, string_view name);
   wabt::Result RunAction(::Action* action,
                          interpreter::Result* out_iresult,
-                         std::vector<TypedValue>* out_results,
+                         TypedValues* out_results,
                          RunVerbosity verbose);
   wabt::Result OnActionCommand(::Action* action);
   wabt::Result ReadInvalidTextModule(const char* module_filename,
@@ -481,7 +354,7 @@ class SpecJSONParser {
                                              string_view text,
                                              ModuleType module_type);
   wabt::Result OnAssertReturnCommand(::Action* action,
-                                     const std::vector<TypedValue>& expected);
+                                     const TypedValues& expected);
   wabt::Result OnAssertReturnNanCommand(::Action* action, bool canonical);
   wabt::Result OnAssertTrapCommand(::Action* action, string_view text);
   wabt::Result OnAssertExhaustionCommand(::Action* action);
@@ -788,8 +661,7 @@ wabt::Result SpecJSONParser::ParseConst(TypedValue* out_value) {
   }
 }
 
-wabt::Result SpecJSONParser::ParseConstVector(
-    std::vector<TypedValue>* out_values) {
+wabt::Result SpecJSONParser::ParseConstVector(TypedValues* out_values) {
   out_values->clear();
   EXPECT("[");
   bool first = true;
@@ -878,10 +750,10 @@ wabt::Result SpecJSONParser::OnModuleCommand(string_view filename,
     return wabt::Result::Error;
   }
 
-  interpreter::Result iresult = RunStartFunction(&thread_, last_module_);
+  interpreter::Result iresult = thread_.RunStartFunction(last_module_);
   if (iresult != interpreter::Result::Ok) {
     env_.ResetToMarkPoint(mark);
-    PrintInterpreterResult("error running start function", iresult);
+    WriteResult(s_stdout_stream.get(), "error running start function", iresult);
     return wabt::Result::Error;
   }
 
@@ -895,7 +767,7 @@ wabt::Result SpecJSONParser::OnModuleCommand(string_view filename,
 
 wabt::Result SpecJSONParser::RunAction(::Action* action,
                                        interpreter::Result* out_iresult,
-                                       std::vector<TypedValue>* out_results,
+                                       TypedValues* out_results,
                                        RunVerbosity verbose) {
   out_results->clear();
 
@@ -909,11 +781,11 @@ wabt::Result SpecJSONParser::RunAction(::Action* action,
 
   switch (action->type) {
     case ::ActionType::Invoke:
-      *out_iresult = RunExportByName(&thread_, module, action->field_name,
-                                     action->args, out_results, verbose);
+      *out_iresult = thread_.RunExportByName(module, action->field_name,
+                                             action->args, out_results);
       if (verbose == RunVerbosity::Verbose) {
-        PrintCall(string_view(), action->field_name, action->args, *out_results,
-                  *out_iresult);
+        WriteCall(s_stdout_stream.get(), string_view(), action->field_name,
+                  action->args, *out_results, *out_iresult);
       }
       return wabt::Result::Ok;
 
@@ -931,7 +803,7 @@ wabt::Result SpecJSONParser::RunAction(::Action* action,
 }
 
 wabt::Result SpecJSONParser::OnActionCommand(::Action* action) {
-  std::vector<TypedValue> results;
+  TypedValues results;
   interpreter::Result iresult;
 
   total_++;
@@ -941,8 +813,7 @@ wabt::Result SpecJSONParser::OnActionCommand(::Action* action) {
     if (iresult == interpreter::Result::Ok) {
       passed_++;
     } else {
-      PrintCommandError("unexpected trap: %s",
-                        s_trap_strings[static_cast<size_t>(iresult)]);
+      PrintCommandError("unexpected trap: %s", ResultToString(iresult));
       result = wabt::Result::Error;
     }
   }
@@ -1090,7 +961,7 @@ wabt::Result SpecJSONParser::OnAssertUninstantiableCommand(
       ReadModule(path.c_str(), &env_, &error_handler, &module);
 
   if (Succeeded(result)) {
-    interpreter::Result iresult = RunStartFunction(&thread_, module);
+    interpreter::Result iresult = thread_.RunStartFunction(module);
     if (iresult == interpreter::Result::Ok) {
       PrintCommandError("expected error running start function: \"%s\"",
                         path.c_str());
@@ -1128,8 +999,8 @@ static bool TypedValuesAreEqual(const TypedValue* tv1, const TypedValue* tv2) {
 
 wabt::Result SpecJSONParser::OnAssertReturnCommand(
     ::Action* action,
-    const std::vector<TypedValue>& expected) {
-  std::vector<TypedValue> results;
+    const TypedValues& expected) {
+  TypedValues results;
   interpreter::Result iresult;
 
   total_++;
@@ -1143,13 +1014,10 @@ wabt::Result SpecJSONParser::OnAssertReturnCommand(
           const TypedValue* expected_tv = &expected[i];
           const TypedValue* actual_tv = &results[i];
           if (!TypedValuesAreEqual(expected_tv, actual_tv)) {
-            char expected_str[MAX_TYPED_VALUE_CHARS];
-            char actual_str[MAX_TYPED_VALUE_CHARS];
-            SPrintTypedValue(expected_str, sizeof(expected_str), expected_tv);
-            SPrintTypedValue(actual_str, sizeof(actual_str), actual_tv);
             PrintCommandError("mismatch in result %" PRIzd
                               " of assert_return: expected %s, got %s",
-                              i, expected_str, actual_str);
+                              i, TypedValueToString(*expected_tv).c_str(),
+                              TypedValueToString(*actual_tv).c_str());
             result = wabt::Result::Error;
           }
         }
@@ -1161,8 +1029,7 @@ wabt::Result SpecJSONParser::OnAssertReturnCommand(
         result = wabt::Result::Error;
       }
     } else {
-      PrintCommandError("unexpected trap: %s",
-                        s_trap_strings[static_cast<size_t>(iresult)]);
+      PrintCommandError("unexpected trap: %s", ResultToString(iresult));
       result = wabt::Result::Error;
     }
   }
@@ -1175,7 +1042,7 @@ wabt::Result SpecJSONParser::OnAssertReturnCommand(
 
 wabt::Result SpecJSONParser::OnAssertReturnNanCommand(::Action* action,
                                                       bool canonical) {
-  std::vector<TypedValue> results;
+  TypedValues results;
   interpreter::Result iresult;
 
   total_++;
@@ -1194,9 +1061,8 @@ wabt::Result SpecJSONParser::OnAssertReturnNanCommand(::Action* action,
           bool is_nan = canonical ? IsCanonicalNan(actual.value.f32_bits)
                                   : IsArithmeticNan(actual.value.f32_bits);
           if (!is_nan) {
-            char actual_str[MAX_TYPED_VALUE_CHARS];
-            SPrintTypedValue(actual_str, sizeof(actual_str), &actual);
-            PrintCommandError("expected result to be nan, got %s", actual_str);
+            PrintCommandError("expected result to be nan, got %s",
+                              TypedValueToString(actual).c_str());
             result = wabt::Result::Error;
           }
           break;
@@ -1206,9 +1072,8 @@ wabt::Result SpecJSONParser::OnAssertReturnNanCommand(::Action* action,
           bool is_nan = canonical ? IsCanonicalNan(actual.value.f64_bits)
                                   : IsArithmeticNan(actual.value.f64_bits);
           if (!is_nan) {
-            char actual_str[MAX_TYPED_VALUE_CHARS];
-            SPrintTypedValue(actual_str, sizeof(actual_str), &actual);
-            PrintCommandError("expected result to be nan, got %s", actual_str);
+            PrintCommandError("expected result to be nan, got %s",
+                              TypedValueToString(actual).c_str());
             result = wabt::Result::Error;
           }
           break;
@@ -1221,8 +1086,7 @@ wabt::Result SpecJSONParser::OnAssertReturnNanCommand(::Action* action,
           break;
       }
     } else {
-      PrintCommandError("unexpected trap: %s",
-                        s_trap_strings[static_cast<int>(iresult)]);
+      PrintCommandError("unexpected trap: %s", ResultToString(iresult));
       result = wabt::Result::Error;
     }
   }
@@ -1235,7 +1099,7 @@ wabt::Result SpecJSONParser::OnAssertReturnNanCommand(::Action* action,
 
 wabt::Result SpecJSONParser::OnAssertTrapCommand(::Action* action,
                                                  string_view text) {
-  std::vector<TypedValue> results;
+  TypedValues results;
   interpreter::Result iresult;
 
   total_++;
@@ -1255,7 +1119,7 @@ wabt::Result SpecJSONParser::OnAssertTrapCommand(::Action* action,
 }
 
 wabt::Result SpecJSONParser::OnAssertExhaustionCommand(::Action* action) {
-  std::vector<TypedValue> results;
+  TypedValues results;
   interpreter::Result iresult;
 
   total_++;
@@ -1363,7 +1227,7 @@ wabt::Result SpecJSONParser::ParseCommand() {
     OnAssertUninstantiableCommand(filename, text, module_type);
   } else if (Match("\"assert_return\"")) {
     ::Action action;
-    std::vector<TypedValue> expected;
+    TypedValues expected;
 
     EXPECT(",");
     CHECK_RESULT(ParseLine());
@@ -1454,9 +1318,9 @@ static wabt::Result ReadAndRunSpecJSON(const char* spec_json_filename) {
 
 int ProgramMain(int argc, char** argv) {
   InitStdio();
-  ParseOptions(argc, argv);
-
   s_stdout_stream = FileStream::CreateStdout();
+
+  ParseOptions(argc, argv);
 
   wabt::Result result;
   result = ReadAndRunSpecJSON(s_infile);

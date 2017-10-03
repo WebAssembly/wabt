@@ -50,6 +50,78 @@ namespace interpreter {
     }                              \
   } while (0)
 
+std::string TypedValueToString(const TypedValue& tv) {
+  switch (tv.type) {
+    case Type::I32:
+      return StringPrintf("i32:%u", tv.value.i32);
+
+    case Type::I64:
+      return StringPrintf("i64:%" PRIu64, tv.value.i64);
+
+    case Type::F32: {
+      float value;
+      memcpy(&value, &tv.value.f32_bits, sizeof(float));
+      return StringPrintf("f32:%f", value);
+    }
+
+    case Type::F64: {
+      double value;
+      memcpy(&value, &tv.value.f64_bits, sizeof(double));
+      return StringPrintf("f64:%f", value);
+    }
+
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+void WriteTypedValue(Stream* stream, const TypedValue& tv) {
+  std::string s = TypedValueToString(tv);
+  stream->WriteData(s.data(), s.size());
+}
+
+void WriteTypedValues(Stream* stream, const TypedValues& values) {
+  for (size_t i = 0; i < values.size(); ++i) {
+    WriteTypedValue(stream, values[i]);
+    if (i != values.size() - 1)
+      stream->Writef(", ");
+  }
+}
+
+#define V(name, str) str,
+  static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
+#undef V
+
+const char* ResultToString(Result result) {
+  return s_trap_strings[static_cast<size_t>(result)];
+}
+
+void WriteResult(Stream* stream, const char* desc, Result result) {
+  stream->Writef("%s: %s\n", desc, ResultToString(result));
+}
+
+void WriteCall(Stream* stream,
+               string_view module_name,
+               string_view func_name,
+               const TypedValues& args,
+               const TypedValues& results,
+               Result result) {
+  if (!module_name.empty())
+    stream->Writef(PRIstringview ".", WABT_PRINTF_STRING_VIEW_ARG(module_name));
+  stream->Writef(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(func_name));
+  WriteTypedValues(stream, args);
+  stream->Writef(") =>");
+  if (result == Result::Ok) {
+    if (results.size() > 0) {
+      stream->Writef(" ");
+      WriteTypedValues(stream, results);
+    }
+    stream->Writef("\n");
+  } else {
+    WriteResult(stream, " error", result);
+  }
+}
+
 Environment::Environment() : istream_(new OutputBuffer()) {}
 
 Index Environment::FindModuleIndex(string_view name) const {
@@ -73,10 +145,12 @@ Module* Environment::FindRegisteredModule(string_view name) {
 
 Thread::Options::Options(uint32_t value_stack_size,
                          uint32_t call_stack_size,
-                         IstreamOffset pc)
+                         IstreamOffset pc,
+                         Stream* trace_stream)
     : value_stack_size(value_stack_size),
       call_stack_size(call_stack_size),
-      pc(pc) {}
+      pc(pc),
+      trace_stream(trace_stream) {}
 
 Thread::Thread(Environment* env, const Options& options)
     : env_(env),
@@ -86,7 +160,8 @@ Thread::Thread(Environment* env, const Options& options)
       value_stack_end_(value_stack_.data() + value_stack_.size()),
       call_stack_top_(call_stack_.data()),
       call_stack_end_(call_stack_.data() + call_stack_.size()),
-      pc_(options.pc) {}
+      pc_(options.pc),
+      trace_stream_(options.trace_stream) {}
 
 FuncSignature::FuncSignature(Index param_count,
                              Type* param_types,
@@ -168,8 +243,7 @@ HostModule* Environment::AppendHostModule(string_view name) {
   return module;
 }
 
-Result Thread::PushArgs(const FuncSignature* sig,
-                        const std::vector<TypedValue>& args) {
+Result Thread::PushArgs(const FuncSignature* sig, const TypedValues& args) {
   if (sig->param_types.size() != args.size())
     return interpreter::Result::ArgumentTypeMismatch;
 
@@ -186,8 +260,7 @@ Result Thread::PushArgs(const FuncSignature* sig,
   return interpreter::Result::Ok;
 }
 
-void Thread::CopyResults(const FuncSignature* sig,
-                         std::vector<TypedValue>* out_results) {
+void Thread::CopyResults(const FuncSignature* sig, TypedValues* out_results) {
   size_t expected_results = sig->result_types.size();
   size_t value_stack_depth = value_stack_top_ - value_stack_.data();
   WABT_USE(value_stack_depth);
@@ -1149,8 +1222,8 @@ bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
 }
 
 Result Thread::RunFunction(Index func_index,
-                           const std::vector<TypedValue>& args,
-                           std::vector<TypedValue>* out_results) {
+                           const TypedValues& args,
+                           TypedValues* out_results) {
   Func* func = env_->GetFunc(func_index);
   FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
 
@@ -1169,51 +1242,59 @@ Result Thread::RunFunction(Index func_index,
   return result;
 }
 
-Result Thread::TraceFunction(Index func_index,
-                             Stream* stream,
-                             const std::vector<TypedValue>& args,
-                             std::vector<TypedValue>* out_results) {
-  Func* func = env_->GetFunc(func_index);
-  FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
+Result Thread::RunStartFunction(DefinedModule* module) {
+  if (module->start_func_index == kInvalidIndex)
+    return Result::Ok;
 
-  Result result = PushArgs(sig, args);
-  if (result == Result::Ok) {
-    result = func->is_host ? CallHost(cast<HostFunc>(func))
-                           : TraceDefinedFunction(
-                                 cast<DefinedFunc>(func)->offset, stream);
-    if (result == Result::Ok)
-      CopyResults(sig, out_results);
+  if (trace_stream_) {
+    trace_stream_->Writef(">>> running start function:\n");
   }
-
-  // Always reset the value and call stacks.
-  value_stack_top_ = value_stack_.data();
-  call_stack_top_ = call_stack_.data();
+  TypedValues args;
+  TypedValues results;
+  Result result = RunFunction(module->start_func_index, args, &results);
+  assert(results.size() == 0);
   return result;
 }
 
-Result Thread::RunDefinedFunction(IstreamOffset function_offset) {
-  const int kNumInstructions = 1000;
-  Result result = Result::Ok;
-  pc_ = function_offset;
-  IstreamOffset* call_stack_return_top = call_stack_top_;
-  while (result == Result::Ok) {
-    result = Run(kNumInstructions, call_stack_return_top);
+Result Thread::RunExport(const Export* export_,
+                         const TypedValues& args,
+                         TypedValues* out_results) {
+  if (trace_stream_) {
+    trace_stream_->Writef(">>> running export \"" PRIstringview "\":\n",
+                          WABT_PRINTF_STRING_VIEW_ARG(export_->name));
   }
-  if (result != Result::Returned)
-    return result;
-  // Use OK instead of RETURNED for consistency.
-  return Result::Ok;
+
+  assert(export_->kind == ExternalKind::Func);
+  return RunFunction(export_->index, args, out_results);
 }
 
-Result Thread::TraceDefinedFunction(IstreamOffset function_offset,
-                                    Stream* stream) {
-  const int kNumInstructions = 1;
+Result Thread::RunExportByName(interpreter::Module* module,
+                               string_view name,
+                               const TypedValues& args,
+                               TypedValues* out_results) {
+  interpreter::Export* export_ = module->GetExport(name);
+  if (!export_)
+    return interpreter::Result::UnknownExport;
+  if (export_->kind != ExternalKind::Func)
+    return interpreter::Result::ExportKindMismatch;
+  return RunExport(export_, args, out_results);
+}
+
+Result Thread::RunDefinedFunction(IstreamOffset function_offset) {
   Result result = Result::Ok;
   pc_ = function_offset;
   IstreamOffset* call_stack_return_top = call_stack_top_;
-  while (result == Result::Ok) {
-    Trace(stream);
-    result = Run(kNumInstructions, call_stack_return_top);
+  if (trace_stream_) {
+    const int kNumInstructions = 1;
+    while (result == Result::Ok) {
+      Trace(trace_stream_);
+      result = Run(kNumInstructions, call_stack_return_top);
+    }
+  } else {
+    const int kNumInstructions = 1000;
+    while (result == Result::Ok) {
+      result = Run(kNumInstructions, call_stack_return_top);
+    }
   }
   if (result != Result::Returned)
     return result;
@@ -1228,8 +1309,8 @@ Result Thread::CallHost(HostFunc* func) {
   size_t num_results = sig->result_types.size();
   // + 1 is a workaround for using data() below; UBSAN doesn't like calling
   // data() with an empty vector.
-  std::vector<TypedValue> params(num_params + 1);
-  std::vector<TypedValue> results(num_results + 1);
+  TypedValues params(num_params + 1);
+  TypedValues results(num_results + 1);
 
   for (size_t i = num_params; i > 0; --i) {
     params[i - 1].value = Pop();
