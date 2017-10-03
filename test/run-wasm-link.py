@@ -73,13 +73,14 @@ def main(args):
       find_exe.GetWasmdumpExecutable(options.bindir),
       error_cmdline=options.error_cmdline)
 
-  wasm_interp = utils.Executable(find_exe.GetWasmInterpExecutable(
-      options.bindir), error_cmdline=options.error_cmdline)
+  spectest_interp = utils.Executable(
+      find_exe.GetSpectestInterpExecutable(options.bindir),
+      error_cmdline=options.error_cmdline)
 
   wast2json.verbose = options.print_cmd
   wasm_link.verbose = options.print_cmd
   wasm_objdump.verbose = options.print_cmd
-  wasm_interp.verbose = options.print_cmd
+  spectest_interp.verbose = options.print_cmd
 
   filename = options.file
 
@@ -123,7 +124,7 @@ def main(args):
       with open(out_file, 'wb') as json_file:
         json.dump(spec, json_file, indent=4)
 
-      wasm_interp.RunWithArgs('--spec', out_file)
+      spectest_interp.RunWithArgs(out_file)
 
 
 if __name__ == '__main__':

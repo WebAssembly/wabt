@@ -16,9 +16,6 @@ examples:
   # parse test.wasm, run the exported functions and trace the output
   $ wasm-interp test.wasm --run-all-exports --trace
 
-  # parse test.json and run the spec tests
-  $ wasm-interp test.json --spec
-
   # parse test.wasm and run all its exported functions, setting the
   # value stack size to 100 elements
   $ wasm-interp test.wasm -V 100 --run-all-exports
@@ -32,6 +29,6 @@ options:
   -V, --value-stack-size=SIZE                 Size in elements of the value stack
   -C, --call-stack-size=SIZE                  Size in elements of the call stack
   -t, --trace                                 Trace execution
-      --spec                                  Run spec tests (input file should be .json)
       --run-all-exports                       Run all the exported functions, in order. Useful for testing
+      --host-print                            Include an importable function named "host.print" for printing to stdout
 ;;; STDOUT ;;)

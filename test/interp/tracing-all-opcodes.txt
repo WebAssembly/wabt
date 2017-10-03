@@ -1,8 +1,8 @@
 ;;; TOOL: run-interp
-;;; FLAGS: --trace --enable-threads --enable-saturating-float-to-int
+;;; FLAGS: --trace --host-print --enable-threads --enable-saturating-float-to-int
 
 (module
-  (import "spectest" "print" (func $print (param i32)))
+  (import "host" "print" (func $print (param i32)))
 
   (type $empty (func))
   (func $empty)
@@ -1377,7 +1377,7 @@ br_unless() =>
 >>> running export "call_host":
 #0. 2466: V:0  | i32.const $1
 #0. 2471: V:1  | call_host $0
-called host spectest.print(i32:1) =>
+called host host.print(i32:1) =>
 #0. 2476: V:0  | return
 call_host() =>
 >>> running export "drop_keep":

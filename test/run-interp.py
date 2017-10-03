@@ -44,6 +44,7 @@ def main(args):
                       help='print the commands that are run.',
                       action='store_true')
   parser.add_argument('--run-all-exports', action='store_true')
+  parser.add_argument('--host-print', action='store_true')
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('-t', '--trace', action='store_true')
   parser.add_argument('file', help='test file.')
@@ -52,14 +53,25 @@ def main(args):
   options = parser.parse_args(args)
 
   wast_tool = None
+  interp_tool = None
   if options.spec:
     wast_tool = utils.Executable(
         find_exe.GetWast2JsonExecutable(options.bindir),
+        error_cmdline=options.error_cmdline)
+    interp_tool = utils.Executable(
+        find_exe.GetSpectestInterpExecutable(options.bindir),
         error_cmdline=options.error_cmdline)
   else:
     wast_tool = utils.Executable(
         find_exe.GetWat2WasmExecutable(options.bindir),
         error_cmdline=options.error_cmdline)
+    interp_tool = utils.Executable(
+        find_exe.GetWasmInterpExecutable(options.bindir),
+        error_cmdline=options.error_cmdline)
+    interp_tool.AppendOptionalArgs({
+        '--host-print': options.host_print,
+        '--run-all-exports': options.run_all_exports,
+    })
 
   wast_tool.AppendOptionalArgs({
       '-v': options.verbose,
@@ -68,13 +80,9 @@ def main(args):
       '--enable-threads': options.enable_threads,
   })
 
-  wasm_interp = utils.Executable(
-      find_exe.GetWasmInterpExecutable(options.bindir),
-      error_cmdline=options.error_cmdline)
-  wasm_interp.AppendOptionalArgs({
+  interp_tool.AppendOptionalArgs({
       '-v': options.verbose,
       '--run-all-exports': options.run_all_exports,
-      '--spec': options.spec,
       '--trace': options.trace,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
@@ -82,13 +90,13 @@ def main(args):
   })
 
   wast_tool.verbose = options.print_cmd
-  wasm_interp.verbose = options.print_cmd
+  interp_tool.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-interp-') as out_dir:
     new_ext = '.json' if options.spec else '.wasm'
     out_file = utils.ChangeDir(utils.ChangeExt(options.file, new_ext), out_dir)
     wast_tool.RunWithArgs(options.file, '-o', out_file)
-    wasm_interp.RunWithArgs(out_file)
+    interp_tool.RunWithArgs(out_file)
 
   return 0
 
