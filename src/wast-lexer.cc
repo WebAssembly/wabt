@@ -546,6 +546,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "rethrow"             { RETURN_OPCODE0(Rethrow); }
       <i> name                  { RETURN_TEXT(Var); }
       <i> "shared"              { RETURN(Shared); }
+      <i> "threads"             { RETURN(Threads); }
 
       <i> ";;" => LINE_COMMENT  { continue; }
       <LINE_COMMENT> "\n" => i  { NEWLINE; continue; }

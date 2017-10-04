@@ -68,6 +68,7 @@ class BinaryWriterSpec {
 
  private:
   std::string GetModuleFilename(const char* extension);
+  void WriteIndent(int indent_size);
   void WriteString(const char* s);
   void WriteKey(const char* key);
   void WriteSeparator();
@@ -84,7 +85,10 @@ class BinaryWriterSpec {
   void WriteScriptModule(string_view filename,
                          const ScriptModule& script_module);
   void WriteInvalidModule(const ScriptModule& module, string_view text);
-  void WriteCommands(const Script& script);
+  void WriteCommands(const Script& script,
+                     const CommandPtrVector& commands,
+                     int indent_size);
+  void WriteScriptCommands(const Script& script);
 
   MemoryStream json_stream_;
   std::string source_filename_;
@@ -96,6 +100,8 @@ class BinaryWriterSpec {
 
   static const char* kWasmExtension;
   static const char* kWastExtension;
+
+  static const int kIndentSpaces = 2;
 };
 
 // static
@@ -125,6 +131,21 @@ std::string BinaryWriterSpec::GetModuleFilename(const char* extension) {
 
 void BinaryWriterSpec::WriteString(const char* s) {
   json_stream_.Writef("\"%s\"", s);
+}
+
+void BinaryWriterSpec::WriteIndent(int indent_size) {
+  static char s_indent[] =
+      "                                                                       "
+      "                                                                       ";
+  static size_t s_indent_len = sizeof(s_indent) - 1;
+  size_t to_write = indent_size;
+  while (to_write >= s_indent_len) {
+    json_stream_.WriteData(s_indent, s_indent_len);
+    to_write -= s_indent_len;
+  }
+  if (to_write > 0) {
+    json_stream_.WriteData(s_indent, to_write);
+  }
 }
 
 void BinaryWriterSpec::WriteKey(const char* key) {
@@ -162,6 +183,7 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "assert_return_arithmetic_nan",
       "assert_trap",
       "assert_exhaustion",
+      "threads",
   };
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_command_names) == kCommandTypeCount);
 
@@ -380,20 +402,21 @@ void BinaryWriterSpec::WriteInvalidModule(const ScriptModule& module,
   WriteScriptModule(filename, module);
 }
 
-void BinaryWriterSpec::WriteCommands(const Script& script) {
-  json_stream_.Writef("{\"source_filename\": ");
-  WriteEscapedString(source_filename_);
-  json_stream_.Writef(",\n \"commands\": [\n");
+void BinaryWriterSpec::WriteCommands(const Script& script,
+                                     const CommandPtrVector& commands,
+                                     int indent_size) {
+  json_stream_.Writef("\"commands\": [\n");
   Index last_module_index = kInvalidIndex;
-  for (size_t i = 0; i < script.commands.size(); ++i) {
-    const Command* command = script.commands[i].get();
+  for (size_t i = 0; i < commands.size(); ++i) {
+    const Command* command = commands[i].get();
 
     if (i != 0) {
       WriteSeparator();
       json_stream_.Writef("\n");
     }
 
-    json_stream_.Writef("  {");
+    WriteIndent(indent_size);
+    json_stream_.Writef("{");
     WriteCommandType(*command);
     WriteSeparator();
 
@@ -534,15 +557,30 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
         WriteAction(*assert_exhaustion_command->action);
         break;
       }
+
+      case CommandType::Threads: {
+        auto* threads_command = cast<ThreadsCommand>(command);
+        WriteCommands(script, threads_command->commands,
+                      indent_size + kIndentSpaces);
+        break;
+      }
     }
 
     json_stream_.Writef("}");
   }
-  json_stream_.Writef("]}\n");
+  json_stream_.Writef("]");
+}
+
+void BinaryWriterSpec::WriteScriptCommands(const Script& script) {
+  json_stream_.Writef("{\"source_filename\": ");
+  WriteEscapedString(source_filename_);
+  json_stream_.Writef(",\n ");
+  WriteCommands(script, script.commands, kIndentSpaces);
+  json_stream_.Writef("\n}\n");
 }
 
 Result BinaryWriterSpec::WriteScript(const Script& script) {
-  WriteCommands(script);
+  WriteScriptCommands(script);
   if (spec_options_->json_filename) {
     json_stream_.WriteToFile(spec_options_->json_filename);
   }

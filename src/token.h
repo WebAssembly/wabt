@@ -70,6 +70,7 @@ enum class TokenType {
   Start,
   Table,
   Then,
+  Threads,
   Type,
   First_Bare = Invalid,
   Last_Bare = Type,

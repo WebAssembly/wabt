@@ -243,6 +243,7 @@ bool IsCommand(TokenTypePair pair) {
     case TokenType::Invoke:
     case TokenType::Module:
     case TokenType::Register:
+    case TokenType::Threads:
       return true;
     default:
       return false;
@@ -1815,6 +1816,9 @@ Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
     case TokenType::Register:
       return ParseRegisterCommand(out_command);
 
+    case TokenType::Threads:
+      return ParseThreadsCommand(out_command);
+
     default:
       assert(!"ParseCommand should only be called when IsCommand() is true");
       return Result::Error;
@@ -1954,6 +1958,57 @@ Result WastParser::ParseRegisterCommand(CommandPtr* out_command) {
   ParseVarOpt(&var, Var(last_module_index_, loc));
   EXPECT(Rpar);
   out_command->reset(new RegisterCommand(text, var));
+  return Result::Ok;
+}
+
+Result WastParser::ParseThreadsCommand(CommandPtr* out_command) {
+  WABT_TRACE(ParseThreadsCommand);
+  EXPECT(Lpar);
+  EXPECT(Threads);
+  auto threads_command = MakeUnique<ThreadsCommand>();
+
+  while (PeekMatch(TokenType::Lpar)) {
+    CommandPtr command;
+
+    switch (Peek(1)) {
+      case TokenType::AssertExhaustion:
+        CHECK_RESULT(ParseAssertExhaustionCommand(&command));
+        break;
+
+      case TokenType::AssertReturn:
+        CHECK_RESULT(ParseAssertReturnCommand(&command));
+        break;
+
+      case TokenType::AssertReturnArithmeticNan:
+        CHECK_RESULT(ParseAssertReturnArithmeticNanCommand(&command));
+        break;
+
+      case TokenType::AssertReturnCanonicalNan:
+        CHECK_RESULT(ParseAssertReturnCanonicalNanCommand(&command));
+        break;
+
+      case TokenType::AssertTrap:
+        CHECK_RESULT(ParseAssertTrapCommand(&command));
+        break;
+
+      case TokenType::Get:
+      case TokenType::Invoke:
+        CHECK_RESULT(ParseActionCommand(&command));
+        break;
+
+      default:
+        ErrorExpected({"assert_exhaustion", "assert_return",
+                       "assert_return_arithmetic_nan",
+                       "assert_return_canonical_nan", "assert_trap", "get",
+                       "invoke"});
+        return Result::Error;
+    }
+
+    threads_command->commands.push_back(std::move(command));
+  }
+  EXPECT(Rpar);
+
+  *out_command = std::move(threads_command);
   return Result::Ok;
 }
 

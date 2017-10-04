@@ -435,6 +435,12 @@ void NameResolver::VisitCommand(Command* command) {
       VisitScriptModule(
           cast<AssertUninstantiableCommand>(command)->module.get());
       break;
+
+    case CommandType::Threads:
+      for (CommandPtr& subcommand : cast<ThreadsCommand>(command)->commands) {
+        VisitCommand(subcommand.get());
+      }
+      break;
   }
 }
 

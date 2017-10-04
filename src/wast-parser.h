@@ -185,6 +185,7 @@ class WastParser {
   Result ParseActionCommand(CommandPtr*);
   Result ParseModuleCommand(Script*, CommandPtr*);
   Result ParseRegisterCommand(CommandPtr*);
+  Result ParseThreadsCommand(CommandPtr*);
 
   Result ParseAction(ActionPtr*);
   Result ParseScriptModule(std::unique_ptr<ScriptModule>*);

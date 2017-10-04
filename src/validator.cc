@@ -1179,10 +1179,17 @@ void Validator::CheckCommand(const Command* command) {
       // ignore result type.
       CheckAction(cast<AssertTrapCommand>(command)->action.get());
       break;
+
     case CommandType::AssertExhaustion:
       // ignore result type.
       CheckAction(cast<AssertExhaustionCommand>(command)->action.get());
       break;
+
+    case CommandType::Threads:
+      for (const CommandPtr& subcommand :
+           cast<ThreadsCommand>(command)->commands) {
+        CheckCommand(subcommand.get());
+      }
   }
 }
 

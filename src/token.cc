@@ -57,6 +57,7 @@ const char* GetTokenTypeName(TokenType token_type) {
       "start",
       "table",
       "then",
+      "threads",
       "type",
 
       // Literal.

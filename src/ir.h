@@ -835,9 +835,10 @@ enum class CommandType {
   AssertReturnArithmeticNan,
   AssertTrap,
   AssertExhaustion,
+  Threads,
 
   First = Module,
-  Last = AssertExhaustion,
+  Last = Threads,
 };
 static const int kCommandTypeCount = WABT_ENUM_COUNT(CommandType);
 
@@ -852,6 +853,9 @@ class Command {
  protected:
   explicit Command(CommandType type) : type(type) {}
 };
+
+typedef std::unique_ptr<Command> CommandPtr;
+typedef std::vector<CommandPtr> CommandPtrVector;
 
 template <CommandType TypeEnum>
 class CommandMixin : public Command {
@@ -903,6 +907,11 @@ typedef AssertTrapCommandBase<CommandType::AssertTrap> AssertTrapCommand;
 typedef AssertTrapCommandBase<CommandType::AssertExhaustion>
     AssertExhaustionCommand;
 
+class ThreadsCommand : public CommandMixin<CommandType::Threads> {
+ public:
+  CommandPtrVector commands;
+};
+
 template <CommandType TypeEnum>
 class AssertModuleCommand : public CommandMixin<TypeEnum> {
  public:
@@ -917,9 +926,6 @@ typedef AssertModuleCommand<CommandType::AssertUnlinkable>
     AssertUnlinkableCommand;
 typedef AssertModuleCommand<CommandType::AssertUninstantiable>
     AssertUninstantiableCommand;
-
-typedef std::unique_ptr<Command> CommandPtr;
-typedef std::vector<CommandPtr> CommandPtrVector;
 
 struct Script {
   WABT_DISALLOW_COPY_AND_ASSIGN(Script);
