@@ -909,6 +909,8 @@ typedef AssertTrapCommandBase<CommandType::AssertExhaustion>
 
 class ThreadsCommand : public CommandMixin<CommandType::Threads> {
  public:
+  ThreadsCommand(const Location& loc = Location()) : loc(loc) {}
+  Location loc;
   CommandPtrVector commands;
 };
 

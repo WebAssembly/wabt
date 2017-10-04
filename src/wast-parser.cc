@@ -1964,8 +1964,9 @@ Result WastParser::ParseRegisterCommand(CommandPtr* out_command) {
 Result WastParser::ParseThreadsCommand(CommandPtr* out_command) {
   WABT_TRACE(ParseThreadsCommand);
   EXPECT(Lpar);
+  Location loc = GetLocation();
   EXPECT(Threads);
-  auto threads_command = MakeUnique<ThreadsCommand>();
+  auto threads_command = MakeUnique<ThreadsCommand>(loc);
 
   while (PeekMatch(TokenType::Lpar)) {
     CommandPtr command;

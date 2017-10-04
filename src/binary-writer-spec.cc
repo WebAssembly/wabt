@@ -560,6 +560,8 @@ void BinaryWriterSpec::WriteCommands(const Script& script,
 
       case CommandType::Threads: {
         auto* threads_command = cast<ThreadsCommand>(command);
+        WriteLocation(threads_command->loc);
+        WriteSeparator();
         WriteCommands(script, threads_command->commands,
                       indent_size + kIndentSpaces);
         break;

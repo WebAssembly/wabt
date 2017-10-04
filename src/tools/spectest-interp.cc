@@ -194,6 +194,11 @@ typedef AssertModuleCommand<CommandType::AssertUnlinkable>
 typedef AssertModuleCommand<CommandType::AssertUninstantiable>
     AssertUninstantiableCommand;
 
+class ThreadsCommand : public CommandMixin<CommandType::Threads> {
+ public:
+  CommandPtrVector commands;
+};
+
 // An extremely simple JSON parser that only knows how to parse the expected
 // format from wat2wasm.
 class JSONParser {
@@ -227,6 +232,7 @@ class JSONParser {
   std::string CreateModulePath(string_view filename);
   wabt::Result ParseFilename(std::string* out_filename);
   wabt::Result ParseCommand(CommandPtr* out_command);
+  wabt::Result ParseCommands(CommandPtrVector* out_commands);
 
   // Parsing info.
   std::vector<uint8_t> json_data_;
@@ -726,6 +732,13 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
     *out_command = std::move(command);
+  } else if (Match("\"threads\"")) {
+    auto command = MakeUnique<ThreadsCommand>();
+    EXPECT(",");
+    CHECK_RESULT(ParseLine(&command->line));
+    EXPECT(",");
+    CHECK_RESULT(ParseCommands(&command->commands));
+    *out_command = std::move(command);
   } else {
     PrintError("unknown command type");
     return wabt::Result::Error;
@@ -734,10 +747,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
   return wabt::Result::Ok;
 }
 
-wabt::Result JSONParser::ParseScript(Script* out_script) {
-  EXPECT("{");
-  PARSE_KEY_STRING_VALUE("source_filename", &out_script->filename);
-  EXPECT(",");
+wabt::Result JSONParser::ParseCommands(CommandPtrVector* out_commands) {
   EXPECT_KEY("commands");
   EXPECT("[");
   bool first = true;
@@ -746,9 +756,17 @@ wabt::Result JSONParser::ParseScript(Script* out_script) {
     if (!first)
       EXPECT(",");
     CHECK_RESULT(ParseCommand(&command));
-    out_script->commands.push_back(std::move(command));
+    out_commands->push_back(std::move(command));
     first = false;
   }
+  return wabt::Result::Ok;
+}
+
+wabt::Result JSONParser::ParseScript(Script* out_script) {
+  EXPECT("{");
+  PARSE_KEY_STRING_VALUE("source_filename", &out_script->filename);
+  EXPECT(",");
+  CHECK_RESULT(ParseCommands(&out_script->commands));
   EXPECT("}");
   return wabt::Result::Ok;
 }
@@ -989,6 +1007,10 @@ wabt::Result CommandRunner::Run(const Script& script) {
       case CommandType::AssertExhaustion:
         TallyCommand(OnAssertExhaustionCommand(
             cast<AssertExhaustionCommand>(command.get())));
+        break;
+
+      case CommandType::Threads:
+        // TODO(binji):
         break;
     }
   }
