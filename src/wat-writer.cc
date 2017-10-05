@@ -656,6 +656,14 @@ void WatWriter::WriteExpr(const Expr* expr) {
       WritePutsNewline(Opcode::Unreachable_Opcode.GetName());
       break;
 
+    case ExprType::Wait:
+      WriteLoadStoreExpr<WaitExpr>(expr);
+      break;
+
+    case ExprType::Wake:
+      WriteLoadStoreExpr<WakeExpr>(expr);
+      break;
+
     default:
       fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(*expr));
       assert(0);
@@ -715,6 +723,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     case ExprType::AtomicRmw:
     case ExprType::Binary:
     case ExprType::Compare:
+    case ExprType::Wake:
       PushExpr(expr, 2, 1);
       break;
 
@@ -800,6 +809,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
 
     case ExprType::AtomicRmwCmpxchg:
     case ExprType::Select:
+    case ExprType::Wait:
       PushExpr(expr, 3, 1);
       break;
 

@@ -111,6 +111,9 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64Extend8S:
     case Opcode::I64Extend16S:
     case Opcode::I64Extend32S:
+    case Opcode::Wake:
+    case Opcode::I32Wait:
+    case Opcode::I64Wait:
     case Opcode::I32AtomicLoad:
     case Opcode::I64AtomicLoad:
     case Opcode::I32AtomicLoad8U:

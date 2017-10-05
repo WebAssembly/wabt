@@ -567,6 +567,14 @@ Result TypeChecker::OnUnreachable() {
   return SetUnreachable();
 }
 
+Result TypeChecker::OnWait(Opcode opcode) {
+  return CheckOpcode3(opcode);
+}
+
+Result TypeChecker::OnWake(Opcode opcode) {
+  return CheckOpcode2(opcode);
+}
+
 Result TypeChecker::EndFunction() {
   Result result = Result::Ok;
   Label* label;

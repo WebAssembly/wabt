@@ -184,6 +184,14 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
     case ExprType::Unreachable:
       CHECK_RESULT(delegate_->OnUnreachableExpr(cast<UnreachableExpr>(expr)));
       break;
+
+    case ExprType::Wait:
+      CHECK_RESULT(delegate_->OnWaitExpr(cast<WaitExpr>(expr)));
+      break;
+
+    case ExprType::Wake:
+      CHECK_RESULT(delegate_->OnWakeExpr(cast<WakeExpr>(expr)));
+      break;
   }
 
   return Result::Ok;

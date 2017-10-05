@@ -236,6 +236,12 @@ class BinaryReaderDelegate {
 
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
+  virtual Result OnWaitExpr(Opcode opcode,
+                            uint32_t alignment_log2,
+                            Address offset) = 0;
+  virtual Result OnWakeExpr(Opcode opcode,
+                            uint32_t alignment_log2,
+                            Address offset) = 0;
   virtual Result EndFunctionBody(Index index) = 0;
   virtual Result EndCodeSection() = 0;
 

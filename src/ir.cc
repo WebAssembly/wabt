@@ -53,7 +53,9 @@ const char* ExprTypeName[] = {
   "Throw",
   "TryBlock",
   "Unary",
-  "Unreachable"
+  "Unreachable",
+  "Wait",
+  "Wake"
 };
 
 }  // end of anonymous namespace

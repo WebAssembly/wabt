@@ -112,6 +112,8 @@ class Validator {
   void CheckBlockSig(const Location* loc,
                      Opcode opcode,
                      const BlockSignature* sig);
+  template <typename T>
+  void CheckAtomicExpr(const T* expr, Result (TypeChecker::*func)(Opcode));
   void CheckExpr(const Expr* expr);
   void CheckFuncSignature(const Location* loc, const Func* func);
   void CheckFunc(const Location* loc, const Func* func);
@@ -422,45 +424,35 @@ void Validator::CheckBlockSig(const Location* loc,
   }
 }
 
+template <typename T>
+void Validator::CheckAtomicExpr(const T* expr,
+                                Result (TypeChecker::*func)(Opcode)) {
+  CheckHasSharedMemory(&expr->loc, expr->opcode);
+  CheckAtomicAlign(&expr->loc, expr->align,
+                   get_opcode_natural_alignment(expr->opcode));
+  (typechecker_.*func)(expr->opcode);
+}
+
 void Validator::CheckExpr(const Expr* expr) {
   expr_loc_ = &expr->loc;
 
   switch (expr->type()) {
-    case ExprType::AtomicLoad: {
-      auto load_expr = cast<AtomicLoadExpr>(expr);
-      CheckHasSharedMemory(&load_expr->loc, load_expr->opcode);
-      CheckAtomicAlign(&load_expr->loc, load_expr->align,
-                       get_opcode_natural_alignment(load_expr->opcode));
-      typechecker_.OnAtomicLoad(load_expr->opcode);
+    case ExprType::AtomicLoad:
+      CheckAtomicExpr(cast<AtomicLoadExpr>(expr), &TypeChecker::OnAtomicLoad);
       break;
-    }
 
-    case ExprType::AtomicRmw: {
-      auto rmw_expr = cast<AtomicRmwExpr>(expr);
-      CheckHasSharedMemory(&rmw_expr->loc, rmw_expr->opcode);
-      CheckAtomicAlign(&rmw_expr->loc, rmw_expr->align,
-                       get_opcode_natural_alignment(rmw_expr->opcode));
-      typechecker_.OnAtomicRmw(rmw_expr->opcode);
+    case ExprType::AtomicRmw:
+      CheckAtomicExpr(cast<AtomicRmwExpr>(expr), &TypeChecker::OnAtomicRmw);
       break;
-    }
 
-    case ExprType::AtomicRmwCmpxchg: {
-      auto cmpxchg_expr = cast<AtomicRmwCmpxchgExpr>(expr);
-      CheckHasSharedMemory(&cmpxchg_expr->loc, cmpxchg_expr->opcode);
-      CheckAtomicAlign(&cmpxchg_expr->loc, cmpxchg_expr->align,
-                       get_opcode_natural_alignment(cmpxchg_expr->opcode));
-      typechecker_.OnAtomicRmwCmpxchg(cmpxchg_expr->opcode);
+    case ExprType::AtomicRmwCmpxchg:
+      CheckAtomicExpr(cast<AtomicRmwCmpxchgExpr>(expr),
+                      &TypeChecker::OnAtomicRmwCmpxchg);
       break;
-    }
 
-    case ExprType::AtomicStore: {
-      auto store_expr = cast<AtomicStoreExpr>(expr);
-      CheckHasSharedMemory(&store_expr->loc, store_expr->opcode);
-      CheckAtomicAlign(&store_expr->loc, store_expr->align,
-                       get_opcode_natural_alignment(store_expr->opcode));
-      typechecker_.OnAtomicStore(store_expr->opcode);
+    case ExprType::AtomicStore:
+      CheckAtomicExpr(cast<AtomicStoreExpr>(expr), &TypeChecker::OnAtomicStore);
       break;
-    }
 
     case ExprType::Binary:
       typechecker_.OnBinary(cast<BinaryExpr>(expr)->opcode);
@@ -663,6 +655,14 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::Unreachable:
       typechecker_.OnUnreachable();
+      break;
+
+    case ExprType::Wait:
+      CheckAtomicExpr(cast<WaitExpr>(expr), &TypeChecker::OnWait);
+      break;
+
+    case ExprType::Wake:
+      CheckAtomicExpr(cast<WakeExpr>(expr), &TypeChecker::OnWake);
       break;
   }
 }

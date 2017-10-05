@@ -171,6 +171,12 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTryExpr(Index num_types, Type* sig_types) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
+  wabt::Result OnWaitExpr(Opcode opcode,
+                          uint32_t alignment_log2,
+                          Address offset) override;
+  wabt::Result OnWakeExpr(Opcode opcode,
+                          uint32_t alignment_log2,
+                          Address offset) override;
   Result EndFunctionBody(Index index) override;
 
   Result OnElemSegmentCount(Index count) override;
@@ -763,6 +769,18 @@ Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {
 
 Result BinaryReaderIR::OnUnreachableExpr() {
   return AppendExpr(MakeUnique<UnreachableExpr>());
+}
+
+wabt::Result BinaryReaderIR::OnWaitExpr(Opcode opcode,
+                                        uint32_t alignment_log2,
+                                        Address offset) {
+  return AppendExpr(MakeUnique<WaitExpr>(opcode, 1 << alignment_log2, offset));
+}
+
+wabt::Result BinaryReaderIR::OnWakeExpr(Opcode opcode,
+                                        uint32_t alignment_log2,
+                                        Address offset) {
+  return AppendExpr(MakeUnique<WakeExpr>(opcode, 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::EndFunctionBody(Index index) {

@@ -163,6 +163,8 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::GrowMemory:
     case TokenType::Throw:
     case TokenType::Rethrow:
+    case TokenType::Wake:
+    case TokenType::Wait:
     case TokenType::AtomicLoad:
     case TokenType::AtomicStore:
     case TokenType::AtomicRmw:
@@ -1377,6 +1379,20 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<RethrowExpr>(loc, out_expr));
       break;
+
+    case TokenType::Wake: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainLoadStoreInstr<WakeExpr>(loc, token, out_expr));
+      break;
+    }
+
+    case TokenType::Wait: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      CHECK_RESULT(ParsePlainLoadStoreInstr<WaitExpr>(loc, token, out_expr));
+      break;
+    }
 
     case TokenType::AtomicLoad: {
       Token token = Consume();
