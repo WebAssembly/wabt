@@ -383,8 +383,8 @@ Result NameResolver::VisitModule(Module* module) {
     VisitElemSegment(elem_segment);
   for (DataSegment* data_segment : module->data_segments)
     VisitDataSegment(data_segment);
-  if (module->start)
-    ResolveFuncVar(module->start);
+  for (Var* start : module->starts)
+    ResolveFuncVar(start);
   current_module_ = nullptr;
   return result_;
 }

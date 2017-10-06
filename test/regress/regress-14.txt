@@ -1,0 +1,10 @@
+;;; ERROR: 1
+(module
+  (func (result(i32)
+    (return (i32.const 42))))
+
+(;; STDERR ;;;
+out/test/regress/regress-14.txt:3:16: error: unexpected token (, expected ).
+  (func (result(i32)
+               ^
+;;; STDERR ;;)

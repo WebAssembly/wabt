@@ -319,7 +319,7 @@ void Module::AppendField(std::unique_ptr<MemoryModuleField> field) {
 }
 
 void Module::AppendField(std::unique_ptr<StartModuleField> field) {
-  start = &field->start;
+  starts.push_back(&field->start);
   fields.push_back(std::move(field));
 }
 
