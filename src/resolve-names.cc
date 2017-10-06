@@ -383,6 +383,26 @@ Result NameResolver::VisitModule(Module* module) {
         VisitGlobal(&cast<GlobalModuleField>(&field)->global);
         break;
 
+      case ModuleFieldType::Import: {
+        Import* import = cast<ImportModuleField>(&field)->import.get();
+        switch (import->kind()) {
+          case ExternalKind::Func:
+            VisitFunc(&cast<FuncImport>(import)->func);
+            break;
+
+          case ExternalKind::Global:
+            VisitGlobal(&cast<GlobalImport>(import)->global);
+            break;
+
+          case ExternalKind::Table:
+          case ExternalKind::Memory:
+          case ExternalKind::Except:
+            // No names to resolve.
+            break;
+        }
+        break;
+      }
+
       case ModuleFieldType::Export:
         VisitExport(&cast<ExportModuleField>(&field)->export_);
         break;
@@ -399,7 +419,6 @@ Result NameResolver::VisitModule(Module* module) {
         ResolveFuncVar(&cast<StartModuleField>(&field)->start);
         break;
 
-      case ModuleFieldType::Import:
       case ModuleFieldType::FuncType:
       case ModuleFieldType::Table:
       case ModuleFieldType::Memory:
