@@ -450,12 +450,12 @@ YYCOND_BLOCK_COMMENT:
 yy34:
 	++cursor_;
 yy35:
-#line 556 "src/wast-lexer.cc"
+#line 559 "src/wast-lexer.cc"
 	{ continue; }
 #line 456 "src/prebuilt/wast-lexer-gen.cc"
 yy36:
 	++cursor_;
-#line 555 "src/wast-lexer.cc"
+#line 558 "src/wast-lexer.cc"
 	{ NEWLINE; continue; }
 #line 461 "src/prebuilt/wast-lexer-gen.cc"
 yy38:
@@ -469,7 +469,7 @@ yy39:
 yy40:
 	++cursor_;
 yy41:
-#line 557 "src/wast-lexer.cc"
+#line 560 "src/wast-lexer.cc"
 	{ MAYBE_MALFORMED_UTF8(" in block comment"); }
 #line 475 "src/prebuilt/wast-lexer-gen.cc"
 yy42:
@@ -504,12 +504,12 @@ yy47:
 	goto yy41;
 yy48:
 	++cursor_;
-#line 551 "src/wast-lexer.cc"
+#line 554 "src/wast-lexer.cc"
 	{ COMMENT_NESTING++; continue; }
 #line 510 "src/prebuilt/wast-lexer-gen.cc"
 yy50:
 	++cursor_;
-#line 552 "src/wast-lexer.cc"
+#line 555 "src/wast-lexer.cc"
 	{ if (--COMMENT_NESTING == 0)
                                     BEGIN(YYCOND_i);
                                   continue; }
@@ -602,19 +602,19 @@ yy57:
 			if (yych <= 0xF4) goto yy76;
 		}
 yy59:
-#line 549 "src/wast-lexer.cc"
+#line 552 "src/wast-lexer.cc"
 		{ continue; }
 #line 608 "src/prebuilt/wast-lexer-gen.cc"
 yy60:
 		++cursor_;
 		BEGIN(YYCOND_i);
-#line 548 "src/wast-lexer.cc"
+#line 551 "src/wast-lexer.cc"
 		{ NEWLINE; continue; }
 #line 614 "src/prebuilt/wast-lexer-gen.cc"
 yy62:
 		++cursor_;
 yy63:
-#line 562 "src/wast-lexer.cc"
+#line 565 "src/wast-lexer.cc"
 		{ MAYBE_MALFORMED_UTF8(""); }
 #line 620 "src/prebuilt/wast-lexer-gen.cc"
 yy64:
@@ -743,8 +743,8 @@ YYCOND_i:
 		if (yybm[0+yych] & 4) {
 			goto yy81;
 		}
-		if (yych <= 'e') {
-			if (yych <= '+') {
+		if (yych <= 'f') {
+			if (yych <= ',') {
 				if (yych <= '#') {
 					if (yych <= 0x1F) {
 						if (yych <= 0x08) goto yy79;
@@ -760,76 +760,78 @@ YYCOND_i:
 						goto yy92;
 					} else {
 						if (yych <= ')') goto yy94;
-						if (yych <= '*') goto yy86;
-						goto yy96;
+						if (yych == '+') goto yy96;
+						goto yy86;
 					}
 				}
 			} else {
-				if (yych <= ':') {
-					if (yych <= '/') {
-						if (yych == '-') goto yy96;
-						goto yy86;
+				if (yych <= ';') {
+					if (yych <= '0') {
+						if (yych <= '-') goto yy96;
+						if (yych <= '/') goto yy86;
+						goto yy97;
 					} else {
-						if (yych <= '0') goto yy97;
 						if (yych <= '9') goto yy99;
-						goto yy86;
+						if (yych <= ':') goto yy86;
+						goto yy101;
 					}
 				} else {
-					if (yych <= 'a') {
-						if (yych <= ';') goto yy101;
+					if (yych <= 'b') {
 						if (yych <= '`') goto yy86;
-						goto yy102;
+						if (yych <= 'a') goto yy102;
+						goto yy103;
 					} else {
-						if (yych <= 'b') goto yy103;
 						if (yych <= 'c') goto yy104;
 						if (yych <= 'd') goto yy105;
-						goto yy106;
+						if (yych <= 'e') goto yy106;
+						goto yy107;
 					}
 				}
 			}
 		} else {
-			if (yych <= 'r') {
-				if (yych <= 'l') {
-					if (yych <= 'h') {
-						if (yych <= 'f') goto yy107;
+			if (yych <= 't') {
+				if (yych <= 'm') {
+					if (yych <= 'i') {
 						if (yych <= 'g') goto yy108;
-						goto yy86;
+						if (yych <= 'h') goto yy86;
+						goto yy109;
 					} else {
-						if (yych <= 'i') goto yy109;
 						if (yych <= 'k') goto yy86;
-						goto yy110;
+						if (yych <= 'l') goto yy110;
+						goto yy111;
 					}
 				} else {
-					if (yych <= 'o') {
-						if (yych <= 'm') goto yy111;
+					if (yych <= 'p') {
 						if (yych <= 'n') goto yy112;
-						goto yy113;
+						if (yych <= 'o') goto yy113;
+						goto yy114;
 					} else {
-						if (yych <= 'p') goto yy114;
 						if (yych <= 'q') goto yy115;
-						goto yy116;
+						if (yych <= 'r') goto yy116;
+						if (yych <= 's') goto yy117;
+						goto yy118;
 					}
 				}
 			} else {
 				if (yych <= 0xC1) {
-					if (yych <= 'u') {
-						if (yych <= 's') goto yy117;
-						if (yych <= 't') goto yy118;
-						goto yy119;
+					if (yych <= 'w') {
+						if (yych <= 'u') goto yy119;
+						if (yych <= 'v') goto yy86;
+						goto yy120;
 					} else {
 						if (yych <= '~') goto yy86;
-						if (yych >= 0x80) goto yy120;
+						if (yych >= 0x80) goto yy121;
 					}
 				} else {
 					if (yych <= 0xEF) {
-						if (yych <= 0xDF) goto yy122;
-						if (yych <= 0xE0) goto yy123;
-						goto yy124;
+						if (yych <= 0xDF) goto yy123;
+						if (yych <= 0xE0) goto yy124;
+						goto yy125;
 					} else {
-						if (yych <= 0xF0) goto yy125;
-						if (yych <= 0xF3) goto yy126;
-						if (yych <= 0xF4) goto yy127;
-						goto yy120;
+						if (yych <= 0xF0) goto yy126;
+						if (yych <= 0xF3) goto yy127;
+						if (yych <= 0xF4) goto yy128;
+						goto yy121;
 					}
 				}
 			}
@@ -837,9 +839,9 @@ YYCOND_i:
 yy79:
 		++cursor_;
 yy80:
-#line 561 "src/wast-lexer.cc"
+#line 564 "src/wast-lexer.cc"
 		{ ERROR("unexpected char"); continue; }
-#line 843 "src/prebuilt/wast-lexer-gen.cc"
+#line 845 "src/prebuilt/wast-lexer-gen.cc"
 yy81:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
@@ -847,14 +849,14 @@ yy81:
 		if (yybm[0+yych] & 4) {
 			goto yy81;
 		}
-#line 559 "src/wast-lexer.cc"
+#line 562 "src/wast-lexer.cc"
 		{ continue; }
-#line 853 "src/prebuilt/wast-lexer-gen.cc"
+#line 855 "src/prebuilt/wast-lexer-gen.cc"
 yy84:
 		++cursor_;
-#line 558 "src/wast-lexer.cc"
+#line 561 "src/wast-lexer.cc"
 		{ NEWLINE; continue; }
-#line 858 "src/prebuilt/wast-lexer-gen.cc"
+#line 860 "src/prebuilt/wast-lexer-gen.cc"
 yy86:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
@@ -864,58 +866,58 @@ yy87:
 			goto yy86;
 		}
 yy88:
-#line 560 "src/wast-lexer.cc"
+#line 563 "src/wast-lexer.cc"
 		{ RETURN_TEXT(Reserved); }
-#line 870 "src/prebuilt/wast-lexer-gen.cc"
+#line 872 "src/prebuilt/wast-lexer-gen.cc"
 yy89:
 		yyaccept = 0;
 		yych = *(marker_ = ++cursor_);
 		if (yych <= 0x1F) goto yy90;
-		if (yych <= 0x7F) goto yy129;
+		if (yych <= 0x7F) goto yy130;
 		if (yych <= 0xC1) goto yy90;
-		if (yych <= 0xF4) goto yy129;
+		if (yych <= 0xF4) goto yy130;
 yy90:
 		BEGIN(YYCOND_BAD_TEXT);
 #line 239 "src/wast-lexer.cc"
 		{ continue; }
-#line 882 "src/prebuilt/wast-lexer-gen.cc"
+#line 884 "src/prebuilt/wast-lexer-gen.cc"
 yy91:
 		yych = *++cursor_;
 		if (yych <= '\'') {
-			if (yych == '!') goto yy141;
+			if (yych == '!') goto yy142;
 			if (yych <= '"') goto yy88;
-			goto yy141;
+			goto yy142;
 		} else {
 			if (yych <= ':') {
 				if (yych <= ')') goto yy88;
-				goto yy141;
+				goto yy142;
 			} else {
 				if (yych <= ';') goto yy88;
-				if (yych <= '~') goto yy141;
+				if (yych <= '~') goto yy142;
 				goto yy88;
 			}
 		}
 yy92:
 		++cursor_;
-		if ((yych = *cursor_) == ';') goto yy143;
+		if ((yych = *cursor_) == ';') goto yy144;
 #line 230 "src/wast-lexer.cc"
 		{ RETURN(Lpar); }
-#line 904 "src/prebuilt/wast-lexer-gen.cc"
+#line 906 "src/prebuilt/wast-lexer-gen.cc"
 yy94:
 		++cursor_;
 #line 231 "src/wast-lexer.cc"
 		{ RETURN(Rpar); }
-#line 909 "src/prebuilt/wast-lexer-gen.cc"
+#line 911 "src/prebuilt/wast-lexer-gen.cc"
 yy96:
 		yych = *++cursor_;
 		if (yych <= 'h') {
 			if (yych <= '/') goto yy87;
-			if (yych <= '0') goto yy145;
-			if (yych <= '9') goto yy147;
+			if (yych <= '0') goto yy146;
+			if (yych <= '9') goto yy148;
 			goto yy87;
 		} else {
-			if (yych <= 'i') goto yy149;
-			if (yych == 'n') goto yy150;
+			if (yych <= 'i') goto yy150;
+			if (yych == 'n') goto yy151;
 			goto yy87;
 		}
 yy97:
@@ -931,7 +933,7 @@ yy97:
 				if (yych <= '-') {
 					if (yych >= '*') goto yy86;
 				} else {
-					if (yych <= '.') goto yy151;
+					if (yych <= '.') goto yy152;
 					if (yych <= ':') goto yy86;
 				}
 			}
@@ -939,17 +941,17 @@ yy97:
 			if (yych <= 'd') {
 				if (yych <= 'E') {
 					if (yych <= 'D') goto yy86;
-					goto yy153;
+					goto yy154;
 				} else {
-					if (yych == '_') goto yy154;
+					if (yych == '_') goto yy155;
 					goto yy86;
 				}
 			} else {
 				if (yych <= 'w') {
-					if (yych <= 'e') goto yy153;
+					if (yych <= 'e') goto yy154;
 					goto yy86;
 				} else {
-					if (yych <= 'x') goto yy155;
+					if (yych <= 'x') goto yy156;
 					if (yych <= '~') goto yy86;
 				}
 			}
@@ -957,7 +959,7 @@ yy97:
 yy98:
 #line 232 "src/wast-lexer.cc"
 		{ RETURN_LITERAL(Nat, Int); }
-#line 961 "src/prebuilt/wast-lexer-gen.cc"
+#line 963 "src/prebuilt/wast-lexer-gen.cc"
 yy99:
 		++cursor_;
 		if ((limit_ - cursor_) < 3) FILL(3);
@@ -972,20 +974,20 @@ yy99:
 				goto yy86;
 			} else {
 				if (yych <= ')') goto yy98;
-				if (yych == '.') goto yy151;
+				if (yych == '.') goto yy152;
 				goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
 				if (yych <= ';') goto yy98;
-				if (yych == 'E') goto yy153;
+				if (yych == 'E') goto yy154;
 				goto yy86;
 			} else {
 				if (yych <= 'd') {
-					if (yych <= '_') goto yy154;
+					if (yych <= '_') goto yy155;
 					goto yy86;
 				} else {
-					if (yych <= 'e') goto yy153;
+					if (yych <= 'e') goto yy154;
 					if (yych <= '~') goto yy86;
 					goto yy98;
 				}
@@ -993,66 +995,66 @@ yy99:
 		}
 yy101:
 		yych = *++cursor_;
-		if (yych == ';') goto yy156;
+		if (yych == ';') goto yy157;
 		goto yy80;
 yy102:
 		yych = *++cursor_;
 		if (yych <= 'm') {
-			if (yych == 'l') goto yy158;
+			if (yych == 'l') goto yy159;
 			goto yy87;
 		} else {
-			if (yych <= 'n') goto yy159;
-			if (yych == 's') goto yy160;
+			if (yych <= 'n') goto yy160;
+			if (yych == 's') goto yy161;
 			goto yy87;
 		}
 yy103:
 		yych = *++cursor_;
 		if (yych <= 'k') {
-			if (yych == 'i') goto yy161;
+			if (yych == 'i') goto yy162;
 			goto yy87;
 		} else {
-			if (yych <= 'l') goto yy162;
-			if (yych == 'r') goto yy163;
+			if (yych <= 'l') goto yy163;
+			if (yych == 'r') goto yy164;
 			goto yy87;
 		}
 yy104:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy165;
-		if (yych == 'u') goto yy166;
+		if (yych == 'a') goto yy166;
+		if (yych == 'u') goto yy167;
 		goto yy87;
 yy105:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy167;
-		if (yych == 'r') goto yy168;
+		if (yych == 'a') goto yy168;
+		if (yych == 'r') goto yy169;
 		goto yy87;
 yy106:
 		yych = *++cursor_;
 		if (yych <= 'm') {
-			if (yych == 'l') goto yy169;
+			if (yych == 'l') goto yy170;
 			goto yy87;
 		} else {
-			if (yych <= 'n') goto yy170;
-			if (yych == 'x') goto yy171;
+			if (yych <= 'n') goto yy171;
+			if (yych == 'x') goto yy172;
 			goto yy87;
 		}
 yy107:
 		yych = *++cursor_;
 		if (yych <= '5') {
-			if (yych == '3') goto yy172;
+			if (yych == '3') goto yy173;
 			goto yy87;
 		} else {
-			if (yych <= '6') goto yy173;
-			if (yych == 'u') goto yy174;
+			if (yych <= '6') goto yy174;
+			if (yych == 'u') goto yy175;
 			goto yy87;
 		}
 yy108:
 		yych = *++cursor_;
 		if (yych <= 'k') {
-			if (yych == 'e') goto yy175;
+			if (yych == 'e') goto yy176;
 			goto yy87;
 		} else {
-			if (yych <= 'l') goto yy176;
-			if (yych == 'r') goto yy177;
+			if (yych <= 'l') goto yy177;
+			if (yych == 'r') goto yy178;
 			goto yy87;
 		}
 yy109:
@@ -1060,278 +1062,282 @@ yy109:
 		if (yych <= 'e') {
 			if (yych <= '3') {
 				if (yych <= '2') goto yy87;
-				goto yy178;
+				goto yy179;
 			} else {
-				if (yych == '6') goto yy179;
+				if (yych == '6') goto yy180;
 				goto yy87;
 			}
 		} else {
 			if (yych <= 'l') {
-				if (yych <= 'f') goto yy180;
+				if (yych <= 'f') goto yy181;
 				goto yy87;
 			} else {
-				if (yych <= 'm') goto yy182;
-				if (yych <= 'n') goto yy183;
+				if (yych <= 'm') goto yy183;
+				if (yych <= 'n') goto yy184;
 				goto yy87;
 			}
 		}
 yy110:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy184;
+		if (yych == 'o') goto yy185;
 		goto yy87;
 yy111:
 		yych = *++cursor_;
 		if (yych <= 'n') {
-			if (yych == 'e') goto yy185;
+			if (yych == 'e') goto yy186;
 			goto yy87;
 		} else {
-			if (yych <= 'o') goto yy186;
-			if (yych == 'u') goto yy187;
+			if (yych <= 'o') goto yy187;
+			if (yych == 'u') goto yy188;
 			goto yy87;
 		}
 yy112:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy188;
-		if (yych == 'o') goto yy189;
+		if (yych == 'a') goto yy189;
+		if (yych == 'o') goto yy190;
 		goto yy87;
 yy113:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy190;
+		if (yych == 'f') goto yy191;
 		goto yy87;
 yy114:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy191;
+		if (yych == 'a') goto yy192;
 		goto yy87;
 yy115:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy192;
+		if (yych == 'u') goto yy193;
 		goto yy87;
 yy116:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy193;
+		if (yych == 'e') goto yy194;
 		goto yy87;
 yy117:
 		yych = *++cursor_;
 		if (yych <= 'g') {
-			if (yych == 'e') goto yy194;
+			if (yych == 'e') goto yy195;
 			goto yy87;
 		} else {
-			if (yych <= 'h') goto yy195;
-			if (yych == 't') goto yy196;
+			if (yych <= 'h') goto yy196;
+			if (yych == 't') goto yy197;
 			goto yy87;
 		}
 yy118:
 		yych = *++cursor_;
 		switch (yych) {
-		case 'a':	goto yy197;
-		case 'e':	goto yy198;
-		case 'h':	goto yy199;
-		case 'r':	goto yy200;
-		case 'y':	goto yy201;
+		case 'a':	goto yy198;
+		case 'e':	goto yy199;
+		case 'h':	goto yy200;
+		case 'r':	goto yy201;
+		case 'y':	goto yy202;
 		default:	goto yy87;
 		}
 yy119:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy202;
+		if (yych == 'n') goto yy203;
 		goto yy87;
 yy120:
-		++cursor_;
-yy121:
-#line 562 "src/wast-lexer.cc"
-		{ MAYBE_MALFORMED_UTF8(""); }
-#line 1143 "src/prebuilt/wast-lexer-gen.cc"
-yy122:
 		yych = *++cursor_;
-		if (yych <= 0x7F) goto yy121;
-		if (yych <= 0xBF) goto yy79;
-		goto yy121;
+		if (yych == 'a') goto yy204;
+		goto yy87;
+yy121:
+		++cursor_;
+yy122:
+#line 565 "src/wast-lexer.cc"
+		{ MAYBE_MALFORMED_UTF8(""); }
+#line 1149 "src/prebuilt/wast-lexer-gen.cc"
 yy123:
-		yyaccept = 1;
-		yych = *(marker_ = ++cursor_);
-		if (yych <= 0x9F) goto yy121;
-		if (yych <= 0xBF) goto yy203;
-		goto yy121;
+		yych = *++cursor_;
+		if (yych <= 0x7F) goto yy122;
+		if (yych <= 0xBF) goto yy79;
+		goto yy122;
 yy124:
 		yyaccept = 1;
 		yych = *(marker_ = ++cursor_);
-		if (yych <= 0x7F) goto yy121;
-		if (yych <= 0xBF) goto yy203;
-		goto yy121;
+		if (yych <= 0x9F) goto yy122;
+		if (yych <= 0xBF) goto yy205;
+		goto yy122;
 yy125:
 		yyaccept = 1;
 		yych = *(marker_ = ++cursor_);
-		if (yych <= 0x8F) goto yy121;
-		if (yych <= 0xBF) goto yy204;
-		goto yy121;
+		if (yych <= 0x7F) goto yy122;
+		if (yych <= 0xBF) goto yy205;
+		goto yy122;
 yy126:
 		yyaccept = 1;
 		yych = *(marker_ = ++cursor_);
-		if (yych <= 0x7F) goto yy121;
-		if (yych <= 0xBF) goto yy204;
-		goto yy121;
+		if (yych <= 0x8F) goto yy122;
+		if (yych <= 0xBF) goto yy206;
+		goto yy122;
 yy127:
 		yyaccept = 1;
 		yych = *(marker_ = ++cursor_);
-		if (yych <= 0x7F) goto yy121;
-		if (yych <= 0x8F) goto yy204;
-		goto yy121;
+		if (yych <= 0x7F) goto yy122;
+		if (yych <= 0xBF) goto yy206;
+		goto yy122;
 yy128:
+		yyaccept = 1;
+		yych = *(marker_ = ++cursor_);
+		if (yych <= 0x7F) goto yy122;
+		if (yych <= 0x8F) goto yy206;
+		goto yy122;
+yy129:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
-yy129:
+yy130:
 		if (yybm[0+yych] & 32) {
-			goto yy128;
+			goto yy129;
 		}
 		if (yych <= 0xDF) {
 			if (yych <= '"') {
-				if (yych >= ' ') goto yy131;
+				if (yych >= ' ') goto yy132;
 			} else {
-				if (yych <= '\\') goto yy133;
-				if (yych >= 0xC2) goto yy134;
+				if (yych <= '\\') goto yy134;
+				if (yych >= 0xC2) goto yy135;
 			}
 		} else {
 			if (yych <= 0xF0) {
-				if (yych <= 0xE0) goto yy135;
-				if (yych <= 0xEF) goto yy136;
-				goto yy137;
+				if (yych <= 0xE0) goto yy136;
+				if (yych <= 0xEF) goto yy137;
+				goto yy138;
 			} else {
-				if (yych <= 0xF3) goto yy138;
-				if (yych <= 0xF4) goto yy139;
+				if (yych <= 0xF3) goto yy139;
+				if (yych <= 0xF4) goto yy140;
 			}
 		}
-yy130:
+yy131:
 		cursor_ = marker_;
 		if (yyaccept == 0) {
 			goto yy90;
 		} else {
-			goto yy121;
+			goto yy122;
 		}
-yy131:
+yy132:
 		++cursor_;
 #line 238 "src/wast-lexer.cc"
 		{ RETURN_TEXT(Text); }
-#line 1215 "src/prebuilt/wast-lexer-gen.cc"
-yy133:
+#line 1221 "src/prebuilt/wast-lexer-gen.cc"
+yy134:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
 		if (yych <= '[') {
 			if (yych <= '\'') {
-				if (yych == '"') goto yy128;
-				if (yych <= '&') goto yy130;
-				goto yy128;
+				if (yych == '"') goto yy129;
+				if (yych <= '&') goto yy131;
+				goto yy129;
 			} else {
 				if (yych <= '9') {
-					if (yych <= '/') goto yy130;
-					goto yy205;
+					if (yych <= '/') goto yy131;
+					goto yy207;
 				} else {
-					if (yych <= '@') goto yy130;
-					if (yych <= 'F') goto yy205;
-					goto yy130;
+					if (yych <= '@') goto yy131;
+					if (yych <= 'F') goto yy207;
+					goto yy131;
 				}
 			}
 		} else {
 			if (yych <= 'n') {
 				if (yych <= '`') {
-					if (yych <= '\\') goto yy128;
-					goto yy130;
+					if (yych <= '\\') goto yy129;
+					goto yy131;
 				} else {
-					if (yych <= 'f') goto yy205;
-					if (yych <= 'm') goto yy130;
-					goto yy128;
+					if (yych <= 'f') goto yy207;
+					if (yych <= 'm') goto yy131;
+					goto yy129;
 				}
 			} else {
 				if (yych <= 'r') {
-					if (yych <= 'q') goto yy130;
-					goto yy128;
+					if (yych <= 'q') goto yy131;
+					goto yy129;
 				} else {
-					if (yych == 't') goto yy128;
-					goto yy130;
+					if (yych == 't') goto yy129;
+					goto yy131;
 				}
 			}
 		}
-yy134:
-		++cursor_;
-		if (limit_ <= cursor_) FILL(1);
-		yych = *cursor_;
-		if (yych <= 0x7F) goto yy130;
-		if (yych <= 0xBF) goto yy128;
-		goto yy130;
 yy135:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
-		if (yych <= 0x9F) goto yy130;
-		if (yych <= 0xBF) goto yy134;
-		goto yy130;
+		if (yych <= 0x7F) goto yy131;
+		if (yych <= 0xBF) goto yy129;
+		goto yy131;
 yy136:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
-		if (yych <= 0x7F) goto yy130;
-		if (yych <= 0xBF) goto yy134;
-		goto yy130;
+		if (yych <= 0x9F) goto yy131;
+		if (yych <= 0xBF) goto yy135;
+		goto yy131;
 yy137:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
-		if (yych <= 0x8F) goto yy130;
-		if (yych <= 0xBF) goto yy136;
-		goto yy130;
+		if (yych <= 0x7F) goto yy131;
+		if (yych <= 0xBF) goto yy135;
+		goto yy131;
 yy138:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
-		if (yych <= 0x7F) goto yy130;
-		if (yych <= 0xBF) goto yy136;
-		goto yy130;
+		if (yych <= 0x8F) goto yy131;
+		if (yych <= 0xBF) goto yy137;
+		goto yy131;
 yy139:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
-		if (yych <= 0x7F) goto yy130;
-		if (yych <= 0x8F) goto yy136;
-		goto yy130;
+		if (yych <= 0x7F) goto yy131;
+		if (yych <= 0xBF) goto yy137;
+		goto yy131;
 yy140:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
+		if (yych <= 0x7F) goto yy131;
+		if (yych <= 0x8F) goto yy137;
+		goto yy131;
 yy141:
-		if (yybm[0+yych] & 64) {
-			goto yy140;
-		}
-		if (yych <= ')') goto yy142;
-		if (yych <= ',') goto yy86;
-		if (yych <= ';') goto yy142;
-		if (yych <= '}') goto yy86;
+		++cursor_;
+		if (limit_ <= cursor_) FILL(1);
+		yych = *cursor_;
 yy142:
-#line 544 "src/wast-lexer.cc"
-		{ RETURN_TEXT(Var); }
-#line 1312 "src/prebuilt/wast-lexer-gen.cc"
+		if (yybm[0+yych] & 64) {
+			goto yy141;
+		}
+		if (yych <= ')') goto yy143;
+		if (yych <= ',') goto yy86;
+		if (yych <= ';') goto yy143;
+		if (yych <= '}') goto yy86;
 yy143:
+#line 547 "src/wast-lexer.cc"
+		{ RETURN_TEXT(Var); }
+#line 1318 "src/prebuilt/wast-lexer-gen.cc"
+yy144:
 		++cursor_;
 		BEGIN(YYCOND_BLOCK_COMMENT);
-#line 550 "src/wast-lexer.cc"
+#line 553 "src/wast-lexer.cc"
 		{ COMMENT_NESTING = 1; continue; }
-#line 1318 "src/prebuilt/wast-lexer-gen.cc"
-yy145:
+#line 1324 "src/prebuilt/wast-lexer-gen.cc"
+yy146:
 		++cursor_;
 		if ((yych = *cursor_) <= ':') {
 			if (yych <= ')') {
 				if (yych <= '!') {
 					if (yych >= '!') goto yy86;
 				} else {
-					if (yych <= '"') goto yy146;
+					if (yych <= '"') goto yy147;
 					if (yych <= '\'') goto yy86;
 				}
 			} else {
 				if (yych <= '.') {
 					if (yych <= '-') goto yy86;
-					goto yy151;
+					goto yy152;
 				} else {
 					if (yych <= '/') goto yy86;
-					if (yych <= '9') goto yy147;
+					if (yych <= '9') goto yy148;
 					goto yy86;
 				}
 			}
@@ -1340,134 +1346,113 @@ yy145:
 				if (yych <= 'D') {
 					if (yych >= '<') goto yy86;
 				} else {
-					if (yych <= 'E') goto yy153;
+					if (yych <= 'E') goto yy154;
 					if (yych <= '^') goto yy86;
-					goto yy206;
+					goto yy208;
 				}
 			} else {
 				if (yych <= 'w') {
-					if (yych == 'e') goto yy153;
+					if (yych == 'e') goto yy154;
 					goto yy86;
 				} else {
-					if (yych <= 'x') goto yy207;
+					if (yych <= 'x') goto yy209;
 					if (yych <= '~') goto yy86;
 				}
 			}
 		}
-yy146:
+yy147:
 #line 233 "src/wast-lexer.cc"
 		{ RETURN_LITERAL(Int, Int); }
-#line 1361 "src/prebuilt/wast-lexer-gen.cc"
-yy147:
+#line 1367 "src/prebuilt/wast-lexer-gen.cc"
+yy148:
 		++cursor_;
 		if ((limit_ - cursor_) < 3) FILL(3);
 		yych = *cursor_;
 		if (yych <= '9') {
 			if (yych <= '\'') {
 				if (yych == '!') goto yy86;
-				if (yych <= '"') goto yy146;
+				if (yych <= '"') goto yy147;
 				goto yy86;
 			} else {
 				if (yych <= '-') {
-					if (yych <= ')') goto yy146;
+					if (yych <= ')') goto yy147;
 					goto yy86;
 				} else {
-					if (yych <= '.') goto yy151;
+					if (yych <= '.') goto yy152;
 					if (yych <= '/') goto yy86;
-					goto yy147;
+					goto yy148;
 				}
 			}
 		} else {
 			if (yych <= '^') {
 				if (yych <= ';') {
 					if (yych <= ':') goto yy86;
-					goto yy146;
+					goto yy147;
 				} else {
-					if (yych == 'E') goto yy153;
+					if (yych == 'E') goto yy154;
 					goto yy86;
 				}
 			} else {
 				if (yych <= 'd') {
-					if (yych <= '_') goto yy206;
+					if (yych <= '_') goto yy208;
 					goto yy86;
 				} else {
-					if (yych <= 'e') goto yy153;
+					if (yych <= 'e') goto yy154;
 					if (yych <= '~') goto yy86;
-					goto yy146;
+					goto yy147;
 				}
 			}
 		}
-yy149:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy208;
-		goto yy87;
 yy150:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy188;
+		if (yych == 'n') goto yy210;
 		goto yy87;
 yy151:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy189;
+		goto yy87;
+yy152:
 		++cursor_;
 		if ((yych = *cursor_) <= '9') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy152;
+				if (yych <= ')') goto yy153;
 				if (yych <= '/') goto yy86;
-				goto yy209;
+				goto yy211;
 			}
 		} else {
 			if (yych <= 'E') {
-				if (yych == ';') goto yy152;
+				if (yych == ';') goto yy153;
 				if (yych <= 'D') goto yy86;
-				goto yy153;
+				goto yy154;
 			} else {
-				if (yych == 'e') goto yy153;
+				if (yych == 'e') goto yy154;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy152:
+yy153:
 #line 234 "src/wast-lexer.cc"
 		{ RETURN_LITERAL(Float, Float); }
-#line 1433 "src/prebuilt/wast-lexer-gen.cc"
-yy153:
+#line 1439 "src/prebuilt/wast-lexer-gen.cc"
+yy154:
 		yych = *++cursor_;
 		if (yych <= ',') {
-			if (yych == '+') goto yy211;
+			if (yych == '+') goto yy213;
 			goto yy87;
 		} else {
-			if (yych <= '-') goto yy211;
+			if (yych <= '-') goto yy213;
 			if (yych <= '/') goto yy87;
-			if (yych <= '9') goto yy212;
+			if (yych <= '9') goto yy214;
 			goto yy87;
-		}
-yy154:
-		++cursor_;
-		if (limit_ <= cursor_) FILL(1);
-		yych = *cursor_;
-		if (yybm[0+yych] & 16) {
-			goto yy99;
-		}
-		if (yych <= '\'') {
-			if (yych == '!') goto yy86;
-			if (yych <= '"') goto yy88;
-			goto yy86;
-		} else {
-			if (yych <= ':') {
-				if (yych <= ')') goto yy88;
-				goto yy86;
-			} else {
-				if (yych <= ';') goto yy88;
-				if (yych <= '~') goto yy86;
-				goto yy88;
-			}
 		}
 yy155:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
-		if (yybm[0+yych] & 128) {
-			goto yy214;
+		if (yybm[0+yych] & 16) {
+			goto yy99;
 		}
 		if (yych <= '\'') {
 			if (yych == '!') goto yy86;
@@ -1485,241 +1470,266 @@ yy155:
 		}
 yy156:
 		++cursor_;
+		if (limit_ <= cursor_) FILL(1);
+		yych = *cursor_;
+		if (yybm[0+yych] & 128) {
+			goto yy216;
+		}
+		if (yych <= '\'') {
+			if (yych == '!') goto yy86;
+			if (yych <= '"') goto yy88;
+			goto yy86;
+		} else {
+			if (yych <= ':') {
+				if (yych <= ')') goto yy88;
+				goto yy86;
+			} else {
+				if (yych <= ';') goto yy88;
+				if (yych <= '~') goto yy86;
+				goto yy88;
+			}
+		}
+yy157:
+		++cursor_;
 		BEGIN(YYCOND_LINE_COMMENT);
-#line 547 "src/wast-lexer.cc"
+#line 550 "src/wast-lexer.cc"
 		{ continue; }
-#line 1492 "src/prebuilt/wast-lexer-gen.cc"
-yy158:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy216;
-		goto yy87;
+#line 1498 "src/prebuilt/wast-lexer-gen.cc"
 yy159:
 		yych = *++cursor_;
-		if (yych == 'y') goto yy217;
+		if (yych == 'i') goto yy218;
 		goto yy87;
 yy160:
 		yych = *++cursor_;
-		if (yych == 's') goto yy218;
+		if (yych == 'y') goto yy219;
 		goto yy87;
 yy161:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy219;
+		if (yych == 's') goto yy220;
 		goto yy87;
 yy162:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy220;
+		if (yych == 'n') goto yy221;
 		goto yy87;
 yy163:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy222;
+		goto yy87;
+yy164:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy164;
+				if (yych <= '"') goto yy165;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
 				if (yych != ';') goto yy86;
 			} else {
-				if (yych <= '_') goto yy221;
+				if (yych <= '_') goto yy223;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy164:
+yy165:
 #line 263 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Br); }
-#line 1533 "src/prebuilt/wast-lexer-gen.cc"
-yy165:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy222;
-		if (yych == 't') goto yy223;
-		goto yy87;
+#line 1539 "src/prebuilt/wast-lexer-gen.cc"
 yy166:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy224;
+		if (yych == 'l') goto yy224;
+		if (yych == 't') goto yy225;
 		goto yy87;
 yy167:
 		yych = *++cursor_;
-		if (yych == 't') goto yy225;
+		if (yych == 'r') goto yy226;
 		goto yy87;
 yy168:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy226;
+		if (yych == 't') goto yy227;
 		goto yy87;
 yy169:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy227;
-		if (yych == 's') goto yy228;
+		if (yych == 'o') goto yy228;
 		goto yy87;
 yy170:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy229;
+		if (yych == 'e') goto yy229;
+		if (yych == 's') goto yy230;
 		goto yy87;
 yy171:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy231;
-		if (yych == 'p') goto yy232;
+		if (yych == 'd') goto yy231;
 		goto yy87;
 yy172:
 		yych = *++cursor_;
-		if (yych == '2') goto yy233;
+		if (yych == 'c') goto yy233;
+		if (yych == 'p') goto yy234;
 		goto yy87;
 yy173:
 		yych = *++cursor_;
-		if (yych == '4') goto yy235;
+		if (yych == '2') goto yy235;
 		goto yy87;
 yy174:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy237;
+		if (yych == '4') goto yy237;
 		goto yy87;
 yy175:
 		yych = *++cursor_;
-		if (yych == 't') goto yy238;
+		if (yych == 'n') goto yy239;
 		goto yy87;
 yy176:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy240;
+		if (yych == 't') goto yy240;
 		goto yy87;
 yy177:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy241;
+		if (yych == 'o') goto yy242;
 		goto yy87;
 yy178:
 		yych = *++cursor_;
-		if (yych == '2') goto yy242;
+		if (yych == 'o') goto yy243;
 		goto yy87;
 yy179:
 		yych = *++cursor_;
-		if (yych == '4') goto yy244;
+		if (yych == '2') goto yy244;
 		goto yy87;
 yy180:
+		yych = *++cursor_;
+		if (yych == '4') goto yy246;
+		goto yy87;
+yy181:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 259 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(If); }
-#line 1604 "src/prebuilt/wast-lexer-gen.cc"
-yy182:
-		yych = *++cursor_;
-		if (yych == 'p') goto yy246;
-		goto yy87;
+#line 1610 "src/prebuilt/wast-lexer-gen.cc"
 yy183:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy247;
-		if (yych == 'v') goto yy249;
+		if (yych == 'p') goto yy248;
 		goto yy87;
 yy184:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy250;
-		if (yych == 'o') goto yy251;
+		if (yych == 'f') goto yy249;
+		if (yych == 'v') goto yy251;
 		goto yy87;
 yy185:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy252;
+		if (yych == 'c') goto yy252;
+		if (yych == 'o') goto yy253;
 		goto yy87;
 yy186:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy253;
+		if (yych == 'm') goto yy254;
 		goto yy87;
 yy187:
 		yych = *++cursor_;
-		if (yych == 't') goto yy254;
+		if (yych == 'd') goto yy255;
 		goto yy87;
 yy188:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy256;
+		if (yych == 't') goto yy256;
 		goto yy87;
 yy189:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy258;
+		if (yych == 'n') goto yy258;
 		goto yy87;
 yy190:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy260;
+		if (yych == 'p') goto yy260;
 		goto yy87;
 yy191:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy261;
+		if (yych == 'f') goto yy262;
 		goto yy87;
 yy192:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy262;
+		if (yych == 'r') goto yy263;
 		goto yy87;
 yy193:
 		yych = *++cursor_;
-		if (yych <= 'r') {
-			if (yych == 'g') goto yy263;
-			goto yy87;
-		} else {
-			if (yych <= 's') goto yy264;
-			if (yych <= 't') goto yy265;
-			goto yy87;
-		}
+		if (yych == 'o') goto yy264;
+		goto yy87;
 yy194:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy266;
-		if (yych == 't') goto yy267;
-		goto yy87;
+		if (yych <= 'r') {
+			if (yych == 'g') goto yy265;
+			goto yy87;
+		} else {
+			if (yych <= 's') goto yy266;
+			if (yych <= 't') goto yy267;
+			goto yy87;
+		}
 yy195:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy268;
+		if (yych == 'l') goto yy268;
+		if (yych == 't') goto yy269;
 		goto yy87;
 yy196:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy269;
+		if (yych == 'a') goto yy270;
 		goto yy87;
 yy197:
 		yych = *++cursor_;
-		if (yych == 'b') goto yy270;
+		if (yych == 'a') goto yy271;
 		goto yy87;
 yy198:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy271;
+		if (yych == 'b') goto yy272;
 		goto yy87;
 yy199:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy272;
-		if (yych == 'r') goto yy273;
+		if (yych == 'e') goto yy273;
 		goto yy87;
 yy200:
 		yych = *++cursor_;
-		if (yych == 'y') goto yy274;
+		if (yych == 'e') goto yy274;
+		if (yych == 'r') goto yy275;
 		goto yy87;
 yy201:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy276;
+		if (yych == 'y') goto yy276;
 		goto yy87;
 yy202:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy277;
+		if (yych == 'p') goto yy278;
 		goto yy87;
 yy203:
 		yych = *++cursor_;
-		if (yych <= 0x7F) goto yy130;
-		if (yych <= 0xBF) goto yy79;
-		goto yy130;
+		if (yych == 'r') goto yy279;
+		goto yy87;
 yy204:
 		yych = *++cursor_;
-		if (yych <= 0x7F) goto yy130;
-		if (yych <= 0xBF) goto yy203;
-		goto yy130;
+		if (yych == 'k') goto yy280;
+		goto yy87;
 yy205:
+		yych = *++cursor_;
+		if (yych <= 0x7F) goto yy131;
+		if (yych <= 0xBF) goto yy79;
+		goto yy131;
+yy206:
+		yych = *++cursor_;
+		if (yych <= 0x7F) goto yy131;
+		if (yych <= 0xBF) goto yy205;
+		goto yy131;
+yy207:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
 		if (yych <= '@') {
-			if (yych <= '/') goto yy130;
-			if (yych <= '9') goto yy128;
-			goto yy130;
+			if (yych <= '/') goto yy131;
+			if (yych <= '9') goto yy129;
+			goto yy131;
 		} else {
-			if (yych <= 'F') goto yy128;
-			if (yych <= '`') goto yy130;
-			if (yych <= 'f') goto yy128;
-			goto yy130;
+			if (yych <= 'F') goto yy129;
+			if (yych <= '`') goto yy131;
+			if (yych <= 'f') goto yy129;
+			goto yy131;
 		}
-yy206:
+yy208:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -1735,7 +1745,7 @@ yy206:
 		} else {
 			if (yych <= ':') {
 				if (yych <= '/') goto yy86;
-				if (yych <= '9') goto yy147;
+				if (yych <= '9') goto yy148;
 				goto yy86;
 			} else {
 				if (yych <= ';') goto yy88;
@@ -1743,7 +1753,7 @@ yy206:
 				goto yy88;
 			}
 		}
-yy207:
+yy209:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -1755,56 +1765,56 @@ yy207:
 				if (yych <= '\'') goto yy86;
 				if (yych <= ')') goto yy88;
 				if (yych <= '/') goto yy86;
-				goto yy278;
+				goto yy281;
 			}
 		} else {
 			if (yych <= 'F') {
 				if (yych == ';') goto yy88;
 				if (yych <= '@') goto yy86;
-				goto yy278;
+				goto yy281;
 			} else {
 				if (yych <= '`') goto yy86;
-				if (yych <= 'f') goto yy278;
+				if (yych <= 'f') goto yy281;
 				if (yych <= '~') goto yy86;
 				goto yy88;
 			}
 		}
-yy208:
+yy210:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy247;
+		if (yych == 'f') goto yy249;
 		goto yy87;
-yy209:
+yy211:
 		++cursor_;
 		if ((limit_ - cursor_) < 2) FILL(2);
 		yych = *cursor_;
 		if (yych <= ':') {
 			if (yych <= '\'') {
 				if (yych == '!') goto yy86;
-				if (yych <= '"') goto yy152;
+				if (yych <= '"') goto yy153;
 				goto yy86;
 			} else {
-				if (yych <= ')') goto yy152;
+				if (yych <= ')') goto yy153;
 				if (yych <= '/') goto yy86;
-				if (yych <= '9') goto yy209;
+				if (yych <= '9') goto yy211;
 				goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
-				if (yych <= ';') goto yy152;
-				if (yych == 'E') goto yy153;
+				if (yych <= ';') goto yy153;
+				if (yych == 'E') goto yy154;
 				goto yy86;
 			} else {
 				if (yych <= 'd') {
-					if (yych <= '_') goto yy280;
+					if (yych <= '_') goto yy283;
 					goto yy86;
 				} else {
-					if (yych <= 'e') goto yy153;
+					if (yych <= 'e') goto yy154;
 					if (yych <= '~') goto yy86;
-					goto yy152;
+					goto yy153;
 				}
 			}
 		}
-yy211:
+yy213:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -1827,36 +1837,36 @@ yy211:
 				goto yy88;
 			}
 		}
-yy212:
+yy214:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
 		if (yych <= '/') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
-				goto yy152;
+				goto yy153;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy152;
+				if (yych <= ')') goto yy153;
 				goto yy86;
 			}
 		} else {
 			if (yych <= ';') {
-				if (yych <= '9') goto yy212;
+				if (yych <= '9') goto yy214;
 				if (yych <= ':') goto yy86;
-				goto yy152;
+				goto yy153;
 			} else {
-				if (yych == '_') goto yy211;
+				if (yych == '_') goto yy213;
 				if (yych <= '~') goto yy86;
-				goto yy152;
+				goto yy153;
 			}
 		}
-yy214:
+yy216:
 		++cursor_;
 		if ((limit_ - cursor_) < 3) FILL(3);
 		yych = *cursor_;
 		if (yybm[0+yych] & 128) {
-			goto yy214;
+			goto yy216;
 		}
 		if (yych <= ':') {
 			if (yych <= '\'') {
@@ -1865,116 +1875,94 @@ yy214:
 				goto yy86;
 			} else {
 				if (yych <= ')') goto yy98;
-				if (yych == '.') goto yy281;
+				if (yych == '.') goto yy284;
 				goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
 				if (yych <= ';') goto yy98;
-				if (yych == 'P') goto yy283;
+				if (yych == 'P') goto yy286;
 				goto yy86;
 			} else {
 				if (yych <= 'o') {
-					if (yych <= '_') goto yy155;
+					if (yych <= '_') goto yy156;
 					goto yy86;
 				} else {
-					if (yych <= 'p') goto yy283;
+					if (yych <= 'p') goto yy286;
 					if (yych <= '~') goto yy86;
 					goto yy98;
 				}
 			}
 		}
-yy216:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy284;
-		goto yy87;
-yy217:
-		yych = *++cursor_;
-		if (yych == 'f') goto yy285;
-		goto yy87;
 yy218:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy286;
+		if (yych == 'g') goto yy287;
 		goto yy87;
 yy219:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy287;
+		if (yych == 'f') goto yy288;
 		goto yy87;
 yy220:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy288;
+		if (yych == 'e') goto yy289;
 		goto yy87;
 yy221:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy289;
-		if (yych == 't') goto yy290;
+		if (yych == 'a') goto yy290;
 		goto yy87;
 yy222:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy291;
+		if (yych == 'c') goto yy291;
 		goto yy87;
 yy223:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy293;
+		if (yych == 'i') goto yy292;
+		if (yych == 't') goto yy293;
 		goto yy87;
 yy224:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy294;
+		if (yych == 'l') goto yy294;
 		goto yy87;
 yy225:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy295;
+		if (yych == 'c') goto yy296;
 		goto yy87;
 yy226:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy297;
+		if (yych == 'r') goto yy297;
 		goto yy87;
 yy227:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy299;
+		if (yych == 'a') goto yy298;
 		goto yy87;
 yy228:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy301;
+		if (yych == 'p') goto yy300;
 		goto yy87;
 yy229:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy302;
+		goto yy87;
+yy230:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy304;
+		goto yy87;
+yy231:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 269 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(End); }
-#line 1948 "src/prebuilt/wast-lexer-gen.cc"
-yy231:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy303;
-		goto yy87;
-yy232:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy304;
-		goto yy87;
+#line 1958 "src/prebuilt/wast-lexer-gen.cc"
 yy233:
-		++cursor_;
-		if ((yych = *cursor_) <= ')') {
-			if (yych <= '!') {
-				if (yych >= '!') goto yy86;
-			} else {
-				if (yych <= '"') goto yy234;
-				if (yych <= '\'') goto yy86;
-			}
-		} else {
-			if (yych <= ':') {
-				if (yych == '.') goto yy305;
-				goto yy86;
-			} else {
-				if (yych <= ';') goto yy234;
-				if (yych <= '~') goto yy86;
-			}
-		}
+		yych = *++cursor_;
+		if (yych == 'e') goto yy306;
+		goto yy87;
 yy234:
-#line 253 "src/wast-lexer.cc"
-		{ RETURN_TYPE(ValueType, F32); }
-#line 1978 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'o') goto yy307;
+		goto yy87;
 yy235:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
@@ -1986,7 +1974,7 @@ yy235:
 			}
 		} else {
 			if (yych <= ':') {
-				if (yych == '.') goto yy306;
+				if (yych == '.') goto yy308;
 				goto yy86;
 			} else {
 				if (yych <= ';') goto yy236;
@@ -1994,64 +1982,64 @@ yy235:
 			}
 		}
 yy236:
-#line 254 "src/wast-lexer.cc"
-		{ RETURN_TYPE(ValueType, F64); }
-#line 2000 "src/prebuilt/wast-lexer-gen.cc"
+#line 253 "src/wast-lexer.cc"
+		{ RETURN_TYPE(ValueType, F32); }
+#line 1988 "src/prebuilt/wast-lexer-gen.cc"
 yy237:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy307;
-		goto yy87;
-yy238:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy239;
+				if (yych <= '"') goto yy238;
+				if (yych <= '\'') goto yy86;
+			}
+		} else {
+			if (yych <= ':') {
+				if (yych == '.') goto yy309;
+				goto yy86;
+			} else {
+				if (yych <= ';') goto yy238;
+				if (yych <= '~') goto yy86;
+			}
+		}
+yy238:
+#line 254 "src/wast-lexer.cc"
+		{ RETURN_TYPE(ValueType, F64); }
+#line 2010 "src/prebuilt/wast-lexer-gen.cc"
+yy239:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy310;
+		goto yy87;
+yy240:
+		++cursor_;
+		if ((yych = *cursor_) <= ')') {
+			if (yych <= '!') {
+				if (yych >= '!') goto yy86;
+			} else {
+				if (yych <= '"') goto yy241;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
 				if (yych != ';') goto yy86;
 			} else {
-				if (yych <= '_') goto yy309;
+				if (yych <= '_') goto yy312;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy239:
-#line 530 "src/wast-lexer.cc"
-		{ RETURN(Get); }
-#line 2025 "src/prebuilt/wast-lexer-gen.cc"
-yy240:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy310;
-		goto yy87;
 yy241:
-		yych = *++cursor_;
-		if (yych == 'w') goto yy311;
-		goto yy87;
+#line 533 "src/wast-lexer.cc"
+		{ RETURN(Get); }
+#line 2035 "src/prebuilt/wast-lexer-gen.cc"
 yy242:
-		++cursor_;
-		if ((yych = *cursor_) <= ')') {
-			if (yych <= '!') {
-				if (yych >= '!') goto yy86;
-			} else {
-				if (yych <= '"') goto yy243;
-				if (yych <= '\'') goto yy86;
-			}
-		} else {
-			if (yych <= ':') {
-				if (yych == '.') goto yy312;
-				goto yy86;
-			} else {
-				if (yych <= ';') goto yy243;
-				if (yych <= '~') goto yy86;
-			}
-		}
+		yych = *++cursor_;
+		if (yych == 'b') goto yy313;
+		goto yy87;
 yy243:
-#line 251 "src/wast-lexer.cc"
-		{ RETURN_TYPE(ValueType, I32); }
-#line 2055 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'w') goto yy314;
+		goto yy87;
 yy244:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
@@ -2063,7 +2051,7 @@ yy244:
 			}
 		} else {
 			if (yych <= ':') {
-				if (yych == '.') goto yy313;
+				if (yych == '.') goto yy315;
 				goto yy86;
 			} else {
 				if (yych <= ';') goto yy245;
@@ -2071,200 +2059,226 @@ yy244:
 			}
 		}
 yy245:
+#line 251 "src/wast-lexer.cc"
+		{ RETURN_TYPE(ValueType, I32); }
+#line 2065 "src/prebuilt/wast-lexer-gen.cc"
+yy246:
+		++cursor_;
+		if ((yych = *cursor_) <= ')') {
+			if (yych <= '!') {
+				if (yych >= '!') goto yy86;
+			} else {
+				if (yych <= '"') goto yy247;
+				if (yych <= '\'') goto yy86;
+			}
+		} else {
+			if (yych <= ':') {
+				if (yych == '.') goto yy316;
+				goto yy86;
+			} else {
+				if (yych <= ';') goto yy247;
+				if (yych <= '~') goto yy86;
+			}
+		}
+yy247:
 #line 252 "src/wast-lexer.cc"
 		{ RETURN_TYPE(ValueType, I64); }
-#line 2077 "src/prebuilt/wast-lexer-gen.cc"
-yy246:
+#line 2087 "src/prebuilt/wast-lexer-gen.cc"
+yy248:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy314;
+		if (yych == 'o') goto yy317;
 		goto yy87;
-yy247:
+yy249:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 236 "src/wast-lexer.cc"
 		{ RETURN_LITERAL(Float, Infinity); }
-#line 2089 "src/prebuilt/wast-lexer-gen.cc"
-yy249:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy315;
-		goto yy87;
-yy250:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy316;
-		goto yy87;
+#line 2099 "src/prebuilt/wast-lexer-gen.cc"
 yy251:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy317;
+		if (yych == 'o') goto yy318;
 		goto yy87;
 yy252:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy319;
+		if (yych == 'a') goto yy319;
 		goto yy87;
 yy253:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy320;
+		if (yych == 'p') goto yy320;
 		goto yy87;
 yy254:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy322;
+		goto yy87;
+yy255:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy323;
+		goto yy87;
+yy256:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 256 "src/wast-lexer.cc"
 		{ RETURN(Mut); }
-#line 2117 "src/prebuilt/wast-lexer-gen.cc"
-yy256:
+#line 2127 "src/prebuilt/wast-lexer-gen.cc"
+yy258:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy257;
+				if (yych <= '"') goto yy259;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= ':') {
 				if (yych <= '9') goto yy86;
-				goto yy321;
+				goto yy324;
 			} else {
-				if (yych <= ';') goto yy257;
+				if (yych <= ';') goto yy259;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy257:
+yy259:
 #line 237 "src/wast-lexer.cc"
 		{ RETURN_LITERAL(Float, Nan); }
-#line 2139 "src/prebuilt/wast-lexer-gen.cc"
-yy258:
+#line 2149 "src/prebuilt/wast-lexer-gen.cc"
+yy260:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 257 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Nop); }
-#line 2147 "src/prebuilt/wast-lexer-gen.cc"
-yy260:
-		yych = *++cursor_;
-		if (yych == 's') goto yy322;
-		goto yy87;
-yy261:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy323;
-		goto yy87;
+#line 2157 "src/prebuilt/wast-lexer-gen.cc"
 yy262:
 		yych = *++cursor_;
-		if (yych == 't') goto yy324;
+		if (yych == 's') goto yy325;
 		goto yy87;
 yy263:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy325;
+		if (yych == 'a') goto yy326;
 		goto yy87;
 yy264:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy326;
+		if (yych == 't') goto yy327;
 		goto yy87;
 yy265:
 		yych = *++cursor_;
-		if (yych == 'h') goto yy327;
-		if (yych == 'u') goto yy328;
+		if (yych == 'i') goto yy328;
 		goto yy87;
 yy266:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy329;
+		if (yych == 'u') goto yy329;
 		goto yy87;
 yy267:
 		yych = *++cursor_;
-		if (yych == '_') goto yy330;
+		if (yych == 'h') goto yy330;
+		if (yych == 'u') goto yy331;
 		goto yy87;
 yy268:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy331;
+		if (yych == 'e') goto yy332;
 		goto yy87;
 yy269:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy332;
+		if (yych == '_') goto yy333;
 		goto yy87;
 yy270:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy333;
+		if (yych == 'r') goto yy334;
 		goto yy87;
 yy271:
 		yych = *++cursor_;
-		if (yych == '_') goto yy334;
+		if (yych == 'r') goto yy335;
 		goto yy87;
 yy272:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy335;
+		if (yych == 'l') goto yy336;
 		goto yy87;
 yy273:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy337;
+		if (yych == '_') goto yy337;
 		goto yy87;
 yy274:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy338;
+		goto yy87;
+yy275:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy340;
+		goto yy87;
+yy276:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 539 "src/wast-lexer.cc"
+#line 542 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Try); }
-#line 2212 "src/prebuilt/wast-lexer-gen.cc"
-yy276:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy338;
-		goto yy87;
-yy277:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy340;
-		goto yy87;
+#line 2222 "src/prebuilt/wast-lexer-gen.cc"
 yy278:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy341;
+		goto yy87;
+yy279:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy343;
+		goto yy87;
+yy280:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy344;
+		goto yy87;
+yy281:
 		++cursor_;
 		if ((limit_ - cursor_) < 3) FILL(3);
 		yych = *cursor_;
 		if (yych <= ';') {
 			if (yych <= ')') {
 				if (yych <= '!') {
-					if (yych <= ' ') goto yy146;
+					if (yych <= ' ') goto yy147;
 					goto yy86;
 				} else {
-					if (yych <= '"') goto yy146;
+					if (yych <= '"') goto yy147;
 					if (yych <= '\'') goto yy86;
-					goto yy146;
+					goto yy147;
 				}
 			} else {
 				if (yych <= '/') {
-					if (yych == '.') goto yy281;
+					if (yych == '.') goto yy284;
 					goto yy86;
 				} else {
-					if (yych <= '9') goto yy278;
+					if (yych <= '9') goto yy281;
 					if (yych <= ':') goto yy86;
-					goto yy146;
+					goto yy147;
 				}
 			}
 		} else {
 			if (yych <= '_') {
 				if (yych <= 'O') {
 					if (yych <= '@') goto yy86;
-					if (yych <= 'F') goto yy278;
+					if (yych <= 'F') goto yy281;
 					goto yy86;
 				} else {
-					if (yych <= 'P') goto yy283;
+					if (yych <= 'P') goto yy286;
 					if (yych <= '^') goto yy86;
-					goto yy207;
+					goto yy209;
 				}
 			} else {
 				if (yych <= 'o') {
 					if (yych <= '`') goto yy86;
-					if (yych <= 'f') goto yy278;
+					if (yych <= 'f') goto yy281;
 					goto yy86;
 				} else {
-					if (yych <= 'p') goto yy283;
+					if (yych <= 'p') goto yy286;
 					if (yych <= '~') goto yy86;
-					goto yy146;
+					goto yy147;
 				}
 			}
 		}
-yy280:
+yy283:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -2280,7 +2294,7 @@ yy280:
 		} else {
 			if (yych <= ':') {
 				if (yych <= '/') goto yy86;
-				if (yych <= '9') goto yy209;
+				if (yych <= '9') goto yy211;
 				goto yy86;
 			} else {
 				if (yych <= ';') goto yy88;
@@ -2288,7 +2302,7 @@ yy280:
 				goto yy88;
 			}
 		}
-yy281:
+yy284:
 		++cursor_;
 		if ((yych = *cursor_) <= ';') {
 			if (yych <= '\'') {
@@ -2298,7 +2312,7 @@ yy281:
 				if (yych <= '/') {
 					if (yych >= '*') goto yy86;
 				} else {
-					if (yych <= '9') goto yy341;
+					if (yych <= '9') goto yy346;
 					if (yych <= ':') goto yy86;
 				}
 			}
@@ -2306,383 +2320,392 @@ yy281:
 			if (yych <= '`') {
 				if (yych <= 'F') {
 					if (yych <= '@') goto yy86;
-					goto yy341;
+					goto yy346;
 				} else {
-					if (yych == 'P') goto yy283;
+					if (yych == 'P') goto yy286;
 					goto yy86;
 				}
 			} else {
 				if (yych <= 'o') {
-					if (yych <= 'f') goto yy341;
+					if (yych <= 'f') goto yy346;
 					goto yy86;
 				} else {
-					if (yych <= 'p') goto yy283;
+					if (yych <= 'p') goto yy286;
 					if (yych <= '~') goto yy86;
 				}
 			}
 		}
-yy282:
+yy285:
 #line 235 "src/wast-lexer.cc"
 		{ RETURN_LITERAL(Float, Hexfloat); }
-#line 2328 "src/prebuilt/wast-lexer-gen.cc"
-yy283:
-		yych = *++cursor_;
-		if (yych <= ',') {
-			if (yych == '+') goto yy343;
-			goto yy87;
-		} else {
-			if (yych <= '-') goto yy343;
-			if (yych <= '/') goto yy87;
-			if (yych <= '9') goto yy344;
-			goto yy87;
-		}
-yy284:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy346;
-		goto yy87;
-yy285:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy347;
-		goto yy87;
+#line 2342 "src/prebuilt/wast-lexer-gen.cc"
 yy286:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy348;
-		goto yy87;
+		if (yych <= ',') {
+			if (yych == '+') goto yy348;
+			goto yy87;
+		} else {
+			if (yych <= '-') goto yy348;
+			if (yych <= '/') goto yy87;
+			if (yych <= '9') goto yy349;
+			goto yy87;
+		}
 yy287:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy349;
+		if (yych == 'n') goto yy351;
 		goto yy87;
 yy288:
 		yych = *++cursor_;
-		if (yych == 'k') goto yy350;
+		if (yych == 'u') goto yy352;
 		goto yy87;
 yy289:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy352;
+		if (yych == 'r') goto yy353;
 		goto yy87;
 yy290:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy354;
+		if (yych == 'r') goto yy354;
 		goto yy87;
 yy291:
+		yych = *++cursor_;
+		if (yych == 'k') goto yy355;
+		goto yy87;
+yy292:
+		yych = *++cursor_;
+		if (yych == 'f') goto yy357;
+		goto yy87;
+yy293:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy359;
+		goto yy87;
+yy294:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy292;
+				if (yych <= '"') goto yy295;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
 				if (yych != ';') goto yy86;
 			} else {
-				if (yych <= '_') goto yy355;
+				if (yych <= '_') goto yy360;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy292:
+yy295:
 #line 266 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Call); }
-#line 2388 "src/prebuilt/wast-lexer-gen.cc"
-yy293:
+#line 2402 "src/prebuilt/wast-lexer-gen.cc"
+yy296:
 		yych = *++cursor_;
-		if (yych == 'h') goto yy356;
+		if (yych == 'h') goto yy361;
 		goto yy87;
-yy294:
+yy297:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy358;
+		if (yych == 'e') goto yy363;
 		goto yy87;
-yy295:
+yy298:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 523 "src/wast-lexer.cc"
+#line 526 "src/wast-lexer.cc"
 		{ RETURN(Data); }
-#line 2404 "src/prebuilt/wast-lexer-gen.cc"
-yy297:
+#line 2418 "src/prebuilt/wast-lexer-gen.cc"
+yy300:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 268 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Drop); }
-#line 2412 "src/prebuilt/wast-lexer-gen.cc"
-yy299:
+#line 2426 "src/prebuilt/wast-lexer-gen.cc"
+yy302:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 522 "src/wast-lexer.cc"
+#line 525 "src/wast-lexer.cc"
 		{ RETURN(Elem); }
-#line 2420 "src/prebuilt/wast-lexer-gen.cc"
-yy301:
+#line 2434 "src/prebuilt/wast-lexer-gen.cc"
+yy304:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 261 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Else); }
-#line 2428 "src/prebuilt/wast-lexer-gen.cc"
-yy303:
-		yych = *++cursor_;
-		if (yych == 'p') goto yy359;
-		goto yy87;
-yy304:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy360;
-		goto yy87;
-yy305:
-		yych = *++cursor_;
-		switch (yych) {
-		case 'a':	goto yy361;
-		case 'c':	goto yy362;
-		case 'd':	goto yy363;
-		case 'e':	goto yy364;
-		case 'f':	goto yy365;
-		case 'g':	goto yy366;
-		case 'l':	goto yy367;
-		case 'm':	goto yy368;
-		case 'n':	goto yy369;
-		case 'r':	goto yy370;
-		case 's':	goto yy371;
-		case 't':	goto yy372;
-		default:	goto yy87;
-		}
+#line 2442 "src/prebuilt/wast-lexer-gen.cc"
 yy306:
 		yych = *++cursor_;
+		if (yych == 'p') goto yy364;
+		goto yy87;
+yy307:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy365;
+		goto yy87;
+yy308:
+		yych = *++cursor_;
 		switch (yych) {
-		case 'a':	goto yy373;
-		case 'c':	goto yy374;
-		case 'd':	goto yy375;
-		case 'e':	goto yy376;
-		case 'f':	goto yy377;
-		case 'g':	goto yy378;
-		case 'l':	goto yy379;
-		case 'm':	goto yy380;
-		case 'n':	goto yy381;
-		case 'p':	goto yy382;
-		case 'r':	goto yy383;
-		case 's':	goto yy384;
-		case 't':	goto yy385;
+		case 'a':	goto yy366;
+		case 'c':	goto yy367;
+		case 'd':	goto yy368;
+		case 'e':	goto yy369;
+		case 'f':	goto yy370;
+		case 'g':	goto yy371;
+		case 'l':	goto yy372;
+		case 'm':	goto yy373;
+		case 'n':	goto yy374;
+		case 'r':	goto yy375;
+		case 's':	goto yy376;
+		case 't':	goto yy377;
 		default:	goto yy87;
 		}
-yy307:
+yy309:
+		yych = *++cursor_;
+		switch (yych) {
+		case 'a':	goto yy378;
+		case 'c':	goto yy379;
+		case 'd':	goto yy380;
+		case 'e':	goto yy381;
+		case 'f':	goto yy382;
+		case 'g':	goto yy383;
+		case 'l':	goto yy384;
+		case 'm':	goto yy385;
+		case 'n':	goto yy386;
+		case 'p':	goto yy387;
+		case 'r':	goto yy388;
+		case 's':	goto yy389;
+		case 't':	goto yy390;
+		default:	goto yy87;
+		}
+yy310:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 511 "src/wast-lexer.cc"
+#line 514 "src/wast-lexer.cc"
 		{ RETURN(Func); }
-#line 2479 "src/prebuilt/wast-lexer-gen.cc"
-yy309:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy386;
-		if (yych == 'l') goto yy387;
-		goto yy87;
-yy310:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy388;
-		goto yy87;
-yy311:
-		yych = *++cursor_;
-		if (yych == '_') goto yy389;
-		goto yy87;
+#line 2493 "src/prebuilt/wast-lexer-gen.cc"
 yy312:
 		yych = *++cursor_;
-		switch (yych) {
-		case 'a':	goto yy390;
-		case 'c':	goto yy391;
-		case 'd':	goto yy392;
-		case 'e':	goto yy393;
-		case 'g':	goto yy394;
-		case 'l':	goto yy395;
-		case 'm':	goto yy396;
-		case 'n':	goto yy397;
-		case 'o':	goto yy398;
-		case 'p':	goto yy399;
-		case 'r':	goto yy400;
-		case 's':	goto yy401;
-		case 't':	goto yy402;
-		case 'w':	goto yy403;
-		case 'x':	goto yy404;
-		default:	goto yy87;
-		}
+		if (yych == 'g') goto yy391;
+		if (yych == 'l') goto yy392;
+		goto yy87;
 yy313:
 		yych = *++cursor_;
-		switch (yych) {
-		case 'a':	goto yy405;
-		case 'c':	goto yy406;
-		case 'd':	goto yy407;
-		case 'e':	goto yy408;
-		case 'g':	goto yy409;
-		case 'l':	goto yy410;
-		case 'm':	goto yy411;
-		case 'n':	goto yy412;
-		case 'o':	goto yy413;
-		case 'p':	goto yy414;
-		case 'r':	goto yy415;
-		case 's':	goto yy416;
-		case 't':	goto yy417;
-		case 'x':	goto yy418;
-		default:	goto yy87;
-		}
+		if (yych == 'a') goto yy393;
+		goto yy87;
 yy314:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy419;
+		if (yych == '_') goto yy394;
 		goto yy87;
 yy315:
 		yych = *++cursor_;
-		if (yych == 'k') goto yy420;
-		goto yy87;
+		switch (yych) {
+		case 'a':	goto yy395;
+		case 'c':	goto yy396;
+		case 'd':	goto yy397;
+		case 'e':	goto yy398;
+		case 'g':	goto yy399;
+		case 'l':	goto yy400;
+		case 'm':	goto yy401;
+		case 'n':	goto yy402;
+		case 'o':	goto yy403;
+		case 'p':	goto yy404;
+		case 'r':	goto yy405;
+		case 's':	goto yy406;
+		case 't':	goto yy407;
+		case 'w':	goto yy408;
+		case 'x':	goto yy409;
+		default:	goto yy87;
+		}
 yy316:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy421;
-		goto yy87;
+		switch (yych) {
+		case 'a':	goto yy410;
+		case 'c':	goto yy411;
+		case 'd':	goto yy412;
+		case 'e':	goto yy413;
+		case 'g':	goto yy414;
+		case 'l':	goto yy415;
+		case 'm':	goto yy416;
+		case 'n':	goto yy417;
+		case 'o':	goto yy418;
+		case 'p':	goto yy419;
+		case 'r':	goto yy420;
+		case 's':	goto yy421;
+		case 't':	goto yy422;
+		case 'w':	goto yy423;
+		case 'x':	goto yy424;
+		default:	goto yy87;
+		}
 yy317:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy425;
+		goto yy87;
+yy318:
+		yych = *++cursor_;
+		if (yych == 'k') goto yy426;
+		goto yy87;
+yy319:
+		yych = *++cursor_;
+		if (yych == 'l') goto yy427;
+		goto yy87;
+yy320:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 262 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Loop); }
-#line 2551 "src/prebuilt/wast-lexer-gen.cc"
-yy319:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy423;
-		goto yy87;
-yy320:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy424;
-		goto yy87;
-yy321:
-		yych = *++cursor_;
-		if (yych == '0') goto yy425;
-		goto yy87;
+#line 2566 "src/prebuilt/wast-lexer-gen.cc"
 yy322:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy426;
+		if (yych == 'r') goto yy429;
 		goto yy87;
 yy323:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy427;
+		if (yych == 'l') goto yy430;
 		goto yy87;
 yy324:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy429;
+		if (yych == '0') goto yy431;
 		goto yy87;
 yy325:
 		yych = *++cursor_;
-		if (yych == 's') goto yy431;
+		if (yych == 'e') goto yy432;
 		goto yy87;
 yy326:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy432;
+		if (yych == 'm') goto yy433;
 		goto yy87;
 yy327:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy433;
+		if (yych == 'e') goto yy435;
 		goto yy87;
 yy328:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy434;
+		if (yych == 's') goto yy437;
 		goto yy87;
 yy329:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy435;
+		if (yych == 'l') goto yy438;
 		goto yy87;
 yy330:
 		yych = *++cursor_;
-		if (yych == 'g') goto yy436;
-		if (yych == 'l') goto yy437;
+		if (yych == 'r') goto yy439;
 		goto yy87;
 yy331:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy438;
+		if (yych == 'r') goto yy440;
 		goto yy87;
 yy332:
 		yych = *++cursor_;
-		if (yych == 't') goto yy439;
+		if (yych == 'c') goto yy441;
 		goto yy87;
 yy333:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy441;
+		if (yych == 'g') goto yy442;
+		if (yych == 'l') goto yy443;
 		goto yy87;
 yy334:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy443;
+		if (yych == 'e') goto yy444;
 		goto yy87;
 yy335:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 260 "src/wast-lexer.cc"
-		{ RETURN(Then); }
-#line 2624 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 't') goto yy445;
+		goto yy87;
+yy336:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy447;
+		goto yy87;
 yy337:
 		yych = *++cursor_;
-		if (yych == 'w') goto yy444;
+		if (yych == 'l') goto yy449;
 		goto yy87;
 yy338:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 510 "src/wast-lexer.cc"
-		{ RETURN(Type); }
-#line 2636 "src/prebuilt/wast-lexer-gen.cc"
+#line 260 "src/wast-lexer.cc"
+		{ RETURN(Then); }
+#line 2639 "src/prebuilt/wast-lexer-gen.cc"
 yy340:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy446;
+		if (yych == 'w') goto yy450;
 		goto yy87;
 yy341:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 513 "src/wast-lexer.cc"
+		{ RETURN(Type); }
+#line 2651 "src/prebuilt/wast-lexer-gen.cc"
+yy343:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy452;
+		goto yy87;
+yy344:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 448 "src/wast-lexer.cc"
+		{ RETURN_OPCODE0(Wake); }
+#line 2663 "src/prebuilt/wast-lexer-gen.cc"
+yy346:
 		++cursor_;
 		if ((limit_ - cursor_) < 2) FILL(2);
 		yych = *cursor_;
 		if (yych <= '@') {
 			if (yych <= ')') {
 				if (yych <= '!') {
-					if (yych <= ' ') goto yy282;
+					if (yych <= ' ') goto yy285;
 					goto yy86;
 				} else {
-					if (yych <= '"') goto yy282;
+					if (yych <= '"') goto yy285;
 					if (yych <= '\'') goto yy86;
-					goto yy282;
+					goto yy285;
 				}
 			} else {
 				if (yych <= '9') {
 					if (yych <= '/') goto yy86;
-					goto yy341;
+					goto yy346;
 				} else {
-					if (yych == ';') goto yy282;
+					if (yych == ';') goto yy285;
 					goto yy86;
 				}
 			}
 		} else {
 			if (yych <= '_') {
 				if (yych <= 'O') {
-					if (yych <= 'F') goto yy341;
+					if (yych <= 'F') goto yy346;
 					goto yy86;
 				} else {
-					if (yych <= 'P') goto yy283;
+					if (yych <= 'P') goto yy286;
 					if (yych <= '^') goto yy86;
-					goto yy447;
+					goto yy453;
 				}
 			} else {
 				if (yych <= 'o') {
 					if (yych <= '`') goto yy86;
-					if (yych <= 'f') goto yy341;
+					if (yych <= 'f') goto yy346;
 					goto yy86;
 				} else {
-					if (yych <= 'p') goto yy283;
+					if (yych <= 'p') goto yy286;
 					if (yych <= '~') goto yy86;
-					goto yy282;
+					goto yy285;
 				}
 			}
 		}
-yy343:
+yy348:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -2705,545 +2728,550 @@ yy343:
 				goto yy88;
 			}
 		}
-yy344:
+yy349:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
 		if (yych <= '/') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
-				goto yy282;
+				goto yy285;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy282;
+				if (yych <= ')') goto yy285;
 				goto yy86;
 			}
 		} else {
 			if (yych <= ';') {
-				if (yych <= '9') goto yy344;
+				if (yych <= '9') goto yy349;
 				if (yych <= ':') goto yy86;
-				goto yy282;
+				goto yy285;
 			} else {
-				if (yych == '_') goto yy343;
+				if (yych == '_') goto yy348;
 				if (yych <= '~') goto yy86;
-				goto yy282;
+				goto yy285;
 			}
 		}
-yy346:
+yy351:
 		yych = *++cursor_;
-		if (yych == '=') goto yy448;
+		if (yych == '=') goto yy454;
 		goto yy87;
-yy347:
+yy352:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy449;
+		if (yych == 'n') goto yy455;
 		goto yy87;
-yy348:
+yy353:
 		yych = *++cursor_;
-		if (yych == 't') goto yy450;
+		if (yych == 't') goto yy456;
 		goto yy87;
-yy349:
+yy354:
 		yych = *++cursor_;
-		if (yych == 'y') goto yy451;
+		if (yych == 'y') goto yy457;
 		goto yy87;
-yy350:
+yy355:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 258 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Block); }
-#line 2756 "src/prebuilt/wast-lexer-gen.cc"
-yy352:
+#line 2779 "src/prebuilt/wast-lexer-gen.cc"
+yy357:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 264 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(BrIf); }
-#line 2764 "src/prebuilt/wast-lexer-gen.cc"
-yy354:
+#line 2787 "src/prebuilt/wast-lexer-gen.cc"
+yy359:
 		yych = *++cursor_;
-		if (yych == 'b') goto yy453;
+		if (yych == 'b') goto yy459;
 		goto yy87;
-yy355:
+yy360:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy454;
+		if (yych == 'i') goto yy460;
 		goto yy87;
-yy356:
+yy361:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy357;
+				if (yych <= '"') goto yy362;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
 				if (yych != ';') goto yy86;
 			} else {
-				if (yych <= '_') goto yy455;
+				if (yych <= '_') goto yy461;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy357:
-#line 540 "src/wast-lexer.cc"
-		{ RETURN_OPCODE0(Catch); }
-#line 2793 "src/prebuilt/wast-lexer-gen.cc"
-yy358:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy456;
-		goto yy87;
-yy359:
-		yych = *++cursor_;
-		if (yych == 't') goto yy457;
-		goto yy87;
-yy360:
-		yych = *++cursor_;
-		if (yych == 't') goto yy459;
-		goto yy87;
-yy361:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy461;
-		if (yych == 'd') goto yy462;
-		goto yy87;
 yy362:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy463;
-		if (yych == 'o') goto yy464;
-		goto yy87;
+#line 543 "src/wast-lexer.cc"
+		{ RETURN_OPCODE0(Catch); }
+#line 2816 "src/prebuilt/wast-lexer-gen.cc"
 yy363:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy465;
-		if (yych == 'i') goto yy466;
+		if (yych == 'n') goto yy462;
 		goto yy87;
 yy364:
 		yych = *++cursor_;
-		if (yych == 'q') goto yy467;
+		if (yych == 't') goto yy463;
 		goto yy87;
 yy365:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy469;
+		if (yych == 't') goto yy465;
 		goto yy87;
 yy366:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy470;
-		if (yych == 't') goto yy472;
+		if (yych == 'b') goto yy467;
+		if (yych == 'd') goto yy468;
 		goto yy87;
 yy367:
 		yych = *++cursor_;
-		if (yych <= 'n') {
-			if (yych == 'e') goto yy474;
-			goto yy87;
-		} else {
-			if (yych <= 'o') goto yy476;
-			if (yych == 't') goto yy477;
-			goto yy87;
-		}
+		if (yych == 'e') goto yy469;
+		if (yych == 'o') goto yy470;
+		goto yy87;
 yy368:
 		yych = *++cursor_;
-		if (yych <= 'h') {
-			if (yych == 'a') goto yy479;
-			goto yy87;
-		} else {
-			if (yych <= 'i') goto yy480;
-			if (yych == 'u') goto yy481;
-			goto yy87;
-		}
+		if (yych == 'e') goto yy471;
+		if (yych == 'i') goto yy472;
+		goto yy87;
 yy369:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy482;
+		if (yych == 'q') goto yy473;
 		goto yy87;
 yy370:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy484;
+		if (yych == 'l') goto yy475;
 		goto yy87;
 yy371:
 		yych = *++cursor_;
-		if (yych <= 's') {
-			if (yych == 'q') goto yy485;
-			goto yy87;
-		} else {
-			if (yych <= 't') goto yy486;
-			if (yych <= 'u') goto yy487;
-			goto yy87;
-		}
+		if (yych == 'e') goto yy476;
+		if (yych == 't') goto yy478;
+		goto yy87;
 yy372:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy488;
-		goto yy87;
+		if (yych <= 'n') {
+			if (yych == 'e') goto yy480;
+			goto yy87;
+		} else {
+			if (yych <= 'o') goto yy482;
+			if (yych == 't') goto yy483;
+			goto yy87;
+		}
 yy373:
 		yych = *++cursor_;
-		if (yych == 'b') goto yy489;
-		if (yych == 'd') goto yy490;
-		goto yy87;
+		if (yych <= 'h') {
+			if (yych == 'a') goto yy485;
+			goto yy87;
+		} else {
+			if (yych <= 'i') goto yy486;
+			if (yych == 'u') goto yy487;
+			goto yy87;
+		}
 yy374:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy491;
-		if (yych == 'o') goto yy492;
+		if (yych == 'e') goto yy488;
 		goto yy87;
 yy375:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy493;
+		if (yych == 'e') goto yy490;
 		goto yy87;
 yy376:
 		yych = *++cursor_;
-		if (yych == 'q') goto yy494;
-		goto yy87;
+		if (yych <= 's') {
+			if (yych == 'q') goto yy491;
+			goto yy87;
+		} else {
+			if (yych <= 't') goto yy492;
+			if (yych <= 'u') goto yy493;
+			goto yy87;
+		}
 yy377:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy496;
+		if (yych == 'r') goto yy494;
 		goto yy87;
 yy378:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy497;
-		if (yych == 't') goto yy499;
+		if (yych == 'b') goto yy495;
+		if (yych == 'd') goto yy496;
 		goto yy87;
 yy379:
 		yych = *++cursor_;
-		if (yych <= 'n') {
-			if (yych == 'e') goto yy501;
-			goto yy87;
-		} else {
-			if (yych <= 'o') goto yy503;
-			if (yych == 't') goto yy504;
-			goto yy87;
-		}
+		if (yych == 'e') goto yy497;
+		if (yych == 'o') goto yy498;
+		goto yy87;
 yy380:
 		yych = *++cursor_;
-		if (yych <= 'h') {
-			if (yych == 'a') goto yy506;
-			goto yy87;
-		} else {
-			if (yych <= 'i') goto yy507;
-			if (yych == 'u') goto yy508;
-			goto yy87;
-		}
+		if (yych == 'i') goto yy499;
+		goto yy87;
 yy381:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy509;
+		if (yych == 'q') goto yy500;
 		goto yy87;
 yy382:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy511;
+		if (yych == 'l') goto yy502;
 		goto yy87;
 yy383:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy512;
+		if (yych == 'e') goto yy503;
+		if (yych == 't') goto yy505;
 		goto yy87;
 yy384:
 		yych = *++cursor_;
-		if (yych <= 's') {
-			if (yych == 'q') goto yy513;
+		if (yych <= 'n') {
+			if (yych == 'e') goto yy507;
 			goto yy87;
 		} else {
-			if (yych <= 't') goto yy514;
-			if (yych <= 'u') goto yy515;
+			if (yych <= 'o') goto yy509;
+			if (yych == 't') goto yy510;
 			goto yy87;
 		}
 yy385:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy516;
-		goto yy87;
+		if (yych <= 'h') {
+			if (yych == 'a') goto yy512;
+			goto yy87;
+		} else {
+			if (yych <= 'i') goto yy513;
+			if (yych == 'u') goto yy514;
+			goto yy87;
+		}
 yy386:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy517;
+		if (yych == 'e') goto yy515;
 		goto yy87;
 yy387:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy518;
+		if (yych == 'r') goto yy517;
 		goto yy87;
 yy388:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy519;
+		if (yych == 'e') goto yy518;
 		goto yy87;
 yy389:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy521;
-		goto yy87;
+		if (yych <= 's') {
+			if (yych == 'q') goto yy519;
+			goto yy87;
+		} else {
+			if (yych <= 't') goto yy520;
+			if (yych <= 'u') goto yy521;
+			goto yy87;
+		}
 yy390:
 		yych = *++cursor_;
-		if (yych <= 'm') {
-			if (yych == 'd') goto yy522;
-			goto yy87;
-		} else {
-			if (yych <= 'n') goto yy523;
-			if (yych == 't') goto yy524;
-			goto yy87;
-		}
+		if (yych == 'r') goto yy522;
+		goto yy87;
 yy391:
 		yych = *++cursor_;
-		if (yych <= 'n') {
-			if (yych == 'l') goto yy525;
-			goto yy87;
-		} else {
-			if (yych <= 'o') goto yy526;
-			if (yych == 't') goto yy527;
-			goto yy87;
-		}
+		if (yych == 'l') goto yy523;
+		goto yy87;
 yy392:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy528;
+		if (yych == 'o') goto yy524;
 		goto yy87;
 yy393:
 		yych = *++cursor_;
-		if (yych == 'q') goto yy529;
-		if (yych == 'x') goto yy531;
+		if (yych == 'l') goto yy525;
 		goto yy87;
 yy394:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy532;
-		if (yych == 't') goto yy533;
+		if (yych == 'm') goto yy527;
 		goto yy87;
 yy395:
 		yych = *++cursor_;
-		if (yych <= 'n') {
-			if (yych == 'e') goto yy534;
+		if (yych <= 'm') {
+			if (yych == 'd') goto yy528;
 			goto yy87;
 		} else {
-			if (yych <= 'o') goto yy535;
-			if (yych == 't') goto yy536;
+			if (yych <= 'n') goto yy529;
+			if (yych == 't') goto yy530;
 			goto yy87;
 		}
 yy396:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy537;
-		goto yy87;
+		if (yych <= 'n') {
+			if (yych == 'l') goto yy531;
+			goto yy87;
+		} else {
+			if (yych <= 'o') goto yy532;
+			if (yych == 't') goto yy533;
+			goto yy87;
+		}
 yy397:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy538;
+		if (yych == 'i') goto yy534;
 		goto yy87;
 yy398:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy540;
+		if (yych == 'q') goto yy535;
+		if (yych == 'x') goto yy537;
 		goto yy87;
 yy399:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy542;
+		if (yych == 'e') goto yy538;
+		if (yych == 't') goto yy539;
 		goto yy87;
 yy400:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy543;
-		if (yych == 'o') goto yy544;
-		goto yy87;
-yy401:
-		yych = *++cursor_;
-		if (yych <= 's') {
-			if (yych == 'h') goto yy545;
+		if (yych <= 'n') {
+			if (yych == 'e') goto yy540;
 			goto yy87;
 		} else {
-			if (yych <= 't') goto yy546;
-			if (yych <= 'u') goto yy547;
+			if (yych <= 'o') goto yy541;
+			if (yych == 't') goto yy542;
 			goto yy87;
 		}
+yy401:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy543;
+		goto yy87;
 yy402:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy548;
+		if (yych == 'e') goto yy544;
 		goto yy87;
 yy403:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy549;
+		if (yych == 'r') goto yy546;
 		goto yy87;
 yy404:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy550;
+		if (yych == 'o') goto yy548;
 		goto yy87;
 yy405:
 		yych = *++cursor_;
-		if (yych <= 'm') {
-			if (yych == 'd') goto yy551;
-			goto yy87;
-		} else {
-			if (yych <= 'n') goto yy552;
-			if (yych == 't') goto yy553;
-			goto yy87;
-		}
+		if (yych == 'e') goto yy549;
+		if (yych == 'o') goto yy550;
+		goto yy87;
 yy406:
 		yych = *++cursor_;
-		if (yych <= 'n') {
-			if (yych == 'l') goto yy554;
+		if (yych <= 's') {
+			if (yych == 'h') goto yy551;
 			goto yy87;
 		} else {
-			if (yych <= 'o') goto yy555;
-			if (yych == 't') goto yy556;
+			if (yych <= 't') goto yy552;
+			if (yych <= 'u') goto yy553;
 			goto yy87;
 		}
 yy407:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy557;
+		if (yych == 'r') goto yy554;
 		goto yy87;
 yy408:
 		yych = *++cursor_;
-		if (yych == 'q') goto yy558;
-		if (yych == 'x') goto yy560;
+		if (yych == 'a') goto yy555;
+		if (yych == 'r') goto yy556;
 		goto yy87;
 yy409:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy561;
-		if (yych == 't') goto yy562;
+		if (yych == 'o') goto yy557;
 		goto yy87;
 yy410:
 		yych = *++cursor_;
-		if (yych <= 'n') {
-			if (yych == 'e') goto yy563;
+		if (yych <= 'm') {
+			if (yych == 'd') goto yy558;
 			goto yy87;
 		} else {
-			if (yych <= 'o') goto yy564;
-			if (yych == 't') goto yy565;
+			if (yych <= 'n') goto yy559;
+			if (yych == 't') goto yy560;
 			goto yy87;
 		}
 yy411:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy566;
-		goto yy87;
+		if (yych <= 'n') {
+			if (yych == 'l') goto yy561;
+			goto yy87;
+		} else {
+			if (yych <= 'o') goto yy562;
+			if (yych == 't') goto yy563;
+			goto yy87;
+		}
 yy412:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy567;
+		if (yych == 'i') goto yy564;
 		goto yy87;
 yy413:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy569;
+		if (yych == 'q') goto yy565;
+		if (yych == 'x') goto yy567;
 		goto yy87;
 yy414:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy571;
+		if (yych == 'e') goto yy568;
+		if (yych == 't') goto yy569;
 		goto yy87;
 yy415:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy572;
-		if (yych == 'o') goto yy573;
-		goto yy87;
-yy416:
-		yych = *++cursor_;
-		if (yych <= 's') {
-			if (yych == 'h') goto yy574;
+		if (yych <= 'n') {
+			if (yych == 'e') goto yy570;
 			goto yy87;
 		} else {
-			if (yych <= 't') goto yy575;
-			if (yych <= 'u') goto yy576;
+			if (yych <= 'o') goto yy571;
+			if (yych == 't') goto yy572;
 			goto yy87;
 		}
+yy416:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy573;
+		goto yy87;
 yy417:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy577;
+		if (yych == 'e') goto yy574;
 		goto yy87;
 yy418:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy578;
+		if (yych == 'r') goto yy576;
 		goto yy87;
 yy419:
 		yych = *++cursor_;
-		if (yych == 't') goto yy579;
+		if (yych == 'o') goto yy578;
 		goto yy87;
 yy420:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy581;
+		if (yych == 'e') goto yy579;
+		if (yych == 'o') goto yy580;
 		goto yy87;
 yy421:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
+		yych = *++cursor_;
+		if (yych <= 's') {
+			if (yych == 'h') goto yy581;
+			goto yy87;
+		} else {
+			if (yych <= 't') goto yy582;
+			if (yych <= 'u') goto yy583;
+			goto yy87;
 		}
-#line 514 "src/wast-lexer.cc"
-		{ RETURN(Local); }
-#line 3150 "src/prebuilt/wast-lexer-gen.cc"
+yy422:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy584;
+		goto yy87;
 yy423:
 		yych = *++cursor_;
-		if (yych == 'y') goto yy583;
+		if (yych == 'a') goto yy585;
 		goto yy87;
 yy424:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy585;
+		if (yych == 'o') goto yy586;
 		goto yy87;
 yy425:
 		yych = *++cursor_;
-		if (yych == 'x') goto yy587;
+		if (yych == 't') goto yy587;
 		goto yy87;
 yy426:
 		yych = *++cursor_;
-		if (yych == 't') goto yy588;
+		if (yych == 'e') goto yy589;
 		goto yy87;
 yy427:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 512 "src/wast-lexer.cc"
-		{ RETURN(Param); }
-#line 3174 "src/prebuilt/wast-lexer-gen.cc"
+#line 517 "src/wast-lexer.cc"
+		{ RETURN(Local); }
+#line 3178 "src/prebuilt/wast-lexer-gen.cc"
 yy429:
+		yych = *++cursor_;
+		if (yych == 'y') goto yy591;
+		goto yy87;
+yy430:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy593;
+		goto yy87;
+yy431:
+		yych = *++cursor_;
+		if (yych == 'x') goto yy595;
+		goto yy87;
+yy432:
+		yych = *++cursor_;
+		if (yych == 't') goto yy596;
+		goto yy87;
+yy433:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 518 "src/wast-lexer.cc"
-		{ RETURN(Quote); }
-#line 3182 "src/prebuilt/wast-lexer-gen.cc"
-yy431:
-		yych = *++cursor_;
-		if (yych == 't') goto yy590;
-		goto yy87;
-yy432:
-		yych = *++cursor_;
-		if (yych == 't') goto yy591;
-		goto yy87;
-yy433:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy593;
-		goto yy87;
-yy434:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy594;
-		goto yy87;
+#line 515 "src/wast-lexer.cc"
+		{ RETURN(Param); }
+#line 3202 "src/prebuilt/wast-lexer-gen.cc"
 yy435:
-		yych = *++cursor_;
-		if (yych == 't') goto yy596;
-		goto yy87;
-yy436:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy598;
-		goto yy87;
-yy437:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy599;
-		goto yy87;
-yy438:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy600;
-		goto yy87;
-yy439:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 521 "src/wast-lexer.cc"
-		{ RETURN(Start); }
-#line 3222 "src/prebuilt/wast-lexer-gen.cc"
+		{ RETURN(Quote); }
+#line 3210 "src/prebuilt/wast-lexer-gen.cc"
+yy437:
+		yych = *++cursor_;
+		if (yych == 't') goto yy598;
+		goto yy87;
+yy438:
+		yych = *++cursor_;
+		if (yych == 't') goto yy599;
+		goto yy87;
+yy439:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy601;
+		goto yy87;
+yy440:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy602;
+		goto yy87;
 yy441:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 519 "src/wast-lexer.cc"
-		{ RETURN(Table); }
-#line 3230 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 't') goto yy604;
+		goto yy87;
+yy442:
+		yych = *++cursor_;
+		if (yych == 'l') goto yy606;
+		goto yy87;
 yy443:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy602;
+		if (yych == 'o') goto yy607;
 		goto yy87;
 yy444:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy608;
+		goto yy87;
+yy445:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 542 "src/wast-lexer.cc"
-		{ RETURN_OPCODE0(Throw); }
-#line 3242 "src/prebuilt/wast-lexer-gen.cc"
-yy446:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy603;
-		goto yy87;
+#line 524 "src/wast-lexer.cc"
+		{ RETURN(Start); }
+#line 3250 "src/prebuilt/wast-lexer-gen.cc"
 yy447:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 522 "src/wast-lexer.cc"
+		{ RETURN(Table); }
+#line 3258 "src/prebuilt/wast-lexer-gen.cc"
+yy449:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy610;
+		goto yy87;
+yy450:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 545 "src/wast-lexer.cc"
+		{ RETURN_OPCODE0(Throw); }
+#line 3270 "src/prebuilt/wast-lexer-gen.cc"
+yy452:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy611;
+		goto yy87;
+yy453:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -3255,160 +3283,160 @@ yy447:
 				if (yych <= '\'') goto yy86;
 				if (yych <= ')') goto yy88;
 				if (yych <= '/') goto yy86;
-				goto yy341;
+				goto yy346;
 			}
 		} else {
 			if (yych <= 'F') {
 				if (yych == ';') goto yy88;
 				if (yych <= '@') goto yy86;
-				goto yy341;
+				goto yy346;
 			} else {
 				if (yych <= '`') goto yy86;
-				if (yych <= 'f') goto yy341;
+				if (yych <= 'f') goto yy346;
 				if (yych <= '~') goto yy86;
 				goto yy88;
 			}
 		}
-yy448:
-		yych = *++cursor_;
-		if (yych <= '/') goto yy87;
-		if (yych <= '0') goto yy604;
-		if (yych <= '9') goto yy606;
-		goto yy87;
-yy449:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy608;
-		goto yy87;
-yy450:
-		yych = *++cursor_;
-		if (yych == '_') goto yy610;
-		goto yy87;
-yy451:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 517 "src/wast-lexer.cc"
-		{ RETURN(Bin); }
-#line 3294 "src/prebuilt/wast-lexer-gen.cc"
-yy453:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy611;
-		goto yy87;
 yy454:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy612;
+		if (yych <= '/') goto yy87;
+		if (yych <= '0') goto yy612;
+		if (yych <= '9') goto yy614;
 		goto yy87;
 yy455:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy613;
+		if (yych == 'c') goto yy616;
 		goto yy87;
 yy456:
 		yych = *++cursor_;
-		if (yych == 't') goto yy614;
+		if (yych == '_') goto yy618;
 		goto yy87;
 yy457:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 527 "src/wast-lexer.cc"
-		{ RETURN(Except); }
-#line 3318 "src/prebuilt/wast-lexer-gen.cc"
+#line 520 "src/wast-lexer.cc"
+		{ RETURN(Bin); }
+#line 3322 "src/prebuilt/wast-lexer-gen.cc"
 yy459:
+		yych = *++cursor_;
+		if (yych == 'l') goto yy619;
+		goto yy87;
+yy460:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy620;
+		goto yy87;
+yy461:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy621;
+		goto yy87;
+yy462:
+		yych = *++cursor_;
+		if (yych == 't') goto yy622;
+		goto yy87;
+yy463:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 526 "src/wast-lexer.cc"
-		{ RETURN(Export); }
-#line 3326 "src/prebuilt/wast-lexer-gen.cc"
-yy461:
-		yych = *++cursor_;
-		if (yych == 's') goto yy615;
-		goto yy87;
-yy462:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy617;
-		goto yy87;
-yy463:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy619;
-		goto yy87;
-yy464:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy620;
-		if (yych == 'p') goto yy621;
-		goto yy87;
+#line 530 "src/wast-lexer.cc"
+		{ RETURN(Except); }
+#line 3346 "src/prebuilt/wast-lexer-gen.cc"
 yy465:
-		yych = *++cursor_;
-		if (yych == 'm') goto yy622;
-		goto yy87;
-yy466:
-		yych = *++cursor_;
-		if (yych == 'v') goto yy623;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 529 "src/wast-lexer.cc"
+		{ RETURN(Export); }
+#line 3354 "src/prebuilt/wast-lexer-gen.cc"
 yy467:
+		yych = *++cursor_;
+		if (yych == 's') goto yy623;
+		goto yy87;
+yy468:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy625;
+		goto yy87;
+yy469:
+		yych = *++cursor_;
+		if (yych == 'i') goto yy627;
+		goto yy87;
+yy470:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy628;
+		if (yych == 'p') goto yy629;
+		goto yy87;
+yy471:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy630;
+		goto yy87;
+yy472:
+		yych = *++cursor_;
+		if (yych == 'v') goto yy631;
+		goto yy87;
+yy473:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 396 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F32Eq); }
-#line 3359 "src/prebuilt/wast-lexer-gen.cc"
-yy469:
+#line 3387 "src/prebuilt/wast-lexer-gen.cc"
+yy475:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy625;
+		if (yych == 'o') goto yy633;
 		goto yy87;
-yy470:
+yy476:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 406 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F32Ge); }
-#line 3371 "src/prebuilt/wast-lexer-gen.cc"
-yy472:
+#line 3399 "src/prebuilt/wast-lexer-gen.cc"
+yy478:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 404 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F32Gt); }
-#line 3379 "src/prebuilt/wast-lexer-gen.cc"
-yy474:
+#line 3407 "src/prebuilt/wast-lexer-gen.cc"
+yy480:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 402 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F32Le); }
-#line 3387 "src/prebuilt/wast-lexer-gen.cc"
-yy476:
+#line 3415 "src/prebuilt/wast-lexer-gen.cc"
+yy482:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy626;
+		if (yych == 'a') goto yy634;
 		goto yy87;
-yy477:
+yy483:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 400 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F32Lt); }
-#line 3399 "src/prebuilt/wast-lexer-gen.cc"
-yy479:
+#line 3427 "src/prebuilt/wast-lexer-gen.cc"
+yy485:
 		yych = *++cursor_;
-		if (yych == 'x') goto yy627;
+		if (yych == 'x') goto yy635;
 		goto yy87;
-yy480:
+yy486:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy629;
+		if (yych == 'n') goto yy637;
 		goto yy87;
-yy481:
+yy487:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy631;
+		if (yych == 'l') goto yy639;
 		goto yy87;
-yy482:
+yy488:
 		++cursor_;
 		if ((yych = *cursor_) <= ':') {
 			if (yych <= '"') {
@@ -3419,120 +3447,120 @@ yy482:
 			}
 		} else {
 			if (yych <= 'a') {
-				if (yych <= ';') goto yy483;
+				if (yych <= ';') goto yy489;
 				if (yych <= '`') goto yy86;
-				goto yy633;
+				goto yy641;
 			} else {
-				if (yych == 'g') goto yy634;
+				if (yych == 'g') goto yy642;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy483:
+yy489:
 #line 398 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F32Ne); }
-#line 3434 "src/prebuilt/wast-lexer-gen.cc"
-yy484:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy636;
-		goto yy87;
-yy485:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy637;
-		goto yy87;
-yy486:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy638;
-		goto yy87;
-yy487:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy639;
-		goto yy87;
-yy488:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy641;
-		goto yy87;
-yy489:
-		yych = *++cursor_;
-		if (yych == 's') goto yy642;
-		goto yy87;
+#line 3462 "src/prebuilt/wast-lexer-gen.cc"
 yy490:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy644;
+		if (yych == 'i') goto yy644;
 		goto yy87;
 yy491:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy646;
+		if (yych == 'r') goto yy645;
 		goto yy87;
 yy492:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy647;
-		if (yych == 'p') goto yy648;
+		if (yych == 'o') goto yy646;
 		goto yy87;
 yy493:
 		yych = *++cursor_;
-		if (yych == 'v') goto yy649;
+		if (yych == 'b') goto yy647;
 		goto yy87;
 yy494:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy649;
+		goto yy87;
+yy495:
+		yych = *++cursor_;
+		if (yych == 's') goto yy650;
+		goto yy87;
+yy496:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy652;
+		goto yy87;
+yy497:
+		yych = *++cursor_;
+		if (yych == 'i') goto yy654;
+		goto yy87;
+yy498:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy655;
+		if (yych == 'p') goto yy656;
+		goto yy87;
+yy499:
+		yych = *++cursor_;
+		if (yych == 'v') goto yy657;
+		goto yy87;
+yy500:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 397 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F64Eq); }
-#line 3483 "src/prebuilt/wast-lexer-gen.cc"
-yy496:
+#line 3511 "src/prebuilt/wast-lexer-gen.cc"
+yy502:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy651;
+		if (yych == 'o') goto yy659;
 		goto yy87;
-yy497:
+yy503:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 407 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F64Ge); }
-#line 3495 "src/prebuilt/wast-lexer-gen.cc"
-yy499:
+#line 3523 "src/prebuilt/wast-lexer-gen.cc"
+yy505:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 405 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F64Gt); }
-#line 3503 "src/prebuilt/wast-lexer-gen.cc"
-yy501:
+#line 3531 "src/prebuilt/wast-lexer-gen.cc"
+yy507:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 403 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F64Le); }
-#line 3511 "src/prebuilt/wast-lexer-gen.cc"
-yy503:
+#line 3539 "src/prebuilt/wast-lexer-gen.cc"
+yy509:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy652;
+		if (yych == 'a') goto yy660;
 		goto yy87;
-yy504:
+yy510:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 401 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F64Lt); }
-#line 3523 "src/prebuilt/wast-lexer-gen.cc"
-yy506:
+#line 3551 "src/prebuilt/wast-lexer-gen.cc"
+yy512:
 		yych = *++cursor_;
-		if (yych == 'x') goto yy653;
+		if (yych == 'x') goto yy661;
 		goto yy87;
-yy507:
+yy513:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy655;
+		if (yych == 'n') goto yy663;
 		goto yy87;
-yy508:
+yy514:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy657;
+		if (yych == 'l') goto yy665;
 		goto yy87;
-yy509:
+yy515:
 		++cursor_;
 		if ((yych = *cursor_) <= ':') {
 			if (yych <= '"') {
@@ -3543,353 +3571,361 @@ yy509:
 			}
 		} else {
 			if (yych <= 'a') {
-				if (yych <= ';') goto yy510;
+				if (yych <= ';') goto yy516;
 				if (yych <= '`') goto yy86;
-				goto yy659;
+				goto yy667;
 			} else {
-				if (yych == 'g') goto yy660;
+				if (yych == 'g') goto yy668;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy510:
+yy516:
 #line 399 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, F64Ne); }
-#line 3558 "src/prebuilt/wast-lexer-gen.cc"
-yy511:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy662;
-		goto yy87;
-yy512:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy663;
-		goto yy87;
-yy513:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy664;
-		goto yy87;
-yy514:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy665;
-		goto yy87;
-yy515:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy666;
-		goto yy87;
-yy516:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy668;
-		goto yy87;
+#line 3586 "src/prebuilt/wast-lexer-gen.cc"
 yy517:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy669;
+		if (yych == 'o') goto yy670;
 		goto yy87;
 yy518:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy670;
+		if (yych == 'i') goto yy671;
 		goto yy87;
 yy519:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy672;
+		goto yy87;
+yy520:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy673;
+		goto yy87;
+yy521:
+		yych = *++cursor_;
+		if (yych == 'b') goto yy674;
+		goto yy87;
+yy522:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy676;
+		goto yy87;
+yy523:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy677;
+		goto yy87;
+yy524:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy678;
+		goto yy87;
+yy525:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 515 "src/wast-lexer.cc"
+#line 518 "src/wast-lexer.cc"
 		{ RETURN(Global); }
-#line 3598 "src/prebuilt/wast-lexer-gen.cc"
-yy521:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy671;
-		goto yy87;
-yy522:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy672;
-		goto yy87;
-yy523:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy674;
-		goto yy87;
-yy524:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy676;
-		goto yy87;
-yy525:
-		yych = *++cursor_;
-		if (yych == 'z') goto yy677;
-		goto yy87;
-yy526:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy679;
-		goto yy87;
+#line 3626 "src/prebuilt/wast-lexer-gen.cc"
 yy527:
 		yych = *++cursor_;
-		if (yych == 'z') goto yy680;
+		if (yych == 'e') goto yy679;
 		goto yy87;
 yy528:
 		yych = *++cursor_;
-		if (yych == 'v') goto yy682;
+		if (yych == 'd') goto yy680;
 		goto yy87;
 yy529:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy682;
+		goto yy87;
+yy530:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy684;
+		goto yy87;
+yy531:
+		yych = *++cursor_;
+		if (yych == 'z') goto yy685;
+		goto yy87;
+yy532:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy687;
+		goto yy87;
+yy533:
+		yych = *++cursor_;
+		if (yych == 'z') goto yy688;
+		goto yy87;
+yy534:
+		yych = *++cursor_;
+		if (yych == 'v') goto yy690;
+		goto yy87;
+yy535:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy530;
+				if (yych <= '"') goto yy536;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= 'y') {
 				if (yych != ';') goto yy86;
 			} else {
-				if (yych <= 'z') goto yy683;
+				if (yych <= 'z') goto yy691;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy530:
+yy536:
 #line 376 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32Eq); }
-#line 3651 "src/prebuilt/wast-lexer-gen.cc"
-yy531:
-		yych = *++cursor_;
-		if (yych == 't') goto yy685;
-		goto yy87;
-yy532:
-		yych = *++cursor_;
-		if (yych == '_') goto yy686;
-		goto yy87;
-yy533:
-		yych = *++cursor_;
-		if (yych == '_') goto yy687;
-		goto yy87;
-yy534:
-		yych = *++cursor_;
-		if (yych == '_') goto yy688;
-		goto yy87;
-yy535:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy689;
-		goto yy87;
-yy536:
-		yych = *++cursor_;
-		if (yych == '_') goto yy690;
-		goto yy87;
+#line 3679 "src/prebuilt/wast-lexer-gen.cc"
 yy537:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy691;
+		if (yych == 't') goto yy693;
 		goto yy87;
 yy538:
+		yych = *++cursor_;
+		if (yych == '_') goto yy694;
+		goto yy87;
+yy539:
+		yych = *++cursor_;
+		if (yych == '_') goto yy695;
+		goto yy87;
+yy540:
+		yych = *++cursor_;
+		if (yych == '_') goto yy696;
+		goto yy87;
+yy541:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy697;
+		goto yy87;
+yy542:
+		yych = *++cursor_;
+		if (yych == '_') goto yy698;
+		goto yy87;
+yy543:
+		yych = *++cursor_;
+		if (yych == 'l') goto yy699;
+		goto yy87;
+yy544:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 378 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32Ne); }
-#line 3687 "src/prebuilt/wast-lexer-gen.cc"
-yy540:
+#line 3715 "src/prebuilt/wast-lexer-gen.cc"
+yy546:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 348 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32Or); }
-#line 3695 "src/prebuilt/wast-lexer-gen.cc"
-yy542:
-		yych = *++cursor_;
-		if (yych == 'p') goto yy693;
-		goto yy87;
-yy543:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy694;
-		if (yych == 'm') goto yy695;
-		goto yy87;
-yy544:
-		yych = *++cursor_;
-		if (yych == 't') goto yy696;
-		goto yy87;
-yy545:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy697;
-		if (yych == 'r') goto yy699;
-		goto yy87;
-yy546:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy700;
-		goto yy87;
-yy547:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy701;
-		goto yy87;
+#line 3723 "src/prebuilt/wast-lexer-gen.cc"
 yy548:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy703;
+		if (yych == 'p') goto yy701;
 		goto yy87;
 yy549:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy704;
+		if (yych == 'i') goto yy702;
+		if (yych == 'm') goto yy703;
 		goto yy87;
 yy550:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy705;
+		if (yych == 't') goto yy704;
 		goto yy87;
 yy551:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy707;
+		if (yych == 'l') goto yy705;
+		if (yych == 'r') goto yy707;
 		goto yy87;
 yy552:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy709;
+		if (yych == 'o') goto yy708;
 		goto yy87;
 yy553:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy711;
+		if (yych == 'b') goto yy709;
 		goto yy87;
 yy554:
 		yych = *++cursor_;
-		if (yych == 'z') goto yy712;
+		if (yych == 'u') goto yy711;
 		goto yy87;
 yy555:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy714;
+		if (yych == 'i') goto yy712;
 		goto yy87;
 yy556:
 		yych = *++cursor_;
-		if (yych == 'z') goto yy715;
+		if (yych == 'a') goto yy713;
 		goto yy87;
 yy557:
 		yych = *++cursor_;
-		if (yych == 'v') goto yy717;
+		if (yych == 'r') goto yy714;
 		goto yy87;
 yy558:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy716;
+		goto yy87;
+yy559:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy718;
+		goto yy87;
+yy560:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy720;
+		goto yy87;
+yy561:
+		yych = *++cursor_;
+		if (yych == 'z') goto yy721;
+		goto yy87;
+yy562:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy723;
+		goto yy87;
+yy563:
+		yych = *++cursor_;
+		if (yych == 'z') goto yy724;
+		goto yy87;
+yy564:
+		yych = *++cursor_;
+		if (yych == 'v') goto yy726;
+		goto yy87;
+yy565:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy559;
+				if (yych <= '"') goto yy566;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= 'y') {
 				if (yych != ';') goto yy86;
 			} else {
-				if (yych <= 'z') goto yy718;
+				if (yych <= 'z') goto yy727;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy559:
+yy566:
 #line 377 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64Eq); }
-#line 3782 "src/prebuilt/wast-lexer-gen.cc"
-yy560:
-		yych = *++cursor_;
-		if (yych == 't') goto yy720;
-		goto yy87;
-yy561:
-		yych = *++cursor_;
-		if (yych == '_') goto yy721;
-		goto yy87;
-yy562:
-		yych = *++cursor_;
-		if (yych == '_') goto yy722;
-		goto yy87;
-yy563:
-		yych = *++cursor_;
-		if (yych == '_') goto yy723;
-		goto yy87;
-yy564:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy724;
-		goto yy87;
-yy565:
-		yych = *++cursor_;
-		if (yych == '_') goto yy725;
-		goto yy87;
-yy566:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy726;
-		goto yy87;
+#line 3814 "src/prebuilt/wast-lexer-gen.cc"
 yy567:
+		yych = *++cursor_;
+		if (yych == 't') goto yy729;
+		goto yy87;
+yy568:
+		yych = *++cursor_;
+		if (yych == '_') goto yy730;
+		goto yy87;
+yy569:
+		yych = *++cursor_;
+		if (yych == '_') goto yy731;
+		goto yy87;
+yy570:
+		yych = *++cursor_;
+		if (yych == '_') goto yy732;
+		goto yy87;
+yy571:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy733;
+		goto yy87;
+yy572:
+		yych = *++cursor_;
+		if (yych == '_') goto yy734;
+		goto yy87;
+yy573:
+		yych = *++cursor_;
+		if (yych == 'l') goto yy735;
+		goto yy87;
+yy574:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 379 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64Ne); }
-#line 3818 "src/prebuilt/wast-lexer-gen.cc"
-yy569:
+#line 3850 "src/prebuilt/wast-lexer-gen.cc"
+yy576:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 349 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64Or); }
-#line 3826 "src/prebuilt/wast-lexer-gen.cc"
-yy571:
-		yych = *++cursor_;
-		if (yych == 'p') goto yy728;
-		goto yy87;
-yy572:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy729;
-		if (yych == 'm') goto yy730;
-		goto yy87;
-yy573:
-		yych = *++cursor_;
-		if (yych == 't') goto yy731;
-		goto yy87;
-yy574:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy732;
-		if (yych == 'r') goto yy734;
-		goto yy87;
-yy575:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy735;
-		goto yy87;
-yy576:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy736;
-		goto yy87;
-yy577:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy738;
-		goto yy87;
+#line 3858 "src/prebuilt/wast-lexer-gen.cc"
 yy578:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy739;
+		if (yych == 'p') goto yy737;
 		goto yy87;
 yy579:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 525 "src/wast-lexer.cc"
-		{ RETURN(Import); }
-#line 3868 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'i') goto yy738;
+		if (yych == 'm') goto yy739;
+		goto yy87;
+yy580:
+		yych = *++cursor_;
+		if (yych == 't') goto yy740;
+		goto yy87;
 yy581:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 529 "src/wast-lexer.cc"
-		{ RETURN(Invoke); }
-#line 3876 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'l') goto yy741;
+		if (yych == 'r') goto yy743;
+		goto yy87;
+yy582:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy744;
+		goto yy87;
 yy583:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 520 "src/wast-lexer.cc"
-		{ RETURN(Memory); }
-#line 3884 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'b') goto yy745;
+		goto yy87;
+yy584:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy747;
+		goto yy87;
 yy585:
+		yych = *++cursor_;
+		if (yych == 'i') goto yy748;
+		goto yy87;
+yy586:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy749;
+		goto yy87;
+yy587:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 516 "src/wast-lexer.cc"
+#line 528 "src/wast-lexer.cc"
+		{ RETURN(Import); }
+#line 3904 "src/prebuilt/wast-lexer-gen.cc"
+yy589:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 532 "src/wast-lexer.cc"
+		{ RETURN(Invoke); }
+#line 3912 "src/prebuilt/wast-lexer-gen.cc"
+yy591:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 523 "src/wast-lexer.cc"
+		{ RETURN(Memory); }
+#line 3920 "src/prebuilt/wast-lexer-gen.cc"
+yy593:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 519 "src/wast-lexer.cc"
 		{ RETURN(Module); }
-#line 3892 "src/prebuilt/wast-lexer-gen.cc"
-yy587:
+#line 3928 "src/prebuilt/wast-lexer-gen.cc"
+yy595:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -3901,764 +3937,772 @@ yy587:
 				if (yych <= '\'') goto yy86;
 				if (yych <= ')') goto yy88;
 				if (yych <= '/') goto yy86;
-				goto yy741;
+				goto yy751;
 			}
 		} else {
 			if (yych <= 'F') {
 				if (yych == ';') goto yy88;
 				if (yych <= '@') goto yy86;
-				goto yy741;
+				goto yy751;
 			} else {
 				if (yych <= '`') goto yy86;
-				if (yych <= 'f') goto yy741;
+				if (yych <= 'f') goto yy751;
 				if (yych <= '~') goto yy86;
 				goto yy88;
 			}
 		}
-yy588:
+yy596:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy589;
+				if (yych <= '"') goto yy597;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= '<') {
 				if (yych != ';') goto yy86;
 			} else {
-				if (yych <= '=') goto yy743;
+				if (yych <= '=') goto yy753;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy589:
-#line 524 "src/wast-lexer.cc"
+yy597:
+#line 527 "src/wast-lexer.cc"
 		{ RETURN(Offset); }
-#line 3939 "src/prebuilt/wast-lexer-gen.cc"
-yy590:
+#line 3975 "src/prebuilt/wast-lexer-gen.cc"
+yy598:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy744;
+		if (yych == 'e') goto yy754;
 		goto yy87;
-yy591:
+yy599:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 513 "src/wast-lexer.cc"
+#line 516 "src/wast-lexer.cc"
 		{ RETURN(Result); }
-#line 3951 "src/prebuilt/wast-lexer-gen.cc"
-yy593:
+#line 3987 "src/prebuilt/wast-lexer-gen.cc"
+yy601:
 		yych = *++cursor_;
-		if (yych == 'w') goto yy745;
+		if (yych == 'w') goto yy755;
 		goto yy87;
-yy594:
+yy602:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 270 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Return); }
-#line 3963 "src/prebuilt/wast-lexer-gen.cc"
-yy596:
+#line 3999 "src/prebuilt/wast-lexer-gen.cc"
+yy604:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 441 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Select); }
-#line 3971 "src/prebuilt/wast-lexer-gen.cc"
-yy598:
+#line 4007 "src/prebuilt/wast-lexer-gen.cc"
+yy606:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy747;
+		if (yych == 'o') goto yy757;
 		goto yy87;
-yy599:
+yy607:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy748;
+		if (yych == 'c') goto yy758;
 		goto yy87;
-yy600:
+yy608:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 545 "src/wast-lexer.cc"
+#line 548 "src/wast-lexer.cc"
 		{ RETURN(Shared); }
-#line 3987 "src/prebuilt/wast-lexer-gen.cc"
-yy602:
+#line 4023 "src/prebuilt/wast-lexer-gen.cc"
+yy610:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy749;
+		if (yych == 'c') goto yy759;
 		goto yy87;
-yy603:
+yy611:
 		yych = *++cursor_;
-		if (yych == 'h') goto yy750;
+		if (yych == 'h') goto yy760;
 		goto yy87;
-yy604:
+yy612:
 		++cursor_;
 		if ((yych = *cursor_) <= '9') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy605;
+				if (yych <= ')') goto yy613;
 				if (yych <= '/') goto yy86;
-				goto yy606;
+				goto yy614;
 			}
 		} else {
 			if (yych <= '_') {
-				if (yych == ';') goto yy605;
+				if (yych == ';') goto yy613;
 				if (yych <= '^') goto yy86;
-				goto yy751;
+				goto yy761;
 			} else {
-				if (yych == 'x') goto yy752;
+				if (yych == 'x') goto yy762;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy605:
+yy613:
 #line 300 "src/wast-lexer.cc"
 		{ RETURN_TEXT_AT(AlignEqNat, 6); }
-#line 4020 "src/prebuilt/wast-lexer-gen.cc"
-yy606:
+#line 4056 "src/prebuilt/wast-lexer-gen.cc"
+yy614:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
 		if (yych <= '/') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
-				goto yy605;
+				goto yy613;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy605;
+				if (yych <= ')') goto yy613;
 				goto yy86;
 			}
 		} else {
 			if (yych <= ';') {
-				if (yych <= '9') goto yy606;
+				if (yych <= '9') goto yy614;
 				if (yych <= ':') goto yy86;
-				goto yy605;
+				goto yy613;
 			} else {
-				if (yych == '_') goto yy751;
+				if (yych == '_') goto yy761;
 				if (yych <= '~') goto yy86;
-				goto yy605;
+				goto yy613;
 			}
 		}
-yy608:
+yy616:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 255 "src/wast-lexer.cc"
 		{ RETURN(Anyfunc); }
-#line 4052 "src/prebuilt/wast-lexer-gen.cc"
-yy610:
+#line 4088 "src/prebuilt/wast-lexer-gen.cc"
+yy618:
 		yych = *++cursor_;
 		switch (yych) {
-		case 'e':	goto yy753;
-		case 'i':	goto yy754;
-		case 'm':	goto yy755;
-		case 'r':	goto yy756;
-		case 't':	goto yy757;
-		case 'u':	goto yy758;
+		case 'e':	goto yy763;
+		case 'i':	goto yy764;
+		case 'm':	goto yy765;
+		case 'r':	goto yy766;
+		case 't':	goto yy767;
+		case 'u':	goto yy768;
 		default:	goto yy87;
 		}
-yy611:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy759;
-		goto yy87;
-yy612:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy761;
-		goto yy87;
-yy613:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy762;
-		goto yy87;
-yy614:
-		yych = *++cursor_;
-		if (yych == '_') goto yy763;
-		goto yy87;
-yy615:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 315 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, F32Abs); }
-#line 4087 "src/prebuilt/wast-lexer-gen.cc"
-yy617:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 362 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, F32Add); }
-#line 4095 "src/prebuilt/wast-lexer-gen.cc"
 yy619:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy764;
+		if (yych == 'e') goto yy769;
 		goto yy87;
 yy620:
 		yych = *++cursor_;
-		if (yych == 's') goto yy766;
-		if (yych == 'v') goto yy767;
+		if (yych == 'd') goto yy771;
 		goto yy87;
 yy621:
 		yych = *++cursor_;
-		if (yych == 'y') goto yy768;
+		if (yych == 'l') goto yy772;
 		goto yy87;
 yy622:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy769;
+		if (yych == '_') goto yy773;
 		goto yy87;
 yy623:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
+#line 315 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, F32Abs); }
+#line 4123 "src/prebuilt/wast-lexer-gen.cc"
+yy625:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 362 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, F32Add); }
+#line 4131 "src/prebuilt/wast-lexer-gen.cc"
+yy627:
+		yych = *++cursor_;
+		if (yych == 'l') goto yy774;
+		goto yy87;
+yy628:
+		yych = *++cursor_;
+		if (yych == 's') goto yy776;
+		if (yych == 'v') goto yy777;
+		goto yy87;
+yy629:
+		yych = *++cursor_;
+		if (yych == 'y') goto yy778;
+		goto yy87;
+yy630:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy779;
+		goto yy87;
+yy631:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
 #line 368 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F32Div); }
-#line 4120 "src/prebuilt/wast-lexer-gen.cc"
-yy625:
+#line 4156 "src/prebuilt/wast-lexer-gen.cc"
+yy633:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy770;
+		if (yych == 'o') goto yy780;
 		goto yy87;
-yy626:
+yy634:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy771;
+		if (yych == 'd') goto yy781;
 		goto yy87;
-yy627:
+yy635:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 372 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F32Max); }
-#line 4136 "src/prebuilt/wast-lexer-gen.cc"
-yy629:
+#line 4172 "src/prebuilt/wast-lexer-gen.cc"
+yy637:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 370 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F32Min); }
-#line 4144 "src/prebuilt/wast-lexer-gen.cc"
-yy631:
+#line 4180 "src/prebuilt/wast-lexer-gen.cc"
+yy639:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 366 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F32Mul); }
-#line 4152 "src/prebuilt/wast-lexer-gen.cc"
-yy633:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy773;
-		goto yy87;
-yy634:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 313 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, F32Neg); }
-#line 4164 "src/prebuilt/wast-lexer-gen.cc"
-yy636:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy774;
-		goto yy87;
-yy637:
-		yych = *++cursor_;
-		if (yych == 't') goto yy775;
-		goto yy87;
-yy638:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy777;
-		goto yy87;
-yy639:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 364 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, F32Sub); }
-#line 4184 "src/prebuilt/wast-lexer-gen.cc"
+#line 4188 "src/prebuilt/wast-lexer-gen.cc"
 yy641:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy778;
+		if (yych == 'r') goto yy783;
 		goto yy87;
 yy642:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
+#line 313 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, F32Neg); }
+#line 4200 "src/prebuilt/wast-lexer-gen.cc"
+yy644:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy784;
+		goto yy87;
+yy645:
+		yych = *++cursor_;
+		if (yych == 't') goto yy785;
+		goto yy87;
+yy646:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy787;
+		goto yy87;
+yy647:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 364 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, F32Sub); }
+#line 4220 "src/prebuilt/wast-lexer-gen.cc"
+yy649:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy788;
+		goto yy87;
+yy650:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
 #line 316 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, F64Abs); }
-#line 4196 "src/prebuilt/wast-lexer-gen.cc"
-yy644:
+#line 4232 "src/prebuilt/wast-lexer-gen.cc"
+yy652:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 363 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F64Add); }
-#line 4204 "src/prebuilt/wast-lexer-gen.cc"
-yy646:
+#line 4240 "src/prebuilt/wast-lexer-gen.cc"
+yy654:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy779;
+		if (yych == 'l') goto yy789;
 		goto yy87;
-yy647:
+yy655:
 		yych = *++cursor_;
-		if (yych == 's') goto yy781;
-		if (yych == 'v') goto yy782;
+		if (yych == 's') goto yy791;
+		if (yych == 'v') goto yy792;
 		goto yy87;
-yy648:
+yy656:
 		yych = *++cursor_;
-		if (yych == 'y') goto yy783;
+		if (yych == 'y') goto yy793;
 		goto yy87;
-yy649:
+yy657:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 369 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F64Div); }
-#line 4225 "src/prebuilt/wast-lexer-gen.cc"
-yy651:
+#line 4261 "src/prebuilt/wast-lexer-gen.cc"
+yy659:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy784;
+		if (yych == 'o') goto yy794;
 		goto yy87;
-yy652:
+yy660:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy785;
+		if (yych == 'd') goto yy795;
 		goto yy87;
-yy653:
+yy661:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 373 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F64Max); }
-#line 4241 "src/prebuilt/wast-lexer-gen.cc"
-yy655:
+#line 4277 "src/prebuilt/wast-lexer-gen.cc"
+yy663:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 371 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F64Min); }
-#line 4249 "src/prebuilt/wast-lexer-gen.cc"
-yy657:
+#line 4285 "src/prebuilt/wast-lexer-gen.cc"
+yy665:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 367 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F64Mul); }
-#line 4257 "src/prebuilt/wast-lexer-gen.cc"
-yy659:
+#line 4293 "src/prebuilt/wast-lexer-gen.cc"
+yy667:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy787;
+		if (yych == 'r') goto yy797;
 		goto yy87;
-yy660:
+yy668:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 314 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, F64Neg); }
-#line 4269 "src/prebuilt/wast-lexer-gen.cc"
-yy662:
+#line 4305 "src/prebuilt/wast-lexer-gen.cc"
+yy670:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy788;
+		if (yych == 'm') goto yy798;
 		goto yy87;
-yy663:
+yy671:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy789;
+		if (yych == 'n') goto yy799;
 		goto yy87;
-yy664:
+yy672:
 		yych = *++cursor_;
-		if (yych == 't') goto yy790;
+		if (yych == 't') goto yy800;
 		goto yy87;
-yy665:
+yy673:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy792;
+		if (yych == 'r') goto yy802;
 		goto yy87;
-yy666:
+yy674:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 365 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, F64Sub); }
-#line 4293 "src/prebuilt/wast-lexer-gen.cc"
-yy668:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy793;
-		goto yy87;
-yy669:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy794;
-		goto yy87;
-yy670:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy795;
-		goto yy87;
-yy671:
-		yych = *++cursor_;
-		if (yych == 'm') goto yy796;
-		goto yy87;
-yy672:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 332 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, I32Add); }
-#line 4317 "src/prebuilt/wast-lexer-gen.cc"
-yy674:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 346 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, I32And); }
-#line 4325 "src/prebuilt/wast-lexer-gen.cc"
+#line 4329 "src/prebuilt/wast-lexer-gen.cc"
 yy676:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy797;
+		if (yych == 'n') goto yy803;
 		goto yy87;
 yy677:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 307 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, I32Clz); }
-#line 4337 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'b') goto yy804;
+		goto yy87;
+yy678:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy805;
+		goto yy87;
 yy679:
 		yych = *++cursor_;
-		if (yych == 's') goto yy798;
+		if (yych == 'm') goto yy806;
 		goto yy87;
 yy680:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 309 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, I32Ctz); }
-#line 4349 "src/prebuilt/wast-lexer-gen.cc"
+#line 332 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, I32Add); }
+#line 4353 "src/prebuilt/wast-lexer-gen.cc"
 yy682:
-		yych = *++cursor_;
-		if (yych == '_') goto yy799;
-		goto yy87;
-yy683:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 305 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, I32Eqz); }
+#line 346 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, I32And); }
 #line 4361 "src/prebuilt/wast-lexer-gen.cc"
+yy684:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy807;
+		goto yy87;
 yy685:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy800;
-		goto yy87;
-yy686:
-		yych = *++cursor_;
-		if (yych == 's') goto yy801;
-		if (yych == 'u') goto yy803;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 307 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, I32Clz); }
+#line 4373 "src/prebuilt/wast-lexer-gen.cc"
 yy687:
 		yych = *++cursor_;
-		if (yych == 's') goto yy805;
-		if (yych == 'u') goto yy807;
+		if (yych == 's') goto yy808;
 		goto yy87;
 yy688:
-		yych = *++cursor_;
-		if (yych == 's') goto yy809;
-		if (yych == 'u') goto yy811;
-		goto yy87;
-yy689:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy813;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 309 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, I32Ctz); }
+#line 4385 "src/prebuilt/wast-lexer-gen.cc"
 yy690:
 		yych = *++cursor_;
-		if (yych == 's') goto yy815;
-		if (yych == 'u') goto yy817;
+		if (yych == '_') goto yy809;
 		goto yy87;
 yy691:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 336 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, I32Mul); }
+#line 305 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, I32Eqz); }
 #line 4397 "src/prebuilt/wast-lexer-gen.cc"
 yy693:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy819;
+		if (yych == 'e') goto yy810;
 		goto yy87;
 yy694:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy820;
+		if (yych == 's') goto yy811;
+		if (yych == 'u') goto yy813;
 		goto yy87;
 yy695:
 		yych = *++cursor_;
-		if (yych == '_') goto yy821;
+		if (yych == 's') goto yy815;
+		if (yych == 'u') goto yy817;
 		goto yy87;
 yy696:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy822;
-		if (yych == 'r') goto yy824;
+		if (yych == 's') goto yy819;
+		if (yych == 'u') goto yy821;
 		goto yy87;
 yy697:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 352 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, I32Shl); }
-#line 4422 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'd') goto yy823;
+		goto yy87;
+yy698:
+		yych = *++cursor_;
+		if (yych == 's') goto yy825;
+		if (yych == 'u') goto yy827;
+		goto yy87;
 yy699:
-		yych = *++cursor_;
-		if (yych == '_') goto yy826;
-		goto yy87;
-yy700:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy827;
-		goto yy87;
-yy701:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 334 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, I32Sub); }
-#line 4438 "src/prebuilt/wast-lexer-gen.cc"
+#line 336 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, I32Mul); }
+#line 4433 "src/prebuilt/wast-lexer-gen.cc"
+yy701:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy829;
+		goto yy87;
+yy702:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy830;
+		goto yy87;
 yy703:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy828;
+		if (yych == '_') goto yy831;
 		goto yy87;
 yy704:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy829;
+		if (yych == 'l') goto yy832;
+		if (yych == 'r') goto yy834;
 		goto yy87;
 yy705:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
+#line 352 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, I32Shl); }
+#line 4458 "src/prebuilt/wast-lexer-gen.cc"
+yy707:
+		yych = *++cursor_;
+		if (yych == '_') goto yy836;
+		goto yy87;
+yy708:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy837;
+		goto yy87;
+yy709:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 334 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, I32Sub); }
+#line 4474 "src/prebuilt/wast-lexer-gen.cc"
+yy711:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy838;
+		goto yy87;
+yy712:
+		yych = *++cursor_;
+		if (yych == 't') goto yy839;
+		goto yy87;
+yy713:
+		yych = *++cursor_;
+		if (yych == 'p') goto yy841;
+		goto yy87;
+yy714:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
 #line 350 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32Xor); }
-#line 4454 "src/prebuilt/wast-lexer-gen.cc"
-yy707:
+#line 4494 "src/prebuilt/wast-lexer-gen.cc"
+yy716:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 333 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64Add); }
-#line 4462 "src/prebuilt/wast-lexer-gen.cc"
-yy709:
+#line 4502 "src/prebuilt/wast-lexer-gen.cc"
+yy718:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 347 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64And); }
-#line 4470 "src/prebuilt/wast-lexer-gen.cc"
-yy711:
+#line 4510 "src/prebuilt/wast-lexer-gen.cc"
+yy720:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy830;
+		if (yych == 'm') goto yy842;
 		goto yy87;
-yy712:
+yy721:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 308 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, I64Clz); }
-#line 4482 "src/prebuilt/wast-lexer-gen.cc"
-yy714:
+#line 4522 "src/prebuilt/wast-lexer-gen.cc"
+yy723:
 		yych = *++cursor_;
-		if (yych == 's') goto yy831;
+		if (yych == 's') goto yy843;
 		goto yy87;
-yy715:
+yy724:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 310 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, I64Ctz); }
-#line 4494 "src/prebuilt/wast-lexer-gen.cc"
-yy717:
+#line 4534 "src/prebuilt/wast-lexer-gen.cc"
+yy726:
 		yych = *++cursor_;
-		if (yych == '_') goto yy832;
+		if (yych == '_') goto yy844;
 		goto yy87;
-yy718:
+yy727:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 306 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64Eqz); }
-#line 4506 "src/prebuilt/wast-lexer-gen.cc"
-yy720:
+#line 4546 "src/prebuilt/wast-lexer-gen.cc"
+yy729:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy833;
+		if (yych == 'e') goto yy845;
 		goto yy87;
-yy721:
+yy730:
 		yych = *++cursor_;
-		if (yych == 's') goto yy834;
-		if (yych == 'u') goto yy836;
+		if (yych == 's') goto yy846;
+		if (yych == 'u') goto yy848;
 		goto yy87;
-yy722:
+yy731:
 		yych = *++cursor_;
-		if (yych == 's') goto yy838;
-		if (yych == 'u') goto yy840;
+		if (yych == 's') goto yy850;
+		if (yych == 'u') goto yy852;
 		goto yy87;
-yy723:
+yy732:
 		yych = *++cursor_;
-		if (yych == 's') goto yy842;
-		if (yych == 'u') goto yy844;
+		if (yych == 's') goto yy854;
+		if (yych == 'u') goto yy856;
 		goto yy87;
-yy724:
+yy733:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy846;
+		if (yych == 'd') goto yy858;
 		goto yy87;
-yy725:
+yy734:
 		yych = *++cursor_;
-		if (yych == 's') goto yy848;
-		if (yych == 'u') goto yy850;
+		if (yych == 's') goto yy860;
+		if (yych == 'u') goto yy862;
 		goto yy87;
-yy726:
+yy735:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 337 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64Mul); }
-#line 4542 "src/prebuilt/wast-lexer-gen.cc"
-yy728:
+#line 4582 "src/prebuilt/wast-lexer-gen.cc"
+yy737:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy852;
+		if (yych == 'c') goto yy864;
 		goto yy87;
-yy729:
+yy738:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy853;
+		if (yych == 'n') goto yy865;
 		goto yy87;
-yy730:
+yy739:
 		yych = *++cursor_;
-		if (yych == '_') goto yy854;
+		if (yych == '_') goto yy866;
 		goto yy87;
-yy731:
+yy740:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy855;
-		if (yych == 'r') goto yy857;
+		if (yych == 'l') goto yy867;
+		if (yych == 'r') goto yy869;
 		goto yy87;
-yy732:
+yy741:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 353 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64Shl); }
-#line 4567 "src/prebuilt/wast-lexer-gen.cc"
-yy734:
-		yych = *++cursor_;
-		if (yych == '_') goto yy859;
-		goto yy87;
-yy735:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy860;
-		goto yy87;
-yy736:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 335 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, I64Sub); }
-#line 4583 "src/prebuilt/wast-lexer-gen.cc"
-yy738:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy861;
-		goto yy87;
-yy739:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 351 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, I64Xor); }
-#line 4595 "src/prebuilt/wast-lexer-gen.cc"
-yy741:
-		++cursor_;
-		if (limit_ <= cursor_) FILL(1);
-		yych = *cursor_;
-		if (yych <= ':') {
-			if (yych <= '\'') {
-				if (yych == '!') goto yy86;
-				if (yych <= '"') goto yy257;
-				goto yy86;
-			} else {
-				if (yych <= ')') goto yy257;
-				if (yych <= '/') goto yy86;
-				if (yych <= '9') goto yy741;
-				goto yy86;
-			}
-		} else {
-			if (yych <= '^') {
-				if (yych <= ';') goto yy257;
-				if (yych <= '@') goto yy86;
-				if (yych <= 'F') goto yy741;
-				goto yy86;
-			} else {
-				if (yych <= '`') {
-					if (yych <= '_') goto yy587;
-					goto yy86;
-				} else {
-					if (yych <= 'f') goto yy741;
-					if (yych <= '~') goto yy86;
-					goto yy257;
-				}
-			}
-		}
+#line 4607 "src/prebuilt/wast-lexer-gen.cc"
 yy743:
 		yych = *++cursor_;
-		if (yych <= '/') goto yy87;
-		if (yych <= '0') goto yy862;
-		if (yych <= '9') goto yy864;
+		if (yych == '_') goto yy871;
 		goto yy87;
 yy744:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy866;
+		if (yych == 'r') goto yy872;
 		goto yy87;
 yy745:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 543 "src/wast-lexer.cc"
-		{ RETURN_OPCODE0(Rethrow); }
-#line 4645 "src/prebuilt/wast-lexer-gen.cc"
+#line 335 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, I64Sub); }
+#line 4623 "src/prebuilt/wast-lexer-gen.cc"
 yy747:
 		yych = *++cursor_;
-		if (yych == 'b') goto yy868;
+		if (yych == 'n') goto yy873;
 		goto yy87;
 yy748:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy869;
+		if (yych == 't') goto yy874;
 		goto yy87;
 yy749:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy870;
-		goto yy87;
-yy750:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy871;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 351 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, I64Xor); }
+#line 4639 "src/prebuilt/wast-lexer-gen.cc"
 yy751:
+		++cursor_;
+		if (limit_ <= cursor_) FILL(1);
+		yych = *cursor_;
+		if (yych <= ':') {
+			if (yych <= '\'') {
+				if (yych == '!') goto yy86;
+				if (yych <= '"') goto yy259;
+				goto yy86;
+			} else {
+				if (yych <= ')') goto yy259;
+				if (yych <= '/') goto yy86;
+				if (yych <= '9') goto yy751;
+				goto yy86;
+			}
+		} else {
+			if (yych <= '^') {
+				if (yych <= ';') goto yy259;
+				if (yych <= '@') goto yy86;
+				if (yych <= 'F') goto yy751;
+				goto yy86;
+			} else {
+				if (yych <= '`') {
+					if (yych <= '_') goto yy595;
+					goto yy86;
+				} else {
+					if (yych <= 'f') goto yy751;
+					if (yych <= '~') goto yy86;
+					goto yy259;
+				}
+			}
+		}
+yy753:
+		yych = *++cursor_;
+		if (yych <= '/') goto yy87;
+		if (yych <= '0') goto yy876;
+		if (yych <= '9') goto yy878;
+		goto yy87;
+yy754:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy880;
+		goto yy87;
+yy755:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 546 "src/wast-lexer.cc"
+		{ RETURN_OPCODE0(Rethrow); }
+#line 4689 "src/prebuilt/wast-lexer-gen.cc"
+yy757:
+		yych = *++cursor_;
+		if (yych == 'b') goto yy882;
+		goto yy87;
+yy758:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy883;
+		goto yy87;
+yy759:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy884;
+		goto yy87;
+yy760:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy885;
+		goto yy87;
+yy761:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -4674,7 +4718,7 @@ yy751:
 		} else {
 			if (yych <= ':') {
 				if (yych <= '/') goto yy86;
-				if (yych <= '9') goto yy606;
+				if (yych <= '9') goto yy614;
 				goto yy86;
 			} else {
 				if (yych <= ';') goto yy88;
@@ -4682,7 +4726,7 @@ yy751:
 				goto yy88;
 			}
 		}
-yy752:
+yy762:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -4694,262 +4738,262 @@ yy752:
 				if (yych <= '\'') goto yy86;
 				if (yych <= ')') goto yy88;
 				if (yych <= '/') goto yy86;
-				goto yy872;
+				goto yy886;
 			}
 		} else {
 			if (yych <= 'F') {
 				if (yych == ';') goto yy88;
 				if (yych <= '@') goto yy86;
-				goto yy872;
+				goto yy886;
 			} else {
 				if (yych <= '`') goto yy86;
-				if (yych <= 'f') goto yy872;
+				if (yych <= 'f') goto yy886;
 				if (yych <= '~') goto yy86;
 				goto yy88;
 			}
 		}
-yy753:
+yy763:
 		yych = *++cursor_;
-		if (yych == 'x') goto yy874;
+		if (yych == 'x') goto yy888;
 		goto yy87;
-yy754:
+yy764:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy875;
+		if (yych == 'n') goto yy889;
 		goto yy87;
-yy755:
+yy765:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy876;
+		if (yych == 'a') goto yy890;
 		goto yy87;
-yy756:
+yy766:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy877;
+		if (yych == 'e') goto yy891;
 		goto yy87;
-yy757:
+yy767:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy878;
+		if (yych == 'r') goto yy892;
 		goto yy87;
-yy758:
+yy768:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy879;
+		if (yych == 'n') goto yy893;
 		goto yy87;
-yy759:
+yy769:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 265 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(BrTable); }
-#line 4743 "src/prebuilt/wast-lexer-gen.cc"
-yy761:
+#line 4787 "src/prebuilt/wast-lexer-gen.cc"
+yy771:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy880;
+		if (yych == 'i') goto yy894;
 		goto yy87;
-yy762:
+yy772:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy881;
+		if (yych == 'l') goto yy895;
 		goto yy87;
-yy763:
+yy773:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy883;
+		if (yych == 'm') goto yy897;
 		goto yy87;
-yy764:
+yy774:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 319 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, F32Ceil); }
-#line 4763 "src/prebuilt/wast-lexer-gen.cc"
-yy766:
+#line 4807 "src/prebuilt/wast-lexer-gen.cc"
+yy776:
 		yych = *++cursor_;
-		if (yych == 't') goto yy884;
+		if (yych == 't') goto yy898;
 		goto yy87;
-yy767:
+yy777:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy886;
+		if (yych == 'e') goto yy900;
 		goto yy87;
-yy768:
+yy778:
 		yych = *++cursor_;
-		if (yych == 's') goto yy887;
+		if (yych == 's') goto yy901;
 		goto yy87;
-yy769:
+yy779:
 		yych = *++cursor_;
-		if (yych == 't') goto yy888;
+		if (yych == 't') goto yy902;
 		goto yy87;
-yy770:
+yy780:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy889;
+		if (yych == 'r') goto yy903;
 		goto yy87;
-yy771:
+yy781:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 278 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, F32Load); }
-#line 4791 "src/prebuilt/wast-lexer-gen.cc"
-yy773:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy891;
-		goto yy87;
-yy774:
-		yych = *++cursor_;
-		if (yych == 't') goto yy892;
-		goto yy87;
-yy775:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 317 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, F32Sqrt); }
-#line 4807 "src/prebuilt/wast-lexer-gen.cc"
-yy777:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy893;
-		goto yy87;
-yy778:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy895;
-		goto yy87;
-yy779:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 320 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, F64Ceil); }
-#line 4823 "src/prebuilt/wast-lexer-gen.cc"
-yy781:
-		yych = *++cursor_;
-		if (yych == 't') goto yy897;
-		goto yy87;
-yy782:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy899;
-		goto yy87;
+#line 4835 "src/prebuilt/wast-lexer-gen.cc"
 yy783:
 		yych = *++cursor_;
-		if (yych == 's') goto yy900;
+		if (yych == 'e') goto yy905;
 		goto yy87;
 yy784:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy901;
+		if (yych == 't') goto yy906;
 		goto yy87;
 yy785:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 279 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Load, F64Load); }
-#line 4847 "src/prebuilt/wast-lexer-gen.cc"
+#line 317 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, F32Sqrt); }
+#line 4851 "src/prebuilt/wast-lexer-gen.cc"
 yy787:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy903;
+		if (yych == 'e') goto yy907;
 		goto yy87;
 yy788:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy904;
+		if (yych == 'c') goto yy909;
 		goto yy87;
 yy789:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 320 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, F64Ceil); }
+#line 4867 "src/prebuilt/wast-lexer-gen.cc"
+yy791:
 		yych = *++cursor_;
-		if (yych == 't') goto yy905;
+		if (yych == 't') goto yy911;
 		goto yy87;
-yy790:
+yy792:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy913;
+		goto yy87;
+yy793:
+		yych = *++cursor_;
+		if (yych == 's') goto yy914;
+		goto yy87;
+yy794:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy915;
+		goto yy87;
+yy795:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 279 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Load, F64Load); }
+#line 4891 "src/prebuilt/wast-lexer-gen.cc"
+yy797:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy917;
+		goto yy87;
+yy798:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy918;
+		goto yy87;
+yy799:
+		yych = *++cursor_;
+		if (yych == 't') goto yy919;
+		goto yy87;
+yy800:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 318 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, F64Sqrt); }
-#line 4867 "src/prebuilt/wast-lexer-gen.cc"
-yy792:
+#line 4911 "src/prebuilt/wast-lexer-gen.cc"
+yy802:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy906;
+		if (yych == 'e') goto yy920;
 		goto yy87;
-yy793:
+yy803:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy908;
+		if (yych == 'c') goto yy922;
 		goto yy87;
-yy794:
+yy804:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy910;
+		if (yych == 'a') goto yy924;
 		goto yy87;
-yy795:
+yy805:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy911;
+		if (yych == 'l') goto yy925;
 		goto yy87;
-yy796:
+yy806:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy913;
+		if (yych == 'o') goto yy927;
 		goto yy87;
-yy797:
+yy807:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy914;
+		if (yych == 'i') goto yy928;
 		goto yy87;
-yy798:
+yy808:
 		yych = *++cursor_;
-		if (yych == 't') goto yy915;
+		if (yych == 't') goto yy929;
 		goto yy87;
-yy799:
+yy809:
 		yych = *++cursor_;
-		if (yych == 's') goto yy917;
-		if (yych == 'u') goto yy919;
+		if (yych == 's') goto yy931;
+		if (yych == 'u') goto yy933;
 		goto yy87;
-yy800:
+yy810:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy921;
+		if (yych == 'n') goto yy935;
 		goto yy87;
-yy801:
+yy811:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 392 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32GeS); }
-#line 4912 "src/prebuilt/wast-lexer-gen.cc"
-yy803:
+#line 4956 "src/prebuilt/wast-lexer-gen.cc"
+yy813:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 394 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32GeU); }
-#line 4920 "src/prebuilt/wast-lexer-gen.cc"
-yy805:
+#line 4964 "src/prebuilt/wast-lexer-gen.cc"
+yy815:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 388 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32GtS); }
-#line 4928 "src/prebuilt/wast-lexer-gen.cc"
-yy807:
+#line 4972 "src/prebuilt/wast-lexer-gen.cc"
+yy817:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 390 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32GtU); }
-#line 4936 "src/prebuilt/wast-lexer-gen.cc"
-yy809:
+#line 4980 "src/prebuilt/wast-lexer-gen.cc"
+yy819:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 384 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32LeS); }
-#line 4944 "src/prebuilt/wast-lexer-gen.cc"
-yy811:
+#line 4988 "src/prebuilt/wast-lexer-gen.cc"
+yy821:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 386 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32LeU); }
-#line 4952 "src/prebuilt/wast-lexer-gen.cc"
-yy813:
+#line 4996 "src/prebuilt/wast-lexer-gen.cc"
+yy823:
 		++cursor_;
 		if ((yych = *cursor_) <= '0') {
 			if (yych <= '"') {
@@ -4960,574 +5004,590 @@ yy813:
 			}
 		} else {
 			if (yych <= '8') {
-				if (yych <= '1') goto yy922;
+				if (yych <= '1') goto yy936;
 				if (yych <= '7') goto yy86;
-				goto yy923;
+				goto yy937;
 			} else {
-				if (yych == ';') goto yy814;
+				if (yych == ';') goto yy824;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy814:
+yy824:
 #line 276 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I32Load); }
-#line 4975 "src/prebuilt/wast-lexer-gen.cc"
-yy815:
+#line 5019 "src/prebuilt/wast-lexer-gen.cc"
+yy825:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 380 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32LtS); }
-#line 4983 "src/prebuilt/wast-lexer-gen.cc"
-yy817:
+#line 5027 "src/prebuilt/wast-lexer-gen.cc"
+yy827:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 382 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I32LtU); }
-#line 4991 "src/prebuilt/wast-lexer-gen.cc"
-yy819:
+#line 5035 "src/prebuilt/wast-lexer-gen.cc"
+yy829:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy924;
+		if (yych == 'n') goto yy938;
 		goto yy87;
-yy820:
+yy830:
 		yych = *++cursor_;
-		if (yych == 't') goto yy925;
+		if (yych == 't') goto yy939;
 		goto yy87;
-yy821:
+yy831:
 		yych = *++cursor_;
-		if (yych == 's') goto yy926;
-		if (yych == 'u') goto yy928;
+		if (yych == 's') goto yy940;
+		if (yych == 'u') goto yy942;
 		goto yy87;
-yy822:
+yy832:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 358 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32Rotl); }
-#line 5012 "src/prebuilt/wast-lexer-gen.cc"
-yy824:
+#line 5056 "src/prebuilt/wast-lexer-gen.cc"
+yy834:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 360 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32Rotr); }
-#line 5020 "src/prebuilt/wast-lexer-gen.cc"
-yy826:
+#line 5064 "src/prebuilt/wast-lexer-gen.cc"
+yy836:
 		yych = *++cursor_;
-		if (yych == 's') goto yy930;
-		if (yych == 'u') goto yy932;
+		if (yych == 's') goto yy944;
+		if (yych == 'u') goto yy946;
 		goto yy87;
-yy827:
+yy837:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy934;
+		if (yych == 'e') goto yy948;
 		goto yy87;
-yy828:
+yy838:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy936;
+		if (yych == 'c') goto yy950;
 		goto yy87;
-yy829:
+yy839:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 446 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Wait, I32Wait); }
+#line 5085 "src/prebuilt/wast-lexer-gen.cc"
+yy841:
 		yych = *++cursor_;
-		if (yych == '/') goto yy937;
+		if (yych == '/') goto yy951;
 		goto yy87;
-yy830:
+yy842:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy938;
+		if (yych == 'i') goto yy952;
 		goto yy87;
-yy831:
+yy843:
 		yych = *++cursor_;
-		if (yych == 't') goto yy939;
+		if (yych == 't') goto yy953;
 		goto yy87;
-yy832:
+yy844:
 		yych = *++cursor_;
-		if (yych == 's') goto yy941;
-		if (yych == 'u') goto yy943;
+		if (yych == 's') goto yy955;
+		if (yych == 'u') goto yy957;
 		goto yy87;
-yy833:
+yy845:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy945;
+		if (yych == 'n') goto yy959;
 		goto yy87;
-yy834:
+yy846:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 393 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64GeS); }
-#line 5062 "src/prebuilt/wast-lexer-gen.cc"
-yy836:
+#line 5114 "src/prebuilt/wast-lexer-gen.cc"
+yy848:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 395 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64GeU); }
-#line 5070 "src/prebuilt/wast-lexer-gen.cc"
-yy838:
+#line 5122 "src/prebuilt/wast-lexer-gen.cc"
+yy850:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 389 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64GtS); }
-#line 5078 "src/prebuilt/wast-lexer-gen.cc"
-yy840:
+#line 5130 "src/prebuilt/wast-lexer-gen.cc"
+yy852:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 391 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64GtU); }
-#line 5086 "src/prebuilt/wast-lexer-gen.cc"
-yy842:
+#line 5138 "src/prebuilt/wast-lexer-gen.cc"
+yy854:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 385 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64LeS); }
-#line 5094 "src/prebuilt/wast-lexer-gen.cc"
-yy844:
+#line 5146 "src/prebuilt/wast-lexer-gen.cc"
+yy856:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 387 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64LeU); }
-#line 5102 "src/prebuilt/wast-lexer-gen.cc"
-yy846:
+#line 5154 "src/prebuilt/wast-lexer-gen.cc"
+yy858:
 		++cursor_;
 		if ((yych = *cursor_) <= '1') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy847;
+				if (yych <= ')') goto yy859;
 				if (yych <= '0') goto yy86;
-				goto yy946;
+				goto yy960;
 			}
 		} else {
 			if (yych <= '8') {
-				if (yych == '3') goto yy947;
+				if (yych == '3') goto yy961;
 				if (yych <= '7') goto yy86;
-				goto yy948;
+				goto yy962;
 			} else {
-				if (yych == ';') goto yy847;
+				if (yych == ';') goto yy859;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy847:
+yy859:
 #line 277 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I64Load); }
-#line 5127 "src/prebuilt/wast-lexer-gen.cc"
-yy848:
+#line 5179 "src/prebuilt/wast-lexer-gen.cc"
+yy860:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 381 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64LtS); }
-#line 5135 "src/prebuilt/wast-lexer-gen.cc"
-yy850:
+#line 5187 "src/prebuilt/wast-lexer-gen.cc"
+yy862:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 383 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Compare, I64LtU); }
-#line 5143 "src/prebuilt/wast-lexer-gen.cc"
-yy852:
+#line 5195 "src/prebuilt/wast-lexer-gen.cc"
+yy864:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy949;
+		if (yych == 'n') goto yy963;
 		goto yy87;
-yy853:
+yy865:
 		yych = *++cursor_;
-		if (yych == 't') goto yy950;
+		if (yych == 't') goto yy964;
 		goto yy87;
-yy854:
+yy866:
 		yych = *++cursor_;
-		if (yych == 's') goto yy951;
-		if (yych == 'u') goto yy953;
+		if (yych == 's') goto yy965;
+		if (yych == 'u') goto yy967;
 		goto yy87;
-yy855:
+yy867:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 359 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64Rotl); }
-#line 5164 "src/prebuilt/wast-lexer-gen.cc"
-yy857:
+#line 5216 "src/prebuilt/wast-lexer-gen.cc"
+yy869:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 361 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64Rotr); }
-#line 5172 "src/prebuilt/wast-lexer-gen.cc"
-yy859:
+#line 5224 "src/prebuilt/wast-lexer-gen.cc"
+yy871:
 		yych = *++cursor_;
-		if (yych == 's') goto yy955;
-		if (yych == 'u') goto yy957;
+		if (yych == 's') goto yy969;
+		if (yych == 'u') goto yy971;
 		goto yy87;
-yy860:
+yy872:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy959;
+		if (yych == 'e') goto yy973;
 		goto yy87;
-yy861:
+yy873:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy961;
+		if (yych == 'c') goto yy975;
 		goto yy87;
-yy862:
+yy874:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 447 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Wait, I64Wait); }
+#line 5245 "src/prebuilt/wast-lexer-gen.cc"
+yy876:
 		++cursor_;
 		if ((yych = *cursor_) <= '9') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy863;
+				if (yych <= ')') goto yy877;
 				if (yych <= '/') goto yy86;
-				goto yy864;
+				goto yy878;
 			}
 		} else {
 			if (yych <= '_') {
-				if (yych == ';') goto yy863;
+				if (yych == ';') goto yy877;
 				if (yych <= '^') goto yy86;
-				goto yy962;
+				goto yy976;
 			} else {
-				if (yych == 'x') goto yy963;
+				if (yych == 'x') goto yy977;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy863:
+yy877:
 #line 299 "src/wast-lexer.cc"
 		{ RETURN_TEXT_AT(OffsetEqNat, 7); }
-#line 5210 "src/prebuilt/wast-lexer-gen.cc"
-yy864:
+#line 5270 "src/prebuilt/wast-lexer-gen.cc"
+yy878:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
 		if (yych <= '/') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
-				goto yy863;
+				goto yy877;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy863;
+				if (yych <= ')') goto yy877;
 				goto yy86;
 			}
 		} else {
 			if (yych <= ';') {
-				if (yych <= '9') goto yy864;
+				if (yych <= '9') goto yy878;
 				if (yych <= ':') goto yy86;
-				goto yy863;
+				goto yy877;
 			} else {
-				if (yych == '_') goto yy962;
+				if (yych == '_') goto yy976;
 				if (yych <= '~') goto yy86;
-				goto yy863;
+				goto yy877;
 			}
 		}
-yy866:
+yy880:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 528 "src/wast-lexer.cc"
+#line 531 "src/wast-lexer.cc"
 		{ RETURN(Register); }
-#line 5242 "src/prebuilt/wast-lexer-gen.cc"
-yy868:
+#line 5302 "src/prebuilt/wast-lexer-gen.cc"
+yy882:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy964;
+		if (yych == 'a') goto yy978;
 		goto yy87;
-yy869:
+yy883:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy965;
+		if (yych == 'l') goto yy979;
 		goto yy87;
-yy870:
+yy884:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy967;
+		if (yych == 'l') goto yy981;
 		goto yy87;
-yy871:
+yy885:
 		yych = *++cursor_;
-		if (yych == 'b') goto yy969;
+		if (yych == 'b') goto yy983;
 		goto yy87;
-yy872:
+yy886:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
 		if (yych <= ':') {
 			if (yych <= '\'') {
 				if (yych == '!') goto yy86;
-				if (yych <= '"') goto yy605;
+				if (yych <= '"') goto yy613;
 				goto yy86;
 			} else {
-				if (yych <= ')') goto yy605;
+				if (yych <= ')') goto yy613;
 				if (yych <= '/') goto yy86;
-				if (yych <= '9') goto yy872;
+				if (yych <= '9') goto yy886;
 				goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
-				if (yych <= ';') goto yy605;
+				if (yych <= ';') goto yy613;
 				if (yych <= '@') goto yy86;
-				if (yych <= 'F') goto yy872;
+				if (yych <= 'F') goto yy886;
 				goto yy86;
 			} else {
 				if (yych <= '`') {
-					if (yych <= '_') goto yy752;
+					if (yych <= '_') goto yy762;
 					goto yy86;
 				} else {
-					if (yych <= 'f') goto yy872;
+					if (yych <= 'f') goto yy886;
 					if (yych <= '~') goto yy86;
-					goto yy605;
+					goto yy613;
 				}
 			}
 		}
-yy874:
+yy888:
 		yych = *++cursor_;
-		if (yych == 'h') goto yy970;
+		if (yych == 'h') goto yy984;
 		goto yy87;
-yy875:
+yy889:
 		yych = *++cursor_;
-		if (yych == 'v') goto yy971;
+		if (yych == 'v') goto yy985;
 		goto yy87;
-yy876:
+yy890:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy972;
+		if (yych == 'l') goto yy986;
 		goto yy87;
-yy877:
+yy891:
 		yych = *++cursor_;
-		if (yych == 't') goto yy973;
+		if (yych == 't') goto yy987;
 		goto yy87;
-yy878:
+yy892:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy974;
+		if (yych == 'a') goto yy988;
 		goto yy87;
-yy879:
+yy893:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy975;
+		if (yych == 'l') goto yy989;
 		goto yy87;
-yy880:
+yy894:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy976;
+		if (yych == 'r') goto yy990;
 		goto yy87;
-yy881:
+yy895:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 541 "src/wast-lexer.cc"
+#line 544 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(CatchAll); }
-#line 5326 "src/prebuilt/wast-lexer-gen.cc"
-yy883:
+#line 5386 "src/prebuilt/wast-lexer-gen.cc"
+yy897:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy977;
+		if (yych == 'e') goto yy991;
 		goto yy87;
-yy884:
+yy898:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 303 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Const, F32Const); }
-#line 5338 "src/prebuilt/wast-lexer-gen.cc"
-yy886:
+#line 5398 "src/prebuilt/wast-lexer-gen.cc"
+yy900:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy978;
+		if (yych == 'r') goto yy992;
 		goto yy87;
-yy887:
+yy901:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy979;
+		if (yych == 'i') goto yy993;
 		goto yy87;
-yy888:
+yy902:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy980;
+		if (yych == 'e') goto yy994;
 		goto yy87;
-yy889:
+yy903:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 321 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, F32Floor); }
-#line 5358 "src/prebuilt/wast-lexer-gen.cc"
-yy891:
+#line 5418 "src/prebuilt/wast-lexer-gen.cc"
+yy905:
 		yych = *++cursor_;
-		if (yych == 's') goto yy981;
+		if (yych == 's') goto yy995;
 		goto yy87;
-yy892:
+yy906:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy982;
+		if (yych == 'e') goto yy996;
 		goto yy87;
-yy893:
+yy907:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 282 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Store, F32Store); }
-#line 5374 "src/prebuilt/wast-lexer-gen.cc"
-yy895:
+#line 5434 "src/prebuilt/wast-lexer-gen.cc"
+yy909:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 323 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, F32Trunc); }
-#line 5382 "src/prebuilt/wast-lexer-gen.cc"
-yy897:
+#line 5442 "src/prebuilt/wast-lexer-gen.cc"
+yy911:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 304 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Const, F64Const); }
-#line 5390 "src/prebuilt/wast-lexer-gen.cc"
-yy899:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy983;
-		goto yy87;
-yy900:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy984;
-		goto yy87;
-yy901:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 322 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, F64Floor); }
-#line 5406 "src/prebuilt/wast-lexer-gen.cc"
-yy903:
-		yych = *++cursor_;
-		if (yych == 's') goto yy985;
-		goto yy87;
-yy904:
-		yych = *++cursor_;
-		if (yych == 't') goto yy986;
-		goto yy87;
-yy905:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy987;
-		goto yy87;
-yy906:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 283 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Store, F64Store); }
-#line 5426 "src/prebuilt/wast-lexer-gen.cc"
-yy908:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 324 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, F64Trunc); }
-#line 5434 "src/prebuilt/wast-lexer-gen.cc"
-yy910:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy988;
-		goto yy87;
-yy911:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 271 "src/wast-lexer.cc"
-		{ RETURN_OPCODE0(GetLocal); }
-#line 5446 "src/prebuilt/wast-lexer-gen.cc"
+#line 5450 "src/prebuilt/wast-lexer-gen.cc"
 yy913:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy990;
+		if (yych == 'r') goto yy997;
 		goto yy87;
 yy914:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy991;
+		if (yych == 'i') goto yy998;
 		goto yy87;
 yy915:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
+#line 322 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, F64Floor); }
+#line 5466 "src/prebuilt/wast-lexer-gen.cc"
+yy917:
+		yych = *++cursor_;
+		if (yych == 's') goto yy999;
+		goto yy87;
+yy918:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1000;
+		goto yy87;
+yy919:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy1001;
+		goto yy87;
+yy920:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 283 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Store, F64Store); }
+#line 5486 "src/prebuilt/wast-lexer-gen.cc"
+yy922:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 324 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, F64Trunc); }
+#line 5494 "src/prebuilt/wast-lexer-gen.cc"
+yy924:
+		yych = *++cursor_;
+		if (yych == 'l') goto yy1002;
+		goto yy87;
+yy925:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 271 "src/wast-lexer.cc"
+		{ RETURN_OPCODE0(GetLocal); }
+#line 5506 "src/prebuilt/wast-lexer-gen.cc"
+yy927:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1004;
+		goto yy87;
+yy928:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1005;
+		goto yy87;
+yy929:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
 #line 301 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Const, I32Const); }
-#line 5462 "src/prebuilt/wast-lexer-gen.cc"
-yy917:
+#line 5522 "src/prebuilt/wast-lexer-gen.cc"
+yy931:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 338 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32DivS); }
-#line 5470 "src/prebuilt/wast-lexer-gen.cc"
-yy919:
+#line 5530 "src/prebuilt/wast-lexer-gen.cc"
+yy933:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 340 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32DivU); }
-#line 5478 "src/prebuilt/wast-lexer-gen.cc"
-yy921:
+#line 5538 "src/prebuilt/wast-lexer-gen.cc"
+yy935:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy992;
+		if (yych == 'd') goto yy1006;
 		goto yy87;
-yy922:
+yy936:
 		yych = *++cursor_;
-		if (yych == '6') goto yy993;
+		if (yych == '6') goto yy1007;
 		goto yy87;
-yy923:
+yy937:
 		yych = *++cursor_;
-		if (yych == '_') goto yy994;
+		if (yych == '_') goto yy1008;
 		goto yy87;
-yy924:
+yy938:
 		yych = *++cursor_;
-		if (yych == 't') goto yy995;
+		if (yych == 't') goto yy1009;
 		goto yy87;
-yy925:
+yy939:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy997;
+		if (yych == 'e') goto yy1011;
 		goto yy87;
-yy926:
+yy940:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 342 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32RemS); }
-#line 5506 "src/prebuilt/wast-lexer-gen.cc"
-yy928:
+#line 5566 "src/prebuilt/wast-lexer-gen.cc"
+yy942:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 344 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32RemU); }
-#line 5514 "src/prebuilt/wast-lexer-gen.cc"
-yy930:
+#line 5574 "src/prebuilt/wast-lexer-gen.cc"
+yy944:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 354 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32ShrS); }
-#line 5522 "src/prebuilt/wast-lexer-gen.cc"
-yy932:
+#line 5582 "src/prebuilt/wast-lexer-gen.cc"
+yy946:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 356 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I32ShrU); }
-#line 5530 "src/prebuilt/wast-lexer-gen.cc"
-yy934:
+#line 5590 "src/prebuilt/wast-lexer-gen.cc"
+yy948:
 		++cursor_;
 		if ((yych = *cursor_) <= '0') {
 			if (yych <= '"') {
@@ -5538,140 +5598,140 @@ yy934:
 			}
 		} else {
 			if (yych <= '8') {
-				if (yych <= '1') goto yy998;
+				if (yych <= '1') goto yy1012;
 				if (yych <= '7') goto yy86;
-				goto yy999;
+				goto yy1013;
 			} else {
-				if (yych == ';') goto yy935;
+				if (yych == ';') goto yy949;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy935:
+yy949:
 #line 280 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Store, I32Store); }
-#line 5553 "src/prebuilt/wast-lexer-gen.cc"
-yy936:
+#line 5613 "src/prebuilt/wast-lexer-gen.cc"
+yy950:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1001;
+		if (yych == '_') goto yy1015;
 		goto yy87;
-yy937:
+yy951:
 		yych = *++cursor_;
-		if (yych == 'i') goto yy1002;
+		if (yych == 'i') goto yy1016;
 		goto yy87;
-yy938:
+yy952:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy1003;
+		if (yych == 'c') goto yy1017;
 		goto yy87;
-yy939:
+yy953:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 302 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Const, I64Const); }
-#line 5573 "src/prebuilt/wast-lexer-gen.cc"
-yy941:
+#line 5633 "src/prebuilt/wast-lexer-gen.cc"
+yy955:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 339 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64DivS); }
-#line 5581 "src/prebuilt/wast-lexer-gen.cc"
-yy943:
+#line 5641 "src/prebuilt/wast-lexer-gen.cc"
+yy957:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 341 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64DivU); }
-#line 5589 "src/prebuilt/wast-lexer-gen.cc"
-yy945:
+#line 5649 "src/prebuilt/wast-lexer-gen.cc"
+yy959:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1004;
+		if (yych == 'd') goto yy1018;
 		goto yy87;
-yy946:
+yy960:
 		yych = *++cursor_;
-		if (yych == '6') goto yy1005;
+		if (yych == '6') goto yy1019;
 		goto yy87;
-yy947:
+yy961:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1006;
+		if (yych == '2') goto yy1020;
 		goto yy87;
-yy948:
+yy962:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1007;
+		if (yych == '_') goto yy1021;
 		goto yy87;
-yy949:
+yy963:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1008;
+		if (yych == 't') goto yy1022;
 		goto yy87;
-yy950:
+yy964:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy1010;
+		if (yych == 'e') goto yy1024;
 		goto yy87;
-yy951:
+yy965:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 343 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64RemS); }
-#line 5621 "src/prebuilt/wast-lexer-gen.cc"
-yy953:
+#line 5681 "src/prebuilt/wast-lexer-gen.cc"
+yy967:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 345 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64RemU); }
-#line 5629 "src/prebuilt/wast-lexer-gen.cc"
-yy955:
+#line 5689 "src/prebuilt/wast-lexer-gen.cc"
+yy969:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 355 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64ShrS); }
-#line 5637 "src/prebuilt/wast-lexer-gen.cc"
-yy957:
+#line 5697 "src/prebuilt/wast-lexer-gen.cc"
+yy971:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 357 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Binary, I64ShrU); }
-#line 5645 "src/prebuilt/wast-lexer-gen.cc"
-yy959:
+#line 5705 "src/prebuilt/wast-lexer-gen.cc"
+yy973:
 		++cursor_;
 		if ((yych = *cursor_) <= '1') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy960;
+				if (yych <= ')') goto yy974;
 				if (yych <= '0') goto yy86;
-				goto yy1011;
+				goto yy1025;
 			}
 		} else {
 			if (yych <= '8') {
-				if (yych == '3') goto yy1012;
+				if (yych == '3') goto yy1026;
 				if (yych <= '7') goto yy86;
-				goto yy1013;
+				goto yy1027;
 			} else {
-				if (yych == ';') goto yy960;
+				if (yych == ';') goto yy974;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy960:
+yy974:
 #line 281 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Store, I64Store); }
-#line 5670 "src/prebuilt/wast-lexer-gen.cc"
-yy961:
+#line 5730 "src/prebuilt/wast-lexer-gen.cc"
+yy975:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1015;
+		if (yych == '_') goto yy1029;
 		goto yy87;
-yy962:
+yy976:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -5687,7 +5747,7 @@ yy962:
 		} else {
 			if (yych <= ':') {
 				if (yych <= '/') goto yy86;
-				if (yych <= '9') goto yy864;
+				if (yych <= '9') goto yy878;
 				goto yy86;
 			} else {
 				if (yych <= ';') goto yy88;
@@ -5695,7 +5755,7 @@ yy962:
 				goto yy88;
 			}
 		}
-yy963:
+yy977:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
@@ -5707,601 +5767,543 @@ yy963:
 				if (yych <= '\'') goto yy86;
 				if (yych <= ')') goto yy88;
 				if (yych <= '/') goto yy86;
-				goto yy1016;
+				goto yy1030;
 			}
 		} else {
 			if (yych <= 'F') {
 				if (yych == ';') goto yy88;
 				if (yych <= '@') goto yy86;
-				goto yy1016;
+				goto yy1030;
 			} else {
 				if (yych <= '`') goto yy86;
-				if (yych <= 'f') goto yy1016;
+				if (yych <= 'f') goto yy1030;
 				if (yych <= '~') goto yy86;
 				goto yy88;
 			}
 		}
-yy964:
+yy978:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy1018;
+		if (yych == 'l') goto yy1032;
 		goto yy87;
-yy965:
+yy979:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 272 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(SetLocal); }
-#line 5736 "src/prebuilt/wast-lexer-gen.cc"
-yy967:
+#line 5796 "src/prebuilt/wast-lexer-gen.cc"
+yy981:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 273 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(TeeLocal); }
-#line 5744 "src/prebuilt/wast-lexer-gen.cc"
-yy969:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy1020;
-		goto yy87;
-yy970:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy1021;
-		goto yy87;
-yy971:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy1022;
-		goto yy87;
-yy972:
-		yych = *++cursor_;
-		if (yych == 'f') goto yy1023;
-		goto yy87;
-yy973:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1024;
-		goto yy87;
-yy974:
-		yych = *++cursor_;
-		if (yych == 'p') goto yy1025;
-		goto yy87;
-yy975:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1027;
-		goto yy87;
-yy976:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy1028;
-		goto yy87;
-yy977:
-		yych = *++cursor_;
-		if (yych == 'm') goto yy1029;
-		goto yy87;
-yy978:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1030;
-		goto yy87;
-yy979:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1031;
-		goto yy87;
-yy980:
-		yych = *++cursor_;
-		if (yych == '/') goto yy1032;
-		goto yy87;
-yy981:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1033;
-		goto yy87;
-yy982:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1035;
-		goto yy87;
+#line 5804 "src/prebuilt/wast-lexer-gen.cc"
 yy983:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1036;
+		if (yych == 'l') goto yy1034;
 		goto yy87;
 yy984:
 		yych = *++cursor_;
-		if (yych == 'g') goto yy1037;
+		if (yych == 'a') goto yy1035;
 		goto yy87;
 yy985:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1038;
+		if (yych == 'a') goto yy1036;
 		goto yy87;
 yy986:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy1040;
+		if (yych == 'f') goto yy1037;
 		goto yy87;
 yy987:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1041;
+		if (yych == 'u') goto yy1038;
 		goto yy87;
 yy988:
+		yych = *++cursor_;
+		if (yych == 'p') goto yy1039;
+		goto yy87;
+yy989:
+		yych = *++cursor_;
+		if (yych == 'i') goto yy1041;
+		goto yy87;
+yy990:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy1042;
+		goto yy87;
+yy991:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy1043;
+		goto yy87;
+yy992:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1044;
+		goto yy87;
+yy993:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1045;
+		goto yy87;
+yy994:
+		yych = *++cursor_;
+		if (yych == '/') goto yy1046;
+		goto yy87;
+yy995:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1047;
+		goto yy87;
+yy996:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1049;
+		goto yy87;
+yy997:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1050;
+		goto yy87;
+yy998:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1051;
+		goto yy87;
+yy999:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1052;
+		goto yy87;
+yy1000:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy1054;
+		goto yy87;
+yy1001:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1055;
+		goto yy87;
+yy1002:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 274 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(GetGlobal); }
-#line 5828 "src/prebuilt/wast-lexer-gen.cc"
-yy990:
+#line 5888 "src/prebuilt/wast-lexer-gen.cc"
+yy1004:
 		yych = *++cursor_;
-		if (yych == 'y') goto yy1042;
+		if (yych == 'y') goto yy1056;
 		goto yy87;
-yy991:
+yy1005:
 		yych = *++cursor_;
-		if (yych == '.') goto yy1044;
+		if (yych == '.') goto yy1058;
 		goto yy87;
-yy992:
+yy1006:
 		yych = *++cursor_;
-		if (yych == '1') goto yy1045;
-		if (yych == '8') goto yy1046;
+		if (yych == '1') goto yy1059;
+		if (yych == '8') goto yy1060;
 		goto yy87;
-yy993:
+yy1007:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1047;
+		if (yych == '_') goto yy1061;
 		goto yy87;
-yy994:
+yy1008:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1048;
-		if (yych == 'u') goto yy1050;
+		if (yych == 's') goto yy1062;
+		if (yych == 'u') goto yy1064;
 		goto yy87;
-yy995:
+yy1009:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 311 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, I32Popcnt); }
-#line 5858 "src/prebuilt/wast-lexer-gen.cc"
-yy997:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1052;
-		goto yy87;
-yy998:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1053;
-		goto yy87;
-yy999:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 294 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Store, I32Store8); }
-#line 5874 "src/prebuilt/wast-lexer-gen.cc"
-yy1001:
-		yych = *++cursor_;
-		if (yych == 's') goto yy1055;
-		if (yych == 'u') goto yy1056;
-		goto yy87;
-yy1002:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1057;
-		goto yy87;
-yy1003:
-		yych = *++cursor_;
-		if (yych == '.') goto yy1058;
-		goto yy87;
-yy1004:
-		yych = *++cursor_;
-		if (yych <= '3') {
-			if (yych == '1') goto yy1059;
-			if (yych <= '2') goto yy87;
-			goto yy1060;
-		} else {
-			if (yych <= '8') {
-				if (yych <= '7') goto yy87;
-				goto yy1061;
-			} else {
-				if (yych == '_') goto yy1062;
-				goto yy87;
-			}
-		}
-yy1005:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1063;
-		goto yy87;
-yy1006:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1064;
-		goto yy87;
-yy1007:
-		yych = *++cursor_;
-		if (yych == 's') goto yy1065;
-		if (yych == 'u') goto yy1067;
-		goto yy87;
-yy1008:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 312 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, I64Popcnt); }
-#line 5923 "src/prebuilt/wast-lexer-gen.cc"
-yy1010:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1069;
-		goto yy87;
+#line 5918 "src/prebuilt/wast-lexer-gen.cc"
 yy1011:
 		yych = *++cursor_;
-		if (yych == '6') goto yy1070;
+		if (yych == 'r') goto yy1066;
 		goto yy87;
 yy1012:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1072;
+		if (yych == '6') goto yy1067;
 		goto yy87;
 yy1013:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 295 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Store, I64Store8); }
-#line 5943 "src/prebuilt/wast-lexer-gen.cc"
+#line 294 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Store, I32Store8); }
+#line 5934 "src/prebuilt/wast-lexer-gen.cc"
 yy1015:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1074;
-		if (yych == 'u') goto yy1075;
+		if (yych == 's') goto yy1069;
+		if (yych == 'u') goto yy1070;
 		goto yy87;
 yy1016:
+		yych = *++cursor_;
+		if (yych == '6') goto yy1071;
+		goto yy87;
+yy1017:
+		yych = *++cursor_;
+		if (yych == '.') goto yy1072;
+		goto yy87;
+yy1018:
+		yych = *++cursor_;
+		if (yych <= '3') {
+			if (yych == '1') goto yy1073;
+			if (yych <= '2') goto yy87;
+			goto yy1074;
+		} else {
+			if (yych <= '8') {
+				if (yych <= '7') goto yy87;
+				goto yy1075;
+			} else {
+				if (yych == '_') goto yy1076;
+				goto yy87;
+			}
+		}
+yy1019:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1077;
+		goto yy87;
+yy1020:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1078;
+		goto yy87;
+yy1021:
+		yych = *++cursor_;
+		if (yych == 's') goto yy1079;
+		if (yych == 'u') goto yy1081;
+		goto yy87;
+yy1022:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 312 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, I64Popcnt); }
+#line 5983 "src/prebuilt/wast-lexer-gen.cc"
+yy1024:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1083;
+		goto yy87;
+yy1025:
+		yych = *++cursor_;
+		if (yych == '6') goto yy1084;
+		goto yy87;
+yy1026:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1086;
+		goto yy87;
+yy1027:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 295 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Store, I64Store8); }
+#line 6003 "src/prebuilt/wast-lexer-gen.cc"
+yy1029:
+		yych = *++cursor_;
+		if (yych == 's') goto yy1088;
+		if (yych == 'u') goto yy1089;
+		goto yy87;
+yy1030:
 		++cursor_;
 		if (limit_ <= cursor_) FILL(1);
 		yych = *cursor_;
 		if (yych <= ':') {
 			if (yych <= '\'') {
 				if (yych == '!') goto yy86;
-				if (yych <= '"') goto yy863;
+				if (yych <= '"') goto yy877;
 				goto yy86;
 			} else {
-				if (yych <= ')') goto yy863;
+				if (yych <= ')') goto yy877;
 				if (yych <= '/') goto yy86;
-				if (yych <= '9') goto yy1016;
+				if (yych <= '9') goto yy1030;
 				goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
-				if (yych <= ';') goto yy863;
+				if (yych <= ';') goto yy877;
 				if (yych <= '@') goto yy86;
-				if (yych <= 'F') goto yy1016;
+				if (yych <= 'F') goto yy1030;
 				goto yy86;
 			} else {
 				if (yych <= '`') {
-					if (yych <= '_') goto yy963;
+					if (yych <= '_') goto yy977;
 					goto yy86;
 				} else {
-					if (yych <= 'f') goto yy1016;
+					if (yych <= 'f') goto yy1030;
 					if (yych <= '~') goto yy86;
-					goto yy863;
+					goto yy877;
 				}
 			}
 		}
-yy1018:
+yy1032:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 275 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(SetGlobal); }
-#line 5988 "src/prebuilt/wast-lexer-gen.cc"
-yy1020:
+#line 6048 "src/prebuilt/wast-lexer-gen.cc"
+yy1034:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy1076;
+		if (yych == 'e') goto yy1090;
 		goto yy87;
-yy1021:
+yy1035:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy1078;
+		if (yych == 'u') goto yy1092;
 		goto yy87;
-yy1022:
+yy1036:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy1079;
+		if (yych == 'l') goto yy1093;
 		goto yy87;
-yy1023:
+yy1037:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy1080;
+		if (yych == 'o') goto yy1094;
 		goto yy87;
-yy1024:
+yy1038:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1081;
+		if (yych == 'r') goto yy1095;
 		goto yy87;
-yy1025:
+yy1039:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 537 "src/wast-lexer.cc"
+#line 540 "src/wast-lexer.cc"
 		{ RETURN(AssertTrap); }
-#line 6016 "src/prebuilt/wast-lexer-gen.cc"
-yy1027:
+#line 6076 "src/prebuilt/wast-lexer-gen.cc"
+yy1041:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy1082;
+		if (yych == 'n') goto yy1096;
 		goto yy87;
-yy1028:
+yy1042:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy1083;
+		if (yych == 'c') goto yy1097;
 		goto yy87;
-yy1029:
+yy1043:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy1084;
+		if (yych == 'o') goto yy1098;
 		goto yy87;
-yy1030:
+yy1044:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1085;
+		if (yych == '_') goto yy1099;
 		goto yy87;
-yy1031:
+yy1045:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy1086;
+		if (yych == 'n') goto yy1100;
 		goto yy87;
-yy1032:
+yy1046:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1088;
+		if (yych == 'f') goto yy1102;
 		goto yy87;
-yy1033:
+yy1047:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 325 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, F32Nearest); }
-#line 6048 "src/prebuilt/wast-lexer-gen.cc"
-yy1035:
+#line 6108 "src/prebuilt/wast-lexer-gen.cc"
+yy1049:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1089;
+		if (yych == 'p') goto yy1103;
 		goto yy87;
-yy1036:
+yy1050:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1090;
+		if (yych == '_') goto yy1104;
 		goto yy87;
-yy1037:
+yy1051:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy1091;
+		if (yych == 'n') goto yy1105;
 		goto yy87;
-yy1038:
+yy1052:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 326 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, F64Nearest); }
-#line 6068 "src/prebuilt/wast-lexer-gen.cc"
-yy1040:
+#line 6128 "src/prebuilt/wast-lexer-gen.cc"
+yy1054:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1093;
+		if (yych == '/') goto yy1107;
 		goto yy87;
-yy1041:
+yy1055:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1094;
+		if (yych == 'p') goto yy1108;
 		goto yy87;
-yy1042:
+yy1056:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 444 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(GrowMemory); }
-#line 6084 "src/prebuilt/wast-lexer-gen.cc"
-yy1044:
+#line 6144 "src/prebuilt/wast-lexer-gen.cc"
+yy1058:
 		yych = *++cursor_;
 		if (yych <= 'q') {
-			if (yych == 'l') goto yy1095;
+			if (yych == 'l') goto yy1109;
 			goto yy87;
 		} else {
-			if (yych <= 'r') goto yy1096;
-			if (yych <= 's') goto yy1097;
+			if (yych <= 'r') goto yy1110;
+			if (yych <= 's') goto yy1111;
 			goto yy87;
 		}
-yy1045:
+yy1059:
 		yych = *++cursor_;
-		if (yych == '6') goto yy1098;
+		if (yych == '6') goto yy1112;
 		goto yy87;
-yy1046:
+yy1060:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1099;
+		if (yych == '_') goto yy1113;
 		goto yy87;
-yy1047:
+yy1061:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1100;
-		if (yych == 'u') goto yy1102;
+		if (yych == 's') goto yy1114;
+		if (yych == 'u') goto yy1116;
 		goto yy87;
-yy1048:
+yy1062:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 284 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I32Load8S); }
-#line 6115 "src/prebuilt/wast-lexer-gen.cc"
-yy1050:
+#line 6175 "src/prebuilt/wast-lexer-gen.cc"
+yy1064:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 286 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I32Load8U); }
-#line 6123 "src/prebuilt/wast-lexer-gen.cc"
-yy1052:
+#line 6183 "src/prebuilt/wast-lexer-gen.cc"
+yy1066:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1104;
+		if (yych == 'p') goto yy1118;
 		goto yy87;
-yy1053:
+yy1067:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 296 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Store, I32Store16); }
-#line 6135 "src/prebuilt/wast-lexer-gen.cc"
-yy1055:
+#line 6195 "src/prebuilt/wast-lexer-gen.cc"
+yy1069:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1105;
-		if (yych == ':') goto yy1106;
+		if (yych == '/') goto yy1119;
+		if (yych == ':') goto yy1120;
 		goto yy87;
-yy1056:
+yy1070:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1107;
-		if (yych == ':') goto yy1108;
+		if (yych == '/') goto yy1121;
+		if (yych == ':') goto yy1122;
 		goto yy87;
-yy1057:
+yy1071:
 		yych = *++cursor_;
-		if (yych == '4') goto yy1109;
+		if (yych == '4') goto yy1123;
 		goto yy87;
-yy1058:
+yy1072:
 		yych = *++cursor_;
 		if (yych <= 'q') {
-			if (yych == 'l') goto yy1111;
+			if (yych == 'l') goto yy1125;
 			goto yy87;
 		} else {
-			if (yych <= 'r') goto yy1112;
-			if (yych <= 's') goto yy1113;
+			if (yych <= 'r') goto yy1126;
+			if (yych <= 's') goto yy1127;
 			goto yy87;
 		}
-yy1059:
+yy1073:
 		yych = *++cursor_;
-		if (yych == '6') goto yy1114;
+		if (yych == '6') goto yy1128;
 		goto yy87;
-yy1060:
+yy1074:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1115;
+		if (yych == '2') goto yy1129;
 		goto yy87;
-yy1061:
+yy1075:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1116;
+		if (yych == '_') goto yy1130;
 		goto yy87;
-yy1062:
+yy1076:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1117;
-		if (yych == 'u') goto yy1118;
+		if (yych == 's') goto yy1131;
+		if (yych == 'u') goto yy1132;
 		goto yy87;
-yy1063:
+yy1077:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1119;
-		if (yych == 'u') goto yy1121;
+		if (yych == 's') goto yy1133;
+		if (yych == 'u') goto yy1135;
 		goto yy87;
-yy1064:
+yy1078:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1123;
-		if (yych == 'u') goto yy1125;
+		if (yych == 's') goto yy1137;
+		if (yych == 'u') goto yy1139;
 		goto yy87;
-yy1065:
+yy1079:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 285 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I64Load8S); }
-#line 6194 "src/prebuilt/wast-lexer-gen.cc"
-yy1067:
+#line 6254 "src/prebuilt/wast-lexer-gen.cc"
+yy1081:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 287 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I64Load8U); }
-#line 6202 "src/prebuilt/wast-lexer-gen.cc"
-yy1069:
+#line 6262 "src/prebuilt/wast-lexer-gen.cc"
+yy1083:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1127;
+		if (yych == 'p') goto yy1141;
 		goto yy87;
-yy1070:
+yy1084:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 297 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Store, I64Store16); }
-#line 6214 "src/prebuilt/wast-lexer-gen.cc"
-yy1072:
+#line 6274 "src/prebuilt/wast-lexer-gen.cc"
+yy1086:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 298 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Store, I64Store32); }
-#line 6222 "src/prebuilt/wast-lexer-gen.cc"
-yy1074:
+#line 6282 "src/prebuilt/wast-lexer-gen.cc"
+yy1088:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1128;
-		if (yych == ':') goto yy1129;
+		if (yych == '/') goto yy1142;
+		if (yych == ':') goto yy1143;
 		goto yy87;
-yy1075:
+yy1089:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1130;
-		if (yych == ':') goto yy1131;
+		if (yych == '/') goto yy1144;
+		if (yych == ':') goto yy1145;
 		goto yy87;
-yy1076:
+yy1090:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 442 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(Unreachable); }
-#line 6240 "src/prebuilt/wast-lexer-gen.cc"
-yy1078:
+#line 6300 "src/prebuilt/wast-lexer-gen.cc"
+yy1092:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1132;
+		if (yych == 's') goto yy1146;
 		goto yy87;
-yy1079:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1133;
-		goto yy87;
-yy1080:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1134;
-		goto yy87;
-yy1081:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy1135;
-		goto yy87;
-yy1082:
-		yych = *++cursor_;
-		if (yych == 'k') goto yy1137;
-		goto yy87;
-yy1083:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1138;
-		goto yy87;
-yy1084:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1140;
-		goto yy87;
-yy1085:
-		yych = *++cursor_;
-		if (yych == 's') goto yy1141;
-		if (yych == 'u') goto yy1142;
-		goto yy87;
-yy1086:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 374 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, F32Copysign); }
-#line 6281 "src/prebuilt/wast-lexer-gen.cc"
-yy1088:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1143;
-		goto yy87;
-yy1089:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1144;
-		goto yy87;
-yy1090:
-		yych = *++cursor_;
-		if (yych == 's') goto yy1145;
-		if (yych == 'u') goto yy1146;
-		goto yy87;
-yy1091:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 375 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Binary, F64Copysign); }
-#line 6302 "src/prebuilt/wast-lexer-gen.cc"
 yy1093:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1147;
+		if (yych == 'i') goto yy1147;
 		goto yy87;
 yy1094:
 		yych = *++cursor_;
@@ -6309,586 +6311,644 @@ yy1094:
 		goto yy87;
 yy1095:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy1149;
+		if (yych == 'n') goto yy1149;
 		goto yy87;
 yy1096:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy1150;
+		if (yych == 'k') goto yy1151;
 		goto yy87;
 yy1097:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1151;
+		if (yych == 't') goto yy1152;
 		goto yy87;
 yy1098:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1152;
+		if (yych == 'r') goto yy1154;
 		goto yy87;
 yy1099:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1153;
+		if (yych == 's') goto yy1155;
+		if (yych == 'u') goto yy1156;
 		goto yy87;
 yy1100:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
+#line 374 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, F32Copysign); }
+#line 6341 "src/prebuilt/wast-lexer-gen.cc"
+yy1102:
+		yych = *++cursor_;
+		if (yych == '6') goto yy1157;
+		goto yy87;
+yy1103:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1158;
+		goto yy87;
+yy1104:
+		yych = *++cursor_;
+		if (yych == 's') goto yy1159;
+		if (yych == 'u') goto yy1160;
+		goto yy87;
+yy1105:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 375 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Binary, F64Copysign); }
+#line 6362 "src/prebuilt/wast-lexer-gen.cc"
+yy1107:
+		yych = *++cursor_;
+		if (yych == 'f') goto yy1161;
+		goto yy87;
+yy1108:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1162;
+		goto yy87;
+yy1109:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy1163;
+		goto yy87;
+yy1110:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy1164;
+		goto yy87;
+yy1111:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1165;
+		goto yy87;
+yy1112:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1166;
+		goto yy87;
+yy1113:
+		yych = *++cursor_;
+		if (yych == 's') goto yy1167;
+		goto yy87;
+yy1114:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
 #line 288 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I32Load16S); }
-#line 6338 "src/prebuilt/wast-lexer-gen.cc"
-yy1102:
+#line 6398 "src/prebuilt/wast-lexer-gen.cc"
+yy1116:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 290 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I32Load16U); }
-#line 6346 "src/prebuilt/wast-lexer-gen.cc"
-yy1104:
+#line 6406 "src/prebuilt/wast-lexer-gen.cc"
+yy1118:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1155;
+		if (yych == 'r') goto yy1169;
 		goto yy87;
-yy1105:
+yy1119:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1156;
+		if (yych == 'f') goto yy1170;
 		goto yy87;
-yy1106:
+yy1120:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1157;
+		if (yych == 's') goto yy1171;
 		goto yy87;
-yy1107:
+yy1121:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1158;
+		if (yych == 'f') goto yy1172;
 		goto yy87;
-yy1108:
+yy1122:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1159;
+		if (yych == 's') goto yy1173;
 		goto yy87;
-yy1109:
+yy1123:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 410 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I32WrapI64); }
-#line 6374 "src/prebuilt/wast-lexer-gen.cc"
-yy1111:
+#line 6434 "src/prebuilt/wast-lexer-gen.cc"
+yy1125:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy1160;
+		if (yych == 'o') goto yy1174;
 		goto yy87;
-yy1112:
+yy1126:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy1161;
+		if (yych == 'm') goto yy1175;
 		goto yy87;
-yy1113:
+yy1127:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1162;
+		if (yych == 't') goto yy1176;
 		goto yy87;
-yy1114:
+yy1128:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1163;
+		if (yych == '_') goto yy1177;
 		goto yy87;
-yy1115:
+yy1129:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1164;
+		if (yych == '_') goto yy1178;
 		goto yy87;
-yy1116:
+yy1130:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1165;
+		if (yych == 's') goto yy1179;
 		goto yy87;
-yy1117:
+yy1131:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1167;
+		if (yych == '/') goto yy1181;
 		goto yy87;
-yy1118:
+yy1132:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1168;
+		if (yych == '/') goto yy1182;
 		goto yy87;
-yy1119:
+yy1133:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 289 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I64Load16S); }
-#line 6414 "src/prebuilt/wast-lexer-gen.cc"
-yy1121:
+#line 6474 "src/prebuilt/wast-lexer-gen.cc"
+yy1135:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 291 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I64Load16U); }
-#line 6422 "src/prebuilt/wast-lexer-gen.cc"
-yy1123:
+#line 6482 "src/prebuilt/wast-lexer-gen.cc"
+yy1137:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 292 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I64Load32S); }
-#line 6430 "src/prebuilt/wast-lexer-gen.cc"
-yy1125:
+#line 6490 "src/prebuilt/wast-lexer-gen.cc"
+yy1139:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 293 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Load, I64Load32U); }
-#line 6438 "src/prebuilt/wast-lexer-gen.cc"
-yy1127:
+#line 6498 "src/prebuilt/wast-lexer-gen.cc"
+yy1141:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1169;
+		if (yych == 'r') goto yy1183;
 		goto yy87;
-yy1128:
+yy1142:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1170;
+		if (yych == 'f') goto yy1184;
 		goto yy87;
-yy1129:
+yy1143:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1171;
+		if (yych == 's') goto yy1185;
 		goto yy87;
-yy1130:
+yy1144:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1172;
+		if (yych == 'f') goto yy1186;
 		goto yy87;
-yy1131:
+yy1145:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1173;
+		if (yych == 's') goto yy1187;
 		goto yy87;
-yy1132:
+yy1146:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1174;
+		if (yych == 't') goto yy1188;
 		goto yy87;
-yy1133:
+yy1147:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1175;
+		if (yych == 'd') goto yy1189;
 		goto yy87;
-yy1134:
+yy1148:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy1177;
+		if (yych == 'm') goto yy1191;
 		goto yy87;
-yy1135:
+yy1149:
 		++cursor_;
 		if ((yych = *cursor_) <= ')') {
 			if (yych <= '!') {
 				if (yych >= '!') goto yy86;
 			} else {
-				if (yych <= '"') goto yy1136;
+				if (yych <= '"') goto yy1150;
 				if (yych <= '\'') goto yy86;
 			}
 		} else {
 			if (yych <= '^') {
 				if (yych != ';') goto yy86;
 			} else {
-				if (yych <= '_') goto yy1178;
+				if (yych <= '_') goto yy1192;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy1136:
-#line 534 "src/wast-lexer.cc"
+yy1150:
+#line 537 "src/wast-lexer.cc"
 		{ RETURN(AssertReturn); }
-#line 6491 "src/prebuilt/wast-lexer-gen.cc"
-yy1137:
+#line 6551 "src/prebuilt/wast-lexer-gen.cc"
+yy1151:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy1179;
+		if (yych == 'a') goto yy1193;
 		goto yy87;
-yy1138:
+yy1152:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 267 "src/wast-lexer.cc"
 		{ RETURN_OPCODE0(CallIndirect); }
-#line 6503 "src/prebuilt/wast-lexer-gen.cc"
-yy1140:
+#line 6563 "src/prebuilt/wast-lexer-gen.cc"
+yy1154:
 		yych = *++cursor_;
-		if (yych == 'y') goto yy1180;
+		if (yych == 'y') goto yy1194;
 		goto yy87;
-yy1141:
+yy1155:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1182;
+		if (yych == '/') goto yy1196;
 		goto yy87;
-yy1142:
+yy1156:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1183;
+		if (yych == '/') goto yy1197;
 		goto yy87;
-yy1143:
+yy1157:
 		yych = *++cursor_;
-		if (yych == '4') goto yy1184;
+		if (yych == '4') goto yy1198;
 		goto yy87;
-yy1144:
+yy1158:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy1186;
+		if (yych == 'e') goto yy1200;
 		goto yy87;
-yy1145:
+yy1159:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1187;
+		if (yych == '/') goto yy1201;
 		goto yy87;
-yy1146:
+yy1160:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1188;
+		if (yych == '/') goto yy1202;
 		goto yy87;
-yy1147:
+yy1161:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1189;
+		if (yych == '3') goto yy1203;
 		goto yy87;
-yy1148:
+yy1162:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy1190;
+		if (yych == 'e') goto yy1204;
 		goto yy87;
-yy1149:
+yy1163:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy1191;
+		if (yych == 'a') goto yy1205;
 		goto yy87;
-yy1150:
+yy1164:
 		yych = *++cursor_;
-		if (yych == 'w') goto yy1192;
+		if (yych == 'w') goto yy1206;
 		goto yy87;
-yy1151:
+yy1165:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy1193;
+		if (yych == 'o') goto yy1207;
 		goto yy87;
-yy1152:
+yy1166:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1194;
+		if (yych == 's') goto yy1208;
 		goto yy87;
-yy1153:
+yy1167:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 327 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, I32Extend8S); }
-#line 6563 "src/prebuilt/wast-lexer-gen.cc"
-yy1155:
+#line 6623 "src/prebuilt/wast-lexer-gen.cc"
+yy1169:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy1196;
+		if (yych == 'e') goto yy1210;
 		goto yy87;
-yy1156:
+yy1170:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1197;
-		if (yych == '6') goto yy1198;
+		if (yych == '3') goto yy1211;
+		if (yych == '6') goto yy1212;
 		goto yy87;
-yy1157:
+yy1171:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy1199;
+		if (yych == 'a') goto yy1213;
 		goto yy87;
-yy1158:
+yy1172:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1200;
-		if (yych == '6') goto yy1201;
+		if (yych == '3') goto yy1214;
+		if (yych == '6') goto yy1215;
 		goto yy87;
-yy1159:
+yy1173:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy1202;
+		if (yych == 'a') goto yy1216;
 		goto yy87;
-yy1160:
+yy1174:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy1203;
+		if (yych == 'a') goto yy1217;
 		goto yy87;
-yy1161:
+yy1175:
 		yych = *++cursor_;
-		if (yych == 'w') goto yy1204;
+		if (yych == 'w') goto yy1218;
 		goto yy87;
-yy1162:
+yy1176:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy1205;
+		if (yych == 'o') goto yy1219;
 		goto yy87;
-yy1163:
+yy1177:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1206;
+		if (yych == 's') goto yy1220;
 		goto yy87;
-yy1164:
+yy1178:
 		yych = *++cursor_;
-		if (yych == 's') goto yy1208;
+		if (yych == 's') goto yy1222;
 		goto yy87;
-yy1165:
+yy1179:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 329 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, I64Extend8S); }
-#line 6613 "src/prebuilt/wast-lexer-gen.cc"
-yy1167:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1210;
-		goto yy87;
-yy1168:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1211;
-		goto yy87;
-yy1169:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy1212;
-		goto yy87;
-yy1170:
-		yych = *++cursor_;
-		if (yych == '3') goto yy1213;
-		if (yych == '6') goto yy1214;
-		goto yy87;
-yy1171:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy1215;
-		goto yy87;
-yy1172:
-		yych = *++cursor_;
-		if (yych == '3') goto yy1216;
-		if (yych == '6') goto yy1217;
-		goto yy87;
-yy1173:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy1218;
-		goto yy87;
-yy1174:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1219;
-		goto yy87;
-yy1175:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 532 "src/wast-lexer.cc"
-		{ RETURN(AssertInvalid); }
-#line 6655 "src/prebuilt/wast-lexer-gen.cc"
-yy1177:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy1220;
-		goto yy87;
-yy1178:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy1221;
-		if (yych == 'c') goto yy1222;
-		goto yy87;
-yy1179:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy1223;
-		goto yy87;
-yy1180:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 443 "src/wast-lexer.cc"
-		{ RETURN_OPCODE0(CurrentMemory); }
-#line 6676 "src/prebuilt/wast-lexer-gen.cc"
-yy1182:
+#line 6673 "src/prebuilt/wast-lexer-gen.cc"
+yy1181:
 		yych = *++cursor_;
 		if (yych == 'i') goto yy1224;
 		goto yy87;
-yy1183:
+yy1182:
 		yych = *++cursor_;
 		if (yych == 'i') goto yy1225;
 		goto yy87;
+yy1183:
+		yych = *++cursor_;
+		if (yych == 'e') goto yy1226;
+		goto yy87;
 yy1184:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1227;
+		if (yych == '6') goto yy1228;
+		goto yy87;
+yy1185:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy1229;
+		goto yy87;
+yy1186:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1230;
+		if (yych == '6') goto yy1231;
+		goto yy87;
+yy1187:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy1232;
+		goto yy87;
+yy1188:
+		yych = *++cursor_;
+		if (yych == 'i') goto yy1233;
+		goto yy87;
+yy1189:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 436 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, F32DemoteF64); }
-#line 6692 "src/prebuilt/wast-lexer-gen.cc"
-yy1186:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1226;
-		goto yy87;
-yy1187:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1227;
-		goto yy87;
-yy1188:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1228;
-		goto yy87;
-yy1189:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1229;
-		goto yy87;
-yy1190:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1231;
-		goto yy87;
+#line 535 "src/wast-lexer.cc"
+		{ RETURN(AssertInvalid); }
+#line 6715 "src/prebuilt/wast-lexer-gen.cc"
 yy1191:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1232;
+		if (yych == 'e') goto yy1234;
 		goto yy87;
 yy1192:
 		yych = *++cursor_;
-		if (yych <= '0') {
-			if (yych == '.') goto yy1234;
-			goto yy87;
-		} else {
-			if (yych <= '1') goto yy1235;
-			if (yych == '8') goto yy1236;
-			goto yy87;
-		}
+		if (yych == 'a') goto yy1235;
+		if (yych == 'c') goto yy1236;
+		goto yy87;
 yy1193:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1237;
+		if (yych == 'b') goto yy1237;
 		goto yy87;
 yy1194:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 328 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Unary, I32Extend16S); }
-#line 6738 "src/prebuilt/wast-lexer-gen.cc"
+#line 443 "src/wast-lexer.cc"
+		{ RETURN_OPCODE0(CurrentMemory); }
+#line 6736 "src/prebuilt/wast-lexer-gen.cc"
 yy1196:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1238;
+		if (yych == 'i') goto yy1238;
 		goto yy87;
 yy1197:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1239;
+		if (yych == 'i') goto yy1239;
 		goto yy87;
 yy1198:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1241;
-		goto yy87;
-yy1199:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1243;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 436 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, F32DemoteF64); }
+#line 6752 "src/prebuilt/wast-lexer-gen.cc"
 yy1200:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1244;
+		if (yych == 't') goto yy1240;
 		goto yy87;
 yy1201:
 		yych = *++cursor_;
-		if (yych == '4') goto yy1246;
+		if (yych == 'i') goto yy1241;
 		goto yy87;
 yy1202:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1248;
+		if (yych == 'i') goto yy1242;
 		goto yy87;
 yy1203:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1249;
+		if (yych == '2') goto yy1243;
 		goto yy87;
 yy1204:
 		yych = *++cursor_;
-		switch (yych) {
-		case '.':	goto yy1251;
-		case '1':	goto yy1252;
-		case '3':	goto yy1253;
-		case '8':	goto yy1254;
-		default:	goto yy87;
-		}
+		if (yych == 't') goto yy1245;
+		goto yy87;
 yy1205:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1255;
+		if (yych == 'd') goto yy1246;
 		goto yy87;
 yy1206:
+		yych = *++cursor_;
+		if (yych <= '0') {
+			if (yych == '.') goto yy1248;
+			goto yy87;
+		} else {
+			if (yych <= '1') goto yy1249;
+			if (yych == '8') goto yy1250;
+			goto yy87;
+		}
+yy1207:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1251;
+		goto yy87;
+yy1208:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 328 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Unary, I32Extend16S); }
+#line 6798 "src/prebuilt/wast-lexer-gen.cc"
+yy1210:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1252;
+		goto yy87;
+yy1211:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1253;
+		goto yy87;
+yy1212:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1255;
+		goto yy87;
+yy1213:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1257;
+		goto yy87;
+yy1214:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1258;
+		goto yy87;
+yy1215:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1260;
+		goto yy87;
+yy1216:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1262;
+		goto yy87;
+yy1217:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1263;
+		goto yy87;
+yy1218:
+		yych = *++cursor_;
+		switch (yych) {
+		case '.':	goto yy1265;
+		case '1':	goto yy1266;
+		case '3':	goto yy1267;
+		case '8':	goto yy1268;
+		default:	goto yy87;
+		}
+yy1219:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1269;
+		goto yy87;
+yy1220:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 330 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, I64Extend16S); }
-#line 6791 "src/prebuilt/wast-lexer-gen.cc"
-yy1208:
+#line 6851 "src/prebuilt/wast-lexer-gen.cc"
+yy1222:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 331 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Unary, I64Extend32S); }
-#line 6799 "src/prebuilt/wast-lexer-gen.cc"
-yy1210:
-		yych = *++cursor_;
-		if (yych == '3') goto yy1256;
-		goto yy87;
-yy1211:
-		yych = *++cursor_;
-		if (yych == '3') goto yy1257;
-		goto yy87;
-yy1212:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1258;
-		goto yy87;
-yy1213:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1259;
-		goto yy87;
-yy1214:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1261;
-		goto yy87;
-yy1215:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1263;
-		goto yy87;
-yy1216:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1264;
-		goto yy87;
-yy1217:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1266;
-		goto yy87;
-yy1218:
-		yych = *++cursor_;
-		if (yych == 't') goto yy1268;
-		goto yy87;
-yy1219:
-		yych = *++cursor_;
-		if (yych == 'o') goto yy1269;
-		goto yy87;
-yy1220:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1270;
-		goto yy87;
-yy1221:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1272;
-		goto yy87;
-yy1222:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy1273;
-		goto yy87;
-yy1223:
-		yych = *++cursor_;
-		if (yych == 'l') goto yy1274;
-		goto yy87;
+#line 6859 "src/prebuilt/wast-lexer-gen.cc"
 yy1224:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1275;
-		if (yych == '6') goto yy1276;
+		if (yych == '3') goto yy1270;
 		goto yy87;
 yy1225:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1277;
-		if (yych == '6') goto yy1278;
+		if (yych == '3') goto yy1271;
 		goto yy87;
 yy1226:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1279;
+		if (yych == 't') goto yy1272;
 		goto yy87;
 yy1227:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1280;
-		if (yych == '6') goto yy1281;
+		if (yych == '2') goto yy1273;
 		goto yy87;
 yy1228:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1282;
-		if (yych == '6') goto yy1283;
+		if (yych == '4') goto yy1275;
 		goto yy87;
 yy1229:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1277;
+		goto yy87;
+yy1230:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1278;
+		goto yy87;
+yy1231:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1280;
+		goto yy87;
+yy1232:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1282;
+		goto yy87;
+yy1233:
+		yych = *++cursor_;
+		if (yych == 'o') goto yy1283;
+		goto yy87;
+yy1234:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1284;
+		goto yy87;
+yy1235:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1286;
+		goto yy87;
+yy1236:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy1287;
+		goto yy87;
+yy1237:
+		yych = *++cursor_;
+		if (yych == 'l') goto yy1288;
+		goto yy87;
+yy1238:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1289;
+		if (yych == '6') goto yy1290;
+		goto yy87;
+yy1239:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1291;
+		if (yych == '6') goto yy1292;
+		goto yy87;
+yy1240:
+		yych = *++cursor_;
+		if (yych == '/') goto yy1293;
+		goto yy87;
+yy1241:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1294;
+		if (yych == '6') goto yy1295;
+		goto yy87;
+yy1242:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1296;
+		if (yych == '6') goto yy1297;
+		goto yy87;
+yy1243:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 435 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, F64PromoteF32); }
-#line 6887 "src/prebuilt/wast-lexer-gen.cc"
-yy1231:
+#line 6947 "src/prebuilt/wast-lexer-gen.cc"
+yy1245:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1284;
+		if (yych == '/') goto yy1298;
 		goto yy87;
-yy1232:
+yy1246:
 		++cursor_;
 		if ((yych = *cursor_) <= '0') {
 			if (yych <= '"') {
@@ -6899,290 +6959,290 @@ yy1232:
 			}
 		} else {
 			if (yych <= '8') {
-				if (yych <= '1') goto yy1285;
+				if (yych <= '1') goto yy1299;
 				if (yych <= '7') goto yy86;
-				goto yy1286;
+				goto yy1300;
 			} else {
-				if (yych == ';') goto yy1233;
+				if (yych == ';') goto yy1247;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy1233:
-#line 446 "src/wast-lexer.cc"
+yy1247:
+#line 449 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(AtomicLoad, I32AtomicLoad); }
-#line 6914 "src/prebuilt/wast-lexer-gen.cc"
-yy1234:
+#line 6974 "src/prebuilt/wast-lexer-gen.cc"
+yy1248:
 		yych = *++cursor_;
 		switch (yych) {
-		case 'a':	goto yy1287;
-		case 'c':	goto yy1288;
-		case 'o':	goto yy1289;
-		case 's':	goto yy1290;
-		case 'x':	goto yy1291;
+		case 'a':	goto yy1301;
+		case 'c':	goto yy1302;
+		case 'o':	goto yy1303;
+		case 's':	goto yy1304;
+		case 'x':	goto yy1305;
 		default:	goto yy87;
 		}
-yy1235:
+yy1249:
 		yych = *++cursor_;
-		if (yych == '6') goto yy1292;
+		if (yych == '6') goto yy1306;
 		goto yy87;
-yy1236:
+yy1250:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1293;
+		if (yych == '_') goto yy1307;
 		goto yy87;
-yy1237:
+yy1251:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy1294;
+		if (yych == 'e') goto yy1308;
 		goto yy87;
-yy1238:
+yy1252:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1296;
+		if (yych == '/') goto yy1310;
 		goto yy87;
-yy1239:
+yy1253:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 411 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I32TruncSF32); }
-#line 6948 "src/prebuilt/wast-lexer-gen.cc"
-yy1241:
+#line 7008 "src/prebuilt/wast-lexer-gen.cc"
+yy1255:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 413 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I32TruncSF64); }
-#line 6956 "src/prebuilt/wast-lexer-gen.cc"
-yy1243:
+#line 7016 "src/prebuilt/wast-lexer-gen.cc"
+yy1257:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1297;
+		if (yych == '/') goto yy1311;
 		goto yy87;
-yy1244:
+yy1258:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 415 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I32TruncUF32); }
-#line 6968 "src/prebuilt/wast-lexer-gen.cc"
-yy1246:
+#line 7028 "src/prebuilt/wast-lexer-gen.cc"
+yy1260:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 417 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I32TruncUF64); }
-#line 6976 "src/prebuilt/wast-lexer-gen.cc"
-yy1248:
+#line 7036 "src/prebuilt/wast-lexer-gen.cc"
+yy1262:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1298;
+		if (yych == '/') goto yy1312;
 		goto yy87;
-yy1249:
+yy1263:
 		++cursor_;
 		if ((yych = *cursor_) <= '1') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy1250;
+				if (yych <= ')') goto yy1264;
 				if (yych <= '0') goto yy86;
-				goto yy1299;
+				goto yy1313;
 			}
 		} else {
 			if (yych <= '8') {
-				if (yych == '3') goto yy1300;
+				if (yych == '3') goto yy1314;
 				if (yych <= '7') goto yy86;
-				goto yy1301;
+				goto yy1315;
 			} else {
-				if (yych == ';') goto yy1250;
+				if (yych == ';') goto yy1264;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy1250:
-#line 447 "src/wast-lexer.cc"
+yy1264:
+#line 450 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(AtomicLoad, I64AtomicLoad); }
-#line 7005 "src/prebuilt/wast-lexer-gen.cc"
-yy1251:
+#line 7065 "src/prebuilt/wast-lexer-gen.cc"
+yy1265:
 		yych = *++cursor_;
 		switch (yych) {
-		case 'a':	goto yy1302;
-		case 'c':	goto yy1303;
-		case 'o':	goto yy1304;
-		case 's':	goto yy1305;
-		case 'x':	goto yy1306;
+		case 'a':	goto yy1316;
+		case 'c':	goto yy1317;
+		case 'o':	goto yy1318;
+		case 's':	goto yy1319;
+		case 'x':	goto yy1320;
 		default:	goto yy87;
 		}
-yy1252:
+yy1266:
 		yych = *++cursor_;
-		if (yych == '6') goto yy1307;
+		if (yych == '6') goto yy1321;
 		goto yy87;
-yy1253:
+yy1267:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1308;
+		if (yych == '2') goto yy1322;
 		goto yy87;
-yy1254:
+yy1268:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1309;
+		if (yych == '_') goto yy1323;
 		goto yy87;
-yy1255:
+yy1269:
 		yych = *++cursor_;
-		if (yych == 'e') goto yy1310;
+		if (yych == 'e') goto yy1324;
 		goto yy87;
-yy1256:
+yy1270:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1312;
+		if (yych == '2') goto yy1326;
 		goto yy87;
-yy1257:
+yy1271:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1314;
+		if (yych == '2') goto yy1328;
 		goto yy87;
-yy1258:
+yy1272:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1316;
+		if (yych == '/') goto yy1330;
 		goto yy87;
-yy1259:
+yy1273:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 412 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64TruncSF32); }
-#line 7051 "src/prebuilt/wast-lexer-gen.cc"
-yy1261:
+#line 7111 "src/prebuilt/wast-lexer-gen.cc"
+yy1275:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 414 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64TruncSF64); }
-#line 7059 "src/prebuilt/wast-lexer-gen.cc"
-yy1263:
+#line 7119 "src/prebuilt/wast-lexer-gen.cc"
+yy1277:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1317;
+		if (yych == '/') goto yy1331;
 		goto yy87;
-yy1264:
+yy1278:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 416 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64TruncUF32); }
-#line 7071 "src/prebuilt/wast-lexer-gen.cc"
-yy1266:
+#line 7131 "src/prebuilt/wast-lexer-gen.cc"
+yy1280:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 418 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64TruncUF64); }
-#line 7079 "src/prebuilt/wast-lexer-gen.cc"
-yy1268:
+#line 7139 "src/prebuilt/wast-lexer-gen.cc"
+yy1282:
 		yych = *++cursor_;
-		if (yych == '/') goto yy1318;
+		if (yych == '/') goto yy1332;
 		goto yy87;
-yy1269:
+yy1283:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy1319;
+		if (yych == 'n') goto yy1333;
 		goto yy87;
-yy1270:
+yy1284:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 531 "src/wast-lexer.cc"
+#line 534 "src/wast-lexer.cc"
 		{ RETURN(AssertMalformed); }
-#line 7095 "src/prebuilt/wast-lexer-gen.cc"
-yy1272:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1321;
-		goto yy87;
-yy1273:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy1322;
-		goto yy87;
-yy1274:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy1323;
-		goto yy87;
-yy1275:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1325;
-		goto yy87;
-yy1276:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1327;
-		goto yy87;
-yy1277:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1329;
-		goto yy87;
-yy1278:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1331;
-		goto yy87;
-yy1279:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1333;
-		goto yy87;
-yy1280:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1334;
-		goto yy87;
-yy1281:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1336;
-		goto yy87;
-yy1282:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1338;
-		goto yy87;
-yy1283:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1340;
-		goto yy87;
-yy1284:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1342;
-		goto yy87;
-yy1285:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1343;
-		goto yy87;
+#line 7155 "src/prebuilt/wast-lexer-gen.cc"
 yy1286:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1344;
+		if (yych == 'i') goto yy1335;
 		goto yy87;
 yy1287:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1345;
-		if (yych == 'n') goto yy1346;
+		if (yych == 'n') goto yy1336;
 		goto yy87;
 yy1288:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy1347;
+		if (yych == 'e') goto yy1337;
 		goto yy87;
 yy1289:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1348;
+		if (yych == '2') goto yy1339;
 		goto yy87;
 yy1290:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy1350;
+		if (yych == '4') goto yy1341;
 		goto yy87;
 yy1291:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy1351;
-		if (yych == 'o') goto yy1352;
+		if (yych == '2') goto yy1343;
 		goto yy87;
 yy1292:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1353;
+		if (yych == '4') goto yy1345;
 		goto yy87;
 yy1293:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy1354;
+		if (yych == 'i') goto yy1347;
 		goto yy87;
 yy1294:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1348;
+		goto yy87;
+yy1295:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1350;
+		goto yy87;
+yy1296:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1352;
+		goto yy87;
+yy1297:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1354;
+		goto yy87;
+yy1298:
+		yych = *++cursor_;
+		if (yych == 'i') goto yy1356;
+		goto yy87;
+yy1299:
+		yych = *++cursor_;
+		if (yych == '6') goto yy1357;
+		goto yy87;
+yy1300:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1358;
+		goto yy87;
+yy1301:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1359;
+		if (yych == 'n') goto yy1360;
+		goto yy87;
+yy1302:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy1361;
+		goto yy87;
+yy1303:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1362;
+		goto yy87;
+yy1304:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1364;
+		goto yy87;
+yy1305:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1365;
+		if (yych == 'o') goto yy1366;
+		goto yy87;
+yy1306:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1367;
+		goto yy87;
+yy1307:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1368;
+		goto yy87;
+yy1308:
 		++cursor_;
 		if ((yych = *cursor_) <= '0') {
 			if (yych <= '"') {
@@ -7193,750 +7253,650 @@ yy1294:
 			}
 		} else {
 			if (yych <= '8') {
-				if (yych <= '1') goto yy1355;
+				if (yych <= '1') goto yy1369;
 				if (yych <= '7') goto yy86;
-				goto yy1356;
+				goto yy1370;
 			} else {
-				if (yych == ';') goto yy1295;
+				if (yych == ';') goto yy1309;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy1295:
-#line 453 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicStore, I32AtomicStore); }
-#line 7208 "src/prebuilt/wast-lexer-gen.cc"
-yy1296:
-		yych = *++cursor_;
-		if (yych == 'f') goto yy1358;
-		goto yy87;
-yy1297:
-		yych = *++cursor_;
-		if (yych == 'f') goto yy1359;
-		goto yy87;
-yy1298:
-		yych = *++cursor_;
-		if (yych == 'f') goto yy1360;
-		goto yy87;
-yy1299:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1361;
-		goto yy87;
-yy1300:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1362;
-		goto yy87;
-yy1301:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1363;
-		goto yy87;
-yy1302:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1364;
-		if (yych == 'n') goto yy1365;
-		goto yy87;
-yy1303:
-		yych = *++cursor_;
-		if (yych == 'm') goto yy1366;
-		goto yy87;
-yy1304:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1367;
-		goto yy87;
-yy1305:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1369;
-		goto yy87;
-yy1306:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1370;
-		if (yych == 'o') goto yy1371;
-		goto yy87;
-yy1307:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1372;
-		goto yy87;
-yy1308:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1373;
-		goto yy87;
 yy1309:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1374;
-		goto yy87;
+#line 456 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicStore, I32AtomicStore); }
+#line 7268 "src/prebuilt/wast-lexer-gen.cc"
 yy1310:
+		yych = *++cursor_;
+		if (yych == 'f') goto yy1372;
+		goto yy87;
+yy1311:
+		yych = *++cursor_;
+		if (yych == 'f') goto yy1373;
+		goto yy87;
+yy1312:
+		yych = *++cursor_;
+		if (yych == 'f') goto yy1374;
+		goto yy87;
+yy1313:
+		yych = *++cursor_;
+		if (yych == '6') goto yy1375;
+		goto yy87;
+yy1314:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1376;
+		goto yy87;
+yy1315:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1377;
+		goto yy87;
+yy1316:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1378;
+		if (yych == 'n') goto yy1379;
+		goto yy87;
+yy1317:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy1380;
+		goto yy87;
+yy1318:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1381;
+		goto yy87;
+yy1319:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1383;
+		goto yy87;
+yy1320:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1384;
+		if (yych == 'o') goto yy1385;
+		goto yy87;
+yy1321:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1386;
+		goto yy87;
+yy1322:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1387;
+		goto yy87;
+yy1323:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1388;
+		goto yy87;
+yy1324:
 		++cursor_;
 		if ((yych = *cursor_) <= '1') {
 			if (yych <= '"') {
 				if (yych == '!') goto yy86;
 			} else {
 				if (yych <= '\'') goto yy86;
-				if (yych <= ')') goto yy1311;
+				if (yych <= ')') goto yy1325;
 				if (yych <= '0') goto yy86;
-				goto yy1375;
+				goto yy1389;
 			}
 		} else {
 			if (yych <= '8') {
-				if (yych == '3') goto yy1376;
+				if (yych == '3') goto yy1390;
 				if (yych <= '7') goto yy86;
-				goto yy1377;
+				goto yy1391;
 			} else {
-				if (yych == ';') goto yy1311;
+				if (yych == ';') goto yy1325;
 				if (yych <= '~') goto yy86;
 			}
 		}
-yy1311:
-#line 454 "src/wast-lexer.cc"
+yy1325:
+#line 457 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(AtomicStore, I64AtomicStore); }
-#line 7291 "src/prebuilt/wast-lexer-gen.cc"
-yy1312:
+#line 7351 "src/prebuilt/wast-lexer-gen.cc"
+yy1326:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 408 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64ExtendSI32); }
-#line 7299 "src/prebuilt/wast-lexer-gen.cc"
-yy1314:
+#line 7359 "src/prebuilt/wast-lexer-gen.cc"
+yy1328:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 409 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64ExtendUI32); }
-#line 7307 "src/prebuilt/wast-lexer-gen.cc"
-yy1316:
+#line 7367 "src/prebuilt/wast-lexer-gen.cc"
+yy1330:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1379;
+		if (yych == 'f') goto yy1393;
 		goto yy87;
-yy1317:
+yy1331:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1380;
+		if (yych == 'f') goto yy1394;
 		goto yy87;
-yy1318:
+yy1332:
 		yych = *++cursor_;
-		if (yych == 'f') goto yy1381;
+		if (yych == 'f') goto yy1395;
 		goto yy87;
-yy1319:
+yy1333:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 538 "src/wast-lexer.cc"
+#line 541 "src/wast-lexer.cc"
 		{ RETURN(AssertExhaustion); }
-#line 7327 "src/prebuilt/wast-lexer-gen.cc"
-yy1321:
+#line 7387 "src/prebuilt/wast-lexer-gen.cc"
+yy1335:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1382;
+		if (yych == 't') goto yy1396;
 		goto yy87;
-yy1322:
+yy1336:
 		yych = *++cursor_;
-		if (yych == 'o') goto yy1383;
+		if (yych == 'o') goto yy1397;
 		goto yy87;
-yy1323:
+yy1337:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 533 "src/wast-lexer.cc"
+#line 536 "src/wast-lexer.cc"
 		{ RETURN(AssertUnlinkable); }
-#line 7343 "src/prebuilt/wast-lexer-gen.cc"
-yy1325:
+#line 7403 "src/prebuilt/wast-lexer-gen.cc"
+yy1339:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 427 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, F32ConvertSI32); }
-#line 7351 "src/prebuilt/wast-lexer-gen.cc"
-yy1327:
+#line 7411 "src/prebuilt/wast-lexer-gen.cc"
+yy1341:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 429 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, F32ConvertSI64); }
-#line 7359 "src/prebuilt/wast-lexer-gen.cc"
-yy1329:
+#line 7419 "src/prebuilt/wast-lexer-gen.cc"
+yy1343:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 431 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, F32ConvertUI32); }
-#line 7367 "src/prebuilt/wast-lexer-gen.cc"
-yy1331:
+#line 7427 "src/prebuilt/wast-lexer-gen.cc"
+yy1345:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 433 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, F32ConvertUI64); }
-#line 7375 "src/prebuilt/wast-lexer-gen.cc"
-yy1333:
-		yych = *++cursor_;
-		if (yych == '3') goto yy1384;
-		goto yy87;
-yy1334:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 428 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, F64ConvertSI32); }
-#line 7387 "src/prebuilt/wast-lexer-gen.cc"
-yy1336:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 430 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, F64ConvertSI64); }
-#line 7395 "src/prebuilt/wast-lexer-gen.cc"
-yy1338:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 432 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, F64ConvertUI32); }
-#line 7403 "src/prebuilt/wast-lexer-gen.cc"
-yy1340:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 434 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, F64ConvertUI64); }
-#line 7411 "src/prebuilt/wast-lexer-gen.cc"
-yy1342:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1385;
-		goto yy87;
-yy1343:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1386;
-		goto yy87;
-yy1344:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1387;
-		goto yy87;
-yy1345:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1389;
-		goto yy87;
-yy1346:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1391;
-		goto yy87;
+#line 7435 "src/prebuilt/wast-lexer-gen.cc"
 yy1347:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1393;
+		if (yych == '3') goto yy1398;
 		goto yy87;
 yy1348:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 481 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwOr); }
-#line 7443 "src/prebuilt/wast-lexer-gen.cc"
+#line 428 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, F64ConvertSI32); }
+#line 7447 "src/prebuilt/wast-lexer-gen.cc"
 yy1350:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy1394;
-		goto yy87;
-yy1351:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1396;
-		goto yy87;
-yy1352:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1397;
-		goto yy87;
-yy1353:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1399;
-		goto yy87;
-yy1354:
-		yych = *++cursor_;
-		if (yych == '.') goto yy1400;
-		goto yy87;
-yy1355:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1401;
-		goto yy87;
-yy1356:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 455 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicStore, I32AtomicStore8); }
-#line 7475 "src/prebuilt/wast-lexer-gen.cc"
+#line 430 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, F64ConvertSI64); }
+#line 7455 "src/prebuilt/wast-lexer-gen.cc"
+yy1352:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 432 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, F64ConvertUI32); }
+#line 7463 "src/prebuilt/wast-lexer-gen.cc"
+yy1354:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 434 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, F64ConvertUI64); }
+#line 7471 "src/prebuilt/wast-lexer-gen.cc"
+yy1356:
+		yych = *++cursor_;
+		if (yych == '6') goto yy1399;
+		goto yy87;
+yy1357:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1400;
+		goto yy87;
 yy1358:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1403;
+		if (yych == 'u') goto yy1401;
 		goto yy87;
 yy1359:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1404;
-		if (yych == '6') goto yy1405;
+		if (yych == 'd') goto yy1403;
 		goto yy87;
 yy1360:
 		yych = *++cursor_;
-		if (yych == '3') goto yy1406;
-		if (yych == '6') goto yy1407;
+		if (yych == 'd') goto yy1405;
 		goto yy87;
 yy1361:
 		yych = *++cursor_;
-		if (yych == '_') goto yy1408;
+		if (yych == 'p') goto yy1407;
 		goto yy87;
 yy1362:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1409;
-		goto yy87;
-yy1363:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1410;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 484 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwOr); }
+#line 7503 "src/prebuilt/wast-lexer-gen.cc"
 yy1364:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1412;
+		if (yych == 'b') goto yy1408;
 		goto yy87;
 yy1365:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1414;
+		if (yych == 'h') goto yy1410;
 		goto yy87;
 yy1366:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1416;
+		if (yych == 'r') goto yy1411;
 		goto yy87;
 yy1367:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 482 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwOr); }
-#line 7521 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1413;
+		goto yy87;
+yy1368:
+		yych = *++cursor_;
+		if (yych == '.') goto yy1414;
+		goto yy87;
 yy1369:
 		yych = *++cursor_;
-		if (yych == 'b') goto yy1417;
+		if (yych == '6') goto yy1415;
 		goto yy87;
 yy1370:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1419;
-		goto yy87;
-yy1371:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1420;
-		goto yy87;
-yy1372:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1422;
-		goto yy87;
-yy1373:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1423;
-		goto yy87;
-yy1374:
-		yych = *++cursor_;
-		if (yych == '.') goto yy1424;
-		goto yy87;
-yy1375:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1425;
-		goto yy87;
-yy1376:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1427;
-		goto yy87;
-yy1377:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 457 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicStore, I64AtomicStore8); }
-#line 7561 "src/prebuilt/wast-lexer-gen.cc"
-yy1379:
-		yych = *++cursor_;
-		if (yych == '6') goto yy1429;
-		goto yy87;
-yy1380:
-		yych = *++cursor_;
-		if (yych == '3') goto yy1430;
-		if (yych == '6') goto yy1431;
-		goto yy87;
-yy1381:
-		yych = *++cursor_;
-		if (yych == '3') goto yy1432;
-		if (yych == '6') goto yy1433;
-		goto yy87;
-yy1382:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1434;
-		goto yy87;
-yy1383:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy1435;
-		goto yy87;
-yy1384:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1436;
-		goto yy87;
-yy1385:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1438;
-		goto yy87;
-yy1386:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1440;
-		goto yy87;
-yy1387:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 448 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicLoad, I32AtomicLoad8U); }
-#line 7603 "src/prebuilt/wast-lexer-gen.cc"
-yy1389:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 460 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwAdd); }
-#line 7611 "src/prebuilt/wast-lexer-gen.cc"
-yy1391:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 474 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwAnd); }
-#line 7619 "src/prebuilt/wast-lexer-gen.cc"
-yy1393:
-		yych = *++cursor_;
-		if (yych == 'x') goto yy1442;
-		goto yy87;
-yy1394:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 467 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwSub); }
-#line 7631 "src/prebuilt/wast-lexer-gen.cc"
-yy1396:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1443;
-		goto yy87;
-yy1397:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 488 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwXor); }
-#line 7643 "src/prebuilt/wast-lexer-gen.cc"
-yy1399:
-		yych = *++cursor_;
-		if (yych == '.') goto yy1445;
-		goto yy87;
-yy1400:
-		yych = *++cursor_;
-		switch (yych) {
-		case 'a':	goto yy1446;
-		case 'c':	goto yy1447;
-		case 'o':	goto yy1448;
-		case 's':	goto yy1449;
-		case 'x':	goto yy1450;
-		default:	goto yy87;
-		}
-yy1401:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 456 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicStore, I32AtomicStore16); }
-#line 7665 "src/prebuilt/wast-lexer-gen.cc"
-yy1403:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1451;
-		goto yy87;
-yy1404:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1453;
-		goto yy87;
-yy1405:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1455;
-		goto yy87;
-yy1406:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1457;
-		goto yy87;
-yy1407:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1459;
-		goto yy87;
-yy1408:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1461;
-		goto yy87;
-yy1409:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1463;
-		goto yy87;
-yy1410:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 450 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicLoad, I64AtomicLoad8U); }
-#line 7701 "src/prebuilt/wast-lexer-gen.cc"
-yy1412:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 461 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwAdd); }
-#line 7709 "src/prebuilt/wast-lexer-gen.cc"
-yy1414:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 475 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwAnd); }
-#line 7717 "src/prebuilt/wast-lexer-gen.cc"
-yy1416:
-		yych = *++cursor_;
-		if (yych == 'x') goto yy1465;
-		goto yy87;
-yy1417:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 468 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwSub); }
-#line 7729 "src/prebuilt/wast-lexer-gen.cc"
-yy1419:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1466;
-		goto yy87;
-yy1420:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 489 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwXor); }
-#line 7741 "src/prebuilt/wast-lexer-gen.cc"
-yy1422:
-		yych = *++cursor_;
-		if (yych == '.') goto yy1468;
-		goto yy87;
-yy1423:
-		yych = *++cursor_;
-		if (yych == '.') goto yy1469;
-		goto yy87;
-yy1424:
-		yych = *++cursor_;
-		switch (yych) {
-		case 'a':	goto yy1470;
-		case 'c':	goto yy1471;
-		case 'o':	goto yy1472;
-		case 's':	goto yy1473;
-		case 'x':	goto yy1474;
-		default:	goto yy87;
-		}
-yy1425:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 458 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicStore, I64AtomicStore16); }
-#line 7767 "src/prebuilt/wast-lexer-gen.cc"
-yy1427:
+		{ RETURN_OPCODE(AtomicStore, I32AtomicStore8); }
+#line 7535 "src/prebuilt/wast-lexer-gen.cc"
+yy1372:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1417;
+		goto yy87;
+yy1373:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1418;
+		if (yych == '6') goto yy1419;
+		goto yy87;
+yy1374:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1420;
+		if (yych == '6') goto yy1421;
+		goto yy87;
+yy1375:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1422;
+		goto yy87;
+yy1376:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1423;
+		goto yy87;
+yy1377:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1424;
+		goto yy87;
+yy1378:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1426;
+		goto yy87;
+yy1379:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1428;
+		goto yy87;
+yy1380:
+		yych = *++cursor_;
+		if (yych == 'p') goto yy1430;
+		goto yy87;
+yy1381:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 485 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwOr); }
+#line 7581 "src/prebuilt/wast-lexer-gen.cc"
+yy1383:
+		yych = *++cursor_;
+		if (yych == 'b') goto yy1431;
+		goto yy87;
+yy1384:
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1433;
+		goto yy87;
+yy1385:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1434;
+		goto yy87;
+yy1386:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1436;
+		goto yy87;
+yy1387:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1437;
+		goto yy87;
+yy1388:
+		yych = *++cursor_;
+		if (yych == '.') goto yy1438;
+		goto yy87;
+yy1389:
+		yych = *++cursor_;
+		if (yych == '6') goto yy1439;
+		goto yy87;
+yy1390:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1441;
+		goto yy87;
+yy1391:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 460 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicStore, I64AtomicStore8); }
+#line 7621 "src/prebuilt/wast-lexer-gen.cc"
+yy1393:
+		yych = *++cursor_;
+		if (yych == '6') goto yy1443;
+		goto yy87;
+yy1394:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1444;
+		if (yych == '6') goto yy1445;
+		goto yy87;
+yy1395:
+		yych = *++cursor_;
+		if (yych == '3') goto yy1446;
+		if (yych == '6') goto yy1447;
+		goto yy87;
+yy1396:
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1448;
+		goto yy87;
+yy1397:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy1449;
+		goto yy87;
+yy1398:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1450;
+		goto yy87;
+yy1399:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1452;
+		goto yy87;
+yy1400:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1454;
+		goto yy87;
+yy1401:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 451 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicLoad, I32AtomicLoad8U); }
+#line 7663 "src/prebuilt/wast-lexer-gen.cc"
+yy1403:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 463 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwAdd); }
+#line 7671 "src/prebuilt/wast-lexer-gen.cc"
+yy1405:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 477 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwAnd); }
+#line 7679 "src/prebuilt/wast-lexer-gen.cc"
+yy1407:
+		yych = *++cursor_;
+		if (yych == 'x') goto yy1456;
+		goto yy87;
+yy1408:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 470 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwSub); }
+#line 7691 "src/prebuilt/wast-lexer-gen.cc"
+yy1410:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1457;
+		goto yy87;
+yy1411:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 491 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwXor); }
+#line 7703 "src/prebuilt/wast-lexer-gen.cc"
+yy1413:
+		yych = *++cursor_;
+		if (yych == '.') goto yy1459;
+		goto yy87;
+yy1414:
+		yych = *++cursor_;
+		switch (yych) {
+		case 'a':	goto yy1460;
+		case 'c':	goto yy1461;
+		case 'o':	goto yy1462;
+		case 's':	goto yy1463;
+		case 'x':	goto yy1464;
+		default:	goto yy87;
+		}
+yy1415:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 459 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicStore, I64AtomicStore32); }
-#line 7775 "src/prebuilt/wast-lexer-gen.cc"
-yy1429:
+		{ RETURN_OPCODE(AtomicStore, I32AtomicStore16); }
+#line 7725 "src/prebuilt/wast-lexer-gen.cc"
+yy1417:
 		yych = *++cursor_;
-		if (yych == '4') goto yy1475;
+		if (yych == '2') goto yy1465;
 		goto yy87;
+yy1418:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1467;
+		goto yy87;
+yy1419:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1469;
+		goto yy87;
+yy1420:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1471;
+		goto yy87;
+yy1421:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1473;
+		goto yy87;
+yy1422:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1475;
+		goto yy87;
+yy1423:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1477;
+		goto yy87;
+yy1424:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 453 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicLoad, I64AtomicLoad8U); }
+#line 7761 "src/prebuilt/wast-lexer-gen.cc"
+yy1426:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 464 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwAdd); }
+#line 7769 "src/prebuilt/wast-lexer-gen.cc"
+yy1428:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 478 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwAnd); }
+#line 7777 "src/prebuilt/wast-lexer-gen.cc"
 yy1430:
 		yych = *++cursor_;
-		if (yych == '2') goto yy1477;
+		if (yych == 'x') goto yy1479;
 		goto yy87;
 yy1431:
-		yych = *++cursor_;
-		if (yych == '4') goto yy1479;
-		goto yy87;
-yy1432:
-		yych = *++cursor_;
-		if (yych == '2') goto yy1481;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 471 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwSub); }
+#line 7789 "src/prebuilt/wast-lexer-gen.cc"
 yy1433:
 		yych = *++cursor_;
-		if (yych == '4') goto yy1483;
+		if (yych == 'g') goto yy1480;
 		goto yy87;
 yy1434:
-		yych = *++cursor_;
-		if (yych == 'm') goto yy1485;
-		goto yy87;
-yy1435:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1486;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 492 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwXor); }
+#line 7801 "src/prebuilt/wast-lexer-gen.cc"
 yy1436:
+		yych = *++cursor_;
+		if (yych == '.') goto yy1482;
+		goto yy87;
+yy1437:
+		yych = *++cursor_;
+		if (yych == '.') goto yy1483;
+		goto yy87;
+yy1438:
+		yych = *++cursor_;
+		switch (yych) {
+		case 'a':	goto yy1484;
+		case 'c':	goto yy1485;
+		case 'o':	goto yy1486;
+		case 's':	goto yy1487;
+		case 'x':	goto yy1488;
+		default:	goto yy87;
+		}
+yy1439:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 461 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicStore, I64AtomicStore16); }
+#line 7827 "src/prebuilt/wast-lexer-gen.cc"
+yy1441:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 462 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicStore, I64AtomicStore32); }
+#line 7835 "src/prebuilt/wast-lexer-gen.cc"
+yy1443:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1489;
+		goto yy87;
+yy1444:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1491;
+		goto yy87;
+yy1445:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1493;
+		goto yy87;
+yy1446:
+		yych = *++cursor_;
+		if (yych == '2') goto yy1495;
+		goto yy87;
+yy1447:
+		yych = *++cursor_;
+		if (yych == '4') goto yy1497;
+		goto yy87;
+yy1448:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy1499;
+		goto yy87;
+yy1449:
+		yych = *++cursor_;
+		if (yych == 'i') goto yy1500;
+		goto yy87;
+yy1450:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 437 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, F32ReinterpretI32); }
-#line 7811 "src/prebuilt/wast-lexer-gen.cc"
-yy1438:
+#line 7871 "src/prebuilt/wast-lexer-gen.cc"
+yy1452:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 439 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, F64ReinterpretI64); }
-#line 7819 "src/prebuilt/wast-lexer-gen.cc"
-yy1440:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 449 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicLoad, I32AtomicLoad16U); }
-#line 7827 "src/prebuilt/wast-lexer-gen.cc"
-yy1442:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1487;
-		goto yy87;
-yy1443:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 495 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwXchg); }
-#line 7839 "src/prebuilt/wast-lexer-gen.cc"
-yy1445:
-		yych = *++cursor_;
-		switch (yych) {
-		case 'a':	goto yy1488;
-		case 'c':	goto yy1489;
-		case 'o':	goto yy1490;
-		case 's':	goto yy1491;
-		case 'x':	goto yy1492;
-		default:	goto yy87;
-		}
-yy1446:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1493;
-		if (yych == 'n') goto yy1494;
-		goto yy87;
-yy1447:
-		yych = *++cursor_;
-		if (yych == 'm') goto yy1495;
-		goto yy87;
-yy1448:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1496;
-		goto yy87;
-yy1449:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1498;
-		goto yy87;
-yy1450:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1499;
-		if (yych == 'o') goto yy1500;
-		goto yy87;
-yy1451:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 438 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, I32ReinterpretF32); }
 #line 7879 "src/prebuilt/wast-lexer-gen.cc"
-yy1453:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 419 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, I32TruncSSatF32); }
-#line 7887 "src/prebuilt/wast-lexer-gen.cc"
-yy1455:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 421 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, I32TruncSSatF64); }
-#line 7895 "src/prebuilt/wast-lexer-gen.cc"
-yy1457:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 423 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, I32TruncUSatF32); }
-#line 7903 "src/prebuilt/wast-lexer-gen.cc"
-yy1459:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 425 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(Convert, I32TruncUSatF64); }
-#line 7911 "src/prebuilt/wast-lexer-gen.cc"
-yy1461:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 451 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicLoad, I64AtomicLoad16U); }
-#line 7919 "src/prebuilt/wast-lexer-gen.cc"
-yy1463:
+yy1454:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 452 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicLoad, I64AtomicLoad32U); }
-#line 7927 "src/prebuilt/wast-lexer-gen.cc"
-yy1465:
+		{ RETURN_OPCODE(AtomicLoad, I32AtomicLoad16U); }
+#line 7887 "src/prebuilt/wast-lexer-gen.cc"
+yy1456:
 		yych = *++cursor_;
 		if (yych == 'c') goto yy1501;
 		goto yy87;
-yy1466:
+yy1457:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 496 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwXchg); }
-#line 7939 "src/prebuilt/wast-lexer-gen.cc"
-yy1468:
+#line 498 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmwXchg); }
+#line 7899 "src/prebuilt/wast-lexer-gen.cc"
+yy1459:
 		yych = *++cursor_;
 		switch (yych) {
 		case 'a':	goto yy1502;
@@ -7946,755 +7906,855 @@ yy1468:
 		case 'x':	goto yy1506;
 		default:	goto yy87;
 		}
+yy1460:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1507;
+		if (yych == 'n') goto yy1508;
+		goto yy87;
+yy1461:
+		yych = *++cursor_;
+		if (yych == 'm') goto yy1509;
+		goto yy87;
+yy1462:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1510;
+		goto yy87;
+yy1463:
+		yych = *++cursor_;
+		if (yych == 'u') goto yy1512;
+		goto yy87;
+yy1464:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1513;
+		if (yych == 'o') goto yy1514;
+		goto yy87;
+yy1465:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 438 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, I32ReinterpretF32); }
+#line 7939 "src/prebuilt/wast-lexer-gen.cc"
+yy1467:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 419 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, I32TruncSSatF32); }
+#line 7947 "src/prebuilt/wast-lexer-gen.cc"
 yy1469:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 421 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, I32TruncSSatF64); }
+#line 7955 "src/prebuilt/wast-lexer-gen.cc"
+yy1471:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 423 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, I32TruncUSatF32); }
+#line 7963 "src/prebuilt/wast-lexer-gen.cc"
+yy1473:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 425 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(Convert, I32TruncUSatF64); }
+#line 7971 "src/prebuilt/wast-lexer-gen.cc"
+yy1475:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 454 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicLoad, I64AtomicLoad16U); }
+#line 7979 "src/prebuilt/wast-lexer-gen.cc"
+yy1477:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 455 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicLoad, I64AtomicLoad32U); }
+#line 7987 "src/prebuilt/wast-lexer-gen.cc"
+yy1479:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1515;
+		goto yy87;
+yy1480:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 499 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmwXchg); }
+#line 7999 "src/prebuilt/wast-lexer-gen.cc"
+yy1482:
 		yych = *++cursor_;
 		switch (yych) {
-		case 'a':	goto yy1507;
-		case 'c':	goto yy1508;
-		case 'o':	goto yy1509;
-		case 's':	goto yy1510;
-		case 'x':	goto yy1511;
+		case 'a':	goto yy1516;
+		case 'c':	goto yy1517;
+		case 'o':	goto yy1518;
+		case 's':	goto yy1519;
+		case 'x':	goto yy1520;
 		default:	goto yy87;
 		}
-yy1470:
+yy1483:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1512;
-		if (yych == 'n') goto yy1513;
-		goto yy87;
-yy1471:
+		switch (yych) {
+		case 'a':	goto yy1521;
+		case 'c':	goto yy1522;
+		case 'o':	goto yy1523;
+		case 's':	goto yy1524;
+		case 'x':	goto yy1525;
+		default:	goto yy87;
+		}
+yy1484:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy1514;
+		if (yych == 'd') goto yy1526;
+		if (yych == 'n') goto yy1527;
 		goto yy87;
-yy1472:
+yy1485:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1515;
+		if (yych == 'm') goto yy1528;
 		goto yy87;
-yy1473:
+yy1486:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy1517;
+		if (yych == 'r') goto yy1529;
 		goto yy87;
-yy1474:
+yy1487:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy1518;
-		if (yych == 'o') goto yy1519;
+		if (yych == 'u') goto yy1531;
 		goto yy87;
-yy1475:
+yy1488:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1532;
+		if (yych == 'o') goto yy1533;
+		goto yy87;
+yy1489:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 440 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64ReinterpretF64); }
-#line 7989 "src/prebuilt/wast-lexer-gen.cc"
-yy1477:
+#line 8049 "src/prebuilt/wast-lexer-gen.cc"
+yy1491:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 420 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64TruncSSatF32); }
-#line 7997 "src/prebuilt/wast-lexer-gen.cc"
-yy1479:
+#line 8057 "src/prebuilt/wast-lexer-gen.cc"
+yy1493:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 422 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64TruncSSatF64); }
-#line 8005 "src/prebuilt/wast-lexer-gen.cc"
-yy1481:
+#line 8065 "src/prebuilt/wast-lexer-gen.cc"
+yy1495:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 424 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64TruncUSatF32); }
-#line 8013 "src/prebuilt/wast-lexer-gen.cc"
-yy1483:
+#line 8073 "src/prebuilt/wast-lexer-gen.cc"
+yy1497:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 426 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(Convert, I64TruncUSatF64); }
-#line 8021 "src/prebuilt/wast-lexer-gen.cc"
-yy1485:
-		yych = *++cursor_;
-		if (yych == 'e') goto yy1520;
-		goto yy87;
-yy1486:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1521;
-		goto yy87;
-yy1487:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1522;
-		goto yy87;
-yy1488:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1523;
-		if (yych == 'n') goto yy1524;
-		goto yy87;
-yy1489:
-		yych = *++cursor_;
-		if (yych == 'm') goto yy1525;
-		goto yy87;
-yy1490:
-		yych = *++cursor_;
-		if (yych == 'r') goto yy1526;
-		goto yy87;
-yy1491:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1528;
-		goto yy87;
-yy1492:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1529;
-		if (yych == 'o') goto yy1530;
-		goto yy87;
-yy1493:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1531;
-		goto yy87;
-yy1494:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1533;
-		goto yy87;
-yy1495:
-		yych = *++cursor_;
-		if (yych == 'p') goto yy1535;
-		goto yy87;
-yy1496:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 483 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UOr); }
-#line 8075 "src/prebuilt/wast-lexer-gen.cc"
-yy1498:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy1536;
-		goto yy87;
+#line 8081 "src/prebuilt/wast-lexer-gen.cc"
 yy1499:
 		yych = *++cursor_;
-		if (yych == 'h') goto yy1538;
+		if (yych == 'e') goto yy1534;
 		goto yy87;
 yy1500:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1539;
+		if (yych == 'c') goto yy1535;
 		goto yy87;
 yy1501:
 		yych = *++cursor_;
-		if (yych == 'h') goto yy1541;
+		if (yych == 'h') goto yy1536;
 		goto yy87;
 yy1502:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1542;
-		if (yych == 'n') goto yy1543;
+		if (yych == 'd') goto yy1537;
+		if (yych == 'n') goto yy1538;
 		goto yy87;
 yy1503:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy1544;
+		if (yych == 'm') goto yy1539;
 		goto yy87;
 yy1504:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1545;
+		if (yych == 'r') goto yy1540;
 		goto yy87;
 yy1505:
 		yych = *++cursor_;
-		if (yych == 'u') goto yy1547;
+		if (yych == 'u') goto yy1542;
 		goto yy87;
 yy1506:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy1548;
-		if (yych == 'o') goto yy1549;
+		if (yych == 'c') goto yy1543;
+		if (yych == 'o') goto yy1544;
 		goto yy87;
 yy1507:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1550;
-		if (yych == 'n') goto yy1551;
+		if (yych == 'd') goto yy1545;
 		goto yy87;
 yy1508:
 		yych = *++cursor_;
-		if (yych == 'm') goto yy1552;
+		if (yych == 'd') goto yy1547;
 		goto yy87;
 yy1509:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1553;
+		if (yych == 'p') goto yy1549;
 		goto yy87;
 yy1510:
-		yych = *++cursor_;
-		if (yych == 'u') goto yy1555;
-		goto yy87;
-yy1511:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1556;
-		if (yych == 'o') goto yy1557;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 486 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UOr); }
+#line 8135 "src/prebuilt/wast-lexer-gen.cc"
 yy1512:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1558;
+		if (yych == 'b') goto yy1550;
 		goto yy87;
 yy1513:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1560;
+		if (yych == 'h') goto yy1552;
 		goto yy87;
 yy1514:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1562;
+		if (yych == 'r') goto yy1553;
 		goto yy87;
 yy1515:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 485 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UOr); }
-#line 8155 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1555;
+		goto yy87;
+yy1516:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1556;
+		if (yych == 'n') goto yy1557;
+		goto yy87;
 yy1517:
 		yych = *++cursor_;
-		if (yych == 'b') goto yy1563;
+		if (yych == 'm') goto yy1558;
 		goto yy87;
 yy1518:
 		yych = *++cursor_;
-		if (yych == 'h') goto yy1565;
+		if (yych == 'r') goto yy1559;
 		goto yy87;
 yy1519:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1566;
+		if (yych == 'u') goto yy1561;
 		goto yy87;
 yy1520:
 		yych = *++cursor_;
-		if (yych == 't') goto yy1568;
+		if (yych == 'c') goto yy1562;
+		if (yych == 'o') goto yy1563;
 		goto yy87;
 yy1521:
 		yych = *++cursor_;
-		if (yych == 'a') goto yy1569;
+		if (yych == 'd') goto yy1564;
+		if (yych == 'n') goto yy1565;
 		goto yy87;
 yy1522:
 		yych = *++cursor_;
-		if (yych == 'g') goto yy1570;
+		if (yych == 'm') goto yy1566;
 		goto yy87;
 yy1523:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1572;
+		if (yych == 'r') goto yy1567;
 		goto yy87;
 yy1524:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1574;
+		if (yych == 'u') goto yy1569;
 		goto yy87;
 yy1525:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1576;
+		if (yych == 'c') goto yy1570;
+		if (yych == 'o') goto yy1571;
 		goto yy87;
 yy1526:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1572;
+		goto yy87;
+yy1527:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1574;
+		goto yy87;
+yy1528:
+		yych = *++cursor_;
+		if (yych == 'p') goto yy1576;
+		goto yy87;
+yy1529:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 484 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UOr); }
-#line 8199 "src/prebuilt/wast-lexer-gen.cc"
-yy1528:
+#line 488 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UOr); }
+#line 8215 "src/prebuilt/wast-lexer-gen.cc"
+yy1531:
 		yych = *++cursor_;
 		if (yych == 'b') goto yy1577;
 		goto yy87;
-yy1529:
+yy1532:
 		yych = *++cursor_;
 		if (yych == 'h') goto yy1579;
 		goto yy87;
-yy1530:
+yy1533:
 		yych = *++cursor_;
 		if (yych == 'r') goto yy1580;
 		goto yy87;
-yy1531:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 462 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UAdd); }
-#line 8219 "src/prebuilt/wast-lexer-gen.cc"
-yy1533:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 476 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UAnd); }
-#line 8227 "src/prebuilt/wast-lexer-gen.cc"
+yy1534:
+		yych = *++cursor_;
+		if (yych == 't') goto yy1582;
+		goto yy87;
 yy1535:
 		yych = *++cursor_;
-		if (yych == 'x') goto yy1582;
+		if (yych == 'a') goto yy1583;
 		goto yy87;
 yy1536:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 469 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8USub); }
-#line 8239 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1584;
+		goto yy87;
+yy1537:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1586;
+		goto yy87;
 yy1538:
 		yych = *++cursor_;
-		if (yych == 'g') goto yy1583;
+		if (yych == 'd') goto yy1588;
 		goto yy87;
 yy1539:
+		yych = *++cursor_;
+		if (yych == 'p') goto yy1590;
+		goto yy87;
+yy1540:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 490 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UXor); }
-#line 8251 "src/prebuilt/wast-lexer-gen.cc"
-yy1541:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1585;
-		goto yy87;
+#line 487 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UOr); }
+#line 8259 "src/prebuilt/wast-lexer-gen.cc"
 yy1542:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1587;
+		if (yych == 'b') goto yy1591;
 		goto yy87;
 yy1543:
 		yych = *++cursor_;
-		if (yych == 'd') goto yy1589;
+		if (yych == 'h') goto yy1593;
 		goto yy87;
 yy1544:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1591;
+		if (yych == 'r') goto yy1594;
 		goto yy87;
 yy1545:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 486 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UOr); }
-#line 8275 "src/prebuilt/wast-lexer-gen.cc"
+#line 465 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UAdd); }
+#line 8279 "src/prebuilt/wast-lexer-gen.cc"
 yy1547:
-		yych = *++cursor_;
-		if (yych == 'b') goto yy1592;
-		goto yy87;
-yy1548:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1594;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 479 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UAnd); }
+#line 8287 "src/prebuilt/wast-lexer-gen.cc"
 yy1549:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1595;
+		if (yych == 'x') goto yy1596;
 		goto yy87;
 yy1550:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1597;
-		goto yy87;
-yy1551:
-		yych = *++cursor_;
-		if (yych == 'd') goto yy1599;
-		goto yy87;
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 472 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8USub); }
+#line 8299 "src/prebuilt/wast-lexer-gen.cc"
 yy1552:
 		yych = *++cursor_;
-		if (yych == 'p') goto yy1601;
+		if (yych == 'g') goto yy1597;
 		goto yy87;
 yy1553:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 487 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UOr); }
-#line 8307 "src/prebuilt/wast-lexer-gen.cc"
+#line 493 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UXor); }
+#line 8311 "src/prebuilt/wast-lexer-gen.cc"
 yy1555:
 		yych = *++cursor_;
-		if (yych == 'b') goto yy1602;
+		if (yych == 'g') goto yy1599;
 		goto yy87;
 yy1556:
 		yych = *++cursor_;
-		if (yych == 'h') goto yy1604;
+		if (yych == 'd') goto yy1601;
 		goto yy87;
 yy1557:
 		yych = *++cursor_;
-		if (yych == 'r') goto yy1605;
+		if (yych == 'd') goto yy1603;
 		goto yy87;
 yy1558:
+		yych = *++cursor_;
+		if (yych == 'p') goto yy1605;
+		goto yy87;
+yy1559:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 464 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UAdd); }
-#line 8327 "src/prebuilt/wast-lexer-gen.cc"
-yy1560:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 478 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UAnd); }
+#line 489 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UOr); }
 #line 8335 "src/prebuilt/wast-lexer-gen.cc"
+yy1561:
+		yych = *++cursor_;
+		if (yych == 'b') goto yy1606;
+		goto yy87;
 yy1562:
 		yych = *++cursor_;
-		if (yych == 'x') goto yy1607;
+		if (yych == 'h') goto yy1608;
 		goto yy87;
 yy1563:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 471 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8USub); }
-#line 8347 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1609;
+		goto yy87;
+yy1564:
+		yych = *++cursor_;
+		if (yych == 'd') goto yy1611;
+		goto yy87;
 yy1565:
 		yych = *++cursor_;
-		if (yych == 'g') goto yy1608;
+		if (yych == 'd') goto yy1613;
 		goto yy87;
 yy1566:
+		yych = *++cursor_;
+		if (yych == 'p') goto yy1615;
+		goto yy87;
+yy1567:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 492 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UXor); }
-#line 8359 "src/prebuilt/wast-lexer-gen.cc"
-yy1568:
-		yych = *++cursor_;
-		if (yych == 'i') goto yy1610;
-		goto yy87;
+#line 490 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UOr); }
+#line 8367 "src/prebuilt/wast-lexer-gen.cc"
 yy1569:
 		yych = *++cursor_;
-		if (yych == 'l') goto yy1611;
+		if (yych == 'b') goto yy1616;
 		goto yy87;
 yy1570:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 502 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmwCmpxchg); }
-#line 8375 "src/prebuilt/wast-lexer-gen.cc"
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1618;
+		goto yy87;
+yy1571:
+		yych = *++cursor_;
+		if (yych == 'r') goto yy1619;
+		goto yy87;
 yy1572:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 463 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UAdd); }
-#line 8383 "src/prebuilt/wast-lexer-gen.cc"
+#line 467 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UAdd); }
+#line 8387 "src/prebuilt/wast-lexer-gen.cc"
 yy1574:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 477 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UAnd); }
-#line 8391 "src/prebuilt/wast-lexer-gen.cc"
+#line 481 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UAnd); }
+#line 8395 "src/prebuilt/wast-lexer-gen.cc"
 yy1576:
 		yych = *++cursor_;
-		if (yych == 'x') goto yy1612;
+		if (yych == 'x') goto yy1621;
 		goto yy87;
 yy1577:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 470 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16USub); }
-#line 8403 "src/prebuilt/wast-lexer-gen.cc"
+#line 474 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8USub); }
+#line 8407 "src/prebuilt/wast-lexer-gen.cc"
 yy1579:
 		yych = *++cursor_;
-		if (yych == 'g') goto yy1613;
+		if (yych == 'g') goto yy1622;
 		goto yy87;
 yy1580:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 491 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UXor); }
-#line 8415 "src/prebuilt/wast-lexer-gen.cc"
+#line 495 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UXor); }
+#line 8419 "src/prebuilt/wast-lexer-gen.cc"
 yy1582:
 		yych = *++cursor_;
-		if (yych == 'c') goto yy1615;
+		if (yych == 'i') goto yy1624;
 		goto yy87;
 yy1583:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 497 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UXchg); }
-#line 8427 "src/prebuilt/wast-lexer-gen.cc"
-yy1585:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 503 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmwCmpxchg); }
-#line 8435 "src/prebuilt/wast-lexer-gen.cc"
-yy1587:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 465 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UAdd); }
-#line 8443 "src/prebuilt/wast-lexer-gen.cc"
-yy1589:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 479 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UAnd); }
-#line 8451 "src/prebuilt/wast-lexer-gen.cc"
-yy1591:
 		yych = *++cursor_;
-		if (yych == 'x') goto yy1616;
+		if (yych == 'l') goto yy1625;
 		goto yy87;
-yy1592:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 472 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16USub); }
-#line 8463 "src/prebuilt/wast-lexer-gen.cc"
-yy1594:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1617;
-		goto yy87;
-yy1595:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 493 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UXor); }
-#line 8475 "src/prebuilt/wast-lexer-gen.cc"
-yy1597:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 466 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UAdd); }
-#line 8483 "src/prebuilt/wast-lexer-gen.cc"
-yy1599:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 480 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UAnd); }
-#line 8491 "src/prebuilt/wast-lexer-gen.cc"
-yy1601:
-		yych = *++cursor_;
-		if (yych == 'x') goto yy1619;
-		goto yy87;
-yy1602:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 473 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32USub); }
-#line 8503 "src/prebuilt/wast-lexer-gen.cc"
-yy1604:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1620;
-		goto yy87;
-yy1605:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 494 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UXor); }
-#line 8515 "src/prebuilt/wast-lexer-gen.cc"
-yy1607:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1622;
-		goto yy87;
-yy1608:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 499 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UXchg); }
-#line 8527 "src/prebuilt/wast-lexer-gen.cc"
-yy1610:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1623;
-		goto yy87;
-yy1611:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1624;
-		goto yy87;
-yy1612:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1625;
-		goto yy87;
-yy1613:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 498 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UXchg); }
-#line 8547 "src/prebuilt/wast-lexer-gen.cc"
-yy1615:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1626;
-		goto yy87;
-yy1616:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1627;
-		goto yy87;
-yy1617:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 500 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UXchg); }
-#line 8563 "src/prebuilt/wast-lexer-gen.cc"
-yy1619:
-		yych = *++cursor_;
-		if (yych == 'c') goto yy1628;
-		goto yy87;
-yy1620:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 501 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UXchg); }
-#line 8575 "src/prebuilt/wast-lexer-gen.cc"
-yy1622:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1629;
-		goto yy87;
-yy1623:
-		yych = *++cursor_;
-		if (yych == '_') goto yy1630;
-		goto yy87;
-yy1624:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy1631;
-		goto yy87;
-yy1625:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1632;
-		goto yy87;
-yy1626:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1633;
-		goto yy87;
-yy1627:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1635;
-		goto yy87;
-yy1628:
-		yych = *++cursor_;
-		if (yych == 'h') goto yy1636;
-		goto yy87;
-yy1629:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1637;
-		goto yy87;
-yy1630:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy1639;
-		goto yy87;
-yy1631:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy1640;
-		goto yy87;
-yy1632:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1641;
-		goto yy87;
-yy1633:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 504 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmw8UCmpxchg); }
-#line 8627 "src/prebuilt/wast-lexer-gen.cc"
-yy1635:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1643;
-		goto yy87;
-yy1636:
-		yych = *++cursor_;
-		if (yych == 'g') goto yy1645;
-		goto yy87;
-yy1637:
-		++cursor_;
-		if (yybm[0+(yych = *cursor_)] & 8) {
-			goto yy86;
-		}
-#line 506 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw8UCmpxchg); }
-#line 8643 "src/prebuilt/wast-lexer-gen.cc"
-yy1639:
-		yych = *++cursor_;
-		if (yych == 'a') goto yy1647;
-		goto yy87;
-yy1640:
-		yych = *++cursor_;
-		if (yych == 'n') goto yy1648;
-		goto yy87;
-yy1641:
+yy1584:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 505 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmw16UCmpxchg); }
-#line 8659 "src/prebuilt/wast-lexer-gen.cc"
+		{ RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmwCmpxchg); }
+#line 8435 "src/prebuilt/wast-lexer-gen.cc"
+yy1586:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 466 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UAdd); }
+#line 8443 "src/prebuilt/wast-lexer-gen.cc"
+yy1588:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 480 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UAnd); }
+#line 8451 "src/prebuilt/wast-lexer-gen.cc"
+yy1590:
+		yych = *++cursor_;
+		if (yych == 'x') goto yy1626;
+		goto yy87;
+yy1591:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 473 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16USub); }
+#line 8463 "src/prebuilt/wast-lexer-gen.cc"
+yy1593:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1627;
+		goto yy87;
+yy1594:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 494 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UXor); }
+#line 8475 "src/prebuilt/wast-lexer-gen.cc"
+yy1596:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1629;
+		goto yy87;
+yy1597:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 500 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw8UXchg); }
+#line 8487 "src/prebuilt/wast-lexer-gen.cc"
+yy1599:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 506 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmwCmpxchg); }
+#line 8495 "src/prebuilt/wast-lexer-gen.cc"
+yy1601:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 468 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UAdd); }
+#line 8503 "src/prebuilt/wast-lexer-gen.cc"
+yy1603:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 482 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UAnd); }
+#line 8511 "src/prebuilt/wast-lexer-gen.cc"
+yy1605:
+		yych = *++cursor_;
+		if (yych == 'x') goto yy1630;
+		goto yy87;
+yy1606:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 475 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16USub); }
+#line 8523 "src/prebuilt/wast-lexer-gen.cc"
+yy1608:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1631;
+		goto yy87;
+yy1609:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 496 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UXor); }
+#line 8535 "src/prebuilt/wast-lexer-gen.cc"
+yy1611:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 469 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UAdd); }
+#line 8543 "src/prebuilt/wast-lexer-gen.cc"
+yy1613:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 483 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UAnd); }
+#line 8551 "src/prebuilt/wast-lexer-gen.cc"
+yy1615:
+		yych = *++cursor_;
+		if (yych == 'x') goto yy1633;
+		goto yy87;
+yy1616:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 476 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32USub); }
+#line 8563 "src/prebuilt/wast-lexer-gen.cc"
+yy1618:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1634;
+		goto yy87;
+yy1619:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 497 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UXor); }
+#line 8575 "src/prebuilt/wast-lexer-gen.cc"
+yy1621:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1636;
+		goto yy87;
+yy1622:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 502 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw8UXchg); }
+#line 8587 "src/prebuilt/wast-lexer-gen.cc"
+yy1624:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1637;
+		goto yy87;
+yy1625:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1638;
+		goto yy87;
+yy1626:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1639;
+		goto yy87;
+yy1627:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 501 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I32AtomicRmw16UXchg); }
+#line 8607 "src/prebuilt/wast-lexer-gen.cc"
+yy1629:
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1640;
+		goto yy87;
+yy1630:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1641;
+		goto yy87;
+yy1631:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 503 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw16UXchg); }
+#line 8623 "src/prebuilt/wast-lexer-gen.cc"
+yy1633:
+		yych = *++cursor_;
+		if (yych == 'c') goto yy1642;
+		goto yy87;
+yy1634:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 504 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmw, I64AtomicRmw32UXchg); }
+#line 8635 "src/prebuilt/wast-lexer-gen.cc"
+yy1636:
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1643;
+		goto yy87;
+yy1637:
+		yych = *++cursor_;
+		if (yych == '_') goto yy1644;
+		goto yy87;
+yy1638:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy1645;
+		goto yy87;
+yy1639:
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1646;
+		goto yy87;
+yy1640:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1647;
+		goto yy87;
+yy1641:
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1649;
+		goto yy87;
+yy1642:
+		yych = *++cursor_;
+		if (yych == 'h') goto yy1650;
+		goto yy87;
 yy1643:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1651;
+		goto yy87;
+yy1644:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy1653;
+		goto yy87;
+yy1645:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy1654;
+		goto yy87;
+yy1646:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1655;
+		goto yy87;
+yy1647:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 507 "src/wast-lexer.cc"
-		{ RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw16UCmpxchg); }
-#line 8667 "src/prebuilt/wast-lexer-gen.cc"
-yy1645:
+		{ RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmw8UCmpxchg); }
+#line 8687 "src/prebuilt/wast-lexer-gen.cc"
+yy1649:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1657;
+		goto yy87;
+yy1650:
+		yych = *++cursor_;
+		if (yych == 'g') goto yy1659;
+		goto yy87;
+yy1651:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 509 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw8UCmpxchg); }
+#line 8703 "src/prebuilt/wast-lexer-gen.cc"
+yy1653:
+		yych = *++cursor_;
+		if (yych == 'a') goto yy1661;
+		goto yy87;
+yy1654:
+		yych = *++cursor_;
+		if (yych == 'n') goto yy1662;
+		goto yy87;
+yy1655:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
 #line 508 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmwCmpxchg, I32AtomicRmw16UCmpxchg); }
+#line 8719 "src/prebuilt/wast-lexer-gen.cc"
+yy1657:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 510 "src/wast-lexer.cc"
+		{ RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw16UCmpxchg); }
+#line 8727 "src/prebuilt/wast-lexer-gen.cc"
+yy1659:
+		++cursor_;
+		if (yybm[0+(yych = *cursor_)] & 8) {
+			goto yy86;
+		}
+#line 511 "src/wast-lexer.cc"
 		{ RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw32UCmpxchg); }
-#line 8675 "src/prebuilt/wast-lexer-gen.cc"
-yy1647:
+#line 8735 "src/prebuilt/wast-lexer-gen.cc"
+yy1661:
 		yych = *++cursor_;
-		if (yych == 'n') goto yy1650;
+		if (yych == 'n') goto yy1664;
 		goto yy87;
-yy1648:
+yy1662:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 535 "src/wast-lexer.cc"
+#line 538 "src/wast-lexer.cc"
 		{ RETURN(AssertReturnCanonicalNan); }
-#line 8687 "src/prebuilt/wast-lexer-gen.cc"
-yy1650:
+#line 8747 "src/prebuilt/wast-lexer-gen.cc"
+yy1664:
 		++cursor_;
 		if (yybm[0+(yych = *cursor_)] & 8) {
 			goto yy86;
 		}
-#line 536 "src/wast-lexer.cc"
+#line 539 "src/wast-lexer.cc"
 		{ RETURN(AssertReturnArithmeticNan); }
-#line 8695 "src/prebuilt/wast-lexer-gen.cc"
+#line 8755 "src/prebuilt/wast-lexer-gen.cc"
 	}
 }
-#line 563 "src/wast-lexer.cc"
+#line 566 "src/wast-lexer.cc"
 
   }
 }
