@@ -707,7 +707,7 @@ struct Module {
   std::vector<ElemSegment*> elem_segments;
   std::vector<Memory*> memories;
   std::vector<DataSegment*> data_segments;
-  Var* start = nullptr;
+  std::vector<Var*> starts;
 
   BindingHash except_bindings;
   BindingHash func_bindings;

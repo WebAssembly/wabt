@@ -820,8 +820,8 @@ Result BinaryWriter::WriteModule(const Module* module) {
     EndSection();
   }
 
-  if (module->start) {
-    Index start_func_index = module->GetFuncIndex(*module->start);
+  if (module->starts.size()) {
+    Index start_func_index = module->GetFuncIndex(*module->starts[0]);
     if (start_func_index != kInvalidIndex) {
       BeginKnownSection(BinarySection::Start, LEB_SECTION_SIZE_GUESS);
       WriteU32Leb128(stream_, start_func_index, "start func index");

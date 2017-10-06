@@ -556,7 +556,6 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list) {
   while (PeekMatch(TokenType::ValueType))
     out_type_list->push_back(Consume().type());
 
-  CHECK_RESULT(ErrorIfLpar({"i32", "i64", "f32", "f64"}));
   return Result::Ok;
 }
 
