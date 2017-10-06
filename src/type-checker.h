@@ -91,6 +91,8 @@ class TypeChecker {
   Result OnTryBlock(const TypeVector* sig);
   Result OnUnary(Opcode);
   Result OnUnreachable();
+  Result OnWait(Opcode);
+  Result OnWake(Opcode);
   Result EndFunction();
 
  private:

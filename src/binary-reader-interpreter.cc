@@ -186,6 +186,12 @@ class BinaryReaderInterpreter : public BinaryReaderNop {
   wabt::Result OnTeeLocalExpr(Index local_index) override;
   wabt::Result OnUnaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnUnreachableExpr() override;
+  wabt::Result OnWaitExpr(Opcode opcode,
+                          uint32_t alignment_log2,
+                          Address offset) override;
+  wabt::Result OnWakeExpr(Opcode opcode,
+                          uint32_t alignment_log2,
+                          Address offset) override;
   wabt::Result EndFunctionBody(Index index) override;
 
   wabt::Result EndElemSegmentInitExpr(Index index) override;
@@ -1498,6 +1504,30 @@ wabt::Result BinaryReaderInterpreter::OnSelectExpr() {
 wabt::Result BinaryReaderInterpreter::OnUnreachableExpr() {
   CHECK_RESULT(typechecker_.OnUnreachable());
   CHECK_RESULT(EmitOpcode(Opcode::Unreachable));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterpreter::OnWaitExpr(Opcode opcode,
+                                                 uint32_t alignment_log2,
+                                                 Address offset) {
+  CHECK_RESULT(CheckHasMemory(opcode));
+  CHECK_RESULT(CheckAtomicAlign(alignment_log2, opcode.GetMemorySize()));
+  CHECK_RESULT(typechecker_.OnWait(opcode));
+  CHECK_RESULT(EmitOpcode(opcode));
+  CHECK_RESULT(EmitI32(module_->memory_index));
+  CHECK_RESULT(EmitI32(offset));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterpreter::OnWakeExpr(Opcode opcode,
+                                                 uint32_t alignment_log2,
+                                                 Address offset) {
+  CHECK_RESULT(CheckHasMemory(opcode));
+  CHECK_RESULT(CheckAtomicAlign(alignment_log2, opcode.GetMemorySize()));
+  CHECK_RESULT(typechecker_.OnWake(opcode));
+  CHECK_RESULT(EmitOpcode(opcode));
+  CHECK_RESULT(EmitI32(module_->memory_index));
+  CHECK_RESULT(EmitI32(offset));
   return wabt::Result::Ok;
 }
 

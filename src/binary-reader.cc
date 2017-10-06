@@ -959,6 +959,29 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
+      case Opcode::Wake: {
+        uint32_t alignment_log2;
+        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        Address offset;
+        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+
+        CALLBACK(OnWakeExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        break;
+      }
+
+      case Opcode::I32Wait:
+      case Opcode::I64Wait: {
+        uint32_t alignment_log2;
+        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        Address offset;
+        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+
+        CALLBACK(OnWaitExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
+        break;
+      }
+
       case Opcode::I32AtomicLoad8U:
       case Opcode::I32AtomicLoad16U:
       case Opcode::I64AtomicLoad8U:

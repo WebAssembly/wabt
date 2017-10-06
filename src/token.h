@@ -120,8 +120,10 @@ enum class TokenType {
   Try,
   Unary,
   Unreachable,
+  Wait,
+  Wake,
   First_Opcode = AtomicLoad,
-  Last_Opcode = Unreachable,
+  Last_Opcode = Wake,
 
   // Tokens with string data.
   AlignEqNat,

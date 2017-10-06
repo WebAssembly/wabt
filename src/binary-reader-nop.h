@@ -253,6 +253,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnUnreachableExpr() override { return Result::Ok; }
+  Result OnWaitExpr(Opcode, uint32_t, Address) override { return Result::Ok; }
+  Result OnWakeExpr(Opcode, uint32_t, Address) override { return Result::Ok; }
   Result EndFunctionBody(Index index) override { return Result::Ok; }
   Result EndCodeSection() override { return Result::Ok; }
 

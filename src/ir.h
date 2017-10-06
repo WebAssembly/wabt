@@ -148,9 +148,11 @@ enum class ExprType {
   TryBlock,
   Unary,
   Unreachable,
+  Wait,
+  Wake,
 
   First = Binary,
-  Last = Unreachable
+  Last = Wake
 };
 
 const char* GetExprTypeName(ExprType type);
@@ -300,6 +302,7 @@ class ConstExpr : public ExprMixin<ExprType::Const> {
   Const const_;
 };
 
+// TODO(binji): Rename this, it is used for more than loads/stores now.
 template <ExprType TypeEnum>
 class LoadStoreExpr : public ExprMixin<TypeEnum> {
  public:
@@ -323,6 +326,8 @@ typedef LoadStoreExpr<ExprType::AtomicLoad> AtomicLoadExpr;
 typedef LoadStoreExpr<ExprType::AtomicStore> AtomicStoreExpr;
 typedef LoadStoreExpr<ExprType::AtomicRmw> AtomicRmwExpr;
 typedef LoadStoreExpr<ExprType::AtomicRmwCmpxchg> AtomicRmwCmpxchgExpr;
+typedef LoadStoreExpr<ExprType::Wait> WaitExpr;
+typedef LoadStoreExpr<ExprType::Wake> WakeExpr;
 
 struct Exception {
   Exception() = default;

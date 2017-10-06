@@ -103,6 +103,8 @@ const char* GetTokenTypeName(TokenType token_type) {
       "try",
       "UNARY",
       "unreachable",
+      "WAIT",
+      "WAKE",
 
       // String.
       "align=",

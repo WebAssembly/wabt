@@ -329,6 +329,7 @@ Index BinaryWriter::GetLocalIndex(const Func* func, const Var& var) {
   }
 }
 
+// TODO(binji): Rename this, it is used for more than loads/stores now.
 template <typename T>
 void BinaryWriter::WriteLoadStoreExpr(const Module* module,
                                       const Func* func,
@@ -542,6 +543,12 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     case ExprType::Unreachable:
       WriteOpcode(stream_, Opcode::Unreachable);
+      break;
+    case ExprType::Wait:
+      WriteLoadStoreExpr<WaitExpr>(module, func, expr, "memory offset");
+      break;
+    case ExprType::Wake:
+      WriteLoadStoreExpr<WakeExpr>(module, func, expr, "memory offset");
       break;
   }
 }
