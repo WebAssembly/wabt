@@ -52,10 +52,10 @@ function compile(text) {
   wabt.ready.then(function() {
     outputEl.textContent = '';
     try {
-      var script = wabt.parseWast('test.wast', text);
-      script.resolveNames();
-      script.validate();
-      var binaryOutput = script.toBinary({log: true});
+      var module = wabt.parseWat('test.wast', text);
+      module.resolveNames();
+      module.validate();
+      var binaryOutput = module.toBinary({log: true});
       outputEl.textContent = binaryOutput.log;
       binaryBuffer = binaryOutput.buffer;
       var blob = new Blob([binaryOutput.buffer]);
@@ -69,7 +69,7 @@ function compile(text) {
       outputEl.textContent += e.toString();
       downloadEl.classList.add('disabled');
     } finally {
-      if (script) script.destroy();
+      if (module) module.destroy();
     }
   });
 }
