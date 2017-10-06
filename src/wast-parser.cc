@@ -439,8 +439,10 @@ Result WastParser::ErrorExpected(const std::vector<std::string>& expected,
 
 Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
                                const char* example) {
-  if (Match(TokenType::Lpar))
+  if (Match(TokenType::Lpar)) {
+    GetToken();
     return ErrorExpected(expected, example);
+  }
   return Result::Ok;
 }
 
@@ -708,7 +710,7 @@ Result WastParser::ParseScript(std::unique_ptr<Script>* out_script) {
 
 Result WastParser::ParseModuleFieldList(Module* module) {
   WABT_TRACE(ParseModuleFieldList);
-  while (PeekMatch(TokenType::Lpar)) {
+  while (IsModuleField(PeekPair())) {
     if (Failed(ParseModuleField(module))) {
       CHECK_RESULT(Synchronize(IsModuleField));
     }
@@ -772,7 +774,7 @@ Result WastParser::ParseExceptModuleField(Module* module) {
   auto field = MakeUnique<ExceptionModuleField>(GetLocation());
   EXPECT(Except);
   ParseBindVarOpt(&field->except.name);
-  ParseValueTypeList(&field->except.sig);
+  CHECK_RESULT(ParseValueTypeList(&field->except.sig));
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
@@ -947,7 +949,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = MakeUnique<ExceptionImport>(name);
-      ParseValueTypeList(&import->except.sig);
+      CHECK_RESULT(ParseValueTypeList(&import->except.sig));
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
       break;
@@ -1155,7 +1157,7 @@ Result WastParser::ParseBoundValueTypeList(TokenType token,
       bindings->emplace(name, Binding(loc, types->size()));
       types->push_back(type);
     } else {
-      ParseValueTypeList(types);
+      CHECK_RESULT(ParseValueTypeList(types));
     }
     EXPECT(Rpar);
   }
@@ -1165,7 +1167,7 @@ Result WastParser::ParseBoundValueTypeList(TokenType token,
 Result WastParser::ParseResultList(TypeVector* result_types) {
   WABT_TRACE(ParseResultList);
   while (MatchLpar(TokenType::Result)) {
-    ParseValueTypeList(result_types);
+    CHECK_RESULT(ParseValueTypeList(result_types));
     EXPECT(Rpar);
   }
   return Result::Ok;

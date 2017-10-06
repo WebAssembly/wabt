@@ -373,18 +373,42 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->memory_bindings, "memory");
   CheckDuplicateBindings(&module->except_bindings, "except");
 
-  for (Func* func : module->funcs)
-    VisitFunc(func);
-  for (Export* export_ : module->exports)
-    VisitExport(export_);
-  for (Global* global : module->globals)
-    VisitGlobal(global);
-  for (ElemSegment* elem_segment : module->elem_segments)
-    VisitElemSegment(elem_segment);
-  for (DataSegment* data_segment : module->data_segments)
-    VisitDataSegment(data_segment);
-  if (module->start)
-    ResolveFuncVar(module->start);
+  for (ModuleField& field : module->fields) {
+    switch (field.type()) {
+      case ModuleFieldType::Func:
+        VisitFunc(&cast<FuncModuleField>(&field)->func);
+        break;
+
+      case ModuleFieldType::Global:
+        VisitGlobal(&cast<GlobalModuleField>(&field)->global);
+        break;
+
+      case ModuleFieldType::Export:
+        VisitExport(&cast<ExportModuleField>(&field)->export_);
+        break;
+
+      case ModuleFieldType::ElemSegment:
+        VisitElemSegment(&cast<ElemSegmentModuleField>(&field)->elem_segment);
+        break;
+
+      case ModuleFieldType::DataSegment:
+        VisitDataSegment(&cast<DataSegmentModuleField>(&field)->data_segment);
+        break;
+
+      case ModuleFieldType::Start:
+        ResolveFuncVar(&cast<StartModuleField>(&field)->start);
+        break;
+
+      case ModuleFieldType::Import:
+      case ModuleFieldType::FuncType:
+      case ModuleFieldType::Table:
+      case ModuleFieldType::Memory:
+      case ModuleFieldType::Except:
+        // No names to resolve.
+        break;
+    }
+  }
+
   current_module_ = nullptr;
   return result_;
 }
