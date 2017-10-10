@@ -7,30 +7,30 @@ out/third_party/testsuite/linking.wast:28: assert_unlinkable passed:
 out/third_party/testsuite/linking.wast:32: assert_unlinkable passed:
   error: import signature mismatch
   0000026: error: OnImportFunc callback failed
-out/third_party/testsuite/linking.wast:166: assert_unlinkable passed:
+out/third_party/testsuite/linking.wast:174: assert_unlinkable passed:
   error: elem segment offset is out of bounds: 10 >= max value 10
   0000029: error: OnElemSegmentFunctionIndex callback failed
-out/third_party/testsuite/linking.wast:175: assert_unlinkable passed:
+out/third_party/testsuite/linking.wast:183: assert_unlinkable passed:
   error: unknown module field "mem"
   0000027: error: OnImportMemory callback failed
-out/third_party/testsuite/linking.wast:187: assert_unlinkable passed:
+out/third_party/testsuite/linking.wast:195: assert_unlinkable passed:
   error: elem segment offset is out of bounds: 12 >= max value 10
   0000030: error: OnElemSegmentFunctionIndex callback failed
-out/third_party/testsuite/linking.wast:198: assert_unlinkable passed:
+out/third_party/testsuite/linking.wast:206: assert_unlinkable passed:
   error: data segment is out of bounds: [65536, 65537) >= max value 65536
   0000042: error: OnDataSegmentData callback failed
-out/third_party/testsuite/linking.wast:258: assert_unlinkable passed:
+out/third_party/testsuite/linking.wast:266: assert_unlinkable passed:
   error: data segment is out of bounds: [65536, 65537) >= max value 65536
   0000020: error: OnDataSegmentData callback failed
-out/third_party/testsuite/linking.wast:283: assert_unlinkable passed:
+out/third_party/testsuite/linking.wast:291: assert_unlinkable passed:
   error: duplicate export "print"
   error: unknown module field "tab"
   0000037: error: OnImportTable callback failed
-out/third_party/testsuite/linking.wast:294: assert_unlinkable passed:
+out/third_party/testsuite/linking.wast:302: assert_unlinkable passed:
   error: data segment is out of bounds: [327680, 327681) >= max value 327680
   0000028: error: OnDataSegmentData callback failed
-out/third_party/testsuite/linking.wast:304: assert_unlinkable passed:
+out/third_party/testsuite/linking.wast:312: assert_unlinkable passed:
   error: elem segment offset is out of bounds: 0 >= max value 0
   000002e: error: OnElemSegmentFunctionIndex callback failed
-79/79 tests passed.
+80/80 tests passed.
 ;;; STDOUT ;;)
