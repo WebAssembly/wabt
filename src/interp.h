@@ -468,40 +468,32 @@ class Thread {
     static const uint32_t kDefaultCallStackSize = 64 * 1024;
 
     explicit Options(uint32_t value_stack_size = kDefaultValueStackSize,
-                     uint32_t call_stack_size = kDefaultCallStackSize,
-                     IstreamOffset pc = kInvalidIstreamOffset,
-                     Stream* trace_stream = nullptr);
+                     uint32_t call_stack_size = kDefaultCallStackSize);
 
     uint32_t value_stack_size;
     uint32_t call_stack_size;
-    IstreamOffset pc;
-    Stream* trace_stream;
   };
 
   explicit Thread(Environment*, const Options& = Options());
 
   Environment* env() { return env_; }
 
-  Result RunFunction(Index func_index,
-                     const TypedValues& args,
-                     TypedValues* out_results);
-  Result RunStartFunction(DefinedModule* module);
-  Result RunExport(const Export*,
-                   const TypedValues& args,
-                   TypedValues* out_results);
-  Result RunExportByName(Module* module,
-                         string_view name,
-                         const TypedValues& args,
-                         TypedValues* out_results);
+  void set_pc(IstreamOffset offset) { pc_ = offset; }
+  IstreamOffset pc() const { return pc_; }
+
+  void Reset();
+  Index NumValues() const { return value_stack_top_; }
+  Result Push(Value) WABT_WARN_UNUSED;
+  Value Pop();
+  Value ValueAt(Index at) const;
+
+  void Trace(Stream*);
+  Result Run(int num_instructions = 1);
+
+  Result CallHost(HostFunc*);
 
  private:
   const uint8_t* GetIstream() const { return env_->istream_->data.data(); }
-
-  Result PushArgs(const FuncSignature*, const TypedValues& args);
-  void CopyResults(const FuncSignature*, TypedValues* out_results);
-
-  Result Run(int num_instructions, IstreamOffset* call_stack_return_top);
-  void Trace(Stream*);
 
   Memory* ReadMemory(const uint8_t** pc);
   template <typename MemType>
@@ -511,9 +503,6 @@ class Thread {
 
   Value& Top();
   Value& Pick(Index depth);
-
-  Result Push(Value) WABT_WARN_UNUSED;
-  Value Pop();
 
   // Push/Pop values with conversions, e.g. Push<float> will convert to the
   // ValueTypeRep (uint32_t) and push that. Similarly, Pop<float> will pop the
@@ -565,19 +554,45 @@ class Thread {
   template <typename R, typename T = R>
   Result BinopTrap(BinopTrapFunc<R, T> func) WABT_WARN_UNUSED;
 
-  Result RunDefinedFunction(IstreamOffset);
-
-  Result CallHost(HostFunc*);
-
-  Environment* env_;
+  Environment* env_ = nullptr;
   std::vector<Value> value_stack_;
   std::vector<IstreamOffset> call_stack_;
-  Value* value_stack_top_;
-  Value* value_stack_end_;
-  IstreamOffset* call_stack_top_;
-  IstreamOffset* call_stack_end_;
-  IstreamOffset pc_;
-  Stream* trace_stream_;
+  uint32_t value_stack_top_ = 0;
+  uint32_t call_stack_top_ = 0;
+  IstreamOffset pc_ = 0;
+};
+
+struct ExecResult {
+  ExecResult() = default;
+  explicit ExecResult(Result result) : result(result) {}
+  ExecResult(Result result, const TypedValues& values)
+      : result(result), values(values) {}
+
+  Result result = Result::Ok;
+  TypedValues values;
+};
+
+class Executor {
+ public:
+  explicit Executor(Environment*,
+                    Stream* trace_stream = nullptr,
+                    const Thread::Options& options = Thread::Options());
+
+  ExecResult RunFunction(Index func_index, const TypedValues& args);
+  ExecResult RunStartFunction(DefinedModule* module);
+  ExecResult RunExport(const Export*, const TypedValues& args);
+  ExecResult RunExportByName(Module* module,
+                             string_view name,
+                             const TypedValues& args);
+
+ private:
+  Result RunDefinedFunction(IstreamOffset function_offset);
+  Result PushArgs(const FuncSignature*, const TypedValues& args);
+  void CopyResults(const FuncSignature*, TypedValues* out_results);
+
+  Environment* env_ = nullptr;
+  Stream* trace_stream_ = nullptr;
+  Thread thread_;
 };
 
 bool IsCanonicalNan(uint32_t f32_bits);

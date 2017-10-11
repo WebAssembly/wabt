@@ -43,6 +43,7 @@ using namespace wabt::interp;
 static int s_verbose;
 static const char* s_infile;
 static Thread::Options s_thread_options;
+static Stream* s_trace_stream;
 static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
@@ -82,9 +83,8 @@ static void ParseOptions(int argc, char** argv) {
                      // TODO(binji): validate.
                      s_thread_options.call_stack_size = atoi(argument.c_str());
                    });
-  parser.AddOption('t', "trace", "Trace execution", []() {
-    s_thread_options.trace_stream = s_stdout_stream.get();
-  });
+  parser.AddOption('t', "trace", "Trace execution",
+                   []() { s_trace_stream = s_stdout_stream.get(); });
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) { s_infile = argument; });
@@ -767,8 +767,7 @@ class CommandRunner {
       PrintError(uint32_t line_number, const char* format, ...);
   wabt::Result RunAction(int line_number,
                          const Action* action,
-                         interp::Result* out_iresult,
-                         TypedValues* out_results,
+                         ExecResult* out_result,
                          RunVerbosity verbose);
 
   wabt::Result OnModuleCommand(const ModuleCommand*);
@@ -795,7 +794,7 @@ class CommandRunner {
                                  const char* desc);
 
   Environment env_;
-  Thread thread_;
+  Executor executor_;
   DefinedModule* last_module_ = nullptr;
   int passed_ = 0;
   int total_ = 0;
@@ -924,7 +923,8 @@ static void InitEnvironment(Environment* env) {
   host_module->import_delegate.reset(new SpectestHostImportDelegate());
 }
 
-CommandRunner::CommandRunner() : thread_(&env_, s_thread_options) {
+CommandRunner::CommandRunner()
+    : executor_(&env_, s_trace_stream, s_thread_options) {
   InitEnvironment(&env_);
 }
 
@@ -994,28 +994,24 @@ void CommandRunner::PrintError(uint32_t line_number, const char* format, ...) {
   printf("%s:%u: %s\n", source_filename_.c_str(), line_number, buffer);
 }
 
-static interp::Result GetGlobalExportByName(Thread* thread,
-                                            interp::Module* module,
-                                            string_view name,
-                                            TypedValues* out_results) {
+static ExecResult GetGlobalExportByName(Environment* env,
+                                        interp::Module* module,
+                                        string_view name) {
   interp::Export* export_ = module->GetExport(name);
   if (!export_)
-    return interp::Result::UnknownExport;
+    return ExecResult(interp::Result::UnknownExport);
   if (export_->kind != ExternalKind::Global)
-    return interp::Result::ExportKindMismatch;
+    return ExecResult(interp::Result::ExportKindMismatch);
 
-  interp::Global* global = thread->env()->GetGlobal(export_->index);
-  out_results->clear();
-  out_results->push_back(global->typed_value);
-  return interp::Result::Ok;
+  interp::Global* global = env->GetGlobal(export_->index);
+  return ExecResult(interp::Result::Ok, {global->typed_value});
 }
 
 wabt::Result CommandRunner::RunAction(int line_number,
                                       const Action* action,
-                                      interp::Result* out_iresult,
-                                      TypedValues* out_results,
+                                      ExecResult* out_exec_result,
                                       RunVerbosity verbose) {
-  out_results->clear();
+  out_exec_result->values.clear();
 
   interp::Module* module;
   if (!action->module_name.empty()) {
@@ -1027,17 +1023,18 @@ wabt::Result CommandRunner::RunAction(int line_number,
 
   switch (action->type) {
     case ActionType::Invoke:
-      *out_iresult = thread_.RunExportByName(module, action->field_name,
-                                             action->args, out_results);
+      *out_exec_result =
+          executor_.RunExportByName(module, action->field_name, action->args);
       if (verbose == RunVerbosity::Verbose) {
         WriteCall(s_stdout_stream.get(), string_view(), action->field_name,
-                  action->args, *out_results, *out_iresult);
+                  action->args, out_exec_result->values,
+                  out_exec_result->result);
       }
       return wabt::Result::Ok;
 
     case ActionType::Get: {
-      *out_iresult = GetGlobalExportByName(&thread_, module, action->field_name,
-                                           out_results);
+      *out_exec_result =
+          GetGlobalExportByName(&env_, module, action->field_name);
       return wabt::Result::Ok;
     }
 
@@ -1131,10 +1128,11 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
     return wabt::Result::Error;
   }
 
-  interp::Result iresult = thread_.RunStartFunction(last_module_);
-  if (iresult != interp::Result::Ok) {
+  ExecResult exec_result = executor_.RunStartFunction(last_module_);
+  if (exec_result.result != interp::Result::Ok) {
     env_.ResetToMarkPoint(mark);
-    WriteResult(s_stdout_stream.get(), "error running start function", iresult);
+    WriteResult(s_stdout_stream.get(), "error running start function",
+                exec_result.result);
     return wabt::Result::Error;
   }
 
@@ -1147,17 +1145,17 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
 }
 
 wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
-  TypedValues results;
-  interp::Result iresult;
+  ExecResult exec_result;
 
   total_++;
-  wabt::Result result = RunAction(command->line, &command->action, &iresult,
-                                  &results, RunVerbosity::Verbose);
+  wabt::Result result = RunAction(command->line, &command->action, &exec_result,
+                                  RunVerbosity::Verbose);
   if (Succeeded(result)) {
-    if (iresult == interp::Result::Ok) {
+    if (exec_result.result == interp::Result::Ok) {
       passed_++;
     } else {
-      PrintError(command->line, "unexpected trap: %s", ResultToString(iresult));
+      PrintError(command->line, "unexpected trap: %s",
+                 ResultToString(exec_result.result));
       result = wabt::Result::Error;
     }
   }
@@ -1255,8 +1253,8 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
       ReadModule(command->filename.c_str(), &env_, &error_handler, &module);
 
   if (Succeeded(result)) {
-    interp::Result iresult = thread_.RunStartFunction(module);
-    if (iresult == interp::Result::Ok) {
+    ExecResult exec_result = executor_.RunStartFunction(module);
+    if (exec_result.result == interp::Result::Ok) {
       PrintError(command->line, "expected error running start function: \"%s\"",
                  command->filename.c_str());
       result = wabt::Result::Error;
@@ -1294,19 +1292,18 @@ static bool TypedValuesAreEqual(const TypedValue* tv1, const TypedValue* tv2) {
 
 wabt::Result CommandRunner::OnAssertReturnCommand(
     const AssertReturnCommand* command) {
-  TypedValues results;
-  interp::Result iresult;
+  ExecResult exec_result;
 
   total_++;
-  wabt::Result result = RunAction(command->line, &command->action, &iresult,
-                                  &results, RunVerbosity::Quiet);
+  wabt::Result result = RunAction(command->line, &command->action, &exec_result,
+                                  RunVerbosity::Quiet);
 
   if (Succeeded(result)) {
-    if (iresult == interp::Result::Ok) {
-      if (results.size() == command->expected.size()) {
-        for (size_t i = 0; i < results.size(); ++i) {
+    if (exec_result.result == interp::Result::Ok) {
+      if (exec_result.values.size() == command->expected.size()) {
+        for (size_t i = 0; i < exec_result.values.size(); ++i) {
           const TypedValue* expected_tv = &command->expected[i];
-          const TypedValue* actual_tv = &results[i];
+          const TypedValue* actual_tv = &exec_result.values[i];
           if (!TypedValuesAreEqual(expected_tv, actual_tv)) {
             PrintError(command->line,
                        "mismatch in result %" PRIzd
@@ -1320,11 +1317,12 @@ wabt::Result CommandRunner::OnAssertReturnCommand(
         PrintError(command->line,
                    "result length mismatch in assert_return: expected %" PRIzd
                    ", got %" PRIzd,
-                   command->expected.size(), results.size());
+                   command->expected.size(), exec_result.values.size());
         result = wabt::Result::Error;
       }
     } else {
-      PrintError(command->line, "unexpected trap: %s", ResultToString(iresult));
+      PrintError(command->line, "unexpected trap: %s",
+                 ResultToString(exec_result.result));
       result = wabt::Result::Error;
     }
   }
@@ -1340,21 +1338,20 @@ wabt::Result CommandRunner::OnAssertReturnNanCommand(
     const NanCommand* command) {
   const bool is_canonical =
       command->type == CommandType::AssertReturnCanonicalNan;
-  TypedValues results;
-  interp::Result iresult;
+  ExecResult exec_result;
 
   total_++;
-  wabt::Result result = RunAction(command->line, &command->action, &iresult,
-                                  &results, RunVerbosity::Quiet);
+  wabt::Result result = RunAction(command->line, &command->action, &exec_result,
+                                  RunVerbosity::Quiet);
   if (Succeeded(result)) {
-    if (iresult == interp::Result::Ok) {
-      if (results.size() != 1) {
+    if (exec_result.result == interp::Result::Ok) {
+      if (exec_result.values.size() != 1) {
         PrintError(command->line, "expected one result, got %" PRIzd,
-                   results.size());
+                   exec_result.values.size());
         result = wabt::Result::Error;
       }
 
-      const TypedValue& actual = results[0];
+      const TypedValue& actual = exec_result.values[0];
       switch (actual.type) {
         case Type::F32: {
           bool is_nan = is_canonical ? IsCanonicalNan(actual.value.f32_bits)
@@ -1386,7 +1383,8 @@ wabt::Result CommandRunner::OnAssertReturnNanCommand(
           break;
       }
     } else {
-      PrintError(command->line, "unexpected trap: %s", ResultToString(iresult));
+      PrintError(command->line, "unexpected trap: %s",
+                 ResultToString(exec_result.result));
       result = wabt::Result::Error;
     }
   }
@@ -1399,14 +1397,13 @@ wabt::Result CommandRunner::OnAssertReturnNanCommand(
 
 wabt::Result CommandRunner::OnAssertTrapCommand(
     const AssertTrapCommand* command) {
-  TypedValues results;
-  interp::Result iresult;
+  ExecResult exec_result;
 
   total_++;
-  wabt::Result result = RunAction(command->line, &command->action, &iresult,
-                                  &results, RunVerbosity::Quiet);
+  wabt::Result result = RunAction(command->line, &command->action, &exec_result,
+                                  RunVerbosity::Quiet);
   if (Succeeded(result)) {
-    if (iresult != interp::Result::Ok) {
+    if (exec_result.result != interp::Result::Ok) {
       passed_++;
     } else {
       PrintError(command->line, "expected trap: \"%s\"", command->text.c_str());
@@ -1419,15 +1416,14 @@ wabt::Result CommandRunner::OnAssertTrapCommand(
 
 wabt::Result CommandRunner::OnAssertExhaustionCommand(
     const AssertExhaustionCommand* command) {
-  TypedValues results;
-  interp::Result iresult;
+  ExecResult exec_result;
 
   total_++;
-  wabt::Result result = RunAction(command->line, &command->action, &iresult,
-                                  &results, RunVerbosity::Quiet);
+  wabt::Result result = RunAction(command->line, &command->action, &exec_result,
+                                  RunVerbosity::Quiet);
   if (Succeeded(result)) {
-    if (iresult == interp::Result::TrapCallStackExhausted ||
-        iresult == interp::Result::TrapValueStackExhausted) {
+    if (exec_result.result == interp::Result::TrapCallStackExhausted ||
+        exec_result.result == interp::Result::TrapValueStackExhausted) {
       passed_++;
     } else {
       PrintError(command->line, "expected call stack exhaustion");
