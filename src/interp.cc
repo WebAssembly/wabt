@@ -2226,8 +2226,8 @@ void Thread::Trace(Stream* stream) {
   const uint8_t* istream = GetIstream();
   const uint8_t* pc = &istream[pc_];
 
-  stream->Writef("#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ", call_stack_top_,
-                 pc - istream, value_stack_top_);
+  stream->Writef("#%u. %4" PRIzd ": V:%-3u| ", call_stack_top_, pc - istream,
+                 value_stack_top_);
 
   Opcode opcode = ReadOpcode(&pc);
   assert(!opcode.IsInvalid());
