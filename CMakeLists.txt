@@ -227,8 +227,8 @@ add_library(libwabt STATIC
   src/binary-reader-ir.cc
   src/binding-hash.cc
   src/wat-writer.cc
-  src/interpreter.cc
-  src/binary-reader-interpreter.cc
+  src/interp.cc
+  src/binary-reader-interp.cc
   src/apply-names.cc
   src/generate-names.cc
   src/resolve-names.cc
