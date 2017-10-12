@@ -23,12 +23,12 @@
 #include <string>
 #include <vector>
 
-#include "src/binary-reader-interpreter.h"
+#include "src/binary-reader-interp.h"
 #include "src/binary-reader.h"
 #include "src/cast.h"
 #include "src/error-handler.h"
 #include "src/feature.h"
-#include "src/interpreter.h"
+#include "src/interp.h"
 #include "src/literal.h"
 #include "src/option-parser.h"
 #include "src/resolve-names.h"
@@ -38,7 +38,7 @@
 #include "src/wast-parser.h"
 
 using namespace wabt;
-using namespace wabt::interpreter;
+using namespace wabt::interp;
 
 static int s_verbose;
 static const char* s_infile;
@@ -767,7 +767,7 @@ class CommandRunner {
       PrintError(uint32_t line_number, const char* format, ...);
   wabt::Result RunAction(int line_number,
                          const Action* action,
-                         interpreter::Result* out_iresult,
+                         interp::Result* out_iresult,
                          TypedValues* out_results,
                          RunVerbosity verbose);
 
@@ -803,14 +803,13 @@ class CommandRunner {
   std::string source_filename_;
 };
 
-static interpreter::Result DefaultHostCallback(
-    const HostFunc* func,
-    const interpreter::FuncSignature* sig,
-    Index num_args,
-    TypedValue* args,
-    Index num_results,
-    TypedValue* out_results,
-    void* user_data) {
+static interp::Result DefaultHostCallback(const HostFunc* func,
+                                          const interp::FuncSignature* sig,
+                                          Index num_args,
+                                          TypedValue* args,
+                                          Index num_results,
+                                          TypedValue* out_results,
+                                          void* user_data) {
   memset(out_results, 0, sizeof(TypedValue) * num_results);
   for (Index i = 0; i < num_results; ++i)
     out_results[i].type = sig->result_types[i];
@@ -820,8 +819,8 @@ static interpreter::Result DefaultHostCallback(
 
   printf("called host ");
   WriteCall(s_stdout_stream.get(), func->module_name, func->field_name,
-            vec_args, vec_results, interpreter::Result::Ok);
-  return interpreter::Result::Ok;
+            vec_args, vec_results, interp::Result::Ok);
+  return interp::Result::Ok;
 }
 
 #define PRIimport "\"%s.%s\""
@@ -829,9 +828,9 @@ static interpreter::Result DefaultHostCallback(
 
 class SpectestHostImportDelegate : public HostImportDelegate {
  public:
-  wabt::Result ImportFunc(interpreter::FuncImport* import,
-                          interpreter::Func* func,
-                          interpreter::FuncSignature* func_sig,
+  wabt::Result ImportFunc(interp::FuncImport* import,
+                          interp::Func* func,
+                          interp::FuncSignature* func_sig,
                           const ErrorCallback& callback) override {
     if (import->field_name == "print") {
       cast<HostFunc>(func)->callback = DefaultHostCallback;
@@ -843,8 +842,8 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportTable(interpreter::TableImport* import,
-                           interpreter::Table* table,
+  wabt::Result ImportTable(interp::TableImport* import,
+                           interp::Table* table,
                            const ErrorCallback& callback) override {
     if (import->field_name == "table") {
       table->limits.has_max = true;
@@ -858,8 +857,8 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportMemory(interpreter::MemoryImport* import,
-                            interpreter::Memory* memory,
+  wabt::Result ImportMemory(interp::MemoryImport* import,
+                            interp::Memory* memory,
                             const ErrorCallback& callback) override {
     if (import->field_name == "memory") {
       memory->page_limits.has_max = true;
@@ -874,8 +873,8 @@ class SpectestHostImportDelegate : public HostImportDelegate {
     }
   }
 
-  wabt::Result ImportGlobal(interpreter::GlobalImport* import,
-                            interpreter::Global* global,
+  wabt::Result ImportGlobal(interp::GlobalImport* import,
+                            interp::Global* global,
                             const ErrorCallback& callback) override {
     if (import->field_name == "global") {
       switch (global->typed_value.type) {
@@ -995,30 +994,30 @@ void CommandRunner::PrintError(uint32_t line_number, const char* format, ...) {
   printf("%s:%u: %s\n", source_filename_.c_str(), line_number, buffer);
 }
 
-static interpreter::Result GetGlobalExportByName(Thread* thread,
-                                                 interpreter::Module* module,
-                                                 string_view name,
-                                                 TypedValues* out_results) {
-  interpreter::Export* export_ = module->GetExport(name);
+static interp::Result GetGlobalExportByName(Thread* thread,
+                                            interp::Module* module,
+                                            string_view name,
+                                            TypedValues* out_results) {
+  interp::Export* export_ = module->GetExport(name);
   if (!export_)
-    return interpreter::Result::UnknownExport;
+    return interp::Result::UnknownExport;
   if (export_->kind != ExternalKind::Global)
-    return interpreter::Result::ExportKindMismatch;
+    return interp::Result::ExportKindMismatch;
 
-  interpreter::Global* global = thread->env()->GetGlobal(export_->index);
+  interp::Global* global = thread->env()->GetGlobal(export_->index);
   out_results->clear();
   out_results->push_back(global->typed_value);
-  return interpreter::Result::Ok;
+  return interp::Result::Ok;
 }
 
 wabt::Result CommandRunner::RunAction(int line_number,
                                       const Action* action,
-                                      interpreter::Result* out_iresult,
+                                      interp::Result* out_iresult,
                                       TypedValues* out_results,
                                       RunVerbosity verbose) {
   out_results->clear();
 
-  interpreter::Module* module;
+  interp::Module* module;
   if (!action->module_name.empty()) {
     module = env_.FindModule(action->module_name);
   } else {
@@ -1082,8 +1081,8 @@ static wabt::Result ReadModule(const char* module_filename,
     const bool kStopOnFirstError = true;
     ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                               kStopOnFirstError);
-    result = ReadBinaryInterpreter(env, DataOrNull(file_data), file_data.size(),
-                                   &options, error_handler, out_module);
+    result = ReadBinaryInterp(env, DataOrNull(file_data), file_data.size(),
+                              &options, error_handler, out_module);
 
     if (Succeeded(result)) {
       if (s_verbose)
@@ -1132,8 +1131,8 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
     return wabt::Result::Error;
   }
 
-  interpreter::Result iresult = thread_.RunStartFunction(last_module_);
-  if (iresult != interpreter::Result::Ok) {
+  interp::Result iresult = thread_.RunStartFunction(last_module_);
+  if (iresult != interp::Result::Ok) {
     env_.ResetToMarkPoint(mark);
     WriteResult(s_stdout_stream.get(), "error running start function", iresult);
     return wabt::Result::Error;
@@ -1149,13 +1148,13 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
 
 wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
   TypedValues results;
-  interpreter::Result iresult;
+  interp::Result iresult;
 
   total_++;
   wabt::Result result = RunAction(command->line, &command->action, &iresult,
                                   &results, RunVerbosity::Verbose);
   if (Succeeded(result)) {
-    if (iresult == interpreter::Result::Ok) {
+    if (iresult == interp::Result::Ok) {
       passed_++;
     } else {
       PrintError(command->line, "unexpected trap: %s", ResultToString(iresult));
@@ -1256,8 +1255,8 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
       ReadModule(command->filename.c_str(), &env_, &error_handler, &module);
 
   if (Succeeded(result)) {
-    interpreter::Result iresult = thread_.RunStartFunction(module);
-    if (iresult == interpreter::Result::Ok) {
+    interp::Result iresult = thread_.RunStartFunction(module);
+    if (iresult == interp::Result::Ok) {
       PrintError(command->line, "expected error running start function: \"%s\"",
                  command->filename.c_str());
       result = wabt::Result::Error;
@@ -1296,14 +1295,14 @@ static bool TypedValuesAreEqual(const TypedValue* tv1, const TypedValue* tv2) {
 wabt::Result CommandRunner::OnAssertReturnCommand(
     const AssertReturnCommand* command) {
   TypedValues results;
-  interpreter::Result iresult;
+  interp::Result iresult;
 
   total_++;
   wabt::Result result = RunAction(command->line, &command->action, &iresult,
                                   &results, RunVerbosity::Quiet);
 
   if (Succeeded(result)) {
-    if (iresult == interpreter::Result::Ok) {
+    if (iresult == interp::Result::Ok) {
       if (results.size() == command->expected.size()) {
         for (size_t i = 0; i < results.size(); ++i) {
           const TypedValue* expected_tv = &command->expected[i];
@@ -1342,13 +1341,13 @@ wabt::Result CommandRunner::OnAssertReturnNanCommand(
   const bool is_canonical =
       command->type == CommandType::AssertReturnCanonicalNan;
   TypedValues results;
-  interpreter::Result iresult;
+  interp::Result iresult;
 
   total_++;
   wabt::Result result = RunAction(command->line, &command->action, &iresult,
                                   &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
-    if (iresult == interpreter::Result::Ok) {
+    if (iresult == interp::Result::Ok) {
       if (results.size() != 1) {
         PrintError(command->line, "expected one result, got %" PRIzd,
                    results.size());
@@ -1401,13 +1400,13 @@ wabt::Result CommandRunner::OnAssertReturnNanCommand(
 wabt::Result CommandRunner::OnAssertTrapCommand(
     const AssertTrapCommand* command) {
   TypedValues results;
-  interpreter::Result iresult;
+  interp::Result iresult;
 
   total_++;
   wabt::Result result = RunAction(command->line, &command->action, &iresult,
                                   &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
-    if (iresult != interpreter::Result::Ok) {
+    if (iresult != interp::Result::Ok) {
       passed_++;
     } else {
       PrintError(command->line, "expected trap: \"%s\"", command->text.c_str());
@@ -1421,14 +1420,14 @@ wabt::Result CommandRunner::OnAssertTrapCommand(
 wabt::Result CommandRunner::OnAssertExhaustionCommand(
     const AssertExhaustionCommand* command) {
   TypedValues results;
-  interpreter::Result iresult;
+  interp::Result iresult;
 
   total_++;
   wabt::Result result = RunAction(command->line, &command->action, &iresult,
                                   &results, RunVerbosity::Quiet);
   if (Succeeded(result)) {
-    if (iresult == interpreter::Result::TrapCallStackExhausted ||
-        iresult == interpreter::Result::TrapValueStackExhausted) {
+    if (iresult == interp::Result::TrapCallStackExhausted ||
+        iresult == interp::Result::TrapValueStackExhausted) {
       passed_++;
     } else {
       PrintError(command->line, "expected call stack exhaustion");

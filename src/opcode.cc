@@ -180,11 +180,11 @@ bool Opcode::IsEnabled(const Features& features) const {
       return features.threads_enabled();
 
     // Interpreter opcodes are never "enabled".
-    case Opcode::InterpreterAlloca:
-    case Opcode::InterpreterBrUnless:
-    case Opcode::InterpreterCallHost:
-    case Opcode::InterpreterData:
-    case Opcode::InterpreterDropKeep:
+    case Opcode::InterpAlloca:
+    case Opcode::InterpBrUnless:
+    case Opcode::InterpCallHost:
+    case Opcode::InterpData:
+    case Opcode::InterpDropKeep:
       return false;
 
     default:

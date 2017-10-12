@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/interpreter.h"
+#include "src/interp.h"
 
 #include <algorithm>
 #include <cassert>
@@ -28,10 +28,10 @@
 #include "src/stream.h"
 
 namespace wabt {
-namespace interpreter {
+namespace interp {
 
 // Differs from the normal CHECK_RESULT because this one is meant to return the
-// interpreter Result type.
+// interp Result type.
 #undef CHECK_RESULT
 #define CHECK_RESULT(expr)  \
   do {                      \
@@ -89,7 +89,7 @@ void WriteTypedValues(Stream* stream, const TypedValues& values) {
 }
 
 #define V(name, str) str,
-  static const char* s_trap_strings[] = {FOREACH_INTERPRETER_RESULT(V)};
+static const char* s_trap_strings[] = {FOREACH_INTERP_RESULT(V)};
 #undef V
 
 const char* ResultToString(Result result) {
@@ -245,19 +245,19 @@ HostModule* Environment::AppendHostModule(string_view name) {
 
 Result Thread::PushArgs(const FuncSignature* sig, const TypedValues& args) {
   if (sig->param_types.size() != args.size())
-    return interpreter::Result::ArgumentTypeMismatch;
+    return interp::Result::ArgumentTypeMismatch;
 
   for (size_t i = 0; i < sig->param_types.size(); ++i) {
     if (sig->param_types[i] != args[i].type)
-      return interpreter::Result::ArgumentTypeMismatch;
+      return interp::Result::ArgumentTypeMismatch;
 
-    interpreter::Result iresult = Push(args[i].value);
-    if (iresult != interpreter::Result::Ok) {
+    interp::Result iresult = Push(args[i].value);
+    if (iresult != interp::Result::Ok) {
       value_stack_top_ = value_stack_.data();
       return iresult;
     }
   }
-  return interpreter::Result::Ok;
+  return interp::Result::Ok;
 }
 
 void Thread::CopyResults(const FuncSignature* sig, TypedValues* out_results) {
@@ -1268,15 +1268,15 @@ Result Thread::RunExport(const Export* export_,
   return RunFunction(export_->index, args, out_results);
 }
 
-Result Thread::RunExportByName(interpreter::Module* module,
+Result Thread::RunExportByName(interp::Module* module,
                                string_view name,
                                const TypedValues& args,
                                TypedValues* out_results) {
-  interpreter::Export* export_ = module->GetExport(name);
+  interp::Export* export_ = module->GetExport(name);
   if (!export_)
-    return interpreter::Result::UnknownExport;
+    return interp::Result::UnknownExport;
   if (export_->kind != ExternalKind::Func)
-    return interpreter::Result::ExportKindMismatch;
+    return interp::Result::ExportKindMismatch;
   return RunExport(export_, args, out_results);
 }
 
@@ -1460,7 +1460,7 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         break;
       }
 
-      case Opcode::InterpreterCallHost: {
+      case Opcode::InterpCallHost: {
         Index func_index = ReadU32(&pc);
         CallHost(cast<HostFunc>(env_->funcs_[func_index].get()));
         break;
@@ -2270,7 +2270,7 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         CHECK_TRAP(Unop(IntExtendS<uint64_t, int32_t>));
         break;
 
-      case Opcode::InterpreterAlloca: {
+      case Opcode::InterpAlloca: {
         Value* old_value_stack_top = value_stack_top_;
         value_stack_top_ += ReadU32(&pc);
         CHECK_STACK();
@@ -2279,7 +2279,7 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         break;
       }
 
-      case Opcode::InterpreterBrUnless: {
+      case Opcode::InterpBrUnless: {
         IstreamOffset new_pc = ReadU32(&pc);
         if (!Pop<uint32_t>())
           GOTO(new_pc);
@@ -2290,7 +2290,7 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         (void)Pop();
         break;
 
-      case Opcode::InterpreterDropKeep: {
+      case Opcode::InterpDropKeep: {
         uint32_t drop_count = ReadU32(&pc);
         uint8_t keep_count = *pc++;
         DropKeep(drop_count, keep_count);
@@ -2315,7 +2315,7 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
       case Opcode::Else:
       case Opcode::End:
       case Opcode::If:
-      case Opcode::InterpreterData:
+      case Opcode::InterpData:
       case Opcode::Invalid:
       case Opcode::Loop:
       case Opcode::Rethrow:
@@ -2420,7 +2420,7 @@ void Thread::Trace(Stream* stream) {
                      Top().i32);
       break;
 
-    case Opcode::InterpreterCallHost:
+    case Opcode::InterpCallHost:
       stream->Writef("%s $%u\n", opcode.GetName(), ReadU32At(pc));
       break;
 
@@ -2531,7 +2531,7 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::I32Wait:{
+    case Opcode::I32Wait: {
       Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %u, %" PRIu64 "\n",
                      opcode.GetName(), memory_index, Pick(3).i32, ReadU32At(pc),
@@ -2750,16 +2750,16 @@ void Thread::Trace(Stream* stream) {
       stream->Writef("%s %u\n", opcode.GetName(), Top().i32);
       break;
 
-    case Opcode::InterpreterAlloca:
+    case Opcode::InterpAlloca:
       stream->Writef("%s $%u\n", opcode.GetName(), ReadU32At(pc));
       break;
 
-    case Opcode::InterpreterBrUnless:
+    case Opcode::InterpBrUnless:
       stream->Writef("%s @%u, %u\n", opcode.GetName(), ReadU32At(pc),
                      Top().i32);
       break;
 
-    case Opcode::InterpreterDropKeep:
+    case Opcode::InterpDropKeep:
       stream->Writef("%s $%u $%u\n", opcode.GetName(), ReadU32At(pc),
                      *(pc + 4));
       break;
@@ -2772,7 +2772,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::Else:
     case Opcode::End:
     case Opcode::If:
-    case Opcode::InterpreterData:
+    case Opcode::InterpData:
     case Opcode::Invalid:
     case Opcode::Loop:
     case Opcode::Rethrow:
@@ -2873,7 +2873,7 @@ void Environment::Disassemble(Stream* stream,
         break;
       }
 
-      case Opcode::InterpreterCallHost:
+      case Opcode::InterpCallHost:
         stream->Writef("%s $%u\n", opcode.GetName(), ReadU32(&pc));
         break;
 
@@ -3133,22 +3133,22 @@ void Environment::Disassemble(Stream* stream,
         break;
       }
 
-      case Opcode::InterpreterAlloca:
+      case Opcode::InterpAlloca:
         stream->Writef("%s $%u\n", opcode.GetName(), ReadU32(&pc));
         break;
 
-      case Opcode::InterpreterBrUnless:
+      case Opcode::InterpBrUnless:
         stream->Writef("%s @%u, %%[-1]\n", opcode.GetName(), ReadU32(&pc));
         break;
 
-      case Opcode::InterpreterDropKeep: {
+      case Opcode::InterpDropKeep: {
         uint32_t drop = ReadU32(&pc);
         uint8_t keep = *pc++;
         stream->Writef("%s $%u $%u\n", opcode.GetName(), drop, keep);
         break;
       }
 
-      case Opcode::InterpreterData: {
+      case Opcode::InterpData: {
         uint32_t num_bytes = ReadU32(&pc);
         stream->Writef("%s $%u\n", opcode.GetName(), num_bytes);
         /* for now, the only reason this is emitted is for br_table, so display
@@ -3200,5 +3200,5 @@ void Environment::DisassembleModule(Stream* stream, Module* module) {
               defined_module->istream_end);
 }
 
-}  // namespace interpreter
+}  // namespace interp
 }  // namespace wabt

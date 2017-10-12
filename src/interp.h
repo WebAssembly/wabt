@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef WABT_INTERPRETER_H_
-#define WABT_INTERPRETER_H_
+#ifndef WABT_INTERP_H_
+#define WABT_INTERP_H_
 
 #include <stdint.h>
 
@@ -30,9 +30,9 @@
 
 namespace wabt {
 
-namespace interpreter {
+namespace interp {
 
-#define FOREACH_INTERPRETER_RESULT(V)                                       \
+#define FOREACH_INTERP_RESULT(V)                                            \
   V(Ok, "ok")                                                               \
   /* returned from the top-most function */                                 \
   V(Returned, "returned")                                                   \
@@ -73,7 +73,7 @@ namespace interpreter {
 
 enum class Result {
 #define V(Name, str) Name,
-  FOREACH_INTERPRETER_RESULT(V)
+  FOREACH_INTERP_RESULT(V)
 #undef V
 };
 
@@ -598,7 +598,7 @@ void WriteCall(Stream* stream,
                const TypedValues& results,
                Result);
 
-}  // namespace interpreter
+}  // namespace interp
 }  // namespace wabt
 
-#endif /* WABT_INTERPRETER_H_ */
+#endif /* WABT_INTERP_H_ */
