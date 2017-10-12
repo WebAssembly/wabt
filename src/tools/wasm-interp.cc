@@ -43,6 +43,7 @@ using namespace wabt::interp;
 static int s_verbose;
 static const char* s_infile;
 static Thread::Options s_thread_options;
+static Stream* s_trace_stream;
 static bool s_run_all_exports;
 static bool s_host_print;
 static Features s_features;
@@ -95,9 +96,8 @@ static void ParseOptions(int argc, char** argv) {
                      // TODO(binji): validate.
                      s_thread_options.call_stack_size = atoi(argument.c_str());
                    });
-  parser.AddOption('t', "trace", "Trace execution", []() {
-    s_thread_options.trace_stream = s_stdout_stream.get();
-  });
+  parser.AddOption('t', "trace", "Trace execution",
+                   []() { s_trace_stream = s_stdout_stream.get(); });
   parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
@@ -113,15 +113,15 @@ static void ParseOptions(int argc, char** argv) {
 }
 
 static void RunAllExports(interp::Module* module,
-                          Thread* thread,
+                          Executor* executor,
                           RunVerbosity verbose) {
   TypedValues args;
   TypedValues results;
   for (const interp::Export& export_ : module->exports) {
-    interp::Result iresult = thread->RunExport(&export_, args, &results);
+    ExecResult exec_result = executor->RunExport(&export_, args);
     if (verbose == RunVerbosity::Verbose) {
       WriteCall(s_stdout_stream.get(), string_view(), export_.name, args,
-                results, iresult);
+                exec_result.values, exec_result.result);
     }
   }
 }
@@ -234,14 +234,14 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
   DefinedModule* module = nullptr;
   result = ReadModule(module_filename, &env, &error_handler, &module);
   if (Succeeded(result)) {
-    Thread thread(&env, s_thread_options);
-    interp::Result iresult = thread.RunStartFunction(module);
-    if (iresult == interp::Result::Ok) {
+    Executor executor(&env, s_trace_stream, s_thread_options);
+    ExecResult exec_result = executor.RunStartFunction(module);
+    if (exec_result.result == interp::Result::Ok) {
       if (s_run_all_exports)
-        RunAllExports(module, &thread, RunVerbosity::Verbose);
+        RunAllExports(module, &executor, RunVerbosity::Verbose);
     } else {
       WriteResult(s_stdout_stream.get(), "error running start function",
-                  iresult);
+                  exec_result.result);
     }
   }
   return result;

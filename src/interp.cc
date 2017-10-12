@@ -144,24 +144,14 @@ Module* Environment::FindRegisteredModule(string_view name) {
 }
 
 Thread::Options::Options(uint32_t value_stack_size,
-                         uint32_t call_stack_size,
-                         IstreamOffset pc,
-                         Stream* trace_stream)
+                         uint32_t call_stack_size)
     : value_stack_size(value_stack_size),
-      call_stack_size(call_stack_size),
-      pc(pc),
-      trace_stream(trace_stream) {}
+      call_stack_size(call_stack_size) {}
 
 Thread::Thread(Environment* env, const Options& options)
     : env_(env),
       value_stack_(options.value_stack_size),
-      call_stack_(options.call_stack_size),
-      value_stack_top_(value_stack_.data()),
-      value_stack_end_(value_stack_.data() + value_stack_.size()),
-      call_stack_top_(call_stack_.data()),
-      call_stack_end_(call_stack_.data() + call_stack_.size()),
-      pc_(options.pc),
-      trace_stream_(options.trace_stream) {}
+      call_stack_(options.call_stack_size) {}
 
 FuncSignature::FuncSignature(Index param_count,
                              Type* param_types,
@@ -241,34 +231,6 @@ HostModule* Environment::AppendHostModule(string_view name) {
   registered_module_bindings_.emplace(name.to_string(),
                                       Binding(modules_.size() - 1));
   return module;
-}
-
-Result Thread::PushArgs(const FuncSignature* sig, const TypedValues& args) {
-  if (sig->param_types.size() != args.size())
-    return interp::Result::ArgumentTypeMismatch;
-
-  for (size_t i = 0; i < sig->param_types.size(); ++i) {
-    if (sig->param_types[i] != args[i].type)
-      return interp::Result::ArgumentTypeMismatch;
-
-    interp::Result iresult = Push(args[i].value);
-    if (iresult != interp::Result::Ok) {
-      value_stack_top_ = value_stack_.data();
-      return iresult;
-    }
-  }
-  return interp::Result::Ok;
-}
-
-void Thread::CopyResults(const FuncSignature* sig, TypedValues* out_results) {
-  size_t expected_results = sig->result_types.size();
-  size_t value_stack_depth = value_stack_top_ - value_stack_.data();
-  WABT_USE(value_stack_depth);
-  assert(expected_results == value_stack_depth);
-
-  out_results->clear();
-  for (size_t i = 0; i < expected_results; ++i)
-    out_results->emplace_back(sig->result_types[i], value_stack_[i]);
 }
 
 uint32_t ToRep(bool x) { return x ? 1 : 0; }
@@ -587,7 +549,7 @@ template<> uint64_t GetValue<double>(Value v) { return v.f64_bits; }
   } while (0)
 
 #define CHECK_STACK() \
-  TRAP_IF(value_stack_top_ >= value_stack_end_, ValueStackExhausted)
+  TRAP_IF(value_stack_top_ >= value_stack_.size(), ValueStackExhausted)
 
 #define PUSH_NEG_1_AND_BREAK_IF(cond) \
   if (WABT_UNLIKELY(cond)) {          \
@@ -690,17 +652,28 @@ Value& Thread::Top() {
 }
 
 Value& Thread::Pick(Index depth) {
-  return *(value_stack_top_ - depth);
+  return value_stack_[value_stack_top_ - depth];
+}
+
+void Thread::Reset() {
+  pc_ = 0;
+  value_stack_top_ = 0;
+  call_stack_top_ = 0;
 }
 
 Result Thread::Push(Value value) {
   CHECK_STACK();
-  *value_stack_top_++ = value;
+  value_stack_[value_stack_top_++] = value;
   return Result::Ok;
 }
 
 Value Thread::Pop() {
-  return *--value_stack_top_;
+  return value_stack_[--value_stack_top_];
+}
+
+Value Thread::ValueAt(Index at) const {
+  assert(at < value_stack_top_);
+  return value_stack_[at];
 }
 
 template <typename T>
@@ -731,13 +704,13 @@ void Thread::DropKeep(uint32_t drop_count, uint8_t keep_count) {
 }
 
 Result Thread::PushCall(const uint8_t* pc) {
-  TRAP_IF(call_stack_top_ >= call_stack_end_, CallStackExhausted);
-  *call_stack_top_++ = pc - GetIstream();
+  TRAP_IF(call_stack_top_ >= call_stack_.size(), CallStackExhausted);
+  call_stack_[call_stack_top_++] = pc - GetIstream();
   return Result::Ok;
 }
 
 IstreamOffset Thread::PopCall() {
-  return *--call_stack_top_;
+  return call_stack_[--call_stack_top_];
 }
 
 template <typename T>
@@ -1221,87 +1194,6 @@ bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
          sig_0->result_types == sig_1->result_types;
 }
 
-Result Thread::RunFunction(Index func_index,
-                           const TypedValues& args,
-                           TypedValues* out_results) {
-  Func* func = env_->GetFunc(func_index);
-  FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
-
-  Result result = PushArgs(sig, args);
-  if (result == Result::Ok) {
-    result = func->is_host
-                 ? CallHost(cast<HostFunc>(func))
-                 : RunDefinedFunction(cast<DefinedFunc>(func)->offset);
-    if (result == Result::Ok)
-      CopyResults(sig, out_results);
-  }
-
-  // Always reset the value and call stacks.
-  value_stack_top_ = value_stack_.data();
-  call_stack_top_ = call_stack_.data();
-  return result;
-}
-
-Result Thread::RunStartFunction(DefinedModule* module) {
-  if (module->start_func_index == kInvalidIndex)
-    return Result::Ok;
-
-  if (trace_stream_) {
-    trace_stream_->Writef(">>> running start function:\n");
-  }
-  TypedValues args;
-  TypedValues results;
-  Result result = RunFunction(module->start_func_index, args, &results);
-  assert(results.size() == 0);
-  return result;
-}
-
-Result Thread::RunExport(const Export* export_,
-                         const TypedValues& args,
-                         TypedValues* out_results) {
-  if (trace_stream_) {
-    trace_stream_->Writef(">>> running export \"" PRIstringview "\":\n",
-                          WABT_PRINTF_STRING_VIEW_ARG(export_->name));
-  }
-
-  assert(export_->kind == ExternalKind::Func);
-  return RunFunction(export_->index, args, out_results);
-}
-
-Result Thread::RunExportByName(interp::Module* module,
-                               string_view name,
-                               const TypedValues& args,
-                               TypedValues* out_results) {
-  interp::Export* export_ = module->GetExport(name);
-  if (!export_)
-    return interp::Result::UnknownExport;
-  if (export_->kind != ExternalKind::Func)
-    return interp::Result::ExportKindMismatch;
-  return RunExport(export_, args, out_results);
-}
-
-Result Thread::RunDefinedFunction(IstreamOffset function_offset) {
-  Result result = Result::Ok;
-  pc_ = function_offset;
-  IstreamOffset* call_stack_return_top = call_stack_top_;
-  if (trace_stream_) {
-    const int kNumInstructions = 1;
-    while (result == Result::Ok) {
-      Trace(trace_stream_);
-      result = Run(kNumInstructions, call_stack_return_top);
-    }
-  } else {
-    const int kNumInstructions = 1000;
-    while (result == Result::Ok) {
-      result = Run(kNumInstructions, call_stack_return_top);
-    }
-  }
-  if (result != Result::Returned)
-    return result;
-  // Use OK instead of RETURNED for consistency.
-  return Result::Ok;
-}
-
 Result Thread::CallHost(HostFunc* func) {
   FuncSignature* sig = &env_->sigs_[func->sig_index];
 
@@ -1330,9 +1222,8 @@ Result Thread::CallHost(HostFunc* func) {
   return Result::Ok;
 }
 
-Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
+Result Thread::Run(int num_instructions) {
   Result result = Result::Ok;
-  assert(call_stack_return_top < call_stack_end_);
 
   const uint8_t* istream = GetIstream();
   const uint8_t* pc = &istream[pc_];
@@ -1376,7 +1267,7 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
       }
 
       case Opcode::Return:
-        if (call_stack_top_ == call_stack_return_top) {
+        if (call_stack_top_ == 0) {
           result = Result::Returned;
           goto exit_loop;
         }
@@ -2271,11 +2162,11 @@ Result Thread::Run(int num_instructions, IstreamOffset* call_stack_return_top) {
         break;
 
       case Opcode::InterpAlloca: {
-        Value* old_value_stack_top = value_stack_top_;
-        value_stack_top_ += ReadU32(&pc);
+        uint32_t old_value_stack_top = value_stack_top_;
+        size_t count = ReadU32(&pc);
+        value_stack_top_ += count;
         CHECK_STACK();
-        memset(old_value_stack_top, 0,
-               (value_stack_top_ - old_value_stack_top) * sizeof(Value));
+        memset(&value_stack_[old_value_stack_top], 0, count * sizeof(Value));
         break;
       }
 
@@ -2334,11 +2225,9 @@ exit_loop:
 void Thread::Trace(Stream* stream) {
   const uint8_t* istream = GetIstream();
   const uint8_t* pc = &istream[pc_];
-  size_t value_stack_depth = value_stack_top_ - value_stack_.data();
-  size_t call_stack_depth = call_stack_top_ - call_stack_.data();
 
-  stream->Writef("#%" PRIzd ". %4" PRIzd ": V:%-3" PRIzd "| ", call_stack_depth,
-                 pc - istream, value_stack_depth);
+  stream->Writef("#%u. %4" PRIzd ": V:%-3u| ", call_stack_top_, pc - istream,
+                 value_stack_top_);
 
   Opcode opcode = ReadOpcode(&pc);
   assert(!opcode.IsInvalid());
@@ -3198,6 +3087,110 @@ void Environment::DisassembleModule(Stream* stream, Module* module) {
   auto* defined_module = cast<DefinedModule>(module);
   Disassemble(stream, defined_module->istream_start,
               defined_module->istream_end);
+}
+
+Executor::Executor(Environment* env,
+                   Stream* trace_stream,
+                   const Thread::Options& options)
+    : env_(env), trace_stream_(trace_stream), thread_(env, options) {}
+
+ExecResult Executor::RunFunction(Index func_index, const TypedValues& args) {
+  ExecResult exec_result;
+  Func* func = env_->GetFunc(func_index);
+  FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
+
+  exec_result.result = PushArgs(sig, args);
+  if (exec_result.result == Result::Ok) {
+    exec_result.result = func->is_host
+                 ? thread_.CallHost(cast<HostFunc>(func))
+                 : RunDefinedFunction(cast<DefinedFunc>(func)->offset);
+    if (exec_result.result == Result::Ok)
+      CopyResults(sig, &exec_result.values);
+  }
+
+  thread_.Reset();
+  return exec_result;
+}
+
+ExecResult Executor::RunStartFunction(DefinedModule* module) {
+  if (module->start_func_index == kInvalidIndex)
+    return ExecResult(Result::Ok);
+
+  if (trace_stream_) {
+    trace_stream_->Writef(">>> running start function:\n");
+  }
+
+  TypedValues args;
+  ExecResult exec_result = RunFunction(module->start_func_index, args);
+  assert(exec_result.values.size() == 0);
+  return exec_result;
+}
+
+ExecResult Executor::RunExport(const Export* export_, const TypedValues& args) {
+  if (trace_stream_) {
+    trace_stream_->Writef(">>> running export \"" PRIstringview "\":\n",
+                          WABT_PRINTF_STRING_VIEW_ARG(export_->name));
+  }
+
+  assert(export_->kind == ExternalKind::Func);
+  return RunFunction(export_->index, args);
+}
+
+ExecResult Executor::RunExportByName(Module* module,
+                                     string_view name,
+                                     const TypedValues& args) {
+  Export* export_ = module->GetExport(name);
+  if (!export_)
+    return ExecResult(Result::UnknownExport);
+  if (export_->kind != ExternalKind::Func)
+    return ExecResult(Result::ExportKindMismatch);
+  return RunExport(export_, args);
+}
+
+Result Executor::RunDefinedFunction(IstreamOffset function_offset) {
+  Result result = Result::Ok;
+  thread_.set_pc(function_offset);
+  if (trace_stream_) {
+    const int kNumInstructions = 1;
+    while (result == Result::Ok) {
+      thread_.Trace(trace_stream_);
+      result = thread_.Run(kNumInstructions);
+    }
+  } else {
+    const int kNumInstructions = 1000;
+    while (result == Result::Ok) {
+      result = thread_.Run(kNumInstructions);
+    }
+  }
+  if (result != Result::Returned)
+    return result;
+  // Use OK instead of RETURNED for consistency.
+  return Result::Ok;
+}
+
+Result Executor::PushArgs(const FuncSignature* sig, const TypedValues& args) {
+  if (sig->param_types.size() != args.size())
+    return Result::ArgumentTypeMismatch;
+
+  for (size_t i = 0; i < sig->param_types.size(); ++i) {
+    if (sig->param_types[i] != args[i].type)
+      return Result::ArgumentTypeMismatch;
+
+    Result result = thread_.Push(args[i].value);
+    if (result != Result::Ok) {
+      return result;
+    }
+  }
+  return Result::Ok;
+}
+
+void Executor::CopyResults(const FuncSignature* sig, TypedValues* out_results) {
+  size_t expected_results = sig->result_types.size();
+  assert(expected_results == thread_.NumValues());
+
+  out_results->clear();
+  for (size_t i = 0; i < expected_results; ++i)
+    out_results->emplace_back(sig->result_types[i], thread_.ValueAt(i));
 }
 
 }  // namespace interp
