@@ -378,14 +378,19 @@ class ModuleExtender(object):
 
 class JSWriter(object):
 
-  def __init__(self, base_dir, commands, out_file):
+  def __init__(self, base_dir, spec_json, out_file):
     self.base_dir = base_dir
-    self.commands = commands
+    self.source_filename = os.path.basename(spec_json['source_filename'])
+    self.commands = spec_json['commands']
     self.out_file = out_file
+    self.module_idx = 0
 
   def Write(self):
     for command in self.commands:
       self._WriteCommand(command)
+
+  def _WriteFileAndLine(self, command):
+    self.out_file.write('// %s:%d\n' % (self.source_filename, command['line']))
 
   def _WriteCommand(self, command):
     command_funcs = {
@@ -406,20 +411,28 @@ class JSWriter(object):
     func = command_funcs.get(command['type'])
     if func is None:
       raise Error('Unexpected type: %s' % command['type'])
+    self._WriteFileAndLine(command)
     func(command)
+    self.out_file.write('\n')
+
+  def _ModuleIdxName(self):
+    return '$%d' % self.module_idx
 
   def _WriteModuleCommand(self, command):
+    self.module_idx += 1
+    idx_name = self._ModuleIdxName()
+
+    self.out_file.write('let %s = instance("%s");\n' %
+                        (idx_name, self._Module(command['filename'])))
     if 'name' in command:
-      self.out_file.write('let %s = ' % command['name'])
-    self.out_file.write('$$ = instance("%s");\n' %
-                        self._Module(command['filename']))
+      self.out_file.write('let %s = %s;\n' % (command['name'], idx_name))
 
   def _WriteActionCommand(self, command):
     self.out_file.write('%s;\n' % self._Action(command['action']))
 
   def _WriteRegisterCommand(self, command):
-    self.out_file.write('register("%s", %s)\n' % (command['as'],
-                                                  command.get('name', '$$')))
+    self.out_file.write('register("%s", %s)\n' % (
+      command['as'], command.get('name', self._ModuleIdxName())))
 
   def _WriteAssertModuleCommand(self, command):
     # Don't bother writing out text modules; they can't be parsed by JS.
@@ -464,15 +477,15 @@ class JSWriter(object):
 
   def _Action(self, action):
     type_ = action['type']
-    if type_ not in ('invoke', 'get'):
-      raise Error('Unexpected action type: %s' % type_)
-
-    args = ''
+    module = action.get('module', self._ModuleIdxName())
+    field = EscapeJSString(action['field'])
     if type_ == 'invoke':
-      args = '(%s)' % self._ConstantList(action.get('args', []))
-
-    return '%s.exports["%s"]%s' % (action.get('module', '$$'),
-                                   EscapeJSString(action['field']), args)
+      args = '[%s]' % self._ConstantList(action.get('args', []))
+      return 'call(%s, "%s", %s)' % (module, field, args)
+    elif type_ == 'get':
+      return 'get(%s, "%s")' % (module, field)
+    else:
+      raise Error('Unexpected action type: %s' % type_)
 
 
 def main(args):
@@ -529,7 +542,7 @@ def main(args):
         output.write(prefix_file.read())
         output.write('\n')
 
-    JSWriter(json_dir, all_commands, output).Write()
+    JSWriter(json_dir, spec_json, output).Write()
 
   if options.output:
     out_file = open(options.output, 'w')

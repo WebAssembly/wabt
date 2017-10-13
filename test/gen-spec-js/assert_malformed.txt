@@ -6,5 +6,7 @@
 (;; STDOUT ;;;
 // A deliberately empty file for testing.
 
+// assert_malformed.txt:4
 assert_malformed("\x00\x61\x73\x6d\xbc\x0a\x00\x00");
+
 ;;; STDOUT ;;)
