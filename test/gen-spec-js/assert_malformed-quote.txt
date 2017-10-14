@@ -8,4 +8,6 @@
 (;; STDOUT ;;;
 // A deliberately empty file for testing.
 
+// assert_malformed-quote.txt:6
+
 ;;; STDOUT ;;)
