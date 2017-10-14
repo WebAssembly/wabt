@@ -21,6 +21,7 @@
 #include "src/cast.h"
 #include "src/error-handler.h"
 #include "src/make-unique.h"
+#include "src/utf8.h"
 #include "src/wast-parser-lexer-shared.h"
 
 #define WABT_TRACING 0
@@ -564,7 +565,11 @@ Result WastParser::ParseQuotedText(std::string* text) {
   if (!PeekMatch(TokenType::Text))
     return ErrorExpected({"a quoted string"}, "\"foo\"");
 
-  RemoveEscapes(Consume().text(), std::back_inserter(*text));
+  Token token = Consume();
+  RemoveEscapes(token.text(), std::back_inserter(*text));
+  if (!IsValidUtf8(text->data(), text->length())) {
+    Error(token.loc, "quoted string has an invalid utf-8 encoding");
+  }
   return Result::Ok;
 }
 
