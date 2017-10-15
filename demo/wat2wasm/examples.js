@@ -17,54 +17,79 @@
 var examples = [
   {
     name: 'empty',
-    contents: '(module)'
+    contents: '(module)',
+    js: '',
   },
 
   {
     name: 'simple',
     contents:
-      '(module\n' +
-      '  (func $addTwo (param i32 i32) (result i32)\n' +
-      '    get_local 0\n' +
-      '    get_local 1\n' +
-      '    i32.add)\n' +
-      '  (export "addTwo" (func $addTwo)))\n'
+`(module
+  (func $addTwo (param i32 i32) (result i32)
+    get_local 0
+    get_local 1
+    i32.add)
+  (export "addTwo" (func $addTwo)))
+`,
+    js:
+`const wasmInstance =
+      new WebAssembly.Instance(wasmModule, {});
+const { addTwo } = wasmInstance.exports;
+for (let i = 0; i < 10; i++) {
+  console.log(addTwo(i, i));
+}
+`,
   },
 
   {
     name: 'factorial',
     contents:
-      '(module\n' +
-      '  (func $fac (param i64) (result i64)\n' +
-      '    get_local 0\n' +
-      '    i64.const 1\n' +
-      '    i64.lt_s\n' +
-      '    if (result i64)\n' +
-      '      i64.const 1\n' +
-      '    else\n' +
-      '      get_local 0\n' +
-      '      get_local 0\n' +
-      '      i64.const 1\n' +
-      '      i64.sub\n' +
-      '      call $fac\n' +
-      '      i64.mul\n' +
-      '    end)\n' +
-      '  (export "fac" (func $fac)))\n'
+`(module
+  (func $fac (param f64) (result f64)
+    get_local 0
+    f64.const 1
+    f64.lt
+    if (result f64)
+      f64.const 1
+    else
+      get_local 0
+      get_local 0
+      f64.const 1
+      f64.sub
+      call $fac
+      f64.mul
+    end)
+  (export "fac" (func $fac)))
+`,
+    js: `const wasmInstance =
+    new WebAssembly.Instance(wasmModule, {});
+const { fac } = wasmInstance.exports;
+for (let i = 1; i <= 15; i++) {
+  console.log(fac(i));
+}
+`,
   },
 
   {
     name: 'stuff',
     contents:
-      '(module\n' +
-      '  (import "foo" "bar" (func (param f32)))\n' +
-      '  (memory (data "hi"))\n' +
-      '  (type (func (param i32) (result i32)))\n' +
-      '  (start 1)\n' +
-      '  (table 0 1 anyfunc)\n' +
-      '  (func)\n' +
-      '  (func (type 1)\n' +
-      '    i32.const 42\n' +
-      '    drop)\n' +
-      '  (export "e" (func 1)))\n'
+`(module
+  (import "foo" "bar" (func (param f32)))
+  (memory (data "hi"))
+  (type (func (param i32) (result i32)))
+  (start 1)
+  (table 0 1 anyfunc)
+  (func)
+  (func (type 1)
+    i32.const 42
+    drop)
+  (export "e" (func 1)))
+`,
+    js: `var wasmInstance = new WebAssembly.Instance(wasmModule, {
+  foo: {
+    bar() {}
+  },
+});
+`,
   }
 ];

@@ -20,13 +20,11 @@
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
   <title>wat2wasm demo</title>
   <link href="../third_party/codemirror/codemirror.css" rel="stylesheet">
-  <link href="../primer.css" rel="stylesheet">
   <link href="../custom.css" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
+  <header>
     <h1>wat2wasm demo</h1>
-    <hr>
     <p>WebAssembly has a
       <a href="http://webassembly.github.io/spec/text/index.html">text format</a>
       and a
@@ -38,24 +36,41 @@
       either show an error, or will show a log with a description of the
       generated binary file.
     </p>
-    <div class="columns">
-      <div class="two-fifths column">
-        <textarea class="editor" autofocus autocomplete="off" autocorrect="off"
-            autocapitalize="off" spellcheck="false" hidden></textarea>
-        <div class="right">
-          <label>example:</label>
-          <select id="select" class="form-select"></select>
-          <button class="btn disabled" type="button" id="download">Download</button>
-          <a id="downloadLink" download="test.wasm" class="hidden"></a>
+  </header>
+  <main>
+    <div id="split-grid" class="split-grid">
+      <div id="top-row" class="split-vertical">
+        <div id="top-left" class="split split-horizontal">
+          <div class="toolbar">
+            WAT
+            <div class="right">
+              <label>example:</label>
+              <select id="select" class="form-select"></select>
+              <button class="btn disabled" type="button" id="download">Download</button>
+              <a id="downloadLink" download="test.wasm" class="hidden"></a>
+            </div>
+          </div>
+        </div>
+        <div id="top-right" class="split split-horizontal">
+          <pre id="output" class="output"></pre>
+          <div class="toolbar">BUILD LOG</div>
         </div>
       </div>
-      <div class="three-fifths column">
-        <pre id="output"></pre>
+      <div id="bottom-row" class="split-vertical">
+        <div id="bottom-left" class="split split-horizontal">
+          <div class="toolbar">JS</div>
+        </div>
+        <div id="bottom-right" class="split split-horizontal">
+          <pre id="js_log" class="output"></pre>
+          <div class="toolbar">JS LOG</div>
+        </div>
       </div>
     </div>
-  </div>
+  </main>
+  <script src="../third_party/split/split.min.js"></script>
   <script src="../third_party/codemirror/codemirror.js"></script>
   <script src="../third_party/codemirror/simple-mode.js"></script>
+  <script src="../third_party/codemirror/javascript.js"></script>
   <script src="../wast-mode.js"></script>
   <script src="../libwabt.js"></script>
   <script src="examples.js"></script>

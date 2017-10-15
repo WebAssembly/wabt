@@ -13,11 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+Split(["#top-left", "#top-right"]);
+Split(["#bottom-left", "#bottom-right"]);
+
+Split(["#top-row", "#bottom-row"], {
+  direction: 'vertical'
+});
+
+wabt.ready.then(function () {
 
 var kCompileMinMS = 100;
 
-var editorEl = document.querySelector('.editor');
 var outputEl = document.getElementById('output');
+var jsLogEl = document.getElementById('js_log');
 var selectEl = document.getElementById('select');
 var downloadEl = document.getElementById('download');
 var downloadLink = document.getElementById('downloadLink');
@@ -26,8 +34,27 @@ var binaryBlobUrl = null;
 
 var wasmInstance = null;
 
-var options = {mode: 'wast', lineNumbers: true};
-var editor = CodeMirror.fromTextArea(editorEl, options);
+var wrappedConsole = Object.create(console);
+
+wrappedConsole.log = (...args) => {
+  let line = args.map(String).join('') + '\n';
+  jsLogEl.textContent += line;
+  console.log(...args);
+}
+
+var watEditor = CodeMirror((elt) => {
+  document.getElementById('top-left').appendChild(elt);
+}, {
+  mode: 'wast',
+  lineNumbers: true,
+});
+
+var jsEditor = CodeMirror((elt) => {
+  document.getElementById('bottom-left').appendChild(elt);
+}, {
+  mode: 'javascript',
+  lineNumbers: true,
+});
 
 function debounce(f, wait) {
   var lastTime = 0;
@@ -48,43 +75,53 @@ function debounce(f, wait) {
   return wrapped;
 }
 
-function compile(text) {
-  wabt.ready.then(function() {
-    outputEl.textContent = '';
-    try {
-      var module = wabt.parseWat('test.wast', text);
-      module.resolveNames();
-      module.validate();
-      var binaryOutput = module.toBinary({log: true});
-      outputEl.textContent = binaryOutput.log;
-      binaryBuffer = binaryOutput.buffer;
-      var blob = new Blob([binaryOutput.buffer]);
-      if (binaryBlobUrl) {
-        URL.revokeObjectURL(binaryBlobUrl);
-      }
-      binaryBlobUrl = URL.createObjectURL(blob);
-      downloadLink.setAttribute('href', binaryBlobUrl);
-      downloadEl.classList.remove('disabled');
-    } catch (e) {
-      outputEl.textContent += e.toString();
-      downloadEl.classList.add('disabled');
-    } finally {
-      if (module) module.destroy();
+function compile() {
+  outputEl.textContent = '';
+  var binaryOutput;
+  try {
+    var module = wabt.parseWat('test.wast', watEditor.getValue());
+    module.resolveNames();
+    module.validate();
+    var binaryOutput = module.toBinary({log: true});
+    outputEl.textContent = binaryOutput.log;
+    binaryBuffer = binaryOutput.buffer;
+    var blob = new Blob([binaryOutput.buffer]);
+    if (binaryBlobUrl) {
+      URL.revokeObjectURL(binaryBlobUrl);
     }
-  });
+    binaryBlobUrl = URL.createObjectURL(blob);
+    downloadLink.setAttribute('href', binaryBlobUrl);
+    downloadEl.classList.remove('disabled');
+  } catch (e) {
+    outputEl.textContent += e.toString();
+    downloadEl.classList.add('disabled');
+  } finally {
+    if (module) module.destroy();
+  }
 }
 
-var compileInput =
-    debounce(function() { compile(editor.getValue()); }, kCompileMinMS);
-
-function onEditorChange(e) {
-  compileInput();
+function run() {
+  jsLogEl.textContent = '';
+  if (binaryBuffer === null) return;
+  try {
+    let wasm = new WebAssembly.Module(binaryBuffer);
+    let js = jsEditor.getValue();
+    let fn = new Function('wasmModule', 'console', js + '//# sourceURL=demo.js');
+    fn(wasm, wrappedConsole);
+  } catch (e) {
+    jsLogEl.textContent += String(e);
+  }
 }
+
+var onWatChange = debounce(compile, kCompileMinMS);
+var onJsChange = debounce(run, kCompileMinMS);
 
 function setExample(index) {
-  var contents = examples[index].contents;
-  editor.setValue(contents);
-  compileInput();
+  var example = examples[index];
+  watEditor.setValue(example.contents);
+  onWatChange();
+  jsEditor.setValue(example.js);
+  onJsChange();
 }
 
 function onSelectChanged(e) {
@@ -101,7 +138,8 @@ function onDownloadClicked(e) {
   downloadLink.dispatchEvent(event);
 }
 
-editor.on('change', onEditorChange);
+watEditor.on('change', onWatChange);
+jsEditor.on('change', onJsChange);
 selectEl.addEventListener('change', onSelectChanged);
 downloadEl.addEventListener('click', onDownloadClicked);
 
@@ -113,3 +151,5 @@ for (var i = 0; i < examples.length; ++i) {
 }
 selectEl.selectedIndex = 1;
 setExample(selectEl.selectedIndex);
+
+});

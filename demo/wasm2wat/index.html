@@ -20,13 +20,11 @@
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
   <title>wasm2wat demo</title>
   <link href="../third_party/codemirror/codemirror.css" rel="stylesheet">
-  <link href="../primer.css" rel="stylesheet">
   <link href="../custom.css" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
+  <header>
     <h1>wasm2wat demo</h1>
-    <hr>
     <p>WebAssembly has a
       <a href="http://webassembly.github.io/spec/text/index.html">text format</a>
       and a
@@ -37,34 +35,34 @@
       Upload a WebAssembly binary file, and the text format will be displayed.
     </p>
     <div>
-      <label>example:</label>
-      <select id="select" class="form-select"></select>
-      <button class="btn" type="button" id="upload">Upload</button>
-      <input type="file" id="uploadInput" class="hidden"></a>
-      <div>
-        <input type="checkbox" id="generateNames" checked>
-        <label for="generateNames">Generate Names</label>
-      </div>
 
-      <div>
-        <input type="checkbox" id="foldExprs" checked>
-        <label for="foldExprs">Fold Expressions</label>
-      </div>
+      <p>
+      </p>
+    </div>
+  </header>
+  <main>
+    <div class="toolbar">
+      <input type="checkbox" id="generateNames" checked>
+      <label for="generateNames">Generate Names</label>
 
-      <div>
-        <input type="checkbox" id="inlineExport" checked>
-        <label for="inlineExport">Inline Export</label>
-      </div>
+      <input type="checkbox" id="foldExprs" checked>
+      <label for="foldExprs">Fold Expressions</label>
 
-      <div>
-        <input type="checkbox" id="readDebugNames" checked>
-        <label for="readDebugNames">Read Debug Names</label>
+      <input type="checkbox" id="inlineExport" checked>
+      <label for="inlineExport">Inline Export</label>
+
+      <input type="checkbox" id="readDebugNames" checked>
+      <label for="readDebugNames">Read Debug Names</label>
+      <div class="right">
+        <input type="file" id="uploadInput" class="hidden"></a>
+        <label>example:</label>
+        <select id="select" class="form-select"></select>
+        <button class="btn" type="button" id="upload">Upload</button>
       </div>
     </div>
-
     <textarea class="editor" autofocus autocomplete="off" autocorrect="off"
         autocapitalize="off" spellcheck="false" hidden></textarea>
-  </div>
+  </main>
   <script src="../third_party/codemirror/codemirror.js"></script>
   <script src="../third_party/codemirror/simple-mode.js"></script>
   <script src="../wast-mode.js"></script>
