@@ -558,6 +558,11 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnSymbolInfo(string_view name, uint32_t flags) override;
   Result OnDataSize(uint32_t data_size) override;
   Result OnDataAlignment(uint32_t data_alignment) override;
+  Result OnSegmentInfoCount(Index count) override;
+  Result OnSegmentInfo(Index index,
+                       string_view name,
+                       uint32_t alignment,
+                       uint32_t flags) override;
 
   Result OnExceptionCount(Index count) override;
   Result OnExceptionType(Index index, TypeVector& sig) override;
@@ -1099,6 +1104,20 @@ Result BinaryReaderObjdump::OnSymbolInfo(string_view name, uint32_t flags) {
 
   PrintDetails("   - %s <" PRIstringview ">\n", binding_name,
                WABT_PRINTF_STRING_VIEW_ARG(name));
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnSegmentInfoCount(Index count) {
+  PrintDetails("  - segment info [count=%d]\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnSegmentInfo(Index index,
+                                          string_view name,
+                                          uint32_t alignment,
+                                          uint32_t flags) {
+  PrintDetails("   - %d: " PRIstringview " align=%d flags=%#x\n", index,
+               WABT_PRINTF_STRING_VIEW_ARG(name), alignment, flags);
   return Result::Ok;
 }
 

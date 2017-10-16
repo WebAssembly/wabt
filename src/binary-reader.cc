@@ -1276,6 +1276,20 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CALLBACK(OnDataAlignment, data_alignment);
         break;
       }
+      case LinkingEntryType::SegmentInfo: {
+        uint32_t info_count;
+        CHECK_RESULT(ReadU32Leb128(&info_count, "info count"));
+        CALLBACK(OnSegmentInfoCount, info_count);
+        for (Index i = 0; i < info_count; i++) {
+          string_view name;
+          uint32_t alignment;
+          uint32_t flags;
+          CHECK_RESULT(ReadStr(&name, "segment name"));
+          CHECK_RESULT(ReadU32Leb128(&alignment, "segment alignment"));
+          CHECK_RESULT(ReadU32Leb128(&flags, "segment flags"));
+          CALLBACK(OnSegmentInfo, i, name, alignment, flags);
+        }
+      }
       default:
         // Unknown subsection, skip it.
         state_.offset = subsection_end;

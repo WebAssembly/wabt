@@ -15,10 +15,19 @@ section("linking") {
   flags[2]
   str("baz")
   flags[0]
+  subsection[5]
+  length[17]
+  count[2]
+  str("data1")
+  align[4]
+  flags[0]
+  str("data2")
+  align[8]
+  flags[0]
 }
 (;; STDOUT ;;;
 
-linking_section.wasm:	file format wasm 0x1
+linking-section.wasm:	file format wasm 0x1
 
 Section Details:
 
@@ -29,4 +38,8 @@ Custom:
    - WEAK   <foo>
    - LOCAL  <bar>
    - GLOBAL <baz>
+  - segment info [count=2]
+   - 0: data1 align=4 flags=0
+   - 1: data2 align=8 flags=0
+
 ;;; STDOUT ;;)

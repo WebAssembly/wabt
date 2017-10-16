@@ -235,6 +235,7 @@ enum class LinkingEntryType {
   SymbolInfo = 2,
   DataSize = 3,
   DataAlignment = 4,
+  SegmentInfo = 5,
 };
 
 enum class SymbolBinding {
