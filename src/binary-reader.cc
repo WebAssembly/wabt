@@ -1289,6 +1289,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           CHECK_RESULT(ReadU32Leb128(&flags, "segment flags"));
           CALLBACK(OnSegmentInfo, i, name, alignment, flags);
         }
+        break;
       }
       default:
         // Unknown subsection, skip it.
