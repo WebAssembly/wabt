@@ -437,6 +437,16 @@ Result BinaryReaderLogging::OnSymbolInfo(string_view name, uint32_t flags) {
   return reader_->OnSymbolInfo(name, flags);
 }
 
+Result BinaryReaderLogging::OnSegmentInfo(Index index,
+                                          string_view name,
+                                          uint32_t alignment,
+                                          uint32_t flags) {
+  LOGF("(OnSegmentInfo %d name: " PRIstringview
+       ", alignment: %d, flags: 0x%x)\n",
+       index, WABT_PRINTF_STRING_VIEW_ARG(name), alignment, flags);
+  return reader_->OnSegmentInfo(index, name, alignment, flags);
+}
+
 #define DEFINE_BEGIN(name)                        \
   Result BinaryReaderLogging::name(Offset size) { \
     LOGF(#name "(%" PRIzd ")\n", size);           \
@@ -603,6 +613,7 @@ DEFINE_INDEX(OnSymbolInfoCount)
 DEFINE_INDEX(OnStackGlobal)
 DEFINE_INDEX(OnDataSize)
 DEFINE_INDEX(OnDataAlignment)
+DEFINE_INDEX(OnSegmentInfoCount)
 DEFINE_END(EndLinkingSection)
 
 DEFINE_BEGIN(BeginExceptionSection);

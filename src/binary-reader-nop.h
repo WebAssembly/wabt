@@ -358,6 +358,13 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnDataAlignment(uint32_t data_alignment) override {
     return Result::Ok;
   }
+  Result OnSegmentInfoCount(Index count) override { return Result::Ok; }
+  Result OnSegmentInfo(Index index,
+                       string_view name,
+                       uint32_t alignment,
+                       uint32_t flags) override {
+    return Result::Ok;
+  }
   Result EndLinkingSection() override { return Result::Ok; }
 
   /* InitExpr - used by elem, data and global sections; these functions are
