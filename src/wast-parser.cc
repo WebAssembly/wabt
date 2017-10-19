@@ -1446,7 +1446,7 @@ Result WastParser::ParseConst(Const* const_) {
   Opcode opcode = Consume().opcode();
   Literal literal;
 
-  Location loc = GetLocation();
+  const_->loc = GetLocation();
 
   switch (Peek()) {
     case TokenType::Nat:
@@ -1493,7 +1493,7 @@ Result WastParser::ParseConst(Const* const_) {
   }
 
   if (Failed(result)) {
-    Error(loc, "invalid literal \"%s\"", literal.text.c_str());
+    Error(const_->loc, "invalid literal \"%s\"", literal.text.c_str());
   }
 
   return Result::Ok;

@@ -1,0 +1,13 @@
+;;; ERROR: 1
+;;; TOOL: run-interp-spec
+(module (func (export "foo") (param i64)))
+
+;; Make sure that the error below has the correct location.
+(invoke "foo" (i32.const 1))
+(;; STDERR ;;;
+Error running "wast2json":
+out/test/regress/regress-17.txt:6:26: error: type mismatch for argument 0 of invoke. got i32, expected i64
+(invoke "foo" (i32.const 1))
+                         ^
+
+;;; STDERR ;;)
