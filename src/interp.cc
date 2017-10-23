@@ -641,8 +641,7 @@ Result Thread::GetAtomicAccessAddress(const uint8_t** pc, void** out_address) {
   uint64_t addr = static_cast<uint64_t>(Pop<uint32_t>()) + ReadU32(pc);
   TRAP_IF(addr + sizeof(MemType) > memory->data.size(),
           MemoryAccessOutOfBounds);
-  uint32_t addr_align = addr != 0 ? (1 << wabt_ctz_u32(addr)) : UINT32_MAX;
-  TRAP_IF(addr_align < sizeof(MemType), AtomicMemoryAccessUnaligned);
+  TRAP_IF((addr & (sizeof(MemType) - 1)) != 0, AtomicMemoryAccessUnaligned);
   *out_address = memory->data.data() + static_cast<IstreamOffset>(addr);
   return Result::Ok;
 }
