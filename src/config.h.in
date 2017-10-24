@@ -216,6 +216,9 @@ __inline unsigned long Popcount(unsigned long value) {
 }
 
 #if _M_X64
+__inline unsigned __int64 Popcount(unsigned __int64 value) {
+  return __popcnt64(value);
+}
 #elif _M_IX86
 __inline unsigned __int64 Popcount(unsigned __int64 value) {
     unsigned long high_value;
@@ -228,9 +231,6 @@ __inline unsigned __int64 Popcount(unsigned __int64 value) {
 #else
 #error unexpected architecture
 #endif
-__inline unsigned __int64 Popcount(unsigned __int64 value) {
-  return __popcnt64(value);
-}
 
 #else
 
