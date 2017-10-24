@@ -180,32 +180,31 @@ __inline unsigned long Clz(unsigned __int64 mask) {
 }
 
 __inline unsigned long Ctz(unsigned long mask) {
-    unsigned long index;
-    _BitScanForward(&index, mask);
-    return index;
+  unsigned long index;
+  _BitScanForward(&index, mask);
+  return index;
 }
 
 __inline unsigned long Ctz(unsigned long mask) {
-    unsigned long index;
-    _BitScanForward(&index, mask);
-    return index;
+  unsigned long index;
+  _BitScanForward(&index, mask);
+  return index;
 }
-
 
 __inline unsigned long Ctz(unsigned __int64 mask) {
 #if _M_X64
-    unsigned long index;
-    _BitScanForward64(&index, mask);
-    return index;
+  unsigned long index;
+  _BitScanForward64(&index, mask);
+  return index;
 #elif _M_IX86
-    unsigned long low_mask = (unsigned long)mask;
-    if (low_mask) {
-        return wabt_ctz_u32(low_mask);
-    }
-    unsigned long high_mask;
-    memcpy(&high_mask, (unsigned char*)&mask + sizeof(unsigned long),
-           sizeof(unsigned long));
-    return sizeof(unsigned long) * 8 + wabt_ctz_u32(high_mask);
+  unsigned long low_mask = (unsigned long)mask;
+  if (low_mask) {
+    return Ctz(low_mask);
+  }
+  unsigned long high_mask;
+  memcpy(&high_mask, (unsigned char*)&mask + sizeof(unsigned long),
+         sizeof(unsigned long));
+  return sizeof(unsigned long) * 8 + Ctz(high_mask);
 #else
 #error unexpected architecture
 #endif
@@ -221,12 +220,12 @@ __inline unsigned __int64 Popcount(unsigned __int64 value) {
 }
 #elif _M_IX86
 __inline unsigned __int64 Popcount(unsigned __int64 value) {
-    unsigned long high_value;
-    unsigned long low_value;
-    memcpy(&high_value, (unsigned char*)&value + sizeof(unsigned long),
-           sizeof(unsigned long));
-    memcpy(&low_value, &value, sizeof(unsigned long));
-    return wabt_popcount_u32(high_value) + wabt_popcount_u32(low_value);
+  unsigned long high_value;
+  unsigned long low_value;
+  memcpy(&high_value, (unsigned char*)&value + sizeof(unsigned long),
+         sizeof(unsigned long));
+  memcpy(&low_value, &value, sizeof(unsigned long));
+  return Popcount(high_value) + Popcount(low_value);
 }
 #else
 #error unexpected architecture
