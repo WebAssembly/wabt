@@ -26,14 +26,6 @@ namespace wabt {
 
 namespace {
 
-int Clz(uint32_t value) {
-  return value == 0 ? 32 : wabt_clz_u32(value);
-}
-
-int Clz(uint64_t value) {
-  return value == 0 ? 64 : wabt_clz_u64(value);
-}
-
 template <typename T>
 struct FloatTraitsBase {};
 

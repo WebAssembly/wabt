@@ -1677,23 +1677,17 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(Binop(Ge<uint32_t>));
         break;
 
-      case Opcode::I32Clz: {
-        uint32_t value = Pop<uint32_t>();
-        CHECK_TRAP(Push<uint32_t>(value != 0 ? wabt_clz_u32(value) : 32));
+      case Opcode::I32Clz:
+        CHECK_TRAP(Push<uint32_t>(Clz(Pop<uint32_t>())));
         break;
-      }
 
-      case Opcode::I32Ctz: {
-        uint32_t value = Pop<uint32_t>();
-        CHECK_TRAP(Push<uint32_t>(value != 0 ? wabt_ctz_u32(value) : 32));
+      case Opcode::I32Ctz:
+        CHECK_TRAP(Push<uint32_t>(Ctz(Pop<uint32_t>())));
         break;
-      }
 
-      case Opcode::I32Popcnt: {
-        uint32_t value = Pop<uint32_t>();
-        CHECK_TRAP(Push<uint32_t>(wabt_popcount_u32(value)));
+      case Opcode::I32Popcnt:
+        CHECK_TRAP(Push<uint32_t>(Popcount(Pop<uint32_t>())));
         break;
-      }
 
       case Opcode::I32Eqz:
         CHECK_TRAP(Unop(IntEqz<uint32_t, uint32_t>));
@@ -1791,20 +1785,16 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(Binop(Ge<uint64_t>));
         break;
 
-      case Opcode::I64Clz: {
-        uint64_t value = Pop<uint64_t>();
-        CHECK_TRAP(Push<uint64_t>(value != 0 ? wabt_clz_u64(value) : 64));
+      case Opcode::I64Clz:
+        CHECK_TRAP(Push<uint64_t>(Clz(Pop<uint64_t>())));
         break;
-      }
 
-      case Opcode::I64Ctz: {
-        uint64_t value = Pop<uint64_t>();
-        CHECK_TRAP(Push<uint64_t>(value != 0 ? wabt_ctz_u64(value) : 64));
+      case Opcode::I64Ctz:
+        CHECK_TRAP(Push<uint64_t>(Ctz(Pop<uint64_t>())));
         break;
-      }
 
       case Opcode::I64Popcnt:
-        CHECK_TRAP(Push<uint64_t>(wabt_popcount_u64(Pop<uint64_t>())));
+        CHECK_TRAP(Push<uint64_t>(Popcount(Pop<uint64_t>())));
         break;
 
       case Opcode::F32Add:
