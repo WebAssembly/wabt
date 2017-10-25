@@ -150,7 +150,22 @@ inline int Popcount(unsigned long long x) { return __builtin_popcountll(x); }
 
 #elif COMPILER_IS_MSVC
 
+#if _M_IX86
+inline unsigned long LowDword(unsigned __int64 value) {
+  return (unsigned long)value;
+}
+
+inline unsigned long HighDword(unsigned __int64 value) {
+  unsigned long high;
+  memcpy(&high, (unsigned char*)&value + sizeof(high), sizeof(high));
+  return high;
+}
+#endif
+
 inline int Clz(unsigned long mask) {
+  if (mask == 0)
+    return 32;
+
   unsigned long index;
   _BitScanReverse(&index, mask);
   return sizeof(unsigned long) * 8 - (index + 1);
@@ -162,28 +177,27 @@ inline int Clz(unsigned int mask) {
 
 inline int Clz(unsigned __int64 mask) {
 #if _M_X64
+  if (mask == 0)
+    return 64;
+
   unsigned long index;
   _BitScanReverse64(&index, mask);
   return sizeof(unsigned __int64) * 8 - (index + 1);
 #elif _M_IX86
-  unsigned long index;
-  unsigned long high_mask;
-  memcpy(&high_mask, (unsigned char*)&mask + sizeof(unsigned long),
-         sizeof(unsigned long));
-  if (_BitScanReverse(&index, high_mask)) {
-    return sizeof(unsigned long) * 8 - (index + 1);
-  }
+  int result = Clz(HighDword(mask));
+  if (result == 32)
+    result += Clz(LowDword(mask));
 
-  unsigned long low_mask;
-  memcpy(&low_mask, &mask, sizeof(unsigned long));
-  _BitScanReverse(&index, low_mask);
-  return sizeof(unsigned __int64) * 8 - (index + 1);
+  return result;
 #else
 #error unexpected architecture
 #endif
 }
 
 inline int Ctz(unsigned long mask) {
+  if (mask == 0)
+    return 32;
+
   unsigned long index;
   _BitScanForward(&index, mask);
   return index;
@@ -195,18 +209,18 @@ inline int Ctz(unsigned int mask) {
 
 inline int Ctz(unsigned __int64 mask) {
 #if _M_X64
+  if (mask == 0)
+    return 64;
+
   unsigned long index;
   _BitScanForward64(&index, mask);
   return index;
 #elif _M_IX86
-  unsigned long low_mask = (unsigned long)mask;
-  if (low_mask) {
-    return Ctz(low_mask);
-  }
-  unsigned long high_mask;
-  memcpy(&high_mask, (unsigned char*)&mask + sizeof(unsigned long),
-         sizeof(unsigned long));
-  return sizeof(unsigned long) * 8 + Ctz(high_mask);
+  int result = Ctz(LowDword(mask));
+  if (result == 32)
+    result += Ctz(HighDword(mask));
+
+  return result;
 #else
 #error unexpected architecture
 #endif
@@ -224,12 +238,7 @@ inline int Popcount(unsigned __int64 value) {
 #if _M_X64
   return __popcnt64(value);
 #elif _M_IX86
-  unsigned long high_value;
-  unsigned long low_value;
-  memcpy(&high_value, (unsigned char*)&value + sizeof(unsigned long),
-         sizeof(unsigned long));
-  memcpy(&low_value, &value, sizeof(unsigned long));
-  return Popcount(high_value) + Popcount(low_value);
+  return Popcount(HighDword(value)) + Popcount(LowDword(value));
 #else
 #error unexpected architecture
 #endif
