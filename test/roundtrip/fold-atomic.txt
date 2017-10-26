@@ -2,7 +2,7 @@
 ;;; FLAGS: --stdout --fold-exprs --enable-threads
 
 (module
-  (memory (shared 1 1))
+  (memory 1 1 shared)
   (func
     i32.const 0 i32.const 0 wake drop
     i32.const 0 i32.const 0 i64.const 0 i32.wait drop
@@ -344,5 +344,5 @@
         (i32.const 0)
         (i64.const 0)
         (i64.const 0))))
-  (memory (;0;) (shared 1 1)))
+  (memory (;0;) 1 1 shared))
 ;;; STDOUT ;;)

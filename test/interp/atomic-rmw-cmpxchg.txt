@@ -1,7 +1,7 @@
 ;;; FLAGS: --enable-threads
 ;;; TOOL: run-interp
 (module
-  (memory (shared 1 1))
+  (memory 1 1 shared)
 
   ;; i32
 

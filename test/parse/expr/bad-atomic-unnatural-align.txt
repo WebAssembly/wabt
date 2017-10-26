@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 ;;; FLAGS: --enable-threads
 (module
-  (memory (shared 1 1))
+  (memory 1 1 shared)
   (func
     i32.const 0 i32.const 0 wake align=8 drop
     i32.const 0 i32.const 0 i64.const 0 i32.wait align=8 drop
