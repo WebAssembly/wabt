@@ -9,7 +9,7 @@
       i32.const 1
     end))
 (;; STDERR ;;;
-out/test/regress/regress-11.txt:7:9: error: type stack at end of block is 1, expected 0
+out/test/regress/regress-11.txt:7:9: error: type mismatch in block, expected [] but got [i32]
         br_if 1
         ^^^^^
 ;;; STDERR ;;)

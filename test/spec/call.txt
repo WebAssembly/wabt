@@ -2,36 +2,34 @@
 ;;; STDIN_FILE: third_party/testsuite/call.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/call.wast:160: assert_invalid passed:
-  error: type stack size too small at i32.eqz. got 0, expected at least 1
+  error: type mismatch in i32.eqz, expected [i32] but got []
   000001b: error: OnConvertExpr callback failed
 out/third_party/testsuite/call.wast:167: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected i32 but got i64.
+  error: type mismatch in i32.eqz, expected [i32] but got [i64]
   000001f: error: OnConvertExpr callback failed
 out/third_party/testsuite/call.wast:175: assert_invalid passed:
-  error: type stack size too small at call. got 0, expected at least 1
+  error: type mismatch in call, expected [i32] but got []
   000001e: error: OnCallExpr callback failed
 out/third_party/testsuite/call.wast:182: assert_invalid passed:
-  error: type stack size too small at call. got 0, expected at least 2
+  error: type mismatch in call, expected [f64, i32] but got []
   000001f: error: OnCallExpr callback failed
 out/third_party/testsuite/call.wast:189: assert_invalid passed:
-  error: type stack at end of function is 1, expected 0
+  error: type mismatch in function, expected [] but got [i32]
   000001d: error: EndFunctionBody callback failed
 out/third_party/testsuite/call.wast:196: assert_invalid passed:
-  error: type stack at end of function is 2, expected 0
+  error: type mismatch in function, expected [] but got [f64, i32]
   0000026: error: EndFunctionBody callback failed
 out/third_party/testsuite/call.wast:204: assert_invalid passed:
-  error: type stack size too small at call. got 1, expected at least 2
+  error: type mismatch in call, expected [i32, i32] but got [i32]
   0000022: error: OnCallExpr callback failed
 out/third_party/testsuite/call.wast:211: assert_invalid passed:
-  error: type stack size too small at call. got 1, expected at least 2
+  error: type mismatch in call, expected [i32, i32] but got [i32]
   0000022: error: OnCallExpr callback failed
 out/third_party/testsuite/call.wast:218: assert_invalid passed:
-  error: type mismatch in call, expected i32 but got f64.
-  error: type mismatch in call, expected f64 but got i32.
+  error: type mismatch in call, expected [i32, f64] but got [f64, i32]
   000002a: error: OnCallExpr callback failed
 out/third_party/testsuite/call.wast:225: assert_invalid passed:
-  error: type mismatch in call, expected f64 but got i32.
-  error: type mismatch in call, expected i32 but got f64.
+  error: type mismatch in call, expected [f64, i32] but got [i32, f64]
   000002a: error: OnCallExpr callback failed
 out/third_party/testsuite/call.wast:236: assert_invalid passed:
   0000019: error: invalid call function index: 1

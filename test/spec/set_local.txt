@@ -2,46 +2,46 @@
 ;;; STDIN_FILE: third_party/testsuite/set_local.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/set_local.wast:95: assert_invalid passed:
-  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: type mismatch in implicit return, expected [i64] but got []
   000001f: error: EndFunctionBody callback failed
 out/third_party/testsuite/set_local.wast:101: assert_invalid passed:
-  error: type stack size too small at i32.eqz. got 0, expected at least 1
+  error: type mismatch in i32.eqz, expected [i32] but got []
   0000021: error: OnConvertExpr callback failed
 out/third_party/testsuite/set_local.wast:107: assert_invalid passed:
-  error: type stack size too small at f64.neg. got 0, expected at least 1
+  error: type mismatch in f64.neg, expected [f64] but got []
   0000020: error: OnUnaryExpr callback failed
 out/third_party/testsuite/set_local.wast:114: assert_invalid passed:
-  error: type stack size too small at set_local. got 0, expected at least 1
+  error: type mismatch in set_local, expected [i32] but got []
   000001c: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:118: assert_invalid passed:
-  error: type mismatch in set_local, expected i32 but got f32.
+  error: type mismatch in set_local, expected [i32] but got [f32]
   0000020: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:122: assert_invalid passed:
-  error: type mismatch in set_local, expected f32 but got f64.
+  error: type mismatch in set_local, expected [f32] but got [f64]
   0000024: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:126: assert_invalid passed:
-  error: type mismatch in set_local, expected i64 but got f64.
+  error: type mismatch in set_local, expected [i64] but got [f64]
   0000026: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:134: assert_invalid passed:
-  error: type mismatch in implicit return, expected i64 but got i32.
+  error: type mismatch in implicit return, expected [i64] but got [i32]
   000001c: error: EndFunctionBody callback failed
 out/third_party/testsuite/set_local.wast:138: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected i32 but got f32.
+  error: type mismatch in i32.eqz, expected [i32] but got [f32]
   000001b: error: OnConvertExpr callback failed
 out/third_party/testsuite/set_local.wast:142: assert_invalid passed:
-  error: type mismatch in f64.neg, expected f64 but got i64.
+  error: type mismatch in f64.neg, expected [f64] but got [i64]
   000001c: error: OnUnaryExpr callback failed
 out/third_party/testsuite/set_local.wast:147: assert_invalid passed:
-  error: type stack size too small at set_local. got 0, expected at least 1
+  error: type mismatch in set_local, expected [i32] but got []
   000001b: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:151: assert_invalid passed:
-  error: type mismatch in set_local, expected i32 but got f32.
+  error: type mismatch in set_local, expected [i32] but got [f32]
   000001f: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:155: assert_invalid passed:
-  error: type mismatch in set_local, expected f32 but got f64.
+  error: type mismatch in set_local, expected [f32] but got [f64]
   0000023: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:159: assert_invalid passed:
-  error: type mismatch in set_local, expected i64 but got f64.
+  error: type mismatch in set_local, expected [i64] but got [f64]
   0000024: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:167: assert_invalid passed:
   error: invalid local_index: 3 (max 2)
@@ -62,13 +62,13 @@ out/third_party/testsuite/set_local.wast:189: assert_invalid passed:
   error: invalid local_index: 214324343 (max 3)
   0000021: error: OnGetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:194: assert_invalid passed:
-  error: type mismatch in set_local, expected i32 but got f32.
+  error: type mismatch in set_local, expected [i32] but got [f32]
   0000021: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:198: assert_invalid passed:
-  error: type mismatch in set_local, expected i32 but got f32.
+  error: type mismatch in set_local, expected [i32] but got [f32]
   0000022: error: OnSetLocalExpr callback failed
 out/third_party/testsuite/set_local.wast:202: assert_invalid passed:
-  error: type mismatch in set_local, expected f64 but got i64.
+  error: type mismatch in set_local, expected [f64] but got [i64]
   0000020: error: OnSetLocalExpr callback failed
 33/33 tests passed.
 ;;; STDOUT ;;)

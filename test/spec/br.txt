@@ -2,16 +2,16 @@
 ;;; STDIN_FILE: third_party/testsuite/br.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/br.wast:411: assert_invalid passed:
-  error: type stack size too small at br. got 0, expected at least 1
+  error: type mismatch in loop, expected [i32] but got []
   000001c: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:418: assert_invalid passed:
-  error: type stack size too small at br. got 0, expected at least 1
+  error: type mismatch in loop, expected [i32] but got []
   000001d: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:424: assert_invalid passed:
-  error: type stack size too small at br. got 0, expected at least 1
+  error: type mismatch in loop, expected [i32] but got []
   0000020: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:430: assert_invalid passed:
-  error: type mismatch in br, expected i32 but got i64.
+  error: type mismatch in loop, expected [i32] but got [i64]
   000001e: error: OnBrExpr callback failed
 out/third_party/testsuite/br.wast:437: assert_invalid passed:
   error: invalid depth: 1 (max 0)

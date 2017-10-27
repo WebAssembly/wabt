@@ -3,10 +3,10 @@
           i32.const 0 
           i32.lt_s))
 (;; STDERR ;;;
-out/test/parse/expr/bad-compare-one-expr.txt:4:11: error: type stack size too small at i32.lt_s. got 1, expected at least 2
+out/test/parse/expr/bad-compare-one-expr.txt:4:11: error: type mismatch in i32.lt_s, expected [i32, i32] but got [i32]
           i32.lt_s))
           ^^^^^^^^
-out/test/parse/expr/bad-compare-one-expr.txt:4:11: error: type stack at end of function is 1, expected 0
+out/test/parse/expr/bad-compare-one-expr.txt:4:11: error: type mismatch in function, expected [] but got [i32, i32]
           i32.lt_s))
           ^^^^^^^^
 ;;; STDERR ;;)

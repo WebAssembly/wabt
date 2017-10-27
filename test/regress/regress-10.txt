@@ -7,7 +7,7 @@
       tee_local 0
     end))
 (;; STDERR ;;;
-out/test/regress/regress-10.txt:7:7: error: type stack at end of block is 1, expected 0
+out/test/regress/regress-10.txt:7:7: error: type mismatch in block, expected [] but got [i32]
       tee_local 0
       ^^^^^^^^^
 ;;; STDERR ;;)

@@ -5,42 +5,40 @@ out/third_party/testsuite/call_indirect.wast:237: assert_invalid passed:
   error: found call_indirect operator, but no table
   000001c: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:245: assert_invalid passed:
-  error: type stack size too small at i32.eqz. got 0, expected at least 1
+  error: type mismatch in i32.eqz, expected [i32] but got []
   0000023: error: OnConvertExpr callback failed
 out/third_party/testsuite/call_indirect.wast:253: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected i32 but got i64.
+  error: type mismatch in i32.eqz, expected [i32] but got [i64]
   0000027: error: OnConvertExpr callback failed
 out/third_party/testsuite/call_indirect.wast:262: assert_invalid passed:
-  error: type stack size too small at call_indirect. got 0, expected at least 1
+  error: type mismatch in call_indirect, expected [i32] but got []
   0000026: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:270: assert_invalid passed:
-  error: type stack size too small at call_indirect. got 0, expected at least 2
+  error: type mismatch in call_indirect, expected [f64, i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:278: assert_invalid passed:
-  error: type stack at end of function is 1, expected 0
+  error: type mismatch in function, expected [] but got [i32]
   0000025: error: EndFunctionBody callback failed
 out/third_party/testsuite/call_indirect.wast:286: assert_invalid passed:
-  error: type stack at end of function is 2, expected 0
+  error: type mismatch in function, expected [] but got [f64, i32]
   000002e: error: EndFunctionBody callback failed
 out/third_party/testsuite/call_indirect.wast:297: assert_invalid passed:
-  error: type stack size too small at call_indirect. got 0, expected at least 1
+  error: type mismatch in call_indirect, expected [i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:305: assert_invalid passed:
-  error: type mismatch in call_indirect, expected i32 but got i64.
+  error: type mismatch in call_indirect, expected [i32] but got [... i64]
   0000028: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:314: assert_invalid passed:
-  error: type stack size too small at call_indirect. got 1, expected at least 2
+  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000002a: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:324: assert_invalid passed:
-  error: type stack size too small at call_indirect. got 1, expected at least 2
+  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000002a: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:334: assert_invalid passed:
-  error: type mismatch in call_indirect, expected i32 but got f64.
-  error: type mismatch in call_indirect, expected f64 but got i32.
+  error: type mismatch in call_indirect, expected [i32, f64] but got [f64, i32]
   0000032: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:344: assert_invalid passed:
-  error: type mismatch in call_indirect, expected f64 but got i32.
-  error: type mismatch in call_indirect, expected i32 but got f64.
+  error: type mismatch in call_indirect, expected [f64, i32] but got [i32, f64]
   0000032: error: OnCallIndirectExpr callback failed
 out/third_party/testsuite/call_indirect.wast:358: assert_invalid passed:
   0000021: error: invalid call_indirect signature index
