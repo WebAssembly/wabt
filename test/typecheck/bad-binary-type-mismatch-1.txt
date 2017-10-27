@@ -6,7 +6,7 @@
     i32.add  
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-binary-type-mismatch-1.txt:6:5: error: type mismatch in i32.add, expected i32 but got f32.
+out/test/typecheck/bad-binary-type-mismatch-1.txt:6:5: error: type mismatch in i32.add, expected [i32, i32] but got [f32, i32]
     i32.add  
     ^^^^^^^
 ;;; STDERR ;;)
