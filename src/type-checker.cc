@@ -319,7 +319,7 @@ Result TypeChecker::OnBr(Index depth) {
   CHECK_RESULT(GetLabel(depth, &label));
   if (label->label_type != LabelType::Loop)
     result |= CheckSignature(label->sig);
-  PrintStackIfFailed(result, "loop", label->sig);
+  PrintStackIfFailed(result, "br", label->sig);
   CHECK_RESULT(SetUnreachable());
   return result;
 }

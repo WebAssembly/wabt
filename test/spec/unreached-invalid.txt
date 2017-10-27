@@ -241,7 +241,7 @@ out/third_party/testsuite/unreached-invalid.wast:470: assert_invalid passed:
   error: type mismatch in return, expected [i32] but got [f64]
   0000025: error: OnReturnExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:477: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got [f64]
+  error: type mismatch in br, expected [i32] but got [f64]
   0000029: error: OnBrExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:484: assert_invalid passed:
   error: type mismatch in br_if, expected [i32] but got [f32]

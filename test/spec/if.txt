@@ -81,28 +81,28 @@ out/third_party/testsuite/if.wast:331: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000027: error: EndFunctionBody callback failed
 out/third_party/testsuite/if.wast:342: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   000001e: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:348: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   0000021: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:354: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   000001e: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:363: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   0000021: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:372: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   000001f: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:381: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   0000022: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:391: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got [i64]
+  error: type mismatch in br, expected [i32] but got [i64]
   0000020: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:400: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got [i64]
+  error: type mismatch in br, expected [i32] but got [i64]
   0000023: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:411: assert_malformed passed:
   out/third_party/testsuite/if/if.35.wast:1:14: error: unexpected label "$l"

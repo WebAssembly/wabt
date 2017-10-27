@@ -62,16 +62,16 @@ out/third_party/testsuite/typecheck.wast:137: assert_invalid passed:
   error: type mismatch in if, expected [i32] but got []
   0000022: error: OnIfExpr callback failed
 out/third_party/testsuite/typecheck.wast:146: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   000001b: error: OnBrExpr callback failed
 out/third_party/testsuite/typecheck.wast:153: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   000001d: error: OnBrExpr callback failed
 out/third_party/testsuite/typecheck.wast:161: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   0000021: error: OnBrExpr callback failed
 out/third_party/testsuite/typecheck.wast:171: assert_invalid passed:
-  error: type mismatch in loop, expected [i32] but got []
+  error: type mismatch in br, expected [i32] but got []
   0000024: error: OnBrExpr callback failed
 out/third_party/testsuite/typecheck.wast:182: assert_invalid passed:
   error: type mismatch in return, expected [i32] but got []
