@@ -97,7 +97,7 @@ Result TypeChecker::PeekType(Index depth, Type* out_type) {
 }
 
 Result TypeChecker::PeekAndCheckType(Index depth, Type expected) {
-  Type actual;
+  Type actual = Type::Any;
   Result result = PeekType(depth, &actual);
   return result | CheckType(actual, expected);
 }
@@ -265,6 +265,7 @@ void TypeChecker::PrintStackIfFailed(Result result,
     for (size_t i = 0; i < actual_size; ++i) {
       Type type;
       Result result = PeekType(actual_size - i - 1, &type);
+      WABT_USE(result);
       assert(Succeeded(result));
       actual.push_back(type);
     }
