@@ -4,7 +4,7 @@
     f32.const 0
     return))
 (;; STDERR ;;;
-out/test/typecheck/bad-return-type-mismatch.txt:5:5: error: type mismatch in return, expected i32 but got f32.
+out/test/typecheck/bad-return-type-mismatch.txt:5:5: error: type mismatch in return, expected [i32] but got [f32]
     return))
     ^^^^^^
 ;;; STDERR ;;)

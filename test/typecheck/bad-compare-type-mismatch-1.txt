@@ -6,7 +6,7 @@
     i32.eq
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-compare-type-mismatch-1.txt:6:5: error: type mismatch in i32.eq, expected i32 but got f32.
+out/test/typecheck/bad-compare-type-mismatch-1.txt:6:5: error: type mismatch in i32.eq, expected [i32, i32] but got [f32, i32]
     i32.eq
     ^^^^^^
 ;;; STDERR ;;)

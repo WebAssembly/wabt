@@ -6,7 +6,7 @@
 out/test/parse/func/bad-sig-result-type-not-void.txt:4:4: error: expected 0 results, got 1
   (func (type $t) (param i32) (result f32)))
    ^^^^
-out/test/parse/func/bad-sig-result-type-not-void.txt:4:4: error: type stack size too small at implicit return. got 0, expected at least 1
+out/test/parse/func/bad-sig-result-type-not-void.txt:4:4: error: type mismatch in implicit return, expected [f32] but got []
   (func (type $t) (param i32) (result f32)))
    ^^^^
 ;;; STDERR ;;)

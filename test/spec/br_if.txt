@@ -2,67 +2,67 @@
 ;;; STDIN_FILE: third_party/testsuite/br_if.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/br_if.wast:191: assert_invalid passed:
-  error: type stack size too small at i32.ctz. got 0, expected at least 1
+  error: type mismatch in i32.ctz, expected [i32] but got []
   000001e: error: OnUnaryExpr callback failed
 out/third_party/testsuite/br_if.wast:195: assert_invalid passed:
-  error: type stack size too small at i64.ctz. got 0, expected at least 1
+  error: type mismatch in i64.ctz, expected [i64] but got []
   000001e: error: OnUnaryExpr callback failed
 out/third_party/testsuite/br_if.wast:199: assert_invalid passed:
-  error: type stack size too small at f32.neg. got 0, expected at least 1
+  error: type mismatch in f32.neg, expected [f32] but got []
   000001e: error: OnUnaryExpr callback failed
 out/third_party/testsuite/br_if.wast:203: assert_invalid passed:
-  error: type stack size too small at f64.neg. got 0, expected at least 1
+  error: type mismatch in f64.neg, expected [f64] but got []
   000001e: error: OnUnaryExpr callback failed
 out/third_party/testsuite/br_if.wast:208: assert_invalid passed:
-  error: type stack size too small at i32.ctz. got 0, expected at least 1
+  error: type mismatch in i32.ctz, expected [i32] but got []
   000001e: error: OnUnaryExpr callback failed
 out/third_party/testsuite/br_if.wast:212: assert_invalid passed:
-  error: type mismatch in br_if, expected i32 but got i64.
+  error: type mismatch in br_if, expected [i32] but got [i64]
   000001d: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:216: assert_invalid passed:
-  error: type mismatch in br_if, expected i32 but got f32.
+  error: type mismatch in br_if, expected [i32] but got [f32]
   0000020: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:220: assert_invalid passed:
-  error: type mismatch in br_if, expected i32 but got i64.
+  error: type mismatch in br_if, expected [i32] but got [i64]
   000001d: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:225: assert_invalid passed:
-  error: type stack size too small at br_if. got 0, expected at least 1
+  error: type mismatch in br_if, expected [i32] but got []
   000001e: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:231: assert_invalid passed:
-  error: type stack size too small at br_if. got 0, expected at least 1
+  error: type mismatch in br_if, expected [i32] but got []
   000001e: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:237: assert_invalid passed:
-  error: type stack at end of block is 1, expected 0
+  error: type mismatch in block, expected [] but got [i32]
   0000020: error: OnEndExpr callback failed
 out/third_party/testsuite/br_if.wast:243: assert_invalid passed:
-  error: type stack at end of block is 1, expected 0
+  error: type mismatch in block, expected [] but got [i32]
   0000020: error: OnEndExpr callback failed
 out/third_party/testsuite/br_if.wast:250: assert_invalid passed:
-  error: type stack size too small at br_if. got 0, expected at least 1
+  error: type mismatch in br_if, expected [i32] but got []
   000001f: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:256: assert_invalid passed:
-  error: type stack size too small at br_if. got 0, expected at least 1
+  error: type mismatch in br_if, expected [i32] but got []
   000001f: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:262: assert_invalid passed:
-  error: type mismatch in br_if, expected i32 but got i64.
+  error: type mismatch in br_if, expected [i32] but got [i64]
   0000020: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:270: assert_invalid passed:
-  error: type mismatch in br_if, expected i32 but got i64.
+  error: type mismatch in br_if, expected [i32] but got [i64]
   0000020: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:279: assert_invalid passed:
-  error: type stack size too small at br_if. got 0, expected at least 1
+  error: type mismatch in br_if, expected [i32] but got []
   000001c: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:285: assert_invalid passed:
-  error: type mismatch in br_if, expected i32 but got i64.
+  error: type mismatch in br_if, expected [i32] but got [i64]
   000001d: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:291: assert_invalid passed:
-  error: type stack size too small at br_if. got 0, expected at least 1
+  error: type mismatch in br_if, expected [i32] but got []
   000001f: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:297: assert_invalid passed:
-  error: type stack size too small at br_if. got 0, expected at least 1
+  error: type mismatch in br_if, expected [i32] but got []
   0000022: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:303: assert_invalid passed:
-  error: type mismatch in br_if, expected i32 but got i64.
+  error: type mismatch in br_if, expected [i32] but got [... i64]
   0000020: error: OnBrIfExpr callback failed
 out/third_party/testsuite/br_if.wast:310: assert_invalid passed:
   error: invalid depth: 1 (max 0)

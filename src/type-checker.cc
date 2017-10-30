@@ -96,17 +96,10 @@ Result TypeChecker::PeekType(Index depth, Type* out_type) {
   return Result::Ok;
 }
 
-Result TypeChecker::TopType(Type* out_type) {
-  return PeekType(0, out_type);
-}
-
-Result TypeChecker::PopType(Type* out_type) {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  Result result = TopType(out_type);
-  if (type_stack_.size() > label->type_stack_limit)
-    type_stack_.pop_back();
-  return result;
+Result TypeChecker::PeekAndCheckType(Index depth, Type expected) {
+  Type actual = Type::Any;
+  Result result = PeekType(depth, &actual);
+  return result | CheckType(actual, expected);
 }
 
 Result TypeChecker::DropTypes(size_t drop_count) {
@@ -133,52 +126,33 @@ void TypeChecker::PushTypes(const TypeVector& types) {
     PushType(type);
 }
 
-Result TypeChecker::CheckTypeStackLimit(size_t expected, const char* desc) {
-  Label* label;
-  CHECK_RESULT(TopLabel(&label));
-  size_t avail = type_stack_.size() - label->type_stack_limit;
-  if (!label->unreachable && expected > avail) {
-    PrintError("type stack size too small at %s. got %" PRIzd
-               ", expected at least %" PRIzd,
-               desc, avail, expected);
-    return Result::Error;
-  }
-  return Result::Ok;
-}
-
 Result TypeChecker::CheckTypeStackEnd(const char* desc) {
   Label* label;
   CHECK_RESULT(TopLabel(&label));
-  if (type_stack_.size() != label->type_stack_limit) {
-    PrintError("type stack at end of %s is %" PRIzd ", expected %" PRIzd, desc,
-               type_stack_.size(), label->type_stack_limit);
-    return Result::Error;
-  }
-  return Result::Ok;
+  Result result = (type_stack_.size() == label->type_stack_limit)
+                      ? Result::Ok
+                      : Result::Error;
+  PrintStackIfFailed(result, desc);
+  return result;
 }
 
-Result TypeChecker::CheckType(Type actual, Type expected, const char* desc) {
-  if (expected != actual && expected != Type::Any && actual != Type::Any) {
-    PrintError("type mismatch in %s, expected %s but got %s.", desc,
-               GetTypeName(expected), GetTypeName(actual));
-    return Result::Error;
-  }
-  return Result::Ok;
+Result TypeChecker::CheckType(Type actual, Type expected) {
+  return (expected == actual || expected == Type::Any || actual == Type::Any)
+             ? Result::Ok
+             : Result::Error;
 }
 
-Result TypeChecker::CheckSignature(const TypeVector& sig, const char* desc) {
-  Result result = CheckTypeStackLimit(sig.size(), desc);
-  for (size_t i = 0; i < sig.size(); ++i) {
-    Type actual = Type::Any;
-    result |= PeekType(sig.size() - i - 1, &actual);
-    result |= CheckType(actual, sig[i], desc);
-  }
+Result TypeChecker::CheckSignature(const TypeVector& sig) {
+  Result result = Result::Ok;
+  for (size_t i = 0; i < sig.size(); ++i)
+    result |= PeekAndCheckType(sig.size() - i - 1, sig[i]);
   return result;
 }
 
 Result TypeChecker::PopAndCheckSignature(const TypeVector& sig,
                                          const char* desc) {
-  Result result = CheckSignature(sig, desc);
+  Result result = CheckSignature(sig);
+  PrintStackIfFailed(result, desc, sig);
   result |= DropTypes(sig.size());
   return result;
 }
@@ -186,12 +160,8 @@ Result TypeChecker::PopAndCheckSignature(const TypeVector& sig,
 Result TypeChecker::PopAndCheckCall(const TypeVector& param_types,
                                     const TypeVector& result_types,
                                     const char* desc) {
-  Result result = CheckTypeStackLimit(param_types.size(), desc);
-  for (size_t i = 0; i < param_types.size(); ++i) {
-    Type actual = Type::Any;
-    result |= PeekType(param_types.size() - i - 1, &actual);
-    result |= CheckType(actual, param_types[i], desc);
-  }
+  Result result = CheckSignature(param_types);
+  PrintStackIfFailed(result, desc, param_types);
   result |= DropTypes(param_types.size());
   PushTypes(result_types);
   return result;
@@ -199,10 +169,9 @@ Result TypeChecker::PopAndCheckCall(const TypeVector& param_types,
 
 Result TypeChecker::PopAndCheck1Type(Type expected, const char* desc) {
   Result result = Result::Ok;
-  Type actual = Type::Any;
-  result |= CheckTypeStackLimit(1, desc);
-  result |= PopType(&actual);
-  result |= CheckType(actual, expected, desc);
+  result |= PeekAndCheckType(0, expected);
+  PrintStackIfFailed(result, desc, expected);
+  result |= DropTypes(1);
   return result;
 }
 
@@ -210,13 +179,10 @@ Result TypeChecker::PopAndCheck2Types(Type expected1,
                                       Type expected2,
                                       const char* desc) {
   Result result = Result::Ok;
-  Type actual1 = Type::Any;
-  Type actual2 = Type::Any;
-  result |= CheckTypeStackLimit(2, desc);
-  result |= PopType(&actual2);
-  result |= PopType(&actual1);
-  result |= CheckType(actual1, expected1, desc);
-  result |= CheckType(actual2, expected2, desc);
+  result |= PeekAndCheckType(0, expected2);
+  result |= PeekAndCheckType(1, expected1);
+  PrintStackIfFailed(result, desc, expected1, expected2);
+  result |= DropTypes(2);
   return result;
 }
 
@@ -225,29 +191,11 @@ Result TypeChecker::PopAndCheck3Types(Type expected1,
                                       Type expected3,
                                       const char* desc) {
   Result result = Result::Ok;
-  Type actual1 = Type::Any;
-  Type actual2 = Type::Any;
-  Type actual3 = Type::Any;
-  result |= CheckTypeStackLimit(3, desc);
-  result |= PopType(&actual3);
-  result |= PopType(&actual2);
-  result |= PopType(&actual1);
-  result |= CheckType(actual1, expected1, desc);
-  result |= CheckType(actual2, expected2, desc);
-  result |= CheckType(actual3, expected3, desc);
-  return result;
-}
-
-Result TypeChecker::PopAndCheck2TypesAreEqual(Type* out_type,
-                                              const char* desc) {
-  Result result = Result::Ok;
-  Type right = Type::Any;
-  Type left = Type::Any;
-  result |= CheckTypeStackLimit(2, desc);
-  result |= PopType(&right);
-  result |= PopType(&left);
-  result |= CheckType(left, right, desc);
-  *out_type = right;
+  result |= PeekAndCheckType(0, expected3);
+  result |= PeekAndCheckType(1, expected2);
+  result |= PeekAndCheckType(2, expected1);
+  PrintStackIfFailed(result, desc, expected1, expected2, expected3);
+  result |= DropTypes(3);
   return result;
 }
 
@@ -270,6 +218,68 @@ Result TypeChecker::CheckOpcode3(Opcode opcode) {
                         opcode.GetParamType3(), opcode.GetName());
   PushType(opcode.GetResultType());
   return result;
+}
+
+static std::string TypesToString(const TypeVector& types,
+                                 const char* prefix = nullptr) {
+  std::string result = "[";
+  if (prefix)
+    result += prefix;
+
+  for (size_t i = 0; i < types.size(); ++i) {
+    result += GetTypeName(types[i]);
+    if (i < types.size() - 1)
+      result += ", ";
+  }
+  result += "]";
+  return result;
+}
+
+void TypeChecker::PrintStackIfFailed(Result result,
+                                     const char* desc,
+                                     const TypeVector& expected) {
+  if (Failed(result)) {
+    size_t limit = 0;
+    Label* label;
+    if (Succeeded(TopLabel(&label))) {
+      limit = label->type_stack_limit;
+    }
+
+    TypeVector actual;
+    size_t max_depth = type_stack_.size() - limit;
+
+    // In general we want to print as many values of the actual stack as were
+    // expected. However, if the stack was expected to be empty, we should
+    // print some amount of the actual stack.
+    size_t actual_size;
+    if (expected.size() == 0) {
+      // Don't print too many elements if the stack is really deep.
+      const size_t kMaxActualStackToPrint = 4;
+      actual_size = std::min(kMaxActualStackToPrint, max_depth);
+    } else {
+      actual_size = std::min(expected.size(), max_depth);
+    }
+
+    bool incomplete_actual_stack = actual_size != max_depth;
+
+    for (size_t i = 0; i < actual_size; ++i) {
+      Type type;
+      Result result = PeekType(actual_size - i - 1, &type);
+      WABT_USE(result);
+      assert(Succeeded(result));
+      actual.push_back(type);
+    }
+
+    std::string message = "type mismatch in ";
+    message += desc;
+    message += ", expected ";
+    message += TypesToString(expected);
+    message += " but got ";
+    message +=
+        TypesToString(actual, incomplete_actual_stack ? "... " : nullptr);
+
+    PrintError("%s", message.c_str());
+  }
 }
 
 Result TypeChecker::BeginFunction(const TypeVector* sig) {
@@ -309,7 +319,8 @@ Result TypeChecker::OnBr(Index depth) {
   Label* label;
   CHECK_RESULT(GetLabel(depth, &label));
   if (label->label_type != LabelType::Loop)
-    result |= CheckSignature(label->sig, "br");
+    result |= CheckSignature(label->sig);
+  PrintStackIfFailed(result, "br", label->sig);
   CHECK_RESULT(SetUnreachable());
   return result;
 }
@@ -340,13 +351,16 @@ Result TypeChecker::OnBrTableTarget(Index depth) {
   } else {
     assert(label->sig.size() <= 1);
     label_sig = label->sig.size() == 0 ? Type::Void : label->sig[0];
+
+    result |= CheckSignature(label->sig);
+    PrintStackIfFailed(result, "br_table", label_sig);
   }
 
-  result |= CheckType(br_table_sig_, label_sig, "br_table");
+  // Make sure this label's signature is consistent with the previous labels'
+  // signatures.
+  result |= CheckType(br_table_sig_, label_sig);
   br_table_sig_ = label_sig;
 
-  if (label->label_type != LabelType::Loop)
-    result |= CheckSignature(label->sig, "br_table");
   return result;
 }
 
@@ -404,9 +418,8 @@ Result TypeChecker::OnCurrentMemory() {
 
 Result TypeChecker::OnDrop() {
   Result result = Result::Ok;
-  Type type = Type::Any;
-  result |= CheckTypeStackLimit(1, "drop");
-  result |= PopType(&type);
+  result |= DropTypes(1);
+  PrintStackIfFailed(result, "drop", Type::Any);
   return result;
 }
 
@@ -528,9 +541,12 @@ Result TypeChecker::OnReturn() {
 
 Result TypeChecker::OnSelect() {
   Result result = Result::Ok;
-  result |= PopAndCheck1Type(Type::I32, "select");
   Type type = Type::Any;
-  result |= PopAndCheck2TypesAreEqual(&type, "select");
+  result |= PeekAndCheckType(0, Type::I32);
+  result |= PeekType(1, &type);
+  result |= PeekAndCheckType(2, type);
+  PrintStackIfFailed(result, "select", Type::I32, type, type);
+  result |= DropTypes(3);
   PushType(type);
   return result;
 }

@@ -9,7 +9,7 @@
   )
 ) 
 (;; STDERR ;;;
-out/test/exceptions/bad-throw.txt:8:6: error: type mismatch in throw, expected i32 but got i64.
+out/test/exceptions/bad-throw.txt:8:6: error: type mismatch in throw, expected [i32] but got [i64]
     (throw $ex)
      ^^^^^
 ;;; STDERR ;;)

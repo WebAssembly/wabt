@@ -2,22 +2,22 @@
 ;;; STDIN_FILE: third_party/testsuite/get_local.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/get_local.wast:91: assert_invalid passed:
-  error: type mismatch in implicit return, expected i64 but got i32.
+  error: type mismatch in implicit return, expected [i64] but got [i32]
   000001d: error: EndFunctionBody callback failed
 out/third_party/testsuite/get_local.wast:95: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected i32 but got f32.
+  error: type mismatch in i32.eqz, expected [i32] but got [f32]
   000001c: error: OnConvertExpr callback failed
 out/third_party/testsuite/get_local.wast:99: assert_invalid passed:
-  error: type mismatch in f64.neg, expected f64 but got i64.
+  error: type mismatch in f64.neg, expected [f64] but got [i64]
   000001e: error: OnUnaryExpr callback failed
 out/third_party/testsuite/get_local.wast:107: assert_invalid passed:
-  error: type mismatch in implicit return, expected i64 but got i32.
+  error: type mismatch in implicit return, expected [i64] but got [i32]
   000001c: error: EndFunctionBody callback failed
 out/third_party/testsuite/get_local.wast:111: assert_invalid passed:
-  error: type mismatch in i32.eqz, expected i32 but got f32.
+  error: type mismatch in i32.eqz, expected [i32] but got [f32]
   000001b: error: OnConvertExpr callback failed
 out/third_party/testsuite/get_local.wast:115: assert_invalid passed:
-  error: type mismatch in f64.neg, expected f64 but got i64.
+  error: type mismatch in f64.neg, expected [f64] but got [i64]
   000001c: error: OnUnaryExpr callback failed
 out/third_party/testsuite/get_local.wast:123: assert_invalid passed:
   error: invalid local_index: 3 (max 2)

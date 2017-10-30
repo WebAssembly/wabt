@@ -2,31 +2,31 @@
 ;;; STDIN_FILE: third_party/testsuite/loop.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/loop.wast:254: assert_invalid passed:
-  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: type mismatch in implicit return, expected [i32] but got []
   000001c: error: EndFunctionBody callback failed
 out/third_party/testsuite/loop.wast:258: assert_invalid passed:
-  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: type mismatch in implicit return, expected [i64] but got []
   000001c: error: EndFunctionBody callback failed
 out/third_party/testsuite/loop.wast:262: assert_invalid passed:
-  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: type mismatch in implicit return, expected [f32] but got []
   000001c: error: EndFunctionBody callback failed
 out/third_party/testsuite/loop.wast:266: assert_invalid passed:
-  error: type stack size too small at implicit return. got 0, expected at least 1
+  error: type mismatch in implicit return, expected [f64] but got []
   000001c: error: EndFunctionBody callback failed
 out/third_party/testsuite/loop.wast:271: assert_invalid passed:
-  error: type stack at end of loop is 1, expected 0
+  error: type mismatch in loop, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
 out/third_party/testsuite/loop.wast:277: assert_invalid passed:
-  error: type stack size too small at loop. got 0, expected at least 1
+  error: type mismatch in loop, expected [i32] but got []
   000001b: error: OnEndExpr callback failed
 out/third_party/testsuite/loop.wast:283: assert_invalid passed:
-  error: type stack size too small at loop. got 0, expected at least 1
+  error: type mismatch in loop, expected [i32] but got []
   000001c: error: OnEndExpr callback failed
 out/third_party/testsuite/loop.wast:289: assert_invalid passed:
-  error: type mismatch in loop, expected i32 but got f32.
+  error: type mismatch in loop, expected [i32] but got [f32]
   0000020: error: OnEndExpr callback failed
 out/third_party/testsuite/loop.wast:295: assert_invalid passed:
-  error: type mismatch in implicit return, expected i32 but got i64.
+  error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
 out/third_party/testsuite/loop.wast:303: assert_malformed passed:
   out/third_party/testsuite/loop/loop.10.wast:1:16: error: unexpected label "$l"

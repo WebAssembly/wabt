@@ -3,7 +3,7 @@
   (local i32)
   set_local 0))
 (;; STDERR ;;;
-out/test/parse/expr/bad-setlocal-no-value.txt:4:3: error: type stack size too small at set_local. got 0, expected at least 1
+out/test/parse/expr/bad-setlocal-no-value.txt:4:3: error: type mismatch in set_local, expected [i32] but got []
   set_local 0))
   ^^^^^^^^^
 ;;; STDERR ;;)

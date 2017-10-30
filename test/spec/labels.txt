@@ -2,13 +2,13 @@
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDOUT ;;;
 out/third_party/testsuite/labels.wast:303: assert_invalid passed:
-  error: type stack size too small at f32.neg. got 0, expected at least 1
+  error: type mismatch in f32.neg, expected [f32] but got []
   000001e: error: OnUnaryExpr callback failed
 out/third_party/testsuite/labels.wast:307: assert_invalid passed:
-  error: type stack at end of block is 1, expected 0
+  error: type mismatch in block, expected [] but got [f32]
   0000023: error: OnEndExpr callback failed
 out/third_party/testsuite/labels.wast:311: assert_invalid passed:
-  error: type stack at end of block is 1, expected 0
+  error: type mismatch in block, expected [] but got [f32]
   0000023: error: OnEndExpr callback failed
 27/27 tests passed.
 ;;; STDOUT ;;)
