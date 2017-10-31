@@ -1,0 +1,19 @@
+;;; EXE: %(wasm-validate)s
+;;; FLAGS: --help
+(;; STDOUT ;;;
+usage: wasm-validate [options] filename
+
+  Read a file in the WebAssembly binary format, and validate it.
+
+examples:
+  # validate binary file test.wasm
+  $ wasm-validate test.wasm
+
+options:
+  -v, --verbose                               Use multiple times for more info
+  -h, --help                                  Print this help message
+      --enable-exceptions                     Experimental exception handling
+      --enable-saturating-float-to-int        Saturating float-to-int operators
+      --enable-threads                        Threading support
+      --no-debug-names                        Ignore debug names in the binary file
+;;; STDOUT ;;)

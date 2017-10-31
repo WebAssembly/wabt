@@ -317,6 +317,9 @@ if (NOT EMSCRIPTEN)
   # wat-desugar
   wabt_executable(wat-desugar src/tools/wat-desugar.cc)
 
+  # wasm-validate
+  wabt_executable(wasm-validate src/tools/wasm-validate.cc)
+
   find_package(Threads)
   if (BUILD_TESTS)
     if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)

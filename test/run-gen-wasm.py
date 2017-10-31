@@ -64,11 +64,19 @@ def main(args):
       error_cmdline=options.error_cmdline)
   wasm2wat.AppendOptionalArgs({
       '--no-debug-names': options.no_debug_names,
+      '--verbose': options.verbose,
   })
-  wasm2wat.AppendOptionalArgs({'--verbose': options.verbose,})
+
+  wasmvalidate = utils.Executable(
+      find_exe.GetWasmValidateExecutable(options.bindir),
+      error_cmdline=options.error_cmdline)
+  wasmvalidate.AppendOptionalArgs({
+      '--no-debug-names': options.no_debug_names,
+  })
 
   gen_wasm.verbose = options.print_cmd
   wasm2wat.verbose = options.print_cmd
+  wasmvalidate.verbose = options.print_cmd
   objdump.verbose = options.print_cmd
 
   with utils.TempDirectory(options.out_dir, 'run-gen-wasm-') as out_dir:
@@ -77,7 +85,26 @@ def main(args):
     if options.objdump:
       objdump.RunWithArgs(out_file, '-x')
     else:
-      wasm2wat.RunWithArgs(out_file)
+      # Test running wasm-validate on all files. wasm2wat should produce the
+      # same errors, so let's make sure that's true.
+      validate_ok = False
+      wasm2wat_ok = False
+
+      try:
+        try:
+          wasmvalidate.RunWithArgs(out_file)
+          validate_ok = True
+        except Error as e:
+          sys.stderr.write(str(e) + '\n')
+
+        try:
+          wasm2wat.RunWithArgs(out_file)
+          wasm2wat_ok = True
+        except Error as e:
+          raise
+      finally:
+        if validate_ok != wasm2wat_ok:
+          sys.stderr.write('wasm-validate and wasm2wat have different results!')
 
 
 if __name__ == '__main__':

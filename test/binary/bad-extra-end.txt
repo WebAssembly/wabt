@@ -13,6 +13,10 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+error: popping empty label stack
+000001a: error: OnEndExpr callback failed
+
 Error running "wasm2wat":
 error: popping empty label stack
 000001a: error: OnEndExpr callback failed

@@ -15,6 +15,10 @@ section("name") {
   str("g")
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+error: expected function name count (2) <= function count (1)
+0000023: error: OnFunctionNamesCount callback failed
+
 Error running "wasm2wat":
 error: expected function name count (2) <= function count (1)
 0000023: error: OnFunctionNamesCount callback failed

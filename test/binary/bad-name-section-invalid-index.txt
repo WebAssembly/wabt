@@ -19,6 +19,9 @@ section("name") {
   str("$F0")
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+0000028: error: invalid function index: 8
+
 Error running "wasm2wat":
 0000028: error: invalid function index: 8
 

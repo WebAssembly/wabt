@@ -21,6 +21,9 @@ section("name") {
   str("F0")
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+000002c: error: function index out of order: 0
+
 Error running "wasm2wat":
 000002c: error: function index out of order: 0
 

@@ -9,6 +9,9 @@ section(MEMORY) {
   max[1]
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+000000e: error: memory initial size must be <= max size
+
 Error running "wasm2wat":
 000000e: error: memory initial size must be <= max size
 

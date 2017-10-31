@@ -5,6 +5,9 @@ version
 section(TYPE) { count[1] function params[0] results[1] i32 }
 section(IMPORT) { count[1] str("module") str("func") func_kind type[1] }
 (;; STDERR ;;;
+Error running "wasm-validate":
+0000020: error: invalid import signature index
+
 Error running "wasm2wat":
 0000020: error: invalid import signature index
 
