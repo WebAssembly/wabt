@@ -3,6 +3,9 @@
 0 "ASM"
 version
 (;; STDERR ;;;
+Error running "wasm-validate":
+0000004: error: bad magic value
+
 Error running "wasm2wat":
 0000004: error: bad magic value
 

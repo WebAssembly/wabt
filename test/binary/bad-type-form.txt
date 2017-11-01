@@ -7,6 +7,9 @@ section(TYPE) {
   0x20
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+000000c: error: unexpected type form: 32
+
 Error running "wasm2wat":
 000000c: error: unexpected type form: 32
 

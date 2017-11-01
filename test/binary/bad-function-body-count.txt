@@ -9,6 +9,9 @@ section(CODE) {
   func { locals[0] }
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+0000016: error: function signature count != function body count
+
 Error running "wasm2wat":
 0000016: error: function signature count != function body count
 

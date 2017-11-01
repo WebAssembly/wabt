@@ -13,6 +13,10 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+error: accessing stack depth: 0 >= max: 0
+000001a: error: OnNopExpr callback failed
+
 Error running "wasm2wat":
 error: accessing stack depth: 0 >= max: 0
 000001a: error: OnNopExpr callback failed

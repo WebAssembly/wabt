@@ -31,6 +31,9 @@ section("name") {
   str("L0")
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+000003d: error: locals function index out of order: 0
+
 Error running "wasm2wat":
 000003d: error: locals function index out of order: 0
 

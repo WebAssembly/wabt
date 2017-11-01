@@ -8,6 +8,9 @@ section(MEMORY) {
   initial[leb_u32(65537)]
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+000000f: error: invalid memory initial size
+
 Error running "wasm2wat":
 000000f: error: invalid memory initial size
 

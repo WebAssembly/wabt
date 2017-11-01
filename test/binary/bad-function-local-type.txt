@@ -12,6 +12,9 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+0000019: error: expected valid local type
+
 Error running "wasm2wat":
 0000019: error: expected valid local type
 

@@ -9,6 +9,9 @@ section(MEMORY) {
   max[leb_u32(65537)]
 }
 (;; STDERR ;;;
+Error running "wasm-validate":
+0000010: error: invalid memory max size
+
 Error running "wasm2wat":
 0000010: error: invalid memory max size
 
