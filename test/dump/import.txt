@@ -2,7 +2,10 @@
 ;;; FLAGS: -v --dump-verbose
 (module
   (import "ignored" "test" (func (param i32 i64 f32 f64)))
-  (import "ignored" "test2" (func (param i32) (result i32))))
+  (import "ignored" "test2" (func (param i32) (result i32)))
+  (import "ignored" "testmem" (memory 0))
+  (import "ignored" "testtable" (table 0 anyfunc))
+)
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
@@ -28,7 +31,7 @@
 ; section "Import" (2)
 0000017: 02                                        ; section code
 0000018: 00                                        ; section size (guess)
-0000019: 02                                        ; num imports
+0000019: 04                                        ; num imports
 ; import header 0
 000001a: 07                                        ; string length
 000001b: 6967 6e6f 7265 64                        ignored  ; import module name
@@ -43,7 +46,24 @@
 0000032: 7465 7374 32                             test2  ; import field name
 0000037: 00                                        ; import kind
 0000038: 01                                        ; import signature index
-0000018: 20                                        ; FIXUP section size
+; import header 2
+0000039: 07                                        ; string length
+000003a: 6967 6e6f 7265 64                        ignored  ; import module name
+0000041: 07                                        ; string length
+0000042: 7465 7374 6d65 6d                        testmem  ; import field name
+0000049: 02                                        ; import kind
+000004a: 00                                        ; limits: flags
+000004b: 00                                        ; limits: initial
+; import header 3
+000004c: 07                                        ; string length
+000004d: 6967 6e6f 7265 64                        ignored  ; import module name
+0000054: 09                                        ; string length
+0000055: 7465 7374 7461 626c 65                   testtable  ; import field name
+000005e: 01                                        ; import kind
+000005f: 70                                        ; anyfunc
+0000060: 00                                        ; limits: flags
+0000061: 00                                        ; limits: initial
+0000018: 49                                        ; FIXUP section size
 
 import.wasm:	file format wasm 0x1
 
@@ -55,6 +75,8 @@ Type:
 Import:
  - func[0] sig=0 <- ignored.test
  - func[1] sig=1 <- ignored.test2
+ - memory[0] pages: initial=0 <- ignored.testmem
+ - table[0] elem_type=anyfunc init=0 max=0 <- ignored.testtable
 
 Code Disassembly:
 
