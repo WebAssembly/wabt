@@ -297,6 +297,10 @@ if (NOT EMSCRIPTEN)
   # wasm2wat
   wabt_executable(wasm2wat src/tools/wasm2wat.cc)
 
+  # wasm2c
+  wabt_executable(wasm2c
+    src/tools/wasm2c.cc src/c-writer.cc)
+
   # wasm-opcodecnt
   wabt_executable(wasm-opcodecnt
     src/tools/wasm-opcodecnt.cc src/binary-reader-opcnt.cc)

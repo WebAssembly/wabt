@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/float_misc.wast
+(;; STDOUT ;;;
+440/440 tests passed.
+;;; STDOUT ;;)

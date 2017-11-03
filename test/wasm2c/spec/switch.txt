@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/switch.wast
+(;; STDOUT ;;;
+26/26 tests passed.
+;;; STDOUT ;;)

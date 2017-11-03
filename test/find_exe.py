@@ -26,7 +26,7 @@ REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 EXECUTABLES = [
     'wat2wasm', 'wast2json', 'wasm2wat', 'wasm-objdump', 'wasm-interp',
     'wasm-opcodecnt', 'wat-desugar', 'wasm-link', 'spectest-interp',
-    'wasm-validate',
+    'wasm-validate', 'wasm2c',
 ]
 
 
@@ -103,3 +103,7 @@ def GetWatDesugarExecutable(override=None):
 
 def GetWasmValidateExecutable(override=None):
   return FindExecutable('wasm-validate', override)
+
+
+def GetWasm2CExecutable(override=None):
+  return FindExecutable('wasm2c', override)

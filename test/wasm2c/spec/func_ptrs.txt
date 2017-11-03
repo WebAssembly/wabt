@@ -1,0 +1,6 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/func_ptrs.wast
+(;; STDOUT ;;;
+spectest.print(83)
+25/25 tests passed.
+;;; STDOUT ;;)

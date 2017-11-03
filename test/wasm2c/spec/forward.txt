@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/forward.wast
+(;; STDOUT ;;;
+4/4 tests passed.
+;;; STDOUT ;;)
