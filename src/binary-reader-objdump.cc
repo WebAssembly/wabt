@@ -753,11 +753,13 @@ Result BinaryReaderObjdump::OnImportTable(Index import_index,
                                           Index table_index,
                                           Type elem_type,
                                           const Limits* elem_limits) {
-  PrintDetails(" - " PRIstringview "." PRIstringview
-               " -> table elem_type=%s init=%" PRId64 " max=%" PRId64 "\n",
+  PrintDetails(" - table[%" PRIindex "] elem_type=%s init=%" PRId64
+               " max=%" PRId64,
+               table_index, GetTypeName(elem_type), elem_limits->initial,
+               elem_limits->max);
+  PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
-               WABT_PRINTF_STRING_VIEW_ARG(field_name), GetTypeName(elem_type),
-               elem_limits->initial, elem_limits->max);
+               WABT_PRINTF_STRING_VIEW_ARG(field_name));
   return Result::Ok;
 }
 
@@ -766,7 +768,11 @@ Result BinaryReaderObjdump::OnImportMemory(Index import_index,
                                            string_view field_name,
                                            Index memory_index,
                                            const Limits* page_limits) {
-  PrintDetails(" - " PRIstringview "." PRIstringview " -> memory\n",
+  PrintDetails(" - memory[%" PRIindex "] pages: initial=%" PRId64, memory_index,
+               page_limits->initial);
+  if (page_limits->has_max)
+    PrintDetails(" max=%" PRId64, page_limits->max);
+  PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
   return Result::Ok;
@@ -778,9 +784,9 @@ Result BinaryReaderObjdump::OnImportGlobal(Index import_index,
                                            Index global_index,
                                            Type type,
                                            bool mutable_) {
-  PrintDetails(" - global[%" PRIindex "] %s mutable=%d <- " PRIstringview
-               "." PRIstringview "\n",
-               global_index, GetTypeName(type), mutable_,
+  PrintDetails(" - global[%" PRIindex "] %s mutable=%d", global_index,
+               GetTypeName(type), mutable_);
+  PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
   return Result::Ok;
