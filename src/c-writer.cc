@@ -23,10 +23,21 @@
 #include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
+#include "src/string-view.h"
+
+#define INDENT_SIZE 2
 
 namespace wabt {
 
 namespace {
+
+enum class NextChar {
+  None,
+  Space,
+  Newline,
+  ForceNewline,
+};
+
 
 class CWriter {
  public:
@@ -36,20 +47,44 @@ class CWriter {
   Result WriteModule(const Module&);
 
  private:
+  void Indent();
+  void Dedent();
+  void WriteIndent();
+  void WriteNextChar();
+  void WriteDataWithNextChar(const void* src, size_t size);
+  void Writef(const char* format, ...);
+  void WritefNewline(const char* format, ...);
+  void WritePutc(char c);
+  void WritePuts(const char* s);
+  void WritePutsNewline(const char* s);
+  void WriteNewline(bool force = false);
+
+  void WriteName(const std::string&);
+  void WriteVar(const Var&);
+  void WriteTypeName(Type);
+  void WriteResultType(const TypeVector&);
+  void WriteConst(const Const&);
+  void WriteInitExpr(const ExprList&);
+
   void WriteHeader();
   void WriteFuncTypes();
-  void WriteMemory(const Memory&);
-  void WriteTable(const Table&);
+  void WriteFuncDeclarations();
+  void WriteGlobals();
+  void WriteMemories();
+  void WriteTables();
   void WriteDataInitializers();
   void WriteElemInitializers();
-  void WriteInitExpr(const ExprList&);
-  void WriteConst(const Const&);
+  void WriteFuncs();
+  void WriteFunc(const Func&);
+  void WriteStackVariables(const Func&);
+  void WriteLocals(const Func&);
 
   const WriteCOptions* options_ = nullptr;
   const Module* module_ = nullptr;
   Stream* stream_ = nullptr;
   Result result_ = Result::Ok;
   int indent_ = 0;
+  NextChar next_char_ = NextChar::None;
 
   // Index func_index_ = 0;
   // Index global_index_ = 0;
@@ -73,39 +108,256 @@ typedef uint64_t u64;
 typedef int64_t s64;
 
 void trap(int);
+u32 register_func_type(u32 params, u32 results, ...);
+void init_data_segment(u32 addr, u8 *data, size_t len);
+void init_elem_segment(u32 addr, Elem *data, size_t len);
+
 )";
 
+void CWriter::Indent() {
+  indent_ += INDENT_SIZE;
+}
+
+void CWriter::Dedent() {
+  indent_ -= INDENT_SIZE;
+  assert(indent_ >= 0);
+}
+
+void CWriter::WriteIndent() {
+  static char s_indent[] =
+      "                                                                       "
+      "                                                                       ";
+  static size_t s_indent_len = sizeof(s_indent) - 1;
+  size_t to_write = indent_;
+  while (to_write >= s_indent_len) {
+    stream_->WriteData(s_indent, s_indent_len);
+    to_write -= s_indent_len;
+  }
+  if (to_write > 0) {
+    stream_->WriteData(s_indent, to_write);
+  }
+}
+
+void CWriter::WriteNextChar() {
+  switch (next_char_) {
+    case NextChar::Space:
+      stream_->WriteChar(' ');
+      break;
+    case NextChar::Newline:
+    case NextChar::ForceNewline:
+      stream_->WriteChar('\n');
+      WriteIndent();
+      break;
+    case NextChar::None:
+      break;
+  }
+  next_char_ = NextChar::None;
+}
+
+void CWriter::WriteDataWithNextChar(const void* src, size_t size) {
+  WriteNextChar();
+  stream_->WriteData(src, size);
+}
+
+void WABT_PRINTF_FORMAT(2, 3) CWriter::Writef(const char* format, ...) {
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  WriteDataWithNextChar(buffer, length);
+  next_char_ = NextChar::None;
+}
+
+void WABT_PRINTF_FORMAT(2, 3) CWriter::WritefNewline(const char* format, ...) {
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  WriteDataWithNextChar(buffer, length);
+  next_char_ = NextChar::Newline;
+}
+
+void CWriter::WritePutc(char c) {
+  stream_->WriteChar(c);
+}
+
+void CWriter::WritePuts(const char* s) {
+  size_t len = strlen(s);
+  WriteDataWithNextChar(s, len);
+  next_char_ = NextChar::None;
+}
+
+void CWriter::WritePutsNewline(const char* s) {
+  size_t len = strlen(s);
+  WriteDataWithNextChar(s, len);
+  next_char_ = NextChar::Newline;
+}
+
+void CWriter::WriteNewline(bool force) {
+  if (next_char_ == NextChar::ForceNewline)
+    WriteNextChar();
+  next_char_ = force ? NextChar::ForceNewline : NextChar::Newline;
+}
+
+void CWriter::WriteName(const std::string& name) {
+  Writef("%s", name.c_str() + 1);  // Skip $ prefix.
+}
+
+void CWriter::WriteVar(const Var& var) {
+  assert(var.is_name());
+  assert(var.name().size() >= 1);
+  WriteName(var.name());
+}
+
+void CWriter::WriteTypeName(Type type) {
+  switch (type) {
+    case Type::I32: WritePuts("u32"); break;
+    case Type::I64: WritePuts("u64"); break;
+    case Type::F32: WritePuts("f32"); break;
+    case Type::F64: WritePuts("f64"); break;
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+void CWriter::WriteResultType(const TypeVector& results) {
+  if (!results.empty()) {
+    WriteTypeName(results[0]);
+  } else {
+    WritePuts("void");
+  }
+}
+
+void CWriter::WriteConst(const Const& const_) {
+  switch (const_.type) {
+    case Type::I32:
+      Writef("%d", static_cast<int32_t>(const_.u32));
+      break;
+
+    case Type::I64:
+      Writef("%" PRId64, static_cast<int64_t>(const_.u64));
+      break;
+
+    case Type::F32: {
+      char buffer[128];
+      WriteFloatHex(buffer, 128, const_.f32_bits);
+      Writef("%s /*=%g*/", buffer, Bitcast<float>(const_.f32_bits));
+      break;
+    }
+
+    case Type::F64: {
+      char buffer[128];
+      WriteDoubleHex(buffer, 128, const_.f64_bits);
+      Writef("%s /*=%g*/", buffer, Bitcast<double>(const_.f64_bits));
+      break;
+    }
+
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+void CWriter::WriteInitExpr(const ExprList& expr_list) {
+  if (expr_list.empty())
+    return;
+
+  assert(expr_list.size() == 1);
+  const Expr* expr = &expr_list.front();
+  switch (expr_list.front().type()) {
+    case ExprType::Const:
+      WriteConst(cast<ConstExpr>(expr)->const_);
+      break;
+
+    case ExprType::GetGlobal:
+      WriteVar(cast<GetGlobalExpr>(expr)->var);
+      break;
+
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
 void CWriter::WriteHeader() {
-  stream_->Writef(s_header);
+  Writef(s_header);
 }
 
 void CWriter::WriteFuncTypes() {
-  stream_->Writef("\nstatic u32 func_types[%" PRIzd "];\n",
-                  module_->func_types.size());
-  stream_->Writef("u32 register_func_type(u32 params, u32 results, ...);\n\n");
-  stream_->Writef("static void init_func_types(void) {\n");
+  WritefNewline("static u32 func_types[%" PRIzd "];",
+                module_->func_types.size());
+  WriteNewline(true);
+  WritefNewline("static void init_func_types(void) {");
   Index func_type_index = 0;
   for (FuncType* func_type : module_->func_types) {
-    stream_->Writef("  func_types[%" PRIindex
-                    "] = register_func_type(%" PRIindex ", %" PRIindex ");",
-                    func_type_index, func_type->GetNumParams(),
-                    func_type->GetNumResults());
+    Index num_params = func_type->GetNumParams();
+    Index num_results = func_type->GetNumResults();
+    Writef("  func_types[%" PRIindex "] = register_func_type(%" PRIindex
+           ", %" PRIindex "",
+           func_type_index, num_params, num_results);
+    for (Index i = 0; i < num_params; ++i)
+      Writef(", %s", GetTypeName(func_type->GetParamType(i)));
+
+    for (Index i = 0; i < num_results; ++i)
+      Writef(", %s", GetTypeName(func_type->GetResultType(i)));
+
+    WritefNewline(");");
     ++func_type_index;
   }
-  stream_->Writef("}\n");
+  WritePutsNewline("}");
 }
 
-void CWriter::WriteMemory(const Memory& memory) {
-  stream_->Writef("\ntypedef struct Memory { u8* data; size_t len; } Memory;\n");
-  stream_->Writef("typedef struct DataSegment { u32 offset; u8* data; size_t len; } DataSegment;\n");
-  stream_->Writef("static Memory mem;\n");
+void CWriter::WriteFuncDeclarations() {
+  if (module_->funcs.empty())
+    return;
+
+  for (Func* func : module_->funcs) {
+    WritePuts("static ");
+    WriteResultType(func->decl.sig.result_types);
+    WritePuts(" ");
+    WriteName(func->name);
+    WritePuts("(");
+    for (Index i = 0; i < func->GetNumParams(); ++i) {
+      if (i != 0)
+        WritePuts(", ");
+      WriteTypeName(func->GetParamType(i));
+    }
+    WritePuts(");");
+    WriteNewline();
+  }
 }
 
-void CWriter::WriteTable(const Table& table) {
-  stream_->Writef("\ntypedef void (*Anyfunc)();\n");
-  stream_->Writef("typedef struct Elem { u32 func_type; Anyfunc func; } Elem;\n");
-  stream_->Writef("typedef struct Table { Elem* data; size_t len; } Table;\n");
-  stream_->Writef("static Table table;\n");
+void CWriter::WriteGlobals() {
+  if (module_->globals.empty())
+    return;
+
+  for (Global* global : module_->globals) {
+    WritePuts("static ");
+    WriteTypeName(global->type);
+    WritePuts(" ");
+    WriteName(global->name);
+    if (!global->init_expr.empty()) {
+      WritePuts(" = ");
+      WriteInitExpr(global->init_expr);
+    }
+    WritePuts(";");
+    WriteNewline();
+  }
+}
+
+void CWriter::WriteMemories() {
+  assert(module_->memories.size() <= 1);
+  for (Memory* memory : module_->memories) {
+    WABT_USE(memory);
+    WritePutsNewline("typedef struct Memory { u8* data; size_t len; } Memory;");
+    WritePutsNewline(
+        "typedef struct DataSegment { u32 offset; u8* data; size_t len; } "
+        "DataSegment;");
+    WritePutsNewline("static Memory mem;");
+  }
+}
+
+void CWriter::WriteTables() {
+  assert(module_->tables.size() <= 1);
+  for (Table* table : module_->tables) {
+    WABT_USE(table);
+    WritePutsNewline("typedef void (*Anyfunc)();");
+    WritePutsNewline("typedef struct Elem { u32 func_type; Anyfunc func; } Elem;");
+    WritePutsNewline("typedef struct Table { Elem* data; size_t len; } Table;");
+    WritePutsNewline("static Table table;");
+  }
 }
 
 void CWriter::WriteDataInitializers() {
@@ -114,80 +366,131 @@ void CWriter::WriteDataInitializers() {
 
   Index data_segment_index = 0;
   for (DataSegment* data_segment : module_->data_segments) {
-    stream_->Writef("\nstatic u8 data_segment_data_%" PRIindex "[] = {",
-                    data_segment_index);
+    Writef("static u8 data_segment_data_%" PRIindex "[] = {",
+           data_segment_index);
+    Indent();
+    WriteNewline();
     size_t i = 0;
     for (uint8_t x : data_segment->data) {
-      if ((i++ % 16) == 0)
-        stream_->Writef("\n  ");
-      stream_->Writef("0x%02x, ", x);
+      Writef("0x%02x, ", x);
+      if ((++i % 16) == 0)
+        WriteNewline();
     }
-    stream_->Writef("\n};\n");
+    Dedent();
+    WriteNewline();
+    WritePutsNewline("};");
     ++data_segment_index;
   }
 
-  stream_->Writef("\nstatic void init_data(void) {\n");
+  WritePutsNewline("static void init_memory(void) {");
   data_segment_index = 0;
   for (DataSegment* data_segment : module_->data_segments) {
-    stream_->Writef("  init_data_segment(");
+    WritePuts("  init_data_segment(");
     WriteInitExpr(data_segment->offset);
-    stream_->Writef(", data_segment_data_%" PRIindex ", %" PRIzd ");\n",
-                    data_segment_index, data_segment->data.size());
+    WritefNewline(", data_segment_data_%" PRIindex ", %" PRIzd ");",
+                  data_segment_index, data_segment->data.size());
     ++data_segment_index;
   }
-  stream_->Writef("}\n");
+  WritefNewline("}");
 }
 
 void CWriter::WriteElemInitializers() {
-}
+  if (module_->tables.empty())
+    return;
 
-void CWriter::WriteInitExpr(const ExprList& expr_list) {
-  assert(expr_list.size() == 1);
-  const Expr* expr = &expr_list.front();
-  switch (expr_list.front().type()) {
-    case ExprType::Const: {
-      WriteConst(cast<ConstExpr>(expr)->const_);
-      break;
+  Index elem_segment_index = 0;
+  for (ElemSegment* elem_segment : module_->elem_segments) {
+    Writef("static Elem elem_segment_data_%" PRIindex "[] = {",
+           elem_segment_index);
+    Indent();
+    WriteNewline();
+
+    size_t i = 0;
+    for (const Var& var : elem_segment->vars) {
+      const Func* func = module_->GetFunc(var);
+      Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
+
+      Writef("{%" PRIindex ", ", func_type_index);
+      WriteName(func->name);
+      WritePuts("}, ");
+
+      if ((++i % 8) == 0)
+        WriteNewline();
     }
-
-    case ExprType::GetGlobal: {
-      const Var& var = cast<GetGlobalExpr>(expr)->var;
-      assert(var.is_name());
-      stream_->Writef("%s", var.name().c_str());
-      break;
-    }
-
-    default:
-      WABT_UNREACHABLE;
+    Dedent();
+    WriteNewline();
+    WritePutsNewline("};");
+    ++elem_segment_index;
   }
+
+  WritePutsNewline("static void init_table(void) {");
+  elem_segment_index = 0;
+  for (const ElemSegment* elem_segment : module_->elem_segments) {
+    WritePuts("  init_elem_segment(");
+    WriteInitExpr(elem_segment->offset);
+    WritefNewline(", elem_segment_data_%" PRIindex ", %" PRIzd ");",
+                  elem_segment_index, elem_segment->vars.size());
+    ++elem_segment_index;
+  }
+  WritePutsNewline("}");
 }
 
-void CWriter::WriteConst(const Const& const_) {
-  switch (const_.type) {
-    case Type::I32:
-      stream_->Writef("%d", static_cast<int32_t>(const_.u32));
-      break;
+void CWriter::WriteFuncs() {
+  for (const Func* func : module_->funcs)
+    WriteFunc(*func);
+}
 
-    case Type::I64:
-      stream_->Writef("%" PRId64, static_cast<int64_t>(const_.u64));
-      break;
+void CWriter::WriteFunc(const Func& func) {
+  WritePuts("static ");
+  WriteResultType(func.decl.sig.result_types);
+  WritePuts(" ");
+  WriteName(func.name);
+  WritePuts("(");
+  std::vector<std::string> index_to_name;
+  MakeTypeBindingReverseMapping(func.decl.sig.param_types, func.param_bindings,
+                                &index_to_name);
+  for (Index i = 0; i < func.GetNumParams(); ++i) {
+    if (i != 0)
+      WritePuts(", ");
+    WriteTypeName(func.GetParamType(i));
+    WritePuts(" ");
+    WriteName(index_to_name[i]);
+  }
+  WritePuts(") {");
+  Indent();
+  WriteNewline();
+  WriteStackVariables(func);
+  WriteLocals(func);
+  Dedent();
+  WriteNewline();
+  WritePutsNewline("}");
+}
 
-    case Type::F32: {
-      char buffer[128];
-      WriteFloatHex(buffer, 128, const_.f32_bits);
-      stream_->Writef("%s (;=%g)", buffer, Bitcast<float>(const_.f32_bits));
-      break;
+void CWriter::WriteStackVariables(const Func& func) {
+}
+
+void CWriter::WriteLocals(const Func& func) {
+  std::vector<std::string> index_to_name;
+  MakeTypeBindingReverseMapping(func.local_types, func.local_bindings,
+                                &index_to_name);
+  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
+    Index local_index = 0;
+    size_t count = 0;
+    for (Type local_type : func.local_types) {
+      if (local_type == type) {
+        if (count++ == 0) {
+          WriteTypeName(type);
+          WritePuts(" ");
+        } else {
+          WritePuts(", ");
+        }
+
+        WriteName(index_to_name[local_index]);
+      }
+      ++local_index;
     }
-
-    case Type::F64: {
-      char buffer[128];
-      WriteDoubleHex(buffer, 128, const_.f64_bits);
-      stream_->Writef("%s (;=%g;)", buffer, Bitcast<double>(const_.f64_bits));
-      break;
-    }
-
-    default:
-      WABT_UNREACHABLE;
+    if (count != 0)
+      WritePutsNewline(";");
   }
 }
 
@@ -198,16 +501,14 @@ Result CWriter::WriteModule(const Module& module) {
 
   module_ = &module;
   WriteHeader();
-
-  assert(module_->memories.size() <= 1);
-  for (Memory* memory: module_->memories)
-    WriteMemory(*memory);
-
-  assert(module_->tables.size() <= 1);
-  for (Table* table: module_->tables)
-    WriteTable(*table);
-
+  WriteFuncTypes();
+  WriteFuncDeclarations();
+  WriteGlobals();
+  WriteMemories();
+  WriteTables();
   WriteDataInitializers();
+  WriteElemInitializers();
+  WriteFuncs();
 
   return result_;
 }
