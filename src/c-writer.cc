@@ -17,6 +17,7 @@
 #include "src/c-writer.h"
 
 #include <cinttypes>
+#include <set>
 
 #include "src/cast.h"
 #include "src/common.h"
@@ -42,7 +43,7 @@ enum class NextChar {
 class CWriter {
  public:
   CWriter(Stream* stream, const WriteCOptions* options)
-      : options_(options), stream_(stream) {}
+      : options_(options), stream_(stream), module_stream_(stream) {}
 
   Result WriteModule(const Module&);
 
@@ -76,15 +77,31 @@ class CWriter {
   void WriteElemInitializers();
   void WriteFuncs();
   void WriteFunc(const Func&);
-  void WriteStackVariables(const Func&);
   void WriteLocals(const Func&);
+  void WriteExprList(const ExprList&);
+
+  enum class AssignOp {
+    Disallowed,
+    Allowed,
+  };
+
+  std::string GetStackVar(Index);
+  void WriteSimpleBinaryExpr(const char* op, AssignOp = AssignOp::Allowed);
+  void WriteBinaryExpr(const BinaryExpr&);
+  void WriteCompareExpr(const CompareExpr&);
 
   const WriteCOptions* options_ = nullptr;
   const Module* module_ = nullptr;
+  const Func* func_ = nullptr;
   Stream* stream_ = nullptr;
+  Stream* module_stream_ = nullptr;
+  MemoryStream func_stream_;
   Result result_ = Result::Ok;
   int indent_ = 0;
   NextChar next_char_ = NextChar::None;
+
+  std::set<std::string> func_syms_;
+  TypeVector type_stack_;
 
   // Index func_index_ = 0;
   // Index global_index_ = 0;
@@ -194,7 +211,7 @@ void CWriter::WriteNewline(bool force) {
 }
 
 void CWriter::WriteName(const std::string& name) {
-  Writef("%s", name.c_str() + 1);  // Skip $ prefix.
+  WritePuts(name.c_str() + 1);  // Skip $ prefix.
 }
 
 void CWriter::WriteVar(const Var& var) {
@@ -459,14 +476,353 @@ void CWriter::WriteFunc(const Func& func) {
   WritePuts(") {");
   Indent();
   WriteNewline();
-  WriteStackVariables(func);
+
+  func_ = &func;
+  stream_ = &func_stream_;
+  func_syms_.clear();
+
   WriteLocals(func);
+  WriteExprList(func.exprs);
+
+  if (!func.decl.sig.result_types.empty()) {
+    // Return the top of the stack implicitly.
+    WritePuts("return ");
+    WriteName(GetStackVar(0));
+    WritePuts(";");
+    WriteNewline();
+  }
+
   Dedent();
   WriteNewline();
+
+  stream_ = module_stream_;
+  std::unique_ptr<OutputBuffer> buf = func_stream_.ReleaseOutputBuffer();
+  stream_->WriteData(buf->data.data(), buf->data.size());
+  func_stream_.Clear();
+  func_ = nullptr;
+
   WritePutsNewline("}");
 }
 
-void CWriter::WriteStackVariables(const Func& func) {
+void CWriter::WriteExprList(const ExprList& exprs) {
+  for (const Expr& expr: exprs) {
+    switch (expr.type()) {
+      case ExprType::Binary:
+        WriteBinaryExpr(*cast<BinaryExpr>(&expr));
+        break;
+
+      case ExprType::Block: {
+        const Block& block = cast<BlockExpr>(&expr)->block;
+        Indent();
+        WriteExprList(block.exprs);
+        Dedent();
+        WriteName(block.label);
+        WritePuts(":");
+        WriteNewline();
+        break;
+      }
+
+      case ExprType::Br: {
+        const Var& var = cast<BrExpr>(&expr)->var;
+        WritePuts("goto ");
+        WriteName(var.name());
+        WritePuts(";");
+        WriteNewline();
+        break;
+      }
+
+      case ExprType::BrIf:
+      case ExprType::BrTable:
+      case ExprType::Call:
+      case ExprType::CallIndirect:
+      case ExprType::Compare:
+        WriteCompareExpr(*cast<CompareExpr>(&expr));
+        break;
+
+      case ExprType::Const: {
+        const Const& const_ = cast<ConstExpr>(&expr)->const_;
+        Type type = const_.type;
+        type_stack_.push_back(type);
+        WriteName(GetStackVar(0));
+        WritePuts(" = ");
+        WriteConst(const_);
+        WritePuts(";");
+        WriteNewline();
+        break;
+      }
+
+      case ExprType::Convert:
+      case ExprType::CurrentMemory:
+      case ExprType::Drop:
+      case ExprType::GetGlobal:
+        break;
+
+      case ExprType::GetLocal: {
+        const Var& var = cast<GetLocalExpr>(&expr)->var;
+        Type type = func_->GetLocalType(var);
+        type_stack_.push_back(type);
+        WriteName(GetStackVar(0));
+        WritePuts(" = ");
+        WriteName(var.name());
+        WritePuts(";");
+        WriteNewline();
+        break;
+      }
+
+      case ExprType::GrowMemory:
+        break;
+
+      case ExprType::If: {
+        const IfExpr& if_ = *cast<IfExpr>(&expr);
+        WritePuts("if (");
+        WriteName(GetStackVar(0));
+        WritePuts(") {");
+        type_stack_.pop_back();
+        Indent();
+        WriteNewline();
+        WriteExprList(if_.true_.exprs);
+        Dedent();
+        if (!if_.false_.empty()) {
+          WritePuts("} else {");
+          Indent();
+          WriteNewline();
+          WriteExprList(if_.false_);
+          Dedent();
+        }
+        WritePuts("}");
+        WriteNewline();
+        break;
+      }
+
+      case ExprType::Load:
+        break;
+
+      case ExprType::Loop: {
+        const Block& block = cast<LoopExpr>(&expr)->block;
+        WriteName(block.label);
+        WritePuts(":");
+        Indent();
+        WriteNewline();
+        WriteExprList(block.exprs);
+        Dedent();
+        break;
+      }
+
+      case ExprType::Nop:
+      case ExprType::Return:
+      case ExprType::Select:
+      case ExprType::SetGlobal:
+
+      case ExprType::SetLocal: {
+        const Var& var = cast<SetLocalExpr>(&expr)->var;
+        WriteName(var.name());
+        WritePuts(" = ");
+        WriteName(GetStackVar(0));
+        WritePuts(";");
+        WriteNewline();
+        type_stack_.pop_back();
+        break;
+      }
+
+      case ExprType::Store:
+      case ExprType::TeeLocal:
+      case ExprType::Unary:
+      case ExprType::Unreachable:
+
+      case ExprType::AtomicLoad:
+      case ExprType::AtomicRmw:
+      case ExprType::AtomicRmwCmpxchg:
+      case ExprType::AtomicStore:
+      case ExprType::Rethrow:
+      case ExprType::Throw:
+      case ExprType::TryBlock:
+      case ExprType::Wait:
+      case ExprType::Wake:
+        // TODO
+        break;
+    }
+  }
+}
+
+std::string CWriter::GetStackVar(Index index) {
+  assert(index < type_stack_.size());
+  Index top = type_stack_.size() - 1;
+  std::string name = "$s" + std::to_string(top - index);
+  // TODO check if name is already used.
+  return name;
+}
+
+void CWriter::WriteSimpleBinaryExpr(const char* op, AssignOp assign_op) {
+  WriteName(GetStackVar(1));
+  if (assign_op == AssignOp::Allowed) {
+    Writef(" %s= ", op);
+    WriteName(GetStackVar(0));
+  } else {
+    WritePuts(" = ");
+    WriteName(GetStackVar(1));
+    Writef(" %s ", op);
+    WriteName(GetStackVar(0));
+  }
+  WriteNewline();
+  type_stack_.pop_back();
+}
+
+void CWriter::WriteBinaryExpr(const BinaryExpr& expr) {
+  switch (expr.opcode) {
+    case Opcode::I32Add:
+    case Opcode::I64Add:
+    case Opcode::F32Add:
+    case Opcode::F64Add:
+      WriteSimpleBinaryExpr("+");
+      break;
+
+    case Opcode::I32Sub:
+    case Opcode::I64Sub:
+    case Opcode::F32Sub:
+    case Opcode::F64Sub:
+      WriteSimpleBinaryExpr("-");
+      break;
+
+    case Opcode::I32Mul:
+    case Opcode::I64Mul:
+    case Opcode::F32Mul:
+    case Opcode::F64Mul:
+      WriteSimpleBinaryExpr("*");
+      break;
+
+    case Opcode::I32DivS:
+    case Opcode::I64DivS:
+      break;
+
+    case Opcode::I32DivU:
+    case Opcode::I64DivU:
+    case Opcode::F32Div:
+    case Opcode::F64Div:
+      break;
+
+    case Opcode::I32RemS:
+    case Opcode::I64RemS:
+      break;
+
+    case Opcode::I32RemU:
+    case Opcode::I64RemU:
+      break;
+
+    case Opcode::I32And:
+    case Opcode::I64And:
+      WriteSimpleBinaryExpr("&");
+      break;
+
+    case Opcode::I32Or:
+    case Opcode::I64Or:
+      WriteSimpleBinaryExpr("|");
+      break;
+
+    case Opcode::I32Xor:
+    case Opcode::I64Xor:
+      WriteSimpleBinaryExpr("^");
+      break;
+
+    case Opcode::I32Shl:
+    case Opcode::I64Shl:
+      break;
+
+    case Opcode::I32ShrS:
+    case Opcode::I64ShrS:
+      break;
+
+    case Opcode::I32ShrU:
+    case Opcode::I64ShrU:
+      break;
+
+    case Opcode::I32Rotl:
+    case Opcode::I64Rotl:
+      break;
+
+    case Opcode::I32Rotr:
+    case Opcode::I64Rotr:
+      break;
+
+    case Opcode::F32Min:
+    case Opcode::F64Min:
+      break;
+
+    case Opcode::F32Max:
+    case Opcode::F64Max:
+      break;
+
+    case Opcode::F32Copysign:
+    case Opcode::F64Copysign:
+      break;
+
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+void CWriter::WriteCompareExpr(const CompareExpr& expr) {
+  switch (expr.opcode) {
+    case Opcode::I32Eq:
+    case Opcode::I64Eq:
+    case Opcode::F32Eq:
+    case Opcode::F64Eq:
+      WriteSimpleBinaryExpr("==", AssignOp::Disallowed);
+      break;
+
+    case Opcode::I32Ne:
+    case Opcode::I64Ne:
+    case Opcode::F32Ne:
+    case Opcode::F64Ne:
+      WriteSimpleBinaryExpr("!=", AssignOp::Disallowed);
+      break;
+
+    case Opcode::I32LtS:
+    case Opcode::I64LtS:
+      break;
+
+    case Opcode::I32LtU:
+    case Opcode::I64LtU:
+    case Opcode::F32Lt:
+    case Opcode::F64Lt:
+      WriteSimpleBinaryExpr("<", AssignOp::Disallowed);
+      break;
+
+    case Opcode::I32LeS:
+    case Opcode::I64LeS:
+      break;
+
+    case Opcode::I32LeU:
+    case Opcode::I64LeU:
+    case Opcode::F32Le:
+    case Opcode::F64Le:
+      WriteSimpleBinaryExpr("<=", AssignOp::Disallowed);
+      break;
+
+    case Opcode::I32GtS:
+    case Opcode::I64GtS:
+      break;
+
+    case Opcode::I32GtU:
+    case Opcode::I64GtU:
+    case Opcode::F32Gt:
+    case Opcode::F64Gt:
+      WriteSimpleBinaryExpr(">", AssignOp::Disallowed);
+      break;
+
+    case Opcode::I32GeS:
+    case Opcode::I64GeS:
+      break;
+
+    case Opcode::I32GeU:
+    case Opcode::I64GeU:
+    case Opcode::F32Ge:
+    case Opcode::F64Ge:
+      WriteSimpleBinaryExpr(">=", AssignOp::Disallowed);
+      break;
+
+    default:
+      WABT_UNREACHABLE;
+  }
 }
 
 void CWriter::WriteLocals(const Func& func) {
@@ -486,6 +842,7 @@ void CWriter::WriteLocals(const Func& func) {
         }
 
         WriteName(index_to_name[local_index]);
+        WritePuts(" = 0");
       }
       ++local_index;
     }

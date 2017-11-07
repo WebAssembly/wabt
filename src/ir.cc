@@ -107,6 +107,21 @@ Index Module::GetExceptIndex(const Var& var) const {
   return except_bindings.FindIndex(var);
 }
 
+Type Func::GetLocalType(Index index) const {
+  Index num_params = decl.GetNumParams();
+  if (index < num_params) {
+    return GetParamType(index);
+  } else {
+    index -= num_params;
+    assert(index < local_types.size());
+    return local_types[index];
+  }
+}
+
+Type Func::GetLocalType(const Var& var) const {
+  return GetLocalType(GetLocalIndex(var));
+}
+
 Index Func::GetLocalIndex(const Var& var) const {
   if (var.is_index())
     return var.index();

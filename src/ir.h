@@ -386,6 +386,8 @@ struct Func {
 
   Type GetParamType(Index index) const { return decl.GetParamType(index); }
   Type GetResultType(Index index) const { return decl.GetResultType(index); }
+  Type GetLocalType(Index index) const;
+  Type GetLocalType(const Var& var) const;
   Index GetNumParams() const { return decl.GetNumParams(); }
   Index GetNumLocals() const { return local_types.size(); }
   Index GetNumParamsAndLocals() const {

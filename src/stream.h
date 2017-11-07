@@ -140,6 +140,7 @@ class Stream {
 struct OutputBuffer {
   Result WriteToFile(string_view filename) const;
 
+  void clear() { data.clear(); }
   size_t size() const { return data.size(); }
 
   std::vector<uint8_t> data;
@@ -154,6 +155,8 @@ class MemoryStream : public Stream {
 
   OutputBuffer& output_buffer() { return *buf_; }
   std::unique_ptr<OutputBuffer> ReleaseOutputBuffer();
+
+  void Clear();
 
   Result WriteToFile(string_view filename) {
     return buf_->WriteToFile(filename);
