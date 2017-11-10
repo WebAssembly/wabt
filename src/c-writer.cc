@@ -39,7 +39,6 @@ enum class NextChar {
   ForceNewline,
 };
 
-
 class CWriter {
  public:
   CWriter(Stream* stream, const WriteCOptions* options)
@@ -48,6 +47,12 @@ class CWriter {
   Result WriteModule(const Module&);
 
  private:
+  size_t MarkTypeStack() const;
+  void ResetTypeStack(size_t mark);
+  void PushType(Type);
+  void PushTypes(const TypeVector&);
+  void DropTypes(size_t count);
+
   void Indent();
   void Dedent();
   void WriteIndent();
@@ -78,6 +83,7 @@ class CWriter {
   void WriteFuncs();
   void WriteFunc(const Func&);
   void WriteLocals(const Func&);
+  void WriteBlock(const Block&);
   void WriteExprList(const ExprList&);
 
   enum class AssignOp {
@@ -130,6 +136,28 @@ void init_data_segment(u32 addr, u8 *data, size_t len);
 void init_elem_segment(u32 addr, Elem *data, size_t len);
 
 )";
+
+size_t CWriter::MarkTypeStack() const {
+  return type_stack_.size();
+}
+
+void CWriter::ResetTypeStack(size_t mark) {
+  assert(mark <= type_stack_.size());
+  type_stack_.erase(type_stack_.begin() + mark, type_stack_.end());
+}
+
+void CWriter::PushType(Type type) {
+  type_stack_.push_back(type);
+}
+
+void CWriter::PushTypes(const TypeVector& types) {
+  type_stack_.insert(type_stack_.end(), types.begin(), types.end());
+}
+
+void CWriter::DropTypes(size_t count) {
+  assert(count <= type_stack_.size());
+  type_stack_.erase(type_stack_.end() - count, type_stack_.end());
+}
 
 void CWriter::Indent() {
   indent_ += INDENT_SIZE;
@@ -408,7 +436,7 @@ void CWriter::WriteDataInitializers() {
                   data_segment_index, data_segment->data.size());
     ++data_segment_index;
   }
-  WritefNewline("}");
+  WritePutsNewline("}");
 }
 
 void CWriter::WriteElemInitializers() {
@@ -482,7 +510,10 @@ void CWriter::WriteFunc(const Func& func) {
   func_syms_.clear();
 
   WriteLocals(func);
+  ResetTypeStack(0);
   WriteExprList(func.exprs);
+  ResetTypeStack(0);
+  PushTypes(func.decl.sig.result_types);
 
   if (!func.decl.sig.result_types.empty()) {
     // Return the top of the stack implicitly.
@@ -502,6 +533,19 @@ void CWriter::WriteFunc(const Func& func) {
   func_ = nullptr;
 
   WritePutsNewline("}");
+  WriteNewline(true);
+  WriteNewline(true);
+}
+
+void CWriter::WriteBlock(const Block& block) {
+  size_t mark = MarkTypeStack();
+  WritePutsNewline("{");
+  Indent();
+  WriteExprList(block.exprs);
+  Dedent();
+  WritePutsNewline("}");
+  ResetTypeStack(mark);
+  PushTypes(block.sig);
 }
 
 void CWriter::WriteExprList(const ExprList& exprs) {
@@ -513,9 +557,7 @@ void CWriter::WriteExprList(const ExprList& exprs) {
 
       case ExprType::Block: {
         const Block& block = cast<BlockExpr>(&expr)->block;
-        Indent();
-        WriteExprList(block.exprs);
-        Dedent();
+        WriteBlock(block);
         WriteName(block.label);
         WritePuts(":");
         WriteNewline();
@@ -528,21 +570,51 @@ void CWriter::WriteExprList(const ExprList& exprs) {
         WriteName(var.name());
         WritePuts(";");
         WriteNewline();
-        break;
+        // Stop processing this ExprList, since the following are unreachable.
+        return;
       }
 
       case ExprType::BrIf:
       case ExprType::BrTable:
-      case ExprType::Call:
+        break;
+
+      case ExprType::Call: {
+        const Var& var = cast<CallExpr>(&expr)->var;
+        const Func& func = *module_->GetFunc(var);
+        Index num_params = func.GetNumParams();
+        Index num_results = func.GetNumResults();
+        assert(type_stack_.size() >= num_params);
+        if (num_results > 0) {
+          assert(num_results == 1);
+          WriteName(GetStackVar(num_params - 1));
+          WritePuts(" = ");
+        }
+
+        WriteName(var.name());
+        WritePuts("(");
+        for (Index i = 0; i < num_params; ++i) {
+          if (i != 0)
+            WritePuts(", ");
+          WriteName(GetStackVar(i));
+        }
+        WritePuts(");");
+        WriteNewline();
+        DropTypes(num_params);
+        PushTypes(func.decl.sig.result_types);
+        break;
+      }
+
       case ExprType::CallIndirect:
+        assert(0);
+        break;
+
       case ExprType::Compare:
         WriteCompareExpr(*cast<CompareExpr>(&expr));
         break;
 
       case ExprType::Const: {
         const Const& const_ = cast<ConstExpr>(&expr)->const_;
-        Type type = const_.type;
-        type_stack_.push_back(type);
+        PushType(const_.type);
         WriteName(GetStackVar(0));
         WritePuts(" = ");
         WriteConst(const_);
@@ -555,12 +627,12 @@ void CWriter::WriteExprList(const ExprList& exprs) {
       case ExprType::CurrentMemory:
       case ExprType::Drop:
       case ExprType::GetGlobal:
+        assert(0);
         break;
 
       case ExprType::GetLocal: {
         const Var& var = cast<GetLocalExpr>(&expr)->var;
-        Type type = func_->GetLocalType(var);
-        type_stack_.push_back(type);
+        PushType(func_->GetLocalType(var));
         WriteName(GetStackVar(0));
         WritePuts(" = ");
         WriteName(var.name());
@@ -570,6 +642,7 @@ void CWriter::WriteExprList(const ExprList& exprs) {
       }
 
       case ExprType::GrowMemory:
+        assert(0);
         break;
 
       case ExprType::If: {
@@ -577,34 +650,37 @@ void CWriter::WriteExprList(const ExprList& exprs) {
         WritePuts("if (");
         WriteName(GetStackVar(0));
         WritePuts(") {");
-        type_stack_.pop_back();
-        Indent();
+        DropTypes(1);
         WriteNewline();
+        size_t mark = MarkTypeStack();
+        Indent();
         WriteExprList(if_.true_.exprs);
         Dedent();
+        ResetTypeStack(mark);
         if (!if_.false_.empty()) {
           WritePuts("} else {");
-          Indent();
           WriteNewline();
+          Indent();
           WriteExprList(if_.false_);
           Dedent();
+          ResetTypeStack(mark);
         }
         WritePuts("}");
         WriteNewline();
+        PushTypes(if_.true_.sig);
         break;
       }
 
       case ExprType::Load:
+        assert(0);
         break;
 
       case ExprType::Loop: {
         const Block& block = cast<LoopExpr>(&expr)->block;
         WriteName(block.label);
         WritePuts(":");
-        Indent();
         WriteNewline();
-        WriteExprList(block.exprs);
-        Dedent();
+        WriteBlock(block);
         break;
       }
 
@@ -612,6 +688,8 @@ void CWriter::WriteExprList(const ExprList& exprs) {
       case ExprType::Return:
       case ExprType::Select:
       case ExprType::SetGlobal:
+        assert(0);
+        break;
 
       case ExprType::SetLocal: {
         const Var& var = cast<SetLocalExpr>(&expr)->var;
@@ -620,7 +698,7 @@ void CWriter::WriteExprList(const ExprList& exprs) {
         WriteName(GetStackVar(0));
         WritePuts(";");
         WriteNewline();
-        type_stack_.pop_back();
+        DropTypes(1);
         break;
       }
 
@@ -628,6 +706,8 @@ void CWriter::WriteExprList(const ExprList& exprs) {
       case ExprType::TeeLocal:
       case ExprType::Unary:
       case ExprType::Unreachable:
+        assert(0);
+        break;
 
       case ExprType::AtomicLoad:
       case ExprType::AtomicRmw:
@@ -638,7 +718,7 @@ void CWriter::WriteExprList(const ExprList& exprs) {
       case ExprType::TryBlock:
       case ExprType::Wait:
       case ExprType::Wake:
-        // TODO
+        assert(0);
         break;
     }
   }
@@ -664,7 +744,7 @@ void CWriter::WriteSimpleBinaryExpr(const char* op, AssignOp assign_op) {
     WriteName(GetStackVar(0));
   }
   WriteNewline();
-  type_stack_.pop_back();
+  DropTypes(1);
 }
 
 void CWriter::WriteBinaryExpr(const BinaryExpr& expr) {
