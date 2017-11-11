@@ -25,6 +25,7 @@
 
 #include "src/binary-reader.h"
 #include "src/cast.h"
+#include "src/expr-visitor.h"
 #include "src/error-handler.h"
 #include "src/ir.h"
 #include "src/type-checker.h"
@@ -115,7 +116,9 @@ class Validator {
   template <typename T>
   void CheckAtomicExpr(const T* expr, Result (TypeChecker::*func)(Opcode));
   void CheckExpr(const Expr* expr);
-  void CheckFuncSignature(const Location* loc, const Func* func);
+  void CheckFuncSignature(const Location* loc, const FuncDeclaration& decl);
+  class CheckFuncSignatureExprVisitorDelegate;
+
   void CheckFunc(const Location* loc, const Func* func);
   void PrintConstExprError(const Location* loc, const char* desc);
   void CheckConstInitExpr(const Location* loc,
@@ -496,15 +499,16 @@ void Validator::CheckExpr(const Expr* expr) {
     }
 
     case ExprType::CallIndirect: {
-      const FuncType* func_type;
       if (current_module_->tables.size() == 0) {
         PrintError(&expr->loc, "found call_indirect operator, but no table");
       }
-      if (Succeeded(CheckFuncTypeVar(&cast<CallIndirectExpr>(expr)->var,
-                                     &func_type))) {
-        typechecker_.OnCallIndirect(&func_type->sig.param_types,
-                                    &func_type->sig.result_types);
+      auto ci_expr = cast<CallIndirectExpr>(expr);
+      if (ci_expr->decl.has_func_type) {
+        const FuncType* func_type;
+        CheckFuncTypeVar(&ci_expr->decl.type_var, &func_type);
       }
+      typechecker_.OnCallIndirect(&ci_expr->decl.sig.param_types,
+                                  &ci_expr->decl.sig.result_types);
       break;
     }
 
@@ -667,13 +671,14 @@ void Validator::CheckExpr(const Expr* expr) {
   }
 }
 
-void Validator::CheckFuncSignature(const Location* loc, const Func* func) {
-  if (func->decl.has_func_type) {
+void Validator::CheckFuncSignature(const Location* loc,
+                                   const FuncDeclaration& decl) {
+  if (decl.has_func_type) {
     const FuncType* func_type;
-    if (Succeeded(CheckFuncTypeVar(&func->decl.type_var, &func_type))) {
-      CheckTypes(loc, func->decl.sig.result_types, func_type->sig.result_types,
+    if (Succeeded(CheckFuncTypeVar(&decl.type_var, &func_type))) {
+      CheckTypes(loc, decl.sig.result_types, func_type->sig.result_types,
                  "function", "result");
-      CheckTypes(loc, func->decl.sig.param_types, func_type->sig.param_types,
+      CheckTypes(loc, decl.sig.param_types, func_type->sig.param_types,
                  "function", "argument");
     }
   }
@@ -681,7 +686,7 @@ void Validator::CheckFuncSignature(const Location* loc, const Func* func) {
 
 void Validator::CheckFunc(const Location* loc, const Func* func) {
   current_func_ = func;
-  CheckFuncSignature(loc, func);
+  CheckFuncSignature(loc, func->decl);
   if (func->GetNumResults() > 1) {
     PrintError(loc, "multiple result values not currently supported.");
     // Don't run any other checks, the won't test the result_type properly.
@@ -1192,13 +1197,35 @@ Result Validator::CheckScript(const Script* script) {
   return result_;
 }
 
+class Validator::CheckFuncSignatureExprVisitorDelegate
+    : public ExprVisitor::DelegateNop {
+ public:
+  explicit CheckFuncSignatureExprVisitorDelegate(Validator* validator)
+      : validator_(validator) {}
+
+  Result OnCallIndirectExpr(CallIndirectExpr* expr) override {
+    validator_->CheckFuncSignature(&expr->loc, expr->decl);
+    return Result::Ok;
+  }
+
+ private:
+  Validator* validator_;
+};
+
 Result Validator::CheckAllFuncSignatures(const Module* module) {
   current_module_ = module;
   for (const ModuleField& field : module->fields) {
     switch (field.type()) {
-      case ModuleFieldType::Func:
-        CheckFuncSignature(&field.loc, &cast<FuncModuleField>(&field)->func);
+      case ModuleFieldType::Func: {
+        auto func_field = cast<FuncModuleField>(&field);
+        CheckFuncSignature(&field.loc, func_field->func.decl);
+        CheckFuncSignatureExprVisitorDelegate delegate(this);
+        ExprVisitor visitor(&delegate);
+        // TODO(binji): would rather not do a const_cast here, but the visitor
+        // is non-const only.
+        visitor.VisitFunc(const_cast<Func*>(&func_field->func));
         break;
+      }
 
       default:
         break;

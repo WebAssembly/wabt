@@ -524,7 +524,10 @@ void WatWriter::WriteExpr(const Expr* expr) {
 
     case ExprType::CallIndirect:
       WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
-      WriteVar(cast<CallIndirectExpr>(expr)->var, NextChar::Newline);
+      WriteOpenSpace("type");
+      WriteVar(cast<CallIndirectExpr>(expr)->decl.type_var,
+               NextChar::Space);
+      WriteCloseNewline();
       break;
 
     case ExprType::Compare:
@@ -758,9 +761,9 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     }
 
     case ExprType::CallIndirect: {
-      const Var& var = cast<CallIndirectExpr>(expr)->var;
-      PushExpr(expr, GetFuncSigParamCount(var) + 1,
-               GetFuncSigResultCount(var));
+      const auto* ci_expr = cast<CallIndirectExpr>(expr);
+      PushExpr(expr, ci_expr->decl.GetNumParams() + 1,
+               ci_expr->decl.GetNumResults());
       break;
     }
 

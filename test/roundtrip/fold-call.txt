@@ -31,7 +31,7 @@
   (func $fold-call-indirect (result i32)
     i32.const 1
     i32.const 2
-    call_indirect $i_i)
+    call_indirect (type $i_i))
 )
 
 (;; STDOUT ;;;
@@ -61,7 +61,7 @@
         (i32.const 3)
         (f32.const 0x1p+2 (;=4;)))))
   (func (;5;) (type 3) (result i32)
-    (call_indirect 0
+    (call_indirect (type 0)
       (i32.const 1)
       (i32.const 2)))
   (table (;0;) 2 2 anyfunc)

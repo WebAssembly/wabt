@@ -18,7 +18,7 @@
     end
     if
       i32.const 0
-      call_indirect $indirect
+      call_indirect (type $indirect)
     else
       nop
     end))
@@ -39,6 +39,6 @@ out/test/typecheck/bad-call-result-mismatch.txt:19:5: error: type mismatch in if
     if
     ^^
 out/test/typecheck/bad-call-result-mismatch.txt:21:7: error: type mismatch in if true branch, expected [] but got [i64]
-      call_indirect $indirect
+      call_indirect (type $indirect)
       ^^^^^^^^^^^^^
 ;;; STDERR ;;)

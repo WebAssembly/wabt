@@ -8,7 +8,7 @@
 
   (func $nullary (param i32) (result i32)
     get_local 0
-    call_indirect $v_i)
+    call_indirect (type $v_i))
 
   (type $ii_i (func (param i32 i32) (result i32)))
   (func $add (type $ii_i)
@@ -24,7 +24,7 @@
     get_local 0
     get_local 1
     get_local 2
-    call_indirect $ii_i)
+    call_indirect (type $ii_i))
 
   (table anyfunc (elem $zero $one $add $sub))
 

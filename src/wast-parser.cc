@@ -19,6 +19,7 @@
 #include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
 #include "src/cast.h"
+#include "src/expr-visitor.h"
 #include "src/error-handler.h"
 #include "src/make-unique.h"
 #include "src/utf8.h"
@@ -253,15 +254,56 @@ bool IsEmptySignature(const FuncSignature* sig) {
   return sig->result_types.empty() && sig->param_types.empty();
 }
 
+void ResolveFuncType(const Location& loc,
+                     Module* module,
+                     FuncDeclaration* decl) {
+  // Resolve func type variables where the signature was not specified
+  // explicitly, e.g.: (func (type 1) ...)
+  if (decl->has_func_type && IsEmptySignature(&decl->sig)) {
+    FuncType* func_type = module->GetFuncType(decl->type_var);
+    if (func_type) {
+      decl->sig = func_type->sig;
+    }
+  }
+
+  // Resolve implicitly defined function types, e.g.: (func (param i32) ...)
+  if (!decl->has_func_type) {
+    Index func_type_index = module->GetFuncTypeIndex(decl->sig);
+    if (func_type_index == kInvalidIndex) {
+      auto func_type_field = MakeUnique<FuncTypeModuleField>(loc);
+      func_type_field->func_type.sig = decl->sig;
+      module->AppendField(std::move(func_type_field));
+    }
+  }
+}
+
+class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
+ public:
+  explicit ResolveFuncTypesExprVisitorDelegate(Module* module)
+      : module_(module) {}
+
+  Result OnCallIndirectExpr(CallIndirectExpr* expr) override {
+    ResolveFuncType(expr->loc, module_, &expr->decl);
+    return Result::Ok;
+  }
+
+ private:
+  Module* module_;
+};
+
 void ResolveFuncTypes(Module* module) {
   for (ModuleField& field : module->fields) {
     Func* func = nullptr;
+    FuncDeclaration* decl = nullptr;
     if (auto* func_field = dyn_cast<FuncModuleField>(&field)) {
       func = &func_field->func;
+      decl = &func->decl;
     } else if (auto* import_field = dyn_cast<ImportModuleField>(&field)) {
       if (auto* func_import =
               dyn_cast<FuncImport>(import_field->import.get())) {
-        func = &func_import->func;
+        // Only check the declaration, not the function itself, since it is an
+        // import.
+        decl = &func_import->func.decl;
       } else {
         continue;
       }
@@ -269,23 +311,13 @@ void ResolveFuncTypes(Module* module) {
       continue;
     }
 
-    // Resolve func type variables where the signature was not specified
-    // explicitly, e.g.: (func (type 1) ...)
-    if (func->decl.has_func_type && IsEmptySignature(&func->decl.sig)) {
-      FuncType* func_type = module->GetFuncType(func->decl.type_var);
-      if (func_type) {
-        func->decl.sig = func_type->sig;
-      }
-    }
+    if (decl)
+      ResolveFuncType(field.loc, module, decl);
 
-    // Resolve implicitly defined function types, e.g.: (func (param i32) ...)
-    if (!func->decl.has_func_type) {
-      Index func_type_index = module->GetFuncTypeIndex(func->decl.sig);
-      if (func_type_index == kInvalidIndex) {
-        auto func_type_field = MakeUnique<FuncTypeModuleField>(field.loc);
-        func_type_field->func_type.sig = func->decl.sig;
-        module->AppendField(std::move(func_type_field));
-      }
+    if (func) {
+      ResolveFuncTypesExprVisitorDelegate delegate(module);
+      ExprVisitor visitor(&delegate);
+      visitor.VisitFunc(func);
     }
   }
 }
@@ -1143,6 +1175,13 @@ Result WastParser::ParseFuncSignature(FuncSignature* sig,
   return Result::Ok;
 }
 
+Result WastParser::ParseUnboundFuncSignature(FuncSignature* sig) {
+  WABT_TRACE(ParseUnboundFuncSignature);
+  CHECK_RESULT(ParseUnboundValueTypeList(TokenType::Param, &sig->param_types));
+  CHECK_RESULT(ParseResultList(&sig->result_types));
+  return Result::Ok;
+}
+
 Result WastParser::ParseBoundValueTypeList(TokenType token,
                                            TypeVector* types,
                                            BindingHash* bindings) {
@@ -1164,13 +1203,19 @@ Result WastParser::ParseBoundValueTypeList(TokenType token,
   return Result::Ok;
 }
 
-Result WastParser::ParseResultList(TypeVector* result_types) {
-  WABT_TRACE(ParseResultList);
-  while (MatchLpar(TokenType::Result)) {
-    CHECK_RESULT(ParseValueTypeList(result_types));
+Result WastParser::ParseUnboundValueTypeList(TokenType token,
+                                             TypeVector* types) {
+  WABT_TRACE(ParseUnboundValueTypeList);
+  while (MatchLpar(token)) {
+    CHECK_RESULT(ParseValueTypeList(types));
     EXPECT(Rpar);
   }
   return Result::Ok;
+}
+
+Result WastParser::ParseResultList(TypeVector* result_types) {
+  WABT_TRACE(ParseResultList);
+  return ParseUnboundValueTypeList(TokenType::Result, result_types);
 }
 
 Result WastParser::ParseInstrList(ExprList* exprs) {
@@ -1293,10 +1338,14 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParsePlainInstrVar<CallExpr>(loc, out_expr));
       break;
 
-    case TokenType::CallIndirect:
+    case TokenType::CallIndirect: {
       Consume();
-      CHECK_RESULT(ParsePlainInstrVar<CallIndirectExpr>(loc, out_expr));
+      auto expr = MakeUnique<CallIndirectExpr>(loc);
+      CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
+      CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
+      *out_expr = std::move(expr);
       break;
+    }
 
     case TokenType::GetLocal:
       Consume();

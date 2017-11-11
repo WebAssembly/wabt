@@ -272,7 +272,8 @@ Result NameApplier::OnCallExpr(CallExpr* expr) {
 }
 
 Result NameApplier::OnCallIndirectExpr(CallIndirectExpr* expr) {
-  CHECK_RESULT(UseNameForFuncTypeVar(&expr->var));
+  if (expr->decl.has_func_type)
+    CHECK_RESULT(UseNameForFuncTypeVar(&expr->decl.type_var));
   return Result::Ok;
 }
 

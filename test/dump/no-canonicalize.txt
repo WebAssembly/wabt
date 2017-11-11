@@ -9,7 +9,7 @@
   (func $f1 (param i32 i32)
     get_local 0
     get_local 1
-    call_indirect $t
+    call_indirect (type $t)
     drop)
   (func $f2 (param i32)
     get_local 0

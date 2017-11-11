@@ -1,51 +1,116 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/call_indirect.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/call_indirect.wast:237: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:273: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.1.wast:1:122: error: unexpected token "param", expected an expr.
+  ...indirect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const ...
+                                        ^^^^^
+  out/third_party/testsuite/call_indirect/call_indirect.1.wast:1:166: error: unexpected token ), expected EOF.
+  ...irect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const 0)  ))
+                                                                                 ^
+out/third_party/testsuite/call_indirect.wast:285: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.2.wast:1:109: error: unexpected token "type", expected an expr.
+  ... i32)  (call_indirect (param i32) (type $sig) (result i32)    (i32.const 0...
+                                        ^^^^
+  out/third_party/testsuite/call_indirect/call_indirect.2.wast:1:166: error: unexpected token ), expected EOF.
+  ...irect (param i32) (type $sig) (result i32)    (i32.const 0) (i32.const 0)  ))
+                                                                                 ^
+out/third_party/testsuite/call_indirect.wast:297: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.3.wast:1:122: error: unexpected token "type", expected an expr.
+  ...indirect (param i32) (result i32) (type $sig)    (i32.const 0) (i32.const ...
+                                        ^^^^
+  out/third_party/testsuite/call_indirect/call_indirect.3.wast:1:166: error: unexpected token ), expected EOF.
+  ...irect (param i32) (result i32) (type $sig)    (i32.const 0) (i32.const 0)  ))
+                                                                                 ^
+out/third_party/testsuite/call_indirect.wast:309: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.4.wast:1:110: error: unexpected token "type", expected an expr.
+  ...i32)  (call_indirect (result i32) (type $sig) (param i32)    (i32.const 0)...
+                                        ^^^^
+  out/third_party/testsuite/call_indirect/call_indirect.4.wast:1:166: error: unexpected token ), expected EOF.
+  ...irect (result i32) (type $sig) (param i32)    (i32.const 0) (i32.const 0)  ))
+                                                                                 ^
+out/third_party/testsuite/call_indirect.wast:321: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.5.wast:1:110: error: unexpected token "param", expected an expr.
+  ...i32)  (call_indirect (result i32) (param i32) (type $sig)    (i32.const 0)...
+                                        ^^^^^
+  out/third_party/testsuite/call_indirect/call_indirect.5.wast:1:166: error: unexpected token ), expected EOF.
+  ...irect (result i32) (param i32) (type $sig)    (i32.const 0) (i32.const 0)  ))
+                                                                                 ^
+out/third_party/testsuite/call_indirect.wast:333: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.6.wast:1:67: error: unexpected token "param", expected an expr.
+  ...t i32)  (call_indirect (result i32) (param i32) (i32.const 0) (i32.const 0)))
+                                          ^^^^^
+  out/third_party/testsuite/call_indirect/call_indirect.6.wast:1:106: error: unexpected token ), expected EOF.
+  ...t i32)  (call_indirect (result i32) (param i32) (i32.const 0) (i32.const 0)))
+                                                                                 ^
+out/third_party/testsuite/call_indirect.wast:343: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.7.wast:1:46: error: unexpected token $x, expected ).
+  ...e 0 anyfunc)(func (call_indirect (param $x i32) (i32.const 0) (i32.const 0)))
+                                             ^^
+  out/third_party/testsuite/call_indirect/call_indirect.7.wast:1:82: error: unexpected token ), expected EOF.
+  ...e 0 anyfunc)(func (call_indirect (param $x i32) (i32.const 0) (i32.const 0)))
+                                                                                 ^
+out/third_party/testsuite/call_indirect.wast:350: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.8.wast:1:57: error: expected 0 results, got 1
+  ...0 anyfunc)(func (result i32)  (call_indirect (type $sig) (result i32) (i32...
+                                    ^^^^^^^^^^^^^
+out/third_party/testsuite/call_indirect.wast:360: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.9.wast:1:82: error: expected 1 arguments, got 0
+  ...0 anyfunc)(func (result i32)  (call_indirect (type $sig) (result i32) (i32...
+                                    ^^^^^^^^^^^^^
+out/third_party/testsuite/call_indirect.wast:370: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.10.wast:1:69: error: expected 1 results, got 0
+  ...i32)))(table 0 anyfunc)(func  (call_indirect (type $sig) (param i32) (i32....
+                                    ^^^^^^^^^^^^^
+out/third_party/testsuite/call_indirect.wast:380: assert_malformed passed:
+  out/third_party/testsuite/call_indirect/call_indirect.11.wast:1:86: error: expected 2 arguments, got 1
+  ...0 anyfunc)(func (result i32)  (call_indirect (type $sig) (param i32) (resu...
+                                    ^^^^^^^^^^^^^
+out/third_party/testsuite/call_indirect.wast:395: assert_invalid passed:
   error: found call_indirect operator, but no table
   000001c: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:245: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:403: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
   0000023: error: OnConvertExpr callback failed
-out/third_party/testsuite/call_indirect.wast:253: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:411: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got [i64]
   0000027: error: OnConvertExpr callback failed
-out/third_party/testsuite/call_indirect.wast:262: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:420: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got []
   0000026: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:270: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:428: assert_invalid passed:
   error: type mismatch in call_indirect, expected [f64, i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:278: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:436: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
   0000025: error: EndFunctionBody callback failed
-out/third_party/testsuite/call_indirect.wast:286: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:444: assert_invalid passed:
   error: type mismatch in function, expected [] but got [f64, i32]
   000002e: error: EndFunctionBody callback failed
-out/third_party/testsuite/call_indirect.wast:297: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:455: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got []
   0000027: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:305: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:463: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32] but got [... i64]
   0000028: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:314: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:472: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000002a: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:324: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:482: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
   000002a: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:334: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:492: assert_invalid passed:
   error: type mismatch in call_indirect, expected [i32, f64] but got [f64, i32]
   0000032: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:344: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:502: assert_invalid passed:
   error: type mismatch in call_indirect, expected [f64, i32] but got [i32, f64]
   0000032: error: OnCallIndirectExpr callback failed
-out/third_party/testsuite/call_indirect.wast:358: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:516: assert_invalid passed:
   0000021: error: invalid call_indirect signature index
-out/third_party/testsuite/call_indirect.wast:365: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:523: assert_invalid passed:
   0000025: error: invalid call_indirect signature index
-out/third_party/testsuite/call_indirect.wast:376: assert_invalid passed:
+out/third_party/testsuite/call_indirect.wast:534: assert_invalid passed:
   error: invalid func_index: 0 (max 0)
   0000018: error: OnElemSegmentFunctionIndex callback failed
-64/64 tests passed.
+75/75 tests passed.
 ;;; STDOUT ;;)

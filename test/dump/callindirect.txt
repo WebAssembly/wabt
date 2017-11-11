@@ -5,7 +5,7 @@
   (func $f (type $t)
     i32.const 0
     i32.const 0
-    call_indirect $t )
+    call_indirect (type $t))
   (table anyfunc (elem $f)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC

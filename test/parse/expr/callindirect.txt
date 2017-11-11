@@ -4,4 +4,4 @@
   (func
     i32.const 0
     i32.const 0
-    call_indirect 0))
+    call_indirect (type 0)))
