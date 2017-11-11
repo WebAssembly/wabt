@@ -113,6 +113,42 @@ struct Const {
 };
 typedef std::vector<Const> ConstVector;
 
+struct FuncSignature {
+  TypeVector param_types;
+  TypeVector result_types;
+
+  Index GetNumParams() const { return param_types.size(); }
+  Index GetNumResults() const { return result_types.size(); }
+  Type GetParamType(Index index) const { return param_types[index]; }
+  Type GetResultType(Index index) const { return result_types[index]; }
+
+  bool operator==(const FuncSignature&) const;
+};
+
+struct FuncType {
+  FuncType() = default;
+  explicit FuncType(string_view name) : name(name.to_string()) {}
+
+  Index GetNumParams() const { return sig.GetNumParams(); }
+  Index GetNumResults() const { return sig.GetNumResults(); }
+  Type GetParamType(Index index) const { return sig.GetParamType(index); }
+  Type GetResultType(Index index) const { return sig.GetResultType(index); }
+
+  std::string name;
+  FuncSignature sig;
+};
+
+struct FuncDeclaration {
+  Index GetNumParams() const { return sig.GetNumParams(); }
+  Index GetNumResults() const { return sig.GetNumResults(); }
+  Type GetParamType(Index index) const { return sig.GetParamType(index); }
+  Type GetResultType(Index index) const { return sig.GetResultType(index); }
+
+  bool has_func_type = false;
+  Var type_var;
+  FuncSignature sig;
+};
+
 enum class ExprType {
   AtomicLoad,
   AtomicStore,
@@ -246,7 +282,6 @@ class VarExpr : public ExprMixin<TypeEnum> {
 typedef VarExpr<ExprType::Br> BrExpr;
 typedef VarExpr<ExprType::BrIf> BrIfExpr;
 typedef VarExpr<ExprType::Call> CallExpr;
-typedef VarExpr<ExprType::CallIndirect> CallIndirectExpr;
 typedef VarExpr<ExprType::GetGlobal> GetGlobalExpr;
 typedef VarExpr<ExprType::GetLocal> GetLocalExpr;
 typedef VarExpr<ExprType::Rethrow> RethrowExpr;
@@ -254,6 +289,14 @@ typedef VarExpr<ExprType::SetGlobal> SetGlobalExpr;
 typedef VarExpr<ExprType::SetLocal> SetLocalExpr;
 typedef VarExpr<ExprType::TeeLocal> TeeLocalExpr;
 typedef VarExpr<ExprType::Throw> ThrowExpr;
+
+class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
+ public:
+  explicit CallIndirectExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::CallIndirect>(loc) {}
+
+  FuncDeclaration decl;
+};
 
 template <ExprType TypeEnum>
 class BlockExprBase : public ExprMixin<TypeEnum> {
@@ -335,42 +378,6 @@ struct Exception {
 
   std::string name;
   TypeVector sig;
-};
-
-struct FuncSignature {
-  TypeVector param_types;
-  TypeVector result_types;
-
-  Index GetNumParams() const { return param_types.size(); }
-  Index GetNumResults() const { return result_types.size(); }
-  Type GetParamType(Index index) const { return param_types[index]; }
-  Type GetResultType(Index index) const { return result_types[index]; }
-
-  bool operator==(const FuncSignature&) const;
-};
-
-struct FuncType {
-  FuncType() = default;
-  explicit FuncType(string_view name) : name(name.to_string()) {}
-
-  Index GetNumParams() const { return sig.GetNumParams(); }
-  Index GetNumResults() const { return sig.GetNumResults(); }
-  Type GetParamType(Index index) const { return sig.GetParamType(index); }
-  Type GetResultType(Index index) const { return sig.GetResultType(index); }
-
-  std::string name;
-  FuncSignature sig;
-};
-
-struct FuncDeclaration {
-  Index GetNumParams() const { return sig.GetNumParams(); }
-  Index GetNumResults() const { return sig.GetNumResults(); }
-  Type GetParamType(Index index) const { return sig.GetParamType(index); }
-  Type GetResultType(Index index) const { return sig.GetResultType(index); }
-
-  bool has_func_type = false;
-  Var type_var;
-  FuncSignature sig;
 };
 
 struct Func {

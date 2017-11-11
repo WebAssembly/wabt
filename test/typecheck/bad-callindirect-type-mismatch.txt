@@ -6,10 +6,10 @@
   (func
     f32.const 0
     i32.const 0
-    call_indirect $t
+    call_indirect (type $t)
     drop))
 (;; STDERR ;;;
 out/test/typecheck/bad-callindirect-type-mismatch.txt:9:5: error: type mismatch in call_indirect, expected [i32] but got [f32]
-    call_indirect $t
+    call_indirect (type $t)
     ^^^^^^^^^^^^^
 ;;; STDERR ;;)

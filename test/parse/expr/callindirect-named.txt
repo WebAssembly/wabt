@@ -4,4 +4,4 @@
   (func $g
     i32.const 0
     i32.const 0
-    call_indirect $t))
+    call_indirect (type $t)))

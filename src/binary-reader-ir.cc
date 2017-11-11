@@ -595,8 +595,11 @@ Result BinaryReaderIR::OnCallExpr(Index func_index) {
 
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index) {
   assert(sig_index < module_->func_types.size());
-  return AppendExpr(
-      MakeUnique<CallIndirectExpr>(Var(sig_index, GetLocation())));
+  auto expr = MakeUnique<CallIndirectExpr>(GetLocation());
+  expr->decl.has_func_type = true;
+  expr->decl.type_var = Var(sig_index, GetLocation());
+  expr->decl.sig = module_->func_types[sig_index]->sig;
+  return AppendExpr(std::move(expr));
 }
 
 Result BinaryReaderIR::OnCompareExpr(Opcode opcode) {

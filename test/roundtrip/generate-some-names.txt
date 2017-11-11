@@ -19,7 +19,7 @@
     drop
     i32.const 0
     i32.const 1
-    call_indirect 0
+    call_indirect (type 0)
     drop
     get_local 1
     drop
@@ -45,7 +45,7 @@
     drop
     i32.const 0
     i32.const 1
-    call_indirect $t0
+    call_indirect (type $t0)
     drop
     get_local $param1
     drop

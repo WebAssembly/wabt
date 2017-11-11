@@ -160,8 +160,6 @@ class WatWriter {
   Index GetLabelArity(const Var& var);
   Index GetFuncParamCount(const Var& var);
   Index GetFuncResultCount(const Var& var);
-  Index GetFuncSigParamCount(const Var& var);
-  Index GetFuncSigResultCount(const Var& var);
   void PushExpr(const Expr* expr, Index operand_count, Index result_count);
   void FlushExprTree(const ExprTree& expr_tree);
   void FlushExprTreeVector(const std::vector<ExprTree>&);
@@ -524,7 +522,10 @@ void WatWriter::WriteExpr(const Expr* expr) {
 
     case ExprType::CallIndirect:
       WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
-      WriteVar(cast<CallIndirectExpr>(expr)->var, NextChar::Newline);
+      WriteOpenSpace("type");
+      WriteVar(cast<CallIndirectExpr>(expr)->decl.type_var,
+               NextChar::Space);
+      WriteCloseNewline();
       break;
 
     case ExprType::Compare:
@@ -707,16 +708,6 @@ Index WatWriter::GetFuncResultCount(const Var& var) {
   return func ? func->GetNumResults() : 0;
 }
 
-Index WatWriter::GetFuncSigParamCount(const Var& var) {
-  const FuncType* func_type = module_->GetFuncType(var);
-  return func_type ? func_type->GetNumParams() : 0;
-}
-
-Index WatWriter::GetFuncSigResultCount(const Var& var) {
-  const FuncType* func_type = module_->GetFuncType(var);
-  return func_type ? func_type->GetNumResults() : 0;
-}
-
 void WatWriter::WriteFoldedExpr(const Expr* expr) {
   WABT_TRACE_ARGS(WriteFoldedExpr, "%s", GetExprTypeName(*expr));
   switch (expr->type()) {
@@ -758,9 +749,9 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     }
 
     case ExprType::CallIndirect: {
-      const Var& var = cast<CallIndirectExpr>(expr)->var;
-      PushExpr(expr, GetFuncSigParamCount(var) + 1,
-               GetFuncSigResultCount(var));
+      const auto* ci_expr = cast<CallIndirectExpr>(expr);
+      PushExpr(expr, ci_expr->decl.GetNumParams() + 1,
+               ci_expr->decl.GetNumResults());
       break;
     }
 

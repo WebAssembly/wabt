@@ -8,7 +8,7 @@
   (func (type 0))
   (func (type 1)
     i32.const 0
-    call_indirect 0
+    call_indirect (type 0)
     i32.const 1))
 (;; STDOUT ;;;
 (module
@@ -18,7 +18,7 @@
   (func $f1 (type $t0))
   (func $f2 (type $t1) (result i32)
     i32.const 0
-    call_indirect $t0
+    call_indirect (type $t0)
     i32.const 1)
   (table $T0 1 1 anyfunc)
   (elem (i32.const 0) $foo.bar))
