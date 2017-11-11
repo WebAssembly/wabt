@@ -160,8 +160,6 @@ class WatWriter {
   Index GetLabelArity(const Var& var);
   Index GetFuncParamCount(const Var& var);
   Index GetFuncResultCount(const Var& var);
-  Index GetFuncSigParamCount(const Var& var);
-  Index GetFuncSigResultCount(const Var& var);
   void PushExpr(const Expr* expr, Index operand_count, Index result_count);
   void FlushExprTree(const ExprTree& expr_tree);
   void FlushExprTreeVector(const std::vector<ExprTree>&);
@@ -708,16 +706,6 @@ Index WatWriter::GetFuncParamCount(const Var& var) {
 Index WatWriter::GetFuncResultCount(const Var& var) {
   const Func* func = module_->GetFunc(var);
   return func ? func->GetNumResults() : 0;
-}
-
-Index WatWriter::GetFuncSigParamCount(const Var& var) {
-  const FuncType* func_type = module_->GetFuncType(var);
-  return func_type ? func_type->GetNumParams() : 0;
-}
-
-Index WatWriter::GetFuncSigResultCount(const Var& var) {
-  const FuncType* func_type = module_->GetFuncType(var);
-  return func_type ? func_type->GetNumResults() : 0;
 }
 
 void WatWriter::WriteFoldedExpr(const Expr* expr) {
