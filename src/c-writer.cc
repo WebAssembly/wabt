@@ -57,6 +57,14 @@ struct ResultType {
   const TypeVector& types;
 };
 
+struct Newline {
+  explicit Newline(bool force = false) : force(force) {}
+  bool force = false;
+};
+
+struct OpenBrace {};
+struct CloseBrace {};
+
 class CWriter {
  public:
   CWriter(Stream* stream, const WriteCOptions* options)
@@ -76,6 +84,7 @@ class CWriter {
   void WriteIndent();
   void WriteNextChar();
   void WriteDataWithNextChar(const void* src, size_t size);
+  void Writef(const char* format, ...);
 
   template <typename T, typename U, typename... Args>
   void Write(T&& t, U&& u, Args&&... args) {
@@ -85,6 +94,9 @@ class CWriter {
   }
 
   void Write() {}
+  void Write(Newline);
+  void Write(OpenBrace);
+  void Write(CloseBrace);
   void Write(Index);
   void Write(const char* s);
   void Write(const Name&);
@@ -92,15 +104,8 @@ class CWriter {
   void Write(const Var&);
   void Write(const StackVar&);
   void Write(const ResultType&);
-
-  void Writef(const char* format, ...);
-  void WritefNewline(const char* format, ...);
-  void WritePutsNewline(const char* s);
-  void WriteNewline(bool force = false);
-
-  void WriteConst(const Const&);
+  void Write(const Const&);
   void WriteInitExpr(const ExprList&);
-
   void WriteHeader();
   void WriteFuncTypes();
   void WriteFuncDeclarations();
@@ -110,10 +115,10 @@ class CWriter {
   void WriteDataInitializers();
   void WriteElemInitializers();
   void WriteFuncs();
-  void WriteFunc(const Func&);
+  void Write(const Func&);
   void WriteLocals(const Func&);
-  void WriteBlock(const Block&);
-  void WriteExprList(const ExprList&);
+  void Write(const Block&);
+  void Write(const ExprList&);
 
   enum class AssignOp {
     Disallowed,
@@ -123,11 +128,12 @@ class CWriter {
   void WriteSimpleUnaryExpr(const char* op);
   void WriteSimpleBinaryExpr(const char* op, AssignOp = AssignOp::Allowed);
   void WriteSignedBinaryExpr(const char* op, Type);
-  void WriteBinaryExpr(const BinaryExpr&);
-  void WriteCompareExpr(const CompareExpr&);
-  void WriteConvertExpr(const ConvertExpr&);
-  void WriteLoadExpr(const LoadExpr&);
-  void WriteUnaryExpr(const UnaryExpr&);
+  void Write(const BinaryExpr&);
+  void Write(const CompareExpr&);
+  void Write(const ConvertExpr&);
+  void Write(const LoadExpr&);
+  void Write(const StoreExpr&);
+  void Write(const UnaryExpr&);
 
   const WriteCOptions* options_ = nullptr;
   const Module* module_ = nullptr;
@@ -243,10 +249,21 @@ void WABT_PRINTF_FORMAT(2, 3) CWriter::Writef(const char* format, ...) {
   next_char_ = NextChar::None;
 }
 
-void WABT_PRINTF_FORMAT(2, 3) CWriter::WritefNewline(const char* format, ...) {
-  WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  WriteDataWithNextChar(buffer, length);
-  next_char_ = NextChar::Newline;
+void CWriter::Write(Newline newline) {
+  if (next_char_ == NextChar::ForceNewline)
+    WriteNextChar();
+  next_char_ = newline.force ? NextChar::ForceNewline : NextChar::Newline;
+}
+
+void CWriter::Write(OpenBrace) {
+  Write("{");
+  Indent();
+  Write(Newline());
+}
+
+void CWriter::Write(CloseBrace) {
+  Dedent();
+  Write(Newline(), "}");
 }
 
 void CWriter::Write(Index index) {
@@ -257,18 +274,6 @@ void CWriter::Write(const char* s) {
   size_t len = strlen(s);
   WriteDataWithNextChar(s, len);
   next_char_ = NextChar::None;
-}
-
-void CWriter::WritePutsNewline(const char* s) {
-  size_t len = strlen(s);
-  WriteDataWithNextChar(s, len);
-  next_char_ = NextChar::Newline;
-}
-
-void CWriter::WriteNewline(bool force) {
-  if (next_char_ == NextChar::ForceNewline)
-    WriteNextChar();
-  next_char_ = force ? NextChar::ForceNewline : NextChar::Newline;
 }
 
 void CWriter::Write(const Name& name) {
@@ -307,7 +312,7 @@ void CWriter::Write(const ResultType& rt) {
   }
 }
 
-void CWriter::WriteConst(const Const& const_) {
+void CWriter::Write(const Const& const_) {
   switch (const_.type) {
     case Type::I32:
       Writef("%d", static_cast<int32_t>(const_.u32));
@@ -344,7 +349,7 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
   const Expr* expr = &expr_list.front();
   switch (expr_list.front().type()) {
     case ExprType::Const:
-      WriteConst(cast<ConstExpr>(expr)->const_);
+      Write(cast<ConstExpr>(expr)->const_);
       break;
 
     case ExprType::GetGlobal:
@@ -361,27 +366,25 @@ void CWriter::WriteHeader() {
 }
 
 void CWriter::WriteFuncTypes() {
-  WritefNewline("static u32 func_types[%" PRIzd "];",
-                module_->func_types.size());
-  WriteNewline(true);
-  WritefNewline("static void init_func_types(void) {");
+  Writef("static u32 func_types[%" PRIzd "];", module_->func_types.size());
+  Write(Newline(), Newline(true));
+  Write("static void init_func_types(void) {", Newline());
   Index func_type_index = 0;
   for (FuncType* func_type : module_->func_types) {
     Index num_params = func_type->GetNumParams();
     Index num_results = func_type->GetNumResults();
-    Writef("  func_types[%" PRIindex "] = register_func_type(%" PRIindex
-           ", %" PRIindex "",
-           func_type_index, num_params, num_results);
+    Write("  func_types[", func_type_index, "] = register_func_type(",
+          num_params, ", ", num_results);
     for (Index i = 0; i < num_params; ++i)
       Writef(", %s", GetTypeName(func_type->GetParamType(i)));
 
     for (Index i = 0; i < num_results; ++i)
       Writef(", %s", GetTypeName(func_type->GetResultType(i)));
 
-    WritefNewline(");");
+    Write(");", Newline());
     ++func_type_index;
   }
-  WritePutsNewline("}");
+  Write("}", Newline());
 }
 
 void CWriter::WriteFuncDeclarations() {
@@ -396,8 +399,7 @@ void CWriter::WriteFuncDeclarations() {
         Write(", ");
       Write(func->GetParamType(i));
     }
-    Write(");");
-    WriteNewline();
+    Write(");", Newline());
   }
 }
 
@@ -406,16 +408,12 @@ void CWriter::WriteGlobals() {
     return;
 
   for (Global* global : module_->globals) {
-    Write("static ");
-    Write(global->type);
-    Write(" ");
-    Write(Name(global->name));
+    Write("static ", global->type, " ", Name(global->name));
     if (!global->init_expr.empty()) {
       Write(" = ");
       WriteInitExpr(global->init_expr);
     }
-    Write(";");
-    WriteNewline();
+    Write(";", Newline());
   }
 }
 
@@ -423,11 +421,12 @@ void CWriter::WriteMemories() {
   assert(module_->memories.size() <= 1);
   for (Memory* memory : module_->memories) {
     WABT_USE(memory);
-    WritePutsNewline("typedef struct Memory { u8* data; size_t len; } Memory;");
-    WritePutsNewline(
+    Write("typedef struct Memory { u8* data; size_t len; } Memory;", Newline());
+    Write(
         "typedef struct DataSegment { u32 offset; u8* data; size_t len; } "
-        "DataSegment;");
-    WritePutsNewline("static Memory mem;");
+        "DataSegment;",
+        Newline());
+    Write("static Memory mem;", Newline());
   }
 }
 
@@ -435,10 +434,11 @@ void CWriter::WriteTables() {
   assert(module_->tables.size() <= 1);
   for (Table* table : module_->tables) {
     WABT_USE(table);
-    WritePutsNewline("typedef void (*Anyfunc)();");
-    WritePutsNewline("typedef struct Elem { u32 func_type; Anyfunc func; } Elem;");
-    WritePutsNewline("typedef struct Table { Elem* data; size_t len; } Table;");
-    WritePutsNewline("static Table table;");
+    Write("typedef void (*Anyfunc)();", Newline());
+    Write("typedef struct Elem { u32 func_type; Anyfunc func; } Elem;",
+          Newline());
+    Write("typedef struct Table { Elem* data; size_t len; } Table;", Newline());
+    Write("static Table table;", Newline());
   }
 }
 
@@ -448,32 +448,28 @@ void CWriter::WriteDataInitializers() {
 
   Index data_segment_index = 0;
   for (DataSegment* data_segment : module_->data_segments) {
-    Writef("static u8 data_segment_data_%" PRIindex "[] = {",
-           data_segment_index);
-    Indent();
-    WriteNewline();
+    Write("static u8 data_segment_data_", data_segment_index,
+          "[] = ", OpenBrace());
     size_t i = 0;
     for (uint8_t x : data_segment->data) {
       Writef("0x%02x, ", x);
       if ((++i % 16) == 0)
-        WriteNewline();
+        Write(Newline());
     }
-    Dedent();
-    WriteNewline();
-    WritePutsNewline("};");
+    Write(CloseBrace(), ";", Newline());
     ++data_segment_index;
   }
 
-  WritePutsNewline("static void init_memory(void) {");
+  Write("static void init_memory(void) ", OpenBrace());
   data_segment_index = 0;
   for (DataSegment* data_segment : module_->data_segments) {
-    Write("  init_data_segment(");
+    Write("init_data_segment(");
     WriteInitExpr(data_segment->offset);
-    WritefNewline(", data_segment_data_%" PRIindex ", %" PRIzd ");",
-                  data_segment_index, data_segment->data.size());
+    Write(", data_segment_data_", data_segment_index, ", ",
+          data_segment->data.size(), ");", Newline());
     ++data_segment_index;
   }
-  WritePutsNewline("}");
+  Write(CloseBrace(), Newline());
 }
 
 void CWriter::WriteElemInitializers() {
@@ -482,47 +478,41 @@ void CWriter::WriteElemInitializers() {
 
   Index elem_segment_index = 0;
   for (ElemSegment* elem_segment : module_->elem_segments) {
-    Writef("static Elem elem_segment_data_%" PRIindex "[] = {",
-           elem_segment_index);
-    Indent();
-    WriteNewline();
+    Write("static Elem elem_segment_data_", elem_segment_index,
+          "[] = ", OpenBrace());
 
     size_t i = 0;
     for (const Var& var : elem_segment->vars) {
       const Func* func = module_->GetFunc(var);
       Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
 
-      Writef("{%" PRIindex ", ", func_type_index);
-      Write(Name(func->name));
-      Write("}, ");
+      Write("{", func_type_index, ", ", Name(func->name), "}, ");
 
       if ((++i % 8) == 0)
-        WriteNewline();
+        Write(Newline());
     }
-    Dedent();
-    WriteNewline();
-    WritePutsNewline("};");
+    Write(CloseBrace(), ";", Newline());
     ++elem_segment_index;
   }
 
-  WritePutsNewline("static void init_table(void) {");
+  Write("static void init_table(void) ", OpenBrace());
   elem_segment_index = 0;
   for (const ElemSegment* elem_segment : module_->elem_segments) {
-    Write("  init_elem_segment(");
+    Write("init_elem_segment(");
     WriteInitExpr(elem_segment->offset);
-    WritefNewline(", elem_segment_data_%" PRIindex ", %" PRIzd ");",
-                  elem_segment_index, elem_segment->vars.size());
+    Write(", elem_segment_data_", elem_segment_index, ", ",
+          elem_segment->vars.size(), ");", Newline());
     ++elem_segment_index;
   }
-  WritePutsNewline("}");
+  Write(CloseBrace());
 }
 
 void CWriter::WriteFuncs() {
   for (const Func* func : module_->funcs)
-    WriteFunc(*func);
+    Write(*func);
 }
 
-void CWriter::WriteFunc(const Func& func) {
+void CWriter::Write(const Func& func) {
   std::vector<std::string> index_to_name;
   MakeTypeBindingReverseMapping(func.decl.sig.param_types, func.param_bindings,
                                 &index_to_name);
@@ -534,9 +524,7 @@ void CWriter::WriteFunc(const Func& func) {
       Write(", ");
     Write(func.GetParamType(i), " ", Name(index_to_name[i]));
   }
-  Write(") {");
-  Indent();
-  WriteNewline();
+  Write(") ", OpenBrace());
 
   func_ = &func;
   stream_ = &func_stream_;
@@ -545,20 +533,14 @@ void CWriter::WriteFunc(const Func& func) {
 
   WriteLocals(func);
   ResetTypeStack(0);
-  WriteExprList(func.exprs);
+  Write(func.exprs);
   ResetTypeStack(0);
   PushTypes(func.decl.sig.result_types);
 
   if (!func.decl.sig.result_types.empty()) {
     // Return the top of the stack implicitly.
-    Write("return ");
-    Write(StackVar(0));
-    Write(";");
-    WriteNewline();
+    Write("return ", StackVar(0), ";", Newline());
   }
-
-  Dedent();
-  WriteNewline();
 
   stream_ = module_stream_;
   std::unique_ptr<OutputBuffer> buf = func_stream_.ReleaseOutputBuffer();
@@ -566,57 +548,40 @@ void CWriter::WriteFunc(const Func& func) {
   func_stream_.Clear();
   func_ = nullptr;
 
-  WritePutsNewline("}");
-  WriteNewline(true);
-  WriteNewline(true);
+  Write(CloseBrace(), Newline(true), Newline(true));
 }
 
-void CWriter::WriteBlock(const Block& block) {
+void CWriter::Write(const Block& block) {
   size_t mark = MarkTypeStack();
-  WritePutsNewline("{");
-  Indent();
-  WriteExprList(block.exprs);
-  Dedent();
-  WritePutsNewline("}");
+  Write(OpenBrace(), block.exprs, CloseBrace());
   ResetTypeStack(mark);
   PushTypes(block.sig);
 }
 
-void CWriter::WriteExprList(const ExprList& exprs) {
+void CWriter::Write(const ExprList& exprs) {
   for (const Expr& expr: exprs) {
     switch (expr.type()) {
       case ExprType::Binary:
-        WriteBinaryExpr(*cast<BinaryExpr>(&expr));
+        Write(*cast<BinaryExpr>(&expr));
         break;
 
       case ExprType::Block: {
         const Block& block = cast<BlockExpr>(&expr)->block;
-        WriteBlock(block);
-        Write(Name(block.label));
-        Write(":");
-        WriteNewline();
+        Write(block, Name(block.label), ":", Newline());
         break;
       }
 
       case ExprType::Br: {
         const Var& var = cast<BrExpr>(&expr)->var;
-        Write("goto ");
-        Write(var);
-        Write(";");
-        WriteNewline();
+        Write("goto ", var, ";", Newline());
         // Stop processing this ExprList, since the following are unreachable.
         return;
       }
 
       case ExprType::BrIf: {
         const Var& var = cast<BrIfExpr>(&expr)->var;
-        Write("if (");
-        Write(StackVar(0));
+        Write("if (", StackVar(0), ") goto ", var, ";", Newline());
         DropTypes(1);
-        Write(") goto ");
-        Write(var);
-        Write(";");
-        WriteNewline();
         break;
       }
 
@@ -632,19 +597,16 @@ void CWriter::WriteExprList(const ExprList& exprs) {
         assert(type_stack_.size() >= num_params);
         if (num_results > 0) {
           assert(num_results == 1);
-          Write(StackVar(num_params - 1));
-          Write(" = ");
+          Write(StackVar(num_params - 1), " = ");
         }
 
-        Write(var);
-        Write("(");
+        Write(var, "(");
         for (Index i = 0; i < num_params; ++i) {
           if (i != 0)
             Write(", ");
           Write(StackVar(num_params - i - 1));
         }
-        Write(");");
-        WriteNewline();
+        Write(");", Newline());
         DropTypes(num_params);
         PushTypes(func.decl.sig.result_types);
         break;
@@ -655,22 +617,18 @@ void CWriter::WriteExprList(const ExprList& exprs) {
         break;
 
       case ExprType::Compare:
-        WriteCompareExpr(*cast<CompareExpr>(&expr));
+        Write(*cast<CompareExpr>(&expr));
         break;
 
       case ExprType::Const: {
         const Const& const_ = cast<ConstExpr>(&expr)->const_;
         PushType(const_.type);
-        Write(StackVar(0));
-        Write(" = ");
-        WriteConst(const_);
-        Write(";");
-        WriteNewline();
+        Write(StackVar(0), " = ", const_, ";", Newline());
         break;
       }
 
       case ExprType::Convert:
-        WriteConvertExpr(*cast<ConvertExpr>(&expr));
+        Write(*cast<ConvertExpr>(&expr));
         break;
 
       case ExprType::CurrentMemory:
@@ -681,22 +639,14 @@ void CWriter::WriteExprList(const ExprList& exprs) {
       case ExprType::GetGlobal: {
         const Var& var = cast<GetGlobalExpr>(&expr)->var;
         PushType(module_->GetGlobal(var)->type);
-        Write(StackVar(0));
-        Write(" = ");
-        Write(var);
-        Write(";");
-        WriteNewline();
+        Write(StackVar(0), " = ", var, ";", Newline());
         break;
       }
 
       case ExprType::GetLocal: {
         const Var& var = cast<GetLocalExpr>(&expr)->var;
         PushType(func_->GetLocalType(var));
-        Write(StackVar(0));
-        Write(" = ");
-        Write(var);
-        Write(";");
-        WriteNewline();
+        Write(StackVar(0), " = ", var, ";", Newline());
         break;
       }
 
@@ -706,40 +656,27 @@ void CWriter::WriteExprList(const ExprList& exprs) {
 
       case ExprType::If: {
         const IfExpr& if_ = *cast<IfExpr>(&expr);
-        Write("if (");
-        Write(StackVar(0));
-        Write(") {");
+        Write("if (", StackVar(0), ") ", OpenBrace());
         DropTypes(1);
-        WriteNewline();
         size_t mark = MarkTypeStack();
-        Indent();
-        WriteExprList(if_.true_.exprs);
-        Dedent();
-        ResetTypeStack(mark);
+        Write(if_.true_.exprs, CloseBrace());
         if (!if_.false_.empty()) {
-          Write("} else {");
-          WriteNewline();
-          Indent();
-          WriteExprList(if_.false_);
-          Dedent();
           ResetTypeStack(mark);
+          Write(" else ", OpenBrace(), if_.false_, CloseBrace());
         }
-        Write("}");
-        WriteNewline();
+        ResetTypeStack(mark);
+        Write(Newline());
         PushTypes(if_.true_.sig);
         break;
       }
 
       case ExprType::Load:
-        WriteLoadExpr(*cast<LoadExpr>(&expr));
+        Write(*cast<LoadExpr>(&expr));
         break;
 
       case ExprType::Loop: {
         const Block& block = cast<LoopExpr>(&expr)->block;
-        Write(Name(block.label));
-        Write(":");
-        WriteNewline();
-        WriteBlock(block);
+        Write(Name(block.label), ":", Newline(), block);
         break;
       }
 
@@ -749,12 +686,8 @@ void CWriter::WriteExprList(const ExprList& exprs) {
 
       case ExprType::Return:
         Write("return");
-        if (!func_->decl.sig.result_types.empty()) {
-          Write(" ");
-          Write(StackVar(0));
-          Write(";");
-          WriteNewline();
-        }
+        if (!func_->decl.sig.result_types.empty())
+          Write(" ", StackVar(0), ";", Newline());
         return;
 
       case ExprType::Select:
@@ -763,41 +696,30 @@ void CWriter::WriteExprList(const ExprList& exprs) {
 
       case ExprType::SetGlobal: {
         const Var& var = cast<SetGlobalExpr>(&expr)->var;
-        Write(var);
-        Write(" = ");
-        Write(StackVar(0));
-        Write(";");
-        WriteNewline();
+        Write(var, " = ", StackVar(0), ";", Newline());
         DropTypes(1);
         break;
       }
 
       case ExprType::SetLocal: {
         const Var& var = cast<SetLocalExpr>(&expr)->var;
-        Write(var);
-        Write(" = ");
-        Write(StackVar(0));
-        Write(";");
-        WriteNewline();
+        Write(var, " = ", StackVar(0), ";", Newline());
         DropTypes(1);
         break;
       }
 
       case ExprType::Store:
+        Write(*cast<StoreExpr>(&expr));
         break;
 
       case ExprType::TeeLocal: {
         const Var& var = cast<TeeLocalExpr>(&expr)->var;
-        Write(var);
-        Write(" = ");
-        Write(StackVar(0));
-        Write(";");
-        WriteNewline();
+        Write(var, " = ", StackVar(0), ";", Newline());
         break;
       }
 
       case ExprType::Unary:
-        WriteUnaryExpr(*cast<UnaryExpr>(&expr));
+        Write(*cast<UnaryExpr>(&expr));
         break;
 
       case ExprType::Unreachable:
@@ -820,25 +742,17 @@ void CWriter::WriteExprList(const ExprList& exprs) {
 }
 
 void CWriter::WriteSimpleUnaryExpr(const char* op) {
-  Write(StackVar(0));
-  Writef(" = %s(", op);
-  Write(StackVar(0));
-  Write(")");
-  WriteNewline();
+  Write(StackVar(0), " = ", op, "(", StackVar(0), ")", Newline());
 }
 
 void CWriter::WriteSimpleBinaryExpr(const char* op, AssignOp assign_op) {
   Write(StackVar(1));
   if (assign_op == AssignOp::Allowed) {
-    Writef(" %s= ", op);
-    Write(StackVar(0));
+    Write(" ", op, "= ", StackVar(0));
   } else {
-    Write(" = ");
-    Write(StackVar(1));
-    Writef(" %s ", op);
-    Write(StackVar(0));
+    Write(" = ", StackVar(1), " ", op, " ", StackVar(0));
   }
-  WritePutsNewline(";");
+  Write(";", Newline());
   DropTypes(1);
 }
 
@@ -851,16 +765,12 @@ void CWriter::WriteSignedBinaryExpr(const char* op, Type type) {
     utype = "u64";
     stype = "s64";
   }
-  Write(StackVar(1));
-  Writef(" = (%s)((%s)", utype, stype);
-  Write(StackVar(1));
-  Writef(" %s (%s)", op, stype);
-  Write(StackVar(0));
-  WritePutsNewline(");");
+  Write(StackVar(1), " = (", utype, ")((", stype, ")", StackVar(1), " ", op,
+        " (", stype, ")", StackVar(0), ");", Newline());
   DropTypes(1);
 }
 
-void CWriter::WriteBinaryExpr(const BinaryExpr& expr) {
+void CWriter::Write(const BinaryExpr& expr) {
   switch (expr.opcode) {
     case Opcode::I32Add:
     case Opcode::I64Add:
@@ -922,10 +832,9 @@ void CWriter::WriteBinaryExpr(const BinaryExpr& expr) {
 
     case Opcode::I32Shl:
     case Opcode::I64Shl:
-      Write(StackVar(1));
-      Write(" <<= (");
-      Write(StackVar(0));
-      WritefNewline(" & %u);", expr.opcode == Opcode::I32Shl ? 31 : 63);
+      Write(StackVar(1), " <<= (", StackVar(0));
+      Writef(" & %u);", expr.opcode == Opcode::I32Shl ? 31 : 63);
+      Write(Newline());
       DropTypes(1);
       break;
 
@@ -942,22 +851,17 @@ void CWriter::WriteBinaryExpr(const BinaryExpr& expr) {
         stype = "s64";
         mask = 63;
       }
-      Write(StackVar(1));
-      Writef(" = (%s)((%s)", utype, stype);
-      Write(StackVar(1));
-      Write(" >> (");
-      Write(StackVar(0));
-      WritefNewline(" & %u));", mask);
+      Write(StackVar(1), " = (", utype, ")((", stype, ")", StackVar(1), " >> (",
+            StackVar(0), " & ", mask, "));", Newline());
       DropTypes(1);
       break;
     }
 
     case Opcode::I32ShrU:
     case Opcode::I64ShrU:
-      Write(StackVar(1));
-      Write(" >>= (");
-      Write(StackVar(0));
-      WritefNewline(" & %u);", expr.opcode == Opcode::I32ShrU ? 31 : 63);
+      Write(StackVar(1), " >>= (", StackVar(0));
+      Writef(" & %u);", expr.opcode == Opcode::I32ShrU ? 31 : 63);
+      Write(Newline());
       DropTypes(1);
       break;
 
@@ -991,7 +895,7 @@ void CWriter::WriteBinaryExpr(const BinaryExpr& expr) {
   }
 }
 
-void CWriter::WriteCompareExpr(const CompareExpr& expr) {
+void CWriter::Write(const CompareExpr& expr) {
   switch (expr.opcode) {
     case Opcode::I32Eq:
     case Opcode::I64Eq:
@@ -1060,7 +964,7 @@ void CWriter::WriteCompareExpr(const CompareExpr& expr) {
   }
 }
 
-void CWriter::WriteConvertExpr(const ConvertExpr& expr) {
+void CWriter::Write(const ConvertExpr& expr) {
   switch (expr.opcode) {
     case Opcode::I32Eqz:
     case Opcode::I64Eqz:
@@ -1108,7 +1012,7 @@ void CWriter::WriteConvertExpr(const ConvertExpr& expr) {
   }
 }
 
-void CWriter::WriteLoadExpr(const LoadExpr& expr) {
+void CWriter::Write(const LoadExpr& expr) {
   const char* macro = nullptr;
   switch (expr.opcode) {
     case Opcode::I32Load: macro = "I32LOAD"; break;
@@ -1131,16 +1035,37 @@ void CWriter::WriteLoadExpr(const LoadExpr& expr) {
   }
 
   PushType(expr.opcode.GetResultType());
-  Write(StackVar(0));
-  Writef(" = %s(", macro);
-  Write(StackVar(1));
+  Write(StackVar(0), " = ", macro, "(", StackVar(1));
   if (expr.offset != 0)
-    Writef(" + %u", expr.offset);
-  Write(");");
-  WriteNewline();
+    Write(" + ", expr.offset);
+  Write(");", Newline());
 }
 
-void CWriter::WriteUnaryExpr(const UnaryExpr& expr) {
+void CWriter::Write(const StoreExpr& expr) {
+  const char* macro = nullptr;
+  switch (expr.opcode) {
+    case Opcode::I32Store: macro = "I32STORE"; break;
+    case Opcode::I64Store: macro = "I64STORE"; break;
+    case Opcode::F32Store: macro = "F32STORE"; break;
+    case Opcode::F64Store: macro = "F64STORE"; break;
+    case Opcode::I32Store8: macro = "I32STORE8"; break;
+    case Opcode::I64Store8: macro = "I64STORE8"; break;
+    case Opcode::I32Store16: macro = "I32STORE16"; break;
+    case Opcode::I64Store16: macro = "I64STORE16"; break;
+    case Opcode::I64Store32: macro = "I64STORE32"; break;
+
+    default:
+      WABT_UNREACHABLE;
+  }
+
+  Write(macro, "(", StackVar(1));
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
+  Write(", ", StackVar(0), ");", Newline());
+  DropTypes(1);
+}
+
+void CWriter::Write(const UnaryExpr& expr) {
   switch (expr.opcode) {
     case Opcode::I32Clz:
     case Opcode::I64Clz:
@@ -1185,19 +1110,17 @@ void CWriter::WriteLocals(const Func& func) {
     for (Type local_type : func.local_types) {
       if (local_type == type) {
         if (count++ == 0) {
-          Write(type);
-          Write(" ");
+          Write(type, " ");
         } else {
           Write(", ");
         }
 
-        Write(Name(index_to_name[local_index]));
-        Write(" = 0");
+        Write(Name(index_to_name[local_index]), " = 0");
       }
       ++local_index;
     }
     if (count != 0)
-      WritePutsNewline(";");
+      Write(";", Newline());
   }
 }
 
