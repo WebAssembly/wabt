@@ -16,6 +16,7 @@
 
 #include "src/c-writer.h"
 
+#include <cctype>
 #include <cinttypes>
 #include <map>
 
@@ -46,12 +47,18 @@ struct Label {
   size_t type_stack_size;
 };
 
+template <bool is_global>
 struct Name {
-  explicit Name(const std::string& name) : name(name) {
-    assert(name.size() >= 1 && name[0] == '$');
-  }
-
+  explicit Name(const std::string& name) : name(name) {}
   const std::string& name;
+};
+
+typedef Name<false> LocalName;
+typedef Name<true> GlobalName;
+
+struct GlobalVar {
+  explicit GlobalVar(const Var& var) : var(var) {}
+  const Var& var;
 };
 
 struct StackVar {
@@ -100,6 +107,9 @@ class CWriter {
   Result WriteModule(const Module&);
 
  private:
+  typedef std::map<std::string, std::string> SymbolMap;
+  typedef std::pair<Index, Type> StackTypePair;
+
   size_t MarkTypeStack() const;
   void ResetTypeStack(size_t mark);
   void PushType(Type);
@@ -109,6 +119,15 @@ class CWriter {
   void PushLabel(const Block& block);
   const Label* FindLabel(const Var& var);
   void PopLabel();
+
+  std::string LegalizeName(const std::string&);
+  std::string DefineName(SymbolMap*, const std::string&);
+  std::string DefineGlobalName(const std::string& name) {
+    return DefineName(&global_syms_, name);
+  }
+  std::string DefineLocalName(const std::string& name) {
+    return DefineName(&local_syms_, name);
+  }
 
   void Indent();
   void Dedent();
@@ -129,11 +148,14 @@ class CWriter {
   void Write(OpenBrace);
   void Write(CloseBrace);
   void Write(Index);
-  void Write(const char* s);
-  void Write(const Name&);
+  void Write(const char*);
+  void Write(const std::string&);
+  void Write(const LocalName&);
+  void Write(const GlobalName&);
   void Write(Type);
   void Write(SignedType);
   void Write(const Var&);
+  void Write(const GlobalVar&);
   void Write(const StackVar&);
   void Write(const CopyLabelVar&);
   void Write(const ResultType&);
@@ -149,6 +171,7 @@ class CWriter {
   void WriteElemInitializers();
   void WriteFuncs();
   void Write(const Func&);
+  void WriteParams(const Func&);
   void WriteLocals(const Func&);
   void Write(const Block&);
   void Write(const ExprList&);
@@ -177,12 +200,9 @@ class CWriter {
   Result result_ = Result::Ok;
   int indent_ = 0;
   NextChar next_char_ = NextChar::None;
-  
-  typedef std::map<std::string, std::string> SymbolMap;
-  typedef std::pair<Index, Type> StackTypePair;
 
   std::map<std::string, std::string> global_syms_;
-  std::map<std::string, std::string> func_syms_;
+  std::map<std::string, std::string> local_syms_;
   std::map<StackTypePair, std::string> stack_var_syms_;
   TypeVector type_stack_;
   std::vector<Label> label_stack_;
@@ -254,6 +274,32 @@ const Label* CWriter::FindLabel(const Var& var) {
 
 void CWriter::PopLabel() {
   label_stack_.pop_back();
+}
+
+std::string CWriter::LegalizeName(const std::string& name) {
+  // Skip leading $.
+  if (name.size() <= 1)
+    return "_";
+
+  std::string result;
+  result = isalpha(name[1]) ? name[1] : '_';
+  for (size_t i = 2; i < name.size(); ++i)
+    result += isalnum(name[i]) ? name[i] : '_';
+
+  return result;
+}
+
+std::string CWriter::DefineName(SymbolMap* map, const std::string& name) {
+  std::string legal = LegalizeName(name);
+  if (map->find(legal) != map->end()) {
+    std::string base = legal + "_";;
+    size_t count = 0;
+    do {
+      legal = base + std::to_string(count);
+    } while (map->find(legal) != map->end());
+  }
+  map->insert(SymbolMap::value_type(name, legal));
+  return legal;
 }
 
 void CWriter::Indent() {
@@ -334,13 +380,29 @@ void CWriter::Write(const char* s) {
   next_char_ = NextChar::None;
 }
 
-void CWriter::Write(const Name& name) {
-  Write(name.name.c_str() + 1);  // Skip $ prefix.
+void CWriter::Write(const std::string& s) {
+  WriteDataWithNextChar(s.data(), s.size());
+  next_char_ = NextChar::None;
+}
+
+void CWriter::Write(const LocalName& name) {
+  assert(local_syms_.count(name.name) == 1);
+  Write(local_syms_[name.name]);
+}
+
+void CWriter::Write(const GlobalName& name) {
+  assert(global_syms_.count(name.name) == 1);
+  Write(global_syms_[name.name]);
 }
 
 void CWriter::Write(const Var& var) {
   assert(var.is_name());
-  Write(Name(var.name()));
+  Write(LocalName(var.name()));
+}
+
+void CWriter::Write(const GlobalVar& var) {
+  assert(var.var.is_name());
+  Write(GlobalName(var.var.name()));
 }
 
 void CWriter::Write(const StackVar& sv) {
@@ -431,7 +493,7 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
       break;
 
     case ExprType::GetGlobal:
-      Write(cast<GetGlobalExpr>(expr)->var);
+      Write(GlobalVar(cast<GetGlobalExpr>(expr)->var));
       break;
 
     default:
@@ -471,7 +533,7 @@ void CWriter::WriteFuncDeclarations() {
 
   for (Func* func : module_->funcs) {
     Write("static ", ResultType(func->decl.sig.result_types), " ",
-          Name(func->name), "(");
+          DefineGlobalName(func->name), "(");
     for (Index i = 0; i < func->GetNumParams(); ++i) {
       if (i != 0)
         Write(", ");
@@ -486,7 +548,7 @@ void CWriter::WriteGlobals() {
     return;
 
   for (Global* global : module_->globals) {
-    Write("static ", global->type, " ", Name(global->name));
+    Write("static ", global->type, " ", DefineGlobalName(global->name));
     if (!global->init_expr.empty()) {
       Write(" = ");
       WriteInitExpr(global->init_expr);
@@ -564,7 +626,7 @@ void CWriter::WriteElemInitializers() {
       const Func* func = module_->GetFunc(var);
       Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
 
-      Write("{", func_type_index, ", ", Name(func->name), "}, ");
+      Write("{", func_type_index, ", ", GlobalName(func->name), "}, ");
 
       if ((++i % 8) == 0)
         Write(Newline());
@@ -591,23 +653,15 @@ void CWriter::WriteFuncs() {
 }
 
 void CWriter::Write(const Func& func) {
-  std::vector<std::string> index_to_name;
-  MakeTypeBindingReverseMapping(func.decl.sig.param_types, func.param_bindings,
-                                &index_to_name);
-
-  Write("static ", ResultType(func.decl.sig.result_types), " ", Name(func.name),
-        "(");
-  for (Index i = 0; i < func.GetNumParams(); ++i) {
-    if (i != 0)
-      Write(", ");
-    Write(func.GetParamType(i), " ", Name(index_to_name[i]));
-  }
-  Write(") ", OpenBrace());
-
   func_ = &func;
+  local_syms_.clear();
+
+  Write("static ", ResultType(func.decl.sig.result_types), " ",
+        GlobalName(func.name), "(");
+  WriteParams(func);
+
   stream_ = &func_stream_;
   stream_->ClearOffset();
-  func_syms_.clear();
 
   WriteLocals(func);
   ResetTypeStack(0);
@@ -623,10 +677,47 @@ void CWriter::Write(const Func& func) {
   stream_ = module_stream_;
   std::unique_ptr<OutputBuffer> buf = func_stream_.ReleaseOutputBuffer();
   stream_->WriteData(buf->data.data(), buf->data.size());
-  func_stream_.Clear();
-  func_ = nullptr;
 
   Write(CloseBrace(), Newline(true), Newline(true));
+
+  func_stream_.Clear();
+  func_ = nullptr;
+}
+
+void CWriter::WriteParams(const Func& func) {
+  std::vector<std::string> index_to_name;
+  MakeTypeBindingReverseMapping(func.decl.sig.param_types, func.param_bindings,
+                                &index_to_name);
+  for (Index i = 0; i < func.GetNumParams(); ++i) {
+    if (i != 0)
+      Write(", ");
+    Write(func.GetParamType(i), " ", DefineLocalName(index_to_name[i]));
+  }
+  Write(") ", OpenBrace());
+}
+
+void CWriter::WriteLocals(const Func& func) {
+  std::vector<std::string> index_to_name;
+  MakeTypeBindingReverseMapping(func.local_types, func.local_bindings,
+                                &index_to_name);
+  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
+    Index local_index = 0;
+    size_t count = 0;
+    for (Type local_type : func.local_types) {
+      if (local_type == type) {
+        if (count++ == 0) {
+          Write(type, " ");
+        } else {
+          Write(", ");
+        }
+
+        Write(DefineLocalName(index_to_name[local_index]), " = 0");
+      }
+      ++local_index;
+    }
+    if (count != 0)
+      Write(";", Newline());
+  }
 }
 
 void CWriter::Write(const Block& block) {
@@ -647,7 +738,8 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::Block: {
         const Block& block = cast<BlockExpr>(&expr)->block;
-        Write(block, " ", Name(block.label), ":", Newline());
+        std::string label = DefineLocalName(block.label);
+        Write(block, " ", label, ":", Newline());
         break;
       }
 
@@ -712,7 +804,7 @@ void CWriter::Write(const ExprList& exprs) {
           Write(StackVar(num_params - 1), " = ");
         }
 
-        Write(var, "(");
+        Write(GlobalVar(var), "(");
         for (Index i = 0; i < num_params; ++i) {
           if (i != 0)
             Write(", ");
@@ -770,7 +862,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::GetGlobal: {
         const Var& var = cast<GetGlobalExpr>(&expr)->var;
         PushType(module_->GetGlobal(var)->type);
-        Write(StackVar(0), " = ", var, ";", Newline());
+        Write(StackVar(0), " = ", GlobalVar(var), ";", Newline());
         break;
       }
 
@@ -809,7 +901,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::Loop: {
         const Block& block = cast<LoopExpr>(&expr)->block;
-        Write(Name(block.label), ": ", block, Newline());
+        Write(DefineLocalName(block.label), ": ", block, Newline());
         break;
       }
 
@@ -828,7 +920,7 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::SetGlobal: {
         const Var& var = cast<SetGlobalExpr>(&expr)->var;
-        Write(var, " = ", StackVar(0), ";", Newline());
+        Write(GlobalVar(var), " = ", StackVar(0), ";", Newline());
         DropTypes(1);
         break;
       }
@@ -1218,30 +1310,6 @@ void CWriter::Write(const UnaryExpr& expr) {
 
     default:
       WABT_UNREACHABLE;
-  }
-}
-
-void CWriter::WriteLocals(const Func& func) {
-  std::vector<std::string> index_to_name;
-  MakeTypeBindingReverseMapping(func.local_types, func.local_bindings,
-                                &index_to_name);
-  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
-    Index local_index = 0;
-    size_t count = 0;
-    for (Type local_type : func.local_types) {
-      if (local_type == type) {
-        if (count++ == 0) {
-          Write(type, " ");
-        } else {
-          Write(", ");
-        }
-
-        Write(Name(index_to_name[local_index]), " = 0");
-      }
-      ++local_index;
-    }
-    if (count != 0)
-      Write(";", Newline());
   }
 }
 
