@@ -175,6 +175,7 @@ class CWriter {
   void WriteTables();
   void WriteDataInitializers();
   void WriteElemInitializers();
+  void WriteInit();
   void WriteFuncs();
   void Write(const Func&);
   void WriteParams();
@@ -246,6 +247,7 @@ typedef struct Table { Elem* data; size_t len; } Table;
 u32 register_func_type(u32 params, u32 results, ...);
 void init_data_segment(u32 addr, u8 *data, size_t len);
 void init_elem_segment(u32 addr, Elem *data, size_t len);
+void init(void);
 
 #define I32LOAD(o) 0
 #define I64LOAD(o) 0
@@ -498,9 +500,6 @@ void CWriter::Write(const StackVar& sv) {
 }
 
 void CWriter::Write(const CopyLabelVar& clv) {
-  if (type_stack_.size() == clv.label.type_stack_size)
-    return;
-
   assert(clv.label.block.sig.size() == 1);
   assert(type_stack_.size() >= clv.label.type_stack_size);
   Write(StackVar(type_stack_.size() - clv.label.type_stack_size - 1,
@@ -619,7 +618,7 @@ void CWriter::WriteFuncTypes() {
     Write(");", Newline());
     ++func_type_index;
   }
-  Write("}", Newline());
+  Write("}", Newline(), Newline(true), Newline(true));
 }
 
 void CWriter::WriteFuncDeclarations() {
@@ -642,6 +641,7 @@ void CWriter::WriteFuncDeclarations() {
     Write(");", Newline());
     ++func_index;
   }
+  Write(Newline(true), Newline(true));
 }
 
 void CWriter::WriteGlobals() {
@@ -653,13 +653,24 @@ void CWriter::WriteGlobals() {
     bool is_import = global_index < module_->num_global_imports;
     Write(is_import ? "extern " : "static ");
     Write(global->type, " ", DefineGlobalName(global->name));
-    if (!global->init_expr.empty()) {
-      Write(" = ");
-      WriteInitExpr(global->init_expr);
-    }
     Write(";", Newline());
     ++global_index;
   }
+  Write(Newline(true), Newline(true));
+
+  Write("static void init_globals(void) ", OpenBrace());
+  global_index = 0;
+  for (Global* global : module_->globals) {
+    bool is_import = global_index < module_->num_global_imports;
+    if (!is_import) {
+      assert(!global->init_expr.empty());
+      Write(GlobalName(global->name), " = ");
+      WriteInitExpr(global->init_expr);
+      Write(";", Newline());
+    }
+    ++global_index;
+  }
+  Write(CloseBrace(), Newline(), Newline(true), Newline(true));
 }
 
 void CWriter::WriteMemories() {
@@ -672,6 +683,7 @@ void CWriter::WriteMemories() {
     Write("Memory mem;", Newline());
     ++memory_index;
   }
+  Write(Newline(true), Newline(true));
 }
 
 void CWriter::WriteTables() {
@@ -684,6 +696,7 @@ void CWriter::WriteTables() {
     Write("Table table;", Newline());
     ++table_index;
   }
+  Write(Newline(true), Newline(true));
 }
 
 void CWriter::WriteDataInitializers() {
@@ -697,10 +710,10 @@ void CWriter::WriteDataInitializers() {
     size_t i = 0;
     for (uint8_t x : data_segment->data) {
       Writef("0x%02x, ", x);
-      if ((++i % 16) == 0)
+      if ((++i % 12) == 0)
         Write(Newline());
     }
-    Write(CloseBrace(), ";", Newline());
+    Write(CloseBrace(), ";", Newline(), Newline(true), Newline(true));
     ++data_segment_index;
   }
 
@@ -713,7 +726,7 @@ void CWriter::WriteDataInitializers() {
           data_segment->data.size(), ");", Newline());
     ++data_segment_index;
   }
-  Write(CloseBrace(), Newline());
+  Write(CloseBrace(), Newline(), Newline(true), Newline(true));
 }
 
 void CWriter::WriteElemInitializers() {
@@ -732,10 +745,10 @@ void CWriter::WriteElemInitializers() {
 
       Write("{", func_type_index, ", (Anyfunc)", GlobalName(func->name), "}, ");
 
-      if ((++i % 8) == 0)
+      if ((++i % 4) == 0)
         Write(Newline());
     }
-    Write(CloseBrace(), ";", Newline());
+    Write(CloseBrace(), ";", Newline(), Newline(true), Newline(true));
     ++elem_segment_index;
   }
 
@@ -748,7 +761,19 @@ void CWriter::WriteElemInitializers() {
           elem_segment->vars.size(), ");", Newline());
     ++elem_segment_index;
   }
-  Write(CloseBrace(), Newline());
+  Write(CloseBrace(), Newline(), Newline(true), Newline(true));
+}
+
+void CWriter::WriteInit() {
+  Write("void init(void) ", OpenBrace());
+  Write("init_func_types();", Newline());
+  Write("init_globals();", Newline());
+  Write("init_memory();", Newline());
+  Write("init_table();", Newline());
+  for (Var* var : module_->starts) {
+    Write(GlobalName(module_->GetFunc(*var)->name), ";", Newline());
+  }
+  Write(CloseBrace(), Newline(), Newline(true), Newline(true));
 }
 
 void CWriter::WriteFuncs() {
@@ -899,7 +924,7 @@ void CWriter::Write(const ExprList& exprs) {
         const Var& var = cast<BrExpr>(&expr)->var;
         const Label* label = FindLabel(var);
         if (!label->block.sig.empty())
-          Write(CopyLabelVar(*label), "; ");
+          Write(CopyLabelVar(*label), " ");
         Write("goto ", var, ";", Newline());
         // Stop processing this ExprList, since the following are unreachable.
         return;
@@ -910,7 +935,7 @@ void CWriter::Write(const ExprList& exprs) {
         const Label* label = FindLabel(var);
         Write("if (", StackVar(0), ") ");
         if (!label->block.sig.empty()) {
-          Write("{", CopyLabelVar(*label), "; goto ", var, ";}", Newline());
+          Write("{", CopyLabelVar(*label), " goto ", var, ";}", Newline());
         } else {
           Write("goto ", var, ";", Newline());
         }
@@ -920,15 +945,13 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::BrTable: {
         const auto* bt_expr = cast<BrTableExpr>(&expr);
-        Write("switch (", StackVar(0), ") {");
+        Write("switch (", StackVar(0), ") ", OpenBrace());
         DropTypes(1);
         Index i = 0;
         const Label* label;
         for (const Var& var : bt_expr->targets) {
           label = FindLabel(var);
-          if (i != 0)
-            Write(" ");
-          Write("case ", i, ": ");
+          Write(Newline(), "case ", i, ": ");
           if (!label->block.sig.empty())
             Write(CopyLabelVar(*label), "; ");
           Write("goto ", var, ";");
@@ -936,12 +959,10 @@ void CWriter::Write(const ExprList& exprs) {
         }
 
         label = FindLabel(bt_expr->default_target);
-        if (i != 0)
-          Write(" ");
-        Write("default: ");
+        Write(Newline(), "default: ");
         if (!label->block.sig.empty())
           Write(CopyLabelVar(*label), "; ");
-        Write("goto ", bt_expr->default_target, ";}");
+        Write("goto ", bt_expr->default_target, ";", CloseBrace(), Newline());
         break;
       }
 
@@ -1478,9 +1499,10 @@ Result CWriter::WriteModule(const Module& module) {
   WriteGlobals();
   WriteMemories();
   WriteTables();
+  WriteFuncs();
   WriteDataInitializers();
   WriteElemInitializers();
-  WriteFuncs();
+  WriteInit();
 
   return result_;
 }
