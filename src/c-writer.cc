@@ -19,6 +19,7 @@
 #include <cctype>
 #include <cinttypes>
 #include <map>
+#include <set>
 
 #include "src/cast.h"
 #include "src/common.h"
@@ -73,6 +74,11 @@ struct CopyLabelVar {
   const Label& label;
 };
 
+struct TypeEnum {
+  explicit TypeEnum(Type type) : type(type) {}
+  Type type;
+};
+
 struct SignedType {
   explicit SignedType(Type type) : type(type) {}
   Type type;
@@ -107,8 +113,10 @@ class CWriter {
   Result WriteModule(const Module&);
 
  private:
+  typedef std::set<std::string> SymbolSet;
   typedef std::map<std::string, std::string> SymbolMap;
   typedef std::pair<Index, Type> StackTypePair;
+  typedef std::map<StackTypePair, std::string> StackVarSymbolMap;
 
   size_t MarkTypeStack() const;
   void ResetTypeStack(size_t mark);
@@ -120,17 +128,14 @@ class CWriter {
   const Label* FindLabel(const Var& var);
   void PopLabel();
 
-  std::string LegalizeName(const std::string&);
-  std::string DefineName(SymbolMap*, const std::string&);
-  std::string DefineGlobalName(const std::string& name) {
-    return DefineName(&global_syms_, name);
-  }
-  std::string DefineLocalName(const std::string& name) {
-    return DefineName(&local_syms_, name);
-  }
+  std::string LegalizeName(string_view);
+  std::string DefineName(SymbolSet*, string_view);
+  std::string DefineGlobalName(const std::string&);
+  std::string DefineLocalName(const std::string&);
+  std::string DefineStackVarName(Index, Type, string_view);
 
-  void Indent();
-  void Dedent();
+  void Indent(int size = INDENT_SIZE);
+  void Dedent(int size = INDENT_SIZE);
   void WriteIndent();
   void WriteNextChar();
   void WriteDataWithNextChar(const void* src, size_t size);
@@ -154,6 +159,7 @@ class CWriter {
   void Write(const GlobalName&);
   void Write(Type);
   void Write(SignedType);
+  void Write(TypeEnum);
   void Write(const Var&);
   void Write(const GlobalVar&);
   void Write(const StackVar&);
@@ -171,8 +177,9 @@ class CWriter {
   void WriteElemInitializers();
   void WriteFuncs();
   void Write(const Func&);
-  void WriteParams(const Func&);
-  void WriteLocals(const Func&);
+  void WriteParams();
+  void WriteLocals();
+  void WriteStackVarDeclarations();
   void Write(const Block&);
   void Write(const ExprList&);
 
@@ -201,9 +208,11 @@ class CWriter {
   int indent_ = 0;
   NextChar next_char_ = NextChar::None;
 
-  std::map<std::string, std::string> global_syms_;
-  std::map<std::string, std::string> local_syms_;
-  std::map<StackTypePair, std::string> stack_var_syms_;
+  SymbolMap global_sym_map_;
+  SymbolMap local_sym_map_;
+  StackVarSymbolMap stack_var_sym_map_;
+  SymbolSet global_syms_;
+  SymbolSet local_syms_;
   TypeVector type_stack_;
   std::vector<Label> label_stack_;
 
@@ -228,10 +237,41 @@ typedef int32_t s32;
 typedef uint64_t u64;
 typedef int64_t s64;
 
-void trap(int);
+typedef enum Type { I32, I64, F32, F64 } Type;
+typedef void (*Anyfunc)();
+typedef struct Elem { u32 func_type; Anyfunc func; } Elem;
+typedef struct Memory { u8* data; size_t len; } Memory;
+typedef struct Table { Elem* data; size_t len; } Table;
+
 u32 register_func_type(u32 params, u32 results, ...);
 void init_data_segment(u32 addr, u8 *data, size_t len);
 void init_elem_segment(u32 addr, Elem *data, size_t len);
+
+#define I32LOAD(o) 0
+#define I64LOAD(o) 0
+#define F32LOAD(o) 0
+#define F64LOAD(o) 0
+#define I32LOAD8S(o) 0
+#define I64LOAD8S(o) 0
+#define I32LOAD8U(o) 0
+#define i64LOAD8U(o) 0
+#define I32LOAD16S(o) 0
+#define I64LOAD16S(o) 0
+#define I32LOAD16U(o) 0
+#define I32LOAD16U(o) 0
+#define I64LOAD32S(o) 0
+#define I64LOAD32U(o) 0
+#define I32STORE(o, v)
+#define I64STORE(o, v)
+#define F32STORE(o, v)
+#define F64STORE(o, v)
+#define I32STORE8(o, v)
+#define I64STORE8(o, v)
+#define I32STORE16(o, v)
+#define I64STORE16(o, v)
+#define I64STORE32(o, v)
+#define CALL_INDIRECT(x, ...) 0
+#define UNREACHABLE
 
 )";
 
@@ -276,38 +316,64 @@ void CWriter::PopLabel() {
   label_stack_.pop_back();
 }
 
-std::string CWriter::LegalizeName(const std::string& name) {
-  // Skip leading $.
-  if (name.size() <= 1)
+std::string CWriter::LegalizeName(string_view name) {
+  if (name.empty())
     return "_";
 
   std::string result;
-  result = isalpha(name[1]) ? name[1] : '_';
-  for (size_t i = 2; i < name.size(); ++i)
+  result = isalpha(name[0]) ? name[0] : '_';
+  for (size_t i = 1; i < name.size(); ++i)
     result += isalnum(name[i]) ? name[i] : '_';
 
   return result;
 }
 
-std::string CWriter::DefineName(SymbolMap* map, const std::string& name) {
+std::string CWriter::DefineName(SymbolSet* set, string_view name) {
   std::string legal = LegalizeName(name);
-  if (map->find(legal) != map->end()) {
+  if (set->find(legal) != set->end()) {
     std::string base = legal + "_";;
     size_t count = 0;
     do {
-      legal = base + std::to_string(count);
-    } while (map->find(legal) != map->end());
+      legal = base + std::to_string(count++);
+    } while (set->find(legal) != set->end());
   }
-  map->insert(SymbolMap::value_type(name, legal));
+  set->insert(legal);
   return legal;
 }
 
-void CWriter::Indent() {
-  indent_ += INDENT_SIZE;
+string_view StripLeadingDollar(string_view name) {
+  assert(!name.empty() && name[0] == '$');
+  name.remove_prefix(1);
+  return name;
 }
 
-void CWriter::Dedent() {
-  indent_ -= INDENT_SIZE;
+std::string CWriter::DefineGlobalName(const std::string& name) {
+  std::string unique = DefineName(&global_syms_, StripLeadingDollar(name));
+  global_sym_map_.insert(SymbolMap::value_type(name, unique));
+  return unique;
+}
+
+std::string CWriter::DefineLocalName(const std::string& name) {
+  std::string unique = DefineName(&local_syms_, StripLeadingDollar(name));
+  local_sym_map_.insert(SymbolMap::value_type(name, unique));
+  return unique;
+}
+
+std::string CWriter::DefineStackVarName(Index index,
+                                        Type type,
+                                        string_view name) {
+  std::string unique = DefineName(&local_syms_, name);
+  StackTypePair stp = {index, type};
+  stack_var_sym_map_.insert(StackVarSymbolMap::value_type(stp, unique));
+  return unique;
+}
+
+void CWriter::Indent(int size) {
+  indent_ += size;
+}
+
+void CWriter::Dedent(int size) {
+  indent_ -= size;
   assert(indent_ >= 0);
 }
 
@@ -386,13 +452,13 @@ void CWriter::Write(const std::string& s) {
 }
 
 void CWriter::Write(const LocalName& name) {
-  assert(local_syms_.count(name.name) == 1);
-  Write(local_syms_[name.name]);
+  assert(local_sym_map_.count(name.name) == 1);
+  Write(local_sym_map_[name.name]);
 }
 
 void CWriter::Write(const GlobalName& name) {
-  assert(global_syms_.count(name.name) == 1);
-  Write(global_syms_[name.name]);
+  assert(global_sym_map_.count(name.name) == 1);
+  Write(global_sym_map_[name.name]);
 }
 
 void CWriter::Write(const Var& var) {
@@ -406,11 +472,29 @@ void CWriter::Write(const GlobalVar& var) {
 }
 
 void CWriter::Write(const StackVar& sv) {
-  // assert(sv.index < type_stack_.size());
-  Index top = type_stack_.size() - 1;
-  // TODO check if name is already used.
-  Write("s");
-  Write(top - sv.index);
+  Index index = type_stack_.size() - 1 - sv.index;
+  Type type = sv.type;
+  if (type == Type::Any) {
+    assert(index < type_stack_.size());
+    type = type_stack_[index];
+  }
+
+  StackTypePair stp = {index, type};
+  auto iter = stack_var_sym_map_.find(stp);
+  if (iter == stack_var_sym_map_.end()) {
+    std::string name;
+    switch (type) {
+      case Type::I32: name = 'i'; break;
+      case Type::I64: name = 'j'; break;
+      case Type::F32: name = 'f'; break;
+      case Type::F64: name = 'd'; break;
+      default: WABT_UNREACHABLE;
+    }
+    name += std::to_string(index);
+    Write(DefineStackVarName(index, type, name));
+  } else {
+    Write(iter->second);
+  }
 }
 
 void CWriter::Write(const CopyLabelVar& clv) {
@@ -430,6 +514,17 @@ void CWriter::Write(Type type) {
     case Type::I64: Write("u64"); break;
     case Type::F32: Write("f32"); break;
     case Type::F64: Write("f64"); break;
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+void CWriter::Write(TypeEnum type) {
+  switch (type.type) {
+    case Type::I32: Write("I32"); break;
+    case Type::I64: Write("I64"); break;
+    case Type::F32: Write("F32"); break;
+    case Type::F64: Write("F64"); break;
     default:
       WABT_UNREACHABLE;
   }
@@ -516,10 +611,10 @@ void CWriter::WriteFuncTypes() {
     Write("  func_types[", func_type_index, "] = register_func_type(",
           num_params, ", ", num_results);
     for (Index i = 0; i < num_params; ++i)
-      Writef(", %s", GetTypeName(func_type->GetParamType(i)));
+      Write(", ", TypeEnum(func_type->GetParamType(i)));
 
     for (Index i = 0; i < num_results; ++i)
-      Writef(", %s", GetTypeName(func_type->GetResultType(i)));
+      Write(", ", TypeEnum(func_type->GetResultType(i)));
 
     Write(");", Newline());
     ++func_type_index;
@@ -531,8 +626,13 @@ void CWriter::WriteFuncDeclarations() {
   if (module_->funcs.empty())
     return;
 
+  Index func_index = 0;
   for (Func* func : module_->funcs) {
-    Write("static ", ResultType(func->decl.sig.result_types), " ",
+    bool is_import = func_index < module_->num_func_imports;
+    if (!is_import)
+      Write("static ");
+
+    Write(ResultType(func->decl.sig.result_types), " ",
           DefineGlobalName(func->name), "(");
     for (Index i = 0; i < func->GetNumParams(); ++i) {
       if (i != 0)
@@ -540,6 +640,7 @@ void CWriter::WriteFuncDeclarations() {
       Write(func->GetParamType(i));
     }
     Write(");", Newline());
+    ++func_index;
   }
 }
 
@@ -547,38 +648,41 @@ void CWriter::WriteGlobals() {
   if (module_->globals.empty())
     return;
 
+  Index global_index = 0;
   for (Global* global : module_->globals) {
-    Write("static ", global->type, " ", DefineGlobalName(global->name));
+    bool is_import = global_index < module_->num_global_imports;
+    Write(is_import ? "extern " : "static ");
+    Write(global->type, " ", DefineGlobalName(global->name));
     if (!global->init_expr.empty()) {
       Write(" = ");
       WriteInitExpr(global->init_expr);
     }
     Write(";", Newline());
+    ++global_index;
   }
 }
 
 void CWriter::WriteMemories() {
   assert(module_->memories.size() <= 1);
+  Index memory_index = 0;
   for (Memory* memory : module_->memories) {
+    bool is_import = memory_index < module_->num_memory_imports;
     WABT_USE(memory);
-    Write("typedef struct Memory { u8* data; size_t len; } Memory;", Newline());
-    Write(
-        "typedef struct DataSegment { u32 offset; u8* data; size_t len; } "
-        "DataSegment;",
-        Newline());
-    Write("static Memory mem;", Newline());
+    Write(is_import ? "extern " : "static ");
+    Write("Memory mem;", Newline());
+    ++memory_index;
   }
 }
 
 void CWriter::WriteTables() {
   assert(module_->tables.size() <= 1);
+  Index table_index = 0;
   for (Table* table : module_->tables) {
+    bool is_import = table_index < module_->num_table_imports;
     WABT_USE(table);
-    Write("typedef void (*Anyfunc)();", Newline());
-    Write("typedef struct Elem { u32 func_type; Anyfunc func; } Elem;",
-          Newline());
-    Write("typedef struct Table { Elem* data; size_t len; } Table;", Newline());
-    Write("static Table table;", Newline());
+    Write(is_import ? "extern " : "static ");
+    Write("Table table;", Newline());
+    ++table_index;
   }
 }
 
@@ -626,7 +730,7 @@ void CWriter::WriteElemInitializers() {
       const Func* func = module_->GetFunc(var);
       Index func_type_index = module_->GetFuncTypeIndex(func->decl.type_var);
 
-      Write("{", func_type_index, ", ", GlobalName(func->name), "}, ");
+      Write("{", func_type_index, ", (Anyfunc)", GlobalName(func->name), "}, ");
 
       if ((++i % 8) == 0)
         Write(Newline());
@@ -648,22 +752,29 @@ void CWriter::WriteElemInitializers() {
 }
 
 void CWriter::WriteFuncs() {
-  for (const Func* func : module_->funcs)
-    Write(*func);
+  Index func_index = 0;
+  for (const Func* func : module_->funcs) {
+    bool is_import = func_index < module_->num_func_imports;
+    if (!is_import)
+      Write(*func);
+    ++func_index;
+  }
 }
 
 void CWriter::Write(const Func& func) {
   func_ = &func;
   local_syms_.clear();
+  local_sym_map_.clear();
+  stack_var_sym_map_.clear();
 
   Write("static ", ResultType(func.decl.sig.result_types), " ",
         GlobalName(func.name), "(");
-  WriteParams(func);
+  WriteParams();
+  WriteLocals();
 
   stream_ = &func_stream_;
   stream_->ClearOffset();
 
-  WriteLocals(func);
   ResetTypeStack(0);
   Write(func.exprs);
   ResetTypeStack(0);
@@ -675,6 +786,8 @@ void CWriter::Write(const Func& func) {
   }
 
   stream_ = module_stream_;
+  WriteStackVarDeclarations();
+
   std::unique_ptr<OutputBuffer> buf = func_stream_.ReleaseOutputBuffer();
   stream_->WriteData(buf->data.data(), buf->data.size());
 
@@ -684,39 +797,78 @@ void CWriter::Write(const Func& func) {
   func_ = nullptr;
 }
 
-void CWriter::WriteParams(const Func& func) {
+void CWriter::WriteParams() {
   std::vector<std::string> index_to_name;
-  MakeTypeBindingReverseMapping(func.decl.sig.param_types, func.param_bindings,
-                                &index_to_name);
-  for (Index i = 0; i < func.GetNumParams(); ++i) {
-    if (i != 0)
+  MakeTypeBindingReverseMapping(func_->decl.sig.param_types,
+                                func_->param_bindings, &index_to_name);
+  Indent(4);
+  for (Index i = 0; i < func_->GetNumParams(); ++i) {
+    if (i != 0) {
       Write(", ");
-    Write(func.GetParamType(i), " ", DefineLocalName(index_to_name[i]));
+      if ((i % 8) == 0)
+        Write(Newline());
+    }
+    Write(func_->GetParamType(i), " ", DefineLocalName(index_to_name[i]));
   }
+  Dedent(4);
   Write(") ", OpenBrace());
 }
 
-void CWriter::WriteLocals(const Func& func) {
+void CWriter::WriteLocals() {
   std::vector<std::string> index_to_name;
-  MakeTypeBindingReverseMapping(func.local_types, func.local_bindings,
+  MakeTypeBindingReverseMapping(func_->local_types, func_->local_bindings,
                                 &index_to_name);
   for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
     Index local_index = 0;
     size_t count = 0;
-    for (Type local_type : func.local_types) {
+    for (Type local_type : func_->local_types) {
       if (local_type == type) {
-        if (count++ == 0) {
+        if (count == 0) {
           Write(type, " ");
+          Indent(4);
         } else {
           Write(", ");
+          if ((count % 8) == 0)
+            Write(Newline());
         }
 
         Write(DefineLocalName(index_to_name[local_index]), " = 0");
+        ++count;
       }
       ++local_index;
     }
-    if (count != 0)
+    if (count != 0) {
+      Dedent(4);
       Write(";", Newline());
+    }
+  }
+}
+
+void CWriter::WriteStackVarDeclarations() {
+  for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
+    size_t count = 0;
+    for (const auto& pair: stack_var_sym_map_) {
+      Type stp_type = pair.first.second;
+      const std::string& name = pair.second;
+
+      if (stp_type == type) {
+        if (count == 0) {
+          Write(type, " ");
+          Indent(4);
+        } else {
+          Write(", ");
+          if ((count % 8) == 0)
+            Write(Newline());
+        }
+
+        Write(name);
+        ++count;
+      }
+    }
+    if (count != 0) {
+      Dedent(4);
+      Write(";", Newline());
+    }
   }
 }
 
@@ -739,7 +891,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Block: {
         const Block& block = cast<BlockExpr>(&expr)->block;
         std::string label = DefineLocalName(block.label);
-        Write(block, " ", label, ":", Newline());
+        Write(block, " ", label, ":;", Newline());
         break;
       }
 
@@ -801,7 +953,7 @@ void CWriter::Write(const ExprList& exprs) {
         assert(type_stack_.size() >= num_params);
         if (num_results > 0) {
           assert(num_results == 1);
-          Write(StackVar(num_params - 1), " = ");
+          Write(StackVar(num_params - 1, func.GetResultType(0)), " = ");
         }
 
         Write(GlobalVar(var), "(");
@@ -823,7 +975,7 @@ void CWriter::Write(const ExprList& exprs) {
         assert(type_stack_.size() > num_params);
         if (num_results > 0) {
           assert(num_results == 1);
-          Write(StackVar(num_params), " = ");
+          Write(StackVar(num_params, decl.GetResultType(0)), " = ");
         }
 
         Write("CALL_INDIRECT(", StackVar(num_params));
@@ -911,7 +1063,8 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Return:
         Write("return");
         if (!func_->decl.sig.result_types.empty())
-          Write(" ", StackVar(0), ";", Newline());
+          Write(" ", StackVar(0));
+        Write(";", Newline());
         return;
 
       case ExprType::Select:
@@ -966,7 +1119,7 @@ void CWriter::Write(const ExprList& exprs) {
 }
 
 void CWriter::WriteSimpleUnaryExpr(const char* op, Type result_type) {
-  Write(StackVar(0, result_type), " = ", op, "(", StackVar(0), ")", Newline());
+  Write(StackVar(0, result_type), " = ", op, "(", StackVar(0), ");", Newline());
 }
 
 void CWriter::WriteSimpleBinaryExpr(const char* op, AssignOp assign_op) {
