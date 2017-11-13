@@ -669,8 +669,10 @@ struct Module {
   const Func* GetFunc(const Var&) const;
   Func* GetFunc(const Var&);
   Index GetTableIndex(const Var&) const;
+  const Table* GetTable(const Var&) const;
   Table* GetTable(const Var&);
   Index GetMemoryIndex(const Var&) const;
+  const Memory* GetMemory(const Var&) const;
   Memory* GetMemory(const Var&);
   Index GetGlobalIndex(const Var&) const;
   const Global* GetGlobal(const Var&) const;

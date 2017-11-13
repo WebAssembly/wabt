@@ -160,11 +160,19 @@ Global* Module::GetGlobal(const Var& var) {
   return globals[index];
 }
 
+const Table* Module::GetTable(const Var& var) const {
+  return const_cast<Module*>(this)->GetTable(var);
+}
+
 Table* Module::GetTable(const Var& var) {
   Index index = table_bindings.FindIndex(var);
   if (index >= tables.size())
     return nullptr;
   return tables[index];
+}
+
+const Memory* Module::GetMemory(const Var& var) const {
+  return const_cast<Module*>(this)->GetMemory(var);
 }
 
 Memory* Module::GetMemory(const Var& var) {
