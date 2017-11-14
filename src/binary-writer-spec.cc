@@ -95,13 +95,13 @@ class BinaryWriterSpec {
   size_t num_modules_ = 0;
 
   static const char* kWasmExtension;
-  static const char* kWastExtension;
+  static const char* kWatExtension;
 };
 
 // static
 const char* BinaryWriterSpec::kWasmExtension = ".wasm";
 // static
-const char* BinaryWriterSpec::kWastExtension = ".wast";
+const char* BinaryWriterSpec::kWatExtension = ".wat";
 
 BinaryWriterSpec::BinaryWriterSpec(const char* source_filename,
                                    const WriteBinarySpecOptions* spec_options)
@@ -361,7 +361,7 @@ void BinaryWriterSpec::WriteInvalidModule(const ScriptModule& module,
       break;
 
     case ScriptModuleType::Quoted:
-      extension = kWastExtension;
+      extension = kWatExtension;
       module_type = "text";
       break;
   }
