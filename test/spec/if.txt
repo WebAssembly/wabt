@@ -105,52 +105,52 @@ out/third_party/testsuite/if.wast:400: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [i64]
   0000023: error: OnBrExpr callback failed
 out/third_party/testsuite/if.wast:411: assert_malformed passed:
-  out/third_party/testsuite/if/if.35.wast:1:14: error: unexpected label "$l"
+  out/third_party/testsuite/if/if.35.wat:1:14: error: unexpected label "$l"
   (func if end $l)
                ^^
 out/third_party/testsuite/if.wast:415: assert_malformed passed:
-  out/third_party/testsuite/if/if.36.wast:1:17: error: mismatching label "$a" != "$l"
+  out/third_party/testsuite/if/if.36.wat:1:17: error: mismatching label "$a" != "$l"
   (func if $a end $l)
                   ^^
 out/third_party/testsuite/if.wast:419: assert_malformed passed:
-  out/third_party/testsuite/if/if.37.wast:1:15: error: unexpected label "$l"
+  out/third_party/testsuite/if/if.37.wat:1:15: error: unexpected label "$l"
   (func if else $l end)
                 ^^
 out/third_party/testsuite/if.wast:423: assert_malformed passed:
-  out/third_party/testsuite/if/if.38.wast:1:18: error: mismatching label "$a" != "$l"
+  out/third_party/testsuite/if/if.38.wat:1:18: error: mismatching label "$a" != "$l"
   (func if $a else $l end)
                    ^^
 out/third_party/testsuite/if.wast:427: assert_malformed passed:
-  out/third_party/testsuite/if/if.39.wast:1:19: error: unexpected label "$l"
+  out/third_party/testsuite/if/if.39.wat:1:19: error: unexpected label "$l"
   (func if else end $l)
                     ^^
 out/third_party/testsuite/if.wast:431: assert_malformed passed:
-  out/third_party/testsuite/if/if.40.wast:1:15: error: unexpected label "$l"
+  out/third_party/testsuite/if/if.40.wat:1:15: error: unexpected label "$l"
   (func if else $l end $l)
                 ^^
-  out/third_party/testsuite/if/if.40.wast:1:22: error: unexpected label "$l"
+  out/third_party/testsuite/if/if.40.wat:1:22: error: unexpected label "$l"
   (func if else $l end $l)
                        ^^
 out/third_party/testsuite/if.wast:435: assert_malformed passed:
-  out/third_party/testsuite/if/if.41.wast:1:15: error: unexpected label "$l1"
+  out/third_party/testsuite/if/if.41.wat:1:15: error: unexpected label "$l1"
   (func if else $l1 end $l2)
                 ^^^
-  out/third_party/testsuite/if/if.41.wast:1:23: error: unexpected label "$l2"
+  out/third_party/testsuite/if/if.41.wat:1:23: error: unexpected label "$l2"
   (func if else $l1 end $l2)
                         ^^^
 out/third_party/testsuite/if.wast:439: assert_malformed passed:
-  out/third_party/testsuite/if/if.42.wast:1:22: error: mismatching label "$a" != "$l"
+  out/third_party/testsuite/if/if.42.wat:1:22: error: mismatching label "$a" != "$l"
   (func if $a else end $l)
                        ^^
 out/third_party/testsuite/if.wast:443: assert_malformed passed:
-  out/third_party/testsuite/if/if.43.wast:1:25: error: mismatching label "$a" != "$l"
+  out/third_party/testsuite/if/if.43.wat:1:25: error: mismatching label "$a" != "$l"
   (func if $a else $a end $l)
                           ^^
 out/third_party/testsuite/if.wast:447: assert_malformed passed:
-  out/third_party/testsuite/if/if.44.wast:1:18: error: mismatching label "$a" != "$l"
+  out/third_party/testsuite/if/if.44.wat:1:18: error: mismatching label "$a" != "$l"
   (func if $a else $l end $l)
                    ^^
-  out/third_party/testsuite/if/if.44.wast:1:25: error: mismatching label "$a" != "$l"
+  out/third_party/testsuite/if/if.44.wat:1:25: error: mismatching label "$a" != "$l"
   (func if $a else $l end $l)
                           ^^
 82/82 tests passed.

@@ -29,11 +29,11 @@ out/third_party/testsuite/loop.wast:295: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
 out/third_party/testsuite/loop.wast:303: assert_malformed passed:
-  out/third_party/testsuite/loop/loop.10.wast:1:16: error: unexpected label "$l"
+  out/third_party/testsuite/loop/loop.10.wat:1:16: error: unexpected label "$l"
   (func loop end $l)
                  ^^
 out/third_party/testsuite/loop.wast:307: assert_malformed passed:
-  out/third_party/testsuite/loop/loop.11.wast:1:19: error: mismatching label "$a" != "$l"
+  out/third_party/testsuite/loop/loop.11.wat:1:19: error: mismatching label "$a" != "$l"
   (func loop $a end $l)
                     ^^
 53/53 tests passed.
