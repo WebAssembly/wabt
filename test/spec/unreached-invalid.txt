@@ -262,8 +262,10 @@ out/third_party/testsuite/unreached-invalid.wast:521: assert_invalid passed:
   error: type mismatch in br_table, expected [i32] but got [f32]
   0000025: error: OnBrTableExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:527: assert_invalid passed:
+  error: br_table labels have inconsistent types: expected f32, got void
   0000023: error: OnBrTableExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:539: assert_invalid passed:
+  error: br_table labels have inconsistent types: expected f32, got f64
   0000023: error: OnBrTableExpr callback failed
 out/third_party/testsuite/unreached-invalid.wast:554: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]

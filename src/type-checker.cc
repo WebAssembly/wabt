@@ -358,7 +358,11 @@ Result TypeChecker::OnBrTableTarget(Index depth) {
 
   // Make sure this label's signature is consistent with the previous labels'
   // signatures.
-  result |= CheckType(br_table_sig_, label_sig);
+  if (Failed(CheckType(br_table_sig_, label_sig))) {
+    result |= Result::Error;
+    PrintError("br_table labels have inconsistent types: expected %s, got %s",
+               GetTypeName(br_table_sig_), GetTypeName(label_sig));
+  }
   br_table_sig_ = label_sig;
 
   return result;
