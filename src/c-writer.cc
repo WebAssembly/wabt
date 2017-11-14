@@ -156,8 +156,7 @@ class CWriter {
   void Write(OpenBrace);
   void Write(CloseBrace);
   void Write(Index);
-  void Write(const char*);
-  void Write(const std::string&);
+  void Write(string_view);
   void Write(const LocalName&);
   void Write(const GlobalName&);
   void Write(Type);
@@ -170,6 +169,7 @@ class CWriter {
   void Write(const ResultType&);
   void Write(const Const&);
   void WriteInitExpr(const ExprList&);
+  void InitGlobalSymbols();
   void WriteHeader();
   void WriteFuncTypes();
   void WriteImports();
@@ -179,6 +179,8 @@ class CWriter {
   void WriteGlobal(const Global&, const std::string&);
   void WriteMemories();
   void WriteMemory(const Memory&, const std::string&);
+  void WriteDefineLoad(string_view name, string_view rest);
+  void WriteDefineStore(string_view name, string_view rest);
   void WriteTables();
   void WriteTable(const Table&, const std::string&);
   void WriteDataInitializers();
@@ -233,10 +235,112 @@ class CWriter {
   // Index func_type_index_ = 0;
 };
 
+static const char* s_global_symbols[] = {
+  // keywords
+  "_Alignas", "_Alignof", "asm", "_Atomic", "auto", "_Bool", "break", "case",
+  "char", "_Complex", "const", "continue", "default", "do", "double", "else",
+  "enum", "extern", "float", "for", "_Generic", "goto", "if", "_Imaginary",
+  "inline", "int", "long", "_Noreturn", "_Pragma", "register", "restrict",
+  "return", "short", "signed", "sizeof", "static", "_Static_assert", "struct",
+  "switch", "_Thread_local", "typedef", "union", "unsigned", "void", "volatile",
+  "while",
+
+  // math.h
+  "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cbrt",
+  "ceil", "copysign", "cos", "cosh", "double_t", "erf", "erfc", "exp", "exp2",
+  "expm1", "fabs", "fdim", "float_t", "floor", "fma", "fmax", "fmin", "fmod",
+  "fpclassify", "FP_FAST_FMA", "FP_FAST_FMAF", "FP_FAST_FMAL", "FP_ILOGB0",
+  "FP_ILOGBNAN", "FP_INFINITE", "FP_NAN", "FP_NORMAL", "FP_SUBNORMAL",
+  "FP_ZERO", "frexp", "HUGE_VAL", "HUGE_VALF", "HUGE_VALL", "hypot", "ilogb",
+  "INFINITY", "isfinite", "isgreater", "isgreaterequal", "isinf", "isless",
+  "islessequal", "islessgreater", "isnan", "isnormal", "isunordered", "ldexp",
+  "lgamma", "llrint", "llround", "log", "log10", "log1p", "log2", "logb",
+  "lrint", "lround", "MATH_ERREXCEPT", "math_errhandling", "MATH_ERRNO", "modf",
+  "nan", "NAN", "nanf", "nanl", "nearbyint", "nextafter", "nexttoward", "pow",
+  "remainder", "remquo", "rint", "round", "scalbln", "scalbn", "signbit", "sin",
+  "sinh", "sqrt", "tan", "tanh", "tgamma", "trunc",
+
+  // stdint.h
+  "INT16_C", "INT16_MAX", "INT16_MIN", "int16_t", "INT32_MAX", "INT32_MIN",
+  "int32_t", "INT64_C", "INT64_MAX", "INT64_MIN", "int64_t", "INT8_C",
+  "INT8_MAX", "INT8_MIN", "int8_t", "INT_FAST16_MAX", "INT_FAST16_MIN",
+  "int_fast16_t", "INT_FAST32_MAX", "INT_FAST32_MIN", "int_fast32_t",
+  "INT_FAST64_MAX", "INT_FAST64_MIN", "int_fast64_t", "INT_FAST8_MAX",
+  "INT_FAST8_MIN", "int_fast8_t", "INT_LEAST16_MAX", "INT_LEAST16_MIN",
+  "int_least16_t", "INT_LEAST32_MAX", "INT_LEAST32_MIN", "int_least32_t",
+  "INT_LEAST64_MAX", "INT_LEAST64_MIN", "int_least64_t", "INT_LEAST8_MAX",
+  "INT_LEAST8_MIN", "int_least8_t", "INTMAX_C", "INTMAX_MAX", "INTMAX_MIN",
+  "intmax_t", "INTPTR_MAX", "INTPTR_MIN", "intptr_t", "PTRDIFF_MAX",
+  "PTRDIFF_MIN", "SIG_ATOMIC_MAX", "SIG_ATOMIC_MIN", "SIZE_MAX", "UINT16_C",
+  "UINT16_MAX", "uint16_t", "UINT32_C", "UINT32_MAX", "uint32_t", "UINT64_C",
+  "UINT64_MAX", "uint64_t", "UINT8_MAX", "uint8_t", "UINT_FAST16_MAX",
+  "uint_fast16_t", "UINT_FAST32_MAX", "uint_fast32_t", "UINT_FAST64_MAX",
+  "uint_fast64_t", "UINT_FAST8_MAX", "uint_fast8_t", "UINT_LEAST16_MAX",
+  "uint_least16_t", "UINT_LEAST32_MAX", "uint_least32_t", "UINT_LEAST64_MAX",
+  "uint_least64_t", "UINT_LEAST8_MAX", "uint_least8_t", "UINTMAX_C",
+  "UINTMAX_MAX", "uintmax_t", "UINTPTR_MAX", "uintptr_t", "UNT8_C", "WCHAR_MAX",
+  "WCHAR_MIN", "WINT_MAX", "WINT_MIN",
+
+  // stdlib.h
+  "abort", "abs", "atexit", "atof", "atoi", "atol", "atoll", "at_quick_exit",
+  "bsearch", "calloc", "div", "div_t", "exit", "_Exit", "EXIT_FAILURE",
+  "EXIT_SUCCESS", "free", "getenv", "labs", "ldiv", "ldiv_t", "llabs", "lldiv",
+  "lldiv_t", "malloc", "MB_CUR_MAX", "mblen", "mbstowcs", "mbtowc", "qsort",
+  "quick_exit", "rand", "RAND_MAX", "realloc", "size_t", "srand", "strtod",
+  "strtof", "strtol", "strtold", "strtoll", "strtoul", "strtoull", "system",
+  "wcstombs", "wctomb",
+
+  // string.h
+  "memchr", "memcmp", "memcpy", "memmove", "memset", "NULL", "size_t", "strcat",
+  "strchr", "strcmp", "strcoll", "strcpy", "strcspn", "strerror", "strlen",
+  "strncat", "strncmp", "strncpy", "strpbrk", "strrchr", "strspn", "strstr",
+  "strtok", "strxfrm",
+
+  // defined
+  "Anyfunc",
+  "CALL_INDIRECT",
+  "DEFINE_LOAD",
+  "DEFINE_STORE",
+  "Elem",
+  "EXPORT_FUNC",
+  "EXPORT_GLOBAL",
+  "EXPORT_MEMORY",
+  "EXPORT_TABLE",
+  "f32",
+  "F32",
+  "f64",
+  "F64",
+  "I32",
+  "I64",
+  "init",
+  "init_data_segment",
+  "init_elem_segment",
+  "MEMCHECK",
+  "Memory",
+  "register_func_type",
+  "s16",
+  "s32",
+  "s64",
+  "s8",
+  "Table",
+  "trap",
+  "Trap",
+  "TRAP_OOB",
+  "Type",
+  "u16",
+  "u32",
+  "u64",
+  "u8",
+  "UNREACHABLE",
+
+};
+
 static const char s_header[] =
-    R"(#include <math.h>
+    R"(#include <assert.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef uint8_t u8;
 typedef int8_t s8;
@@ -246,49 +350,55 @@ typedef uint32_t u32;
 typedef int32_t s32;
 typedef uint64_t u64;
 typedef int64_t s64;
+typedef float f32;
+typedef double f64;
 
+typedef enum Trap { TRAP_OOB, TRAP_CALL_INDIRECT } Trap;
 typedef enum Type { I32, I64, F32, F64 } Type;
 typedef void (*Anyfunc)();
 typedef struct Elem { u32 func_type; Anyfunc func; } Elem;
 typedef struct Memory { u8* data; size_t len; } Memory;
 typedef struct Table { Elem* data; size_t len; } Table;
 
+extern void trap(Trap) __attribute__((noreturn));
 extern u32 register_func_type(u32 params, u32 results, ...);
 extern void init_data_segment(u32 addr, const u8 *data, size_t len);
-extern void init_elem_segment(u32 addr, const Elem *data, size_t len);
+extern void init_elem_segment(u32 idx, const Elem *data, size_t len);
 
 void init(void);
+
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#define LIKELY(x) __builtin_expect(!!(x), 1)
 
 #define EXPORT_FUNC(sym, name) void sym(void) __attribute__((alias(#name)))
 #define EXPORT_GLOBAL(sym, name) extern int sym __attribute__((alias(#name)))
 #define EXPORT_MEMORY(sym, name) extern int sym __attribute__((alias(#name)))
 #define EXPORT_TABLE(sym, name) extern int sym __attribute__((alias(#name)))
 
-#define I32LOAD(o) 0
-#define I64LOAD(o) 0
-#define F32LOAD(o) 0
-#define F64LOAD(o) 0
-#define I32LOAD8S(o) 0
-#define I64LOAD8S(o) 0
-#define I32LOAD8U(o) 0
-#define i64LOAD8U(o) 0
-#define I32LOAD16S(o) 0
-#define I64LOAD16S(o) 0
-#define I32LOAD16U(o) 0
-#define I32LOAD16U(o) 0
-#define I64LOAD32S(o) 0
-#define I64LOAD32U(o) 0
-#define I32STORE(o, v)
-#define I64STORE(o, v)
-#define F32STORE(o, v)
-#define F64STORE(o, v)
-#define I32STORE8(o, v)
-#define I64STORE8(o, v)
-#define I32STORE16(o, v)
-#define I64STORE16(o, v)
-#define I64STORE32(o, v)
-#define CALL_INDIRECT(x, ...) 0
-#define UNREACHABLE
+#define MEMCHECK(mem, a, t)  \
+  if (UNLIKELY((a) + sizeof(t) > mem.len)) trap(TRAP_OOB)
+
+#define DEFINE_LOAD(mem, name, t1, t2, t3)        \
+  static inline t3 name(u32 addr) {               \
+    MEMCHECK(mem, addr, t1);                      \
+    t1 result;                                    \
+    memcpy(&result, &mem.data[addr], sizeof(t1)); \
+    return (t3)(t2)result;                        \
+  }
+
+#define DEFINE_STORE(mem, name, t1, t2)            \
+  static inline void name(u32 addr, t2 value) {    \
+    MEMCHECK(mem, addr, t1);                       \
+    t1 wrapped = (t1)value;                        \
+    memcpy(&mem.data[addr], &wrapped, sizeof(t1)); \
+  }
+
+#define CALL_INDIRECT(table, t, ft, x, ...)                                 \
+  (((x) < table.len && table.data[x].func && table.data[x].func_type == ft) \
+       ? ((t)table.data[x].func)(__VA_ARGS__)                               \
+       : (trap(TRAP_CALL_INDIRECT), 0))
+
+#define UNREACHABLE __builtin_trap()
 
 )";
 
@@ -489,13 +599,7 @@ void CWriter::Write(Index index) {
   Writef("%" PRIindex, index);
 }
 
-void CWriter::Write(const char* s) {
-  size_t len = strlen(s);
-  WriteDataWithNextChar(s, len);
-  next_char_ = NextChar::None;
-}
-
-void CWriter::Write(const std::string& s) {
+void CWriter::Write(string_view s) {
   WriteDataWithNextChar(s.data(), s.size());
   next_char_ = NextChar::None;
 }
@@ -642,6 +746,11 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
   }
 }
 
+void CWriter::InitGlobalSymbols() {
+  for (const char* symbol : s_global_symbols)
+    global_syms_.insert(symbol);
+}
+
 void CWriter::WriteHeader() {
   Write(s_header);
 }
@@ -677,6 +786,7 @@ void CWriter::WriteImports() {
         WriteFuncDeclaration(func.decl,
                              DefineImportName(func.name, import->module_name,
                                               import->field_name));
+        Write(";", Newline());
         break;
       }
 
@@ -718,6 +828,7 @@ void CWriter::WriteFuncDeclarations() {
     if (!is_import) {
       Write("static ");
       WriteFuncDeclaration(func->decl, DefineGlobalName(func->name));
+      Write(";", Newline());
     }
     ++func_index;
   }
@@ -732,7 +843,7 @@ void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
       Write(", ");
     Write(decl.GetParamType(i));
   }
-  Write(");", Newline());
+  Write(")");
 }
 
 void CWriter::WriteGlobals() {
@@ -785,7 +896,40 @@ void CWriter::WriteMemories() {
 }
 
 void CWriter::WriteMemory(const Memory& memory, const std::string& name) {
-  Write("Memory ", name, ";", Newline());
+  Write("Memory ", name, ";", Newline(), Newline(true), Newline(true));
+  WriteDefineLoad(name, "i32_load, u32, u32, u32");
+  WriteDefineLoad(name, "i64_load, u64, u64, u64");
+  WriteDefineLoad(name, "f32_load, f32, f32, f32");
+  WriteDefineLoad(name, "f64_load, f64, f64, f64");
+  WriteDefineLoad(name, "i32_load8_s, s8, s32, u32");
+  WriteDefineLoad(name, "i64_load8_s, s8, s64, u64");
+  WriteDefineLoad(name, "i32_load8_u, u8, u32, u32");
+  WriteDefineLoad(name, "i64_load8_u, u8, u64, u64");
+  WriteDefineLoad(name, "i32_load16_s, s16, s32, u32");
+  WriteDefineLoad(name, "i64_load16_s, s16, s64, u64");
+  WriteDefineLoad(name, "i32_load16_u, u16, u32, u32");
+  WriteDefineLoad(name, "i64_load16_u, u16, u64, u64");
+  WriteDefineLoad(name, "i64_load32_s, s32, s64, u64");
+  WriteDefineLoad(name, "i64_load32_u, u32, u64, u64");
+
+  WriteDefineStore(name, "i32_store, u32, u32");
+  WriteDefineStore(name, "i64_store, u64, u64");
+  WriteDefineStore(name, "f32_store, f32, f32");
+  WriteDefineStore(name, "f64_store, f64, f64");
+  WriteDefineStore(name, "i32_store8, u8, u32");
+  WriteDefineStore(name, "i32_store16, u16, u32");
+  WriteDefineStore(name, "i64_store8, u8, u64");
+  WriteDefineStore(name, "i64_store16, u16, u64");
+  WriteDefineStore(name, "i64_store32, u32, u64");
+  Write(Newline(true), Newline(true));
+}
+
+void CWriter::WriteDefineLoad(string_view name, string_view rest) {
+  Write("DEFINE_LOAD(", name, ", ", rest, ")", Newline());
+}
+
+void CWriter::WriteDefineStore(string_view name, string_view rest) {
+  Write("DEFINE_STORE(", name, ", ", rest, ")", Newline());
 }
 
 void CWriter::WriteTables() {
@@ -1142,9 +1286,17 @@ void CWriter::Write(const ExprList& exprs) {
           Write(StackVar(num_params, decl.GetResultType(0)), " = ");
         }
 
-        Write("CALL_INDIRECT(", StackVar(num_params));
+        assert(module_->tables.size() == 1);
+        const Table* table = module_->tables[0];
+
+        assert(decl.has_func_type);
+        Index func_type_index = module_->GetFuncTypeIndex(decl.type_var);
+
+        Write("CALL_INDIRECT(", GlobalName(table->name), ", ");
+        WriteFuncDeclaration(decl, "(*)");
+        Write(", ", func_type_index, ", ", StackVar(0));
         for (Index i = 0; i < num_params; ++i) {
-          Write(", ", StackVar(num_params - i - 1));
+          Write(", ", StackVar(num_params - i));
         }
         Write(");", Newline());
         DropTypes(num_params + 1);
@@ -1543,52 +1695,54 @@ void CWriter::Write(const ConvertExpr& expr) {
 }
 
 void CWriter::Write(const LoadExpr& expr) {
-  const char* macro = nullptr;
+  const char* func = nullptr;
   switch (expr.opcode) {
-    case Opcode::I32Load: macro = "I32LOAD"; break;
-    case Opcode::I64Load: macro = "I64LOAD"; break;
-    case Opcode::F32Load: macro = "F32LOAD"; break;
-    case Opcode::F64Load: macro = "F64LOAD"; break;
-    case Opcode::I32Load8S: macro = "I32LOAD8S"; break;
-    case Opcode::I64Load8S: macro = "I64LOAD8S"; break;
-    case Opcode::I32Load8U: macro = "I32LOAD8U"; break;
-    case Opcode::I64Load8U: macro = "i64LOAD8U"; break;
-    case Opcode::I32Load16S: macro = "I32LOAD16S"; break;
-    case Opcode::I64Load16S: macro = "I64LOAD16S"; break;
-    case Opcode::I32Load16U: macro = "I32LOAD16U"; break;
-    case Opcode::I64Load16U: macro = "I32LOAD16U"; break;
-    case Opcode::I64Load32S: macro = "I64LOAD32S"; break;
-    case Opcode::I64Load32U: macro = "I64LOAD32U"; break;
+    case Opcode::I32Load: func = "i32_load"; break;
+    case Opcode::I64Load: func = "i64_load"; break;
+    case Opcode::F32Load: func = "f32_load"; break;
+    case Opcode::F64Load: func = "f64_load"; break;
+    case Opcode::I32Load8S: func = "i32_load8_s"; break;
+    case Opcode::I64Load8S: func = "i64_load8_s"; break;
+    case Opcode::I32Load8U: func = "i32_load8_u"; break;
+    case Opcode::I64Load8U: func = "i64_load8_u"; break;
+    case Opcode::I32Load16S: func = "i32_load16_s"; break;
+    case Opcode::I64Load16S: func = "i64_load16_s"; break;
+    case Opcode::I32Load16U: func = "i32_load16_u"; break;
+    case Opcode::I64Load16U: func = "i32_load16_u"; break;
+    case Opcode::I64Load32S: func = "i64_load32_s"; break;
+    case Opcode::I64Load32U: func = "i64_load32_u"; break;
 
     default:
       WABT_UNREACHABLE;
   }
 
-  Write(StackVar(0, expr.opcode.GetResultType()), " = ", macro, "(",
-        StackVar(0));
+  Type result_type = expr.opcode.GetResultType();
+  Write(StackVar(0, result_type), " = ", func, "(", StackVar(0));
   if (expr.offset != 0)
     Write(" + ", expr.offset);
   Write(");", Newline());
+  DropTypes(1);
+  PushType(result_type);
 }
 
 void CWriter::Write(const StoreExpr& expr) {
-  const char* macro = nullptr;
+  const char* func = nullptr;
   switch (expr.opcode) {
-    case Opcode::I32Store: macro = "I32STORE"; break;
-    case Opcode::I64Store: macro = "I64STORE"; break;
-    case Opcode::F32Store: macro = "F32STORE"; break;
-    case Opcode::F64Store: macro = "F64STORE"; break;
-    case Opcode::I32Store8: macro = "I32STORE8"; break;
-    case Opcode::I64Store8: macro = "I64STORE8"; break;
-    case Opcode::I32Store16: macro = "I32STORE16"; break;
-    case Opcode::I64Store16: macro = "I64STORE16"; break;
-    case Opcode::I64Store32: macro = "I64STORE32"; break;
+    case Opcode::I32Store: func = "i32_store"; break;
+    case Opcode::I64Store: func = "i64_store"; break;
+    case Opcode::F32Store: func = "f32_store"; break;
+    case Opcode::F64Store: func = "f64_store"; break;
+    case Opcode::I32Store8: func = "i32_store8"; break;
+    case Opcode::I64Store8: func = "i64_store8"; break;
+    case Opcode::I32Store16: func = "i32_store16"; break;
+    case Opcode::I64Store16: func = "i64_store16"; break;
+    case Opcode::I64Store32: func = "i64_store32"; break;
 
     default:
       WABT_UNREACHABLE;
   }
 
-  Write(macro, "(", StackVar(1));
+  Write(func, "(", StackVar(1));
   if (expr.offset != 0)
     Write(" + ", expr.offset);
   Write(", ", StackVar(0), ");", Newline());
@@ -1636,6 +1790,7 @@ Result CWriter::WriteModule(const Module& module) {
   WABT_USE(stream_);
 
   module_ = &module;
+  InitGlobalSymbols();
   WriteHeader();
   WriteFuncTypes();
   WriteImports();
