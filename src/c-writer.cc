@@ -1234,15 +1234,7 @@ void CWriter::WriteStackVarDeclarations() {
 void CWriter::Write(const Block& block) {
   size_t mark = MarkTypeStack();
   PushLabel(block);
-#if 0
-  Write(OpenBrace(), block.exprs, CloseBrace());
-#else
-  Write("/*{*/");
-  Indent();
   Write(Newline(), block.exprs);
-  Dedent();
-  Write(Newline(), "/*}*/");
-#endif
   ResetTypeStack(mark);
   PopLabel();
   PushTypes(block.sig);
@@ -1258,7 +1250,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Block: {
         const Block& block = cast<BlockExpr>(&expr)->block;
         std::string label = DefineLocalName(block.label);
-        Write(block, " ", label, ":;", Newline());
+        Write(block, label, ":;", Newline());
         break;
       }
 
@@ -1424,7 +1416,11 @@ void CWriter::Write(const ExprList& exprs) {
 
       case ExprType::Loop: {
         const Block& block = cast<LoopExpr>(&expr)->block;
-        Write(DefineLocalName(block.label), ": ", block, Newline());
+        Write(DefineLocalName(block.label), ": ");
+        Indent();
+        Write(block);
+        Dedent();
+        Write(Newline());
         break;
       }
 
