@@ -30,6 +30,8 @@
 
 #define INDENT_SIZE 2
 
+#define UNIMPLEMENTED(x) printf("unimplemented: %s\n", (x)), abort()
+
 namespace wabt {
 
 namespace {
@@ -200,9 +202,12 @@ class CWriter {
     Allowed,
   };
 
-  void WriteSimpleUnaryExpr(const char* op, Type result_type);
-  void WriteSimpleBinaryExpr(const char* op, AssignOp = AssignOp::Allowed);
-  void WriteSignedBinaryExpr(const char* op, Type);
+  void WriteSimpleUnaryExpr(Opcode, const char* op);
+  void WriteInfixBinaryExpr(Opcode,
+                            const char* op,
+                            AssignOp = AssignOp::Allowed);
+  void WritePrefixBinaryExpr(Opcode, const char* op);
+  void WriteSignedBinaryExpr(Opcode, const char* op);
   void Write(const BinaryExpr&);
   void Write(const CompareExpr&);
   void Write(const ConvertExpr&);
@@ -353,7 +358,9 @@ typedef int64_t s64;
 typedef float f32;
 typedef double f64;
 
-typedef enum Trap { TRAP_OOB, TRAP_CALL_INDIRECT } Trap;
+typedef enum Trap {
+  TRAP_OOB, TRAP_INT_OVERFLOW, TRAP_DIV_BY_ZERO, TRAP_INVALID_CONVERSION,
+  TRAP_UNREACHABLE, TRAP_CALL_INDIRECT } Trap;
 typedef enum Type { I32, I64, F32, F64 } Type;
 typedef void (*Anyfunc)();
 typedef struct Elem { u32 func_type; Anyfunc func; } Elem;
@@ -375,8 +382,10 @@ void init(void);
 #define EXPORT_MEMORY(sym, name) extern int sym __attribute__((alias(#name)))
 #define EXPORT_TABLE(sym, name) extern int sym __attribute__((alias(#name)))
 
+#define TRAP(x) (trap(TRAP_##x), 0)
+
 #define MEMCHECK(mem, a, t)  \
-  if (UNLIKELY((a) + sizeof(t) > mem.len)) trap(TRAP_OOB)
+  if (UNLIKELY((a) + sizeof(t) > mem.len)) TRAP(OOB)
 
 #define DEFINE_LOAD(mem, name, t1, t2, t3)        \
   static inline t3 name(u32 addr) {               \
@@ -396,9 +405,47 @@ void init(void);
 #define CALL_INDIRECT(table, t, ft, x, ...)                                 \
   (((x) < table.len && table.data[x].func && table.data[x].func_type == ft) \
        ? ((t)table.data[x].func)(__VA_ARGS__)                               \
-       : (trap(TRAP_CALL_INDIRECT), 0))
+       : TRAP(CALL_INDIRECT))
 
-#define UNREACHABLE __builtin_trap()
+#define DIVREM_S(op, ut, st, min, x, y)                      \
+   ((UNLIKELY((y) == 0)) ?                TRAP(DIV_BY_ZERO)  \
+  : (UNLIKELY((x) == min && (y) == -1)) ? TRAP(INT_OVERFLOW) \
+  : (ut)((st)(x) op (st)(y)))
+
+#define DIVREM_U(op, x, y) \
+  ((UNLIKELY((y) == 0)) ? TRAP(DIV_BY_ZERO) : ((x) op (y)))
+
+#define I32_DIV_S(x, y) DIVREM_S(/, u32, s32, INT32_MIN, x, y)
+#define I64_DIV_S(x, y) DIVREM_S(/, u64, s64, INT64_MIN, x, y)
+#define I32_REM_S(x, y) DIVREM_S(%, u32, s32, INT32_MIN, x, y)
+#define I64_REM_S(x, y) DIVREM_S(%, u64, s64, INT64_MIN, x, y)
+
+#define DIV_U(x, y) DIVREM_U(/, x, y)
+#define REM_U(x, y) DIVREM_U(%, x, y)
+
+#define TRUNC(ut, st, min, max, x)                              \
+   ((UNLIKELY((x) != (x))) ? TRAP(INVALID_CONVERSION)           \
+  : (UNLIKELY((x) < (min) || (x) > (max))) ? TRAP(INT_OVERFLOW) \
+  : (ut)(st)(x))
+
+#define I32_TRUNC_S_F32(x) TRUNC(u32, s32, (f32)INT32_MIN, (f32)INT32_MAX, x)
+#define I64_TRUNC_S_F32(x) TRUNC(u64, s64, (f32)INT64_MIN, (f32)INT64_MAX, x)
+#define I32_TRUNC_S_F64(x) TRUNC(u32, s32, (f64)INT32_MIN, (f64)INT32_MAX, x)
+#define I64_TRUNC_S_F64(x) TRUNC(u64, s64, (f64)INT64_MIN, (f64)INT64_MAX, x)
+
+#define DEFINE_REINTERPRET(name, t1, t2)  \
+  static inline t2 name(t1 x) {           \
+    t2 result;                            \
+    memcpy(&result, &x, sizeof(result));  \
+    return result;                        \
+  }
+
+DEFINE_REINTERPRET(f32_reinterpret_i32, u32, f32)
+DEFINE_REINTERPRET(i32_reinterpret_f32, f32, u32)
+DEFINE_REINTERPRET(f64_reinterpret_i64, u64, f64)
+DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
+
+#define UNREACHABLE TRAP(UNREACHABLE)
 
 )";
 
@@ -1187,7 +1234,15 @@ void CWriter::WriteStackVarDeclarations() {
 void CWriter::Write(const Block& block) {
   size_t mark = MarkTypeStack();
   PushLabel(block);
+#if 0
   Write(OpenBrace(), block.exprs, CloseBrace());
+#else
+  Write("/*{*/");
+  Indent();
+  Write(Newline(), block.exprs);
+  Dedent();
+  Write(Newline(), "/*}*/");
+#endif
   ResetTypeStack(mark);
   PopLabel();
   PushTypes(block.sig);
@@ -1320,7 +1375,7 @@ void CWriter::Write(const ExprList& exprs) {
         break;
 
       case ExprType::CurrentMemory:
-        assert(0);
+        UNIMPLEMENTED("current_memory");
         break;
 
       case ExprType::Drop:
@@ -1342,7 +1397,7 @@ void CWriter::Write(const ExprList& exprs) {
       }
 
       case ExprType::GrowMemory:
-        assert(0);
+        UNIMPLEMENTED("grow_memory");
         break;
 
       case ExprType::If: {
@@ -1384,7 +1439,7 @@ void CWriter::Write(const ExprList& exprs) {
         return;
 
       case ExprType::Select:
-        assert(0);
+        UNIMPLEMENTED("select");
         break;
 
       case ExprType::SetGlobal: {
@@ -1428,39 +1483,51 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::TryBlock:
       case ExprType::Wait:
       case ExprType::Wake:
-        assert(0);
+        UNIMPLEMENTED("...");
         break;
     }
   }
 }
 
-void CWriter::WriteSimpleUnaryExpr(const char* op, Type result_type) {
+void CWriter::WriteSimpleUnaryExpr(Opcode opcode, const char* op) {
+  Type result_type = opcode.GetResultType();
   Write(StackVar(0, result_type), " = ", op, "(", StackVar(0), ");", Newline());
+  DropTypes(1);
+  PushType(opcode.GetResultType());
 }
 
-void CWriter::WriteSimpleBinaryExpr(const char* op, AssignOp assign_op) {
-  Write(StackVar(1));
+void CWriter::WriteInfixBinaryExpr(Opcode opcode,
+                                   const char* op,
+                                   AssignOp assign_op) {
+  Type result_type = opcode.GetResultType();
+  Write(StackVar(1, result_type));
   if (assign_op == AssignOp::Allowed) {
     Write(" ", op, "= ", StackVar(0));
   } else {
     Write(" = ", StackVar(1), " ", op, " ", StackVar(0));
   }
   Write(";", Newline());
-  DropTypes(1);
+  DropTypes(2);
+  PushType(result_type);
 }
 
-void CWriter::WriteSignedBinaryExpr(const char* op, Type type) {
-  const char *utype, *stype;
-  if (type == Type::I32) {
-    utype = "u32";
-    stype = "s32";
-  } else {
-    utype = "u64";
-    stype = "s64";
-  }
-  Write(StackVar(1), " = (", utype, ")((", stype, ")", StackVar(1), " ", op,
-        " (", stype, ")", StackVar(0), ");", Newline());
-  DropTypes(1);
+void CWriter::WritePrefixBinaryExpr(Opcode opcode, const char* op) {
+  Type result_type = opcode.GetResultType();
+  Write(StackVar(1, result_type), " = ", op, "(", StackVar(1), ", ",
+        StackVar(0), ");", Newline());
+  DropTypes(2);
+  PushType(result_type);
+}
+
+void CWriter::WriteSignedBinaryExpr(Opcode opcode, const char* op) {
+  Type result_type = opcode.GetResultType();
+  Type type = opcode.GetParamType1();
+  assert(opcode.GetParamType2() == type);
+  Write(StackVar(1, result_type), " = (", type, ")((", SignedType(type), ")",
+        StackVar(1), " ", op, " (", SignedType(type), ")", StackVar(0), ");",
+        Newline());
+  DropTypes(2);
+  PushType(result_type);
 }
 
 void CWriter::Write(const BinaryExpr& expr) {
@@ -1469,58 +1536,67 @@ void CWriter::Write(const BinaryExpr& expr) {
     case Opcode::I64Add:
     case Opcode::F32Add:
     case Opcode::F64Add:
-      WriteSimpleBinaryExpr("+");
+      WriteInfixBinaryExpr(expr.opcode, "+");
       break;
 
     case Opcode::I32Sub:
     case Opcode::I64Sub:
     case Opcode::F32Sub:
     case Opcode::F64Sub:
-      WriteSimpleBinaryExpr("-");
+      WriteInfixBinaryExpr(expr.opcode, "-");
       break;
 
     case Opcode::I32Mul:
     case Opcode::I64Mul:
     case Opcode::F32Mul:
     case Opcode::F64Mul:
-      WriteSimpleBinaryExpr("*");
+      WriteInfixBinaryExpr(expr.opcode, "*");
       break;
 
     case Opcode::I32DivS:
+      WritePrefixBinaryExpr(expr.opcode, "I32_DIV_S");
+      break;
+
     case Opcode::I64DivS:
-      assert(0);
+      WritePrefixBinaryExpr(expr.opcode, "I64_DIV_S");
       break;
 
     case Opcode::I32DivU:
     case Opcode::I64DivU:
+      WritePrefixBinaryExpr(expr.opcode, "DIV_U");
+      break;
+
     case Opcode::F32Div:
     case Opcode::F64Div:
-      assert(0);
+      UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
     case Opcode::I32RemS:
+      WritePrefixBinaryExpr(expr.opcode, "I32_REM_S");
+      break;
+
     case Opcode::I64RemS:
-      assert(0);
+      WritePrefixBinaryExpr(expr.opcode, "I64_REM_S");
       break;
 
     case Opcode::I32RemU:
     case Opcode::I64RemU:
-      assert(0);
+      WritePrefixBinaryExpr(expr.opcode, "REM_U");
       break;
 
     case Opcode::I32And:
     case Opcode::I64And:
-      WriteSimpleBinaryExpr("&");
+      WriteInfixBinaryExpr(expr.opcode, "&");
       break;
 
     case Opcode::I32Or:
     case Opcode::I64Or:
-      WriteSimpleBinaryExpr("|");
+      WriteInfixBinaryExpr(expr.opcode, "|");
       break;
 
     case Opcode::I32Xor:
     case Opcode::I64Xor:
-      WriteSimpleBinaryExpr("^");
+      WriteInfixBinaryExpr(expr.opcode, "^");
       break;
 
     case Opcode::I32Shl:
@@ -1549,27 +1625,27 @@ void CWriter::Write(const BinaryExpr& expr) {
 
     case Opcode::I32Rotl:
     case Opcode::I64Rotl:
-      assert(0);
+      UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
     case Opcode::I32Rotr:
     case Opcode::I64Rotr:
-      assert(0);
+      UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
     case Opcode::F32Min:
     case Opcode::F64Min:
-      assert(0);
+      UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
     case Opcode::F32Max:
     case Opcode::F64Max:
-      assert(0);
+      UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
     case Opcode::F32Copysign:
     case Opcode::F64Copysign:
-      assert(0);
+      UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
     default:
@@ -1583,62 +1659,62 @@ void CWriter::Write(const CompareExpr& expr) {
     case Opcode::I64Eq:
     case Opcode::F32Eq:
     case Opcode::F64Eq:
-      WriteSimpleBinaryExpr("==", AssignOp::Disallowed);
+      WriteInfixBinaryExpr(expr.opcode, "==", AssignOp::Disallowed);
       break;
 
     case Opcode::I32Ne:
     case Opcode::I64Ne:
     case Opcode::F32Ne:
     case Opcode::F64Ne:
-      WriteSimpleBinaryExpr("!=", AssignOp::Disallowed);
+      WriteInfixBinaryExpr(expr.opcode, "!=", AssignOp::Disallowed);
       break;
 
     case Opcode::I32LtS:
     case Opcode::I64LtS:
-      WriteSignedBinaryExpr("<", expr.opcode.GetResultType());
+      WriteSignedBinaryExpr(expr.opcode, "<");
       break;
 
     case Opcode::I32LtU:
     case Opcode::I64LtU:
     case Opcode::F32Lt:
     case Opcode::F64Lt:
-      WriteSimpleBinaryExpr("<", AssignOp::Disallowed);
+      WriteInfixBinaryExpr(expr.opcode, "<", AssignOp::Disallowed);
       break;
 
     case Opcode::I32LeS:
     case Opcode::I64LeS:
-      WriteSignedBinaryExpr("<=", expr.opcode.GetResultType());
+      WriteSignedBinaryExpr(expr.opcode, "<=");
       break;
 
     case Opcode::I32LeU:
     case Opcode::I64LeU:
     case Opcode::F32Le:
     case Opcode::F64Le:
-      WriteSimpleBinaryExpr("<=", AssignOp::Disallowed);
+      WriteInfixBinaryExpr(expr.opcode, "<=", AssignOp::Disallowed);
       break;
 
     case Opcode::I32GtS:
     case Opcode::I64GtS:
-      WriteSignedBinaryExpr(">", expr.opcode.GetResultType());
+      WriteSignedBinaryExpr(expr.opcode, ">");
       break;
 
     case Opcode::I32GtU:
     case Opcode::I64GtU:
     case Opcode::F32Gt:
     case Opcode::F64Gt:
-      WriteSimpleBinaryExpr(">", AssignOp::Disallowed);
+      WriteInfixBinaryExpr(expr.opcode, ">", AssignOp::Disallowed);
       break;
 
     case Opcode::I32GeS:
     case Opcode::I64GeS:
-      WriteSignedBinaryExpr(">=", expr.opcode.GetResultType());
+      WriteSignedBinaryExpr(expr.opcode, ">=");
       break;
 
     case Opcode::I32GeU:
     case Opcode::I64GeU:
     case Opcode::F32Ge:
     case Opcode::F64Ge:
-      WriteSimpleBinaryExpr(">=", AssignOp::Disallowed);
+      WriteInfixBinaryExpr(expr.opcode, ">=", AssignOp::Disallowed);
       break;
 
     default:
@@ -1650,16 +1726,37 @@ void CWriter::Write(const ConvertExpr& expr) {
   switch (expr.opcode) {
     case Opcode::I32Eqz:
     case Opcode::I64Eqz:
-      WriteSimpleUnaryExpr("!", expr.opcode.GetResultType());
+      WriteSimpleUnaryExpr(expr.opcode, "!");
       break;
 
     case Opcode::I64ExtendSI32:
+      WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s32)");
+      break;
+
     case Opcode::I64ExtendUI32:
+      WriteSimpleUnaryExpr(expr.opcode, "(u64)");
+      break;
+
     case Opcode::I32WrapI64:
+      WriteSimpleUnaryExpr(expr.opcode, "(u32)");
+      break;
+
     case Opcode::I32TruncSF32:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_S_F32");
+      break;
+
     case Opcode::I64TruncSF32:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_S_F32");
+      break;
+
     case Opcode::I32TruncSF64:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_S_F64");
+      break;
+
     case Opcode::I64TruncSF64:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_S_F64");
+      break;
+
     case Opcode::I32TruncUF32:
     case Opcode::I64TruncUF32:
     case Opcode::I32TruncUF64:
@@ -1672,21 +1769,52 @@ void CWriter::Write(const ConvertExpr& expr) {
     case Opcode::I64TruncUSatF32:
     case Opcode::I32TruncUSatF64:
     case Opcode::I64TruncUSatF64:
+      UNIMPLEMENTED(expr.opcode.GetName());
+      break;
+
     case Opcode::F32ConvertSI32:
-    case Opcode::F64ConvertSI32:
-    case Opcode::F32ConvertSI64:
-    case Opcode::F64ConvertSI64:
     case Opcode::F32ConvertUI32:
-    case Opcode::F64ConvertUI32:
+    case Opcode::F32ConvertSI64:
+      WriteSimpleUnaryExpr(expr.opcode, "(f32)");
+      break;
+
     case Opcode::F32ConvertUI64:
+      // TODO(binji): This needs to be handled specially (see
+      // wabt_convert_uint64_to_float).
+      WriteSimpleUnaryExpr(expr.opcode, "(f32)");
+      break;
+
+    case Opcode::F64ConvertSI32:
+    case Opcode::F64ConvertUI32:
+    case Opcode::F64ConvertSI64:
+      WriteSimpleUnaryExpr(expr.opcode, "(f64)");
+      break;
+
     case Opcode::F64ConvertUI64:
+      // TODO(binji): This needs to be handled specially (see
+      // wabt_convert_uint64_to_double).
+      WriteSimpleUnaryExpr(expr.opcode, "(f64)");
+      break;
+
     case Opcode::F64PromoteF32:
     case Opcode::F32DemoteF64:
+      UNIMPLEMENTED(expr.opcode.GetName());
+      break;
+
     case Opcode::F32ReinterpretI32:
+      WriteSimpleUnaryExpr(expr.opcode, "f32_reinterpret_i32");
+      break;
+
     case Opcode::I32ReinterpretF32:
+      WriteSimpleUnaryExpr(expr.opcode, "i32_reinterpret_f32");
+      break;
+
     case Opcode::F64ReinterpretI64:
+      WriteSimpleUnaryExpr(expr.opcode, "f64_reinterpret_i64");
+      break;
+
     case Opcode::I64ReinterpretF64:
-      assert(0);
+      WriteSimpleUnaryExpr(expr.opcode, "i64_reinterpret_f64");
       break;
 
     default:
@@ -1757,8 +1885,14 @@ void CWriter::Write(const UnaryExpr& expr) {
     case Opcode::I64Ctz:
     case Opcode::I32Popcnt:
     case Opcode::I64Popcnt:
+      UNIMPLEMENTED(expr.opcode.GetName());
+      break;
+
     case Opcode::F32Neg:
     case Opcode::F64Neg:
+      WriteSimpleUnaryExpr(expr.opcode, "-");
+      break;
+
     case Opcode::F32Abs:
     case Opcode::F64Abs:
     case Opcode::F32Sqrt:
@@ -1776,7 +1910,7 @@ void CWriter::Write(const UnaryExpr& expr) {
     case Opcode::I64Extend8S:
     case Opcode::I64Extend16S:
     case Opcode::I64Extend32S:
-      assert(0);
+      UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
     default:
@@ -1785,9 +1919,7 @@ void CWriter::Write(const UnaryExpr& expr) {
 }
 
 Result CWriter::WriteModule(const Module& module) {
-  WABT_USE(indent_);
   WABT_USE(options_);
-  WABT_USE(stream_);
 
   module_ = &module;
   InitGlobalSymbols();
