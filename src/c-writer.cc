@@ -122,6 +122,7 @@ class CWriter {
 
   size_t MarkTypeStack() const;
   void ResetTypeStack(size_t mark);
+  Type StackType(Index) const;
   void PushType(Type);
   void PushTypes(const TypeVector&);
   void DropTypes(size_t count);
@@ -456,6 +457,11 @@ size_t CWriter::MarkTypeStack() const {
 void CWriter::ResetTypeStack(size_t mark) {
   assert(mark <= type_stack_.size());
   type_stack_.erase(type_stack_.begin() + mark, type_stack_.end());
+}
+
+Type CWriter::StackType(Index index) const {
+  assert(index < type_stack_.size());
+  return *(type_stack_.rbegin() + index);
 }
 
 void CWriter::PushType(Type type) {
@@ -1434,9 +1440,14 @@ void CWriter::Write(const ExprList& exprs) {
         Write(";", Newline());
         return;
 
-      case ExprType::Select:
-        UNIMPLEMENTED("select");
+      case ExprType::Select: {
+        Type type = StackType(1);
+        Write(StackVar(2), " = ", StackVar(0), " ? ", StackVar(2), " : ",
+              StackVar(1), ";", Newline());
+        DropTypes(3);
+        PushType(type);
         break;
+      }
 
       case ExprType::SetGlobal: {
         const Var& var = cast<SetGlobalExpr>(&expr)->var;
@@ -1564,7 +1575,7 @@ void CWriter::Write(const BinaryExpr& expr) {
 
     case Opcode::F32Div:
     case Opcode::F64Div:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WriteInfixBinaryExpr(expr.opcode, "/");
       break;
 
     case Opcode::I32RemS:
@@ -1771,6 +1782,7 @@ void CWriter::Write(const ConvertExpr& expr) {
     case Opcode::F32ConvertSI32:
     case Opcode::F32ConvertUI32:
     case Opcode::F32ConvertSI64:
+    case Opcode::F32DemoteF64:
       WriteSimpleUnaryExpr(expr.opcode, "(f32)");
       break;
 
@@ -1783,6 +1795,7 @@ void CWriter::Write(const ConvertExpr& expr) {
     case Opcode::F64ConvertSI32:
     case Opcode::F64ConvertUI32:
     case Opcode::F64ConvertSI64:
+    case Opcode::F64PromoteF32:
       WriteSimpleUnaryExpr(expr.opcode, "(f64)");
       break;
 
@@ -1790,11 +1803,6 @@ void CWriter::Write(const ConvertExpr& expr) {
       // TODO(binji): This needs to be handled specially (see
       // wabt_convert_uint64_to_double).
       WriteSimpleUnaryExpr(expr.opcode, "(f64)");
-      break;
-
-    case Opcode::F64PromoteF32:
-    case Opcode::F32DemoteF64:
-      UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
     case Opcode::F32ReinterpretI32:
@@ -1890,17 +1898,53 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Abs:
+      WriteSimpleUnaryExpr(expr.opcode, "fabsf");
+      break;
+
     case Opcode::F64Abs:
+      WriteSimpleUnaryExpr(expr.opcode, "fabs");
+      break;
+
     case Opcode::F32Sqrt:
+      WriteSimpleUnaryExpr(expr.opcode, "sqrtf");
+      break;
+
     case Opcode::F64Sqrt:
+      WriteSimpleUnaryExpr(expr.opcode, "sqrt");
+      break;
+
     case Opcode::F32Ceil:
+      WriteSimpleUnaryExpr(expr.opcode, "ceilf");
+      break;
+
     case Opcode::F64Ceil:
+      WriteSimpleUnaryExpr(expr.opcode, "ceil");
+      break;
+
     case Opcode::F32Floor:
+      WriteSimpleUnaryExpr(expr.opcode, "floorf");
+      break;
+
     case Opcode::F64Floor:
+      WriteSimpleUnaryExpr(expr.opcode, "floor");
+      break;
+
     case Opcode::F32Trunc:
+      WriteSimpleUnaryExpr(expr.opcode, "truncf");
+      break;
+
     case Opcode::F64Trunc:
+      WriteSimpleUnaryExpr(expr.opcode, "trunc");
+      break;
+
     case Opcode::F32Nearest:
+      WriteSimpleUnaryExpr(expr.opcode, "nearbyintf");
+      break;
+
     case Opcode::F64Nearest:
+      WriteSimpleUnaryExpr(expr.opcode, "nearbyint");
+      break;
+
     case Opcode::I32Extend8S:
     case Opcode::I32Extend16S:
     case Opcode::I64Extend8S:
