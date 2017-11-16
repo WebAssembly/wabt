@@ -410,28 +410,28 @@ void init(void);
 #define DIVREM_S(op, ut, st, min, x, y)                      \
    ((UNLIKELY((y) == 0)) ?                TRAP(DIV_BY_ZERO)  \
   : (UNLIKELY((x) == min && (y) == -1)) ? TRAP(INT_OVERFLOW) \
-  : (ut)((st)(x) op (st)(y)))
+  : (ut)((x) op (y)))
 
 #define DIVREM_U(op, x, y) \
   ((UNLIKELY((y) == 0)) ? TRAP(DIV_BY_ZERO) : ((x) op (y)))
 
-#define I32_DIV_S(x, y) DIVREM_S(/, u32, s32, INT32_MIN, x, y)
-#define I64_DIV_S(x, y) DIVREM_S(/, u64, s64, INT64_MIN, x, y)
-#define I32_REM_S(x, y) DIVREM_S(%, u32, s32, INT32_MIN, x, y)
-#define I64_REM_S(x, y) DIVREM_S(%, u64, s64, INT64_MIN, x, y)
+#define I32_DIV_S(x, y) DIVREM_S(/, u32, s32, INT32_MIN, (s32)x, (s32)y)
+#define I64_DIV_S(x, y) DIVREM_S(/, u64, s64, INT64_MIN, (s64)x, (s64)y)
+#define I32_REM_S(x, y) DIVREM_S(%, u32, s32, INT32_MIN, (s32)x, (s32)y)
+#define I64_REM_S(x, y) DIVREM_S(%, u64, s64, INT64_MIN, (s64)x, (s64)y)
 
 #define DIV_U(x, y) DIVREM_U(/, x, y)
 #define REM_U(x, y) DIVREM_U(%, x, y)
 
-#define TRUNC(ut, st, min, max, x)                              \
+#define TRUNC_S(ut, st, min, max, x)                            \
    ((UNLIKELY((x) != (x))) ? TRAP(INVALID_CONVERSION)           \
   : (UNLIKELY((x) < (min) || (x) > (max))) ? TRAP(INT_OVERFLOW) \
-  : (ut)(st)(x))
+  : (ut)(x))
 
-#define I32_TRUNC_S_F32(x) TRUNC(u32, s32, (f32)INT32_MIN, (f32)INT32_MAX, x)
-#define I64_TRUNC_S_F32(x) TRUNC(u64, s64, (f32)INT64_MIN, (f32)INT64_MAX, x)
-#define I32_TRUNC_S_F64(x) TRUNC(u32, s32, (f64)INT32_MIN, (f64)INT32_MAX, x)
-#define I64_TRUNC_S_F64(x) TRUNC(u64, s64, (f64)INT64_MIN, (f64)INT64_MAX, x)
+#define I32_TRUNC_S_F32(x) TRUNC_S(u32, s32, (f32)INT32_MIN, (f32)INT32_MAX, (s32)x)
+#define I64_TRUNC_S_F32(x) TRUNC_S(u64, s64, (f32)INT64_MIN, (f32)INT64_MAX, (s64)x)
+#define I32_TRUNC_S_F64(x) TRUNC_S(u32, s32, (f64)INT32_MIN, (f64)INT32_MAX, (s32)x)
+#define I64_TRUNC_S_F64(x) TRUNC_S(u64, s64, (f64)INT64_MIN, (f64)INT64_MAX, (s64)x)
 
 #define DEFINE_REINTERPRET(name, t1, t2)  \
   static inline t2 name(t1 x) {           \
@@ -747,11 +747,11 @@ void CWriter::Write(const ResultType& rt) {
 void CWriter::Write(const Const& const_) {
   switch (const_.type) {
     case Type::I32:
-      Writef("%d", static_cast<int32_t>(const_.u32));
+      Writef("%u" "u", static_cast<int32_t>(const_.u32));
       break;
 
     case Type::I64:
-      Writef("%" PRId64, static_cast<int64_t>(const_.u64));
+      Writef("%" PRIu64 "ull", static_cast<int64_t>(const_.u64));
       break;
 
     case Type::F32: {
