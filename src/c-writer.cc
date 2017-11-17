@@ -319,8 +319,6 @@ static const char* s_global_symbols[] = {
   "I32",
   "I64",
   "init",
-  "init_data_segment",
-  "init_elem_segment",
   "MEMCHECK",
   "Memory",
   "register_func_type",
@@ -370,8 +368,6 @@ typedef struct Table { Elem* data; size_t len; } Table;
 
 extern void trap(Trap) __attribute__((noreturn));
 extern u32 register_func_type(u32 params, u32 results, ...);
-extern void init_data_segment(u32 addr, const u8 *data, size_t len);
-extern void init_elem_segment(u32 idx, const Elem *data, size_t len);
 
 void init(void);
 
@@ -831,6 +827,7 @@ void CWriter::WriteFuncTypes() {
 }
 
 void CWriter::WriteImports() {
+  // TODO(binji): Write imports ordered by type.
   for (const Import* import : module_->imports) {
     Write("extern ");
     switch (import->kind()) {
@@ -891,10 +888,14 @@ void CWriter::WriteFuncDeclarations() {
 void CWriter::WriteFuncDeclaration(const FuncDeclaration& decl,
                                    const std::string& name) {
   Write(ResultType(decl.sig.result_types), " ", name, "(");
-  for (Index i = 0; i < decl.GetNumParams(); ++i) {
-    if (i != 0)
-      Write(", ");
-    Write(decl.GetParamType(i));
+  if (decl.GetNumParams() == 0) {
+    Write("void");
+  } else {
+    for (Index i = 0; i < decl.GetNumParams(); ++i) {
+      if (i != 0)
+        Write(", ");
+      Write(decl.GetParamType(i));
+    }
   }
   Write(")");
 }
@@ -1022,12 +1023,14 @@ void CWriter::WriteDataInitializers() {
     ++data_segment_index;
   }
 
+  const Memory* memory = module_->memories[0];
+
   Write("static void init_memory(void) ", OpenBrace());
   data_segment_index = 0;
   for (const DataSegment* data_segment : module_->data_segments) {
-    Write("init_data_segment(");
+    Write("memcpy(&", GlobalName(memory->name), ".data[");
     WriteInitExpr(data_segment->offset);
-    Write(", data_segment_data_", data_segment_index, ", ",
+    Write("], data_segment_data_", data_segment_index, ", ",
           data_segment->data.size(), ");", Newline());
     ++data_segment_index;
   }
@@ -1057,13 +1060,15 @@ void CWriter::WriteElemInitializers() {
     ++elem_segment_index;
   }
 
+  const Table* table = module_->tables[0];
+
   Write("static void init_table(void) ", OpenBrace());
   elem_segment_index = 0;
   for (const ElemSegment* elem_segment : module_->elem_segments) {
-    Write("init_elem_segment(");
+    Write("memcpy(&", GlobalName(table->name), ".data[");
     WriteInitExpr(elem_segment->offset);
-    Write(", elem_segment_data_", elem_segment_index, ", ",
-          elem_segment->vars.size(), ");", Newline());
+    Write("], elem_segment_data_", elem_segment_index, ", ",
+          elem_segment->vars.size(), " * sizeof(Elem));", Newline());
     ++elem_segment_index;
   }
   Write(CloseBrace(), Newline(), Newline(true), Newline(true));
@@ -1163,19 +1168,23 @@ void CWriter::Write(const Func& func) {
 }
 
 void CWriter::WriteParams() {
-  std::vector<std::string> index_to_name;
-  MakeTypeBindingReverseMapping(func_->decl.sig.param_types,
-                                func_->param_bindings, &index_to_name);
-  Indent(4);
-  for (Index i = 0; i < func_->GetNumParams(); ++i) {
-    if (i != 0) {
-      Write(", ");
-      if ((i % 8) == 0)
-        Write(Newline());
+  if (func_->decl.sig.param_types.empty()) {
+    Write("void");
+  } else {
+    std::vector<std::string> index_to_name;
+    MakeTypeBindingReverseMapping(func_->decl.sig.param_types,
+                                  func_->param_bindings, &index_to_name);
+    Indent(4);
+    for (Index i = 0; i < func_->GetNumParams(); ++i) {
+      if (i != 0) {
+        Write(", ");
+        if ((i % 8) == 0)
+          Write(Newline());
+      }
+      Write(func_->GetParamType(i), " ", DefineLocalName(index_to_name[i]));
     }
-    Write(func_->GetParamType(i), " ", DefineLocalName(index_to_name[i]));
+    Dedent(4);
   }
-  Dedent(4);
   Write(") ", OpenBrace());
 }
 
@@ -1960,6 +1969,8 @@ void CWriter::Write(const UnaryExpr& expr) {
 
 Result CWriter::WriteModule(const Module& module) {
   WABT_USE(options_);
+
+  // TODO(binji): Write C header as well?
 
   module_ = &module;
   InitGlobalSymbols();
