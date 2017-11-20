@@ -233,12 +233,6 @@ class CWriter {
   SymbolSet local_syms_;
   TypeVector type_stack_;
   std::vector<Label> label_stack_;
-
-  // Index func_index_ = 0;
-  // Index global_index_ = 0;
-  // Index table_index_ = 0;
-  // Index memory_index_ = 0;
-  // Index func_type_index_ = 0;
 };
 
 static const char* s_global_symbols[] = {
@@ -250,6 +244,8 @@ static const char* s_global_symbols[] = {
   "return", "short", "signed", "sizeof", "static", "_Static_assert", "struct",
   "switch", "_Thread_local", "typedef", "union", "unsigned", "void", "volatile",
   "while",
+
+  // TODO(binji): assert.h
 
   // math.h
   "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cbrt",
@@ -303,6 +299,7 @@ static const char* s_global_symbols[] = {
   "strtok", "strxfrm",
 
   // defined
+  // TODO(binji): finish
   "Anyfunc",
   "CALL_INDIRECT",
   "DEFINE_LOAD",
@@ -420,15 +417,25 @@ void init(void);
 #define DIV_U(x, y) DIVREM_U(/, x, y)
 #define REM_U(x, y) DIVREM_U(%, x, y)
 
-#define TRUNC_S(ut, st, min, max, x)                            \
-   ((UNLIKELY((x) != (x))) ? TRAP(INVALID_CONVERSION)           \
-  : (UNLIKELY((x) < (min) || (x) > (max))) ? TRAP(INT_OVERFLOW) \
+#define TRUNC_S(ut, ft, min, max, maxop, x)                                 \
+   ((UNLIKELY((x) != (x))) ? TRAP(INVALID_CONVERSION)                       \
+  : (UNLIKELY((x) < (ft)(min) || (x) maxop (ft)(max))) ? TRAP(INT_OVERFLOW) \
   : (ut)(x))
 
-#define I32_TRUNC_S_F32(x) TRUNC_S(u32, s32, (f32)INT32_MIN, (f32)INT32_MAX, (s32)x)
-#define I64_TRUNC_S_F32(x) TRUNC_S(u64, s64, (f32)INT64_MIN, (f32)INT64_MAX, (s64)x)
-#define I32_TRUNC_S_F64(x) TRUNC_S(u32, s32, (f64)INT32_MIN, (f64)INT32_MAX, (s32)x)
-#define I64_TRUNC_S_F64(x) TRUNC_S(u64, s64, (f64)INT64_MIN, (f64)INT64_MAX, (s64)x)
+#define I32_TRUNC_S_F32(x) TRUNC_S(u32, f32, INT32_MIN, INT32_MAX, >=, (s32)x)
+#define I64_TRUNC_S_F32(x) TRUNC_S(u64, f32, INT64_MIN, INT64_MAX, >=, (s64)x)
+#define I32_TRUNC_S_F64(x) TRUNC_S(u32, f64, INT32_MIN, INT32_MAX, >,  (s32)x)
+#define I64_TRUNC_S_F64(x) TRUNC_S(u64, f64, INT64_MIN, INT64_MAX, >=, (s64)x)
+
+#define TRUNC_U(ut, ft, max, maxop, x)                                    \
+   ((UNLIKELY((x) != (x))) ? TRAP(INVALID_CONVERSION)                     \
+  : (UNLIKELY((x) <= (ft)-1 || (x) maxop (ft)(max))) ? TRAP(INT_OVERFLOW) \
+  : (ut)(x))
+
+#define I32_TRUNC_U_F32(x) TRUNC_U(u32, f32, UINT32_MAX, >=, x)
+#define I64_TRUNC_U_F32(x) TRUNC_U(u64, f32, UINT64_MAX, >=, x)
+#define I32_TRUNC_U_F64(x) TRUNC_U(u32, f64, UINT32_MAX, >,  x)
+#define I64_TRUNC_U_F64(x) TRUNC_U(u64, f64, UINT64_MAX, >=, x)
 
 #define DEFINE_REINTERPRET(name, t1, t2)  \
   static inline t2 name(t1 x) {           \
@@ -441,6 +448,13 @@ DEFINE_REINTERPRET(f32_reinterpret_i32, u32, f32)
 DEFINE_REINTERPRET(i32_reinterpret_f32, f32, u32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, u64, f64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
+
+#define I32_CLZ(x) ((x) ? __builtin_clz(x) : 32)
+#define I64_CLZ(x) ((x) ? __builtin_clzll(x) : 64)
+#define I32_CTZ(x) ((x) ? __builtin_ctz(x) : 32)
+#define I64_CTZ(x) ((x) ? __builtin_ctzll(x) : 64)
+#define I32_POPCNT(x) (__builtin_popcount(x))
+#define I64_POPCNT(x) (__builtin_popcountll(x))
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
@@ -1774,9 +1788,21 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::I32TruncUF32:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_U_F32");
+      break;
+
     case Opcode::I64TruncUF32:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_U_F32");
+      break;
+
     case Opcode::I32TruncUF64:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_U_F64");
+      break;
+
     case Opcode::I64TruncUF64:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_U_F64");
+      break;
+
     case Opcode::I32TruncSSatF32:
     case Opcode::I64TruncSSatF32:
     case Opcode::I32TruncSSatF64:
@@ -1789,8 +1815,14 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::F32ConvertSI32:
-    case Opcode::F32ConvertUI32:
+      WriteSimpleUnaryExpr(expr.opcode, "(f32)(s32)");
+      break;
+
     case Opcode::F32ConvertSI64:
+      WriteSimpleUnaryExpr(expr.opcode, "(f32)(s64)");
+      break;
+
+    case Opcode::F32ConvertUI32:
     case Opcode::F32DemoteF64:
       WriteSimpleUnaryExpr(expr.opcode, "(f32)");
       break;
@@ -1802,8 +1834,14 @@ void CWriter::Write(const ConvertExpr& expr) {
       break;
 
     case Opcode::F64ConvertSI32:
-    case Opcode::F64ConvertUI32:
+      WriteSimpleUnaryExpr(expr.opcode, "(f64)(s32)");
+      break;
+
     case Opcode::F64ConvertSI64:
+      WriteSimpleUnaryExpr(expr.opcode, "(f64)(s64)");
+      break;
+
+    case Opcode::F64ConvertUI32:
     case Opcode::F64PromoteF32:
       WriteSimpleUnaryExpr(expr.opcode, "(f64)");
       break;
@@ -1893,12 +1931,27 @@ void CWriter::Write(const StoreExpr& expr) {
 void CWriter::Write(const UnaryExpr& expr) {
   switch (expr.opcode) {
     case Opcode::I32Clz:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_CLZ");
+      break;
+
     case Opcode::I64Clz:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_CLZ");
+      break;
+
     case Opcode::I32Ctz:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_CTZ");
+      break;
+
     case Opcode::I64Ctz:
+      WriteSimpleUnaryExpr(expr.opcode, "I64_CTZ");
+      break;
+
     case Opcode::I32Popcnt:
+      WriteSimpleUnaryExpr(expr.opcode, "I32_POPCNT");
+      break;
+
     case Opcode::I64Popcnt:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WriteSimpleUnaryExpr(expr.opcode, "I64_POPCNT");
       break;
 
     case Opcode::F32Neg:
