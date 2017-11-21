@@ -55,6 +55,8 @@ class TypeChecker {
   Result OnAtomicStore(Opcode);
   Result OnAtomicRmw(Opcode);
   Result OnAtomicRmwCmpxchg(Opcode);
+  Result OnAtomicWait(Opcode);
+  Result OnAtomicWake(Opcode);
   Result OnBinary(Opcode);
   Result OnBlock(const TypeVector* sig);
   Result OnBr(Index depth);
@@ -91,8 +93,6 @@ class TypeChecker {
   Result OnTryBlock(const TypeVector* sig);
   Result OnUnary(Opcode);
   Result OnUnreachable();
-  Result OnWait(Opcode);
-  Result OnWake(Opcode);
   Result EndFunction();
 
  private:

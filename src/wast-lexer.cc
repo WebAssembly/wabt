@@ -443,9 +443,9 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "current_memory"      { RETURN_OPCODE0(CurrentMemory); }
       <i> "grow_memory"         { RETURN_OPCODE0(GrowMemory); }
 
-      <i> "i32.wait"            { RETURN_OPCODE(Wait, I32Wait); }
-      <i> "i64.wait"            { RETURN_OPCODE(Wait, I64Wait); }
-      <i> "wake"                { RETURN_OPCODE0(Wake); }
+      <i> "i32.atomic.wait"     { RETURN_OPCODE(AtomicWait, I32AtomicWait); }
+      <i> "i64.atomic.wait"     { RETURN_OPCODE(AtomicWait, I64AtomicWait); }
+      <i> "atomic.wake"         { RETURN_OPCODE0(AtomicWake); }
       <i> "i32.atomic.load"     { RETURN_OPCODE(AtomicLoad, I32AtomicLoad); }
       <i> "i64.atomic.load"     { RETURN_OPCODE(AtomicLoad, I64AtomicLoad); }
       <i> "i32.atomic.load8_u"  { RETURN_OPCODE(AtomicLoad, I32AtomicLoad8U); }

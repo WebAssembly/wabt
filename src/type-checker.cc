@@ -305,6 +305,14 @@ Result TypeChecker::OnAtomicRmwCmpxchg(Opcode opcode) {
   return CheckOpcode3(opcode);
 }
 
+Result TypeChecker::OnAtomicWait(Opcode opcode) {
+  return CheckOpcode3(opcode);
+}
+
+Result TypeChecker::OnAtomicWake(Opcode opcode) {
+  return CheckOpcode2(opcode);
+}
+
 Result TypeChecker::OnBinary(Opcode opcode) {
   return CheckOpcode2(opcode);
 }
@@ -585,14 +593,6 @@ Result TypeChecker::OnUnary(Opcode opcode) {
 
 Result TypeChecker::OnUnreachable() {
   return SetUnreachable();
-}
-
-Result TypeChecker::OnWait(Opcode opcode) {
-  return CheckOpcode3(opcode);
-}
-
-Result TypeChecker::OnWake(Opcode opcode) {
-  return CheckOpcode2(opcode);
 }
 
 Result TypeChecker::EndFunction() {

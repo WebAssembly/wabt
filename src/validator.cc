@@ -457,6 +457,14 @@ void Validator::CheckExpr(const Expr* expr) {
       CheckAtomicExpr(cast<AtomicStoreExpr>(expr), &TypeChecker::OnAtomicStore);
       break;
 
+    case ExprType::AtomicWait:
+      CheckAtomicExpr(cast<AtomicWaitExpr>(expr), &TypeChecker::OnAtomicWait);
+      break;
+
+    case ExprType::AtomicWake:
+      CheckAtomicExpr(cast<AtomicWakeExpr>(expr), &TypeChecker::OnAtomicWake);
+      break;
+
     case ExprType::Binary:
       typechecker_.OnBinary(cast<BinaryExpr>(expr)->opcode);
       break;
@@ -659,14 +667,6 @@ void Validator::CheckExpr(const Expr* expr) {
 
     case ExprType::Unreachable:
       typechecker_.OnUnreachable();
-      break;
-
-    case ExprType::Wait:
-      CheckAtomicExpr(cast<WaitExpr>(expr), &TypeChecker::OnWait);
-      break;
-
-    case ExprType::Wake:
-      CheckAtomicExpr(cast<WakeExpr>(expr), &TypeChecker::OnWake);
       break;
   }
 }

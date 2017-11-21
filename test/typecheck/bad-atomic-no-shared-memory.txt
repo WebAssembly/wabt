@@ -4,9 +4,9 @@
 (module
   (memory 1)
   (func
-    i32.const 0 i32.const 0 wake drop
-    i32.const 0 i32.const 0 i64.const 0 i32.wait drop
-    i32.const 0 i64.const 0 i64.const 0 i64.wait drop
+    i32.const 0 i32.const 0 atomic.wake drop
+    i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
 
     i32.const 0 i32.atomic.load drop
     i32.const 0 i64.atomic.load drop
@@ -82,15 +82,15 @@
 
 ))
 (;; STDERR ;;;
-out/test/typecheck/bad-atomic-no-shared-memory.txt:7:29: error: wake requires memory to be shared.
-    i32.const 0 i32.const 0 wake drop
-                            ^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:8:41: error: i32.wait requires memory to be shared.
-    i32.const 0 i32.const 0 i64.const 0 i32.wait drop
-                                        ^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:9:41: error: i64.wait requires memory to be shared.
-    i32.const 0 i64.const 0 i64.const 0 i64.wait drop
-                                        ^^^^^^^^
+out/test/typecheck/bad-atomic-no-shared-memory.txt:7:29: error: atomic.wake requires memory to be shared.
+    i32.const 0 i32.const 0 atomic.wake drop
+                            ^^^^^^^^^^^
+out/test/typecheck/bad-atomic-no-shared-memory.txt:8:41: error: i32.atomic.wait requires memory to be shared.
+    i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
+                                        ^^^^^^^^^^^^^^^
+out/test/typecheck/bad-atomic-no-shared-memory.txt:9:41: error: i64.atomic.wait requires memory to be shared.
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
+                                        ^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-no-shared-memory.txt:11:17: error: i32.atomic.load requires memory to be shared.
     i32.const 0 i32.atomic.load drop
                 ^^^^^^^^^^^^^^^

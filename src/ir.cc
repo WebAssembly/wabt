@@ -24,6 +24,12 @@
 namespace {
 
 const char* ExprTypeName[] = {
+  "AtomicLoad",
+  "AtomicRmw",
+  "AtomicRmwCmpxchg",
+  "AtomicStore",
+  "AtomicWait",
+  "AtomicWake",
   "Binary",
   "Block",
   "Br",
@@ -54,8 +60,6 @@ const char* ExprTypeName[] = {
   "TryBlock",
   "Unary",
   "Unreachable",
-  "Wait",
-  "Wake"
 };
 
 }  // end of anonymous namespace

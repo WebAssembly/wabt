@@ -189,12 +189,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTryExpr(Index num_types, Type* sig_types) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
-  Result OnWaitExpr(Opcode opcode,
-                    uint32_t alignment_log2,
-                    Address offset) override;
-  Result OnWakeExpr(Opcode opcode,
-                    uint32_t alignment_log2,
-                    Address offset) override;
+  Result OnAtomicWaitExpr(Opcode opcode,
+                          uint32_t alignment_log2,
+                          Address offset) override;
+  Result OnAtomicWakeExpr(Opcode opcode,
+                          uint32_t alignment_log2,
+                          Address offset) override;
   Result EndFunctionBody(Index index) override;
   Result EndCodeSection() override;
 

@@ -4,9 +4,9 @@
 (module
   (memory 1 1 shared)
   (func
-    i32.const 0 i32.const 0 wake drop
-    i32.const 0 i32.const 0 i64.const 0 i32.wait drop
-    i32.const 0 i64.const 0 i64.const 0 i64.wait drop
+    i32.const 0 i32.const 0 atomic.wake drop
+    i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
 
     i32.const 0 i32.atomic.load drop
     i32.const 0 i64.atomic.load drop
@@ -90,17 +90,17 @@ Code Disassembly:
 00001c func[0]:
  00001f: 41 00                      | i32.const 0
  000021: 41 00                      | i32.const 0
- 000024: fe 00 02 00                | wake 2 0
+ 000024: fe 00 02 00                | atomic.wake 2 0
  000027: 1a                         | drop
  000028: 41 00                      | i32.const 0
  00002a: 41 00                      | i32.const 0
  00002c: 42 00                      | i64.const 0
- 00002f: fe 01 02 00                | i32.wait 2 0
+ 00002f: fe 01 02 00                | i32.atomic.wait 2 0
  000032: 1a                         | drop
  000033: 41 00                      | i32.const 0
  000035: 42 00                      | i64.const 0
  000037: 42 00                      | i64.const 0
- 00003a: fe 02 03 00                | i64.wait 3 0
+ 00003a: fe 02 03 00                | i64.atomic.wait 3 0
  00003d: 1a                         | drop
  00003e: 41 00                      | i32.const 0
  000041: fe 10 02 00                | i32.atomic.load 2 0

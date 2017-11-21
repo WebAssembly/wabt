@@ -550,6 +550,8 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicLoadExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwCmpxchgExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicStoreExpr);
+DEFINE_LOAD_STORE_OPCODE(OnAtomicWaitExpr);
+DEFINE_LOAD_STORE_OPCODE(OnAtomicWakeExpr);
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_DESC(OnCallIndirectExpr, "sig_index")
@@ -576,8 +578,6 @@ DEFINE_INDEX_DESC(OnTeeLocalExpr, "index")
 DEFINE_INDEX_DESC(OnThrowExpr, "except_index")
 DEFINE0(OnUnreachableExpr)
 DEFINE_OPCODE(OnUnaryExpr)
-DEFINE_LOAD_STORE_OPCODE(OnWaitExpr);
-DEFINE_LOAD_STORE_OPCODE(OnWakeExpr);
 DEFINE_END(EndCodeSection)
 
 DEFINE_BEGIN(BeginElemSection)

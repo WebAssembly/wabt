@@ -148,6 +148,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
                                       uint32_t alignment_log2,
                                       Address offset) override;
+  wabt::Result OnAtomicWaitExpr(Opcode opcode,
+                                uint32_t alignment_log2,
+                                Address offset) override;
+  wabt::Result OnAtomicWakeExpr(Opcode opcode,
+                                uint32_t alignment_log2,
+                                Address offset) override;
   wabt::Result OnBinaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnBlockExpr(Index num_types, Type* sig_types) override;
   wabt::Result OnBrExpr(Index depth) override;
@@ -186,12 +192,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnTeeLocalExpr(Index local_index) override;
   wabt::Result OnUnaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnUnreachableExpr() override;
-  wabt::Result OnWaitExpr(Opcode opcode,
-                          uint32_t alignment_log2,
-                          Address offset) override;
-  wabt::Result OnWakeExpr(Opcode opcode,
-                          uint32_t alignment_log2,
-                          Address offset) override;
   wabt::Result EndFunctionBody(Index index) override;
 
   wabt::Result EndElemSegmentInitExpr(Index index) override;
@@ -1486,24 +1486,24 @@ wabt::Result BinaryReaderInterp::OnUnreachableExpr() {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnWaitExpr(Opcode opcode,
-                                            uint32_t alignment_log2,
-                                            Address offset) {
+wabt::Result BinaryReaderInterp::OnAtomicWaitExpr(Opcode opcode,
+                                                  uint32_t alignment_log2,
+                                                  Address offset) {
   CHECK_RESULT(CheckHasMemory(opcode));
   CHECK_RESULT(CheckAtomicAlign(alignment_log2, opcode.GetMemorySize()));
-  CHECK_RESULT(typechecker_.OnWait(opcode));
+  CHECK_RESULT(typechecker_.OnAtomicWait(opcode));
   CHECK_RESULT(EmitOpcode(opcode));
   CHECK_RESULT(EmitI32(module_->memory_index));
   CHECK_RESULT(EmitI32(offset));
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnWakeExpr(Opcode opcode,
-                                            uint32_t alignment_log2,
-                                            Address offset) {
+wabt::Result BinaryReaderInterp::OnAtomicWakeExpr(Opcode opcode,
+                                                  uint32_t alignment_log2,
+                                                  Address offset) {
   CHECK_RESULT(CheckHasMemory(opcode));
   CHECK_RESULT(CheckAtomicAlign(alignment_log2, opcode.GetMemorySize()));
-  CHECK_RESULT(typechecker_.OnWake(opcode));
+  CHECK_RESULT(typechecker_.OnAtomicWake(opcode));
   CHECK_RESULT(EmitOpcode(opcode));
   CHECK_RESULT(EmitI32(module_->memory_index));
   CHECK_RESULT(EmitI32(offset));

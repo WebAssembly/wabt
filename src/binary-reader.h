@@ -191,6 +191,12 @@ class BinaryReaderDelegate {
   virtual Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
                                         uint32_t alignment_log2,
                                         Address offset) = 0;
+  virtual Result OnAtomicWaitExpr(Opcode opcode,
+                                  uint32_t alignment_log2,
+                                  Address offset) = 0;
+  virtual Result OnAtomicWakeExpr(Opcode opcode,
+                                  uint32_t alignment_log2,
+                                  Address offset) = 0;
   virtual Result OnBinaryExpr(Opcode opcode) = 0;
   virtual Result OnBlockExpr(Index num_types, Type* sig_types) = 0;
   virtual Result OnBrExpr(Index depth) = 0;
@@ -236,12 +242,6 @@ class BinaryReaderDelegate {
 
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnUnreachableExpr() = 0;
-  virtual Result OnWaitExpr(Opcode opcode,
-                            uint32_t alignment_log2,
-                            Address offset) = 0;
-  virtual Result OnWakeExpr(Opcode opcode,
-                            uint32_t alignment_log2,
-                            Address offset) = 0;
   virtual Result EndFunctionBody(Index index) = 0;
   virtual Result EndCodeSection() = 0;
 
