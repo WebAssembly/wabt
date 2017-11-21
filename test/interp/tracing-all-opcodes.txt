@@ -213,9 +213,9 @@
   (; 0xfc 0x07 ;) (func (export "i64.trunc_u:sat/f64") f64.const 1 i64.trunc_u:sat/f64 drop)
 
   ;; --enable-threads
-  (; 0xfe 0x00 ;) (func (export "wake") i32.const 1 i32.const 2 wake offset=3 drop)
-  (; 0xfe 0x01 ;) (func (export "i32.wait") i32.const 1 i32.const 2 i64.const 3 i32.wait offset=3 drop)
-  (; 0xfe 0x02 ;) (func (export "i64.wait") i32.const 1 i64.const 2 i64.const 3 i64.wait offset=3 drop)
+  (; 0xfe 0x00 ;) (func (export "atomic.wake") i32.const 1 i32.const 2 atomic.wake offset=3 drop)
+  (; 0xfe 0x01 ;) (func (export "i32.atomic.wait") i32.const 1 i32.const 2 i64.const 3 i32.atomic.wait offset=3 drop)
+  (; 0xfe 0x02 ;) (func (export "i64.atomic.wait") i32.const 1 i64.const 2 i64.const 3 i64.atomic.wait offset=3 drop)
   (; 0xfe 0x10 ;) (func (export "i32.atomic.load") i32.const 1 i32.atomic.load offset=3 drop)
   (; 0xfe 0x11 ;) (func (export "i64.atomic.load") i32.const 1 i64.atomic.load offset=7 drop)
   (; 0xfe 0x12 ;) (func (export "i32.atomic.load8_u") i32.const 1 i32.atomic.load8_u offset=3 drop)
@@ -1439,23 +1439,23 @@ i64.trunc_s:sat/f64() =>
 #0. 2586: V:1  | drop
 #0. 2587: V:0  | return
 i64.trunc_u:sat/f64() =>
->>> running export "wake":
+>>> running export "atomic.wake":
 #0. 2588: V:0  | i32.const $1
 #0. 2593: V:1  | i32.const $2
-#0. 2598: V:2  | wake $0:1+$3, 2
-wake() => error: unreachable executed
->>> running export "i32.wait":
+#0. 2598: V:2  | atomic.wake $0:1+$3, 2
+atomic.wake() => error: unreachable executed
+>>> running export "i32.atomic.wait":
 #0. 2610: V:0  | i32.const $1
 #0. 2615: V:1  | i32.const $2
 #0. 2620: V:2  | i64.const $3
-#0. 2629: V:3  | i32.wait $0:1+$3, 2, 3
-i32.wait() => error: unreachable executed
->>> running export "i64.wait":
+#0. 2629: V:3  | i32.atomic.wait $0:1+$3, 2, 3
+i32.atomic.wait() => error: unreachable executed
+>>> running export "i64.atomic.wait":
 #0. 2641: V:0  | i32.const $1
 #0. 2646: V:1  | i64.const $2
 #0. 2655: V:2  | i64.const $3
-#0. 2664: V:3  | i64.wait $0:1+$3, 2, 3
-i64.wait() => error: unreachable executed
+#0. 2664: V:3  | i64.atomic.wait $0:1+$3, 2, 3
+i64.atomic.wait() => error: unreachable executed
 >>> running export "i32.atomic.load":
 #0. 2676: V:0  | i32.const $1
 #0. 2681: V:1  | i32.atomic.load $0:1+$3

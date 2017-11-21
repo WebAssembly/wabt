@@ -359,6 +359,12 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::AtomicStore:
       WriteLoadStoreExpr<AtomicStoreExpr>(module, func, expr, "memory offset");
       break;
+    case ExprType::AtomicWait:
+      WriteLoadStoreExpr<AtomicWaitExpr>(module, func, expr, "memory offset");
+      break;
+    case ExprType::AtomicWake:
+      WriteLoadStoreExpr<AtomicWakeExpr>(module, func, expr, "memory offset");
+      break;
     case ExprType::Binary:
       WriteOpcode(stream_, cast<BinaryExpr>(expr)->opcode);
       break;
@@ -544,12 +550,6 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     case ExprType::Unreachable:
       WriteOpcode(stream_, Opcode::Unreachable);
-      break;
-    case ExprType::Wait:
-      WriteLoadStoreExpr<WaitExpr>(module, func, expr, "memory offset");
-      break;
-    case ExprType::Wake:
-      WriteLoadStoreExpr<WakeExpr>(module, func, expr, "memory offset");
       break;
   }
 }

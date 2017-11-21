@@ -195,6 +195,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                                 Address offset) override {
     return Result::Ok;
   }
+  Result OnAtomicWaitExpr(Opcode, uint32_t, Address) override {
+    return Result::Ok;
+  }
+  Result OnAtomicWakeExpr(Opcode, uint32_t, Address) override {
+    return Result::Ok;
+  }
   Result OnBinaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnBlockExpr(Index num_types, Type* sig_types) override {
     return Result::Ok;
@@ -253,8 +259,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnUnaryExpr(Opcode opcode) override { return Result::Ok; }
   Result OnUnreachableExpr() override { return Result::Ok; }
-  Result OnWaitExpr(Opcode, uint32_t, Address) override { return Result::Ok; }
-  Result OnWakeExpr(Opcode, uint32_t, Address) override { return Result::Ok; }
   Result EndFunctionBody(Index index) override { return Result::Ok; }
   Result EndCodeSection() override { return Result::Ok; }
 

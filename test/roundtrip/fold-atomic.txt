@@ -4,9 +4,9 @@
 (module
   (memory 1 1 shared)
   (func
-    i32.const 0 i32.const 0 wake drop
-    i32.const 0 i32.const 0 i64.const 0 i32.wait drop
-    i32.const 0 i64.const 0 i64.const 0 i64.wait drop
+    i32.const 0 i32.const 0 atomic.wake drop
+    i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
 
     i32.const 0 i32.atomic.load drop
     i32.const 0 i64.atomic.load drop
@@ -86,16 +86,16 @@
   (type (;0;) (func))
   (func (;0;) (type 0)
     (drop
-      (wake
+      (atomic.wake
         (i32.const 0)
         (i32.const 0)))
     (drop
-      (i32.wait
+      (i32.atomic.wait
         (i32.const 0)
         (i32.const 0)
         (i64.const 0)))
     (drop
-      (i64.wait
+      (i64.atomic.wait
         (i32.const 0)
         (i64.const 0)
         (i64.const 0)))

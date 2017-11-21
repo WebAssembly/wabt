@@ -234,9 +234,9 @@ WABT_OPCODE(I64, F32, ___, ___, 0, 0xfc,  0x05, I64TruncUSatF32, "i64.trunc_u:sa
 WABT_OPCODE(I64, F64, ___, ___, 0, 0xfc,  0x06, I64TruncSSatF64, "i64.trunc_s:sat/f64")
 WABT_OPCODE(I64, F64, ___, ___, 0, 0xfc,  0x07, I64TruncUSatF64, "i64.trunc_u:sat/f64")
 
-WABT_OPCODE(I32, I32, I32, ___, 4, 0xfe,  0x00, Wake, "wake")
-WABT_OPCODE(I32, I32, I32, I64, 4, 0xfe,  0x01, I32Wait, "i32.wait")
-WABT_OPCODE(I32, I32, I64, I64, 8, 0xfe,  0x02, I64Wait, "i64.wait")
+WABT_OPCODE(I32, I32, I32, ___, 4, 0xfe,  0x00, AtomicWake, "atomic.wake")
+WABT_OPCODE(I32, I32, I32, I64, 4, 0xfe,  0x01, I32AtomicWait, "i32.atomic.wait")
+WABT_OPCODE(I32, I32, I64, I64, 8, 0xfe,  0x02, I64AtomicWait, "i64.atomic.wait")
 WABT_OPCODE(I32, I32, ___, ___, 4, 0xfe,  0x10, I32AtomicLoad, "i32.atomic.load")
 WABT_OPCODE(I64, I32, ___, ___, 8, 0xfe,  0x11, I64AtomicLoad, "i64.atomic.load")
 WABT_OPCODE(I32, I32, ___, ___, 1, 0xfe,  0x12, I32AtomicLoad8U, "i32.atomic.load8_u")

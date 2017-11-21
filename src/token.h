@@ -86,6 +86,8 @@ enum class TokenType {
   AtomicRmw,
   AtomicRmwCmpxchg,
   AtomicStore,
+  AtomicWait,
+  AtomicWake,
   Binary,
   Block,
   Br,
@@ -120,10 +122,8 @@ enum class TokenType {
   Try,
   Unary,
   Unreachable,
-  Wait,
-  Wake,
   First_Opcode = AtomicLoad,
-  Last_Opcode = Wake,
+  Last_Opcode = Unreachable,
 
   // Tokens with string data.
   AlignEqNat,

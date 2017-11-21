@@ -151,9 +151,11 @@ struct FuncDeclaration {
 
 enum class ExprType {
   AtomicLoad,
-  AtomicStore,
   AtomicRmw,
   AtomicRmwCmpxchg,
+  AtomicStore,
+  AtomicWait,
+  AtomicWake,
   Binary,
   Block,
   Br,
@@ -184,11 +186,9 @@ enum class ExprType {
   TryBlock,
   Unary,
   Unreachable,
-  Wait,
-  Wake,
 
-  First = Binary,
-  Last = Wake
+  First = AtomicLoad,
+  Last = Unreachable
 };
 
 const char* GetExprTypeName(ExprType type);
@@ -369,8 +369,8 @@ typedef LoadStoreExpr<ExprType::AtomicLoad> AtomicLoadExpr;
 typedef LoadStoreExpr<ExprType::AtomicStore> AtomicStoreExpr;
 typedef LoadStoreExpr<ExprType::AtomicRmw> AtomicRmwExpr;
 typedef LoadStoreExpr<ExprType::AtomicRmwCmpxchg> AtomicRmwCmpxchgExpr;
-typedef LoadStoreExpr<ExprType::Wait> WaitExpr;
-typedef LoadStoreExpr<ExprType::Wake> WakeExpr;
+typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
+typedef LoadStoreExpr<ExprType::AtomicWake> AtomicWakeExpr;
 
 struct Exception {
   Exception() = default;

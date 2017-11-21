@@ -165,12 +165,12 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::GrowMemory:
     case TokenType::Throw:
     case TokenType::Rethrow:
-    case TokenType::Wake:
-    case TokenType::Wait:
     case TokenType::AtomicLoad:
     case TokenType::AtomicStore:
     case TokenType::AtomicRmw:
     case TokenType::AtomicRmwCmpxchg:
+    case TokenType::AtomicWake:
+    case TokenType::AtomicWait:
       return true;
     default:
       return false;
@@ -1431,17 +1431,19 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       CHECK_RESULT(ParsePlainInstrVar<RethrowExpr>(loc, out_expr));
       break;
 
-    case TokenType::Wake: {
+    case TokenType::AtomicWake: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(ParsePlainLoadStoreInstr<WakeExpr>(loc, token, out_expr));
+      CHECK_RESULT(
+          ParsePlainLoadStoreInstr<AtomicWakeExpr>(loc, token, out_expr));
       break;
     }
 
-    case TokenType::Wait: {
+    case TokenType::AtomicWait: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      CHECK_RESULT(ParsePlainLoadStoreInstr<WaitExpr>(loc, token, out_expr));
+      CHECK_RESULT(
+          ParsePlainLoadStoreInstr<AtomicWaitExpr>(loc, token, out_expr));
       break;
     }
 

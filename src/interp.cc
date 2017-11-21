@@ -2180,9 +2180,9 @@ Result Thread::Run(int num_instructions) {
       case Opcode::Nop:
         break;
 
-      case Opcode::I32Wait:
-      case Opcode::I64Wait:
-      case Opcode::Wake:
+      case Opcode::I32AtomicWait:
+      case Opcode::I64AtomicWait:
+      case Opcode::AtomicWake:
         // TODO(binji): Implement.
         TRAP(Unreachable);
         break;
@@ -2329,7 +2329,7 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::Wake:
+    case Opcode::AtomicWake:
     case Opcode::I32AtomicStore:
     case Opcode::I32AtomicStore8:
     case Opcode::I32AtomicStore16:
@@ -2409,7 +2409,7 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::I32Wait: {
+    case Opcode::I32AtomicWait: {
       Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %u, %" PRIu64 "\n",
                      opcode.GetName(), memory_index, Pick(3).i32, ReadU32At(pc),
@@ -2417,7 +2417,7 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::I64Wait:
+    case Opcode::I64AtomicWait:
     case Opcode::I64AtomicRmwCmpxchg:
     case Opcode::I64AtomicRmw8UCmpxchg:
     case Opcode::I64AtomicRmw16UCmpxchg:
@@ -2782,7 +2782,7 @@ void Environment::Disassemble(Stream* stream,
         break;
       }
 
-      case Opcode::Wake:
+      case Opcode::AtomicWake:
       case Opcode::I32AtomicStore:
       case Opcode::I64AtomicStore:
       case Opcode::I32AtomicStore8:
@@ -2847,8 +2847,8 @@ void Environment::Disassemble(Stream* stream,
         break;
       }
 
-      case Opcode::I32Wait:
-      case Opcode::I64Wait:
+      case Opcode::I32AtomicWait:
+      case Opcode::I64AtomicWait:
       case Opcode::I32AtomicRmwCmpxchg:
       case Opcode::I64AtomicRmwCmpxchg:
       case Opcode::I32AtomicRmw8UCmpxchg:

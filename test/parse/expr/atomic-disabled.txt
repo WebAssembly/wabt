@@ -3,9 +3,9 @@
 (module
   (memory 1)
   (func
-    i32.const 0 i32.const 0 wake drop
-    i32.const 0 i32.const 0 i64.const 0 i32.wait drop
-    i32.const 0 i64.const 0 i64.const 0 i64.wait drop
+    i32.const 0 i32.const 0 atomic.wake drop
+    i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
 
     i32.const 0 i32.atomic.load drop
     i32.const 0 i64.atomic.load drop
@@ -81,15 +81,15 @@
 
 ))
 (;; STDERR ;;;
-out/test/parse/expr/atomic-disabled.txt:6:29: error: opcode not allowed: wake
-    i32.const 0 i32.const 0 wake drop
-                            ^^^^
-out/test/parse/expr/atomic-disabled.txt:7:41: error: opcode not allowed: i32.wait
-    i32.const 0 i32.const 0 i64.const 0 i32.wait drop
-                                        ^^^^^^^^
-out/test/parse/expr/atomic-disabled.txt:8:41: error: opcode not allowed: i64.wait
-    i32.const 0 i64.const 0 i64.const 0 i64.wait drop
-                                        ^^^^^^^^
+out/test/parse/expr/atomic-disabled.txt:6:29: error: opcode not allowed: atomic.wake
+    i32.const 0 i32.const 0 atomic.wake drop
+                            ^^^^^^^^^^^
+out/test/parse/expr/atomic-disabled.txt:7:41: error: opcode not allowed: i32.atomic.wait
+    i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
+                                        ^^^^^^^^^^^^^^^
+out/test/parse/expr/atomic-disabled.txt:8:41: error: opcode not allowed: i64.atomic.wait
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
+                                        ^^^^^^^^^^^^^^^
 out/test/parse/expr/atomic-disabled.txt:10:17: error: opcode not allowed: i32.atomic.load
     i32.const 0 i32.atomic.load drop
                 ^^^^^^^^^^^^^^^

@@ -488,6 +488,14 @@ void WatWriter::WriteExpr(const Expr* expr) {
       WriteLoadStoreExpr<AtomicRmwCmpxchgExpr>(expr);
       break;
 
+    case ExprType::AtomicWait:
+      WriteLoadStoreExpr<AtomicWaitExpr>(expr);
+      break;
+
+    case ExprType::AtomicWake:
+      WriteLoadStoreExpr<AtomicWakeExpr>(expr);
+      break;
+
     case ExprType::Binary:
       WritePutsNewline(cast<BinaryExpr>(expr)->opcode.GetName());
       break;
@@ -657,14 +665,6 @@ void WatWriter::WriteExpr(const Expr* expr) {
       WritePutsNewline(Opcode::Unreachable_Opcode.GetName());
       break;
 
-    case ExprType::Wait:
-      WriteLoadStoreExpr<WaitExpr>(expr);
-      break;
-
-    case ExprType::Wake:
-      WriteLoadStoreExpr<WakeExpr>(expr);
-      break;
-
     default:
       fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(*expr));
       assert(0);
@@ -712,9 +712,9 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
   WABT_TRACE_ARGS(WriteFoldedExpr, "%s", GetExprTypeName(*expr));
   switch (expr->type()) {
     case ExprType::AtomicRmw:
+    case ExprType::AtomicWake:
     case ExprType::Binary:
     case ExprType::Compare:
-    case ExprType::Wake:
       PushExpr(expr, 2, 1);
       break;
 
@@ -799,8 +799,8 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::AtomicRmwCmpxchg:
+    case ExprType::AtomicWait:
     case ExprType::Select:
-    case ExprType::Wait:
       PushExpr(expr, 3, 1);
       break;
 
