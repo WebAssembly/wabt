@@ -456,6 +456,24 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
 #define I32_POPCNT(x) (__builtin_popcount(x))
 #define I64_POPCNT(x) (__builtin_popcountll(x))
 
+#define DEFINE_ROTR(name, t, bits)  \
+  static inline t name(t x, t n) {  \
+    y = y & (bits-1);               \
+    return (x>>n) | (x<<(bits-n));  \
+  }
+
+DEFINE_ROTR(i32_rotr, u32, 32);
+DEFINE_ROTR(i64_rotr, u64, 64);
+
+#define DEFINE_ROTL(name, t, bits)  \
+  static inline t name(t x, t n) {  \
+    y = y & (bits-1);               \
+    return (x<<n) | (x>>(bits-n));  \
+  }
+
+DEFINE_ROTL(i32_rotl, u32, 32);
+DEFINE_ROTL(i64_rotl, u64, 64);
+
 #define UNREACHABLE TRAP(UNREACHABLE)
 
 )";
@@ -1654,28 +1672,43 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::I32Rotl:
+      WritePrefixBinaryExpr(expr.opcode, "I32_ROTL");
+      break;
+
     case Opcode::I64Rotl:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WritePrefixBinaryExpr(expr.opcode, "I64_ROTL");
       break;
 
     case Opcode::I32Rotr:
+      WritePrefixBinaryExpr(expr.opcode, "I32_ROTR");
+      break;
+
     case Opcode::I64Rotr:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WritePrefixBinaryExpr(expr.opcode, "I64_ROTR");
       break;
 
     case Opcode::F32Min:
+      WritePrefixBinaryExpr(expr.opcode, "fminf");
+      break;
+
     case Opcode::F64Min:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WritePrefixBinaryExpr(expr.opcode, "fmin");
       break;
 
     case Opcode::F32Max:
+      WritePrefixBinaryExpr(expr.opcode, "fmaxf");
+      break;
+
     case Opcode::F64Max:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WritePrefixBinaryExpr(expr.opcode, "fmax");
       break;
 
     case Opcode::F32Copysign:
+      WritePrefixBinaryExpr(expr.opcode, "copysignf");
+      break;
+
     case Opcode::F64Copysign:
-      UNIMPLEMENTED(expr.opcode.GetName());
+      WritePrefixBinaryExpr(expr.opcode, "copysign");
       break;
 
     default:
