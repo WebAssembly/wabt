@@ -82,7 +82,7 @@ function compile() {
     var module = wabt.parseWat('test.wast', watEditor.getValue());
     module.resolveNames();
     module.validate();
-    var binaryOutput = module.toBinary({log: true});
+    var binaryOutput = module.toBinary({log: true, write_debug_names:true});
     outputEl.textContent = binaryOutput.log;
     binaryBuffer = binaryOutput.buffer;
     var blob = new Blob([binaryOutput.buffer]);
