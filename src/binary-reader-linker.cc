@@ -289,7 +289,7 @@ Result ReadBinaryLinker(LinkerInputBinary* input_info, LinkOptions* options) {
   ReadBinaryOptions read_options;
   read_options.read_debug_names = true;
   read_options.log_stream = options->log_stream;
-  return ReadBinary(DataOrNull(input_info->data), input_info->data.size(),
+  return ReadBinary(input_info->data.data(), input_info->data.size(),
                     &reader, &read_options);
 }
 

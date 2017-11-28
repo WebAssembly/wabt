@@ -126,15 +126,6 @@ void Destruct(T& placement) {
   placement.~T();
 }
 
-// Calls data() on vector, string, etc. but will return nullptr if the
-// container is empty.
-// TODO(binji): this should probably be removed when there is a more direct way
-// to represent a memory slice (e.g. something similar to GSL's span)
-template <typename T>
-typename T::value_type* DataOrNull(T& container) {
-  return container.empty() ? nullptr : container.data();
-}
-
 inline std::string WABT_PRINTF_FORMAT(1, 2)
     StringPrintf(const char* format, ...) {
   va_list args;
