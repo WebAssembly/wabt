@@ -180,7 +180,8 @@ SANITIZER(USE_LSAN "-fsanitize=leak")
 if (USE_UBSAN)
   # -fno-sanitize-recover was deprecated, see if we are compiling with a newer
   # clang that requires -fno-sanitize-recover=all.
-  include(CheckCCompilerFlag)
+  set(UBSAN_BLACKLIST ${WABT_SOURCE_DIR}/ubsan.blacklist)
+  include(CheckCXXCompilerFlag)
   CHECK_CXX_COMPILER_FLAG("-fsanitize=undefined -fno-sanitize-recover -Wall -Werror" HAS_UBSAN_RECOVER_BARE)
   if (HAS_UBSAN_RECOVER_BARE)
     SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover -fsanitize-blacklist=${UBSAN_BLACKLIST}")
