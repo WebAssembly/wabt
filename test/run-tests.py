@@ -36,7 +36,6 @@ IS_WINDOWS = sys.platform == 'win32'
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(TEST_DIR)
 OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
-ROUNDTRIP_PY = os.path.join(TEST_DIR, 'run-roundtrip.py')
 DEFAULT_TIMEOUT = 10  # seconds
 SLOW_TIMEOUT_MULTIPLIER = 2
 
@@ -232,8 +231,8 @@ class TestInfo(object):
     self.input_ = ''
     self.expected_stdout = ''
     self.expected_stderr = ''
-    self.tool = 'wat2wasm'
-    self.exe = '%(wat2wasm)s'
+    self.tool = None
+    self.exe = None
     self.flags = []
     self.env = {}
     self.last_cmd = ''
@@ -244,18 +243,16 @@ class TestInfo(object):
 
   def CreateRoundtripInfo(self, fold_exprs):
     result = TestInfo()
+    result.SetTool('run-roundtrip')
     result.filename = self.filename
     result.header = self.header
     result.input_filename = self.input_filename
     result.input_ = self.input_
     result.expected_stdout = ''
     result.expected_stderr = ''
-    result.tool = 'run-roundtrip'
-    result.exe = ROUNDTRIP_PY
     # TODO(binji): It's kind of cheesy to keep the enable flag based on prefix.
     # Maybe it would be nicer to add a new directive ENABLE instead.
     result.flags = [flag for flag in self.flags if flag.startswith('--enable')]
-    result.flags += ['--bindir', '%(bindir)s', '-v', '-o', '%(out_dir)s']
     if fold_exprs:
       result.flags.append('--fold-exprs')
     result.env = self.env
@@ -295,6 +292,13 @@ class TestInfo(object):
   def ShouldCreateRoundtrip(self):
     return self.tool in ROUNDTRIP_TOOLS
 
+  def SetTool(self, tool):
+    if tool not in TOOLS:
+      raise Error('Unknown tool: %s' % tool)
+    self.tool = tool
+    for tool_key, tool_value in TOOLS[tool].items():
+      self.ParseDirective(tool_key, tool_value)
+
   def ParseDirective(self, key, value):
     if key == 'EXE':
       self.exe = value
@@ -315,11 +319,7 @@ class TestInfo(object):
     elif key in ['TODO', 'NOTE']:
       pass
     elif key == 'TOOL':
-      if not value in TOOLS:
-        raise Error('Unknown tool: %s' % value)
-      self.tool = value
-      for tool_key, tool_value in TOOLS[value].items():
-        self.ParseDirective(tool_key, tool_value)
+      self.SetTool(value)
     elif key == 'ENV':
       # Pattern: FOO=1 BAR=stuff
       self.env = dict(x.split('=') for x in value.split())
@@ -388,6 +388,11 @@ class TestInfo(object):
     self.input_ = ''.join(input_lines)
     self.expected_stdout = ''.join(stdout_lines)
     self.expected_stderr = ''.join(stderr_lines)
+
+    # If the test didn't specify a executable (either via EXE or indirectly
+    # via TOOL, then use the default tool)
+    if not self.exe:
+      self.SetTool('wat2wasm')
 
   def GetExecutable(self):
     if os.path.splitext(self.exe)[1] == '.py':
