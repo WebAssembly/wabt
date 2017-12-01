@@ -34,8 +34,8 @@ std::string ErrorHandler::DefaultErrorMessage(const Color& color,
 
   result += color.MaybeBoldCode();
 
-  if (loc.filename) {
-    result += loc.filename;
+  if (!loc.filename.empty()) {
+    result += loc.filename.to_string();
     result += ":";
   }
 

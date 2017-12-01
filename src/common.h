@@ -161,14 +161,14 @@ struct Location {
   };
 
   Location() : line(0), first_column(0), last_column(0) {}
-  Location(const char* filename, int line, int first_column, int last_column)
+  Location(string_view filename, int line, int first_column, int last_column)
       : filename(filename),
         line(line),
         first_column(first_column),
         last_column(last_column) {}
   explicit Location(size_t offset) : offset(offset) {}
 
-  const char* filename = nullptr;
+  string_view filename;
   union {
     // For text files.
     struct {
@@ -263,7 +263,7 @@ enum class NameSectionSubsection {
   Local = 2,
 };
 
-Result ReadFile(const char* filename, std::vector<uint8_t>* out_data);
+Result ReadFile(string_view filename, std::vector<uint8_t>* out_data);
 
 void InitStdio();
 

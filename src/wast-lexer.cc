@@ -82,7 +82,7 @@
 
 namespace wabt {
 
-WastLexer::WastLexer(std::unique_ptr<LexerSource> source, const char* filename)
+WastLexer::WastLexer(std::unique_ptr<LexerSource> source, string_view filename)
     : source_(std::move(source)),
       line_finder_(source_->Clone()),
       filename_(filename),
@@ -103,13 +103,13 @@ WastLexer::~WastLexer() {
 }
 
 // static
-std::unique_ptr<WastLexer> WastLexer::CreateFileLexer(const char* filename) {
+std::unique_ptr<WastLexer> WastLexer::CreateFileLexer(string_view filename) {
   std::unique_ptr<LexerSource> source(new LexerSourceFile(filename));
   return std::unique_ptr<WastLexer>(new WastLexer(std::move(source), filename));
 }
 
 // static
-std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(const char* filename,
+std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(string_view filename,
                                                         const void* data,
                                                         size_t size) {
   std::unique_ptr<LexerSource> source(new LexerSourceBuffer(data, size));
