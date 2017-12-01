@@ -27,6 +27,7 @@
 #include "src/common.h"
 #include "src/error-handler.h"
 #include "src/feature.h"
+#include "src/filenames.h"
 #include "src/ir.h"
 #include "src/option-parser.h"
 #include "src/resolve-names.h"
@@ -37,7 +38,7 @@
 using namespace wabt;
 
 static const char* s_infile;
-static const char* s_outfile;
+static std::string s_outfile;
 static bool s_dump_module;
 static int s_verbose;
 static WriteBinaryOptions s_write_binary_options;
@@ -98,7 +99,7 @@ static void ParseOptions(int argc, char* argv[]) {
   parser.Parse(argc, argv);
 }
 
-static void WriteBufferToFile(const char* filename,
+static void WriteBufferToFile(string_view filename,
                               const OutputBuffer& buffer) {
   if (s_dump_module) {
     if (s_verbose)
@@ -108,9 +109,15 @@ static void WriteBufferToFile(const char* filename,
     }
   }
 
-  if (filename) {
-    buffer.WriteToFile(filename);
-  }
+  buffer.WriteToFile(filename);
+}
+
+static std::string DefaultOuputName(string_view input_name) {
+  // Strip existing extension and add .wasm
+  std::string result(StripExtension(GetBasename(input_name)));
+  result += kWasmExtension;
+
+  return result;
 }
 
 int ProgramMain(int argc, char** argv) {
@@ -139,8 +146,11 @@ int ProgramMain(int argc, char** argv) {
       result =
           WriteBinaryModule(&stream, module.get(), &s_write_binary_options);
 
-      if (Succeeded(result))
-        WriteBufferToFile(s_outfile, stream.output_buffer());
+      if (Succeeded(result)) {
+        if (s_outfile.empty())
+          s_outfile = DefaultOuputName(s_infile);
+        WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
+      }
     }
   }
 

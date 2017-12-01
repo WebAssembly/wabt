@@ -219,6 +219,7 @@ add_library(libwabt STATIC
   src/opcode.cc
   src/error-handler.cc
   src/hash-util.cc
+  src/filenames.cc
   src/string-view.cc
   src/ir.cc
   src/expr-visitor.cc
@@ -354,6 +355,7 @@ if (NOT EMSCRIPTEN)
       src/test-circular-array.cc
       src/test-intrusive-list.cc
       src/test-string-view.cc
+      src/test-filenames.cc
       src/test-utf8.cc
       src/test-wast-parser.cc
       third_party/gtest/googletest/src/gtest_main.cc
