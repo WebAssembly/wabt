@@ -24,38 +24,12 @@
 #include "src/binary.h"
 #include "src/binary-writer.h"
 #include "src/cast.h"
+#include "src/filenames.h"
 #include "src/ir.h"
 #include "src/stream.h"
 #include "src/string-view.h"
 
 namespace wabt {
-
-static string_view strip_extension(string_view s) {
-  // Strip .json or .wasm, but leave other extensions, e.g.:
-  //
-  // s = "foo", => "foo"
-  // s = "foo.json" => "foo"
-  // s = "foo.wasm" => "foo"
-  // s = "foo.bar" => "foo.bar"
-  string_view ext = s.substr(s.find_last_of('.'));
-  string_view result = s;
-
-  if (ext == ".json" || ext == ".wasm")
-    result.remove_suffix(ext.length());
-  return result;
-}
-
-static string_view get_basename(string_view s) {
-  // Strip everything up to and including the last slash, e.g.:
-  //
-  // s = "/foo/bar/baz", => "baz"
-  // s = "/usr/local/include/stdio.h", => "stdio.h"
-  // s = "foo.bar", => "foo.bar"
-  size_t last_slash = s.find_last_of('/');
-  if (last_slash != string_view::npos)
-    return s.substr(last_slash + 1);
-  return s;
-}
 
 namespace {
 
@@ -93,24 +67,16 @@ class BinaryWriterSpec {
   const WriteBinarySpecOptions* spec_options_ = nullptr;
   Result result_ = Result::Ok;
   size_t num_modules_ = 0;
-
-  static const char* kWasmExtension;
-  static const char* kWatExtension;
 };
-
-// static
-const char* BinaryWriterSpec::kWasmExtension = ".wasm";
-// static
-const char* BinaryWriterSpec::kWatExtension = ".wat";
 
 BinaryWriterSpec::BinaryWriterSpec(const char* source_filename,
                                    const WriteBinarySpecOptions* spec_options)
     : spec_options_(spec_options) {
   source_filename_ = source_filename;
-  module_filename_noext_ = strip_extension(spec_options_->json_filename
-                                               ? spec_options_->json_filename
-                                               : source_filename)
-                               .to_string();
+  module_filename_noext_ =
+      StripExtension(spec_options_->json_filename ? spec_options_->json_filename
+                                                  : source_filename)
+          .to_string();
   write_modules_ = !!spec_options_->json_filename;
 }
 
@@ -370,7 +336,7 @@ void BinaryWriterSpec::WriteInvalidModule(const ScriptModule& module,
   WriteSeparator();
   std::string filename = GetModuleFilename(extension);
   WriteKey("filename");
-  WriteEscapedString(get_basename(filename));
+  WriteEscapedString(GetBasename(filename));
   WriteSeparator();
   WriteKey("text");
   WriteEscapedString(text);
@@ -409,7 +375,7 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
           WriteSeparator();
         }
         WriteKey("filename");
-        WriteEscapedString(get_basename(filename));
+        WriteEscapedString(GetBasename(filename));
         WriteModule(filename, module);
         num_modules_++;
         last_module_index = i;

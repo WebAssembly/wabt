@@ -43,6 +43,7 @@ SLOW_TIMEOUT_MULTIPLIER = 2
 TOOLS = {
     'wat2wasm': {
         'EXE': '%(wat2wasm)s',
+        'FLAGS': [ '-o', '%(out_dir)s/out.wasm'],
         'VERBOSE-FLAGS': ['-v']
     },
     'wast2json': {
