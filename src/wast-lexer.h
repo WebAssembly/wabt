@@ -59,7 +59,7 @@ class WastLexer {
 
   std::unique_ptr<LexerSource> source_;
   LexerSourceLineFinder line_finder_;
-  string_view filename_;
+  std::string filename_;
   int line_;
   int comment_nesting_;
   size_t buffer_file_offset_; // File offset of the start of the buffer.
