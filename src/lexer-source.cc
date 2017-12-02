@@ -20,9 +20,9 @@
 
 namespace wabt {
 
-LexerSourceFile::LexerSourceFile(const std::string& filename)
+LexerSourceFile::LexerSourceFile(string_view filename)
   : filename_(filename) {
-  file_ = fopen(filename.c_str(), "rb");
+  file_ = fopen(filename_.c_str(), "rb");
 }
 
 LexerSourceFile::~LexerSourceFile() {

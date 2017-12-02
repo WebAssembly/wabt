@@ -200,7 +200,7 @@ class JSONParser {
  public:
   JSONParser() {}
 
-  wabt::Result ReadFile(const char* spec_json_filename);
+  wabt::Result ReadFile(string_view spec_json_filename);
   wabt::Result ParseScript(Script* out_script);
 
  private:
@@ -241,7 +241,7 @@ class JSONParser {
 #define PARSE_KEY_STRING_VALUE(key, value) \
   CHECK_RESULT(ParseKeyStringValue(key, value))
 
-wabt::Result JSONParser::ReadFile(const char* spec_json_filename) {
+wabt::Result JSONParser::ReadFile(string_view spec_json_filename) {
   loc_.filename = spec_json_filename;
   loc_.line = 1;
   loc_.first_column = 1;
@@ -251,8 +251,8 @@ wabt::Result JSONParser::ReadFile(const char* spec_json_filename) {
 
 void JSONParser::PrintError(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  fprintf(stderr, "%s:%d:%d: %s\n", loc_.filename, loc_.line, loc_.first_column,
-          buffer);
+  fprintf(stderr, "%s:%d:%d: %s\n", loc_.filename.to_string().c_str(),
+          loc_.line, loc_.first_column, buffer);
 }
 
 void JSONParser::PutbackChar() {
@@ -584,7 +584,7 @@ static string_view GetDirname(string_view path) {
 }
 
 std::string JSONParser::CreateModulePath(string_view filename) {
-  const char* spec_json_filename = loc_.filename;
+  string_view spec_json_filename = loc_.filename;
   string_view dirname = GetDirname(spec_json_filename);
   std::string path;
 
@@ -785,11 +785,11 @@ class CommandRunner {
 
   void TallyCommand(wabt::Result);
 
-  wabt::Result ReadInvalidTextModule(const char* module_filename,
+  wabt::Result ReadInvalidTextModule(string_view module_filename,
                                      Environment* env,
                                      ErrorHandler* error_handler);
   wabt::Result ReadInvalidModule(int line_number,
-                                 const char* module_filename,
+                                 string_view module_filename,
                                  Environment* env,
                                  ModuleType module_type,
                                  const char* desc);
@@ -1048,7 +1048,7 @@ ExecResult CommandRunner::RunAction(int line_number,
   return exec_result;
 }
 
-wabt::Result CommandRunner::ReadInvalidTextModule(const char* module_filename,
+wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
                                                   Environment* env,
                                                   ErrorHandler* error_handler) {
   std::unique_ptr<WastLexer> lexer =
@@ -1066,7 +1066,7 @@ wabt::Result CommandRunner::ReadInvalidTextModule(const char* module_filename,
   return result;
 }
 
-static wabt::Result ReadModule(const char* module_filename,
+static wabt::Result ReadModule(string_view module_filename,
                                Environment* env,
                                ErrorHandler* error_handler,
                                DefinedModule** out_module) {
@@ -1093,7 +1093,7 @@ static wabt::Result ReadModule(const char* module_filename,
 }
 
 wabt::Result CommandRunner::ReadInvalidModule(int line_number,
-                                              const char* module_filename,
+                                              string_view module_filename,
                                               Environment* env,
                                               ModuleType module_type,
                                               const char* desc) {
@@ -1121,7 +1121,7 @@ wabt::Result CommandRunner::ReadInvalidModule(int line_number,
 wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
   Environment::MarkPoint mark = env_.Mark();
   ErrorHandlerFile error_handler(Location::Type::Binary);
-  wabt::Result result = ReadModule(command->filename.c_str(), &env_,
+  wabt::Result result = ReadModule(command->filename, &env_,
                                    &error_handler, &last_module_);
 
   if (Failed(result)) {
@@ -1167,8 +1167,8 @@ wabt::Result CommandRunner::OnAssertMalformedCommand(
   InitEnvironment(&env);
 
   wabt::Result result =
-      ReadInvalidModule(command->line, command->filename.c_str(), &env,
-                        command->type, "assert_malformed");
+      ReadInvalidModule(command->line, command->filename, &env, command->type,
+                        "assert_malformed");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be malformed: \"%s\"",
                command->filename.c_str());
@@ -1199,8 +1199,8 @@ wabt::Result CommandRunner::OnAssertUnlinkableCommand(
     const AssertUnlinkableCommand* command) {
   Environment::MarkPoint mark = env_.Mark();
   wabt::Result result =
-      ReadInvalidModule(command->line, command->filename.c_str(), &env_,
-                        command->type, "assert_unlinkable");
+      ReadInvalidModule(command->line, command->filename, &env_, command->type,
+                        "assert_unlinkable");
   env_.ResetToMarkPoint(mark);
 
   if (Succeeded(result)) {
@@ -1217,9 +1217,8 @@ wabt::Result CommandRunner::OnAssertInvalidCommand(
   Environment env;
   InitEnvironment(&env);
 
-  wabt::Result result =
-      ReadInvalidModule(command->line, command->filename.c_str(), &env,
-                        command->type, "assert_invalid");
+  wabt::Result result = ReadInvalidModule(
+      command->line, command->filename, &env, command->type, "assert_invalid");
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be invalid: \"%s\"",
                command->filename.c_str());
@@ -1235,7 +1234,7 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
   DefinedModule* module;
   Environment::MarkPoint mark = env_.Mark();
   wabt::Result result =
-      ReadModule(command->filename.c_str(), &env_, &error_handler, &module);
+      ReadModule(command->filename, &env_, &error_handler, &module);
 
   if (Succeeded(result)) {
     ExecResult exec_result = executor_.RunStartFunction(module);
@@ -1395,7 +1394,7 @@ void CommandRunner::TallyCommand(wabt::Result result) {
   total_++;
 }
 
-static wabt::Result ReadAndRunSpecJSON(const char* spec_json_filename) {
+static wabt::Result ReadAndRunSpecJSON(string_view spec_json_filename) {
   JSONParser parser;
   CHECK_RESULT(parser.ReadFile(spec_json_filename));
 

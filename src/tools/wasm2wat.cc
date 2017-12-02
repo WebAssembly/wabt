@@ -125,7 +125,7 @@ int ProgramMain(int argc, char** argv) {
       }
 
       if (Succeeded(result)) {
-        FileStream stream(!s_outfile.empty() ? FileStream(s_outfile.c_str())
+        FileStream stream(!s_outfile.empty() ? FileStream(s_outfile)
                                              : FileStream(stdout));
         result = WriteWat(&stream, &module, &s_write_wat_options);
       }
