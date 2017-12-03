@@ -320,7 +320,9 @@ WasmModule.prototype.toBinary = function(options) {
 
 WasmModule.prototype.destroy = function() {
   Module._wabt_destroy_module(this.module_addr);
-  this.lexer.destroy();
+  if (this.lexer) {
+    this.lexer.destroy();
+  }
 };
 
 var exports = {
