@@ -56,6 +56,20 @@ static const uint8_t s_is_char_escaped[] = {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
+// This table matches the characters allowed by wast-lexer.cc for `symbol`.
+// The disallowed printable characters are: "(),;[]{} and <space>.
+static const uint8_t s_valid_name_chars[256] = {
+    //         0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+    /* 0x00 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 0x10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 0x20 */ 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1,
+    /* 0x30 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1,
+    /* 0x40 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    /* 0x50 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1,
+    /* 0x60 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    /* 0x70 */ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0,
+};
+
 enum class NextChar {
   None,
   Space,
@@ -303,7 +317,18 @@ void WatWriter::WriteString(const std::string& str, NextChar next_char) {
 void WatWriter::WriteName(string_view str, NextChar next_char) {
   // Debug names must begin with a $ for for wast file to be valid
   assert(!str.empty() && str.front() == '$');
-  WriteDataWithNextChar(str.data(), str.length());
+  bool has_invalid_chars = std::any_of(
+      str.begin(), str.end(), [](uint8_t c) { return !s_valid_name_chars[c]; });
+
+  if (has_invalid_chars) {
+    std::string valid_str;
+    std::transform(str.begin(), str.end(), std::back_inserter(valid_str),
+                   [](uint8_t c) { return s_valid_name_chars[c] ? c : '_'; });
+    WriteDataWithNextChar(valid_str.data(), valid_str.length());
+  } else {
+    WriteDataWithNextChar(str.data(), str.length());
+  }
+
   next_char_ = next_char;
 }
 
