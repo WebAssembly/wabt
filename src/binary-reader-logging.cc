@@ -307,6 +307,11 @@ Result BinaryReaderLogging::OnF64ConstExpr(uint64_t value_bits) {
   return reader_->OnF64ConstExpr(value_bits);
 }
 
+Result BinaryReaderLogging::OnV128ConstExpr(v128 value_bits) {
+  /*TODO (zhengxing)*/
+  return reader_->OnV128ConstExpr(value_bits);
+}
+
 Result BinaryReaderLogging::OnI32ConstExpr(uint32_t value) {
   LOGF("OnI32ConstExpr(%u (0x%x))\n", value, value);
   return reader_->OnI32ConstExpr(value);
@@ -396,6 +401,12 @@ Result BinaryReaderLogging::OnInitExprF64ConstExpr(Index index,
        "))\n",
        index, value, value_bits);
   return reader_->OnInitExprF64ConstExpr(index, value_bits);
+}
+
+Result BinaryReaderLogging::OnInitExprV128ConstExpr(Index index,
+                                                    v128 value_bits) {
+  /*TODO (zhengxing)*/
+  return reader_->OnInitExprV128ConstExpr(index, value_bits);
 }
 
 Result BinaryReaderLogging::OnInitExprI32ConstExpr(Index index,
@@ -656,6 +667,10 @@ Result BinaryReaderLogging::OnOpcodeF32(uint32_t value) {
 
 Result BinaryReaderLogging::OnOpcodeF64(uint64_t value) {
   return reader_->OnOpcodeF64(value);
+}
+
+Result BinaryReaderLogging::OnOpcodeV128(v128 value) {
+  return reader_->OnOpcodeV128(value);
 }
 
 Result BinaryReaderLogging::OnOpcodeBlockSig(Index num_types, Type* sig_types) {

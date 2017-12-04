@@ -1,3 +1,4 @@
+;;; FLAGS: --enable-simd
 (module
   (func
     i32.const 0
@@ -79,4 +80,8 @@
     f64.const -0x1p-1
     drop
     f64.const 0x1.921fb54442d18p+2
+    drop
+    v128.const i32 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
+    drop
+    v128.const i32 0x11223344 1432778632 2578103244 0xddeeff00
     drop))

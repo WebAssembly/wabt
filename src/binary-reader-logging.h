@@ -132,6 +132,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcodeUint64(uint64_t value) override;
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
+  Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Index num_types, Type* sig_types) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
@@ -165,6 +166,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnEndFunc() override;
   Result OnF32ConstExpr(uint32_t value_bits) override;
   Result OnF64ConstExpr(uint64_t value_bits) override;
+  Result OnV128ConstExpr(v128 value_bits) override;
   Result OnGetGlobalExpr(Index global_index) override;
   Result OnGetLocalExpr(Index local_index) override;
   Result OnGrowMemoryExpr() override;
@@ -269,6 +271,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
+  Result OnInitExprV128ConstExpr(Index index, v128 value) override;
   Result OnInitExprGetGlobalExpr(Index index,
                                  Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;

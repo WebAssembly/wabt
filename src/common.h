@@ -90,6 +90,10 @@
 #define PRIaddress "u"
 #define PRIoffset PRIzx
 
+struct v128 {
+  uint32_t v[4];
+};
+
 namespace wabt {
 
 typedef uint32_t Index;    // An index into one of the many index spaces.
@@ -189,6 +193,7 @@ enum class Type {
   I64 = -0x02,
   F32 = -0x03,
   F64 = -0x04,
+  V128 = -0x05,
   Anyfunc = -0x10,
   Func = -0x20,
   Void = -0x40,
@@ -297,6 +302,8 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "f32";
     case Type::F64:
       return "f64";
+    case Type::V128:
+      return "v128";
     case Type::Anyfunc:
       return "anyfunc";
     case Type::Func:
