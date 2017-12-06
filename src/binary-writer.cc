@@ -142,7 +142,7 @@ class BinaryWriter {
   void WriteGlobalHeader(const Global* global);
   void WriteExceptType(const TypeVector* except_types);
   void WriteRelocSection(const RelocSection* reloc_section);
-  void WriteLinkingSection();
+  void WriteEmptyLinkingSection();
 
   Stream* stream_;
   const WriteBinaryOptions* options_ = nullptr;
