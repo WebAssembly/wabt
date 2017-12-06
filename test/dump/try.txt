@@ -33,7 +33,7 @@
 0000012: 00                                        ; function 0 signature index
 0000010: 02                                        ; FIXUP section size
 ; section "exception"
-0000013: 00                                        ; custom section code
+0000013: 00                                        ; section code
 0000014: 00                                        ; section size (guess)
 0000015: 09                                        ; string length
 0000016: 6578 6365 7074 696f 6e                   exception  ; custom section name

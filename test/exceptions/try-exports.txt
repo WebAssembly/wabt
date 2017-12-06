@@ -37,7 +37,7 @@
 000001e: 00                                        ; export exception index
 0000014: 0a                                        ; FIXUP section size
 ; section "exception"
-000001f: 00                                        ; custom section code
+000001f: 00                                        ; section code
 0000020: 00                                        ; section size (guess)
 0000021: 09                                        ; string length
 0000022: 6578 6365 7074 696f 6e                   exception  ; custom section name

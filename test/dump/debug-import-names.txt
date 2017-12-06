@@ -27,7 +27,7 @@
 000001a: 00                                        ; import signature index
 000000f: 0b                                        ; FIXUP section size
 ; section "name"
-000001b: 00                                        ; custom section code
+000001b: 00                                        ; section code
 000001c: 00                                        ; section size (guess)
 000001d: 04                                        ; string length
 000001e: 6e61 6d65                                name  ; custom section name
