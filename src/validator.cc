@@ -38,7 +38,10 @@ namespace {
 class Validator {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Validator);
-  Validator(ErrorHandler*, WastLexer*, const Script*);
+  Validator(ErrorHandler*,
+            WastLexer*,
+            const Script*,
+            const ValidateOptions* options);
 
   Result CheckModule(const Module* module);
   Result CheckScript(const Script* script);
@@ -146,6 +149,7 @@ class Validator {
   void CheckExcept(const Location* loc, const Exception* Except);
   Result CheckExceptVar(const Var* var, const Exception** out_except);
 
+  const ValidateOptions* options_ = nullptr;
   ErrorHandler* error_handler_ = nullptr;
   WastLexer* lexer_ = nullptr;
   const Script* script_ = nullptr;
@@ -164,8 +168,12 @@ class Validator {
 
 Validator::Validator(ErrorHandler* error_handler,
                      WastLexer* lexer,
-                     const Script* script)
-    : error_handler_(error_handler), lexer_(lexer), script_(script) {
+                     const Script* script,
+                     const ValidateOptions* options)
+    : options_(options),
+      error_handler_(error_handler),
+      lexer_(lexer),
+      script_(script) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
 }
@@ -865,7 +873,8 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
 
     case ExternalKind::Global: {
       auto* global_import = cast<GlobalImport>(import);
-      if (global_import->global.mutable_) {
+      if (global_import->global.mutable_ &&
+          !options_->features.threads_enabled()) {
         PrintError(loc, "mutable globals cannot be imported");
       }
       ++num_imported_globals_;
@@ -892,7 +901,7 @@ void Validator::CheckExport(const Location* loc, const Export* export_) {
     case ExternalKind::Global: {
       const Global* global;
       if (Succeeded(CheckGlobalVar(&export_->var, &global, nullptr))) {
-        if (global->mutable_) {
+        if (global->mutable_ && !options_->features.threads_enabled()) {
           PrintError(&export_->var.loc, "mutable globals cannot be exported");
         }
       }
@@ -1238,24 +1247,27 @@ Result Validator::CheckAllFuncSignatures(const Module* module) {
 
 Result ValidateScript(WastLexer* lexer,
                       const Script* script,
-                      ErrorHandler* error_handler) {
-  Validator validator(error_handler, lexer, script);
+                      ErrorHandler* error_handler,
+                      const ValidateOptions* options) {
+  Validator validator(error_handler, lexer, script, options);
 
   return validator.CheckScript(script);
 }
 
 Result ValidateModule(WastLexer* lexer,
                       const Module* module,
-                      ErrorHandler* error_handler) {
-  Validator validator(error_handler, lexer, nullptr);
+                      ErrorHandler* error_handler,
+                      const ValidateOptions* options) {
+  Validator validator(error_handler, lexer, nullptr, options);
 
   return validator.CheckModule(module);
 }
 
 Result ValidateFuncSignatures(WastLexer* lexer,
                               const Module* module,
-                              ErrorHandler* error_handler) {
-  Validator validator(error_handler, lexer, nullptr);
+                              ErrorHandler* error_handler,
+                              const ValidateOptions* options) {
+  Validator validator(error_handler, lexer, nullptr, options);
 
   return validator.CheckAllFuncSignatures(module);
 }
