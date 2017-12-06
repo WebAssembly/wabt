@@ -664,7 +664,7 @@ void BinaryWriter::WriteEmptyLinkingSection() {
   // Write an empty linking section.  This is signal that the resulting
   // file is relocatable:
   // See: https://github.com/WebAssembly/tool-conventions/blob/master/Linking.md
-  BeginCustomSection(WABT_BINARY_SECTION_LINKING, LEB_SECTION_SIZE_GUESS);
+  BeginCustomSection(WABT_BINARY_SECTION_LINKING);
   EndSection();
 }
 
