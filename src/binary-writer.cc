@@ -663,7 +663,7 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
   EndSection();
 }
 
-void BinaryWriter::WriteLinkingSection() {
+void BinaryWriter::WriteEmptyLinkingSection() {
   // Write an empty linking section.  This is signal that the resulting
   // file is relocatable:
   // See: https://github.com/WebAssembly/tool-conventions/blob/master/Linking.md
@@ -971,7 +971,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
     for (RelocSection& section : reloc_sections_) {
       WriteRelocSection(&section);
     }
-    WriteLinkingSection();
+    WriteEmptyLinkingSection();
   }
 
   return stream_->result();
