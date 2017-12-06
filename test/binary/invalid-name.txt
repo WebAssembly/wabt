@@ -1,0 +1,25 @@
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    i32.const 42
+  }
+}
+section("name") {
+  subsection[1]
+  length[15]
+  func_count[1]
+  index[0]
+  str("hi hello hey")
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32)))
+  (func $hi_hello_hey (type 0) (result i32)
+    i32.const 42))
+;;; STDOUT ;;)
