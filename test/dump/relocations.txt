@@ -26,6 +26,7 @@ Sections:
      Code start=0x0000004f end=0x00000065 (size=0x00000016) count: 1
    Custom start=0x00000067 end=0x00000077 (size=0x00000010) "reloc.Elem"
    Custom start=0x00000079 end=0x0000008f (size=0x00000016) "reloc.Code"
+   Custom start=0x00000091 end=0x00000099 (size=0x00000008) "linking"
 
 Code Disassembly:
 

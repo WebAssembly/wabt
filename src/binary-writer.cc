@@ -142,6 +142,7 @@ class BinaryWriter {
   void WriteGlobalHeader(const Global* global);
   void WriteExceptType(const TypeVector* except_types);
   void WriteRelocSection(const RelocSection* reloc_section);
+  void WriteLinkingSection();
 
   Stream* stream_;
   const WriteBinaryOptions* options_ = nullptr;
@@ -662,6 +663,14 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
   EndSection();
 }
 
+void BinaryWriter::WriteLinkingSection() {
+  // Write an empty linking section.  This is signal that the resulting
+  // file is relocatable:
+  // See: https://github.com/WebAssembly/tool-conventions/blob/master/Linking.md
+  BeginCustomSection(WABT_BINARY_SECTION_LINKING, LEB_SECTION_SIZE_GUESS);
+  EndSection();
+}
+
 Result BinaryWriter::WriteModule(const Module* module) {
   stream_->WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
   stream_->WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
@@ -962,6 +971,7 @@ Result BinaryWriter::WriteModule(const Module* module) {
     for (RelocSection& section : reloc_sections_) {
       WriteRelocSection(&section);
     }
+    WriteLinkingSection();
   }
 
   return stream_->result();
