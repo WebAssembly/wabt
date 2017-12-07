@@ -138,8 +138,11 @@ int ProgramMain(int argc, char** argv) {
   if (Succeeded(result)) {
     result = ResolveNamesModule(lexer.get(), module.get(), &error_handler);
 
-    if (Succeeded(result) && s_validate)
-      result = ValidateModule(lexer.get(), module.get(), &error_handler);
+    if (Succeeded(result) && s_validate) {
+      ValidateOptions options(s_features);
+      result =
+          ValidateModule(lexer.get(), module.get(), &error_handler, &options);
+    }
 
     if (Succeeded(result)) {
       MemoryStream stream(s_log_stream.get());

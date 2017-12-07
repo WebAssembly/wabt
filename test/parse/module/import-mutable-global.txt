@@ -1,0 +1,2 @@
+;;; FLAGS: --enable-threads
+(module (import "mod" "field" (global (mut f32))))

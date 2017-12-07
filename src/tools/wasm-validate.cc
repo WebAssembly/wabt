@@ -81,7 +81,8 @@ int ProgramMain(int argc, char** argv) {
                           file_data.size(), &options, &error_handler, &module);
     if (Succeeded(result)) {
       WastLexer* lexer = nullptr;
-      result = ValidateModule(lexer, &module, &error_handler);
+      ValidateOptions options(s_features);
+      result = ValidateModule(lexer, &module, &error_handler, &options);
     }
   }
   return result != Result::Ok;

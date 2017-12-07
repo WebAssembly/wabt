@@ -1,0 +1,55 @@
+;;; TOOL: run-objdump
+;;; FLAGS: -v --dump-verbose --enable-threads
+(module
+  (import "foo" "imported" (global (mut i32)))
+  (global (export "exported") (mut i32) (i32.const 1)))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Import" (2)
+0000008: 02                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num imports
+; import header 0
+000000b: 03                                        ; string length
+000000c: 666f 6f                                  foo  ; import module name
+000000f: 08                                        ; string length
+0000010: 696d 706f 7274 6564                      imported  ; import field name
+0000018: 03                                        ; import kind
+0000019: 7f                                        ; i32
+000001a: 01                                        ; global mutability
+0000009: 11                                        ; FIXUP section size
+; section "Global" (6)
+000001b: 06                                        ; section code
+000001c: 00                                        ; section size (guess)
+000001d: 01                                        ; num globals
+000001e: 7f                                        ; i32
+000001f: 01                                        ; global mutability
+0000020: 41                                        ; i32.const
+0000021: 01                                        ; i32 literal
+0000022: 0b                                        ; end
+000001c: 06                                        ; FIXUP section size
+; section "Export" (7)
+0000023: 07                                        ; section code
+0000024: 00                                        ; section size (guess)
+0000025: 01                                        ; num exports
+0000026: 08                                        ; string length
+0000027: 6578 706f 7274 6564                      exported  ; export name
+000002f: 03                                        ; export kind
+0000030: 01                                        ; export global index
+0000024: 0c                                        ; FIXUP section size
+
+mutable-global.wasm:	file format wasm 0x1
+
+Section Details:
+
+Import:
+ - global[0] i32 mutable=1 <- foo.imported
+Global:
+ - global[1] i32 mutable=1 - init i32=1
+Export:
+ - global[1] -> "exported"
+
+Code Disassembly:
+
+;;; STDOUT ;;)
