@@ -145,8 +145,9 @@ static wabt::Result ReadModule(const char* module_filename,
                               &options, error_handler, out_module);
 
     if (Succeeded(result)) {
-      if (s_verbose)
+      if (s_verbose) {
         env->DisassembleModule(s_stdout_stream.get(), *out_module);
+      }
     }
   }
   return result;
@@ -237,8 +238,9 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
     Executor executor(&env, s_trace_stream, s_thread_options);
     ExecResult exec_result = executor.RunStartFunction(module);
     if (exec_result.result == interp::Result::Ok) {
-      if (s_run_all_exports)
+      if (s_run_all_exports) {
         RunAllExports(module, &executor, RunVerbosity::Verbose);
+      }
     } else {
       WriteResult(s_stdout_stream.get(), "error running start function",
                   exec_result.result);

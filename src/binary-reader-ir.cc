@@ -868,8 +868,9 @@ Result BinaryReaderIR::OnDataSegmentData(Index index,
   assert(index == module_->data_segments.size() - 1);
   DataSegment* segment = module_->data_segments[index];
   segment->data.resize(size);
-  if (size > 0)
+  if (size > 0) {
     memcpy(segment->data.data(), data, size);
+  }
   return Result::Ok;
 }
 
@@ -884,8 +885,9 @@ Result BinaryReaderIR::OnFunctionNamesCount(Index count) {
 }
 
 Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
-  if (name.empty())
+  if (name.empty()) {
     return Result::Ok;
+  }
 
   Func* func = module_->funcs[index];
   std::string dollar_name = std::string("$") + name.to_string();
@@ -951,8 +953,9 @@ Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
 Result BinaryReaderIR::OnLocalName(Index func_index,
                                    Index local_index,
                                    string_view name) {
-  if (name.empty())
+  if (name.empty()) {
     return Result::Ok;
+  }
 
   Func* func = module_->funcs[func_index];
   Index num_params = func->GetNumParams();

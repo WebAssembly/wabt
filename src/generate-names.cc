@@ -113,10 +113,12 @@ void NameGenerator::GenerateName(const char* prefix,
                                  unsigned disambiguator,
                                  std::string* str) {
   *str = prefix;
-  if (index != kInvalidIndex)
+  if (index != kInvalidIndex) {
     *str += std::to_string(index);
-  if (disambiguator != 0)
+  }
+  if (disambiguator != 0) {
     *str += '_' + std::to_string(disambiguator);
+  }
 }
 
 // static
@@ -152,8 +154,9 @@ void NameGenerator::MaybeGenerateAndBindName(BindingHash* bindings,
                                              const char* prefix,
                                              Index index,
                                              std::string* str) {
-  if (!HasName(*str))
+  if (!HasName(*str)) {
     GenerateAndBindName(bindings, prefix, index, str);
+  }
 }
 
 // static
@@ -179,8 +182,9 @@ void NameGenerator::GenerateAndBindLocalNames(BindingHash* bindings,
                                               const char* prefix) {
   for (size_t i = 0; i < index_to_name_.size(); ++i) {
     const std::string& old_name = index_to_name_[i];
-    if (!old_name.empty())
+    if (!old_name.empty()) {
       continue;
+    }
 
     std::string new_name;
     GenerateAndBindName(bindings, prefix, i, &new_name);

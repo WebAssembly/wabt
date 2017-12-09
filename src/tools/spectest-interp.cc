@@ -263,8 +263,9 @@ void JSONParser::PutbackChar() {
 }
 
 int JSONParser::ReadChar() {
-  if (json_offset_ >= json_data_.size())
+  if (json_offset_ >= json_data_.size()) {
     return -1;
+  }
   prev_loc_ = loc_;
   char c = json_data_[json_offset_++];
   if (c == '\n') {
@@ -453,8 +454,9 @@ wabt::Result JSONParser::ParseTypeVector(TypeVector* out_types) {
   EXPECT("[");
   bool first = true;
   while (!Match("]")) {
-    if (!first)
+    if (!first) {
       EXPECT(",");
+    }
     Type type;
     CHECK_RESULT(ParseTypeObject(&type));
     first = false;
@@ -514,8 +516,9 @@ wabt::Result JSONParser::ParseConstVector(TypedValues* out_values) {
   EXPECT("[");
   bool first = true;
   while (!Match("]")) {
-    if (!first)
+    if (!first) {
       EXPECT(",");
+    }
     TypedValue value;
     CHECK_RESULT(ParseConst(&value));
     out_values->push_back(value);
@@ -575,10 +578,12 @@ static string_view GetDirname(string_view path) {
   // s = "some\windows\directory", => "some\windows"
   size_t last_slash = path.find_last_of('/');
   size_t last_backslash = path.find_last_of('\\');
-  if (last_slash == string_view::npos)
+  if (last_slash == string_view::npos) {
     last_slash = 0;
-  if (last_backslash == string_view::npos)
+  }
+  if (last_backslash == string_view::npos) {
     last_backslash = 0;
+  }
 
   return path.substr(0, std::max(last_slash, last_backslash));
 }
@@ -743,8 +748,9 @@ wabt::Result JSONParser::ParseScript(Script* out_script) {
   bool first = true;
   while (!Match("]")) {
     CommandPtr command;
-    if (!first)
+    if (!first) {
       EXPECT(",");
+    }
     CHECK_RESULT(ParseCommand(&command));
     out_script->commands.push_back(std::move(command));
     first = false;
@@ -1005,10 +1011,12 @@ static ExecResult GetGlobalExportByName(Environment* env,
                                         interp::Module* module,
                                         string_view name) {
   interp::Export* export_ = module->GetExport(name);
-  if (!export_)
+  if (!export_) {
     return ExecResult(interp::Result::UnknownExport);
-  if (export_->kind != ExternalKind::Global)
+  }
+  if (export_->kind != ExternalKind::Global) {
     return ExecResult(interp::Result::ExportKindMismatch);
+  }
 
   interp::Global* global = env->GetGlobal(export_->index);
   return ExecResult(interp::Result::Ok, {global->typed_value});
@@ -1087,8 +1095,9 @@ static wabt::Result ReadModule(string_view module_filename,
                               &options, error_handler, out_module);
 
     if (Succeeded(result)) {
-      if (s_verbose)
+      if (s_verbose) {
         env->DisassembleModule(s_stdout_stream.get(), *out_module);
+      }
     }
   }
   return result;
@@ -1258,8 +1267,9 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
 }
 
 static bool TypedValuesAreEqual(const TypedValue& tv1, const TypedValue& tv2) {
-  if (tv1.type != tv2.type)
+  if (tv1.type != tv2.type) {
     return false;
+  }
 
   switch (tv1.type) {
     case Type::I32:
@@ -1391,8 +1401,9 @@ wabt::Result CommandRunner::OnAssertExhaustionCommand(
 }
 
 void CommandRunner::TallyCommand(wabt::Result result) {
-  if (Succeeded(result))
+  if (Succeeded(result)) {
     passed_++;
+  }
   total_++;
 }
 

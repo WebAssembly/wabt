@@ -82,8 +82,9 @@ bool Opcode::IsNaturallyAligned(Address alignment) const {
 }
 
 Address Opcode::GetAlignment(Address alignment) const {
-  if (alignment == WABT_USE_NATURAL_ALIGNMENT)
+  if (alignment == WABT_USE_NATURAL_ALIGNMENT) {
     return GetMemorySize();
+  }
   return alignment;
 }
 

@@ -44,10 +44,11 @@
     }                           \
   } while (0)
 
-#define ERROR_UNLESS_OPCODE_ENABLED(opcode)    \
-  do {                                         \
-    if (!opcode.IsEnabled(options_->features)) \
-      return ReportUnexpectedOpcode(opcode);   \
+#define ERROR_UNLESS_OPCODE_ENABLED(opcode)      \
+  do {                                           \
+    if (!opcode.IsEnabled(options_->features)) { \
+      return ReportUnexpectedOpcode(opcode);     \
+    }                                            \
   } while (0)
 
 #define CALLBACK0(member)                              \
@@ -176,8 +177,9 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
 Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
                                             const char* message) {
   const char* maybe_space = " ";
-  if (!message)
+  if (!message) {
     message = maybe_space = "";
+  }
   if (opcode.HasPrefix()) {
     PrintError("unexpected opcode%s%s: %d %d (0x%x 0x%x)", maybe_space, message,
                opcode.GetPrefix(), opcode.GetCode(), opcode.GetPrefix(),
@@ -1202,8 +1204,9 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
   uint32_t section;
   CHECK_RESULT(ReadU32Leb128(&section, "section"));
   string_view section_name;
-  if (static_cast<BinarySection>(section) == BinarySection::Custom)
+  if (static_cast<BinarySection>(section) == BinarySection::Custom) {
     CHECK_RESULT(ReadStr(&section_name, "section name"));
+  }
   Index num_relocs;
   CHECK_RESULT(ReadIndex(&num_relocs, "relocation count"));
   CALLBACK(OnRelocCount, num_relocs, static_cast<BinarySection>(section),
@@ -1755,8 +1758,9 @@ Result BinaryReader::ReadSections() {
     ERROR_UNLESS(state_.offset == read_end_,
                  "unfinished section (expected end: 0x%" PRIzx ")", read_end_);
 
-    if (section != BinarySection::Custom)
+    if (section != BinarySection::Custom) {
       last_known_section_ = section;
+    }
   }
 
   return result;

@@ -103,8 +103,9 @@ bool ErrorHandlerFile::OnError(const Location& loc,
 }
 
 void ErrorHandlerFile::PrintErrorHeader() {
-  if (header_.empty())
+  if (header_.empty()) {
     return;
+  }
 
   switch (print_header_) {
     case PrintHeader::Never:

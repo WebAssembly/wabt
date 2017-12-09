@@ -205,8 +205,9 @@ Result Validator::CheckVar(Index max_index,
                            const char* desc,
                            Index* out_index) {
   if (var->index() < max_index) {
-    if (out_index)
+    if (out_index) {
       *out_index = var->index();
+    }
     return Result::Ok;
   }
   PrintError(&var->loc, "%s variable out of range (max %" PRIindex ")", desc,
@@ -217,8 +218,9 @@ Result Validator::CheckVar(Index max_index,
 Result Validator::CheckFuncVar(const Var* var, const Func** out_func) {
   Index index;
   CHECK_RESULT(CheckVar(current_module_->funcs.size(), var, "function", &index));
-  if (out_func)
+  if (out_func) {
     *out_func = current_module_->funcs[index];
+  }
   return Result::Ok;
 }
 
@@ -228,17 +230,20 @@ Result Validator::CheckGlobalVar(const Var* var,
   Index index;
   CHECK_RESULT(
       CheckVar(current_module_->globals.size(), var, "global", &index));
-  if (out_global)
+  if (out_global) {
     *out_global = current_module_->globals[index];
-  if (out_global_index)
+  }
+  if (out_global_index) {
     *out_global_index = index;
+  }
   return Result::Ok;
 }
 
 Type Validator::GetGlobalVarTypeOrAny(const Var* var) {
   const Global* global;
-  if (Succeeded(CheckGlobalVar(var, &global, nullptr)))
+  if (Succeeded(CheckGlobalVar(var, &global, nullptr))) {
     return global->type;
+  }
   return Type::Any;
 }
 
@@ -247,16 +252,18 @@ Result Validator::CheckFuncTypeVar(const Var* var,
   Index index;
   CHECK_RESULT(CheckVar(current_module_->func_types.size(), var,
                         "function type", &index));
-  if (out_func_type)
+  if (out_func_type) {
     *out_func_type = current_module_->func_types[index];
+  }
   return Result::Ok;
 }
 
 Result Validator::CheckTableVar(const Var* var, const Table** out_table) {
   Index index;
   CHECK_RESULT(CheckVar(current_module_->tables.size(), var, "table", &index));
-  if (out_table)
+  if (out_table) {
     *out_table = current_module_->tables[index];
+  }
   return Result::Ok;
 }
 
@@ -264,8 +271,9 @@ Result Validator::CheckMemoryVar(const Var* var, const Memory** out_memory) {
   Index index;
   CHECK_RESULT(
       CheckVar(current_module_->memories.size(), var, "memory", &index));
-  if (out_memory)
+  if (out_memory) {
     *out_memory = current_module_->memories[index];
+  }
   return Result::Ok;
 }
 
@@ -305,8 +313,9 @@ void Validator::CheckAlign(const Location* loc,
                            Address alignment,
                            Address natural_alignment) {
   if (alignment != WABT_USE_NATURAL_ALIGNMENT) {
-    if (!is_power_of_two(alignment))
+    if (!is_power_of_two(alignment)) {
       PrintError(loc, "alignment must be power-of-two");
+    }
     if (alignment > natural_alignment) {
       PrintError(loc,
                  "alignment must not be larger than natural alignment (%u)",
@@ -319,8 +328,9 @@ void Validator::CheckAtomicAlign(const Location* loc,
                                  Address alignment,
                                  Address natural_alignment) {
   if (alignment != WABT_USE_NATURAL_ALIGNMENT) {
-    if (!is_power_of_two(alignment))
+    if (!is_power_of_two(alignment)) {
       PrintError(loc, "alignment must be power-of-two");
+    }
     if (alignment != natural_alignment) {
       PrintError(loc, "alignment must be equal to natural alignment (%u)",
                  natural_alignment);
@@ -385,8 +395,9 @@ void Validator::CheckConstType(const Location* loc,
                                const ConstVector& expected,
                                const char* desc) {
   TypeVector actual_types;
-  if (actual != Type::Void)
+  if (actual != Type::Void) {
     actual_types.push_back(actual);
+  }
   CheckConstTypes(loc, actual_types, expected, desc);
 }
 
@@ -648,16 +659,18 @@ void Validator::CheckExpr(const Expr* expr) {
       typechecker_.OnTryBlock(&try_expr->block.sig);
       CheckExprList(&try_expr->loc, try_expr->block.exprs);
 
-      if (try_expr->catches.empty())
+      if (try_expr->catches.empty()) {
         PrintError(&try_expr->loc, "TryBlock: doesn't have any catch clauses");
+      }
       bool found_catch_all = false;
       for (const Catch& catch_ : try_expr->catches) {
         typechecker_.OnCatchBlock(&try_expr->block.sig);
         if (catch_.IsCatchAll()) {
           found_catch_all = true;
         } else {
-          if (found_catch_all)
+          if (found_catch_all) {
             PrintError(&catch_.loc, "Appears after catch all block");
+          }
           const Exception* except = nullptr;
           if (Succeeded(CheckExceptVar(&catch_.var, &except))) {
             typechecker_.OnCatch(&except->sig);
@@ -802,8 +815,9 @@ void Validator::CheckLimits(const Location* loc, const Limits* limits,
 }
 
 void Validator::CheckTable(const Location* loc, const Table* table) {
-  if (current_table_index_ == 1)
+  if (current_table_index_ == 1) {
     PrintError(loc, "only one table allowed");
+  }
   CheckLimits(loc, &table->elem_limits, UINT32_MAX, "elems",
               LimitsShareable::NotAllowed);
 }
@@ -813,8 +827,9 @@ void Validator::CheckElemSegments(const Module* module) {
     if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(&field)) {
       auto&& elem_segment = elem_segment_field->elem_segment;
       const Table* table;
-      if (Failed(CheckTableVar(&elem_segment.table_var, &table)))
+      if (Failed(CheckTableVar(&elem_segment.table_var, &table))) {
         continue;
+      }
 
       for (const Var& var : elem_segment.vars) {
         CheckFuncVar(&var, nullptr);
@@ -827,8 +842,9 @@ void Validator::CheckElemSegments(const Module* module) {
 }
 
 void Validator::CheckMemory(const Location* loc, const Memory* memory) {
-  if (current_memory_index_ == 1)
+  if (current_memory_index_ == 1) {
     PrintError(loc, "only one memory block allowed");
+  }
   CheckLimits(loc, &memory->page_limits, WABT_MAX_PAGES, "pages",
               LimitsShareable::Allowed);
 }
@@ -838,8 +854,9 @@ void Validator::CheckDataSegments(const Module* module) {
     if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(&field)) {
       auto&& data_segment = data_segment_field->data_segment;
       const Memory* memory;
-      if (Failed(CheckMemoryVar(&data_segment.memory_var, &memory)))
+      if (Failed(CheckMemoryVar(&data_segment.memory_var, &memory))) {
         continue;
+      }
 
       CheckConstInitExpr(&field.loc, data_segment.offset, Type::I32,
                          "data segment offset");
@@ -856,8 +873,9 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
 
     case ExternalKind::Func: {
       auto* func_import = cast<FuncImport>(import);
-      if (func_import->func.decl.has_func_type)
+      if (func_import->func.decl.has_func_type) {
         CheckFuncTypeVar(&func_import->func.decl.type_var, nullptr);
+      }
       break;
     }
 
@@ -1074,8 +1092,9 @@ Result Validator::CheckExceptVar(const Var* var, const Exception** out_except) {
   Index index;
   CHECK_RESULT(
       CheckVar(current_module_->excepts.size(), var, "except", &index));
-  if (out_except)
+  if (out_except) {
     *out_except = current_module_->excepts[index];
+  }
   return Result::Ok;
 }
 
@@ -1106,10 +1125,11 @@ Validator::ActionResult Validator::CheckAction(const Action* action) {
       break;
 
     case ActionType::Get:
-      if (Succeeded(CheckGet(cast<GetAction>(action), &result.type)))
+      if (Succeeded(CheckGet(cast<GetAction>(action), &result.type))) {
         result.kind = ActionResult::Kind::Type;
-      else
+      } else {
         result.kind = ActionResult::Kind::Error;
+      }
       break;
   }
 
@@ -1134,8 +1154,9 @@ void Validator::CheckAssertReturnNanCommand(const Action* action) {
     }
   }
 
-  if (result.kind == ActionResult::Kind::Type && result.type != Type::Any)
+  if (result.kind == ActionResult::Kind::Type && result.type != Type::Any) {
     CheckAssertReturnNanType(&action->loc, result.type, "action");
+  }
 }
 
 void Validator::CheckCommand(const Command* command) {

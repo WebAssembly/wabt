@@ -80,8 +80,9 @@ void BinaryReaderLogging::LogTypes(Index type_count, Type* types) {
   LOGF_NOINDENT("[");
   for (Index i = 0; i < type_count; ++i) {
     LOGF_NOINDENT("%s", GetTypeName(types[i]));
-    if (i != type_count - 1)
+    if (i != type_count - 1) {
       LOGF_NOINDENT(", ");
+    }
   }
   LOGF_NOINDENT("]");
 }
@@ -276,8 +277,9 @@ Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
   LOGF("OnBrTableExpr(num_targets: %" PRIindex ", depths: [", num_targets);
   for (Index i = 0; i < num_targets; ++i) {
     LOGF_NOINDENT("%" PRIindex, target_depths[i]);
-    if (i != num_targets - 1)
+    if (i != num_targets - 1) {
       LOGF_NOINDENT(", ");
+    }
   }
   LOGF_NOINDENT("], default: %" PRIindex ")\n", default_target_depth);
   return reader_->OnBrTableExpr(num_targets, target_depths,
