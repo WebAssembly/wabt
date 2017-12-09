@@ -29,12 +29,14 @@ string_view StripExtension(string_view filename) {
 string_view GetBasename(string_view filename) {
   size_t last_slash = filename.find_last_of('/');
   size_t last_backslash = filename.find_last_of('\\');
-  if (last_slash == string_view::npos && last_backslash == string_view::npos)
+  if (last_slash == string_view::npos && last_backslash == string_view::npos) {
     return filename;
+  }
 
   if (last_slash == string_view::npos) {
-    if (last_backslash == string_view::npos)
+    if (last_backslash == string_view::npos) {
       return filename;
+    }
     last_slash = last_backslash;
   } else if (last_backslash != string_view::npos) {
     last_slash = std::max(last_slash, last_backslash);
@@ -45,8 +47,9 @@ string_view GetBasename(string_view filename) {
 
 string_view GetExtension(string_view filename) {
   size_t pos = filename.find_last_of('.');
-  if (pos == string_view::npos)
+  if (pos == string_view::npos) {
     return "";
+  }
   return filename.substr(pos);
 }
 

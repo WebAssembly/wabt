@@ -142,10 +142,11 @@ void BinaryWriterSpec::WriteLocation(const Location& loc) {
 }
 
 void BinaryWriterSpec::WriteVar(const Var& var) {
-  if (var.is_index())
+  if (var.is_index()) {
     json_stream_.Writef("\"%" PRIindex "\"", var.index());
-  else
+  } else {
     WriteEscapedString(var.name());
+  }
 }
 
 void BinaryWriterSpec::WriteTypeObject(Type type) {
@@ -206,8 +207,9 @@ void BinaryWriterSpec::WriteConstVector(const ConstVector& consts) {
   for (size_t i = 0; i < consts.size(); ++i) {
     const Const& const_ = consts[i];
     WriteConst(const_);
-    if (i != consts.size() - 1)
+    if (i != consts.size() - 1) {
       WriteSeparator();
+    }
   }
   json_stream_.Writef("]");
 }
@@ -272,8 +274,9 @@ void BinaryWriterSpec::WriteModule(string_view filename, const Module& module) {
   MemoryStream memory_stream(spec_options_->log_stream);
   result_ = WriteBinaryModule(&memory_stream, &module,
                               &spec_options_->write_binary_options);
-  if (Succeeded(result_) && write_modules_)
+  if (Succeeded(result_) && write_modules_) {
     result_ = memory_stream.WriteToFile(filename);
+  }
 }
 
 void BinaryWriterSpec::WriteScriptModule(string_view filename,

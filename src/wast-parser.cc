@@ -44,8 +44,9 @@ template <typename OutputIter>
 void RemoveEscapes(string_view text, OutputIter dest) {
   // Remove surrounding quotes; if any. This may be empty if the string was
   // invalid (e.g. if it contained a bad escape sequence).
-  if (text.size() <= 2)
+  if (text.size() <= 2) {
     return;
+  }
 
   text = text.substr(1, text.size() - 2);
 
@@ -206,8 +207,9 @@ bool IsCatch(TokenType token_type) {
 }
 
 bool IsModuleField(TokenTypePair pair) {
-  if (pair[0] != TokenType::Lpar)
+  if (pair[0] != TokenType::Lpar) {
     return false;
+  }
 
   switch (pair[1]) {
     case TokenType::Data:
@@ -228,8 +230,9 @@ bool IsModuleField(TokenTypePair pair) {
 }
 
 bool IsCommand(TokenTypePair pair) {
-  if (pair[0] != TokenType::Lpar)
+  if (pair[0] != TokenType::Lpar) {
     return false;
+  }
 
   switch (pair[1]) {
     case TokenType::AssertExhaustion:
@@ -311,8 +314,9 @@ void ResolveFuncTypes(Module* module) {
       continue;
     }
 
-    if (decl)
+    if (decl) {
       ResolveFuncType(field.loc, module, decl);
+    }
 
     if (func) {
       ResolveFuncTypesExprVisitorDelegate delegate(module);
@@ -351,8 +355,9 @@ void WastParser::Error(Location loc, const char* format, ...) {
 }
 
 Token WastParser::GetToken() {
-  if (tokens_.empty())
+  if (tokens_.empty()) {
     tokens_.push_back(lexer_->GetToken(this));
+  }
   return tokens_.front();
 }
 
@@ -421,8 +426,9 @@ Token WastParser::Consume() {
 Result WastParser::Synchronize(SynchronizeFunc func) {
   static const int kMaxConsumed = 10;
   for (int i = 0; i < kMaxConsumed; ++i) {
-    if (func(PeekPair()))
+    if (func(PeekPair())) {
       return Result::Ok;
+    }
 
     Token token = Consume();
     if (token.token_type() == TokenType::Reserved) {
@@ -436,8 +442,9 @@ Result WastParser::Synchronize(SynchronizeFunc func) {
 
 void WastParser::ErrorUnlessOpcodeEnabled(const Token& token) {
   Opcode opcode = token.opcode();
-  if (!opcode.IsEnabled(options_->features))
+  if (!opcode.IsEnabled(options_->features)) {
     Error(token.loc, "opcode not allowed: %s", opcode.GetName());
+  }
 }
 
 Result WastParser::ErrorExpected(const std::vector<std::string>& expected,
@@ -448,10 +455,11 @@ Result WastParser::ErrorExpected(const std::vector<std::string>& expected,
     expected_str = ", expected ";
     for (size_t i = 0; i < expected.size(); ++i) {
       if (i != 0) {
-        if (i == expected.size() - 1)
+        if (i == expected.size() - 1) {
           expected_str += " or ";
-        else
+        } else {
           expected_str += ", ";
+        }
       }
 
       expected_str += expected[i];
@@ -577,8 +585,9 @@ bool WastParser::ParseVarListOpt(VarVector* out_var_list) {
 
 Result WastParser::ParseValueType(Type* out_type) {
   WABT_TRACE(ParseValueType);
-  if (!PeekMatch(TokenType::ValueType))
+  if (!PeekMatch(TokenType::ValueType)) {
     return ErrorExpected({"i32", "i64", "f32", "f64"});
+  }
 
   *out_type = Consume().type();
   return Result::Ok;
@@ -594,8 +603,9 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list) {
 
 Result WastParser::ParseQuotedText(std::string* text) {
   WABT_TRACE(ParseQuotedText);
-  if (!PeekMatch(TokenType::Text))
+  if (!PeekMatch(TokenType::Text)) {
     return ErrorExpected({"a quoted string"}, "\"foo\"");
+  }
 
   Token token = Consume();
   RemoveEscapes(token.text(), std::back_inserter(*text));
@@ -670,8 +680,9 @@ Result WastParser::ParseLimits(Limits* out_limits) {
 
 Result WastParser::ParseNat(uint64_t* out_nat) {
   WABT_TRACE(ParseNat);
-  if (!PeekMatch(TokenType::Nat))
+  if (!PeekMatch(TokenType::Nat)) {
     return ErrorExpected({"a natural number"}, "123");
+  }
 
   Token token = Consume();
   string_view sv = token.literal().text;
@@ -1672,8 +1683,9 @@ Result WastParser::ParseExprList(ExprList* exprs) {
 
 Result WastParser::ParseExpr(ExprList* exprs) {
   WABT_TRACE(ParseExpr);
-  if (!PeekMatch(TokenType::Lpar))
+  if (!PeekMatch(TokenType::Lpar)) {
     return Result::Error;
+  }
 
   if (IsPlainInstr(Peek(1))) {
     Consume();
@@ -1774,8 +1786,9 @@ Result WastParser::ParseCatchInstrList(CatchVector* catches) {
   while (IsCatch(Peek())) {
     Catch catch_(GetLocation());
 
-    if (Consume().token_type() == TokenType::Catch)
+    if (Consume().token_type() == TokenType::Catch) {
       CHECK_RESULT(ParseVar(&catch_.var));
+    }
 
     CHECK_RESULT(ParseInstrList(&catch_.exprs));
     catches->push_back(std::move(catch_));
@@ -1790,8 +1803,9 @@ Result WastParser::ParseCatchExprList(CatchVector* catches) {
     Consume();
     Catch catch_(GetLocation());
 
-    if (Consume().token_type() == TokenType::Catch)
+    if (Consume().token_type() == TokenType::Catch) {
       CHECK_RESULT(ParseVar(&catch_.var));
+    }
 
     CHECK_RESULT(ParseTerminatingInstrList(&catch_.exprs));
     EXPECT(Rpar);

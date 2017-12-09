@@ -129,8 +129,9 @@ std::string WastLexer::GetText(size_t offset) {
 }
 
 Result WastLexer::Fill(size_t need) {
-  if (eof_)
+  if (eof_) {
     return Result::Error;
+  }
   size_t free = next_pos_ - buffer_;
   assert(static_cast<size_t>(cursor_ - buffer_) >= free);
   // Our buffer is too small, need to realloc.
@@ -146,8 +147,9 @@ Result WastLexer::Fill(size_t need) {
       new_buffer_size *= 2;
 
     char* new_buffer = new char[new_buffer_size];
-    if (limit_ > next_pos_)
+    if (limit_ > next_pos_) {
       memmove(new_buffer, next_pos_, limit_ - next_pos_);
+    }
     buffer_ = new_buffer;
     buffer_size_ = new_buffer_size;
     next_pos_ = new_buffer + (next_pos_ - old_buffer) - free;
@@ -159,8 +161,9 @@ Result WastLexer::Fill(size_t need) {
     delete[] old_buffer;
   } else {
     // Shift everything down to make more room in the buffer.
-    if (limit_ > next_pos_)
+    if (limit_ > next_pos_) {
       memmove(buffer_, next_pos_, limit_ - next_pos_);
+    }
     next_pos_ -= free;
     marker_ -= free;
     cursor_ -= free;
@@ -552,8 +555,9 @@ Token WastLexer::GetToken(WastParser* parser) {
       <LINE_COMMENT> [^\n]+     { continue; }
       <i> "(;" => BLOCK_COMMENT { COMMENT_NESTING = 1; continue; }
       <BLOCK_COMMENT> "(;"      { COMMENT_NESTING++; continue; }
-      <BLOCK_COMMENT> ";)"      { if (--COMMENT_NESTING == 0)
+      <BLOCK_COMMENT> ";)"      { if (--COMMENT_NESTING == 0) {
                                     BEGIN(YYCOND_i);
+                                  }
                                   continue; }
       <BLOCK_COMMENT> "\n"      { NEWLINE; continue; }
       <BLOCK_COMMENT> [^]       { continue; }

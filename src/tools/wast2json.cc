@@ -95,8 +95,9 @@ int ProgramMain(int argc, char** argv) {
   ParseOptions(argc, argv);
 
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateFileLexer(s_infile);
-  if (!lexer)
+  if (!lexer) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
+  }
 
   ErrorHandlerFile error_handler(Location::Type::Text);
   std::unique_ptr<Script> script;

@@ -63,8 +63,9 @@ class Stream {
   void WriteData(const std::vector<T> src,
                  const char* desc,
                  PrintChars print_chars = PrintChars::No) {
-    if (!src.empty())
+    if (!src.empty()) {
       WriteData(src.data(), src.size() * sizeof(T), desc, print_chars);
+    }
   }
 
   void WriteDataAt(size_t offset,

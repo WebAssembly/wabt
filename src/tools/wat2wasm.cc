@@ -102,8 +102,9 @@ static void ParseOptions(int argc, char* argv[]) {
 static void WriteBufferToFile(string_view filename,
                               const OutputBuffer& buffer) {
   if (s_dump_module) {
-    if (s_verbose)
+    if (s_verbose) {
       s_log_stream->Writef(";; dump\n");
+    }
     if (!buffer.data.empty()) {
       s_log_stream->WriteMemoryDump(buffer.data.data(), buffer.data.size());
     }
@@ -126,8 +127,9 @@ int ProgramMain(int argc, char** argv) {
   ParseOptions(argc, argv);
 
   std::unique_ptr<WastLexer> lexer = WastLexer::CreateFileLexer(s_infile);
-  if (!lexer)
+  if (!lexer) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
+  }
 
   ErrorHandlerFile error_handler(Location::Type::Text);
   std::unique_ptr<Module> module;
@@ -150,8 +152,9 @@ int ProgramMain(int argc, char** argv) {
           WriteBinaryModule(&stream, module.get(), &s_write_binary_options);
 
       if (Succeeded(result)) {
-        if (s_outfile.empty())
+        if (s_outfile.empty()) {
           s_outfile = DefaultOuputName(s_infile);
+        }
         WriteBufferToFile(s_outfile.c_str(), stream.output_buffer());
       }
     }

@@ -88,11 +88,13 @@ Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
 void InitStdio() {
 #if COMPILER_IS_MSVC
   int result = _setmode(_fileno(stdout), _O_BINARY);
-  if (result == -1)
+  if (result == -1) {
     perror("Cannot set mode binary to stdout");
+  }
   result = _setmode(_fileno(stderr), _O_BINARY);
-  if (result == -1)
+  if (result == -1) {
     perror("Cannot set mode binary to stderr");
+  }
 #endif
 }
 

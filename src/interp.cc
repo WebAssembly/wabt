@@ -33,10 +33,11 @@ namespace interp {
 // Differs from the normal CHECK_RESULT because this one is meant to return the
 // interp Result type.
 #undef CHECK_RESULT
-#define CHECK_RESULT(expr)  \
-  do {                      \
-    if (WABT_FAILED(expr))  \
-      return Result::Error; \
+#define CHECK_RESULT(expr)   \
+  do {                       \
+    if (WABT_FAILED(expr)) { \
+      return Result::Error;  \
+    }                        \
   } while (0)
 
 // Differs from CHECK_RESULT since it can return different traps, not just
@@ -83,8 +84,9 @@ void WriteTypedValue(Stream* stream, const TypedValue& tv) {
 void WriteTypedValues(Stream* stream, const TypedValues& values) {
   for (size_t i = 0; i < values.size(); ++i) {
     WriteTypedValue(stream, values[i]);
-    if (i != values.size() - 1)
+    if (i != values.size() - 1) {
       stream->Writef(", ");
+    }
   }
 }
 
@@ -106,8 +108,9 @@ void WriteCall(Stream* stream,
                const TypedValues& args,
                const TypedValues& results,
                Result result) {
-  if (!module_name.empty())
+  if (!module_name.empty()) {
     stream->Writef(PRIstringview ".", WABT_PRINTF_STRING_VIEW_ARG(module_name));
+  }
   stream->Writef(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(func_name));
   WriteTypedValues(stream, args);
   stream->Writef(") =>");
@@ -126,8 +129,9 @@ Environment::Environment() : istream_(new OutputBuffer()) {}
 
 Index Environment::FindModuleIndex(string_view name) const {
   auto iter = module_bindings_.find(name.to_string());
-  if (iter == module_bindings_.end())
+  if (iter == module_bindings_.end()) {
     return kInvalidIndex;
+  }
   return iter->second.index;
 }
 
@@ -138,8 +142,9 @@ Module* Environment::FindModule(string_view name) {
 
 Module* Environment::FindRegisteredModule(string_view name) {
   auto iter = registered_module_bindings_.find(name.to_string());
-  if (iter == registered_module_bindings_.end())
+  if (iter == registered_module_bindings_.end()) {
     return nullptr;
+  }
   return modules_[iter->second.index].get();
 }
 
@@ -173,8 +178,9 @@ Module::Module(string_view name, bool is_host)
 
 Export* Module::GetExport(string_view name) {
   int field_index = export_bindings.FindIndex(name);
-  if (field_index < 0)
+  if (field_index < 0) {
     return nullptr;
+  }
   return &exports[field_index];
 }
 
@@ -202,18 +208,20 @@ void Environment::ResetToMarkPoint(const MarkPoint& mark) {
   // Destroy entries in the binding hash.
   for (size_t i = mark.modules_size; i < modules_.size(); ++i) {
     std::string name = modules_[i]->name;
-    if (!name.empty())
+    if (!name.empty()) {
       module_bindings_.erase(name);
+    }
   }
 
   // registered_module_bindings_ maps from an arbitrary name to a module index,
   // so we have to iterate through the entire table to find entries to remove.
   auto iter = registered_module_bindings_.begin();
   while (iter != registered_module_bindings_.end()) {
-    if (iter->second.index >= mark.modules_size)
+    if (iter->second.index >= mark.modules_size) {
       iter = registered_module_bindings_.erase(iter);
-    else
+    } else {
       ++iter;
+    }
   }
 
   modules_.erase(modules_.begin() + mark.modules_size, modules_.end());
@@ -542,10 +550,11 @@ template<> uint64_t GetValue<double>(Value v) { return v.f64_bits; }
 
 #define TRAP(type) return Result::Trap##type
 #define TRAP_UNLESS(cond, type) TRAP_IF(!(cond), type)
-#define TRAP_IF(cond, type)  \
-  do {                       \
-    if (WABT_UNLIKELY(cond)) \
-      TRAP(type);            \
+#define TRAP_IF(cond, type)    \
+  do {                         \
+    if (WABT_UNLIKELY(cond)) { \
+      TRAP(type);              \
+    }                          \
   } while (0)
 
 #define CHECK_STACK() \
@@ -697,8 +706,9 @@ ValueTypeRep<T> Thread::PopRep() {
 
 void Thread::DropKeep(uint32_t drop_count, uint8_t keep_count) {
   assert(keep_count <= 1);
-  if (keep_count == 1)
+  if (keep_count == 1) {
     Pick(drop_count + 1) = Top();
+  }
   value_stack_top_ -= drop_count;
 }
 
@@ -1185,8 +1195,9 @@ ValueTypeRep<T> Xchg(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
 
 bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
                                          Index sig_index_1) const {
-  if (sig_index_0 == sig_index_1)
+  if (sig_index_0 == sig_index_1) {
     return true;
+  }
   const FuncSignature* sig_0 = &sigs_[sig_index_0];
   const FuncSignature* sig_1 = &sigs_[sig_index_1];
   return sig_0->param_types == sig_1->param_types &&
@@ -1244,8 +1255,9 @@ Result Thread::Run(int num_instructions) {
 
       case Opcode::BrIf: {
         IstreamOffset new_pc = ReadU32(&pc);
-        if (Pop<uint32_t>())
+        if (Pop<uint32_t>()) {
           GOTO(new_pc);
+        }
         break;
       }
 
@@ -2161,8 +2173,9 @@ Result Thread::Run(int num_instructions) {
 
       case Opcode::InterpBrUnless: {
         IstreamOffset new_pc = ReadU32(&pc);
-        if (!Pop<uint32_t>())
+        if (!Pop<uint32_t>()) {
           GOTO(new_pc);
+        }
         break;
       }
 
@@ -2666,8 +2679,9 @@ void Environment::Disassemble(Stream* stream,
                               IstreamOffset to) {
   /* TODO(binji): mark function entries */
   /* TODO(binji): track value stack size */
-  if (from >= istream_->data.size())
+  if (from >= istream_->data.size()) {
     return;
+  }
   to = std::min<IstreamOffset>(to, istream_->data.size());
   const uint8_t* istream = istream_->data.data();
   const uint8_t* pc = &istream[from];
@@ -3093,8 +3107,9 @@ ExecResult Executor::RunFunction(Index func_index, const TypedValues& args) {
     exec_result.result = func->is_host
                  ? thread_.CallHost(cast<HostFunc>(func))
                  : RunDefinedFunction(cast<DefinedFunc>(func)->offset);
-    if (exec_result.result == Result::Ok)
+    if (exec_result.result == Result::Ok) {
       CopyResults(sig, &exec_result.values);
+    }
   }
 
   thread_.Reset();
@@ -3102,8 +3117,9 @@ ExecResult Executor::RunFunction(Index func_index, const TypedValues& args) {
 }
 
 ExecResult Executor::RunStartFunction(DefinedModule* module) {
-  if (module->start_func_index == kInvalidIndex)
+  if (module->start_func_index == kInvalidIndex) {
     return ExecResult(Result::Ok);
+  }
 
   if (trace_stream_) {
     trace_stream_->Writef(">>> running start function:\n");
@@ -3129,10 +3145,12 @@ ExecResult Executor::RunExportByName(Module* module,
                                      string_view name,
                                      const TypedValues& args) {
   Export* export_ = module->GetExport(name);
-  if (!export_)
+  if (!export_) {
     return ExecResult(Result::UnknownExport);
-  if (export_->kind != ExternalKind::Func)
+  }
+  if (export_->kind != ExternalKind::Func) {
     return ExecResult(Result::ExportKindMismatch);
+  }
   return RunExport(export_, args);
 }
 
@@ -3151,19 +3169,22 @@ Result Executor::RunDefinedFunction(IstreamOffset function_offset) {
       result = thread_.Run(kNumInstructions);
     }
   }
-  if (result != Result::Returned)
+  if (result != Result::Returned) {
     return result;
+  }
   // Use OK instead of RETURNED for consistency.
   return Result::Ok;
 }
 
 Result Executor::PushArgs(const FuncSignature* sig, const TypedValues& args) {
-  if (sig->param_types.size() != args.size())
+  if (sig->param_types.size() != args.size()) {
     return Result::ArgumentTypeMismatch;
+  }
 
   for (size_t i = 0; i < sig->param_types.size(); ++i) {
-    if (sig->param_types[i] != args[i].type)
+    if (sig->param_types[i] != args[i].type) {
       return Result::ArgumentTypeMismatch;
+    }
 
     Result result = thread_.Push(args[i].value);
     if (result != Result::Ok) {

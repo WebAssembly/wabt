@@ -63,8 +63,9 @@ void WriteLimits(Stream* stream, const Limits* limits) {
   flags |= limits->is_shared ? WABT_BINARY_LIMITS_IS_SHARED_FLAG : 0;
   WriteU32Leb128(stream, flags, "limits: flags");
   WriteU32Leb128(stream, limits->initial, "limits: initial");
-  if (limits->has_max)
+  if (limits->has_max) {
     WriteU32Leb128(stream, limits->max, "limits: max");
+  }
 }
 
 void WriteDebugName(Stream* stream, string_view name, const char* desc) {
@@ -909,8 +910,9 @@ Result BinaryWriter::WriteModule(const Module* module) {
 
     size_t named_functions = 0;
     for (const Func* func : module->funcs) {
-      if (!func->name.empty())
+      if (!func->name.empty()) {
         named_functions++;
+      }
     }
 
     if (named_functions > 0) {
@@ -920,8 +922,9 @@ Result BinaryWriter::WriteModule(const Module* module) {
       WriteU32Leb128(stream_, named_functions, "num functions");
       for (size_t i = 0; i < module->funcs.size(); ++i) {
         const Func* func = module->funcs[i];
-        if (func->name.empty())
+        if (func->name.empty()) {
           continue;
+        }
         WriteU32Leb128(stream_, i, "function index");
         wabt_snprintf(desc, sizeof(desc), "func name %" PRIzd, i);
         WriteDebugName(stream_, func->name, desc);

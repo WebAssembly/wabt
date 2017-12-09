@@ -54,8 +54,9 @@ Result TypeChecker::TopLabel(Label** out_label) {
 
 bool TypeChecker::IsUnreachable() {
   Label* label;
-  if (Failed(TopLabel(&label)))
+  if (Failed(TopLabel(&label))) {
     return true;
+  }
   return label->unreachable;
 }
 
@@ -117,8 +118,9 @@ Result TypeChecker::DropTypes(size_t drop_count) {
 }
 
 void TypeChecker::PushType(Type type) {
-  if (type != Type::Void)
+  if (type != Type::Void) {
     type_stack_.push_back(type);
+  }
 }
 
 void TypeChecker::PushTypes(const TypeVector& types) {
@@ -223,13 +225,15 @@ Result TypeChecker::CheckOpcode3(Opcode opcode) {
 static std::string TypesToString(const TypeVector& types,
                                  const char* prefix = nullptr) {
   std::string result = "[";
-  if (prefix)
+  if (prefix) {
     result += prefix;
+  }
 
   for (size_t i = 0; i < types.size(); ++i) {
     result += GetTypeName(types[i]);
-    if (i < types.size() - 1)
+    if (i < types.size() - 1) {
       result += ", ";
+    }
   }
   result += "]";
   return result;
@@ -326,8 +330,9 @@ Result TypeChecker::OnBr(Index depth) {
   Result result = Result::Ok;
   Label* label;
   CHECK_RESULT(GetLabel(depth, &label));
-  if (label->label_type != LabelType::Loop)
+  if (label->label_type != LabelType::Loop) {
     result |= CheckSignature(label->sig);
+  }
   PrintStackIfFailed(result, "br", label->sig);
   CHECK_RESULT(SetUnreachable());
   return result;
@@ -518,8 +523,9 @@ Result TypeChecker::OnRethrow(Index depth) {
     size_t last = label_stack_.size() - 1;
     for (size_t i = 0; i < label_stack_.size(); ++i) {
       if (label_stack_[last - i].label_type == LabelType::Catch) {
-        if (!candidates.empty())
+        if (!candidates.empty()) {
           candidates.append(", ");
+        }
         candidates.append(std::to_string(i));
       }
     }

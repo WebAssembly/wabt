@@ -446,8 +446,9 @@ wabt::Result BinaryReaderInterp::EmitDropKeep(uint32_t drop, uint8_t keep) {
 wabt::Result BinaryReaderInterp::AppendFixup(
     IstreamOffsetVectorVector* fixups_vector,
     Index index) {
-  if (index >= fixups_vector->size())
+  if (index >= fixups_vector->size()) {
     fixups_vector->resize(index + 1);
+  }
   (*fixups_vector)[index].push_back(GetIstreamOffset());
   return wabt::Result::Ok;
 }
@@ -1025,8 +1026,9 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
     return wabt::Result::Error;
   }
 
-  if (size > 0)
+  if (size > 0) {
     data_segment_infos_.emplace_back(&memory->data[address], src_data, size);
+  }
 
   return wabt::Result::Ok;
 }

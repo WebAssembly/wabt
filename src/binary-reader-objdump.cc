@@ -117,8 +117,9 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
 
 const char* BinaryReaderObjdumpBase::GetFunctionName(Index index) const {
   if (index >= objdump_state_->function_names.size() ||
-      objdump_state_->function_names[index].empty())
+      objdump_state_->function_names[index].empty()) {
     return nullptr;
+  }
 
   return objdump_state_->function_names[index].c_str();
 }
@@ -248,8 +249,9 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
 
   // Print binary data
   printf(" %06" PRIzx ":", offset - 1);
-  if (current_opcode.HasPrefix())
+  if (current_opcode.HasPrefix()) {
     printf(" %02x", current_opcode.GetPrefix());
+  }
   printf(" %02x", current_opcode.GetCode());
   for (size_t i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT;
        i++, offset++) {
@@ -309,10 +311,11 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeBare() {
 Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
   Offset immediate_len = state->offset - current_opcode_offset;
   const char* name;
-  if (current_opcode == Opcode::Call && (name = GetFunctionName(value)))
+  if (current_opcode == Opcode::Call && (name = GetFunctionName(value))) {
     LogOpcode(data_, immediate_len, "%d <%s>", value, name);
-  else
+  } else {
     LogOpcode(data_, immediate_len, "%d", value);
+  }
   return Result::Ok;
 }
 
@@ -375,10 +378,11 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
 
 Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index) {
   const char* name = GetFunctionName(index);
-  if (name)
+  if (name) {
     printf("%06" PRIzx " <%s>:\n", state->offset, name);
-  else
+  } else {
     printf("%06" PRIzx " func[%" PRIindex "]:\n", state->offset, index);
+  }
 
   last_opcode_end = 0;
   return Result::Ok;
@@ -406,10 +410,11 @@ const char* type_name(Type type) {
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Index num_types,
                                                         Type* sig_types) {
-  if (num_types)
+  if (num_types) {
     LogOpcode(data_, 1, "%s", type_name(*sig_types));
-  else
+  } else {
     LogOpcode(data_, 1, nullptr);
+  }
   indent_level++;
   return Result::Ok;
 }
@@ -596,8 +601,9 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
 
   bool section_match =
       !options_->section_name || !strcasecmp(options_->section_name, name);
-  if (section_match)
+  if (section_match) {
     section_found_ = true;
+  }
 
   switch (options_->mode) {
     case ObjdumpMode::Headers:
@@ -607,8 +613,9 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
       break;
     case ObjdumpMode::Details:
       if (section_match) {
-        if (section_code != BinarySection::Code)
+        if (section_code != BinarySection::Code) {
           printf("%s:\n", name);
+        }
         print_details_ = true;
       } else {
         print_details_ = false;
@@ -629,15 +636,17 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
 }
 
 bool BinaryReaderObjdump::ShouldPrintDetails() {
-  if (options_->mode != ObjdumpMode::Details)
+  if (options_->mode != ObjdumpMode::Details) {
     return false;
+  }
   return print_details_;
 }
 
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderObjdump::PrintDetails(const char* fmt,
                                                                 ...) {
-  if (!ShouldPrintDetails())
+  if (!ShouldPrintDetails()) {
     return;
+  }
   va_list args;
   va_start(args, fmt);
   vprintf(fmt, args);
@@ -676,8 +685,9 @@ Result BinaryReaderObjdump::OnType(Index index,
                                    Type* param_types,
                                    Index result_count,
                                    Type* result_types) {
-  if (!ShouldPrintDetails())
+  if (!ShouldPrintDetails()) {
     return Result::Ok;
+  }
   printf(" - type[%" PRIindex "] (", index);
   for (Index i = 0; i < param_count; i++) {
     if (i != 0) {
@@ -686,10 +696,11 @@ Result BinaryReaderObjdump::OnType(Index index,
     printf("%s", type_name(param_types[i]));
   }
   printf(") -> ");
-  if (result_count)
+  if (result_count) {
     printf("%s", type_name(result_types[0]));
-  else
+  } else {
     printf("nil");
+  }
   printf("\n");
   return Result::Ok;
 }
@@ -700,8 +711,9 @@ Result BinaryReaderObjdump::OnFunctionCount(Index count) {
 
 Result BinaryReaderObjdump::OnFunction(Index index, Index sig_index) {
   PrintDetails(" - func[%" PRIindex "] sig=%" PRIindex, index, sig_index);
-  if (const char* name = GetFunctionName(index))
+  if (const char* name = GetFunctionName(index)) {
     PrintDetails(" <%s>", name);
+  }
   PrintDetails("\n");
   return Result::Ok;
 }
@@ -729,8 +741,9 @@ Result BinaryReaderObjdump::OnImportFunc(Index import_index,
                                          Index func_index,
                                          Index sig_index) {
   PrintDetails(" - func[%" PRIindex "] sig=%" PRIindex, func_index, sig_index);
-  if (const char* name = GetFunctionName(func_index))
+  if (const char* name = GetFunctionName(func_index)) {
     PrintDetails(" <%s>", name);
+  }
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
@@ -760,8 +773,9 @@ Result BinaryReaderObjdump::OnImportMemory(Index import_index,
                                            const Limits* page_limits) {
   PrintDetails(" - memory[%" PRIindex "] pages: initial=%" PRId64, memory_index,
                page_limits->initial);
-  if (page_limits->has_max)
+  if (page_limits->has_max) {
     PrintDetails(" max=%" PRId64, page_limits->max);
+  }
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
@@ -807,8 +821,9 @@ Result BinaryReaderObjdump::OnMemoryCount(Index count) {
 Result BinaryReaderObjdump::OnMemory(Index index, const Limits* page_limits) {
   PrintDetails(" - memory[%" PRIindex "] pages: initial=%" PRId64, index,
                page_limits->initial);
-  if (page_limits->has_max)
+  if (page_limits->has_max) {
     PrintDetails(" max=%" PRId64, page_limits->max);
+  }
   PrintDetails("\n");
   return Result::Ok;
 }
@@ -822,8 +837,9 @@ Result BinaryReaderObjdump::OnTable(Index index,
                                     const Limits* elem_limits) {
   PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, index,
                GetTypeName(elem_type), elem_limits->initial);
-  if (elem_limits->has_max)
+  if (elem_limits->has_max) {
     PrintDetails(" max=%" PRId64, elem_limits->max);
+  }
   PrintDetails("\n");
   return Result::Ok;
 }
@@ -838,8 +854,9 @@ Result BinaryReaderObjdump::OnExport(Index index,
                                      string_view name) {
   PrintDetails(" - %s[%" PRIindex "]", GetKindName(kind), item_index);
   if (kind == ExternalKind::Func) {
-    if (const char* name = GetFunctionName(item_index))
+    if (const char* name = GetFunctionName(item_index)) {
       PrintDetails(" <%s>", name);
+    }
   }
 
   PrintDetails(" -> \"" PRIstringview "\"\n",
@@ -851,8 +868,9 @@ Result BinaryReaderObjdump::OnElemSegmentFunctionIndex(Index segment_index,
                                                        Index func_index) {
   PrintDetails("  - elem[%" PRIindex "] = func[%" PRIindex "]", elem_index_,
                func_index);
-  if (const char* name = GetFunctionName(func_index))
+  if (const char* name = GetFunctionName(func_index)) {
     PrintDetails(" <%s>", name);
+  }
   PrintDetails("\n");
   elem_index_++;
   return Result::Ok;
@@ -1000,8 +1018,9 @@ Result BinaryReaderObjdump::BeginDataSegment(Index index, Index memory_index) {
 Result BinaryReaderObjdump::OnDataSegmentData(Index index,
                                               const void* src_data,
                                               Address size) {
-  if (!ShouldPrintDetails())
+  if (!ShouldPrintDetails()) {
     return Result::Ok;
+  }
 
   PrintDetails(" - segment[%" PRIindex "] size=%" PRIaddress, index, size);
   PrintInitExpr(data_init_expr_);
@@ -1025,8 +1044,9 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
                                "  - ");
 
   // Print relocations from this segment.
-  if (!options_->relocs)
+  if (!options_->relocs) {
     return Result::Ok;
+  }
 
   Offset data_start = GetSectionStart(BinarySection::Data);
   Offset segment_start = state->offset - size;
@@ -1034,8 +1054,9 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   while (next_data_reloc_ < objdump_state_->data_relocations.size()) {
     const Reloc& reloc = objdump_state_->data_relocations[next_data_reloc_];
     Offset abs_offset = data_start + reloc.offset;
-    if (abs_offset > state->offset)
+    if (abs_offset > state->offset) {
       break;
+    }
     PrintRelocation(reloc, reloc.offset - segment_offset + voffset);
     next_data_reloc_++;
   }
@@ -1122,8 +1143,9 @@ Result BinaryReaderObjdump::OnExceptionCount(Index count) {
 }
 
 Result BinaryReaderObjdump::OnExceptionType(Index index, TypeVector& sig) {
-  if (!ShouldPrintDetails())
+  if (!ShouldPrintDetails()) {
     return Result::Ok;
+  }
   printf(" - except[%" PRIindex "] (", index);
   for (Index i = 0; i < sig.size(); ++i) {
     if (i != 0) {

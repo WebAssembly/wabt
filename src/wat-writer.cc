@@ -82,8 +82,9 @@ struct ExprTree {
   // For debugging.
   std::string describe() const {
     std::string result("ExprTree(");
-    if (expr)
+    if (expr) {
       result.append(GetExprTypeName(*expr));
+    }
     return result + ")";
   }
 
@@ -276,8 +277,9 @@ void WatWriter::WritePutsNewline(const char* s) {
 }
 
 void WatWriter::WriteNewline(bool force) {
-  if (next_char_ == NextChar::ForceNewline)
+  if (next_char_ == NextChar::ForceNewline) {
     WriteNextChar();
+  }
   next_char_ = force ? NextChar::ForceNewline : NextChar::Newline;
 }
 
@@ -296,8 +298,9 @@ void WatWriter::WriteOpenSpace(const char* name) {
 }
 
 void WatWriter::WriteClose(NextChar next_char) {
-  if (next_char_ != NextChar::ForceNewline)
+  if (next_char_ != NextChar::ForceNewline) {
     next_char_ = NextChar::None;
+  }
   Dedent();
   WritePuts(")", next_char);
 }
@@ -335,10 +338,11 @@ void WatWriter::WriteName(string_view str, NextChar next_char) {
 void WatWriter::WriteNameOrIndex(string_view str,
                                  Index index,
                                  NextChar next_char) {
-  if (!str.empty())
+  if (!str.empty()) {
     WriteName(str, next_char);
-  else
+  } else {
     Writef("(;%u;)", index);
+  }
 }
 
 void WatWriter::WriteQuotedData(const void* data, size_t length) {
@@ -396,12 +400,14 @@ void WatWriter::WriteType(Type type, NextChar next_char) {
 
 void WatWriter::WriteTypes(const TypeVector& types, const char* name) {
   if (types.size()) {
-    if (name)
+    if (name) {
       WriteOpenSpace(name);
+    }
     for (Type type : types)
       WriteType(type, NextChar::Space);
-    if (name)
+    if (name) {
       WriteCloseSpace();
+    }
   }
 }
 
@@ -415,11 +421,13 @@ void WatWriter::WriteBeginBlock(LabelType label_type,
                                 const char* text) {
   WritePutsSpace(text);
   bool has_label = !block.label.empty();
-  if (has_label)
+  if (has_label) {
     WriteString(block.label, NextChar::Space);
+  }
   WriteTypes(block.sig, "result");
-  if (!has_label)
+  if (!has_label) {
     Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
+  }
   WriteNewline(FORCE_NEWLINE);
   label_stack_.emplace_back(label_type, block.label, block.sig);
   Indent();
@@ -487,10 +495,12 @@ template <typename T>
 void WatWriter::WriteLoadStoreExpr(const Expr* expr) {
   auto typed_expr = cast<T>(expr);
   WritePutsSpace(typed_expr->opcode.GetName());
-  if (typed_expr->offset)
+  if (typed_expr->offset) {
     Writef("offset=%u", typed_expr->offset);
-  if (!typed_expr->opcode.IsNaturallyAligned(typed_expr->align))
+  }
+  if (!typed_expr->opcode.IsNaturallyAligned(typed_expr->align)) {
     Writef("align=%u", typed_expr->align);
+  }
   WriteNewline(NO_FORCE_NEWLINE);
 }
 
@@ -707,8 +717,9 @@ Label* WatWriter::GetLabel(const Var& var) {
   if (var.is_name()) {
     for (Index i = GetLabelStackSize(); i > 0; --i) {
       Label* label = &label_stack_[i - 1];
-      if (label->name == var.name())
+      if (label->name == var.name()) {
         return label;
+      }
     }
   } else if (var.index() < GetLabelStackSize()) {
     Label* label = &label_stack_[GetLabelStackSize() - var.index() - 1];
@@ -868,8 +879,9 @@ void WatWriter::PushExpr(const Expr* expr,
     std::move(first_operand, last_operand, std::back_inserter(tree.children));
     expr_tree_stack_.erase(first_operand, last_operand);
     expr_tree_stack_.emplace_back(tree);
-    if (result_count == 0)
+    if (result_count == 0) {
       FlushExprTreeStack();
+    }
   } else {
     expr_tree_stack_.emplace_back(expr);
     FlushExprTreeStack();
@@ -994,16 +1006,18 @@ void WatWriter::WriteTypeBindings(const char* prefix,
     }
 
     const std::string& name = index_to_name_[i];
-    if (!name.empty())
+    if (!name.empty()) {
       WriteString(name, NextChar::Space);
+    }
     WriteType(types[i], NextChar::Space);
     if (!name.empty()) {
       WriteCloseSpace();
       is_open = false;
     }
   }
-  if (is_open)
+  if (is_open) {
     WriteCloseSpace();
+  }
 }
 
 void WatWriter::WriteFunc(const Module& module, const Func& func) {
@@ -1073,10 +1087,12 @@ void WatWriter::WriteException(const Exception& except) {
 
 void WatWriter::WriteLimits(const Limits& limits) {
   Writef("%" PRIu64, limits.initial);
-  if (limits.has_max)
+  if (limits.has_max) {
     Writef("%" PRIu64, limits.max);
-  if (limits.is_shared)
+  }
+  if (limits.is_shared) {
     Writef("shared");
+  }
 }
 
 void WatWriter::WriteTable(const Table& table) {
@@ -1155,8 +1171,9 @@ void WatWriter::WriteImport(const Import& import) {
 }
 
 void WatWriter::WriteExport(const Export& export_) {
-  if (options_->inline_export)
+  if (options_->inline_export) {
     return;
+  }
   WriteOpenSpace("export");
   WriteQuotedString(export_.name, NextChar::Space);
   WriteOpenSpace(GetKindName(export_.kind));
@@ -1262,8 +1279,9 @@ void WatWriter::BuildExportMap() {
 }
 
 void WatWriter::WriteInlineExports(ExternalKind kind, Index index) {
-  if (!options_->inline_export)
+  if (!options_->inline_export) {
     return;
+  }
 
   auto iter_pair = export_map_.equal_range(std::make_pair(kind, index));
   for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter)
