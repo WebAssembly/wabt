@@ -71,6 +71,10 @@ std::string TypedValueToString(const TypedValue& tv) {
       return StringPrintf("f64:%f", value);
     }
 
+    case Type::V128:
+      return StringPrintf("v128:0x%08x 0x%08x 0x%08x 0x%08x", tv.value.v128_bits.v[0],
+             tv.value.v128_bits.v[1],tv.value.v128_bits.v[2],tv.value.v128_bits.v[3]);
+
     default:
       WABT_UNREACHABLE;
   }
@@ -248,6 +252,7 @@ uint32_t ToRep(int32_t x) { return Bitcast<uint32_t>(x); }
 uint64_t ToRep(int64_t x) { return Bitcast<uint64_t>(x); }
 uint32_t ToRep(float x) { return Bitcast<uint32_t>(x); }
 uint64_t ToRep(double x) { return Bitcast<uint64_t>(x); }
+v128     ToRep(v128 x) { return Bitcast<v128>(x); }
 
 template <typename Dst, typename Src>
 Dst FromRep(Src x);
@@ -540,6 +545,13 @@ Value MakeValue<double>(uint64_t v) {
   return result;
 }
 
+template <>
+Value MakeValue<v128>(v128 v) {
+  Value result;
+  result.v128_bits = v;
+  return result;
+}
+
 template <typename T> ValueTypeRep<T> GetValue(Value);
 template<> uint32_t GetValue<int32_t>(Value v) { return v.i32; }
 template<> uint32_t GetValue<uint32_t>(Value v) { return v.i32; }
@@ -547,6 +559,7 @@ template<> uint64_t GetValue<int64_t>(Value v) { return v.i64; }
 template<> uint64_t GetValue<uint64_t>(Value v) { return v.i64; }
 template<> uint32_t GetValue<float>(Value v) { return v.f32_bits; }
 template<> uint64_t GetValue<double>(Value v) { return v.f64_bits; }
+template<> v128 GetValue<v128>(Value v) { return v.v128_bits; }
 
 #define TRAP(type) return Result::Trap##type
 #define TRAP_UNLESS(cond, type) TRAP_IF(!(cond), type)
@@ -604,6 +617,14 @@ inline uint64_t ReadU64At(const uint8_t* pc) {
 
 inline uint64_t ReadU64(const uint8_t** pc) {
   return ReadUx<uint64_t>(pc);
+}
+
+inline v128 ReadV128At(const uint8_t* pc) {
+  return ReadUxAt<v128>(pc);
+}
+
+inline v128 ReadV128(const uint8_t** pc) {
+  return ReadUx<v128>(pc);
 }
 
 inline Opcode ReadOpcode(const uint8_t** pc) {
@@ -2201,8 +2222,7 @@ Result Thread::Run(int num_instructions) {
         break;
 
       case Opcode::V128Const: {
-        // TODO(zhengxing)*/
-        WABT_UNREACHABLE;
+        CHECK_TRAP(PushRep<v128>(ReadV128(&pc)));
         break;
       }
 
@@ -2662,8 +2682,8 @@ void Thread::Trace(Stream* stream) {
       break;
 
     case Opcode::V128Const: {
-      /* TODO (zhengxing)*/
-      WABT_UNREACHABLE;
+      stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(),
+                     ReadU32At(pc), ReadU32At(pc+4),ReadU32At(pc+8),ReadU32At(pc+12));
       break;
     }
 
@@ -3079,8 +3099,9 @@ void Environment::Disassemble(Stream* stream,
       }
 
       case Opcode::V128Const: {
-        /*TODO (zhengxing)*/
-        WABT_UNREACHABLE;
+      stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(),
+                     ReadU32(&pc), ReadU32(&pc),ReadU32(&pc),ReadU32(&pc));
+
         break;
       }
       // The following opcodes are either never generated or should never be

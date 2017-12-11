@@ -308,7 +308,8 @@ Result BinaryReaderLogging::OnF64ConstExpr(uint64_t value_bits) {
 }
 
 Result BinaryReaderLogging::OnV128ConstExpr(v128 value_bits) {
-  /*TODO (zhengxing)*/
+  LOGF("OnV128ConstExpr(0x%08x 0x%08x 0x%08x 0x%08x)\n", value_bits.v[0],\
+                    value_bits.v[1], value_bits.v[2], value_bits.v[3]);
   return reader_->OnV128ConstExpr(value_bits);
 }
 
@@ -405,7 +406,9 @@ Result BinaryReaderLogging::OnInitExprF64ConstExpr(Index index,
 
 Result BinaryReaderLogging::OnInitExprV128ConstExpr(Index index,
                                                     v128 value_bits) {
-  /*TODO (zhengxing)*/
+  LOGF("OnInitExprV128ConstExpr(index: %" PRIindex " value: (\
+       0x%08x 0x%08x 0x%08x 0x%08x))\n", index, value_bits.v[0],\
+           value_bits.v[1], value_bits.v[2], value_bits.v[3]);
   return reader_->OnInitExprV128ConstExpr(index, value_bits);
 }
 

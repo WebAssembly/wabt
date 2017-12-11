@@ -1,0 +1,9 @@
+;;; TOOL: run-interp
+;;; FLAGS: --enable-simd
+(module
+  (func (export "main") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    return))
+(;; STDOUT ;;;
+main() => v128:0x00000001 0x00000002 0x00000003 0x00000004
+;;; STDOUT ;;)
