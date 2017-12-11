@@ -20,6 +20,10 @@
 )
 (;; STDOUT ;;;
 
+******************************************************************
+WARNING: wasm-link is deprecated. Where possible, use lld instead.
+******************************************************************
+
 linked.wasm:	file format wasm 0x1
 
 Sections:
