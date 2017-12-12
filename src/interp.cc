@@ -1214,6 +1214,23 @@ ValueTypeRep<T> Xchg(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
   return rhs_rep;
 }
 
+// i(8,16,32,64) f(32,64) X (2,4,8,16) splat ==> v128
+template <typename T, typename V>
+ValueTypeRep<T> SimdSplat(V Lane_Data) {
+  // Calculate how many Lanes according to input lane data type.
+  int32_t Lanes = sizeof(T)/sizeof(V);
+
+  // Define SIMD data array by Lanes.
+  V Simd_data[sizeof(T)/sizeof(V)];
+
+  // Constuct the Simd value by Land data and Lane nums.
+  for(int32_t i = 0; i < Lanes; i++) {
+    Simd_data[i] = Lane_Data;
+  }
+
+  return ToRep(Bitcast<T>(Simd_data));
+}
+
 bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
                                          Index sig_index_1) const {
   if (sig_index_0 == sig_index_1) {
@@ -2226,6 +2243,12 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
+      case Opcode::I8X16Splat: {
+        uint8_t Lane_data = static_cast<uint8_t>(Pop<uint32_t>());
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(Lane_data)));
+        break;
+      }
+
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -2687,6 +2710,12 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
+    case Opcode::I8X16Splat: {
+      stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
+                                Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
+      break;
+    }
+
     // The following opcodes are either never generated or should never be
     // executed.
     case Opcode::Block:
@@ -3047,6 +3076,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I64Extend16S:
       case Opcode::I64Extend32S:
       case Opcode::I64Extend8S:
+      case Opcode::I8X16Splat:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 

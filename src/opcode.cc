@@ -181,6 +181,7 @@ bool Opcode::IsEnabled(const Features& features) const {
       return features.threads_enabled();
 
     case Opcode::V128Const:
+    case Opcode::I8X16Splat:
       return features.simd_enabled();
 
     // Interpreter opcodes are never "enabled".
