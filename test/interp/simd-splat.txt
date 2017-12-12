@@ -1,18 +1,78 @@
 ;;; TOOL: run-interp
 ;;; FLAGS: --enable-simd
 (module
-  (func (export  "func_i8x16_splat_0x7f") (result  v128)
+
+  ;; i8x16
+  (func (export  "func_i8x16_splat_0") (result  v128)
     i32.const 0x7f
     i8x16.splat)
-  (func (export  "func_i8x16_splat_0x01") (result  v128)
+  (func (export  "func_i8x16_splat_1") (result  v128)
     i32.const 0x01
     i8x16.splat)
-  (func (export  "func_i8x16_splat_0x24") (result  v128)
+  (func (export  "func_i8x16_splat_2") (result  v128)
     i32.const 0x3524
     i8x16.splat)
+
+  ;; i16x8
+  (func (export  "func_i16x8_splat_0") (result  v128)
+    i32.const 0x1234
+    i16x8.splat)
+  (func (export  "func_i16x8_splat_1") (result  v128)
+    i32.const 0x5aa5
+    i16x8.splat)
+  (func (export  "func_i16x8_splat_2") (result  v128)
+    i32.const 0x01234567
+    i16x8.splat)
+
+  ;; i32x4
+  (func (export  "func_i32x4_splat_0") (result  v128)
+    i32.const 0x12345678
+    i32x4.splat)
+  (func (export  "func_i32x4_splat_1") (result  v128)
+    i32.const 0x00000001
+    i32x4.splat)
+
+  ;; i64x2
+  (func (export  "func_i64x2_splat_0") (result  v128)
+    i64.const 0x1234567800000000
+    i64x2.splat)
+  (func (export  "func_i64x2_splat_1") (result  v128)
+    i64.const 0x0000000100000002
+    i64x2.splat)
+
+  ;; f32x4
+  ;; float 1.0 == Hex 0x3f800000
+  (func (export  "func_f32x4_splat_0") (result  v128)
+    f32.const 1.0
+    f32x4.splat)
+  ;; float 6.91 == Hex 0x40dd1eb8
+  (func (export  "func_f32x4_splat_1") (result  v128)
+    f32.const 6.91
+    f32x4.splat)
+
+  ;; f64x2
+  ;; double 1.0 == Hex 0x3ff0000000000000
+  (func (export  "func_f64x2_splat_0") (result  v128)
+    f64.const 1.0
+    f64x2.splat)
+  ;; double 6.91 == Hex 0x401ba3d70a3d70a4
+  (func (export  "func_f64x2_splat_1") (result  v128)
+    f64.const 6.91
+    f64x2.splat)
 )
 (;; STDOUT ;;;
-func_i8x16_splat_0x7f() => v128:0x7f7f7f7f 0x7f7f7f7f 0x7f7f7f7f 0x7f7f7f7f
-func_i8x16_splat_0x01() => v128:0x01010101 0x01010101 0x01010101 0x01010101
-func_i8x16_splat_0x24() => v128:0x24242424 0x24242424 0x24242424 0x24242424
+func_i8x16_splat_0() => v128:0x7f7f7f7f 0x7f7f7f7f 0x7f7f7f7f 0x7f7f7f7f
+func_i8x16_splat_1() => v128:0x01010101 0x01010101 0x01010101 0x01010101
+func_i8x16_splat_2() => v128:0x24242424 0x24242424 0x24242424 0x24242424
+func_i16x8_splat_0() => v128:0x12341234 0x12341234 0x12341234 0x12341234
+func_i16x8_splat_1() => v128:0x5aa55aa5 0x5aa55aa5 0x5aa55aa5 0x5aa55aa5
+func_i16x8_splat_2() => v128:0x45674567 0x45674567 0x45674567 0x45674567
+func_i32x4_splat_0() => v128:0x12345678 0x12345678 0x12345678 0x12345678
+func_i32x4_splat_1() => v128:0x00000001 0x00000001 0x00000001 0x00000001
+func_i64x2_splat_0() => v128:0x00000000 0x12345678 0x00000000 0x12345678
+func_i64x2_splat_1() => v128:0x00000002 0x00000001 0x00000002 0x00000001
+func_f32x4_splat_0() => v128:0x3f800000 0x3f800000 0x3f800000 0x3f800000
+func_f32x4_splat_1() => v128:0x40dd1eb8 0x40dd1eb8 0x40dd1eb8 0x40dd1eb8
+func_f64x2_splat_0() => v128:0x00000000 0x3ff00000 0x00000000 0x3ff00000
+func_f64x2_splat_1() => v128:0x0a3d70a4 0x401ba3d7 0x0a3d70a4 0x401ba3d7
 ;;; STDOUT ;;)
