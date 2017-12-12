@@ -100,7 +100,8 @@ wabt::Result::Enum wabt_validate_module(
     wabt::WastLexer* lexer,
     wabt::Module* module,
     wabt::ErrorHandlerBuffer* error_handler) {
-  return ValidateModule(lexer, module, error_handler);
+  wabt::ValidateOptions options;
+  return ValidateModule(lexer, module, error_handler, &options);
 }
 
 wabt::Result::Enum wabt_apply_names_module(wabt::Module* module) {
