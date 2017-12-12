@@ -815,6 +815,12 @@ int ProgramMain(int argc, char** argv) {
 
   Linker linker;
 
+  printf(R"(
+******************************************************************
+WARNING: wasm-link is deprecated. Where possible, use lld instead.
+******************************************************************
+)");
+
   ParseOptions(argc, argv);
 
   Result result = Result::Ok;

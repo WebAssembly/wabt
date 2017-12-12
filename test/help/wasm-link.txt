@@ -1,6 +1,10 @@
 ;;; EXE: %(wasm-link)s
 ;;; FLAGS: --help
 (;; STDOUT ;;;
+
+******************************************************************
+WARNING: wasm-link is deprecated. Where possible, use lld instead.
+******************************************************************
 usage: wasm-link [options] filename+
 
   link one or more wasm binary modules into a single binary module.
