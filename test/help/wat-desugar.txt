@@ -23,5 +23,6 @@ options:
       --enable-exceptions                     Experimental exception handling
       --enable-saturating-float-to-int        Saturating float-to-int operators
       --enable-threads                        Threading support
+      --enable-simd                           SIMD support
       --generate-names                        Give auto-generated names to non-named functions, types, etc.
 ;;; STDOUT ;;)
