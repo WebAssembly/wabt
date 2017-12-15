@@ -15,5 +15,6 @@ options:
       --enable-exceptions                     Experimental exception handling
       --enable-saturating-float-to-int        Saturating float-to-int operators
       --enable-threads                        Threading support
+      --enable-simd                           SIMD support
       --no-debug-names                        Ignore debug names in the binary file
 ;;; STDOUT ;;)
