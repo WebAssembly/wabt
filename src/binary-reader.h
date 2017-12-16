@@ -178,6 +178,7 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeUint64(uint64_t value) = 0;
   virtual Result OnOpcodeF32(uint32_t value) = 0;
   virtual Result OnOpcodeF64(uint64_t value) = 0;
+  virtual Result OnOpcodeV128(v128 value) = 0;
   virtual Result OnOpcodeBlockSig(Index num_types, Type* sig_types) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   uint32_t alignment_log2,
@@ -217,6 +218,7 @@ class BinaryReaderDelegate {
   virtual Result OnEndFunc() = 0;
   virtual Result OnF32ConstExpr(uint32_t value_bits) = 0;
   virtual Result OnF64ConstExpr(uint64_t value_bits) = 0;
+  virtual Result OnV128ConstExpr(v128 value_bits) = 0;
   virtual Result OnGetGlobalExpr(Index global_index) = 0;
   virtual Result OnGetLocalExpr(Index local_index) = 0;
   virtual Result OnGrowMemoryExpr() = 0;
@@ -323,6 +325,7 @@ class BinaryReaderDelegate {
    * only called between calls to Begin*InitExpr and End*InitExpr */
   virtual Result OnInitExprF32ConstExpr(Index index, uint32_t value) = 0;
   virtual Result OnInitExprF64ConstExpr(Index index, uint64_t value) = 0;
+  virtual Result OnInitExprV128ConstExpr(Index index, v128 value) = 0;
   virtual Result OnInitExprGetGlobalExpr(Index index, Index global_index) = 0;
   virtual Result OnInitExprI32ConstExpr(Index index, uint32_t value) = 0;
   virtual Result OnInitExprI64ConstExpr(Index index, uint64_t value) = 0;

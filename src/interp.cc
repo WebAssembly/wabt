@@ -2200,6 +2200,12 @@ Result Thread::Run(int num_instructions) {
         TRAP(Unreachable);
         break;
 
+      case Opcode::V128Const: {
+        // TODO(zhengxing)*/
+        WABT_UNREACHABLE;
+        break;
+      }
+
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -2655,6 +2661,12 @@ void Thread::Trace(Stream* stream) {
                      *(pc + 4));
       break;
 
+    case Opcode::V128Const: {
+      /* TODO (zhengxing)*/
+      WABT_UNREACHABLE;
+      break;
+    }
+
     // The following opcodes are either never generated or should never be
     // executed.
     case Opcode::Block:
@@ -3066,6 +3078,11 @@ void Environment::Disassemble(Stream* stream,
         break;
       }
 
+      case Opcode::V128Const: {
+        /*TODO (zhengxing)*/
+        WABT_UNREACHABLE;
+        break;
+      }
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:

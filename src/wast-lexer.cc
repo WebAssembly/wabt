@@ -255,6 +255,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i64"                 { RETURN_TYPE(ValueType, I64); }
       <i> "f32"                 { RETURN_TYPE(ValueType, F32); }
       <i> "f64"                 { RETURN_TYPE(ValueType, F64); }
+      <i> "v128"                { RETURN_TYPE(ValueType, V128); }
       <i> "anyfunc"             { RETURN(Anyfunc); }
       <i> "mut"                 { RETURN(Mut); }
       <i> "nop"                 { RETURN_OPCODE0(Nop); }
@@ -512,6 +513,8 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i64.atomic.rmw8_u.cmpxchg"  { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw8UCmpxchg); }
       <i> "i64.atomic.rmw16_u.cmpxchg" { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw16UCmpxchg); }
       <i> "i64.atomic.rmw32_u.cmpxchg" { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw32UCmpxchg); }
+      <i> "v128.const"           { RETURN_OPCODE(Const, V128Const); }
+
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }

@@ -96,6 +96,12 @@ class Stream {
                 PrintChars print_chars = PrintChars::No) {
     Write(value, desc, print_chars);
   }
+  void WriteU128(v128 value,
+                const char* desc = nullptr,
+                PrintChars print_chars = PrintChars::No) {
+    Write(value, desc, print_chars);
+  }
+
   void WriteChar(char c,
                  const char* desc = nullptr,
                  PrintChars print_chars = PrintChars::No) {

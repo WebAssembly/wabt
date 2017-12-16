@@ -90,6 +90,10 @@ struct Const {
     return Const(F64Tag(), val, loc);
   }
 
+  static Const V128(v128 val, const Location& loc = Location()) {
+    return Const(V128Tag(), val, loc);
+  }
+
   Location loc;
   Type type;
   union {
@@ -97,6 +101,7 @@ struct Const {
     uint64_t u64;
     uint32_t f32_bits;
     uint64_t f64_bits;
+    v128     v128_bits;
   };
 
  private:
@@ -105,11 +110,13 @@ struct Const {
   struct I64Tag {};
   struct F32Tag {};
   struct F64Tag {};
+  struct V128Tag {};
 
   Const(I32Tag, uint32_t val = 0, const Location& loc = Location());
   Const(I64Tag, uint64_t val = 0, const Location& loc = Location());
   Const(F32Tag, uint32_t val = 0, const Location& loc = Location());
   Const(F64Tag, uint64_t val = 0, const Location& loc = Location());
+  Const(V128Tag, v128 val = {{0, 0, 0, 0}}, const Location& loc = Location());
 };
 typedef std::vector<Const> ConstVector;
 

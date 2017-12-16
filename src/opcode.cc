@@ -180,6 +180,9 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64AtomicRmw32UCmpxchg:
       return features.threads_enabled();
 
+    case Opcode::V128Const:
+      return features.simd_enabled();
+
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:
     case Opcode::InterpBrUnless:

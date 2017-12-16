@@ -83,6 +83,7 @@ class BinaryReader {
   Result ReadU32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadF32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadF64(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
+  Result ReadV128(v128* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadU32Leb128(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadS32Leb128(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadS64Leb128(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
@@ -234,6 +235,10 @@ Result BinaryReader::ReadF64(uint64_t* out_value, const char* desc) {
   return ReadT(out_value, "double", desc);
 }
 
+Result BinaryReader::ReadV128(v128* out_value, const char* desc) {
+  return ReadT(out_value, "v128", desc);
+}
+
 Result BinaryReader::ReadU32Leb128(uint32_t* out_value, const char* desc) {
   const uint8_t* p = state_.data + state_.offset;
   const uint8_t* end = state_.data + read_end_;
@@ -327,6 +332,7 @@ static bool is_concrete_type(Type type) {
     case Type::I64:
     case Type::F32:
     case Type::F64:
+    case Type::V128:
       return true;
 
     default:
@@ -388,6 +394,15 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
       uint64_t value_bits = 0;
       CHECK_RESULT(ReadF64(&value_bits, "init_expr f64.const value"));
       CALLBACK(OnInitExprF64ConstExpr, index, value_bits);
+      break;
+    }
+
+    case Opcode::V128Const: {
+      ERROR_UNLESS_OPCODE_ENABLED(opcode);
+      v128 value_bits;
+      ZeroMemory(value_bits);
+      CHECK_RESULT(ReadV128(&value_bits, "init_expr v128.const value"));
+      CALLBACK(OnInitExprV128ConstExpr, index, value_bits);
       break;
     }
 
@@ -626,6 +641,16 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadF64(&value_bits, "f64.const value"));
         CALLBACK(OnF64ConstExpr, value_bits);
         CALLBACK(OnOpcodeF64, value_bits);
+        break;
+      }
+
+      case Opcode::V128Const: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        v128 value_bits;
+        ZeroMemory(value_bits);
+        CHECK_RESULT(ReadV128(&value_bits, "v128.const value"));
+        CALLBACK(OnV128ConstExpr, value_bits);
+        CALLBACK(OnOpcodeV128, value_bits);
         break;
       }
 

@@ -1,7 +1,7 @@
 ;;; ERROR: 1
 (module (func (param $bar $baz)))
 (;; STDERR ;;;
-out/test/parse/func/bad-param-binding.txt:2:27: error: unexpected token "$baz", expected i32, i64, f32 or f64.
+out/test/parse/func/bad-param-binding.txt:2:27: error: unexpected token "$baz", expected i32, i64, f32, f64 or v128.
 (module (func (param $bar $baz)))
                           ^^^^
 ;;; STDERR ;;)
