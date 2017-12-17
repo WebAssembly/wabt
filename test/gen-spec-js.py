@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -17,10 +17,7 @@
 
 import argparse
 from collections import namedtuple
-try:
-  from cStringIO import StringIO
-except ImportError:
-  from io import StringIO
+import io
 import json
 import os
 import re
@@ -536,7 +533,7 @@ def main(args):
         module_command['filename'] = os.path.relpath(new_module_filename,
                                                      json_dir)
 
-    output = StringIO()
+    output = io.StringIO()
     if options.prefix:
       with open(options.prefix) as prefix_file:
         output.write(prefix_file.read())

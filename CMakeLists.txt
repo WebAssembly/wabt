@@ -373,7 +373,7 @@ if (NOT EMSCRIPTEN)
   endif ()
 
   # test running
-  find_package(PythonInterp 2.7 REQUIRED)
+  find_package(PythonInterp 3.4 REQUIRED)
   set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
   add_custom_target(run-tests
     COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir ${CMAKE_BINARY_DIR}

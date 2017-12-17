@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright 2016 WebAssembly Community Group participants
 #
@@ -121,7 +121,7 @@ def main(args):
                               ('filename', os.path.basename(output)),])
         spec['commands'].insert(0, module)
 
-      with open(out_file, 'wb') as json_file:
+      with open(out_file, 'w') as json_file:
         json.dump(spec, json_file, indent=4)
 
       spectest_interp.RunWithArgs(out_file)
