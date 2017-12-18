@@ -34,6 +34,6 @@ log_and_run() {
 }
 
 log_and_run lcov --zerocounters -d ${BIN_DIR} --rc lcov_branch_coverage=1
-log_and_run python test/run-tests.py --bindir ${BIN_DIR}
+log_and_run test/run-tests.py --bindir ${BIN_DIR}
 log_and_run lcov -c -d ${BIN_DIR} -o ${COV_FILE} --rc lcov_branch_coverage=1
 log_and_run genhtml --branch-coverage -o ${COV_HTML_DIR} ${COV_FILE}
