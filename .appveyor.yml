@@ -2,7 +2,7 @@
 
 init:
   # AppVeyor default is python2, but we want python 3
-  - set PATH=C:\Python26;C:\Python36\Scripts;%PATH%
+  - set PATH=C:\Python36;C:\Python36\Scripts;%PATH%
   - set PATH=C:\msys64\mingw64\bin;C:\msys64\usr\bin;%PATH%
   # Python doesn't seem to be able to import files from the current script's
   # directory on Windows.
