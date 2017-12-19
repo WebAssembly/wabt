@@ -1320,6 +1320,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           CHECK_RESULT(ReadU32Leb128(&func, "function index"));
           CALLBACK(OnInitFunction, priority, func);
         }
+        break;
       default:
         // Unknown subsection, skip it.
         state_.offset = subsection_end;
