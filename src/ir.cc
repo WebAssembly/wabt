@@ -112,6 +112,28 @@ Index Module::GetExceptIndex(const Var& var) const {
   return except_bindings.FindIndex(var);
 }
 
+bool Module::IsImport(ExternalKind kind, const Var& var) const {
+  switch (kind) {
+    case ExternalKind::Func:
+      return GetFuncIndex(var) < num_func_imports;
+
+    case ExternalKind::Global:
+      return GetGlobalIndex(var) < num_global_imports;
+
+    case ExternalKind::Memory:
+      return GetMemoryIndex(var) < num_memory_imports;
+
+    case ExternalKind::Table:
+      return GetTableIndex(var) < num_table_imports;
+
+    case ExternalKind::Except:
+      return GetExceptIndex(var) < num_except_imports;
+
+    default:
+      return false;
+  }
+}
+
 Index Func::GetLocalIndex(const Var& var) const {
   if (var.is_index()) {
     return var.index();

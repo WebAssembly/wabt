@@ -1180,7 +1180,10 @@ void WatWriter::WriteImport(const Import& import) {
 
 void WatWriter::WriteExport(const Export& export_) {
   if (options_->inline_export) {
-    return;
+    // Exported imports can't be written with inline exports.
+    if (!module_->IsImport(export_)) {
+      return;
+    }
   }
   WriteOpenSpace("export");
   WriteQuotedString(export_.name, NextChar::Space);
