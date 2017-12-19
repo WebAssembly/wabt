@@ -16,7 +16,7 @@ Sections:
      Type start=0x0000000a end=0x0000000e (size=0x00000004) count: 1
    Import start=0x00000014 end=0x0000001f (size=0x0000000b) count: 1
    Custom start=0x00000025 end=0x0000003f (size=0x0000001a) "name"
-   Custom start=0x00000045 end=0x0000005b (size=0x00000016) "linking"
+   Custom start=0x00000045 end=0x0000004d (size=0x00000008) "linking"
 
 Section Details:
 
@@ -29,8 +29,6 @@ Custom:
  - func[0] import_func1
 Custom:
  - name: "linking"
-  - data size : 0
-  - data align: 0
 
 Code Disassembly:
 

@@ -1272,6 +1272,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                  "invalid sub-section size: extends past end");
     read_end_ = subsection_end;
 
+    uint32_t count;
     switch (static_cast<LinkingEntryType>(linking_type)) {
       case LinkingEntryType::StackPointer: {
         uint32_t stack_ptr;
@@ -1279,11 +1280,10 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CALLBACK(OnStackGlobal, stack_ptr);
         break;
       }
-      case LinkingEntryType::SymbolInfo: {
-        uint32_t info_count;
-        CHECK_RESULT(ReadU32Leb128(&info_count, "info count"));
-        CALLBACK(OnSymbolInfoCount, info_count);
-        while (info_count--) {
+      case LinkingEntryType::SymbolInfo:
+        CHECK_RESULT(ReadU32Leb128(&count, "info count"));
+        CALLBACK(OnSymbolInfoCount, count);
+        while (count--) {
           string_view name;
           uint32_t info;
           CHECK_RESULT(ReadStr(&name, "symbol name"));
@@ -1291,24 +1291,16 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           CALLBACK(OnSymbolInfo, name, info);
         }
         break;
-      }
       case LinkingEntryType::DataSize: {
         uint32_t data_size;
         CHECK_RESULT(ReadU32Leb128(&data_size, "data size"));
         CALLBACK(OnDataSize, data_size);
         break;
       }
-      case LinkingEntryType::DataAlignment: {
-        uint32_t data_alignment;
-        CHECK_RESULT(ReadU32Leb128(&data_alignment, "data alignment"));
-        CALLBACK(OnDataAlignment, data_alignment);
-        break;
-      }
-      case LinkingEntryType::SegmentInfo: {
-        uint32_t info_count;
-        CHECK_RESULT(ReadU32Leb128(&info_count, "info count"));
-        CALLBACK(OnSegmentInfoCount, info_count);
-        for (Index i = 0; i < info_count; i++) {
+      case LinkingEntryType::SegmentInfo:
+        CHECK_RESULT(ReadU32Leb128(&count, "info count"));
+        CALLBACK(OnSegmentInfoCount, count);
+        for (Index i = 0; i < count; i++) {
           string_view name;
           uint32_t alignment;
           uint32_t flags;
@@ -1318,7 +1310,16 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           CALLBACK(OnSegmentInfo, i, name, alignment, flags);
         }
         break;
-      }
+      case LinkingEntryType::InitFunctions:
+        CHECK_RESULT(ReadU32Leb128(&count, "info count"));
+        CALLBACK(OnInitFunctionCount, count);
+        while (count--) {
+          uint32_t priority;
+          uint32_t func;
+          CHECK_RESULT(ReadU32Leb128(&priority, "priority"));
+          CHECK_RESULT(ReadU32Leb128(&func, "function index"));
+          CALLBACK(OnInitFunction, priority, func);
+        }
       default:
         // Unknown subsection, skip it.
         state_.offset = subsection_end;

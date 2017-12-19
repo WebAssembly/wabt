@@ -24,6 +24,13 @@ section("linking") {
   str("data2")
   align[8]
   flags[0]
+  subsection[6]
+  length[5]
+  count[2]
+  priority[5]
+  func[1]
+  priority[6]
+  func[0]
 }
 (;; STDOUT ;;;
 
@@ -41,4 +48,7 @@ Custom:
   - segment info [count=2]
    - 0: data1 align=4 flags=0
    - 1: data2 align=8 flags=0
+  - init functions [count=2]
+   - 1: priority=5
+   - 0: priority=6
 ;;; STDOUT ;;)

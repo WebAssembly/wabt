@@ -553,12 +553,13 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnSymbolInfoCount(Index count) override;
   Result OnSymbolInfo(string_view name, uint32_t flags) override;
   Result OnDataSize(uint32_t data_size) override;
-  Result OnDataAlignment(uint32_t data_alignment) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
                        string_view name,
                        uint32_t alignment,
                        uint32_t flags) override;
+  Result OnInitFunctionCount(Index count) override;
+  Result OnInitFunction(uint32_t priority, Index function_index) override;
 
   Result OnExceptionCount(Index count) override;
   Result OnExceptionType(Index index, TypeVector& sig) override;
@@ -1145,6 +1146,18 @@ Result BinaryReaderObjdump::OnSegmentInfo(Index index,
   return Result::Ok;
 }
 
+
+Result BinaryReaderObjdump::OnInitFunctionCount(Index count) {
+  PrintDetails("  - init functions [count=%d]\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnInitFunction(uint32_t priority,
+                                           Index function_index) {
+  PrintDetails("   - %d: priority=%d\n", function_index, priority);
+  return Result::Ok;
+}
+
 Result BinaryReaderObjdump::OnExceptionCount(Index count) {
   return OnCount(count);
 }
@@ -1166,11 +1179,6 @@ Result BinaryReaderObjdump::OnExceptionType(Index index, TypeVector& sig) {
 
 Result BinaryReaderObjdump::OnDataSize(uint32_t data_size) {
   PrintDetails("  - data size : %d\n", data_size);
-  return Result::Ok;
-}
-
-Result BinaryReaderObjdump::OnDataAlignment(uint32_t data_alignment) {
-  PrintDetails("  - data align: %d\n", data_alignment);
   return Result::Ok;
 }
 

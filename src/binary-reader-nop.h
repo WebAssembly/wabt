@@ -361,14 +361,15 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnDataSize(uint32_t data_size) override { return Result::Ok; }
-  Result OnDataAlignment(uint32_t data_alignment) override {
-    return Result::Ok;
-  }
   Result OnSegmentInfoCount(Index count) override { return Result::Ok; }
   Result OnSegmentInfo(Index index,
                        string_view name,
                        uint32_t alignment,
                        uint32_t flags) override {
+    return Result::Ok;
+  }
+  Result OnInitFunctionCount(Index count) override { return Result::Ok; }
+  Result OnInitFunction(uint32_t priority, Index function_index) override {
     return Result::Ok;
   }
   Result EndLinkingSection() override { return Result::Ok; }
