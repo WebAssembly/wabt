@@ -155,7 +155,8 @@ class WatWriter {
                          const Func& func,
                          const TypeVector& types,
                          const BindingHash& bindings);
-  void WriteFunc(const Module& module, const Func& func);
+  void WriteBeginFunc(const Func& func);
+  void WriteFunc(const Func& func);
   void WriteBeginGlobal(const Global& global);
   void WriteGlobal(const Global& global);
   void WriteBeginException(const Exception& except);
@@ -166,6 +167,7 @@ class WatWriter {
   void WriteMemory(const Memory& memory);
   void WriteDataSegment(const DataSegment& segment);
   void WriteImport(const Import& import);
+  void WriteInlineImport(const Import& import);
   void WriteExport(const Export& export_);
   void WriteFuncType(const FuncType& func_type);
   void WriteStartFunction(const Var& start);
@@ -182,9 +184,11 @@ class WatWriter {
   void WriteFoldedExpr(const Expr*);
   void WriteFoldedExprList(const ExprList&);
 
-  void BuildExportMap();
+  void BuildInlineExportMap();
   void WriteInlineExports(ExternalKind, Index);
-  void WriteInlineExport(const Export* export_);
+  bool IsInlineExport(const Export& export_);
+  void BuildInlineImportMap();
+  void WriteInlineImport(ExternalKind, Index);
 
   const WriteWatOptions* options_ = nullptr;
   const Module* module_ = nullptr;
@@ -196,7 +200,9 @@ class WatWriter {
   std::vector<std::string> index_to_name_;
   std::vector<Label> label_stack_;
   std::vector<ExprTree> expr_tree_stack_;
-  std::multimap<std::pair<ExternalKind, Index>, const Export*> export_map_;
+  std::multimap<std::pair<ExternalKind, Index>, const Export*>
+      inline_export_map_;
+  std::vector<const Import*> inline_import_map_[kExternalKindCount];
 
   Index func_index_ = 0;
   Index global_index_ = 0;
@@ -1028,15 +1034,37 @@ void WatWriter::WriteTypeBindings(const char* prefix,
   }
 }
 
-void WatWriter::WriteFunc(const Module& module, const Func& func) {
+void WatWriter::WriteBeginFunc(const Func& func) {
   WriteOpenSpace("func");
   WriteNameOrIndex(func.name, func_index_, NextChar::Space);
   WriteInlineExports(ExternalKind::Func, func_index_);
+  WriteInlineImport(ExternalKind::Func, func_index_);
   if (func.decl.has_func_type) {
     WriteOpenSpace("type");
     WriteVar(func.decl.type_var, NextChar::None);
     WriteCloseSpace();
   }
+
+  if (module_->IsImport(ExternalKind::Func, Var(func_index_))) {
+    // Imported functions can be written a few ways:
+    //
+    //   1. (import "module" "field" (func (type 0)))
+    //   2. (import "module" "field" (func (param i32) (result i32)))
+    //   3. (func (import "module" "field") (type 0))
+    //   4. (func (import "module" "field") (param i32) (result i32))
+    //   5. (func (import "module" "field") (type 0) (param i32) (result i32))
+    //
+    // Note that the text format does not allow including the param/result
+    // explicitly when using the "(import..." syntax (#1 and #2).
+    if (options_->inline_import || !func.decl.has_func_type) {
+      WriteFuncSigSpace(func.decl.sig);
+    }
+  }
+  func_index_++;
+}
+
+void WatWriter::WriteFunc(const Func& func) {
+  WriteBeginFunc(func);
   WriteTypeBindings("param", func, func.decl.sig.param_types,
                     func.param_bindings);
   WriteTypes(func.decl.sig.result_types, "result");
@@ -1057,13 +1085,13 @@ void WatWriter::WriteFunc(const Module& module, const Func& func) {
   }
   current_func_ = nullptr;
   WriteCloseNewline();
-  func_index_++;
 }
 
 void WatWriter::WriteBeginGlobal(const Global& global) {
   WriteOpenSpace("global");
   WriteNameOrIndex(global.name, global_index_, NextChar::Space);
   WriteInlineExports(ExternalKind::Global, global_index_);
+  WriteInlineImport(ExternalKind::Global, global_index_);
   if (global.mutable_) {
     WriteOpenSpace("mut");
     WriteType(global.type, NextChar::Space);
@@ -1084,6 +1112,7 @@ void WatWriter::WriteBeginException(const Exception& except) {
   WriteOpenSpace("except");
   WriteNameOrIndex(except.name, except_index_, NextChar::Space);
   WriteInlineExports(ExternalKind::Except, except_index_);
+  WriteInlineImport(ExternalKind::Except, except_index_);
   WriteTypes(except.sig, nullptr);
   ++except_index_;
 }
@@ -1107,6 +1136,7 @@ void WatWriter::WriteTable(const Table& table) {
   WriteOpenSpace("table");
   WriteNameOrIndex(table.name, table_index_, NextChar::Space);
   WriteInlineExports(ExternalKind::Table, table_index_);
+  WriteInlineImport(ExternalKind::Table, table_index_);
   WriteLimits(table.elem_limits);
   WritePutsSpace("anyfunc");
   WriteCloseNewline();
@@ -1125,6 +1155,7 @@ void WatWriter::WriteMemory(const Memory& memory) {
   WriteOpenSpace("memory");
   WriteNameOrIndex(memory.name, memory_index_, NextChar::Space);
   WriteInlineExports(ExternalKind::Memory, memory_index_);
+  WriteInlineImport(ExternalKind::Memory, memory_index_);
   WriteLimits(memory.page_limits);
   WriteCloseNewline();
   memory_index_++;
@@ -1138,9 +1169,45 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
 }
 
 void WatWriter::WriteImport(const Import& import) {
-  WriteOpenSpace("import");
-  WriteQuotedString(import.module_name, NextChar::Space);
-  WriteQuotedString(import.field_name, NextChar::Space);
+  if (!options_->inline_import) {
+    WriteOpenSpace("import");
+    WriteQuotedString(import.module_name, NextChar::Space);
+    WriteQuotedString(import.field_name, NextChar::Space);
+  }
+
+  switch (import.kind()) {
+    case ExternalKind::Func:
+      WriteBeginFunc(cast<FuncImport>(&import)->func);
+      WriteCloseSpace();
+      break;
+
+    case ExternalKind::Table:
+      WriteTable(cast<TableImport>(&import)->table);
+      break;
+
+    case ExternalKind::Memory:
+      WriteMemory(cast<MemoryImport>(&import)->memory);
+      break;
+
+    case ExternalKind::Global:
+      WriteBeginGlobal(cast<GlobalImport>(&import)->global);
+      WriteCloseSpace();
+      break;
+
+    case ExternalKind::Except:
+      WriteBeginException(cast<ExceptionImport>(&import)->except);
+      WriteCloseSpace();
+      break;
+  }
+
+  if (options_->inline_import) {
+    WriteNewline(NO_FORCE_NEWLINE);
+  } else {
+    WriteCloseNewline();
+  }
+}
+
+void WatWriter::WriteInlineImport(const Import& import) {
   switch (import.kind()) {
     case ExternalKind::Func: {
       auto* func_import = cast<FuncImport>(&import);
@@ -1175,15 +1242,11 @@ void WatWriter::WriteImport(const Import& import) {
       WriteCloseSpace();
       break;
   }
-  WriteCloseNewline();
 }
 
 void WatWriter::WriteExport(const Export& export_) {
-  if (options_->inline_export) {
-    // Exported imports can't be written with inline exports.
-    if (!module_->IsImport(export_)) {
-      return;
-    }
+  if (options_->inline_export && IsInlineExport(export_)) {
+    return;
   }
   WriteOpenSpace("export");
   WriteQuotedString(export_.name, NextChar::Space);
@@ -1210,12 +1273,13 @@ void WatWriter::WriteStartFunction(const Var& start) {
 
 Result WatWriter::WriteModule(const Module& module) {
   module_ = &module;
-  BuildExportMap();
+  BuildInlineExportMap();
+  BuildInlineImportMap();
   WriteOpenNewline("module");
   for (const ModuleField& field : module.fields) {
     switch (field.type()) {
       case ModuleFieldType::Func:
-        WriteFunc(module, cast<FuncModuleField>(&field)->func);
+        WriteFunc(cast<FuncModuleField>(&field)->func);
         break;
       case ModuleFieldType::Global:
         WriteGlobal(cast<GlobalModuleField>(&field)->global);
@@ -1255,10 +1319,27 @@ Result WatWriter::WriteModule(const Module& module) {
   return result_;
 }
 
-void WatWriter::BuildExportMap() {
+void WatWriter::BuildInlineExportMap() {
+  if (!options_->inline_export) {
+    return;
+  }
+
   assert(module_);
   for (Export* export_ : module_->exports) {
     Index index = kInvalidIndex;
+
+    // Exported imports can't be written with inline exports, unless the
+    // imports are also inline. For example, the following is invalid:
+    //
+    //   (import "module" "field" (func (export "e")))
+    //
+    // But this is valid:
+    //
+    //   (func (export "e") (import "module" "field"))
+    //
+    if (!options_->inline_import && module_->IsImport(*export_)) {
+      continue;
+    }
 
     switch (export_->kind) {
       case ExternalKind::Func:
@@ -1284,7 +1365,7 @@ void WatWriter::BuildExportMap() {
 
     if (index != kInvalidIndex) {
       auto key = std::make_pair(export_->kind, index);
-      export_map_.insert(std::make_pair(key, export_));
+      inline_export_map_.insert(std::make_pair(key, export_));
     }
   }
 }
@@ -1294,17 +1375,70 @@ void WatWriter::WriteInlineExports(ExternalKind kind, Index index) {
     return;
   }
 
-  auto iter_pair = export_map_.equal_range(std::make_pair(kind, index));
-  for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter)
-    WriteInlineExport(iter->second);
-}
-
-void WatWriter::WriteInlineExport(const Export* export_) {
-  if (export_ && options_->inline_export) {
+  auto iter_pair = inline_export_map_.equal_range(std::make_pair(kind, index));
+  for (auto iter = iter_pair.first; iter != iter_pair.second; ++iter) {
+    const Export* export_ = iter->second;
     WriteOpenSpace("export");
     WriteQuotedString(export_->name, NextChar::None);
     WriteCloseSpace();
   }
+}
+
+bool WatWriter::IsInlineExport(const Export& export_) {
+  Index index;
+  switch (export_.kind) {
+    case ExternalKind::Func:
+      index = module_->GetFuncIndex(export_.var);
+      break;
+
+    case ExternalKind::Table:
+      index = module_->GetTableIndex(export_.var);
+      break;
+
+    case ExternalKind::Memory:
+      index = module_->GetMemoryIndex(export_.var);
+      break;
+
+    case ExternalKind::Global:
+      index = module_->GetGlobalIndex(export_.var);
+      break;
+
+    case ExternalKind::Except:
+      index = module_->GetExceptIndex(export_.var);
+      break;
+  }
+
+  return inline_export_map_.find(std::make_pair(export_.kind, index)) !=
+         inline_export_map_.end();
+}
+
+void WatWriter::BuildInlineImportMap() {
+  if (!options_->inline_import) {
+    return;
+  }
+
+  assert(module_);
+  for (const Import* import : module_->imports) {
+    inline_import_map_[static_cast<size_t>(import->kind())].push_back(import);
+  }
+}
+
+void WatWriter::WriteInlineImport(ExternalKind kind, Index index) {
+  if (!options_->inline_import) {
+    return;
+  }
+
+  size_t kind_index = static_cast<size_t>(kind);
+
+  if (index >= inline_import_map_[kind_index].size()) {
+    return;
+  }
+
+  const Import* import = inline_import_map_[kind_index][index];
+  WriteOpenSpace("import");
+  WriteQuotedString(import->module_name, NextChar::Space);
+  WriteQuotedString(import->field_name, NextChar::Space);
+  WriteCloseSpace();
 }
 
 }  // end anonymous namespace

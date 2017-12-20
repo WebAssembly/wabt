@@ -1,0 +1,21 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --inline-import --inline-export
+(module
+  (import "mod" "f" (func $f (param i32)))
+  (import "mod" "g" (global $g f32))
+  (import "mod" "t" (table $t 1 2 anyfunc))
+  (import "mod" "m" (memory $m 3))
+
+  (export "F" (func $f))
+  (export "G" (global $g))
+  (export "T" (table $t))
+  (export "M" (memory $m))
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32)))
+  (func (;0;) (export "F") (import "mod" "f") (type 0) (param i32))
+  (global (;0;) (export "G") (import "mod" "g") f32)
+  (table (;0;) (export "T") (import "mod" "t") 1 2 anyfunc)
+  (memory (;0;) (export "M") (import "mod" "m") 3))
+;;; STDOUT ;;)
