@@ -1,0 +1,12 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --inline-export --stdout
+(module
+  (import "foo" "bar" (func))
+  (export "baz" (func 0))
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (import "foo" "bar" (func (;0;) (type 0)))
+  (export "baz" (func 0)))
+;;; STDOUT ;;)

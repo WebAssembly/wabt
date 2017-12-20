@@ -684,6 +684,11 @@ struct Module {
   Exception* GetExcept(const Var&) const;
   Index GetExceptIndex(const Var&) const;
 
+  bool IsImport(ExternalKind kind, const Var&) const;
+  bool IsImport(const Export& export_) const {
+    return IsImport(export_.kind, export_.var);
+  }
+
   // TODO(binji): move this into a builder class?
   void AppendField(std::unique_ptr<DataSegmentModuleField>);
   void AppendField(std::unique_ptr<ElemSegmentModuleField>);
