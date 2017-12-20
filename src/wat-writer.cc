@@ -167,7 +167,6 @@ class WatWriter {
   void WriteMemory(const Memory& memory);
   void WriteDataSegment(const DataSegment& segment);
   void WriteImport(const Import& import);
-  void WriteInlineImport(const Import& import);
   void WriteExport(const Export& export_);
   void WriteFuncType(const FuncType& func_type);
   void WriteStartFunction(const Var& start);
@@ -1204,43 +1203,6 @@ void WatWriter::WriteImport(const Import& import) {
     WriteNewline(NO_FORCE_NEWLINE);
   } else {
     WriteCloseNewline();
-  }
-}
-
-void WatWriter::WriteInlineImport(const Import& import) {
-  switch (import.kind()) {
-    case ExternalKind::Func: {
-      auto* func_import = cast<FuncImport>(&import);
-      WriteOpenSpace("func");
-      WriteNameOrIndex(func_import->func.name, func_index_++, NextChar::Space);
-      if (func_import->func.decl.has_func_type) {
-        WriteOpenSpace("type");
-        WriteVar(func_import->func.decl.type_var, NextChar::None);
-        WriteCloseSpace();
-      } else {
-        WriteFuncSigSpace(func_import->func.decl.sig);
-      }
-      WriteCloseSpace();
-      break;
-    }
-
-    case ExternalKind::Table:
-      WriteTable(cast<TableImport>(&import)->table);
-      break;
-
-    case ExternalKind::Memory:
-      WriteMemory(cast<MemoryImport>(&import)->memory);
-      break;
-
-    case ExternalKind::Global:
-      WriteBeginGlobal(cast<GlobalImport>(&import)->global);
-      WriteCloseSpace();
-      break;
-
-    case ExternalKind::Except:
-      WriteBeginException(cast<ExceptionImport>(&import)->except);
-      WriteCloseSpace();
-      break;
   }
 }
 
