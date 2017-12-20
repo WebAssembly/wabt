@@ -132,6 +132,7 @@ template <> struct ValueTypeRepT<int64_t> { typedef uint64_t type; };
 template <> struct ValueTypeRepT<uint64_t> { typedef uint64_t type; };
 template <> struct ValueTypeRepT<float> { typedef uint32_t type; };
 template <> struct ValueTypeRepT<double> { typedef uint64_t type; };
+template <> struct ValueTypeRepT<v128> { typedef v128 type; };
 
 template <typename T>
 using ValueTypeRep = typename ValueTypeRepT<T>::type;
@@ -141,6 +142,7 @@ union Value {
   uint64_t i64;
   ValueTypeRep<float> f32_bits;
   ValueTypeRep<double> f64_bits;
+  ValueTypeRep<v128> v128_bits;
 };
 
 struct TypedValue {

@@ -518,8 +518,7 @@ Const::Const(F64Tag, uint64_t value, const Location& loc_)
 }
 
 Const::Const(V128Tag, v128 value, const Location& loc_)
-    : loc(loc_), type(Type::V128) {
-  memcpy(&v128_bits, &value, sizeof(v128));
+    : loc(loc_), type(Type::V128), v128_bits(value) {
 }
 
 }  // namespace wabt

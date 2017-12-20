@@ -402,6 +402,9 @@ const char* type_name(Type type) {
     case Type::F64:
       return "f64";
 
+    case Type::V128:
+      return "v128";
+
     default:
       assert(0);
       return "INVALID TYPE";
@@ -424,6 +427,7 @@ enum class InitExprType {
   F32,
   I64,
   F64,
+  V128,
   Global,
 };
 
@@ -435,6 +439,7 @@ struct InitExpr {
     uint32_t f32;
     uint64_t i64;
     uint64_t f64;
+    v128     v128_v;
   } value;
 };
 
@@ -918,6 +923,11 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
       PrintDetails(" - init f32=%s\n", buffer);
       break;
     }
+    case InitExprType::V128: {
+      PrintDetails(" - init v128=0x%08x 0x%08x 0x%08x 0x%08x \n", expr.value.v128_v.v[0],\
+                  expr.value.v128_v.v[1], expr.value.v128_v.v[2], expr.value.v128_v.v[3]);
+      break;
+    }
     case InitExprType::Global:
       PrintDetails(" - init global=%" PRIindex "\n", expr.value.global);
       break;
@@ -952,7 +962,14 @@ Result BinaryReaderObjdump::OnInitExprF64ConstExpr(Index index,
 
 Result BinaryReaderObjdump::OnInitExprV128ConstExpr(Index index,
                                                     v128 value) {
-  /*TODO (zhengxing)*/
+  InitExpr expr;
+  expr.type = InitExprType::V128;
+  expr.value.v128_v = value;
+  if (in_data_section_) {
+    data_init_expr_ = expr;
+  } else {
+    PrintInitExpr(expr);
+  }
   return Result::Ok;
 }
 
@@ -1042,6 +1059,7 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
     case InitExprType::I64:
     case InitExprType::F32:
     case InitExprType::F64:
+    case InitExprType::V128:
       fprintf(stderr, "Segment offset must be an i32 init expr");
       return Result::Error;
       break;

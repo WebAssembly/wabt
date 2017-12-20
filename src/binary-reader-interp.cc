@@ -241,6 +241,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result EmitI8(uint8_t value);
   wabt::Result EmitI32(uint32_t value);
   wabt::Result EmitI64(uint64_t value);
+  wabt::Result EmitV128(v128 value);
   wabt::Result EmitI32At(IstreamOffset offset, uint32_t value);
   wabt::Result EmitDropKeep(uint32_t drop, uint8_t keep);
   wabt::Result AppendFixup(IstreamOffsetVectorVector* fixups_vector,
@@ -422,6 +423,10 @@ wabt::Result BinaryReaderInterp::EmitI32(uint32_t value) {
 }
 
 wabt::Result BinaryReaderInterp::EmitI64(uint64_t value) {
+  return EmitData(&value, sizeof(value));
+}
+
+wabt::Result BinaryReaderInterp::EmitV128(v128 value) {
   return EmitData(&value, sizeof(value));
 }
 
@@ -906,8 +911,9 @@ wabt::Result BinaryReaderInterp::OnInitExprF64ConstExpr(Index index,
 
 wabt::Result BinaryReaderInterp::OnInitExprV128ConstExpr(Index index,
                                                          v128 value_bits) {
-  /*TODO (zhengxing)*/
-  WABT_FATAL("BinaryReaderInterp::OnInitExprV128ConstExpr() function not implemented");
+  init_expr_value_.type = Type::V128;
+  init_expr_value_.value.v128_bits = value_bits;
+  return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnInitExprGetGlobalExpr(Index index,
@@ -1373,8 +1379,10 @@ wabt::Result BinaryReaderInterp::OnF64ConstExpr(uint64_t value_bits) {
 }
 
 wabt::Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
-  /*TODO (zhengxing)*/
-  WABT_FATAL("BinaryReaderInterp::OnV128ConstExpr() function not implemented");
+  CHECK_RESULT(typechecker_.OnConst(Type::V128));
+  CHECK_RESULT(EmitOpcode(Opcode::V128Const));
+  CHECK_RESULT(EmitV128(value_bits));
+  return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnGetGlobalExpr(Index global_index) {
