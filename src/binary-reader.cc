@@ -882,6 +882,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64Trunc:
       case Opcode::F64Nearest:
       case Opcode::F64Sqrt:
+      case Opcode::I8X16Splat:
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;

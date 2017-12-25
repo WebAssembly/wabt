@@ -237,6 +237,7 @@ WABT_OPCODE(I64, F64, ___, ___, 0, 0xfc,  0x07, I64TruncUSatF64, "i64.trunc_u:sa
 
 /* Simd opcodes */
 WABT_OPCODE(V128, ___, ___, ___, 0, 0xfd, 0x00,  V128Const, "v128.const")
+WABT_OPCODE(V128, I32, ___, ___, 0, 0xfd, 0x03,  I8X16Splat, "i8x16.splat")
 
 WABT_OPCODE(I32, I32, I32, ___, 4, 0xfe,  0x00, AtomicWake, "atomic.wake")
 WABT_OPCODE(I32, I32, I32, I64, 4, 0xfe,  0x01, I32AtomicWait, "i32.atomic.wait")

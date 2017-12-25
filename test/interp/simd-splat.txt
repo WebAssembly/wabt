@@ -1,0 +1,18 @@
+;;; TOOL: run-interp
+;;; FLAGS: --enable-simd
+(module
+  (func (export  "func_i8x16_splat_0x7f") (result  v128)
+    i32.const 0x7f
+    i8x16.splat)
+  (func (export  "func_i8x16_splat_0x01") (result  v128)
+    i32.const 0x01
+    i8x16.splat)
+  (func (export  "func_i8x16_splat_0x24") (result  v128)
+    i32.const 0x3524
+    i8x16.splat)
+)
+(;; STDOUT ;;;
+func_i8x16_splat_0x7f() => v128:0x7f7f7f7f 0x7f7f7f7f 0x7f7f7f7f 0x7f7f7f7f
+func_i8x16_splat_0x01() => v128:0x01010101 0x01010101 0x01010101 0x01010101
+func_i8x16_splat_0x24() => v128:0x24242424 0x24242424 0x24242424 0x24242424
+;;; STDOUT ;;)
