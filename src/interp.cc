@@ -1216,19 +1216,19 @@ ValueTypeRep<T> Xchg(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
 
 // i(8,16,32,64) f(32,64) X (2,4,8,16) splat ==> v128
 template <typename T, typename V>
-ValueTypeRep<T> SimdSplat(V Lane_Data) {
+ValueTypeRep<T> SimdSplat(V lane_data) {
   // Calculate how many Lanes according to input lane data type.
-  int32_t Lanes = sizeof(T)/sizeof(V);
+  int32_t lanes = sizeof(T)/sizeof(V);
 
   // Define SIMD data array by Lanes.
-  V Simd_data[sizeof(T)/sizeof(V)];
+  V simd_data[sizeof(T)/sizeof(V)];
 
   // Constuct the Simd value by Land data and Lane nums.
-  for(int32_t i = 0; i < Lanes; i++) {
-    Simd_data[i] = Lane_Data;
+  for(int32_t i = 0; i < lanes; i++) {
+    simd_data[i] = lane_data;
   }
 
-  return ToRep(Bitcast<T>(Simd_data));
+  return ToRep(Bitcast<T>(simd_data));
 }
 
 bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
@@ -2244,8 +2244,38 @@ Result Thread::Run(int num_instructions) {
       }
 
       case Opcode::I8X16Splat: {
-        uint8_t Lane_data = static_cast<uint8_t>(Pop<uint32_t>());
-        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(Lane_data)));
+        uint8_t lane_data = Pop<uint32_t>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(lane_data)));
+        break;
+      }
+
+      case Opcode::I16X8Splat: {
+        uint16_t lane_data = Pop<uint32_t>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint16_t>(lane_data)));
+        break;
+      }
+
+      case Opcode::I32X4Splat: {
+        uint32_t lane_data = Pop<uint32_t>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint32_t>(lane_data)));
+        break;
+      }
+
+      case Opcode::I64X2Splat: {
+        uint64_t lane_data = Pop<uint64_t>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint64_t>(lane_data)));
+        break;
+      }
+
+      case Opcode::F32X4Splat: {
+        float lane_data = Pop<float>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, float>(lane_data)));
+        break;
+      }
+
+      case Opcode::F64X2Splat: {
+        double lane_data = Pop<double>();
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, double>(lane_data)));
         break;
       }
 
@@ -2710,7 +2740,12 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::I8X16Splat: {
+    case Opcode::I8X16Splat:
+    case Opcode::I16X8Splat:
+    case Opcode::I32X4Splat:
+    case Opcode::I64X2Splat:
+    case Opcode::F32X4Splat:
+    case Opcode::F64X2Splat: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
                                 Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -3077,6 +3112,11 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I64Extend32S:
       case Opcode::I64Extend8S:
       case Opcode::I8X16Splat:
+      case Opcode::I16X8Splat:
+      case Opcode::I32X4Splat:
+      case Opcode::I64X2Splat:
+      case Opcode::F32X4Splat:
+      case Opcode::F64X2Splat:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
