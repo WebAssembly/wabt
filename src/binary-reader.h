@@ -307,12 +307,13 @@ class BinaryReaderDelegate {
   virtual Result OnSymbolInfoCount(Index count) = 0;
   virtual Result OnSymbolInfo(string_view name, uint32_t flags) = 0;
   virtual Result OnDataSize(uint32_t data_size) = 0;
-  virtual Result OnDataAlignment(uint32_t data_alignment) = 0;
   virtual Result OnSegmentInfoCount(Index count) = 0;
   virtual Result OnSegmentInfo(Index index,
                                string_view name,
                                uint32_t alignment,
                                uint32_t flags) = 0;
+  virtual Result OnInitFunctionCount(Index count) = 0;
+  virtual Result OnInitFunction(uint32_t priority, Index function_index) = 0;
   virtual Result EndLinkingSection() = 0;
 
   /* Exception section */

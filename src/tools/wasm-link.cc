@@ -502,17 +502,10 @@ void Linker::WriteLinkingSection(uint32_t data_size, uint32_t data_alignment) {
 
   WriteStr(&stream_, "linking", "linking section name");
 
-  {
+  if (data_size) {
     WriteU32Leb128(&stream_, LinkingEntryType::DataSize, "subsection code");
     Fixup fixup_subsection = WriteUnknownSize();
     WriteU32Leb128(&stream_, data_size, "data size");
-    FixupSize(fixup_subsection);
-  }
-
-  {
-    WriteU32Leb128(&stream_, LinkingEntryType::DataAlignment, "subsection code");
-    Fixup fixup_subsection = WriteUnknownSize();
-    WriteU32Leb128(&stream_, data_alignment, "data alignment");
     FixupSize(fixup_subsection);
   }
 

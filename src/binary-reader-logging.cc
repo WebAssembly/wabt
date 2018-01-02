@@ -463,6 +463,12 @@ Result BinaryReaderLogging::OnSegmentInfo(Index index,
   return reader_->OnSegmentInfo(index, name, alignment, flags);
 }
 
+Result BinaryReaderLogging::OnInitFunction(uint32_t priority,
+                                           Index func_index) {
+  LOGF("(OnInitFunction %d priority: %d)\n", func_index, priority);
+  return reader_->OnInitFunction(priority, func_index);
+}
+
 #define DEFINE_BEGIN(name)                        \
   Result BinaryReaderLogging::name(Offset size) { \
     LOGF(#name "(%" PRIzd ")\n", size);           \
@@ -628,8 +634,8 @@ DEFINE_BEGIN(BeginLinkingSection)
 DEFINE_INDEX(OnSymbolInfoCount)
 DEFINE_INDEX(OnStackGlobal)
 DEFINE_INDEX(OnDataSize)
-DEFINE_INDEX(OnDataAlignment)
 DEFINE_INDEX(OnSegmentInfoCount)
+DEFINE_INDEX(OnInitFunctionCount)
 DEFINE_END(EndLinkingSection)
 
 DEFINE_BEGIN(BeginExceptionSection);

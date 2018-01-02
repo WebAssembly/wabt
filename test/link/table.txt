@@ -30,9 +30,9 @@ Sections:
      Elem start=0x00000036 end=0x00000055 (size=0x0000001f) count: 1
      Code start=0x00000057 end=0x0000006d (size=0x00000016) count: 4
    Custom start=0x00000073 end=0x0000009b (size=0x00000028) "name"
-   Custom start=0x000000a1 end=0x000000b7 (size=0x00000016) "linking"
-   Custom start=0x000000bd end=0x000000d9 (size=0x0000001c) "reloc.Elem"
-   Custom start=0x000000df end=0x000000ef (size=0x00000010) "reloc.Code"
+   Custom start=0x000000a1 end=0x000000a9 (size=0x00000008) "linking"
+   Custom start=0x000000af end=0x000000cb (size=0x0000001c) "reloc.Elem"
+   Custom start=0x000000d1 end=0x000000e1 (size=0x00000010) "reloc.Code"
 
 Section Details:
 
@@ -64,8 +64,6 @@ Custom:
  - func[3] func4
 Custom:
  - name: "linking"
-  - data size : 0
-  - data align: 0
 Custom:
  - name: "reloc.Elem"
   - section: Elem

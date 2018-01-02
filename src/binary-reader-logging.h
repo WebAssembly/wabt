@@ -256,12 +256,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnSymbolInfoCount(Index count) override;
   Result OnSymbolInfo(string_view name, uint32_t flags) override;
   Result OnDataSize(uint32_t data_size) override;
-  Result OnDataAlignment(uint32_t data_alignment) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
                        string_view name,
                        uint32_t alignment,
                        uint32_t flags) override;
+  Result OnInitFunctionCount(Index count) override;
+  Result OnInitFunction(uint32_t priority, Index function_index) override;
   Result EndLinkingSection() override;
 
   Result BeginExceptionSection(Offset size) override;
