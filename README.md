@@ -4,7 +4,7 @@
 
 WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
 
- - **wat2wasm**: translate from [WebAssembly text format](http://webassembly.github.io/spec/text/index.html) to the [WebAssembly binary format](http://webassembly.github.io/spec/binary/index.html)
+ - **wat2wasm**: translate from [WebAssembly text format](https://webassembly.github.io/spec/core/text/index.html) to the [WebAssembly binary format](https://webassembly.github.io/spec/core/binary/index.html)
  - **wasm2wat**: the inverse of wat2wasm, translate from the binary format back to the text format (also known as a .wat)
  - **wasm-objdump**: print information about a wasm binary. Similiar to objdump.
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
