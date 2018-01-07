@@ -222,6 +222,7 @@ class JSONParser {
   wabt::Result ParseConst(TypedValue* out_value);
   wabt::Result ParseConstVector(TypedValues* out_values);
   wabt::Result ParseAction(Action* out_action);
+  wabt::Result ParseActionResult();
   wabt::Result ParseModuleType(ModuleType* out_type);
 
   std::string CreateModulePath(string_view filename);
@@ -553,6 +554,14 @@ wabt::Result JSONParser::ParseAction(Action* out_action) {
   return wabt::Result::Ok;
 }
 
+wabt::Result JSONParser::ParseActionResult() {
+  // Not needed for wabt-interp, but useful for other parsers.
+  EXPECT_KEY("expected");
+  TypeVector expected;
+  CHECK_RESULT(ParseTypeVector(&expected));
+  return wabt::Result::Ok;
+}
+
 wabt::Result JSONParser::ParseModuleType(ModuleType* out_type) {
   std::string module_type_str;
 
@@ -628,6 +637,8 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
+    EXPECT(",");
+    CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else if (Match("\"register\"")) {
     auto command = MakeUnique<RegisterCommand>();
@@ -698,10 +709,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
     EXPECT(",");
-    // Not needed for wabt-interp, but useful for other parsers.
-    EXPECT_KEY("expected");
-    TypeVector expected;
-    CHECK_RESULT(ParseTypeVector(&expected));
+    CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else if (Match("\"assert_return_arithmetic_nan\"")) {
     auto command = MakeUnique<AssertReturnArithmeticNanCommand>();
@@ -710,10 +718,7 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
     EXPECT(",");
-    // Not needed for wabt-interp, but useful for other parsers.
-    EXPECT_KEY("expected");
-    TypeVector expected;
-    CHECK_RESULT(ParseTypeVector(&expected));
+    CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else if (Match("\"assert_trap\"")) {
     auto command = MakeUnique<AssertTrapCommand>();
@@ -723,6 +728,8 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseAction(&command->action));
     EXPECT(",");
     PARSE_KEY_STRING_VALUE("text", &command->text);
+    EXPECT(",");
+    CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else if (Match("\"assert_exhaustion\"")) {
     auto command = MakeUnique<AssertExhaustionCommand>();
@@ -730,6 +737,8 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     CHECK_RESULT(ParseLine(&command->line));
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
+    EXPECT(",");
+    CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else {
     PrintError("unknown command type");
