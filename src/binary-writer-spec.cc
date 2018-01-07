@@ -53,13 +53,14 @@ class BinaryWriterSpec {
   void WriteConst(const Const& const_);
   void WriteConstVector(const ConstVector& consts);
   void WriteAction(const Action& action);
-  void WriteActionResultType(const Script& script, const Action& action);
+  void WriteActionResultType(const Action& action);
   void WriteModule(string_view filename, const Module& module);
   void WriteScriptModule(string_view filename,
                          const ScriptModule& script_module);
   void WriteInvalidModule(const ScriptModule& module, string_view text);
-  void WriteCommands(const Script& script);
+  void WriteCommands();
 
+  const Script* script_ = nullptr;
   MemoryStream json_stream_;
   std::string source_filename_;
   std::string module_filename_noext_;
@@ -243,9 +244,8 @@ void BinaryWriterSpec::WriteAction(const Action& action) {
   json_stream_.Writef("}");
 }
 
-void BinaryWriterSpec::WriteActionResultType(const Script& script,
-                                             const Action& action) {
-  const Module* module = script.GetModule(action.module_var);
+void BinaryWriterSpec::WriteActionResultType(const Action& action) {
+  const Module* module = script_->GetModule(action.module_var);
   const Export* export_;
   json_stream_.Writef("[");
   switch (action.type()) {
@@ -349,13 +349,13 @@ void BinaryWriterSpec::WriteInvalidModule(const ScriptModule& module,
   WriteScriptModule(filename, module);
 }
 
-void BinaryWriterSpec::WriteCommands(const Script& script) {
+void BinaryWriterSpec::WriteCommands() {
   json_stream_.Writef("{\"source_filename\": ");
   WriteEscapedString(source_filename_);
   json_stream_.Writef(",\n \"commands\": [\n");
   Index last_module_index = kInvalidIndex;
-  for (size_t i = 0; i < script.commands.size(); ++i) {
-    const Command* command = script.commands[i].get();
+  for (size_t i = 0; i < script_->commands.size(); ++i) {
+    const Command* command = script_->commands[i].get();
 
     if (i != 0) {
       WriteSeparator();
@@ -390,6 +390,9 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
         WriteLocation(action.loc);
         WriteSeparator();
         WriteAction(action);
+        WriteSeparator();
+        WriteKey("expected");
+        WriteActionResultType(action);
         break;
       }
 
@@ -466,8 +469,7 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
         WriteAction(*assert_return_canonical_nan_command->action);
         WriteSeparator();
         WriteKey("expected");
-        WriteActionResultType(script,
-                              *assert_return_canonical_nan_command->action);
+        WriteActionResultType(*assert_return_canonical_nan_command->action);
         break;
       }
 
@@ -479,8 +481,7 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
         WriteAction(*assert_return_arithmetic_nan_command->action);
         WriteSeparator();
         WriteKey("expected");
-        WriteActionResultType(script,
-                              *assert_return_arithmetic_nan_command->action);
+        WriteActionResultType(*assert_return_arithmetic_nan_command->action);
         break;
       }
 
@@ -492,6 +493,9 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
         WriteSeparator();
         WriteKey("text");
         WriteEscapedString(assert_trap_command->text);
+        WriteSeparator();
+        WriteKey("expected");
+        WriteActionResultType(*assert_trap_command->action);
         break;
       }
 
@@ -501,6 +505,9 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
         WriteLocation(assert_exhaustion_command->action->loc);
         WriteSeparator();
         WriteAction(*assert_exhaustion_command->action);
+        WriteSeparator();
+        WriteKey("expected");
+        WriteActionResultType(*assert_exhaustion_command->action);
         break;
       }
     }
@@ -511,7 +518,8 @@ void BinaryWriterSpec::WriteCommands(const Script& script) {
 }
 
 Result BinaryWriterSpec::WriteScript(const Script& script) {
-  WriteCommands(script);
+  script_ = &script;
+  WriteCommands();
   if (spec_options_->json_filename) {
     json_stream_.WriteToFile(spec_options_->json_filename);
   }
