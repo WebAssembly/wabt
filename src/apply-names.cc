@@ -70,6 +70,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result UseNameForExceptVar(Var* var);
   Result UseNameForParamAndLocalVar(Func* func, Var* var);
   Result VisitFunc(Index func_index, Func* func);
+  Result VisitGlobal(Global* global);
   Result VisitExport(Index export_index, Export* export_);
   Result VisitElemSegment(Index elem_segment_index, ElemSegment* segment);
   Result VisitDataSegment(Index data_segment_index, DataSegment* segment);
@@ -340,6 +341,11 @@ Result NameApplier::VisitFunc(Index func_index, Func* func) {
   return Result::Ok;
 }
 
+Result NameApplier::VisitGlobal(Global* global) {
+  CHECK_RESULT(visitor_.VisitExprList(global->init_expr));
+  return Result::Ok;
+}
+
 Result NameApplier::VisitExport(Index export_index, Export* export_) {
   if (export_->kind == ExternalKind::Func) {
     UseNameForFuncVar(&export_->var);
@@ -350,6 +356,7 @@ Result NameApplier::VisitExport(Index export_index, Export* export_) {
 Result NameApplier::VisitElemSegment(Index elem_segment_index,
                                      ElemSegment* segment) {
   CHECK_RESULT(UseNameForTableVar(&segment->table_var));
+  CHECK_RESULT(visitor_.VisitExprList(segment->offset));
   for (Var& var : segment->vars) {
     CHECK_RESULT(UseNameForFuncVar(&var));
   }
@@ -359,6 +366,7 @@ Result NameApplier::VisitElemSegment(Index elem_segment_index,
 Result NameApplier::VisitDataSegment(Index data_segment_index,
                                      DataSegment* segment) {
   CHECK_RESULT(UseNameForMemoryVar(&segment->memory_var));
+  CHECK_RESULT(visitor_.VisitExprList(segment->offset));
   return Result::Ok;
 }
 
@@ -366,6 +374,8 @@ Result NameApplier::VisitModule(Module* module) {
   module_ = module;
   for (size_t i = 0; i < module->funcs.size(); ++i)
     CHECK_RESULT(VisitFunc(i, module->funcs[i]));
+  for (size_t i = 0; i < module->globals.size(); ++i)
+    CHECK_RESULT(VisitGlobal(module->globals[i]));
   for (size_t i = 0; i < module->exports.size(); ++i)
     CHECK_RESULT(VisitExport(i, module->exports[i]));
   for (size_t i = 0; i < module->elem_segments.size(); ++i)

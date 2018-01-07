@@ -1,0 +1,23 @@
+;;; TOOL: run-roundtrip
+;;; FLAGS: --stdout --generate-names
+(module
+  (import "m" "g" (global $g i32))
+  (func)
+  (table 1 anyfunc)
+  (memory 1)
+
+  (global i32 (get_global $g))
+  (elem (get_global $g) 0)
+  (data (get_global $g) "hi")
+)
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (import "m" "g" (global $m.g i32))
+  (func $f0 (type $t0))
+  (table $T0 1 anyfunc)
+  (memory $M0 1)
+  (global $g1 i32 (get_global $m.g))
+  (elem (get_global $m.g) $f0)
+  (data (get_global $m.g) "hi"))
+;;; STDOUT ;;)
