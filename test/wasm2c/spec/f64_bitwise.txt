@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/f64_bitwise.wast
+(;; STDOUT ;;;
+360/360 tests passed.
+;;; STDOUT ;;)

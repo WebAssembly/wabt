@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/utf8-import-field.wast
+(;; STDOUT ;;;
+0/0 tests passed.
+;;; STDOUT ;;)

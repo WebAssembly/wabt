@@ -46,7 +46,12 @@ class Executable(object):
     self.error_cmdline = kwargs.get('error_cmdline', True)
     self.clean_stdout = kwargs.get('clean_stdout')
     self.clean_stderr = kwargs.get('clean_stderr')
+    self.stdout_handle = self._ForwardHandle(kwargs.get('forward_stdout'))
+    self.stderr_handle = self._ForwardHandle(kwargs.get('forward_stderr'))
     self.verbose = False
+
+  def _ForwardHandle(self, forward):
+    return None if forward else subprocess.PIPE
 
   def _RunWithArgsInternal(self, *args, **kwargs):
     cmd = [self.exe] + self.before_args + list(args) + self.after_args
@@ -63,11 +68,13 @@ class Executable(object):
     stderr = ''
     error = None
     try:
-      process = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE, **kwargs)
+      process = subprocess.Popen(cmd, stdout=self.stdout_handle,
+                                 stderr=self.stderr_handle, **kwargs)
       stdout, stderr = process.communicate()
-      stdout = stdout.decode('utf-8', 'ignore')
-      stderr = stderr.decode('utf-8', 'ignore')
+      if stdout:
+        stdout = stdout.decode('utf-8', 'ignore')
+      if stderr:
+        stderr = stderr.decode('utf-8', 'ignore')
       if self.clean_stdout:
         stdout = self.clean_stdout(stdout)
       if self.clean_stderr:
@@ -91,7 +98,8 @@ class Executable(object):
 
   def RunWithArgs(self, *args, **kwargs):
     stdout, stderr, error = self._RunWithArgsInternal(*args, **kwargs)
-    sys.stdout.write(stdout)
+    if stdout:
+      sys.stdout.write(stdout)
     if error:
       raise error
 

@@ -1,0 +1,5 @@
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/memory.wast
+(;; STDOUT ;;;
+47/47 tests passed.
+;;; STDOUT ;;)

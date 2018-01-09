@@ -1,0 +1,6 @@
+;;; SLOW:
+;;; TOOL: run-spec-wasm2c
+;;; STDIN_FILE: third_party/testsuite/f64_cmp.wast
+(;; STDOUT ;;;
+2400/2400 tests passed.
+;;; STDOUT ;;)

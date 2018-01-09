@@ -136,9 +136,13 @@ The currently supported list of tools (see
   interpreter
 - `run-opcodecnt`: parse a wasm text file, convert it to binary, then display
   opcode usage counts.
-- `run-gen-spec-js`:parse wasm spec test text file, convert it to a JSON file
+- `run-gen-spec-js`: parse wasm spec test text file, convert it to a JSON file
   and a collection of `.wasm` and `.wast` files, then take all of these files
   and generate a JavaScript file that will execute the same tests.
+- `run-spec-wasm2c`: similar to `run-gen-spec-js`, but the output instead will
+  be C source files, that are then compiled with the default C compiler (`cc`).
+  Finally, the native executable is run.
+
 
 ## Test subdirectories
 

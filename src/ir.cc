@@ -134,6 +134,21 @@ bool Module::IsImport(ExternalKind kind, const Var& var) const {
   }
 }
 
+Type Func::GetLocalType(Index index) const {
+  Index num_params = decl.GetNumParams();
+  if (index < num_params) {
+    return GetParamType(index);
+  } else {
+    index -= num_params;
+    assert(index < local_types.size());
+    return local_types[index];
+  }
+}
+
+Type Func::GetLocalType(const Var& var) const {
+  return GetLocalType(GetLocalIndex(var));
+}
+
 Index Func::GetLocalIndex(const Var& var) const {
   if (var.is_index()) {
     return var.index();
@@ -177,12 +192,20 @@ Global* Module::GetGlobal(const Var& var) {
   return globals[index];
 }
 
+const Table* Module::GetTable(const Var& var) const {
+  return const_cast<Module*>(this)->GetTable(var);
+}
+
 Table* Module::GetTable(const Var& var) {
   Index index = table_bindings.FindIndex(var);
   if (index >= tables.size()) {
     return nullptr;
   }
   return tables[index];
+}
+
+const Memory* Module::GetMemory(const Var& var) const {
+  return const_cast<Module*>(this)->GetMemory(var);
 }
 
 Memory* Module::GetMemory(const Var& var) {

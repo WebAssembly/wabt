@@ -10,6 +10,7 @@ WABT (we pronounce it "wabbit") is a suite of tools for WebAssembly, including:
  - **wasm-interp**: decode and run a WebAssembly binary file using a stack-based interpreter
  - **wat-desugar**: parse .wat text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and print "canonical" flat format
  - **wasm-link**: simple linker for merging multiple wasm files.
+ - **wasm2c**: convert a WebAssembly binary file to a C source and header
 
 These tools are intended for use in (or for development of) toolchains or other
 systems that want to manipulate WebAssembly files. Unlike the WebAssembly spec
