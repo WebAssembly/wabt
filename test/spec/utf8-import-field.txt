@@ -1,357 +1,357 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/utf8-import-field.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/utf8-import-field.wast:7: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:7: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:22: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:22: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:37: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:37: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:52: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:52: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:67: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:67: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:82: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:82: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:99: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:99: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:114: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:114: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:129: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:129: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:146: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:146: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:161: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:161: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:176: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:176: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:191: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:191: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:206: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:206: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:221: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:221: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:236: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:236: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:251: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:251: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:266: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:266: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:281: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:281: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:296: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:296: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:311: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:311: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:328: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:328: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:343: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:343: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:358: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:358: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:373: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:373: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:388: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:388: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:405: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:405: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:420: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:420: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:435: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:435: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:450: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:450: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:465: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:465: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:480: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:480: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:495: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:495: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:510: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:510: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:525: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:525: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:540: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:540: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:555: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:555: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:570: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:570: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:585: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:585: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:600: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:600: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:615: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:615: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:630: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:630: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:645: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:645: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:660: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:660: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:675: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:675: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:690: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:690: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:705: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:705: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:720: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:720: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:735: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:735: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:750: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:750: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:765: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:765: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:780: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:780: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:795: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:795: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:810: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:810: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:825: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:825: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:840: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:840: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:855: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:855: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:870: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:870: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:887: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:887: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:902: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:902: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:917: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:917: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:932: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:932: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:947: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:947: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:962: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:962: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:977: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:977: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:992: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:992: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1007: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1007: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1022: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1022: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1037: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1037: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1052: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1052: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1067: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1067: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1082: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1082: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1097: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1097: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1112: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1112: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1127: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1127: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1142: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1142: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1157: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1157: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1172: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1172: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1187: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1187: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1202: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1202: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1217: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1217: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1232: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1232: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1249: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1249: assert_malformed passed:
   0000011: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1264: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1264: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1279: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1279: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1294: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1294: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1309: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1309: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1324: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1324: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1339: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1339: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1356: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1356: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1371: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1371: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1386: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1386: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1401: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1401: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1416: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1416: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1431: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1431: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1446: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1446: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1461: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1461: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1476: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1476: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1491: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1491: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1506: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1506: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1521: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1521: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1536: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1536: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1551: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1551: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1566: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1566: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1581: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1581: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1596: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1596: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1611: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1611: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1626: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1626: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1641: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1641: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1656: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1656: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1671: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1671: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1686: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1686: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1701: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1701: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1716: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1716: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1733: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1733: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1748: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1748: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1763: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1763: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1778: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1778: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1793: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1793: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1808: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1808: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1823: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1823: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1838: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1838: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1853: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1853: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1868: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1868: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1883: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1883: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1898: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1898: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1913: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1913: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1928: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1928: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1943: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1943: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1958: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1958: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1975: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1975: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:1990: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:1990: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2005: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2005: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2020: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2020: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2035: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2035: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2050: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2050: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2065: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2065: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2080: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2080: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2095: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2095: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2110: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2110: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2125: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2125: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2140: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2140: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2155: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2155: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2170: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2170: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2185: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2185: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2200: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2200: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2217: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2217: assert_malformed passed:
   0000012: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2232: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2232: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2247: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2247: assert_malformed passed:
   0000011: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2262: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2262: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2277: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2277: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2292: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2292: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2307: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2307: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2322: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2322: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2337: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2337: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2354: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2354: assert_malformed passed:
   0000011: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2369: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2369: assert_malformed passed:
   0000011: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2386: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2386: assert_malformed passed:
   0000013: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2401: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2401: assert_malformed passed:
   0000011: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2416: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2416: assert_malformed passed:
   0000012: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2431: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2431: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2446: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2446: assert_malformed passed:
   0000011: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2461: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2461: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2476: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2476: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2491: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2491: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2506: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2506: assert_malformed passed:
   000000f: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2521: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2521: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2536: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2536: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2553: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2553: assert_malformed passed:
   0000012: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2568: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2568: assert_malformed passed:
   0000012: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2585: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2585: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2600: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2600: assert_malformed passed:
   000000d: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2615: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2615: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2630: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2630: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2645: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2645: assert_malformed passed:
   000000e: error: invalid utf-8 encoding: import module name
-out/third_party/testsuite/utf8-import-field.wast:2660: assert_malformed passed:
+out/test/spec/utf8-import-field.wast:2660: assert_malformed passed:
   0000010: error: invalid utf-8 encoding: import module name
 176/176 tests passed.
 ;;; STDOUT ;;)

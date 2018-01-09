@@ -1,12 +1,12 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/start.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/start.wast:2: assert_invalid passed:
+out/test/spec/start.wast:2: assert_invalid passed:
   0000015: error: invalid start function index: 1
-out/third_party/testsuite/start.wast:7: assert_invalid passed:
+out/test/spec/start.wast:7: assert_invalid passed:
   error: start function must not return anything
   0000016: error: OnStartFunction callback failed
-out/third_party/testsuite/start.wast:14: assert_invalid passed:
+out/test/spec/start.wast:14: assert_invalid passed:
   error: start function must be nullary
   0000016: error: OnStartFunction callback failed
 inc() =>

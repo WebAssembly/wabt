@@ -1,84 +1,84 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/int_literals.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/int_literals.wast:72: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.1.wat:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:72: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.1.wat:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const _100))
                          ^^^^
-out/third_party/testsuite/int_literals.wast:76: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.2.wat:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:76: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.2.wat:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const +_100))
                          ^^^^^
-out/third_party/testsuite/int_literals.wast:80: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.3.wat:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:80: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.3.wat:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const -_100))
                          ^^^^^
-out/third_party/testsuite/int_literals.wast:84: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.4.wat:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:84: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.4.wat:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const 99_))
                          ^^^
-out/third_party/testsuite/int_literals.wast:88: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.5.wat:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:88: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.5.wat:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const 1__000))
                          ^^^^^^
-out/third_party/testsuite/int_literals.wast:92: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.6.wat:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:92: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.6.wat:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const _0x100))
                          ^^^^^^
-out/third_party/testsuite/int_literals.wast:96: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.7.wat:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:96: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.7.wat:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const 0_x100))
                          ^^^^^^
-out/third_party/testsuite/int_literals.wast:100: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.8.wat:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:100: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.8.wat:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const 0x_100))
                          ^^^^^^
-out/third_party/testsuite/int_literals.wast:104: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.9.wat:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:104: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.9.wat:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const 0x00_))
                          ^^^^^
-out/third_party/testsuite/int_literals.wast:108: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.10.wat:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:108: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.10.wat:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i32 (i32.const 0xff__ffff))
                          ^^^^^^^^^^
-out/third_party/testsuite/int_literals.wast:113: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.11.wat:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:113: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.11.wat:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const _100))
                          ^^^^
-out/third_party/testsuite/int_literals.wast:117: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.12.wat:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:117: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.12.wat:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const +_100))
                          ^^^^^
-out/third_party/testsuite/int_literals.wast:121: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.13.wat:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:121: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.13.wat:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const -_100))
                          ^^^^^
-out/third_party/testsuite/int_literals.wast:125: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.14.wat:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:125: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.14.wat:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const 99_))
                          ^^^
-out/third_party/testsuite/int_literals.wast:129: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.15.wat:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:129: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.15.wat:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const 1__000))
                          ^^^^^^
-out/third_party/testsuite/int_literals.wast:133: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.16.wat:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:133: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.16.wat:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const _0x100))
                          ^^^^^^
-out/third_party/testsuite/int_literals.wast:137: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.17.wat:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:137: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.17.wat:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const 0_x100))
                          ^^^^^^
-out/third_party/testsuite/int_literals.wast:141: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.18.wat:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:141: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.18.wat:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const 0x_100))
                          ^^^^^^
-out/third_party/testsuite/int_literals.wast:145: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.19.wat:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:145: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.19.wat:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const 0x00_))
                          ^^^^^
-out/third_party/testsuite/int_literals.wast:149: assert_malformed passed:
-  out/third_party/testsuite/int_literals/int_literals.20.wat:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/int_literals.wast:149: assert_malformed passed:
+  out/test/spec/int_literals/int_literals.20.wat:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global i64 (i64.const 0xff__ffff))
                          ^^^^^^^^^^
 50/50 tests passed.

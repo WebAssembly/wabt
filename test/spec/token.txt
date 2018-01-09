@@ -1,12 +1,12 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/token.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/token.wast:4: assert_malformed passed:
-  out/third_party/testsuite/token/token.0.wat:1:14: error: unexpected token "i32.const0", expected an expr.
+out/test/spec/token.wast:4: assert_malformed passed:
+  out/test/spec/token/token.0.wat:1:14: error: unexpected token "i32.const0", expected an expr.
   (func (drop (i32.const0)))
                ^^^^^^^^^^
-out/third_party/testsuite/token.wast:8: assert_malformed passed:
-  out/third_party/testsuite/token/token.1.wat:1:10: error: unexpected token "0drop", expected a numeric index or a name (e.g. 12 or $foo).
+out/test/spec/token.wast:8: assert_malformed passed:
+  out/test/spec/token/token.1.wat:1:10: error: unexpected token "0drop", expected a numeric index or a name (e.g. 12 or $foo).
   (func br 0drop)
            ^^^^^
 2/2 tests passed.

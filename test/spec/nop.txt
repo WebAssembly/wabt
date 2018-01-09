@@ -1,16 +1,16 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/nop.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/nop.wast:250: assert_invalid passed:
+out/test/spec/nop.wast:250: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   000001a: error: EndFunctionBody callback failed
-out/third_party/testsuite/nop.wast:254: assert_invalid passed:
+out/test/spec/nop.wast:254: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   000001a: error: EndFunctionBody callback failed
-out/third_party/testsuite/nop.wast:258: assert_invalid passed:
+out/test/spec/nop.wast:258: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got []
   000001a: error: EndFunctionBody callback failed
-out/third_party/testsuite/nop.wast:262: assert_invalid passed:
+out/test/spec/nop.wast:262: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got []
   000001a: error: EndFunctionBody callback failed
 54/54 tests passed.

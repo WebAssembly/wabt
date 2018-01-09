@@ -288,11 +288,18 @@ class TestInfo(object):
     return name
 
   def GetGeneratedInputFilename(self):
+    # All tests should be generated in their own directories, even if they
+    # share the same input filename. We want the input filename to be correct,
+    # though, so we use the directory of the test (.txt) file, but the basename
+    # of the input file (likely a .wast).
+
     path = OUT_DIR
     if self.input_filename:
-      path = os.path.join(path, self.input_filename)
+      basename = os.path.basename(self.input_filename)
     else:
-      path = os.path.join(path, self.filename)
+      basename = os.path.basename(self.filename)
+
+    path = os.path.join(path, os.path.dirname(self.filename), basename)
 
     if self.is_roundtrip:
       dirname = os.path.dirname(path)

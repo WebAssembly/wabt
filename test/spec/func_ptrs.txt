@@ -3,19 +3,19 @@
 (;; STDOUT ;;;
 called host spectest.print(i32:83) =>
 four(i32:83) =>
-out/third_party/testsuite/func_ptrs.wast:32: assert_invalid passed:
+out/test/spec/func_ptrs.wast:32: assert_invalid passed:
   000000b: error: elem section without table section
-out/third_party/testsuite/func_ptrs.wast:33: assert_invalid passed:
+out/test/spec/func_ptrs.wast:33: assert_invalid passed:
   0000015: error: elem section without table section
-out/third_party/testsuite/func_ptrs.wast:36: assert_invalid passed:
+out/test/spec/func_ptrs.wast:36: assert_invalid passed:
   0000014: error: expected i32 init_expr
-out/third_party/testsuite/func_ptrs.wast:40: assert_invalid passed:
+out/test/spec/func_ptrs.wast:40: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
-out/third_party/testsuite/func_ptrs.wast:44: assert_invalid passed:
+out/test/spec/func_ptrs.wast:44: assert_invalid passed:
   0000013: error: unexpected opcode in initializer expression: 1 (0x1)
-out/third_party/testsuite/func_ptrs.wast:48: assert_invalid passed:
+out/test/spec/func_ptrs.wast:48: assert_invalid passed:
   000000c: error: invalid function signature index: 42
-out/third_party/testsuite/func_ptrs.wast:49: assert_invalid passed:
+out/test/spec/func_ptrs.wast:49: assert_invalid passed:
   000001c: error: invalid import signature index
 33/33 tests passed.
 ;;; STDOUT ;;)

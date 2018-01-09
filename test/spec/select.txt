@@ -1,7 +1,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/select.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/select.wast:65: assert_invalid passed:
+out/test/spec/select.wast:65: assert_invalid passed:
   error: type mismatch in select, expected [i32, any, any] but got [i32]
   000001c: error: OnSelectExpr callback failed
 29/29 tests passed.
