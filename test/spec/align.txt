@@ -1,26 +1,26 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/align.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/align.wast:2: assert_malformed passed:
-  out/third_party/testsuite/align/align.0.wat:1:42: error: alignment must be power-of-two
+out/test/spec/align.wast:2: assert_malformed passed:
+  out/test/spec/align/align.0.wat:1:42: error: alignment must be power-of-two
   (module (memory 0) (func (drop (i64.load align=0 (i32.const 0)))))
                                            ^^^^^^^
-out/third_party/testsuite/align.wast:8: assert_malformed passed:
-  out/third_party/testsuite/align/align.1.wat:1:42: error: alignment must be power-of-two
+out/test/spec/align.wast:8: assert_malformed passed:
+  out/test/spec/align/align.1.wat:1:42: error: alignment must be power-of-two
   (module (memory 0) (func (drop (i64.load align=7 (i32.const 0)))))
                                            ^^^^^^^
-out/third_party/testsuite/align.wast:14: assert_invalid passed:
+out/test/spec/align.wast:14: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
-out/third_party/testsuite/align.wast:19: assert_malformed passed:
-  out/third_party/testsuite/align/align.3.wat:1:37: error: alignment must be power-of-two
+out/test/spec/align.wast:19: assert_malformed passed:
+  out/test/spec/align/align.3.wat:1:37: error: alignment must be power-of-two
   (module (memory 0) (func (i64.store align=0 (i32.const 0) (i64.const 0))))
                                       ^^^^^^^
-out/third_party/testsuite/align.wast:25: assert_malformed passed:
-  out/third_party/testsuite/align/align.4.wat:1:37: error: alignment must be power-of-two
+out/test/spec/align.wast:25: assert_malformed passed:
+  out/test/spec/align/align.4.wat:1:37: error: alignment must be power-of-two
   (module (memory 0) (func (i64.store align=5 (i32.const 0) (i64.const 0))))
                                       ^^^^^^^
-out/third_party/testsuite/align.wast:31: assert_invalid passed:
+out/test/spec/align.wast:31: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
   0000023: error: OnStoreExpr callback failed
 6/6 tests passed.

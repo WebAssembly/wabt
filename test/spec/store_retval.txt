@@ -1,43 +1,43 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/store_retval.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/store_retval.wast:2: assert_invalid passed:
+out/test/spec/store_retval.wast:2: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   000001e: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:6: assert_invalid passed:
+out/test/spec/store_retval.wast:6: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   000001e: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:10: assert_invalid passed:
+out/test/spec/store_retval.wast:10: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got []
   0000021: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:14: assert_invalid passed:
+out/test/spec/store_retval.wast:14: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got []
   0000025: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:19: assert_invalid passed:
+out/test/spec/store_retval.wast:19: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:23: assert_invalid passed:
+out/test/spec/store_retval.wast:23: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:27: assert_invalid passed:
+out/test/spec/store_retval.wast:27: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got []
   0000029: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:31: assert_invalid passed:
+out/test/spec/store_retval.wast:31: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got []
   000002d: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:36: assert_invalid passed:
+out/test/spec/store_retval.wast:36: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:40: assert_invalid passed:
+out/test/spec/store_retval.wast:40: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   0000026: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:44: assert_invalid passed:
+out/test/spec/store_retval.wast:44: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:48: assert_invalid passed:
+out/test/spec/store_retval.wast:48: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
-out/third_party/testsuite/store_retval.wast:52: assert_invalid passed:
+out/test/spec/store_retval.wast:52: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   0000026: error: EndFunctionBody callback failed
 13/13 tests passed.

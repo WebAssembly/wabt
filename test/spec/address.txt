@@ -1,8 +1,8 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/address.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/address.wast:98: assert_malformed passed:
-  out/third_party/testsuite/address/address.1.wat:1:33: error: offset must be less than or equal to 0xffffffff
+out/test/spec/address.wast:98: assert_malformed passed:
+  out/test/spec/address/address.1.wat:1:33: error: offset must be less than or equal to 0xffffffff
   (memory 1)(func (drop (i32.load offset=4294967296 (i32.const 0))))
                                   ^^^^^^^^^^^^^^^^^
 42/42 tests passed.

@@ -1,39 +1,39 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/loop.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/loop.wast:254: assert_invalid passed:
+out/test/spec/loop.wast:254: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   000001c: error: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:258: assert_invalid passed:
+out/test/spec/loop.wast:258: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   000001c: error: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:262: assert_invalid passed:
+out/test/spec/loop.wast:262: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got []
   000001c: error: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:266: assert_invalid passed:
+out/test/spec/loop.wast:266: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got []
   000001c: error: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:271: assert_invalid passed:
+out/test/spec/loop.wast:271: assert_invalid passed:
   error: type mismatch in loop, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
-out/third_party/testsuite/loop.wast:277: assert_invalid passed:
+out/test/spec/loop.wast:277: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got []
   000001b: error: OnEndExpr callback failed
-out/third_party/testsuite/loop.wast:283: assert_invalid passed:
+out/test/spec/loop.wast:283: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got []
   000001c: error: OnEndExpr callback failed
-out/third_party/testsuite/loop.wast:289: assert_invalid passed:
+out/test/spec/loop.wast:289: assert_invalid passed:
   error: type mismatch in loop, expected [i32] but got [f32]
   0000020: error: OnEndExpr callback failed
-out/third_party/testsuite/loop.wast:295: assert_invalid passed:
+out/test/spec/loop.wast:295: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
-out/third_party/testsuite/loop.wast:303: assert_malformed passed:
-  out/third_party/testsuite/loop/loop.10.wat:1:16: error: unexpected label "$l"
+out/test/spec/loop.wast:303: assert_malformed passed:
+  out/test/spec/loop/loop.10.wat:1:16: error: unexpected label "$l"
   (func loop end $l)
                  ^^
-out/third_party/testsuite/loop.wast:307: assert_malformed passed:
-  out/third_party/testsuite/loop/loop.11.wat:1:19: error: mismatching label "$a" != "$l"
+out/test/spec/loop.wast:307: assert_malformed passed:
+  out/test/spec/loop/loop.11.wat:1:19: error: mismatching label "$a" != "$l"
   (func loop $a end $l)
                     ^^
 53/53 tests passed.

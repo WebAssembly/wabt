@@ -1,7 +1,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/switch.wast
 (;; STDOUT ;;;
-out/third_party/testsuite/switch.wast:150: assert_invalid passed:
+out/test/spec/switch.wast:150: assert_invalid passed:
   error: invalid depth: 3 (max 0)
   000001c: error: OnBrTableExpr callback failed
 27/27 tests passed.
