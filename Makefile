@@ -146,6 +146,15 @@ update-re2c: src/prebuilt/wast-lexer-gen.cc
 src/prebuilt/wast-lexer-gen.cc: src/wast-lexer.cc
 	re2c -W -Werror --no-generation-date -bc8 -o $@ $<
 
+.PHONY: update-wasm2c
+update-wasm2c: src/prebuilt/wasm2c.include.c src/prebuilt/wasm2c.include.h
+
+src/prebuilt/wasm2c.include.c: src/wasm2c.c.tmpl
+	src/wasm2c_tmpl.py -o $@ $<
+
+src/prebuilt/wasm2c.include.h: src/wasm2c.h.tmpl
+	src/wasm2c_tmpl.py -o $@ $<
+
 # running CMake
 $(foreach CONFIG,$(CONFIGS), \
 	$(foreach COMPILER,$(COMPILERS), \
