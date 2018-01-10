@@ -822,6 +822,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64Min:
       case Opcode::F64Max:
       case Opcode::F64Copysign:
+      case Opcode::I8X16Add:
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;

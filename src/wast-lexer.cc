@@ -520,6 +520,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i64x2.splat"          { RETURN_OPCODE(Unary, I64X2Splat); }
       <i> "f32x4.splat"          { RETURN_OPCODE(Unary, F32X4Splat); }
       <i> "f64x2.splat"          { RETURN_OPCODE(Unary, F64X2Splat); }
+      <i> "i8x16.add"            { RETURN_OPCODE(Binary, I8X16Add); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }

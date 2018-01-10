@@ -848,6 +848,32 @@ Result Thread::Binop(BinopFunc<R, T> func) {
   return PushRep<R>(func(lhs_rep, rhs_rep));
 }
 
+//// {i8, i16, 132, i64}{16, 8, 4, 2}.(add/sub/mul/neg)
+template <typename T, typename L, typename R, typename P>
+Result Thread::SimdBinop(BinopFunc<R, P> func) {
+  auto rhs_rep = PopRep<T>();
+  auto lhs_rep = PopRep<T>();
+
+  // Calculate how many Lanes according to input lane data type.
+  constexpr int32_t lanes = sizeof(T)/sizeof(L);
+
+  // Define SIMD data array for Simd add by Lanes.
+  L simd_data_ret[lanes];
+  L simd_data_0[lanes];
+  L simd_data_1[lanes];
+
+  // Convert intput SIMD data to array.
+  memcpy(simd_data_0, &lhs_rep, sizeof(T));
+  memcpy(simd_data_1, &rhs_rep, sizeof(T));
+
+  // Constuct the Simd value by Land data and Lane nums.
+  for(int32_t i = 0; i < lanes; i++) {
+    simd_data_ret[i] = static_cast<L>(func(simd_data_0[i], simd_data_1[i]));
+  }
+
+  return PushRep<T>(Bitcast<T>(simd_data_ret));
+}
+
 template <typename R, typename T>
 Result Thread::BinopTrap(BinopTrapFunc<R, T> func) {
   auto rhs_rep = PopRep<T>();
@@ -2279,6 +2305,10 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
+      case Opcode::I8X16Add:
+        CHECK_TRAP(SimdBinop<v128, uint8_t>(Add<uint32_t>));
+        break;
+
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -2751,6 +2781,13 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
+    case Opcode::I8X16Add: {
+      stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n", opcode.GetName(), Pick(2).v128_bits.v[0],
+                       Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],Pick(1).v128_bits.v[0],
+                       Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
+      break;
+    }
+
     // The following opcodes are either never generated or should never be
     // executed.
     case Opcode::Block:
@@ -3048,6 +3085,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64Le:
       case Opcode::F64Gt:
       case Opcode::F64Ge:
+      case Opcode::I8X16Add:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
