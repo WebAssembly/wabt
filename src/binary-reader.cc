@@ -108,7 +108,7 @@ class BinaryReader {
   Result ReadGlobalHeader(Type* out_type, bool* out_mutable) WABT_WARN_UNUSED;
   Result ReadExceptionType(TypeVector& sig) WABT_WARN_UNUSED;
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
-  Result ReadNamesSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Offset section_size) WABT_WARN_UNUSED;
@@ -135,6 +135,7 @@ class BinaryReader {
   std::vector<Index> target_depths_;
   const ReadBinaryOptions* options_ = nullptr;
   BinarySection last_known_section_ = BinarySection::Invalid;
+  bool did_read_names_section_ = false;
   Index num_signatures_ = 0;
   Index num_imports_ = 0;
   Index num_func_imports_ = 0;
@@ -1134,7 +1135,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadNamesSection(Offset section_size) {
+Result BinaryReader::ReadNameSection(Offset section_size) {
   CALLBACK(BeginNamesSection, section_size);
   Index i = 0;
   Offset previous_read_end = read_end_;
@@ -1382,10 +1383,9 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
   CHECK_RESULT(ReadStr(&section_name, "section name"));
   CALLBACK(BeginCustomSection, section_size, section_name);
 
-  bool name_section_ok = last_known_section_ >= BinarySection::Import;
-  if (options_->read_debug_names && name_section_ok &&
-      section_name == WABT_BINARY_SECTION_NAME) {
-    CHECK_RESULT(ReadNamesSection(section_size));
+  if (options_->read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
+    CHECK_RESULT(ReadNameSection(section_size));
+    did_read_names_section_ = true;
   } else if (section_name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0) {
     // Reloc sections always begin with "reloc."
     CHECK_RESULT(ReadRelocSection(section_size));
@@ -1764,6 +1764,10 @@ Result BinaryReader::ReadSections() {
                      section == BinarySection::Custom ||
                      section > last_known_section_,
                  "section %s out of order", GetSectionName(section));
+
+    ERROR_UNLESS(!did_read_names_section_ || section == BinarySection::Custom,
+                 "%s section can not occur after Name section",
+                 GetSectionName(section));
 
     CALLBACK(BeginSection, section, section_size);
 
