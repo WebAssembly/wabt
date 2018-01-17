@@ -2,9 +2,7 @@
 magic
 version
 section(TYPE) { count[1] function params[0] results[1] i32 }
-section("name") {
-  func_count[0]
-}
+section("name") {}
 section("reloc.TYPE") {
   reloc_section[1]
   reloc_count[0]
