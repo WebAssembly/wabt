@@ -11,11 +11,11 @@ section(CODE) {
   }
 }
 section("name") {
-  subsection[1]
-  length[15]
-  func_count[1]
-  index[0]
-  str("hi hello hey")
+  section(NAME_FUNCTION) {
+    func_count[1]
+    index[0]
+    str("hi hello hey")
+  }
 }
 (;; STDOUT ;;;
 (module

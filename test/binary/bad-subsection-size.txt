@@ -13,7 +13,7 @@ section(CODE) {
 }
 section("name") {
   subsection[1]
-  length[1]
+  length[1]  ;; length is too short
   func_count[1]
   index[0]
   str("$F0")

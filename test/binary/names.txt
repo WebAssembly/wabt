@@ -11,18 +11,19 @@ section(CODE) {
   }
 }
 section("name") {
-  subsection[1]
-  length[5]
-  func_count[1]
-  index[0]
-  str("F0")
-  subsection[2]
-  length[7]
-  func_count[1]
-  index[0]
-  local_count[1]
-  index[0]
-  str("L0")
+  section(NAME_FUNCTION) {
+    func_count[1]
+    index[0]
+    str("F0")
+  }
+
+  section(NAME_LOCALS) {
+    func_count[1]
+    index[0]
+    local_count[1]
+    index[0]
+    str("L0")
+  }
 }
 (;; STDOUT ;;;
 (module

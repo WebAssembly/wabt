@@ -3,34 +3,37 @@
 magic
 version
 section("linking") {
-  subsection[1]
-  length[1]
-  stack_global[3]
-  subsection[2]
-  length[16]
-  num_symbols[3]
-  str("foo")
-  flags[1]
-  str("bar")
-  flags[2]
-  str("baz")
-  flags[0]
-  subsection[5]
-  length[17]
-  count[2]
-  str("data1")
-  align[4]
-  flags[0]
-  str("data2")
-  align[8]
-  flags[0]
-  subsection[6]
-  length[5]
-  count[2]
-  priority[5]
-  func[1]
-  priority[6]
-  func[0]
+  section(LINKING_STACK_POINTER) {
+    stack_global[3]
+  }
+
+  section(LINKING_SYMBOL_INFO) {
+    num_symbols[3]
+    str("foo")
+    flags[1]
+    str("bar")
+    flags[2]
+    str("baz")
+    flags[0]
+  }
+
+  section(LINKING_SEGMENT_INFO) {
+    count[2]
+    str("data1")
+    align[4]
+    flags[0]
+    str("data2")
+    align[8]
+    flags[0]
+  }
+
+  section(LINKING_INIT_FUNCTIONS) {
+    count[2]
+    priority[5]
+    func[1]
+    priority[6]
+    func[0]
+  }
 }
 (;; STDOUT ;;;
 

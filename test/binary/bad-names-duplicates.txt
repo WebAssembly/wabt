@@ -11,13 +11,13 @@ section(CODE) {
   func { locals[decl_count[0]] }
 }
 section("name") {
-  subsection[1]
-  length[9]
-  func_count[2]
-  index[0]
-  str("F0")
-  index[0]
-  str("F1")
+  section(NAME_FUNCTION) {
+    func_count[2]
+    index[0]
+    str("F0")
+    index[0]
+    str("F1")
+  }
 }
 (;; STDERR ;;;
 Error running "wasm-validate":

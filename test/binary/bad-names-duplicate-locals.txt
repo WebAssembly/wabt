@@ -12,20 +12,20 @@ section(CODE) {
   }
 }
 section("name") {
-  subsection[1]
-  length[5]
-  func_count[1]
-  index[0]
-  str("F0")
-  subsection[2]
-  length[11]
-  func_count[1]
-  index[0]
-  local_count[2]
-  index[0]
-  str("L0")
-  index[0]
-  str("L1")
+  section(NAME_FUNCTION) {
+    func_count[1]
+    index[0]
+    str("F0")
+  }
+  section(NAME_LOCALS) {
+    func_count[1]
+    index[0]
+    local_count[2]
+    index[0]
+    str("L0")
+    index[0]
+    str("L1")
+  }
 }
 (;; STDERR ;;;
 Error running "wasm-validate":
