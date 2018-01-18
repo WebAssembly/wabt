@@ -10,13 +10,12 @@ section(CODE) {
   func { locals[decl_count[0]] }
 }
 section("name") {
-  subsection[1]
-  length[13]
-  func_count[3]
-
-  index[0] str("F1")
-  index[1] str("F1")
-  index[2] str("F1")
+  section(NAME_FUNCTION) {
+    func_count[3]
+    index[0] str("F1")
+    index[1] str("F1")
+    index[2] str("F1")
+  }
 }
 (;; STDOUT ;;;
 (module

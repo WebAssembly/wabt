@@ -12,21 +12,19 @@ section(CODE) {
   }
 }
 section("name") {
-  subsection[1]
-  length[10]
-  func_count[1]
-  index[0]
-  str("$F0")
-  subsection[1]
-  data[1]
-  data[1]
-  data[1]
+  section(NAME_FUNCTION) {
+    func_count[1]
+    index[0]
+    str("$F0")
+
+    data[1]  ;; extra unused data
+  }
 }
 (;; STDERR ;;;
 Error running "wasm-validate":
-000002c: error: unfinished sub-section (expected end: 0x30)
+000002c: error: unfinished sub-section (expected end: 0x2d)
 
 Error running "wasm2wat":
-000002c: error: unfinished sub-section (expected end: 0x30)
+000002c: error: unfinished sub-section (expected end: 0x2d)
 
 ;;; STDERR ;;)

@@ -12,12 +12,13 @@ section(CODE) {
   }
 }
 section("name") {
-  subsection_type[2]
-  subsection_length[1]
-  count[0]
-  subsection_type[1]
-  subsection_length[1]
-  count[0]
+  section(NAME_LOCALS) {
+    count[0]
+  }
+
+  section(NAME_FUNCTION) {
+    count[0]
+  }
 }
 (;; STDERR ;;;
 Error running "wasm-validate":

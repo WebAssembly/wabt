@@ -62,6 +62,17 @@ NAMED_VALUES = {
     'CODE': 10,
     'DATA': 11,
 
+    # name subsection codes
+    'NAME_FUNCTION': 1,
+    'NAME_LOCALS': 2,
+
+    # linking subsection codes
+    'LINKING_STACK_POINTER': 1,
+    'LINKING_SYMBOL_INFO': 2,
+    'LINKING_DATA_SIZE': 3,
+    'LINKING_SEGMENT_INFO': 5,
+    'LINKING_INIT_FUNCTIONS': 6,
+
     # external kinds
     'func_kind': 0,
     'table_kind': 1,

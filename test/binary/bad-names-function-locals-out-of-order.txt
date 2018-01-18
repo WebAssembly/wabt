@@ -10,25 +10,26 @@ section(CODE) {
   func { locals[decl_count[1] i32_count[2] i32] }
 }
 section("name") {
-  subsection[1]
-  length[9]
-  func_count[2]
-  index[0]
-  str("F0")
-  index[1]
-  str("F2")
+  section(NAME_FUNCTION) {
+    func_count[2]
+    index[0]
+    str("F0")
+    index[1]
+    str("F2")
+  }
 
-  subsection[2]
-  length[13]
-  func_count[2]
-  index[1]
-  local_count[1]
-  index[0]
-  str("L0")
-  index[0]
-  local_count[1]
-  index[0]
-  str("L0")
+  section(NAME_LOCALS) {
+    func_count[2]
+    func_index[1]
+    local_count[1]
+    local_index[0]
+    str("L0")
+
+    func_index[0]
+    local_count[1]
+    local_index[0]
+    str("L0")
+  }
 }
 (;; STDERR ;;;
 Error running "wasm-validate":

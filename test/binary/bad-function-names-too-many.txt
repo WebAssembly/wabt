@@ -6,13 +6,13 @@ section(TYPE) { count[1] function params[0] results[0] }
 section(FUNCTION) { count[1] sig[0] }
 section(CODE) { count[1] func { locals[0] nop } }
 section("name") {
-  subsection[1]
-  length[1]
-  count[2]
-  index[0]
-  str("f")
-  index[1]
-  str("g")
+  section(NAME_FUNCTION) {
+    count[2]
+    index[0]
+    str("f")
+    index[1]
+    str("g")
+  }
 }
 (;; STDERR ;;;
 Error running "wasm-validate":
