@@ -110,6 +110,26 @@
     v128.const i32 0x00ff0001 0x00040002 0x00000003 0x00000004
     v128.const i32 0x00020001 0x00fe0002 0x00000003 0x00000004
     i32x4.mul)
+
+  ;; i8x16 saturating add (signed and unsigned)
+  (func (export "i8x16_add_saturate_signed_0") (result v128)
+    v128.const i32 0x00000001 0x0000007f 0x00000003 0x00000080
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x000000ff
+    i8x16.add_saturate_s)
+  (func (export "i8x16_add_saturate_unsigned_0") (result v128)
+    v128.const i32 0x00ff0001 0x04000002 0x00000003 0x00000004
+    v128.const i32 0x00020001 0xfe000002 0x00000003 0x00000004
+    i8x16.add_saturate_u)
+
+  ;; i16x8 saturating add (signed and unsigned)
+  (func (export "i16x8_add_saturate_signed_0") (result v128)
+    v128.const i32 0x00000001 0x00007fff 0x00000003 0x00008000
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x0000fffe
+    i16x8.add_saturate_s)
+  (func (export "i16x8_add_saturate_unsigned_0") (result v128)
+    v128.const i32 0x00ffffff 0x0400ffff 0x00000003 0x00000004
+    v128.const i32 0x00020001 0xfe000002 0x00000003 0x00000004
+    i16x8.add_saturate_u)
 )
 
 (;; STDOUT ;;;
@@ -135,4 +155,8 @@ i16x8_mul_0() => v128:0x00000001 0x00000004 0x00000009 0x00000010
 i16x8_mul_1() => v128:0x01fe0001 0x03f80004 0x00000009 0x00000010
 i32x4_mul_0() => v128:0x00000001 0x00000004 0x00000009 0x00000010
 i32x4_mul_1() => v128:0x01010001 0x02040004 0x00000009 0x00000010
+i8x16_add_saturate_signed_0() => v128:0x00000002 0x0000007f 0x00000006 0x00000080
+i8x16_add_saturate_unsigned_0() => v128:0x00ff0002 0xff000004 0x00000006 0x00000008
+i16x8_add_saturate_signed_0() => v128:0x00000002 0x00007fff 0x00000006 0x00008000
+i16x8_add_saturate_unsigned_0() => v128:0x0101ffff 0xffffffff 0x00000006 0x00000008
 ;;; STDOUT ;;)
