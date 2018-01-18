@@ -21,8 +21,10 @@ options:
       --debug-parser                          Turn on debugging the parser of wat files
   -f, --fold-exprs                            Write folded expressions where possible
       --enable-exceptions                     Experimental exception handling
+      --enable-mutable-globals                Import/export mutable globals
       --enable-saturating-float-to-int        Saturating float-to-int operators
-      --enable-threads                        Threading support
+      --enable-sign-extension                 Sign-extension operators
       --enable-simd                           SIMD support
+      --enable-threads                        Threading support
       --generate-names                        Give auto-generated names to non-named functions, types, etc.
 ;;; STDOUT ;;)

@@ -1,4 +1,4 @@
-;;; FLAGS: --enable-threads
+;;; FLAGS: --enable-sign-extension
 (module
   (func
     i32.const 0

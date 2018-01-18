@@ -19,9 +19,11 @@ options:
   -o, --output=FILENAME                       Output file for the generated wast file, by default use stdout
   -f, --fold-exprs                            Write folded expressions where possible
       --enable-exceptions                     Experimental exception handling
+      --enable-mutable-globals                Import/export mutable globals
       --enable-saturating-float-to-int        Saturating float-to-int operators
-      --enable-threads                        Threading support
+      --enable-sign-extension                 Sign-extension operators
       --enable-simd                           SIMD support
+      --enable-threads                        Threading support
       --inline-exports                        Write all exports inline
       --inline-imports                        Write all imports inline
       --no-debug-names                        Ignore debug names in the binary file
