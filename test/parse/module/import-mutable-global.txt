@@ -1,2 +1,2 @@
-;;; FLAGS: --enable-threads
+;;; FLAGS: --enable-mutable-globals
 (module (import "mod" "field" (global (mut f32))))

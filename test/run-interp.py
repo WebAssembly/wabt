@@ -48,9 +48,12 @@ def main(args):
   parser.add_argument('--spec', action='store_true')
   parser.add_argument('-t', '--trace', action='store_true')
   parser.add_argument('file', help='test file.')
+  parser.add_argument('--enable-exceptions', action='store_true')
+  parser.add_argument('--enable-mutable-globals', action='store_true')
   parser.add_argument('--enable-saturating-float-to-int', action='store_true')
-  parser.add_argument('--enable-threads', action='store_true')
+  parser.add_argument('--enable-sign-extension', action='store_true')
   parser.add_argument('--enable-simd', action='store_true')
+  parser.add_argument('--enable-threads', action='store_true')
   options = parser.parse_args(args)
 
   wast_tool = None
@@ -76,20 +79,26 @@ def main(args):
 
   wast_tool.AppendOptionalArgs({
       '-v': options.verbose,
+      '--enable-exceptions': options.enable_exceptions,
+      '--enable-mutable-globals': options.enable_mutable_globals,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
-      '--enable-threads': options.enable_threads,
+      '--enable-sign-extension': options.enable_sign_extension,
       '--enable-simd': options.enable_simd,
+      '--enable-threads': options.enable_threads,
   })
 
   interp_tool.AppendOptionalArgs({
       '-v': options.verbose,
       '--run-all-exports': options.run_all_exports,
       '--trace': options.trace,
+      '--enable-exceptions': options.enable_exceptions,
+      '--enable-mutable-globals': options.enable_mutable_globals,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
-      '--enable-threads': options.enable_threads,
+      '--enable-sign-extension': options.enable_sign_extension,
       '--enable-simd': options.enable_simd,
+      '--enable-threads': options.enable_threads,
   })
 
   wast_tool.verbose = options.print_cmd

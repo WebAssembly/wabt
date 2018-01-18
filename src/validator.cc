@@ -892,7 +892,7 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
     case ExternalKind::Global: {
       auto* global_import = cast<GlobalImport>(import);
       if (global_import->global.mutable_ &&
-          !options_->features.threads_enabled()) {
+          !options_->features.mutable_globals_enabled()) {
         PrintError(loc, "mutable globals cannot be imported");
       }
       ++num_imported_globals_;
@@ -919,7 +919,7 @@ void Validator::CheckExport(const Location* loc, const Export* export_) {
     case ExternalKind::Global: {
       const Global* global;
       if (Succeeded(CheckGlobalVar(&export_->var, &global, nullptr))) {
-        if (global->mutable_ && !options_->features.threads_enabled()) {
+        if (global->mutable_ && !options_->features.mutable_globals_enabled()) {
           PrintError(&export_->var.loc, "mutable globals cannot be exported");
         }
       }

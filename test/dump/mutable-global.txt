@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v --dump-verbose --enable-threads
+;;; FLAGS: -v --dump-verbose --enable-mutable-globals
 (module
   (import "foo" "imported" (global (mut i32)))
   (global (export "exported") (mut i32) (i32.const 1)))

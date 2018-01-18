@@ -13,9 +13,11 @@ options:
   -v, --verbose                               Use multiple times for more info
   -h, --help                                  Print this help message
       --enable-exceptions                     Experimental exception handling
+      --enable-mutable-globals                Import/export mutable globals
       --enable-saturating-float-to-int        Saturating float-to-int operators
-      --enable-threads                        Threading support
+      --enable-sign-extension                 Sign-extension operators
       --enable-simd                           SIMD support
+      --enable-threads                        Threading support
   -V, --value-stack-size=SIZE                 Size in elements of the value stack
   -C, --call-stack-size=SIZE                  Size in elements of the call stack
   -t, --trace                                 Trace execution

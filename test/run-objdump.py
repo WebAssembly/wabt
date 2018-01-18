@@ -47,9 +47,11 @@ def main(args):
   parser.add_argument('--dump-verbose', action='store_true')
   parser.add_argument('--dump-debug', action='store_true')
   parser.add_argument('--enable-exceptions', action='store_true')
+  parser.add_argument('--enable-mutable-globals', action='store_true')
   parser.add_argument('--enable-saturating-float-to-int', action='store_true')
-  parser.add_argument('--enable-threads', action='store_true')
+  parser.add_argument('--enable-sign-extension', action='store_true')
   parser.add_argument('--enable-simd', action='store_true')
+  parser.add_argument('--enable-threads', action='store_true')
   parser.add_argument('--gen-wasm', action='store_true',
                       help='parse with gen-wasm')
   parser.add_argument('--spec', action='store_true')
@@ -78,10 +80,12 @@ def main(args):
   wat_tool.AppendOptionalArgs({
       '--debug-names': options.debug_names,
       '--enable-exceptions': options.enable_exceptions,
+      '--enable-mutable-globals': options.enable_mutable_globals,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
-      '--enable-threads': options.enable_threads,
+      '--enable-sign-extension': options.enable_sign_extension,
       '--enable-simd': options.enable_simd,
+      '--enable-threads': options.enable_threads,
       '--no-check': options.no_check,
       '--no-canonicalize-leb128s': options.no_canonicalize_leb128s,
       '-v': options.verbose,

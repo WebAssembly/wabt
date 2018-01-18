@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp
-;;; FLAGS: -v --host-print --enable-threads --enable-saturating-float-to-int
+;;; FLAGS: -v --host-print --enable-threads --enable-saturating-float-to-int --enable-sign-extension
 
 (module
   (import "host" "print" (func $print (param i32)))
