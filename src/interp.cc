@@ -3194,10 +3194,6 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I8X16Mul:
       case Opcode::I16X8Mul:
       case Opcode::I32X4Mul:
-      case Opcode::I8X16Neg:
-      case Opcode::I16X8Neg:
-      case Opcode::I32X4Neg:
-      case Opcode::I64X2Neg:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
@@ -3267,6 +3263,10 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I64X2Splat:
       case Opcode::F32X4Splat:
       case Opcode::F64X2Splat:
+      case Opcode::I8X16Neg:
+      case Opcode::I16X8Neg:
+      case Opcode::I32X4Neg:
+      case Opcode::I64X2Neg:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
