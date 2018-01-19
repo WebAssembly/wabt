@@ -208,10 +208,14 @@ def SplitArgs(value):
 class CommandTemplate(object):
 
   def __init__(self, exe):
-    self.exe = exe
-    self.args = []
+    self.args = self._FixPythonExecutable(SplitArgs(exe))
     self.verbose_args = []
-    self.last_cmd = None
+
+  def _FixPythonExecutable(self, args):
+    exe, rest = args[0], args[1:]
+    if os.path.splitext(exe)[1] == '.py':
+      return [sys.executable, os.path.join(REPO_ROOT_DIR, exe)] + rest
+    return args
 
   def AppendArgs(self, args):
     self.args += SplitArgs(args)
@@ -222,26 +226,18 @@ class CommandTemplate(object):
         self.verbose_args.append([])
       self.verbose_args[level] += SplitArgs(level_args)
 
-  def _GetExecutable(self):
-    if os.path.splitext(self.exe)[1] == '.py':
-      return [sys.executable, os.path.join(REPO_ROOT_DIR, self.exe)]
-    else:
-      return [self.exe]
-
   def _Format(self, cmd, variables):
     return [arg % variables for arg in cmd]
 
   def GetCommand(self, variables, extra_args=None, verbose_level=0):
-    args = self._GetExecutable()
+    args = self.args[:]
     vl = 0
     while vl < verbose_level and vl < len(self.verbose_args):
       args += self.verbose_args[vl]
       vl += 1
     if extra_args:
       args += extra_args
-    args += self.args
     args = self._Format(args, variables)
-    self.last_cmd = args
     return Command(args)
 
 
@@ -295,7 +291,7 @@ class Command(object):
     finally:
       KillProcess(False)
 
-    return RunResult(stdout, stderr, returncode, duration)
+    return RunResult(self, stdout, stderr, returncode, duration)
 
   def __str__(self):
     return ' '.join(self.args)
@@ -303,7 +299,9 @@ class Command(object):
 
 class RunResult(object):
 
-  def __init__(self, stdout = '', stderr = '', returncode = 0, duration = 0):
+  def __init__(self, last_cmd=None, stdout='', stderr='', returncode=0,
+               duration=0):
+    self.last_cmd = last_cmd
     self.stdout = stdout
     self.stderr = stderr
     self.returncode = returncode
@@ -314,16 +312,23 @@ class RunResult(object):
 
   def Append(self, other):
     assert isinstance(other, RunResult)
-    self.stdout += other.stdout
-    self.stderr += other.stderr
+
+    self.last_cmd = other.last_cmd
+
+    if other.stdout is not None:
+      self.stdout += other.stdout
+
+    if other.stderr is not None:
+      self.stderr += other.stderr
+
     self.duration += other.duration
 
     assert(self.returncode == 0)
     self.returncode = other.returncode
 
   def __repr__(self):
-    return 'RunResult(%s, %s, %s, %s)' % (self.stdout, self.stderr,
-                                          self.returncode, self.duration)
+    return 'RunResult(%s, %s, %s, %s, %s)' % (
+        self.last_cmd, self.stdout, self.stderr, self.returncode, self.duration)
 
 
 class TestInfo(object):
@@ -338,7 +343,6 @@ class TestInfo(object):
     self.tool = None
     self.cmds = []
     self.env = {}
-    self.last_cmd = ''
     self.expected_error = 0
     self.slow = False
     self.skip = False
@@ -589,9 +593,9 @@ class Status(object):
     else:
       sys.stderr.write('+ %s (%.3fs)\n' % (info.GetName(), duration))
 
-  def Failed(self, info, error_msg):
+  def Failed(self, info, error_msg, result=None):
     self.failed += 1
-    self.failed_tests.append(info)
+    self.failed_tests.append((info, result))
     if self.isatty:
       self._Clear()
     sys.stderr.write('- %s\n%s\n' % (info.GetName(), Indent(error_msg, 2)))
@@ -722,7 +726,7 @@ def HandleTestResult(status, info, result, rebase=False):
           info.Diff(result.stdout, result.stderr)
         status.Passed(info, result.duration)
   except Error as e:
-    status.Failed(info, str(e))
+    status.Failed(info, str(e), result)
 
 
 #Source : http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
@@ -909,9 +913,8 @@ def main(args):
   ret = 0
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
-    for info in status.failed_tests:
-      sys.stderr.write('- %s\n    %s\n' % (info.GetName(),
-                                           ' '.join(info.last_cmd)))
+    for info, result in status.failed_tests:
+      sys.stderr.write('- %s\n    %s\n' % (info.GetName(), result.last_cmd))
     ret = 1
 
   return ret
