@@ -1,4 +1,3 @@
-;;; TOOL: wat2wasm
 ;;; FLAGS: -v --no-check
 (module
   (table 1 anyfunc)

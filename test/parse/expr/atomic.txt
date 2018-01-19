@@ -1,4 +1,3 @@
-;;; TOOL: wat2wasm
 ;;; FLAGS: --enable-threads
 (module
   (memory 1 1 shared)
