@@ -1,5 +1,5 @@
-;;; FLAGS: --enable-threads
 ;;; TOOL: run-interp
+;;; FLAGS: --enable-threads
 (module
   (memory 1 1 shared)
 

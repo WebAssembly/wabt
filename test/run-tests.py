@@ -43,19 +43,22 @@ SLOW_TIMEOUT_MULTIPLIER = 2
 TOOLS = {
     'wat2wasm': {
         'EXE': '%(wat2wasm)s',
-        'FLAGS': [ '-o', '%(out_dir)s/out.wasm'],
+        'FLAGS': ['%(in_file)s', '-o', '%(out_dir)s/out.wasm'],
         'VERBOSE-FLAGS': ['-v']
     },
     'wast2json': {
         'EXE': '%(wast2json)s',
+        'FLAGS': ['%(in_file)s'],
         'VERBOSE-FLAGS': ['-v']
     },
     'wat-desugar': {
-        'EXE': '%(wat-desugar)s'
+        'EXE': '%(wat-desugar)s',
+        'FLAGS': ['%(in_file)s']
     },
     'run-objdump': {
         'EXE': 'test/run-objdump.py',
         'FLAGS': [
+                '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o', '%(out_dir)s'
@@ -64,12 +67,13 @@ TOOLS = {
     },
     'run-wasm-link': {
         'EXE': 'test/run-wasm-link.py',
-        'FLAGS': ['--bindir=%(bindir)s', '-o', '%(out_dir)s'],
+        'FLAGS': ['%(in_file)s', '--bindir=%(bindir)s', '-o', '%(out_dir)s'],
         'VERBOSE-FLAGS': ['-v']
     },
     'run-roundtrip': {
         'EXE': 'test/run-roundtrip.py',
         'FLAGS': [
+                '%(in_file)s',
                 '-v',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
@@ -81,6 +85,7 @@ TOOLS = {
     'run-interp': {
         'EXE': 'test/run-interp.py',
         'FLAGS': [
+                '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--run-all-exports',
                 '--no-error-cmdline',
@@ -92,6 +97,7 @@ TOOLS = {
     'run-interp-spec': {
         'EXE': 'test/run-interp.py',
         'FLAGS': [
+                '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--spec',
                 '--no-error-cmdline',
@@ -103,6 +109,7 @@ TOOLS = {
     'run-gen-wasm': {
         'EXE': 'test/run-gen-wasm.py',
         'FLAGS': [
+                '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
@@ -113,6 +120,7 @@ TOOLS = {
     'run-gen-wasm-interp': {
         'EXE': 'test/run-gen-wasm-interp.py',
         'FLAGS': [
+                '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--run-all-exports',
                 '--no-error-cmdline',
@@ -124,6 +132,7 @@ TOOLS = {
     'run-opcodecnt': {
         'EXE': 'test/run-opcodecnt.py',
         'FLAGS': [
+                '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
@@ -134,6 +143,7 @@ TOOLS = {
     'run-gen-spec-js': {
         'EXE': 'test/run-gen-spec-js.py',
         'FLAGS': [
+                '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
@@ -144,6 +154,7 @@ TOOLS = {
     'run-spec-wasm2c': {
         'EXE': 'test/run-spec-wasm2c.py',
         'FLAGS': [
+                '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
@@ -160,6 +171,10 @@ if IS_WINDOWS:
 ROUNDTRIP_TOOLS = ('wat2wasm',)
 
 
+class NoRoundtripError(Error):
+  pass
+
+
 def Indent(s, spaces):
   return ''.join(' ' * spaces + l for l in s.splitlines(1))
 
@@ -170,11 +185,6 @@ def DiffLines(expected, actual):
   return list(
       difflib.unified_diff(expected_lines, actual_lines, fromfile='expected',
                            tofile='actual', lineterm=''))
-
-
-def AppendBeforeExt(file_path, suffix):
-  file_path_noext, ext = os.path.splitext(file_path)
-  return file_path_noext + suffix + ext
 
 
 class Cell(object):
@@ -189,52 +199,131 @@ class Cell(object):
     return self.value[0]
 
 
-def RunCommandWithTimeout(command, cwd, timeout, console_out=False, env=None):
-  process = None
-  is_timeout = Cell(False)
+def SplitArgs(value):
+  if isinstance(value, list):
+    return value
+  return shlex.split(value)
 
-  def KillProcess(timeout=True):
-    if process:
-      try:
-        if IS_WINDOWS:
-          # http://stackoverflow.com/a/10830753: deleting child processes in
-          # Windows
-          subprocess.call(['taskkill', '/F', '/T', '/PID', str(process.pid)])
-        else:
-          os.killpg(os.getpgid(process.pid), 15)
-      except OSError:
-        pass
-    is_timeout.Set(timeout)
 
-  try:
-    start_time = time.time()
-    kwargs = {}
-    if not IS_WINDOWS:
-      kwargs['preexec_fn'] = os.setsid
+class CommandTemplate(object):
 
-    # http://stackoverflow.com/a/10012262: subprocess with a timeout
-    # http://stackoverflow.com/a/22582602: kill subprocess and children
-    process = subprocess.Popen(command, cwd=cwd, env=env,
-                               stdout=None if console_out else subprocess.PIPE,
-                               stderr=None if console_out else subprocess.PIPE,
-                               universal_newlines=True, **kwargs)
-    timer = threading.Timer(timeout, KillProcess)
+  def __init__(self, exe):
+    self.exe = exe
+    self.flags = []
+    self.verbose_flags = []
+    self.last_cmd = None
+
+  def AppendFlags(self, flags):
+    self.flags += SplitArgs(flags)
+
+  def AppendVerboseFlags(self, flags_list):
+    for level, level_flags in enumerate(flags_list):
+      while level >= len(self.verbose_flags):
+        self.verbose_flags.append([])
+      self.verbose_flags[level] += SplitArgs(level_flags)
+
+  def _GetExecutable(self):
+    if os.path.splitext(self.exe)[1] == '.py':
+      return [sys.executable, os.path.join(REPO_ROOT_DIR, self.exe)]
+    else:
+      return [self.exe]
+
+  def _Format(self, cmd, variables):
+    return [arg % variables for arg in cmd]
+
+  def GetCommand(self, variables, extra_args=None, verbose_level=0):
+    args = self._GetExecutable()
+    vl = 0
+    while vl < verbose_level and vl < len(self.verbose_flags):
+      args += self.verbose_flags[vl]
+      vl += 1
+    if extra_args:
+      args += extra_args
+    args += self.flags
+    args = self._Format(args, variables)
+    self.last_cmd = args
+    return Command(args)
+
+
+class Command(object):
+
+  def __init__(self, args):
+    self.args = args
+
+  def Run(self, cwd, timeout, console_out=False, env=None):
+    process = None
+    is_timeout = Cell(False)
+
+    def KillProcess(timeout=True):
+      if process:
+        try:
+          if IS_WINDOWS:
+            # http://stackoverflow.com/a/10830753: deleting child processes in
+            # Windows
+            subprocess.call(['taskkill', '/F', '/T', '/PID', str(process.pid)])
+          else:
+            os.killpg(os.getpgid(process.pid), 15)
+        except OSError:
+          pass
+      is_timeout.Set(timeout)
+
     try:
-      timer.start()
-      stdout, stderr = process.communicate()
-    finally:
-      returncode = process.returncode
-      process = None
-      timer.cancel()
-    if is_timeout.Get():
-      raise Error('TIMEOUT\nSTDOUT:\n%s\nSTDERR:\n%s\n' % (stdout, stderr))
-    duration = time.time() - start_time
-  except OSError as e:
-    raise Error(str(e))
-  finally:
-    KillProcess(False)
+      start_time = time.time()
+      kwargs = {}
+      if not IS_WINDOWS:
+        kwargs['preexec_fn'] = os.setsid
 
-  return stdout, stderr, returncode, duration
+      # http://stackoverflow.com/a/10012262: subprocess with a timeout
+      # http://stackoverflow.com/a/22582602: kill subprocess and children
+      process = subprocess.Popen(self.args, cwd=cwd, env=env,
+                                 stdout=None if console_out else subprocess.PIPE,
+                                 stderr=None if console_out else subprocess.PIPE,
+                                 universal_newlines=True, **kwargs)
+      timer = threading.Timer(timeout, KillProcess)
+      try:
+        timer.start()
+        stdout, stderr = process.communicate()
+      finally:
+        returncode = process.returncode
+        process = None
+        timer.cancel()
+      if is_timeout.Get():
+        raise Error('TIMEOUT\nSTDOUT:\n%s\nSTDERR:\n%s\n' % (stdout, stderr))
+      duration = time.time() - start_time
+    except OSError as e:
+      raise Error(str(e))
+    finally:
+      KillProcess(False)
+
+    return RunResult(stdout, stderr, returncode, duration)
+
+  def __str__(self):
+    return ' '.join(self.args)
+
+
+class RunResult(object):
+
+  def __init__(self, stdout = '', stderr = '', returncode = 0, duration = 0):
+    self.stdout = stdout
+    self.stderr = stderr
+    self.returncode = returncode
+    self.duration = duration
+
+  def Failed(self):
+    return self.returncode != 0
+
+  def Append(self, other):
+    assert isinstance(other, RunResult)
+    self.stdout += other.stdout
+    self.stderr += other.stderr
+    self.duration += other.duration
+
+    assert(self.returncode == 0)
+    self.returncode = other.returncode
+
+  def __repr__(self):
+    return 'RunResult(%s, %s, %s, %s)' % (self.stdout, self.stderr,
+                                          self.returncode, self.duration)
 
 
 class TestInfo(object):
@@ -247,8 +336,7 @@ class TestInfo(object):
     self.expected_stdout = ''
     self.expected_stderr = ''
     self.tool = None
-    self.exe = None
-    self.flags = []
+    self.cmds = []
     self.env = {}
     self.last_cmd = ''
     self.expected_error = 0
@@ -257,6 +345,12 @@ class TestInfo(object):
     self.is_roundtrip = False
 
   def CreateRoundtripInfo(self, fold_exprs):
+    if self.tool not in ROUNDTRIP_TOOLS:
+      raise NoRoundtripError()
+
+    if len(self.cmds) != 1:
+      raise NoRoundtripError()
+
     result = TestInfo()
     result.SetTool('run-roundtrip')
     result.filename = self.filename
@@ -265,11 +359,15 @@ class TestInfo(object):
     result.input_ = self.input_
     result.expected_stdout = ''
     result.expected_stderr = ''
+
     # TODO(binji): It's kind of cheesy to keep the enable flag based on prefix.
     # Maybe it would be nicer to add a new directive ENABLE instead.
-    result.flags = [flag for flag in self.flags if flag.startswith('--enable')]
+    old_cmd = self.cmds[0]
+    new_cmd = result.cmds[0]
+    new_cmd.AppendFlags([f for f in old_cmd.flags if f.startswith('--enable')])
     if fold_exprs:
-      result.flags.append('--fold-exprs')
+      new_cmd.AppendFlags('--fold-exprs')
+
     result.env = self.env
     result.expected_error = 0
     result.slow = self.slow
@@ -311,9 +409,6 @@ class TestInfo(object):
 
     return path
 
-  def ShouldCreateRoundtrip(self):
-    return self.tool in ROUNDTRIP_TOOLS
-
   def SetTool(self, tool):
     if tool not in TOOLS:
       raise Error('Unknown tool: %s' % tool)
@@ -321,15 +416,20 @@ class TestInfo(object):
     for tool_key, tool_value in TOOLS[tool].items():
       self.ParseDirective(tool_key, tool_value)
 
+  def GetLastCommand(self):
+    if not self.cmds:
+      self.SetTool('wat2wasm')
+    return self.cmds[-1]
+
   def ParseDirective(self, key, value):
     if key == 'EXE':
-      self.exe = value
+      self.cmds.append(CommandTemplate(value))
     elif key == 'STDIN_FILE':
       self.input_filename = value
     elif key == 'FLAGS':
       if not isinstance(value, list):
         value = shlex.split(value)
-      self.flags += value
+      self.GetLastCommand().AppendFlags(value)
     elif key == 'ERROR':
       self.expected_error = int(value)
     elif key == 'SLOW':
@@ -337,7 +437,7 @@ class TestInfo(object):
     elif key == 'SKIP':
       self.skip = True
     elif key == 'VERBOSE-FLAGS':
-      self.verbose_flags = [shlex.split(level) for level in value]
+      self.GetLastCommand().AppendVerboseFlags(value)
     elif key in ['TODO', 'NOTE']:
       pass
     elif key == 'TOOL':
@@ -353,7 +453,6 @@ class TestInfo(object):
 
     test_path = os.path.join(REPO_ROOT_DIR, filename)
     with open(test_path) as f:
-      seen_keys = set()
       state = 'header'
       empty = True
       header_lines = []
@@ -379,9 +478,6 @@ class TestInfo(object):
               key, value = directive.split(':', 1)
               key = key.strip()
               value = value.strip()
-              if key in seen_keys:
-                raise Error('%s already set' % key)
-              seen_keys.add(key)
               self.ParseDirective(key, value)
             elif state in ('stdout', 'stderr'):
               if not re.match(r'%s ;;\)$' % state.upper(), directive):
@@ -413,31 +509,8 @@ class TestInfo(object):
 
     # If the test didn't specify a executable (either via EXE or indirectly
     # via TOOL, then use the default tool)
-    if not self.exe:
+    if not self.cmds:
       self.SetTool('wat2wasm')
-
-  def GetExecutable(self):
-    if os.path.splitext(self.exe)[1] == '.py':
-      return [sys.executable, os.path.join(REPO_ROOT_DIR, self.exe)]
-    else:
-      return [self.exe]
-
-  def FormatCommand(self, cmd, variables):
-    return [arg % variables for arg in cmd]
-
-  def GetCommand(self, filename, variables, extra_args=None, verbose_level=0):
-    cmd = self.GetExecutable()
-    vl = 0
-    while vl < verbose_level and vl < len(self.verbose_flags):
-      cmd += self.verbose_flags[vl]
-      vl += 1
-    if extra_args:
-      cmd += extra_args
-    cmd += self.flags
-    cmd += [filename.replace(os.path.sep, '/')]
-    cmd = self.FormatCommand(cmd, variables)
-    self.last_cmd = cmd
-    return cmd
 
   def CreateInputFile(self):
     gen_input_path = self.GetGeneratedInputFilename()
@@ -587,7 +660,9 @@ def RunTest(info, options, variables, verbose_level=0):
   env = dict(os.environ)
   env.update(info.env)
   gen_input_path = info.CreateInputFile()
-  rel_gen_input_path = os.path.relpath(gen_input_path, cwd)
+  rel_gen_input_path = (
+      os.path.relpath(gen_input_path, cwd).replace(os.path.sep, '/'))
+  variables['in_file'] = rel_gen_input_path
 
   # Each test runs with a unique output directory which is removed before
   # we run the test.
@@ -597,15 +672,23 @@ def RunTest(info, options, variables, verbose_level=0):
   os.makedirs(out_dir)
   variables['out_dir'] = out_dir
 
-  cmd = info.GetCommand(rel_gen_input_path, variables, options.arg,
-                        verbose_level)
-  if options.print_cmd:
-    print(' '.join(cmd))
+  final_result = RunResult()
 
-  try:
-    return RunCommandWithTimeout(cmd, cwd, timeout, verbose_level > 0, env)
-  except (Error, KeyboardInterrupt) as e:
-    return e
+  for cmd_template in info.cmds:
+    cmd = cmd_template.GetCommand(variables, options.arg, verbose_level)
+    if options.print_cmd:
+      print(cmd)
+
+    try:
+      result = cmd.Run(cwd, timeout, verbose_level > 0, env)
+    except (Error, KeyboardInterrupt) as e:
+      return e
+
+    final_result.Append(result)
+    if final_result.Failed():
+      break
+
+  return final_result
 
 
 def HandleTestResult(status, info, result, rebase=False):
@@ -613,32 +696,31 @@ def HandleTestResult(status, info, result, rebase=False):
     if isinstance(result, (Error, KeyboardInterrupt)):
       raise result
 
-    stdout, stderr, returncode, duration = result
     if info.is_roundtrip:
-      if returncode == 0:
-        status.Passed(info, duration)
-      elif returncode == 2:
+      if result.returncode == 0:
+        status.Passed(info, result.duration)
+      elif result.returncode == 2:
         # run-roundtrip.py returns 2 if the file couldn't be parsed.
         # it's likely a "bad-*" file.
         status.Skipped(info)
       else:
         raise Error(stderr)
     else:
-      if returncode != info.expected_error:
+      if result.returncode != info.expected_error:
         # This test has already failed, but diff it anyway.
         msg = 'expected error code %d, got %d.' % (info.expected_error,
-                                                   returncode)
+                                                   result.returncode)
         try:
-          info.Diff(stdout, stderr)
+          info.Diff(result.stdout, result.stderr)
         except Error as e:
           msg += '\n' + str(e)
         raise Error(msg)
       else:
         if rebase:
-          info.Rebase(stdout, stderr)
+          info.Rebase(result.stdout, result.stderr)
         else:
-          info.Diff(stdout, stderr)
-        status.Passed(info, duration)
+          info.Diff(result.stdout, result.stderr)
+        status.Passed(info, result.duration)
   except Error as e:
     status.Failed(info, str(e))
 
@@ -802,9 +884,12 @@ def main(args):
       continue
     infos_to_run.append(info)
 
-    if options.roundtrip and info.ShouldCreateRoundtrip():
-      infos_to_run.append(info.CreateRoundtripInfo(fold_exprs=False))
-      infos_to_run.append(info.CreateRoundtripInfo(fold_exprs=True))
+    if options.roundtrip:
+      for fold_exprs in False, True:
+        try:
+          infos_to_run.append(info.CreateRoundtripInfo(fold_exprs=fold_exprs))
+        except NoRoundtripError:
+          pass
 
   if not os.path.exists(OUT_DIR):
     os.makedirs(OUT_DIR)

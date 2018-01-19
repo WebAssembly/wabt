@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; FLAGS: --enable-simd
 (module
   (func
