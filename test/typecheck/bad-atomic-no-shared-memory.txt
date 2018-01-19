@@ -1,4 +1,5 @@
 ;;; ERROR: 1
+;;; TOOL: wat2wasm
 ;;; FLAGS: --enable-threads
 
 (module
@@ -82,202 +83,202 @@
 
 ))
 (;; STDERR ;;;
-out/test/typecheck/bad-atomic-no-shared-memory.txt:7:29: error: atomic.wake requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:8:29: error: atomic.wake requires memory to be shared.
     i32.const 0 i32.const 0 atomic.wake drop
                             ^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:8:41: error: i32.atomic.wait requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:9:41: error: i32.atomic.wait requires memory to be shared.
     i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
                                         ^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:9:41: error: i64.atomic.wait requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:10:41: error: i64.atomic.wait requires memory to be shared.
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
                                         ^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:11:17: error: i32.atomic.load requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:12:17: error: i32.atomic.load requires memory to be shared.
     i32.const 0 i32.atomic.load drop
                 ^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:12:17: error: i64.atomic.load requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:13:17: error: i64.atomic.load requires memory to be shared.
     i32.const 0 i64.atomic.load drop
                 ^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:13:17: error: i32.atomic.load8_u requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:14:17: error: i32.atomic.load8_u requires memory to be shared.
     i32.const 0 i32.atomic.load8_u drop
                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:14:17: error: i32.atomic.load16_u requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:15:17: error: i32.atomic.load16_u requires memory to be shared.
     i32.const 0 i32.atomic.load16_u drop
                 ^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:15:17: error: i64.atomic.load8_u requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:16:17: error: i64.atomic.load8_u requires memory to be shared.
     i32.const 0 i64.atomic.load8_u drop
                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:16:17: error: i64.atomic.load16_u requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:17:17: error: i64.atomic.load16_u requires memory to be shared.
     i32.const 0 i64.atomic.load16_u drop
                 ^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:17:17: error: i64.atomic.load32_u requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:18:17: error: i64.atomic.load32_u requires memory to be shared.
     i32.const 0 i64.atomic.load32_u drop
                 ^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:19:29: error: i32.atomic.store requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:20:29: error: i32.atomic.store requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.store
                             ^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:20:29: error: i64.atomic.store requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:21:29: error: i64.atomic.store requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.store
                             ^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:21:29: error: i32.atomic.store8 requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:22:29: error: i32.atomic.store8 requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.store8
                             ^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:22:29: error: i32.atomic.store16 requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:23:29: error: i32.atomic.store16 requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.store16
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:23:29: error: i64.atomic.store8 requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:24:29: error: i64.atomic.store8 requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.store8
                             ^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:24:29: error: i64.atomic.store16 requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:25:29: error: i64.atomic.store16 requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.store16
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:25:29: error: i64.atomic.store32 requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:26:29: error: i64.atomic.store32 requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.store32
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:27:29: error: i32.atomic.rmw.add requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:28:29: error: i32.atomic.rmw.add requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw.add drop
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:28:29: error: i64.atomic.rmw.add requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:29:29: error: i64.atomic.rmw.add requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw.add drop
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:29:29: error: i32.atomic.rmw8_u.add requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:30:29: error: i32.atomic.rmw8_u.add requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw8_u.add drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:30:29: error: i32.atomic.rmw16_u.add requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:31:29: error: i32.atomic.rmw16_u.add requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw16_u.add drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:31:29: error: i64.atomic.rmw8_u.add requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:32:29: error: i64.atomic.rmw8_u.add requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw8_u.add drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:32:29: error: i64.atomic.rmw16_u.add requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:33:29: error: i64.atomic.rmw16_u.add requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw16_u.add drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:33:29: error: i64.atomic.rmw32_u.add requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:34:29: error: i64.atomic.rmw32_u.add requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw32_u.add drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:35:29: error: i32.atomic.rmw.sub requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:36:29: error: i32.atomic.rmw.sub requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw.sub drop
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:36:29: error: i64.atomic.rmw.sub requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:37:29: error: i64.atomic.rmw.sub requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw.sub drop
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:37:29: error: i32.atomic.rmw8_u.sub requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:38:29: error: i32.atomic.rmw8_u.sub requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw8_u.sub drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:38:29: error: i32.atomic.rmw16_u.sub requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:39:29: error: i32.atomic.rmw16_u.sub requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw16_u.sub drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:39:29: error: i64.atomic.rmw8_u.sub requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:40:29: error: i64.atomic.rmw8_u.sub requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw8_u.sub drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:40:29: error: i64.atomic.rmw16_u.sub requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:41:29: error: i64.atomic.rmw16_u.sub requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw16_u.sub drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:41:29: error: i64.atomic.rmw32_u.sub requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:42:29: error: i64.atomic.rmw32_u.sub requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw32_u.sub drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:43:29: error: i32.atomic.rmw.and requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:44:29: error: i32.atomic.rmw.and requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw.and drop
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:44:29: error: i64.atomic.rmw.and requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:45:29: error: i64.atomic.rmw.and requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw.and drop
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:45:29: error: i32.atomic.rmw8_u.and requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:46:29: error: i32.atomic.rmw8_u.and requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw8_u.and drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:46:29: error: i32.atomic.rmw16_u.and requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:47:29: error: i32.atomic.rmw16_u.and requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw16_u.and drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:47:29: error: i64.atomic.rmw8_u.and requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:48:29: error: i64.atomic.rmw8_u.and requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw8_u.and drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:48:29: error: i64.atomic.rmw16_u.and requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:49:29: error: i64.atomic.rmw16_u.and requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw16_u.and drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:49:29: error: i64.atomic.rmw32_u.and requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:50:29: error: i64.atomic.rmw32_u.and requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw32_u.and drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:51:29: error: i32.atomic.rmw.or requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:52:29: error: i32.atomic.rmw.or requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw.or drop
                             ^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:52:29: error: i64.atomic.rmw.or requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:53:29: error: i64.atomic.rmw.or requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw.or drop
                             ^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:53:29: error: i32.atomic.rmw8_u.or requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:54:29: error: i32.atomic.rmw8_u.or requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw8_u.or drop
                             ^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:54:29: error: i32.atomic.rmw16_u.or requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:55:29: error: i32.atomic.rmw16_u.or requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw16_u.or drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:55:29: error: i64.atomic.rmw8_u.or requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:56:29: error: i64.atomic.rmw8_u.or requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw8_u.or drop
                             ^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:56:29: error: i64.atomic.rmw16_u.or requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:57:29: error: i64.atomic.rmw16_u.or requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw16_u.or drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:57:29: error: i64.atomic.rmw32_u.or requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:58:29: error: i64.atomic.rmw32_u.or requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw32_u.or drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:59:29: error: i32.atomic.rmw.xor requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:60:29: error: i32.atomic.rmw.xor requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw.xor drop
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:60:29: error: i64.atomic.rmw.xor requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:61:29: error: i64.atomic.rmw.xor requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw.xor drop
                             ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:61:29: error: i32.atomic.rmw8_u.xor requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:62:29: error: i32.atomic.rmw8_u.xor requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw8_u.xor drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:62:29: error: i32.atomic.rmw16_u.xor requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:63:29: error: i32.atomic.rmw16_u.xor requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw16_u.xor drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:63:29: error: i64.atomic.rmw8_u.xor requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:64:29: error: i64.atomic.rmw8_u.xor requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw8_u.xor drop
                             ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:64:29: error: i64.atomic.rmw16_u.xor requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:65:29: error: i64.atomic.rmw16_u.xor requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw16_u.xor drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:65:29: error: i64.atomic.rmw32_u.xor requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:66:29: error: i64.atomic.rmw32_u.xor requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw32_u.xor drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:67:29: error: i32.atomic.rmw.xchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:68:29: error: i32.atomic.rmw.xchg requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw.xchg drop
                             ^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:68:29: error: i64.atomic.rmw.xchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:69:29: error: i64.atomic.rmw.xchg requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw.xchg drop
                             ^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:69:29: error: i32.atomic.rmw8_u.xchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:70:29: error: i32.atomic.rmw8_u.xchg requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw8_u.xchg drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:70:29: error: i32.atomic.rmw16_u.xchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:71:29: error: i32.atomic.rmw16_u.xchg requires memory to be shared.
     i32.const 0 i32.const 0 i32.atomic.rmw16_u.xchg drop
                             ^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:71:29: error: i64.atomic.rmw8_u.xchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:72:29: error: i64.atomic.rmw8_u.xchg requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw8_u.xchg drop
                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:72:29: error: i64.atomic.rmw16_u.xchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:73:29: error: i64.atomic.rmw16_u.xchg requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw16_u.xchg drop
                             ^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:73:29: error: i64.atomic.rmw32_u.xchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:74:29: error: i64.atomic.rmw32_u.xchg requires memory to be shared.
     i32.const 0 i64.const 0 i64.atomic.rmw32_u.xchg drop
                             ^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:75:41: error: i32.atomic.rmw.cmpxchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:76:41: error: i32.atomic.rmw.cmpxchg requires memory to be shared.
     i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg drop
                                         ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:76:41: error: i64.atomic.rmw.cmpxchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:77:41: error: i64.atomic.rmw.cmpxchg requires memory to be shared.
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg drop
                                         ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:77:41: error: i32.atomic.rmw8_u.cmpxchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:78:41: error: i32.atomic.rmw8_u.cmpxchg requires memory to be shared.
     i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg drop
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:78:41: error: i32.atomic.rmw16_u.cmpxchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:79:41: error: i32.atomic.rmw16_u.cmpxchg requires memory to be shared.
     i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg drop
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:79:41: error: i64.atomic.rmw8_u.cmpxchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:80:41: error: i64.atomic.rmw8_u.cmpxchg requires memory to be shared.
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg drop
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:80:41: error: i64.atomic.rmw16_u.cmpxchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:81:41: error: i64.atomic.rmw16_u.cmpxchg requires memory to be shared.
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg drop
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-no-shared-memory.txt:81:41: error: i64.atomic.rmw32_u.cmpxchg requires memory to be shared.
+out/test/typecheck/bad-atomic-no-shared-memory.txt:82:41: error: i64.atomic.rmw32_u.cmpxchg requires memory to be shared.
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg drop
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

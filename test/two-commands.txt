@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; FLAGS: -v
+;;; TOOL: wat2wasm
+;;; FLAGS: -v
+(module)
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+;;; STDOUT ;;)

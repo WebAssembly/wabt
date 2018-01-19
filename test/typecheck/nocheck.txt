@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; FLAGS: --no-check
 (module
   (func (result i32)
