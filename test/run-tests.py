@@ -316,7 +316,7 @@ class TestInfo(object):
     if self.tool not in ROUNDTRIP_TOOLS:
       raise NoRoundtripError()
 
-    if not (len(self.cmds) == 1 and len(result.cmds) == 1):
+    if len(self.cmds) != 1:
       raise NoRoundtripError()
 
     result = TestInfo()
