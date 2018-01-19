@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp
-;;; FLAGS: --enable-simd
+;;; ARGS: --enable-simd
 (module
   ;; i8x16 neg
   (func (export "i8x16_neg_0") (result v128)

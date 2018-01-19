@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp
-;;; FLAGS: --host-print
+;;; ARGS: --host-print
 (module
   (import "host" "print" (func $imported (result i32)))
 

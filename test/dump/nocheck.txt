@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v --no-check
+;;; ARGS: -v --no-check
 (module
   (func (result i64)
     f32.const 1

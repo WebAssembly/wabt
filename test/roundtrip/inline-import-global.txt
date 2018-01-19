@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --inline-import
+;;; ARGS: --stdout --inline-import
 (module
   (import "mod" "g1" (global i32))
   (import "mod" "g2" (global f32))

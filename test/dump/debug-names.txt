@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v --debug-names --dump-verbose
+;;; ARGS: -v --debug-names --dump-verbose
 (module
   (func $F1 (param $F1P0 i32)
     (local $F1L1 f32)

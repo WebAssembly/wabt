@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS: -r
+;;; ARGS: -r
 (module
   (import "__extern" "bar" (global i32))
   (global i32 (i32.const 1))

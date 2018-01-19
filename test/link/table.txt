@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS: -r
+;;; ARGS: -r
 (module
   (func $func1 (param i32))
   (table anyfunc (elem $func1 $func1))

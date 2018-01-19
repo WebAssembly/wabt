@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --fold-exprs --debug-names --generate-names
+;;; ARGS: --stdout --fold-exprs --debug-names --generate-names
 (module
   (func $fac-stack-raw (param $n i64) (result i64)
     (local $i i64)

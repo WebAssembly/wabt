@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --generate-names
+;;; ARGS: --stdout --generate-names
 (module
   (import "m" "g" (global $g i32))
   (func)

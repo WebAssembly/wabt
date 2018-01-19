@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --generate-names
+;;; ARGS: --stdout --generate-names
 (module
   (import "foo" "bar" (func (type 0)))
   (table anyfunc (elem 0))

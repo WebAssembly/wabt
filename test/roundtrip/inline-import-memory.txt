@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --inline-import
+;;; ARGS: --stdout --inline-import
 (module
   (import "mod" "m1" (memory 2 3))
 )

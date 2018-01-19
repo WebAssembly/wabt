@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS: --incremental -r
+;;; ARGS: --incremental -r
 (module
   (import "__extern" "bar" (func (param i32) (result i32)))
   (func (param i32)

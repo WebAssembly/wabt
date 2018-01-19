@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: --headers -r
+;;; ARGS: --headers -r
 (module
   (type $t (func (param i32)))
   (import "__extern" "foo" (func (param i32) (result i32)))

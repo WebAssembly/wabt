@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS: 
+;;; ARGS: 
 (module
   (export "foo" (func 0))
   (func (param i32)

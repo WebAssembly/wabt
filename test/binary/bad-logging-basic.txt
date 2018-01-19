@@ -1,5 +1,5 @@
 ;;; TOOL: run-gen-wasm-interp
-;;; FLAGS: -v
+;;; ARGS: -v
 ;;; ERROR: 1
 magic
 version

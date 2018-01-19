@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --fold-exprs --debug-names
+;;; ARGS: --stdout --fold-exprs --debug-names
 (module
   (func $fold-block (result f32)
     f32.const 2

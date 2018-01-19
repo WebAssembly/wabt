@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v --headers --enable-exceptions
+;;; ARGS: -v --headers --enable-exceptions
 (module
   (import "c++" "except" (except $ex i32))
   (func (result i32)

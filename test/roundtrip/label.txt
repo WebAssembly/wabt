@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout
+;;; ARGS: --stdout
 (module
   (func (param i32) (result f32)
     block (result f32)

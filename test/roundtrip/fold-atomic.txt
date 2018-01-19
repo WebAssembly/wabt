@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --fold-exprs --enable-threads
+;;; ARGS: --stdout --fold-exprs --enable-threads
 
 (module
   (memory 1 1 shared)

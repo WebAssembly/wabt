@@ -1,5 +1,5 @@
 ;;; TOOL: run-gen-spec-js
-;;; FLAGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
+;;; ARGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
 (module
   (func (export "unreachable") unreachable)
   (func (export "i32.trunc_s") (param f32) (result i32)

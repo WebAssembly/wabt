@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v
+;;; ARGS: -v
 (module
   (import "foo" "bar" (func (param i32 f32) (result i32)))
   (func (result i32)

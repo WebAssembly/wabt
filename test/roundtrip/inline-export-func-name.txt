@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --inline-export --debug-names
+;;; ARGS: --stdout --inline-export --debug-names
 (module
   (func $foo
     nop)

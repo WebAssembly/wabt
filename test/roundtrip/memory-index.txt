@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout
+;;; ARGS: --stdout
 (module
   (import "a" "b" (memory 1)))
 (;; STDOUT ;;;

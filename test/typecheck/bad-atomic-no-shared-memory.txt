@@ -1,6 +1,6 @@
 ;;; ERROR: 1
 ;;; TOOL: wat2wasm
-;;; FLAGS: --enable-threads
+;;; ARGS: --enable-threads
 
 (module
   (memory 1)

@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --no-check
+;;; ARGS: --stdout --no-check
 (module
   (func
     br 1))

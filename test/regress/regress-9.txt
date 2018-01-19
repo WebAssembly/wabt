@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout
+;;; ARGS: --stdout
 (module
   ;; This used to cause an infinite loop in wat-writer when writing out long
   ;; indentation.

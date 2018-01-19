@@ -1,5 +1,5 @@
 ;;; TOOL: run-gen-spec-js
-;;; FLAGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
+;;; ARGS: --prefix=%(test_dir)s/gen-spec-empty-prefix.js
 
 ;; This won't be written out, since it can't be tested in JS.
 (assert_malformed

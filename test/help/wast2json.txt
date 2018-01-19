@@ -1,5 +1,5 @@
-;;; EXE: %(wast2json)s
-;;; FLAGS: --help
+;;; RUN: %(wast2json)s
+;;; ARGS: --help
 (;; STDOUT ;;;
 usage: wast2json [options] filename
 

@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS: -r
+;;; ARGS: -r
 ;; Verify that relocations are generated correctly in sections longer than
 ;; 128 bytes.  We had an issue where the size relocation offsets we not correct
 ;; due to section payload changing once the section size LEB was fixed up.

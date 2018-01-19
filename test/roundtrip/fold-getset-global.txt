@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --fold-exprs
+;;; ARGS: --stdout --fold-exprs
 (module
   (global i32 (i32.const 1))
   (global f32 (f32.const 1.5))

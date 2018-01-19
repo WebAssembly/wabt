@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --fold-exprs
+;;; ARGS: --stdout --fold-exprs
 (module
   (func $fold-get-local (result f32)
     (local f32 f32 f64 f64)

@@ -41,127 +41,127 @@ SLOW_TIMEOUT_MULTIPLIER = 2
 
 # default configurations for tests
 TOOLS = {
-    'wat2wasm': {
-        'EXE': '%(wat2wasm)s',
-        'FLAGS': ['%(in_file)s', '-o', '%(out_dir)s/out.wasm'],
-        'VERBOSE-FLAGS': ['-v']
-    },
-    'wast2json': {
-        'EXE': '%(wast2json)s',
-        'FLAGS': ['%(in_file)s'],
-        'VERBOSE-FLAGS': ['-v']
-    },
-    'wat-desugar': {
-        'EXE': '%(wat-desugar)s',
-        'FLAGS': ['%(in_file)s']
-    },
-    'run-objdump': {
-        'EXE': 'test/run-objdump.py',
-        'FLAGS': [
+    'wat2wasm': [
+        ('RUN', '%(wat2wasm)s'),
+        ('ARGS', ['%(in_file)s', '-o', '%(out_dir)s/out.wasm']),
+        ('VERBOSE-ARGS', ['-v']),
+    ],
+    'wast2json': [
+        ('RUN', '%(wast2json)s'),
+        ('ARGS', ['%(in_file)s']),
+        ('VERBOSE-ARGS', ['-v']),
+    ],
+    'wat-desugar': [
+        ('RUN', '%(wat-desugar)s'),
+        ('ARGS', ['%(in_file)s']),
+    ],
+    'run-objdump': [
+        ('RUN', 'test/run-objdump.py'),
+        ('ARGS', [
                 '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o', '%(out_dir)s'
-                ],
-        'VERBOSE-FLAGS': ['-v']
-    },
-    'run-wasm-link': {
-        'EXE': 'test/run-wasm-link.py',
-        'FLAGS': ['%(in_file)s', '--bindir=%(bindir)s', '-o', '%(out_dir)s'],
-        'VERBOSE-FLAGS': ['-v']
-    },
-    'run-roundtrip': {
-        'EXE': 'test/run-roundtrip.py',
-        'FLAGS': [
+                ]),
+        ('VERBOSE-ARGS', ['-v']),
+    ],
+    'run-wasm-link': [
+        ('RUN', 'test/run-wasm-link.py'),
+        ('ARGS', ['%(in_file)s', '--bindir=%(bindir)s', '-o', '%(out_dir)s']),
+        ('VERBOSE-ARGS', ['-v']),
+    ],
+    'run-roundtrip': [
+        ('RUN', 'test/run-roundtrip.py'),
+        ('ARGS', [
                 '%(in_file)s',
                 '-v',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-        ],
-        'VERBOSE-FLAGS': ['--print-cmd', '-v']
-    },
-    'run-interp': {
-        'EXE': 'test/run-interp.py',
-        'FLAGS': [
+                ]),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-interp': [
+        ('RUN', 'test/run-interp.py'),
+        ('ARGS', [
                 '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--run-all-exports',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-        ],
-        'VERBOSE-FLAGS': ['--print-cmd', '-v']
-    },
-    'run-interp-spec': {
-        'EXE': 'test/run-interp.py',
-        'FLAGS': [
+                ]),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-interp-spec': [
+        ('RUN', 'test/run-interp.py'),
+        ('ARGS', [
                 '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--spec',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-         ],
-        'VERBOSE-FLAGS': ['--print-cmd', '-v']
-    },
-    'run-gen-wasm': {
-        'EXE': 'test/run-gen-wasm.py',
-        'FLAGS': [
+                ]),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-gen-wasm': [
+        ('RUN', 'test/run-gen-wasm.py'),
+        ('ARGS', [
                 '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-         ],
-        'VERBOSE-FLAGS': ['--print-cmd', '-v']
-    },
-    'run-gen-wasm-interp': {
-        'EXE': 'test/run-gen-wasm-interp.py',
-        'FLAGS': [
+                ]),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-gen-wasm-interp': [
+        ('RUN', 'test/run-gen-wasm-interp.py'),
+        ('ARGS', [
                 '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--run-all-exports',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-        ],
-        'VERBOSE-FLAGS': ['--print-cmd', '-v']
-    },
-    'run-opcodecnt': {
-        'EXE': 'test/run-opcodecnt.py',
-        'FLAGS': [
-                '%(in_file)s',
-                '--bindir=%(bindir)s',
-                '--no-error-cmdline',
-                '-o',
-                '%(out_dir)s'
-        ],
-        'VERBOSE-FLAGS': ['--print-cmd', '-v']
-    },
-    'run-gen-spec-js': {
-        'EXE': 'test/run-gen-spec-js.py',
-        'FLAGS': [
+                ]),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-opcodecnt': [
+        ('RUN', 'test/run-opcodecnt.py'),
+        ('ARGS', [
                 '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-        ],
-        'VERBOSE-FLAGS': ['--print-cmd', '-v']
-    },
-    'run-spec-wasm2c': {
-        'EXE': 'test/run-spec-wasm2c.py',
-        'FLAGS': [
+                ]),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-gen-spec-js': [
+        ('RUN', 'test/run-gen-spec-js.py'),
+        ('ARGS', [
                 '%(in_file)s',
                 '--bindir=%(bindir)s',
                 '--no-error-cmdline',
                 '-o',
                 '%(out_dir)s',
-        ],
-        'VERBOSE-FLAGS': ['--print-cmd', '-v']
-    }
+                ]),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-spec-wasm2c': [
+        ('RUN', 'test/run-spec-wasm2c.py'),
+        ('ARGS', [
+                '%(in_file)s',
+                '--bindir=%(bindir)s',
+                '--no-error-cmdline',
+                '-o',
+                '%(out_dir)s',
+                ]),
+        ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ]
 }
 
 # TODO(binji): Add Windows support for compiling using run-spec-wasm2c.py
@@ -209,18 +209,18 @@ class CommandTemplate(object):
 
   def __init__(self, exe):
     self.exe = exe
-    self.flags = []
-    self.verbose_flags = []
+    self.args = []
+    self.verbose_args = []
     self.last_cmd = None
 
-  def AppendFlags(self, flags):
-    self.flags += SplitArgs(flags)
+  def AppendArgs(self, args):
+    self.args += SplitArgs(args)
 
-  def AppendVerboseFlags(self, flags_list):
-    for level, level_flags in enumerate(flags_list):
-      while level >= len(self.verbose_flags):
-        self.verbose_flags.append([])
-      self.verbose_flags[level] += SplitArgs(level_flags)
+  def AppendVerboseArgs(self, args_list):
+    for level, level_args in enumerate(args_list):
+      while level >= len(self.verbose_args):
+        self.verbose_args.append([])
+      self.verbose_args[level] += SplitArgs(level_args)
 
   def _GetExecutable(self):
     if os.path.splitext(self.exe)[1] == '.py':
@@ -234,12 +234,12 @@ class CommandTemplate(object):
   def GetCommand(self, variables, extra_args=None, verbose_level=0):
     args = self._GetExecutable()
     vl = 0
-    while vl < verbose_level and vl < len(self.verbose_flags):
-      args += self.verbose_flags[vl]
+    while vl < verbose_level and vl < len(self.verbose_args):
+      args += self.verbose_args[vl]
       vl += 1
     if extra_args:
       args += extra_args
-    args += self.flags
+    args += self.args
     args = self._Format(args, variables)
     self.last_cmd = args
     return Command(args)
@@ -364,9 +364,9 @@ class TestInfo(object):
     # Maybe it would be nicer to add a new directive ENABLE instead.
     old_cmd = self.cmds[0]
     new_cmd = result.cmds[0]
-    new_cmd.AppendFlags([f for f in old_cmd.flags if f.startswith('--enable')])
+    new_cmd.AppendArgs([f for f in old_cmd.args if f.startswith('--enable')])
     if fold_exprs:
-      new_cmd.AppendFlags('--fold-exprs')
+      new_cmd.AppendArgs('--fold-exprs')
 
     result.env = self.env
     result.expected_error = 0
@@ -413,7 +413,7 @@ class TestInfo(object):
     if tool not in TOOLS:
       raise Error('Unknown tool: %s' % tool)
     self.tool = tool
-    for tool_key, tool_value in TOOLS[tool].items():
+    for tool_key, tool_value in TOOLS[tool]:
       self.ParseDirective(tool_key, tool_value)
 
   def GetLastCommand(self):
@@ -422,22 +422,22 @@ class TestInfo(object):
     return self.cmds[-1]
 
   def ParseDirective(self, key, value):
-    if key == 'EXE':
+    if key == 'RUN':
       self.cmds.append(CommandTemplate(value))
     elif key == 'STDIN_FILE':
       self.input_filename = value
-    elif key == 'FLAGS':
+    elif key == 'ARGS':
       if not isinstance(value, list):
         value = shlex.split(value)
-      self.GetLastCommand().AppendFlags(value)
+      self.GetLastCommand().AppendArgs(value)
     elif key == 'ERROR':
       self.expected_error = int(value)
     elif key == 'SLOW':
       self.slow = True
     elif key == 'SKIP':
       self.skip = True
-    elif key == 'VERBOSE-FLAGS':
-      self.GetLastCommand().AppendVerboseFlags(value)
+    elif key == 'VERBOSE-ARGS':
+      self.GetLastCommand().AppendVerboseArgs(value)
     elif key in ['TODO', 'NOTE']:
       pass
     elif key == 'TOOL':
@@ -507,7 +507,7 @@ class TestInfo(object):
     self.expected_stdout = ''.join(stdout_lines)
     self.expected_stderr = ''.join(stderr_lines)
 
-    # If the test didn't specify a executable (either via EXE or indirectly
+    # If the test didn't specify a executable (either via RUN or indirectly
     # via TOOL, then use the default tool)
     if not self.cmds:
       self.SetTool('wat2wasm')

@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v --enable-saturating-float-to-int
+;;; ARGS: -v --enable-saturating-float-to-int
 (module
   (func
     f32.const 0

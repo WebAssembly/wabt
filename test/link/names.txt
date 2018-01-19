@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS: --debug-names -r
+;;; ARGS: --debug-names -r
 (module
   (import "__extern" "missing0" (func $import_func0))
   (import "_extern1" "missing1" (func))

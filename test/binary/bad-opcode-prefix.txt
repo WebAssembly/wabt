@@ -1,5 +1,5 @@
 ;;; TOOL: run-gen-wasm
-;;; FLAGS: --objdump
+;;; ARGS: --objdump
 ;;; ERROR: 1
 magic
 version
