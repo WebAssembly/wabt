@@ -833,6 +833,29 @@ Result Thread::Unop(UnopFunc<R, T> func) {
   return PushRep<R>(func(value));
 }
 
+// {i8, i16, 132, i64}{16, 8, 4, 2}.(neg)
+template <typename T, typename L, typename R, typename P>
+Result Thread::SimdUnop(UnopFunc<R, P> func) {
+  auto value = PopRep<T>();
+
+  // Calculate how many Lanes according to input lane data type.
+  constexpr int32_t lanes = sizeof(T)/sizeof(L);
+
+  // Define SIMD data array for Simd add by Lanes.
+  L simd_data_ret[lanes];
+  L simd_data_0[lanes];
+
+  // Convert intput SIMD data to array.
+  memcpy(simd_data_0, &value, sizeof(T));
+
+  // Constuct the Simd value by Lane data and Lane nums.
+  for(int32_t i = 0; i < lanes; i++) {
+    simd_data_ret[i] = static_cast<L>(func(simd_data_0[i]));
+  }
+
+  return PushRep<T>(Bitcast<T>(simd_data_ret));
+}
+
 template <typename R, typename T>
 Result Thread::UnopTrap(UnopTrapFunc<R, T> func) {
   auto value = PopRep<T>();
@@ -848,7 +871,7 @@ Result Thread::Binop(BinopFunc<R, T> func) {
   return PushRep<R>(func(lhs_rep, rhs_rep));
 }
 
-//// {i8, i16, 132, i64}{16, 8, 4, 2}.(add/sub/mul/neg)
+// {i8, i16, 132, i64}{16, 8, 4, 2}.(add/sub/mul)
 template <typename T, typename L, typename R, typename P>
 Result Thread::SimdBinop(BinopFunc<R, P> func) {
   auto rhs_rep = PopRep<T>();
@@ -866,7 +889,7 @@ Result Thread::SimdBinop(BinopFunc<R, P> func) {
   memcpy(simd_data_0, &lhs_rep, sizeof(T));
   memcpy(simd_data_1, &rhs_rep, sizeof(T));
 
-  // Constuct the Simd value by Land data and Lane nums.
+  // Constuct the Simd value by Lane data and Lane nums.
   for(int32_t i = 0; i < lanes; i++) {
     simd_data_ret[i] = static_cast<L>(func(simd_data_0[i], simd_data_1[i]));
   }
@@ -1045,6 +1068,12 @@ ValueTypeRep<T> IntRotr(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
 template <typename R, typename T>
 ValueTypeRep<R> IntEqz(ValueTypeRep<T> v_rep) {
   return ToRep(v_rep == 0);
+}
+
+template <typename T>
+ValueTypeRep<T> IntNeg(ValueTypeRep<T> v_rep) {
+  T tmp = static_cast<T>(v_rep);
+  return ToRep(-tmp);
 }
 
 // f{32,64}.abs
@@ -2349,6 +2378,21 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(SimdBinop<v128, uint32_t>(Mul<uint32_t>));
         break;
 
+      case Opcode::I8X16Neg:
+        CHECK_TRAP(SimdUnop<v128, int8_t>(IntNeg<int32_t>));
+        break;
+
+      case Opcode::I16X8Neg:
+        CHECK_TRAP(SimdUnop<v128, int16_t>(IntNeg<int32_t>));
+        break;
+
+      case Opcode::I32X4Neg:
+        CHECK_TRAP(SimdUnop<v128, int32_t>(IntNeg<int32_t>));
+        break;
+
+      case Opcode::I64X2Neg:
+        CHECK_TRAP(SimdUnop<v128, int64_t>(IntNeg<int64_t>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -2815,7 +2859,11 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32X4Splat:
     case Opcode::I64X2Splat:
     case Opcode::F32X4Splat:
-    case Opcode::F64X2Splat: {
+    case Opcode::F64X2Splat:
+    case Opcode::I8X16Neg:
+    case Opcode::I16X8Neg:
+    case Opcode::I32X4Neg:
+    case Opcode::I64X2Neg: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
                                 Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -3146,6 +3194,10 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I8X16Mul:
       case Opcode::I16X8Mul:
       case Opcode::I32X4Mul:
+      case Opcode::I8X16Neg:
+      case Opcode::I16X8Neg:
+      case Opcode::I32X4Neg:
+      case Opcode::I64X2Neg:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
