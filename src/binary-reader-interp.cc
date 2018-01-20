@@ -624,7 +624,9 @@ wabt::Result BinaryReaderInterp::AppendExport(Module* module,
                                               ExternalKind kind,
                                               Index item_index,
                                               string_view name) {
-  if (module->export_bindings.FindIndex(name) != kInvalidIndex) {
+  // Host modules are allowed to have duplicated exports; e.g. "spectest.print"
+  if (isa<DefinedModule>(module) &&
+      module->export_bindings.FindIndex(name) != kInvalidIndex) {
     PrintError("duplicate export \"" PRIstringview "\"",
                WABT_PRINTF_STRING_VIEW_ARG(name));
     return wabt::Result::Error;
