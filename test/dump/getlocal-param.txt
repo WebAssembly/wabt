@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -v
+;;; ARGS0: -v
 (module
   (func (param i32 f32)
     (local i64 f32 i32 f32)

@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -v
+;;; ARGS0: -v
 (module
   (global i32 (i32.const 0))
   (func (result i32)

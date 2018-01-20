@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS: --enable-threads
+;;; ARGS0: --enable-threads
 
 (module
   (memory 1 1 shared)

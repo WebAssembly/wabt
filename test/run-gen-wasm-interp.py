@@ -25,7 +25,6 @@ import utils
 from utils import Error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-GEN_WASM_PY = os.path.join(SCRIPT_DIR, 'gen-wasm.py')
 
 
 def main(args):
@@ -49,7 +48,7 @@ def main(args):
   parser.add_argument('file', help='test file.')
   options = parser.parse_args(args)
 
-  gen_wasm = utils.Executable(sys.executable, GEN_WASM_PY,
+  gen_wasm = utils.Executable(sys.executable, find_exe.GEN_WASM_PY,
                               error_cmdline=options.error_cmdline)
 
   wasm_interp = utils.Executable(

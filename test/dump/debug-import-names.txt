@@ -1,5 +1,6 @@
 ;;; TOOL: run-objdump
-;;; ARGS: --headers -v --debug-names --dump-verbose
+;;; ARGS0: -v --debug-names
+;;; ARGS1: --headers -x
 (module
   (import "bar" "foo" (func $foo)))
 (;; STDOUT ;;;

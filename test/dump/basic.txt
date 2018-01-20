@@ -1,5 +1,6 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -v --headers
+;;; ARGS0: -v
+;;; ARGS1: --headers
 (module
   (memory 1)
   (func $f (param i32 i32) (result i32)

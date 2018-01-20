@@ -1,5 +1,6 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -v --dump-verbose --headers
+;;; ARGS0: -v
+;;; ARGS1: -x --headers
 (module
   (func $a)
   (func $b)

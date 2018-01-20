@@ -1,5 +1,6 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -v --dump-verbose
+;;; ARGS0: -v
+;;; ARGS1: -x
 (module
   (import "foo" "i32_global" (global i32))
   (import "foo" "i64_global" (global i64))

@@ -119,6 +119,12 @@ The currently supported list of tools (see
   format.
 - `run-objdump`: parse a wasm text file, convert it to binary, then run
   `wasm-objdump` on it.
+- `run-objdump-gen-wasm`: parse a "gen-wasm" text file, convert it to binary,
+  then run `wasm-objdump` on it.
+- `run-objdump-spec`: parse a wast spec test file, convert it to JSON and a
+  collection of `.wasm` files, then run `wasm-objdump`. Note that the `.wasm`
+  files are not automatically passed to `wasm-objdump`, so each test must
+  specify them manually: `%(temp_file)s.0.wasm %(temp_file)s.1.wasm`, etc.
 - `run-wasm-link`: parses a wasm text file which may contain multiple modules,
   convert them to binary, then link them together via `wasm-link`.
 - `run-roundtrip`: parse a wasm text file, convert it to binary, convert it

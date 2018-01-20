@@ -1,5 +1,6 @@
 ;;; TOOL: run-objdump
-;;; ARGS: --dump-verbose --enable-exceptions
+;;; ARGS0: --enable-exceptions
+;;; ARGS1: -x
 (module
   (except $ex i32)
   (export "except" (except $ex))

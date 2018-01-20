@@ -29,6 +29,8 @@ EXECUTABLES = [
     'wasm-validate', 'wasm2c',
 ]
 
+GEN_WASM_PY = os.path.join(SCRIPT_DIR, 'gen-wasm.py')
+
 
 def GetDefaultPath():
   return os.path.join(REPO_ROOT_DIR, 'bin')
