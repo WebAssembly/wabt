@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; FLAGS: --spec
+;;; ARGS: --spec
 (module
   (export "export1" (func $export1))
   (export "call_import1" (func $call_import1))

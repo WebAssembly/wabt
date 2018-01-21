@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --generate-names
+;;; ARGS: --stdout --generate-names
 (module
   (global i32 (i32.const 42))
   (global f32 (f32.const -1.5))

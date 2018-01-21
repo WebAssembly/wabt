@@ -1,5 +1,5 @@
 ;;; TOOL: wat-desugar
-;;; FLAGS: --enable-exceptions
+;;; ARGS: --enable-exceptions
 (module
   (import "c++" "except" (except $ex i32))
   (func (result i32)

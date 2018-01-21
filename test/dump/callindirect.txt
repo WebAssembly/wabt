@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v
+;;; ARGS: -v
 (module
   (type $t (func (param i32)))
   (func $f (type $t)

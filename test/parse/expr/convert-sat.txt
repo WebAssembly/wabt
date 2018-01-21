@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; FLAGS: --enable-saturating-float-to-int
+;;; ARGS: --enable-saturating-float-to-int
 (module
   (func
     f32.const 0

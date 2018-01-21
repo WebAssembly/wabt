@@ -1,5 +1,5 @@
-;;; EXE: %(spectest-interp)s
-;;; FLAGS: --help
+;;; RUN: %(spectest-interp)s
+;;; ARGS: --help
 (;; STDOUT ;;;
 usage: spectest-interp [options] filename
 

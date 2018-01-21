@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v
+;;; ARGS: -v
 (module
   (memory 1)
   (func (result i32)

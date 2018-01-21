@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v
+;;; ARGS: -v
 (module
   (type (func (param i32)))
   (type (func (param i64)))

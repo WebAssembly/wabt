@@ -1,6 +1,6 @@
 ;;; ERROR: 1
 ;;; TOOL: wat2wasm
-;;; FLAGS: --enable-simd
+;;; ARGS: --enable-simd
 (module (func v128.const 0x12345678 0x00000000 0x00000000 0xabcd3478))
 (module (func v128.const i64 0x12345678 0x00000000 0x00000000 0xabcd3478))
 (;; STDERR ;;;

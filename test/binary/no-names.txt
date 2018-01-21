@@ -1,5 +1,5 @@
 ;;; TOOL: run-gen-wasm
-;;; FLAGS: --no-debug-names
+;;; ARGS: --no-debug-names
 magic
 version
 section(TYPE) { count[1] function params[0] results[1] i32 }

@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v --dump-verbose
+;;; ARGS: -v --dump-verbose
 (module
   (type $t (func (param i32)))
   (func (type $t))

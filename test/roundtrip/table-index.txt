@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout
+;;; ARGS: --stdout
 (module
   (import "a" "b" (table 2 anyfunc)))
 (;; STDOUT ;;;

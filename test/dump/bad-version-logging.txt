@@ -1,6 +1,6 @@
 ;;; ERROR: 1
 ;;; TOOL: run-objdump
-;;; FLAGS: --gen-wasm --dump-debug
+;;; ARGS: --gen-wasm --dump-debug
 magic
 0xe 0 0 0
 (;; STDERR ;;;

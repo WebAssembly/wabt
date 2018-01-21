@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout
+;;; ARGS: --stdout
 (module
   (import "a" "b" (global i32))
   (global f32 (f32.const 12345.625)))

@@ -1,5 +1,5 @@
 ;;; TOOL: run-opcodecnt
-;;; FLAGS: --cutoff 3
+;;; ARGS: --cutoff 3
 (module
   (func
     i32.const 1

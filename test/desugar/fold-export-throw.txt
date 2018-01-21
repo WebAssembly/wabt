@@ -1,5 +1,5 @@
 ;;; TOOL: wat-desugar
-;;; FLAGS: --enable-exceptions --fold-exprs
+;;; ARGS: --enable-exceptions --fold-exprs
 (module
   (except $ex i32)
   (export "except" (except $ex))

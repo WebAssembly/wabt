@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: -v
+;;; ARGS: -v
 (module (func) (export "tab:\t newline:\n slash:\\ quote:\' double:\"" (func 0)))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC

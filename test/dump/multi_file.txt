@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; FLAGS: --headers --spec
+;;; ARGS: --headers --spec
 (module
   (func (param $param2 i64))
 )

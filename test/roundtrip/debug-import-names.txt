@@ -1,4 +1,4 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --debug-names
+;;; ARGS: --debug-names
 (module
   (import "bar" "foo" (func $foo)))

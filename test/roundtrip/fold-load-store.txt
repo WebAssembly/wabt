@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --fold-exprs
+;;; ARGS: --stdout --fold-exprs
 (module
   (memory 1)
   (func $fold-load

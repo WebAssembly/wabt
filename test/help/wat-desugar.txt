@@ -1,5 +1,5 @@
-;;; EXE: %(wat-desugar)s
-;;; FLAGS: --help
+;;; RUN: %(wat-desugar)s
+;;; ARGS: --help
 (;; STDOUT ;;;
 usage: wat-desugar [options] filename
 

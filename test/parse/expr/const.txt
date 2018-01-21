@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; FLAGS: --enable-simd
+;;; ARGS: --enable-simd
 (module
   (func
     i32.const 0

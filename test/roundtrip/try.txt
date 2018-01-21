@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --enable-exceptions
+;;; ARGS: --stdout --enable-exceptions
 (module
   (except $ex i32)
   (func (result i32)

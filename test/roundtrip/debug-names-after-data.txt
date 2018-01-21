@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --debug-names
+;;; ARGS: --debug-names
 (module
   (memory 1)
   (data (i32.const 0) "hi")

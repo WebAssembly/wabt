@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; FLAGS: --enable-exceptions -v
+;;; ARGS: --enable-exceptions -v
 (module
   (except $ex i32)
   (func (result i32)

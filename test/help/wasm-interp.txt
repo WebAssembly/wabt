@@ -1,5 +1,5 @@
-;;; EXE: %(wasm-interp)s
-;;; FLAGS: --help
+;;; RUN: %(wasm-interp)s
+;;; ARGS: --help
 (;; STDOUT ;;;
 usage: wasm-interp [options] filename
 

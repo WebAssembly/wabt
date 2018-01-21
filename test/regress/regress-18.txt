@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --fold-exprs --generate-names
+;;; ARGS: --stdout --fold-exprs --generate-names
 
 ;; This was folding incorrectly since the import index was being used as the
 ;; function index, so the folder didn't know how many parameters the function

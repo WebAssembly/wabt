@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
-;;; FLAGS: --enable-exceptions -v
+;;; ARGS: --enable-exceptions -v
 ;;; ERROR: 1
 (module
   (func (result i32)

@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --generate-names
+;;; ARGS: --stdout --generate-names
 (module
   (func 
     i32.const 1

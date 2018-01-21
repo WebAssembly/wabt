@@ -100,9 +100,9 @@ argument to the executable (which by default is `out/wat2wasm`).
 The currently supported list of keys:
 
 - `TOOL`: a set of preconfigured keys, see below.
-- `EXE`: the executable to run, defaults to out/wat2wasm
+- `RUN`: the executable to run, defaults to out/wat2wasm
 - `STDIN_FILE`: the file to use for STDIN instead of the contents of this file.
-- `FLAGS`: additional flags to pass to the executable
+- `ARGS`: additional args to pass to the executable
 - `ENV`: environment variables to set, separated by spaces
 - `ERROR`: the expected return value from the executable, defaults to 0
 - `SLOW`: if defined, this test's timeout is doubled.

@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --inline-import --inline-export
+;;; ARGS: --stdout --inline-import --inline-export
 (module
   (import "mod" "f" (func $f (param i32)))
   (import "mod" "g" (global $g f32))

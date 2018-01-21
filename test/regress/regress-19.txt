@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --inline-export --stdout
+;;; ARGS: --inline-export --stdout
 (module
   (import "foo" "bar" (func))
   (export "baz" (func 0))

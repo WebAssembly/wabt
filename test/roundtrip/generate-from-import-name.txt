@@ -1,5 +1,5 @@
 ;;; TOOL: run-roundtrip
-;;; FLAGS: --stdout --debug-names --generate-names
+;;; ARGS: --stdout --debug-names --generate-names
 
 (module
   (func (import "m1" "my_func"))

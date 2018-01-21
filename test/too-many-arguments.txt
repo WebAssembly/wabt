@@ -1,5 +1,5 @@
-;;; EXE: %(wat2wasm)s
-;;; FLAGS: foo.txt bar.txt
+;;; RUN: %(wat2wasm)s
+;;; ARGS: foo.txt bar.txt
 ;;; ERROR: 1
 (;; STDERR ;;;
 unexpected argument 'bar.txt'
