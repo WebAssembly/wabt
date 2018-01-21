@@ -205,17 +205,21 @@ def SplitArgs(value):
   return shlex.split(value)
 
 
+def FixPythonExecutable(args):
+  """Given an argument list beginning with a `*.py` file, return one with that
+     uses sys.executable as arg[0].
+  """
+  exe, rest = args[0], args[1:]
+  if os.path.splitext(exe)[1] == '.py':
+    return [sys.executable, os.path.join(REPO_ROOT_DIR, exe)] + rest
+  return args
+
+
 class CommandTemplate(object):
 
   def __init__(self, exe):
-    self.args = self._FixPythonExecutable(SplitArgs(exe))
+    self.args = FixPythonExecutable(SplitArgs(exe))
     self.verbose_args = []
-
-  def _FixPythonExecutable(self, args):
-    exe, rest = args[0], args[1:]
-    if os.path.splitext(exe)[1] == '.py':
-      return [sys.executable, os.path.join(REPO_ROOT_DIR, exe)] + rest
-    return args
 
   def AppendArgs(self, args):
     self.args += SplitArgs(args)
