@@ -535,6 +535,10 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i16x8.neg"            { RETURN_OPCODE(Unary, I16X8Neg); }
       <i> "i32x4.neg"            { RETURN_OPCODE(Unary, I32X4Neg); }
       <i> "i64x2.neg"            { RETURN_OPCODE(Unary, I64X2Neg); }
+      <i> "i8x16.add_saturate_s" { RETURN_OPCODE(Binary, I8X16AddSaturateS); }
+      <i> "i8x16.add_saturate_u" { RETURN_OPCODE(Binary, I8X16AddSaturateU); }
+      <i> "i16x8.add_saturate_s" { RETURN_OPCODE(Binary, I16X8AddSaturateS); }
+      <i> "i16x8.add_saturate_u" { RETURN_OPCODE(Binary, I16X8AddSaturateU); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
