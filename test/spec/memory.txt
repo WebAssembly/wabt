@@ -61,7 +61,6 @@ out/test/spec/memory.wast:105: assert_unlinkable passed:
   error: data segment is out of bounds: [4294967295, 4294967295) >= max value 65536
   0000016: error: OnDataSegmentData callback failed
 out/test/spec/memory.wast:114: assert_unlinkable passed:
-  error: duplicate export "global"
   error: data segment is out of bounds: [666, 667) >= max value 0
   000002c: error: OnDataSegmentData callback failed
 out/test/spec/memory.wast:131: assert_invalid passed:

@@ -83,27 +83,13 @@ TOOLS = {
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-interp': [
-        ('RUN', 'test/run-interp.py'),
-        ('ARGS', [
-                '%(in_file)s',
-                '--bindir=%(bindir)s',
-                '--run-all-exports',
-                '--no-error-cmdline',
-                '-o',
-                '%(out_dir)s',
-                ]),
+        ('RUN', '%(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-interp)s %(temp_file)s.wasm --run-all-exports'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-interp-spec': [
-        ('RUN', 'test/run-interp.py'),
-        ('ARGS', [
-                '%(in_file)s',
-                '--bindir=%(bindir)s',
-                '--spec',
-                '--no-error-cmdline',
-                '-o',
-                '%(out_dir)s',
-                ]),
+        ('RUN', '%(wast2json)s %(in_file)s -o %(temp_file)s.json'),
+        ('RUN', '%(spectest-interp)s %(temp_file)s.json'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-gen-wasm': [
@@ -424,10 +410,19 @@ class TestInfo(object):
     for tool_key, tool_value in TOOLS[tool]:
       self.ParseDirective(tool_key, tool_value)
 
+  def GetCommand(self, index):
+    if index >= len(self.cmds):
+      raise Error('Invalid command index: %s' % index)
+    return self.cmds[index]
+
   def GetLastCommand(self):
     if not self.cmds:
       self.SetTool('wat2wasm')
     return self.cmds[-1]
+
+  def AppendArgsToAllCommands(self, args):
+    for cmd in self.cmds:
+      cmd.AppendArgs(args)
 
   def ParseDirective(self, key, value):
     if key == 'RUN':
@@ -435,9 +430,13 @@ class TestInfo(object):
     elif key == 'STDIN_FILE':
       self.input_filename = value
     elif key == 'ARGS':
-      if not isinstance(value, list):
-        value = shlex.split(value)
       self.GetLastCommand().AppendArgs(value)
+    elif key.startswith('ARGS'):
+      suffix = key[len('ARGS'):]
+      if suffix == '*':
+        self.AppendArgsToAllCommands(value)
+      elif re.match(r'^\d+$', suffix):
+        self.GetCommand(int(suffix)).AppendArgs(value)
     elif key == 'ERROR':
       self.expected_error = int(value)
     elif key == 'SLOW':
@@ -679,6 +678,12 @@ def RunTest(info, options, variables, verbose_level=0):
     shutil.rmtree(out_dir)
   os.makedirs(out_dir)
   variables['out_dir'] = out_dir
+
+  # Temporary files typically are placed in `out_dir` and use the same test's
+  # basename. This name does include an extension.
+  input_basename = os.path.basename(rel_gen_input_path)
+  variables['temp_file'] = os.path.join(
+      out_dir, os.path.splitext(input_basename)[0])
 
   final_result = RunResult()
 

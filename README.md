@@ -200,19 +200,10 @@ $ out/wasm-interp test.json --spec
 $ out/wasm-interp test.wasm -V 100 --run-all-exports
 ```
 
-As a convenience, you can use `test/run-interp.py` to convert a .wat file to
-binary first, then run it in the interpreter:
-
-```console
-$ test/run-interp.py --spec spec-test.wat
-20/20 tests.passed.
-```
-
 You can use `-h` to get additional help:
 
 ```console
 $ out/wasm-interp -h
-$ out/run-interp.py -h
 ```
 
 ## Running the test suite

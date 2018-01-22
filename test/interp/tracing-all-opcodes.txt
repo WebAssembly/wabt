@@ -1,5 +1,6 @@
 ;;; TOOL: run-interp
-;;; ARGS: --trace --host-print --enable-threads --enable-saturating-float-to-int --enable-sign-extension
+;;; ARGS*: --enable-threads --enable-saturating-float-to-int --enable-sign-extension
+;;; ARGS1: --trace --host-print
 
 (module
   (import "host" "print" (func $print (param i32)))

@@ -103,6 +103,8 @@ The currently supported list of keys:
 - `RUN`: the executable to run, defaults to out/wat2wasm
 - `STDIN_FILE`: the file to use for STDIN instead of the contents of this file.
 - `ARGS`: additional args to pass to the executable
+- `ARGS{N}`: additional args to the Nth `RUN` command (zero-based)
+- `ARGS*`: additional args to all `RUN` commands
 - `ENV`: environment variables to set, separated by spaces
 - `ERROR`: the expected return value from the executable, defaults to 0
 - `SLOW`: if defined, this test's timeout is doubled.

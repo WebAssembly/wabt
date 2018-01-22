@@ -1,5 +1,5 @@
 ;;; TOOL: run-interp
-;;; ARGS: --enable-sign-extension
+;;; ARGS*: --enable-sign-extension
 (module
   (func (export "i32.extend8_s 0x7f") (result i32)
     i32.const 0x7f
