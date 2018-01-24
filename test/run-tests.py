@@ -210,7 +210,7 @@ def FixPythonExecutable(args):
 class CommandTemplate(object):
 
   def __init__(self, exe):
-    self.args = FixPythonExecutable(SplitArgs(exe))
+    self.args = SplitArgs(exe)
     self.verbose_args = []
 
   def AppendArgs(self, args):
@@ -234,7 +234,7 @@ class CommandTemplate(object):
     if extra_args:
       args += extra_args
     args = self._Format(args, variables)
-    return Command(args)
+    return Command(FixPythonExecutable(args))
 
 
 class Command(object):
