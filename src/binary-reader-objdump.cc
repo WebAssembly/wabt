@@ -135,6 +135,8 @@ void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
       printf(" + %d", reloc.addend);
       break;
     case RelocType::FuncIndexLEB:
+    case RelocType::TableIndexSLEB:
+    case RelocType::TableIndexI32:
       if (const char* name = GetFunctionName(reloc.index)) {
         printf(" <%s>", name);
       }
