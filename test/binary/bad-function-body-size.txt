@@ -13,7 +13,5 @@ section(CODE) {
     drop
 }
 (;; STDERR ;;;
-Error running "wasm-interp":
 0000019: error: function body longer than given size
-
 ;;; STDERR ;;)

@@ -1,6 +1,4 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
-;; This test file contains two functions, but their names are listed in the
+;;; TOOL: run-gen-wasm-bad
 ;; names section out of order (1 first, then 0) which is an error.
 magic
 version
@@ -21,10 +19,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 000002c: error: function index out of order: 0
-
-Error running "wasm2wat":
 000002c: error: function index out of order: 0
-
 ;;; STDERR ;;)

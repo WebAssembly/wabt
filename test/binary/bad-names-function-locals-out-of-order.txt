@@ -1,5 +1,4 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(TYPE) { count[1] function params[0] results[1] i32 }
@@ -32,10 +31,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 000003d: error: locals function index out of order: 0
-
-Error running "wasm2wat":
 000003d: error: locals function index out of order: 0
-
 ;;; STDERR ;;)

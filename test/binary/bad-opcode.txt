@@ -1,5 +1,5 @@
-;;; TOOL: run-gen-wasm
-;;; ARGS: --objdump
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
 ;;; ERROR: 1
 magic
 version
@@ -13,9 +13,7 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-objdump":
 *ERROR*: @0x00000019: unexpected opcode: 255 (0xff)
-
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -27,4 +25,8 @@ Type:
  - type[0] () -> i32
 Function:
  - func[0] sig=0
+
+Code Disassembly:
+
+000016 func[0]:
 ;;; STDOUT ;;)

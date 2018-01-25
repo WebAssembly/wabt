@@ -1,5 +1,4 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(DATA) {
@@ -8,10 +7,6 @@ section(DATA) {
   data[str("hi")]
 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 000000b: error: data section without memory section
-
-Error running "wasm2wat":
 000000b: error: data section without memory section
-
 ;;; STDERR ;;)

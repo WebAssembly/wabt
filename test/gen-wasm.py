@@ -505,8 +505,8 @@ def p_error(p):
   raise Error('%d: syntax error, %s' % (p.lineno, p))
 
 
-parser = yacc.yacc(tabmodule='gen_wasm', debugfile='gen_wasm_debug.txt',
-                   outputdir=OUT_DIR)
+parser = yacc.yacc(debug=False, tabmodule='gen_wasm',
+                   debugfile='gen_wasm_debug.txt', outputdir=OUT_DIR)
 
 ################################################################################
 

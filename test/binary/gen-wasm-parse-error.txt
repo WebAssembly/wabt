@@ -1,9 +1,6 @@
-;;; TOOL: run-gen-wasm
+;;; RUN: %(gen_wasm_py)s %(in_file)s
 ;;; ERROR: 1
 section(TYPE) { foo }
 (;; STDERR ;;;
-Error running "gen-wasm.py":
-Generating LALR tables
 3: syntax error, LexToken(RBRACE,'}',3,22)
-
 ;;; STDERR ;;)

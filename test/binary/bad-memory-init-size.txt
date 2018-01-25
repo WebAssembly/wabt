@@ -1,5 +1,4 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(MEMORY) {
@@ -8,10 +7,6 @@ section(MEMORY) {
   initial[leb_u32(65537)]
 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 000000f: error: invalid memory initial size
-
-Error running "wasm2wat":
 000000f: error: invalid memory initial size
-
 ;;; STDERR ;;)

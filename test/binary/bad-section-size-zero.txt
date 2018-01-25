@@ -1,15 +1,10 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section_code[1] section_size[0]
 ;; garbage after the section; shouldn't be read
 1 2 3 4 5
 (;; STDERR ;;;
-Error running "wasm-validate":
 000000a: error: unable to read u32 leb128: type count
-
-Error running "wasm2wat":
 000000a: error: unable to read u32 leb128: type count
-
 ;;; STDERR ;;)

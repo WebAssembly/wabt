@@ -4,7 +4,6 @@
 magic
 0xe 0 0 0
 (;; STDERR ;;;
-Generating LALR tables
 *ERROR*: @0x00000008: bad wasm file version: 0xe (expected 0x1)
 ;;; STDERR ;;)
 (;; STDOUT ;;;

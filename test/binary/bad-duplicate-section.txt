@@ -1,14 +1,9 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(TYPE) { count[0] }
 section(TYPE) { count[0] }
 (;; STDERR ;;;
-Error running "wasm-validate":
 000000d: error: section Type out of order
-
-Error running "wasm2wat":
 000000d: error: section Type out of order
-
 ;;; STDERR ;;)

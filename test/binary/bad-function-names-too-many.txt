@@ -1,5 +1,4 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(TYPE) { count[1] function params[0] results[0] }
@@ -15,12 +14,8 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 error: expected function name count (2) <= function count (1)
 0000023: error: OnFunctionNamesCount callback failed
-
-Error running "wasm2wat":
 error: expected function name count (2) <= function count (1)
 0000023: error: OnFunctionNamesCount callback failed
-
 ;;; STDERR ;;)

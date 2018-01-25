@@ -1,12 +1,6 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
-0 "ASM"
+;;; TOOL: run-gen-wasm-bad
 version
 (;; STDERR ;;;
-Error running "wasm-validate":
 0000004: error: bad magic value
-
-Error running "wasm2wat":
 0000004: error: bad magic value
-
 ;;; STDERR ;;)
