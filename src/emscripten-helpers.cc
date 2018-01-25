@@ -52,6 +52,12 @@ struct WabtWriteModuleResult {
   std::unique_ptr<wabt::OutputBuffer> log_buffer;
 };
 
+struct WabtParseWastResult {
+  wabt::Result result;
+  std::unique_ptr<wabt::Script> script;
+};
+
+
 extern "C" {
 
 wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
@@ -70,6 +76,16 @@ WabtParseWatResult* wabt_parse_wat(wabt::WastLexer* lexer,
   result->module = std::move(module);
   return result;
 }
+
+WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
+                                   wabt::ErrorHandlerBuffer* error_handler) {
+  WabtParseWastResult* result = new WabtParseWastResult();
+  std::unique_ptr<wabt::Script> script;
+  result->result = wabt::ParseWastScript(lexer, &script, error_handler);
+  result->script = std::move(script);
+  return result;
+}
+
 
 WabtReadBinaryResult* wabt_read_binary(
     const void* data,
@@ -103,6 +119,15 @@ wabt::Result::Enum wabt_validate_module(
   wabt::ValidateOptions options;
   return ValidateModule(lexer, module, error_handler, &options);
 }
+
+wabt::Result::Enum wabt_validate_script(
+    wabt::WastLexer* lexer,
+    wabt::Script* script,
+    wabt::ErrorHandlerBuffer* error_handler) {
+  wabt::ValidateOptions options;
+  return ValidateScript(lexer, script, error_handler, &options);
+}
+
 
 wabt::Result::Enum wabt_apply_names_module(wabt::Module* module) {
   return ApplyNames(module);
@@ -194,6 +219,21 @@ wabt::Module* wabt_parse_wat_result_release_module(WabtParseWatResult* result) {
 void wabt_destroy_parse_wat_result(WabtParseWatResult* result) {
   delete result;
 }
+
+// WabtParseWastResult
+wabt::Result::Enum wabt_parse_wast_result_get_result(
+    WabtParseWastResult* result) {
+  return result->result;
+}
+
+wabt::Script* wabt_parse_wast_result_release_module(WabtParseWastResult* result) {
+  return result->script.release();
+}
+
+void wabt_destroy_parse_wast_result(WabtParseWastResult* result) {
+  delete result;
+}
+
 
 // WabtReadBinaryResult
 wabt::Result::Enum wabt_read_binary_result_get_result(
