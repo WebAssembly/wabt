@@ -56,13 +56,19 @@ TOOLS = {
         ('ARGS', ['%(in_file)s']),
     ],
     'run-objdump': [
-        ('RUN', 'test/run-objdump.py'),
-        ('ARGS', [
-                '%(in_file)s',
-                '--bindir=%(bindir)s',
-                '--no-error-cmdline',
-                '-o', '%(out_dir)s'
-                ]),
+        ('RUN', '%(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-objdump)s -r -d %(temp_file)s.wasm'),
+        ('VERBOSE-ARGS', ['-v']),
+    ],
+    'run-objdump-gen-wasm': [
+        ('RUN', '%(gen_wasm_py)s %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-objdump)s -r -d %(temp_file)s.wasm'),
+        ('VERBOSE-ARGS', ['-v']),
+    ],
+    'run-objdump-spec': [
+        ('RUN', '%(wast2json)s %(in_file)s -o %(temp_file)s.json'),
+        # NOTE: wasm files must be passed in manually via ARGS1
+        ('RUN', '%(wasm-objdump)s -r -d'),
         ('VERBOSE-ARGS', ['-v']),
     ],
     'run-wasm-link': [
@@ -204,7 +210,7 @@ def FixPythonExecutable(args):
 class CommandTemplate(object):
 
   def __init__(self, exe):
-    self.args = FixPythonExecutable(SplitArgs(exe))
+    self.args = SplitArgs(exe)
     self.verbose_args = []
 
   def AppendArgs(self, args):
@@ -228,7 +234,7 @@ class CommandTemplate(object):
     if extra_args:
       args += extra_args
     args = self._Format(args, variables)
-    return Command(args)
+    return Command(FixPythonExecutable(args))
 
 
 class Command(object):
@@ -883,6 +889,7 @@ def main(args):
   variables = {}
   variables['test_dir'] = os.path.abspath(TEST_DIR)
   variables['bindir'] = options.bindir
+  variables['gen_wasm_py'] = find_exe.GEN_WASM_PY
   for exe_basename in find_exe.EXECUTABLES:
     exe_override = os.path.join(options.bindir, exe_basename)
     variables[exe_basename] = find_exe.FindExecutable(exe_basename,

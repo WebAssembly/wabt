@@ -1,5 +1,5 @@
-;;; TOOL: run-objdump
-;;; ARGS: --headers --spec
+;;; TOOL: run-objdump-spec
+;;; ARGS1: --headers %(temp_file)s.0.wasm %(temp_file)s.1.wasm
 (module
   (func (param $param2 i64))
 )

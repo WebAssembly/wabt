@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -v
+;;; ARGS0: -v
 (module (memory 1))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC

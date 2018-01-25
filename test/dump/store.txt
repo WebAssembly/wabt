@@ -1,5 +1,5 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -v
+;;; ARGS0: -v
 (module
   (memory 1)
   (func

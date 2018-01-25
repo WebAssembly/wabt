@@ -1,12 +1,11 @@
 ;;; ERROR: 1
-;;; TOOL: run-objdump
-;;; ARGS: --gen-wasm --dump-debug
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS1: --debug
 magic
 0xe 0 0 0
 (;; STDERR ;;;
-Error running "wasm-objdump":
+Generating LALR tables
 *ERROR*: @0x00000008: bad wasm file version: 0xe (expected 0x1)
-
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 

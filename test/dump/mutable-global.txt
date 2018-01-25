@@ -1,5 +1,6 @@
 ;;; TOOL: run-objdump
-;;; ARGS: -v --dump-verbose --enable-mutable-globals
+;;; ARGS0: -v --enable-mutable-globals
+;;; ARGS1: -x
 (module
   (import "foo" "imported" (global (mut i32)))
   (global (export "exported") (mut i32) (i32.const 1)))
