@@ -122,14 +122,8 @@ TOOLS = {
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-opcodecnt': [
-        ('RUN', 'test/run-opcodecnt.py'),
-        ('ARGS', [
-                '%(in_file)s',
-                '--bindir=%(bindir)s',
-                '--no-error-cmdline',
-                '-o',
-                '%(out_dir)s',
-                ]),
+        ('RUN', '%(wat2wasm)s %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-opcodecnt)s %(temp_file)s.wasm'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-gen-spec-js': [
