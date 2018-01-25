@@ -1,9 +1,10 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (memory 100)
   (data foo))
 (;; STDERR ;;;
-out/test/parse/module/bad-memory-segment-address.txt:4:9: error: unexpected token "foo", expected an offset expr (e.g. (i32.const 123)).
+out/test/parse/module/bad-memory-segment-address.txt:5:9: error: unexpected token "foo", expected an offset expr (e.g. (i32.const 123)).
   (data foo))
         ^^^
 ;;; STDERR ;;)

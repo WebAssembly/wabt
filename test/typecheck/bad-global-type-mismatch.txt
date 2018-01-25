@@ -1,8 +1,9 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (global i32 (f32.const 1)))
 (;; STDERR ;;;
-out/test/typecheck/bad-global-type-mismatch.txt:3:16: error: type mismatch at global initializer expression. got f32, expected i32
+out/test/typecheck/bad-global-type-mismatch.txt:4:16: error: type mismatch at global initializer expression. got f32, expected i32
   (global i32 (f32.const 1)))
                ^^^^^^^^^
 ;;; STDERR ;;)

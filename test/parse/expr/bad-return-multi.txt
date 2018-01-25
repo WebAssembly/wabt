@@ -1,10 +1,11 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module (func (result f32 f32)
           f32.const 0
           f32.const 3.14
           return))
 (;; STDERR ;;;
-out/test/parse/expr/bad-return-multi.txt:2:10: error: multiple result values not currently supported.
+out/test/parse/expr/bad-return-multi.txt:3:10: error: multiple result values not currently supported.
 (module (func (result f32 f32)
          ^^^^
 ;;; STDERR ;;)

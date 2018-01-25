@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func
@@ -6,10 +7,10 @@
     else $bar
     end $baz))
 (;; STDERR ;;;
-out/test/parse/expr/bad-if-mismatch-label.txt:6:10: error: mismatching label "$foo" != "$bar"
+out/test/parse/expr/bad-if-mismatch-label.txt:7:10: error: mismatching label "$foo" != "$bar"
     else $bar
          ^^^^
-out/test/parse/expr/bad-if-mismatch-label.txt:7:9: error: mismatching label "$foo" != "$baz"
+out/test/parse/expr/bad-if-mismatch-label.txt:8:9: error: mismatching label "$foo" != "$baz"
     end $baz))
         ^^^^
 ;;; STDERR ;;)

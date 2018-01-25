@@ -1,7 +1,8 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module (func (result i32 i64)))
 (;; STDERR ;;;
-out/test/parse/func/bad-result-multi.txt:2:10: error: multiple result values not currently supported.
+out/test/parse/func/bad-result-multi.txt:3:10: error: multiple result values not currently supported.
 (module (func (result i32 i64)))
          ^^^^
 ;;; STDERR ;;)

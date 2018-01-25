@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func
@@ -21,19 +22,19 @@
     i64.extend32_s
     drop))
 (;; STDERR ;;;
-out/test/parse/expr/unary-extend-disabled.txt:5:5: error: opcode not allowed: i32.extend8_s
+out/test/parse/expr/unary-extend-disabled.txt:6:5: error: opcode not allowed: i32.extend8_s
     i32.extend8_s
     ^^^^^^^^^^^^^
-out/test/parse/expr/unary-extend-disabled.txt:9:5: error: opcode not allowed: i32.extend16_s
+out/test/parse/expr/unary-extend-disabled.txt:10:5: error: opcode not allowed: i32.extend16_s
     i32.extend16_s
     ^^^^^^^^^^^^^^
-out/test/parse/expr/unary-extend-disabled.txt:13:5: error: opcode not allowed: i64.extend8_s
+out/test/parse/expr/unary-extend-disabled.txt:14:5: error: opcode not allowed: i64.extend8_s
     i64.extend8_s
     ^^^^^^^^^^^^^
-out/test/parse/expr/unary-extend-disabled.txt:17:5: error: opcode not allowed: i64.extend16_s
+out/test/parse/expr/unary-extend-disabled.txt:18:5: error: opcode not allowed: i64.extend16_s
     i64.extend16_s
     ^^^^^^^^^^^^^^
-out/test/parse/expr/unary-extend-disabled.txt:21:5: error: opcode not allowed: i64.extend32_s
+out/test/parse/expr/unary-extend-disabled.txt:22:5: error: opcode not allowed: i64.extend32_s
     i64.extend32_s
     ^^^^^^^^^^^^^^
 ;;; STDERR ;;)

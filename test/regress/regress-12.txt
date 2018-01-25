@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func)
@@ -5,7 +6,7 @@
 
 (func))
 (;; STDERR ;;;
-out/test/regress/regress-12.txt:6:1: error: unexpected token (, expected EOF.
+out/test/regress/regress-12.txt:7:1: error: unexpected token (, expected EOF.
 (func))
 ^
 ;;; STDERR ;;)

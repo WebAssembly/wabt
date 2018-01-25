@@ -416,8 +416,6 @@ class TestInfo(object):
     return self.cmds[index]
 
   def GetLastCommand(self):
-    if not self.cmds:
-      self.SetTool('wat2wasm')
     return self.cmds[-1]
 
   def AppendArgsToAllCommands(self, args):
@@ -513,11 +511,6 @@ class TestInfo(object):
     self.input_ = ''.join(input_lines)
     self.expected_stdout = ''.join(stdout_lines)
     self.expected_stderr = ''.join(stderr_lines)
-
-    # If the test didn't specify a executable (either via RUN or indirectly
-    # via TOOL, then use the default tool)
-    if not self.cmds:
-      self.SetTool('wat2wasm')
 
   def CreateInputFile(self):
     gen_input_path = self.GetGeneratedInputFilename()
@@ -924,7 +917,8 @@ def main(args):
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
     for info, result in status.failed_tests:
-      sys.stderr.write('- %s\n    %s\n' % (info.GetName(), result.last_cmd))
+      last_cmd = result.last_cmd if result is not None else ''
+      sys.stderr.write('- %s\n    %s\n' % (info.GetName(), last_cmd))
     ret = 1
 
   return ret

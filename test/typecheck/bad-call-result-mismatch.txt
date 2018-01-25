@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (import "foo" "bar" (func $import (result f32)))
@@ -23,22 +24,22 @@
       nop
     end))
 (;; STDERR ;;;
-out/test/typecheck/bad-call-result-mismatch.txt:9:5: error: type mismatch in if, expected [i32] but got []
+out/test/typecheck/bad-call-result-mismatch.txt:10:5: error: type mismatch in if, expected [i32] but got []
     if
     ^^
-out/test/typecheck/bad-call-result-mismatch.txt:10:7: error: type mismatch in if true branch, expected [] but got [i64]
+out/test/typecheck/bad-call-result-mismatch.txt:11:7: error: type mismatch in if true branch, expected [] but got [i64]
       call $direct
       ^^^^
-out/test/typecheck/bad-call-result-mismatch.txt:14:5: error: type mismatch in if, expected [i32] but got []
+out/test/typecheck/bad-call-result-mismatch.txt:15:5: error: type mismatch in if, expected [i32] but got []
     if
     ^^
-out/test/typecheck/bad-call-result-mismatch.txt:15:7: error: type mismatch in if true branch, expected [] but got [f32]
+out/test/typecheck/bad-call-result-mismatch.txt:16:7: error: type mismatch in if true branch, expected [] but got [f32]
       call $import
       ^^^^
-out/test/typecheck/bad-call-result-mismatch.txt:19:5: error: type mismatch in if, expected [i32] but got []
+out/test/typecheck/bad-call-result-mismatch.txt:20:5: error: type mismatch in if, expected [i32] but got []
     if
     ^^
-out/test/typecheck/bad-call-result-mismatch.txt:21:7: error: type mismatch in if true branch, expected [] but got [i64]
+out/test/typecheck/bad-call-result-mismatch.txt:22:7: error: type mismatch in if true branch, expected [] but got [i64]
       call_indirect (type $indirect)
       ^^^^^^^^^^^^^
 ;;; STDERR ;;)
