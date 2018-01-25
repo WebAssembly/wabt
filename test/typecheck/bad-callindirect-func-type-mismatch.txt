@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (table anyfunc (elem 0))
@@ -6,7 +7,7 @@
     f32.const 0
     call_indirect (type $t)))
 (;; STDERR ;;;
-out/test/typecheck/bad-callindirect-func-type-mismatch.txt:7:5: error: type mismatch in call_indirect, expected [i32] but got [f32]
+out/test/typecheck/bad-callindirect-func-type-mismatch.txt:8:5: error: type mismatch in call_indirect, expected [i32] but got [f32]
     call_indirect (type $t)))
     ^^^^^^^^^^^^^
 ;;; STDERR ;;)

@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func
@@ -6,10 +7,10 @@
     else $foo
     end $bar))
 (;; STDERR ;;;
-out/test/parse/expr/bad-if-end-label.txt:6:10: error: unexpected label "$foo"
+out/test/parse/expr/bad-if-end-label.txt:7:10: error: unexpected label "$foo"
     else $foo
          ^^^^
-out/test/parse/expr/bad-if-end-label.txt:7:9: error: unexpected label "$bar"
+out/test/parse/expr/bad-if-end-label.txt:8:9: error: unexpected label "$bar"
     end $bar))
         ^^^^
 ;;; STDERR ;;)

@@ -1,8 +1,9 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module (memory 1 shared))
 
 (;; STDERR ;;;
-out/test/parse/module/bad-memory-shared-nomax.txt:2:10: error: shared memories must have max sizes
+out/test/parse/module/bad-memory-shared-nomax.txt:3:10: error: shared memories must have max sizes
 (module (memory 1 shared))
          ^^^^^^
 ;;; STDERR ;;)

@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func
@@ -8,7 +9,7 @@
     drop
     drop))
 (;; STDERR ;;;
-out/test/parse/expr/bad-block-sig-multi.txt:4:5: error: multiple block signature result types not currently supported.
+out/test/parse/expr/bad-block-sig-multi.txt:5:5: error: multiple block signature result types not currently supported.
     block (result i32 i32)
     ^^^^^
 ;;; STDERR ;;)

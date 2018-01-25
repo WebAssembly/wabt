@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func (result i32)
@@ -11,7 +12,7 @@
     end
     i32.const 2))
 (;; STDERR ;;;
-out/test/typecheck/bad-brtable-type-mismatch.txt:7:9: error: type mismatch in br_table, expected [i32] but got [f32]
+out/test/typecheck/bad-brtable-type-mismatch.txt:8:9: error: type mismatch in br_table, expected [i32] but got [f32]
         br_table 0 1 
         ^^^^^^^^
 ;;; STDERR ;;)

@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func (result i32)
@@ -9,10 +10,10 @@
     end
     i32.add))
 (;; STDERR ;;;
-out/test/typecheck/bad-expr-if.txt:10:5: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+out/test/typecheck/bad-expr-if.txt:11:5: error: type mismatch in i32.add, expected [i32, i32] but got [i32]
     i32.add))
     ^^^^^^^
-out/test/typecheck/bad-expr-if.txt:10:5: error: type mismatch in function, expected [] but got [i32]
+out/test/typecheck/bad-expr-if.txt:11:5: error: type mismatch in function, expected [] but got [i32]
     i32.add))
     ^^^^^^^
 ;;; STDERR ;;)

@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (start 0)
@@ -5,7 +6,7 @@
   (func)
   (func))
 (;; STDERR ;;;
-out/test/parse/module/bad-start-too-many.txt:4:4: error: only one start function allowed
+out/test/parse/module/bad-start-too-many.txt:5:4: error: only one start function allowed
   (start 1)
    ^^^^^
 ;;; STDERR ;;)

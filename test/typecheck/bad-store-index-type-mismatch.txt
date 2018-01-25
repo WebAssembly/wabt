@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (memory 1)
@@ -6,7 +7,7 @@
     f32.const 0
     i32.store))
 (;; STDERR ;;;
-out/test/typecheck/bad-store-index-type-mismatch.txt:7:5: error: type mismatch in i32.store, expected [i32, i32] but got [i32, f32]
+out/test/typecheck/bad-store-index-type-mismatch.txt:8:5: error: type mismatch in i32.store, expected [i32, i32] but got [i32, f32]
     i32.store))
     ^^^^^^^^^
 ;;; STDERR ;;)

@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (global i32 
@@ -5,7 +6,7 @@
     i32.const 2
     i32.add))
 (;; STDERR ;;;
-out/test/parse/module/bad-global-invalid-expr.txt:3:4: error: invalid global initializer expression, must be a constant expression; either *.const or get_global.
+out/test/parse/module/bad-global-invalid-expr.txt:4:4: error: invalid global initializer expression, must be a constant expression; either *.const or get_global.
   (global i32 
    ^^^^^^
 ;;; STDERR ;;)

@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func (result i32)
@@ -18,7 +19,7 @@
     ;; return statement here, or a value returned from (br $outer).
   ))
 (;; STDERR ;;;
-out/test/typecheck/bad-nested-br.txt:15:7: error: type mismatch in implicit return, expected [i32] but got []
+out/test/typecheck/bad-nested-br.txt:16:7: error: type mismatch in implicit return, expected [i32] but got []
       return
       ^^^^^^
 ;;; STDERR ;;)

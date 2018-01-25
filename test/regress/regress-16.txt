@@ -1,8 +1,9 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (start $2)
 (start 42)
 (;; STDERR ;;;
-out/test/regress/regress-16.txt:2:8: error: undefined function variable "$2"
+out/test/regress/regress-16.txt:3:8: error: undefined function variable "$2"
 (start $2)
        ^^
 ;;; STDERR ;;)

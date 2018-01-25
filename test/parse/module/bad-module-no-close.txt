@@ -1,5 +1,6 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
 (;; STDERR ;;;
-out/test/parse/module/bad-module-no-close.txt:3:2: error: unexpected token "EOF", expected a module field.
+out/test/parse/module/bad-module-no-close.txt:4:2: error: unexpected token "EOF", expected a module field.
 ;;; STDERR ;;)

@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func
@@ -5,7 +6,7 @@
     f32.reinterpret/i32
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-cast-type-mismatch.txt:5:5: error: type mismatch in f32.reinterpret/i32, expected [i32] but got [f32]
+out/test/typecheck/bad-cast-type-mismatch.txt:6:5: error: type mismatch in f32.reinterpret/i32, expected [i32] but got [f32]
     f32.reinterpret/i32
     ^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

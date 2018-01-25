@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ARGS: -v --no-check
 (module
   (data (i32.const 0) "hello"))

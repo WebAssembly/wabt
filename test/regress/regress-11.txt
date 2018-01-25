@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
   (func (result i32)
@@ -9,7 +10,7 @@
       i32.const 1
     end))
 (;; STDERR ;;;
-out/test/regress/regress-11.txt:7:9: error: type mismatch in block, expected [] but got [i32]
+out/test/regress/regress-11.txt:8:9: error: type mismatch in block, expected [] but got [i32]
         br_if 1
         ^^^^^
 ;;; STDERR ;;)
