@@ -47,7 +47,7 @@ function allocateBuffer(buf) {
   if (buf instanceof ArrayBuffer) {
     size = buf.byteLength;
     addr = malloc(size);
-     (new Uint8Array(HEAP8.buffer, addr, size)).set(new Uint8Array(buf))
+    (new Uint8Array(HEAP8.buffer, addr, size)).set(new Uint8Array(buf))
   } else if (ArrayBuffer.isView(buf)) {
     size = buf.buffer.byteLength;
     addr = malloc(size);
