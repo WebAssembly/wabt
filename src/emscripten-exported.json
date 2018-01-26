@@ -29,6 +29,7 @@
 "_wabt_validate_module",
 "_wabt_validate_script",
 "_wabt_write_binary_module",
+"_wabt_write_binary_spec_script",
 "_wabt_write_module_result_get_result",
 "_wabt_write_module_result_release_log_output_buffer",
 "_wabt_write_module_result_release_output_buffer",

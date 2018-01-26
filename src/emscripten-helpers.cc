@@ -52,6 +52,7 @@ struct WabtWriteModuleResult {
   std::unique_ptr<wabt::OutputBuffer> log_buffer;
 };
 
+
 struct WabtParseWastResult {
   wabt::Result result;
   std::unique_ptr<wabt::Script> script;
@@ -85,6 +86,8 @@ WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
   result->script = std::move(script);
   return result;
 }
+
+
 
 
 WabtReadBinaryResult* wabt_read_binary(
@@ -126,6 +129,34 @@ wabt::Result::Enum wabt_validate_script(
     wabt::ErrorHandlerBuffer* error_handler) {
   wabt::ValidateOptions options;
   return ValidateScript(lexer, script, error_handler, &options);
+}
+
+WabtWriteBinaryResult* wabt_write_binary_spec_script(wabt::Script* script,
+                                                const char* source_filename,
+                                                const char* out_filename;
+                                                int log,
+                                                int canonicalize_lebs,
+                                                int relocatable,
+                                                int write_debug_names) {
+  wabt::MemoryStream log_stream;
+  wabt::WriteBinarySpecOptions options;
+  options.write_binary_options.canonicalize_lebs = canonicalize_lebs;
+  options.write_binary_options.relocatable = relocatable;
+  options.write_binary_options.write_debug_names = write_debug_names;
+
+  wabt::MemoryStream stream(log ? &log_stream : nullptr);
+  options.log_stream = &stream;
+  options.json_filename = out_filename;
+  
+  WabtWriteBinaryResult* result = new WabtWriteBinaryResult();
+  result->result = WriteBinarySpecScript(script.get(), source_filename,
+                                     &options.write_binary_spec_options);
+
+  if (result->result == wabt::Result::Ok) {
+    result->buffer = stream.ReleaseOutputBuffer();
+    result->log_buffer = log ? log_stream.ReleaseOutputBuffer() : nullptr;
+  }
+  return result;
 }
 
 
