@@ -25,6 +25,7 @@
 #include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
 #include "src/binary-writer.h"
+#include "src/binary-writer-spec.h"
 #include "src/common.h"
 #include "src/error-handler.h"
 #include "src/ir.h"
@@ -131,9 +132,9 @@ wabt::Result::Enum wabt_validate_script(
   return ValidateScript(lexer, script, error_handler, &options);
 }
 
-WabtWriteBinaryResult* wabt_write_binary_spec_script(wabt::Script* script,
+WabtWriteModuleResult* wabt_write_binary_spec_script(wabt::Script* script,
                                                 const char* source_filename,
-                                                const char* out_filename;
+                                                const char* out_filename,
                                                 int log,
                                                 int canonicalize_lebs,
                                                 int relocatable,
@@ -148,9 +149,9 @@ WabtWriteBinaryResult* wabt_write_binary_spec_script(wabt::Script* script,
   options.log_stream = &stream;
   options.json_filename = out_filename;
   
-  WabtWriteBinaryResult* result = new WabtWriteBinaryResult();
-  result->result = WriteBinarySpecScript(script.get(), source_filename,
-                                     &options.write_binary_spec_options);
+  WabtWriteModuleResult* result = new WabtWriteModuleResult();
+  result->result = WriteBinarySpecScript(script, source_filename,
+                                     &options);
 
   if (result->result == wabt::Result::Ok) {
     result->buffer = stream.ReleaseOutputBuffer();
