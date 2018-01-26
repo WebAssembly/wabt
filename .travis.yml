@@ -42,6 +42,24 @@ matrix:
       env: SANITIZER=ubsan
     - os: osx
       compiler: clang
+    # Build the .js outputs using emcc
+    - &test-emcc
+      stage: test
+      compiler: clang
+      python: 2.7
+      node_js: 7
+      language: node_js
+      node_js:
+      - node
+      sudo: required
+      services:
+      - docker
+      before_install:
+      - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
+      script:
+      # run binaryen.js and wasm.js tests before and after building, so we see if the bundled
+      # version is good too
+      - docker exec -it emscripten bash ./travis-emcc.sh
 
   # Allow failures on the Mac bots. We'd rather not, but they are quite slow.
   allow_failures:
