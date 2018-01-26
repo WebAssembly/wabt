@@ -1,5 +1,4 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(TYPE) { count[1] function params[0] results[1] i32 }
@@ -21,10 +20,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 0000028: error: out-of-order sub-section
-
-Error running "wasm2wat":
 0000028: error: out-of-order sub-section
-
 ;;; STDERR ;;)

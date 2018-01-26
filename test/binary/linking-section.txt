@@ -1,5 +1,5 @@
-;;; TOOL: run-gen-wasm
-;;; ARGS: --objdump
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
 magic
 version
 section("linking") {
@@ -54,4 +54,7 @@ Custom:
   - init functions [count=2]
    - 1: priority=5
    - 0: priority=6
+
+Code Disassembly:
+
 ;;; STDOUT ;;)

@@ -12,10 +12,19 @@ section(CODE) {
   }
 }
 section("name") {
-  func_count[1]
-  str("$F0")
-  local_count[1]
-  str("$L0")
+  section(NAME_FUNCTION) {
+    func_count[1]
+    index[0]
+    str("$F0")
+  }
+
+  section(NAME_LOCALS) {
+    func_count[1]
+    index[0]
+    local_count[1]
+    index[0]
+    str("$L0")
+  }
 }
 (;; STDOUT ;;;
 (module

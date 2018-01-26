@@ -1,13 +1,8 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(TYPE) { count[1] function params[0] results[2] i32 i32 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 000000e: error: result count must be 0 or 1
-
-Error running "wasm2wat":
 000000e: error: result count must be 0 or 1
-
 ;;; STDERR ;;)

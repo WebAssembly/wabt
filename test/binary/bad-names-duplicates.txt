@@ -1,6 +1,4 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
-;; This test file contains a name section that names that same function twice
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(TYPE) { count[1] function params[0] results[1] i32 }
@@ -20,10 +18,6 @@ section("name") {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 000002c: error: duplicate function name: 0
-
-Error running "wasm2wat":
 000002c: error: duplicate function name: 0
-
 ;;; STDERR ;;)

@@ -1,5 +1,4 @@
-;;; TOOL: run-gen-wasm
-;;; ERROR: 1
+;;; TOOL: run-gen-wasm-bad
 magic
 version
 section(TYPE) { count[1] function params[0] results[0] }
@@ -14,10 +13,6 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-Error running "wasm-validate":
 out/test/binary/bad-typecheck-missing-drop/bad-typecheck-missing-drop.wasm:000001c: error: type mismatch in function, expected [] but got [i32]
-
-Error running "wasm2wat":
 out/test/binary/bad-typecheck-missing-drop/bad-typecheck-missing-drop.wasm:000001c: error: type mismatch in function, expected [] but got [i32]
-
 ;;; STDERR ;;)
