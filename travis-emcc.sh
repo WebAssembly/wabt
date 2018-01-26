@@ -1,4 +1,4 @@
 set -e
 emconfigure cmake .
-emmake -j 2
+emmake make -j 2
 
