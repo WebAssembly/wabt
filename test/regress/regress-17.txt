@@ -1,5 +1,5 @@
+;;; RUN: %(wast2json)s %(in_file)s
 ;;; ERROR: 1
-;;; TOOL: run-interp-spec
 (module (func (export "foo") (param i64)))
 
 ;; Make sure that the error below has the correct location.

@@ -1,5 +1,5 @@
-;;; ERROR: 1
 ;;; TOOL: run-gen-wasm
+;;; ERROR: 1
 ;; This test file contains a name section that names that same function twice
 magic
 version

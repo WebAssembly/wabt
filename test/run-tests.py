@@ -206,9 +206,13 @@ class CommandTemplate(object):
   def __init__(self, exe):
     self.args = SplitArgs(exe)
     self.verbose_args = []
+    self.expected_returncode = 0
 
   def AppendArgs(self, args):
     self.args += SplitArgs(args)
+
+  def SetExpectedReturncode(self, returncode):
+    self.expected_returncode = returncode
 
   def AppendVerboseArgs(self, args_list):
     for level, level_args in enumerate(args_list):
@@ -228,13 +232,17 @@ class CommandTemplate(object):
     if extra_args:
       args += extra_args
     args = self._Format(args, variables)
-    return Command(FixPythonExecutable(args))
+    return Command(self, FixPythonExecutable(args))
 
 
 class Command(object):
 
-  def __init__(self, args):
+  def __init__(self, template, args):
+    self.template = template
     self.args = args
+
+  def GetExpectedReturncode(self):
+    return self.template.expected_returncode
 
   def Run(self, cwd, timeout, console_out=False, env=None):
     process = None
@@ -289,36 +297,51 @@ class Command(object):
 
 class RunResult(object):
 
-  def __init__(self, last_cmd=None, stdout='', stderr='', returncode=0,
-               duration=0):
-    self.last_cmd = last_cmd
+  def __init__(self, cmd=None, stdout='', stderr='', returncode=0, duration=0):
+    self.cmd = cmd
     self.stdout = stdout
     self.stderr = stderr
     self.returncode = returncode
     self.duration = duration
 
+  def GetExpectedReturncode(self):
+    return self.cmd.GetExpectedReturncode()
+
   def Failed(self):
-    return self.returncode != 0
-
-  def Append(self, other):
-    assert isinstance(other, RunResult)
-
-    self.last_cmd = other.last_cmd
-
-    if other.stdout is not None:
-      self.stdout += other.stdout
-
-    if other.stderr is not None:
-      self.stderr += other.stderr
-
-    self.duration += other.duration
-
-    assert(self.returncode == 0)
-    self.returncode = other.returncode
+    return self.returncode != self.GetExpectedReturncode()
 
   def __repr__(self):
     return 'RunResult(%s, %s, %s, %s, %s)' % (
-        self.last_cmd, self.stdout, self.stderr, self.returncode, self.duration)
+        self.cmd, self.stdout, self.stderr, self.returncode, self.duration)
+
+
+class TestResult(object):
+
+  def __init__(self):
+    self.results = []
+    self.stdout = ''
+    self.stderr = ''
+    self.duration = 0
+
+  def GetLastCommand(self):
+    return self.results[-1].cmd
+
+  def GetLastFailure(self):
+    return [r for r in self.results if r.Failed()][-1]
+
+  def Failed(self):
+    return any(r.Failed() for r in self.results)
+
+  def Append(self, result):
+    self.results.append(result)
+
+    if result.stdout is not None:
+      self.stdout += result.stdout
+
+    if result.stderr is not None:
+      self.stderr += result.stderr
+
+    self.duration += result.duration
 
 
 class TestInfo(object):
@@ -333,7 +356,6 @@ class TestInfo(object):
     self.tool = None
     self.cmds = []
     self.env = {}
-    self.expected_error = 0
     self.slow = False
     self.skip = False
     self.is_roundtrip = False
@@ -363,7 +385,6 @@ class TestInfo(object):
       new_cmd.AppendArgs('--fold-exprs')
 
     result.env = self.env
-    result.expected_error = 0
     result.slow = self.slow
     result.skip = self.skip
     result.is_roundtrip = True
@@ -411,32 +432,37 @@ class TestInfo(object):
       self.ParseDirective(tool_key, tool_value)
 
   def GetCommand(self, index):
-    if index >= len(self.cmds):
+    try:
+      return self.cmds[index]
+    except IndexError:
       raise Error('Invalid command index: %s' % index)
-    return self.cmds[index]
 
   def GetLastCommand(self):
-    return self.cmds[-1]
+    return self.GetCommand(len(self.cmds) - 1)
 
-  def AppendArgsToAllCommands(self, args):
-    for cmd in self.cmds:
-      cmd.AppendArgs(args)
+  def ApplyToCommandBySuffix(self, suffix, fn):
+    if suffix == '':
+      fn(self.GetLastCommand())
+    elif re.match(r'^\d+$', suffix):
+      fn(self.GetCommand(int(suffix)))
+    elif suffix == '*':
+      for cmd in self.cmds:
+        fn(cmd)
+    else:
+      raise Error('Invalid directive suffix: %s' % suffix)
 
   def ParseDirective(self, key, value):
     if key == 'RUN':
       self.cmds.append(CommandTemplate(value))
     elif key == 'STDIN_FILE':
       self.input_filename = value
-    elif key == 'ARGS':
-      self.GetLastCommand().AppendArgs(value)
     elif key.startswith('ARGS'):
       suffix = key[len('ARGS'):]
-      if suffix == '*':
-        self.AppendArgsToAllCommands(value)
-      elif re.match(r'^\d+$', suffix):
-        self.GetCommand(int(suffix)).AppendArgs(value)
-    elif key == 'ERROR':
-      self.expected_error = int(value)
+      self.ApplyToCommandBySuffix(suffix, lambda cmd: cmd.AppendArgs(value))
+    elif key.startswith('ERROR'):
+      suffix = key[len('ERROR'):]
+      self.ApplyToCommandBySuffix(
+        suffix, lambda cmd: cmd.SetExpectedReturncode(int(value)))
     elif key == 'SLOW':
       self.slow = True
     elif key == 'SKIP':
@@ -681,7 +707,7 @@ def RunTest(info, options, variables, verbose_level=0):
   variables['temp_file'] = os.path.join(
       out_dir, os.path.splitext(input_basename)[0])
 
-  final_result = RunResult()
+  test_result = TestResult()
 
   for cmd_template in info.cmds:
     cmd = cmd_template.GetCommand(variables, options.arg, verbose_level)
@@ -693,11 +719,11 @@ def RunTest(info, options, variables, verbose_level=0):
     except (Error, KeyboardInterrupt) as e:
       return e
 
-    final_result.Append(result)
-    if final_result.Failed():
+    test_result.Append(result)
+    if result.Failed():
       break
 
-  return final_result
+  return test_result
 
 
 def HandleTestResult(status, info, result, rebase=False):
@@ -706,19 +732,21 @@ def HandleTestResult(status, info, result, rebase=False):
       raise result
 
     if info.is_roundtrip:
-      if result.returncode == 0:
-        status.Passed(info, result.duration)
-      elif result.returncode == 2:
-        # run-roundtrip.py returns 2 if the file couldn't be parsed.
-        # it's likely a "bad-*" file.
-        status.Skipped(info)
+      if result.Failed():
+        if result.GetLastFailure().returncode == 2:
+          # run-roundtrip.py returns 2 if the file couldn't be parsed.
+          # it's likely a "bad-*" file.
+          status.Skipped(info)
+        else:
+          raise Error(stderr)
       else:
-        raise Error(stderr)
+        status.Passed(info, result.duration)
     else:
-      if result.returncode != info.expected_error:
+      if result.Failed():
         # This test has already failed, but diff it anyway.
-        msg = 'expected error code %d, got %d.' % (info.expected_error,
-                                                   result.returncode)
+        last_failure = result.GetLastFailure()
+        msg = 'expected error code %d, got %d.' % (
+            last_failure.GetExpectedReturncode(), last_failure.returncode)
         try:
           info.Diff(result.stdout, result.stderr)
         except Error as e:
@@ -920,7 +948,7 @@ def main(args):
   if status.failed:
     sys.stderr.write('**** FAILED %s\n' % ('*' * (80 - 14)))
     for info, result in status.failed_tests:
-      last_cmd = result.last_cmd if result is not None else ''
+      last_cmd = result.GetLastCommand() if result is not None else ''
       sys.stderr.write('- %s\n    %s\n' % (info.GetName(), last_cmd))
     ret = 1
 

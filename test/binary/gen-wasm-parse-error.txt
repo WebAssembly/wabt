@@ -1,5 +1,5 @@
-;;; ERROR: 1
 ;;; TOOL: run-gen-wasm
+;;; ERROR: 1
 section(TYPE) { foo }
 (;; STDERR ;;;
 Error running "gen-wasm.py":

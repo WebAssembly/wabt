@@ -1,5 +1,5 @@
-;;; ERROR: 1
 ;;; TOOL: run-objdump-gen-wasm
+;;; ERROR1: 1
 magic
 0xe 0 0 0
 (;; STDERR ;;;

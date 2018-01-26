@@ -1,5 +1,5 @@
-;;; ERROR: 1
 ;;; TOOL: run-gen-wasm
+;;; ERROR: 1
 magic
 version
 section(MEMORY) {

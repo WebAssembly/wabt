@@ -1,6 +1,6 @@
-;;; ERROR: 1
 ;;; TOOL: wat2wasm
 ;;; ENV: FORCE_COLOR=1
+;;; ERROR: 1
 (module
   (func badname (param i32) (result badtype)
     drop))
