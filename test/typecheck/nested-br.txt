@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
   (func (result i32)
     block $outer

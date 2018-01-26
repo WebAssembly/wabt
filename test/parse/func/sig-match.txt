@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
   (type $empty (func))
   (type $i_v (func (param i32)))

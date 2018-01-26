@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
   ;; unnamed
   (import "foo" "bar" (func (param i32) (result i64)))

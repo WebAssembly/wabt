@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;; This is a regression test to ensure we read and parse integer tokens ASAP.
 ;; Otherwise the memory that is used to store them may be reused. In this case,
 ;; the very long data segment strings were causing the strings that store the

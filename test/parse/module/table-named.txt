@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
   (func $f (param i32))
   (func $g (param i32 i64))
