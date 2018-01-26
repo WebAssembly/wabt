@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
  (table 0 anyfunc)
  (memory $0 17)

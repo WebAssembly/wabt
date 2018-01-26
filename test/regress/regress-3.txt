@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 ;;; NOTE: bug when calling function defined with type after call
 (module
   (type $t (func (result i32)))

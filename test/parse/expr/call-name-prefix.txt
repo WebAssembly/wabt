@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
   (func $foomore
     i32.const 0

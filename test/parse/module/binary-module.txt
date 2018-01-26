@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module binary
   "\00asm"            ;; magic
   "\01\00\00\00"      ;; version

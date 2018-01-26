@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
   (func
     i64.const 0

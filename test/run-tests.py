@@ -512,6 +512,9 @@ class TestInfo(object):
     self.expected_stdout = ''.join(stdout_lines)
     self.expected_stderr = ''.join(stderr_lines)
 
+    if not self.cmds:
+      raise Error('test has no commands')
+
   def CreateInputFile(self):
     gen_input_path = self.GetGeneratedInputFilename()
     gen_input_dir = os.path.dirname(gen_input_path)

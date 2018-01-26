@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
   (import "foo" "bar" (global i32))
   (memory 1)

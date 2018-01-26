@@ -1,3 +1,4 @@
+;;; TOOL: wat2wasm
 (module
   (global $g f32 (f32.const 1))
   (func
