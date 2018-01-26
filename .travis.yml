@@ -7,41 +7,41 @@ script:
   - scripts/travis-test.sh
 matrix:
   include:
-    - os: linux
-      dist: trusty
-      sudo: required
-      compiler: gcc
-    - os: linux
-      dist: trusty
-      sudo: required
-      compiler: gcc-i686
-    - os: linux
-      dist: trusty
-      sudo: required
-      compiler: clang
-    - os: linux
-      dist: trusty
-      sudo: required
-      compiler: clang
-      env: SANITIZER=asan
+#    - os: linux
+#      dist: trusty
+#      sudo: required
+#      compiler: gcc
+#    - os: linux
+#      dist: trusty
+#      sudo: required
+#      compiler: gcc-i686
+#    - os: linux
+#      dist: trusty
+#      sudo: required
+#      compiler: clang
+#    - os: linux
+#      dist: trusty
+#      sudo: required
+#      compiler: clang
+#      env: SANITIZER=asan
 # Disabled because MSAN seems to have stopped working on Travis.
 #    - os: linux
 #      dist: trusty
 #      sudo: required
 #      compiler: clang
 #      env: SANITIZER=msan
-    - os: linux
-      dist: trusty
-      sudo: required
-      compiler: clang
-      env: SANITIZER=lsan
-    - os: linux
-      dist: trusty
-      sudo: required
-      compiler: clang
-      env: SANITIZER=ubsan
-    - os: osx
-      compiler: clang
+#    - os: linux
+#      dist: trusty
+#      sudo: required
+#      compiler: clang
+#      env: SANITIZER=lsan
+#    - os: linux
+#      dist: trusty
+#      sudo: required
+#      compiler: clang
+#      env: SANITIZER=ubsan
+#    - os: osx
+#      compiler: clang
     # Build the .js outputs using emcc
     - &test-emcc
       stage: test
