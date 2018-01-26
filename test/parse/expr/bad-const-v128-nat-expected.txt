@@ -1,6 +1,6 @@
-;;; ERROR: 1
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-simd
+;;; ERROR: 1
 (module
   (func v128.const i32 0x12345678 -123 0x00000000 0xabcd3478))
 (module

@@ -1,5 +1,5 @@
-;;; ERROR: 1
 ;;; TOOL: run-gen-wasm
+;;; ERROR: 1
 ;; This test file contains two functions, but their names are listed in the
 ;; names section out of order (1 first, then 0) which is an error.
 magic
