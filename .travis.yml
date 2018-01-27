@@ -59,7 +59,7 @@ matrix:
       script:
       # run binaryen.js and wasm.js tests before and after building, so we see if the bundled
       # version is good too
-      - docker exec -it emscripten bash ./travis-emcc.sh
+      - docker exec -it emscripten bash scripts/travis-emcc.sh
 
   # Allow failures on the Mac bots. We'd rather not, but they are quite slow.
   allow_failures:
