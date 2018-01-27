@@ -123,14 +123,8 @@ TOOLS = {
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-gen-spec-js': [
-        ('RUN', 'test/run-gen-spec-js.py'),
-        ('ARGS', [
-                '%(in_file)s',
-                '--bindir=%(bindir)s',
-                '--no-error-cmdline',
-                '-o',
-                '%(out_dir)s',
-                ]),
+        ('RUN', '%(wast2json)s %(in_file)s -o %(temp_file)s.json'),
+        ('RUN', '%(gen_spec_js_py)s %(temp_file)s.json'),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-spec-wasm2c': [
@@ -904,6 +898,7 @@ def main(args):
   variables['test_dir'] = os.path.abspath(TEST_DIR)
   variables['bindir'] = options.bindir
   variables['gen_wasm_py'] = find_exe.GEN_WASM_PY
+  variables['gen_spec_js_py'] = find_exe.GEN_SPEC_JS_PY
   for exe_basename in find_exe.EXECUTABLES:
     exe_override = os.path.join(options.bindir, exe_basename)
     variables[exe_basename] = find_exe.FindExecutable(exe_basename,
