@@ -30,6 +30,7 @@ EXECUTABLES = [
 ]
 
 GEN_WASM_PY = os.path.join(SCRIPT_DIR, 'gen-wasm.py')
+GEN_SPEC_JS_PY = os.path.join(SCRIPT_DIR, 'gen-spec-js.py')
 
 
 def GetDefaultPath():
