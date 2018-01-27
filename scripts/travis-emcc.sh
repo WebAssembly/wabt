@@ -15,8 +15,7 @@
 # limitations under the License.
 #
 
-SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
-ROOT_DIR="$(dirname "${SCRIPT_DIR}")"
-BUILD_TYPES="debug release"
-BUILD_TYPES_UPPER="Debug Release"
-COMPILER="${CC:=clang}"
+set -e
+emconfigure cmake .
+emmake make -j 2
+
