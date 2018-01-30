@@ -1,5 +1,8 @@
-;;; TOOL: run-wasm-link
-;;; ARGS: --incremental -r
+;;; RUN: %(wast2json)s %(in_file)s --debug-names --no-check -r -o %(temp_file)s.json
+;;; RUN: %(wasm-link)s -r %(temp_file)s.0.wasm -o %(out_dir)s/linked.0.wasm
+;;; RUN: %(wasm-link)s -r %(out_dir)s/linked.0.wasm %(temp_file)s.1.wasm -o %(out_dir)s/linked.1.wasm
+;;; RUN: %(wasm-link)s -r %(out_dir)s/linked.1.wasm %(temp_file)s.2.wasm -o %(out_dir)s/linked.wasm
+;;; RUN: %(wasm-objdump)s -d -x -r -h %(out_dir)s/linked.wasm
 (module
   (import "__extern" "bar" (func (param i32) (result i32)))
   (func (param i32)

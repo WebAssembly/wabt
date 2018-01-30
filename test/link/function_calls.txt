@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; ARGS: -r
+;;; ARGS1: -r %(temp_file)s.0.wasm %(temp_file)s.1.wasm
 (module
   (import "__extern" "foo" (func $import0 (param i32) (result i32)))
   (import "__extern" "bar" (func $import1 (param i32) (result i32)))
