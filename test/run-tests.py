@@ -72,8 +72,10 @@ TOOLS = {
         ('VERBOSE-ARGS', ['-v']),
     ],
     'run-wasm-link': [
-        ('RUN', 'test/run-wasm-link.py'),
-        ('ARGS', ['%(in_file)s', '--bindir=%(bindir)s', '-o', '%(out_dir)s']),
+        ('RUN', '%(wast2json)s %(in_file)s --debug-names --no-check -r -o %(temp_file)s.json'),
+        # NOTE: wasm files must be passed in manually via ARGS1
+        ('RUN', '%(wasm-link)s -o %(out_dir)s/linked.wasm'),
+        ('RUN', '%(wasm-objdump)s -d -x -r -h %(out_dir)s/linked.wasm'),
         ('VERBOSE-ARGS', ['-v']),
     ],
     'run-roundtrip': [

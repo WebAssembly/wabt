@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; ARGS:
+;;; ARGS1: %(temp_file)s.0.wasm %(temp_file)s.1.wasm
 (module
   (memory 1 1)
   (data (i32.const 0) "foo")

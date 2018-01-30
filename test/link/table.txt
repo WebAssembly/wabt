@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; ARGS: -r
+;;; ARGS1: -r %(temp_file)s.0.wasm %(temp_file)s.1.wasm
 (module
   (func $func1 (param i32))
   (table anyfunc (elem $func1 $func1))

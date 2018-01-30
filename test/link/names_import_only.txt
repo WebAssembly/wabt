@@ -1,5 +1,5 @@
 ;;; TOOL: run-wasm-link
-;;; ARGS: --debug-names -r
+;;; ARGS1: -r %(temp_file)s.0.wasm
 (module
   (import "__extern" "baz" (func $import_func1))
 )
