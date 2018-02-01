@@ -19,7 +19,11 @@
 
 #include <cstddef>
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "src/apply-names.h"
 #include "src/binary-reader.h"
@@ -28,6 +32,7 @@
 #include "src/binary-writer-spec.h"
 #include "src/common.h"
 #include "src/error-handler.h"
+#include "src/filenames.h"
 #include "src/ir.h"
 #include "src/generate-names.h"
 #include "src/resolve-names.h"
@@ -36,6 +41,10 @@
 #include "src/wast-lexer.h"
 #include "src/wast-parser.h"
 #include "src/wat-writer.h"
+
+typedef std::unique_ptr<wabt::OutputBuffer> WabtOutputBufferPtr;
+typedef std::pair<std::string, WabtOutputBufferPtr>
+    WabtFilenameOutputBufferPair;
 
 struct WabtParseWatResult {
   wabt::Result result;
@@ -49,10 +58,16 @@ struct WabtReadBinaryResult {
 
 struct WabtWriteModuleResult {
   wabt::Result result;
-  std::unique_ptr<wabt::OutputBuffer> buffer;
-  std::unique_ptr<wabt::OutputBuffer> log_buffer;
+  WabtOutputBufferPtr buffer;
+  WabtOutputBufferPtr log_buffer;
 };
 
+struct WabtWriteScriptResult {
+  wabt::Result result;
+  WabtOutputBufferPtr json_buffer;
+  WabtOutputBufferPtr log_buffer;
+  std::vector<WabtFilenameOutputBufferPair> module_buffers;
+};
 
 struct WabtParseWastResult {
   wabt::Result result;
@@ -132,30 +147,43 @@ wabt::Result::Enum wabt_validate_script(
   return ValidateScript(lexer, script, error_handler, &options);
 }
 
-WabtWriteModuleResult* wabt_write_binary_spec_script(wabt::Script* script,
-                                                const char* source_filename,
-                                                const char* out_filename,
-                                                int log,
-                                                int canonicalize_lebs,
-                                                int relocatable,
-                                                int write_debug_names) {
+WabtWriteScriptResult* wabt_write_binary_spec_script(
+    wabt::Script* script,
+    const char* source_filename,
+    const char* out_filename,
+    int log,
+    int canonicalize_lebs,
+    int relocatable,
+    int write_debug_names) {
   wabt::MemoryStream log_stream;
-  wabt::WriteBinarySpecOptions options;
-  options.write_binary_options.canonicalize_lebs = canonicalize_lebs;
-  options.write_binary_options.relocatable = relocatable;
-  options.write_binary_options.write_debug_names = write_debug_names;
+  wabt::MemoryStream* log_stream_p = log ? &log_stream : nullptr;
 
-  wabt::MemoryStream stream(log ? &log_stream : nullptr);
-  options.log_stream = &stream;
-  options.json_filename = out_filename;
-  
-  WabtWriteModuleResult* result = new WabtWriteModuleResult();
-  result->result = WriteBinarySpecScript(script, source_filename,
-                                     &options);
+  wabt::WriteBinaryOptions options;
+  options.canonicalize_lebs = canonicalize_lebs;
+  options.relocatable = relocatable;
+  options.write_debug_names = write_debug_names;
+
+  std::vector<wabt::FilenameMemoryStreamPair> module_streams;
+  wabt::MemoryStream json_stream(log_stream_p);
+
+  std::string module_filename_noext =
+      wabt::StripExtension(out_filename ? out_filename : source_filename)
+          .to_string();
+
+  WabtWriteScriptResult* result = new WabtWriteScriptResult();
+  result->result = WriteBinarySpecScript(&json_stream, script, source_filename,
+                                         module_filename_noext, &options,
+                                         &module_streams, log_stream_p);
 
   if (result->result == wabt::Result::Ok) {
-    result->buffer = stream.ReleaseOutputBuffer();
+    result->json_buffer = json_stream.ReleaseOutputBuffer();
     result->log_buffer = log ? log_stream.ReleaseOutputBuffer() : nullptr;
+    std::transform(module_streams.begin(), module_streams.end(),
+                   std::back_inserter(result->module_buffers),
+                   [](wabt::FilenameMemoryStreamPair& pair) {
+                     return WabtFilenameOutputBufferPair(
+                         pair.filename, pair.stream->ReleaseOutputBuffer());
+                   });
   }
   return result;
 }
@@ -258,7 +286,8 @@ wabt::Result::Enum wabt_parse_wast_result_get_result(
   return result->result;
 }
 
-wabt::Script* wabt_parse_wast_result_release_module(WabtParseWastResult* result) {
+wabt::Script* wabt_parse_wast_result_release_module(
+    WabtParseWastResult* result) {
   return result->script.release();
 }
 
@@ -299,6 +328,43 @@ wabt::OutputBuffer* wabt_write_module_result_release_log_output_buffer(
 }
 
 void wabt_destroy_write_module_result(WabtWriteModuleResult* result) {
+  delete result;
+}
+
+// WabtWriteScriptResult
+wabt::Result::Enum wabt_write_script_result_get_result(
+    WabtWriteScriptResult* result) {
+  return result->result;
+}
+
+wabt::OutputBuffer* wabt_write_script_result_release_json_output_buffer(
+    WabtWriteScriptResult* result) {
+  return result->json_buffer.release();
+}
+
+wabt::OutputBuffer* wabt_write_script_result_release_log_output_buffer(
+    WabtWriteScriptResult* result) {
+  return result->log_buffer.release();
+}
+
+size_t wabt_write_script_result_get_module_count(
+    WabtWriteScriptResult* result) {
+  return result->module_buffers.size();
+}
+
+const char* wabt_write_script_result_get_module_filename(
+    WabtWriteScriptResult* result,
+    size_t index) {
+  return result->module_buffers[index].first.c_str();
+}
+
+wabt::OutputBuffer* wabt_write_script_result_release_module_output_buffer(
+    WabtWriteScriptResult* result,
+    size_t index) {
+  return result->module_buffers[index].second.release();
+}
+
+void wabt_destroy_write_script_result(WabtWriteScriptResult* result) {
   delete result;
 }
 
