@@ -130,6 +130,26 @@
     v128.const i32 0x00ffffff 0x0400ffff 0x00000003 0x00000004
     v128.const i32 0x00020001 0xfe000002 0x00000003 0x00000004
     i16x8.add_saturate_u)
+
+  ;; i8x16 saturating sub (signed and unsigned)
+  (func (export "i8x16_sub_saturate_signed_0") (result v128)
+    v128.const i32 0x00000001 0x0000007f 0x000000fe 0x00000080
+    v128.const i32 0x00000001 0x000000fe 0x0000007f 0x000000ff
+    i8x16.sub_saturate_s)
+  (func (export "i8x16_sub_saturate_unsigned_0") (result v128)
+    v128.const i32 0x00ff0001 0x0400007f 0x0000fffe 0x00000004
+    v128.const i32 0x00020001 0xfe00fffe 0x0000007f 0x00000004
+    i8x16.sub_saturate_u)
+
+  ;; i16x8 saturating sub (signed and unsigned)
+  (func (export "i16x8_sub_saturate_signed_0") (result v128)
+    v128.const i32 0x00000001 0x00007fff 0x0000fffe 0x00008000
+    v128.const i32 0x00000001 0x0000fffe 0x00007fff 0x0000fffe
+    i16x8.sub_saturate_s)
+  (func (export "i16x8_sub_saturate_unsigned_0") (result v128)
+    v128.const i32 0x00ffffff 0x0400ffff 0x00000003 0x00000004
+    v128.const i32 0x00020001 0xfe000002 0x00000003 0x00000004
+    i16x8.sub_saturate_u)
 )
 
 (;; STDOUT ;;;
@@ -159,4 +179,8 @@ i8x16_add_saturate_signed_0() => v128:0x00000002 0x0000007f 0x00000006 0x0000008
 i8x16_add_saturate_unsigned_0() => v128:0x00ff0002 0xff000004 0x00000006 0x00000008
 i16x8_add_saturate_signed_0() => v128:0x00000002 0x00007fff 0x00000006 0x00008000
 i16x8_add_saturate_unsigned_0() => v128:0x0101ffff 0xffffffff 0x00000006 0x00000008
+i8x16_sub_saturate_signed_0() => v128:0x00000000 0x0000007f 0x00000080 0x00000081
+i8x16_sub_saturate_unsigned_0() => v128:0x00fd0000 0x00000000 0x0000ff7f 0x00000000
+i16x8_sub_saturate_signed_0() => v128:0x00000000 0x00007fff 0x00008000 0x00008002
+i16x8_sub_saturate_unsigned_0() => v128:0x00fdfffe 0x0000fffd 0x00000000 0x00000000
 ;;; STDOUT ;;)

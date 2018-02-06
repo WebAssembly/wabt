@@ -927,6 +927,21 @@ ValueTypeRep<T> AddSaturate(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
   }
 }
 
+template <typename T, typename R>
+ValueTypeRep<T> SubSaturate(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
+  T max = std::numeric_limits<R>::max();
+  T min = std::numeric_limits<R>::min(); 
+  T result = static_cast<T>(lhs_rep) - static_cast<T>(rhs_rep);
+
+  if(result < min) {
+    return ToRep(min);
+  } else if (result > max) {
+    return ToRep(max);
+  } else {
+    return ToRep(result);
+  }
+}
+
 // {i,f}{32,64}.sub
 template <typename T>
 ValueTypeRep<T> Sub(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
@@ -2424,6 +2439,22 @@ Result Thread::Run(int num_instructions) {
       case Opcode::I16X8AddSaturateU:
         CHECK_TRAP(SimdBinop<v128, uint16_t>(AddSaturate<uint32_t, uint16_t>));
         break;
+
+      case Opcode::I8X16SubSaturateS:
+        CHECK_TRAP(SimdBinop<v128, int8_t>(SubSaturate<int32_t, int8_t>));
+        break;
+
+      case Opcode::I8X16SubSaturateU:
+        CHECK_TRAP(SimdBinop<v128, uint8_t>(SubSaturate<int32_t, uint8_t>));
+        break;
+
+      case Opcode::I16X8SubSaturateS:
+        CHECK_TRAP(SimdBinop<v128, int16_t>(SubSaturate<int32_t, int16_t>));
+        break;
+
+      case Opcode::I16X8SubSaturateU:
+        CHECK_TRAP(SimdBinop<v128, uint16_t>(SubSaturate<int32_t, uint16_t>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -2914,7 +2945,11 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I8X16AddSaturateS: 
     case Opcode::I8X16AddSaturateU: 
     case Opcode::I16X8AddSaturateS: 
-    case Opcode::I16X8AddSaturateU: { 
+    case Opcode::I16X8AddSaturateU: 
+    case Opcode::I8X16SubSaturateS: 
+    case Opcode::I8X16SubSaturateU: 
+    case Opcode::I16X8SubSaturateS: 
+    case Opcode::I16X8SubSaturateU: { 
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n", opcode.GetName(), Pick(2).v128_bits.v[0],
                        Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],Pick(1).v128_bits.v[0],
                        Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
@@ -3233,6 +3268,10 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I8X16AddSaturateU:
       case Opcode::I16X8AddSaturateS:
       case Opcode::I16X8AddSaturateU:
+      case Opcode::I8X16SubSaturateS:
+      case Opcode::I8X16SubSaturateU:
+      case Opcode::I16X8SubSaturateS:
+      case Opcode::I16X8SubSaturateU:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
