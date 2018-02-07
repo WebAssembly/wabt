@@ -543,6 +543,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i8x16.sub_saturate_u" { RETURN_OPCODE(Binary, I8X16SubSaturateU); }
       <i> "i16x8.sub_saturate_s" { RETURN_OPCODE(Binary, I16X8SubSaturateS); }
       <i> "i16x8.sub_saturate_u" { RETURN_OPCODE(Binary, I16X8SubSaturateU); }
+      <i> "i8x16.shl"            { RETURN_OPCODE(Binary, I8X16Shl); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
