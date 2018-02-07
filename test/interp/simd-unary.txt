@@ -20,10 +20,16 @@
   (func (export "i64x2_neg_0") (result v128)
     v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
     i64x2.neg)
+
+  ;; v128 not
+  (func (export "v128_not_0") (result v128)
+    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    v128.not)
 )
 (;; STDOUT ;;;
 i8x16_neg_0() => v128:0x000000ff 0x000000fe 0x000000fd 0x000000fc
 i16x8_neg_0() => v128:0x00000001 0x00008001 0x0000fffd 0x0000fffc
 i32x4_neg_0() => v128:0xffffffff 0xfffffffe 0xfffffffd 0xfffffffc
 i64x2_neg_0() => v128:0xffffffff 0xfffffffd 0xfffffffd 0xfffffffb
+v128_not_0() => v128:0xff00fffe 0xffaafffd 0xfffffffc 0xfffffffb
 ;;; STDOUT ;;)
