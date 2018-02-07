@@ -1,0 +1,17 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-simd
+(module
+  ;; i8x16 shl
+  (func (export "i8x16_shl_0") (result v128)
+    v128.const i32 0xff000001 0xe0000002 0x00000003 0x00000004
+    i32.const 3
+    i8x16.shl)
+  (func (export "i8x16_shl_1") (result v128)
+    v128.const i32 0xff000001 0xe0000002 0x00000003 0x00000004
+    i32.const 11
+    i8x16.shl)
+)
+(;; STDOUT ;;;
+i8x16_shl_0() => v128:0xf8000008 0x00000010 0x00000018 0x00000020
+i8x16_shl_1() => v128:0xf8000008 0x00000010 0x00000018 0x00000020
+;;; STDOUT ;;)
