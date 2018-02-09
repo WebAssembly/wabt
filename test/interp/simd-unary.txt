@@ -25,6 +25,70 @@
   (func (export "v128_not_0") (result v128)
     v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
     v128.not)
+
+  ;; i8x16 any_true
+  (func (export "i8x16_any_true_0") (result i32)
+    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    i8x16.any_true)
+  (func (export "i8x16_any_true_1") (result i32)
+    v128.const i32 0x00000000 0x00000000 0x00000000 0x00000000
+    i8x16.any_true)
+
+  ;; i16x8 any_true
+  (func (export "i16x8_any_true_0") (result i32)
+    v128.const i32 0x00000000 0x00000000 0x00000000 0x00000000
+    i16x8.any_true)
+  (func (export "i16x8_any_true_1") (result i32)
+    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    i16x8.any_true)
+
+  ;; i32x4 any_true
+  (func (export "i32x4_any_true_0") (result i32)
+    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    i32x4.any_true)
+  (func (export "i32x4_any_true_1") (result i32)
+    v128.const i32 0x00000000 0x00000000 0x00000000 0x00000000
+    i32x4.any_true)
+
+  ;; i64x2 any_true
+  (func (export "i64x2_any_true_0") (result i32)
+    v128.const i32 0x00000000 0x00000000 0x00000000 0x00000000
+    i64x2.any_true)
+  (func (export "i64x2_any_true_1") (result i32)
+    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    i64x2.any_true)
+
+  ;; i8x16 all_true
+  (func (export "i8x16_all_true_0") (result i32)
+    v128.const i32 0x01020304 0x01050706 0x10020403 0x20103004
+    i8x16.all_true)
+  (func (export "i8x16_all_true_1") (result i32)
+    v128.const i32 0x00000001 0x00000200 0x00030000 0x00000000
+    i8x16.all_true)
+
+  ;; i16x8 all_true
+  (func (export "i16x8_all_true_0") (result i32)
+    v128.const i32 0x00040004 0x00030003 0x00020002 0x00010001
+    i16x8.all_true)
+  (func (export "i16x8_all_true_1") (result i32)
+    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    i16x8.all_true)
+
+  ;; i32x4 all_true
+  (func (export "i32x4_all_true_0") (result i32)
+    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    i32x4.all_true)
+  (func (export "i32x4_all_true_1") (result i32)
+    v128.const i32 0x01010101 0x000000ff 0x000ff000 0x00000000
+    i32x4.all_true)
+
+  ;; i64x2 all_true
+  (func (export "i64x2_all_true_0") (result i32)
+    v128.const i32 0x00000001 0x00000000 0x00000001 0x00000000
+    i64x2.all_true)
+  (func (export "i64x2_all_true_1") (result i32)
+    v128.const i32 0x00ff0001 0x00550002 0x00000000 0x00000000
+    i64x2.all_true)
 )
 (;; STDOUT ;;;
 i8x16_neg_0() => v128:0x000000ff 0x000000fe 0x000000fd 0x000000fc
@@ -32,4 +96,20 @@ i16x8_neg_0() => v128:0x00000001 0x00008001 0x0000fffd 0x0000fffc
 i32x4_neg_0() => v128:0xffffffff 0xfffffffe 0xfffffffd 0xfffffffc
 i64x2_neg_0() => v128:0xffffffff 0xfffffffd 0xfffffffd 0xfffffffb
 v128_not_0() => v128:0xff00fffe 0xffaafffd 0xfffffffc 0xfffffffb
+i8x16_any_true_0() => i32:1
+i8x16_any_true_1() => i32:0
+i16x8_any_true_0() => i32:0
+i16x8_any_true_1() => i32:1
+i32x4_any_true_0() => i32:1
+i32x4_any_true_1() => i32:0
+i64x2_any_true_0() => i32:0
+i64x2_any_true_1() => i32:1
+i8x16_all_true_0() => i32:1
+i8x16_all_true_1() => i32:0
+i16x8_all_true_0() => i32:1
+i16x8_all_true_1() => i32:0
+i32x4_all_true_0() => i32:1
+i32x4_all_true_1() => i32:0
+i64x2_all_true_0() => i32:1
+i64x2_all_true_1() => i32:0
 ;;; STDOUT ;;)

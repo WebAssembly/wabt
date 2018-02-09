@@ -942,6 +942,28 @@ ValueTypeRep<T> SubSaturate(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
   }
 }
 
+template <typename T, typename L>
+int32_t SimdIsLaneTrue(ValueTypeRep<T> value, int32_t true_cond ) {
+  int true_count = 0;
+
+  // Calculate how many Lanes according to input lane data type.
+  constexpr int32_t lanes = sizeof(T)/sizeof(L);
+
+  // Define SIMD data array for Simd Lanes.
+  L simd_data_0[lanes];
+
+  // Convert intput SIMD data to array.
+  memcpy(simd_data_0, &value, sizeof(T));
+
+  // Constuct the Simd value by Lane data and Lane nums.
+  for(int32_t i = 0; i < lanes; i++) {
+    if(simd_data_0[i] != 0)
+      true_count++;
+  }
+
+  return (true_count >= true_cond) ? 1 : 0;
+}
+
 // {i,f}{32,64}.sub
 template <typename T>
 ValueTypeRep<T> Sub(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
@@ -2593,6 +2615,54 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(SimdBinop<v128, uint64_t>(IntOr<uint64_t>));
         break;
       }
+
+      case Opcode::I8X16AnyTrue: {
+        v128 value  = PopRep<v128>();
+        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint8_t>(value, 1)));
+        break;
+        }
+
+      case Opcode::I16X8AnyTrue: {
+        v128 value  = PopRep<v128>();
+        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint16_t>(value, 1)));
+        break;
+        }
+
+      case Opcode::I32X4AnyTrue: {
+        v128 value  = PopRep<v128>();
+        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint32_t>(value, 1)));
+        break;
+        }
+
+      case Opcode::I64X2AnyTrue: {
+        v128 value  = PopRep<v128>();
+        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint64_t>(value, 1)));
+        break;
+        }
+
+      case Opcode::I8X16AllTrue: {
+        v128 value  = PopRep<v128>();
+        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint8_t>(value, 16)));
+        break;
+        }
+
+      case Opcode::I16X8AllTrue: {
+        v128 value  = PopRep<v128>();
+        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint16_t>(value, 8)));
+        break;
+        }
+
+      case Opcode::I32X4AllTrue: {
+        v128 value  = PopRep<v128>();
+        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint32_t>(value, 4)));
+        break;
+        }
+
+      case Opcode::I64X2AllTrue: {
+        v128 value  = PopRep<v128>();
+        CHECK_TRAP(Push<int32_t>(SimdIsLaneTrue<v128, uint64_t>(value, 2)));
+        break;
+        }
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -3064,7 +3134,15 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I16X8Neg:
     case Opcode::I32X4Neg:
     case Opcode::I64X2Neg:
-    case Opcode::V128Not: {
+    case Opcode::V128Not:
+    case Opcode::I8X16AnyTrue:
+    case Opcode::I16X8AnyTrue:
+    case Opcode::I32X4AnyTrue:
+    case Opcode::I64X2AnyTrue:
+    case Opcode::I8X16AllTrue:
+    case Opcode::I16X8AllTrue:
+    case Opcode::I32X4AllTrue:
+    case Opcode::I64X2AllTrue: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
                                 Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -3532,6 +3610,14 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I32X4Neg:
       case Opcode::I64X2Neg:
       case Opcode::V128Not:
+      case Opcode::I8X16AnyTrue:
+      case Opcode::I16X8AnyTrue:
+      case Opcode::I32X4AnyTrue:
+      case Opcode::I64X2AnyTrue:
+      case Opcode::I8X16AllTrue:
+      case Opcode::I16X8AllTrue:
+      case Opcode::I32X4AllTrue:
+      case Opcode::I64X2AllTrue:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
