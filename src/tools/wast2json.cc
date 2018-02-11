@@ -129,10 +129,10 @@ int ProgramMain(int argc, char** argv) {
         json_stream.WriteToFile(s_outfile);
       }
 
-      std::for_each(module_streams.begin(), module_streams.end(),
-                    [](FilenameMemoryStreamPair& pair) {
-                      pair.stream->WriteToFile(pair.filename);
-                    });
+      for (auto iter = module_streams.begin(); iter != module_streams.end();
+           ++iter) {
+        iter->stream->WriteToFile(iter->filename);
+      }
     }
   }
 
