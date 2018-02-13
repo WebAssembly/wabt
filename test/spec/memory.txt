@@ -62,7 +62,7 @@ out/test/spec/memory.wast:105: assert_unlinkable passed:
   0000016: error: OnDataSegmentData callback failed
 out/test/spec/memory.wast:114: assert_unlinkable passed:
   error: data segment is out of bounds: [666, 667) >= max value 0
-  000002c: error: OnDataSegmentData callback failed
+  0000030: error: OnDataSegmentData callback failed
 out/test/spec/memory.wast:131: assert_invalid passed:
   000000e: error: memory initial size must be <= max size
 out/test/spec/memory.wast:135: assert_invalid passed:

@@ -1,7 +1,7 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/names.wast
 (;; STDOUT ;;;
-spectest.print(42)
-spectest.print(123)
+spectest.print_i32(42)
+spectest.print_i32(123)
 475/475 tests passed.
 ;;; STDOUT ;;)

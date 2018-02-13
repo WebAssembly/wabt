@@ -13,8 +13,8 @@ inc() =>
 inc() =>
 inc() =>
 inc() =>
-called host spectest.print(i32:1) =>
-called host spectest.print(i32:2) =>
+called host spectest.print_i32(i32:1) =>
+called host spectest.print_i32(i32:2) =>
 called host spectest.print() =>
 14/14 tests passed.
 ;;; STDOUT ;;)

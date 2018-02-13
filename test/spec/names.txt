@@ -1,7 +1,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/names.wast
 (;; STDOUT ;;;
-called host spectest.print(i32:42) =>
-called host spectest.print(i32:123) =>
+called host spectest.print_i32(i32:42) =>
+called host spectest.print_i32(i32:123) =>
 475/475 tests passed.
 ;;; STDOUT ;;)

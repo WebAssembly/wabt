@@ -1,7 +1,7 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/func_ptrs.wast
 (;; STDOUT ;;;
-called host spectest.print(i32:83) =>
+called host spectest.print_i32(i32:83) =>
 four(i32:83) =>
 out/test/spec/func_ptrs.wast:32: assert_invalid passed:
   000000b: error: elem section without table section
@@ -16,6 +16,6 @@ out/test/spec/func_ptrs.wast:44: assert_invalid passed:
 out/test/spec/func_ptrs.wast:48: assert_invalid passed:
   000000c: error: invalid function signature index: 42
 out/test/spec/func_ptrs.wast:49: assert_invalid passed:
-  000001c: error: invalid import signature index
+  0000020: error: invalid import signature index
 33/33 tests passed.
 ;;; STDOUT ;;)

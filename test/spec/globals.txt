@@ -41,9 +41,9 @@ out/test/spec/globals.wast:120: assert_invalid passed:
   error: initializer expression can only reference an imported global
   000000f: error: OnInitExprGetGlobalExpr callback failed
 out/test/spec/globals.wast:128: assert_malformed passed:
-  0000022: error: global mutability must be 0 or 1
+  0000019: error: unable to read string: import field name
 out/test/spec/globals.wast:141: assert_malformed passed:
-  0000022: error: global mutability must be 0 or 1
+  0000019: error: unable to read string: import field name
 out/test/spec/globals.wast:158: assert_malformed passed:
   0000011: error: global mutability must be 0 or 1
 out/test/spec/globals.wast:170: assert_malformed passed:
