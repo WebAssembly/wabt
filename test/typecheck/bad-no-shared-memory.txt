@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module (memory 1 1 shared))
+(;; STDERR ;;;
+out/test/typecheck/bad-no-shared-memory.txt:3:10: error: memories may not be shared
+(module (memory 1 1 shared))
+         ^^^^^^
+;;; STDERR ;;)
