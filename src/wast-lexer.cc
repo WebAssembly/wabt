@@ -558,6 +558,10 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i32x4.shr_u"          { RETURN_OPCODE(Binary, I32X4ShrU); }
       <i> "i64x2.shr_s"          { RETURN_OPCODE(Binary, I64X2ShrS); }
       <i> "i64x2.shr_u"          { RETURN_OPCODE(Binary, I64X2ShrU); }
+      <i> "v128.and"             { RETURN_OPCODE(Binary, V128And); }
+      <i> "v128.or"              { RETURN_OPCODE(Binary, V128Or); }
+      <i> "v128.xor"             { RETURN_OPCODE(Binary, V128Xor); }
+      <i> "v128.not"             { RETURN_OPCODE(Unary, V128Not); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
