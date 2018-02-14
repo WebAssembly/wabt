@@ -2487,6 +2487,70 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(SimdBinop<v128, uint64_t>(IntShl<uint64_t>));
         break;
       }
+
+      case Opcode::I8X16ShrS: {
+        uint32_t shift_count = Pop<uint32_t>();
+        shift_count = shift_count % 8;
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(shift_count)));
+        CHECK_TRAP(SimdBinop<v128, int8_t>(IntShr<int32_t>));
+        break;
+      }
+
+      case Opcode::I8X16ShrU: {
+        uint32_t shift_count = Pop<uint32_t>();
+        shift_count = shift_count % 8;
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(shift_count)));
+        CHECK_TRAP(SimdBinop<v128, uint8_t>(IntShr<uint32_t>));
+        break;
+      }
+
+      case Opcode::I16X8ShrS: {
+        uint32_t shift_count = Pop<uint32_t>();
+        shift_count = shift_count % 16;
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint16_t>(shift_count)));
+        CHECK_TRAP(SimdBinop<v128, int16_t>(IntShr<int32_t>));
+        break;
+      }
+
+      case Opcode::I16X8ShrU: {
+        uint32_t shift_count = Pop<uint32_t>();
+        shift_count = shift_count % 16;
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint16_t>(shift_count)));
+        CHECK_TRAP(SimdBinop<v128, uint16_t>(IntShr<uint32_t>));
+        break;
+      }
+
+      case Opcode::I32X4ShrS: {
+        uint32_t shift_count = Pop<uint32_t>();
+        shift_count = shift_count % 32;
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint32_t>(shift_count)));
+        CHECK_TRAP(SimdBinop<v128, int32_t>(IntShr<int32_t>));
+        break;
+      }
+
+      case Opcode::I32X4ShrU: {
+        uint32_t shift_count = Pop<uint32_t>();
+        shift_count = shift_count % 32;
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint32_t>(shift_count)));
+        CHECK_TRAP(SimdBinop<v128, uint32_t>(IntShr<uint32_t>));
+        break;
+      }
+
+      case Opcode::I64X2ShrS: {
+        uint32_t shift_count = Pop<uint32_t>();
+        shift_count = shift_count % 64;
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint64_t>(shift_count)));
+        CHECK_TRAP(SimdBinop<v128, int64_t>(IntShr<int64_t>));
+        break;
+      }
+
+      case Opcode::I64X2ShrU: {
+        uint32_t shift_count = Pop<uint32_t>();
+        shift_count = shift_count % 64;
+        CHECK_TRAP(Push<v128>(SimdSplat<v128, uint64_t>(shift_count)));
+        CHECK_TRAP(SimdBinop<v128, uint64_t>(IntShr<uint64_t>));
+        break;
+      }
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -2988,10 +3052,18 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::I8X16Shl: 
-    case Opcode::I16X8Shl: 
-    case Opcode::I32X4Shl: 
-    case Opcode::I64X2Shl: { 
+    case Opcode::I8X16Shl:
+    case Opcode::I16X8Shl:
+    case Opcode::I32X4Shl:
+    case Opcode::I64X2Shl: 
+    case Opcode::I8X16ShrS:
+    case Opcode::I8X16ShrU:
+    case Opcode::I16X8ShrS:
+    case Opcode::I16X8ShrU:
+    case Opcode::I32X4ShrS:
+    case Opcode::I32X4ShrU:
+    case Opcode::I64X2ShrS:
+    case Opcode::I64X2ShrU: { 
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x\n", opcode.GetName(),
                      Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
                      Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
@@ -3319,6 +3391,14 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I16X8Shl:
       case Opcode::I32X4Shl:
       case Opcode::I64X2Shl:
+      case Opcode::I8X16ShrS:
+      case Opcode::I8X16ShrU:
+      case Opcode::I16X8ShrS:
+      case Opcode::I16X8ShrU:
+      case Opcode::I32X4ShrS:
+      case Opcode::I32X4ShrU:
+      case Opcode::I64X2ShrS:
+      case Opcode::I64X2ShrU:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
