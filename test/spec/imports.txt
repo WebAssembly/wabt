@@ -1,16 +1,16 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/imports.wast
 (;; STDOUT ;;;
-called host spectest.print(i32:13) =>
-called host spectest.print(i32:14, f32:42.000000) =>
-called host spectest.print(i32:13) =>
-called host spectest.print(i32:13) =>
-called host spectest.print(f32:13.000000) =>
-called host spectest.print(i32:13) =>
-called host spectest.print(f64:25.000000, f64:53.000000) =>
-called host spectest.print(f64:24.000000) =>
-called host spectest.print(f64:24.000000) =>
-called host spectest.print(f64:24.000000) =>
+called host spectest.print_i32(i32:13) =>
+called host spectest.print_i32_f32(i32:14, f32:42.000000) =>
+called host spectest.print_i32(i32:13) =>
+called host spectest.print_i32(i32:13) =>
+called host spectest.print_f32(f32:13.000000) =>
+called host spectest.print_i32(i32:13) =>
+called host spectest.print_f64_f64(f64:25.000000, f64:53.000000) =>
+called host spectest.print_f64(f64:24.000000) =>
+called host spectest.print_f64(f64:24.000000) =>
+called host spectest.print_f64(f64:24.000000) =>
 out/test/spec/imports.wast:99: assert_unlinkable passed:
   error: unknown module field "unknown"
   0000020: error: OnImportFunc callback failed
@@ -75,8 +75,8 @@ out/test/spec/imports.wast:181: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind func, not memory
   0000025: error: OnImportFunc callback failed
 out/test/spec/imports.wast:185: assert_unlinkable passed:
-  error: unknown host function import "spectest.global"
-  0000023: error: OnImportFunc callback failed
+  error: unknown host function import "spectest.global_i32"
+  0000027: error: OnImportFunc callback failed
 out/test/spec/imports.wast:189: assert_unlinkable passed:
   error: unknown host function import "spectest.table"
   0000022: error: OnImportFunc callback failed
@@ -99,8 +99,8 @@ out/test/spec/imports.wast:244: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind global, not memory
   0000020: error: OnImportGlobal callback failed
 out/test/spec/imports.wast:248: assert_unlinkable passed:
-  error: unknown host global import "spectest.print"
-  000001d: error: OnImportGlobal callback failed
+  error: unknown host global import "spectest.print_i32"
+  0000021: error: OnImportGlobal callback failed
 out/test/spec/imports.wast:252: assert_unlinkable passed:
   error: unknown host global import "spectest.table"
   000001d: error: OnImportGlobal callback failed
@@ -143,8 +143,8 @@ out/test/spec/imports.wast:361: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind table, not memory
   0000021: error: OnImportTable callback failed
 out/test/spec/imports.wast:365: assert_unlinkable passed:
-  error: unknown host table import "spectest.print"
-  000001e: error: OnImportTable callback failed
+  error: unknown host table import "spectest.print_i32"
+  0000022: error: OnImportTable callback failed
 out/test/spec/imports.wast:397: assert_invalid passed:
   error: unknown import module ""
   0000010: error: OnImportMemory callback failed
@@ -181,11 +181,11 @@ out/test/spec/imports.wast:454: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind memory, not table
   0000020: error: OnImportMemory callback failed
 out/test/spec/imports.wast:458: assert_unlinkable passed:
-  error: unknown host memory import "spectest.print"
-  000001d: error: OnImportMemory callback failed
+  error: unknown host memory import "spectest.print_i32"
+  0000021: error: OnImportMemory callback failed
 out/test/spec/imports.wast:462: assert_unlinkable passed:
-  error: unknown host memory import "spectest.global"
-  000001e: error: OnImportMemory callback failed
+  error: unknown host memory import "spectest.global_i32"
+  0000022: error: OnImportMemory callback failed
 out/test/spec/imports.wast:466: assert_unlinkable passed:
   error: unknown host memory import "spectest.table"
   000001d: error: OnImportMemory callback failed
@@ -259,5 +259,8 @@ out/test/spec/imports.wast:556: assert_malformed passed:
   out/test/spec/imports/imports.114.wat:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (memory 1 2))
               ^^^^^^
-107/107 tests passed.
+out/test/spec/imports.wast:564: assert_unlinkable passed:
+  error: unknown import module "not wasm"
+  000004d: error: OnImportFunc callback failed
+108/108 tests passed.
 ;;; STDOUT ;;)

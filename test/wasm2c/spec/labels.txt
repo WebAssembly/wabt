@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDOUT ;;;
-24/24 tests passed.
+25/25 tests passed.
 ;;; STDOUT ;;)
