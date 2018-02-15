@@ -302,7 +302,9 @@ bool BinaryReaderIR::OnError(const char* message) {
 }
 
 Result BinaryReaderIR::OnTypeCount(Index count) {
+  WABT_TRY
   module_->func_types.reserve(count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -320,7 +322,9 @@ Result BinaryReaderIR::OnType(Index index,
 }
 
 Result BinaryReaderIR::OnImportCount(Index count) {
+  WABT_TRY
   module_->imports.reserve(count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -400,7 +404,9 @@ Result BinaryReaderIR::OnImportException(Index import_index,
 }
 
 Result BinaryReaderIR::OnFunctionCount(Index count) {
+  WABT_TRY
   module_->funcs.reserve(module_->num_func_imports + count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -415,7 +421,9 @@ Result BinaryReaderIR::OnFunction(Index index, Index sig_index) {
 }
 
 Result BinaryReaderIR::OnTableCount(Index count) {
+  WABT_TRY
   module_->tables.reserve(module_->num_table_imports + count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -430,7 +438,9 @@ Result BinaryReaderIR::OnTable(Index index,
 }
 
 Result BinaryReaderIR::OnMemoryCount(Index count) {
+  WABT_TRY
   module_->memories.reserve(module_->num_memory_imports + count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -443,7 +453,9 @@ Result BinaryReaderIR::OnMemory(Index index, const Limits* page_limits) {
 }
 
 Result BinaryReaderIR::OnGlobalCount(Index count) {
+  WABT_TRY
   module_->globals.reserve(module_->num_global_imports + count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -469,7 +481,9 @@ Result BinaryReaderIR::EndGlobalInitExpr(Index index) {
 }
 
 Result BinaryReaderIR::OnExportCount(Index count) {
+  WABT_TRY
   module_->exports.reserve(count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -523,7 +537,9 @@ Result BinaryReaderIR::BeginFunctionBody(Index index) {
 
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
   TypeVector& types = current_func_->local_types;
+  WABT_TRY
   types.reserve(types.size() + count);
+  WABT_CATCH_BAD_ALLOC
   for (size_t i = 0; i < count; ++i)
     types.push_back(type);
   return Result::Ok;
@@ -802,7 +818,9 @@ Result BinaryReaderIR::EndFunctionBody(Index index) {
 }
 
 Result BinaryReaderIR::OnElemSegmentCount(Index count) {
+  WABT_TRY
   module_->elem_segments.reserve(count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -830,7 +848,9 @@ Result BinaryReaderIR::OnElemSegmentFunctionIndexCount(Index index,
                                                        Index count) {
   assert(index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[index];
+  WABT_TRY
   segment->vars.reserve(count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
@@ -845,7 +865,9 @@ Result BinaryReaderIR::OnElemSegmentFunctionIndex(Index segment_index,
 }
 
 Result BinaryReaderIR::OnDataSegmentCount(Index count) {
+  WABT_TRY
   module_->data_segments.reserve(count);
+  WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
 
