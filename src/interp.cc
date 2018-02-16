@@ -2895,6 +2895,14 @@ Result Thread::Run(int num_instructions) {
       case Opcode::F64X2Mul:
         CHECK_TRAP(SimdBinop<v128, int64_t>(Mul<double>));
         break;
+
+      case Opcode::F32X4Sqrt:
+        CHECK_TRAP(SimdUnop<v128, int32_t>(FloatSqrt<float>));
+        break;
+
+      case Opcode::F64X2Sqrt:
+        CHECK_TRAP(SimdUnop<v128, int64_t>(FloatSqrt<double>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -3378,7 +3386,9 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32X4Neg:
     case Opcode::F64X2Neg:
     case Opcode::F32X4Abs:
-    case Opcode::F64X2Abs: {
+    case Opcode::F64X2Abs:
+    case Opcode::F32X4Sqrt:
+    case Opcode::F64X2Sqrt: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
                                 Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -3966,6 +3976,8 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64X2Neg:
       case Opcode::F32X4Abs:
       case Opcode::F64X2Abs:
+      case Opcode::F32X4Sqrt:
+      case Opcode::F64X2Sqrt:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
