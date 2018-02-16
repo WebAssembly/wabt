@@ -2879,6 +2879,22 @@ Result Thread::Run(int num_instructions) {
       case Opcode::F64X2Sub:
         CHECK_TRAP(SimdBinop<v128, int64_t>(Sub<double>));
         break;
+
+      case Opcode::F32X4Div:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(FloatDiv<float>));
+        break;
+
+      case Opcode::F64X2Div:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(FloatDiv<double>));
+        break;
+
+      case Opcode::F32X4Mul:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Mul<float>));
+        break;
+
+      case Opcode::F64X2Mul:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Mul<double>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -3448,7 +3464,11 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32X4Add:
     case Opcode::F64X2Add:
     case Opcode::F32X4Sub:
-    case Opcode::F64X2Sub: {
+    case Opcode::F64X2Sub:
+    case Opcode::F32X4Div:
+    case Opcode::F64X2Div:
+    case Opcode::F32X4Mul:
+    case Opcode::F64X2Mul: {
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n", opcode.GetName(), Pick(2).v128_bits.v[0],
                        Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],Pick(1).v128_bits.v[0],
                        Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
@@ -3856,6 +3876,10 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64X2Add:
       case Opcode::F32X4Sub:
       case Opcode::F64X2Sub:
+      case Opcode::F32X4Div:
+      case Opcode::F64X2Div:
+      case Opcode::F32X4Mul:
+      case Opcode::F64X2Mul:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 

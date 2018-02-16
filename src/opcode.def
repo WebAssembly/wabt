@@ -345,6 +345,10 @@ WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x7a,  F32X4Add, "f32x4.add")
 WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x7b,  F64X2Add, "f64x2.add")
 WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x7c,  F32X4Sub, "f32x4.sub")
 WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x7d,  F64X2Sub, "f64x2.sub")
+WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x7e,  F32X4Div, "f32x4.div")
+WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x7f,  F64X2Div, "f64x2.div")
+WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x80,  F32X4Mul, "f32x4.mul")
+WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x81,  F64X2Mul, "f64x2.mul")
 
 
 WABT_OPCODE(I32, I32, I32, ___, 4, 0xfe,  0x00, AtomicWake, "atomic.wake")
