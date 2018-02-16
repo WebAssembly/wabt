@@ -177,6 +177,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTeeLocalExpr(Index local_index) override;
   Result OnTryExpr(Index num_types, Type* sig_types) override;
   Result OnUnaryExpr(Opcode opcode) override;
+  Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
 
@@ -805,6 +806,10 @@ Result BinaryReaderIR::OnCatchAllExpr() {
 
 Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {
   return AppendExpr(MakeUnique<UnaryExpr>(opcode));
+}
+
+Result BinaryReaderIR::OnTernaryExpr(Opcode opcode) {
+  return AppendExpr(MakeUnique<TernaryExpr>(opcode));
 }
 
 Result BinaryReaderIR::OnUnreachableExpr() {

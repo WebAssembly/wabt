@@ -2573,6 +2573,26 @@ Result Thread::Run(int num_instructions) {
       case Opcode::V128Not:
         CHECK_TRAP(SimdUnop<v128, uint64_t>(IntNot<uint64_t>));
         break;
+
+      case Opcode::V128BitSelect: {
+        // Follow Wasm Simd spec to compute V128BitSelect:
+        // v128.or(v128.and(v1, c), v128.and(v2, v128.not(c)))
+        v128 c_mask = PopRep<v128>();
+        v128 v2  = PopRep<v128>();
+        v128 v1  = PopRep<v128>();
+        // 1. v128.and(v1, c)
+        CHECK_TRAP(Push<v128>(v1));
+        CHECK_TRAP(Push<v128>(c_mask));
+        CHECK_TRAP(SimdBinop<v128, uint64_t>(IntAnd<uint64_t>));
+        // 2. v128.and(v2, v128.not(c))
+        CHECK_TRAP(Push<v128>(v2));
+        CHECK_TRAP(Push<v128>(c_mask));
+        CHECK_TRAP(SimdUnop<v128, uint64_t>(IntNot<uint64_t>));
+        CHECK_TRAP(SimdBinop<v128, uint64_t>(IntAnd<uint64_t>));
+        // 3. v128.or( 1 , 2)
+        CHECK_TRAP(SimdBinop<v128, uint64_t>(IntOr<uint64_t>));
+        break;
+      }
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -3050,6 +3070,15 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
+    case Opcode::V128BitSelect:
+      stream->Writef("%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x\n",
+                     opcode.GetName(), Pick(3).v128_bits.v[0], Pick(3).v128_bits.v[1],
+                     Pick(3).v128_bits.v[2], Pick(3).v128_bits.v[3], Pick(2).v128_bits.v[0],
+                     Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
+                     Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2],
+                     Pick(1).v128_bits.v[3]);
+      break;
+
     case Opcode::I8X16Add: 
     case Opcode::I16X8Add: 
     case Opcode::I32X4Add: 
@@ -3135,6 +3164,7 @@ void Environment::Disassemble(Stream* stream,
     assert(!opcode.IsInvalid());
     switch (opcode) {
       case Opcode::Select:
+      case Opcode::V128BitSelect:
         stream->Writef("%s %%[-3], %%[-2], %%[-1]\n", opcode.GetName());
         break;
 

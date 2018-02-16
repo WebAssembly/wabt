@@ -562,6 +562,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "v128.or"              { RETURN_OPCODE(Binary, V128Or); }
       <i> "v128.xor"             { RETURN_OPCODE(Binary, V128Xor); }
       <i> "v128.not"             { RETURN_OPCODE(Unary, V128Not); }
+      <i> "v128.bitselect"       { RETURN_OPCODE(Ternary, V128BitSelect); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }

@@ -83,6 +83,7 @@ class ExprVisitor::Delegate {
   virtual Result OnAtomicStoreExpr(AtomicStoreExpr*) = 0;
   virtual Result OnAtomicRmwExpr(AtomicRmwExpr*) = 0;
   virtual Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) = 0;
+  virtual Result OnTernaryExpr(TernaryExpr*) = 0;
 };
 
 class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
@@ -131,6 +132,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override {
     return Result::Ok;
   }
+  Result OnTernaryExpr(TernaryExpr*) override { return Result::Ok; }
 };
 
 }  // namespace wabt

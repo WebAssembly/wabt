@@ -551,6 +551,9 @@ void BinaryWriter::WriteExpr(const Module* module,
     case ExprType::Unary:
       WriteOpcode(stream_, cast<UnaryExpr>(expr)->opcode);
       break;
+    case ExprType::Ternary:
+      WriteOpcode(stream_, cast<TernaryExpr>(expr)->opcode);
+      break;
     case ExprType::Unreachable:
       WriteOpcode(stream_, Opcode::Unreachable);
       break;

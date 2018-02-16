@@ -102,6 +102,7 @@ const char* GetTokenTypeName(TokenType token_type) {
       "throw",
       "try",
       "UNARY",
+      "TERNARY",
       "unreachable",
       "WAIT",
       "WAKE",

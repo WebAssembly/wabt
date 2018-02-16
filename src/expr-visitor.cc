@@ -189,6 +189,10 @@ Result ExprVisitor::VisitExpr(Expr* expr) {
       CHECK_RESULT(delegate_->OnUnaryExpr(cast<UnaryExpr>(expr)));
       break;
 
+    case ExprType::Ternary:
+      CHECK_RESULT(delegate_->OnTernaryExpr(cast<TernaryExpr>(expr)));
+      break;
+
     case ExprType::Unreachable:
       CHECK_RESULT(delegate_->OnUnreachableExpr(cast<UnreachableExpr>(expr)));
       break;

@@ -59,6 +59,7 @@ const char* ExprTypeName[] = {
   "Throw",
   "TryBlock",
   "Unary",
+  "Ternary",
   "Unreachable",
 };
 

@@ -172,6 +172,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::AtomicRmwCmpxchg:
     case TokenType::AtomicWake:
     case TokenType::AtomicWait:
+    case TokenType::Ternary:
       return true;
     default:
       return false;
@@ -1487,6 +1488,13 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ErrorUnlessOpcodeEnabled(token);
       CHECK_RESULT(
           ParsePlainLoadStoreInstr<AtomicRmwCmpxchgExpr>(loc, token, out_expr));
+      break;
+    }
+
+    case TokenType::Ternary: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      out_expr->reset(new TernaryExpr(token.opcode(), loc));
       break;
     }
 

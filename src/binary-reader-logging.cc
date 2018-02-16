@@ -600,6 +600,7 @@ DEFINE_INDEX_DESC(OnTeeLocalExpr, "index")
 DEFINE_INDEX_DESC(OnThrowExpr, "except_index")
 DEFINE0(OnUnreachableExpr)
 DEFINE_OPCODE(OnUnaryExpr)
+DEFINE_OPCODE(OnTernaryExpr)
 DEFINE_END(EndCodeSection)
 
 DEFINE_BEGIN(BeginElemSection)

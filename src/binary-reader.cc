@@ -934,6 +934,12 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
+      case Opcode::V128BitSelect:
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        CALLBACK(OnTernaryExpr, opcode);
+        CALLBACK0(OnOpcodeBare);
+        break;
+
       case Opcode::I32TruncSF32:
       case Opcode::I32TruncSF64:
       case Opcode::I32TruncUF32:
