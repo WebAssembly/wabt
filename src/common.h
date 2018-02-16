@@ -76,6 +76,10 @@
 
 #if WITH_EXCEPTIONS
 #define WABT_TRY try {
+#define WABT_CATCH_BAD_ALLOC \
+  }                          \
+  catch (std::bad_alloc&) {  \
+  }
 #define WABT_CATCH_BAD_ALLOC_AND_EXIT           \
   }                                             \
   catch (std::bad_alloc&) {                     \
@@ -83,6 +87,7 @@
   }
 #else
 #define WABT_TRY
+#define WABT_CATCH_BAD_ALLOC
 #define WABT_CATCH_BAD_ALLOC_AND_EXIT
 #endif
 
