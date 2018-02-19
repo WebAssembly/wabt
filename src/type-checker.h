@@ -92,6 +92,7 @@ class TypeChecker {
   Result OnThrow(const TypeVector* sig);
   Result OnTryBlock(const TypeVector* sig);
   Result OnUnary(Opcode);
+  Result OnTernary(Opcode);
   Result OnUnreachable();
   Result EndFunction();
 

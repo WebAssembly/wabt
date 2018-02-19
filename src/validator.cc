@@ -687,6 +687,10 @@ void Validator::CheckExpr(const Expr* expr) {
       typechecker_.OnUnary(cast<UnaryExpr>(expr)->opcode);
       break;
 
+    case ExprType::Ternary:
+      typechecker_.OnTernary(cast<TernaryExpr>(expr)->opcode);
+      break;
+
     case ExprType::Unreachable:
       typechecker_.OnUnreachable();
       break;

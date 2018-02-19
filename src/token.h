@@ -121,6 +121,7 @@ enum class TokenType {
   Throw,
   Try,
   Unary,
+  Ternary,
   Unreachable,
   First_Opcode = AtomicLoad,
   Last_Opcode = Unreachable,

@@ -262,6 +262,7 @@ class CWriter {
   void Write(const LoadExpr&);
   void Write(const StoreExpr&);
   void Write(const UnaryExpr&);
+  void Write(const TernaryExpr&);
 
   const WriteCOptions* options_ = nullptr;
   const Module* module_ = nullptr;
@@ -1614,6 +1615,10 @@ void CWriter::Write(const ExprList& exprs) {
         Write(*cast<UnaryExpr>(&expr));
         break;
 
+      case ExprType::Ternary:
+        Write(*cast<TernaryExpr>(&expr));
+        break;
+
       case ExprType::Unreachable:
         Write("UNREACHABLE;", Newline());
         return;
@@ -2145,6 +2150,22 @@ void CWriter::Write(const UnaryExpr& expr) {
       UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
+void CWriter::Write(const TernaryExpr& expr) {
+  switch (expr.opcode) {
+    case Opcode::V128BitSelect: {
+      Type result_type = expr.opcode.GetResultType();
+      Write(StackVar(2, result_type), " = ", "v128.bitselect", "(" ,
+            StackVar(0),", ", StackVar(1),", ", StackVar(2), ");",
+            Newline());
+      DropTypes(3);
+      PushType(result_type);
+      break;
+    }
     default:
       WABT_UNREACHABLE;
   }

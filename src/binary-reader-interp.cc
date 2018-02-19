@@ -192,6 +192,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                            Address offset) override;
   wabt::Result OnTeeLocalExpr(Index local_index) override;
   wabt::Result OnUnaryExpr(wabt::Opcode opcode) override;
+  wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnUnreachableExpr() override;
   wabt::Result EndFunctionBody(Index index) override;
 
@@ -1156,6 +1157,12 @@ wabt::Result BinaryReaderInterp::CheckAtomicAlign(uint32_t alignment_log2,
 
 wabt::Result BinaryReaderInterp::OnUnaryExpr(wabt::Opcode opcode) {
   CHECK_RESULT(typechecker_.OnUnary(opcode));
+  CHECK_RESULT(EmitOpcode(opcode));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnTernaryExpr(wabt::Opcode opcode) {
+  CHECK_RESULT(typechecker_.OnTernary(opcode));
   CHECK_RESULT(EmitOpcode(opcode));
   return wabt::Result::Ok;
 }

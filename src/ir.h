@@ -192,6 +192,7 @@ enum class ExprType {
   Throw,
   TryBlock,
   Unary,
+  Ternary,
   Unreachable,
 
   First = AtomicLoad,
@@ -276,6 +277,7 @@ typedef OpcodeExpr<ExprType::Binary> BinaryExpr;
 typedef OpcodeExpr<ExprType::Compare> CompareExpr;
 typedef OpcodeExpr<ExprType::Convert> ConvertExpr;
 typedef OpcodeExpr<ExprType::Unary> UnaryExpr;
+typedef OpcodeExpr<ExprType::Ternary> TernaryExpr;
 
 template <ExprType TypeEnum>
 class VarExpr : public ExprMixin<TypeEnum> {

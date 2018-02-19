@@ -709,6 +709,10 @@ void WatWriter::WriteExpr(const Expr* expr) {
       WritePutsNewline(cast<UnaryExpr>(expr)->opcode.GetName());
       break;
 
+    case ExprType::Ternary:
+      WritePutsNewline(cast<TernaryExpr>(expr)->opcode.GetName());
+      break;
+
     case ExprType::Unreachable:
       WritePutsNewline(Opcode::Unreachable_Opcode.GetName());
       break;
@@ -865,6 +869,10 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
 
     case ExprType::TryBlock:
       PushExpr(expr, 0, cast<TryExpr>(expr)->block.sig.size());
+      break;
+
+    case ExprType::Ternary:
+      PushExpr(expr, 3, 1);
       break;
 
     default:

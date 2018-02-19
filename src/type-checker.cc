@@ -597,6 +597,10 @@ Result TypeChecker::OnUnary(Opcode opcode) {
   return CheckOpcode1(opcode);
 }
 
+Result TypeChecker::OnTernary(Opcode opcode) {
+  return CheckOpcode3(opcode);
+}
+
 Result TypeChecker::OnUnreachable() {
   return SetUnreachable();
 }
