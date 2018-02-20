@@ -1036,6 +1036,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F32X4ConvertUI32X4:
       case Opcode::F64X2ConvertSI64X2:
       case Opcode::F64X2ConvertUI64X2:
+      case Opcode::I32X4TruncSF32X4Sat:
+      case Opcode::I32X4TruncUF32X4Sat:
+      case Opcode::I64X2TruncSF64X2Sat:
+      case Opcode::I64X2TruncUF64X2Sat:
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnConvertExpr, opcode);
         CALLBACK0(OnOpcodeBare);

@@ -2931,6 +2931,22 @@ Result Thread::Run(int num_instructions) {
       case Opcode::F64X2ConvertUI64X2:
         CHECK_TRAP(SimdUnop<v128, uint64_t>(SimdConvert<double, uint64_t>));
         break;
+
+      case Opcode::I32X4TruncSF32X4Sat:
+        CHECK_TRAP(SimdUnop<v128, int32_t>(IntTruncSat<int32_t, float>));
+        break;
+
+      case Opcode::I32X4TruncUF32X4Sat:
+        CHECK_TRAP(SimdUnop<v128, uint32_t>(IntTruncSat<uint32_t, float>));
+        break;
+
+      case Opcode::I64X2TruncSF64X2Sat:
+        CHECK_TRAP(SimdUnop<v128, int64_t>(IntTruncSat<int64_t, double>));
+        break;
+
+      case Opcode::I64X2TruncUF64X2Sat:
+        CHECK_TRAP(SimdUnop<v128, uint64_t>(IntTruncSat<uint64_t, double>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -3420,7 +3436,11 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32X4ConvertSI32X4:
     case Opcode::F32X4ConvertUI32X4:
     case Opcode::F64X2ConvertSI64X2:
-    case Opcode::F64X2ConvertUI64X2: {
+    case Opcode::F64X2ConvertUI64X2:
+    case Opcode::I32X4TruncSF32X4Sat:
+    case Opcode::I32X4TruncUF32X4Sat:
+    case Opcode::I64X2TruncSF64X2Sat:
+    case Opcode::I64X2TruncUF64X2Sat: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
                                 Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -4014,6 +4034,10 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F32X4ConvertUI32X4:
       case Opcode::F64X2ConvertSI64X2:
       case Opcode::F64X2ConvertUI64X2:
+      case Opcode::I32X4TruncSF32X4Sat:
+      case Opcode::I32X4TruncUF32X4Sat:
+      case Opcode::I64X2TruncSF64X2Sat:
+      case Opcode::I64X2TruncUF64X2Sat:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
