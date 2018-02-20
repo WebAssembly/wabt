@@ -17,6 +17,8 @@
 #ifndef WABT_CONFIG_H_
 #define WABT_CONFIG_H_
 
+#include <stdint.h>
+
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 
 /* Whether <alloca.h> is available */
@@ -320,8 +322,13 @@ __inline float wabt_convert_uint64_to_float(unsigned __int64 x) {
 }
 
 #else
-#define wabt_convert_uint64_to_double(x) static_cast<double>(x)
-#define wabt_convert_uint64_to_float(x) static_cast<float>(x)
+__inline double wabt_convert_uint64_to_double(uint64_t x) {
+  return static_cast<double>(x);
+}
+
+__inline float wabt_convert_uint64_to_float(uint64_t x) {
+  return static_cast<float>(x);
+}
 #endif
 
 #endif /* WABT_CONFIG_H_ */
