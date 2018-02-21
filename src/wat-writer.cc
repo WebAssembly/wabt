@@ -143,9 +143,6 @@ class WatWriter {
                        const Block& block,
                        const char* text);
   void WriteEndBlock();
-  void WriteBlock(LabelType label_type,
-                  const Block& block,
-                  const char* start_text);
   void WriteConst(const Const& const_);
   void WriteExpr(const Expr* expr);
   template <typename T>
@@ -445,14 +442,6 @@ void WatWriter::WriteEndBlock() {
   Dedent();
   label_stack_.pop_back();
   WritePutsNewline(Opcode::End_Opcode.GetName());
-}
-
-void WatWriter::WriteBlock(LabelType label_type,
-                           const Block& block,
-                           const char* start_text) {
-  WriteBeginBlock(label_type, block, start_text);
-  WriteExprList(block.exprs);
-  WriteEndBlock();
 }
 
 void WatWriter::WriteConst(const Const& const_) {
