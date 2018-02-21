@@ -894,6 +894,12 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64Le:
       case Opcode::F64Gt:
       case Opcode::F64Ge:
+      case Opcode::I8X16Eq:
+      case Opcode::I16X8Eq:
+      case Opcode::I32X4Eq:
+      case Opcode::F32X4Eq:
+      case Opcode::F64X2Eq:
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnCompareExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
