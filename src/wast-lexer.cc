@@ -563,6 +563,14 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "v128.xor"             { RETURN_OPCODE(Binary, V128Xor); }
       <i> "v128.not"             { RETURN_OPCODE(Unary, V128Not); }
       <i> "v128.bitselect"       { RETURN_OPCODE(Ternary, V128BitSelect); }
+      <i> "i8x16.any_true"       { RETURN_OPCODE(Unary,  I8X16AnyTrue); }
+      <i> "i16x8.any_true"       { RETURN_OPCODE(Unary,  I16X8AnyTrue); }
+      <i> "i32x4.any_true"       { RETURN_OPCODE(Unary,  I32X4AnyTrue); }
+      <i> "i64x2.any_true"       { RETURN_OPCODE(Unary,  I64X2AnyTrue); }
+      <i> "i8x16.all_true"       { RETURN_OPCODE(Unary,  I8X16AllTrue); }
+      <i> "i16x8.all_true"       { RETURN_OPCODE(Unary,  I16X8AllTrue); }
+      <i> "i32x4.all_true"       { RETURN_OPCODE(Unary,  I32X4AllTrue); }
+      <i> "i64x2.all_true"       { RETURN_OPCODE(Unary,  I64X2AllTrue); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
