@@ -353,6 +353,11 @@ Result BinaryReaderLogging::OnTryExpr(Index num_types, Type* sig_types) {
   return reader_->OnTryExpr(num_types, sig_types);
 }
 
+Result  BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
+  LOGF("OnSimdLaneOpExpr (lane: %" PRIu64 ")\n", value);
+  return reader_->OnSimdLaneOpExpr(opcode, value);
+}
+
 Result BinaryReaderLogging::OnDataSegmentData(Index index,
                                               const void* data,
                                               Address size) {

@@ -269,6 +269,8 @@ template <>
 float FromRep<float>(uint32_t x) { return Bitcast<float>(x); }
 template <>
 double FromRep<double>(uint64_t x) { return Bitcast<double>(x); }
+template <>
+v128 FromRep<v128>(v128 x) { return Bitcast<v128>(x); }
 
 template <typename T>
 struct FloatTraits;
@@ -1358,6 +1360,24 @@ ValueTypeRep<T> SimdSplat(V lane_data) {
   return ToRep(Bitcast<T>(simd_data));
 }
 
+// Simd instructions with Lane operand.
+// value: input v128 value.
+// typename T: lane data type.
+template <typename R, typename V, typename T>
+ValueTypeRep<R> SimdExtractLane(V value, uint32_t laneidx) {
+  // Calculate how many Lanes according to input lane data type.
+  constexpr int32_t lanes = sizeof(V)/sizeof(T);
+
+  // Define SIMD data array for Simd add by Lanes.
+  T simd_data_0[lanes];
+
+  // Convert intput SIMD data to array.
+  memcpy(simd_data_0, &value, sizeof(V));
+
+  return ToRep(static_cast<R>(simd_data_0[laneidx]));
+}
+
+
 bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
                                          Index sig_index_1) const {
   if (sig_index_0 == sig_index_1) {
@@ -2411,6 +2431,13 @@ Result Thread::Run(int num_instructions) {
       case Opcode::F64X2Splat: {
         double lane_data = Pop<double>();
         CHECK_TRAP(Push<v128>(SimdSplat<v128, double>(lane_data)));
+        break;
+      }
+
+      case Opcode::I8X16ExtractLaneS: {
+        v128 lane_val = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(PushRep<int32_t>(SimdExtractLane<int32_t, v128, int8_t>(lane_val, lane_idx)));
         break;
       }
 
@@ -3475,6 +3502,12 @@ void Thread::Trace(Stream* stream) {
                      Pick(1).v128_bits.v[3]);
       break;
 
+    case Opcode::I8X16ExtractLaneS: {
+      stream->Writef("%s : LaneIdx %d From $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), ReadU8At(pc),\
+                    Top().v128_bits.v[0], Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
+      break;
+    }
+
     case Opcode::I8X16Add: 
     case Opcode::I16X8Add: 
     case Opcode::I32X4Add: 
@@ -4062,6 +4095,11 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I64X2TruncUF64X2Sat:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
+
+      case Opcode::I8X16ExtractLaneS: {
+        stream->Writef("%s (Lane idx %d) \n", opcode.GetName(),ReadU8(&pc));
+        break;
+      }
 
       case Opcode::GrowMemory: {
         Index memory_index = ReadU32(&pc);

@@ -1007,6 +1007,15 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
+      case Opcode::I8X16ExtractLaneS: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        uint8_t lane_val;
+        CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
+        CALLBACK(OnSimdLaneOpExpr, opcode, lane_val);
+        CALLBACK(OnOpcodeUint64, lane_val);
+        break;
+      }
+
       case Opcode::I32TruncSF32:
       case Opcode::I32TruncSF64:
       case Opcode::I32TruncUF32:

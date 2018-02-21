@@ -268,6 +268,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnUnreachableExpr() override { return Result::Ok; }
   Result EndFunctionBody(Index index) override { return Result::Ok; }
   Result EndCodeSection() override { return Result::Ok; }
+  Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override {
+    return Result::Ok;
+  }
 
   /* Elem section */
   Result BeginElemSection(Offset size) override { return Result::Ok; }

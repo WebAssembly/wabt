@@ -326,6 +326,11 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnTernaryExpr(cast<TernaryExpr>(expr)));
       break;
 
+    case ExprType::SimdLaneOp: {
+      CHECK_RESULT(delegate_->OnSimdLaneOpExpr(cast<SimdLaneOpExpr>(expr)));
+      break;
+    }
+
     case ExprType::Unreachable:
       CHECK_RESULT(delegate_->OnUnreachableExpr(cast<UnreachableExpr>(expr)));
       break;

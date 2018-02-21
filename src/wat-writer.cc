@@ -577,6 +577,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnAtomicRmwExpr(AtomicRmwExpr*) override;
   Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override;
   Result OnTernaryExpr(TernaryExpr*) override;
+  Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override;
 
  private:
   WatWriter* writer_;
@@ -853,6 +854,13 @@ Result WatWriter::ExprVisitorDelegate::OnTernaryExpr(TernaryExpr* expr) {
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
+  writer_->WritePutsSpace(expr->opcode.GetName());
+  writer_->Writef("%" PRIu64, (expr->val));
+  writer_->WritePutsNewline("");
+  return Result::Ok;
+}
+
 void WatWriter::WriteExpr(const Expr* expr) {
   WABT_TRACE(WriteExprList);
   ExprVisitorDelegate delegate(this);
@@ -1015,6 +1023,21 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     case ExprType::Ternary:
       PushExpr(expr, 3, 1);
       break;
+
+    case ExprType::SimdLaneOp: {
+      const Opcode opcode = cast<SimdLaneOpExpr>(expr)->opcode;
+      switch (opcode) {
+        case Opcode::I8X16ExtractLaneS:
+          PushExpr(expr, 1, 1);
+          break;
+
+        default:
+          fprintf(stderr, "Invalid Opcode for expr type: %s\n", 
+                                       GetExprTypeName(*expr));
+          assert(0);
+      }
+      break;
+    }
 
     default:
       fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(*expr));

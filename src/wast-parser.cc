@@ -173,6 +173,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::AtomicWake:
     case TokenType::AtomicWait:
     case TokenType::Ternary:
+    case TokenType::SimdLaneOp:
       return true;
     default:
       return false;
@@ -1492,6 +1493,15 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
       out_expr->reset(new TernaryExpr(token.opcode(), loc));
+      break;
+    }
+
+    case TokenType::SimdLaneOp: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      uint64_t lane_idx;
+      CHECK_RESULT(ParseNat(&lane_idx));
+      out_expr->reset(new SimdLaneOpExpr(token.opcode(), lane_idx, loc));
       break;
     }
 

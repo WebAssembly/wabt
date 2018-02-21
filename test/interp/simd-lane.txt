@@ -1,0 +1,15 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-simd
+(module
+  ;; i8x16 extract lane signed/unsigned
+  (func (export  "func_i8x16_extract_lane_s_0") (result i32)
+    v128.const i32 0x00000001 0x0000000f 0x000000ff 0x0000017f
+    i8x16.extract_lane_s 0)
+  (func (export  "func_i8x16_extract_lane_s_1") (result i32)
+    v128.const i32 0x00000001 0x0000000f 0x000000ff 0x0000017f
+    i8x16.extract_lane_s 8)
+)
+(;; STDOUT ;;;
+func_i8x16_extract_lane_s_0() => i32:1
+func_i8x16_extract_lane_s_1() => i32:4294967295
+;;; STDOUT ;;)

@@ -55,6 +55,7 @@ const char* ExprTypeName[] = {
   "Select",
   "SetGlobal",
   "SetLocal",
+  "SimdLaneOp",
   "Store",
   "TeeLocal",
   "Ternary",
