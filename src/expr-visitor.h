@@ -34,7 +34,36 @@ class ExprVisitor {
   Result VisitFunc(Func*);
 
  private:
+  enum class State {
+    Default,
+    Block,
+    IfTrue,
+    IfFalse,
+    Loop,
+    Try,
+    TryCatch,
+  };
+
+  Result HandleDefaultState(Expr*);
+  void PushDefault(Expr*);
+  void PopDefault();
+  void PushExprlist(State state, Expr*, ExprList&);
+  void PopExprlist();
+  void PushCatch(Expr*, Index catch_index, ExprList&);
+  void PopCatch();
+
   Delegate* delegate_;
+
+  // Use parallel arrays instead of array of structs so we can avoid allocating
+  // unneeded objects. ExprList::iterator has no default constructor, so it
+  // must only be allocated for states that use it.
+  //
+  // NOTE(binji): This can be simplified when the new exception proposal is
+  // implemented, as it only allows for one catch block per try block.
+  std::vector<State> state_stack_;
+  std::vector<Expr*> expr_stack_;
+  std::vector<ExprList::iterator> expr_iter_stack_;
+  std::vector<Index> catch_index_stack_;
 };
 
 class ExprVisitor::Delegate {
