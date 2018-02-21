@@ -488,6 +488,7 @@ template<> struct ExtendMemType<uint64_t, uint64_t> { typedef uint64_t type; };
 template<> struct ExtendMemType<uint64_t, int64_t> { typedef int64_t type; };
 template<> struct ExtendMemType<float, float> { typedef float type; };
 template<> struct ExtendMemType<double, double> { typedef double type; };
+template<> struct ExtendMemType<v128, v128> { typedef v128 type; };
 
 template <typename T, typename MemType> struct WrapMemType;
 template<> struct WrapMemType<uint32_t, uint8_t> { typedef uint8_t type; };
@@ -499,6 +500,7 @@ template<> struct WrapMemType<uint64_t, uint32_t> { typedef uint32_t type; };
 template<> struct WrapMemType<uint64_t, uint64_t> { typedef uint64_t type; };
 template<> struct WrapMemType<float, float> { typedef uint32_t type; };
 template<> struct WrapMemType<double, double> { typedef uint64_t type; };
+template<> struct WrapMemType<v128, v128> { typedef v128 type; };
 
 template <typename T>
 Value MakeValue(ValueTypeRep<T>);
@@ -2368,6 +2370,14 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
+      case Opcode::V128Load:
+        CHECK_TRAP(Load<v128>(&pc));
+        break;
+
+      case Opcode::V128Store:
+        CHECK_TRAP(Store<v128>(&pc));
+        break;
+
       case Opcode::I8X16Splat: {
         uint8_t lane_data = Pop<uint32_t>();
         CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(lane_data)));
@@ -3082,7 +3092,8 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32Load:
     case Opcode::I64Load:
     case Opcode::F32Load:
-    case Opcode::F64Load: {
+    case Opcode::F64Load:
+    case Opcode::V128Load: {
       Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u\n", opcode.GetName(),
                      memory_index, Top().i32, ReadU32At(pc));
@@ -3202,6 +3213,15 @@ void Thread::Trace(Stream* stream) {
       stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n", opcode.GetName(),
                      memory_index, Pick(2).i32, ReadU32At(pc),
                      Bitcast<double>(Pick(1).f64_bits));
+      break;
+    }
+
+    case Opcode::V128Store: {
+      Index memory_index = ReadU32(&pc);
+      stream->Writef("%s $%" PRIindex ":%u+$%u, $0x%08x 0x%08x 0x%08x 0x%08x\n",
+                     opcode.GetName(), memory_index, Pick(2).i32, ReadU32At(pc),
+                     Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
+                     Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
       break;
     }
 
@@ -3691,7 +3711,8 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I32Load:
       case Opcode::I64Load:
       case Opcode::F32Load:
-      case Opcode::F64Load: {
+      case Opcode::F64Load:
+      case Opcode::V128Load: {
         Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%%[-1]+$%u\n", opcode.GetName(),
                        memory_index, ReadU32(&pc));
@@ -3756,7 +3777,8 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I64Store32:
       case Opcode::I64Store:
       case Opcode::F32Store:
-      case Opcode::F64Store: {
+      case Opcode::F64Store:
+      case Opcode::V128Store: {
         Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%%[-2]+$%u, %%[-1]\n",
                        opcode.GetName(), memory_index, ReadU32(&pc));

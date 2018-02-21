@@ -237,6 +237,8 @@ WABT_OPCODE(I64, F64, ___, ___, 0, 0xfc,  0x07, I64TruncUSatF64, "i64.trunc_u:sa
 
 /* Simd opcodes */
 WABT_OPCODE(V128, ___, ___, ___, 0, 0xfd, 0x00,  V128Const, "v128.const")
+WABT_OPCODE(V128, I32, ___, ___,16, 0xfd, 0x01,  V128Load,  "v128.load")
+WABT_OPCODE(___,  I32, V128,___,16, 0xfd, 0x02,  V128Store, "v128.store")
 WABT_OPCODE(V128, I32, ___, ___, 0, 0xfd, 0x03,  I8X16Splat, "i8x16.splat")
 WABT_OPCODE(V128, I32, ___, ___, 0, 0xfd, 0x04,  I16X8Splat, "i16x8.splat")
 WABT_OPCODE(V128, I32, ___, ___, 0, 0xfd, 0x05,  I32X4Splat, "i32x4.splat")

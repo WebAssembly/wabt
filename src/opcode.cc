@@ -183,6 +183,8 @@ bool Opcode::IsEnabled(const Features& features) const {
       return features.threads_enabled();
 
     case Opcode::V128Const:
+    case Opcode::V128Load:
+    case Opcode::V128Store:
     case Opcode::I8X16Splat:
     case Opcode::I16X8Splat:
     case Opcode::I32X4Splat:
