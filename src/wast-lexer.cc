@@ -576,6 +576,11 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i32x4.eq"             { RETURN_OPCODE(Compare, I32X4Eq); }
       <i> "f32x4.eq"             { RETURN_OPCODE(Compare, F32X4Eq); }
       <i> "f64x2.eq"             { RETURN_OPCODE(Compare, F64X2Eq); }
+      <i> "i8x16.ne"             { RETURN_OPCODE(Compare, I8X16Ne); }
+      <i> "i16x8.ne"             { RETURN_OPCODE(Compare, I16X8Ne); }
+      <i> "i32x4.ne"             { RETURN_OPCODE(Compare, I32X4Ne); }
+      <i> "f32x4.ne"             { RETURN_OPCODE(Compare, F32X4Ne); }
+      <i> "f64x2.ne"             { RETURN_OPCODE(Compare, F64X2Ne); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
