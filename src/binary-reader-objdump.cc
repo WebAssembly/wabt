@@ -167,8 +167,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
  public:
   using BinaryReaderObjdumpBase::BinaryReaderObjdumpBase;
 
-  Result OnFunctionName(Index index,
-                        string_view name) override {
+  Result OnFunctionName(Index index, string_view name) override {
     SetFunctionName(index, name);
     return Result::Ok;
   }
@@ -1192,12 +1191,14 @@ Result BinaryReaderObjdump::OnSymbol(Index symbol_index,
   std::string sym_name = name.to_string();
   switch (type) {
     case SymbolType::Function:
-      if (sym_name.empty())
+      if (sym_name.empty()) {
         sym_name = GetFunctionName(index);
+      }
       break;
     case SymbolType::Global:
-      if (sym_name.empty())
+      if (sym_name.empty()) {
         sym_name = GetGlobalName(index);
+      }
       break;
     case SymbolType::Data:
       break;
@@ -1234,16 +1235,16 @@ Result BinaryReaderObjdump::OnSymbol(Index symbol_index,
   PrintDetails("   - sym[%d] <" PRIstringview ">", symbol_index,
                WABT_PRINTF_STRING_VIEW_ARG(sym_name));
   switch (type) {
-  case SymbolType::Data:
-    PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
-                 size);
-    break;
-  case SymbolType::Function:
-    PrintDetails(" func=%" PRIindex, index);
-    break;
-  case SymbolType::Global:
-    PrintDetails(" global=%" PRIindex, index);
-    break;
+    case SymbolType::Data:
+      PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
+                   size);
+      break;
+    case SymbolType::Function:
+      PrintDetails(" func=%" PRIindex, index);
+      break;
+    case SymbolType::Global:
+      PrintDetails(" global=%" PRIindex, index);
+      break;
   }
   PrintDetails(" binding=%s vis=%s\n", binding_name, vis_name);
   return Result::Ok;
