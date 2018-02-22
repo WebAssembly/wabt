@@ -28,6 +28,7 @@
 
 #include "src/cast.h"
 #include "src/common.h"
+#include "src/expr-visitor.h"
 #include "src/ir.h"
 #include "src/literal.h"
 #include "src/stream.h"
@@ -142,9 +143,6 @@ class WatWriter {
                        const Block& block,
                        const char* text);
   void WriteEndBlock();
-  void WriteBlock(LabelType label_type,
-                  const Block& block,
-                  const char* start_text);
   void WriteConst(const Const& const_);
   void WriteExpr(const Expr* expr);
   template <typename T>
@@ -170,6 +168,8 @@ class WatWriter {
   void WriteExport(const Export& export_);
   void WriteFuncType(const FuncType& func_type);
   void WriteStartFunction(const Var& start);
+
+  class ExprVisitorDelegate;
 
   Index GetLabelStackSize() { return label_stack_.size(); }
   Label* GetLabel(const Var& var);
@@ -444,14 +444,6 @@ void WatWriter::WriteEndBlock() {
   WritePutsNewline(Opcode::End_Opcode.GetName());
 }
 
-void WatWriter::WriteBlock(LabelType label_type,
-                           const Block& block,
-                           const char* start_text) {
-  WriteBeginBlock(label_type, block, start_text);
-  WriteExprList(block.exprs);
-  WriteEndBlock();
-}
-
 void WatWriter::WriteConst(const Const& const_) {
   switch (const_.type) {
     case Type::I32:
@@ -517,217 +509,324 @@ void WatWriter::WriteLoadStoreExpr(const Expr* expr) {
   WriteNewline(NO_FORCE_NEWLINE);
 }
 
-void WatWriter::WriteExpr(const Expr* expr) {
-  WABT_TRACE_ARGS(WriteExpr, "%s", GetExprTypeName(*expr));
-  switch (expr->type()) {
-    case ExprType::AtomicLoad:
-      WriteLoadStoreExpr<AtomicLoadExpr>(expr);
-      break;
+class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
+ public:
+  explicit ExprVisitorDelegate(WatWriter* writer) : writer_(writer) {}
 
-    case ExprType::AtomicStore:
-      WriteLoadStoreExpr<AtomicStoreExpr>(expr);
-      break;
+  Result OnBinaryExpr(BinaryExpr*) override;
+  Result BeginBlockExpr(BlockExpr*) override;
+  Result EndBlockExpr(BlockExpr*) override;
+  Result OnBrExpr(BrExpr*) override;
+  Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrTableExpr(BrTableExpr*) override;
+  Result OnCallExpr(CallExpr*) override;
+  Result OnCallIndirectExpr(CallIndirectExpr*) override;
+  Result OnCompareExpr(CompareExpr*) override;
+  Result OnConstExpr(ConstExpr*) override;
+  Result OnConvertExpr(ConvertExpr*) override;
+  Result OnCurrentMemoryExpr(CurrentMemoryExpr*) override;
+  Result OnDropExpr(DropExpr*) override;
+  Result OnGetGlobalExpr(GetGlobalExpr*) override;
+  Result OnGetLocalExpr(GetLocalExpr*) override;
+  Result OnGrowMemoryExpr(GrowMemoryExpr*) override;
+  Result BeginIfExpr(IfExpr*) override;
+  Result AfterIfTrueExpr(IfExpr*) override;
+  Result EndIfExpr(IfExpr*) override;
+  Result OnLoadExpr(LoadExpr*) override;
+  Result BeginLoopExpr(LoopExpr*) override;
+  Result EndLoopExpr(LoopExpr*) override;
+  Result OnNopExpr(NopExpr*) override;
+  Result OnReturnExpr(ReturnExpr*) override;
+  Result OnSelectExpr(SelectExpr*) override;
+  Result OnSetGlobalExpr(SetGlobalExpr*) override;
+  Result OnSetLocalExpr(SetLocalExpr*) override;
+  Result OnStoreExpr(StoreExpr*) override;
+  Result OnTeeLocalExpr(TeeLocalExpr*) override;
+  Result OnUnaryExpr(UnaryExpr*) override;
+  Result OnUnreachableExpr(UnreachableExpr*) override;
+  Result BeginTryExpr(TryExpr*) override;
+  Result EndTryExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*, Catch*) override;
+  Result OnThrowExpr(ThrowExpr*) override;
+  Result OnRethrowExpr(RethrowExpr*) override;
+  Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
+  Result OnAtomicWakeExpr(AtomicWakeExpr*) override;
+  Result OnAtomicLoadExpr(AtomicLoadExpr*) override;
+  Result OnAtomicStoreExpr(AtomicStoreExpr*) override;
+  Result OnAtomicRmwExpr(AtomicRmwExpr*) override;
+  Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override;
+  Result OnTernaryExpr(TernaryExpr*) override;
 
-    case ExprType::AtomicRmw:
-      WriteLoadStoreExpr<AtomicRmwExpr>(expr);
-      break;
+ private:
+  WatWriter* writer_;
+};
 
-    case ExprType::AtomicRmwCmpxchg:
-      WriteLoadStoreExpr<AtomicRmwCmpxchgExpr>(expr);
-      break;
+Result WatWriter::ExprVisitorDelegate::OnBinaryExpr(BinaryExpr* expr) {
+  writer_->WritePutsNewline(expr->opcode.GetName());
+  return Result::Ok;
+}
 
-    case ExprType::AtomicWait:
-      WriteLoadStoreExpr<AtomicWaitExpr>(expr);
-      break;
+Result WatWriter::ExprVisitorDelegate::BeginBlockExpr(BlockExpr* expr) {
+  writer_->WriteBeginBlock(LabelType::Block, expr->block,
+                           Opcode::Block_Opcode.GetName());
+  return Result::Ok;
+}
 
-    case ExprType::AtomicWake:
-      WriteLoadStoreExpr<AtomicWakeExpr>(expr);
-      break;
+Result WatWriter::ExprVisitorDelegate::EndBlockExpr(BlockExpr* expr) {
+  writer_->WriteEndBlock();
+  return Result::Ok;
+}
 
-    case ExprType::Binary:
-      WritePutsNewline(cast<BinaryExpr>(expr)->opcode.GetName());
-      break;
+Result WatWriter::ExprVisitorDelegate::OnBrExpr(BrExpr* expr) {
+  writer_->WritePutsSpace(Opcode::Br_Opcode.GetName());
+  writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
 
-    case ExprType::Block:
-      WriteBlock(LabelType::Block, cast<BlockExpr>(expr)->block,
-                 Opcode::Block_Opcode.GetName());
-      break;
+Result WatWriter::ExprVisitorDelegate::OnBrIfExpr(BrIfExpr* expr) {
+  writer_->WritePutsSpace(Opcode::BrIf_Opcode.GetName());
+  writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
 
-    case ExprType::Br:
-      WritePutsSpace(Opcode::Br_Opcode.GetName());
-      WriteBrVar(cast<BrExpr>(expr)->var, NextChar::Newline);
-      break;
+Result WatWriter::ExprVisitorDelegate::OnBrTableExpr(BrTableExpr* expr) {
+  writer_->WritePutsSpace(Opcode::BrTable_Opcode.GetName());
+  for (const Var& var : expr->targets)
+    writer_->WriteBrVar(var, NextChar::Space);
+  writer_->WriteBrVar(expr->default_target, NextChar::Newline);
+  return Result::Ok;
+}
 
-    case ExprType::BrIf:
-      WritePutsSpace(Opcode::BrIf_Opcode.GetName());
-      WriteBrVar(cast<BrIfExpr>(expr)->var, NextChar::Newline);
-      break;
+Result WatWriter::ExprVisitorDelegate::OnCallExpr(CallExpr* expr) {
+  writer_->WritePutsSpace(Opcode::Call_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
 
-    case ExprType::BrTable: {
-      WritePutsSpace(Opcode::BrTable_Opcode.GetName());
-      for (const Var& var : cast<BrTableExpr>(expr)->targets)
-        WriteBrVar(var, NextChar::Space);
-      WriteBrVar(cast<BrTableExpr>(expr)->default_target, NextChar::Newline);
-      break;
-    }
+Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
+    CallIndirectExpr* expr) {
+  writer_->WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
+  writer_->WriteOpenSpace("type");
+  writer_->WriteVar(expr->decl.type_var, NextChar::Space);
+  writer_->WriteCloseNewline();
+  return Result::Ok;
+}
 
-    case ExprType::Call:
-      WritePutsSpace(Opcode::Call_Opcode.GetName());
-      WriteVar(cast<CallExpr>(expr)->var, NextChar::Newline);
-      break;
+Result WatWriter::ExprVisitorDelegate::OnCompareExpr(CompareExpr* expr) {
+  writer_->WritePutsNewline(expr->opcode.GetName());
+  return Result::Ok;
+}
 
-    case ExprType::CallIndirect:
-      WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
-      WriteOpenSpace("type");
-      WriteVar(cast<CallIndirectExpr>(expr)->decl.type_var,
-               NextChar::Space);
-      WriteCloseNewline();
-      break;
+Result WatWriter::ExprVisitorDelegate::OnConstExpr(ConstExpr* expr) {
+  writer_->WriteConst(expr->const_);
+  return Result::Ok;
+}
 
-    case ExprType::Compare:
-      WritePutsNewline(cast<CompareExpr>(expr)->opcode.GetName());
-      break;
+Result WatWriter::ExprVisitorDelegate::OnConvertExpr(ConvertExpr* expr) {
+  writer_->WritePutsNewline(expr->opcode.GetName());
+  return Result::Ok;
+}
 
-    case ExprType::Const:
-      WriteConst(cast<ConstExpr>(expr)->const_);
-      break;
+Result WatWriter::ExprVisitorDelegate::OnCurrentMemoryExpr(
+    CurrentMemoryExpr* expr) {
+  writer_->WritePutsNewline(Opcode::CurrentMemory_Opcode.GetName());
+  return Result::Ok;
+}
 
-    case ExprType::Convert:
-      WritePutsNewline(cast<ConvertExpr>(expr)->opcode.GetName());
-      break;
+Result WatWriter::ExprVisitorDelegate::OnDropExpr(DropExpr* expr) {
+  writer_->WritePutsNewline(Opcode::Drop_Opcode.GetName());
+  return Result::Ok;
+}
 
-    case ExprType::Drop:
-      WritePutsNewline(Opcode::Drop_Opcode.GetName());
-      break;
+Result WatWriter::ExprVisitorDelegate::OnGetGlobalExpr(GetGlobalExpr* expr) {
+  writer_->WritePutsSpace(Opcode::GetGlobal_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
 
-    case ExprType::GetGlobal:
-      WritePutsSpace(Opcode::GetGlobal_Opcode.GetName());
-      WriteVar(cast<GetGlobalExpr>(expr)->var, NextChar::Newline);
-      break;
+Result WatWriter::ExprVisitorDelegate::OnGetLocalExpr(GetLocalExpr* expr) {
+  writer_->WritePutsSpace(Opcode::GetLocal_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
 
-    case ExprType::GetLocal:
-      WritePutsSpace(Opcode::GetLocal_Opcode.GetName());
-      WriteVar(cast<GetLocalExpr>(expr)->var, NextChar::Newline);
-      break;
+Result WatWriter::ExprVisitorDelegate::OnGrowMemoryExpr(GrowMemoryExpr* expr) {
+  writer_->WritePutsNewline(Opcode::GrowMemory_Opcode.GetName());
+  return Result::Ok;
+}
 
-    case ExprType::GrowMemory:
-      WritePutsNewline(Opcode::GrowMemory_Opcode.GetName());
-      break;
+Result WatWriter::ExprVisitorDelegate::BeginIfExpr(IfExpr* expr) {
+  writer_->WriteBeginBlock(LabelType::If, expr->true_,
+                           Opcode::If_Opcode.GetName());
+  return Result::Ok;
+}
 
-    case ExprType::If: {
-      auto if_expr = cast<IfExpr>(expr);
-      WriteBeginBlock(LabelType::If, if_expr->true_,
-                      Opcode::If_Opcode.GetName());
-      WriteExprList(if_expr->true_.exprs);
-      if (!if_expr->false_.empty()) {
-        Dedent();
-        WritePutsSpace(Opcode::Else_Opcode.GetName());
-        Indent();
-        WriteNewline(FORCE_NEWLINE);
-        WriteExprList(if_expr->false_);
-      }
-      WriteEndBlock();
-      break;
-    }
-
-    case ExprType::Load:
-      WriteLoadStoreExpr<LoadExpr>(expr);
-      break;
-
-    case ExprType::Loop:
-      WriteBlock(LabelType::Loop, cast<LoopExpr>(expr)->block,
-                 Opcode::Loop_Opcode.GetName());
-      break;
-
-    case ExprType::CurrentMemory:
-      WritePutsNewline(Opcode::CurrentMemory_Opcode.GetName());
-      break;
-
-    case ExprType::Nop:
-      WritePutsNewline(Opcode::Nop_Opcode.GetName());
-      break;
-
-    case ExprType::Rethrow:
-      WritePutsSpace(Opcode::Rethrow_Opcode.GetName());
-      WriteBrVar(cast<RethrowExpr>(expr)->var, NextChar::Newline);
-      break;
-
-    case ExprType::Return:
-      WritePutsNewline(Opcode::Return_Opcode.GetName());
-      break;
-
-    case ExprType::Select:
-      WritePutsNewline(Opcode::Select_Opcode.GetName());
-      break;
-
-    case ExprType::SetGlobal:
-      WritePutsSpace(Opcode::SetGlobal_Opcode.GetName());
-      WriteVar(cast<SetGlobalExpr>(expr)->var, NextChar::Newline);
-      break;
-
-    case ExprType::SetLocal:
-      WritePutsSpace(Opcode::SetLocal_Opcode.GetName());
-      WriteVar(cast<SetLocalExpr>(expr)->var, NextChar::Newline);
-      break;
-
-    case ExprType::Store:
-      WriteLoadStoreExpr<StoreExpr>(expr);
-      break;
-
-    case ExprType::TeeLocal:
-      WritePutsSpace(Opcode::TeeLocal_Opcode.GetName());
-      WriteVar(cast<TeeLocalExpr>(expr)->var, NextChar::Newline);
-      break;
-
-    case ExprType::Throw:
-      WritePutsSpace(Opcode::Throw_Opcode.GetName());
-      WriteVar(cast<ThrowExpr>(expr)->var, NextChar::Newline);
-      break;
-
-    case ExprType::TryBlock: {
-      auto try_ = cast<TryExpr>(expr);
-      WriteBeginBlock(LabelType::Try, try_->block,
-                      Opcode::Try_Opcode.GetName());
-      WriteExprList(try_->block.exprs);
-      for (const Catch& catch_ : try_->catches) {
-        Dedent();
-        if (catch_.IsCatchAll()) {
-          WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
-        } else {
-          WritePutsSpace(Opcode::Catch_Opcode.GetName());
-          WriteVar(catch_.var, NextChar::Newline);
-        }
-        Indent();
-        label_stack_.back().label_type = LabelType::Catch;
-        WriteExprList(catch_.exprs);
-      }
-      WriteEndBlock();
-      break;
-    }
-
-    case ExprType::Unary:
-      WritePutsNewline(cast<UnaryExpr>(expr)->opcode.GetName());
-      break;
-
-    case ExprType::Ternary:
-      WritePutsNewline(cast<TernaryExpr>(expr)->opcode.GetName());
-      break;
-
-    case ExprType::Unreachable:
-      WritePutsNewline(Opcode::Unreachable_Opcode.GetName());
-      break;
-
-    default:
-      fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(*expr));
-      assert(0);
-      break;
+Result WatWriter::ExprVisitorDelegate::AfterIfTrueExpr(IfExpr* expr) {
+  if (!expr->false_.empty()) {
+    writer_->Dedent();
+    writer_->WritePutsSpace(Opcode::Else_Opcode.GetName());
+    writer_->Indent();
+    writer_->WriteNewline(FORCE_NEWLINE);
   }
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::EndIfExpr(IfExpr* expr) {
+  writer_->WriteEndBlock();
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnLoadExpr(LoadExpr* expr) {
+  writer_->WriteLoadStoreExpr<LoadExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::BeginLoopExpr(LoopExpr* expr) {
+  writer_->WriteBeginBlock(LabelType::Loop, expr->block,
+                           Opcode::Loop_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::EndLoopExpr(LoopExpr* expr) {
+  writer_->WriteEndBlock();
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnNopExpr(NopExpr* expr) {
+  writer_->WritePutsNewline(Opcode::Nop_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnReturnExpr(ReturnExpr* expr) {
+  writer_->WritePutsNewline(Opcode::Return_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnSelectExpr(SelectExpr* expr) {
+  writer_->WritePutsNewline(Opcode::Select_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnSetGlobalExpr(SetGlobalExpr* expr) {
+  writer_->WritePutsSpace(Opcode::SetGlobal_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnSetLocalExpr(SetLocalExpr* expr) {
+  writer_->WritePutsSpace(Opcode::SetLocal_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnStoreExpr(StoreExpr* expr) {
+  writer_->WriteLoadStoreExpr<StoreExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTeeLocalExpr(TeeLocalExpr* expr) {
+  writer_->WritePutsSpace(Opcode::TeeLocal_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnUnaryExpr(UnaryExpr* expr) {
+  writer_->WritePutsNewline(expr->opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnUnreachableExpr(
+    UnreachableExpr* expr) {
+  writer_->WritePutsNewline(Opcode::Unreachable_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::BeginTryExpr(TryExpr* expr) {
+  writer_->WriteBeginBlock(LabelType::Try, expr->block,
+                           Opcode::Try_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::EndTryExpr(TryExpr* expr) {
+  writer_->WriteEndBlock();
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnCatchExpr(TryExpr* expr,
+                                                   Catch* catch_) {
+  writer_->Dedent();
+  if (catch_->IsCatchAll()) {
+    writer_->WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
+  } else {
+    writer_->WritePutsSpace(Opcode::Catch_Opcode.GetName());
+    writer_->WriteVar(catch_->var, NextChar::Newline);
+  }
+  writer_->Indent();
+  writer_->label_stack_.back().label_type = LabelType::Catch;
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnThrowExpr(ThrowExpr* expr) {
+  writer_->WritePutsSpace(Opcode::Throw_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnRethrowExpr(RethrowExpr* expr) {
+  writer_->WritePutsSpace(Opcode::Rethrow_Opcode.GetName());
+  writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
+  writer_->WriteLoadStoreExpr<AtomicWaitExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnAtomicWakeExpr(AtomicWakeExpr* expr) {
+  writer_->WriteLoadStoreExpr<AtomicWakeExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnAtomicLoadExpr(AtomicLoadExpr* expr) {
+  writer_->WriteLoadStoreExpr<AtomicLoadExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnAtomicStoreExpr(
+    AtomicStoreExpr* expr) {
+  writer_->WriteLoadStoreExpr<AtomicStoreExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnAtomicRmwExpr(AtomicRmwExpr* expr) {
+  writer_->WriteLoadStoreExpr<AtomicRmwExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnAtomicRmwCmpxchgExpr(
+    AtomicRmwCmpxchgExpr* expr) {
+  writer_->WriteLoadStoreExpr<AtomicRmwCmpxchgExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTernaryExpr(TernaryExpr* expr) {
+  writer_->WritePutsNewline(expr->opcode.GetName());
+  return Result::Ok;
+}
+
+void WatWriter::WriteExpr(const Expr* expr) {
+  WABT_TRACE(WriteExprList);
+  ExprVisitorDelegate delegate(this);
+  ExprVisitor visitor(&delegate);
+  visitor.VisitExpr(const_cast<Expr*>(expr));
 }
 
 void WatWriter::WriteExprList(const ExprList& exprs) {
   WABT_TRACE(WriteExprList);
-  for (const Expr& expr : exprs)
-    WriteExpr(&expr);
+  ExprVisitorDelegate delegate(this);
+  ExprVisitor visitor(&delegate);
+  visitor.VisitExprList(const_cast<ExprList&>(exprs));
 }
 
 Label* WatWriter::GetLabel(const Var& var) {
