@@ -447,10 +447,18 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   return reader_->OnReloc(type, offset, index, addend);
 }
 
-Result BinaryReaderLogging::OnSymbolInfo(string_view name, uint32_t flags) {
-  LOGF("(OnSymbolInfo name: " PRIstringview ", flags: 0x%x)\n",
+Result BinaryReaderLogging::OnSymbol(Index symbol_index,
+                                     SymbolType type,
+                                     Index index,
+                                     string_view name,
+                                     uint32_t flags,
+                                     Index segment,
+                                     uint32_t offset,
+                                     uint32_t size) {
+  LOGF("(OnSymbol name: " PRIstringview ", flags: 0x%x)\n",
        WABT_PRINTF_STRING_VIEW_ARG(name), flags);
-  return reader_->OnSymbolInfo(name, flags);
+  return reader_->OnSymbol(symbol_index, type, index, name, flags, segment,
+                           offset, size);
 }
 
 Result BinaryReaderLogging::OnSegmentInfo(Index index,
@@ -632,7 +640,7 @@ DEFINE_END(EndRelocSection)
 DEFINE_INDEX_INDEX(OnInitExprGetGlobalExpr, "index", "global_index")
 
 DEFINE_BEGIN(BeginLinkingSection)
-DEFINE_INDEX(OnSymbolInfoCount)
+DEFINE_INDEX(OnSymbolCount)
 DEFINE_INDEX(OnStackGlobal)
 DEFINE_INDEX(OnDataSize)
 DEFINE_INDEX(OnSegmentInfoCount)

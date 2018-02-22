@@ -7,16 +7,6 @@ section("linking") {
     stack_global[3]
   }
 
-  section(LINKING_SYMBOL_INFO) {
-    num_symbols[3]
-    str("foo")
-    flags[1]
-    str("bar")
-    flags[2]
-    str("baz")
-    flags[0]
-  }
-
   section(LINKING_SEGMENT_INFO) {
     count[2]
     str("data1")
@@ -34,6 +24,25 @@ section("linking") {
     priority[6]
     func[0]
   }
+
+  section(LINKING_SYMBOL_TABLE) {
+    num_symbols[3]
+
+    type[0]
+    flags[1]
+    index[0]
+    str("foo")
+
+    type[0]
+    flags[2]
+    index[0]
+    str("bar")
+
+    type[0]
+    flags[4]
+    index[0]
+    str("baz")
+  }
 }
 (;; STDOUT ;;;
 
@@ -44,16 +53,16 @@ Section Details:
 Custom:
  - name: "linking"
   - stack pointer global: 3
-  - symbol info [count=3]
-   - WEAK   <foo>
-   - LOCAL  <bar>
-   - GLOBAL <baz>
   - segment info [count=2]
    - 0: data1 align=4 flags=0
    - 1: data2 align=8 flags=0
   - init functions [count=2]
    - 1: priority=5
    - 0: priority=6
+  - symbol table [count=3]
+   - sym[0] <foo> func=0 binding=weak vis=default
+   - sym[1] <bar> func=0 binding=local vis=default
+   - sym[2] <baz> func=0 binding=global vis=hidden
 
 Code Disassembly:
 

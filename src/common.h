@@ -233,10 +233,26 @@ struct Reloc {
 
 enum class LinkingEntryType {
   StackPointer = 1,
-  SymbolInfo = 2,
   DataSize = 3,
   SegmentInfo = 5,
   InitFunctions = 6,
+  ComdatInfo = 7,
+  SymbolTable = 8,
+};
+
+enum class SymbolType {
+  Function = 0,
+  Data = 1,
+  Global = 2,
+};
+
+#define WABT_SYMBOL_FLAG_UNDEFINED 0x10
+#define WABT_SYMBOL_MASK_VISIBILITY 0x4
+#define WABT_SYMBOL_MASK_BINDING 0x3
+
+enum class SymbolVisibility {
+  Default = 0,
+  Hidden = 4,
 };
 
 enum class SymbolBinding {

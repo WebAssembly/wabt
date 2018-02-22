@@ -63,11 +63,11 @@ Custom:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x00005f) index=2
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000c(file=0x000065) index=3
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000012(file=0x00006b) index=0
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000024(file=0x00007d) index=1
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00002c(file=0x000085) index=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x00005f) symbol=2
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000c(file=0x000065) symbol=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000012(file=0x00006b) symbol=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000024(file=0x00007d) symbol=1
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00002c(file=0x000085) symbol=3
 
 Code Disassembly:
 

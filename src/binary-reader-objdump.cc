@@ -49,6 +49,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
 
  protected:
   const char* GetFunctionName(Index index) const;
+  const char* GetGlobalName(Index index) const;
   void PrintRelocation(const Reloc& reloc, Offset offset) const;
   Offset GetSectionStart(BinarySection section_code) const {
     return section_starts_[static_cast<size_t>(section_code)];
@@ -124,6 +125,15 @@ const char* BinaryReaderObjdumpBase::GetFunctionName(Index index) const {
   return objdump_state_->function_names[index].c_str();
 }
 
+const char* BinaryReaderObjdumpBase::GetGlobalName(Index index) const {
+  if (index >= objdump_state_->global_names.size() ||
+      objdump_state_->global_names[index].empty()) {
+    return nullptr;
+  }
+
+  return objdump_state_->global_names[index].c_str();
+}
+
 void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
                                               Offset offset) const {
   printf("           %06" PRIzx ": %-18s %" PRIindex "", offset,
@@ -157,19 +167,47 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
  public:
   using BinaryReaderObjdumpBase::BinaryReaderObjdumpBase;
 
-  Result OnFunctionName(Index function_index,
-                        string_view function_name) override;
+  Result OnFunctionName(Index index,
+                        string_view name) override {
+    SetFunctionName(index, name);
+    return Result::Ok;
+  }
+
+  Result OnSymbol(Index symbol_index,
+                  SymbolType type,
+                  Index index,
+                  string_view name,
+                  uint32_t flags,
+                  Index segment,
+                  uint32_t offset,
+                  uint32_t size) override {
+    if (type == SymbolType::Function && !name.empty())
+      SetFunctionName(index, name);
+    return Result::Ok;
+  }
+
+  Result OnImportFunc(Index import_index,
+                      string_view module_name,
+                      string_view field_name,
+                      Index func_index,
+                      Index sig_index) override {
+    SetFunctionName(func_index, field_name);
+    return Result::Ok;
+  }
+
   Result OnReloc(RelocType type,
                  Offset offset,
                  Index index,
                  uint32_t addend) override;
+
+ protected:
+  void SetFunctionName(Index index, string_view name);
 };
 
-Result BinaryReaderObjdumpPrepass::OnFunctionName(Index index,
-                                                  string_view name) {
+void BinaryReaderObjdumpPrepass::SetFunctionName(Index index,
+                                                 string_view name) {
   objdump_state_->function_names.resize(index + 1);
   objdump_state_->function_names[index] = name.to_string();
-  return Result::Ok;
 }
 
 Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
@@ -557,8 +595,15 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                  uint32_t addend) override;
 
   Result OnStackGlobal(Index stack_global) override;
-  Result OnSymbolInfoCount(Index count) override;
-  Result OnSymbolInfo(string_view name, uint32_t flags) override;
+  Result OnSymbolCount(Index count) override;
+  Result OnSymbol(Index symbol_index,
+                  SymbolType type,
+                  Index index,
+                  string_view name,
+                  uint32_t flags,
+                  Index segment,
+                  uint32_t offset,
+                  uint32_t size) override;
   Result OnDataSize(uint32_t data_size) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
@@ -1105,9 +1150,13 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
                                     Index index,
                                     uint32_t addend) {
   Offset total_offset = GetSectionStart(reloc_section_) + offset;
-  PrintDetails("   - %-18s offset=%#08" PRIoffset "(file=%#08" PRIoffset
-               ") index=%" PRIindex,
-               GetRelocTypeName(type), offset, total_offset, index);
+  PrintDetails("   - %-18s offset=%#08" PRIoffset "(file=%#08" PRIoffset ") ",
+               GetRelocTypeName(type), offset, total_offset);
+  if (type == RelocType::TypeIndexLEB)
+    PrintDetails("type=%" PRIindex, index);
+  else
+    PrintDetails("symbol=%" PRIindex, index);
+
   if (addend) {
     int32_t signed_addend = static_cast<int32_t>(addend);
     if (signed_addend < 0) {
@@ -1127,28 +1176,76 @@ Result BinaryReaderObjdump::OnStackGlobal(Index stack_global) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnSymbolInfoCount(Index count) {
-  PrintDetails("  - symbol info [count=%d]\n", count);
+Result BinaryReaderObjdump::OnSymbolCount(Index count) {
+  PrintDetails("  - symbol table [count=%d]\n", count);
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnSymbolInfo(string_view name, uint32_t flags) {
+Result BinaryReaderObjdump::OnSymbol(Index symbol_index,
+                                     SymbolType type,
+                                     Index index,
+                                     string_view name,
+                                     uint32_t flags,
+                                     Index segment,
+                                     uint32_t offset,
+                                     uint32_t size) {
+  std::string sym_name = name.to_string();
+  switch (type) {
+    case SymbolType::Function:
+      if (sym_name.empty())
+        sym_name = GetFunctionName(index);
+      break;
+    case SymbolType::Global:
+      if (sym_name.empty())
+        sym_name = GetGlobalName(index);
+      break;
+    case SymbolType::Data:
+      break;
+  }
+  assert(!sym_name.empty());
+
   const char* binding_name = nullptr;
-  SymbolBinding binding = static_cast<SymbolBinding>(flags & 0x3);
+  SymbolBinding binding =
+      static_cast<SymbolBinding>(flags & WABT_SYMBOL_MASK_BINDING);
   switch (binding) {
     case SymbolBinding::Global:
-      binding_name = "GLOBAL";
+      binding_name = "global";
       break;
     case SymbolBinding::Local:
-      binding_name = "LOCAL ";
+      binding_name = "local";
       break;
     case SymbolBinding::Weak:
-      binding_name = "WEAK  ";
+      binding_name = "weak";
       break;
   }
 
-  PrintDetails("   - %s <" PRIstringview ">\n", binding_name,
-               WABT_PRINTF_STRING_VIEW_ARG(name));
+  const char* vis_name = nullptr;
+  SymbolVisibility vis =
+      static_cast<SymbolVisibility>(flags & WABT_SYMBOL_MASK_VISIBILITY);
+  switch (vis) {
+    case SymbolVisibility::Hidden:
+      vis_name = "hidden";
+      break;
+    case SymbolVisibility::Default:
+      vis_name = "default";
+      break;
+  }
+
+  PrintDetails("   - sym[%d] <" PRIstringview ">", symbol_index,
+               WABT_PRINTF_STRING_VIEW_ARG(sym_name));
+  switch (type) {
+  case SymbolType::Data:
+    PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
+                 size);
+    break;
+  case SymbolType::Function:
+    PrintDetails(" func=%" PRIindex, index);
+    break;
+  case SymbolType::Global:
+    PrintDetails(" global=%" PRIindex, index);
+    break;
+  }
+  PrintDetails(" binding=%s vis=%s\n", binding_name, vis_name);
   return Result::Ok;
 }
 

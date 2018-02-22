@@ -68,9 +68,9 @@ Type:
  - type[4] (f32) -> nil
  - type[5] (i32) -> nil
 Import:
- - func[0] sig=0 <- __extern.bar
- - func[1] sig=2 <- __extern.does_nothing
- - func[2] sig=4 <- __extern.hello_world
+ - func[0] sig=0 <bar> <- __extern.bar
+ - func[1] sig=2 <does_nothing> <- __extern.does_nothing
+ - func[2] sig=4 <hello_world> <- __extern.hello_world
 Function:
  - func[3] sig=1 <func1>
  - func[4] sig=3 <func2>
@@ -97,44 +97,44 @@ Custom:
 Custom:
  - name: "reloc.Elem"
   - section: Elem
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x00008a) index=3
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000b(file=0x00008f) index=3
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000010(file=0x000094) index=3
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000015(file=0x000099) index=4
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001a(file=0x00009e) index=4
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001f(file=0x0000a3) index=5
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000024(file=0x0000a8) index=5
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x00008a) symbol=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000b(file=0x00008f) symbol=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000010(file=0x000094) symbol=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000015(file=0x000099) symbol=4
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001a(file=0x00009e) symbol=4
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001f(file=0x0000a3) symbol=5
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000024(file=0x0000a8) symbol=5
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x0000b5) index=0
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000c(file=0x0000bb) index=3
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001e(file=0x0000cd) index=1
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000026(file=0x0000d5) index=4
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000034(file=0x0000e3) index=2
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00003c(file=0x0000eb) index=5
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000006(file=0x0000b5) symbol=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00000c(file=0x0000bb) symbol=3
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00001e(file=0x0000cd) symbol=1
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000026(file=0x0000d5) symbol=4
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000034(file=0x0000e3) symbol=2
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x00003c(file=0x0000eb) symbol=5
 
 Code Disassembly:
 
 0000b0 <func1>:
  0000b2: 20 00                      | get_local 0
- 0000b4: 10 80 80 80 80 00          | call 0
-           0000b5: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 0
+ 0000b4: 10 80 80 80 80 00          | call 0 <bar>
+           0000b5: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 0 <bar>
  0000ba: 10 83 80 80 80 00          | call 3 <func1>
            0000bb: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 3 <func1>
  0000c0: 0b                         | end
 0000c1 <func2>:
  0000c3: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
- 0000cc: 10 81 80 80 80 00          | call 1
-           0000cd: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 1
+ 0000cc: 10 81 80 80 80 00          | call 1 <does_nothing>
+           0000cd: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 1 <does_nothing>
  0000d2: 42 0a                      | i64.const 10
  0000d4: 10 84 80 80 80 00          | call 4 <func2>
            0000d5: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 4 <func2>
  0000da: 0b                         | end
 0000db <func3>:
  0000dd: 43 00 00 80 3f             | f32.const 0x1p+0
- 0000e2: 10 82 80 80 80 00          | call 2
-           0000e3: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 2
+ 0000e2: 10 82 80 80 80 00          | call 2 <hello_world>
+           0000e3: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 2 <hello_world>
  0000e8: 41 0a                      | i32.const 10
  0000ea: 10 85 80 80 80 00          | call 5 <func3>
            0000eb: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 5 <func3>
