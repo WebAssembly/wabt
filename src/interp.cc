@@ -2735,6 +2735,38 @@ Result Thread::Run(int num_instructions) {
       case Opcode::F64X2Lt:
         CHECK_TRAP(SimdBinop<v128, int64_t>(Lt<double>));
         break;
+
+      case Opcode::I8X16LeS:
+        CHECK_TRAP(SimdBinop<v128, int8_t>(Le<int32_t>));
+        break;
+
+      case Opcode::I8X16LeU:
+        CHECK_TRAP(SimdBinop<v128, uint8_t>(Le<uint32_t>));
+        break;
+
+      case Opcode::I16X8LeS:
+        CHECK_TRAP(SimdBinop<v128, int16_t>(Le<int32_t>));
+        break;
+
+      case Opcode::I16X8LeU:
+        CHECK_TRAP(SimdBinop<v128, uint16_t>(Le<uint32_t>));
+        break;
+
+      case Opcode::I32X4LeS:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Le<int32_t>));
+        break;
+
+      case Opcode::I32X4LeU:
+        CHECK_TRAP(SimdBinop<v128, uint32_t>(Le<uint32_t>));
+        break;
+
+      case Opcode::F32X4Le:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Le<float>));
+        break;
+
+      case Opcode::F64X2Le:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Le<double>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -3268,7 +3300,15 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32X4LtS:
     case Opcode::I32X4LtU:
     case Opcode::F32X4Lt:
-    case Opcode::F64X2Lt: { 
+    case Opcode::F64X2Lt:
+    case Opcode::I8X16LeS:
+    case Opcode::I8X16LeU:
+    case Opcode::I16X8LeS:
+    case Opcode::I16X8LeU:
+    case Opcode::I32X4LeS:
+    case Opcode::I32X4LeU:
+    case Opcode::F32X4Le:
+    case Opcode::F64X2Le: { 
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n", opcode.GetName(), Pick(2).v128_bits.v[0],
                        Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],Pick(1).v128_bits.v[0],
                        Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
@@ -3644,6 +3684,14 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I32X4LtU:
       case Opcode::F32X4Lt:
       case Opcode::F64X2Lt:
+      case Opcode::I8X16LeS:
+      case Opcode::I8X16LeU:
+      case Opcode::I16X8LeS:
+      case Opcode::I16X8LeU:
+      case Opcode::I32X4LeS:
+      case Opcode::I32X4LeU:
+      case Opcode::F32X4Le:
+      case Opcode::F64X2Le:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
