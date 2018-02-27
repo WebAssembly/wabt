@@ -6,6 +6,7 @@
   (import "ignored" "test2" (func (param i32) (result i32)))
   (import "ignored" "testmem" (memory 0))
   (import "ignored" "testtable" (table 0 anyfunc))
+  (import "ignored" "testexcept" (except i32))
 )
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
@@ -32,7 +33,7 @@
 ; section "Import" (2)
 0000017: 02                                        ; section code
 0000018: 00                                        ; section size (guess)
-0000019: 04                                        ; num imports
+0000019: 05                                        ; num imports
 ; import header 0
 000001a: 07                                        ; string length
 000001b: 6967 6e6f 7265 64                        ignored  ; import module name
@@ -64,7 +65,15 @@
 000005f: 70                                        ; anyfunc
 0000060: 00                                        ; limits: flags
 0000061: 00                                        ; limits: initial
-0000018: 49                                        ; FIXUP section size
+; import header 4
+0000062: 07                                        ; string length
+0000063: 6967 6e6f 7265 64                        ignored  ; import module name
+000006a: 0a                                        ; string length
+000006b: 7465 7374 6578 6365 7074                 testexcept  ; import field name
+0000075: 04                                        ; import kind
+0000076: 01                                        ; exception type count
+0000077: 7f                                        ; i32
+0000018: 5f                                        ; FIXUP section size
 
 import.wasm:	file format wasm 0x1
 
@@ -78,6 +87,7 @@ Import:
  - func[1] sig=1 <- ignored.test2
  - memory[0] pages: initial=0 <- ignored.testmem
  - table[0] elem_type=anyfunc init=0 max=0 <- ignored.testtable
+ - except[0] (i32) <- ignored.testexcept
 
 Code Disassembly:
 

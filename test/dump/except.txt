@@ -1,0 +1,37 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v
+;;; ARGS1: -x
+(module
+  (except)
+  (except i32)
+  (except f32 f64))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "exception"
+0000008: 00                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 09                                        ; string length
+000000b: 6578 6365 7074 696f 6e                   exception  ; custom section name
+0000014: 03                                        ; exception count
+0000015: 00                                        ; exception type count
+0000016: 01                                        ; exception type count
+0000017: 7f                                        ; i32
+0000018: 02                                        ; exception type count
+0000019: 7d                                        ; f32
+000001a: 7c                                        ; f64
+0000009: 11                                        ; FIXUP section size
+
+except.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "exception"
+ - except[0] ()
+ - except[1] (i32)
+ - except[2] (f32, f64)
+
+Code Disassembly:
+
+;;; STDOUT ;;)

@@ -330,6 +330,15 @@ Result BinaryReaderLogging::OnIfExpr(Index num_types, Type* sig_types) {
   return reader_->OnIfExpr(num_types, sig_types);
 }
 
+Result BinaryReaderLogging::OnIfExceptExpr(Index num_types,
+                                           Type* sig_types,
+                                           Index except_index) {
+  LOGF("OnIfExceptExpr(sig: ");
+  LogTypes(num_types, sig_types);
+  LOGF_NOINDENT(", except: %" PRIindex ")\n", except_index);
+  return reader_->OnIfExceptExpr(num_types, sig_types, except_index);
+}
+
 Result BinaryReaderLogging::OnLoopExpr(Index num_types, Type* sig_types) {
   LOGF("OnLoopExpr(sig: ");
   LogTypes(num_types, sig_types);
@@ -577,8 +586,7 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicWakeExpr);
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_DESC(OnCallIndirectExpr, "sig_index")
-DEFINE_INDEX_DESC(OnCatchExpr, "except_index");
-DEFINE0(OnCatchAllExpr)
+DEFINE0(OnCatchExpr);
 DEFINE_OPCODE(OnCompareExpr)
 DEFINE_OPCODE(OnConvertExpr)
 DEFINE0(OnCurrentMemoryExpr)
@@ -590,7 +598,7 @@ DEFINE_INDEX_DESC(OnGetLocalExpr, "index")
 DEFINE0(OnGrowMemoryExpr)
 DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);
 DEFINE0(OnNopExpr)
-DEFINE_INDEX_DESC(OnRethrowExpr, "depth");
+DEFINE0(OnRethrowExpr);
 DEFINE0(OnReturnExpr)
 DEFINE0(OnSelectExpr)
 DEFINE_INDEX_DESC(OnSetGlobalExpr, "index")

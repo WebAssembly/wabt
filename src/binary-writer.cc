@@ -481,6 +481,20 @@ void BinaryWriter::WriteExpr(const Module* module,
       WriteOpcode(stream_, Opcode::End);
       break;
     }
+    case ExprType::IfExcept: {
+      auto* if_except_expr = cast<IfExceptExpr>(expr);
+      WriteOpcode(stream_, Opcode::IfExcept);
+      write_inline_signature_type(stream_, if_except_expr->true_.sig);
+      Index index = module->GetExceptIndex(if_except_expr->except_var);
+      WriteU32Leb128(stream_, index, "exception index");
+      WriteExprList(module, func, if_except_expr->true_.exprs);
+      if (!if_except_expr->false_.empty()) {
+        WriteOpcode(stream_, Opcode::Else);
+        WriteExprList(module, func, if_except_expr->false_);
+      }
+      WriteOpcode(stream_, Opcode::End);
+      break;
+    }
     case ExprType::Load:
       WriteLoadStoreExpr<LoadExpr>(module, func, expr, "load offset");
       break;
@@ -495,8 +509,6 @@ void BinaryWriter::WriteExpr(const Module* module,
       break;
     case ExprType::Rethrow:
       WriteOpcode(stream_, Opcode::Rethrow);
-      WriteU32Leb128(stream_, GetLabelVarDepth(&cast<RethrowExpr>(expr)->var),
-                     "rethrow depth");
       break;
     case ExprType::Return:
       WriteOpcode(stream_, Opcode::Return);
@@ -530,21 +542,13 @@ void BinaryWriter::WriteExpr(const Module* module,
       WriteU32Leb128(stream_, GetExceptVarDepth(&cast<ThrowExpr>(expr)->var),
                      "throw exception");
       break;
-    case ExprType::TryBlock: {
+    case ExprType::Try: {
       auto* try_expr = cast<TryExpr>(expr);
       WriteOpcode(stream_, Opcode::Try);
       write_inline_signature_type(stream_, try_expr->block.sig);
       WriteExprList(module, func, try_expr->block.exprs);
-      for (const Catch& catch_ : try_expr->catches) {
-        if (catch_.IsCatchAll()) {
-          WriteOpcode(stream_, Opcode::CatchAll);
-        } else {
-          WriteOpcode(stream_, Opcode::Catch);
-          WriteU32Leb128(stream_, GetExceptVarDepth(&catch_.var),
-                         "catch exception");
-        }
-        WriteExprList(module, func, catch_.exprs);
-      }
+      WriteOpcode(stream_, Opcode::Catch);
+      WriteExprList(module, func, try_expr->catch_);
       WriteOpcode(stream_, Opcode::End);
       break;
     }

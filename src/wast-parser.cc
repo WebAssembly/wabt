@@ -184,6 +184,7 @@ bool IsBlockInstr(TokenType token_type) {
     case TokenType::Block:
     case TokenType::Loop:
     case TokenType::If:
+    case TokenType::IfExcept:
     case TokenType::Try:
       return true;
     default:
@@ -201,10 +202,6 @@ bool IsExpr(TokenTypePair pair) {
 
 bool IsInstr(TokenTypePair pair) {
   return IsPlainOrBlockInstr(pair[0]) || IsExpr(pair);
-}
-
-bool IsCatch(TokenType token_type) {
-  return token_type == TokenType::Catch || token_type == TokenType::CatchAll;
 }
 
 bool IsModuleField(TokenTypePair pair) {
@@ -1440,7 +1437,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
     case TokenType::Rethrow:
       ErrorUnlessOpcodeEnabled(Consume());
-      CHECK_RESULT(ParsePlainInstrVar<RethrowExpr>(loc, out_expr));
+      out_expr->reset(new RethrowExpr(loc));
       break;
 
     case TokenType::AtomicWake: {
@@ -1689,14 +1686,32 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
+    case TokenType::IfExcept: {
+      Consume();
+      auto expr = MakeUnique<IfExceptExpr>(loc);
+      CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
+      CHECK_RESULT(ParseResultList(&expr->true_.sig));
+      CHECK_RESULT(ParseVar(&expr->except_var));
+      CHECK_RESULT(ParseInstrList(&expr->true_.exprs));
+      if (Match(TokenType::Else)) {
+        CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
+        CHECK_RESULT(ParseTerminatingInstrList(&expr->false_));
+      }
+      EXPECT(End);
+      CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
+      *out_expr = std::move(expr);
+      break;
+    }
+
     case TokenType::Try: {
       ErrorUnlessOpcodeEnabled(Consume());
       auto expr = MakeUnique<TryExpr>(loc);
-      CatchVector catches;
       CHECK_RESULT(ParseLabelOpt(&expr->block.label));
       CHECK_RESULT(ParseBlock(&expr->block));
-      CHECK_RESULT(ParseCatchInstrList(&expr->catches));
-      CHECK_RESULT(ErrorIfLpar({"a catch expr"}));
+      if (Match(TokenType::Catch)) {
+        CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
+        CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
+      }
       EXPECT(End);
       CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
       *out_expr = std::move(expr);
@@ -1788,7 +1803,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
       case TokenType::Loop: {
         Consume();
         Consume();
-        auto expr = MakeUnique<LoopExpr>();
+        auto expr = MakeUnique<LoopExpr>(loc);
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseBlock(&expr->block));
         exprs->push_back(std::move(expr));
@@ -1796,12 +1811,53 @@ Result WastParser::ParseExpr(ExprList* exprs) {
       }
 
       case TokenType::If: {
+        Location loc = GetLocation();
         Consume();
         Consume();
         auto expr = MakeUnique<IfExpr>(loc);
 
         CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
         CHECK_RESULT(ParseResultList(&expr->true_.sig));
+
+        if (PeekMatchExpr()) {
+          ExprList cond;
+          CHECK_RESULT(ParseExpr(&cond));
+          exprs->splice(exprs->end(), cond);
+        }
+
+        if (MatchLpar(TokenType::Then)) {
+          CHECK_RESULT(ParseTerminatingInstrList(&expr->true_.exprs));
+          EXPECT(Rpar);
+
+          if (MatchLpar(TokenType::Else)) {
+            CHECK_RESULT(ParseTerminatingInstrList(&expr->false_));
+            EXPECT(Rpar);
+          } else if (PeekMatchExpr()) {
+            CHECK_RESULT(ParseExpr(&expr->false_));
+          }
+        } else if (PeekMatchExpr()) {
+          CHECK_RESULT(ParseExpr(&expr->true_.exprs));
+          if (PeekMatchExpr()) {
+            CHECK_RESULT(ParseExpr(&expr->false_));
+          }
+        } else {
+          ConsumeIfLpar();
+          return ErrorExpected({"then block"}, "(then ...)");
+        }
+
+        exprs->push_back(std::move(expr));
+        break;
+      }
+
+      case TokenType::IfExcept: {
+        Location loc = GetLocation();
+        Consume();
+        Consume();
+        auto expr = MakeUnique<IfExceptExpr>(loc);
+
+        CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
+        CHECK_RESULT(ParseResultList(&expr->true_.sig));
+        CHECK_RESULT(ParseVar(&expr->except_var));
 
         if (PeekMatchExpr()) {
           ExprList cond;
@@ -1841,8 +1897,14 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseResultList(&expr->block.sig));
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
-        CHECK_RESULT(ParseCatchExprList(&expr->catches));
-        CHECK_RESULT(ErrorIfLpar({"a catch expr"}));
+
+        if (MatchLpar(TokenType::Catch)) {
+          CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
+          EXPECT(Rpar);
+        } else {
+          ConsumeIfLpar();
+          return ErrorExpected({"catch block"}, "(catch ...)");
+        }
 
         exprs->push_back(std::move(expr));
         break;
@@ -1855,40 +1917,6 @@ Result WastParser::ParseExpr(ExprList* exprs) {
   }
 
   EXPECT(Rpar);
-  return Result::Ok;
-}
-
-Result WastParser::ParseCatchInstrList(CatchVector* catches) {
-  WABT_TRACE(ParseCatchInstrList);
-  while (IsCatch(Peek())) {
-    Catch catch_(GetLocation());
-
-    if (Consume().token_type() == TokenType::Catch) {
-      CHECK_RESULT(ParseVar(&catch_.var));
-    }
-
-    CHECK_RESULT(ParseInstrList(&catch_.exprs));
-    catches->push_back(std::move(catch_));
-  }
-
-  return Result::Ok;
-}
-
-Result WastParser::ParseCatchExprList(CatchVector* catches) {
-  WABT_TRACE(ParseCatchExprList);
-  while (PeekMatch(TokenType::Lpar) && IsCatch(Peek(1))) {
-    Consume();
-    Catch catch_(GetLocation());
-
-    if (Consume().token_type() == TokenType::Catch) {
-      CHECK_RESULT(ParseVar(&catch_.var));
-    }
-
-    CHECK_RESULT(ParseTerminatingInstrList(&catch_.exprs));
-    EXPECT(Rpar);
-    catches->push_back(std::move(catch_));
-  }
-
   return Result::Ok;
 }
 

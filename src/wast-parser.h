@@ -165,8 +165,6 @@ class WastParser {
   Result ParseBlock(Block*);
   Result ParseExprList(ExprList*);
   Result ParseExpr(ExprList*);
-  Result ParseCatchInstrList(CatchVector* catches);
-  Result ParseCatchExprList(CatchVector* catches);
   Result ParseGlobalType(Global*);
 
   template <typename T>

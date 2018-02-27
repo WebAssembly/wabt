@@ -1,0 +1,39 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+(module
+  (except $e i32)
+
+  ;; no else
+  (func
+    try
+      nop
+    catch
+      if_except $label $e
+        drop
+      end
+    end)
+
+  ;; with label
+  (func
+    try
+      nop
+    catch
+      if_except $label $e
+        drop
+      else
+        nop
+      end
+    end)
+
+  ;; with result type
+  (func
+    try (result i32)
+      i32.const 0
+    catch
+      if_except (result i32) $e
+      else
+        i32.const 2
+      end
+    end
+    drop)
+)

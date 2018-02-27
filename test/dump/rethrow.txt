@@ -1,0 +1,62 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-exceptions
+(module
+  (except $e1)
+  (func
+    try
+    catch
+      rethrow
+    end))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+0000009: 04                                        ; FIXUP section size
+; section "Function" (3)
+000000e: 03                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num functions
+0000011: 00                                        ; function 0 signature index
+000000f: 02                                        ; FIXUP section size
+; section "exception"
+0000012: 00                                        ; section code
+0000013: 00                                        ; section size (guess)
+0000014: 09                                        ; string length
+0000015: 6578 6365 7074 696f 6e                   exception  ; custom section name
+000001e: 01                                        ; exception count
+000001f: 00                                        ; exception type count
+0000013: 0c                                        ; FIXUP section size
+; section "Code" (10)
+0000020: 0a                                        ; section code
+0000021: 00                                        ; section size (guess)
+0000022: 01                                        ; num functions
+; function body 0
+0000023: 00                                        ; func body size (guess)
+0000024: 00                                        ; local decl count
+0000025: 06                                        ; try
+0000026: 40                                        ; void
+0000027: 07                                        ; catch
+0000028: 09                                        ; rethrow
+0000029: 0b                                        ; end
+000002a: 0b                                        ; end
+0000023: 07                                        ; FIXUP func body size
+0000021: 09                                        ; FIXUP section size
+
+rethrow.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000023 func[0]:
+ 000025: 06 40                      | try
+ 000027: 07                         | catch
+ 000028: 09                         |   rethrow
+ 000029: 0b                         | end
+ 00002a: 0b                         | end
+;;; STDOUT ;;)

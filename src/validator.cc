@@ -67,6 +67,9 @@ class Validator : public ExprVisitor::Delegate {
   Result BeginIfExpr(IfExpr*) override;
   Result AfterIfTrueExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
+  Result BeginIfExceptExpr(IfExceptExpr*) override;
+  Result AfterIfExceptTrueExpr(IfExceptExpr*) override;
+  Result EndIfExceptExpr(IfExceptExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
@@ -80,8 +83,8 @@ class Validator : public ExprVisitor::Delegate {
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
-  Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
@@ -635,6 +638,30 @@ Result Validator::EndIfExpr(IfExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::BeginIfExceptExpr(IfExceptExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckBlockSig(&expr->loc, Opcode::IfExcept, &expr->true_.sig);
+  const Exception* except;
+  TypeVector except_sig;
+  if (Succeeded(CheckExceptVar(&expr->except_var, &except))) {
+    except_sig = except->sig;
+  }
+  typechecker_.OnIfExcept(&expr->true_.sig, &except_sig);
+  return Result::Ok;
+}
+
+Result Validator::AfterIfExceptTrueExpr(IfExceptExpr* expr) {
+  if (!expr->false_.empty()) {
+    typechecker_.OnElse();
+  }
+  return Result::Ok;
+}
+
+Result Validator::EndIfExceptExpr(IfExceptExpr* expr) {
+  typechecker_.OnEnd();
+  return Result::Ok;
+}
+
 Result Validator::OnLoadExpr(LoadExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasMemory(&expr->loc, expr->opcode);
@@ -715,36 +742,20 @@ Result Validator::OnUnreachableExpr(UnreachableExpr* expr) {
 Result Validator::BeginTryExpr(TryExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckBlockSig(&expr->loc, Opcode::Try, &expr->block.sig);
-  typechecker_.OnTryBlock(&expr->block.sig);
-  if (expr->catches.empty()) {
-    PrintError(&expr->loc, "TryBlock: doesn't have any catch clauses");
+  typechecker_.OnTry(&expr->block.sig);
+  if (expr->catch_.empty()) {
+    PrintError(&expr->loc, "try block doesn't have a catch clause");
   }
-  bool found_catch_all = false;
-  for (const Catch& catch_ : expr->catches) {
-    if (catch_.IsCatchAll()) {
-      found_catch_all = true;
-    } else {
-      if (found_catch_all) {
-        PrintError(&catch_.loc, "Appears after catch all block");
-      }
-    }
-  }
+  return Result::Ok;
+}
+
+Result Validator::OnCatchExpr(TryExpr* expr) {
+  typechecker_.OnCatch();
   return Result::Ok;
 }
 
 Result Validator::EndTryExpr(TryExpr* expr) {
   typechecker_.OnEnd();
-  return Result::Ok;
-}
-
-Result Validator::OnCatchExpr(TryExpr* expr, Catch* catch_) {
-  typechecker_.OnCatchBlock(&expr->block.sig);
-  if (!catch_->IsCatchAll()) {
-    const Exception* except = nullptr;
-    if (Succeeded(CheckExceptVar(&catch_->var, &except))) {
-      typechecker_.OnCatch(&except->sig);
-    }
-  }
   return Result::Ok;
 }
 
@@ -759,7 +770,7 @@ Result Validator::OnThrowExpr(ThrowExpr* expr) {
 
 Result Validator::OnRethrowExpr(RethrowExpr* expr) {
   expr_loc_ = &expr->loc;
-  typechecker_.OnRethrow(expr->var.index());
+  typechecker_.OnRethrow();
   return Result::Ok;
 }
 

@@ -1,0 +1,13 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (func
+    try
+      nop
+    end))
+(;; STDERR ;;;
+out/test/parse/expr/bad-try-no-catch.txt:6:5: error: try block doesn't have a catch clause
+    try
+    ^^^
+;;; STDERR ;;)
