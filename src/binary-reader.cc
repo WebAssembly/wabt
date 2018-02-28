@@ -1355,30 +1355,38 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           string_view name;
           uint32_t flags = 0;
           uint32_t kind = 0;
-          uint32_t index = 0;
-          uint32_t segment = 0;
-          uint32_t offset = 0;
-          uint32_t size = 0;
           CHECK_RESULT(ReadU32Leb128(&kind, "sym type"));
           CHECK_RESULT(ReadU32Leb128(&flags, "sym flags"));
-          switch (static_cast<SymbolType>(kind)) {
+          SymbolType sym_type = static_cast<SymbolType>(kind);
+          CALLBACK(OnSymbol, i, sym_type, flags);
+          switch (sym_type) {
             case SymbolType::Function:
-            case SymbolType::Global:
+            case SymbolType::Global: {
+              uint32_t index = 0;
               CHECK_RESULT(ReadU32Leb128(&index, "index"));
               if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0)
                 CHECK_RESULT(ReadStr(&name, "symbol name"));
+              if (sym_type == SymbolType::Function) {
+                CALLBACK(OnFunctionSymbol, i, flags, name, index);
+              } else {
+                CALLBACK(OnGlobalSymbol, i, flags, name, index);
+              }
               break;
-            case SymbolType::Data:
+            }
+            case SymbolType::Data: {
+              uint32_t segment = 0;
+              uint32_t offset = 0;
+              uint32_t size = 0;
               CHECK_RESULT(ReadStr(&name, "symbol name"));
               if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0) {
                 CHECK_RESULT(ReadU32Leb128(&segment, "segment"));
                 CHECK_RESULT(ReadU32Leb128(&offset, "offset"));
                 CHECK_RESULT(ReadU32Leb128(&size, "size"));
               }
+              CALLBACK(OnDataSymbol, i, flags, name, segment, offset, size);
               break;
+            }
           }
-          CALLBACK(OnSymbol, i, static_cast<SymbolType>(kind), index, name,
-                   flags, segment, offset, size);
         }
         break;
       case LinkingEntryType::DataSize: {

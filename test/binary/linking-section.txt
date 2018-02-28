@@ -31,17 +31,19 @@ section("linking") {
     type[0]
     flags[1]
     index[0]
-    str("foo")
+    str("func_sym")
 
-    type[0]
+    type[2]
     flags[2]
     index[0]
-    str("bar")
+    str("global_syum")
 
-    type[0]
+    type[1]
     flags[4]
-    index[0]
-    str("baz")
+    str("data_sym")
+    segment[1]
+    offset[2]
+    size[1]
   }
 }
 (;; STDOUT ;;;
@@ -60,9 +62,9 @@ Custom:
    - 1: priority=5
    - 0: priority=6
   - symbol table [count=3]
-   - sym[0] <foo> func=0 binding=weak vis=default
-   - sym[1] <bar> func=0 binding=local vis=default
-   - sym[2] <baz> func=0 binding=global vis=hidden
+   - sym[0] <func_sym> func=0 binding=weak vis=default
+   - sym[1] <global_syum> global=0 binding=local vis=default
+   - sym[2] <data_sym> segment=1 offset=2 size=1 binding=global vis=hidden
 
 Code Disassembly:
 

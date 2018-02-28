@@ -172,16 +172,12 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
-  Result OnSymbol(Index symbol_index,
-                  SymbolType type,
-                  Index index,
-                  string_view name,
-                  uint32_t flags,
-                  Index segment,
-                  uint32_t offset,
-                  uint32_t size) override {
-    if (type == SymbolType::Function && !name.empty())
-      SetFunctionName(index, name);
+  Result OnFunctionSymbol(Index index,
+                          uint32_t flags,
+                          string_view name,
+                          Index func_index) override {
+    if (!name.empty())
+      SetFunctionName(func_index, name);
     return Result::Ok;
   }
 
@@ -595,14 +591,20 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
 
   Result OnStackGlobal(Index stack_global) override;
   Result OnSymbolCount(Index count) override;
-  Result OnSymbol(Index symbol_index,
-                  SymbolType type,
-                  Index index,
-                  string_view name,
-                  uint32_t flags,
-                  Index segment,
-                  uint32_t offset,
-                  uint32_t size) override;
+  Result OnDataSymbol(Index index,
+                      uint32_t flags,
+                      string_view name,
+                      Index segment,
+                      uint32_t offset,
+                      uint32_t size) override;
+  Result OnFunctionSymbol(Index index,
+                          uint32_t flags,
+                          string_view name,
+                          Index func_index) override;
+  Result OnGlobalSymbol(Index index,
+                        uint32_t flags,
+                        string_view name,
+                        Index global_index) override;
   Result OnDataSize(uint32_t data_size) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
@@ -618,6 +620,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
  private:
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
+  void PrintSymbolFlags(uint32_t flags);
   void PrintInitExpr(const InitExpr& expr);
   Result OnCount(Index count);
 
@@ -1180,31 +1183,7 @@ Result BinaryReaderObjdump::OnSymbolCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnSymbol(Index symbol_index,
-                                     SymbolType type,
-                                     Index index,
-                                     string_view name,
-                                     uint32_t flags,
-                                     Index segment,
-                                     uint32_t offset,
-                                     uint32_t size) {
-  std::string sym_name = name.to_string();
-  switch (type) {
-    case SymbolType::Function:
-      if (sym_name.empty()) {
-        sym_name = GetFunctionName(index);
-      }
-      break;
-    case SymbolType::Global:
-      if (sym_name.empty()) {
-        sym_name = GetGlobalName(index);
-      }
-      break;
-    case SymbolType::Data:
-      break;
-  }
-  assert(!sym_name.empty());
-
+void BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
   const char* binding_name = nullptr;
   SymbolBinding binding =
       static_cast<SymbolBinding>(flags & WABT_SYMBOL_MASK_BINDING);
@@ -1231,22 +1210,49 @@ Result BinaryReaderObjdump::OnSymbol(Index symbol_index,
       vis_name = "default";
       break;
   }
-
-  PrintDetails("   - sym[%d] <" PRIstringview ">", symbol_index,
-               WABT_PRINTF_STRING_VIEW_ARG(sym_name));
-  switch (type) {
-    case SymbolType::Data:
-      PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
-                   size);
-      break;
-    case SymbolType::Function:
-      PrintDetails(" func=%" PRIindex, index);
-      break;
-    case SymbolType::Global:
-      PrintDetails(" global=%" PRIindex, index);
-      break;
-  }
   PrintDetails(" binding=%s vis=%s\n", binding_name, vis_name);
+}
+
+Result BinaryReaderObjdump::OnDataSymbol(Index index,
+                                         uint32_t flags,
+                                         string_view name,
+                                         Index segment,
+                                         uint32_t offset,
+                                         uint32_t size) {
+  PrintDetails("   - sym[%d] <" PRIstringview "> segment=%" PRIindex
+               " offset=%d size=%d",
+               index, WABT_PRINTF_STRING_VIEW_ARG(name), segment, offset, size);
+  PrintSymbolFlags(flags);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
+                                             uint32_t flags,
+                                             string_view name,
+                                             Index func_index) {
+  std::string sym_name = name.to_string();
+  if (sym_name.empty()) {
+      sym_name = GetFunctionName(func_index);
+  }
+  assert(!sym_name.empty());
+  PrintDetails("   - sym[%d] <" PRIstringview "> func=%" PRIindex, index,
+               WABT_PRINTF_STRING_VIEW_ARG(sym_name), func_index);
+  PrintSymbolFlags(flags);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
+                                           uint32_t flags,
+                                           string_view name,
+                                           Index global_index) {
+  std::string sym_name = name.to_string();
+  if (sym_name.empty()) {
+      sym_name = GetGlobalName(global_index);
+  }
+  assert(!sym_name.empty());
+  PrintDetails("   - sym[%d] <" PRIstringview "> global=%" PRIindex, index,
+               WABT_PRINTF_STRING_VIEW_ARG(sym_name), global_index);
+  PrintSymbolFlags(flags);
   return Result::Ok;
 }
 

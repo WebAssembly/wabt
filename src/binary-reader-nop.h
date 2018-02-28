@@ -360,12 +360,27 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnSymbolCount(Index count) override { return Result::Ok; }
   Result OnSymbol(Index sybmol_index,
                   SymbolType type,
-                  Index index,
-                  string_view name,
-                  uint32_t flags,
-                  Index segment,
-                  uint32_t offset,
-                  uint32_t size) override {
+                  uint32_t flags) override {
+    return Result::Ok;
+  }
+  Result OnDataSymbol(Index index,
+                      uint32_t flags,
+                      string_view name,
+                      Index segment,
+                      uint32_t offset,
+                      uint32_t size) override {
+    return Result::Ok;
+  }
+  Result OnFunctionSymbol(Index index,
+                          uint32_t flags,
+                          string_view name,
+                          Index func_index) override {
+    return Result::Ok;
+  }
+  Result OnGlobalSymbol(Index index,
+                        uint32_t flags,
+                        string_view name,
+                        Index global_index) override {
     return Result::Ok;
   }
   Result OnDataSize(uint32_t data_size) override { return Result::Ok; }
