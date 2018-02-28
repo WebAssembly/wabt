@@ -69,6 +69,8 @@ const char* GetTokenTypeName(TokenType token_type) {
       "ATOMIC_RMW",
       "ATOMIC_RMW_CMPXCHG",
       "ATOMIC_STORE",
+      "ATOMIC_WAIT",
+      "ATOMIC_WAKE",
       "BINARY",
       "block",
       "br",
@@ -99,13 +101,11 @@ const char* GetTokenTypeName(TokenType token_type) {
       "set_local",
       "STORE",
       "tee_local",
+      "TERNARY",
       "throw",
       "try",
       "UNARY",
-      "TERNARY",
       "unreachable",
-      "WAIT",
-      "WAKE",
 
       // String.
       "align=",
