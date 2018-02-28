@@ -55,7 +55,7 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type) {
-  WriteS32Leb128(stream, type, GetTypeName(type));
+  stream->WriteU8Enum(type, GetTypeName(type));
 }
 
 void WriteLimits(Stream* stream, const Limits* limits) {
