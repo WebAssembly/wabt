@@ -2683,6 +2683,162 @@ Result Thread::Run(int num_instructions) {
       case Opcode::F64X2Eq:
         CHECK_TRAP(SimdBinop<v128, int64_t>(Eq<double>));
         break;
+
+      case Opcode::I8X16Ne:
+        CHECK_TRAP(SimdBinop<v128, int8_t>(Ne<int32_t>));
+        break;
+
+      case Opcode::I16X8Ne:
+        CHECK_TRAP(SimdBinop<v128, int16_t>(Ne<int32_t>));
+        break;
+
+      case Opcode::I32X4Ne:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Ne<int32_t>));
+        break;
+
+      case Opcode::F32X4Ne:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Ne<float>));
+        break;
+
+      case Opcode::F64X2Ne:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Ne<double>));
+        break;
+
+      case Opcode::I8X16LtS:
+        CHECK_TRAP(SimdBinop<v128, int8_t>(Lt<int32_t>));
+        break;
+
+      case Opcode::I8X16LtU:
+        CHECK_TRAP(SimdBinop<v128, uint8_t>(Lt<uint32_t>));
+        break;
+
+      case Opcode::I16X8LtS:
+        CHECK_TRAP(SimdBinop<v128, int16_t>(Lt<int32_t>));
+        break;
+
+      case Opcode::I16X8LtU:
+        CHECK_TRAP(SimdBinop<v128, uint16_t>(Lt<uint32_t>));
+        break;
+
+      case Opcode::I32X4LtS:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Lt<int32_t>));
+        break;
+
+      case Opcode::I32X4LtU:
+        CHECK_TRAP(SimdBinop<v128, uint32_t>(Lt<uint32_t>));
+        break;
+
+      case Opcode::F32X4Lt:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Lt<float>));
+        break;
+
+      case Opcode::F64X2Lt:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Lt<double>));
+        break;
+
+      case Opcode::I8X16LeS:
+        CHECK_TRAP(SimdBinop<v128, int8_t>(Le<int32_t>));
+        break;
+
+      case Opcode::I8X16LeU:
+        CHECK_TRAP(SimdBinop<v128, uint8_t>(Le<uint32_t>));
+        break;
+
+      case Opcode::I16X8LeS:
+        CHECK_TRAP(SimdBinop<v128, int16_t>(Le<int32_t>));
+        break;
+
+      case Opcode::I16X8LeU:
+        CHECK_TRAP(SimdBinop<v128, uint16_t>(Le<uint32_t>));
+        break;
+
+      case Opcode::I32X4LeS:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Le<int32_t>));
+        break;
+
+      case Opcode::I32X4LeU:
+        CHECK_TRAP(SimdBinop<v128, uint32_t>(Le<uint32_t>));
+        break;
+
+      case Opcode::F32X4Le:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Le<float>));
+        break;
+
+      case Opcode::F64X2Le:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Le<double>));
+        break;
+
+      case Opcode::I8X16GtS:
+        CHECK_TRAP(SimdBinop<v128, int8_t>(Gt<int32_t>));
+        break;
+
+      case Opcode::I8X16GtU:
+        CHECK_TRAP(SimdBinop<v128, uint8_t>(Gt<uint32_t>));
+        break;
+
+      case Opcode::I16X8GtS:
+        CHECK_TRAP(SimdBinop<v128, int16_t>(Gt<int32_t>));
+        break;
+
+      case Opcode::I16X8GtU:
+        CHECK_TRAP(SimdBinop<v128, uint16_t>(Gt<uint32_t>));
+        break;
+
+      case Opcode::I32X4GtS:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Gt<int32_t>));
+        break;
+
+      case Opcode::I32X4GtU:
+        CHECK_TRAP(SimdBinop<v128, uint32_t>(Gt<uint32_t>));
+        break;
+
+      case Opcode::F32X4Gt:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Gt<float>));
+        break;
+
+      case Opcode::F64X2Gt:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Gt<double>));
+        break;
+
+      case Opcode::I8X16GeS:
+        CHECK_TRAP(SimdBinop<v128, int8_t>(Ge<int32_t>));
+        break;
+
+      case Opcode::I8X16GeU:
+        CHECK_TRAP(SimdBinop<v128, uint8_t>(Ge<uint32_t>));
+        break;
+
+      case Opcode::I16X8GeS:
+        CHECK_TRAP(SimdBinop<v128, int16_t>(Ge<int32_t>));
+        break;
+
+      case Opcode::I16X8GeU:
+        CHECK_TRAP(SimdBinop<v128, uint16_t>(Ge<uint32_t>));
+        break;
+
+      case Opcode::I32X4GeS:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Ge<int32_t>));
+        break;
+
+      case Opcode::I32X4GeU:
+        CHECK_TRAP(SimdBinop<v128, uint32_t>(Ge<uint32_t>));
+        break;
+
+      case Opcode::F32X4Ge:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Ge<float>));
+        break;
+
+      case Opcode::F64X2Ge:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Ge<double>));
+        break;
+
+      case Opcode::F32X4Neg:
+        CHECK_TRAP(SimdUnop<v128, int32_t>(FloatNeg<float>));
+        break;
+
+      case Opcode::F64X2Neg:
+        CHECK_TRAP(SimdUnop<v128, int64_t>(FloatNeg<double>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -3162,7 +3318,9 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I8X16AllTrue:
     case Opcode::I16X8AllTrue:
     case Opcode::I32X4AllTrue:
-    case Opcode::I64X2AllTrue: {
+    case Opcode::I64X2AllTrue:
+    case Opcode::F32X4Neg:
+    case Opcode::F64X2Neg: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
                                 Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -3203,7 +3361,44 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I16X8Eq: 
     case Opcode::I32X4Eq: 
     case Opcode::F32X4Eq: 
-    case Opcode::F64X2Eq: { 
+    case Opcode::F64X2Eq:
+    case Opcode::I8X16Ne:
+    case Opcode::I16X8Ne:
+    case Opcode::I32X4Ne:
+    case Opcode::F32X4Ne:
+    case Opcode::F64X2Ne:
+    case Opcode::I8X16LtS:
+    case Opcode::I8X16LtU:
+    case Opcode::I16X8LtS:
+    case Opcode::I16X8LtU:
+    case Opcode::I32X4LtS:
+    case Opcode::I32X4LtU:
+    case Opcode::F32X4Lt:
+    case Opcode::F64X2Lt:
+    case Opcode::I8X16LeS:
+    case Opcode::I8X16LeU:
+    case Opcode::I16X8LeS:
+    case Opcode::I16X8LeU:
+    case Opcode::I32X4LeS:
+    case Opcode::I32X4LeU:
+    case Opcode::F32X4Le:
+    case Opcode::F64X2Le:
+    case Opcode::I8X16GtS:
+    case Opcode::I8X16GtU:
+    case Opcode::I16X8GtS:
+    case Opcode::I16X8GtU:
+    case Opcode::I32X4GtS:
+    case Opcode::I32X4GtU:
+    case Opcode::F32X4Gt:
+    case Opcode::F64X2Gt:
+    case Opcode::I8X16GeS:
+    case Opcode::I8X16GeU:
+    case Opcode::I16X8GeS:
+    case Opcode::I16X8GeU:
+    case Opcode::I32X4GeS:
+    case Opcode::I32X4GeU:
+    case Opcode::F32X4Ge:
+    case Opcode::F64X2Ge: {
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n", opcode.GetName(), Pick(2).v128_bits.v[0],
                        Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],Pick(1).v128_bits.v[0],
                        Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
@@ -3566,6 +3761,43 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I32X4Eq:
       case Opcode::F32X4Eq:
       case Opcode::F64X2Eq:
+      case Opcode::I8X16Ne:
+      case Opcode::I16X8Ne:
+      case Opcode::I32X4Ne:
+      case Opcode::F32X4Ne:
+      case Opcode::F64X2Ne:
+      case Opcode::I8X16LtS:
+      case Opcode::I8X16LtU:
+      case Opcode::I16X8LtS:
+      case Opcode::I16X8LtU:
+      case Opcode::I32X4LtS:
+      case Opcode::I32X4LtU:
+      case Opcode::F32X4Lt:
+      case Opcode::F64X2Lt:
+      case Opcode::I8X16LeS:
+      case Opcode::I8X16LeU:
+      case Opcode::I16X8LeS:
+      case Opcode::I16X8LeU:
+      case Opcode::I32X4LeS:
+      case Opcode::I32X4LeU:
+      case Opcode::F32X4Le:
+      case Opcode::F64X2Le:
+      case Opcode::I8X16GtS:
+      case Opcode::I8X16GtU:
+      case Opcode::I16X8GtS:
+      case Opcode::I16X8GtU:
+      case Opcode::I32X4GtS:
+      case Opcode::I32X4GtU:
+      case Opcode::F32X4Gt:
+      case Opcode::F64X2Gt:
+      case Opcode::I8X16GeS:
+      case Opcode::I8X16GeU:
+      case Opcode::I16X8GeS:
+      case Opcode::I16X8GeU:
+      case Opcode::I32X4GeS:
+      case Opcode::I32X4GeU:
+      case Opcode::F32X4Ge:
+      case Opcode::F64X2Ge:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
@@ -3648,6 +3880,8 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I16X8AllTrue:
       case Opcode::I32X4AllTrue:
       case Opcode::I64X2AllTrue:
+      case Opcode::F32X4Neg:
+      case Opcode::F64X2Neg:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 

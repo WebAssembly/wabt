@@ -423,33 +423,10 @@ Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index) {
   return Result::Ok;
 }
 
-const char* type_name(Type type) {
-  switch (type) {
-    case Type::I32:
-      return "i32";
-
-    case Type::I64:
-      return "i64";
-
-    case Type::F32:
-      return "f32";
-
-    case Type::F64:
-      return "f64";
-
-    case Type::V128:
-      return "v128";
-
-    default:
-      assert(0);
-      return "INVALID TYPE";
-  }
-}
-
 Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Index num_types,
                                                         Type* sig_types) {
   if (num_types) {
-    LogOpcode(data_, 1, "%s", type_name(*sig_types));
+    LogOpcode(data_, 1, "%s", GetTypeName(*sig_types));
   } else {
     LogOpcode(data_, 1, nullptr);
   }
@@ -749,11 +726,11 @@ Result BinaryReaderObjdump::OnType(Index index,
     if (i != 0) {
       printf(", ");
     }
-    printf("%s", type_name(param_types[i]));
+    printf("%s", GetTypeName(param_types[i]));
   }
   printf(") -> ");
   if (result_count) {
-    printf("%s", type_name(result_types[0]));
+    printf("%s", GetTypeName(result_types[0]));
   } else {
     printf("nil");
   }
@@ -862,7 +839,7 @@ Result BinaryReaderObjdump::OnImportException(Index import_index,
     if (i != 0) {
       PrintDetails(", ");
     }
-    PrintDetails("%s", type_name(sig[i]));
+    PrintDetails("%s", GetTypeName(sig[i]));
   }
   PrintDetails(") <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
@@ -1295,7 +1272,7 @@ Result BinaryReaderObjdump::OnExceptionType(Index index, TypeVector& sig) {
     if (i != 0) {
       printf(", ");
     }
-    printf("%s", type_name(sig[i]));
+    printf("%s", GetTypeName(sig[i]));
   }
   printf(")\n");
   return Result::Ok;

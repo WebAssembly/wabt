@@ -576,6 +576,45 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i32x4.eq"             { RETURN_OPCODE(Compare, I32X4Eq); }
       <i> "f32x4.eq"             { RETURN_OPCODE(Compare, F32X4Eq); }
       <i> "f64x2.eq"             { RETURN_OPCODE(Compare, F64X2Eq); }
+      <i> "i8x16.ne"             { RETURN_OPCODE(Compare, I8X16Ne); }
+      <i> "i16x8.ne"             { RETURN_OPCODE(Compare, I16X8Ne); }
+      <i> "i32x4.ne"             { RETURN_OPCODE(Compare, I32X4Ne); }
+      <i> "f32x4.ne"             { RETURN_OPCODE(Compare, F32X4Ne); }
+      <i> "f64x2.ne"             { RETURN_OPCODE(Compare, F64X2Ne); }
+      <i> "i8x16.lt_s"           { RETURN_OPCODE(Compare, I8X16LtS); }
+      <i> "i8x16.lt_u"           { RETURN_OPCODE(Compare, I8X16LtU); }
+      <i> "i16x8.lt_s"           { RETURN_OPCODE(Compare, I16X8LtS); }
+      <i> "i16x8.lt_u"           { RETURN_OPCODE(Compare, I16X8LtU); }
+      <i> "i32x4.lt_s"           { RETURN_OPCODE(Compare, I32X4LtS); }
+      <i> "i32x4.lt_u"           { RETURN_OPCODE(Compare, I32X4LtU); }
+      <i> "f32x4.lt"             { RETURN_OPCODE(Compare, F32X4Lt); }
+      <i> "f64x2.lt"             { RETURN_OPCODE(Compare, F64X2Lt); }
+      <i> "i8x16.le_s"           { RETURN_OPCODE(Compare, I8X16LeS); }
+      <i> "i8x16.le_u"           { RETURN_OPCODE(Compare, I8X16LeU); }
+      <i> "i16x8.le_s"           { RETURN_OPCODE(Compare, I16X8LeS); }
+      <i> "i16x8.le_u"           { RETURN_OPCODE(Compare, I16X8LeU); }
+      <i> "i32x4.le_s"           { RETURN_OPCODE(Compare, I32X4LeS); }
+      <i> "i32x4.le_u"           { RETURN_OPCODE(Compare, I32X4LeU); }
+      <i> "f32x4.le"             { RETURN_OPCODE(Compare, F32X4Le); }
+      <i> "f64x2.le"             { RETURN_OPCODE(Compare, F64X2Le); }
+      <i> "i8x16.gt_s"           { RETURN_OPCODE(Compare, I8X16GtS); }
+      <i> "i8x16.gt_u"           { RETURN_OPCODE(Compare, I8X16GtU); }
+      <i> "i16x8.gt_s"           { RETURN_OPCODE(Compare, I16X8GtS); }
+      <i> "i16x8.gt_u"           { RETURN_OPCODE(Compare, I16X8GtU); }
+      <i> "i32x4.gt_s"           { RETURN_OPCODE(Compare, I32X4GtS); }
+      <i> "i32x4.gt_u"           { RETURN_OPCODE(Compare, I32X4GtU); }
+      <i> "f32x4.gt"             { RETURN_OPCODE(Compare, F32X4Gt); }
+      <i> "f64x2.gt"             { RETURN_OPCODE(Compare, F64X2Gt); }
+      <i> "i8x16.ge_s"           { RETURN_OPCODE(Compare, I8X16GeS); }
+      <i> "i8x16.ge_u"           { RETURN_OPCODE(Compare, I8X16GeU); }
+      <i> "i16x8.ge_s"           { RETURN_OPCODE(Compare, I16X8GeS); }
+      <i> "i16x8.ge_u"           { RETURN_OPCODE(Compare, I16X8GeU); }
+      <i> "i32x4.ge_s"           { RETURN_OPCODE(Compare, I32X4GeS); }
+      <i> "i32x4.ge_u"           { RETURN_OPCODE(Compare, I32X4GeU); }
+      <i> "f32x4.ge"             { RETURN_OPCODE(Compare, F32X4Ge); }
+      <i> "f64x2.ge"             { RETURN_OPCODE(Compare, F64X2Ge); }
+      <i> "f32x4.neg"            { RETURN_OPCODE(Unary, F32X4Neg); }
+      <i> "f64x2.neg"            { RETURN_OPCODE(Unary, F64X2Neg); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }

@@ -730,7 +730,7 @@ def HandleTestResult(status, info, result, rebase=False):
           # it's likely a "bad-*" file.
           status.Skipped(info)
         else:
-          raise Error(stderr)
+          raise Error(result.stderr)
       else:
         status.Passed(info, result.duration)
     else:
