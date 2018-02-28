@@ -1551,8 +1551,8 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
     string_view field_name;
     CHECK_RESULT(ReadStr(&field_name, "import field name"));
 
-    uint32_t kind;
-    CHECK_RESULT(ReadU32Leb128(&kind, "import kind"));
+    uint8_t kind;
+    CHECK_RESULT(ReadU8(&kind, "import kind"));
     switch (static_cast<ExternalKind>(kind)) {
       case ExternalKind::Func: {
         Index sig_index;
@@ -1691,14 +1691,14 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
     string_view name;
     CHECK_RESULT(ReadStr(&name, "export item name"));
 
-    uint8_t external_kind = 0;
-    CHECK_RESULT(ReadU8(&external_kind, "export external kind"));
-    ERROR_UNLESS(is_valid_external_kind(external_kind),
-                 "invalid export external kind: %d", external_kind);
+    uint8_t kind = 0;
+    CHECK_RESULT(ReadU8(&kind, "export kind"));
+    ERROR_UNLESS(is_valid_external_kind(kind),
+                 "invalid export external kind: %d", kind);
 
     Index item_index;
     CHECK_RESULT(ReadIndex(&item_index, "export item index"));
-    switch (static_cast<ExternalKind>(external_kind)) {
+    switch (static_cast<ExternalKind>(kind)) {
       case ExternalKind::Func:
         ERROR_UNLESS(item_index < NumTotalFuncs(),
                      "invalid export func index: %" PRIindex, item_index);
@@ -1722,8 +1722,7 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
         break;
     }
 
-    CALLBACK(OnExport, i, static_cast<ExternalKind>(external_kind), item_index,
-             name);
+    CALLBACK(OnExport, i, static_cast<ExternalKind>(kind), item_index, name);
   }
   CALLBACK0(EndExportSection);
   return Result::Ok;
