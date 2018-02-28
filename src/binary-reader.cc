@@ -980,6 +980,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I16X8AllTrue:
       case Opcode::I32X4AllTrue:
       case Opcode::I64X2AllTrue:
+      case Opcode::F32X4Neg:
+      case Opcode::F64X2Neg:
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);

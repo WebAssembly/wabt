@@ -279,6 +279,8 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I32X4GeU:
     case Opcode::F32X4Ge:
     case Opcode::F64X2Ge:
+    case Opcode::F32X4Neg:
+    case Opcode::F64X2Neg:
       return features.simd_enabled();
 
     // Interpreter opcodes are never "enabled".

@@ -613,6 +613,8 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i32x4.ge_u"           { RETURN_OPCODE(Compare, I32X4GeU); }
       <i> "f32x4.ge"             { RETURN_OPCODE(Compare, F32X4Ge); }
       <i> "f64x2.ge"             { RETURN_OPCODE(Compare, F64X2Ge); }
+      <i> "f32x4.neg"            { RETURN_OPCODE(Unary, F32X4Neg); }
+      <i> "f64x2.neg"            { RETURN_OPCODE(Unary, F64X2Neg); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
