@@ -197,6 +197,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result EndFunctionBody(Index index) override;
 
   wabt::Result EndElemSegmentInitExpr(Index index) override;
+  wabt::Result OnElemSegmentFunctionIndexCount(Index index,
+                                               Index count) override;
   wabt::Result OnElemSegmentFunctionIndex(Index index,
                                           Index func_index) override;
 
@@ -741,6 +743,8 @@ wabt::Result BinaryReaderInterp::OnImportTable(Index import_index,
 
     CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
 
+    table->func_indexes.resize(table->limits.initial);
+
     module_->table_index = env_->GetTableCount() - 1;
     AppendExport(host_import_module, ExternalKind::Table, module_->table_index,
                  import->field_name);
@@ -1005,16 +1009,23 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemSegmentFunctionIndex(Index index,
-                                                            Index func_index) {
+wabt::Result BinaryReaderInterp::OnElemSegmentFunctionIndexCount(Index index,
+                                                                 Index count) {
   assert(module_->table_index != kInvalidIndex);
   Table* table = env_->GetTable(module_->table_index);
-  if (table_offset_ >= table->func_indexes.size()) {
-    PrintError("elem segment offset is out of bounds: %u >= max value %" PRIzd,
-               table_offset_, table->func_indexes.size());
+  // Check both cases, as table_offset_ + count may overflow.
+  if (table_offset_ > table->func_indexes.size() ||
+      table_offset_ + count > table->func_indexes.size()) {
+    PrintError("elem segment is out of bounds: [%u, %u) >= max value %" PRIzd,
+               table_offset_, table_offset_ + count,
+               table->func_indexes.size());
     return wabt::Result::Error;
   }
+  return wabt::Result::Ok;
+}
 
+wabt::Result BinaryReaderInterp::OnElemSegmentFunctionIndex(Index index,
+                                                            Index func_index) {
   Index max_func_index = func_index_mapping_.size();
   if (func_index >= max_func_index) {
     PrintError("invalid func_index: %" PRIindex " (max %" PRIindex ")",
@@ -1022,6 +1033,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentFunctionIndex(Index index,
     return wabt::Result::Error;
   }
 
+  Table* table = env_->GetTable(module_->table_index);
   elem_segment_infos_.emplace_back(&table->func_indexes[table_offset_++],
                                    TranslateFuncIndexToEnv(func_index));
   return wabt::Result::Ok;
