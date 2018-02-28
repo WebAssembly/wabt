@@ -176,8 +176,9 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                           uint32_t flags,
                           string_view name,
                           Index func_index) override {
-    if (!name.empty())
+    if (!name.empty()) {
       SetFunctionName(func_index, name);
+    }
     return Result::Ok;
   }
 
@@ -1209,7 +1210,7 @@ Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
                                              Index func_index) {
   std::string sym_name = name.to_string();
   if (sym_name.empty()) {
-      sym_name = GetFunctionName(func_index);
+    sym_name = GetFunctionName(func_index);
   }
   assert(!sym_name.empty());
   PrintDetails("   - sym[%d] <" PRIstringview "> func=%" PRIindex, index,
@@ -1224,7 +1225,7 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
                                            Index global_index) {
   std::string sym_name = name.to_string();
   if (sym_name.empty()) {
-      sym_name = GetGlobalName(global_index);
+    sym_name = GetGlobalName(global_index);
   }
   assert(!sym_name.empty());
   PrintDetails("   - sym[%d] <" PRIstringview "> global=%" PRIindex, index,

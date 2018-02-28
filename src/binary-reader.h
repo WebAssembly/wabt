@@ -306,9 +306,7 @@ class BinaryReaderDelegate {
   virtual Result BeginLinkingSection(Offset size) = 0;
   virtual Result OnStackGlobal(Index stack_global) = 0;
   virtual Result OnSymbolCount(Index count) = 0;
-  virtual Result OnSymbol(Index index,
-                          SymbolType type,
-                          uint32_t flags) = 0;
+  virtual Result OnSymbol(Index index, SymbolType type, uint32_t flags) = 0;
   virtual Result OnDataSymbol(Index index,
                               uint32_t flags,
                               string_view name,

@@ -305,6 +305,20 @@ static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
   return g_reloc_type_name[static_cast<size_t>(reloc)];
 }
 
+/* symbol */
+
+static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
+  switch (type) {
+    case SymbolType::Function:
+      return "func";
+    case SymbolType::Global:
+      return "global";
+    case SymbolType::Data:
+      return "data";
+  }
+  WABT_UNREACHABLE;
+}
+
 /* type */
 
 static WABT_INLINE const char* GetTypeName(Type type) {
