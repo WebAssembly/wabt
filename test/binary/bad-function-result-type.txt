@@ -6,6 +6,6 @@ section(TYPE) {
   function params[1] i32 results[1] void
 }
 (;; STDERR ;;;
-0000010: error: expected valid result type: -64
-0000010: error: expected valid result type: -64
+0000010: error: expected valid result type: 0x40
+0000010: error: expected valid result type: 0x40
 ;;; STDERR ;;)

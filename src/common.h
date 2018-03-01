@@ -194,14 +194,14 @@ struct Location {
 
 /* matches binary format, do not change */
 enum class Type {
-  I32 = -0x01,
-  I64 = -0x02,
-  F32 = -0x03,
-  F64 = -0x04,
-  V128 = -0x05,
-  Anyfunc = -0x10,
-  Func = -0x20,
-  Void = -0x40,
+  I32 = 0x7F,
+  I64 = 0x7E,
+  F32 = 0x7D,
+  F64 = 0x7C,
+  V128 = 0x7B,
+  Anyfunc = 0x70,
+  Func = 0x60,
+  Void = 0x40,
   ___ = Void, /* convenient for the opcode table in opcode.h */
   Any = 0,    /* Not actually specified, but useful for type-checking */
 };

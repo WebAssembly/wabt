@@ -268,12 +268,8 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
 }
 
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
-  uint32_t type = 0;
-  CHECK_RESULT(ReadS32Leb128(&type, desc));
-  // Must be in the vs7 range: [-128, 127).
-  ERROR_UNLESS(
-      static_cast<int32_t>(type) >= -128 && static_cast<int32_t>(type) <= 127,
-      "invalid type: %d", type);
+  uint8_t type = 0;
+  CHECK_RESULT(ReadU8(&type, desc));
   *out_value = static_cast<Type>(type);
   return Result::Ok;
 }
@@ -1516,7 +1512,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
       Type param_type;
       CHECK_RESULT(ReadType(&param_type, "function param type"));
       ERROR_UNLESS(is_concrete_type(param_type),
-                   "expected valid param type (got %d)",
+                   "expected valid param type (got %#x)",
                    static_cast<int>(param_type));
       param_types_[j] = param_type;
     }
@@ -1529,7 +1525,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
     if (num_results) {
       CHECK_RESULT(ReadType(&result_type, "function result type"));
       ERROR_UNLESS(is_concrete_type(result_type),
-                   "expected valid result type: %d",
+                   "expected valid result type: %#x",
                    static_cast<int>(result_type));
     }
 
