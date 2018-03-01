@@ -1,188 +1,155 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/memory.wast
 (;; STDOUT ;;;
-out/test/spec/memory.wast:19: assert_invalid passed:
+out/test/spec/memory.wast:8: assert_invalid passed:
   000000b: error: memory count must be 0 or 1
-out/test/spec/memory.wast:20: assert_invalid passed:
+out/test/spec/memory.wast:9: assert_invalid passed:
   error: only one memory allowed
   0000023: error: OnMemory callback failed
-out/test/spec/memory.wast:29: assert_invalid passed:
+out/test/spec/memory.wast:18: assert_invalid passed:
   000000b: error: data section without memory section
-out/test/spec/memory.wast:30: assert_invalid passed:
+out/test/spec/memory.wast:19: assert_invalid passed:
   000000b: error: data section without memory section
-out/test/spec/memory.wast:31: assert_invalid passed:
+out/test/spec/memory.wast:20: assert_invalid passed:
   000000b: error: data section without memory section
-out/test/spec/memory.wast:34: assert_invalid passed:
+out/test/spec/memory.wast:23: assert_invalid passed:
   error: f32.load requires an imported or defined memory.
   000001c: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:38: assert_invalid passed:
+out/test/spec/memory.wast:27: assert_invalid passed:
   error: f32.store requires an imported or defined memory.
   0000021: error: OnStoreExpr callback failed
-out/test/spec/memory.wast:42: assert_invalid passed:
+out/test/spec/memory.wast:31: assert_invalid passed:
   error: i32.load8_s requires an imported or defined memory.
   000001c: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:46: assert_invalid passed:
+out/test/spec/memory.wast:35: assert_invalid passed:
   error: i32.store8 requires an imported or defined memory.
   000001e: error: OnStoreExpr callback failed
-out/test/spec/memory.wast:50: assert_invalid passed:
+out/test/spec/memory.wast:39: assert_invalid passed:
   error: current_memory requires an imported or defined memory.
   0000019: error: OnCurrentMemoryExpr callback failed
-out/test/spec/memory.wast:54: assert_invalid passed:
+out/test/spec/memory.wast:43: assert_invalid passed:
   error: grow_memory requires an imported or defined memory.
   000001b: error: OnGrowMemoryExpr callback failed
-out/test/spec/memory.wast:59: assert_invalid passed:
-  0000013: error: expected i32 init_expr
-out/test/spec/memory.wast:63: assert_invalid passed:
-  0000014: error: expected END opcode after initializer expression
-out/test/spec/memory.wast:67: assert_invalid passed:
-  0000012: error: unexpected opcode in initializer expression: 1 (0x1)
-out/test/spec/memory.wast:77: assert_unlinkable passed:
-  error: data segment is out of bounds: [0, 1) >= max value 0
-  0000017: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:81: assert_unlinkable passed:
-  error: data segment is out of bounds: [0, 1) >= max value 0
-  0000017: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:85: assert_unlinkable passed:
-  error: data segment is out of bounds: [4294967295, 4294967296) >= max value 65536
-  0000017: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:89: assert_unlinkable passed:
-  error: data segment is out of bounds: [4294966296, 4294966297) >= max value 65536
-  0000018: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:93: assert_unlinkable passed:
-  error: data segment is out of bounds: [98304, 98305) >= max value 65536
-  000001f: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:97: assert_unlinkable passed:
-  error: data segment is out of bounds: [1, 1) >= max value 0
-  0000016: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:101: assert_unlinkable passed:
-  error: data segment is out of bounds: [73728, 73728) >= max value 65536
-  0000017: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:105: assert_unlinkable passed:
-  error: data segment is out of bounds: [4294967295, 4294967295) >= max value 65536
-  0000016: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:114: assert_unlinkable passed:
-  error: data segment is out of bounds: [666, 667) >= max value 0
-  0000030: error: OnDataSegmentData callback failed
-out/test/spec/memory.wast:131: assert_invalid passed:
+out/test/spec/memory.wast:49: assert_invalid passed:
   000000e: error: memory initial size must be <= max size
-out/test/spec/memory.wast:135: assert_invalid passed:
+out/test/spec/memory.wast:53: assert_invalid passed:
   000000f: error: invalid memory initial size
-out/test/spec/memory.wast:139: assert_invalid passed:
+out/test/spec/memory.wast:57: assert_invalid passed:
   0000011: error: invalid memory initial size
-out/test/spec/memory.wast:143: assert_invalid passed:
+out/test/spec/memory.wast:61: assert_invalid passed:
   0000011: error: invalid memory initial size
-out/test/spec/memory.wast:147: assert_invalid passed:
+out/test/spec/memory.wast:65: assert_invalid passed:
   0000010: error: invalid memory max size
-out/test/spec/memory.wast:151: assert_invalid passed:
+out/test/spec/memory.wast:69: assert_invalid passed:
   0000012: error: invalid memory max size
-out/test/spec/memory.wast:155: assert_invalid passed:
+out/test/spec/memory.wast:73: assert_invalid passed:
   0000012: error: invalid memory max size
-out/test/spec/memory.wast:166: assert_invalid passed:
+out/test/spec/memory.wast:84: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:170: assert_invalid passed:
+out/test/spec/memory.wast:88: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
   0000021: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:174: assert_invalid passed:
+out/test/spec/memory.wast:92: assert_invalid passed:
   error: alignment must not be larger than natural alignment (4)
   0000021: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:178: assert_invalid passed:
+out/test/spec/memory.wast:96: assert_invalid passed:
   error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:182: assert_invalid passed:
+out/test/spec/memory.wast:100: assert_invalid passed:
   error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:186: assert_invalid passed:
+out/test/spec/memory.wast:104: assert_invalid passed:
   error: alignment must not be larger than natural alignment (1)
   0000023: error: OnStoreExpr callback failed
-out/test/spec/memory.wast:190: assert_invalid passed:
+out/test/spec/memory.wast:108: assert_invalid passed:
   error: alignment must not be larger than natural alignment (2)
   0000021: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:194: assert_invalid passed:
+out/test/spec/memory.wast:112: assert_invalid passed:
   error: alignment must not be larger than natural alignment (1)
   0000021: error: OnLoadExpr callback failed
-out/test/spec/memory.wast:198: assert_invalid passed:
+out/test/spec/memory.wast:116: assert_invalid passed:
   error: alignment must not be larger than natural alignment (1)
   0000023: error: OnStoreExpr callback failed
-out/test/spec/memory.wast:390: assert_malformed passed:
-  out/test/spec/memory/memory.63.wat:1:43: error: unexpected token "i32.load32", expected an instr.
+out/test/spec/memory.wast:308: assert_malformed passed:
+  out/test/spec/memory/memory.39.wat:1:43: error: unexpected token "i32.load32", expected an instr.
   (memory 1)(func (param i32) (result i32) (i32.load32 (get_local 0)))
                                             ^^^^^^^^^^
-out/test/spec/memory.wast:397: assert_malformed passed:
-  out/test/spec/memory/memory.64.wat:1:43: error: unexpected token "i32.load32_u", expected an instr.
+out/test/spec/memory.wast:315: assert_malformed passed:
+  out/test/spec/memory/memory.40.wat:1:43: error: unexpected token "i32.load32_u", expected an instr.
   (memory 1)(func (param i32) (result i32) (i32.load32_u (get_local 0)))
                                             ^^^^^^^^^^^^
-out/test/spec/memory.wast:404: assert_malformed passed:
-  out/test/spec/memory/memory.65.wat:1:43: error: unexpected token "i32.load32_s", expected an instr.
+out/test/spec/memory.wast:322: assert_malformed passed:
+  out/test/spec/memory/memory.41.wat:1:43: error: unexpected token "i32.load32_s", expected an instr.
   (memory 1)(func (param i32) (result i32) (i32.load32_s (get_local 0)))
                                             ^^^^^^^^^^^^
-out/test/spec/memory.wast:411: assert_malformed passed:
-  out/test/spec/memory/memory.66.wat:1:43: error: unexpected token "i32.load64", expected an instr.
+out/test/spec/memory.wast:329: assert_malformed passed:
+  out/test/spec/memory/memory.42.wat:1:43: error: unexpected token "i32.load64", expected an instr.
   (memory 1)(func (param i32) (result i32) (i32.load64 (get_local 0)))
                                             ^^^^^^^^^^
-out/test/spec/memory.wast:418: assert_malformed passed:
-  out/test/spec/memory/memory.67.wat:1:43: error: unexpected token "i32.load64_u", expected an instr.
+out/test/spec/memory.wast:336: assert_malformed passed:
+  out/test/spec/memory/memory.43.wat:1:43: error: unexpected token "i32.load64_u", expected an instr.
   (memory 1)(func (param i32) (result i32) (i32.load64_u (get_local 0)))
                                             ^^^^^^^^^^^^
-out/test/spec/memory.wast:425: assert_malformed passed:
-  out/test/spec/memory/memory.68.wat:1:43: error: unexpected token "i32.load64_s", expected an instr.
+out/test/spec/memory.wast:343: assert_malformed passed:
+  out/test/spec/memory/memory.44.wat:1:43: error: unexpected token "i32.load64_s", expected an instr.
   (memory 1)(func (param i32) (result i32) (i32.load64_s (get_local 0)))
                                             ^^^^^^^^^^^^
-out/test/spec/memory.wast:432: assert_malformed passed:
-  out/test/spec/memory/memory.69.wat:1:30: error: unexpected token "i32.store32", expected an instr.
+out/test/spec/memory.wast:350: assert_malformed passed:
+  out/test/spec/memory/memory.45.wat:1:30: error: unexpected token "i32.store32", expected an instr.
   (memory 1)(func (param i32) (i32.store32 (get_local 0) (i32.const 0)))
                                ^^^^^^^^^^^
-out/test/spec/memory.wast:439: assert_malformed passed:
-  out/test/spec/memory/memory.70.wat:1:30: error: unexpected token "i32.store64", expected an instr.
+out/test/spec/memory.wast:357: assert_malformed passed:
+  out/test/spec/memory/memory.46.wat:1:30: error: unexpected token "i32.store64", expected an instr.
   (memory 1)(func (param i32) (i32.store64 (get_local 0) (i64.const 0)))
                                ^^^^^^^^^^^
-out/test/spec/memory.wast:447: assert_malformed passed:
-  out/test/spec/memory/memory.71.wat:1:43: error: unexpected token "i64.load64", expected an instr.
+out/test/spec/memory.wast:365: assert_malformed passed:
+  out/test/spec/memory/memory.47.wat:1:43: error: unexpected token "i64.load64", expected an instr.
   (memory 1)(func (param i32) (result i64) (i64.load64 (get_local 0)))
                                             ^^^^^^^^^^
-out/test/spec/memory.wast:454: assert_malformed passed:
-  out/test/spec/memory/memory.72.wat:1:43: error: unexpected token "i64.load64_u", expected an instr.
+out/test/spec/memory.wast:372: assert_malformed passed:
+  out/test/spec/memory/memory.48.wat:1:43: error: unexpected token "i64.load64_u", expected an instr.
   (memory 1)(func (param i32) (result i64) (i64.load64_u (get_local 0)))
                                             ^^^^^^^^^^^^
-out/test/spec/memory.wast:461: assert_malformed passed:
-  out/test/spec/memory/memory.73.wat:1:43: error: unexpected token "i64.load64_s", expected an instr.
+out/test/spec/memory.wast:379: assert_malformed passed:
+  out/test/spec/memory/memory.49.wat:1:43: error: unexpected token "i64.load64_s", expected an instr.
   (memory 1)(func (param i32) (result i64) (i64.load64_s (get_local 0)))
                                             ^^^^^^^^^^^^
-out/test/spec/memory.wast:468: assert_malformed passed:
-  out/test/spec/memory/memory.74.wat:1:30: error: unexpected token "i64.store64", expected an instr.
+out/test/spec/memory.wast:386: assert_malformed passed:
+  out/test/spec/memory/memory.50.wat:1:30: error: unexpected token "i64.store64", expected an instr.
   (memory 1)(func (param i32) (i64.store64 (get_local 0) (i64.const 0)))
                                ^^^^^^^^^^^
-out/test/spec/memory.wast:476: assert_malformed passed:
-  out/test/spec/memory/memory.75.wat:1:43: error: unexpected token "f32.load32", expected an instr.
+out/test/spec/memory.wast:394: assert_malformed passed:
+  out/test/spec/memory/memory.51.wat:1:43: error: unexpected token "f32.load32", expected an instr.
   (memory 1)(func (param i32) (result f32) (f32.load32 (get_local 0)))
                                             ^^^^^^^^^^
-out/test/spec/memory.wast:483: assert_malformed passed:
-  out/test/spec/memory/memory.76.wat:1:43: error: unexpected token "f32.load64", expected an instr.
+out/test/spec/memory.wast:401: assert_malformed passed:
+  out/test/spec/memory/memory.52.wat:1:43: error: unexpected token "f32.load64", expected an instr.
   (memory 1)(func (param i32) (result f32) (f32.load64 (get_local 0)))
                                             ^^^^^^^^^^
-out/test/spec/memory.wast:490: assert_malformed passed:
-  out/test/spec/memory/memory.77.wat:1:30: error: unexpected token "f32.store32", expected an instr.
+out/test/spec/memory.wast:408: assert_malformed passed:
+  out/test/spec/memory/memory.53.wat:1:30: error: unexpected token "f32.store32", expected an instr.
   (memory 1)(func (param i32) (f32.store32 (get_local 0) (f32.const 0)))
                                ^^^^^^^^^^^
-out/test/spec/memory.wast:497: assert_malformed passed:
-  out/test/spec/memory/memory.78.wat:1:30: error: unexpected token "f32.store64", expected an instr.
+out/test/spec/memory.wast:415: assert_malformed passed:
+  out/test/spec/memory/memory.54.wat:1:30: error: unexpected token "f32.store64", expected an instr.
   (memory 1)(func (param i32) (f32.store64 (get_local 0) (f64.const 0)))
                                ^^^^^^^^^^^
-out/test/spec/memory.wast:505: assert_malformed passed:
-  out/test/spec/memory/memory.79.wat:1:43: error: unexpected token "f64.load32", expected an instr.
+out/test/spec/memory.wast:423: assert_malformed passed:
+  out/test/spec/memory/memory.55.wat:1:43: error: unexpected token "f64.load32", expected an instr.
   (memory 1)(func (param i32) (result f64) (f64.load32 (get_local 0)))
                                             ^^^^^^^^^^
-out/test/spec/memory.wast:512: assert_malformed passed:
-  out/test/spec/memory/memory.80.wat:1:43: error: unexpected token "f64.load64", expected an instr.
+out/test/spec/memory.wast:430: assert_malformed passed:
+  out/test/spec/memory/memory.56.wat:1:43: error: unexpected token "f64.load64", expected an instr.
   (memory 1)(func (param i32) (result f64) (f64.load64 (get_local 0)))
                                             ^^^^^^^^^^
-out/test/spec/memory.wast:519: assert_malformed passed:
-  out/test/spec/memory/memory.81.wat:1:30: error: unexpected token "f64.store32", expected an instr.
+out/test/spec/memory.wast:437: assert_malformed passed:
+  out/test/spec/memory/memory.57.wat:1:30: error: unexpected token "f64.store32", expected an instr.
   (memory 1)(func (param i32) (f64.store32 (get_local 0) (f32.const 0)))
                                ^^^^^^^^^^^
-out/test/spec/memory.wast:526: assert_malformed passed:
-  out/test/spec/memory/memory.82.wat:1:30: error: unexpected token "f64.store64", expected an instr.
+out/test/spec/memory.wast:444: assert_malformed passed:
+  out/test/spec/memory/memory.58.wat:1:30: error: unexpected token "f64.store64", expected an instr.
   (memory 1)(func (param i32) (f64.store64 (get_local 0) (f64.const 0)))
                                ^^^^^^^^^^^
-106/106 tests passed.
+94/94 tests passed.
 ;;; STDOUT ;;)

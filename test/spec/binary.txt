@@ -57,5 +57,11 @@ out/test/spec/binary.wast:43: assert_malformed passed:
   0000008: error: bad wasm file version: 0x10000 (expected 0x1)
 out/test/spec/binary.wast:44: assert_malformed passed:
   0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
-28/28 tests passed.
+out/test/spec/binary.wast:48: assert_malformed passed:
+  0000022: error: call_indirect reserved value must be 0
+out/test/spec/binary.wast:67: assert_malformed passed:
+  0000020: error: grow_memory reserved value must be 0
+out/test/spec/binary.wast:87: assert_malformed passed:
+  000001e: error: current_memory reserved value must be 0
+31/31 tests passed.
 ;;; STDOUT ;;)
