@@ -853,6 +853,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::V128And:
       case Opcode::V128Or:
       case Opcode::V128Xor:
+      case Opcode::F32X4Min:
+      case Opcode::F64X2Min:
+      case Opcode::F32X4Max:
+      case Opcode::F64X2Max:
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
