@@ -1687,11 +1687,9 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
     }
 
     case TokenType::IfExcept: {
-      Consume();
+      ErrorUnlessOpcodeEnabled(Consume());
       auto expr = MakeUnique<IfExceptExpr>(loc);
-      CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
-      CHECK_RESULT(ParseResultList(&expr->true_.sig));
-      CHECK_RESULT(ParseVar(&expr->except_var));
+      CHECK_RESULT(ParseIfExceptHeader(expr.get()));
       CHECK_RESULT(ParseInstrList(&expr->true_.exprs));
       if (Match(TokenType::Else)) {
         CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
@@ -1708,10 +1706,9 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       auto expr = MakeUnique<TryExpr>(loc);
       CHECK_RESULT(ParseLabelOpt(&expr->block.label));
       CHECK_RESULT(ParseBlock(&expr->block));
-      if (Match(TokenType::Catch)) {
-        CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
-        CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
-      }
+      EXPECT(Catch);
+      CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
+      CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
       EXPECT(End);
       CHECK_RESULT(ParseEndLabelOpt(expr->block.label));
       *out_expr = std::move(expr);
@@ -1757,6 +1754,51 @@ Result WastParser::ParseBlock(Block* block) {
   WABT_TRACE(ParseBlock);
   CHECK_RESULT(ParseResultList(&block->sig));
   CHECK_RESULT(ParseInstrList(&block->exprs));
+  return Result::Ok;
+}
+
+Result WastParser::ParseIfExceptHeader(IfExceptExpr* expr) {
+  WABT_TRACE(ParseIfExceptHeader);
+  // if_except has the syntax:
+  //
+  //     if_except label_opt block_type except_index
+  //
+  // This means that it can have a few different forms:
+  //
+  //     1. if_except <num> ...
+  //     2. if_except $except ...
+  //     3. if_except $label $except/<num> ...
+  //     4. if_except (result...) $except/<num> ...
+  //     5. if_except $label (result...) $except/<num> ...
+
+  if (PeekMatchLpar(TokenType::Result)) {
+    // Case 4.
+    CHECK_RESULT(ParseResultList(&expr->true_.sig));
+    CHECK_RESULT(ParseVar(&expr->except_var));
+  } else if (PeekMatch(TokenType::Nat)) {
+    // Case 1.
+    CHECK_RESULT(ParseVar(&expr->except_var));
+  } else if (PeekMatch(TokenType::Var)) {
+    // Cases 2, 3, 5.
+    Var var;
+    CHECK_RESULT(ParseVar(&var));
+    if (PeekMatchLpar(TokenType::Result)) {
+      // Case 5.
+      expr->true_.label = var.name();
+      CHECK_RESULT(ParseResultList(&expr->true_.sig));
+      CHECK_RESULT(ParseVar(&expr->except_var));
+    } else if (ParseVarOpt(&expr->except_var, Var())) {
+      // Case 3.
+      expr->true_.label = var.name();
+    } else {
+      // Case 2.
+      expr->except_var = var;
+    }
+  } else {
+    return ErrorExpected({"a var", "a block type"},
+                         "12 or $foo or (result ...)");
+  }
+
   return Result::Ok;
 }
 
@@ -1811,7 +1853,6 @@ Result WastParser::ParseExpr(ExprList* exprs) {
       }
 
       case TokenType::If: {
-        Location loc = GetLocation();
         Consume();
         Consume();
         auto expr = MakeUnique<IfExpr>(loc);
@@ -1850,14 +1891,11 @@ Result WastParser::ParseExpr(ExprList* exprs) {
       }
 
       case TokenType::IfExcept: {
-        Location loc = GetLocation();
         Consume();
-        Consume();
+        ErrorUnlessOpcodeEnabled(Consume());
         auto expr = MakeUnique<IfExceptExpr>(loc);
 
-        CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
-        CHECK_RESULT(ParseResultList(&expr->true_.sig));
-        CHECK_RESULT(ParseVar(&expr->except_var));
+        CHECK_RESULT(ParseIfExceptHeader(expr.get()));
 
         if (PeekMatchExpr()) {
           ExprList cond;
@@ -1897,15 +1935,10 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseResultList(&expr->block.sig));
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
-
-        if (MatchLpar(TokenType::Catch)) {
-          CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
-          EXPECT(Rpar);
-        } else {
-          ConsumeIfLpar();
-          return ErrorExpected({"catch block"}, "(catch ...)");
-        }
-
+        EXPECT(Lpar);
+        EXPECT(Catch);
+        CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
+        EXPECT(Rpar);
         exprs->push_back(std::move(expr));
         break;
       }

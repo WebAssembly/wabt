@@ -743,9 +743,6 @@ Result Validator::BeginTryExpr(TryExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckBlockSig(&expr->loc, Opcode::Try, &expr->block.sig);
   typechecker_.OnTry(&expr->block.sig);
-  if (expr->catch_.empty()) {
-    PrintError(&expr->loc, "try block doesn't have a catch clause");
-  }
   return Result::Ok;
 }
 

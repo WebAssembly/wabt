@@ -3,13 +3,34 @@
 (module
   (except $e i32)
 
-  ;; no else
+  ;; except number
   (func
     try
       nop
     catch
-      if_except $label $e
+      if_except 0
         drop
+      end
+    end)
+
+  ;; just except
+  (func
+    try
+      nop
+    catch
+      if_except $e
+        drop
+      end
+    end)
+
+  ;; with else
+  (func
+    try
+      nop
+    catch
+      if_except $e
+        drop
+      else
       end
     end)
 
@@ -20,8 +41,6 @@
     catch
       if_except $label $e
         drop
-      else
-        nop
       end
     end)
 
@@ -31,6 +50,18 @@
       i32.const 0
     catch
       if_except (result i32) $e
+      else
+        i32.const 2
+      end
+    end
+    drop)
+
+  ;; with label and result type
+  (func
+    try (result i32)
+      i32.const 0
+    catch
+      if_except $label (result i32) $e
       else
         i32.const 2
       end
