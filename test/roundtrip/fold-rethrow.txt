@@ -1,0 +1,21 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-exceptions
+(module
+  (except $e0 i32)
+
+  (func
+    try
+    catch
+      rethrow
+    end
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (try  ;; label = @1
+      (catch
+        (rethrow))))
+  (except (;0;) i32))
+;;; STDOUT ;;)
