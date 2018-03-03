@@ -155,6 +155,8 @@ enum class LabelType {
   Loop,
   If,
   Else,
+  IfExcept,
+  IfExceptElse,
   Try,
   Catch,
 
@@ -202,6 +204,7 @@ enum class Type {
   Anyfunc = 0x70,
   Func = 0x60,
   Void = 0x40,
+  ExceptRef = 0x3f,
   ___ = Void, /* convenient for the opcode table in opcode.h */
   Any = 0,    /* Not actually specified, but useful for type-checking */
 };
@@ -307,6 +310,8 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "anyfunc";
     case Type::Func:
       return "func";
+    case Type::ExceptRef:
+      return "except_ref";
     case Type::Void:
       return "void";
     case Type::Any:

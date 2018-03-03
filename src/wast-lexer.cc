@@ -653,9 +653,9 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "assert_exhaustion"   { RETURN(AssertExhaustion); }
       <i> "try"                 { RETURN_OPCODE0(Try); }
       <i> "catch"               { RETURN_OPCODE0(Catch); }
-      <i> "catch_all"           { RETURN_OPCODE0(CatchAll); }
       <i> "throw"               { RETURN_OPCODE0(Throw); }
       <i> "rethrow"             { RETURN_OPCODE0(Rethrow); }
+      <i> "if_except"           { RETURN_OPCODE0(IfExcept); }
       <i> name                  { RETURN_TEXT(Var); }
       <i> "shared"              { RETURN(Shared); }
 

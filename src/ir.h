@@ -179,6 +179,7 @@ enum class ExprType {
   GetLocal,
   GrowMemory,
   If,
+  IfExcept,
   Load,
   Loop,
   Nop,
@@ -189,10 +190,10 @@ enum class ExprType {
   SetLocal,
   Store,
   TeeLocal,
-  Throw,
-  TryBlock,
-  Unary,
   Ternary,
+  Throw,
+  Try,
+  Unary,
   Unreachable,
 
   First = AtomicLoad,
@@ -214,20 +215,6 @@ struct Block {
   BlockSignature sig;
   ExprList exprs;
 };
-
-struct Catch {
-  explicit Catch(const Location& loc = Location()) : loc(loc) {}
-  explicit Catch(const Var& var, const Location& loc = Location())
-      : loc(loc), var(var) {}
-  Location loc;
-  Var var;
-  ExprList exprs;
-  bool IsCatchAll() const {
-    return var.is_index() && var.index() == kInvalidIndex;
-  }
-};
-
-typedef std::vector<Catch> CatchVector;
 
 class Expr : public intrusive_list_base<Expr> {
  public:
@@ -260,6 +247,7 @@ typedef ExprMixin<ExprType::CurrentMemory> CurrentMemoryExpr;
 typedef ExprMixin<ExprType::Drop> DropExpr;
 typedef ExprMixin<ExprType::GrowMemory> GrowMemoryExpr;
 typedef ExprMixin<ExprType::Nop> NopExpr;
+typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
 typedef ExprMixin<ExprType::Select> SelectExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
@@ -293,7 +281,6 @@ typedef VarExpr<ExprType::BrIf> BrIfExpr;
 typedef VarExpr<ExprType::Call> CallExpr;
 typedef VarExpr<ExprType::GetGlobal> GetGlobalExpr;
 typedef VarExpr<ExprType::GetLocal> GetLocalExpr;
-typedef VarExpr<ExprType::Rethrow> RethrowExpr;
 typedef VarExpr<ExprType::SetGlobal> SetGlobalExpr;
 typedef VarExpr<ExprType::SetLocal> SetLocalExpr;
 typedef VarExpr<ExprType::TeeLocal> TeeLocalExpr;
@@ -328,13 +315,23 @@ class IfExpr : public ExprMixin<ExprType::If> {
   ExprList false_;
 };
 
-class TryExpr : public ExprMixin<ExprType::TryBlock> {
+class IfExceptExpr : public ExprMixin<ExprType::IfExcept> {
+ public:
+  explicit IfExceptExpr(const Location& loc = Location())
+      : ExprMixin<ExprType::IfExcept>(loc) {}
+
+  Block true_;
+  ExprList false_;
+  Var except_var;
+};
+
+class TryExpr : public ExprMixin<ExprType::Try> {
  public:
   explicit TryExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::TryBlock>(loc) {}
+      : ExprMixin<ExprType::Try>(loc) {}
 
   Block block;
-  CatchVector catches;
+  ExprList catch_;
 };
 
 class BrTableExpr : public ExprMixin<ExprType::BrTable> {

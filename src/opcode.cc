@@ -94,7 +94,7 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::Catch:
     case Opcode::Throw:
     case Opcode::Rethrow:
-    case Opcode::CatchAll:
+    case Opcode::IfExcept:
       return features.exceptions_enabled();
 
     case Opcode::I32TruncSSatF32:

@@ -1040,26 +1040,15 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::Catch: {
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
-        Index index;
-        CHECK_RESULT(ReadIndex(&index, "exception index"));
-        CALLBACK(OnCatchExpr, index);
-        CALLBACK(OnOpcodeIndex, index);
-        break;
-      }
-
-      case Opcode::CatchAll: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
-        CALLBACK(OnCatchAllExpr);
+        CALLBACK0(OnCatchExpr);
         CALLBACK0(OnOpcodeBare);
         break;
       }
 
       case Opcode::Rethrow: {
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
-        Index depth;
-        CHECK_RESULT(ReadIndex(&depth, "catch depth"));
-        CALLBACK(OnRethrowExpr, depth);
-        CALLBACK(OnOpcodeIndex, depth);
+        CALLBACK0(OnRethrowExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
       }
 
@@ -1069,6 +1058,19 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnThrowExpr, index);
         CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
+      case Opcode::IfExcept: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        Type sig_type;
+        CHECK_RESULT(ReadType(&sig_type, "if signature type"));
+        ERROR_UNLESS(is_inline_sig_type(sig_type),
+                     "expected valid block signature type");
+        Index num_types = sig_type == Type::Void ? 0 : 1;
+        Index except_index;
+        CHECK_RESULT(ReadIndex(&except_index, "exception index"));
+        CALLBACK(OnIfExceptExpr, num_types, &sig_type, except_index);
         break;
       }
 

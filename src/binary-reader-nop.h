@@ -215,8 +215,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result OnCallExpr(Index func_index) override { return Result::Ok; }
   Result OnCallIndirectExpr(Index sig_index) override { return Result::Ok; }
-  Result OnCatchExpr(Index except_index) override { return Result::Ok; }
-  Result OnCatchAllExpr() override { return Result::Ok; }
+  Result OnCatchExpr() override { return Result::Ok; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
   Result OnConvertExpr(Opcode opcode) override { return Result::Ok; }
   Result OnCurrentMemoryExpr() override { return Result::Ok; }
@@ -235,6 +234,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnIfExpr(Index num_types, Type* sig_types) override {
     return Result::Ok;
   }
+  Result OnIfExceptExpr(Index num_types,
+                        Type* sig_types,
+                        Index except_index) override {
+    return Result::Ok;
+  }
   Result OnLoadExpr(Opcode opcode,
                     uint32_t alignment_log2,
                     Address offset) override {
@@ -244,7 +248,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnNopExpr() override { return Result::Ok; }
-  Result OnRethrowExpr(Index depth) override { return Result::Ok; }
+  Result OnRethrowExpr() override { return Result::Ok; }
   Result OnReturnExpr() override { return Result::Ok; }
   Result OnSelectExpr() override { return Result::Ok; }
   Result OnSetGlobalExpr(Index global_index) override { return Result::Ok; }

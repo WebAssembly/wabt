@@ -142,8 +142,7 @@ class BinaryReaderIR : public BinaryReaderNop {
                        Index* target_depths,
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
-  Result OnCatchExpr(Index except_index) override;
-  Result OnCatchAllExpr() override;
+  Result OnCatchExpr() override;
   Result OnCallIndirectExpr(Index sig_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
@@ -159,13 +158,16 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnI32ConstExpr(uint32_t value) override;
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Index num_types, Type* sig_types) override;
+  Result OnIfExceptExpr(Index num_types,
+                        Type* sig_types,
+                        Index except_index) override;
   Result OnLoadExpr(Opcode opcode,
                     uint32_t alignment_log2,
                     Address offset) override;
   Result OnLoopExpr(Index num_types, Type* sig_types) override;
   Result OnCurrentMemoryExpr() override;
   Result OnNopExpr() override;
-  Result OnRethrowExpr(Index depth) override;
+  Result OnRethrowExpr() override;
   Result OnReturnExpr() override;
   Result OnSelectExpr() override;
   Result OnSetGlobalExpr(Index global_index) override;
@@ -227,7 +229,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result GetLabelAt(LabelNode** label, Index depth);
   Result TopLabel(LabelNode** label);
   Result AppendExpr(std::unique_ptr<Expr> expr);
-  Result AppendCatch(Catch&& catch_);
 
   ErrorHandler* error_handler_ = nullptr;
   Module* module_ = nullptr;
@@ -654,7 +655,8 @@ Result BinaryReaderIR::OnDropExpr() {
 Result BinaryReaderIR::OnElseExpr() {
   LabelNode* label;
   CHECK_RESULT(TopLabel(&label));
-  if (label->label_type != LabelType::If) {
+  if (label->label_type != LabelType::If &&
+      label->label_type != LabelType::IfExcept) {
     PrintError("else expression without matching if");
     return Result::Error;
   }
@@ -662,8 +664,12 @@ Result BinaryReaderIR::OnElseExpr() {
   LabelNode* parent_label;
   CHECK_RESULT(GetLabelAt(&parent_label, 1));
 
+  if (label->label_type == LabelType::If) {
+    label->exprs = &cast<IfExpr>(&parent_label->exprs->back())->false_;
+  } else {
+    label->exprs = &cast<IfExceptExpr>(&parent_label->exprs->back())->false_;
+  }
   label->label_type = LabelType::Else;
-  label->exprs = &cast<IfExpr>(&parent_label->exprs->back())->false_;
   return Result::Ok;
 }
 
@@ -716,6 +722,18 @@ Result BinaryReaderIR::OnIfExpr(Index num_types, Type* sig_types) {
   return Result::Ok;
 }
 
+Result BinaryReaderIR::OnIfExceptExpr(Index num_types,
+                                      Type* sig_types,
+                                      Index except_index) {
+  auto expr = MakeUnique<IfExceptExpr>(GetLocation());
+  expr->except_var = Var(except_index, GetLocation());
+  expr->true_.sig.assign(sig_types, sig_types + num_types);
+  ExprList* expr_list = &expr->true_.exprs;
+  CHECK_RESULT(AppendExpr(std::move(expr)));
+  PushLabel(LabelType::IfExcept, expr_list);
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::OnLoadExpr(Opcode opcode,
                                   uint32_t alignment_log2,
                                   Address offset) {
@@ -735,8 +753,8 @@ Result BinaryReaderIR::OnNopExpr() {
   return AppendExpr(MakeUnique<NopExpr>(GetLocation()));
 }
 
-Result BinaryReaderIR::OnRethrowExpr(Index depth) {
-  return AppendExpr(MakeUnique<RethrowExpr>(Var(depth, GetLocation())));
+Result BinaryReaderIR::OnRethrowExpr() {
+  return AppendExpr(MakeUnique<RethrowExpr>());
 }
 
 Result BinaryReaderIR::OnReturnExpr() {
@@ -781,27 +799,20 @@ Result BinaryReaderIR::OnTryExpr(Index num_types, Type* sig_types) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::AppendCatch(Catch&& catch_) {
-  LabelNode* label = nullptr;
+Result BinaryReaderIR::OnCatchExpr() {
+  LabelNode* label;
   CHECK_RESULT(TopLabel(&label));
-
   if (label->label_type != LabelType::Try) {
-    PrintError("catch not inside try block");
+    PrintError("catch expression without matching try");
     return Result::Error;
   }
 
-  auto try_ = cast<TryExpr>(label->context);
-  try_->catches.push_back(std::move(catch_));
-  label->exprs = &try_->catches.back().exprs;
+  LabelNode* parent_label;
+  CHECK_RESULT(GetLabelAt(&parent_label, 1));
+
+  label->label_type = LabelType::Catch;
+  label->exprs = &cast<TryExpr>(&parent_label->exprs->back())->catch_;
   return Result::Ok;
-}
-
-Result BinaryReaderIR::OnCatchExpr(Index except_index) {
-  return AppendCatch(Catch(Var(except_index, GetLocation())));
-}
-
-Result BinaryReaderIR::OnCatchAllExpr() {
-  return AppendCatch(Catch(GetLocation()));
 }
 
 Result BinaryReaderIR::OnUnaryExpr(Opcode opcode) {
