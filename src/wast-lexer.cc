@@ -629,6 +629,8 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "f64x2.div"            { RETURN_OPCODE(Binary, F64X2Div); }
       <i> "f32x4.mul"            { RETURN_OPCODE(Binary, F32X4Mul); }
       <i> "f64x2.mul"            { RETURN_OPCODE(Binary, F64X2Mul); }
+      <i> "f32x4.sqrt"            { RETURN_OPCODE(Unary, F32X4Sqrt); }
+      <i> "f64x2.sqrt"            { RETURN_OPCODE(Unary, F64X2Sqrt); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
