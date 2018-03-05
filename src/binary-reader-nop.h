@@ -361,8 +361,30 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
   Result OnStackGlobal(Index stack_global) override { return Result::Ok; }
-  Result OnSymbolInfoCount(Index count) override { return Result::Ok; }
-  Result OnSymbolInfo(string_view name, uint32_t flags) override {
+  Result OnSymbolCount(Index count) override { return Result::Ok; }
+  Result OnSymbol(Index sybmol_index,
+                  SymbolType type,
+                  uint32_t flags) override {
+    return Result::Ok;
+  }
+  Result OnDataSymbol(Index index,
+                      uint32_t flags,
+                      string_view name,
+                      Index segment,
+                      uint32_t offset,
+                      uint32_t size) override {
+    return Result::Ok;
+  }
+  Result OnFunctionSymbol(Index index,
+                          uint32_t flags,
+                          string_view name,
+                          Index func_index) override {
+    return Result::Ok;
+  }
+  Result OnGlobalSymbol(Index index,
+                        uint32_t flags,
+                        string_view name,
+                        Index global_index) override {
     return Result::Ok;
   }
   Result OnDataSize(uint32_t data_size) override { return Result::Ok; }

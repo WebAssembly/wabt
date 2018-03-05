@@ -1399,15 +1399,45 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CALLBACK(OnStackGlobal, stack_ptr);
         break;
       }
-      case LinkingEntryType::SymbolInfo:
-        CHECK_RESULT(ReadU32Leb128(&count, "info count"));
-        CALLBACK(OnSymbolInfoCount, count);
-        while (count--) {
+      case LinkingEntryType::SymbolTable:
+        CHECK_RESULT(ReadU32Leb128(&count, "sym count"));
+        CALLBACK(OnSymbolCount, count);
+        for (Index i = 0; i < count; ++i) {
           string_view name;
-          uint32_t info;
-          CHECK_RESULT(ReadStr(&name, "symbol name"));
-          CHECK_RESULT(ReadU32Leb128(&info, "sym flags"));
-          CALLBACK(OnSymbolInfo, name, info);
+          uint32_t flags = 0;
+          uint32_t kind = 0;
+          CHECK_RESULT(ReadU32Leb128(&kind, "sym type"));
+          CHECK_RESULT(ReadU32Leb128(&flags, "sym flags"));
+          SymbolType sym_type = static_cast<SymbolType>(kind);
+          CALLBACK(OnSymbol, i, sym_type, flags);
+          switch (sym_type) {
+            case SymbolType::Function:
+            case SymbolType::Global: {
+              uint32_t index = 0;
+              CHECK_RESULT(ReadU32Leb128(&index, "index"));
+              if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0)
+                CHECK_RESULT(ReadStr(&name, "symbol name"));
+              if (sym_type == SymbolType::Function) {
+                CALLBACK(OnFunctionSymbol, i, flags, name, index);
+              } else {
+                CALLBACK(OnGlobalSymbol, i, flags, name, index);
+              }
+              break;
+            }
+            case SymbolType::Data: {
+              uint32_t segment = 0;
+              uint32_t offset = 0;
+              uint32_t size = 0;
+              CHECK_RESULT(ReadStr(&name, "symbol name"));
+              if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0) {
+                CHECK_RESULT(ReadU32Leb128(&segment, "segment"));
+                CHECK_RESULT(ReadU32Leb128(&offset, "offset"));
+                CHECK_RESULT(ReadU32Leb128(&size, "size"));
+              }
+              CALLBACK(OnDataSymbol, i, flags, name, segment, offset, size);
+              break;
+            }
+          }
         }
         break;
       case LinkingEntryType::DataSize: {

@@ -456,10 +456,40 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
   return reader_->OnReloc(type, offset, index, addend);
 }
 
-Result BinaryReaderLogging::OnSymbolInfo(string_view name, uint32_t flags) {
-  LOGF("(OnSymbolInfo name: " PRIstringview ", flags: 0x%x)\n",
+Result BinaryReaderLogging::OnSymbol(Index symbol_index,
+                                     SymbolType type,
+                                     uint32_t flags) {
+  LOGF("(OnSymbol type: %s flags: 0x%x)\n", GetSymbolTypeName(type), flags);
+  return reader_->OnSymbol(symbol_index, type, flags);
+}
+
+Result BinaryReaderLogging::OnDataSymbol(Index index,
+                                         uint32_t flags,
+                                         string_view name,
+                                         Index segment,
+                                         uint32_t offset,
+                                         uint32_t size) {
+  LOGF("(OnDataSymbol name: " PRIstringview " flags: 0x%x)\n",
        WABT_PRINTF_STRING_VIEW_ARG(name), flags);
-  return reader_->OnSymbolInfo(name, flags);
+  return reader_->OnDataSymbol(index, flags, name, segment, offset, size);
+}
+
+Result BinaryReaderLogging::OnFunctionSymbol(Index index,
+                                             uint32_t flags,
+                                             string_view name,
+                                             Index func_index) {
+  LOGF("(OnFunctionSymbol name: " PRIstringview " flags: 0x%x)\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), flags);
+  return reader_->OnGlobalSymbol(index, flags, name, func_index);
+}
+
+Result BinaryReaderLogging::OnGlobalSymbol(Index index,
+                                           uint32_t flags,
+                                           string_view name,
+                                           Index global_index) {
+  LOGF("(OnGlobalSymbol name: " PRIstringview " flags: 0x%x)\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), flags);
+  return reader_->OnGlobalSymbol(index, flags, name, global_index);
 }
 
 Result BinaryReaderLogging::OnSegmentInfo(Index index,
@@ -640,7 +670,7 @@ DEFINE_END(EndRelocSection)
 DEFINE_INDEX_INDEX(OnInitExprGetGlobalExpr, "index", "global_index")
 
 DEFINE_BEGIN(BeginLinkingSection)
-DEFINE_INDEX(OnSymbolInfoCount)
+DEFINE_INDEX(OnSymbolCount)
 DEFINE_INDEX(OnStackGlobal)
 DEFINE_INDEX(OnDataSize)
 DEFINE_INDEX(OnSegmentInfoCount)

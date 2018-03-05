@@ -83,8 +83,8 @@ Type:
  - type[0] (i32, i64, f32, f64) -> nil
  - type[1] (i32) -> i32
 Import:
- - func[0] sig=0 <- ignored.test
- - func[1] sig=1 <- ignored.test2
+ - func[0] sig=0 <test> <- ignored.test
+ - func[1] sig=1 <test2> <- ignored.test2
  - memory[0] pages: initial=0 <- ignored.testmem
  - table[0] elem_type=anyfunc init=0 max=0 <- ignored.testtable
  - except[0] (i32) <- ignored.testexcept
