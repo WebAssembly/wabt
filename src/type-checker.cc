@@ -124,8 +124,9 @@ void TypeChecker::PushType(Type type) {
 }
 
 void TypeChecker::PushTypes(const TypeVector& types) {
-  for (Type type : types)
+  for (Type type : types) {
     PushType(type);
+  }
 }
 
 Result TypeChecker::CheckTypeStackEnd(const char* desc) {
@@ -146,8 +147,9 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
 
 Result TypeChecker::CheckSignature(const TypeVector& sig) {
   Result result = Result::Ok;
-  for (size_t i = 0; i < sig.size(); ++i)
+  for (size_t i = 0; i < sig.size(); ++i) {
     result |= PeekAndCheckType(sig.size() - i - 1, sig[i]);
+  }
   return result;
 }
 
@@ -242,48 +244,49 @@ static std::string TypesToString(const TypeVector& types,
 void TypeChecker::PrintStackIfFailed(Result result,
                                      const char* desc,
                                      const TypeVector& expected) {
-  if (Failed(result)) {
-    size_t limit = 0;
-    Label* label;
-    if (Succeeded(TopLabel(&label))) {
-      limit = label->type_stack_limit;
-    }
+  if (Succeeded(result))
+    return;
 
-    TypeVector actual;
-    size_t max_depth = type_stack_.size() - limit;
-
-    // In general we want to print as many values of the actual stack as were
-    // expected. However, if the stack was expected to be empty, we should
-    // print some amount of the actual stack.
-    size_t actual_size;
-    if (expected.size() == 0) {
-      // Don't print too many elements if the stack is really deep.
-      const size_t kMaxActualStackToPrint = 4;
-      actual_size = std::min(kMaxActualStackToPrint, max_depth);
-    } else {
-      actual_size = std::min(expected.size(), max_depth);
-    }
-
-    bool incomplete_actual_stack = actual_size != max_depth;
-
-    for (size_t i = 0; i < actual_size; ++i) {
-      Type type;
-      Result result = PeekType(actual_size - i - 1, &type);
-      WABT_USE(result);
-      assert(Succeeded(result));
-      actual.push_back(type);
-    }
-
-    std::string message = "type mismatch in ";
-    message += desc;
-    message += ", expected ";
-    message += TypesToString(expected);
-    message += " but got ";
-    message +=
-        TypesToString(actual, incomplete_actual_stack ? "... " : nullptr);
-
-    PrintError("%s", message.c_str());
+  size_t limit = 0;
+  Label* label;
+  if (Succeeded(TopLabel(&label))) {
+    limit = label->type_stack_limit;
   }
+
+  TypeVector actual;
+  size_t max_depth = type_stack_.size() - limit;
+
+  // In general we want to print as many values of the actual stack as were
+  // expected. However, if the stack was expected to be empty, we should
+  // print some amount of the actual stack.
+  size_t actual_size;
+  if (expected.size() == 0) {
+    // Don't print too many elements if the stack is really deep.
+    const size_t kMaxActualStackToPrint = 4;
+    actual_size = std::min(kMaxActualStackToPrint, max_depth);
+  } else {
+    actual_size = std::min(expected.size(), max_depth);
+  }
+
+  bool incomplete_actual_stack = actual_size != max_depth;
+
+  for (size_t i = 0; i < actual_size; ++i) {
+    Type type;
+    Result result = PeekType(actual_size - i - 1, &type);
+    WABT_USE(result);
+    assert(Succeeded(result));
+    actual.push_back(type);
+  }
+
+  std::string message = "type mismatch in ";
+  message += desc;
+  message += ", expected ";
+  message += TypesToString(expected);
+  message += " but got ";
+  message +=
+      TypesToString(actual, incomplete_actual_stack ? "... " : nullptr);
+
+  PrintError("%s", message.c_str());
 }
 
 Result TypeChecker::BeginFunction(const TypeVector* sig) {
