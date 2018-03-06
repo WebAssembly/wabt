@@ -309,9 +309,6 @@ if (NOT EMSCRIPTEN)
   wabt_executable(wasm-objdump
     src/tools/wasm-objdump.cc src/binary-reader-objdump.cc)
 
-  # wasm-link
-  wabt_executable(wasm-link src/tools/wasm-link.cc src/binary-reader-linker.cc)
-
   # wasm-interp
   wabt_executable(wasm-interp src/tools/wasm-interp.cc)
   if (COMPILER_IS_CLANG OR COMPILER_IS_GNU)
