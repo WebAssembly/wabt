@@ -459,7 +459,7 @@ Result BinaryReaderLogging::OnReloc(RelocType type,
 Result BinaryReaderLogging::OnSymbol(Index symbol_index,
                                      SymbolType type,
                                      uint32_t flags) {
-  LOGF("(OnSymbol type: %s flags: 0x%x)\n", GetSymbolTypeName(type), flags);
+  LOGF("OnSymbol(type: %s flags: 0x%x)\n", GetSymbolTypeName(type), flags);
   return reader_->OnSymbol(symbol_index, type, flags);
 }
 
@@ -469,7 +469,7 @@ Result BinaryReaderLogging::OnDataSymbol(Index index,
                                          Index segment,
                                          uint32_t offset,
                                          uint32_t size) {
-  LOGF("(OnDataSymbol name: " PRIstringview " flags: 0x%x)\n",
+  LOGF("OnDataSymbol(name: " PRIstringview " flags: 0x%x)\n",
        WABT_PRINTF_STRING_VIEW_ARG(name), flags);
   return reader_->OnDataSymbol(index, flags, name, segment, offset, size);
 }
@@ -478,7 +478,7 @@ Result BinaryReaderLogging::OnFunctionSymbol(Index index,
                                              uint32_t flags,
                                              string_view name,
                                              Index func_index) {
-  LOGF("(OnFunctionSymbol name: " PRIstringview " flags: 0x%x)\n",
+  LOGF("OnFunctionSymbol(name: " PRIstringview " flags: 0x%x)\n",
        WABT_PRINTF_STRING_VIEW_ARG(name), flags);
   return reader_->OnGlobalSymbol(index, flags, name, func_index);
 }
@@ -487,7 +487,7 @@ Result BinaryReaderLogging::OnGlobalSymbol(Index index,
                                            uint32_t flags,
                                            string_view name,
                                            Index global_index) {
-  LOGF("(OnGlobalSymbol name: " PRIstringview " flags: 0x%x)\n",
+  LOGF("OnGlobalSymbol(name: " PRIstringview " flags: 0x%x)\n",
        WABT_PRINTF_STRING_VIEW_ARG(name), flags);
   return reader_->OnGlobalSymbol(index, flags, name, global_index);
 }
@@ -496,7 +496,7 @@ Result BinaryReaderLogging::OnSegmentInfo(Index index,
                                           string_view name,
                                           uint32_t alignment,
                                           uint32_t flags) {
-  LOGF("(OnSegmentInfo %d name: " PRIstringview
+  LOGF("OnSegmentInfos(%d name: " PRIstringview
        ", alignment: %d, flags: 0x%x)\n",
        index, WABT_PRINTF_STRING_VIEW_ARG(name), alignment, flags);
   return reader_->OnSegmentInfo(index, name, alignment, flags);
@@ -504,7 +504,7 @@ Result BinaryReaderLogging::OnSegmentInfo(Index index,
 
 Result BinaryReaderLogging::OnInitFunction(uint32_t priority,
                                            Index func_index) {
-  LOGF("(OnInitFunction %d priority: %d)\n", func_index, priority);
+  LOGF("OnInitFunction(%d priority: %d)\n", func_index, priority);
   return reader_->OnInitFunction(priority, func_index);
 }
 
