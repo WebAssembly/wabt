@@ -133,7 +133,6 @@ struct FuncSignature {
 };
 
 struct FuncType {
-  FuncType() = default;
   explicit FuncType(string_view name) : name(name.to_string()) {}
 
   Index GetNumParams() const { return sig.GetNumParams(); }
@@ -379,7 +378,6 @@ typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
 typedef LoadStoreExpr<ExprType::AtomicWake> AtomicWakeExpr;
 
 struct Exception {
-  Exception() = default;
   explicit Exception(string_view name) : name(name.to_string()) {}
 
   std::string name;
@@ -387,7 +385,6 @@ struct Exception {
 };
 
 struct Func {
-  Func() = default;
   explicit Func(string_view name) : name(name.to_string()) {}
 
   Type GetParamType(Index index) const { return decl.GetParamType(index); }
@@ -411,7 +408,6 @@ struct Func {
 };
 
 struct Global {
-  Global() = default;
   explicit Global(string_view name) : name(name.to_string()) {}
 
   std::string name;
@@ -421,7 +417,6 @@ struct Global {
 };
 
 struct Table {
-  Table() = default;
   explicit Table(string_view name) : name(name.to_string()) {}
 
   std::string name;
@@ -435,7 +430,6 @@ struct ElemSegment {
 };
 
 struct Memory {
-  Memory() = default;
   explicit Memory(string_view name) : name(name.to_string()) {}
 
   std::string name;

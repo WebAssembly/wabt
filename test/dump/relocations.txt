@@ -4,7 +4,7 @@
 (module
   (type $t (func (param i32)))
   (import "__extern" "foo" (func (param i32) (result i32)))
-  (global i32 (i32.const 0))
+  (global $g i32 (i32.const 0))
   (func $f (param i32) (result i32)
     get_global 0
     call 1
@@ -25,18 +25,18 @@ Sections:
    Export start=0x0000003b end=0x00000040 (size=0x00000005) count: 1
      Elem start=0x00000042 end=0x0000004d (size=0x0000000b) count: 1
      Code start=0x0000004f end=0x00000065 (size=0x00000016) count: 1
-   Custom start=0x00000067 end=0x0000006f (size=0x00000008) "linking"
-   Custom start=0x00000071 end=0x00000081 (size=0x00000010) "reloc.Elem"
-   Custom start=0x00000083 end=0x00000099 (size=0x00000016) "reloc.Code"
+   Custom start=0x00000067 end=0x00000081 (size=0x0000001a) "linking"
+   Custom start=0x00000083 end=0x00000093 (size=0x00000010) "reloc.Elem"
+   Custom start=0x00000095 end=0x000000ab (size=0x00000016) "reloc.Code"
 
 Code Disassembly:
 
-000050 func[1]:
+000050 <$f>:
  000052: 23 80 80 80 80 00          | get_global 0
-           000053: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 0
- 000058: 10 81 80 80 80 00          | call 1
-           000059: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 1
+           000053: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 1 <$g>
+ 000058: 10 81 80 80 80 00          | call 1 <$f>
+           000059: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 0 <$f>
  00005e: 10 80 80 80 80 00          | call 0 <foo>
-           00005f: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 0 <foo>
+           00005f: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 2 <foo>
  000064: 0b                         | end
 ;;; STDOUT ;;)
