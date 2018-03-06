@@ -94,7 +94,7 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::Catch:
     case Opcode::Throw:
     case Opcode::Rethrow:
-    case Opcode::CatchAll:
+    case Opcode::IfExcept:
       return features.exceptions_enabled();
 
     case Opcode::I32TruncSSatF32:
@@ -287,6 +287,16 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::F64X2Min:
     case Opcode::F32X4Max:
     case Opcode::F64X2Max:
+    case Opcode::F32X4Add:
+    case Opcode::F64X2Add:
+    case Opcode::F32X4Sub:
+    case Opcode::F64X2Sub:
+    case Opcode::F32X4Div:
+    case Opcode::F64X2Div:
+    case Opcode::F32X4Mul:
+    case Opcode::F64X2Mul:
+    case Opcode::F32X4Sqrt:
+    case Opcode::F64X2Sqrt:
       return features.simd_enabled();
 
     // Interpreter opcodes are never "enabled".

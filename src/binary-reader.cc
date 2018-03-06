@@ -857,6 +857,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Min:
       case Opcode::F32X4Max:
       case Opcode::F64X2Max:
+      case Opcode::F32X4Add:
+      case Opcode::F64X2Add:
+      case Opcode::F32X4Sub:
+      case Opcode::F64X2Sub:
+      case Opcode::F32X4Div:
+      case Opcode::F64X2Div:
+      case Opcode::F32X4Mul:
+      case Opcode::F64X2Mul:
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
@@ -984,6 +992,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Neg:
       case Opcode::F32X4Abs:
       case Opcode::F64X2Abs:
+      case Opcode::F32X4Sqrt:
+      case Opcode::F64X2Sqrt:
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
@@ -1040,26 +1050,15 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::Catch: {
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
-        Index index;
-        CHECK_RESULT(ReadIndex(&index, "exception index"));
-        CALLBACK(OnCatchExpr, index);
-        CALLBACK(OnOpcodeIndex, index);
-        break;
-      }
-
-      case Opcode::CatchAll: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
-        CALLBACK(OnCatchAllExpr);
+        CALLBACK0(OnCatchExpr);
         CALLBACK0(OnOpcodeBare);
         break;
       }
 
       case Opcode::Rethrow: {
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
-        Index depth;
-        CHECK_RESULT(ReadIndex(&depth, "catch depth"));
-        CALLBACK(OnRethrowExpr, depth);
-        CALLBACK(OnOpcodeIndex, depth);
+        CALLBACK0(OnRethrowExpr);
+        CALLBACK0(OnOpcodeBare);
         break;
       }
 
@@ -1069,6 +1068,19 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnThrowExpr, index);
         CALLBACK(OnOpcodeIndex, index);
+        break;
+      }
+
+      case Opcode::IfExcept: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        Type sig_type;
+        CHECK_RESULT(ReadType(&sig_type, "if signature type"));
+        ERROR_UNLESS(is_inline_sig_type(sig_type),
+                     "expected valid block signature type");
+        Index num_types = sig_type == Type::Void ? 0 : 1;
+        Index except_index;
+        CHECK_RESULT(ReadIndex(&except_index, "exception index"));
+        CALLBACK(OnIfExceptExpr, num_types, &sig_type, except_index);
         break;
       }
 
@@ -1389,15 +1401,45 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CALLBACK(OnStackGlobal, stack_ptr);
         break;
       }
-      case LinkingEntryType::SymbolInfo:
-        CHECK_RESULT(ReadU32Leb128(&count, "info count"));
-        CALLBACK(OnSymbolInfoCount, count);
-        while (count--) {
+      case LinkingEntryType::SymbolTable:
+        CHECK_RESULT(ReadU32Leb128(&count, "sym count"));
+        CALLBACK(OnSymbolCount, count);
+        for (Index i = 0; i < count; ++i) {
           string_view name;
-          uint32_t info;
-          CHECK_RESULT(ReadStr(&name, "symbol name"));
-          CHECK_RESULT(ReadU32Leb128(&info, "sym flags"));
-          CALLBACK(OnSymbolInfo, name, info);
+          uint32_t flags = 0;
+          uint32_t kind = 0;
+          CHECK_RESULT(ReadU32Leb128(&kind, "sym type"));
+          CHECK_RESULT(ReadU32Leb128(&flags, "sym flags"));
+          SymbolType sym_type = static_cast<SymbolType>(kind);
+          CALLBACK(OnSymbol, i, sym_type, flags);
+          switch (sym_type) {
+            case SymbolType::Function:
+            case SymbolType::Global: {
+              uint32_t index = 0;
+              CHECK_RESULT(ReadU32Leb128(&index, "index"));
+              if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0)
+                CHECK_RESULT(ReadStr(&name, "symbol name"));
+              if (sym_type == SymbolType::Function) {
+                CALLBACK(OnFunctionSymbol, i, flags, name, index);
+              } else {
+                CALLBACK(OnGlobalSymbol, i, flags, name, index);
+              }
+              break;
+            }
+            case SymbolType::Data: {
+              uint32_t segment = 0;
+              uint32_t offset = 0;
+              uint32_t size = 0;
+              CHECK_RESULT(ReadStr(&name, "symbol name"));
+              if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0) {
+                CHECK_RESULT(ReadU32Leb128(&segment, "segment"));
+                CHECK_RESULT(ReadU32Leb128(&offset, "offset"));
+                CHECK_RESULT(ReadU32Leb128(&size, "size"));
+              }
+              CALLBACK(OnDataSymbol, i, flags, name, segment, offset, size);
+              break;
+            }
+          }
         }
         break;
       case LinkingEntryType::DataSize: {

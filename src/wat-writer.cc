@@ -142,6 +142,7 @@ class WatWriter {
   void WriteBeginBlock(LabelType label_type,
                        const Block& block,
                        const char* text);
+  void WriteBeginIfExceptBlock(const IfExceptExpr* expr);
   void WriteEndBlock();
   void WriteConst(const Const& const_);
   void WriteExpr(const Expr* expr);
@@ -438,6 +439,23 @@ void WatWriter::WriteBeginBlock(LabelType label_type,
   Indent();
 }
 
+void WatWriter::WriteBeginIfExceptBlock(const IfExceptExpr* expr) {
+  const Block& block = expr->true_;
+  WritePutsSpace(Opcode::IfExcept_Opcode.GetName());
+  bool has_label = !block.label.empty();
+  if (has_label) {
+    WriteString(block.label, NextChar::Space);
+  }
+  WriteTypes(block.sig, "result");
+  WriteVar(expr->except_var, NextChar::Space);
+  if (!has_label) {
+    Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
+  }
+  WriteNewline(FORCE_NEWLINE);
+  label_stack_.emplace_back(LabelType::IfExcept, block.label, block.sig);
+  Indent();
+}
+
 void WatWriter::WriteEndBlock() {
   Dedent();
   label_stack_.pop_back();
@@ -532,6 +550,9 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result BeginIfExpr(IfExpr*) override;
   Result AfterIfTrueExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
+  Result BeginIfExceptExpr(IfExceptExpr*) override;
+  Result AfterIfExceptTrueExpr(IfExceptExpr*) override;
+  Result EndIfExceptExpr(IfExceptExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
@@ -545,8 +566,8 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
+  Result OnCatchExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
-  Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
@@ -676,6 +697,29 @@ Result WatWriter::ExprVisitorDelegate::EndIfExpr(IfExpr* expr) {
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::BeginIfExceptExpr(IfExceptExpr* expr) {
+  // Can't use WriteBeginBlock because if_except has an additional exception
+  // index argument.
+  writer_->WriteBeginIfExceptBlock(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::AfterIfExceptTrueExpr(
+    IfExceptExpr* expr) {
+  if (!expr->false_.empty()) {
+    writer_->Dedent();
+    writer_->WritePutsSpace(Opcode::Else_Opcode.GetName());
+    writer_->Indent();
+    writer_->WriteNewline(FORCE_NEWLINE);
+  }
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::EndIfExceptExpr(IfExceptExpr* expr) {
+  writer_->WriteEndBlock();
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::OnLoadExpr(LoadExpr* expr) {
   writer_->WriteLoadStoreExpr<LoadExpr>(expr);
   return Result::Ok;
@@ -747,22 +791,17 @@ Result WatWriter::ExprVisitorDelegate::BeginTryExpr(TryExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::EndTryExpr(TryExpr* expr) {
-  writer_->WriteEndBlock();
+Result WatWriter::ExprVisitorDelegate::OnCatchExpr(TryExpr* expr) {
+  writer_->Dedent();
+  writer_->WritePutsSpace(Opcode::Catch_Opcode.GetName());
+  writer_->Indent();
+  writer_->label_stack_.back().label_type = LabelType::Catch;
+  writer_->WriteNewline(FORCE_NEWLINE);
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnCatchExpr(TryExpr* expr,
-                                                   Catch* catch_) {
-  writer_->Dedent();
-  if (catch_->IsCatchAll()) {
-    writer_->WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
-  } else {
-    writer_->WritePutsSpace(Opcode::Catch_Opcode.GetName());
-    writer_->WriteVar(catch_->var, NextChar::Newline);
-  }
-  writer_->Indent();
-  writer_->label_stack_.back().label_type = LabelType::Catch;
+Result WatWriter::ExprVisitorDelegate::EndTryExpr(TryExpr* expr) {
+  writer_->WriteEndBlock();
   return Result::Ok;
 }
 
@@ -774,7 +813,6 @@ Result WatWriter::ExprVisitorDelegate::OnThrowExpr(ThrowExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnRethrowExpr(RethrowExpr* expr) {
   writer_->WritePutsSpace(Opcode::Rethrow_Opcode.GetName());
-  writer_->WriteBrVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -934,6 +972,10 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       PushExpr(expr, 1, cast<IfExpr>(expr)->true_.sig.size());
       break;
 
+    case ExprType::IfExcept:
+      PushExpr(expr, 1, cast<IfExceptExpr>(expr)->true_.sig.size());
+      break;
+
     case ExprType::Loop:
       PushExpr(expr, 0, cast<LoopExpr>(expr)->block.sig.size());
       break;
@@ -966,7 +1008,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
     }
 
-    case ExprType::TryBlock:
+    case ExprType::Try:
       PushExpr(expr, 0, cast<TryExpr>(expr)->block.sig.size());
       break;
 
@@ -1049,27 +1091,37 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       break;
     }
 
-    case ExprType::TryBlock: {
-      auto try_ = cast<TryExpr>(expr_tree.expr);
+    case ExprType::IfExcept: {
+      auto if_except_expr = cast<IfExceptExpr>(expr_tree.expr);
       WritePuts("(", NextChar::None);
-      WriteBeginBlock(LabelType::Try, try_->block,
-                      Opcode::Try_Opcode.GetName());
-      WriteFoldedExprList(try_->block.exprs);
+      WriteBeginIfExceptBlock(if_except_expr);
+      FlushExprTreeVector(expr_tree.children);
+      WriteOpenNewline("then");
+      WriteFoldedExprList(if_except_expr->true_.exprs);
       FlushExprTreeStack();
-      for (const Catch& catch_ : try_->catches) {
-        WritePuts("(", NextChar::None);
-        if (catch_.IsCatchAll()) {
-          WritePutsNewline(Opcode::CatchAll_Opcode.GetName());
-        } else {
-          WritePutsSpace(Opcode::Catch_Opcode.GetName());
-          WriteVar(catch_.var, NextChar::Newline);
-        }
-        Indent();
-        label_stack_.back().label_type = LabelType::Catch;
-        WriteFoldedExprList(catch_.exprs);
+      WriteCloseNewline();
+      if (!if_except_expr->false_.empty()) {
+        WriteOpenNewline("else");
+        WriteFoldedExprList(if_except_expr->false_);
         FlushExprTreeStack();
         WriteCloseNewline();
       }
+      WriteCloseNewline();
+      break;
+    }
+
+    case ExprType::Try: {
+      auto try_expr = cast<TryExpr>(expr_tree.expr);
+      WritePuts("(", NextChar::None);
+      WriteBeginBlock(LabelType::Try, try_expr->block,
+                      Opcode::Try_Opcode.GetName());
+      FlushExprTreeVector(expr_tree.children);
+      WriteFoldedExprList(try_expr->block.exprs);
+      FlushExprTreeStack();
+      WriteOpenNewline("catch");
+      WriteFoldedExprList(try_expr->catch_);
+      FlushExprTreeStack();
+      WriteCloseNewline();
       WriteCloseNewline();
       break;
     }

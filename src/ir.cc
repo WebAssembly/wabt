@@ -46,6 +46,7 @@ const char* ExprTypeName[] = {
   "GetLocal",
   "GrowMemory",
   "If",
+  "IfExcept",
   "Load",
   "Loop",
   "Nop",
@@ -56,10 +57,10 @@ const char* ExprTypeName[] = {
   "SetLocal",
   "Store",
   "TeeLocal",
-  "Throw",
-  "TryBlock",
-  "Unary",
   "Ternary",
+  "Throw",
+  "Try",
+  "Unary",
   "Unreachable",
 };
 

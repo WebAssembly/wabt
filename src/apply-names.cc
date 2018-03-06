@@ -46,6 +46,8 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnGetLocalExpr(GetLocalExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
+  Result BeginIfExceptExpr(IfExceptExpr*) override;
+  Result EndIfExceptExpr(IfExceptExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
   Result OnSetGlobalExpr(SetGlobalExpr*) override;
@@ -53,9 +55,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnTeeLocalExpr(TeeLocalExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
-  Result OnCatchExpr(TryExpr*, Catch*) override;
   Result OnThrowExpr(ThrowExpr*) override;
-  Result OnRethrowExpr(RethrowExpr*) override;
 
  private:
   void PushLabel(const std::string& label);
@@ -259,21 +259,8 @@ Result NameApplier::EndTryExpr(TryExpr*) {
   return Result::Ok;
 }
 
-Result NameApplier::OnCatchExpr(TryExpr*, Catch* expr) {
-  if (!expr->IsCatchAll()) {
-    CHECK_RESULT(UseNameForExceptVar(&expr->var));
-  }
-  return Result::Ok;
-}
-
 Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
   CHECK_RESULT(UseNameForExceptVar(&expr->var));
-  return Result::Ok;
-}
-
-Result NameApplier::OnRethrowExpr(RethrowExpr* expr) {
-  string_view label = FindLabelByVar(&expr->var);
-  UseNameForVar(label, &expr->var);
   return Result::Ok;
 }
 
@@ -305,6 +292,17 @@ Result NameApplier::BeginIfExpr(IfExpr* expr) {
 }
 
 Result NameApplier::EndIfExpr(IfExpr* expr) {
+  PopLabel();
+  return Result::Ok;
+}
+
+Result NameApplier::BeginIfExceptExpr(IfExceptExpr* expr) {
+  PushLabel(expr->true_.label);
+  CHECK_RESULT(UseNameForExceptVar(&expr->except_var));
+  return Result::Ok;
+}
+
+Result NameApplier::EndIfExceptExpr(IfExceptExpr* expr) {
   PopLabel();
   return Result::Ok;
 }

@@ -621,6 +621,16 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "f64x2.min"            { RETURN_OPCODE(Binary, F64X2Min); }
       <i> "f32x4.max"            { RETURN_OPCODE(Binary, F32X4Max); }
       <i> "f64x2.max"            { RETURN_OPCODE(Binary, F64X2Max); }
+      <i> "f32x4.add"            { RETURN_OPCODE(Binary, F32X4Add); }
+      <i> "f64x2.add"            { RETURN_OPCODE(Binary, F64X2Add); }
+      <i> "f32x4.sub"            { RETURN_OPCODE(Binary, F32X4Sub); }
+      <i> "f64x2.sub"            { RETURN_OPCODE(Binary, F64X2Sub); }
+      <i> "f32x4.div"            { RETURN_OPCODE(Binary, F32X4Div); }
+      <i> "f64x2.div"            { RETURN_OPCODE(Binary, F64X2Div); }
+      <i> "f32x4.mul"            { RETURN_OPCODE(Binary, F32X4Mul); }
+      <i> "f64x2.mul"            { RETURN_OPCODE(Binary, F64X2Mul); }
+      <i> "f32x4.sqrt"            { RETURN_OPCODE(Unary, F32X4Sqrt); }
+      <i> "f64x2.sqrt"            { RETURN_OPCODE(Unary, F64X2Sqrt); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }
@@ -653,9 +663,9 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "assert_exhaustion"   { RETURN(AssertExhaustion); }
       <i> "try"                 { RETURN_OPCODE0(Try); }
       <i> "catch"               { RETURN_OPCODE0(Catch); }
-      <i> "catch_all"           { RETURN_OPCODE0(CatchAll); }
       <i> "throw"               { RETURN_OPCODE0(Throw); }
       <i> "rethrow"             { RETURN_OPCODE0(Rethrow); }
+      <i> "if_except"           { RETURN_OPCODE0(IfExcept); }
       <i> name                  { RETURN_TEXT(Var); }
       <i> "shared"              { RETURN(Shared); }
 

@@ -155,6 +155,8 @@ enum class LabelType {
   Loop,
   If,
   Else,
+  IfExcept,
+  IfExceptElse,
   Try,
   Catch,
 
@@ -202,6 +204,7 @@ enum class Type {
   Anyfunc = 0x70,
   Func = 0x60,
   Void = 0x40,
+  ExceptRef = 0x3f,
   ___ = Void, /* convenient for the opcode table in opcode.h */
   Any = 0,    /* Not actually specified, but useful for type-checking */
 };
@@ -233,10 +236,26 @@ struct Reloc {
 
 enum class LinkingEntryType {
   StackPointer = 1,
-  SymbolInfo = 2,
   DataSize = 3,
   SegmentInfo = 5,
   InitFunctions = 6,
+  ComdatInfo = 7,
+  SymbolTable = 8,
+};
+
+enum class SymbolType {
+  Function = 0,
+  Data = 1,
+  Global = 2,
+};
+
+#define WABT_SYMBOL_FLAG_UNDEFINED 0x10
+#define WABT_SYMBOL_MASK_VISIBILITY 0x4
+#define WABT_SYMBOL_MASK_BINDING 0x3
+
+enum class SymbolVisibility {
+  Default = 0,
+  Hidden = 4,
 };
 
 enum class SymbolBinding {
@@ -289,6 +308,20 @@ static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
   return g_reloc_type_name[static_cast<size_t>(reloc)];
 }
 
+/* symbol */
+
+static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
+  switch (type) {
+    case SymbolType::Function:
+      return "func";
+    case SymbolType::Global:
+      return "global";
+    case SymbolType::Data:
+      return "data";
+  }
+  WABT_UNREACHABLE;
+}
+
 /* type */
 
 static WABT_INLINE const char* GetTypeName(Type type) {
@@ -307,6 +340,8 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "anyfunc";
     case Type::Func:
       return "func";
+    case Type::ExceptRef:
+      return "except_ref";
     case Type::Void:
       return "void";
     case Type::Any:

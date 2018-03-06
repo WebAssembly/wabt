@@ -56,6 +56,7 @@ struct ObjdumpState {
   std::vector<Reloc> code_relocations;
   std::vector<Reloc> data_relocations;
   std::vector<std::string> function_names;
+  std::vector<std::string> global_names;
 };
 
 Result ReadBinaryObjdump(const uint8_t* data,

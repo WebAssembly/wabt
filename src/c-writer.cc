@@ -1629,9 +1629,10 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicRmw:
       case ExprType::AtomicRmwCmpxchg:
       case ExprType::AtomicStore:
+      case ExprType::IfExcept:
       case ExprType::Rethrow:
       case ExprType::Throw:
-      case ExprType::TryBlock:
+      case ExprType::Try:
         UNIMPLEMENTED("...");
         break;
     }

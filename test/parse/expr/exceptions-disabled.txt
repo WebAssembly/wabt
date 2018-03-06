@@ -1,0 +1,27 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+
+(module
+  (except $e i32)
+
+  (func
+    i32.const 0 throw $e
+    try catch end
+    rethrow
+    if_except $e drop end
+  )
+)
+(;; STDERR ;;;
+out/test/parse/expr/exceptions-disabled.txt:8:17: error: opcode not allowed: throw
+    i32.const 0 throw $e
+                ^^^^^
+out/test/parse/expr/exceptions-disabled.txt:9:5: error: opcode not allowed: try
+    try catch end
+    ^^^
+out/test/parse/expr/exceptions-disabled.txt:10:5: error: opcode not allowed: rethrow
+    rethrow
+    ^^^^^^^
+out/test/parse/expr/exceptions-disabled.txt:11:5: error: opcode not allowed: if_except
+    if_except $e drop end
+    ^^^^^^^^^
+;;; STDERR ;;)

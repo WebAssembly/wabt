@@ -163,10 +163,9 @@ class WastParser {
   Result ParseLabelOpt(std::string*);
   Result ParseEndLabelOpt(const std::string&);
   Result ParseBlock(Block*);
+  Result ParseIfExceptHeader(IfExceptExpr*);
   Result ParseExprList(ExprList*);
   Result ParseExpr(ExprList*);
-  Result ParseCatchInstrList(CatchVector* catches);
-  Result ParseCatchExprList(CatchVector* catches);
   Result ParseGlobalType(Global*);
 
   template <typename T>

@@ -1,0 +1,41 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --generate-names --enable-exceptions
+(module
+  (except $e0 i32)
+  (except $e1 f32)
+
+  (func
+    try
+    catch
+      if_except $label $e0
+        drop
+      end
+    end
+
+    try
+    catch
+      if_except $label $e1
+        drop
+      end
+    end
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0 (type $t0)
+    try  ;; label = @1
+    catch
+      if_except $E0 $e0
+        drop
+      end
+    end
+    try  ;; label = @1
+    catch
+      if_except $E1 $e1
+        drop
+      end
+    end)
+  (except $e0 i32)
+  (except $e1 f32))
+;;; STDOUT ;;)

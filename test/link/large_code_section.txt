@@ -100,7 +100,7 @@ Custom:
 Custom:
  - name: "reloc.Code"
   - section: Code
-   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000005(file=0x00001f) index=0
+   - R_WEBASSEMBLY_FUNCTION_INDEX_LEB offset=0x000005(file=0x00001f) symbol=0
 
 Code Disassembly:
 

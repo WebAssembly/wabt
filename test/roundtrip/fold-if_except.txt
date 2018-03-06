@@ -1,0 +1,28 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-exceptions --debug-names
+(module
+  (except $e i32)
+  (func
+    try
+      nop
+    catch
+      if_except $label $e
+        drop
+      else
+        nop
+      end
+    end))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (try  ;; label = @1
+      (nop)
+      (catch
+        (if_except 0  ;; label = @2
+          (then
+            (drop))
+          (else
+            (nop))))))
+  (except (;0;) i32))
+;;; STDOUT ;;)

@@ -2863,14 +2863,54 @@ Result Thread::Run(int num_instructions) {
       case Opcode::F64X2Max:
         CHECK_TRAP(SimdBinop<v128, int64_t>(FloatMax<double>));
         break;
+
+      case Opcode::F32X4Add:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Add<float>));
+        break;
+
+      case Opcode::F64X2Add:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Add<double>));
+        break;
+
+      case Opcode::F32X4Sub:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Sub<float>));
+        break;
+
+      case Opcode::F64X2Sub:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Sub<double>));
+        break;
+
+      case Opcode::F32X4Div:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(FloatDiv<float>));
+        break;
+
+      case Opcode::F64X2Div:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(FloatDiv<double>));
+        break;
+
+      case Opcode::F32X4Mul:
+        CHECK_TRAP(SimdBinop<v128, int32_t>(Mul<float>));
+        break;
+
+      case Opcode::F64X2Mul:
+        CHECK_TRAP(SimdBinop<v128, int64_t>(Mul<double>));
+        break;
+
+      case Opcode::F32X4Sqrt:
+        CHECK_TRAP(SimdUnop<v128, int32_t>(FloatSqrt<float>));
+        break;
+
+      case Opcode::F64X2Sqrt:
+        CHECK_TRAP(SimdUnop<v128, int64_t>(FloatSqrt<double>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
       case Opcode::Catch:
-      case Opcode::CatchAll:
       case Opcode::Else:
       case Opcode::End:
       case Opcode::If:
+      case Opcode::IfExcept:
       case Opcode::InterpData:
       case Opcode::Invalid:
       case Opcode::Loop:
@@ -3346,7 +3386,9 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32X4Neg:
     case Opcode::F64X2Neg:
     case Opcode::F32X4Abs:
-    case Opcode::F64X2Abs: {
+    case Opcode::F64X2Abs:
+    case Opcode::F32X4Sqrt:
+    case Opcode::F64X2Sqrt: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
                                 Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -3428,7 +3470,15 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32X4Min:
     case Opcode::F64X2Min:
     case Opcode::F32X4Max:
-    case Opcode::F64X2Max: {
+    case Opcode::F64X2Max:
+    case Opcode::F32X4Add:
+    case Opcode::F64X2Add:
+    case Opcode::F32X4Sub:
+    case Opcode::F64X2Sub:
+    case Opcode::F32X4Div:
+    case Opcode::F64X2Div:
+    case Opcode::F32X4Mul:
+    case Opcode::F64X2Mul: {
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n", opcode.GetName(), Pick(2).v128_bits.v[0],
                        Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],Pick(1).v128_bits.v[0],
                        Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
@@ -3458,10 +3508,10 @@ void Thread::Trace(Stream* stream) {
     // executed.
     case Opcode::Block:
     case Opcode::Catch:
-    case Opcode::CatchAll:
     case Opcode::Else:
     case Opcode::End:
     case Opcode::If:
+    case Opcode::IfExcept:
     case Opcode::InterpData:
     case Opcode::Invalid:
     case Opcode::Loop:
@@ -3832,6 +3882,14 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64X2Min:
       case Opcode::F32X4Max:
       case Opcode::F64X2Max:
+      case Opcode::F32X4Add:
+      case Opcode::F64X2Add:
+      case Opcode::F32X4Sub:
+      case Opcode::F64X2Sub:
+      case Opcode::F32X4Div:
+      case Opcode::F64X2Div:
+      case Opcode::F32X4Mul:
+      case Opcode::F64X2Mul:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
@@ -3918,6 +3976,8 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64X2Neg:
       case Opcode::F32X4Abs:
       case Opcode::F64X2Abs:
+      case Opcode::F32X4Sqrt:
+      case Opcode::F64X2Sqrt:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
@@ -3979,10 +4039,10 @@ void Environment::Disassemble(Stream* stream,
       // executed.
       case Opcode::Block:
       case Opcode::Catch:
-      case Opcode::CatchAll:
       case Opcode::Else:
       case Opcode::End:
       case Opcode::If:
+      case Opcode::IfExcept:
       case Opcode::Invalid:
       case Opcode::Loop:
       case Opcode::Rethrow:
