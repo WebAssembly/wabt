@@ -128,15 +128,11 @@ class BinaryWriter {
                                const char* desc,
                                RelocType reloc_type);
   template <typename T>
-  void WriteLoadStoreExpr(const Func* func,
-                          const Expr* expr,
-                          const char* desc);
+  void WriteLoadStoreExpr(const Func* func, const Expr* expr, const char* desc);
   void WriteExpr(const Func* func, const Expr* expr);
-  void WriteExprList(const Func* func,
-                     const ExprList& exprs);
+  void WriteExprList(const Func* func, const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
-  void WriteFuncLocals(const Func* func,
-                       const TypeVector& local_types);
+  void WriteFuncLocals(const Func* func, const TypeVector& local_types);
   void WriteFunc(const Func* func);
   void WriteTable(const Table* table);
   void WriteMemory(const Memory* memory);
@@ -342,9 +338,7 @@ void BinaryWriter::WriteLoadStoreExpr(const Func* func,
   WriteU32Leb128(stream_, typed_expr->offset, desc);
 }
 
-void BinaryWriter::WriteExpr(
-                             const Func* func,
-                             const Expr* expr) {
+void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
   switch (expr->type()) {
     case ExprType::AtomicLoad:
       WriteLoadStoreExpr<AtomicLoadExpr>(func, expr, "memory offset");
@@ -353,8 +347,7 @@ void BinaryWriter::WriteExpr(
       WriteLoadStoreExpr<AtomicRmwExpr>(func, expr, "memory offset");
       break;
     case ExprType::AtomicRmwCmpxchg:
-      WriteLoadStoreExpr<AtomicRmwCmpxchgExpr>(func, expr,
-                                               "memory offset");
+      WriteLoadStoreExpr<AtomicRmwCmpxchgExpr>(func, expr, "memory offset");
       break;
     case ExprType::AtomicStore:
       WriteLoadStoreExpr<AtomicStoreExpr>(func, expr, "memory offset");
@@ -565,8 +558,7 @@ void BinaryWriter::WriteExpr(
   }
 }
 
-void BinaryWriter::WriteExprList(const Func* func,
-                                 const ExprList& exprs) {
+void BinaryWriter::WriteExprList(const Func* func, const ExprList& exprs) {
   for (const Expr& expr : exprs)
     WriteExpr(func, &expr);
 }
@@ -719,9 +711,10 @@ Result BinaryWriter::WriteModule() {
       stream_->WriteU8Enum(import->kind(), "import kind");
       switch (import->kind()) {
         case ExternalKind::Func:
-          WriteU32Leb128(stream_, module_->GetFuncTypeIndex(
-                                       cast<FuncImport>(import)->func.decl),
-                         "import signature index");
+          WriteU32Leb128(
+              stream_,
+              module_->GetFuncTypeIndex(cast<FuncImport>(import)->func.decl),
+              "import signature index");
           break;
 
         case ExternalKind::Table:
