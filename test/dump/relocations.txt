@@ -25,9 +25,9 @@ Sections:
    Export start=0x0000003b end=0x00000040 (size=0x00000005) count: 1
      Elem start=0x00000042 end=0x0000004d (size=0x0000000b) count: 1
      Code start=0x0000004f end=0x00000065 (size=0x00000016) count: 1
-   Custom start=0x00000067 end=0x00000077 (size=0x00000010) "reloc.Elem"
-   Custom start=0x00000079 end=0x0000008f (size=0x00000016) "reloc.Code"
-   Custom start=0x00000091 end=0x00000099 (size=0x00000008) "linking"
+   Custom start=0x00000067 end=0x0000006f (size=0x00000008) "linking"
+   Custom start=0x00000071 end=0x00000081 (size=0x00000010) "reloc.Elem"
+   Custom start=0x00000083 end=0x00000099 (size=0x00000016) "reloc.Code"
 
 Code Disassembly:
 

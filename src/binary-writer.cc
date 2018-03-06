@@ -971,10 +971,10 @@ Result BinaryWriter::WriteModule() {
   }
 
   if (options_->relocatable) {
+    WriteEmptyLinkingSection();
     for (RelocSection& section : reloc_sections_) {
       WriteRelocSection(&section);
     }
-    WriteEmptyLinkingSection();
   }
 
   return stream_->result();
