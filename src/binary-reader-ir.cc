@@ -289,6 +289,7 @@ Result BinaryReaderIR::TopLabel(LabelNode** label) {
 }
 
 Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
+  expr->loc = GetLocation();
   LabelNode* label;
   CHECK_RESULT(TopLabel(&label));
   label->exprs->push_back(std::move(expr));
@@ -590,11 +591,11 @@ wabt::Result BinaryReaderIR::OnAtomicWakeExpr(Opcode opcode,
 }
 
 Result BinaryReaderIR::OnBinaryExpr(Opcode opcode) {
-  return AppendExpr(MakeUnique<BinaryExpr>(opcode, GetLocation()));
+  return AppendExpr(MakeUnique<BinaryExpr>(opcode));
 }
 
 Result BinaryReaderIR::OnBlockExpr(Index num_types, Type* sig_types) {
-  auto expr = MakeUnique<BlockExpr>(GetLocation());
+  auto expr = MakeUnique<BlockExpr>();
   expr->block.sig.assign(sig_types, sig_types + num_types);
   ExprList* expr_list = &expr->block.exprs;
   CHECK_RESULT(AppendExpr(std::move(expr)));
@@ -603,17 +604,17 @@ Result BinaryReaderIR::OnBlockExpr(Index num_types, Type* sig_types) {
 }
 
 Result BinaryReaderIR::OnBrExpr(Index depth) {
-  return AppendExpr(MakeUnique<BrExpr>(Var(depth, GetLocation())));
+  return AppendExpr(MakeUnique<BrExpr>(Var(depth)));
 }
 
 Result BinaryReaderIR::OnBrIfExpr(Index depth) {
-  return AppendExpr(MakeUnique<BrIfExpr>(Var(depth, GetLocation())));
+  return AppendExpr(MakeUnique<BrIfExpr>(Var(depth)));
 }
 
 Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
                                      Index* target_depths,
                                      Index default_target_depth) {
-  auto expr = MakeUnique<BrTableExpr>(GetLocation());
+  auto expr = MakeUnique<BrTableExpr>();
   expr->default_target = Var(default_target_depth);
   expr->targets.resize(num_targets);
   for (Index i = 0; i < num_targets; ++i) {
@@ -624,12 +625,12 @@ Result BinaryReaderIR::OnBrTableExpr(Index num_targets,
 
 Result BinaryReaderIR::OnCallExpr(Index func_index) {
   assert(func_index < module_->funcs.size());
-  return AppendExpr(MakeUnique<CallExpr>(Var(func_index, GetLocation())));
+  return AppendExpr(MakeUnique<CallExpr>(Var(func_index)));
 }
 
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index) {
   assert(sig_index < module_->func_types.size());
-  auto expr = MakeUnique<CallIndirectExpr>(GetLocation());
+  auto expr = MakeUnique<CallIndirectExpr>();
   expr->decl.has_func_type = true;
   expr->decl.type_var = Var(sig_index, GetLocation());
   expr->decl.sig = module_->func_types[sig_index]->sig;
@@ -637,19 +638,19 @@ Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index) {
 }
 
 Result BinaryReaderIR::OnCompareExpr(Opcode opcode) {
-  return AppendExpr(MakeUnique<CompareExpr>(opcode, GetLocation()));
+  return AppendExpr(MakeUnique<CompareExpr>(opcode));
 }
 
 Result BinaryReaderIR::OnConvertExpr(Opcode opcode) {
-  return AppendExpr(MakeUnique<ConvertExpr>(opcode, GetLocation()));
+  return AppendExpr(MakeUnique<ConvertExpr>(opcode));
 }
 
 Result BinaryReaderIR::OnCurrentMemoryExpr() {
-  return AppendExpr(MakeUnique<CurrentMemoryExpr>(GetLocation()));
+  return AppendExpr(MakeUnique<CurrentMemoryExpr>());
 }
 
 Result BinaryReaderIR::OnDropExpr() {
-  return AppendExpr(MakeUnique<DropExpr>(GetLocation()));
+  return AppendExpr(MakeUnique<DropExpr>());
 }
 
 Result BinaryReaderIR::OnElseExpr() {
@@ -714,7 +715,7 @@ Result BinaryReaderIR::OnI64ConstExpr(uint64_t value) {
 }
 
 Result BinaryReaderIR::OnIfExpr(Index num_types, Type* sig_types) {
-  auto expr = MakeUnique<IfExpr>(GetLocation());
+  auto expr = MakeUnique<IfExpr>();
   expr->true_.sig.assign(sig_types, sig_types + num_types);
   ExprList* expr_list = &expr->true_.exprs;
   CHECK_RESULT(AppendExpr(std::move(expr)));
@@ -725,7 +726,7 @@ Result BinaryReaderIR::OnIfExpr(Index num_types, Type* sig_types) {
 Result BinaryReaderIR::OnIfExceptExpr(Index num_types,
                                       Type* sig_types,
                                       Index except_index) {
-  auto expr = MakeUnique<IfExceptExpr>(GetLocation());
+  auto expr = MakeUnique<IfExceptExpr>();
   expr->except_var = Var(except_index, GetLocation());
   expr->true_.sig.assign(sig_types, sig_types + num_types);
   ExprList* expr_list = &expr->true_.exprs;
@@ -750,7 +751,7 @@ Result BinaryReaderIR::OnLoopExpr(Index num_types, Type* sig_types) {
 }
 
 Result BinaryReaderIR::OnNopExpr() {
-  return AppendExpr(MakeUnique<NopExpr>(GetLocation()));
+  return AppendExpr(MakeUnique<NopExpr>());
 }
 
 Result BinaryReaderIR::OnRethrowExpr() {
