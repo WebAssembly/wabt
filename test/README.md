@@ -125,8 +125,6 @@ The currently supported list of tools (see
   collection of `.wasm` files, then run `wasm-objdump`. Note that the `.wasm`
   files are not automatically passed to `wasm-objdump`, so each test must
   specify them manually: `%(temp_file)s.0.wasm %(temp_file)s.1.wasm`, etc.
-- `run-wasm-link`: parses a wasm text file which may contain multiple modules,
-  convert them to binary, then link them together via `wasm-link`.
 - `run-roundtrip`: parse a wasm text file, convert it to binary, convert it
   back to text, then finally convert it back to binary and compare the two
   binary results. If the `--stdout` flag is passed, the final conversion to
@@ -173,7 +171,6 @@ subdirectory:
   JavaScript file.
 - `help`: Tests the output of running with the `-h` flag on each tool.
 - `interp`: Tests the `wasm-interp` tool.
-- `link`: Tests the `wasm-link` tool.
 - `opcodecnt`: Tests the `wasm-opcodecnt` tool.
 - `parse`: Tests parsing via the `wat2wasm` tool.
 - `regress`: Various regression tests that are irregular and don't fit
