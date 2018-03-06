@@ -22,7 +22,7 @@ options:
       --enable-simd                           SIMD support
       --enable-threads                        Threading support
   -o, --output=FILE                           output wasm binary file
-  -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with wasm-link)
+  -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with e.g. lld)
       --no-canonicalize-leb128s               Write all LEB128 sizes as 5-bytes instead of their minimal size
       --debug-names                           Write debug names to the generated binary file
       --no-check                              Don't check for invalid modules
