@@ -244,8 +244,9 @@ static std::string TypesToString(const TypeVector& types,
 void TypeChecker::PrintStackIfFailed(Result result,
                                      const char* desc,
                                      const TypeVector& expected) {
-  if (Succeeded(result))
+  if (Succeeded(result)) {
     return;
+  }
 
   size_t limit = 0;
   Label* label;
