@@ -263,7 +263,8 @@ void BinaryReaderObjdumpPrepass::SetFunctionName(Index index,
 }
 
 void BinaryReaderObjdumpPrepass::SetGlobalName(Index index, string_view name) {
-  objdump_state_->global_names.resize(index + 1);
+  if (objdump_state_->global_names.size() <= index)
+    objdump_state_->global_names.resize(index + 1);
   objdump_state_->global_names[index] = name.to_string();
 }
 
