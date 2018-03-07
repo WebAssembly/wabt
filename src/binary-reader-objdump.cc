@@ -211,7 +211,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
 
 void BinaryReaderObjdumpPrepass::SetFunctionName(Index index,
                                                  string_view name) {
-  objdump_state_->function_names.resize(index + 1);
+  if (objdump_state_->function_names.size() <= index)
+    objdump_state_->function_names.resize(index + 1);
   objdump_state_->function_names[index] = name.to_string();
 }
 
