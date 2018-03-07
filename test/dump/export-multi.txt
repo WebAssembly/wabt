@@ -51,7 +51,7 @@ export-multi.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000020 func[0]:
+000020 <b>:
  000022: 01                         | nop
  000023: 0b                         | end
 ;;; STDOUT ;;)
