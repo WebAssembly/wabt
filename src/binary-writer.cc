@@ -95,6 +95,12 @@ struct RelocSection {
   std::vector<Reloc> relocations;
 };
 
+struct Symbol {
+  Index symbol_index;
+  SymbolType type;
+  Index element_index;
+};
+
 RelocSection::RelocSection(const char* name, BinarySection code)
     : name(name), section_code(code) {}
 
@@ -123,6 +129,7 @@ class BinaryWriter {
   Index GetLabelVarDepth(const Var* var);
   Index GetExceptVarDepth(const Var* var);
   Index GetLocalIndex(const Func* func, const Var& var);
+  Index GetSymbolIndex(RelocType reloc_type, Index index);
   void AddReloc(RelocType reloc_type, Index index);
   void WriteU32Leb128WithReloc(Index index,
                                const char* desc,
@@ -139,12 +146,14 @@ class BinaryWriter {
   void WriteGlobalHeader(const Global* global);
   void WriteExceptType(const TypeVector* except_types);
   void WriteRelocSection(const RelocSection* reloc_section);
-  void WriteEmptyLinkingSection();
+  void WriteLinkingSection();
 
   Stream* stream_;
   const WriteBinaryOptions* options_;
   const Module* module_;
 
+  std::unordered_map<std::string, Index> symtab_;
+  std::vector<Symbol> symbols_;
   std::vector<RelocSection> reloc_sections_;
   RelocSection* current_reloc_section_ = nullptr;
 
@@ -289,6 +298,31 @@ Index BinaryWriter::GetExceptVarDepth(const Var* var) {
   return var->index();
 }
 
+Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
+  std::string name;
+  SymbolType type = SymbolType::Function;
+  switch (reloc_type) {
+    case RelocType::FuncIndexLEB:
+      name = module_->funcs[index]->name;
+      break;
+    case RelocType::GlobalIndexLEB:
+      type = SymbolType::Global;
+      name = module_->globals[index]->name;
+      break;
+    default:
+      WABT_UNREACHABLE;
+  }
+  auto iter = symtab_.find(name);
+  if (iter != symtab_.end()) {
+    return iter->second;
+  }
+
+  Index sym_index = Index(symbols_.size());
+  symtab_[name] = sym_index;
+  symbols_.push_back(Symbol{sym_index, type, index});
+  return sym_index;
+}
+
 void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
   // Add a new reloc section if needed
   if (!current_reloc_section_ ||
@@ -300,7 +334,9 @@ void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
 
   // Add a new relocation to the curent reloc section
   size_t offset = stream_->offset() - last_section_payload_offset_;
-  current_reloc_section_->relocations.emplace_back(reloc_type, offset, index);
+  Index symbol_index = GetSymbolIndex(reloc_type, index);
+  current_reloc_section_->relocations.emplace_back(reloc_type, offset,
+                                                   symbol_index);
 }
 
 void BinaryWriter::WriteU32Leb128WithReloc(Index index,
@@ -663,11 +699,41 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
   EndSection();
 }
 
-void BinaryWriter::WriteEmptyLinkingSection() {
-  // Write an empty linking section.  This is signal that the resulting
-  // file is relocatable:
-  // See: https://github.com/WebAssembly/tool-conventions/blob/master/Linking.md
+void BinaryWriter::WriteLinkingSection() {
   BeginCustomSection(WABT_BINARY_SECTION_LINKING);
+  if (symbols_.size()) {
+    stream_->WriteU8Enum(LinkingEntryType::SymbolTable, "symbol table");
+    BeginSubsection("symbol table");
+    WriteU32Leb128(stream_, symbols_.size(), "num symbols");
+
+    for (const Symbol& sym : symbols_) {
+      bool is_defined = true;
+      if (sym.type == SymbolType::Function) {
+        if (sym.element_index < module_->num_func_imports) {
+          is_defined = false;
+        }
+      }
+      if (sym.type == SymbolType::Global) {
+        if (sym.element_index < module_->num_global_imports) {
+          is_defined = false;
+        }
+      }
+      stream_->WriteU8Enum(sym.type, "symbol type");
+      WriteU32Leb128(stream_, is_defined ? 0 : WABT_SYMBOL_FLAG_UNDEFINED,
+                     "symbol flags");
+      WriteU32Leb128(stream_, sym.element_index, "element index");
+      if (is_defined) {
+        if (sym.type == SymbolType::Function) {
+          WriteStr(stream_, module_->funcs[sym.element_index]->name,
+                   "function name", PrintChars::Yes);
+        } else if (sym.type == SymbolType::Global) {
+          WriteStr(stream_, module_->globals[sym.element_index]->name,
+                   "global name", PrintChars::Yes);
+        }
+      }
+    }
+    EndSubsection();
+  }
   EndSection();
 }
 
@@ -971,7 +1037,7 @@ Result BinaryWriter::WriteModule() {
   }
 
   if (options_->relocatable) {
-    WriteEmptyLinkingSection();
+    WriteLinkingSection();
     for (RelocSection& section : reloc_sections_) {
       WriteRelocSection(&section);
     }

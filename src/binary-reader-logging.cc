@@ -478,8 +478,9 @@ Result BinaryReaderLogging::OnFunctionSymbol(Index index,
                                              uint32_t flags,
                                              string_view name,
                                              Index func_index) {
-  LOGF("OnFunctionSymbol(name: " PRIstringview " flags: 0x%x)\n",
-       WABT_PRINTF_STRING_VIEW_ARG(name), flags);
+  LOGF("OnFunctionSymbol(name: " PRIstringview " flags: 0x%x index: %" PRIindex
+       ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), flags, func_index);
   return reader_->OnGlobalSymbol(index, flags, name, func_index);
 }
 
@@ -487,8 +488,9 @@ Result BinaryReaderLogging::OnGlobalSymbol(Index index,
                                            uint32_t flags,
                                            string_view name,
                                            Index global_index) {
-  LOGF("OnGlobalSymbol(name: " PRIstringview " flags: 0x%x)\n",
-       WABT_PRINTF_STRING_VIEW_ARG(name), flags);
+  LOGF("OnGlobalSymbol(name: " PRIstringview " flags: 0x%x index: %" PRIindex
+       ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), flags, global_index);
   return reader_->OnGlobalSymbol(index, flags, name, global_index);
 }
 
