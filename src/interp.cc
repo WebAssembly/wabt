@@ -1280,6 +1280,18 @@ uint32_t Ge(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
   return ToRep(FromRep<T>(lhs_rep) >= FromRep<T>(rhs_rep));
 }
 
+// f32x4.convert_{s,u}/i32x4 and f64x2.convert_s/i64x2.
+template <typename R, typename T>
+ValueTypeRep<R> SimdConvert(ValueTypeRep<T> v_rep) {
+  return ToRep(static_cast<R>(static_cast<T>(v_rep)));
+}
+
+// f64x2.convert_u/i64x2 use this instance due to MSVC issue.
+template <>
+ValueTypeRep<double> SimdConvert<double, uint64_t>(ValueTypeRep<uint64_t> v_rep) {
+  return ToRep(wabt_convert_uint64_to_double(v_rep));
+}
+
 // i{32,64}.trunc_{s,u}/f{32,64}
 template <typename R, typename T>
 Result IntTrunc(ValueTypeRep<T> v_rep, ValueTypeRep<R>* out_result) {
@@ -2903,6 +2915,22 @@ Result Thread::Run(int num_instructions) {
       case Opcode::F64X2Sqrt:
         CHECK_TRAP(SimdUnop<v128, int64_t>(FloatSqrt<double>));
         break;
+
+      case Opcode::F32X4ConvertSI32X4:
+        CHECK_TRAP(SimdUnop<v128, int32_t>(SimdConvert<float, int32_t>));
+        break;
+
+      case Opcode::F32X4ConvertUI32X4:
+        CHECK_TRAP(SimdUnop<v128, uint32_t>(SimdConvert<float, uint32_t>));
+        break;
+
+      case Opcode::F64X2ConvertSI64X2:
+        CHECK_TRAP(SimdUnop<v128, int64_t>(SimdConvert<double, int64_t>));
+        break;
+
+      case Opcode::F64X2ConvertUI64X2:
+        CHECK_TRAP(SimdUnop<v128, uint64_t>(SimdConvert<double, uint64_t>));
+        break;
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
@@ -3388,7 +3416,11 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32X4Abs:
     case Opcode::F64X2Abs:
     case Opcode::F32X4Sqrt:
-    case Opcode::F64X2Sqrt: {
+    case Opcode::F64X2Sqrt:
+    case Opcode::F32X4ConvertSI32X4:
+    case Opcode::F32X4ConvertUI32X4:
+    case Opcode::F64X2ConvertSI64X2:
+    case Opcode::F64X2ConvertUI64X2: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), Top().v128_bits.v[0],
                                 Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -3978,6 +4010,10 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64X2Abs:
       case Opcode::F32X4Sqrt:
       case Opcode::F64X2Sqrt:
+      case Opcode::F32X4ConvertSI32X4:
+      case Opcode::F32X4ConvertUI32X4:
+      case Opcode::F64X2ConvertSI64X2:
+      case Opcode::F64X2ConvertUI64X2:
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
