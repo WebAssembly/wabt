@@ -189,7 +189,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                       Index segment,
                       uint32_t offset,
                       uint32_t size) override {
-    objdump_state_->symtab[index] = {SymbolType::Data, name, 0};
+    objdump_state_->symtab[index] = {SymbolType::Data, name.to_string(), 0};
     return Result::Ok;
   }
 
@@ -200,7 +200,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     if (!name.empty()) {
       SetFunctionName(func_index, name);
     }
-    objdump_state_->symtab[index] = {SymbolType::Function, name, func_index};
+    objdump_state_->symtab[index] = {SymbolType::Function, name.to_string(),
+                                     func_index};
     return Result::Ok;
   }
 
@@ -211,7 +212,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     if (!name.empty()) {
       SetGlobalName(global_index, name);
     }
-    objdump_state_->symtab[index] = {SymbolType::Global, name, global_index};
+    objdump_state_->symtab[index] = {SymbolType::Global, name.to_string(),
+                                     global_index};
     return Result::Ok;
   }
 
@@ -1302,8 +1304,8 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
                                            Index global_index) {
   std::string sym_name = name.to_string();
   if (sym_name.empty()) {
-    if (const char* N = GetGlobalName(global_index)) {
-      sym_name = N;
+    if (const char* Name = GetGlobalName(global_index)) {
+      sym_name = Name;
     }
   }
   assert(!sym_name.empty());

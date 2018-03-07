@@ -313,8 +313,9 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
       WABT_UNREACHABLE;
   }
   auto iter = symtab_.find(name);
-  if (iter != symtab_.end())
+  if (iter != symtab_.end()) {
     return iter->second;
+  }
 
   Index sym_index = Index(symbols_.size());
   symtab_[name] = sym_index;

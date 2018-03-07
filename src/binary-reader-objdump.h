@@ -52,7 +52,7 @@ struct ObjdumpOptions {
 
 struct ObjdumpSymbol {
   wabt::SymbolType kind;
-  string_view name;
+  std::string name;
   Index index;
 };
 
