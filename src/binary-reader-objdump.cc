@@ -146,6 +146,7 @@ string_view BinaryReaderObjdumpBase::GetSymbolName(Index symbol_index) const {
     case SymbolType::Global:
       return GetGlobalName(sym.index);
   }
+  WABT_UNREACHABLE;
 }
 
 void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
