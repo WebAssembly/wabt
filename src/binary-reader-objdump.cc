@@ -191,6 +191,15 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
+  Result OnExport(Index index,
+                  ExternalKind kind,
+                  Index item_index,
+                  string_view name) override {
+    if (kind == ExternalKind::Func)
+      SetFunctionName(item_index, name);
+    return Result::Ok;
+  }
+
   Result OnReloc(RelocType type,
                  Offset offset,
                  Index index,
@@ -202,7 +211,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
 
 void BinaryReaderObjdumpPrepass::SetFunctionName(Index index,
                                                  string_view name) {
-  objdump_state_->function_names.resize(index + 1);
+  if (objdump_state_->function_names.size() <= index)
+    objdump_state_->function_names.resize(index + 1);
   objdump_state_->function_names[index] = name.to_string();
 }
 

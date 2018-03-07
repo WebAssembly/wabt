@@ -43,6 +43,6 @@ string-hex.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000022 func[0]:
+000022 <fooޭʻ>:
  000024: 0b                         | end
 ;;; STDOUT ;;)
