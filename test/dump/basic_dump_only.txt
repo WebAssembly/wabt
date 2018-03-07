@@ -18,7 +18,7 @@ basic_dump_only.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000024 func[0]:
+000024 <f>:
  000026: 41 00                      | i32.const 0
  000028: 41 00                      | i32.const 0
  00002a: 28 02 00                   | i32.load 2 0
