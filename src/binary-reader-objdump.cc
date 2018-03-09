@@ -1278,9 +1278,12 @@ Result BinaryReaderObjdump::OnDataSymbol(Index index,
                                          Index segment,
                                          uint32_t offset,
                                          uint32_t size) {
-  PrintDetails("   - sym[%d] <" PRIstringview "> segment=%" PRIindex
-               " offset=%d size=%d",
-               index, WABT_PRINTF_STRING_VIEW_ARG(name), segment, offset, size);
+  char type_char = flags & WABT_SYMBOL_FLAG_UNDEFINED ? 'U' : 'D';
+  PrintDetails("   - [%d] %c <" PRIstringview ">", index, type_char,
+               WABT_PRINTF_STRING_VIEW_ARG(name));
+  if (!(flags & WABT_SYMBOL_FLAG_UNDEFINED))
+    PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
+                 size);
   PrintSymbolFlags(flags);
   return Result::Ok;
 }
@@ -1289,13 +1292,14 @@ Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
                                              uint32_t flags,
                                              string_view name,
                                              Index func_index) {
+  char type_char = flags & WABT_SYMBOL_FLAG_UNDEFINED ? 'F' : 'U';
   std::string sym_name = name.to_string();
   if (sym_name.empty()) {
     sym_name = GetFunctionName(func_index);
   }
   assert(!sym_name.empty());
-  PrintDetails("   - sym[%d] <" PRIstringview "> func=%" PRIindex, index,
-               WABT_PRINTF_STRING_VIEW_ARG(sym_name), func_index);
+  PrintDetails("   - [%d] %c <" PRIstringview "> func=%" PRIindex, index,
+               type_char, WABT_PRINTF_STRING_VIEW_ARG(sym_name), func_index);
   PrintSymbolFlags(flags);
   return Result::Ok;
 }
@@ -1311,8 +1315,9 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
     }
   }
   assert(!sym_name.empty());
-  PrintDetails("   - sym[%d] <" PRIstringview "> global=%" PRIindex, index,
-               WABT_PRINTF_STRING_VIEW_ARG(sym_name), global_index);
+  char type_char = flags & WABT_SYMBOL_FLAG_UNDEFINED ? 'U' : 'G';
+  PrintDetails("   - [%d] %c <" PRIstringview "> global=%" PRIindex, index,
+               type_char, WABT_PRINTF_STRING_VIEW_ARG(sym_name), global_index);
   PrintSymbolFlags(flags);
   return Result::Ok;
 }

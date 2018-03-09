@@ -62,9 +62,9 @@ Custom:
    - 1: priority=5
    - 0: priority=6
   - symbol table [count=3]
-   - sym[0] <func_sym> func=0 binding=weak vis=default
-   - sym[1] <global_sym> global=0 binding=local vis=default
-   - sym[2] <data_sym> segment=1 offset=2 size=1 binding=global vis=hidden
+   - [0] U <func_sym> func=0 binding=weak vis=default
+   - [1] G <global_sym> global=0 binding=local vis=default
+   - [2] D <data_sym> segment=1 offset=2 size=1 binding=global vis=hidden
 
 Code Disassembly:
 
