@@ -1292,7 +1292,7 @@ Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
                                              uint32_t flags,
                                              string_view name,
                                              Index func_index) {
-  char type_char = flags & WABT_SYMBOL_FLAG_UNDEFINED ? 'F' : 'U';
+  char type_char = flags & WABT_SYMBOL_FLAG_UNDEFINED ? 'U' : 'F';
   std::string sym_name = name.to_string();
   if (sym_name.empty()) {
     sym_name = GetFunctionName(func_index);
