@@ -517,6 +517,8 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i64.atomic.rmw16_u.cmpxchg" { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw16UCmpxchg); }
       <i> "i64.atomic.rmw32_u.cmpxchg" { RETURN_OPCODE(AtomicRmwCmpxchg, I64AtomicRmw32UCmpxchg); }
       <i> "v128.const"           { RETURN_OPCODE(Const, V128Const); }
+      <i> "v128.load"            { RETURN_OPCODE(Load,  V128Load); }
+      <i> "v128.store"           { RETURN_OPCODE(Store, V128Store); }
       <i> "i8x16.splat"          { RETURN_OPCODE(Unary, I8X16Splat); }
       <i> "i16x8.splat"          { RETURN_OPCODE(Unary, I16X8Splat); }
       <i> "i32x4.splat"          { RETURN_OPCODE(Unary, I32X4Splat); }
