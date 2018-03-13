@@ -250,6 +250,9 @@ class BinaryReaderDelegate {
   virtual Result EndFunctionBody(Index index) = 0;
   virtual Result EndCodeSection() = 0;
 
+  /* Simd instructions with Lane Imm operand*/
+  virtual Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) = 0;
+
   /* Elem section */
   virtual Result BeginElemSection(Offset size) = 0;
   virtual Result OnElemSegmentCount(Index count) = 0;

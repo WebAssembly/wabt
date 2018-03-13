@@ -187,6 +187,7 @@ enum class ExprType {
   Select,
   SetGlobal,
   SetLocal,
+  SimdLaneOp,
   Store,
   TeeLocal,
   Ternary,
@@ -265,6 +266,15 @@ typedef OpcodeExpr<ExprType::Compare> CompareExpr;
 typedef OpcodeExpr<ExprType::Convert> ConvertExpr;
 typedef OpcodeExpr<ExprType::Unary> UnaryExpr;
 typedef OpcodeExpr<ExprType::Ternary> TernaryExpr;
+
+class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
+ public:
+  SimdLaneOpExpr(Opcode opcode, uint64_t val, const Location& loc = Location())
+            : ExprMixin<ExprType::SimdLaneOp>(loc), opcode(opcode), val(val) {}
+
+  Opcode opcode;
+  uint64_t val;
+};
 
 template <ExprType TypeEnum>
 class VarExpr : public ExprMixin<TypeEnum> {

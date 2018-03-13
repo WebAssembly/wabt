@@ -122,6 +122,7 @@ enum class TokenType {
   Throw,
   Try,
   Unary,
+  SimdLaneOp,
   Unreachable,
   First_Opcode = AtomicLoad,
   Last_Opcode = Unreachable,

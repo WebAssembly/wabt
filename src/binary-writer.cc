@@ -588,6 +588,12 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Ternary:
       WriteOpcode(stream_, cast<TernaryExpr>(expr)->opcode);
       break;
+    case ExprType::SimdLaneOp: {
+      const Opcode opcode = cast<SimdLaneOpExpr>(expr)->opcode;
+      WriteOpcode(stream_, opcode);
+      stream_->WriteU8(static_cast<uint8_t>(cast<SimdLaneOpExpr>(expr)->val), "Simd Lane literal");
+      break;
+    }
     case ExprType::Unreachable:
       WriteOpcode(stream_, Opcode::Unreachable);
       break;

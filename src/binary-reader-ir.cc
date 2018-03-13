@@ -182,6 +182,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
+  Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
 
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index, Index table_index) override;
@@ -832,6 +833,10 @@ Result BinaryReaderIR::EndFunctionBody(Index index) {
   CHECK_RESULT(PopLabel());
   current_func_ = nullptr;
   return Result::Ok;
+}
+
+Result BinaryReaderIR::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
+  return AppendExpr(MakeUnique<SimdLaneOpExpr>(opcode, value));
 }
 
 Result BinaryReaderIR::OnElemSegmentCount(Index count) {

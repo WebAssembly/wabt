@@ -195,6 +195,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnUnreachableExpr() override;
   wabt::Result EndFunctionBody(Index index) override;
+  wabt::Result OnSimdLaneOpExpr(wabt::Opcode opcode, uint64_t value) override;
 
   wabt::Result EndElemSegmentInitExpr(Index index) override;
   wabt::Result OnElemSegmentFunctionIndexCount(Index index,
@@ -1176,6 +1177,14 @@ wabt::Result BinaryReaderInterp::OnUnaryExpr(wabt::Opcode opcode) {
 wabt::Result BinaryReaderInterp::OnTernaryExpr(wabt::Opcode opcode) {
   CHECK_RESULT(typechecker_.OnTernary(opcode));
   CHECK_RESULT(EmitOpcode(opcode));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnSimdLaneOpExpr(wabt::Opcode opcode, 
+                                                      uint64_t value) {
+  CHECK_RESULT(typechecker_.OnSimdLaneOp(opcode, value));
+  CHECK_RESULT(EmitOpcode(opcode));
+  CHECK_RESULT(EmitI8(static_cast<uint8_t>(value)));
   return wabt::Result::Ok;
 }
 

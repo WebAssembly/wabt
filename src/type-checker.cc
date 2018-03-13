@@ -595,6 +595,24 @@ Result TypeChecker::OnTernary(Opcode opcode) {
   return CheckOpcode3(opcode);
 }
 
+Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
+  Result result = Result::Error;
+  switch (opcode) {
+    case Opcode::I8X16ExtractLaneS: {
+      if(lane_idx >= 16) {
+        PrintError("TypeChecker: I8X16 lane Operations: lane index must\
+                                                      be less than 16.");
+        break;
+      }
+      result = CheckOpcode1(opcode);
+      break;
+    }
+    default:
+      PrintError("TypeChecker::OnSimdLane: called by invalid opcode.");
+  }  
+  return result;
+}
+
 Result TypeChecker::OnUnreachable() {
   return SetUnreachable();
 }

@@ -263,6 +263,7 @@ class CWriter {
   void Write(const StoreExpr&);
   void Write(const UnaryExpr&);
   void Write(const TernaryExpr&);
+  void Write(const SimdLaneOpExpr&);
 
   const WriteCOptions* options_ = nullptr;
   const Module* module_ = nullptr;
@@ -1619,6 +1620,11 @@ void CWriter::Write(const ExprList& exprs) {
         Write(*cast<TernaryExpr>(&expr));
         break;
 
+      case ExprType::SimdLaneOp: {
+        Write(*cast<SimdLaneOpExpr>(&expr));
+        break;
+      }
+
       case ExprType::Unreachable:
         Write("UNREACHABLE;", Newline());
         return;
@@ -2170,6 +2176,23 @@ void CWriter::Write(const TernaryExpr& expr) {
     default:
       WABT_UNREACHABLE;
   }
+}
+
+void CWriter::Write(const SimdLaneOpExpr& expr) {
+  Type result_type = expr.opcode.GetResultType();
+
+  switch (expr.opcode) {
+    case Opcode::I8X16ExtractLaneS: {
+      Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(" ,
+            StackVar(0),", lane Imm: ", expr.val, ");", Newline());
+      DropTypes(1);
+      break;
+    }
+    default:
+      WABT_UNREACHABLE;
+  }
+
+  PushType(result_type);
 }
 
 void CWriter::WriteCHeader() {
