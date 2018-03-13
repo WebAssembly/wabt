@@ -526,6 +526,13 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "f32x4.splat"          { RETURN_OPCODE(Unary, F32X4Splat); }
       <i> "f64x2.splat"          { RETURN_OPCODE(Unary, F64X2Splat); }
       <i> "i8x16.extract_lane_s" { RETURN_OPCODE(SimdLaneOp, I8X16ExtractLaneS); }
+      <i> "i8x16.extract_lane_u" { RETURN_OPCODE(SimdLaneOp, I8X16ExtractLaneU); }
+      <i> "i16x8.extract_lane_s" { RETURN_OPCODE(SimdLaneOp, I16X8ExtractLaneS); }
+      <i> "i16x8.extract_lane_u" { RETURN_OPCODE(SimdLaneOp, I16X8ExtractLaneU); }
+      <i> "i32x4.extract_lane"   { RETURN_OPCODE(SimdLaneOp, I32X4ExtractLane); }
+      <i> "i64x2.extract_lane"   { RETURN_OPCODE(SimdLaneOp, I64X2ExtractLane); }
+      <i> "f32x4.extract_lane"   { RETURN_OPCODE(SimdLaneOp, F32X4ExtractLane); }
+      <i> "f64x2.extract_lane"   { RETURN_OPCODE(SimdLaneOp, F64X2ExtractLane); }
       <i> "i8x16.add"            { RETURN_OPCODE(Binary, I8X16Add); }
       <i> "i16x8.add"            { RETURN_OPCODE(Binary, I16X8Add); }
       <i> "i32x4.add"            { RETURN_OPCODE(Binary, I32X4Add); }

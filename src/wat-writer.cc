@@ -1028,6 +1028,13 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       const Opcode opcode = cast<SimdLaneOpExpr>(expr)->opcode;
       switch (opcode) {
         case Opcode::I8X16ExtractLaneS:
+        case Opcode::I8X16ExtractLaneU:
+        case Opcode::I16X8ExtractLaneS:
+        case Opcode::I16X8ExtractLaneU:
+        case Opcode::I32X4ExtractLane:
+        case Opcode::I64X2ExtractLane:
+        case Opcode::F32X4ExtractLane:
+        case Opcode::F64X2ExtractLane:
           PushExpr(expr, 1, 1);
           break;
 
