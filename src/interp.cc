@@ -1360,7 +1360,7 @@ ValueTypeRep<T> SimdSplat(V lane_data) {
   return ToRep(Bitcast<T>(simd_data));
 }
 
-// Simd instructions with Lane operand.
+// Simd instructions of Lane extract.
 // value: input v128 value.
 // typename T: lane data type.
 template <typename R, typename V, typename T>
@@ -1377,6 +1377,25 @@ ValueTypeRep<R> SimdExtractLane(V value, uint32_t laneidx) {
   return ToRep(static_cast<R>(simd_data_0[laneidx]));
 }
 
+// Simd instructions of Lane replace.
+// value: input v128 value.  lane_val: input lane data.
+// typename T: lane data type.
+template <typename R, typename V, typename T>
+ValueTypeRep<R> SimdReplaceLane(V value, uint32_t lane_idx, T lane_val) {
+  // Calculate how many Lanes according to input lane data type.
+  constexpr int32_t lanes = sizeof(V)/sizeof(T);
+
+  // Define SIMD data array for Simd add by Lanes.
+  T simd_data_0[lanes];
+
+  // Convert intput SIMD data to array.
+  memcpy(simd_data_0, &value, sizeof(V));
+
+ // Replace the indicated lane.
+  simd_data_0[lane_idx] = lane_val;
+
+  return ToRep(Bitcast<R>(simd_data_0));
+}
 
 bool Environment::FuncSignaturesAreEqual(Index sig_index_0,
                                          Index sig_index_1) const {
@@ -2490,6 +2509,54 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
+      case Opcode::I8X16ReplaceLane: {
+        int8_t lane_val = static_cast<int8_t>(Pop<int32_t>());
+        v128 value = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(Push<v128>(SimdReplaceLane<v128, v128, int8_t>(value, lane_idx, lane_val)));
+        break;
+      }
+
+      case Opcode::I16X8ReplaceLane: {
+        int16_t lane_val = static_cast<int16_t>(Pop<int32_t>());
+        v128 value = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(Push<v128>(SimdReplaceLane<v128, v128, int16_t>(value, lane_idx, lane_val)));
+        break;
+      }
+
+      case Opcode::I32X4ReplaceLane: {
+        int32_t lane_val = Pop<int32_t>();
+        v128 value = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(Push<v128>(SimdReplaceLane<v128, v128, int32_t>(value, lane_idx, lane_val)));
+        break;
+      }
+
+      case Opcode::I64X2ReplaceLane: {
+        int64_t lane_val = Pop<int64_t>();
+        v128 value = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(Push<v128>(SimdReplaceLane<v128, v128, int64_t>(value, lane_idx, lane_val)));
+        break;
+      }
+
+      case Opcode::F32X4ReplaceLane: {
+        float lane_val = Pop<float>();
+        v128 value = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(Push<v128>(SimdReplaceLane<v128, v128, float>(value, lane_idx, lane_val)));
+        break;
+      }
+
+      case Opcode::F64X2ReplaceLane: {
+        double lane_val = Pop<double>();
+        v128 value = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(Push<v128>(SimdReplaceLane<v128, v128, double>(value, lane_idx, lane_val)));
+        break;
+      }
+
       case Opcode::I8X16Add:
         CHECK_TRAP(SimdBinop<v128, uint8_t>(Add<uint32_t>));
         break;
@@ -3564,6 +3631,36 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
+    case Opcode::I8X16ReplaceLane:
+    case Opcode::I16X8ReplaceLane:
+    case Opcode::I32X4ReplaceLane: {
+      stream->Writef("%s : Set %u to LaneIdx %d In $0x%08x 0x%08x 0x%08x 0x%08x \n",
+                     opcode.GetName(), Pick(1).i32, ReadU8At(pc),Pick(2).v128_bits.v[0],\
+                     Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3]);
+      break;
+    }
+    case Opcode::I64X2ReplaceLane:{
+      stream->Writef("%s : Set %" PRIu64 " to LaneIdx %d In $0x%08x 0x%08x 0x%08x 0x%08x \n",
+                     opcode.GetName(), Pick(1).i64, ReadU8At(pc),Pick(2).v128_bits.v[0],\
+                     Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3]);
+      break;
+    }
+    case Opcode::F32X4ReplaceLane: {
+      stream->Writef("%s : Set %g to LaneIdx %d In $0x%08x 0x%08x 0x%08x 0x%08x \n",
+                     opcode.GetName(), Bitcast<float>(Pick(1).f32_bits), ReadU8At(pc),
+                     Pick(2).v128_bits.v[0],Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2],
+                     Pick(2).v128_bits.v[3]);
+
+      break;
+    }
+    case Opcode::F64X2ReplaceLane: {
+      stream->Writef("%s : Set %g to LaneIdx %d In $0x%08x 0x%08x 0x%08x 0x%08x \n",
+                     opcode.GetName(), Bitcast<double>(Pick(1).f64_bits), ReadU8At(pc),
+                     Pick(2).v128_bits.v[0],Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2],
+                     Pick(2).v128_bits.v[3]);
+      break;
+    }
+
     case Opcode::I8X16Add: 
     case Opcode::I16X8Add: 
     case Opcode::I32X4Add: 
@@ -4159,7 +4256,13 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I32X4ExtractLane:
       case Opcode::I64X2ExtractLane:
       case Opcode::F32X4ExtractLane:
-      case Opcode::F64X2ExtractLane: {
+      case Opcode::F64X2ExtractLane:
+      case Opcode::I8X16ReplaceLane:
+      case Opcode::I16X8ReplaceLane:
+      case Opcode::I32X4ReplaceLane:
+      case Opcode::I64X2ReplaceLane:
+      case Opcode::F32X4ReplaceLane:
+      case Opcode::F64X2ReplaceLane: {
         stream->Writef("%s (Lane idx %d) \n", opcode.GetName(),ReadU8(&pc));
         break;
       }

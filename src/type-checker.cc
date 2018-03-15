@@ -638,6 +638,44 @@ Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
       result = CheckOpcode1(opcode);
       break;
     }
+    case Opcode::I8X16ReplaceLane: {
+      if(lane_idx >= 16) {
+        PrintError("TypeChecker: I8X16 lane Operations: lane index must\
+                                                      be less than 16.");
+        break;
+      }
+      result = CheckOpcode2(opcode);
+      break;
+    }
+    case Opcode::I16X8ReplaceLane: {
+      if(lane_idx >= 8) {
+        PrintError("TypeChecker: I16X8 lane Operations: lane index must\
+                                                       be less than 8.");
+        break;
+      }
+      result = CheckOpcode2(opcode);
+      break;
+    }
+    case Opcode::I32X4ReplaceLane:
+    case Opcode::F32X4ReplaceLane: {
+      if(lane_idx >= 4) {
+        PrintError("TypeChecker: (I/f)32X4 lane Operations: lane index must\
+                                                           be less than 4.");
+        break;
+      }
+      result = CheckOpcode2(opcode);
+      break;
+    }
+    case Opcode::I64X2ReplaceLane:
+    case Opcode::F64X2ReplaceLane: {
+      if(lane_idx >= 2) {
+        PrintError("TypeChecker: (I/f)64X2 lane Operations: lane index must\
+                                                           be less than 2.");
+        break;
+      }
+      result = CheckOpcode2(opcode);
+      break;
+    }
     default:
       PrintError("TypeChecker::OnSimdLane: called by invalid opcode.");
   }  
