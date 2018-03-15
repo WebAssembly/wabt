@@ -91,13 +91,13 @@ getlocal.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000015 func[0]:
- - local[0] type=f64
- - local[1] type=f32
- - local[2] type=i64
- - local[3..4] type=i32
- - local[5] type=f32
- - local[6] type=f64
- - local[7] type=i64
+ 000017: 01 7c                      | local[0] type=f64
+ 000019: 01 7d                      | local[1] type=f32
+ 00001b: 01 7e                      | local[2] type=i64
+ 00001d: 02 7f                      | local[3..4] type=i32
+ 00001f: 01 7d                      | local[5] type=f32
+ 000021: 01 7c                      | local[6] type=f64
+ 000023: 01 7e                      | local[7] type=i64
  000025: 20 00                      | get_local 0
  000027: 1a                         | drop
  000028: 20 01                      | get_local 1
