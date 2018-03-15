@@ -2182,7 +2182,14 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
 
   switch (expr.opcode) {
-    case Opcode::I8X16ExtractLaneS: {
+    case Opcode::I8X16ExtractLaneS:
+    case Opcode::I8X16ExtractLaneU:
+    case Opcode::I16X8ExtractLaneS:
+    case Opcode::I16X8ExtractLaneU:
+    case Opcode::I32X4ExtractLane:
+    case Opcode::I64X2ExtractLane:
+    case Opcode::F32X4ExtractLane:
+    case Opcode::F64X2ExtractLane: {
       Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(" ,
             StackVar(0),", lane Imm: ", expr.val, ");", Newline());
       DropTypes(1);

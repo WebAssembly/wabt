@@ -598,10 +598,41 @@ Result TypeChecker::OnTernary(Opcode opcode) {
 Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
   Result result = Result::Error;
   switch (opcode) {
-    case Opcode::I8X16ExtractLaneS: {
+    case Opcode::I8X16ExtractLaneS:
+    case Opcode::I8X16ExtractLaneU: {
       if(lane_idx >= 16) {
         PrintError("TypeChecker: I8X16 lane Operations: lane index must\
                                                       be less than 16.");
+        break;
+      }
+      result = CheckOpcode1(opcode);
+      break;
+    }
+    case Opcode::I16X8ExtractLaneS:
+    case Opcode::I16X8ExtractLaneU: {
+      if(lane_idx >= 8) {
+        PrintError("TypeChecker: I16X8 lane Operations: lane index must\
+                                                       be less than 8.");
+        break;
+      }
+      result = CheckOpcode1(opcode);
+      break;
+    }
+    case Opcode::I32X4ExtractLane:
+    case Opcode::F32X4ExtractLane: {
+      if(lane_idx >= 4) {
+        PrintError("TypeChecker: (I/f)32X4 lane Operations: lane index must\
+                                                           be less than 4.");
+        break;
+      }
+      result = CheckOpcode1(opcode);
+      break;
+    }
+    case Opcode::I64X2ExtractLane:
+    case Opcode::F64X2ExtractLane: {
+      if(lane_idx >= 2) {
+        PrintError("TypeChecker: (I/f)64X2 lane Operations: lane index must\
+                                                           be less than 2.");
         break;
       }
       result = CheckOpcode1(opcode);

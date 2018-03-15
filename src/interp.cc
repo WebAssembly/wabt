@@ -2441,6 +2441,55 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
+      case Opcode::I8X16ExtractLaneU: {
+        v128 lane_val = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(PushRep<int32_t>(SimdExtractLane<int32_t, v128, uint8_t>(lane_val, lane_idx)));
+        break;
+      }
+
+      case Opcode::I16X8ExtractLaneS: {
+        v128 lane_val = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(PushRep<int32_t>(SimdExtractLane<int32_t, v128, int16_t>(lane_val, lane_idx)));
+        break;
+      }
+
+      case Opcode::I16X8ExtractLaneU: {
+        v128 lane_val = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(PushRep<int32_t>(SimdExtractLane<int32_t, v128, uint16_t>(lane_val, lane_idx)));
+        break;
+      }
+
+      case Opcode::I32X4ExtractLane: {
+        v128 lane_val = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(PushRep<int32_t>(SimdExtractLane<int32_t, v128, int32_t>(lane_val, lane_idx)));
+        break;
+      }
+
+      case Opcode::I64X2ExtractLane: {
+        v128 lane_val = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(PushRep<int64_t>(SimdExtractLane<int64_t, v128, int64_t>(lane_val, lane_idx)));
+        break;
+      }
+
+      case Opcode::F32X4ExtractLane: {
+        v128 lane_val = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(PushRep<float>(SimdExtractLane<int32_t, v128, int32_t>(lane_val, lane_idx)));
+        break;
+      }
+
+      case Opcode::F64X2ExtractLane: {
+        v128 lane_val = static_cast<v128>(Pop<v128>());
+        uint32_t lane_idx = ReadU8(&pc);
+        CHECK_TRAP(PushRep<double>(SimdExtractLane<int64_t, v128, int64_t>(lane_val, lane_idx)));
+        break;
+      }
+
       case Opcode::I8X16Add:
         CHECK_TRAP(SimdBinop<v128, uint8_t>(Add<uint32_t>));
         break;
@@ -3502,7 +3551,14 @@ void Thread::Trace(Stream* stream) {
                      Pick(1).v128_bits.v[3]);
       break;
 
-    case Opcode::I8X16ExtractLaneS: {
+    case Opcode::I8X16ExtractLaneS:
+    case Opcode::I8X16ExtractLaneU:
+    case Opcode::I16X8ExtractLaneS:
+    case Opcode::I16X8ExtractLaneU:
+    case Opcode::I32X4ExtractLane:
+    case Opcode::I64X2ExtractLane:
+    case Opcode::F32X4ExtractLane:
+    case Opcode::F64X2ExtractLane: {
       stream->Writef("%s : LaneIdx %d From $0x%08x 0x%08x 0x%08x 0x%08x \n", opcode.GetName(), ReadU8At(pc),\
                     Top().v128_bits.v[0], Top().v128_bits.v[1], Top().v128_bits.v[2], Top().v128_bits.v[3]);
       break;
@@ -4096,7 +4152,14 @@ void Environment::Disassemble(Stream* stream,
         stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
-      case Opcode::I8X16ExtractLaneS: {
+      case Opcode::I8X16ExtractLaneS:
+      case Opcode::I8X16ExtractLaneU:
+      case Opcode::I16X8ExtractLaneS:
+      case Opcode::I16X8ExtractLaneU:
+      case Opcode::I32X4ExtractLane:
+      case Opcode::I64X2ExtractLane:
+      case Opcode::F32X4ExtractLane:
+      case Opcode::F64X2ExtractLane: {
         stream->Writef("%s (Lane idx %d) \n", opcode.GetName(),ReadU8(&pc));
         break;
       }

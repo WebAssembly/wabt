@@ -192,6 +192,13 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::F32X4Splat:
     case Opcode::F64X2Splat:
     case Opcode::I8X16ExtractLaneS:
+    case Opcode::I8X16ExtractLaneU:
+    case Opcode::I16X8ExtractLaneS:
+    case Opcode::I16X8ExtractLaneU:
+    case Opcode::I32X4ExtractLane:
+    case Opcode::I64X2ExtractLane:
+    case Opcode::F32X4ExtractLane:
+    case Opcode::F64X2ExtractLane:
     case Opcode::I8X16Add:
     case Opcode::I16X8Add:
     case Opcode::I32X4Add:
