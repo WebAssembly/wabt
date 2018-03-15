@@ -188,6 +188,7 @@ enum class ExprType {
   SetGlobal,
   SetLocal,
   SimdLaneOp,
+  SimdShuffleOp,
   Store,
   TeeLocal,
   Ternary,
@@ -274,6 +275,15 @@ class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
 
   Opcode opcode;
   uint64_t val;
+};
+
+class SimdShuffleOpExpr : public ExprMixin<ExprType::SimdShuffleOp> {
+ public:
+  SimdShuffleOpExpr(Opcode opcode, v128 val, const Location& loc = Location())
+            : ExprMixin<ExprType::SimdShuffleOp>(loc), opcode(opcode), val(val) {}
+
+  Opcode opcode;
+  v128 val;
 };
 
 template <ExprType TypeEnum>

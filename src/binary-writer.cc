@@ -594,6 +594,12 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       stream_->WriteU8(static_cast<uint8_t>(cast<SimdLaneOpExpr>(expr)->val), "Simd Lane literal");
       break;
     }
+    case ExprType::SimdShuffleOp: {
+      const Opcode opcode = cast<SimdShuffleOpExpr>(expr)->opcode;
+      WriteOpcode(stream_, opcode);
+      stream_->WriteU128(cast<SimdShuffleOpExpr>(expr)->val, "Simd Lane[16] literal");
+      break;
+    }
     case ExprType::Unreachable:
       WriteOpcode(stream_, Opcode::Unreachable);
       break;

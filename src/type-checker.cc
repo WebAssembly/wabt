@@ -682,6 +682,21 @@ Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
   return result;
 }
 
+Result TypeChecker::OnSimdShuffleOp(Opcode opcode, v128 lane_idx) {
+  Result result = Result::Error;
+  uint8_t simd_data[16];
+  memcpy(simd_data, &(lane_idx), 16);
+  for(int i = 0; i < 16; i++) {
+    if(simd_data[i] >= 32) {
+      PrintError("TypeChecker: v8x16 shuffle: each lane index must be >=0 and < 32.");
+      return result;  
+    }
+  }
+  
+  result = CheckOpcode2(opcode);
+  return result;
+}
+
 Result TypeChecker::OnUnreachable() {
   return SetUnreachable();
 }

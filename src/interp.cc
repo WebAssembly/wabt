@@ -2557,6 +2557,34 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
+      case Opcode::V8X16Shuffle: {
+        const int32_t lanes = 16;
+        // Define SIMD data array for Simd add by Lanes.
+        int8_t simd_data_ret[lanes];
+        int8_t simd_data_0[lanes];
+        int8_t simd_data_1[lanes];
+        int8_t simd_shuffle[lanes];
+
+        v128 v2  = PopRep<v128>();
+        v128 v1  = PopRep<v128>();
+        v128 shuffle_imm = ReadV128(&pc);
+
+        // Convert intput SIMD data to array.
+        memcpy(simd_data_0, &v1, sizeof(v128));
+        memcpy(simd_data_1, &v2, sizeof(v128));
+        memcpy(simd_shuffle,&shuffle_imm, sizeof(v128));
+
+        // Constuct the Simd value by Lane data and Lane nums.
+        for(int32_t i = 0; i < lanes; i++) {
+          int8_t lane_idx = simd_shuffle[i];
+          simd_data_ret[i] = (lane_idx < lanes) ? simd_data_0[lane_idx] :
+                                            simd_data_1[lane_idx - lanes];
+        }
+
+        CHECK_TRAP(PushRep<v128>(Bitcast<v128>(simd_data_ret)));
+        break;
+      }
+
       case Opcode::I8X16Add:
         CHECK_TRAP(SimdBinop<v128, uint8_t>(Add<uint32_t>));
         break;
@@ -3661,6 +3689,15 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
+    case Opcode::V8X16Shuffle:
+      stream->Writef("%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with lane imm:\
+                     $0x%08x %08x %08x %08x\n", opcode.GetName(), Pick(2).v128_bits.v[0],
+                     Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
+                     Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2],
+                     Pick(1).v128_bits.v[3], ReadU32At(pc), ReadU32At(pc+4),ReadU32At(pc+8),
+                     ReadU32At(pc+12));
+      break;
+
     case Opcode::I8X16Add: 
     case Opcode::I16X8Add: 
     case Opcode::I32X4Add: 
@@ -4256,16 +4293,27 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I32X4ExtractLane:
       case Opcode::I64X2ExtractLane:
       case Opcode::F32X4ExtractLane:
-      case Opcode::F64X2ExtractLane:
+      case Opcode::F64X2ExtractLane: {
+        stream->Writef("%s %%[-1] : (Lane imm: %d) \n", opcode.GetName(),ReadU8(&pc));
+        break;
+      }
+
       case Opcode::I8X16ReplaceLane:
       case Opcode::I16X8ReplaceLane:
       case Opcode::I32X4ReplaceLane:
       case Opcode::I64X2ReplaceLane:
       case Opcode::F32X4ReplaceLane:
       case Opcode::F64X2ReplaceLane: {
-        stream->Writef("%s (Lane idx %d) \n", opcode.GetName(),ReadU8(&pc));
+        stream->Writef("%s %%[-1], %%[-2] : (Lane imm: %d) \n", opcode.GetName(),
+                                                                    ReadU8(&pc));
         break;
       }
+
+      case Opcode::V8X16Shuffle:
+        stream->Writef("%s %%[-2], %%[-1] : (Lane imm: $0x%08x 0x%08x 0x%08x \
+                       0x%08x )\n", opcode.GetName(), ReadU32(&pc), ReadU32(&pc),
+                                                      ReadU32(&pc),ReadU32(&pc));
+        break;
 
       case Opcode::GrowMemory: {
         Index memory_index = ReadU32(&pc);

@@ -205,6 +205,7 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64X2ReplaceLane:
     case Opcode::F32X4ReplaceLane:
     case Opcode::F64X2ReplaceLane:
+    case Opcode::V8X16Shuffle:
     case Opcode::I8X16Add:
     case Opcode::I16X8Add:
     case Opcode::I32X4Add:

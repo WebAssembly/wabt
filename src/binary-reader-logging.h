@@ -203,6 +203,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndFunctionBody(Index index) override;
   Result EndCodeSection() override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
+  Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
 
   Result BeginElemSection(Offset size) override;
   Result OnElemSegmentCount(Index count) override;

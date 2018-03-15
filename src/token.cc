@@ -106,6 +106,7 @@ const char* GetTokenTypeName(TokenType token_type) {
       "try",
       "UNARY",
       "SIMDLANEOP",
+      "SIMDSHUFFLEOP",
       "unreachable",
 
       // String.
