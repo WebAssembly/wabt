@@ -103,6 +103,13 @@ setlocal.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000015 func[0]:
+ 000017: 01 7c                      | local[0] type=f64
+ 000019: 01 7d                      | local[1] type=f32
+ 00001b: 01 7e                      | local[2] type=i64
+ 00001d: 02 7f                      | local[3..4] type=i32
+ 00001f: 01 7d                      | local[5] type=f32
+ 000021: 01 7c                      | local[6] type=f64
+ 000023: 01 7e                      | local[7] type=i64
  000025: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  00002e: 21 00                      | set_local 0
  000030: 43 00 00 00 00             | f32.const 0x0p+0

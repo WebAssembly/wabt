@@ -288,6 +288,9 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
   Result BeginFunctionBody(Index index) override;
 
+  Result OnLocalDeclCount(Index count) override;
+  Result OnLocalDecl(Index decl_index, Index count, Type type) override;
+
   Result OnOpcode(Opcode Opcode) override;
   Result OnOpcodeBare() override;
   Result OnOpcodeIndex(Index value) override;
@@ -315,6 +318,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Offset last_opcode_end = 0;
   int indent_level = 0;
   Index next_reloc = 0;
+  Index local_index_ = 0;
 };
 
 Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
@@ -342,6 +346,41 @@ Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
 }
 
 #define IMMEDIATE_OCTET_COUNT 9
+
+Result BinaryReaderObjdumpDisassemble::OnLocalDeclCount(Index count) {
+  local_index_ = 0;
+  current_opcode_offset = state->offset;
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
+                                                   Index count,
+                                                   Type type) {
+  Offset offset = current_opcode_offset;
+  size_t data_size = state->offset - offset;
+
+  printf(" %06" PRIzx ":", offset);
+  for (size_t i = 0; i < data_size && i < IMMEDIATE_OCTET_COUNT;
+       i++, offset++) {
+    printf(" %02x", data_[offset]);
+  }
+  for (size_t i = data_size; i < IMMEDIATE_OCTET_COUNT; i++) {
+    printf("   ");
+  }
+  printf(" | local[%" PRIindex, local_index_);
+
+  if (count != 1) {
+    printf("..%" PRIindex "", local_index_ + count - 1);
+  }
+  local_index_ += count;
+
+  printf("] type=%s\n", GetTypeName(type));
+
+  last_opcode_end = current_opcode_offset + data_size;
+  current_opcode_offset = last_opcode_end;
+
+  return Result::Ok;
+}
 
 void BinaryReaderObjdumpDisassemble::LogOpcode(const uint8_t* data,
                                                size_t data_size,
