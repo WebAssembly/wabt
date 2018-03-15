@@ -1,0 +1,18 @@
+;;; TOOL: wat2wasm
+;;; ARGS*: --enable-simd
+;;; ERROR: 1
+(module
+  (func (result i32) v128.const i32 0 0 0 0 i8x16.extract_lane_s 16)
+  (func (result i32) v128.const i32 0 0 0 0 i8x16.extract_lane_u 16)
+  (func (result i32) v128.const i32 0 0 0 0 i16x8.extract_lane_s 8)
+  (func (result i32) v128.const i32 0 0 0 0 i16x8.extract_lane_u 8)
+  (func (result i32) v128.const i32 0 0 0 0 i32x4.extract_lane 4)
+  (func (result f32) v128.const i32 0 0 0 0 f32x4.extract_lane 4)
+  (func (result f64) v128.const i32 0 0 0 0 f64x2.extract_lane 2)
+
+  (func (result v128) v128.const i32 0 0 0 0 i32.const 0 i8x16.replace_lane 16)
+  (func (result v128) v128.const i32 0 0 0 0 i32.const 0 i16x8.replace_lane 8)
+  (func (result v128) v128.const i32 0 0 0 0 i32.const 0 i32x4.replace_lane 4)
+  (func (result v128) v128.const i32 0 0 0 0 f32.const 0 f32x4.replace_lane 4)
+  (func (result v128) v128.const i32 0 0 0 0 f64.const 0 f64x2.replace_lane 2)
+)

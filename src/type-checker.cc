@@ -595,90 +595,62 @@ Result TypeChecker::OnTernary(Opcode opcode) {
   return CheckOpcode3(opcode);
 }
 
-Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
+Result TypeChecker::OnSimdLaneOp(Opcode opcode, int lane_idx) {
   Result result = Result::Error;
+  int max_lane;
   switch (opcode) {
     case Opcode::I8X16ExtractLaneS:
-    case Opcode::I8X16ExtractLaneU: {
-      if(lane_idx >= 16) {
-        PrintError("TypeChecker: I8X16 lane Operations: lane index must\
-                                                      be less than 16.");
-        break;
-      }
-      result = CheckOpcode1(opcode);
+    case Opcode::I8X16ExtractLaneU:
+    case Opcode::I8X16ReplaceLane:
+      max_lane = 16;
       break;
-    }
     case Opcode::I16X8ExtractLaneS:
-    case Opcode::I16X8ExtractLaneU: {
-      if(lane_idx >= 8) {
-        PrintError("TypeChecker: I16X8 lane Operations: lane index must\
-                                                       be less than 8.");
-        break;
-      }
-      result = CheckOpcode1(opcode);
+    case Opcode::I16X8ExtractLaneU:
+    case Opcode::I16X8ReplaceLane:
+      max_lane = 8;
       break;
-    }
+    case Opcode::F32X4ExtractLane:
+    case Opcode::F32X4ReplaceLane:
     case Opcode::I32X4ExtractLane:
-    case Opcode::F32X4ExtractLane: {
-      if(lane_idx >= 4) {
-        PrintError("TypeChecker: (I/f)32X4 lane Operations: lane index must\
-                                                           be less than 4.");
-        break;
-      }
-      result = CheckOpcode1(opcode);
-      break;
-    }
-    case Opcode::I64X2ExtractLane:
-    case Opcode::F64X2ExtractLane: {
-      if(lane_idx >= 2) {
-        PrintError("TypeChecker: (I/f)64X2 lane Operations: lane index must\
-                                                           be less than 2.");
-        break;
-      }
-      result = CheckOpcode1(opcode);
-      break;
-    }
-    case Opcode::I8X16ReplaceLane: {
-      if(lane_idx >= 16) {
-        PrintError("TypeChecker: I8X16 lane Operations: lane index must\
-                                                      be less than 16.");
-        break;
-      }
-      result = CheckOpcode2(opcode);
-      break;
-    }
-    case Opcode::I16X8ReplaceLane: {
-      if(lane_idx >= 8) {
-        PrintError("TypeChecker: I16X8 lane Operations: lane index must\
-                                                       be less than 8.");
-        break;
-      }
-      result = CheckOpcode2(opcode);
-      break;
-    }
     case Opcode::I32X4ReplaceLane:
-    case Opcode::F32X4ReplaceLane: {
-      if(lane_idx >= 4) {
-        PrintError("TypeChecker: (I/f)32X4 lane Operations: lane index must\
-                                                           be less than 4.");
-        break;
-      }
-      result = CheckOpcode2(opcode);
+      max_lane = 4;
       break;
-    }
+    case Opcode::F64X2ExtractLane:
+    case Opcode::F64X2ReplaceLane:
+    case Opcode::I64X2ExtractLane:
     case Opcode::I64X2ReplaceLane:
-    case Opcode::F64X2ReplaceLane: {
-      if(lane_idx >= 2) {
-        PrintError("TypeChecker: (I/f)64X2 lane Operations: lane index must\
-                                                           be less than 2.");
-        break;
-      }
+      max_lane = 2;
+      break;
+    default:
+      WABT_UNREACHABLE;
+  }
+
+  if (lane_idx >= max_lane) {
+    PrintError("lane index must be less than %d (got %d)", max_lane, lane_idx);
+  }
+
+  switch (opcode) {
+    case Opcode::I8X16ExtractLaneS:
+    case Opcode::I8X16ExtractLaneU:
+    case Opcode::I16X8ExtractLaneS:
+    case Opcode::I16X8ExtractLaneU:
+    case Opcode::I32X4ExtractLane:
+    case Opcode::F32X4ExtractLane:
+    case Opcode::I64X2ExtractLane:
+    case Opcode::F64X2ExtractLane:
+      result = CheckOpcode1(opcode);
+      break;
+    case Opcode::I8X16ReplaceLane:
+    case Opcode::I16X8ReplaceLane:
+    case Opcode::I32X4ReplaceLane:
+    case Opcode::F32X4ReplaceLane:
+    case Opcode::I64X2ReplaceLane:
+    case Opcode::F64X2ReplaceLane:
       result = CheckOpcode2(opcode);
       break;
-    }
     default:
-      PrintError("TypeChecker::OnSimdLane: called by invalid opcode.");
-  }  
+      WABT_UNREACHABLE;
+  }
   return result;
 }
 

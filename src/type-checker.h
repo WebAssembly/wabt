@@ -87,7 +87,7 @@ class TypeChecker {
   Result OnSelect();
   Result OnSetGlobal(Type);
   Result OnSetLocal(Type);
-  Result OnSimdLaneOp(Opcode, uint64_t);
+  Result OnSimdLaneOp(Opcode, int);
   Result OnSimdShuffleOp(Opcode, v128);
   Result OnStore(Opcode);
   Result OnTeeLocal(Type);
