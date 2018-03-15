@@ -146,9 +146,13 @@ Custom:
 Code Disassembly:
 
 00001c <F1>:
+ - local[0] type=f32
+ - local[1..2] type=i32
  000022: 0b                         | end
 000023 func[1]:
  000025: 0b                         | end
 000026 <F2>:
+ - local[0] type=f64
+ - local[1..2] type=i64
  00002c: 0b                         | end
 ;;; STDOUT ;;)

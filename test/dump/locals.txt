@@ -44,5 +44,9 @@ locals.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000015 func[0]:
+ - local[0] type=i32
+ - local[1..2] type=i64
+ - local[3..5] type=f32
+ - local[6..9] type=f64
  00001f: 0b                         | end
 ;;; STDOUT ;;)

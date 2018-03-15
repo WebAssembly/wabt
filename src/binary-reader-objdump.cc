@@ -288,6 +288,9 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
   Result BeginFunctionBody(Index index) override;
 
+  Result OnLocalDeclCount(Index count) override;
+  Result OnLocalDecl(Index decl_index, Index count, Type type) override;
+
   Result OnOpcode(Opcode Opcode) override;
   Result OnOpcodeBare() override;
   Result OnOpcodeIndex(Index value) override;
@@ -315,7 +318,27 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Offset last_opcode_end = 0;
   int indent_level = 0;
   Index next_reloc = 0;
+  Index local_index_ = 0;
 };
+
+Result BinaryReaderObjdumpDisassemble::OnLocalDeclCount(Index count) {
+  local_index_ = 0;
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnLocalDecl(Index decl_index,
+                                                   Index count,
+                                                   Type type) {
+  if (count == 1) {
+    printf(" - local[%" PRIindex "] type=%s\n", local_index_,
+           GetTypeName(type));
+  } else {
+    printf(" - local[%" PRIindex "..%" PRIindex "] type=%s\n", local_index_,
+           local_index_ + count - 1, GetTypeName(type));
+  }
+  local_index_ += count;
+  return Result::Ok;
+}
 
 Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
   if (options_->debug) {
