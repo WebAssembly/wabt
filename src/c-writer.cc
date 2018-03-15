@@ -2195,6 +2195,18 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
       DropTypes(1);
       break;
     }
+    case Opcode::I8X16ReplaceLane:
+    case Opcode::I16X8ReplaceLane:
+    case Opcode::I32X4ReplaceLane:
+    case Opcode::I64X2ReplaceLane:
+    case Opcode::F32X4ReplaceLane:
+    case Opcode::F64X2ReplaceLane: {
+      Write(StackVar(1, result_type), " = ", expr.opcode.GetName(), "(" ,
+            StackVar(0),", ", StackVar(1), ", lane Imm: ", expr.val, ");",
+                                                               Newline());
+      DropTypes(2);
+      break;
+    }
     default:
       WABT_UNREACHABLE;
   }

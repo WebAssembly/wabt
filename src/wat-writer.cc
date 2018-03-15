@@ -1038,6 +1038,15 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
           PushExpr(expr, 1, 1);
           break;
 
+        case Opcode::I8X16ReplaceLane:
+        case Opcode::I16X8ReplaceLane:
+        case Opcode::I32X4ReplaceLane:
+        case Opcode::I64X2ReplaceLane:
+        case Opcode::F32X4ReplaceLane:
+        case Opcode::F64X2ReplaceLane:
+          PushExpr(expr, 2, 1);
+          break;
+
         default:
           fprintf(stderr, "Invalid Opcode for expr type: %s\n", 
                                        GetExprTypeName(*expr));
