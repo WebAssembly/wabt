@@ -16,3 +16,41 @@
   (func (result v128) v128.const i32 0 0 0 0 f32.const 0 f32x4.replace_lane 4)
   (func (result v128) v128.const i32 0 0 0 0 f64.const 0 f64x2.replace_lane 2)
 )
+(;; STDERR ;;;
+out/test/typecheck/bad-simd-lane.txt:5:45: error: lane index must be less than 16 (got 16)
+  (func (result i32) v128.const i32 0 0 0 0 i8x16.extract_lane_s 16)
+                                            ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:6:45: error: lane index must be less than 16 (got 16)
+  (func (result i32) v128.const i32 0 0 0 0 i8x16.extract_lane_u 16)
+                                            ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:7:45: error: lane index must be less than 8 (got 8)
+  (func (result i32) v128.const i32 0 0 0 0 i16x8.extract_lane_s 8)
+                                            ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:8:45: error: lane index must be less than 8 (got 8)
+  (func (result i32) v128.const i32 0 0 0 0 i16x8.extract_lane_u 8)
+                                            ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:9:45: error: lane index must be less than 4 (got 4)
+  (func (result i32) v128.const i32 0 0 0 0 i32x4.extract_lane 4)
+                                            ^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:10:45: error: lane index must be less than 4 (got 4)
+  (func (result f32) v128.const i32 0 0 0 0 f32x4.extract_lane 4)
+                                            ^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:11:45: error: lane index must be less than 2 (got 2)
+  (func (result f64) v128.const i32 0 0 0 0 f64x2.extract_lane 2)
+                                            ^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:13:58: error: lane index must be less than 16 (got 16)
+  (func (result v128) v128.const i32 0 0 0 0 i32.const 0 i8x16.replace_lane 16)
+                                                         ^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:14:58: error: lane index must be less than 8 (got 8)
+  (func (result v128) v128.const i32 0 0 0 0 i32.const 0 i16x8.replace_lane 8)
+                                                         ^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:15:58: error: lane index must be less than 4 (got 4)
+  (func (result v128) v128.const i32 0 0 0 0 i32.const 0 i32x4.replace_lane 4)
+                                                         ^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:16:58: error: lane index must be less than 4 (got 4)
+  (func (result v128) v128.const i32 0 0 0 0 f32.const 0 f32x4.replace_lane 4)
+                                                         ^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:17:58: error: lane index must be less than 2 (got 2)
+  (func (result v128) v128.const i32 0 0 0 0 f64.const 0 f64x2.replace_lane 2)
+                                                         ^^^^^^^^^^^^^^^^^^
+;;; STDERR ;;)
