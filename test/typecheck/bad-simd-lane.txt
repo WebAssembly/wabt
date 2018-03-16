@@ -15,6 +15,9 @@
   (func (result v128) v128.const i32 0 0 0 0 i32.const 0 i32x4.replace_lane 4)
   (func (result v128) v128.const i32 0 0 0 0 f32.const 0 f32x4.replace_lane 4)
   (func (result v128) v128.const i32 0 0 0 0 f64.const 0 f64x2.replace_lane 2)
+
+  ;; Test a 64-bit index.
+  (func (result i32) v128.const i32 0 0 0 0 i8x16.extract_lane_s 0x100000000)
 )
 (;; STDERR ;;;
 out/test/typecheck/bad-simd-lane.txt:5:45: error: lane index must be less than 16 (got 16)
