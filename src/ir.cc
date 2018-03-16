@@ -240,7 +240,6 @@ FuncType* Module::GetFuncType(const Var& var) {
   return func_types[index];
 }
 
-
 Index Module::GetFuncTypeIndex(const FuncSignature& sig) const {
   for (size_t i = 0; i < func_types.size(); ++i) {
     if (func_types[i]->sig == sig) {
@@ -551,23 +550,18 @@ void Var::Destroy() {
 }
 
 Const::Const(I32Tag, uint32_t value, const Location& loc_)
-    : loc(loc_), type(Type::I32), u32(value) {
-}
+    : loc(loc_), type(Type::I32), u32(value) {}
 
 Const::Const(I64Tag, uint64_t value, const Location& loc_)
-    : loc(loc_), type(Type::I64), u64(value) {
-}
+    : loc(loc_), type(Type::I64), u64(value) {}
 
 Const::Const(F32Tag, uint32_t value, const Location& loc_)
-    : loc(loc_), type(Type::F32), f32_bits(value) {
-}
+    : loc(loc_), type(Type::F32), f32_bits(value) {}
 
 Const::Const(F64Tag, uint64_t value, const Location& loc_)
-    : loc(loc_), type(Type::F64), f64_bits(value) {
-}
+    : loc(loc_), type(Type::F64), f64_bits(value) {}
 
 Const::Const(V128Tag, v128 value, const Location& loc_)
-    : loc(loc_), type(Type::V128), v128_bits(value) {
-}
+    : loc(loc_), type(Type::V128), v128_bits(value) {}
 
 }  // namespace wabt

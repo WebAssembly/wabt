@@ -26,15 +26,15 @@
 #include <vector>
 
 #include "src/apply-names.h"
-#include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
-#include "src/binary-writer.h"
+#include "src/binary-reader.h"
 #include "src/binary-writer-spec.h"
+#include "src/binary-writer.h"
 #include "src/common.h"
 #include "src/error-handler.h"
 #include "src/filenames.h"
-#include "src/ir.h"
 #include "src/generate-names.h"
+#include "src/ir.h"
 #include "src/resolve-names.h"
 #include "src/stream.h"
 #include "src/validator.h"
@@ -74,7 +74,6 @@ struct WabtParseWastResult {
   std::unique_ptr<wabt::Script> script;
 };
 
-
 extern "C" {
 
 wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
@@ -95,16 +94,13 @@ WabtParseWatResult* wabt_parse_wat(wabt::WastLexer* lexer,
 }
 
 WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
-                                   wabt::ErrorHandlerBuffer* error_handler) {
+                                     wabt::ErrorHandlerBuffer* error_handler) {
   WabtParseWastResult* result = new WabtParseWastResult();
   std::unique_ptr<wabt::Script> script;
   result->result = wabt::ParseWastScript(lexer, &script, error_handler);
   result->script = std::move(script);
   return result;
 }
-
-
-
 
 WabtReadBinaryResult* wabt_read_binary(
     const void* data,
@@ -187,7 +183,6 @@ WabtWriteScriptResult* wabt_write_binary_spec_script(
   }
   return result;
 }
-
 
 wabt::Result::Enum wabt_apply_names_module(wabt::Module* module) {
   return ApplyNames(module);
@@ -294,7 +289,6 @@ wabt::Script* wabt_parse_wast_result_release_module(
 void wabt_destroy_parse_wast_result(WabtParseWastResult* result) {
   delete result;
 }
-
 
 // WabtReadBinaryResult
 wabt::Result::Enum wabt_read_binary_result_get_result(

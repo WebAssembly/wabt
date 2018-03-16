@@ -199,9 +199,15 @@ struct Token {
     return text_;
   }
 
-  Type type() const { assert(HasType()); return type_; }
+  Type type() const {
+    assert(HasType());
+    return type_;
+  }
 
-  Opcode opcode() const { assert(HasOpcode()); return opcode_; }
+  Opcode opcode() const {
+    assert(HasOpcode());
+    return opcode_;
+  }
 
   const Literal& literal() const {
     assert(HasLiteral());
@@ -226,4 +232,4 @@ struct Token {
 
 }  // namespace wabt
 
-#endif // WABT_TOKEN_H_
+#endif  // WABT_TOKEN_H_

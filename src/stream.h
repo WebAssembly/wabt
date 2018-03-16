@@ -98,8 +98,8 @@ class Stream {
     Write(value, desc, print_chars);
   }
   void WriteU128(v128 value,
-                const char* desc = nullptr,
-                PrintChars print_chars = PrintChars::No) {
+                 const char* desc = nullptr,
+                 PrintChars print_chars = PrintChars::No) {
     Write(value, desc, print_chars);
   }
 

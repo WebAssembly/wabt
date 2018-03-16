@@ -16,11 +16,11 @@
 
 #include "src/wast-parser.h"
 
-#include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
+#include "src/binary-reader.h"
 #include "src/cast.h"
-#include "src/expr-visitor.h"
 #include "src/error-handler.h"
+#include "src/expr-visitor.h"
 #include "src/make-unique.h"
 #include "src/utf8.h"
 #include "src/wast-parser-lexer-shared.h"
@@ -1294,7 +1294,6 @@ Result WastParser::ParsePlainLoadStoreInstr(Location loc,
   return Result::Ok;
 }
 
-
 Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   WABT_TRACE(ParsePlainInstr);
   Location loc = GetLocation();
@@ -1511,7 +1510,8 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ErrorUnlessOpcodeEnabled(token);
       Const const_;
       CHECK_RESULT((ParseSimdConst(&const_, Type::I32, sizeof(v128))));
-      out_expr->reset(new SimdShuffleOpExpr(token.opcode(), const_.v128_bits, loc));
+      out_expr->reset(
+          new SimdShuffleOpExpr(token.opcode(), const_.v128_bits, loc));
       break;
     }
 
@@ -1527,16 +1527,18 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 // Current Simd const type is V128 const only.
 // The current expected V128 const lists is:
 // i32 0xXXXXXXXX 0xXXXXXXXX 0xXXXXXXXX 0xXXXXXXXX
-Result WastParser::ParseSimdConst(Const* const_, Type in_type, int32_t nSimdConstBytes) {
+Result WastParser::ParseSimdConst(Const* const_,
+                                  Type in_type,
+                                  int32_t nSimdConstBytes) {
   WABT_TRACE(ParseSimdConst);
 
   // Parse the Simd Consts according to input data type.
   switch (in_type) {
     case Type::I32: {
       const_->loc = GetLocation();
-      int Count = nSimdConstBytes/sizeof(uint32_t);
+      int Count = nSimdConstBytes / sizeof(uint32_t);
       // Meet expected "i32" token. start parse 4 i32 consts
-      for(int i=0; i<Count; i++) {
+      for (int i = 0; i < Count; i++) {
         Location loc = GetLocation();
 
         // Expected one 0xXXXXXXXX number
@@ -1550,8 +1552,8 @@ Result WastParser::ParseSimdConst(Const* const_, Type in_type, int32_t nSimdCons
         const char* end = sv.end();
         Result result;
 
-        result =
-            ParseInt32(s, end, &(const_->v128_bits.v[i]), ParseIntType::SignedAndUnsigned);
+        result = ParseInt32(s, end, &(const_->v128_bits.v[i]),
+                            ParseIntType::SignedAndUnsigned);
 
         if (Failed(result)) {
           Error(loc, "invalid literal \"%s\"", literal.text.c_str());
@@ -1593,8 +1595,9 @@ Result WastParser::ParseConst(Const* const_) {
     }
     case TokenType::ValueType: {
       // ValueType token is valid here only when after a Simd const opcode.
-      if(opcode != Opcode::V128Const) {
-        return ErrorExpected({"a numeric literal for non-simd const opcode"}, "123, -45, 6.7e8");
+      if (opcode != Opcode::V128Const) {
+        return ErrorExpected({"a numeric literal for non-simd const opcode"},
+                             "123, -45, 6.7e8");
       }
       // Get Simd Const input type.
       in_type = Consume().type();
@@ -1633,8 +1636,11 @@ Result WastParser::ParseConst(Const* const_) {
       const_->type = Type::V128;
       // Parse V128 Simd Const (16 bytes).
       result = ParseSimdConst(const_, in_type, sizeof(v128));
-      // ParseSimdConst report error already, just return here if parser get errors.
-      if (Failed(result)) return Result::Error;
+      // ParseSimdConst report error already, just return here if parser get
+      // errors.
+      if (Failed(result)) {
+        return Result::Error;
+      }
       break;
 
     default:
@@ -2320,14 +2326,13 @@ void WastParser::CheckImportOrdering(Module* module) {
 }
 
 Result ParseWatModule(WastLexer* lexer,
-                       std::unique_ptr<Module>* out_module,
-                       ErrorHandler* error_handler,
-                       WastParseOptions* options) {
+                      std::unique_ptr<Module>* out_module,
+                      ErrorHandler* error_handler,
+                      WastParseOptions* options) {
   assert(out_module != nullptr);
   WastParser parser(lexer, error_handler, options);
   return parser.ParseModule(out_module);
 }
-
 
 Result ParseWastScript(WastLexer* lexer,
                        std::unique_ptr<Script>* out_script,

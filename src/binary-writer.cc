@@ -237,7 +237,8 @@ static void write_inline_signature_type(Stream* stream,
   }
 }
 
-void BinaryWriter::WriteSectionHeader(const char* desc, BinarySection section_code) {
+void BinaryWriter::WriteSectionHeader(const char* desc,
+                                      BinarySection section_code) {
   assert(last_section_leb_size_guess_ == 0);
   WriteHeader(desc, PRINT_HEADER_NO_INDEX);
   stream_->WriteU8Enum(section_code, "section code");
@@ -268,8 +269,9 @@ void BinaryWriter::EndSection() {
   Offset delta = WriteFixupU32Leb128Size(
       last_section_offset_, last_section_leb_size_guess_, "FIXUP section size");
   if (current_reloc_section_ && delta != 0) {
-    for (Reloc& reloc: current_reloc_section_->relocations)
+    for (Reloc& reloc : current_reloc_section_->relocations) {
       reloc.offset += delta;
+    }
   }
   last_section_leb_size_guess_ = 0;
 }
@@ -591,13 +593,15 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::SimdLaneOp: {
       const Opcode opcode = cast<SimdLaneOpExpr>(expr)->opcode;
       WriteOpcode(stream_, opcode);
-      stream_->WriteU8(static_cast<uint8_t>(cast<SimdLaneOpExpr>(expr)->val), "Simd Lane literal");
+      stream_->WriteU8(static_cast<uint8_t>(cast<SimdLaneOpExpr>(expr)->val),
+                       "Simd Lane literal");
       break;
     }
     case ExprType::SimdShuffleOp: {
       const Opcode opcode = cast<SimdShuffleOpExpr>(expr)->opcode;
       WriteOpcode(stream_, opcode);
-      stream_->WriteU128(cast<SimdShuffleOpExpr>(expr)->val, "Simd Lane[16] literal");
+      stream_->WriteU128(cast<SimdShuffleOpExpr>(expr)->val,
+                         "Simd Lane[16] literal");
       break;
     }
     case ExprType::Unreachable:
@@ -607,8 +611,9 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
 }
 
 void BinaryWriter::WriteExprList(const Func* func, const ExprList& exprs) {
-  for (const Expr& expr : exprs)
+  for (const Expr& expr : exprs) {
     WriteExpr(func, &expr);
+  }
 }
 
 void BinaryWriter::WriteInitExpr(const ExprList& expr) {
@@ -680,8 +685,9 @@ void BinaryWriter::WriteGlobalHeader(const Global* global) {
 
 void BinaryWriter::WriteExceptType(const TypeVector* except_types) {
   WriteU32Leb128(stream_, except_types->size(), "exception type count");
-  for (Type ty : *except_types)
+  for (Type ty : *except_types) {
     WriteType(stream_, ty);
+  }
 }
 
 void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
@@ -765,12 +771,14 @@ Result BinaryWriter::WriteModule() {
       Index num_params = sig->param_types.size();
       Index num_results = sig->result_types.size();
       WriteU32Leb128(stream_, num_params, "num params");
-      for (size_t j = 0; j < num_params; ++j)
+      for (size_t j = 0; j < num_params; ++j) {
         WriteType(stream_, sig->param_types[j]);
+      }
 
       WriteU32Leb128(stream_, num_results, "num results");
-      for (size_t j = 0; j < num_results; ++j)
+      for (size_t j = 0; j < num_results; ++j) {
         WriteType(stream_, sig->result_types[j]);
+      }
     }
     EndSection();
   }

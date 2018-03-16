@@ -21,8 +21,8 @@
 
 #include "src/circular-array.h"
 #include "src/feature.h"
-#include "src/ir.h"
 #include "src/intrusive-list.h"
+#include "src/ir.h"
 #include "src/wast-lexer.h"
 
 namespace wabt {

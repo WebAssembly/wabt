@@ -42,7 +42,8 @@
 #define WABT_USE(x) static_cast<void>(x)
 
 #define WABT_PAGE_SIZE 0x10000 /* 64k */
-#define WABT_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space */
+#define WABT_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space \
+                                */
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
 #define WABT_ALIGN_UP_TO_PAGE(x) \
   (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
@@ -117,7 +118,7 @@ Dst Bitcast(Src&& value) {
   return result;
 }
 
-template<typename T>
+template <typename T>
 void ZeroMemory(T& v) {
   WABT_STATIC_ASSERT(std::is_pod<T>::value);
   memset(&v, 0, sizeof(v));
@@ -369,4 +370,4 @@ inline void ConvertBackslashToSlash(std::string* s) {
 
 }  // namespace wabt
 
-#endif // WABT_COMMON_H_
+#endif  // WABT_COMMON_H_

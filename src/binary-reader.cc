@@ -26,8 +26,8 @@
 
 #include "config.h"
 
-#include "src/binary.h"
 #include "src/binary-reader-logging.h"
+#include "src/binary.h"
 #include "src/leb128.h"
 #include "src/stream.h"
 #include "src/utf8.h"
@@ -51,9 +51,8 @@
     }                                            \
   } while (0)
 
-#define CALLBACK0(member)                              \
-  ERROR_UNLESS(Succeeded(delegate_->member()), #member \
-               " callback failed")
+#define CALLBACK0(member) \
+  ERROR_UNLESS(Succeeded(delegate_->member()), #member " callback failed")
 
 #define CALLBACK(member, ...)                             \
   ERROR_UNLESS(Succeeded(delegate_->member(__VA_ARGS__)), \
@@ -127,7 +126,7 @@ class BinaryReader {
   Result ReadSections() WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
-  size_t read_end_ = 0; // Either the section end or data_size.
+  size_t read_end_ = 0;  // Either the section end or data_size.
   BinaryReaderDelegate::State state_;
   BinaryReaderLogging logging_delegate_;
   BinaryReaderDelegate* delegate_ = nullptr;
@@ -187,8 +186,8 @@ Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
                opcode.GetPrefix(), opcode.GetCode(), opcode.GetPrefix(),
                opcode.GetCode());
   } else {
-    PrintError("unexpected opcode%s%s: %d (0x%x)",
-               maybe_space, message, opcode.GetCode(), opcode.GetCode());
+    PrintError("unexpected opcode%s%s: %d (0x%x)", maybe_space, message,
+               opcode.GetCode(), opcode.GetCode());
   }
   return Result::Error;
 }

@@ -286,8 +286,7 @@ void TypeChecker::PrintStackIfFailed(Result result,
   message += ", expected ";
   message += TypesToString(expected);
   message += " but got ";
-  message +=
-      TypesToString(actual, incomplete_actual_stack ? "... " : nullptr);
+  message += TypesToString(actual, incomplete_actual_stack ? "... " : nullptr);
 
   PrintError("%s", message.c_str());
 }

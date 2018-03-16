@@ -308,8 +308,8 @@ Result BinaryReaderLogging::OnF64ConstExpr(uint64_t value_bits) {
 }
 
 Result BinaryReaderLogging::OnV128ConstExpr(v128 value_bits) {
-  LOGF("OnV128ConstExpr(0x%08x 0x%08x 0x%08x 0x%08x)\n", value_bits.v[0],\
-                    value_bits.v[1], value_bits.v[2], value_bits.v[3]);
+  LOGF("OnV128ConstExpr(0x%08x 0x%08x 0x%08x 0x%08x)\n", value_bits.v[0],
+       value_bits.v[1], value_bits.v[2], value_bits.v[3]);
   return reader_->OnV128ConstExpr(value_bits);
 }
 
@@ -353,14 +353,14 @@ Result BinaryReaderLogging::OnTryExpr(Index num_types, Type* sig_types) {
   return reader_->OnTryExpr(num_types, sig_types);
 }
 
-Result  BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
+Result BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   LOGF("OnSimdLaneOpExpr (lane: %" PRIu64 ")\n", value);
   return reader_->OnSimdLaneOpExpr(opcode, value);
 }
 
-Result  BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
+Result BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
   LOGF("OnSimdShuffleOpExpr (lane: 0x%08x %08x %08x %08x)\n", value.v[0],
-                                     value.v[1], value.v[2], value.v[3]);
+       value.v[1], value.v[2], value.v[3]);
   return reader_->OnSimdShuffleOpExpr(opcode, value);
 }
 
@@ -426,9 +426,10 @@ Result BinaryReaderLogging::OnInitExprF64ConstExpr(Index index,
 
 Result BinaryReaderLogging::OnInitExprV128ConstExpr(Index index,
                                                     v128 value_bits) {
-  LOGF("OnInitExprV128ConstExpr(index: %" PRIindex " value: (\
-       0x%08x 0x%08x 0x%08x 0x%08x))\n", index, value_bits.v[0],\
-           value_bits.v[1], value_bits.v[2], value_bits.v[3]);
+  LOGF("OnInitExprV128ConstExpr(index: %" PRIindex
+       " value: ( 0x%08x 0x%08x 0x%08x 0x%08x))\n",
+       index, value_bits.v[0], value_bits.v[1], value_bits.v[2],
+       value_bits.v[3]);
   return reader_->OnInitExprV128ConstExpr(index, value_bits);
 }
 

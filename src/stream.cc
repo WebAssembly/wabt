@@ -278,5 +278,4 @@ std::unique_ptr<FileStream> FileStream::CreateStderr() {
   return std::unique_ptr<FileStream>(new FileStream(stderr));
 }
 
-
 }  // namespace wabt
