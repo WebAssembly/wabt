@@ -123,6 +123,7 @@ enum class TokenType {
   Try,
   Unary,
   SimdLaneOp,
+  SimdShuffleOp,
   Unreachable,
   First_Opcode = AtomicLoad,
   Last_Opcode = Unreachable,

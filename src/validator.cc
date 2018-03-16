@@ -95,6 +95,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override;
   Result OnTernaryExpr(TernaryExpr*) override;
   Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override;
+  Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
 
  private:
   struct ActionResult {
@@ -817,6 +818,12 @@ Result Validator::OnTernaryExpr(TernaryExpr* expr) {
 Result Validator::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
   expr_loc_ = &expr->loc;
   typechecker_.OnSimdLaneOp(expr->opcode, expr->val);
+  return Result::Ok;
+}
+
+Result Validator::OnSimdShuffleOpExpr(SimdShuffleOpExpr* expr) {
+  expr_loc_ = &expr->loc;
+  typechecker_.OnSimdShuffleOp(expr->opcode, expr->val);
   return Result::Ok;
 }
 

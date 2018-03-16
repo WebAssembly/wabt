@@ -331,6 +331,11 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       break;
     }
 
+    case ExprType::SimdShuffleOp: {
+      CHECK_RESULT(delegate_->OnSimdShuffleOpExpr(cast<SimdShuffleOpExpr>(expr)));
+      break;
+    }
+
     case ExprType::Unreachable:
       CHECK_RESULT(delegate_->OnUnreachableExpr(cast<UnreachableExpr>(expr)));
       break;

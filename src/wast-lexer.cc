@@ -539,6 +539,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i64x2.replace_lane"   { RETURN_OPCODE(SimdLaneOp, I64X2ReplaceLane); }
       <i> "f32x4.replace_lane"   { RETURN_OPCODE(SimdLaneOp, F32X4ReplaceLane); }
       <i> "f64x2.replace_lane"   { RETURN_OPCODE(SimdLaneOp, F64X2ReplaceLane); }
+      <i> "v8x16.shuffle"        { RETURN_OPCODE(SimdShuffleOp, V8X16Shuffle); }
       <i> "i8x16.add"            { RETURN_OPCODE(Binary, I8X16Add); }
       <i> "i16x8.add"            { RETURN_OPCODE(Binary, I16X8Add); }
       <i> "i32x4.add"            { RETURN_OPCODE(Binary, I32X4Add); }

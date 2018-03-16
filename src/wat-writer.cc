@@ -578,6 +578,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override;
   Result OnTernaryExpr(TernaryExpr*) override;
   Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override;
+  Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
 
  private:
   WatWriter* writer_;
@@ -861,6 +862,14 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(SimdShuffleOpExpr* expr) {
+  writer_->WritePutsSpace(expr->opcode.GetName());
+  writer_->Writef(" $0x%08x %08x %08x %08x", (expr->val.v[0]), (expr->val.v[1]),
+                                             (expr->val.v[2]), (expr->val.v[3]));
+  writer_->WritePutsNewline("");
+  return Result::Ok;
+}
+
 void WatWriter::WriteExpr(const Expr* expr) {
   WABT_TRACE(WriteExprList);
   ExprVisitorDelegate delegate(this);
@@ -1054,6 +1063,10 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       }
       break;
     }
+
+    case ExprType::SimdShuffleOp:
+      PushExpr(expr, 2, 1);
+      break;
 
     default:
       fprintf(stderr, "bad expr type: %s\n", GetExprTypeName(*expr));

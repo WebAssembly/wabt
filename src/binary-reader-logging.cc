@@ -358,6 +358,12 @@ Result  BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   return reader_->OnSimdLaneOpExpr(opcode, value);
 }
 
+Result  BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
+  LOGF("OnSimdShuffleOpExpr (lane: 0x%08x %08x %08x %08x)\n", value.v[0],
+                                     value.v[1], value.v[2], value.v[3]);
+  return reader_->OnSimdShuffleOpExpr(opcode, value);
+}
+
 Result BinaryReaderLogging::OnDataSegmentData(Index index,
                                               const void* data,
                                               Address size) {

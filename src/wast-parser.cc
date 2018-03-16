@@ -174,6 +174,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::AtomicWait:
     case TokenType::Ternary:
     case TokenType::SimdLaneOp:
+    case TokenType::SimdShuffleOp:
       return true;
     default:
       return false;
@@ -1502,6 +1503,15 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       uint64_t lane_idx;
       CHECK_RESULT(ParseNat(&lane_idx));
       out_expr->reset(new SimdLaneOpExpr(token.opcode(), lane_idx, loc));
+      break;
+    }
+
+    case TokenType::SimdShuffleOp: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      Const const_;
+      CHECK_RESULT((ParseSimdConst(&const_, Type::I32, sizeof(v128))));
+      out_expr->reset(new SimdShuffleOpExpr(token.opcode(), const_.v128_bits, loc));
       break;
     }
 

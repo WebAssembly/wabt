@@ -271,6 +271,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override {
     return Result::Ok;
   }
+  Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override {
+    return Result::Ok;
+  }
 
   /* Elem section */
   Result BeginElemSection(Offset size) override { return Result::Ok; }

@@ -259,6 +259,7 @@ WABT_OPCODE(V128, V128, I32, ___, 0, 0xfd, 0x13,  I32X4ReplaceLane, "i32x4.repla
 WABT_OPCODE(V128, V128, I64, ___, 0, 0xfd, 0x14,  I64X2ReplaceLane, "i64x2.replace_lane")
 WABT_OPCODE(V128, V128, F32, ___, 0, 0xfd, 0x15,  F32X4ReplaceLane, "f32x4.replace_lane")
 WABT_OPCODE(V128, V128, F64, ___, 0, 0xfd, 0x16,  F64X2ReplaceLane, "f64x2.replace_lane")
+WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x17,  V8X16Shuffle, "v8x16.shuffle")
 WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x18,  I8X16Add, "i8x16.add")
 WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x19,  I16X8Add, "i16x8.add")
 WABT_OPCODE(V128, V128, V128, ___, 0, 0xfd, 0x1a,  I32X4Add, "i32x4.add")
