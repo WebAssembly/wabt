@@ -56,4 +56,7 @@ out/test/typecheck/bad-simd-lane.txt:16:58: error: lane index must be less than 
 out/test/typecheck/bad-simd-lane.txt:17:58: error: lane index must be less than 2 (got 2)
   (func (result v128) v128.const i32 0 0 0 0 f64.const 0 f64x2.replace_lane 2)
                                                          ^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-simd-lane.txt:20:45: error: lane index must be less than 16 (got 4294967296)
+  (func (result i32) v128.const i32 0 0 0 0 i8x16.extract_lane_s 0x100000000)
+                                            ^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

@@ -61,6 +61,9 @@ struct Opcode {
   Type GetParamType3() const { return GetInfo().param3_type; }
   Address GetMemorySize() const { return GetInfo().memory_size; }
 
+  // Get the lane count of an extract/replace simd op.
+  uint32_t GetSimdLaneCount() const;
+
   // Return 1 if |alignment| matches the alignment of |opcode|, or if
   // |alignment| is WABT_USE_NATURAL_ALIGNMENT.
   bool IsNaturallyAligned(Address alignment) const;

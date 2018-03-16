@@ -16,6 +16,8 @@
 
 #include "src/type-checker.h"
 
+#include <cinttypes>
+
 namespace wabt {
 
 TypeChecker::Label::Label(LabelType label_type,
@@ -595,38 +597,12 @@ Result TypeChecker::OnTernary(Opcode opcode) {
   return CheckOpcode3(opcode);
 }
 
-Result TypeChecker::OnSimdLaneOp(Opcode opcode, int lane_idx) {
+Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
   Result result = Result::Error;
-  int max_lane;
-  switch (opcode) {
-    case Opcode::I8X16ExtractLaneS:
-    case Opcode::I8X16ExtractLaneU:
-    case Opcode::I8X16ReplaceLane:
-      max_lane = 16;
-      break;
-    case Opcode::I16X8ExtractLaneS:
-    case Opcode::I16X8ExtractLaneU:
-    case Opcode::I16X8ReplaceLane:
-      max_lane = 8;
-      break;
-    case Opcode::F32X4ExtractLane:
-    case Opcode::F32X4ReplaceLane:
-    case Opcode::I32X4ExtractLane:
-    case Opcode::I32X4ReplaceLane:
-      max_lane = 4;
-      break;
-    case Opcode::F64X2ExtractLane:
-    case Opcode::F64X2ReplaceLane:
-    case Opcode::I64X2ExtractLane:
-    case Opcode::I64X2ReplaceLane:
-      max_lane = 2;
-      break;
-    default:
-      WABT_UNREACHABLE;
-  }
-
-  if (lane_idx >= max_lane) {
-    PrintError("lane index must be less than %d (got %d)", max_lane, lane_idx);
+  uint32_t lane_count = opcode.GetSimdLaneCount();
+  if (lane_idx >= lane_count) {
+    PrintError("lane index must be less than %d (got %" PRIu64 ")", lane_count,
+               lane_idx);
   }
 
   switch (opcode) {
@@ -657,14 +633,13 @@ Result TypeChecker::OnSimdLaneOp(Opcode opcode, int lane_idx) {
 Result TypeChecker::OnSimdShuffleOp(Opcode opcode, v128 lane_idx) {
   Result result = Result::Error;
   uint8_t simd_data[16];
-  memcpy(simd_data, &(lane_idx), 16);
-  for(int i = 0; i < 16; i++) {
-    if(simd_data[i] >= 32) {
-      PrintError("TypeChecker: v8x16 shuffle: each lane index must be >=0 and < 32.");
-      return result;  
+  memcpy(simd_data, &lane_idx, 16);
+  for (int i = 0; i < 16; i++) {
+    if (simd_data[i] >= 32) {
+      PrintError("lane index must be less than 32 (got %d)", simd_data[i]);
     }
   }
-  
+
   result = CheckOpcode2(opcode);
   return result;
 }
