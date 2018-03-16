@@ -337,4 +337,33 @@ bool Opcode::IsEnabled(const Features& features) const {
   }
 }
 
+uint32_t Opcode::GetSimdLaneCount() const {
+  switch (enum_) {
+    case Opcode::I8X16ExtractLaneS:
+    case Opcode::I8X16ExtractLaneU:
+    case Opcode::I8X16ReplaceLane:
+      return 16;
+      break;
+    case Opcode::I16X8ExtractLaneS:
+    case Opcode::I16X8ExtractLaneU:
+    case Opcode::I16X8ReplaceLane:
+      return 8;
+      break;
+    case Opcode::F32X4ExtractLane:
+    case Opcode::F32X4ReplaceLane:
+    case Opcode::I32X4ExtractLane:
+    case Opcode::I32X4ReplaceLane:
+      return 4;
+      break;
+    case Opcode::F64X2ExtractLane:
+    case Opcode::F64X2ReplaceLane:
+    case Opcode::I64X2ExtractLane:
+    case Opcode::I64X2ReplaceLane:
+      return 2;
+      break;
+    default:
+      WABT_UNREACHABLE;
+  }
+}
+
 }  // end anonymous namespace
