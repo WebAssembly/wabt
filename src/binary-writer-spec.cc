@@ -21,8 +21,8 @@
 
 #include "config.h"
 
-#include "src/binary.h"
 #include "src/binary-writer.h"
+#include "src/binary.h"
 #include "src/cast.h"
 #include "src/filenames.h"
 #include "src/ir.h"

@@ -65,8 +65,8 @@
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
 
-#define WABT_UNUSED __attribute__ ((unused))
-#define WABT_WARN_UNUSED __attribute__ ((warn_unused_result))
+#define WABT_UNUSED __attribute__((unused))
+#define WABT_WARN_UNUSED __attribute__((warn_unused_result))
 #define WABT_INLINE inline
 #define WABT_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #define WABT_LIKELY(x) __builtin_expect(!!(x), 1)
@@ -99,8 +99,8 @@
 
 #elif COMPILER_IS_MSVC
 
-#include <cstring>
 #include <intrin.h>
+#include <cstring>
 
 #define WABT_UNUSED
 #define WABT_WARN_UNUSED _Check_return_
@@ -117,7 +117,6 @@
 #error unknown compiler
 
 #endif
-
 
 namespace wabt {
 
@@ -237,8 +236,7 @@ inline int Popcount(unsigned __int64 value) {
 
 #endif
 
-} // namespace wabt
-
+}  // namespace wabt
 
 #if COMPILER_IS_MSVC
 
@@ -264,7 +262,6 @@ inline int Popcount(unsigned __int64 value) {
 #error unknown compiler
 
 #endif
-
 
 #if HAVE_SNPRINTF
 #define wabt_snprintf snprintf

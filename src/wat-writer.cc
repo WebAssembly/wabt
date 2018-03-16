@@ -21,8 +21,8 @@
 #include <cinttypes>
 #include <cstdarg>
 #include <cstdio>
-#include <map>
 #include <iterator>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -409,8 +409,9 @@ void WatWriter::WriteTypes(const TypeVector& types, const char* name) {
     if (name) {
       WriteOpenSpace(name);
     }
-    for (Type type : types)
+    for (Type type : types) {
       WriteType(type, NextChar::Space);
+    }
     if (name) {
       WriteCloseSpace();
     }
@@ -502,8 +503,9 @@ void WatWriter::WriteConst(const Const& const_) {
 
     case Type::V128: {
       WritePutsSpace(Opcode::V128Const_Opcode.GetName());
-      Writef("i32 0x%08x 0x%08x 0x%08x 0x%08x", const_.v128_bits.v[0], const_.v128_bits.v[1],\
-                                                const_.v128_bits.v[2], const_.v128_bits.v[3]);
+      Writef("i32 0x%08x 0x%08x 0x%08x 0x%08x", const_.v128_bits.v[0],
+             const_.v128_bits.v[1], const_.v128_bits.v[2],
+             const_.v128_bits.v[3]);
       WriteNewline(NO_FORCE_NEWLINE);
       break;
     }
@@ -614,8 +616,9 @@ Result WatWriter::ExprVisitorDelegate::OnBrIfExpr(BrIfExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnBrTableExpr(BrTableExpr* expr) {
   writer_->WritePutsSpace(Opcode::BrTable_Opcode.GetName());
-  for (const Var& var : expr->targets)
+  for (const Var& var : expr->targets) {
     writer_->WriteBrVar(var, NextChar::Space);
+  }
   writer_->WriteBrVar(expr->default_target, NextChar::Newline);
   return Result::Ok;
 }
@@ -862,10 +865,11 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(SimdShuffleOpExpr* expr) {
+Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
+    SimdShuffleOpExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
   writer_->Writef(" $0x%08x %08x %08x %08x", (expr->val.v[0]), (expr->val.v[1]),
-                                             (expr->val.v[2]), (expr->val.v[3]));
+                  (expr->val.v[2]), (expr->val.v[3]));
   writer_->WritePutsNewline("");
   return Result::Ok;
 }
@@ -898,7 +902,6 @@ Label* WatWriter::GetLabel(const Var& var) {
   }
   return nullptr;
 }
-
 
 Index WatWriter::GetLabelArity(const Var& var) {
   Label* label = GetLabel(var);
@@ -1057,8 +1060,8 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
           break;
 
         default:
-          fprintf(stderr, "Invalid Opcode for expr type: %s\n", 
-                                       GetExprTypeName(*expr));
+          fprintf(stderr, "Invalid Opcode for expr type: %s\n",
+                  GetExprTypeName(*expr));
           assert(0);
       }
       break;
@@ -1077,15 +1080,16 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
 
 void WatWriter::WriteFoldedExprList(const ExprList& exprs) {
   WABT_TRACE(WriteFoldedExprList);
-  for (const Expr& expr : exprs)
+  for (const Expr& expr : exprs) {
     WriteFoldedExpr(&expr);
+  }
 }
 
 void WatWriter::PushExpr(const Expr* expr,
                          Index operand_count,
                          Index result_count) {
   WABT_TRACE_ARGS(PushExpr, "%s, %" PRIindex ", %" PRIindex "",
-             GetExprTypeName(*expr), operand_count, result_count);
+                  GetExprTypeName(*expr), operand_count, result_count);
   if (operand_count <= expr_tree_stack_.size()) {
     auto last_operand = expr_tree_stack_.end();
     auto first_operand = last_operand - operand_count;
@@ -1191,8 +1195,9 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
 
 void WatWriter::FlushExprTreeVector(const std::vector<ExprTree>& expr_trees) {
   WABT_TRACE_ARGS(FlushExprTreeVector, "%zu", expr_trees.size());
-  for (auto expr_tree : expr_trees)
-      FlushExprTree(expr_tree);
+  for (auto expr_tree : expr_trees) {
+    FlushExprTree(expr_tree);
+  }
 }
 
 void WatWriter::FlushExprTreeStack() {
@@ -1356,8 +1361,9 @@ void WatWriter::WriteTable(const Table& table) {
 void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteOpenSpace("elem");
   WriteInitExpr(segment.offset);
-  for (const Var& var : segment.vars)
+  for (const Var& var : segment.vars) {
     WriteVar(var, NextChar::Space);
+  }
   WriteCloseNewline();
 }
 

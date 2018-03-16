@@ -210,10 +210,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result BeginElemSegment(Index index, Index table_index) override;
   Result BeginElemSegmentInitExpr(Index index) override;
   Result EndElemSegmentInitExpr(Index index) override;
-  Result OnElemSegmentFunctionIndexCount(Index index,
-                                         Index count) override;
-  Result OnElemSegmentFunctionIndex(Index index,
-                                    Index func_index) override;
+  Result OnElemSegmentFunctionIndexCount(Index index, Index count) override;
+  Result OnElemSegmentFunctionIndex(Index index, Index func_index) override;
   Result EndElemSegment(Index index) override;
   Result EndElemSection() override;
 
@@ -239,8 +237,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                                uint32_t name_type,
                                Offset subsection_size) override;
   Result OnLocalNameFunctionCount(Index num_functions) override;
-  Result OnLocalNameLocalCount(Index function_index,
-                               Index num_locals) override;
+  Result OnLocalNameLocalCount(Index function_index, Index num_locals) override;
   Result OnLocalName(Index function_index,
                      Index local_index,
                      string_view local_name) override;
@@ -292,8 +289,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGetGlobalExpr(Index index,
-                                 Index global_index) override;
+  Result OnInitExprGetGlobalExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 

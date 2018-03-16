@@ -25,8 +25,8 @@
 
 #include "src/binary-reader.h"
 #include "src/cast.h"
-#include "src/expr-visitor.h"
 #include "src/error-handler.h"
+#include "src/expr-visitor.h"
 #include "src/ir.h"
 #include "src/type-checker.h"
 #include "src/wast-parser-lexer-shared.h"
@@ -267,7 +267,8 @@ Result Validator::CheckVar(Index max_index,
 
 Result Validator::CheckFuncVar(const Var* var, const Func** out_func) {
   Index index;
-  CHECK_RESULT(CheckVar(current_module_->funcs.size(), var, "function", &index));
+  CHECK_RESULT(
+      CheckVar(current_module_->funcs.size(), var, "function", &index));
   if (out_func) {
     *out_func = current_module_->funcs[index];
   }
@@ -885,8 +886,8 @@ void Validator::CheckConstInitExpr(const Location* loc,
       case ExprType::GetGlobal: {
         const Global* ref_global = nullptr;
         Index ref_global_index;
-        if (Failed(CheckGlobalVar(&cast<GetGlobalExpr>(expr)->var,
-                                  &ref_global, &ref_global_index))) {
+        if (Failed(CheckGlobalVar(&cast<GetGlobalExpr>(expr)->var, &ref_global,
+                                  &ref_global_index))) {
           return;
         }
 
@@ -918,8 +919,10 @@ void Validator::CheckGlobal(const Location* loc, const Global* global) {
                      "global initializer expression");
 }
 
-void Validator::CheckLimits(const Location* loc, const Limits* limits,
-                            uint64_t absolute_max, const char* desc) {
+void Validator::CheckLimits(const Location* loc,
+                            const Limits* limits,
+                            uint64_t absolute_max,
+                            const char* desc) {
   if (limits->initial > absolute_max) {
     PrintError(loc, "initial %s (%" PRIu64 ") must be <= (%" PRIu64 ")", desc,
                limits->initial, absolute_max);
@@ -1064,14 +1067,15 @@ void Validator::CheckExport(const Location* loc, const Export* export_) {
 }
 
 void Validator::CheckDuplicateExportBindings(const Module* module) {
-  module->export_bindings.FindDuplicates([this](
-      const BindingHash::value_type& a, const BindingHash::value_type& b) {
-    // Choose the location that is later in the file.
-    const Location& a_loc = a.second.loc;
-    const Location& b_loc = b.second.loc;
-    const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
-    PrintError(&loc, "redefinition of export \"%s\"", a.first.c_str());
-  });
+  module->export_bindings.FindDuplicates(
+      [this](const BindingHash::value_type& a,
+             const BindingHash::value_type& b) {
+        // Choose the location that is later in the file.
+        const Location& a_loc = a.second.loc;
+        const Location& b_loc = b.second.loc;
+        const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
+        PrintError(&loc, "redefinition of export \"%s\"", a.first.c_str());
+      });
 }
 
 Result Validator::CheckModule(const Module* module) {
@@ -1184,8 +1188,9 @@ const TypeVector* Validator::CheckInvoke(const InvokeAction* action) {
   size_t actual_args = action->args.size();
   size_t expected_args = func->GetNumParams();
   if (expected_args != actual_args) {
-    PrintError(&action->loc, "too %s parameters to function. got %" PRIzd
-                             ", expected %" PRIzd,
+    PrintError(&action->loc,
+               "too %s parameters to function. got %" PRIzd
+               ", expected %" PRIzd,
                actual_args > expected_args ? "many" : "few", actual_args,
                expected_args);
     return nullptr;

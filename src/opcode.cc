@@ -366,4 +366,4 @@ uint32_t Opcode::GetSimdLaneCount() const {
   }
 }
 
-}  // end anonymous namespace
+}  // namespace wabt

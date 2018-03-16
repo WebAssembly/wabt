@@ -37,7 +37,7 @@ struct Opcode {
     Invalid,
   };
 
-  // Static opcode objects.
+// Static opcode objects.
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text)                                                     \
   static Opcode Name##_Opcode;
@@ -134,6 +134,6 @@ struct Opcode {
   Enum enum_;
 };
 
-}  // end anonymous namespace
+}  // namespace wabt
 
 #endif  // WABT_OPCODE_H_

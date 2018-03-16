@@ -570,7 +570,7 @@ struct InitExpr {
     uint32_t f32;
     uint64_t i64;
     uint64_t f64;
-    v128     v128_v;
+    v128 v128_v;
   } value;
 };
 
@@ -1079,8 +1079,9 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
       break;
     }
     case InitExprType::V128: {
-      PrintDetails(" - init v128=0x%08x 0x%08x 0x%08x 0x%08x \n", expr.value.v128_v.v[0],\
-                  expr.value.v128_v.v[1], expr.value.v128_v.v[2], expr.value.v128_v.v[3]);
+      PrintDetails(" - init v128=0x%08x 0x%08x 0x%08x 0x%08x \n",
+                   expr.value.v128_v.v[0], expr.value.v128_v.v[1],
+                   expr.value.v128_v.v[2], expr.value.v128_v.v[3]);
       break;
     }
     case InitExprType::Global:
@@ -1115,8 +1116,7 @@ Result BinaryReaderObjdump::OnInitExprF64ConstExpr(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnInitExprV128ConstExpr(Index index,
-                                                    v128 value) {
+Result BinaryReaderObjdump::OnInitExprV128ConstExpr(Index index, v128 value) {
   InitExpr expr;
   expr.type = InitExprType::V128;
   expr.value.v128_v = value;
@@ -1383,7 +1383,6 @@ Result BinaryReaderObjdump::OnSegmentInfo(Index index,
                WABT_PRINTF_STRING_VIEW_ARG(name), alignment, flags);
   return Result::Ok;
 }
-
 
 Result BinaryReaderObjdump::OnInitFunctionCount(Index count) {
   PrintDetails("  - init functions [count=%d]\n", count);

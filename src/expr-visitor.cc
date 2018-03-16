@@ -332,7 +332,8 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
     }
 
     case ExprType::SimdShuffleOp: {
-      CHECK_RESULT(delegate_->OnSimdShuffleOpExpr(cast<SimdShuffleOpExpr>(expr)));
+      CHECK_RESULT(
+          delegate_->OnSimdShuffleOpExpr(cast<SimdShuffleOpExpr>(expr)));
       break;
     }
 

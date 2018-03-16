@@ -22,8 +22,8 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 #include <type_traits>
+#include <vector>
 
 #include "src/binding-hash.h"
 #include "src/common.h"
@@ -43,8 +43,8 @@ struct Var {
   explicit Var(string_view name, const Location& loc = Location());
   Var(Var&&);
   Var(const Var&);
-  Var& operator =(const Var&);
-  Var& operator =(Var&&);
+  Var& operator=(const Var&);
+  Var& operator=(Var&&);
   ~Var();
 
   VarType type() const { return type_; }
@@ -101,7 +101,7 @@ struct Const {
     uint64_t u64;
     uint32_t f32_bits;
     uint64_t f64_bits;
-    v128     v128_bits;
+    v128 v128_bits;
   };
 
  private:
@@ -271,7 +271,7 @@ typedef OpcodeExpr<ExprType::Ternary> TernaryExpr;
 class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
  public:
   SimdLaneOpExpr(Opcode opcode, uint64_t val, const Location& loc = Location())
-            : ExprMixin<ExprType::SimdLaneOp>(loc), opcode(opcode), val(val) {}
+      : ExprMixin<ExprType::SimdLaneOp>(loc), opcode(opcode), val(val) {}
 
   Opcode opcode;
   uint64_t val;
@@ -280,7 +280,7 @@ class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
 class SimdShuffleOpExpr : public ExprMixin<ExprType::SimdShuffleOp> {
  public:
   SimdShuffleOpExpr(Opcode opcode, v128 val, const Location& loc = Location())
-            : ExprMixin<ExprType::SimdShuffleOp>(loc), opcode(opcode), val(val) {}
+      : ExprMixin<ExprType::SimdShuffleOp>(loc), opcode(opcode), val(val) {}
 
   Opcode opcode;
   v128 val;
@@ -655,7 +655,7 @@ class MemoryModuleField : public ModuleFieldMixin<ModuleFieldType::Memory> {
 class DataSegmentModuleField
     : public ModuleFieldMixin<ModuleFieldType::DataSegment> {
  public:
-  explicit DataSegmentModuleField( const Location& loc = Location())
+  explicit DataSegmentModuleField(const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::DataSegment>(loc) {}
 
   DataSegment data_segment;
@@ -672,8 +672,7 @@ class ExceptionModuleField : public ModuleFieldMixin<ModuleFieldType::Except> {
 
 class StartModuleField : public ModuleFieldMixin<ModuleFieldType::Start> {
  public:
-  explicit StartModuleField(Var start = Var(),
-                            const Location& loc = Location())
+  explicit StartModuleField(Var start = Var(), const Location& loc = Location())
       : ModuleFieldMixin<ModuleFieldType::Start>(loc), start(start) {}
 
   Var start;
@@ -971,7 +970,7 @@ struct Script {
 
 void MakeTypeBindingReverseMapping(
     const TypeVector& types,
-    const BindingHash&  bindings,
+    const BindingHash& bindings,
     std::vector<std::string>* out_reverse_mapping);
 
 }  // namespace wabt

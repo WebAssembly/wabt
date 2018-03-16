@@ -1181,8 +1181,8 @@ wabt::Result BinaryReaderInterp::OnTernaryExpr(wabt::Opcode opcode) {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnSimdLaneOpExpr(wabt::Opcode opcode, 
-                                                      uint64_t value) {
+wabt::Result BinaryReaderInterp::OnSimdLaneOpExpr(wabt::Opcode opcode,
+                                                  uint64_t value) {
   CHECK_RESULT(typechecker_.OnSimdLaneOp(opcode, value));
   CHECK_RESULT(EmitOpcode(opcode));
   CHECK_RESULT(EmitI8(static_cast<uint8_t>(value)));
@@ -1190,7 +1190,7 @@ wabt::Result BinaryReaderInterp::OnSimdLaneOpExpr(wabt::Opcode opcode,
 }
 
 wabt::Result BinaryReaderInterp::OnSimdShuffleOpExpr(wabt::Opcode opcode,
-                                                            v128 value) {
+                                                     v128 value) {
   CHECK_RESULT(typechecker_.OnSimdShuffleOp(opcode, value));
   CHECK_RESULT(EmitOpcode(opcode));
   CHECK_RESULT(EmitV128(value));
