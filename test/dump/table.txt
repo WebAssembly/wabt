@@ -103,8 +103,8 @@ Function:
 Table:
  - table[0] type=anyfunc initial=4 max=4
 Elem:
- - segment[0] table=0
  - init i32=0
+ - segment[0] table=0 count=4
   - elem[0] = func[0]
   - elem[1] = func[0]
   - elem[2] = func[1]
