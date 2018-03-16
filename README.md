@@ -207,7 +207,7 @@ $ out/wasm-interp -h
 
 ## Running wasm2c
 
-See [wasm2c.md](wasm2c.md)
+See [wasm2c.md](wasm2c/README.md)
 
 ## Running the test suite
 
