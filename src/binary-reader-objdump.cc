@@ -647,6 +647,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
 
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index, Index table_index) override;
+  Result OnElemSegmentFunctionIndexCount(Index index, Index count) override;
   Result OnElemSegmentFunctionIndex(Index segment_index,
                                     Index func_index) override;
 
@@ -722,6 +723,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
 
   std::unique_ptr<FileStream> out_stream_;
   Index elem_index_ = 0;
+  Index table_index_ = 0;
   Index next_data_reloc_ = 0;
   bool in_data_section_ = false;
   InitExpr data_init_expr_;
@@ -1033,9 +1035,16 @@ Result BinaryReaderObjdump::OnElemSegmentCount(Index count) {
 }
 
 Result BinaryReaderObjdump::BeginElemSegment(Index index, Index table_index) {
-  PrintDetails(" - segment[%" PRIindex "] table=%" PRIindex "\n", index,
-               table_index);
+  table_index_ = table_index;
   elem_index_ = 0;
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnElemSegmentFunctionIndexCount(Index index,
+                                                            Index count) {
+  PrintDetails(" - segment[%" PRIindex "] table=%" PRIindex " count=%" PRIindex
+               "\n",
+               index, table_index_, count);
   return Result::Ok;
 }
 
