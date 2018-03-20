@@ -217,7 +217,7 @@ WABT_OPCODE(I32,  I32,  ___,  ___,  0,  0,    0xC0, I32Extend8S, "i32.extend8_s"
 WABT_OPCODE(I32,  I32,  ___,  ___,  0,  0,    0xC1, I32Extend16S, "i32.extend16_s")
 WABT_OPCODE(I64,  I64,  ___,  ___,  0,  0,    0xC2, I64Extend8S, "i64.extend8_s")
 WABT_OPCODE(I64,  I64,  ___,  ___,  0,  0,    0xC3, I64Extend16S, "i64.extend16_s")
-WABT_OPCODE(I64,  I64,  ___,  ___,  0,  0,    0xC3, I64Extend32S, "i64.extend32_s")
+WABT_OPCODE(I64,  I64,  ___,  ___,  0,  0,    0xC4, I64Extend32S, "i64.extend32_s")
 
 /* Interpreter-only opcodes */
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xe0, InterpAlloca, "alloca")
