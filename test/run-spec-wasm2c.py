@@ -33,6 +33,7 @@ import utils
 from utils import Error
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+WASM2C_DIR = os.path.join(find_exe.REPO_ROOT_DIR, 'wasm2c')
 
 
 def ReinterpretF32(f32_bits):
@@ -294,6 +295,18 @@ class CWriter(object):
       raise Error('Unexpected action type: %s' % type_)
 
 
+def Compile(cc, c_filename, out_dir, *args):
+  out_dir = os.path.abspath(out_dir)
+  o_filename = utils.ChangeDir(utils.ChangeExt(c_filename, '.o'), out_dir)
+  cc.RunWithArgs('-c', '-o', o_filename, c_filename, *args, cwd=out_dir)
+  return o_filename
+
+
+def Link(cc, o_filenames, main_exe, out_dir, *args):
+  args = ['-o', main_exe] + o_filenames + list(args)
+  cc.RunWithArgs(*args, cwd=out_dir)
+
+
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('-o', '--out-dir', metavar='PATH',
@@ -303,6 +316,8 @@ def main(args):
   parser.add_argument('--bindir', metavar='PATH',
                       default=find_exe.GetDefaultPath(),
                       help='directory to search for all executables.')
+  parser.add_argument('--wasmrt-dir', metavar='PATH',
+                      help='directory with wasm-rt files', default=WASM2C_DIR)
   parser.add_argument('--cc', metavar='PATH',
                       help='the path to the C compiler', default='cc')
   parser.add_argument('--cflags', metavar='FLAGS',
@@ -361,23 +376,24 @@ def main(args):
       out_main_file.write(output.getvalue())
 
     o_filenames = []
+    includes = '-I%s' % options.wasmrt_dir
+
+    # Compile wasm-rt-impl.
+    wasm_rt_impl_c = os.path.join(options.wasmrt_dir, 'wasm-rt-impl.c')
+    o_filenames.append(Compile(cc, wasm_rt_impl_c, out_dir, includes))
 
     for i, wasm_filename in enumerate(cwriter.GetModuleFilenames()):
       c_filename = utils.ChangeExt(wasm_filename, '.c')
       wasm2c.RunWithArgs(wasm_filename, '-o', c_filename, cwd=out_dir)
       if options.compile:
-        o_filename = utils.ChangeExt(wasm_filename, '.o')
-        o_filenames.append(o_filename)
-        cc.RunWithArgs(
-            '-c', '-o', o_filename,
-            '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i),
-            c_filename, cwd=out_dir)
+        defines = '-DWASM_RT_MODULE_PREFIX=%s' % cwriter.GetModulePrefix(i)
+        o_filenames.append(Compile(cc, c_filename, out_dir, includes, defines))
 
     if options.compile:
       main_c = os.path.basename(main_filename)
+      o_filenames.append(Compile(cc, main_c, out_dir, includes, defines))
       main_exe = os.path.basename(utils.ChangeExt(json_file_path, ''))
-      args = ['-o', main_exe, main_c] + o_filenames + ['-lm']
-      cc.RunWithArgs(*args, cwd=out_dir)
+      Link(cc, o_filenames, main_exe, out_dir, '-lm')
 
     if options.compile and options.run:
       utils.Executable(os.path.join(out_dir, main_exe),

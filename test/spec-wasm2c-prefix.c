@@ -2,7 +2,6 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <math.h>
-#include <setjmp.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,20 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PAGE_SIZE 65536
-
-typedef struct FuncType {
-  wasm_rt_type_t* params;
-  wasm_rt_type_t* results;
-  u32 param_count;
-  u32 result_count;
-} FuncType;
+#include "wasm-rt.h"
+#include "wasm-rt-impl.h"
 
 int g_tests_run;
 int g_tests_passed;
-jmp_buf g_jmp_buf;
-FuncType* g_func_types;
-u32 g_func_type_count;
 
 static void run_spec_tests(void);
 
@@ -38,7 +28,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_TRAP(f)                                         \
   do {                                                         \
     g_tests_run++;                                             \
-    if (setjmp(g_jmp_buf) != 0) {                              \
+    if (wasm_rt_impl_try() != 0) {                             \
       g_tests_passed++;                                        \
     } else {                                                   \
       (void)(f);                                               \
@@ -49,7 +39,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_EXHAUSTION(f)                                     \
   do {                                                           \
     g_tests_run++;                                               \
-    wasm_rt_trap_t code = setjmp(g_jmp_buf);                     \
+    wasm_rt_trap_t code = wasm_rt_impl_try();                    \
     switch (code) {                                              \
       case WASM_RT_TRAP_NONE:                                    \
         (void)(f);                                               \
@@ -70,7 +60,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN(f)                           \
   do {                                             \
     g_tests_run++;                                 \
-    if (setjmp(g_jmp_buf) != 0) {                  \
+    if (wasm_rt_impl_try() != 0) {                 \
       error(__FILE__, __LINE__, #f " trapped.\n"); \
     } else {                                       \
       f;                                           \
@@ -81,7 +71,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN_T(type, fmt, f, expected)                          \
   do {                                                                   \
     g_tests_run++;                                                       \
-    if (setjmp(g_jmp_buf) != 0) {                                        \
+    if (wasm_rt_impl_try() != 0) {                                       \
       error(__FILE__, __LINE__, #f " trapped.\n");                       \
     } else {                                                             \
       type actual = f;                                                   \
@@ -98,7 +88,7 @@ static void error(const char* file, int line, const char* format, ...) {
 #define ASSERT_RETURN_NAN_T(type, itype, fmt, f, kind)                        \
   do {                                                                        \
     g_tests_run++;                                                            \
-    if (setjmp(g_jmp_buf) != 0) {                                             \
+    if (wasm_rt_impl_try() != 0) {                                            \
       error(__FILE__, __LINE__, #f " trapped.\n");                            \
     } else {                                                                  \
       type actual = f;                                                        \
@@ -181,91 +171,6 @@ static bool is_arithmetic_nan_f64(u64 x) {
   return (x & 0x7ff8000000000000) == 0x7ff8000000000000;
 }
 
-static bool func_types_are_equal(FuncType* a, FuncType* b) {
-  if (a->param_count != b->param_count || a->result_count != b->result_count)
-    return 0;
-  int i;
-  for (i = 0; i < a->param_count; ++i)
-    if (a->params[i] != b->params[i])
-      return 0;
-  for (i = 0; i < a->result_count; ++i)
-    if (a->results[i] != b->results[i])
-      return 0;
-  return 1;
-}
-
-
-/*
- * wasm_rt_* implementations
- */
-
-uint32_t wasm_rt_call_stack_depth;
-
-void wasm_rt_trap(wasm_rt_trap_t code) {
-  assert(code != WASM_RT_TRAP_NONE);
-  longjmp(g_jmp_buf, code);
-}
-
-u32 wasm_rt_register_func_type(u32 param_count, u32 result_count, ...) {
-  FuncType func_type;
-  func_type.param_count = param_count;
-  func_type.params = malloc(param_count * sizeof(wasm_rt_type_t));
-  func_type.result_count = result_count;
-  func_type.results = malloc(result_count * sizeof(wasm_rt_type_t));
-
-  va_list args;
-  va_start(args, result_count);
-
-  u32 i;
-  for (i = 0; i < param_count; ++i)
-    func_type.params[i] = va_arg(args, wasm_rt_type_t);
-  for (i = 0; i < result_count; ++i)
-    func_type.results[i] = va_arg(args, wasm_rt_type_t);
-  va_end(args);
-
-  for (i = 0; i < g_func_type_count; ++i) {
-    if (func_types_are_equal(&g_func_types[i], &func_type)) {
-      free(func_type.params);
-      free(func_type.results);
-      return i + 1;
-    }
-  }
-
-  u32 idx = g_func_type_count++;
-  g_func_types = realloc(g_func_types, g_func_type_count * sizeof(FuncType));
-  g_func_types[idx] = func_type;
-  return idx + 1;
-}
-
-void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
-                             u32 initial_pages,
-                             u32 max_pages) {
-  memory->pages = initial_pages;
-  memory->max_pages = max_pages;
-  memory->size = initial_pages * PAGE_SIZE;
-  memory->data = calloc(memory->size, 1);
-}
-
-u32 wasm_rt_grow_memory(wasm_rt_memory_t* memory, u32 delta) {
-  u32 old_pages = memory->pages;
-  u32 new_pages = memory->pages + delta;
-  if (new_pages < old_pages || new_pages > memory->max_pages) {
-    return (u32)-1;
-  }
-  memory->data = realloc(memory->data, new_pages);
-  memory->pages = new_pages;
-  memory->size = new_pages * PAGE_SIZE;
-  return old_pages;
-}
-
-void wasm_rt_allocate_table(wasm_rt_table_t* table,
-                            u32 elements,
-                            u32 max_elements) {
-  table->size = elements;
-  table->max_size = max_elements;
-  table->data = calloc(table->size, sizeof(wasm_rt_elem_t));
-}
-
 
 /*
  * spectest implementations
@@ -322,4 +227,3 @@ int main(int argc, char** argv) {
   printf("%u/%u tests passed.\n", g_tests_passed, g_tests_run);
   return g_tests_passed != g_tests_run;
 }
-
