@@ -3451,6 +3451,9 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32Eqz:
     case Opcode::I32Extend16S:
     case Opcode::I32Extend8S:
+    case Opcode::I8X16Splat:
+    case Opcode::I16X8Splat:
+    case Opcode::I32X4Splat:
       stream->Writef("%s %u\n", opcode.GetName(), Top().i32);
       break;
 
@@ -3490,6 +3493,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64Extend16S:
     case Opcode::I64Extend32S:
     case Opcode::I64Extend8S:
+    case Opcode::I64X2Splat:
       stream->Writef("%s %" PRIu64 "\n", opcode.GetName(), Top().i64);
       break;
 
@@ -3517,6 +3521,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32Trunc:
     case Opcode::F32Nearest:
     case Opcode::F32Sqrt:
+    case Opcode::F32X4Splat:
       stream->Writef("%s %g\n", opcode.GetName(), Bitcast<float>(Top().i32));
       break;
 
@@ -3545,6 +3550,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F64Trunc:
     case Opcode::F64Nearest:
     case Opcode::F64Sqrt:
+    case Opcode::F64X2Splat:
       stream->Writef("%s %g\n", opcode.GetName(), Bitcast<double>(Top().i64));
       break;
 
@@ -3614,12 +3620,6 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::I8X16Splat:
-    case Opcode::I16X8Splat:
-    case Opcode::I32X4Splat:
-    case Opcode::I64X2Splat:
-    case Opcode::F32X4Splat:
-    case Opcode::F64X2Splat:
     case Opcode::I8X16Neg:
     case Opcode::I16X8Neg:
     case Opcode::I32X4Neg:
