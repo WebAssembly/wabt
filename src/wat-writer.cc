@@ -150,9 +150,10 @@ class WatWriter {
   void WriteLoadStoreExpr(const Expr* expr);
   void WriteExprList(const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
+  template <typename T>
   void WriteTypeBindings(const char* prefix,
                          const Func& func,
-                         const TypeVector& types,
+                         const T& types,
                          const BindingHash& bindings);
   void WriteBeginFunc(const Func& func);
   void WriteFunc(const Func& func);
@@ -1216,11 +1217,12 @@ void WatWriter::WriteInitExpr(const ExprList& expr) {
   }
 }
 
+template <typename T>
 void WatWriter::WriteTypeBindings(const char* prefix,
                                   const Func& func,
-                                  const TypeVector& types,
+                                  const T& types,
                                   const BindingHash& bindings) {
-  MakeTypeBindingReverseMapping(types, bindings, &index_to_name_);
+  MakeTypeBindingReverseMapping(types.size(), bindings, &index_to_name_);
 
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
@@ -1228,21 +1230,23 @@ void WatWriter::WriteTypeBindings(const char* prefix,
    *   (param i32 i64 f32)
    */
   bool is_open = false;
-  for (size_t i = 0; i < types.size(); ++i) {
+  size_t index = 0;
+  for (Type type : types) {
     if (!is_open) {
       WriteOpenSpace(prefix);
       is_open = true;
     }
 
-    const std::string& name = index_to_name_[i];
+    const std::string& name = index_to_name_[index];
     if (!name.empty()) {
       WriteString(name, NextChar::Space);
     }
-    WriteType(types[i], NextChar::Space);
+    WriteType(type, NextChar::Space);
     if (!name.empty()) {
       WriteCloseSpace();
       is_open = false;
     }
+    ++index;
   }
   if (is_open) {
     WriteCloseSpace();

@@ -18,6 +18,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <numeric>
 
 #include "src/cast.h"
 
@@ -136,6 +137,44 @@ bool Module::IsImport(ExternalKind kind, const Var& var) const {
     default:
       return false;
   }
+}
+
+void LocalTypes::Set(const TypeVector& types) {
+  decls.clear();
+  if (types.empty()) {
+    return;
+  }
+
+  Type type = types[0];
+  Index count = 1;
+  for (Index i = 1; i < types.size(); ++i) {
+    if (types[i] != type) {
+      decls.emplace_back(type, count);
+      type = types[i];
+      count = 1;
+    } else {
+      ++count;
+    }
+  }
+  decls.emplace_back(type, count);
+}
+
+Index LocalTypes::size() const {
+  return std::accumulate(
+      decls.begin(), decls.end(), 0,
+      [](Index sum, const Decl& decl) { return sum + decl.second; });
+}
+
+Type LocalTypes::operator[](Index i) const {
+  Index count = 0;
+  for (auto decl: decls) {
+    if (i < count + decl.second) {
+      return decl.first;
+    }
+    count += decl.second;
+  }
+  assert(i < count);
+  return Type::Any;
 }
 
 Type Func::GetLocalType(Index index) const {
@@ -477,11 +516,11 @@ const Module* Script::GetModule(const Var& var) const {
 }
 
 void MakeTypeBindingReverseMapping(
-    const TypeVector& types,
+    size_t num_types,
     const BindingHash& bindings,
     std::vector<std::string>* out_reverse_mapping) {
   out_reverse_mapping->clear();
-  out_reverse_mapping->resize(types.size());
+  out_reverse_mapping->resize(num_types);
   for (const auto& pair : bindings) {
     assert(static_cast<size_t>(pair.second.index) <
            out_reverse_mapping->size());
