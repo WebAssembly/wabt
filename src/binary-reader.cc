@@ -93,6 +93,7 @@ class BinaryReader {
                    const char* desc) WABT_WARN_UNUSED;
   Result ReadIndex(Index* index, const char* desc) WABT_WARN_UNUSED;
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
+  Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
 
   Index NumTotalFuncs();
   Index NumTotalTables();
@@ -315,6 +316,23 @@ Result BinaryReader::ReadOffset(Offset* offset, const char* desc) {
   uint32_t value;
   CHECK_RESULT(ReadU32Leb128(&value, desc));
   *offset = value;
+  return Result::Ok;
+}
+
+Result BinaryReader::ReadCount(Index* count, const char* desc) {
+  CHECK_RESULT(ReadIndex(count, desc));
+
+  // This check assumes that each item follows in this section, and takes at
+  // least 1 byte. It's possible that this check passes but reading fails
+  // later. It is still useful to check here, though, because it early-outs
+  // when an erroneous large count is used, before allocating memory for it.
+  size_t section_remaining = read_end_ - state_.offset;
+  if (*count > section_remaining) {
+    PrintError("invalid %s %" PRIindex ", only %" PRIzd
+               " bytes left in section",
+               desc, *count, section_remaining);
+    return Result::Error;
+  }
   return Result::Ok;
 }
 
@@ -1311,7 +1329,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
         CALLBACK(OnFunctionNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {
           Index num_names;
-          CHECK_RESULT(ReadIndex(&num_names, "name count"));
+          CHECK_RESULT(ReadCount(&num_names, "name count"));
           CALLBACK(OnFunctionNamesCount, num_names);
           Index last_function_index = kInvalidIndex;
 
@@ -1337,7 +1355,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
         CALLBACK(OnLocalNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {
           Index num_funcs;
-          CHECK_RESULT(ReadIndex(&num_funcs, "function count"));
+          CHECK_RESULT(ReadCount(&num_funcs, "function count"));
           CALLBACK(OnLocalNameFunctionCount, num_funcs);
           Index last_function_index = kInvalidIndex;
           for (Index j = 0; j < num_funcs; ++j) {
@@ -1351,7 +1369,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
                          function_index);
             last_function_index = function_index;
             Index num_locals;
-            CHECK_RESULT(ReadIndex(&num_locals, "local count"));
+            CHECK_RESULT(ReadCount(&num_locals, "local count"));
             CALLBACK(OnLocalNameLocalCount, function_index, num_locals);
             Index last_local_index = kInvalidIndex;
             for (Index k = 0; k < num_locals; ++k) {
@@ -1395,7 +1413,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
     CHECK_RESULT(ReadStr(&section_name, "section name"));
   }
   Index num_relocs;
-  CHECK_RESULT(ReadIndex(&num_relocs, "relocation count"));
+  CHECK_RESULT(ReadCount(&num_relocs, "relocation count"));
   CALLBACK(OnRelocCount, num_relocs, static_cast<BinarySection>(section),
            section_name);
   for (Index i = 0; i < num_relocs; ++i) {
@@ -1529,7 +1547,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
 
 Result BinaryReader::ReadExceptionType(TypeVector& sig) {
   Index num_values;
-  CHECK_RESULT(ReadIndex(&num_values, "exception type count"));
+  CHECK_RESULT(ReadCount(&num_values, "exception type count"));
   sig.resize(num_values);
   for (Index j = 0; j < num_values; ++j) {
     Type value_type;
@@ -1544,7 +1562,7 @@ Result BinaryReader::ReadExceptionType(TypeVector& sig) {
 
 Result BinaryReader::ReadExceptionSection(Offset section_size) {
   CALLBACK(BeginExceptionSection, section_size);
-  CHECK_RESULT(ReadIndex(&num_exceptions_, "exception count"));
+  CHECK_RESULT(ReadCount(&num_exceptions_, "exception count"));
   CALLBACK(OnExceptionCount, num_exceptions_);
 
   for (Index i = 0; i < num_exceptions_; ++i) {
@@ -1583,7 +1601,7 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
 
 Result BinaryReader::ReadTypeSection(Offset section_size) {
   CALLBACK(BeginTypeSection, section_size);
-  CHECK_RESULT(ReadIndex(&num_signatures_, "type count"));
+  CHECK_RESULT(ReadCount(&num_signatures_, "type count"));
   CALLBACK(OnTypeCount, num_signatures_);
 
   for (Index i = 0; i < num_signatures_; ++i) {
@@ -1593,7 +1611,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
                  static_cast<int>(form));
 
     Index num_params;
-    CHECK_RESULT(ReadIndex(&num_params, "function param count"));
+    CHECK_RESULT(ReadCount(&num_params, "function param count"));
 
     param_types_.resize(num_params);
 
@@ -1607,7 +1625,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
     }
 
     Index num_results;
-    CHECK_RESULT(ReadIndex(&num_results, "function result count"));
+    CHECK_RESULT(ReadCount(&num_results, "function result count"));
     ERROR_UNLESS(num_results <= 1, "result count must be 0 or 1");
 
     Type result_type = Type::Void;
@@ -1628,7 +1646,7 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
 
 Result BinaryReader::ReadImportSection(Offset section_size) {
   CALLBACK(BeginImportSection, section_size);
-  CHECK_RESULT(ReadIndex(&num_imports_, "import count"));
+  CHECK_RESULT(ReadCount(&num_imports_, "import count"));
   CALLBACK(OnImportCount, num_imports_);
   for (Index i = 0; i < num_imports_; ++i) {
     string_view module_name;
@@ -1703,7 +1721,7 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
 Result BinaryReader::ReadFunctionSection(Offset section_size) {
   CALLBACK(BeginFunctionSection, section_size);
   CHECK_RESULT(
-      ReadIndex(&num_function_signatures_, "function signature count"));
+      ReadCount(&num_function_signatures_, "function signature count"));
   CALLBACK(OnFunctionCount, num_function_signatures_);
   for (Index i = 0; i < num_function_signatures_; ++i) {
     Index func_index = num_func_imports_ + i;
@@ -1719,7 +1737,7 @@ Result BinaryReader::ReadFunctionSection(Offset section_size) {
 
 Result BinaryReader::ReadTableSection(Offset section_size) {
   CALLBACK(BeginTableSection, section_size);
-  CHECK_RESULT(ReadIndex(&num_tables_, "table count"));
+  CHECK_RESULT(ReadCount(&num_tables_, "table count"));
   ERROR_UNLESS(num_tables_ <= 1, "table count (%" PRIindex ") must be 0 or 1",
                num_tables_);
   CALLBACK(OnTableCount, num_tables_);
@@ -1736,7 +1754,7 @@ Result BinaryReader::ReadTableSection(Offset section_size) {
 
 Result BinaryReader::ReadMemorySection(Offset section_size) {
   CALLBACK(BeginMemorySection, section_size);
-  CHECK_RESULT(ReadIndex(&num_memories_, "memory count"));
+  CHECK_RESULT(ReadCount(&num_memories_, "memory count"));
   ERROR_UNLESS(num_memories_ <= 1, "memory count must be 0 or 1");
   CALLBACK(OnMemoryCount, num_memories_);
   for (Index i = 0; i < num_memories_; ++i) {
@@ -1751,7 +1769,7 @@ Result BinaryReader::ReadMemorySection(Offset section_size) {
 
 Result BinaryReader::ReadGlobalSection(Offset section_size) {
   CALLBACK(BeginGlobalSection, section_size);
-  CHECK_RESULT(ReadIndex(&num_globals_, "global count"));
+  CHECK_RESULT(ReadCount(&num_globals_, "global count"));
   CALLBACK(OnGlobalCount, num_globals_);
   for (Index i = 0; i < num_globals_; ++i) {
     Index global_index = num_global_imports_ + i;
@@ -1770,7 +1788,7 @@ Result BinaryReader::ReadGlobalSection(Offset section_size) {
 
 Result BinaryReader::ReadExportSection(Offset section_size) {
   CALLBACK(BeginExportSection, section_size);
-  CHECK_RESULT(ReadIndex(&num_exports_, "export count"));
+  CHECK_RESULT(ReadCount(&num_exports_, "export count"));
   CALLBACK(OnExportCount, num_exports_);
   for (Index i = 0; i < num_exports_; ++i) {
     string_view name;
@@ -1827,7 +1845,7 @@ Result BinaryReader::ReadStartSection(Offset section_size) {
 Result BinaryReader::ReadElemSection(Offset section_size) {
   CALLBACK(BeginElemSection, section_size);
   Index num_elem_segments;
-  CHECK_RESULT(ReadIndex(&num_elem_segments, "elem segment count"));
+  CHECK_RESULT(ReadCount(&num_elem_segments, "elem segment count"));
   CALLBACK(OnElemSegmentCount, num_elem_segments);
   ERROR_UNLESS(num_elem_segments == 0 || NumTotalTables() > 0,
                "elem section without table section");
@@ -1841,7 +1859,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
 
     Index num_function_indexes;
     CHECK_RESULT(
-        ReadIndex(&num_function_indexes, "elem segment function index count"));
+        ReadCount(&num_function_indexes, "elem segment function index count"));
     CALLBACK(OnElemSegmentFunctionIndexCount, i, num_function_indexes);
     for (Index j = 0; j < num_function_indexes; ++j) {
       Index func_index;
@@ -1856,7 +1874,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
 
 Result BinaryReader::ReadCodeSection(Offset section_size) {
   CALLBACK(BeginCodeSection, section_size);
-  CHECK_RESULT(ReadIndex(&num_function_bodies_, "function body count"));
+  CHECK_RESULT(ReadCount(&num_function_bodies_, "function body count"));
   ERROR_UNLESS(num_function_signatures_ == num_function_bodies_,
                "function signature count != function body count");
   CALLBACK(OnFunctionBodyCount, num_function_bodies_);
@@ -1871,7 +1889,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     Offset end_offset = body_start_offset + body_size;
 
     Index num_local_decls;
-    CHECK_RESULT(ReadIndex(&num_local_decls, "local declaration count"));
+    CHECK_RESULT(ReadCount(&num_local_decls, "local declaration count"));
     CALLBACK(OnLocalDeclCount, num_local_decls);
     for (Index k = 0; k < num_local_decls; ++k) {
       Index num_local_types;
@@ -1893,7 +1911,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
 Result BinaryReader::ReadDataSection(Offset section_size) {
   CALLBACK(BeginDataSection, section_size);
   Index num_data_segments;
-  CHECK_RESULT(ReadIndex(&num_data_segments, "data segment count"));
+  CHECK_RESULT(ReadCount(&num_data_segments, "data segment count"));
   CALLBACK(OnDataSegmentCount, num_data_segments);
   ERROR_UNLESS(num_data_segments == 0 || NumTotalMemories() > 0,
                "data section without memory section");

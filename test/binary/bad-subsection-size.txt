@@ -18,6 +18,6 @@ section("name") {
   str("$F0")
 }
 (;; STDERR ;;;
-0000027: error: unable to read u32 leb128: function index
-0000027: error: unable to read u32 leb128: function index
+0000027: error: invalid name count 1, only 0 bytes left in section
+0000027: error: invalid name count 1, only 0 bytes left in section
 ;;; STDERR ;;)
