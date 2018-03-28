@@ -139,7 +139,7 @@ class BinaryWriter {
   void WriteExpr(const Func* func, const Expr* expr);
   void WriteExprList(const Func* func, const ExprList& exprs);
   void WriteInitExpr(const ExprList& expr);
-  void WriteFuncLocals(const Func* func, const TypeVector& local_types);
+  void WriteFuncLocals(const Func* func, const LocalTypes& local_types);
   void WriteFunc(const Func* func);
   void WriteTable(const Table* table);
   void WriteMemory(const Memory* memory);
@@ -622,44 +622,17 @@ void BinaryWriter::WriteInitExpr(const ExprList& expr) {
 }
 
 void BinaryWriter::WriteFuncLocals(const Func* func,
-                                   const TypeVector& local_types) {
+                                   const LocalTypes& local_types) {
   if (local_types.size() == 0) {
     WriteU32Leb128(stream_, 0, "local decl count");
     return;
   }
 
-  Index num_params = func->GetNumParams();
-
-#define FIRST_LOCAL_INDEX (num_params)
-#define LAST_LOCAL_INDEX (num_params + local_types.size())
-#define GET_LOCAL_TYPE(x) (local_types[x - num_params])
-
-  /* loop through once to count the number of local declaration runs */
-  Type current_type = GET_LOCAL_TYPE(FIRST_LOCAL_INDEX);
-  Index local_decl_count = 1;
-  for (Index i = FIRST_LOCAL_INDEX + 1; i < LAST_LOCAL_INDEX; ++i) {
-    Type type = GET_LOCAL_TYPE(i);
-    if (current_type != type) {
-      local_decl_count++;
-      current_type = type;
-    }
-  }
-
-  /* loop through again to write everything out */
+  Index local_decl_count = local_types.decls.size();
   WriteU32Leb128(stream_, local_decl_count, "local decl count");
-  current_type = GET_LOCAL_TYPE(FIRST_LOCAL_INDEX);
-  Index local_type_count = 1;
-  for (Index i = FIRST_LOCAL_INDEX + 1; i <= LAST_LOCAL_INDEX; ++i) {
-    /* loop through an extra time to catch the final type transition */
-    Type type = i == LAST_LOCAL_INDEX ? Type::Void : GET_LOCAL_TYPE(i);
-    if (current_type == type) {
-      local_type_count++;
-    } else {
-      WriteU32Leb128(stream_, local_type_count, "local type count");
-      WriteType(stream_, current_type);
-      local_type_count = 1;
-      current_type = type;
-    }
+  for (auto decl : local_types.decls) {
+    WriteU32Leb128(stream_, decl.second, "local type count");
+    WriteType(stream_, decl.first);
   }
 }
 
@@ -1034,7 +1007,7 @@ Result BinaryWriter::WriteModule() {
       WriteU32Leb128(stream_, i, "function index");
       WriteU32Leb128(stream_, num_params_and_locals, "num locals");
 
-      MakeTypeBindingReverseMapping(func->decl.sig.param_types,
+      MakeTypeBindingReverseMapping(func->decl.sig.param_types.size(),
                                     func->param_bindings, &index_to_name);
       for (size_t j = 0; j < num_params; ++j) {
         const std::string& name = index_to_name[j];
@@ -1043,8 +1016,8 @@ Result BinaryWriter::WriteModule() {
         WriteDebugName(stream_, name, desc);
       }
 
-      MakeTypeBindingReverseMapping(func->local_types, func->local_bindings,
-                                    &index_to_name);
+      MakeTypeBindingReverseMapping(func->local_types.size(),
+                                    func->local_bindings, &index_to_name);
       for (size_t j = 0; j < num_locals; ++j) {
         const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, num_params + j);

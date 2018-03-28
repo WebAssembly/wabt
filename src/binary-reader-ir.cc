@@ -541,12 +541,7 @@ Result BinaryReaderIR::BeginFunctionBody(Index index) {
 }
 
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
-  TypeVector& types = current_func_->local_types;
-  WABT_TRY
-  types.reserve(types.size() + count);
-  WABT_CATCH_BAD_ALLOC
-  for (size_t i = 0; i < count; ++i)
-    types.push_back(type);
+  current_func_->local_types.decls.emplace_back(type, count);
   return Result::Ok;
 }
 

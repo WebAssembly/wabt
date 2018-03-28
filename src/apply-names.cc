@@ -328,10 +328,10 @@ Result NameApplier::VisitFunc(Index func_index, Func* func) {
     CHECK_RESULT(UseNameForFuncTypeVar(&func->decl.type_var));
   }
 
-  MakeTypeBindingReverseMapping(func->decl.sig.param_types,
+  MakeTypeBindingReverseMapping(func->decl.sig.param_types.size(),
                                 func->param_bindings, &param_index_to_name_);
 
-  MakeTypeBindingReverseMapping(func->local_types, func->local_bindings,
+  MakeTypeBindingReverseMapping(func->local_types.size(), func->local_bindings,
                                 &local_index_to_name_);
 
   CHECK_RESULT(visitor_.VisitFunc(func));

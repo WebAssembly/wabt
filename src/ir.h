@@ -404,6 +404,57 @@ struct Exception {
   TypeVector sig;
 };
 
+struct LocalTypes {
+  typedef std::pair<Type, Index> Decl;
+  typedef std::vector<Decl> Decls;
+
+  struct const_iterator {
+    const_iterator(Decls::const_iterator decl, Index index)
+        : decl(decl), index(index) {}
+    Type operator*() const { return decl->first; }
+    const_iterator& operator++();
+    const_iterator operator++(int);
+
+    Decls::const_iterator decl;
+    Index index;
+  };
+
+  void Set(const TypeVector&);
+
+  Index size() const;
+  Type operator[](Index) const;
+
+  const_iterator begin() const { return {decls.begin(), 0}; }
+  const_iterator end() const { return {decls.end(), 0}; }
+
+  Decls decls;
+};
+
+inline LocalTypes::const_iterator& LocalTypes::const_iterator::operator++() {
+  ++index;
+  if (index >= decl->second) {
+    ++decl;
+    index = 0;
+  }
+  return *this;
+}
+
+inline LocalTypes::const_iterator LocalTypes::const_iterator::operator++(int) {
+  const_iterator result = *this;
+  operator++();
+  return result;
+}
+
+inline bool operator==(const LocalTypes::const_iterator& lhs,
+                       const LocalTypes::const_iterator& rhs) {
+  return lhs.decl == rhs.decl && lhs.index == rhs.index;
+}
+
+inline bool operator!=(const LocalTypes::const_iterator& lhs,
+                       const LocalTypes::const_iterator& rhs) {
+  return !operator==(lhs, rhs);
+}
+
 struct Func {
   explicit Func(string_view name) : name(name.to_string()) {}
 
@@ -421,7 +472,7 @@ struct Func {
 
   std::string name;
   FuncDeclaration decl;
-  TypeVector local_types;
+  LocalTypes local_types;
   BindingHash param_bindings;
   BindingHash local_bindings;
   ExprList exprs;
@@ -969,7 +1020,7 @@ struct Script {
 };
 
 void MakeTypeBindingReverseMapping(
-    const TypeVector& types,
+    size_t num_types,
     const BindingHash& bindings,
     std::vector<std::string>* out_reverse_mapping);
 

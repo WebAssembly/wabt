@@ -1,0 +1,19 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[
+      decl_count[1]
+      local_count[leb_i32(3334443763)]  ;; <- huge number of locals
+      42  ;; <- invalid type
+    ]
+  }
+}
+(;; STDERR ;;;
+000001e: error: expected valid local type
+000001e: error: expected valid local type
+;;; STDERR ;;)

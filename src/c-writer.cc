@@ -1314,7 +1314,7 @@ void CWriter::WriteParams() {
     Write("void");
   } else {
     std::vector<std::string> index_to_name;
-    MakeTypeBindingReverseMapping(func_->decl.sig.param_types,
+    MakeTypeBindingReverseMapping(func_->decl.sig.param_types.size(),
                                   func_->param_bindings, &index_to_name);
     Indent(4);
     for (Index i = 0; i < func_->GetNumParams(); ++i) {
@@ -1333,8 +1333,8 @@ void CWriter::WriteParams() {
 
 void CWriter::WriteLocals() {
   std::vector<std::string> index_to_name;
-  MakeTypeBindingReverseMapping(func_->local_types, func_->local_bindings,
-                                &index_to_name);
+  MakeTypeBindingReverseMapping(func_->local_types.size(),
+                                func_->local_bindings, &index_to_name);
   for (Type type : {Type::I32, Type::I64, Type::F32, Type::F64}) {
     Index local_index = 0;
     size_t count = 0;

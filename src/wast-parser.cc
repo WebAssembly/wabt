@@ -862,8 +862,10 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     Func& func = field->func;
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
     CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.param_bindings));
-    CHECK_RESULT(ParseBoundValueTypeList(TokenType::Local, &func.local_types,
+    TypeVector local_types;
+    CHECK_RESULT(ParseBoundValueTypeList(TokenType::Local, &local_types,
                                          &func.local_bindings));
+    func.local_types.Set(local_types);
     CHECK_RESULT(ParseTerminatingInstrList(&func.exprs));
     module->AppendField(std::move(field));
   }
