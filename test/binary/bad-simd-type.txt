@@ -1,0 +1,10 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) {
+  count[1] function params[1] v128 results[0]
+}
+(;; STDERR ;;;
+000000e: error: expected valid param type (got 0x7b)
+000000e: error: expected valid param type (got 0x7b)
+;;; STDERR ;;)
