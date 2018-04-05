@@ -95,6 +95,9 @@ class BinaryReader {
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
   Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
 
+  bool is_concrete_type(Type);
+  bool is_inline_sig_type(Type);
+
   Index NumTotalFuncs();
   Index NumTotalTables();
   Index NumTotalMemories();
@@ -340,21 +343,23 @@ static bool is_valid_external_kind(uint8_t kind) {
   return kind < kExternalKindCount;
 }
 
-static bool is_concrete_type(Type type) {
+bool BinaryReader::is_concrete_type(Type type) {
   switch (type) {
     case Type::I32:
     case Type::I64:
     case Type::F32:
     case Type::F64:
-    case Type::V128:
       return true;
+
+    case Type::V128:
+      return options_->features.simd_enabled();
 
     default:
       return false;
   }
 }
 
-static bool is_inline_sig_type(Type type) {
+bool BinaryReader::is_inline_sig_type(Type type) {
   return is_concrete_type(type) || type == Type::Void;
 }
 
