@@ -1,0 +1,6 @@
+;;; RUN: %(wasm2c)s
+;;; ARGS: --enable-simd %(in_file)s
+;;; ERROR: 1
+(;; STDERR ;;;
+wasm2c doesn't currently support any --enable-* flags.
+;;; STDERR ;;)
