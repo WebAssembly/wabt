@@ -541,7 +541,7 @@ Result BinaryReaderIR::BeginFunctionBody(Index index) {
 }
 
 Result BinaryReaderIR::OnLocalDecl(Index decl_index, Index count, Type type) {
-  current_func_->local_types.decls.emplace_back(type, count);
+  current_func_->local_types.AppendDecl(type, count);
   return Result::Ok;
 }
 

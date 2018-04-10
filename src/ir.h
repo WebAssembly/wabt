@@ -404,7 +404,8 @@ struct Exception {
   TypeVector sig;
 };
 
-struct LocalTypes {
+class LocalTypes {
+ public:
   typedef std::pair<Type, Index> Decl;
   typedef std::vector<Decl> Decls;
 
@@ -421,13 +422,21 @@ struct LocalTypes {
 
   void Set(const TypeVector&);
 
+  const Decls& decls() const { return decls_; }
+
+  void AppendDecl(Type type, Index count) {
+    assert(count > 0);
+    decls_.emplace_back(type, count);
+  }
+
   Index size() const;
   Type operator[](Index) const;
 
-  const_iterator begin() const { return {decls.begin(), 0}; }
-  const_iterator end() const { return {decls.end(), 0}; }
+  const_iterator begin() const { return {decls_.begin(), 0}; }
+  const_iterator end() const { return {decls_.end(), 0}; }
 
-  Decls decls;
+ private:
+  Decls decls_;
 };
 
 inline LocalTypes::const_iterator& LocalTypes::const_iterator::operator++() {

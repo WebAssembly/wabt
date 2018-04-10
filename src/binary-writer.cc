@@ -628,9 +628,9 @@ void BinaryWriter::WriteFuncLocals(const Func* func,
     return;
   }
 
-  Index local_decl_count = local_types.decls.size();
+  Index local_decl_count = local_types.decls().size();
   WriteU32Leb128(stream_, local_decl_count, "local decl count");
-  for (auto decl : local_types.decls) {
+  for (auto decl : local_types.decls()) {
     WriteU32Leb128(stream_, decl.second, "local type count");
     WriteType(stream_, decl.first);
   }
