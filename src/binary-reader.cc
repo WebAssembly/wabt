@@ -1899,6 +1899,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     for (Index k = 0; k < num_local_decls; ++k) {
       Index num_local_types;
       CHECK_RESULT(ReadIndex(&num_local_types, "local type count"));
+      ERROR_UNLESS(num_local_types > 0, "local count must be > 0");
       Type local_type;
       CHECK_RESULT(ReadType(&local_type, "local type"));
       ERROR_UNLESS(is_concrete_type(local_type), "expected valid local type");
