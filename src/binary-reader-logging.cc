@@ -463,13 +463,10 @@ Result BinaryReaderLogging::OnInitExprI64ConstExpr(Index index,
 }
 
 Result BinaryReaderLogging::OnRelocCount(Index count,
-                                         BinarySection section_code,
-                                         string_view section_name) {
-  LOGF("OnRelocCount(count: %" PRIindex
-       ", section: %s, section_name: " PRIstringview ")\n",
-       count, GetSectionName(section_code),
-       WABT_PRINTF_STRING_VIEW_ARG(section_name));
-  return reader_->OnRelocCount(count, section_code, section_name);
+                                         Index section_index) {
+  LOGF("OnRelocCount(count: %" PRIindex ", section: %" PRIindex ")\n", count,
+       section_index);
+  return reader_->OnRelocCount(count, section_index);
 }
 
 Result BinaryReaderLogging::OnReloc(RelocType type,

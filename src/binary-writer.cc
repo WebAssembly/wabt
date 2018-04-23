@@ -88,10 +88,11 @@ static const size_t LEB_SECTION_SIZE_GUESS = 1;
   fprintf(stderr, "%s:%d: allocation failed\n", __FILE__, __LINE__)
 
 struct RelocSection {
-  RelocSection(const char* name, BinarySection code);
+  RelocSection(const char* name, Index index)
+      : name(name), section_index(index) {}
 
   const char* name;
-  BinarySection section_code;
+  Index section_index;
   std::vector<Reloc> relocations;
 };
 
@@ -100,9 +101,6 @@ struct Symbol {
   SymbolType type;
   Index element_index;
 };
-
-RelocSection::RelocSection(const char* name, BinarySection code)
-    : name(name), section_code(code) {}
 
 class BinaryWriter {
   WABT_DISALLOW_COPY_AND_ASSIGN(BinaryWriter);
@@ -157,6 +155,7 @@ class BinaryWriter {
   std::vector<RelocSection> reloc_sections_;
   RelocSection* current_reloc_section_ = nullptr;
 
+  Index section_count_ = 0;
   size_t last_section_offset_ = 0;
   size_t last_section_leb_size_guess_ = 0;
   BinarySection last_section_type_ = BinarySection::Invalid;
@@ -274,6 +273,7 @@ void BinaryWriter::EndSection() {
     }
   }
   last_section_leb_size_guess_ = 0;
+  section_count_++;
 }
 
 void BinaryWriter::BeginSubsection(const char* name) {
@@ -328,9 +328,8 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
 void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
   // Add a new reloc section if needed
   if (!current_reloc_section_ ||
-      current_reloc_section_->section_code != last_section_type_) {
-    reloc_sections_.emplace_back(GetSectionName(last_section_type_),
-                                 last_section_type_);
+      current_reloc_section_->section_index != section_count_) {
+    reloc_sections_.emplace_back(GetSectionName(last_section_type_), section_count_);
     current_reloc_section_ = &reloc_sections_.back();
   }
 
@@ -668,7 +667,7 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
   wabt_snprintf(section_name, sizeof(section_name), "%s.%s",
                 WABT_BINARY_SECTION_RELOC, reloc_section->name);
   BeginCustomSection(section_name);
-  WriteU32Leb128(stream_, reloc_section->section_code, "reloc section type");
+  WriteU32Leb128(stream_, reloc_section->section_index, "reloc section index");
   const std::vector<Reloc>& relocs = reloc_section->relocations;
   WriteU32Leb128(stream_, relocs.size(), "num relocs");
 

@@ -43,9 +43,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   Result BeginModule(uint32_t version) override;
   Result BeginSection(BinarySection section_type, Offset size) override;
 
-  Result OnRelocCount(Index count,
-                      BinarySection section_code,
-                      string_view section_name) override;
+  Result OnRelocCount(Index count, Index section_index) override;
 
  protected:
   const char* GetFunctionName(Index index) const;
@@ -63,6 +61,8 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   bool print_details_ = false;
   BinarySection reloc_section_ = BinarySection::Invalid;
   Offset section_starts_[kBinarySectionCount];
+  // Map of section index to section type
+  std::vector<BinarySection> section_types_;
   bool section_found_ = false;
 };
 
@@ -80,6 +80,7 @@ BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
 Result BinaryReaderObjdumpBase::BeginSection(BinarySection section_code,
                                              Offset size) {
   section_starts_[static_cast<size_t>(section_code)] = state->offset;
+  section_types_.push_back(section_code);
   return Result::Ok;
 }
 
@@ -163,10 +164,8 @@ void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
   printf("\n");
 }
 
-Result BinaryReaderObjdumpBase::OnRelocCount(Index count,
-                                             BinarySection section_code,
-                                             string_view section_name) {
-  reloc_section_ = section_code;
+Result BinaryReaderObjdumpBase::OnRelocCount(Index count, Index section_index) {
+  reloc_section_ = section_types_[section_index];
   return Result::Ok;
 }
 
@@ -678,9 +677,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
-  Result OnRelocCount(Index count,
-                      BinarySection section_code,
-                      string_view section_name) override;
+  Result OnRelocCount(Index count, Index section_index) override;
   Result OnReloc(RelocType type,
                  Offset offset,
                  Index index,
@@ -1244,11 +1241,10 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnRelocCount(Index count,
-                                         BinarySection section_code,
-                                         string_view section_name) {
-  BinaryReaderObjdumpBase::OnRelocCount(count, section_code, section_name);
-  PrintDetails("  - section: %s\n", GetSectionName(section_code));
+Result BinaryReaderObjdump::OnRelocCount(Index count, Index section_index) {
+  BinaryReaderObjdumpBase::OnRelocCount(count, section_index);
+  PrintDetails("  - relocations for section: %d (%s) [%d]\n", section_index,
+               GetSectionName(section_types_[section_index]), count);
   return Result::Ok;
 }
 

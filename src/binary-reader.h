@@ -304,8 +304,7 @@ class BinaryReaderDelegate {
   /* Reloc section */
   virtual Result BeginRelocSection(Offset size) = 0;
   virtual Result OnRelocCount(Index count,
-                              BinarySection section_code,
-                              string_view section_name) = 0;
+                              Index section_index) = 0;
   virtual Result OnReloc(RelocType type,
                          Offset offset,
                          Index index,

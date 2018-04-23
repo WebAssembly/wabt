@@ -248,9 +248,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndNamesSection() override;
 
   Result BeginRelocSection(Offset size) override;
-  Result OnRelocCount(Index count,
-                      BinarySection section_code,
-                      string_view section_name) override;
+  Result OnRelocCount(Index count, Index section_index) override;
   Result OnReloc(RelocType type,
                  Offset offset,
                  Index index,
