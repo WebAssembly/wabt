@@ -1330,6 +1330,14 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
     read_end_ = subsection_end;
 
     switch (static_cast<NameSectionSubsection>(name_type)) {
+      case NameSectionSubsection::Module:
+        CALLBACK(OnModuleNameSubsection, i, name_type, subsection_size);
+        if (subsection_size) {
+          string_view name;
+          CHECK_RESULT(ReadStr(&name, "module name"));
+          CALLBACK(OnModuleName, name);
+        }
+        break;
       case NameSectionSubsection::Function:
         CALLBACK(OnFunctionNameSubsection, i, name_type, subsection_size);
         if (subsection_size) {

@@ -372,6 +372,21 @@ Result BinaryReaderLogging::OnDataSegmentData(Index index,
   return reader_->OnDataSegmentData(index, data, size);
 }
 
+Result BinaryReaderLogging::OnModuleNameSubsection(Index index,
+                                                   uint32_t name_type,
+                                                   Offset subsection_size) {
+  LOGF("OnModuleNameSubsection(index:%" PRIindex ", nametype:%u, size:%" PRIzd
+       ")\n",
+       index, name_type, subsection_size);
+  return reader_->OnModuleNameSubsection(index, name_type, subsection_size);
+}
+
+Result BinaryReaderLogging::OnModuleName(string_view name) {
+  LOGF("OnModuleName(name: \"" PRIstringview "\")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name));
+  return reader_->OnModuleName(name);
+}
+
 Result BinaryReaderLogging::OnFunctionNameSubsection(Index index,
                                                      uint32_t name_type,
                                                      Offset subsection_size) {

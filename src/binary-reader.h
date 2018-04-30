@@ -280,6 +280,10 @@ class BinaryReaderDelegate {
 
   /* Names section */
   virtual Result BeginNamesSection(Offset size) = 0;
+  virtual Result OnModuleNameSubsection(Index index,
+                                        uint32_t name_type,
+                                        Offset subsection_size) = 0;
+  virtual Result OnModuleName(string_view name) = 0;
   virtual Result OnFunctionNameSubsection(Index index,
                                           uint32_t name_type,
                                           Offset subsection_size) = 0;

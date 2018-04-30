@@ -11,6 +11,10 @@ section(CODE) {
   }
 }
 section("name") {
+  section(NAME_MODULE) {
+    str("M0")
+  }
+
   section(NAME_FUNCTION) {
     func_count[1]
     index[0]
@@ -26,7 +30,7 @@ section("name") {
   }
 }
 (;; STDOUT ;;;
-(module
+(module $M0
   (type (;0;) (func (result i32)))
   (func $F0 (type 0) (result i32)
     (local $L0 i32)
