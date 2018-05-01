@@ -64,6 +64,7 @@ NAMED_VALUES = {
     'DATA': 11,
 
     # name subsection codes
+    'NAME_MODULE': 0,
     'NAME_FUNCTION': 1,
     'NAME_LOCALS': 2,
 

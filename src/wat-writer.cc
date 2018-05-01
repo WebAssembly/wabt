@@ -1458,7 +1458,12 @@ Result WatWriter::WriteModule(const Module& module) {
   module_ = &module;
   BuildInlineExportMap();
   BuildInlineImportMap();
-  WriteOpenNewline("module");
+  WriteOpenSpace("module");
+  if (module.name.empty()) {
+    WriteNewline(NO_FORCE_NEWLINE);
+  } else {
+    WriteName(module.name, NextChar::Newline);
+  }
   for (const ModuleField& field : module.fields) {
     switch (field.type()) {
       case ModuleFieldType::Func:

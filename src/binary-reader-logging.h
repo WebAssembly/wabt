@@ -227,6 +227,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndDataSection() override;
 
   Result BeginNamesSection(Offset size) override;
+  Result OnModuleNameSubsection(Index index,
+                                uint32_t name_type,
+                                Offset subsection_size) override;
+  Result OnModuleName(string_view name) override;
   Result OnFunctionNameSubsection(Index index,
                                   uint32_t name_type,
                                   Offset subsection_size) override;

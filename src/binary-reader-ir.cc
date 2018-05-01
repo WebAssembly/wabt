@@ -200,6 +200,7 @@ class BinaryReaderIR : public BinaryReaderNop {
                            const void* data,
                            Address size) override;
 
+  Result OnModuleName(string_view module_name) override;
   Result OnFunctionNamesCount(Index num_functions) override;
   Result OnFunctionName(Index function_index,
                         string_view function_name) override;
@@ -935,13 +936,26 @@ Result BinaryReaderIR::OnFunctionNamesCount(Index count) {
   return Result::Ok;
 }
 
+static std::string MakeDollarName(string_view name) {
+  return std::string("$") + name.to_string();
+}
+
+Result BinaryReaderIR::OnModuleName(string_view name) {
+  if (name.empty()) {
+    return Result::Ok;
+  }
+
+  module_->name = MakeDollarName(name);
+  return Result::Ok;
+}
+
 Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
   if (name.empty()) {
     return Result::Ok;
   }
 
   Func* func = module_->funcs[index];
-  std::string dollar_name = std::string("$") + name.to_string();
+  std::string dollar_name = MakeDollarName(name);
   int counter = 1;
   std::string orig_name = dollar_name;
   while (module_->func_bindings.count(dollar_name) != 0) {
@@ -1028,7 +1042,7 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
     bindings = &func->local_bindings;
     index = local_index - num_params;
   }
-  bindings->emplace(std::string("$") + name.to_string(), Binding(index));
+  bindings->emplace(MakeDollarName(name), Binding(index));
   return Result::Ok;
 }
 

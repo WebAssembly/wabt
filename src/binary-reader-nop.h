@@ -310,6 +310,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
 
   /* Names section */
   Result BeginNamesSection(Offset size) override { return Result::Ok; }
+  Result OnModuleNameSubsection(Index index,
+                                uint32_t name_type,
+                                Offset subsection_size) override {
+    return Result::Ok;
+  }
+  Result OnModuleName(string_view name) override { return Result::Ok; }
   Result OnFunctionNameSubsection(Index index,
                                   uint32_t name_type,
                                   Offset subsection_size) override {

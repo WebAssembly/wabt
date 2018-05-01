@@ -977,6 +977,13 @@ Result BinaryWriter::WriteModule() {
       }
     }
 
+    if (!module_->name.empty()) {
+      WriteU32Leb128(stream_, 0, "module name type");
+      BeginSubsection("module name subsection");
+      WriteDebugName(stream_, module_->name, "module name");
+      EndSubsection();
+    }
+
     if (named_functions > 0) {
       WriteU32Leb128(stream_, 1, "function name type");
       BeginSubsection("function name subsection");
