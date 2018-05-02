@@ -3156,6 +3156,37 @@ Result Thread::Run(int num_instructions) {
       case Opcode::Rethrow:
       case Opcode::Throw:
       case Opcode::Try:
+      case Opcode::F64Acos:
+      case Opcode::F64Asin:
+      case Opcode::F64Atan:
+      case Opcode::F64Cos:
+      case Opcode::F64Sin:
+      case Opcode::F64Tan:
+      case Opcode::F64Exp:
+      case Opcode::F64Log:
+      case Opcode::F64Atan2:
+      case Opcode::F64Pow:
+      case Opcode::F64Mod:
+      case Opcode::I32AsmjsDivS:
+      case Opcode::I32AsmjsDivU:
+      case Opcode::I32AsmjsRemS:
+      case Opcode::I32AsmjsRemU:
+      case Opcode::I32AsmjsLoadMem8S:
+      case Opcode::I32AsmjsLoadMem8U:
+      case Opcode::I32AsmjsLoadMem16S:
+      case Opcode::I32AsmjsLoadMem16U:
+      case Opcode::I32AsmjsLoadMem:
+      case Opcode::F32AsmjsLoadMem:
+      case Opcode::F64AsmjsLoadMem:
+      case Opcode::I32AsmjsStoreMem8:
+      case Opcode::I32AsmjsStoreMem16:
+      case Opcode::I32AsmjsStoreMem:
+      case Opcode::F32AsmjsStoreMem:
+      case Opcode::F64AsmjsStoreMem:
+      case Opcode::I32AsmjsSConvertF32:
+      case Opcode::I32AsmjsUConvertF32:
+      case Opcode::I32AsmjsSConvertF64:
+      case Opcode::I32AsmjsUConvertF64:
         WABT_UNREACHABLE;
         break;
     }
@@ -3845,6 +3876,37 @@ void Thread::Trace(Stream* stream) {
     case Opcode::Rethrow:
     case Opcode::Throw:
     case Opcode::Try:
+    case Opcode::F64Acos:
+    case Opcode::F64Asin:
+    case Opcode::F64Atan:
+    case Opcode::F64Cos:
+    case Opcode::F64Sin:
+    case Opcode::F64Tan:
+    case Opcode::F64Exp:
+    case Opcode::F64Log:
+    case Opcode::F64Atan2:
+    case Opcode::F64Pow:
+    case Opcode::F64Mod:
+    case Opcode::I32AsmjsDivS:
+    case Opcode::I32AsmjsDivU:
+    case Opcode::I32AsmjsRemS:
+    case Opcode::I32AsmjsRemU:
+    case Opcode::I32AsmjsLoadMem8S:
+    case Opcode::I32AsmjsLoadMem8U:
+    case Opcode::I32AsmjsLoadMem16S:
+    case Opcode::I32AsmjsLoadMem16U:
+    case Opcode::I32AsmjsLoadMem:
+    case Opcode::F32AsmjsLoadMem:
+    case Opcode::F64AsmjsLoadMem:
+    case Opcode::I32AsmjsStoreMem8:
+    case Opcode::I32AsmjsStoreMem16:
+    case Opcode::I32AsmjsStoreMem:
+    case Opcode::F32AsmjsStoreMem:
+    case Opcode::F64AsmjsStoreMem:
+    case Opcode::I32AsmjsSConvertF32:
+    case Opcode::I32AsmjsUConvertF32:
+    case Opcode::I32AsmjsSConvertF64:
+    case Opcode::I32AsmjsUConvertF64:
       WABT_UNREACHABLE;
       break;
   }
@@ -4416,6 +4478,37 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::Rethrow:
       case Opcode::Throw:
       case Opcode::Try:
+      case Opcode::F64Acos:
+      case Opcode::F64Asin:
+      case Opcode::F64Atan:
+      case Opcode::F64Cos:
+      case Opcode::F64Sin:
+      case Opcode::F64Tan:
+      case Opcode::F64Exp:
+      case Opcode::F64Log:
+      case Opcode::F64Atan2:
+      case Opcode::F64Pow:
+      case Opcode::F64Mod:
+      case Opcode::I32AsmjsDivS:
+      case Opcode::I32AsmjsDivU:
+      case Opcode::I32AsmjsRemS:
+      case Opcode::I32AsmjsRemU:
+      case Opcode::I32AsmjsLoadMem8S:
+      case Opcode::I32AsmjsLoadMem8U:
+      case Opcode::I32AsmjsLoadMem16S:
+      case Opcode::I32AsmjsLoadMem16U:
+      case Opcode::I32AsmjsLoadMem:
+      case Opcode::F32AsmjsLoadMem:
+      case Opcode::F64AsmjsLoadMem:
+      case Opcode::I32AsmjsStoreMem8:
+      case Opcode::I32AsmjsStoreMem16:
+      case Opcode::I32AsmjsStoreMem:
+      case Opcode::F32AsmjsStoreMem:
+      case Opcode::F64AsmjsStoreMem:
+      case Opcode::I32AsmjsSConvertF32:
+      case Opcode::I32AsmjsUConvertF32:
+      case Opcode::I32AsmjsSConvertF64:
+      case Opcode::I32AsmjsUConvertF64:
         WABT_UNREACHABLE;
         break;
     }

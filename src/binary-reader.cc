@@ -889,6 +889,18 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Div:
       case Opcode::F32X4Mul:
       case Opcode::F64X2Mul:
+      case Opcode::F64Atan2:
+      case Opcode::F64Pow:
+      case Opcode::F64Mod:
+      case Opcode::I32AsmjsDivS:
+      case Opcode::I32AsmjsDivU:
+      case Opcode::I32AsmjsRemS:
+      case Opcode::I32AsmjsRemU:
+      case Opcode::I32AsmjsStoreMem8:
+      case Opcode::I32AsmjsStoreMem16:
+      case Opcode::I32AsmjsStoreMem:
+      case Opcode::F32AsmjsStoreMem:
+      case Opcode::F64AsmjsStoreMem:
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
@@ -1018,6 +1030,24 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Abs:
       case Opcode::F32X4Sqrt:
       case Opcode::F64X2Sqrt:
+      case Opcode::F64Acos:
+      case Opcode::F64Asin:
+      case Opcode::F64Atan:
+      case Opcode::F64Sin:
+      case Opcode::F64Tan:
+      case Opcode::F64Exp:
+      case Opcode::F64Log:
+      case Opcode::I32AsmjsLoadMem8S:
+      case Opcode::I32AsmjsLoadMem8U:
+      case Opcode::I32AsmjsLoadMem16S:
+      case Opcode::I32AsmjsLoadMem16U:
+      case Opcode::I32AsmjsLoadMem:
+      case Opcode::F32AsmjsLoadMem:
+      case Opcode::F64AsmjsLoadMem:
+      case Opcode::I32AsmjsSConvertF32:
+      case Opcode::I32AsmjsUConvertF32:
+      case Opcode::I32AsmjsSConvertF64:
+      case Opcode::I32AsmjsUConvertF64:
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
