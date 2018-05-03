@@ -691,6 +691,7 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
 
 void BinaryWriter::WriteLinkingSection() {
   BeginCustomSection(WABT_BINARY_SECTION_LINKING);
+  WriteU32Leb128(stream_, 1, "metadata version");
   if (symbols_.size()) {
     stream_->WriteU8Enum(LinkingEntryType::SymbolTable, "symbol table");
     BeginSubsection("symbol table");
