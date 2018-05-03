@@ -8,8 +8,7 @@ section("reloc.TYPE") {
   reloc_count[0]
 }
 section("reloc.name") {
-  reloc_section[0]
-  str("name")
+  reloc_section[1]
   reloc_count[0]
 }
 (;; STDOUT ;;;

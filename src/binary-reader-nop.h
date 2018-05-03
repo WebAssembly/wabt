@@ -349,9 +349,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
 
   /* Reloc section */
   Result BeginRelocSection(Offset size) override { return Result::Ok; }
-  Result OnRelocCount(Index count,
-                      BinarySection section_code,
-                      string_view section_name) override {
+  Result OnRelocCount(Index count, Index section_code) override {
     return Result::Ok;
   }
   Result OnReloc(RelocType type,

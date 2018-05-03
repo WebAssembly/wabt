@@ -1419,16 +1419,11 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
 
 Result BinaryReader::ReadRelocSection(Offset section_size) {
   CALLBACK(BeginRelocSection, section_size);
-  uint32_t section;
-  CHECK_RESULT(ReadU32Leb128(&section, "section"));
-  string_view section_name;
-  if (static_cast<BinarySection>(section) == BinarySection::Custom) {
-    CHECK_RESULT(ReadStr(&section_name, "section name"));
-  }
+  uint32_t section_index;
+  CHECK_RESULT(ReadU32Leb128(&section_index, "section index"));
   Index num_relocs;
   CHECK_RESULT(ReadCount(&num_relocs, "relocation count"));
-  CALLBACK(OnRelocCount, num_relocs, static_cast<BinarySection>(section),
-           section_name);
+  CALLBACK(OnRelocCount, num_relocs, section_index);
   for (Index i = 0; i < num_relocs; ++i) {
     Offset offset;
     Index index;
@@ -1454,6 +1449,9 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
 
 Result BinaryReader::ReadLinkingSection(Offset section_size) {
   CALLBACK(BeginLinkingSection, section_size);
+  uint32_t version;
+  CHECK_RESULT(ReadU32Leb128(&version, "version"));
+  ERROR_UNLESS(version = 1, "invalid linking metadata version");
   Offset previous_read_end = read_end_;
   while (state_.offset < read_end_) {
     uint32_t linking_type;

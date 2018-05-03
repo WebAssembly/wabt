@@ -3,6 +3,8 @@
 magic
 version
 section("linking") {
+  metadata_version[1]
+
   section(LINKING_STACK_POINTER) {
     stack_global[3]
   }
