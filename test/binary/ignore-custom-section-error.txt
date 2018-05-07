@@ -18,7 +18,7 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-*ERROR*: @0x00000015: unfinished sub-section (expected end: 0x16)
+*ERROR*: @0x00000019: unable to read u32 leb128: subsection size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
@@ -28,7 +28,6 @@ Section Details:
 
 Custom:
  - name: "linking"
-  - stack pointer global: 3
 Type:
  - type[0] () -> nil
 Function:
