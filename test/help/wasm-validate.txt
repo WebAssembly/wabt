@@ -19,4 +19,5 @@ options:
       --enable-simd                           SIMD support
       --enable-threads                        Threading support
       --no-debug-names                        Ignore debug names in the binary file
+      --ignore-custom-section-errors          Ignore errors in custom sections
 ;;; STDOUT ;;)

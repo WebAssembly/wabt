@@ -1425,8 +1425,9 @@ Result ReadBinaryObjdump(const uint8_t* data,
   features.EnableAll();
   const bool kReadDebugNames = true;
   const bool kStopOnFirstError = false;
+  const bool kFailOnCustomSectionError = false;
   ReadBinaryOptions read_options(features, options->log_stream, kReadDebugNames,
-                                 kStopOnFirstError);
+                                 kStopOnFirstError, kFailOnCustomSectionError);
 
   switch (options->mode) {
     case ObjdumpMode::Prepass: {

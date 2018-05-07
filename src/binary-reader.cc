@@ -72,6 +72,15 @@ class BinaryReader {
   Result ReadModule();
 
  private:
+  struct ReadEndRestoreGuard {
+    explicit ReadEndRestoreGuard(BinaryReader* this_)
+        : this_(this_), previous_read_end_(this_->read_end_) {}
+    ~ReadEndRestoreGuard() { this_->read_end_ = previous_read_end_; }
+
+    BinaryReader* this_;
+    size_t previous_read_end_;
+  };
+
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
   Result ReadOpcode(Opcode* out_value, const char* desc) WABT_WARN_UNUSED;
   template <typename T>
@@ -1310,7 +1319,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 Result BinaryReader::ReadNameSection(Offset section_size) {
   CALLBACK(BeginNamesSection, section_size);
   Index i = 0;
-  Offset previous_read_end = read_end_;
   uint32_t previous_subsection_type = 0;
   while (state_.offset < read_end_) {
     uint32_t name_type;
@@ -1327,6 +1335,7 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
     size_t subsection_end = state_.offset + subsection_size;
     ERROR_UNLESS(subsection_end <= read_end_,
                  "invalid sub-section size: extends past end");
+    ReadEndRestoreGuard guard(this);
     read_end_ = subsection_end;
 
     switch (static_cast<NameSectionSubsection>(name_type)) {
@@ -1411,7 +1420,6 @@ Result BinaryReader::ReadNameSection(Offset section_size) {
     ERROR_UNLESS(state_.offset == subsection_end,
                  "unfinished sub-section (expected end: 0x%" PRIzx ")",
                  subsection_end);
-    read_end_ = previous_read_end;
   }
   CALLBACK0(EndNamesSection);
   return Result::Ok;
@@ -1452,7 +1460,6 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   uint32_t version;
   CHECK_RESULT(ReadU32Leb128(&version, "version"));
   ERROR_UNLESS(version = 1, "invalid linking metadata version");
-  Offset previous_read_end = read_end_;
   while (state_.offset < read_end_) {
     uint32_t linking_type;
     Offset subsection_size;
@@ -1461,6 +1468,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
     size_t subsection_end = state_.offset + subsection_size;
     ERROR_UNLESS(subsection_end <= read_end_,
                  "invalid sub-section size: extends past end");
+    ReadEndRestoreGuard guard(this);
     read_end_ = subsection_end;
 
     uint32_t count;
@@ -1550,7 +1558,6 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
     ERROR_UNLESS(state_.offset == subsection_end,
                  "unfinished sub-section (expected end: 0x%" PRIzx ")",
                  subsection_end);
-    read_end_ = previous_read_end;
   }
   CALLBACK0(EndLinkingSection);
   return Result::Ok;
@@ -1951,11 +1958,9 @@ Result BinaryReader::ReadSections() {
   while (state_.offset < state_.size) {
     uint32_t section_code;
     Offset section_size;
-    // Temporarily reset read_end_ to the full data size so the next section
-    // can be read.
-    read_end_ = state_.size;
     CHECK_RESULT(ReadU32Leb128(&section_code, "section code"));
     CHECK_RESULT(ReadOffset(&section_size, "section size"));
+    ReadEndRestoreGuard guard(this);
     read_end_ = state_.offset + section_size;
     if (section_code >= kBinarySectionCount) {
       PrintError("invalid section code: %u; max is %u", section_code,
@@ -1979,21 +1984,61 @@ Result BinaryReader::ReadSections() {
 
     CALLBACK(BeginSection, section, section_size);
 
-#define V(Name, name, code)                             \
-  case BinarySection::Name:                             \
-    section_result = Read##Name##Section(section_size); \
-    result |= section_result;                           \
-    break;
-
     Result section_result = Result::Error;
-
     switch (section) {
-      WABT_FOREACH_BINARY_SECTION(V)
+      case BinarySection::Custom:
+        section_result = ReadCustomSection(section_size);
+        if (options_->fail_on_custom_section_error) {
+          result |= section_result;
+        }
+        break;
+      case BinarySection::Type:
+        section_result = ReadTypeSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Import:
+        section_result = ReadImportSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Function:
+        section_result = ReadFunctionSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Table:
+        section_result = ReadTableSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Memory:
+        section_result = ReadMemorySection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Global:
+        section_result = ReadGlobalSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Export:
+        section_result = ReadExportSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Start:
+        section_result = ReadStartSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Elem:
+        section_result = ReadElemSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Code:
+        section_result = ReadCodeSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Data:
+        section_result = ReadDataSection(section_size);
+        result |= section_result;
+        break;
       case BinarySection::Invalid:
         WABT_UNREACHABLE;
     }
-
-#undef V
 
     if (Failed(section_result)) {
       if (options_->stop_on_first_error) {
