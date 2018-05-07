@@ -1,0 +1,24 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-simd
+;;; ERROR: 1
+(module
+  (func
+    v128.const i32 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
+    v128.const i32 0x00550055 0x00550055 0x00550055 0x00550155
+    v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
+    ))
+
+(;; STDERR ;;;
+out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:5: error: lane index must be less than 32 (got 100)
+    v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
+    ^^^^^^^^^^^^^
+out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:5: error: lane index must be less than 32 (got 56)
+    v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
+    ^^^^^^^^^^^^^
+out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:5: error: lane index must be less than 32 (got 77)
+    v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
+    ^^^^^^^^^^^^^
+out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:5: error: type mismatch in function, expected [] but got [v128]
+    v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
+    ^^^^^^^^^^^^^
+;;; STDERR ;;)

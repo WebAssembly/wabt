@@ -869,7 +869,7 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
     SimdShuffleOpExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
-  writer_->Writef(" $0x%08x %08x %08x %08x", (expr->val.v[0]), (expr->val.v[1]),
+  writer_->Writef(" 0x%08x 0x%08x 0x%08x 0x%08x", (expr->val.v[0]), (expr->val.v[1]),
                   (expr->val.v[2]), (expr->val.v[3]));
   writer_->WritePutsNewline("");
   return Result::Ok;
