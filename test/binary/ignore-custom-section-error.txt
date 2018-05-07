@@ -1,0 +1,41 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
+magic
+version
+section("linking") {
+  1 2 3 4 5 6 7
+}
+
+;; Some dummy data to make sure the module is still parsed after the invalid
+;; linking section.
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    return
+  }
+}
+(;; STDERR ;;;
+*ERROR*: @0x00000019: unable to read u32 leb128: subsection size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+ignore-custom-section-error.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "linking"
+Type:
+ - type[0] () -> nil
+Function:
+ - func[0] sig=0
+
+Code Disassembly:
+
+000026 func[0]:
+ 000028: 0f                         | return
+ 000029: 0b                         | end
+;;; STDOUT ;;)

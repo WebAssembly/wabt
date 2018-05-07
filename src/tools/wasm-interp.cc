@@ -139,8 +139,9 @@ static wabt::Result ReadModule(const char* module_filename,
   if (Succeeded(result)) {
     const bool kReadDebugNames = true;
     const bool kStopOnFirstError = true;
+    const bool kFailOnCustomSectionError = true;
     ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
-                              kStopOnFirstError);
+                              kStopOnFirstError, kFailOnCustomSectionError);
     result = ReadBinaryInterp(env, file_data.data(), file_data.size(),
                               &options, error_handler, out_module);
 
