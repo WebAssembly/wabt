@@ -664,6 +664,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                            const void* data,
                            Address size) override;
 
+  Result OnModuleName(string_view function_name) override;
   Result OnFunctionName(Index function_index,
                         string_view function_name) override;
   Result OnLocalName(Index function_index,
@@ -1161,6 +1162,12 @@ Result BinaryReaderObjdump::OnInitExprI64ConstExpr(Index index,
   } else {
     PrintInitExpr(expr);
   }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnModuleName(string_view name) {
+  PrintDetails(" - module " PRIstringview "\n",
+               WABT_PRINTF_STRING_VIEW_ARG(name));
   return Result::Ok;
 }
 
