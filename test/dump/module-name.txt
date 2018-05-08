@@ -22,12 +22,13 @@
 0000009: 14                                        ; FIXUP section size
 
 module-name.wasm:	file format wasm 0x1
+module name: <my_module>
 
 Section Details:
 
 Custom:
  - name: "name"
- - module my_module
+ - module <my_module>
 
 Code Disassembly:
 
