@@ -63,7 +63,7 @@ Import:
  - func[0] sig=0 <foo> <- bar.foo
 Custom:
  - name: "name"
- - func[0] foo
+ - func[0] <foo>
 
 Code Disassembly:
 

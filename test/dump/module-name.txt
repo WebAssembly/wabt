@@ -1,0 +1,35 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --debug-names
+;;; ARGS1: -x
+(module $my_module)
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "name"
+0000008: 00                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 04                                        ; string length
+000000b: 6e61 6d65                                name  ; custom section name
+000000f: 00                                        ; module name type
+0000010: 00                                        ; subsection size (guess)
+0000011: 09                                        ; string length
+0000012: 6d79 5f6d 6f64 756c 65                   my_module  ; module name
+0000010: 0a                                        ; FIXUP subsection size
+000001b: 02                                        ; local name type
+000001c: 00                                        ; subsection size (guess)
+000001d: 00                                        ; num functions
+000001c: 01                                        ; FIXUP subsection size
+0000009: 14                                        ; FIXUP section size
+
+module-name.wasm:	file format wasm 0x1
+module name: <my_module>
+
+Section Details:
+
+Custom:
+ - name: "name"
+ - module <my_module>
+
+Code Disassembly:
+
+;;; STDOUT ;;)

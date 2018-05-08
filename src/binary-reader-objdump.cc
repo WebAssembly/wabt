@@ -64,6 +64,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   // Map of section index to section type
   std::vector<BinarySection> section_types_;
   bool section_found_ = false;
+  std::string module_name_;
 };
 
 BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
@@ -249,6 +250,14 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                  Offset offset,
                  Index index,
                  uint32_t addend) override;
+
+  Result OnModuleName(string_view name) override {
+    if (options_->mode == ObjdumpMode::Prepass) {
+      printf("module name: <" PRIstringview ">\n",
+             WABT_PRINTF_STRING_VIEW_ARG(name));
+    }
+    return Result::Ok;
+  }
 
  protected:
   void SetFunctionName(Index index, string_view name);
@@ -664,6 +673,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                            const void* data,
                            Address size) override;
 
+  Result OnModuleName(string_view name) override;
   Result OnFunctionName(Index function_index,
                         string_view function_name) override;
   Result OnLocalName(Index function_index,
@@ -1164,8 +1174,14 @@ Result BinaryReaderObjdump::OnInitExprI64ConstExpr(Index index,
   return Result::Ok;
 }
 
+Result BinaryReaderObjdump::OnModuleName(string_view name) {
+  PrintDetails(" - module <" PRIstringview ">\n",
+               WABT_PRINTF_STRING_VIEW_ARG(name));
+  return Result::Ok;
+}
+
 Result BinaryReaderObjdump::OnFunctionName(Index index, string_view name) {
-  PrintDetails(" - func[%" PRIindex "] " PRIstringview "\n", index,
+  PrintDetails(" - func[%" PRIindex "] <" PRIstringview ">\n", index,
                WABT_PRINTF_STRING_VIEW_ARG(name));
   return Result::Ok;
 }
@@ -1174,8 +1190,8 @@ Result BinaryReaderObjdump::OnLocalName(Index func_index,
                                         Index local_index,
                                         string_view name) {
   if (!name.empty()) {
-    PrintDetails(" - func[%" PRIindex "] local[%" PRIindex "] " PRIstringview
-                 "\n",
+    PrintDetails(" - func[%" PRIindex "] local[%" PRIindex "] <" PRIstringview
+                 ">\n",
                  func_index, local_index, WABT_PRINTF_STRING_VIEW_ARG(name));
   }
   return Result::Ok;
