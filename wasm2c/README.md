@@ -39,6 +39,78 @@ We can then convert it to a C source and header by using the `wasm2c` tool:
 $ wasm2c fac.wasm -o fac.c
 ```
 
+This generates two files, `fac.c` and `fac.h`. We'll take a closer look at
+these files below, but first let's show a simple example of how to use these
+files.
+
+## Using the generated module
+
+To actually use our fac module, we'll use create a new file, `main.c`, that
+include `fac.h`, initializes the module, and calls `fac`.
+
+`wasm2c` generates a few symbols for us, `init` and `Z_facZ_ii`. `init`
+initializes the module, and `Z_facZ_ii` is our exported `fac` function, but
+[name-mangled](https://en.wikipedia.org/wiki/Name_mangling) to include the
+function signature.
+
+We can define `WASM_RT_MODULE_PREFIX` before including `fac.h` to generate
+these symbols with a prefix, in case we already have a symbol called `init` (or
+even `Z_facZ_ii`!) Note that you'll have to compile `fac.c` with this macro
+too, for this to work.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+/* Uncomment this to define fac_init and fac_Z_facZ_ii instead. */
+/* #define WASM_RT_MODULE_PREFIX fac_ */
+
+#include "fac.h"
+
+int main(int argc, char** argv) {
+  /* Make sure there is at least one command-line argument. */
+  if (argc < 2) return 1;
+
+  /* Convert the argument from a string to an int. We'll implictly cast the int
+  to a `u32`, which is what `fac` expects. */
+  u32 x = atoi(argv[1]);
+
+  /* Initialize the fac module. Since we didn't define WASM_RT_MODULE_PREFIX,
+  the initialization function is called `init`. */
+  init();
+
+  /* Call `fac`, using the mangled name. */
+  u32 result = Z_facZ_ii(x);
+
+  /* Print the result. */
+  printf("fac(%u) -> %u\n", x, result);
+
+  return 0;
+}
+```
+
+To compile the executable, we need to use `main.c` and the generated `fac.c`.
+We'll also include `wasm-rt-impl.c` which has implementations of the various
+`wasm_rt_*` functions used by `fac.c` and `fac.h`.
+
+```sh
+$ cc -o fac main.c fac.c wasm-rt-impl.c
+```
+
+Now let's test it out!
+
+```sh
+$ ./fac 1
+fac(1) -> 1
+$ ./fac 5
+fac(5) -> 120
+$ ./fac 10
+fac(10) -> 3628800
+```
+
+You can take a look at the all of these files in
+[wasm2c/examples/fac](/wasm2c/examples/fac).
+
 ## Looking at the generated header, `fac.h`
 
 The generated header file looks something like this:
@@ -215,6 +287,9 @@ typedef struct {
 Next in `fac.h` are a collection of extern symbols that must be implemented by
 the embedder (i.e. you) before this C source can be used.
 
+A C implementation of these functions is defined in
+[`wasm-rt-impl.h`](wasm-rt-impl.h) and [`wasm-rt-impl.c`](wasm-rt-impl.c).
+
 ```c
 extern void wasm_rt_trap(wasm_rt_trap_t) __attribute__((noreturn));
 extern uint32_t wasm_rt_register_func_type(uint32_t params, uint32_t results, ...);
@@ -330,3 +405,34 @@ that there is a 1-1 mapping in the output:
     i32.mul
   end)
 ```
+
+This looks different than the factorial function above because it is using the
+"flat format" instead of the "folded format". You can use `wat-desugar` to
+convert between the two to be sure:
+
+```sh
+$ wat-desugar fac-flat.wat --fold -o fac-folded.wat
+```
+
+```wasm
+(module
+  (func (;0;) (param i32) (result i32)
+    (if (result i32)  ;; label = @1
+      (i32.eq
+        (get_local 0)
+        (i32.const 0))
+      (then
+        (i32.const 1))
+      (else
+        (i32.mul
+          (get_local 0)
+          (call 0
+            (i32.sub
+              (get_local 0)
+              (i32.const 1)))))))
+  (export "fac" (func 0))
+  (type (;0;) (func (param i32) (result i32))))
+```
+
+The formatting is different and the variable and function names are gone, but
+the structure is the same.
