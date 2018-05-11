@@ -1,0 +1,30 @@
+;;; TOOL: run-gen-wasm
+;;; ARGS1: --ignore-custom-section-errors
+;;; ARGS2: --ignore-custom-section-errors
+magic
+version
+section("linking") {
+  1 2 3 4 5 6 7
+}
+
+;; Some dummy data to make sure the module is still parsed after the invalid
+;; linking section.
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    return
+  }
+}
+(;; STDERR ;;;
+0000019: error: unable to read u32 leb128: subsection size
+0000019: error: unable to read u32 leb128: subsection size
+;;; STDERR ;;)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    return))
+;;; STDOUT ;;)
