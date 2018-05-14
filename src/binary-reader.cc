@@ -1459,7 +1459,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   CALLBACK(BeginLinkingSection, section_size);
   uint32_t version;
   CHECK_RESULT(ReadU32Leb128(&version, "version"));
-  ERROR_UNLESS(version = 1, "invalid linking metadata version");
+  ERROR_UNLESS(version == 1, "invalid linking metadata version: %u", version);
   while (state_.offset < read_end_) {
     uint32_t linking_type;
     Offset subsection_size;
