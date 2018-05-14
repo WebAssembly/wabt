@@ -22,7 +22,7 @@ section(CODE) {
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
-ignore-custom-section-error.wasm:	file format wasm 0x1
+ignore-custom-section-error-objdump.wasm:	file format wasm 0x1
 
 Section Details:
 

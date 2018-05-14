@@ -1984,12 +1984,15 @@ Result BinaryReader::ReadSections() {
 
     CALLBACK(BeginSection, section, section_size);
 
+    bool stop_on_first_error = options_->stop_on_first_error;
     Result section_result = Result::Error;
     switch (section) {
       case BinarySection::Custom:
         section_result = ReadCustomSection(section_size);
         if (options_->fail_on_custom_section_error) {
           result |= section_result;
+        } else {
+          stop_on_first_error = false;
         }
         break;
       case BinarySection::Type:
@@ -2041,7 +2044,7 @@ Result BinaryReader::ReadSections() {
     }
 
     if (Failed(section_result)) {
-      if (options_->stop_on_first_error) {
+      if (stop_on_first_error) {
         return Result::Error;
       }
 
