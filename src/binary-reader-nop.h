@@ -370,7 +370,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
 
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
-  Result OnStackGlobal(Index stack_global) override { return Result::Ok; }
   Result OnSymbolCount(Index count) override { return Result::Ok; }
   Result OnSymbol(Index sybmol_index,
                   SymbolType type,
@@ -397,7 +396,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                         Index global_index) override {
     return Result::Ok;
   }
-  Result OnDataSize(uint32_t data_size) override { return Result::Ok; }
   Result OnSegmentInfoCount(Index count) override { return Result::Ok; }
   Result OnSegmentInfo(Index index,
                        string_view name,
