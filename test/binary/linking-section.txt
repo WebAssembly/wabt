@@ -28,7 +28,7 @@ section("linking") {
   }
 
   section(LINKING_SYMBOL_TABLE) {
-    num_symbols[3]
+    num_symbols[4]
 
     type[0]
     flags[1]
@@ -46,6 +46,10 @@ section("linking") {
     segment[1]
     offset[2]
     size[1]
+
+    type[0]
+    flags[0x10]
+    index[0]
   }
 }
 (;; STDOUT ;;;
@@ -63,10 +67,11 @@ Custom:
   - init functions [count=2]
    - 1: priority=5
    - 0: priority=6
-  - symbol table [count=3]
+  - symbol table [count=4]
    - [0] F <func_sym> func=0 binding=weak vis=default
    - [1] G <global_sym> global=0 binding=local vis=default
    - [2] D <data_sym> segment=1 offset=2 size=1 binding=global vis=hidden
+   - [3] F <func_sym> func=0 undefined binding=global vis=default
 
 Code Disassembly:
 
