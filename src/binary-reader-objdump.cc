@@ -1318,7 +1318,7 @@ void BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
       break;
   }
   if (flags & WABT_SYMBOL_FLAG_UNDEFINED)
-    PrintDetails(" undef");
+    PrintDetails(" undefined");
   PrintDetails(" binding=%s vis=%s\n", binding_name, vis_name);
 }
 

@@ -69,7 +69,7 @@ Custom:
    - [0] F <func_sym> func=0 binding=weak vis=default
    - [1] G <global_sym> global=0 binding=local vis=default
    - [2] D <data_sym> segment=1 offset=2 size=1 binding=global vis=hidden
-   - [3] F <func_sym> func=0 undef binding=global vis=default
+   - [3] F <func_sym> func=0 undefined binding=global vis=default
 
 Code Disassembly:
 
