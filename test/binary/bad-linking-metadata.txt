@@ -1,0 +1,10 @@
+;;; TOOL: run-gen-wasm-interp
+;;; ERROR: 1
+magic
+version
+section("linking") {
+  metadata_version[99]
+}
+(;; STDERR ;;;
+0000013: error: invalid linking metadata version: 99
+;;; STDERR ;;)
