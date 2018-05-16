@@ -102,6 +102,11 @@ struct v128 {
 
 namespace wabt {
 
+enum class ErrorLevel {
+  Warning,
+  Error,
+};
+
 typedef uint32_t Index;    // An index into one of the many index spaces.
 typedef uint32_t Address;  // An address or size in linear memory.
 typedef size_t Offset;     // An offset into a host's file or memory buffer.
@@ -347,6 +352,18 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "void";
     case Type::Any:
       return "any";
+  }
+  WABT_UNREACHABLE;
+}
+
+/* error level */
+
+static WABT_INLINE const char* GetErrorLevelName(ErrorLevel error_level) {
+  switch (error_level) {
+    case ErrorLevel::Warning:
+      return "warning";
+    case ErrorLevel::Error:
+      return "error";
   }
   WABT_UNREACHABLE;
 }

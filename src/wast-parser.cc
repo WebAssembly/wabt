@@ -108,7 +108,8 @@ void RemoveEscapes(const TextVector& texts, OutputIter out) {
 class BinaryErrorHandlerModule : public ErrorHandler {
  public:
   BinaryErrorHandlerModule(Location* loc, WastParser* parser);
-  bool OnError(const Location&,
+  bool OnError(ErrorLevel,
+               const Location&,
                const std::string& error,
                const std::string& source_line,
                size_t source_line_column_offset) override;
@@ -125,10 +126,12 @@ BinaryErrorHandlerModule::BinaryErrorHandlerModule(Location* loc,
                                                    WastParser* parser)
     : ErrorHandler(Location::Type::Binary), loc_(loc), parser_(parser) {}
 
-bool BinaryErrorHandlerModule::OnError(const Location& binary_loc,
+bool BinaryErrorHandlerModule::OnError(ErrorLevel error_level,
+                                       const Location& binary_loc,
                                        const std::string& error,
                                        const std::string& source_line,
                                        size_t source_line_column_offset) {
+  assert(error_level == ErrorLevel::Error);
   if (binary_loc.offset == kInvalidOffset) {
     parser_->Error(*loc_, "error in binary module: %s", error.c_str());
   } else {

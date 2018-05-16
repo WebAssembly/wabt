@@ -63,7 +63,7 @@ class BinaryReaderDelegate {
 
   virtual ~BinaryReaderDelegate() {}
 
-  virtual bool OnError(const char* message) = 0;
+  virtual bool OnError(ErrorLevel, const char* message) = 0;
   virtual void OnSetState(const State* s) { state = s; }
 
   /* Module */
