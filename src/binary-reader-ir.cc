@@ -50,7 +50,7 @@ class BinaryReaderIR : public BinaryReaderNop {
                  const char* filename,
                  ErrorHandler* error_handler);
 
-  bool OnError(const char* message) override;
+  bool OnError(ErrorLevel, const char* message) override;
 
   Result OnTypeCount(Index count) override;
   Result OnType(Index index,
@@ -222,7 +222,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
  private:
-  bool HandleError(Offset offset, const char* message);
+  bool HandleError(ErrorLevel, Offset offset, const char* message);
   Location GetLocation() const;
   void PrintError(const char* format, ...);
   void PushLabel(LabelType label_type,
@@ -257,7 +257,7 @@ Location BinaryReaderIR::GetLocation() const {
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderIR::PrintError(const char* format,
                                                          ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  HandleError(kInvalidOffset, buffer);
+  HandleError(ErrorLevel::Error, kInvalidOffset, buffer);
 }
 
 void BinaryReaderIR::PushLabel(LabelType label_type,
@@ -299,12 +299,14 @@ Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
   return Result::Ok;
 }
 
-bool BinaryReaderIR::HandleError(Offset offset, const char* message) {
-  return error_handler_->OnError(offset, message);
+bool BinaryReaderIR::HandleError(ErrorLevel error_level,
+                                 Offset offset,
+                                 const char* message) {
+  return error_handler_->OnError(error_level, offset, message);
 }
 
-bool BinaryReaderIR::OnError(const char* message) {
-  return HandleError(state->offset, message);
+bool BinaryReaderIR::OnError(ErrorLevel error_level, const char* message) {
+  return HandleError(error_level, state->offset, message);
 }
 
 Result BinaryReaderIR::OnTypeCount(Index count) {

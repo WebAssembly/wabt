@@ -78,7 +78,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   std::unique_ptr<OutputBuffer> ReleaseOutputBuffer();
 
   // Implement BinaryReader.
-  bool OnError(const char* message) override;
+  bool OnError(ErrorLevel, const char* message) override;
 
   wabt::Result EndModule() override;
 
@@ -222,7 +222,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   void PushLabel(IstreamOffset offset, IstreamOffset fixup_offset);
   void PopLabel();
 
-  bool HandleError(Offset offset, const char* message);
+  bool HandleError(ErrorLevel, Offset offset, const char* message);
   void PrintError(const char* format, ...);
 
   Index TranslateSigIndexToEnv(Index sig_index);
@@ -340,14 +340,16 @@ Label* BinaryReaderInterp::TopLabel() {
   return GetLabel(0);
 }
 
-bool BinaryReaderInterp::HandleError(Offset offset, const char* message) {
-  return error_handler_->OnError(offset, message);
+bool BinaryReaderInterp::HandleError(ErrorLevel error_level,
+                                     Offset offset,
+                                     const char* message) {
+  return error_handler_->OnError(error_level, offset, message);
 }
 
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderInterp::PrintError(const char* format,
                                                              ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  HandleError(kInvalidOffset, buffer);
+  HandleError(ErrorLevel::Error, kInvalidOffset, buffer);
 }
 
 Index BinaryReaderInterp::TranslateSigIndexToEnv(Index sig_index) {
@@ -545,8 +547,8 @@ wabt::Result BinaryReaderInterp::EmitFuncOffset(DefinedFunc* func,
   return wabt::Result::Ok;
 }
 
-bool BinaryReaderInterp::OnError(const char* message) {
-  return HandleError(state->offset, message);
+bool BinaryReaderInterp::OnError(ErrorLevel error_level, const char* message) {
+  return HandleError(error_level, state->offset, message);
 }
 
 wabt::Result BinaryReaderInterp::OnTypeCount(Index count) {

@@ -72,13 +72,14 @@ class BinaryReader {
   Result ReadModule();
 
  private:
-  struct ReadEndRestoreGuard {
-    explicit ReadEndRestoreGuard(BinaryReader* this_)
-        : this_(this_), previous_read_end_(this_->read_end_) {}
-    ~ReadEndRestoreGuard() { this_->read_end_ = previous_read_end_; }
+  template <typename T, T BinaryReader::*member>
+  struct ValueRestoreGuard {
+    explicit ValueRestoreGuard(BinaryReader* this_)
+        : this_(this_), previous_value_(this_->*member) {}
+    ~ValueRestoreGuard() { this_->*member = previous_value_; }
 
     BinaryReader* this_;
-    size_t previous_read_end_;
+    T previous_value_;
   };
 
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* format, ...);
@@ -148,6 +149,7 @@ class BinaryReader {
   const ReadBinaryOptions* options_ = nullptr;
   BinarySection last_known_section_ = BinarySection::Invalid;
   bool did_read_names_section_ = false;
+  bool reading_custom_section_ = false;
   Index num_signatures_ = 0;
   Index num_imports_ = 0;
   Index num_func_imports_ = 0;
@@ -162,6 +164,9 @@ class BinaryReader {
   Index num_exports_ = 0;
   Index num_function_bodies_ = 0;
   Index num_exceptions_ = 0;
+
+  using ReadEndRestoreGuard =
+      ValueRestoreGuard<size_t, &BinaryReader::read_end_>;
 };
 
 BinaryReader::BinaryReader(const void* data,
@@ -179,12 +184,18 @@ BinaryReader::BinaryReader(const void* data,
 
 void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
                                                        ...) {
+  ErrorLevel error_level =
+      reading_custom_section_ && !options_->fail_on_custom_section_error
+          ? ErrorLevel::Warning
+          : ErrorLevel::Error;
+
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  bool handled = delegate_->OnError(buffer);
+  bool handled = delegate_->OnError(error_level, buffer);
 
   if (!handled) {
     // Not great to just print, but we don't want to eat the error either.
-    fprintf(stderr, "*ERROR*: @0x%08zx: %s\n", state_.offset, buffer);
+    fprintf(stderr, "%07" PRIzx ": %s: %s\n", state_.offset,
+            GetErrorLevelName(error_level), buffer);
   }
 }
 
@@ -1597,6 +1608,8 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
   string_view section_name;
   CHECK_RESULT(ReadStr(&section_name, "section name"));
   CALLBACK(BeginCustomSection, section_size, section_name);
+  ValueRestoreGuard<bool, &BinaryReader::reading_custom_section_> guard(this);
+  reading_custom_section_ = true;
 
   if (options_->read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));

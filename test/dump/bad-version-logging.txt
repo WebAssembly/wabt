@@ -4,7 +4,7 @@
 magic
 0xe 0 0 0
 (;; STDERR ;;;
-*ERROR*: @0x00000008: bad wasm file version: 0xe (expected 0x1)
+0000008: error: bad wasm file version: 0xe (expected 0x1)
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 

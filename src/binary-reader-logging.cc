@@ -91,8 +91,8 @@ void BinaryReaderLogging::LogTypes(TypeVector& types) {
   LogTypes(types.size(), types.data());
 }
 
-bool BinaryReaderLogging::OnError(const char* message) {
-  return reader_->OnError(message);
+bool BinaryReaderLogging::OnError(ErrorLevel error_level, const char* message) {
+  return reader_->OnError(error_level, message);
 }
 
 void BinaryReaderLogging::OnSetState(const State* s) {

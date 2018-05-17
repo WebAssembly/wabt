@@ -19,8 +19,8 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000019: error: unable to read u32 leb128: subsection size
-0000019: error: unable to read u32 leb128: subsection size
+0000019: warning: unable to read u32 leb128: subsection size
+0000019: warning: unable to read u32 leb128: subsection size
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 (module
