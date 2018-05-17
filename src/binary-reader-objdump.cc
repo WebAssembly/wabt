@@ -694,7 +694,6 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                  Index index,
                  uint32_t addend) override;
 
-  Result OnStackGlobal(Index stack_global) override;
   Result OnSymbolCount(Index count) override;
   Result OnDataSymbol(Index index,
                       uint32_t flags,
@@ -710,7 +709,6 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                         uint32_t flags,
                         string_view name,
                         Index global_index) override;
-  Result OnDataSize(uint32_t data_size) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
                        string_view name,
@@ -1293,11 +1291,6 @@ Result BinaryReaderObjdump::OnReloc(RelocType type,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnStackGlobal(Index stack_global) {
-  PrintDetails("  - stack pointer global: %d\n", stack_global);
-  return Result::Ok;
-}
-
 Result BinaryReaderObjdump::OnSymbolCount(Index count) {
   PrintDetails("  - symbol table [count=%d]\n", count);
   return Result::Ok;
@@ -1423,11 +1416,6 @@ Result BinaryReaderObjdump::OnExceptionType(Index index, TypeVector& sig) {
     printf("%s", GetTypeName(sig[i]));
   }
   printf(")\n");
-  return Result::Ok;
-}
-
-Result BinaryReaderObjdump::OnDataSize(uint32_t data_size) {
-  PrintDetails("  - data size : %d\n", data_size);
   return Result::Ok;
 }
 

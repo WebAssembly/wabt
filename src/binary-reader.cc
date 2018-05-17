@@ -1484,12 +1484,6 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
 
     uint32_t count;
     switch (static_cast<LinkingEntryType>(linking_type)) {
-      case LinkingEntryType::StackPointer: {
-        uint32_t stack_ptr;
-        CHECK_RESULT(ReadU32Leb128(&stack_ptr, "stack pointer index"));
-        CALLBACK(OnStackGlobal, stack_ptr);
-        break;
-      }
       case LinkingEntryType::SymbolTable:
         CHECK_RESULT(ReadU32Leb128(&count, "sym count"));
         CALLBACK(OnSymbolCount, count);
@@ -1531,12 +1525,6 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           }
         }
         break;
-      case LinkingEntryType::DataSize: {
-        uint32_t data_size;
-        CHECK_RESULT(ReadU32Leb128(&data_size, "data size"));
-        CALLBACK(OnDataSize, data_size);
-        break;
-      }
       case LinkingEntryType::SegmentInfo:
         CHECK_RESULT(ReadU32Leb128(&count, "info count"));
         CALLBACK(OnSegmentInfoCount, count);

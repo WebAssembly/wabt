@@ -697,8 +697,6 @@ DEFINE_INDEX_INDEX(OnInitExprGetGlobalExpr, "index", "global_index")
 
 DEFINE_BEGIN(BeginLinkingSection)
 DEFINE_INDEX(OnSymbolCount)
-DEFINE_INDEX(OnStackGlobal)
-DEFINE_INDEX(OnDataSize)
 DEFINE_INDEX(OnSegmentInfoCount)
 DEFINE_INDEX(OnInitFunctionCount)
 DEFINE_END(EndLinkingSection)

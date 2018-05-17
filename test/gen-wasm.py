@@ -69,8 +69,6 @@ NAMED_VALUES = {
     'NAME_LOCALS': 2,
 
     # linking subsection codes
-    'LINKING_STACK_POINTER': 1,
-    'LINKING_DATA_SIZE': 3,
     'LINKING_SEGMENT_INFO': 5,
     'LINKING_INIT_FUNCTIONS': 6,
     'LINKING_SYMBOL_TABLE': 8,

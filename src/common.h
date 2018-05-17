@@ -241,8 +241,6 @@ struct Reloc {
 };
 
 enum class LinkingEntryType {
-  StackPointer = 1,
-  DataSize = 3,
   SegmentInfo = 5,
   InitFunctions = 6,
   ComdatInfo = 7,
