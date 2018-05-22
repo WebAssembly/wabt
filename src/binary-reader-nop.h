@@ -396,6 +396,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                         Index global_index) override {
     return Result::Ok;
   }
+  Result OnSectionSymbol(Index index,
+                         uint32_t flags,
+                         Index section_index) override {
+    return Result::Ok;
+  }
   Result OnSegmentInfoCount(Index count) override { return Result::Ok; }
   Result OnSegmentInfo(Index index,
                        string_view name,

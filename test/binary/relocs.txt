@@ -1,17 +1,55 @@
-;;; TOOL: run-gen-wasm
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
 magic
 version
 section(TYPE) { count[1] function params[0] results[1] i32 }
-section("name") {}
+section("mysection") {}
+section("linking") {
+  metadata_version[1]
+
+  section(LINKING_SYMBOL_TABLE) {
+    num_symbols[1]
+
+    type[3]
+    flags[0]
+    index[1]
+  }
+}
 section("reloc.TYPE") {
-  reloc_section[1]
+  reloc_section[0]
   reloc_count[0]
 }
-section("reloc.name") {
+section("reloc.mysection") {
   reloc_section[1]
-  reloc_count[0]
+  reloc_count[1]
+
+  reloc_type[8]
+  reloc_offset[0]
+  reloc_symbol[0]
+  reloc_addend[0]
 }
 (;; STDOUT ;;;
-(module
-  (type (;0;) (func (result i32))))
+
+relocs.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type:
+ - type[0] () -> i32
+Custom:
+ - name: "mysection"
+Custom:
+ - name: "linking"
+  - symbol table [count=1]
+   - [0] S <mysection> section=1 binding=global vis=default
+Custom:
+ - name: "reloc.TYPE"
+  - relocations for section: 0 (Type) [0]
+Custom:
+ - name: "reloc.mysection"
+  - relocations for section: 1 (mysection) [1]
+   - R_WEBASSEMBLY_FUNCTION_OFFSET_I32 offset=00000000(file=0x00003d) symbol=0 <mysection>
+
+Code Disassembly:
+
 ;;; STDOUT ;;)
