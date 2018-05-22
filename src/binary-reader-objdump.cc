@@ -187,9 +187,10 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
 
   Result BeginSection(BinarySection section_code, Offset size) override {
     BinaryReaderObjdumpBase::BeginSection(section_code, size);
-    if (section_code != BinarySection::Custom)
+    if (section_code != BinarySection::Custom) {
       objdump_state_->section_names.push_back(
           wabt::GetSectionName(section_code));
+    }
     return Result::Ok;
   }
 
