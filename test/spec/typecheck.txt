@@ -578,7 +578,7 @@ out/test/spec/typecheck.wast:422: assert_invalid passed:
   error: type mismatch in f64.reinterpret/i64, expected [i64] but got [i32]
   000001a: error: OnConvertExpr callback failed
 out/test/spec/typecheck.wast:425: assert_invalid passed:
-  error: type mismatch in grow_memory, expected [i32] but got [f32]
-  0000023: error: OnGrowMemoryExpr callback failed
+  error: type mismatch in memory.grow, expected [i32] but got [f32]
+  0000023: error: OnMemoryGrowExpr callback failed
 193/193 tests passed.
 ;;; STDOUT ;;)

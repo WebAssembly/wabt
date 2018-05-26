@@ -801,20 +801,20 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::CurrentMemory: {
+      case Opcode::MemorySize: {
         uint32_t reserved;
-        CHECK_RESULT(ReadU32Leb128(&reserved, "current_memory reserved"));
-        ERROR_UNLESS(reserved == 0, "current_memory reserved value must be 0");
-        CALLBACK0(OnCurrentMemoryExpr);
+        CHECK_RESULT(ReadU32Leb128(&reserved, "memory.size reserved"));
+        ERROR_UNLESS(reserved == 0, "memory.size reserved value must be 0");
+        CALLBACK0(OnMemorySizeExpr);
         CALLBACK(OnOpcodeUint32, reserved);
         break;
       }
 
-      case Opcode::GrowMemory: {
+      case Opcode::MemoryGrow: {
         uint32_t reserved;
-        CHECK_RESULT(ReadU32Leb128(&reserved, "grow_memory reserved"));
-        ERROR_UNLESS(reserved == 0, "grow_memory reserved value must be 0");
-        CALLBACK0(OnGrowMemoryExpr);
+        CHECK_RESULT(ReadU32Leb128(&reserved, "memory.grow reserved"));
+        ERROR_UNLESS(reserved == 0, "memory.grow reserved value must be 0");
+        CALLBACK0(OnMemoryGrowExpr);
         CALLBACK(OnOpcodeUint32, reserved);
         break;
       }

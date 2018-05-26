@@ -645,14 +645,14 @@ DEFINE_INDEX_DESC(OnCallIndirectExpr, "sig_index")
 DEFINE0(OnCatchExpr);
 DEFINE_OPCODE(OnCompareExpr)
 DEFINE_OPCODE(OnConvertExpr)
-DEFINE0(OnCurrentMemoryExpr)
 DEFINE0(OnDropExpr)
 DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
 DEFINE_INDEX_DESC(OnGetGlobalExpr, "index")
 DEFINE_INDEX_DESC(OnGetLocalExpr, "index")
-DEFINE0(OnGrowMemoryExpr)
 DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);
+DEFINE0(OnMemoryGrowExpr)
+DEFINE0(OnMemorySizeExpr)
 DEFINE0(OnNopExpr)
 DEFINE0(OnRethrowExpr);
 DEFINE0(OnReturnExpr)

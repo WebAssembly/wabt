@@ -477,10 +477,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Convert:
       WriteOpcode(stream_, cast<ConvertExpr>(expr)->opcode);
       break;
-    case ExprType::CurrentMemory:
-      WriteOpcode(stream_, Opcode::CurrentMemory);
-      WriteU32Leb128(stream_, 0, "current_memory reserved");
-      break;
     case ExprType::Drop:
       WriteOpcode(stream_, Opcode::Drop);
       break;
@@ -496,10 +492,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, index, "local index");
       break;
     }
-    case ExprType::GrowMemory:
-      WriteOpcode(stream_, Opcode::GrowMemory);
-      WriteU32Leb128(stream_, 0, "grow_memory reserved");
-      break;
     case ExprType::If: {
       auto* if_expr = cast<IfExpr>(expr);
       WriteOpcode(stream_, Opcode::If);
@@ -534,6 +526,14 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       write_inline_signature_type(stream_, cast<LoopExpr>(expr)->block.sig);
       WriteExprList(func, cast<LoopExpr>(expr)->block.exprs);
       WriteOpcode(stream_, Opcode::End);
+      break;
+    case ExprType::MemoryGrow:
+      WriteOpcode(stream_, Opcode::MemoryGrow);
+      WriteU32Leb128(stream_, 0, "memory.grow reserved");
+      break;
+    case ExprType::MemorySize:
+      WriteOpcode(stream_, Opcode::MemorySize);
+      WriteU32Leb128(stream_, 0, "memory.size reserved");
       break;
     case ExprType::Nop:
       WriteOpcode(stream_, Opcode::Nop);

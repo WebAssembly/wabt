@@ -165,8 +165,8 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Binary:
     case TokenType::Compare:
     case TokenType::Convert:
-    case TokenType::CurrentMemory:
-    case TokenType::GrowMemory:
+    case TokenType::MemorySize:
+    case TokenType::MemoryGrow:
     case TokenType::Throw:
     case TokenType::Rethrow:
     case TokenType::AtomicLoad:
@@ -1426,14 +1426,14 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
-    case TokenType::CurrentMemory:
+    case TokenType::MemorySize:
       Consume();
-      out_expr->reset(new CurrentMemoryExpr(loc));
+      out_expr->reset(new MemorySizeExpr(loc));
       break;
 
-    case TokenType::GrowMemory:
+    case TokenType::MemoryGrow:
       Consume();
-      out_expr->reset(new GrowMemoryExpr(loc));
+      out_expr->reset(new MemoryGrowExpr(loc));
       break;
 
     case TokenType::Throw:

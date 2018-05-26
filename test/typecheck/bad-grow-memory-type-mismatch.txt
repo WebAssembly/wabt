@@ -7,7 +7,7 @@
     grow_memory
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-grow-memory-type-mismatch.txt:7:5: error: type mismatch in grow_memory, expected [i32] but got [f32]
+out/test/typecheck/bad-grow-memory-type-mismatch.txt:7:5: error: type mismatch in memory.grow, expected [i32] but got [f32]
     grow_memory
     ^^^^^^^^^^^
 ;;; STDERR ;;)

@@ -47,13 +47,13 @@
   (func (;2;) (type 1) (result i32)
     (drop
       (i32.add
-        (current_memory)
+        (memory.size)
         (i32.const 1)))
     (i32.const 2))
   (func (;3;) (type 1) (result i32)
     (i32.lt_s
       (i32.const 1)
-      (grow_memory
+      (memory.grow
         (i32.const 2))))
   (memory (;0;) 1))
 ;;; STDOUT ;;)

@@ -158,7 +158,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnCallIndirectExpr(Index sig_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
-  Result OnCurrentMemoryExpr() override;
   Result OnDropExpr() override;
   Result OnElseExpr() override;
   Result OnEndExpr() override;
@@ -168,7 +167,6 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnV128ConstExpr(v128 value_bits) override;
   Result OnGetGlobalExpr(Index global_index) override;
   Result OnGetLocalExpr(Index local_index) override;
-  Result OnGrowMemoryExpr() override;
   Result OnI32ConstExpr(uint32_t value) override;
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Index num_types, Type* sig_types) override;
@@ -179,6 +177,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                     uint32_t alignment_log2,
                     Address offset) override;
   Result OnLoopExpr(Index num_types, Type* sig_types) override;
+  Result OnMemoryGrowExpr() override;
+  Result OnMemorySizeExpr() override;
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;
   Result OnReturnExpr() override;

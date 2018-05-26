@@ -1780,11 +1780,11 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(AtomicRmwCmpxchg<uint32_t, uint64_t>(&pc));
         break;
 
-      case Opcode::CurrentMemory:
+      case Opcode::MemorySize:
         CHECK_TRAP(Push<uint32_t>(ReadMemory(&pc)->page_limits.initial));
         break;
 
-      case Opcode::GrowMemory: {
+      case Opcode::MemoryGrow: {
         Memory* memory = ReadMemory(&pc);
         uint32_t old_page_size = memory->page_limits.initial;
         uint32_t grow_pages = Pop<uint32_t>();
@@ -3208,7 +3208,7 @@ void Thread::Trace(Stream* stream) {
       stream->Writef("%s\n", opcode.GetName());
       break;
 
-    case Opcode::CurrentMemory: {
+    case Opcode::MemorySize: {
       Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex "\n", opcode.GetName(), memory_index);
       break;
@@ -3410,7 +3410,7 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::GrowMemory: {
+    case Opcode::MemoryGrow: {
       Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u\n", opcode.GetName(), memory_index,
                      Top().i32);
@@ -3896,7 +3896,7 @@ void Environment::Disassemble(Stream* stream,
         stream->Writef("%s\n", opcode.GetName());
         break;
 
-      case Opcode::CurrentMemory: {
+      case Opcode::MemorySize: {
         Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex "\n", opcode.GetName(), memory_index);
         break;
@@ -4349,7 +4349,7 @@ void Environment::Disassemble(Stream* stream,
             ReadU32(&pc));
         break;
 
-      case Opcode::GrowMemory: {
+      case Opcode::MemoryGrow: {
         Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%%[-1]\n", opcode.GetName(),
                        memory_index);
