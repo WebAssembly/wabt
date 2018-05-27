@@ -2954,8 +2954,8 @@
 ; function body 37
 0001b68: 00                                        ; func body size (guess)
 0001b69: 00                                        ; local decl count
-0001b6a: 3f                                        ; current_memory
-0001b6b: 00                                        ; current_memory reserved
+0001b6a: 3f                                        ; memory.size
+0001b6b: 00                                        ; memory.size reserved
 0001b6c: 1a                                        ; drop
 0001b6d: 0b                                        ; end
 0001b68: 05                                        ; FIXUP func body size
@@ -2964,8 +2964,8 @@
 0001b6f: 00                                        ; local decl count
 0001b70: 41                                        ; i32.const
 0001b71: 01                                        ; i32 literal
-0001b72: 40                                        ; grow_memory
-0001b73: 00                                        ; grow_memory reserved
+0001b72: 40                                        ; memory.grow
+0001b73: 00                                        ; memory.grow reserved
 0001b74: 1a                                        ; drop
 0001b75: 0b                                        ; end
 0001b6e: 07                                        ; FIXUP func body size
@@ -8218,13 +8218,13 @@ BeginModule(version: 1)
     EndFunctionBody(37)
     BeginFunctionBody(38)
     OnLocalDeclCount(0)
-    OnCurrentMemoryExpr
+    OnMemorySizeExpr
     OnDropExpr
     EndFunctionBody(38)
     BeginFunctionBody(39)
     OnLocalDeclCount(0)
     OnI32ConstExpr(1 (0x1))
-    OnGrowMemoryExpr
+    OnMemoryGrowExpr
     OnDropExpr
     EndFunctionBody(39)
     BeginFunctionBody(40)
@@ -10702,11 +10702,11 @@ EndModule
  557| i64.const $2
  566| i64.store32 $0:%[-2]+$2, %[-1]
  575| return
- 576| current_memory $0
+ 576| memory.size $0
  581| drop
  582| return
  583| i32.const $1
- 588| grow_memory $0:%[-1]
+ 588| memory.grow $0:%[-1]
  593| drop
  594| return
  595| i32.const $1

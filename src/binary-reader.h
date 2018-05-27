@@ -213,7 +213,6 @@ class BinaryReaderDelegate {
   virtual Result OnCatchExpr() = 0;
   virtual Result OnCompareExpr(Opcode opcode) = 0;
   virtual Result OnConvertExpr(Opcode opcode) = 0;
-  virtual Result OnCurrentMemoryExpr() = 0;
   virtual Result OnDropExpr() = 0;
   virtual Result OnElseExpr() = 0;
   virtual Result OnEndExpr() = 0;
@@ -223,7 +222,6 @@ class BinaryReaderDelegate {
   virtual Result OnV128ConstExpr(v128 value_bits) = 0;
   virtual Result OnGetGlobalExpr(Index global_index) = 0;
   virtual Result OnGetLocalExpr(Index local_index) = 0;
-  virtual Result OnGrowMemoryExpr() = 0;
   virtual Result OnI32ConstExpr(uint32_t value) = 0;
   virtual Result OnI64ConstExpr(uint64_t value) = 0;
   virtual Result OnIfExpr(Index num_types, Type* sig_types) = 0;
@@ -234,6 +232,8 @@ class BinaryReaderDelegate {
                             uint32_t alignment_log2,
                             Address offset) = 0;
   virtual Result OnLoopExpr(Index num_types, Type* sig_types) = 0;
+  virtual Result OnMemoryGrowExpr() = 0;
+  virtual Result OnMemorySizeExpr() = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr() = 0;
   virtual Result OnReturnExpr() = 0;

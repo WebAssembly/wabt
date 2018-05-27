@@ -172,15 +172,15 @@ enum class ExprType {
   Compare,
   Const,
   Convert,
-  CurrentMemory,
   Drop,
   GetGlobal,
   GetLocal,
-  GrowMemory,
   If,
   IfExcept,
   Load,
   Loop,
+  MemoryGrow,
+  MemorySize,
   Nop,
   Rethrow,
   Return,
@@ -244,9 +244,9 @@ class ExprMixin : public Expr {
   explicit ExprMixin(const Location& loc = Location()) : Expr(TypeEnum, loc) {}
 };
 
-typedef ExprMixin<ExprType::CurrentMemory> CurrentMemoryExpr;
 typedef ExprMixin<ExprType::Drop> DropExpr;
-typedef ExprMixin<ExprType::GrowMemory> GrowMemoryExpr;
+typedef ExprMixin<ExprType::MemoryGrow> MemoryGrowExpr;
+typedef ExprMixin<ExprType::MemorySize> MemorySizeExpr;
 typedef ExprMixin<ExprType::Nop> NopExpr;
 typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;

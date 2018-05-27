@@ -165,7 +165,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnCallIndirectExpr(Index sig_index) override;
   wabt::Result OnCompareExpr(wabt::Opcode opcode) override;
   wabt::Result OnConvertExpr(wabt::Opcode opcode) override;
-  wabt::Result OnCurrentMemoryExpr() override;
   wabt::Result OnDropExpr() override;
   wabt::Result OnElseExpr() override;
   wabt::Result OnEndExpr() override;
@@ -174,7 +173,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnV128ConstExpr(v128 value_bits) override;
   wabt::Result OnGetGlobalExpr(Index global_index) override;
   wabt::Result OnGetLocalExpr(Index local_index) override;
-  wabt::Result OnGrowMemoryExpr() override;
   wabt::Result OnI32ConstExpr(uint32_t value) override;
   wabt::Result OnI64ConstExpr(uint64_t value) override;
   wabt::Result OnIfExpr(Index num_types, Type* sig_types) override;
@@ -182,6 +180,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
                           uint32_t alignment_log2,
                           Address offset) override;
   wabt::Result OnLoopExpr(Index num_types, Type* sig_types) override;
+  wabt::Result OnMemoryGrowExpr() override;
+  wabt::Result OnMemorySizeExpr() override;
   wabt::Result OnNopExpr() override;
   wabt::Result OnReturnExpr() override;
   wabt::Result OnSelectExpr() override;
@@ -1485,14 +1485,6 @@ wabt::Result BinaryReaderInterp::OnTeeLocalExpr(Index local_index) {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnGrowMemoryExpr() {
-  CHECK_RESULT(CheckHasMemory(wabt::Opcode::GrowMemory));
-  CHECK_RESULT(typechecker_.OnGrowMemory());
-  CHECK_RESULT(EmitOpcode(Opcode::GrowMemory));
-  CHECK_RESULT(EmitI32(module_->memory_index));
-  return wabt::Result::Ok;
-}
-
 wabt::Result BinaryReaderInterp::OnLoadExpr(wabt::Opcode opcode,
                                             uint32_t alignment_log2,
                                             Address offset) {
@@ -1517,10 +1509,18 @@ wabt::Result BinaryReaderInterp::OnStoreExpr(wabt::Opcode opcode,
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnCurrentMemoryExpr() {
-  CHECK_RESULT(CheckHasMemory(wabt::Opcode::CurrentMemory));
-  CHECK_RESULT(typechecker_.OnCurrentMemory());
-  CHECK_RESULT(EmitOpcode(Opcode::CurrentMemory));
+wabt::Result BinaryReaderInterp::OnMemoryGrowExpr() {
+  CHECK_RESULT(CheckHasMemory(wabt::Opcode::MemoryGrow));
+  CHECK_RESULT(typechecker_.OnMemoryGrow());
+  CHECK_RESULT(EmitOpcode(Opcode::MemoryGrow));
+  CHECK_RESULT(EmitI32(module_->memory_index));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnMemorySizeExpr() {
+  CHECK_RESULT(CheckHasMemory(wabt::Opcode::MemorySize));
+  CHECK_RESULT(typechecker_.OnMemorySize());
+  CHECK_RESULT(EmitOpcode(Opcode::MemorySize));
   CHECK_RESULT(EmitI32(module_->memory_index));
   return wabt::Result::Ok;
 }

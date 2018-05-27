@@ -429,11 +429,6 @@ Result TypeChecker::OnConvert(Opcode opcode) {
   return CheckOpcode1(opcode);
 }
 
-Result TypeChecker::OnCurrentMemory() {
-  PushType(Type::I32);
-  return Result::Ok;
-}
-
 Result TypeChecker::OnDrop() {
   Result result = Result::Ok;
   result |= DropTypes(1);
@@ -493,10 +488,6 @@ Result TypeChecker::OnEnd() {
   return result;
 }
 
-Result TypeChecker::OnGrowMemory() {
-  return CheckOpcode1(Opcode::GrowMemory);
-}
-
 Result TypeChecker::OnIf(const TypeVector* sig) {
   Result result = PopAndCheck1Type(Type::I32, "if");
   PushLabel(LabelType::If, *sig);
@@ -527,6 +518,15 @@ Result TypeChecker::OnLoad(Opcode opcode) {
 
 Result TypeChecker::OnLoop(const TypeVector* sig) {
   PushLabel(LabelType::Loop, *sig);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnMemoryGrow() {
+  return CheckOpcode1(Opcode::MemoryGrow);
+}
+
+Result TypeChecker::OnMemorySize() {
+  PushType(Type::I32);
   return Result::Ok;
 }
 

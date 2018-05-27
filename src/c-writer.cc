@@ -1501,16 +1501,6 @@ void CWriter::Write(const ExprList& exprs) {
         Write(*cast<ConvertExpr>(&expr));
         break;
 
-      case ExprType::CurrentMemory: {
-        assert(module_->memories.size() == 1);
-        Memory* memory = module_->memories[0];
-
-        PushType(Type::I32);
-        Write(StackVar(0), " = ", ExternalRef(memory->name), ".pages;",
-              Newline());
-        break;
-      }
-
       case ExprType::Drop:
         DropTypes(1);
         break;
@@ -1526,15 +1516,6 @@ void CWriter::Write(const ExprList& exprs) {
         const Var& var = cast<GetLocalExpr>(&expr)->var;
         PushType(func_->GetLocalType(var));
         Write(StackVar(0), " = ", var, ";", Newline());
-        break;
-      }
-
-      case ExprType::GrowMemory: {
-        assert(module_->memories.size() == 1);
-        Memory* memory = module_->memories[0];
-
-        Write(StackVar(0), " = wasm_rt_grow_memory(", ExternalPtr(memory->name),
-              ", ", StackVar(0), ");", Newline());
         break;
       }
 
@@ -1574,6 +1555,25 @@ void CWriter::Write(const ExprList& exprs) {
           PushTypes(block.sig);
           Dedent();
         }
+        break;
+      }
+
+      case ExprType::MemoryGrow: {
+        assert(module_->memories.size() == 1);
+        Memory* memory = module_->memories[0];
+
+        Write(StackVar(0), " = wasm_rt_grow_memory(", ExternalPtr(memory->name),
+              ", ", StackVar(0), ");", Newline());
+        break;
+      }
+
+      case ExprType::MemorySize: {
+        assert(module_->memories.size() == 1);
+        Memory* memory = module_->memories[0];
+
+        PushType(Type::I32);
+        Write(StackVar(0), " = ", ExternalRef(memory->name), ".pages;",
+              Newline());
         break;
       }
 

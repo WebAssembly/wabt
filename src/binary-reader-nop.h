@@ -218,7 +218,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnCatchExpr() override { return Result::Ok; }
   Result OnCompareExpr(Opcode opcode) override { return Result::Ok; }
   Result OnConvertExpr(Opcode opcode) override { return Result::Ok; }
-  Result OnCurrentMemoryExpr() override { return Result::Ok; }
   Result OnDropExpr() override { return Result::Ok; }
   Result OnElseExpr() override { return Result::Ok; }
   Result OnEndExpr() override { return Result::Ok; }
@@ -228,7 +227,6 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnV128ConstExpr(v128 value_bits) override { return Result::Ok; }
   Result OnGetGlobalExpr(Index global_index) override { return Result::Ok; }
   Result OnGetLocalExpr(Index local_index) override { return Result::Ok; }
-  Result OnGrowMemoryExpr() override { return Result::Ok; }
   Result OnI32ConstExpr(uint32_t value) override { return Result::Ok; }
   Result OnI64ConstExpr(uint64_t value) override { return Result::Ok; }
   Result OnIfExpr(Index num_types, Type* sig_types) override {
@@ -247,6 +245,8 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnLoopExpr(Index num_types, Type* sig_types) override {
     return Result::Ok;
   }
+  Result OnMemoryGrowExpr() override { return Result::Ok; }
+  Result OnMemorySizeExpr() override { return Result::Ok; }
   Result OnNopExpr() override { return Result::Ok; }
   Result OnRethrowExpr() override { return Result::Ok; }
   Result OnReturnExpr() override { return Result::Ok; }

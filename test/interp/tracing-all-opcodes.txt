@@ -635,13 +635,13 @@ i64.store16() =>
 #0.  575: V:0  | return
 i64.store32() =>
 >>> running export "current_memory":
-#0.  576: V:0  | current_memory $0
+#0.  576: V:0  | memory.size $0
 #0.  581: V:1  | drop
 #0.  582: V:0  | return
 current_memory() =>
 >>> running export "grow_memory":
 #0.  583: V:0  | i32.const $1
-#0.  588: V:1  | grow_memory $0:1
+#0.  588: V:1  | memory.grow $0:1
 #0.  593: V:1  | drop
 #0.  594: V:0  | return
 grow_memory() =>

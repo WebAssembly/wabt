@@ -333,5 +333,8 @@ out/test/spec/unreached-invalid.wast:683: assert_invalid passed:
 out/test/spec/unreached-invalid.wast:690: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000022: error: OnEndExpr callback failed
-110/110 tests passed.
+out/test/spec/unreached-invalid.wast:701: assert_invalid passed:
+  error: type mismatch in i64.extend_u/i32, expected [i32] but got [i64]
+  000001c: error: OnConvertExpr callback failed
+111/111 tests passed.
 ;;; STDOUT ;;)

@@ -25,11 +25,11 @@ out/test/spec/memory.wast:35: assert_invalid passed:
   error: i32.store8 requires an imported or defined memory.
   000001e: error: OnStoreExpr callback failed
 out/test/spec/memory.wast:39: assert_invalid passed:
-  error: current_memory requires an imported or defined memory.
-  0000019: error: OnCurrentMemoryExpr callback failed
+  error: memory.size requires an imported or defined memory.
+  0000019: error: OnMemorySizeExpr callback failed
 out/test/spec/memory.wast:43: assert_invalid passed:
-  error: grow_memory requires an imported or defined memory.
-  000001b: error: OnGrowMemoryExpr callback failed
+  error: memory.grow requires an imported or defined memory.
+  000001b: error: OnMemoryGrowExpr callback failed
 out/test/spec/memory.wast:49: assert_invalid passed:
   000000e: error: memory initial size must be <= max size
 out/test/spec/memory.wast:53: assert_invalid passed:

@@ -59,11 +59,9 @@ class Validator : public ExprVisitor::Delegate {
   Result OnCompareExpr(CompareExpr*) override;
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
-  Result OnCurrentMemoryExpr(CurrentMemoryExpr*) override;
   Result OnDropExpr(DropExpr*) override;
   Result OnGetGlobalExpr(GetGlobalExpr*) override;
   Result OnGetLocalExpr(GetLocalExpr*) override;
-  Result OnGrowMemoryExpr(GrowMemoryExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result AfterIfTrueExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
@@ -73,6 +71,8 @@ class Validator : public ExprVisitor::Delegate {
   Result OnLoadExpr(LoadExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
+  Result OnMemorySizeExpr(MemorySizeExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
@@ -590,13 +590,6 @@ Result Validator::OnConvertExpr(ConvertExpr* expr) {
   return Result::Ok;
 }
 
-Result Validator::OnCurrentMemoryExpr(CurrentMemoryExpr* expr) {
-  expr_loc_ = &expr->loc;
-  CheckHasMemory(&expr->loc, Opcode::CurrentMemory);
-  typechecker_.OnCurrentMemory();
-  return Result::Ok;
-}
-
 Result Validator::OnDropExpr(DropExpr* expr) {
   expr_loc_ = &expr->loc;
   typechecker_.OnDrop();
@@ -612,13 +605,6 @@ Result Validator::OnGetGlobalExpr(GetGlobalExpr* expr) {
 Result Validator::OnGetLocalExpr(GetLocalExpr* expr) {
   expr_loc_ = &expr->loc;
   typechecker_.OnGetLocal(GetLocalVarTypeOrAny(&expr->var));
-  return Result::Ok;
-}
-
-Result Validator::OnGrowMemoryExpr(GrowMemoryExpr* expr) {
-  expr_loc_ = &expr->loc;
-  CheckHasMemory(&expr->loc, Opcode::GrowMemory);
-  typechecker_.OnGrowMemory();
   return Result::Ok;
 }
 
@@ -683,6 +669,20 @@ Result Validator::BeginLoopExpr(LoopExpr* expr) {
 
 Result Validator::EndLoopExpr(LoopExpr* expr) {
   typechecker_.OnEnd();
+  return Result::Ok;
+}
+
+Result Validator::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasMemory(&expr->loc, Opcode::MemoryGrow);
+  typechecker_.OnMemoryGrow();
+  return Result::Ok;
+}
+
+Result Validator::OnMemorySizeExpr(MemorySizeExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasMemory(&expr->loc, Opcode::MemorySize);
+  typechecker_.OnMemorySize();
   return Result::Ok;
 }
 

@@ -90,8 +90,8 @@ out/test/spec/binary.wast:261: assert_malformed passed:
 out/test/spec/binary.wast:273: assert_malformed passed:
   0000022: error: call_indirect reserved value must be 0
 out/test/spec/binary.wast:292: assert_malformed passed:
-  0000020: error: grow_memory reserved value must be 0
+  0000020: error: memory.grow reserved value must be 0
 out/test/spec/binary.wast:312: assert_malformed passed:
-  000001e: error: current_memory reserved value must be 0
+  000001e: error: memory.size reserved value must be 0
 46/46 tests passed.
 ;;; STDOUT ;;)

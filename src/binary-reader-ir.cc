@@ -154,7 +154,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnV128ConstExpr(v128 value_bits) override;
   Result OnGetGlobalExpr(Index global_index) override;
   Result OnGetLocalExpr(Index local_index) override;
-  Result OnGrowMemoryExpr() override;
   Result OnI32ConstExpr(uint32_t value) override;
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Index num_types, Type* sig_types) override;
@@ -165,7 +164,8 @@ class BinaryReaderIR : public BinaryReaderNop {
                     uint32_t alignment_log2,
                     Address offset) override;
   Result OnLoopExpr(Index num_types, Type* sig_types) override;
-  Result OnCurrentMemoryExpr() override;
+  Result OnMemoryGrowExpr() override;
+  Result OnMemorySizeExpr() override;
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;
   Result OnReturnExpr() override;
@@ -645,10 +645,6 @@ Result BinaryReaderIR::OnConvertExpr(Opcode opcode) {
   return AppendExpr(MakeUnique<ConvertExpr>(opcode));
 }
 
-Result BinaryReaderIR::OnCurrentMemoryExpr() {
-  return AppendExpr(MakeUnique<CurrentMemoryExpr>());
-}
-
 Result BinaryReaderIR::OnDropExpr() {
   return AppendExpr(MakeUnique<DropExpr>());
 }
@@ -702,10 +698,6 @@ Result BinaryReaderIR::OnGetLocalExpr(Index local_index) {
   return AppendExpr(MakeUnique<GetLocalExpr>(Var(local_index, GetLocation())));
 }
 
-Result BinaryReaderIR::OnGrowMemoryExpr() {
-  return AppendExpr(MakeUnique<GrowMemoryExpr>());
-}
-
 Result BinaryReaderIR::OnI32ConstExpr(uint32_t value) {
   return AppendExpr(MakeUnique<ConstExpr>(Const::I32(value, GetLocation())));
 }
@@ -748,6 +740,14 @@ Result BinaryReaderIR::OnLoopExpr(Index num_types, Type* sig_types) {
   CHECK_RESULT(AppendExpr(std::move(expr)));
   PushLabel(LabelType::Loop, expr_list);
   return Result::Ok;
+}
+
+Result BinaryReaderIR::OnMemoryGrowExpr() {
+  return AppendExpr(MakeUnique<MemoryGrowExpr>());
+}
+
+Result BinaryReaderIR::OnMemorySizeExpr() {
+  return AppendExpr(MakeUnique<MemorySizeExpr>());
 }
 
 Result BinaryReaderIR::OnNopExpr() {
