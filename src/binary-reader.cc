@@ -1455,6 +1455,8 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
       case RelocType::MemoryAddressLEB:
       case RelocType::MemoryAddressSLEB:
       case RelocType::MemoryAddressI32:
+      case RelocType::FunctionOffsetI32:
+      case RelocType::SectionOffsetI32:
         CHECK_RESULT(ReadS32Leb128(&addend, "addend"));
         break;
       default:
@@ -1520,6 +1522,12 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                 CHECK_RESULT(ReadU32Leb128(&size, "size"));
               }
               CALLBACK(OnDataSymbol, i, flags, name, segment, offset, size);
+              break;
+            }
+            case SymbolType::Section: {
+              uint32_t index = 0;
+              CHECK_RESULT(ReadU32Leb128(&index, "index"));
+              CALLBACK(OnSectionSymbol, i, flags, index);
               break;
             }
           }

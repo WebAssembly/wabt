@@ -518,6 +518,14 @@ Result BinaryReaderLogging::OnGlobalSymbol(Index index,
   return reader_->OnGlobalSymbol(index, flags, name, global_index);
 }
 
+Result BinaryReaderLogging::OnSectionSymbol(Index index,
+                                            uint32_t flags,
+                                            Index section_index) {
+  LOGF("OnSectionSymbol(flags: 0x%x index: %" PRIindex ")\n", flags,
+       section_index);
+  return reader_->OnSectionSymbol(index, flags, section_index);
+}
+
 Result BinaryReaderLogging::OnSegmentInfo(Index index,
                                           string_view name,
                                           uint32_t alignment,

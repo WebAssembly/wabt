@@ -225,9 +225,11 @@ enum class RelocType {
   MemoryAddressI32 = 5,   // e.g. Memory address in DATA
   TypeIndexLEB = 6,       // e.g. Immediate type in call_indirect
   GlobalIndexLEB = 7,     // e.g. Immediate of get_global inst
+  FunctionOffsetI32 = 8,  // e.g. Code offset in DWARF metadata
+  SectionOffsetI32 = 9,   // e.g. Section offset in DWARF metadata
 
   First = FuncIndexLEB,
-  Last = GlobalIndexLEB,
+  Last = SectionOffsetI32,
 };
 static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 
@@ -251,6 +253,7 @@ enum class SymbolType {
   Function = 0,
   Data = 1,
   Global = 2,
+  Section = 3,
 };
 
 #define WABT_SYMBOL_FLAG_UNDEFINED 0x10
@@ -322,6 +325,8 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
       return "global";
     case SymbolType::Data:
       return "data";
+    case SymbolType::Section:
+      return "section";
   }
   WABT_UNREACHABLE;
 }
