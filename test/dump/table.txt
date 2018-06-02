@@ -7,7 +7,9 @@
   (func (param i32 i64))
   (func (result f64) 
     f64.const 0)
-  (table anyfunc (elem 0 0 1 2)))
+  (table 6 6 anyfunc)
+  (elem (i32.const 0) 1 1)
+  (elem (i32.const 2) 0 0 1 2))
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
 0000004: 0100 0000                                 ; WASM_BINARY_VERSION
@@ -47,46 +49,54 @@
 ; table 0
 0000021: 70                                        ; anyfunc
 0000022: 01                                        ; limits: flags
-0000023: 04                                        ; limits: initial
-0000024: 04                                        ; limits: max
+0000023: 06                                        ; limits: initial
+0000024: 06                                        ; limits: max
 000001f: 05                                        ; FIXUP section size
 ; section "Elem" (9)
 0000025: 09                                        ; section code
 0000026: 00                                        ; section size (guess)
-0000027: 01                                        ; num elem segments
+0000027: 02                                        ; num elem segments
 ; elem segment header 0
 0000028: 00                                        ; table index
 0000029: 41                                        ; i32.const
 000002a: 00                                        ; i32 literal
 000002b: 0b                                        ; end
-000002c: 04                                        ; num function indices
-000002d: 00                                        ; function index
-000002e: 00                                        ; function index
-000002f: 01                                        ; function index
-0000030: 02                                        ; function index
-0000026: 0a                                        ; FIXUP section size
+000002c: 02                                        ; num function indices
+000002d: 01                                        ; function index
+000002e: 01                                        ; function index
+; elem segment header 1
+000002f: 00                                        ; table index
+0000030: 41                                        ; i32.const
+0000031: 02                                        ; i32 literal
+0000032: 0b                                        ; end
+0000033: 04                                        ; num function indices
+0000034: 00                                        ; function index
+0000035: 00                                        ; function index
+0000036: 01                                        ; function index
+0000037: 02                                        ; function index
+0000026: 11                                        ; FIXUP section size
 ; section "Code" (10)
-0000031: 0a                                        ; section code
-0000032: 00                                        ; section size (guess)
-0000033: 03                                        ; num functions
+0000038: 0a                                        ; section code
+0000039: 00                                        ; section size (guess)
+000003a: 03                                        ; num functions
 ; function body 0
-0000034: 00                                        ; func body size (guess)
-0000035: 00                                        ; local decl count
-0000036: 0b                                        ; end
-0000034: 02                                        ; FIXUP func body size
+000003b: 00                                        ; func body size (guess)
+000003c: 00                                        ; local decl count
+000003d: 0b                                        ; end
+000003b: 02                                        ; FIXUP func body size
 ; function body 1
-0000037: 00                                        ; func body size (guess)
-0000038: 00                                        ; local decl count
-0000039: 0b                                        ; end
-0000037: 02                                        ; FIXUP func body size
+000003e: 00                                        ; func body size (guess)
+000003f: 00                                        ; local decl count
+0000040: 0b                                        ; end
+000003e: 02                                        ; FIXUP func body size
 ; function body 2
-000003a: 00                                        ; func body size (guess)
-000003b: 00                                        ; local decl count
-000003c: 44                                        ; f64.const
-000003d: 0000 0000 0000 0000                       ; f64 literal
-0000045: 0b                                        ; end
-000003a: 0b                                        ; FIXUP func body size
-0000032: 13                                        ; FIXUP section size
+0000041: 00                                        ; func body size (guess)
+0000042: 00                                        ; local decl count
+0000043: 44                                        ; f64.const
+0000044: 0000 0000 0000 0000                       ; f64 literal
+000004c: 0b                                        ; end
+0000041: 0b                                        ; FIXUP func body size
+0000039: 13                                        ; FIXUP section size
 
 table.wasm:	file format wasm 0x1
 
@@ -101,22 +111,24 @@ Function:
  - func[1] sig=1
  - func[2] sig=2
 Table:
- - table[0] type=anyfunc initial=4 max=4
+ - table[0] type=anyfunc initial=6 max=6
 Elem:
- - init i32=0
- - segment[0] table=0 count=4
-  - elem[0] = func[0]
-  - elem[1] = func[0]
-  - elem[2] = func[1]
-  - elem[3] = func[2]
+ - segment[0] table=0 count=2 - init i32=0
+  - elem[0] = func[1]
+  - elem[1] = func[1]
+ - segment[1] table=0 count=4 - init i32=2
+  - elem[2] = func[0]
+  - elem[3] = func[0]
+  - elem[4] = func[1]
+  - elem[5] = func[2]
 
 Code Disassembly:
 
-000034 func[0]:
- 000036: 0b                         | end
-000037 func[1]:
- 000039: 0b                         | end
-00003a func[2]:
- 00003c: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 000045: 0b                         | end
+00003b func[0]:
+ 00003d: 0b                         | end
+00003e func[1]:
+ 000040: 0b                         | end
+000041 func[2]:
+ 000043: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 00004c: 0b                         | end
 ;;; STDOUT ;;)

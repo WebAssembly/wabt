@@ -686,6 +686,15 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
 
   Result OnFunctionBodyCount(Index count) override;
 
+  Result BeginElemSection(Offset size) override {
+    in_elem_section_ = true;
+    return Result::Ok;
+  }
+  Result EndElemSection() override {
+    in_elem_section_ = false;
+    return Result::Ok;
+  }
+
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index, Index table_index) override;
   Result OnElemSegmentFunctionIndexCount(Index index, Index count) override;
@@ -700,6 +709,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
     in_data_section_ = false;
     return Result::Ok;
   }
+
   Result OnDataSegmentCount(Index count) override;
   Result BeginDataSegment(Index index, Index memory_index) override;
   Result OnDataSegmentData(Index index,
@@ -756,6 +766,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnExceptionType(Index index, TypeVector& sig) override;
 
  private:
+  Result HandleInitExpr(const InitExpr& expr);
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
   void PrintSymbolFlags(uint32_t flags);
@@ -767,7 +778,11 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Index table_index_ = 0;
   Index next_data_reloc_ = 0;
   bool in_data_section_ = false;
+  bool in_elem_section_ = false;
   InitExpr data_init_expr_;
+  InitExpr elem_init_expr_;
+  uint32_t data_offset_ = 0;
+  uint32_t elem_offset_ = 0;
 };
 
 BinaryReaderObjdump::BinaryReaderObjdump(const uint8_t* data,
@@ -1061,8 +1076,8 @@ Result BinaryReaderObjdump::OnExport(Index index,
 
 Result BinaryReaderObjdump::OnElemSegmentFunctionIndex(Index segment_index,
                                                        Index func_index) {
-  PrintDetails("  - elem[%" PRIindex "] = func[%" PRIindex "]", elem_index_,
-               func_index);
+  PrintDetails("  - elem[%" PRIindex "] = func[%" PRIindex "]",
+               elem_offset_ + elem_index_, func_index);
   if (const char* name = GetFunctionName(func_index)) {
     PrintDetails(" <%s>", name);
   }
@@ -1083,9 +1098,9 @@ Result BinaryReaderObjdump::BeginElemSegment(Index index, Index table_index) {
 
 Result BinaryReaderObjdump::OnElemSegmentFunctionIndexCount(Index index,
                                                             Index count) {
-  PrintDetails(" - segment[%" PRIindex "] table=%" PRIindex " count=%" PRIindex
-               "\n",
+  PrintDetails(" - segment[%" PRIindex "] table=%" PRIindex " count=%" PRIindex,
                index, table_index_, count);
+  PrintInitExpr(elem_init_expr_);
   return Result::Ok;
 }
 
@@ -1131,16 +1146,45 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
   }
 }
 
+static Result InitExprToConstOffset(const InitExpr& expr,
+                                    uint32_t& out_offset) {
+  switch (expr.type) {
+    case InitExprType::I32:
+      out_offset = expr.value.i32;
+      break;
+    case InitExprType::Global:
+      out_offset = 0;
+      break;
+    case InitExprType::I64:
+    case InitExprType::F32:
+    case InitExprType::F64:
+    case InitExprType::V128:
+      fprintf(stderr, "Segment/Elem offset must be an i32 init expr");
+      return Result::Error;
+      break;
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::HandleInitExpr(const InitExpr& expr) {
+  if (in_data_section_) {
+    data_init_expr_ = expr;
+    return InitExprToConstOffset(expr, data_offset_);
+  } else if (in_elem_section_) {
+    elem_init_expr_ = expr;
+    return InitExprToConstOffset(expr, elem_offset_);
+  } else {
+    PrintInitExpr(expr);
+  }
+  return Result::Ok;
+}
+
 Result BinaryReaderObjdump::OnInitExprF32ConstExpr(Index index,
                                                    uint32_t value) {
   InitExpr expr;
   expr.type = InitExprType::F32;
   expr.value.f32 = value;
-  if (in_data_section_) {
-    data_init_expr_ = expr;
-  } else {
-    PrintInitExpr(expr);
-  }
+  HandleInitExpr(expr);
   return Result::Ok;
 }
 
@@ -1149,11 +1193,7 @@ Result BinaryReaderObjdump::OnInitExprF64ConstExpr(Index index,
   InitExpr expr;
   expr.type = InitExprType::F64;
   expr.value.f64 = value;
-  if (in_data_section_) {
-    data_init_expr_ = expr;
-  } else {
-    PrintInitExpr(expr);
-  }
+  HandleInitExpr(expr);
   return Result::Ok;
 }
 
@@ -1161,11 +1201,7 @@ Result BinaryReaderObjdump::OnInitExprV128ConstExpr(Index index, v128 value) {
   InitExpr expr;
   expr.type = InitExprType::V128;
   expr.value.v128_v = value;
-  if (in_data_section_) {
-    data_init_expr_ = expr;
-  } else {
-    PrintInitExpr(expr);
-  }
+  HandleInitExpr(expr);
   return Result::Ok;
 }
 
@@ -1174,11 +1210,7 @@ Result BinaryReaderObjdump::OnInitExprGetGlobalExpr(Index index,
   InitExpr expr;
   expr.type = InitExprType::Global;
   expr.value.global = global_index;
-  if (in_data_section_) {
-    data_init_expr_ = expr;
-  } else {
-    PrintInitExpr(expr);
-  }
+  HandleInitExpr(expr);
   return Result::Ok;
 }
 
@@ -1187,11 +1219,7 @@ Result BinaryReaderObjdump::OnInitExprI32ConstExpr(Index index,
   InitExpr expr;
   expr.type = InitExprType::I32;
   expr.value.i32 = value;
-  if (in_data_section_) {
-    data_init_expr_ = expr;
-  } else {
-    PrintInitExpr(expr);
-  }
+  HandleInitExpr(expr);
   return Result::Ok;
 }
 
@@ -1200,11 +1228,7 @@ Result BinaryReaderObjdump::OnInitExprI64ConstExpr(Index index,
   InitExpr expr;
   expr.type = InitExprType::I64;
   expr.value.i64 = value;
-  if (in_data_section_) {
-    data_init_expr_ = expr;
-  } else {
-    PrintInitExpr(expr);
-  }
+  HandleInitExpr(expr);
   return Result::Ok;
 }
 
@@ -1251,23 +1275,7 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   PrintDetails(" - segment[%" PRIindex "] size=%" PRIaddress, index, size);
   PrintInitExpr(data_init_expr_);
 
-  size_t voffset = 0;
-  switch (data_init_expr_.type) {
-    case InitExprType::I32:
-      voffset = data_init_expr_.value.i32;
-      break;
-    case InitExprType::Global:
-      break;
-    case InitExprType::I64:
-    case InitExprType::F32:
-    case InitExprType::F64:
-    case InitExprType::V128:
-      fprintf(stderr, "Segment offset must be an i32 init expr");
-      return Result::Error;
-      break;
-  }
-
-  out_stream_->WriteMemoryDump(src_data, size, voffset, PrintChars::Yes,
+  out_stream_->WriteMemoryDump(src_data, size, data_offset_, PrintChars::Yes,
                                "  - ");
 
   // Print relocations from this segment.
@@ -1284,7 +1292,7 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
     if (abs_offset > state->offset) {
       break;
     }
-    PrintRelocation(reloc, reloc.offset - segment_offset + voffset);
+    PrintRelocation(reloc, reloc.offset - segment_offset + data_offset_);
     next_data_reloc_++;
   }
 
