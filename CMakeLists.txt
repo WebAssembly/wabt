@@ -397,7 +397,6 @@ else ()
   target_link_libraries(libwabtjs libwabt)
   set_target_properties(libwabtjs PROPERTIES OUTPUT_NAME libwabt)
 
-  set(WABT_PRE_JS ${WABT_SOURCE_DIR}/src/wabt.pre.js)
   set(WABT_POST_JS ${WABT_SOURCE_DIR}/src/wabt.post.js)
   set(EMSCRIPTEN_EXPORTED_JSON ${WABT_SOURCE_DIR}/src/emscripten-exported.json)
 
@@ -419,6 +418,6 @@ else ()
   set_target_properties(libwabtjs
     PROPERTIES
     LINK_FLAGS "${LIBWABT_LINK_FLAGS_STR}"
-    LINK_DEPENDS "${WABT_PRE_JS};${WABT_POST_JS};${EMSCRIPTEN_EXPORTED_JSON}"
+    LINK_DEPENDS "${WABT_POST_JS};${EMSCRIPTEN_EXPORTED_JSON}"
   )
 endif ()
