@@ -11,7 +11,7 @@ out/test/spec/br_table.wast:1426: assert_invalid passed:
   error: type mismatch in br_table, expected [i32] but got [i64]
   0000023: error: OnBrTableExpr callback failed
 out/test/spec/br_table.wast:1434: assert_invalid passed:
-  error: br_table labels have inconsistent types: expected f32, got void
+  error: br_table labels have inconsistent types: expected [f32], got []
   0000026: error: OnBrTableExpr callback failed
 out/test/spec/br_table.wast:1446: assert_invalid passed:
   error: type mismatch in br_table, expected [i32] but got []

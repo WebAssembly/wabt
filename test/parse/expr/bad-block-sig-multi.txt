@@ -7,9 +7,18 @@
       i32.const 1
     end
     drop
-    drop))
+    drop)
+
+  (func
+    i32.const 1
+    block (param i32)
+      drop
+    end))
 (;; STDERR ;;;
-out/test/parse/expr/bad-block-sig-multi.txt:5:5: error: multiple block signature result types not currently supported.
+out/test/parse/expr/bad-block-sig-multi.txt:5:5: error: multiple block results not currently supported.
     block (result i32 i32)
+    ^^^^^
+out/test/parse/expr/bad-block-sig-multi.txt:14:5: error: block params not currently supported.
+    block (param i32)
     ^^^^^
 ;;; STDERR ;;)

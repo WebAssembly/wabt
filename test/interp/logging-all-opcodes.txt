@@ -9112,7 +9112,7 @@ BeginModule(version: 1)
     EndFunctionBody(175)
     BeginFunctionBody(176)
     OnLocalDeclCount(0)
-    OnBlockExpr(sig: [i32])
+    OnBlockExpr(sig: i32)
     OnI32ConstExpr(1 (0x1))
     OnI32ConstExpr(2 (0x2))
     OnBrExpr(depth: 0)
@@ -10569,1780 +10569,1780 @@ EndModule
    8| return
    9| i32.const $1
   14| br_table %[-1], $#0, table:$28
-  23| data $9
-  28|   entry 0: offset: 37 drop: 0 keep: 0
-  37| return
-  38| return
-  39| return
-  40| call @0
-  45| return
-  46| i32.const $1
-  51| call_indirect $0:0, %[-1]
-  60| return
-  61| i32.const $1
-  66| drop
-  67| return
-  68| i32.const $1
-  73| i32.const $2
-  78| i32.const $3
-  83| select %[-3], %[-2], %[-1]
-  84| drop
-  85| return
-  86| alloca $1
-  91| get_local $1
-  96| drop
-  97| drop
-  98| return
-  99| alloca $1
- 104| i32.const $1
- 109| set_local $1, %[-1]
- 114| drop
- 115| return
- 116| alloca $1
- 121| i32.const $1
- 126| tee_local $2, %[-1]
- 131| drop
- 132| drop
- 133| return
- 134| get_global $0
- 139| drop
- 140| return
- 141| i32.const $1
- 146| set_global $0, %[-1]
- 151| return
- 152| i32.const $1
- 157| i32.load $0:%[-1]+$2
- 166| drop
- 167| return
- 168| i32.const $1
- 173| i64.load $0:%[-1]+$2
- 182| drop
- 183| return
- 184| i32.const $1
- 189| f32.load $0:%[-1]+$2
- 198| drop
- 199| return
- 200| i32.const $1
- 205| f64.load $0:%[-1]+$2
- 214| drop
- 215| return
- 216| i32.const $1
- 221| i32.load8_s $0:%[-1]+$2
- 230| drop
- 231| return
- 232| i32.const $1
- 237| i32.load8_u $0:%[-1]+$2
- 246| drop
- 247| return
- 248| i32.const $1
- 253| i32.load16_s $0:%[-1]+$2
- 262| drop
- 263| return
- 264| i32.const $1
- 269| i32.load16_u $0:%[-1]+$2
- 278| drop
- 279| return
- 280| i32.const $1
- 285| i64.load8_s $0:%[-1]+$2
- 294| drop
- 295| return
- 296| i32.const $1
- 301| i64.load8_u $0:%[-1]+$2
- 310| drop
- 311| return
- 312| i32.const $1
- 317| i64.load16_s $0:%[-1]+$2
- 326| drop
- 327| return
- 328| i32.const $1
- 333| i64.load16_u $0:%[-1]+$2
- 342| drop
- 343| return
- 344| i32.const $1
- 349| i64.load32_s $0:%[-1]+$2
- 358| drop
- 359| return
- 360| i32.const $1
- 365| i64.load32_u $0:%[-1]+$2
- 374| drop
- 375| return
- 376| i32.const $1
- 381| i32.const $2
- 386| i32.store $0:%[-2]+$2, %[-1]
- 395| return
- 396| i32.const $1
- 401| i64.const $2
- 410| i64.store $0:%[-2]+$2, %[-1]
- 419| return
- 420| i32.const $1
- 425| f32.const $2
- 430| f32.store $0:%[-2]+$2, %[-1]
- 439| return
- 440| i32.const $1
- 445| f64.const $2
- 454| f64.store $0:%[-2]+$2, %[-1]
- 463| return
- 464| i32.const $1
- 469| i32.const $2
- 474| i32.store8 $0:%[-2]+$2, %[-1]
- 483| return
- 484| i32.const $1
- 489| i32.const $2
- 494| i32.store16 $0:%[-2]+$2, %[-1]
- 503| return
- 504| i32.const $1
- 509| i64.const $2
- 518| i64.store8 $0:%[-2]+$2, %[-1]
- 527| return
- 528| i32.const $1
- 533| i64.const $2
- 542| i64.store16 $0:%[-2]+$2, %[-1]
- 551| return
- 552| i32.const $1
- 557| i64.const $2
- 566| i64.store32 $0:%[-2]+$2, %[-1]
- 575| return
- 576| memory.size $0
- 581| drop
- 582| return
- 583| i32.const $1
- 588| memory.grow $0:%[-1]
- 593| drop
- 594| return
- 595| i32.const $1
- 600| drop
- 601| return
- 602| i64.const $1
- 611| drop
- 612| return
- 613| f32.const $1
- 618| drop
- 619| return
- 620| f64.const $1
- 629| drop
- 630| return
- 631| i32.const $1
- 636| i32.eqz %[-1]
- 637| drop
- 638| return
- 639| i32.const $1
- 644| i32.const $2
- 649| i32.eq %[-2], %[-1]
- 650| drop
- 651| return
- 652| i32.const $1
- 657| i32.const $2
- 662| i32.ne %[-2], %[-1]
- 663| drop
- 664| return
- 665| i32.const $1
- 670| i32.const $2
- 675| i32.lt_s %[-2], %[-1]
- 676| drop
- 677| return
- 678| i32.const $1
- 683| i32.const $2
- 688| i32.lt_u %[-2], %[-1]
- 689| drop
- 690| return
- 691| i32.const $1
- 696| i32.const $2
- 701| i32.gt_s %[-2], %[-1]
- 702| drop
- 703| return
- 704| i32.const $1
- 709| i32.const $2
- 714| i32.gt_u %[-2], %[-1]
- 715| drop
- 716| return
- 717| i32.const $1
- 722| i32.const $2
- 727| i32.le_s %[-2], %[-1]
- 728| drop
- 729| return
- 730| i32.const $1
- 735| i32.const $2
- 740| i32.le_u %[-2], %[-1]
- 741| drop
- 742| return
- 743| i32.const $1
- 748| i32.const $2
- 753| i32.ge_s %[-2], %[-1]
- 754| drop
- 755| return
- 756| i32.const $1
- 761| i32.const $2
- 766| i32.ge_u %[-2], %[-1]
- 767| drop
- 768| return
- 769| i64.const $1
- 778| i64.eqz %[-1]
- 779| drop
- 780| return
- 781| i64.const $1
- 790| i64.const $2
- 799| i64.eq %[-2], %[-1]
- 800| drop
- 801| return
- 802| i64.const $1
- 811| i64.const $2
- 820| i64.ne %[-2], %[-1]
- 821| drop
- 822| return
- 823| i64.const $1
- 832| i64.const $2
- 841| i64.lt_s %[-2], %[-1]
- 842| drop
- 843| return
- 844| i64.const $1
- 853| i64.const $2
- 862| i64.lt_u %[-2], %[-1]
- 863| drop
- 864| return
- 865| i64.const $1
- 874| i64.const $2
- 883| i64.gt_s %[-2], %[-1]
- 884| drop
- 885| return
- 886| i64.const $1
- 895| i64.const $2
- 904| i64.gt_u %[-2], %[-1]
- 905| drop
- 906| return
- 907| i64.const $1
- 916| i64.const $2
- 925| i64.le_s %[-2], %[-1]
- 926| drop
- 927| return
- 928| i64.const $1
- 937| i64.const $2
- 946| i64.le_u %[-2], %[-1]
- 947| drop
- 948| return
- 949| i64.const $1
- 958| i64.const $2
- 967| i64.ge_s %[-2], %[-1]
- 968| drop
- 969| return
- 970| i64.const $1
- 979| i64.const $2
- 988| i64.ge_u %[-2], %[-1]
- 989| drop
- 990| return
- 991| f32.const $1
- 996| f32.const $2
-1001| f32.eq %[-2], %[-1]
-1002| drop
-1003| return
-1004| f32.const $1
-1009| f32.const $2
-1014| f32.ne %[-2], %[-1]
-1015| drop
-1016| return
-1017| f32.const $1
-1022| f32.const $2
-1027| f32.lt %[-2], %[-1]
-1028| drop
-1029| return
-1030| f32.const $1
-1035| f32.const $2
-1040| f32.gt %[-2], %[-1]
-1041| drop
-1042| return
-1043| f32.const $1
-1048| f32.const $2
-1053| f32.le %[-2], %[-1]
-1054| drop
-1055| return
-1056| f32.const $1
-1061| f32.const $2
-1066| f32.ge %[-2], %[-1]
-1067| drop
-1068| return
-1069| f64.const $1
-1078| f64.const $2
-1087| f64.eq %[-2], %[-1]
-1088| drop
-1089| return
-1090| f64.const $1
-1099| f64.const $2
-1108| f64.ne %[-2], %[-1]
-1109| drop
-1110| return
-1111| f64.const $1
-1120| f64.const $2
-1129| f64.lt %[-2], %[-1]
-1130| drop
-1131| return
-1132| f64.const $1
-1141| f64.const $2
-1150| f64.gt %[-2], %[-1]
-1151| drop
-1152| return
-1153| f64.const $1
-1162| f64.const $2
-1171| f64.le %[-2], %[-1]
-1172| drop
-1173| return
-1174| f64.const $1
-1183| f64.const $2
-1192| f64.ge %[-2], %[-1]
-1193| drop
-1194| return
-1195| i32.const $1
-1200| i32.clz %[-1]
-1201| drop
-1202| return
-1203| i32.const $1
-1208| i32.ctz %[-1]
-1209| drop
-1210| return
-1211| i32.const $1
-1216| i32.popcnt %[-1]
-1217| drop
-1218| return
-1219| i32.const $1
-1224| i32.const $2
-1229| i32.add %[-2], %[-1]
-1230| drop
-1231| return
-1232| i32.const $1
-1237| i32.const $2
-1242| i32.sub %[-2], %[-1]
-1243| drop
-1244| return
-1245| i32.const $1
-1250| i32.const $2
-1255| i32.mul %[-2], %[-1]
-1256| drop
-1257| return
-1258| i32.const $1
-1263| i32.const $2
-1268| i32.div_s %[-2], %[-1]
-1269| drop
-1270| return
-1271| i32.const $1
-1276| i32.const $2
-1281| i32.div_u %[-2], %[-1]
-1282| drop
-1283| return
-1284| i32.const $1
-1289| i32.const $2
-1294| i32.rem_s %[-2], %[-1]
-1295| drop
-1296| return
-1297| i32.const $1
-1302| i32.const $2
-1307| i32.rem_u %[-2], %[-1]
-1308| drop
-1309| return
-1310| i32.const $1
-1315| i32.const $2
-1320| i32.and %[-2], %[-1]
-1321| drop
-1322| return
-1323| i32.const $1
-1328| i32.const $2
-1333| i32.or %[-2], %[-1]
-1334| drop
-1335| return
-1336| i32.const $1
-1341| i32.const $2
-1346| i32.xor %[-2], %[-1]
-1347| drop
-1348| return
-1349| i32.const $1
-1354| i32.const $2
-1359| i32.shl %[-2], %[-1]
-1360| drop
-1361| return
-1362| i32.const $1
-1367| i32.const $2
-1372| i32.shr_s %[-2], %[-1]
-1373| drop
-1374| return
-1375| i32.const $1
-1380| i32.const $2
-1385| i32.shr_u %[-2], %[-1]
-1386| drop
-1387| return
-1388| i32.const $1
-1393| i32.const $2
-1398| i32.rotl %[-2], %[-1]
-1399| drop
-1400| return
-1401| i32.const $1
-1406| i32.const $2
-1411| i32.rotr %[-2], %[-1]
-1412| drop
-1413| return
-1414| i64.const $1
-1423| i64.clz %[-1]
-1424| drop
-1425| return
-1426| i64.const $1
-1435| i64.ctz %[-1]
-1436| drop
-1437| return
-1438| i64.const $1
-1447| i64.popcnt %[-1]
-1448| drop
-1449| return
-1450| i64.const $1
-1459| i64.const $2
-1468| i64.add %[-2], %[-1]
-1469| drop
-1470| return
-1471| i64.const $1
-1480| i64.const $2
-1489| i64.sub %[-2], %[-1]
-1490| drop
-1491| return
-1492| i64.const $1
-1501| i64.const $2
-1510| i64.mul %[-2], %[-1]
-1511| drop
-1512| return
-1513| i64.const $1
-1522| i64.const $2
-1531| i64.div_s %[-2], %[-1]
-1532| drop
-1533| return
-1534| i64.const $1
-1543| i64.const $2
-1552| i64.div_u %[-2], %[-1]
-1553| drop
-1554| return
-1555| i64.const $1
-1564| i64.const $2
-1573| i64.rem_s %[-2], %[-1]
-1574| drop
-1575| return
-1576| i64.const $1
-1585| i64.const $2
-1594| i64.rem_u %[-2], %[-1]
-1595| drop
-1596| return
-1597| i64.const $1
-1606| i64.const $2
-1615| i64.and %[-2], %[-1]
-1616| drop
-1617| return
-1618| i64.const $1
-1627| i64.const $2
-1636| i64.or %[-2], %[-1]
-1637| drop
-1638| return
-1639| i64.const $1
-1648| i64.const $2
-1657| i64.xor %[-2], %[-1]
-1658| drop
-1659| return
-1660| i64.const $1
-1669| i64.const $2
-1678| i64.shl %[-2], %[-1]
-1679| drop
-1680| return
-1681| i64.const $1
-1690| i64.const $2
-1699| i64.shr_s %[-2], %[-1]
-1700| drop
-1701| return
-1702| i64.const $1
-1711| i64.const $2
-1720| i64.shr_u %[-2], %[-1]
-1721| drop
-1722| return
-1723| i64.const $1
-1732| i64.const $2
-1741| i64.rotl %[-2], %[-1]
-1742| drop
-1743| return
-1744| i64.const $1
-1753| i64.const $2
-1762| i64.rotr %[-2], %[-1]
-1763| drop
-1764| return
-1765| f32.const $1
-1770| f32.abs %[-1]
-1771| drop
-1772| return
-1773| f32.const $1
-1778| f32.neg %[-1]
-1779| drop
-1780| return
-1781| f32.const $1
-1786| f32.ceil %[-1]
-1787| drop
-1788| return
-1789| f32.const $1
-1794| f32.floor %[-1]
-1795| drop
-1796| return
-1797| f32.const $1
-1802| f32.trunc %[-1]
-1803| drop
-1804| return
-1805| f32.const $1
-1810| f32.nearest %[-1]
-1811| drop
-1812| return
-1813| f32.const $1
-1818| f32.sqrt %[-1]
-1819| drop
-1820| return
-1821| f32.const $1
-1826| f32.const $2
-1831| f32.add %[-2], %[-1]
-1832| drop
-1833| return
-1834| f32.const $1
-1839| f32.const $2
-1844| f32.sub %[-2], %[-1]
-1845| drop
-1846| return
-1847| f32.const $1
-1852| f32.const $2
-1857| f32.mul %[-2], %[-1]
-1858| drop
-1859| return
-1860| f32.const $1
-1865| f32.const $2
-1870| f32.div %[-2], %[-1]
-1871| drop
-1872| return
-1873| f32.const $1
-1878| f32.const $2
-1883| f32.min %[-2], %[-1]
-1884| drop
-1885| return
-1886| f32.const $1
-1891| f32.const $2
-1896| f32.max %[-2], %[-1]
-1897| drop
-1898| return
-1899| f32.const $1
-1904| f32.const $2
-1909| f32.copysign %[-2], %[-1]
-1910| drop
-1911| return
-1912| f64.const $1
-1921| f64.abs %[-1]
-1922| drop
-1923| return
-1924| f64.const $1
-1933| f64.neg %[-1]
-1934| drop
-1935| return
-1936| f64.const $1
-1945| f64.ceil %[-1]
-1946| drop
-1947| return
-1948| f64.const $1
-1957| f64.floor %[-1]
-1958| drop
-1959| return
-1960| f64.const $1
-1969| f64.trunc %[-1]
-1970| drop
-1971| return
-1972| f64.const $1
-1981| f64.nearest %[-1]
-1982| drop
-1983| return
-1984| f64.const $1
-1993| f64.sqrt %[-1]
-1994| drop
-1995| return
-1996| f64.const $1
-2005| f64.const $2
-2014| f64.add %[-2], %[-1]
-2015| drop
-2016| return
-2017| f64.const $1
-2026| f64.const $2
-2035| f64.sub %[-2], %[-1]
-2036| drop
-2037| return
-2038| f64.const $1
-2047| f64.const $2
-2056| f64.mul %[-2], %[-1]
-2057| drop
-2058| return
-2059| f64.const $1
-2068| f64.const $2
-2077| f64.div %[-2], %[-1]
-2078| drop
-2079| return
-2080| f64.const $1
-2089| f64.const $2
-2098| f64.min %[-2], %[-1]
-2099| drop
-2100| return
-2101| f64.const $1
-2110| f64.const $2
-2119| f64.max %[-2], %[-1]
-2120| drop
-2121| return
-2122| f64.const $1
-2131| f64.const $2
-2140| f64.copysign %[-2], %[-1]
-2141| drop
-2142| return
-2143| i64.const $1
-2152| i32.wrap/i64 %[-1]
-2153| drop
-2154| return
-2155| f32.const $1
-2160| i32.trunc_s/f32 %[-1]
-2161| drop
-2162| return
-2163| f32.const $1
-2168| i32.trunc_u/f32 %[-1]
-2169| drop
-2170| return
-2171| f64.const $1
-2180| i32.trunc_s/f64 %[-1]
-2181| drop
-2182| return
-2183| f64.const $1
-2192| i32.trunc_u/f64 %[-1]
-2193| drop
-2194| return
-2195| i32.const $1
-2200| i64.extend_s/i32 %[-1]
-2201| drop
-2202| return
-2203| i32.const $1
-2208| i64.extend_u/i32 %[-1]
-2209| drop
-2210| return
-2211| f32.const $1
-2216| i64.trunc_s/f32 %[-1]
-2217| drop
-2218| return
-2219| f32.const $1
-2224| i64.trunc_u/f32 %[-1]
-2225| drop
-2226| return
-2227| f64.const $1
-2236| i64.trunc_s/f64 %[-1]
-2237| drop
-2238| return
-2239| f64.const $1
-2248| i64.trunc_u/f64 %[-1]
-2249| drop
-2250| return
-2251| i32.const $1
-2256| f32.convert_s/i32 %[-1]
-2257| drop
-2258| return
-2259| i32.const $1
-2264| f32.convert_u/i32 %[-1]
-2265| drop
-2266| return
-2267| i64.const $1
-2276| f32.convert_s/i64 %[-1]
-2277| drop
-2278| return
-2279| i64.const $1
-2288| f32.convert_u/i64 %[-1]
-2289| drop
-2290| return
-2291| f64.const $1
-2300| f32.demote/f64 %[-1]
-2301| drop
-2302| return
-2303| i32.const $1
-2308| f64.convert_s/i32 %[-1]
-2309| drop
-2310| return
-2311| i32.const $1
-2316| f64.convert_u/i32 %[-1]
-2317| drop
-2318| return
-2319| i64.const $1
-2328| f64.convert_s/i64 %[-1]
-2329| drop
-2330| return
-2331| i64.const $1
-2340| f64.convert_u/i64 %[-1]
-2341| drop
-2342| return
-2343| f32.const $1
-2348| f64.promote/f32 %[-1]
-2349| drop
-2350| return
-2351| i32.const $1
-2356| f32.reinterpret/i32 %[-1]
-2357| drop
-2358| return
-2359| f32.const $1
-2364| i32.reinterpret/f32 %[-1]
-2365| drop
-2366| return
-2367| i64.const $1
-2376| f64.reinterpret/i64 %[-1]
-2377| drop
-2378| return
-2379| f64.const $1
-2388| i64.reinterpret/f64 %[-1]
-2389| drop
-2390| return
-2391| i32.const $1
-2396| i32.extend8_s %[-1]
-2397| drop
-2398| return
-2399| i32.const $1
-2404| i32.extend16_s %[-1]
-2405| drop
-2406| return
-2407| i64.const $1
-2416| i64.extend8_s %[-1]
-2417| drop
-2418| return
-2419| i64.const $1
-2428| i64.extend16_s %[-1]
-2429| drop
-2430| return
-2431| i64.const $1
-2440| i64.extend32_s %[-1]
-2441| drop
-2442| return
-2443| alloca $1
-2448| drop
-2449| return
-2450| i32.const $1
-2455| br_unless @2465, %[-1]
-2460| br @2465
-2465| return
-2466| i32.const $1
-2471| call_host $0
-2476| return
-2477| i32.const $1
-2482| br_table %[-1], $#0, table:$2496
-2491| data $9
-2496|   entry 0: offset: 2505 drop: 0 keep: 0
-2505| return
-2506| i32.const $1
-2511| i32.const $2
-2516| drop_keep $1 $1
-2522| br @2527
-2527| drop
-2528| return
-2529| f32.const $1
-2534| i32.trunc_s:sat/f32 %[-1]
+  23| data $12
+  28|   entry 0: offset: 40 drop: 0 keep: 0
+  40| return
+  41| return
+  42| return
+  43| call @0
+  48| return
+  49| i32.const $1
+  54| call_indirect $0:0, %[-1]
+  63| return
+  64| i32.const $1
+  69| drop
+  70| return
+  71| i32.const $1
+  76| i32.const $2
+  81| i32.const $3
+  86| select %[-3], %[-2], %[-1]
+  87| drop
+  88| return
+  89| alloca $1
+  94| get_local $1
+  99| drop
+ 100| drop
+ 101| return
+ 102| alloca $1
+ 107| i32.const $1
+ 112| set_local $1, %[-1]
+ 117| drop
+ 118| return
+ 119| alloca $1
+ 124| i32.const $1
+ 129| tee_local $2, %[-1]
+ 134| drop
+ 135| drop
+ 136| return
+ 137| get_global $0
+ 142| drop
+ 143| return
+ 144| i32.const $1
+ 149| set_global $0, %[-1]
+ 154| return
+ 155| i32.const $1
+ 160| i32.load $0:%[-1]+$2
+ 169| drop
+ 170| return
+ 171| i32.const $1
+ 176| i64.load $0:%[-1]+$2
+ 185| drop
+ 186| return
+ 187| i32.const $1
+ 192| f32.load $0:%[-1]+$2
+ 201| drop
+ 202| return
+ 203| i32.const $1
+ 208| f64.load $0:%[-1]+$2
+ 217| drop
+ 218| return
+ 219| i32.const $1
+ 224| i32.load8_s $0:%[-1]+$2
+ 233| drop
+ 234| return
+ 235| i32.const $1
+ 240| i32.load8_u $0:%[-1]+$2
+ 249| drop
+ 250| return
+ 251| i32.const $1
+ 256| i32.load16_s $0:%[-1]+$2
+ 265| drop
+ 266| return
+ 267| i32.const $1
+ 272| i32.load16_u $0:%[-1]+$2
+ 281| drop
+ 282| return
+ 283| i32.const $1
+ 288| i64.load8_s $0:%[-1]+$2
+ 297| drop
+ 298| return
+ 299| i32.const $1
+ 304| i64.load8_u $0:%[-1]+$2
+ 313| drop
+ 314| return
+ 315| i32.const $1
+ 320| i64.load16_s $0:%[-1]+$2
+ 329| drop
+ 330| return
+ 331| i32.const $1
+ 336| i64.load16_u $0:%[-1]+$2
+ 345| drop
+ 346| return
+ 347| i32.const $1
+ 352| i64.load32_s $0:%[-1]+$2
+ 361| drop
+ 362| return
+ 363| i32.const $1
+ 368| i64.load32_u $0:%[-1]+$2
+ 377| drop
+ 378| return
+ 379| i32.const $1
+ 384| i32.const $2
+ 389| i32.store $0:%[-2]+$2, %[-1]
+ 398| return
+ 399| i32.const $1
+ 404| i64.const $2
+ 413| i64.store $0:%[-2]+$2, %[-1]
+ 422| return
+ 423| i32.const $1
+ 428| f32.const $2
+ 433| f32.store $0:%[-2]+$2, %[-1]
+ 442| return
+ 443| i32.const $1
+ 448| f64.const $2
+ 457| f64.store $0:%[-2]+$2, %[-1]
+ 466| return
+ 467| i32.const $1
+ 472| i32.const $2
+ 477| i32.store8 $0:%[-2]+$2, %[-1]
+ 486| return
+ 487| i32.const $1
+ 492| i32.const $2
+ 497| i32.store16 $0:%[-2]+$2, %[-1]
+ 506| return
+ 507| i32.const $1
+ 512| i64.const $2
+ 521| i64.store8 $0:%[-2]+$2, %[-1]
+ 530| return
+ 531| i32.const $1
+ 536| i64.const $2
+ 545| i64.store16 $0:%[-2]+$2, %[-1]
+ 554| return
+ 555| i32.const $1
+ 560| i64.const $2
+ 569| i64.store32 $0:%[-2]+$2, %[-1]
+ 578| return
+ 579| memory.size $0
+ 584| drop
+ 585| return
+ 586| i32.const $1
+ 591| memory.grow $0:%[-1]
+ 596| drop
+ 597| return
+ 598| i32.const $1
+ 603| drop
+ 604| return
+ 605| i64.const $1
+ 614| drop
+ 615| return
+ 616| f32.const $1
+ 621| drop
+ 622| return
+ 623| f64.const $1
+ 632| drop
+ 633| return
+ 634| i32.const $1
+ 639| i32.eqz %[-1]
+ 640| drop
+ 641| return
+ 642| i32.const $1
+ 647| i32.const $2
+ 652| i32.eq %[-2], %[-1]
+ 653| drop
+ 654| return
+ 655| i32.const $1
+ 660| i32.const $2
+ 665| i32.ne %[-2], %[-1]
+ 666| drop
+ 667| return
+ 668| i32.const $1
+ 673| i32.const $2
+ 678| i32.lt_s %[-2], %[-1]
+ 679| drop
+ 680| return
+ 681| i32.const $1
+ 686| i32.const $2
+ 691| i32.lt_u %[-2], %[-1]
+ 692| drop
+ 693| return
+ 694| i32.const $1
+ 699| i32.const $2
+ 704| i32.gt_s %[-2], %[-1]
+ 705| drop
+ 706| return
+ 707| i32.const $1
+ 712| i32.const $2
+ 717| i32.gt_u %[-2], %[-1]
+ 718| drop
+ 719| return
+ 720| i32.const $1
+ 725| i32.const $2
+ 730| i32.le_s %[-2], %[-1]
+ 731| drop
+ 732| return
+ 733| i32.const $1
+ 738| i32.const $2
+ 743| i32.le_u %[-2], %[-1]
+ 744| drop
+ 745| return
+ 746| i32.const $1
+ 751| i32.const $2
+ 756| i32.ge_s %[-2], %[-1]
+ 757| drop
+ 758| return
+ 759| i32.const $1
+ 764| i32.const $2
+ 769| i32.ge_u %[-2], %[-1]
+ 770| drop
+ 771| return
+ 772| i64.const $1
+ 781| i64.eqz %[-1]
+ 782| drop
+ 783| return
+ 784| i64.const $1
+ 793| i64.const $2
+ 802| i64.eq %[-2], %[-1]
+ 803| drop
+ 804| return
+ 805| i64.const $1
+ 814| i64.const $2
+ 823| i64.ne %[-2], %[-1]
+ 824| drop
+ 825| return
+ 826| i64.const $1
+ 835| i64.const $2
+ 844| i64.lt_s %[-2], %[-1]
+ 845| drop
+ 846| return
+ 847| i64.const $1
+ 856| i64.const $2
+ 865| i64.lt_u %[-2], %[-1]
+ 866| drop
+ 867| return
+ 868| i64.const $1
+ 877| i64.const $2
+ 886| i64.gt_s %[-2], %[-1]
+ 887| drop
+ 888| return
+ 889| i64.const $1
+ 898| i64.const $2
+ 907| i64.gt_u %[-2], %[-1]
+ 908| drop
+ 909| return
+ 910| i64.const $1
+ 919| i64.const $2
+ 928| i64.le_s %[-2], %[-1]
+ 929| drop
+ 930| return
+ 931| i64.const $1
+ 940| i64.const $2
+ 949| i64.le_u %[-2], %[-1]
+ 950| drop
+ 951| return
+ 952| i64.const $1
+ 961| i64.const $2
+ 970| i64.ge_s %[-2], %[-1]
+ 971| drop
+ 972| return
+ 973| i64.const $1
+ 982| i64.const $2
+ 991| i64.ge_u %[-2], %[-1]
+ 992| drop
+ 993| return
+ 994| f32.const $1
+ 999| f32.const $2
+1004| f32.eq %[-2], %[-1]
+1005| drop
+1006| return
+1007| f32.const $1
+1012| f32.const $2
+1017| f32.ne %[-2], %[-1]
+1018| drop
+1019| return
+1020| f32.const $1
+1025| f32.const $2
+1030| f32.lt %[-2], %[-1]
+1031| drop
+1032| return
+1033| f32.const $1
+1038| f32.const $2
+1043| f32.gt %[-2], %[-1]
+1044| drop
+1045| return
+1046| f32.const $1
+1051| f32.const $2
+1056| f32.le %[-2], %[-1]
+1057| drop
+1058| return
+1059| f32.const $1
+1064| f32.const $2
+1069| f32.ge %[-2], %[-1]
+1070| drop
+1071| return
+1072| f64.const $1
+1081| f64.const $2
+1090| f64.eq %[-2], %[-1]
+1091| drop
+1092| return
+1093| f64.const $1
+1102| f64.const $2
+1111| f64.ne %[-2], %[-1]
+1112| drop
+1113| return
+1114| f64.const $1
+1123| f64.const $2
+1132| f64.lt %[-2], %[-1]
+1133| drop
+1134| return
+1135| f64.const $1
+1144| f64.const $2
+1153| f64.gt %[-2], %[-1]
+1154| drop
+1155| return
+1156| f64.const $1
+1165| f64.const $2
+1174| f64.le %[-2], %[-1]
+1175| drop
+1176| return
+1177| f64.const $1
+1186| f64.const $2
+1195| f64.ge %[-2], %[-1]
+1196| drop
+1197| return
+1198| i32.const $1
+1203| i32.clz %[-1]
+1204| drop
+1205| return
+1206| i32.const $1
+1211| i32.ctz %[-1]
+1212| drop
+1213| return
+1214| i32.const $1
+1219| i32.popcnt %[-1]
+1220| drop
+1221| return
+1222| i32.const $1
+1227| i32.const $2
+1232| i32.add %[-2], %[-1]
+1233| drop
+1234| return
+1235| i32.const $1
+1240| i32.const $2
+1245| i32.sub %[-2], %[-1]
+1246| drop
+1247| return
+1248| i32.const $1
+1253| i32.const $2
+1258| i32.mul %[-2], %[-1]
+1259| drop
+1260| return
+1261| i32.const $1
+1266| i32.const $2
+1271| i32.div_s %[-2], %[-1]
+1272| drop
+1273| return
+1274| i32.const $1
+1279| i32.const $2
+1284| i32.div_u %[-2], %[-1]
+1285| drop
+1286| return
+1287| i32.const $1
+1292| i32.const $2
+1297| i32.rem_s %[-2], %[-1]
+1298| drop
+1299| return
+1300| i32.const $1
+1305| i32.const $2
+1310| i32.rem_u %[-2], %[-1]
+1311| drop
+1312| return
+1313| i32.const $1
+1318| i32.const $2
+1323| i32.and %[-2], %[-1]
+1324| drop
+1325| return
+1326| i32.const $1
+1331| i32.const $2
+1336| i32.or %[-2], %[-1]
+1337| drop
+1338| return
+1339| i32.const $1
+1344| i32.const $2
+1349| i32.xor %[-2], %[-1]
+1350| drop
+1351| return
+1352| i32.const $1
+1357| i32.const $2
+1362| i32.shl %[-2], %[-1]
+1363| drop
+1364| return
+1365| i32.const $1
+1370| i32.const $2
+1375| i32.shr_s %[-2], %[-1]
+1376| drop
+1377| return
+1378| i32.const $1
+1383| i32.const $2
+1388| i32.shr_u %[-2], %[-1]
+1389| drop
+1390| return
+1391| i32.const $1
+1396| i32.const $2
+1401| i32.rotl %[-2], %[-1]
+1402| drop
+1403| return
+1404| i32.const $1
+1409| i32.const $2
+1414| i32.rotr %[-2], %[-1]
+1415| drop
+1416| return
+1417| i64.const $1
+1426| i64.clz %[-1]
+1427| drop
+1428| return
+1429| i64.const $1
+1438| i64.ctz %[-1]
+1439| drop
+1440| return
+1441| i64.const $1
+1450| i64.popcnt %[-1]
+1451| drop
+1452| return
+1453| i64.const $1
+1462| i64.const $2
+1471| i64.add %[-2], %[-1]
+1472| drop
+1473| return
+1474| i64.const $1
+1483| i64.const $2
+1492| i64.sub %[-2], %[-1]
+1493| drop
+1494| return
+1495| i64.const $1
+1504| i64.const $2
+1513| i64.mul %[-2], %[-1]
+1514| drop
+1515| return
+1516| i64.const $1
+1525| i64.const $2
+1534| i64.div_s %[-2], %[-1]
+1535| drop
+1536| return
+1537| i64.const $1
+1546| i64.const $2
+1555| i64.div_u %[-2], %[-1]
+1556| drop
+1557| return
+1558| i64.const $1
+1567| i64.const $2
+1576| i64.rem_s %[-2], %[-1]
+1577| drop
+1578| return
+1579| i64.const $1
+1588| i64.const $2
+1597| i64.rem_u %[-2], %[-1]
+1598| drop
+1599| return
+1600| i64.const $1
+1609| i64.const $2
+1618| i64.and %[-2], %[-1]
+1619| drop
+1620| return
+1621| i64.const $1
+1630| i64.const $2
+1639| i64.or %[-2], %[-1]
+1640| drop
+1641| return
+1642| i64.const $1
+1651| i64.const $2
+1660| i64.xor %[-2], %[-1]
+1661| drop
+1662| return
+1663| i64.const $1
+1672| i64.const $2
+1681| i64.shl %[-2], %[-1]
+1682| drop
+1683| return
+1684| i64.const $1
+1693| i64.const $2
+1702| i64.shr_s %[-2], %[-1]
+1703| drop
+1704| return
+1705| i64.const $1
+1714| i64.const $2
+1723| i64.shr_u %[-2], %[-1]
+1724| drop
+1725| return
+1726| i64.const $1
+1735| i64.const $2
+1744| i64.rotl %[-2], %[-1]
+1745| drop
+1746| return
+1747| i64.const $1
+1756| i64.const $2
+1765| i64.rotr %[-2], %[-1]
+1766| drop
+1767| return
+1768| f32.const $1
+1773| f32.abs %[-1]
+1774| drop
+1775| return
+1776| f32.const $1
+1781| f32.neg %[-1]
+1782| drop
+1783| return
+1784| f32.const $1
+1789| f32.ceil %[-1]
+1790| drop
+1791| return
+1792| f32.const $1
+1797| f32.floor %[-1]
+1798| drop
+1799| return
+1800| f32.const $1
+1805| f32.trunc %[-1]
+1806| drop
+1807| return
+1808| f32.const $1
+1813| f32.nearest %[-1]
+1814| drop
+1815| return
+1816| f32.const $1
+1821| f32.sqrt %[-1]
+1822| drop
+1823| return
+1824| f32.const $1
+1829| f32.const $2
+1834| f32.add %[-2], %[-1]
+1835| drop
+1836| return
+1837| f32.const $1
+1842| f32.const $2
+1847| f32.sub %[-2], %[-1]
+1848| drop
+1849| return
+1850| f32.const $1
+1855| f32.const $2
+1860| f32.mul %[-2], %[-1]
+1861| drop
+1862| return
+1863| f32.const $1
+1868| f32.const $2
+1873| f32.div %[-2], %[-1]
+1874| drop
+1875| return
+1876| f32.const $1
+1881| f32.const $2
+1886| f32.min %[-2], %[-1]
+1887| drop
+1888| return
+1889| f32.const $1
+1894| f32.const $2
+1899| f32.max %[-2], %[-1]
+1900| drop
+1901| return
+1902| f32.const $1
+1907| f32.const $2
+1912| f32.copysign %[-2], %[-1]
+1913| drop
+1914| return
+1915| f64.const $1
+1924| f64.abs %[-1]
+1925| drop
+1926| return
+1927| f64.const $1
+1936| f64.neg %[-1]
+1937| drop
+1938| return
+1939| f64.const $1
+1948| f64.ceil %[-1]
+1949| drop
+1950| return
+1951| f64.const $1
+1960| f64.floor %[-1]
+1961| drop
+1962| return
+1963| f64.const $1
+1972| f64.trunc %[-1]
+1973| drop
+1974| return
+1975| f64.const $1
+1984| f64.nearest %[-1]
+1985| drop
+1986| return
+1987| f64.const $1
+1996| f64.sqrt %[-1]
+1997| drop
+1998| return
+1999| f64.const $1
+2008| f64.const $2
+2017| f64.add %[-2], %[-1]
+2018| drop
+2019| return
+2020| f64.const $1
+2029| f64.const $2
+2038| f64.sub %[-2], %[-1]
+2039| drop
+2040| return
+2041| f64.const $1
+2050| f64.const $2
+2059| f64.mul %[-2], %[-1]
+2060| drop
+2061| return
+2062| f64.const $1
+2071| f64.const $2
+2080| f64.div %[-2], %[-1]
+2081| drop
+2082| return
+2083| f64.const $1
+2092| f64.const $2
+2101| f64.min %[-2], %[-1]
+2102| drop
+2103| return
+2104| f64.const $1
+2113| f64.const $2
+2122| f64.max %[-2], %[-1]
+2123| drop
+2124| return
+2125| f64.const $1
+2134| f64.const $2
+2143| f64.copysign %[-2], %[-1]
+2144| drop
+2145| return
+2146| i64.const $1
+2155| i32.wrap/i64 %[-1]
+2156| drop
+2157| return
+2158| f32.const $1
+2163| i32.trunc_s/f32 %[-1]
+2164| drop
+2165| return
+2166| f32.const $1
+2171| i32.trunc_u/f32 %[-1]
+2172| drop
+2173| return
+2174| f64.const $1
+2183| i32.trunc_s/f64 %[-1]
+2184| drop
+2185| return
+2186| f64.const $1
+2195| i32.trunc_u/f64 %[-1]
+2196| drop
+2197| return
+2198| i32.const $1
+2203| i64.extend_s/i32 %[-1]
+2204| drop
+2205| return
+2206| i32.const $1
+2211| i64.extend_u/i32 %[-1]
+2212| drop
+2213| return
+2214| f32.const $1
+2219| i64.trunc_s/f32 %[-1]
+2220| drop
+2221| return
+2222| f32.const $1
+2227| i64.trunc_u/f32 %[-1]
+2228| drop
+2229| return
+2230| f64.const $1
+2239| i64.trunc_s/f64 %[-1]
+2240| drop
+2241| return
+2242| f64.const $1
+2251| i64.trunc_u/f64 %[-1]
+2252| drop
+2253| return
+2254| i32.const $1
+2259| f32.convert_s/i32 %[-1]
+2260| drop
+2261| return
+2262| i32.const $1
+2267| f32.convert_u/i32 %[-1]
+2268| drop
+2269| return
+2270| i64.const $1
+2279| f32.convert_s/i64 %[-1]
+2280| drop
+2281| return
+2282| i64.const $1
+2291| f32.convert_u/i64 %[-1]
+2292| drop
+2293| return
+2294| f64.const $1
+2303| f32.demote/f64 %[-1]
+2304| drop
+2305| return
+2306| i32.const $1
+2311| f64.convert_s/i32 %[-1]
+2312| drop
+2313| return
+2314| i32.const $1
+2319| f64.convert_u/i32 %[-1]
+2320| drop
+2321| return
+2322| i64.const $1
+2331| f64.convert_s/i64 %[-1]
+2332| drop
+2333| return
+2334| i64.const $1
+2343| f64.convert_u/i64 %[-1]
+2344| drop
+2345| return
+2346| f32.const $1
+2351| f64.promote/f32 %[-1]
+2352| drop
+2353| return
+2354| i32.const $1
+2359| f32.reinterpret/i32 %[-1]
+2360| drop
+2361| return
+2362| f32.const $1
+2367| i32.reinterpret/f32 %[-1]
+2368| drop
+2369| return
+2370| i64.const $1
+2379| f64.reinterpret/i64 %[-1]
+2380| drop
+2381| return
+2382| f64.const $1
+2391| i64.reinterpret/f64 %[-1]
+2392| drop
+2393| return
+2394| i32.const $1
+2399| i32.extend8_s %[-1]
+2400| drop
+2401| return
+2402| i32.const $1
+2407| i32.extend16_s %[-1]
+2408| drop
+2409| return
+2410| i64.const $1
+2419| i64.extend8_s %[-1]
+2420| drop
+2421| return
+2422| i64.const $1
+2431| i64.extend16_s %[-1]
+2432| drop
+2433| return
+2434| i64.const $1
+2443| i64.extend32_s %[-1]
+2444| drop
+2445| return
+2446| alloca $1
+2451| drop
+2452| return
+2453| i32.const $1
+2458| br_unless @2468, %[-1]
+2463| br @2468
+2468| return
+2469| i32.const $1
+2474| call_host $0
+2479| return
+2480| i32.const $1
+2485| br_table %[-1], $#0, table:$2499
+2494| data $12
+2499|   entry 0: offset: 2511 drop: 0 keep: 0
+2511| return
+2512| i32.const $1
+2517| i32.const $2
+2522| drop_keep $1 $1
+2531| br @2536
 2536| drop
 2537| return
 2538| f32.const $1
-2543| i32.trunc_u:sat/f32 %[-1]
+2543| i32.trunc_s:sat/f32 %[-1]
 2545| drop
 2546| return
-2547| f64.const $1
-2556| i32.trunc_s:sat/f64 %[-1]
-2558| drop
-2559| return
-2560| f64.const $1
-2569| i32.trunc_u:sat/f64 %[-1]
-2571| drop
-2572| return
-2573| f32.const $1
-2578| i64.trunc_s:sat/f32 %[-1]
+2547| f32.const $1
+2552| i32.trunc_u:sat/f32 %[-1]
+2554| drop
+2555| return
+2556| f64.const $1
+2565| i32.trunc_s:sat/f64 %[-1]
+2567| drop
+2568| return
+2569| f64.const $1
+2578| i32.trunc_u:sat/f64 %[-1]
 2580| drop
 2581| return
 2582| f32.const $1
-2587| i64.trunc_u:sat/f32 %[-1]
+2587| i64.trunc_s:sat/f32 %[-1]
 2589| drop
 2590| return
-2591| f64.const $1
-2600| i64.trunc_s:sat/f64 %[-1]
-2602| drop
-2603| return
-2604| f64.const $1
-2613| i64.trunc_u:sat/f64 %[-1]
-2615| drop
-2616| return
-2617| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2635| drop
-2636| return
-2637| i32.const $1
-2642| v128.load $0:%[-1]+$3
-2652| drop
-2653| return
-2654| i32.const $1
-2659| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2677| v128.store $0:%[-2]+$3, %[-1]
-2687| return
-2688| i32.const $1
-2693| i8x16.splat %[-1]
-2695| drop
+2591| f32.const $1
+2596| i64.trunc_u:sat/f32 %[-1]
+2598| drop
+2599| return
+2600| f64.const $1
+2609| i64.trunc_s:sat/f64 %[-1]
+2611| drop
+2612| return
+2613| f64.const $1
+2622| i64.trunc_u:sat/f64 %[-1]
+2624| drop
+2625| return
+2626| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2644| drop
+2645| return
+2646| i32.const $1
+2651| v128.load $0:%[-1]+$3
+2661| drop
+2662| return
+2663| i32.const $1
+2668| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2686| v128.store $0:%[-2]+$3, %[-1]
 2696| return
 2697| i32.const $1
-2702| i16x8.splat %[-1]
+2702| i8x16.splat %[-1]
 2704| drop
 2705| return
 2706| i32.const $1
-2711| i32x4.splat %[-1]
+2711| i16x8.splat %[-1]
 2713| drop
 2714| return
-2715| i64.const $1
-2724| i64x2.splat %[-1]
-2726| drop
-2727| return
-2728| f32.const $1
-2733| f32x4.splat %[-1]
+2715| i32.const $1
+2720| i32x4.splat %[-1]
+2722| drop
+2723| return
+2724| i64.const $1
+2733| i64x2.splat %[-1]
 2735| drop
 2736| return
-2737| f64.const $1
-2746| f64x2.splat %[-1]
-2748| drop
-2749| return
-2750| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2768| i8x16.extract_lane_s %[-1] : (Lane imm: 15)
-2771| drop
-2772| return
-2773| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2791| i8x16.extract_lane_u %[-1] : (Lane imm: 15)
-2794| drop
-2795| return
-2796| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2814| i16x8.extract_lane_s %[-1] : (Lane imm: 7)
-2817| drop
-2818| return
-2819| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2837| i16x8.extract_lane_u %[-1] : (Lane imm: 7)
-2840| drop
-2841| return
-2842| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2860| i32x4.extract_lane %[-1] : (Lane imm: 3)
-2863| drop
-2864| return
-2865| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2883| i64x2.extract_lane %[-1] : (Lane imm: 1)
-2886| drop
-2887| return
-2888| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2906| f32x4.extract_lane %[-1] : (Lane imm: 3)
-2909| drop
-2910| return
-2911| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2929| f64x2.extract_lane %[-1] : (Lane imm: 1)
-2932| drop
-2933| return
-2934| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2952| i32.const $0
-2957| i8x16.replace_lane %[-1], %[-2] : (Lane imm: 15)
-2960| drop
-2961| return
-2962| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-2980| i32.const $0
-2985| i16x8.replace_lane %[-1], %[-2] : (Lane imm: 7)
-2988| drop
-2989| return
-2990| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3008| i32.const $0
-3013| i32x4.replace_lane %[-1], %[-2] : (Lane imm: 3)
-3016| drop
-3017| return
-3018| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3036| i64.const $0
-3045| i64x2.replace_lane %[-1], %[-2] : (Lane imm: 1)
-3048| drop
-3049| return
-3050| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3068| f32.const $0
-3073| f32x4.replace_lane %[-1], %[-2] : (Lane imm: 3)
-3076| drop
-3077| return
-3078| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3096| f64.const $0
-3105| f64x2.replace_lane %[-1], %[-2] : (Lane imm: 1)
-3108| drop
-3109| return
-3110| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3128| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3146| v8x16.shuffle %[-2], %[-1] : (Lane imm: $0x00000001 0x00000001 0x00000001 0x00000001 )
-3164| drop
-3165| return
-3166| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3184| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3202| i8x16.add %[-2], %[-1]
-3204| drop
-3205| return
-3206| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3224| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3242| i16x8.add %[-2], %[-1]
-3244| drop
-3245| return
-3246| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3264| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3282| i32x4.add %[-2], %[-1]
-3284| drop
-3285| return
-3286| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3304| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3322| i64x2.add %[-2], %[-1]
-3324| drop
-3325| return
-3326| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3344| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3362| i8x16.sub %[-2], %[-1]
-3364| drop
-3365| return
-3366| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3384| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3402| i16x8.sub %[-2], %[-1]
-3404| drop
-3405| return
-3406| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3424| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3442| i32x4.sub %[-2], %[-1]
-3444| drop
-3445| return
-3446| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3464| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3482| i64x2.sub %[-2], %[-1]
-3484| drop
-3485| return
-3486| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3504| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3522| i8x16.mul %[-2], %[-1]
-3524| drop
-3525| return
-3526| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3544| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3562| i16x8.mul %[-2], %[-1]
-3564| drop
-3565| return
-3566| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3584| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3602| i32x4.mul %[-2], %[-1]
-3604| drop
-3605| return
-3606| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3624| i8x16.neg %[-1]
-3626| drop
-3627| return
-3628| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3646| i16x8.neg %[-1]
-3648| drop
-3649| return
-3650| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3668| i32x4.neg %[-1]
-3670| drop
-3671| return
-3672| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3690| i64x2.neg %[-1]
-3692| drop
-3693| return
-3694| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3712| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3730| i8x16.add_saturate_s %[-2], %[-1]
-3732| drop
-3733| return
-3734| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3752| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3770| i8x16.add_saturate_u %[-2], %[-1]
-3772| drop
-3773| return
-3774| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3792| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3810| i16x8.add_saturate_s %[-2], %[-1]
-3812| drop
-3813| return
-3814| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3832| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3850| i16x8.add_saturate_u %[-2], %[-1]
-3852| drop
-3853| return
-3854| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3872| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3890| i8x16.sub_saturate_s %[-2], %[-1]
-3892| drop
-3893| return
-3894| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3912| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3930| i8x16.sub_saturate_u %[-2], %[-1]
-3932| drop
-3933| return
-3934| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3952| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-3970| i16x8.sub_saturate_s %[-2], %[-1]
-3972| drop
-3973| return
-3974| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-3992| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4010| i16x8.sub_saturate_u %[-2], %[-1]
-4012| drop
-4013| return
-4014| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4032| i32.const $0
-4037| i8x16.shl %[-2], %[-1]
-4039| drop
-4040| return
-4041| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4059| i32.const $0
-4064| i16x8.shl %[-2], %[-1]
-4066| drop
-4067| return
-4068| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4086| i32.const $0
-4091| i32x4.shl %[-2], %[-1]
-4093| drop
-4094| return
-4095| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4113| i32.const $0
-4118| i64x2.shl %[-2], %[-1]
-4120| drop
-4121| return
-4122| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4140| i32.const $0
-4145| i8x16.shr_s %[-2], %[-1]
-4147| drop
-4148| return
-4149| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4167| i32.const $0
-4172| i8x16.shr_u %[-2], %[-1]
-4174| drop
-4175| return
-4176| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4194| i32.const $0
-4199| i16x8.shr_s %[-2], %[-1]
-4201| drop
-4202| return
-4203| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4221| i32.const $0
-4226| i16x8.shr_u %[-2], %[-1]
-4228| drop
-4229| return
-4230| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4248| i32.const $0
-4253| i32x4.shr_s %[-2], %[-1]
-4255| drop
-4256| return
-4257| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4275| i32.const $0
-4280| i32x4.shr_u %[-2], %[-1]
-4282| drop
-4283| return
-4284| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4302| i32.const $0
-4307| i64x2.shr_s %[-2], %[-1]
-4309| drop
-4310| return
-4311| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4329| i32.const $0
-4334| i64x2.shr_u %[-2], %[-1]
-4336| drop
-4337| return
-4338| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4356| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4374| v128.and %[-2], %[-1]
-4376| drop
-4377| return
-4378| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4396| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4414| v128.or %[-2], %[-1]
-4416| drop
-4417| return
-4418| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4436| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4454| v128.xor %[-2], %[-1]
-4456| drop
-4457| return
-4458| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4476| v128.not %[-1]
-4478| drop
-4479| return
-4480| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4498| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4516| v128.const $0x00000003 0x00000003 0x00000003 0x00000003
-4534| v128.bitselect %[-3], %[-2], %[-1]
-4536| drop
-4537| return
-4538| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4556| i8x16.any_true %[-1]
-4558| drop
-4559| return
-4560| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4578| i16x8.any_true %[-1]
-4580| drop
-4581| return
-4582| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4600| i32x4.any_true %[-1]
-4602| drop
-4603| return
-4604| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4622| i64x2.any_true %[-1]
-4624| drop
-4625| return
-4626| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4644| i8x16.all_true %[-1]
-4646| drop
-4647| return
-4648| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4666| i16x8.all_true %[-1]
-4668| drop
-4669| return
-4670| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4688| i32x4.all_true %[-1]
-4690| drop
-4691| return
-4692| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4710| i64x2.all_true %[-1]
-4712| drop
-4713| return
-4714| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4732| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4750| i8x16.eq %[-2], %[-1]
-4752| drop
-4753| return
-4754| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4772| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4790| i16x8.eq %[-2], %[-1]
-4792| drop
-4793| return
-4794| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4812| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4830| i32x4.eq %[-2], %[-1]
-4832| drop
-4833| return
-4834| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4852| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4870| f32x4.eq %[-2], %[-1]
-4872| drop
-4873| return
-4874| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4892| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4910| f64x2.eq %[-2], %[-1]
-4912| drop
-4913| return
-4914| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4932| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4950| i8x16.ne %[-2], %[-1]
-4952| drop
-4953| return
-4954| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-4972| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-4990| i16x8.ne %[-2], %[-1]
-4992| drop
-4993| return
-4994| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5012| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5030| i32x4.ne %[-2], %[-1]
-5032| drop
-5033| return
-5034| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5052| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5070| f32x4.ne %[-2], %[-1]
-5072| drop
-5073| return
-5074| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5092| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5110| f64x2.ne %[-2], %[-1]
-5112| drop
-5113| return
-5114| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5132| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5150| i8x16.lt_s %[-2], %[-1]
-5152| drop
-5153| return
-5154| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5172| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5190| i8x16.lt_u %[-2], %[-1]
-5192| drop
-5193| return
-5194| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5212| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5230| i16x8.lt_s %[-2], %[-1]
-5232| drop
-5233| return
-5234| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5252| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5270| i16x8.lt_u %[-2], %[-1]
-5272| drop
-5273| return
-5274| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5292| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5310| i32x4.lt_s %[-2], %[-1]
-5312| drop
-5313| return
-5314| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5332| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5350| i32x4.lt_u %[-2], %[-1]
-5352| drop
-5353| return
-5354| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5372| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5390| f32x4.lt %[-2], %[-1]
-5392| drop
-5393| return
-5394| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5412| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5430| f64x2.lt %[-2], %[-1]
-5432| drop
-5433| return
-5434| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5452| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5470| i8x16.le_s %[-2], %[-1]
-5472| drop
-5473| return
-5474| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5492| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5510| i8x16.le_u %[-2], %[-1]
-5512| drop
-5513| return
-5514| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5532| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5550| i16x8.le_s %[-2], %[-1]
-5552| drop
-5553| return
-5554| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5572| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5590| i16x8.le_u %[-2], %[-1]
-5592| drop
-5593| return
-5594| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5612| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5630| i32x4.le_s %[-2], %[-1]
-5632| drop
-5633| return
-5634| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5652| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5670| i32x4.le_u %[-2], %[-1]
-5672| drop
-5673| return
-5674| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5692| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5710| f32x4.le %[-2], %[-1]
-5712| drop
-5713| return
-5714| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5732| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5750| f64x2.le %[-2], %[-1]
-5752| drop
-5753| return
-5754| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5772| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5790| i8x16.gt_s %[-2], %[-1]
-5792| drop
-5793| return
-5794| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5812| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5830| i8x16.gt_u %[-2], %[-1]
-5832| drop
-5833| return
-5834| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5852| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5870| i16x8.gt_s %[-2], %[-1]
-5872| drop
-5873| return
-5874| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5892| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5910| i16x8.gt_u %[-2], %[-1]
-5912| drop
-5913| return
-5914| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5932| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5950| i32x4.gt_s %[-2], %[-1]
-5952| drop
-5953| return
-5954| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-5972| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-5990| i32x4.gt_u %[-2], %[-1]
-5992| drop
-5993| return
-5994| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6012| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6030| f32x4.gt %[-2], %[-1]
-6032| drop
-6033| return
-6034| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6052| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6070| f64x2.gt %[-2], %[-1]
-6072| drop
-6073| return
-6074| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6092| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6110| i8x16.ge_s %[-2], %[-1]
-6112| drop
-6113| return
-6114| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6132| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6150| i8x16.ge_u %[-2], %[-1]
-6152| drop
-6153| return
-6154| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6172| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6190| i16x8.ge_s %[-2], %[-1]
-6192| drop
-6193| return
-6194| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6212| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6230| i16x8.ge_u %[-2], %[-1]
-6232| drop
-6233| return
-6234| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6252| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6270| i32x4.ge_s %[-2], %[-1]
-6272| drop
-6273| return
-6274| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6292| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6310| i32x4.ge_u %[-2], %[-1]
-6312| drop
-6313| return
-6314| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6332| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6350| f32x4.ge %[-2], %[-1]
-6352| drop
-6353| return
-6354| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6372| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6390| f64x2.ge %[-2], %[-1]
-6392| drop
-6393| return
-6394| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6412| f32x4.neg %[-1]
-6414| drop
-6415| return
-6416| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6434| f64x2.neg %[-1]
-6436| drop
-6437| return
-6438| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6456| f32x4.abs %[-1]
-6458| drop
-6459| return
-6460| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6478| f64x2.abs %[-1]
-6480| drop
-6481| return
-6482| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6500| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6518| f32x4.min %[-2], %[-1]
-6520| drop
-6521| return
-6522| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6540| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6558| f64x2.min %[-2], %[-1]
-6560| drop
-6561| return
-6562| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6580| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6598| f32x4.max %[-2], %[-1]
-6600| drop
-6601| return
-6602| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6620| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6638| f64x2.max %[-2], %[-1]
-6640| drop
-6641| return
-6642| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6660| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6678| f32x4.add %[-2], %[-1]
-6680| drop
-6681| return
-6682| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6700| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6718| f64x2.add %[-2], %[-1]
-6720| drop
-6721| return
-6722| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6740| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6758| f32x4.sub %[-2], %[-1]
-6760| drop
-6761| return
-6762| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6780| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6798| f64x2.sub %[-2], %[-1]
-6800| drop
-6801| return
-6802| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6820| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6838| f32x4.div %[-2], %[-1]
-6840| drop
-6841| return
-6842| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6860| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6878| f64x2.div %[-2], %[-1]
-6880| drop
-6881| return
-6882| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6900| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6918| f32x4.mul %[-2], %[-1]
-6920| drop
-6921| return
-6922| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6940| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
-6958| f64x2.mul %[-2], %[-1]
-6960| drop
-6961| return
-6962| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-6980| f32x4.sqrt %[-1]
-6982| drop
-6983| return
-6984| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7002| f64x2.sqrt %[-1]
-7004| drop
-7005| return
-7006| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7024| f32x4.convert_s/i32x4 %[-1]
-7026| drop
-7027| return
-7028| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7046| f32x4.convert_u/i32x4 %[-1]
-7048| drop
-7049| return
-7050| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7068| f64x2.convert_s/i64x2 %[-1]
-7070| drop
-7071| return
-7072| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7090| f64x2.convert_u/i64x2 %[-1]
-7092| drop
-7093| return
-7094| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7112| i32x4.trunc_s/f32x4:sat %[-1]
-7114| drop
-7115| return
-7116| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7134| i32x4.trunc_u/f32x4:sat %[-1]
-7136| drop
-7137| return
-7138| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7156| i64x2.trunc_s/f64x2:sat %[-1]
-7158| drop
-7159| return
-7160| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
-7178| i64x2.trunc_u/f64x2:sat %[-1]
-7180| drop
-7181| return
-7182| i32.const $1
-7187| i32.const $2
-7192| atomic.wake $0:%[-2]+$3, %[-1]
-7202| drop
-7203| return
-7204| i32.const $1
-7209| i32.const $2
-7214| i64.const $3
-7223| i32.atomic.wait $0:%[-3]+$3, %[-2], %[-1]
-7233| drop
-7234| return
-7235| i32.const $1
-7240| i64.const $2
-7249| i64.const $3
-7258| i64.atomic.wait $0:%[-3]+$3, %[-2], %[-1]
-7268| drop
-7269| return
-7270| i32.const $1
-7275| i32.atomic.load $0:%[-1]+$3
-7285| drop
-7286| return
-7287| i32.const $1
-7292| i64.atomic.load $0:%[-1]+$7
-7302| drop
-7303| return
-7304| i32.const $1
-7309| i32.atomic.load8_u $0:%[-1]+$3
-7319| drop
-7320| return
-7321| i32.const $1
-7326| i32.atomic.load16_u $0:%[-1]+$3
-7336| drop
-7337| return
-7338| i32.const $1
-7343| i64.atomic.load8_u $0:%[-1]+$3
-7353| drop
-7354| return
-7355| i32.const $1
-7360| i64.atomic.load16_u $0:%[-1]+$3
-7370| drop
-7371| return
-7372| i32.const $1
-7377| i64.atomic.load32_u $0:%[-1]+$3
-7387| drop
-7388| return
-7389| i32.const $1
-7394| i32.const $2
-7399| i32.atomic.store $0:%[-2]+$3, %[-1]
-7409| return
-7410| i32.const $1
-7415| i64.const $2
-7424| i64.atomic.store $0:%[-2]+$7, %[-1]
-7434| return
-7435| i32.const $1
-7440| i32.const $2
-7445| i32.atomic.store8 $0:%[-2]+$3, %[-1]
-7455| return
-7456| i32.const $1
-7461| i32.const $2
-7466| i32.atomic.store16 $0:%[-2]+$3, %[-1]
-7476| return
-7477| i32.const $1
-7482| i64.const $2
-7491| i64.atomic.store8 $0:%[-2]+$3, %[-1]
-7501| return
-7502| i32.const $1
-7507| i64.const $2
-7516| i64.atomic.store16 $0:%[-2]+$3, %[-1]
-7526| return
-7527| i32.const $1
-7532| i64.const $2
-7541| i64.atomic.store32 $0:%[-2]+$3, %[-1]
-7551| return
-7552| i32.const $1
-7557| i32.const $2
-7562| i32.atomic.rmw.add $0:%[-2]+$3, %[-1]
-7572| drop
-7573| return
-7574| i32.const $1
-7579| i64.const $2
-7588| i64.atomic.rmw.add $0:%[-2]+$7, %[-1]
-7598| drop
-7599| return
-7600| i32.const $1
-7605| i32.const $2
-7610| i32.atomic.rmw8_u.add $0:%[-2]+$3, %[-1]
-7620| drop
-7621| return
-7622| i32.const $1
-7627| i32.const $2
-7632| i32.atomic.rmw16_u.add $0:%[-2]+$3, %[-1]
-7642| drop
-7643| return
-7644| i32.const $1
-7649| i64.const $2
-7658| i64.atomic.rmw8_u.add $0:%[-2]+$3, %[-1]
-7668| drop
-7669| return
-7670| i32.const $1
-7675| i64.const $2
-7684| i64.atomic.rmw16_u.add $0:%[-2]+$3, %[-1]
-7694| drop
-7695| return
-7696| i32.const $1
-7701| i64.const $2
-7710| i64.atomic.rmw32_u.add $0:%[-2]+$3, %[-1]
-7720| drop
-7721| return
-7722| i32.const $1
-7727| i32.const $2
-7732| i32.atomic.rmw.sub $0:%[-2]+$3, %[-1]
-7742| drop
-7743| return
-7744| i32.const $1
-7749| i64.const $2
-7758| i64.atomic.rmw.sub $0:%[-2]+$7, %[-1]
-7768| drop
-7769| return
-7770| i32.const $1
-7775| i32.const $2
-7780| i32.atomic.rmw8_u.sub $0:%[-2]+$3, %[-1]
-7790| drop
-7791| return
-7792| i32.const $1
-7797| i32.const $2
-7802| i32.atomic.rmw16_u.sub $0:%[-2]+$3, %[-1]
-7812| drop
-7813| return
-7814| i32.const $1
-7819| i64.const $2
-7828| i64.atomic.rmw8_u.sub $0:%[-2]+$3, %[-1]
-7838| drop
-7839| return
-7840| i32.const $1
-7845| i64.const $2
-7854| i64.atomic.rmw16_u.sub $0:%[-2]+$3, %[-1]
-7864| drop
-7865| return
-7866| i32.const $1
-7871| i64.const $2
-7880| i64.atomic.rmw32_u.sub $0:%[-2]+$3, %[-1]
-7890| drop
-7891| return
-7892| i32.const $1
-7897| i32.const $2
-7902| i32.atomic.rmw.and $0:%[-2]+$3, %[-1]
-7912| drop
-7913| return
-7914| i32.const $1
-7919| i64.const $2
-7928| i64.atomic.rmw.and $0:%[-2]+$7, %[-1]
-7938| drop
-7939| return
-7940| i32.const $1
-7945| i32.const $2
-7950| i32.atomic.rmw8_u.and $0:%[-2]+$3, %[-1]
-7960| drop
-7961| return
-7962| i32.const $1
-7967| i32.const $2
-7972| i32.atomic.rmw16_u.and $0:%[-2]+$3, %[-1]
-7982| drop
-7983| return
-7984| i32.const $1
-7989| i64.const $2
-7998| i64.atomic.rmw8_u.and $0:%[-2]+$3, %[-1]
-8008| drop
-8009| return
-8010| i32.const $1
-8015| i64.const $2
-8024| i64.atomic.rmw16_u.and $0:%[-2]+$3, %[-1]
-8034| drop
-8035| return
-8036| i32.const $1
-8041| i64.const $2
-8050| i64.atomic.rmw32_u.and $0:%[-2]+$3, %[-1]
-8060| drop
-8061| return
-8062| i32.const $1
-8067| i32.const $2
-8072| i32.atomic.rmw.or $0:%[-2]+$3, %[-1]
-8082| drop
-8083| return
-8084| i32.const $1
-8089| i64.const $2
-8098| i64.atomic.rmw.or $0:%[-2]+$7, %[-1]
-8108| drop
-8109| return
-8110| i32.const $1
-8115| i32.const $2
-8120| i32.atomic.rmw8_u.or $0:%[-2]+$3, %[-1]
-8130| drop
-8131| return
-8132| i32.const $1
-8137| i32.const $2
-8142| i32.atomic.rmw16_u.or $0:%[-2]+$3, %[-1]
-8152| drop
-8153| return
-8154| i32.const $1
-8159| i64.const $2
-8168| i64.atomic.rmw8_u.or $0:%[-2]+$3, %[-1]
-8178| drop
-8179| return
-8180| i32.const $1
-8185| i64.const $2
-8194| i64.atomic.rmw16_u.or $0:%[-2]+$3, %[-1]
-8204| drop
-8205| return
-8206| i32.const $1
-8211| i64.const $2
-8220| i64.atomic.rmw32_u.or $0:%[-2]+$3, %[-1]
-8230| drop
-8231| return
-8232| i32.const $1
-8237| i32.const $2
-8242| i32.atomic.rmw.xor $0:%[-2]+$3, %[-1]
-8252| drop
-8253| return
-8254| i32.const $1
-8259| i64.const $2
-8268| i64.atomic.rmw.xor $0:%[-2]+$7, %[-1]
-8278| drop
-8279| return
-8280| i32.const $1
-8285| i32.const $2
-8290| i32.atomic.rmw8_u.xor $0:%[-2]+$3, %[-1]
-8300| drop
-8301| return
-8302| i32.const $1
-8307| i32.const $2
-8312| i32.atomic.rmw16_u.xor $0:%[-2]+$3, %[-1]
-8322| drop
-8323| return
-8324| i32.const $1
-8329| i64.const $2
-8338| i64.atomic.rmw8_u.xor $0:%[-2]+$3, %[-1]
-8348| drop
-8349| return
-8350| i32.const $1
-8355| i64.const $2
-8364| i64.atomic.rmw16_u.xor $0:%[-2]+$3, %[-1]
-8374| drop
-8375| return
-8376| i32.const $1
-8381| i64.const $2
-8390| i64.atomic.rmw32_u.xor $0:%[-2]+$3, %[-1]
-8400| drop
-8401| return
-8402| i32.const $1
-8407| i32.const $2
-8412| i32.atomic.rmw.xchg $0:%[-2]+$3, %[-1]
-8422| drop
-8423| return
-8424| i32.const $1
-8429| i64.const $2
-8438| i64.atomic.rmw.xchg $0:%[-2]+$7, %[-1]
-8448| drop
-8449| return
-8450| i32.const $1
-8455| i32.const $2
-8460| i32.atomic.rmw8_u.xchg $0:%[-2]+$3, %[-1]
-8470| drop
-8471| return
-8472| i32.const $1
-8477| i32.const $2
-8482| i32.atomic.rmw16_u.xchg $0:%[-2]+$3, %[-1]
-8492| drop
-8493| return
-8494| i32.const $1
-8499| i64.const $2
-8508| i64.atomic.rmw8_u.xchg $0:%[-2]+$3, %[-1]
-8518| drop
-8519| return
-8520| i32.const $1
-8525| i64.const $2
-8534| i64.atomic.rmw16_u.xchg $0:%[-2]+$3, %[-1]
-8544| drop
-8545| return
-8546| i32.const $1
-8551| i64.const $2
-8560| i64.atomic.rmw32_u.xchg $0:%[-2]+$3, %[-1]
-8570| drop
-8571| return
-8572| i32.const $1
-8577| i32.const $2
-8582| i32.const $3
-8587| i32.atomic.rmw.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
-8597| drop
-8598| return
-8599| i32.const $1
-8604| i64.const $2
-8613| i64.const $3
-8622| i64.atomic.rmw.cmpxchg $0:%[-3]+$7, %[-2], %[-1]
-8632| drop
-8633| return
-8634| i32.const $1
-8639| i32.const $2
-8644| i32.const $3
-8649| i32.atomic.rmw8_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
-8659| drop
-8660| return
-8661| i32.const $1
-8666| i32.const $2
-8671| i32.const $3
-8676| i32.atomic.rmw16_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
-8686| drop
-8687| return
-8688| i32.const $1
-8693| i64.const $2
-8702| i64.const $3
-8711| i64.atomic.rmw8_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
-8721| drop
-8722| return
-8723| i32.const $1
-8728| i64.const $2
-8737| i64.const $3
-8746| i64.atomic.rmw16_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
-8756| drop
-8757| return
-8758| i32.const $1
-8763| i64.const $2
-8772| i64.const $3
-8781| i64.atomic.rmw32_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
-8791| drop
-8792| return
+2737| f32.const $1
+2742| f32x4.splat %[-1]
+2744| drop
+2745| return
+2746| f64.const $1
+2755| f64x2.splat %[-1]
+2757| drop
+2758| return
+2759| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2777| i8x16.extract_lane_s %[-1] : (Lane imm: 15)
+2780| drop
+2781| return
+2782| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2800| i8x16.extract_lane_u %[-1] : (Lane imm: 15)
+2803| drop
+2804| return
+2805| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2823| i16x8.extract_lane_s %[-1] : (Lane imm: 7)
+2826| drop
+2827| return
+2828| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2846| i16x8.extract_lane_u %[-1] : (Lane imm: 7)
+2849| drop
+2850| return
+2851| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2869| i32x4.extract_lane %[-1] : (Lane imm: 3)
+2872| drop
+2873| return
+2874| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2892| i64x2.extract_lane %[-1] : (Lane imm: 1)
+2895| drop
+2896| return
+2897| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2915| f32x4.extract_lane %[-1] : (Lane imm: 3)
+2918| drop
+2919| return
+2920| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2938| f64x2.extract_lane %[-1] : (Lane imm: 1)
+2941| drop
+2942| return
+2943| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2961| i32.const $0
+2966| i8x16.replace_lane %[-1], %[-2] : (Lane imm: 15)
+2969| drop
+2970| return
+2971| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+2989| i32.const $0
+2994| i16x8.replace_lane %[-1], %[-2] : (Lane imm: 7)
+2997| drop
+2998| return
+2999| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3017| i32.const $0
+3022| i32x4.replace_lane %[-1], %[-2] : (Lane imm: 3)
+3025| drop
+3026| return
+3027| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3045| i64.const $0
+3054| i64x2.replace_lane %[-1], %[-2] : (Lane imm: 1)
+3057| drop
+3058| return
+3059| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3077| f32.const $0
+3082| f32x4.replace_lane %[-1], %[-2] : (Lane imm: 3)
+3085| drop
+3086| return
+3087| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3105| f64.const $0
+3114| f64x2.replace_lane %[-1], %[-2] : (Lane imm: 1)
+3117| drop
+3118| return
+3119| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3137| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3155| v8x16.shuffle %[-2], %[-1] : (Lane imm: $0x00000001 0x00000001 0x00000001 0x00000001 )
+3173| drop
+3174| return
+3175| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3193| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3211| i8x16.add %[-2], %[-1]
+3213| drop
+3214| return
+3215| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3233| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3251| i16x8.add %[-2], %[-1]
+3253| drop
+3254| return
+3255| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3273| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3291| i32x4.add %[-2], %[-1]
+3293| drop
+3294| return
+3295| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3313| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3331| i64x2.add %[-2], %[-1]
+3333| drop
+3334| return
+3335| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3353| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3371| i8x16.sub %[-2], %[-1]
+3373| drop
+3374| return
+3375| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3393| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3411| i16x8.sub %[-2], %[-1]
+3413| drop
+3414| return
+3415| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3433| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3451| i32x4.sub %[-2], %[-1]
+3453| drop
+3454| return
+3455| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3473| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3491| i64x2.sub %[-2], %[-1]
+3493| drop
+3494| return
+3495| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3513| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3531| i8x16.mul %[-2], %[-1]
+3533| drop
+3534| return
+3535| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3553| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3571| i16x8.mul %[-2], %[-1]
+3573| drop
+3574| return
+3575| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3593| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3611| i32x4.mul %[-2], %[-1]
+3613| drop
+3614| return
+3615| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3633| i8x16.neg %[-1]
+3635| drop
+3636| return
+3637| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3655| i16x8.neg %[-1]
+3657| drop
+3658| return
+3659| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3677| i32x4.neg %[-1]
+3679| drop
+3680| return
+3681| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3699| i64x2.neg %[-1]
+3701| drop
+3702| return
+3703| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3721| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3739| i8x16.add_saturate_s %[-2], %[-1]
+3741| drop
+3742| return
+3743| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3761| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3779| i8x16.add_saturate_u %[-2], %[-1]
+3781| drop
+3782| return
+3783| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3801| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3819| i16x8.add_saturate_s %[-2], %[-1]
+3821| drop
+3822| return
+3823| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3841| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3859| i16x8.add_saturate_u %[-2], %[-1]
+3861| drop
+3862| return
+3863| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3881| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3899| i8x16.sub_saturate_s %[-2], %[-1]
+3901| drop
+3902| return
+3903| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3921| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3939| i8x16.sub_saturate_u %[-2], %[-1]
+3941| drop
+3942| return
+3943| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+3961| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+3979| i16x8.sub_saturate_s %[-2], %[-1]
+3981| drop
+3982| return
+3983| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4001| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4019| i16x8.sub_saturate_u %[-2], %[-1]
+4021| drop
+4022| return
+4023| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4041| i32.const $0
+4046| i8x16.shl %[-2], %[-1]
+4048| drop
+4049| return
+4050| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4068| i32.const $0
+4073| i16x8.shl %[-2], %[-1]
+4075| drop
+4076| return
+4077| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4095| i32.const $0
+4100| i32x4.shl %[-2], %[-1]
+4102| drop
+4103| return
+4104| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4122| i32.const $0
+4127| i64x2.shl %[-2], %[-1]
+4129| drop
+4130| return
+4131| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4149| i32.const $0
+4154| i8x16.shr_s %[-2], %[-1]
+4156| drop
+4157| return
+4158| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4176| i32.const $0
+4181| i8x16.shr_u %[-2], %[-1]
+4183| drop
+4184| return
+4185| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4203| i32.const $0
+4208| i16x8.shr_s %[-2], %[-1]
+4210| drop
+4211| return
+4212| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4230| i32.const $0
+4235| i16x8.shr_u %[-2], %[-1]
+4237| drop
+4238| return
+4239| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4257| i32.const $0
+4262| i32x4.shr_s %[-2], %[-1]
+4264| drop
+4265| return
+4266| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4284| i32.const $0
+4289| i32x4.shr_u %[-2], %[-1]
+4291| drop
+4292| return
+4293| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4311| i32.const $0
+4316| i64x2.shr_s %[-2], %[-1]
+4318| drop
+4319| return
+4320| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4338| i32.const $0
+4343| i64x2.shr_u %[-2], %[-1]
+4345| drop
+4346| return
+4347| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4365| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4383| v128.and %[-2], %[-1]
+4385| drop
+4386| return
+4387| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4405| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4423| v128.or %[-2], %[-1]
+4425| drop
+4426| return
+4427| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4445| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4463| v128.xor %[-2], %[-1]
+4465| drop
+4466| return
+4467| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4485| v128.not %[-1]
+4487| drop
+4488| return
+4489| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4507| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4525| v128.const $0x00000003 0x00000003 0x00000003 0x00000003
+4543| v128.bitselect %[-3], %[-2], %[-1]
+4545| drop
+4546| return
+4547| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4565| i8x16.any_true %[-1]
+4567| drop
+4568| return
+4569| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4587| i16x8.any_true %[-1]
+4589| drop
+4590| return
+4591| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4609| i32x4.any_true %[-1]
+4611| drop
+4612| return
+4613| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4631| i64x2.any_true %[-1]
+4633| drop
+4634| return
+4635| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4653| i8x16.all_true %[-1]
+4655| drop
+4656| return
+4657| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4675| i16x8.all_true %[-1]
+4677| drop
+4678| return
+4679| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4697| i32x4.all_true %[-1]
+4699| drop
+4700| return
+4701| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4719| i64x2.all_true %[-1]
+4721| drop
+4722| return
+4723| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4741| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4759| i8x16.eq %[-2], %[-1]
+4761| drop
+4762| return
+4763| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4781| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4799| i16x8.eq %[-2], %[-1]
+4801| drop
+4802| return
+4803| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4821| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4839| i32x4.eq %[-2], %[-1]
+4841| drop
+4842| return
+4843| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4861| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4879| f32x4.eq %[-2], %[-1]
+4881| drop
+4882| return
+4883| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4901| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4919| f64x2.eq %[-2], %[-1]
+4921| drop
+4922| return
+4923| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4941| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4959| i8x16.ne %[-2], %[-1]
+4961| drop
+4962| return
+4963| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+4981| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+4999| i16x8.ne %[-2], %[-1]
+5001| drop
+5002| return
+5003| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5021| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5039| i32x4.ne %[-2], %[-1]
+5041| drop
+5042| return
+5043| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5061| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5079| f32x4.ne %[-2], %[-1]
+5081| drop
+5082| return
+5083| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5101| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5119| f64x2.ne %[-2], %[-1]
+5121| drop
+5122| return
+5123| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5141| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5159| i8x16.lt_s %[-2], %[-1]
+5161| drop
+5162| return
+5163| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5181| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5199| i8x16.lt_u %[-2], %[-1]
+5201| drop
+5202| return
+5203| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5221| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5239| i16x8.lt_s %[-2], %[-1]
+5241| drop
+5242| return
+5243| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5261| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5279| i16x8.lt_u %[-2], %[-1]
+5281| drop
+5282| return
+5283| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5301| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5319| i32x4.lt_s %[-2], %[-1]
+5321| drop
+5322| return
+5323| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5341| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5359| i32x4.lt_u %[-2], %[-1]
+5361| drop
+5362| return
+5363| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5381| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5399| f32x4.lt %[-2], %[-1]
+5401| drop
+5402| return
+5403| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5421| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5439| f64x2.lt %[-2], %[-1]
+5441| drop
+5442| return
+5443| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5461| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5479| i8x16.le_s %[-2], %[-1]
+5481| drop
+5482| return
+5483| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5501| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5519| i8x16.le_u %[-2], %[-1]
+5521| drop
+5522| return
+5523| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5541| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5559| i16x8.le_s %[-2], %[-1]
+5561| drop
+5562| return
+5563| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5581| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5599| i16x8.le_u %[-2], %[-1]
+5601| drop
+5602| return
+5603| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5621| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5639| i32x4.le_s %[-2], %[-1]
+5641| drop
+5642| return
+5643| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5661| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5679| i32x4.le_u %[-2], %[-1]
+5681| drop
+5682| return
+5683| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5701| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5719| f32x4.le %[-2], %[-1]
+5721| drop
+5722| return
+5723| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5741| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5759| f64x2.le %[-2], %[-1]
+5761| drop
+5762| return
+5763| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5781| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5799| i8x16.gt_s %[-2], %[-1]
+5801| drop
+5802| return
+5803| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5821| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5839| i8x16.gt_u %[-2], %[-1]
+5841| drop
+5842| return
+5843| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5861| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5879| i16x8.gt_s %[-2], %[-1]
+5881| drop
+5882| return
+5883| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5901| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5919| i16x8.gt_u %[-2], %[-1]
+5921| drop
+5922| return
+5923| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5941| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5959| i32x4.gt_s %[-2], %[-1]
+5961| drop
+5962| return
+5963| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+5981| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+5999| i32x4.gt_u %[-2], %[-1]
+6001| drop
+6002| return
+6003| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6021| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6039| f32x4.gt %[-2], %[-1]
+6041| drop
+6042| return
+6043| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6061| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6079| f64x2.gt %[-2], %[-1]
+6081| drop
+6082| return
+6083| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6101| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6119| i8x16.ge_s %[-2], %[-1]
+6121| drop
+6122| return
+6123| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6141| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6159| i8x16.ge_u %[-2], %[-1]
+6161| drop
+6162| return
+6163| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6181| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6199| i16x8.ge_s %[-2], %[-1]
+6201| drop
+6202| return
+6203| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6221| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6239| i16x8.ge_u %[-2], %[-1]
+6241| drop
+6242| return
+6243| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6261| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6279| i32x4.ge_s %[-2], %[-1]
+6281| drop
+6282| return
+6283| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6301| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6319| i32x4.ge_u %[-2], %[-1]
+6321| drop
+6322| return
+6323| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6341| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6359| f32x4.ge %[-2], %[-1]
+6361| drop
+6362| return
+6363| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6381| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6399| f64x2.ge %[-2], %[-1]
+6401| drop
+6402| return
+6403| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6421| f32x4.neg %[-1]
+6423| drop
+6424| return
+6425| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6443| f64x2.neg %[-1]
+6445| drop
+6446| return
+6447| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6465| f32x4.abs %[-1]
+6467| drop
+6468| return
+6469| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6487| f64x2.abs %[-1]
+6489| drop
+6490| return
+6491| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6509| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6527| f32x4.min %[-2], %[-1]
+6529| drop
+6530| return
+6531| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6549| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6567| f64x2.min %[-2], %[-1]
+6569| drop
+6570| return
+6571| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6589| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6607| f32x4.max %[-2], %[-1]
+6609| drop
+6610| return
+6611| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6629| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6647| f64x2.max %[-2], %[-1]
+6649| drop
+6650| return
+6651| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6669| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6687| f32x4.add %[-2], %[-1]
+6689| drop
+6690| return
+6691| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6709| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6727| f64x2.add %[-2], %[-1]
+6729| drop
+6730| return
+6731| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6749| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6767| f32x4.sub %[-2], %[-1]
+6769| drop
+6770| return
+6771| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6789| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6807| f64x2.sub %[-2], %[-1]
+6809| drop
+6810| return
+6811| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6829| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6847| f32x4.div %[-2], %[-1]
+6849| drop
+6850| return
+6851| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6869| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6887| f64x2.div %[-2], %[-1]
+6889| drop
+6890| return
+6891| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6909| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6927| f32x4.mul %[-2], %[-1]
+6929| drop
+6930| return
+6931| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6949| v128.const $0x00000002 0x00000002 0x00000002 0x00000002
+6967| f64x2.mul %[-2], %[-1]
+6969| drop
+6970| return
+6971| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+6989| f32x4.sqrt %[-1]
+6991| drop
+6992| return
+6993| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7011| f64x2.sqrt %[-1]
+7013| drop
+7014| return
+7015| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7033| f32x4.convert_s/i32x4 %[-1]
+7035| drop
+7036| return
+7037| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7055| f32x4.convert_u/i32x4 %[-1]
+7057| drop
+7058| return
+7059| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7077| f64x2.convert_s/i64x2 %[-1]
+7079| drop
+7080| return
+7081| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7099| f64x2.convert_u/i64x2 %[-1]
+7101| drop
+7102| return
+7103| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7121| i32x4.trunc_s/f32x4:sat %[-1]
+7123| drop
+7124| return
+7125| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7143| i32x4.trunc_u/f32x4:sat %[-1]
+7145| drop
+7146| return
+7147| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7165| i64x2.trunc_s/f64x2:sat %[-1]
+7167| drop
+7168| return
+7169| v128.const $0x00000001 0x00000001 0x00000001 0x00000001
+7187| i64x2.trunc_u/f64x2:sat %[-1]
+7189| drop
+7190| return
+7191| i32.const $1
+7196| i32.const $2
+7201| atomic.wake $0:%[-2]+$3, %[-1]
+7211| drop
+7212| return
+7213| i32.const $1
+7218| i32.const $2
+7223| i64.const $3
+7232| i32.atomic.wait $0:%[-3]+$3, %[-2], %[-1]
+7242| drop
+7243| return
+7244| i32.const $1
+7249| i64.const $2
+7258| i64.const $3
+7267| i64.atomic.wait $0:%[-3]+$3, %[-2], %[-1]
+7277| drop
+7278| return
+7279| i32.const $1
+7284| i32.atomic.load $0:%[-1]+$3
+7294| drop
+7295| return
+7296| i32.const $1
+7301| i64.atomic.load $0:%[-1]+$7
+7311| drop
+7312| return
+7313| i32.const $1
+7318| i32.atomic.load8_u $0:%[-1]+$3
+7328| drop
+7329| return
+7330| i32.const $1
+7335| i32.atomic.load16_u $0:%[-1]+$3
+7345| drop
+7346| return
+7347| i32.const $1
+7352| i64.atomic.load8_u $0:%[-1]+$3
+7362| drop
+7363| return
+7364| i32.const $1
+7369| i64.atomic.load16_u $0:%[-1]+$3
+7379| drop
+7380| return
+7381| i32.const $1
+7386| i64.atomic.load32_u $0:%[-1]+$3
+7396| drop
+7397| return
+7398| i32.const $1
+7403| i32.const $2
+7408| i32.atomic.store $0:%[-2]+$3, %[-1]
+7418| return
+7419| i32.const $1
+7424| i64.const $2
+7433| i64.atomic.store $0:%[-2]+$7, %[-1]
+7443| return
+7444| i32.const $1
+7449| i32.const $2
+7454| i32.atomic.store8 $0:%[-2]+$3, %[-1]
+7464| return
+7465| i32.const $1
+7470| i32.const $2
+7475| i32.atomic.store16 $0:%[-2]+$3, %[-1]
+7485| return
+7486| i32.const $1
+7491| i64.const $2
+7500| i64.atomic.store8 $0:%[-2]+$3, %[-1]
+7510| return
+7511| i32.const $1
+7516| i64.const $2
+7525| i64.atomic.store16 $0:%[-2]+$3, %[-1]
+7535| return
+7536| i32.const $1
+7541| i64.const $2
+7550| i64.atomic.store32 $0:%[-2]+$3, %[-1]
+7560| return
+7561| i32.const $1
+7566| i32.const $2
+7571| i32.atomic.rmw.add $0:%[-2]+$3, %[-1]
+7581| drop
+7582| return
+7583| i32.const $1
+7588| i64.const $2
+7597| i64.atomic.rmw.add $0:%[-2]+$7, %[-1]
+7607| drop
+7608| return
+7609| i32.const $1
+7614| i32.const $2
+7619| i32.atomic.rmw8_u.add $0:%[-2]+$3, %[-1]
+7629| drop
+7630| return
+7631| i32.const $1
+7636| i32.const $2
+7641| i32.atomic.rmw16_u.add $0:%[-2]+$3, %[-1]
+7651| drop
+7652| return
+7653| i32.const $1
+7658| i64.const $2
+7667| i64.atomic.rmw8_u.add $0:%[-2]+$3, %[-1]
+7677| drop
+7678| return
+7679| i32.const $1
+7684| i64.const $2
+7693| i64.atomic.rmw16_u.add $0:%[-2]+$3, %[-1]
+7703| drop
+7704| return
+7705| i32.const $1
+7710| i64.const $2
+7719| i64.atomic.rmw32_u.add $0:%[-2]+$3, %[-1]
+7729| drop
+7730| return
+7731| i32.const $1
+7736| i32.const $2
+7741| i32.atomic.rmw.sub $0:%[-2]+$3, %[-1]
+7751| drop
+7752| return
+7753| i32.const $1
+7758| i64.const $2
+7767| i64.atomic.rmw.sub $0:%[-2]+$7, %[-1]
+7777| drop
+7778| return
+7779| i32.const $1
+7784| i32.const $2
+7789| i32.atomic.rmw8_u.sub $0:%[-2]+$3, %[-1]
+7799| drop
+7800| return
+7801| i32.const $1
+7806| i32.const $2
+7811| i32.atomic.rmw16_u.sub $0:%[-2]+$3, %[-1]
+7821| drop
+7822| return
+7823| i32.const $1
+7828| i64.const $2
+7837| i64.atomic.rmw8_u.sub $0:%[-2]+$3, %[-1]
+7847| drop
+7848| return
+7849| i32.const $1
+7854| i64.const $2
+7863| i64.atomic.rmw16_u.sub $0:%[-2]+$3, %[-1]
+7873| drop
+7874| return
+7875| i32.const $1
+7880| i64.const $2
+7889| i64.atomic.rmw32_u.sub $0:%[-2]+$3, %[-1]
+7899| drop
+7900| return
+7901| i32.const $1
+7906| i32.const $2
+7911| i32.atomic.rmw.and $0:%[-2]+$3, %[-1]
+7921| drop
+7922| return
+7923| i32.const $1
+7928| i64.const $2
+7937| i64.atomic.rmw.and $0:%[-2]+$7, %[-1]
+7947| drop
+7948| return
+7949| i32.const $1
+7954| i32.const $2
+7959| i32.atomic.rmw8_u.and $0:%[-2]+$3, %[-1]
+7969| drop
+7970| return
+7971| i32.const $1
+7976| i32.const $2
+7981| i32.atomic.rmw16_u.and $0:%[-2]+$3, %[-1]
+7991| drop
+7992| return
+7993| i32.const $1
+7998| i64.const $2
+8007| i64.atomic.rmw8_u.and $0:%[-2]+$3, %[-1]
+8017| drop
+8018| return
+8019| i32.const $1
+8024| i64.const $2
+8033| i64.atomic.rmw16_u.and $0:%[-2]+$3, %[-1]
+8043| drop
+8044| return
+8045| i32.const $1
+8050| i64.const $2
+8059| i64.atomic.rmw32_u.and $0:%[-2]+$3, %[-1]
+8069| drop
+8070| return
+8071| i32.const $1
+8076| i32.const $2
+8081| i32.atomic.rmw.or $0:%[-2]+$3, %[-1]
+8091| drop
+8092| return
+8093| i32.const $1
+8098| i64.const $2
+8107| i64.atomic.rmw.or $0:%[-2]+$7, %[-1]
+8117| drop
+8118| return
+8119| i32.const $1
+8124| i32.const $2
+8129| i32.atomic.rmw8_u.or $0:%[-2]+$3, %[-1]
+8139| drop
+8140| return
+8141| i32.const $1
+8146| i32.const $2
+8151| i32.atomic.rmw16_u.or $0:%[-2]+$3, %[-1]
+8161| drop
+8162| return
+8163| i32.const $1
+8168| i64.const $2
+8177| i64.atomic.rmw8_u.or $0:%[-2]+$3, %[-1]
+8187| drop
+8188| return
+8189| i32.const $1
+8194| i64.const $2
+8203| i64.atomic.rmw16_u.or $0:%[-2]+$3, %[-1]
+8213| drop
+8214| return
+8215| i32.const $1
+8220| i64.const $2
+8229| i64.atomic.rmw32_u.or $0:%[-2]+$3, %[-1]
+8239| drop
+8240| return
+8241| i32.const $1
+8246| i32.const $2
+8251| i32.atomic.rmw.xor $0:%[-2]+$3, %[-1]
+8261| drop
+8262| return
+8263| i32.const $1
+8268| i64.const $2
+8277| i64.atomic.rmw.xor $0:%[-2]+$7, %[-1]
+8287| drop
+8288| return
+8289| i32.const $1
+8294| i32.const $2
+8299| i32.atomic.rmw8_u.xor $0:%[-2]+$3, %[-1]
+8309| drop
+8310| return
+8311| i32.const $1
+8316| i32.const $2
+8321| i32.atomic.rmw16_u.xor $0:%[-2]+$3, %[-1]
+8331| drop
+8332| return
+8333| i32.const $1
+8338| i64.const $2
+8347| i64.atomic.rmw8_u.xor $0:%[-2]+$3, %[-1]
+8357| drop
+8358| return
+8359| i32.const $1
+8364| i64.const $2
+8373| i64.atomic.rmw16_u.xor $0:%[-2]+$3, %[-1]
+8383| drop
+8384| return
+8385| i32.const $1
+8390| i64.const $2
+8399| i64.atomic.rmw32_u.xor $0:%[-2]+$3, %[-1]
+8409| drop
+8410| return
+8411| i32.const $1
+8416| i32.const $2
+8421| i32.atomic.rmw.xchg $0:%[-2]+$3, %[-1]
+8431| drop
+8432| return
+8433| i32.const $1
+8438| i64.const $2
+8447| i64.atomic.rmw.xchg $0:%[-2]+$7, %[-1]
+8457| drop
+8458| return
+8459| i32.const $1
+8464| i32.const $2
+8469| i32.atomic.rmw8_u.xchg $0:%[-2]+$3, %[-1]
+8479| drop
+8480| return
+8481| i32.const $1
+8486| i32.const $2
+8491| i32.atomic.rmw16_u.xchg $0:%[-2]+$3, %[-1]
+8501| drop
+8502| return
+8503| i32.const $1
+8508| i64.const $2
+8517| i64.atomic.rmw8_u.xchg $0:%[-2]+$3, %[-1]
+8527| drop
+8528| return
+8529| i32.const $1
+8534| i64.const $2
+8543| i64.atomic.rmw16_u.xchg $0:%[-2]+$3, %[-1]
+8553| drop
+8554| return
+8555| i32.const $1
+8560| i64.const $2
+8569| i64.atomic.rmw32_u.xchg $0:%[-2]+$3, %[-1]
+8579| drop
+8580| return
+8581| i32.const $1
+8586| i32.const $2
+8591| i32.const $3
+8596| i32.atomic.rmw.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
+8606| drop
+8607| return
+8608| i32.const $1
+8613| i64.const $2
+8622| i64.const $3
+8631| i64.atomic.rmw.cmpxchg $0:%[-3]+$7, %[-2], %[-1]
+8641| drop
+8642| return
+8643| i32.const $1
+8648| i32.const $2
+8653| i32.const $3
+8658| i32.atomic.rmw8_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
+8668| drop
+8669| return
+8670| i32.const $1
+8675| i32.const $2
+8680| i32.const $3
+8685| i32.atomic.rmw16_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
+8695| drop
+8696| return
+8697| i32.const $1
+8702| i64.const $2
+8711| i64.const $3
+8720| i64.atomic.rmw8_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
+8730| drop
+8731| return
+8732| i32.const $1
+8737| i64.const $2
+8746| i64.const $3
+8755| i64.atomic.rmw16_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
+8765| drop
+8766| return
+8767| i32.const $1
+8772| i64.const $2
+8781| i64.const $3
+8790| i64.atomic.rmw32_u.cmpxchg $0:%[-3]+$3, %[-2], %[-1]
+8800| drop
+8801| return
 unreachable() => error: unreachable executed
 br() =>
 br_table() =>

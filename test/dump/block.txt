@@ -68,7 +68,7 @@ block.wasm:	file format wasm 0x1
 Code Disassembly:
 
 00001a func[0]:
- 00001c: 02 40                      | block
+ 00001c: 02 40                      | block 
  00001e: 01                         |   nop
  00001f: 01                         |   nop
  000020: 01                         |   nop

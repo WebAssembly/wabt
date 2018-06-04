@@ -61,14 +61,14 @@ br-loop-inner.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000015 func[0]:
- 000017: 02 40                      | block
- 000019: 03 40                      |   loop
+ 000017: 02 40                      | block 
+ 000019: 03 40                      |   loop 
  00001b: 41 01                      |     i32.const 1
- 00001d: 04 40                      |     if
+ 00001d: 04 40                      |     if 
  00001f: 0c 02                      |       br 2
  000021: 0b                         |     end
  000022: 41 02                      |     i32.const 2
- 000024: 04 40                      |     if
+ 000024: 04 40                      |     if 
  000026: 0c 01                      |       br 1
  000028: 0b                         |     end
  000029: 0b                         |   end

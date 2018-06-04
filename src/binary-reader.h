@@ -182,7 +182,7 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeF32(uint32_t value) = 0;
   virtual Result OnOpcodeF64(uint64_t value) = 0;
   virtual Result OnOpcodeV128(v128 value) = 0;
-  virtual Result OnOpcodeBlockSig(Index num_types, Type* sig_types) = 0;
+  virtual Result OnOpcodeBlockSig(Type sig_type) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   uint32_t alignment_log2,
                                   Address offset) = 0;
@@ -202,7 +202,7 @@ class BinaryReaderDelegate {
                                   uint32_t alignment_log2,
                                   Address offset) = 0;
   virtual Result OnBinaryExpr(Opcode opcode) = 0;
-  virtual Result OnBlockExpr(Index num_types, Type* sig_types) = 0;
+  virtual Result OnBlockExpr(Type sig_type) = 0;
   virtual Result OnBrExpr(Index depth) = 0;
   virtual Result OnBrIfExpr(Index depth) = 0;
   virtual Result OnBrTableExpr(Index num_targets,
@@ -224,14 +224,12 @@ class BinaryReaderDelegate {
   virtual Result OnGetLocalExpr(Index local_index) = 0;
   virtual Result OnI32ConstExpr(uint32_t value) = 0;
   virtual Result OnI64ConstExpr(uint64_t value) = 0;
-  virtual Result OnIfExpr(Index num_types, Type* sig_types) = 0;
-  virtual Result OnIfExceptExpr(Index num_types,
-                                Type* sig_types,
-                                Index except_index) = 0;
+  virtual Result OnIfExpr(Type sig_type) = 0;
+  virtual Result OnIfExceptExpr(Type sig_type, Index except_index) = 0;
   virtual Result OnLoadExpr(Opcode opcode,
                             uint32_t alignment_log2,
                             Address offset) = 0;
-  virtual Result OnLoopExpr(Index num_types, Type* sig_types) = 0;
+  virtual Result OnLoopExpr(Type sig_type) = 0;
   virtual Result OnMemoryGrowExpr() = 0;
   virtual Result OnMemorySizeExpr() = 0;
   virtual Result OnNopExpr() = 0;
@@ -245,7 +243,7 @@ class BinaryReaderDelegate {
                              Address offset) = 0;
   virtual Result OnTeeLocalExpr(Index local_index) = 0;
   virtual Result OnThrowExpr(Index except_index) = 0;
-  virtual Result OnTryExpr(Index num_types, Type* sig_types) = 0;
+  virtual Result OnTryExpr(Type sig_type) = 0;
 
   virtual Result OnUnaryExpr(Opcode opcode) = 0;
   virtual Result OnTernaryExpr(Opcode opcode) = 0;

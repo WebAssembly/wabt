@@ -1,0 +1,93 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-multi-value
+(module
+  (func
+    loop (result i32 i32)
+      i32.const 1
+      i32.const 2
+    end
+    return)
+
+  (func
+    i32.const 0
+    loop (param i32)
+      drop
+    end))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 03                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+; type 1
+000000e: 60                                        ; func
+000000f: 00                                        ; num params
+0000010: 02                                        ; num results
+0000011: 7f                                        ; i32
+0000012: 7f                                        ; i32
+; type 2
+0000013: 60                                        ; func
+0000014: 01                                        ; num params
+0000015: 7f                                        ; i32
+0000016: 00                                        ; num results
+0000009: 0d                                        ; FIXUP section size
+; section "Function" (3)
+0000017: 03                                        ; section code
+0000018: 00                                        ; section size (guess)
+0000019: 02                                        ; num functions
+000001a: 00                                        ; function 0 signature index
+000001b: 00                                        ; function 1 signature index
+0000018: 03                                        ; FIXUP section size
+; section "Code" (10)
+000001c: 0a                                        ; section code
+000001d: 00                                        ; section size (guess)
+000001e: 02                                        ; num functions
+; function body 0
+000001f: 00                                        ; func body size (guess)
+0000020: 00                                        ; local decl count
+0000021: 03                                        ; loop
+0000022: 01                                        ; block type function index
+0000023: 41                                        ; i32.const
+0000024: 01                                        ; i32 literal
+0000025: 41                                        ; i32.const
+0000026: 02                                        ; i32 literal
+0000027: 0b                                        ; end
+0000028: 0f                                        ; return
+0000029: 0b                                        ; end
+000001f: 0a                                        ; FIXUP func body size
+; function body 1
+000002a: 00                                        ; func body size (guess)
+000002b: 00                                        ; local decl count
+000002c: 41                                        ; i32.const
+000002d: 00                                        ; i32 literal
+000002e: 03                                        ; loop
+000002f: 02                                        ; block type function index
+0000030: 1a                                        ; drop
+0000031: 0b                                        ; end
+0000032: 0b                                        ; end
+000002a: 08                                        ; FIXUP func body size
+000001d: 15                                        ; FIXUP section size
+
+loop-multi.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+00001f func[0]:
+ 000021: 03 01                      | loop type[1]
+ 000023: 41 01                      |   i32.const 1
+ 000025: 41 02                      |   i32.const 2
+ 000027: 0b                         | end
+ 000028: 0f                         | return
+ 000029: 0b                         | end
+00002a func[1]:
+ 00002c: 41 00                      | i32.const 0
+ 00002e: 03 02                      | loop type[2]
+ 000030: 1a                         |   drop
+ 000031: 0b                         | end
+ 000032: 0b                         | end
+;;; STDOUT ;;)

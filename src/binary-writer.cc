@@ -55,7 +55,7 @@ void WriteOpcode(Stream* stream, Opcode opcode) {
 }
 
 void WriteType(Stream* stream, Type type) {
-  stream->WriteU8Enum(type, GetTypeName(type));
+  WriteS32Leb128(stream, type, GetTypeName(type));
 }
 
 void WriteLimits(Stream* stream, const Limits* limits) {
@@ -129,6 +129,7 @@ class BinaryWriter {
   Index GetLocalIndex(const Func* func, const Var& var);
   Index GetSymbolIndex(RelocType reloc_type, Index index);
   void AddReloc(RelocType reloc_type, Index index);
+  void WriteBlockDecl(const BlockDeclaration& decl);
   void WriteU32Leb128WithReloc(Index index,
                                const char* desc,
                                RelocType reloc_type);
@@ -224,16 +225,20 @@ Offset BinaryWriter::WriteFixupU32Leb128Size(Offset offset,
   }
 }
 
-static void write_inline_signature_type(Stream* stream,
-                                        const BlockSignature& sig) {
-  if (sig.size() == 0) {
-    WriteType(stream, Type::Void);
-  } else if (sig.size() == 1) {
-    WriteType(stream, sig[0]);
-  } else {
-    /* this is currently unrepresentable */
-    stream->WriteU8(0xff, "INVALID INLINE SIGNATURE");
+void BinaryWriter::WriteBlockDecl(const BlockDeclaration& decl) {
+  if (decl.sig.GetNumParams() == 0 && decl.sig.GetNumResults() <= 1) {
+    if (decl.sig.GetNumResults() == 0) {
+      WriteType(stream_, Type::Void);
+    } else if (decl.sig.GetNumResults() == 1) {
+      WriteType(stream_, decl.sig.GetResultType(0));
+    }
+    return;
   }
+
+  Index index = decl.has_func_type ? module_->GetFuncTypeIndex(decl.type_var)
+                                   : module_->GetFuncTypeIndex(decl.sig);
+  assert(index != kInvalidIndex);
+  WriteS32Leb128(stream_, index, "block type function index");
 }
 
 void BinaryWriter::WriteSectionHeader(const char* desc,
@@ -400,7 +405,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Block:
       WriteOpcode(stream_, Opcode::Block);
-      write_inline_signature_type(stream_, cast<BlockExpr>(expr)->block.sig);
+      WriteBlockDecl(cast<BlockExpr>(expr)->block.decl);
       WriteExprList(func, cast<BlockExpr>(expr)->block.exprs);
       WriteOpcode(stream_, Opcode::End);
       break;
@@ -495,7 +500,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::If: {
       auto* if_expr = cast<IfExpr>(expr);
       WriteOpcode(stream_, Opcode::If);
-      write_inline_signature_type(stream_, if_expr->true_.sig);
+      WriteBlockDecl(if_expr->true_.decl);
       WriteExprList(func, if_expr->true_.exprs);
       if (!if_expr->false_.empty()) {
         WriteOpcode(stream_, Opcode::Else);
@@ -507,7 +512,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::IfExcept: {
       auto* if_except_expr = cast<IfExceptExpr>(expr);
       WriteOpcode(stream_, Opcode::IfExcept);
-      write_inline_signature_type(stream_, if_except_expr->true_.sig);
+      WriteBlockDecl(if_except_expr->true_.decl);
       Index index = module_->GetExceptIndex(if_except_expr->except_var);
       WriteU32Leb128(stream_, index, "exception index");
       WriteExprList(func, if_except_expr->true_.exprs);
@@ -523,7 +528,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Loop:
       WriteOpcode(stream_, Opcode::Loop);
-      write_inline_signature_type(stream_, cast<LoopExpr>(expr)->block.sig);
+      WriteBlockDecl(cast<LoopExpr>(expr)->block.decl);
       WriteExprList(func, cast<LoopExpr>(expr)->block.exprs);
       WriteOpcode(stream_, Opcode::End);
       break;
@@ -576,7 +581,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Try: {
       auto* try_expr = cast<TryExpr>(expr);
       WriteOpcode(stream_, Opcode::Try);
-      write_inline_signature_type(stream_, try_expr->block.sig);
+      WriteBlockDecl(try_expr->block.decl);
       WriteExprList(func, try_expr->block.exprs);
       WriteOpcode(stream_, Opcode::Catch);
       WriteExprList(func, try_expr->catch_);

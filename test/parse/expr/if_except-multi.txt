@@ -1,0 +1,44 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions --enable-multi-value
+(module
+  (except $e i32 i64)
+
+  ;; if_except w/ multiple results
+  (func
+    try
+      nop
+    catch
+      if_except (result i32 i64) $e
+      else
+        i32.const 1
+        i64.const 2
+      end
+      return
+    end)
+
+  ;; if_except w/ params
+  ;; TODO(binji): this doesn't currently work since wat2wasm doesn't support
+  ;; except_ref locals.
+  (;
+
+  (func
+    (local $ee except_ref)
+    try
+      nop
+    catch
+      set_local $ee  ;; except_ref ->
+
+      i32.const 0    ;;  -> i32
+      get_local $ee  ;; i32 -> i32 except_ref
+
+      if_except (param i32) $e
+        drop  ;; drop i64 from except
+        drop  ;; drop i32 from except
+        drop  ;; drop param
+      else
+        drop  ;; drop param
+      end
+    end)
+
+  ;)
+)

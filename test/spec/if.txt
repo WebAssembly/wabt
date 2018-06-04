@@ -41,14 +41,14 @@ out/test/spec/if.wast:242: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got []
   000001d: error: OnElseExpr callback failed
 out/test/spec/if.wast:248: assert_invalid passed:
-  error: if without else cannot have type signature.
+  error: if without else cannot have results.
   000001f: error: OnEndExpr callback failed
 out/test/spec/if.wast:254: assert_invalid passed:
-  error: if without else cannot have type signature.
+  error: if without else cannot have results.
   error: type mismatch in if, expected [i32] but got []
   000001d: error: OnEndExpr callback failed
 out/test/spec/if.wast:260: assert_invalid passed:
-  error: if without else cannot have type signature.
+  error: if without else cannot have results.
   000001f: error: OnEndExpr callback failed
 out/test/spec/if.wast:267: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got []

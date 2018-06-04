@@ -6,6 +6,6 @@ section(TYPE) {
   0x20
 }
 (;; STDERR ;;;
-000000c: error: unexpected type form: 32
-000000c: error: unexpected type form: 32
+000000c: error: unexpected type form (got 0x20)
+000000c: error: unexpected type form (got 0x20)
 ;;; STDERR ;;)

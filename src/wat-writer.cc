@@ -96,12 +96,17 @@ struct ExprTree {
 struct Label {
   Label(LabelType label_type,
         const std::string& name,
-        const BlockSignature& sig)
-      : name(name), label_type(label_type), sig(sig) {}
+        const TypeVector& param_types,
+        const TypeVector& result_types)
+      : name(name),
+        label_type(label_type),
+        param_types(param_types),
+        result_types(result_types) {}
 
   std::string name;
   LabelType label_type;
-  const BlockSignature& sig;  // Share with Expr.
+  TypeVector param_types;
+  TypeVector result_types;
 };
 
 class WatWriter {
@@ -432,12 +437,14 @@ void WatWriter::WriteBeginBlock(LabelType label_type,
   if (has_label) {
     WriteString(block.label, NextChar::Space);
   }
-  WriteTypes(block.sig, "result");
+  WriteTypes(block.decl.sig.param_types, "param");
+  WriteTypes(block.decl.sig.result_types, "result");
   if (!has_label) {
     Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
   }
   WriteNewline(FORCE_NEWLINE);
-  label_stack_.emplace_back(label_type, block.label, block.sig);
+  label_stack_.emplace_back(label_type, block.label, block.decl.sig.param_types,
+                            block.decl.sig.result_types);
   Indent();
 }
 
@@ -448,13 +455,16 @@ void WatWriter::WriteBeginIfExceptBlock(const IfExceptExpr* expr) {
   if (has_label) {
     WriteString(block.label, NextChar::Space);
   }
-  WriteTypes(block.sig, "result");
+  WriteTypes(block.decl.sig.param_types, "param");
+  WriteTypes(block.decl.sig.result_types, "result");
   WriteVar(expr->except_var, NextChar::Space);
   if (!has_label) {
     Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
   }
   WriteNewline(FORCE_NEWLINE);
-  label_stack_.emplace_back(LabelType::IfExcept, block.label, block.sig);
+  label_stack_.emplace_back(LabelType::IfExcept, block.label,
+                            block.decl.sig.param_types,
+                            block.decl.sig.result_types);
   Indent();
 }
 
@@ -905,7 +915,12 @@ Label* WatWriter::GetLabel(const Var& var) {
 
 Index WatWriter::GetLabelArity(const Var& var) {
   Label* label = GetLabel(var);
-  return label && label->label_type != LabelType::Loop ? label->sig.size() : 0;
+  if (!label) {
+    return 0;
+  }
+
+  return label->label_type == LabelType::Loop ? label->param_types.size()
+                                              : label->result_types.size();
 }
 
 Index WatWriter::GetFuncParamCount(const Var& var) {
@@ -934,7 +949,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::Block:
-      PushExpr(expr, 0, cast<BlockExpr>(expr)->block.sig.size());
+      PushExpr(expr, 0, cast<BlockExpr>(expr)->block.decl.sig.GetNumResults());
       break;
 
     case ExprType::Br:
@@ -989,15 +1004,16 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::If:
-      PushExpr(expr, 1, cast<IfExpr>(expr)->true_.sig.size());
+      PushExpr(expr, 1, cast<IfExpr>(expr)->true_.decl.sig.GetNumResults());
       break;
 
     case ExprType::IfExcept:
-      PushExpr(expr, 1, cast<IfExceptExpr>(expr)->true_.sig.size());
+      PushExpr(expr, 1,
+               cast<IfExceptExpr>(expr)->true_.decl.sig.GetNumResults());
       break;
 
     case ExprType::Loop:
-      PushExpr(expr, 0, cast<LoopExpr>(expr)->block.sig.size());
+      PushExpr(expr, 0, cast<LoopExpr>(expr)->block.decl.sig.GetNumResults());
       break;
 
     case ExprType::Nop:
@@ -1029,7 +1045,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     }
 
     case ExprType::Try:
-      PushExpr(expr, 0, cast<TryExpr>(expr)->block.sig.size());
+      PushExpr(expr, 0, cast<TryExpr>(expr)->block.decl.sig.GetNumResults());
       break;
 
     case ExprType::Ternary:
@@ -1292,7 +1308,7 @@ void WatWriter::WriteFunc(const Func& func) {
   }
   WriteNewline(NO_FORCE_NEWLINE);
   label_stack_.clear();
-  label_stack_.emplace_back(LabelType::Func, std::string(),
+  label_stack_.emplace_back(LabelType::Func, std::string(), TypeVector(),
                             func.decl.sig.result_types);
   current_func_ = &func;
   if (options_->fold_exprs) {

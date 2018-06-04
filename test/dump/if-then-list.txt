@@ -49,7 +49,7 @@ Code Disassembly:
 
 000015 func[0]:
  000017: 41 01                      | i32.const 1
- 000019: 04 40                      | if
+ 000019: 04 40                      | if 
  00001b: 01                         |   nop
  00001c: 01                         |   nop
  00001d: 0b                         | end

@@ -1,0 +1,30 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-multi-value
+(module
+  (func (export "loop-multi-result") (result i32)
+    loop (result i32 i32)
+      i32.const 1
+      i32.const 2
+    end
+    i32.add)
+
+  (func (export "loop-param-brif") (result i32)
+    (local $l i32)
+    i32.const 0
+    loop $again (param i32) (result i32)
+      i32.const 3
+      i32.add       ;; +3 to TOS (loop param)
+
+      tee_local $l
+      get_local $l  ;; dup TOS
+
+      i32.const 10
+      i32.lt_s
+      br_if $again  ;; loop if < 10
+    end
+  )
+)
+(;; STDOUT ;;;
+loop-multi-result() => i32:3
+loop-param-brif() => i32:12
+;;; STDOUT ;;)

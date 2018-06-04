@@ -1,0 +1,48 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-multi-value
+(module
+  (func $i32_i64 (result i32 i64)
+    i32.const 1
+    i64.const 2)
+
+  (func (export "call-multi-result") (result i32)
+    call $i32_i64
+    i32.wrap/i64
+    i32.add)
+
+  (func $rot_f32_3 (param f32 f32 f32) (result f32 f32 f32)
+    get_local 1
+    get_local 2
+    get_local 0)
+
+  (func (export "call-multi-param-result") (result i32)
+    block $fail
+      f32.const 11
+      f32.const 22
+      f32.const 33
+
+      ;; updates stack: 11 22 33 -- 22 33 11
+      call $rot_f32_3
+
+      f32.const 11
+      f32.ne
+      br_if $fail
+
+      f32.const 33
+      f32.ne
+      br_if $fail
+
+      f32.const 22
+      f32.ne
+      br_if $fail
+
+      i32.const 1
+      return
+    end
+
+    i32.const 0)
+)
+(;; STDOUT ;;;
+call-multi-result() => i32:3
+call-multi-param-result() => i32:1
+;;; STDOUT ;;)

@@ -52,6 +52,10 @@
 #define WABT_PRINTF_STRING_VIEW_ARG(x) \
   static_cast<int>((x).length()), (x).data()
 
+#define PRItypecode "%s%#x"
+#define WABT_PRINTF_TYPE_CODE(x) \
+  (static_cast<int32_t>(x) < 0 ? "-" : ""), std::abs(static_cast<int32_t>(x))
+
 #define WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE 128
 #define WABT_SNPRINTF_ALLOCA(buffer, len, format)                          \
   va_list args;                                                            \
@@ -200,19 +204,19 @@ struct Location {
   };
 };
 
-/* matches binary format, do not change */
-enum class Type {
-  I32 = 0x7F,
-  I64 = 0x7E,
-  F32 = 0x7D,
-  F64 = 0x7C,
-  V128 = 0x7B,
-  Anyfunc = 0x70,
-  Func = 0x60,
-  Void = 0x40,
-  ExceptRef = 0x3f,
-  ___ = Void, /* convenient for the opcode table in opcode.h */
-  Any = 0,    /* Not actually specified, but useful for type-checking */
+// Matches binary format, do not change.
+enum class Type : int32_t {
+  I32 = -0x01,        // 0x7f
+  I64 = -0x02,        // 0x7e
+  F32 = -0x03,        // 0x7d
+  F64 = -0x04,        // 0x7c
+  V128 = -0x05,       // 0x7b
+  Anyfunc = -0x10,    // 0x70
+  ExceptRef = -0x18,  // 0x68
+  Func = -0x20,       // 0x60
+  Void = -0x40,       // 0x40
+  ___ = Void,         // Convenient for the opcode table in opcode.h
+  Any = 0,            // Not actually specified, but useful for type-checking
 };
 typedef std::vector<Type> TypeVector;
 
@@ -355,8 +359,37 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "void";
     case Type::Any:
       return "any";
+    default:
+      return "<type index>";
   }
   WABT_UNREACHABLE;
+}
+
+static WABT_INLINE bool IsTypeIndex(Type type) {
+  return static_cast<int32_t>(type) >= 0;
+}
+
+static WABT_INLINE Index GetTypeIndex(Type type) {
+  assert(IsTypeIndex(type));
+  return static_cast<Index>(type);
+}
+
+static WABT_INLINE TypeVector GetInlineTypeVector(Type type) {
+  assert(!IsTypeIndex(type));
+  switch (type) {
+    case Type::Void:
+      return TypeVector();
+
+    case Type::I32:
+    case Type::I64:
+    case Type::F32:
+    case Type::F64:
+    case Type::V128:
+      return TypeVector(&type, &type + 1);
+
+    default:
+      WABT_UNREACHABLE;
+  }
 }
 
 /* error level */

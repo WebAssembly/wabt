@@ -133,7 +133,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
   Result OnOpcodeV128(v128 value) override;
-  Result OnOpcodeBlockSig(Index num_types, Type* sig_types) override;
+  Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
@@ -147,7 +147,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                                 uint32_t alignment_log2,
                                 Address offset) override;
   Result OnBinaryExpr(Opcode opcode) override;
-  Result OnBlockExpr(Index num_types, Type* sig_types) override;
+  Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
   Result OnBrTableExpr(Index num_targets,
@@ -169,14 +169,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnGetLocalExpr(Index local_index) override;
   Result OnI32ConstExpr(uint32_t value) override;
   Result OnI64ConstExpr(uint64_t value) override;
-  Result OnIfExpr(Index num_types, Type* sig_types) override;
-  Result OnIfExceptExpr(Index num_types,
-                        Type* sig_types,
-                        Index except_index) override;
+  Result OnIfExpr(Type sig_type) override;
+  Result OnIfExceptExpr(Type sig_type, Index except_index) override;
   Result OnLoadExpr(Opcode opcode,
                     uint32_t alignment_log2,
                     Address offset) override;
-  Result OnLoopExpr(Index num_types, Type* sig_types) override;
+  Result OnLoopExpr(Type sig_type) override;
   Result OnMemoryGrowExpr() override;
   Result OnMemorySizeExpr() override;
   Result OnNopExpr() override;
@@ -190,7 +188,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                      Address offset) override;
   Result OnTeeLocalExpr(Index local_index) override;
   Result OnThrowExpr(Index except_index) override;
-  Result OnTryExpr(Index num_types, Type* sig_types) override;
+  Result OnTryExpr(Type sig_type) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
   Result OnUnreachableExpr() override;
@@ -300,6 +298,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   void Indent();
   void Dedent();
   void WriteIndent();
+  void LogType(Type type);
   void LogTypes(Index type_count, Type* types);
   void LogTypes(TypeVector& types);
 
