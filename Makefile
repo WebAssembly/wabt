@@ -155,6 +155,10 @@ src/prebuilt/wasm2c.include.c: src/wasm2c.c.tmpl
 src/prebuilt/wasm2c.include.h: src/wasm2c.h.tmpl
 	src/wasm2c_tmpl.py -o $@ $<
 
+.PHONY: demo
+demo: emscripten-release
+	cp out/emscripten/Release/libwabt.js demo
+
 # running CMake
 $(foreach CONFIG,$(CONFIGS), \
 	$(foreach COMPILER,$(COMPILERS), \

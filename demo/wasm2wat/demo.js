@@ -38,7 +38,7 @@ function compile(contents) {
   var foldExprs = foldExprsEl.checked;
   var inlineExport = inlineExportEl.checked;
 
-  wabt.ready.then(function() {
+  WabtModule().then(function(wabt) {
     try {
       var module = wabt.readWasm(contents, {readDebugNames: readDebugNames});
       if (generateNames) {

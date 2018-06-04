@@ -20,7 +20,7 @@ Split(["#top-row", "#bottom-row"], {
   direction: 'vertical'
 });
 
-wabt.ready.then(function () {
+WabtModule().then(function(wabt) {
 
 var kCompileMinMS = 100;
 
