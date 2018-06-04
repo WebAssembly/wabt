@@ -215,6 +215,7 @@ struct Block {
   std::string label;
   BlockSignature sig;
   ExprList exprs;
+  Location end_loc;
 };
 
 class Expr : public intrusive_list_base<Expr> {
@@ -332,6 +333,7 @@ class IfExpr : public ExprMixin<ExprType::If> {
 
   Block true_;
   ExprList false_;
+  Location false_end_loc;
 };
 
 class IfExceptExpr : public ExprMixin<ExprType::IfExcept> {
@@ -341,6 +343,7 @@ class IfExceptExpr : public ExprMixin<ExprType::IfExcept> {
 
   Block true_;
   ExprList false_;
+  Location false_end_loc;
   Var except_var;
 };
 

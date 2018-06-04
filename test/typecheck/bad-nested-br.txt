@@ -19,7 +19,7 @@
     ;; return statement here, or a value returned from (br $outer).
   ))
 (;; STDERR ;;;
-out/test/typecheck/bad-nested-br.txt:16:7: error: type mismatch in implicit return, expected [i32] but got []
-      return
-      ^^^^^^
+out/test/typecheck/bad-nested-br.txt:17:5: error: type mismatch in implicit return, expected [i32] but got []
+    end
+    ^^^
 ;;; STDERR ;;)

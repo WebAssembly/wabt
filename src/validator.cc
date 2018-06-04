@@ -521,6 +521,7 @@ Result Validator::BeginBlockExpr(BlockExpr* expr) {
 }
 
 Result Validator::EndBlockExpr(BlockExpr* expr) {
+  expr_loc_ = &expr->block.end_loc;
   typechecker_.OnEnd();
   return Result::Ok;
 }
@@ -623,6 +624,8 @@ Result Validator::AfterIfTrueExpr(IfExpr* expr) {
 }
 
 Result Validator::EndIfExpr(IfExpr* expr) {
+  expr_loc_ =
+      expr->false_.empty() ? &expr->true_.end_loc : &expr->false_end_loc;
   typechecker_.OnEnd();
   return Result::Ok;
 }
@@ -647,6 +650,8 @@ Result Validator::AfterIfExceptTrueExpr(IfExceptExpr* expr) {
 }
 
 Result Validator::EndIfExceptExpr(IfExceptExpr* expr) {
+  expr_loc_ =
+      expr->false_.empty() ? &expr->true_.end_loc : &expr->false_end_loc;
   typechecker_.OnEnd();
   return Result::Ok;
 }
@@ -668,6 +673,7 @@ Result Validator::BeginLoopExpr(LoopExpr* expr) {
 }
 
 Result Validator::EndLoopExpr(LoopExpr* expr) {
+  expr_loc_ = &expr->block.end_loc;
   typechecker_.OnEnd();
   return Result::Ok;
 }
@@ -755,6 +761,7 @@ Result Validator::OnCatchExpr(TryExpr* expr) {
 }
 
 Result Validator::EndTryExpr(TryExpr* expr) {
+  expr_loc_ = &expr->block.end_loc;
   typechecker_.OnEnd();
   return Result::Ok;
 }
