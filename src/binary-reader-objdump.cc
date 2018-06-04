@@ -1147,13 +1147,13 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
 }
 
 static Result InitExprToConstOffset(const InitExpr& expr,
-                                    uint32_t& out_offset) {
+                                    uint32_t* out_offset) {
   switch (expr.type) {
     case InitExprType::I32:
-      out_offset = expr.value.i32;
+      *out_offset = expr.value.i32;
       break;
     case InitExprType::Global:
-      out_offset = 0;
+      *out_offset = 0;
       break;
     case InitExprType::I64:
     case InitExprType::F32:
@@ -1169,10 +1169,10 @@ static Result InitExprToConstOffset(const InitExpr& expr,
 Result BinaryReaderObjdump::HandleInitExpr(const InitExpr& expr) {
   if (in_data_section_) {
     data_init_expr_ = expr;
-    return InitExprToConstOffset(expr, data_offset_);
+    return InitExprToConstOffset(expr, &data_offset_);
   } else if (in_elem_section_) {
     elem_init_expr_ = expr;
-    return InitExprToConstOffset(expr, elem_offset_);
+    return InitExprToConstOffset(expr, &elem_offset_);
   } else {
     PrintInitExpr(expr);
   }
