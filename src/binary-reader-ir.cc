@@ -231,6 +231,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result PopLabel();
   Result GetLabelAt(LabelNode** label, Index depth);
   Result TopLabel(LabelNode** label);
+  Result TopLabelExpr(LabelNode** label, Expr** expr);
   Result AppendExpr(std::unique_ptr<Expr> expr);
 
   ErrorHandler* error_handler_ = nullptr;
@@ -289,6 +290,14 @@ Result BinaryReaderIR::GetLabelAt(LabelNode** label, Index depth) {
 
 Result BinaryReaderIR::TopLabel(LabelNode** label) {
   return GetLabelAt(label, 0);
+}
+
+Result BinaryReaderIR::TopLabelExpr(LabelNode** label, Expr** expr) {
+  CHECK_RESULT(TopLabel(label));
+  LabelNode* parent_label;
+  CHECK_RESULT(GetLabelAt(&parent_label, 1));
+  *expr = &parent_label->exprs->back();
+  return Result::Ok;
 }
 
 Result BinaryReaderIR::AppendExpr(std::unique_ptr<Expr> expr) {
@@ -651,26 +660,59 @@ Result BinaryReaderIR::OnDropExpr() {
 
 Result BinaryReaderIR::OnElseExpr() {
   LabelNode* label;
-  CHECK_RESULT(TopLabel(&label));
-  if (label->label_type != LabelType::If &&
-      label->label_type != LabelType::IfExcept) {
+  Expr* expr;
+  CHECK_RESULT(TopLabelExpr(&label, &expr));
+
+  if (label->label_type == LabelType::If) {
+    auto* if_expr = cast<IfExpr>(expr);
+    if_expr->true_.end_loc = GetLocation();
+    label->exprs = &if_expr->false_;
+    label->label_type = LabelType::Else;
+  } else if (label->label_type == LabelType::IfExcept) {
+    auto* if_except_expr = cast<IfExceptExpr>(expr);
+    if_except_expr->true_.end_loc = GetLocation();
+    label->exprs = &if_except_expr->false_;
+    label->label_type = LabelType::IfExceptElse;
+  } else {
     PrintError("else expression without matching if");
     return Result::Error;
   }
 
-  LabelNode* parent_label;
-  CHECK_RESULT(GetLabelAt(&parent_label, 1));
-
-  if (label->label_type == LabelType::If) {
-    label->exprs = &cast<IfExpr>(&parent_label->exprs->back())->false_;
-  } else {
-    label->exprs = &cast<IfExceptExpr>(&parent_label->exprs->back())->false_;
-  }
-  label->label_type = LabelType::Else;
   return Result::Ok;
 }
 
 Result BinaryReaderIR::OnEndExpr() {
+  LabelNode* label;
+  Expr* expr;
+  CHECK_RESULT(TopLabelExpr(&label, &expr));
+  switch (label->label_type) {
+    case LabelType::Block:
+      cast<BlockExpr>(expr)->block.end_loc = GetLocation();
+      break;
+    case LabelType::Loop:
+      cast<LoopExpr>(expr)->block.end_loc = GetLocation();
+      break;
+    case LabelType::If:
+      cast<IfExpr>(expr)->true_.end_loc = GetLocation();
+      break;
+    case LabelType::Else:
+      cast<IfExpr>(expr)->false_end_loc = GetLocation();
+      break;
+    case LabelType::IfExcept:
+      cast<IfExceptExpr>(expr)->true_.end_loc = GetLocation();
+      break;
+    case LabelType::IfExceptElse:
+      cast<IfExceptExpr>(expr)->false_end_loc = GetLocation();
+      break;
+    case LabelType::Try:
+      cast<TryExpr>(expr)->block.end_loc = GetLocation();
+      break;
+
+    case LabelType::Func:
+    case LabelType::Catch:
+      break;
+  }
+
   return PopLabel();
 }
 

@@ -1710,6 +1710,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       if (Match(TokenType::Else)) {
         CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
         CHECK_RESULT(ParseTerminatingInstrList(&expr->false_));
+        expr->false_end_loc = GetLocation();
       }
       EXPECT(End);
       CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
@@ -1722,9 +1723,11 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       auto expr = MakeUnique<IfExceptExpr>(loc);
       CHECK_RESULT(ParseIfExceptHeader(expr.get()));
       CHECK_RESULT(ParseInstrList(&expr->true_.exprs));
+      expr->true_.end_loc = GetLocation();
       if (Match(TokenType::Else)) {
         CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
         CHECK_RESULT(ParseTerminatingInstrList(&expr->false_));
+        expr->false_end_loc = GetLocation();
       }
       EXPECT(End);
       CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
@@ -1785,6 +1788,7 @@ Result WastParser::ParseBlock(Block* block) {
   WABT_TRACE(ParseBlock);
   CHECK_RESULT(ParseResultList(&block->sig));
   CHECK_RESULT(ParseInstrList(&block->exprs));
+  block->end_loc = GetLocation();
   return Result::Ok;
 }
 
@@ -1966,6 +1970,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
         CHECK_RESULT(ParseLabelOpt(&expr->block.label));
         CHECK_RESULT(ParseResultList(&expr->block.sig));
         CHECK_RESULT(ParseInstrList(&expr->block.exprs));
+        expr->block.end_loc = GetLocation();
         EXPECT(Lpar);
         EXPECT(Catch);
         CHECK_RESULT(ParseTerminatingInstrList(&expr->catch_));
