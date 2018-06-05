@@ -201,7 +201,8 @@ class WasmInterpHostImportDelegate : public HostImportDelegate {
                                       Index num_results,
                                       TypedValue* out_results,
                                       void* user_data) {
-    memset(out_results, 0, sizeof(TypedValue) * num_results);
+    memset(static_cast<void*>(out_results), 0,
+                              sizeof(TypedValue) * num_results);
     for (Index i = 0; i < num_results; ++i)
       out_results[i].type = sig->result_types[i];
 
