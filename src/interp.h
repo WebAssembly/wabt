@@ -90,7 +90,7 @@ static const IstreamOffset kInvalidIstreamOffset = ~0;
 #define WABT_TABLE_ENTRY_SIZE \
   (sizeof(IstreamOffset) + sizeof(uint32_t) + sizeof(uint8_t))
 #define WABT_TABLE_ENTRY_OFFSET_OFFSET 0
-#define WABT_TABLE_ENTRY_DROP_OFFSET sizeof(uint32_t)
+#define WABT_TABLE_ENTRY_DROP_OFFSET sizeof(IstreamOffset)
 #define WABT_TABLE_ENTRY_KEEP_OFFSET (sizeof(IstreamOffset) + sizeof(uint32_t))
 
 struct FuncSignature {
@@ -514,8 +514,8 @@ class Thread {
   template <typename T>
   T Pop();
 
-  // Push/Pop values without conversions, e.g. Push<float> will take a uint32_t
-  // argument which is the integer representation of that float value.
+  // Push/Pop values without conversions, e.g. PushRep<float> will take a
+  // uint32_t argument which is the integer representation of that float value.
   // Similarly, PopRep<float> will not convert the value to a float.
   template <typename T>
   Result PushRep(ValueTypeRep<T>) WABT_WARN_UNUSED;
