@@ -78,7 +78,7 @@ void BinaryReaderLogging::WriteIndent() {
 
 void BinaryReaderLogging::LogType(Type type) {
   if (IsTypeIndex(type)) {
-    LOGF_NOINDENT("funcidx[%d]", type);
+    LOGF_NOINDENT("funcidx[%d]", static_cast<int>(type));
   } else {
     LOGF_NOINDENT("%s", GetTypeName(type));
   }
