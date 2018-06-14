@@ -558,8 +558,12 @@ Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
 Result BinaryReaderObjdumpDisassemble::OnIfExceptExpr(Type sig_type,
                                                       Index except_index) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(data_, immediate_len, "%s %u", BlockSigToString(sig_type).c_str(),
-            except_index);
+  if (sig_type != Type::Void) {
+    LogOpcode(data_, immediate_len, "%s %u", BlockSigToString(sig_type).c_str(),
+              except_index);
+  } else {
+    LogOpcode(data_, immediate_len, "%u", except_index);
+  }
   indent_level++;
   return Result::Ok;
 }
@@ -590,7 +594,11 @@ Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index) {
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Type sig_type) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  LogOpcode(data_, immediate_len, "%s", BlockSigToString(sig_type).c_str());
+  if (sig_type != Type::Void) {
+    LogOpcode(data_, immediate_len, "%s", BlockSigToString(sig_type).c_str());
+  } else {
+    LogOpcode(data_, immediate_len, nullptr);
+  }
   indent_level++;
   return Result::Ok;
 }

@@ -73,12 +73,12 @@ br-block.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000015 func[0]:
- 000017: 02 40                      | block 
- 000019: 03 40                      |   loop 
- 00001b: 02 40                      |     block 
+ 000017: 02 40                      | block
+ 000019: 03 40                      |   loop
+ 00001b: 02 40                      |     block
  00001d: 41 00                      |       i32.const 0
  00001f: 1a                         |       drop
- 000020: 02 40                      |       block 
+ 000020: 02 40                      |       block
  000022: 0c 00                      |         br 0
  000024: 0c 01                      |         br 1
  000026: 0c 02                      |         br 2

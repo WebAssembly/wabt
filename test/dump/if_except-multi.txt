@@ -79,7 +79,7 @@ if_except-multi.wasm:	file format wasm 0x1
 Code Disassembly:
 
 00002a func[0]:
- 00002c: 06 40                      | try 
+ 00002c: 06 40                      | try
  00002e: 01                         |   nop
  00002f: 07                         | catch
  000030: 0a 01 00                   |   if_except type[1] 0

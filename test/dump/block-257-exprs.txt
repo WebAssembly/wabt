@@ -342,7 +342,7 @@ block-257-exprs.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000016 func[0]:
- 000019: 02 40                      | block 
+ 000019: 02 40                      | block
  00001b: 01                         |   nop
  00001c: 01                         |   nop
  00001d: 01                         |   nop

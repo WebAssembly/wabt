@@ -86,7 +86,7 @@ Code Disassembly:
 
 000016 func[0]:
  000018: 41 01                      | i32.const 1
- 00001a: 04 40                      | if 
+ 00001a: 04 40                      | if
  00001c: 01                         |   nop
  00001d: 0b                         | end
  00001e: 41 00                      | i32.const 0
@@ -99,7 +99,7 @@ Code Disassembly:
  00002f: 0b                         | end
 000030 func[1]:
  000032: 41 01                      | i32.const 1
- 000034: 04 40                      | if 
+ 000034: 04 40                      | if
  000036: 0f                         |   return
  000037: 05                         | else
  000038: 0f                         |   return
