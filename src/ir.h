@@ -203,17 +203,17 @@ enum class ExprType {
 
 const char* GetExprTypeName(ExprType type);
 
-typedef TypeVector BlockSignature;
-
 class Expr;
 typedef intrusive_list<Expr> ExprList;
+
+typedef FuncDeclaration BlockDeclaration;
 
 struct Block {
   Block() = default;
   explicit Block(ExprList exprs) : exprs(std::move(exprs)) {}
 
   std::string label;
-  BlockSignature sig;
+  BlockDeclaration decl;
   ExprList exprs;
   Location end_loc;
 };

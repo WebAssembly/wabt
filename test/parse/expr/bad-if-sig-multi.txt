@@ -11,9 +11,21 @@
       i32.const 4
     end
     drop
-    drop))
+    drop)
+
+  (func
+    i32.const 1
+    i32.const 2
+    if (param i32)
+      drop
+    else
+      drop
+    end))
 (;; STDERR ;;;
-out/test/parse/expr/bad-if-sig-multi.txt:6:5: error: multiple if signature result types not currently supported.
+out/test/parse/expr/bad-if-sig-multi.txt:6:5: error: multiple if results not currently supported.
     if (result i32 i32)
+    ^^
+out/test/parse/expr/bad-if-sig-multi.txt:19:5: error: if params not currently supported.
+    if (param i32)
     ^^
 ;;; STDERR ;;)

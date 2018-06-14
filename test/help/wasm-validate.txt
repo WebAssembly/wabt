@@ -18,6 +18,7 @@ options:
       --enable-sign-extension                 Sign-extension operators
       --enable-simd                           SIMD support
       --enable-threads                        Threading support
+      --enable-multi-value                    Multi-value
       --no-debug-names                        Ignore debug names in the binary file
       --ignore-custom-section-errors          Ignore errors in custom sections
 ;;; STDOUT ;;)

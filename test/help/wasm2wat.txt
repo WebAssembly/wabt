@@ -24,6 +24,7 @@ options:
       --enable-sign-extension                 Sign-extension operators
       --enable-simd                           SIMD support
       --enable-threads                        Threading support
+      --enable-multi-value                    Multi-value
       --inline-exports                        Write all exports inline
       --inline-imports                        Write all imports inline
       --no-debug-names                        Ignore debug names in the binary file

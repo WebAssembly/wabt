@@ -163,9 +163,9 @@ class Validator : public ExprVisitor::Delegate {
   void CheckExprList(const Location* loc, const ExprList& exprs);
   bool CheckHasMemory(const Location* loc, Opcode opcode);
   void CheckHasSharedMemory(const Location* loc, Opcode opcode);
-  void CheckBlockSig(const Location* loc,
-                     Opcode opcode,
-                     const BlockSignature* sig);
+  void CheckBlockDeclaration(const Location* loc,
+                             Opcode opcode,
+                             const BlockDeclaration* decl);
   template <typename T>
   void CheckAtomicExpr(const T* expr, Result (TypeChecker::*func)(Opcode));
   void CheckFuncSignature(const Location* loc, const FuncDeclaration& decl);
@@ -488,13 +488,26 @@ void Validator::CheckHasSharedMemory(const Location* loc, Opcode opcode) {
   }
 }
 
-void Validator::CheckBlockSig(const Location* loc,
-                              Opcode opcode,
-                              const BlockSignature* sig) {
-  if (sig->size() > 1) {
-    PrintError(loc,
-               "multiple %s signature result types not currently supported.",
+void Validator::CheckBlockDeclaration(const Location* loc,
+                                      Opcode opcode,
+                                      const BlockDeclaration* decl) {
+  if (decl->sig.GetNumParams() > 0 &&
+      !options_->features.multi_value_enabled()) {
+    PrintError(loc, "%s params not currently supported.", opcode.GetName());
+  }
+  if (decl->sig.GetNumResults() > 1 &&
+      !options_->features.multi_value_enabled()) {
+    PrintError(loc, "multiple %s results not currently supported.",
                opcode.GetName());
+  }
+  if (decl->has_func_type) {
+    const FuncType* func_type;
+    if (Succeeded(CheckFuncTypeVar(&decl->type_var, &func_type))) {
+      CheckTypes(loc, decl->sig.result_types, func_type->sig.result_types,
+                 opcode.GetName(), "result");
+      CheckTypes(loc, decl->sig.param_types, func_type->sig.param_types,
+                 opcode.GetName(), "argument");
+    }
   }
 }
 
@@ -515,8 +528,9 @@ Result Validator::OnBinaryExpr(BinaryExpr* expr) {
 
 Result Validator::BeginBlockExpr(BlockExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckBlockSig(&expr->loc, Opcode::Block, &expr->block.sig);
-  typechecker_.OnBlock(&expr->block.sig);
+  CheckBlockDeclaration(&expr->loc, Opcode::Block, &expr->block.decl);
+  typechecker_.OnBlock(expr->block.decl.sig.param_types,
+                       expr->block.decl.sig.result_types);
   return Result::Ok;
 }
 
@@ -553,8 +567,8 @@ Result Validator::OnCallExpr(CallExpr* expr) {
   expr_loc_ = &expr->loc;
   const Func* callee;
   if (Succeeded(CheckFuncVar(&expr->var, &callee))) {
-    typechecker_.OnCall(&callee->decl.sig.param_types,
-                        &callee->decl.sig.result_types);
+    typechecker_.OnCall(callee->decl.sig.param_types,
+                        callee->decl.sig.result_types);
   }
   return Result::Ok;
 }
@@ -568,8 +582,8 @@ Result Validator::OnCallIndirectExpr(CallIndirectExpr* expr) {
     const FuncType* func_type;
     CheckFuncTypeVar(&expr->decl.type_var, &func_type);
   }
-  typechecker_.OnCallIndirect(&expr->decl.sig.param_types,
-                              &expr->decl.sig.result_types);
+  typechecker_.OnCallIndirect(expr->decl.sig.param_types,
+                              expr->decl.sig.result_types);
   return Result::Ok;
 }
 
@@ -611,8 +625,9 @@ Result Validator::OnGetLocalExpr(GetLocalExpr* expr) {
 
 Result Validator::BeginIfExpr(IfExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckBlockSig(&expr->loc, Opcode::If, &expr->true_.sig);
-  typechecker_.OnIf(&expr->true_.sig);
+  CheckBlockDeclaration(&expr->loc, Opcode::If, &expr->true_.decl);
+  typechecker_.OnIf(expr->true_.decl.sig.param_types,
+                    expr->true_.decl.sig.result_types);
   return Result::Ok;
 }
 
@@ -632,13 +647,14 @@ Result Validator::EndIfExpr(IfExpr* expr) {
 
 Result Validator::BeginIfExceptExpr(IfExceptExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckBlockSig(&expr->loc, Opcode::IfExcept, &expr->true_.sig);
+  CheckBlockDeclaration(&expr->loc, Opcode::IfExcept, &expr->true_.decl);
   const Exception* except;
   TypeVector except_sig;
   if (Succeeded(CheckExceptVar(&expr->except_var, &except))) {
     except_sig = except->sig;
   }
-  typechecker_.OnIfExcept(&expr->true_.sig, &except_sig);
+  typechecker_.OnIfExcept(expr->true_.decl.sig.param_types,
+                          expr->true_.decl.sig.result_types, except_sig);
   return Result::Ok;
 }
 
@@ -667,8 +683,9 @@ Result Validator::OnLoadExpr(LoadExpr* expr) {
 
 Result Validator::BeginLoopExpr(LoopExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckBlockSig(&expr->loc, Opcode::Loop, &expr->block.sig);
-  typechecker_.OnLoop(&expr->block.sig);
+  CheckBlockDeclaration(&expr->loc, Opcode::Loop, &expr->block.decl);
+  typechecker_.OnLoop(expr->block.decl.sig.param_types,
+                      expr->block.decl.sig.result_types);
   return Result::Ok;
 }
 
@@ -750,8 +767,9 @@ Result Validator::OnUnreachableExpr(UnreachableExpr* expr) {
 
 Result Validator::BeginTryExpr(TryExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckBlockSig(&expr->loc, Opcode::Try, &expr->block.sig);
-  typechecker_.OnTry(&expr->block.sig);
+  CheckBlockDeclaration(&expr->loc, Opcode::Try, &expr->block.decl);
+  typechecker_.OnTry(expr->block.decl.sig.param_types,
+                     expr->block.decl.sig.result_types);
   return Result::Ok;
 }
 
@@ -770,7 +788,7 @@ Result Validator::OnThrowExpr(ThrowExpr* expr) {
   expr_loc_ = &expr->loc;
   const Exception* except;
   if (Succeeded(CheckExceptVar(&expr->var, &except))) {
-    typechecker_.OnThrow(&except->sig);
+    typechecker_.OnThrow(except->sig);
   }
   return Result::Ok;
 }
@@ -851,14 +869,14 @@ void Validator::CheckFuncSignature(const Location* loc,
 void Validator::CheckFunc(const Location* loc, const Func* func) {
   current_func_ = func;
   CheckFuncSignature(loc, func->decl);
-  if (func->GetNumResults() > 1) {
+  if (!options_->features.multi_value_enabled() && func->GetNumResults() > 1) {
     PrintError(loc, "multiple result values not currently supported.");
     // Don't run any other checks, the won't test the result_type properly.
     return;
   }
 
   expr_loc_ = loc;
-  typechecker_.BeginFunction(&func->decl.sig.result_types);
+  typechecker_.BeginFunction(func->decl.sig.result_types);
   CheckExprList(loc, func->exprs);
   typechecker_.EndFunction();
   current_func_ = nullptr;

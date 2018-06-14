@@ -1,0 +1,28 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-multi-value
+(module
+  (func (export "if-multi-result") (result i32)
+    i32.const 1
+    if (result i32 f32)
+      i32.const 2
+      f32.const 3
+    else
+      unreachable
+    end
+    i32.trunc_s/f32
+    i32.add)
+
+  (func (export "if-param") (result f32)
+    f32.const 3
+    i32.const 0
+    if (param f32) (result f32)
+      unreachable
+    else
+      f32.const 100
+      f32.add
+    end)
+)
+(;; STDOUT ;;;
+if-multi-result() => i32:5
+if-param() => f32:103.000000
+;;; STDOUT ;;)

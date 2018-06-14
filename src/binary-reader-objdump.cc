@@ -327,6 +327,8 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
  public:
   using BinaryReaderObjdumpBase::BinaryReaderObjdumpBase;
 
+  std::string BlockSigToString(Type type) const;
+
   Result BeginFunctionBody(Index index) override;
 
   Result OnLocalDeclCount(Index count) override;
@@ -340,14 +342,12 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeUint64(uint64_t value) override;
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
-  Result OnOpcodeBlockSig(Index num_types, Type* sig_types) override;
+  Result OnOpcodeBlockSig(Type sig_type) override;
 
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
-  Result OnIfExceptExpr(Index num_types,
-                        Type* sig_types,
-                        Index except_index) override;
+  Result OnIfExceptExpr(Type sig_type, Index except_index) override;
   Result OnEndExpr() override;
   Result OnEndFunc() override;
 
@@ -361,6 +361,16 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Index next_reloc = 0;
   Index local_index_ = 0;
 };
+
+std::string BinaryReaderObjdumpDisassemble::BlockSigToString(Type type) const {
+  if (IsTypeIndex(type)) {
+    return StringPrintf("type[%d]", GetTypeIndex(type));
+  } else if (type == Type::Void) {
+    return "";
+  } else {
+    return GetTypeName(type);
+  }
+}
 
 Result BinaryReaderObjdumpDisassemble::OnOpcode(Opcode opcode) {
   if (options_->debug) {
@@ -545,12 +555,11 @@ Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisassemble::OnIfExceptExpr(Index num_types,
-                                                      Type* sig_types,
+Result BinaryReaderObjdumpDisassemble::OnIfExceptExpr(Type sig_type,
                                                       Index except_index) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  if (num_types) {
-    LogOpcode(data_, immediate_len, "%s %u", GetTypeName(*sig_types),
+  if (sig_type != Type::Void) {
+    LogOpcode(data_, immediate_len, "%s %u", BlockSigToString(sig_type).c_str(),
               except_index);
   } else {
     LogOpcode(data_, immediate_len, "%u", except_index);
@@ -583,12 +592,12 @@ Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Index num_types,
-                                                        Type* sig_types) {
-  if (num_types) {
-    LogOpcode(data_, 1, "%s", GetTypeName(*sig_types));
+Result BinaryReaderObjdumpDisassemble::OnOpcodeBlockSig(Type sig_type) {
+  Offset immediate_len = state->offset - current_opcode_offset;
+  if (sig_type != Type::Void) {
+    LogOpcode(data_, immediate_len, "%s", BlockSigToString(sig_type).c_str());
   } else {
-    LogOpcode(data_, 1, nullptr);
+    LogOpcode(data_, immediate_len, nullptr);
   }
   indent_level++;
   return Result::Ok;

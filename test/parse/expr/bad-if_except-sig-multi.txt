@@ -1,0 +1,23 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+
+(module
+  (except $e i32 i64)
+
+  (func
+    try
+      nop
+    catch
+      if_except (result i32 i64) $e
+      else
+        i32.const 1
+        i64.const 2
+      end
+      return
+    end))
+(;; STDERR ;;;
+out/test/parse/expr/bad-if_except-sig-multi.txt:12:7: error: multiple if_except results not currently supported.
+      if_except (result i32 i64) $e
+      ^^^^^^^^^
+;;; STDERR ;;)

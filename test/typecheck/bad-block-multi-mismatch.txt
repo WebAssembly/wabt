@@ -1,0 +1,58 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-multi-value
+;;; ERROR: 1
+(module
+  ;; too few results
+  (func
+    block (result i32 i32)
+      i32.const 0
+    end
+    return)
+
+  ;; too many results
+  (func
+    block (result i32 i32)
+      i32.const 0
+      i32.const 0
+      i32.const 0
+    end
+    return)
+
+  ;; result type mismatch
+  (func
+    block (result f32 i32)
+      i32.const 0
+      i32.const 1
+    end
+    return)
+
+  ;; too few params
+  (func
+    block (param i32)
+      drop
+    end)
+
+  ;; param type mismatch
+  (func
+    f32.const 0
+    block (param i32)
+      drop
+    end)
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-block-multi-mismatch.txt:9:5: error: type mismatch in block, expected [i32, i32] but got [i32]
+    end
+    ^^^
+out/test/typecheck/bad-block-multi-mismatch.txt:18:5: error: type mismatch in block, expected [] but got [i32]
+    end
+    ^^^
+out/test/typecheck/bad-block-multi-mismatch.txt:26:5: error: type mismatch in block, expected [f32, i32] but got [i32, i32]
+    end
+    ^^^
+out/test/typecheck/bad-block-multi-mismatch.txt:31:5: error: type mismatch in block, expected [i32] but got []
+    block (param i32)
+    ^^^^^
+out/test/typecheck/bad-block-multi-mismatch.txt:38:5: error: type mismatch in block, expected [i32] but got [f32]
+    block (param i32)
+    ^^^^^
+;;; STDERR ;;)

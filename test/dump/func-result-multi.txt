@@ -1,0 +1,50 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-multi-value
+(module
+  (func (result i32 i64)
+    i32.const 0
+    i64.const 0))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 02                                        ; num results
+000000e: 7f                                        ; i32
+000000f: 7e                                        ; i64
+0000009: 06                                        ; FIXUP section size
+; section "Function" (3)
+0000010: 03                                        ; section code
+0000011: 00                                        ; section size (guess)
+0000012: 01                                        ; num functions
+0000013: 00                                        ; function 0 signature index
+0000011: 02                                        ; FIXUP section size
+; section "Code" (10)
+0000014: 0a                                        ; section code
+0000015: 00                                        ; section size (guess)
+0000016: 01                                        ; num functions
+; function body 0
+0000017: 00                                        ; func body size (guess)
+0000018: 00                                        ; local decl count
+0000019: 41                                        ; i32.const
+000001a: 00                                        ; i32 literal
+000001b: 42                                        ; i64.const
+000001c: 00                                        ; i64 literal
+000001d: 0b                                        ; end
+0000017: 06                                        ; FIXUP func body size
+0000015: 08                                        ; FIXUP section size
+
+func-result-multi.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000017 func[0]:
+ 000019: 41 00                      | i32.const 0
+ 00001b: 42 00                      | i64.const 0
+ 00001d: 0b                         | end
+;;; STDOUT ;;)

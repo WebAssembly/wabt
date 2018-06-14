@@ -1,0 +1,118 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-multi-value
+(module
+  (func
+    i32.const 0
+    if (result i32 f32)
+      i32.const 1
+      f32.const 2
+    else
+      i32.const 3
+      f32.const 4
+    end
+    return)
+
+  (func
+    f32.const 0
+    i32.const 1
+    if (param f32)
+      drop
+    else
+      drop
+    end))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 03                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+; type 1
+000000e: 60                                        ; func
+000000f: 00                                        ; num params
+0000010: 02                                        ; num results
+0000011: 7f                                        ; i32
+0000012: 7d                                        ; f32
+; type 2
+0000013: 60                                        ; func
+0000014: 01                                        ; num params
+0000015: 7d                                        ; f32
+0000016: 00                                        ; num results
+0000009: 0d                                        ; FIXUP section size
+; section "Function" (3)
+0000017: 03                                        ; section code
+0000018: 00                                        ; section size (guess)
+0000019: 02                                        ; num functions
+000001a: 00                                        ; function 0 signature index
+000001b: 00                                        ; function 1 signature index
+0000018: 03                                        ; FIXUP section size
+; section "Code" (10)
+000001c: 0a                                        ; section code
+000001d: 00                                        ; section size (guess)
+000001e: 02                                        ; num functions
+; function body 0
+000001f: 00                                        ; func body size (guess)
+0000020: 00                                        ; local decl count
+0000021: 41                                        ; i32.const
+0000022: 00                                        ; i32 literal
+0000023: 04                                        ; if
+0000024: 01                                        ; block type function index
+0000025: 41                                        ; i32.const
+0000026: 01                                        ; i32 literal
+0000027: 43                                        ; f32.const
+0000028: 0000 0040                                 ; f32 literal
+000002c: 05                                        ; else
+000002d: 41                                        ; i32.const
+000002e: 03                                        ; i32 literal
+000002f: 43                                        ; f32.const
+0000030: 0000 8040                                 ; f32 literal
+0000034: 0b                                        ; end
+0000035: 0f                                        ; return
+0000036: 0b                                        ; end
+000001f: 17                                        ; FIXUP func body size
+; function body 1
+0000037: 00                                        ; func body size (guess)
+0000038: 00                                        ; local decl count
+0000039: 43                                        ; f32.const
+000003a: 0000 0000                                 ; f32 literal
+000003e: 41                                        ; i32.const
+000003f: 01                                        ; i32 literal
+0000040: 04                                        ; if
+0000041: 02                                        ; block type function index
+0000042: 1a                                        ; drop
+0000043: 05                                        ; else
+0000044: 1a                                        ; drop
+0000045: 0b                                        ; end
+0000046: 0b                                        ; end
+0000037: 0f                                        ; FIXUP func body size
+000001d: 29                                        ; FIXUP section size
+
+if-multi.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+00001f func[0]:
+ 000021: 41 00                      | i32.const 0
+ 000023: 04 01                      | if type[1]
+ 000025: 41 01                      |   i32.const 1
+ 000027: 43 00 00 00 40             |   f32.const 0x1p+1
+ 00002c: 05                         | else
+ 00002d: 41 03                      |   i32.const 3
+ 00002f: 43 00 00 80 40             |   f32.const 0x1p+2
+ 000034: 0b                         | end
+ 000035: 0f                         | return
+ 000036: 0b                         | end
+000037 func[1]:
+ 000039: 43 00 00 00 00             | f32.const 0x0p+0
+ 00003e: 41 01                      | i32.const 1
+ 000040: 04 02                      | if type[2]
+ 000042: 1a                         |   drop
+ 000043: 05                         | else
+ 000044: 1a                         |   drop
+ 000045: 0b                         | end
+ 000046: 0b                         | end
+;;; STDOUT ;;)

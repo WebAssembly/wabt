@@ -105,8 +105,8 @@ class BinaryReader {
   Result ReadOffset(Offset* offset, const char* desc) WABT_WARN_UNUSED;
   Result ReadCount(Index* index, const char* desc) WABT_WARN_UNUSED;
 
-  bool is_concrete_type(Type);
-  bool is_inline_sig_type(Type);
+  bool IsConcreteType(Type);
+  bool IsBlockType(Type);
 
   Index NumTotalFuncs();
   Index NumTotalTables();
@@ -145,6 +145,7 @@ class BinaryReader {
   BinaryReaderLogging logging_delegate_;
   BinaryReaderDelegate* delegate_ = nullptr;
   TypeVector param_types_;
+  TypeVector result_types_;
   std::vector<Index> target_depths_;
   const ReadBinaryOptions* options_ = nullptr;
   BinarySection last_known_section_ = BinarySection::Invalid;
@@ -291,8 +292,8 @@ Result BinaryReader::ReadS64Leb128(uint64_t* out_value, const char* desc) {
 }
 
 Result BinaryReader::ReadType(Type* out_value, const char* desc) {
-  uint8_t type = 0;
-  CHECK_RESULT(ReadU8(&type, desc));
+  uint32_t type = 0;
+  CHECK_RESULT(ReadS32Leb128(&type, desc));
   *out_value = static_cast<Type>(type);
   return Result::Ok;
 }
@@ -363,7 +364,7 @@ static bool is_valid_external_kind(uint8_t kind) {
   return kind < kExternalKindCount;
 }
 
-bool BinaryReader::is_concrete_type(Type type) {
+bool BinaryReader::IsConcreteType(Type type) {
   switch (type) {
     case Type::I32:
     case Type::I64:
@@ -379,8 +380,16 @@ bool BinaryReader::is_concrete_type(Type type) {
   }
 }
 
-bool BinaryReader::is_inline_sig_type(Type type) {
-  return is_concrete_type(type) || type == Type::Void;
+bool BinaryReader::IsBlockType(Type type) {
+  if (IsConcreteType(type) || type == Type::Void) {
+    return true;
+  }
+
+  if (!(options_->features.multi_value_enabled() && IsTypeIndex(type))) {
+    return false;
+  }
+
+  return GetTypeIndex(type) < num_signatures_;
 }
 
 Index BinaryReader::NumTotalFuncs() {
@@ -523,7 +532,7 @@ Result BinaryReader::ReadGlobalHeader(Type* out_type, bool* out_mutable) {
   Type global_type = Type::Void;
   uint8_t mutable_ = 0;
   CHECK_RESULT(ReadType(&global_type, "global type"));
-  ERROR_UNLESS(is_concrete_type(global_type), "invalid global type: %#x",
+  ERROR_UNLESS(IsConcreteType(global_type), "invalid global type: %#x",
                static_cast<int>(global_type));
 
   CHECK_RESULT(ReadU8(&mutable_, "global mutability"));
@@ -549,33 +558,30 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::Block: {
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "block signature type"));
-        ERROR_UNLESS(is_inline_sig_type(sig_type),
+        ERROR_UNLESS(IsBlockType(sig_type),
                      "expected valid block signature type");
-        Index num_types = sig_type == Type::Void ? 0 : 1;
-        CALLBACK(OnBlockExpr, num_types, &sig_type);
-        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
+        CALLBACK(OnBlockExpr, sig_type);
+        CALLBACK(OnOpcodeBlockSig, sig_type);
         break;
       }
 
       case Opcode::Loop: {
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "loop signature type"));
-        ERROR_UNLESS(is_inline_sig_type(sig_type),
+        ERROR_UNLESS(IsBlockType(sig_type),
                      "expected valid block signature type");
-        Index num_types = sig_type == Type::Void ? 0 : 1;
-        CALLBACK(OnLoopExpr, num_types, &sig_type);
-        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
+        CALLBACK(OnLoopExpr, sig_type);
+        CALLBACK(OnOpcodeBlockSig, sig_type);
         break;
       }
 
       case Opcode::If: {
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "if signature type"));
-        ERROR_UNLESS(is_inline_sig_type(sig_type),
+        ERROR_UNLESS(IsBlockType(sig_type),
                      "expected valid block signature type");
-        Index num_types = sig_type == Type::Void ? 0 : 1;
-        CALLBACK(OnIfExpr, num_types, &sig_type);
-        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
+        CALLBACK(OnIfExpr, sig_type);
+        CALLBACK(OnOpcodeBlockSig, sig_type);
         break;
       }
 
@@ -1124,11 +1130,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "try signature type"));
-        ERROR_UNLESS(is_inline_sig_type(sig_type),
+        ERROR_UNLESS(IsBlockType(sig_type),
                      "expected valid block signature type");
-        Index num_types = sig_type == Type::Void ? 0 : 1;
-        CALLBACK(OnTryExpr, num_types, &sig_type);
-        CALLBACK(OnOpcodeBlockSig, num_types, &sig_type);
+        CALLBACK(OnTryExpr, sig_type);
+        CALLBACK(OnOpcodeBlockSig, sig_type);
         break;
       }
 
@@ -1159,12 +1164,11 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "if signature type"));
-        ERROR_UNLESS(is_inline_sig_type(sig_type),
+        ERROR_UNLESS(IsBlockType(sig_type),
                      "expected valid block signature type");
-        Index num_types = sig_type == Type::Void ? 0 : 1;
         Index except_index;
         CHECK_RESULT(ReadIndex(&except_index, "exception index"));
-        CALLBACK(OnIfExceptExpr, num_types, &sig_type, except_index);
+        CALLBACK(OnIfExceptExpr, sig_type, except_index);
         break;
       }
 
@@ -1577,7 +1581,7 @@ Result BinaryReader::ReadExceptionType(TypeVector& sig) {
   for (Index j = 0; j < num_values; ++j) {
     Type value_type;
     CHECK_RESULT(ReadType(&value_type, "exception value type"));
-    ERROR_UNLESS(is_concrete_type(value_type),
+    ERROR_UNLESS(IsConcreteType(value_type),
                  "excepted valid exception value type (got %d)",
                  static_cast<int>(value_type));
     sig[j] = value_type;
@@ -1634,8 +1638,9 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
   for (Index i = 0; i < num_signatures_; ++i) {
     Type form;
     CHECK_RESULT(ReadType(&form, "type form"));
-    ERROR_UNLESS(form == Type::Func, "unexpected type form: %d",
-                 static_cast<int>(form));
+    ERROR_UNLESS(form == Type::Func,
+                 "unexpected type form (got " PRItypecode ")",
+                 WABT_PRINTF_TYPE_CODE(form));
 
     Index num_params;
     CHECK_RESULT(ReadCount(&num_params, "function param count"));
@@ -1645,27 +1650,32 @@ Result BinaryReader::ReadTypeSection(Offset section_size) {
     for (Index j = 0; j < num_params; ++j) {
       Type param_type;
       CHECK_RESULT(ReadType(&param_type, "function param type"));
-      ERROR_UNLESS(is_concrete_type(param_type),
-                   "expected valid param type (got %#x)",
-                   static_cast<int>(param_type));
+      ERROR_UNLESS(IsConcreteType(param_type),
+                   "expected valid param type (got " PRItypecode ")",
+                   WABT_PRINTF_TYPE_CODE(param_type));
       param_types_[j] = param_type;
     }
 
     Index num_results;
     CHECK_RESULT(ReadCount(&num_results, "function result count"));
-    ERROR_UNLESS(num_results <= 1, "result count must be 0 or 1");
+    ERROR_UNLESS(num_results <= 1 || options_->features.multi_value_enabled(),
+                 "result count must be 0 or 1");
 
-    Type result_type = Type::Void;
-    if (num_results) {
+    result_types_.resize(num_results);
+
+    for (Index j = 0; j < num_results; ++j) {
+      Type result_type;
       CHECK_RESULT(ReadType(&result_type, "function result type"));
-      ERROR_UNLESS(is_concrete_type(result_type),
-                   "expected valid result type: %#x",
-                   static_cast<int>(result_type));
+      ERROR_UNLESS(IsConcreteType(result_type),
+                   "expected valid result type (got " PRItypecode ")",
+                   WABT_PRINTF_TYPE_CODE(result_type));
+      result_types_[j] = result_type;
     }
 
     Type* param_types = num_params ? param_types_.data() : nullptr;
+    Type* result_types = num_results ? result_types_.data() : nullptr;
 
-    CALLBACK(OnType, i, num_params, param_types, num_results, &result_type);
+    CALLBACK(OnType, i, num_params, param_types, num_results, result_types);
   }
   CALLBACK0(EndTypeSection);
   return Result::Ok;
@@ -1924,7 +1934,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
       ERROR_UNLESS(num_local_types > 0, "local count must be > 0");
       Type local_type;
       CHECK_RESULT(ReadType(&local_type, "local type"));
-      ERROR_UNLESS(is_concrete_type(local_type), "expected valid local type");
+      ERROR_UNLESS(IsConcreteType(local_type), "expected valid local type");
       CALLBACK(OnLocalDecl, k, num_local_types, local_type);
     }
 

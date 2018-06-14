@@ -1,0 +1,35 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-multi-value
+(module
+  (func (export "block-multi-result") (result i32)
+    block (result i32 i32)
+      i32.const 1
+      i32.const 2
+    end
+    i32.add
+  )
+
+  (func (export "block-multi-result-br") (result i32)
+    block $b (result i32 i32)
+      block
+        i32.const 15
+        i32.const 7
+        br $b
+      end
+      i32.const -1
+      i32.const -2
+    end
+    drop)
+
+  (func (export "block-param") (result f32)
+    i32.const 2
+    block (param i32) (result f32)
+      f32.convert_s/i32
+    end
+  )
+)
+(;; STDOUT ;;;
+block-multi-result() => i32:3
+block-multi-result-br() => i32:15
+block-param() => f32:2.000000
+;;; STDOUT ;;)

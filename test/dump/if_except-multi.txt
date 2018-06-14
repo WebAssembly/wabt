@@ -1,0 +1,93 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v --enable-multi-value --enable-exceptions
+(module
+  (except $e i32 i64)
+
+  (func
+    try
+      nop
+    catch
+      if_except (result i32 i64) $e
+      else
+        i32.const 1
+        i64.const 2
+      end
+      return
+    end))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 02                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+; type 1
+000000e: 60                                        ; func
+000000f: 00                                        ; num params
+0000010: 02                                        ; num results
+0000011: 7f                                        ; i32
+0000012: 7e                                        ; i64
+0000009: 09                                        ; FIXUP section size
+; section "Function" (3)
+0000013: 03                                        ; section code
+0000014: 00                                        ; section size (guess)
+0000015: 01                                        ; num functions
+0000016: 00                                        ; function 0 signature index
+0000014: 02                                        ; FIXUP section size
+; section "exception"
+0000017: 00                                        ; section code
+0000018: 00                                        ; section size (guess)
+0000019: 09                                        ; string length
+000001a: 6578 6365 7074 696f 6e                   exception  ; custom section name
+0000023: 01                                        ; exception count
+0000024: 02                                        ; exception type count
+0000025: 7f                                        ; i32
+0000026: 7e                                        ; i64
+0000018: 0e                                        ; FIXUP section size
+; section "Code" (10)
+0000027: 0a                                        ; section code
+0000028: 00                                        ; section size (guess)
+0000029: 01                                        ; num functions
+; function body 0
+000002a: 00                                        ; func body size (guess)
+000002b: 00                                        ; local decl count
+000002c: 06                                        ; try
+000002d: 40                                        ; void
+000002e: 01                                        ; nop
+000002f: 07                                        ; catch
+0000030: 0a                                        ; if_except
+0000031: 01                                        ; block type function index
+0000032: 00                                        ; exception index
+0000033: 05                                        ; else
+0000034: 41                                        ; i32.const
+0000035: 01                                        ; i32 literal
+0000036: 42                                        ; i64.const
+0000037: 02                                        ; i64 literal
+0000038: 0b                                        ; end
+0000039: 0f                                        ; return
+000003a: 0b                                        ; end
+000003b: 0b                                        ; end
+000002a: 11                                        ; FIXUP func body size
+0000028: 13                                        ; FIXUP section size
+
+if_except-multi.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+00002a func[0]:
+ 00002c: 06 40                      | try
+ 00002e: 01                         |   nop
+ 00002f: 07                         | catch
+ 000030: 0a 01 00                   |   if_except type[1] 0
+ 000033: 05                         |   else
+ 000034: 41 01                      |     i32.const 1
+ 000036: 42 02                      |     i64.const 2
+ 000038: 0b                         |   end
+ 000039: 0f                         |   return
+ 00003a: 0b                         | end
+ 00003b: 0b                         | end
+;;; STDOUT ;;)

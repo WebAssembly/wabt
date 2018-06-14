@@ -1,0 +1,52 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-multi-value
+(module
+  ;; block
+  (func
+    block (result f32 f32)
+      block
+        block (result f32 f32)
+          f32.const 1
+          f32.const 2
+          i32.const 0  ;; key
+          br_table 0 2
+        end
+        drop
+        drop
+      end
+      f32.const 3
+      f32.const 4
+    end
+    return)
+
+  ;; loop
+  (func
+    loop (result f32 f32)
+      loop
+        loop (result f32 f32)
+          i32.const 0  ;; key
+          br_table 0 2
+        end
+        drop
+        drop
+      end
+      f32.const 3
+      f32.const 4
+    end
+    return)
+
+  ;; loop w/ param
+  (func
+    i32.const 1
+    loop (param i32)
+      drop  ;; loop param
+      loop
+        i32.const 2
+        loop (param i32)
+          ;; br param is passed through as loop param
+          i32.const 0  ;; key
+          br_table 0 2
+        end
+      end
+    end)
+)
