@@ -1,0 +1,35 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
+;;; ERROR: 1
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals [
+      decl_count[2]
+      leb_u32(0xffffffff) i32
+      leb_u32(1) i64
+    ]
+  }
+}
+(;; STDERR ;;;
+000001c: error: local count must be < 0x10000000
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+bad-too-many-locals.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type:
+ - type[0] () -> nil
+Function:
+ - func[0] sig=0
+
+Code Disassembly:
+
+000015 func[0]:
+;;; STDOUT ;;)
