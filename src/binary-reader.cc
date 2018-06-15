@@ -1925,6 +1925,7 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     Offset body_start_offset = state_.offset;
     Offset end_offset = body_start_offset + body_size;
 
+    uint64_t total_locals = 0;
     Index num_local_decls;
     CHECK_RESULT(ReadCount(&num_local_decls, "local declaration count"));
     CALLBACK(OnLocalDeclCount, num_local_decls);
@@ -1932,6 +1933,9 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
       Index num_local_types;
       CHECK_RESULT(ReadIndex(&num_local_types, "local type count"));
       ERROR_UNLESS(num_local_types > 0, "local count must be > 0");
+      total_locals += num_local_types;
+      ERROR_UNLESS(total_locals < UINT32_MAX,
+                   "local count must be < 0x10000000");
       Type local_type;
       CHECK_RESULT(ReadType(&local_type, "local type"));
       ERROR_UNLESS(IsConcreteType(local_type), "expected valid local type");
