@@ -103,9 +103,9 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint32_t)-1;
   }
-  memory->data = realloc(memory->data, new_pages);
   memory->pages = new_pages;
   memory->size = new_pages * PAGE_SIZE;
+  memory->data = realloc(memory->data, memory->size);
   return old_pages;
 }
 
