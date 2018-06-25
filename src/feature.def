@@ -29,3 +29,4 @@ WABT_FEATURE(sign_extension,   "sign-extension",          false,   "Sign-extensi
 WABT_FEATURE(simd,             "simd",                    false,   "SIMD support")
 WABT_FEATURE(threads,          "threads",                 false,   "Threading support")
 WABT_FEATURE(multi_value,      "multi-value",             false,   "Multi-value")
+WABT_FEATURE(tail_call,        "tail-call",               false,   "Tail-call support")

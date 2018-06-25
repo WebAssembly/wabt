@@ -432,16 +432,21 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, depth, "break depth for default");
       break;
     }
-    case ExprType::Call: {
+    case ExprType::Call:
+    case ExprType::ReturnCall: {
       Index index = module_->GetFuncIndex(cast<CallExpr>(expr)->var);
-      WriteOpcode(stream_, Opcode::Call);
+      WriteOpcode(stream_, expr->type() == ExprType::Call ? Opcode::Call
+                                                          : Opcode::ReturnCall);
       WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
       break;
     }
-    case ExprType::CallIndirect: {
+    case ExprType::CallIndirect:
+    case ExprType::ReturnCallIndirect: {
       Index index =
           module_->GetFuncTypeIndex(cast<CallIndirectExpr>(expr)->decl);
-      WriteOpcode(stream_, Opcode::CallIndirect);
+      WriteOpcode(stream_, expr->type() == ExprType::CallIndirect
+                               ? Opcode::CallIndirect
+                               : Opcode::ReturnCallIndirect);
       WriteU32Leb128WithReloc(index, "signature index",
                               RelocType::TypeIndexLEB);
       WriteU32Leb128(stream_, 0, "call_indirect reserved");

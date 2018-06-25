@@ -70,6 +70,8 @@ class Validator : public ExprVisitor::Delegate {
   Result OnMemorySizeExpr(MemorySizeExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
+  Result OnReturnCallExpr(ReturnCallExpr*) override;
+  Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
   Result OnSetGlobalExpr(SetGlobalExpr*) override;
   Result OnSetLocalExpr(SetLocalExpr*) override;
@@ -706,6 +708,16 @@ Result Validator::OnReturnExpr(ReturnExpr* expr) {
   expr_loc_ = &expr->loc;
   typechecker_.OnReturn();
   return Result::Ok;
+}
+
+Result Validator::OnReturnCallExpr(ReturnCallExpr* expr) {
+  // TODO(binji): implement.
+  return Result::Error;
+}
+
+Result Validator::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
+  // TODO(binji): implement.
+  return Result::Error;
 }
 
 Result Validator::OnSelectExpr(SelectExpr* expr) {
