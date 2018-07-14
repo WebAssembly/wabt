@@ -42,7 +42,7 @@ static std::unique_ptr<FileStream> s_log_stream;
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-objdump", s_description);
 
-  parser.AddOption('h', "headers", "Print headers",
+  parser.AddOption("headers", "Print headers",
                    []() { s_objdump_options.headers = true; });
   parser.AddOption(
       'j', "section", "SECTION", "Select just one section",

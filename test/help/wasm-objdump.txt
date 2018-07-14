@@ -9,7 +9,7 @@ examples:
   $ wasm-objdump test.wasm
 
 options:
-  -h, --headers                Print headers
+      --headers                Print headers
   -j, --section=SECTION        Select just one section
   -s, --full-contents          Print raw section contents
   -d, --disassemble            Disassemble function bodies
