@@ -34,7 +34,7 @@ relocs.wasm:	file format wasm 0x1
 
 Section Details:
 
-Type:
+Type[1]:
  - type[0] () -> i32
 Custom:
  - name: "mysection"

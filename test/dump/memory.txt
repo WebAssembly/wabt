@@ -44,9 +44,9 @@ memory.wasm:	file format wasm 0x1
 
 Section Details:
 
-Memory:
+Memory[1]:
  - memory[0] pages: initial=1
-Data:
+Data[2]:
  - segment[0] size=5 - init i32=10
   - 000000a: 6865 6c6c 6f                             hello
  - segment[1] size=48 - init i32=20

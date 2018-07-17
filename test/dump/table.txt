@@ -102,17 +102,17 @@ table.wasm:	file format wasm 0x1
 
 Section Details:
 
-Type:
+Type[3]:
  - type[0] (i32) -> nil
  - type[1] (i32, i64) -> nil
  - type[2] () -> f64
-Function:
+Function[3]:
  - func[0] sig=0
  - func[1] sig=1
  - func[2] sig=2
-Table:
+Table[1]:
  - table[0] type=anyfunc initial=6 max=6
-Elem:
+Elem[2]:
  - segment[0] table=0 count=2 - init i32=0
   - elem[0] = func[1]
   - elem[1] = func[1]
