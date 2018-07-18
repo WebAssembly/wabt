@@ -9,12 +9,12 @@ examples:
   $ wasm-objdump test.wasm
 
 options:
-      --headers                Print headers
+  -h, --headers                Print headers
   -j, --section=SECTION        Select just one section
   -s, --full-contents          Print raw section contents
   -d, --disassemble            Disassemble function bodies
       --debug                  Print extra debug information
   -x, --details                Show section details
   -r, --reloc                  Show relocations inline with disassembly
-  -h, --help                   Print this help message
+  -H, --help                   Print this help message
 ;;; STDOUT ;;)
