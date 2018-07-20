@@ -45,7 +45,8 @@ test_script:
   - python test\run-tests.py -v --bindir %APPVEYOR_BUILD_FOLDER%\bin
 
 after_test:
-  - 7z a %DEPLOY_NAME% %APPVEYOR_BUILD_FOLDER%\%CONFIG%\bin\*.exe
+  - ren "%APPVEYOR_BUILD_FOLDER%\\bin" "%APPVEYOR_BUILD_FOLDER%\\wabt-%APPVEYOR_REPO_TAG_NAME%"
+  - 7z a %DEPLOY_NAME% "%APPVEYOR_BUILD_FOLDER%\\wabt-%APPVEYOR_REPO_TAG_NAME%\\*.exe"
 
 artifacts:
   - path: "%DEPLOY_NAME%"
