@@ -19,7 +19,7 @@ matrix:
       dist: trusty
       sudo: required
       compiler: clang
-      env: TRAVIS_TAG=release_test WABT_DEPLOY=clang-release
+      env: WABT_DEPLOY=clang-release
     - os: linux
       dist: trusty
       sudo: required
