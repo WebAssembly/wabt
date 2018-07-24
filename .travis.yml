@@ -19,6 +19,7 @@ matrix:
       dist: trusty
       sudo: required
       compiler: clang
+      env: TRAVIS_TAG=release_test WABT_DEPLOY=clang-release
     - os: linux
       dist: trusty
       sudo: required
@@ -42,6 +43,7 @@ matrix:
       env: SANITIZER=ubsan
     - os: osx
       compiler: clang
+      env: WABT_DEPLOY=clang-release
     # Build the .js outputs using emcc
     - &test-emcc
       stage: test
@@ -69,10 +71,7 @@ matrix:
   fast_finish: true
 
 before_deploy:
-  - PKGNAME="wabt-$TRAVIS_TAG-$TRAVIS_OS_NAME"
-  - mv bin wabt-$TRAVIS_TAG
-  - tar -czf $PKGNAME.tar.gz wabt-$TRAVIS_TAG
-  - sha256sum $PKGNAME.tar.gz > $PKGNAME.tar.gz.sha256
+  - scripts/travis-before-deploy.sh
 
 deploy:
   provider: releases
@@ -82,3 +81,4 @@ deploy:
   file_glob: true
   on:
     tags: true
+    condition: -n ${WABT_DEPLOY}
