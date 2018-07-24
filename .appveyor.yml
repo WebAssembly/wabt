@@ -17,18 +17,24 @@ environment:
     CONFIG: Release
     JOBS_FLAG: -j
     EXE_DIR: .
+    DEPLOY: false
   - GENERATOR: Visual Studio 14 2015
     CONFIG: Release
     JOBS_FLAG: "/m:"
     EXE_DIR: '%CONFIG%'
+    DEPLOY: true
+    DEPLOY_NAME: wabt-%APPVEYOR_REPO_TAG_NAME%-win32.zip
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Debug
     JOBS_FLAG: "/m:"
     EXE_DIR: '%CONFIG%'
+    DEPLOY: false
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Release
     JOBS_FLAG: "/m:"
     EXE_DIR: '%CONFIG%'
+    DEPLOY: true
+    DEPLOY_NAME: wabt-%APPVEYOR_REPO_TAG_NAME%-win64.zip
 
 build_script:
   - cmake .  -DCMAKE_BUILD_TYPE=%CONFIG% -DCMAKE_INSTALL_PREFIX=%APPVEYOR_BUILD_FOLDER% -G "%GENERATOR%"
@@ -37,3 +43,21 @@ build_script:
 test_script:
   - "%APPVEYOR_BUILD_FOLDER%\\bin\\wabt-unittests"
   - python test\run-tests.py -v --bindir %APPVEYOR_BUILD_FOLDER%\bin
+
+artifacts:
+  - path: "%DEPLOY_NAME%"
+    name: wabt
+
+before_deploy:
+  - ren "%APPVEYOR_BUILD_FOLDER%\\bin" "wabt-%APPVEYOR_REPO_TAG_NAME%"
+  - 7z a %DEPLOY_NAME% "%APPVEYOR_BUILD_FOLDER%\\wabt-%APPVEYOR_REPO_TAG_NAME%\\*.exe"
+
+deploy:
+  description: 'wabt release'
+  provider: GitHub
+  auth_token:
+    secure: KFfsYkAo+kBfRikg9gm55VHkjNEiiDQk00S1kFjDrjEMrJRmrp6azGUeTSBfuiTH
+  artifact: "%DEPLOY_NAME%"
+  on:
+    appveyor_repo_tag: true
+    deploy: true

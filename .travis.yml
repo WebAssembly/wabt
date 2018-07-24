@@ -19,6 +19,7 @@ matrix:
       dist: trusty
       sudo: required
       compiler: clang
+      env: WABT_DEPLOY=clang-release
     - os: linux
       dist: trusty
       sudo: required
@@ -42,6 +43,7 @@ matrix:
       env: SANITIZER=ubsan
     - os: osx
       compiler: clang
+      env: WABT_DEPLOY=clang-release
     # Build the .js outputs using emcc
     - &test-emcc
       stage: test
@@ -67,3 +69,17 @@ matrix:
       compiler: clang
 
   fast_finish: true
+
+before_deploy:
+  - scripts/travis-before-deploy.sh
+
+deploy:
+  provider: releases
+  api_key:
+    secure: UTs36nT7zk1E5cmv4PmsrLbfpQoCJmkQ1upBvyiUl7F2GtPpd7bn/lxN9+e6xroW3vvFTD0MAx/ylqqKHISMhUlRj3vSRW9M1JO/EKj3jQ8kqr92Nz9On5QcGJ8usMMuzq4rXW/t32XIFci25RlFTBxAVXaQq6cVbvjGzvGfvJ6V6vTtho6Pjgj2HCq3K38TYMwA6/+NiP30bV2OkYKjTRx6RCFkYUhKallr0t035GT30bgW7Zz5roLlXUXMiCt8TqY5MCcFYmKukYpLF/tp+B5MUXR0rFFoTsafOc7hWCIi9SdngkwlUFW2tbc9CD0MtNEIUpF+Pf+siXo2RKqfg9A4pdHyHTx1PIOqyDTGcMLHBrs8bsQAoO4PJy6V0WLA1PwQDajXzGfFC3O7Wg/ljOpUumaHCt8yl3/aFu0LZu1NOCZnTpu/kLMXiB1osbSPuYqO+v2j8qgS6xDWf183d9cBzqlep+Wnk2Pgoq1PX2lO08QfxJjW6o3dJkZ/4icpT8hHb4ymcIr3VI9Pl+5Gg1JiMZooZeGV/XMXDAaaO2SNELOK4Dz9eBy4d4ffgaNPZkmNIJZLEx8nISDCU+u2VLcC5FHsCT8VyjcG9JdAXwOmlv2auxhyU87buteJvsJFDavfnc4BEgHPM1xR9PVJzY3IXAOAwAXUZQPWxSKwEgQ=
+  file: wabt-$TRAVIS_TAG-*.tar.gz*
+  file_glob: true
+  skip_cleanup: true
+  on:
+    tags: true
+    condition: -n ${WABT_DEPLOY}
