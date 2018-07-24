@@ -19,7 +19,7 @@ examples:
 
 options:
   -v, --verbose                               Use multiple times for more info
-  -h, --help                                  Print this help message
+      --help                                  Print this help message
       --debug-parser                          Turn on debugging the parser of wat files
   -d, --dump-module                           Print a hexdump of the module to stdout
       --enable-exceptions                     Experimental exception handling
