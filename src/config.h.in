@@ -279,7 +279,7 @@ int wabt_vsnprintf(char* str, size_t size, const char* format, va_list ap);
 #endif
 
 #if !HAVE_SSIZE_T
-typedef int ssize_t;
+typedef long ssize_t;
 #endif
 
 #if !HAVE_STRCASECMP
