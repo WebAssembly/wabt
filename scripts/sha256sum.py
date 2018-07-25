@@ -19,6 +19,7 @@ import argparse
 import hashlib
 import sys
 
+
 def main(args):
   parser = argparse.ArgumentParser()
   parser.add_argument('file', nargs='?')
@@ -32,6 +33,7 @@ def main(args):
     m.update(f.read())
   print('%s  %s' % (m.hexdigest(), options.file))
   return 0
+
 
 if __name__ == '__main__':
   sys.exit(main(sys.argv[1:]))
