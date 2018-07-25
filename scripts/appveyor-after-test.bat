@@ -14,7 +14,9 @@ REM limitations under the License.
 
 REM Set up the artifact for this build, but only if this is a tag build.
 
-IF "%APPVEYOR_REPO_TAG%" == "true" (
-  ren "%APPVEYOR_BUILD_FOLDER%\\bin" "wabt-%APPVEYOR_REPO_TAG_NAME%"
-  7z a %DEPLOY_NAME% "%APPVEYOR_BUILD_FOLDER%\\wabt-%APPVEYOR_REPO_TAG_NAME%\\*.exe"
+IF "%DEPLOY%" == "true" (
+  IF "%APPVEYOR_REPO_TAG%" == "true" (
+    ren "%APPVEYOR_BUILD_FOLDER%\\bin" "wabt-%APPVEYOR_REPO_TAG_NAME%"
+    7z a %DEPLOY_NAME% "%APPVEYOR_BUILD_FOLDER%\\wabt-%APPVEYOR_REPO_TAG_NAME%\\*.exe"
+  )
 )

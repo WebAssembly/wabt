@@ -56,7 +56,7 @@ deploy:
   description: 'wabt release'
   provider: GitHub
   auth_token:
-    secure: KFfsYkAo+kBfRikg9gm55VHkjNEiiDQk00S1kFjDrjEMrJRmrp6azGUeTSBfuiTH
+    secure: lHQSdycL1FHsFKZZ0RSnYSUtRitYaLb4uxDjCSOpYHnk4gIO/0/DLu4aoU2VvD7Y
   artifact: "%DEPLOY_NAME%"
   on:
     appveyor_repo_tag: true
