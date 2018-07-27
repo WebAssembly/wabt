@@ -44,19 +44,19 @@ test_script:
   - "%APPVEYOR_BUILD_FOLDER%\\bin\\wabt-unittests"
   - python test\run-tests.py -v --bindir %APPVEYOR_BUILD_FOLDER%\bin
 
+# Must happen before artifacts step.
+after_test:
+  - call scripts\appveyor-after-test.bat
+
 artifacts:
   - path: "%DEPLOY_NAME%"
     name: wabt
-
-before_deploy:
-  - ren "%APPVEYOR_BUILD_FOLDER%\\bin" "wabt-%APPVEYOR_REPO_TAG_NAME%"
-  - 7z a %DEPLOY_NAME% "%APPVEYOR_BUILD_FOLDER%\\wabt-%APPVEYOR_REPO_TAG_NAME%\\*.exe"
 
 deploy:
   description: 'wabt release'
   provider: GitHub
   auth_token:
-    secure: KFfsYkAo+kBfRikg9gm55VHkjNEiiDQk00S1kFjDrjEMrJRmrp6azGUeTSBfuiTH
+    secure: lHQSdycL1FHsFKZZ0RSnYSUtRitYaLb4uxDjCSOpYHnk4gIO/0/DLu4aoU2VvD7Y
   artifact: "%DEPLOY_NAME%"
   on:
     appveyor_repo_tag: true

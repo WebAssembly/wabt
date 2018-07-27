@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python
 #
 # Copyright 2018 WebAssembly Community Group participants
 #
@@ -13,20 +13,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
-set -o nounset
-set -o errexit
+from __future__ import print_function
+import argparse
+import hashlib
+import sys
 
-SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
-source "${SCRIPT_DIR}/travis-common.sh"
 
-if [[ -n ${WABT_DEPLOY:-} ]]; then
-  # Rebuild the WABT_DEPLOY target so it copies the results into bin/
-  make ${WABT_DEPLOY}
+def main(args):
+  parser = argparse.ArgumentParser()
+  parser.add_argument('file', nargs='?')
+  options = parser.parse_args(args)
 
-  PKGNAME="wabt-${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
-  mv bin wabt-${TRAVIS_TAG}
-  tar -czf ${PKGNAME}.tar.gz wabt-${TRAVIS_TAG}
-  ${SCRIPT_DIR}/sha256sum.py ${PKGNAME}.tar.gz > ${PKGNAME}.tar.gz.sha256
-fi
+  if options.file is None:
+    parser.error('Expected a file')
+
+  m = hashlib.sha256()
+  with open(options.file, 'rb') as f:
+    m.update(f.read())
+  print('%s  %s' % (m.hexdigest(), options.file))
+  return 0
+
+
+if __name__ == '__main__':
+  sys.exit(main(sys.argv[1:]))
