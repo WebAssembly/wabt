@@ -80,15 +80,16 @@ static void ParseOptions(int argc, char** argv) {
                      });
   parser.Parse(argc, argv);
 
-  // TODO(binji): currently wasm2c doesn't support any feature flags.
-  bool any_feature_enabled = false;
-#define WABT_FEATURE(variable, flag, help) \
-  any_feature_enabled |= s_features.variable##_enabled();
+  // TODO(binji): currently wasm2c doesn't support any non-default feature
+  // flags.
+  bool any_non_default_feature = false;
+#define WABT_FEATURE(variable, flag, default_, help) \
+  any_non_default_feature |= (s_features.variable##_enabled() != default_);
 #include "src/feature.def"
 #undef WABT_FEATURE
 
-  if (any_feature_enabled) {
-    fprintf(stderr, "wasm2c doesn't currently support any --enable-* flags.\n");
+  if (any_non_default_feature) {
+    fprintf(stderr, "wasm2c currently support only default feature flags.\n");
     exit(1);
   }
 }

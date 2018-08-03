@@ -121,7 +121,6 @@ def main(args):
   parser.add_argument('--enable-threads', action='store_true')
   parser.add_argument('--enable-simd', action='store_true')
   parser.add_argument('--enable-sign-extension', action='store_true')
-  parser.add_argument('--enable-mutable-globals', action='store_true')
   parser.add_argument('--enable-multi-value', action='store_true')
   parser.add_argument('--inline-exports', action='store_true')
   parser.add_argument('--inline-imports', action='store_true')
@@ -135,7 +134,6 @@ def main(args):
       '--debug-names': options.debug_names,
       '--enable-exceptions': options.enable_exceptions,
       '--enable-multi-value': options.enable_multi_value,
-      '--enable-mutable-globals': options.enable_mutable_globals,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
       '--enable-sign-extension': options.enable_sign_extension,
@@ -151,7 +149,6 @@ def main(args):
       '--fold-exprs': options.fold_exprs,
       '--enable-exceptions': options.enable_exceptions,
       '--enable-multi-value': options.enable_multi_value,
-      '--enable-mutable-globals': options.enable_mutable_globals,
       '--enable-saturating-float-to-int':
           options.enable_saturating_float_to_int,
       '--enable-sign-extension': options.enable_sign_extension,

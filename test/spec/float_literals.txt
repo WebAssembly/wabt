@@ -1,309 +1,309 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/float_literals.wast
 (;; STDOUT ;;;
-out/test/spec/float_literals.wast:196: assert_malformed passed:
+out/test/spec/float_literals.wast:204: assert_malformed passed:
   out/test/spec/float_literals/float_literals.2.wat:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _100))
                          ^^^^
-out/test/spec/float_literals.wast:200: assert_malformed passed:
+out/test/spec/float_literals.wast:208: assert_malformed passed:
   out/test/spec/float_literals/float_literals.3.wat:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const +_100))
                          ^^^^^
-out/test/spec/float_literals.wast:204: assert_malformed passed:
+out/test/spec/float_literals.wast:212: assert_malformed passed:
   out/test/spec/float_literals/float_literals.4.wat:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const -_100))
                          ^^^^^
-out/test/spec/float_literals.wast:208: assert_malformed passed:
+out/test/spec/float_literals.wast:216: assert_malformed passed:
   out/test/spec/float_literals/float_literals.5.wat:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 99_))
                          ^^^
-out/test/spec/float_literals.wast:212: assert_malformed passed:
+out/test/spec/float_literals.wast:220: assert_malformed passed:
   out/test/spec/float_literals/float_literals.6.wat:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1__000))
                          ^^^^^^
-out/test/spec/float_literals.wast:216: assert_malformed passed:
+out/test/spec/float_literals.wast:224: assert_malformed passed:
   out/test/spec/float_literals/float_literals.7.wat:1:24: error: unexpected token "_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _1.0))
                          ^^^^
-out/test/spec/float_literals.wast:220: assert_malformed passed:
+out/test/spec/float_literals.wast:228: assert_malformed passed:
   out/test/spec/float_literals/float_literals.8.wat:1:24: error: unexpected token "1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0_))
                          ^^^^
-out/test/spec/float_literals.wast:224: assert_malformed passed:
+out/test/spec/float_literals.wast:232: assert_malformed passed:
   out/test/spec/float_literals/float_literals.9.wat:1:24: error: unexpected token "1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1_.0))
                          ^^^^
-out/test/spec/float_literals.wast:228: assert_malformed passed:
+out/test/spec/float_literals.wast:236: assert_malformed passed:
   out/test/spec/float_literals/float_literals.10.wat:1:24: error: unexpected token "1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1._0))
                          ^^^^
-out/test/spec/float_literals.wast:232: assert_malformed passed:
+out/test/spec/float_literals.wast:240: assert_malformed passed:
   out/test/spec/float_literals/float_literals.11.wat:1:24: error: unexpected token "_1e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _1e1))
                          ^^^^
-out/test/spec/float_literals.wast:236: assert_malformed passed:
+out/test/spec/float_literals.wast:244: assert_malformed passed:
   out/test/spec/float_literals/float_literals.12.wat:1:24: error: unexpected token "1e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1e1_))
                          ^^^^
-out/test/spec/float_literals.wast:240: assert_malformed passed:
+out/test/spec/float_literals.wast:248: assert_malformed passed:
   out/test/spec/float_literals/float_literals.13.wat:1:24: error: unexpected token "1_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1_e1))
                          ^^^^
-out/test/spec/float_literals.wast:244: assert_malformed passed:
+out/test/spec/float_literals.wast:252: assert_malformed passed:
   out/test/spec/float_literals/float_literals.14.wat:1:24: error: unexpected token "1e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1e_1))
                          ^^^^
-out/test/spec/float_literals.wast:248: assert_malformed passed:
+out/test/spec/float_literals.wast:256: assert_malformed passed:
   out/test/spec/float_literals/float_literals.15.wat:1:24: error: unexpected token "_1.0e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _1.0e1))
                          ^^^^^^
-out/test/spec/float_literals.wast:252: assert_malformed passed:
+out/test/spec/float_literals.wast:260: assert_malformed passed:
   out/test/spec/float_literals/float_literals.16.wat:1:24: error: unexpected token "1.0e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0e1_))
                          ^^^^^^
-out/test/spec/float_literals.wast:256: assert_malformed passed:
+out/test/spec/float_literals.wast:264: assert_malformed passed:
   out/test/spec/float_literals/float_literals.17.wat:1:24: error: unexpected token "1.0_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0_e1))
                          ^^^^^^
-out/test/spec/float_literals.wast:260: assert_malformed passed:
+out/test/spec/float_literals.wast:268: assert_malformed passed:
   out/test/spec/float_literals/float_literals.18.wat:1:24: error: unexpected token "1.0e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0e_1))
                          ^^^^^^
-out/test/spec/float_literals.wast:264: assert_malformed passed:
+out/test/spec/float_literals.wast:272: assert_malformed passed:
   out/test/spec/float_literals/float_literals.19.wat:1:24: error: unexpected token "1.0e+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0e+_1))
                          ^^^^^^^
-out/test/spec/float_literals.wast:268: assert_malformed passed:
+out/test/spec/float_literals.wast:276: assert_malformed passed:
   out/test/spec/float_literals/float_literals.20.wat:1:24: error: unexpected token "1.0e_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 1.0e_+1))
                          ^^^^^^^
-out/test/spec/float_literals.wast:272: assert_malformed passed:
+out/test/spec/float_literals.wast:280: assert_malformed passed:
   out/test/spec/float_literals/float_literals.21.wat:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const _0x100))
                          ^^^^^^
-out/test/spec/float_literals.wast:276: assert_malformed passed:
+out/test/spec/float_literals.wast:284: assert_malformed passed:
   out/test/spec/float_literals/float_literals.22.wat:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0_x100))
                          ^^^^^^
-out/test/spec/float_literals.wast:280: assert_malformed passed:
+out/test/spec/float_literals.wast:288: assert_malformed passed:
   out/test/spec/float_literals/float_literals.23.wat:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x_100))
                          ^^^^^^
-out/test/spec/float_literals.wast:284: assert_malformed passed:
+out/test/spec/float_literals.wast:292: assert_malformed passed:
   out/test/spec/float_literals/float_literals.24.wat:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x00_))
                          ^^^^^
-out/test/spec/float_literals.wast:288: assert_malformed passed:
+out/test/spec/float_literals.wast:296: assert_malformed passed:
   out/test/spec/float_literals/float_literals.25.wat:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0xff__ffff))
                          ^^^^^^^^^^
-out/test/spec/float_literals.wast:292: assert_malformed passed:
+out/test/spec/float_literals.wast:300: assert_malformed passed:
   out/test/spec/float_literals/float_literals.26.wat:1:24: error: unexpected token "0x_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x_1.0))
                          ^^^^^^
-out/test/spec/float_literals.wast:296: assert_malformed passed:
+out/test/spec/float_literals.wast:304: assert_malformed passed:
   out/test/spec/float_literals/float_literals.27.wat:1:24: error: unexpected token "0x1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0_))
                          ^^^^^^
-out/test/spec/float_literals.wast:300: assert_malformed passed:
+out/test/spec/float_literals.wast:308: assert_malformed passed:
   out/test/spec/float_literals/float_literals.28.wat:1:24: error: unexpected token "0x1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1_.0))
                          ^^^^^^
-out/test/spec/float_literals.wast:304: assert_malformed passed:
+out/test/spec/float_literals.wast:312: assert_malformed passed:
   out/test/spec/float_literals/float_literals.29.wat:1:24: error: unexpected token "0x1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1._0))
                          ^^^^^^
-out/test/spec/float_literals.wast:308: assert_malformed passed:
+out/test/spec/float_literals.wast:316: assert_malformed passed:
   out/test/spec/float_literals/float_literals.30.wat:1:24: error: unexpected token "0x_1p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x_1p1))
                          ^^^^^^
-out/test/spec/float_literals.wast:312: assert_malformed passed:
+out/test/spec/float_literals.wast:320: assert_malformed passed:
   out/test/spec/float_literals/float_literals.31.wat:1:24: error: unexpected token "0x1p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1p1_))
                          ^^^^^^
-out/test/spec/float_literals.wast:316: assert_malformed passed:
+out/test/spec/float_literals.wast:324: assert_malformed passed:
   out/test/spec/float_literals/float_literals.32.wat:1:24: error: unexpected token "0x1_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1_p1))
                          ^^^^^^
-out/test/spec/float_literals.wast:320: assert_malformed passed:
+out/test/spec/float_literals.wast:328: assert_malformed passed:
   out/test/spec/float_literals/float_literals.33.wat:1:24: error: unexpected token "0x1p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1p_1))
                          ^^^^^^
-out/test/spec/float_literals.wast:324: assert_malformed passed:
+out/test/spec/float_literals.wast:332: assert_malformed passed:
   out/test/spec/float_literals/float_literals.34.wat:1:24: error: unexpected token "0x_1.0p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x_1.0p1))
                          ^^^^^^^^
-out/test/spec/float_literals.wast:328: assert_malformed passed:
+out/test/spec/float_literals.wast:336: assert_malformed passed:
   out/test/spec/float_literals/float_literals.35.wat:1:24: error: unexpected token "0x1.0p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0p1_))
                          ^^^^^^^^
-out/test/spec/float_literals.wast:332: assert_malformed passed:
+out/test/spec/float_literals.wast:340: assert_malformed passed:
   out/test/spec/float_literals/float_literals.36.wat:1:24: error: unexpected token "0x1.0_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0_p1))
                          ^^^^^^^^
-out/test/spec/float_literals.wast:336: assert_malformed passed:
+out/test/spec/float_literals.wast:344: assert_malformed passed:
   out/test/spec/float_literals/float_literals.37.wat:1:24: error: unexpected token "0x1.0p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0p_1))
                          ^^^^^^^^
-out/test/spec/float_literals.wast:340: assert_malformed passed:
+out/test/spec/float_literals.wast:348: assert_malformed passed:
   out/test/spec/float_literals/float_literals.38.wat:1:24: error: unexpected token "0x1.0p+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0p+_1))
                          ^^^^^^^^^
-out/test/spec/float_literals.wast:344: assert_malformed passed:
+out/test/spec/float_literals.wast:352: assert_malformed passed:
   out/test/spec/float_literals/float_literals.39.wat:1:24: error: unexpected token "0x1.0p_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f32 (f32.const 0x1.0p_+1))
                          ^^^^^^^^^
-out/test/spec/float_literals.wast:349: assert_malformed passed:
+out/test/spec/float_literals.wast:357: assert_malformed passed:
   out/test/spec/float_literals/float_literals.40.wat:1:24: error: unexpected token "_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _100))
                          ^^^^
-out/test/spec/float_literals.wast:353: assert_malformed passed:
+out/test/spec/float_literals.wast:361: assert_malformed passed:
   out/test/spec/float_literals/float_literals.41.wat:1:24: error: unexpected token "+_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const +_100))
                          ^^^^^
-out/test/spec/float_literals.wast:357: assert_malformed passed:
+out/test/spec/float_literals.wast:365: assert_malformed passed:
   out/test/spec/float_literals/float_literals.42.wat:1:24: error: unexpected token "-_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const -_100))
                          ^^^^^
-out/test/spec/float_literals.wast:361: assert_malformed passed:
+out/test/spec/float_literals.wast:369: assert_malformed passed:
   out/test/spec/float_literals/float_literals.43.wat:1:24: error: unexpected token "99_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 99_))
                          ^^^
-out/test/spec/float_literals.wast:365: assert_malformed passed:
+out/test/spec/float_literals.wast:373: assert_malformed passed:
   out/test/spec/float_literals/float_literals.44.wat:1:24: error: unexpected token "1__000", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1__000))
                          ^^^^^^
-out/test/spec/float_literals.wast:369: assert_malformed passed:
+out/test/spec/float_literals.wast:377: assert_malformed passed:
   out/test/spec/float_literals/float_literals.45.wat:1:24: error: unexpected token "_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _1.0))
                          ^^^^
-out/test/spec/float_literals.wast:373: assert_malformed passed:
+out/test/spec/float_literals.wast:381: assert_malformed passed:
   out/test/spec/float_literals/float_literals.46.wat:1:24: error: unexpected token "1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0_))
                          ^^^^
-out/test/spec/float_literals.wast:377: assert_malformed passed:
+out/test/spec/float_literals.wast:385: assert_malformed passed:
   out/test/spec/float_literals/float_literals.47.wat:1:24: error: unexpected token "1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1_.0))
                          ^^^^
-out/test/spec/float_literals.wast:381: assert_malformed passed:
+out/test/spec/float_literals.wast:389: assert_malformed passed:
   out/test/spec/float_literals/float_literals.48.wat:1:24: error: unexpected token "1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1._0))
                          ^^^^
-out/test/spec/float_literals.wast:385: assert_malformed passed:
+out/test/spec/float_literals.wast:393: assert_malformed passed:
   out/test/spec/float_literals/float_literals.49.wat:1:24: error: unexpected token "_1e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _1e1))
                          ^^^^
-out/test/spec/float_literals.wast:389: assert_malformed passed:
+out/test/spec/float_literals.wast:397: assert_malformed passed:
   out/test/spec/float_literals/float_literals.50.wat:1:24: error: unexpected token "1e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1e1_))
                          ^^^^
-out/test/spec/float_literals.wast:393: assert_malformed passed:
+out/test/spec/float_literals.wast:401: assert_malformed passed:
   out/test/spec/float_literals/float_literals.51.wat:1:24: error: unexpected token "1_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1_e1))
                          ^^^^
-out/test/spec/float_literals.wast:397: assert_malformed passed:
+out/test/spec/float_literals.wast:405: assert_malformed passed:
   out/test/spec/float_literals/float_literals.52.wat:1:24: error: unexpected token "1e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1e_1))
                          ^^^^
-out/test/spec/float_literals.wast:401: assert_malformed passed:
+out/test/spec/float_literals.wast:409: assert_malformed passed:
   out/test/spec/float_literals/float_literals.53.wat:1:24: error: unexpected token "_1.0e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _1.0e1))
                          ^^^^^^
-out/test/spec/float_literals.wast:405: assert_malformed passed:
+out/test/spec/float_literals.wast:413: assert_malformed passed:
   out/test/spec/float_literals/float_literals.54.wat:1:24: error: unexpected token "1.0e1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0e1_))
                          ^^^^^^
-out/test/spec/float_literals.wast:409: assert_malformed passed:
+out/test/spec/float_literals.wast:417: assert_malformed passed:
   out/test/spec/float_literals/float_literals.55.wat:1:24: error: unexpected token "1.0_e1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0_e1))
                          ^^^^^^
-out/test/spec/float_literals.wast:413: assert_malformed passed:
+out/test/spec/float_literals.wast:421: assert_malformed passed:
   out/test/spec/float_literals/float_literals.56.wat:1:24: error: unexpected token "1.0e_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0e_1))
                          ^^^^^^
-out/test/spec/float_literals.wast:417: assert_malformed passed:
+out/test/spec/float_literals.wast:425: assert_malformed passed:
   out/test/spec/float_literals/float_literals.57.wat:1:24: error: unexpected token "1.0e+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0e+_1))
                          ^^^^^^^
-out/test/spec/float_literals.wast:421: assert_malformed passed:
+out/test/spec/float_literals.wast:429: assert_malformed passed:
   out/test/spec/float_literals/float_literals.58.wat:1:24: error: unexpected token "1.0e_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 1.0e_+1))
                          ^^^^^^^
-out/test/spec/float_literals.wast:425: assert_malformed passed:
+out/test/spec/float_literals.wast:433: assert_malformed passed:
   out/test/spec/float_literals/float_literals.59.wat:1:24: error: unexpected token "_0x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const _0x100))
                          ^^^^^^
-out/test/spec/float_literals.wast:429: assert_malformed passed:
+out/test/spec/float_literals.wast:437: assert_malformed passed:
   out/test/spec/float_literals/float_literals.60.wat:1:24: error: unexpected token "0_x100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0_x100))
                          ^^^^^^
-out/test/spec/float_literals.wast:433: assert_malformed passed:
+out/test/spec/float_literals.wast:441: assert_malformed passed:
   out/test/spec/float_literals/float_literals.61.wat:1:24: error: unexpected token "0x_100", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x_100))
                          ^^^^^^
-out/test/spec/float_literals.wast:437: assert_malformed passed:
+out/test/spec/float_literals.wast:445: assert_malformed passed:
   out/test/spec/float_literals/float_literals.62.wat:1:24: error: unexpected token "0x00_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x00_))
                          ^^^^^
-out/test/spec/float_literals.wast:441: assert_malformed passed:
+out/test/spec/float_literals.wast:449: assert_malformed passed:
   out/test/spec/float_literals/float_literals.63.wat:1:24: error: unexpected token "0xff__ffff", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0xff__ffff))
                          ^^^^^^^^^^
-out/test/spec/float_literals.wast:445: assert_malformed passed:
+out/test/spec/float_literals.wast:453: assert_malformed passed:
   out/test/spec/float_literals/float_literals.64.wat:1:24: error: unexpected token "0x_1.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x_1.0))
                          ^^^^^^
-out/test/spec/float_literals.wast:449: assert_malformed passed:
+out/test/spec/float_literals.wast:457: assert_malformed passed:
   out/test/spec/float_literals/float_literals.65.wat:1:24: error: unexpected token "0x1.0_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0_))
                          ^^^^^^
-out/test/spec/float_literals.wast:453: assert_malformed passed:
+out/test/spec/float_literals.wast:461: assert_malformed passed:
   out/test/spec/float_literals/float_literals.66.wat:1:24: error: unexpected token "0x1_.0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1_.0))
                          ^^^^^^
-out/test/spec/float_literals.wast:457: assert_malformed passed:
+out/test/spec/float_literals.wast:465: assert_malformed passed:
   out/test/spec/float_literals/float_literals.67.wat:1:24: error: unexpected token "0x1._0", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1._0))
                          ^^^^^^
-out/test/spec/float_literals.wast:461: assert_malformed passed:
+out/test/spec/float_literals.wast:469: assert_malformed passed:
   out/test/spec/float_literals/float_literals.68.wat:1:24: error: unexpected token "0x_1p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x_1p1))
                          ^^^^^^
-out/test/spec/float_literals.wast:465: assert_malformed passed:
+out/test/spec/float_literals.wast:473: assert_malformed passed:
   out/test/spec/float_literals/float_literals.69.wat:1:24: error: unexpected token "0x1p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1p1_))
                          ^^^^^^
-out/test/spec/float_literals.wast:469: assert_malformed passed:
+out/test/spec/float_literals.wast:477: assert_malformed passed:
   out/test/spec/float_literals/float_literals.70.wat:1:24: error: unexpected token "0x1_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1_p1))
                          ^^^^^^
-out/test/spec/float_literals.wast:473: assert_malformed passed:
+out/test/spec/float_literals.wast:481: assert_malformed passed:
   out/test/spec/float_literals/float_literals.71.wat:1:24: error: unexpected token "0x1p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1p_1))
                          ^^^^^^
-out/test/spec/float_literals.wast:477: assert_malformed passed:
+out/test/spec/float_literals.wast:485: assert_malformed passed:
   out/test/spec/float_literals/float_literals.72.wat:1:24: error: unexpected token "0x_1.0p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x_1.0p1))
                          ^^^^^^^^
-out/test/spec/float_literals.wast:481: assert_malformed passed:
+out/test/spec/float_literals.wast:489: assert_malformed passed:
   out/test/spec/float_literals/float_literals.73.wat:1:24: error: unexpected token "0x1.0p1_", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p1_))
                          ^^^^^^^^
-out/test/spec/float_literals.wast:485: assert_malformed passed:
+out/test/spec/float_literals.wast:493: assert_malformed passed:
   out/test/spec/float_literals/float_literals.74.wat:1:24: error: unexpected token "0x1.0_p1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0_p1))
                          ^^^^^^^^
-out/test/spec/float_literals.wast:489: assert_malformed passed:
+out/test/spec/float_literals.wast:497: assert_malformed passed:
   out/test/spec/float_literals/float_literals.75.wat:1:24: error: unexpected token "0x1.0p_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p_1))
                          ^^^^^^^^
-out/test/spec/float_literals.wast:493: assert_malformed passed:
+out/test/spec/float_literals.wast:501: assert_malformed passed:
   out/test/spec/float_literals/float_literals.76.wat:1:24: error: unexpected token "0x1.0p+_1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p+_1))
                          ^^^^^^^^^
-out/test/spec/float_literals.wast:497: assert_malformed passed:
+out/test/spec/float_literals.wast:505: assert_malformed passed:
   out/test/spec/float_literals/float_literals.77.wat:1:24: error: unexpected token "0x1.0p_+1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (global f64 (f64.const 0x1.0p_+1))
                          ^^^^^^^^^
-157/157 tests passed.
+159/159 tests passed.
 ;;; STDOUT ;;)
