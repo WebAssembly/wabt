@@ -13,7 +13,7 @@ examples:
 
 options:
   -v, --verbose                               Use multiple times for more info
-  -h, --help                                  Print this help message
+      --help                                  Print this help message
       --debug-parser                          Turn on debugging the parser of wast files
       --enable-exceptions                     Experimental exception handling
       --enable-mutable-globals                Import/export mutable globals

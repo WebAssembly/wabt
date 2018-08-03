@@ -16,7 +16,7 @@ examples:
   $ wat-desugar --generate-names test.wat
 
 options:
-  -h, --help                                  Print this help message
+      --help                                  Print this help message
   -o, --output=FILE                           Output file for the formatted file
       --debug-parser                          Turn on debugging the parser of wat files
   -f, --fold-exprs                            Write folded expressions where possible

@@ -169,7 +169,7 @@ subdirectory:
 - `exceptions`: Tests the new experimental exceptions feature.
 - `gen-spec-js`: Tests the gen-spec-js tool, which converts a spec test into a
   JavaScript file.
-- `help`: Tests the output of running with the `-h` flag on each tool.
+- `help`: Tests the output of running with the `--help` flag on each tool.
 - `interp`: Tests the `wasm-interp` tool.
 - `opcodecnt`: Tests the `wasm-opcodecnt` tool.
 - `parse`: Tests parsing via the `wat2wasm` tool.
