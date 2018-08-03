@@ -1,3 +1,2 @@
 ;;; TOOL: wat2wasm
-;;; ARGS: --enable-mutable-globals
 (module (import "mod" "field" (global (mut f32))))

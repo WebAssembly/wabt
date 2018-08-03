@@ -3,5 +3,5 @@
 (;; STDOUT ;;;
 spectest.print_i32(42)
 spectest.print_i32(123)
-475/475 tests passed.
+479/479 tests passed.
 ;;; STDOUT ;;)

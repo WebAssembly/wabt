@@ -12,7 +12,7 @@ examples:
 
 options:
   -v, --verbose                    Use multiple times for more info
-      --help                       Print this help message
+  -h, --help                       Print this help message
   -o, --output=FILENAME            Output file for the opcode counts, by default use stdout
   -c, --cutoff=N                   Cutoff for reporting counts less than N
   -s, --separator=SEPARATOR        Separator text between element and count when reporting counts

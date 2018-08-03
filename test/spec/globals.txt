@@ -4,49 +4,37 @@
 out/test/spec/globals.wast:50: assert_invalid passed:
   error: can't set_global on immutable global at index 0.
   0000026: error: OnSetGlobalExpr callback failed
-out/test/spec/globals.wast:55: assert_invalid passed:
-  error: unknown import module "m"
-  0000012: error: OnImportGlobal callback failed
-out/test/spec/globals.wast:60: assert_invalid passed:
-  error: unknown import module "m"
-  0000012: error: OnImportGlobal callback failed
-out/test/spec/globals.wast:65: assert_invalid passed:
-  error: mutable globals cannot be exported
-  000001a: error: OnExport callback failed
-out/test/spec/globals.wast:70: assert_invalid passed:
-  error: mutable globals cannot be exported
-  000001a: error: OnExport callback failed
-out/test/spec/globals.wast:75: assert_invalid passed:
+out/test/spec/globals.wast:59: assert_invalid passed:
   0000013: error: expected END opcode after initializer expression
-out/test/spec/globals.wast:80: assert_invalid passed:
+out/test/spec/globals.wast:64: assert_invalid passed:
   000000e: error: unexpected opcode in initializer expression: 32 (0x20)
-out/test/spec/globals.wast:85: assert_invalid passed:
+out/test/spec/globals.wast:69: assert_invalid passed:
   0000013: error: expected END opcode after initializer expression
-out/test/spec/globals.wast:90: assert_invalid passed:
+out/test/spec/globals.wast:74: assert_invalid passed:
   0000010: error: expected END opcode after initializer expression
-out/test/spec/globals.wast:95: assert_invalid passed:
+out/test/spec/globals.wast:79: assert_invalid passed:
   000000e: error: unexpected opcode in initializer expression: 1 (0x1)
-out/test/spec/globals.wast:100: assert_invalid passed:
+out/test/spec/globals.wast:84: assert_invalid passed:
   error: type mismatch in global, expected i32 but got f32.
   0000013: error: EndGlobalInitExpr callback failed
-out/test/spec/globals.wast:105: assert_invalid passed:
+out/test/spec/globals.wast:89: assert_invalid passed:
   0000010: error: expected END opcode after initializer expression
-out/test/spec/globals.wast:110: assert_invalid passed:
+out/test/spec/globals.wast:94: assert_invalid passed:
   error: type mismatch in global, expected i32 but got void.
   000000e: error: EndGlobalInitExpr callback failed
-out/test/spec/globals.wast:115: assert_invalid passed:
+out/test/spec/globals.wast:99: assert_invalid passed:
   error: initializer expression can only reference an imported global
   000000f: error: OnInitExprGetGlobalExpr callback failed
-out/test/spec/globals.wast:120: assert_invalid passed:
+out/test/spec/globals.wast:104: assert_invalid passed:
   error: initializer expression can only reference an imported global
   000000f: error: OnInitExprGetGlobalExpr callback failed
-out/test/spec/globals.wast:128: assert_malformed passed:
+out/test/spec/globals.wast:112: assert_malformed passed:
   0000019: error: unable to read string: import field name
-out/test/spec/globals.wast:141: assert_malformed passed:
+out/test/spec/globals.wast:125: assert_malformed passed:
   0000019: error: unable to read string: import field name
-out/test/spec/globals.wast:158: assert_malformed passed:
+out/test/spec/globals.wast:142: assert_malformed passed:
   0000011: error: global mutability must be 0 or 1
-out/test/spec/globals.wast:170: assert_malformed passed:
+out/test/spec/globals.wast:154: assert_malformed passed:
   0000011: error: global mutability must be 0 or 1
-35/35 tests passed.
+31/31 tests passed.
 ;;; STDOUT ;;)

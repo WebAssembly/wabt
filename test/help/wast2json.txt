@@ -13,15 +13,15 @@ examples:
 
 options:
   -v, --verbose                               Use multiple times for more info
-      --help                                  Print this help message
+  -h, --help                                  Print this help message
       --debug-parser                          Turn on debugging the parser of wast files
-      --enable-exceptions                     Experimental exception handling
-      --enable-mutable-globals                Import/export mutable globals
-      --enable-saturating-float-to-int        Saturating float-to-int operators
-      --enable-sign-extension                 Sign-extension operators
-      --enable-simd                           SIMD support
-      --enable-threads                        Threading support
-      --enable-multi-value                    Multi-value
+      --enable-exceptions                     Enable Experimental exception handling
+      --disable-mutable-globals               Disable Import/export mutable globals
+      --enable-saturating-float-to-int        Enable Saturating float-to-int operators
+      --enable-sign-extension                 Enable Sign-extension operators
+      --enable-simd                           Enable SIMD support
+      --enable-threads                        Enable Threading support
+      --enable-multi-value                    Enable Multi-value
   -o, --output=FILE                           output wasm binary file
   -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with e.g. lld)
       --no-canonicalize-leb128s               Write all LEB128 sizes as 5-bytes instead of their minimal size

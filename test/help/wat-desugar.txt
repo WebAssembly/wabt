@@ -16,16 +16,16 @@ examples:
   $ wat-desugar --generate-names test.wat
 
 options:
-      --help                                  Print this help message
+  -h, --help                                  Print this help message
   -o, --output=FILE                           Output file for the formatted file
       --debug-parser                          Turn on debugging the parser of wat files
   -f, --fold-exprs                            Write folded expressions where possible
-      --enable-exceptions                     Experimental exception handling
-      --enable-mutable-globals                Import/export mutable globals
-      --enable-saturating-float-to-int        Saturating float-to-int operators
-      --enable-sign-extension                 Sign-extension operators
-      --enable-simd                           SIMD support
-      --enable-threads                        Threading support
-      --enable-multi-value                    Multi-value
+      --enable-exceptions                     Enable Experimental exception handling
+      --disable-mutable-globals               Disable Import/export mutable globals
+      --enable-saturating-float-to-int        Enable Saturating float-to-int operators
+      --enable-sign-extension                 Enable Sign-extension operators
+      --enable-simd                           Enable SIMD support
+      --enable-threads                        Enable Threading support
+      --enable-multi-value                    Enable Multi-value
       --generate-names                        Give auto-generated names to non-named functions, types, etc.
 ;;; STDOUT ;;)

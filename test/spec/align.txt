@@ -1,27 +1,300 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/align.wast
 (;; STDOUT ;;;
-out/test/spec/align.wast:2: assert_malformed passed:
-  out/test/spec/align/align.0.wat:1:42: error: alignment must be power-of-two
+out/test/spec/align.wast:28: assert_malformed passed:
+  out/test/spec/align/align.23.wat:1:45: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load8_s align=0 (i32.const 0)))))
+                                              ^^^^^^^
+out/test/spec/align.wast:34: assert_malformed passed:
+  out/test/spec/align/align.24.wat:1:45: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load8_s align=7 (i32.const 0)))))
+                                              ^^^^^^^
+out/test/spec/align.wast:40: assert_malformed passed:
+  out/test/spec/align/align.25.wat:1:45: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load8_u align=0 (i32.const 0)))))
+                                              ^^^^^^^
+out/test/spec/align.wast:46: assert_malformed passed:
+  out/test/spec/align/align.26.wat:1:45: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load8_u align=7 (i32.const 0)))))
+                                              ^^^^^^^
+out/test/spec/align.wast:52: assert_malformed passed:
+  out/test/spec/align/align.27.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load16_s align=0 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:58: assert_malformed passed:
+  out/test/spec/align/align.28.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load16_s align=7 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:64: assert_malformed passed:
+  out/test/spec/align/align.29.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load16_u align=0 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:70: assert_malformed passed:
+  out/test/spec/align/align.30.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load16_u align=7 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:76: assert_malformed passed:
+  out/test/spec/align/align.31.wat:1:42: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load align=0 (i32.const 0)))))
+                                           ^^^^^^^
+out/test/spec/align.wast:82: assert_malformed passed:
+  out/test/spec/align/align.32.wat:1:42: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i32.load align=7 (i32.const 0)))))
+                                           ^^^^^^^
+out/test/spec/align.wast:88: assert_malformed passed:
+  out/test/spec/align/align.33.wat:1:45: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load8_s align=0 (i32.const 0)))))
+                                              ^^^^^^^
+out/test/spec/align.wast:94: assert_malformed passed:
+  out/test/spec/align/align.34.wat:1:45: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load8_s align=7 (i32.const 0)))))
+                                              ^^^^^^^
+out/test/spec/align.wast:100: assert_malformed passed:
+  out/test/spec/align/align.35.wat:1:45: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load8_u align=0 (i32.const 0)))))
+                                              ^^^^^^^
+out/test/spec/align.wast:106: assert_malformed passed:
+  out/test/spec/align/align.36.wat:1:45: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load8_u align=7 (i32.const 0)))))
+                                              ^^^^^^^
+out/test/spec/align.wast:112: assert_malformed passed:
+  out/test/spec/align/align.37.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load16_s align=0 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:118: assert_malformed passed:
+  out/test/spec/align/align.38.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load16_s align=7 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:124: assert_malformed passed:
+  out/test/spec/align/align.39.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load16_u align=0 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:130: assert_malformed passed:
+  out/test/spec/align/align.40.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load16_u align=7 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:136: assert_malformed passed:
+  out/test/spec/align/align.41.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load32_s align=0 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:142: assert_malformed passed:
+  out/test/spec/align/align.42.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load32_s align=7 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:148: assert_malformed passed:
+  out/test/spec/align/align.43.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load32_u align=0 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:154: assert_malformed passed:
+  out/test/spec/align/align.44.wat:1:46: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (i64.load32_u align=7 (i32.const 0)))))
+                                               ^^^^^^^
+out/test/spec/align.wast:160: assert_malformed passed:
+  out/test/spec/align/align.45.wat:1:42: error: alignment must be power-of-two
   (module (memory 0) (func (drop (i64.load align=0 (i32.const 0)))))
                                            ^^^^^^^
-out/test/spec/align.wast:8: assert_malformed passed:
-  out/test/spec/align/align.1.wat:1:42: error: alignment must be power-of-two
+out/test/spec/align.wast:166: assert_malformed passed:
+  out/test/spec/align/align.46.wat:1:42: error: alignment must be power-of-two
   (module (memory 0) (func (drop (i64.load align=7 (i32.const 0)))))
                                            ^^^^^^^
-out/test/spec/align.wast:14: assert_invalid passed:
-  error: alignment must not be larger than natural alignment (8)
-  0000021: error: OnLoadExpr callback failed
-out/test/spec/align.wast:19: assert_malformed passed:
-  out/test/spec/align/align.3.wat:1:37: error: alignment must be power-of-two
+out/test/spec/align.wast:172: assert_malformed passed:
+  out/test/spec/align/align.47.wat:1:42: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (f32.load align=0 (i32.const 0)))))
+                                           ^^^^^^^
+out/test/spec/align.wast:178: assert_malformed passed:
+  out/test/spec/align/align.48.wat:1:42: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (f32.load align=7 (i32.const 0)))))
+                                           ^^^^^^^
+out/test/spec/align.wast:184: assert_malformed passed:
+  out/test/spec/align/align.49.wat:1:42: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (f64.load align=0 (i32.const 0)))))
+                                           ^^^^^^^
+out/test/spec/align.wast:190: assert_malformed passed:
+  out/test/spec/align/align.50.wat:1:42: error: alignment must be power-of-two
+  (module (memory 0) (func (drop (f64.load align=7 (i32.const 0)))))
+                                           ^^^^^^^
+out/test/spec/align.wast:197: assert_malformed passed:
+  out/test/spec/align/align.51.wat:1:38: error: alignment must be power-of-two
+  (module (memory 0) (func (i32.store8 align=0 (i32.const 0) (i32.const 0))))
+                                       ^^^^^^^
+out/test/spec/align.wast:203: assert_malformed passed:
+  out/test/spec/align/align.52.wat:1:38: error: alignment must be power-of-two
+  (module (memory 0) (func (i32.store8 align=7 (i32.const 0) (i32.const 0))))
+                                       ^^^^^^^
+out/test/spec/align.wast:209: assert_malformed passed:
+  out/test/spec/align/align.53.wat:1:39: error: alignment must be power-of-two
+  (module (memory 0) (func (i32.store16 align=0 (i32.const 0) (i32.const 0))))
+                                        ^^^^^^^
+out/test/spec/align.wast:215: assert_malformed passed:
+  out/test/spec/align/align.54.wat:1:39: error: alignment must be power-of-two
+  (module (memory 0) (func (i32.store16 align=7 (i32.const 0) (i32.const 0))))
+                                        ^^^^^^^
+out/test/spec/align.wast:221: assert_malformed passed:
+  out/test/spec/align/align.55.wat:1:37: error: alignment must be power-of-two
+  (module (memory 0) (func (i32.store align=0 (i32.const 0) (i32.const 0))))
+                                      ^^^^^^^
+out/test/spec/align.wast:227: assert_malformed passed:
+  out/test/spec/align/align.56.wat:1:37: error: alignment must be power-of-two
+  (module (memory 0) (func (i32.store align=7 (i32.const 0) (i32.const 0))))
+                                      ^^^^^^^
+out/test/spec/align.wast:233: assert_malformed passed:
+  out/test/spec/align/align.57.wat:1:38: error: alignment must be power-of-two
+  (module (memory 0) (func (i64.store8 align=0 (i32.const 0) (i64.const 0))))
+                                       ^^^^^^^
+out/test/spec/align.wast:239: assert_malformed passed:
+  out/test/spec/align/align.58.wat:1:38: error: alignment must be power-of-two
+  (module (memory 0) (func (i64.store8 align=7 (i32.const 0) (i64.const 0))))
+                                       ^^^^^^^
+out/test/spec/align.wast:245: assert_malformed passed:
+  out/test/spec/align/align.59.wat:1:39: error: alignment must be power-of-two
+  (module (memory 0) (func (i64.store16 align=0 (i32.const 0) (i64.const 0))))
+                                        ^^^^^^^
+out/test/spec/align.wast:251: assert_malformed passed:
+  out/test/spec/align/align.60.wat:1:39: error: alignment must be power-of-two
+  (module (memory 0) (func (i64.store16 align=7 (i32.const 0) (i64.const 0))))
+                                        ^^^^^^^
+out/test/spec/align.wast:257: assert_malformed passed:
+  out/test/spec/align/align.61.wat:1:39: error: alignment must be power-of-two
+  (module (memory 0) (func (i64.store32 align=0 (i32.const 0) (i64.const 0))))
+                                        ^^^^^^^
+out/test/spec/align.wast:263: assert_malformed passed:
+  out/test/spec/align/align.62.wat:1:39: error: alignment must be power-of-two
+  (module (memory 0) (func (i64.store32 align=7 (i32.const 0) (i64.const 0))))
+                                        ^^^^^^^
+out/test/spec/align.wast:269: assert_malformed passed:
+  out/test/spec/align/align.63.wat:1:37: error: alignment must be power-of-two
   (module (memory 0) (func (i64.store align=0 (i32.const 0) (i64.const 0))))
                                       ^^^^^^^
-out/test/spec/align.wast:25: assert_malformed passed:
-  out/test/spec/align/align.4.wat:1:37: error: alignment must be power-of-two
-  (module (memory 0) (func (i64.store align=5 (i32.const 0) (i64.const 0))))
+out/test/spec/align.wast:275: assert_malformed passed:
+  out/test/spec/align/align.64.wat:1:37: error: alignment must be power-of-two
+  (module (memory 0) (func (i64.store align=7 (i32.const 0) (i64.const 0))))
                                       ^^^^^^^
-out/test/spec/align.wast:31: assert_invalid passed:
+out/test/spec/align.wast:281: assert_malformed passed:
+  out/test/spec/align/align.65.wat:1:37: error: alignment must be power-of-two
+  (module (memory 0) (func (f32.store align=0 (i32.const 0) (f32.const 0))))
+                                      ^^^^^^^
+out/test/spec/align.wast:287: assert_malformed passed:
+  out/test/spec/align/align.66.wat:1:37: error: alignment must be power-of-two
+  (module (memory 0) (func (f32.store align=7 (i32.const 0) (f32.const 0))))
+                                      ^^^^^^^
+out/test/spec/align.wast:293: assert_malformed passed:
+  out/test/spec/align/align.67.wat:1:37: error: alignment must be power-of-two
+  (module (memory 0) (func (f64.store align=0 (i32.const 0) (f32.const 0))))
+                                      ^^^^^^^
+out/test/spec/align.wast:299: assert_malformed passed:
+  out/test/spec/align/align.68.wat:1:37: error: alignment must be power-of-two
+  (module (memory 0) (func (f64.store align=7 (i32.const 0) (f32.const 0))))
+                                      ^^^^^^^
+out/test/spec/align.wast:306: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:310: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:314: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:318: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:322: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:326: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:330: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:334: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:338: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:342: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:346: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:350: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:354: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:358: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:363: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:367: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:371: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:375: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:379: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:383: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:387: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:391: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:395: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:399: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:403: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:407: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:411: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:415: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000021: error: OnLoadExpr callback failed
+out/test/spec/align.wast:420: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/align.wast:424: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/align.wast:428: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/align.wast:432: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (1)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/align.wast:436: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (2)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/align.wast:440: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000023: error: OnStoreExpr callback failed
+out/test/spec/align.wast:444: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
   0000023: error: OnStoreExpr callback failed
-6/6 tests passed.
+out/test/spec/align.wast:448: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (4)
+  0000026: error: OnStoreExpr callback failed
+out/test/spec/align.wast:452: assert_invalid passed:
+  error: alignment must not be larger than natural alignment (8)
+  0000026: error: OnStoreExpr callback failed
+131/131 tests passed.
 ;;; STDOUT ;;)

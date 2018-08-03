@@ -93,5 +93,7 @@ out/test/spec/binary.wast:292: assert_malformed passed:
   0000020: error: memory.grow reserved value must be 0
 out/test/spec/binary.wast:312: assert_malformed passed:
   000001e: error: memory.size reserved value must be 0
-46/46 tests passed.
+out/test/spec/binary.wast:331: assert_malformed passed:
+  000001c: error: local count must be < 0x10000000
+47/47 tests passed.
 ;;; STDOUT ;;)

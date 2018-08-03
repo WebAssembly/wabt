@@ -25,6 +25,7 @@
 #include "src/binary-reader-nop.h"
 #include "src/cast.h"
 #include "src/error-handler.h"
+#include "src/feature.h"
 #include "src/interp.h"
 #include "src/stream.h"
 #include "src/type-checker.h"
@@ -71,7 +72,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   BinaryReaderInterp(Environment* env,
                      DefinedModule* module,
                      std::unique_ptr<OutputBuffer> istream,
-                     ErrorHandler* error_handler);
+                     ErrorHandler* error_handler,
+                     const Features& features);
 
   wabt::Result ReadBinary(DefinedModule* out_module);
 
@@ -287,6 +289,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   HostImportDelegate::ErrorCallback MakePrintErrorCallback();
 
+  Features features_;
   ErrorHandler* error_handler_ = nullptr;
   Environment* env_ = nullptr;
   DefinedModule* module_ = nullptr;
@@ -320,8 +323,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
 BinaryReaderInterp::BinaryReaderInterp(Environment* env,
                                        DefinedModule* module,
                                        std::unique_ptr<OutputBuffer> istream,
-                                       ErrorHandler* error_handler)
-    : error_handler_(error_handler),
+                                       ErrorHandler* error_handler,
+                                       const Features& features)
+    : features_(features),
+      error_handler_(error_handler),
       env_(env),
       module_(module),
       istream_(std::move(istream)),
@@ -841,6 +846,10 @@ wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
     CHECK_RESULT(host_import_module->import_delegate->ImportGlobal(
         import, global, MakePrintErrorCallback()));
 
+    // Make sure the ImportGlobal callback gave us a global that matches.
+    assert(global->typed_value.type == type);
+    assert(global->mutable_ == mutable_);
+
     global_env_index = env_->GetGlobalCount() - 1;
     AppendExport(host_import_module, ExternalKind::Global, global_env_index,
                  import->field_name);
@@ -849,11 +858,26 @@ wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
     CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
     CHECK_RESULT(CheckImportKind(import, export_->kind));
 
-    // TODO: check type and mutability
-    import->type = type;
-    import->mutable_ = mutable_;
+    Global* exported_global = env_->GetGlobal(export_->index);
+    if (exported_global->typed_value.type != type) {
+      PrintError("type mismatch in imported global, expected %s but got %s.",
+                 GetTypeName(exported_global->typed_value.type),
+                 GetTypeName(type));
+      return wabt::Result::Error;
+    }
+
+    if (exported_global->mutable_ != mutable_) {
+      const char* kMutableNames[] = {"immutable", "mutable"};
+      PrintError(
+          "mutability mismatch in imported global, expected %s but got %s.",
+          kMutableNames[exported_global->mutable_], kMutableNames[mutable_]);
+      return wabt::Result::Error;
+    }
+
     global_env_index = export_->index;
   }
+  import->type = type;
+  import->mutable_ = mutable_;
   global_index_mapping_.push_back(global_env_index);
   num_global_imports_++;
   return wabt::Result::Ok;
@@ -991,7 +1015,7 @@ wabt::Result BinaryReaderInterp::OnExport(Index index,
     case ExternalKind::Global: {
       item_index = TranslateGlobalIndexToEnv(item_index);
       Global* global = env_->GetGlobal(item_index);
-      if (global->mutable_) {
+      if (global->mutable_ && !features_.mutable_globals_enabled()) {
         PrintError("mutable globals cannot be exported");
         return wabt::Result::Error;
       }
@@ -1617,7 +1641,8 @@ wabt::Result ReadBinaryInterp(Environment* env,
   IstreamOffset istream_offset = istream->size();
   DefinedModule* module = new DefinedModule();
 
-  BinaryReaderInterp reader(env, module, std::move(istream), error_handler);
+  BinaryReaderInterp reader(env, module, std::move(istream), error_handler,
+                            options->features);
   env->EmplaceBackModule(module);
 
   wabt::Result result = ReadBinary(data, size, &reader, options);
