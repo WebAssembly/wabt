@@ -16,5 +16,5 @@ options:
       --debug                  Print extra debug information
   -x, --details                Show section details
   -r, --reloc                  Show relocations inline with disassembly
-  -h, --help                   Print this help message
+      --help                   Print this help message
 ;;; STDOUT ;;)
