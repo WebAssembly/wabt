@@ -356,6 +356,7 @@ if (NOT EMSCRIPTEN)
     # wabt-unittests
     set(UNITTESTS_SRCS
       src/test-circular-array.cc
+      src/test-interp.cc
       src/test-intrusive-list.cc
       src/test-literal.cc
       src/test-string-view.cc
