@@ -87,7 +87,7 @@ int ProgramMain(int argc, char** argv) {
     if (Succeeded(result)) {
       WastLexer* lexer = nullptr;
       ValidateOptions options(s_features);
-      result = ValidateModule(lexer, &module, &error_handler, &options);
+      result = ValidateModule(lexer, &module, &error_handler, options);
     }
   }
   return result != Result::Ok;

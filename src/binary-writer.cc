@@ -107,7 +107,7 @@ class BinaryWriter {
 
  public:
   BinaryWriter(Stream*,
-               const WriteBinaryOptions* options,
+               const WriteBinaryOptions& options,
                const Module* module);
 
   Result WriteModule();
@@ -148,7 +148,7 @@ class BinaryWriter {
   void WriteLinkingSection();
 
   Stream* stream_;
-  const WriteBinaryOptions* options_;
+  const WriteBinaryOptions& options_;
   const Module* module_;
 
   std::unordered_map<std::string, Index> symtab_;
@@ -177,7 +177,7 @@ static uint8_t log2_u32(uint32_t x) {
 }
 
 BinaryWriter::BinaryWriter(Stream* stream,
-                           const WriteBinaryOptions* options,
+                           const WriteBinaryOptions& options,
                            const Module* module)
     : stream_(stream), options_(options), module_(module) {}
 
@@ -198,7 +198,7 @@ Offset BinaryWriter::WriteU32Leb128Space(Offset leb_size_guess,
   uint8_t data[MAX_U32_LEB128_BYTES] = {0};
   Offset result = stream_->offset();
   Offset bytes_to_write =
-      options_->canonicalize_lebs ? leb_size_guess : MAX_U32_LEB128_BYTES;
+      options_.canonicalize_lebs ? leb_size_guess : MAX_U32_LEB128_BYTES;
   stream_->WriteData(data, bytes_to_write, desc);
   return result;
 }
@@ -206,7 +206,7 @@ Offset BinaryWriter::WriteU32Leb128Space(Offset leb_size_guess,
 Offset BinaryWriter::WriteFixupU32Leb128Size(Offset offset,
                                              Offset leb_size_guess,
                                              const char* desc) {
-  if (options_->canonicalize_lebs) {
+  if (options_.canonicalize_lebs) {
     Offset size = stream_->offset() - offset - leb_size_guess;
     Offset leb_size = U32Leb128Length(size);
     Offset delta = leb_size - leb_size_guess;
@@ -348,7 +348,7 @@ void BinaryWriter::AddReloc(RelocType reloc_type, Index index) {
 void BinaryWriter::WriteU32Leb128WithReloc(Index index,
                                            const char* desc,
                                            RelocType reloc_type) {
-  if (options_->relocatable) {
+  if (options_.relocatable) {
     AddReloc(reloc_type, index);
     WriteFixedU32Leb128(stream_, index, desc);
   } else {
@@ -969,7 +969,7 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
-  if (options_->write_debug_names) {
+  if (options_.write_debug_names) {
     std::vector<std::string> index_to_name;
 
     char desc[100];
@@ -1041,7 +1041,7 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
-  if (options_->relocatable) {
+  if (options_.relocatable) {
     WriteLinkingSection();
     for (RelocSection& section : reloc_sections_) {
       WriteRelocSection(&section);
@@ -1055,7 +1055,7 @@ Result BinaryWriter::WriteModule() {
 
 Result WriteBinaryModule(Stream* stream,
                          const Module* module,
-                         const WriteBinaryOptions* options) {
+                         const WriteBinaryOptions& options) {
   BinaryWriter binary_writer(stream, options, module);
   return binary_writer.WriteModule();
 }

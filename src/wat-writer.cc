@@ -111,7 +111,7 @@ struct Label {
 
 class WatWriter {
  public:
-  WatWriter(Stream* stream, const WriteWatOptions* options)
+  WatWriter(Stream* stream, const WriteWatOptions& options)
       : options_(options), stream_(stream) {}
 
   Result WriteModule(const Module& module);
@@ -196,7 +196,7 @@ class WatWriter {
   void BuildInlineImportMap();
   void WriteInlineImport(ExternalKind, Index);
 
-  const WriteWatOptions* options_ = nullptr;
+  const WriteWatOptions& options_;
   const Module* module_ = nullptr;
   const Func* current_func_ = nullptr;
   Stream* stream_ = nullptr;
@@ -1290,7 +1290,7 @@ void WatWriter::WriteBeginFunc(const Func& func) {
     //
     // Note that the text format does not allow including the param/result
     // explicitly when using the "(import..." syntax (#1 and #2).
-    if (options_->inline_import || !func.decl.has_func_type) {
+    if (options_.inline_import || !func.decl.has_func_type) {
       WriteFuncSigSpace(func.decl.sig);
     }
   }
@@ -1311,7 +1311,7 @@ void WatWriter::WriteFunc(const Func& func) {
   label_stack_.emplace_back(LabelType::Func, std::string(), TypeVector(),
                             func.decl.sig.result_types);
   current_func_ = &func;
-  if (options_->fold_exprs) {
+  if (options_.fold_exprs) {
     WriteFoldedExprList(func.exprs);
     FlushExprTreeStack();
   } else {
@@ -1404,7 +1404,7 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
 }
 
 void WatWriter::WriteImport(const Import& import) {
-  if (!options_->inline_import) {
+  if (!options_.inline_import) {
     WriteOpenSpace("import");
     WriteQuotedString(import.module_name, NextChar::Space);
     WriteQuotedString(import.field_name, NextChar::Space);
@@ -1435,7 +1435,7 @@ void WatWriter::WriteImport(const Import& import) {
       break;
   }
 
-  if (options_->inline_import) {
+  if (options_.inline_import) {
     WriteNewline(NO_FORCE_NEWLINE);
   } else {
     WriteCloseNewline();
@@ -1443,7 +1443,7 @@ void WatWriter::WriteImport(const Import& import) {
 }
 
 void WatWriter::WriteExport(const Export& export_) {
-  if (options_->inline_export && IsInlineExport(export_)) {
+  if (options_.inline_export && IsInlineExport(export_)) {
     return;
   }
   WriteOpenSpace("export");
@@ -1523,7 +1523,7 @@ Result WatWriter::WriteModule(const Module& module) {
 }
 
 void WatWriter::BuildInlineExportMap() {
-  if (!options_->inline_export) {
+  if (!options_.inline_export) {
     return;
   }
 
@@ -1540,7 +1540,7 @@ void WatWriter::BuildInlineExportMap() {
     //
     //   (func (export "e") (import "module" "field"))
     //
-    if (!options_->inline_import && module_->IsImport(*export_)) {
+    if (!options_.inline_import && module_->IsImport(*export_)) {
       continue;
     }
 
@@ -1574,7 +1574,7 @@ void WatWriter::BuildInlineExportMap() {
 }
 
 void WatWriter::WriteInlineExports(ExternalKind kind, Index index) {
-  if (!options_->inline_export) {
+  if (!options_.inline_export) {
     return;
   }
 
@@ -1616,7 +1616,7 @@ bool WatWriter::IsInlineExport(const Export& export_) {
 }
 
 void WatWriter::BuildInlineImportMap() {
-  if (!options_->inline_import) {
+  if (!options_.inline_import) {
     return;
   }
 
@@ -1627,7 +1627,7 @@ void WatWriter::BuildInlineImportMap() {
 }
 
 void WatWriter::WriteInlineImport(ExternalKind kind, Index index) {
-  if (!options_->inline_import) {
+  if (!options_.inline_import) {
     return;
   }
 
@@ -1648,7 +1648,7 @@ void WatWriter::WriteInlineImport(ExternalKind kind, Index index) {
 
 Result WriteWat(Stream* stream,
                 const Module* module,
-                const WriteWatOptions* options) {
+                const WriteWatOptions& options) {
   WatWriter wat_writer(stream, options);
   return wat_writer.WriteModule(*module);
 }

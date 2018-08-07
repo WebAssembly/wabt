@@ -38,11 +38,11 @@ struct ValidateOptions {
 Result ValidateScript(WastLexer*,
                       const Script*,
                       ErrorHandler*,
-                      const ValidateOptions*);
+                      const ValidateOptions&);
 Result ValidateModule(WastLexer*,
                       const Module*,
                       ErrorHandler*,
-                      const ValidateOptions*);
+                      const ValidateOptions&);
 
 // Validate that all functions that have an explicit function signature and a
 // function type use match.
@@ -54,7 +54,7 @@ Result ValidateModule(WastLexer*,
 Result ValidateFuncSignatures(WastLexer*,
                               const Module*,
                               ErrorHandler*,
-                              const ValidateOptions*);
+                              const ValidateOptions&);
 
 }  // namespace wabt
 

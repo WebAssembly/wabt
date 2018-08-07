@@ -119,7 +119,7 @@ int ProgramMain(int argc, char** argv) {
       if (Succeeded(result) && s_validate) {
         WastLexer* lexer = nullptr;
         ValidateOptions options(s_features);
-        result = ValidateModule(lexer, &module, &error_handler, &options);
+        result = ValidateModule(lexer, &module, &error_handler, options);
       }
 
       if (s_generate_names) {
@@ -136,7 +136,7 @@ int ProgramMain(int argc, char** argv) {
       if (Succeeded(result)) {
         FileStream stream(!s_outfile.empty() ? FileStream(s_outfile)
                                              : FileStream(stdout));
-        result = WriteWat(&stream, &module, &s_write_wat_options);
+        result = WriteWat(&stream, &module, s_write_wat_options);
       }
     }
   }

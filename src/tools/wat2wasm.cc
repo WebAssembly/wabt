@@ -143,13 +143,12 @@ int ProgramMain(int argc, char** argv) {
     if (Succeeded(result) && s_validate) {
       ValidateOptions options(s_features);
       result =
-          ValidateModule(lexer.get(), module.get(), &error_handler, &options);
+          ValidateModule(lexer.get(), module.get(), &error_handler, options);
     }
 
     if (Succeeded(result)) {
       MemoryStream stream(s_log_stream.get());
-      result =
-          WriteBinaryModule(&stream, module.get(), &s_write_binary_options);
+      result = WriteBinaryModule(&stream, module.get(), s_write_binary_options);
 
       if (Succeeded(result)) {
         if (s_outfile.empty()) {

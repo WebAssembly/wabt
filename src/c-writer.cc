@@ -124,7 +124,7 @@ class CWriter {
   CWriter(Stream* c_stream,
           Stream* h_stream,
           const char* header_name,
-          const WriteCOptions* options)
+          const WriteCOptions& options)
       : options_(options),
         c_stream_(c_stream),
         h_stream_(h_stream),
@@ -266,7 +266,7 @@ class CWriter {
   void Write(const SimdLaneOpExpr&);
   void Write(const SimdShuffleOpExpr&);
 
-  const WriteCOptions* options_ = nullptr;
+  const WriteCOptions& options_;
   const Module* module_ = nullptr;
   const Func* func_ = nullptr;
   Stream* stream_ = nullptr;
@@ -2286,7 +2286,7 @@ Result WriteC(Stream* c_stream,
               Stream* h_stream,
               const char* header_name,
               const Module* module,
-              const WriteCOptions* options) {
+              const WriteCOptions& options) {
   CWriter c_writer(c_stream, h_stream, header_name, options);
   return c_writer.WriteModule(*module);
 }
