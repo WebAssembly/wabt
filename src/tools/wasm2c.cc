@@ -121,7 +121,7 @@ int ProgramMain(int argc, char** argv) {
                               s_read_debug_names, kStopOnFirstError,
                               kFailOnCustomSectionError);
     result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
-                          &options, &error_handler, &module);
+                          options, &error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result)) {
         ValidateOptions options(s_features);

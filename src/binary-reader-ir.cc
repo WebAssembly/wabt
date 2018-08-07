@@ -1114,12 +1114,11 @@ Result BinaryReaderIR::OnExceptionType(Index index, TypeVector& sig) {
 Result ReadBinaryIr(const char* filename,
                     const void* data,
                     size_t size,
-                    const ReadBinaryOptions* options,
+                    const ReadBinaryOptions& options,
                     ErrorHandler* error_handler,
-                    struct Module* out_module) {
+                    Module* out_module) {
   BinaryReaderIR reader(out_module, filename, error_handler);
-  Result result = ReadBinary(data, size, &reader, options);
-  return result;
+  return ReadBinary(data, size, &reader, options);
 }
 
 }  // namespace wabt

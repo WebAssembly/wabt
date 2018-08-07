@@ -1631,7 +1631,7 @@ wabt::Result BinaryReaderInterp::EndModule() {
 wabt::Result ReadBinaryInterp(Environment* env,
                               const void* data,
                               size_t size,
-                              const ReadBinaryOptions* options,
+                              const ReadBinaryOptions& options,
                               ErrorHandler* error_handler,
                               DefinedModule** out_module) {
   // Need to mark before taking ownership of env->istream.
@@ -1642,7 +1642,7 @@ wabt::Result ReadBinaryInterp(Environment* env,
   DefinedModule* module = new DefinedModule();
 
   BinaryReaderInterp reader(env, module, std::move(istream), error_handler,
-                            options->features);
+                            options.features);
   env->EmplaceBackModule(module);
 
   wabt::Result result = ReadBinary(data, size, &reader, options);

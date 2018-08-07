@@ -1499,15 +1499,15 @@ Result ReadBinaryObjdump(const uint8_t* data,
   switch (options->mode) {
     case ObjdumpMode::Prepass: {
       BinaryReaderObjdumpPrepass reader(data, size, options, state);
-      return ReadBinary(data, size, &reader, &read_options);
+      return ReadBinary(data, size, &reader, read_options);
     }
     case ObjdumpMode::Disassemble: {
       BinaryReaderObjdumpDisassemble reader(data, size, options, state);
-      return ReadBinary(data, size, &reader, &read_options);
+      return ReadBinary(data, size, &reader, read_options);
     }
     default: {
       BinaryReaderObjdump reader(data, size, options, state);
-      return ReadBinary(data, size, &reader, &read_options);
+      return ReadBinary(data, size, &reader, read_options);
     }
   }
 }

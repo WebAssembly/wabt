@@ -156,7 +156,7 @@ int ProgramMain(int argc, char** argv) {
   if (Succeeded(result)) {
     OpcodeInfoCounts counts;
     result = ReadBinaryOpcnt(file_data.data(), file_data.size(),
-                             &s_read_binary_options, &counts);
+                             s_read_binary_options, &counts);
     if (Succeeded(result)) {
       stream.Writef("Opcode counts:\n");
       WriteCounts(stream, counts);

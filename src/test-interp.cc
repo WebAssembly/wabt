@@ -84,7 +84,7 @@ class HostTrapTest : public ::testing::Test {
     ErrorHandlerFile error_handler(Location::Type::Binary);
     interp::DefinedModule* module = nullptr;
     ReadBinaryOptions options;
-    Result result = ReadBinaryInterp(&env_, data.data(), data.size(), &options,
+    Result result = ReadBinaryInterp(&env_, data.data(), data.size(), options,
                                      &error_handler, &module);
     EXPECT_EQ(Result::Ok, result);
 

@@ -363,7 +363,7 @@ class BinaryReaderDelegate {
 Result ReadBinary(const void* data,
                   size_t size,
                   BinaryReaderDelegate* reader,
-                  const ReadBinaryOptions* options);
+                  const ReadBinaryOptions& options);
 
 size_t ReadU32Leb128(const uint8_t* ptr,
                      const uint8_t* end,
