@@ -115,7 +115,7 @@ WabtReadBinaryResult* wabt_read_binary(
   // TODO(binji): Pass through from wabt_read_binary parameter.
   const char* filename = "<binary>";
   result->result =
-      wabt::ReadBinaryIr(filename, data, size, &options, error_handler, module);
+      wabt::ReadBinaryIr(filename, data, size, options, error_handler, module);
   result->module.reset(module);
   return result;
 }
@@ -132,7 +132,7 @@ wabt::Result::Enum wabt_validate_module(
     wabt::Module* module,
     wabt::ErrorHandlerBuffer* error_handler) {
   wabt::ValidateOptions options;
-  return ValidateModule(lexer, module, error_handler, &options);
+  return ValidateModule(lexer, module, error_handler, options);
 }
 
 wabt::Result::Enum wabt_validate_script(
@@ -140,7 +140,7 @@ wabt::Result::Enum wabt_validate_script(
     wabt::Script* script,
     wabt::ErrorHandlerBuffer* error_handler) {
   wabt::ValidateOptions options;
-  return ValidateScript(lexer, script, error_handler, &options);
+  return ValidateScript(lexer, script, error_handler, options);
 }
 
 WabtWriteScriptResult* wabt_write_binary_spec_script(
@@ -168,7 +168,7 @@ WabtWriteScriptResult* wabt_write_binary_spec_script(
 
   WabtWriteScriptResult* result = new WabtWriteScriptResult();
   result->result = WriteBinarySpecScript(&json_stream, script, source_filename,
-                                         module_filename_noext, &options,
+                                         module_filename_noext, options,
                                          &module_streams, log_stream_p);
 
   if (result->result == wabt::Result::Ok) {
@@ -205,7 +205,7 @@ WabtWriteModuleResult* wabt_write_binary_module(wabt::Module* module,
 
   wabt::MemoryStream stream(log ? &log_stream : nullptr);
   WabtWriteModuleResult* result = new WabtWriteModuleResult();
-  result->result = WriteBinaryModule(&stream, module, &options);
+  result->result = WriteBinaryModule(&stream, module, options);
   if (result->result == wabt::Result::Ok) {
     result->buffer = stream.ReleaseOutputBuffer();
     result->log_buffer = log ? log_stream.ReleaseOutputBuffer() : nullptr;
@@ -222,7 +222,7 @@ WabtWriteModuleResult* wabt_write_text_module(wabt::Module* module,
 
   wabt::MemoryStream stream;
   WabtWriteModuleResult* result = new WabtWriteModuleResult();
-  result->result = WriteWat(&stream, module, &options);
+  result->result = WriteWat(&stream, module, options);
   if (result->result == wabt::Result::Ok) {
     result->buffer = stream.ReleaseOutputBuffer();
   }

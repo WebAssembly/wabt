@@ -112,7 +112,7 @@ int ProgramMain(int argc, char** argv) {
     if (Succeeded(result) && s_validate) {
       ValidateOptions options(s_features);
       result =
-          ValidateScript(lexer.get(), script.get(), &error_handler, &options);
+          ValidateScript(lexer.get(), script.get(), &error_handler, options);
     }
 
     if (Succeeded(result)) {
@@ -123,7 +123,7 @@ int ProgramMain(int argc, char** argv) {
           StripExtension(s_outfile ? s_outfile : s_infile).to_string();
       result = WriteBinarySpecScript(
           &json_stream, script.get(), s_infile, module_filename_noext,
-          &s_write_binary_options, &module_streams, s_log_stream.get());
+          s_write_binary_options, &module_streams, s_log_stream.get());
 
       if (s_outfile) {
         json_stream.WriteToFile(s_outfile);

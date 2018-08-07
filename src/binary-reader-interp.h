@@ -34,7 +34,7 @@ struct ReadBinaryOptions;
 Result ReadBinaryInterp(interp::Environment* env,
                         const void* data,
                         size_t size,
-                        const ReadBinaryOptions* options,
+                        const ReadBinaryOptions& options,
                         ErrorHandler*,
                         interp::DefinedModule** out_module);
 

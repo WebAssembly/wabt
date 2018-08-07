@@ -108,7 +108,7 @@ int ProgramMain(int argc, char** argv) {
 
     if (Succeeded(result)) {
       FileStream stream(s_outfile ? FileStream(s_outfile) : FileStream(stdout));
-      result = WriteWat(&stream, module, &s_write_wat_options);
+      result = WriteWat(&stream, module, s_write_wat_options);
     }
   }
 

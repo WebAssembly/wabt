@@ -28,7 +28,7 @@ struct ReadBinaryOptions;
 Result ReadBinaryIr(const char* filename,
                     const void* data,
                     size_t size,
-                    const ReadBinaryOptions* options,
+                    const ReadBinaryOptions& options,
                     ErrorHandler*,
                     Module* out_module);
 

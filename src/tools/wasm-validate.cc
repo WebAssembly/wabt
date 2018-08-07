@@ -82,12 +82,12 @@ int ProgramMain(int argc, char** argv) {
     ReadBinaryOptions options(s_features, s_log_stream.get(),
                               s_read_debug_names, kStopOnFirstError,
                               s_fail_on_custom_section_error);
-    result = ReadBinaryIr(s_infile.c_str(), file_data.data(),
-                          file_data.size(), &options, &error_handler, &module);
+    result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
+                          options, &error_handler, &module);
     if (Succeeded(result)) {
       WastLexer* lexer = nullptr;
       ValidateOptions options(s_features);
-      result = ValidateModule(lexer, &module, &error_handler, &options);
+      result = ValidateModule(lexer, &module, &error_handler, options);
     }
   }
   return result != Result::Ok;

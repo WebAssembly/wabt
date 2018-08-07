@@ -1073,7 +1073,7 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
       ValidateOptions options(s_features);
       // Don't do a full validation, just validate the function signatures.
       result =
-          ValidateFuncSignatures(lexer.get(), module, error_handler, &options);
+          ValidateFuncSignatures(lexer.get(), module, error_handler, options);
     }
   }
   return result;
@@ -1095,8 +1095,8 @@ static wabt::Result ReadModule(string_view module_filename,
     const bool kFailOnCustomSectionError = true;
     ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                               kStopOnFirstError, kFailOnCustomSectionError);
-    result = ReadBinaryInterp(env, file_data.data(), file_data.size(),
-                              &options, error_handler, out_module);
+    result = ReadBinaryInterp(env, file_data.data(), file_data.size(), options,
+                              error_handler, out_module);
 
     if (Succeeded(result)) {
       if (s_verbose) {

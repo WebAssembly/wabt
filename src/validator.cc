@@ -41,7 +41,7 @@ class Validator : public ExprVisitor::Delegate {
   Validator(ErrorHandler*,
             WastLexer*,
             const Script*,
-            const ValidateOptions* options);
+            const ValidateOptions& options);
 
   Result CheckModule(const Module* module);
   Result CheckScript(const Script* script);
@@ -199,7 +199,7 @@ class Validator : public ExprVisitor::Delegate {
   void CheckExcept(const Location* loc, const Exception* Except);
   Result CheckExceptVar(const Var* var, const Exception** out_except);
 
-  const ValidateOptions* options_ = nullptr;
+  const ValidateOptions& options_;
   ErrorHandler* error_handler_ = nullptr;
   WastLexer* lexer_ = nullptr;
   const Script* script_ = nullptr;
@@ -219,7 +219,7 @@ class Validator : public ExprVisitor::Delegate {
 Validator::Validator(ErrorHandler* error_handler,
                      WastLexer* lexer,
                      const Script* script,
-                     const ValidateOptions* options)
+                     const ValidateOptions& options)
     : options_(options),
       error_handler_(error_handler),
       lexer_(lexer),
@@ -492,11 +492,11 @@ void Validator::CheckBlockDeclaration(const Location* loc,
                                       Opcode opcode,
                                       const BlockDeclaration* decl) {
   if (decl->sig.GetNumParams() > 0 &&
-      !options_->features.multi_value_enabled()) {
+      !options_.features.multi_value_enabled()) {
     PrintError(loc, "%s params not currently supported.", opcode.GetName());
   }
   if (decl->sig.GetNumResults() > 1 &&
-      !options_->features.multi_value_enabled()) {
+      !options_.features.multi_value_enabled()) {
     PrintError(loc, "multiple %s results not currently supported.",
                opcode.GetName());
   }
@@ -869,7 +869,7 @@ void Validator::CheckFuncSignature(const Location* loc,
 void Validator::CheckFunc(const Location* loc, const Func* func) {
   current_func_ = func;
   CheckFuncSignature(loc, func->decl);
-  if (!options_->features.multi_value_enabled() && func->GetNumResults() > 1) {
+  if (!options_.features.multi_value_enabled() && func->GetNumResults() > 1) {
     PrintError(loc, "multiple result values not currently supported.");
     // Don't run any other checks, the won't test the result_type properly.
     return;
@@ -1004,7 +1004,7 @@ void Validator::CheckMemory(const Location* loc, const Memory* memory) {
   CheckLimits(loc, &memory->page_limits, WABT_MAX_PAGES, "pages");
 
   if (memory->page_limits.is_shared) {
-    if (!options_->features.threads_enabled()) {
+    if (!options_.features.threads_enabled()) {
       PrintError(loc, "memories may not be shared");
     } else if (!memory->page_limits.has_max) {
       PrintError(loc, "shared memories must have max sizes");
@@ -1055,7 +1055,7 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
     case ExternalKind::Global: {
       auto* global_import = cast<GlobalImport>(import);
       if (global_import->global.mutable_ &&
-          !options_->features.mutable_globals_enabled()) {
+          !options_.features.mutable_globals_enabled()) {
         PrintError(loc, "mutable globals cannot be imported");
       }
       ++num_imported_globals_;
@@ -1082,7 +1082,7 @@ void Validator::CheckExport(const Location* loc, const Export* export_) {
     case ExternalKind::Global: {
       const Global* global;
       if (Succeeded(CheckGlobalVar(&export_->var, &global, nullptr))) {
-        if (global->mutable_ && !options_->features.mutable_globals_enabled()) {
+        if (global->mutable_ && !options_.features.mutable_globals_enabled()) {
           PrintError(&export_->var.loc, "mutable globals cannot be exported");
         }
       }
@@ -1435,7 +1435,7 @@ Result Validator::CheckAllFuncSignatures(const Module* module) {
 Result ValidateScript(WastLexer* lexer,
                       const Script* script,
                       ErrorHandler* error_handler,
-                      const ValidateOptions* options) {
+                      const ValidateOptions& options) {
   Validator validator(error_handler, lexer, script, options);
 
   return validator.CheckScript(script);
@@ -1444,7 +1444,7 @@ Result ValidateScript(WastLexer* lexer,
 Result ValidateModule(WastLexer* lexer,
                       const Module* module,
                       ErrorHandler* error_handler,
-                      const ValidateOptions* options) {
+                      const ValidateOptions& options) {
   Validator validator(error_handler, lexer, nullptr, options);
 
   return validator.CheckModule(module);
@@ -1453,7 +1453,7 @@ Result ValidateModule(WastLexer* lexer,
 Result ValidateFuncSignatures(WastLexer* lexer,
                               const Module* module,
                               ErrorHandler* error_handler,
-                              const ValidateOptions* options) {
+                              const ValidateOptions& options) {
   Validator validator(error_handler, lexer, nullptr, options);
 
   return validator.CheckAllFuncSignatures(module);

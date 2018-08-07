@@ -121,12 +121,12 @@ int ProgramMain(int argc, char** argv) {
                               s_read_debug_names, kStopOnFirstError,
                               kFailOnCustomSectionError);
     result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
-                          &options, &error_handler, &module);
+                          options, &error_handler, &module);
     if (Succeeded(result)) {
       if (Succeeded(result)) {
         ValidateOptions options(s_features);
         WastLexer* lexer = nullptr;
-        result = ValidateModule(lexer, &module, &error_handler, &options);
+        result = ValidateModule(lexer, &module, &error_handler, options);
         result |= GenerateNames(&module);
       }
 
@@ -144,11 +144,11 @@ int ProgramMain(int argc, char** argv) {
           FileStream c_stream(s_outfile.c_str());
           FileStream h_stream(header_name);
           result = WriteC(&c_stream, &h_stream, header_name.c_str(), &module,
-                          &s_write_c_options);
+                          s_write_c_options);
         } else {
           FileStream stream(stdout);
           result =
-              WriteC(&stream, &stream, "wasm.h", &module, &s_write_c_options);
+              WriteC(&stream, &stream, "wasm.h", &module, s_write_c_options);
         }
       }
     }
