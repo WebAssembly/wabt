@@ -818,119 +818,34 @@ class CommandRunner {
   std::string source_filename_;
 };
 
-static interp::Result DefaultHostCallback(const HostFunc* func,
-                                          const interp::FuncSignature* sig,
-                                          Index num_args,
-                                          TypedValue* args,
-                                          Index num_results,
-                                          TypedValue* out_results,
-                                          void* user_data) {
-  memset(static_cast<void*>(out_results), 0,
-                            sizeof(TypedValue) * num_results);
-  for (Index i = 0; i < num_results; ++i)
-    out_results[i].type = sig->result_types[i];
-
-  TypedValues vec_args(args, args + num_args);
-  TypedValues vec_results(out_results, out_results + num_results);
-
+static interp::Result PrintCallback(const HostFunc* func,
+                                    const interp::FuncSignature* sig,
+                                    const TypedValues& args,
+                                    TypedValues& results) {
   printf("called host ");
-  WriteCall(s_stdout_stream.get(), func->module_name, func->field_name,
-            vec_args, vec_results, interp::Result::Ok);
+  WriteCall(s_stdout_stream.get(), func->module_name, func->field_name, args,
+            results, interp::Result::Ok);
   return interp::Result::Ok;
 }
 
-#define PRIimport "\"%s.%s\""
-#define PRINTF_IMPORT_ARG(x) ((x).module_name.c_str()), ((x).field_name.c_str())
-
-class SpectestHostImportDelegate : public HostImportDelegate {
- public:
-  wabt::Result ImportFunc(interp::FuncImport* import,
-                          interp::Func* func,
-                          interp::FuncSignature* func_sig,
-                          const ErrorCallback& callback) override {
-    if (import->field_name == "print" || import->field_name == "print_i32" ||
-        import->field_name == "print_f32" ||
-        import->field_name == "print_f64" ||
-        import->field_name == "print_i32_f32" ||
-        import->field_name == "print_f64_f64") {
-      cast<HostFunc>(func)->callback = DefaultHostCallback;
-      return wabt::Result::Ok;
-    } else {
-      PrintError(callback, "unknown host function import " PRIimport,
-                 PRINTF_IMPORT_ARG(*import));
-      return wabt::Result::Error;
-    }
-  }
-
-  wabt::Result ImportTable(interp::TableImport* import,
-                           interp::Table* table,
-                           const ErrorCallback& callback) override {
-    if (import->field_name == "table") {
-      table->limits.has_max = true;
-      table->limits.initial = 10;
-      table->limits.max = 20;
-      return wabt::Result::Ok;
-    } else {
-      PrintError(callback, "unknown host table import " PRIimport,
-                 PRINTF_IMPORT_ARG(*import));
-      return wabt::Result::Error;
-    }
-  }
-
-  wabt::Result ImportMemory(interp::MemoryImport* import,
-                            interp::Memory* memory,
-                            const ErrorCallback& callback) override {
-    if (import->field_name == "memory") {
-      memory->page_limits.has_max = true;
-      memory->page_limits.initial = 1;
-      memory->page_limits.max = 2;
-      memory->data.resize(memory->page_limits.initial * WABT_MAX_PAGES);
-      return wabt::Result::Ok;
-    } else {
-      PrintError(callback, "unknown host memory import " PRIimport,
-                 PRINTF_IMPORT_ARG(*import));
-      return wabt::Result::Error;
-    }
-  }
-
-  wabt::Result ImportGlobal(interp::GlobalImport* import,
-                            interp::Global* global,
-                            const ErrorCallback& callback) override {
-    if (import->field_name == "global_i32") {
-      global->typed_value.type = Type::I32;
-      global->typed_value.value.i32 = 666;
-      return wabt::Result::Ok;
-    } else if (import->field_name == "global_f32") {
-      global->typed_value.type = Type::F32;
-      float value = 666.6f;
-      memcpy(&global->typed_value.value.f32_bits, &value, sizeof(value));
-      return wabt::Result::Ok;
-    } else if (import->field_name == "global_i64") {
-      global->typed_value.type = Type::I64;
-      global->typed_value.value.i64 = 666;
-      return wabt::Result::Ok;
-    } else if (import->field_name == "global_f64") {
-      global->typed_value.type = Type::F64;
-      double value = 666.6;
-      memcpy(&global->typed_value.value.f64_bits, &value, sizeof(value));
-      return wabt::Result::Ok;
-    } else {
-      PrintError(callback, "unknown host global import " PRIimport,
-                 PRINTF_IMPORT_ARG(*import));
-      return wabt::Result::Error;
-    }
-  }
-
- private:
-  void PrintError(const ErrorCallback& callback, const char* format, ...) {
-    WABT_SNPRINTF_ALLOCA(buffer, length, format);
-    callback(buffer);
-  }
-};
-
 static void InitEnvironment(Environment* env) {
   HostModule* host_module = env->AppendHostModule("spectest");
-  host_module->import_delegate.reset(new SpectestHostImportDelegate());
+  host_module->AppendFuncExport("print", {{}, {}}, PrintCallback);
+  host_module->AppendFuncExport("print_i32", {{Type::I32}, {}}, PrintCallback);
+  host_module->AppendFuncExport("print_f32", {{Type::F32}, {}}, PrintCallback);
+  host_module->AppendFuncExport("print_f64", {{Type::F64}, {}}, PrintCallback);
+  host_module->AppendFuncExport("print_i32_f32", {{Type::I32, Type::F32}, {}},
+                                PrintCallback);
+  host_module->AppendFuncExport("print_f64_f64", {{Type::F64, Type::F64}, {}},
+                                PrintCallback);
+
+  host_module->AppendTableExport("table", Limits(10, 20));
+  host_module->AppendMemoryExport("memory", Limits(1, 2));
+
+  host_module->AppendGlobalExport("global_i32", false, uint32_t(666));
+  host_module->AppendGlobalExport("global_i64", false, uint64_t(666));
+  host_module->AppendGlobalExport("global_f32", false, float(666.6f));
+  host_module->AppendGlobalExport("global_f64", false, double(666.6));
 }
 
 CommandRunner::CommandRunner()

@@ -17,7 +17,7 @@ out/test/spec/imports.wast:107: assert_unlinkable passed:
   error: unknown module field "unknown"
   0000020: error: OnImportFunc callback failed
 out/test/spec/imports.wast:111: assert_unlinkable passed:
-  error: unknown host function import "spectest.unknown"
+  error: unknown module field "unknown"
   0000024: error: OnImportFunc callback failed
 out/test/spec/imports.wast:116: assert_unlinkable passed:
   error: import signature mismatch
@@ -77,19 +77,19 @@ out/test/spec/imports.wast:189: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind func, not memory
   0000025: error: OnImportFunc callback failed
 out/test/spec/imports.wast:193: assert_unlinkable passed:
-  error: unknown host function import "spectest.global_i32"
+  error: expected import "spectest.global_i32" to have kind func, not global
   0000027: error: OnImportFunc callback failed
 out/test/spec/imports.wast:197: assert_unlinkable passed:
-  error: unknown host function import "spectest.table"
+  error: expected import "spectest.table" to have kind func, not table
   0000022: error: OnImportFunc callback failed
 out/test/spec/imports.wast:201: assert_unlinkable passed:
-  error: unknown host function import "spectest.memory"
+  error: expected import "spectest.memory" to have kind func, not memory
   0000023: error: OnImportFunc callback failed
 out/test/spec/imports.wast:235: assert_unlinkable passed:
   error: unknown module field "unknown"
   000001b: error: OnImportGlobal callback failed
 out/test/spec/imports.wast:239: assert_unlinkable passed:
-  error: unknown host global import "spectest.unknown"
+  error: unknown module field "unknown"
   000001f: error: OnImportGlobal callback failed
 out/test/spec/imports.wast:244: assert_unlinkable passed:
   error: expected import "test.func" to have kind global, not func
@@ -101,13 +101,13 @@ out/test/spec/imports.wast:252: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind global, not memory
   0000020: error: OnImportGlobal callback failed
 out/test/spec/imports.wast:256: assert_unlinkable passed:
-  error: unknown host global import "spectest.print_i32"
+  error: expected import "spectest.print_i32" to have kind global, not func
   0000021: error: OnImportGlobal callback failed
 out/test/spec/imports.wast:260: assert_unlinkable passed:
-  error: unknown host global import "spectest.table"
+  error: expected import "spectest.table" to have kind global, not table
   000001d: error: OnImportGlobal callback failed
 out/test/spec/imports.wast:264: assert_unlinkable passed:
-  error: unknown host global import "spectest.memory"
+  error: expected import "spectest.memory" to have kind global, not memory
   000001e: error: OnImportGlobal callback failed
 out/test/spec/imports.wast:310: assert_invalid passed:
   error: unknown import module ""
@@ -121,7 +121,7 @@ out/test/spec/imports.wast:335: assert_unlinkable passed:
   error: unknown module field "unknown"
   000001c: error: OnImportTable callback failed
 out/test/spec/imports.wast:339: assert_unlinkable passed:
-  error: unknown host table import "spectest.unknown"
+  error: unknown module field "unknown"
   0000020: error: OnImportTable callback failed
 out/test/spec/imports.wast:344: assert_unlinkable passed:
   error: actual size (10) smaller than declared (12)
@@ -145,7 +145,7 @@ out/test/spec/imports.wast:369: assert_unlinkable passed:
   error: expected import "test.memory-2-inf" to have kind table, not memory
   0000021: error: OnImportTable callback failed
 out/test/spec/imports.wast:373: assert_unlinkable passed:
-  error: unknown host table import "spectest.print_i32"
+  error: expected import "spectest.print_i32" to have kind table, not func
   0000022: error: OnImportTable callback failed
 out/test/spec/imports.wast:405: assert_invalid passed:
   error: unknown import module ""
@@ -159,7 +159,7 @@ out/test/spec/imports.wast:428: assert_unlinkable passed:
   error: unknown module field "unknown"
   000001b: error: OnImportMemory callback failed
 out/test/spec/imports.wast:432: assert_unlinkable passed:
-  error: unknown host memory import "spectest.unknown"
+  error: unknown module field "unknown"
   000001f: error: OnImportMemory callback failed
 out/test/spec/imports.wast:437: assert_unlinkable passed:
   error: actual size (2) smaller than declared (3)
@@ -183,13 +183,13 @@ out/test/spec/imports.wast:462: assert_unlinkable passed:
   error: expected import "test.table-10-inf" to have kind memory, not table
   0000020: error: OnImportMemory callback failed
 out/test/spec/imports.wast:466: assert_unlinkable passed:
-  error: unknown host memory import "spectest.print_i32"
+  error: expected import "spectest.print_i32" to have kind memory, not func
   0000021: error: OnImportMemory callback failed
 out/test/spec/imports.wast:470: assert_unlinkable passed:
-  error: unknown host memory import "spectest.global_i32"
+  error: expected import "spectest.global_i32" to have kind memory, not global
   0000022: error: OnImportMemory callback failed
 out/test/spec/imports.wast:474: assert_unlinkable passed:
-  error: unknown host memory import "spectest.table"
+  error: expected import "spectest.table" to have kind memory, not table
   000001d: error: OnImportMemory callback failed
 out/test/spec/imports.wast:479: assert_unlinkable passed:
   error: actual size (1) smaller than declared (2)
