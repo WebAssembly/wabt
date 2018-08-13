@@ -289,6 +289,13 @@ enum class ExternalKind {
 static const int kExternalKindCount = WABT_ENUM_COUNT(ExternalKind);
 
 struct Limits {
+  Limits() = default;
+  explicit Limits(uint64_t initial) : initial(initial) {}
+  Limits(uint64_t initial, uint64_t max)
+      : initial(initial), max(max), has_max(true) {}
+  Limits(uint64_t initial, uint64_t max, bool is_shared)
+      : initial(initial), max(max), has_max(true), is_shared(is_shared) {}
+
   uint64_t initial = 0;
   uint64_t max = 0;
   bool has_max = false;

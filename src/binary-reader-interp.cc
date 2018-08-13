@@ -287,8 +287,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                string_view field_name,
                                Export** out_export);
 
-  HostImportDelegate::ErrorCallback MakePrintErrorCallback();
-
   Features features_;
   ErrorHandler* error_handler_ = nullptr;
   Environment* env_ = nullptr;
@@ -659,11 +657,7 @@ wabt::Result BinaryReaderInterp::AppendExport(Module* module,
     return wabt::Result::Error;
   }
 
-  module->exports.emplace_back(name, kind, item_index);
-  Export* export_ = &module->exports.back();
-
-  module->export_bindings.emplace(export_->name,
-                                  Binding(module->exports.size() - 1));
+  module->AppendExport(kind, item_index, name);
   return wabt::Result::Ok;
 }
 
@@ -694,10 +688,6 @@ wabt::Result BinaryReaderInterp::GetModuleExport(Module* module,
   return wabt::Result::Ok;
 }
 
-HostImportDelegate::ErrorCallback BinaryReaderInterp::MakePrintErrorCallback() {
-  return [this](const char* msg) { PrintError("%s", msg); };
-}
-
 wabt::Result BinaryReaderInterp::OnImportFunc(Index import_index,
                                               string_view module_name,
                                               string_view field_name,
@@ -710,34 +700,24 @@ wabt::Result BinaryReaderInterp::OnImportFunc(Index import_index,
   Module* import_module;
   CHECK_RESULT(FindRegisteredModule(import->module_name, &import_module));
 
-  Index func_env_index;
-  if (auto* host_import_module = dyn_cast<HostModule>(import_module)) {
-    HostFunc* func = new HostFunc(import->module_name, import->field_name,
-                                  import->sig_index);
-    env_->EmplaceBackFunc(func);
-
-    FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
-    CHECK_RESULT(host_import_module->import_delegate->ImportFunc(
-        import, func, sig, MakePrintErrorCallback()));
-    assert(func->callback);
-
-    func_env_index = env_->GetFuncCount() - 1;
-    AppendExport(host_import_module, ExternalKind::Func, func_env_index,
-                 import->field_name);
-  } else {
-    Export* export_;
+  Export* export_ =
+      import_module->GetFuncExport(env_, field_name, import->sig_index);
+  if (!export_) {
+    // If GetFuncExport fails then GetModuleExport will fail too. But it's
+    // useful to call here to share the same error handling code as other
+    // imports.
     CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
-    CHECK_RESULT(CheckImportKind(import, export_->kind));
-
-    Func* func = env_->GetFunc(export_->index);
-    if (!env_->FuncSignaturesAreEqual(import->sig_index, func->sig_index)) {
-      PrintError("import signature mismatch");
-      return wabt::Result::Error;
-    }
-
-    func_env_index = export_->index;
   }
-  func_index_mapping_.push_back(func_env_index);
+
+  CHECK_RESULT(CheckImportKind(import, export_->kind));
+
+  Func* func = env_->GetFunc(export_->index);
+  if (!env_->FuncSignaturesAreEqual(import->sig_index, func->sig_index)) {
+    PrintError("import signature mismatch");
+    return wabt::Result::Error;
+  }
+
+  func_index_mapping_.push_back(export_->index);
   num_func_imports_++;
   return wabt::Result::Ok;
 }
@@ -759,30 +739,15 @@ wabt::Result BinaryReaderInterp::OnImportTable(Index import_index,
   Module* import_module;
   CHECK_RESULT(FindRegisteredModule(import->module_name, &import_module));
 
-  if (auto* host_import_module = dyn_cast<HostModule>(import_module)) {
-    Table* table = env_->EmplaceBackTable(*elem_limits);
+  Export* export_;
+  CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
+  CHECK_RESULT(CheckImportKind(import, export_->kind));
 
-    CHECK_RESULT(host_import_module->import_delegate->ImportTable(
-        import, table, MakePrintErrorCallback()));
+  Table* table = env_->GetTable(export_->index);
+  CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
 
-    CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
-
-    table->func_indexes.resize(table->limits.initial);
-
-    module_->table_index = env_->GetTableCount() - 1;
-    AppendExport(host_import_module, ExternalKind::Table, module_->table_index,
-                 import->field_name);
-  } else {
-    Export* export_;
-    CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
-    CHECK_RESULT(CheckImportKind(import, export_->kind));
-
-    Table* table = env_->GetTable(export_->index);
-    CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
-
-    import->limits = *elem_limits;
-    module_->table_index = export_->index;
-  }
+  import->limits = *elem_limits;
+  module_->table_index = export_->index;
   return wabt::Result::Ok;
 }
 
@@ -802,28 +767,15 @@ wabt::Result BinaryReaderInterp::OnImportMemory(Index import_index,
   Module* import_module;
   CHECK_RESULT(FindRegisteredModule(import->module_name, &import_module));
 
-  if (auto* host_import_module = dyn_cast<HostModule>(import_module)) {
-    Memory* memory = env_->EmplaceBackMemory();
+  Export* export_;
+  CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
+  CHECK_RESULT(CheckImportKind(import, export_->kind));
 
-    CHECK_RESULT(host_import_module->import_delegate->ImportMemory(
-        import, memory, MakePrintErrorCallback()));
+  Memory* memory = env_->GetMemory(export_->index);
+  CHECK_RESULT(CheckImportLimits(page_limits, &memory->page_limits));
 
-    CHECK_RESULT(CheckImportLimits(page_limits, &memory->page_limits));
-
-    module_->memory_index = env_->GetMemoryCount() - 1;
-    AppendExport(host_import_module, ExternalKind::Memory,
-                 module_->memory_index, import->field_name);
-  } else {
-    Export* export_;
-    CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
-    CHECK_RESULT(CheckImportKind(import, export_->kind));
-
-    Memory* memory = env_->GetMemory(export_->index);
-    CHECK_RESULT(CheckImportLimits(page_limits, &memory->page_limits));
-
-    import->limits = *page_limits;
-    module_->memory_index = export_->index;
-  }
+  import->limits = *page_limits;
+  module_->memory_index = export_->index;
   return wabt::Result::Ok;
 }
 
@@ -839,46 +791,29 @@ wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
   Module* import_module;
   CHECK_RESULT(FindRegisteredModule(import->module_name, &import_module));
 
-  Index global_env_index = env_->GetGlobalCount() - 1;
-  if (auto* host_import_module = dyn_cast<HostModule>(import_module)) {
-    Global* global = env_->EmplaceBackGlobal(TypedValue(type), mutable_);
+  Export* export_;
+  CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
+  CHECK_RESULT(CheckImportKind(import, export_->kind));
 
-    CHECK_RESULT(host_import_module->import_delegate->ImportGlobal(
-        import, global, MakePrintErrorCallback()));
-
-    // Make sure the ImportGlobal callback gave us a global that matches.
-    assert(global->typed_value.type == type);
-    assert(global->mutable_ == mutable_);
-
-    global_env_index = env_->GetGlobalCount() - 1;
-    AppendExport(host_import_module, ExternalKind::Global, global_env_index,
-                 import->field_name);
-  } else {
-    Export* export_;
-    CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
-    CHECK_RESULT(CheckImportKind(import, export_->kind));
-
-    Global* exported_global = env_->GetGlobal(export_->index);
-    if (exported_global->typed_value.type != type) {
-      PrintError("type mismatch in imported global, expected %s but got %s.",
-                 GetTypeName(exported_global->typed_value.type),
-                 GetTypeName(type));
-      return wabt::Result::Error;
-    }
-
-    if (exported_global->mutable_ != mutable_) {
-      const char* kMutableNames[] = {"immutable", "mutable"};
-      PrintError(
-          "mutability mismatch in imported global, expected %s but got %s.",
-          kMutableNames[exported_global->mutable_], kMutableNames[mutable_]);
-      return wabt::Result::Error;
-    }
-
-    global_env_index = export_->index;
+  Global* exported_global = env_->GetGlobal(export_->index);
+  if (exported_global->typed_value.type != type) {
+    PrintError("type mismatch in imported global, expected %s but got %s.",
+               GetTypeName(exported_global->typed_value.type),
+               GetTypeName(type));
+    return wabt::Result::Error;
   }
+
+  if (exported_global->mutable_ != mutable_) {
+    const char* kMutableNames[] = {"immutable", "mutable"};
+    PrintError(
+        "mutability mismatch in imported global, expected %s but got %s.",
+        kMutableNames[exported_global->mutable_], kMutableNames[mutable_]);
+    return wabt::Result::Error;
+  }
+
   import->type = type;
   import->mutable_ = mutable_;
-  global_index_mapping_.push_back(global_env_index);
+  global_index_mapping_.push_back(export_->index);
   num_global_imports_++;
   return wabt::Result::Ok;
 }

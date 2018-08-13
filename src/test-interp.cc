@@ -29,51 +29,18 @@ using namespace wabt;
 
 namespace {
 
-class TrapHostImportDelegate : public interp::HostImportDelegate {
- public:
-  Result ImportFunc(interp::FuncImport* import,
-                    interp::Func* func,
-                    interp::FuncSignature* func_sig,
-                    const ErrorCallback& callback) override {
-    cast<interp::HostFunc>(func)->callback = TrapCallback;
-    return Result::Ok;
-  }
-
-  Result ImportTable(interp::TableImport* import,
-                     interp::Table* table,
-                     const ErrorCallback& callback) override {
-    return Result::Error;
-  }
-
-  Result ImportMemory(interp::MemoryImport* import,
-                      interp::Memory* memory,
-                      const ErrorCallback& callback) override {
-    return Result::Error;
-  }
-
-  Result ImportGlobal(interp::GlobalImport* import,
-                      interp::Global* global,
-                      const ErrorCallback& callback) override {
-    return Result::Error;
-  }
-
- private:
-  static interp::Result TrapCallback(const interp::HostFunc* func,
-                                     const interp::FuncSignature* sig,
-                                     Index num_args,
-                                     interp::TypedValue* args,
-                                     Index num_results,
-                                     interp::TypedValue* out_results,
-                                     void* user_data) {
-    return interp::Result::TrapHostTrapped;
-  }
-};
+interp::Result TrapCallback(const interp::HostFunc* func,
+                            const interp::FuncSignature* sig,
+                            const interp::TypedValues& args,
+                            interp::TypedValues& results) {
+  return interp::Result::TrapHostTrapped;
+}
 
 class HostTrapTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
     interp::HostModule* host_module = env_.AppendHostModule("host");
-    host_module->import_delegate = MakeUnique<TrapHostImportDelegate>();
+    host_module->AppendFuncExport("a", {{}, {}}, TrapCallback);
     executor_ = MakeUnique<interp::Executor>(&env_);
   }
 
