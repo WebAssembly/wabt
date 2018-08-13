@@ -201,6 +201,7 @@ Export* Module::GetFuncExport(Environment* env,
     Export* export_ = &exports[index];
     assert(export_->kind == ExternalKind::Func);
     const Func* func = env->GetFunc(export_->index);
+    WABT_USE(func);
     assert(env->FuncSignaturesAreEqual(sig_index, func->sig_index));
     return export_;
   }
