@@ -106,6 +106,7 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   memory->pages = new_pages;
   memory->size = new_pages * PAGE_SIZE;
   memory->data = realloc(memory->data, memory->size);
+  memset(memory->data + old_pages * PAGE_SIZE, 0, delta * PAGE_SIZE);
   return old_pages;
 }
 
