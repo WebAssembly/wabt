@@ -190,64 +190,61 @@ class HostMemoryTest : public ::testing::Test {
 }  // end of anonymous namespace
 
 TEST_F(HostMemoryTest, Rot13) {
-  // (module
-  //   (import "host" "mem" (memory $mem 1))
-  //   (import "host" "fill_buf" (func $fill_buf (param i32 i32) (result i32)))
-  //   (import "host" "buf_done" (func $buf_done (param i32 i32)))
+  // (import "host" "mem" (memory $mem 1))
+  // (import "host" "fill_buf" (func $fill_buf (param i32 i32) (result i32)))
+  // (import "host" "buf_done" (func $buf_done (param i32 i32)))
   //
-  //   (func $rot13 (param $c i32) (result i32)
-  //     ;; No change if < 'A'.
-  //     (if (i32.lt_u (get_local $c) (i32.const 64)) (return (get_local $c)))
+  // (func $rot13c (param $c i32) (result i32)
+  //   (local $uc i32)
   //
-  //     ;; In range ['A', 'M'] return |c| + 13.
-  //     (if (i32.le_u (get_local $c) (i32.const 77)) (return (i32.add (get_local $c) (i32.const 13))))
+  //   ;; No change if < 'A'.
+  //   (if (i32.lt_u (get_local $c) (i32.const 65))
+  //     (return (get_local $c)))
   //
-  //     ;; In range ['N', 'Z'] return |c| - 13.
-  //     (if (i32.le_u (get_local $c) (i32.const 90)) (return (i32.sub (get_local $c) (i32.const 13))))
+  //   ;; Clear 5th bit of c, to force uppercase. 0xdf = 0b11011111
+  //   (set_local $uc (i32.and (get_local $c) (i32.const 0xdf)))
   //
-  //     ;; In range ('Z', 'a'), no change.
-  //     (if (i32.lt_u (get_local $c) (i32.const 97)) (return (get_local $c)))
+  //   ;; In range ['A', 'M'] return |c| + 13.
+  //   (if (i32.le_u (get_local $uc) (i32.const 77))
+  //     (return (i32.add (get_local $c) (i32.const 13))))
   //
-  //     ;; In range ['a', 'm'] return |c| + 13.
-  //     (if (i32.le_u (get_local $c) (i32.const 109)) (return (i32.add (get_local $c) (i32.const 13))))
+  //   ;; In range ['N', 'Z'] return |c| - 13.
+  //   (if (i32.le_u (get_local $uc) (i32.const 90))
+  //     (return (i32.sub (get_local $c) (i32.const 13))))
   //
-  //     ;; In range ['n', 'z'] return |c| - 13.
-  //     (if (i32.le_u (get_local $c) (i32.const 122)) (return (i32.sub (get_local $c) (i32.const 13))))
+  //   ;; No change for everything else.
+  //   (return (get_local $c))
+  // )
   //
-  //     ;; No change for everything else.
-  //     (return (get_local $c))
-  //   )
+  // (func (export "rot13")
+  //   (local $size i32)
+  //   (local $i i32)
   //
-  //   (func (export "rot13")
-  //     (local $size i32)
-  //     (local $i i32)
+  //   ;; Ask host to fill memory [0, 1024) with data.
+  //   (call $fill_buf (i32.const 0) (i32.const 1024))
   //
-  //     ;; Ask host to fill memory [0, 1024) with data.
-  //     (call $fill_buf (i32.const 0) (i32.const 1024))
+  //   ;; The host returns the size filled.
+  //   (set_local $size)
   //
-  //     ;; The host returns the size filled.
-  //     (set_local $size)
+  //   ;; Loop over all bytes and rot13 them.
+  //   (block $exit
+  //     (loop $top
+  //       ;; if (i >= size) break
+  //       (if (i32.ge_u (get_local $i) (get_local $size)) (br $exit))
   //
-  //     ;; Loop over all bytes and rot13 them.
-  //     (block $exit
-  //       (loop $top
-  //         ;; if (i >= size) break
-  //         (if (i32.ge_u (get_local $i) (get_local $size)) (br $exit))
+  //       ;; mem[i] = rot13c(mem[i])
+  //       (i32.store8
+  //         (get_local $i)
+  //         (call $rot13c
+  //           (i32.load8_u (get_local $i))))
   //
-  //         ;; mem[i] = rot13(mem[i])
-  //         (i32.store8
-  //           (get_local $i)
-  //           (call $rot13
-  //             (i32.load8_u (get_local $i))))
-  //
-  //         ;; i++
-  //         (set_local $i (i32.add (get_local $i) (i32.const 1)))
-  //         (br $top)
-  //       )
+  //       ;; i++
+  //       (set_local $i (i32.add (get_local $i) (i32.const 1)))
+  //       (br $top)
   //     )
-  //
-  //     (call $buf_done (i32.const 0) (get_local $size))
   //   )
+  //
+  //   (call $buf_done (i32.const 0) (get_local $size))
   // )
   std::vector<uint8_t> data = {
       0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00, 0x01, 0x14, 0x04, 0x60,
@@ -257,28 +254,30 @@ TEST_F(HostMemoryTest, Rot13) {
       0x73, 0x74, 0x08, 0x66, 0x69, 0x6c, 0x6c, 0x5f, 0x62, 0x75, 0x66, 0x00,
       0x00, 0x04, 0x68, 0x6f, 0x73, 0x74, 0x08, 0x62, 0x75, 0x66, 0x5f, 0x64,
       0x6f, 0x6e, 0x65, 0x00, 0x01, 0x03, 0x03, 0x02, 0x02, 0x03, 0x07, 0x09,
-      0x01, 0x05, 0x72, 0x6f, 0x74, 0x31, 0x33, 0x00, 0x03, 0x0a, 0x94, 0x01,
-      0x02, 0x59, 0x00, 0x20, 0x00, 0x41, 0xc0, 0x00, 0x49, 0x04, 0x40, 0x20,
-      0x00, 0x0f, 0x0b, 0x20, 0x00, 0x41, 0xcd, 0x00, 0x4d, 0x04, 0x40, 0x20,
-      0x00, 0x41, 0x0d, 0x6a, 0x0f, 0x0b, 0x20, 0x00, 0x41, 0xda, 0x00, 0x4d,
-      0x04, 0x40, 0x20, 0x00, 0x41, 0x0d, 0x6b, 0x0f, 0x0b, 0x20, 0x00, 0x41,
-      0xe1, 0x00, 0x49, 0x04, 0x40, 0x20, 0x00, 0x0f, 0x0b, 0x20, 0x00, 0x41,
-      0xed, 0x00, 0x4d, 0x04, 0x40, 0x20, 0x00, 0x41, 0x0d, 0x6a, 0x0f, 0x0b,
-      0x20, 0x00, 0x41, 0xfa, 0x00, 0x4d, 0x04, 0x40, 0x20, 0x00, 0x41, 0x0d,
-      0x6b, 0x0f, 0x0b, 0x20, 0x00, 0x0f, 0x0b, 0x38, 0x01, 0x02, 0x7f, 0x41,
-      0x00, 0x41, 0x80, 0x08, 0x10, 0x00, 0x21, 0x00, 0x02, 0x40, 0x03, 0x40,
-      0x20, 0x01, 0x20, 0x00, 0x4f, 0x04, 0x40, 0x0c, 0x02, 0x0b, 0x20, 0x01,
-      0x20, 0x01, 0x2d, 0x00, 0x00, 0x10, 0x02, 0x3a, 0x00, 0x00, 0x20, 0x01,
-      0x41, 0x01, 0x6a, 0x21, 0x01, 0x0c, 0x00, 0x0b, 0x0b, 0x41, 0x00, 0x20,
-      0x00, 0x10, 0x01, 0x0b,
+      0x01, 0x05, 0x72, 0x6f, 0x74, 0x31, 0x33, 0x00, 0x03, 0x0a, 0x74, 0x02,
+      0x39, 0x01, 0x01, 0x7f, 0x20, 0x00, 0x41, 0xc1, 0x00, 0x49, 0x04, 0x40,
+      0x20, 0x00, 0x0f, 0x0b, 0x20, 0x00, 0x41, 0xdf, 0x01, 0x71, 0x21, 0x01,
+      0x20, 0x01, 0x41, 0xcd, 0x00, 0x4d, 0x04, 0x40, 0x20, 0x00, 0x41, 0x0d,
+      0x6a, 0x0f, 0x0b, 0x20, 0x01, 0x41, 0xda, 0x00, 0x4d, 0x04, 0x40, 0x20,
+      0x00, 0x41, 0x0d, 0x6b, 0x0f, 0x0b, 0x20, 0x00, 0x0f, 0x0b, 0x38, 0x01,
+      0x02, 0x7f, 0x41, 0x00, 0x41, 0x80, 0x08, 0x10, 0x00, 0x21, 0x00, 0x02,
+      0x40, 0x03, 0x40, 0x20, 0x01, 0x20, 0x00, 0x4f, 0x04, 0x40, 0x0c, 0x02,
+      0x0b, 0x20, 0x01, 0x20, 0x01, 0x2d, 0x00, 0x00, 0x10, 0x02, 0x3a, 0x00,
+      0x00, 0x20, 0x01, 0x41, 0x01, 0x6a, 0x21, 0x01, 0x0c, 0x00, 0x0b, 0x0b,
+      0x41, 0x00, 0x20, 0x00, 0x10, 0x01, 0x0b,
   };
 
   ASSERT_EQ(Result::Ok, LoadModule(data));
 
-  string_data = "Hello, World!";
+  string_data = "Hello, WebAssembly!";
 
   ASSERT_EQ(interp::Result::Ok,
             executor_->RunExportByName(module_, "rot13", {}).result);
 
-  ASSERT_EQ("Uryyb, Jbeyq!", string_data);
+  ASSERT_EQ("Uryyb, JroNffrzoyl!", string_data);
+
+  ASSERT_EQ(interp::Result::Ok,
+            executor_->RunExportByName(module_, "rot13", {}).result);
+
+  ASSERT_EQ("Hello, WebAssembly!", string_data);
 }
