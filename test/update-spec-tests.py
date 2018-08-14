@@ -25,6 +25,9 @@ TEST_DIR = SCRIPT_DIR
 REPO_ROOT_DIR = os.path.dirname(SCRIPT_DIR)
 TESTSUITE_DIR = os.path.join(REPO_ROOT_DIR, 'third_party', 'testsuite')
 SPEC_TEST_DIR = os.path.join(TEST_DIR, 'spec')
+WASM2C_SPEC_TEST_DIR = os.path.join(TEST_DIR, 'wasm2c', 'spec')
+
+options = None
 
 
 def GetFilesWithExtension(src_dir, want_ext):
@@ -36,17 +39,11 @@ def GetFilesWithExtension(src_dir, want_ext):
   return result
 
 
-def main(args):
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
-                      action='store_true')
-  options = parser.parse_args(args)
-
-  testsuite_tests = set(GetFilesWithExtension(TESTSUITE_DIR, '.wast'))
-  spec_tests = set(GetFilesWithExtension(SPEC_TEST_DIR, '.txt'))
+def ProcessDir(dirname, testsuite_tests, tool):
+  spec_tests = set(GetFilesWithExtension(dirname, '.txt'))
 
   for removed_test_name in spec_tests - testsuite_tests:
-    test_filename = os.path.join(SPEC_TEST_DIR, removed_test_name + '.txt')
+    test_filename = os.path.join(dirname, removed_test_name + '.txt')
     if options.verbose:
       print('Removing %s' % test_filename)
     os.remove(test_filename)
@@ -55,14 +52,24 @@ def main(args):
     wast_filename = os.path.join(
         os.path.relpath(TESTSUITE_DIR, REPO_ROOT_DIR),
         added_test_name + '.wast')
-    test_filename = os.path.join(SPEC_TEST_DIR, added_test_name + '.txt')
+    test_filename = os.path.join(dirname, added_test_name + '.txt')
     if options.verbose:
       print('Adding %s' % test_filename)
     with open(test_filename, 'w') as f:
-      if added_test_name.endswith('.fail'):
-        f.write(';;; ERROR: 1\n')
-      f.write(';;; TOOL: run-interp-spec\n')
+      f.write(';;; TOOL: %s\n' % tool)
       f.write(';;; STDIN_FILE: %s\n' % wast_filename)
+
+
+def main(args):
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
+                      action='store_true')
+  global options
+  options = parser.parse_args(args)
+
+  testsuite_tests = set(GetFilesWithExtension(TESTSUITE_DIR, '.wast'))
+  ProcessDir(SPEC_TEST_DIR, testsuite_tests, 'run-interp-spec')
+  ProcessDir(WASM2C_SPEC_TEST_DIR, testsuite_tests, 'run-spec-wasm2c')
 
   return 0
 
