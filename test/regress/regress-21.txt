@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (type $foo.ty       (func))
+  (global $g i32 (i32.const -1))
+  (func $foo (type $foo.ty)
+     (set_global $g (i32.const 1))
+  )
+  (export "foo" (func $foo))
+)
+(;; STDERR ;;;
+out/test/regress/regress-21.txt:7:7: error: can't set_global on immutable global at index 0.
+     (set_global $g (i32.const 1))
+      ^^^^^^^^^^
+;;; STDERR ;;)
