@@ -728,7 +728,18 @@ Result Validator::OnSelectExpr(SelectExpr* expr) {
 
 Result Validator::OnSetGlobalExpr(SetGlobalExpr* expr) {
   expr_loc_ = &expr->loc;
-  typechecker_.OnSetGlobal(GetGlobalVarTypeOrAny(&expr->var));
+  Type type = Type::Any;
+  const Global* global;
+  Index global_index;
+  if (Succeeded(CheckGlobalVar(&expr->var, &global, &global_index))) {
+    if (!global->mutable_) {
+      PrintError(&expr->loc,
+                 "can't set_global on immutable global at index %" PRIindex ".",
+                 global_index);
+    }
+    type = global->type;
+  }
+  typechecker_.OnSetGlobal(type);
   return Result::Ok;
 }
 

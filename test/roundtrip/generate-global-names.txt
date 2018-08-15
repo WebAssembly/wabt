@@ -2,7 +2,7 @@
 ;;; ARGS: --stdout --generate-names
 (module
   (global i32 (i32.const 42))
-  (global f32 (f32.const -1.5))
+  (global (mut f32) (f32.const -1.5))
   (func (result i32)
     f32.const 3.0
     set_global 1
@@ -15,5 +15,5 @@
     set_global $g1
     get_global $g0)
   (global $g0 i32 (i32.const 42))
-  (global $g1 f32 (f32.const -0x1.8p+0 (;=-1.5;))))
+  (global $g1 (mut f32) (f32.const -0x1.8p+0 (;=-1.5;))))
 ;;; STDOUT ;;)
