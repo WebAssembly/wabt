@@ -1,0 +1,41 @@
+.Dd $Mdocdate$
+.Dt WABT 1
+.Os
+.Sh NAME
+.Nm wasm-objdump
+.Nd print information about a wasm binary
+.Sh SYNOPSIS
+.Nm wasm-objdump
+.Op options
+.Ar filename
+.Sh DESCRIPTION
+.Nm
+prints information about a wasm binary, similiar to objdump.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl Fl headers
+Print headers
+.It Fl j , Fl Fl section=SECTION
+Select just one section
+.It Fl s , Fl Fl full-contents
+Print raw section contents
+.It Fl d , Fl Fl disassemble
+Disassemble function bodies
+.It Fl Fl debug
+Print extra debug information
+.It Fl x , Fl Fl details
+Show section details
+.It Fl r , Fl Fl reloc
+Show relocations inline with disassembly
+.It Fl Fl help
+Print a help message
+.El
+.Sh EXAMPLES
+ $ wasm-objdump test.wasm
+.Sh SEE ALSO
+wat2wasm(1), wasm2wat(1), wasm-interp(1), wat-desugar(1), wasm2c(1)
+.Sh BUGS
+If you find a bug, please report it at
+.br
+<\fBhttps://github.com/WebAssembly/wabt/issues/\fP>.
