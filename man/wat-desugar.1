@@ -1,0 +1,54 @@
+.Dd $Mdocdate$
+.Dt WABT 1
+.Os
+.Sh NAME
+.Nm wat-desugar
+.Nd parse .wat text form and print "canonical" flat format
+.Sh SYNOPSIS
+.Nm wat-desugar
+.Op options
+.Ar filename
+.Sh DESCRIPTION
+.Nm
+parses .wat text form as supported by the spec interpreter (s-expressions, flat syntax, or mixed) and prints "canonical" flat format.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl Fl help
+Print a help message
+.It Fl o , Fl Fl output=FILE
+Output file for the formatted file
+.It Fl Fl debug-parser
+Turn on debugging the parser of wat files
+.It Fl f , Fl Fl fold-exprs
+Write folded expressions where possible
+.It Fl Fl enable-exceptions
+Experimental exception handling
+.It Fl Fl disable-mutable-globals
+Import/export mutable globals
+.It Fl Fl enable-saturating-float-to-int
+Saturating float-to-int operators
+.It Fl Fl enable-sign-extension
+Sign-extension operators
+.It Fl Fl enable-simd
+SIMD support
+.It Fl Fl enable-threads
+Threading support
+.It Fl Fl generate-names
+Give auto-generated names to non-named functions, types, etc.
+.El
+.Sh EXAMPLES
+ # write output to stdout
+ $ wat-desugar test.wat
+.sp
+ # write output to test2.wat
+ $ wat-desugar test.wat -o test2.wat
+.sp
+ # generate names for indexed variables
+ $ wat-desugar --generate-names test.wat
+.Sh SEE ALSO
+wat2wasm(1), wasm2wat(1), wasm-objdump(1), wasm-interp(1), wasm2c(1)
+.Sh BUGS
+If you find a bug, please report it at
+.br
+<\fBhttps://github.com/WebAssembly/wabt/issues/\fP>.
