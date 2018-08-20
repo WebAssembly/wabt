@@ -386,6 +386,16 @@ if (NOT EMSCRIPTEN)
   # install
   if (BUILD_TOOLS OR BUILD_TESTS)
     install(TARGETS ${WABT_EXECUTABLES} DESTINATION bin)
+    if (UNIX)
+      if (NOT CMAKE_INSTALL_MANDIR)
+        include(GNUInstallDirs)
+      endif ()
+      file(GLOB MAN_FILES "${CMAKE_CURRENT_SOURCE_DIR}/man/*.1")
+      foreach(MAN_FILE ${MAN_FILES})
+        install(FILES ${MAN_FILE}
+          DESTINATION ${CMAKE_INSTALL_MANDIR}/man1/)
+      endforeach()
+    endif ()
   endif ()
 
 else ()
