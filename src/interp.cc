@@ -4571,6 +4571,7 @@ ExecResult Executor::RunFunction(Index func_index, const TypedValues& args) {
   Func* func = env_->GetFunc(func_index);
   FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
 
+  thread_.Reset();
   exec_result.result = PushArgs(sig, args);
   if (exec_result.result == Result::Ok) {
     exec_result.result =
@@ -4581,7 +4582,6 @@ ExecResult Executor::RunFunction(Index func_index, const TypedValues& args) {
     }
   }
 
-  thread_.Reset();
   return exec_result;
 }
 
