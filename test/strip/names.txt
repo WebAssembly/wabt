@@ -1,0 +1,41 @@
+;;; TOOL: run-gen-wasm-strip
+magic
+version
+section(TYPE) { count[1] function params[0] results[1] i32 }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[decl_count[1] i32_count[1] i32]
+    get_local 0
+  }
+}
+section("name") {
+  section(NAME_MODULE) {
+    str("M0")
+  }
+
+  section(NAME_FUNCTION) {
+    func_count[1]
+    index[0]
+    str("F0")
+  }
+
+  section(NAME_LOCALS) {
+    func_count[1]
+    index[0]
+    local_count[1]
+    index[0]
+    str("L0")
+  }
+}
+(;; STDOUT ;;;
+
+names.wasm:	file format wasm 0x1
+
+Sections:
+
+     Type start=0x0000000a end=0x0000000f (size=0x00000005) count: 1
+ Function start=0x00000011 end=0x00000013 (size=0x00000002) count: 1
+     Code start=0x00000015 end=0x0000001d (size=0x00000008) count: 1
+;;; STDOUT ;;)
