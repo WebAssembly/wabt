@@ -1,14 +1,14 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/return.wast
 (;; STDOUT ;;;
-out/test/spec/return.wast:284: assert_invalid passed:
+out/test/spec/return.wast:302: assert_invalid passed:
   error: type mismatch in return, expected [f64] but got []
   0000019: error: OnReturnExpr callback failed
-out/test/spec/return.wast:288: assert_invalid passed:
+out/test/spec/return.wast:306: assert_invalid passed:
   error: type mismatch in return, expected [f64] but got []
   000001a: error: OnReturnExpr callback failed
-out/test/spec/return.wast:292: assert_invalid passed:
+out/test/spec/return.wast:310: assert_invalid passed:
   error: type mismatch in return, expected [f64] but got [i64]
   000001b: error: OnReturnExpr callback failed
-60/60 tests passed.
+64/64 tests passed.
 ;;; STDOUT ;;)
