@@ -834,8 +834,9 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
       if (section_match && section_code != BinarySection::Code) {
         printf("%s", name);
         // All known section types except the start section have a count
-        // in which case this line gets completely in OnCount()
-        if (section_code == BinarySection::Start || section_code == BinarySection::Custom) {
+        // in which case this line gets completed in OnCount().
+        if (section_code == BinarySection::Start ||
+            section_code == BinarySection::Custom) {
           printf(":\n");
         }
         print_details_ = true;
