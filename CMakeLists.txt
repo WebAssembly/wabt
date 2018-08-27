@@ -323,6 +323,9 @@ if (NOT EMSCRIPTEN)
 
     # wasm-validate
     wabt_executable(wasm-validate src/tools/wasm-validate.cc)
+
+    # wasm-strip
+    wabt_executable(wasm-strip src/tools/wasm-strip.cc)
   endif ()
 
   find_package(Threads)
