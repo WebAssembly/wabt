@@ -44,11 +44,11 @@ mutable-global.wasm:	file format wasm 0x1
 
 Section Details:
 
-Import:
+Import[1]:
  - global[0] i32 mutable=1 <- foo.imported
-Global:
+Global[1]:
  - global[1] i32 mutable=1 - init i32=1
-Export:
+Export[1]:
  - global[1] -> "exported"
 
 Code Disassembly:

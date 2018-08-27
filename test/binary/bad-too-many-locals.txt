@@ -24,9 +24,9 @@ bad-too-many-locals.wasm:	file format wasm 0x1
 
 Section Details:
 
-Type:
+Type[1]:
  - type[0] () -> nil
-Function:
+Function[1]:
  - func[0] sig=0
 
 Code Disassembly:

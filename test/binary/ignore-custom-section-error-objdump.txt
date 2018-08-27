@@ -28,9 +28,9 @@ Section Details:
 
 Custom:
  - name: "linking"
-Type:
+Type[1]:
  - type[0] () -> nil
-Function:
+Function[1]:
  - func[0] sig=0
 
 Code Disassembly:

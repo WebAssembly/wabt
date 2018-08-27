@@ -28,6 +28,7 @@ Section Details:
 
 Custom:
  - name: "exception"
+[3]:
  - except[0] ()
  - except[1] (i32)
  - except[2] (f32, f64)

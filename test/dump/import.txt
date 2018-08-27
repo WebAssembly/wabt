@@ -79,10 +79,10 @@ import.wasm:	file format wasm 0x1
 
 Section Details:
 
-Type:
+Type[2]:
  - type[0] (i32, i64, f32, f64) -> nil
  - type[1] (i32) -> i32
-Import:
+Import[5]:
  - func[0] sig=0 <test> <- ignored.test
  - func[1] sig=1 <test2> <- ignored.test2
  - memory[0] pages: initial=0 <- ignored.testmem

@@ -57,9 +57,9 @@ Sections:
 
 Section Details:
 
-Type:
+Type[1]:
  - type[0] () -> nil
-Import:
+Import[1]:
  - func[0] sig=0 <foo> <- bar.foo
 Custom:
  - name: "name"

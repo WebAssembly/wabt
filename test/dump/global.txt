@@ -106,12 +106,12 @@ global.wasm:	file format wasm 0x1
 
 Section Details:
 
-Import:
+Import[4]:
  - global[0] i32 mutable=0 <- foo.i32_global
  - global[1] i64 mutable=0 <- foo.i64_global
  - global[2] f32 mutable=0 <- foo.f32_global
  - global[3] f64 mutable=0 <- foo.f64_global
-Global:
+Global[8]:
  - global[4] i32 mutable=0 - init i32=1
  - global[5] i64 mutable=0 - init i64=2
  - global[6] f32 mutable=0 - init f32=0x1.8p+1

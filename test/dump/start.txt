@@ -63,9 +63,9 @@ Sections:
 
 Section Details:
 
-Type:
+Type[1]:
  - type[0] () -> nil
-Function:
+Function[3]:
  - func[0] sig=0
  - func[1] sig=0
  - func[2] sig=0
