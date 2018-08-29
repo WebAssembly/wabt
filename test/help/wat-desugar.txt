@@ -20,6 +20,8 @@ options:
   -o, --output=FILE                           Output file for the formatted file
       --debug-parser                          Turn on debugging the parser of wat files
   -f, --fold-exprs                            Write folded expressions where possible
+      --inline-exports                        Write all exports inline
+      --inline-imports                        Write all imports inline
       --enable-exceptions                     Enable Experimental exception handling
       --disable-mutable-globals               Disable Import/export mutable globals
       --enable-saturating-float-to-int        Enable Saturating float-to-int operators

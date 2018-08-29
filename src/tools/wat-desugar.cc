@@ -66,6 +66,10 @@ static void ParseOptions(int argc, char** argv) {
                    []() { s_debug_parsing = true; });
   parser.AddOption('f', "fold-exprs", "Write folded expressions where possible",
                    []() { s_write_wat_options.fold_exprs = true; });
+  parser.AddOption("inline-exports", "Write all exports inline",
+                   []() { s_write_wat_options.inline_export = true; });
+  parser.AddOption("inline-imports", "Write all imports inline",
+                   []() { s_write_wat_options.inline_import = true; });
   s_features.AddOptions(&parser);
   parser.AddOption(
       "generate-names",
