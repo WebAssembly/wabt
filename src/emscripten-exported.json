@@ -33,5 +33,6 @@
 "_wabt_write_module_result_get_result",
 "_wabt_write_module_result_release_log_output_buffer",
 "_wabt_write_module_result_release_output_buffer",
-"_wabt_write_text_module"
+"_wabt_write_text_module",
+"_dummy_workaround_for_emscripten_issue_7073"
 ]
