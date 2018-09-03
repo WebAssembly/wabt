@@ -24,7 +24,6 @@
 
 #include "src/binary-reader-nop.h"
 #include "src/cast.h"
-#include "src/error-handler.h"
 #include "src/feature.h"
 #include "src/interp.h"
 #include "src/stream.h"
@@ -72,7 +71,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   BinaryReaderInterp(Environment* env,
                      DefinedModule* module,
                      std::unique_ptr<OutputBuffer> istream,
-                     ErrorHandler* error_handler,
+                     Errors* errors,
                      const Features& features);
 
   wabt::Result ReadBinary(DefinedModule* out_module);
@@ -80,7 +79,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   std::unique_ptr<OutputBuffer> ReleaseOutputBuffer();
 
   // Implement BinaryReader.
-  bool OnError(ErrorLevel, const char* message) override;
+  bool OnError(const Error&) override;
 
   wabt::Result EndModule() override;
 
@@ -224,7 +223,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   void PushLabel(IstreamOffset offset, IstreamOffset fixup_offset);
   void PopLabel();
 
-  bool HandleError(ErrorLevel, Offset offset, const char* message);
   void PrintError(const char* format, ...);
 
   Index TranslateSigIndexToEnv(Index sig_index);
@@ -288,7 +286,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                Export** out_export);
 
   Features features_;
-  ErrorHandler* error_handler_ = nullptr;
+  Errors* errors_ = nullptr;
   Environment* env_ = nullptr;
   DefinedModule* module_ = nullptr;
   DefinedFunc* current_func_ = nullptr;
@@ -321,10 +319,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
 BinaryReaderInterp::BinaryReaderInterp(Environment* env,
                                        DefinedModule* module,
                                        std::unique_ptr<OutputBuffer> istream,
-                                       ErrorHandler* error_handler,
+                                       Errors* errors,
                                        const Features& features)
     : features_(features),
-      error_handler_(error_handler),
+      errors_(errors),
       env_(env),
       module_(module),
       istream_(std::move(istream)),
@@ -346,16 +344,10 @@ Label* BinaryReaderInterp::TopLabel() {
   return GetLabel(0);
 }
 
-bool BinaryReaderInterp::HandleError(ErrorLevel error_level,
-                                     Offset offset,
-                                     const char* message) {
-  return error_handler_->OnError(error_level, offset, message);
-}
-
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderInterp::PrintError(const char* format,
                                                              ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  HandleError(ErrorLevel::Error, kInvalidOffset, buffer);
+  errors_->emplace_back(ErrorLevel::Error, Location(kInvalidOffset), buffer);
 }
 
 Index BinaryReaderInterp::TranslateSigIndexToEnv(Index sig_index) {
@@ -565,8 +557,9 @@ wabt::Result BinaryReaderInterp::EmitFuncOffset(DefinedFunc* func,
   return wabt::Result::Ok;
 }
 
-bool BinaryReaderInterp::OnError(ErrorLevel error_level, const char* message) {
-  return HandleError(error_level, state->offset, message);
+bool BinaryReaderInterp::OnError(const Error& error) {
+  errors_->push_back(error);
+  return true;
 }
 
 wabt::Result BinaryReaderInterp::OnTypeCount(Index count) {
@@ -1567,7 +1560,7 @@ wabt::Result ReadBinaryInterp(Environment* env,
                               const void* data,
                               size_t size,
                               const ReadBinaryOptions& options,
-                              ErrorHandler* error_handler,
+                              Errors* errors,
                               DefinedModule** out_module) {
   // Need to mark before taking ownership of env->istream.
   Environment::MarkPoint mark = env->Mark();
@@ -1576,7 +1569,7 @@ wabt::Result ReadBinaryInterp(Environment* env,
   IstreamOffset istream_offset = istream->size();
   DefinedModule* module = new DefinedModule();
 
-  BinaryReaderInterp reader(env, module, std::move(istream), error_handler,
+  BinaryReaderInterp reader(env, module, std::move(istream), errors,
                             options.features);
   env->EmplaceBackModule(module);
 

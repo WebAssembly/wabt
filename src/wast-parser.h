@@ -20,14 +20,13 @@
 #include <array>
 
 #include "src/circular-array.h"
+#include "src/error.h"
 #include "src/feature.h"
 #include "src/intrusive-list.h"
 #include "src/ir.h"
 #include "src/wast-lexer.h"
 
 namespace wabt {
-
-class ErrorHandler;
 
 struct WastParseOptions {
   WastParseOptions(const Features& features) : features(features) {}
@@ -40,7 +39,7 @@ typedef std::array<TokenType, 2> TokenTypePair;
 
 class WastParser {
  public:
-  WastParser(WastLexer*, ErrorHandler*, WastParseOptions*);
+  WastParser(WastLexer*, Errors*, WastParseOptions*);
 
   void WABT_PRINTF_FORMAT(3, 4) Error(Location, const char* format, ...);
   Result ParseModule(std::unique_ptr<Module>* out_module);
@@ -206,8 +205,7 @@ class WastParser {
 
   WastLexer* lexer_;
   Index last_module_index_ = kInvalidIndex;
-  ErrorHandler* error_handler_;
-  int errors_ = 0;
+  Errors* errors_;
   WastParseOptions* options_;
 
   CircularArray<Token, 2> tokens_;
@@ -215,12 +213,12 @@ class WastParser {
 
 Result ParseWatModule(WastLexer* lexer,
                       std::unique_ptr<Module>* out_module,
-                      ErrorHandler*,
+                      Errors*,
                       WastParseOptions* options = nullptr);
 
 Result ParseWastScript(WastLexer* lexer,
                        std::unique_ptr<Script>* out_script,
-                       ErrorHandler*,
+                       Errors*,
                        WastParseOptions* options = nullptr);
 
 }  // namespace wabt

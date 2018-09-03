@@ -26,7 +26,7 @@
 #include "src/binary-reader-interp.h"
 #include "src/binary-reader.h"
 #include "src/cast.h"
-#include "src/error-handler.h"
+#include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/interp.h"
 #include "src/literal.h"
@@ -979,26 +979,28 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
                                                   const std::string& header) {
   std::unique_ptr<WastLexer> lexer =
       WastLexer::CreateFileLexer(module_filename);
-  ErrorHandlerFile error_handler(Location::Type::Text, lexer->MakeLineFinder(),
-                                 stdout, header,
-                                 ErrorHandlerFile::PrintHeader::Once);
+  Errors errors;
   std::unique_ptr<::Script> script;
-  wabt::Result result = ParseWastScript(lexer.get(), &script, &error_handler);
+  wabt::Result result = ParseWastScript(lexer.get(), &script, &errors);
   if (Succeeded(result)) {
     wabt::Module* module = script->GetFirstModule();
-    result = ResolveNamesModule(module, &error_handler);
+    result = ResolveNamesModule(module, &errors);
     if (Succeeded(result)) {
       ValidateOptions options(s_features);
       // Don't do a full validation, just validate the function signatures.
-      result = ValidateFuncSignatures(module, &error_handler, options);
+      result = ValidateFuncSignatures(module, &errors, options);
     }
   }
+
+  auto line_finder = lexer->MakeLineFinder();
+  FormatErrorsToFile(errors, Location::Type::Text, line_finder.get(), stdout,
+                     header, PrintHeader::Once);
   return result;
 }
 
 static wabt::Result ReadModule(string_view module_filename,
                                Environment* env,
-                               ErrorHandler* error_handler,
+                               Errors* errors,
                                DefinedModule** out_module) {
   wabt::Result result;
   std::vector<uint8_t> file_data;
@@ -1013,7 +1015,7 @@ static wabt::Result ReadModule(string_view module_filename,
     ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,
                               kStopOnFirstError, kFailOnCustomSectionError);
     result = ReadBinaryInterp(env, file_data.data(), file_data.size(), options,
-                              error_handler, out_module);
+                              errors, out_module);
 
     if (Succeeded(result)) {
       if (s_verbose) {
@@ -1039,9 +1041,11 @@ wabt::Result CommandRunner::ReadInvalidModule(int line_number,
 
     case ModuleType::Binary: {
       DefinedModule* module;
-      ErrorHandlerFile error_handler(Location::Type::Binary, {}, stdout, header,
-                                     ErrorHandlerFile::PrintHeader::Once);
-      return ReadModule(module_filename, env, &error_handler, &module);
+      Errors errors;
+      wabt::Result result = ReadModule(module_filename, env, &errors, &module);
+      FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
+                         PrintHeader::Once);
+      return result;
     }
   }
 
@@ -1050,9 +1054,10 @@ wabt::Result CommandRunner::ReadInvalidModule(int line_number,
 
 wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
   Environment::MarkPoint mark = env_.Mark();
-  ErrorHandlerFile error_handler(Location::Type::Binary);
+  Errors errors;
   wabt::Result result = ReadModule(command->filename, &env_,
-                                   &error_handler, &last_module_);
+                                   &errors, &last_module_);
+  FormatErrorsToFile(errors, Location::Type::Binary);
 
   if (Failed(result)) {
     env_.ResetToMarkPoint(mark);
@@ -1160,11 +1165,11 @@ wabt::Result CommandRunner::OnAssertInvalidCommand(
 
 wabt::Result CommandRunner::OnAssertUninstantiableCommand(
     const AssertUninstantiableCommand* command) {
-  ErrorHandlerFile error_handler(Location::Type::Binary);
+  Errors errors;
   DefinedModule* module;
   Environment::MarkPoint mark = env_.Mark();
-  wabt::Result result =
-      ReadModule(command->filename, &env_, &error_handler, &module);
+  wabt::Result result = ReadModule(command->filename, &env_, &errors, &module);
+  FormatErrorsToFile(errors, Location::Type::Binary);
 
   if (Succeeded(result)) {
     ExecResult exec_result = executor_.RunStartFunction(module);

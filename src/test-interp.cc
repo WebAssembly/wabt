@@ -25,7 +25,6 @@
 #include "src/binary-reader.h"
 #include "src/binary-reader-interp.h"
 #include "src/cast.h"
-#include "src/error-handler.h"
 #include "src/interp.h"
 #include "src/make-unique.h"
 
@@ -51,11 +50,11 @@ class HostTrapTest : public ::testing::Test {
 
   interp::ExecResult LoadModuleAndRunStartFunction(
       const std::vector<uint8_t>& data) {
-    ErrorHandlerFile error_handler(Location::Type::Binary);
+    Errors errors;
     interp::DefinedModule* module = nullptr;
     ReadBinaryOptions options;
     Result result = ReadBinaryInterp(&env_, data.data(), data.size(), options,
-                                     &error_handler, &module);
+                                     &errors, &module);
     EXPECT_EQ(Result::Ok, result);
 
     if (result == Result::Ok) {
@@ -127,10 +126,10 @@ class HostMemoryTest : public ::testing::Test {
   }
 
   Result LoadModule(const std::vector<uint8_t>& data) {
-    ErrorHandlerFile error_handler(Location::Type::Binary);
+    Errors errors;
     ReadBinaryOptions options;
-    return ReadBinaryInterp(&env_, data.data(), data.size(), options,
-                            &error_handler, &module_);
+    return ReadBinaryInterp(&env_, data.data(), data.size(), options, &errors,
+                            &module_);
   }
 
   std::string string_data;

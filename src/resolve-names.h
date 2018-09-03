@@ -18,15 +18,15 @@
 #define WABT_RESOLVE_NAMES_H_
 
 #include "src/common.h"
+#include "src/error.h"
 
 namespace wabt {
 
 struct Module;
 struct Script;
-class ErrorHandler;
 
-Result ResolveNamesModule(Module*, ErrorHandler*);
-Result ResolveNamesScript(Script*, ErrorHandler*);
+Result ResolveNamesModule(Module*, Errors*);
+Result ResolveNamesScript(Script*, Errors*);
 
 }  // namespace wabt
 

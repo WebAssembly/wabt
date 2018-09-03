@@ -191,7 +191,8 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
           : ErrorLevel::Error;
 
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  bool handled = delegate_->OnError(error_level, buffer);
+  Error error(error_level, Location(state_.offset), buffer);
+  bool handled = delegate_->OnError(error);
 
   if (!handled) {
     // Not great to just print, but we don't want to eat the error either.

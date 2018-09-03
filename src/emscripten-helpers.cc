@@ -31,7 +31,7 @@
 #include "src/binary-writer-spec.h"
 #include "src/binary-writer.h"
 #include "src/common.h"
-#include "src/error-handler.h"
+#include "src/error-formatter.h"
 #include "src/filenames.h"
 #include "src/generate-names.h"
 #include "src/ir.h"
@@ -85,28 +85,27 @@ wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
 }
 
 WabtParseWatResult* wabt_parse_wat(wabt::WastLexer* lexer,
-                                   wabt::ErrorHandlerBuffer* error_handler) {
+                                   wabt::Errors* errors) {
   WabtParseWatResult* result = new WabtParseWatResult();
   std::unique_ptr<wabt::Module> module;
-  result->result = wabt::ParseWatModule(lexer, &module, error_handler);
+  result->result = wabt::ParseWatModule(lexer, &module, errors);
   result->module = std::move(module);
   return result;
 }
 
 WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
-                                     wabt::ErrorHandlerBuffer* error_handler) {
+                                     wabt::Errors* errors) {
   WabtParseWastResult* result = new WabtParseWastResult();
   std::unique_ptr<wabt::Script> script;
-  result->result = wabt::ParseWastScript(lexer, &script, error_handler);
+  result->result = wabt::ParseWastScript(lexer, &script, errors);
   result->script = std::move(script);
   return result;
 }
 
-WabtReadBinaryResult* wabt_read_binary(
-    const void* data,
-    size_t size,
-    int read_debug_names,
-    wabt::ErrorHandlerBuffer* error_handler) {
+WabtReadBinaryResult* wabt_read_binary(const void* data,
+                                       size_t size,
+                                       int read_debug_names,
+                                       wabt::Errors* errors) {
   wabt::ReadBinaryOptions options;
   options.read_debug_names = read_debug_names;
 
@@ -115,29 +114,26 @@ WabtReadBinaryResult* wabt_read_binary(
   // TODO(binji): Pass through from wabt_read_binary parameter.
   const char* filename = "<binary>";
   result->result =
-      wabt::ReadBinaryIr(filename, data, size, options, error_handler, module);
+      wabt::ReadBinaryIr(filename, data, size, options, errors, module);
   result->module.reset(module);
   return result;
 }
 
-wabt::Result::Enum wabt_resolve_names_module(
-    wabt::Module* module,
-    wabt::ErrorHandlerBuffer* error_handler) {
-  return ResolveNamesModule(module, error_handler);
+wabt::Result::Enum wabt_resolve_names_module(wabt::Module* module,
+                                             wabt::Errors* errors) {
+  return ResolveNamesModule(module, errors);
 }
 
-wabt::Result::Enum wabt_validate_module(
-    wabt::Module* module,
-    wabt::ErrorHandlerBuffer* error_handler) {
+wabt::Result::Enum wabt_validate_module(wabt::Module* module,
+                                        wabt::Errors* errors) {
   wabt::ValidateOptions options;
-  return ValidateModule(module, error_handler, options);
+  return ValidateModule(module, errors, options);
 }
 
-wabt::Result::Enum wabt_validate_script(
-    wabt::Script* script,
-    wabt::ErrorHandlerBuffer* error_handler) {
+wabt::Result::Enum wabt_validate_script(wabt::Script* script,
+                                        wabt::Errors* errors) {
   wabt::ValidateOptions options;
-  return ValidateScript(script, error_handler, options);
+  return ValidateScript(script, errors, options);
 }
 
 WabtWriteScriptResult* wabt_write_binary_spec_script(
@@ -234,28 +230,35 @@ void wabt_destroy_wast_lexer(wabt::WastLexer* lexer) {
   delete lexer;
 }
 
-// ErrorHandlerBuffer
-wabt::ErrorHandlerBuffer* wabt_new_text_error_handler_buffer(void) {
-  return new wabt::ErrorHandlerBuffer(wabt::Location::Type::Text);
+// Errors
+wabt::Errors* wabt_new_errors(void) {
+  return new wabt::Errors();
 }
 
-wabt::ErrorHandlerBuffer* wabt_new_binary_error_handler_buffer(void) {
-  return new wabt::ErrorHandlerBuffer(wabt::Location::Type::Binary);
+wabt::OutputBuffer* wabt_format_text_errors(wabt::Errors* errors,
+                                            wabt::WastLexer* lexer) {
+  auto line_finder = lexer->MakeLineFinder();
+  std::string string_result = FormatErrorsToString(
+      *errors, wabt::Location::Type::Text, line_finder.get());
+
+  wabt::OutputBuffer* result = new wabt::OutputBuffer();
+  std::copy(string_result.begin(), string_result.end(),
+            std::back_inserter(result->data));
+  return result;
 }
 
-const void* wabt_error_handler_buffer_get_data(
-    wabt::ErrorHandlerBuffer* error_handler) {
-  return error_handler->buffer().data();
+wabt::OutputBuffer* wabt_format_binary_errors(wabt::Errors* errors) {
+  std::string string_result =
+      FormatErrorsToString(*errors, wabt::Location::Type::Binary);
+
+  wabt::OutputBuffer* result = new wabt::OutputBuffer();
+  std::copy(string_result.begin(), string_result.end(),
+            std::back_inserter(result->data));
+  return result;
 }
 
-size_t wabt_error_handler_buffer_get_size(
-    wabt::ErrorHandlerBuffer* error_handler) {
-  return error_handler->buffer().size();
-}
-
-void wabt_destroy_error_handler_buffer(
-    wabt::ErrorHandlerBuffer* error_handler) {
-  delete error_handler;
+void wabt_destroy_errors(wabt::Errors* errors) {
+  delete errors;
 }
 
 // WabtParseWatResult

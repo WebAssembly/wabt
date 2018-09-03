@@ -213,7 +213,7 @@ add_custom_target(everything)
 add_library(libwabt STATIC
   src/token.cc
   src/opcode.cc
-  src/error-handler.cc
+  src/error-formatter.cc
   src/hash-util.cc
   src/filenames.cc
   src/string-view.cc

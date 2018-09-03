@@ -20,7 +20,6 @@
 #include <cstdio>
 
 #include "src/cast.h"
-#include "src/error-handler.h"
 #include "src/expr-visitor.h"
 #include "src/ir.h"
 #include "src/wast-lexer.h"
@@ -31,7 +30,7 @@ namespace {
 
 class NameResolver : public ExprVisitor::DelegateNop {
  public:
-  NameResolver(Script* script, ErrorHandler* error_handler);
+  NameResolver(Script* script, Errors* errors);
 
   Result VisitModule(Module* module);
   Result VisitScript(Script* script);
@@ -81,7 +80,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitScriptModule(ScriptModule* script_module);
   void VisitCommand(Command* command);
 
-  ErrorHandler* error_handler_ = nullptr;
+  Errors* errors_ = nullptr;
   Script* script_ = nullptr;
   Module* current_module_ = nullptr;
   Func* current_func_ = nullptr;
@@ -90,21 +89,19 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result result_ = Result::Ok;
 };
 
-NameResolver::NameResolver(Script* script, ErrorHandler* error_handler)
-    : error_handler_(error_handler),
+NameResolver::NameResolver(Script* script, Errors* errors)
+    : errors_(errors),
       script_(script),
       visitor_(this) {}
 
 }  // end anonymous namespace
 
 void WABT_PRINTF_FORMAT(3, 4) NameResolver::PrintError(const Location* loc,
-                                                       const char* fmt,
+                                                       const char* format,
                                                        ...) {
   result_ = Result::Error;
-  va_list args;
-  va_start(args, fmt);
-  error_handler_->OnError(ErrorLevel::Error, *loc, fmt, args);
-  va_end(args);
+  WABT_SNPRINTF_ALLOCA(buffer, length, format);
+  errors_->emplace_back(ErrorLevel::Error, *loc, buffer);
 }
 
 void NameResolver::PushLabel(const std::string& label) {
@@ -419,8 +416,8 @@ void NameResolver::VisitCommand(Command* command) {
       /* The module may be invalid because the names cannot be resolved; we
        * don't want to print errors or fail if that's the case, but we still
        * should try to resolve names when possible. */
-      ErrorHandlerNop new_error_handler;
-      NameResolver new_resolver(script_, &new_error_handler);
+      Errors errors;
+      NameResolver new_resolver(script_, &errors);
       new_resolver.VisitScriptModule(assert_invalid_command->module.get());
       break;
     }
@@ -442,13 +439,13 @@ Result NameResolver::VisitScript(Script* script) {
   return result_;
 }
 
-Result ResolveNamesModule(Module* module, ErrorHandler* error_handler) {
-  NameResolver resolver(nullptr, error_handler);
+Result ResolveNamesModule(Module* module, Errors* errors) {
+  NameResolver resolver(nullptr, errors);
   return resolver.VisitModule(module);
 }
 
-Result ResolveNamesScript(Script* script, ErrorHandler* error_handler) {
-  NameResolver resolver(script, error_handler);
+Result ResolveNamesScript(Script* script, Errors* errors) {
+  NameResolver resolver(script, errors);
   return resolver.VisitScript(script);
 }
 

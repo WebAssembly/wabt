@@ -24,7 +24,7 @@
 
 #include "src/apply-names.h"
 #include "src/common.h"
-#include "src/error-handler.h"
+#include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/generate-names.h"
 #include "src/ir.h"
@@ -90,11 +90,13 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read %s\n", s_infile);
   }
 
-  ErrorHandlerFile error_handler(Location::Type::Text, lexer->MakeLineFinder());
+  Errors errors;
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
-  Result result = ParseWastScript(lexer.get(), &script, &error_handler,
-                                  &parse_wast_options);
+  Result result =
+      ParseWastScript(lexer.get(), &script, &errors, &parse_wast_options);
+  auto line_finder = lexer->MakeLineFinder();
+  FormatErrorsToFile(errors, Location::Type::Text);
 
   if (Succeeded(result)) {
     Module* module = script->GetFirstModule();

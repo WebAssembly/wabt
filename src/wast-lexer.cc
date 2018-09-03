@@ -21,7 +21,6 @@
 
 #include "config.h"
 
-#include "src/error-handler.h"
 #include "src/lexer-source.h"
 #include "src/wast-parser.h"
 

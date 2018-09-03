@@ -26,7 +26,7 @@
 #include "src/binary-writer.h"
 #include "src/binary-writer-spec.h"
 #include "src/common.h"
-#include "src/error-handler.h"
+#include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/filenames.h"
 #include "src/ir.h"
@@ -100,18 +100,18 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
   }
 
-  ErrorHandlerFile error_handler(Location::Type::Text, lexer->MakeLineFinder());
+  Errors errors;
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
-  Result result = ParseWastScript(lexer.get(), &script, &error_handler,
-                                  &parse_wast_options);
+  Result result =
+      ParseWastScript(lexer.get(), &script, &errors, &parse_wast_options);
 
   if (Succeeded(result)) {
-    result = ResolveNamesScript(script.get(), &error_handler);
+    result = ResolveNamesScript(script.get(), &errors);
 
     if (Succeeded(result) && s_validate) {
       ValidateOptions options(s_features);
-      result = ValidateScript(script.get(), &error_handler, options);
+      result = ValidateScript(script.get(), &errors, options);
     }
 
     if (Succeeded(result)) {
@@ -134,6 +134,9 @@ int ProgramMain(int argc, char** argv) {
       }
     }
   }
+
+  auto line_finder = lexer->MakeLineFinder();
+  FormatErrorsToFile(errors, Location::Type::Text, line_finder.get());
 
   return result != Result::Ok;
 }

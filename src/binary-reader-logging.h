@@ -27,7 +27,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
  public:
   BinaryReaderLogging(Stream*, BinaryReaderDelegate* forward);
 
-  bool OnError(ErrorLevel, const char* message) override;
+  bool OnError(const Error&) override;
   void OnSetState(const State* s) override;
 
   Result BeginModule(uint32_t version) override;
