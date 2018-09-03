@@ -23,7 +23,7 @@ namespace wabt {
 
 class BinaryReaderNop : public BinaryReaderDelegate {
  public:
-  bool OnError(ErrorLevel, const char* message) override { return false; }
+  bool OnError(const Error&) override { return false; }
 
   /* Module */
   Result BeginModule(uint32_t version) override { return Result::Ok; }

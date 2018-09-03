@@ -17,7 +17,7 @@
 #include "src/binary.h"
 #include "src/binary-reader.h"
 #include "src/binary-reader-nop.h"
-#include "src/error-handler.h"
+#include "src/error-formatter.h"
 #include "src/leb128.h"
 #include "src/option-parser.h"
 #include "src/stream.h"
@@ -48,14 +48,15 @@ static void ParseOptions(int argc, char** argv) {
 
 class BinaryReaderStrip : public BinaryReaderNop {
  public:
-  explicit BinaryReaderStrip(ErrorHandler* error_handler)
-      : error_handler_(error_handler) {
+  explicit BinaryReaderStrip(Errors* errors)
+      : errors_(errors) {
     stream_.WriteU32(WABT_BINARY_MAGIC, "WASM_BINARY_MAGIC");
     stream_.WriteU32(WABT_BINARY_VERSION, "WASM_BINARY_VERSION");
   }
 
-  bool OnError(ErrorLevel error_level, const char* message) override {
-    return error_handler_->OnError(error_level, state->offset, message);
+  bool OnError(const Error& error) override {
+    errors_->push_back(error);
+    return true;
   }
 
   Result BeginSection(BinarySection section_type, Offset size) override {
@@ -74,7 +75,7 @@ class BinaryReaderStrip : public BinaryReaderNop {
 
  private:
   MemoryStream stream_;
-  ErrorHandler* error_handler_;
+  Errors* errors_;
 };
 
 int ProgramMain(int argc, char** argv) {
@@ -86,16 +87,17 @@ int ProgramMain(int argc, char** argv) {
   std::vector<uint8_t> file_data;
   result = ReadFile(s_filename.c_str(), &file_data);
   if (Succeeded(result)) {
+    Errors errors;
     Features features;
-    ErrorHandlerFile error_handler(Location::Type::Binary);
     const bool kReadDebugNames = false;
     const bool kStopOnFirstError = true;
     const bool kFailOnCustomSectionError = false;
     ReadBinaryOptions options(features, nullptr, kReadDebugNames,
                               kStopOnFirstError, kFailOnCustomSectionError);
 
-    BinaryReaderStrip reader(&error_handler);
+    BinaryReaderStrip reader(&errors);
     result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
+    FormatErrorsToFile(errors, Location::Type::Binary);
 
     if (Succeeded(result)) {
       result = reader.WriteToFile(s_filename);

@@ -22,7 +22,7 @@
 #include "src/apply-names.h"
 #include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
-#include "src/error-handler.h"
+#include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/generate-names.h"
 #include "src/ir.h"
@@ -113,7 +113,7 @@ int ProgramMain(int argc, char** argv) {
   std::vector<uint8_t> file_data;
   result = ReadFile(s_infile.c_str(), &file_data);
   if (Succeeded(result)) {
-    ErrorHandlerFile error_handler(Location::Type::Binary);
+    Errors errors;
     Module module;
     const bool kStopOnFirstError = true;
     const bool kFailOnCustomSectionError = true;
@@ -121,11 +121,11 @@ int ProgramMain(int argc, char** argv) {
                               s_read_debug_names, kStopOnFirstError,
                               kFailOnCustomSectionError);
     result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
-                          options, &error_handler, &module);
+                          options, &errors, &module);
     if (Succeeded(result)) {
       if (Succeeded(result)) {
         ValidateOptions options(s_features);
-        result = ValidateModule(&module, &error_handler, options);
+        result = ValidateModule(&module, &errors, options);
         result |= GenerateNames(&module);
       }
 
@@ -151,6 +151,7 @@ int ProgramMain(int argc, char** argv) {
         }
       }
     }
+    FormatErrorsToFile(errors, Location::Type::Binary);
   }
   return result != Result::Ok;
 }

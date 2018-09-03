@@ -17,13 +17,13 @@
 #ifndef WABT_VALIDATOR_H_
 #define WABT_VALIDATOR_H_
 
+#include "src/error.h"
 #include "src/feature.h"
 
 namespace wabt {
 
 struct Module;
 struct Script;
-class ErrorHandler;
 
 struct ValidateOptions {
   ValidateOptions() = default;
@@ -34,8 +34,8 @@ struct ValidateOptions {
 
 // Perform all checks on the script. It is valid if and only if this function
 // succeeds.
-Result ValidateScript(const Script*, ErrorHandler*, const ValidateOptions&);
-Result ValidateModule(const Module*, ErrorHandler*, const ValidateOptions&);
+Result ValidateScript(const Script*, Errors*, const ValidateOptions&);
+Result ValidateModule(const Module*, Errors*, const ValidateOptions&);
 
 // Validate that all functions that have an explicit function signature and a
 // function type use match.
@@ -44,9 +44,7 @@ Result ValidateModule(const Module*, ErrorHandler*, const ValidateOptions&);
 // be malformed text, not a validation error. We can't handle that error in the
 // parser because the parser doesn't resolve names to indexes, which is
 // required to perform this check.
-Result ValidateFuncSignatures(const Module*,
-                              ErrorHandler*,
-                              const ValidateOptions&);
+Result ValidateFuncSignatures(const Module*, Errors*, const ValidateOptions&);
 
 }  // namespace wabt
 

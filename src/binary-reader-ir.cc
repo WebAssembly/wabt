@@ -26,7 +26,6 @@
 #include "src/binary-reader-nop.h"
 #include "src/cast.h"
 #include "src/common.h"
-#include "src/error-handler.h"
 #include "src/ir.h"
 
 namespace wabt {
@@ -48,9 +47,9 @@ class BinaryReaderIR : public BinaryReaderNop {
  public:
   BinaryReaderIR(Module* out_module,
                  const char* filename,
-                 ErrorHandler* error_handler);
+                 Errors* errors);
 
-  bool OnError(ErrorLevel, const char* message) override;
+  bool OnError(const Error&) override;
 
   Result OnTypeCount(Index count) override;
   Result OnType(Index index,
@@ -220,7 +219,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
  private:
-  bool HandleError(ErrorLevel, Offset offset, const char* message);
   Location GetLocation() const;
   void PrintError(const char* format, ...);
   void PushLabel(LabelType label_type,
@@ -233,7 +231,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result AppendExpr(std::unique_ptr<Expr> expr);
   void SetBlockDeclaration(BlockDeclaration* decl, Type sig_type);
 
-  ErrorHandler* error_handler_ = nullptr;
+  Errors* errors_ = nullptr;
   Module* module_ = nullptr;
 
   Func* current_func_ = nullptr;
@@ -244,8 +242,8 @@ class BinaryReaderIR : public BinaryReaderNop {
 
 BinaryReaderIR::BinaryReaderIR(Module* out_module,
                                const char* filename,
-                               ErrorHandler* error_handler)
-    : error_handler_(error_handler), module_(out_module), filename_(filename) {}
+                               Errors* errors)
+    : errors_(errors), module_(out_module), filename_(filename) {}
 
 Location BinaryReaderIR::GetLocation() const {
   Location loc;
@@ -257,7 +255,7 @@ Location BinaryReaderIR::GetLocation() const {
 void WABT_PRINTF_FORMAT(2, 3) BinaryReaderIR::PrintError(const char* format,
                                                          ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  HandleError(ErrorLevel::Error, kInvalidOffset, buffer);
+  errors_->emplace_back(ErrorLevel::Error, Location(kInvalidOffset), buffer);
 }
 
 void BinaryReaderIR::PushLabel(LabelType label_type,
@@ -321,14 +319,9 @@ void BinaryReaderIR::SetBlockDeclaration(BlockDeclaration* decl,
   }
 }
 
-bool BinaryReaderIR::HandleError(ErrorLevel error_level,
-                                 Offset offset,
-                                 const char* message) {
-  return error_handler_->OnError(error_level, offset, message);
-}
-
-bool BinaryReaderIR::OnError(ErrorLevel error_level, const char* message) {
-  return HandleError(error_level, state->offset, message);
+bool BinaryReaderIR::OnError(const Error& error) {
+  errors_->push_back(error);
+  return true;
 }
 
 Result BinaryReaderIR::OnTypeCount(Index count) {
@@ -1115,9 +1108,9 @@ Result ReadBinaryIr(const char* filename,
                     const void* data,
                     size_t size,
                     const ReadBinaryOptions& options,
-                    ErrorHandler* error_handler,
+                    Errors* errors,
                     Module* out_module) {
-  BinaryReaderIR reader(out_module, filename, error_handler);
+  BinaryReaderIR reader(out_module, filename, errors);
   return ReadBinary(data, size, &reader, options);
 }
 
