@@ -23,7 +23,6 @@
 #include "src/expr-visitor.h"
 #include "src/make-unique.h"
 #include "src/utf8.h"
-#include "src/wast-parser-lexer-shared.h"
 
 #define WABT_TRACING 0
 #include "src/tracing.h"
@@ -384,7 +383,7 @@ void WastParser::Error(Location loc, const char* format, ...) {
   errors_++;
   va_list args;
   va_start(args, format);
-  WastFormatError(error_handler_, &loc, lexer_, format, args);
+  error_handler_->OnError(ErrorLevel::Error, loc, format, args);
   va_end(args);
 }
 

@@ -131,19 +131,18 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
   }
 
-  ErrorHandlerFile error_handler(Location::Type::Text);
+  ErrorHandlerFile error_handler(Location::Type::Text, lexer->MakeLineFinder());
   std::unique_ptr<Module> module;
   WastParseOptions parse_wast_options(s_features);
   Result result =
       ParseWatModule(lexer.get(), &module, &error_handler, &parse_wast_options);
 
   if (Succeeded(result)) {
-    result = ResolveNamesModule(lexer.get(), module.get(), &error_handler);
+    result = ResolveNamesModule(module.get(), &error_handler);
 
     if (Succeeded(result) && s_validate) {
       ValidateOptions options(s_features);
-      result =
-          ValidateModule(lexer.get(), module.get(), &error_handler, options);
+      result = ValidateModule(module.get(), &error_handler, options);
     }
 
     if (Succeeded(result)) {

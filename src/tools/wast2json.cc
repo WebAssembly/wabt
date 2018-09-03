@@ -100,19 +100,18 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
   }
 
-  ErrorHandlerFile error_handler(Location::Type::Text);
+  ErrorHandlerFile error_handler(Location::Type::Text, lexer->MakeLineFinder());
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
   Result result = ParseWastScript(lexer.get(), &script, &error_handler,
                                   &parse_wast_options);
 
   if (Succeeded(result)) {
-    result = ResolveNamesScript(lexer.get(), script.get(), &error_handler);
+    result = ResolveNamesScript(script.get(), &error_handler);
 
     if (Succeeded(result) && s_validate) {
       ValidateOptions options(s_features);
-      result =
-          ValidateScript(lexer.get(), script.get(), &error_handler, options);
+      result = ValidateScript(script.get(), &error_handler, options);
     }
 
     if (Succeeded(result)) {

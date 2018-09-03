@@ -37,8 +37,8 @@ std::string repeat(std::string s, size_t count) {
 std::string ParseInvalidModule(std::string text) {
   auto lexer = WastLexer::CreateBufferLexer("test", text.c_str(), text.size());
   const size_t source_line_max_length = 80;
-  ErrorHandlerBuffer error_handler(Location::Type::Text,
-                                   source_line_max_length);
+  ErrorHandlerBuffer error_handler(
+      Location::Type::Text, lexer->MakeLineFinder(), source_line_max_length);
   std::unique_ptr<Module> module;
   Result result = ParseWatModule(lexer.get(), &module, &error_handler);
   EXPECT_EQ(Result::Error, result);

@@ -29,7 +29,6 @@
 #include "src/expr-visitor.h"
 #include "src/ir.h"
 #include "src/type-checker.h"
-#include "src/wast-parser-lexer-shared.h"
 
 namespace wabt {
 
@@ -38,10 +37,7 @@ namespace {
 class Validator : public ExprVisitor::Delegate {
  public:
   WABT_DISALLOW_COPY_AND_ASSIGN(Validator);
-  Validator(ErrorHandler*,
-            WastLexer*,
-            const Script*,
-            const ValidateOptions& options);
+  Validator(ErrorHandler*, const Script*, const ValidateOptions& options);
 
   Result CheckModule(const Module* module);
   Result CheckScript(const Script* script);
@@ -201,7 +197,6 @@ class Validator : public ExprVisitor::Delegate {
 
   const ValidateOptions& options_;
   ErrorHandler* error_handler_ = nullptr;
-  WastLexer* lexer_ = nullptr;
   const Script* script_ = nullptr;
   const Module* current_module_ = nullptr;
   const Func* current_func_ = nullptr;
@@ -217,13 +212,9 @@ class Validator : public ExprVisitor::Delegate {
 };
 
 Validator::Validator(ErrorHandler* error_handler,
-                     WastLexer* lexer,
                      const Script* script,
                      const ValidateOptions& options)
-    : options_(options),
-      error_handler_(error_handler),
-      lexer_(lexer),
-      script_(script) {
+    : options_(options), error_handler_(error_handler), script_(script) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
 }
@@ -232,7 +223,7 @@ void Validator::PrintError(const Location* loc, const char* fmt, ...) {
   result_ = Result::Error;
   va_list args;
   va_start(args, fmt);
-  WastFormatError(error_handler_, loc, lexer_, fmt, args);
+  error_handler_->OnError(ErrorLevel::Error, *loc, fmt, args);
   va_end(args);
 }
 
@@ -1443,29 +1434,26 @@ Result Validator::CheckAllFuncSignatures(const Module* module) {
 
 }  // end anonymous namespace
 
-Result ValidateScript(WastLexer* lexer,
-                      const Script* script,
+Result ValidateScript(const Script* script,
                       ErrorHandler* error_handler,
                       const ValidateOptions& options) {
-  Validator validator(error_handler, lexer, script, options);
+  Validator validator(error_handler, script, options);
 
   return validator.CheckScript(script);
 }
 
-Result ValidateModule(WastLexer* lexer,
-                      const Module* module,
+Result ValidateModule(const Module* module,
                       ErrorHandler* error_handler,
                       const ValidateOptions& options) {
-  Validator validator(error_handler, lexer, nullptr, options);
+  Validator validator(error_handler, nullptr, options);
 
   return validator.CheckModule(module);
 }
 
-Result ValidateFuncSignatures(WastLexer* lexer,
-                              const Module* module,
+Result ValidateFuncSignatures(const Module* module,
                               ErrorHandler* error_handler,
                               const ValidateOptions& options) {
-  Validator validator(error_handler, lexer, nullptr, options);
+  Validator validator(error_handler, nullptr, options);
 
   return validator.CheckAllFuncSignatures(module);
 }

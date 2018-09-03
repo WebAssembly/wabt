@@ -210,9 +210,8 @@ WasmModule.prototype = Object.create(Object.prototype);
 WasmModule.prototype.validate = function() {
   var errorHandler = new ErrorHandler('text');
   try {
-    var lexer_addr = this.lexer ? this.lexer.addr : null;
-    var result = Module._wabt_validate_module(
-        lexer_addr, this.module_addr, errorHandler.addr);
+    var result =
+        Module._wabt_validate_module(this.module_addr, errorHandler.addr);
     if (result !== WABT_OK) {
       throw new Error('validate failed:\n' + errorHandler.getMessage());
     }
@@ -224,9 +223,8 @@ WasmModule.prototype.validate = function() {
 WasmModule.prototype.resolveNames = function() {
   var errorHandler = new ErrorHandler('text');
   try {
-    var lexer_addr = this.lexer ? this.lexer.addr : null;
-    var result = Module._wabt_resolve_names_module(
-        lexer_addr, this.module_addr, errorHandler.addr);
+    var result =
+        Module._wabt_resolve_names_module(this.module_addr, errorHandler.addr);
     if (result !== WABT_OK) {
       throw new Error('resolveNames failed:\n' + errorHandler.getMessage());
     }

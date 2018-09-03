@@ -802,7 +802,7 @@ class CommandRunner {
 
   wabt::Result ReadInvalidTextModule(string_view module_filename,
                                      Environment* env,
-                                     ErrorHandler* error_handler);
+                                     const std::string& header);
   wabt::Result ReadInvalidModule(int line_number,
                                  string_view module_filename,
                                  Environment* env,
@@ -976,19 +976,21 @@ ExecResult CommandRunner::RunAction(int line_number,
 
 wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
                                                   Environment* env,
-                                                  ErrorHandler* error_handler) {
+                                                  const std::string& header) {
   std::unique_ptr<WastLexer> lexer =
       WastLexer::CreateFileLexer(module_filename);
+  ErrorHandlerFile error_handler(Location::Type::Text, lexer->MakeLineFinder(),
+                                 stdout, header,
+                                 ErrorHandlerFile::PrintHeader::Once);
   std::unique_ptr<::Script> script;
-  wabt::Result result = ParseWastScript(lexer.get(), &script, error_handler);
+  wabt::Result result = ParseWastScript(lexer.get(), &script, &error_handler);
   if (Succeeded(result)) {
     wabt::Module* module = script->GetFirstModule();
-    result = ResolveNamesModule(lexer.get(), module, error_handler);
+    result = ResolveNamesModule(module, &error_handler);
     if (Succeeded(result)) {
       ValidateOptions options(s_features);
       // Don't do a full validation, just validate the function signatures.
-      result =
-          ValidateFuncSignatures(lexer.get(), module, error_handler, options);
+      result = ValidateFuncSignatures(module, &error_handler, options);
     }
   }
   return result;
@@ -1032,14 +1034,12 @@ wabt::Result CommandRunner::ReadInvalidModule(int line_number,
 
   switch (module_type) {
     case ModuleType::Text: {
-      ErrorHandlerFile error_handler(Location::Type::Text, stdout, header,
-                                     ErrorHandlerFile::PrintHeader::Once);
-      return ReadInvalidTextModule(module_filename, env, &error_handler);
+      return ReadInvalidTextModule(module_filename, env, header);
     }
 
     case ModuleType::Binary: {
       DefinedModule* module;
-      ErrorHandlerFile error_handler(Location::Type::Binary, stdout, header,
+      ErrorHandlerFile error_handler(Location::Type::Binary, {}, stdout, header,
                                      ErrorHandlerFile::PrintHeader::Once);
       return ReadModule(module_filename, env, &error_handler, &module);
     }

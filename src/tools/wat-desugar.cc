@@ -90,7 +90,7 @@ int ProgramMain(int argc, char** argv) {
     WABT_FATAL("unable to read %s\n", s_infile);
   }
 
-  ErrorHandlerFile error_handler(Location::Type::Text);
+  ErrorHandlerFile error_handler(Location::Type::Text, lexer->MakeLineFinder());
   std::unique_ptr<Script> script;
   WastParseOptions parse_wast_options(s_features);
   Result result = ParseWastScript(lexer.get(), &script, &error_handler,
