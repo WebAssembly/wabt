@@ -23,6 +23,39 @@ namespace wabt {
 ErrorHandler::ErrorHandler(Location::Type location_type)
     : location_type_(location_type) {}
 
+ErrorHandler::ErrorHandler(Location::Type location_type,
+                           std::unique_ptr<LexerSourceLineFinder> line_finder)
+    : location_type_(location_type), line_finder_(std::move(line_finder)) {}
+
+bool ErrorHandler::OnError(ErrorLevel error_level,
+                           const Location& loc,
+                           const char* format,
+                           va_list args) {
+  va_list args_copy;
+  va_copy(args_copy, args);
+  char fixed_buf[WABT_DEFAULT_SNPRINTF_ALLOCA_BUFSIZE];
+  char* buffer = fixed_buf;
+  size_t len = wabt_vsnprintf(fixed_buf, sizeof(fixed_buf), format, args);
+  if (len + 1 > sizeof(fixed_buf)) {
+    buffer = static_cast<char*>(alloca(len + 1));
+    len = wabt_vsnprintf(buffer, len + 1, format, args_copy);
+  }
+
+  LexerSourceLineFinder::SourceLine source_line;
+  if (line_finder_) {
+    Result result = line_finder_->GetSourceLine(loc, source_line_max_length(),
+                                                &source_line);
+    if (Failed(result)) {
+      // If this fails, it means that we've probably screwed up the lexer. Blow
+      // up.
+      WABT_FATAL("error getting the source line.\n");
+    }
+  }
+
+  return OnError(ErrorLevel::Error, loc, std::string(buffer), source_line.line,
+                 source_line.column_offset);
+}
+
 std::string ErrorHandler::DefaultErrorMessage(ErrorLevel error_level,
                                               const Color& color,
                                               const Location& loc,
@@ -79,12 +112,14 @@ ErrorHandlerNop::ErrorHandlerNop()
     // The Location::Type is irrelevant since we never display an error.
     : ErrorHandler(Location::Type::Text) {}
 
-ErrorHandlerFile::ErrorHandlerFile(Location::Type location_type,
-                                   FILE* file,
-                                   const std::string& header,
-                                   PrintHeader print_header,
-                                   size_t source_line_max_length)
-    : ErrorHandler(location_type),
+ErrorHandlerFile::ErrorHandlerFile(
+    Location::Type location_type,
+    std::unique_ptr<LexerSourceLineFinder> line_finder,
+    FILE* file,
+    const std::string& header,
+    PrintHeader print_header,
+    size_t source_line_max_length)
+    : ErrorHandler(location_type, std::move(line_finder)),
       file_(file),
       header_(header),
       print_header_(print_header),
@@ -125,9 +160,11 @@ void ErrorHandlerFile::PrintErrorHeader() {
   }
 }
 
-ErrorHandlerBuffer::ErrorHandlerBuffer(Location::Type location_type,
-                                       size_t source_line_max_length)
-    : ErrorHandler(location_type),
+ErrorHandlerBuffer::ErrorHandlerBuffer(
+    Location::Type location_type,
+    std::unique_ptr<LexerSourceLineFinder> line_finder,
+    size_t source_line_max_length)
+    : ErrorHandler(location_type, std::move(line_finder)),
       source_line_max_length_(source_line_max_length),
       color_(nullptr, false) {}
 

@@ -121,26 +121,23 @@ WabtReadBinaryResult* wabt_read_binary(
 }
 
 wabt::Result::Enum wabt_resolve_names_module(
-    wabt::WastLexer* lexer,
     wabt::Module* module,
     wabt::ErrorHandlerBuffer* error_handler) {
-  return ResolveNamesModule(lexer, module, error_handler);
+  return ResolveNamesModule(module, error_handler);
 }
 
 wabt::Result::Enum wabt_validate_module(
-    wabt::WastLexer* lexer,
     wabt::Module* module,
     wabt::ErrorHandlerBuffer* error_handler) {
   wabt::ValidateOptions options;
-  return ValidateModule(lexer, module, error_handler, options);
+  return ValidateModule(module, error_handler, options);
 }
 
 wabt::Result::Enum wabt_validate_script(
-    wabt::WastLexer* lexer,
     wabt::Script* script,
     wabt::ErrorHandlerBuffer* error_handler) {
   wabt::ValidateOptions options;
-  return ValidateScript(lexer, script, error_handler, options);
+  return ValidateScript(script, error_handler, options);
 }
 
 WabtWriteScriptResult* wabt_write_binary_spec_script(

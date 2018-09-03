@@ -24,7 +24,6 @@
 #include "src/expr-visitor.h"
 #include "src/ir.h"
 #include "src/wast-lexer.h"
-#include "src/wast-parser-lexer-shared.h"
 
 namespace wabt {
 
@@ -32,7 +31,7 @@ namespace {
 
 class NameResolver : public ExprVisitor::DelegateNop {
  public:
-  NameResolver(WastLexer* lexer, Script* script, ErrorHandler* error_handler);
+  NameResolver(Script* script, ErrorHandler* error_handler);
 
   Result VisitModule(Module* module);
   Result VisitScript(Script* script);
@@ -83,7 +82,6 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitCommand(Command* command);
 
   ErrorHandler* error_handler_ = nullptr;
-  WastLexer* lexer_ = nullptr;
   Script* script_ = nullptr;
   Module* current_module_ = nullptr;
   Func* current_func_ = nullptr;
@@ -92,11 +90,8 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result result_ = Result::Ok;
 };
 
-NameResolver::NameResolver(WastLexer* lexer,
-                           Script* script,
-                           ErrorHandler* error_handler)
+NameResolver::NameResolver(Script* script, ErrorHandler* error_handler)
     : error_handler_(error_handler),
-      lexer_(lexer),
       script_(script),
       visitor_(this) {}
 
@@ -108,7 +103,7 @@ void WABT_PRINTF_FORMAT(3, 4) NameResolver::PrintError(const Location* loc,
   result_ = Result::Error;
   va_list args;
   va_start(args, fmt);
-  WastFormatError(error_handler_, loc, lexer_, fmt, args);
+  error_handler_->OnError(ErrorLevel::Error, *loc, fmt, args);
   va_end(args);
 }
 
@@ -425,7 +420,7 @@ void NameResolver::VisitCommand(Command* command) {
        * don't want to print errors or fail if that's the case, but we still
        * should try to resolve names when possible. */
       ErrorHandlerNop new_error_handler;
-      NameResolver new_resolver(lexer_, script_, &new_error_handler);
+      NameResolver new_resolver(script_, &new_error_handler);
       new_resolver.VisitScriptModule(assert_invalid_command->module.get());
       break;
     }
@@ -447,17 +442,13 @@ Result NameResolver::VisitScript(Script* script) {
   return result_;
 }
 
-Result ResolveNamesModule(WastLexer* lexer,
-                          Module* module,
-                          ErrorHandler* error_handler) {
-  NameResolver resolver(lexer, nullptr, error_handler);
+Result ResolveNamesModule(Module* module, ErrorHandler* error_handler) {
+  NameResolver resolver(nullptr, error_handler);
   return resolver.VisitModule(module);
 }
 
-Result ResolveNamesScript(WastLexer* lexer,
-                          Script* script,
-                          ErrorHandler* error_handler) {
-  NameResolver resolver(lexer, script, error_handler);
+Result ResolveNamesScript(Script* script, ErrorHandler* error_handler) {
+  NameResolver resolver(script, error_handler);
   return resolver.VisitScript(script);
 }
 

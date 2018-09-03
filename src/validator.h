@@ -18,7 +18,6 @@
 #define WABT_VALIDATOR_H_
 
 #include "src/feature.h"
-#include "src/wast-lexer.h"
 
 namespace wabt {
 
@@ -35,14 +34,8 @@ struct ValidateOptions {
 
 // Perform all checks on the script. It is valid if and only if this function
 // succeeds.
-Result ValidateScript(WastLexer*,
-                      const Script*,
-                      ErrorHandler*,
-                      const ValidateOptions&);
-Result ValidateModule(WastLexer*,
-                      const Module*,
-                      ErrorHandler*,
-                      const ValidateOptions&);
+Result ValidateScript(const Script*, ErrorHandler*, const ValidateOptions&);
+Result ValidateModule(const Module*, ErrorHandler*, const ValidateOptions&);
 
 // Validate that all functions that have an explicit function signature and a
 // function type use match.
@@ -51,8 +44,7 @@ Result ValidateModule(WastLexer*,
 // be malformed text, not a validation error. We can't handle that error in the
 // parser because the parser doesn't resolve names to indexes, which is
 // required to perform this check.
-Result ValidateFuncSignatures(WastLexer*,
-                              const Module*,
+Result ValidateFuncSignatures(const Module*,
                               ErrorHandler*,
                               const ValidateOptions&);
 

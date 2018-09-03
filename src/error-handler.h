@@ -17,16 +17,22 @@
 #ifndef WABT_ERROR_HANDLER_H_
 #define WABT_ERROR_HANDLER_H_
 
+#include <cstdarg>
 #include <string>
 
 #include "src/color.h"
 #include "src/common.h"
+#include "src/lexer-source-line-finder.h"
 
 namespace wabt {
+
+class WastLexer;
 
 class ErrorHandler {
  public:
   explicit ErrorHandler(Location::Type);
+  ErrorHandler(Location::Type,
+               std::unique_ptr<LexerSourceLineFinder> line_finder);
 
   virtual ~ErrorHandler() {}
 
@@ -44,6 +50,9 @@ class ErrorHandler {
     return OnError(error_level, Location(offset), error, std::string(), 0);
   }
 
+  // Helper function for va_lists.
+  bool OnError(ErrorLevel, const Location&, const char* format, va_list args);
+
   // OnError will be called with with source_line trimmed to this length.
   virtual size_t source_line_max_length() const = 0;
 
@@ -57,6 +66,8 @@ class ErrorHandler {
 
  protected:
   Location::Type location_type_;
+  // TODO(binji): remove unique_ptr
+  std::unique_ptr<LexerSourceLineFinder> line_finder_;
 };
 
 class ErrorHandlerNop : public ErrorHandler {
@@ -83,6 +94,7 @@ class ErrorHandlerFile : public ErrorHandler {
   };
 
   explicit ErrorHandlerFile(Location::Type,
+                            std::unique_ptr<LexerSourceLineFinder> = {},
                             FILE* file = stderr,
                             const std::string& header = std::string(),
                             PrintHeader print_header = PrintHeader::Never,
@@ -111,6 +123,7 @@ class ErrorHandlerFile : public ErrorHandler {
 class ErrorHandlerBuffer : public ErrorHandler {
  public:
   explicit ErrorHandlerBuffer(Location::Type,
+                              std::unique_ptr<LexerSourceLineFinder> = {},
                               size_t source_line_max_length = 80);
 
   bool OnError(ErrorLevel,
