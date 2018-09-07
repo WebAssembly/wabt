@@ -218,31 +218,39 @@ bool IsCommand(TokenTypePair pair) {
   }
 }
 
-bool IsEmptySignature(const FuncSignature* sig) {
-  return sig->result_types.empty() && sig->param_types.empty();
+bool IsEmptySignature(const FuncSignature& sig) {
+  return sig.result_types.empty() && sig.param_types.empty();
 }
 
-void ResolveFuncType(const Location& loc,
-                     Module* module,
-                     FuncDeclaration* decl) {
+void ResolveFuncTypeWithEmptySignature(const Module& module,
+                                       FuncDeclaration* decl) {
   // Resolve func type variables where the signature was not specified
   // explicitly, e.g.: (func (type 1) ...)
-  if (decl->has_func_type && IsEmptySignature(&decl->sig)) {
-    FuncType* func_type = module->GetFuncType(decl->type_var);
+  if (decl->has_func_type && IsEmptySignature(decl->sig)) {
+    const FuncType* func_type = module.GetFuncType(decl->type_var);
     if (func_type) {
       decl->sig = func_type->sig;
     }
   }
 
+}
+
+void ResolveImplicitlyDefinedFunctionType(const Location& loc,
+                                          Module* module,
+                                          const FuncDeclaration& decl) {
   // Resolve implicitly defined function types, e.g.: (func (param i32) ...)
-  if (!decl->has_func_type) {
-    Index func_type_index = module->GetFuncTypeIndex(decl->sig);
+  if (!decl.has_func_type) {
+    Index func_type_index = module->GetFuncTypeIndex(decl.sig);
     if (func_type_index == kInvalidIndex) {
       auto func_type_field = MakeUnique<FuncTypeModuleField>(loc);
-      func_type_field->func_type.sig = decl->sig;
+      func_type_field->func_type.sig = decl.sig;
       module->AppendField(std::move(func_type_field));
     }
   }
+}
+
+bool IsInlinableFuncSignature(const FuncSignature& sig) {
+  return sig.GetNumParams() == 0 && sig.GetNumResults() <= 1;
 }
 
 class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
@@ -251,8 +259,9 @@ class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
       : module_(module) {}
 
   void ResolveBlockDeclaration(const Location& loc, BlockDeclaration* decl) {
-    if (decl->GetNumParams() != 0 || decl->GetNumResults() > 1) {
-      ResolveFuncType(loc, module_, decl);
+    ResolveFuncTypeWithEmptySignature(*module_, decl);
+    if (!IsInlinableFuncSignature(decl->sig)) {
+      ResolveImplicitlyDefinedFunctionType(loc, module_, *decl);
     }
   }
 
@@ -282,7 +291,8 @@ class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
   }
 
   Result OnCallIndirectExpr(CallIndirectExpr* expr) override {
-    ResolveFuncType(expr->loc, module_, &expr->decl);
+    ResolveFuncTypeWithEmptySignature(*module_, &expr->decl);
+    ResolveImplicitlyDefinedFunctionType(expr->loc, module_, expr->decl);
     return Result::Ok;
   }
 
@@ -311,7 +321,8 @@ void ResolveFuncTypes(Module* module) {
     }
 
     if (decl) {
-      ResolveFuncType(field.loc, module, decl);
+      ResolveFuncTypeWithEmptySignature(*module, decl);
+      ResolveImplicitlyDefinedFunctionType(field.loc, module, *decl);
     }
 
     if (func) {

@@ -29,35 +29,50 @@ WASM2C_SPEC_TEST_DIR = os.path.join(TEST_DIR, 'wasm2c', 'spec')
 
 options = None
 
-
 def GetFilesWithExtension(src_dir, want_ext):
-  result = []
-  for filename in os.listdir(src_dir):
-    name, ext = os.path.splitext(filename)
-    if ext == want_ext:
-      result.append(name)
+  result = set()
+  if os.path.exists(src_dir):
+    for filename in os.listdir(src_dir):
+      name, ext = os.path.splitext(filename)
+      if ext == want_ext:
+        result.add(name)
   return result
 
 
-def ProcessDir(dirname, testsuite_tests, tool):
-  spec_tests = set(GetFilesWithExtension(dirname, '.txt'))
+def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
+  testsuite_tests = GetFilesWithExtension(testsuite_dir, '.wast')
+  wabt_tests = GetFilesWithExtension(wabt_test_dir, '.txt')
 
-  for removed_test_name in spec_tests - testsuite_tests:
-    test_filename = os.path.join(dirname, removed_test_name + '.txt')
+  for removed_test_name in wabt_tests - testsuite_tests:
+    test_filename = os.path.join(wabt_test_dir, removed_test_name + '.txt')
     if options.verbose:
       print('Removing %s' % test_filename)
     os.remove(test_filename)
 
-  for added_test_name in testsuite_tests - spec_tests:
+  for added_test_name in testsuite_tests - wabt_tests:
     wast_filename = os.path.join(
-        os.path.relpath(TESTSUITE_DIR, REPO_ROOT_DIR),
+        os.path.relpath(testsuite_dir, REPO_ROOT_DIR),
         added_test_name + '.wast')
-    test_filename = os.path.join(dirname, added_test_name + '.txt')
+    test_filename = os.path.join(wabt_test_dir, added_test_name + '.txt')
     if options.verbose:
       print('Adding %s' % test_filename)
+
+    test_dirname = os.path.dirname(test_filename)
+    if not os.path.exists(test_dirname):
+      os.makedirs(test_dirname)
+
     with open(test_filename, 'w') as f:
       f.write(';;; TOOL: %s\n' % tool)
       f.write(';;; STDIN_FILE: %s\n' % wast_filename)
+      if flags:
+        f.write(';;; ARGS*: %s\n' % flags)
+
+
+def ProcessTestsuite(wabt_test_dir, testsuite_dir, tool, flags=None):
+  testsuite_dir = os.path.join(TESTSUITE_DIR, reldir)
+  testsuite_tests = GetFilesWithExtension(testsuite_dir, '.wast')
+  wabt_test_dir = os.path.join(SPEC_TEST_DIR, reldir)
+  ProcessDir(wabt_test_dir, testsuite_tests, 'run-interp-spec')
 
 
 def main(args):
@@ -67,9 +82,14 @@ def main(args):
   global options
   options = parser.parse_args(args)
 
-  testsuite_tests = set(GetFilesWithExtension(TESTSUITE_DIR, '.wast'))
-  ProcessDir(SPEC_TEST_DIR, testsuite_tests, 'run-interp-spec')
-  ProcessDir(WASM2C_SPEC_TEST_DIR, testsuite_tests, 'run-spec-wasm2c')
+  ProcessDir(SPEC_TEST_DIR, TESTSUITE_DIR, 'run-interp-spec')
+  ProcessDir(WASM2C_SPEC_TEST_DIR, TESTSUITE_DIR, 'run-spec-wasm2c')
+
+  ProcessDir(
+      os.path.join(SPEC_TEST_DIR, 'multi-value'),
+      os.path.join(TESTSUITE_DIR, 'proposals', 'multi-value'),
+      'run-interp-spec',
+      '--enable-multi-value')
 
   return 0
 

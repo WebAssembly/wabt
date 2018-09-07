@@ -219,11 +219,10 @@ out/test/spec/unreached-invalid.wast:427: assert_invalid passed:
   error: type mismatch in f32.eq, expected [f32, f32] but got [i32, f32]
   0000023: error: OnCompareExpr callback failed
 out/test/spec/unreached-invalid.wast:433: assert_invalid passed:
-  error: type mismatch in if, expected [] but got [i32]
+  error: type mismatch in if true branch, expected [] but got [i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/unreached-invalid.wast:439: assert_invalid passed:
-  error: if without else cannot have results.
-  error: type mismatch in if, expected [i32] but got [f32]
+  error: type mismatch in if true branch, expected [i32] but got [f32]
   0000022: error: OnEndExpr callback failed
 out/test/spec/unreached-invalid.wast:445: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]

@@ -72,6 +72,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveMemoryVar(Var* var);
   void ResolveExceptionVar(Var* var);
   void ResolveLocalVar(Var* var);
+  void ResolveBlockDeclarationVar(BlockDeclaration* decl);
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
@@ -121,7 +122,6 @@ void NameResolver::CheckDuplicateBindings(const BindingHash* bindings,
     const Location& b_loc = b.second.loc;
     const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
     PrintError(&loc, "redefinition of %s \"%s\"", desc, a.first.c_str());
-
   });
 }
 
@@ -195,8 +195,15 @@ void NameResolver::ResolveLocalVar(Var* var) {
   }
 }
 
+void NameResolver::ResolveBlockDeclarationVar(BlockDeclaration* decl) {
+  if (decl->has_func_type) {
+    ResolveFuncTypeVar(&decl->type_var);
+  }
+}
+
 Result NameResolver::BeginBlockExpr(BlockExpr* expr) {
   PushLabel(expr->block.label);
+  ResolveBlockDeclarationVar(&expr->block.decl);
   return Result::Ok;
 }
 
@@ -207,6 +214,7 @@ Result NameResolver::EndBlockExpr(BlockExpr* expr) {
 
 Result NameResolver::BeginLoopExpr(LoopExpr* expr) {
   PushLabel(expr->block.label);
+  ResolveBlockDeclarationVar(&expr->block.decl);
   return Result::Ok;
 }
 
@@ -256,6 +264,7 @@ Result NameResolver::OnGetLocalExpr(GetLocalExpr* expr) {
 
 Result NameResolver::BeginIfExpr(IfExpr* expr) {
   PushLabel(expr->true_.label);
+  ResolveBlockDeclarationVar(&expr->true_.decl);
   return Result::Ok;
 }
 
@@ -266,6 +275,7 @@ Result NameResolver::EndIfExpr(IfExpr* expr) {
 
 Result NameResolver::BeginIfExceptExpr(IfExceptExpr* expr) {
   PushLabel(expr->true_.label);
+  ResolveBlockDeclarationVar(&expr->true_.decl);
   ResolveExceptionVar(&expr->except_var);
   return Result::Ok;
 }
@@ -292,6 +302,7 @@ Result NameResolver::OnTeeLocalExpr(TeeLocalExpr* expr) {
 
 Result NameResolver::BeginTryExpr(TryExpr* expr) {
   PushLabel(expr->block.label);
+  ResolveBlockDeclarationVar(&expr->block.decl);
   return Result::Ok;
 }
 

@@ -860,8 +860,9 @@ ValueTypeRep<T> Thread::PopRep() {
 }
 
 void Thread::DropKeep(uint32_t drop_count, uint32_t keep_count) {
-  for (uint32_t i = 0; i < keep_count; ++i) {
-    Pick(drop_count + i + 1) = Pick(i + 1);
+  // Copy backward to avoid clobbering when the regions overlap.
+  for (uint32_t i = keep_count; i > 0; --i) {
+    Pick(drop_count + i) = Pick(i);
   }
   value_stack_top_ -= drop_count;
 }

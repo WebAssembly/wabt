@@ -1,0 +1,350 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/if.wast
+;;; ARGS*: --enable-multi-value
+(;; STDOUT ;;;
+out/test/spec/multi-value/if.wast:410: assert_malformed passed:
+  out/test/spec/multi-value/if/if.1.wat:1:95: error: unexpected token "param", expected then block (e.g. (then ...)).
+  ...i32.const 0)  (if (type $sig) (result i32) (param i32) (i32.const 1) (then)))
+                                                 ^^^^^
+  out/test/spec/multi-value/if/if.1.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (type $sig) (result i32) (param i32) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/multi-value/if.wast:419: assert_malformed passed:
+  out/test/spec/multi-value/if/if.2.wat:1:82: error: unexpected token "type", expected then block (e.g. (then ...)).
+  ...nc (i32.const 0)  (if (param i32) (type $sig) (result i32) (i32.const 1) (...
+                                        ^^^^
+  out/test/spec/multi-value/if/if.2.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (param i32) (type $sig) (result i32) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/multi-value/if.wast:428: assert_malformed passed:
+  out/test/spec/multi-value/if/if.3.wat:1:95: error: unexpected token "type", expected then block (e.g. (then ...)).
+  ...i32.const 0)  (if (param i32) (result i32) (type $sig) (i32.const 1) (then)))
+                                                 ^^^^
+  out/test/spec/multi-value/if/if.3.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (param i32) (result i32) (type $sig) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/multi-value/if.wast:437: assert_malformed passed:
+  out/test/spec/multi-value/if/if.4.wat:1:83: error: unexpected token "type", expected then block (e.g. (then ...)).
+  ...c (i32.const 0)  (if (result i32) (type $sig) (param i32) (i32.const 1) (t...
+                                        ^^^^
+  out/test/spec/multi-value/if/if.4.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (result i32) (type $sig) (param i32) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/multi-value/if.wast:446: assert_malformed passed:
+  out/test/spec/multi-value/if/if.5.wat:1:83: error: unexpected token "param", expected then block (e.g. (then ...)).
+  ...c (i32.const 0)  (if (result i32) (param i32) (type $sig) (i32.const 1) (t...
+                                        ^^^^^
+  out/test/spec/multi-value/if/if.5.wat:1:121: error: unexpected token "then", expected an instr.
+  ...i32.const 0)  (if (result i32) (param i32) (type $sig) (i32.const 1) (then)))
+                                                                           ^^^^
+out/test/spec/multi-value/if.wast:455: assert_malformed passed:
+  out/test/spec/multi-value/if/if.6.wat:1:39: error: unexpected token "param", expected then block (e.g. (then ...)).
+  (func (i32.const 0) (if (result i32) (param i32) (i32.const 1) (then)))
+                                        ^^^^^
+  out/test/spec/multi-value/if/if.6.wat:1:65: error: unexpected token "then", expected an instr.
+  (func (i32.const 0) (if (result i32) (param i32) (i32.const 1) (then)))
+                                                                  ^^^^
+out/test/spec/multi-value/if.wast:462: assert_malformed passed:
+  out/test/spec/multi-value/if/if.7.wat:1:47: error: unexpected token $x, expected ).
+  ...(i32.const 0) (i32.const 1)  (if (param $x i32) (then (drop)) (else (drop))))
+                                             ^^
+  out/test/spec/multi-value/if/if.7.wat:1:69: error: unexpected token (, expected EOF.
+  ...(i32.const 0) (i32.const 1)  (if (param $x i32) (then (drop)) (else (drop))))
+                                                                   ^
+out/test/spec/multi-value/if.wast:470: assert_malformed passed:
+  out/test/spec/multi-value/if/if.8.wat:1:40: error: expected 0 results, got 1
+  (type $sig (func))(func (i32.const 1)  (if (type $sig) (result i32) (then (i3...
+                                         ^
+out/test/spec/multi-value/if.wast:480: assert_malformed passed:
+  out/test/spec/multi-value/if/if.9.wat:1:65: error: expected 1 arguments, got 0
+  ...) (result i32)))(func (i32.const 1)  (if (type $sig) (result i32) (then (i...
+                                          ^
+out/test/spec/multi-value/if.wast:490: assert_malformed passed:
+  out/test/spec/multi-value/if/if.10.wat:1:79: error: expected 1 results, got 0
+  ...))(func (i32.const 0) (i32.const 1)  (if (type $sig) (param i32) (then (dr...
+                                          ^
+out/test/spec/multi-value/if.wast:500: assert_malformed passed:
+  out/test/spec/multi-value/if/if.11.wat:1:83: error: expected 2 arguments, got 1
+  ...))(func (i32.const 0) (i32.const 1)  (if (type $sig) (param i32) (result i...
+                                          ^
+out/test/spec/multi-value/if.wast:510: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  000001f: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:518: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:522: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:526: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:530: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:535: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:539: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:543: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:547: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:552: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32]
+  000001e: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:558: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32]
+  000001e: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:564: assert_invalid passed:
+  error: type mismatch in if false branch, expected [] but got [i32]
+  000001f: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:570: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32]
+  000001e: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:577: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32, i32]
+  0000020: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:583: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32, i32]
+  0000020: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:589: assert_invalid passed:
+  error: type mismatch in if false branch, expected [] but got [i32, i32]
+  0000021: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:595: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32, i32]
+  0000020: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:602: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got []
+  000001d: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:608: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32] but got []
+  000001f: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:614: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got []
+  000001d: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:621: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got []
+  000001e: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:627: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32, i32] but got []
+  0000022: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:633: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got []
+  000001e: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:640: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32] but got []
+  000001f: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:646: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32, i32] but got []
+  0000022: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:653: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got []
+  000001e: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:659: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32] but got []
+  0000021: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:665: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got []
+  000001e: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:672: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got []
+  000001f: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:678: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32, i32] but got []
+  0000024: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:684: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got []
+  000001f: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:691: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got [i64]
+  000001f: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:697: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32] but got [i64]
+  0000022: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:703: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got [i64]
+  000001f: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:710: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  0000020: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:716: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32, i32] but got [i32]
+  0000025: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:722: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  0000020: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:729: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  0000022: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:736: assert_invalid passed:
+  error: type mismatch in if false branch, expected [i32, i32] but got [i32]
+  0000027: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:743: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  0000022: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:751: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32]
+  0000021: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:757: assert_invalid passed:
+  error: type mismatch in if false branch, expected [] but got [i32]
+  0000024: error: OnEndExpr callback failed
+out/test/spec/multi-value/if.wast:763: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32]
+  0000021: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:770: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got [i64]
+  000001f: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:776: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32]
+  0000024: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:783: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000025: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:793: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000025: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:803: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000027: error: EndFunctionBody callback failed
+out/test/spec/multi-value/if.wast:814: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001e: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:820: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000021: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:826: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got []
+  000001f: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:832: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got []
+  0000024: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:839: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001e: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:848: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000021: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:857: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got []
+  000001f: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:866: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got []
+  0000024: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:876: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001f: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:885: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000022: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:894: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got []
+  0000020: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:903: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got []
+  0000025: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:913: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got [i64]
+  0000020: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:922: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got [i64]
+  0000023: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:931: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got [i64]
+  0000021: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:940: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got [i64]
+  0000026: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:949: assert_invalid passed:
+  error: type mismatch in br, expected [i32, i32] but got [i64]
+  0000023: error: OnBrExpr callback failed
+out/test/spec/multi-value/if.wast:959: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32, i32] but got [i32]
+  0000022: error: OnElseExpr callback failed
+out/test/spec/multi-value/if.wast:970: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001f: error: OnIfExpr callback failed
+out/test/spec/multi-value/if.wast:976: assert_invalid passed:
+  error: type mismatch in if, expected [i32, f64] but got []
+  0000020: error: OnIfExpr callback failed
+out/test/spec/multi-value/if.wast:982: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got [f32]
+  0000024: error: OnIfExpr callback failed
+out/test/spec/multi-value/if.wast:988: assert_invalid passed:
+  error: type mismatch in if, expected [f32, i32] but got [f32]
+  0000025: error: OnIfExpr callback failed
+out/test/spec/multi-value/if.wast:994: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  0000021: error: OnIfExpr callback failed
+out/test/spec/multi-value/if.wast:1000: assert_invalid passed:
+  error: type mismatch in if, expected [i32, f64] but got []
+  0000022: error: OnIfExpr callback failed
+out/test/spec/multi-value/if.wast:1006: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got [f32]
+  0000026: error: OnIfExpr callback failed
+out/test/spec/multi-value/if.wast:1012: assert_invalid passed:
+  error: type mismatch in if, expected [f32, i32] but got [f32]
+  0000027: error: OnIfExpr callback failed
+out/test/spec/multi-value/if.wast:1019: assert_malformed passed:
+  out/test/spec/multi-value/if/if.86.wat:1:42: error: unexpected token $x, expected ).
+  (func (param i32) (result i32) if (param $x i32) end)
+                                           ^^
+out/test/spec/multi-value/if.wast:1023: assert_malformed passed:
+  out/test/spec/multi-value/if/if.87.wat:1:43: error: unexpected token $x, expected ).
+  (func (param i32) (result i32) (if (param $x i32) (then)))
+                                            ^^
+out/test/spec/multi-value/if.wast:1028: assert_malformed passed:
+  out/test/spec/multi-value/if/if.88.wat:1:14: error: unexpected label "$l"
+  (func if end $l)
+               ^^
+out/test/spec/multi-value/if.wast:1032: assert_malformed passed:
+  out/test/spec/multi-value/if/if.89.wat:1:17: error: mismatching label "$a" != "$l"
+  (func if $a end $l)
+                  ^^
+out/test/spec/multi-value/if.wast:1036: assert_malformed passed:
+  out/test/spec/multi-value/if/if.90.wat:1:15: error: unexpected label "$l"
+  (func if else $l end)
+                ^^
+out/test/spec/multi-value/if.wast:1040: assert_malformed passed:
+  out/test/spec/multi-value/if/if.91.wat:1:18: error: mismatching label "$a" != "$l"
+  (func if $a else $l end)
+                   ^^
+out/test/spec/multi-value/if.wast:1044: assert_malformed passed:
+  out/test/spec/multi-value/if/if.92.wat:1:19: error: unexpected label "$l"
+  (func if else end $l)
+                    ^^
+out/test/spec/multi-value/if.wast:1048: assert_malformed passed:
+  out/test/spec/multi-value/if/if.93.wat:1:15: error: unexpected label "$l"
+  (func if else $l end $l)
+                ^^
+  out/test/spec/multi-value/if/if.93.wat:1:22: error: unexpected label "$l"
+  (func if else $l end $l)
+                       ^^
+out/test/spec/multi-value/if.wast:1052: assert_malformed passed:
+  out/test/spec/multi-value/if/if.94.wat:1:15: error: unexpected label "$l1"
+  (func if else $l1 end $l2)
+                ^^^
+  out/test/spec/multi-value/if/if.94.wat:1:23: error: unexpected label "$l2"
+  (func if else $l1 end $l2)
+                        ^^^
+out/test/spec/multi-value/if.wast:1056: assert_malformed passed:
+  out/test/spec/multi-value/if/if.95.wat:1:22: error: mismatching label "$a" != "$l"
+  (func if $a else end $l)
+                       ^^
+out/test/spec/multi-value/if.wast:1060: assert_malformed passed:
+  out/test/spec/multi-value/if/if.96.wat:1:25: error: mismatching label "$a" != "$l"
+  (func if $a else $a end $l)
+                          ^^
+out/test/spec/multi-value/if.wast:1064: assert_malformed passed:
+  out/test/spec/multi-value/if/if.97.wat:1:18: error: mismatching label "$a" != "$l"
+  (func if $a else $l end $l)
+                   ^^
+  out/test/spec/multi-value/if/if.97.wat:1:25: error: mismatching label "$a" != "$l"
+  (func if $a else $l end $l)
+                          ^^
+170/170 tests passed.
+;;; STDOUT ;;)
