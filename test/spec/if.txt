@@ -26,10 +26,10 @@ out/test/spec/if.wast:505: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got []
   000001e: error: EndFunctionBody callback failed
 out/test/spec/if.wast:510: assert_invalid passed:
-  error: type mismatch in if, expected [] but got [i32]
+  error: type mismatch in if true branch, expected [] but got [i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/if.wast:516: assert_invalid passed:
-  error: type mismatch in if, expected [] but got [i32]
+  error: type mismatch in if true branch, expected [] but got [i32]
   000001e: error: OnEndExpr callback failed
 out/test/spec/if.wast:522: assert_invalid passed:
   error: type mismatch in if false branch, expected [] but got [i32]
@@ -41,14 +41,13 @@ out/test/spec/if.wast:535: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got []
   000001d: error: OnElseExpr callback failed
 out/test/spec/if.wast:541: assert_invalid passed:
-  error: if without else cannot have results.
+  error: type mismatch in if false branch, expected [i32] but got []
   000001f: error: OnEndExpr callback failed
 out/test/spec/if.wast:547: assert_invalid passed:
-  error: if without else cannot have results.
-  error: type mismatch in if, expected [i32] but got []
+  error: type mismatch in if true branch, expected [i32] but got []
   000001d: error: OnEndExpr callback failed
 out/test/spec/if.wast:553: assert_invalid passed:
-  error: if without else cannot have results.
+  error: type mismatch in if false branch, expected [i32] but got []
   000001f: error: OnEndExpr callback failed
 out/test/spec/if.wast:560: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got []

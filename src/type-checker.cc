@@ -473,10 +473,10 @@ Result TypeChecker::OnEnd() {
   assert(static_cast<int>(label->label_type) < kLabelTypeCount);
   if (label->label_type == LabelType::If ||
       label->label_type == LabelType::IfExcept) {
-    if (label->result_types.size() != 0) {
-      PrintError("if without else cannot have results.");
-      result = Result::Error;
-    }
+    // An if without an else will just pass the params through, so the result
+    // types must be the same as the param types. It has the same behavior as
+    // an empty else block.
+    CHECK_RESULT(OnElse());
   }
   const char* desc = s_label_type_name[static_cast<int>(label->label_type)];
   result |= OnEnd(label, desc, desc);

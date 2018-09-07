@@ -1398,8 +1398,38 @@ class Validator::CheckFuncSignatureExprVisitorDelegate
   explicit CheckFuncSignatureExprVisitorDelegate(Validator* validator)
       : validator_(validator) {}
 
+  Result BeginBlockExpr(BlockExpr* expr) override {
+    validator_->CheckBlockDeclaration(&expr->loc, Opcode::Block,
+                                      &expr->block.decl);
+    return Result::Ok;
+  }
+
   Result OnCallIndirectExpr(CallIndirectExpr* expr) override {
     validator_->CheckFuncSignature(&expr->loc, expr->decl);
+    return Result::Ok;
+  }
+
+  Result BeginIfExpr(IfExpr* expr) override {
+    validator_->CheckBlockDeclaration(&expr->loc, Opcode::If,
+                                      &expr->true_.decl);
+    return Result::Ok;
+  }
+
+  Result BeginIfExceptExpr(IfExceptExpr* expr) override {
+    validator_->CheckBlockDeclaration(&expr->loc, Opcode::IfExcept,
+                                      &expr->true_.decl);
+    return Result::Ok;
+  }
+
+  Result BeginLoopExpr(LoopExpr* expr) override {
+    validator_->CheckBlockDeclaration(&expr->loc, Opcode::Loop,
+                                      &expr->block.decl);
+    return Result::Ok;
+  }
+
+  Result BeginTryExpr(TryExpr* expr) override {
+    validator_->CheckBlockDeclaration(&expr->loc, Opcode::Try,
+                                      &expr->block.decl);
     return Result::Ok;
   }
 
