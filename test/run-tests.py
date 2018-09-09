@@ -143,7 +143,10 @@ TOOLS = {
 
 # TODO(binji): Add Windows support for compiling using run-spec-wasm2c.py
 if IS_WINDOWS:
-  TOOLS['run-spec-wasm2c'].append(('SKIP', ''))
+  # TOOLS['run-spec-wasm2c'].append(('SKIP', ''))
+  # FIXME HACK
+  l = TOOLS['run-spec-wasm2c'][1][1]
+  l += ['--msvc', '--cc=cl.exe']
 
 ROUNDTRIP_TOOLS = ('wat2wasm',)
 
@@ -629,8 +632,8 @@ class Status(object):
     assert(self.isatty)
     total_duration = time.time() - self.start_time
     name = info.GetName() if info else ''
-    if (self.total - self.skipped):
-      percent = 100 * (self.passed + self.failed) / (self.total - self.skipped)
+    if self.total:
+      percent = 100 * (self.passed + self.failed) / self.total
     else:
       percent = 100
     status = '[+%d|-%d|%%%d] (%.2fs) %s' % (self.passed, self.failed,
