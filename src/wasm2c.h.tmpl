@@ -11,6 +11,12 @@ extern "C" {
 #define WASM_RT_MODULE_PREFIX
 #endif
 
+#if _MSC_VER
+#define WASM_RT_CC __vectorcall
+#else
+#define WASM_RT_CC
+#endif
+
 #define WASM_RT_PASTE_(x, y) x ## y
 #define WASM_RT_PASTE(x, y) WASM_RT_PASTE_(x, y)
 #define WASM_RT_ADD_PREFIX(x) WASM_RT_PASTE(WASM_RT_MODULE_PREFIX, x)

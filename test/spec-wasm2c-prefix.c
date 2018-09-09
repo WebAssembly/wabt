@@ -127,28 +127,28 @@ static bool is_equal_u64(u64 x, u64 y) {
   return x == y;
 }
 
-static bool is_equal_f32(f32 x, f32 y) {
+static bool WASM_RT_CC is_equal_f32(f32 x, f32 y) {
   u32 ux, uy;
   memcpy(&ux, &x, sizeof(ux));
   memcpy(&uy, &y, sizeof(uy));
   return ux == uy;
 }
 
-static bool is_equal_f64(f64 x, f64 y) {
+static bool WASM_RT_CC is_equal_f64(f64 x, f64 y) {
   u64 ux, uy;
   memcpy(&ux, &x, sizeof(ux));
   memcpy(&uy, &y, sizeof(uy));
   return ux == uy;
 }
 
-static f32 make_nan_f32(u32 x) {
+static f32 WASM_RT_CC make_nan_f32(u32 x) {
   x |= 0x7f800000;
   f32 res;
   memcpy(&res, &x, sizeof(res));
   return res;
 }
 
-static f64 make_nan_f64(u64 x) {
+static f64 WASM_RT_CC make_nan_f64(u64 x) {
   x |= 0x7ff0000000000000;
   f64 res;
   memcpy(&res, &x, sizeof(res));
@@ -175,27 +175,27 @@ static bool is_arithmetic_nan_f64(u64 x) {
 /*
  * spectest implementations
  */
-static void spectest_print(void) {
+static void WASM_RT_CC spectest_print(void) {
   printf("spectest.print()\n");
 }
 
-static void spectest_print_i32(uint32_t i) {
+static void WASM_RT_CC spectest_print_i32(uint32_t i) {
   printf("spectest.print_i32(%d)\n", i);
 }
 
-static void spectest_print_f32(float f) {
+static void WASM_RT_CC spectest_print_f32(float f) {
   printf("spectest.print_f32(%g)\n", f);
 }
 
-static void spectest_print_i32_f32(uint32_t i, float f) {
+static void WASM_RT_CC spectest_print_i32_f32(uint32_t i, float f) {
   printf("spectest.print_i32_f32(%d %g)\n", i, f);
 }
 
-static void spectest_print_f64(double d) {
+static void WASM_RT_CC spectest_print_f64(double d) {
   printf("spectest.print_f64(%g)\n", d);
 }
 
-static void spectest_print_f64_f64(double d1, double d2) {
+static void WASM_RT_CC spectest_print_f64_f64(double d1, double d2) {
   printf("spectest.print_f64_f64(%g %g)\n", d1, d2);
 }
 
@@ -203,14 +203,14 @@ static wasm_rt_table_t spectest_table;
 static wasm_rt_memory_t spectest_memory;
 static uint32_t spectest_global_i32 = 666;
 
-void (*Z_spectestZ_printZ_vv)(void) = &spectest_print;
-void (*Z_spectestZ_print_i32Z_vi)(uint32_t) = &spectest_print_i32;
-void (*Z_spectestZ_print_f32Z_vf)(float) = &spectest_print_f32;
-void (*Z_spectestZ_print_i32_f32Z_vif)(uint32_t,
-                                       float) = &spectest_print_i32_f32;
-void (*Z_spectestZ_print_f64Z_vd)(double) = &spectest_print_f64;
-void (*Z_spectestZ_print_f64_f64Z_vdd)(double,
-                                       double) = &spectest_print_f64_f64;
+void (WASM_RT_CC *Z_spectestZ_printZ_vv)(void) = &spectest_print;
+void (WASM_RT_CC *Z_spectestZ_print_i32Z_vi)(uint32_t) = &spectest_print_i32;
+void (WASM_RT_CC *Z_spectestZ_print_f32Z_vf)(float) = &spectest_print_f32;
+void (WASM_RT_CC *Z_spectestZ_print_i32_f32Z_vif)(uint32_t, float)
+    = &spectest_print_i32_f32;
+void (WASM_RT_CC *Z_spectestZ_print_f64Z_vd)(double) = &spectest_print_f64;
+void (WASM_RT_CC *Z_spectestZ_print_f64_f64Z_vdd)(double, double)
+    = &spectest_print_f64_f64;
 wasm_rt_table_t* Z_spectestZ_table = &spectest_table;
 wasm_rt_memory_t* Z_spectestZ_memory = &spectest_memory;
 uint32_t* Z_spectestZ_global_i32Z_i = &spectest_global_i32;
