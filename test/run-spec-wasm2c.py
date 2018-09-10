@@ -52,13 +52,8 @@ def F32ToC(f32_bits):
       return '%smake_nan_f32(0x%06x)' % (sign, f32_bits & F32_SIG_MASK)
     else:
       return '%sINFINITY' % sign
-  elif f32_bits == F32_SIGN_BIT:
-    return '-0.f'
   else:
-    s = '%.10g' % ReinterpretF32(f32_bits)
-    if '.' not in s:
-      s += '.'
-    return s + 'f'
+    return '%1.9ef' % ReinterpretF32(f32_bits)
 
 
 def ReinterpretF64(f64_bits):
@@ -77,10 +72,8 @@ def F64ToC(f64_bits):
       return '%smake_nan_f64(0x%06x)' % (sign, f64_bits & F64_SIG_MASK)
     else:
       return '%sINFINITY' % sign
-  elif f64_bits == F64_SIGN_BIT:
-    return '-0.0'
   else:
-    return '%.17g' % ReinterpretF64(f64_bits)
+    return '%1.17e' % ReinterpretF64(f64_bits)
 
 
 def MangleType(t):

@@ -1,6 +1,10 @@
 %%includes
 #include <math.h>
 #include <string.h>
+#if _MSC_VER
+#include <xmmintrin.h>
+#include <emmintrin.h>
+#endif
 %%declarations
 #if _MSC_VER
 #define UNLIKELY(x) (x)
@@ -224,4 +228,32 @@ DEFINE_REINTERPRET(f32_reinterpret_i32, u32, f32)
 DEFINE_REINTERPRET(i32_reinterpret_f32, f32, u32)
 DEFINE_REINTERPRET(f64_reinterpret_i64, u64, f64)
 DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
+
+#if _MSC_VER
+static inline f32 __vectorcall F32_COPYSIGN(f32 x, f32 y) {
+#if _M_X64 || _M_IX86
+  return _mm_cvtss_f32(_mm_or_ps(_mm_and_ps(_mm_set_ss(x), _mm_castsi128_ps(_mm_set_epi32(0, 0, 0, 0x7fffffffu))),
+                                 _mm_and_ps(_mm_set_ss(y), _mm_castsi128_ps(_mm_set_epi32(0, 0, 0, 0x80000000u)))));
+#else
+#error unexpected architecture
+#endif
+}
+
+static inline f64 __vectorcall F64_COPYSIGN(f64 x, f64 y) {
+#if _M_X64 || _M_IX86
+  return _mm_cvtsd_f64(_mm_or_pd(_mm_and_pd(_mm_set_sd(x), _mm_castsi128_pd(_mm_set_epi32(0, 0, 0x7fffffffu, 0xffffffffu))),
+                                 _mm_and_pd(_mm_set_sd(y), _mm_castsi128_pd(_mm_set_epi32(0, 0, 0x80000000u, 0)))));
+#else
+#error unexpected architecture
+#endif
+}
+
+static inline f32 __vectorcall F32_ABS(f32 x) { return F32_COPYSIGN(x, 0.f); }
+static inline f64 __vectorcall F64_ABS(f64 x) { return F64_COPYSIGN(x, 0.f); }
+#else
+#define F32_ABS fabsf
+#define F64_ABS fabs
+#define F32_COPYSIGN copysignf
+#define F64_COPYSIGN copysign
+#endif
 
