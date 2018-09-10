@@ -35,19 +35,20 @@
 #define MEMCHECK(mem, a, t)  \
   if (UNLIKELY((a) + sizeof(t) > mem->size)) TRAP(OOB)
 
-#define DEFINE_LOAD(name, t1, t2, t3)                                   \
-  static inline t3 WASM_RT_CC name(wasm_rt_memory_t* mem, u64 addr) {   \
-    MEMCHECK(mem, addr, t1);                                            \
-    t1 result;                                                          \
-    memcpy(&result, &mem->data[addr], sizeof(t1));                      \
-    return (t3)(t2)result;                                              \
+#define DEFINE_LOAD(name, t1, t2, t3)                                 \
+  static inline t3 WASM_RT_CC name(wasm_rt_memory_t* mem, u64 addr) { \
+    MEMCHECK(mem, addr, t1);                                          \
+    t1 result;                                                        \
+    memcpy(&result, &mem->data[addr], sizeof(t1));                    \
+    return (t3)(t2)result;                                            \
   }
 
-#define DEFINE_STORE(name, t1, t2)                           \
-  static inline void WASM_RT_CC name(wasm_rt_memory_t* mem, u64 addr, t2 value) { \
-    MEMCHECK(mem, addr, t1);                                 \
-    t1 wrapped = (t1)value;                                  \
-    memcpy(&mem->data[addr], &wrapped, sizeof(t1));          \
+#define DEFINE_STORE(name, t1, t2)                                    \
+  static inline void WASM_RT_CC name(wasm_rt_memory_t* mem, u64 addr, \
+                                     t2 value) {                      \
+    MEMCHECK(mem, addr, t1);                                          \
+    t1 wrapped = (t1)value;                                           \
+    memcpy(&mem->data[addr], &wrapped, sizeof(t1));                   \
   }
 
 DEFINE_LOAD(i32_load, u32, u32, u32);
@@ -88,7 +89,8 @@ static inline unsigned long HighDword(unsigned __int64 value) {
 #endif
 
 static inline int I32_CLZ(unsigned long mask) {
-  if (mask == 0) return 32;
+  if (mask == 0)
+    return 32;
   unsigned long index;
   _BitScanReverse(&index, mask);
   return sizeof(unsigned long) * 8 - (index + 1);
@@ -234,8 +236,11 @@ DEFINE_REINTERPRET(i64_reinterpret_f64, f64, u64)
 #if _MSC_VER
 static inline f32 __vectorcall F32_COPYSIGN(f32 x, f32 y) {
 #if _M_X64 || _M_IX86
-  return _mm_cvtss_f32(_mm_or_ps(_mm_and_ps(_mm_set_ss(x), _mm_castsi128_ps(_mm_set_epi32(0, 0, 0, 0x7fffffffu))),
-                                 _mm_and_ps(_mm_set_ss(y), _mm_castsi128_ps(_mm_set_epi32(0, 0, 0, 0x80000000u)))));
+  return _mm_cvtss_f32(_mm_or_ps(
+      _mm_and_ps(_mm_set_ss(x),
+                 _mm_castsi128_ps(_mm_set_epi32(0, 0, 0, 0x7fffffffu))),
+      _mm_and_ps(_mm_set_ss(y),
+                 _mm_castsi128_ps(_mm_set_epi32(0, 0, 0, 0x80000000u)))));
 #else
 #error unexpected architecture
 #endif
@@ -243,8 +248,11 @@ static inline f32 __vectorcall F32_COPYSIGN(f32 x, f32 y) {
 
 static inline f64 __vectorcall F64_COPYSIGN(f64 x, f64 y) {
 #if _M_X64 || _M_IX86
-  return _mm_cvtsd_f64(_mm_or_pd(_mm_and_pd(_mm_set_sd(x), _mm_castsi128_pd(_mm_set_epi32(0, 0, 0x7fffffffu, 0xffffffffu))),
-                                 _mm_and_pd(_mm_set_sd(y), _mm_castsi128_pd(_mm_set_epi32(0, 0, 0x80000000u, 0)))));
+  return _mm_cvtsd_f64(_mm_or_pd(
+      _mm_and_pd(_mm_set_sd(x), _mm_castsi128_pd(_mm_set_epi32(
+                                    0, 0, 0x7fffffffu, 0xffffffffu))),
+      _mm_and_pd(_mm_set_sd(y),
+                 _mm_castsi128_pd(_mm_set_epi32(0, 0, 0x80000000u, 0)))));
 #else
 #error unexpected architecture
 #endif

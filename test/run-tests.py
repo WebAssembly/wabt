@@ -141,13 +141,6 @@ TOOLS = {
     ]
 }
 
-# TODO(binji): Add Windows support for compiling using run-spec-wasm2c.py
-if IS_WINDOWS:
-  # TOOLS['run-spec-wasm2c'].append(('SKIP', ''))
-  # FIXME HACK
-  l = TOOLS['run-spec-wasm2c'][1][1]
-  l += ['--msvc', '--cc=cl.exe']
-
 ROUNDTRIP_TOOLS = ('wat2wasm',)
 
 
@@ -872,6 +865,8 @@ def main(args):
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',
                       action='store_true')
+  parser.add_argument('--msvc', action='store_true',
+                      help='run wasm2c tests using MSVC compiler')
   parser.add_argument('patterns', metavar='pattern', nargs='*',
                       help='test patterns.')
   options = parser.parse_args(args)
@@ -887,6 +882,15 @@ def main(args):
         fnmatch.translate('*%s*' % p) for p in options.patterns)
   else:
     pattern_re = '.*'
+
+  if options.msvc:
+    # Forward the --msvc flag to run-spec-wasm2c.py. This needs to be separated
+    # into two steps because otherwise Python will complain about modifying a
+    # tuple.
+    wasm2c_args_tuple = TOOLS['run-spec-wasm2c'][1]
+    assert wasm2c_args_tuple[0] == 'ARGS'
+    wasm2c_args_list = wasm2c_args_tuple[1]
+    wasm2c_args_list += ['--msvc']
 
   test_names = FindTestFiles('.txt', pattern_re)
 
