@@ -350,36 +350,33 @@ static const char* s_global_symbols[] = {
 
     // defined
     "CALL_INDIRECT", "DEFINE_LOAD", "DEFINE_REINTERPRET", "DEFINE_STORE",
-    "DIVREM_U", "DIV_S", "DIV_U", "f32", "f32_load", "f32_reinterpret_i32",
-    "f32_store", "f64", "f64_load", "f64_reinterpret_i64", "f64_store", "FMAX",
-    "FMIN", "FUNC_EPILOGUE", "FUNC_PROLOGUE", "func_types", "I32_CLZ",
-    "I32_CLZ", "I32_DIV_S", "i32_load", "i32_load16_s", "i32_load16_u",
-    "i32_load8_s", "i32_load8_u", "I32_POPCNT", "i32_reinterpret_f32",
-    "I32_REM_S", "I32_ROTL", "I32_ROTR", "i32_store", "i32_store16",
-    "i32_store8", "I32_TRUNC_S_F32", "I32_TRUNC_S_F64", "I32_TRUNC_U_F32",
-    "I32_TRUNC_U_F64", "I64_CTZ", "I64_CTZ", "I64_DIV_S", "i64_load",
-    "i64_load16_s", "i64_load16_u", "i64_load32_s", "i64_load32_u",
-    "i64_load8_s", "i64_load8_u", "I64_POPCNT", "i64_reinterpret_f64",
-    "I64_REM_S", "I64_ROTL", "I64_ROTR", "i64_store", "i64_store16",
-    "i64_store32", "i64_store8", "I64_TRUNC_S_F32", "I64_TRUNC_S_F64",
-    "I64_TRUNC_U_F32", "I64_TRUNC_U_F64", "init", "init_elem_segment",
-    "init_func_types", "init_globals", "init_memory", "init_table", "LIKELY",
-    "MEMCHECK", "REM_S", "REM_U", "ROTL", "ROTR", "s16", "s32", "s64", "s8",
-    "TRAP", "TRUNC_S", "TRUNC_U", "Type", "u16", "u32", "u64", "u8", "UNLIKELY",
-    "UNREACHABLE", "WASM_RT_ADD_PREFIX", "wasm_rt_allocate_memory",
-    "wasm_rt_allocate_table", "wasm_rt_anyfunc_t", "wasm_rt_call_stack_depth",
-    "wasm_rt_elem_t", "WASM_RT_F32", "WASM_RT_F64", "wasm_rt_grow_memory",
-    "WASM_RT_I32", "WASM_RT_I64", "WASM_RT_INCLUDED_",
-    "WASM_RT_MAX_CALL_STACK_DEPTH", "wasm_rt_memory_t", "WASM_RT_MODULE_PREFIX",
-    "WASM_RT_PASTE_", "WASM_RT_PASTE", "wasm_rt_register_func_type",
-    "wasm_rt_table_t", "wasm_rt_trap", "WASM_RT_TRAP_CALL_INDIRECT",
-    "WASM_RT_TRAP_DIV_BY_ZERO", "WASM_RT_TRAP_EXHAUSTION",
-    "WASM_RT_TRAP_INT_OVERFLOW", "WASM_RT_TRAP_INVALID_CONVERSION",
-    "WASM_RT_TRAP_NONE", "WASM_RT_TRAP_OOB", "wasm_rt_trap_t",
-    "WASM_RT_TRAP_UNREACHABLE",
-
-    // TODO reformat
-    "WASM_RT_CC", "F32_ABS", "F64_ABS", "F32_COPYSIGN", "F64_COPYSIGN",
+    "DIVREM_U", "DIV_S", "DIV_U", "f32", "F32_ABS", "F64_ABS", "F32_COPYSIGN",
+    "F64_COPYSIGN", "f32_load", "f32_reinterpret_i32", "f32_store", "f64",
+    "f64_load", "f64_reinterpret_i64", "f64_store", "FMAX", "FMIN",
+    "FUNC_EPILOGUE", "FUNC_PROLOGUE", "func_types", "I32_CLZ", "I32_CLZ",
+    "I32_DIV_S", "i32_load", "i32_load16_s", "i32_load16_u", "i32_load8_s",
+    "i32_load8_u", "I32_POPCNT", "i32_reinterpret_f32", "I32_REM_S", "I32_ROTL",
+    "I32_ROTR", "i32_store", "i32_store16", "i32_store8", "I32_TRUNC_S_F32",
+    "I32_TRUNC_S_F64", "I32_TRUNC_U_F32", "I32_TRUNC_U_F64", "I64_CTZ",
+    "I64_CTZ", "I64_DIV_S", "i64_load", "i64_load16_s", "i64_load16_u",
+    "i64_load32_s", "i64_load32_u", "i64_load8_s", "i64_load8_u", "I64_POPCNT",
+    "i64_reinterpret_f64", "I64_REM_S", "I64_ROTL", "I64_ROTR", "i64_store",
+    "i64_store16", "i64_store32", "i64_store8", "I64_TRUNC_S_F32",
+    "I64_TRUNC_S_F64", "I64_TRUNC_U_F32", "I64_TRUNC_U_F64", "init",
+    "init_elem_segment", "init_func_types", "init_globals", "init_memory",
+    "init_table", "LIKELY", "MEMCHECK", "REM_S", "REM_U", "ROTL", "ROTR", "s16",
+    "s32", "s64", "s8", "TRAP", "TRUNC_S", "TRUNC_U", "Type", "u16", "u32",
+    "u64", "u8", "UNLIKELY", "UNREACHABLE", "WASM_RT_ADD_PREFIX",
+    "wasm_rt_allocate_memory", "wasm_rt_allocate_table", "wasm_rt_anyfunc_t",
+    "wasm_rt_call_stack_depth", "WASM_RT_CC", "wasm_rt_elem_t", "WASM_RT_F32",
+    "WASM_RT_F64", "wasm_rt_grow_memory", "WASM_RT_I32", "WASM_RT_I64",
+    "WASM_RT_INCLUDED_", "WASM_RT_MAX_CALL_STACK_DEPTH", "wasm_rt_memory_t",
+    "WASM_RT_MODULE_PREFIX", "WASM_RT_PASTE_", "WASM_RT_PASTE",
+    "wasm_rt_register_func_type", "wasm_rt_table_t", "wasm_rt_trap",
+    "WASM_RT_TRAP_CALL_INDIRECT", "WASM_RT_TRAP_DIV_BY_ZERO",
+    "WASM_RT_TRAP_EXHAUSTION", "WASM_RT_TRAP_INT_OVERFLOW",
+    "WASM_RT_TRAP_INVALID_CONVERSION", "WASM_RT_TRAP_NONE", "WASM_RT_TRAP_OOB",
+    "wasm_rt_trap_t", "WASM_RT_TRAP_UNREACHABLE",
 };
 
 #define SECTION_NAME(x) s_header_##x
@@ -924,10 +921,10 @@ void CWriter::WriteImports() {
     switch (import->kind()) {
       case ExternalKind::Func: {
         const Func& func = cast<FuncImport>(import)->func;
-        std::string mangled_name =
-            DefineImportName(func.name, import->module_name,
-                MangleFuncName(import->field_name, func.decl.sig.param_types,
-                               func.decl.sig.result_types));
+        std::string mangled_name = DefineImportName(
+            func.name, import->module_name,
+            MangleFuncName(import->field_name, func.decl.sig.param_types,
+                           func.decl.sig.result_types));
         WriteFuncDeclaration(func.decl, "(WASM_RT_CC * " + mangled_name + ")");
         Write(";");
         break;
@@ -945,18 +942,16 @@ void CWriter::WriteImports() {
 
       case ExternalKind::Memory: {
         const Memory& memory = cast<MemoryImport>(import)->memory;
-        std::string mangled_name =
-            DefineImportName(memory.name, import->module_name,
-                             MangleName(import->field_name));
+        std::string mangled_name = DefineImportName(
+            memory.name, import->module_name, MangleName(import->field_name));
         WriteMemory(Deref(mangled_name));
         break;
       }
 
       case ExternalKind::Table: {
         const Table& table = cast<TableImport>(import)->table;
-        std::string mangled_name =
-            DefineImportName(table.name, import->module_name,
-                             MangleName(import->field_name));
+        std::string mangled_name = DefineImportName(
+            table.name, import->module_name, MangleName(import->field_name));
         WriteTable(Deref(mangled_name));
         break;
       }

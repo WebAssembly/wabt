@@ -304,7 +304,7 @@ class Toolchain(object):
     if self.msvc:
       # Strip the first line of output, since cl.exe always prints the name of
       # the file it is compiling.
-      nl = stdout.find('\n')
+      nl = stdout.find(b'\n')
       stdout = stdout[nl+1:]
     return stdout
 
@@ -351,8 +351,8 @@ def main(args):
   parser.add_argument('--wasmrt-dir', metavar='PATH',
                       help='directory with wasm-rt files', default=WASM2C_DIR)
   parser.add_argument('--cc', metavar='PATH',
-                      help='the path to the C compiler', default='cc')
-  parser.add_argument('--msvc', action='store_true', default=False,
+                      help='the path to the C compiler')
+  parser.add_argument('--msvc', action='store_true',
                       help='If set, use MSVC as compiler')
   parser.add_argument('--cflags', metavar='FLAGS',
                       help='additional flags for C compiler.',
@@ -375,6 +375,9 @@ def main(args):
                       action='store_true')
   parser.add_argument('file', help='wast file.')
   options = parser.parse_args(args)
+
+  if options.cc is None:
+    options.cc = 'cl' if options.msvc else 'cc'
 
   with utils.TempDirectory(options.out_dir, 'run-spec-wasm2c-') as out_dir:
     # Parse JSON file and generate main .c file with calls to test functions.
@@ -440,9 +443,12 @@ if __name__ == '__main__':
   try:
     sys.exit(main(sys.argv[1:]))
   except Error as e:
-    # TODO(binji): gcc will output unicode quotes in errors since the terminal
-    # environment allows it, but python2 stderr will always attempt to convert
-    # to ascii first, which fails. This will replace the invalid characters
-    # instead, which is ugly, but works.
-    sys.stderr.write(u'{0}\n'.format(e).encode('ascii', 'replace'))
+    if sys.version_info[0] == 3:
+      sys.stderr.write(u'{0}\n'.format(e))
+    else:
+      # TODO(binji): gcc will output unicode quotes in errors since the
+      # terminal environment allows it, but python2 stderr will always attempt
+      # to convert to ascii first, which fails. This will replace the invalid
+      # characters instead, which is ugly, but works.
+      sys.stderr.write(u'{0}\n'.format(e).encode('ascii', 'replace'))
     sys.exit(1)
