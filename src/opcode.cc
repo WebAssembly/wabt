@@ -16,8 +16,6 @@
 
 #include "src/opcode.h"
 
-#include <algorithm>
-
 #include "src/feature.h"
 
 namespace wabt {
@@ -31,6 +29,8 @@ Opcode::Info Opcode::infos_[] = {
    prefix,      code,        PrefixCode(prefix, code)},
 #include "src/opcode.def"
 #undef WABT_OPCODE
+
+    {"<invalid>", Type::Void, Type::Void, Type::Void, Type::Void, 0, 0, 0, 0},
 };
 
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
@@ -39,40 +39,14 @@ Opcode::Info Opcode::infos_[] = {
 #include "src/opcode.def"
 #undef WABT_OPCODE
 
-// static
-Opcode Opcode::FromCode(uint32_t code) {
-  return FromCode(0, code);
-}
-
-// static
-Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
-  uint32_t prefix_code = PrefixCode(prefix, code);
-  auto begin = infos_;
-  auto end = infos_ + WABT_ARRAY_SIZE(infos_);
-  auto iter = std::lower_bound(begin, end, prefix_code,
-                               [](const Info& info, uint32_t prefix_code) {
-                                 return info.prefix_code < prefix_code;
-                               });
-  if (iter == end || iter->prefix_code != prefix_code) {
-    return Opcode(EncodeInvalidOpcode(prefix_code));
-  }
-
-  return Opcode(static_cast<Enum>(iter - infos_));
-}
-
 Opcode::Info Opcode::GetInfo() const {
   if (enum_ < Invalid) {
     return infos_[enum_];
   }
 
-  uint8_t prefix;
-  uint32_t code;
-  DecodeInvalidOpcode(enum_, &prefix, &code);
-  const Info invalid_info = {
-      "<invalid>", Type::Void, Type::Void,
-      Type::Void,  Type::Void, 0,
-      prefix,      code,       PrefixCode(prefix, code),
-  };
+  Info invalid_info = infos_[Opcode::Invalid];
+  DecodeInvalidOpcode(enum_, &invalid_info.prefix, &invalid_info.code);
+  invalid_info.prefix_code = PrefixCode(invalid_info.prefix, invalid_info.code);
   return invalid_info;
 }
 

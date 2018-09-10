@@ -134,6 +134,26 @@ struct Opcode {
   Enum enum_;
 };
 
+extern "C" uint32_t WabtOpcodeCodeTable[];
+
+// static
+inline Opcode Opcode::FromCode(uint32_t code) {
+  return FromCode(0, code);
+}
+
+// static
+inline Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
+  uint32_t value = WabtOpcodeCodeTable[prefix * 256 + code];
+  // The default value in the table is 0. That's a valid value, but only if the
+  // code is 0 (for nop).
+  if (WABT_UNLIKELY(value == 0 && code != 0)) {
+    return Opcode(EncodeInvalidOpcode(PrefixCode(prefix, code)));
+  }
+
+  return Opcode(static_cast<Enum>(value));
+}
+
+
 }  // namespace wabt
 
 #endif  // WABT_OPCODE_H_

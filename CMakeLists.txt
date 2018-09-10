@@ -90,9 +90,11 @@ else ()
   #   interfaces, etc.
   # disable -Wpointer-arith: this is a GCC extension, and doesn't work in MSVC.
   add_definitions(
-    -Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -g -std=c++11
-    -Wold-style-cast -Wuninitialized
+    -Wall -Wextra -Werror -Wno-unused-parameter -Wpointer-arith -g
+    -Wuninitialized
   )
+
+  set(CMAKE_CXX_FLAGS "-std=c++11 -Wold-style-cast")
 
   if (NOT WITH_EXCEPTIONS)
     add_definitions(-fno-exceptions)
@@ -213,6 +215,7 @@ add_custom_target(everything)
 add_library(libwabt STATIC
   src/token.cc
   src/opcode.cc
+  src/opcode-code-table.c
   src/error-formatter.cc
   src/hash-util.cc
   src/filenames.cc
