@@ -390,7 +390,7 @@ static const char* s_global_symbols[] = {
     "WASM_RT_TRAP_UNREACHABLE",
 
     // TODO reformat
-    "WASM_RT_CC",
+    "WASM_RT_CC", "F32_ABS", "F64_ABS", "F32_COPYSIGN", "F64_COPYSIGN",
 };
 
 #define SECTION_NAME(x) s_header_##x
@@ -819,11 +819,8 @@ void CWriter::Write(const Const& const_) {
           Writef("f32_reinterpret_i32(0x%08x) /* %snan:0x%06x */",
                  const_.f32_bits, sign, significand);
         }
-      } else if (const_.f32_bits == 0x80000000) {
-        // Negative zero. Special-cased so it isn't written as -0 below.
-        Writef("-0.f");
       } else {
-        Writef("%.9g", Bitcast<float>(const_.f32_bits));
+        Writef("%1.9ef", Bitcast<float>(const_.f32_bits));
       }
       break;
     }
@@ -842,11 +839,8 @@ void CWriter::Write(const Const& const_) {
                  " */",
                  const_.f64_bits, sign, significand);
         }
-      } else if (const_.f64_bits == 0x8000000000000000ull) {
-        // Negative zero. Special-cased so it isn't written as -0 below.
-        Writef("-0.0");
       } else {
-        Writef("%.17g", Bitcast<double>(const_.f64_bits));
+        Writef("%1.17e", Bitcast<double>(const_.f64_bits));
       }
       break;
 
@@ -1847,11 +1841,11 @@ void CWriter::Write(const BinaryExpr& expr) {
       break;
 
     case Opcode::F32Copysign:
-      WritePrefixBinaryExpr(expr.opcode, "copysignf");
+      WritePrefixBinaryExpr(expr.opcode, "F32_COPYSIGN");
       break;
 
     case Opcode::F64Copysign:
-      WritePrefixBinaryExpr(expr.opcode, "copysign");
+      WritePrefixBinaryExpr(expr.opcode, "F64_COPYSIGN");
       break;
 
     default:
@@ -2143,11 +2137,11 @@ void CWriter::Write(const UnaryExpr& expr) {
       break;
 
     case Opcode::F32Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "fabsf");
+      WriteSimpleUnaryExpr(expr.opcode, "F32_ABS");
       break;
 
     case Opcode::F64Abs:
-      WriteSimpleUnaryExpr(expr.opcode, "fabs");
+      WriteSimpleUnaryExpr(expr.opcode, "F64_ABS");
       break;
 
     case Opcode::F32Sqrt:
