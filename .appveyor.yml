@@ -15,12 +15,14 @@ environment:
   matrix:
   - GENERATOR: MSYS Makefiles
     CONFIG: Release
+    TARGET: x86
     JOBS_FLAG: -j
     MSVC_FLAG:
     EXE_DIR: .
     DEPLOY: false
   - GENERATOR: Visual Studio 14 2015
     CONFIG: Release
+    TARGET: x86
     JOBS_FLAG: "/m:"
     MSVC_FLAG: --msvc
     EXE_DIR: '%CONFIG%'
@@ -28,12 +30,14 @@ environment:
     DEPLOY_NAME: wabt-%APPVEYOR_REPO_TAG_NAME%-win32.zip
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Debug
+    TARGET: x86_amd64
     JOBS_FLAG: "/m:"
     MSVC_FLAG: --msvc
     EXE_DIR: '%CONFIG%'
     DEPLOY: false
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Release
+    TARGET: x86_amd64
     JOBS_FLAG: "/m:"
     MSVC_FLAG: --msvc
     EXE_DIR: '%CONFIG%'
@@ -45,7 +49,7 @@ build_script:
   - cmake --build . --config %CONFIG% --target install -- %JOBS_FLAG%%JOBS%
 
 test_script:
-  - python test\run-tests.py -v --bindir %APPVEYOR_BUILD_FOLDER%\bin %MSVC_FLAG%
+  - call scripts\appveyor-test-script.bat
 
 # Must happen before artifacts step.
 after_test:
