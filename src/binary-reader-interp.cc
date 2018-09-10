@@ -422,14 +422,7 @@ wabt::Result BinaryReaderInterp::EmitData(const void* data,
 }
 
 wabt::Result BinaryReaderInterp::EmitOpcode(Opcode opcode) {
-  if (opcode.HasPrefix()) {
-    CHECK_RESULT(EmitI8(opcode.GetPrefix()));
-  }
-
-  // Assume opcode codes are all 1 byte for now (excluding the prefix).
-  uint32_t code = opcode.GetCode();
-  assert(code < 256);
-  return EmitI8(code);
+  return EmitI32(static_cast<uint32_t>(opcode));
 }
 
 wabt::Result BinaryReaderInterp::EmitI8(uint8_t value) {

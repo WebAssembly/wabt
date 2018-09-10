@@ -18,6 +18,7 @@
 #define WABT_OPCODE_H_
 
 #include "src/common.h"
+#include "src/opcode-code-table.h"
 
 namespace wabt {
 
@@ -133,6 +134,28 @@ struct Opcode {
 
   Enum enum_;
 };
+
+// static
+inline Opcode Opcode::FromCode(uint32_t code) {
+  return FromCode(0, code);
+}
+
+// static
+inline Opcode Opcode::FromCode(uint8_t prefix, uint32_t code) {
+  uint32_t prefix_code = PrefixCode(prefix, code);
+
+  if (WABT_LIKELY(prefix_code < WABT_ARRAY_SIZE(WabtOpcodeCodeTable))) {
+    uint32_t value = WabtOpcodeCodeTable[prefix_code];
+    // The default value in the table is 0. That's a valid value, but only if
+    // the code is 0 (for nop).
+    if (WABT_LIKELY(value != 0 || code == 0)) {
+      return Opcode(static_cast<Enum>(value));
+    }
+  }
+
+  return Opcode(EncodeInvalidOpcode(prefix_code));
+}
+
 
 }  // namespace wabt
 

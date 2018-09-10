@@ -68,7 +68,7 @@ BeginModule(version: 1)
   EndCodeSection
 EndModule
    0| i32.const $42
-   5| return
-   6| return
+   8| return
+  12| return
 main() => i32:42
 ;;; STDOUT ;;)
