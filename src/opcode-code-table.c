@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-/* This structure is defined in C because C++ doesn't (yet) allow you to use
- * designated array initializers, i.e. [10] = {foo}.
- */
+#include "src/opcode-code-table.h"
 
 #include <stdint.h>
 
@@ -29,10 +27,10 @@ typedef enum WabtOpcodeEnum {
   Invalid,
 } WabtOpcodeEnum;
 
-_Static_assert(Invalid <= 65536, "Too many opcodes");
+_Static_assert(Invalid <= WABT_OPCODE_CODE_TABLE_SIZE, "Too many opcodes");
 
 /* The array index calculated below must match the one in Opcode::FromCode. */
-uint32_t WabtOpcodeCodeTable[65536] = {
+uint32_t WabtOpcodeCodeTable[WABT_OPCODE_CODE_TABLE_SIZE] = {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text)                                                     \
   [(prefix << 8) + code] = Name,

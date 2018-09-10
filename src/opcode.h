@@ -18,6 +18,7 @@
 #define WABT_OPCODE_H_
 
 #include "src/common.h"
+#include "src/opcode-code-table.h"
 
 namespace wabt {
 
@@ -133,8 +134,6 @@ struct Opcode {
 
   Enum enum_;
 };
-
-extern "C" uint32_t WabtOpcodeCodeTable[65536];
 
 // static
 inline Opcode Opcode::FromCode(uint32_t code) {
