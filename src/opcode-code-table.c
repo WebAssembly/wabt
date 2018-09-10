@@ -32,10 +32,10 @@ typedef enum WabtOpcodeEnum {
 _Static_assert(Invalid <= 65536, "Too many opcodes");
 
 /* The array index calculated below must match the one in Opcode::FromCode. */
-uint32_t WabtOpcodeCodeTable[] = {
+uint32_t WabtOpcodeCodeTable[65536] = {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
                     text)                                                     \
-  [prefix * 256 + code] = Name,
+  [(prefix << 8) + code] = Name,
 #include "opcode.def"
 #undef WABT_OPCODE
 };
