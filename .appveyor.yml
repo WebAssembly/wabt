@@ -41,7 +41,6 @@ build_script:
   - cmake --build . --config %CONFIG% --target install -- %JOBS_FLAG%%JOBS%
 
 test_script:
-  - "%APPVEYOR_BUILD_FOLDER%\\bin\\wabt-unittests"
   - python test\run-tests.py -v --bindir %APPVEYOR_BUILD_FOLDER%\bin
 
 # Must happen before artifacts step.
