@@ -1,0 +1,7 @@
+;;; TOOL: run-interp
+(module
+  (memory (export "mem") 1 1)
+  (func (export "dummy") (result i32) i32.const 0x25))
+(;; STDOUT ;;;
+dummy() => i32:37
+;;; STDOUT ;;)

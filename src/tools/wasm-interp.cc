@@ -118,6 +118,9 @@ static void RunAllExports(interp::Module* module,
   TypedValues args;
   TypedValues results;
   for (const interp::Export& export_ : module->exports) {
+    if (export_.kind != ExternalKind::Func) {
+      continue;
+    }
     ExecResult exec_result = executor->RunExport(&export_, args);
     if (verbose == RunVerbosity::Verbose) {
       WriteCall(s_stdout_stream.get(), string_view(), export_.name, args,
