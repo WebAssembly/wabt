@@ -656,6 +656,8 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "i32x4.trunc_u/f32x4:sat" { RETURN_OPCODE(Unary, I32X4TruncUF32X4Sat); }
       <i> "i64x2.trunc_s/f64x2:sat" { RETURN_OPCODE(Unary, I64X2TruncSF64X2Sat); }
       <i> "i64x2.trunc_u/f64x2:sat" { RETURN_OPCODE(Unary, I64X2TruncUF64X2Sat); }
+      <i> "return_call"           { RETURN_OPCODE0(ReturnCall); }
+      <i> "return_call_indirect"  { RETURN_OPCODE0(ReturnCallIndirect); }
 
       <i> "type"                { RETURN(Type); }
       <i> "func"                { RETURN(Func); }

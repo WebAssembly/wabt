@@ -184,6 +184,8 @@ enum class ExprType {
   Nop,
   Rethrow,
   Return,
+  ReturnCall,
+  ReturnCallIndirect,
   Select,
   SetGlobal,
   SetLocal,
@@ -301,6 +303,7 @@ typedef VarExpr<ExprType::BrIf> BrIfExpr;
 typedef VarExpr<ExprType::Call> CallExpr;
 typedef VarExpr<ExprType::GetGlobal> GetGlobalExpr;
 typedef VarExpr<ExprType::GetLocal> GetLocalExpr;
+typedef VarExpr<ExprType::ReturnCall> ReturnCallExpr;
 typedef VarExpr<ExprType::SetGlobal> SetGlobalExpr;
 typedef VarExpr<ExprType::SetLocal> SetLocalExpr;
 typedef VarExpr<ExprType::TeeLocal> TeeLocalExpr;
@@ -313,6 +316,8 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
 
   FuncDeclaration decl;
 };
+
+typedef CallIndirectExpr ReturnCallIndirectExpr;
 
 template <ExprType TypeEnum>
 class BlockExprBase : public ExprMixin<TypeEnum> {

@@ -93,6 +93,8 @@ class ExprVisitor::Delegate {
   virtual Result OnMemorySizeExpr(MemorySizeExpr*) = 0;
   virtual Result OnNopExpr(NopExpr*) = 0;
   virtual Result OnReturnExpr(ReturnExpr*) = 0;
+  virtual Result OnReturnCallExpr(ReturnCallExpr*) = 0;
+  virtual Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) = 0;
   virtual Result OnSelectExpr(SelectExpr*) = 0;
   virtual Result OnSetGlobalExpr(SetGlobalExpr*) = 0;
   virtual Result OnSetLocalExpr(SetLocalExpr*) = 0;
@@ -145,6 +147,10 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnMemorySizeExpr(MemorySizeExpr*) override { return Result::Ok; }
   Result OnNopExpr(NopExpr*) override { return Result::Ok; }
   Result OnReturnExpr(ReturnExpr*) override { return Result::Ok; }
+  Result OnReturnCallExpr(ReturnCallExpr*) override { return Result::Ok; }
+  Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override {
+    return Result::Ok;
+  }
   Result OnSelectExpr(SelectExpr*) override { return Result::Ok; }
   Result OnSetGlobalExpr(SetGlobalExpr*) override { return Result::Ok; }
   Result OnSetLocalExpr(SetLocalExpr*) override { return Result::Ok; }

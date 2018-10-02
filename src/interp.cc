@@ -1696,6 +1696,16 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
+      case Opcode::ReturnCall:
+        // TODO(binji): Implement.
+        TRAP(Unreachable);
+        break;
+
+      case Opcode::ReturnCallIndirect:
+        // TODO(binji): Implement.
+        TRAP(Unreachable);
+        break;
+
       case Opcode::I32Load8S:
         CHECK_TRAP(Load<int8_t, uint32_t>(&pc));
         break;
@@ -3369,10 +3379,12 @@ void Thread::Trace(Stream* stream) {
       break;
 
     case Opcode::Call:
+    case Opcode::ReturnCall:
       stream->Writef("%s @%u\n", opcode.GetName(), ReadU32At(pc));
       break;
 
     case Opcode::CallIndirect:
+    case Opcode::ReturnCallIndirect:
       stream->Writef("%s $%u, %u\n", opcode.GetName(), ReadU32At(pc),
                      Top().i32);
       break;
@@ -4056,10 +4068,12 @@ void Environment::Disassemble(Stream* stream,
         break;
 
       case Opcode::Call:
+      case Opcode::ReturnCall:
         stream->Writef("%s @%u\n", opcode.GetName(), ReadU32(&pc));
         break;
 
-      case Opcode::CallIndirect: {
+      case Opcode::CallIndirect:
+      case Opcode::ReturnCallIndirect: {
         Index table_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%u, %%[-1]\n", opcode.GetName(),
                        table_index, ReadU32(&pc));

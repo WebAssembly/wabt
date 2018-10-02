@@ -286,6 +286,15 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnReturnExpr(cast<ReturnExpr>(expr)));
       break;
 
+    case ExprType::ReturnCall:
+      CHECK_RESULT(delegate_->OnReturnCallExpr(cast<ReturnCallExpr>(expr)));
+      break;
+
+    case ExprType::ReturnCallIndirect:
+      CHECK_RESULT(delegate_->OnReturnCallIndirectExpr(
+          cast<ReturnCallIndirectExpr>(expr)));
+      break;
+
     case ExprType::Select:
       CHECK_RESULT(delegate_->OnSelectExpr(cast<SelectExpr>(expr)));
       break;

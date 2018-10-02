@@ -1649,14 +1649,16 @@ void CWriter::Write(const ExprList& exprs) {
         Write("UNREACHABLE;", Newline());
         return;
 
-      case ExprType::AtomicWait:
-      case ExprType::AtomicWake:
       case ExprType::AtomicLoad:
       case ExprType::AtomicRmw:
       case ExprType::AtomicRmwCmpxchg:
       case ExprType::AtomicStore:
+      case ExprType::AtomicWait:
+      case ExprType::AtomicWake:
       case ExprType::IfExcept:
       case ExprType::Rethrow:
+      case ExprType::ReturnCall:
+      case ExprType::ReturnCallIndirect:
       case ExprType::Throw:
       case ExprType::Try:
         UNIMPLEMENTED("...");

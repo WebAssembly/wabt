@@ -53,6 +53,8 @@ const char* ExprTypeName[] = {
   "Nop",
   "Rethrow",
   "Return",
+  "ReturnCall",
+  "ReturnCallIndirect",
   "Select",
   "SetGlobal",
   "SetLocal",
