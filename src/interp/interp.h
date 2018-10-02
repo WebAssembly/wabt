@@ -82,19 +82,6 @@ enum class Result {
 typedef uint32_t IstreamOffset;
 static const IstreamOffset kInvalidIstreamOffset = ~0;
 
-// A table entry has the following packed layout:
-//
-//   struct {
-//     IstreamOffset offset;
-//     uint32_t drop_count;
-//     uint32_t keep_count;
-//   };
-#define WABT_TABLE_ENTRY_SIZE \
-  (sizeof(IstreamOffset) + sizeof(uint32_t) + sizeof(uint32_t))
-#define WABT_TABLE_ENTRY_OFFSET_OFFSET 0
-#define WABT_TABLE_ENTRY_DROP_OFFSET sizeof(IstreamOffset)
-#define WABT_TABLE_ENTRY_KEEP_OFFSET (sizeof(IstreamOffset) + sizeof(uint32_t))
-
 struct FuncSignature {
   FuncSignature() = default;
   FuncSignature(std::vector<Type> param_types, std::vector<Type> result_types);

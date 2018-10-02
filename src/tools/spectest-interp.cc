@@ -23,12 +23,12 @@
 #include <string>
 #include <vector>
 
-#include "src/binary-reader-interp.h"
 #include "src/binary-reader.h"
 #include "src/cast.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
-#include "src/interp.h"
+#include "src/interp/binary-reader-interp.h"
+#include "src/interp/interp.h"
 #include "src/literal.h"
 #include "src/option-parser.h"
 #include "src/resolve-names.h"
