@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "src/binary-reader-interp.h"
+#include "src/interp/binary-reader-interp.h"
 
 #include <cassert>
 #include <cinttypes>
@@ -25,7 +25,8 @@
 #include "src/binary-reader-nop.h"
 #include "src/cast.h"
 #include "src/feature.h"
-#include "src/interp.h"
+#include "src/interp/interp.h"
+#include "src/interp/interp-internal.h"
 #include "src/stream.h"
 #include "src/type-checker.h"
 
