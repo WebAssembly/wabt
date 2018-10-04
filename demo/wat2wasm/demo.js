@@ -20,7 +20,20 @@ Split(["#top-row", "#bottom-row"], {
   direction: 'vertical'
 });
 
+var features = {};
+
 WabtModule().then(function(wabt) {
+
+var FEATURES = [
+  'exceptions',
+  'mutable_globals',
+  'sat_float_to_int',
+  'sign_extension',
+  'simd',
+  'threads',
+  'multi_value',
+  'tail_call',
+];
 
 var kCompileMinMS = 100;
 
@@ -31,6 +44,16 @@ var downloadEl = document.getElementById('download');
 var downloadLink = document.getElementById('downloadLink');
 var binaryBuffer = null;
 var binaryBlobUrl = null;
+
+for (var feature of FEATURES) {
+  var featureEl = document.getElementById(feature);
+  features[feature] = featureEl.checked;
+  featureEl.addEventListener('change', event => {
+    var feature = event.target.id;
+    features[feature] = event.target.checked;
+    onWatChange();
+  });
+}
 
 var wasmInstance = null;
 
@@ -79,9 +102,9 @@ function compile() {
   outputEl.textContent = '';
   var binaryOutput;
   try {
-    var module = wabt.parseWat('test.wast', watEditor.getValue());
+    var module = wabt.parseWat('test.wast', watEditor.getValue(), features);
     module.resolveNames();
-    module.validate();
+    module.validate(features);
     var binaryOutput = module.toBinary({log: true, write_debug_names:true});
     outputEl.textContent = binaryOutput.log;
     binaryBuffer = binaryOutput.buffer;

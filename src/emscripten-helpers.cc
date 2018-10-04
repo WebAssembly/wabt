@@ -32,6 +32,7 @@
 #include "src/binary-writer.h"
 #include "src/common.h"
 #include "src/error-formatter.h"
+#include "src/feature.h"
 #include "src/filenames.h"
 #include "src/generate-names.h"
 #include "src/ir.h"
@@ -76,6 +77,24 @@ struct WabtParseWastResult {
 
 extern "C" {
 
+wabt::Features* wabt_new_features(void) {
+  return new wabt::Features();
+}
+
+void wabt_destroy_features(wabt::Features* f) {
+  delete f;
+}
+
+#define WABT_FEATURE(variable, flag, default_, help)                   \
+  bool wabt_##variable##_enabled(wabt::Features* f) {                  \
+    return f->variable##_enabled();                                    \
+  }                                                                    \
+  void wabt_set_##variable##_enabled(wabt::Features* f, int enabled) { \
+    f->set_##variable##_enabled(enabled);                              \
+  }
+#include "src/feature.def"
+#undef WABT_FEATURE
+
 wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
                                             const void* data,
                                             size_t size) {
@@ -85,19 +104,23 @@ wabt::WastLexer* wabt_new_wast_buffer_lexer(const char* filename,
 }
 
 WabtParseWatResult* wabt_parse_wat(wabt::WastLexer* lexer,
+                                   wabt::Features* features,
                                    wabt::Errors* errors) {
+  wabt::WastParseOptions options(*features);
   WabtParseWatResult* result = new WabtParseWatResult();
   std::unique_ptr<wabt::Module> module;
-  result->result = wabt::ParseWatModule(lexer, &module, errors);
+  result->result = wabt::ParseWatModule(lexer, &module, errors, &options);
   result->module = std::move(module);
   return result;
 }
 
 WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
+                                     wabt::Features* features,
                                      wabt::Errors* errors) {
+  wabt::WastParseOptions options(*features);
   WabtParseWastResult* result = new WabtParseWastResult();
   std::unique_ptr<wabt::Script> script;
-  result->result = wabt::ParseWastScript(lexer, &script, errors);
+  result->result = wabt::ParseWastScript(lexer, &script, errors, &options);
   result->script = std::move(script);
   return result;
 }
@@ -105,8 +128,10 @@ WabtParseWastResult* wabt_parse_wast(wabt::WastLexer* lexer,
 WabtReadBinaryResult* wabt_read_binary(const void* data,
                                        size_t size,
                                        int read_debug_names,
+                                       wabt::Features* features,
                                        wabt::Errors* errors) {
   wabt::ReadBinaryOptions options;
+  options.features = *features;
   options.read_debug_names = read_debug_names;
 
   WabtReadBinaryResult* result = new WabtReadBinaryResult();
@@ -125,14 +150,18 @@ wabt::Result::Enum wabt_resolve_names_module(wabt::Module* module,
 }
 
 wabt::Result::Enum wabt_validate_module(wabt::Module* module,
+                                        wabt::Features* features,
                                         wabt::Errors* errors) {
   wabt::ValidateOptions options;
+  options.features = *features;
   return ValidateModule(module, errors, options);
 }
 
 wabt::Result::Enum wabt_validate_script(wabt::Script* script,
+                                        wabt::Features* features,
                                         wabt::Errors* errors) {
   wabt::ValidateOptions options;
+  options.features = *features;
   return ValidateScript(script, errors, options);
 }
 
