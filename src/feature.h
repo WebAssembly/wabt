@@ -36,7 +36,8 @@ class Features {
 #define WABT_FEATURE(variable, flag, default_, help)              \
   bool variable##_enabled() const { return variable##_enabled_; } \
   void enable_##variable() { variable##_enabled_ = true; }        \
-  void disable_##variable() { variable##_enabled_ = false; }
+  void disable_##variable() { variable##_enabled_ = false; }      \
+  void set_##variable##_enabled(bool value) { variable##_enabled_ = value; }
 #include "src/feature.def"
 #undef WABT_FEATURE
 
