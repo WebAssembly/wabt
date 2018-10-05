@@ -1,0 +1,20 @@
+;;; TOOL: run-gen-wasm-bad
+magic
+version
+section(TYPE) { count[1] function params[0] results[0]}
+section(FUNCTION) { count[1] type[0] }
+section(MEMORY) { count[1] flags[0] init[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    ;; The memory.size reserved byte must be a single 0 byte. Using a long
+    ;; leb128 encoding of 0 is not valid.
+    memory.size reserved[0x80 0]
+    drop
+  }
+}
+(;; STDERR ;;;
+000001e: error: memory.size reserved value must be 0
+000001e: error: memory.size reserved value must be 0
+;;; STDERR ;;)
