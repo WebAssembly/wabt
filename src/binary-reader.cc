@@ -747,8 +747,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadIndex(&sig_index, "call_indirect signature index"));
         ERROR_UNLESS(sig_index < num_signatures_,
                      "invalid call_indirect signature index");
-        uint32_t reserved;
-        CHECK_RESULT(ReadU32Leb128(&reserved, "call_indirect reserved"));
+        uint8_t reserved;
+        CHECK_RESULT(ReadU8(&reserved, "call_indirect reserved"));
         ERROR_UNLESS(reserved == 0, "call_indirect reserved value must be 0");
         CALLBACK(OnCallIndirectExpr, sig_index);
         CALLBACK(OnOpcodeUint32Uint32, sig_index, reserved);
@@ -809,8 +809,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::MemorySize: {
-        uint32_t reserved;
-        CHECK_RESULT(ReadU32Leb128(&reserved, "memory.size reserved"));
+        uint8_t reserved;
+        CHECK_RESULT(ReadU8(&reserved, "memory.size reserved"));
         ERROR_UNLESS(reserved == 0, "memory.size reserved value must be 0");
         CALLBACK0(OnMemorySizeExpr);
         CALLBACK(OnOpcodeUint32, reserved);
@@ -818,8 +818,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::MemoryGrow: {
-        uint32_t reserved;
-        CHECK_RESULT(ReadU32Leb128(&reserved, "memory.grow reserved"));
+        uint8_t reserved;
+        CHECK_RESULT(ReadU8(&reserved, "memory.grow reserved"));
         ERROR_UNLESS(reserved == 0, "memory.grow reserved value must be 0");
         CALLBACK0(OnMemoryGrowExpr);
         CALLBACK(OnOpcodeUint32, reserved);
