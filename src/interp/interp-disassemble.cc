@@ -579,6 +579,35 @@ void Environment::Disassemble(Stream* stream,
 
         break;
       }
+
+      case Opcode::MemoryInit:
+        WABT_UNREACHABLE;
+        break;
+
+      case Opcode::MemoryDrop:
+        WABT_UNREACHABLE;
+        break;
+
+      case Opcode::MemoryCopy:
+        WABT_UNREACHABLE;
+        break;
+
+      case Opcode::MemoryFill:
+        WABT_UNREACHABLE;
+        break;
+
+      case Opcode::TableInit:
+        WABT_UNREACHABLE;
+        break;
+
+      case Opcode::TableDrop:
+        WABT_UNREACHABLE;
+        break;
+
+      case Opcode::TableCopy:
+        WABT_UNREACHABLE;
+        break;
+
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:

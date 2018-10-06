@@ -2555,7 +2555,7 @@
 0001a1b: 00                                        ; section size (guess)
 0001a1c: 01                                        ; num elem segments
 ; elem segment header 0
-0001a1d: 00                                        ; table index
+0001a1d: 00                                      
 0001a1e: 41                                        ; i32.const
 0001a1f: 00                                        ; i32 literal
 0001a20: 0b                                        ; end
@@ -7996,7 +7996,7 @@ BeginModule(version: 1)
   EndExportSection
   BeginElemSection(8)
     OnElemSegmentCount(1)
-    BeginElemSegment(index: 0, table_index: 0)
+    BeginElemSegment(index: 0, table_index: 0, passive: false)
     BeginElemSegmentInitExpr(0)
     OnInitExprI32ConstExpr(index: 0, value: 0)
     EndElemSegmentInitExpr(0)

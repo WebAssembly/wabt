@@ -1322,6 +1322,64 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::TableInit: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        uint8_t reserved;
+        CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
+        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        Index segment;
+        CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
+        CALLBACK(OnTableInitExpr, segment);
+        break;
+      }
+
+      case Opcode::MemoryInit: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        uint8_t reserved;
+        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        Index segment;
+        CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
+        CALLBACK(OnMemoryInitExpr, segment);
+        break;
+      }
+
+      case Opcode::MemoryDrop:
+      case Opcode::TableDrop: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        Index segment;
+        CHECK_RESULT(ReadIndex(&segment, "segment index"));
+        if (opcode == Opcode::MemoryDrop) {
+          CALLBACK(OnMemoryDropExpr, segment);
+        } else {
+          CALLBACK(OnTableDropExpr, segment);
+        }
+        break;
+      }
+
+      case Opcode::MemoryCopy:
+      case Opcode::MemoryFill: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        uint8_t reserved;
+        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        if (opcode == Opcode::MemoryCopy) {
+          CALLBACK(OnMemoryCopyExpr);
+        } else {
+          CALLBACK(OnMemoryFillExpr);
+        }
+        break;
+      }
+
+      case Opcode::TableCopy: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+        uint8_t reserved;
+        CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
+        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        CALLBACK(OnTableCopyExpr);
+        break;
+      }
+
       default:
         return ReportUnexpectedOpcode(opcode);
     }
@@ -1888,12 +1946,19 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
   ERROR_UNLESS(num_elem_segments == 0 || NumTotalTables() > 0,
                "elem section without table section");
   for (Index i = 0; i < num_elem_segments; ++i) {
-    Index table_index;
-    CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
-    CALLBACK(BeginElemSegment, i, table_index);
-    CALLBACK(BeginElemSegmentInitExpr, i);
-    CHECK_RESULT(ReadI32InitExpr(i));
-    CALLBACK(EndElemSegmentInitExpr, i);
+    uint8_t flags_byte;
+    CHECK_RESULT(ReadU8(&flags_byte, "elem segment flags"));
+    SegmentFlags flags = static_cast<SegmentFlags>(flags_byte);
+    Index table_index(0);
+    if (flags == SegmentFlags::IndexOther) {
+      CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
+    }
+    CALLBACK(BeginElemSegment, i, table_index, flags == SegmentFlags::Passive);
+    if (flags != SegmentFlags::Passive) {
+      CALLBACK(BeginElemSegmentInitExpr, i);
+      CHECK_RESULT(ReadI32InitExpr(i));
+      CALLBACK(EndElemSegmentInitExpr, i);
+    }
 
     Index num_function_indexes;
     CHECK_RESULT(
@@ -1959,12 +2024,19 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   ERROR_UNLESS(num_data_segments == 0 || NumTotalMemories() > 0,
                "data section without memory section");
   for (Index i = 0; i < num_data_segments; ++i) {
-    Index memory_index;
-    CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));
-    CALLBACK(BeginDataSegment, i, memory_index);
-    CALLBACK(BeginDataSegmentInitExpr, i);
-    CHECK_RESULT(ReadI32InitExpr(i));
-    CALLBACK(EndDataSegmentInitExpr, i);
+    uint8_t flags_byte;
+    CHECK_RESULT(ReadU8(&flags_byte, "data segment flags"));
+    SegmentFlags flags = static_cast<SegmentFlags>(flags_byte);
+    Index memory_index(0);
+    if (flags == SegmentFlags::IndexOther) {
+      CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));
+    }
+    CALLBACK(BeginDataSegment, i, memory_index, flags == SegmentFlags::Passive);
+    if (flags != SegmentFlags::Passive) {
+      CALLBACK(BeginDataSegmentInitExpr, i);
+      CHECK_RESULT(ReadI32InitExpr(i));
+      CALLBACK(EndDataSegmentInitExpr, i);
+    }
 
     Address data_size;
     const void* data;

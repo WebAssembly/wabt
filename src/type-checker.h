@@ -90,8 +90,15 @@ class TypeChecker {
                     const TypeVector& except_sig);
   Result OnLoad(Opcode);
   Result OnLoop(const TypeVector& param_types, const TypeVector& result_types);
+  Result OnMemoryCopy();
+  Result OnMemoryDrop(Index);
+  Result OnMemoryFill();
   Result OnMemoryGrow();
+  Result OnMemoryInit(Index);
   Result OnMemorySize();
+  Result OnTableCopy();
+  Result OnTableDrop(Index);
+  Result OnTableInit(Index);
   Result OnRethrow();
   Result OnReturn();
   Result OnSelect();

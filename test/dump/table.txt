@@ -57,7 +57,7 @@
 0000026: 00                                        ; section size (guess)
 0000027: 02                                        ; num elem segments
 ; elem segment header 0
-0000028: 00                                        ; table index
+0000028: 00                                      
 0000029: 41                                        ; i32.const
 000002a: 00                                        ; i32 literal
 000002b: 0b                                        ; end
@@ -65,7 +65,7 @@
 000002d: 01                                        ; function index
 000002e: 01                                        ; function index
 ; elem segment header 1
-000002f: 00                                        ; table index
+000002f: 00                                      
 0000030: 41                                        ; i32.const
 0000031: 02                                        ; i32 literal
 0000032: 0b                                        ; end

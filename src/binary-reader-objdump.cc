@@ -704,7 +704,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   }
 
   Result OnElemSegmentCount(Index count) override;
-  Result BeginElemSegment(Index index, Index table_index) override;
+  Result BeginElemSegment(Index index, Index table_index, bool passive) override;
   Result OnElemSegmentFunctionIndexCount(Index index, Index count) override;
   Result OnElemSegmentFunctionIndex(Index segment_index,
                                     Index func_index) override;
@@ -719,7 +719,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   }
 
   Result OnDataSegmentCount(Index count) override;
-  Result BeginDataSegment(Index index, Index memory_index) override;
+  Result BeginDataSegment(Index index, Index memory_index, bool passive) override;
   Result OnDataSegmentData(Index index,
                            const void* data,
                            Address size) override;
@@ -1104,7 +1104,7 @@ Result BinaryReaderObjdump::OnElemSegmentCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::BeginElemSegment(Index index, Index table_index) {
+Result BinaryReaderObjdump::BeginElemSegment(Index index, Index table_index, bool passive) {
   table_index_ = table_index;
   elem_index_ = 0;
   return Result::Ok;
@@ -1273,7 +1273,7 @@ Result BinaryReaderObjdump::OnDataSegmentCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::BeginDataSegment(Index index, Index memory_index) {
+Result BinaryReaderObjdump::BeginDataSegment(Index index, Index memory_index, bool passive) {
   // TODO(sbc): Display memory_index once multiple memories become a thing
   // PrintDetails(" - memory[%" PRIindex "]", memory_index);
   return Result::Ok;

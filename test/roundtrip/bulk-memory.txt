@@ -1,0 +1,75 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --enable-bulk-memory
+(module
+  (memory 0)
+  (table 0 anyfunc)
+
+  (func
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.init 0
+
+    memory.drop 0
+
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.copy
+
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.fill
+
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    table.init 0
+
+    table.drop 0
+
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    table.copy
+
+    )
+
+  (func)
+
+  (data passive "hi")
+  (elem passive 1)
+  )
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.init 0
+    memory.drop 0
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.copy
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.fill
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    table.init 0
+    table.drop 0
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    table.copy)
+  (func (;1;) (type 0))
+  (table (;0;) 0 anyfunc)
+  (memory (;0;) 0)
+  (elem passive 1)
+  (data passive "hi"))
+;;; STDOUT ;;)

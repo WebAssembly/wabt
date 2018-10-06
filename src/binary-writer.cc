@@ -537,14 +537,52 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteExprList(func, cast<LoopExpr>(expr)->block.exprs);
       WriteOpcode(stream_, Opcode::End);
       break;
+    case ExprType::MemoryCopy:
+      WriteOpcode(stream_, Opcode::MemoryCopy);
+      WriteU32Leb128(stream_, 0, "memory.copy reserved");
+      break;
+    case ExprType::MemoryDrop: {
+      auto* drop_expr = cast<MemoryDropExpr>(expr);
+      WriteOpcode(stream_, Opcode::MemoryDrop);
+      WriteU32Leb128(stream_, drop_expr->segment, "memory.drop segment");
+      break;
+    }
+    case ExprType::MemoryFill:
+      WriteOpcode(stream_, Opcode::MemoryFill);
+      WriteU32Leb128(stream_, 0, "memory.fill reserved");
+      break;
     case ExprType::MemoryGrow:
       WriteOpcode(stream_, Opcode::MemoryGrow);
       WriteU32Leb128(stream_, 0, "memory.grow reserved");
       break;
+    case ExprType::MemoryInit: {
+      auto* init_expr = cast<MemoryInitExpr>(expr);
+      WriteOpcode(stream_, Opcode::MemoryInit);
+      WriteU32Leb128(stream_, 0, "memory.init reserved");
+      WriteU32Leb128(stream_, init_expr->segment, "memory.init segment");
+      break;
+    }
     case ExprType::MemorySize:
       WriteOpcode(stream_, Opcode::MemorySize);
       WriteU32Leb128(stream_, 0, "memory.size reserved");
       break;
+    case ExprType::TableCopy:
+      WriteOpcode(stream_, Opcode::TableCopy);
+      WriteU32Leb128(stream_, 0, "table.copy reserved");
+      break;
+    case ExprType::TableDrop: {
+      auto* drop_expr = cast<TableDropExpr>(expr);
+      WriteOpcode(stream_, Opcode::TableDrop);
+      WriteU32Leb128(stream_, drop_expr->segment, "table.drop segment");
+      break;
+    }
+    case ExprType::TableInit: {
+      auto* init_expr = cast<TableInitExpr>(expr);
+      WriteOpcode(stream_, Opcode::TableInit);
+      WriteU32Leb128(stream_, 0, "table.init reserved");
+      WriteU32Leb128(stream_, init_expr->segment, "table.init segment");
+      break;
+    }
     case ExprType::Nop:
       WriteOpcode(stream_, Opcode::Nop);
       break;
@@ -914,10 +952,14 @@ Result BinaryWriter::WriteModule() {
     WriteU32Leb128(stream_, module_->elem_segments.size(), "num elem segments");
     for (size_t i = 0; i < module_->elem_segments.size(); ++i) {
       ElemSegment* segment = module_->elem_segments[i];
-      Index table_index = module_->GetTableIndex(segment->table_var);
       WriteHeader("elem segment header", i);
-      WriteU32Leb128(stream_, table_index, "table index");
-      WriteInitExpr(segment->offset);
+      if (segment->passive) {
+        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::Passive));
+      } else {
+        assert(module_->GetTableIndex(segment->table_var) == 0);
+        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));
+        WriteInitExpr(segment->offset);
+      }
       WriteU32Leb128(stream_, segment->vars.size(), "num function indices");
       for (const Var& var : segment->vars) {
         Index index = module_->GetFuncIndex(var);
@@ -964,9 +1006,13 @@ Result BinaryWriter::WriteModule() {
     for (size_t i = 0; i < module_->data_segments.size(); ++i) {
       const DataSegment* segment = module_->data_segments[i];
       WriteHeader("data segment header", i);
-      Index memory_index = module_->GetMemoryIndex(segment->memory_var);
-      WriteU32Leb128(stream_, memory_index, "memory index");
-      WriteInitExpr(segment->offset);
+      if (segment->passive) {
+        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::Passive));
+      } else {
+        assert(module_->GetMemoryIndex(segment->memory_var) == 0);
+        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));
+        WriteInitExpr(segment->offset);
+      }
       WriteU32Leb128(stream_, segment->data.size(), "data segment size");
       WriteHeader("data segment data", i);
       stream_->WriteData(segment->data, "data segment data");

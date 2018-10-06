@@ -527,13 +527,41 @@ Result TypeChecker::OnLoop(const TypeVector& param_types,
   return result;
 }
 
+Result TypeChecker::OnMemoryCopy() {
+  return CheckOpcode3(Opcode::MemoryCopy);
+}
+
+Result TypeChecker::OnMemoryDrop(uint32_t segment) {
+  return Result::Ok;
+}
+
+Result TypeChecker::OnMemoryFill() {
+  return CheckOpcode3(Opcode::MemoryFill);
+}
+
 Result TypeChecker::OnMemoryGrow() {
   return CheckOpcode1(Opcode::MemoryGrow);
+}
+
+Result TypeChecker::OnMemoryInit(uint32_t segment) {
+  return CheckOpcode3(Opcode::MemoryInit);
 }
 
 Result TypeChecker::OnMemorySize() {
   PushType(Type::I32);
   return Result::Ok;
+}
+
+Result TypeChecker::OnTableCopy() {
+  return CheckOpcode3(Opcode::TableCopy);
+}
+
+Result TypeChecker::OnTableDrop(uint32_t segment) {
+  return Result::Ok;
+}
+
+Result TypeChecker::OnTableInit(uint32_t segment) {
+  return CheckOpcode3(Opcode::TableInit);
 }
 
 Result TypeChecker::OnRethrow() {

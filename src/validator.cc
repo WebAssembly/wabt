@@ -66,8 +66,15 @@ class Validator : public ExprVisitor::Delegate {
   Result OnLoadExpr(LoadExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
+  Result OnMemoryDropExpr(MemoryDropExpr*) override;
+  Result OnMemoryFillExpr(MemoryFillExpr*) override;
   Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
+  Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnMemorySizeExpr(MemorySizeExpr*) override;
+  Result OnTableCopyExpr(TableCopyExpr*) override;
+  Result OnTableDropExpr(TableDropExpr*) override;
+  Result OnTableInitExpr(TableInitExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
@@ -159,6 +166,7 @@ class Validator : public ExprVisitor::Delegate {
                                 const char* desc);
   void CheckExprList(const Location* loc, const ExprList& exprs);
   bool CheckHasMemory(const Location* loc, Opcode opcode);
+  bool CheckHasTable(const Location* loc, Opcode opcode);
   void CheckHasSharedMemory(const Location* loc, Opcode opcode);
   void CheckBlockDeclaration(const Location* loc,
                              Opcode opcode,
@@ -469,6 +477,16 @@ bool Validator::CheckHasMemory(const Location* loc, Opcode opcode) {
   return true;
 }
 
+bool Validator::CheckHasTable(const Location* loc, Opcode opcode) {
+  if (current_module_->tables.size() == 0) {
+    PrintError(loc, "%s requires an imported or defined table.",
+               opcode.GetName());
+    return false;
+  }
+
+  return true;
+}
+
 void Validator::CheckHasSharedMemory(const Location* loc, Opcode opcode) {
   if (CheckHasMemory(loc, opcode)) {
     Memory* memory = current_module_->memories[0];
@@ -685,6 +703,27 @@ Result Validator::EndLoopExpr(LoopExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasMemory(&expr->loc, Opcode::MemoryCopy);
+  typechecker_.OnMemoryCopy();
+  return Result::Ok;
+}
+
+Result Validator::OnMemoryDropExpr(MemoryDropExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasMemory(&expr->loc, Opcode::MemoryDrop);
+  typechecker_.OnMemoryDrop(expr->segment);
+  return Result::Ok;
+}
+
+Result Validator::OnMemoryFillExpr(MemoryFillExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasMemory(&expr->loc, Opcode::MemoryFill);
+  typechecker_.OnMemoryFill();
+  return Result::Ok;
+}
+
 Result Validator::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasMemory(&expr->loc, Opcode::MemoryGrow);
@@ -692,10 +731,38 @@ Result Validator::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::OnMemoryInitExpr(MemoryInitExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasMemory(&expr->loc, Opcode::MemoryInit);
+  typechecker_.OnMemoryInit(expr->segment);
+  return Result::Ok;
+}
+
 Result Validator::OnMemorySizeExpr(MemorySizeExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasMemory(&expr->loc, Opcode::MemorySize);
   typechecker_.OnMemorySize();
+  return Result::Ok;
+}
+
+Result Validator::OnTableCopyExpr(TableCopyExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasTable(&expr->loc, Opcode::TableCopy);
+  typechecker_.OnTableCopy();
+  return Result::Ok;
+}
+
+Result Validator::OnTableDropExpr(TableDropExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasTable(&expr->loc, Opcode::TableDrop);
+  typechecker_.OnTableDrop(expr->segment);
+  return Result::Ok;
+}
+
+Result Validator::OnTableInitExpr(TableInitExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasTable(&expr->loc, Opcode::TableInit);
+  typechecker_.OnTableInit(expr->segment);
   return Result::Ok;
 }
 
@@ -994,14 +1061,16 @@ void Validator::CheckElemSegments(const Module* module) {
     if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(&field)) {
       auto&& elem_segment = elem_segment_field->elem_segment;
       const Table* table;
-      if (Failed(CheckTableVar(&elem_segment.table_var, &table))) {
-        continue;
-      }
-
       for (const Var& var : elem_segment.vars) {
         CheckFuncVar(&var, nullptr);
       }
 
+      if (elem_segment.passive)  {
+        continue;
+      }
+      if (Failed(CheckTableVar(&elem_segment.table_var, &table))) {
+        continue;
+      }
       CheckConstInitExpr(&field.loc, elem_segment.offset, Type::I32,
                          "elem segment offset");
     }
@@ -1028,10 +1097,12 @@ void Validator::CheckDataSegments(const Module* module) {
     if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(&field)) {
       auto&& data_segment = data_segment_field->data_segment;
       const Memory* memory;
+      if (data_segment.passive)  {
+        continue;
+      }
       if (Failed(CheckMemoryVar(&data_segment.memory_var, &memory))) {
         continue;
       }
-
       CheckConstInitExpr(&field.loc, data_segment.offset, Type::I32,
                          "data segment offset");
     }

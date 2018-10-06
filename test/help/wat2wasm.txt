@@ -30,6 +30,7 @@ options:
       --enable-threads                        Enable Threading support
       --enable-multi-value                    Enable Multi-value
       --enable-tail-call                      Enable Tail-call support
+      --enable-bulk-memory                    Enable Bulk-memory operations
   -o, --output=FILE                           output wasm binary file
   -r, --relocatable                           Create a relocatable wasm binary (suitable for linking with e.g. lld)
       --no-canonicalize-leb128s               Write all LEB128 sizes as 5-bytes instead of their minimal size

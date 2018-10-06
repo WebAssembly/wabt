@@ -36,7 +36,7 @@
 0000019: 00                                        ; section size (guess)
 000001a: 01                                        ; num elem segments
 ; elem segment header 0
-000001b: 00                                        ; table index
+000001b: 00                                      
 000001c: 41                                        ; i32.const
 000001d: 01                                        ; i32 literal
 000001e: 45                                        ; i32.eqz
