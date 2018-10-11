@@ -711,13 +711,27 @@ Result Validator::OnReturnExpr(ReturnExpr* expr) {
 }
 
 Result Validator::OnReturnCallExpr(ReturnCallExpr* expr) {
-  // TODO(binji): implement.
-  return Result::Error;
+  expr_loc_ = &expr->loc;
+  const Func* callee;
+  if (Succeeded(CheckFuncVar(&expr->var, &callee))) {
+    typechecker_.OnReturnCall(callee->decl.sig.param_types,
+                        callee->decl.sig.result_types);
+  }
+  return Result::Ok;
 }
 
 Result Validator::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
-  // TODO(binji): implement.
-  return Result::Error;
+  expr_loc_ = &expr->loc;
+  if (current_module_->tables.empty()) {
+    PrintError(&expr->loc, "found return_call_indirect operator, but no table");
+  }
+  if (expr->decl.has_func_type) {
+    const FuncType* func_type;
+    CheckFuncTypeVar(&expr->decl.type_var, &func_type);
+  }
+  typechecker_.OnReturnCallIndirect(expr->decl.sig.param_types,
+                              expr->decl.sig.result_types);
+  return Result::Ok;
 }
 
 Result Validator::OnSelectExpr(SelectExpr* expr) {
@@ -1417,6 +1431,11 @@ class Validator::CheckFuncSignatureExprVisitorDelegate
   }
 
   Result OnCallIndirectExpr(CallIndirectExpr* expr) override {
+    validator_->CheckFuncSignature(&expr->loc, expr->decl);
+    return Result::Ok;
+  }
+
+  Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) override {
     validator_->CheckFuncSignature(&expr->loc, expr->decl);
     return Result::Ok;
   }

@@ -149,11 +149,28 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
              : Result::Error;
 }
 
+Result TypeChecker::CheckTypes(const TypeVector &actual, const TypeVector &expected) {
+  if(actual.size()!=expected.size())
+    return Result::Error;
+  else{
+    Result result = Result::Ok;
+    for(size_t i=0;i<actual.size();i++)
+      result |= CheckType(actual[i],expected[i]);
+    return result;
+  }
+}
+
 Result TypeChecker::CheckSignature(const TypeVector& sig, const char* desc) {
   Result result = Result::Ok;
   for (size_t i = 0; i < sig.size(); ++i) {
     result |= PeekAndCheckType(sig.size() - i - 1, sig[i]);
   }
+  PrintStackIfFailed(result, desc, sig);
+  return result;
+}
+
+Result TypeChecker::CheckReturnSignature(const TypeVector& sig, const TypeVector &expected,const char *desc){
+  Result result = CheckTypes(sig,expected);
   PrintStackIfFailed(result, desc, sig);
   return result;
 }
@@ -171,6 +188,12 @@ Result TypeChecker::PopAndCheckCall(const TypeVector& param_types,
   Result result = CheckSignature(param_types, desc);
   result |= DropTypes(param_types.size());
   PushTypes(result_types);
+  return result;
+}
+
+Result TypeChecker::PopAndCheckParams(const TypeVector& param_types, const char* desc){
+  Result result = CheckSignature(param_types, desc);
+  result |= DropTypes(param_types.size());
   return result;
 }
 
@@ -393,6 +416,30 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
                                    const TypeVector& result_types) {
   Result result = PopAndCheck1Type(Type::I32, "call_indirect");
   result |= PopAndCheckCall(param_types, result_types, "call_indirect");
+  return result;
+}
+
+Result TypeChecker::OnReturnCall(const TypeVector& param_types,
+                           const TypeVector& result_types) {
+  Result result = PopAndCheckParams(param_types,"return_call");
+  Label* func_label;
+  CHECK_RESULT(GetLabel(label_stack_.size() - 1, &func_label));
+  result |= CheckReturnSignature(func_label->result_types, result_types,"return_call");
+
+  CHECK_RESULT(SetUnreachable());
+  return result;
+}
+
+Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
+                                   const TypeVector& result_types) {
+  Result result = PopAndCheck1Type(Type::I32, "return_call_indirect");
+
+  result |= PopAndCheckParams(param_types,"return_call_indirect");
+  Label* func_label;
+  CHECK_RESULT(GetLabel(label_stack_.size() - 1, &func_label));
+  result |= CheckReturnSignature(func_label->result_types, result_types,"return_call_indirect");
+
+  CHECK_RESULT(SetUnreachable());
   return result;
 }
 

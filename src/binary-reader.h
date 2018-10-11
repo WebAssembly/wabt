@@ -236,6 +236,8 @@ class BinaryReaderDelegate {
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr() = 0;
   virtual Result OnReturnExpr() = 0;
+  virtual Result OnReturnCallExpr(Index func_index) = 0;
+  virtual Result OnReturnCallIndirectExpr(Index func_index) = 0;
   virtual Result OnSelectExpr() = 0;
   virtual Result OnSetGlobalExpr(Index global_index) = 0;
   virtual Result OnSetLocalExpr(Index local_index) = 0;
