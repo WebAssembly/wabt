@@ -1638,15 +1638,36 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
-      case Opcode::ReturnCall:
-        // TODO(binji): Implement.
-        TRAP(Unreachable);
-        break;
+      case Opcode::ReturnCall: {
+        IstreamOffset offset = ReadU32(&pc);
+        GOTO(offset);
 
-      case Opcode::ReturnCallIndirect:
-        // TODO(binji): Implement.
-        TRAP(Unreachable);
         break;
+      }
+
+      case Opcode::ReturnCallIndirect:{
+        Index table_index = ReadU32(&pc);
+        Table* table = &env_->tables_[table_index];
+        Index sig_index = ReadU32(&pc);
+        Index entry_index = Pop<uint32_t>();
+        TRAP_IF(entry_index >= table->func_indexes.size(), UndefinedTableIndex);
+        Index func_index = table->func_indexes[entry_index];
+        TRAP_IF(func_index == kInvalidIndex, UninitializedTableElement);
+        Func* func = env_->funcs_[func_index].get();
+        TRAP_UNLESS(env_->FuncSignaturesAreEqual(func->sig_index, sig_index),
+                    IndirectCallSignatureMismatch);
+        if (func->is_host) { // Emulate a call/return for imported functions
+          CHECK_TRAP(CallHost(cast<HostFunc>(func)));
+          if (call_stack_top_ == 0) {
+            result = Result::Returned;
+            goto exit_loop;
+          }
+          GOTO(PopCall());
+        } else {
+          GOTO(cast<DefinedFunc>(func)->offset);
+        }
+        break;
+      }
 
       case Opcode::I32Load8S:
         CHECK_TRAP(Load<int8_t, uint32_t>(&pc));

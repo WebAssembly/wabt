@@ -165,6 +165,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
                              Index default_target_depth) override;
   wabt::Result OnCallExpr(Index func_index) override;
   wabt::Result OnCallIndirectExpr(Index sig_index) override;
+  wabt::Result OnReturnCallExpr(Index func_index) override;
+  wabt::Result OnReturnCallIndirectExpr(Index sig_index) override;
   wabt::Result OnCompareExpr(wabt::Opcode opcode) override;
   wabt::Result OnConvertExpr(wabt::Opcode opcode) override;
   wabt::Result OnDropExpr() override;
@@ -1336,6 +1338,52 @@ wabt::Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index) {
       typechecker_.OnCallIndirect(sig->param_types, sig->result_types));
 
   CHECK_RESULT(EmitOpcode(Opcode::CallIndirect));
+  CHECK_RESULT(EmitI32(module_->table_index));
+  CHECK_RESULT(EmitI32(TranslateSigIndexToEnv(sig_index)));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
+  Func* func = GetFuncByModuleIndex(func_index);
+  FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
+  CHECK_RESULT(typechecker_.OnReturnCall(sig->param_types, sig->result_types));
+
+  Index drop_count, keep_count;
+  CHECK_RESULT(GetReturnDropKeepCount(&drop_count, &keep_count));
+
+  keep_count = static_cast<Index>(sig->param_types.size());
+
+  CHECK_RESULT(EmitDropKeep(drop_count, keep_count));
+
+  if (func->is_host) {
+    CHECK_RESULT(EmitOpcode(Opcode::InterpCallHost));
+    CHECK_RESULT(EmitI32(TranslateFuncIndexToEnv(func_index)));
+    CHECK_RESULT(EmitOpcode(Opcode::Return));
+  } else {
+    CHECK_RESULT(EmitOpcode(Opcode::ReturnCall));
+    CHECK_RESULT(EmitFuncOffset(cast<DefinedFunc>(func), func_index));
+  }
+
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index) {
+  if (module_->table_index == kInvalidIndex) {
+    PrintError("found return_call_indirect operator, but no table");
+    return wabt::Result::Error;
+  }
+  FuncSignature* sig = GetSignatureByModuleIndex(sig_index);
+  CHECK_RESULT(
+    typechecker_.OnReturnCallIndirect(sig->param_types, sig->result_types));
+
+  Index drop_count, keep_count;
+  CHECK_RESULT(GetReturnDropKeepCount(&drop_count, &keep_count));
+
+  keep_count = static_cast<Index>(sig->param_types.size()+1); // Include the index of the function
+
+  CHECK_RESULT(EmitDropKeep(drop_count, keep_count));
+
+  CHECK_RESULT(EmitOpcode(Opcode::ReturnCallIndirect));
   CHECK_RESULT(EmitI32(module_->table_index));
   CHECK_RESULT(EmitI32(TranslateSigIndexToEnv(sig_index)));
   return wabt::Result::Ok;

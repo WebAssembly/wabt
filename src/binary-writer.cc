@@ -432,24 +432,32 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, depth, "break depth for default");
       break;
     }
-    case ExprType::Call:
-    case ExprType::ReturnCall: {
+    case ExprType::Call:{
       Index index = module_->GetFuncIndex(cast<CallExpr>(expr)->var);
-      WriteOpcode(stream_, expr->type() == ExprType::Call ? Opcode::Call
-                                                          : Opcode::ReturnCall);
+      WriteOpcode(stream_, Opcode::Call);
       WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
       break;
     }
-    case ExprType::CallIndirect:
+    case ExprType::ReturnCall: {
+      Index index = module_->GetFuncIndex(cast<ReturnCallExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::ReturnCall);
+      WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
+      break;
+    }
+    case ExprType::CallIndirect:{
+      Index index =
+        module_->GetFuncTypeIndex(cast<CallIndirectExpr>(expr)->decl);
+      WriteOpcode(stream_, Opcode::CallIndirect);
+      WriteU32Leb128WithReloc(index, "signature index", RelocType::TypeIndexLEB);
+      WriteU32Leb128(stream_, 0, "call_indirect reserved");
+      break;
+    }
     case ExprType::ReturnCallIndirect: {
       Index index =
-          module_->GetFuncTypeIndex(cast<CallIndirectExpr>(expr)->decl);
-      WriteOpcode(stream_, expr->type() == ExprType::CallIndirect
-                               ? Opcode::CallIndirect
-                               : Opcode::ReturnCallIndirect);
-      WriteU32Leb128WithReloc(index, "signature index",
-                              RelocType::TypeIndexLEB);
-      WriteU32Leb128(stream_, 0, "call_indirect reserved");
+          module_->GetFuncTypeIndex(cast<ReturnCallIndirectExpr>(expr)->decl);
+      WriteOpcode(stream_, Opcode::ReturnCallIndirect);
+      WriteU32Leb128WithReloc(index, "signature index", RelocType::TypeIndexLEB);
+      WriteU32Leb128(stream_, 0, "return_call_indirect reserved");
       break;
     }
     case ExprType::Compare:

@@ -3,3 +3,5 @@
 /fuzz-out
 /emscripten
 *.pyc
+.idea/
+/cmake-build-debug/

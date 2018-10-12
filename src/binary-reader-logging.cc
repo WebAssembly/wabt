@@ -684,6 +684,9 @@ DEFINE_INDEX(OnTableDropExpr)
 DEFINE_INDEX(OnTableInitExpr)
 DEFINE0(OnNopExpr)
 DEFINE0(OnRethrowExpr);
+DEFINE_INDEX_DESC(OnReturnCallExpr, "func_index")
+
+    DEFINE_INDEX_DESC(OnReturnCallIndirectExpr, "sig_index")
 DEFINE0(OnReturnExpr)
 DEFINE0(OnSelectExpr)
 DEFINE_INDEX_DESC(OnSetGlobalExpr, "index")

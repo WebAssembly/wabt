@@ -143,6 +143,8 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnCallExpr(Index func_index) override;
   Result OnCatchExpr() override;
   Result OnCallIndirectExpr(Index sig_index) override;
+  Result OnReturnCallExpr(Index func_index) override;
+  Result OnReturnCallIndirectExpr(Index sig_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
   Result OnDropExpr() override;
@@ -653,6 +655,20 @@ Result BinaryReaderIR::OnCallExpr(Index func_index) {
 Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index) {
   assert(sig_index < module_->func_types.size());
   auto expr = MakeUnique<CallIndirectExpr>();
+  expr->decl.has_func_type = true;
+  expr->decl.type_var = Var(sig_index, GetLocation());
+  expr->decl.sig = module_->func_types[sig_index]->sig;
+  return AppendExpr(std::move(expr));
+}
+
+Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
+  assert(func_index < module_->funcs.size());
+  return AppendExpr(MakeUnique<ReturnCallExpr>(Var(func_index)));
+}
+
+Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index) {
+  assert(sig_index < module_->func_types.size());
+  auto expr = MakeUnique<ReturnCallIndirectExpr>();
   expr->decl.has_func_type = true;
   expr->decl.type_var = Var(sig_index, GetLocation());
   expr->decl.sig = module_->func_types[sig_index]->sig;
