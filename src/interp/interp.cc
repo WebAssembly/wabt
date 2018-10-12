@@ -1656,9 +1656,13 @@ Result Thread::Run(int num_instructions) {
         Func* func = env_->funcs_[func_index].get();
         TRAP_UNLESS(env_->FuncSignaturesAreEqual(func->sig_index, sig_index),
                     IndirectCallSignatureMismatch);
-        if (func->is_host) {
+        if (func->is_host) { // Emulate a call/return for imported functions
           CHECK_TRAP(CallHost(cast<HostFunc>(func)));
-
+          if (call_stack_top_ == 0) {
+            result = Result::Returned;
+            goto exit_loop;
+          }
+          GOTO(PopCall());
         } else {
           GOTO(cast<DefinedFunc>(func)->offset);
         }

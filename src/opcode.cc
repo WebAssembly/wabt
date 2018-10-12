@@ -71,6 +71,10 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::IfExcept:
       return features.exceptions_enabled();
 
+    case Opcode::ReturnCallIndirect:
+    case Opcode::ReturnCall:
+      return features.tail_call_enabled();
+
     case Opcode::I32TruncSSatF32:
     case Opcode::I32TruncUSatF32:
     case Opcode::I32TruncSSatF64:

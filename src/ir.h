@@ -318,8 +318,8 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
 };
 
 class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
-  public:
-    explicit ReturnCallIndirectExpr(const Location &loc = Location())
+ public:
+  explicit ReturnCallIndirectExpr(const Location &loc = Location())
       : ExprMixin<ExprType::ReturnCallIndirect>(loc) {}
       FuncDeclaration decl;
 };

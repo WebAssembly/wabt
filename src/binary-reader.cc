@@ -756,8 +756,9 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::ReturnCall: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index func_index;
-        CHECK_RESULT(ReadIndex(&func_index, "call function index"));
+        CHECK_RESULT(ReadIndex(&func_index, "return_call"));
         ERROR_UNLESS(func_index < NumTotalFuncs(),
                      "invalid call function index: %" PRIindex, func_index);
         CALLBACK(OnReturnCallExpr, func_index);
@@ -766,8 +767,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::ReturnCallIndirect: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
+
         Index sig_index;
-        CHECK_RESULT(ReadIndex(&sig_index, "call_indirect signature index"));
+        CHECK_RESULT(ReadIndex(&sig_index, "return_call_indirect"));
         ERROR_UNLESS(sig_index < num_signatures_,
                      "invalid call_indirect signature index");
         uint8_t reserved;

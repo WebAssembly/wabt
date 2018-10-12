@@ -166,7 +166,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnCallExpr(Index func_index) override;
   wabt::Result OnCallIndirectExpr(Index sig_index) override;
   wabt::Result OnReturnCallExpr(Index func_index) override;
-  wabt::Result OnReturnCallIndirectExpr(Index func_index) override;
+  wabt::Result OnReturnCallIndirectExpr(Index sig_index) override;
   wabt::Result OnCompareExpr(wabt::Opcode opcode) override;
   wabt::Result OnConvertExpr(wabt::Opcode opcode) override;
   wabt::Result OnDropExpr() override;
@@ -1369,7 +1369,7 @@ wabt::Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
 
 wabt::Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index) {
   if (module_->table_index == kInvalidIndex) {
-    PrintError("found call_indirect operator, but no table");
+    PrintError("found return_call_indirect operator, but no table");
     return wabt::Result::Error;
   }
   FuncSignature* sig = GetSignatureByModuleIndex(sig_index);
