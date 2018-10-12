@@ -235,8 +235,15 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnLoopExpr(Type sig_type) override { return Result::Ok; }
+  Result OnMemoryCopyExpr() override { return Result::Ok; }
+  Result OnMemoryDropExpr(Index segment_index) override { return Result::Ok; }
+  Result OnMemoryFillExpr() override { return Result::Ok; }
   Result OnMemoryGrowExpr() override { return Result::Ok; }
+  Result OnMemoryInitExpr(Index segment_index) override { return Result::Ok; }
   Result OnMemorySizeExpr() override { return Result::Ok; }
+  Result OnTableCopyExpr() override { return Result::Ok; }
+  Result OnTableDropExpr(Index segment_index) override { return Result::Ok; }
+  Result OnTableInitExpr(Index segment_index) override { return Result::Ok; }
   Result OnNopExpr() override { return Result::Ok; }
   Result OnRethrowExpr() override { return Result::Ok; }
   Result OnReturnExpr() override { return Result::Ok; }
@@ -266,7 +273,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Elem section */
   Result BeginElemSection(Offset size) override { return Result::Ok; }
   Result OnElemSegmentCount(Index count) override { return Result::Ok; }
-  Result BeginElemSegment(Index index, Index table_index) override {
+  Result BeginElemSegment(Index index, Index table_index, bool passive) override {
     return Result::Ok;
   }
   Result BeginElemSegmentInitExpr(Index index) override { return Result::Ok; }
@@ -283,7 +290,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Data section */
   Result BeginDataSection(Offset size) override { return Result::Ok; }
   Result OnDataSegmentCount(Index count) override { return Result::Ok; }
-  Result BeginDataSegment(Index index, Index memory_index) override {
+  Result BeginDataSegment(Index index, Index memory_index, bool passive) override {
     return Result::Ok;
   }
   Result BeginDataSegmentInitExpr(Index index) override { return Result::Ok; }

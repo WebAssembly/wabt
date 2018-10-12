@@ -122,6 +122,7 @@ def main(args):
   parser.add_argument('--enable-simd', action='store_true')
   parser.add_argument('--enable-sign-extension', action='store_true')
   parser.add_argument('--enable-multi-value', action='store_true')
+  parser.add_argument('--enable-bulk-memory', action='store_true')
   parser.add_argument('--inline-exports', action='store_true')
   parser.add_argument('--inline-imports', action='store_true')
   parser.add_argument('file', help='test file.')
@@ -139,6 +140,7 @@ def main(args):
       '--enable-sign-extension': options.enable_sign_extension,
       '--enable-simd': options.enable_simd,
       '--enable-threads': options.enable_threads,
+      '--enable-bulk-memory': options.enable_bulk_memory,
       '--no-check': options.no_check,
   })
 
@@ -153,6 +155,7 @@ def main(args):
           options.enable_saturating_float_to_int,
       '--enable-sign-extension': options.enable_sign_extension,
       '--enable-simd': options.enable_simd,
+      '--enable-bulk-memory': options.enable_bulk_memory,
       '--enable-threads': options.enable_threads,
       '--inline-exports': options.inline_exports,
       '--inline-imports': options.inline_imports,

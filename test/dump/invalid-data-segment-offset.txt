@@ -19,7 +19,7 @@
 000000e: 00                                        ; section size (guess)
 000000f: 01                                        ; num data segments
 ; data segment header 0
-0000010: 00                                        ; memory index
+0000010: 00                                      
 0000011: 41                                        ; i32.const
 0000012: 01                                        ; i32 literal
 0000013: 41                                        ; i32.const

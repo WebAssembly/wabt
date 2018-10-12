@@ -1,0 +1,12 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-bulk-memory
+(module
+  (memory 0)
+
+  (func
+    table.drop 0)
+
+  (func)
+
+  (table 0 anyfunc)
+  (elem passive 1))

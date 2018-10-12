@@ -1565,6 +1565,16 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
+      case ExprType::MemoryCopy:
+      case ExprType::MemoryDrop:
+      case ExprType::MemoryInit:
+      case ExprType::MemoryFill:
+      case ExprType::TableCopy:
+      case ExprType::TableDrop:
+      case ExprType::TableInit:
+        UNIMPLEMENTED("...");
+        break;
+
       case ExprType::MemoryGrow: {
         assert(module_->memories.size() == 1);
         Memory* memory = module_->memories[0];

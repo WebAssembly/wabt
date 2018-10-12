@@ -298,6 +298,15 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64X2TruncUF64X2Sat:
       return features.simd_enabled();
 
+    case Opcode::MemoryInit:
+    case Opcode::MemoryDrop:
+    case Opcode::MemoryCopy:
+    case Opcode::MemoryFill:
+    case Opcode::TableInit:
+    case Opcode::TableDrop:
+    case Opcode::TableCopy:
+      return features.bulk_memory_enabled();
+
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:
     case Opcode::InterpBrUnless:

@@ -238,6 +238,15 @@ WABT_OPCODE(I64,  F32,  ___,  ___,  0,  0xfc, 0x05, I64TruncUSatF32, "i64.trunc_
 WABT_OPCODE(I64,  F64,  ___,  ___,  0,  0xfc, 0x06, I64TruncSSatF64, "i64.trunc_s:sat/f64")
 WABT_OPCODE(I64,  F64,  ___,  ___,  0,  0xfc, 0x07, I64TruncUSatF64, "i64.trunc_u:sat/f64")
 
+/* Bulk-memory (--enable-bulk-memory) */
+WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x08, MemoryInit, "memory.init")
+WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x09, MemoryDrop,  "memory.drop")
+WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0a, MemoryCopy, "memory.copy")
+WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0b, MemoryFill, "memory.fill")
+WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0c, TableInit, "table.init")
+WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x0d, TableDrop, "table.drop")
+WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0e, TableCopy, "table.copy")
+
 /* Simd opcodes (--enable-simd) */
 WABT_OPCODE(V128, ___,  ___,  ___,  0,  0xfd, 0x00, V128Const, "v128.const")
 WABT_OPCODE(V128, I32,  ___,  ___,  16, 0xfd, 0x01, V128Load,  "v128.load")

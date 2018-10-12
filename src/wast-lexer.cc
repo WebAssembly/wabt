@@ -447,8 +447,15 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "unreachable"         { RETURN_OPCODE0(Unreachable); }
       <i> "memory.size"         { RETURN_OPCODE0(MemorySize); }
       <i> "memory.grow"         { RETURN_OPCODE0(MemoryGrow); }
+      <i> "memory.init"         { RETURN_OPCODE0(MemoryInit); }
+      <i> "memory.drop"         { RETURN_OPCODE0(MemoryDrop); }
+      <i> "memory.copy"         { RETURN_OPCODE0(MemoryCopy); }
+      <i> "memory.fill"         { RETURN_OPCODE0(MemoryFill); }
       <i> "current_memory"      { RETURN_OPCODE0(MemorySize); }
       <i> "grow_memory"         { RETURN_OPCODE0(MemoryGrow); }
+      <i> "table.init"         { RETURN_OPCODE0(TableInit); }
+      <i> "table.drop"         { RETURN_OPCODE0(TableDrop); }
+      <i> "table.copy"         { RETURN_OPCODE0(TableCopy); }
 
       <i> "i32.atomic.wait"     { RETURN_OPCODE(AtomicWait, I32AtomicWait); }
       <i> "i64.atomic.wait"     { RETURN_OPCODE(AtomicWait, I64AtomicWait); }
@@ -677,6 +684,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "import"              { RETURN(Import); }
       <i> "export"              { RETURN(Export); }
       <i> "except"              { RETURN(Except); }
+      <i> "passive"             { RETURN(Passive); }
       <i> "register"            { RETURN(Register); }
       <i> "invoke"              { RETURN(Invoke); }
       <i> "get"                 { RETURN(Get); }

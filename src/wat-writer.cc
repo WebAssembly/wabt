@@ -567,8 +567,15 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnLoadExpr(LoadExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
+  Result OnMemoryDropExpr(MemoryDropExpr*) override;
+  Result OnMemoryFillExpr(MemoryFillExpr*) override;
   Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
+  Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnMemorySizeExpr(MemorySizeExpr*) override;
+  Result OnTableCopyExpr(TableCopyExpr*) override;
+  Result OnTableDropExpr(TableDropExpr*) override;
+  Result OnTableInitExpr(TableInitExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
@@ -743,13 +750,56 @@ Result WatWriter::ExprVisitorDelegate::EndLoopExpr(LoopExpr* expr) {
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
+  writer_->WritePutsNewline(Opcode::MemoryCopy_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnMemoryDropExpr(MemoryDropExpr* expr) {
+  writer_->WritePutsSpace(Opcode::MemoryDrop_Opcode.GetName());
+  writer_->Writef("%d", expr->segment);
+  writer_->WriteNewline(FORCE_NEWLINE);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnMemoryFillExpr(MemoryFillExpr* expr) {
+  writer_->WritePutsNewline(Opcode::MemoryFill_Opcode.GetName());
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
   writer_->WritePutsNewline(Opcode::MemoryGrow_Opcode.GetName());
   return Result::Ok;
 }
 
+Result WatWriter::ExprVisitorDelegate::OnMemoryInitExpr(MemoryInitExpr* expr) {
+  writer_->WritePutsSpace(Opcode::MemoryInit_Opcode.GetName());
+  writer_->Writef("%d", expr->segment);
+  writer_->WriteNewline(FORCE_NEWLINE);
+  return Result::Ok;
+}
+
 Result WatWriter::ExprVisitorDelegate::OnMemorySizeExpr(MemorySizeExpr* expr) {
   writer_->WritePutsNewline(Opcode::MemorySize_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTableCopyExpr(TableCopyExpr* expr) {
+  writer_->WritePutsNewline(Opcode::TableCopy_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTableDropExpr(TableDropExpr* expr) {
+  writer_->WritePutsSpace(Opcode::TableDrop_Opcode.GetName());
+  writer_->Writef("%d", expr->segment);
+  writer_->WriteNewline(FORCE_NEWLINE);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTableInitExpr(TableInitExpr* expr) {
+  writer_->WritePutsSpace(Opcode::TableInit_Opcode.GetName());
+  writer_->Writef("%d", expr->segment);
+  writer_->WriteNewline(FORCE_NEWLINE);
   return Result::Ok;
 }
 
@@ -1003,6 +1053,19 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     case ExprType::GetLocal:
     case ExprType::Unreachable:
       PushExpr(expr, 0, 1);
+      break;
+
+    case ExprType::MemoryDrop:
+    case ExprType::TableDrop:
+      PushExpr(expr, 0, 0);
+      break;
+
+    case ExprType::MemoryInit:
+    case ExprType::TableInit:
+    case ExprType::MemoryFill:
+    case ExprType::MemoryCopy:
+    case ExprType::TableCopy:
+      PushExpr(expr, 3, 0);
       break;
 
     case ExprType::AtomicLoad:
@@ -1396,7 +1459,11 @@ void WatWriter::WriteTable(const Table& table) {
 
 void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteOpenSpace("elem");
-  WriteInitExpr(segment.offset);
+  if (segment.passive) {
+    WritePutsSpace("passive");
+  } else {
+    WriteInitExpr(segment.offset);
+  }
   for (const Var& var : segment.vars) {
     WriteVar(var, NextChar::Space);
   }
@@ -1415,7 +1482,11 @@ void WatWriter::WriteMemory(const Memory& memory) {
 
 void WatWriter::WriteDataSegment(const DataSegment& segment) {
   WriteOpenSpace("data");
-  WriteInitExpr(segment.offset);
+  if (segment.passive) {
+    WritePutsSpace("passive");
+  } else {
+    WriteInitExpr(segment.offset);
+  }
   WriteQuotedData(segment.data.data(), segment.data.size());
   WriteCloseNewline();
 }

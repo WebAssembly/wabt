@@ -179,7 +179,11 @@ enum class ExprType {
   IfExcept,
   Load,
   Loop,
+  MemoryCopy,
+  MemoryDrop,
+  MemoryFill,
   MemoryGrow,
+  MemoryInit,
   MemorySize,
   Nop,
   Rethrow,
@@ -192,6 +196,9 @@ enum class ExprType {
   SimdLaneOp,
   SimdShuffleOp,
   Store,
+  TableInit,
+  TableCopy,
+  TableDrop,
   TeeLocal,
   Ternary,
   Throw,
@@ -250,6 +257,9 @@ class ExprMixin : public Expr {
 typedef ExprMixin<ExprType::Drop> DropExpr;
 typedef ExprMixin<ExprType::MemoryGrow> MemoryGrowExpr;
 typedef ExprMixin<ExprType::MemorySize> MemorySizeExpr;
+typedef ExprMixin<ExprType::MemoryCopy> MemoryCopyExpr;
+typedef ExprMixin<ExprType::MemoryFill> MemoryFillExpr;
+typedef ExprMixin<ExprType::TableCopy> TableCopyExpr;
 typedef ExprMixin<ExprType::Nop> NopExpr;
 typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
@@ -287,6 +297,38 @@ class SimdShuffleOpExpr : public ExprMixin<ExprType::SimdShuffleOp> {
 
   Opcode opcode;
   v128 val;
+};
+
+class MemoryInitExpr : public ExprMixin<ExprType::MemoryInit> {
+ public:
+  MemoryInitExpr(Index segment, const Location& loc = Location())
+      : ExprMixin<ExprType::MemoryInit>(loc), segment(segment) {}
+
+  Index segment;
+};
+
+class MemoryDropExpr : public ExprMixin<ExprType::MemoryDrop> {
+ public:
+  MemoryDropExpr(Index segment, const Location& loc = Location())
+      : ExprMixin<ExprType::MemoryDrop>(loc), segment(segment) {}
+
+  Index segment;
+};
+
+class TableInitExpr : public ExprMixin<ExprType::TableInit> {
+ public:
+  TableInitExpr(Index segment, const Location& loc = Location())
+      : ExprMixin<ExprType::TableInit>(loc), segment(segment) {}
+
+  Index segment;
+};
+
+class TableDropExpr : public ExprMixin<ExprType::TableDrop> {
+ public:
+  TableDropExpr(Index segment, const Location& loc = Location())
+      : ExprMixin<ExprType::TableDrop>(loc), segment(segment) {}
+
+  Index segment;
 };
 
 template <ExprType TypeEnum>
@@ -513,6 +555,7 @@ struct Table {
 
 struct ElemSegment {
   Var table_var;
+  bool passive = false;
   ExprList offset;
   VarVector vars;
 };
@@ -526,6 +569,7 @@ struct Memory {
 
 struct DataSegment {
   Var memory_var;
+  bool passive = false;
   ExprList offset;
   std::vector<uint8_t> data;
 };

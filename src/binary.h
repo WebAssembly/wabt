@@ -64,6 +64,12 @@ enum class NameSectionSubsection {
   Local = 2,
 };
 
+enum class SegmentFlags: uint8_t {
+  IndexZero = 0,
+  Passive = 1,
+  IndexOther = 2,
+};
+
 extern const char* g_section_name[];
 
 static WABT_INLINE const char* GetSectionName(BinarySection sec) {

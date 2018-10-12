@@ -581,6 +581,14 @@ Result BinaryReaderLogging::OnInitFunction(uint32_t priority,
     return reader_->name(value0, value1);                                \
   }
 
+#define DEFINE_INDEX_INDEX_BOOL(name, desc0, desc1, desc2)                     \
+  Result BinaryReaderLogging::name(Index value0, Index value1, bool value2) {  \
+    LOGF(#name "(" desc0 ": %" PRIindex ", " desc1 ": %" PRIindex              \
+               ", " desc2 ": %s)\n",                                           \
+         value0, value1, value2 ? "true" : "false");                           \
+    return reader_->name(value0, value1, value2);                              \
+  }
+
 #define DEFINE_OPCODE(name)                                            \
   Result BinaryReaderLogging::name(Opcode opcode) {                    \
     LOGF(#name "(\"%s\" (%u))\n", opcode.GetName(), opcode.GetCode()); \
@@ -665,8 +673,15 @@ DEFINE0(OnEndExpr)
 DEFINE_INDEX_DESC(OnGetGlobalExpr, "index")
 DEFINE_INDEX_DESC(OnGetLocalExpr, "index")
 DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);
+DEFINE0(OnMemoryCopyExpr)
+DEFINE_INDEX(OnMemoryDropExpr)
+DEFINE0(OnMemoryFillExpr)
 DEFINE0(OnMemoryGrowExpr)
+DEFINE_INDEX(OnMemoryInitExpr)
 DEFINE0(OnMemorySizeExpr)
+DEFINE0(OnTableCopyExpr)
+DEFINE_INDEX(OnTableDropExpr)
+DEFINE_INDEX(OnTableInitExpr)
 DEFINE0(OnNopExpr)
 DEFINE0(OnRethrowExpr);
 DEFINE0(OnReturnExpr)
@@ -683,7 +698,7 @@ DEFINE_END(EndCodeSection)
 
 DEFINE_BEGIN(BeginElemSection)
 DEFINE_INDEX(OnElemSegmentCount)
-DEFINE_INDEX_INDEX(BeginElemSegment, "index", "table_index")
+DEFINE_INDEX_INDEX_BOOL(BeginElemSegment, "index", "table_index", "passive")
 DEFINE_INDEX(BeginElemSegmentInitExpr)
 DEFINE_INDEX(EndElemSegmentInitExpr)
 DEFINE_INDEX_INDEX(OnElemSegmentFunctionIndexCount, "index", "count")
@@ -693,7 +708,7 @@ DEFINE_END(EndElemSection)
 
 DEFINE_BEGIN(BeginDataSection)
 DEFINE_INDEX(OnDataSegmentCount)
-DEFINE_INDEX_INDEX(BeginDataSegment, "index", "memory_index")
+DEFINE_INDEX_INDEX_BOOL(BeginDataSegment, "index", "memory_index", "passive")
 DEFINE_INDEX(BeginDataSegmentInitExpr)
 DEFINE_INDEX(EndDataSegmentInitExpr)
 DEFINE_INDEX(EndDataSegment)
