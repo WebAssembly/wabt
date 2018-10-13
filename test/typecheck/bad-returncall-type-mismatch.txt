@@ -1,0 +1,42 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-tail-call
+;;; ERROR: 1
+(module
+  (func $v_v)
+  (func $i_i (param i32) (result i32) i32.const 0)
+  (func $v_fff (param f32 f32 f32))
+
+  ;; Mismatch on param type.
+  (func (result i32) return_call $i_i)
+  (func (result i32) f32.const 0 return_call $i_i)
+  (func f32.const 0 f32.const 0 return_call $v_fff)
+  (func f32.const 0 f32.const 0 i32.const 0 return_call $v_fff)
+
+  ;; Mismatch on return type.
+  (func (result i32) return_call $v_v)
+  (func i32.const 0 return_call $i_i)
+  (func (result f32) i32.const 0 return_call $i_i)
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-returncall-type-mismatch.txt:10:22: error: type mismatch in return_call, expected [i32] but got []
+  (func (result i32) return_call $i_i)
+                     ^^^^^^^^^^^
+out/test/typecheck/bad-returncall-type-mismatch.txt:11:34: error: type mismatch in return_call, expected [i32] but got [f32]
+  (func (result i32) f32.const 0 return_call $i_i)
+                                 ^^^^^^^^^^^
+out/test/typecheck/bad-returncall-type-mismatch.txt:12:33: error: type mismatch in return_call, expected [f32, f32, f32] but got [f32, f32]
+  (func f32.const 0 f32.const 0 return_call $v_fff)
+                                ^^^^^^^^^^^
+out/test/typecheck/bad-returncall-type-mismatch.txt:13:45: error: type mismatch in return_call, expected [f32, f32, f32] but got [f32, f32, i32]
+  (func f32.const 0 f32.const 0 i32.const 0 return_call $v_fff)
+                                            ^^^^^^^^^^^
+out/test/typecheck/bad-returncall-type-mismatch.txt:16:22: error: return signatures have inconsistent types: expected [i32], got []
+  (func (result i32) return_call $v_v)
+                     ^^^^^^^^^^^
+out/test/typecheck/bad-returncall-type-mismatch.txt:17:21: error: return signatures have inconsistent types: expected [], got [i32]
+  (func i32.const 0 return_call $i_i)
+                    ^^^^^^^^^^^
+out/test/typecheck/bad-returncall-type-mismatch.txt:18:34: error: return signatures have inconsistent types: expected [f32], got [i32]
+  (func (result f32) i32.const 0 return_call $i_i)
+                                 ^^^^^^^^^^^
+;;; STDERR ;;)

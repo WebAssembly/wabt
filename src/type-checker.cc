@@ -20,6 +20,27 @@
 
 namespace wabt {
 
+namespace {
+
+std::string TypesToString(const TypeVector& types,
+                          const char* prefix = nullptr) {
+  std::string result = "[";
+  if (prefix) {
+    result += prefix;
+  }
+
+  for (size_t i = 0; i < types.size(); ++i) {
+    result += GetTypeName(types[i]);
+    if (i < types.size() - 1) {
+      result += ", ";
+    }
+  }
+  result += "]";
+  return result;
+}
+
+}  // end anonymous namespace
+
 TypeChecker::Label::Label(LabelType label_type,
                           const TypeVector& param_types,
                           const TypeVector& result_types,
@@ -92,7 +113,7 @@ Result TypeChecker::CheckLabelType(Label* label, LabelType label_type) {
   return label->label_type == label_type ? Result::Ok : Result::Error;
 }
 
-Result TypeChecker::GetThisFunctionLabel(Label** label){
+Result TypeChecker::GetThisFunctionLabel(Label** label) {
   return GetLabel(label_stack_.size() - 1, label);
 }
 
@@ -153,13 +174,14 @@ Result TypeChecker::CheckType(Type actual, Type expected) {
              : Result::Error;
 }
 
-Result TypeChecker::CheckTypes(const TypeVector &actual, const TypeVector &expected) {
-  if(actual.size()!=expected.size()) {
+Result TypeChecker::CheckTypes(const TypeVector& actual,
+                               const TypeVector& expected) {
+  if (actual.size() != expected.size()) {
     return Result::Error;
   } else {
     Result result = Result::Ok;
-    for(size_t i=0;i<actual.size();i++)
-      result |= CheckType(actual[i],expected[i]);
+    for (size_t i = 0; i < actual.size(); i++)
+      result |= CheckType(actual[i], expected[i]);
     return result;
   }
 }
@@ -173,9 +195,14 @@ Result TypeChecker::CheckSignature(const TypeVector& sig, const char* desc) {
   return result;
 }
 
-Result TypeChecker::CheckReturnSignature(const TypeVector& sig, const TypeVector &expected,const char *desc){
-  Result result = CheckTypes(sig,expected);
-  PrintStackIfFailed(result, desc, sig);
+Result TypeChecker::CheckReturnSignature(const TypeVector& actual,
+                                         const TypeVector& expected,
+                                         const char* desc) {
+  Result result = CheckTypes(actual, expected);
+  if (Failed(result)) {
+    PrintError("return signatures have inconsistent types: expected %s, got %s",
+               TypesToString(expected).c_str(), TypesToString(actual).c_str());
+  }
   return result;
 }
 
@@ -245,23 +272,6 @@ Result TypeChecker::CheckOpcode3(Opcode opcode) {
       PopAndCheck3Types(opcode.GetParamType1(), opcode.GetParamType2(),
                         opcode.GetParamType3(), opcode.GetName());
   PushType(opcode.GetResultType());
-  return result;
-}
-
-static std::string TypesToString(const TypeVector& types,
-                                 const char* prefix = nullptr) {
-  std::string result = "[";
-  if (prefix) {
-    result += prefix;
-  }
-
-  for (size_t i = 0; i < types.size(); ++i) {
-    result += GetTypeName(types[i]);
-    if (i < types.size() - 1) {
-      result += ", ";
-    }
-  }
-  result += "]";
   return result;
 }
 
@@ -418,24 +428,26 @@ Result TypeChecker::OnCallIndirect(const TypeVector& param_types,
 }
 
 Result TypeChecker::OnReturnCall(const TypeVector& param_types,
-                           const TypeVector& result_types) {
-  Result result = PopAndCheckSignature(param_types,"return_call");
+                                 const TypeVector& result_types) {
+  Result result = PopAndCheckSignature(param_types, "return_call");
   Label* func_label;
   CHECK_RESULT(GetThisFunctionLabel(&func_label));
-  result |= CheckReturnSignature(func_label->result_types, result_types,"return_call");
+  result |= CheckReturnSignature(result_types, func_label->result_types,
+                                 "return_call");
 
   CHECK_RESULT(SetUnreachable());
   return result;
 }
 
 Result TypeChecker::OnReturnCallIndirect(const TypeVector& param_types,
-                                   const TypeVector& result_types) {
+                                         const TypeVector& result_types) {
   Result result = PopAndCheck1Type(Type::I32, "return_call_indirect");
 
-  result |= PopAndCheckSignature(param_types,"return_call_indirect");
+  result |= PopAndCheckSignature(param_types, "return_call_indirect");
   Label* func_label;
   CHECK_RESULT(GetThisFunctionLabel(&func_label));
-  result |= CheckReturnSignature(func_label->result_types, result_types,"return_call_indirect");
+  result |= CheckReturnSignature(result_types, func_label->result_types,
+                                 "return_call_indirect");
 
   CHECK_RESULT(SetUnreachable());
   return result;
