@@ -6,7 +6,7 @@
 
   (type $v_v (func))
   (type $l_l (func (param i64) (result i64)))
-  (type $v_fff (func (param f32 f32 f32)))
+  (type $fff_v (func (param f32 f32 f32)))
 
   ;; Mismatch on call_indirect key.
   (func (result i64)
@@ -27,7 +27,7 @@
   (func
     f32.const 0 f32.const 0 i64.const 0
     i32.const 0
-    return_call_indirect (type $v_fff))
+    return_call_indirect (type $fff_v))
 
   ;; Mismatch on return type.
   (func (result i64)
@@ -58,7 +58,7 @@ out/test/typecheck/bad-returncallindirect-type-mismatch.txt:25:5: error: type mi
     return_call_indirect (type $l_l))
     ^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-returncallindirect-type-mismatch.txt:30:5: error: type mismatch in return_call_indirect, expected [f32, f32, f32] but got [f32, f32, i64]
-    return_call_indirect (type $v_fff))
+    return_call_indirect (type $fff_v))
     ^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-returncallindirect-type-mismatch.txt:35:5: error: return signatures have inconsistent types: expected [i64], got []
     return_call_indirect (type $v_v))
