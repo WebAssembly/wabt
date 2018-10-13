@@ -299,38 +299,6 @@ class SimdShuffleOpExpr : public ExprMixin<ExprType::SimdShuffleOp> {
   v128 val;
 };
 
-class MemoryInitExpr : public ExprMixin<ExprType::MemoryInit> {
- public:
-  MemoryInitExpr(Index segment, const Location& loc = Location())
-      : ExprMixin<ExprType::MemoryInit>(loc), segment(segment) {}
-
-  Index segment;
-};
-
-class MemoryDropExpr : public ExprMixin<ExprType::MemoryDrop> {
- public:
-  MemoryDropExpr(Index segment, const Location& loc = Location())
-      : ExprMixin<ExprType::MemoryDrop>(loc), segment(segment) {}
-
-  Index segment;
-};
-
-class TableInitExpr : public ExprMixin<ExprType::TableInit> {
- public:
-  TableInitExpr(Index segment, const Location& loc = Location())
-      : ExprMixin<ExprType::TableInit>(loc), segment(segment) {}
-
-  Index segment;
-};
-
-class TableDropExpr : public ExprMixin<ExprType::TableDrop> {
- public:
-  TableDropExpr(Index segment, const Location& loc = Location())
-      : ExprMixin<ExprType::TableDrop>(loc), segment(segment) {}
-
-  Index segment;
-};
-
 template <ExprType TypeEnum>
 class VarExpr : public ExprMixin<TypeEnum> {
  public:
@@ -350,6 +318,11 @@ typedef VarExpr<ExprType::SetGlobal> SetGlobalExpr;
 typedef VarExpr<ExprType::SetLocal> SetLocalExpr;
 typedef VarExpr<ExprType::TeeLocal> TeeLocalExpr;
 typedef VarExpr<ExprType::Throw> ThrowExpr;
+
+typedef VarExpr<ExprType::MemoryInit> MemoryInitExpr;
+typedef VarExpr<ExprType::MemoryDrop> MemoryDropExpr;
+typedef VarExpr<ExprType::TableInit> TableInitExpr;
+typedef VarExpr<ExprType::TableDrop> TableDropExpr;
 
 class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
  public:
@@ -559,6 +532,9 @@ struct Table {
 };
 
 struct ElemSegment {
+  explicit ElemSegment(string_view name) : name(name.to_string()) {}
+
+  std::string name;
   Var table_var;
   bool passive = false;
   ExprList offset;
@@ -573,6 +549,9 @@ struct Memory {
 };
 
 struct DataSegment {
+  explicit DataSegment(string_view name) : name(name.to_string()) {}
+
+  std::string name;
   Var memory_var;
   bool passive = false;
   ExprList offset;
@@ -754,8 +733,10 @@ class TableModuleField : public ModuleFieldMixin<ModuleFieldType::Table> {
 class ElemSegmentModuleField
     : public ModuleFieldMixin<ModuleFieldType::ElemSegment> {
  public:
-  explicit ElemSegmentModuleField(const Location& loc = Location())
-      : ModuleFieldMixin<ModuleFieldType::ElemSegment>(loc) {}
+  explicit ElemSegmentModuleField(const Location& loc = Location(),
+                                  string_view name = string_view())
+      : ModuleFieldMixin<ModuleFieldType::ElemSegment>(loc),
+        elem_segment(name) {}
 
   ElemSegment elem_segment;
 };
@@ -772,8 +753,10 @@ class MemoryModuleField : public ModuleFieldMixin<ModuleFieldType::Memory> {
 class DataSegmentModuleField
     : public ModuleFieldMixin<ModuleFieldType::DataSegment> {
  public:
-  explicit DataSegmentModuleField(const Location& loc = Location())
-      : ModuleFieldMixin<ModuleFieldType::DataSegment>(loc) {}
+  explicit DataSegmentModuleField(const Location& loc = Location(),
+                                  string_view name = string_view())
+      : ModuleFieldMixin<ModuleFieldType::DataSegment>(loc),
+        data_segment(name) {}
 
   DataSegment data_segment;
 };
@@ -816,6 +799,12 @@ struct Module {
   const Export* GetExport(string_view) const;
   Exception* GetExcept(const Var&) const;
   Index GetExceptIndex(const Var&) const;
+  const DataSegment* GetDataSegment(const Var&) const;
+  DataSegment* GetDataSegment(const Var&);
+  Index GetDataSegmentIndex(const Var&) const;
+  const ElemSegment* GetElemSegment(const Var&) const;
+  ElemSegment* GetElemSegment(const Var&);
+  Index GetElemSegmentIndex(const Var&) const;
 
   bool IsImport(ExternalKind kind, const Var&) const;
   bool IsImport(const Export& export_) const {
@@ -868,6 +857,8 @@ struct Module {
   BindingHash func_type_bindings;
   BindingHash table_bindings;
   BindingHash memory_bindings;
+  BindingHash data_segment_bindings;
+  BindingHash elem_segment_bindings;
 };
 
 enum class ScriptModuleType {

@@ -816,7 +816,7 @@ Result BinaryReaderIR::OnMemoryCopyExpr() {
 }
 
 Result BinaryReaderIR::OnMemoryDropExpr(Index segment) {
-  return AppendExpr(MakeUnique<MemoryDropExpr>(segment));
+  return AppendExpr(MakeUnique<MemoryDropExpr>(Var(segment)));
 }
 
 Result BinaryReaderIR::OnMemoryFillExpr() {
@@ -828,7 +828,7 @@ Result BinaryReaderIR::OnMemoryGrowExpr() {
 }
 
 Result BinaryReaderIR::OnMemoryInitExpr(Index segment) {
-  return AppendExpr(MakeUnique<MemoryInitExpr>(segment));
+  return AppendExpr(MakeUnique<MemoryInitExpr>(Var(segment)));
 }
 
 Result BinaryReaderIR::OnMemorySizeExpr() {
@@ -840,11 +840,11 @@ Result BinaryReaderIR::OnTableCopyExpr() {
 }
 
 Result BinaryReaderIR::OnTableDropExpr(Index segment) {
-  return AppendExpr(MakeUnique<TableDropExpr>(segment));
+  return AppendExpr(MakeUnique<TableDropExpr>(Var(segment)));
 }
 
 Result BinaryReaderIR::OnTableInitExpr(Index segment) {
-  return AppendExpr(MakeUnique<TableInitExpr>(segment));
+  return AppendExpr(MakeUnique<TableInitExpr>(Var(segment)));
 }
 
 Result BinaryReaderIR::OnNopExpr() {

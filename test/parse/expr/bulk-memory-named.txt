@@ -1,0 +1,18 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-bulk-memory
+
+(module
+  (memory 1)
+  (data $data passive "a")
+  (func
+    i32.const 0 i32.const 0 i32.const 0 memory.init $data
+    memory.drop $data
+  )
+
+  (table 1 anyfunc)
+  (elem $elem passive 0)
+  (func
+    i32.const 0 i32.const 0 i32.const 0 table.init $elem
+    table.drop $elem
+  )
+)

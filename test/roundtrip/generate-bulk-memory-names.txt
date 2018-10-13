@@ -1,0 +1,38 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --generate-names --enable-bulk-memory
+
+(module
+  (memory 1)
+  (data passive "a")
+  (func
+    i32.const 0 i32.const 0 i32.const 0 memory.init 0
+    memory.drop 0
+  )
+
+  (table 1 anyfunc)
+  (elem passive 0)
+  (func
+    i32.const 0 i32.const 0 i32.const 0 table.init 0
+    table.drop 0
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0 (type $t0)
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.init $d0
+    memory.drop $d0)
+  (func $f1 (type $t0)
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    table.init $e0
+    table.drop $e0)
+  (table $T0 1 anyfunc)
+  (memory $M0 1)
+  (elem $e0 passive $f0)
+  (data $d0 passive "a"))
+;;; STDOUT ;;)

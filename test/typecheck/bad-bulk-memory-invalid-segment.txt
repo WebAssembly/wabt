@@ -1,0 +1,31 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-bulk-memory
+;;; ERROR: 1
+
+(module
+  (memory 1)
+  (func
+    i32.const 0 i32.const 0 i32.const 0 memory.init 0
+    memory.drop 0
+  )
+
+  (table 1 anyfunc)
+  (func
+    i32.const 0 i32.const 0 i32.const 0 table.init 0
+    table.drop 0
+  )
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-bulk-memory-invalid-segment.txt:8:53: error: data_segment variable out of range (max 0)
+    i32.const 0 i32.const 0 i32.const 0 memory.init 0
+                                                    ^
+out/test/typecheck/bad-bulk-memory-invalid-segment.txt:9:17: error: data_segment variable out of range (max 0)
+    memory.drop 0
+                ^
+out/test/typecheck/bad-bulk-memory-invalid-segment.txt:14:52: error: elem_segment variable out of range (max 0)
+    i32.const 0 i32.const 0 i32.const 0 table.init 0
+                                                   ^
+out/test/typecheck/bad-bulk-memory-invalid-segment.txt:15:16: error: elem_segment variable out of range (max 0)
+    table.drop 0
+               ^
+;;; STDERR ;;)

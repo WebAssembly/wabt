@@ -806,8 +806,11 @@ Result WastParser::ParseDataModuleField(Module* module) {
   WABT_TRACE(ParseDataModuleField);
   EXPECT(Lpar);
   Location loc = GetLocation();
-  auto field = MakeUnique<DataSegmentModuleField>(loc);
   EXPECT(Data);
+  std::string name;
+  ParseBindVarOpt(&name);
+  auto field = MakeUnique<DataSegmentModuleField>(loc, name);
+
   if (Peek() == TokenType::Passive) {
     Consume();
     field->data_segment.passive = true;
@@ -825,8 +828,11 @@ Result WastParser::ParseElemModuleField(Module* module) {
   WABT_TRACE(ParseElemModuleField);
   EXPECT(Lpar);
   Location loc = GetLocation();
-  auto field = MakeUnique<ElemSegmentModuleField>(loc);
   EXPECT(Elem);
+  std::string name;
+  ParseBindVarOpt(&name);
+  auto field = MakeUnique<ElemSegmentModuleField>(loc, name);
+
   if (Peek() == TokenType::Passive) {
     Consume();
     field->elem_segment.passive = true;
@@ -1467,30 +1473,24 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     }
 
     case TokenType::MemoryCopy:
-      Consume();
+      ErrorUnlessOpcodeEnabled(Consume());
       out_expr->reset(new MemoryCopyExpr(loc));
       break;
 
     case TokenType::MemoryFill:
-      Consume();
+      ErrorUnlessOpcodeEnabled(Consume());
       out_expr->reset(new MemoryFillExpr(loc));
       break;
 
-    case TokenType::MemoryDrop: {
-      Consume();
-      uint64_t segment;
-      CHECK_RESULT(ParseNat(&segment));
-      out_expr->reset(new MemoryDropExpr(segment, loc));
+    case TokenType::MemoryDrop:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<MemoryDropExpr>(loc, out_expr));
       break;
-    }
 
-    case TokenType::MemoryInit: {
-      Consume();
-      uint64_t segment;
-      CHECK_RESULT(ParseNat(&segment));
-      out_expr->reset(new MemoryInitExpr(segment, loc));
+    case TokenType::MemoryInit:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<MemoryInitExpr>(loc, out_expr));
       break;
-    }
 
     case TokenType::MemorySize:
       Consume();
@@ -1503,25 +1503,19 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
 
     case TokenType::TableCopy:
-      Consume();
+      ErrorUnlessOpcodeEnabled(Consume());
       out_expr->reset(new TableCopyExpr(loc));
       break;
 
-    case TokenType::TableDrop: {
-      Consume();
-      uint64_t segment;
-      CHECK_RESULT(ParseNat(&segment));
-      out_expr->reset(new TableDropExpr(segment, loc));
+    case TokenType::TableDrop:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<TableDropExpr>(loc, out_expr));
       break;
-    }
 
-    case TokenType::TableInit: {
-      Consume();
-      uint64_t segment;
-      CHECK_RESULT(ParseNat(&segment));
-      out_expr->reset(new TableInitExpr(segment, loc));
+    case TokenType::TableInit:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<TableInitExpr>(loc, out_expr));
       break;
-    }
 
     case TokenType::Throw:
       ErrorUnlessOpcodeEnabled(Consume());

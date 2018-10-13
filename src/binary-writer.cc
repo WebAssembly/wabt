@@ -550,9 +550,10 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, 0, "memory.copy reserved");
       break;
     case ExprType::MemoryDrop: {
-      auto* drop_expr = cast<MemoryDropExpr>(expr);
+      Index index =
+          module_->GetDataSegmentIndex(cast<MemoryDropExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::MemoryDrop);
-      WriteU32Leb128(stream_, drop_expr->segment, "memory.drop segment");
+      WriteU32Leb128(stream_, index, "memory.drop segment");
       break;
     }
     case ExprType::MemoryFill:
@@ -564,10 +565,11 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, 0, "memory.grow reserved");
       break;
     case ExprType::MemoryInit: {
-      auto* init_expr = cast<MemoryInitExpr>(expr);
+      Index index =
+          module_->GetDataSegmentIndex(cast<MemoryInitExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::MemoryInit);
       WriteU32Leb128(stream_, 0, "memory.init reserved");
-      WriteU32Leb128(stream_, init_expr->segment, "memory.init segment");
+      WriteU32Leb128(stream_, index, "memory.init segment");
       break;
     }
     case ExprType::MemorySize:
@@ -579,16 +581,18 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, 0, "table.copy reserved");
       break;
     case ExprType::TableDrop: {
-      auto* drop_expr = cast<TableDropExpr>(expr);
+      Index index =
+          module_->GetElemSegmentIndex(cast<TableDropExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableDrop);
-      WriteU32Leb128(stream_, drop_expr->segment, "table.drop segment");
+      WriteU32Leb128(stream_, index, "table.drop segment");
       break;
     }
     case ExprType::TableInit: {
-      auto* init_expr = cast<TableInitExpr>(expr);
+      Index index =
+          module_->GetElemSegmentIndex(cast<TableInitExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableInit);
       WriteU32Leb128(stream_, 0, "table.init reserved");
-      WriteU32Leb128(stream_, init_expr->segment, "table.init segment");
+      WriteU32Leb128(stream_, index, "table.init segment");
       break;
     }
     case ExprType::Nop:
