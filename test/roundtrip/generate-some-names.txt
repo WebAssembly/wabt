@@ -54,5 +54,5 @@
   (table $T0 1 1 anyfunc)
   (export "baz" (func $import))
   (export "quux" (func $func0))
-  (elem (i32.const 0) $import))
+  (elem $e0 (i32.const 0) $import))
 ;;; STDOUT ;;)
