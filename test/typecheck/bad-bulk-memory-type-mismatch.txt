@@ -1,0 +1,82 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-bulk-memory
+;;; ERROR: 1
+
+(module
+  (memory 1)
+  (data passive "a")
+  (table 1 anyfunc)
+  (elem passive 0)
+
+  (func
+    ;; Mismatch first operand.
+    f32.const 0 i32.const 0 i32.const 0 memory.init 0
+    f32.const 0 i32.const 0 i32.const 0 memory.copy
+    f32.const 0 i32.const 0 i32.const 0 memory.fill
+    f32.const 0 i32.const 0 i32.const 0 table.init 0
+    f32.const 0 i32.const 0 i32.const 0 table.copy
+
+    ;; Mismatch second operand.
+    i32.const 0 f32.const 0 i32.const 0 memory.init 0
+    i32.const 0 f32.const 0 i32.const 0 memory.copy
+    i32.const 0 f32.const 0 i32.const 0 memory.fill
+    i32.const 0 f32.const 0 i32.const 0 table.init 0
+    i32.const 0 f32.const 0 i32.const 0 table.copy
+
+    ;; Mismatch third operand.
+    i32.const 0 i32.const 0 i64.const 0 memory.init 0
+    i32.const 0 i32.const 0 i64.const 0 memory.copy
+    i32.const 0 i32.const 0 i64.const 0 memory.fill
+    i32.const 0 i32.const 0 i64.const 0 table.init 0
+    i32.const 0 i32.const 0 i64.const 0 table.copy
+  )
+)
+
+
+(;; STDERR ;;;
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:13:41: error: type mismatch in memory.init, expected [i32, i32, i32] but got [f32, i32, i32]
+    f32.const 0 i32.const 0 i32.const 0 memory.init 0
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:14:41: error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i32, i32]
+    f32.const 0 i32.const 0 i32.const 0 memory.copy
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:15:41: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, i32]
+    f32.const 0 i32.const 0 i32.const 0 memory.fill
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:16:41: error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i32]
+    f32.const 0 i32.const 0 i32.const 0 table.init 0
+                                        ^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:17:41: error: type mismatch in table.copy, expected [i32, i32, i32] but got [f32, i32, i32]
+    f32.const 0 i32.const 0 i32.const 0 table.copy
+                                        ^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:20:41: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, f32, i32]
+    i32.const 0 f32.const 0 i32.const 0 memory.init 0
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:21:41: error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f32, i32]
+    i32.const 0 f32.const 0 i32.const 0 memory.copy
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:22:41: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, i32]
+    i32.const 0 f32.const 0 i32.const 0 memory.fill
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:23:41: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i32]
+    i32.const 0 f32.const 0 i32.const 0 table.init 0
+                                        ^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:24:41: error: type mismatch in table.copy, expected [i32, i32, i32] but got [i32, f32, i32]
+    i32.const 0 f32.const 0 i32.const 0 table.copy
+                                        ^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:27:41: error: type mismatch in memory.init, expected [i32, i32, i32] but got [i32, i32, i64]
+    i32.const 0 i32.const 0 i64.const 0 memory.init 0
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:28:41: error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i32, i64]
+    i32.const 0 i32.const 0 i64.const 0 memory.copy
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:29:41: error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i32, i64]
+    i32.const 0 i32.const 0 i64.const 0 memory.fill
+                                        ^^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:30:41: error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, i64]
+    i32.const 0 i32.const 0 i64.const 0 table.init 0
+                                        ^^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-type-mismatch.txt:31:41: error: type mismatch in table.copy, expected [i32, i32, i32] but got [i32, i32, i64]
+    i32.const 0 i32.const 0 i64.const 0 table.copy
+                                        ^^^^^^^^^^
+;;; STDERR ;;)

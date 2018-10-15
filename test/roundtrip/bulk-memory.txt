@@ -70,6 +70,6 @@
   (func (;1;) (type 0))
   (table (;0;) 0 anyfunc)
   (memory (;0;) 0)
-  (elem passive 1)
-  (data passive "hi"))
+  (elem (;0;) passive 1)
+  (data (;0;) passive "hi"))
 ;;; STDOUT ;;)

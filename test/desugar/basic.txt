@@ -15,9 +15,9 @@
   (import "foo" "bar" (func (;0;) (result i32)))
   (global (;0;) i32 (i32.const 1))
   (table (;0;) 1 1 anyfunc)
-  (elem (i32.const 0) 0)
+  (elem (;0;) (i32.const 0) 0)
   (memory (;0;) 1 1)
-  (data (i32.const 0) "hello")
+  (data (;0;) (i32.const 0) "hello")
   (func (;1;) (result i32)
     call 0
     i32.const 1

@@ -130,6 +130,8 @@ class Validator : public ExprVisitor::Delegate {
   Result CheckFuncTypeVar(const Var* var, const FuncType** out_func_type);
   Result CheckTableVar(const Var* var, const Table** out_table);
   Result CheckMemoryVar(const Var* var, const Memory** out_memory);
+  Result CheckDataSegmentVar(const Var* var);
+  Result CheckElemSegmentVar(const Var* var);
   Result CheckLocalVar(const Var* var, Type* out_type);
   Type GetLocalVarTypeOrAny(const Var* var);
   void CheckAlign(const Location* loc,
@@ -323,6 +325,20 @@ Result Validator::CheckMemoryVar(const Var* var, const Memory** out_memory) {
   if (out_memory) {
     *out_memory = current_module_->memories[index];
   }
+  return Result::Ok;
+}
+
+Result Validator::CheckDataSegmentVar(const Var* var) {
+  Index index;
+  CHECK_RESULT(CheckVar(current_module_->data_segments.size(), var,
+                        "data_segment", &index));
+  return Result::Ok;
+}
+
+Result Validator::CheckElemSegmentVar(const Var* var) {
+  Index index;
+  CHECK_RESULT(CheckVar(current_module_->elem_segments.size(), var,
+                        "elem_segment", &index));
   return Result::Ok;
 }
 
@@ -713,7 +729,8 @@ Result Validator::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
 Result Validator::OnMemoryDropExpr(MemoryDropExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasMemory(&expr->loc, Opcode::MemoryDrop);
-  typechecker_.OnMemoryDrop(expr->segment);
+  CheckDataSegmentVar(&expr->var);
+  typechecker_.OnMemoryDrop(expr->var.index());
   return Result::Ok;
 }
 
@@ -734,7 +751,8 @@ Result Validator::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
 Result Validator::OnMemoryInitExpr(MemoryInitExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasMemory(&expr->loc, Opcode::MemoryInit);
-  typechecker_.OnMemoryInit(expr->segment);
+  CheckDataSegmentVar(&expr->var);
+  typechecker_.OnMemoryInit(expr->var.index());
   return Result::Ok;
 }
 
@@ -755,14 +773,16 @@ Result Validator::OnTableCopyExpr(TableCopyExpr* expr) {
 Result Validator::OnTableDropExpr(TableDropExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasTable(&expr->loc, Opcode::TableDrop);
-  typechecker_.OnTableDrop(expr->segment);
+  CheckElemSegmentVar(&expr->var);
+  typechecker_.OnTableDrop(expr->var.index());
   return Result::Ok;
 }
 
 Result Validator::OnTableInitExpr(TableInitExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasTable(&expr->loc, Opcode::TableInit);
-  typechecker_.OnTableInit(expr->segment);
+  CheckElemSegmentVar(&expr->var);
+  typechecker_.OnTableInit(expr->var.index());
   return Result::Ok;
 }
 

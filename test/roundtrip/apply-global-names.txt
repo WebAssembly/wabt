@@ -18,6 +18,6 @@
   (table $T0 1 anyfunc)
   (memory $M0 1)
   (global $g1 i32 (get_global $m.g))
-  (elem (get_global $m.g) $f0)
-  (data (get_global $m.g) "hi"))
+  (elem $e0 (get_global $m.g) $f0)
+  (data $d0 (get_global $m.g) "hi"))
 ;;; STDOUT ;;)

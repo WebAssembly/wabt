@@ -1356,6 +1356,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         Index segment;
         CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
         CALLBACK(OnTableInitExpr, segment);
+        CALLBACK(OnOpcodeUint32Uint32, segment, reserved);
         break;
       }
 
@@ -1367,6 +1368,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         Index segment;
         CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
         CALLBACK(OnMemoryInitExpr, segment);
+        CALLBACK(OnOpcodeUint32Uint32, segment, reserved);
         break;
       }
 
@@ -1380,6 +1382,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         } else {
           CALLBACK(OnTableDropExpr, segment);
         }
+        CALLBACK(OnOpcodeUint32, segment);
         break;
       }
 
@@ -1394,6 +1397,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         } else {
           CALLBACK(OnMemoryFillExpr);
         }
+        CALLBACK(OnOpcodeUint32, reserved);
         break;
       }
 
@@ -1403,6 +1407,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");
         CALLBACK(OnTableCopyExpr);
+        CALLBACK(OnOpcodeUint32, reserved);
         break;
       }
 

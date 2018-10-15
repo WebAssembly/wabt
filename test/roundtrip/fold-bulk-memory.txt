@@ -1,0 +1,53 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-bulk-memory
+
+(module
+  (memory 1)
+  (data passive "a")
+  (func
+    i32.const 0 i32.const 0 i32.const 0 memory.init 0
+    memory.drop 0
+    i32.const 0 i32.const 0 i32.const 0 memory.copy
+    i32.const 0 i32.const 0 i32.const 0 memory.fill
+  )
+
+  (table 1 anyfunc)
+  (elem passive 0)
+  (func
+    i32.const 0 i32.const 0 i32.const 0 table.init 0
+    table.drop 0
+    i32.const 0 i32.const 0 i32.const 0 table.copy
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (memory.init 0
+      (i32.const 0)
+      (i32.const 0)
+      (i32.const 0))
+    (memory.drop 0)
+    (memory.copy
+      (i32.const 0)
+      (i32.const 0)
+      (i32.const 0))
+    (memory.fill
+      (i32.const 0)
+      (i32.const 0)
+      (i32.const 0)))
+  (func (;1;) (type 0)
+    (table.init 0
+      (i32.const 0)
+      (i32.const 0)
+      (i32.const 0))
+    (table.drop 0)
+    (table.copy
+      (i32.const 0)
+      (i32.const 0)
+      (i32.const 0)))
+  (table (;0;) 1 anyfunc)
+  (memory (;0;) 1)
+  (elem (;0;) passive 0)
+  (data (;0;) passive "a"))
+;;; STDOUT ;;)

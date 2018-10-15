@@ -216,6 +216,8 @@ class WatWriter {
   Index memory_index_ = 0;
   Index func_type_index_ = 0;
   Index except_index_ = 0;
+  Index data_segment_index_ = 0;
+  Index elem_segment_index_ = 0;
 };
 
 void WatWriter::Indent() {
@@ -757,8 +759,7 @@ Result WatWriter::ExprVisitorDelegate::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryDropExpr(MemoryDropExpr* expr) {
   writer_->WritePutsSpace(Opcode::MemoryDrop_Opcode.GetName());
-  writer_->Writef("%d", expr->segment);
-  writer_->WriteNewline(FORCE_NEWLINE);
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -774,8 +775,7 @@ Result WatWriter::ExprVisitorDelegate::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnMemoryInitExpr(MemoryInitExpr* expr) {
   writer_->WritePutsSpace(Opcode::MemoryInit_Opcode.GetName());
-  writer_->Writef("%d", expr->segment);
-  writer_->WriteNewline(FORCE_NEWLINE);
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -791,15 +791,13 @@ Result WatWriter::ExprVisitorDelegate::OnTableCopyExpr(TableCopyExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnTableDropExpr(TableDropExpr* expr) {
   writer_->WritePutsSpace(Opcode::TableDrop_Opcode.GetName());
-  writer_->Writef("%d", expr->segment);
-  writer_->WriteNewline(FORCE_NEWLINE);
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
 Result WatWriter::ExprVisitorDelegate::OnTableInitExpr(TableInitExpr* expr) {
   writer_->WritePutsSpace(Opcode::TableInit_Opcode.GetName());
-  writer_->Writef("%d", expr->segment);
-  writer_->WriteNewline(FORCE_NEWLINE);
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -1459,6 +1457,7 @@ void WatWriter::WriteTable(const Table& table) {
 
 void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteOpenSpace("elem");
+  WriteNameOrIndex(segment.name, elem_segment_index_, NextChar::Space);
   if (segment.passive) {
     WritePutsSpace("passive");
   } else {
@@ -1468,6 +1467,7 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
     WriteVar(var, NextChar::Space);
   }
   WriteCloseNewline();
+  elem_segment_index_++;
 }
 
 void WatWriter::WriteMemory(const Memory& memory) {
@@ -1482,6 +1482,7 @@ void WatWriter::WriteMemory(const Memory& memory) {
 
 void WatWriter::WriteDataSegment(const DataSegment& segment) {
   WriteOpenSpace("data");
+  WriteNameOrIndex(segment.name, data_segment_index_, NextChar::Space);
   if (segment.passive) {
     WritePutsSpace("passive");
   } else {
@@ -1489,6 +1490,7 @@ void WatWriter::WriteDataSegment(const DataSegment& segment) {
   }
   WriteQuotedData(segment.data.data(), segment.data.size());
   WriteCloseNewline();
+  data_segment_index_++;
 }
 
 void WatWriter::WriteImport(const Import& import) {

@@ -53,8 +53,12 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result EndIfExceptExpr(IfExceptExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryDropExpr(MemoryDropExpr*) override;
+  Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnSetGlobalExpr(SetGlobalExpr*) override;
   Result OnSetLocalExpr(SetLocalExpr*) override;
+  Result OnTableDropExpr(TableDropExpr*) override;
+  Result OnTableInitExpr(TableInitExpr*) override;
   Result OnTeeLocalExpr(TeeLocalExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
@@ -73,6 +77,8 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveTableVar(Var* var);
   void ResolveMemoryVar(Var* var);
   void ResolveExceptionVar(Var* var);
+  void ResolveDataSegmentVar(Var* var);
+  void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
   void ResolveBlockDeclarationVar(BlockDeclaration* decl);
   void VisitFunc(Func* func);
@@ -178,6 +184,14 @@ void NameResolver::ResolveMemoryVar(Var* var) {
 
 void NameResolver::ResolveExceptionVar(Var* var) {
   ResolveVar(&current_module_->except_bindings, var, "exception");
+}
+
+void NameResolver::ResolveDataSegmentVar(Var* var) {
+  ResolveVar(&current_module_->data_segment_bindings, var, "data segment");
+}
+
+void NameResolver::ResolveElemSegmentVar(Var* var) {
+  ResolveVar(&current_module_->elem_segment_bindings, var, "elem segment");
 }
 
 void NameResolver::ResolveLocalVar(Var* var) {
@@ -299,6 +313,16 @@ Result NameResolver::EndIfExceptExpr(IfExceptExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnMemoryDropExpr(MemoryDropExpr* expr) {
+  ResolveDataSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnMemoryInitExpr(MemoryInitExpr* expr) {
+  ResolveDataSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
 Result NameResolver::OnSetGlobalExpr(SetGlobalExpr* expr) {
   ResolveGlobalVar(&expr->var);
   return Result::Ok;
@@ -306,6 +330,16 @@ Result NameResolver::OnSetGlobalExpr(SetGlobalExpr* expr) {
 
 Result NameResolver::OnSetLocalExpr(SetLocalExpr* expr) {
   ResolveLocalVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnTableDropExpr(TableDropExpr* expr) {
+  ResolveElemSegmentVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnTableInitExpr(TableInitExpr* expr) {
+  ResolveElemSegmentVar(&expr->var);
   return Result::Ok;
 }
 

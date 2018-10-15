@@ -52,8 +52,12 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result EndIfExceptExpr(IfExceptExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
+  Result OnMemoryDropExpr(MemoryDropExpr*) override;
+  Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnSetGlobalExpr(SetGlobalExpr*) override;
   Result OnSetLocalExpr(SetLocalExpr*) override;
+  Result OnTableDropExpr(TableDropExpr*) override;
+  Result OnTableInitExpr(TableInitExpr*) override;
   Result OnTeeLocalExpr(TeeLocalExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
@@ -70,6 +74,8 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result UseNameForTableVar(Var* var);
   Result UseNameForMemoryVar(Var* var);
   Result UseNameForExceptVar(Var* var);
+  Result UseNameForDataSegmentVar(Var* var);
+  Result UseNameForElemSegmentVar(Var* var);
   Result UseNameForParamAndLocalVar(Func* func, Var* var);
   Result VisitFunc(Index func_index, Func* func);
   Result VisitGlobal(Global* global);
@@ -178,6 +184,24 @@ Result NameApplier::UseNameForExceptVar(Var* var) {
   return Result::Ok;
 }
 
+Result NameApplier::UseNameForDataSegmentVar(Var* var) {
+  DataSegment* data_segment = module_->GetDataSegment(*var);
+  if (!data_segment) {
+    return Result::Error;
+  }
+  UseNameForVar(data_segment->name, var);
+  return Result::Ok;
+}
+
+Result NameApplier::UseNameForElemSegmentVar(Var* var) {
+  ElemSegment* elem_segment = module_->GetElemSegment(*var);
+  if (!elem_segment) {
+    return Result::Error;
+  }
+  UseNameForVar(elem_segment->name, var);
+  return Result::Ok;
+}
+
 Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
   Index local_index = func->GetLocalIndex(*var);
   if (local_index >= func->GetNumParamsAndLocals()) {
@@ -225,6 +249,26 @@ Result NameApplier::BeginLoopExpr(LoopExpr* expr) {
 
 Result NameApplier::EndLoopExpr(LoopExpr* expr) {
   PopLabel();
+  return Result::Ok;
+}
+
+Result NameApplier::OnMemoryDropExpr(MemoryDropExpr* expr) {
+  CHECK_RESULT(UseNameForDataSegmentVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnMemoryInitExpr(MemoryInitExpr* expr)  {
+  CHECK_RESULT(UseNameForDataSegmentVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnTableDropExpr(TableDropExpr* expr)  {
+  CHECK_RESULT(UseNameForElemSegmentVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnTableInitExpr(TableInitExpr* expr)  {
+  CHECK_RESULT(UseNameForElemSegmentVar(&expr->var));
   return Result::Ok;
 }
 
