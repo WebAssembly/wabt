@@ -202,19 +202,23 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
 }
 
 Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
-                                            const char* message) {
-  const char* maybe_space = " ";
-  if (!message) {
-    message = maybe_space = "";
+                                            const char* where) {
+  std::string message = "unexpected opcode";
+  if (where) {
+    message += ' ';
+    message += where;
   }
-  if (opcode.HasPrefix()) {
-    PrintError("unexpected opcode%s%s: %d %d (0x%x 0x%x)", maybe_space, message,
-               opcode.GetPrefix(), opcode.GetCode(), opcode.GetPrefix(),
-               opcode.GetCode());
-  } else {
-    PrintError("unexpected opcode%s%s: %d (0x%x)", maybe_space, message,
-               opcode.GetCode(), opcode.GetCode());
+
+  message += ":";
+
+  std::vector<uint8_t> bytes = opcode.GetBytes();
+  assert(bytes.size() > 0);
+
+  for (uint8_t byte: bytes) {
+    message += StringPrintf(" 0x%x", byte);
   }
+
+  PrintError("%s", message.c_str());
   return Result::Error;
 }
 
@@ -806,6 +810,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F32Load:
       case Opcode::F64Load:
       case Opcode::V128Load: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
         Address offset;
@@ -826,6 +831,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F32Store:
       case Opcode::F64Store:
       case Opcode::V128Store: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "store alignment"));
         Address offset;
@@ -1225,6 +1231,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
 
       case Opcode::AtomicWake: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
         Address offset;
@@ -1237,6 +1244,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::I32AtomicWait:
       case Opcode::I64AtomicWait: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
         Address offset;
@@ -1254,6 +1262,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicLoad32U:
       case Opcode::I32AtomicLoad:
       case Opcode::I64AtomicLoad: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
         Address offset;
@@ -1271,6 +1280,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicStore32:
       case Opcode::I32AtomicStore:
       case Opcode::I64AtomicStore: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "store alignment"));
         Address offset;
@@ -1323,6 +1333,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicRmw8UXchg:
       case Opcode::I64AtomicRmw16UXchg:
       case Opcode::I64AtomicRmw32UXchg: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "memory alignment"));
         Address offset;
@@ -1340,6 +1351,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64AtomicRmw8UCmpxchg:
       case Opcode::I64AtomicRmw16UCmpxchg:
       case Opcode::I64AtomicRmw32UCmpxchg: {
+        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "memory alignment"));
         Address offset;

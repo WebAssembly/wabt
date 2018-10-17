@@ -12,7 +12,7 @@ out/test/spec/func_ptrs.wast:36: assert_invalid passed:
 out/test/spec/func_ptrs.wast:40: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
 out/test/spec/func_ptrs.wast:44: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 1 (0x1)
+  0000013: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/func_ptrs.wast:48: assert_invalid passed:
   000000c: error: invalid function signature index: 42
 out/test/spec/func_ptrs.wast:49: assert_invalid passed:
