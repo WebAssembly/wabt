@@ -1,0 +1,72 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-tail-call
+;;; ERROR: 1
+(module
+  (table 1 anyfunc)
+
+  (type $v_v (func))
+  (type $l_l (func (param i64) (result i64)))
+  (type $fff_v (func (param f32 f32 f32)))
+
+  ;; Mismatch on call_indirect key.
+  (func (result i64)
+    f64.const 0
+    f32.const 0
+    return_call_indirect (type $l_l))
+
+  ;; Mismatch on param type.
+  (func (result i64)
+    i32.const 0
+    return_call_indirect (type $l_l))
+
+  (func (result i64)
+    f32.const 0
+    i32.const 0
+    return_call_indirect (type $l_l))
+
+  (func
+    f32.const 0 f32.const 0 i64.const 0
+    i32.const 0
+    return_call_indirect (type $fff_v))
+
+  ;; Mismatch on return type.
+  (func (result i64)
+    i32.const 0
+    return_call_indirect (type $v_v))
+
+  (func
+    i64.const 0
+    i32.const 0
+    return_call_indirect (type $l_l))
+
+  (func (result f32)
+    i64.const 0
+    i32.const 0
+    return_call_indirect (type $l_l))
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-returncallindirect-type-mismatch.txt:15:5: error: type mismatch in return_call_indirect, expected [i32] but got [... f32]
+    return_call_indirect (type $l_l))
+    ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-returncallindirect-type-mismatch.txt:15:5: error: type mismatch in return_call_indirect, expected [i64] but got [f64]
+    return_call_indirect (type $l_l))
+    ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-returncallindirect-type-mismatch.txt:20:5: error: type mismatch in return_call_indirect, expected [i64] but got []
+    return_call_indirect (type $l_l))
+    ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-returncallindirect-type-mismatch.txt:25:5: error: type mismatch in return_call_indirect, expected [i64] but got [f32]
+    return_call_indirect (type $l_l))
+    ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-returncallindirect-type-mismatch.txt:30:5: error: type mismatch in return_call_indirect, expected [f32, f32, f32] but got [f32, f32, i64]
+    return_call_indirect (type $fff_v))
+    ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-returncallindirect-type-mismatch.txt:35:5: error: return signatures have inconsistent types: expected [i64], got []
+    return_call_indirect (type $v_v))
+    ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-returncallindirect-type-mismatch.txt:40:5: error: return signatures have inconsistent types: expected [], got [i64]
+    return_call_indirect (type $l_l))
+    ^^^^^^^^^^^^^^^^^^^^
+out/test/typecheck/bad-returncallindirect-type-mismatch.txt:45:5: error: return signatures have inconsistent types: expected [f32], got [i64]
+    return_call_indirect (type $l_l))
+    ^^^^^^^^^^^^^^^^^^^^
+;;; STDERR ;;)

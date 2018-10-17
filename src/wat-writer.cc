@@ -1038,10 +1038,23 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
     }
 
+    case ExprType::ReturnCall: {
+      const Var& var = cast<ReturnCallExpr>(expr)->var;
+      PushExpr(expr, GetFuncParamCount(var), GetFuncResultCount(var));
+      break;
+    }
+
     case ExprType::CallIndirect: {
       const auto* ci_expr = cast<CallIndirectExpr>(expr);
       PushExpr(expr, ci_expr->decl.GetNumParams() + 1,
                ci_expr->decl.GetNumResults());
+      break;
+    }
+
+    case ExprType::ReturnCallIndirect: {
+      const auto* rci_expr = cast<ReturnCallIndirectExpr>(expr);
+      PushExpr(expr, rci_expr->decl.GetNumParams() + 1,
+               rci_expr->decl.GetNumResults());
       break;
     }
 

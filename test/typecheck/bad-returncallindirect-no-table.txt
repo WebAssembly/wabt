@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-tail-call
+;;; ERROR: 1
+(module
+  (type $v_v (func))
+
+  (func
+    i32.const 0
+    return_call_indirect)
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-returncallindirect-no-table.txt:9:5: error: found return_call_indirect operator, but no table
+    return_call_indirect)
+    ^^^^^^^^^^^^^^^^^^^^
+;;; STDERR ;;)

@@ -1,0 +1,46 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-tail-call
+(module
+  (type $t (func))
+  (type $t2 (func (param f32 f32) (result f32)))
+  (table 1 anyfunc)
+
+  (func $f
+    return_call $f)
+
+  (func $f2 (param f32 f32) (result f32)
+    f32.const 0
+    f32.const 0
+    return_call $f2)
+
+  (func
+    i32.const 0
+    return_call_indirect (type $t))
+
+  (func (result f32)
+    f32.const 0
+    f32.const 0
+    i32.const 0
+    return_call_indirect (type $t2))
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (type (;1;) (func (param f32 f32) (result f32)))
+  (type (;2;) (func (result f32)))
+  (func (;0;) (type 0)
+    (return_call 0))
+  (func (;1;) (type 1) (param f32 f32) (result f32)
+    (return_call 1
+      (f32.const 0x0p+0 (;=0;))
+      (f32.const 0x0p+0 (;=0;))))
+  (func (;2;) (type 0)
+    (return_call_indirect (type 0)
+      (i32.const 0)))
+  (func (;3;) (type 2) (result f32)
+    (return_call_indirect (type 1)
+      (f32.const 0x0p+0 (;=0;))
+      (f32.const 0x0p+0 (;=0;))
+      (i32.const 0)))
+  (table (;0;) 1 anyfunc))
+;;; STDOUT ;;)
