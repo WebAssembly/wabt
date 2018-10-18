@@ -179,6 +179,8 @@ class CWriter {
   std::string DefineLocalScopeName(const std::string&);
   std::string DefineStackVarName(Index, Type, string_view);
 
+  size_t GetStackFrameSize(const Func&);
+
   void Indent(int size = INDENT_SIZE);
   void Dedent(int size = INDENT_SIZE);
   void WriteIndent();
@@ -504,14 +506,23 @@ std::string CWriter::MangleTypes(const TypeVector& types) {
   return result;
 }
 
+// Use unsigned char instead of char to avoid undefined behavior.
+bool IsAlpha(unsigned char c) {
+  return isalpha(c);
+}
+
+bool IsAlnum(unsigned char c) {
+  return isalnum(c);
+}
+
 // static
 std::string CWriter::MangleName(string_view name) {
   const char kPrefix = 'Z';
   std::string result = "Z_";
 
   if (!name.empty()) {
-    for (char c : name) {
-      if ((isalnum(c) && c != kPrefix) || c == '_') {
+    for (unsigned char c : name) {
+      if ((IsAlnum(c) && c != kPrefix) || c == '_') {
         result += c;
       } else {
         result += kPrefix;
@@ -548,9 +559,9 @@ std::string CWriter::LegalizeName(string_view name) {
     return "_";
 
   std::string result;
-  result = isalpha(name[0]) ? name[0] : '_';
+  result = IsAlpha(name[0]) ? name[0] : '_';
   for (size_t i = 1; i < name.size(); ++i)
-    result += isalnum(name[i]) ? name[i] : '_';
+    result += IsAlnum(name[i]) ? name[i] : '_';
 
   return result;
 }
@@ -604,6 +615,28 @@ std::string CWriter::DefineStackVarName(Index index,
   StackTypePair stp = {index, type};
   stack_var_sym_map_.insert(StackVarSymbolMap::value_type(stp, unique));
   return unique;
+}
+
+size_t TypeSizeInBytes(Type type) {
+  switch (type) {
+    case Type::I32: return 4;
+    case Type::I64: return 8;
+    case Type::F32: return 4;
+    case Type::F64: return 8;
+    case Type::V128: return 16;
+    default: return 0;
+  }
+}
+
+size_t CWriter::GetStackFrameSize(const Func& func) {
+  size_t total = 0;
+  for (Type param_type : func.decl.sig.param_types) {
+    total += TypeSizeInBytes(param_type);
+  }
+  for (Type local_type : func.local_types) {
+    total += TypeSizeInBytes(local_type);
+  }
+  return total;
 }
 
 void CWriter::Indent(int size) {
@@ -875,7 +908,7 @@ void CWriter::InitGlobalSymbols() {
 std::string CWriter::GenerateHeaderGuard() const {
   std::string result;
   for (char c : header_name_) {
-    if (isalnum(c) || c == '_') {
+    if (IsAlnum(c) || c == '_') {
       result += toupper(c);
     } else {
       result += '_';
@@ -1289,11 +1322,13 @@ void CWriter::Write(const Func& func) {
   local_sym_map_.clear();
   stack_var_sym_map_.clear();
 
+  size_t stack_frame_size = GetStackFrameSize(func);
+
   Write("static ", ResultType(func.decl.sig.result_types), " WASM_RT_CC ",
         GlobalName(func.name), "(");
   WriteParams();
   WriteLocals();
-  Write("FUNC_PROLOGUE;", Newline());
+  Write("FUNC_PROLOGUE(", stack_frame_size, ");", Newline());
 
   stream_ = &func_stream_;
   stream_->ClearOffset();
@@ -1306,7 +1341,7 @@ void CWriter::Write(const Func& func) {
   PopLabel();
   ResetTypeStack(0);
   PushTypes(func.decl.sig.result_types);
-  Write("FUNC_EPILOGUE;", Newline());
+  Write("FUNC_EPILOGUE(", stack_frame_size, ");", Newline());
 
   if (!func.decl.sig.result_types.empty()) {
     // Return the top of the stack implicitly.

@@ -18,11 +18,14 @@
 
 #define TRAP(x) (wasm_rt_trap(WASM_RT_TRAP_##x), 0)
 
-#define FUNC_PROLOGUE                                            \
-  if (++wasm_rt_call_stack_depth > WASM_RT_MAX_CALL_STACK_DEPTH) \
+#define FUNC_PROLOGUE(frame_size)                                              \
+  if ((++wasm_rt_call_stack_depth > WASM_RT_MAX_CALL_STACK_DEPTH) ||           \
+      ((wasm_rt_call_stack_size += frame_size) > WASM_RT_MAX_CALL_STACK_SIZE)) \
     TRAP(EXHAUSTION)
 
-#define FUNC_EPILOGUE --wasm_rt_call_stack_depth
+#define FUNC_EPILOGUE(frame_size)                                \
+  --wasm_rt_call_stack_depth;                                    \
+  wasm_rt_call_stack_size -= frame_size
 
 #define UNREACHABLE TRAP(UNREACHABLE)
 
