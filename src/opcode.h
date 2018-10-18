@@ -58,7 +58,7 @@ struct Opcode {
   uint8_t GetPrefix() const { return GetInfo().prefix; }
   uint32_t GetCode() const { return GetInfo().code; }
   size_t GetLength() const {
-    return HasPrefix() ? 1 + U32Leb128Length(GetCode()) : 1;
+    return GetBytes().size();
   }
   const char* GetName() const { return GetInfo().name; }
   Type GetResultType() const { return GetInfo().result_type; }
