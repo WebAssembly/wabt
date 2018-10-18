@@ -41,6 +41,22 @@ extern "C" {
 #define WASM_RT_MAX_CALL_STACK_DEPTH 500
 #endif
 
+/** Maximum stack size before trapping.
+ *
+ * See the documentation for `wasm_rt_call_stack_size` for documentation on how
+ * this value is calculated.
+ *
+ * This value can be configured by defining this symbol before including
+ * wasm-rt when building the generated c files, for example:
+ *
+ * ```
+ *   cc -c -DWASM_RT_MAX_CALL_STACK_SIZE=1000000 my_module.c -o my_module.o
+ * ```
+ * */
+#ifndef WASM_RT_MAX_CALL_STACK_SIZE
+#define WASM_RT_MAX_CALL_STACK_SIZE (512 * 1024)
+#endif
+
 /** Reason a trap occurred. Provide this to `wasm_rt_trap`. */
 typedef enum {
   WASM_RT_TRAP_NONE,         /** No error. */
@@ -157,15 +173,40 @@ extern uint32_t wasm_rt_grow_memory(wasm_rt_memory_t*, uint32_t pages);
  *
  *  ```
  *    wasm_rt_table_t my_table;
- *    // 5 elemnets and a maximum of 10 elements.
+ *    // 5 elements and a maximum of 10 elements.
  *    wasm_rt_allocate_table(&my_table, 5, 10);
  *  ``` */
 extern void wasm_rt_allocate_table(wasm_rt_table_t*,
                                    uint32_t elements,
                                    uint32_t max_elements);
 
-/** Current call stack depth. */
+/** Current call stack depth.
+ *
+ * TODO remove? It's only use is debugging now that `wasm_rt_call_stack_size` is
+ * being used instead. */
 extern uint32_t wasm_rt_call_stack_depth;
+
+/** Current call stack size. This is measured by adding the size of all
+ * parameters and locals in all active stack frames.
+ *
+ * For example, the following function:
+ *
+ *  ```
+ *  (func (param i32 i64) (local f64) ...)
+ *  ```
+ *
+ * will have a stack frame size of 4 + 8 + 8 = 20 bytes.
+ *
+ * TODO include variables introduced from value stack as well?
+ *
+ * A C compiler may reduce (or increase) the actual stack size used, but
+ * `wasm_rt_call_stack_size` will be used instead of the actual stack size for
+ * calculating whether the call stack is exhausted.
+ *
+ * The C compiler may insert additional stack checks, but those will not cause
+ * a trap via `wasm_rt_trap`.
+ */
+extern uint32_t wasm_rt_call_stack_size;
 
 #ifdef __cplusplus
 }
