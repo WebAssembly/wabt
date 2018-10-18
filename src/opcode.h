@@ -57,9 +57,7 @@ struct Opcode {
   bool HasPrefix() const { return GetInfo().prefix != 0; }
   uint8_t GetPrefix() const { return GetInfo().prefix; }
   uint32_t GetCode() const { return GetInfo().code; }
-  size_t GetLength() const {
-    return GetBytes().size();
-  }
+  size_t GetLength() const { return GetBytes().size(); }
   const char* GetName() const { return GetInfo().name; }
   Type GetResultType() const { return GetInfo().result_type; }
   Type GetParamType1() const { return GetInfo().param1_type; }
