@@ -50,9 +50,9 @@ out/test/spec/data.wast:292: assert_invalid passed:
 out/test/spec/data.wast:300: assert_invalid passed:
   0000014: error: expected END opcode after initializer expression
 out/test/spec/data.wast:308: assert_invalid passed:
-  0000012: error: unexpected opcode in initializer expression: 1 (0x1)
+  0000012: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/data.wast:316: assert_invalid passed:
-  0000012: error: unexpected opcode in initializer expression: 1 (0x1)
+  0000012: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/data.wast:324: assert_invalid passed:
   0000014: error: expected END opcode after initializer expression
 20/20 tests passed.

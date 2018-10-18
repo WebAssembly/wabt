@@ -44,9 +44,9 @@ out/test/spec/elem.wast:258: assert_invalid passed:
 out/test/spec/elem.wast:266: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
 out/test/spec/elem.wast:274: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 1 (0x1)
+  0000013: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/elem.wast:282: assert_invalid passed:
-  0000013: error: unexpected opcode in initializer expression: 1 (0x1)
+  0000013: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/elem.wast:290: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
 31/31 tests passed.

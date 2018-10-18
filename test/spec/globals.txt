@@ -7,13 +7,13 @@ out/test/spec/globals.wast:50: assert_invalid passed:
 out/test/spec/globals.wast:59: assert_invalid passed:
   0000013: error: expected END opcode after initializer expression
 out/test/spec/globals.wast:64: assert_invalid passed:
-  000000e: error: unexpected opcode in initializer expression: 32 (0x20)
+  000000e: error: unexpected opcode in initializer expression: 0x20
 out/test/spec/globals.wast:69: assert_invalid passed:
   0000013: error: expected END opcode after initializer expression
 out/test/spec/globals.wast:74: assert_invalid passed:
   0000010: error: expected END opcode after initializer expression
 out/test/spec/globals.wast:79: assert_invalid passed:
-  000000e: error: unexpected opcode in initializer expression: 1 (0x1)
+  000000e: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/globals.wast:84: assert_invalid passed:
   error: type mismatch in global, expected i32 but got f32.
   0000013: error: EndGlobalInitExpr callback failed

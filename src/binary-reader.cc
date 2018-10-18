@@ -202,19 +202,23 @@ void WABT_PRINTF_FORMAT(2, 3) BinaryReader::PrintError(const char* format,
 }
 
 Result BinaryReader::ReportUnexpectedOpcode(Opcode opcode,
-                                            const char* message) {
-  const char* maybe_space = " ";
-  if (!message) {
-    message = maybe_space = "";
+                                            const char* where) {
+  std::string message = "unexpected opcode";
+  if (where) {
+    message += ' ';
+    message += where;
   }
-  if (opcode.HasPrefix()) {
-    PrintError("unexpected opcode%s%s: %d %d (0x%x 0x%x)", maybe_space, message,
-               opcode.GetPrefix(), opcode.GetCode(), opcode.GetPrefix(),
-               opcode.GetCode());
-  } else {
-    PrintError("unexpected opcode%s%s: %d (0x%x)", maybe_space, message,
-               opcode.GetCode(), opcode.GetCode());
+
+  message += ":";
+
+  std::vector<uint8_t> bytes = opcode.GetBytes();
+  assert(bytes.size() > 0);
+
+  for (uint8_t byte: bytes) {
+    message += StringPrintf(" 0x%x", byte);
   }
+
+  PrintError("%s", message.c_str());
   return Result::Error;
 }
 
@@ -416,6 +420,7 @@ Result BinaryReader::ReadI32InitExpr(Index index) {
 Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
   Opcode opcode;
   CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
+  ERROR_UNLESS_OPCODE_ENABLED(opcode);
 
   switch (opcode) {
     case Opcode::I32Const: {
@@ -447,7 +452,6 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
     }
 
     case Opcode::V128Const: {
-      ERROR_UNLESS_OPCODE_ENABLED(opcode);
       v128 value_bits;
       ZeroMemory(value_bits);
       CHECK_RESULT(ReadV128(&value_bits, "init_expr v128.const value"));
@@ -550,6 +554,8 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
     Opcode opcode;
     CHECK_RESULT(ReadOpcode(&opcode, "opcode"));
     CALLBACK(OnOpcode, opcode);
+    ERROR_UNLESS_OPCODE_ENABLED(opcode);
+
     switch (opcode) {
       case Opcode::Unreachable:
         CALLBACK0(OnUnreachableExpr);
@@ -691,7 +697,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::V128Const: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         v128 value_bits;
         ZeroMemory(value_bits);
         CHECK_RESULT(ReadV128(&value_bits, "v128.const value"));
@@ -756,7 +761,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::ReturnCall: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index func_index;
         CHECK_RESULT(ReadIndex(&func_index, "return_call"));
         ERROR_UNLESS(func_index < NumTotalFuncs(),
@@ -768,7 +772,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::ReturnCallIndirect: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
 
         Index sig_index;
         CHECK_RESULT(ReadIndex(&sig_index, "return_call_indirect"));
@@ -944,7 +947,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Div:
       case Opcode::F32X4Mul:
       case Opcode::F64X2Mul:
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1023,7 +1025,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32X4GeU:
       case Opcode::F32X4Ge:
       case Opcode::F64X2Ge:
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnCompareExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1073,13 +1074,11 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Abs:
       case Opcode::F32X4Sqrt:
       case Opcode::F64X2Sqrt:
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::V128BitSelect:
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnTernaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1098,7 +1097,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64X2ReplaceLane:
       case Opcode::F32X4ReplaceLane:
       case Opcode::F64X2ReplaceLane: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint8_t lane_val;
         CHECK_RESULT(ReadU8(&lane_val, "Lane idx"));
         CALLBACK(OnSimdLaneOpExpr, opcode, lane_val);
@@ -1107,7 +1105,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::V8X16Shuffle: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         v128 value;
         CHECK_RESULT(ReadV128(&value, "Lane idx [16]"));
         CALLBACK(OnSimdShuffleOpExpr, opcode, value);
@@ -1150,13 +1147,11 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I32X4TruncUF32X4Sat:
       case Opcode::I64X2TruncSF64X2Sat:
       case Opcode::I64X2TruncUF64X2Sat:
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnConvertExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
 
       case Opcode::Try: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "try signature type"));
         ERROR_UNLESS(IsBlockType(sig_type),
@@ -1167,21 +1162,18 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::Catch: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK0(OnCatchExpr);
         CALLBACK0(OnOpcodeBare);
         break;
       }
 
       case Opcode::Rethrow: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK0(OnRethrowExpr);
         CALLBACK0(OnOpcodeBare);
         break;
       }
 
       case Opcode::Throw: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index index;
         CHECK_RESULT(ReadIndex(&index, "exception index"));
         CALLBACK(OnThrowExpr, index);
@@ -1190,7 +1182,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::IfExcept: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Type sig_type;
         CHECK_RESULT(ReadType(&sig_type, "if signature type"));
         ERROR_UNLESS(IsBlockType(sig_type),
@@ -1206,7 +1197,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64Extend8S:
       case Opcode::I64Extend16S:
       case Opcode::I64Extend32S:
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnUnaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1219,7 +1209,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::I64TruncUSatF32:
       case Opcode::I64TruncSSatF64:
       case Opcode::I64TruncUSatF64:
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         CALLBACK(OnConvertExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1351,7 +1340,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::TableInit: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");
@@ -1363,7 +1351,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::MemoryInit: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");
@@ -1376,7 +1363,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::MemoryDrop:
       case Opcode::TableDrop: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         Index segment;
         CHECK_RESULT(ReadIndex(&segment, "segment index"));
         if (opcode == Opcode::MemoryDrop) {
@@ -1390,7 +1376,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::MemoryCopy:
       case Opcode::MemoryFill: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");
@@ -1404,7 +1389,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::TableCopy: {
-        ERROR_UNLESS_OPCODE_ENABLED(opcode);
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");

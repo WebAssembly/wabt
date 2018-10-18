@@ -42,6 +42,7 @@ static WABT_INLINE const char* GetErrorLevelName(ErrorLevel error_level) {
 
 class Error {
  public:
+  Error() : error_level(ErrorLevel::Error) {}
   Error(ErrorLevel error_level, Location loc, string_view message)
       : error_level(error_level), loc(loc), message(message.to_string()) {}
 

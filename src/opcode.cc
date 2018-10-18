@@ -353,4 +353,20 @@ uint32_t Opcode::GetSimdLaneCount() const {
   }
 }
 
+// Get the byte sequence for this opcode, including prefix.
+std::vector<uint8_t> Opcode::GetBytes() const {
+  std::vector<uint8_t> result;
+  if (HasPrefix()) {
+    result.push_back(GetPrefix());
+    uint8_t buffer[5];
+    Offset length =
+        WriteU32Leb128Raw(buffer, buffer + sizeof(buffer), GetCode());
+    assert(length != 0);
+    result.insert(result.end(), buffer, buffer + length);
+  } else {
+    result.push_back(GetCode());
+  }
+  return result;
+}
+
 }  // namespace wabt

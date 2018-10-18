@@ -13,7 +13,7 @@ section(CODE) {
   }
 }
 (;; STDERR ;;;
-0000019: error: unexpected opcode: 255 (0xff)
+0000019: error: unexpected opcode: 0xff
 ;;; STDERR ;;)
 (;; STDOUT ;;;
 
