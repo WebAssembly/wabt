@@ -376,6 +376,13 @@ if (NOT EMSCRIPTEN)
       SOURCES src/tools/wasm-strip.cc
       INSTALL
     )
+
+    # wasm-hook
+    wabt_executable(
+      NAME wasm-hook
+      SOURCES src/tools/wasm-hook.cc
+      INSTALL
+    )
   endif ()
 
   find_package(Threads)

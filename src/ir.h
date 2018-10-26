@@ -121,6 +121,10 @@ struct Const {
 typedef std::vector<Const> ConstVector;
 
 struct FuncSignature {
+  FuncSignature() = default;
+  FuncSignature(const TypeVector& param_types, const TypeVector& result_types)
+      : param_types(param_types), result_types(result_types) {}
+
   TypeVector param_types;
   TypeVector result_types;
 
