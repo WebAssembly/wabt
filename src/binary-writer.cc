@@ -610,6 +610,42 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, 0, "table.init reserved");
       break;
     }
+    case ExprType::TableGet: {
+      Index index =
+          module_->GetTableIndex(cast<TableGetExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::TableGet);
+      WriteU32Leb128(stream_, index, "table.get table index");
+      break;
+    }
+    case ExprType::TableSet: {
+      Index index =
+          module_->GetTableIndex(cast<TableSetExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::TableSet);
+      WriteU32Leb128(stream_, index, "table.set table index");
+      break;
+    }
+    case ExprType::TableGrow: {
+      Index index =
+          module_->GetTableIndex(cast<TableGrowExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::TableGrow);
+      WriteU32Leb128(stream_, index, "table.grow table index");
+      break;
+    }
+    case ExprType::TableSize: {
+      Index index =
+          module_->GetTableIndex(cast<TableSizeExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::TableSize);
+      WriteU32Leb128(stream_, index, "table.size table index");
+      break;
+    }
+    case ExprType::RefNull: {
+      WriteOpcode(stream_, Opcode::RefNull);
+      break;
+    }
+    case ExprType::RefIsNull: {
+      WriteOpcode(stream_, Opcode::RefIsNull);
+      break;
+    }
     case ExprType::Nop:
       WriteOpcode(stream_, Opcode::Nop);
       break;
@@ -699,7 +735,7 @@ void BinaryWriter::WriteFunc(const Func* func) {
 }
 
 void BinaryWriter::WriteTable(const Table* table) {
-  WriteType(stream_, Type::Anyfunc);
+  WriteType(stream_, table->elem_type);
   WriteLimits(stream_, &table->elem_limits);
 }
 

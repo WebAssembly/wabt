@@ -95,9 +95,10 @@ struct FuncSignature {
 };
 
 struct Table {
-  explicit Table(const Limits& limits)
-      : limits(limits), func_indexes(limits.initial, kInvalidIndex) {}
+  explicit Table(Type elem_type, const Limits& limits)
+      : elem_type(elem_type), limits(limits), func_indexes(limits.initial, kInvalidIndex) {}
 
+  Type elem_type;
   Limits limits;
   std::vector<Index> func_indexes;
 };
@@ -341,7 +342,9 @@ struct HostModule : Module {
   std::pair<HostFunc*, Index> AppendFuncExport(string_view name,
                                                Index sig_index,
                                                HostFunc::Callback);
-  std::pair<Table*, Index> AppendTableExport(string_view name, const Limits&);
+  std::pair<Table*, Index> AppendTableExport(string_view name,
+                                             Type elem_type,
+                                             const Limits&);
   std::pair<Memory*, Index> AppendMemoryExport(string_view name, const Limits&);
   std::pair<Global*, Index> AppendGlobalExport(string_view name,
                                                Type,

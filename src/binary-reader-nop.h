@@ -252,6 +252,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnTableCopyExpr() override { return Result::Ok; }
   Result OnElemDropExpr(Index segment_index) override { return Result::Ok; }
   Result OnTableInitExpr(Index segment_index) override { return Result::Ok; }
+  Result OnTableGetExpr(Index table_index) override { return Result::Ok; }
+  Result OnTableSetExpr(Index table_index) override { return Result::Ok; }
+  Result OnTableGrowExpr(Index table_index) override { return Result::Ok; }
+  Result OnTableSizeExpr(Index table_index) override { return Result::Ok; }
+  Result OnRefNullExpr() override { return Result::Ok; }
+  Result OnRefIsNullExpr() override { return Result::Ok; }
   Result OnNopExpr() override { return Result::Ok; }
   Result OnRethrowExpr() override { return Result::Ok; }
   Result OnReturnCallExpr(Index sig_index) override { return Result::Ok; }

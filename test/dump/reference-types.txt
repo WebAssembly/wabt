@@ -1,0 +1,104 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-reference-types
+
+(module
+  (table $foo 1 anyref)
+  (table $bar 1 anyref)
+  (table $baz 1 anyfunc)
+
+  (func (result anyref)
+    i32.const 0
+    table.get $foo
+  )
+  (func (result anyref)
+    i32.const 0
+    table.get $bar
+  )
+
+  (func (param anyref)
+    i32.const 0
+    get_local 0
+    table.set $foo
+  )
+  (func (param anyref)
+    i32.const 0
+    get_local 0
+    table.set $bar
+  )
+
+  (func (result i32)
+    i32.const 0
+    ref.null
+    table.grow $foo
+  )
+  (func (result i32)
+    i32.const 0
+    ref.null
+    table.grow $bar
+  )
+
+  (func (param anyref) (result i32)
+    local.get 0
+    ref.is_null
+  )
+
+
+  (func (result i32)
+    table.size $foo
+  )
+  (func (result i32)
+    table.size $bar
+  )
+  (func (result i32)
+    table.size $baz
+  )
+)
+
+(;; STDOUT ;;;
+
+reference-types.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000039 func[0]:
+ 00003a: 41 00                      | i32.const 0
+ 00003c: 25 00                      | table.get 0
+ 00003e: 0b                         | end
+000040 func[1]:
+ 000041: 41 00                      | i32.const 0
+ 000043: 25 01                      | table.get 1
+ 000045: 0b                         | end
+000047 func[2]:
+ 000048: 41 00                      | i32.const 0
+ 00004a: 20 00                      | local.get 0
+ 00004c: 26 00                      | table.set 0
+ 00004e: 0b                         | end
+000050 func[3]:
+ 000051: 41 00                      | i32.const 0
+ 000053: 20 00                      | local.get 0
+ 000055: 26 01                      | table.set 1
+ 000057: 0b                         | end
+000059 func[4]:
+ 00005a: 41 00                      | i32.const 0
+ 00005c: d0                         | ref.null
+ 00005d: fc 0f 00                   | table.grow 0
+ 000060: 0b                         | end
+000062 func[5]:
+ 000063: 41 00                      | i32.const 0
+ 000065: d0                         | ref.null
+ 000066: fc 0f 01                   | table.grow 1
+ 000069: 0b                         | end
+00006b func[6]:
+ 00006c: 20 00                      | local.get 0
+ 00006e: d1                         | ref.is_null
+ 00006f: 0b                         | end
+000071 func[7]:
+ 000072: fc 10 00                   | table.size 0
+ 000075: 0b                         | end
+000077 func[8]:
+ 000078: fc 10 01                   | table.size 1
+ 00007b: 0b                         | end
+00007d func[9]:
+ 00007e: fc 10 02                   | table.size 2
+ 000081: 0b                         | end
+;;; STDOUT ;;)

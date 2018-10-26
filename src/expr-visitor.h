@@ -97,6 +97,12 @@ class ExprVisitor::Delegate {
   virtual Result OnTableCopyExpr(TableCopyExpr*) = 0;
   virtual Result OnElemDropExpr(ElemDropExpr*) = 0;
   virtual Result OnTableInitExpr(TableInitExpr*) = 0;
+  virtual Result OnTableGetExpr(TableGetExpr*) = 0;
+  virtual Result OnTableSetExpr(TableSetExpr*) = 0;
+  virtual Result OnTableGrowExpr(TableGrowExpr*) = 0;
+  virtual Result OnTableSizeExpr(TableSizeExpr*) = 0;
+  virtual Result OnRefNullExpr(RefNullExpr*) = 0;
+  virtual Result OnRefIsNullExpr(RefIsNullExpr*) = 0;
   virtual Result OnNopExpr(NopExpr*) = 0;
   virtual Result OnReturnExpr(ReturnExpr*) = 0;
   virtual Result OnReturnCallExpr(ReturnCallExpr*) = 0;
@@ -156,6 +162,12 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnTableCopyExpr(TableCopyExpr*) override { return Result::Ok; }
   Result OnElemDropExpr(ElemDropExpr*) override { return Result::Ok; }
   Result OnTableInitExpr(TableInitExpr*) override { return Result::Ok; }
+  Result OnTableGetExpr(TableGetExpr*) override { return Result::Ok; }
+  Result OnTableSetExpr(TableSetExpr*) override { return Result::Ok; }
+  Result OnTableGrowExpr(TableGrowExpr*) override { return Result::Ok; }
+  Result OnTableSizeExpr(TableSizeExpr*) override { return Result::Ok; }
+  Result OnRefNullExpr(RefNullExpr*) override { return Result::Ok; }
+  Result OnRefIsNullExpr(RefIsNullExpr*) override { return Result::Ok; }
   Result OnNopExpr(NopExpr*) override { return Result::Ok; }
   Result OnReturnExpr(ReturnExpr*) override { return Result::Ok; }
   Result OnReturnCallExpr(ReturnCallExpr*) override { return Result::Ok; }

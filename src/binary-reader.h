@@ -244,6 +244,12 @@ class BinaryReaderDelegate {
   virtual Result OnTableCopyExpr() = 0;
   virtual Result OnElemDropExpr(Index segment_index) = 0;
   virtual Result OnTableInitExpr(Index segment_index) = 0;
+  virtual Result OnTableGetExpr(Index table_index) = 0;
+  virtual Result OnTableSetExpr(Index table_index) = 0;
+  virtual Result OnTableGrowExpr(Index table_index) = 0;
+  virtual Result OnTableSizeExpr(Index table_index) = 0;
+  virtual Result OnRefNullExpr() = 0;
+  virtual Result OnRefIsNullExpr() = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr() = 0;
   virtual Result OnReturnExpr() = 0;

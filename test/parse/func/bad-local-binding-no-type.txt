@@ -2,7 +2,7 @@
 ;;; ERROR: 1
 (module (func (local $n)))
 (;; STDERR ;;;
-out/test/parse/func/bad-local-binding-no-type.txt:3:24: error: unexpected token ")", expected i32, i64, f32, f64 or v128.
+out/test/parse/func/bad-local-binding-no-type.txt:3:24: error: unexpected token ")", expected i32, i64, f32, f64, v128 or anyref.
 (module (func (local $n)))
                        ^
 ;;; STDERR ;;)

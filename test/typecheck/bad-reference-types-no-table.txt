@@ -1,0 +1,20 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-reference-types
+;;; ERROR: 1
+
+(module
+  (func
+    i32.const 0
+    i32.const 0
+    table.get $t
+    table.set $t
+  )
+)
+(;; STDERR ;;;
+out/test/typecheck/bad-reference-types-no-table.txt:9:15: error: undefined table variable "$t"
+    table.get $t
+              ^^
+out/test/typecheck/bad-reference-types-no-table.txt:10:15: error: undefined table variable "$t"
+    table.set $t
+              ^^
+;;; STDERR ;;)

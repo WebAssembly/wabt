@@ -1,0 +1,22 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-reference-types
+
+(module
+  (table $t 1 anyref)
+  (func
+    i32.const 0
+    i32.const 0
+    table.get $t
+    table.set $t
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0)
+    (table.set 0
+      (i32.const 0)
+      (table.get 0
+        (i32.const 0))))
+  (table (;0;) 1 anyref))
+;;; STDOUT ;;)

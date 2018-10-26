@@ -266,8 +266,9 @@ std::pair<HostFunc*, Index> HostModule::AppendFuncExport(
 }
 
 std::pair<Table*, Index> HostModule::AppendTableExport(string_view name,
+                                                       Type elem_type,
                                                        const Limits& limits) {
-  Table* table = env_->EmplaceBackTable(limits);
+  Table* table = env_->EmplaceBackTable(elem_type, limits);
   Index table_env_index = env_->GetTableCount() - 1;
   Index export_index = AppendExport(ExternalKind::Table, table_env_index, name);
   return {table, export_index};
@@ -3238,6 +3239,15 @@ Result Thread::Run(int num_instructions) {
 
       case Opcode::I64X2TruncSatF64X2U:
         CHECK_TRAP(SimdUnop<v128, uint64_t>(IntTruncSat<uint64_t, double>));
+        break;
+
+      case Opcode::TableGet:
+      case Opcode::TableSet:
+      case Opcode::TableGrow:
+      case Opcode::TableSize:
+      case Opcode::RefNull:
+      case Opcode::RefIsNull:
+        WABT_UNREACHABLE;
         break;
 
       case Opcode::MemoryInit:

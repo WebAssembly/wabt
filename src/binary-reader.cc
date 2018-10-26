@@ -383,6 +383,9 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::V128:
       return options_.features.simd_enabled();
 
+    case Type::Anyref:
+      return options_.features.reference_types_enabled();
+
     default:
       return false;
   }
@@ -490,8 +493,8 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadType(out_elem_type, "table elem type"));
-  ERROR_UNLESS(*out_elem_type == Type::Anyfunc,
-               "table elem type must by anyfunc");
+  ERROR_UNLESS(*out_elem_type == Type::Anyfunc || *out_elem_type == Type::Anyref,
+               "table elem type must by anyfunc or anyref");
 
   uint32_t flags;
   uint32_t initial;
@@ -1406,6 +1409,50 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::TableGet: {
+        Index table;
+        CHECK_RESULT(ReadIndex(&table, "table index"));
+        CALLBACK(OnTableGetExpr, table);
+        CALLBACK(OnOpcodeUint32, table);
+        break;
+      }
+
+      case Opcode::TableSet: {
+        Index table;
+        CHECK_RESULT(ReadIndex(&table, "table index"));
+        CALLBACK(OnTableSetExpr, table);
+        CALLBACK(OnOpcodeUint32, table);
+        break;
+      }
+
+      case Opcode::TableGrow: {
+        Index table;
+        CHECK_RESULT(ReadIndex(&table, "table index"));
+        CALLBACK(OnTableGrowExpr, table);
+        CALLBACK(OnOpcodeUint32, table);
+        break;
+      }
+
+      case Opcode::TableSize: {
+        Index table;
+        CHECK_RESULT(ReadIndex(&table, "table index"));
+        CALLBACK(OnTableSizeExpr, table);
+        CALLBACK(OnOpcodeUint32, table);
+        break;
+      }
+
+      case Opcode::RefNull: {
+        CALLBACK(OnRefNullExpr);
+        CALLBACK0(OnOpcodeBare);
+        break;
+      }
+
+      case Opcode::RefIsNull: {
+        CALLBACK(OnRefIsNullExpr);
+        CALLBACK0(OnOpcodeBare);
+        break;
+      }
+
       default:
         return ReportUnexpectedOpcode(opcode);
     }
@@ -1879,8 +1926,10 @@ Result BinaryReader::ReadFunctionSection(Offset section_size) {
 Result BinaryReader::ReadTableSection(Offset section_size) {
   CALLBACK(BeginTableSection, section_size);
   CHECK_RESULT(ReadCount(&num_tables_, "table count"));
-  ERROR_UNLESS(num_tables_ <= 1, "table count (%" PRIindex ") must be 0 or 1",
-               num_tables_);
+  if (!options_.features.reference_types_enabled()) {
+    ERROR_UNLESS(num_tables_ <= 1, "table count (%" PRIindex ") must be 0 or 1",
+                 num_tables_);
+  }
   CALLBACK(OnTableCount, num_tables_);
   for (Index i = 0; i < num_tables_; ++i) {
     Index table_index = num_table_imports_ + i;

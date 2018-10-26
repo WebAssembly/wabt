@@ -826,7 +826,7 @@ wabt::Result BinaryReaderInterp::OnTable(Index index,
     PrintError("only one table allowed");
     return wabt::Result::Error;
   }
-  env_->EmplaceBackTable(*elem_limits);
+  env_->EmplaceBackTable(elem_type, *elem_limits);
   module_->table_index = env_->GetTableCount() - 1;
   return wabt::Result::Ok;
 }
