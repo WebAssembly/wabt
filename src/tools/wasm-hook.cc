@@ -37,23 +37,23 @@ using namespace wabt;
 namespace names {
 
 const char kModule[] = "wasm-hook";
-const char kBeginFunc[] = "begin-func";  // [func idx:i32]
-const char kEndFunc[] = "end-func";      // [func idx:i32]
+const char kBeginFunc[] = "begin-func";  // [func idx:i32] -> []
+const char kEndFunc[] = "end-func";      // [func idx:i32] -> []
 
-// i32.load:     [addr:i32, align:i32, offset:i32, val:i32]
-// i64.load:     [addr:i32, align:i32, offset:i32, val:i64]
-// f32.load:     [addr:i32, align:i32, offset:i32, val:f32]
-// f64.load:     [addr:i32, align:i32, offset:i32, val:f64]
-// i32.load8_s:  [addr:i32, align:i32, offset:i32, val:i32]
-// i32.load8_u:  [addr:i32, align:i32, offset:i32, val:i32]
-// i32.load16_s: [addr:i32, align:i32, offset:i32, val:i32]
-// i32.load16_u: [addr:i32, align:i32, offset:i32, val:i32]
-// i64.load8_s:  [addr:i32, align:i32, offset:i32, val:i64]
-// i64.load8_u:  [addr:i32, align:i32, offset:i32, val:i64]
-// i64.load16_s: [addr:i32, align:i32, offset:i32, val:i64]
-// i64.load16_u: [addr:i32, align:i32, offset:i32, val:i64]
-// i64.load32_s: [addr:i32, align:i32, offset:i32, val:i64]
-// i64.load32_u: [addr:i32, align:i32, offset:i32, val:i64]
+// i32.load:     [addr:i32, align:i32, offset:i32, val:i32] -> []
+// i64.load:     [addr:i32, align:i32, offset:i32, val:i64] -> []
+// f32.load:     [addr:i32, align:i32, offset:i32, val:f32] -> []
+// f64.load:     [addr:i32, align:i32, offset:i32, val:f64] -> []
+// i32.load8_s:  [addr:i32, align:i32, offset:i32, val:i32] -> []
+// i32.load8_u:  [addr:i32, align:i32, offset:i32, val:i32] -> []
+// i32.load16_s: [addr:i32, align:i32, offset:i32, val:i32] -> []
+// i32.load16_u: [addr:i32, align:i32, offset:i32, val:i32] -> []
+// i64.load8_s:  [addr:i32, align:i32, offset:i32, val:i64] -> []
+// i64.load8_u:  [addr:i32, align:i32, offset:i32, val:i64] -> []
+// i64.load16_s: [addr:i32, align:i32, offset:i32, val:i64] -> []
+// i64.load16_u: [addr:i32, align:i32, offset:i32, val:i64] -> []
+// i64.load32_s: [addr:i32, align:i32, offset:i32, val:i64] -> []
+// i64.load32_u: [addr:i32, align:i32, offset:i32, val:i64] -> []
 
 } // namespace names.
 
@@ -225,8 +225,10 @@ void ForEachDefinedFunc(Module* module, F&& callback) {
 
 template <typename F>
 void RecurseExprs(ExprList* exprs, F&& callback) {
-  for (auto iter = exprs->begin(), end = exprs->end(); iter != end; ++iter) {
+  for (auto iter = exprs->begin(), end = exprs->end(); iter != end;) {
     Expr& expr = *iter;
+    auto next = iter;
+    next++;
 
     callback(exprs, iter);
 
@@ -256,7 +258,46 @@ void RecurseExprs(ExprList* exprs, F&& callback) {
       default:
         break;
     }
+
+    iter = next;
   }
+}
+
+static Index AppendFuncWrapper(Module* module,
+                               const Func& func,
+                               Index func_index,
+                               Index begin_hook_func_index,
+                               Index end_hook_func_index) {
+  auto field = MakeUnique<FuncModuleField>();
+  Func& wrapper_func = field->func;
+  SetFuncSignature(module, &wrapper_func, func.decl.sig);
+
+  ExprList& exprs = wrapper_func.exprs;
+
+  //   ;; Call the begin hook.
+  //   i32.const func_index
+  //   call $begin_hook
+  exprs.push_back(MakeUnique<ConstExpr>(Const::I32(func_index)));
+  exprs.push_back(MakeUnique<CallExpr>(Var(begin_hook_func_index)));
+
+  //   ;; Call the original function, pushing the params on to the stack.
+  //   get_local $p0
+  //   get_local $p1
+  //   ...
+  //   call $orig
+  for (Index i = 0; i < func.GetNumParams(); ++i) {
+    exprs.push_back(MakeUnique<GetLocalExpr>(Var(i)));
+  }
+  exprs.push_back(MakeUnique<CallExpr>(Var(func_index)));
+
+  //   ;; Call the end hook.
+  //   i32.const func_index
+  //   call $end_hook
+  exprs.push_back(MakeUnique<ConstExpr>(Const::I32(func_index)));
+  exprs.push_back(MakeUnique<CallExpr>(Var(end_hook_func_index)));
+
+  module->AppendField(std::move(field));
+  return module->funcs.size() - 1;
 }
 
 static void HookFuncs(Module* module) {
@@ -268,35 +309,62 @@ static void HookFuncs(Module* module) {
   const Index begin_index = indexes[0];
   const Index end_index = indexes[1];
 
+  Index last_non_wrapper_func_index = module->funcs.size();
+
+  // Create a wrapper function for each original function.
+  std::map<Index, Index> func_to_wrapper;
   ForEachDefinedFunc(module, [&](Func* func, Index func_index) {
-    auto block = MakeUnique<BlockExpr>();
-    block->block.decl.sig.result_types = func->decl.sig.result_types;
-    block->block.exprs = std::move(func->exprs);
+    Index wrapper_func_index =
+        AppendFuncWrapper(module, *func, func_index, begin_index, end_index);
+    func_to_wrapper.insert(std::make_pair(func_index, wrapper_func_index));
+  });
 
-    // Insert endFunc hook before all return instructions.
-    RecurseExprs(
-        &block->block.exprs, [&](ExprList* exprs, ExprList::iterator iter) {
-          auto* expr = dyn_cast<ReturnExpr>(&*iter);
-          if (!expr) {
-            return;
-          }
+  auto&& fix_var = [&](Var* var) {
+    Index old_index = var->index();
+    auto iter = func_to_wrapper.find(old_index);
+    if (iter != func_to_wrapper.end()) {
+      var->set_index(iter->second);
+    }
+  };
 
-          exprs->insert(iter, MakeUnique<ConstExpr>(Const::I32(func_index)));
-          exprs->insert(iter, MakeUnique<CallExpr>(Var(end_index)));
-        });
+  // Fixup Export fields.
+  for (Export* export_: module->exports) {
+    if (export_->kind == ExternalKind::Func) {
+      fix_var(&export_->var);
+    }
+  }
 
-    func->exprs.push_back(MakeUnique<ConstExpr>(Const::I32(func_index)));
-    func->exprs.push_back(MakeUnique<CallExpr>(Var(begin_index)));
-    func->exprs.push_back(std::move(block));
-    func->exprs.push_back(MakeUnique<ConstExpr>(Const::I32(func_index)));
-    func->exprs.push_back(MakeUnique<CallExpr>(Var(end_index)));
+  // Fixup ElemSegment fields.
+  for (ElemSegment* elem_segment: module->elem_segments) {
+    for (Var& var: elem_segment->vars) {
+      fix_var(&var);
+    }
+  }
+
+  // Fixup Start field.
+  for (Var* var: module->starts) {
+    fix_var(var);
+  }
+
+  ForEachDefinedFunc(module, [&](Func* func, Index func_index) {
+    // Only wrap non-wrapper funcs.
+    if (func_index >= last_non_wrapper_func_index) {
+      return;
+    }
+
+    RecurseExprs(&func->exprs, [&](ExprList* exprs, ExprList::iterator iter) {
+      auto* expr = dyn_cast<CallExpr>(&*iter);
+      if (expr) {
+        fix_var(&expr->var);
+      }
+    });
   });
 }
 
-static Index AppendLoadFunc(Module* module,
-                            const Opcode& op,
-                            Address align,
-                            Index hook_func_index) {
+static Index AppendLoadFuncWrapper(Module* module,
+                                   const Opcode& op,
+                                   Address align,
+                                   Index hook_func_index) {
   // Create a wrapper function for any of the various load instructions. A load
   // instruction looks like:
   //
@@ -308,6 +376,11 @@ static Index AppendLoadFunc(Module* module,
   auto field = MakeUnique<FuncModuleField>();
   Func& func = field->func;
 
+  const Index addr = 0;
+  const Index offset = 1;
+  const Index fulladdr = 2;
+  const Index val = 3;
+
   // (func (param $addr i32) (param $offset i32) (result i32)
   SetFuncSignature(module, &func,
                    FuncSignature({Type::I32, Type::I32}, {result_type}));
@@ -317,10 +390,7 @@ static Index AppendLoadFunc(Module* module,
   func.local_types.AppendDecl(Type::I64, 1);
   func.local_types.AppendDecl(result_type, 1);
 
-  const Index addr = 0;
-  const Index offset = 1;
-  const Index fulladdr = 2;
-  const Index val = 3;
+  ExprList& exprs = func.exprs;
 
   //   ;; Calculate addr + offset.
   //   get_local $addr
@@ -329,12 +399,12 @@ static Index AppendLoadFunc(Module* module,
   //   i64.extend_u/i32
   //   i64.add
   //   tee_local $fulladdr
-  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(addr)));
-  func.exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I64ExtendUI32_Opcode));
-  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(offset)));
-  func.exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I64ExtendUI32_Opcode));
-  func.exprs.push_back(MakeUnique<BinaryExpr>(Opcode::I64Add));
-  func.exprs.push_back(MakeUnique<TeeLocalExpr>(Var(fulladdr)));
+  exprs.push_back(MakeUnique<GetLocalExpr>(Var(addr)));
+  exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I64ExtendUI32_Opcode));
+  exprs.push_back(MakeUnique<GetLocalExpr>(Var(offset)));
+  exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I64ExtendUI32_Opcode));
+  exprs.push_back(MakeUnique<BinaryExpr>(Opcode::I64Add));
+  exprs.push_back(MakeUnique<TeeLocalExpr>(Var(fulladdr)));
 
   //   ;; Trap if >= 32-bits.
   //   i64.const 0x100000000
@@ -342,19 +412,19 @@ static Index AppendLoadFunc(Module* module,
   //   if
   //     unreachable
   //   end
-  func.exprs.push_back(MakeUnique<ConstExpr>(Const::I64(0x100000000)));
-  func.exprs.push_back(MakeUnique<CompareExpr>(Opcode::I64GeU));
+  exprs.push_back(MakeUnique<ConstExpr>(Const::I64(0x100000000)));
+  exprs.push_back(MakeUnique<CompareExpr>(Opcode::I64GeU));
   auto if_expr = MakeUnique<IfExpr>();
   if_expr->true_.exprs.push_back(MakeUnique<UnreachableExpr>());
-  func.exprs.push_back(std::move(if_expr));
+  exprs.push_back(std::move(if_expr));
 
   //   ;; Perform the load.
   //   get_local $fulladdr
   //   i32.wrap/i64
   //   i32.load offset=0 align=ALIGN
-  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(fulladdr)));
-  func.exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I32WrapI64_Opcode));
-  func.exprs.push_back(MakeUnique<LoadExpr>(op, align, 0));
+  exprs.push_back(MakeUnique<GetLocalExpr>(Var(fulladdr)));
+  exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I32WrapI64_Opcode));
+  exprs.push_back(MakeUnique<LoadExpr>(op, align, 0));
 
   //   ;; Call the hook.
   //   set_local $val
@@ -362,15 +432,15 @@ static Index AppendLoadFunc(Module* module,
   //   i32.const ALIGN
   //   get_local $val
   //   call $hook
-  func.exprs.push_back(MakeUnique<SetLocalExpr>(Var(val)));
-  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(addr)));
-  func.exprs.push_back(MakeUnique<ConstExpr>(Const::I32(align)));
-  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(val)));
-  func.exprs.push_back(MakeUnique<CallExpr>(Var(hook_func_index)));
+  exprs.push_back(MakeUnique<SetLocalExpr>(Var(val)));
+  exprs.push_back(MakeUnique<GetLocalExpr>(Var(addr)));
+  exprs.push_back(MakeUnique<ConstExpr>(Const::I32(align)));
+  exprs.push_back(MakeUnique<GetLocalExpr>(Var(val)));
+  exprs.push_back(MakeUnique<CallExpr>(Var(hook_func_index)));
 
   //   ;; Restore the result.
   //   get_local $val
-  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(val)));
+  exprs.push_back(MakeUnique<GetLocalExpr>(Var(val)));
 
   module->AppendField(std::move(field));
   return module->funcs.size() - 1;
@@ -394,9 +464,14 @@ static void HookLoads(Module* module) {
   std::vector<FuncImportInfo> func_import_infos;
   for (const auto& pair : opcode_aligns) {
     const Opcode op(pair.first.first);
+    const Address align = pair.first.second;
     const Type result_type = op.GetResultType();
     const FuncSignature sig({Type::I32, Type::I32, result_type}, {});
-    func_import_infos.push_back({names::kModule, op.GetName(), sig});
+    std::string name = op.GetName();
+    if (!op.IsNaturallyAligned(align)) {
+      name += StringPrintf(" align=%d", align);
+    }
+    func_import_infos.push_back({names::kModule, name, sig});
   }
 
   std::vector<Index> indexes = InsertFuncImports(module, func_import_infos);
@@ -408,7 +483,8 @@ static void HookLoads(Module* module) {
   int i = 0;
   for (auto& pair : opcode_aligns) {
     const Opcode op(pair.first.first);
-    pair.second = AppendLoadFunc(module, op, pair.first.second, indexes[i]);
+    pair.second =
+        AppendLoadFuncWrapper(module, op, pair.first.second, indexes[i]);
     ++i;
   }
 
