@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <map>
 #include <vector>
 
 #include "src/binary.h"
@@ -33,16 +34,43 @@
 
 using namespace wabt;
 
+namespace names {
+
+const char kModule[] = "wasm-hook";
+const char kBeginFunc[] = "begin-func";  // [func idx:i32]
+const char kEndFunc[] = "end-func";      // [func idx:i32]
+
+// i32.load:     [addr:i32, align:i32, offset:i32, val:i32]
+// i64.load:     [addr:i32, align:i32, offset:i32, val:i64]
+// f32.load:     [addr:i32, align:i32, offset:i32, val:f32]
+// f64.load:     [addr:i32, align:i32, offset:i32, val:f64]
+// i32.load8_s:  [addr:i32, align:i32, offset:i32, val:i32]
+// i32.load8_u:  [addr:i32, align:i32, offset:i32, val:i32]
+// i32.load16_s: [addr:i32, align:i32, offset:i32, val:i32]
+// i32.load16_u: [addr:i32, align:i32, offset:i32, val:i32]
+// i64.load8_s:  [addr:i32, align:i32, offset:i32, val:i64]
+// i64.load8_u:  [addr:i32, align:i32, offset:i32, val:i64]
+// i64.load16_s: [addr:i32, align:i32, offset:i32, val:i64]
+// i64.load16_u: [addr:i32, align:i32, offset:i32, val:i64]
+// i64.load32_s: [addr:i32, align:i32, offset:i32, val:i64]
+// i64.load32_u: [addr:i32, align:i32, offset:i32, val:i64]
+
+} // namespace names.
+
 static std::string s_infile;
 static std::string s_outfile;
 static bool s_hook_functions = false;
+static bool s_hook_loads = false;
 
 static const char s_description[] =
 R"(  Instrument a WebAssembly module and add debugging hooks.
 
 examples:
-  # Add debugging hooks for all function calls.
+  # Add begin/end hooks for all defined functions.
   $ wasm-hook -f test.wasm -o test.hook.wasm
+
+  # Add a hook after every load.
+  $ wasm-hook -l test.wasm -o test.hook.wasm
 )";
 
 static void ParseOptions(int argc, char** argv) {
@@ -54,8 +82,12 @@ static void ParseOptions(int argc, char** argv) {
                      s_outfile = argument;
                      ConvertBackslashToSlash(&s_infile);
                    });
-  parser.AddOption('f', "function", "Add hook for all function calls",
+  parser.AddOption('f', "function",
+                   "Add begin/end hooks to all defined functions",
                    []() { s_hook_functions = true; });
+  parser.AddOption('l', "load",
+                   "Add begin/end hooks to all memory loads",
+                   []() { s_hook_loads = true; });
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) {
                        s_infile = argument;
@@ -98,13 +130,28 @@ class IncrementFuncIndexDelegate : public ExprVisitor::DelegateNop {
   Index delta;
 };
 
+void SetFuncSignature(Module* module, Func* func, const FuncSignature& sig) {
+  Index func_type_index = module->GetFuncTypeIndex(sig);
+  if (func_type_index == kInvalidIndex) {
+    auto func_type_field = MakeUnique<FuncTypeModuleField>();
+    func_type_field->func_type.sig = sig;
+
+    module->AppendField(std::move(func_type_field));
+    func_type_index = module->func_types.size() - 1;
+  }
+
+  func->decl.has_func_type = true;
+  func->decl.type_var.set_index(func_type_index);
+  func->decl.sig = sig;
+}
+
 struct FuncImportInfo {
   std::string module;
   std::string field;
   FuncSignature sig;
 };
 
-static std::vector<Index> AppendFuncImports(
+static std::vector<Index> InsertFuncImports(
     Module* module,
     std::vector<FuncImportInfo> func_import_infos) {
   // Fix up all function references after this index.
@@ -147,18 +194,7 @@ static std::vector<Index> AppendFuncImports(
     func_import->module_name = func_import_info.module;
     func_import->field_name = func_import_info.field;
 
-    Index func_type_index = module->GetFuncTypeIndex(func_import_info.sig);
-    if (func_type_index == kInvalidIndex) {
-      auto func_type_field = MakeUnique<FuncTypeModuleField>();
-      func_type_field->func_type.sig = func_import_info.sig;
-
-      module->AppendField(std::move(func_type_field));
-      func_type_index = module->func_types.size() - 1;
-    }
-
-    func_import->func.decl.has_func_type = true;
-    func_import->func.decl.type_var.set_index(func_type_index);
-    func_import->func.decl.sig = func_import_info.sig;
+    SetFuncSignature(module, &func_import->func, func_import_info.sig);
 
     module->imports.push_back(func_import.get());
     module->funcs.insert(module->funcs.begin() + module->num_func_imports,
@@ -176,33 +212,45 @@ static std::vector<Index> AppendFuncImports(
 }
 
 template <typename F>
-void RecurseExprs(ExprList* exprs, F&& func) {
+void ForEachDefinedFunc(Module* module, F&& callback) {
+  Index func_index = 0;
+  for (Func* func : module->funcs) {
+    if (func_index >= module->num_func_imports) {
+      callback(func, func_index);
+    }
+
+    ++func_index;
+  }
+}
+
+template <typename F>
+void RecurseExprs(ExprList* exprs, F&& callback) {
   for (auto iter = exprs->begin(), end = exprs->end(); iter != end; ++iter) {
     Expr& expr = *iter;
 
-    func(exprs, iter);
+    callback(exprs, iter);
 
     switch (expr.type()) {
       case ExprType::Block:
-        RecurseExprs(&cast<BlockExpr>(&expr)->block.exprs, func);
+        RecurseExprs(&cast<BlockExpr>(&expr)->block.exprs, callback);
         break;
 
       case ExprType::If:
-        RecurseExprs(&cast<IfExpr>(&expr)->true_.exprs, func);
-        RecurseExprs(&cast<IfExpr>(&expr)->false_, func);
+        RecurseExprs(&cast<IfExpr>(&expr)->true_.exprs, callback);
+        RecurseExprs(&cast<IfExpr>(&expr)->false_, callback);
         break;
 
       case ExprType::IfExcept:
-        RecurseExprs(&cast<IfExceptExpr>(&expr)->true_.exprs, func);
-        RecurseExprs(&cast<IfExceptExpr>(&expr)->false_, func);
+        RecurseExprs(&cast<IfExceptExpr>(&expr)->true_.exprs, callback);
+        RecurseExprs(&cast<IfExceptExpr>(&expr)->false_, callback);
         break;
 
       case ExprType::Try:
-        RecurseExprs(&cast<TryExpr>(&expr)->block.exprs, func);
+        RecurseExprs(&cast<TryExpr>(&expr)->block.exprs, callback);
         break;
 
       case ExprType::Loop:
-        RecurseExprs(&cast<LoopExpr>(&expr)->block.exprs, func);
+        RecurseExprs(&cast<LoopExpr>(&expr)->block.exprs, callback);
         break;
 
       default:
@@ -211,37 +259,184 @@ void RecurseExprs(ExprList* exprs, F&& func) {
   }
 }
 
-static void HookFuncs(Module* module,
-                      Index begin_func_index,
-                      Index end_func_index) {
-  Index func_index = 0;
-  for (Func* func : module->funcs) {
-    if (func_index >= module->num_func_imports) {
-      auto block = MakeUnique<BlockExpr>();
-      block->block.decl.sig.result_types = func->decl.sig.result_types;
-      block->block.exprs = std::move(func->exprs);
+static void HookFuncs(Module* module) {
+  const FuncSignature sig_i_v({Type::I32}, {});
+  const std::vector<Index> indexes =
+      InsertFuncImports(module, {{names::kModule, names::kBeginFunc, sig_i_v},
+                                 {names::kModule, names::kEndFunc, sig_i_v}});
+  assert(indexes.size() == 2);
+  const Index begin_index = indexes[0];
+  const Index end_index = indexes[1];
 
-      // Insert endFunc hook before all return instructions.
-      RecurseExprs(
-          &block->block.exprs, [=](ExprList* exprs, ExprList::iterator iter) {
-            auto* expr = dyn_cast<ReturnExpr>(&*iter);
-            if (!expr) {
-              return;
-            }
+  ForEachDefinedFunc(module, [&](Func* func, Index func_index) {
+    auto block = MakeUnique<BlockExpr>();
+    block->block.decl.sig.result_types = func->decl.sig.result_types;
+    block->block.exprs = std::move(func->exprs);
 
-            exprs->insert(iter, MakeUnique<ConstExpr>(Const::I32(func_index)));
-            exprs->insert(iter, MakeUnique<CallExpr>(Var(end_func_index)));
-          });
+    // Insert endFunc hook before all return instructions.
+    RecurseExprs(
+        &block->block.exprs, [&](ExprList* exprs, ExprList::iterator iter) {
+          auto* expr = dyn_cast<ReturnExpr>(&*iter);
+          if (!expr) {
+            return;
+          }
 
-      func->exprs.push_back(MakeUnique<ConstExpr>(Const::I32(func_index)));
-      func->exprs.push_back(MakeUnique<CallExpr>(Var(begin_func_index)));
-      func->exprs.push_back(std::move(block));
-      func->exprs.push_back(MakeUnique<ConstExpr>(Const::I32(func_index)));
-      func->exprs.push_back(MakeUnique<CallExpr>(Var(end_func_index)));
+          exprs->insert(iter, MakeUnique<ConstExpr>(Const::I32(func_index)));
+          exprs->insert(iter, MakeUnique<CallExpr>(Var(end_index)));
+        });
+
+    func->exprs.push_back(MakeUnique<ConstExpr>(Const::I32(func_index)));
+    func->exprs.push_back(MakeUnique<CallExpr>(Var(begin_index)));
+    func->exprs.push_back(std::move(block));
+    func->exprs.push_back(MakeUnique<ConstExpr>(Const::I32(func_index)));
+    func->exprs.push_back(MakeUnique<CallExpr>(Var(end_index)));
+  });
+}
+
+static Index AppendLoadFunc(Module* module,
+                            const Opcode& op,
+                            Address align,
+                            Index hook_func_index) {
+  // Create a wrapper function for any of the various load instructions. A load
+  // instruction looks like:
+  //
+  // i32.load align=ALIGN offset=OFFSET: [addr:i32] -> [val:i32]
+  //
+  // We create a wrapper function as described in the comments below.
+  //
+  const Type result_type = op.GetResultType();
+  auto field = MakeUnique<FuncModuleField>();
+  Func& func = field->func;
+
+  // (func (param $addr i32) (param $offset i32) (result i32)
+  SetFuncSignature(module, &func,
+                   FuncSignature({Type::I32, Type::I32}, {result_type}));
+
+  //   (local $fulladdr i64)
+  //   (local $val i32)
+  func.local_types.AppendDecl(Type::I64, 1);
+  func.local_types.AppendDecl(result_type, 1);
+
+  const Index addr = 0;
+  const Index offset = 1;
+  const Index fulladdr = 2;
+  const Index val = 3;
+
+  //   ;; Calculate addr + offset.
+  //   get_local $addr
+  //   i64.extend_u/i32
+  //   get_local $offset
+  //   i64.extend_u/i32
+  //   i64.add
+  //   tee_local $fulladdr
+  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(addr)));
+  func.exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I64ExtendUI32_Opcode));
+  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(offset)));
+  func.exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I64ExtendUI32_Opcode));
+  func.exprs.push_back(MakeUnique<BinaryExpr>(Opcode::I64Add));
+  func.exprs.push_back(MakeUnique<TeeLocalExpr>(Var(fulladdr)));
+
+  //   ;; Trap if >= 32-bits.
+  //   i64.const 0x100000000
+  //   i64.ge_u
+  //   if
+  //     unreachable
+  //   end
+  func.exprs.push_back(MakeUnique<ConstExpr>(Const::I64(0x100000000)));
+  func.exprs.push_back(MakeUnique<CompareExpr>(Opcode::I64GeU));
+  auto if_expr = MakeUnique<IfExpr>();
+  if_expr->true_.exprs.push_back(MakeUnique<UnreachableExpr>());
+  func.exprs.push_back(std::move(if_expr));
+
+  //   ;; Perform the load.
+  //   get_local $fulladdr
+  //   i32.wrap/i64
+  //   i32.load offset=0 align=ALIGN
+  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(fulladdr)));
+  func.exprs.push_back(MakeUnique<ConvertExpr>(Opcode::I32WrapI64_Opcode));
+  func.exprs.push_back(MakeUnique<LoadExpr>(op, align, 0));
+
+  //   ;; Call the hook.
+  //   set_local $val
+  //   get_local $addr
+  //   i32.const ALIGN
+  //   get_local $val
+  //   call $hook
+  func.exprs.push_back(MakeUnique<SetLocalExpr>(Var(val)));
+  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(addr)));
+  func.exprs.push_back(MakeUnique<ConstExpr>(Const::I32(align)));
+  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(val)));
+  func.exprs.push_back(MakeUnique<CallExpr>(Var(hook_func_index)));
+
+  //   ;; Restore the result.
+  //   get_local $val
+  func.exprs.push_back(MakeUnique<GetLocalExpr>(Var(val)));
+
+  module->AppendField(std::move(field));
+  return module->funcs.size() - 1;
+}
+
+static void HookLoads(Module* module) {
+  // Find which kinds of loads exist in the module. The key is a combination of
+  // the opcode and its alignment.
+  std::map<std::pair<Opcode::Enum, Address>, Index> opcode_aligns;
+  ForEachDefinedFunc(module, [&](Func* func, Index func_index) {
+    RecurseExprs(&func->exprs, [&](ExprList* exprs, ExprList::iterator iter) {
+      auto* expr = dyn_cast<LoadExpr>(&*iter);
+      if (expr) {
+        opcode_aligns.emplace(std::make_pair(expr->opcode, expr->align),
+                              kInvalidIndex);
+      }
+    });
+  });
+
+  // Create the function import hooks.
+  std::vector<FuncImportInfo> func_import_infos;
+  for (const auto& pair : opcode_aligns) {
+    const Opcode op(pair.first.first);
+    const Type result_type = op.GetResultType();
+    const FuncSignature sig({Type::I32, Type::I32, result_type}, {});
+    func_import_infos.push_back({names::kModule, op.GetName(), sig});
+  }
+
+  std::vector<Index> indexes = InsertFuncImports(module, func_import_infos);
+  assert(indexes.size() == opcode_aligns.size());
+
+  Index last_non_wrapper_func_index = module->funcs.size();
+
+  // Create wrapper functions for each load/alignment combination.
+  int i = 0;
+  for (auto& pair : opcode_aligns) {
+    const Opcode op(pair.first.first);
+    pair.second = AppendLoadFunc(module, op, pair.first.second, indexes[i]);
+    ++i;
+  }
+
+  // Replace all loads with their equivalent wrapper functions.
+  ForEachDefinedFunc(module, [&](Func* func, Index func_index) {
+    // Don't replace loads in the new functions.
+    if (func_index >= last_non_wrapper_func_index) {
+      return;
     }
 
-    ++func_index;
-  }
+    RecurseExprs(&func->exprs, [&](ExprList* exprs, ExprList::iterator iter) {
+      auto* expr = dyn_cast<LoadExpr>(&*iter);
+      if (!expr) {
+        return;
+      }
+
+      auto oa_iter =
+          opcode_aligns.find(std::make_pair(expr->opcode, expr->align));
+      assert(oa_iter != opcode_aligns.end());
+      const Index wrapper_func_index = oa_iter->second;
+
+      // Push the immediate offset, and replace the load with a call to the
+      // wrapper function.
+      exprs->insert(iter, MakeUnique<ConstExpr>(Const::I32(expr->offset)));
+      exprs->insert(iter, MakeUnique<CallExpr>(Var(wrapper_func_index)));
+      exprs->erase(iter);
+    });
+  });
 }
 
 int ProgramMain(int argc, char** argv) {
@@ -268,13 +463,11 @@ int ProgramMain(int argc, char** argv) {
                           options, &errors, &module);
     if (Succeeded(result)) {
       if (s_hook_functions) {
-        FuncSignature sig_i_v({Type::I32}, {});
-        std::vector<Index> indexes =
-            AppendFuncImports(&module, {{"wasm-hook", "beginFunc", sig_i_v},
-                                        {"wasm-hook", "endFunc", sig_i_v}});
-        assert(indexes.size() == 2);
+        HookFuncs(&module);
+      }
 
-        HookFuncs(&module, indexes[0], indexes[1]);
+      if (s_hook_loads) {
+        HookLoads(&module);
       }
 
       result = ValidateModule(&module, &errors, ValidateOptions(features));
