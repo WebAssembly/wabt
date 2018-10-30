@@ -1,0 +1,71 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+
+;; This regression test makes sure that the end_loc of `if` blocks is properly
+;; set when using the folded format.
+
+;; if/else shorthand format, error in true branch.
+(func (result i32)
+  (if (result i32)
+    (i32.const 0)
+    (block
+      (unreachable)
+    )
+    (i32.const 0)
+  )
+)
+
+;; if/else with `then`/`else` keywords, error in true branch.
+(func (result i32)
+  (if (result i32)
+    (i32.const 0)
+    (then
+      (block
+        (unreachable)
+      )
+    )
+    (else
+      (i32.const 0)
+    )
+  )
+)
+
+;; if/else shorthand format, error in false branch.
+(func (result i32)
+  (if (result i32)
+    (i32.const 0)
+    (i32.const 0)
+    (block
+      (unreachable)
+    )
+  )
+)
+
+;; if/else with `then`/`else` keywords, error in false branch.
+(func (result i32)
+  (if (result i32)
+    (i32.const 0)
+    (then
+      (i32.const 0)
+    )
+    (else
+      (block
+        (unreachable)
+      )
+    )
+  )
+)
+(;; STDERR ;;;
+out/test/regress/regress-23.txt:13:5: error: type mismatch in if true branch, expected [i32] but got []
+    )
+    ^
+out/test/regress/regress-23.txt:25:7: error: type mismatch in if true branch, expected [i32] but got []
+      )
+      ^
+out/test/regress/regress-23.txt:41:3: error: type mismatch in if false branch, expected [i32] but got []
+  )
+  ^
+out/test/regress/regress-23.txt:56:3: error: type mismatch in if false branch, expected [i32] but got []
+  )
+  ^
+;;; STDERR ;;)

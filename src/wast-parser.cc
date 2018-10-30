@@ -2006,6 +2006,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
 
         if (MatchLpar(TokenType::Then)) {
           CHECK_RESULT(ParseTerminatingInstrList(&expr->true_.exprs));
+          expr->true_.end_loc = GetLocation();
           EXPECT(Rpar);
 
           if (MatchLpar(TokenType::Else)) {
@@ -2014,10 +2015,13 @@ Result WastParser::ParseExpr(ExprList* exprs) {
           } else if (PeekMatchExpr()) {
             CHECK_RESULT(ParseExpr(&expr->false_));
           }
+          expr->false_end_loc = GetLocation();
         } else if (PeekMatchExpr()) {
           CHECK_RESULT(ParseExpr(&expr->true_.exprs));
+          expr->true_.end_loc = GetLocation();
           if (PeekMatchExpr()) {
             CHECK_RESULT(ParseExpr(&expr->false_));
+            expr->false_end_loc = GetLocation();
           }
         } else {
           ConsumeIfLpar();
@@ -2043,6 +2047,7 @@ Result WastParser::ParseExpr(ExprList* exprs) {
 
         if (MatchLpar(TokenType::Then)) {
           CHECK_RESULT(ParseTerminatingInstrList(&expr->true_.exprs));
+          expr->true_.end_loc = GetLocation();
           EXPECT(Rpar);
 
           if (MatchLpar(TokenType::Else)) {
@@ -2051,10 +2056,13 @@ Result WastParser::ParseExpr(ExprList* exprs) {
           } else if (PeekMatchExpr()) {
             CHECK_RESULT(ParseExpr(&expr->false_));
           }
+          expr->false_end_loc = GetLocation();
         } else if (PeekMatchExpr()) {
           CHECK_RESULT(ParseExpr(&expr->true_.exprs));
+          expr->true_.end_loc = GetLocation();
           if (PeekMatchExpr()) {
             CHECK_RESULT(ParseExpr(&expr->false_));
+            expr->false_end_loc = GetLocation();
           }
         } else {
           ConsumeIfLpar();
