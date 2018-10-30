@@ -1,385 +1,385 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/block.wast
 (;; STDOUT ;;;
-out/test/spec/block.wast:295: assert_invalid passed:
+out/test/spec/block.wast:306: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   000001c: error: EndFunctionBody callback failed
-out/test/spec/block.wast:299: assert_invalid passed:
+out/test/spec/block.wast:310: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   000001c: error: EndFunctionBody callback failed
-out/test/spec/block.wast:303: assert_invalid passed:
+out/test/spec/block.wast:314: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got []
   000001c: error: EndFunctionBody callback failed
-out/test/spec/block.wast:307: assert_invalid passed:
+out/test/spec/block.wast:318: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got []
   000001c: error: EndFunctionBody callback failed
-out/test/spec/block.wast:312: assert_invalid passed:
+out/test/spec/block.wast:323: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   000001c: error: OnEndExpr callback failed
-out/test/spec/block.wast:318: assert_invalid passed:
+out/test/spec/block.wast:329: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i64]
   000001c: error: OnEndExpr callback failed
-out/test/spec/block.wast:324: assert_invalid passed:
+out/test/spec/block.wast:335: assert_invalid passed:
   error: type mismatch in block, expected [] but got [f32]
   000001f: error: OnEndExpr callback failed
-out/test/spec/block.wast:330: assert_invalid passed:
+out/test/spec/block.wast:341: assert_invalid passed:
   error: type mismatch in block, expected [] but got [f64]
   0000023: error: OnEndExpr callback failed
-out/test/spec/block.wast:337: assert_invalid passed:
+out/test/spec/block.wast:348: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got []
   000001b: error: OnEndExpr callback failed
-out/test/spec/block.wast:343: assert_invalid passed:
+out/test/spec/block.wast:354: assert_invalid passed:
   error: type mismatch in block, expected [i64] but got []
   000001b: error: OnEndExpr callback failed
-out/test/spec/block.wast:349: assert_invalid passed:
+out/test/spec/block.wast:360: assert_invalid passed:
   error: type mismatch in block, expected [f32] but got []
   000001b: error: OnEndExpr callback failed
-out/test/spec/block.wast:355: assert_invalid passed:
+out/test/spec/block.wast:366: assert_invalid passed:
   error: type mismatch in block, expected [f64] but got []
   000001b: error: OnEndExpr callback failed
-out/test/spec/block.wast:362: assert_invalid passed:
+out/test/spec/block.wast:373: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got []
   000001c: error: OnEndExpr callback failed
-out/test/spec/block.wast:368: assert_invalid passed:
+out/test/spec/block.wast:379: assert_invalid passed:
   error: type mismatch in block, expected [i64] but got []
   000001c: error: OnEndExpr callback failed
-out/test/spec/block.wast:374: assert_invalid passed:
+out/test/spec/block.wast:385: assert_invalid passed:
   error: type mismatch in block, expected [f32] but got []
   000001c: error: OnEndExpr callback failed
-out/test/spec/block.wast:380: assert_invalid passed:
+out/test/spec/block.wast:391: assert_invalid passed:
   error: type mismatch in block, expected [f64] but got []
   000001c: error: OnEndExpr callback failed
-out/test/spec/block.wast:387: assert_invalid passed:
+out/test/spec/block.wast:398: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [i64]
   000001d: error: OnEndExpr callback failed
-out/test/spec/block.wast:393: assert_invalid passed:
+out/test/spec/block.wast:404: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [f32]
   0000020: error: OnEndExpr callback failed
-out/test/spec/block.wast:399: assert_invalid passed:
+out/test/spec/block.wast:410: assert_invalid passed:
   error: type mismatch in block, expected [i32] but got [f64]
   0000024: error: OnEndExpr callback failed
-out/test/spec/block.wast:405: assert_invalid passed:
+out/test/spec/block.wast:416: assert_invalid passed:
   error: type mismatch in block, expected [i64] but got [i32]
   000001d: error: OnEndExpr callback failed
-out/test/spec/block.wast:411: assert_invalid passed:
+out/test/spec/block.wast:422: assert_invalid passed:
   error: type mismatch in block, expected [i64] but got [f32]
   0000020: error: OnEndExpr callback failed
-out/test/spec/block.wast:417: assert_invalid passed:
+out/test/spec/block.wast:428: assert_invalid passed:
   error: type mismatch in block, expected [i64] but got [f64]
   0000024: error: OnEndExpr callback failed
-out/test/spec/block.wast:423: assert_invalid passed:
+out/test/spec/block.wast:434: assert_invalid passed:
   error: type mismatch in block, expected [f32] but got [i32]
   000001d: error: OnEndExpr callback failed
-out/test/spec/block.wast:429: assert_invalid passed:
+out/test/spec/block.wast:440: assert_invalid passed:
   error: type mismatch in block, expected [f32] but got [i64]
   000001d: error: OnEndExpr callback failed
-out/test/spec/block.wast:435: assert_invalid passed:
+out/test/spec/block.wast:446: assert_invalid passed:
   error: type mismatch in block, expected [f32] but got [f64]
   0000024: error: OnEndExpr callback failed
-out/test/spec/block.wast:441: assert_invalid passed:
+out/test/spec/block.wast:452: assert_invalid passed:
   error: type mismatch in block, expected [f64] but got [i32]
   000001d: error: OnEndExpr callback failed
-out/test/spec/block.wast:447: assert_invalid passed:
+out/test/spec/block.wast:458: assert_invalid passed:
   error: type mismatch in block, expected [f64] but got [i64]
   000001d: error: OnEndExpr callback failed
-out/test/spec/block.wast:453: assert_invalid passed:
+out/test/spec/block.wast:464: assert_invalid passed:
   error: type mismatch in block, expected [f64] but got [f32]
   0000020: error: OnEndExpr callback failed
-out/test/spec/block.wast:460: assert_invalid passed:
+out/test/spec/block.wast:471: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:466: assert_invalid passed:
+out/test/spec/block.wast:477: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [f32]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:472: assert_invalid passed:
+out/test/spec/block.wast:483: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [f64]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:478: assert_invalid passed:
+out/test/spec/block.wast:489: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got [i32]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:484: assert_invalid passed:
+out/test/spec/block.wast:495: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got [f32]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:490: assert_invalid passed:
+out/test/spec/block.wast:501: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got [f64]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:496: assert_invalid passed:
+out/test/spec/block.wast:507: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got [i32]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:502: assert_invalid passed:
+out/test/spec/block.wast:513: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got [i64]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:508: assert_invalid passed:
+out/test/spec/block.wast:519: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got [f64]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:514: assert_invalid passed:
+out/test/spec/block.wast:525: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got [i32]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:520: assert_invalid passed:
+out/test/spec/block.wast:531: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got [i64]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:526: assert_invalid passed:
+out/test/spec/block.wast:537: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got [f32]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/block.wast:533: assert_invalid passed:
+out/test/spec/block.wast:544: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001c: error: OnBrExpr callback failed
-out/test/spec/block.wast:539: assert_invalid passed:
+out/test/spec/block.wast:550: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got []
   000001c: error: OnBrExpr callback failed
-out/test/spec/block.wast:545: assert_invalid passed:
+out/test/spec/block.wast:556: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got []
   000001c: error: OnBrExpr callback failed
-out/test/spec/block.wast:551: assert_invalid passed:
+out/test/spec/block.wast:562: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got []
   000001c: error: OnBrExpr callback failed
-out/test/spec/block.wast:558: assert_invalid passed:
+out/test/spec/block.wast:569: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001c: error: OnBrExpr callback failed
-out/test/spec/block.wast:564: assert_invalid passed:
+out/test/spec/block.wast:575: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got []
   000001c: error: OnBrExpr callback failed
-out/test/spec/block.wast:570: assert_invalid passed:
+out/test/spec/block.wast:581: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got []
   000001c: error: OnBrExpr callback failed
-out/test/spec/block.wast:576: assert_invalid passed:
+out/test/spec/block.wast:587: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got []
   000001c: error: OnBrExpr callback failed
-out/test/spec/block.wast:583: assert_invalid passed:
+out/test/spec/block.wast:594: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/block.wast:589: assert_invalid passed:
+out/test/spec/block.wast:600: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/block.wast:595: assert_invalid passed:
+out/test/spec/block.wast:606: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/block.wast:601: assert_invalid passed:
+out/test/spec/block.wast:612: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/block.wast:608: assert_invalid passed:
+out/test/spec/block.wast:619: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [i64]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:614: assert_invalid passed:
+out/test/spec/block.wast:625: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [f32]
   0000021: error: OnBrExpr callback failed
-out/test/spec/block.wast:620: assert_invalid passed:
+out/test/spec/block.wast:631: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [f64]
   0000025: error: OnBrExpr callback failed
-out/test/spec/block.wast:626: assert_invalid passed:
+out/test/spec/block.wast:637: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [i32]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:632: assert_invalid passed:
+out/test/spec/block.wast:643: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [f32]
   0000021: error: OnBrExpr callback failed
-out/test/spec/block.wast:638: assert_invalid passed:
+out/test/spec/block.wast:649: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [f64]
   0000025: error: OnBrExpr callback failed
-out/test/spec/block.wast:644: assert_invalid passed:
+out/test/spec/block.wast:655: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [i32]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:650: assert_invalid passed:
+out/test/spec/block.wast:661: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [i64]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:656: assert_invalid passed:
+out/test/spec/block.wast:667: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [f64]
   0000025: error: OnBrExpr callback failed
-out/test/spec/block.wast:662: assert_invalid passed:
+out/test/spec/block.wast:673: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [i32]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:668: assert_invalid passed:
+out/test/spec/block.wast:679: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got [i64]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:674: assert_invalid passed:
+out/test/spec/block.wast:685: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got [f32]
   0000021: error: OnBrExpr callback failed
-out/test/spec/block.wast:681: assert_invalid passed:
+out/test/spec/block.wast:692: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/block.wast:687: assert_invalid passed:
+out/test/spec/block.wast:698: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/block.wast:693: assert_invalid passed:
+out/test/spec/block.wast:704: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/block.wast:699: assert_invalid passed:
+out/test/spec/block.wast:710: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/block.wast:706: assert_invalid passed:
+out/test/spec/block.wast:717: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [i64]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:712: assert_invalid passed:
+out/test/spec/block.wast:723: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [f32]
   0000021: error: OnBrExpr callback failed
-out/test/spec/block.wast:718: assert_invalid passed:
+out/test/spec/block.wast:729: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [f64]
   0000025: error: OnBrExpr callback failed
-out/test/spec/block.wast:724: assert_invalid passed:
+out/test/spec/block.wast:735: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [i32]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:730: assert_invalid passed:
+out/test/spec/block.wast:741: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [f32]
   0000021: error: OnBrExpr callback failed
-out/test/spec/block.wast:736: assert_invalid passed:
+out/test/spec/block.wast:747: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [f64]
   0000025: error: OnBrExpr callback failed
-out/test/spec/block.wast:742: assert_invalid passed:
+out/test/spec/block.wast:753: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [i32]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:748: assert_invalid passed:
+out/test/spec/block.wast:759: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [i64]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:754: assert_invalid passed:
+out/test/spec/block.wast:765: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [f64]
   0000025: error: OnBrExpr callback failed
-out/test/spec/block.wast:760: assert_invalid passed:
+out/test/spec/block.wast:771: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got [i32]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:766: assert_invalid passed:
+out/test/spec/block.wast:777: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got [i64]
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:772: assert_invalid passed:
+out/test/spec/block.wast:783: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got [f32]
   0000021: error: OnBrExpr callback failed
-out/test/spec/block.wast:779: assert_invalid passed:
+out/test/spec/block.wast:790: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i32]
   0000024: error: EndFunctionBody callback failed
-out/test/spec/block.wast:785: assert_invalid passed:
+out/test/spec/block.wast:796: assert_invalid passed:
   error: type mismatch in function, expected [] but got [i64]
   0000024: error: EndFunctionBody callback failed
-out/test/spec/block.wast:791: assert_invalid passed:
+out/test/spec/block.wast:802: assert_invalid passed:
   error: type mismatch in function, expected [] but got [f32]
   0000027: error: EndFunctionBody callback failed
-out/test/spec/block.wast:797: assert_invalid passed:
+out/test/spec/block.wast:808: assert_invalid passed:
   error: type mismatch in function, expected [] but got [f64]
   000002b: error: EndFunctionBody callback failed
-out/test/spec/block.wast:804: assert_invalid passed:
+out/test/spec/block.wast:815: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:810: assert_invalid passed:
+out/test/spec/block.wast:821: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got []
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:816: assert_invalid passed:
+out/test/spec/block.wast:827: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got []
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:822: assert_invalid passed:
+out/test/spec/block.wast:833: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got []
   000001e: error: OnBrExpr callback failed
-out/test/spec/block.wast:829: assert_invalid passed:
+out/test/spec/block.wast:840: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001f: error: OnBrExpr callback failed
-out/test/spec/block.wast:835: assert_invalid passed:
+out/test/spec/block.wast:846: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got []
   000001f: error: OnBrExpr callback failed
-out/test/spec/block.wast:841: assert_invalid passed:
+out/test/spec/block.wast:852: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got []
   000001f: error: OnBrExpr callback failed
-out/test/spec/block.wast:847: assert_invalid passed:
+out/test/spec/block.wast:858: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got []
   000001f: error: OnBrExpr callback failed
-out/test/spec/block.wast:854: assert_invalid passed:
+out/test/spec/block.wast:865: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [i64]
   0000020: error: OnBrExpr callback failed
-out/test/spec/block.wast:862: assert_invalid passed:
+out/test/spec/block.wast:873: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [f32]
   0000023: error: OnBrExpr callback failed
-out/test/spec/block.wast:870: assert_invalid passed:
+out/test/spec/block.wast:881: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [f64]
   0000027: error: OnBrExpr callback failed
-out/test/spec/block.wast:878: assert_invalid passed:
+out/test/spec/block.wast:889: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [i32]
   0000020: error: OnBrExpr callback failed
-out/test/spec/block.wast:886: assert_invalid passed:
+out/test/spec/block.wast:897: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [f32]
   0000023: error: OnBrExpr callback failed
-out/test/spec/block.wast:894: assert_invalid passed:
+out/test/spec/block.wast:905: assert_invalid passed:
   error: type mismatch in br, expected [i64] but got [f64]
   0000027: error: OnBrExpr callback failed
-out/test/spec/block.wast:902: assert_invalid passed:
+out/test/spec/block.wast:913: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [i32]
   0000020: error: OnBrExpr callback failed
-out/test/spec/block.wast:910: assert_invalid passed:
+out/test/spec/block.wast:921: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [i64]
   0000020: error: OnBrExpr callback failed
-out/test/spec/block.wast:918: assert_invalid passed:
+out/test/spec/block.wast:929: assert_invalid passed:
   error: type mismatch in br, expected [f32] but got [f64]
   0000027: error: OnBrExpr callback failed
-out/test/spec/block.wast:926: assert_invalid passed:
+out/test/spec/block.wast:937: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got [i32]
   0000020: error: OnBrExpr callback failed
-out/test/spec/block.wast:934: assert_invalid passed:
+out/test/spec/block.wast:945: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got [i64]
   0000020: error: OnBrExpr callback failed
-out/test/spec/block.wast:942: assert_invalid passed:
+out/test/spec/block.wast:953: assert_invalid passed:
   error: type mismatch in br, expected [f64] but got [f32]
   0000023: error: OnBrExpr callback failed
-out/test/spec/block.wast:951: assert_invalid passed:
+out/test/spec/block.wast:962: assert_invalid passed:
   error: type mismatch in i32.ctz, expected [i32] but got []
   000001e: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:957: assert_invalid passed:
+out/test/spec/block.wast:968: assert_invalid passed:
   error: type mismatch in i64.ctz, expected [i64] but got []
   000001e: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:963: assert_invalid passed:
+out/test/spec/block.wast:974: assert_invalid passed:
   error: type mismatch in f32.floor, expected [f32] but got []
   000001e: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:969: assert_invalid passed:
+out/test/spec/block.wast:980: assert_invalid passed:
   error: type mismatch in f64.floor, expected [f64] but got []
   000001e: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:976: assert_invalid passed:
+out/test/spec/block.wast:987: assert_invalid passed:
   error: type mismatch in i32.ctz, expected [i32] but got []
   000001f: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:982: assert_invalid passed:
+out/test/spec/block.wast:993: assert_invalid passed:
   error: type mismatch in i64.ctz, expected [i64] but got []
   000001f: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:988: assert_invalid passed:
+out/test/spec/block.wast:999: assert_invalid passed:
   error: type mismatch in f32.floor, expected [f32] but got []
   000001f: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:994: assert_invalid passed:
+out/test/spec/block.wast:1005: assert_invalid passed:
   error: type mismatch in f64.floor, expected [f64] but got []
   000001f: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1001: assert_invalid passed:
+out/test/spec/block.wast:1012: assert_invalid passed:
   error: type mismatch in i64.ctz, expected [i64] but got []
   0000020: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1007: assert_invalid passed:
+out/test/spec/block.wast:1018: assert_invalid passed:
   error: type mismatch in f32.floor, expected [f32] but got []
   0000023: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1013: assert_invalid passed:
+out/test/spec/block.wast:1024: assert_invalid passed:
   error: type mismatch in f64.floor, expected [f64] but got []
   0000027: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1019: assert_invalid passed:
+out/test/spec/block.wast:1030: assert_invalid passed:
   error: type mismatch in i32.ctz, expected [i32] but got []
   0000020: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1025: assert_invalid passed:
+out/test/spec/block.wast:1036: assert_invalid passed:
   error: type mismatch in f32.floor, expected [f32] but got []
   0000023: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1031: assert_invalid passed:
+out/test/spec/block.wast:1042: assert_invalid passed:
   error: type mismatch in f64.floor, expected [f64] but got []
   0000027: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1037: assert_invalid passed:
+out/test/spec/block.wast:1048: assert_invalid passed:
   error: type mismatch in i32.ctz, expected [i32] but got []
   0000020: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1043: assert_invalid passed:
+out/test/spec/block.wast:1054: assert_invalid passed:
   error: type mismatch in i64.ctz, expected [i64] but got []
   0000020: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1049: assert_invalid passed:
+out/test/spec/block.wast:1060: assert_invalid passed:
   error: type mismatch in f64.floor, expected [f64] but got []
   0000027: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1055: assert_invalid passed:
+out/test/spec/block.wast:1066: assert_invalid passed:
   error: type mismatch in i32.ctz, expected [i32] but got []
   0000020: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1061: assert_invalid passed:
+out/test/spec/block.wast:1072: assert_invalid passed:
   error: type mismatch in i64.ctz, expected [i64] but got []
   0000020: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1067: assert_invalid passed:
+out/test/spec/block.wast:1078: assert_invalid passed:
   error: type mismatch in f32.floor, expected [f32] but got []
   0000023: error: OnUnaryExpr callback failed
-out/test/spec/block.wast:1074: assert_malformed passed:
+out/test/spec/block.wast:1085: assert_malformed passed:
   out/test/spec/block/block.125.wat:1:17: error: unexpected label "$l"
   (func block end $l)
                   ^^
-out/test/spec/block.wast:1078: assert_malformed passed:
+out/test/spec/block.wast:1089: assert_malformed passed:
   out/test/spec/block/block.126.wat:1:20: error: mismatching label "$a" != "$l"
   (func block $a end $l)
                      ^^
-165/165 tests passed.
+167/167 tests passed.
 ;;; STDOUT ;;)

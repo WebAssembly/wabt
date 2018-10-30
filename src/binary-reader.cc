@@ -1963,9 +1963,11 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
   ERROR_UNLESS(num_elem_segments == 0 || NumTotalTables() > 0,
                "elem section without table section");
   for (Index i = 0; i < num_elem_segments; ++i) {
-    uint8_t flags_byte;
-    CHECK_RESULT(ReadU8(&flags_byte, "elem segment flags"));
-    SegmentFlags flags = static_cast<SegmentFlags>(flags_byte);
+    uint32_t flags_u32;
+    CHECK_RESULT(ReadU32Leb128(&flags_u32, "elem segment flags"));
+    ERROR_UNLESS(flags_u32 <= static_cast<uint32_t>(SegmentFlags::IndexOther),
+                 "invalid elem segment flags");
+    SegmentFlags flags = static_cast<SegmentFlags>(flags_u32);
     Index table_index(0);
     if (flags == SegmentFlags::IndexOther) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
@@ -2041,9 +2043,11 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   ERROR_UNLESS(num_data_segments == 0 || NumTotalMemories() > 0,
                "data section without memory section");
   for (Index i = 0; i < num_data_segments; ++i) {
-    uint8_t flags_byte;
-    CHECK_RESULT(ReadU8(&flags_byte, "data segment flags"));
-    SegmentFlags flags = static_cast<SegmentFlags>(flags_byte);
+    uint32_t flags_u32;
+    CHECK_RESULT(ReadU32Leb128(&flags_u32, "data segment flags"));
+    ERROR_UNLESS(flags_u32 <= static_cast<uint32_t>(SegmentFlags::IndexOther),
+                 "invalid data segment flags");
+    SegmentFlags flags = static_cast<SegmentFlags>(flags_u32);
     Index memory_index(0);
     if (flags == SegmentFlags::IndexOther) {
       CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));

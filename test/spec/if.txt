@@ -1,156 +1,156 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/if.wast
 (;; STDOUT ;;;
-out/test/spec/if.wast:476: assert_invalid passed:
+out/test/spec/if.wast:499: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   000001e: error: EndFunctionBody callback failed
-out/test/spec/if.wast:480: assert_invalid passed:
+out/test/spec/if.wast:503: assert_invalid passed:
   error: type mismatch in implicit return, expected [i64] but got []
   000001e: error: EndFunctionBody callback failed
-out/test/spec/if.wast:484: assert_invalid passed:
+out/test/spec/if.wast:507: assert_invalid passed:
   error: type mismatch in implicit return, expected [f32] but got []
   000001e: error: EndFunctionBody callback failed
-out/test/spec/if.wast:488: assert_invalid passed:
+out/test/spec/if.wast:511: assert_invalid passed:
   error: type mismatch in implicit return, expected [f64] but got []
   000001e: error: EndFunctionBody callback failed
-out/test/spec/if.wast:493: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got []
-  000001e: error: EndFunctionBody callback failed
-out/test/spec/if.wast:497: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i64] but got []
-  000001e: error: EndFunctionBody callback failed
-out/test/spec/if.wast:501: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f32] but got []
-  000001e: error: EndFunctionBody callback failed
-out/test/spec/if.wast:505: assert_invalid passed:
-  error: type mismatch in implicit return, expected [f64] but got []
-  000001e: error: EndFunctionBody callback failed
-out/test/spec/if.wast:510: assert_invalid passed:
-  error: type mismatch in if true branch, expected [] but got [i32]
-  000001e: error: OnEndExpr callback failed
 out/test/spec/if.wast:516: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/if.wast:520: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/if.wast:524: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f32] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/if.wast:528: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f64] but got []
+  000001e: error: EndFunctionBody callback failed
+out/test/spec/if.wast:533: assert_invalid passed:
   error: type mismatch in if true branch, expected [] but got [i32]
   000001e: error: OnEndExpr callback failed
-out/test/spec/if.wast:522: assert_invalid passed:
+out/test/spec/if.wast:539: assert_invalid passed:
+  error: type mismatch in if true branch, expected [] but got [i32]
+  000001e: error: OnEndExpr callback failed
+out/test/spec/if.wast:545: assert_invalid passed:
   error: type mismatch in if false branch, expected [] but got [i32]
   000001f: error: OnEndExpr callback failed
-out/test/spec/if.wast:528: assert_invalid passed:
+out/test/spec/if.wast:551: assert_invalid passed:
   error: type mismatch in if true branch, expected [] but got [i32]
   000001e: error: OnElseExpr callback failed
-out/test/spec/if.wast:535: assert_invalid passed:
+out/test/spec/if.wast:558: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got []
   000001d: error: OnElseExpr callback failed
-out/test/spec/if.wast:541: assert_invalid passed:
+out/test/spec/if.wast:564: assert_invalid passed:
   error: type mismatch in if false branch, expected [i32] but got []
   000001f: error: OnEndExpr callback failed
-out/test/spec/if.wast:547: assert_invalid passed:
+out/test/spec/if.wast:570: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got []
   000001d: error: OnEndExpr callback failed
-out/test/spec/if.wast:553: assert_invalid passed:
+out/test/spec/if.wast:576: assert_invalid passed:
   error: type mismatch in if false branch, expected [i32] but got []
   000001f: error: OnEndExpr callback failed
-out/test/spec/if.wast:560: assert_invalid passed:
+out/test/spec/if.wast:583: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got []
   000001e: error: OnElseExpr callback failed
-out/test/spec/if.wast:566: assert_invalid passed:
+out/test/spec/if.wast:589: assert_invalid passed:
   error: type mismatch in if false branch, expected [i32] but got []
   0000021: error: OnEndExpr callback failed
-out/test/spec/if.wast:572: assert_invalid passed:
+out/test/spec/if.wast:595: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got []
   000001e: error: OnElseExpr callback failed
-out/test/spec/if.wast:579: assert_invalid passed:
+out/test/spec/if.wast:602: assert_invalid passed:
   error: type mismatch in if true branch, expected [i32] but got [i64]
   000001f: error: OnElseExpr callback failed
-out/test/spec/if.wast:585: assert_invalid passed:
+out/test/spec/if.wast:608: assert_invalid passed:
   error: type mismatch in if false branch, expected [i32] but got [i64]
   0000022: error: OnEndExpr callback failed
-out/test/spec/if.wast:591: assert_invalid passed:
-  error: type mismatch in if true branch, expected [i32] but got [i64]
-  000001f: error: OnElseExpr callback failed
-out/test/spec/if.wast:597: assert_invalid passed:
-  error: type mismatch in if true branch, expected [i32] but got [i64]
-  000001f: error: OnElseExpr callback failed
-out/test/spec/if.wast:604: assert_invalid passed:
-  error: type mismatch in implicit return, expected [i32] but got [i64]
-  0000025: error: EndFunctionBody callback failed
 out/test/spec/if.wast:614: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got [i64]
+  000001f: error: OnElseExpr callback failed
+out/test/spec/if.wast:620: assert_invalid passed:
+  error: type mismatch in if true branch, expected [i32] but got [i64]
+  000001f: error: OnElseExpr callback failed
+out/test/spec/if.wast:627: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000025: error: EndFunctionBody callback failed
-out/test/spec/if.wast:624: assert_invalid passed:
+out/test/spec/if.wast:637: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got [i64]
+  0000025: error: EndFunctionBody callback failed
+out/test/spec/if.wast:647: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000027: error: EndFunctionBody callback failed
-out/test/spec/if.wast:635: assert_invalid passed:
+out/test/spec/if.wast:658: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001e: error: OnBrExpr callback failed
-out/test/spec/if.wast:641: assert_invalid passed:
+out/test/spec/if.wast:664: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   0000021: error: OnBrExpr callback failed
-out/test/spec/if.wast:647: assert_invalid passed:
+out/test/spec/if.wast:670: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001e: error: OnBrExpr callback failed
-out/test/spec/if.wast:656: assert_invalid passed:
+out/test/spec/if.wast:679: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   0000021: error: OnBrExpr callback failed
-out/test/spec/if.wast:665: assert_invalid passed:
+out/test/spec/if.wast:688: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001f: error: OnBrExpr callback failed
-out/test/spec/if.wast:674: assert_invalid passed:
+out/test/spec/if.wast:697: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   0000022: error: OnBrExpr callback failed
-out/test/spec/if.wast:684: assert_invalid passed:
+out/test/spec/if.wast:707: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [i64]
   0000020: error: OnBrExpr callback failed
-out/test/spec/if.wast:693: assert_invalid passed:
+out/test/spec/if.wast:716: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [i64]
   0000023: error: OnBrExpr callback failed
-out/test/spec/if.wast:704: assert_malformed passed:
+out/test/spec/if.wast:727: assert_malformed passed:
   out/test/spec/if/if.35.wat:1:14: error: unexpected label "$l"
   (func if end $l)
                ^^
-out/test/spec/if.wast:708: assert_malformed passed:
+out/test/spec/if.wast:731: assert_malformed passed:
   out/test/spec/if/if.36.wat:1:17: error: mismatching label "$a" != "$l"
   (func if $a end $l)
                   ^^
-out/test/spec/if.wast:712: assert_malformed passed:
+out/test/spec/if.wast:735: assert_malformed passed:
   out/test/spec/if/if.37.wat:1:15: error: unexpected label "$l"
   (func if else $l end)
                 ^^
-out/test/spec/if.wast:716: assert_malformed passed:
+out/test/spec/if.wast:739: assert_malformed passed:
   out/test/spec/if/if.38.wat:1:18: error: mismatching label "$a" != "$l"
   (func if $a else $l end)
                    ^^
-out/test/spec/if.wast:720: assert_malformed passed:
+out/test/spec/if.wast:743: assert_malformed passed:
   out/test/spec/if/if.39.wat:1:19: error: unexpected label "$l"
   (func if else end $l)
                     ^^
-out/test/spec/if.wast:724: assert_malformed passed:
+out/test/spec/if.wast:747: assert_malformed passed:
   out/test/spec/if/if.40.wat:1:15: error: unexpected label "$l"
   (func if else $l end $l)
                 ^^
   out/test/spec/if/if.40.wat:1:22: error: unexpected label "$l"
   (func if else $l end $l)
                        ^^
-out/test/spec/if.wast:728: assert_malformed passed:
+out/test/spec/if.wast:751: assert_malformed passed:
   out/test/spec/if/if.41.wat:1:15: error: unexpected label "$l1"
   (func if else $l1 end $l2)
                 ^^^
   out/test/spec/if/if.41.wat:1:23: error: unexpected label "$l2"
   (func if else $l1 end $l2)
                         ^^^
-out/test/spec/if.wast:732: assert_malformed passed:
+out/test/spec/if.wast:755: assert_malformed passed:
   out/test/spec/if/if.42.wat:1:22: error: mismatching label "$a" != "$l"
   (func if $a else end $l)
                        ^^
-out/test/spec/if.wast:736: assert_malformed passed:
+out/test/spec/if.wast:759: assert_malformed passed:
   out/test/spec/if/if.43.wat:1:25: error: mismatching label "$a" != "$l"
   (func if $a else $a end $l)
                           ^^
-out/test/spec/if.wast:740: assert_malformed passed:
+out/test/spec/if.wast:763: assert_malformed passed:
   out/test/spec/if/if.44.wat:1:18: error: mismatching label "$a" != "$l"
   (func if $a else $l end $l)
                    ^^
   out/test/spec/if/if.44.wat:1:25: error: mismatching label "$a" != "$l"
   (func if $a else $l end $l)
                           ^^
-128/128 tests passed.
+132/132 tests passed.
 ;;; STDOUT ;;)
