@@ -404,6 +404,9 @@ void wabt_destroy_output_buffer(wabt::OutputBuffer* output_buffer) {
   delete output_buffer;
 }
 
+// See https://github.com/kripken/emscripten/issues/7073.
+void dummy_workaround_for_emscripten_issue_7073(void) {}
+
 }  // extern "C"
 
 #endif /* WABT_EMSCRIPTEN_HELPERS_H_ */
