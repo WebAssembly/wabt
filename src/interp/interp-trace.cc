@@ -72,20 +72,20 @@ void Thread::Trace(Stream* stream) {
     }
 
     case Opcode::I32Const:
-      stream->Writef("%s $%u\n", opcode.GetName(), ReadU32At(pc));
+      stream->Writef("%s %u\n", opcode.GetName(), ReadU32At(pc));
       break;
 
     case Opcode::I64Const:
-      stream->Writef("%s $%" PRIu64 "\n", opcode.GetName(), ReadU64At(pc));
+      stream->Writef("%s %" PRIu64 "\n", opcode.GetName(), ReadU64At(pc));
       break;
 
     case Opcode::F32Const:
-      stream->Writef("%s $%g\n", opcode.GetName(),
+      stream->Writef("%s %g\n", opcode.GetName(),
                      Bitcast<float>(ReadU32At(pc)));
       break;
 
     case Opcode::F64Const:
-      stream->Writef("%s $%g\n", opcode.GetName(),
+      stream->Writef("%s %g\n", opcode.GetName(),
                      Bitcast<double>(ReadU64At(pc)));
       break;
 
