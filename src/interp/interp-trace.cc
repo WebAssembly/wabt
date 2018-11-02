@@ -50,9 +50,9 @@ void Thread::Trace(Stream* stream) {
       break;
 
     case Opcode::BrTable: {
-      Index num_targets = ReadU32At(pc);
-      IstreamOffset table_offset = ReadU32At(pc + 4);
-      uint32_t key = Top().i32;
+      const Index num_targets = ReadU32At(pc);
+      const IstreamOffset table_offset = ReadU32At(pc + 4);
+      const uint32_t key = Top().i32;
       stream->Writef("%s %u, $#%" PRIindex ", table:$%u\n", opcode.GetName(),
                      key, num_targets, table_offset);
       break;
@@ -66,7 +66,7 @@ void Thread::Trace(Stream* stream) {
       break;
 
     case Opcode::MemorySize: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex "\n", opcode.GetName(), memory_index);
       break;
     }
@@ -138,7 +138,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32Load:
     case Opcode::F64Load:
     case Opcode::V128Load: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u\n", opcode.GetName(),
                      memory_index, Top().i32, ReadU32At(pc));
       break;
@@ -169,7 +169,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32Store8:
     case Opcode::I32Store16:
     case Opcode::I32Store: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %u\n", opcode.GetName(),
                      memory_index, Pick(2).i32, ReadU32At(pc), Pick(1).i32);
       break;
@@ -178,7 +178,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32AtomicRmwCmpxchg:
     case Opcode::I32AtomicRmw8UCmpxchg:
     case Opcode::I32AtomicRmw16UCmpxchg: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %u, %u\n", opcode.GetName(),
                      memory_index, Pick(3).i32, ReadU32At(pc), Pick(2).i32,
                      Pick(1).i32);
@@ -217,7 +217,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64Store16:
     case Opcode::I64Store32:
     case Opcode::I64Store: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %" PRIu64 "\n",
                      opcode.GetName(), memory_index, Pick(2).i32, ReadU32At(pc),
                      Pick(1).i64);
@@ -225,7 +225,7 @@ void Thread::Trace(Stream* stream) {
     }
 
     case Opcode::I32AtomicWait: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %u, %" PRIu64 "\n",
                      opcode.GetName(), memory_index, Pick(3).i32, ReadU32At(pc),
                      Pick(2).i32, Pick(1).i64);
@@ -237,7 +237,7 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64AtomicRmw8UCmpxchg:
     case Opcode::I64AtomicRmw16UCmpxchg:
     case Opcode::I64AtomicRmw32UCmpxchg: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %" PRIu64 ", %" PRIu64 "\n",
                      opcode.GetName(), memory_index, Pick(3).i32, ReadU32At(pc),
                      Pick(2).i64, Pick(1).i64);
@@ -245,7 +245,7 @@ void Thread::Trace(Stream* stream) {
     }
 
     case Opcode::F32Store: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n", opcode.GetName(),
                      memory_index, Pick(2).i32, ReadU32At(pc),
                      Bitcast<float>(Pick(1).f32_bits));
@@ -253,7 +253,7 @@ void Thread::Trace(Stream* stream) {
     }
 
     case Opcode::F64Store: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, %g\n", opcode.GetName(),
                      memory_index, Pick(2).i32, ReadU32At(pc),
                      Bitcast<double>(Pick(1).f64_bits));
@@ -261,7 +261,7 @@ void Thread::Trace(Stream* stream) {
     }
 
     case Opcode::V128Store: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, $0x%08x 0x%08x 0x%08x 0x%08x\n",
                      opcode.GetName(), memory_index, Pick(2).i32, ReadU32At(pc),
                      Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
@@ -270,7 +270,7 @@ void Thread::Trace(Stream* stream) {
     }
 
     case Opcode::MemoryGrow: {
-      Index memory_index = ReadU32(&pc);
+      const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u\n", opcode.GetName(), memory_index,
                      Top().i32);
       break;

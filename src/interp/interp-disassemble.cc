@@ -56,8 +56,8 @@ void Environment::Disassemble(Stream* stream,
         break;
 
       case Opcode::BrTable: {
-        Index num_targets = ReadU32(&pc);
-        IstreamOffset table_offset = ReadU32(&pc);
+        const Index num_targets = ReadU32(&pc);
+        const IstreamOffset table_offset = ReadU32(&pc);
         stream->Writef("%s %%[-1], $#%" PRIindex ", table:$%u\n",
                        opcode.GetName(), num_targets, table_offset);
         break;
@@ -71,26 +71,26 @@ void Environment::Disassemble(Stream* stream,
         break;
 
       case Opcode::MemorySize: {
-        Index memory_index = ReadU32(&pc);
+        const Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex "\n", opcode.GetName(), memory_index);
         break;
       }
 
       case Opcode::I32Const:
-        stream->Writef("%s $%u\n", opcode.GetName(), ReadU32(&pc));
+        stream->Writef("%s %u\n", opcode.GetName(), ReadU32(&pc));
         break;
 
       case Opcode::I64Const:
-        stream->Writef("%s $%" PRIu64 "\n", opcode.GetName(), ReadU64(&pc));
+        stream->Writef("%s %" PRIu64 "\n", opcode.GetName(), ReadU64(&pc));
         break;
 
       case Opcode::F32Const:
-        stream->Writef("%s $%g\n", opcode.GetName(),
+        stream->Writef("%s %g\n", opcode.GetName(),
                        Bitcast<float>(ReadU32(&pc)));
         break;
 
       case Opcode::F64Const:
-        stream->Writef("%s $%g\n", opcode.GetName(),
+        stream->Writef("%s %g\n", opcode.GetName(),
                        Bitcast<double>(ReadU64(&pc)));
         break;
 
@@ -112,7 +112,7 @@ void Environment::Disassemble(Stream* stream,
 
       case Opcode::CallIndirect:
       case Opcode::ReturnCallIndirect: {
-        Index table_index = ReadU32(&pc);
+        const Index table_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%u, %%[-1]\n", opcode.GetName(),
                        table_index, ReadU32(&pc));
         break;
@@ -144,7 +144,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F32Load:
       case Opcode::F64Load:
       case Opcode::V128Load: {
-        Index memory_index = ReadU32(&pc);
+        const Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%%[-1]+$%u\n", opcode.GetName(),
                        memory_index, ReadU32(&pc));
         break;
@@ -210,7 +210,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F32Store:
       case Opcode::F64Store:
       case Opcode::V128Store: {
-        Index memory_index = ReadU32(&pc);
+        const Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%%[-2]+$%u, %%[-1]\n",
                        opcode.GetName(), memory_index, ReadU32(&pc));
         break;
@@ -225,7 +225,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I64AtomicRmw8UCmpxchg:
       case Opcode::I64AtomicRmw16UCmpxchg:
       case Opcode::I64AtomicRmw32UCmpxchg: {
-        Index memory_index = ReadU32(&pc);
+        const Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%%[-3]+$%u, %%[-2], %%[-1]\n",
                        opcode.GetName(), memory_index, ReadU32(&pc));
         break;
@@ -541,14 +541,14 @@ void Environment::Disassemble(Stream* stream,
         break;
 
       case Opcode::InterpDropKeep: {
-        uint32_t drop = ReadU32(&pc);
-        uint32_t keep = ReadU32(&pc);
+        const uint32_t drop = ReadU32(&pc);
+        const uint32_t keep = ReadU32(&pc);
         stream->Writef("%s $%u $%u\n", opcode.GetName(), drop, keep);
         break;
       }
 
       case Opcode::InterpData: {
-        uint32_t num_bytes = ReadU32(&pc);
+        const uint32_t num_bytes = ReadU32(&pc);
         stream->Writef("%s $%u\n", opcode.GetName(), num_bytes);
         /* for now, the only reason this is emitted is for br_table, so display
          * it as a list of table entries */
