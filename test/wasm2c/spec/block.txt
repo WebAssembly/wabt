@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/block.wast
 (;; STDOUT ;;;
-39/39 tests passed.
+41/41 tests passed.
 ;;; STDOUT ;;)

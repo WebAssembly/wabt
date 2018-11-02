@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/globals.wast
 (;; STDOUT ;;;
-16/16 tests passed.
+46/46 tests passed.
 ;;; STDOUT ;;)

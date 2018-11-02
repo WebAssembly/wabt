@@ -2,5 +2,5 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/br_table.wast
 (;; STDOUT ;;;
-144/144 tests passed.
+146/146 tests passed.
 ;;; STDOUT ;;)

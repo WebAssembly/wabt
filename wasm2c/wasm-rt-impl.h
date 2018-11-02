@@ -28,6 +28,9 @@ extern "C" {
 /** A setjmp buffer used for handling traps. */
 extern jmp_buf g_jmp_buf;
 
+/** Saved call stack depth that will be restored in case a trap occurs. */
+extern uint32_t g_saved_call_stack_depth;
+
 /** Convenience macro to use before calling a wasm function. On first execution
  * it will return `WASM_RT_TRAP_NONE` (i.e. 0). If the function traps, it will
  * jump back and return the trap that occurred.
@@ -43,7 +46,8 @@ extern jmp_buf g_jmp_buf;
  *   my_wasm_func();
  * ```
  */
-#define wasm_rt_impl_try() setjmp(g_jmp_buf)
+#define wasm_rt_impl_try() \
+  (g_saved_call_stack_depth = wasm_rt_call_stack_depth, setjmp(g_jmp_buf))
 
 #ifdef __cplusplus
 }

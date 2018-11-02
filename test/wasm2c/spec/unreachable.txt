@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/unreachable.wast
 (;; STDOUT ;;;
-59/59 tests passed.
+61/61 tests passed.
 ;;; STDOUT ;;)
