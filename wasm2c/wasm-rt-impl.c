@@ -32,6 +32,7 @@ typedef struct FuncType {
 } FuncType;
 
 uint32_t wasm_rt_call_stack_depth;
+uint32_t g_saved_call_stack_depth;
 
 jmp_buf g_jmp_buf;
 FuncType* g_func_types;
@@ -39,6 +40,7 @@ uint32_t g_func_type_count;
 
 void wasm_rt_trap(wasm_rt_trap_t code) {
   assert(code != WASM_RT_TRAP_NONE);
+  wasm_rt_call_stack_depth = g_saved_call_stack_depth;
   longjmp(g_jmp_buf, code);
 }
 
