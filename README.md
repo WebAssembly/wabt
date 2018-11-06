@@ -53,6 +53,10 @@ $ make
 This will build the default version of the tools: a debug build using the Clang
 compiler.
 
+**NOTE**: Under the hood, this uses make to run CMake, which then calls make again.
+On some systems, this doesn't build properly. If you see these errors, you can build
+using CMake directly as described below.
+
 There are many make targets available for other configurations as well. They
 are generated from every combination of a compiler, build type and
 configuration.
@@ -70,6 +74,8 @@ $ make gcc-i686-release
 $ make clang-debug-lsan
 $ make gcc-debug-no-re2c
 ```
+
+### Building using CMake directly
 
 You can also run CMake yourself, the normal way:
 
