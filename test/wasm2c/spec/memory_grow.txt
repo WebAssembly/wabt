@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/memory_grow.wast
 (;; STDOUT ;;;
-47/47 tests passed.
+84/84 tests passed.
 ;;; STDOUT ;;)
