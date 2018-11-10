@@ -67,7 +67,7 @@ BeginModule(version: 1)
     EndFunctionBody(0)
   EndCodeSection
 EndModule
-   0| i32.const $42
+   0| i32.const 42
    8| return
   12| return
 main() => i32:42
