@@ -574,7 +574,7 @@ void Environment::Disassemble(Stream* stream,
       }
 
       case Opcode::V128Const: {
-        stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x\n", opcode.GetName(),
+        stream->Writef("%s 0x%08x 0x%08x 0x%08x 0x%08x\n", opcode.GetName(),
                        ReadU32(&pc), ReadU32(&pc), ReadU32(&pc), ReadU32(&pc));
 
         break;
