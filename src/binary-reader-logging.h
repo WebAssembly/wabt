@@ -262,6 +262,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                  uint32_t addend) override;
   Result EndRelocSection() override;
 
+  Result BeginDylinkSection(Offset size) override;
+  Result OnDylinkInfo(uint32_t mem_size,
+                      uint32_t mem_align,
+                      uint32_t table_size,
+                      uint32_t table_align) override;
+  Result EndDylinkSection() override;
+
   Result BeginLinkingSection(Offset size) override;
   Result OnSymbolCount(Index count) override;
   Result OnSymbol(Index sybmol_index, SymbolType type, uint32_t flags) override;
