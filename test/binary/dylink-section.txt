@@ -1,0 +1,26 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
+magic
+version
+section("dylink") {
+  mem_size[5]
+  mem_align[1]
+  table_size[3]
+  table_align[2]
+}
+(;; STDOUT ;;;
+
+dylink-section.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "dylink"
+ - mem_size   : 5
+ - mem_align  : 1
+ - table_size : 3
+ - table_align: 2
+
+Code Disassembly:
+
+;;; STDOUT ;;)
