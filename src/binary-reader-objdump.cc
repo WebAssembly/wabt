@@ -738,6 +738,11 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
+  Result OnDylinkInfo(uint32_t mem_size,
+                      uint32_t mem_align,
+                      uint32_t table_size,
+                      uint32_t table_align) override;
+
   Result OnRelocCount(Index count, Index section_index) override;
   Result OnReloc(RelocType type,
                  Offset offset,
@@ -1310,6 +1315,17 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
     next_data_reloc_++;
   }
 
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkInfo(uint32_t mem_size,
+                                         uint32_t mem_align,
+                                         uint32_t table_size,
+                                         uint32_t table_align) {
+  PrintDetails(" - mem_size   : %u\n", mem_size);
+  PrintDetails(" - mem_align  : %u\n", mem_align);
+  PrintDetails(" - table_size : %u\n", table_size);
+  PrintDetails(" - table_align: %u\n", table_align);
   return Result::Ok;
 }
 

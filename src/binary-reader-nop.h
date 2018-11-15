@@ -365,6 +365,16 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result EndExceptionSection() override { return Result::Ok; }
 
+  /* Dylink section */
+  Result BeginDylinkSection(Offset size) override { return Result::Ok; }
+  Result OnDylinkInfo(uint32_t mem_size,
+                      uint32_t mem_align,
+                      uint32_t table_size,
+                      uint32_t table_align) override {
+    return Result::Ok;
+  };
+  Result EndDylinkSection() override { return Result::Ok; }
+
   /* Linking section */
   Result BeginLinkingSection(Offset size) override { return Result::Ok; }
   Result OnSymbolCount(Index count) override { return Result::Ok; }

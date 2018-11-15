@@ -468,6 +468,17 @@ Result BinaryReaderLogging::OnInitExprI64ConstExpr(Index index,
   return reader_->OnInitExprI64ConstExpr(index, value);
 }
 
+Result BinaryReaderLogging::OnDylinkInfo(uint32_t mem_size,
+                                         uint32_t mem_align,
+                                         uint32_t table_size,
+                                         uint32_t table_align) {
+  LOGF(
+      "OnDylinkInfo(mem_size: %u, mem_align: %u, table_size: %u, table_align: "
+      "%u)\n",
+      mem_size, mem_align, table_size, table_align);
+  return reader_->OnDylinkInfo(mem_size, mem_align, table_size, table_align);
+}
+
 Result BinaryReaderLogging::OnRelocCount(Index count,
                                          Index section_index) {
   LOGF("OnRelocCount(count: %" PRIindex ", section: %" PRIindex ")\n", count,
@@ -726,6 +737,9 @@ DEFINE_END(EndNamesSection)
 DEFINE_BEGIN(BeginRelocSection)
 DEFINE_END(EndRelocSection)
 DEFINE_INDEX_INDEX(OnInitExprGetGlobalExpr, "index", "global_index")
+
+DEFINE_BEGIN(BeginDylinkSection)
+DEFINE_END(EndDylinkSection)
 
 DEFINE_BEGIN(BeginLinkingSection)
 DEFINE_INDEX(OnSymbolCount)

@@ -123,6 +123,7 @@ class BinaryReader {
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadDylinkSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadLinkingSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCustomSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadTypeSection(Offset section_size) WABT_WARN_UNUSED;
@@ -1548,6 +1549,23 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadDylinkSection(Offset section_size) {
+  CALLBACK(BeginDylinkSection, section_size);
+  uint32_t mem_size;
+  uint32_t mem_align;
+  uint32_t table_size;
+  uint32_t table_align;
+
+  CHECK_RESULT(ReadU32Leb128(&mem_size, "mem_size"));
+  CHECK_RESULT(ReadU32Leb128(&mem_align, "mem_align"));
+  CHECK_RESULT(ReadU32Leb128(&table_size, "table_size"));
+  CHECK_RESULT(ReadU32Leb128(&table_align, "table_align"));
+  CALLBACK(OnDylinkInfo, mem_size, mem_align, table_size, table_align);
+
+  CALLBACK0(EndDylinkSection);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadLinkingSection(Offset section_size) {
   CALLBACK(BeginLinkingSection, section_size);
   uint32_t version;
@@ -1690,6 +1708,8 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
   if (options_.read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));
     did_read_names_section_ = true;
+  } else if (section_name == WABT_BINARY_SECTION_DYLINK) {
+    CHECK_RESULT(ReadDylinkSection(section_size));
   } else if (section_name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0) {
     // Reloc sections always begin with "reloc."
     CHECK_RESULT(ReadRelocSection(section_size));

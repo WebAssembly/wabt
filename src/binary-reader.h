@@ -322,6 +322,14 @@ class BinaryReaderDelegate {
                          uint32_t addend) = 0;
   virtual Result EndRelocSection() = 0;
 
+  /* Dylink section */
+  virtual Result BeginDylinkSection(Offset size) = 0;
+  virtual Result OnDylinkInfo(uint32_t mem_size,
+                              uint32_t mem_align,
+                              uint32_t table_size,
+                              uint32_t table_align) = 0;
+  virtual Result EndDylinkSection() = 0;
+
   /* Linking section */
   virtual Result BeginLinkingSection(Offset size) = 0;
   virtual Result OnSymbolCount(Index count) = 0;
