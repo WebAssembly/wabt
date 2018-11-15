@@ -1708,7 +1708,7 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
   if (options_.read_debug_names && section_name == WABT_BINARY_SECTION_NAME) {
     CHECK_RESULT(ReadNameSection(section_size));
     did_read_names_section_ = true;
-  } else if (section_name.rfind(WABT_BINARY_SECTION_DYLINK, 0) == 0) {
+  } else if (section_name == WABT_BINARY_SECTION_DYLINK) {
     CHECK_RESULT(ReadDylinkSection(section_size));
   } else if (section_name.rfind(WABT_BINARY_SECTION_RELOC, 0) == 0) {
     // Reloc sections always begin with "reloc."
