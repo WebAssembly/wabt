@@ -1,0 +1,18 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-simd
+
+(module
+  (func (export "main") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    return))
+(;; STDOUT ;;;
+
+simd-basic.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+000020 <main>:
+ 000023: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000034: 0f                         | return
+ 000035: 0b                         | end
+;;; STDOUT ;;)
