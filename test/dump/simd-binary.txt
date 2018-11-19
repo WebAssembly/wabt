@@ -1,0 +1,378 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-simd
+
+(module
+  ;; i8x16 add
+  (func (export "i8x16_add_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i8x16.add)
+
+  ;; i16x8 add
+  (func (export "i16x8_add_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i16x8.add)
+
+  ;; i32x4 add
+  (func (export "i32x4_add_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i32x4.add)
+
+  ;; i64x2 add
+  (func (export "i64x2_add_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i64x2.add)
+
+  ;; i8x16 sub
+  (func (export "i8x16_sub_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i8x16.sub)
+
+  ;; i16x8 sub
+  (func (export "i16x8_sub_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i16x8.sub)
+
+  ;; i32x4 sub
+  (func (export "i32x4_sub_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i32x4.sub)
+
+  ;; i64x2 sub
+  (func (export "i64x2_sub_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i64x2.sub)
+
+  ;; i8x16 mul
+  (func (export "i8x16_mul_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i8x16.mul)
+
+  ;; i16x8 mul
+  (func (export "i16x8_mul_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i16x8.mul)
+
+  ;; i32x4 mul
+  (func (export "i32x4_mul_0") (result v128)
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    i32x4.mul)
+
+  ;; i8x16 saturating add (signed and unsigned)
+  (func (export "i8x16_add_saturate_signed_0") (result v128)
+    v128.const i32 0x00000001 0x0000007f 0x00000003 0x00000080
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x000000ff
+    i8x16.add_saturate_s)
+  (func (export "i8x16_add_saturate_unsigned_0") (result v128)
+    v128.const i32 0x00ff0001 0x04000002 0x00000003 0x00000004
+    v128.const i32 0x00020001 0xfe000002 0x00000003 0x00000004
+    i8x16.add_saturate_u)
+
+  ;; i16x8 saturating add (signed and unsigned)
+  (func (export "i16x8_add_saturate_signed_0") (result v128)
+    v128.const i32 0x00000001 0x00007fff 0x00000003 0x00008000
+    v128.const i32 0x00000001 0x00000002 0x00000003 0x0000fffe
+    i16x8.add_saturate_s)
+  (func (export "i16x8_add_saturate_unsigned_0") (result v128)
+    v128.const i32 0x00ffffff 0x0400ffff 0x00000003 0x00000004
+    v128.const i32 0x00020001 0xfe000002 0x00000003 0x00000004
+    i16x8.add_saturate_u)
+
+  ;; i8x16 saturating sub (signed and unsigned)
+  (func (export "i8x16_sub_saturate_signed_0") (result v128)
+    v128.const i32 0x00000001 0x0000007f 0x000000fe 0x00000080
+    v128.const i32 0x00000001 0x000000fe 0x0000007f 0x000000ff
+    i8x16.sub_saturate_s)
+  (func (export "i8x16_sub_saturate_unsigned_0") (result v128)
+    v128.const i32 0x00ff0001 0x0400007f 0x0000fffe 0x00000004
+    v128.const i32 0x00020001 0xfe00fffe 0x0000007f 0x00000004
+    i8x16.sub_saturate_u)
+
+  ;; i16x8 saturating sub (signed and unsigned)
+  (func (export "i16x8_sub_saturate_signed_0") (result v128)
+    v128.const i32 0x00000001 0x00007fff 0x0000fffe 0x00008000
+    v128.const i32 0x00000001 0x0000fffe 0x00007fff 0x0000fffe
+    i16x8.sub_saturate_s)
+  (func (export "i16x8_sub_saturate_unsigned_0") (result v128)
+    v128.const i32 0x00ffffff 0x0400ffff 0x00000003 0x00000004
+    v128.const i32 0x00020001 0xfe000002 0x00000003 0x00000004
+    i16x8.sub_saturate_u)
+
+  ;; v128 and
+  (func (export "v128_and_0") (result v128)
+    v128.const i32 0x00ff0001 0x00040002 0x44000003 0x00000004
+    v128.const i32 0x00020001 0x00fe0002 0x00000003 0x55000004
+    v128.and)
+
+  ;; v128 or
+  (func (export "v128_or_0") (result v128)
+    v128.const i32 0x00ff0001 0x00040002 0x44000003 0x00000004
+    v128.const i32 0x00020001 0x00fe0002 0x00000003 0x55000004
+    v128.or)
+
+  ;; v128 xor
+  (func (export "v128_xor_0") (result v128)
+    v128.const i32 0x00ff0001 0x00040002 0x44000003 0x00000004
+    v128.const i32 0x00020001 0x00fe0002 0x00000003 0x55000004
+    v128.xor)
+
+  ;; f32x4 min
+  (func (export "f32x4_min_0") (result v128)
+    v128.const i32 0x80000000 0xffc00000 0x449a5000 0xbf800000
+    v128.const i32 0x00000000 0x3f800000 0x449a5000 0x3f800000
+    f32x4.min)
+
+  ;; f64x2 min
+  (func (export "f64x2_min_0") (result v128)
+    v128.const i32 0x00000000 0x00000000 0x00000000 0xfff80000
+    v128.const i32 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+    f64x2.min)
+
+  ;; f32x4 max
+  (func (export "f32x4_max_0") (result v128)
+    v128.const i32 0x80000000 0xffc00000 0x449a5000 0xbf800000
+    v128.const i32 0x00000000 0x3f800000 0x449a5000 0x3f800000
+    f32x4.max)
+
+  ;; f64x2 max
+  (func (export "f64x2_max_0") (result v128)
+    v128.const i32 0x00000000 0x00000000 0x00000000 0xfff80000
+    v128.const i32 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+    f64x2.max)
+
+  ;; f32x4 add
+  (func (export "f32x4_add_0") (result v128)
+    v128.const i32 0x80000000 0xffc00000 0x449a5000 0xc49a5000
+    v128.const i32 0x00000000 0x3f800000 0x3f800000 0x3fc00000
+    f32x4.add)
+
+  ;; f64x2 add
+  (func (export "f64x2_add_0") (result v128)
+    v128.const i32 0x00000000 0x3ff80000 0x00000000 0xfff80000
+    v128.const i32 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+    f64x2.add)
+
+  ;; f32x4 sub
+  (func (export "f32x4_sub_0") (result v128)
+    v128.const i32 0x80000000 0xffc00000 0x449a5000 0xc49a5000
+    v128.const i32 0x00000000 0x3f800000 0x3f800000 0x3fc00000
+    f32x4.sub)
+
+  ;; f64x2 sub
+  (func (export "f64x2_sub_0") (result v128)
+    v128.const i32 0x00000000 0x3ff80000 0x00000000 0xfff80000
+    v128.const i32 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+    f64x2.sub)
+
+  ;; f32x4 div
+  (func (export "f32x4_div_0") (result v128)
+    v128.const i32 0x80000000 0xffc00000 0x3fc00000 0xc0400000
+    v128.const i32 0x00000000 0x3f800000 0x3f800000 0x3fc00000
+    f32x4.div)
+
+  ;; f64x2 div
+  (func (export "f64x2_div_0") (result v128)
+    v128.const i32 0x00000000 0x3ff80000 0x00000000 0xc0080000
+    v128.const i32 0x00000000 0x3ff00000 0x00000000 0x3ff80000
+    f64x2.div)
+
+  ;; f32x4 mul
+  (func (export "f32x4_mul_0") (result v128)
+    v128.const i32 0x80000000 0xffc00000 0x3fc00000 0xc0400000
+    v128.const i32 0x00000000 0x3f800000 0x3f800000 0x3fc00000
+    f32x4.mul)
+
+  ;; f64x2 mul
+  (func (export "f64x2_mul_0") (result v128)
+    v128.const i32 0x00000000 0x3ff80000 0x00000000 0xc0080000
+    v128.const i32 0x00000000 0x3ff00000 0x00000000 0x3ff80000
+    f64x2.mul)
+)
+
+(;; STDOUT ;;;
+
+simd-binary.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+00029c <i8x16_add_0>:
+ 00029f: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0002b1: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0002c3: fd 57                      | i8x16.add
+ 0002c4: 0b                         | end
+0002c5 <i16x8_add_0>:
+ 0002c8: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0002da: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0002ec: fd 68                      | i16x8.add
+ 0002ed: 0b                         | end
+0002ee <i32x4_add_0>:
+ 0002f1: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000303: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000315: fd 79                      | i32x4.add
+ 000316: 0b                         | end
+000317 <i64x2_add_0>:
+ 00031a: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 00032c: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 00033f: fd 8a                   | i64x2.add
+ 000340: 0b                         | end
+000341 <i8x16_sub_0>:
+ 000344: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000356: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000368: fd 5a                      | i8x16.sub
+ 000369: 0b                         | end
+00036a <i16x8_sub_0>:
+ 00036d: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 00037f: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000391: fd 6b                      | i16x8.sub
+ 000392: 0b                         | end
+000393 <i32x4_sub_0>:
+ 000396: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0003a8: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0003ba: fd 7c                      | i32x4.sub
+ 0003bb: 0b                         | end
+0003bc <i64x2_sub_0>:
+ 0003bf: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0003d1: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0003e4: fd 8d                   | i64x2.sub
+ 0003e5: 0b                         | end
+0003e6 <i8x16_mul_0>:
+ 0003e9: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0003fb: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 00040d: fd 5d                      | i8x16.mul
+ 00040e: 0b                         | end
+00040f <i16x8_mul_0>:
+ 000412: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000424: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000436: fd 6e                      | i16x8.mul
+ 000437: 0b                         | end
+000438 <i32x4_mul_0>:
+ 00043b: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 00044d: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 00045f: fd 7f                      | i32x4.mul
+ 000460: 0b                         | end
+000461 <i8x16_add_saturate_signed_0>:
+ 000464: fd 02 01 00 00 00 7f 00 00 00 03 | v128.const 0x00000001 0x0000007f 0x00000003 0x00000080
+ 000476: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x000000ff
+ 000488: fd 58                      | i8x16.add_saturate_s
+ 000489: 0b                         | end
+00048a <i8x16_add_saturate_unsigned_0>:
+ 00048d: fd 02 01 00 ff 00 02 00 00 04 03 | v128.const 0x00ff0001 0x04000002 0x00000003 0x00000004
+ 00049f: fd 02 01 00 02 00 02 00 00 fe 03 | v128.const 0x00020001 0xfe000002 0x00000003 0x00000004
+ 0004b1: fd 59                      | i8x16.add_saturate_u
+ 0004b2: 0b                         | end
+0004b3 <i16x8_add_saturate_signed_0>:
+ 0004b6: fd 02 01 00 00 00 ff 7f 00 00 03 | v128.const 0x00000001 0x00007fff 0x00000003 0x00008000
+ 0004c8: fd 02 01 00 00 00 02 00 00 00 03 | v128.const 0x00000001 0x00000002 0x00000003 0x0000fffe
+ 0004da: fd 69                      | i16x8.add_saturate_s
+ 0004db: 0b                         | end
+0004dc <i16x8_add_saturate_unsigned_0>:
+ 0004df: fd 02 ff ff ff 00 ff ff 00 04 03 | v128.const 0x00ffffff 0x0400ffff 0x00000003 0x00000004
+ 0004f1: fd 02 01 00 02 00 02 00 00 fe 03 | v128.const 0x00020001 0xfe000002 0x00000003 0x00000004
+ 000503: fd 6a                      | i16x8.add_saturate_u
+ 000504: 0b                         | end
+000505 <i8x16_sub_saturate_signed_0>:
+ 000508: fd 02 01 00 00 00 7f 00 00 00 fe | v128.const 0x00000001 0x0000007f 0x000000fe 0x00000080
+ 00051a: fd 02 01 00 00 00 fe 00 00 00 7f | v128.const 0x00000001 0x000000fe 0x0000007f 0x000000ff
+ 00052c: fd 5b                      | i8x16.sub_saturate_s
+ 00052d: 0b                         | end
+00052e <i8x16_sub_saturate_unsigned_0>:
+ 000531: fd 02 01 00 ff 00 7f 00 00 04 fe | v128.const 0x00ff0001 0x0400007f 0x0000fffe 0x00000004
+ 000543: fd 02 01 00 02 00 fe ff 00 fe 7f | v128.const 0x00020001 0xfe00fffe 0x0000007f 0x00000004
+ 000555: fd 5c                      | i8x16.sub_saturate_u
+ 000556: 0b                         | end
+000557 <i16x8_sub_saturate_signed_0>:
+ 00055a: fd 02 01 00 00 00 ff 7f 00 00 fe | v128.const 0x00000001 0x00007fff 0x0000fffe 0x00008000
+ 00056c: fd 02 01 00 00 00 fe ff 00 00 ff | v128.const 0x00000001 0x0000fffe 0x00007fff 0x0000fffe
+ 00057e: fd 6c                      | i16x8.sub_saturate_s
+ 00057f: 0b                         | end
+000580 <i16x8_sub_saturate_unsigned_0>:
+ 000583: fd 02 ff ff ff 00 ff ff 00 04 03 | v128.const 0x00ffffff 0x0400ffff 0x00000003 0x00000004
+ 000595: fd 02 01 00 02 00 02 00 00 fe 03 | v128.const 0x00020001 0xfe000002 0x00000003 0x00000004
+ 0005a7: fd 6d                      | i16x8.sub_saturate_u
+ 0005a8: 0b                         | end
+0005a9 <v128_and_0>:
+ 0005ac: fd 02 01 00 ff 00 02 00 04 00 03 | v128.const 0x00ff0001 0x00040002 0x44000003 0x00000004
+ 0005be: fd 02 01 00 02 00 02 00 fe 00 03 | v128.const 0x00020001 0x00fe0002 0x00000003 0x55000004
+ 0005d0: fd 4d                      | v128.and
+ 0005d1: 0b                         | end
+0005d2 <v128_or_0>:
+ 0005d5: fd 02 01 00 ff 00 02 00 04 00 03 | v128.const 0x00ff0001 0x00040002 0x44000003 0x00000004
+ 0005e7: fd 02 01 00 02 00 02 00 fe 00 03 | v128.const 0x00020001 0x00fe0002 0x00000003 0x55000004
+ 0005f9: fd 4e                      | v128.or
+ 0005fa: 0b                         | end
+0005fb <v128_xor_0>:
+ 0005fe: fd 02 01 00 ff 00 02 00 04 00 03 | v128.const 0x00ff0001 0x00040002 0x44000003 0x00000004
+ 000610: fd 02 01 00 02 00 02 00 fe 00 03 | v128.const 0x00020001 0x00fe0002 0x00000003 0x55000004
+ 000622: fd 4f                      | v128.xor
+ 000623: 0b                         | end
+000624 <f32x4_min_0>:
+ 000627: fd 02 00 00 00 80 00 00 c0 ff 00 | v128.const 0x80000000 0xffc00000 0x449a5000 0xbf800000
+ 000639: fd 02 00 00 00 00 00 00 80 3f 00 | v128.const 0x00000000 0x3f800000 0x449a5000 0x3f800000
+ 00064c: fd 9e                   | f32x4.min
+ 00064d: 0b                         | end
+00064e <f64x2_min_0>:
+ 000651: fd 02 00 00 00 00 00 00 00 00 00 | v128.const 0x00000000 0x00000000 0x00000000 0xfff80000
+ 000663: fd 02 00 00 00 00 00 4a 93 c0 00 | v128.const 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+ 000676: fd a9                   | f64x2.min
+ 000677: 0b                         | end
+000678 <f32x4_max_0>:
+ 00067b: fd 02 00 00 00 80 00 00 c0 ff 00 | v128.const 0x80000000 0xffc00000 0x449a5000 0xbf800000
+ 00068d: fd 02 00 00 00 00 00 00 80 3f 00 | v128.const 0x00000000 0x3f800000 0x449a5000 0x3f800000
+ 0006a0: fd 9f                   | f32x4.max
+ 0006a1: 0b                         | end
+0006a2 <f64x2_max_0>:
+ 0006a5: fd 02 00 00 00 00 00 00 00 00 00 | v128.const 0x00000000 0x00000000 0x00000000 0xfff80000
+ 0006b7: fd 02 00 00 00 00 00 4a 93 c0 00 | v128.const 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+ 0006ca: fd aa                   | f64x2.max
+ 0006cb: 0b                         | end
+0006cc <f32x4_add_0>:
+ 0006cf: fd 02 00 00 00 80 00 00 c0 ff 00 | v128.const 0x80000000 0xffc00000 0x449a5000 0xc49a5000
+ 0006e1: fd 02 00 00 00 00 00 00 80 3f 00 | v128.const 0x00000000 0x3f800000 0x3f800000 0x3fc00000
+ 0006f4: fd 9a                   | f32x4.add
+ 0006f5: 0b                         | end
+0006f6 <f64x2_add_0>:
+ 0006f9: fd 02 00 00 00 00 00 00 f8 3f 00 | v128.const 0x00000000 0x3ff80000 0x00000000 0xfff80000
+ 00070b: fd 02 00 00 00 00 00 4a 93 c0 00 | v128.const 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+ 00071e: fd a5                   | f64x2.add
+ 00071f: 0b                         | end
+000720 <f32x4_sub_0>:
+ 000723: fd 02 00 00 00 80 00 00 c0 ff 00 | v128.const 0x80000000 0xffc00000 0x449a5000 0xc49a5000
+ 000735: fd 02 00 00 00 00 00 00 80 3f 00 | v128.const 0x00000000 0x3f800000 0x3f800000 0x3fc00000
+ 000748: fd 9b                   | f32x4.sub
+ 000749: 0b                         | end
+00074a <f64x2_sub_0>:
+ 00074d: fd 02 00 00 00 00 00 00 f8 3f 00 | v128.const 0x00000000 0x3ff80000 0x00000000 0xfff80000
+ 00075f: fd 02 00 00 00 00 00 4a 93 c0 00 | v128.const 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+ 000772: fd a6                   | f64x2.sub
+ 000773: 0b                         | end
+000774 <f32x4_div_0>:
+ 000777: fd 02 00 00 00 80 00 00 c0 ff 00 | v128.const 0x80000000 0xffc00000 0x3fc00000 0xc0400000
+ 000789: fd 02 00 00 00 00 00 00 80 3f 00 | v128.const 0x00000000 0x3f800000 0x3f800000 0x3fc00000
+ 00079c: fd 9d                   | f32x4.div
+ 00079d: 0b                         | end
+00079e <f64x2_div_0>:
+ 0007a1: fd 02 00 00 00 00 00 00 f8 3f 00 | v128.const 0x00000000 0x3ff80000 0x00000000 0xc0080000
+ 0007b3: fd 02 00 00 00 00 00 00 f0 3f 00 | v128.const 0x00000000 0x3ff00000 0x00000000 0x3ff80000
+ 0007c6: fd a8                   | f64x2.div
+ 0007c7: 0b                         | end
+0007c8 <f32x4_mul_0>:
+ 0007cb: fd 02 00 00 00 80 00 00 c0 ff 00 | v128.const 0x80000000 0xffc00000 0x3fc00000 0xc0400000
+ 0007dd: fd 02 00 00 00 00 00 00 80 3f 00 | v128.const 0x00000000 0x3f800000 0x3f800000 0x3fc00000
+ 0007f0: fd 9c                   | f32x4.mul
+ 0007f1: 0b                         | end
+0007f2 <f64x2_mul_0>:
+ 0007f5: fd 02 00 00 00 00 00 00 f8 3f 00 | v128.const 0x00000000 0x3ff80000 0x00000000 0xc0080000
+ 000807: fd 02 00 00 00 00 00 00 f0 3f 00 | v128.const 0x00000000 0x3ff00000 0x00000000 0x3ff80000
+ 00081a: fd a7                   | f64x2.mul
+ 00081b: 0b                         | end
+;;; STDOUT ;;)

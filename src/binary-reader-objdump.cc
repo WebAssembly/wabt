@@ -341,6 +341,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeUint64(uint64_t value) override;
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
+  Result OnOpcodeV128(v128 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
 
   Result OnBrTableExpr(Index num_targets,
@@ -541,6 +542,13 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeF64(uint64_t value) {
   char buffer[WABT_MAX_DOUBLE_HEX];
   WriteDoubleHex(buffer, sizeof(buffer), value);
   LogOpcode(data_, immediate_len, buffer);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnOpcodeV128(v128 value) {
+  Offset immediate_len = state->offset - current_opcode_offset;
+  LogOpcode(data_, immediate_len, "0x%08x 0x%08x 0x%08x 0x%08x",
+            value.v[0], value.v[1], value.v[2], value.v[3]);
   return Result::Ok;
 }
 
