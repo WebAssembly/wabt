@@ -41,26 +41,27 @@ Code Disassembly:
 
 00009c <func_i8x16_splat_0>:
  00009e: 41 ff 00                   | i32.const 127
- 0000a2: fd 04                      | i8x16.splat
+ 0000a1: fd 04                      | i8x16.splat
  0000a3: 0b                         | end
 0000a4 <func_i16x8_splat_0>:
  0000a6: 41 b4 24                   | i32.const 4660
- 0000aa: fd 08                      | i16x8.splat
+ 0000a9: fd 08                      | i16x8.splat
  0000ab: 0b                         | end
 0000ac <func_i32x4_splat_0>:
  0000ae: 41 f8 ac d1 91 01          | i32.const 305419896
- 0000b5: fd 0c                      | i32x4.splat
+ 0000b4: fd 0c                      | i32x4.splat
  0000b6: 0b                         | end
 0000b7 <func_i64x2_splat_0>:
- 0000b9: 42 80 80 80 80 80 cf 95 9a 12 | i64.const 1311768464867721216
- 0000c4: fd 0f                      | i64x2.splat
+ 0000b9: 42 80 80 80 80 80 cf 95 9a | i64.const 1311768464867721216
+ 0000c2: 12                         | 
+ 0000c3: fd 0f                      | i64x2.splat
  0000c5: 0b                         | end
 0000c6 <func_f32x4_splat_0>:
  0000c8: 43 00 00 80 3f             | f32.const 0x1p+0
- 0000ce: fd 12                      | f32x4.splat
+ 0000cd: fd 12                      | f32x4.splat
  0000cf: 0b                         | end
 0000d0 <func_f64x2_splat_0>:
  0000d2: 44 00 00 00 00 00 00 f0 3f | f64.const 0x1p+0
- 0000dc: fd 15                      | f64x2.splat
+ 0000db: fd 15                      | f64x2.splat
  0000dd: 0b                         | end
 ;;; STDOUT ;;)
