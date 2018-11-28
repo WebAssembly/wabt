@@ -2214,6 +2214,10 @@ Result BinaryReader::ReadModule() {
 
   CALLBACK(BeginModule, version);
   CHECK_RESULT(ReadSections());
+  // This is checked in ReadCodeSection, but it must be checked at the end too,
+  // in case the code section was omitted.
+  ERROR_UNLESS(num_function_signatures_ == num_function_bodies_,
+               "function signature count != function body count");
   CALLBACK0(EndModule);
 
   return Result::Ok;

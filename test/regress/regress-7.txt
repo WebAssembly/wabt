@@ -28,6 +28,19 @@ section(FUNCTION) {
   type[0]
   type[0]
 }
+section(CODE) {
+  count[10]
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+  func { locals[0] }
+}
 (;; STDOUT ;;;
 (module
   (type (;0;) (func))
