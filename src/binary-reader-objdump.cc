@@ -273,8 +273,11 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                   ExternalKind kind,
                   Index item_index,
                   string_view name) override {
-    if (kind == ExternalKind::Func)
+    if (kind == ExternalKind::Func) {
       SetFunctionName(item_index, name);
+    } else if (kind == ExternalKind::Global) {
+      SetGlobalName(item_index, name);
+    }
     return Result::Ok;
   }
 
@@ -480,9 +483,21 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
       if (fmt) {
         printf(" ");
         va_list args;
+        va_list args_copy;
         va_start(args, fmt);
+        va_copy(args_copy, args);
         vprintf(fmt, args);
         va_end(args);
+
+        if (current_opcode == Opcode::GetGlobal ||
+            current_opcode == Opcode::SetGlobal) {
+          int global_index = va_arg(args_copy, int);
+          if (const char* name = GetGlobalName(global_index)) {
+            printf(" <%s>", name);
+          }
+        }
+
+        va_end(args_copy);
       }
     }
 
