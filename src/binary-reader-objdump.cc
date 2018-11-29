@@ -483,21 +483,9 @@ void BinaryReaderObjdumpDisassemble::LogOpcode(size_t data_size,
       if (fmt) {
         printf(" ");
         va_list args;
-        va_list args_copy;
         va_start(args, fmt);
-        va_copy(args_copy, args);
         vprintf(fmt, args);
         va_end(args);
-
-        if (current_opcode == Opcode::GetGlobal ||
-            current_opcode == Opcode::SetGlobal) {
-          int global_index = va_arg(args_copy, int);
-          if (const char* name = GetGlobalName(global_index)) {
-            printf(" <%s>", name);
-          }
-        }
-
-        va_end(args_copy);
       }
     }
 
@@ -528,6 +516,10 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
   Offset immediate_len = state->offset - current_opcode_offset;
   const char* name;
   if (current_opcode == Opcode::Call && (name = GetFunctionName(value))) {
+    LogOpcode(immediate_len, "%d <%s>", value, name);
+  } else if ((current_opcode == Opcode::GetGlobal ||
+              current_opcode == Opcode::SetGlobal) &&
+             (name = GetGlobalName(value))) {
     LogOpcode(immediate_len, "%d <%s>", value, name);
   } else {
     LogOpcode(immediate_len, "%d", value);
