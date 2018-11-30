@@ -1,0 +1,6 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/nontrapping-float-to-int-conversions/conversions.wast
+;;; ARGS*: --enable-saturating-float-to-int
+(;; STDOUT ;;;
+581/581 tests passed.
+;;; STDOUT ;;)
