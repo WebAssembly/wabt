@@ -68,6 +68,13 @@ def ProcessDir(wabt_test_dir, testsuite_dir, tool, flags=None):
         f.write(';;; ARGS*: %s\n' % flags)
 
 
+def ProcessProposalDir(name, flags=None):
+  ProcessDir(os.path.join(SPEC_TEST_DIR, name),
+             os.path.join(TESTSUITE_DIR, 'proposals', name),
+             'run-interp-spec',
+             flags)
+
+
 def ProcessTestsuite(wabt_test_dir, testsuite_dir, tool, flags=None):
   testsuite_dir = os.path.join(TESTSUITE_DIR, reldir)
   testsuite_tests = GetFilesWithExtension(testsuite_dir, '.wast')
@@ -85,11 +92,11 @@ def main(args):
   ProcessDir(SPEC_TEST_DIR, TESTSUITE_DIR, 'run-interp-spec')
   ProcessDir(WASM2C_SPEC_TEST_DIR, TESTSUITE_DIR, 'run-spec-wasm2c')
 
-  ProcessDir(
-      os.path.join(SPEC_TEST_DIR, 'multi-value'),
-      os.path.join(TESTSUITE_DIR, 'proposals', 'multi-value'),
-      'run-interp-spec',
-      '--enable-multi-value')
+  ProcessProposalDir('multi-value', '--enable-multi-value')
+  ProcessProposalDir('mutable-global')  # Already enabled by default.
+  ProcessProposalDir('nontrapping-float-to-int-conversions',
+                     '--enable-saturating-float-to-int')
+  ProcessProposalDir('sign-extension-ops', '--enable-sign-extension')
 
   return 0
 
