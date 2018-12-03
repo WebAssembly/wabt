@@ -240,6 +240,9 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result AppendExpr(std::unique_ptr<Expr> expr);
   void SetBlockDeclaration(BlockDeclaration* decl, Type sig_type);
 
+  std::string GetUniqueName(BindingHash* bindings,
+                            const std::string& original_name);
+
   Errors* errors_ = nullptr;
   Module* module_ = nullptr;
 
@@ -326,6 +329,16 @@ void BinaryReaderIR::SetBlockDeclaration(BlockDeclaration* decl,
     decl->sig.param_types.clear();
     decl->sig.result_types = GetInlineTypeVector(sig_type);
   }
+}
+
+std::string BinaryReaderIR::GetUniqueName(BindingHash* bindings,
+                                          const std::string& orig_name) {
+  int counter = 1;
+  std::string unique_name = orig_name;
+  while (bindings->count(unique_name) != 0) {
+    unique_name = orig_name + "." + std::to_string(counter++);
+  }
+  return unique_name;
 }
 
 bool BinaryReaderIR::OnError(const Error& error) {
@@ -946,7 +959,9 @@ Result BinaryReaderIR::OnElemSegmentCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginElemSegment(Index index, Index table_index, bool passive) {
+Result BinaryReaderIR::BeginElemSegment(Index index,
+                                        Index table_index,
+                                        bool passive) {
   auto field = MakeUnique<ElemSegmentModuleField>(GetLocation());
   ElemSegment& elem_segment = field->elem_segment;
   elem_segment.table_var = Var(table_index, GetLocation());
@@ -994,7 +1009,9 @@ Result BinaryReaderIR::OnDataSegmentCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginDataSegment(Index index, Index memory_index, bool passive) {
+Result BinaryReaderIR::BeginDataSegment(Index index,
+                                        Index memory_index,
+                                        bool passive) {
   auto field = MakeUnique<DataSegmentModuleField>(GetLocation());
   DataSegment& data_segment = field->data_segment;
   data_segment.memory_var = Var(memory_index, GetLocation());
@@ -1056,12 +1073,8 @@ Result BinaryReaderIR::OnFunctionName(Index index, string_view name) {
   }
 
   Func* func = module_->funcs[index];
-  std::string dollar_name = MakeDollarName(name);
-  int counter = 1;
-  std::string orig_name = dollar_name;
-  while (module_->func_bindings.count(dollar_name) != 0) {
-    dollar_name = orig_name + "." + std::to_string(counter++);
-  }
+  std::string dollar_name =
+      GetUniqueName(&module_->func_bindings, MakeDollarName(name));
   func->name = dollar_name;
   module_->func_bindings.emplace(dollar_name, Binding(index));
   return Result::Ok;
@@ -1135,15 +1148,16 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   BindingHash* bindings;
   Index index;
   if (local_index < num_params) {
-    /* param name */
+    // param name
     bindings = &func->param_bindings;
     index = local_index;
   } else {
-    /* local name */
+    // local name
     bindings = &func->local_bindings;
     index = local_index - num_params;
   }
-  bindings->emplace(MakeDollarName(name), Binding(index));
+  bindings->emplace(GetUniqueName(bindings, MakeDollarName(name)),
+                    Binding(index));
   return Result::Ok;
 }
 
