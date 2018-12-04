@@ -510,8 +510,7 @@ struct Func {
   std::string name;
   FuncDeclaration decl;
   LocalTypes local_types;
-  BindingHash param_bindings;
-  BindingHash local_bindings;
+  BindingHash bindings;
   ExprList exprs;
 };
 

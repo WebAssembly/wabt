@@ -157,9 +157,9 @@ class WatWriter {
   void WriteInitExpr(const ExprList& expr);
   template <typename T>
   void WriteTypeBindings(const char* prefix,
-                         const Func& func,
                          const T& types,
-                         const BindingHash& bindings);
+                         const std::vector<std::string>& index_to_name,
+                         Index binding_index_offset = 0);
   void WriteBeginFunc(const Func& func);
   void WriteFunc(const Func& func);
   void WriteBeginGlobal(const Global& global);
@@ -203,7 +203,6 @@ class WatWriter {
   Result result_ = Result::Ok;
   int indent_ = 0;
   NextChar next_char_ = NextChar::None;
-  std::vector<std::string> index_to_name_;
   std::vector<Label> label_stack_;
   std::vector<ExprTree> expr_tree_stack_;
   std::multimap<std::pair<ExternalKind, Index>, const Export*>
@@ -1325,11 +1324,9 @@ void WatWriter::WriteInitExpr(const ExprList& expr) {
 
 template <typename T>
 void WatWriter::WriteTypeBindings(const char* prefix,
-                                  const Func& func,
                                   const T& types,
-                                  const BindingHash& bindings) {
-  MakeTypeBindingReverseMapping(types.size(), bindings, &index_to_name_);
-
+                                  const std::vector<std::string>& index_to_name,
+                                  Index binding_index_offset) {
   /* named params/locals must be specified by themselves, but nameless
    * params/locals can be compressed, e.g.:
    *   (param $foo i32)
@@ -1343,7 +1340,7 @@ void WatWriter::WriteTypeBindings(const char* prefix,
       is_open = true;
     }
 
-    const std::string& name = index_to_name_[index];
+    const std::string& name = index_to_name[binding_index_offset + index];
     if (!name.empty()) {
       WriteString(name, NextChar::Space);
     }
@@ -1390,12 +1387,15 @@ void WatWriter::WriteBeginFunc(const Func& func) {
 
 void WatWriter::WriteFunc(const Func& func) {
   WriteBeginFunc(func);
-  WriteTypeBindings("param", func, func.decl.sig.param_types,
-                    func.param_bindings);
+  std::vector<std::string> index_to_name;
+  MakeTypeBindingReverseMapping(func.GetNumParamsAndLocals(), func.bindings,
+                                &index_to_name);
+  WriteTypeBindings("param", func.decl.sig.param_types, index_to_name);
   WriteTypes(func.decl.sig.result_types, "result");
   WriteNewline(NO_FORCE_NEWLINE);
   if (func.local_types.size()) {
-    WriteTypeBindings("local", func, func.local_types, func.local_bindings);
+    WriteTypeBindings("local", func.local_types, index_to_name,
+                      func.GetNumParams());
   }
   WriteNewline(NO_FORCE_NEWLINE);
   label_stack_.clear();

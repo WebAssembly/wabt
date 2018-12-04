@@ -79,7 +79,8 @@ class NameGenerator : public ExprVisitor::DelegateNop {
                                   Index index,
                                   std::string* out_str);
 
-  void GenerateAndBindLocalNames(BindingHash* bindings, const char* prefix);
+  void GenerateAndBindLocalNames(Func* func);
+
   template <typename T>
   Result VisitAll(const std::vector<T*>& items,
                   Result (NameGenerator::*func)(Index, T*));
@@ -97,7 +98,6 @@ class NameGenerator : public ExprVisitor::DelegateNop {
 
   Module* module_ = nullptr;
   ExprVisitor visitor_;
-  std::vector<std::string> index_to_name_;
   Index label_count_ = 0;
 
   Index num_func_imports_ = 0;
@@ -185,17 +185,20 @@ void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
   }
 }
 
-void NameGenerator::GenerateAndBindLocalNames(BindingHash* bindings,
-                                              const char* prefix) {
-  for (size_t i = 0; i < index_to_name_.size(); ++i) {
-    const std::string& old_name = index_to_name_[i];
+void NameGenerator::GenerateAndBindLocalNames(Func* func) {
+  std::vector<std::string> index_to_name;
+  MakeTypeBindingReverseMapping(func->GetNumParamsAndLocals(), func->bindings,
+                                &index_to_name);
+  for (size_t i = 0; i < index_to_name.size(); ++i) {
+    const std::string& old_name = index_to_name[i];
     if (!old_name.empty()) {
       continue;
     }
 
+    const char* prefix = i < func->GetNumParams() ? "$p" : "$l";
     std::string new_name;
-    GenerateAndBindName(bindings, prefix, i, &new_name);
-    index_to_name_[i] = new_name;
+    GenerateAndBindName(&func->bindings, prefix, i, &new_name);
+    index_to_name[i] = new_name;
   }
 }
 
@@ -222,14 +225,7 @@ Result NameGenerator::BeginIfExceptExpr(IfExceptExpr* expr) {
 Result NameGenerator::VisitFunc(Index func_index, Func* func) {
   MaybeGenerateAndBindName(&module_->func_bindings, "$f", func_index,
                            &func->name);
-
-  MakeTypeBindingReverseMapping(func->decl.sig.param_types.size(),
-                                func->param_bindings, &index_to_name_);
-  GenerateAndBindLocalNames(&func->param_bindings, "$p");
-
-  MakeTypeBindingReverseMapping(func->local_types.size(), func->local_bindings,
-                                &index_to_name_);
-  GenerateAndBindLocalNames(&func->local_bindings, "$l");
+  GenerateAndBindLocalNames(func);
 
   label_count_ = 0;
   CHECK_RESULT(visitor_.VisitFunc(func));

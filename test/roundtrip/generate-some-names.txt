@@ -37,7 +37,7 @@
   (func $func0 (type $t0) (param $p0 i32) (result f32)
     f32.const 0x1p+0 (;=1;))
   (func $f2 (type $t2) (param $p0 i32) (param $param1 i64)
-    (local $l0 f32) (local $local1 f64)
+    (local $l2 f32) (local $local1 f64)
     call $import
     drop
     i32.const 0
@@ -50,7 +50,7 @@
     get_local $param1
     drop
     f32.const 0x0p+0 (;=0;)
-    set_local $l0)
+    set_local $l2)
   (table $T0 1 1 anyfunc)
   (export "baz" (func $import))
   (export "quux" (func $func0))

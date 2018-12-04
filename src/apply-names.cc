@@ -86,9 +86,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Module* module_ = nullptr;
   Func* current_func_ = nullptr;
   ExprVisitor visitor_;
-  /* mapping from param index to its name, if any, for the current func */
-  std::vector<std::string> param_index_to_name_;
-  std::vector<std::string> local_index_to_name_;
+  std::vector<std::string> param_and_local_index_to_name_;
   std::vector<std::string> labels_;
 };
 
@@ -208,26 +206,14 @@ Result NameApplier::UseNameForParamAndLocalVar(Func* func, Var* var) {
     return Result::Error;
   }
 
-  Index num_params = func->GetNumParams();
-  std::string* name;
-  if (local_index < num_params) {
-    /* param */
-    assert(local_index < param_index_to_name_.size());
-    name = &param_index_to_name_[local_index];
-  } else {
-    /* local */
-    local_index -= num_params;
-    assert(local_index < local_index_to_name_.size());
-    name = &local_index_to_name_[local_index];
-  }
-
+  std::string name = param_and_local_index_to_name_[local_index];
   if (var->is_name()) {
-    assert(*name == var->name());
+    assert(name == var->name());
     return Result::Ok;
   }
 
-  if (!name->empty()) {
-    var->set_name(*name);
+  if (!name.empty()) {
+    var->set_name(name);
   }
   return Result::Ok;
 }
@@ -386,11 +372,8 @@ Result NameApplier::VisitFunc(Index func_index, Func* func) {
     CHECK_RESULT(UseNameForFuncTypeVar(&func->decl.type_var));
   }
 
-  MakeTypeBindingReverseMapping(func->decl.sig.param_types.size(),
-                                func->param_bindings, &param_index_to_name_);
-
-  MakeTypeBindingReverseMapping(func->local_types.size(), func->local_bindings,
-                                &local_index_to_name_);
+  MakeTypeBindingReverseMapping(func->GetNumParamsAndLocals(), func->bindings,
+                                &param_and_local_index_to_name_);
 
   CHECK_RESULT(visitor_.VisitFunc(func));
   current_func_ = nullptr;

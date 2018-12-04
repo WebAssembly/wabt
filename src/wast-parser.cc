@@ -887,7 +887,7 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     Func& func = import->func;
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
-    CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.param_bindings));
+    CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
     CHECK_RESULT(ErrorIfLpar({"type", "param", "result"}));
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
@@ -896,10 +896,10 @@ Result WastParser::ParseFuncModuleField(Module* module) {
     auto field = MakeUnique<FuncModuleField>(loc, name);
     Func& func = field->func;
     CHECK_RESULT(ParseTypeUseOpt(&func.decl));
-    CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.param_bindings));
+    CHECK_RESULT(ParseFuncSignature(&func.decl.sig, &func.bindings));
     TypeVector local_types;
     CHECK_RESULT(ParseBoundValueTypeList(TokenType::Local, &local_types,
-                                         &func.local_bindings));
+                                         &func.bindings, func.GetNumParams()));
     func.local_types.Set(local_types);
     CHECK_RESULT(ParseTerminatingInstrList(&func.exprs));
     module->AppendField(std::move(field));
@@ -985,8 +985,8 @@ Result WastParser::ParseImportModuleField(Module* module) {
         CHECK_RESULT(ParseTypeUseOpt(&import->func.decl));
         EXPECT(Rpar);
       } else {
-        CHECK_RESULT(ParseFuncSignature(&import->func.decl.sig,
-                                        &import->func.param_bindings));
+        CHECK_RESULT(
+            ParseFuncSignature(&import->func.decl.sig, &import->func.bindings));
         CHECK_RESULT(ErrorIfLpar({"param", "result"}));
         EXPECT(Rpar);
       }
@@ -1232,7 +1232,8 @@ Result WastParser::ParseUnboundFuncSignature(FuncSignature* sig) {
 
 Result WastParser::ParseBoundValueTypeList(TokenType token,
                                            TypeVector* types,
-                                           BindingHash* bindings) {
+                                           BindingHash* bindings,
+                                           Index binding_index_offset) {
   WABT_TRACE(ParseBoundValueTypeList);
   while (MatchLpar(token)) {
     if (PeekMatch(TokenType::Var)) {
@@ -1241,7 +1242,8 @@ Result WastParser::ParseBoundValueTypeList(TokenType token,
       Location loc = GetLocation();
       ParseBindVarOpt(&name);
       CHECK_RESULT(ParseValueType(&type));
-      bindings->emplace(name, Binding(loc, types->size()));
+      bindings->emplace(name,
+                        Binding(loc, binding_index_offset + types->size()));
       types->push_back(type);
     } else {
       CHECK_RESULT(ParseValueTypeList(types));
