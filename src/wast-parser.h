@@ -149,7 +149,10 @@ class WastParser {
   Result ParseTypeUseOpt(FuncDeclaration*);
   Result ParseFuncSignature(FuncSignature*, BindingHash* param_bindings);
   Result ParseUnboundFuncSignature(FuncSignature*);
-  Result ParseBoundValueTypeList(TokenType, TypeVector*, BindingHash*);
+  Result ParseBoundValueTypeList(TokenType,
+                                 TypeVector*,
+                                 BindingHash*,
+                                 Index binding_index_offset = 0);
   Result ParseUnboundValueTypeList(TokenType, TypeVector*);
   Result ParseResultList(TypeVector*);
   Result ParseInstrList(ExprList*);

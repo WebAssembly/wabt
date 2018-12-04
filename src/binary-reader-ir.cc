@@ -1144,20 +1144,8 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   }
 
   Func* func = module_->funcs[func_index];
-  Index num_params = func->GetNumParams();
-  BindingHash* bindings;
-  Index index;
-  if (local_index < num_params) {
-    // param name
-    bindings = &func->param_bindings;
-    index = local_index;
-  } else {
-    // local name
-    bindings = &func->local_bindings;
-    index = local_index - num_params;
-  }
-  bindings->emplace(GetUniqueName(bindings, MakeDollarName(name)),
-                    Binding(index));
+  func->bindings.emplace(GetUniqueName(&func->bindings, MakeDollarName(name)),
+                         Binding(local_index));
   return Result::Ok;
 }
 

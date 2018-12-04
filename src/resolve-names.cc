@@ -69,6 +69,9 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void PushLabel(const std::string& label);
   void PopLabel();
   void CheckDuplicateBindings(const BindingHash* bindings, const char* desc);
+  void PrintDuplicateBindingsError(const BindingHash::value_type&,
+                                   const BindingHash::value_type&,
+                                   const char* desc);
   void ResolveLabelVar(Var* var);
   void ResolveVar(const BindingHash* bindings, Var* var, const char* desc);
   void ResolveFuncVar(Var* var);
@@ -125,12 +128,18 @@ void NameResolver::CheckDuplicateBindings(const BindingHash* bindings,
                                           const char* desc) {
   bindings->FindDuplicates([this, desc](const BindingHash::value_type& a,
                                         const BindingHash::value_type& b) {
-    // Choose the location that is later in the file.
-    const Location& a_loc = a.second.loc;
-    const Location& b_loc = b.second.loc;
-    const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
-    PrintError(&loc, "redefinition of %s \"%s\"", desc, a.first.c_str());
+    PrintDuplicateBindingsError(a, b, desc);
   });
+}
+
+void NameResolver::PrintDuplicateBindingsError(const BindingHash::value_type& a,
+                                               const BindingHash::value_type& b,
+                                               const char* desc) {
+  // Choose the location that is later in the file.
+  const Location& a_loc = a.second.loc;
+  const Location& b_loc = b.second.loc;
+  const Location& loc = a_loc.line > b_loc.line ? a_loc : b_loc;
+  PrintError(&loc, "redefinition of %s \"%s\"", desc, a.first.c_str());
 }
 
 void NameResolver::ResolveLabelVar(Var* var) {
@@ -370,8 +379,12 @@ void NameResolver::VisitFunc(Func* func) {
     ResolveFuncTypeVar(&func->decl.type_var);
   }
 
-  CheckDuplicateBindings(&func->param_bindings, "parameter");
-  CheckDuplicateBindings(&func->local_bindings, "local");
+  func->bindings.FindDuplicates(
+      [=](const BindingHash::value_type& a, const BindingHash::value_type& b) {
+        const char* desc =
+            (a.second.index < func->GetNumParams()) ? "parameter" : "local";
+        PrintDuplicateBindingsError(a, b, desc);
+      });
 
   visitor_.VisitFunc(func);
   current_func_ = nullptr;

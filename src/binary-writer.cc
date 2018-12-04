@@ -1075,28 +1075,17 @@ Result BinaryWriter::WriteModule() {
     WriteU32Leb128(stream_, module_->funcs.size(), "num functions");
     for (size_t i = 0; i < module_->funcs.size(); ++i) {
       const Func* func = module_->funcs[i];
-      Index num_params = func->GetNumParams();
-      Index num_locals = func->local_types.size();
       Index num_params_and_locals = func->GetNumParamsAndLocals();
 
       WriteU32Leb128(stream_, i, "function index");
       WriteU32Leb128(stream_, num_params_and_locals, "num locals");
 
-      MakeTypeBindingReverseMapping(func->decl.sig.param_types.size(),
-                                    func->param_bindings, &index_to_name);
-      for (size_t j = 0; j < num_params; ++j) {
+      MakeTypeBindingReverseMapping(num_params_and_locals, func->bindings,
+                                    &index_to_name);
+      for (size_t j = 0; j < num_params_and_locals; ++j) {
         const std::string& name = index_to_name[j];
         wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, j);
         WriteU32Leb128(stream_, j, "local index");
-        WriteDebugName(stream_, name, desc);
-      }
-
-      MakeTypeBindingReverseMapping(func->local_types.size(),
-                                    func->local_bindings, &index_to_name);
-      for (size_t j = 0; j < num_locals; ++j) {
-        const std::string& name = index_to_name[j];
-        wabt_snprintf(desc, sizeof(desc), "local name %" PRIzd, num_params + j);
-        WriteU32Leb128(stream_, num_params + j, "local index");
         WriteDebugName(stream_, name, desc);
       }
     }

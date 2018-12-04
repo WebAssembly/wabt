@@ -213,19 +213,7 @@ Index Func::GetLocalIndex(const Var& var) const {
   if (var.is_index()) {
     return var.index();
   }
-
-  Index result = param_bindings.FindIndex(var);
-  if (result != kInvalidIndex) {
-    return result;
-  }
-
-  result = local_bindings.FindIndex(var);
-  if (result == kInvalidIndex) {
-    return result;
-  }
-
-  // The locals start after all the params.
-  return decl.GetNumParams() + result;
+  return bindings.FindIndex(var);
 }
 
 const Func* Module::GetFunc(const Var& var) const {

@@ -24,21 +24,21 @@
 (module
   (type $t0 (func (param i32 f32)))
   (func $f0 (type $t0) (param $p0 i32) (param $p1 f32)
-    (local $l0 f64) (local $l1 i64)
+    (local $l2 f64) (local $l3 i64)
     get_local $p0
     drop
     get_local $p1
     drop
-    get_local $l0
+    get_local $l2
     drop
-    get_local $l1
+    get_local $l3
     drop
     i32.const 1
     set_local $p0
     f32.const 0x1p+0 (;=1;)
     set_local $p1
     f64.const 0x1p+0 (;=1;)
-    set_local $l0
+    set_local $l2
     i64.const 1
-    set_local $l1))
+    set_local $l3))
 ;;; STDOUT ;;)
