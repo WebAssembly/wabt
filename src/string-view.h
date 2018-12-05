@@ -30,6 +30,12 @@
 namespace wabt {
 
 using nonstd::string_view;
+using nonstd::operator==;
+using nonstd::operator!=;
+using nonstd::operator<;
+using nonstd::operator<=;
+using nonstd::operator>;
+using nonstd::operator>=;
 
 }  // namespace wabt
 
