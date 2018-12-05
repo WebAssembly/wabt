@@ -372,7 +372,8 @@ void Environment::ResetToMarkPoint(const MarkPoint& mark) {
 HostModule* Environment::AppendHostModule(string_view name) {
   HostModule* module = new HostModule(this, name);
   modules_.emplace_back(module);
-  registered_module_bindings_.emplace(name, Binding(modules_.size() - 1));
+  registered_module_bindings_.emplace(std::string(name),
+                                      Binding(modules_.size() - 1));
   return module;
 }
 
