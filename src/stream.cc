@@ -119,7 +119,7 @@ void Stream::WriteMemoryDump(const void* start,
 }
 
 Result OutputBuffer::WriteToFile(string_view filename) const {
-  std::string filename_str = filename.to_string();
+  std::string filename_str(filename);
   FILE* file = fopen(filename_str.c_str(), "wb");
   if (!file) {
     ERROR("unable to open %s for writing\n", filename_str.c_str());
@@ -197,7 +197,7 @@ Result MemoryStream::MoveDataImpl(size_t dst_offset,
 
 FileStream::FileStream(string_view filename, Stream* log_stream)
     : Stream(log_stream), file_(nullptr), offset_(0), should_close_(false) {
-  std::string filename_str = filename.to_string();
+  std::string filename_str(filename);
   file_ = fopen(filename_str.c_str(), "wb");
 
   // TODO(binji): this is pretty cheesy, should come up with a better API.

@@ -55,7 +55,7 @@ class BindingHash : public std::unordered_multimap<std::string, Binding> {
   }
 
   Index FindIndex(string_view name) const {
-    return FindIndex(name.to_string());
+    return FindIndex(std::string(name));
   }
 
  private:

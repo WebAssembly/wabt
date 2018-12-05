@@ -155,6 +155,8 @@ TEST(string_view, operator_bracket) {
   ASSERT_EQ('s', sv[4]);
 }
 
+#if 0
+// Not provided by abseil string_view.
 TEST(string_view, at) {
   string_view sv("words");
   ASSERT_EQ('w', sv.at(0));
@@ -163,6 +165,7 @@ TEST(string_view, at) {
   ASSERT_EQ('d', sv.at(3));
   ASSERT_EQ('s', sv.at(4));
 }
+#endif
 
 TEST(string_view, front) {
   string_view sv("words");
@@ -283,11 +286,14 @@ TEST(string_view, find1) {
   ASSERT_EQ(npos, string_view("012340123").find('0', 6));
 }
 
+#if 0
+// Not provided by abseil string_view.
 TEST(string_view, find2) {
   ASSERT_EQ(1U, string_view("012340123").find("12345", 0, 2));
   ASSERT_EQ(6U, string_view("012340123").find("12345", 3, 2));
   ASSERT_EQ(npos, string_view("012340123").find("12345", 10, 2));
 }
+#endif
 
 TEST(string_view, find3) {
   ASSERT_EQ(1U, string_view("012340123").find("12"));
@@ -308,12 +314,15 @@ TEST(string_view, rfind1) {
   ASSERT_EQ(npos, string_view("012340123").rfind('9'));
 }
 
+#if 0
+// Not provided by abseil string_view.
 TEST(string_view, rfind2) {
   ASSERT_EQ(6U, string_view("012340123").rfind("12345", npos, 2));
   ASSERT_EQ(1U, string_view("012340123").rfind("12345", 4, 2));
   ASSERT_EQ(npos, string_view("012340123").rfind("12345", npos, 5));
   ASSERT_EQ(npos, string_view("012").rfind("12345", npos, 5));
 }
+#endif
 
 TEST(string_view, rfind3) {
   ASSERT_EQ(6U, string_view("012340123").rfind("12"));
@@ -334,11 +343,14 @@ TEST(string_view, find_first_of1) {
   ASSERT_EQ(npos, string_view("ahellohi").find_first_of('z', 2));
 }
 
+#if 0
+// Not provided by abseil string_view.
 TEST(string_view, find_first_of2) {
   ASSERT_EQ(0U, string_view("0123abc").find_first_of("0a1b", 0, 2));
   ASSERT_EQ(4U, string_view("0123abc").find_first_of("0a1b", 1, 2));
   ASSERT_EQ(npos, string_view("0123abc").find_first_of("0a1b", 5, 2));
 }
+#endif
 
 TEST(string_view, find_first_of3) {
   ASSERT_EQ(0U, string_view("0123abc").find_first_of("0a"));
@@ -359,12 +371,15 @@ TEST(string_view, find_last_of1) {
   ASSERT_EQ(npos, string_view("ahellohi").find_last_of('z', 2));
 }
 
+#if 0
+// Not provided by abseil string_view.
 TEST(string_view, find_last_of2) {
   ASSERT_EQ(4U, string_view("0123abc").find_last_of("0a1b", npos, 2));
   ASSERT_EQ(0U, string_view("0123abc").find_last_of("0a1b", 1, 2));
   ASSERT_EQ(npos, string_view("0123abc").find_last_of("a1b", 0, 2));
   ASSERT_EQ(npos, string_view("0123abc").find_last_of("xyz", npos, 0));
 }
+#endif
 
 TEST(string_view, find_last_of3) {
   ASSERT_EQ(4U, string_view("0123abc").find_last_of("0a"));
@@ -407,9 +422,12 @@ TEST(string_view, operator_greater_than_or_equal) {
   ASSERT_TRUE(string_view("now") >= string_view("now"));
 }
 
+#if 0
+// Not provided by abseil string_view.
 TEST(string_view, hash) {
   std::hash<string_view> hasher;
 
   ASSERT_NE(hasher(string_view("hello")), hasher(string_view("goodbye")));
   ASSERT_EQ(hasher(string_view("same")), hasher(string_view("same")));
 }
+#endif

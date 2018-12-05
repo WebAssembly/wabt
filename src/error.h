@@ -44,7 +44,7 @@ class Error {
  public:
   Error() : error_level(ErrorLevel::Error) {}
   Error(ErrorLevel error_level, Location loc, string_view message)
-      : error_level(error_level), loc(loc), message(message.to_string()) {}
+      : error_level(error_level), loc(loc), message(message) {}
 
   ErrorLevel error_level;
   Location loc;

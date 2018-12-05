@@ -618,7 +618,7 @@ void Var::set_name(std::string&& name) {
 }
 
 void Var::set_name(string_view name) {
-  set_name(name.to_string());
+  set_name(std::string(name));
 }
 
 void Var::Destroy() {

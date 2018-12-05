@@ -131,7 +131,7 @@ void WriteCall(Stream* stream,
 Environment::Environment() : istream_(new OutputBuffer()) {}
 
 Index Environment::FindModuleIndex(string_view name) const {
-  auto iter = module_bindings_.find(name.to_string());
+  auto iter = module_bindings_.find(std::string(name));
   if (iter == module_bindings_.end()) {
     return kInvalidIndex;
   }
@@ -144,7 +144,7 @@ Module* Environment::FindModule(string_view name) {
 }
 
 Module* Environment::FindRegisteredModule(string_view name) {
-  auto iter = registered_module_bindings_.find(name.to_string());
+  auto iter = registered_module_bindings_.find(std::string(name));
   if (iter == registered_module_bindings_.end()) {
     return nullptr;
   }
@@ -176,7 +176,7 @@ Module::Module(bool is_host)
       is_host(is_host) {}
 
 Module::Module(string_view name, bool is_host)
-    : name(name.to_string()),
+    : name(name),
       memory_index(kInvalidIndex),
       table_index(kInvalidIndex),
       is_host(is_host) {}
@@ -184,7 +184,7 @@ Module::Module(string_view name, bool is_host)
 Export* Module::GetFuncExport(Environment* env,
                               string_view name,
                               Index sig_index) {
-  auto range = export_bindings.equal_range(name.to_string());
+  auto range = export_bindings.equal_range(std::string(name));
   for (auto iter = range.first; iter != range.second; ++iter) {
     const Binding& binding = iter->second;
     Export* export_ = &exports[binding.index];
@@ -372,8 +372,7 @@ void Environment::ResetToMarkPoint(const MarkPoint& mark) {
 HostModule* Environment::AppendHostModule(string_view name) {
   HostModule* module = new HostModule(this, name);
   modules_.emplace_back(module);
-  registered_module_bindings_.emplace(name.to_string(),
-                                      Binding(modules_.size() - 1));
+  registered_module_bindings_.emplace(name, Binding(modules_.size() - 1));
   return module;
 }
 

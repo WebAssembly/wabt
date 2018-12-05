@@ -47,11 +47,11 @@ const char* g_reloc_type_name[] = {
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
 
 Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
-  FILE* infile = fopen(filename.to_string().c_str(), "rb");
+  FILE* infile = fopen(std::string(filename).c_str(), "rb");
   if (!infile) {
     const char format[] = "unable to read file %s";
     char msg[PATH_MAX + sizeof(format)];
-    wabt_snprintf(msg, sizeof(msg), format, filename.to_string().c_str());
+    wabt_snprintf(msg, sizeof(msg), format, std::string(filename).c_str());
     perror(msg);
     return Result::Error;
   }

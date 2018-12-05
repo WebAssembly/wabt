@@ -179,8 +179,8 @@ struct Import {
   explicit Import(ExternalKind kind) : kind(kind) {}
   Import(ExternalKind kind, string_view module_name, string_view field_name)
       : kind(kind),
-        module_name(module_name.to_string()),
-        field_name(field_name.to_string()) {}
+        module_name(module_name),
+        field_name(field_name) {}
 
   ExternalKind kind;
   std::string module_name;
@@ -264,8 +264,8 @@ struct HostFunc : Func {
            Index sig_index,
            Callback callback)
       : Func(sig_index, true),
-        module_name(module_name.to_string()),
-        field_name(field_name.to_string()),
+        module_name(module_name),
+        field_name(field_name),
         callback(callback) {}
 
   static bool classof(const Func* func) { return func->is_host; }
@@ -277,7 +277,7 @@ struct HostFunc : Func {
 
 struct Export {
   Export(string_view name, ExternalKind kind, Index index)
-      : name(name.to_string()), kind(kind), index(index) {}
+      : name(name), kind(kind), index(index) {}
 
   std::string name;
   ExternalKind kind;

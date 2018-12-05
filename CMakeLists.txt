@@ -72,6 +72,7 @@ configure_file(
 )
 
 include_directories(${WABT_SOURCE_DIR} ${WABT_BINARY_DIR})
+include_directories(third_party/abseil)
 
 if (COMPILER_IS_MSVC)
   # disable warning C4018: signed/unsigned mismatch
@@ -212,6 +213,21 @@ endif ()
 
 add_custom_target(everything)
 
+# Compile the parts of absl we use separately, to prevent accidentally pulling
+# in more than we want to support.
+add_library(absl_base STATIC
+  third_party/abseil/absl/base/internal/raw_logging.cc
+  third_party/abseil/absl/base/internal/throw_delegate.cc
+)
+
+add_library(absl_stringview STATIC
+  third_party/abseil/absl/strings/ascii.cc
+  third_party/abseil/absl/strings/string_view.cc
+  third_party/abseil/absl/strings/internal/memutil.cc
+)
+
+target_link_libraries(absl_stringview absl_base)
+
 add_library(wabt STATIC
   src/apply-names.cc
   src/binary.cc
@@ -240,7 +256,6 @@ add_library(wabt STATIC
   src/option-parser.cc
   src/resolve-names.cc
   src/stream.cc
-  src/string-view.cc
   src/token.cc
   src/tracing.cc
   src/type-checker.cc
@@ -257,6 +272,7 @@ add_library(wabt STATIC
   src/interp/interp-trace.cc
 )
 
+target_link_libraries(wabt absl_stringview)
 
 if (NOT EMSCRIPTEN)
   if (CODE_COVERAGE)

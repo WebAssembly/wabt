@@ -537,7 +537,7 @@ std::string CWriter::MangleGlobalName(string_view name, Type type) {
 
 // static
 std::string CWriter::ExportName(string_view mangled_name) {
-  return "WASM_RT_ADD_PREFIX(" + mangled_name.to_string() + ")";
+  return "WASM_RT_ADD_PREFIX(" + std::string(mangled_name) + ")";
 }
 
 // static
@@ -576,7 +576,7 @@ string_view StripLeadingDollar(string_view name) {
 std::string CWriter::DefineImportName(const std::string& name,
                                       string_view module,
                                       string_view mangled_field_name) {
-  std::string mangled = MangleName(module) + mangled_field_name.to_string();
+  std::string mangled = MangleName(module) + std::string(mangled_field_name);
   import_syms_.insert(name);
   global_syms_.insert(mangled);
   global_sym_map_.insert(SymbolMap::value_type(name, mangled));

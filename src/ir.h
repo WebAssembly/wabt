@@ -133,7 +133,7 @@ struct FuncSignature {
 };
 
 struct FuncType {
-  explicit FuncType(string_view name) : name(name.to_string()) {}
+  explicit FuncType(string_view name) : name(name) {}
 
   Index GetNumParams() const { return sig.GetNumParams(); }
   Index GetNumResults() const { return sig.GetNumResults(); }
@@ -426,7 +426,7 @@ typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
 typedef LoadStoreExpr<ExprType::AtomicWake> AtomicWakeExpr;
 
 struct Exception {
-  explicit Exception(string_view name) : name(name.to_string()) {}
+  explicit Exception(string_view name) : name(name) {}
 
   std::string name;
   TypeVector sig;
@@ -493,7 +493,7 @@ inline bool operator!=(const LocalTypes::const_iterator& lhs,
 }
 
 struct Func {
-  explicit Func(string_view name) : name(name.to_string()) {}
+  explicit Func(string_view name) : name(name) {}
 
   Type GetParamType(Index index) const { return decl.GetParamType(index); }
   Type GetResultType(Index index) const { return decl.GetResultType(index); }
@@ -515,7 +515,7 @@ struct Func {
 };
 
 struct Global {
-  explicit Global(string_view name) : name(name.to_string()) {}
+  explicit Global(string_view name) : name(name) {}
 
   std::string name;
   Type type = Type::Void;
@@ -524,14 +524,14 @@ struct Global {
 };
 
 struct Table {
-  explicit Table(string_view name) : name(name.to_string()) {}
+  explicit Table(string_view name) : name(name) {}
 
   std::string name;
   Limits elem_limits;
 };
 
 struct ElemSegment {
-  explicit ElemSegment(string_view name) : name(name.to_string()) {}
+  explicit ElemSegment(string_view name) : name(name) {}
 
   std::string name;
   Var table_var;
@@ -541,14 +541,14 @@ struct ElemSegment {
 };
 
 struct Memory {
-  explicit Memory(string_view name) : name(name.to_string()) {}
+  explicit Memory(string_view name) : name(name) {}
 
   std::string name;
   Limits page_limits;
 };
 
 struct DataSegment {
-  explicit DataSegment(string_view name) : name(name.to_string()) {}
+  explicit DataSegment(string_view name) : name(name) {}
 
   std::string name;
   Var memory_var;

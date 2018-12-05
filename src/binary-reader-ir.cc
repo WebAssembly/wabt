@@ -379,8 +379,8 @@ Result BinaryReaderIR::OnImportFunc(Index import_index,
                                     Index func_index,
                                     Index sig_index) {
   auto import = MakeUnique<FuncImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = std::string(module_name);
+  import->field_name = std::string(field_name);
   import->func.decl.has_func_type = true;
   import->func.decl.type_var = Var(sig_index, GetLocation());
   import->func.decl.sig = module_->func_types[sig_index]->sig;
@@ -396,8 +396,8 @@ Result BinaryReaderIR::OnImportTable(Index import_index,
                                      Type elem_type,
                                      const Limits* elem_limits) {
   auto import = MakeUnique<TableImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = std::string(module_name);
+  import->field_name = std::string(field_name);
   import->table.elem_limits = *elem_limits;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
@@ -410,8 +410,8 @@ Result BinaryReaderIR::OnImportMemory(Index import_index,
                                       Index memory_index,
                                       const Limits* page_limits) {
   auto import = MakeUnique<MemoryImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = std::string(module_name);
+  import->field_name = std::string(field_name);
   import->memory.page_limits = *page_limits;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
@@ -425,8 +425,8 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
                                       Type type,
                                       bool mutable_) {
   auto import = MakeUnique<GlobalImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = std::string(module_name);
+  import->field_name = std::string(field_name);
   import->global.type = type;
   import->global.mutable_ = mutable_;
   module_->AppendField(
@@ -440,8 +440,8 @@ Result BinaryReaderIR::OnImportException(Index import_index,
                                          Index except_index,
                                          TypeVector& sig) {
   auto import = MakeUnique<ExceptionImport>();
-  import->module_name = module_name.to_string();
-  import->field_name = field_name.to_string();
+  import->module_name = std::string(module_name);
+  import->field_name = std::string(field_name);
   import->except.sig = sig;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
@@ -538,7 +538,7 @@ Result BinaryReaderIR::OnExport(Index index,
                                 string_view name) {
   auto field = MakeUnique<ExportModuleField>(GetLocation());
   Export& export_ = field->export_;
-  export_.name = name.to_string();
+  export_.name = std::string(name);
   switch (kind) {
     case ExternalKind::Func:
       assert(item_index < module_->funcs.size());
@@ -1055,7 +1055,7 @@ Result BinaryReaderIR::OnFunctionNamesCount(Index count) {
 }
 
 static std::string MakeDollarName(string_view name) {
-  return std::string("$") + name.to_string();
+  return "$" + std::string(name);
 }
 
 Result BinaryReaderIR::OnModuleName(string_view name) {

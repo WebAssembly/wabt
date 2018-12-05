@@ -118,8 +118,8 @@ int ProgramMain(int argc, char** argv) {
       std::vector<FilenameMemoryStreamPair> module_streams;
       MemoryStream json_stream;
 
-      std::string module_filename_noext =
-          StripExtension(s_outfile ? s_outfile : s_infile).to_string();
+      std::string module_filename_noext(
+          StripExtension(s_outfile ? s_outfile : s_infile));
       result = WriteBinarySpecScript(
           &json_stream, script.get(), s_infile, module_filename_noext,
           s_write_binary_options, &module_streams, s_log_stream.get());

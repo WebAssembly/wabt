@@ -252,7 +252,7 @@ wabt::Result JSONParser::ReadFile(string_view spec_json_filename) {
 
 void JSONParser::PrintError(const char* format, ...) {
   WABT_SNPRINTF_ALLOCA(buffer, length, format);
-  fprintf(stderr, "%s:%d:%d: %s\n", loc_.filename.to_string().c_str(),
+  fprintf(stderr, "%s:%d:%d: %s\n", std::string(loc_.filename).c_str(),
           loc_.line, loc_.first_column, buffer);
 }
 
@@ -603,11 +603,11 @@ std::string JSONParser::CreateModulePath(string_view filename) {
   std::string path;
 
   if (dirname.size() == 0) {
-    path = filename.to_string();
+    path = std::string(filename);
   } else {
-    path = dirname.to_string();
+    path = std::string(dirname);
     path += '/';
-    path += filename.to_string();
+    path += std::string(filename);
   }
 
   ConvertBackslashToSlash(&path);

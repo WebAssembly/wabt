@@ -109,7 +109,7 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
       break;
     case ObjdumpMode::Prepass: {
       string_view basename = GetBasename(options_->filename);
-      printf("%s:\tfile format wasm %#x\n", basename.to_string().c_str(),
+      printf("%s:\tfile format wasm %#x\n", std::string(basename).c_str(),
              version);
       break;
     }
@@ -194,7 +194,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
   }
 
   Result BeginCustomSection(Offset size, string_view section_name) override {
-    objdump_state_->section_names.push_back(section_name.to_string());
+    objdump_state_->section_names.push_back(std::string(section_name));
     return Result::Ok;
   }
 
@@ -214,7 +214,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                       Index segment,
                       uint32_t offset,
                       uint32_t size) override {
-    objdump_state_->symtab[index] = {SymbolType::Data, name.to_string(), 0};
+    objdump_state_->symtab[index] = {SymbolType::Data, std::string(name), 0};
     return Result::Ok;
   }
 
@@ -225,7 +225,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     if (!name.empty()) {
       SetFunctionName(func_index, name);
     }
-    objdump_state_->symtab[index] = {SymbolType::Function, name.to_string(),
+    objdump_state_->symtab[index] = {SymbolType::Function, std::string(name),
                                      func_index};
     return Result::Ok;
   }
@@ -237,7 +237,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     if (!name.empty()) {
       SetGlobalName(global_index, name);
     }
-    objdump_state_->symtab[index] = {SymbolType::Global, name.to_string(),
+    objdump_state_->symtab[index] = {SymbolType::Global, std::string(name),
                                      global_index};
     return Result::Ok;
   }
@@ -303,13 +303,13 @@ void BinaryReaderObjdumpPrepass::SetFunctionName(Index index,
                                                  string_view name) {
   if (objdump_state_->function_names.size() <= index)
     objdump_state_->function_names.resize(index + 1);
-  objdump_state_->function_names[index] = name.to_string();
+  objdump_state_->function_names[index] = std::string(name);
 }
 
 void BinaryReaderObjdumpPrepass::SetGlobalName(Index index, string_view name) {
   if (objdump_state_->global_names.size() <= index)
     objdump_state_->global_names.resize(index + 1);
-  objdump_state_->global_names[index] = name.to_string();
+  objdump_state_->global_names[index] = std::string(name);
 }
 
 Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
@@ -1445,7 +1445,7 @@ Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
                                              uint32_t flags,
                                              string_view name,
                                              Index func_index) {
-  std::string sym_name = name.to_string();
+  std::string sym_name(name);
   if (sym_name.empty()) {
     sym_name = GetFunctionName(func_index);
   }
@@ -1460,7 +1460,7 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
                                            uint32_t flags,
                                            string_view name,
                                            Index global_index) {
-  std::string sym_name = name.to_string();
+  std::string sym_name(name);
   if (sym_name.empty()) {
     if (const char* Name = GetGlobalName(global_index)) {
       sym_name = Name;
