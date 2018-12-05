@@ -351,6 +351,7 @@ TEST(string_view, find_last_of0) {
   ASSERT_EQ(4U, string_view("0123abc").find_last_of(string_view("0a")));
   ASSERT_EQ(0U, string_view("0123abc").find_last_of(string_view("0a"), 1));
   ASSERT_EQ(npos, string_view("0123abc").find_last_of(string_view("xyz")));
+  ASSERT_EQ(npos, string_view("").find_last_of(string_view("a")));
 }
 
 TEST(string_view, find_last_of1) {

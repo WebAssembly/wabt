@@ -9,3 +9,5 @@ details:
 
 - All `throw` statements have been replaced by a macro `nssv_throw`, so the
   library can be used with `-fno-exceptions`.
+- Fix a bug in `find_last_of` and `find_last_not_of` with an empty
+  `string_view`.

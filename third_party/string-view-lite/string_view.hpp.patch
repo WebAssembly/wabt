@@ -1,5 +1,5 @@
---- orig 	2018-12-04 16:07:55.029834440 -0800
-+++ new	2018-12-04 16:03:41.773170588 -0800
+--- /home/binji/dev/string-view-lite/include/nonstd/string_view.hpp	2018-12-04 16:07:55.029834440 -0800
++++ nonstd/string_view.hpp	2018-12-04 18:53:34.876394698 -0800
 @@ -505,7 +505,7 @@
              return data_at( pos );
          }
@@ -26,4 +26,26 @@
 +            nssv_throw(std::out_of_range, "nonst::string_view::substr()");
  
          return basic_string_view( data() + pos, (std::min)( n, size() - pos ) );
+     }
+@@ -712,7 +712,9 @@
+ 
+     nssv_constexpr size_type find_last_of( basic_string_view v, size_type pos = npos ) const nssv_noexcept  // (1)
+     {
+-        return pos >= size()
++        return empty()
++            ? npos
++            : pos >= size()
+             ? find_last_of( v, size() - 1 )
+             : to_pos( std::find_first_of( const_reverse_iterator( cbegin() + pos + 1 ), crend(), v.cbegin(), v.cend(), Traits::eq ) );
+     }
+@@ -760,7 +762,9 @@
+ 
+     nssv_constexpr size_type find_last_not_of( basic_string_view v, size_type pos = npos ) const nssv_noexcept  // (1)
+     {
+-        return pos >= size()
++        return empty()
++            ? npos
++            : pos >= size()
+             ? find_last_not_of( v, size() - 1 )
+             : to_pos( std::find_if( const_reverse_iterator( cbegin() + pos + 1 ), crend(), not_in_view( v ) ) );
      }
