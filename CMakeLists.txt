@@ -210,6 +210,10 @@ else ()
   set(WAST_LEXER_GEN_CC src/prebuilt/wast-lexer-gen.cc)
 endif ()
 
+include_directories(
+  third_party/string-view-lite
+)
+
 add_custom_target(everything)
 
 add_library(wabt STATIC
@@ -240,7 +244,6 @@ add_library(wabt STATIC
   src/option-parser.cc
   src/resolve-names.cc
   src/stream.cc
-  src/string-view.cc
   src/token.cc
   src/tracing.cc
   src/type-checker.cc

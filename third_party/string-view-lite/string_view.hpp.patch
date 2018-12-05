@@ -1,0 +1,29 @@
+--- orig 	2018-12-04 16:07:55.029834440 -0800
++++ new	2018-12-04 16:03:41.773170588 -0800
+@@ -505,7 +505,7 @@
+             return data_at( pos );
+         }
+ 
+-        throw std::out_of_range("nonst::string_view::at()");
++        nssv_throw(std::out_of_range, "nonst::string_view::at()");
+     }
+ 
+     nssv_constexpr const_reference front() const { return data_at( 0 );          }
+@@ -540,7 +540,7 @@
+     size_type copy( CharT * dest, size_type n, size_type pos = 0 ) const
+     {
+         if ( pos > size() )
+-            throw std::out_of_range("nonst::string_view::copy()");
++            nssv_throw(std::out_of_range, "nonst::string_view::copy()");
+ 
+         const size_type rlen = (std::min)( n, size() - pos );
+ 
+@@ -552,7 +552,7 @@
+     nssv_constexpr14 basic_string_view substr( size_type pos = 0, size_type n = npos ) const
+     {
+         if ( pos > size() )
+-            throw std::out_of_range("nonst::string_view::substr()");
++            nssv_throw(std::out_of_range, "nonst::string_view::substr()");
+ 
+         return basic_string_view( data() + pos, (std::min)( n, size() - pos ) );
+     }

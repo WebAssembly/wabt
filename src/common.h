@@ -32,18 +32,15 @@
 
 #include "config.h"
 
+#include "src/macros.h"
 #include "src/make-unique.h"
 #include "src/result.h"
 #include "src/string-view.h"
 
-#define WABT_FATAL(...) fprintf(stderr, __VA_ARGS__), exit(1)
-#define WABT_ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
-
-#define WABT_USE(x) static_cast<void>(x)
-
 #define WABT_PAGE_SIZE 0x10000 /* 64k */
 #define WABT_MAX_PAGES 0x10000 /* # of pages that fit in 32-bit address space \
                                 */
+
 #define WABT_BYTES_TO_PAGES(x) ((x) >> 16)
 #define WABT_ALIGN_UP_TO_PAGE(x) \
   (((x) + WABT_PAGE_SIZE - 1) & ~(WABT_PAGE_SIZE - 1))
@@ -71,30 +68,6 @@
     len = wabt_vsnprintf(buffer, len + 1, format, args_copy);              \
   }                                                                        \
   va_end(args_copy)
-
-#define WABT_ENUM_COUNT(name) \
-  (static_cast<int>(name::Last) - static_cast<int>(name::First) + 1)
-
-#define WABT_DISALLOW_COPY_AND_ASSIGN(type) \
-  type(const type&) = delete;               \
-  type& operator=(const type&) = delete;
-
-#if WITH_EXCEPTIONS
-#define WABT_TRY try {
-#define WABT_CATCH_BAD_ALLOC \
-  }                          \
-  catch (std::bad_alloc&) {  \
-  }
-#define WABT_CATCH_BAD_ALLOC_AND_EXIT           \
-  }                                             \
-  catch (std::bad_alloc&) {                     \
-    WABT_FATAL("Memory allocation failure.\n"); \
-  }
-#else
-#define WABT_TRY
-#define WABT_CATCH_BAD_ALLOC
-#define WABT_CATCH_BAD_ALLOC_AND_EXIT
-#endif
 
 #define PRIindex "u"
 #define PRIaddress "u"
