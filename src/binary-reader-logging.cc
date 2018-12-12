@@ -479,6 +479,12 @@ Result BinaryReaderLogging::OnDylinkInfo(uint32_t mem_size,
   return reader_->OnDylinkInfo(mem_size, mem_align, table_size, table_align);
 }
 
+Result BinaryReaderLogging::OnDylinkNeeded(string_view so_name) {
+  LOGF("OnDylinkNeeded(name: " PRIstringview ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(so_name));
+  return reader_->OnDylinkNeeded(so_name);
+}
+
 Result BinaryReaderLogging::OnRelocCount(Index count,
                                          Index section_index) {
   LOGF("OnRelocCount(count: %" PRIindex ", section: %" PRIindex ")\n", count,
@@ -739,6 +745,7 @@ DEFINE_END(EndRelocSection)
 DEFINE_INDEX_INDEX(OnInitExprGetGlobalExpr, "index", "global_index")
 
 DEFINE_BEGIN(BeginDylinkSection)
+DEFINE_INDEX(OnDylinkNeededCount)
 DEFINE_END(EndDylinkSection)
 
 DEFINE_BEGIN(BeginLinkingSection)

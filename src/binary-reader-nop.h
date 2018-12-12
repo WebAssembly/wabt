@@ -372,7 +372,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                       uint32_t table_size,
                       uint32_t table_align) override {
     return Result::Ok;
-  };
+  }
+  Result OnDylinkNeededCount(Index count) override { return Result::Ok; }
+  Result OnDylinkNeeded(string_view so_name) override { return Result::Ok; }
   Result EndDylinkSection() override { return Result::Ok; }
 
   /* Linking section */
