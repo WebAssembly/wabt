@@ -1562,6 +1562,15 @@ Result BinaryReader::ReadDylinkSection(Offset section_size) {
   CHECK_RESULT(ReadU32Leb128(&table_align, "table_align"));
   CALLBACK(OnDylinkInfo, mem_size, mem_align, table_size, table_align);
 
+  uint32_t count;
+  CHECK_RESULT(ReadU32Leb128(&count, "needed_dynlibs"));
+  CALLBACK(OnDylinkNeededCount, count);
+  while (count--) {
+    string_view so_name;
+    CHECK_RESULT(ReadStr(&so_name, "dylib so_name"));
+    CALLBACK(OnDylinkNeeded, so_name);
+  }
+
   CALLBACK0(EndDylinkSection);
   return Result::Ok;
 }

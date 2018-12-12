@@ -767,6 +767,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                       uint32_t mem_align,
                       uint32_t table_size,
                       uint32_t table_align) override;
+  Result OnDylinkNeededCount(Index count) override;
+  Result OnDylinkNeeded(string_view so_name) override;
 
   Result OnRelocCount(Index count, Index section_index) override;
   Result OnReloc(RelocType type,
@@ -1351,6 +1353,18 @@ Result BinaryReaderObjdump::OnDylinkInfo(uint32_t mem_size,
   PrintDetails(" - mem_align  : %u\n", mem_align);
   PrintDetails(" - table_size : %u\n", table_size);
   PrintDetails(" - table_align: %u\n", table_align);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkNeededCount(Index count) {
+  if (count) {
+    PrintDetails(" - needed_dynlibs[%u]:\n", count);
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDylinkNeeded(string_view so_name) {
+  PrintDetails("  - " PRIstringview "\n", WABT_PRINTF_STRING_VIEW_ARG(so_name));
   return Result::Ok;
 }
 

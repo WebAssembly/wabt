@@ -7,6 +7,9 @@ section("dylink") {
   mem_align[1]
   table_size[3]
   table_align[2]
+  needed_count[2]
+  str("libfoo.so")
+  str("libbar.so")
 }
 (;; STDOUT ;;;
 
@@ -20,6 +23,9 @@ Custom:
  - mem_align  : 1
  - table_size : 3
  - table_align: 2
+ - needed_dynlibs[2]:
+  - libfoo.so
+  - libbar.so
 
 Code Disassembly:
 
