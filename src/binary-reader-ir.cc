@@ -112,7 +112,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnStartFunction(Index func_index) override;
 
   Result OnFunctionBodyCount(Index count) override;
-  Result BeginFunctionBody(Index index) override;
+  Result BeginFunctionBody(Index index, Offset size) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
   Result OnAtomicLoadExpr(Opcode opcode,
@@ -574,7 +574,7 @@ Result BinaryReaderIR::OnFunctionBodyCount(Index count) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::BeginFunctionBody(Index index) {
+Result BinaryReaderIR::BeginFunctionBody(Index index, Offset size) {
   current_func_ = module_->funcs[index];
   PushLabel(LabelType::Func, &current_func_->exprs);
   return Result::Ok;

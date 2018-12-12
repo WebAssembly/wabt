@@ -11,10 +11,10 @@ tail-call.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001c func[0]:
+00001d func[0]:
  00001e: 12 00                      | return_call 0
  000020: 0b                         | end
-000021 func[1]:
+000022 func[1]:
  000023: 41 00                      | i32.const 0
  000025: 13 00 00                   | return_call_indirect 0 0
  000028: 0b                         | end

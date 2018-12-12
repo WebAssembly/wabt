@@ -50,7 +50,7 @@ getglobal.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001e func[0]:
+00001f func[0]:
  000020: 23 00                      | get_global 0
  000022: 0b                         | end
 ;;; STDOUT ;;)

@@ -46,7 +46,7 @@ tee_local.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000015 func[0]:
+000016 func[0]:
  000017: 01 7f                      | local[0] type=i32
  000019: 41 00                      | i32.const 0
  00001b: 22 00                      | tee_local 0

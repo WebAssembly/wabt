@@ -68,7 +68,7 @@ if_except.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000024 func[0]:
+000025 func[0]:
  000026: 06 40                      | try
  000028: 01                         |   nop
  000029: 07                         | catch

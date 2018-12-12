@@ -124,7 +124,7 @@ hexfloat_f64.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
+000018 func[0]:
  000019: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  000022: 1a                         | drop
  000023: 44 00 00 00 00 50 34 12 41 | f64.const 0x1.2345p+18

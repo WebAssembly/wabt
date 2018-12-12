@@ -25,7 +25,7 @@ bulk-memory.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000027 func[0]:
+000028 func[0]:
  000029: 41 00                      | i32.const 0
  00002b: 41 00                      | i32.const 0
  00002d: 41 00                      | i32.const 0
@@ -40,7 +40,7 @@ Code Disassembly:
  000043: 41 00                      | i32.const 0
  000045: fc 0b 00                   | memory.fill 0
  000048: 0b                         | end
-000049 func[1]:
+00004a func[1]:
  00004b: 41 00                      | i32.const 0
  00004d: 41 00                      | i32.const 0
  00004f: 41 00                      | i32.const 0

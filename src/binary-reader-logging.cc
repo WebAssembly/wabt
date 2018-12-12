@@ -254,6 +254,11 @@ Result BinaryReaderLogging::OnExport(Index index,
   return reader_->OnExport(index, kind, item_index, name);
 }
 
+Result BinaryReaderLogging::BeginFunctionBody(Index value, Offset size) {
+  LOGF("BeginFunctionBody(%" PRIindex ", size:%" PRIzd ")\n", value, size);
+  return reader_->BeginFunctionBody(value, size);
+}
+
 Result BinaryReaderLogging::OnLocalDecl(Index decl_index,
                                         Index count,
                                         Type type) {
@@ -663,7 +668,6 @@ DEFINE_END(EndStartSection)
 
 DEFINE_BEGIN(BeginCodeSection)
 DEFINE_INDEX(OnFunctionBodyCount)
-DEFINE_INDEX(BeginFunctionBody)
 DEFINE_INDEX(EndFunctionBody)
 DEFINE_INDEX(OnLocalDeclCount)
 DEFINE_LOAD_STORE_OPCODE(OnAtomicLoadExpr);

@@ -91,7 +91,7 @@ try-multi.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001f func[0]:
+000020 func[0]:
  000021: 06 01                      | try type[1]
  000023: 41 01                      |   i32.const 1
  000025: 41 02                      |   i32.const 2
@@ -102,7 +102,7 @@ Code Disassembly:
  00002d: 0b                         | end
  00002e: 0f                         | return
  00002f: 0b                         | end
-000030 func[1]:
+000031 func[1]:
  000032: 41 00                      | i32.const 0
  000034: 06 02                      | try type[2]
  000036: 1a                         |   drop

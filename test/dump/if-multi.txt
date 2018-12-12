@@ -95,7 +95,7 @@ if-multi.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001f func[0]:
+000020 func[0]:
  000021: 41 00                      | i32.const 0
  000023: 04 01                      | if type[1]
  000025: 41 01                      |   i32.const 1
@@ -106,7 +106,7 @@ Code Disassembly:
  000034: 0b                         | end
  000035: 0f                         | return
  000036: 0b                         | end
-000037 func[1]:
+000038 func[1]:
  000039: 43 00 00 00 00             | f32.const 0x0p+0
  00003e: 41 01                      | i32.const 1
  000040: 04 02                      | if type[2]

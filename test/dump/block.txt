@@ -67,14 +67,14 @@ block.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001a func[0]:
+00001b func[0]:
  00001c: 02 40                      | block
  00001e: 01                         |   nop
  00001f: 01                         |   nop
  000020: 01                         |   nop
  000021: 0b                         | end
  000022: 0b                         | end
-000023 func[1]:
+000024 func[1]:
  000025: 02 7f                      | block i32
  000027: 41 01                      |   i32.const 1
  000029: 0b                         | end

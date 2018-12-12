@@ -20,5 +20,5 @@ bad-opcode-prefix.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
+000017 func[0]:
 ;;; STDOUT ;;)

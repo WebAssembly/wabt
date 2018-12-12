@@ -71,13 +71,17 @@ Function[3]:
  - func[2] sig=0
 Start:
  - start function: 2
+Code[3]:
+ - func[0] size=2
+ - func[1] size=2
+ - func[2] size=2
 
 Code Disassembly:
 
-00001a func[0]:
+00001b func[0]:
  00001c: 0b                         | end
-00001d func[1]:
+00001e func[1]:
  00001f: 0b                         | end
-000020 func[2]:
+000021 func[2]:
  000022: 0b                         | end
 ;;; STDOUT ;;)
