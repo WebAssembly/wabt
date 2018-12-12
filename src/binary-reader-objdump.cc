@@ -1357,8 +1357,9 @@ Result BinaryReaderObjdump::OnDylinkInfo(uint32_t mem_size,
 }
 
 Result BinaryReaderObjdump::OnDylinkNeededCount(Index count) {
-  if (count)
+  if (count) {
     PrintDetails(" - needed_dynlibs[%u]:\n", count);
+  }
   return Result::Ok;
 }
 
