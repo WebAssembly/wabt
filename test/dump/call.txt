@@ -42,7 +42,7 @@ call.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
+000017 func[0]:
  000018: 41 01                      | i32.const 1
  00001a: 10 00                      | call 0
  00001c: 0b                         | end

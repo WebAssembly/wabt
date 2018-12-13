@@ -28,8 +28,10 @@ Type[1]:
  - type[0] () -> nil
 Function[1]:
  - func[0] sig=0
+Code[1]:
+ - func[0] size=10
 
 Code Disassembly:
 
-000015 func[0]:
+000016 func[0]:
 ;;; STDOUT ;;)

@@ -122,7 +122,7 @@ hexfloat_f32.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000015 func[0]:
+000016 func[0]:
  000017: 43 00 00 00 00             | f32.const 0x0p+0
  00001c: 1a                         | drop
  00001d: 43 80 a2 91 48             | f32.const 0x1.2345p+18

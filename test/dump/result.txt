@@ -84,16 +84,16 @@ result.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000025 func[0]:
+000026 func[0]:
  000027: 41 00                      | i32.const 0
  000029: 0b                         | end
-00002a func[1]:
+00002b func[1]:
  00002c: 42 00                      | i64.const 0
  00002e: 0b                         | end
-00002f func[2]:
+000030 func[2]:
  000031: 43 00 00 00 00             | f32.const 0x0p+0
  000036: 0b                         | end
-000037 func[3]:
+000038 func[3]:
  000039: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  000042: 0b                         | end
 ;;; STDOUT ;;)

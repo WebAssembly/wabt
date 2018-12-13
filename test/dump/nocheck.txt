@@ -54,7 +54,7 @@ nocheck.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001f <foo>:
+000020 <foo>:
  000021: 43 00 00 80 3f             | f32.const 0x1p+0
  000026: 44 00 00 00 00 00 00 00 40 | f64.const 0x1p+1
  00002f: 6a                         | i32.add

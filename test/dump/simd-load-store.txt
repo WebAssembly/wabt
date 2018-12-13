@@ -27,11 +27,11 @@ simd-load-store.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00003c <v128_load_0>:
+00003d <v128_load_0>:
  00003e: 41 04                      | i32.const 4
  000040: fd 00 04 00                | v128.load 4 0
  000044: 0b                         | end
-000045 <v128_store_0>:
+000046 <v128_store_0>:
  000047: 41 04                      | i32.const 4
  000049: fd 02 44 33 22 11 88 77 66 | v128.const 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
  000052: 55 cc bb aa 99 00 ff ee dd | 

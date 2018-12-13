@@ -331,7 +331,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
 
   std::string BlockSigToString(Type type) const;
 
-  Result BeginFunctionBody(Index index) override;
+  Result BeginFunctionBody(Index index, Offset size) override;
 
   Result OnLocalDeclCount(Index count) override;
   Result OnLocalDecl(Index decl_index, Index count, Type type) override;
@@ -604,7 +604,8 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index) {
+Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index,
+                                                         Offset size) {
   const char* name = GetFunctionName(index);
   if (name) {
     printf("%06" PRIzx " <%s>:\n", state->offset, name);
@@ -718,6 +719,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnStartFunction(Index func_index) override;
 
   Result OnFunctionBodyCount(Index count) override;
+  Result BeginFunctionBody(Index index, Offset size) override;
 
   Result BeginElemSection(Offset size) override {
     in_elem_section_ = true;
@@ -862,7 +864,7 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
              name, state->offset, state->offset + size, size);
       break;
     case ObjdumpMode::Details:
-      if (section_match && section_code != BinarySection::Code) {
+      if (section_match) {
         printf("%s", name);
         // All known section types except the start section have a count
         // in which case this line gets completed in OnCount().
@@ -976,6 +978,11 @@ Result BinaryReaderObjdump::OnFunction(Index index, Index sig_index) {
 
 Result BinaryReaderObjdump::OnFunctionBodyCount(Index count) {
   return OnCount(count);
+}
+
+Result BinaryReaderObjdump::BeginFunctionBody(Index index, Offset size) {
+  PrintDetails(" - func[%" PRIindex "] size=%" PRIzd "\n", index, size);
+  return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnStartFunction(Index func_index) {

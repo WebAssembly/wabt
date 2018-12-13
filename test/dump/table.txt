@@ -121,14 +121,18 @@ Elem[2]:
   - elem[3] = func[0]
   - elem[4] = func[1]
   - elem[5] = func[2]
+Code[3]:
+ - func[0] size=2
+ - func[1] size=2
+ - func[2] size=11
 
 Code Disassembly:
 
-00003b func[0]:
+00003c func[0]:
  00003d: 0b                         | end
-00003e func[1]:
+00003f func[1]:
  000040: 0b                         | end
-000041 func[2]:
+000042 func[2]:
  000043: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
  00004c: 0b                         | end
 ;;; STDOUT ;;)

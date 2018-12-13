@@ -87,7 +87,7 @@ select.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000015 func[0]:
+000016 func[0]:
  000017: 41 02                      | i32.const 2
  000019: 41 03                      | i32.const 3
  00001b: 41 01                      | i32.const 1

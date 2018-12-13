@@ -168,7 +168,7 @@ class BinaryReaderDelegate {
   /* Code section */
   virtual Result BeginCodeSection(Offset size) = 0;
   virtual Result OnFunctionBodyCount(Index count) = 0;
-  virtual Result BeginFunctionBody(Index index) = 0;
+  virtual Result BeginFunctionBody(Index index, Offset size) = 0;
   virtual Result OnLocalDeclCount(Index count) = 0;
   virtual Result OnLocalDecl(Index decl_index, Index count, Type type) = 0;
 

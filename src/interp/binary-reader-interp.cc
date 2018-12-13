@@ -134,7 +134,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   wabt::Result OnStartFunction(Index func_index) override;
 
-  wabt::Result BeginFunctionBody(Index index) override;
+  wabt::Result BeginFunctionBody(Index index, Offset size) override;
   wabt::Result OnLocalDeclCount(Index count) override;
   wabt::Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
@@ -1044,7 +1044,7 @@ void BinaryReaderInterp::PopLabel() {
   }
 }
 
-wabt::Result BinaryReaderInterp::BeginFunctionBody(Index index) {
+wabt::Result BinaryReaderInterp::BeginFunctionBody(Index index, Offset size) {
   auto* func = cast<DefinedFunc>(GetFuncByModuleIndex(index));
   FuncSignature* sig = env_->GetFuncSignature(func->sig_index);
 
