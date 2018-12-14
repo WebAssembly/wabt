@@ -26,7 +26,13 @@
 #include <fcntl.h>
 #include <io.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#define fileno _fileno
 #define PATH_MAX _MAX_PATH
+#else
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #endif
 
 namespace wabt {
@@ -53,6 +59,22 @@ Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
     char msg[PATH_MAX + sizeof(format)];
     wabt_snprintf(msg, sizeof(msg), format, filename.to_string().c_str());
     perror(msg);
+    return Result::Error;
+  }
+
+  struct stat status;
+  if (fstat(fileno(infile), &status) < 0)
+  {
+    perror("stating the file failed");
+    fclose(infile);
+    return Result::Error;
+  }
+
+  if ((status.st_mode & S_IFMT) != S_IFREG)
+  {
+    fprintf(stderr, "the parameter: %s is not a regular file\n",
+        filename.to_string().c_str());
+    fclose(infile);
     return Result::Error;
   }
 
