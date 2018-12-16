@@ -1,0 +1,38 @@
+.Dd $Mdocdate$
+.Dt WABT 1
+.Os
+.Sh NAME
+.Nm wasm-strip
+.Nd remove sections of a WebAssembly binary file
+.Sh SYNOPSIS
+.Nm wasm-strip
+.Op options
+.Ar file
+.Sh DESCRIPTION
+.Nm
+removes sections of a WebAssembly binary file.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl Fl help
+Print a help message
+.El
+.Sh EXAMPLES
+Remove all custom sections from test.wasm
+.Pp
+.Dl $ wasm-strip test.wasm
+.Sh SEE ALSO
+.Xr wasm-interp 1 ,
+.Xr wasm-objdump 1 ,
+.Xr wasm-opcodecnt 1 ,
+.Xr wasm-validate 1 ,
+.Xr wasm2c 1 ,
+.Xr wasm2wat 1 ,
+.Xr wast2json 1 ,
+.Xr wat-desugar 1 ,
+.Xr wat2wasm 1 ,
+.Xr spectest-interp 1
+.Sh BUGS
+If you find a bug, please report it at
+.br
+.Lk https://github.com/WebAssembly/wabt/issues .

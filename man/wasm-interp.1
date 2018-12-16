@@ -42,21 +42,33 @@ Run all the exported functions, in order. Useful for testing
 Include an importable function named "host.print" for printing to stdout
 .El
 .Sh EXAMPLES
- # parse binary file test.wasm, and type-check it
- $ wasm-interp test.wasm
-.sp
- # parse test.wasm and run all its exported functions
- $ wasm-interp test.wasm --run-all-exports
-.sp
- # parse test.wasm, run the exported functions and trace the output
- $ wasm-interp test.wasm --run-all-exports --trace
-.sp
- # parse test.wasm and run all its exported functions, setting the
- # value stack size to 100 elements
- $ wasm-interp test.wasm -V 100 --run-all-exports
+Parse binary file test.wasm, and type-check it
+.Pp
+.Dl $ wasm-interp test.wasm
+.Pp
+Parse test.wasm and run all its exported functions
+.Pp
+.Dl $ wasm-interp test.wasm --run-all-exports
+.Pp
+Parse test.wasm, run the exported functions and trace the output
+.Pp
+.Dl $ wasm-interp test.wasm --run-all-exports --trace
+.Pp
+Parse test.wasm and run all its exported functions, setting the value stack size to 100 elements
+.Pp
+.Dl $ wasm-interp test.wasm -V 100 --run-all-exports
 .Sh SEE ALSO
-wat2wasm(1), wasm2wat(1), wasm-objdump(1), wat-desugar(1), wasm2c(1)
+.Xr wasm-objdump 1 ,
+.Xr wasm-opcodecnt 1 ,
+.Xr wasm-strip 1 ,
+.Xr wasm-validate 1 ,
+.Xr wasm2c 1 ,
+.Xr wasm2wat 1 ,
+.Xr wast2json 1 ,
+.Xr wat-desugar 1 ,
+.Xr wat2wasm 1 ,
+.Xr spectest-interp 1
 .Sh BUGS
 If you find a bug, please report it at
 .br
-<\fBhttps://github.com/WebAssembly/wabt/issues/\fP>.
+.Lk https://github.com/WebAssembly/wabt/issues .

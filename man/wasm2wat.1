@@ -46,14 +46,25 @@ Give auto-generated names to non-named functions, types, etc.
 Don't check for invalid modules
 .El
 .Sh EXAMPLES
- # parse binary file test.wasm and write text file test.wast
- $ wasm2wat test.wasm -o test.wat
-.sp
- # parse test.wasm, write test.wat, but ignore the debug names, if any
- $ wasm2wat test.wasm --no-debug-names -o test.wat
+Parse binary file test.wasm and write text file test.wast
+.Pp
+.Dl $ wasm2wat test.wasm -o test.wat
+.Pp
+Parse test.wasm, write test.wat, but ignore the debug names, if any
+.Pp
+.Dl $ wasm2wat test.wasm --no-debug-names -o test.wat
 .Sh SEE ALSO
-wat2wasm(1), wasm-objdump(1), wasm-interp(1), wat-desugar(1), wasm2c(1)
+.Xr wasm-interp 1 ,
+.Xr wasm-objdump 1 ,
+.Xr wasm-opcodecnt 1 ,
+.Xr wasm-strip 1 ,
+.Xr wasm-validate 1 ,
+.Xr wasm2c 1 ,
+.Xr wast2json 1 ,
+.Xr wat-desugar 1 ,
+.Xr wat2wasm 1 ,
+.Xr spectest-interp 1
 .Sh BUGS
 If you find a bug, please report it at
 .br
-<\fBhttps://github.com/WebAssembly/wabt/issues/\fP>.
+.Lk https://github.com/WebAssembly/wabt/issues .

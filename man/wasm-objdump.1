@@ -10,7 +10,7 @@
 .Ar
 .Sh DESCRIPTION
 .Nm
-prints information about a wasm binary, similiar to objdump.
+prints information about a wasm binary, similar to objdump.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
@@ -32,10 +32,19 @@ Show relocations inline with disassembly
 Print a help message
 .El
 .Sh EXAMPLES
- $ wasm-objdump test.wasm
+.Dl $ wasm-objdump test.wasm
 .Sh SEE ALSO
-wat2wasm(1), wasm2wat(1), wasm-interp(1), wat-desugar(1), wasm2c(1)
+.Xr wasm-interp 1 ,
+.Xr wasm-opcodecnt 1 ,
+.Xr wasm-strip 1 ,
+.Xr wasm-validate 1 ,
+.Xr wasm2c 1 ,
+.Xr wasm2wat 1 ,
+.Xr wast2json 1 ,
+.Xr wat-desugar 1 ,
+.Xr wat2wasm 1 ,
+.Xr spectest-interp 1
 .Sh BUGS
 If you find a bug, please report it at
 .br
-<\fBhttps://github.com/WebAssembly/wabt/issues/\fP>.
+.Lk https://github.com/WebAssembly/wabt/issues .

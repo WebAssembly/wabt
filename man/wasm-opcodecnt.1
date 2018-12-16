@@ -1,0 +1,46 @@
+.Dd $Mdocdate$
+.Dt WABT 1
+.Os
+.Sh NAME
+.Nm wasm-opcodecnt
+.Nd count opcode usage for instructions
+.Sh SYNOPSIS
+.Nm wasm-opcodecnt
+.Op options
+.Ar
+.Sh DESCRIPTION
+.Nm
+reads a file in the wasm binary format, and counts opcode usage for instructions.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl v , Fl Fl verbose
+Use multiple times for more info
+.It Fl Fl help
+Print a help message
+.It Fl o , Fl Fl output=FILENAME
+Output file for the opcode counts, by default use stdout
+.It Fl c , Fl Fl cutoff=N
+Cutoff for reporting counts less than N
+.It Fl s , Fl Fl separator=SEPARATOR
+Separator text between element and count when reporting counts expected filename argument
+.El
+.Sh EXAMPLES
+Parse binary file test.wasm and write pcode dist file test.dist
+.Pp
+.Dl $ wasm-opcodecnt test.wasm -o test.dist
+.Sh SEE ALSO
+.Xr wasm-interp 1 ,
+.Xr wasm-objdump 1 ,
+.Xr wasm-strip 1 ,
+.Xr wasm-validate 1 ,
+.Xr wasm2c 1 ,
+.Xr wasm2wat 1 ,
+.Xr wast2json 1 ,
+.Xr wat-desugar 1 ,
+.Xr wat2wasm 1 ,
+.Xr spectest-interp 1
+.Sh BUGS
+If you find a bug, please report it at
+.br
+.Lk https://github.com/WebAssembly/wabt/issues .
