@@ -2,53 +2,53 @@
 .Dt WABT 1
 .Os
 .Sh NAME
-.Nm wasm2c
-.Nd convert a WebAssembly binary file to a C source and header
+.Nm wasm-validate
+.Nd validate a file in the WebAssembly binary format
 .Sh SYNOPSIS
-.Nm wasm2c
+.Nm wasm-validate
 .Op options
 .Ar file
 .Sh DESCRIPTION
 .Nm
-takes a WebAssembly module and produces an equivalent C source and header.
+reads a file in the WebAssembly binary format and validates it.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl v , Fl Fl verbose
 Use multiple times for more info
 .It Fl Fl help
-Print a help message
-.It Fl o , Fl Fl output=FILENAME
-Output file for the generated C source file, by default use stdout
+Print this help message
 .It Fl Fl enable-exceptions
-Experimental exception handling
+Enable Experimental exception handling
 .It Fl Fl disable-mutable-globals
-Import/export mutable globals
+Disable Import/export mutable globals
 .It Fl Fl enable-saturating-float-to-int
-Saturating float-to-int operators
+Enable Saturating float-to-int operators
 .It Fl Fl enable-sign-extension
-Sign-extension operators
+Enable Sign-extension operators
 .It Fl Fl enable-simd
-SIMD support
+Enable SIMD support
 .It Fl Fl enable-threads
-Threading support
+Enable Threading support
+.It Fl Fl enable-multi-value
+Enable Multi-value
+.It Fl Fl enable-tail-call
+Enable Tail-call support
 .It Fl Fl no-debug-names
 Ignore debug names in the binary file
+.It Fl Fl ignore-custom-section-errors
+Ignore errors in custom sections
 .El
 .Sh EXAMPLES
-Parse binary file test.wasm and write test.c and test.h
+Validate binary file test.wasm
 .Pp
-.Dl $ wasm2c test.wasm -o test.c
-.Pp
-Parse test.wasm, write test.c and test.h, but ignore the debug names, if any
-.Pp
-.Dl $ wasm2c test.wasm --no-debug-names -o test.c
+.Dl $ wasm-validate test.wasm
 .Sh SEE ALSO
 .Xr wasm-interp 1 ,
 .Xr wasm-objdump 1 ,
 .Xr wasm-opcodecnt 1 ,
 .Xr wasm-strip 1 ,
-.Xr wasm-validate 1 ,
+.Xr wasm2c 1 ,
 .Xr wasm2wat 1 ,
 .Xr wast2json 1 ,
 .Xr wat-desugar 1 ,

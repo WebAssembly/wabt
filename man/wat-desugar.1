@@ -42,17 +42,29 @@ Write all imports inline
 Give auto-generated names to non-named functions, types, etc.
 .El
 .Sh EXAMPLES
- # write output to stdout
- $ wat-desugar test.wat
-.sp
- # write output to test2.wat
- $ wat-desugar test.wat -o test2.wat
-.sp
- # generate names for indexed variables
- $ wat-desugar --generate-names test.wat
+Write output to stdout
+.Pp
+.Dl $ wat-desugar test.wat
+.Pp
+Write output to test2.wat
+.Pp
+.Dl $ wat-desugar test.wat -o test2.wat
+.Pp
+Generate names for indexed variables
+.Pp
+.Dl $ wat-desugar --generate-names test.wat
 .Sh SEE ALSO
-wat2wasm(1), wasm2wat(1), wasm-objdump(1), wasm-interp(1), wasm2c(1)
+.Xr wasm-interp 1 ,
+.Xr wasm-objdump 1 ,
+.Xr wasm-opcodecnt 1 ,
+.Xr wasm-strip 1 ,
+.Xr wasm-validate 1 ,
+.Xr wasm2c 1 ,
+.Xr wasm2wat 1 ,
+.Xr wast2json 1 ,
+.Xr wat2wasm 1,
+.Xr spectest-interp 1
 .Sh BUGS
 If you find a bug, please report it at
 .br
-<\fBhttps://github.com/WebAssembly/wabt/issues/\fP>.
+.Lk https://github.com/WebAssembly/wabt/issues .

@@ -2,38 +2,40 @@
 .Dt WABT 1
 .Os
 .Sh NAME
-.Nm wat2wasm
-.Nd translate from WebAssembly text format to the WebAssembly binary format
+.Nm wast2json
+.Nd convert a file in the wasm spec test format to a JSON file and associated wasm binary files
 .Sh SYNOPSIS
-.Nm wat2wasm
+.Nm wast2json
 .Op options
 .Ar file
 .Sh DESCRIPTION
 .Nm
-translates from WebAssembly text format to the WebAssembly binary format.
+reads a file in the wasm spec test format, checks it for errors, and converts it to a JSON file and associated wasm binary files.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl v , Fl Fl verbose
 Use multiple times for more info
 .It Fl Fl help
-Print a help message
+Print this help message
 .It Fl Fl debug-parser
-Turn on debugging the parser of wat files
-.It Fl d , Fl Fl dump-module
-Print a hexdump of the module to stdout
+Turn on debugging the parser of wast files
 .It Fl Fl enable-exceptions
-Experimental exception handling
+Enable Experimental exception handling
 .It Fl Fl disable-mutable-globals
-Import/export mutable globals
+Disable Import/export mutable globals
 .It Fl Fl enable-saturating-float-to-int
-Saturating float-to-int operators
+Enable Saturating float-to-int operators
 .It Fl Fl enable-sign-extension
-Sign-extension operators
+Enable Sign-extension operators
 .It Fl Fl enable-simd
-SIMD support
+Enable SIMD support
 .It Fl Fl enable-threads
-Threading support
+Enable Threading support
+.It Fl Fl enable-multi-value
+Enable Multi-value
+.It Fl Fl enable-tail-call
+Enable Tail-call support
 .It Fl o , Fl Fl output=FILE
 output wasm binary file
 .It Fl r , Fl Fl relocatable
@@ -46,17 +48,10 @@ Write debug names to the generated binary file
 Don't check for invalid modules
 .El
 .Sh EXAMPLES
-Parse and typecheck test.wat
+Parse spec-test.wast, and write files to spec-test.json.
+Modules are written to spec-test.0.wasm, spec-test.1.wasm, etc.
 .Pp
-.Dl $ wat2wasm test.wat
-.Pp
-parse test.wat and write to binary file test.wasm
-.Pp
-.Dl $ wat2wasm test.wat -o test.wasm
-.Pp
-Parse spec-test.wast, and write verbose output to stdout (including the meaning of every byte)
-.Pp
-.Dl $ wat2wasm spec-test.wast -v
+.Dl $ wast2json spec-test.wast -o spec-test.json
 .Sh SEE ALSO
 .Xr wasm-interp 1 ,
 .Xr wasm-objdump 1 ,
@@ -65,8 +60,8 @@ Parse spec-test.wast, and write verbose output to stdout (including the meaning 
 .Xr wasm-validate 1 ,
 .Xr wasm2c 1 ,
 .Xr wasm2wat 1 ,
-.Xr wast2json 1 ,
 .Xr wat-desugar 1 ,
+.Xr wat2wasm 1 ,
 .Xr spectest-interp 1
 .Sh BUGS
 If you find a bug, please report it at
