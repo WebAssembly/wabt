@@ -1,0 +1,50 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --fold-exprs --enable-multi-value
+(module
+  (func $dup (result i32 i32)
+    i32.const 0
+    i32.const 1
+  )
+
+  (func $fold-two (result i32)
+    call $dup
+    i32.add
+  )
+
+  (func $cant-fold (result i32)
+    call $dup
+    i32.const 1
+    i32.add
+    drop
+  )
+
+  (func $partial-fold (result i32)
+    call $dup
+    call $dup
+    i32.add
+    i32.sub
+    drop
+  )
+)
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (result i32 i32)))
+  (type (;1;) (func (result i32)))
+  (func (;0;) (type 0) (result i32 i32)
+    (i32.const 0)
+    (i32.const 1))
+  (func (;1;) (type 1) (result i32)
+    (i32.add
+      (call 0)))
+  (func (;2;) (type 1) (result i32)
+    (call 0)
+    (i32.const 1)
+    (i32.add)
+    (drop))
+  (func (;3;) (type 1) (result i32)
+    (call 0)
+    (i32.add
+      (call 0))
+    (i32.sub)
+    (drop)))
+;;; STDOUT ;;)
