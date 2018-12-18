@@ -79,18 +79,12 @@ enum class NextChar {
 };
 
 struct ExprTree {
-  explicit ExprTree(const Expr* expr = nullptr) : expr(expr) {}
-  // For debugging.
-  std::string describe() const {
-    std::string result("ExprTree(");
-    if (expr) {
-      result.append(GetExprTypeName(*expr));
-    }
-    return result + ")";
-  }
+  explicit ExprTree(const Expr* expr, Index result_count)
+      : expr(expr), result_count(result_count) {}
 
   const Expr* expr;
   std::vector<ExprTree> children;
+  Index result_count;
 };
 
 struct Label {
@@ -1196,18 +1190,43 @@ void WatWriter::PushExpr(const Expr* expr,
                          Index result_count) {
   WABT_TRACE_ARGS(PushExpr, "%s, %" PRIindex ", %" PRIindex "",
                   GetExprTypeName(*expr), operand_count, result_count);
-  if (operand_count <= expr_tree_stack_.size()) {
+
+  // Try to pop operand off the expr stack to use as this expr's children. One
+  // expr can have multiple return values (with the multi-value extension), so
+  // we have to iterate over each in reverse.
+
+  auto first_operand = expr_tree_stack_.end();
+
+  Index current_count = 0;
+  if (operand_count > 0) {
+    for (auto iter = expr_tree_stack_.rbegin(); iter != expr_tree_stack_.rend();
+         ++iter) {
+      assert(iter->result_count > 0);
+      current_count += iter->result_count;
+
+      if (current_count == operand_count) {
+        first_operand = iter.base() - 1;
+        break;
+      } else if (current_count > operand_count) {
+        // We went over the number of operands this instruction wants; this can
+        // only happen when there are expressions on the stack with a
+        // result_count > 1. When this happens we can't fold, since any result
+        // we produce will not make sense.
+        break;
+      }
+    }
+  }
+
+  ExprTree tree(expr, result_count);
+
+  if (current_count == operand_count && operand_count > 0) {
     auto last_operand = expr_tree_stack_.end();
-    auto first_operand = last_operand - operand_count;
-    ExprTree tree(expr);
     std::move(first_operand, last_operand, std::back_inserter(tree.children));
     expr_tree_stack_.erase(first_operand, last_operand);
-    expr_tree_stack_.emplace_back(tree);
-    if (result_count == 0) {
-      FlushExprTreeStack();
-    }
-  } else {
-    expr_tree_stack_.emplace_back(expr);
+  }
+
+  expr_tree_stack_.emplace_back(std::move(tree));
+  if (current_count > operand_count || result_count == 0) {
     FlushExprTreeStack();
   }
 }
