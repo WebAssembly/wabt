@@ -1,13 +1,13 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/labels.wast
 (;; STDOUT ;;;
-out/test/spec/labels.wast:311: assert_invalid passed:
+out/test/spec/labels.wast:318: assert_invalid passed:
   error: type mismatch in f32.neg, expected [f32] but got []
   000001e: error: OnUnaryExpr callback failed
-out/test/spec/labels.wast:315: assert_invalid passed:
+out/test/spec/labels.wast:322: assert_invalid passed:
   error: type mismatch in block, expected [] but got [f32]
   0000023: error: OnEndExpr callback failed
-out/test/spec/labels.wast:319: assert_invalid passed:
+out/test/spec/labels.wast:326: assert_invalid passed:
   error: type mismatch in block, expected [] but got [f32]
   0000023: error: OnEndExpr callback failed
 28/28 tests passed.

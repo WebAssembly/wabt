@@ -182,8 +182,8 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnAtomicWaitExpr(cast<AtomicWaitExpr>(expr)));
       break;
 
-    case ExprType::AtomicWake:
-      CHECK_RESULT(delegate_->OnAtomicWakeExpr(cast<AtomicWakeExpr>(expr)));
+    case ExprType::AtomicNotify:
+      CHECK_RESULT(delegate_->OnAtomicNotifyExpr(cast<AtomicNotifyExpr>(expr)));
       break;
 
     case ExprType::Binary:
@@ -233,12 +233,12 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnDropExpr(cast<DropExpr>(expr)));
       break;
 
-    case ExprType::GetGlobal:
-      CHECK_RESULT(delegate_->OnGetGlobalExpr(cast<GetGlobalExpr>(expr)));
+    case ExprType::GlobalGet:
+      CHECK_RESULT(delegate_->OnGlobalGetExpr(cast<GlobalGetExpr>(expr)));
       break;
 
-    case ExprType::GetLocal:
-      CHECK_RESULT(delegate_->OnGetLocalExpr(cast<GetLocalExpr>(expr)));
+    case ExprType::GlobalSet:
+      CHECK_RESULT(delegate_->OnGlobalSetExpr(cast<GlobalSetExpr>(expr)));
       break;
 
     case ExprType::If: {
@@ -257,6 +257,18 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
 
     case ExprType::Load:
       CHECK_RESULT(delegate_->OnLoadExpr(cast<LoadExpr>(expr)));
+      break;
+
+    case ExprType::LocalGet:
+      CHECK_RESULT(delegate_->OnLocalGetExpr(cast<LocalGetExpr>(expr)));
+      break;
+
+    case ExprType::LocalSet:
+      CHECK_RESULT(delegate_->OnLocalSetExpr(cast<LocalSetExpr>(expr)));
+      break;
+
+    case ExprType::LocalTee:
+      CHECK_RESULT(delegate_->OnLocalTeeExpr(cast<LocalTeeExpr>(expr)));
       break;
 
     case ExprType::Loop: {
@@ -327,21 +339,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnSelectExpr(cast<SelectExpr>(expr)));
       break;
 
-    case ExprType::SetGlobal:
-      CHECK_RESULT(delegate_->OnSetGlobalExpr(cast<SetGlobalExpr>(expr)));
-      break;
-
-    case ExprType::SetLocal:
-      CHECK_RESULT(delegate_->OnSetLocalExpr(cast<SetLocalExpr>(expr)));
-      break;
-
     case ExprType::Store:
       CHECK_RESULT(delegate_->OnStoreExpr(cast<StoreExpr>(expr)));
       break;
 
-    case ExprType::TeeLocal:
-      CHECK_RESULT(delegate_->OnTeeLocalExpr(cast<TeeLocalExpr>(expr)));
-      break;
 
     case ExprType::Throw:
       CHECK_RESULT(delegate_->OnThrowExpr(cast<ThrowExpr>(expr)));

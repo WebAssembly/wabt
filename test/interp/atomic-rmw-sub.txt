@@ -5,22 +5,22 @@
 
   ;; i32
 
-  (func (export "i32.atomic.rmw8_u.sub-result") (result i32)
+  (func (export "i32.atomic.rmw8.sub_u-result") (result i32)
     i32.const 0 i32.const 1000000 i32.store
-    i32.const 0 i32.const 1       i32.atomic.rmw8_u.sub)
+    i32.const 0 i32.const 1       i32.atomic.rmw8.sub_u)
 
-  (func (export "i32.atomic.rmw8_u.sub-memory") (result i32)
+  (func (export "i32.atomic.rmw8.sub_u-memory") (result i32)
     i32.const 0 i32.const 1000000 i32.store
-    i32.const 0 i32.const 1       i32.atomic.rmw8_u.sub drop
+    i32.const 0 i32.const 1       i32.atomic.rmw8.sub_u drop
     i32.const 0 i32.load8_u)
 
-  (func (export "i32.atomic.rmw16_u.sub-result") (result i32)
+  (func (export "i32.atomic.rmw16.sub_u-result") (result i32)
     i32.const 0 i32.const 1000000 i32.store
-    i32.const 0 i32.const 1       i32.atomic.rmw16_u.sub)
+    i32.const 0 i32.const 1       i32.atomic.rmw16.sub_u)
 
-  (func (export "i32.atomic.rmw16_u.sub-memory") (result i32)
+  (func (export "i32.atomic.rmw16.sub_u-memory") (result i32)
     i32.const 0 i32.const 1000000 i32.store
-    i32.const 0 i32.const 1       i32.atomic.rmw16_u.sub drop
+    i32.const 0 i32.const 1       i32.atomic.rmw16.sub_u drop
     i32.const 0 i32.load16_u)
 
   (func (export "i32.atomic.rmw.sub-result") (result i32)
@@ -35,31 +35,31 @@
 
   ;; i64
 
-  (func (export "i64.atomic.rmw8_u.sub-result") (result i64)
+  (func (export "i64.atomic.rmw8.sub_u-result") (result i64)
     i32.const 0 i64.const 10000000000 i64.store
-    i32.const 0 i64.const 1           i64.atomic.rmw8_u.sub)
+    i32.const 0 i64.const 1           i64.atomic.rmw8.sub_u)
 
-  (func (export "i64.atomic.rmw8_u.sub-memory") (result i64)
+  (func (export "i64.atomic.rmw8.sub_u-memory") (result i64)
     i32.const 0 i64.const 10000000000 i64.store
-    i32.const 0 i64.const 1           i64.atomic.rmw8_u.sub drop
+    i32.const 0 i64.const 1           i64.atomic.rmw8.sub_u drop
     i32.const 0 i64.load8_u)
 
-  (func (export "i64.atomic.rmw16_u.sub-result") (result i64)
+  (func (export "i64.atomic.rmw16.sub_u-result") (result i64)
     i32.const 0 i64.const 10000000000 i64.store
-    i32.const 0 i64.const 1           i64.atomic.rmw16_u.sub)
+    i32.const 0 i64.const 1           i64.atomic.rmw16.sub_u)
 
-  (func (export "i64.atomic.rmw16_u.sub-memory") (result i64)
+  (func (export "i64.atomic.rmw16.sub_u-memory") (result i64)
     i32.const 0 i64.const 10000000000 i64.store
-    i32.const 0 i64.const 1           i64.atomic.rmw16_u.sub drop
+    i32.const 0 i64.const 1           i64.atomic.rmw16.sub_u drop
     i32.const 0 i64.load16_u)
 
-  (func (export "i64.atomic.rmw32_u.sub-result") (result i64)
+  (func (export "i64.atomic.rmw32.sub_u-result") (result i64)
     i32.const 0 i64.const 10000000000 i64.store
-    i32.const 0 i64.const 1           i64.atomic.rmw32_u.sub)
+    i32.const 0 i64.const 1           i64.atomic.rmw32.sub_u)
 
-  (func (export "i64.atomic.rmw32_u.sub-memory") (result i64)
+  (func (export "i64.atomic.rmw32.sub_u-memory") (result i64)
     i32.const 0 i64.const 10000000000 i64.store
-    i32.const 0 i64.const 1           i64.atomic.rmw32_u.sub drop
+    i32.const 0 i64.const 1           i64.atomic.rmw32.sub_u drop
     i32.const 0 i64.load32_u)
 
   (func (export "i64.atomic.rmw.sub-result") (result i64)
@@ -74,37 +74,37 @@
 
   ;; Test bad alignment
 
-  (func (export "bad_align-i32.atomic.rmw16_u.sub")
-    i32.const 1 i32.const 0 i32.atomic.rmw16_u.sub drop)
+  (func (export "bad_align-i32.atomic.rmw16.sub_u")
+    i32.const 1 i32.const 0 i32.atomic.rmw16.sub_u drop)
   (func (export "bad_align-i32.atomic.rmw.sub")
     i32.const 2 i32.const 0 i32.atomic.rmw.sub drop)
 
-  (func (export "bad_align-i64.atomic.rmw16_u.sub")
-    i32.const 1 i64.const 0 i64.atomic.rmw16_u.sub drop)
-  (func (export "bad_align-i64.atomic.rmw32_u.sub")
-    i32.const 2 i64.const 0 i64.atomic.rmw32_u.sub drop)
+  (func (export "bad_align-i64.atomic.rmw16.sub_u")
+    i32.const 1 i64.const 0 i64.atomic.rmw16.sub_u drop)
+  (func (export "bad_align-i64.atomic.rmw32.sub_u")
+    i32.const 2 i64.const 0 i64.atomic.rmw32.sub_u drop)
   (func (export "bad_align-i64.atomic.rmw.sub")
     i32.const 4 i64.const 0 i64.atomic.rmw.sub drop)
 
 )
 (;; STDOUT ;;;
-i32.atomic.rmw8_u.sub-result() => i32:64
-i32.atomic.rmw8_u.sub-memory() => i32:63
-i32.atomic.rmw16_u.sub-result() => i32:16960
-i32.atomic.rmw16_u.sub-memory() => i32:16959
+i32.atomic.rmw8.sub_u-result() => i32:64
+i32.atomic.rmw8.sub_u-memory() => i32:63
+i32.atomic.rmw16.sub_u-result() => i32:16960
+i32.atomic.rmw16.sub_u-memory() => i32:16959
 i32.atomic.rmw.sub-result() => i32:1000000
 i32.atomic.rmw.sub-memory() => i32:999999
-i64.atomic.rmw8_u.sub-result() => i64:0
-i64.atomic.rmw8_u.sub-memory() => i64:255
-i64.atomic.rmw16_u.sub-result() => i64:58368
-i64.atomic.rmw16_u.sub-memory() => i64:58367
-i64.atomic.rmw32_u.sub-result() => i64:1410065408
-i64.atomic.rmw32_u.sub-memory() => i64:1410065407
+i64.atomic.rmw8.sub_u-result() => i64:0
+i64.atomic.rmw8.sub_u-memory() => i64:255
+i64.atomic.rmw16.sub_u-result() => i64:58368
+i64.atomic.rmw16.sub_u-memory() => i64:58367
+i64.atomic.rmw32.sub_u-result() => i64:1410065408
+i64.atomic.rmw32.sub_u-memory() => i64:1410065407
 i64.atomic.rmw.sub-result() => i64:10000000000
 i64.atomic.rmw.sub-memory() => i64:9999999999
-bad_align-i32.atomic.rmw16_u.sub() => error: atomic memory access is unaligned
+bad_align-i32.atomic.rmw16.sub_u() => error: atomic memory access is unaligned
 bad_align-i32.atomic.rmw.sub() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw16_u.sub() => error: atomic memory access is unaligned
-bad_align-i64.atomic.rmw32_u.sub() => error: atomic memory access is unaligned
+bad_align-i64.atomic.rmw16.sub_u() => error: atomic memory access is unaligned
+bad_align-i64.atomic.rmw32.sub_u() => error: atomic memory access is unaligned
 bad_align-i64.atomic.rmw.sub() => error: atomic memory access is unaligned
 ;;; STDOUT ;;)

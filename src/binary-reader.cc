@@ -460,10 +460,10 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
       break;
     }
 
-    case Opcode::GetGlobal: {
+    case Opcode::GlobalGet: {
       Index global_index;
-      CHECK_RESULT(ReadIndex(&global_index, "init_expr get_global index"));
-      CALLBACK(OnInitExprGetGlobalExpr, index, global_index);
+      CHECK_RESULT(ReadIndex(&global_index, "init_expr global.get index"));
+      CALLBACK(OnInitExprGlobalGetExpr, index, global_index);
       break;
     }
 
@@ -475,7 +475,7 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
   }
 
   if (require_i32 && opcode != Opcode::I32Const &&
-      opcode != Opcode::GetGlobal) {
+      opcode != Opcode::GlobalGet) {
     PrintError("expected i32 init_expr");
     return Result::Error;
   }
@@ -706,34 +706,34 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::GetGlobal: {
+      case Opcode::GlobalGet: {
         Index global_index;
-        CHECK_RESULT(ReadIndex(&global_index, "get_global global index"));
-        CALLBACK(OnGetGlobalExpr, global_index);
+        CHECK_RESULT(ReadIndex(&global_index, "global.get global index"));
+        CALLBACK(OnGlobalGetExpr, global_index);
         CALLBACK(OnOpcodeIndex, global_index);
         break;
       }
 
-      case Opcode::GetLocal: {
+      case Opcode::LocalGet: {
         Index local_index;
-        CHECK_RESULT(ReadIndex(&local_index, "get_local local index"));
-        CALLBACK(OnGetLocalExpr, local_index);
+        CHECK_RESULT(ReadIndex(&local_index, "local.get local index"));
+        CALLBACK(OnLocalGetExpr, local_index);
         CALLBACK(OnOpcodeIndex, local_index);
         break;
       }
 
-      case Opcode::SetGlobal: {
+      case Opcode::GlobalSet: {
         Index global_index;
-        CHECK_RESULT(ReadIndex(&global_index, "set_global global index"));
-        CALLBACK(OnSetGlobalExpr, global_index);
+        CHECK_RESULT(ReadIndex(&global_index, "global.set global index"));
+        CALLBACK(OnGlobalSetExpr, global_index);
         CALLBACK(OnOpcodeIndex, global_index);
         break;
       }
 
-      case Opcode::SetLocal: {
+      case Opcode::LocalSet: {
         Index local_index;
-        CHECK_RESULT(ReadIndex(&local_index, "set_local local index"));
-        CALLBACK(OnSetLocalExpr, local_index);
+        CHECK_RESULT(ReadIndex(&local_index, "local.set local index"));
+        CALLBACK(OnLocalSetExpr, local_index);
         CALLBACK(OnOpcodeIndex, local_index);
         break;
       }
@@ -787,10 +787,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::TeeLocal: {
+      case Opcode::LocalTee: {
         Index local_index;
-        CHECK_RESULT(ReadIndex(&local_index, "tee_local local index"));
-        CALLBACK(OnTeeLocalExpr, local_index);
+        CHECK_RESULT(ReadIndex(&local_index, "local.tee local index"));
+        CALLBACK(OnLocalTeeExpr, local_index);
         CALLBACK(OnOpcodeIndex, local_index);
         break;
       }
@@ -1113,41 +1113,41 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::I32TruncSF32:
-      case Opcode::I32TruncSF64:
-      case Opcode::I32TruncUF32:
-      case Opcode::I32TruncUF64:
+      case Opcode::I32TruncF32S:
+      case Opcode::I32TruncF64S:
+      case Opcode::I32TruncF32U:
+      case Opcode::I32TruncF64U:
       case Opcode::I32WrapI64:
-      case Opcode::I64TruncSF32:
-      case Opcode::I64TruncSF64:
-      case Opcode::I64TruncUF32:
-      case Opcode::I64TruncUF64:
-      case Opcode::I64ExtendSI32:
-      case Opcode::I64ExtendUI32:
-      case Opcode::F32ConvertSI32:
-      case Opcode::F32ConvertUI32:
-      case Opcode::F32ConvertSI64:
-      case Opcode::F32ConvertUI64:
+      case Opcode::I64TruncF32S:
+      case Opcode::I64TruncF64S:
+      case Opcode::I64TruncF32U:
+      case Opcode::I64TruncF64U:
+      case Opcode::I64ExtendI32S:
+      case Opcode::I64ExtendI32U:
+      case Opcode::F32ConvertI32S:
+      case Opcode::F32ConvertI32U:
+      case Opcode::F32ConvertI64S:
+      case Opcode::F32ConvertI64U:
       case Opcode::F32DemoteF64:
       case Opcode::F32ReinterpretI32:
-      case Opcode::F64ConvertSI32:
-      case Opcode::F64ConvertUI32:
-      case Opcode::F64ConvertSI64:
-      case Opcode::F64ConvertUI64:
+      case Opcode::F64ConvertI32S:
+      case Opcode::F64ConvertI32U:
+      case Opcode::F64ConvertI64S:
+      case Opcode::F64ConvertI64U:
       case Opcode::F64PromoteF32:
       case Opcode::F64ReinterpretI64:
       case Opcode::I32ReinterpretF32:
       case Opcode::I64ReinterpretF64:
       case Opcode::I32Eqz:
       case Opcode::I64Eqz:
-      case Opcode::F32X4ConvertSI32X4:
-      case Opcode::F32X4ConvertUI32X4:
-      case Opcode::F64X2ConvertSI64X2:
-      case Opcode::F64X2ConvertUI64X2:
-      case Opcode::I32X4TruncSF32X4Sat:
-      case Opcode::I32X4TruncUF32X4Sat:
-      case Opcode::I64X2TruncSF64X2Sat:
-      case Opcode::I64X2TruncUF64X2Sat:
+      case Opcode::F32X4ConvertI32X4S:
+      case Opcode::F32X4ConvertI32X4U:
+      case Opcode::F64X2ConvertI64X2S:
+      case Opcode::F64X2ConvertI64X2U:
+      case Opcode::I32X4TruncSatF32X4S:
+      case Opcode::I32X4TruncSatF32X4U:
+      case Opcode::I64X2TruncSatF64X2S:
+      case Opcode::I64X2TruncSatF64X2U:
         CALLBACK(OnConvertExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1202,25 +1202,25 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
-      case Opcode::I32TruncSSatF32:
-      case Opcode::I32TruncUSatF32:
-      case Opcode::I32TruncSSatF64:
-      case Opcode::I32TruncUSatF64:
-      case Opcode::I64TruncSSatF32:
-      case Opcode::I64TruncUSatF32:
-      case Opcode::I64TruncSSatF64:
-      case Opcode::I64TruncUSatF64:
+      case Opcode::I32TruncSatF32S:
+      case Opcode::I32TruncSatF32U:
+      case Opcode::I32TruncSatF64S:
+      case Opcode::I32TruncSatF64U:
+      case Opcode::I64TruncSatF32S:
+      case Opcode::I64TruncSatF32U:
+      case Opcode::I64TruncSatF64S:
+      case Opcode::I64TruncSatF64U:
         CALLBACK(OnConvertExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
 
-      case Opcode::AtomicWake: {
+      case Opcode::AtomicNotify: {
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
         Address offset;
         CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
 
-        CALLBACK(OnAtomicWakeExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnAtomicNotifyExpr, opcode, alignment_log2, offset);
         CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
         break;
       }
@@ -1273,46 +1273,46 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::I32AtomicRmwAdd:
       case Opcode::I64AtomicRmwAdd:
-      case Opcode::I32AtomicRmw8UAdd:
-      case Opcode::I32AtomicRmw16UAdd:
-      case Opcode::I64AtomicRmw8UAdd:
-      case Opcode::I64AtomicRmw16UAdd:
-      case Opcode::I64AtomicRmw32UAdd:
+      case Opcode::I32AtomicRmw8AddU:
+      case Opcode::I32AtomicRmw16AddU:
+      case Opcode::I64AtomicRmw8AddU:
+      case Opcode::I64AtomicRmw16AddU:
+      case Opcode::I64AtomicRmw32AddU:
       case Opcode::I32AtomicRmwSub:
       case Opcode::I64AtomicRmwSub:
-      case Opcode::I32AtomicRmw8USub:
-      case Opcode::I32AtomicRmw16USub:
-      case Opcode::I64AtomicRmw8USub:
-      case Opcode::I64AtomicRmw16USub:
-      case Opcode::I64AtomicRmw32USub:
+      case Opcode::I32AtomicRmw8SubU:
+      case Opcode::I32AtomicRmw16SubU:
+      case Opcode::I64AtomicRmw8SubU:
+      case Opcode::I64AtomicRmw16SubU:
+      case Opcode::I64AtomicRmw32SubU:
       case Opcode::I32AtomicRmwAnd:
       case Opcode::I64AtomicRmwAnd:
-      case Opcode::I32AtomicRmw8UAnd:
-      case Opcode::I32AtomicRmw16UAnd:
-      case Opcode::I64AtomicRmw8UAnd:
-      case Opcode::I64AtomicRmw16UAnd:
-      case Opcode::I64AtomicRmw32UAnd:
+      case Opcode::I32AtomicRmw8AndU:
+      case Opcode::I32AtomicRmw16AndU:
+      case Opcode::I64AtomicRmw8AndU:
+      case Opcode::I64AtomicRmw16AndU:
+      case Opcode::I64AtomicRmw32AndU:
       case Opcode::I32AtomicRmwOr:
       case Opcode::I64AtomicRmwOr:
-      case Opcode::I32AtomicRmw8UOr:
-      case Opcode::I32AtomicRmw16UOr:
-      case Opcode::I64AtomicRmw8UOr:
-      case Opcode::I64AtomicRmw16UOr:
-      case Opcode::I64AtomicRmw32UOr:
+      case Opcode::I32AtomicRmw8OrU:
+      case Opcode::I32AtomicRmw16OrU:
+      case Opcode::I64AtomicRmw8OrU:
+      case Opcode::I64AtomicRmw16OrU:
+      case Opcode::I64AtomicRmw32OrU:
       case Opcode::I32AtomicRmwXor:
       case Opcode::I64AtomicRmwXor:
-      case Opcode::I32AtomicRmw8UXor:
-      case Opcode::I32AtomicRmw16UXor:
-      case Opcode::I64AtomicRmw8UXor:
-      case Opcode::I64AtomicRmw16UXor:
-      case Opcode::I64AtomicRmw32UXor:
+      case Opcode::I32AtomicRmw8XorU:
+      case Opcode::I32AtomicRmw16XorU:
+      case Opcode::I64AtomicRmw8XorU:
+      case Opcode::I64AtomicRmw16XorU:
+      case Opcode::I64AtomicRmw32XorU:
       case Opcode::I32AtomicRmwXchg:
       case Opcode::I64AtomicRmwXchg:
-      case Opcode::I32AtomicRmw8UXchg:
-      case Opcode::I32AtomicRmw16UXchg:
-      case Opcode::I64AtomicRmw8UXchg:
-      case Opcode::I64AtomicRmw16UXchg:
-      case Opcode::I64AtomicRmw32UXchg: {
+      case Opcode::I32AtomicRmw8XchgU:
+      case Opcode::I32AtomicRmw16XchgU:
+      case Opcode::I64AtomicRmw8XchgU:
+      case Opcode::I64AtomicRmw16XchgU:
+      case Opcode::I64AtomicRmw32XchgU: {
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "memory alignment"));
         Address offset;
@@ -1325,11 +1325,11 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
 
       case Opcode::I32AtomicRmwCmpxchg:
       case Opcode::I64AtomicRmwCmpxchg:
-      case Opcode::I32AtomicRmw8UCmpxchg:
-      case Opcode::I32AtomicRmw16UCmpxchg:
-      case Opcode::I64AtomicRmw8UCmpxchg:
-      case Opcode::I64AtomicRmw16UCmpxchg:
-      case Opcode::I64AtomicRmw32UCmpxchg: {
+      case Opcode::I32AtomicRmw8CmpxchgU:
+      case Opcode::I32AtomicRmw16CmpxchgU:
+      case Opcode::I64AtomicRmw8CmpxchgU:
+      case Opcode::I64AtomicRmw16CmpxchgU:
+      case Opcode::I64AtomicRmw32CmpxchgU: {
         uint32_t alignment_log2;
         CHECK_RESULT(ReadU32Leb128(&alignment_log2, "memory alignment"));
         Address offset;

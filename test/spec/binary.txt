@@ -119,5 +119,13 @@ out/test/spec/binary.wast:558: assert_malformed passed:
   000001e: error: memory.size reserved value must be 0
 out/test/spec/binary.wast:577: assert_malformed passed:
   000001c: error: local count must be < 0x10000000
-59/59 tests passed.
+out/test/spec/binary.wast:594: assert_malformed passed:
+  0000013: error: function signature count != function body count
+out/test/spec/binary.wast:604: assert_malformed passed:
+  000000b: error: function signature count != function body count
+out/test/spec/binary.wast:613: assert_malformed passed:
+  0000016: error: function signature count != function body count
+out/test/spec/binary.wast:624: assert_malformed passed:
+  0000015: error: function signature count != function body count
+63/63 tests passed.
 ;;; STDOUT ;;)

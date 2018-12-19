@@ -58,9 +58,9 @@
       (f32.neg
         (f32.const 0x1p+0 (;=1;)))))
   (func (;4;) (type 2) (result i64)
-    (i64.extend_s/i32
-      (i32.trunc_s/f32
-        (f32.demote/f64
+    (i64.extend_i32_s
+      (i32.trunc_f32_s
+        (f32.demote_f64
           (f64.const 0x0p+0 (;=0;))))))
   (func (;5;) (type 1) (result f32)
     (select

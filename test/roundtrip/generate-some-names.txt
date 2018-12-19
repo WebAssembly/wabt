@@ -47,10 +47,10 @@
     i32.const 1
     call_indirect (type $t0)
     drop
-    get_local $param1
+    local.get $param1
     drop
     f32.const 0x0p+0 (;=0;)
-    set_local $l2)
+    local.set $l2)
   (table $T0 1 1 anyfunc)
   (export "baz" (func $import))
   (export "quux" (func $func0))

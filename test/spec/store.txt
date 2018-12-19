@@ -1,0 +1,60 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/store.wast
+(;; STDOUT ;;;
+out/test/spec/store.wast:58: assert_malformed passed:
+  out/test/spec/store/store.1.wat:1:30: error: unexpected token "i32.store32", expected an instr.
+  (memory 1)(func (param i32) (i32.store32 (local.get 0) (i32.const 0)))
+                               ^^^^^^^^^^^
+out/test/spec/store.wast:65: assert_malformed passed:
+  out/test/spec/store/store.2.wat:1:30: error: unexpected token "i32.store64", expected an instr.
+  (memory 1)(func (param i32) (i32.store64 (local.get 0) (i64.const 0)))
+                               ^^^^^^^^^^^
+out/test/spec/store.wast:73: assert_malformed passed:
+  out/test/spec/store/store.3.wat:1:30: error: unexpected token "i64.store64", expected an instr.
+  (memory 1)(func (param i32) (i64.store64 (local.get 0) (i64.const 0)))
+                               ^^^^^^^^^^^
+out/test/spec/store.wast:81: assert_malformed passed:
+  out/test/spec/store/store.4.wat:1:30: error: unexpected token "f32.store32", expected an instr.
+  (memory 1)(func (param i32) (f32.store32 (local.get 0) (f32.const 0)))
+                               ^^^^^^^^^^^
+out/test/spec/store.wast:88: assert_malformed passed:
+  out/test/spec/store/store.5.wat:1:30: error: unexpected token "f32.store64", expected an instr.
+  (memory 1)(func (param i32) (f32.store64 (local.get 0) (f64.const 0)))
+                               ^^^^^^^^^^^
+out/test/spec/store.wast:96: assert_malformed passed:
+  out/test/spec/store/store.6.wat:1:30: error: unexpected token "f64.store32", expected an instr.
+  (memory 1)(func (param i32) (f64.store32 (local.get 0) (f32.const 0)))
+                               ^^^^^^^^^^^
+out/test/spec/store.wast:103: assert_malformed passed:
+  out/test/spec/store/store.7.wat:1:30: error: unexpected token "f64.store64", expected an instr.
+  (memory 1)(func (param i32) (f64.store64 (local.get 0) (f64.const 0)))
+                               ^^^^^^^^^^^
+out/test/spec/store.wast:112: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got []
+  0000026: error: EndFunctionBody callback failed
+out/test/spec/store.wast:116: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i64] but got []
+  0000026: error: EndFunctionBody callback failed
+out/test/spec/store.wast:120: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f32] but got []
+  0000029: error: EndFunctionBody callback failed
+out/test/spec/store.wast:124: assert_invalid passed:
+  error: type mismatch in implicit return, expected [f64] but got []
+  000002d: error: EndFunctionBody callback failed
+out/test/spec/store.wast:128: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got []
+  0000026: error: EndFunctionBody callback failed
+out/test/spec/store.wast:132: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i32] but got []
+  0000026: error: EndFunctionBody callback failed
+out/test/spec/store.wast:136: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i64] but got []
+  0000026: error: EndFunctionBody callback failed
+out/test/spec/store.wast:140: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i64] but got []
+  0000026: error: EndFunctionBody callback failed
+out/test/spec/store.wast:144: assert_invalid passed:
+  error: type mismatch in implicit return, expected [i64] but got []
+  0000026: error: EndFunctionBody callback failed
+25/25 tests passed.
+;;; STDOUT ;;)

@@ -117,11 +117,11 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::ReturnCallIndirect:
     case TokenType::Call:
     case TokenType::CallIndirect:
-    case TokenType::GetLocal:
-    case TokenType::SetLocal:
-    case TokenType::TeeLocal:
-    case TokenType::GetGlobal:
-    case TokenType::SetGlobal:
+    case TokenType::LocalGet:
+    case TokenType::LocalSet:
+    case TokenType::LocalTee:
+    case TokenType::GlobalGet:
+    case TokenType::GlobalSet:
     case TokenType::Load:
     case TokenType::Store:
     case TokenType::Const:
@@ -144,7 +144,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::AtomicStore:
     case TokenType::AtomicRmw:
     case TokenType::AtomicRmwCmpxchg:
-    case TokenType::AtomicWake:
+    case TokenType::AtomicNotify:
     case TokenType::AtomicWait:
     case TokenType::Ternary:
     case TokenType::SimdLaneOp:
@@ -999,7 +999,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       ParseBindVarOpt(&name);
       auto import = MakeUnique<TableImport>(name);
       CHECK_RESULT(ParseLimits(&import->table.elem_limits));
-      EXPECT(Anyfunc);
+      EXPECT(Funcref);
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
       break;
@@ -1124,11 +1124,11 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto import = MakeUnique<TableImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseLimits(&import->table.elem_limits));
-    EXPECT(Anyfunc);
+    EXPECT(Funcref);
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
-  } else if (Match(TokenType::Anyfunc)) {
+  } else if (Match(TokenType::Funcref)) {
     EXPECT(Lpar);
     EXPECT(Elem);
 
@@ -1149,7 +1149,7 @@ Result WastParser::ParseTableModuleField(Module* module) {
   } else {
     auto field = MakeUnique<TableModuleField>(loc, name);
     CHECK_RESULT(ParseLimits(&field->table.elem_limits));
-    EXPECT(Anyfunc);
+    EXPECT(Funcref);
     module->AppendField(std::move(field));
   }
 
@@ -1410,29 +1410,29 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
-    case TokenType::GetLocal:
+    case TokenType::LocalGet:
       Consume();
-      CHECK_RESULT(ParsePlainInstrVar<GetLocalExpr>(loc, out_expr));
+      CHECK_RESULT(ParsePlainInstrVar<LocalGetExpr>(loc, out_expr));
       break;
 
-    case TokenType::SetLocal:
+    case TokenType::LocalSet:
       Consume();
-      CHECK_RESULT(ParsePlainInstrVar<SetLocalExpr>(loc, out_expr));
+      CHECK_RESULT(ParsePlainInstrVar<LocalSetExpr>(loc, out_expr));
       break;
 
-    case TokenType::TeeLocal:
+    case TokenType::LocalTee:
       Consume();
-      CHECK_RESULT(ParsePlainInstrVar<TeeLocalExpr>(loc, out_expr));
+      CHECK_RESULT(ParsePlainInstrVar<LocalTeeExpr>(loc, out_expr));
       break;
 
-    case TokenType::GetGlobal:
+    case TokenType::GlobalGet:
       Consume();
-      CHECK_RESULT(ParsePlainInstrVar<GetGlobalExpr>(loc, out_expr));
+      CHECK_RESULT(ParsePlainInstrVar<GlobalGetExpr>(loc, out_expr));
       break;
 
-    case TokenType::SetGlobal:
+    case TokenType::GlobalSet:
       Consume();
-      CHECK_RESULT(ParsePlainInstrVar<SetGlobalExpr>(loc, out_expr));
+      CHECK_RESULT(ParsePlainInstrVar<GlobalSetExpr>(loc, out_expr));
       break;
 
     case TokenType::Load:
@@ -1529,11 +1529,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       out_expr->reset(new RethrowExpr(loc));
       break;
 
-    case TokenType::AtomicWake: {
+    case TokenType::AtomicNotify: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
       CHECK_RESULT(
-          ParsePlainLoadStoreInstr<AtomicWakeExpr>(loc, token, out_expr));
+          ParsePlainLoadStoreInstr<AtomicNotifyExpr>(loc, token, out_expr));
       break;
     }
 

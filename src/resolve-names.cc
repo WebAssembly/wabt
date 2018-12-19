@@ -45,21 +45,21 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr *) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
-  Result OnGetGlobalExpr(GetGlobalExpr*) override;
-  Result OnGetLocalExpr(GetLocalExpr*) override;
+  Result OnGlobalGetExpr(GlobalGetExpr*) override;
+  Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
   Result BeginIfExceptExpr(IfExceptExpr*) override;
   Result EndIfExceptExpr(IfExceptExpr*) override;
+  Result OnLocalGetExpr(LocalGetExpr*) override;
+  Result OnLocalSetExpr(LocalSetExpr*) override;
+  Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
   Result OnMemoryDropExpr(MemoryDropExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
-  Result OnSetGlobalExpr(SetGlobalExpr*) override;
-  Result OnSetLocalExpr(SetLocalExpr*) override;
   Result OnTableDropExpr(TableDropExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
-  Result OnTeeLocalExpr(TeeLocalExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -289,13 +289,13 @@ Result NameResolver::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
   return Result::Ok;
 }
 
-Result NameResolver::OnGetGlobalExpr(GetGlobalExpr* expr) {
+Result NameResolver::OnGlobalGetExpr(GlobalGetExpr* expr) {
   ResolveGlobalVar(&expr->var);
   return Result::Ok;
 }
 
-Result NameResolver::OnGetLocalExpr(GetLocalExpr* expr) {
-  ResolveLocalVar(&expr->var);
+Result NameResolver::OnGlobalSetExpr(GlobalSetExpr* expr) {
+  ResolveGlobalVar(&expr->var);
   return Result::Ok;
 }
 
@@ -322,6 +322,21 @@ Result NameResolver::EndIfExceptExpr(IfExceptExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnLocalGetExpr(LocalGetExpr* expr) {
+  ResolveLocalVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnLocalSetExpr(LocalSetExpr* expr) {
+  ResolveLocalVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnLocalTeeExpr(LocalTeeExpr* expr) {
+  ResolveLocalVar(&expr->var);
+  return Result::Ok;
+}
+
 Result NameResolver::OnMemoryDropExpr(MemoryDropExpr* expr) {
   ResolveDataSegmentVar(&expr->var);
   return Result::Ok;
@@ -332,16 +347,6 @@ Result NameResolver::OnMemoryInitExpr(MemoryInitExpr* expr) {
   return Result::Ok;
 }
 
-Result NameResolver::OnSetGlobalExpr(SetGlobalExpr* expr) {
-  ResolveGlobalVar(&expr->var);
-  return Result::Ok;
-}
-
-Result NameResolver::OnSetLocalExpr(SetLocalExpr* expr) {
-  ResolveLocalVar(&expr->var);
-  return Result::Ok;
-}
-
 Result NameResolver::OnTableDropExpr(TableDropExpr* expr) {
   ResolveElemSegmentVar(&expr->var);
   return Result::Ok;
@@ -349,11 +354,6 @@ Result NameResolver::OnTableDropExpr(TableDropExpr* expr) {
 
 Result NameResolver::OnTableInitExpr(TableInitExpr* expr) {
   ResolveElemSegmentVar(&expr->var);
-  return Result::Ok;
-}
-
-Result NameResolver::OnTeeLocalExpr(TeeLocalExpr* expr) {
-  ResolveLocalVar(&expr->var);
   return Result::Ok;
 }
 

@@ -160,8 +160,8 @@ enum class ExprType {
   AtomicRmw,
   AtomicRmwCmpxchg,
   AtomicStore,
+  AtomicNotify,
   AtomicWait,
-  AtomicWake,
   Binary,
   Block,
   Br,
@@ -173,11 +173,14 @@ enum class ExprType {
   Const,
   Convert,
   Drop,
-  GetGlobal,
-  GetLocal,
+  GlobalGet,
+  GlobalSet,
   If,
   IfExcept,
   Load,
+  LocalGet,
+  LocalSet,
+  LocalTee,
   Loop,
   MemoryCopy,
   MemoryDrop,
@@ -191,15 +194,12 @@ enum class ExprType {
   ReturnCall,
   ReturnCallIndirect,
   Select,
-  SetGlobal,
-  SetLocal,
   SimdLaneOp,
   SimdShuffleOp,
   Store,
-  TableInit,
   TableCopy,
   TableDrop,
-  TeeLocal,
+  TableInit,
   Ternary,
   Throw,
   Try,
@@ -311,12 +311,12 @@ class VarExpr : public ExprMixin<TypeEnum> {
 typedef VarExpr<ExprType::Br> BrExpr;
 typedef VarExpr<ExprType::BrIf> BrIfExpr;
 typedef VarExpr<ExprType::Call> CallExpr;
-typedef VarExpr<ExprType::GetGlobal> GetGlobalExpr;
-typedef VarExpr<ExprType::GetLocal> GetLocalExpr;
+typedef VarExpr<ExprType::GlobalGet> GlobalGetExpr;
+typedef VarExpr<ExprType::GlobalSet> GlobalSetExpr;
+typedef VarExpr<ExprType::LocalGet> LocalGetExpr;
+typedef VarExpr<ExprType::LocalSet> LocalSetExpr;
+typedef VarExpr<ExprType::LocalTee> LocalTeeExpr;
 typedef VarExpr<ExprType::ReturnCall> ReturnCallExpr;
-typedef VarExpr<ExprType::SetGlobal> SetGlobalExpr;
-typedef VarExpr<ExprType::SetLocal> SetLocalExpr;
-typedef VarExpr<ExprType::TeeLocal> TeeLocalExpr;
 typedef VarExpr<ExprType::Throw> ThrowExpr;
 
 typedef VarExpr<ExprType::MemoryInit> MemoryInitExpr;
@@ -423,7 +423,7 @@ typedef LoadStoreExpr<ExprType::AtomicStore> AtomicStoreExpr;
 typedef LoadStoreExpr<ExprType::AtomicRmw> AtomicRmwExpr;
 typedef LoadStoreExpr<ExprType::AtomicRmwCmpxchg> AtomicRmwCmpxchgExpr;
 typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
-typedef LoadStoreExpr<ExprType::AtomicWake> AtomicWakeExpr;
+typedef LoadStoreExpr<ExprType::AtomicNotify> AtomicNotifyExpr;
 
 struct Exception {
   explicit Exception(string_view name) : name(name.to_string()) {}

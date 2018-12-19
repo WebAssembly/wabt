@@ -130,9 +130,9 @@ class BinaryReaderIR : public BinaryReaderNop {
   wabt::Result OnAtomicWaitExpr(Opcode opcode,
                                 uint32_t alignment_log2,
                                 Address offset) override;
-  wabt::Result OnAtomicWakeExpr(Opcode opcode,
-                                uint32_t alignment_log2,
-                                Address offset) override;
+  wabt::Result OnAtomicNotifyExpr(Opcode opcode,
+                                  uint32_t alignment_log2,
+                                  Address offset) override;
   Result OnBinaryExpr(Opcode opcode) override;
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
@@ -153,8 +153,8 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnF32ConstExpr(uint32_t value_bits) override;
   Result OnF64ConstExpr(uint64_t value_bits) override;
   Result OnV128ConstExpr(v128 value_bits) override;
-  Result OnGetGlobalExpr(Index global_index) override;
-  Result OnGetLocalExpr(Index local_index) override;
+  Result OnGlobalGetExpr(Index global_index) override;
+  Result OnGlobalSetExpr(Index global_index) override;
   Result OnI32ConstExpr(uint32_t value) override;
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Type sig_type) override;
@@ -162,6 +162,9 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLoadExpr(Opcode opcode,
                     uint32_t alignment_log2,
                     Address offset) override;
+  Result OnLocalGetExpr(Index local_index) override;
+  Result OnLocalSetExpr(Index local_index) override;
+  Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
   Result OnMemoryCopyExpr() override;
   Result OnMemoryDropExpr(Index segment_index) override;
@@ -176,13 +179,10 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnRethrowExpr() override;
   Result OnReturnExpr() override;
   Result OnSelectExpr() override;
-  Result OnSetGlobalExpr(Index global_index) override;
-  Result OnSetLocalExpr(Index local_index) override;
   Result OnStoreExpr(Opcode opcode,
                      uint32_t alignment_log2,
                      Address offset) override;
   Result OnThrowExpr(Index except_index) override;
-  Result OnTeeLocalExpr(Index local_index) override;
   Result OnTryExpr(Type sig_type) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
@@ -223,7 +223,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGetGlobalExpr(Index index, Index global_index) override;
+  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
@@ -620,11 +620,11 @@ wabt::Result BinaryReaderIR::OnAtomicWaitExpr(Opcode opcode,
       MakeUnique<AtomicWaitExpr>(opcode, 1 << alignment_log2, offset));
 }
 
-wabt::Result BinaryReaderIR::OnAtomicWakeExpr(Opcode opcode,
-                                              uint32_t alignment_log2,
-                                              Address offset) {
+wabt::Result BinaryReaderIR::OnAtomicNotifyExpr(Opcode opcode,
+                                                uint32_t alignment_log2,
+                                                Address offset) {
   return AppendExpr(
-      MakeUnique<AtomicWakeExpr>(opcode, 1 << alignment_log2, offset));
+      MakeUnique<AtomicNotifyExpr>(opcode, 1 << alignment_log2, offset));
 }
 
 Result BinaryReaderIR::OnBinaryExpr(Opcode opcode) {
@@ -773,13 +773,13 @@ Result BinaryReaderIR::OnV128ConstExpr(v128 value_bits) {
       MakeUnique<ConstExpr>(Const::V128(value_bits, GetLocation())));
 }
 
-Result BinaryReaderIR::OnGetGlobalExpr(Index global_index) {
+Result BinaryReaderIR::OnGlobalGetExpr(Index global_index) {
   return AppendExpr(
-      MakeUnique<GetGlobalExpr>(Var(global_index, GetLocation())));
+      MakeUnique<GlobalGetExpr>(Var(global_index, GetLocation())));
 }
 
-Result BinaryReaderIR::OnGetLocalExpr(Index local_index) {
-  return AppendExpr(MakeUnique<GetLocalExpr>(Var(local_index, GetLocation())));
+Result BinaryReaderIR::OnLocalGetExpr(Index local_index) {
+  return AppendExpr(MakeUnique<LocalGetExpr>(Var(local_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnI32ConstExpr(uint32_t value) {
@@ -876,13 +876,13 @@ Result BinaryReaderIR::OnSelectExpr() {
   return AppendExpr(MakeUnique<SelectExpr>());
 }
 
-Result BinaryReaderIR::OnSetGlobalExpr(Index global_index) {
+Result BinaryReaderIR::OnGlobalSetExpr(Index global_index) {
   return AppendExpr(
-      MakeUnique<SetGlobalExpr>(Var(global_index, GetLocation())));
+      MakeUnique<GlobalSetExpr>(Var(global_index, GetLocation())));
 }
 
-Result BinaryReaderIR::OnSetLocalExpr(Index local_index) {
-  return AppendExpr(MakeUnique<SetLocalExpr>(Var(local_index, GetLocation())));
+Result BinaryReaderIR::OnLocalSetExpr(Index local_index) {
+  return AppendExpr(MakeUnique<LocalSetExpr>(Var(local_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
@@ -895,8 +895,8 @@ Result BinaryReaderIR::OnThrowExpr(Index except_index) {
   return AppendExpr(MakeUnique<ThrowExpr>(Var(except_index, GetLocation())));
 }
 
-Result BinaryReaderIR::OnTeeLocalExpr(Index local_index) {
-  return AppendExpr(MakeUnique<TeeLocalExpr>(Var(local_index, GetLocation())));
+Result BinaryReaderIR::OnLocalTeeExpr(Index local_index) {
+  return AppendExpr(MakeUnique<LocalTeeExpr>(Var(local_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnTryExpr(Type sig_type) {
@@ -1114,11 +1114,11 @@ Result BinaryReaderIR::OnInitExprV128ConstExpr(Index index, v128 value) {
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnInitExprGetGlobalExpr(Index index,
+Result BinaryReaderIR::OnInitExprGlobalGetExpr(Index index,
                                                Index global_index) {
   Location loc = GetLocation();
   current_init_expr_->push_back(
-      MakeUnique<GetGlobalExpr>(Var(global_index, loc), loc));
+      MakeUnique<GlobalGetExpr>(Var(global_index, loc), loc));
   return Result::Ok;
 }
 

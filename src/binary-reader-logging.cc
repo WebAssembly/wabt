@@ -681,7 +681,7 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwCmpxchgExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicStoreExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicWaitExpr);
-DEFINE_LOAD_STORE_OPCODE(OnAtomicWakeExpr);
+DEFINE_LOAD_STORE_OPCODE(OnAtomicNotifyExpr);
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_DESC(OnCallIndirectExpr, "sig_index")
@@ -691,9 +691,12 @@ DEFINE_OPCODE(OnConvertExpr)
 DEFINE0(OnDropExpr)
 DEFINE0(OnElseExpr)
 DEFINE0(OnEndExpr)
-DEFINE_INDEX_DESC(OnGetGlobalExpr, "index")
-DEFINE_INDEX_DESC(OnGetLocalExpr, "index")
+DEFINE_INDEX_DESC(OnGlobalGetExpr, "index")
+DEFINE_INDEX_DESC(OnGlobalSetExpr, "index")
 DEFINE_LOAD_STORE_OPCODE(OnLoadExpr);
+DEFINE_INDEX_DESC(OnLocalGetExpr, "index")
+DEFINE_INDEX_DESC(OnLocalSetExpr, "index")
+DEFINE_INDEX_DESC(OnLocalTeeExpr, "index")
 DEFINE0(OnMemoryCopyExpr)
 DEFINE_INDEX(OnMemoryDropExpr)
 DEFINE0(OnMemoryFillExpr)
@@ -710,10 +713,7 @@ DEFINE_INDEX_DESC(OnReturnCallExpr, "func_index")
     DEFINE_INDEX_DESC(OnReturnCallIndirectExpr, "sig_index")
 DEFINE0(OnReturnExpr)
 DEFINE0(OnSelectExpr)
-DEFINE_INDEX_DESC(OnSetGlobalExpr, "index")
-DEFINE_INDEX_DESC(OnSetLocalExpr, "index")
 DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
-DEFINE_INDEX_DESC(OnTeeLocalExpr, "index")
 DEFINE_INDEX_DESC(OnThrowExpr, "except_index")
 DEFINE0(OnUnreachableExpr)
 DEFINE_OPCODE(OnUnaryExpr)
@@ -746,7 +746,7 @@ DEFINE_END(EndNamesSection)
 
 DEFINE_BEGIN(BeginRelocSection)
 DEFINE_END(EndRelocSection)
-DEFINE_INDEX_INDEX(OnInitExprGetGlobalExpr, "index", "global_index")
+DEFINE_INDEX_INDEX(OnInitExprGlobalGetExpr, "index", "global_index")
 
 DEFINE_BEGIN(BeginDylinkSection)
 DEFINE_INDEX(OnDylinkNeededCount)

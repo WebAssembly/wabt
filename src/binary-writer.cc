@@ -357,7 +357,7 @@ void BinaryWriter::WriteU32Leb128WithReloc(Index index,
 }
 
 Index BinaryWriter::GetLocalIndex(const Func* func, const Var& var) {
-  // func can be nullptr when using get_local/set_local/tee_local in an
+  // func can be nullptr when using local.get/local.set/local.tee in an
   // init_expr.
   if (func) {
     return func->GetLocalIndex(var);
@@ -397,8 +397,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::AtomicWait:
       WriteLoadStoreExpr<AtomicWaitExpr>(func, expr, "memory offset");
       break;
-    case ExprType::AtomicWake:
-      WriteLoadStoreExpr<AtomicWakeExpr>(func, expr, "memory offset");
+    case ExprType::AtomicNotify:
+      WriteLoadStoreExpr<AtomicNotifyExpr>(func, expr, "memory offset");
       break;
     case ExprType::Binary:
       WriteOpcode(stream_, cast<BinaryExpr>(expr)->opcode);
@@ -498,16 +498,16 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Drop:
       WriteOpcode(stream_, Opcode::Drop);
       break;
-    case ExprType::GetGlobal: {
-      Index index = module_->GetGlobalIndex(cast<GetGlobalExpr>(expr)->var);
-      WriteOpcode(stream_, Opcode::GetGlobal);
+    case ExprType::GlobalGet: {
+      Index index = module_->GetGlobalIndex(cast<GlobalGetExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::GlobalGet);
       WriteU32Leb128WithReloc(index, "global index", RelocType::GlobalIndexLEB);
       break;
     }
-    case ExprType::GetLocal: {
-      Index index = GetLocalIndex(func, cast<GetLocalExpr>(expr)->var);
-      WriteOpcode(stream_, Opcode::GetLocal);
-      WriteU32Leb128(stream_, index, "local index");
+    case ExprType::GlobalSet: {
+      Index index = module_->GetGlobalIndex(cast<GlobalSetExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::GlobalSet);
+      WriteU32Leb128WithReloc(index, "global index", RelocType::GlobalIndexLEB);
       break;
     }
     case ExprType::If: {
@@ -539,6 +539,24 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Load:
       WriteLoadStoreExpr<LoadExpr>(func, expr, "load offset");
       break;
+    case ExprType::LocalGet: {
+      Index index = GetLocalIndex(func, cast<LocalGetExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::LocalGet);
+      WriteU32Leb128(stream_, index, "local index");
+      break;
+    }
+    case ExprType::LocalSet: {
+      Index index = GetLocalIndex(func, cast<LocalSetExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::LocalSet);
+      WriteU32Leb128(stream_, index, "local index");
+      break;
+    }
+    case ExprType::LocalTee: {
+      Index index = GetLocalIndex(func, cast<LocalTeeExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::LocalTee);
+      WriteU32Leb128(stream_, index, "local index");
+      break;
+    }
     case ExprType::Loop:
       WriteOpcode(stream_, Opcode::Loop);
       WriteBlockDecl(cast<LoopExpr>(expr)->block.decl);
@@ -607,27 +625,9 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Select:
       WriteOpcode(stream_, Opcode::Select);
       break;
-    case ExprType::SetGlobal: {
-      Index index = module_->GetGlobalIndex(cast<SetGlobalExpr>(expr)->var);
-      WriteOpcode(stream_, Opcode::SetGlobal);
-      WriteU32Leb128WithReloc(index, "global index", RelocType::GlobalIndexLEB);
-      break;
-    }
-    case ExprType::SetLocal: {
-      Index index = GetLocalIndex(func, cast<SetLocalExpr>(expr)->var);
-      WriteOpcode(stream_, Opcode::SetLocal);
-      WriteU32Leb128(stream_, index, "local index");
-      break;
-    }
     case ExprType::Store:
       WriteLoadStoreExpr<StoreExpr>(func, expr, "store offset");
       break;
-    case ExprType::TeeLocal: {
-      Index index = GetLocalIndex(func, cast<TeeLocalExpr>(expr)->var);
-      WriteOpcode(stream_, Opcode::TeeLocal);
-      WriteU32Leb128(stream_, index, "local index");
-      break;
-    }
     case ExprType::Throw:
       WriteOpcode(stream_, Opcode::Throw);
       WriteU32Leb128(stream_, GetExceptVarDepth(&cast<ThrowExpr>(expr)->var),

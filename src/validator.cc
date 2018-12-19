@@ -55,8 +55,8 @@ class Validator : public ExprVisitor::Delegate {
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
   Result OnDropExpr(DropExpr*) override;
-  Result OnGetGlobalExpr(GetGlobalExpr*) override;
-  Result OnGetLocalExpr(GetLocalExpr*) override;
+  Result OnGlobalGetExpr(GlobalGetExpr*) override;
+  Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result AfterIfTrueExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
@@ -64,6 +64,9 @@ class Validator : public ExprVisitor::Delegate {
   Result AfterIfExceptTrueExpr(IfExceptExpr*) override;
   Result EndIfExceptExpr(IfExceptExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
+  Result OnLocalGetExpr(LocalGetExpr*) override;
+  Result OnLocalSetExpr(LocalSetExpr*) override;
+  Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
   Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
@@ -80,10 +83,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
-  Result OnSetGlobalExpr(SetGlobalExpr*) override;
-  Result OnSetLocalExpr(SetLocalExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
-  Result OnTeeLocalExpr(TeeLocalExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
@@ -92,7 +92,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
-  Result OnAtomicWakeExpr(AtomicWakeExpr*) override;
+  Result OnAtomicNotifyExpr(AtomicNotifyExpr*) override;
   Result OnAtomicLoadExpr(AtomicLoadExpr*) override;
   Result OnAtomicStoreExpr(AtomicStoreExpr*) override;
   Result OnAtomicRmwExpr(AtomicRmwExpr*) override;
@@ -632,15 +632,26 @@ Result Validator::OnDropExpr(DropExpr* expr) {
   return Result::Ok;
 }
 
-Result Validator::OnGetGlobalExpr(GetGlobalExpr* expr) {
+Result Validator::OnGlobalGetExpr(GlobalGetExpr* expr) {
   expr_loc_ = &expr->loc;
-  typechecker_.OnGetGlobal(GetGlobalVarTypeOrAny(&expr->var));
+  typechecker_.OnGlobalGet(GetGlobalVarTypeOrAny(&expr->var));
   return Result::Ok;
 }
 
-Result Validator::OnGetLocalExpr(GetLocalExpr* expr) {
+Result Validator::OnGlobalSetExpr(GlobalSetExpr* expr) {
   expr_loc_ = &expr->loc;
-  typechecker_.OnGetLocal(GetLocalVarTypeOrAny(&expr->var));
+  Type type = Type::Any;
+  const Global* global;
+  Index global_index;
+  if (Succeeded(CheckGlobalVar(&expr->var, &global, &global_index))) {
+    if (!global->mutable_) {
+      PrintError(&expr->loc,
+                 "can't global.set on immutable global at index %" PRIindex ".",
+                 global_index);
+    }
+    type = global->type;
+  }
+  typechecker_.OnGlobalSet(type);
   return Result::Ok;
 }
 
@@ -699,6 +710,24 @@ Result Validator::OnLoadExpr(LoadExpr* expr) {
   CheckAlign(&expr->loc, expr->align,
              get_opcode_natural_alignment(expr->opcode));
   typechecker_.OnLoad(expr->opcode);
+  return Result::Ok;
+}
+
+Result Validator::OnLocalGetExpr(LocalGetExpr* expr) {
+  expr_loc_ = &expr->loc;
+  typechecker_.OnLocalGet(GetLocalVarTypeOrAny(&expr->var));
+  return Result::Ok;
+}
+
+Result Validator::OnLocalSetExpr(LocalSetExpr* expr) {
+  expr_loc_ = &expr->loc;
+  typechecker_.OnLocalSet(GetLocalVarTypeOrAny(&expr->var));
+  return Result::Ok;
+}
+
+Result Validator::OnLocalTeeExpr(LocalTeeExpr* expr) {
+  expr_loc_ = &expr->loc;
+  typechecker_.OnLocalTee(GetLocalVarTypeOrAny(&expr->var));
   return Result::Ok;
 }
 
@@ -821,41 +850,12 @@ Result Validator::OnSelectExpr(SelectExpr* expr) {
   return Result::Ok;
 }
 
-Result Validator::OnSetGlobalExpr(SetGlobalExpr* expr) {
-  expr_loc_ = &expr->loc;
-  Type type = Type::Any;
-  const Global* global;
-  Index global_index;
-  if (Succeeded(CheckGlobalVar(&expr->var, &global, &global_index))) {
-    if (!global->mutable_) {
-      PrintError(&expr->loc,
-                 "can't set_global on immutable global at index %" PRIindex ".",
-                 global_index);
-    }
-    type = global->type;
-  }
-  typechecker_.OnSetGlobal(type);
-  return Result::Ok;
-}
-
-Result Validator::OnSetLocalExpr(SetLocalExpr* expr) {
-  expr_loc_ = &expr->loc;
-  typechecker_.OnSetLocal(GetLocalVarTypeOrAny(&expr->var));
-  return Result::Ok;
-}
-
 Result Validator::OnStoreExpr(StoreExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasMemory(&expr->loc, expr->opcode);
   CheckAlign(&expr->loc, expr->align,
              get_opcode_natural_alignment(expr->opcode));
   typechecker_.OnStore(expr->opcode);
-  return Result::Ok;
-}
-
-Result Validator::OnTeeLocalExpr(TeeLocalExpr* expr) {
-  expr_loc_ = &expr->loc;
-  typechecker_.OnTeeLocal(GetLocalVarTypeOrAny(&expr->var));
   return Result::Ok;
 }
 
@@ -911,9 +911,9 @@ Result Validator::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
   return Result::Ok;
 }
 
-Result Validator::OnAtomicWakeExpr(AtomicWakeExpr* expr) {
+Result Validator::OnAtomicNotifyExpr(AtomicNotifyExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckAtomicExpr(expr, &TypeChecker::OnAtomicWake);
+  CheckAtomicExpr(expr, &TypeChecker::OnAtomicNotify);
   return Result::Ok;
 }
 
@@ -991,7 +991,7 @@ void Validator::CheckFunc(const Location* loc, const Func* func) {
 void Validator::PrintConstExprError(const Location* loc, const char* desc) {
   PrintError(loc,
              "invalid %s, must be a constant expression; either *.const or "
-             "get_global.",
+             "global.get.",
              desc);
 }
 
@@ -1014,10 +1014,10 @@ void Validator::CheckConstInitExpr(const Location* loc,
         type = cast<ConstExpr>(expr)->const_.type;
         break;
 
-      case ExprType::GetGlobal: {
+      case ExprType::GlobalGet: {
         const Global* ref_global = nullptr;
         Index ref_global_index;
-        if (Failed(CheckGlobalVar(&cast<GetGlobalExpr>(expr)->var, &ref_global,
+        if (Failed(CheckGlobalVar(&cast<GlobalGetExpr>(expr)->var, &ref_global,
                                   &ref_global_index))) {
           return;
         }

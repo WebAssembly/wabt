@@ -165,8 +165,8 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnF32ConstExpr(uint32_t value_bits) override;
   Result OnF64ConstExpr(uint64_t value_bits) override;
   Result OnV128ConstExpr(v128 value_bits) override;
-  Result OnGetGlobalExpr(Index global_index) override;
-  Result OnGetLocalExpr(Index local_index) override;
+  Result OnGlobalGetExpr(Index global_index) override;
+  Result OnGlobalSetExpr(Index global_index) override;
   Result OnI32ConstExpr(uint32_t value) override;
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Type sig_type) override;
@@ -174,6 +174,9 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnLoadExpr(Opcode opcode,
                     uint32_t alignment_log2,
                     Address offset) override;
+  Result OnLocalGetExpr(Index local_index) override;
+  Result OnLocalSetExpr(Index local_index) override;
+  Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
   Result OnMemoryCopyExpr() override;
   Result OnMemoryDropExpr(Index segment_index) override;
@@ -190,12 +193,9 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnReturnCallIndirectExpr(Index sig_index) override;
   Result OnReturnExpr() override;
   Result OnSelectExpr() override;
-  Result OnSetGlobalExpr(Index global_index) override;
-  Result OnSetLocalExpr(Index local_index) override;
   Result OnStoreExpr(Opcode opcode,
                      uint32_t alignment_log2,
                      Address offset) override;
-  Result OnTeeLocalExpr(Index local_index) override;
   Result OnThrowExpr(Index except_index) override;
   Result OnTryExpr(Type sig_type) override;
   Result OnUnaryExpr(Opcode opcode) override;
@@ -204,9 +204,9 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnAtomicWaitExpr(Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
-  Result OnAtomicWakeExpr(Opcode opcode,
-                          uint32_t alignment_log2,
-                          Address offset) override;
+  Result OnAtomicNotifyExpr(Opcode opcode,
+                            uint32_t alignment_log2,
+                            Address offset) override;
   Result EndFunctionBody(Index index) override;
   Result EndCodeSection() override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
@@ -308,7 +308,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGetGlobalExpr(Index index, Index global_index) override;
+  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 

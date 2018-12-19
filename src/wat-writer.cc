@@ -551,8 +551,8 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnConstExpr(ConstExpr*) override;
   Result OnConvertExpr(ConvertExpr*) override;
   Result OnDropExpr(DropExpr*) override;
-  Result OnGetGlobalExpr(GetGlobalExpr*) override;
-  Result OnGetLocalExpr(GetLocalExpr*) override;
+  Result OnGlobalGetExpr(GlobalGetExpr*) override;
+  Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result AfterIfTrueExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
@@ -560,6 +560,9 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result AfterIfExceptTrueExpr(IfExceptExpr*) override;
   Result EndIfExceptExpr(IfExceptExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
+  Result OnLocalGetExpr(LocalGetExpr*) override;
+  Result OnLocalSetExpr(LocalSetExpr*) override;
+  Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
   Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
@@ -576,10 +579,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
   Result OnSelectExpr(SelectExpr*) override;
-  Result OnSetGlobalExpr(SetGlobalExpr*) override;
-  Result OnSetLocalExpr(SetLocalExpr*) override;
   Result OnStoreExpr(StoreExpr*) override;
-  Result OnTeeLocalExpr(TeeLocalExpr*) override;
   Result OnUnaryExpr(UnaryExpr*) override;
   Result OnUnreachableExpr(UnreachableExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
@@ -588,7 +588,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
-  Result OnAtomicWakeExpr(AtomicWakeExpr*) override;
+  Result OnAtomicNotifyExpr(AtomicNotifyExpr*) override;
   Result OnAtomicLoadExpr(AtomicLoadExpr*) override;
   Result OnAtomicStoreExpr(AtomicStoreExpr*) override;
   Result OnAtomicRmwExpr(AtomicRmwExpr*) override;
@@ -673,14 +673,14 @@ Result WatWriter::ExprVisitorDelegate::OnDropExpr(DropExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnGetGlobalExpr(GetGlobalExpr* expr) {
-  writer_->WritePutsSpace(Opcode::GetGlobal_Opcode.GetName());
+Result WatWriter::ExprVisitorDelegate::OnGlobalGetExpr(GlobalGetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::GlobalGet_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnGetLocalExpr(GetLocalExpr* expr) {
-  writer_->WritePutsSpace(Opcode::GetLocal_Opcode.GetName());
+Result WatWriter::ExprVisitorDelegate::OnGlobalSetExpr(GlobalSetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::GlobalSet_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
@@ -731,6 +731,24 @@ Result WatWriter::ExprVisitorDelegate::EndIfExceptExpr(IfExceptExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnLoadExpr(LoadExpr* expr) {
   writer_->WriteLoadStoreExpr<LoadExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnLocalGetExpr(LocalGetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::LocalGet_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnLocalSetExpr(LocalSetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::LocalSet_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnLocalTeeExpr(LocalTeeExpr* expr) {
+  writer_->WritePutsSpace(Opcode::LocalTee_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -824,26 +842,8 @@ Result WatWriter::ExprVisitorDelegate::OnSelectExpr(SelectExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnSetGlobalExpr(SetGlobalExpr* expr) {
-  writer_->WritePutsSpace(Opcode::SetGlobal_Opcode.GetName());
-  writer_->WriteVar(expr->var, NextChar::Newline);
-  return Result::Ok;
-}
-
-Result WatWriter::ExprVisitorDelegate::OnSetLocalExpr(SetLocalExpr* expr) {
-  writer_->WritePutsSpace(Opcode::SetLocal_Opcode.GetName());
-  writer_->WriteVar(expr->var, NextChar::Newline);
-  return Result::Ok;
-}
-
 Result WatWriter::ExprVisitorDelegate::OnStoreExpr(StoreExpr* expr) {
   writer_->WriteLoadStoreExpr<StoreExpr>(expr);
-  return Result::Ok;
-}
-
-Result WatWriter::ExprVisitorDelegate::OnTeeLocalExpr(TeeLocalExpr* expr) {
-  writer_->WritePutsSpace(Opcode::TeeLocal_Opcode.GetName());
-  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -894,8 +894,9 @@ Result WatWriter::ExprVisitorDelegate::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnAtomicWakeExpr(AtomicWakeExpr* expr) {
-  writer_->WriteLoadStoreExpr<AtomicWakeExpr>(expr);
+Result WatWriter::ExprVisitorDelegate::OnAtomicNotifyExpr(
+    AtomicNotifyExpr* expr) {
+  writer_->WriteLoadStoreExpr<AtomicNotifyExpr>(expr);
   return Result::Ok;
 }
 
@@ -994,8 +995,8 @@ Index WatWriter::GetFuncResultCount(const Var& var) {
 void WatWriter::WriteFoldedExpr(const Expr* expr) {
   WABT_TRACE_ARGS(WriteFoldedExpr, "%s", GetExprTypeName(*expr));
   switch (expr->type()) {
+    case ExprType::AtomicNotify:
     case ExprType::AtomicRmw:
-    case ExprType::AtomicWake:
     case ExprType::Binary:
     case ExprType::Compare:
       PushExpr(expr, 2, 1);
@@ -1052,9 +1053,9 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     }
 
     case ExprType::Const:
+    case ExprType::GlobalGet:
+    case ExprType::LocalGet:
     case ExprType::MemorySize:
-    case ExprType::GetGlobal:
-    case ExprType::GetLocal:
     case ExprType::Unreachable:
       PushExpr(expr, 0, 1);
       break;
@@ -1074,16 +1075,16 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
 
     case ExprType::AtomicLoad:
     case ExprType::Convert:
-    case ExprType::MemoryGrow:
     case ExprType::Load:
-    case ExprType::TeeLocal:
+    case ExprType::LocalTee:
+    case ExprType::MemoryGrow:
     case ExprType::Unary:
       PushExpr(expr, 1, 1);
       break;
 
     case ExprType::Drop:
-    case ExprType::SetGlobal:
-    case ExprType::SetLocal:
+    case ExprType::GlobalSet:
+    case ExprType::LocalSet:
       PushExpr(expr, 1, 0);
       break;
 

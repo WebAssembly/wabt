@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
-;;; STDIN_FILE: third_party/testsuite/set_local.wast
+;;; STDIN_FILE: third_party/testsuite/local_get.wast
 (;; STDOUT ;;;
 19/19 tests passed.
 ;;; STDOUT ;;)

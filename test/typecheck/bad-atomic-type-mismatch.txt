@@ -6,7 +6,7 @@
   (memory 1 1 shared)
 
   ;; Mismatch address.
-  (func f32.const 0 i32.const 0 atomic.wake drop)
+  (func f32.const 0 i32.const 0 atomic.notify drop)
   (func f32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop)
   (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop)
   (func f32.const 0 i32.atomic.load drop)
@@ -25,56 +25,56 @@
   (func f32.const 0 i64.const 0 i64.atomic.store32)
   (func f32.const 0 i32.const 0 i32.atomic.rmw.add drop)
   (func f32.const 0 i64.const 0 i64.atomic.rmw.add drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.add drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.add drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.add drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.add drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.add drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.add_u drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.add_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.add_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.add_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.add_u drop)
   (func f32.const 0 i32.const 0 i32.atomic.rmw.sub drop)
   (func f32.const 0 i64.const 0 i64.atomic.rmw.sub drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.sub drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.sub drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.sub drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.sub drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.sub drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.sub_u drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.sub_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.sub_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.sub_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.sub_u drop)
   (func f32.const 0 i32.const 0 i32.atomic.rmw.and drop)
   (func f32.const 0 i64.const 0 i64.atomic.rmw.and drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.and drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.and drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.and drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.and drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.and drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.and_u drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.and_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.and_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.and_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.and_u drop)
   (func f32.const 0 i32.const 0 i32.atomic.rmw.or drop)
   (func f32.const 0 i64.const 0 i64.atomic.rmw.or drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.or drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.or drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.or drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.or drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.or drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.or_u drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.or_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.or_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.or_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.or_u drop)
   (func f32.const 0 i32.const 0 i32.atomic.rmw.xor drop)
   (func f32.const 0 i64.const 0 i64.atomic.rmw.xor drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.xor drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.xor drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.xor drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.xor drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.xor drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.xor_u drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.xor_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.xor_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.xor_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.xor_u drop)
   (func f32.const 0 i32.const 0 i32.atomic.rmw.xchg drop)
   (func f32.const 0 i64.const 0 i64.atomic.rmw.xchg drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.xchg drop)
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.xchg drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.xchg drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.xchg drop)
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.xchg drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.xchg_u drop)
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.xchg_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.xchg_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.xchg_u drop)
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.xchg_u drop)
   (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg drop)
   (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg drop)
-  (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg drop)
-  (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg drop)
-  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg drop)
-  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg drop)
-  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg drop)
+  (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8.cmpxchg_u drop)
+  (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16.cmpxchg_u drop)
+  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8.cmpxchg_u drop)
+  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16.cmpxchg_u drop)
+  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u drop)
 
   ;; Mismatch first value operand.
-  (func i32.const 0 f32.const 0 atomic.wake drop)
+  (func i32.const 0 f32.const 0 atomic.notify drop)
   (func i32.const 0 f32.const 0 i64.const 0 i32.atomic.wait drop)
   (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.wait drop)
   (func i32.const 0 f32.const 0 i32.atomic.store)
@@ -86,67 +86,67 @@
   (func i32.const 0 f64.const 0 i64.atomic.store32)
   (func i32.const 0 f32.const 0 i32.atomic.rmw.add drop)
   (func i32.const 0 f64.const 0 i64.atomic.rmw.add drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.add drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.add drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.add drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.add drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.add drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.add_u drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.add_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.add_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.add_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.add_u drop)
   (func i32.const 0 f32.const 0 i32.atomic.rmw.sub drop)
   (func i32.const 0 f64.const 0 i64.atomic.rmw.sub drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.sub drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.sub drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.sub drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.sub drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.sub drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.sub_u drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.sub_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.sub_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.sub_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.sub_u drop)
   (func i32.const 0 f32.const 0 i32.atomic.rmw.and drop)
   (func i32.const 0 f64.const 0 i64.atomic.rmw.and drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.and drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.and drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.and drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.and drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.and drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.and_u drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.and_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.and_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.and_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.and_u drop)
   (func i32.const 0 f32.const 0 i32.atomic.rmw.or drop)
   (func i32.const 0 f64.const 0 i64.atomic.rmw.or drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.or drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.or drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.or drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.or drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.or drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.or_u drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.or_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.or_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.or_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.or_u drop)
   (func i32.const 0 f32.const 0 i32.atomic.rmw.xor drop)
   (func i32.const 0 f64.const 0 i64.atomic.rmw.xor drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.xor drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.xor drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.xor drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.xor drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.xor drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.xor_u drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.xor_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.xor_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.xor_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.xor_u drop)
   (func i32.const 0 f32.const 0 i32.atomic.rmw.xchg drop)
   (func i32.const 0 f64.const 0 i64.atomic.rmw.xchg drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.xchg drop)
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.xchg drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.xchg drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.xchg drop)
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.xchg drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.xchg_u drop)
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.xchg_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.xchg_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.xchg_u drop)
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.xchg_u drop)
   (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg drop)
   (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg drop)
-  (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg drop)
-  (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg drop)
-  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg drop)
-  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg drop)
-  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg drop)
+  (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw8.cmpxchg_u drop)
+  (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw16.cmpxchg_u drop)
+  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw8.cmpxchg_u drop)
+  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw16.cmpxchg_u drop)
+  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u drop)
 
   ;; Mismatch second value operand.
   (func i32.const 0 i32.const 0 f64.const 0 i32.atomic.wait drop)
   (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.wait drop)
   (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw.cmpxchg drop)
   (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw.cmpxchg drop)
-  (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw8_u.cmpxchg drop)
-  (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw16_u.cmpxchg drop)
-  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw8_u.cmpxchg drop)
-  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw16_u.cmpxchg drop)
-  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw32_u.cmpxchg drop)
+  (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw8.cmpxchg_u drop)
+  (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw16.cmpxchg_u drop)
+  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw8.cmpxchg_u drop)
+  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw16.cmpxchg_u drop)
+  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw32.cmpxchg_u drop)
 
   ;; Mismatch result.
-  (func (result f32) i32.const 0 i32.const 0 atomic.wake)
+  (func (result f32) i32.const 0 i32.const 0 atomic.notify)
   (func (result f32) i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait)
   (func (result f32) i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait)
   (func (result f32) i32.const 0 i32.atomic.load)
@@ -158,59 +158,59 @@
   (func (result f64) i32.const 0 i64.atomic.load32_u)
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.add)
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.add)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.add)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.add)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.add)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.add)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.add)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.add_u)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.add_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.add_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.add_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.add_u)
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.sub)
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.sub)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.sub)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.sub)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.sub)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.sub)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.sub)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.sub_u)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.sub_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.sub_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.sub_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.sub_u)
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.and)
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.and)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.and)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.and)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.and)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.and)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.and)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.and_u)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.and_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.and_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.and_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.and_u)
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.or)
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.or)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.or)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.or)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.or)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.or)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.or)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.or_u)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.or_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.or_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.or_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.or_u)
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.xor)
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.xor)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.xor)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.xor)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.xor)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.xor)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.xor)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.xor_u)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.xor_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.xor_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.xor_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.xor_u)
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.xchg)
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.xchg)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.xchg)
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.xchg)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.xchg)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.xchg)
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.xchg)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.xchg_u)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.xchg_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.xchg_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.xchg_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.xchg_u)
   (func (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg)
   (func (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg)
-  (func (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg)
-  (func (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg)
-  (func (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg)
-  (func (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg)
-  (func (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg)
+  (func (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8.cmpxchg_u)
+  (func (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16.cmpxchg_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8.cmpxchg_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16.cmpxchg_u)
+  (func (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u)
 
 )
 (;; STDERR ;;;
-out/test/typecheck/bad-atomic-type-mismatch.txt:9:33: error: type mismatch in atomic.wake, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 atomic.wake drop)
-                                ^^^^^^^^^^^
+out/test/typecheck/bad-atomic-type-mismatch.txt:9:33: error: type mismatch in atomic.notify, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 atomic.notify drop)
+                                ^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:10:45: error: type mismatch in i32.atomic.wait, expected [i32, i32, i64] but got [f32, i32, i64]
   (func f32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop)
                                             ^^^^^^^^^^^^^^^
@@ -265,20 +265,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:26:33: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:27:33: error: type mismatch in i64.atomic.rmw.add, expected [i32, i64] but got [f32, i64]
   (func f32.const 0 i64.const 0 i64.atomic.rmw.add drop)
                                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:28:33: error: type mismatch in i32.atomic.rmw8_u.add, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:28:33: error: type mismatch in i32.atomic.rmw8.add_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:29:33: error: type mismatch in i32.atomic.rmw16_u.add, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:29:33: error: type mismatch in i32.atomic.rmw16.add_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:30:33: error: type mismatch in i64.atomic.rmw8_u.add, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:30:33: error: type mismatch in i64.atomic.rmw8.add_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:31:33: error: type mismatch in i64.atomic.rmw16_u.add, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:31:33: error: type mismatch in i64.atomic.rmw16.add_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:32:33: error: type mismatch in i64.atomic.rmw32_u.add, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:32:33: error: type mismatch in i64.atomic.rmw32.add_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:33:33: error: type mismatch in i32.atomic.rmw.sub, expected [i32, i32] but got [f32, i32]
   (func f32.const 0 i32.const 0 i32.atomic.rmw.sub drop)
@@ -286,20 +286,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:33:33: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:34:33: error: type mismatch in i64.atomic.rmw.sub, expected [i32, i64] but got [f32, i64]
   (func f32.const 0 i64.const 0 i64.atomic.rmw.sub drop)
                                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:35:33: error: type mismatch in i32.atomic.rmw8_u.sub, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:35:33: error: type mismatch in i32.atomic.rmw8.sub_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:36:33: error: type mismatch in i32.atomic.rmw16_u.sub, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:36:33: error: type mismatch in i32.atomic.rmw16.sub_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:37:33: error: type mismatch in i64.atomic.rmw8_u.sub, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:37:33: error: type mismatch in i64.atomic.rmw8.sub_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:38:33: error: type mismatch in i64.atomic.rmw16_u.sub, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:38:33: error: type mismatch in i64.atomic.rmw16.sub_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:39:33: error: type mismatch in i64.atomic.rmw32_u.sub, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:39:33: error: type mismatch in i64.atomic.rmw32.sub_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:40:33: error: type mismatch in i32.atomic.rmw.and, expected [i32, i32] but got [f32, i32]
   (func f32.const 0 i32.const 0 i32.atomic.rmw.and drop)
@@ -307,20 +307,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:40:33: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:41:33: error: type mismatch in i64.atomic.rmw.and, expected [i32, i64] but got [f32, i64]
   (func f32.const 0 i64.const 0 i64.atomic.rmw.and drop)
                                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:42:33: error: type mismatch in i32.atomic.rmw8_u.and, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:42:33: error: type mismatch in i32.atomic.rmw8.and_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:43:33: error: type mismatch in i32.atomic.rmw16_u.and, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:43:33: error: type mismatch in i32.atomic.rmw16.and_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:44:33: error: type mismatch in i64.atomic.rmw8_u.and, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:44:33: error: type mismatch in i64.atomic.rmw8.and_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:45:33: error: type mismatch in i64.atomic.rmw16_u.and, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:45:33: error: type mismatch in i64.atomic.rmw16.and_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:46:33: error: type mismatch in i64.atomic.rmw32_u.and, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:46:33: error: type mismatch in i64.atomic.rmw32.and_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:47:33: error: type mismatch in i32.atomic.rmw.or, expected [i32, i32] but got [f32, i32]
   (func f32.const 0 i32.const 0 i32.atomic.rmw.or drop)
@@ -328,20 +328,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:47:33: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:48:33: error: type mismatch in i64.atomic.rmw.or, expected [i32, i64] but got [f32, i64]
   (func f32.const 0 i64.const 0 i64.atomic.rmw.or drop)
                                 ^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:49:33: error: type mismatch in i32.atomic.rmw8_u.or, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:49:33: error: type mismatch in i32.atomic.rmw8.or_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:50:33: error: type mismatch in i32.atomic.rmw16_u.or, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:50:33: error: type mismatch in i32.atomic.rmw16.or_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:51:33: error: type mismatch in i64.atomic.rmw8_u.or, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:51:33: error: type mismatch in i64.atomic.rmw8.or_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:52:33: error: type mismatch in i64.atomic.rmw16_u.or, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:52:33: error: type mismatch in i64.atomic.rmw16.or_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:53:33: error: type mismatch in i64.atomic.rmw32_u.or, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:53:33: error: type mismatch in i64.atomic.rmw32.or_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:54:33: error: type mismatch in i32.atomic.rmw.xor, expected [i32, i32] but got [f32, i32]
   (func f32.const 0 i32.const 0 i32.atomic.rmw.xor drop)
@@ -349,20 +349,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:54:33: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:55:33: error: type mismatch in i64.atomic.rmw.xor, expected [i32, i64] but got [f32, i64]
   (func f32.const 0 i64.const 0 i64.atomic.rmw.xor drop)
                                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:56:33: error: type mismatch in i32.atomic.rmw8_u.xor, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:56:33: error: type mismatch in i32.atomic.rmw8.xor_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:57:33: error: type mismatch in i32.atomic.rmw16_u.xor, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:57:33: error: type mismatch in i32.atomic.rmw16.xor_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:58:33: error: type mismatch in i64.atomic.rmw8_u.xor, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:58:33: error: type mismatch in i64.atomic.rmw8.xor_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:59:33: error: type mismatch in i64.atomic.rmw16_u.xor, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:59:33: error: type mismatch in i64.atomic.rmw16.xor_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:60:33: error: type mismatch in i64.atomic.rmw32_u.xor, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:60:33: error: type mismatch in i64.atomic.rmw32.xor_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:61:33: error: type mismatch in i32.atomic.rmw.xchg, expected [i32, i32] but got [f32, i32]
   (func f32.const 0 i32.const 0 i32.atomic.rmw.xchg drop)
@@ -370,20 +370,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:61:33: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:62:33: error: type mismatch in i64.atomic.rmw.xchg, expected [i32, i64] but got [f32, i64]
   (func f32.const 0 i64.const 0 i64.atomic.rmw.xchg drop)
                                 ^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:63:33: error: type mismatch in i32.atomic.rmw8_u.xchg, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw8_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:63:33: error: type mismatch in i32.atomic.rmw8.xchg_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw8.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:64:33: error: type mismatch in i32.atomic.rmw16_u.xchg, expected [i32, i32] but got [f32, i32]
-  (func f32.const 0 i32.const 0 i32.atomic.rmw16_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:64:33: error: type mismatch in i32.atomic.rmw16.xchg_u, expected [i32, i32] but got [f32, i32]
+  (func f32.const 0 i32.const 0 i32.atomic.rmw16.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:65:33: error: type mismatch in i64.atomic.rmw8_u.xchg, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw8_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:65:33: error: type mismatch in i64.atomic.rmw8.xchg_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw8.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:66:33: error: type mismatch in i64.atomic.rmw16_u.xchg, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw16_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:66:33: error: type mismatch in i64.atomic.rmw16.xchg_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw16.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:67:33: error: type mismatch in i64.atomic.rmw32_u.xchg, expected [i32, i64] but got [f32, i64]
-  (func f32.const 0 i64.const 0 i64.atomic.rmw32_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:67:33: error: type mismatch in i64.atomic.rmw32.xchg_u, expected [i32, i64] but got [f32, i64]
+  (func f32.const 0 i64.const 0 i64.atomic.rmw32.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:68:45: error: type mismatch in i32.atomic.rmw.cmpxchg, expected [i32, i32, i32] but got [f32, i32, i32]
   (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg drop)
@@ -391,24 +391,24 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:68:45: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:69:45: error: type mismatch in i64.atomic.rmw.cmpxchg, expected [i32, i64, i64] but got [f32, i64, i64]
   (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:70:45: error: type mismatch in i32.atomic.rmw8_u.cmpxchg, expected [i32, i32, i32] but got [f32, i32, i32]
-  (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:70:45: error: type mismatch in i32.atomic.rmw8.cmpxchg_u, expected [i32, i32, i32] but got [f32, i32, i32]
+  (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:71:45: error: type mismatch in i32.atomic.rmw16_u.cmpxchg, expected [i32, i32, i32] but got [f32, i32, i32]
-  (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:71:45: error: type mismatch in i32.atomic.rmw16.cmpxchg_u, expected [i32, i32, i32] but got [f32, i32, i32]
+  (func f32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:72:45: error: type mismatch in i64.atomic.rmw8_u.cmpxchg, expected [i32, i64, i64] but got [f32, i64, i64]
-  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:72:45: error: type mismatch in i64.atomic.rmw8.cmpxchg_u, expected [i32, i64, i64] but got [f32, i64, i64]
+  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:73:45: error: type mismatch in i64.atomic.rmw16_u.cmpxchg, expected [i32, i64, i64] but got [f32, i64, i64]
-  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:73:45: error: type mismatch in i64.atomic.rmw16.cmpxchg_u, expected [i32, i64, i64] but got [f32, i64, i64]
+  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:74:45: error: type mismatch in i64.atomic.rmw32_u.cmpxchg, expected [i32, i64, i64] but got [f32, i64, i64]
-  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:74:45: error: type mismatch in i64.atomic.rmw32.cmpxchg_u, expected [i32, i64, i64] but got [f32, i64, i64]
+  (func f32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:77:33: error: type mismatch in atomic.wake, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 atomic.wake drop)
-                                ^^^^^^^^^^^
+out/test/typecheck/bad-atomic-type-mismatch.txt:77:33: error: type mismatch in atomic.notify, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 atomic.notify drop)
+                                ^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:78:45: error: type mismatch in i32.atomic.wait, expected [i32, i32, i64] but got [i32, f32, i64]
   (func i32.const 0 f32.const 0 i64.const 0 i32.atomic.wait drop)
                                             ^^^^^^^^^^^^^^^
@@ -442,20 +442,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:87:33: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:88:33: error: type mismatch in i64.atomic.rmw.add, expected [i32, i64] but got [i32, f64]
   (func i32.const 0 f64.const 0 i64.atomic.rmw.add drop)
                                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:89:33: error: type mismatch in i32.atomic.rmw8_u.add, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:89:33: error: type mismatch in i32.atomic.rmw8.add_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:90:33: error: type mismatch in i32.atomic.rmw16_u.add, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:90:33: error: type mismatch in i32.atomic.rmw16.add_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:91:33: error: type mismatch in i64.atomic.rmw8_u.add, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:91:33: error: type mismatch in i64.atomic.rmw8.add_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:92:33: error: type mismatch in i64.atomic.rmw16_u.add, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:92:33: error: type mismatch in i64.atomic.rmw16.add_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:93:33: error: type mismatch in i64.atomic.rmw32_u.add, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.add drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:93:33: error: type mismatch in i64.atomic.rmw32.add_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.add_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:94:33: error: type mismatch in i32.atomic.rmw.sub, expected [i32, i32] but got [i32, f32]
   (func i32.const 0 f32.const 0 i32.atomic.rmw.sub drop)
@@ -463,20 +463,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:94:33: error: type mismatch in i
 out/test/typecheck/bad-atomic-type-mismatch.txt:95:33: error: type mismatch in i64.atomic.rmw.sub, expected [i32, i64] but got [i32, f64]
   (func i32.const 0 f64.const 0 i64.atomic.rmw.sub drop)
                                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:96:33: error: type mismatch in i32.atomic.rmw8_u.sub, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:96:33: error: type mismatch in i32.atomic.rmw8.sub_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:97:33: error: type mismatch in i32.atomic.rmw16_u.sub, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:97:33: error: type mismatch in i32.atomic.rmw16.sub_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:98:33: error: type mismatch in i64.atomic.rmw8_u.sub, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:98:33: error: type mismatch in i64.atomic.rmw8.sub_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:99:33: error: type mismatch in i64.atomic.rmw16_u.sub, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:99:33: error: type mismatch in i64.atomic.rmw16.sub_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:100:33: error: type mismatch in i64.atomic.rmw32_u.sub, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.sub drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:100:33: error: type mismatch in i64.atomic.rmw32.sub_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.sub_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:101:33: error: type mismatch in i32.atomic.rmw.and, expected [i32, i32] but got [i32, f32]
   (func i32.const 0 f32.const 0 i32.atomic.rmw.and drop)
@@ -484,20 +484,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:101:33: error: type mismatch in 
 out/test/typecheck/bad-atomic-type-mismatch.txt:102:33: error: type mismatch in i64.atomic.rmw.and, expected [i32, i64] but got [i32, f64]
   (func i32.const 0 f64.const 0 i64.atomic.rmw.and drop)
                                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:103:33: error: type mismatch in i32.atomic.rmw8_u.and, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:103:33: error: type mismatch in i32.atomic.rmw8.and_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:104:33: error: type mismatch in i32.atomic.rmw16_u.and, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:104:33: error: type mismatch in i32.atomic.rmw16.and_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:105:33: error: type mismatch in i64.atomic.rmw8_u.and, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:105:33: error: type mismatch in i64.atomic.rmw8.and_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:106:33: error: type mismatch in i64.atomic.rmw16_u.and, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:106:33: error: type mismatch in i64.atomic.rmw16.and_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:107:33: error: type mismatch in i64.atomic.rmw32_u.and, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.and drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:107:33: error: type mismatch in i64.atomic.rmw32.and_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.and_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:108:33: error: type mismatch in i32.atomic.rmw.or, expected [i32, i32] but got [i32, f32]
   (func i32.const 0 f32.const 0 i32.atomic.rmw.or drop)
@@ -505,20 +505,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:108:33: error: type mismatch in 
 out/test/typecheck/bad-atomic-type-mismatch.txt:109:33: error: type mismatch in i64.atomic.rmw.or, expected [i32, i64] but got [i32, f64]
   (func i32.const 0 f64.const 0 i64.atomic.rmw.or drop)
                                 ^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:110:33: error: type mismatch in i32.atomic.rmw8_u.or, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:110:33: error: type mismatch in i32.atomic.rmw8.or_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:111:33: error: type mismatch in i32.atomic.rmw16_u.or, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:111:33: error: type mismatch in i32.atomic.rmw16.or_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:112:33: error: type mismatch in i64.atomic.rmw8_u.or, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:112:33: error: type mismatch in i64.atomic.rmw8.or_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:113:33: error: type mismatch in i64.atomic.rmw16_u.or, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:113:33: error: type mismatch in i64.atomic.rmw16.or_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:114:33: error: type mismatch in i64.atomic.rmw32_u.or, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.or drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:114:33: error: type mismatch in i64.atomic.rmw32.or_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.or_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:115:33: error: type mismatch in i32.atomic.rmw.xor, expected [i32, i32] but got [i32, f32]
   (func i32.const 0 f32.const 0 i32.atomic.rmw.xor drop)
@@ -526,20 +526,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:115:33: error: type mismatch in 
 out/test/typecheck/bad-atomic-type-mismatch.txt:116:33: error: type mismatch in i64.atomic.rmw.xor, expected [i32, i64] but got [i32, f64]
   (func i32.const 0 f64.const 0 i64.atomic.rmw.xor drop)
                                 ^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:117:33: error: type mismatch in i32.atomic.rmw8_u.xor, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:117:33: error: type mismatch in i32.atomic.rmw8.xor_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:118:33: error: type mismatch in i32.atomic.rmw16_u.xor, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:118:33: error: type mismatch in i32.atomic.rmw16.xor_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:119:33: error: type mismatch in i64.atomic.rmw8_u.xor, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:119:33: error: type mismatch in i64.atomic.rmw8.xor_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:120:33: error: type mismatch in i64.atomic.rmw16_u.xor, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:120:33: error: type mismatch in i64.atomic.rmw16.xor_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:121:33: error: type mismatch in i64.atomic.rmw32_u.xor, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.xor drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:121:33: error: type mismatch in i64.atomic.rmw32.xor_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.xor_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:122:33: error: type mismatch in i32.atomic.rmw.xchg, expected [i32, i32] but got [i32, f32]
   (func i32.const 0 f32.const 0 i32.atomic.rmw.xchg drop)
@@ -547,20 +547,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:122:33: error: type mismatch in 
 out/test/typecheck/bad-atomic-type-mismatch.txt:123:33: error: type mismatch in i64.atomic.rmw.xchg, expected [i32, i64] but got [i32, f64]
   (func i32.const 0 f64.const 0 i64.atomic.rmw.xchg drop)
                                 ^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:124:33: error: type mismatch in i32.atomic.rmw8_u.xchg, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw8_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:124:33: error: type mismatch in i32.atomic.rmw8.xchg_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw8.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:125:33: error: type mismatch in i32.atomic.rmw16_u.xchg, expected [i32, i32] but got [i32, f32]
-  (func i32.const 0 f32.const 0 i32.atomic.rmw16_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:125:33: error: type mismatch in i32.atomic.rmw16.xchg_u, expected [i32, i32] but got [i32, f32]
+  (func i32.const 0 f32.const 0 i32.atomic.rmw16.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:126:33: error: type mismatch in i64.atomic.rmw8_u.xchg, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw8_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:126:33: error: type mismatch in i64.atomic.rmw8.xchg_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw8.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:127:33: error: type mismatch in i64.atomic.rmw16_u.xchg, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw16_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:127:33: error: type mismatch in i64.atomic.rmw16.xchg_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw16.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:128:33: error: type mismatch in i64.atomic.rmw32_u.xchg, expected [i32, i64] but got [i32, f64]
-  (func i32.const 0 f64.const 0 i64.atomic.rmw32_u.xchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:128:33: error: type mismatch in i64.atomic.rmw32.xchg_u, expected [i32, i64] but got [i32, f64]
+  (func i32.const 0 f64.const 0 i64.atomic.rmw32.xchg_u drop)
                                 ^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:129:45: error: type mismatch in i32.atomic.rmw.cmpxchg, expected [i32, i32, i32] but got [i32, f32, i32]
   (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg drop)
@@ -568,20 +568,20 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:129:45: error: type mismatch in 
 out/test/typecheck/bad-atomic-type-mismatch.txt:130:45: error: type mismatch in i64.atomic.rmw.cmpxchg, expected [i32, i64, i64] but got [i32, f64, i64]
   (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:131:45: error: type mismatch in i32.atomic.rmw8_u.cmpxchg, expected [i32, i32, i32] but got [i32, f32, i32]
-  (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:131:45: error: type mismatch in i32.atomic.rmw8.cmpxchg_u, expected [i32, i32, i32] but got [i32, f32, i32]
+  (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw8.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:132:45: error: type mismatch in i32.atomic.rmw16_u.cmpxchg, expected [i32, i32, i32] but got [i32, f32, i32]
-  (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:132:45: error: type mismatch in i32.atomic.rmw16.cmpxchg_u, expected [i32, i32, i32] but got [i32, f32, i32]
+  (func i32.const 0 f32.const 0 i32.const 0 i32.atomic.rmw16.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:133:45: error: type mismatch in i64.atomic.rmw8_u.cmpxchg, expected [i32, i64, i64] but got [i32, f64, i64]
-  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:133:45: error: type mismatch in i64.atomic.rmw8.cmpxchg_u, expected [i32, i64, i64] but got [i32, f64, i64]
+  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw8.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:134:45: error: type mismatch in i64.atomic.rmw16_u.cmpxchg, expected [i32, i64, i64] but got [i32, f64, i64]
-  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:134:45: error: type mismatch in i64.atomic.rmw16.cmpxchg_u, expected [i32, i64, i64] but got [i32, f64, i64]
+  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw16.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:135:45: error: type mismatch in i64.atomic.rmw32_u.cmpxchg, expected [i32, i64, i64] but got [i32, f64, i64]
-  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:135:45: error: type mismatch in i64.atomic.rmw32.cmpxchg_u, expected [i32, i64, i64] but got [i32, f64, i64]
+  (func i32.const 0 f64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:138:45: error: type mismatch in i32.atomic.wait, expected [i32, i32, i64] but got [i32, i32, f64]
   (func i32.const 0 i32.const 0 f64.const 0 i32.atomic.wait drop)
@@ -595,24 +595,24 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:140:45: error: type mismatch in 
 out/test/typecheck/bad-atomic-type-mismatch.txt:141:45: error: type mismatch in i64.atomic.rmw.cmpxchg, expected [i32, i64, i64] but got [i32, i64, f64]
   (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw.cmpxchg drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:142:45: error: type mismatch in i32.atomic.rmw8_u.cmpxchg, expected [i32, i32, i32] but got [i32, i32, f32]
-  (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw8_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:142:45: error: type mismatch in i32.atomic.rmw8.cmpxchg_u, expected [i32, i32, i32] but got [i32, i32, f32]
+  (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw8.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:143:45: error: type mismatch in i32.atomic.rmw16_u.cmpxchg, expected [i32, i32, i32] but got [i32, i32, f32]
-  (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw16_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:143:45: error: type mismatch in i32.atomic.rmw16.cmpxchg_u, expected [i32, i32, i32] but got [i32, i32, f32]
+  (func i32.const 0 i32.const 0 f32.const 0 i32.atomic.rmw16.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:144:45: error: type mismatch in i64.atomic.rmw8_u.cmpxchg, expected [i32, i64, i64] but got [i32, i64, f64]
-  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw8_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:144:45: error: type mismatch in i64.atomic.rmw8.cmpxchg_u, expected [i32, i64, i64] but got [i32, i64, f64]
+  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw8.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:145:45: error: type mismatch in i64.atomic.rmw16_u.cmpxchg, expected [i32, i64, i64] but got [i32, i64, f64]
-  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw16_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:145:45: error: type mismatch in i64.atomic.rmw16.cmpxchg_u, expected [i32, i64, i64] but got [i32, i64, f64]
+  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw16.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/typecheck/bad-atomic-type-mismatch.txt:146:45: error: type mismatch in i64.atomic.rmw32_u.cmpxchg, expected [i32, i64, i64] but got [i32, i64, f64]
-  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw32_u.cmpxchg drop)
+out/test/typecheck/bad-atomic-type-mismatch.txt:146:45: error: type mismatch in i64.atomic.rmw32.cmpxchg_u, expected [i32, i64, i64] but got [i32, i64, f64]
+  (func i32.const 0 i64.const 0 f64.const 0 i64.atomic.rmw32.cmpxchg_u drop)
                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:149:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 atomic.wake)
-                                             ^^^^^^^^^^^
+  (func (result f32) i32.const 0 i32.const 0 atomic.notify)
+                                             ^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:150:58: error: type mismatch in implicit return, expected [f32] but got [i32]
   (func (result f32) i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait)
                                                          ^^^^^^^^^^^^^^^
@@ -647,19 +647,19 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:160:46: error: type mismatch in 
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.add)
                                              ^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:161:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.add)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.add_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:162:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.add)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.add_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:163:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.add)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.add_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:164:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.add)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.add_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:165:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.add)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.add_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:166:46: error: type mismatch in implicit return, expected [f32] but got [i32]
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.sub)
@@ -668,19 +668,19 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:167:46: error: type mismatch in 
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.sub)
                                              ^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:168:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.sub)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.sub_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:169:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.sub)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.sub_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:170:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.sub)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.sub_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:171:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.sub)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.sub_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:172:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.sub)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.sub_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:173:46: error: type mismatch in implicit return, expected [f32] but got [i32]
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.and)
@@ -689,19 +689,19 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:174:46: error: type mismatch in 
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.and)
                                              ^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:175:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.and)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.and_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:176:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.and)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.and_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:177:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.and)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.and_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:178:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.and)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.and_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:179:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.and)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.and_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:180:46: error: type mismatch in implicit return, expected [f32] but got [i32]
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.or)
@@ -710,19 +710,19 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:181:46: error: type mismatch in 
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.or)
                                              ^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:182:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.or)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.or_u)
                                              ^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:183:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.or)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.or_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:184:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.or)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.or_u)
                                              ^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:185:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.or)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.or_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:186:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.or)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.or_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:187:46: error: type mismatch in implicit return, expected [f32] but got [i32]
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.xor)
@@ -731,19 +731,19 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:188:46: error: type mismatch in 
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.xor)
                                              ^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:189:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.xor)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.xor_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:190:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.xor)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.xor_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:191:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.xor)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.xor_u)
                                              ^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:192:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.xor)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.xor_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:193:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.xor)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.xor_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:194:46: error: type mismatch in implicit return, expected [f32] but got [i32]
   (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw.xchg)
@@ -752,19 +752,19 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:195:46: error: type mismatch in 
   (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw.xchg)
                                              ^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:196:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8_u.xchg)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw8.xchg_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:197:46: error: type mismatch in implicit return, expected [f32] but got [i32]
-  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16_u.xchg)
+  (func (result f32) i32.const 0 i32.const 0 i32.atomic.rmw16.xchg_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:198:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8_u.xchg)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw8.xchg_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:199:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16_u.xchg)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw16.xchg_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:200:46: error: type mismatch in implicit return, expected [f64] but got [i64]
-  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32_u.xchg)
+  (func (result f64) i32.const 0 i64.const 0 i64.atomic.rmw32.xchg_u)
                                              ^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:201:58: error: type mismatch in implicit return, expected [f32] but got [i32]
   (func (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg)
@@ -773,18 +773,18 @@ out/test/typecheck/bad-atomic-type-mismatch.txt:202:58: error: type mismatch in 
   (func (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg)
                                                          ^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:203:58: error: type mismatch in implicit return, expected [f32] but got [i32]
-...c (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg)
+...c (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8.cmpxchg_u)
                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:204:58: error: type mismatch in implicit return, expected [f32] but got [i32]
-... (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg)
+... (result f32) i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16.cmpxchg_u)
                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:205:58: error: type mismatch in implicit return, expected [f64] but got [i64]
-...c (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg)
+...c (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8.cmpxchg_u)
                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:206:58: error: type mismatch in implicit return, expected [f64] but got [i64]
-... (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg)
+... (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16.cmpxchg_u)
                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 out/test/typecheck/bad-atomic-type-mismatch.txt:207:58: error: type mismatch in implicit return, expected [f64] but got [i64]
-... (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg)
+... (result f64) i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u)
                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

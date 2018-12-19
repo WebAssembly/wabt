@@ -517,8 +517,8 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
   const char* name;
   if (current_opcode == Opcode::Call && (name = GetFunctionName(value))) {
     LogOpcode(immediate_len, "%d <%s>", value, name);
-  } else if ((current_opcode == Opcode::GetGlobal ||
-              current_opcode == Opcode::SetGlobal) &&
+  } else if ((current_opcode == Opcode::GlobalGet ||
+              current_opcode == Opcode::GlobalSet) &&
              (name = GetGlobalName(value))) {
     LogOpcode(immediate_len, "%d <%s>", value, name);
   } else {
@@ -761,7 +761,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  Result OnInitExprGetGlobalExpr(Index index, Index global_index) override;
+  Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
@@ -1258,7 +1258,7 @@ Result BinaryReaderObjdump::OnInitExprV128ConstExpr(Index index, v128 value) {
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnInitExprGetGlobalExpr(Index index,
+Result BinaryReaderObjdump::OnInitExprGlobalGetExpr(Index index,
                                                     Index global_index) {
   InitExpr expr;
   expr.type = InitExprType::Global;
