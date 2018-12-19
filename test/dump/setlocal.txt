@@ -64,35 +64,35 @@
 0000024: 7e                                        ; i64
 0000025: 44                                        ; f64.const
 0000026: 0000 0000 0000 0000                       ; f64 literal
-000002e: 21                                        ; set_local
+000002e: 21                                        ; local.set
 000002f: 00                                        ; local index
 0000030: 43                                        ; f32.const
 0000031: 0000 0000                                 ; f32 literal
-0000035: 21                                        ; set_local
+0000035: 21                                        ; local.set
 0000036: 01                                        ; local index
 0000037: 42                                        ; i64.const
 0000038: 00                                        ; i64 literal
-0000039: 21                                        ; set_local
+0000039: 21                                        ; local.set
 000003a: 02                                        ; local index
 000003b: 41                                        ; i32.const
 000003c: 00                                        ; i32 literal
-000003d: 21                                        ; set_local
+000003d: 21                                        ; local.set
 000003e: 03                                        ; local index
 000003f: 41                                        ; i32.const
 0000040: 00                                        ; i32 literal
-0000041: 21                                        ; set_local
+0000041: 21                                        ; local.set
 0000042: 04                                        ; local index
 0000043: 43                                        ; f32.const
 0000044: 0000 0000                                 ; f32 literal
-0000048: 21                                        ; set_local
+0000048: 21                                        ; local.set
 0000049: 05                                        ; local index
 000004a: 44                                        ; f64.const
 000004b: 0000 0000 0000 0000                       ; f64 literal
-0000053: 21                                        ; set_local
+0000053: 21                                        ; local.set
 0000054: 06                                        ; local index
 0000055: 42                                        ; i64.const
 0000056: 00                                        ; i64 literal
-0000057: 21                                        ; set_local
+0000057: 21                                        ; local.set
 0000058: 07                                        ; local index
 0000059: 0b                                        ; end
 0000015: 44                                        ; FIXUP func body size
@@ -111,20 +111,20 @@ Code Disassembly:
  000021: 01 7c                      | local[6] type=f64
  000023: 01 7e                      | local[7] type=i64
  000025: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 00002e: 21 00                      | set_local 0
+ 00002e: 21 00                      | local.set 0
  000030: 43 00 00 00 00             | f32.const 0x0p+0
- 000035: 21 01                      | set_local 1
+ 000035: 21 01                      | local.set 1
  000037: 42 00                      | i64.const 0
- 000039: 21 02                      | set_local 2
+ 000039: 21 02                      | local.set 2
  00003b: 41 00                      | i32.const 0
- 00003d: 21 03                      | set_local 3
+ 00003d: 21 03                      | local.set 3
  00003f: 41 00                      | i32.const 0
- 000041: 21 04                      | set_local 4
+ 000041: 21 04                      | local.set 4
  000043: 43 00 00 00 00             | f32.const 0x0p+0
- 000048: 21 05                      | set_local 5
+ 000048: 21 05                      | local.set 5
  00004a: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 000053: 21 06                      | set_local 6
+ 000053: 21 06                      | local.set 6
  000055: 42 00                      | i64.const 0
- 000057: 21 07                      | set_local 7
+ 000057: 21 07                      | local.set 7
  000059: 0b                         | end
 ;;; STDOUT ;;)

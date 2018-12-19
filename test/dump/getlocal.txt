@@ -58,28 +58,28 @@
 0000022: 7c                                        ; f64
 0000023: 01                                        ; local type count
 0000024: 7e                                        ; i64
-0000025: 20                                        ; get_local
+0000025: 20                                        ; local.get
 0000026: 00                                        ; local index
 0000027: 1a                                        ; drop
-0000028: 20                                        ; get_local
+0000028: 20                                        ; local.get
 0000029: 01                                        ; local index
 000002a: 1a                                        ; drop
-000002b: 20                                        ; get_local
+000002b: 20                                        ; local.get
 000002c: 02                                        ; local index
 000002d: 1a                                        ; drop
-000002e: 20                                        ; get_local
+000002e: 20                                        ; local.get
 000002f: 03                                        ; local index
 0000030: 1a                                        ; drop
-0000031: 20                                        ; get_local
+0000031: 20                                        ; local.get
 0000032: 04                                        ; local index
 0000033: 1a                                        ; drop
-0000034: 20                                        ; get_local
+0000034: 20                                        ; local.get
 0000035: 05                                        ; local index
 0000036: 1a                                        ; drop
-0000037: 20                                        ; get_local
+0000037: 20                                        ; local.get
 0000038: 06                                        ; local index
 0000039: 1a                                        ; drop
-000003a: 20                                        ; get_local
+000003a: 20                                        ; local.get
 000003b: 07                                        ; local index
 000003c: 1a                                        ; drop
 000003d: 0b                                        ; end
@@ -98,21 +98,21 @@ Code Disassembly:
  00001f: 01 7d                      | local[5] type=f32
  000021: 01 7c                      | local[6] type=f64
  000023: 01 7e                      | local[7] type=i64
- 000025: 20 00                      | get_local 0
+ 000025: 20 00                      | local.get 0
  000027: 1a                         | drop
- 000028: 20 01                      | get_local 1
+ 000028: 20 01                      | local.get 1
  00002a: 1a                         | drop
- 00002b: 20 02                      | get_local 2
+ 00002b: 20 02                      | local.get 2
  00002d: 1a                         | drop
- 00002e: 20 03                      | get_local 3
+ 00002e: 20 03                      | local.get 3
  000030: 1a                         | drop
- 000031: 20 04                      | get_local 4
+ 000031: 20 04                      | local.get 4
  000033: 1a                         | drop
- 000034: 20 05                      | get_local 5
+ 000034: 20 05                      | local.get 5
  000036: 1a                         | drop
- 000037: 20 06                      | get_local 6
+ 000037: 20 06                      | local.get 6
  000039: 1a                         | drop
- 00003a: 20 07                      | get_local 7
+ 00003a: 20 07                      | local.get 7
  00003c: 1a                         | drop
  00003d: 0b                         | end
 ;;; STDOUT ;;)

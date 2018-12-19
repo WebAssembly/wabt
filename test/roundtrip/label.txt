@@ -16,7 +16,7 @@
   (func (;0;) (type 0) (param i32) (result f32)
     block (result f32)  ;; label = @1
       f32.const 0x1p+0 (;=1;)
-      get_local 0
+      local.get 0
       i32.eqz
       br_if 0 (;@1;)
       drop

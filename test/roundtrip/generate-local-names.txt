@@ -25,20 +25,20 @@
   (type $t0 (func (param i32 f32)))
   (func $f0 (type $t0) (param $p0 i32) (param $p1 f32)
     (local $l2 f64) (local $l3 i64)
-    get_local $p0
+    local.get $p0
     drop
-    get_local $p1
+    local.get $p1
     drop
-    get_local $l2
+    local.get $l2
     drop
-    get_local $l3
+    local.get $l3
     drop
     i32.const 1
-    set_local $p0
+    local.set $p0
     f32.const 0x1p+0 (;=1;)
-    set_local $p1
+    local.set $p1
     f64.const 0x1p+0 (;=1;)
-    set_local $l2
+    local.set $l2
     i64.const 1
-    set_local $l3))
+    local.set $l3))
 ;;; STDOUT ;;)

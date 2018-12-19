@@ -3,7 +3,7 @@
 (module
   (memory 1 1 shared)
   (func
-    i32.const 0 i32.const 0 atomic.wake drop
+    i32.const 0 i32.const 0 atomic.notify drop
     i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
 
@@ -25,58 +25,58 @@
 
     i32.const 0 i32.const 0 i32.atomic.rmw.add drop
     i32.const 0 i64.const 0 i64.atomic.rmw.add drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.add drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.add drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.add drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.add drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.add drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.add_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.add_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.add_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.add_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.add_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.sub drop
     i32.const 0 i64.const 0 i64.atomic.rmw.sub drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.sub drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.sub drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.sub drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.sub drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.sub drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.sub_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.sub_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.sub_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.sub_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.sub_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.and drop
     i32.const 0 i64.const 0 i64.atomic.rmw.and drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.and drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.and drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.and drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.and drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.and drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.and_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.and_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.and_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.and_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.and_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.or drop
     i32.const 0 i64.const 0 i64.atomic.rmw.or drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.or drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.or drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.or drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.or drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.or drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.or_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.or_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.or_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.or_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.or_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.xor drop
     i32.const 0 i64.const 0 i64.atomic.rmw.xor drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.xor drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.xor drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.xor drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.xor drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.xor drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.xor_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.xor_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.xor_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.xor_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.xor_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.xchg drop
     i32.const 0 i64.const 0 i64.atomic.rmw.xchg drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.xchg drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.xchg drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.xchg drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.xchg drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.xchg drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.xchg_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.xchg_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.xchg_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.xchg_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.xchg_u drop
 
     i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg drop
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg drop
-    i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg drop
-    i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg drop
-    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg drop
-    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg drop
-    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg drop
+    i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8.cmpxchg_u drop
+    i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16.cmpxchg_u drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8.cmpxchg_u drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16.cmpxchg_u drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u drop
 
 ))

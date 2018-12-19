@@ -9,7 +9,7 @@
   (export "foo" (func $foo))
 )
 (;; STDERR ;;;
-out/test/regress/regress-21.txt:7:7: error: can't set_global on immutable global at index 0.
+out/test/regress/regress-21.txt:7:7: error: can't global.set on immutable global at index 0.
      (set_global $g (i32.const 1))
       ^^^^^^^^^^
 ;;; STDERR ;;)

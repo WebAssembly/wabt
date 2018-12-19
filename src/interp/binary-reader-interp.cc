@@ -153,7 +153,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnAtomicWaitExpr(Opcode opcode,
                                 uint32_t alignment_log2,
                                 Address offset) override;
-  wabt::Result OnAtomicWakeExpr(Opcode opcode,
+  wabt::Result OnAtomicNotifyExpr(Opcode opcode,
                                 uint32_t alignment_log2,
                                 Address offset) override;
   wabt::Result OnBinaryExpr(wabt::Opcode opcode) override;
@@ -175,26 +175,26 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnF32ConstExpr(uint32_t value_bits) override;
   wabt::Result OnF64ConstExpr(uint64_t value_bits) override;
   wabt::Result OnV128ConstExpr(v128 value_bits) override;
-  wabt::Result OnGetGlobalExpr(Index global_index) override;
-  wabt::Result OnGetLocalExpr(Index local_index) override;
+  wabt::Result OnGlobalGetExpr(Index global_index) override;
+  wabt::Result OnGlobalSetExpr(Index global_index) override;
   wabt::Result OnI32ConstExpr(uint32_t value) override;
   wabt::Result OnI64ConstExpr(uint64_t value) override;
   wabt::Result OnIfExpr(Type sig_type) override;
   wabt::Result OnLoadExpr(wabt::Opcode opcode,
                           uint32_t alignment_log2,
                           Address offset) override;
+  wabt::Result OnLocalGetExpr(Index local_index) override;
+  wabt::Result OnLocalSetExpr(Index local_index) override;
+  wabt::Result OnLocalTeeExpr(Index local_index) override;
   wabt::Result OnLoopExpr(Type sig_type) override;
   wabt::Result OnMemoryGrowExpr() override;
   wabt::Result OnMemorySizeExpr() override;
   wabt::Result OnNopExpr() override;
   wabt::Result OnReturnExpr() override;
   wabt::Result OnSelectExpr() override;
-  wabt::Result OnSetGlobalExpr(Index global_index) override;
-  wabt::Result OnSetLocalExpr(Index local_index) override;
   wabt::Result OnStoreExpr(wabt::Opcode opcode,
                            uint32_t alignment_log2,
                            Address offset) override;
-  wabt::Result OnTeeLocalExpr(Index local_index) override;
   wabt::Result OnUnaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnUnreachableExpr() override;
@@ -215,7 +215,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   wabt::Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
   wabt::Result OnInitExprV128ConstExpr(Index index, v128 value) override;
-  wabt::Result OnInitExprGetGlobalExpr(Index index,
+  wabt::Result OnInitExprGlobalGetExpr(Index index,
                                        Index global_index) override;
   wabt::Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   wabt::Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
@@ -890,7 +890,7 @@ wabt::Result BinaryReaderInterp::OnInitExprV128ConstExpr(Index index,
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnInitExprGetGlobalExpr(Index index,
+wabt::Result BinaryReaderInterp::OnInitExprGlobalGetExpr(Index index,
                                                          Index global_index) {
   if (global_index >= num_global_imports_) {
     PrintError("initializer expression can only reference an imported global");
@@ -1438,25 +1438,25 @@ wabt::Result BinaryReaderInterp::OnV128ConstExpr(v128 value_bits) {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnGetGlobalExpr(Index global_index) {
+wabt::Result BinaryReaderInterp::OnGlobalGetExpr(Index global_index) {
   CHECK_RESULT(CheckGlobal(global_index));
   Type type = GetGlobalTypeByModuleIndex(global_index);
-  CHECK_RESULT(typechecker_.OnGetGlobal(type));
-  CHECK_RESULT(EmitOpcode(Opcode::GetGlobal));
+  CHECK_RESULT(typechecker_.OnGlobalGet(type));
+  CHECK_RESULT(EmitOpcode(Opcode::GlobalGet));
   CHECK_RESULT(EmitI32(TranslateGlobalIndexToEnv(global_index)));
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnSetGlobalExpr(Index global_index) {
+wabt::Result BinaryReaderInterp::OnGlobalSetExpr(Index global_index) {
   CHECK_RESULT(CheckGlobal(global_index));
   Global* global = GetGlobalByModuleIndex(global_index);
   if (!global->mutable_) {
-    PrintError("can't set_global on immutable global at index %" PRIindex ".",
+    PrintError("can't global.set on immutable global at index %" PRIindex ".",
                global_index);
     return wabt::Result::Error;
   }
-  CHECK_RESULT(typechecker_.OnSetGlobal(global->typed_value.type));
-  CHECK_RESULT(EmitOpcode(Opcode::SetGlobal));
+  CHECK_RESULT(typechecker_.OnGlobalSet(global->typed_value.type));
+  CHECK_RESULT(EmitOpcode(Opcode::GlobalSet));
   CHECK_RESULT(EmitI32(TranslateGlobalIndexToEnv(global_index)));
   return wabt::Result::Ok;
 }
@@ -1466,33 +1466,33 @@ Index BinaryReaderInterp::TranslateLocalIndex(Index local_index) {
          current_func_->param_and_local_types.size() - local_index;
 }
 
-wabt::Result BinaryReaderInterp::OnGetLocalExpr(Index local_index) {
+wabt::Result BinaryReaderInterp::OnLocalGetExpr(Index local_index) {
   CHECK_RESULT(CheckLocal(local_index));
   Type type = GetLocalTypeByIndex(current_func_, local_index);
-  // Get the translated index before calling typechecker_.OnGetLocal because it
+  // Get the translated index before calling typechecker_.OnLocalGet because it
   // will update the type stack size. We need the index to be relative to the
   // old stack size.
   Index translated_local_index = TranslateLocalIndex(local_index);
-  CHECK_RESULT(typechecker_.OnGetLocal(type));
-  CHECK_RESULT(EmitOpcode(Opcode::GetLocal));
+  CHECK_RESULT(typechecker_.OnLocalGet(type));
+  CHECK_RESULT(EmitOpcode(Opcode::LocalGet));
   CHECK_RESULT(EmitI32(translated_local_index));
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnSetLocalExpr(Index local_index) {
+wabt::Result BinaryReaderInterp::OnLocalSetExpr(Index local_index) {
   CHECK_RESULT(CheckLocal(local_index));
   Type type = GetLocalTypeByIndex(current_func_, local_index);
-  CHECK_RESULT(typechecker_.OnSetLocal(type));
-  CHECK_RESULT(EmitOpcode(Opcode::SetLocal));
+  CHECK_RESULT(typechecker_.OnLocalSet(type));
+  CHECK_RESULT(EmitOpcode(Opcode::LocalSet));
   CHECK_RESULT(EmitI32(TranslateLocalIndex(local_index)));
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnTeeLocalExpr(Index local_index) {
+wabt::Result BinaryReaderInterp::OnLocalTeeExpr(Index local_index) {
   CHECK_RESULT(CheckLocal(local_index));
   Type type = GetLocalTypeByIndex(current_func_, local_index);
-  CHECK_RESULT(typechecker_.OnTeeLocal(type));
-  CHECK_RESULT(EmitOpcode(Opcode::TeeLocal));
+  CHECK_RESULT(typechecker_.OnLocalTee(type));
+  CHECK_RESULT(EmitOpcode(Opcode::LocalTee));
   CHECK_RESULT(EmitI32(TranslateLocalIndex(local_index)));
   return wabt::Result::Ok;
 }
@@ -1574,12 +1574,12 @@ wabt::Result BinaryReaderInterp::OnAtomicWaitExpr(Opcode opcode,
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnAtomicWakeExpr(Opcode opcode,
-                                                  uint32_t alignment_log2,
-                                                  Address offset) {
+wabt::Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
+                                                    uint32_t alignment_log2,
+                                                    Address offset) {
   CHECK_RESULT(CheckHasMemory(opcode));
   CHECK_RESULT(CheckAtomicAlign(alignment_log2, opcode.GetMemorySize()));
-  CHECK_RESULT(typechecker_.OnAtomicWake(opcode));
+  CHECK_RESULT(typechecker_.OnAtomicNotify(opcode));
   CHECK_RESULT(EmitOpcode(opcode));
   CHECK_RESULT(EmitI32(module_->memory_index));
   CHECK_RESULT(EmitI32(offset));

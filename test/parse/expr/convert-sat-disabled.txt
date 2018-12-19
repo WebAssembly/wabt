@@ -34,28 +34,28 @@
     i64.trunc_u:sat/f64
     drop))
 (;; STDERR ;;;
-out/test/parse/expr/convert-sat-disabled.txt:6:5: error: opcode not allowed: i32.trunc_s:sat/f32
+out/test/parse/expr/convert-sat-disabled.txt:6:5: error: opcode not allowed: i32.trunc_sat_f32_s
     i32.trunc_s:sat/f32
     ^^^^^^^^^^^^^^^^^^^
-out/test/parse/expr/convert-sat-disabled.txt:10:5: error: opcode not allowed: i32.trunc_u:sat/f32
+out/test/parse/expr/convert-sat-disabled.txt:10:5: error: opcode not allowed: i32.trunc_sat_f32_u
     i32.trunc_u:sat/f32
     ^^^^^^^^^^^^^^^^^^^
-out/test/parse/expr/convert-sat-disabled.txt:14:5: error: opcode not allowed: i32.trunc_s:sat/f64
+out/test/parse/expr/convert-sat-disabled.txt:14:5: error: opcode not allowed: i32.trunc_sat_f64_s
     i32.trunc_s:sat/f64
     ^^^^^^^^^^^^^^^^^^^
-out/test/parse/expr/convert-sat-disabled.txt:18:5: error: opcode not allowed: i32.trunc_u:sat/f64
+out/test/parse/expr/convert-sat-disabled.txt:18:5: error: opcode not allowed: i32.trunc_sat_f64_u
     i32.trunc_u:sat/f64
     ^^^^^^^^^^^^^^^^^^^
-out/test/parse/expr/convert-sat-disabled.txt:22:5: error: opcode not allowed: i64.trunc_s:sat/f32
+out/test/parse/expr/convert-sat-disabled.txt:22:5: error: opcode not allowed: i64.trunc_sat_f32_s
     i64.trunc_s:sat/f32
     ^^^^^^^^^^^^^^^^^^^
-out/test/parse/expr/convert-sat-disabled.txt:26:5: error: opcode not allowed: i64.trunc_u:sat/f32
+out/test/parse/expr/convert-sat-disabled.txt:26:5: error: opcode not allowed: i64.trunc_sat_f32_u
     i64.trunc_u:sat/f32
     ^^^^^^^^^^^^^^^^^^^
-out/test/parse/expr/convert-sat-disabled.txt:30:5: error: opcode not allowed: i64.trunc_s:sat/f64
+out/test/parse/expr/convert-sat-disabled.txt:30:5: error: opcode not allowed: i64.trunc_sat_f64_s
     i64.trunc_s:sat/f64
     ^^^^^^^^^^^^^^^^^^^
-out/test/parse/expr/convert-sat-disabled.txt:34:5: error: opcode not allowed: i64.trunc_u:sat/f64
+out/test/parse/expr/convert-sat-disabled.txt:34:5: error: opcode not allowed: i64.trunc_sat_f64_u
     i64.trunc_u:sat/f64
     ^^^^^^^^^^^^^^^^^^^
 ;;; STDERR ;;)

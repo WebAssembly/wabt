@@ -1,5 +1,0 @@
-;;; TOOL: run-interp-spec
-;;; STDIN_FILE: third_party/testsuite/resizing.wast
-(;; STDOUT ;;;
-34/34 tests passed.
-;;; STDOUT ;;)

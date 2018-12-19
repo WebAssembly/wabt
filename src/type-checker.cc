@@ -350,7 +350,7 @@ Result TypeChecker::OnAtomicWait(Opcode opcode) {
   return CheckOpcode3(opcode);
 }
 
-Result TypeChecker::OnAtomicWake(Opcode opcode) {
+Result TypeChecker::OnAtomicNotify(Opcode opcode) {
   return CheckOpcode2(opcode);
 }
 
@@ -562,18 +562,33 @@ Result TypeChecker::OnIfExcept(const TypeVector& param_types,
   return result;
 }
 
-Result TypeChecker::OnGetGlobal(Type type) {
+Result TypeChecker::OnGlobalGet(Type type) {
   PushType(type);
   return Result::Ok;
 }
 
-Result TypeChecker::OnGetLocal(Type type) {
-  PushType(type);
-  return Result::Ok;
+Result TypeChecker::OnGlobalSet(Type type) {
+  return PopAndCheck1Type(type, "global.set");
 }
 
 Result TypeChecker::OnLoad(Opcode opcode) {
   return CheckOpcode1(opcode);
+}
+
+Result TypeChecker::OnLocalGet(Type type) {
+  PushType(type);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnLocalSet(Type type) {
+  return PopAndCheck1Type(type, "local.set");
+}
+
+Result TypeChecker::OnLocalTee(Type type) {
+  Result result = Result::Ok;
+  result |= PopAndCheck1Type(type, "local.tee");
+  PushType(type);
+  return result;
 }
 
 Result TypeChecker::OnLoop(const TypeVector& param_types,
@@ -655,14 +670,6 @@ Result TypeChecker::OnSelect() {
   return result;
 }
 
-Result TypeChecker::OnSetGlobal(Type type) {
-  return PopAndCheck1Type(type, "set_global");
-}
-
-Result TypeChecker::OnSetLocal(Type type) {
-  return PopAndCheck1Type(type, "set_local");
-}
-
 Result TypeChecker::OnStore(Opcode opcode) {
   return CheckOpcode2(opcode);
 }
@@ -672,13 +679,6 @@ Result TypeChecker::OnTry(const TypeVector& param_types,
   Result result = PopAndCheckSignature(param_types, "try");
   PushLabel(LabelType::Try, param_types, result_types);
   PushTypes(param_types);
-  return result;
-}
-
-Result TypeChecker::OnTeeLocal(Type type) {
-  Result result = Result::Ok;
-  result |= PopAndCheck1Type(type, "tee_local");
-  PushType(type);
   return result;
 }
 

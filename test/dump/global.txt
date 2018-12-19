@@ -82,22 +82,22 @@
 0000073: 0b                                        ; end
 0000074: 7f                                        ; i32
 0000075: 00                                        ; global mutability
-0000076: 23                                        ; get_global
+0000076: 23                                        ; global.get
 0000077: 00                                        ; global index
 0000078: 0b                                        ; end
 0000079: 7e                                        ; i64
 000007a: 00                                        ; global mutability
-000007b: 23                                        ; get_global
+000007b: 23                                        ; global.get
 000007c: 01                                        ; global index
 000007d: 0b                                        ; end
 000007e: 7d                                        ; f32
 000007f: 00                                        ; global mutability
-0000080: 23                                        ; get_global
+0000080: 23                                        ; global.get
 0000081: 02                                        ; global index
 0000082: 0b                                        ; end
 0000083: 7c                                        ; f64
 0000084: 00                                        ; global mutability
-0000085: 23                                        ; get_global
+0000085: 23                                        ; global.get
 0000086: 03                                        ; global index
 0000087: 0b                                        ; end
 0000054: 33                                        ; FIXUP section size

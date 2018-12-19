@@ -207,7 +207,7 @@ out/test/spec/imports.wast:505: assert_malformed passed:
           ^^^^^^
 out/test/spec/imports.wast:509: assert_malformed passed:
   out/test/spec/imports/imports.102.wat:1:9: error: imports must occur before all non-import definitions
-  (func) (import "" "" (table 0 anyfunc))
+  (func) (import "" "" (table 0 funcref))
           ^^^^^^
 out/test/spec/imports.wast:513: assert_malformed passed:
   out/test/spec/imports/imports.103.wat:1:9: error: imports must occur before all non-import definitions
@@ -223,7 +223,7 @@ out/test/spec/imports.wast:522: assert_malformed passed:
                               ^^^^^^
 out/test/spec/imports.wast:526: assert_malformed passed:
   out/test/spec/imports/imports.106.wat:1:29: error: imports must occur before all non-import definitions
-  (global i64 (i64.const 0)) (import "" "" (table 0 anyfunc))
+  (global i64 (i64.const 0)) (import "" "" (table 0 funcref))
                               ^^^^^^
 out/test/spec/imports.wast:530: assert_malformed passed:
   out/test/spec/imports/imports.107.wat:1:29: error: imports must occur before all non-import definitions
@@ -231,19 +231,19 @@ out/test/spec/imports.wast:530: assert_malformed passed:
                               ^^^^^^
 out/test/spec/imports.wast:535: assert_malformed passed:
   out/test/spec/imports/imports.108.wat:1:20: error: imports must occur before all non-import definitions
-  (table 0 anyfunc) (import "" "" (func))
+  (table 0 funcref) (import "" "" (func))
                      ^^^^^^
 out/test/spec/imports.wast:539: assert_malformed passed:
   out/test/spec/imports/imports.109.wat:1:20: error: imports must occur before all non-import definitions
-  (table 0 anyfunc) (import "" "" (global i32))
+  (table 0 funcref) (import "" "" (global i32))
                      ^^^^^^
 out/test/spec/imports.wast:543: assert_malformed passed:
   out/test/spec/imports/imports.110.wat:1:20: error: imports must occur before all non-import definitions
-  (table 0 anyfunc) (import "" "" (table 0 anyfunc))
+  (table 0 funcref) (import "" "" (table 0 funcref))
                      ^^^^^^
 out/test/spec/imports.wast:547: assert_malformed passed:
   out/test/spec/imports/imports.111.wat:1:20: error: imports must occur before all non-import definitions
-  (table 0 anyfunc) (import "" "" (memory 0))
+  (table 0 funcref) (import "" "" (memory 0))
                      ^^^^^^
 out/test/spec/imports.wast:552: assert_malformed passed:
   out/test/spec/imports/imports.112.wat:1:13: error: imports must occur before all non-import definitions
@@ -255,7 +255,7 @@ out/test/spec/imports.wast:556: assert_malformed passed:
               ^^^^^^
 out/test/spec/imports.wast:560: assert_malformed passed:
   out/test/spec/imports/imports.114.wat:1:13: error: imports must occur before all non-import definitions
-  (memory 0) (import "" "" (table 1 3 anyfunc))
+  (memory 0) (import "" "" (table 1 3 funcref))
               ^^^^^^
 out/test/spec/imports.wast:564: assert_malformed passed:
   out/test/spec/imports/imports.115.wat:1:13: error: imports must occur before all non-import definitions

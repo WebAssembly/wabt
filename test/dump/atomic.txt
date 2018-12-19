@@ -4,7 +4,7 @@
 (module
   (memory 1 1 shared)
   (func
-    i32.const 0 i32.const 0 atomic.wake drop
+    i32.const 0 i32.const 0 atomic.notify drop
     i32.const 0 i32.const 0 i64.const 0 i32.atomic.wait drop
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.wait drop
 
@@ -26,59 +26,59 @@
 
     i32.const 0 i32.const 0 i32.atomic.rmw.add drop
     i32.const 0 i64.const 0 i64.atomic.rmw.add drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.add drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.add drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.add drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.add drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.add drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.add_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.add_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.add_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.add_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.add_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.sub drop
     i32.const 0 i64.const 0 i64.atomic.rmw.sub drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.sub drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.sub drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.sub drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.sub drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.sub drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.sub_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.sub_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.sub_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.sub_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.sub_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.and drop
     i32.const 0 i64.const 0 i64.atomic.rmw.and drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.and drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.and drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.and drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.and drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.and drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.and_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.and_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.and_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.and_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.and_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.or drop
     i32.const 0 i64.const 0 i64.atomic.rmw.or drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.or drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.or drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.or drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.or drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.or drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.or_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.or_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.or_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.or_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.or_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.xor drop
     i32.const 0 i64.const 0 i64.atomic.rmw.xor drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.xor drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.xor drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.xor drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.xor drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.xor drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.xor_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.xor_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.xor_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.xor_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.xor_u drop
 
     i32.const 0 i32.const 0 i32.atomic.rmw.xchg drop
     i32.const 0 i64.const 0 i64.atomic.rmw.xchg drop
-    i32.const 0 i32.const 0 i32.atomic.rmw8_u.xchg drop
-    i32.const 0 i32.const 0 i32.atomic.rmw16_u.xchg drop
-    i32.const 0 i64.const 0 i64.atomic.rmw8_u.xchg drop
-    i32.const 0 i64.const 0 i64.atomic.rmw16_u.xchg drop
-    i32.const 0 i64.const 0 i64.atomic.rmw32_u.xchg drop
+    i32.const 0 i32.const 0 i32.atomic.rmw8.xchg_u drop
+    i32.const 0 i32.const 0 i32.atomic.rmw16.xchg_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw8.xchg_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw16.xchg_u drop
+    i32.const 0 i64.const 0 i64.atomic.rmw32.xchg_u drop
 
     i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw.cmpxchg drop
     i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw.cmpxchg drop
-    i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8_u.cmpxchg drop
-    i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16_u.cmpxchg drop
-    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8_u.cmpxchg drop
-    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16_u.cmpxchg drop
-    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32_u.cmpxchg drop
+    i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw8.cmpxchg_u drop
+    i32.const 0 i32.const 0 i32.const 0 i32.atomic.rmw16.cmpxchg_u drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw8.cmpxchg_u drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw16.cmpxchg_u drop
+    i32.const 0 i64.const 0 i64.const 0 i64.atomic.rmw32.cmpxchg_u drop
 
 ))
 (;; STDOUT ;;;
@@ -90,7 +90,7 @@ Code Disassembly:
 00001e func[0]:
  00001f: 41 00                      | i32.const 0
  000021: 41 00                      | i32.const 0
- 000023: fe 00 02 00                | atomic.wake 2 0
+ 000023: fe 00 02 00                | atomic.notify 2 0
  000027: 1a                         | drop
  000028: 41 00                      | i32.const 0
  00002a: 41 00                      | i32.const 0
@@ -154,23 +154,23 @@ Code Disassembly:
  0000b8: 1a                         | drop
  0000b9: 41 00                      | i32.const 0
  0000bb: 41 00                      | i32.const 0
- 0000bd: fe 20 00 00                | i32.atomic.rmw8_u.add 0 0
+ 0000bd: fe 20 00 00                | i32.atomic.rmw8.add_u 0 0
  0000c1: 1a                         | drop
  0000c2: 41 00                      | i32.const 0
  0000c4: 41 00                      | i32.const 0
- 0000c6: fe 21 01 00                | i32.atomic.rmw16_u.add 1 0
+ 0000c6: fe 21 01 00                | i32.atomic.rmw16.add_u 1 0
  0000ca: 1a                         | drop
  0000cb: 41 00                      | i32.const 0
  0000cd: 42 00                      | i64.const 0
- 0000cf: fe 22 00 00                | i64.atomic.rmw8_u.add 0 0
+ 0000cf: fe 22 00 00                | i64.atomic.rmw8.add_u 0 0
  0000d3: 1a                         | drop
  0000d4: 41 00                      | i32.const 0
  0000d6: 42 00                      | i64.const 0
- 0000d8: fe 23 01 00                | i64.atomic.rmw16_u.add 1 0
+ 0000d8: fe 23 01 00                | i64.atomic.rmw16.add_u 1 0
  0000dc: 1a                         | drop
  0000dd: 41 00                      | i32.const 0
  0000df: 42 00                      | i64.const 0
- 0000e1: fe 24 02 00                | i64.atomic.rmw32_u.add 2 0
+ 0000e1: fe 24 02 00                | i64.atomic.rmw32.add_u 2 0
  0000e5: 1a                         | drop
  0000e6: 41 00                      | i32.const 0
  0000e8: 41 00                      | i32.const 0
@@ -182,23 +182,23 @@ Code Disassembly:
  0000f7: 1a                         | drop
  0000f8: 41 00                      | i32.const 0
  0000fa: 41 00                      | i32.const 0
- 0000fc: fe 27 00 00                | i32.atomic.rmw8_u.sub 0 0
+ 0000fc: fe 27 00 00                | i32.atomic.rmw8.sub_u 0 0
  000100: 1a                         | drop
  000101: 41 00                      | i32.const 0
  000103: 41 00                      | i32.const 0
- 000105: fe 28 01 00                | i32.atomic.rmw16_u.sub 1 0
+ 000105: fe 28 01 00                | i32.atomic.rmw16.sub_u 1 0
  000109: 1a                         | drop
  00010a: 41 00                      | i32.const 0
  00010c: 42 00                      | i64.const 0
- 00010e: fe 29 00 00                | i64.atomic.rmw8_u.sub 0 0
+ 00010e: fe 29 00 00                | i64.atomic.rmw8.sub_u 0 0
  000112: 1a                         | drop
  000113: 41 00                      | i32.const 0
  000115: 42 00                      | i64.const 0
- 000117: fe 2a 01 00                | i64.atomic.rmw16_u.sub 1 0
+ 000117: fe 2a 01 00                | i64.atomic.rmw16.sub_u 1 0
  00011b: 1a                         | drop
  00011c: 41 00                      | i32.const 0
  00011e: 42 00                      | i64.const 0
- 000120: fe 2b 02 00                | i64.atomic.rmw32_u.sub 2 0
+ 000120: fe 2b 02 00                | i64.atomic.rmw32.sub_u 2 0
  000124: 1a                         | drop
  000125: 41 00                      | i32.const 0
  000127: 41 00                      | i32.const 0
@@ -210,23 +210,23 @@ Code Disassembly:
  000136: 1a                         | drop
  000137: 41 00                      | i32.const 0
  000139: 41 00                      | i32.const 0
- 00013b: fe 2e 00 00                | i32.atomic.rmw8_u.and 0 0
+ 00013b: fe 2e 00 00                | i32.atomic.rmw8.and_u 0 0
  00013f: 1a                         | drop
  000140: 41 00                      | i32.const 0
  000142: 41 00                      | i32.const 0
- 000144: fe 2f 01 00                | i32.atomic.rmw16_u.and 1 0
+ 000144: fe 2f 01 00                | i32.atomic.rmw16.and_u 1 0
  000148: 1a                         | drop
  000149: 41 00                      | i32.const 0
  00014b: 42 00                      | i64.const 0
- 00014d: fe 30 00 00                | i64.atomic.rmw8_u.and 0 0
+ 00014d: fe 30 00 00                | i64.atomic.rmw8.and_u 0 0
  000151: 1a                         | drop
  000152: 41 00                      | i32.const 0
  000154: 42 00                      | i64.const 0
- 000156: fe 31 01 00                | i64.atomic.rmw16_u.and 1 0
+ 000156: fe 31 01 00                | i64.atomic.rmw16.and_u 1 0
  00015a: 1a                         | drop
  00015b: 41 00                      | i32.const 0
  00015d: 42 00                      | i64.const 0
- 00015f: fe 32 02 00                | i64.atomic.rmw32_u.and 2 0
+ 00015f: fe 32 02 00                | i64.atomic.rmw32.and_u 2 0
  000163: 1a                         | drop
  000164: 41 00                      | i32.const 0
  000166: 41 00                      | i32.const 0
@@ -238,23 +238,23 @@ Code Disassembly:
  000175: 1a                         | drop
  000176: 41 00                      | i32.const 0
  000178: 41 00                      | i32.const 0
- 00017a: fe 35 00 00                | i32.atomic.rmw8_u.or 0 0
+ 00017a: fe 35 00 00                | i32.atomic.rmw8.or_u 0 0
  00017e: 1a                         | drop
  00017f: 41 00                      | i32.const 0
  000181: 41 00                      | i32.const 0
- 000183: fe 36 01 00                | i32.atomic.rmw16_u.or 1 0
+ 000183: fe 36 01 00                | i32.atomic.rmw16.or_u 1 0
  000187: 1a                         | drop
  000188: 41 00                      | i32.const 0
  00018a: 42 00                      | i64.const 0
- 00018c: fe 37 00 00                | i64.atomic.rmw8_u.or 0 0
+ 00018c: fe 37 00 00                | i64.atomic.rmw8.or_u 0 0
  000190: 1a                         | drop
  000191: 41 00                      | i32.const 0
  000193: 42 00                      | i64.const 0
- 000195: fe 38 01 00                | i64.atomic.rmw16_u.or 1 0
+ 000195: fe 38 01 00                | i64.atomic.rmw16.or_u 1 0
  000199: 1a                         | drop
  00019a: 41 00                      | i32.const 0
  00019c: 42 00                      | i64.const 0
- 00019e: fe 39 02 00                | i64.atomic.rmw32_u.or 2 0
+ 00019e: fe 39 02 00                | i64.atomic.rmw32.or_u 2 0
  0001a2: 1a                         | drop
  0001a3: 41 00                      | i32.const 0
  0001a5: 41 00                      | i32.const 0
@@ -266,23 +266,23 @@ Code Disassembly:
  0001b4: 1a                         | drop
  0001b5: 41 00                      | i32.const 0
  0001b7: 41 00                      | i32.const 0
- 0001b9: fe 3c 00 00                | i32.atomic.rmw8_u.xor 0 0
+ 0001b9: fe 3c 00 00                | i32.atomic.rmw8.xor_u 0 0
  0001bd: 1a                         | drop
  0001be: 41 00                      | i32.const 0
  0001c0: 41 00                      | i32.const 0
- 0001c2: fe 3d 01 00                | i32.atomic.rmw16_u.xor 1 0
+ 0001c2: fe 3d 01 00                | i32.atomic.rmw16.xor_u 1 0
  0001c6: 1a                         | drop
  0001c7: 41 00                      | i32.const 0
  0001c9: 42 00                      | i64.const 0
- 0001cb: fe 3e 00 00                | i64.atomic.rmw8_u.xor 0 0
+ 0001cb: fe 3e 00 00                | i64.atomic.rmw8.xor_u 0 0
  0001cf: 1a                         | drop
  0001d0: 41 00                      | i32.const 0
  0001d2: 42 00                      | i64.const 0
- 0001d4: fe 3f 01 00                | i64.atomic.rmw16_u.xor 1 0
+ 0001d4: fe 3f 01 00                | i64.atomic.rmw16.xor_u 1 0
  0001d8: 1a                         | drop
  0001d9: 41 00                      | i32.const 0
  0001db: 42 00                      | i64.const 0
- 0001dd: fe 40 02 00                | i64.atomic.rmw32_u.xor 2 0
+ 0001dd: fe 40 02 00                | i64.atomic.rmw32.xor_u 2 0
  0001e1: 1a                         | drop
  0001e2: 41 00                      | i32.const 0
  0001e4: 41 00                      | i32.const 0
@@ -294,23 +294,23 @@ Code Disassembly:
  0001f3: 1a                         | drop
  0001f4: 41 00                      | i32.const 0
  0001f6: 41 00                      | i32.const 0
- 0001f8: fe 43 00 00                | i32.atomic.rmw8_u.xchg 0 0
+ 0001f8: fe 43 00 00                | i32.atomic.rmw8.xchg_u 0 0
  0001fc: 1a                         | drop
  0001fd: 41 00                      | i32.const 0
  0001ff: 41 00                      | i32.const 0
- 000201: fe 44 01 00                | i32.atomic.rmw16_u.xchg 1 0
+ 000201: fe 44 01 00                | i32.atomic.rmw16.xchg_u 1 0
  000205: 1a                         | drop
  000206: 41 00                      | i32.const 0
  000208: 42 00                      | i64.const 0
- 00020a: fe 45 00 00                | i64.atomic.rmw8_u.xchg 0 0
+ 00020a: fe 45 00 00                | i64.atomic.rmw8.xchg_u 0 0
  00020e: 1a                         | drop
  00020f: 41 00                      | i32.const 0
  000211: 42 00                      | i64.const 0
- 000213: fe 46 01 00                | i64.atomic.rmw16_u.xchg 1 0
+ 000213: fe 46 01 00                | i64.atomic.rmw16.xchg_u 1 0
  000217: 1a                         | drop
  000218: 41 00                      | i32.const 0
  00021a: 42 00                      | i64.const 0
- 00021c: fe 47 02 00                | i64.atomic.rmw32_u.xchg 2 0
+ 00021c: fe 47 02 00                | i64.atomic.rmw32.xchg_u 2 0
  000220: 1a                         | drop
  000221: 41 00                      | i32.const 0
  000223: 41 00                      | i32.const 0
@@ -325,27 +325,27 @@ Code Disassembly:
  000237: 41 00                      | i32.const 0
  000239: 41 00                      | i32.const 0
  00023b: 41 00                      | i32.const 0
- 00023d: fe 4a 00 00                | i32.atomic.rmw8_u.cmpxchg 0 0
+ 00023d: fe 4a 00 00                | i32.atomic.rmw8.cmpxchg_u 0 0
  000241: 1a                         | drop
  000242: 41 00                      | i32.const 0
  000244: 41 00                      | i32.const 0
  000246: 41 00                      | i32.const 0
- 000248: fe 4b 01 00                | i32.atomic.rmw16_u.cmpxchg 1 0
+ 000248: fe 4b 01 00                | i32.atomic.rmw16.cmpxchg_u 1 0
  00024c: 1a                         | drop
  00024d: 41 00                      | i32.const 0
  00024f: 42 00                      | i64.const 0
  000251: 42 00                      | i64.const 0
- 000253: fe 4c 00 00                | i64.atomic.rmw8_u.cmpxchg 0 0
+ 000253: fe 4c 00 00                | i64.atomic.rmw8.cmpxchg_u 0 0
  000257: 1a                         | drop
  000258: 41 00                      | i32.const 0
  00025a: 42 00                      | i64.const 0
  00025c: 42 00                      | i64.const 0
- 00025e: fe 4d 01 00                | i64.atomic.rmw16_u.cmpxchg 1 0
+ 00025e: fe 4d 01 00                | i64.atomic.rmw16.cmpxchg_u 1 0
  000262: 1a                         | drop
  000263: 41 00                      | i32.const 0
  000265: 42 00                      | i64.const 0
  000267: 42 00                      | i64.const 0
- 000269: fe 4e 02 00                | i64.atomic.rmw32_u.cmpxchg 2 0
+ 000269: fe 4e 02 00                | i64.atomic.rmw32.cmpxchg_u 2 0
  00026d: 1a                         | drop
  00026e: 0b                         | end
 ;;; STDOUT ;;)

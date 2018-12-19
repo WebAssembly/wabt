@@ -40,7 +40,7 @@
 ; function body 0
 000001e: 00                                        ; func body size (guess)
 000001f: 00                                        ; local decl count
-0000020: 23                                        ; get_global
+0000020: 23                                        ; global.get
 0000021: 00                                        ; global index
 0000022: 0b                                        ; end
 000001e: 04                                        ; FIXUP func body size
@@ -51,6 +51,6 @@ getglobal.wasm:	file format wasm 0x1
 Code Disassembly:
 
 00001f func[0]:
- 000020: 23 00                      | get_global 0
+ 000020: 23 00                      | global.get 0
  000022: 0b                         | end
 ;;; STDOUT ;;)

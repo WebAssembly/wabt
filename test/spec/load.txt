@@ -1,0 +1,99 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/load.wast
+(;; STDOUT ;;;
+out/test/spec/load.wast:214: assert_malformed passed:
+  out/test/spec/load/load.1.wat:1:43: error: unexpected token "i32.load32", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load32 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/load.wast:221: assert_malformed passed:
+  out/test/spec/load/load.2.wat:1:43: error: unexpected token "i32.load32_u", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load32_u (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/load.wast:228: assert_malformed passed:
+  out/test/spec/load/load.3.wat:1:43: error: unexpected token "i32.load32_s", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load32_s (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/load.wast:235: assert_malformed passed:
+  out/test/spec/load/load.4.wat:1:43: error: unexpected token "i32.load64", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load64 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/load.wast:242: assert_malformed passed:
+  out/test/spec/load/load.5.wat:1:43: error: unexpected token "i32.load64_u", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load64_u (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/load.wast:249: assert_malformed passed:
+  out/test/spec/load/load.6.wat:1:43: error: unexpected token "i32.load64_s", expected an instr.
+  (memory 1)(func (param i32) (result i32) (i32.load64_s (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/load.wast:257: assert_malformed passed:
+  out/test/spec/load/load.7.wat:1:43: error: unexpected token "i64.load64", expected an instr.
+  (memory 1)(func (param i32) (result i64) (i64.load64 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/load.wast:264: assert_malformed passed:
+  out/test/spec/load/load.8.wat:1:43: error: unexpected token "i64.load64_u", expected an instr.
+  (memory 1)(func (param i32) (result i64) (i64.load64_u (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/load.wast:271: assert_malformed passed:
+  out/test/spec/load/load.9.wat:1:43: error: unexpected token "i64.load64_s", expected an instr.
+  (memory 1)(func (param i32) (result i64) (i64.load64_s (local.get 0)))
+                                            ^^^^^^^^^^^^
+out/test/spec/load.wast:279: assert_malformed passed:
+  out/test/spec/load/load.10.wat:1:43: error: unexpected token "f32.load32", expected an instr.
+  (memory 1)(func (param i32) (result f32) (f32.load32 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/load.wast:286: assert_malformed passed:
+  out/test/spec/load/load.11.wat:1:43: error: unexpected token "f32.load64", expected an instr.
+  (memory 1)(func (param i32) (result f32) (f32.load64 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/load.wast:294: assert_malformed passed:
+  out/test/spec/load/load.12.wat:1:43: error: unexpected token "f64.load32", expected an instr.
+  (memory 1)(func (param i32) (result f64) (f64.load32 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/load.wast:301: assert_malformed passed:
+  out/test/spec/load/load.13.wat:1:43: error: unexpected token "f64.load64", expected an instr.
+  (memory 1)(func (param i32) (result f64) (f64.load64 (local.get 0)))
+                                            ^^^^^^^^^^
+out/test/spec/load.wast:312: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:316: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:320: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:324: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:328: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:332: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:336: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:340: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:344: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:348: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:352: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:356: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [i64]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:360: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [f32]
+  0000022: error: EndFunctionBody callback failed
+out/test/spec/load.wast:364: assert_invalid passed:
+  error: type mismatch in function, expected [] but got [f64]
+  0000022: error: EndFunctionBody callback failed
+64/64 tests passed.
+;;; STDOUT ;;)

@@ -113,9 +113,9 @@
 ; function body 0
 0000071: 0000 0000 00                              ; func body size (guess)
 0000076: 00                                        ; local decl count
-0000077: 20                                        ; get_local
+0000077: 20                                        ; local.get
 0000078: 00                                        ; local index
-0000079: 20                                        ; get_local
+0000079: 20                                        ; local.get
 000007a: 01                                        ; local index
 000007b: 11                                        ; call_indirect
 000007c: 00                                        ; signature index
@@ -126,7 +126,7 @@
 ; function body 1
 0000080: 0000 0000 00                              ; func body size (guess)
 0000085: 00                                        ; local decl count
-0000086: 20                                        ; get_local
+0000086: 20                                        ; local.get
 0000087: 00                                        ; local index
 0000088: 41                                        ; i32.const
 0000089: 01                                        ; i32 literal
@@ -137,7 +137,7 @@
 ; function body 2
 000008d: 0000 0000 00                              ; func body size (guess)
 0000092: 00                                        ; local decl count
-0000093: 20                                        ; get_local
+0000093: 20                                        ; local.get
 0000094: 00                                        ; local index
 0000095: 41                                        ; i32.const
 0000096: 02                                        ; i32 literal
@@ -152,19 +152,19 @@ no-canonicalize.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000076 <f1>:
- 000077: 20 00                      | get_local 0
- 000079: 20 01                      | get_local 1
+ 000077: 20 00                      | local.get 0
+ 000079: 20 01                      | local.get 1
  00007b: 11 00 00                   | call_indirect 0 0
  00007e: 1a                         | drop
  00007f: 0b                         | end
 000085 func[2]:
- 000086: 20 00                      | get_local 0
+ 000086: 20 00                      | local.get 0
  000088: 41 01                      | i32.const 1
  00008a: 6a                         | i32.add
  00008b: 1a                         | drop
  00008c: 0b                         | end
 000092 func[3]:
- 000093: 20 00                      | get_local 0
+ 000093: 20 00                      | local.get 0
  000095: 41 02                      | i32.const 2
  000097: 6c                         | i32.mul
  000098: 1a                         | drop

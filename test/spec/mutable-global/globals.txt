@@ -2,8 +2,8 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/mutable-global/globals.wast
 (;; STDOUT ;;;
 out/test/spec/mutable-global/globals.wast:50: assert_invalid passed:
-  error: can't set_global on immutable global at index 0.
-  0000026: error: OnSetGlobalExpr callback failed
+  error: can't global.set on immutable global at index 0.
+  0000026: error: OnGlobalSetExpr callback failed
 out/test/spec/mutable-global/globals.wast:59: assert_invalid passed:
   0000013: error: expected END opcode after initializer expression
 out/test/spec/mutable-global/globals.wast:64: assert_invalid passed:
@@ -24,10 +24,10 @@ out/test/spec/mutable-global/globals.wast:94: assert_invalid passed:
   000000e: error: EndGlobalInitExpr callback failed
 out/test/spec/mutable-global/globals.wast:99: assert_invalid passed:
   error: initializer expression can only reference an imported global
-  000000f: error: OnInitExprGetGlobalExpr callback failed
+  000000f: error: OnInitExprGlobalGetExpr callback failed
 out/test/spec/mutable-global/globals.wast:104: assert_invalid passed:
   error: initializer expression can only reference an imported global
-  000000f: error: OnInitExprGetGlobalExpr callback failed
+  000000f: error: OnInitExprGlobalGetExpr callback failed
 out/test/spec/mutable-global/globals.wast:112: assert_malformed passed:
   0000019: error: unable to read string: import field name
 out/test/spec/mutable-global/globals.wast:125: assert_malformed passed:

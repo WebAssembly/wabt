@@ -3,10 +3,10 @@
 (;; STDOUT ;;;
 out/test/spec/unreached-invalid.wast:4: assert_invalid passed:
   error: invalid local_index: 0 (max 0)
-  000001a: error: OnGetLocalExpr callback failed
+  000001a: error: OnLocalGetExpr callback failed
 out/test/spec/unreached-invalid.wast:8: assert_invalid passed:
   error: invalid global_index: 0 (max 0)
-  000001a: error: OnGetGlobalExpr callback failed
+  000001a: error: OnGlobalGetExpr callback failed
 out/test/spec/unreached-invalid.wast:12: assert_invalid passed:
   000001a: error: invalid call function index: 1
 out/test/spec/unreached-invalid.wast:16: assert_invalid passed:
@@ -333,7 +333,7 @@ out/test/spec/unreached-invalid.wast:690: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
   0000022: error: OnEndExpr callback failed
 out/test/spec/unreached-invalid.wast:701: assert_invalid passed:
-  error: type mismatch in i64.extend_u/i32, expected [i32] but got [i64]
+  error: type mismatch in i64.extend_i32_u, expected [i32] but got [i64]
   000001c: error: OnConvertExpr callback failed
 111/111 tests passed.
 ;;; STDOUT ;;)

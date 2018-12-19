@@ -44,21 +44,21 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
   Result OnReturnCallIndirectExpr(ReturnCallIndirectExpr*) override;
-  Result OnGetGlobalExpr(GetGlobalExpr*) override;
-  Result OnGetLocalExpr(GetLocalExpr*) override;
+  Result OnGlobalGetExpr(GlobalGetExpr*) override;
+  Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
   Result BeginIfExceptExpr(IfExceptExpr*) override;
   Result EndIfExceptExpr(IfExceptExpr*) override;
+  Result OnLocalGetExpr(LocalGetExpr*) override;
+  Result OnLocalSetExpr(LocalSetExpr*) override;
+  Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
   Result OnMemoryDropExpr(MemoryDropExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
-  Result OnSetGlobalExpr(SetGlobalExpr*) override;
-  Result OnSetLocalExpr(SetLocalExpr*) override;
   Result OnTableDropExpr(TableDropExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
-  Result OnTeeLocalExpr(TeeLocalExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -320,12 +320,12 @@ Result NameApplier::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
   return Result::Ok;
 }
 
-Result NameApplier::OnGetGlobalExpr(GetGlobalExpr* expr) {
+Result NameApplier::OnGlobalGetExpr(GlobalGetExpr* expr) {
   CHECK_RESULT(UseNameForGlobalVar(&expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnGetLocalExpr(GetLocalExpr* expr) {
+Result NameApplier::OnLocalGetExpr(LocalGetExpr* expr) {
   CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->var));
   return Result::Ok;
 }
@@ -351,17 +351,17 @@ Result NameApplier::EndIfExceptExpr(IfExceptExpr* expr) {
   return Result::Ok;
 }
 
-Result NameApplier::OnSetGlobalExpr(SetGlobalExpr* expr) {
+Result NameApplier::OnGlobalSetExpr(GlobalSetExpr* expr) {
   CHECK_RESULT(UseNameForGlobalVar(&expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnSetLocalExpr(SetLocalExpr* expr) {
+Result NameApplier::OnLocalSetExpr(LocalSetExpr* expr) {
   CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->var));
   return Result::Ok;
 }
 
-Result NameApplier::OnTeeLocalExpr(TeeLocalExpr* expr) {
+Result NameApplier::OnLocalTeeExpr(LocalTeeExpr* expr) {
   CHECK_RESULT(UseNameForParamAndLocalVar(current_func_, &expr->var));
   return Result::Ok;
 }

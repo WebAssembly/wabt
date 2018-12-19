@@ -25,16 +25,16 @@
   (type (;1;) (func))
   (func (;0;) (type 0) (result i32)
     (drop
-      (get_global 1))
+      (global.get 1))
     (i32.mul
-      (get_global 0)
-      (get_global 0)))
+      (global.get 0)
+      (global.get 0)))
   (func (;1;) (type 1)
-    (set_global 0
+    (global.set 0
       (i32.add
-        (get_global 0)
+        (global.get 0)
         (i32.const 1)))
-    (set_global 1
+    (global.set 1
       (f32.const 0x1p+1 (;=2;))))
   (global (;0;) (mut i32) (i32.const 1))
   (global (;1;) (mut f32) (f32.const 0x1.8p+0 (;=1.5;))))

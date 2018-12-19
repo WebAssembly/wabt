@@ -60,11 +60,11 @@ class TypeChecker {
 
   Result BeginFunction(const TypeVector& sig);
   Result OnAtomicLoad(Opcode);
+  Result OnAtomicNotify(Opcode);
   Result OnAtomicStore(Opcode);
   Result OnAtomicRmw(Opcode);
   Result OnAtomicRmwCmpxchg(Opcode);
   Result OnAtomicWait(Opcode);
-  Result OnAtomicWake(Opcode);
   Result OnBinary(Opcode);
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
@@ -84,13 +84,16 @@ class TypeChecker {
   Result OnDrop();
   Result OnElse();
   Result OnEnd();
-  Result OnGetGlobal(Type);
-  Result OnGetLocal(Type);
+  Result OnGlobalGet(Type);
+  Result OnGlobalSet(Type);
   Result OnIf(const TypeVector& param_types, const TypeVector& result_types);
   Result OnIfExcept(const TypeVector& param_types,
                     const TypeVector& result_types,
                     const TypeVector& except_sig);
   Result OnLoad(Opcode);
+  Result OnLocalGet(Type);
+  Result OnLocalSet(Type);
+  Result OnLocalTee(Type);
   Result OnLoop(const TypeVector& param_types, const TypeVector& result_types);
   Result OnMemoryCopy();
   Result OnMemoryDrop(Index);
@@ -104,12 +107,9 @@ class TypeChecker {
   Result OnRethrow();
   Result OnReturn();
   Result OnSelect();
-  Result OnSetGlobal(Type);
-  Result OnSetLocal(Type);
   Result OnSimdLaneOp(Opcode, uint64_t);
   Result OnSimdShuffleOp(Opcode, v128);
   Result OnStore(Opcode);
-  Result OnTeeLocal(Type);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);
   Result OnTry(const TypeVector& param_types, const TypeVector& result_types);

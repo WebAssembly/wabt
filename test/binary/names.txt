@@ -34,5 +34,5 @@ section("name") {
   (type (;0;) (func (result i32)))
   (func $F0 (type 0) (result i32)
     (local $L0 i32)
-    get_local $L0))
+    local.get $L0))
 ;;; STDOUT ;;)

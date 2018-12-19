@@ -861,8 +861,8 @@ void CWriter::WriteInitExpr(const ExprList& expr_list) {
       Write(cast<ConstExpr>(expr)->const_);
       break;
 
-    case ExprType::GetGlobal:
-      Write(GlobalVar(cast<GetGlobalExpr>(expr)->var));
+    case ExprType::GlobalGet:
+      Write(GlobalVar(cast<GlobalGetExpr>(expr)->var));
       break;
 
     default:
@@ -1516,17 +1516,17 @@ void CWriter::Write(const ExprList& exprs) {
         DropTypes(1);
         break;
 
-      case ExprType::GetGlobal: {
-        const Var& var = cast<GetGlobalExpr>(&expr)->var;
+      case ExprType::GlobalGet: {
+        const Var& var = cast<GlobalGetExpr>(&expr)->var;
         PushType(module_->GetGlobal(var)->type);
         Write(StackVar(0), " = ", GlobalVar(var), ";", Newline());
         break;
       }
 
-      case ExprType::GetLocal: {
-        const Var& var = cast<GetLocalExpr>(&expr)->var;
-        PushType(func_->GetLocalType(var));
-        Write(StackVar(0), " = ", var, ";", Newline());
+      case ExprType::GlobalSet: {
+        const Var& var = cast<GlobalSetExpr>(&expr)->var;
+        Write(GlobalVar(var), " = ", StackVar(0), ";", Newline());
+        DropTypes(1);
         break;
       }
 
@@ -1552,6 +1552,26 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::Load:
         Write(*cast<LoadExpr>(&expr));
         break;
+
+      case ExprType::LocalGet: {
+        const Var& var = cast<LocalGetExpr>(&expr)->var;
+        PushType(func_->GetLocalType(var));
+        Write(StackVar(0), " = ", var, ";", Newline());
+        break;
+      }
+
+      case ExprType::LocalSet: {
+        const Var& var = cast<LocalSetExpr>(&expr)->var;
+        Write(var, " = ", StackVar(0), ";", Newline());
+        DropTypes(1);
+        break;
+      }
+
+      case ExprType::LocalTee: {
+        const Var& var = cast<LocalTeeExpr>(&expr)->var;
+        Write(var, " = ", StackVar(0), ";", Newline());
+        break;
+      }
 
       case ExprType::Loop: {
         const Block& block = cast<LoopExpr>(&expr)->block;
@@ -1617,29 +1637,9 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::SetGlobal: {
-        const Var& var = cast<SetGlobalExpr>(&expr)->var;
-        Write(GlobalVar(var), " = ", StackVar(0), ";", Newline());
-        DropTypes(1);
-        break;
-      }
-
-      case ExprType::SetLocal: {
-        const Var& var = cast<SetLocalExpr>(&expr)->var;
-        Write(var, " = ", StackVar(0), ";", Newline());
-        DropTypes(1);
-        break;
-      }
-
       case ExprType::Store:
         Write(*cast<StoreExpr>(&expr));
         break;
-
-      case ExprType::TeeLocal: {
-        const Var& var = cast<TeeLocalExpr>(&expr)->var;
-        Write(var, " = ", StackVar(0), ";", Newline());
-        break;
-      }
 
       case ExprType::Unary:
         Write(*cast<UnaryExpr>(&expr));
@@ -1668,7 +1668,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicRmwCmpxchg:
       case ExprType::AtomicStore:
       case ExprType::AtomicWait:
-      case ExprType::AtomicWake:
+      case ExprType::AtomicNotify:
       case ExprType::IfExcept:
       case ExprType::Rethrow:
       case ExprType::ReturnCall:
@@ -1930,11 +1930,11 @@ void CWriter::Write(const ConvertExpr& expr) {
       WriteSimpleUnaryExpr(expr.opcode, "!");
       break;
 
-    case Opcode::I64ExtendSI32:
+    case Opcode::I64ExtendI32S:
       WriteSimpleUnaryExpr(expr.opcode, "(u64)(s64)(s32)");
       break;
 
-    case Opcode::I64ExtendUI32:
+    case Opcode::I64ExtendI32U:
       WriteSimpleUnaryExpr(expr.opcode, "(u64)");
       break;
 
@@ -1942,82 +1942,82 @@ void CWriter::Write(const ConvertExpr& expr) {
       WriteSimpleUnaryExpr(expr.opcode, "(u32)");
       break;
 
-    case Opcode::I32TruncSF32:
+    case Opcode::I32TruncF32S:
       WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_S_F32");
       break;
 
-    case Opcode::I64TruncSF32:
+    case Opcode::I64TruncF32S:
       WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_S_F32");
       break;
 
-    case Opcode::I32TruncSF64:
+    case Opcode::I32TruncF64S:
       WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_S_F64");
       break;
 
-    case Opcode::I64TruncSF64:
+    case Opcode::I64TruncF64S:
       WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_S_F64");
       break;
 
-    case Opcode::I32TruncUF32:
+    case Opcode::I32TruncF32U:
       WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_U_F32");
       break;
 
-    case Opcode::I64TruncUF32:
+    case Opcode::I64TruncF32U:
       WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_U_F32");
       break;
 
-    case Opcode::I32TruncUF64:
+    case Opcode::I32TruncF64U:
       WriteSimpleUnaryExpr(expr.opcode, "I32_TRUNC_U_F64");
       break;
 
-    case Opcode::I64TruncUF64:
+    case Opcode::I64TruncF64U:
       WriteSimpleUnaryExpr(expr.opcode, "I64_TRUNC_U_F64");
       break;
 
-    case Opcode::I32TruncSSatF32:
-    case Opcode::I64TruncSSatF32:
-    case Opcode::I32TruncSSatF64:
-    case Opcode::I64TruncSSatF64:
-    case Opcode::I32TruncUSatF32:
-    case Opcode::I64TruncUSatF32:
-    case Opcode::I32TruncUSatF64:
-    case Opcode::I64TruncUSatF64:
+    case Opcode::I32TruncSatF32S:
+    case Opcode::I64TruncSatF32S:
+    case Opcode::I32TruncSatF64S:
+    case Opcode::I64TruncSatF64S:
+    case Opcode::I32TruncSatF32U:
+    case Opcode::I64TruncSatF32U:
+    case Opcode::I32TruncSatF64U:
+    case Opcode::I64TruncSatF64U:
       UNIMPLEMENTED(expr.opcode.GetName());
       break;
 
-    case Opcode::F32ConvertSI32:
+    case Opcode::F32ConvertI32S:
       WriteSimpleUnaryExpr(expr.opcode, "(f32)(s32)");
       break;
 
-    case Opcode::F32ConvertSI64:
+    case Opcode::F32ConvertI64S:
       WriteSimpleUnaryExpr(expr.opcode, "(f32)(s64)");
       break;
 
-    case Opcode::F32ConvertUI32:
+    case Opcode::F32ConvertI32U:
     case Opcode::F32DemoteF64:
       WriteSimpleUnaryExpr(expr.opcode, "(f32)");
       break;
 
-    case Opcode::F32ConvertUI64:
+    case Opcode::F32ConvertI64U:
       // TODO(binji): This needs to be handled specially (see
       // wabt_convert_uint64_to_float).
       WriteSimpleUnaryExpr(expr.opcode, "(f32)");
       break;
 
-    case Opcode::F64ConvertSI32:
+    case Opcode::F64ConvertI32S:
       WriteSimpleUnaryExpr(expr.opcode, "(f64)(s32)");
       break;
 
-    case Opcode::F64ConvertSI64:
+    case Opcode::F64ConvertI64S:
       WriteSimpleUnaryExpr(expr.opcode, "(f64)(s64)");
       break;
 
-    case Opcode::F64ConvertUI32:
+    case Opcode::F64ConvertI32U:
     case Opcode::F64PromoteF32:
       WriteSimpleUnaryExpr(expr.opcode, "(f64)");
       break;
 
-    case Opcode::F64ConvertUI64:
+    case Opcode::F64ConvertI64U:
       // TODO(binji): This needs to be handled specially (see
       // wabt_convert_uint64_to_double).
       WriteSimpleUnaryExpr(expr.opcode, "(f64)");

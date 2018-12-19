@@ -35,7 +35,7 @@
 0000018: 7f                                        ; i32
 0000019: 41                                        ; i32.const
 000001a: 00                                        ; i32 literal
-000001b: 22                                        ; tee_local
+000001b: 22                                        ; local.tee
 000001c: 00                                        ; local index
 000001d: 1a                                        ; drop
 000001e: 0b                                        ; end
@@ -49,7 +49,7 @@ Code Disassembly:
 000016 func[0]:
  000017: 01 7f                      | local[0] type=i32
  000019: 41 00                      | i32.const 0
- 00001b: 22 00                      | tee_local 0
+ 00001b: 22 00                      | local.tee 0
  00001d: 1a                         | drop
  00001e: 0b                         | end
 ;;; STDOUT ;;)
