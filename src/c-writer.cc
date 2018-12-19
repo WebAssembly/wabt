@@ -301,9 +301,6 @@ static const char* s_global_symbols[] = {
     "switch", "_Thread_local", "typedef", "union", "unsigned", "void",
     "volatile", "while",
 
-    // assert.h
-    "assert", "static_assert",
-
     // math.h
     "abs", "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "cbrt",
     "ceil", "copysign", "cos", "cosh", "double_t", "erf", "erfc", "exp", "exp2",
@@ -340,15 +337,6 @@ static const char* s_global_symbols[] = {
     "uint_least64_t", "UINT_LEAST8_MAX", "uint_least8_t", "UINTMAX_C",
     "UINTMAX_MAX", "uintmax_t", "UINTPTR_MAX", "uintptr_t", "UNT8_C",
     "WCHAR_MAX", "WCHAR_MIN", "WINT_MAX", "WINT_MIN",
-
-    // stdlib.h
-    "abort", "abs", "atexit", "atof", "atoi", "atol", "atoll", "at_quick_exit",
-    "bsearch", "calloc", "div", "div_t", "exit", "_Exit", "EXIT_FAILURE",
-    "EXIT_SUCCESS", "free", "getenv", "labs", "ldiv", "ldiv_t", "llabs",
-    "lldiv", "lldiv_t", "malloc", "MB_CUR_MAX", "mblen", "mbstowcs", "mbtowc",
-    "qsort", "quick_exit", "rand", "RAND_MAX", "realloc", "size_t", "srand",
-    "strtod", "strtof", "strtol", "strtold", "strtoll", "strtoul", "strtoull",
-    "system", "wcstombs", "wctomb",
 
     // string.h
     "memchr", "memcmp", "memcpy", "memmove", "memset", "NULL", "size_t",
