@@ -1,8 +1,6 @@
 /* Generated from 'wasm2c.c.tmpl' by wasm2c_tmpl.py, do not edit! */
 const char SECTION_NAME(includes)[] =
-"#include <assert.h>\n"
 "#include <math.h>\n"
-"#include <stdlib.h>\n"
 "#include <string.h>\n"
 ;
 
