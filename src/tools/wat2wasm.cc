@@ -102,11 +102,12 @@ static void ParseOptions(int argc, char* argv[]) {
 static void WriteBufferToFile(string_view filename,
                               const OutputBuffer& buffer) {
   if (s_dump_module) {
+    std::unique_ptr<FileStream> stream = FileStream::CreateStdout();
     if (s_verbose) {
-      s_log_stream->Writef(";; dump\n");
+      stream->Writef(";; dump\n");
     }
     if (!buffer.data.empty()) {
-      s_log_stream->WriteMemoryDump(buffer.data.data(), buffer.data.size());
+      stream->WriteMemoryDump(buffer.data.data(), buffer.data.size());
     }
   }
 
