@@ -22,11 +22,16 @@
 #include <cstdio>
 #include <cstring>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #if COMPILER_IS_MSVC
 #include <fcntl.h>
 #include <io.h>
 #include <stdlib.h>
 #define PATH_MAX _MAX_PATH
+#define stat _stat
+#define S_IFREG _S_IFREG
 #endif
 
 namespace wabt {
@@ -47,11 +52,25 @@ const char* g_reloc_type_name[] = {
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
 
 Result ReadFile(string_view filename, std::vector<uint8_t>* out_data) {
-  FILE* infile = fopen(filename.to_string().c_str(), "rb");
+  std::string filename_str = filename.to_string();
+  const char* filename_cstr = filename_str.c_str();
+
+  struct stat statbuf;
+  if (stat(filename_cstr, &statbuf) < 0) {
+    perror("stat failed");
+    return Result::Error;
+  }
+
+  if (!(statbuf.st_mode & S_IFREG)) {
+    fprintf(stderr, "%s is not a regular file.\n", filename_cstr);
+    return Result::Error;
+  }
+
+  FILE* infile = fopen(filename_cstr, "rb");
   if (!infile) {
     const char format[] = "unable to read file %s";
     char msg[PATH_MAX + sizeof(format)];
-    wabt_snprintf(msg, sizeof(msg), format, filename.to_string().c_str());
+    wabt_snprintf(msg, sizeof(msg), format, filename_cstr);
     perror(msg);
     return Result::Error;
   }
