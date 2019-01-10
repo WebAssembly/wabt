@@ -433,22 +433,22 @@ if (NOT EMSCRIPTEN)
       SOURCES ${UNITTESTS_SRCS}
       LIBS libgtest ${CMAKE_THREAD_LIBS_INIT}
     )
-  endif ()
 
-  if (NOT CMAKE_VERSION VERSION_LESS "3.2")
-    set(USES_TERMINAL USES_TERMINAL)
-  endif ()
+    if (NOT CMAKE_VERSION VERSION_LESS "3.2")
+      set(USES_TERMINAL USES_TERMINAL)
+    endif ()
 
-  # test running
-  find_package(PythonInterp 2.7 REQUIRED)
-  set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
-  add_custom_target(run-tests
-    COMMAND ${CMAKE_BINARY_DIR}/wabt-unittests
-    COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir ${CMAKE_BINARY_DIR}
-    DEPENDS ${WABT_EXECUTABLES}
-    WORKING_DIRECTORY ${WABT_SOURCE_DIR}
-    ${USES_TERMINAL}
-  )
+    # test running
+    find_package(PythonInterp 2.7 REQUIRED)
+    set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
+    add_custom_target(run-tests
+      COMMAND ${CMAKE_BINARY_DIR}/wabt-unittests
+      COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir ${CMAKE_BINARY_DIR}
+      DEPENDS ${WABT_EXECUTABLES}
+      WORKING_DIRECTORY ${WABT_SOURCE_DIR}
+      ${USES_TERMINAL}
+    )
+  endif ()
 
   # install
   if (BUILD_TOOLS OR BUILD_TESTS)
