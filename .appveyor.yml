@@ -50,13 +50,15 @@ after_test:
 artifacts:
   - path: "%DEPLOY_NAME%"
     name: wabt
+  - path: "%DEPLOY_NAME%.sha256"
+    name: sha256
 
 deploy:
   description: 'wabt release'
   provider: GitHub
   auth_token:
     secure: lHQSdycL1FHsFKZZ0RSnYSUtRitYaLb4uxDjCSOpYHnk4gIO/0/DLu4aoU2VvD7Y
-  artifact: "%DEPLOY_NAME%"
+  artifact: wabt,sha256
   on:
     appveyor_repo_tag: true
     deploy: true
