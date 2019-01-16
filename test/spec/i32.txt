@@ -1,5 +1,50 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/i32.wast
 (;; STDOUT ;;;
-359/359 tests passed.
+out/test/spec/i32.wast:425: assert_invalid passed:
+  error: type mismatch in i32.eqz, expected [i32] but got []
+  0000018: error: OnConvertExpr callback failed
+out/test/spec/i32.wast:433: assert_invalid passed:
+  error: type mismatch in i32.eqz, expected [i32] but got []
+  000001c: error: OnConvertExpr callback failed
+out/test/spec/i32.wast:442: assert_invalid passed:
+  error: type mismatch in i32.eqz, expected [i32] but got []
+  000001c: error: OnConvertExpr callback failed
+out/test/spec/i32.wast:451: assert_invalid passed:
+  error: type mismatch in i32.eqz, expected [i32] but got []
+  000001e: error: OnConvertExpr callback failed
+out/test/spec/i32.wast:460: assert_invalid passed:
+  error: type mismatch in i32.eqz, expected [i32] but got []
+  0000021: error: OnConvertExpr callback failed
+out/test/spec/i32.wast:470: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got []
+  0000018: error: OnBinaryExpr callback failed
+out/test/spec/i32.wast:478: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  000001a: error: OnBinaryExpr callback failed
+out/test/spec/i32.wast:486: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got []
+  000001e: error: OnBinaryExpr callback failed
+out/test/spec/i32.wast:495: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  000001e: error: OnBinaryExpr callback failed
+out/test/spec/i32.wast:504: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got []
+  000001e: error: OnBinaryExpr callback failed
+out/test/spec/i32.wast:513: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got [i32]
+  000001e: error: OnBinaryExpr callback failed
+out/test/spec/i32.wast:522: assert_invalid passed:
+  error: type mismatch in drop, expected [any] but got []
+  0000021: error: OnDropExpr callback failed
+out/test/spec/i32.wast:531: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got []
+  0000020: error: OnBinaryExpr callback failed
+out/test/spec/i32.wast:540: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got []
+  0000023: error: OnBinaryExpr callback failed
+out/test/spec/i32.wast:550: assert_invalid passed:
+  error: type mismatch in i32.add, expected [i32, i32] but got []
+  0000021: error: OnBinaryExpr callback failed
+374/374 tests passed.
 ;;; STDOUT ;;)

@@ -14,13 +14,25 @@ out/test/spec/br.wast:439: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got [i64]
   000001e: error: OnBrExpr callback failed
 out/test/spec/br.wast:446: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001b: error: OnBrExpr callback failed
+out/test/spec/br.wast:455: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001d: error: OnBrExpr callback failed
+out/test/spec/br.wast:465: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000021: error: OnBrExpr callback failed
+out/test/spec/br.wast:477: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000024: error: OnBrExpr callback failed
+out/test/spec/br.wast:492: assert_invalid passed:
   error: invalid depth: 1 (max 0)
   0000019: error: OnBrExpr callback failed
-out/test/spec/br.wast:450: assert_invalid passed:
+out/test/spec/br.wast:496: assert_invalid passed:
   error: invalid depth: 5 (max 2)
   000001d: error: OnBrExpr callback failed
-out/test/spec/br.wast:454: assert_invalid passed:
+out/test/spec/br.wast:500: assert_invalid passed:
   error: invalid depth: 268435457 (max 0)
   000001d: error: OnBrExpr callback failed
-70/70 tests passed.
+74/74 tests passed.
 ;;; STDOUT ;;)

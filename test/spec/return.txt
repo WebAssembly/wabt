@@ -10,5 +10,20 @@ out/test/spec/return.wast:315: assert_invalid passed:
 out/test/spec/return.wast:319: assert_invalid passed:
   error: type mismatch in return, expected [f64] but got [i64]
   000001b: error: OnReturnExpr callback failed
-66/66 tests passed.
+out/test/spec/return.wast:324: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  0000019: error: OnReturnExpr callback failed
+out/test/spec/return.wast:332: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001d: error: OnReturnExpr callback failed
+out/test/spec/return.wast:341: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001d: error: OnReturnExpr callback failed
+out/test/spec/return.wast:350: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001f: error: OnReturnExpr callback failed
+out/test/spec/return.wast:359: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  0000022: error: OnReturnExpr callback failed
+71/71 tests passed.
 ;;; STDOUT ;;)
