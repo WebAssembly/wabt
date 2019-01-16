@@ -766,9 +766,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
 
   Result OnDylinkInfo(uint32_t mem_size,
-                      uint32_t mem_align,
+                      uint32_t mem_align_log2,
                       uint32_t table_size,
-                      uint32_t table_align) override;
+                      uint32_t table_align_log2) override;
   Result OnDylinkNeededCount(Index count) override;
   Result OnDylinkNeeded(string_view so_name) override;
 
@@ -799,7 +799,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
                        string_view name,
-                       uint32_t alignment,
+                       uint32_t alignment_log2,
                        uint32_t flags) override;
   Result OnInitFunctionCount(Index count) override;
   Result OnInitFunction(uint32_t priority, Index function_index) override;
@@ -1353,13 +1353,13 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
 }
 
 Result BinaryReaderObjdump::OnDylinkInfo(uint32_t mem_size,
-                                         uint32_t mem_align,
+                                         uint32_t mem_align_log2,
                                          uint32_t table_size,
-                                         uint32_t table_align) {
-  PrintDetails(" - mem_size   : %u\n", mem_size);
-  PrintDetails(" - mem_align  : %u\n", mem_align);
-  PrintDetails(" - table_size : %u\n", table_size);
-  PrintDetails(" - table_align: %u\n", table_align);
+                                         uint32_t table_align_log2) {
+  PrintDetails(" - mem_size     : %u\n", mem_size);
+  PrintDetails(" - mem_p2align  : %u\n", mem_align_log2);
+  PrintDetails(" - table_size   : %u\n", table_size);
+  PrintDetails(" - table_p2align: %u\n", table_align_log2);
   return Result::Ok;
 }
 
@@ -1512,10 +1512,10 @@ Result BinaryReaderObjdump::OnSegmentInfoCount(Index count) {
 
 Result BinaryReaderObjdump::OnSegmentInfo(Index index,
                                           string_view name,
-                                          uint32_t alignment,
+                                          uint32_t alignment_log2,
                                           uint32_t flags) {
-  PrintDetails("   - %d: " PRIstringview " align=%d flags=%#x\n", index,
-               WABT_PRINTF_STRING_VIEW_ARG(name), alignment, flags);
+  PrintDetails("   - %d: " PRIstringview " p2align=%d flags=%#x\n", index,
+               WABT_PRINTF_STRING_VIEW_ARG(name), alignment_log2, flags);
   return Result::Ok;
 }
 

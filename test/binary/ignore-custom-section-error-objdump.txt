@@ -3,7 +3,8 @@
 magic
 version
 section("linking") {
-  1 2 3 4 5 6 7
+  metadata_version[2]
+  2 3 4 5 6 7
 }
 
 ;; Some dummy data to make sure the module is still parsed after the invalid

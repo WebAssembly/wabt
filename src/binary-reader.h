@@ -329,9 +329,9 @@ class BinaryReaderDelegate {
   /* Dylink section */
   virtual Result BeginDylinkSection(Offset size) = 0;
   virtual Result OnDylinkInfo(uint32_t mem_size,
-                              uint32_t mem_align,
+                              uint32_t mem_align_log2,
                               uint32_t table_size,
-                              uint32_t table_align) = 0;
+                              uint32_t table_align_log2) = 0;
   virtual Result OnDylinkNeededCount(Index count) = 0;
   virtual Result OnDylinkNeeded(string_view so_name) = 0;
   virtual Result EndDylinkSection() = 0;
@@ -360,7 +360,7 @@ class BinaryReaderDelegate {
   virtual Result OnSegmentInfoCount(Index count) = 0;
   virtual Result OnSegmentInfo(Index index,
                                string_view name,
-                               uint32_t alignment,
+                               uint32_t alignment_log2,
                                uint32_t flags) = 0;
   virtual Result OnInitFunctionCount(Index count) = 0;
   virtual Result OnInitFunction(uint32_t priority, Index function_index) = 0;

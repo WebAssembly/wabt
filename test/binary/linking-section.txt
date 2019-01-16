@@ -3,15 +3,15 @@
 magic
 version
 section("linking") {
-  metadata_version[1]
+  metadata_version[2]
 
   section(LINKING_SEGMENT_INFO) {
     count[2]
     str("data1")
-    align[4]
+    p2align[2]
     flags[0]
     str("data2")
-    align[8]
+    p2align[3]
     flags[0]
   }
 
@@ -57,8 +57,8 @@ Section Details:
 Custom:
  - name: "linking"
   - segment info [count=2]
-   - 0: data1 align=4 flags=0
-   - 1: data2 align=8 flags=0
+   - 0: data1 p2align=2 flags=0
+   - 1: data2 p2align=3 flags=0
   - init functions [count=2]
    - 1: priority=5
    - 0: priority=6
