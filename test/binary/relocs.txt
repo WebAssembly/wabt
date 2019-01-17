@@ -5,7 +5,7 @@ version
 section(TYPE) { count[1] function params[0] results[1] i32 }
 section("mysection") {}
 section("linking") {
-  metadata_version[1]
+  metadata_version[2]
 
   section(LINKING_SYMBOL_TABLE) {
     num_symbols[1]

@@ -19,10 +19,10 @@ Section Details:
 
 Custom:
  - name: "dylink"
- - mem_size   : 5
- - mem_align  : 1
- - table_size : 3
- - table_align: 2
+ - mem_size     : 5
+ - mem_p2align  : 1
+ - table_size   : 3
+ - table_p2align: 2
  - needed_dynlibs[2]:
   - libfoo.so
   - libbar.so

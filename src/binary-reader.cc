@@ -1579,7 +1579,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   CALLBACK(BeginLinkingSection, section_size);
   uint32_t version;
   CHECK_RESULT(ReadU32Leb128(&version, "version"));
-  ERROR_UNLESS(version == 1, "invalid linking metadata version: %u", version);
+  ERROR_UNLESS(version == 2, "invalid linking metadata version: %u", version);
   while (state_.offset < read_end_) {
     uint32_t linking_type;
     Offset subsection_size;
@@ -1645,12 +1645,12 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
         CALLBACK(OnSegmentInfoCount, count);
         for (Index i = 0; i < count; i++) {
           string_view name;
-          uint32_t alignment;
+          uint32_t alignment_log2;
           uint32_t flags;
           CHECK_RESULT(ReadStr(&name, "segment name"));
-          CHECK_RESULT(ReadU32Leb128(&alignment, "segment alignment"));
+          CHECK_RESULT(ReadU32Leb128(&alignment_log2, "segment alignment"));
           CHECK_RESULT(ReadU32Leb128(&flags, "segment flags"));
-          CALLBACK(OnSegmentInfo, i, name, alignment, flags);
+          CALLBACK(OnSegmentInfo, i, name, alignment_log2, flags);
         }
         break;
       case LinkingEntryType::InitFunctions:
