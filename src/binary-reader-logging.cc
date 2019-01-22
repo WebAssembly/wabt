@@ -738,6 +738,10 @@ DEFINE_INDEX(EndDataSegmentInitExpr)
 DEFINE_INDEX(EndDataSegment)
 DEFINE_END(EndDataSection)
 
+DEFINE_BEGIN(BeginDataCountSection)
+DEFINE_INDEX(OnDataCount)
+DEFINE_END(EndDataCountSection)
+
 DEFINE_BEGIN(BeginNamesSection)
 DEFINE_INDEX(OnFunctionNamesCount)
 DEFINE_INDEX(OnLocalNameFunctionCount)

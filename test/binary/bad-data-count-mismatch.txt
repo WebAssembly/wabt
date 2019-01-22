@@ -1,0 +1,23 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-bulk-memory
+;;; ARGS2: --enable-bulk-memory
+magic
+version
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[1]
+}
+section(DATACOUNT) {
+  count[2]
+}
+section(DATA) {
+  count[1]
+  memory_index[0]
+  offset[i32.const 0 end]
+  data[str("whoops")]
+}
+(;; STDERR ;;;
+0000013: error: data segment count does not equal count in DataCount section
+0000013: error: data segment count does not equal count in DataCount section
+;;; STDERR ;;)

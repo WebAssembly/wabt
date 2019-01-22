@@ -62,6 +62,7 @@ NAMED_VALUES = {
     'ELEM': 9,
     'CODE': 10,
     'DATA': 11,
+    'DATACOUNT': 12,
 
     # name subsection codes
     'NAME_MODULE': 0,

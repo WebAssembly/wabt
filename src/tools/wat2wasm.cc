@@ -148,6 +148,7 @@ int ProgramMain(int argc, char** argv) {
 
     if (Succeeded(result)) {
       MemoryStream stream(s_log_stream.get());
+      s_write_binary_options.features = s_features;
       result = WriteBinaryModule(&stream, module.get(), s_write_binary_options);
 
       if (Succeeded(result)) {

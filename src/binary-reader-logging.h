@@ -233,6 +233,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndDataSegment(Index index) override;
   Result EndDataSection() override;
 
+  Result BeginDataCountSection(Offset size) override;
+  Result OnDataCount(Index count) override;
+  Result EndDataCountSection() override;
+
   Result BeginNamesSection(Offset size) override;
   Result OnModuleNameSubsection(Index index,
                                 uint32_t name_type,

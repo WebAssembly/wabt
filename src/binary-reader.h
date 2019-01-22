@@ -293,6 +293,11 @@ class BinaryReaderDelegate {
   virtual Result EndDataSegment(Index index) = 0;
   virtual Result EndDataSection() = 0;
 
+  /* DataCount section */
+  virtual Result BeginDataCountSection(Offset size) = 0;
+  virtual Result OnDataCount(Index count) = 0;
+  virtual Result EndDataCountSection() = 0;
+
   /* Names section */
   virtual Result BeginNamesSection(Offset size) = 0;
   virtual Result OnModuleNameSubsection(Index index,

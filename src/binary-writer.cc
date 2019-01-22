@@ -993,6 +993,12 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
+  if (options_.features.bulk_memory_enabled()) {
+    BeginKnownSection(BinarySection::DataCount);
+    WriteU32Leb128(stream_, module_->data_segments.size(), "data count");
+    EndSection();
+  }
+
   if (num_funcs) {
     BeginKnownSection(BinarySection::Code);
     WriteU32Leb128(stream_, num_funcs, "num functions");
