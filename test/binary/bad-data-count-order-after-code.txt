@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-bulk-memory
+;;; ARGS2: --enable-bulk-memory
+magic
+version
+section(CODE) { count[0] }
+section(DATACOUNT) { count[0] }
+(;; STDERR ;;;
+000000d: error: section DataCount out of order
+000000d: error: section DataCount out of order
+;;; STDERR ;;)

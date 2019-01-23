@@ -10,7 +10,7 @@ out/test/spec/custom.wast:77: assert_malformed passed:
 out/test/spec/custom.wast:85: assert_malformed passed:
   000000a: error: invalid section size: extends past end
 out/test/spec/custom.wast:93: assert_malformed passed:
-  0000031: error: invalid section code: 36; max is 11
+  0000031: error: invalid section code: 36
 out/test/spec/custom.wast:102: assert_malformed passed:
   000003e: error: function signature count != function body count
 out/test/spec/custom.wast:115: assert_malformed passed:

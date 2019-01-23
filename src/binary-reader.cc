@@ -137,6 +137,7 @@ class BinaryReader {
   Result ReadElemSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadCodeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadDataCountSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadExceptionSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadSections() WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
@@ -166,6 +167,7 @@ class BinaryReader {
   Index num_exports_ = 0;
   Index num_function_bodies_ = 0;
   Index num_exceptions_ = 0;
+  Index data_count_ = kInvalidIndex;
 
   using ReadEndRestoreGuard =
       ValueRestoreGuard<size_t, &BinaryReader::read_end_>;
@@ -2071,6 +2073,9 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   CALLBACK(OnDataSegmentCount, num_data_segments);
   ERROR_UNLESS(num_data_segments == 0 || NumTotalMemories() > 0,
                "data section without memory section");
+  // If the DataCount section is not present, then data_count_ will be invalid.
+  ERROR_UNLESS(data_count_ == kInvalidIndex || data_count_ == num_data_segments,
+               "data segment count does not equal count in DataCount section");
   for (Index i = 0; i < num_data_segments; ++i) {
     uint32_t flags_u32;
     CHECK_RESULT(ReadU32Leb128(&flags_u32, "data segment flags"));
@@ -2098,6 +2103,16 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadDataCountSection(Offset section_size) {
+  CALLBACK(BeginDataCountSection, section_size);
+  Index data_count;
+  CHECK_RESULT(ReadIndex(&data_count, "data count"));
+  CALLBACK(OnDataCount, data_count);
+  CALLBACK0(EndDataCountSection);
+  data_count_ = data_count;
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadSections() {
   Result result = Result::Ok;
 
@@ -2109,8 +2124,7 @@ Result BinaryReader::ReadSections() {
     ReadEndRestoreGuard guard(this);
     read_end_ = state_.offset + section_size;
     if (section_code >= kBinarySectionCount) {
-      PrintError("invalid section code: %u; max is %u", section_code,
-                 kBinarySectionCount - 1);
+      PrintError("invalid section code: %u", section_code);
       return Result::Error;
     }
 
@@ -2119,10 +2133,11 @@ Result BinaryReader::ReadSections() {
     ERROR_UNLESS(read_end_ <= state_.size,
                  "invalid section size: extends past end");
 
-    ERROR_UNLESS(last_known_section_ == BinarySection::Invalid ||
-                     section == BinarySection::Custom ||
-                     section > last_known_section_,
-                 "section %s out of order", GetSectionName(section));
+    ERROR_UNLESS(
+        last_known_section_ == BinarySection::Invalid ||
+            section == BinarySection::Custom ||
+            GetSectionOrder(section) > GetSectionOrder(last_known_section_),
+        "section %s out of order", GetSectionName(section));
 
     ERROR_UNLESS(!did_read_names_section_ || section == BinarySection::Custom,
                  "%s section can not occur after Name section",
@@ -2183,6 +2198,12 @@ Result BinaryReader::ReadSections() {
         break;
       case BinarySection::Data:
         section_result = ReadDataSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::DataCount:
+        ERROR_UNLESS(options_.features.bulk_memory_enabled(),
+                     "invalid section code: %u", section);
+        section_result = ReadDataCountSection(section_size);
         result |= section_result;
         break;
       case BinarySection::Invalid:

@@ -18,6 +18,7 @@
 #define WABT_BINARY_WRITER_H_
 
 #include "src/common.h"
+#include "src/feature.h"
 #include "src/opcode.h"
 #include "src/stream.h"
 
@@ -27,6 +28,17 @@ struct Module;
 struct Script;
 
 struct WriteBinaryOptions {
+  WriteBinaryOptions() = default;
+  WriteBinaryOptions(const Features& features,
+                     bool canonicalize_lebs,
+                     bool relocatable,
+                     bool write_debug_names)
+      : features(features),
+        canonicalize_lebs(canonicalize_lebs),
+        relocatable(relocatable),
+        write_debug_names(write_debug_names) {}
+
+  Features features;
   bool canonicalize_lebs = true;
   bool relocatable = false;
   bool write_debug_names = false;

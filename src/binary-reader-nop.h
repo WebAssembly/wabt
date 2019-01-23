@@ -307,6 +307,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result EndDataSegment(Index index) override { return Result::Ok; }
   Result EndDataSection() override { return Result::Ok; }
 
+  /* DataCount section */
+  Result BeginDataCountSection(Offset size) override { return Result::Ok; }
+  Result OnDataCount(Index count) override { return Result::Ok; }
+  Result EndDataCountSection() override { return Result::Ok; }
+
   /* Names section */
   Result BeginNamesSection(Offset size) override { return Result::Ok; }
   Result OnModuleNameSubsection(Index index,

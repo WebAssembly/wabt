@@ -717,6 +717,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                   string_view name) override;
 
   Result OnStartFunction(Index func_index) override;
+  Result OnDataCount(Index count) override;
 
   Result OnFunctionBodyCount(Index count) override;
   Result BeginFunctionBody(Index index, Offset size) override;
@@ -866,9 +867,10 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
     case ObjdumpMode::Details:
       if (section_match) {
         printf("%s", name);
-        // All known section types except the start section have a count
-        // in which case this line gets completed in OnCount().
+        // All known section types except the Start and DataCount sections have
+        // a count in which case this line gets completed in OnCount().
         if (section_code == BinarySection::Start ||
+            section_code == BinarySection::DataCount ||
             section_code == BinarySection::Custom) {
           printf(":\n");
         }
@@ -990,6 +992,15 @@ Result BinaryReaderObjdump::OnStartFunction(Index func_index) {
     printf("start: %" PRIindex "\n", func_index);
   } else {
     PrintDetails(" - start function: %" PRIindex "\n", func_index);
+  }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnDataCount(Index count) {
+  if (options_->mode == ObjdumpMode::Headers) {
+    printf("count: %" PRIindex "\n", count);
+  } else {
+    PrintDetails(" - data count: %" PRIindex "\n", count);
   }
   return Result::Ok;
 }

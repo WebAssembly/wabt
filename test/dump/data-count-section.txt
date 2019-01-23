@@ -1,0 +1,36 @@
+;;; TOOL: run-objdump
+;;; ARGS0: --enable-bulk-memory
+;;; ARGS1: -hx
+(module
+  (memory 1)
+  (data (i32.const 0) "hi")
+  (data (i32.const 2) "world")
+  (data (i32.const 7) "goodbye")
+)
+(;; STDOUT ;;;
+
+data-count-section.wasm:	file format wasm 0x1
+
+Sections:
+
+   Memory start=0x0000000a end=0x0000000d (size=0x00000003) count: 1
+DataCount start=0x0000000f end=0x00000010 (size=0x00000001) count: 3
+     Data start=0x00000012 end=0x00000030 (size=0x0000001e) count: 3
+
+Section Details:
+
+Memory[1]:
+ - memory[0] pages: initial=1
+DataCount:
+ - data count: 3
+Data[3]:
+ - segment[0] size=2 - init i32=0
+  - 0000000: 6869                                     hi
+ - segment[1] size=5 - init i32=2
+  - 0000002: 776f 726c 64                             world
+ - segment[2] size=7 - init i32=7
+  - 0000007: 676f 6f64 6279 65                        goodbye
+
+Code Disassembly:
+
+;;; STDOUT ;;)
