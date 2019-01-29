@@ -282,8 +282,8 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnMemoryCopyExpr(cast<MemoryCopyExpr>(expr)));
       break;
 
-    case ExprType::MemoryDrop:
-      CHECK_RESULT(delegate_->OnMemoryDropExpr(cast<MemoryDropExpr>(expr)));
+    case ExprType::DataDrop:
+      CHECK_RESULT(delegate_->OnDataDropExpr(cast<DataDropExpr>(expr)));
       break;
 
     case ExprType::MemoryFill:
@@ -306,8 +306,8 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnTableCopyExpr(cast<TableCopyExpr>(expr)));
       break;
 
-    case ExprType::TableDrop:
-      CHECK_RESULT(delegate_->OnTableDropExpr(cast<TableDropExpr>(expr)));
+    case ExprType::ElemDrop:
+      CHECK_RESULT(delegate_->OnElemDropExpr(cast<ElemDropExpr>(expr)));
       break;
 
     case ExprType::TableInit:

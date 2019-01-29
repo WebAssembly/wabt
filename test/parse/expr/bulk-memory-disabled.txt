@@ -6,7 +6,7 @@
   (data $data passive "a")
   (func
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
-    memory.drop 0
+    data.drop 0
     i32.const 0 i32.const 0 i32.const 0 memory.copy
     i32.const 0 i32.const 0 i32.const 0 memory.fill
   )
@@ -15,7 +15,7 @@
   (elem $elem passive 0)
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0
-    table.drop 0
+    elem.drop 0
     i32.const 0 i32.const 0 i32.const 0 table.copy
   )
 )
@@ -23,9 +23,9 @@
 out/test/parse/expr/bulk-memory-disabled.txt:8:41: error: opcode not allowed: memory.init
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
                                         ^^^^^^^^^^^
-out/test/parse/expr/bulk-memory-disabled.txt:9:5: error: opcode not allowed: memory.drop
-    memory.drop 0
-    ^^^^^^^^^^^
+out/test/parse/expr/bulk-memory-disabled.txt:9:5: error: opcode not allowed: data.drop
+    data.drop 0
+    ^^^^^^^^^
 out/test/parse/expr/bulk-memory-disabled.txt:10:41: error: opcode not allowed: memory.copy
     i32.const 0 i32.const 0 i32.const 0 memory.copy
                                         ^^^^^^^^^^^
@@ -35,9 +35,9 @@ out/test/parse/expr/bulk-memory-disabled.txt:11:41: error: opcode not allowed: m
 out/test/parse/expr/bulk-memory-disabled.txt:17:41: error: opcode not allowed: table.init
     i32.const 0 i32.const 0 i32.const 0 table.init 0
                                         ^^^^^^^^^^
-out/test/parse/expr/bulk-memory-disabled.txt:18:5: error: opcode not allowed: table.drop
-    table.drop 0
-    ^^^^^^^^^^
+out/test/parse/expr/bulk-memory-disabled.txt:18:5: error: opcode not allowed: elem.drop
+    elem.drop 0
+    ^^^^^^^^^
 out/test/parse/expr/bulk-memory-disabled.txt:19:41: error: opcode not allowed: table.copy
     i32.const 0 i32.const 0 i32.const 0 table.copy
                                         ^^^^^^^^^^

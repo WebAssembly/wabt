@@ -4,6 +4,6 @@
   (memory 0)
 
   (func
-    memory.drop 0)
+    data.drop 0)
 
   (data passive "hi"))

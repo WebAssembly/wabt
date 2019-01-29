@@ -167,13 +167,13 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
   Result OnMemoryCopyExpr() override;
-  Result OnMemoryDropExpr(Index segment_index) override;
+  Result OnDataDropExpr(Index segment_index) override;
   Result OnMemoryFillExpr() override;
   Result OnMemoryGrowExpr() override;
   Result OnMemoryInitExpr(Index segment_index) override;
   Result OnMemorySizeExpr() override;
   Result OnTableCopyExpr() override;
-  Result OnTableDropExpr(Index segment_index) override;
+  Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;
@@ -828,8 +828,8 @@ Result BinaryReaderIR::OnMemoryCopyExpr() {
   return AppendExpr(MakeUnique<MemoryCopyExpr>());
 }
 
-Result BinaryReaderIR::OnMemoryDropExpr(Index segment) {
-  return AppendExpr(MakeUnique<MemoryDropExpr>(Var(segment)));
+Result BinaryReaderIR::OnDataDropExpr(Index segment) {
+  return AppendExpr(MakeUnique<DataDropExpr>(Var(segment)));
 }
 
 Result BinaryReaderIR::OnMemoryFillExpr() {
@@ -852,8 +852,8 @@ Result BinaryReaderIR::OnTableCopyExpr() {
   return AppendExpr(MakeUnique<TableCopyExpr>());
 }
 
-Result BinaryReaderIR::OnTableDropExpr(Index segment) {
-  return AppendExpr(MakeUnique<TableDropExpr>(Var(segment)));
+Result BinaryReaderIR::OnElemDropExpr(Index segment) {
+  return AppendExpr(MakeUnique<ElemDropExpr>(Var(segment)));
 }
 
 Result BinaryReaderIR::OnTableInitExpr(Index segment) {

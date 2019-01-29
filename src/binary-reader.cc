@@ -1364,14 +1364,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::MemoryDrop:
-      case Opcode::TableDrop: {
+      case Opcode::DataDrop:
+      case Opcode::ElemDrop: {
         Index segment;
         CHECK_RESULT(ReadIndex(&segment, "segment index"));
-        if (opcode == Opcode::MemoryDrop) {
-          CALLBACK(OnMemoryDropExpr, segment);
+        if (opcode == Opcode::DataDrop) {
+          CALLBACK(OnDataDropExpr, segment);
         } else {
-          CALLBACK(OnTableDropExpr, segment);
+          CALLBACK(OnElemDropExpr, segment);
         }
         CALLBACK(OnOpcodeUint32, segment);
         break;

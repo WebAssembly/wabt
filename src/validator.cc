@@ -70,13 +70,13 @@ class Validator : public ExprVisitor::Delegate {
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
   Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
-  Result OnMemoryDropExpr(MemoryDropExpr*) override;
+  Result OnDataDropExpr(DataDropExpr*) override;
   Result OnMemoryFillExpr(MemoryFillExpr*) override;
   Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnMemorySizeExpr(MemorySizeExpr*) override;
   Result OnTableCopyExpr(TableCopyExpr*) override;
-  Result OnTableDropExpr(TableDropExpr*) override;
+  Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
@@ -752,11 +752,11 @@ Result Validator::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
   return Result::Ok;
 }
 
-Result Validator::OnMemoryDropExpr(MemoryDropExpr* expr) {
+Result Validator::OnDataDropExpr(DataDropExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckHasMemory(&expr->loc, Opcode::MemoryDrop);
+  CheckHasMemory(&expr->loc, Opcode::DataDrop);
   CheckDataSegmentVar(&expr->var);
-  typechecker_.OnMemoryDrop(expr->var.index());
+  typechecker_.OnDataDrop(expr->var.index());
   return Result::Ok;
 }
 
@@ -796,11 +796,11 @@ Result Validator::OnTableCopyExpr(TableCopyExpr* expr) {
   return Result::Ok;
 }
 
-Result Validator::OnTableDropExpr(TableDropExpr* expr) {
+Result Validator::OnElemDropExpr(ElemDropExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckHasTable(&expr->loc, Opcode::TableDrop);
+  CheckHasTable(&expr->loc, Opcode::ElemDrop);
   CheckElemSegmentVar(&expr->var);
-  typechecker_.OnTableDrop(expr->var.index());
+  typechecker_.OnElemDrop(expr->var.index());
   return Result::Ok;
 }
 

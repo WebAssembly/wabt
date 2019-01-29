@@ -55,9 +55,9 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
-  Result OnMemoryDropExpr(MemoryDropExpr*) override;
+  Result OnDataDropExpr(DataDropExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
-  Result OnTableDropExpr(TableDropExpr*) override;
+  Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
@@ -238,7 +238,7 @@ Result NameApplier::EndLoopExpr(LoopExpr* expr) {
   return Result::Ok;
 }
 
-Result NameApplier::OnMemoryDropExpr(MemoryDropExpr* expr) {
+Result NameApplier::OnDataDropExpr(DataDropExpr* expr) {
   CHECK_RESULT(UseNameForDataSegmentVar(&expr->var));
   return Result::Ok;
 }
@@ -248,7 +248,7 @@ Result NameApplier::OnMemoryInitExpr(MemoryInitExpr* expr)  {
   return Result::Ok;
 }
 
-Result NameApplier::OnTableDropExpr(TableDropExpr* expr)  {
+Result NameApplier::OnElemDropExpr(ElemDropExpr* expr)  {
   CHECK_RESULT(UseNameForElemSegmentVar(&expr->var));
   return Result::Ok;
 }

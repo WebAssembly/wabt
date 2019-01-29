@@ -5,7 +5,7 @@
 (module
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0
-    table.drop 0
+    elem.drop 0
     i32.const 0 i32.const 0 i32.const 0 table.copy
   )
 )
@@ -16,12 +16,12 @@ out/test/typecheck/bad-bulk-memory-no-table.txt:7:41: error: table.init requires
 out/test/typecheck/bad-bulk-memory-no-table.txt:7:52: error: elem_segment variable out of range (max 0)
     i32.const 0 i32.const 0 i32.const 0 table.init 0
                                                    ^
-out/test/typecheck/bad-bulk-memory-no-table.txt:8:5: error: table.drop requires an imported or defined table.
-    table.drop 0
-    ^^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-table.txt:8:16: error: elem_segment variable out of range (max 0)
-    table.drop 0
-               ^
+out/test/typecheck/bad-bulk-memory-no-table.txt:8:5: error: elem.drop requires an imported or defined table.
+    elem.drop 0
+    ^^^^^^^^^
+out/test/typecheck/bad-bulk-memory-no-table.txt:8:15: error: elem_segment variable out of range (max 0)
+    elem.drop 0
+              ^
 out/test/typecheck/bad-bulk-memory-no-table.txt:9:41: error: table.copy requires an imported or defined table.
     i32.const 0 i32.const 0 i32.const 0 table.copy
                                         ^^^^^^^^^^

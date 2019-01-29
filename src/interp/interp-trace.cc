@@ -694,7 +694,7 @@ void Thread::Trace(Stream* stream) {
       WABT_UNREACHABLE;
       break;
 
-    case Opcode::MemoryDrop:
+    case Opcode::DataDrop:
       WABT_UNREACHABLE;
       break;
 
@@ -710,7 +710,7 @@ void Thread::Trace(Stream* stream) {
       WABT_UNREACHABLE;
       break;
 
-    case Opcode::TableDrop:
+    case Opcode::ElemDrop:
       WABT_UNREACHABLE;
       break;
 

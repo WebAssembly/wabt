@@ -1578,11 +1578,11 @@ void CWriter::Write(const ExprList& exprs) {
       }
 
       case ExprType::MemoryCopy:
-      case ExprType::MemoryDrop:
+      case ExprType::DataDrop:
       case ExprType::MemoryInit:
       case ExprType::MemoryFill:
       case ExprType::TableCopy:
-      case ExprType::TableDrop:
+      case ExprType::ElemDrop:
       case ExprType::TableInit:
         UNIMPLEMENTED("...");
         break;

@@ -179,13 +179,13 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnLocalTeeExpr(Index local_index) override;
   Result OnLoopExpr(Type sig_type) override;
   Result OnMemoryCopyExpr() override;
-  Result OnMemoryDropExpr(Index segment_index) override;
+  Result OnDataDropExpr(Index segment_index) override;
   Result OnMemoryFillExpr() override;
   Result OnMemoryGrowExpr() override;
   Result OnMemoryInitExpr(Index segment_index) override;
   Result OnMemorySizeExpr() override;
   Result OnTableCopyExpr() override;
-  Result OnTableDropExpr(Index segment_index) override;
+  Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index) override;
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;

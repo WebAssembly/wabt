@@ -130,13 +130,13 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Compare:
     case TokenType::Convert:
     case TokenType::MemoryCopy:
-    case TokenType::MemoryDrop:
+    case TokenType::DataDrop:
     case TokenType::MemoryFill:
     case TokenType::MemoryGrow:
     case TokenType::MemoryInit:
     case TokenType::MemorySize:
     case TokenType::TableCopy:
-    case TokenType::TableDrop:
+    case TokenType::ElemDrop:
     case TokenType::TableInit:
     case TokenType::Throw:
     case TokenType::Rethrow:
@@ -1484,9 +1484,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       out_expr->reset(new MemoryFillExpr(loc));
       break;
 
-    case TokenType::MemoryDrop:
+    case TokenType::DataDrop:
       ErrorUnlessOpcodeEnabled(Consume());
-      CHECK_RESULT(ParsePlainInstrVar<MemoryDropExpr>(loc, out_expr));
+      CHECK_RESULT(ParsePlainInstrVar<DataDropExpr>(loc, out_expr));
       break;
 
     case TokenType::MemoryInit:
@@ -1509,9 +1509,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       out_expr->reset(new TableCopyExpr(loc));
       break;
 
-    case TokenType::TableDrop:
+    case TokenType::ElemDrop:
       ErrorUnlessOpcodeEnabled(Consume());
-      CHECK_RESULT(ParsePlainInstrVar<TableDropExpr>(loc, out_expr));
+      CHECK_RESULT(ParsePlainInstrVar<ElemDropExpr>(loc, out_expr));
       break;
 
     case TokenType::TableInit:

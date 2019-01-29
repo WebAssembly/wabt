@@ -566,13 +566,13 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result BeginLoopExpr(LoopExpr*) override;
   Result EndLoopExpr(LoopExpr*) override;
   Result OnMemoryCopyExpr(MemoryCopyExpr*) override;
-  Result OnMemoryDropExpr(MemoryDropExpr*) override;
+  Result OnDataDropExpr(DataDropExpr*) override;
   Result OnMemoryFillExpr(MemoryFillExpr*) override;
   Result OnMemoryGrowExpr(MemoryGrowExpr*) override;
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnMemorySizeExpr(MemorySizeExpr*) override;
   Result OnTableCopyExpr(TableCopyExpr*) override;
-  Result OnTableDropExpr(TableDropExpr*) override;
+  Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
@@ -768,8 +768,8 @@ Result WatWriter::ExprVisitorDelegate::OnMemoryCopyExpr(MemoryCopyExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnMemoryDropExpr(MemoryDropExpr* expr) {
-  writer_->WritePutsSpace(Opcode::MemoryDrop_Opcode.GetName());
+Result WatWriter::ExprVisitorDelegate::OnDataDropExpr(DataDropExpr* expr) {
+  writer_->WritePutsSpace(Opcode::DataDrop_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
@@ -800,8 +800,8 @@ Result WatWriter::ExprVisitorDelegate::OnTableCopyExpr(TableCopyExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnTableDropExpr(TableDropExpr* expr) {
-  writer_->WritePutsSpace(Opcode::TableDrop_Opcode.GetName());
+Result WatWriter::ExprVisitorDelegate::OnElemDropExpr(ElemDropExpr* expr) {
+  writer_->WritePutsSpace(Opcode::ElemDrop_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
@@ -1060,8 +1060,8 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       PushExpr(expr, 0, 1);
       break;
 
-    case ExprType::MemoryDrop:
-    case ExprType::TableDrop:
+    case ExprType::DataDrop:
+    case ExprType::ElemDrop:
       PushExpr(expr, 0, 0);
       break;
 
