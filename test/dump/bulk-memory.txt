@@ -34,21 +34,21 @@ Code Disassembly:
  000039: 41 00                      | i32.const 0
  00003b: 41 00                      | i32.const 0
  00003d: 41 00                      | i32.const 0
- 00003f: fc 0a 00                   | memory.copy 0
- 000042: 41 00                      | i32.const 0
- 000044: 41 00                      | i32.const 0
- 000046: 41 00                      | i32.const 0
- 000048: fc 0b 00                   | memory.fill 0
- 00004b: 0b                         | end
-00004d func[1]:
- 00004e: 41 00                      | i32.const 0
- 000050: 41 00                      | i32.const 0
- 000052: 41 00                      | i32.const 0
- 000054: fc 0c 00 00                | table.init 0 0
- 000058: fc 0d 00                   | table.drop 0
- 00005b: 41 00                      | i32.const 0
- 00005d: 41 00                      | i32.const 0
- 00005f: 41 00                      | i32.const 0
- 000061: fc 0e 00                   | table.copy 0
- 000064: 0b                         | end
+ 00003f: fc 0a 00 00                | memory.copy 0 0
+ 000043: 41 00                      | i32.const 0
+ 000045: 41 00                      | i32.const 0
+ 000047: 41 00                      | i32.const 0
+ 000049: fc 0b 00                   | memory.fill 0
+ 00004c: 0b                         | end
+00004e func[1]:
+ 00004f: 41 00                      | i32.const 0
+ 000051: 41 00                      | i32.const 0
+ 000053: 41 00                      | i32.const 0
+ 000055: fc 0c 00 00                | table.init 0 0
+ 000059: fc 0d 00                   | table.drop 0
+ 00005c: 41 00                      | i32.const 0
+ 00005e: 41 00                      | i32.const 0
+ 000060: 41 00                      | i32.const 0
+ 000062: fc 0e 00 00                | table.copy 0 0
+ 000066: 0b                         | end
 ;;; STDOUT ;;)

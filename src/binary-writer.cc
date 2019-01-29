@@ -566,6 +566,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::MemoryCopy:
       WriteOpcode(stream_, Opcode::MemoryCopy);
       WriteU32Leb128(stream_, 0, "memory.copy reserved");
+      WriteU32Leb128(stream_, 0, "memory.copy reserved");
       break;
     case ExprType::MemoryDrop: {
       Index index =
@@ -586,8 +587,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       Index index =
           module_->GetDataSegmentIndex(cast<MemoryInitExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::MemoryInit);
-      WriteU32Leb128(stream_, 0, "memory.init reserved");
       WriteU32Leb128(stream_, index, "memory.init segment");
+      WriteU32Leb128(stream_, 0, "memory.init reserved");
       break;
     }
     case ExprType::MemorySize:
@@ -596,6 +597,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::TableCopy:
       WriteOpcode(stream_, Opcode::TableCopy);
+      WriteU32Leb128(stream_, 0, "table.copy reserved");
       WriteU32Leb128(stream_, 0, "table.copy reserved");
       break;
     case ExprType::TableDrop: {
@@ -609,8 +611,8 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       Index index =
           module_->GetElemSegmentIndex(cast<TableInitExpr>(expr)->var);
       WriteOpcode(stream_, Opcode::TableInit);
-      WriteU32Leb128(stream_, 0, "table.init reserved");
       WriteU32Leb128(stream_, index, "table.init segment");
+      WriteU32Leb128(stream_, 0, "table.init reserved");
       break;
     }
     case ExprType::Nop:
