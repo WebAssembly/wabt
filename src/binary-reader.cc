@@ -1343,22 +1343,22 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::TableInit: {
+        Index segment;
+        CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        Index segment;
-        CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
         CALLBACK(OnTableInitExpr, segment);
         CALLBACK(OnOpcodeUint32Uint32, segment, reserved);
         break;
       }
 
       case Opcode::MemoryInit: {
+        Index segment;
+        CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        Index segment;
-        CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
         CALLBACK(OnMemoryInitExpr, segment);
         CALLBACK(OnOpcodeUint32Uint32, segment, reserved);
         break;
@@ -1377,17 +1377,22 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::MemoryCopy:
       case Opcode::MemoryFill: {
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        if (opcode == Opcode::MemoryCopy) {
-          CALLBACK(OnMemoryCopyExpr);
-        } else {
-          CALLBACK(OnMemoryFillExpr);
-        }
+        CALLBACK(OnMemoryFillExpr);
         CALLBACK(OnOpcodeUint32, reserved);
+        break;
+      }
+      case Opcode::MemoryCopy: {
+        uint8_t reserved;
+        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        CHECK_RESULT(ReadU8(&reserved, "reserved memory index"));
+        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        CALLBACK(OnMemoryCopyExpr);
+        CALLBACK(OnOpcodeUint32Uint32, reserved, reserved);
         break;
       }
 
@@ -1395,8 +1400,10 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         uint8_t reserved;
         CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
         ERROR_UNLESS(reserved == 0, "reserved value must be 0");
+        CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
+        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
         CALLBACK(OnTableCopyExpr);
-        CALLBACK(OnOpcodeUint32, reserved);
+        CALLBACK(OnOpcodeUint32Uint32, reserved, reserved);
         break;
       }
 
