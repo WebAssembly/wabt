@@ -235,13 +235,13 @@ class BinaryReaderDelegate {
   virtual Result OnLocalTeeExpr(Index local_index) = 0;
   virtual Result OnLoopExpr(Type sig_type) = 0;
   virtual Result OnMemoryCopyExpr() = 0;
-  virtual Result OnMemoryDropExpr(Index segment_index) = 0;
+  virtual Result OnDataDropExpr(Index segment_index) = 0;
   virtual Result OnMemoryFillExpr() = 0;
   virtual Result OnMemoryGrowExpr() = 0;
   virtual Result OnMemoryInitExpr(Index segment_index) = 0;
   virtual Result OnMemorySizeExpr() = 0;
   virtual Result OnTableCopyExpr() = 0;
-  virtual Result OnTableDropExpr(Index segment_index) = 0;
+  virtual Result OnElemDropExpr(Index segment_index) = 0;
   virtual Result OnTableInitExpr(Index segment_index) = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr() = 0;

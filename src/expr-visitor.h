@@ -93,13 +93,13 @@ class ExprVisitor::Delegate {
   virtual Result BeginLoopExpr(LoopExpr*) = 0;
   virtual Result EndLoopExpr(LoopExpr*) = 0;
   virtual Result OnMemoryCopyExpr(MemoryCopyExpr*) = 0;
-  virtual Result OnMemoryDropExpr(MemoryDropExpr*) = 0;
+  virtual Result OnDataDropExpr(DataDropExpr*) = 0;
   virtual Result OnMemoryFillExpr(MemoryFillExpr*) = 0;
   virtual Result OnMemoryGrowExpr(MemoryGrowExpr*) = 0;
   virtual Result OnMemoryInitExpr(MemoryInitExpr*) = 0;
   virtual Result OnMemorySizeExpr(MemorySizeExpr*) = 0;
   virtual Result OnTableCopyExpr(TableCopyExpr*) = 0;
-  virtual Result OnTableDropExpr(TableDropExpr*) = 0;
+  virtual Result OnElemDropExpr(ElemDropExpr*) = 0;
   virtual Result OnTableInitExpr(TableInitExpr*) = 0;
   virtual Result OnNopExpr(NopExpr*) = 0;
   virtual Result OnReturnExpr(ReturnExpr*) = 0;
@@ -154,13 +154,13 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result BeginLoopExpr(LoopExpr*) override { return Result::Ok; }
   Result EndLoopExpr(LoopExpr*) override { return Result::Ok; }
   Result OnMemoryCopyExpr(MemoryCopyExpr*) override { return Result::Ok; }
-  Result OnMemoryDropExpr(MemoryDropExpr*) override { return Result::Ok; }
+  Result OnDataDropExpr(DataDropExpr*) override { return Result::Ok; }
   Result OnMemoryFillExpr(MemoryFillExpr*) override { return Result::Ok; }
   Result OnMemoryGrowExpr(MemoryGrowExpr*) override { return Result::Ok; }
   Result OnMemoryInitExpr(MemoryInitExpr*) override { return Result::Ok; }
   Result OnMemorySizeExpr(MemorySizeExpr*) override { return Result::Ok; }
   Result OnTableCopyExpr(TableCopyExpr*) override { return Result::Ok; }
-  Result OnTableDropExpr(TableDropExpr*) override { return Result::Ok; }
+  Result OnElemDropExpr(ElemDropExpr*) override { return Result::Ok; }
   Result OnTableInitExpr(TableInitExpr*) override { return Result::Ok; }
   Result OnNopExpr(NopExpr*) override { return Result::Ok; }
   Result OnReturnExpr(ReturnExpr*) override { return Result::Ok; }

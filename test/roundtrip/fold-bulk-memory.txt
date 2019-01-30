@@ -6,7 +6,7 @@
   (data passive "a")
   (func
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
-    memory.drop 0
+    data.drop 0
     i32.const 0 i32.const 0 i32.const 0 memory.copy
     i32.const 0 i32.const 0 i32.const 0 memory.fill
   )
@@ -15,7 +15,7 @@
   (elem passive 0)
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0
-    table.drop 0
+    elem.drop 0
     i32.const 0 i32.const 0 i32.const 0 table.copy
   )
 )
@@ -27,7 +27,7 @@
       (i32.const 0)
       (i32.const 0)
       (i32.const 0))
-    (memory.drop 0)
+    (data.drop 0)
     (memory.copy
       (i32.const 0)
       (i32.const 0)
@@ -41,7 +41,7 @@
       (i32.const 0)
       (i32.const 0)
       (i32.const 0))
-    (table.drop 0)
+    (elem.drop 0)
     (table.copy
       (i32.const 0)
       (i32.const 0)

@@ -3244,7 +3244,7 @@ Result Thread::Run(int num_instructions) {
         WABT_UNREACHABLE;
         break;
 
-      case Opcode::MemoryDrop:
+      case Opcode::DataDrop:
         WABT_UNREACHABLE;
         break;
 
@@ -3260,7 +3260,7 @@ Result Thread::Run(int num_instructions) {
         WABT_UNREACHABLE;
         break;
 
-      case Opcode::TableDrop:
+      case Opcode::ElemDrop:
         WABT_UNREACHABLE;
         break;
 

@@ -303,11 +303,11 @@ bool Opcode::IsEnabled(const Features& features) const {
       return features.simd_enabled();
 
     case Opcode::MemoryInit:
-    case Opcode::MemoryDrop:
+    case Opcode::DataDrop:
     case Opcode::MemoryCopy:
     case Opcode::MemoryFill:
     case Opcode::TableInit:
-    case Opcode::TableDrop:
+    case Opcode::ElemDrop:
     case Opcode::TableCopy:
       return features.bulk_memory_enabled();
 

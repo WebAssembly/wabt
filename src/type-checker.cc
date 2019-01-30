@@ -603,7 +603,7 @@ Result TypeChecker::OnMemoryCopy() {
   return CheckOpcode3(Opcode::MemoryCopy);
 }
 
-Result TypeChecker::OnMemoryDrop(uint32_t segment) {
+Result TypeChecker::OnDataDrop(uint32_t segment) {
   return Result::Ok;
 }
 
@@ -628,7 +628,7 @@ Result TypeChecker::OnTableCopy() {
   return CheckOpcode3(Opcode::TableCopy);
 }
 
-Result TypeChecker::OnTableDrop(uint32_t segment) {
+Result TypeChecker::OnElemDrop(uint32_t segment) {
   return Result::Ok;
 }
 

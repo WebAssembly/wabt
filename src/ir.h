@@ -183,7 +183,7 @@ enum class ExprType {
   LocalTee,
   Loop,
   MemoryCopy,
-  MemoryDrop,
+  DataDrop,
   MemoryFill,
   MemoryGrow,
   MemoryInit,
@@ -198,7 +198,7 @@ enum class ExprType {
   SimdShuffleOp,
   Store,
   TableCopy,
-  TableDrop,
+  ElemDrop,
   TableInit,
   Ternary,
   Throw,
@@ -320,9 +320,9 @@ typedef VarExpr<ExprType::ReturnCall> ReturnCallExpr;
 typedef VarExpr<ExprType::Throw> ThrowExpr;
 
 typedef VarExpr<ExprType::MemoryInit> MemoryInitExpr;
-typedef VarExpr<ExprType::MemoryDrop> MemoryDropExpr;
+typedef VarExpr<ExprType::DataDrop> DataDropExpr;
 typedef VarExpr<ExprType::TableInit> TableInitExpr;
-typedef VarExpr<ExprType::TableDrop> TableDropExpr;
+typedef VarExpr<ExprType::ElemDrop> ElemDropExpr;
 
 class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
  public:

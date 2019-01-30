@@ -240,11 +240,11 @@ WABT_OPCODE(I64,  F64,  ___,  ___,  0,  0xfc, 0x07, I64TruncSatF64U, "i64.trunc_
 
 /* Bulk-memory (--enable-bulk-memory) */
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x08, MemoryInit, "memory.init")
-WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x09, MemoryDrop,  "memory.drop")
-WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0a, MemoryCopy, "memory.copy")
+WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x09, DataDrop, "data.drop")
+WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0a, MemoryCopy,"memory.copy")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0b, MemoryFill, "memory.fill")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0c, TableInit, "table.init")
-WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x0d, TableDrop, "table.drop")
+WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x0d, ElemDrop, "elem.drop")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0e, TableCopy, "table.copy")
 
 /* Simd opcodes (--enable-simd) */

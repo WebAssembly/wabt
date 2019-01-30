@@ -96,13 +96,13 @@ class TypeChecker {
   Result OnLocalTee(Type);
   Result OnLoop(const TypeVector& param_types, const TypeVector& result_types);
   Result OnMemoryCopy();
-  Result OnMemoryDrop(Index);
+  Result OnDataDrop(Index);
   Result OnMemoryFill();
   Result OnMemoryGrow();
   Result OnMemoryInit(Index);
   Result OnMemorySize();
   Result OnTableCopy();
-  Result OnTableDrop(Index);
+  Result OnElemDrop(Index);
   Result OnTableInit(Index);
   Result OnRethrow();
   Result OnReturn();
