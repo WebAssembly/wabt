@@ -1,0 +1,15 @@
+;;; TOOL: run-interp-spec
+;;; ERROR: 3
+;; spectest-interp returns the number of failed tests as the error code.
+(module (func (export "f") (result i32) (i32.const 0)))
+
+(assert_return (invoke "f") (i32.const 0))
+(assert_return (invoke "f") (i32.const 1))
+(assert_return (invoke "f") (i32.const 2))
+(assert_return (invoke "f") (i32.const 3))
+(;; STDOUT ;;;
+out/test/spectest-interp-error-count.txt:7: mismatch in result 0 of assert_return: expected i32:1, got i32:0
+out/test/spectest-interp-error-count.txt:8: mismatch in result 0 of assert_return: expected i32:2, got i32:0
+out/test/spectest-interp-error-count.txt:9: mismatch in result 0 of assert_return: expected i32:3, got i32:0
+1/4 tests passed.
+;;; STDOUT ;;)
