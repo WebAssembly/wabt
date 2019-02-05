@@ -16,7 +16,7 @@ simd-bitselect.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000032 <func_v128_bitselect_0>:
+000032 func[0] <func_v128_bitselect_0>:
  000033: fd 02 01 00 ff 00 02 00 04 | v128.const 0x00ff0001 0x00040002 0x55555555 0x00000004
  00003c: 00 55 55 55 55 04 00 00 00 | 
  000045: fd 02 01 00 02 00 02 00 fe | v128.const 0x00020001 0x00fe0002 0xaaaaaaaa 0x55000004

@@ -151,7 +151,7 @@ no-canonicalize.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000076 <f1>:
+000076 func[1] <f1>:
  000077: 20 00                      | local.get 0
  000079: 20 01                      | local.get 1
  00007b: 11 00 00                   | call_indirect 0 0

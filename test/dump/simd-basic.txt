@@ -11,7 +11,7 @@ simd-basic.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000021 <main>:
+000021 func[0] <main>:
  000022: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
  00002b: 00 03 00 00 00 04 00 00 00 | 
  000034: 0f                         | return

@@ -606,12 +606,12 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
 
 Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index,
                                                          Offset size) {
+  printf("%06" PRIzx " func[%" PRIindex "]", state->offset, index);
   const char* name = GetFunctionName(index);
   if (name) {
-    printf("%06" PRIzx " <%s>:\n", state->offset, name);
-  } else {
-    printf("%06" PRIzx " func[%" PRIindex "]:\n", state->offset, index);
+    printf(" <%s>", name);
   }
+  printf(":\n");
 
   last_opcode_end = 0;
   return Result::Ok;
