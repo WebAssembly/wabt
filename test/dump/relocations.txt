@@ -31,7 +31,7 @@ Sections:
 
 Code Disassembly:
 
-000051 <$f>:
+000051 func[1] <$f>:
  000052: 23 80 80 80 80 00          | global.get 0 <$g>
            000053: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 1 <$g>
  000058: 10 81 80 80 80 00          | call 1 <$f>
