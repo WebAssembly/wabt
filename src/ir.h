@@ -765,7 +765,7 @@ class DataSegmentModuleField
 class EventModuleField : public ModuleFieldMixin<ModuleFieldType::Except> {
  public:
   explicit EventModuleField(const Location& loc = Location(),
-                                string_view name = string_view())
+                            string_view name = string_view())
       : ModuleFieldMixin<ModuleFieldType::Except>(loc), event(name) {}
 
   Event event;

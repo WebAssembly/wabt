@@ -987,8 +987,7 @@ Result BinaryWriter::WriteModule() {
     for (Index i = 0; i < num_events; ++i) {
       const Event* event = module_->events[i + module_->num_event_imports];
       char desc[100];
-      wabt_snprintf(desc, sizeof(desc), "event %" PRIzd " signature index",
-                    i);
+      wabt_snprintf(desc, sizeof(desc), "event %" PRIzd " signature index", i);
       WriteU32Leb128(stream_, module_->GetFuncTypeIndex(event->decl), desc);
     }
     EndSection();

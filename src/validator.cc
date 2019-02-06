@@ -680,7 +680,7 @@ Result Validator::EndIfExpr(IfExpr* expr) {
 Result Validator::BeginIfExceptExpr(IfExceptExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckBlockDeclaration(&expr->loc, Opcode::IfExcept, &expr->true_.decl);
-  //const Event* event;
+  // const Event* event;
   TypeVector event_sig;
   /*
   if (Succeeded(CheckEventVar(&expr->event_var, &event))) {
@@ -1367,8 +1367,7 @@ Result Validator::CheckGet(const GetAction* action, Type* out_type) {
 
 Result Validator::CheckEventVar(const Var* var, const Event** out_except) {
   Index index;
-  CHECK_RESULT(
-      CheckVar(current_module_->events.size(), var, "except", &index));
+  CHECK_RESULT(CheckVar(current_module_->events.size(), var, "except", &index));
   if (out_except) {
     *out_except = current_module_->events[index];
   }

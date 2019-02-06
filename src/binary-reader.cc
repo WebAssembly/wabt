@@ -1843,8 +1843,8 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         CHECK_RESULT(ReadIndex(&kind, "event kind"));
         CHECK_RESULT(ReadIndex(&sig_index, "event signature index"));
         CALLBACK(OnImport, i, module_name, field_name);
-        CALLBACK(OnImportEvent, i, module_name, field_name,
-                 num_event_imports_, kind, sig_index);
+        CALLBACK(OnImportEvent, i, module_name, field_name, num_event_imports_,
+                 kind, sig_index);
         num_event_imports_++;
         break;
       }

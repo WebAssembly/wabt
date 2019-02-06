@@ -90,11 +90,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
     return Result::Ok;
   }
   Result OnImportEvent(Index import_index,
-                           string_view module_name,
-                           string_view field_name,
-                           Index event_index,
-                           Index kind,
-                           Index sig_index) override {
+                       string_view module_name,
+                       string_view field_name,
+                       Index event_index,
+                       Index kind,
+                       Index sig_index) override {
     return Result::Ok;
   }
   Result EndImportSection() override { return Result::Ok; }

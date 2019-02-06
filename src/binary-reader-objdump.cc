@@ -691,11 +691,11 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                         Type type,
                         bool mutable_) override;
   Result OnImportEvent(Index import_index,
-                           string_view module_name,
-                           string_view field_name,
-                           Index event_index,
-                           Index kind,
-                           Index sig_index) override;
+                       string_view module_name,
+                       string_view field_name,
+                       Index event_index,
+                       Index kind,
+                       Index sig_index) override;
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -1077,7 +1077,8 @@ Result BinaryReaderObjdump::OnImportEvent(Index import_index,
                                           Index event_index,
                                           Index kind,
                                           Index sig_index) {
-  PrintDetails(" - event[%" PRIindex "] sig=%" PRIindex, event_index, sig_index);
+  PrintDetails(" - event[%" PRIindex "] sig=%" PRIindex, event_index,
+               sig_index);
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
