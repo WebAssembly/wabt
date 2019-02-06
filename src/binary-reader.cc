@@ -119,7 +119,6 @@ class BinaryReader {
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
   Result ReadGlobalHeader(Type* out_type, bool* out_mutable) WABT_WARN_UNUSED;
-  Result ReadExceptionType(TypeVector& sig) WABT_WARN_UNUSED;
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
@@ -138,7 +137,7 @@ class BinaryReader {
   Result ReadCodeSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadDataCountSection(Offset section_size) WABT_WARN_UNUSED;
-  Result ReadExceptionSection(Offset section_size) WABT_WARN_UNUSED;
+  Result ReadEventSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadSections() WABT_WARN_UNUSED;
   Result ReportUnexpectedOpcode(Opcode opcode, const char* message = nullptr);
 
@@ -159,14 +158,14 @@ class BinaryReader {
   Index num_table_imports_ = 0;
   Index num_memory_imports_ = 0;
   Index num_global_imports_ = 0;
-  Index num_exception_imports_ = 0;
+  Index num_event_imports_ = 0;
   Index num_function_signatures_ = 0;
   Index num_tables_ = 0;
   Index num_memories_ = 0;
   Index num_globals_ = 0;
   Index num_exports_ = 0;
   Index num_function_bodies_ = 0;
-  Index num_exceptions_ = 0;
+  Index num_events_ = 0;
   Index data_count_ = kInvalidIndex;
 
   using ReadEndRestoreGuard =
@@ -1189,9 +1188,9 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadType(&sig_type, "if signature type"));
         ERROR_UNLESS(IsBlockType(sig_type),
                      "expected valid block signature type");
-        Index except_index;
-        CHECK_RESULT(ReadIndex(&except_index, "exception index"));
-        CALLBACK(OnIfExceptExpr, sig_type, except_index);
+        Index event_index;
+        CHECK_RESULT(ReadIndex(&event_index, "event index"));
+        CALLBACK(OnIfExceptExpr, sig_type, event_index);
         break;
       }
 
@@ -1686,33 +1685,20 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadExceptionType(TypeVector& sig) {
-  Index num_values;
-  CHECK_RESULT(ReadCount(&num_values, "exception type count"));
-  sig.resize(num_values);
-  for (Index j = 0; j < num_values; ++j) {
-    Type value_type;
-    CHECK_RESULT(ReadType(&value_type, "exception value type"));
-    ERROR_UNLESS(IsConcreteType(value_type),
-                 "excepted valid exception value type (got %d)",
-                 static_cast<int>(value_type));
-    sig[j] = value_type;
-  }
-  return Result::Ok;
-}
+Result BinaryReader::ReadEventSection(Offset section_size) {
+  CALLBACK(BeginEventSection, section_size);
+  CHECK_RESULT(ReadCount(&num_events_, "exception count"));
+  CALLBACK(OnEventCount, num_events_);
 
-Result BinaryReader::ReadExceptionSection(Offset section_size) {
-  CALLBACK(BeginExceptionSection, section_size);
-  CHECK_RESULT(ReadCount(&num_exceptions_, "exception count"));
-  CALLBACK(OnExceptionCount, num_exceptions_);
-
-  for (Index i = 0; i < num_exceptions_; ++i) {
-    TypeVector sig;
-    CHECK_RESULT(ReadExceptionType(sig));
-    CALLBACK(OnExceptionType, i, sig);
+  for (Index i = 0; i < num_events_; ++i) {
+    Index kind;
+    Index sig_index;
+    CHECK_RESULT(ReadIndex(&kind, "event kind"));
+    CHECK_RESULT(ReadIndex(&sig_index, "event signature index"));
+    CALLBACK(OnEvent, i, kind, sig_index);
   }
 
-  CALLBACK(EndExceptionSection);
+  CALLBACK(EndEventSection);
   return Result::Ok;
 }
 
@@ -1733,9 +1719,6 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
-  } else if (options_.features.exceptions_enabled() &&
-             section_name == WABT_BINARY_SECTION_EXCEPTION) {
-    CHECK_RESULT(ReadExceptionSection(section_size));
   } else {
     // This is an unknown custom section, skip it.
     state_.offset = read_end_;
@@ -1852,15 +1835,17 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         break;
       }
 
-      case ExternalKind::Except: {
+      case ExternalKind::Event: {
         ERROR_UNLESS(options_.features.exceptions_enabled(),
                      "invalid import exception kind: exceptions not allowed");
-        TypeVector sig;
-        CHECK_RESULT(ReadExceptionType(sig));
+        Index kind;
+        Index sig_index;
+        CHECK_RESULT(ReadIndex(&kind, "event kind"));
+        CHECK_RESULT(ReadIndex(&sig_index, "event signature index"));
         CALLBACK(OnImport, i, module_name, field_name);
-        CALLBACK(OnImportException, i, module_name, field_name,
-                 num_exception_imports_, sig);
-        num_exception_imports_++;
+        CALLBACK(OnImportEvent, i, module_name, field_name,
+                 num_event_imports_, kind, sig_index);
+        num_event_imports_++;
         break;
       }
     }
@@ -1969,10 +1954,10 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
         ERROR_UNLESS(item_index < NumTotalGlobals(),
                      "invalid export global index: %" PRIindex, item_index);
         break;
-      case ExternalKind::Except:
+      case ExternalKind::Event:
         // Note: Can't check if index valid, exceptions section comes later.
         ERROR_UNLESS(options_.features.exceptions_enabled(),
-                     "invalid export exception kind: exceptions not allowed");
+                     "invalid event export: exceptions are not enabled");
         break;
     }
 
@@ -2211,6 +2196,10 @@ Result BinaryReader::ReadSections() {
         ERROR_UNLESS(options_.features.bulk_memory_enabled(),
                      "invalid section code: %u", section);
         section_result = ReadDataCountSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Event:
+        section_result = ReadEventSection(section_size);
         result |= section_result;
         break;
       case BinarySection::Invalid:

@@ -89,11 +89,12 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                         bool mutable_) override {
     return Result::Ok;
   }
-  Result OnImportException(Index import_index,
+  Result OnImportEvent(Index import_index,
                            string_view module_name,
                            string_view field_name,
-                           Index except_index,
-                           TypeVector& sig) override {
+                           Index event_index,
+                           Index kind,
+                           Index sig_index) override {
     return Result::Ok;
   }
   Result EndImportSection() override { return Result::Ok; }
@@ -364,13 +365,13 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result EndRelocSection() override { return Result::Ok; }
 
-  /* Exception section */
-  Result BeginExceptionSection(Offset size) override { return Result::Ok; }
-  Result OnExceptionCount(Index count) override { return Result::Ok; }
-  Result OnExceptionType(Index index, TypeVector& sig) override {
+  /* Event section */
+  Result BeginEventSection(Offset size) override { return Result::Ok; }
+  Result OnEventCount(Index count) override { return Result::Ok; }
+  Result OnEvent(Index index, Index kind, Index sig_index) override {
     return Result::Ok;
   }
-  Result EndExceptionSection() override { return Result::Ok; }
+  Result EndEventSection() override { return Result::Ok; }
 
   /* Dylink section */
   Result BeginDylinkSection(Offset size) override { return Result::Ok; }

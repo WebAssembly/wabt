@@ -79,7 +79,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void ResolveFuncTypeVar(Var* var);
   void ResolveTableVar(Var* var);
   void ResolveMemoryVar(Var* var);
-  void ResolveExceptionVar(Var* var);
+  void ResolveEventVar(Var* var);
   void ResolveDataSegmentVar(Var* var);
   void ResolveElemSegmentVar(Var* var);
   void ResolveLocalVar(Var* var);
@@ -191,8 +191,8 @@ void NameResolver::ResolveMemoryVar(Var* var) {
   ResolveVar(&current_module_->memory_bindings, var, "memory");
 }
 
-void NameResolver::ResolveExceptionVar(Var* var) {
-  ResolveVar(&current_module_->except_bindings, var, "exception");
+void NameResolver::ResolveEventVar(Var* var) {
+  ResolveVar(&current_module_->event_bindings, var, "exception");
 }
 
 void NameResolver::ResolveDataSegmentVar(Var* var) {
@@ -313,7 +313,7 @@ Result NameResolver::EndIfExpr(IfExpr* expr) {
 Result NameResolver::BeginIfExceptExpr(IfExceptExpr* expr) {
   PushLabel(expr->true_.label);
   ResolveBlockDeclarationVar(&expr->true_.decl);
-  ResolveExceptionVar(&expr->except_var);
+  ResolveEventVar(&expr->event_var);
   return Result::Ok;
 }
 
@@ -369,7 +369,7 @@ Result NameResolver::EndTryExpr(TryExpr*) {
 }
 
 Result NameResolver::OnThrowExpr(ThrowExpr* expr) {
-  ResolveExceptionVar(&expr->var);
+  ResolveEventVar(&expr->var);
   return Result::Ok;
 }
 
@@ -408,8 +408,8 @@ void NameResolver::VisitExport(Export* export_) {
       ResolveGlobalVar(&export_->var);
       break;
 
-    case ExternalKind::Except:
-      ResolveExceptionVar(&export_->var);
+    case ExternalKind::Event:
+      ResolveEventVar(&export_->var);
       break;
   }
 }
@@ -437,7 +437,7 @@ Result NameResolver::VisitModule(Module* module) {
   CheckDuplicateBindings(&module->func_type_bindings, "function type");
   CheckDuplicateBindings(&module->table_bindings, "table");
   CheckDuplicateBindings(&module->memory_bindings, "memory");
-  CheckDuplicateBindings(&module->except_bindings, "except");
+  CheckDuplicateBindings(&module->event_bindings, "except");
 
   for (Func* func : module->funcs)
     VisitFunc(func);

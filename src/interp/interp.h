@@ -221,9 +221,9 @@ struct GlobalImport : Import {
 };
 
 struct ExceptImport : Import {
-  ExceptImport() : Import(ExternalKind::Except) {}
+  ExceptImport() : Import(ExternalKind::Event) {}
   ExceptImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Except, module_name, field_name) {}
+      : Import(ExternalKind::Event, module_name, field_name) {}
 };
 
 struct Func;

@@ -690,11 +690,12 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
-  Result OnImportException(Index import_index,
+  Result OnImportEvent(Index import_index,
                            string_view module_name,
                            string_view field_name,
-                           Index except_index,
-                           TypeVector& sig) override;
+                           Index event_index,
+                           Index kind,
+                           Index sig_index) override;
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -805,8 +806,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitFunctionCount(Index count) override;
   Result OnInitFunction(uint32_t priority, Index function_index) override;
 
-  Result OnExceptionCount(Index count) override;
-  Result OnExceptionType(Index index, TypeVector& sig) override;
+  Result OnEventCount(Index count) override;
+  Result OnEvent(Index index, Index kind, Index sig_index) override;
 
  private:
   Result HandleInitExpr(const InitExpr& expr);
@@ -1070,19 +1071,14 @@ Result BinaryReaderObjdump::OnImportGlobal(Index import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnImportException(Index import_index,
-                                              string_view module_name,
-                                              string_view field_name,
-                                              Index except_index,
-                                              TypeVector& sig) {
-  PrintDetails(" - except[%" PRIindex "] (", except_index);
-  for (Index i = 0; i < sig.size(); ++i) {
-    if (i != 0) {
-      PrintDetails(", ");
-    }
-    PrintDetails("%s", GetTypeName(sig[i]));
-  }
-  PrintDetails(") <- " PRIstringview "." PRIstringview "\n",
+Result BinaryReaderObjdump::OnImportEvent(Index import_index,
+                                          string_view module_name,
+                                          string_view field_name,
+                                          Index event_index,
+                                          Index kind,
+                                          Index sig_index) {
+  PrintDetails(" - event[%" PRIindex "] sig=%" PRIindex, event_index, sig_index);
+  PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
   return Result::Ok;
@@ -1541,22 +1537,15 @@ Result BinaryReaderObjdump::OnInitFunction(uint32_t priority,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnExceptionCount(Index count) {
+Result BinaryReaderObjdump::OnEventCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::OnExceptionType(Index index, TypeVector& sig) {
+Result BinaryReaderObjdump::OnEvent(Index index, Index kind, Index sig_index) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - except[%" PRIindex "] (", index);
-  for (Index i = 0; i < sig.size(); ++i) {
-    if (i != 0) {
-      printf(", ");
-    }
-    printf("%s", GetTypeName(sig[i]));
-  }
-  printf(")\n");
+  printf(" - except[%" PRIindex "] sig=%" PRIindex, index, sig_index);
   return Result::Ok;
 }
 

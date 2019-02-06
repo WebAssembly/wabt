@@ -207,18 +207,17 @@ Result BinaryReaderLogging::OnImportGlobal(Index import_index,
                                  global_index, type, mutable_);
 }
 
-Result BinaryReaderLogging::OnImportException(Index import_index,
-                                              string_view module_name,
-                                              string_view field_name,
-                                              Index except_index,
-                                              TypeVector& sig) {
-  LOGF("OnImportException(import_index: %" PRIindex ", except_index: %" PRIindex
-       ", sig: ",
-       import_index, except_index);
-  LogTypes(sig);
-  LOGF_NOINDENT(")\n");
-  return reader_->OnImportException(import_index, module_name, field_name,
-                                    except_index, sig);
+Result BinaryReaderLogging::OnImportEvent(Index import_index,
+                                          string_view module_name,
+                                          string_view field_name,
+                                          Index event_index,
+                                          Index kind,
+                                          Index sig_index) {
+  LOGF("OnImportEvent(import_index: %" PRIindex ", event_index: %" PRIindex
+       ", sig: %" PRIindex "\n",
+       import_index, event_index, sig_index);
+  return reader_->OnImportEvent(import_index, module_name, field_name,
+                                event_index, kind, sig_index);
 }
 
 Result BinaryReaderLogging::OnTable(Index index,
@@ -299,11 +298,10 @@ Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
                                 default_target_depth);
 }
 
-Result BinaryReaderLogging::OnExceptionType(Index index, TypeVector& sig) {
-  LOGF("OnType(index: %" PRIindex ", values: ", index);
-  LogTypes(sig);
-  LOGF_NOINDENT(")\n");
-  return reader_->OnExceptionType(index, sig);
+Result BinaryReaderLogging::OnEvent(Index index, Index kind, Index sig_index) {
+  LOGF("OnEvent(index: %" PRIindex ", sig_index: %" PRIindex "\n", index,
+       sig_index);
+  return reader_->OnEvent(index, kind, sig_index);
 }
 
 Result BinaryReaderLogging::OnF32ConstExpr(uint32_t value_bits) {
@@ -762,10 +760,10 @@ DEFINE_INDEX(OnSegmentInfoCount)
 DEFINE_INDEX(OnInitFunctionCount)
 DEFINE_END(EndLinkingSection)
 
-DEFINE_BEGIN(BeginExceptionSection);
-DEFINE_INDEX(OnExceptionCount);
+DEFINE_BEGIN(BeginEventSection);
+DEFINE_INDEX(OnEventCount);
 
-DEFINE_END(EndExceptionSection);
+DEFINE_END(EndEventSection);
 
 // We don't need to log these (the individual opcodes are logged instead), but
 // we still need to forward the calls.

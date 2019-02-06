@@ -74,11 +74,12 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
-  Result OnImportException(Index import_index,
+  Result OnImportEvent(Index import_index,
                            string_view module_name,
                            string_view field_name,
-                           Index except_index,
-                           TypeVector& sig) override;
+                           Index event_index,
+                           Index kind,
+                           Index sig_index) override;
   Result EndImportSection() override;
 
   Result BeginFunctionSection(Offset size) override;
@@ -304,10 +305,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnInitFunction(uint32_t priority, Index function_index) override;
   Result EndLinkingSection() override;
 
-  Result BeginExceptionSection(Offset size) override;
-  Result OnExceptionCount(Index count) override;
-  Result OnExceptionType(Index index, TypeVector& sig) override;
-  Result EndExceptionSection() override;
+  Result BeginEventSection(Offset size) override;
+  Result OnEventCount(Index count) override;
+  Result OnEvent(Index index, Index kind, Index sig_index) override;
+  Result EndEventSection() override;
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;

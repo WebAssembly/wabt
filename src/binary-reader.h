@@ -115,11 +115,12 @@ class BinaryReaderDelegate {
                                 Index global_index,
                                 Type type,
                                 bool mutable_) = 0;
-  virtual Result OnImportException(Index import_index,
-                                   string_view module_name,
-                                   string_view field_name,
-                                   Index except_index,
-                                   TypeVector& sig) = 0;
+  virtual Result OnImportEvent(Index import_index,
+                               string_view module_name,
+                               string_view field_name,
+                               Index event_index,
+                               Index kind,
+                               Index sig_index) = 0;
   virtual Result EndImportSection() = 0;
 
   /* Function section */
@@ -371,11 +372,11 @@ class BinaryReaderDelegate {
   virtual Result OnInitFunction(uint32_t priority, Index function_index) = 0;
   virtual Result EndLinkingSection() = 0;
 
-  /* Exception section */
-  virtual Result BeginExceptionSection(Offset size) = 0;
-  virtual Result OnExceptionCount(Index count) = 0;
-  virtual Result OnExceptionType(Index index, TypeVector& sig) = 0;
-  virtual Result EndExceptionSection() = 0;
+  /* Event section */
+  virtual Result BeginEventSection(Offset size) = 0;
+  virtual Result OnEventCount(Index count) = 0;
+  virtual Result OnEvent(Index index, Index kind, Index sig_index) = 0;
+  virtual Result EndEventSection() = 0;
 
   /* InitExpr - used by elem, data and global sections; these functions are
    * only called between calls to Begin*InitExpr and End*InitExpr */

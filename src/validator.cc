@@ -203,8 +203,8 @@ class Validator : public ExprVisitor::Delegate {
   void CheckAssertReturnNanCommand(const Action* action);
   void CheckCommand(const Command* command);
 
-  void CheckExcept(const Location* loc, const Exception* Except);
-  Result CheckExceptVar(const Var* var, const Exception** out_except);
+  void CheckExcept(const Location* loc, const Event* Except);
+  Result CheckEventVar(const Var* var, const Event** out_except);
 
   const ValidateOptions& options_;
   Errors* errors_ = nullptr;
@@ -680,13 +680,15 @@ Result Validator::EndIfExpr(IfExpr* expr) {
 Result Validator::BeginIfExceptExpr(IfExceptExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckBlockDeclaration(&expr->loc, Opcode::IfExcept, &expr->true_.decl);
-  const Exception* except;
-  TypeVector except_sig;
-  if (Succeeded(CheckExceptVar(&expr->except_var, &except))) {
-    except_sig = except->sig;
+  //const Event* event;
+  TypeVector event_sig;
+  /*
+  if (Succeeded(CheckEventVar(&expr->event_var, &event))) {
+    event_sig = event->sig;
   }
+  */
   typechecker_.OnIfExcept(expr->true_.decl.sig.param_types,
-                          expr->true_.decl.sig.result_types, except_sig);
+                          expr->true_.decl.sig.result_types, event_sig);
   return Result::Ok;
 }
 
@@ -892,9 +894,9 @@ Result Validator::EndTryExpr(TryExpr* expr) {
 
 Result Validator::OnThrowExpr(ThrowExpr* expr) {
   expr_loc_ = &expr->loc;
-  const Exception* except;
-  if (Succeeded(CheckExceptVar(&expr->var, &except))) {
-    typechecker_.OnThrow(except->sig);
+  const Event* event;
+  if (Succeeded(CheckEventVar(&expr->var, &event))) {
+    typechecker_.OnThrow(event->decl.sig.param_types);
   }
   return Result::Ok;
 }
@@ -1139,9 +1141,9 @@ void Validator::CheckDataSegments(const Module* module) {
 
 void Validator::CheckImport(const Location* loc, const Import* import) {
   switch (import->kind()) {
-    case ExternalKind::Except:
+    case ExternalKind::Event:
       ++current_except_index_;
-      CheckExcept(loc, &cast<ExceptionImport>(import)->except);
+      CheckExcept(loc, &cast<EventImport>(import)->event);
       break;
 
     case ExternalKind::Func: {
@@ -1177,8 +1179,8 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
 
 void Validator::CheckExport(const Location* loc, const Export* export_) {
   switch (export_->kind) {
-    case ExternalKind::Except:
-      CheckExceptVar(&export_->var, nullptr);
+    case ExternalKind::Event:
+      CheckEventVar(&export_->var, nullptr);
       break;
     case ExternalKind::Func:
       CheckFuncVar(&export_->var, nullptr);
@@ -1227,7 +1229,7 @@ Result Validator::CheckModule(const Module* module) {
     switch (field.type()) {
       case ModuleFieldType::Except:
         ++current_except_index_;
-        CheckExcept(&field.loc, &cast<ExceptionModuleField>(&field)->except);
+        CheckExcept(&field.loc, &cast<EventModuleField>(&field)->event);
         break;
 
       case ModuleFieldType::Func:
@@ -1363,18 +1365,18 @@ Result Validator::CheckGet(const GetAction* action, Type* out_type) {
   return Result::Ok;
 }
 
-Result Validator::CheckExceptVar(const Var* var, const Exception** out_except) {
+Result Validator::CheckEventVar(const Var* var, const Event** out_except) {
   Index index;
   CHECK_RESULT(
-      CheckVar(current_module_->excepts.size(), var, "except", &index));
+      CheckVar(current_module_->events.size(), var, "except", &index));
   if (out_except) {
-    *out_except = current_module_->excepts[index];
+    *out_except = current_module_->events[index];
   }
   return Result::Ok;
 }
 
-void Validator::CheckExcept(const Location* loc, const Exception* except) {
-  for (Type ty : except->sig) {
+void Validator::CheckExcept(const Location* loc, const Event* event) {
+  for (Type ty : event->decl.sig.param_types) {
     switch (ty) {
       case Type::I32:
       case Type::I64:
@@ -1383,7 +1385,7 @@ void Validator::CheckExcept(const Location* loc, const Exception* except) {
       case Type::V128:
         break;
       default:
-        PrintError(loc, "Invalid exception type: %s", GetTypeName(ty));
+        PrintError(loc, "Invalid event type: %s", GetTypeName(ty));
         break;
     }
   }

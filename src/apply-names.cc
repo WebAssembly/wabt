@@ -174,7 +174,7 @@ Result NameApplier::UseNameForMemoryVar(Var* var) {
 }
 
 Result NameApplier::UseNameForExceptVar(Var* var) {
-  Exception* except = module_->GetExcept(*var);
+  Event* except = module_->GetEvent(*var);
   if (!except) {
     return Result::Error;
   }
@@ -342,7 +342,7 @@ Result NameApplier::EndIfExpr(IfExpr* expr) {
 
 Result NameApplier::BeginIfExceptExpr(IfExceptExpr* expr) {
   PushLabel(expr->true_.label);
-  CHECK_RESULT(UseNameForExceptVar(&expr->except_var));
+  CHECK_RESULT(UseNameForExceptVar(&expr->event_var));
   return Result::Ok;
 }
 

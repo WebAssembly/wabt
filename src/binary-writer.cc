@@ -125,7 +125,7 @@ class BinaryWriter {
   void BeginSubsection(const char* name);
   void EndSubsection();
   Index GetLabelVarDepth(const Var* var);
-  Index GetExceptVarDepth(const Var* var);
+  Index GetEventVarDepth(const Var* var);
   Index GetLocalIndex(const Func* func, const Var& var);
   Index GetSymbolIndex(RelocType reloc_type, Index index);
   void AddReloc(RelocType reloc_type, Index index);
@@ -143,7 +143,6 @@ class BinaryWriter {
   void WriteTable(const Table* table);
   void WriteMemory(const Memory* memory);
   void WriteGlobalHeader(const Global* global);
-  void WriteExceptType(const TypeVector* except_types);
   void WriteRelocSection(const RelocSection* reloc_section);
   void WriteLinkingSection();
 
@@ -301,7 +300,7 @@ Index BinaryWriter::GetLabelVarDepth(const Var* var) {
   return var->index();
 }
 
-Index BinaryWriter::GetExceptVarDepth(const Var* var) {
+Index BinaryWriter::GetEventVarDepth(const Var* var) {
   return var->index();
 }
 
@@ -526,7 +525,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       auto* if_except_expr = cast<IfExceptExpr>(expr);
       WriteOpcode(stream_, Opcode::IfExcept);
       WriteBlockDecl(if_except_expr->true_.decl);
-      Index index = module_->GetExceptIndex(if_except_expr->except_var);
+      Index index = module_->GetEventIndex(if_except_expr->event_var);
       WriteU32Leb128(stream_, index, "exception index");
       WriteExprList(func, if_except_expr->true_.exprs);
       if (!if_except_expr->false_.empty()) {
@@ -632,7 +631,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     case ExprType::Throw:
       WriteOpcode(stream_, Opcode::Throw);
-      WriteU32Leb128(stream_, GetExceptVarDepth(&cast<ThrowExpr>(expr)->var),
+      WriteU32Leb128(stream_, GetEventVarDepth(&cast<ThrowExpr>(expr)->var),
                      "throw exception");
       break;
     case ExprType::Try: {
@@ -715,13 +714,6 @@ void BinaryWriter::WriteMemory(const Memory* memory) {
 void BinaryWriter::WriteGlobalHeader(const Global* global) {
   WriteType(stream_, global->type);
   stream_->WriteU8(global->mutable_, "global mutability");
-}
-
-void BinaryWriter::WriteExceptType(const TypeVector* except_types) {
-  WriteU32Leb128(stream_, except_types->size(), "exception type count");
-  for (Type ty : *except_types) {
-    WriteType(stream_, ty);
-  }
 }
 
 void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
@@ -850,8 +842,11 @@ Result BinaryWriter::WriteModule() {
           WriteGlobalHeader(&cast<GlobalImport>(import)->global);
           break;
 
-        case ExternalKind::Except:
-          WriteExceptType(&cast<ExceptionImport>(import)->except.sig);
+        case ExternalKind::Event:
+          WriteU32Leb128(
+              stream_,
+              module_->GetFuncTypeIndex(cast<EventImport>(import)->event.decl),
+              "import signature index");
           break;
       }
     }
@@ -942,8 +937,8 @@ Result BinaryWriter::WriteModule() {
           WriteU32Leb128(stream_, index, "export global index");
           break;
         }
-        case ExternalKind::Except: {
-          Index index = module_->GetExceptIndex(export_->var);
+        case ExternalKind::Event: {
+          Index index = module_->GetEventIndex(export_->var);
           WriteU32Leb128(stream_, index, "export exception index");
           break;
         }
@@ -984,13 +979,17 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
-  assert(module_->excepts.size() >= module_->num_except_imports);
-  Index num_exceptions = module_->excepts.size() - module_->num_except_imports;
-  if (num_exceptions) {
-    BeginCustomSection("exception");
-    WriteU32Leb128(stream_, num_exceptions, "exception count");
-    for (Index i = module_->num_except_imports; i < num_exceptions; ++i) {
-      WriteExceptType(&module_->excepts[i]->sig);
+  assert(module_->events.size() >= module_->num_event_imports);
+  Index num_events = module_->events.size() - module_->num_event_imports;
+  if (num_events) {
+    BeginKnownSection(BinarySection::Event);
+    WriteU32Leb128(stream_, num_events, "event count");
+    for (Index i = 0; i < num_events; ++i) {
+      const Event* event = module_->events[i + module_->num_event_imports];
+      char desc[100];
+      wabt_snprintf(desc, sizeof(desc), "event %" PRIzd " signature index",
+                    i);
+      WriteU32Leb128(stream_, module_->GetFuncTypeIndex(event->decl), desc);
     }
     EndSection();
   }

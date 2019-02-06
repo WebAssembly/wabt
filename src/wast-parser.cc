@@ -188,7 +188,7 @@ bool IsModuleField(TokenTypePair pair) {
   switch (pair[1]) {
     case TokenType::Data:
     case TokenType::Elem:
-    case TokenType::Except:
+    case TokenType::Event:
     case TokenType::Export:
     case TokenType::Func:
     case TokenType::Type:
@@ -786,7 +786,7 @@ Result WastParser::ParseModuleField(Module* module) {
   switch (Peek(1)) {
     case TokenType::Data:   return ParseDataModuleField(module);
     case TokenType::Elem:   return ParseElemModuleField(module);
-    case TokenType::Except: return ParseExceptModuleField(module);
+    case TokenType::Event:  return ParseExceptModuleField(module);
     case TokenType::Export: return ParseExportModuleField(module);
     case TokenType::Func:   return ParseFuncModuleField(module);
     case TokenType::Type:   return ParseTypeModuleField(module);
@@ -849,10 +849,10 @@ Result WastParser::ParseElemModuleField(Module* module) {
 Result WastParser::ParseExceptModuleField(Module* module) {
   WABT_TRACE(ParseExceptModuleField);
   EXPECT(Lpar);
-  auto field = MakeUnique<ExceptionModuleField>(GetLocation());
-  EXPECT(Except);
-  ParseBindVarOpt(&field->except.name);
-  CHECK_RESULT(ParseValueTypeList(&field->except.sig));
+  auto field = MakeUnique<EventModuleField>(GetLocation());
+  EXPECT(Event);
+  ParseBindVarOpt(&field->event.name);
+  //CHECK_RESULT(ParseValueTypeList(&field->event.sig));
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
@@ -1025,11 +1025,11 @@ Result WastParser::ParseImportModuleField(Module* module) {
       break;
     }
 
-    case TokenType::Except: {
+    case TokenType::Event: {
       Consume();
       ParseBindVarOpt(&name);
-      auto import = MakeUnique<ExceptionImport>(name);
-      CHECK_RESULT(ParseValueTypeList(&import->except.sig));
+      auto import = MakeUnique<EventImport>(name);
+      //CHECK_RESULT(ParseValueTypeList(&import->event.sig));
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
       break;
@@ -1167,7 +1167,7 @@ Result WastParser::ParseExportDesc(Export* export_) {
     case TokenType::Table:  export_->kind = ExternalKind::Table; break;
     case TokenType::Memory: export_->kind = ExternalKind::Memory; break;
     case TokenType::Global: export_->kind = ExternalKind::Global; break;
-    case TokenType::Except: export_->kind = ExternalKind::Except; break;
+    case TokenType::Event:  export_->kind = ExternalKind::Event; break;
     default:
       return ErrorExpected({"an external kind"});
   }
@@ -1914,10 +1914,10 @@ Result WastParser::ParseIfExceptHeader(IfExceptExpr* expr) {
   if (PeekMatchLpar(TokenType::Result) || PeekMatchLpar(TokenType::Param)) {
     // Cases 4, 6, 7.
     CHECK_RESULT(ParseBlockDeclaration(&expr->true_.decl));
-    CHECK_RESULT(ParseVar(&expr->except_var));
+    CHECK_RESULT(ParseVar(&expr->event_var));
   } else if (PeekMatch(TokenType::Nat)) {
     // Case 1.
-    CHECK_RESULT(ParseVar(&expr->except_var));
+    CHECK_RESULT(ParseVar(&expr->event_var));
   } else if (PeekMatch(TokenType::Var)) {
     // Cases 2, 3, 5, 8, 9.
     Var var;
@@ -1926,13 +1926,13 @@ Result WastParser::ParseIfExceptHeader(IfExceptExpr* expr) {
       // Cases 5, 8, 9.
       expr->true_.label = var.name();
       CHECK_RESULT(ParseBlockDeclaration(&expr->true_.decl));
-      CHECK_RESULT(ParseVar(&expr->except_var));
-    } else if (ParseVarOpt(&expr->except_var, Var())) {
+      CHECK_RESULT(ParseVar(&expr->event_var));
+    } else if (ParseVarOpt(&expr->event_var, Var())) {
       // Case 3.
       expr->true_.label = var.name();
     } else {
       // Case 2.
-      expr->except_var = var;
+      expr->event_var = var;
     }
   } else {
     return ErrorExpected({"a var", "a block type"},
@@ -2451,7 +2451,7 @@ void WastParser::CheckImportOrdering(Module* module) {
       module->tables.size() != module->num_table_imports ||
       module->memories.size() != module->num_memory_imports ||
       module->globals.size() != module->num_global_imports ||
-      module->excepts.size() != module->num_except_imports) {
+      module->events.size() != module->num_event_imports) {
     Error(GetLocation(),
           "imports must occur before all non-import definitions");
   }

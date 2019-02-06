@@ -158,8 +158,8 @@ class WatWriter {
   void WriteFunc(const Func& func);
   void WriteBeginGlobal(const Global& global);
   void WriteGlobal(const Global& global);
-  void WriteBeginException(const Exception& except);
-  void WriteException(const Exception& except);
+  void WriteBeginEvent(const Event& event);
+  void WriteEvent(const Event& event);
   void WriteLimits(const Limits& limits);
   void WriteTable(const Table& table);
   void WriteElemSegment(const ElemSegment& segment);
@@ -175,6 +175,7 @@ class WatWriter {
   Index GetLabelStackSize() { return label_stack_.size(); }
   Label* GetLabel(const Var& var);
   Index GetLabelArity(const Var& var);
+  Index GetEventParamCount(const Var& var);
   Index GetFuncParamCount(const Var& var);
   Index GetFuncResultCount(const Var& var);
   void PushExpr(const Expr* expr, Index operand_count, Index result_count);
@@ -208,7 +209,7 @@ class WatWriter {
   Index table_index_ = 0;
   Index memory_index_ = 0;
   Index func_type_index_ = 0;
-  Index except_index_ = 0;
+  Index event_index_ = 0;
   Index data_segment_index_ = 0;
   Index elem_segment_index_ = 0;
 };
@@ -452,7 +453,7 @@ void WatWriter::WriteBeginIfExceptBlock(const IfExceptExpr* expr) {
   }
   WriteTypes(block.decl.sig.param_types, "param");
   WriteTypes(block.decl.sig.result_types, "result");
-  WriteVar(expr->except_var, NextChar::Space);
+  WriteVar(expr->event_var, NextChar::Space);
   if (!has_label) {
     Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
   }
@@ -987,6 +988,11 @@ Index WatWriter::GetFuncParamCount(const Var& var) {
   return func ? func->GetNumParams() : 0;
 }
 
+Index WatWriter::GetEventParamCount(const Var& var) {
+  const Event* event = module_->GetEvent(var);
+  return event ? event->GetNumParams() : 0;
+}
+
 Index WatWriter::GetFuncResultCount(const Var& var) {
   const Func* func = module_->GetFunc(var);
   return func ? func->GetNumResults() : 0;
@@ -1120,12 +1126,8 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
 
     case ExprType::Throw: {
-      auto throw_ = cast<ThrowExpr>(expr);
-      Index operand_count = 0;
-      if (Exception* except = module_->GetExcept(throw_->var)) {
-        operand_count = except->sig.size();
-      }
-      PushExpr(expr, operand_count, 0);
+      const Var& var = cast<ThrowExpr>(expr)->var;
+      PushExpr(expr, GetEventParamCount(var), 0);
       break;
     }
 
@@ -1453,17 +1455,19 @@ void WatWriter::WriteGlobal(const Global& global) {
   WriteCloseNewline();
 }
 
-void WatWriter::WriteBeginException(const Exception& except) {
-  WriteOpenSpace("except");
-  WriteNameOrIndex(except.name, except_index_, NextChar::Space);
-  WriteInlineExports(ExternalKind::Except, except_index_);
-  WriteInlineImport(ExternalKind::Except, except_index_);
-  WriteTypes(except.sig, nullptr);
-  ++except_index_;
+void WatWriter::WriteBeginEvent(const Event& event) {
+  WriteOpenSpace("event");
+  WriteNameOrIndex(event.name, event_index_, NextChar::Space);
+  WriteInlineExports(ExternalKind::Event, event_index_);
+  WriteInlineImport(ExternalKind::Event, event_index_);
+  WriteOpenSpace("type");
+  WriteVar(event.decl.type_var, NextChar::None);
+  WriteCloseSpace();
+  ++event_index_;
 }
 
-void WatWriter::WriteException(const Exception& except) {
-  WriteBeginException(except);
+void WatWriter::WriteEvent(const Event& event) {
+  WriteBeginEvent(event);
   WriteCloseNewline();
 }
 
@@ -1552,8 +1556,8 @@ void WatWriter::WriteImport(const Import& import) {
       WriteCloseSpace();
       break;
 
-    case ExternalKind::Except:
-      WriteBeginException(cast<ExceptionImport>(&import)->except);
+    case ExternalKind::Event:
+      WriteBeginEvent(cast<EventImport>(&import)->event);
       WriteCloseSpace();
       break;
   }
@@ -1614,7 +1618,7 @@ Result WatWriter::WriteModule(const Module& module) {
         WriteImport(*cast<ImportModuleField>(&field)->import);
         break;
       case ModuleFieldType::Except:
-        WriteException(cast<ExceptionModuleField>(&field)->except);
+        WriteEvent(cast<EventModuleField>(&field)->event);
         break;
       case ModuleFieldType::Export:
         WriteExport(cast<ExportModuleField>(&field)->export_);
@@ -1684,8 +1688,8 @@ void WatWriter::BuildInlineExportMap() {
         index = module_->GetGlobalIndex(export_->var);
         break;
 
-      case ExternalKind::Except:
-        index = module_->GetExceptIndex(export_->var);
+      case ExternalKind::Event:
+        index = module_->GetEventIndex(export_->var);
         break;
     }
 
@@ -1729,8 +1733,8 @@ bool WatWriter::IsInlineExport(const Export& export_) {
       index = module_->GetGlobalIndex(export_.var);
       break;
 
-    case ExternalKind::Except:
-      index = module_->GetExceptIndex(export_.var);
+    case ExternalKind::Event:
+      index = module_->GetEventIndex(export_.var);
       break;
   }
 
