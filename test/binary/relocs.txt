@@ -48,7 +48,7 @@ Custom:
 Custom:
  - name: "reloc.mysection"
   - relocations for section: 1 (mysection) [1]
-   - R_WEBASSEMBLY_FUNCTION_OFFSET_I32 offset=00000000(file=0x00003d) symbol=0 <mysection>
+   - R_WASM_FUNCTION_OFFSET_I32 offset=00000000(file=0x00003d) symbol=0 <mysection>
 
 Code Disassembly:
 
