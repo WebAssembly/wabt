@@ -33,10 +33,10 @@ Code Disassembly:
 
 000051 func[1] <$f>:
  000052: 23 80 80 80 80 00          | global.get 0 <$g>
-           000053: R_WEBASSEMBLY_GLOBAL_INDEX_LEB 1 <$g>
+           000053: R_WASM_GLOBAL_INDEX_LEB 1 <$g>
  000058: 10 81 80 80 80 00          | call 1 <$f>
-           000059: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 0 <$f>
+           000059: R_WASM_FUNCTION_INDEX_LEB 0 <$f>
  00005e: 10 80 80 80 80 00          | call 0 <foo>
-           00005f: R_WEBASSEMBLY_FUNCTION_INDEX_LEB 2 <foo>
+           00005f: R_WASM_FUNCTION_INDEX_LEB 2 <foo>
  000064: 0b                         | end
 ;;; STDOUT ;;)
