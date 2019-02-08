@@ -43,4 +43,7 @@ int wabt_snprintf(char* str, size_t size, const char* format, ...) {
   return result;
 }
 #endif
+
+#elif COMPILER_IS_CLANG
+void wabt_config_cc_dummy(void) {}
 #endif
