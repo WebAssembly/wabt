@@ -350,7 +350,6 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
-  Result OnIfExceptExpr(Type sig_type, Index except_index) override;
   Result OnEndExpr() override;
   Result OnEndFunc() override;
 
@@ -576,19 +575,6 @@ Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
   Offset immediate_len = state->offset - current_opcode_offset;
   /* TODO(sbc): Print targets */
   LogOpcode(immediate_len, nullptr);
-  return Result::Ok;
-}
-
-Result BinaryReaderObjdumpDisassemble::OnIfExceptExpr(Type sig_type,
-                                                      Index except_index) {
-  Offset immediate_len = state->offset - current_opcode_offset;
-  if (sig_type != Type::Void) {
-    LogOpcode(immediate_len, "%s %u", BlockSigToString(sig_type).c_str(),
-              except_index);
-  } else {
-    LogOpcode(immediate_len, "%u", except_index);
-  }
-  indent_level++;
   return Result::Ok;
 }
 

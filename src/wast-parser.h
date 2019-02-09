@@ -166,7 +166,6 @@ class WastParser {
   Result ParseEndLabelOpt(const std::string&);
   Result ParseBlockDeclaration(BlockDeclaration*);
   Result ParseBlock(Block*);
-  Result ParseIfExceptHeader(IfExceptExpr*);
   Result ParseExprList(ExprList*);
   Result ParseExpr(ExprList*);
   Result ParseGlobalType(Global*);

@@ -515,21 +515,13 @@ Result TypeChecker::OnEnd(Label* label,
 
 Result TypeChecker::OnEnd() {
   Result result = Result::Ok;
-  static const char* s_label_type_name[] = {"function",
-                                            "block",
-                                            "loop",
-                                            "if",
-                                            "if false branch",
-                                            "if_except",
-                                            "if_except false branch",
-                                            "try",
-                                            "try catch"};
+  static const char* s_label_type_name[] = {
+      "function", "block", "loop", "if", "if false branch", "try", "try catch"};
   WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(s_label_type_name) == kLabelTypeCount);
   Label* label;
   CHECK_RESULT(TopLabel(&label));
   assert(static_cast<int>(label->label_type) < kLabelTypeCount);
-  if (label->label_type == LabelType::If ||
-      label->label_type == LabelType::IfExcept) {
+  if (label->label_type == LabelType::If) {
     // An if without an else will just pass the params through, so the result
     // types must be the same as the param types. It has the same behavior as
     // an empty else block.
@@ -546,19 +538,6 @@ Result TypeChecker::OnIf(const TypeVector& param_types,
   result |= PopAndCheckSignature(param_types, "if");
   PushLabel(LabelType::If, param_types, result_types);
   PushTypes(param_types);
-  return result;
-}
-
-Result TypeChecker::OnIfExcept(const TypeVector& param_types,
-                               const TypeVector& result_types,
-                               const TypeVector& except_sig) {
-  Result result = PopAndCheck1Type(Type::ExceptRef, "if_except");
-  result |= PopAndCheckSignature(param_types, "if_except");
-  PushLabel(LabelType::IfExcept, param_types, result_types);
-  // TODO(binji): Not quite sure how multi-value and exception proposals are
-  // meant to interact here.
-  PushTypes(param_types);
-  PushTypes(except_sig);
   return result;
 }
 

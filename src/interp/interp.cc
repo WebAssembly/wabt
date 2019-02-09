@@ -3275,7 +3275,6 @@ Result Thread::Run(int num_instructions) {
       case Opcode::Else:
       case Opcode::End:
       case Opcode::If:
-      case Opcode::IfExcept:
       case Opcode::InterpData:
       case Opcode::Invalid:
       case Opcode::Loop:

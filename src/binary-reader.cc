@@ -1184,17 +1184,6 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::IfExcept: {
-        Type sig_type;
-        CHECK_RESULT(ReadType(&sig_type, "if signature type"));
-        ERROR_UNLESS(IsBlockType(sig_type),
-                     "expected valid block signature type");
-        Index except_index;
-        CHECK_RESULT(ReadIndex(&except_index, "exception index"));
-        CALLBACK(OnIfExceptExpr, sig_type, except_index);
-        break;
-      }
-
       case Opcode::I32Extend8S:
       case Opcode::I32Extend16S:
       case Opcode::I64Extend8S:

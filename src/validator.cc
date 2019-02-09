@@ -60,9 +60,6 @@ class Validator : public ExprVisitor::Delegate {
   Result BeginIfExpr(IfExpr*) override;
   Result AfterIfTrueExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
-  Result BeginIfExceptExpr(IfExceptExpr*) override;
-  Result AfterIfExceptTrueExpr(IfExceptExpr*) override;
-  Result EndIfExceptExpr(IfExceptExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
@@ -671,33 +668,6 @@ Result Validator::AfterIfTrueExpr(IfExpr* expr) {
 }
 
 Result Validator::EndIfExpr(IfExpr* expr) {
-  expr_loc_ =
-      expr->false_.empty() ? &expr->true_.end_loc : &expr->false_end_loc;
-  typechecker_.OnEnd();
-  return Result::Ok;
-}
-
-Result Validator::BeginIfExceptExpr(IfExceptExpr* expr) {
-  expr_loc_ = &expr->loc;
-  CheckBlockDeclaration(&expr->loc, Opcode::IfExcept, &expr->true_.decl);
-  const Exception* except;
-  TypeVector except_sig;
-  if (Succeeded(CheckExceptVar(&expr->except_var, &except))) {
-    except_sig = except->sig;
-  }
-  typechecker_.OnIfExcept(expr->true_.decl.sig.param_types,
-                          expr->true_.decl.sig.result_types, except_sig);
-  return Result::Ok;
-}
-
-Result Validator::AfterIfExceptTrueExpr(IfExceptExpr* expr) {
-  if (!expr->false_.empty()) {
-    typechecker_.OnElse();
-  }
-  return Result::Ok;
-}
-
-Result Validator::EndIfExceptExpr(IfExceptExpr* expr) {
   expr_loc_ =
       expr->false_.empty() ? &expr->true_.end_loc : &expr->false_end_loc;
   typechecker_.OnEnd();
@@ -1527,12 +1497,6 @@ class Validator::CheckFuncSignatureExprVisitorDelegate
 
   Result BeginIfExpr(IfExpr* expr) override {
     validator_->CheckBlockDeclaration(&expr->loc, Opcode::If,
-                                      &expr->true_.decl);
-    return Result::Ok;
-  }
-
-  Result BeginIfExceptExpr(IfExceptExpr* expr) override {
-    validator_->CheckBlockDeclaration(&expr->loc, Opcode::IfExcept,
                                       &expr->true_.decl);
     return Result::Ok;
   }

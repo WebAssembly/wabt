@@ -45,7 +45,6 @@ const char* ExprTypeName[] = {
   "GlobalGet",
   "GlobalSet",
   "If",
-  "IfExcept",
   "Load",
   "LocalGet",
   "LocalSet",

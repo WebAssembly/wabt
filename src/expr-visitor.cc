@@ -77,31 +77,6 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         break;
       }
 
-      case State::IfExceptTrue: {
-        auto if_except_expr = cast<IfExceptExpr>(expr);
-        auto& iter = expr_iter_stack_.back();
-        if (iter != if_except_expr->true_.exprs.end()) {
-          PushDefault(&*iter++);
-        } else {
-          CHECK_RESULT(delegate_->AfterIfExceptTrueExpr(if_except_expr));
-          PopExprlist();
-          PushExprlist(State::IfExceptFalse, expr, if_except_expr->false_);
-        }
-        break;
-      }
-
-      case State::IfExceptFalse: {
-        auto if_except_expr = cast<IfExceptExpr>(expr);
-        auto& iter = expr_iter_stack_.back();
-        if (iter != if_except_expr->false_.end()) {
-          PushDefault(&*iter++);
-        } else {
-          CHECK_RESULT(delegate_->EndIfExceptExpr(if_except_expr));
-          PopExprlist();
-        }
-        break;
-      }
-
       case State::Loop: {
         auto loop_expr = cast<LoopExpr>(expr);
         auto& iter = expr_iter_stack_.back();
@@ -245,13 +220,6 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       auto if_expr = cast<IfExpr>(expr);
       CHECK_RESULT(delegate_->BeginIfExpr(if_expr));
       PushExprlist(State::IfTrue, expr, if_expr->true_.exprs);
-      break;
-    }
-
-    case ExprType::IfExcept: {
-      auto if_except_expr = cast<IfExceptExpr>(expr);
-      CHECK_RESULT(delegate_->BeginIfExceptExpr(if_except_expr));
-      PushExprlist(State::IfExceptTrue, expr, if_except_expr->true_.exprs);
       break;
     }
 

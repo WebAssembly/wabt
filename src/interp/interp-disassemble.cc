@@ -615,7 +615,6 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::Else:
       case Opcode::End:
       case Opcode::If:
-      case Opcode::IfExcept:
       case Opcode::Invalid:
       case Opcode::Loop:
       case Opcode::Rethrow:

@@ -39,7 +39,6 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   Result BeginBlockExpr(BlockExpr* expr) override;
   Result BeginLoopExpr(LoopExpr* expr) override;
   Result BeginIfExpr(IfExpr* expr) override;
-  Result BeginIfExceptExpr(IfExceptExpr* expr) override;
 
  private:
   static bool HasName(const std::string& str);
@@ -214,11 +213,6 @@ Result NameGenerator::BeginLoopExpr(LoopExpr* expr) {
 
 Result NameGenerator::BeginIfExpr(IfExpr* expr) {
   MaybeGenerateName("$I", label_count_++, &expr->true_.label);
-  return Result::Ok;
-}
-
-Result NameGenerator::BeginIfExceptExpr(IfExceptExpr* expr) {
-  MaybeGenerateName("$E", label_count_++, &expr->true_.label);
   return Result::Ok;
 }
 

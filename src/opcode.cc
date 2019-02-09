@@ -68,7 +68,6 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::Catch:
     case Opcode::Throw:
     case Opcode::Rethrow:
-    case Opcode::IfExcept:
       return features.exceptions_enabled();
 
     case Opcode::ReturnCallIndirect:

@@ -39,8 +39,6 @@ class ExprVisitor {
     Block,
     IfTrue,
     IfFalse,
-    IfExceptTrue,
-    IfExceptFalse,
     Loop,
     Try,
     Catch,
@@ -83,9 +81,6 @@ class ExprVisitor::Delegate {
   virtual Result BeginIfExpr(IfExpr*) = 0;
   virtual Result AfterIfTrueExpr(IfExpr*) = 0;
   virtual Result EndIfExpr(IfExpr*) = 0;
-  virtual Result BeginIfExceptExpr(IfExceptExpr*) = 0;
-  virtual Result AfterIfExceptTrueExpr(IfExceptExpr*) = 0;
-  virtual Result EndIfExceptExpr(IfExceptExpr*) = 0;
   virtual Result OnLoadExpr(LoadExpr*) = 0;
   virtual Result OnLocalGetExpr(LocalGetExpr*) = 0;
   virtual Result OnLocalSetExpr(LocalSetExpr*) = 0;
@@ -144,9 +139,6 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result BeginIfExpr(IfExpr*) override { return Result::Ok; }
   Result AfterIfTrueExpr(IfExpr*) override { return Result::Ok; }
   Result EndIfExpr(IfExpr*) override { return Result::Ok; }
-  Result BeginIfExceptExpr(IfExceptExpr*) override { return Result::Ok; }
-  Result AfterIfExceptTrueExpr(IfExceptExpr*) override { return Result::Ok; }
-  Result EndIfExceptExpr(IfExceptExpr*) override { return Result::Ok; }
   Result OnLoadExpr(LoadExpr*) override { return Result::Ok; }
   Result OnLocalGetExpr(LocalGetExpr*) override { return Result::Ok; }
   Result OnLocalSetExpr(LocalSetExpr*) override { return Result::Ok; }

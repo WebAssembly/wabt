@@ -49,8 +49,6 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
-  Result BeginIfExceptExpr(IfExceptExpr*) override;
-  Result EndIfExceptExpr(IfExceptExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
@@ -306,18 +304,6 @@ Result NameResolver::BeginIfExpr(IfExpr* expr) {
 }
 
 Result NameResolver::EndIfExpr(IfExpr* expr) {
-  PopLabel();
-  return Result::Ok;
-}
-
-Result NameResolver::BeginIfExceptExpr(IfExceptExpr* expr) {
-  PushLabel(expr->true_.label);
-  ResolveBlockDeclarationVar(&expr->true_.decl);
-  ResolveExceptionVar(&expr->except_var);
-  return Result::Ok;
-}
-
-Result NameResolver::EndIfExceptExpr(IfExceptExpr* expr) {
   PopLabel();
   return Result::Ok;
 }
