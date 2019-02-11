@@ -48,8 +48,6 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnGlobalSetExpr(GlobalSetExpr*) override;
   Result BeginIfExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
-  Result BeginIfExceptExpr(IfExceptExpr*) override;
-  Result EndIfExceptExpr(IfExceptExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
   Result OnLocalTeeExpr(LocalTeeExpr*) override;
@@ -336,17 +334,6 @@ Result NameApplier::BeginIfExpr(IfExpr* expr) {
 }
 
 Result NameApplier::EndIfExpr(IfExpr* expr) {
-  PopLabel();
-  return Result::Ok;
-}
-
-Result NameApplier::BeginIfExceptExpr(IfExceptExpr* expr) {
-  PushLabel(expr->true_.label);
-  CHECK_RESULT(UseNameForExceptVar(&expr->except_var));
-  return Result::Ok;
-}
-
-Result NameApplier::EndIfExceptExpr(IfExceptExpr* expr) {
   PopLabel();
   return Result::Ok;
 }

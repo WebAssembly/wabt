@@ -158,7 +158,6 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnI32ConstExpr(uint32_t value) override;
   Result OnI64ConstExpr(uint64_t value) override;
   Result OnIfExpr(Type sig_type) override;
-  Result OnIfExceptExpr(Type sig_type, Index except_index) override;
   Result OnLoadExpr(Opcode opcode,
                     uint32_t alignment_log2,
                     Address offset) override;
@@ -710,11 +709,6 @@ Result BinaryReaderIR::OnElseExpr() {
     if_expr->true_.end_loc = GetLocation();
     label->exprs = &if_expr->false_;
     label->label_type = LabelType::Else;
-  } else if (label->label_type == LabelType::IfExcept) {
-    auto* if_except_expr = cast<IfExceptExpr>(expr);
-    if_except_expr->true_.end_loc = GetLocation();
-    label->exprs = &if_except_expr->false_;
-    label->label_type = LabelType::IfExceptElse;
   } else {
     PrintError("else expression without matching if");
     return Result::Error;
@@ -739,12 +733,6 @@ Result BinaryReaderIR::OnEndExpr() {
       break;
     case LabelType::Else:
       cast<IfExpr>(expr)->false_end_loc = GetLocation();
-      break;
-    case LabelType::IfExcept:
-      cast<IfExceptExpr>(expr)->true_.end_loc = GetLocation();
-      break;
-    case LabelType::IfExceptElse:
-      cast<IfExceptExpr>(expr)->false_end_loc = GetLocation();
       break;
     case LabelType::Try:
       cast<TryExpr>(expr)->block.end_loc = GetLocation();
@@ -796,16 +784,6 @@ Result BinaryReaderIR::OnIfExpr(Type sig_type) {
   ExprList* expr_list = &expr->true_.exprs;
   CHECK_RESULT(AppendExpr(std::move(expr)));
   PushLabel(LabelType::If, expr_list);
-  return Result::Ok;
-}
-
-Result BinaryReaderIR::OnIfExceptExpr(Type sig_type, Index except_index) {
-  auto expr = MakeUnique<IfExceptExpr>();
-  expr->except_var = Var(except_index, GetLocation());
-  SetBlockDeclaration(&expr->true_.decl, sig_type);
-  ExprList* expr_list = &expr->true_.exprs;
-  CHECK_RESULT(AppendExpr(std::move(expr)));
-  PushLabel(LabelType::IfExcept, expr_list);
   return Result::Ok;
 }
 

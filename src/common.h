@@ -160,8 +160,6 @@ enum class LabelType {
   Loop,
   If,
   Else,
-  IfExcept,
-  IfExceptElse,
   Try,
   Catch,
 

@@ -725,7 +725,6 @@ void Thread::Trace(Stream* stream) {
     case Opcode::Else:
     case Opcode::End:
     case Opcode::If:
-    case Opcode::IfExcept:
     case Opcode::InterpData:
     case Opcode::Invalid:
     case Opcode::Loop:

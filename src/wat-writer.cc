@@ -141,7 +141,6 @@ class WatWriter {
   void WriteBeginBlock(LabelType label_type,
                        const Block& block,
                        const char* text);
-  void WriteBeginIfExceptBlock(const IfExceptExpr* expr);
   void WriteEndBlock();
   void WriteConst(const Const& const_);
   void WriteExpr(const Expr* expr);
@@ -443,26 +442,6 @@ void WatWriter::WriteBeginBlock(LabelType label_type,
   Indent();
 }
 
-void WatWriter::WriteBeginIfExceptBlock(const IfExceptExpr* expr) {
-  const Block& block = expr->true_;
-  WritePutsSpace(Opcode::IfExcept_Opcode.GetName());
-  bool has_label = !block.label.empty();
-  if (has_label) {
-    WriteString(block.label, NextChar::Space);
-  }
-  WriteTypes(block.decl.sig.param_types, "param");
-  WriteTypes(block.decl.sig.result_types, "result");
-  WriteVar(expr->except_var, NextChar::Space);
-  if (!has_label) {
-    Writef(" ;; label = @%" PRIindex, GetLabelStackSize());
-  }
-  WriteNewline(FORCE_NEWLINE);
-  label_stack_.emplace_back(LabelType::IfExcept, block.label,
-                            block.decl.sig.param_types,
-                            block.decl.sig.result_types);
-  Indent();
-}
-
 void WatWriter::WriteEndBlock() {
   Dedent();
   label_stack_.pop_back();
@@ -556,9 +535,6 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result BeginIfExpr(IfExpr*) override;
   Result AfterIfTrueExpr(IfExpr*) override;
   Result EndIfExpr(IfExpr*) override;
-  Result BeginIfExceptExpr(IfExceptExpr*) override;
-  Result AfterIfExceptTrueExpr(IfExceptExpr*) override;
-  Result EndIfExceptExpr(IfExceptExpr*) override;
   Result OnLoadExpr(LoadExpr*) override;
   Result OnLocalGetExpr(LocalGetExpr*) override;
   Result OnLocalSetExpr(LocalSetExpr*) override;
@@ -702,29 +678,6 @@ Result WatWriter::ExprVisitorDelegate::AfterIfTrueExpr(IfExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::EndIfExpr(IfExpr* expr) {
-  writer_->WriteEndBlock();
-  return Result::Ok;
-}
-
-Result WatWriter::ExprVisitorDelegate::BeginIfExceptExpr(IfExceptExpr* expr) {
-  // Can't use WriteBeginBlock because if_except has an additional exception
-  // index argument.
-  writer_->WriteBeginIfExceptBlock(expr);
-  return Result::Ok;
-}
-
-Result WatWriter::ExprVisitorDelegate::AfterIfExceptTrueExpr(
-    IfExceptExpr* expr) {
-  if (!expr->false_.empty()) {
-    writer_->Dedent();
-    writer_->WritePutsSpace(Opcode::Else_Opcode.GetName());
-    writer_->Indent();
-    writer_->WriteNewline(FORCE_NEWLINE);
-  }
-  return Result::Ok;
-}
-
-Result WatWriter::ExprVisitorDelegate::EndIfExceptExpr(IfExceptExpr* expr) {
   writer_->WriteEndBlock();
   return Result::Ok;
 }
@@ -1092,11 +1045,6 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       PushExpr(expr, 1, cast<IfExpr>(expr)->true_.decl.sig.GetNumResults());
       break;
 
-    case ExprType::IfExcept:
-      PushExpr(expr, 1,
-               cast<IfExceptExpr>(expr)->true_.decl.sig.GetNumResults());
-      break;
-
     case ExprType::Loop:
       PushExpr(expr, 0, cast<LoopExpr>(expr)->block.decl.sig.GetNumResults());
       break;
@@ -1266,25 +1214,6 @@ void WatWriter::FlushExprTree(const ExprTree& expr_tree) {
       if (!if_expr->false_.empty()) {
         WriteOpenNewline("else");
         WriteFoldedExprList(if_expr->false_);
-        FlushExprTreeStack();
-        WriteCloseNewline();
-      }
-      WriteCloseNewline();
-      break;
-    }
-
-    case ExprType::IfExcept: {
-      auto if_except_expr = cast<IfExceptExpr>(expr_tree.expr);
-      WritePuts("(", NextChar::None);
-      WriteBeginIfExceptBlock(if_except_expr);
-      FlushExprTreeVector(expr_tree.children);
-      WriteOpenNewline("then");
-      WriteFoldedExprList(if_except_expr->true_.exprs);
-      FlushExprTreeStack();
-      WriteCloseNewline();
-      if (!if_except_expr->false_.empty()) {
-        WriteOpenNewline("else");
-        WriteFoldedExprList(if_except_expr->false_);
         FlushExprTreeStack();
         WriteCloseNewline();
       }

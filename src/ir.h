@@ -176,7 +176,6 @@ enum class ExprType {
   GlobalGet,
   GlobalSet,
   If,
-  IfExcept,
   Load,
   LocalGet,
   LocalSet,
@@ -359,17 +358,6 @@ class IfExpr : public ExprMixin<ExprType::If> {
   Block true_;
   ExprList false_;
   Location false_end_loc;
-};
-
-class IfExceptExpr : public ExprMixin<ExprType::IfExcept> {
- public:
-  explicit IfExceptExpr(const Location& loc = Location())
-      : ExprMixin<ExprType::IfExcept>(loc) {}
-
-  Block true_;
-  ExprList false_;
-  Location false_end_loc;
-  Var except_var;
 };
 
 class TryExpr : public ExprMixin<ExprType::Try> {

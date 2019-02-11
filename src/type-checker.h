@@ -87,9 +87,6 @@ class TypeChecker {
   Result OnGlobalGet(Type);
   Result OnGlobalSet(Type);
   Result OnIf(const TypeVector& param_types, const TypeVector& result_types);
-  Result OnIfExcept(const TypeVector& param_types,
-                    const TypeVector& result_types,
-                    const TypeVector& except_sig);
   Result OnLoad(Opcode);
   Result OnLocalGet(Type);
   Result OnLocalSet(Type);

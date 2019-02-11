@@ -160,7 +160,6 @@ bool IsBlockInstr(TokenType token_type) {
     case TokenType::Block:
     case TokenType::Loop:
     case TokenType::If:
-    case TokenType::IfExcept:
     case TokenType::Try:
       return true;
     default:
@@ -280,11 +279,6 @@ class ResolveFuncTypesExprVisitorDelegate : public ExprVisitor::DelegateNop {
   }
 
   Result BeginIfExpr(IfExpr* expr) override {
-    ResolveBlockDeclaration(expr->loc, &expr->true_.decl);
-    return Result::Ok;
-  }
-
-  Result BeginIfExceptExpr(IfExceptExpr* expr) override {
     ResolveBlockDeclaration(expr->loc, &expr->true_.decl);
     return Result::Ok;
   }
@@ -1801,23 +1795,6 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
-    case TokenType::IfExcept: {
-      ErrorUnlessOpcodeEnabled(Consume());
-      auto expr = MakeUnique<IfExceptExpr>(loc);
-      CHECK_RESULT(ParseIfExceptHeader(expr.get()));
-      CHECK_RESULT(ParseInstrList(&expr->true_.exprs));
-      expr->true_.end_loc = GetLocation();
-      if (Match(TokenType::Else)) {
-        CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
-        CHECK_RESULT(ParseTerminatingInstrList(&expr->false_));
-        expr->false_end_loc = GetLocation();
-      }
-      EXPECT(End);
-      CHECK_RESULT(ParseEndLabelOpt(expr->true_.label));
-      *out_expr = std::move(expr);
-      break;
-    }
-
     case TokenType::Try: {
       ErrorUnlessOpcodeEnabled(Consume());
       auto expr = MakeUnique<TryExpr>(loc);
@@ -1886,62 +1863,6 @@ Result WastParser::ParseBlock(Block* block) {
   return Result::Ok;
 }
 
-Result WastParser::ParseIfExceptHeader(IfExceptExpr* expr) {
-  WABT_TRACE(ParseIfExceptHeader);
-  // if_except has the syntax:
-  //
-  //     if_except label_opt block_type except_index
-  //
-  // This means that it can have a few different forms:
-  //
-  //     1. if_except <num> ...
-  //     2. if_except $except ...
-  //     3. if_except $label $except/<num> ...
-  //     4. if_except (result...) $except/<num> ...
-  //     5. if_except $label (result...) $except/<num> ...
-  //
-  // With the multi-value proposal, `block_type` can be (param...) (result...),
-  // so there are more forms:
-  //
-  //     6. if_except (param...) $except/<num> ...
-  //     7. if_except (param...) (result...) $except/<num> ...
-  //     8. if_except $label (param...) $except/<num> ...
-  //     9. if_except $label (param...) (result...) $except/<num> ...
-  //
-  // This case is handled by ParseBlockDeclaration, but it means we also need
-  // to check for the `param` token here.
-
-  if (PeekMatchLpar(TokenType::Result) || PeekMatchLpar(TokenType::Param)) {
-    // Cases 4, 6, 7.
-    CHECK_RESULT(ParseBlockDeclaration(&expr->true_.decl));
-    CHECK_RESULT(ParseVar(&expr->except_var));
-  } else if (PeekMatch(TokenType::Nat)) {
-    // Case 1.
-    CHECK_RESULT(ParseVar(&expr->except_var));
-  } else if (PeekMatch(TokenType::Var)) {
-    // Cases 2, 3, 5, 8, 9.
-    Var var;
-    CHECK_RESULT(ParseVar(&var));
-    if (PeekMatchLpar(TokenType::Result) || PeekMatchLpar(TokenType::Param)) {
-      // Cases 5, 8, 9.
-      expr->true_.label = var.name();
-      CHECK_RESULT(ParseBlockDeclaration(&expr->true_.decl));
-      CHECK_RESULT(ParseVar(&expr->except_var));
-    } else if (ParseVarOpt(&expr->except_var, Var())) {
-      // Case 3.
-      expr->true_.label = var.name();
-    } else {
-      // Case 2.
-      expr->except_var = var;
-    }
-  } else {
-    return ErrorExpected({"a var", "a block type"},
-                         "12 or $foo or (result ...)");
-  }
-
-  return Result::Ok;
-}
-
 Result WastParser::ParseExprList(ExprList* exprs) {
   WABT_TRACE(ParseExprList);
   ExprList new_exprs;
@@ -1999,47 +1920,6 @@ Result WastParser::ParseExpr(ExprList* exprs) {
 
         CHECK_RESULT(ParseLabelOpt(&expr->true_.label));
         CHECK_RESULT(ParseBlockDeclaration(&expr->true_.decl));
-
-        if (PeekMatchExpr()) {
-          ExprList cond;
-          CHECK_RESULT(ParseExpr(&cond));
-          exprs->splice(exprs->end(), cond);
-        }
-
-        if (MatchLpar(TokenType::Then)) {
-          CHECK_RESULT(ParseTerminatingInstrList(&expr->true_.exprs));
-          expr->true_.end_loc = GetLocation();
-          EXPECT(Rpar);
-
-          if (MatchLpar(TokenType::Else)) {
-            CHECK_RESULT(ParseTerminatingInstrList(&expr->false_));
-            EXPECT(Rpar);
-          } else if (PeekMatchExpr()) {
-            CHECK_RESULT(ParseExpr(&expr->false_));
-          }
-          expr->false_end_loc = GetLocation();
-        } else if (PeekMatchExpr()) {
-          CHECK_RESULT(ParseExpr(&expr->true_.exprs));
-          expr->true_.end_loc = GetLocation();
-          if (PeekMatchExpr()) {
-            CHECK_RESULT(ParseExpr(&expr->false_));
-            expr->false_end_loc = GetLocation();
-          }
-        } else {
-          ConsumeIfLpar();
-          return ErrorExpected({"then block"}, "(then ...)");
-        }
-
-        exprs->push_back(std::move(expr));
-        break;
-      }
-
-      case TokenType::IfExcept: {
-        Consume();
-        ErrorUnlessOpcodeEnabled(Consume());
-        auto expr = MakeUnique<IfExceptExpr>(loc);
-
-        CHECK_RESULT(ParseIfExceptHeader(expr.get()));
 
         if (PeekMatchExpr()) {
           ExprList cond;

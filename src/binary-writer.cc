@@ -522,20 +522,6 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::End);
       break;
     }
-    case ExprType::IfExcept: {
-      auto* if_except_expr = cast<IfExceptExpr>(expr);
-      WriteOpcode(stream_, Opcode::IfExcept);
-      WriteBlockDecl(if_except_expr->true_.decl);
-      Index index = module_->GetExceptIndex(if_except_expr->except_var);
-      WriteU32Leb128(stream_, index, "exception index");
-      WriteExprList(func, if_except_expr->true_.exprs);
-      if (!if_except_expr->false_.empty()) {
-        WriteOpcode(stream_, Opcode::Else);
-        WriteExprList(func, if_except_expr->false_);
-      }
-      WriteOpcode(stream_, Opcode::End);
-      break;
-    }
     case ExprType::Load:
       WriteLoadStoreExpr<LoadExpr>(func, expr, "load offset");
       break;

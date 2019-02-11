@@ -343,13 +343,6 @@ Result BinaryReaderLogging::OnIfExpr(Type sig_type) {
   return reader_->OnIfExpr(sig_type);
 }
 
-Result BinaryReaderLogging::OnIfExceptExpr(Type sig_type, Index except_index) {
-  LOGF("OnIfExceptExpr(sig: ");
-  LogType(sig_type);
-  LOGF_NOINDENT(", except: %" PRIindex ")\n", except_index);
-  return reader_->OnIfExceptExpr(sig_type, except_index);
-}
-
 Result BinaryReaderLogging::OnLoopExpr(Type sig_type) {
   LOGF("OnLoopExpr(sig: ");
   LogType(sig_type);
