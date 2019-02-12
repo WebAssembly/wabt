@@ -946,9 +946,9 @@ wabt::Result BinaryReaderInterp::OnExport(Index index,
       break;
     }
 
-    case ExternalKind::Except:
+    case ExternalKind::Event:
       // TODO(karlschimpf) Define
-      WABT_FATAL("BinaryReaderInterp::OnExport(except) not implemented");
+      WABT_FATAL("BinaryReaderInterp::OnExport(event) not implemented");
       break;
   }
   return AppendExport(module_, kind, item_index, name);

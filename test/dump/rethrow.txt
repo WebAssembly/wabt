@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
-  (except $e1)
+  (event $e1)
   (func
     try
     catch
@@ -28,8 +28,8 @@
 ; section "Event" (13)
 0000012: 0d                                        ; section code
 0000013: 00                                        ; section size (guess)
-0000014: 01                                        ; exception count
-0000015: 00                                        ; exception type count
+0000014: 01                                        ; event count
+0000015: 00                                        ; event type count
 0000013: 02                                        ; FIXUP section size
 ; section "Code" (10)
 0000016: 0a                                        ; section code

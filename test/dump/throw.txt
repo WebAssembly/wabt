@@ -1,7 +1,7 @@
 ;;; TOOL: run-objdump
 ;;; ARGS0: -v --enable-exceptions
 (module
-  (except $e i32)
+  (event $e i32)
   (func
     i32.const 1
     throw $e))
@@ -26,8 +26,8 @@
 ; section "Event" (13)
 0000012: 0d                                        ; section code
 0000013: 00                                        ; section size (guess)
-0000014: 01                                        ; exception count
-0000015: 01                                        ; exception type count
+0000014: 01                                        ; event count
+0000015: 01                                        ; event type count
 0000016: 7f                                        ; i32
 0000013: 03                                        ; FIXUP section size
 ; section "Code" (10)
@@ -40,7 +40,7 @@
 000001c: 41                                        ; i32.const
 000001d: 01                                        ; i32 literal
 000001e: 08                                        ; throw
-000001f: 00                                        ; throw exception
+000001f: 00                                        ; throw event
 0000020: 0b                                        ; end
 000001a: 06                                        ; FIXUP func body size
 0000018: 08                                        ; FIXUP section size

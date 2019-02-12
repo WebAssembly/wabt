@@ -724,7 +724,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "offset"              { RETURN(Offset); }
       <i> "import"              { RETURN(Import); }
       <i> "export"              { RETURN(Export); }
-      <i> "except"              { RETURN(Except); }
+      <i> "event"               { RETURN(Event); }
       <i> "passive"             { RETURN(Passive); }
       <i> "register"            { RETURN(Register); }
       <i> "invoke"              { RETURN(Invoke); }

@@ -1,7 +1,7 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-exceptions
 (module
-  (except $e1)
+  (event $e1)
   (func
     try
     catch

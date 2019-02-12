@@ -1,8 +1,8 @@
 ;;; TOOL: run-roundtrip
 ;;; ARGS: --stdout --fold-exprs --enable-exceptions
 (module
-  (except $e0 i32)
-  (except $e1 f32 i32)
+  (event $e0 i32)
+  (event $e1 f32 i32)
 
   (func i32.const 1 throw $e0)
   (func f32.const 2 i32.const 1 throw $e1))
@@ -16,6 +16,6 @@
     (throw 1
       (f32.const 0x1p+1 (;=2;))
       (i32.const 1)))
-  (except (;0;) i32)
-  (except (;1;) f32 i32))
+  (event (;0;) i32)
+  (event (;1;) f32 i32))
 ;;; STDOUT ;;)
