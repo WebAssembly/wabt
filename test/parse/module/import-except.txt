@@ -1,4 +1,4 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-exceptions
 (module
-  (import "foo" "1" (except f64 f32)))
+  (import "foo" "1" (event f64 f32)))

@@ -39,7 +39,7 @@ namespace wabt {
 Reloc::Reloc(RelocType type, Offset offset, Index index, int32_t addend)
     : type(type), offset(offset), index(index), addend(addend) {}
 
-const char* g_kind_name[] = {"func", "table", "memory", "global", "except"};
+const char* g_kind_name[] = {"func", "table", "memory", "global", "event"};
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_kind_name) == kExternalKindCount);
 
 const char* g_reloc_type_name[] = {

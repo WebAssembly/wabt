@@ -1,5 +1,5 @@
 ;;; TOOL: wat2wasm
 ;;; ARGS: --enable-exceptions
 (module
-  (except i32 i32)
-  (export "my_except" (except 0)))
+  (event i32 i32)
+  (export "my_event" (event 0)))

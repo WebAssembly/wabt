@@ -81,10 +81,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                         Index global_index,
                         Type type,
                         bool mutable_) override;
-  Result OnImportException(Index import_index,
+  Result OnImportEvent(Index import_index,
                            string_view module_name,
                            string_view field_name,
-                           Index except_index,
+                           Index event_index,
                            TypeVector& sig) override;
 
   Result OnFunctionCount(Index count) override;
@@ -181,7 +181,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnStoreExpr(Opcode opcode,
                      uint32_t alignment_log2,
                      Address offset) override;
-  Result OnThrowExpr(Index except_index) override;
+  Result OnThrowExpr(Index event_index) override;
   Result OnTryExpr(Type sig_type) override;
   Result OnUnaryExpr(Opcode opcode) override;
   Result OnTernaryExpr(Opcode opcode) override;
@@ -214,10 +214,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                      Index local_index,
                      string_view local_name) override;
 
-  Result BeginExceptionSection(Offset size) override { return Result::Ok; }
-  Result OnExceptionCount(Index count) override { return Result::Ok; }
-  Result OnExceptionType(Index index, TypeVector& types) override;
-  Result EndExceptionSection() override { return Result::Ok; }
+  Result BeginEventSection(Offset size) override { return Result::Ok; }
+  Result OnEventCount(Index count) override { return Result::Ok; }
+  Result OnEventType(Index index, TypeVector& types) override;
+  Result EndEventSection() override { return Result::Ok; }
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprF64ConstExpr(Index index, uint64_t value) override;
@@ -433,15 +433,15 @@ Result BinaryReaderIR::OnImportGlobal(Index import_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnImportException(Index import_index,
-                                         string_view module_name,
-                                         string_view field_name,
-                                         Index except_index,
-                                         TypeVector& sig) {
-  auto import = MakeUnique<ExceptionImport>();
+Result BinaryReaderIR::OnImportEvent(Index import_index,
+                                     string_view module_name,
+                                     string_view field_name,
+                                     Index event_index,
+                                     TypeVector& sig) {
+  auto import = MakeUnique<EventImport>();
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
-  import->except.sig = sig;
+  import->event.sig = sig;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
@@ -551,8 +551,8 @@ Result BinaryReaderIR::OnExport(Index index,
     case ExternalKind::Global:
       assert(item_index < module_->globals.size());
       break;
-    case ExternalKind::Except:
-      // Note: Can't check if index valid, exceptions section comes later.
+    case ExternalKind::Event:
+      // Note: Can't check if index valid, the event section comes later.
       break;
   }
   export_.var = Var(item_index, GetLocation());
@@ -869,8 +869,8 @@ Result BinaryReaderIR::OnStoreExpr(Opcode opcode,
   return AppendExpr(MakeUnique<StoreExpr>(opcode, 1 << alignment_log2, offset));
 }
 
-Result BinaryReaderIR::OnThrowExpr(Index except_index) {
-  return AppendExpr(MakeUnique<ThrowExpr>(Var(except_index, GetLocation())));
+Result BinaryReaderIR::OnThrowExpr(Index event_index) {
+  return AppendExpr(MakeUnique<ThrowExpr>(Var(event_index, GetLocation())));
 }
 
 Result BinaryReaderIR::OnLocalTeeExpr(Index local_index) {
@@ -1127,10 +1127,10 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnExceptionType(Index index, TypeVector& sig) {
-  auto field = MakeUnique<ExceptionModuleField>(GetLocation());
-  Exception& except = field->except;
-  except.sig = sig;
+Result BinaryReaderIR::OnEventType(Index index, TypeVector& sig) {
+  auto field = MakeUnique<EventModuleField>(GetLocation());
+  Event& event = field->event;
+  event.sig = sig;
   module_->AppendField(std::move(field));
   return Result::Ok;
 }

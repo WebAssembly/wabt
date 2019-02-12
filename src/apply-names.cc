@@ -71,7 +71,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result UseNameForGlobalVar(Var* var);
   Result UseNameForTableVar(Var* var);
   Result UseNameForMemoryVar(Var* var);
-  Result UseNameForExceptVar(Var* var);
+  Result UseNameForEventVar(Var* var);
   Result UseNameForDataSegmentVar(Var* var);
   Result UseNameForElemSegmentVar(Var* var);
   Result UseNameForParamAndLocalVar(Func* func, Var* var);
@@ -171,12 +171,12 @@ Result NameApplier::UseNameForMemoryVar(Var* var) {
   return Result::Ok;
 }
 
-Result NameApplier::UseNameForExceptVar(Var* var) {
-  Exception* except = module_->GetExcept(*var);
-  if (!except) {
+Result NameApplier::UseNameForEventVar(Var* var) {
+  Event* event = module_->GetEvent(*var);
+  if (!event) {
     return Result::Error;
   }
-  UseNameForVar(except->name, var);
+  UseNameForVar(event->name, var);
   return Result::Ok;
 }
 
@@ -290,7 +290,7 @@ Result NameApplier::EndTryExpr(TryExpr*) {
 }
 
 Result NameApplier::OnThrowExpr(ThrowExpr* expr) {
-  CHECK_RESULT(UseNameForExceptVar(&expr->var));
+  CHECK_RESULT(UseNameForEventVar(&expr->var));
   return Result::Ok;
 }
 

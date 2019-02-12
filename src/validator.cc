@@ -200,8 +200,8 @@ class Validator : public ExprVisitor::Delegate {
   void CheckAssertReturnNanCommand(const Action* action);
   void CheckCommand(const Command* command);
 
-  void CheckExcept(const Location* loc, const Exception* Except);
-  Result CheckExceptVar(const Var* var, const Exception** out_except);
+  void CheckEvent(const Location* loc, const Event* Event);
+  Result CheckEventVar(const Var* var, const Event** out_event);
 
   const ValidateOptions& options_;
   Errors* errors_ = nullptr;
@@ -212,7 +212,7 @@ class Validator : public ExprVisitor::Delegate {
   Index current_memory_index_ = 0;
   Index current_global_index_ = 0;
   Index num_imported_globals_ = 0;
-  Index current_except_index_ = 0;
+  Index current_event_index_ = 0;
   TypeChecker typechecker_;
   // Cached for access by OnTypecheckerError.
   const Location* expr_loc_ = nullptr;
@@ -862,9 +862,9 @@ Result Validator::EndTryExpr(TryExpr* expr) {
 
 Result Validator::OnThrowExpr(ThrowExpr* expr) {
   expr_loc_ = &expr->loc;
-  const Exception* except;
-  if (Succeeded(CheckExceptVar(&expr->var, &except))) {
-    typechecker_.OnThrow(except->sig);
+  const Event* event;
+  if (Succeeded(CheckEventVar(&expr->var, &event))) {
+    typechecker_.OnThrow(event->sig);
   }
   return Result::Ok;
 }
@@ -1109,9 +1109,9 @@ void Validator::CheckDataSegments(const Module* module) {
 
 void Validator::CheckImport(const Location* loc, const Import* import) {
   switch (import->kind()) {
-    case ExternalKind::Except:
-      ++current_except_index_;
-      CheckExcept(loc, &cast<ExceptionImport>(import)->except);
+    case ExternalKind::Event:
+      ++current_event_index_;
+      CheckEvent(loc, &cast<EventImport>(import)->event);
       break;
 
     case ExternalKind::Func: {
@@ -1147,8 +1147,8 @@ void Validator::CheckImport(const Location* loc, const Import* import) {
 
 void Validator::CheckExport(const Location* loc, const Export* export_) {
   switch (export_->kind) {
-    case ExternalKind::Except:
-      CheckExceptVar(&export_->var, nullptr);
+    case ExternalKind::Event:
+      CheckEventVar(&export_->var, nullptr);
       break;
     case ExternalKind::Func:
       CheckFuncVar(&export_->var, nullptr);
@@ -1191,13 +1191,13 @@ Result Validator::CheckModule(const Module* module) {
   current_memory_index_ = 0;
   current_global_index_ = 0;
   num_imported_globals_ = 0;
-  current_except_index_ = 0;
+  current_event_index_ = 0;
 
   for (const ModuleField& field : module->fields) {
     switch (field.type()) {
-      case ModuleFieldType::Except:
-        ++current_except_index_;
-        CheckExcept(&field.loc, &cast<ExceptionModuleField>(&field)->except);
+      case ModuleFieldType::Event:
+        ++current_event_index_;
+        CheckEvent(&field.loc, &cast<EventModuleField>(&field)->event);
         break;
 
       case ModuleFieldType::Func:
@@ -1333,18 +1333,17 @@ Result Validator::CheckGet(const GetAction* action, Type* out_type) {
   return Result::Ok;
 }
 
-Result Validator::CheckExceptVar(const Var* var, const Exception** out_except) {
+Result Validator::CheckEventVar(const Var* var, const Event** out_event) {
   Index index;
-  CHECK_RESULT(
-      CheckVar(current_module_->excepts.size(), var, "except", &index));
-  if (out_except) {
-    *out_except = current_module_->excepts[index];
+  CHECK_RESULT(CheckVar(current_module_->events.size(), var, "event", &index));
+  if (out_event) {
+    *out_event = current_module_->events[index];
   }
   return Result::Ok;
 }
 
-void Validator::CheckExcept(const Location* loc, const Exception* except) {
-  for (Type ty : except->sig) {
+void Validator::CheckEvent(const Location* loc, const Event* event) {
+  for (Type ty : event->sig) {
     switch (ty) {
       case Type::I32:
       case Type::I64:
@@ -1353,7 +1352,7 @@ void Validator::CheckExcept(const Location* loc, const Exception* except) {
       case Type::V128:
         break;
       default:
-        PrintError(loc, "Invalid exception type: %s", GetTypeName(ty));
+        PrintError(loc, "Invalid event type: %s", GetTypeName(ty));
         break;
     }
   }
