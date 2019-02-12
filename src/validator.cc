@@ -864,7 +864,7 @@ Result Validator::OnThrowExpr(ThrowExpr* expr) {
   expr_loc_ = &expr->loc;
   const Event* event;
   if (Succeeded(CheckEventVar(&expr->var, &event))) {
-    typechecker_.OnThrow(event->sig);
+    typechecker_.OnThrow(event->decl.sig.param_types);
   }
   return Result::Ok;
 }
@@ -1343,18 +1343,9 @@ Result Validator::CheckEventVar(const Var* var, const Event** out_event) {
 }
 
 void Validator::CheckEvent(const Location* loc, const Event* event) {
-  for (Type ty : event->sig) {
-    switch (ty) {
-      case Type::I32:
-      case Type::I64:
-      case Type::F32:
-      case Type::F64:
-      case Type::V128:
-        break;
-      default:
-        PrintError(loc, "Invalid event type: %s", GetTypeName(ty));
-        break;
-    }
+  CheckFuncSignature(loc, event->decl);
+  if (event->decl.sig.GetNumResults() > 0) {
+    PrintError(loc, "Event signature must have 0 results.");
   }
 }
 

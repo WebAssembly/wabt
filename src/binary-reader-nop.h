@@ -93,7 +93,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
                        string_view module_name,
                        string_view field_name,
                        Index event_index,
-                       TypeVector& sig) override {
+                       Index sig_index) override {
     return Result::Ok;
   }
   Result EndImportSection() override { return Result::Ok; }
@@ -364,7 +364,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Event section */
   Result BeginEventSection(Offset size) override { return Result::Ok; }
   Result OnEventCount(Index count) override { return Result::Ok; }
-  Result OnEventType(Index index, TypeVector& sig) override {
+  Result OnEventType(Index index, Index sig_index) override {
     return Result::Ok;
   }
   Result EndEventSection() override { return Result::Ok; }

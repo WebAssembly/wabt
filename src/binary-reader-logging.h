@@ -78,7 +78,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                        string_view module_name,
                        string_view field_name,
                        Index event_index,
-                       TypeVector& sig) override;
+                       Index sig_index) override;
   Result EndImportSection() override;
 
   Result BeginFunctionSection(Offset size) override;
@@ -305,7 +305,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginEventSection(Offset size) override;
   Result OnEventCount(Index count) override;
-  Result OnEventType(Index index, TypeVector& sig) override;
+  Result OnEventType(Index index, Index sig_index) override;
   Result EndEventSection() override;
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;

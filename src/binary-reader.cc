@@ -119,7 +119,7 @@ class BinaryReader {
                    Limits* out_elem_limits) WABT_WARN_UNUSED;
   Result ReadMemory(Limits* out_page_limits) WABT_WARN_UNUSED;
   Result ReadGlobalHeader(Type* out_type, bool* out_mutable) WABT_WARN_UNUSED;
-  Result ReadEventType(TypeVector& sig) WABT_WARN_UNUSED;
+  Result ReadEventType(Index* out_sig_index) WABT_WARN_UNUSED;
   Result ReadFunctionBody(Offset end_offset) WABT_WARN_UNUSED;
   Result ReadNameSection(Offset section_size) WABT_WARN_UNUSED;
   Result ReadRelocSection(Offset section_size) WABT_WARN_UNUSED;
@@ -1675,18 +1675,11 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
   return Result::Ok;
 }
 
-Result BinaryReader::ReadEventType(TypeVector& sig) {
-  Index num_values;
-  CHECK_RESULT(ReadCount(&num_values, "event type count"));
-  sig.resize(num_values);
-  for (Index j = 0; j < num_values; ++j) {
-    Type value_type;
-    CHECK_RESULT(ReadType(&value_type, "event value type"));
-    ERROR_UNLESS(IsConcreteType(value_type),
-                 "expected valid event value type (got %d)",
-                 static_cast<int>(value_type));
-    sig[j] = value_type;
-  }
+Result BinaryReader::ReadEventType(Index* out_sig_index) {
+  uint32_t attribute;
+  CHECK_RESULT(ReadU32Leb128(&attribute, "event attribute"));
+  ERROR_UNLESS(attribute == 0, "event attribute must be 0");
+  CHECK_RESULT(ReadIndex(out_sig_index, "event signature index"));
   return Result::Ok;
 }
 
@@ -1696,9 +1689,10 @@ Result BinaryReader::ReadEventSection(Offset section_size) {
   CALLBACK(OnEventCount, num_events_);
 
   for (Index i = 0; i < num_events_; ++i) {
-    TypeVector sig;
-    CHECK_RESULT(ReadEventType(sig));
-    CALLBACK(OnEventType, i, sig);
+    Index event_index = num_event_imports_ + i;
+    Index sig_index;
+    CHECK_RESULT(ReadEventType(&sig_index));
+    CALLBACK(OnEventType, event_index, sig_index);
   }
 
   CALLBACK(EndEventSection);
@@ -1841,11 +1835,11 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       case ExternalKind::Event: {
         ERROR_UNLESS(options_.features.exceptions_enabled(),
                      "invalid import event kind: exceptions not allowed");
-        TypeVector sig;
-        CHECK_RESULT(ReadEventType(sig));
+        Index sig_index;
+        CHECK_RESULT(ReadEventType(&sig_index));
         CALLBACK(OnImport, i, module_name, field_name);
         CALLBACK(OnImportEvent, i, module_name, field_name, num_event_imports_,
-                 sig);
+                 sig_index);
         num_event_imports_++;
         break;
       }

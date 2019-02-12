@@ -116,10 +116,10 @@ class BinaryReaderDelegate {
                                 Type type,
                                 bool mutable_) = 0;
   virtual Result OnImportEvent(Index import_index,
-                                   string_view module_name,
-                                   string_view field_name,
-                                   Index event_index,
-                                   TypeVector& sig) = 0;
+                               string_view module_name,
+                               string_view field_name,
+                               Index event_index,
+                               Index sig_index) = 0;
   virtual Result EndImportSection() = 0;
 
   /* Function section */
@@ -373,7 +373,7 @@ class BinaryReaderDelegate {
   /* Event section */
   virtual Result BeginEventSection(Offset size) = 0;
   virtual Result OnEventCount(Index count) = 0;
-  virtual Result OnEventType(Index index, TypeVector& sig) = 0;
+  virtual Result OnEventType(Index index, Index sig_index) = 0;
   virtual Result EndEventSection() = 0;
 
   /* InitExpr - used by elem, data and global sections; these functions are

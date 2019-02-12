@@ -157,7 +157,6 @@ class WatWriter {
   void WriteFunc(const Func& func);
   void WriteBeginGlobal(const Global& global);
   void WriteGlobal(const Global& global);
-  void WriteBeginEvent(const Event& event);
   void WriteEvent(const Event& event);
   void WriteLimits(const Limits& limits);
   void WriteTable(const Table& table);
@@ -1071,7 +1070,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       auto throw_ = cast<ThrowExpr>(expr);
       Index operand_count = 0;
       if (Event* event = module_->GetEvent(throw_->var)) {
-        operand_count = event->sig.size();
+        operand_count = event->decl.sig.param_types.size();
       }
       PushExpr(expr, operand_count, 0);
       break;
@@ -1382,17 +1381,18 @@ void WatWriter::WriteGlobal(const Global& global) {
   WriteCloseNewline();
 }
 
-void WatWriter::WriteBeginEvent(const Event& event) {
+void WatWriter::WriteEvent(const Event& event) {
   WriteOpenSpace("event");
   WriteNameOrIndex(event.name, event_index_, NextChar::Space);
   WriteInlineExports(ExternalKind::Event, event_index_);
   WriteInlineImport(ExternalKind::Event, event_index_);
-  WriteTypes(event.sig, nullptr);
+  if (event.decl.has_func_type) {
+    WriteOpenSpace("type");
+    WriteVar(event.decl.type_var, NextChar::None);
+    WriteCloseSpace();
+  }
+  WriteTypes(event.decl.sig.param_types, "param");
   ++event_index_;
-}
-
-void WatWriter::WriteEvent(const Event& event) {
-  WriteBeginEvent(event);
   WriteCloseNewline();
 }
 
@@ -1482,8 +1482,7 @@ void WatWriter::WriteImport(const Import& import) {
       break;
 
     case ExternalKind::Event:
-      WriteBeginEvent(cast<EventImport>(&import)->event);
-      WriteCloseSpace();
+      WriteEvent(cast<EventImport>(&import)->event);
       break;
   }
 

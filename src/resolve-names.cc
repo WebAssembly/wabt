@@ -85,6 +85,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   void VisitFunc(Func* func);
   void VisitExport(Export* export_);
   void VisitGlobal(Global* global);
+  void VisitEvent(Event* event);
   void VisitElemSegment(ElemSegment* segment);
   void VisitDataSegment(DataSegment* segment);
   void VisitScriptModule(ScriptModule* script_module);
@@ -404,6 +405,12 @@ void NameResolver::VisitGlobal(Global* global) {
   visitor_.VisitExprList(global->init_expr);
 }
 
+void NameResolver::VisitEvent(Event* event) {
+  if (event->decl.has_func_type) {
+    ResolveFuncTypeVar(&event->decl.type_var);
+  }
+}
+
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
@@ -431,6 +438,8 @@ Result NameResolver::VisitModule(Module* module) {
     VisitExport(export_);
   for (Global* global : module->globals)
     VisitGlobal(global);
+  for (Event* event : module->events)
+    VisitEvent(event);
   for (ElemSegment* elem_segment : module->elem_segments)
     VisitElemSegment(elem_segment);
   for (DataSegment* data_segment : module->data_segments)

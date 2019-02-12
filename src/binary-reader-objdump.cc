@@ -680,7 +680,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                        string_view module_name,
                        string_view field_name,
                        Index event_index,
-                       TypeVector& sig) override;
+                       Index sig_index) override;
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -792,7 +792,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitFunction(uint32_t priority, Index function_index) override;
 
   Result OnEventCount(Index count) override;
-  Result OnEventType(Index index, TypeVector& sig) override;
+  Result OnEventType(Index index, Index sig_index) override;
 
  private:
   Result HandleInitExpr(const InitExpr& expr);
@@ -1060,15 +1060,10 @@ Result BinaryReaderObjdump::OnImportEvent(Index import_index,
                                           string_view module_name,
                                           string_view field_name,
                                           Index event_index,
-                                          TypeVector& sig) {
-  PrintDetails(" - event[%" PRIindex "] (", event_index);
-  for (Index i = 0; i < sig.size(); ++i) {
-    if (i != 0) {
-      PrintDetails(", ");
-    }
-    PrintDetails("%s", GetTypeName(sig[i]));
-  }
-  PrintDetails(") <- " PRIstringview "." PRIstringview "\n",
+                                          Index sig_index) {
+  PrintDetails(" - event[%" PRIindex "] sig=%" PRIindex, event_index,
+               sig_index);
+  PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));
   return Result::Ok;
@@ -1531,18 +1526,11 @@ Result BinaryReaderObjdump::OnEventCount(Index count) {
   return OnCount(count);
 }
 
-Result BinaryReaderObjdump::OnEventType(Index index, TypeVector& sig) {
+Result BinaryReaderObjdump::OnEventType(Index index, Index sig_index) {
   if (!ShouldPrintDetails()) {
     return Result::Ok;
   }
-  printf(" - event[%" PRIindex "] (", index);
-  for (Index i = 0; i < sig.size(); ++i) {
-    if (i != 0) {
-      printf(", ");
-    }
-    printf("%s", GetTypeName(sig[i]));
-  }
-  printf(")\n");
+  printf(" - event[%" PRIindex "] sig=%" PRIindex "\n", index, sig_index);
   return Result::Ok;
 }
 

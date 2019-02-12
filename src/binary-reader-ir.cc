@@ -82,10 +82,10 @@ class BinaryReaderIR : public BinaryReaderNop {
                         Type type,
                         bool mutable_) override;
   Result OnImportEvent(Index import_index,
-                           string_view module_name,
-                           string_view field_name,
-                           Index event_index,
-                           TypeVector& sig) override;
+                       string_view module_name,
+                       string_view field_name,
+                       Index event_index,
+                       Index sig_index) override;
 
   Result OnFunctionCount(Index count) override;
   Result OnFunction(Index index, Index sig_index) override;
@@ -216,7 +216,7 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result BeginEventSection(Offset size) override { return Result::Ok; }
   Result OnEventCount(Index count) override { return Result::Ok; }
-  Result OnEventType(Index index, TypeVector& types) override;
+  Result OnEventType(Index index, Index sig_index) override;
   Result EndEventSection() override { return Result::Ok; }
 
   Result OnInitExprF32ConstExpr(Index index, uint32_t value) override;
@@ -437,11 +437,13 @@ Result BinaryReaderIR::OnImportEvent(Index import_index,
                                      string_view module_name,
                                      string_view field_name,
                                      Index event_index,
-                                     TypeVector& sig) {
+                                     Index sig_index) {
   auto import = MakeUnique<EventImport>();
   import->module_name = module_name.to_string();
   import->field_name = field_name.to_string();
-  import->event.sig = sig;
+  import->event.decl.has_func_type = true;
+  import->event.decl.type_var = Var(sig_index, GetLocation());
+  import->event.decl.sig = module_->func_types[sig_index]->sig;
   module_->AppendField(
       MakeUnique<ImportModuleField>(std::move(import), GetLocation()));
   return Result::Ok;
@@ -552,7 +554,7 @@ Result BinaryReaderIR::OnExport(Index index,
       assert(item_index < module_->globals.size());
       break;
     case ExternalKind::Event:
-      // Note: Can't check if index valid, the event section comes later.
+      assert(item_index < module_->events.size());
       break;
   }
   export_.var = Var(item_index, GetLocation());
@@ -1127,10 +1129,12 @@ Result BinaryReaderIR::OnLocalName(Index func_index,
   return Result::Ok;
 }
 
-Result BinaryReaderIR::OnEventType(Index index, TypeVector& sig) {
+Result BinaryReaderIR::OnEventType(Index index, Index sig_index) {
   auto field = MakeUnique<EventModuleField>(GetLocation());
   Event& event = field->event;
-  event.sig = sig;
+  event.decl.has_func_type = true;
+  event.decl.type_var = Var(sig_index, GetLocation());
+  event.decl.sig = module_->func_types[sig_index]->sig;
   module_->AppendField(std::move(field));
   return Result::Ok;
 }

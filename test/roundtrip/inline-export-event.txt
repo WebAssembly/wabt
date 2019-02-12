@@ -1,0 +1,10 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --inline-export --enable-exceptions
+(module
+  (event $foo (param i32))
+  (export "foo" (event $foo)))
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func (param i32)))
+  (event (;0;) (export "foo") (type 0) (param i32)))
+;;; STDOUT ;;)

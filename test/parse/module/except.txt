@@ -1,6 +1,0 @@
-;;; TOOL: wat2wasm
-;;; ARGS: --enable-exceptions
-(module
-  (event)
-  (event $e1 i32)
-  (event $e2 f32 f32 f32))
