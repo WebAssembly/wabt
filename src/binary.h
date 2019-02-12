@@ -27,7 +27,6 @@
 #define WABT_BINARY_SECTION_NAME "name"
 #define WABT_BINARY_SECTION_RELOC "reloc"
 #define WABT_BINARY_SECTION_LINKING "linking"
-#define WABT_BINARY_SECTION_EXCEPTION "exception"
 #define WABT_BINARY_SECTION_DYLINK "dylink"
 
 #define WABT_FOREACH_BINARY_SECTION(V) \
@@ -38,6 +37,7 @@
   V(Table, table, 4)                   \
   V(Memory, memory, 5)                 \
   V(Global, global, 6)                 \
+  V(Event, event, 13)                  \
   V(Export, export, 7)                 \
   V(Start, start, 8)                   \
   V(Elem, elem, 9)                     \
@@ -55,7 +55,7 @@ enum class BinarySection {
   Invalid = ~0,
 
   First = Custom,
-  Last = DataCount,
+  Last = Event,
 };
 /* clang-format on */
 static const int kBinarySectionCount = WABT_ENUM_COUNT(BinarySection);

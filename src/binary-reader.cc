@@ -1722,9 +1722,6 @@ Result BinaryReader::ReadCustomSection(Offset section_size) {
     CHECK_RESULT(ReadRelocSection(section_size));
   } else if (section_name == WABT_BINARY_SECTION_LINKING) {
     CHECK_RESULT(ReadLinkingSection(section_size));
-  } else if (options_.features.exceptions_enabled() &&
-             section_name == WABT_BINARY_SECTION_EXCEPTION) {
-    CHECK_RESULT(ReadExceptionSection(section_size));
   } else {
     // This is an unknown custom section, skip it.
     state_.offset = read_end_;
@@ -2194,6 +2191,12 @@ Result BinaryReader::ReadSections() {
         break;
       case BinarySection::Data:
         section_result = ReadDataSection(section_size);
+        result |= section_result;
+        break;
+      case BinarySection::Event:
+        ERROR_UNLESS(options_.features.exceptions_enabled(),
+                     "invalid section code: %u", section);
+        section_result = ReadExceptionSection(section_size);
         result |= section_result;
         break;
       case BinarySection::DataCount:
