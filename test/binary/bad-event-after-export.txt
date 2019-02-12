@@ -1,0 +1,11 @@
+;;; TOOL: run-gen-wasm-bad
+;;; ARGS1: --enable-exceptions
+;;; ARGS2: --enable-exceptions
+magic
+version
+section(EXPORT) { count[0] }
+section(EVENT) { count[0] }
+(;; STDERR ;;;
+000000d: error: section Event out of order
+000000d: error: section Event out of order
+;;; STDERR ;;)

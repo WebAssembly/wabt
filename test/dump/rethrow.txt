@@ -25,38 +25,36 @@
 0000010: 01                                        ; num functions
 0000011: 00                                        ; function 0 signature index
 000000f: 02                                        ; FIXUP section size
-; section "exception"
-0000012: 00                                        ; section code
+; section "Event" (13)
+0000012: 0d                                        ; section code
 0000013: 00                                        ; section size (guess)
-0000014: 09                                        ; string length
-0000015: 6578 6365 7074 696f 6e                   exception  ; custom section name
-000001e: 01                                        ; exception count
-000001f: 00                                        ; exception type count
-0000013: 0c                                        ; FIXUP section size
+0000014: 01                                        ; exception count
+0000015: 00                                        ; exception type count
+0000013: 02                                        ; FIXUP section size
 ; section "Code" (10)
-0000020: 0a                                        ; section code
-0000021: 00                                        ; section size (guess)
-0000022: 01                                        ; num functions
+0000016: 0a                                        ; section code
+0000017: 00                                        ; section size (guess)
+0000018: 01                                        ; num functions
 ; function body 0
-0000023: 00                                        ; func body size (guess)
-0000024: 00                                        ; local decl count
-0000025: 06                                        ; try
-0000026: 40                                        ; void
-0000027: 07                                        ; catch
-0000028: 09                                        ; rethrow
-0000029: 0b                                        ; end
-000002a: 0b                                        ; end
-0000023: 07                                        ; FIXUP func body size
-0000021: 09                                        ; FIXUP section size
+0000019: 00                                        ; func body size (guess)
+000001a: 00                                        ; local decl count
+000001b: 06                                        ; try
+000001c: 40                                        ; void
+000001d: 07                                        ; catch
+000001e: 09                                        ; rethrow
+000001f: 0b                                        ; end
+0000020: 0b                                        ; end
+0000019: 07                                        ; FIXUP func body size
+0000017: 09                                        ; FIXUP section size
 
 rethrow.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000024 func[0]:
- 000025: 06 40                      | try
- 000027: 07                         | catch
- 000028: 09                         |   rethrow
- 000029: 0b                         | end
- 00002a: 0b                         | end
+00001a func[0]:
+ 00001b: 06 40                      | try
+ 00001d: 07                         | catch
+ 00001e: 09                         |   rethrow
+ 00001f: 0b                         | end
+ 000020: 0b                         | end
 ;;; STDOUT ;;)

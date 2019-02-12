@@ -900,6 +900,17 @@ Result BinaryWriter::WriteModule() {
     EndSection();
   }
 
+  assert(module_->excepts.size() >= module_->num_except_imports);
+  Index num_exceptions = module_->excepts.size() - module_->num_except_imports;
+  if (num_exceptions) {
+    BeginKnownSection(BinarySection::Event);
+    WriteU32Leb128(stream_, num_exceptions, "exception count");
+    for (Index i = module_->num_except_imports; i < num_exceptions; ++i) {
+      WriteExceptType(&module_->excepts[i]->sig);
+    }
+    EndSection();
+  }
+
   if (module_->exports.size()) {
     BeginKnownSection(BinarySection::Export);
     WriteU32Leb128(stream_, module_->exports.size(), "num exports");
@@ -966,17 +977,6 @@ Result BinaryWriter::WriteModule() {
         WriteU32Leb128WithReloc(index, "function index",
                                 RelocType::FuncIndexLEB);
       }
-    }
-    EndSection();
-  }
-
-  assert(module_->excepts.size() >= module_->num_except_imports);
-  Index num_exceptions = module_->excepts.size() - module_->num_except_imports;
-  if (num_exceptions) {
-    BeginCustomSection("exception");
-    WriteU32Leb128(stream_, num_exceptions, "exception count");
-    for (Index i = module_->num_except_imports; i < num_exceptions; ++i) {
-      WriteExceptType(&module_->excepts[i]->sig);
     }
     EndSection();
   }

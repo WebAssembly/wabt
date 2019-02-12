@@ -23,36 +23,34 @@
 0000010: 01                                        ; num functions
 0000011: 00                                        ; function 0 signature index
 000000f: 02                                        ; FIXUP section size
-; section "exception"
-0000012: 00                                        ; section code
+; section "Event" (13)
+0000012: 0d                                        ; section code
 0000013: 00                                        ; section size (guess)
-0000014: 09                                        ; string length
-0000015: 6578 6365 7074 696f 6e                   exception  ; custom section name
-000001e: 01                                        ; exception count
-000001f: 01                                        ; exception type count
-0000020: 7f                                        ; i32
-0000013: 0d                                        ; FIXUP section size
+0000014: 01                                        ; exception count
+0000015: 01                                        ; exception type count
+0000016: 7f                                        ; i32
+0000013: 03                                        ; FIXUP section size
 ; section "Code" (10)
-0000021: 0a                                        ; section code
-0000022: 00                                        ; section size (guess)
-0000023: 01                                        ; num functions
+0000017: 0a                                        ; section code
+0000018: 00                                        ; section size (guess)
+0000019: 01                                        ; num functions
 ; function body 0
-0000024: 00                                        ; func body size (guess)
-0000025: 00                                        ; local decl count
-0000026: 41                                        ; i32.const
-0000027: 01                                        ; i32 literal
-0000028: 08                                        ; throw
-0000029: 00                                        ; throw exception
-000002a: 0b                                        ; end
-0000024: 06                                        ; FIXUP func body size
-0000022: 08                                        ; FIXUP section size
+000001a: 00                                        ; func body size (guess)
+000001b: 00                                        ; local decl count
+000001c: 41                                        ; i32.const
+000001d: 01                                        ; i32 literal
+000001e: 08                                        ; throw
+000001f: 00                                        ; throw exception
+0000020: 0b                                        ; end
+000001a: 06                                        ; FIXUP func body size
+0000018: 08                                        ; FIXUP section size
 
 throw.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000025 func[0]:
- 000026: 41 01                      | i32.const 1
- 000028: 08 00                      | throw 0
- 00002a: 0b                         | end
+00001b func[0]:
+ 00001c: 41 01                      | i32.const 1
+ 00001e: 08 00                      | throw 0
+ 000020: 0b                         | end
 ;;; STDOUT ;;)
