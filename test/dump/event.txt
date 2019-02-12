@@ -1,0 +1,61 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v
+;;; ARGS1: -x
+(module
+  (event)
+  (event (param i32))
+  (event (param f32 f64)))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Type" (1)
+0000008: 01                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 03                                        ; num types
+; type 0
+000000b: 60                                        ; func
+000000c: 00                                        ; num params
+000000d: 00                                        ; num results
+; type 1
+000000e: 60                                        ; func
+000000f: 01                                        ; num params
+0000010: 7f                                        ; i32
+0000011: 00                                        ; num results
+; type 2
+0000012: 60                                        ; func
+0000013: 02                                        ; num params
+0000014: 7d                                        ; f32
+0000015: 7c                                        ; f64
+0000016: 00                                        ; num results
+0000009: 0d                                        ; FIXUP section size
+; section "Event" (13)
+0000017: 0d                                        ; section code
+0000018: 00                                        ; section size (guess)
+0000019: 03                                        ; event count
+; event 0
+000001a: 00                                        ; event attribute
+000001b: 00                                        ; event signature index
+; event 1
+000001c: 00                                        ; event attribute
+000001d: 01                                        ; event signature index
+; event 2
+000001e: 00                                        ; event attribute
+000001f: 02                                        ; event signature index
+0000018: 07                                        ; FIXUP section size
+
+event.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[3]:
+ - type[0] () -> nil
+ - type[1] (i32) -> nil
+ - type[2] (f32, f64) -> nil
+Event[3]:
+ - event[0] sig=0
+ - event[1] sig=1
+ - event[2] sig=2
+
+Code Disassembly:
+
+;;; STDOUT ;;)

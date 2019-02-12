@@ -417,7 +417,7 @@ struct Event {
   explicit Event(string_view name) : name(name.to_string()) {}
 
   std::string name;
-  TypeVector sig;
+  FuncDeclaration decl;
 };
 
 class LocalTypes {

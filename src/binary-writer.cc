@@ -143,7 +143,7 @@ class BinaryWriter {
   void WriteTable(const Table* table);
   void WriteMemory(const Memory* memory);
   void WriteGlobalHeader(const Global* global);
-  void WriteEventType(const TypeVector* event_types);
+  void WriteEventType(const Event* event);
   void WriteRelocSection(const RelocSection* reloc_section);
   void WriteLinkingSection();
 
@@ -703,11 +703,10 @@ void BinaryWriter::WriteGlobalHeader(const Global* global) {
   stream_->WriteU8(global->mutable_, "global mutability");
 }
 
-void BinaryWriter::WriteEventType(const TypeVector* event_types) {
-  WriteU32Leb128(stream_, event_types->size(), "event type count");
-  for (Type ty : *event_types) {
-    WriteType(stream_, ty);
-  }
+void BinaryWriter::WriteEventType(const Event* event) {
+  WriteU32Leb128(stream_, 0, "event attribute");
+  WriteU32Leb128(stream_, module_->GetFuncTypeIndex(event->decl),
+                 "event signature index");
 }
 
 void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
@@ -837,7 +836,7 @@ Result BinaryWriter::WriteModule() {
           break;
 
         case ExternalKind::Event:
-          WriteEventType(&cast<EventImport>(import)->event.sig);
+          WriteEventType(&cast<EventImport>(import)->event);
           break;
       }
     }
@@ -905,8 +904,10 @@ Result BinaryWriter::WriteModule() {
   if (num_events) {
     BeginKnownSection(BinarySection::Event);
     WriteU32Leb128(stream_, num_events, "event count");
-    for (Index i = module_->num_event_imports; i < num_events; ++i) {
-      WriteEventType(&module_->events[i]->sig);
+    for (size_t i = 0; i < num_events; ++i) {
+      WriteHeader("event", i);
+      const Event* event = module_->events[i + module_->num_event_imports];
+      WriteEventType(event);
     }
     EndSection();
   }

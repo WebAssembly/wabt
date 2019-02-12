@@ -6,7 +6,7 @@
   (import "ignored" "test2" (func (param i32) (result i32)))
   (import "ignored" "testmem" (memory 0))
   (import "ignored" "testtable" (table 0 anyfunc))
-  (import "ignored" "testevent" (event i32))
+  (import "ignored" "testevent" (event (param i32)))
 )
 (;; STDOUT ;;;
 0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
@@ -14,7 +14,7 @@
 ; section "Type" (1)
 0000008: 01                                        ; section code
 0000009: 00                                        ; section size (guess)
-000000a: 02                                        ; num types
+000000a: 03                                        ; num types
 ; type 0
 000000b: 60                                        ; func
 000000c: 04                                        ; num params
@@ -29,65 +29,71 @@
 0000014: 7f                                        ; i32
 0000015: 01                                        ; num results
 0000016: 7f                                        ; i32
-0000009: 0d                                        ; FIXUP section size
+; type 2
+0000017: 60                                        ; func
+0000018: 01                                        ; num params
+0000019: 7f                                        ; i32
+000001a: 00                                        ; num results
+0000009: 11                                        ; FIXUP section size
 ; section "Import" (2)
-0000017: 02                                        ; section code
-0000018: 00                                        ; section size (guess)
-0000019: 05                                        ; num imports
+000001b: 02                                        ; section code
+000001c: 00                                        ; section size (guess)
+000001d: 05                                        ; num imports
 ; import header 0
-000001a: 07                                        ; string length
-000001b: 6967 6e6f 7265 64                        ignored  ; import module name
-0000022: 04                                        ; string length
-0000023: 7465 7374                                test  ; import field name
-0000027: 00                                        ; import kind
-0000028: 00                                        ; import signature index
+000001e: 07                                        ; string length
+000001f: 6967 6e6f 7265 64                        ignored  ; import module name
+0000026: 04                                        ; string length
+0000027: 7465 7374                                test  ; import field name
+000002b: 00                                        ; import kind
+000002c: 00                                        ; import signature index
 ; import header 1
-0000029: 07                                        ; string length
-000002a: 6967 6e6f 7265 64                        ignored  ; import module name
-0000031: 05                                        ; string length
-0000032: 7465 7374 32                             test2  ; import field name
-0000037: 00                                        ; import kind
-0000038: 01                                        ; import signature index
+000002d: 07                                        ; string length
+000002e: 6967 6e6f 7265 64                        ignored  ; import module name
+0000035: 05                                        ; string length
+0000036: 7465 7374 32                             test2  ; import field name
+000003b: 00                                        ; import kind
+000003c: 01                                        ; import signature index
 ; import header 2
-0000039: 07                                        ; string length
-000003a: 6967 6e6f 7265 64                        ignored  ; import module name
-0000041: 07                                        ; string length
-0000042: 7465 7374 6d65 6d                        testmem  ; import field name
-0000049: 02                                        ; import kind
-000004a: 00                                        ; limits: flags
-000004b: 00                                        ; limits: initial
+000003d: 07                                        ; string length
+000003e: 6967 6e6f 7265 64                        ignored  ; import module name
+0000045: 07                                        ; string length
+0000046: 7465 7374 6d65 6d                        testmem  ; import field name
+000004d: 02                                        ; import kind
+000004e: 00                                        ; limits: flags
+000004f: 00                                        ; limits: initial
 ; import header 3
-000004c: 07                                        ; string length
-000004d: 6967 6e6f 7265 64                        ignored  ; import module name
-0000054: 09                                        ; string length
-0000055: 7465 7374 7461 626c 65                   testtable  ; import field name
-000005e: 01                                        ; import kind
-000005f: 70                                        ; anyfunc
-0000060: 00                                        ; limits: flags
-0000061: 00                                        ; limits: initial
+0000050: 07                                        ; string length
+0000051: 6967 6e6f 7265 64                        ignored  ; import module name
+0000058: 09                                        ; string length
+0000059: 7465 7374 7461 626c 65                   testtable  ; import field name
+0000062: 01                                        ; import kind
+0000063: 70                                        ; anyfunc
+0000064: 00                                        ; limits: flags
+0000065: 00                                        ; limits: initial
 ; import header 4
-0000062: 07                                        ; string length
-0000063: 6967 6e6f 7265 64                        ignored  ; import module name
-000006a: 09                                        ; string length
-000006b: 7465 7374 6576 656e 74                   testevent  ; import field name
-0000074: 04                                        ; import kind
-0000075: 01                                        ; event type count
-0000076: 7f                                        ; i32
-0000018: 5e                                        ; FIXUP section size
+0000066: 07                                        ; string length
+0000067: 6967 6e6f 7265 64                        ignored  ; import module name
+000006e: 09                                        ; string length
+000006f: 7465 7374 6576 656e 74                   testevent  ; import field name
+0000078: 04                                        ; import kind
+0000079: 00                                        ; event attribute
+000007a: 02                                        ; event signature index
+000001c: 5e                                        ; FIXUP section size
 
 import.wasm:	file format wasm 0x1
 
 Section Details:
 
-Type[2]:
+Type[3]:
  - type[0] (i32, i64, f32, f64) -> nil
  - type[1] (i32) -> i32
+ - type[2] (i32) -> nil
 Import[5]:
  - func[0] sig=0 <test> <- ignored.test
  - func[1] sig=1 <test2> <- ignored.test2
  - memory[0] pages: initial=0 <- ignored.testmem
  - table[0] elem_type=anyfunc init=0 max=0 <- ignored.testtable
- - event[0] (i32) <- ignored.testevent
+ - event[0] sig=2 <- ignored.testevent
 
 Code Disassembly:
 

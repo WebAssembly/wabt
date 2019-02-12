@@ -29,32 +29,34 @@
 0000012: 0d                                        ; section code
 0000013: 00                                        ; section size (guess)
 0000014: 01                                        ; event count
-0000015: 00                                        ; event type count
-0000013: 02                                        ; FIXUP section size
+; event 0
+0000015: 00                                        ; event attribute
+0000016: 00                                        ; event signature index
+0000013: 03                                        ; FIXUP section size
 ; section "Code" (10)
-0000016: 0a                                        ; section code
-0000017: 00                                        ; section size (guess)
-0000018: 01                                        ; num functions
+0000017: 0a                                        ; section code
+0000018: 00                                        ; section size (guess)
+0000019: 01                                        ; num functions
 ; function body 0
-0000019: 00                                        ; func body size (guess)
-000001a: 00                                        ; local decl count
-000001b: 06                                        ; try
-000001c: 40                                        ; void
-000001d: 07                                        ; catch
-000001e: 09                                        ; rethrow
-000001f: 0b                                        ; end
+000001a: 00                                        ; func body size (guess)
+000001b: 00                                        ; local decl count
+000001c: 06                                        ; try
+000001d: 40                                        ; void
+000001e: 07                                        ; catch
+000001f: 09                                        ; rethrow
 0000020: 0b                                        ; end
-0000019: 07                                        ; FIXUP func body size
-0000017: 09                                        ; FIXUP section size
+0000021: 0b                                        ; end
+000001a: 07                                        ; FIXUP func body size
+0000018: 09                                        ; FIXUP section size
 
 rethrow.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001a func[0]:
- 00001b: 06 40                      | try
- 00001d: 07                         | catch
- 00001e: 09                         |   rethrow
- 00001f: 0b                         | end
+00001b func[0]:
+ 00001c: 06 40                      | try
+ 00001e: 07                         | catch
+ 00001f: 09                         |   rethrow
  000020: 0b                         | end
+ 000021: 0b                         | end
 ;;; STDOUT ;;)

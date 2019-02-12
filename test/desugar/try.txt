@@ -1,7 +1,7 @@
 ;;; TOOL: wat-desugar
 ;;; ARGS: --enable-exceptions
 (module
-  (event $ex i32)
+  (event $ex (param i32))
   (func (result i32)
     try $try1 (result i32)
       nop
@@ -13,7 +13,7 @@
 )
 (;; STDOUT ;;;
 (module
-  (event $ex i32)
+  (event $ex (param i32))
   (func (;0;) (result i32)
     try $try1 (result i32)
       nop
@@ -21,5 +21,6 @@
     catch
       nop
     end)
-  (type (;0;) (func (result i32))))
+  (type (;0;) (func (param i32)))
+  (type (;1;) (func (result i32))))
 ;;; STDOUT ;;)

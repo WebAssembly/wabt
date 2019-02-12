@@ -316,12 +316,17 @@ void ResolveFuncTypes(Module* module) {
     if (auto* func_field = dyn_cast<FuncModuleField>(&field)) {
       func = &func_field->func;
       decl = &func->decl;
+    } else if (auto* event_field = dyn_cast<EventModuleField>(&field)) {
+      decl = &event_field->event.decl;
     } else if (auto* import_field = dyn_cast<ImportModuleField>(&field)) {
       if (auto* func_import =
               dyn_cast<FuncImport>(import_field->import.get())) {
         // Only check the declaration, not the function itself, since it is an
         // import.
         decl = &func_import->func.decl;
+      } else if (auto* event_import =
+                     dyn_cast<EventImport>(import_field->import.get())) {
+        decl = &event_import->event.decl;
       } else {
         continue;
       }
@@ -846,7 +851,8 @@ Result WastParser::ParseEventModuleField(Module* module) {
   auto field = MakeUnique<EventModuleField>(GetLocation());
   EXPECT(Event);
   ParseBindVarOpt(&field->event.name);
-  CHECK_RESULT(ParseValueTypeList(&field->event.sig));
+  CHECK_RESULT(ParseTypeUseOpt(&field->event.decl));
+  CHECK_RESULT(ParseUnboundFuncSignature(&field->event.decl.sig));
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
@@ -1023,7 +1029,8 @@ Result WastParser::ParseImportModuleField(Module* module) {
       Consume();
       ParseBindVarOpt(&name);
       auto import = MakeUnique<EventImport>(name);
-      CHECK_RESULT(ParseValueTypeList(&import->event.sig));
+      CHECK_RESULT(ParseTypeUseOpt(&import->event.decl));
+      CHECK_RESULT(ParseUnboundFuncSignature(&import->event.decl.sig));
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
       break;

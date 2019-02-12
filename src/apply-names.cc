@@ -77,6 +77,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result UseNameForParamAndLocalVar(Func* func, Var* var);
   Result VisitFunc(Index func_index, Func* func);
   Result VisitGlobal(Global* global);
+  Result VisitEvent(Event* event);
   Result VisitExport(Index export_index, Export* export_);
   Result VisitElemSegment(Index elem_segment_index, ElemSegment* segment);
   Result VisitDataSegment(Index data_segment_index, DataSegment* segment);
@@ -372,6 +373,13 @@ Result NameApplier::VisitGlobal(Global* global) {
   return Result::Ok;
 }
 
+Result NameApplier::VisitEvent(Event* event) {
+  if (event->decl.has_func_type) {
+    CHECK_RESULT(UseNameForFuncTypeVar(&event->decl.type_var));
+  }
+  return Result::Ok;
+}
+
 Result NameApplier::VisitExport(Index export_index, Export* export_) {
   if (export_->kind == ExternalKind::Func) {
     UseNameForFuncVar(&export_->var);
@@ -402,6 +410,8 @@ Result NameApplier::VisitModule(Module* module) {
     CHECK_RESULT(VisitFunc(i, module->funcs[i]));
   for (size_t i = 0; i < module->globals.size(); ++i)
     CHECK_RESULT(VisitGlobal(module->globals[i]));
+  for (size_t i = 0; i < module->events.size(); ++i)
+    CHECK_RESULT(VisitEvent(module->events[i]));
   for (size_t i = 0; i < module->exports.size(); ++i)
     CHECK_RESULT(VisitExport(i, module->exports[i]));
   for (size_t i = 0; i < module->elem_segments.size(); ++i)

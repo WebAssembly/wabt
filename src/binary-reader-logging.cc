@@ -211,14 +211,12 @@ Result BinaryReaderLogging::OnImportEvent(Index import_index,
                                           string_view module_name,
                                           string_view field_name,
                                           Index event_index,
-                                          TypeVector& sig) {
+                                          Index sig_index) {
   LOGF("OnImportEvent(import_index: %" PRIindex ", event_index: %" PRIindex
-       ", sig: ",
-       import_index, event_index);
-  LogTypes(sig);
-  LOGF_NOINDENT(")\n");
+       ", sig_index: %" PRIindex ")\n",
+       import_index, event_index, sig_index);
   return reader_->OnImportEvent(import_index, module_name, field_name,
-                                event_index, sig);
+                                event_index, sig_index);
 }
 
 Result BinaryReaderLogging::OnTable(Index index,
@@ -297,13 +295,6 @@ Result BinaryReaderLogging::OnBrTableExpr(Index num_targets,
   LOGF_NOINDENT("], default: %" PRIindex ")\n", default_target_depth);
   return reader_->OnBrTableExpr(num_targets, target_depths,
                                 default_target_depth);
-}
-
-Result BinaryReaderLogging::OnEventType(Index index, TypeVector& sig) {
-  LOGF("OnEventType(index: %" PRIindex ", values: ", index);
-  LogTypes(sig);
-  LOGF_NOINDENT(")\n");
-  return reader_->OnEventType(index, sig);
 }
 
 Result BinaryReaderLogging::OnF32ConstExpr(uint32_t value_bits) {
@@ -757,7 +748,7 @@ DEFINE_END(EndLinkingSection)
 
 DEFINE_BEGIN(BeginEventSection);
 DEFINE_INDEX(OnEventCount);
-
+DEFINE_INDEX_INDEX(OnEventType, "index", "sig_index")
 DEFINE_END(EndEventSection);
 
 // We don't need to log these (the individual opcodes are logged instead), but

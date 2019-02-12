@@ -1,21 +1,23 @@
 ;;; TOOL: run-roundtrip
 ;;; ARGS: --stdout --fold-exprs --enable-exceptions
 (module
-  (event $e0 i32)
-  (event $e1 f32 i32)
+  (event $e0 (param i32))
+  (event $e1 (param f32 i32))
 
   (func i32.const 1 throw $e0)
   (func f32.const 2 i32.const 1 throw $e1))
 (;; STDOUT ;;;
 (module
-  (type (;0;) (func))
-  (func (;0;) (type 0)
+  (type (;0;) (func (param i32)))
+  (type (;1;) (func (param f32 i32)))
+  (type (;2;) (func))
+  (func (;0;) (type 2)
     (throw 0
       (i32.const 1)))
-  (func (;1;) (type 0)
+  (func (;1;) (type 2)
     (throw 1
       (f32.const 0x1p+1 (;=2;))
       (i32.const 1)))
-  (event (;0;) i32)
-  (event (;1;) f32 i32))
+  (event (;0;) (type 0) (param i32))
+  (event (;1;) (type 1) (param f32 i32)))
 ;;; STDOUT ;;)
