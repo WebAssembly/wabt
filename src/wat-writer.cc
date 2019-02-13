@@ -522,6 +522,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnExnExpr(BrOnExnExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -601,6 +602,13 @@ Result WatWriter::ExprVisitorDelegate::OnBrExpr(BrExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnBrIfExpr(BrIfExpr* expr) {
   writer_->WritePutsSpace(Opcode::BrIf_Opcode.GetName());
   writer_->WriteBrVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnBrOnExnExpr(BrOnExnExpr* expr) {
+  writer_->WritePutsSpace(Opcode::BrOnExn_Opcode.GetName());
+  writer_->WriteBrVar(expr->label_var, NextChar::Space);
+  writer_->WriteVar(expr->event_var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -972,6 +980,10 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       PushExpr(expr, arity + 1, arity);
       break;
     }
+
+    case ExprType::BrOnExn:
+      PushExpr(expr, 1, 1);
+      break;
 
     case ExprType::BrTable:
       PushExpr(expr, GetLabelArity(cast<BrTableExpr>(expr)->default_target) + 1,

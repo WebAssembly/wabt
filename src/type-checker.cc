@@ -384,6 +384,20 @@ Result TypeChecker::OnBrIf(Index depth) {
   return result;
 }
 
+Result TypeChecker::OnBrOnExn(Index depth, const TypeVector& types) {
+  Result result = PopAndCheck1Type(Type::ExceptRef, "br_on_exn");
+  Label* label;
+  CHECK_RESULT(GetLabel(depth, &label));
+  if (Failed(CheckTypes(types, label->br_types()))) {
+    PrintError("br_on_exn has inconsistent types: expected %s, got %s",
+               TypesToString(label->br_types()).c_str(),
+               TypesToString(types).c_str());
+    result = Result::Error;
+  }
+  PushType(Type::ExceptRef);
+  return result;
+}
+
 Result TypeChecker::BeginBrTable() {
   br_table_sig_ = nullptr;
   return PopAndCheck1Type(Type::I32, "br_table");

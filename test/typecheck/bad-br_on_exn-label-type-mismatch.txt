@@ -1,0 +1,16 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (event $e (param i32))
+  (func
+    try
+    catch
+      br_on_exn 0 $e
+      drop
+    end))
+(;; STDERR ;;;
+out/test/typecheck/bad-br_on_exn-label-type-mismatch.txt:9:7: error: br_on_exn has inconsistent types: expected [], got [i32]
+      br_on_exn 0 $e
+      ^^^^^^^^^
+;;; STDERR ;;)

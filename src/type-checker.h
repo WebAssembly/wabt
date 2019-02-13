@@ -69,6 +69,7 @@ class TypeChecker {
   Result OnBlock(const TypeVector& param_types, const TypeVector& result_types);
   Result OnBr(Index depth);
   Result OnBrIf(Index depth);
+  Result OnBrOnExn(Index depth, const TypeVector& types);
   Result BeginBrTable();
   Result OnBrTableTarget(Index depth);
   Result EndBrTable();

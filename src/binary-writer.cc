@@ -419,6 +419,15 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, GetLabelVarDepth(&cast<BrIfExpr>(expr)->var),
                      "break depth");
       break;
+    case ExprType::BrOnExn: {
+      auto* br_on_exn_expr = cast<BrOnExnExpr>(expr);
+      WriteOpcode(stream_, Opcode::BrOnExn);
+      WriteU32Leb128(stream_, GetLabelVarDepth(&br_on_exn_expr->label_var),
+                     "break depth");
+      WriteU32Leb128(stream_, module_->GetEventIndex(br_on_exn_expr->event_var),
+                     "event index");
+      break;
+    }
     case ExprType::BrTable: {
       auto* br_table_expr = cast<BrTableExpr>(expr);
       WriteOpcode(stream_, Opcode::BrTable);

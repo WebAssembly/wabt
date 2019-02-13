@@ -339,6 +339,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcode(Opcode Opcode) override;
   Result OnOpcodeBare() override;
   Result OnOpcodeIndex(Index value) override;
+  Result OnOpcodeIndexIndex(Index value, Index value2) override;
   Result OnOpcodeUint32(uint32_t value) override;
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override;
   Result OnOpcodeUint64(uint64_t value) override;
@@ -523,6 +524,13 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
   } else {
     LogOpcode(immediate_len, "%d", value);
   }
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnOpcodeIndexIndex(Index value,
+                                                          Index value2) {
+  Offset immediate_len = state->offset - current_opcode_offset;
+  LogOpcode(immediate_len, "%" PRIindex " %" PRIindex, value, value2);
   return Result::Ok;
 }
 

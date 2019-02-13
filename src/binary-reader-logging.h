@@ -127,6 +127,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcode(Opcode opcode) override;
   Result OnOpcodeBare() override;
   Result OnOpcodeIndex(Index value) override;
+  Result OnOpcodeIndexIndex(Index value, Index value2) override;
   Result OnOpcodeUint32(uint32_t value) override;
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override;
   Result OnOpcodeUint64(uint64_t value) override;
@@ -150,6 +151,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
+  Result OnBrOnExnExpr(Index depth, Index event_index) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;

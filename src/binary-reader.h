@@ -178,6 +178,7 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeBare() = 0;
   virtual Result OnOpcodeUint32(uint32_t value) = 0;
   virtual Result OnOpcodeIndex(Index value) = 0;
+  virtual Result OnOpcodeIndexIndex(Index value, Index value2) = 0;
   virtual Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) = 0;
   virtual Result OnOpcodeUint64(uint64_t value) = 0;
   virtual Result OnOpcodeF32(uint32_t value) = 0;
@@ -206,6 +207,7 @@ class BinaryReaderDelegate {
   virtual Result OnBlockExpr(Type sig_type) = 0;
   virtual Result OnBrExpr(Index depth) = 0;
   virtual Result OnBrIfExpr(Index depth) = 0;
+  virtual Result OnBrOnExnExpr(Index depth, Index event_index) = 0;
   virtual Result OnBrTableExpr(Index num_targets,
                                Index* target_depths,
                                Index default_target_depth) = 0;

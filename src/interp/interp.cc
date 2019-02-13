@@ -3271,6 +3271,7 @@ Result Thread::Run(int num_instructions) {
       // The following opcodes are either never generated or should never be
       // executed.
       case Opcode::Block:
+      case Opcode::BrOnExn:
       case Opcode::Catch:
       case Opcode::Else:
       case Opcode::End:

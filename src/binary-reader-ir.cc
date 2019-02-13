@@ -137,6 +137,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
   Result OnBrIfExpr(Index depth) override;
+  Result OnBrOnExnExpr(Index depth, Index event_index) override;
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override;
@@ -647,6 +648,13 @@ Result BinaryReaderIR::OnBrExpr(Index depth) {
 
 Result BinaryReaderIR::OnBrIfExpr(Index depth) {
   return AppendExpr(MakeUnique<BrIfExpr>(Var(depth)));
+}
+
+Result BinaryReaderIR::OnBrOnExnExpr(Index depth, Index event_index) {
+  auto expr = MakeUnique<BrOnExnExpr>();
+  expr->label_var = Var(depth);
+  expr->event_var = Var(event_index);
+  return AppendExpr(std::move(expr));
 }
 
 Result BinaryReaderIR::OnBrTableExpr(Index num_targets,

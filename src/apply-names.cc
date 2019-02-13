@@ -39,6 +39,7 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnExnExpr(BrOnExnExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -266,6 +267,13 @@ Result NameApplier::OnBrExpr(BrExpr* expr) {
 Result NameApplier::OnBrIfExpr(BrIfExpr* expr) {
   string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
+  return Result::Ok;
+}
+
+Result NameApplier::OnBrOnExnExpr(BrOnExnExpr* expr) {
+  string_view label = FindLabelByVar(&expr->label_var);
+  UseNameForVar(label, &expr->label_var);
+  CHECK_RESULT(UseNameForEventVar(&expr->event_var));
   return Result::Ok;
 }
 
