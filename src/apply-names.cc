@@ -336,6 +336,7 @@ Result NameApplier::OnCallIndirectExpr(CallIndirectExpr* expr) {
   if (expr->decl.has_func_type) {
     CHECK_RESULT(UseNameForFuncTypeVar(&expr->decl.type_var));
   }
+  CHECK_RESULT(UseNameForTableVar(&expr->table));
   return Result::Ok;
 }
 
@@ -348,6 +349,7 @@ Result NameApplier::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
   if (expr->decl.has_func_type) {
     CHECK_RESULT(UseNameForFuncTypeVar(&expr->decl.type_var));
   }
+  CHECK_RESULT(UseNameForTableVar(&expr->table));
   return Result::Ok;
 }
 

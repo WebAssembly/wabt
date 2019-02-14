@@ -638,7 +638,13 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
   writer_->WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
   writer_->WriteOpenSpace("type");
   writer_->WriteVar(expr->decl.type_var, NextChar::Space);
-  writer_->WriteCloseNewline();
+
+  if (expr->table.is_index() && expr->table.index() == 0) {
+    writer_->WriteCloseNewline();
+  } else {
+    writer_->WriteCloseSpace();
+    writer_->WriteVar(expr->table, NextChar::Newline);
+  }
   return Result::Ok;
 }
 

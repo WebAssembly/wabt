@@ -669,7 +669,7 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicNotifyExpr);
 DEFINE_INDEX_INDEX(OnBrOnExnExpr, "depth", "event_index");
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
-DEFINE_INDEX_DESC(OnCallIndirectExpr, "sig_index")
+DEFINE_INDEX_INDEX(OnCallIndirectExpr, "sig_index", "table_index")
 DEFINE0(OnCatchExpr);
 DEFINE_OPCODE(OnCompareExpr)
 DEFINE_OPCODE(OnConvertExpr)
@@ -701,7 +701,7 @@ DEFINE0(OnNopExpr)
 DEFINE0(OnRethrowExpr);
 DEFINE_INDEX_DESC(OnReturnCallExpr, "func_index")
 
-DEFINE_INDEX_DESC(OnReturnCallIndirectExpr, "sig_index")
+DEFINE_INDEX_INDEX(OnReturnCallIndirectExpr, "sig_index", "table_index")
 DEFINE0(OnReturnExpr)
 DEFINE0(OnSelectExpr)
 DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);

@@ -342,13 +342,16 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
       : ExprMixin<ExprType::CallIndirect>(loc) {}
 
   FuncDeclaration decl;
+  Var table;
 };
 
 class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
  public:
   explicit ReturnCallIndirectExpr(const Location &loc = Location())
       : ExprMixin<ExprType::ReturnCallIndirect>(loc) {}
-      FuncDeclaration decl;
+
+  FuncDeclaration decl;
+  Var table;
 };
 
 template <ExprType TypeEnum>

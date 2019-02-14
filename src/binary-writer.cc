@@ -454,19 +454,23 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     }
     case ExprType::CallIndirect:{
-      Index index =
+      Index sig_index =
         module_->GetFuncTypeIndex(cast<CallIndirectExpr>(expr)->decl);
+      Index table_index =
+        module_->GetTableIndex(cast<CallIndirectExpr>(expr)->table);
       WriteOpcode(stream_, Opcode::CallIndirect);
-      WriteU32Leb128WithReloc(index, "signature index", RelocType::TypeIndexLEB);
-      WriteU32Leb128(stream_, 0, "call_indirect reserved");
+      WriteU32Leb128WithReloc(sig_index, "signature index", RelocType::TypeIndexLEB);
+      WriteU32Leb128(stream_, table_index, "table index");
       break;
     }
     case ExprType::ReturnCallIndirect: {
-      Index index =
+      Index sig_index =
           module_->GetFuncTypeIndex(cast<ReturnCallIndirectExpr>(expr)->decl);
+      Index table_index =
+          module_->GetTableIndex(cast<ReturnCallIndirectExpr>(expr)->table);
       WriteOpcode(stream_, Opcode::ReturnCallIndirect);
-      WriteU32Leb128WithReloc(index, "signature index", RelocType::TypeIndexLEB);
-      WriteU32Leb128(stream_, 0, "return_call_indirect reserved");
+      WriteU32Leb128WithReloc(sig_index, "signature index", RelocType::TypeIndexLEB);
+      WriteU32Leb128(stream_, table_index, "table index");
       break;
     }
     case ExprType::Compare:

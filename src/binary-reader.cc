@@ -758,11 +758,19 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadIndex(&sig_index, "call_indirect signature index"));
         ERROR_UNLESS(sig_index < num_signatures_,
                      "invalid call_indirect signature index");
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "call_indirect reserved"));
-        ERROR_UNLESS(reserved == 0, "call_indirect reserved value must be 0");
-        CALLBACK(OnCallIndirectExpr, sig_index);
-        CALLBACK(OnOpcodeUint32Uint32, sig_index, reserved);
+        Index table_index = 0;
+        if (options_.features.reference_types_enabled()) {
+          CHECK_RESULT(ReadIndex(&table_index, "call_indirect table index"));
+          ERROR_UNLESS(table_index < NumTotalTables(),
+                       "invalid call_indirect table index");
+        } else {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "call_indirect reserved"));
+          ERROR_UNLESS(reserved == 0,
+                           "call_indirect reserved value must be 0");
+        }
+        CALLBACK(OnCallIndirectExpr, sig_index, table_index);
+        CALLBACK(OnOpcodeUint32Uint32, sig_index, table_index);
         break;
       }
 
@@ -778,17 +786,23 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::ReturnCallIndirect: {
-
         Index sig_index;
         CHECK_RESULT(ReadIndex(&sig_index, "return_call_indirect"));
         ERROR_UNLESS(sig_index < num_signatures_,
                      "invalid return_call_indirect signature index");
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "return_call_indirect reserved"));
-        ERROR_UNLESS(reserved == 0,
-                     "return_call_indirect reserved value must be 0");
-        CALLBACK(OnReturnCallIndirectExpr, sig_index);
-        CALLBACK(OnOpcodeUint32Uint32, sig_index, reserved);
+        Index table_index = 0;
+        if (options_.features.reference_types_enabled()) {
+          CHECK_RESULT(ReadIndex(&table_index, "return_call_indirect table index"));
+          ERROR_UNLESS(table_index < NumTotalTables(),
+                       "invalid return_call_indirect table index");
+        } else {
+          uint8_t reserved;
+          CHECK_RESULT(ReadU8(&reserved, "return_call_indirect reserved"));
+          ERROR_UNLESS(reserved == 0,
+                           "return_call_indirect reserved value must be 0");
+        }
+        CALLBACK(OnReturnCallIndirectExpr, sig_index, table_index);
+        CALLBACK(OnOpcodeUint32Uint32, sig_index, table_index);
         break;
       }
 

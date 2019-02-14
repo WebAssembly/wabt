@@ -2631,7 +2631,7 @@
 0001a73: 01                                        ; i32 literal
 0001a74: 11                                        ; call_indirect
 0001a75: 00                                        ; signature index
-0001a76: 00                                        ; call_indirect reserved
+0001a76: 00                                        ; table index
 0001a77: 0b                                        ; end
 0001a70: 07                                        ; FIXUP func body size
 ; function body 7
@@ -2648,7 +2648,7 @@
 0001a80: 01                                        ; i32 literal
 0001a81: 13                                        ; return_call_indirect
 0001a82: 00                                        ; signature index
-0001a83: 00                                        ; return_call_indirect reserved
+0001a83: 00                                        ; table index
 0001a84: 0b                                        ; end
 0001a7d: 07                                        ; FIXUP func body size
 ; function body 9
@@ -8071,7 +8071,7 @@ BeginModule(version: 1)
     BeginFunctionBody(7, size:7)
     OnLocalDeclCount(0)
     OnI32ConstExpr(1 (0x1))
-    OnCallIndirectExpr(sig_index: 0)
+    OnCallIndirectExpr(sig_index: 0, table_index: 0)
     EndFunctionBody(7)
     BeginFunctionBody(8, size:4)
     OnLocalDeclCount(0)
@@ -8080,7 +8080,7 @@ BeginModule(version: 1)
     BeginFunctionBody(9, size:7)
     OnLocalDeclCount(0)
     OnI32ConstExpr(1 (0x1))
-    OnReturnCallIndirectExpr(sig_index: 0)
+    OnReturnCallIndirectExpr(sig_index: 0, table_index: 0)
     EndFunctionBody(9)
     BeginFunctionBody(10, size:5)
     OnLocalDeclCount(0)

@@ -1422,6 +1422,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       auto expr = MakeUnique<CallIndirectExpr>(loc);
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
+      ParseVarOpt(&expr->table, Var(0));
       *out_expr = std::move(expr);
       break;
     }
@@ -1436,6 +1437,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       auto expr = MakeUnique<ReturnCallIndirectExpr>(loc);
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
+      ParseVarOpt(&expr->table, Var(0));
       *out_expr = std::move(expr);
       break;
     }

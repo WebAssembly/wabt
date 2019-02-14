@@ -284,6 +284,7 @@ Result NameResolver::OnCallIndirectExpr(CallIndirectExpr* expr) {
   if (expr->decl.has_func_type) {
     ResolveFuncTypeVar(&expr->decl.type_var);
   }
+  ResolveTableVar(&expr->table);
   return Result::Ok;
 }
 
@@ -296,6 +297,7 @@ Result NameResolver::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
   if (expr->decl.has_func_type) {
     ResolveFuncTypeVar(&expr->decl.type_var);
   }
+  ResolveTableVar(&expr->table);
   return Result::Ok;
 }
 

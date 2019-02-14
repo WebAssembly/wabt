@@ -164,9 +164,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
                              Index* target_depths,
                              Index default_target_depth) override;
   wabt::Result OnCallExpr(Index func_index) override;
-  wabt::Result OnCallIndirectExpr(Index sig_index) override;
+  wabt::Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
   wabt::Result OnReturnCallExpr(Index func_index) override;
-  wabt::Result OnReturnCallIndirectExpr(Index sig_index) override;
+  wabt::Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   wabt::Result OnCompareExpr(wabt::Opcode opcode) override;
   wabt::Result OnConvertExpr(wabt::Opcode opcode) override;
   wabt::Result OnDropExpr() override;
@@ -1328,7 +1328,7 @@ wabt::Result BinaryReaderInterp::OnCallExpr(Index func_index) {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index) {
+wabt::Result BinaryReaderInterp::OnCallIndirectExpr(Index sig_index, Index table_index) {
   if (module_->table_index == kInvalidIndex) {
     PrintError("found call_indirect operator, but no table");
     return wabt::Result::Error;
@@ -1367,7 +1367,7 @@ wabt::Result BinaryReaderInterp::OnReturnCallExpr(Index func_index) {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index) {
+wabt::Result BinaryReaderInterp::OnReturnCallIndirectExpr(Index sig_index, Index table_index) {
   if (module_->table_index == kInvalidIndex) {
     PrintError("found return_call_indirect operator, but no table");
     return wabt::Result::Error;

@@ -613,9 +613,7 @@ Result Validator::OnCallExpr(CallExpr* expr) {
 
 Result Validator::OnCallIndirectExpr(CallIndirectExpr* expr) {
   expr_loc_ = &expr->loc;
-  if (current_module_->tables.size() == 0) {
-    PrintError(&expr->loc, "found call_indirect operator, but no table");
-  }
+  CheckHasTable(&expr->loc, Opcode::CallIndirect, expr->table.index());
   CheckFuncSignature(&expr->loc, expr->decl);
   typechecker_.OnCallIndirect(expr->decl.sig.param_types,
                               expr->decl.sig.result_types);
@@ -862,9 +860,7 @@ Result Validator::OnReturnCallExpr(ReturnCallExpr* expr) {
 
 Result Validator::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
   expr_loc_ = &expr->loc;
-  if (current_module_->tables.empty()) {
-    PrintError(&expr->loc, "found return_call_indirect operator, but no table");
-  }
+  CheckHasTable(&expr->loc, Opcode::ReturnCallIndirect, expr->table.index());
   CheckFuncSignature(&expr->loc, expr->decl);
   typechecker_.OnReturnCallIndirect(expr->decl.sig.param_types,
                               expr->decl.sig.result_types);
