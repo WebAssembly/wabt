@@ -40,6 +40,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnExnExpr(BrOnExnExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -254,6 +255,12 @@ Result NameResolver::OnBrExpr(BrExpr* expr) {
 
 Result NameResolver::OnBrIfExpr(BrIfExpr* expr) {
   ResolveLabelVar(&expr->var);
+  return Result::Ok;
+}
+
+Result NameResolver::OnBrOnExnExpr(BrOnExnExpr* expr) {
+  ResolveLabelVar(&expr->label_var);
+  ResolveEventVar(&expr->event_var);
   return Result::Ok;
 }
 

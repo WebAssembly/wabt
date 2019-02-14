@@ -666,6 +666,7 @@ DEFINE_LOAD_STORE_OPCODE(OnAtomicRmwCmpxchgExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicStoreExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicWaitExpr);
 DEFINE_LOAD_STORE_OPCODE(OnAtomicNotifyExpr);
+DEFINE_INDEX_INDEX(OnBrOnExnExpr, "depth", "event_index");
 DEFINE_OPCODE(OnBinaryExpr)
 DEFINE_INDEX_DESC(OnCallExpr, "func_index")
 DEFINE_INDEX_DESC(OnCallIndirectExpr, "sig_index")
@@ -763,6 +764,10 @@ Result BinaryReaderLogging::OnOpcodeBare() {
 
 Result BinaryReaderLogging::OnOpcodeIndex(Index value) {
   return reader_->OnOpcodeIndex(value);
+}
+
+Result BinaryReaderLogging::OnOpcodeIndexIndex(Index value, Index value2) {
+  return reader_->OnOpcodeIndexIndex(value, value2);
 }
 
 Result BinaryReaderLogging::OnOpcodeUint32(uint32_t value) {

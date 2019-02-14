@@ -1,0 +1,15 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (event $e)
+  (func
+    try
+    catch
+      br_on_exn 0 $e
+    end))
+(;; STDERR ;;;
+out/test/typecheck/bad-br_on_exn-result-mismatch.txt:8:5: error: type mismatch in try catch, expected [] but got [except_ref]
+    catch
+    ^^^^^
+;;; STDERR ;;)

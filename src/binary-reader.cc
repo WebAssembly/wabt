@@ -1184,6 +1184,16 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::BrOnExn: {
+        Index depth;
+        Index index;
+        CHECK_RESULT(ReadIndex(&depth, "br_on_exn depth"));
+        CHECK_RESULT(ReadIndex(&index, "event index"));
+        CALLBACK(OnBrOnExnExpr, depth, index);
+        CALLBACK(OnOpcodeIndexIndex, depth, index);
+        break;
+      }
+
       case Opcode::I32Extend8S:
       case Opcode::I32Extend16S:
       case Opcode::I64Extend8S:

@@ -167,6 +167,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcode(Opcode Opcode) override { return Result::Ok; }
   Result OnOpcodeBare() override { return Result::Ok; }
   Result OnOpcodeIndex(Index value) override { return Result::Ok; }
+  Result OnOpcodeIndexIndex(Index value, Index value2) override {
+    return Result::Ok;
+  }
   Result OnOpcodeUint32(uint32_t value) override { return Result::Ok; }
   Result OnOpcodeUint32Uint32(uint32_t value, uint32_t value2) override {
     return Result::Ok;
@@ -206,6 +209,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnBlockExpr(Type sig_type) override { return Result::Ok; }
   Result OnBrExpr(Index depth) override { return Result::Ok; }
   Result OnBrIfExpr(Index depth) override { return Result::Ok; }
+  Result OnBrOnExnExpr(Index depth, Index event_index) override {
+    return Result::Ok;
+  }
   Result OnBrTableExpr(Index num_targets,
                        Index* target_depths,
                        Index default_target_depth) override {

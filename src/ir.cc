@@ -35,6 +35,7 @@ const char* ExprTypeName[] = {
   "Block",
   "Br",
   "BrIf",
+  "BrOnExn",
   "BrTable",
   "Call",
   "CallIndirect",

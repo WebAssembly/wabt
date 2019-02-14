@@ -741,6 +741,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "catch"               { RETURN_OPCODE0(Catch); }
       <i> "throw"               { RETURN_OPCODE0(Throw); }
       <i> "rethrow"             { RETURN_OPCODE0(Rethrow); }
+      <i> "br_on_exn"           { RETURN_OPCODE0(BrOnExn); }
       <i> name                  { RETURN_TEXT(Var); }
       <i> "shared"              { RETURN(Shared); }
 

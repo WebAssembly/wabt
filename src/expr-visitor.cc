@@ -180,6 +180,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnBrIfExpr(cast<BrIfExpr>(expr)));
       break;
 
+    case ExprType::BrOnExn:
+      CHECK_RESULT(delegate_->OnBrOnExnExpr(cast<BrOnExnExpr>(expr)));
+      break;
+
     case ExprType::BrTable:
       CHECK_RESULT(delegate_->OnBrTableExpr(cast<BrTableExpr>(expr)));
       break;

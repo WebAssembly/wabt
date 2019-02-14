@@ -111,6 +111,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Select:
     case TokenType::Br:
     case TokenType::BrIf:
+    case TokenType::BrOnExn:
     case TokenType::BrTable:
     case TokenType::Return:
     case TokenType::ReturnCall:
@@ -1367,6 +1368,15 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       Consume();
       CHECK_RESULT(ParsePlainInstrVar<BrIfExpr>(loc, out_expr));
       break;
+
+    case TokenType::BrOnExn: {
+      Consume();
+      auto expr = MakeUnique<BrOnExnExpr>(loc);
+      CHECK_RESULT(ParseVar(&expr->label_var));
+      CHECK_RESULT(ParseVar(&expr->event_var));
+      *out_expr = std::move(expr);
+      break;
+    }
 
     case TokenType::BrTable: {
       Consume();

@@ -48,6 +48,7 @@ class Validator : public ExprVisitor::Delegate {
   Result EndBlockExpr(BlockExpr*) override;
   Result OnBrExpr(BrExpr*) override;
   Result OnBrIfExpr(BrIfExpr*) override;
+  Result OnBrOnExnExpr(BrOnExnExpr*) override;
   Result OnBrTableExpr(BrTableExpr*) override;
   Result OnCallExpr(CallExpr*) override;
   Result OnCallIndirectExpr(CallIndirectExpr*) override;
@@ -570,6 +571,16 @@ Result Validator::OnBrExpr(BrExpr* expr) {
 Result Validator::OnBrIfExpr(BrIfExpr* expr) {
   expr_loc_ = &expr->loc;
   typechecker_.OnBrIf(expr->var.index());
+  return Result::Ok;
+}
+
+Result Validator::OnBrOnExnExpr(BrOnExnExpr* expr) {
+  expr_loc_ = &expr->loc;
+  const Event* event;
+  if (Succeeded(CheckEventVar(&expr->event_var, &event))) {
+    typechecker_.OnBrOnExn(expr->label_var.index(),
+                           event->decl.sig.param_types);
+  }
   return Result::Ok;
 }
 
