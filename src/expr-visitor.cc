@@ -286,6 +286,30 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnTableInitExpr(cast<TableInitExpr>(expr)));
       break;
 
+    case ExprType::TableGet:
+      CHECK_RESULT(delegate_->OnTableGetExpr(cast<TableGetExpr>(expr)));
+      break;
+
+    case ExprType::TableSet:
+      CHECK_RESULT(delegate_->OnTableSetExpr(cast<TableSetExpr>(expr)));
+      break;
+
+    case ExprType::TableGrow:
+      CHECK_RESULT(delegate_->OnTableGrowExpr(cast<TableGrowExpr>(expr)));
+      break;
+
+    case ExprType::TableSize:
+      CHECK_RESULT(delegate_->OnTableSizeExpr(cast<TableSizeExpr>(expr)));
+      break;
+
+    case ExprType::RefNull:
+      CHECK_RESULT(delegate_->OnRefNullExpr(cast<RefNullExpr>(expr)));
+      break;
+
+    case ExprType::RefIsNull:
+      CHECK_RESULT(delegate_->OnRefIsNullExpr(cast<RefIsNullExpr>(expr)));
+      break;
+
     case ExprType::Nop:
       CHECK_RESULT(delegate_->OnNopExpr(cast<NopExpr>(expr)));
       break;

@@ -119,7 +119,7 @@
 000007a: 01                                        ; local index
 000007b: 11                                        ; call_indirect
 000007c: 00                                        ; signature index
-000007d: 00                                        ; call_indirect reserved
+000007d: 00                                        ; table index
 000007e: 1a                                        ; drop
 000007f: 0b                                        ; end
 0000071: 8a80 8080 00                              ; FIXUP func body size

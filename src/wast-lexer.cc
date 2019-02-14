@@ -258,6 +258,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "f64"                 { RETURN_TYPE(ValueType, F64); }
       <i> "v128"                { RETURN_TYPE(ValueType, V128); }
       <i> "funcref"             { RETURN(Funcref); }
+      <i> "anyref"              { RETURN_TYPE(ValueType, Anyref); }
       <i> "mut"                 { RETURN(Mut); }
       <i> "nop"                 { RETURN_OPCODE0(Nop); }
       <i> "block"               { RETURN_OPCODE0(Block); }
@@ -456,6 +457,12 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "table.init"          { RETURN_OPCODE0(TableInit); }
       <i> "elem.drop"           { RETURN_OPCODE0(ElemDrop); }
       <i> "table.copy"          { RETURN_OPCODE0(TableCopy); }
+      <i> "table.get"           { RETURN_OPCODE0(TableGet); }
+      <i> "table.set"           { RETURN_OPCODE0(TableSet); }
+      <i> "table.grow"          { RETURN_OPCODE0(TableGrow); }
+      <i> "table.size"          { RETURN_OPCODE0(TableSize); }
+      <i> "ref.null"            { RETURN_OPCODE0(RefNull); }
+      <i> "ref.is_null"          { RETURN_OPCODE0(RefIsNull); }
 
       <i> "i32.atomic.wait"     { RETURN_OPCODE(AtomicWait, I32AtomicWait); }
       <i> "i64.atomic.wait"     { RETURN_OPCODE(AtomicWait, I64AtomicWait); }

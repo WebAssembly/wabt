@@ -58,6 +58,10 @@ class NameApplier : public ExprVisitor::DelegateNop {
   Result OnMemoryInitExpr(MemoryInitExpr*) override;
   Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
+  Result OnTableGetExpr(TableGetExpr*) override;
+  Result OnTableSetExpr(TableSetExpr*) override;
+  Result OnTableGrowExpr(TableGrowExpr*) override;
+  Result OnTableSizeExpr(TableSizeExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -258,6 +262,26 @@ Result NameApplier::OnTableInitExpr(TableInitExpr* expr)  {
   return Result::Ok;
 }
 
+Result NameApplier::OnTableGetExpr(TableGetExpr* expr)  {
+  CHECK_RESULT(UseNameForTableVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnTableSetExpr(TableSetExpr* expr)  {
+  CHECK_RESULT(UseNameForTableVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnTableGrowExpr(TableGrowExpr* expr)  {
+  CHECK_RESULT(UseNameForTableVar(&expr->var));
+  return Result::Ok;
+}
+
+Result NameApplier::OnTableSizeExpr(TableSizeExpr* expr)  {
+  CHECK_RESULT(UseNameForTableVar(&expr->var));
+  return Result::Ok;
+}
+
 Result NameApplier::OnBrExpr(BrExpr* expr) {
   string_view label = FindLabelByVar(&expr->var);
   UseNameForVar(label, &expr->var);
@@ -312,6 +336,7 @@ Result NameApplier::OnCallIndirectExpr(CallIndirectExpr* expr) {
   if (expr->decl.has_func_type) {
     CHECK_RESULT(UseNameForFuncTypeVar(&expr->decl.type_var));
   }
+  CHECK_RESULT(UseNameForTableVar(&expr->table));
   return Result::Ok;
 }
 
@@ -324,6 +349,7 @@ Result NameApplier::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
   if (expr->decl.has_func_type) {
     CHECK_RESULT(UseNameForFuncTypeVar(&expr->decl.type_var));
   }
+  CHECK_RESULT(UseNameForTableVar(&expr->table));
   return Result::Ok;
 }
 

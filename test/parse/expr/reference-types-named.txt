@@ -1,0 +1,21 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-reference-types
+
+(module
+  (table $foo 1 anyref)
+  (func (result anyref)
+    i32.const 0
+    table.get $foo
+  )
+  (func (param anyref)
+    i32.const 0
+    get_local 0
+    table.set $foo
+  )
+  (func (result i32)
+    i32.const 0
+    ref.null
+    table.grow $foo
+  )
+)
+

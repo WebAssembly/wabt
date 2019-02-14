@@ -629,6 +629,39 @@ Result TypeChecker::OnTableInit(uint32_t segment) {
   return CheckOpcode3(Opcode::TableInit);
 }
 
+Result TypeChecker::OnTableGet(Index segment) {
+  Result result = PopAndCheck1Type(Type::I32, "table.get");
+  PushType(Type::Anyref); // TODO: should be the table's type
+  return result;
+}
+
+Result TypeChecker::OnTableSet(Index segment) {
+  // TODO: anyref here should be the table's type
+  return PopAndCheck2Types(Type::I32, Type::Anyref, "table.set");
+}
+
+Result TypeChecker::OnTableGrow(Index segment) {
+  Result result = PopAndCheck2Types(Type::I32, Type::Anyref, "table.grow");
+  PushType(Type::I32);
+  return result;
+}
+
+Result TypeChecker::OnTableSize(Index segment) {
+  PushType(Type::I32);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnRefNullExpr() {
+  PushType(Type::Anyref);
+  return Result::Ok;
+}
+
+Result TypeChecker::OnRefIsNullExpr() {
+  Result result = PopAndCheck1Type(Type::Anyref, "ref.is_null");
+  PushType(Type::I32);
+  return result;
+}
+
 Result TypeChecker::OnRethrow() {
   Result result = PopAndCheck1Type(Type::ExceptRef, "rethrow");
   CHECK_RESULT(SetUnreachable());

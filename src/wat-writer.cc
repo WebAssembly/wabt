@@ -550,6 +550,12 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnTableCopyExpr(TableCopyExpr*) override;
   Result OnElemDropExpr(ElemDropExpr*) override;
   Result OnTableInitExpr(TableInitExpr*) override;
+  Result OnTableGetExpr(TableGetExpr*) override;
+  Result OnTableSetExpr(TableSetExpr*) override;
+  Result OnTableGrowExpr(TableGrowExpr*) override;
+  Result OnTableSizeExpr(TableSizeExpr*) override;
+  Result OnRefNullExpr(RefNullExpr*) override;
+  Result OnRefIsNullExpr(RefIsNullExpr*) override;
   Result OnNopExpr(NopExpr*) override;
   Result OnReturnExpr(ReturnExpr*) override;
   Result OnReturnCallExpr(ReturnCallExpr*) override;
@@ -632,7 +638,13 @@ Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
   writer_->WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
   writer_->WriteOpenSpace("type");
   writer_->WriteVar(expr->decl.type_var, NextChar::Space);
-  writer_->WriteCloseNewline();
+
+  if (expr->table.is_index() && expr->table.index() == 0) {
+    writer_->WriteCloseNewline();
+  } else {
+    writer_->WriteCloseSpace();
+    writer_->WriteVar(expr->table, NextChar::Newline);
+  }
   return Result::Ok;
 }
 
@@ -744,14 +756,14 @@ Result WatWriter::ExprVisitorDelegate::OnMemoryGrowExpr(MemoryGrowExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnMemoryInitExpr(MemoryInitExpr* expr) {
-  writer_->WritePutsSpace(Opcode::MemoryInit_Opcode.GetName());
-  writer_->WriteVar(expr->var, NextChar::Newline);
+Result WatWriter::ExprVisitorDelegate::OnMemorySizeExpr(MemorySizeExpr* expr) {
+  writer_->WritePutsNewline(Opcode::MemorySize_Opcode.GetName());
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnMemorySizeExpr(MemorySizeExpr* expr) {
-  writer_->WritePutsNewline(Opcode::MemorySize_Opcode.GetName());
+Result WatWriter::ExprVisitorDelegate::OnMemoryInitExpr(MemoryInitExpr* expr) {
+  writer_->WritePutsSpace(Opcode::MemoryInit_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
 
@@ -769,6 +781,40 @@ Result WatWriter::ExprVisitorDelegate::OnElemDropExpr(ElemDropExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnTableInitExpr(TableInitExpr* expr) {
   writer_->WritePutsSpace(Opcode::TableInit_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTableGetExpr(TableGetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::TableGet_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTableSetExpr(TableSetExpr* expr) {
+  writer_->WritePutsSpace(Opcode::TableSet_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTableGrowExpr(TableGrowExpr* expr) {
+  writer_->WritePutsSpace(Opcode::TableGrow_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnTableSizeExpr(TableSizeExpr* expr) {
+  writer_->WritePutsSpace(Opcode::TableSize_Opcode.GetName());
+  writer_->WriteVar(expr->var, NextChar::Newline);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnRefNullExpr(RefNullExpr* expr) {
+  writer_->WritePutsNewline(Opcode::RefNull_Opcode.GetName());
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnRefIsNullExpr(RefIsNullExpr* expr) {
+  writer_->WritePutsNewline(Opcode::RefIsNull_Opcode.GetName());
   return Result::Ok;
 }
 
@@ -959,11 +1005,13 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     case ExprType::AtomicRmw:
     case ExprType::Binary:
     case ExprType::Compare:
+    case ExprType::TableGrow:
       PushExpr(expr, 2, 1);
       break;
 
     case ExprType::AtomicStore:
     case ExprType::Store:
+    case ExprType::TableSet:
       PushExpr(expr, 2, 0);
       break;
 
@@ -1020,7 +1068,9 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     case ExprType::GlobalGet:
     case ExprType::LocalGet:
     case ExprType::MemorySize:
+    case ExprType::TableSize:
     case ExprType::Unreachable:
+    case ExprType::RefNull:
       PushExpr(expr, 0, 1);
       break;
 
@@ -1043,6 +1093,8 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
     case ExprType::LocalTee:
     case ExprType::MemoryGrow:
     case ExprType::Unary:
+    case ExprType::TableGet:
+    case ExprType::RefIsNull:
       PushExpr(expr, 1, 1);
       break;
 
@@ -1424,7 +1476,7 @@ void WatWriter::WriteTable(const Table& table) {
   WriteInlineExports(ExternalKind::Table, table_index_);
   WriteInlineImport(ExternalKind::Table, table_index_);
   WriteLimits(table.elem_limits);
-  WritePutsSpace("anyfunc");
+  WriteType(table.elem_type, NextChar::None);
   WriteCloseNewline();
   table_index_++;
 }

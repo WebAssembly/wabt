@@ -212,7 +212,7 @@ class BinaryReaderDelegate {
                                Index* target_depths,
                                Index default_target_depth) = 0;
   virtual Result OnCallExpr(Index func_index) = 0;
-  virtual Result OnCallIndirectExpr(Index sig_index) = 0;
+  virtual Result OnCallIndirectExpr(Index sig_index, Index table_index) = 0;
   virtual Result OnCatchExpr() = 0;
   virtual Result OnCompareExpr(Opcode opcode) = 0;
   virtual Result OnConvertExpr(Opcode opcode) = 0;
@@ -244,11 +244,17 @@ class BinaryReaderDelegate {
   virtual Result OnTableCopyExpr() = 0;
   virtual Result OnElemDropExpr(Index segment_index) = 0;
   virtual Result OnTableInitExpr(Index segment_index) = 0;
+  virtual Result OnTableGetExpr(Index table_index) = 0;
+  virtual Result OnTableSetExpr(Index table_index) = 0;
+  virtual Result OnTableGrowExpr(Index table_index) = 0;
+  virtual Result OnTableSizeExpr(Index table_index) = 0;
+  virtual Result OnRefNullExpr() = 0;
+  virtual Result OnRefIsNullExpr() = 0;
   virtual Result OnNopExpr() = 0;
   virtual Result OnRethrowExpr() = 0;
   virtual Result OnReturnExpr() = 0;
   virtual Result OnReturnCallExpr(Index func_index) = 0;
-  virtual Result OnReturnCallIndirectExpr(Index sig_index) = 0;
+  virtual Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) = 0;
   virtual Result OnSelectExpr() = 0;
   virtual Result OnStoreExpr(Opcode opcode,
                              uint32_t alignment_log2,

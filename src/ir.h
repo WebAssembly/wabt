@@ -189,6 +189,8 @@ enum class ExprType {
   MemoryInit,
   MemorySize,
   Nop,
+  RefIsNull,
+  RefNull,
   Rethrow,
   Return,
   ReturnCall,
@@ -200,6 +202,10 @@ enum class ExprType {
   TableCopy,
   ElemDrop,
   TableInit,
+  TableGet,
+  TableGrow,
+  TableSize,
+  TableSet,
   Ternary,
   Throw,
   Try,
@@ -265,6 +271,8 @@ typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
 typedef ExprMixin<ExprType::Select> SelectExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
+typedef ExprMixin<ExprType::RefNull> RefNullExpr;
+typedef ExprMixin<ExprType::RefIsNull> RefIsNullExpr;
 
 template <ExprType TypeEnum>
 class OpcodeExpr : public ExprMixin<TypeEnum> {
@@ -323,6 +331,10 @@ typedef VarExpr<ExprType::MemoryInit> MemoryInitExpr;
 typedef VarExpr<ExprType::DataDrop> DataDropExpr;
 typedef VarExpr<ExprType::TableInit> TableInitExpr;
 typedef VarExpr<ExprType::ElemDrop> ElemDropExpr;
+typedef VarExpr<ExprType::TableGet> TableGetExpr;
+typedef VarExpr<ExprType::TableSet> TableSetExpr;
+typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
+typedef VarExpr<ExprType::TableSize> TableSizeExpr;
 
 class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
  public:
@@ -330,13 +342,16 @@ class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
       : ExprMixin<ExprType::CallIndirect>(loc) {}
 
   FuncDeclaration decl;
+  Var table;
 };
 
 class ReturnCallIndirectExpr : public ExprMixin<ExprType::ReturnCallIndirect> {
  public:
   explicit ReturnCallIndirectExpr(const Location &loc = Location())
       : ExprMixin<ExprType::ReturnCallIndirect>(loc) {}
-      FuncDeclaration decl;
+
+  FuncDeclaration decl;
+  Var table;
 };
 
 template <ExprType TypeEnum>
@@ -522,10 +537,13 @@ struct Global {
 };
 
 struct Table {
-  explicit Table(string_view name) : name(name.to_string()) {}
+  explicit Table(string_view name) :
+      name(name.to_string()),
+      elem_type(Type::Anyfunc) {}
 
   std::string name;
   Limits elem_limits;
+  Type elem_type;
 };
 
 struct ElemSegment {

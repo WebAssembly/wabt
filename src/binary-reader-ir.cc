@@ -143,9 +143,9 @@ class BinaryReaderIR : public BinaryReaderNop {
                        Index default_target_depth) override;
   Result OnCallExpr(Index func_index) override;
   Result OnCatchExpr() override;
-  Result OnCallIndirectExpr(Index sig_index) override;
+  Result OnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnReturnCallExpr(Index func_index) override;
-  Result OnReturnCallIndirectExpr(Index sig_index) override;
+  Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) override;
   Result OnCompareExpr(Opcode opcode) override;
   Result OnConvertExpr(Opcode opcode) override;
   Result OnDropExpr() override;
@@ -175,6 +175,12 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnTableCopyExpr() override;
   Result OnElemDropExpr(Index segment_index) override;
   Result OnTableInitExpr(Index segment_index) override;
+  Result OnTableGetExpr(Index table_index) override;
+  Result OnTableSetExpr(Index table_index) override;
+  Result OnTableGrowExpr(Index table_index) override;
+  Result OnTableSizeExpr(Index table_index) override;
+  Result OnRefNullExpr() override;
+  Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;
   Result OnReturnExpr() override;
@@ -480,6 +486,7 @@ Result BinaryReaderIR::OnTable(Index index,
   auto field = MakeUnique<TableModuleField>(GetLocation());
   Table& table = field->table;
   table.elem_limits = *elem_limits;
+  table.elem_type = elem_type;
   module_->AppendField(std::move(field));
   return Result::Ok;
 }
@@ -674,12 +681,13 @@ Result BinaryReaderIR::OnCallExpr(Index func_index) {
   return AppendExpr(MakeUnique<CallExpr>(Var(func_index)));
 }
 
-Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index) {
+Result BinaryReaderIR::OnCallIndirectExpr(Index sig_index, Index table_index) {
   assert(sig_index < module_->func_types.size());
   auto expr = MakeUnique<CallIndirectExpr>();
   expr->decl.has_func_type = true;
   expr->decl.type_var = Var(sig_index, GetLocation());
   expr->decl.sig = module_->func_types[sig_index]->sig;
+  expr->table = Var(table_index);
   return AppendExpr(std::move(expr));
 }
 
@@ -688,12 +696,13 @@ Result BinaryReaderIR::OnReturnCallExpr(Index func_index) {
   return AppendExpr(MakeUnique<ReturnCallExpr>(Var(func_index)));
 }
 
-Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index) {
+Result BinaryReaderIR::OnReturnCallIndirectExpr(Index sig_index, Index table_index) {
   assert(sig_index < module_->func_types.size());
   auto expr = MakeUnique<ReturnCallIndirectExpr>();
   expr->decl.has_func_type = true;
   expr->decl.type_var = Var(sig_index, GetLocation());
   expr->decl.sig = module_->func_types[sig_index]->sig;
+  expr->table = Var(table_index);
   return AppendExpr(std::move(expr));
 }
 
@@ -846,6 +855,30 @@ Result BinaryReaderIR::OnElemDropExpr(Index segment) {
 
 Result BinaryReaderIR::OnTableInitExpr(Index segment) {
   return AppendExpr(MakeUnique<TableInitExpr>(Var(segment)));
+}
+
+Result BinaryReaderIR::OnTableGetExpr(Index table_index) {
+  return AppendExpr(MakeUnique<TableGetExpr>(Var(table_index)));
+}
+
+Result BinaryReaderIR::OnTableSetExpr(Index table_index) {
+  return AppendExpr(MakeUnique<TableSetExpr>(Var(table_index)));
+}
+
+Result BinaryReaderIR::OnTableGrowExpr(Index table_index) {
+  return AppendExpr(MakeUnique<TableGrowExpr>(Var(table_index)));
+}
+
+Result BinaryReaderIR::OnTableSizeExpr(Index table_index) {
+  return AppendExpr(MakeUnique<TableSizeExpr>(Var(table_index)));
+}
+
+Result BinaryReaderIR::OnRefNullExpr() {
+  return AppendExpr(MakeUnique<RefNullExpr>());
+}
+
+Result BinaryReaderIR::OnRefIsNullExpr() {
+  return AppendExpr(MakeUnique<RefIsNullExpr>());
 }
 
 Result BinaryReaderIR::OnNopExpr() {
