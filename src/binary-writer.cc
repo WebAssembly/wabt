@@ -250,7 +250,6 @@ void BinaryWriter::WriteSectionHeader(const char* desc,
   last_section_leb_size_guess_ = LEB_SECTION_SIZE_GUESS;
   last_section_offset_ =
       WriteU32Leb128Space(LEB_SECTION_SIZE_GUESS, "section size (guess)");
-  last_section_payload_offset_ = stream_->offset();
 }
 
 void BinaryWriter::BeginKnownSection(BinarySection section_code) {
@@ -1040,7 +1039,7 @@ Result BinaryWriter::WriteModule() {
   if (num_funcs) {
     BeginKnownSection(BinarySection::Code);
     WriteU32Leb128(stream_, num_funcs, "num functions");
-
+    last_section_payload_offset_ = stream_->offset();
     for (size_t i = 0; i < num_funcs; ++i) {
       WriteHeader("function body", i);
       const Func* func = module_->funcs[i + module_->num_func_imports];
