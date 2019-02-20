@@ -225,9 +225,10 @@ enum class RelocType {
   GlobalIndexLEB = 7,     // e.g. Immediate of get_global inst
   FunctionOffsetI32 = 8,  // e.g. Code offset in DWARF metadata
   SectionOffsetI32 = 9,   // e.g. Section offset in DWARF metadata
+  EventIndexLEB = 10,     // e.g. Used in throw instructions
 
   First = FuncIndexLEB,
-  Last = SectionOffsetI32,
+  Last = EventIndexLEB,
 };
 static const int kRelocTypeCount = WABT_ENUM_COUNT(RelocType);
 

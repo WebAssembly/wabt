@@ -48,6 +48,7 @@ const char* g_reloc_type_name[] = {
     "R_WASM_MEMORY_ADDR_SLEB",    "R_WASM_MEMORY_ADDR_I32",
     "R_WASM_TYPE_INDEX_LEB",      "R_WASM_GLOBAL_INDEX_LEB",
     "R_WASM_FUNCTION_OFFSET_I32", "R_WASM_SECTION_OFFSET_I32",
+    "R_WASM_EVENT_INDEX_LEB",
 };
 WABT_STATIC_ASSERT(WABT_ARRAY_SIZE(g_reloc_type_name) == kRelocTypeCount);
 

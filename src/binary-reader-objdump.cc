@@ -1470,7 +1470,6 @@ Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
   if (sym_name.empty()) {
     sym_name = GetFunctionName(func_index);
   }
-  assert(!sym_name.empty());
   PrintDetails("   - [%d] F <" PRIstringview "> func=%" PRIindex, index,
                WABT_PRINTF_STRING_VIEW_ARG(sym_name), func_index);
   PrintSymbolFlags(flags);
@@ -1487,7 +1486,6 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
       sym_name = Name;
     }
   }
-  assert(!sym_name.empty());
   PrintDetails("   - [%d] G <" PRIstringview "> global=%" PRIindex, index,
                WABT_PRINTF_STRING_VIEW_ARG(sym_name), global_index);
   PrintSymbolFlags(flags);
