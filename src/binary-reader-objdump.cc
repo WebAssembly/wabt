@@ -592,8 +592,9 @@ Result BinaryReaderObjdumpDisassemble::OnEndFunc() {
 }
 
 Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
-  indent_level--;
-  assert(indent_level >= 0);
+  if (indent_level > 0) {
+    indent_level--;
+  }
   LogOpcode(0, nullptr);
   return Result::Ok;
 }
