@@ -105,7 +105,10 @@ struct Opcode {
 
   static uint32_t PrefixCode(uint8_t prefix, uint32_t code) {
     // For now, 8 bits is enough for all codes.
-    assert(code < 0x100);
+    if (code >= 0x100) {
+      // Clamp to 0xff, since we know that it is an invalid code.
+      code = 0xff;
+    }
     return (prefix << 8) | code;
   }
 
