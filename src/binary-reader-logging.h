@@ -302,6 +302,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnSectionSymbol(Index index,
                          uint32_t flags,
                          Index section_index) override;
+  Result OnEventSymbol(Index index,
+                       uint32_t flags,
+                       string_view name,
+                       Index event_index) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
                        string_view name,

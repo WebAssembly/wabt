@@ -1678,15 +1678,25 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           CALLBACK(OnSymbol, i, sym_type, flags);
           switch (sym_type) {
             case SymbolType::Function:
-            case SymbolType::Global: {
+            case SymbolType::Global:
+            case SymbolType::Event:  {
               uint32_t index = 0;
               CHECK_RESULT(ReadU32Leb128(&index, "index"));
-              if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0)
+              if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0 ||
+                  (flags & WASM_SYMBOL_EXPLICIT_NAME) != 0)
                 CHECK_RESULT(ReadStr(&name, "symbol name"));
-              if (sym_type == SymbolType::Function) {
-                CALLBACK(OnFunctionSymbol, i, flags, name, index);
-              } else {
-                CALLBACK(OnGlobalSymbol, i, flags, name, index);
+              switch (sym_type) {
+                case SymbolType::Function:
+                  CALLBACK(OnFunctionSymbol, i, flags, name, index);
+                  break;
+                case SymbolType::Global:
+                  CALLBACK(OnGlobalSymbol, i, flags, name, index);
+                  break;
+                case SymbolType::Event:
+                  CALLBACK(OnEventSymbol, i, flags, name, index);
+                  break;
+                default:
+                  WABT_UNREACHABLE;
               }
               break;
             }

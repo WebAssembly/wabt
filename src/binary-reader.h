@@ -369,6 +369,10 @@ class BinaryReaderDelegate {
   virtual Result OnSectionSymbol(Index index,
                                  uint32_t flags,
                                  Index section_index) = 0;
+  virtual Result OnEventSymbol(Index index,
+                               uint32_t flags,
+                               string_view name,
+                               Index event_index) = 0;
   virtual Result OnSegmentInfoCount(Index count) = 0;
   virtual Result OnSegmentInfo(Index index,
                                string_view name,
