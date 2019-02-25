@@ -253,11 +253,13 @@ enum class SymbolType {
   Data = 1,
   Global = 2,
   Section = 3,
+  Event = 4,
 };
 
 #define WABT_SYMBOL_FLAG_UNDEFINED 0x10
 #define WABT_SYMBOL_MASK_VISIBILITY 0x4
 #define WABT_SYMBOL_MASK_BINDING 0x3
+#define WASM_SYMBOL_EXPLICIT_NAME 0x40
 
 enum class SymbolVisibility {
   Default = 0,
@@ -333,6 +335,8 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
       return "data";
     case SymbolType::Section:
       return "section";
+    case SymbolType::Event:
+      return "event";
   }
   WABT_UNREACHABLE;
 }

@@ -49,6 +49,7 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   const char* GetFunctionName(Index index) const;
   const char* GetGlobalName(Index index) const;
   const char* GetSectionName(Index index) const;
+  const char* GetEventName(Index index) const;
   string_view GetSymbolName(Index symbol_index) const;
   void PrintRelocation(const Reloc& reloc, Offset offset) const;
   Offset GetSectionStart(BinarySection section_code) const {
@@ -145,6 +146,15 @@ const char* BinaryReaderObjdumpBase::GetSectionName(Index index) const {
   return objdump_state_->section_names[index].c_str();
 }
 
+const char* BinaryReaderObjdumpBase::GetEventName(Index index) const {
+  if (index >= objdump_state_->event_names.size() ||
+      objdump_state_->event_names[index].empty()) {
+    return nullptr;
+  }
+
+  return objdump_state_->event_names[index].c_str();
+}
+
 string_view BinaryReaderObjdumpBase::GetSymbolName(Index symbol_index) const {
   assert(symbol_index < objdump_state_->symtab.size());
   ObjdumpSymbol& sym = objdump_state_->symtab[symbol_index];
@@ -157,6 +167,8 @@ string_view BinaryReaderObjdumpBase::GetSymbolName(Index symbol_index) const {
       return GetGlobalName(sym.index);
     case SymbolType::Section:
       return GetSectionName(sym.index);
+    case SymbolType::Event:
+      return GetEventName(sym.index);
   }
   WABT_UNREACHABLE;
 }
@@ -250,6 +262,18 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
     return Result::Ok;
   }
 
+  Result OnEventSymbol(Index index,
+                        uint32_t flags,
+                        string_view name,
+                        Index event_index) override {
+    if (!name.empty()) {
+      SetEventName(event_index, name);
+    }
+    objdump_state_->symtab[index] = {SymbolType::Event, name.to_string(),
+                                     event_index};
+    return Result::Ok;
+  }
+
   Result OnImportFunc(Index import_index,
                       string_view module_name,
                       string_view field_name,
@@ -297,6 +321,7 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
  protected:
   void SetFunctionName(Index index, string_view name);
   void SetGlobalName(Index index, string_view name);
+  void SetEventName(Index index, string_view name);
 };
 
 void BinaryReaderObjdumpPrepass::SetFunctionName(Index index,
@@ -310,6 +335,12 @@ void BinaryReaderObjdumpPrepass::SetGlobalName(Index index, string_view name) {
   if (objdump_state_->global_names.size() <= index)
     objdump_state_->global_names.resize(index + 1);
   objdump_state_->global_names[index] = name.to_string();
+}
+
+void BinaryReaderObjdumpPrepass::SetEventName(Index index, string_view name) {
+  if (objdump_state_->event_names.size() <= index)
+    objdump_state_->event_names.resize(index + 1);
+  objdump_state_->event_names[index] = name.to_string();
 }
 
 Result BinaryReaderObjdumpPrepass::OnReloc(RelocType type,
@@ -792,6 +823,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnSectionSymbol(Index index,
                          uint32_t flags,
                          Index section_index) override;
+  Result OnEventSymbol(Index index,
+                       uint32_t flags,
+                       string_view name,
+                       Index event_index) override;
   Result OnSegmentInfoCount(Index count) override;
   Result OnSegmentInfo(Index index,
                        string_view name,
@@ -1500,6 +1535,22 @@ Result BinaryReaderObjdump::OnSectionSymbol(Index index,
   assert(sym_name);
   PrintDetails("   - [%d] S <%s> section=%" PRIindex, index, sym_name,
                section_index);
+  PrintSymbolFlags(flags);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnEventSymbol(Index index,
+                                          uint32_t flags,
+                                          string_view name,
+                                          Index event_index) {
+  std::string sym_name = name.to_string();
+  if (sym_name.empty()) {
+    if (const char* Name = GetEventName(event_index)) {
+      sym_name = Name;
+    }
+  }
+  PrintDetails("   - [%d] E <" PRIstringview "> event=%" PRIindex, index,
+               WABT_PRINTF_STRING_VIEW_ARG(sym_name), event_index);
   PrintSymbolFlags(flags);
   return Result::Ok;
 }
