@@ -862,7 +862,7 @@
 00001b0: 00                                        ; section size (guess)
 00001b1: 01                                        ; num tables
 ; table 0
-00001b2: 70                                        ; anyfunc
+00001b2: 70                                        ; funcref
 00001b3: 01                                        ; limits: flags
 00001b4: 02                                        ; limits: initial
 00001b5: 02                                        ; limits: max
@@ -7623,7 +7623,7 @@ BeginModule(version: 1)
   EndFunctionSection
   BeginTableSection(5)
     OnTableCount(1)
-    OnTable(index: 0, elem_type: anyfunc, initial: 2, max: 2)
+    OnTable(index: 0, elem_type: funcref, initial: 2, max: 2)
   EndTableSection
   BeginMemorySection(4)
     OnMemoryCount(1)

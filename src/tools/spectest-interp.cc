@@ -839,7 +839,7 @@ static void InitEnvironment(Environment* env) {
   host_module->AppendFuncExport("print_f64_f64", {{Type::F64, Type::F64}, {}},
                                 PrintCallback);
 
-  host_module->AppendTableExport("table", Type::Anyfunc, Limits(10, 20));
+  host_module->AppendTableExport("table", Type::Funcref, Limits(10, 20));
   host_module->AppendMemoryExport("memory", Limits(1, 2));
 
   host_module->AppendGlobalExport("global_i32", false, uint32_t(666));

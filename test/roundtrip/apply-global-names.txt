@@ -15,7 +15,7 @@
   (type $t0 (func))
   (import "m" "g" (global $m.g i32))
   (func $f0 (type $t0))
-  (table $T0 1 anyfunc)
+  (table $T0 1 funcref)
   (memory $M0 1)
   (global $g1 i32 (global.get $m.g))
   (elem $e0 (global.get $m.g) $f0)

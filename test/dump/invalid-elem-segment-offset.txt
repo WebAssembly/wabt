@@ -27,7 +27,7 @@
 0000013: 00                                        ; section size (guess)
 0000014: 01                                        ; num tables
 ; table 0
-0000015: 70                                        ; anyfunc
+0000015: 70                                        ; funcref
 0000016: 00                                        ; limits: flags
 0000017: 01                                        ; limits: initial
 0000013: 04                                        ; FIXUP section size

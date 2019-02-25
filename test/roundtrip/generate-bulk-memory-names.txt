@@ -31,7 +31,7 @@
     i32.const 0
     table.init $e0
     elem.drop $e0)
-  (table $T0 1 anyfunc)
+  (table $T0 1 funcref)
   (memory $M0 1)
   (elem $e0 passive $f0)
   (data $d0 passive "a"))

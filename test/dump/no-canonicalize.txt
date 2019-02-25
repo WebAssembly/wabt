@@ -71,7 +71,7 @@
 000003d: 0000 0000 00                              ; section size (guess)
 0000042: 01                                        ; num tables
 ; table 0
-0000043: 70                                        ; anyfunc
+0000043: 70                                        ; funcref
 0000044: 01                                        ; limits: flags
 0000045: 02                                        ; limits: initial
 0000046: 02                                        ; limits: max

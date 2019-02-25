@@ -204,7 +204,7 @@ enum class Type : int32_t {
   F32 = -0x03,        // 0x7d
   F64 = -0x04,        // 0x7c
   V128 = -0x05,       // 0x7b
-  Anyfunc = -0x10,    // 0x70
+  Funcref = -0x10,    // 0x70
   Anyref = -0x11,     // 0x6f
   ExceptRef = -0x18,  // 0x68
   Func = -0x20,       // 0x60
@@ -355,8 +355,8 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "f64";
     case Type::V128:
       return "v128";
-    case Type::Anyfunc:
-      return "anyfunc";
+    case Type::Funcref:
+      return "funcref";
     case Type::Func:
       return "func";
     case Type::ExceptRef:

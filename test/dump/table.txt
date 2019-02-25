@@ -47,7 +47,7 @@
 000001f: 00                                        ; section size (guess)
 0000020: 01                                        ; num tables
 ; table 0
-0000021: 70                                        ; anyfunc
+0000021: 70                                        ; funcref
 0000022: 01                                        ; limits: flags
 0000023: 06                                        ; limits: initial
 0000024: 06                                        ; limits: max
@@ -111,7 +111,7 @@ Function[3]:
  - func[1] sig=1
  - func[2] sig=2
 Table[1]:
- - table[0] type=anyfunc initial=6 max=6
+ - table[0] type=funcref initial=6 max=6
 Elem[2]:
  - segment[0] table=0 count=2 - init i32=0
   - elem[0] = func[1]

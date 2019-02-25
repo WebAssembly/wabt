@@ -15,7 +15,7 @@
   (func $one (type $t0)
     call $zero)
   (func $f2 (type $t0))
-  (table $T0 3 3 anyfunc)
+  (table $T0 3 3 funcref)
   (export "zero" (func $zero))
   (export "one" (func $one))
   (elem $e0 (i32.const 0) $zero $one $zero))

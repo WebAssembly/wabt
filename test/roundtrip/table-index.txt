@@ -4,5 +4,5 @@
   (import "a" "b" (table 2 anyfunc)))
 (;; STDOUT ;;;
 (module
-  (import "a" "b" (table (;0;) 2 anyfunc)))
+  (import "a" "b" (table (;0;) 2 funcref)))
 ;;; STDOUT ;;)

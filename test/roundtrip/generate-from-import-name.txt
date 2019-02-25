@@ -19,7 +19,7 @@
   (type $t1 (func (result f32)))
   (type $t2 (func (result i32)))
   (import "m1" "my_func" (func $m1.my_func (type $t0)))
-  (import "m2" "my_table" (table $m2.my_table 1 anyfunc))
+  (import "m2" "my_table" (table $m2.my_table 1 funcref))
   (import "m3" "my_memory" (memory $m3.my_memory 1))
   (import "m4" "my_global" (global $m4.my_global i32))
   (import "m5" "foo_1" (func $m5.foo_1 (type $t1)))

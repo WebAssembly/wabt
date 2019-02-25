@@ -5,5 +5,5 @@
 )
 (;; STDOUT ;;;
 (module
-  (table (;0;) (import "mod" "t1") 1 anyfunc))
+  (table (;0;) (import "mod" "t1") 1 funcref))
 ;;; STDOUT ;;)

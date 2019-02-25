@@ -26,7 +26,7 @@
     i32.const 456)
   (func $foo_2 (type $t1) (result i32)
     i32.const 789)
-  (table $my_table 1 anyfunc)
+  (table $my_table 1 funcref)
   (memory $my_memory 1)
   (global $my_global i32 (i32.const 1))
   (export "my_func" (func $my_func))

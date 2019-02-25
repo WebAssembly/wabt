@@ -1097,7 +1097,8 @@ void Validator::CheckLimits(const Location* loc,
 }
 
 void Validator::CheckTable(const Location* loc, const Table* table) {
-  if (current_table_index_ == 1 && !options_.features.reference_types_enabled()) {
+  if (current_table_index_ == 1 &&
+      !options_.features.reference_types_enabled()) {
     PrintError(loc, "only one table allowed");
   }
   CheckLimits(loc, &table->elem_limits, UINT32_MAX, "elems");
@@ -1105,11 +1106,12 @@ void Validator::CheckTable(const Location* loc, const Table* table) {
   if (table->elem_limits.is_shared) {
     PrintError(loc, "tables may not be shared");
   }
-  if (table->elem_type == Type::Anyref && !options_.features.reference_types_enabled()) {
+  if (table->elem_type == Type::Anyref &&
+      !options_.features.reference_types_enabled()) {
     PrintError(loc, "tables must have anyref type");
   }
-  if (table->elem_type != Type::Anyref && table->elem_type != Type::Anyfunc) {
-    PrintError(loc, "tables must have anyref or anyfunc type");
+  if (table->elem_type != Type::Anyref && table->elem_type != Type::Funcref) {
+    PrintError(loc, "tables must have anyref or funcref type");
   }
 }
 

@@ -20,8 +20,6 @@
 
 /* Tokens with no additional data (i.e. bare). */
 WABT_TOKEN(Invalid, "Invalid")
-WABT_TOKEN(Anyfunc, "anyfunc")
-WABT_TOKEN(Anyref, "anyref")
 WABT_TOKEN(AssertExhaustion, "assert_exhaustion")
 WABT_TOKEN(AssertInvalid, "assert_invalid")
 WABT_TOKEN(AssertMalformed, "assert_malformed")
@@ -37,7 +35,6 @@ WABT_TOKEN(Eof, "EOF")
 WABT_TOKEN(Event, "event")
 WABT_TOKEN(Export, "export")
 WABT_TOKEN(Func, "func")
-WABT_TOKEN(Funcref, "funcref")
 WABT_TOKEN(Get, "get")
 WABT_TOKEN(Global, "global")
 WABT_TOKEN(Import, "import")
