@@ -496,8 +496,9 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadType(out_elem_type, "table elem type"));
-  ERROR_UNLESS(*out_elem_type == Type::Anyfunc || *out_elem_type == Type::Anyref,
-               "table elem type must by anyfunc or anyref");
+  ERROR_UNLESS(
+      *out_elem_type == Type::Funcref || *out_elem_type == Type::Anyref,
+      "table elem type must by funcref or anyref");
 
   uint32_t flags;
   uint32_t initial;

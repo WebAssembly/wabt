@@ -614,7 +614,27 @@ Result WastParser::ParseValueType(Type* out_type) {
     return ErrorExpected({"i32", "i64", "f32", "f64", "v128", "anyref"});
   }
 
-  *out_type = Consume().type();
+  Token token = Consume();
+  Type type = token.type();
+  bool is_enabled;
+  switch (type) {
+    case Type::V128:
+      is_enabled = options_->features.simd_enabled();
+      break;
+    case Type::Anyref:
+      is_enabled = options_->features.reference_types_enabled();
+      break;
+    default:
+      is_enabled = true;
+      break;
+  }
+
+  if (!is_enabled) {
+    Error(token.loc, "value type not allowed: %s", GetTypeName(type));
+    return Result::Error;
+  }
+
+  *out_type = type;
   return Result::Ok;
 }
 
@@ -623,6 +643,23 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list) {
   while (PeekMatch(TokenType::ValueType))
     out_type_list->push_back(Consume().type());
 
+  return Result::Ok;
+}
+
+Result WastParser::ParseRefType(Type* out_type) {
+  WABT_TRACE(ParseRefType);
+  if (!PeekMatch(TokenType::ValueType)) {
+    return ErrorExpected({"anyref", "funcref"});
+  }
+
+  Token token = Consume();
+  Type type = token.type();
+  if (type == Type::Anyref && !options_->features.reference_types_enabled()) {
+    Error(token.loc, "value type not allowed: %s", GetTypeName(type));
+    return Result::Error;
+  }
+
+  *out_type = type;
   return Result::Ok;
 }
 
@@ -1006,11 +1043,7 @@ Result WastParser::ParseImportModuleField(Module* module) {
       ParseBindVarOpt(&name);
       auto import = MakeUnique<TableImport>(name);
       CHECK_RESULT(ParseLimits(&import->table.elem_limits));
-      if (Match(TokenType::Funcref)) {
-        import->table.elem_type = Type::Anyfunc;
-      } else {
-        CHECK_RESULT(ParseValueType(&import->table.elem_type));
-      }
+      CHECK_RESULT(ParseRefType(&import->table.elem_type));
       EXPECT(Rpar);
       field = MakeUnique<ImportModuleField>(std::move(import), loc);
       break;
@@ -1136,15 +1169,14 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto import = MakeUnique<TableImport>(name);
     CHECK_RESULT(ParseInlineImport(import.get()));
     CHECK_RESULT(ParseLimits(&import->table.elem_limits));
-    if (Match(TokenType::Funcref)) {
-      import->table.elem_type = Type::Anyfunc;
-    } else {
-      CHECK_RESULT(ParseValueType(&import->table.elem_type));
-    }
+    CHECK_RESULT(ParseRefType(&import->table.elem_type));
     auto field =
         MakeUnique<ImportModuleField>(std::move(import), GetLocation());
     module->AppendField(std::move(field));
-  } else if (Match(TokenType::Funcref)) {
+  } else if (PeekMatch(TokenType::ValueType)) {
+    Type elem_type;
+    CHECK_RESULT(ParseRefType(&elem_type));
+
     EXPECT(Lpar);
     EXPECT(Elem);
 
@@ -1160,17 +1192,13 @@ Result WastParser::ParseTableModuleField(Module* module) {
     table_field->table.elem_limits.initial = elem_segment.vars.size();
     table_field->table.elem_limits.max = elem_segment.vars.size();
     table_field->table.elem_limits.has_max = true;
-    table_field->table.elem_type = Type::Anyfunc;
+    table_field->table.elem_type = elem_type;
     module->AppendField(std::move(table_field));
     module->AppendField(std::move(elem_segment_field));
   } else {
     auto field = MakeUnique<TableModuleField>(loc, name);
     CHECK_RESULT(ParseLimits(&field->table.elem_limits));
-    if (Match(TokenType::Funcref)) {
-      field->table.elem_type = Type::Anyfunc;
-    } else {
-      CHECK_RESULT(ParseValueType(&field->table.elem_type));
-    }
+    CHECK_RESULT(ParseRefType(&field->table.elem_type));
     module->AppendField(std::move(field));
   }
 

@@ -537,9 +537,8 @@ struct Global {
 };
 
 struct Table {
-  explicit Table(string_view name) :
-      name(name.to_string()),
-      elem_type(Type::Anyfunc) {}
+  explicit Table(string_view name)
+      : name(name.to_string()), elem_type(Type::Funcref) {}
 
   std::string name;
   Limits elem_limits;

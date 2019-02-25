@@ -257,7 +257,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "f32"                 { RETURN_TYPE(ValueType, F32); }
       <i> "f64"                 { RETURN_TYPE(ValueType, F64); }
       <i> "v128"                { RETURN_TYPE(ValueType, V128); }
-      <i> "funcref"             { RETURN(Funcref); }
+      <i> "funcref"             { RETURN_TYPE(ValueType, Funcref); }
       <i> "anyref"              { RETURN_TYPE(ValueType, Anyref); }
       <i> "mut"                 { RETURN(Mut); }
       <i> "nop"                 { RETURN_OPCODE0(Nop); }
@@ -674,7 +674,7 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "return_call_indirect"  { RETURN_OPCODE0(ReturnCallIndirect); }
 
       // Deprecated names.
-      <i> "anyfunc"             { RETURN(Funcref); }
+      <i> "anyfunc"             { RETURN_TYPE(ValueType, Funcref); }
       <i> "get_local"           { RETURN_OPCODE0(LocalGet); }
       <i> "set_local"           { RETURN_OPCODE0(LocalSet); }
       <i> "tee_local"           { RETURN_OPCODE0(LocalTee); }

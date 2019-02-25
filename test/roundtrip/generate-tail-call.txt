@@ -13,5 +13,5 @@
   (func $f1 (type $t0)
     i32.const 0
     return_call_indirect (type $t0))
-  (table $T0 1 anyfunc))
+  (table $T0 1 funcref))
 ;;; STDOUT ;;)

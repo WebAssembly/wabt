@@ -21,7 +21,7 @@
   (type (;0;) (func))
   (func (;0;) (export "func0") (export "func1") (type 0)
     nop)
-  (table (;0;) (export "table0") (export "table1") 1 1 anyfunc)
+  (table (;0;) (export "table0") (export "table1") 1 1 funcref)
   (memory (;0;) (export "memory0") (export "memory1") 0)
   (global (;0;) (export "global0") (export "global1") i32 (i32.const 0)))
 ;;; STDOUT ;;)

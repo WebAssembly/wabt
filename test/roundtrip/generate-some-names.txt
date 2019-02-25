@@ -51,7 +51,7 @@
     drop
     f32.const 0x0p+0 (;=0;)
     local.set $l2)
-  (table $T0 1 1 anyfunc)
+  (table $T0 1 1 funcref)
   (export "baz" (func $import))
   (export "quux" (func $func0))
   (elem $e0 (i32.const 0) $import))
