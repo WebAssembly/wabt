@@ -46,10 +46,10 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   Result OnRelocCount(Index count, Index section_index) override;
 
  protected:
-  const char* GetFunctionName(Index index) const;
-  const char* GetGlobalName(Index index) const;
-  const char* GetSectionName(Index index) const;
-  const char* GetEventName(Index index) const;
+  string_view GetFunctionName(Index index) const;
+  string_view GetGlobalName(Index index) const;
+  string_view GetSectionName(Index index) const;
+  string_view GetEventName(Index index) const;
   string_view GetSymbolName(Index symbol_index) const;
   void PrintRelocation(const Reloc& reloc, Offset offset) const;
   Offset GetSectionStart(BinarySection section_code) const {
@@ -121,38 +121,38 @@ Result BinaryReaderObjdumpBase::BeginModule(uint32_t version) {
   return Result::Ok;
 }
 
-const char* BinaryReaderObjdumpBase::GetFunctionName(Index index) const {
+string_view BinaryReaderObjdumpBase::GetFunctionName(Index index) const {
   if (index >= objdump_state_->function_names.size() ||
       objdump_state_->function_names[index].empty()) {
-    return nullptr;
+    return {};
   }
 
-  return objdump_state_->function_names[index].c_str();
+  return objdump_state_->function_names[index];
 }
 
-const char* BinaryReaderObjdumpBase::GetGlobalName(Index index) const {
+string_view BinaryReaderObjdumpBase::GetGlobalName(Index index) const {
   if (index >= objdump_state_->global_names.size() ||
       objdump_state_->global_names[index].empty()) {
-    return nullptr;
+    return {};
   }
 
-  return objdump_state_->global_names[index].c_str();
+  return objdump_state_->global_names[index];
 }
 
-const char* BinaryReaderObjdumpBase::GetSectionName(Index index) const {
+string_view BinaryReaderObjdumpBase::GetSectionName(Index index) const {
   assert(index < objdump_state_->section_names.size() &&
          !objdump_state_->section_names[index].empty());
 
-  return objdump_state_->section_names[index].c_str();
+  return objdump_state_->section_names[index];
 }
 
-const char* BinaryReaderObjdumpBase::GetEventName(Index index) const {
+string_view BinaryReaderObjdumpBase::GetEventName(Index index) const {
   if (index >= objdump_state_->event_names.size() ||
       objdump_state_->event_names[index].empty()) {
-    return nullptr;
+    return {};
   }
 
-  return objdump_state_->event_names[index].c_str();
+  return objdump_state_->event_names[index];
 }
 
 string_view BinaryReaderObjdumpBase::GetSymbolName(Index symbol_index) const {
@@ -258,7 +258,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                          uint32_t flags,
                          Index section_index) override {
     objdump_state_->symtab[index] = {
-        SymbolType::Section, GetSectionName(section_index), section_index};
+        SymbolType::Section, std::string(GetSectionName(section_index)),
+        section_index};
     return Result::Ok;
   }
 
@@ -545,13 +546,13 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeBare() {
 
 Result BinaryReaderObjdumpDisassemble::OnOpcodeIndex(Index value) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  const char* name;
-  if (current_opcode == Opcode::Call && (name = GetFunctionName(value))) {
-    LogOpcode(immediate_len, "%d <%s>", value, name);
+  string_view name;
+  if (current_opcode == Opcode::Call && !(name = GetFunctionName(value)).empty()) {
+    LogOpcode(immediate_len, "%d <" PRIstringview ">", value, WABT_PRINTF_STRING_VIEW_ARG(name));
   } else if ((current_opcode == Opcode::GlobalGet ||
               current_opcode == Opcode::GlobalSet) &&
-             (name = GetGlobalName(value))) {
-    LogOpcode(immediate_len, "%d <%s>", value, name);
+             !(name = GetGlobalName(value)).empty()) {
+    LogOpcode(immediate_len, "%d <" PRIstringview ">", value, WABT_PRINTF_STRING_VIEW_ARG(name));
   } else {
     LogOpcode(immediate_len, "%d", value);
   }
@@ -633,9 +634,9 @@ Result BinaryReaderObjdumpDisassemble::OnEndExpr() {
 Result BinaryReaderObjdumpDisassemble::BeginFunctionBody(Index index,
                                                          Offset size) {
   printf("%06" PRIzx " func[%" PRIindex "]", state->offset, index);
-  const char* name = GetFunctionName(index);
-  if (name) {
-    printf(" <%s>", name);
+  auto name = GetFunctionName(index);
+  if (!name.empty()) {
+    printf(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
   printf(":\n");
 
@@ -1001,8 +1002,9 @@ Result BinaryReaderObjdump::OnFunctionCount(Index count) {
 
 Result BinaryReaderObjdump::OnFunction(Index index, Index sig_index) {
   PrintDetails(" - func[%" PRIindex "] sig=%" PRIindex, index, sig_index);
-  if (const char* name = GetFunctionName(index)) {
-    PrintDetails(" <%s>", name);
+  auto name = GetFunctionName(index);
+  if (!name.empty()) {
+    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
   PrintDetails("\n");
   return Result::Ok;
@@ -1045,8 +1047,9 @@ Result BinaryReaderObjdump::OnImportFunc(Index import_index,
                                          Index func_index,
                                          Index sig_index) {
   PrintDetails(" - func[%" PRIindex "] sig=%" PRIindex, func_index, sig_index);
-  if (const char* name = GetFunctionName(func_index)) {
-    PrintDetails(" <%s>", name);
+  auto name = GetFunctionName(func_index);
+  if (!name.empty()) {
+    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
@@ -1153,8 +1156,9 @@ Result BinaryReaderObjdump::OnExport(Index index,
                                      string_view name) {
   PrintDetails(" - %s[%" PRIindex "]", GetKindName(kind), item_index);
   if (kind == ExternalKind::Func) {
-    if (const char* name = GetFunctionName(item_index)) {
-      PrintDetails(" <%s>", name);
+    auto name = GetFunctionName(item_index);
+    if (!name.empty()) {
+      PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
     }
   }
 
@@ -1167,8 +1171,9 @@ Result BinaryReaderObjdump::OnElemSegmentFunctionIndex(Index segment_index,
                                                        Index func_index) {
   PrintDetails("  - elem[%" PRIindex "] = func[%" PRIindex "]",
                elem_offset_ + elem_index_, func_index);
-  if (const char* name = GetFunctionName(func_index)) {
-    PrintDetails(" <%s>", name);
+  auto name = GetFunctionName(func_index);
+  if (!name.empty()) {
+    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
   PrintDetails("\n");
   elem_index_++;
@@ -1413,8 +1418,8 @@ Result BinaryReaderObjdump::OnDylinkNeeded(string_view so_name) {
 
 Result BinaryReaderObjdump::OnRelocCount(Index count, Index section_index) {
   BinaryReaderObjdumpBase::OnRelocCount(count, section_index);
-  PrintDetails("  - relocations for section: %d (%s) [%d]\n", section_index,
-               GetSectionName(section_index), count);
+  PrintDetails("  - relocations for section: %d (" PRIstringview ") [%d]\n", section_index,
+               WABT_PRINTF_STRING_VIEW_ARG(GetSectionName(section_index)), count);
   return Result::Ok;
 }
 
@@ -1502,12 +1507,11 @@ Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
                                              uint32_t flags,
                                              string_view name,
                                              Index func_index) {
-  std::string sym_name = name.to_string();
-  if (sym_name.empty()) {
-    sym_name = GetFunctionName(func_index);
+  if (name.empty()) {
+    name = GetFunctionName(func_index);
   }
   PrintDetails("   - [%d] F <" PRIstringview "> func=%" PRIindex, index,
-               WABT_PRINTF_STRING_VIEW_ARG(sym_name), func_index);
+               WABT_PRINTF_STRING_VIEW_ARG(name), func_index);
   PrintSymbolFlags(flags);
   return Result::Ok;
 }
@@ -1516,14 +1520,11 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
                                            uint32_t flags,
                                            string_view name,
                                            Index global_index) {
-  std::string sym_name = name.to_string();
-  if (sym_name.empty()) {
-    if (const char* Name = GetGlobalName(global_index)) {
-      sym_name = Name;
-    }
+  if (name.empty()) {
+    name = GetGlobalName(global_index);
   }
   PrintDetails("   - [%d] G <" PRIstringview "> global=%" PRIindex, index,
-               WABT_PRINTF_STRING_VIEW_ARG(sym_name), global_index);
+               WABT_PRINTF_STRING_VIEW_ARG(name), global_index);
   PrintSymbolFlags(flags);
   return Result::Ok;
 }
@@ -1531,9 +1532,9 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
 Result BinaryReaderObjdump::OnSectionSymbol(Index index,
                                             uint32_t flags,
                                             Index section_index) {
-  const char* sym_name = GetSectionName(section_index);
-  assert(sym_name);
-  PrintDetails("   - [%d] S <%s> section=%" PRIindex, index, sym_name,
+  auto sym_name = GetSectionName(section_index);
+  assert(!sym_name.empty());
+  PrintDetails("   - [%d] S <" PRIstringview "> section=%" PRIindex, index, WABT_PRINTF_STRING_VIEW_ARG(sym_name),
                section_index);
   PrintSymbolFlags(flags);
   return Result::Ok;
@@ -1543,14 +1544,11 @@ Result BinaryReaderObjdump::OnEventSymbol(Index index,
                                           uint32_t flags,
                                           string_view name,
                                           Index event_index) {
-  std::string sym_name = name.to_string();
-  if (sym_name.empty()) {
-    if (const char* Name = GetEventName(event_index)) {
-      sym_name = Name;
-    }
+  if (name.empty()) {
+    name = GetEventName(event_index);
   }
   PrintDetails("   - [%d] E <" PRIstringview "> event=%" PRIindex, index,
-               WABT_PRINTF_STRING_VIEW_ARG(sym_name), event_index);
+               WABT_PRINTF_STRING_VIEW_ARG(name), event_index);
   PrintSymbolFlags(flags);
   return Result::Ok;
 }
