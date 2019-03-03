@@ -552,7 +552,7 @@ Result BinaryReaderLogging::OnSegmentInfo(Index index,
                                           string_view name,
                                           uint32_t alignment,
                                           uint32_t flags) {
-  LOGF("OnSegmentInfos(%d name: " PRIstringview
+  LOGF("OnSegmentInfo(%d name: " PRIstringview
        ", alignment: %d, flags: 0x%x)\n",
        index, WABT_PRINTF_STRING_VIEW_ARG(name), alignment, flags);
   return reader_->OnSegmentInfo(index, name, alignment, flags);
