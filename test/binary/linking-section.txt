@@ -2,6 +2,20 @@
 ;;; ARGS: -x
 magic
 version
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[0]
+}
+section(DATA) {
+  count[2]
+  memory_index[0]
+  offset[i32.const 0 end]
+  data[str("foo")]
+  memory_index[0]
+  offset[i32.const 10 end]
+  data[str("bar")]
+}
 section("linking") {
   metadata_version[2]
 
@@ -54,6 +68,13 @@ linking-section.wasm:	file format wasm 0x1
 
 Section Details:
 
+Memory[1]:
+ - memory[0] pages: initial=0
+Data[2]:
+ - segment[0] <data1> size=3 - init i32=0
+  - 0000000: 666f 6f                                  foo
+ - segment[1] <data2> size=3 - init i32=10
+  - 000000a: 6261 72                                  bar
 Custom:
  - name: "linking"
   - segment info [count=2]
@@ -63,10 +84,10 @@ Custom:
    - 1: priority=5
    - 0: priority=6
   - symbol table [count=4]
-   - [0] F <func_sym> func=0 binding=weak vis=default
-   - [1] G <global_sym> global=0 binding=local vis=default
-   - [2] D <data_sym> segment=1 offset=2 size=1 binding=global vis=hidden
-   - [3] F <func_sym> func=0 undefined binding=global vis=default
+   - 0: F <func_sym> func=0 binding=weak vis=default
+   - 1: G <global_sym> global=0 binding=local vis=default
+   - 2: D <data_sym> segment=1 offset=2 size=1 binding=global vis=hidden
+   - 3: F <func_sym> func=0 undefined binding=global vis=default
 
 Code Disassembly:
 
