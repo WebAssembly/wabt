@@ -1218,7 +1218,7 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
       break;
     case InitExprType::F64: {
       char buffer[WABT_MAX_DOUBLE_HEX];
-      WriteFloatHex(buffer, sizeof(buffer), expr.value.f64);
+      WriteDoubleHex(buffer, sizeof(buffer), expr.value.f64);
       PrintDetails(" - init f64=%s\n", buffer);
       break;
     }
