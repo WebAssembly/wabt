@@ -604,6 +604,9 @@ class Thread {
   template <typename T, typename L, typename R, typename P = R>
   Result SimdBinop(BinopFunc<R, P> func) WABT_WARN_UNUSED;
 
+  template <typename T, typename L, typename R, typename P = R>
+  Result SimdRelBinop(BinopFunc<R, P> func) WABT_WARN_UNUSED;
+
   Environment* env_ = nullptr;
   std::vector<Value> value_stack_;
   std::vector<IstreamOffset> call_stack_;
