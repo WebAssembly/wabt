@@ -56,16 +56,24 @@ struct ObjdumpSymbol {
   Index index;
 };
 
+struct ObjdumpNames {
+  string_view Get(Index index) const;
+  void Set(Index index, string_view name);
+  void push_back(string_view name);
+
+  std::vector<std::string> names;
+};
+
 // read_binary_objdump uses this state to store information from previous runs
 // and use it to display more useful information.
 struct ObjdumpState {
   std::vector<Reloc> code_relocations;
   std::vector<Reloc> data_relocations;
-  std::vector<std::string> function_names;
-  std::vector<std::string> global_names;
-  std::vector<std::string> section_names;
-  std::vector<std::string> event_names;
-  std::vector<std::string> segment_names;
+  ObjdumpNames function_names;
+  ObjdumpNames global_names;
+  ObjdumpNames section_names;
+  ObjdumpNames event_names;
+  ObjdumpNames segment_names;
   std::vector<ObjdumpSymbol> symtab;
 };
 
