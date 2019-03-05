@@ -965,6 +965,34 @@ Result Thread::SimdBinop(BinopFunc<R, P> func) {
   return PushRep<T>(Bitcast<T>(simd_data_ret));
 }
 
+// {i8, i16, 132, i64, f32, f64}{16, 8, 4, 2}.(eq/ne/lt/le/gt/ge)
+template <typename T, typename L, typename R, typename P>
+Result Thread::SimdRelBinop(BinopFunc<R, P> func) {
+  auto rhs_rep = PopRep<T>();
+  auto lhs_rep = PopRep<T>();
+
+  // Calculate how many Lanes according to input lane data type.
+  constexpr int32_t lanes = sizeof(T) / sizeof(L);
+
+  // Define SIMD data array for Simd add by Lanes.
+  L simd_data_ret[lanes];
+  L simd_data_0[lanes];
+  L simd_data_1[lanes];
+
+  // Convert intput SIMD data to array.
+  memcpy(simd_data_0, &lhs_rep, sizeof(T));
+  memcpy(simd_data_1, &rhs_rep, sizeof(T));
+
+  // Constuct the Simd value by Lane data and Lane nums.
+  for (int32_t i = 0; i < lanes; i++) {
+    simd_data_ret[i] = static_cast<L>(
+      func(simd_data_0[i], simd_data_1[i]) == 0? 0 : -1
+    );
+  }
+
+  return PushRep<T>(Bitcast<T>(simd_data_ret));
+}
+
 template <typename R, typename T>
 Result Thread::BinopTrap(BinopTrapFunc<R, T> func) {
   auto rhs_rep = PopRep<T>();
@@ -2970,171 +2998,171 @@ Result Thread::Run(int num_instructions) {
       }
 
       case Opcode::I8X16Eq:
-        CHECK_TRAP(SimdBinop<v128, int8_t>(Eq<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int8_t>(Eq<int32_t>));
         break;
 
       case Opcode::I16X8Eq:
-        CHECK_TRAP(SimdBinop<v128, int16_t>(Eq<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int16_t>(Eq<int32_t>));
         break;
 
       case Opcode::I32X4Eq:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Eq<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Eq<int32_t>));
         break;
 
       case Opcode::F32X4Eq:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Eq<float>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Eq<float>));
         break;
 
       case Opcode::F64X2Eq:
-        CHECK_TRAP(SimdBinop<v128, int64_t>(Eq<double>));
+        CHECK_TRAP(SimdRelBinop<v128, int64_t>(Eq<double>));
         break;
 
       case Opcode::I8X16Ne:
-        CHECK_TRAP(SimdBinop<v128, int8_t>(Ne<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int8_t>(Ne<int32_t>));
         break;
 
       case Opcode::I16X8Ne:
-        CHECK_TRAP(SimdBinop<v128, int16_t>(Ne<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int16_t>(Ne<int32_t>));
         break;
 
       case Opcode::I32X4Ne:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Ne<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Ne<int32_t>));
         break;
 
       case Opcode::F32X4Ne:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Ne<float>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Ne<float>));
         break;
 
       case Opcode::F64X2Ne:
-        CHECK_TRAP(SimdBinop<v128, int64_t>(Ne<double>));
+        CHECK_TRAP(SimdRelBinop<v128, int64_t>(Ne<double>));
         break;
 
       case Opcode::I8X16LtS:
-        CHECK_TRAP(SimdBinop<v128, int8_t>(Lt<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int8_t>(Lt<int32_t>));
         break;
 
       case Opcode::I8X16LtU:
-        CHECK_TRAP(SimdBinop<v128, uint8_t>(Lt<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint8_t>(Lt<uint32_t>));
         break;
 
       case Opcode::I16X8LtS:
-        CHECK_TRAP(SimdBinop<v128, int16_t>(Lt<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int16_t>(Lt<int32_t>));
         break;
 
       case Opcode::I16X8LtU:
-        CHECK_TRAP(SimdBinop<v128, uint16_t>(Lt<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint16_t>(Lt<uint32_t>));
         break;
 
       case Opcode::I32X4LtS:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Lt<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Lt<int32_t>));
         break;
 
       case Opcode::I32X4LtU:
-        CHECK_TRAP(SimdBinop<v128, uint32_t>(Lt<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint32_t>(Lt<uint32_t>));
         break;
 
       case Opcode::F32X4Lt:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Lt<float>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Lt<float>));
         break;
 
       case Opcode::F64X2Lt:
-        CHECK_TRAP(SimdBinop<v128, int64_t>(Lt<double>));
+        CHECK_TRAP(SimdRelBinop<v128, int64_t>(Lt<double>));
         break;
 
       case Opcode::I8X16LeS:
-        CHECK_TRAP(SimdBinop<v128, int8_t>(Le<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int8_t>(Le<int32_t>));
         break;
 
       case Opcode::I8X16LeU:
-        CHECK_TRAP(SimdBinop<v128, uint8_t>(Le<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint8_t>(Le<uint32_t>));
         break;
 
       case Opcode::I16X8LeS:
-        CHECK_TRAP(SimdBinop<v128, int16_t>(Le<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int16_t>(Le<int32_t>));
         break;
 
       case Opcode::I16X8LeU:
-        CHECK_TRAP(SimdBinop<v128, uint16_t>(Le<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint16_t>(Le<uint32_t>));
         break;
 
       case Opcode::I32X4LeS:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Le<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Le<int32_t>));
         break;
 
       case Opcode::I32X4LeU:
-        CHECK_TRAP(SimdBinop<v128, uint32_t>(Le<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint32_t>(Le<uint32_t>));
         break;
 
       case Opcode::F32X4Le:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Le<float>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Le<float>));
         break;
 
       case Opcode::F64X2Le:
-        CHECK_TRAP(SimdBinop<v128, int64_t>(Le<double>));
+        CHECK_TRAP(SimdRelBinop<v128, int64_t>(Le<double>));
         break;
 
       case Opcode::I8X16GtS:
-        CHECK_TRAP(SimdBinop<v128, int8_t>(Gt<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int8_t>(Gt<int32_t>));
         break;
 
       case Opcode::I8X16GtU:
-        CHECK_TRAP(SimdBinop<v128, uint8_t>(Gt<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint8_t>(Gt<uint32_t>));
         break;
 
       case Opcode::I16X8GtS:
-        CHECK_TRAP(SimdBinop<v128, int16_t>(Gt<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int16_t>(Gt<int32_t>));
         break;
 
       case Opcode::I16X8GtU:
-        CHECK_TRAP(SimdBinop<v128, uint16_t>(Gt<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint16_t>(Gt<uint32_t>));
         break;
 
       case Opcode::I32X4GtS:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Gt<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Gt<int32_t>));
         break;
 
       case Opcode::I32X4GtU:
-        CHECK_TRAP(SimdBinop<v128, uint32_t>(Gt<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint32_t>(Gt<uint32_t>));
         break;
 
       case Opcode::F32X4Gt:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Gt<float>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Gt<float>));
         break;
 
       case Opcode::F64X2Gt:
-        CHECK_TRAP(SimdBinop<v128, int64_t>(Gt<double>));
+        CHECK_TRAP(SimdRelBinop<v128, int64_t>(Gt<double>));
         break;
 
       case Opcode::I8X16GeS:
-        CHECK_TRAP(SimdBinop<v128, int8_t>(Ge<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int8_t>(Ge<int32_t>));
         break;
 
       case Opcode::I8X16GeU:
-        CHECK_TRAP(SimdBinop<v128, uint8_t>(Ge<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint8_t>(Ge<uint32_t>));
         break;
 
       case Opcode::I16X8GeS:
-        CHECK_TRAP(SimdBinop<v128, int16_t>(Ge<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int16_t>(Ge<int32_t>));
         break;
 
       case Opcode::I16X8GeU:
-        CHECK_TRAP(SimdBinop<v128, uint16_t>(Ge<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint16_t>(Ge<uint32_t>));
         break;
 
       case Opcode::I32X4GeS:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Ge<int32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Ge<int32_t>));
         break;
 
       case Opcode::I32X4GeU:
-        CHECK_TRAP(SimdBinop<v128, uint32_t>(Ge<uint32_t>));
+        CHECK_TRAP(SimdRelBinop<v128, uint32_t>(Ge<uint32_t>));
         break;
 
       case Opcode::F32X4Ge:
-        CHECK_TRAP(SimdBinop<v128, int32_t>(Ge<float>));
+        CHECK_TRAP(SimdRelBinop<v128, int32_t>(Ge<float>));
         break;
 
       case Opcode::F64X2Ge:
-        CHECK_TRAP(SimdBinop<v128, int64_t>(Ge<double>));
+        CHECK_TRAP(SimdRelBinop<v128, int64_t>(Ge<double>));
         break;
 
       case Opcode::F32X4Neg:
