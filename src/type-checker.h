@@ -112,7 +112,7 @@ class TypeChecker {
   Result OnReturn();
   Result OnSelect();
   Result OnSimdLaneOp(Opcode, uint64_t);
-  Result OnSimdShuffleOp(Opcode, v128);
+  Result OnSimdShuffleOp(Opcode, i5x16);
   Result OnStore(Opcode);
   Result OnTernary(Opcode);
   Result OnThrow(const TypeVector& sig);

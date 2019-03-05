@@ -102,6 +102,12 @@ class Stream {
                  PrintChars print_chars = PrintChars::No) {
     Write(value, desc, print_chars);
   }
+  void WriteU5x16(i5x16 value,
+                 const char* desc = nullptr,
+                 PrintChars print_chars = PrintChars::No) {
+    assert(value.repr() == i5x16::Discriminant::Binary);
+    Write(value.value.binary, desc, print_chars);
+  }
 
   void WriteChar(char c,
                  const char* desc = nullptr,

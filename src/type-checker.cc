@@ -749,16 +749,16 @@ Result TypeChecker::OnSimdLaneOp(Opcode opcode, uint64_t lane_idx) {
   return result;
 }
 
-Result TypeChecker::OnSimdShuffleOp(Opcode opcode, v128 lane_idx) {
+Result TypeChecker::OnSimdShuffleOp(Opcode opcode, i5x16 imm) {
   Result result = Result::Error;
-  uint8_t simd_data[16];
-  memcpy(simd_data, &lane_idx, 16);
-  for (int i = 0; i < 16; i++) {
-    if (simd_data[i] >= 32) {
-      PrintError("lane index must be less than 32 (got %d)", simd_data[i]);
+  for (int i = 0; i < i5x16::size(); i++) {
+    if (imm.repr() == i5x16::Discriminant::Text && imm.read_text(i) >= i5x16::max_value()) {
+      PrintError(
+        "lane index must be in range `[0, %llu)` (got `%llu`)",
+        i5x16::max_value() + 1, imm.read_text(i)
+      );
     }
   }
-
   result = CheckOpcode2(opcode);
   return result;
 }

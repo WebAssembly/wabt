@@ -134,6 +134,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
   Result OnOpcodeV128(v128 value) override;
+  Result OnOpcodeI5x16(i5x16 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
@@ -217,7 +218,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result EndFunctionBody(Index index) override;
   Result EndCodeSection() override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
-  Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
+  Result OnSimdShuffleOpExpr(Opcode opcode, i5x16 value) override;
 
   Result BeginElemSection(Offset size) override;
   Result OnElemSegmentCount(Index count) override;

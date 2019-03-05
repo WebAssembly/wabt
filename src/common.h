@@ -32,6 +32,7 @@
 
 #include "config.h"
 
+#include "src/iNxM.h"
 #include "src/make-unique.h"
 #include "src/result.h"
 #include "src/string-view.h"

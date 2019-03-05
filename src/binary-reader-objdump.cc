@@ -372,6 +372,7 @@ class BinaryReaderObjdumpDisassemble : public BinaryReaderObjdumpBase {
   Result OnOpcodeF32(uint32_t value) override;
   Result OnOpcodeF64(uint64_t value) override;
   Result OnOpcodeV128(v128 value) override;
+  Result OnOpcodeI5x16(i5x16 value) override;
   Result OnOpcodeBlockSig(Type sig_type) override;
 
   Result OnBrTableExpr(Index num_targets,
@@ -602,6 +603,25 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeV128(v128 value) {
   Offset immediate_len = state->offset - current_opcode_offset;
   LogOpcode(immediate_len, "0x%08x 0x%08x 0x%08x 0x%08x", value.v[0],
             value.v[1], value.v[2], value.v[3]);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdumpDisassemble::OnOpcodeI5x16(i5x16 value) {
+  Offset immediate_len = state->offset - current_opcode_offset;
+  if (value.repr() == i5x16::Discriminant::Binary) {
+    value.binary_to_text();
+  }
+  LogOpcode(
+      immediate_len,
+      "%llu %llu %llu %llu \
+%llu %llu %llu %llu \
+%llu %llu %llu %llu \
+%llu %llu %llu %llu",
+      value.read_text(0), value.read_text(1), value.read_text(2), value.read_text(3),
+      value.read_text(4), value.read_text(5), value.read_text(6), value.read_text(7),
+      value.read_text(8), value.read_text(9), value.read_text(10), value.read_text(11),
+      value.read_text(12), value.read_text(13), value.read_text(14), value.read_text(15)
+  );
   return Result::Ok;
 }
 

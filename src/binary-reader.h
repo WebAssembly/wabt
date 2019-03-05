@@ -184,6 +184,7 @@ class BinaryReaderDelegate {
   virtual Result OnOpcodeF32(uint32_t value) = 0;
   virtual Result OnOpcodeF64(uint64_t value) = 0;
   virtual Result OnOpcodeV128(v128 value) = 0;
+  virtual Result OnOpcodeI5x16(i5x16 value) = 0;
   virtual Result OnOpcodeBlockSig(Type sig_type) = 0;
   virtual Result OnAtomicLoadExpr(Opcode opcode,
                                   uint32_t alignment_log2,
@@ -270,7 +271,7 @@ class BinaryReaderDelegate {
 
   /* Simd instructions with Lane Imm operand*/
   virtual Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) = 0;
-  virtual Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) = 0;
+  virtual Result OnSimdShuffleOpExpr(Opcode opcode, i5x16 value) = 0;
 
   /* Elem section */
   virtual Result BeginElemSection(Offset size) = 0;

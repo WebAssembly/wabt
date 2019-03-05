@@ -178,6 +178,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnOpcodeF32(uint32_t value) override { return Result::Ok; }
   Result OnOpcodeF64(uint64_t value) override { return Result::Ok; }
   Result OnOpcodeV128(v128 value) override { return Result::Ok; }
+  Result OnOpcodeI5x16(i5x16 value) override { return Result::Ok; }
   Result OnOpcodeBlockSig(Type sig_type) override { return Result::Ok; }
   Result OnAtomicLoadExpr(Opcode opcode,
                           uint32_t alignment_log2,
@@ -279,7 +280,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override {
     return Result::Ok;
   }
-  Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override {
+  Result OnSimdShuffleOpExpr(Opcode opcode, i5x16 value) override {
     return Result::Ok;
   }
 

@@ -93,6 +93,7 @@ class BinaryReader {
   Result ReadF32(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadF64(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadV128(v128* out_value, const char* desc) WABT_WARN_UNUSED;
+  Result ReadI5x16(i5x16::BinaryValue* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadU32Leb128(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadS32Leb128(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadS64Leb128(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
@@ -270,6 +271,12 @@ Result BinaryReader::ReadF64(uint64_t* out_value, const char* desc) {
 
 Result BinaryReader::ReadV128(v128* out_value, const char* desc) {
   return ReadT(out_value, "v128", desc);
+}
+
+Result BinaryReader::ReadI5x16(
+  i5x16::BinaryValue* out_value, const char* desc
+) {
+  return ReadT(out_value, "i5x16", desc);
 }
 
 Result BinaryReader::ReadU32Leb128(uint32_t* out_value, const char* desc) {
@@ -1129,10 +1136,11 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::V8X16Shuffle: {
-        v128 value;
-        CHECK_RESULT(ReadV128(&value, "Lane idx [16]"));
+        i5x16::BinaryValue binary_value;
+        CHECK_RESULT(ReadI5x16(&binary_value, "Lane idx [16]"));
+        i5x16 value(binary_value);
         CALLBACK(OnSimdShuffleOpExpr, opcode, value);
-        CALLBACK(OnOpcodeV128, value);
+        CALLBACK(OnOpcodeI5x16, value);
         break;
       }
 

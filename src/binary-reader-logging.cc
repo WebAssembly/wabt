@@ -353,9 +353,14 @@ Result BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   return reader_->OnSimdLaneOpExpr(opcode, value);
 }
 
-Result BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
-  LOGF("OnSimdShuffleOpExpr (lane: 0x%08x %08x %08x %08x)\n", value.v[0],
-       value.v[1], value.v[2], value.v[3]);
+Result BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, i5x16 value) {
+  assert(value.repr() == i5x16::Discriminant::Binary);
+  LOGF("OnSimdShuffleOpExpr (imm: %llu", (static_cast<uint64_t>(value.read_binary(0))));
+  for (int32_t i = 1; i < i5x16::size(); ++i) {
+    LOGF(" %llu", static_cast<uint64_t>(value.read_binary(i)));
+  }
+
+  LOGF(")\n");
   return reader_->OnSimdShuffleOpExpr(opcode, value);
 }
 
@@ -809,6 +814,10 @@ Result BinaryReaderLogging::OnOpcodeF64(uint64_t value) {
 
 Result BinaryReaderLogging::OnOpcodeV128(v128 value) {
   return reader_->OnOpcodeV128(value);
+}
+
+Result BinaryReaderLogging::OnOpcodeI5x16(i5x16 value) {
+  return reader_->OnOpcodeI5x16(value);
 }
 
 Result BinaryReaderLogging::OnOpcodeBlockSig(Type sig_type) {

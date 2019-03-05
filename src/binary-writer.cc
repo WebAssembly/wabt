@@ -696,8 +696,11 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::SimdShuffleOp: {
       const Opcode opcode = cast<SimdShuffleOpExpr>(expr)->opcode;
       WriteOpcode(stream_, opcode);
-      stream_->WriteU128(cast<SimdShuffleOpExpr>(expr)->val,
-                         "Simd Lane[16] literal");
+      i5x16 val = cast<SimdShuffleOpExpr>(expr)->val;
+      if (val.repr() == i5x16::Discriminant::Text) {
+        val.text_to_binary();
+      }
+      stream_->WriteU5x16(val, "Simd Lane[16] literal");
       break;
     }
     case ExprType::Unreachable:

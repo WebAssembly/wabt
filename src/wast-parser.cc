@@ -1686,10 +1686,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::SimdShuffleOp: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      Const const_;
-      CHECK_RESULT((ParseSimdConst(&const_, Type::I32, sizeof(v128))));
-      out_expr->reset(
-          new SimdShuffleOpExpr(token.opcode(), const_.v128_bits, loc));
+      i5x16::TextValue lanes{};
+      for (int32_t lane = 0; lane < i5x16::size(); ++lane) {
+        CHECK_RESULT((ParseNat(&lanes[lane])));
+      }
+      i5x16 const_{lanes};
+      out_expr->reset(new SimdShuffleOpExpr(token.opcode(), const_, loc));
       break;
     }
 

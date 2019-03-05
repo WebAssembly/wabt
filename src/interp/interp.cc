@@ -2679,12 +2679,17 @@ Result Thread::Run(int num_instructions) {
 
         v128 v2 = PopRep<v128>();
         v128 v1 = PopRep<v128>();
-        v128 shuffle_imm = ReadV128(&pc);
+
+        i5x16 simd_shuffle_bytes(ReadUx<i5x16::BinaryValue>(&pc));
 
         // Convert intput SIMD data to array.
         memcpy(simd_data_0, &v1, sizeof(v128));
         memcpy(simd_data_1, &v2, sizeof(v128));
-        memcpy(simd_shuffle, &shuffle_imm, sizeof(v128));
+
+        // Convert packed shuffle indices into integers:
+        for (int32_t lane = 0; lane < lanes; ++lane) {
+          simd_shuffle[lane] = simd_shuffle_bytes.read_binary(lane);
+        }
 
         // Constuct the Simd value by Lane data and Lane nums.
         for (int32_t i = 0; i < lanes; i++) {

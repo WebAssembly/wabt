@@ -200,7 +200,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnUnreachableExpr() override;
   wabt::Result EndFunctionBody(Index index) override;
   wabt::Result OnSimdLaneOpExpr(wabt::Opcode opcode, uint64_t value) override;
-  wabt::Result OnSimdShuffleOpExpr(wabt::Opcode opcode, v128 value) override;
+  wabt::Result OnSimdShuffleOpExpr(wabt::Opcode opcode, i5x16 value) override;
 
   wabt::Result EndElemSegmentInitExpr(Index index) override;
   wabt::Result OnElemSegmentFunctionIndexCount(Index index,
@@ -253,6 +253,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result EmitI32(uint32_t value);
   wabt::Result EmitI64(uint64_t value);
   wabt::Result EmitV128(v128 value);
+  wabt::Result EmitI5x16(i5x16 value);
   wabt::Result EmitI32At(IstreamOffset offset, uint32_t value);
   wabt::Result EmitDropKeep(uint32_t drop, uint32_t keep);
   wabt::Result AppendFixup(IstreamOffsetVectorVector* fixups_vector,
@@ -442,6 +443,11 @@ wabt::Result BinaryReaderInterp::EmitI64(uint64_t value) {
 
 wabt::Result BinaryReaderInterp::EmitV128(v128 value) {
   return EmitData(&value, sizeof(value));
+}
+
+wabt::Result BinaryReaderInterp::EmitI5x16(i5x16 value) {
+  assert(value.repr() == i5x16::Discriminant::Binary);
+  return EmitData(&value.value.binary, sizeof(value.value.binary));
 }
 
 wabt::Result BinaryReaderInterp::EmitI32At(IstreamOffset offset,
@@ -1155,10 +1161,10 @@ wabt::Result BinaryReaderInterp::OnSimdLaneOpExpr(wabt::Opcode opcode,
 }
 
 wabt::Result BinaryReaderInterp::OnSimdShuffleOpExpr(wabt::Opcode opcode,
-                                                     v128 value) {
+                                                     i5x16 value) {
   CHECK_RESULT(typechecker_.OnSimdShuffleOp(opcode, value));
   CHECK_RESULT(EmitOpcode(opcode));
-  CHECK_RESULT(EmitV128(value));
+  CHECK_RESULT(EmitI5x16(value));
   return wabt::Result::Ok;
 }
 

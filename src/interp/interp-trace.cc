@@ -575,16 +575,27 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::V8X16Shuffle:
+    case Opcode::V8X16Shuffle: {
       stream->Writef(
-          "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with lane imm: "
-          "$0x%08x %08x %08x %08x\n",
-          opcode.GetName(), Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
-          Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
-          Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3], ReadU32At(pc),
-          ReadU32At(pc + 4), ReadU32At(pc + 8), ReadU32At(pc + 12));
+        "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with lane imm:",
+        opcode.GetName(), Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
+        Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
+        Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
+        Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
+
+      i5x16::BinaryValue binary_value{0};
+      for (uint32_t i = 0; i < binary_value.size(); ++i) {
+        binary_value[i] = ReadU8At(pc + i);
+      }
+      i5x16 value{binary_value};
+      value.binary_to_text();
+      for (int32_t i = 0; i < i5x16::size(); ++i) {
+        stream->Writef(" $%llu", value.read_text(i));
+      }
+
+      stream->Writef("\n");
       break;
+    }
 
     case Opcode::I8X16Add:
     case Opcode::I16X8Add:

@@ -300,11 +300,11 @@ class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
 
 class SimdShuffleOpExpr : public ExprMixin<ExprType::SimdShuffleOp> {
  public:
-  SimdShuffleOpExpr(Opcode opcode, v128 val, const Location& loc = Location())
+  SimdShuffleOpExpr(Opcode opcode, i5x16 val, const Location& loc = Location())
       : ExprMixin<ExprType::SimdShuffleOp>(loc), opcode(opcode), val(val) {}
 
   Opcode opcode;
-  v128 val;
+  i5x16 val;
 };
 
 template <ExprType TypeEnum>

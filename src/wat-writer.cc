@@ -943,8 +943,13 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
     SimdShuffleOpExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
-  writer_->Writef(" 0x%08x 0x%08x 0x%08x 0x%08x", (expr->val.v[0]), (expr->val.v[1]),
-                  (expr->val.v[2]), (expr->val.v[3]));
+  i5x16 value = expr->val;
+  if (value.repr() == i5x16::Discriminant::Binary) {
+    value.binary_to_text();
+  }
+  for (int32_t lane = 0; lane < i5x16::size(); ++lane) {
+    writer_->Writef(" %llu", (value.read_text(lane)));
+  }
   writer_->WritePutsNewline("");
   return Result::Ok;
 }

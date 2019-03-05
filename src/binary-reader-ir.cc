@@ -195,7 +195,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnUnreachableExpr() override;
   Result EndFunctionBody(Index index) override;
   Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) override;
-  Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
+  Result OnSimdShuffleOpExpr(Opcode opcode, i5x16 value) override;
 
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index, Index table_index, bool passive) override;
@@ -969,7 +969,7 @@ Result BinaryReaderIR::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   return AppendExpr(MakeUnique<SimdLaneOpExpr>(opcode, value));
 }
 
-Result BinaryReaderIR::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
+Result BinaryReaderIR::OnSimdShuffleOpExpr(Opcode opcode, i5x16 value) {
   return AppendExpr(MakeUnique<SimdShuffleOpExpr>(opcode, value));
 }
 
