@@ -4,9 +4,9 @@
 (module
   ;; v128.bitselect
   (func (export  "func_v128_bitselect_0") (result  v128)
-    v128.const i32 0x00ff0001 0x00040002 0x55555555 0x00000004
-    v128.const i32 0x00020001 0x00fe0002 0xaaaaaaaa 0x55000004
-    v128.const i32 0xffffffff 0x00000000 0x55555555 0x55000004
+    v128.const i32x4 0x00ff0001 0x00040002 0x55555555 0x00000004
+    v128.const i32x4 0x00020001 0x00fe0002 0xaaaaaaaa 0x55000004
+    v128.const i32x4 0xffffffff 0x00000000 0x55555555 0x55000004
     v128.bitselect)
 )
 
@@ -17,11 +17,11 @@ simd-bitselect.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000032 func[0] <func_v128_bitselect_0>:
- 000033: fd 02 01 00 ff 00 02 00 04 | v128.const 0x00ff0001 0x00040002 0x55555555 0x00000004
+ 000033: fd 02 01 00 ff 00 02 00 04 | v128.const i32x4 0x00ff0001 0x00040002 0x55555555 0x00000004
  00003c: 00 55 55 55 55 04 00 00 00 | 
- 000045: fd 02 01 00 02 00 02 00 fe | v128.const 0x00020001 0x00fe0002 0xaaaaaaaa 0x55000004
+ 000045: fd 02 01 00 02 00 02 00 fe | v128.const i32x4 0x00020001 0x00fe0002 0xaaaaaaaa 0x55000004
  00004e: 00 aa aa aa aa 04 00 00 55 | 
- 000057: fd 02 ff ff ff ff 00 00 00 | v128.const 0xffffffff 0x00000000 0x55555555 0x55000004
+ 000057: fd 02 ff ff ff ff 00 00 00 | v128.const i32x4 0xffffffff 0x00000000 0x55555555 0x55000004
  000060: 00 55 55 55 55 04 00 00 55 | 
  000069: fd 50                      | v128.bitselect
  00006b: 0b                         | end

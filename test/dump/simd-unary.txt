@@ -4,146 +4,146 @@
 (module
   ;; i8x16 neg
   (func (export "i8x16_neg_0") (result v128)
-    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32x4 0x00000001 0x00000002 0x00000003 0x00000004
     i8x16.neg)
 
   ;; i16x8 neg
   (func (export "i16x8_neg_0") (result v128)
-    v128.const i32 0x0000ffff 0x00007fff 0x00000003 0x00000004
+    v128.const i32x4 0x0000ffff 0x00007fff 0x00000003 0x00000004
     i16x8.neg)
 
   ;; i32x4 neg
   (func (export "i32x4_neg_0") (result v128)
-    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32x4 0x00000001 0x00000002 0x00000003 0x00000004
     i32x4.neg)
 
   ;; i64x2 neg
   (func (export "i64x2_neg_0") (result v128)
-    v128.const i32 0x00000001 0x00000002 0x00000003 0x00000004
+    v128.const i32x4 0x00000001 0x00000002 0x00000003 0x00000004
     i64x2.neg)
 
   ;; v128 not
   (func (export "v128_not_0") (result v128)
-    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    v128.const i32x4 0x00ff0001 0x00550002 0x00000003 0x00000004
     v128.not)
 
   ;; i8x16 any_true
   (func (export "i8x16_any_true_0") (result i32)
-    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    v128.const i32x4 0x00ff0001 0x00550002 0x00000003 0x00000004
     i8x16.any_true)
 
   ;; i16x8 any_true
   (func (export "i16x8_any_true_0") (result i32)
-    v128.const i32 0x00000000 0x00000000 0x00000000 0x00000000
+    v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
     i16x8.any_true)
 
   ;; i32x4 any_true
   (func (export "i32x4_any_true_0") (result i32)
-    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    v128.const i32x4 0x00ff0001 0x00550002 0x00000003 0x00000004
     i32x4.any_true)
 
   ;; i64x2 any_true
   (func (export "i64x2_any_true_0") (result i32)
-    v128.const i32 0x00000000 0x00000000 0x00000000 0x00000000
+    v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
     i64x2.any_true)
 
   ;; i8x16 all_true
   (func (export "i8x16_all_true_0") (result i32)
-    v128.const i32 0x01020304 0x01050706 0x10020403 0x20103004
+    v128.const i32x4 0x01020304 0x01050706 0x10020403 0x20103004
     i8x16.all_true)
 
   ;; i16x8 all_true
   (func (export "i16x8_all_true_0") (result i32)
-    v128.const i32 0x00040004 0x00030003 0x00020002 0x00010001
+    v128.const i32x4 0x00040004 0x00030003 0x00020002 0x00010001
     i16x8.all_true)
 
   ;; i32x4 all_true
   (func (export "i32x4_all_true_0") (result i32)
-    v128.const i32 0x00ff0001 0x00550002 0x00000003 0x00000004
+    v128.const i32x4 0x00ff0001 0x00550002 0x00000003 0x00000004
     i32x4.all_true)
 
   ;; i64x2 all_true
   (func (export "i64x2_all_true_0") (result i32)
-    v128.const i32 0x00000001 0x00000000 0x00000001 0x00000000
+    v128.const i32x4 0x00000001 0x00000000 0x00000001 0x00000000
     i64x2.all_true)
 
   ;; f32x4 neg
   (func (export "f32x4_neg_0") (result v128)
-    v128.const i32 0x80000000 0xffc00000 0x449a5000 0xbf800000
+    v128.const i32x4 0x80000000 0xffc00000 0x449a5000 0xbf800000
     f32x4.neg)
 
   ;; f64x2 neg
   (func (export "f64x2_neg_0") (result v128)
-    v128.const i32 0x00000000 0x00000000 0x00000000 0xfff80000
+    v128.const i32x4 0x00000000 0x00000000 0x00000000 0xfff80000
     f64x2.neg)
   (func (export "f64x2_neg_1") (result v128)
-    v128.const i32 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+    v128.const i32x4 0x00000000 0xc0934a00 0x00000000 0x3ff00000
     f64x2.neg)
 
   ;; f32x4 abs
   (func (export "f32x4_abs_0") (result v128)
-    v128.const i32 0x80000000 0xffc00000 0x449a5000 0xbf800000
+    v128.const i32x4 0x80000000 0xffc00000 0x449a5000 0xbf800000
     f32x4.abs)
 
   ;; f64x2 abs
   (func (export "f64x2_abs_0") (result v128)
-    v128.const i32 0x00000000 0x80000000 0x00000000 0xfff80000
+    v128.const i32x4 0x00000000 0x80000000 0x00000000 0xfff80000
     f64x2.abs)
   (func (export "f64x2_abs_1") (result v128)
-    v128.const i32 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+    v128.const i32x4 0x00000000 0xc0934a00 0x00000000 0x3ff00000
     f64x2.abs)
 
   ;; f32x4 sqrt
   (func (export "f32x4_sqrt_0") (result v128)
-    v128.const i32 0xbf800000 0xffc00000 0x40800000 0x41100000
+    v128.const i32x4 0xbf800000 0xffc00000 0x40800000 0x41100000
     f32x4.sqrt)
 
   ;; f64x2 sqrt
   (func (export "f64x2_sqrt_0") (result v128)
-    v128.const i32 0x00000000 0xbff00000 0x00000000 0xfff80000
+    v128.const i32x4 0x00000000 0xbff00000 0x00000000 0xfff80000
     f64x2.sqrt)
   (func (export "f64x2_sqrt_1") (result v128)
-    v128.const i32 0x00000000 0x40100000 0x00000000 0x40220000
+    v128.const i32x4 0x00000000 0x40100000 0x00000000 0x40220000
     f64x2.sqrt)
 
   ;; f32x4 convert_i32x4_s
   (func (export "f32x4_convert_i32x4_s_0") (result v128)
-    v128.const i32 0x00000001 0xffffffff 0x00000000 0x00000003
+    v128.const i32x4 0x00000001 0xffffffff 0x00000000 0x00000003
     f32x4.convert_i32x4_s)
 
   ;; f32x4 convert_i32x4_u
   (func (export "f32x4_convert_i32x4_u_0") (result v128)
-    v128.const i32 0x00000001 0x00000002 0x00000000 0x00000003
+    v128.const i32x4 0x00000001 0x00000002 0x00000000 0x00000003
     f32x4.convert_i32x4_u)
 
   ;; f64x2 convert_i64x2_s
   (func (export "f64x2_convert_i64x2_s_0") (result v128)
-    v128.const i32 0x00000001 0x00000000 0xfffffffd 0xffffffff
+    v128.const i32x4 0x00000001 0x00000000 0xfffffffd 0xffffffff
     f64x2.convert_i64x2_s)
 
   ;; f64x2 convert_i64x2_u
   (func (export "f64x2_convert_i64x2_u_0") (result v128)
-    v128.const i32 0x00000001 0x00000000 0x00000003 0x00000000
+    v128.const i32x4 0x00000001 0x00000000 0x00000003 0x00000000
     f64x2.convert_i64x2_u)
 
   ;; i32x4 trunc_sat_f32x4_s
   (func (export "i32x4_trunc_sat_f32x4_s_0") (result v128)
-    v128.const i32 0x3fc00000 0xc0900000 0xffc00000 0x449a599a
+    v128.const i32x4 0x3fc00000 0xc0900000 0xffc00000 0x449a599a
     i32x4.trunc_sat_f32x4_s)
 
   ;; i32x4 trunc_sat_f32x4_u
   (func (export "i32x4_trunc_sat_f32x4_u_0") (result v128)
-    v128.const i32 0x3fc00000 0x40900000 0xffc00000 0x449a599a
+    v128.const i32x4 0x3fc00000 0x40900000 0xffc00000 0x449a599a
     i32x4.trunc_sat_f32x4_u)
 
   ;; i64x2 trunc_sat_f64x2_s
   (func (export "i64x2_trunc_sat_f64x2_s_0") (result v128)
-    v128.const i32 0x00000000 0xfff80000 0x00000000 0xc0120000
+    v128.const i32x4 0x00000000 0xfff80000 0x00000000 0xc0120000
     i64x2.trunc_sat_f64x2_s)
 
   ;; i64x2 trunc_sat_f64x2_u
   (func (export "i64x2_trunc_sat_f64x2_u_0") (result v128)
-    v128.const i32 0x00000000 0xfff80000 0x00000000 0x40120000
+    v128.const i32x4 0x00000000 0xfff80000 0x00000000 0x40120000
     i64x2.trunc_sat_f64x2_u)
 )
 (;; STDOUT ;;;
@@ -153,152 +153,152 @@ simd-unary.wasm:	file format wasm 0x1
 Code Disassembly:
 
 000273 func[0] <i8x16_neg_0>:
- 000274: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 000274: fd 02 01 00 00 00 02 00 00 | v128.const i32x4 0x00000001 0x00000002 0x00000003 0x00000004
  00027d: 00 03 00 00 00 04 00 00 00 | 
  000286: fd 51                      | i8x16.neg
  000288: 0b                         | end
 00028a func[1] <i16x8_neg_0>:
- 00028b: fd 02 ff ff 00 00 ff 7f 00 | v128.const 0x0000ffff 0x00007fff 0x00000003 0x00000004
+ 00028b: fd 02 ff ff 00 00 ff 7f 00 | v128.const i32x4 0x0000ffff 0x00007fff 0x00000003 0x00000004
  000294: 00 03 00 00 00 04 00 00 00 | 
  00029d: fd 62                      | i16x8.neg
  00029f: 0b                         | end
 0002a1 func[2] <i32x4_neg_0>:
- 0002a2: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0002a2: fd 02 01 00 00 00 02 00 00 | v128.const i32x4 0x00000001 0x00000002 0x00000003 0x00000004
  0002ab: 00 03 00 00 00 04 00 00 00 | 
  0002b4: fd 73                      | i32x4.neg
  0002b6: 0b                         | end
 0002b8 func[3] <i64x2_neg_0>:
- 0002b9: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000003 0x00000004
+ 0002b9: fd 02 01 00 00 00 02 00 00 | v128.const i32x4 0x00000001 0x00000002 0x00000003 0x00000004
  0002c2: 00 03 00 00 00 04 00 00 00 | 
  0002cb: fd 84 01                   | i64x2.neg
  0002ce: 0b                         | end
 0002d0 func[4] <v128_not_0>:
- 0002d1: fd 02 01 00 ff 00 02 00 55 | v128.const 0x00ff0001 0x00550002 0x00000003 0x00000004
+ 0002d1: fd 02 01 00 ff 00 02 00 55 | v128.const i32x4 0x00ff0001 0x00550002 0x00000003 0x00000004
  0002da: 00 03 00 00 00 04 00 00 00 | 
  0002e3: fd 4c                      | v128.not
  0002e5: 0b                         | end
 0002e7 func[5] <i8x16_any_true_0>:
- 0002e8: fd 02 01 00 ff 00 02 00 55 | v128.const 0x00ff0001 0x00550002 0x00000003 0x00000004
+ 0002e8: fd 02 01 00 ff 00 02 00 55 | v128.const i32x4 0x00ff0001 0x00550002 0x00000003 0x00000004
  0002f1: 00 03 00 00 00 04 00 00 00 | 
  0002fa: fd 52                      | i8x16.any_true
  0002fc: 0b                         | end
 0002fe func[6] <i16x8_any_true_0>:
- 0002ff: fd 02 00 00 00 00 00 00 00 | v128.const 0x00000000 0x00000000 0x00000000 0x00000000
+ 0002ff: fd 02 00 00 00 00 00 00 00 | v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
  000308: 00 00 00 00 00 00 00 00 00 | 
  000311: fd 63                      | i16x8.any_true
  000313: 0b                         | end
 000315 func[7] <i32x4_any_true_0>:
- 000316: fd 02 01 00 ff 00 02 00 55 | v128.const 0x00ff0001 0x00550002 0x00000003 0x00000004
+ 000316: fd 02 01 00 ff 00 02 00 55 | v128.const i32x4 0x00ff0001 0x00550002 0x00000003 0x00000004
  00031f: 00 03 00 00 00 04 00 00 00 | 
  000328: fd 74                      | i32x4.any_true
  00032a: 0b                         | end
 00032c func[8] <i64x2_any_true_0>:
- 00032d: fd 02 00 00 00 00 00 00 00 | v128.const 0x00000000 0x00000000 0x00000000 0x00000000
+ 00032d: fd 02 00 00 00 00 00 00 00 | v128.const i32x4 0x00000000 0x00000000 0x00000000 0x00000000
  000336: 00 00 00 00 00 00 00 00 00 | 
  00033f: fd 85 01                   | i64x2.any_true
  000342: 0b                         | end
 000344 func[9] <i8x16_all_true_0>:
- 000345: fd 02 04 03 02 01 06 07 05 | v128.const 0x01020304 0x01050706 0x10020403 0x20103004
+ 000345: fd 02 04 03 02 01 06 07 05 | v128.const i32x4 0x01020304 0x01050706 0x10020403 0x20103004
  00034e: 01 03 04 02 10 04 30 10 20 | 
  000357: fd 53                      | i8x16.all_true
  000359: 0b                         | end
 00035b func[10] <i16x8_all_true_0>:
- 00035c: fd 02 04 00 04 00 03 00 03 | v128.const 0x00040004 0x00030003 0x00020002 0x00010001
+ 00035c: fd 02 04 00 04 00 03 00 03 | v128.const i32x4 0x00040004 0x00030003 0x00020002 0x00010001
  000365: 00 02 00 02 00 01 00 01 00 | 
  00036e: fd 64                      | i16x8.all_true
  000370: 0b                         | end
 000372 func[11] <i32x4_all_true_0>:
- 000373: fd 02 01 00 ff 00 02 00 55 | v128.const 0x00ff0001 0x00550002 0x00000003 0x00000004
+ 000373: fd 02 01 00 ff 00 02 00 55 | v128.const i32x4 0x00ff0001 0x00550002 0x00000003 0x00000004
  00037c: 00 03 00 00 00 04 00 00 00 | 
  000385: fd 75                      | i32x4.all_true
  000387: 0b                         | end
 000389 func[12] <i64x2_all_true_0>:
- 00038a: fd 02 01 00 00 00 00 00 00 | v128.const 0x00000001 0x00000000 0x00000001 0x00000000
+ 00038a: fd 02 01 00 00 00 00 00 00 | v128.const i32x4 0x00000001 0x00000000 0x00000001 0x00000000
  000393: 00 01 00 00 00 00 00 00 00 | 
  00039c: fd 86 01                   | i64x2.all_true
  00039f: 0b                         | end
 0003a1 func[13] <f32x4_neg_0>:
- 0003a2: fd 02 00 00 00 80 00 00 c0 | v128.const 0x80000000 0xffc00000 0x449a5000 0xbf800000
+ 0003a2: fd 02 00 00 00 80 00 00 c0 | v128.const i32x4 0x80000000 0xffc00000 0x449a5000 0xbf800000
  0003ab: ff 00 50 9a 44 00 00 80 bf | 
  0003b4: fd 96 01                   | f32x4.neg
  0003b7: 0b                         | end
 0003b9 func[14] <f64x2_neg_0>:
- 0003ba: fd 02 00 00 00 00 00 00 00 | v128.const 0x00000000 0x00000000 0x00000000 0xfff80000
+ 0003ba: fd 02 00 00 00 00 00 00 00 | v128.const i32x4 0x00000000 0x00000000 0x00000000 0xfff80000
  0003c3: 00 00 00 00 00 00 00 f8 ff | 
  0003cc: fd a1 01                   | f64x2.neg
  0003cf: 0b                         | end
 0003d1 func[15] <f64x2_neg_1>:
- 0003d2: fd 02 00 00 00 00 00 4a 93 | v128.const 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+ 0003d2: fd 02 00 00 00 00 00 4a 93 | v128.const i32x4 0x00000000 0xc0934a00 0x00000000 0x3ff00000
  0003db: c0 00 00 00 00 00 00 f0 3f | 
  0003e4: fd a1 01                   | f64x2.neg
  0003e7: 0b                         | end
 0003e9 func[16] <f32x4_abs_0>:
- 0003ea: fd 02 00 00 00 80 00 00 c0 | v128.const 0x80000000 0xffc00000 0x449a5000 0xbf800000
+ 0003ea: fd 02 00 00 00 80 00 00 c0 | v128.const i32x4 0x80000000 0xffc00000 0x449a5000 0xbf800000
  0003f3: ff 00 50 9a 44 00 00 80 bf | 
  0003fc: fd 95 01                   | f32x4.abs
  0003ff: 0b                         | end
 000401 func[17] <f64x2_abs_0>:
- 000402: fd 02 00 00 00 00 00 00 00 | v128.const 0x00000000 0x80000000 0x00000000 0xfff80000
+ 000402: fd 02 00 00 00 00 00 00 00 | v128.const i32x4 0x00000000 0x80000000 0x00000000 0xfff80000
  00040b: 80 00 00 00 00 00 00 f8 ff | 
  000414: fd a0 01                   | f64x2.abs
  000417: 0b                         | end
 000419 func[18] <f64x2_abs_1>:
- 00041a: fd 02 00 00 00 00 00 4a 93 | v128.const 0x00000000 0xc0934a00 0x00000000 0x3ff00000
+ 00041a: fd 02 00 00 00 00 00 4a 93 | v128.const i32x4 0x00000000 0xc0934a00 0x00000000 0x3ff00000
  000423: c0 00 00 00 00 00 00 f0 3f | 
  00042c: fd a0 01                   | f64x2.abs
  00042f: 0b                         | end
 000431 func[19] <f32x4_sqrt_0>:
- 000432: fd 02 00 00 80 bf 00 00 c0 | v128.const 0xbf800000 0xffc00000 0x40800000 0x41100000
+ 000432: fd 02 00 00 80 bf 00 00 c0 | v128.const i32x4 0xbf800000 0xffc00000 0x40800000 0x41100000
  00043b: ff 00 00 80 40 00 00 10 41 | 
  000444: fd 97 01                   | f32x4.sqrt
  000447: 0b                         | end
 000449 func[20] <f64x2_sqrt_0>:
- 00044a: fd 02 00 00 00 00 00 00 f0 | v128.const 0x00000000 0xbff00000 0x00000000 0xfff80000
+ 00044a: fd 02 00 00 00 00 00 00 f0 | v128.const i32x4 0x00000000 0xbff00000 0x00000000 0xfff80000
  000453: bf 00 00 00 00 00 00 f8 ff | 
  00045c: fd a2 01                   | f64x2.sqrt
  00045f: 0b                         | end
 000461 func[21] <f64x2_sqrt_1>:
- 000462: fd 02 00 00 00 00 00 00 10 | v128.const 0x00000000 0x40100000 0x00000000 0x40220000
+ 000462: fd 02 00 00 00 00 00 00 10 | v128.const i32x4 0x00000000 0x40100000 0x00000000 0x40220000
  00046b: 40 00 00 00 00 00 00 22 40 | 
  000474: fd a2 01                   | f64x2.sqrt
  000477: 0b                         | end
 000479 func[22] <f32x4_convert_i32x4_s_0>:
- 00047a: fd 02 01 00 00 00 ff ff ff | v128.const 0x00000001 0xffffffff 0x00000000 0x00000003
+ 00047a: fd 02 01 00 00 00 ff ff ff | v128.const i32x4 0x00000001 0xffffffff 0x00000000 0x00000003
  000483: ff 00 00 00 00 03 00 00 00 | 
  00048c: fd af 01                   | f32x4.convert_i32x4_s
  00048f: 0b                         | end
 000491 func[23] <f32x4_convert_i32x4_u_0>:
- 000492: fd 02 01 00 00 00 02 00 00 | v128.const 0x00000001 0x00000002 0x00000000 0x00000003
+ 000492: fd 02 01 00 00 00 02 00 00 | v128.const i32x4 0x00000001 0x00000002 0x00000000 0x00000003
  00049b: 00 00 00 00 00 03 00 00 00 | 
  0004a4: fd b0 01                   | f32x4.convert_i32x4_u
  0004a7: 0b                         | end
 0004a9 func[24] <f64x2_convert_i64x2_s_0>:
- 0004aa: fd 02 01 00 00 00 00 00 00 | v128.const 0x00000001 0x00000000 0xfffffffd 0xffffffff
+ 0004aa: fd 02 01 00 00 00 00 00 00 | v128.const i32x4 0x00000001 0x00000000 0xfffffffd 0xffffffff
  0004b3: 00 fd ff ff ff ff ff ff ff | 
  0004bc: fd b1 01                   | f64x2.convert_i64x2_s
  0004bf: 0b                         | end
 0004c1 func[25] <f64x2_convert_i64x2_u_0>:
- 0004c2: fd 02 01 00 00 00 00 00 00 | v128.const 0x00000001 0x00000000 0x00000003 0x00000000
+ 0004c2: fd 02 01 00 00 00 00 00 00 | v128.const i32x4 0x00000001 0x00000000 0x00000003 0x00000000
  0004cb: 00 03 00 00 00 00 00 00 00 | 
  0004d4: fd b2 01                   | f64x2.convert_i64x2_u
  0004d7: 0b                         | end
 0004d9 func[26] <i32x4_trunc_sat_f32x4_s_0>:
- 0004da: fd 02 00 00 c0 3f 00 00 90 | v128.const 0x3fc00000 0xc0900000 0xffc00000 0x449a599a
+ 0004da: fd 02 00 00 c0 3f 00 00 90 | v128.const i32x4 0x3fc00000 0xc0900000 0xffc00000 0x449a599a
  0004e3: c0 00 00 c0 ff 9a 59 9a 44 | 
  0004ec: fd ab 01                   | i32x4.trunc_sat_f32x4_s
  0004ef: 0b                         | end
 0004f1 func[27] <i32x4_trunc_sat_f32x4_u_0>:
- 0004f2: fd 02 00 00 c0 3f 00 00 90 | v128.const 0x3fc00000 0x40900000 0xffc00000 0x449a599a
+ 0004f2: fd 02 00 00 c0 3f 00 00 90 | v128.const i32x4 0x3fc00000 0x40900000 0xffc00000 0x449a599a
  0004fb: 40 00 00 c0 ff 9a 59 9a 44 | 
  000504: fd ac 01                   | i32x4.trunc_sat_f32x4_u
  000507: 0b                         | end
 000509 func[28] <i64x2_trunc_sat_f64x2_s_0>:
- 00050a: fd 02 00 00 00 00 00 00 f8 | v128.const 0x00000000 0xfff80000 0x00000000 0xc0120000
+ 00050a: fd 02 00 00 00 00 00 00 f8 | v128.const i32x4 0x00000000 0xfff80000 0x00000000 0xc0120000
  000513: ff 00 00 00 00 00 00 12 c0 | 
  00051c: fd ad 01                   | i64x2.trunc_sat_f64x2_s
  00051f: 0b                         | end
 000521 func[29] <i64x2_trunc_sat_f64x2_u_0>:
- 000522: fd 02 00 00 00 00 00 00 f8 | v128.const 0x00000000 0xfff80000 0x00000000 0x40120000
+ 000522: fd 02 00 00 00 00 00 00 f8 | v128.const i32x4 0x00000000 0xfff80000 0x00000000 0x40120000
  00052b: ff 00 00 00 00 00 00 12 40 | 
  000534: fd ae 01                   | i64x2.trunc_sat_f64x2_u
  000537: 0b                         | end

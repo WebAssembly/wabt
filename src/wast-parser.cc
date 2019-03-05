@@ -1734,7 +1734,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
 // Current Simd const type is V128 const only.
 // The current expected V128 const lists is:
-// i32 0xXXXXXXXX 0xXXXXXXXX 0xXXXXXXXX 0xXXXXXXXX
+// i32x4 0xXXXXXXXX 0xXXXXXXXX 0xXXXXXXXX 0xXXXXXXXX
 Result WastParser::ParseSimdConst(Const* const_,
                                   Type in_type,
                                   int32_t nSimdConstBytes) {
@@ -1763,6 +1763,7 @@ Result WastParser::ParseSimdConst(Const* const_,
         result = ParseInt32(s, end, &(const_->v128_bits.v[i]),
                             ParseIntType::SignedAndUnsigned);
 
+
         if (Failed(result)) {
           Error(loc, "invalid literal \"%s\"", literal.text.c_str());
           return Result::Error;
@@ -1772,7 +1773,7 @@ Result WastParser::ParseSimdConst(Const* const_,
     }
 
     default:
-      Error(const_->loc, "Expected i32 at start of simd constant");
+      Error(const_->loc, "Expected i32x4 at start of simd constant");
       return Result::Error;
   }
 
@@ -1812,6 +1813,13 @@ Result WastParser::ParseConst(Const* const_) {
       break;
     }
     default:
+      if (opcode == Opcode::V128Const) {
+        auto l = Consume().text();
+        if (l == "i32x4") {
+          in_type = Type::I32;
+          break;
+        }
+      }
       return ErrorExpected({"a numeric literal"}, "123, -45, 6.7e8");
   }
 

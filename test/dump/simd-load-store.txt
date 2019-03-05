@@ -16,7 +16,7 @@
   ;; v128 store
   (func (export "v128_store_0") (result v128)
     i32.const 4
-    v128.const i32 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
+    v128.const i32x4 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
     v128.store
     i32.const 4
     v128.load)
@@ -33,7 +33,7 @@ Code Disassembly:
  000044: 0b                         | end
 000046 func[1] <v128_store_0>:
  000047: 41 04                      | i32.const 4
- 000049: fd 02 44 33 22 11 88 77 66 | v128.const 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
+ 000049: fd 02 44 33 22 11 88 77 66 | v128.const i32x4 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
  000052: 55 cc bb aa 99 00 ff ee dd | 
  00005b: fd 01 04 00                | v128.store 4 0
  00005f: 41 04                      | i32.const 4

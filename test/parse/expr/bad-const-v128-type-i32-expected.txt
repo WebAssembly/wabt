@@ -4,10 +4,10 @@
 (module (func v128.const 0x12345678 0x00000000 0x00000000 0xabcd3478))
 (module (func v128.const i64 0x12345678 0x00000000 0x00000000 0xabcd3478))
 (;; STDERR ;;;
-out/test/parse/expr/bad-const-v128-type-i32-expected.txt:4:26: error: Expected i32 at start of simd constant
+out/test/parse/expr/bad-const-v128-type-i32-expected.txt:4:26: error: Expected i32x4 at start of simd constant
 (module (func v128.const 0x12345678 0x00000000 0x00000000 0xabcd3478))
                          ^^^^^^^^^^
-out/test/parse/expr/bad-const-v128-type-i32-expected.txt:5:26: error: Expected i32 at start of simd constant
+out/test/parse/expr/bad-const-v128-type-i32-expected.txt:5:26: error: Expected i32x4 at start of simd constant
 (module (func v128.const i64 0x12345678 0x00000000 0x00000000 0xabcd3478))
                          ^^^
 ;;; STDERR ;;)
