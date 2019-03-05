@@ -70,7 +70,7 @@ std::string TypedValueToString(const TypedValue& tv) {
     }
 
     case Type::V128:
-      return StringPrintf("v128:0x%08x 0x%08x 0x%08x 0x%08x",
+      return StringPrintf("v128 i32x4:0x%08x 0x%08x 0x%08x 0x%08x",
                           tv.value.v128_bits.v[0], tv.value.v128_bits.v[1],
                           tv.value.v128_bits.v[2], tv.value.v128_bits.v[3]);
 

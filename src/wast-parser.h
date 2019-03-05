@@ -202,7 +202,7 @@ class WastParser {
   template <typename T>
   Result ParseAssertScriptModuleCommand(TokenType, CommandPtr*);
 
-  Result ParseSimdConst(Const*, Type, int32_t);
+  Result ParseSimdV128Const(Const*, TokenType);
 
   void CheckImportOrdering(Module*);
 

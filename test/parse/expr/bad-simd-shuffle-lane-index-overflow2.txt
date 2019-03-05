@@ -9,6 +9,12 @@
     ))
 
 (;; STDERR ;;;
+out/test/parse/expr/bad-simd-shuffle-lane-index-overflow2.txt:6:16: error: Unexpected type at start of simd constant. Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2.
+    v128.const i32 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
+               ^^^
+out/test/parse/expr/bad-simd-shuffle-lane-index-overflow2.txt:7:16: error: Unexpected type at start of simd constant. Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2.
+    v128.const i32 0x00550055 0x00550055 0x00550055 0x00550155
+               ^^^
 out/test/parse/expr/bad-simd-shuffle-lane-index-overflow2.txt:8:55: error: shuffle index "33" out-of-range [0, 32)
     v8x16.shuffle 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 33
                                                       ^^
