@@ -2246,7 +2246,11 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
 void CWriter::Write(const SimdShuffleOpExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(1, result_type), " = ", expr.opcode.GetName(), "(",
-        StackVar(1), " ", StackVar(0), ", lane Imm: %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+        StackVar(1), " ", StackVar(0), ", i5x16 imm: "
+        "%llu %llu %llu %llu "
+        "%llu %llu %llu %llu "
+        "%llu %llu %llu %llu "
+        "%llu %llu %llu %llu",
         expr.val.read_text(0), expr.val.read_text(1), expr.val.read_text(2), expr.val.read_text(3),
         expr.val.read_text(4), expr.val.read_text(5), expr.val.read_text(6), expr.val.read_text(7),
         expr.val.read_text(8), expr.val.read_text(9), expr.val.read_text(10), expr.val.read_text(11),

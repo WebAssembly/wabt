@@ -526,18 +526,11 @@ void Environment::Disassemble(Stream* stream,
         i5x16 value{binary_value};
         value.binary_to_text();
 
-        stream->Writef(
-          "%s %%[-2], %%[-1] : (Lane imm: \
-%llu %llu %llu %llu \
-%llu %llu %llu %llu \
-%llu %llu %llu %llu \
-%llu %llu %llu %llu)\n",
-          opcode.GetName(),
-          value.read_text(0), value.read_text(1), value.read_text(2), value.read_text(3),
-          value.read_text(4), value.read_text(5), value.read_text(6), value.read_text(7),
-          value.read_text(8), value.read_text(9), value.read_text(10), value.read_text(11),
-          value.read_text(12), value.read_text(13), value.read_text(14), value.read_text(15)
-        );
+        stream->Writef("%s %%[-2], %%[-1] : (i5x16 imm:", opcode.GetName());
+        for (uint32_t l = 0; l < i5x16::size(); ++l) {
+          stream->Writef(" %llu", value.read_text(l));
+        }
+        stream->Writef(")\n");
         break;
       }
 

@@ -577,11 +577,12 @@ void Thread::Trace(Stream* stream) {
 
     case Opcode::V8X16Shuffle: {
       stream->Writef(
-        "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with lane imm:",
+        "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with i5x16 imm:",
         opcode.GetName(), Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
         Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
         Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
-        Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
+        Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]
+      );
 
       i5x16::BinaryValue binary_value{0};
       for (uint32_t i = 0; i < binary_value.size(); ++i) {

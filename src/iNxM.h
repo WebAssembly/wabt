@@ -49,8 +49,10 @@ struct iNxM {
   /// In the textual encoding we treat the integers as Nat.
   using TextValue = std::array<text_t, Length>;
 
-  static_assert(IntBits * Length % (sizeof(bin_t) * CHAR_BIT) == 0,
-                "The array length in bits must be a multiple of CHAR_BIT");
+  static_assert(
+    IntBits * Length % (sizeof(bin_t) * CHAR_BIT) == 0,
+    "The array length in bits must be a multiple of sizeof(bin_t) * CHAR_BIT"
+  );
   /// In the binary encoding we pack the iN integers together:
   using BinaryValue
     = std::array<bin_t, IntBits * Length / (sizeof(bin_t) * CHAR_BIT)>;
@@ -88,20 +90,20 @@ struct iNxM {
 
   /// Converts the internal representation from text to binary.
   ///
-  /// Pre-condition: assert(repr == i5x16::Discriminant::Text);
+  /// Pre-condition: assert(repr == iNxM::Discriminant::Text);
   void text_to_binary();
   /// Converts the internal representation from binary to text.
   ///
-  /// Pre-condition: assert(repr == i5x16::Discriminant::Binary);
+  /// Pre-condition: assert(repr == iNxM::Discriminant::Binary);
   void binary_to_text();
 
   /// Reads the iN at index
   ///
-  /// Pre-condition: assert(repr == Discriminant::Binary);
+  /// Pre-condition: assert(repr == iNxM::Discriminant::Binary);
   bin_t read_binary(int32_t index) const;
-  /// Reads the i5 at index
+  /// Reads the iN at index
   ///
-  /// Pre-condition: assert(repr == Discriminant::Binary);
+  /// Pre-condition: assert(repr == iNxM::Discriminant::Binary);
   text_t read_text(int32_t index) const {
     assert(repr() == Discriminant::Text);
     assert(index >= 0);
@@ -124,7 +126,11 @@ using text_t = typename iNxM<IntBits, Length>::text_t;
 
 /// Reads the N-bit integer at the position `index` of the Mx iN array `binary`.
 template <uint8_t N, ptrdiff_t L>
-bin_t<N, L> read_i(binary_v<N, L> const& binary, int32_t index) {
+typename iNxM<N, L>::bin_t
+read_i(
+  typename iNxM<N, L>::BinaryValue const& binary,
+  int32_t index
+) {
   assert(index >= 0);
   assert(index < L);
   uint8_t value = 0;
@@ -137,10 +143,10 @@ bin_t<N, L> read_i(binary_v<N, L> const& binary, int32_t index) {
     int32_t array_byte_rel_bit = array_bit % CHAR_BIT;
 
     // Bitmaks for the relative bit:
-    uint8_t flag = 1 << array_byte_rel_bit;
+    bin_t<N, L> flag = 1 << array_byte_rel_bit;
 
     // Test the bit:
-    uint8_t bit_value = binary[array_byte] & flag ? 1 : 0;
+    bin_t<N, L> bit_value = binary[array_byte] & flag ? 1 : 0;
 
     // Set the bit in value
     value |= bit_value << value_bit;
@@ -155,7 +161,11 @@ bin_t<N, L> read_i(binary_v<N, L> const& binary, int32_t index) {
 /// Write the `N`-bit integer `value` at the position `index` within
 /// `binary`
 template <uint8_t N, ptrdiff_t L>
-void write_i(binary_v<N, L>& binary, bin_t<N, L> iN, int32_t index) {
+void write_i(
+  typename iNxM<N, L>::BinaryValue& binary,
+  typename iNxM<N, L>::bin_t iN,
+  int32_t index
+) {
   static_assert(N <= sizeof(bin_t<N, L>) * CHAR_BIT, "bin_t overflows");
   assert(iN <= (iNxM<N, L>::max_value()));
   assert(index >= 0);
@@ -186,7 +196,10 @@ void write_i(binary_v<N, L>& binary, bin_t<N, L> iN, int32_t index) {
 }
 
 template <uint8_t N, ptrdiff_t L>
-binary_v<N, L> text_to_binary_impl(text_v<N, L> const& text) {
+typename iNxM<N, L>::BinaryValue
+text_to_binary_impl(
+  typename iNxM<N, L>::TextValue const& text
+) {
   binary_v<N, L> binary;
   std::fill(binary.begin(), binary.end(), 0);
 
@@ -198,7 +211,10 @@ binary_v<N, L> text_to_binary_impl(text_v<N, L> const& text) {
 }
 
 template <uint8_t N, ptrdiff_t L>
-text_v<N, L> binary_to_text_impl(binary_v<N, L> const& binary) {
+typename iNxM<N, L>::TextValue
+binary_to_text_impl(
+  typename iNxM<N, L>::BinaryValue const& binary
+) {
   text_v<N, L> text;
   std::fill(text.begin(), text.end(), 0);
 
@@ -227,7 +243,8 @@ void iNxM<N, L>::binary_to_text() {
 }
 
 template <uint8_t N, ptrdiff_t L>
-bin_t<N, L> iNxM<N, L>::read_binary(int32_t index) const {
+typename iNxM<N, L>::bin_t
+iNxM<N, L>::read_binary(int32_t index) const {
    assert(repr() == Discriminant::Binary);
    assert(index >= 0);
    assert(index < L);
@@ -236,7 +253,7 @@ bin_t<N, L> iNxM<N, L>::read_binary(int32_t index) const {
 
 } // namespace iNxM
 
-/// Immediate shuffle indices:
+/// Immediate mode argument of i8x16.shuffle
 using i5x16 = iNxM::iNxM<5, 16>;
 
 #endif // WABT_INXM_H_

@@ -613,10 +613,10 @@ Result BinaryReaderObjdumpDisassemble::OnOpcodeI5x16(i5x16 value) {
   }
   LogOpcode(
       immediate_len,
-      "%llu %llu %llu %llu \
-%llu %llu %llu %llu \
-%llu %llu %llu %llu \
-%llu %llu %llu %llu",
+      "%llu %llu %llu %llu "
+      "%llu %llu %llu %llu "
+      "%llu %llu %llu %llu "
+      "%llu %llu %llu %llu",
       value.read_text(0), value.read_text(1), value.read_text(2), value.read_text(3),
       value.read_text(4), value.read_text(5), value.read_text(6), value.read_text(7),
       value.read_text(8), value.read_text(9), value.read_text(10), value.read_text(11),
