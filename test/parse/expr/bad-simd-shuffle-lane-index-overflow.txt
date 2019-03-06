@@ -9,16 +9,7 @@
     ))
 
 (;; STDERR ;;;
-out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:5: error: lane index must be less than 32 (got 100)
+out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:19: error: shuffle index "0x01020304" out-of-range [0, 32)
     v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
-    ^^^^^^^^^^^^^
-out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:5: error: lane index must be less than 32 (got 56)
-    v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
-    ^^^^^^^^^^^^^
-out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:5: error: lane index must be less than 32 (got 77)
-    v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
-    ^^^^^^^^^^^^^
-out/test/parse/expr/bad-simd-shuffle-lane-index-overflow.txt:8:5: error: type mismatch in function, expected [] but got [v128]
-    v8x16.shuffle 0x01020304 05060708 0x090a0b0c 0x00000000
-    ^^^^^^^^^^^^^
+                  ^^^^^^^^^^
 ;;; STDERR ;;)

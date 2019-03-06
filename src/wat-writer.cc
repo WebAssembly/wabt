@@ -943,8 +943,10 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
     SimdShuffleOpExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
-  writer_->Writef(" 0x%08x 0x%08x 0x%08x 0x%08x", (expr->val.v[0]), (expr->val.v[1]),
-                  (expr->val.v[2]), (expr->val.v[3]));
+  uint8_t* value_ptr = reinterpret_cast<uint8_t*>(&expr->val);
+  for (int32_t lane = 0; lane < 16; ++lane) {
+    writer_->Writef(" %u", value_ptr[lane]);
+  }
   writer_->WritePutsNewline("");
   return Result::Ok;
 }

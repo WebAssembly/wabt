@@ -1686,10 +1686,39 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::SimdShuffleOp: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      Const const_;
-      CHECK_RESULT((ParseSimdConst(&const_, Type::I32, sizeof(v128))));
+      v128 value;
+      char* value_ptr = reinterpret_cast<char*>(&value);
+      for (int32_t lane = 0; lane < 16; ++lane) {
+        Location loc = GetLocation();
+
+        if (!PeekMatch(TokenType::Nat))
+          return ErrorExpected({"an natural number in range [0, 32)"});
+
+        Literal literal = Consume().literal();
+
+        string_view sv = literal.text;
+        const char* s = sv.begin();
+        const char* end = sv.end();
+        Result result;
+
+        uint32_t value = 0;
+
+        result = ParseInt32(s, end, &value, ParseIntType::UnsignedOnly);
+
+        if (Failed(result)) {
+          Error(loc, "invalid literal \"%s\"", literal.text.c_str());
+          return Result::Error;
+        }
+
+        if (value > 31) {
+          Error(loc, "shuffle index \"%s\" out-of-range [0, 32)", literal.text.c_str());
+          return Result::Error;
+        }
+
+        *(value_ptr + lane) = static_cast<uint8_t>(value);
+      }
       out_expr->reset(
-          new SimdShuffleOpExpr(token.opcode(), const_.v128_bits, loc));
+          new SimdShuffleOpExpr(token.opcode(), value, loc));
       break;
     }
 

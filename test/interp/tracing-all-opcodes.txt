@@ -222,7 +222,7 @@
   (; 0xfd 0x00 ;) (func (export "v128.load") i32.const 1 v128.load offset=3 drop)
   (; 0xfd 0x01 ;) (func (export "v128.store") i32.const 1 v128.const i32 1 1 1 1 v128.store offset=3)
   (; 0xfd 0x02 ;) (func (export "v128.const") v128.const i32 1 1 1 1 drop)
-  (; 0xfd 0x03 ;) (func (export "v8x16.shuffle") v128.const i32 1 1 1 1 v128.const i32 2 2 2 2 v8x16.shuffle 1 1 1 1 drop)
+  (; 0xfd 0x03 ;) (func (export "v8x16.shuffle") v128.const i32 1 1 1 1 v128.const i32 2 2 2 2 v8x16.shuffle 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 drop)
   (; 0xfd 0x04 ;) (func (export "i8x16.splat") i32.const 1 i8x16.splat drop)
   (; 0xfd 0x05 ;) (func (export "i8x16.extract_lane_s") v128.const i32 1 1 1 1 i8x16.extract_lane_s 15 drop)
   (; 0xfd 0x06 ;) (func (export "i8x16.extract_lane_u") v128.const i32 1 1 1 1 i8x16.extract_lane_u 15 drop)
@@ -1616,7 +1616,7 @@ v128.const() =>
 >>> running export "v8x16.shuffle":
 #0. 5104: V:0  | v128.const 0x00000001 0x00000001 0x00000001 0x00000001
 #0. 5124: V:1  | v128.const 0x00000002 0x00000002 0x00000002 0x00000002
-#0. 5144: V:2  | v8x16.shuffle $0x00000001 00000001 00000001 00000001 $0x00000002 00000002 00000002 00000002 : with lane imm: $0x00000001 00000001 00000001 00000001
+#0. 5144: V:2  | v8x16.shuffle $0x00000001 00000001 00000001 00000001 $0x00000002 00000002 00000002 00000002 : with lane imm: $0x01010101 01010101 01010101 01010101
 #0. 5164: V:1  | drop
 #0. 5168: V:0  | return
 v8x16.shuffle() =>
