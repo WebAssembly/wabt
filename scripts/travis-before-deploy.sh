@@ -21,6 +21,10 @@ set -o errexit
 SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source "${SCRIPT_DIR}/travis-common.sh"
 
+sha256sum() {
+  ${SCRIPT_DIR}/sha256sum.py ${1} > ${1}.sha256
+}
+
 if [[ -n ${WABT_DEPLOY:-} ]]; then
   # Rebuild the WABT_DEPLOY target so it copies the results into bin/
   make ${WABT_DEPLOY}
@@ -28,5 +32,19 @@ if [[ -n ${WABT_DEPLOY:-} ]]; then
   PKGNAME="wabt-${TRAVIS_TAG}-${TRAVIS_OS_NAME}"
   mv bin wabt-${TRAVIS_TAG}
   tar -czf ${PKGNAME}.tar.gz wabt-${TRAVIS_TAG}
-  ${SCRIPT_DIR}/sha256sum.py ${PKGNAME}.tar.gz > ${PKGNAME}.tar.gz.sha256
+  sha256sum ${PKGNAME}.tar.gz
+
+  # We want to store the output in the `webassembly` bucket, with the directory
+  # `wabt/${TRAVIS_TAG}/${TRAVIS_OS_NAME}/`. The root directory is `gcs/` so it
+  # can be recursively copied by the deployment step.
+  GCS_DIR=gcs/wabt/${TRAVIS_TAG}/${TRAVIS_OS_NAME}
+  mkdir -p ${GCS_DIR}
+  cp wabt-${TRAVIS_TAG}/* ${GCS_DIR}
+
+  # Create sha256 files for each tool.
+  cd ${GCS_DIR}
+  for tool in *; do
+    sha256sum ${tool}
+  done
+  cd -
 fi
