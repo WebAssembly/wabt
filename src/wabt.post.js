@@ -25,6 +25,8 @@ var FEATURES = [
   'threads',
   'multi_value',
   'tail_call',
+  'bulk_memory',
+  'reference_types',
 ];
 
 /// If value is not undefined, return it. Otherwise return default_.

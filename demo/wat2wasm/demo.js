@@ -33,6 +33,8 @@ var FEATURES = [
   'threads',
   'multi_value',
   'tail_call',
+  'bulk_memory',
+  'reference_types',
 ];
 
 var kCompileMinMS = 100;
