@@ -222,7 +222,7 @@
   (; 0xfd 0x00 ;) (func (export "v128.load") i32.const 1 v128.load offset=3 drop)
   (; 0xfd 0x01 ;) (func (export "v128.store") i32.const 1 v128.const i32 1 1 1 1 v128.store offset=3)
   (; 0xfd 0x02 ;) (func (export "v128.const") v128.const i32 1 1 1 1 drop)
-  (; 0xfd 0x03 ;) (func (export "v8x16.shuffle") v128.const i32 1 1 1 1 v128.const i32 2 2 2 2 v8x16.shuffle 1 1 1 1 drop)
+  (; 0xfd 0x03 ;) (func (export "v8x16.shuffle") v128.const i32 1 1 1 1 v128.const i32 2 2 2 2 v8x16.shuffle 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 drop)
   (; 0xfd 0x04 ;) (func (export "i8x16.splat") i32.const 1 i8x16.splat drop)
   (; 0xfd 0x05 ;) (func (export "i8x16.extract_lane_s") v128.const i32 1 1 1 1 i8x16.extract_lane_s 15 drop)
   (; 0xfd 0x06 ;) (func (export "i8x16.extract_lane_u") v128.const i32 1 1 1 1 i8x16.extract_lane_u 15 drop)
@@ -4514,7 +4514,7 @@
 000224f: 0200 0000 0200 0000 0200 0000 0200 0000   ; v128 literal
 000225f: fd                                        ; prefix
 0002260: 03                                        ; v8x16.shuffle
-0002261: 0100 0000 0100 0000 0100 0000 0100 0000   ; Simd Lane[16] literal
+0002261: 0101 0101 0101 0101 0101 0101 0101 0101   ; Simd Lane[16] literal
 0002271: 1a                                        ; drop
 0002272: 0b                                        ; end
 0002239: 39                                        ; FIXUP func body size
@@ -9234,7 +9234,7 @@ BeginModule(version: 1)
     OnLocalDeclCount(0)
     OnV128ConstExpr(0x00000001 0x00000001 0x00000001 0x00000001)
     OnV128ConstExpr(0x00000002 0x00000002 0x00000002 0x00000002)
-    OnSimdShuffleOpExpr (lane: 0x00000001 00000001 00000001 00000001)
+    OnSimdShuffleOpExpr (lane: 0x01010101 01010101 01010101 01010101)
     OnDropExpr
     EndFunctionBody(190)
     BeginFunctionBody(191, size:7)
@@ -11426,7 +11426,7 @@ EndModule
 5144| return
 5148| v128.const 0x00000001 0x00000001 0x00000001 0x00000001
 5168| v128.const 0x00000002 0x00000002 0x00000002 0x00000002
-5188| v8x16.shuffle %[-2], %[-1] : (Lane imm: $0x00000001 0x00000001 0x00000001 0x00000001 )
+5188| v8x16.shuffle %[-2], %[-1] : (Lane imm: $0x01010101 0x01010101 0x01010101 0x01010101 )
 5208| drop
 5212| return
 5216| i32.const 1

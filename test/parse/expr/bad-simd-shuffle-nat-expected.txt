@@ -9,7 +9,7 @@
     ))
 
 (;; STDERR ;;;
-out/test/parse/expr/bad-simd-shuffle-nat-expected.txt:8:19: error: unexpected token "$0x01020304", expected an Nat literal (e.g. 123).
+out/test/parse/expr/bad-simd-shuffle-nat-expected.txt:8:19: error: unexpected token "$0x01020304", expected a natural number in range [0, 32).
     v8x16.shuffle $0x01020304 0x05060708 0x090a0b0c 0x00000000
                   ^^^^^^^^^^^
 ;;; STDERR ;;)
