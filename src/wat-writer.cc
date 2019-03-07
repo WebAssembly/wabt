@@ -17,6 +17,7 @@
 #include "src/wat-writer.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cinttypes>
 #include <cstdarg>
@@ -943,9 +944,9 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
     SimdShuffleOpExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
-  uint8_t* value_ptr = reinterpret_cast<uint8_t*>(&expr->val);
+  std::array<uint8_t, 16> values = Bitcast<std::array<uint8_t, 16>>(expr->val);
   for (int32_t lane = 0; lane < 16; ++lane) {
-    writer_->Writef(" %u", value_ptr[lane]);
+    writer_->Writef(" %u", values[lane]);
   }
   writer_->WritePutsNewline("");
   return Result::Ok;
