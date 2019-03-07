@@ -1688,11 +1688,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ErrorUnlessOpcodeEnabled(token);
       v128 value;
       char* value_ptr = reinterpret_cast<char*>(&value);
-      for (int32_t lane = 0; lane < 16; ++lane) {
+      for (int lane = 0; lane < 16; ++lane) {
         Location loc = GetLocation();
 
-        if (!PeekMatch(TokenType::Nat))
-          return ErrorExpected({"an natural number in range [0, 32)"});
+        if (!PeekMatch(TokenType::Nat)) {
+          return ErrorExpected({"a natural number in range [0, 32)"});
+        }
 
         Literal literal = Consume().literal();
 

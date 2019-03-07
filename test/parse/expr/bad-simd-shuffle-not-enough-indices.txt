@@ -9,7 +9,7 @@
     ))
 
 (;; STDERR ;;;
-out/test/parse/expr/bad-simd-shuffle-not-enough-indices.txt:9:5: error: unexpected token ")", expected an natural number in range [0, 32).
+out/test/parse/expr/bad-simd-shuffle-not-enough-indices.txt:9:5: error: unexpected token ")", expected a natural number in range [0, 32).
     ))
     ^
 ;;; STDERR ;;)
