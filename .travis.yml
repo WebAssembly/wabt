@@ -71,7 +71,12 @@ matrix:
   fast_finish: true
 
 before_deploy:
-  - scripts/travis-before-deploy.sh
+  # Only run deploy script once (see https://github.com/travis-ci/travis-ci/issues/2570#issuecomment-171262181)
+  - >
+    if ! [ "$BEFORE_DEPLOY_RUN" ]; then
+      export BEFORE_DEPLOY_RUN=1;
+      scripts/travis-before-deploy.sh
+    fi
 
 deploy:
   - provider: releases
