@@ -1686,8 +1686,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::SimdShuffleOp: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
-      v128 value;
-      char* value_ptr = reinterpret_cast<char*>(&value);
+      uint8_t values[16];
       for (int lane = 0; lane < 16; ++lane) {
         Location loc = GetLocation();
 
@@ -1703,7 +1702,6 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         Result result;
 
         uint32_t value = 0;
-
         result = ParseInt32(s, end, &value, ParseIntType::UnsignedOnly);
 
         if (Failed(result)) {
@@ -1716,8 +1714,10 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
           return Result::Error;
         }
 
-        *(value_ptr + lane) = static_cast<uint8_t>(value);
+        values[lane] = static_cast<uint8_t>(value);
       }
+      v128 value = Bitcast<v128>(values);
+
       out_expr->reset(
           new SimdShuffleOpExpr(token.opcode(), value, loc));
       break;
