@@ -1,0 +1,26 @@
+;;; TOOL: run-gen-wasm
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[2] sig[0] sig[0] }
+section(CODE) {
+  count[2]
+  func {
+    local_decls[1]
+    locals[0] i32
+  }
+  func {
+    local_decls[4]
+    locals[1] i64
+    locals[0] i32
+    locals[2] f64
+    locals[0] f32
+  }
+}
+(;; STDOUT ;;;
+(module
+  (type (;0;) (func))
+  (func (;0;) (type 0))
+  (func (;1;) (type 0)
+    (local i64 f64 f64)))
+;;; STDOUT ;;)

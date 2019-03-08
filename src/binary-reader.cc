@@ -2122,7 +2122,6 @@ Result BinaryReader::ReadCodeSection(Offset section_size) {
     for (Index k = 0; k < num_local_decls; ++k) {
       Index num_local_types;
       CHECK_RESULT(ReadIndex(&num_local_types, "local type count"));
-      ERROR_UNLESS(num_local_types > 0, "local count must be > 0");
       total_locals += num_local_types;
       ERROR_UNLESS(total_locals < UINT32_MAX,
                    "local count must be < 0x10000000");

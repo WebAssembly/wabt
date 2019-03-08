@@ -466,8 +466,9 @@ class LocalTypes {
   const Decls& decls() const { return decls_; }
 
   void AppendDecl(Type type, Index count) {
-    assert(count > 0);
-    decls_.emplace_back(type, count);
+    if (count != 0) {
+      decls_.emplace_back(type, count);
+    }
   }
 
   Index size() const;
