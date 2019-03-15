@@ -534,10 +534,10 @@ Result ParseHexdigit(char c, uint32_t* out) {
   if (static_cast<unsigned int>(c - '0') <= 9) {
     *out = c - '0';
     return Result::Ok;
-  } else if (static_cast<unsigned int>(c - 'a') <= 6) {
+  } else if (static_cast<unsigned int>(c - 'a') < 6) {
     *out = 10 + (c - 'a');
     return Result::Ok;
-  } else if (static_cast<unsigned int>(c - 'A') <= 6) {
+  } else if (static_cast<unsigned int>(c - 'A') < 6) {
     *out = 10 + (c - 'A');
     return Result::Ok;
   }
@@ -554,20 +554,23 @@ Result ParseUint64(const char* s, const char* end, uint64_t* out) {
     if (s == end) {
       return Result::Error;
     }
+    constexpr uint64_t kMaxDiv16 = UINT64_MAX / 16;
+    constexpr uint64_t kMaxMod16 = UINT64_MAX % 16;
     for (; s < end; ++s) {
       uint32_t digit;
       if (*s == '_') {
         continue;
       }
       CHECK_RESULT(ParseHexdigit(*s, &digit));
-      uint64_t old_value = value;
-      value = value * 16 + digit;
       // Check for overflow.
-      if (old_value > value) {
+      if (value > kMaxDiv16 || (value == kMaxDiv16 && digit > kMaxMod16)) {
         return Result::Error;
       }
+      value = value * 16 + digit;
     }
   } else {
+    constexpr uint64_t kMaxDiv10 = UINT64_MAX / 10;
+    constexpr uint64_t kMaxMod10 = UINT64_MAX % 10;
     for (; s < end; ++s) {
       if (*s == '_') {
         continue;
@@ -576,12 +579,11 @@ Result ParseUint64(const char* s, const char* end, uint64_t* out) {
       if (digit > 9) {
         return Result::Error;
       }
-      uint64_t old_value = value;
-      value = value * 10 + digit;
       // Check for overflow.
-      if (old_value > value) {
+      if (value > kMaxDiv10 || (value == kMaxDiv10 && digit > kMaxMod10)) {
         return Result::Error;
       }
+      value = value * 10 + digit;
     }
   }
   if (s != end) {
