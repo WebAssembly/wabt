@@ -1120,8 +1120,10 @@ void Validator::CheckElemSegments(const Module* module) {
     if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(&field)) {
       auto&& elem_segment = elem_segment_field->elem_segment;
       const Table* table;
-      for (const Var& var : elem_segment.vars) {
-        CheckFuncVar(&var, nullptr);
+      for (const ElemExpr& elem_expr : elem_segment.elem_exprs) {
+        if (elem_expr.kind == ElemExprKind::RefFunc) {
+          CheckFuncVar(&elem_expr.var, nullptr);
+        }
       }
 
       if (elem_segment.passive)  {

@@ -1024,11 +1024,30 @@ Result BinaryWriter::WriteModule() {
         stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));
         WriteInitExpr(segment->offset);
       }
-      WriteU32Leb128(stream_, segment->vars.size(), "num function indices");
-      for (const Var& var : segment->vars) {
-        Index index = module_->GetFuncIndex(var);
-        WriteU32Leb128WithReloc(index, "function index",
-                                RelocType::FuncIndexLEB);
+      WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elem exprs");
+      if (segment->passive) {
+        for (const ElemExpr& elem_expr : segment->elem_exprs) {
+          switch (elem_expr.kind) {
+            case ElemExprKind::RefNull:
+              WriteOpcode(stream_, Opcode::RefNull);
+              break;
+
+            case ElemExprKind::RefFunc:
+              WriteOpcode(stream_, Opcode::RefFunc);
+              WriteU32Leb128WithReloc(module_->GetFuncIndex(elem_expr.var),
+                                      "function index",
+                                      RelocType::FuncIndexLEB);
+              break;
+          }
+          WriteOpcode(stream_, Opcode::End);
+        }
+      } else {
+        // Active segment.
+        for (const ElemExpr& elem_expr : segment->elem_exprs) {
+          assert(elem_expr.kind == ElemExprKind::RefFunc);
+          WriteU32Leb128WithReloc(module_->GetFuncIndex(elem_expr.var),
+                                  "function index", RelocType::FuncIndexLEB);
+        }
       }
     }
     EndSection();

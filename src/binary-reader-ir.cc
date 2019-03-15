@@ -1008,7 +1008,7 @@ Result BinaryReaderIR::OnElemSegmentFunctionIndexCount(Index index,
   assert(index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[index];
   WABT_TRY
-  segment->vars.reserve(count);
+  segment->elem_exprs.reserve(count);
   WABT_CATCH_BAD_ALLOC
   return Result::Ok;
 }
@@ -1017,9 +1017,7 @@ Result BinaryReaderIR::OnElemSegmentFunctionIndex(Index segment_index,
                                                   Index func_index) {
   assert(segment_index == module_->elem_segments.size() - 1);
   ElemSegment* segment = module_->elem_segments[segment_index];
-  segment->vars.emplace_back();
-  Var* var = &segment->vars.back();
-  *var = Var(func_index, GetLocation());
+  segment->elem_exprs.emplace_back(Var(func_index, GetLocation()));
   return Result::Ok;
 }
 

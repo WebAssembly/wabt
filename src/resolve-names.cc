@@ -447,8 +447,11 @@ void NameResolver::VisitEvent(Event* event) {
 void NameResolver::VisitElemSegment(ElemSegment* segment) {
   ResolveTableVar(&segment->table_var);
   visitor_.VisitExprList(segment->offset);
-  for (Var& var : segment->vars)
-    ResolveFuncVar(&var);
+  for (ElemExpr& elem_expr : segment->elem_exprs) {
+    if (elem_expr.kind == ElemExprKind::RefFunc) {
+      ResolveFuncVar(&elem_expr.var);
+    }
+  }
 }
 
 void NameResolver::VisitDataSegment(DataSegment* segment) {
