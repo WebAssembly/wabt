@@ -445,7 +445,6 @@ struct FloatTraits<float> {
   static const uint32_t kNegZero = 0x80000000U;
   static const uint32_t kQuietNan = 0x7fc00000U;
   static const uint32_t kQuietNegNan = 0xffc00000U;
-  static const uint32_t kQuietNanBit = 0x00400000U;
   static const int kSigBits = 23;
   static const uint32_t kSigMask = 0x7fffff;
   static const uint32_t kSignMask = 0x80000000U;
@@ -462,6 +461,10 @@ struct FloatTraits<float> {
 
   static bool IsArithmeticNan(uint32_t bits) {
     return (bits & kQuietNan) == kQuietNan;
+  }
+
+  static uint32_t CanonicalizeNan(uint32_t bits) {
+    return WABT_UNLIKELY(IsNan(bits)) ? kQuietNan : bits;
   }
 };
 
@@ -531,7 +534,6 @@ struct FloatTraits<double> {
   static const uint64_t kNegZero = 0x8000000000000000ULL;
   static const uint64_t kQuietNan = 0x7ff8000000000000ULL;
   static const uint64_t kQuietNegNan = 0xfff8000000000000ULL;
-  static const uint64_t kQuietNanBit = 0x0008000000000000ULL;
   static const int kSigBits = 52;
   static const uint64_t kSigMask = 0xfffffffffffffULL;
   static const uint64_t kSignMask = 0x8000000000000000ULL;
@@ -548,6 +550,10 @@ struct FloatTraits<double> {
 
   static bool IsArithmeticNan(uint64_t bits) {
     return (bits & kQuietNan) == kQuietNan;
+  }
+
+  static uint64_t CanonicalizeNan(uint64_t bits) {
+    return WABT_UNLIKELY(IsNan(bits)) ? kQuietNan : bits;
   }
 };
 
@@ -697,6 +703,21 @@ template<> uint64_t GetValue<uint64_t>(Value v) { return v.i64; }
 template<> uint32_t GetValue<float>(Value v) { return v.f32_bits; }
 template<> uint64_t GetValue<double>(Value v) { return v.f64_bits; }
 template<> v128 GetValue<v128>(Value v) { return v.v128_bits; }
+
+template <typename T>
+ValueTypeRep<T> CanonicalizeNan(ValueTypeRep<T> rep) {
+  return rep;
+}
+
+template <>
+ValueTypeRep<float> CanonicalizeNan<float>(ValueTypeRep<float> rep) {
+  return FloatTraits<float>::CanonicalizeNan(rep);
+}
+
+template <>
+ValueTypeRep<double> CanonicalizeNan<double>(ValueTypeRep<double> rep) {
+  return FloatTraits<double>::CanonicalizeNan(rep);
+}
 
 #define TRAP(type) return Result::Trap##type
 #define TRAP_UNLESS(cond, type) TRAP_IF(!(cond), type)
@@ -1005,7 +1026,7 @@ Result Thread::BinopTrap(BinopTrapFunc<R, T> func) {
 // {i,f}{32,64}.add
 template <typename T>
 ValueTypeRep<T> Add(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
-  return ToRep(FromRep<T>(lhs_rep) + FromRep<T>(rhs_rep));
+  return CanonicalizeNan<T>(ToRep(FromRep<T>(lhs_rep) + FromRep<T>(rhs_rep)));
 }
 
 template <typename T, typename R>
@@ -1063,13 +1084,13 @@ int32_t SimdIsLaneTrue(ValueTypeRep<T> value, int32_t true_cond) {
 // {i,f}{32,64}.sub
 template <typename T>
 ValueTypeRep<T> Sub(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
-  return ToRep(FromRep<T>(lhs_rep) - FromRep<T>(rhs_rep));
+  return CanonicalizeNan<T>(ToRep(FromRep<T>(lhs_rep) - FromRep<T>(rhs_rep)));
 }
 
 // {i,f}{32,64}.mul
 template <typename T>
 ValueTypeRep<T> Mul(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
-  return ToRep(FromRep<T>(lhs_rep) * FromRep<T>(rhs_rep));
+  return CanonicalizeNan<T>(ToRep(FromRep<T>(lhs_rep) * FromRep<T>(rhs_rep)));
 }
 
 // i{32,64}.{div,rem}_s are special-cased because they trap when dividing the
@@ -1140,16 +1161,15 @@ ValueTypeRep<T> FloatDiv(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
   typedef FloatTraits<T> Traits;
   ValueTypeRep<T> result;
   if (WABT_UNLIKELY(Traits::IsZero(rhs_rep))) {
-    if (Traits::IsNan(lhs_rep)) {
-      result = lhs_rep | Traits::kQuietNan;
-    } else if (Traits::IsZero(lhs_rep)) {
+    if (Traits::IsNan(lhs_rep) || Traits::IsZero(lhs_rep)) {
       result = Traits::kQuietNan;
     } else {
       auto sign = (lhs_rep & Traits::kSignMask) ^ (rhs_rep & Traits::kSignMask);
       result = sign | Traits::kInf;
     }
   } else {
-    result = ToRep(FromRep<T>(lhs_rep) / FromRep<T>(rhs_rep));
+    result =
+        CanonicalizeNan<T>(ToRep(FromRep<T>(lhs_rep) / FromRep<T>(rhs_rep)));
   }
   return result;
 }
@@ -1245,51 +1265,31 @@ ValueTypeRep<T> FloatNeg(ValueTypeRep<T> v_rep) {
 // f{32,64}.ceil
 template <typename T>
 ValueTypeRep<T> FloatCeil(ValueTypeRep<T> v_rep) {
-  auto result = ToRep(std::ceil(FromRep<T>(v_rep)));
-  if (WABT_UNLIKELY(FloatTraits<T>::IsNan(result))) {
-    result |= FloatTraits<T>::kQuietNanBit;
-  }
-  return result;
+  return CanonicalizeNan<T>(ToRep(std::ceil(FromRep<T>(v_rep))));
 }
 
 // f{32,64}.floor
 template <typename T>
 ValueTypeRep<T> FloatFloor(ValueTypeRep<T> v_rep) {
-  auto result = ToRep(std::floor(FromRep<T>(v_rep)));
-  if (WABT_UNLIKELY(FloatTraits<T>::IsNan(result))) {
-    result |= FloatTraits<T>::kQuietNanBit;
-  }
-  return result;
+  return CanonicalizeNan<T>(ToRep(std::floor(FromRep<T>(v_rep))));
 }
 
 // f{32,64}.trunc
 template <typename T>
 ValueTypeRep<T> FloatTrunc(ValueTypeRep<T> v_rep) {
-  auto result = ToRep(std::trunc(FromRep<T>(v_rep)));
-  if (WABT_UNLIKELY(FloatTraits<T>::IsNan(result))) {
-    result |= FloatTraits<T>::kQuietNanBit;
-  }
-  return result;
+  return CanonicalizeNan<T>(ToRep(std::trunc(FromRep<T>(v_rep))));
 }
 
 // f{32,64}.nearest
 template <typename T>
 ValueTypeRep<T> FloatNearest(ValueTypeRep<T> v_rep) {
-  auto result = ToRep(std::nearbyint(FromRep<T>(v_rep)));
-  if (WABT_UNLIKELY(FloatTraits<T>::IsNan(result))) {
-    result |= FloatTraits<T>::kQuietNanBit;
-  }
-  return result;
+  return CanonicalizeNan<T>(ToRep(std::nearbyint(FromRep<T>(v_rep))));
 }
 
 // f{32,64}.sqrt
 template <typename T>
 ValueTypeRep<T> FloatSqrt(ValueTypeRep<T> v_rep) {
-  auto result = ToRep(std::sqrt(FromRep<T>(v_rep)));
-  if (WABT_UNLIKELY(FloatTraits<T>::IsNan(result))) {
-    result |= FloatTraits<T>::kQuietNanBit;
-  }
-  return result;
+  return CanonicalizeNan<T>(ToRep(std::sqrt(FromRep<T>(v_rep))));
 }
 
 // f{32,64}.min
@@ -1297,10 +1297,8 @@ template <typename T>
 ValueTypeRep<T> FloatMin(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
   typedef FloatTraits<T> Traits;
 
-  if (WABT_UNLIKELY(Traits::IsNan(lhs_rep))) {
-    return lhs_rep | Traits::kQuietNanBit;
-  } else if (WABT_UNLIKELY(Traits::IsNan(rhs_rep))) {
-    return rhs_rep | Traits::kQuietNanBit;
+  if (WABT_UNLIKELY(Traits::IsNan(lhs_rep) || Traits::IsNan(rhs_rep))) {
+    return Traits::kQuietNan;
   } else if (WABT_UNLIKELY(Traits::IsZero(lhs_rep) &&
                            Traits::IsZero(rhs_rep))) {
     // min(0.0, -0.0) == -0.0, but std::min won't produce the correct result.
@@ -1317,10 +1315,8 @@ template <typename T>
 ValueTypeRep<T> FloatMax(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
   typedef FloatTraits<T> Traits;
 
-  if (WABT_UNLIKELY(Traits::IsNan(lhs_rep))) {
-    return lhs_rep | Traits::kQuietNanBit;
-  } else if (WABT_UNLIKELY(Traits::IsNan(rhs_rep))) {
-    return rhs_rep | Traits::kQuietNanBit;
+  if (WABT_UNLIKELY(Traits::IsNan(lhs_rep) || Traits::IsNan(rhs_rep))) {
+    return Traits::kQuietNan;
   } else if (WABT_UNLIKELY(Traits::IsZero(lhs_rep) &&
                            Traits::IsZero(rhs_rep))) {
     // min(0.0, -0.0) == -0.0, but std::min won't produce the correct result.
@@ -2393,7 +2389,6 @@ Result Thread::Run(int num_instructions) {
 
       case Opcode::F32DemoteF64: {
         typedef FloatTraits<float> F32Traits;
-        typedef FloatTraits<double> F64Traits;
 
         uint64_t value = PopRep<double>();
         if (WABT_LIKELY((IsConversionInRange<float, double>(value)))) {
@@ -2402,15 +2397,12 @@ Result Thread::Run(int num_instructions) {
           CHECK_TRAP(PushRep<float>(F32Traits::kMax));
         } else if (IsInRangeF64DemoteF32RoundToNegF32Max(value)) {
           CHECK_TRAP(PushRep<float>(F32Traits::kNegMax));
+        } else if (FloatTraits<double>::IsNan(value)) {
+          CHECK_TRAP(PushRep<float>(F32Traits::kQuietNan));
         } else {
+          // Infinity.
           uint32_t sign = (value >> 32) & F32Traits::kSignMask;
-          uint32_t tag = 0;
-          if (F64Traits::IsNan(value)) {
-            tag = F32Traits::kQuietNanBit |
-                  ((value >> (F64Traits::kSigBits - F32Traits::kSigBits)) &
-                   F32Traits::kSigMask);
-          }
-          CHECK_TRAP(PushRep<float>(sign | F32Traits::kInf | tag));
+          CHECK_TRAP(PushRep<float>(sign | F32Traits::kInf));
         }
         break;
       }
@@ -2436,9 +2428,15 @@ Result Thread::Run(int num_instructions) {
             Push<double>(wabt_convert_uint64_to_double(Pop<uint64_t>())));
         break;
 
-      case Opcode::F64PromoteF32:
-        CHECK_TRAP(Push<double>(Pop<float>()));
+      case Opcode::F64PromoteF32: {
+        uint32_t value = PopRep<float>();
+        if (WABT_UNLIKELY(FloatTraits<float>::IsNan(value))) {
+          CHECK_TRAP(PushRep<double>(FloatTraits<double>::kQuietNan));
+        } else {
+          CHECK_TRAP(Push<double>(Bitcast<float>(value)));
+        }
         break;
+      }
 
       case Opcode::F64ReinterpretI64:
         CHECK_TRAP(PushRep<double>(Pop<uint64_t>()));
