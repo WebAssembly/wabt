@@ -1,5 +1,80 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/conversions.wast
 (;; STDOUT ;;;
-401/401 tests passed.
+out/test/spec/conversions.wast:465: assert_invalid passed:
+  error: type mismatch in i32.wrap_i64, expected [i64] but got [f32]
+  000001e: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:466: assert_invalid passed:
+  error: type mismatch in i32.trunc_f32_s, expected [f32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:467: assert_invalid passed:
+  error: type mismatch in i32.trunc_f32_u, expected [f32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:468: assert_invalid passed:
+  error: type mismatch in i32.trunc_f64_s, expected [f64] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:469: assert_invalid passed:
+  error: type mismatch in i32.trunc_f64_u, expected [f64] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:470: assert_invalid passed:
+  error: type mismatch in i32.reinterpret_f32, expected [f32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:471: assert_invalid passed:
+  error: type mismatch in i64.extend_i32_s, expected [i32] but got [f32]
+  000001e: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:472: assert_invalid passed:
+  error: type mismatch in i64.extend_i32_u, expected [i32] but got [f32]
+  000001e: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:473: assert_invalid passed:
+  error: type mismatch in i64.trunc_f32_s, expected [f32] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:474: assert_invalid passed:
+  error: type mismatch in i64.trunc_f32_u, expected [f32] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:475: assert_invalid passed:
+  error: type mismatch in i64.trunc_f64_s, expected [f64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:476: assert_invalid passed:
+  error: type mismatch in i64.trunc_f64_u, expected [f64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:477: assert_invalid passed:
+  error: type mismatch in i64.reinterpret_f64, expected [f64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:478: assert_invalid passed:
+  error: type mismatch in f32.convert_i32_s, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:479: assert_invalid passed:
+  error: type mismatch in f32.convert_i32_u, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:480: assert_invalid passed:
+  error: type mismatch in f32.convert_i64_s, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:481: assert_invalid passed:
+  error: type mismatch in f32.convert_i64_u, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:482: assert_invalid passed:
+  error: type mismatch in f32.demote_f64, expected [f64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:483: assert_invalid passed:
+  error: type mismatch in f32.reinterpret_i32, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:484: assert_invalid passed:
+  error: type mismatch in f64.convert_i32_s, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:485: assert_invalid passed:
+  error: type mismatch in f64.convert_i32_u, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:486: assert_invalid passed:
+  error: type mismatch in f64.convert_i64_s, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:487: assert_invalid passed:
+  error: type mismatch in f64.convert_i64_u, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:488: assert_invalid passed:
+  error: type mismatch in f64.promote_f32, expected [f32] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/conversions.wast:489: assert_invalid passed:
+  error: type mismatch in f64.reinterpret_i64, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+426/426 tests passed.
 ;;; STDOUT ;;)

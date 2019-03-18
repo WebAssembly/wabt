@@ -1,5 +1,20 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/memory_grow.wast
 (;; STDOUT ;;;
-84/84 tests passed.
+out/test/spec/memory_grow.wast:313: assert_invalid passed:
+  error: type mismatch in memory.grow, expected [i32] but got []
+  000001e: error: OnMemoryGrowExpr callback failed
+out/test/spec/memory_grow.wast:322: assert_invalid passed:
+  error: type mismatch in memory.grow, expected [i32] but got []
+  0000022: error: OnMemoryGrowExpr callback failed
+out/test/spec/memory_grow.wast:332: assert_invalid passed:
+  error: type mismatch in memory.grow, expected [i32] but got []
+  0000022: error: OnMemoryGrowExpr callback failed
+out/test/spec/memory_grow.wast:342: assert_invalid passed:
+  error: type mismatch in memory.grow, expected [i32] but got []
+  0000024: error: OnMemoryGrowExpr callback failed
+out/test/spec/memory_grow.wast:355: assert_invalid passed:
+  error: type mismatch in memory.grow, expected [i32] but got [f32]
+  0000024: error: OnMemoryGrowExpr callback failed
+89/89 tests passed.
 ;;; STDOUT ;;)

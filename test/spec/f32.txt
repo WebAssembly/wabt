@@ -2,5 +2,38 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/f32.wast
 (;; STDOUT ;;;
-2500/2500 tests passed.
+out/test/spec/f32.wast:2523: assert_invalid passed:
+  error: type mismatch in f32.add, expected [f32, f32] but got [i64, f64]
+  0000024: error: OnBinaryExpr callback failed
+out/test/spec/f32.wast:2524: assert_invalid passed:
+  error: type mismatch in f32.div, expected [f32, f32] but got [i64, f64]
+  0000024: error: OnBinaryExpr callback failed
+out/test/spec/f32.wast:2525: assert_invalid passed:
+  error: type mismatch in f32.max, expected [f32, f32] but got [i64, f64]
+  0000024: error: OnBinaryExpr callback failed
+out/test/spec/f32.wast:2526: assert_invalid passed:
+  error: type mismatch in f32.min, expected [f32, f32] but got [i64, f64]
+  0000024: error: OnBinaryExpr callback failed
+out/test/spec/f32.wast:2527: assert_invalid passed:
+  error: type mismatch in f32.mul, expected [f32, f32] but got [i64, f64]
+  0000024: error: OnBinaryExpr callback failed
+out/test/spec/f32.wast:2528: assert_invalid passed:
+  error: type mismatch in f32.sub, expected [f32, f32] but got [i64, f64]
+  0000024: error: OnBinaryExpr callback failed
+out/test/spec/f32.wast:2529: assert_invalid passed:
+  error: type mismatch in f32.ceil, expected [f32] but got [i64]
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/f32.wast:2530: assert_invalid passed:
+  error: type mismatch in f32.floor, expected [f32] but got [i64]
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/f32.wast:2531: assert_invalid passed:
+  error: type mismatch in f32.nearest, expected [f32] but got [i64]
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/f32.wast:2532: assert_invalid passed:
+  error: type mismatch in f32.sqrt, expected [f32] but got [i64]
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/f32.wast:2533: assert_invalid passed:
+  error: type mismatch in f32.trunc, expected [f32] but got [i64]
+  000001b: error: OnUnaryExpr callback failed
+2511/2511 tests passed.
 ;;; STDOUT ;;)

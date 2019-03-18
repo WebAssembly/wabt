@@ -2,28 +2,64 @@
 ;;; STDIN_FILE: third_party/testsuite/return.wast
 (;; STDOUT ;;;
 out/test/spec/return.wast:311: assert_invalid passed:
-  error: type mismatch in return, expected [f64] but got []
+  error: type mismatch in return, expected [i32] but got []
   0000019: error: OnReturnExpr callback failed
 out/test/spec/return.wast:315: assert_invalid passed:
-  error: type mismatch in return, expected [f64] but got []
-  000001a: error: OnReturnExpr callback failed
-out/test/spec/return.wast:319: assert_invalid passed:
-  error: type mismatch in return, expected [f64] but got [i64]
-  000001b: error: OnReturnExpr callback failed
+  error: type mismatch in return, expected [i32] but got []
+  000001d: error: OnReturnExpr callback failed
 out/test/spec/return.wast:324: assert_invalid passed:
   error: type mismatch in return, expected [i32] but got []
-  0000019: error: OnReturnExpr callback failed
-out/test/spec/return.wast:332: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
   000001d: error: OnReturnExpr callback failed
-out/test/spec/return.wast:341: assert_invalid passed:
-  error: type mismatch in return, expected [i32] but got []
-  000001d: error: OnReturnExpr callback failed
-out/test/spec/return.wast:350: assert_invalid passed:
+out/test/spec/return.wast:333: assert_invalid passed:
   error: type mismatch in return, expected [i32] but got []
   000001f: error: OnReturnExpr callback failed
-out/test/spec/return.wast:359: assert_invalid passed:
+out/test/spec/return.wast:342: assert_invalid passed:
   error: type mismatch in return, expected [i32] but got []
   0000022: error: OnReturnExpr callback failed
-71/71 tests passed.
+out/test/spec/return.wast:351: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001d: error: OnReturnExpr callback failed
+out/test/spec/return.wast:360: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001d: error: OnReturnExpr callback failed
+out/test/spec/return.wast:369: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001d: error: OnReturnExpr callback failed
+out/test/spec/return.wast:378: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  0000019: error: OnReturnExpr callback failed
+out/test/spec/return.wast:386: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  0000019: error: OnReturnExpr callback failed
+out/test/spec/return.wast:394: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001f: error: OnReturnExpr callback failed
+out/test/spec/return.wast:403: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  0000036: error: OnReturnExpr callback failed
+out/test/spec/return.wast:418: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001b: error: OnReturnExpr callback failed
+out/test/spec/return.wast:427: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001b: error: OnReturnExpr callback failed
+out/test/spec/return.wast:436: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  0000021: error: OnReturnExpr callback failed
+out/test/spec/return.wast:445: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001e: error: OnReturnExpr callback failed
+out/test/spec/return.wast:454: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001e: error: OnReturnExpr callback failed
+out/test/spec/return.wast:463: assert_invalid passed:
+  error: type mismatch in return, expected [i32] but got []
+  000001e: error: OnReturnExpr callback failed
+out/test/spec/return.wast:472: assert_invalid passed:
+  error: type mismatch in return, expected [f64] but got []
+  000001a: error: OnReturnExpr callback failed
+out/test/spec/return.wast:476: assert_invalid passed:
+  error: type mismatch in return, expected [f64] but got [i64]
+  000001b: error: OnReturnExpr callback failed
+83/83 tests passed.
 ;;; STDOUT ;;)

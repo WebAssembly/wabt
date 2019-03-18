@@ -31,9 +31,27 @@ out/test/spec/call.wast:372: assert_invalid passed:
 out/test/spec/call.wast:379: assert_invalid passed:
   error: type mismatch in call, expected [f64, i32] but got [i32, f64]
   000002a: error: OnCallExpr callback failed
-out/test/spec/call.wast:390: assert_invalid passed:
+out/test/spec/call.wast:387: assert_invalid passed:
+  error: type mismatch in call, expected [i32] but got []
+  0000020: error: OnCallExpr callback failed
+out/test/spec/call.wast:396: assert_invalid passed:
+  error: type mismatch in call, expected [i32, i32] but got [i32]
+  0000023: error: OnCallExpr callback failed
+out/test/spec/call.wast:405: assert_invalid passed:
+  error: type mismatch in call, expected [i32] but got []
+  0000020: error: OnCallExpr callback failed
+out/test/spec/call.wast:414: assert_invalid passed:
+  error: type mismatch in call, expected [i32, i32] but got [i32]
+  0000023: error: OnCallExpr callback failed
+out/test/spec/call.wast:423: assert_invalid passed:
+  error: type mismatch in call, expected [i32] but got []
+  0000022: error: OnCallExpr callback failed
+out/test/spec/call.wast:432: assert_invalid passed:
+  error: type mismatch in call, expected [i32, i32] but got [i32]
+  0000025: error: OnCallExpr callback failed
+out/test/spec/call.wast:445: assert_invalid passed:
   0000019: error: invalid call function index: 1
-out/test/spec/call.wast:394: assert_invalid passed:
+out/test/spec/call.wast:449: assert_invalid passed:
   000001d: error: invalid call function index: 1012321300
-75/75 tests passed.
+81/81 tests passed.
 ;;; STDOUT ;;)

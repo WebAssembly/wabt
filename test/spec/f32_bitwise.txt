@@ -1,5 +1,14 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/f32_bitwise.wast
 (;; STDOUT ;;;
-360/360 tests passed.
+out/test/spec/f32_bitwise.wast:374: assert_invalid passed:
+  error: type mismatch in f32.copysign, expected [f32, f32] but got [i64, f64]
+  0000024: error: OnBinaryExpr callback failed
+out/test/spec/f32_bitwise.wast:375: assert_invalid passed:
+  error: type mismatch in f32.abs, expected [f32] but got [i64]
+  000001b: error: OnUnaryExpr callback failed
+out/test/spec/f32_bitwise.wast:376: assert_invalid passed:
+  error: type mismatch in f32.neg, expected [f32] but got [i64]
+  000001b: error: OnUnaryExpr callback failed
+363/363 tests passed.
 ;;; STDOUT ;;)

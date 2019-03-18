@@ -51,27 +51,44 @@ out/test/spec/br_if.wast:560: assert_invalid passed:
   0000020: error: OnBrIfExpr callback failed
 out/test/spec/br_if.wast:569: assert_invalid passed:
   error: type mismatch in br_if, expected [i32] but got []
-  000001c: error: OnBrIfExpr callback failed
+  000001b: error: OnBrIfExpr callback failed
 out/test/spec/br_if.wast:575: assert_invalid passed:
+  error: type mismatch in br_if, expected [i32] but got []
+  000001c: error: OnBrIfExpr callback failed
+out/test/spec/br_if.wast:581: assert_invalid passed:
   error: type mismatch in br_if, expected [i32] but got [i64]
   000001d: error: OnBrIfExpr callback failed
-out/test/spec/br_if.wast:581: assert_invalid passed:
-  error: type mismatch in br_if, expected [i32] but got []
-  000001f: error: OnBrIfExpr callback failed
 out/test/spec/br_if.wast:587: assert_invalid passed:
   error: type mismatch in br_if, expected [i32] but got []
-  0000022: error: OnBrIfExpr callback failed
+  000001f: error: OnBrIfExpr callback failed
 out/test/spec/br_if.wast:593: assert_invalid passed:
+  error: type mismatch in br_if, expected [i32] but got []
+  0000022: error: OnBrIfExpr callback failed
+out/test/spec/br_if.wast:599: assert_invalid passed:
   error: type mismatch in br_if, expected [i32] but got [... i64]
   0000020: error: OnBrIfExpr callback failed
-out/test/spec/br_if.wast:600: assert_invalid passed:
+out/test/spec/br_if.wast:606: assert_invalid passed:
+  error: type mismatch in br_if, expected [i32] but got []
+  error: type mismatch in br_if, expected [i32] but got []
+  0000021: error: OnBrIfExpr callback failed
+out/test/spec/br_if.wast:618: assert_invalid passed:
+  error: type mismatch in br_if, expected [i32] but got []
+  0000023: error: OnBrIfExpr callback failed
+out/test/spec/br_if.wast:630: assert_invalid passed:
+  error: type mismatch in br_if, expected [i32] but got []
+  error: type mismatch in br_if, expected [i32] but got []
+  000001b: error: OnBrIfExpr callback failed
+out/test/spec/br_if.wast:641: assert_invalid passed:
+  error: type mismatch in br_if, expected [i32] but got []
+  000001d: error: OnBrIfExpr callback failed
+out/test/spec/br_if.wast:654: assert_invalid passed:
   error: invalid depth: 1 (max 0)
   000001b: error: OnBrIfExpr callback failed
-out/test/spec/br_if.wast:604: assert_invalid passed:
+out/test/spec/br_if.wast:658: assert_invalid passed:
   error: invalid depth: 5 (max 2)
   000001f: error: OnBrIfExpr callback failed
-out/test/spec/br_if.wast:608: assert_invalid passed:
+out/test/spec/br_if.wast:662: assert_invalid passed:
   error: invalid depth: 268435457 (max 0)
   000001f: error: OnBrIfExpr callback failed
-112/112 tests passed.
+117/117 tests passed.
 ;;; STDOUT ;;)
