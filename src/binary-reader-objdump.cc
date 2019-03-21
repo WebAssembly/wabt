@@ -267,7 +267,18 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                       string_view field_name,
                       Index func_index,
                       Index sig_index) override {
-    SetFunctionName(func_index, field_name);
+    SetFunctionName(func_index,
+                    module_name.to_string() + "." + field_name.to_string());
+    return Result::Ok;
+  }
+
+  Result OnImportEvent(Index import_index,
+                       string_view module_name,
+                       string_view field_name,
+                       Index event_index,
+                       Index sig_index) override {
+    SetEventName(event_index,
+                 module_name.to_string() + "." + field_name.to_string());
     return Result::Ok;
   }
 
@@ -277,7 +288,8 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
                         Index global_index,
                         Type type,
                         bool mutable_) override {
-    SetGlobalName(global_index, field_name);
+    SetGlobalName(global_index,
+                  module_name.to_string() + "." + field_name.to_string());
     return Result::Ok;
   }
 
@@ -1111,6 +1123,10 @@ Result BinaryReaderObjdump::OnImportEvent(Index import_index,
                                           Index sig_index) {
   PrintDetails(" - event[%" PRIindex "] sig=%" PRIindex, event_index,
                sig_index);
+  auto name = GetEventName(event_index);
+  if (!name.empty()) {
+    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+  }
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));

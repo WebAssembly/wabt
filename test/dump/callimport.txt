@@ -75,7 +75,7 @@ Code Disassembly:
 00002a func[1]:
  00002b: 41 01                      | i32.const 1
  00002d: 43 00 00 00 40             | f32.const 0x1p+1
- 000032: 10 00                      | call 0 <bar>
+ 000032: 10 00                      | call 0 <foo.bar>
  000034: 1a                         | drop
  000035: 10 01                      | call 1
  000037: 0b                         | end
