@@ -261,8 +261,8 @@ out/test/spec/imports.wast:564: assert_malformed passed:
   out/test/spec/imports/imports.115.wat:1:13: error: imports must occur before all non-import definitions
   (memory 0) (import "" "" (memory 1 2))
               ^^^^^^
-out/test/spec/imports.wast:572: assert_unlinkable passed:
-  error: unknown import module "not wasm"
+out/test/spec/imports.wast:574: assert_unlinkable passed:
+  error: unknown module field "overloaded"
   000004d: error: OnImportFunc callback failed
 109/109 tests passed.
 ;;; STDOUT ;;)

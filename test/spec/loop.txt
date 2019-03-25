@@ -28,13 +28,22 @@ out/test/spec/loop.wast:421: assert_invalid passed:
 out/test/spec/loop.wast:427: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got [i64]
   0000020: error: EndFunctionBody callback failed
-out/test/spec/loop.wast:435: assert_malformed passed:
-  out/test/spec/loop/loop.10.wat:1:16: error: unexpected label "$l"
+out/test/spec/loop.wast:434: assert_invalid passed:
+  error: type mismatch in loop, expected [i32] but got []
+  000001e: error: OnEndExpr callback failed
+out/test/spec/loop.wast:443: assert_invalid passed:
+  error: type mismatch in loop, expected [i32] but got []
+  000001e: error: OnEndExpr callback failed
+out/test/spec/loop.wast:452: assert_invalid passed:
+  error: type mismatch in loop, expected [i32] but got []
+  0000020: error: OnEndExpr callback failed
+out/test/spec/loop.wast:463: assert_malformed passed:
+  out/test/spec/loop/loop.13.wat:1:16: error: unexpected label "$l"
   (func loop end $l)
                  ^^
-out/test/spec/loop.wast:439: assert_malformed passed:
-  out/test/spec/loop/loop.11.wat:1:19: error: mismatching label "$a" != "$l"
+out/test/spec/loop.wast:467: assert_malformed passed:
+  out/test/spec/loop/loop.14.wat:1:19: error: mismatching label "$a" != "$l"
   (func loop $a end $l)
                     ^^
-77/77 tests passed.
+80/80 tests passed.
 ;;; STDOUT ;;)

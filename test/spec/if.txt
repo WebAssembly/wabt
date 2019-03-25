@@ -118,54 +118,93 @@ out/test/spec/if.wast:752: assert_invalid passed:
 out/test/spec/if.wast:761: assert_invalid passed:
   error: type mismatch in if, expected [i32] but got []
   0000022: error: OnIfExpr callback failed
-out/test/spec/if.wast:775: assert_malformed passed:
-  out/test/spec/if/if.40.wat:1:14: error: unexpected label "$l"
+out/test/spec/if.wast:771: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001d: error: OnIfExpr callback failed
+out/test/spec/if.wast:780: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001d: error: OnIfExpr callback failed
+out/test/spec/if.wast:789: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001d: error: OnIfExpr callback failed
+out/test/spec/if.wast:798: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  0000019: error: OnIfExpr callback failed
+out/test/spec/if.wast:806: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  0000019: error: OnIfExpr callback failed
+out/test/spec/if.wast:814: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001f: error: OnIfExpr callback failed
+out/test/spec/if.wast:823: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  0000036: error: OnIfExpr callback failed
+out/test/spec/if.wast:839: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001b: error: OnIfExpr callback failed
+out/test/spec/if.wast:848: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001b: error: OnIfExpr callback failed
+out/test/spec/if.wast:857: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  0000021: error: OnIfExpr callback failed
+out/test/spec/if.wast:866: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001e: error: OnIfExpr callback failed
+out/test/spec/if.wast:875: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001e: error: OnIfExpr callback failed
+out/test/spec/if.wast:884: assert_invalid passed:
+  error: type mismatch in if, expected [i32] but got []
+  000001e: error: OnIfExpr callback failed
+out/test/spec/if.wast:895: assert_malformed passed:
+  out/test/spec/if/if.53.wat:1:14: error: unexpected label "$l"
   (func if end $l)
                ^^
-out/test/spec/if.wast:779: assert_malformed passed:
-  out/test/spec/if/if.41.wat:1:17: error: mismatching label "$a" != "$l"
+out/test/spec/if.wast:899: assert_malformed passed:
+  out/test/spec/if/if.54.wat:1:17: error: mismatching label "$a" != "$l"
   (func if $a end $l)
                   ^^
-out/test/spec/if.wast:783: assert_malformed passed:
-  out/test/spec/if/if.42.wat:1:15: error: unexpected label "$l"
+out/test/spec/if.wast:903: assert_malformed passed:
+  out/test/spec/if/if.55.wat:1:15: error: unexpected label "$l"
   (func if else $l end)
                 ^^
-out/test/spec/if.wast:787: assert_malformed passed:
-  out/test/spec/if/if.43.wat:1:18: error: mismatching label "$a" != "$l"
+out/test/spec/if.wast:907: assert_malformed passed:
+  out/test/spec/if/if.56.wat:1:18: error: mismatching label "$a" != "$l"
   (func if $a else $l end)
                    ^^
-out/test/spec/if.wast:791: assert_malformed passed:
-  out/test/spec/if/if.44.wat:1:19: error: unexpected label "$l"
+out/test/spec/if.wast:911: assert_malformed passed:
+  out/test/spec/if/if.57.wat:1:19: error: unexpected label "$l"
   (func if else end $l)
                     ^^
-out/test/spec/if.wast:795: assert_malformed passed:
-  out/test/spec/if/if.45.wat:1:15: error: unexpected label "$l"
+out/test/spec/if.wast:915: assert_malformed passed:
+  out/test/spec/if/if.58.wat:1:15: error: unexpected label "$l"
   (func if else $l end $l)
                 ^^
-  out/test/spec/if/if.45.wat:1:22: error: unexpected label "$l"
+  out/test/spec/if/if.58.wat:1:22: error: unexpected label "$l"
   (func if else $l end $l)
                        ^^
-out/test/spec/if.wast:799: assert_malformed passed:
-  out/test/spec/if/if.46.wat:1:15: error: unexpected label "$l1"
+out/test/spec/if.wast:919: assert_malformed passed:
+  out/test/spec/if/if.59.wat:1:15: error: unexpected label "$l1"
   (func if else $l1 end $l2)
                 ^^^
-  out/test/spec/if/if.46.wat:1:23: error: unexpected label "$l2"
+  out/test/spec/if/if.59.wat:1:23: error: unexpected label "$l2"
   (func if else $l1 end $l2)
                         ^^^
-out/test/spec/if.wast:803: assert_malformed passed:
-  out/test/spec/if/if.47.wat:1:22: error: mismatching label "$a" != "$l"
+out/test/spec/if.wast:923: assert_malformed passed:
+  out/test/spec/if/if.60.wat:1:22: error: mismatching label "$a" != "$l"
   (func if $a else end $l)
                        ^^
-out/test/spec/if.wast:807: assert_malformed passed:
-  out/test/spec/if/if.48.wat:1:25: error: mismatching label "$a" != "$l"
+out/test/spec/if.wast:927: assert_malformed passed:
+  out/test/spec/if/if.61.wat:1:25: error: mismatching label "$a" != "$l"
   (func if $a else $a end $l)
                           ^^
-out/test/spec/if.wast:811: assert_malformed passed:
-  out/test/spec/if/if.49.wat:1:18: error: mismatching label "$a" != "$l"
+out/test/spec/if.wast:931: assert_malformed passed:
+  out/test/spec/if/if.62.wat:1:18: error: mismatching label "$a" != "$l"
   (func if $a else $l end $l)
                    ^^
-  out/test/spec/if/if.49.wat:1:25: error: mismatching label "$a" != "$l"
+  out/test/spec/if/if.62.wat:1:25: error: mismatching label "$a" != "$l"
   (func if $a else $l end $l)
                           ^^
-137/137 tests passed.
+150/150 tests passed.
 ;;; STDOUT ;;)

@@ -13,5 +13,41 @@ out/test/spec/select.wast:301: assert_invalid passed:
 out/test/spec/select.wast:305: assert_invalid passed:
   error: type mismatch in select, expected [i32, f64, f64] but got [i32, f64, i32]
   0000025: error: OnSelectExpr callback failed
-98/98 tests passed.
+out/test/spec/select.wast:311: assert_invalid passed:
+  error: type mismatch in select, expected [i32, any, any] but got []
+  0000018: error: OnSelectExpr callback failed
+out/test/spec/select.wast:319: assert_invalid passed:
+  error: type mismatch in select, expected [i32, any, any] but got [i32]
+  000001a: error: OnSelectExpr callback failed
+out/test/spec/select.wast:327: assert_invalid passed:
+  error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32]
+  000001c: error: OnSelectExpr callback failed
+out/test/spec/select.wast:335: assert_invalid passed:
+  error: type mismatch in select, expected [i32, any, any] but got []
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/select.wast:344: assert_invalid passed:
+  error: type mismatch in select, expected [i32, any, any] but got [i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/select.wast:353: assert_invalid passed:
+  error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/select.wast:362: assert_invalid passed:
+  error: type mismatch in select, expected [i32, any, any] but got []
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/select.wast:371: assert_invalid passed:
+  error: type mismatch in select, expected [i32, any, any] but got [i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/select.wast:380: assert_invalid passed:
+  error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/select.wast:389: assert_invalid passed:
+  error: type mismatch in select, expected [i32, any, any] but got []
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/select.wast:398: assert_invalid passed:
+  error: type mismatch in select, expected [i32, any, any] but got [i32]
+  0000020: error: OnSelectExpr callback failed
+out/test/spec/select.wast:407: assert_invalid passed:
+  error: type mismatch in select, expected [i32, i32, i32] but got [i32, i32]
+  0000020: error: OnSelectExpr callback failed
+110/110 tests passed.
 ;;; STDOUT ;;)

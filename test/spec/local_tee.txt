@@ -43,32 +43,86 @@ out/test/spec/local_tee.wast:425: assert_invalid passed:
 out/test/spec/local_tee.wast:429: assert_invalid passed:
   error: type mismatch in local.tee, expected [i64] but got [f64]
   0000024: error: OnLocalTeeExpr callback failed
-out/test/spec/local_tee.wast:437: assert_invalid passed:
+out/test/spec/local_tee.wast:434: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001a: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:442: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001e: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:451: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001e: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:460: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  0000020: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:469: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  0000023: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:478: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001e: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:487: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001e: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:496: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001e: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:505: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001a: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:513: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001a: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:521: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  0000020: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:530: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  0000037: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:546: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001a: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:554: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001a: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:562: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  0000022: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:571: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001f: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:580: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001f: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:589: assert_invalid passed:
+  error: type mismatch in local.tee, expected [i32] but got []
+  000001f: error: OnLocalTeeExpr callback failed
+out/test/spec/local_tee.wast:602: assert_invalid passed:
   error: invalid local_index: 3 (max 2)
   000001d: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:441: assert_invalid passed:
+out/test/spec/local_tee.wast:606: assert_invalid passed:
   error: invalid local_index: 14324343 (max 2)
   0000020: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:446: assert_invalid passed:
+out/test/spec/local_tee.wast:611: assert_invalid passed:
   error: invalid local_index: 2 (max 2)
   000001b: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:450: assert_invalid passed:
+out/test/spec/local_tee.wast:615: assert_invalid passed:
   error: invalid local_index: 714324343 (max 2)
   0000021: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:455: assert_invalid passed:
+out/test/spec/local_tee.wast:620: assert_invalid passed:
   error: invalid local_index: 3 (max 3)
   000001e: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:459: assert_invalid passed:
+out/test/spec/local_tee.wast:624: assert_invalid passed:
   error: invalid local_index: 214324343 (max 3)
   0000021: error: OnLocalGetExpr callback failed
-out/test/spec/local_tee.wast:464: assert_invalid passed:
+out/test/spec/local_tee.wast:629: assert_invalid passed:
   error: type mismatch in local.tee, expected [i32] but got [f32]
   0000021: error: OnLocalTeeExpr callback failed
-out/test/spec/local_tee.wast:468: assert_invalid passed:
+out/test/spec/local_tee.wast:633: assert_invalid passed:
   error: type mismatch in local.tee, expected [i32] but got [f32]
   0000022: error: OnLocalTeeExpr callback failed
-out/test/spec/local_tee.wast:472: assert_invalid passed:
+out/test/spec/local_tee.wast:637: assert_invalid passed:
   error: type mismatch in local.tee, expected [f64] but got [i64]
   0000020: error: OnLocalTeeExpr callback failed
-78/78 tests passed.
+96/96 tests passed.
 ;;; STDOUT ;;)

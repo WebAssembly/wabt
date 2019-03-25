@@ -105,12 +105,30 @@ out/test/spec/call_indirect.wast:813: assert_invalid passed:
 out/test/spec/call_indirect.wast:823: assert_invalid passed:
   error: type mismatch in call_indirect, expected [f64, i32] but got [i32, f64]
   0000032: error: OnCallIndirectExpr callback failed
-out/test/spec/call_indirect.wast:837: assert_invalid passed:
+out/test/spec/call_indirect.wast:834: assert_invalid passed:
+  error: type mismatch in call_indirect, expected [i32] but got []
+  0000036: error: OnCallIndirectExpr callback failed
+out/test/spec/call_indirect.wast:847: assert_invalid passed:
+  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
+  0000039: error: OnCallIndirectExpr callback failed
+out/test/spec/call_indirect.wast:860: assert_invalid passed:
+  error: type mismatch in call_indirect, expected [i32] but got []
+  0000036: error: OnCallIndirectExpr callback failed
+out/test/spec/call_indirect.wast:873: assert_invalid passed:
+  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
+  0000039: error: OnCallIndirectExpr callback failed
+out/test/spec/call_indirect.wast:886: assert_invalid passed:
+  error: type mismatch in call_indirect, expected [i32] but got []
+  000003a: error: OnCallIndirectExpr callback failed
+out/test/spec/call_indirect.wast:902: assert_invalid passed:
+  error: type mismatch in call_indirect, expected [i32, i32] but got [i32]
+  000003d: error: OnCallIndirectExpr callback failed
+out/test/spec/call_indirect.wast:922: assert_invalid passed:
   0000021: error: invalid call_indirect signature index
-out/test/spec/call_indirect.wast:844: assert_invalid passed:
+out/test/spec/call_indirect.wast:929: assert_invalid passed:
   0000025: error: invalid call_indirect signature index
-out/test/spec/call_indirect.wast:855: assert_invalid passed:
+out/test/spec/call_indirect.wast:940: assert_invalid passed:
   error: invalid func_index: 0 (max 0)
   0000018: error: OnElemSegmentFunctionIndex callback failed
-145/145 tests passed.
+151/151 tests passed.
 ;;; STDOUT ;;)

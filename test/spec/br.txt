@@ -15,24 +15,51 @@ out/test/spec/br.wast:439: assert_invalid passed:
   000001e: error: OnBrExpr callback failed
 out/test/spec/br.wast:446: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
-  000001b: error: OnBrExpr callback failed
+  000001d: error: OnBrExpr callback failed
 out/test/spec/br.wast:455: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   000001d: error: OnBrExpr callback failed
-out/test/spec/br.wast:465: assert_invalid passed:
+out/test/spec/br.wast:464: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001d: error: OnBrExpr callback failed
+out/test/spec/br.wast:473: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001b: error: OnBrExpr callback failed
+out/test/spec/br.wast:484: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001b: error: OnBrExpr callback failed
+out/test/spec/br.wast:495: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
   0000021: error: OnBrExpr callback failed
-out/test/spec/br.wast:477: assert_invalid passed:
+out/test/spec/br.wast:507: assert_invalid passed:
   error: type mismatch in br, expected [i32] but got []
-  0000024: error: OnBrExpr callback failed
-out/test/spec/br.wast:492: assert_invalid passed:
+  0000036: error: OnBrExpr callback failed
+out/test/spec/br.wast:523: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001d: error: OnBrExpr callback failed
+out/test/spec/br.wast:535: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  000001d: error: OnBrExpr callback failed
+out/test/spec/br.wast:547: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000023: error: OnBrExpr callback failed
+out/test/spec/br.wast:559: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000020: error: OnBrExpr callback failed
+out/test/spec/br.wast:571: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000020: error: OnBrExpr callback failed
+out/test/spec/br.wast:583: assert_invalid passed:
+  error: type mismatch in br, expected [i32] but got []
+  0000020: error: OnBrExpr callback failed
+out/test/spec/br.wast:596: assert_invalid passed:
   error: invalid depth: 1 (max 0)
   0000019: error: OnBrExpr callback failed
-out/test/spec/br.wast:496: assert_invalid passed:
+out/test/spec/br.wast:600: assert_invalid passed:
   error: invalid depth: 5 (max 2)
   000001d: error: OnBrExpr callback failed
-out/test/spec/br.wast:500: assert_invalid passed:
+out/test/spec/br.wast:604: assert_invalid passed:
   error: invalid depth: 268435457 (max 0)
   000001d: error: OnBrExpr callback failed
-74/74 tests passed.
+83/83 tests passed.
 ;;; STDOUT ;;)
