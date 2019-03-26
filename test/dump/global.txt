@@ -116,10 +116,10 @@ Global[8]:
  - global[5] i64 mutable=0 - init i64=2
  - global[6] f32 mutable=0 - init f32=0x1.8p+1
  - global[7] f64 mutable=0 - init f64=0x1p+2
- - global[8] i32 mutable=0 - init global=0
- - global[9] i64 mutable=0 - init global=1
- - global[10] f32 mutable=0 - init global=2
- - global[11] f64 mutable=0 - init global=3
+ - global[8] i32 mutable=0 - init global=0 <foo.i32_global>
+ - global[9] i64 mutable=0 - init global=1 <foo.i64_global>
+ - global[10] f32 mutable=0 - init global=2 <foo.f32_global>
+ - global[11] f64 mutable=0 - init global=3 <foo.f64_global>
 
 Code Disassembly:
 

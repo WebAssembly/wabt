@@ -1253,9 +1253,15 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
                    expr.value.v128_v.v[2], expr.value.v128_v.v[3]);
       break;
     }
-    case InitExprType::Global:
-      PrintDetails(" - init global=%" PRIindex "\n", expr.value.global);
+    case InitExprType::Global: {
+      PrintDetails(" - init global=%" PRIindex, expr.value.global);
+      string_view name = GetGlobalName(expr.value.global);
+      if (!name.empty()) {
+        PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+      }
+      PrintDetails("\n");
       break;
+    }
   }
 }
 
