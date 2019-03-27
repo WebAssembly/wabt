@@ -1735,48 +1735,28 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
   WABT_TRACE(ParseSimdV128Const);
 
+  uint8_t lane_count = 0;
+  bool integer = true;
   switch (token_type) {
-    case TokenType::Nat:
-    case TokenType::Int:
-    case TokenType::Float:
-    case TokenType::ValueType: {
+    case TokenType::I8X16: { lane_count = 16; break; }
+    case TokenType::I16X8: { lane_count = 8; break; }
+    case TokenType::I32X4: { lane_count = 4; break; }
+    case TokenType::I64X2: { lane_count = 2; break; }
+    case TokenType::F32X4: { lane_count = 4; integer = false; break; }
+    case TokenType::F64X2: { lane_count = 2; integer = false; break; }
+    default: {
       Error(
         const_->loc,
         "Unexpected type at start of simd constant. "
-        "Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2."
+        "Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2. "
+        "Found \"%s\".",
+        GetTokenTypeName(token_type)
       );
       return Result::Error;
     }
-    default: break;
   }
+  Consume();
 
-  auto text = Consume().text();
-  // Look up the number of lanes and whether the v128 is an integer or
-  // floating-point vector:
-  uint8_t lane_count = 0;
-  bool integer = true;
-  if (text == "i8x16") {
-    lane_count = 16;
-  } else if (text == "i16x8") {
-    lane_count = 8;
-  } else if (text == "i32x4") {
-    lane_count = 4;
-  } else if (text == "i64x2") {
-    lane_count = 2;
-  } else if (text == "f32x4") {
-    lane_count = 4;
-    integer = false;
-  } else if (text == "f64x2") {
-    lane_count = 2;
-    integer = false;
-  } else {
-    Error(
-      const_->loc,
-      "Unexpected type at start of simd constant. "
-      "Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2."
-    );
-    return Result::Error;
-  }
   uint8_t lane_size = sizeof(v128) / lane_count;
 
   // The bytes of the v128 are written here first:

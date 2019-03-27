@@ -744,6 +744,12 @@ Token WastLexer::GetToken(WastParser* parser) {
       <i> "assert_return_arithmetic_nan" { RETURN(AssertReturnArithmeticNan); }
       <i> "assert_trap"         { RETURN(AssertTrap); }
       <i> "assert_exhaustion"   { RETURN(AssertExhaustion); }
+      <i> "i8x16"               { RETURN(I8X16); }
+      <i> "i16x8"               { RETURN(I16X8); }
+      <i> "i32x4"               { RETURN(I32X4); }
+      <i> "i64x2"               { RETURN(I64X2); }
+      <i> "f32x4"               { RETURN(F32X4); }
+      <i> "f64x2"               { RETURN(F64X2); }
       <i> "try"                 { RETURN_OPCODE0(Try); }
       <i> "catch"               { RETURN_OPCODE0(Catch); }
       <i> "throw"               { RETURN_OPCODE0(Throw); }
