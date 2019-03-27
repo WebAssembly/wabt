@@ -1788,8 +1788,8 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
 
     // Check that the lane literal type matches the element type of the v128:
     if (integer) {
-      if (!PeekMatch(TokenType::Nat)) {
-        return ErrorExpected({"a Nat literal"}, "123");
+      if (!(PeekMatch(TokenType::Int) || PeekMatch(TokenType::Nat))) {
+        return ErrorExpected({"a Nat or Integer literal"}, "123");
       }
     } else {
       if (!PeekMatch(TokenType::Float)) {
@@ -1812,27 +1812,25 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
     if (integer) {
       switch(lane_count) {
         case 16: {
-          uint8_t value[4] = {0, 0, 0, 0};
+          int32_t value;
           result = ParseInt32(s, end, Bitcast<uint32_t*>(&value), ParseIntType::SignedAndUnsigned);
-          // If the literal fits in an i8, then all upper bytes of the parsed
-          // Int32 are zero (independently of how whether it is signed or unsigned):
-          for (int i = 1; i < 4; ++i) {
-            if (value[i] != 0) {
+          if (value < static_cast<int32_t>(std::numeric_limits<int8_t>::min()) ||
+              value > static_cast<int32_t>(std::numeric_limits<uint8_t>::max())) {
               Error(loc, "literal \"%s\" out-of-bounds of i8", literal.text.c_str());
               return Result::Error;
-            }
           }
-          *lane_ptr = value[0];
+          *lane_ptr = static_cast<uint8_t>(value);
           break;
         }
         case 8: {
-          uint16_t value[2] = {0, 0};
+          int32_t value;
           result = ParseInt32(s, end, Bitcast<uint32_t*>(&value), ParseIntType::SignedAndUnsigned);
-          if (value[1] != 0) {
+          if (value < static_cast<int32_t>(std::numeric_limits<int16_t>::min()) ||
+              value > static_cast<int32_t>(std::numeric_limits<uint16_t>::max())) {
             Error(loc, "literal \"%s\" out-of-bounds of i16", literal.text.c_str());
             return Result::Error;
           }
-          *lane_ptr = value[0];
+          *lane_ptr = static_cast<uint16_t>(value);
           break;
         }
         case 4: {
