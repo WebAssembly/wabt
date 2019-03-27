@@ -1732,7 +1732,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   return Result::Ok;
 }
 
-  Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
+Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
   WABT_TRACE(ParseSimdV128Const);
 
   switch (token_type) {
