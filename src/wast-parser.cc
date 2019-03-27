@@ -1753,21 +1753,21 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
   auto text = Consume().text();
   // Look up the number of lanes and whether the v128 is an integer or
   // floating-point vector:
-  uint8_t no_lanes = 0;
+  uint8_t lane_count = 0;
   bool integer = true;
   if (text == "i8x16") {
-    no_lanes = 16;
+    lane_count = 16;
   } else if (text == "i16x8") {
-    no_lanes = 8;
+    lane_count = 8;
   } else if (text == "i32x4") {
-    no_lanes = 4;
+    lane_count = 4;
   } else if (text == "i64x2") {
-    no_lanes = 2;
+    lane_count = 2;
   } else if (text == "f32x4") {
-    no_lanes = 4;
+    lane_count = 4;
     integer = false;
   } else if (text == "f64x2") {
-    no_lanes = 2;
+    lane_count = 2;
     integer = false;
   } else {
     Error(
@@ -1777,13 +1777,13 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
     );
     return Result::Error;
   }
-  uint8_t lane_size = sizeof(v128) / no_lanes;
+  uint8_t lane_size = sizeof(v128) / lane_count;
 
   // The bytes of the v128 are written here first:
   std::array<char, 16> v128_bytes{};
   const_->loc = GetLocation();
 
-  for (int i = 0; i < no_lanes; ++i) {
+  for (int i = 0; i < lane_count; ++i) {
     Location loc = GetLocation();
 
     // Check that the lane literal type matches the element type of the v128:
@@ -1810,7 +1810,7 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
     // For each type, parse the next literal, bound check it, and write it to
     // the array of bytes:
     if (integer) {
-      switch(no_lanes) {
+      switch(lane_count) {
         case 16: {
           uint8_t value[4] = {0, 0, 0, 0};
           result = ParseInt32(s, end, Bitcast<uint32_t*>(&value), ParseIntType::SignedAndUnsigned);
@@ -1845,7 +1845,7 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
         }
       }
     } else {
-      switch(no_lanes) {
+      switch(lane_count) {
         case 4: {
           result = ParseFloat(literal.type, s, end, Bitcast<uint32_t*>(lane_ptr));
           break;
