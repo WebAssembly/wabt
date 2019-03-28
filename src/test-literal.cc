@@ -62,6 +62,18 @@ void AssertIntEquals(T expected,
   }
 }
 
+void AssertInt8Equals(uint8_t expected,
+                      const char* s,
+                      ParseIntTypeCombo parse_type = Both) {
+  AssertIntEquals(expected, s, ParseInt8, parse_type);
+}
+
+void AssertInt16Equals(uint16_t expected,
+                       const char* s,
+                       ParseIntTypeCombo parse_type = Both) {
+  AssertIntEquals(expected, s, ParseInt16, parse_type);
+}
+
 void AssertInt32Equals(uint32_t expected,
                        const char* s,
                        ParseIntTypeCombo parse_type = Both) {
@@ -72,6 +84,28 @@ void AssertInt64Equals(uint64_t expected,
                        const char* s,
                        ParseIntTypeCombo parse_type = Both) {
   AssertIntEquals(expected, s, ParseInt64, parse_type);
+}
+
+void AssertInt8Fails(const char* s) {
+  const char* const end = s + strlen(s);
+  uint8_t actual;
+  ASSERT_EQ(Result::Error,
+            ParseInt8(s, end, &actual, ParseIntType::SignedAndUnsigned))
+      << s;
+  ASSERT_EQ(Result::Error,
+            ParseInt8(s, end, &actual, ParseIntType::UnsignedOnly))
+      << s;
+}
+
+void AssertInt16Fails(const char* s) {
+  const char* const end = s + strlen(s);
+  uint16_t actual;
+  ASSERT_EQ(Result::Error,
+            ParseInt16(s, end, &actual, ParseIntType::SignedAndUnsigned))
+      << s;
+  ASSERT_EQ(Result::Error,
+            ParseInt16(s, end, &actual, ParseIntType::UnsignedOnly))
+      << s;
 }
 
 void AssertInt32Fails(const char* s) {
@@ -138,6 +172,102 @@ void AssertHexDoubleFails(const char* s) {
 }
 
 }  // end anonymous namespace
+
+TEST(ParseInt8, Both) {
+  AssertInt8Equals(0, "0");
+  AssertInt8Equals(100, "100");
+  AssertInt8Equals(123, "123");
+  AssertInt8Equals(127, "127");
+  AssertInt8Equals(255, "255");
+  AssertInt8Equals(0xca, "0xca");
+  AssertInt8Equals(0x7f, "0x7f");
+  AssertInt8Equals(0x80, "0x80");
+  AssertInt8Equals(0xff, "0xff");
+}
+
+TEST(ParseInt8, SignedAndUnsigned) {
+  AssertInt8Equals(128, "-128", SignedAndUnsigned);
+  AssertInt8Equals(-0x80, "-0x80", SignedAndUnsigned);
+  AssertInt8Equals(255, "-1", SignedAndUnsigned);
+  AssertInt8Equals(-1, "-0x1", SignedAndUnsigned);
+  AssertInt8Equals(1, "+1", SignedAndUnsigned);
+  AssertInt8Equals(-0x7b, "-0x7B", SignedAndUnsigned);
+  AssertInt8Equals(0xab, "+0xab", SignedAndUnsigned);
+}
+
+TEST(ParseInt8, Invalid) {
+  AssertInt8Fails("");
+  AssertInt8Fails("-100hello");
+  AssertInt8Fails("0XAB");
+  AssertInt8Fails("0xga");
+  AssertInt8Fails("two");
+}
+
+TEST(ParseInt8, Underscores) {
+  AssertInt8Equals(123, "12_3", Both);
+  AssertInt8Equals(123, "+12_3", SignedAndUnsigned);
+  AssertInt8Equals(-123, "-1_23", SignedAndUnsigned);
+  AssertInt8Equals(19, "1______9", Both);
+  AssertInt8Equals(0xab, "0xa_b", Both);
+  AssertInt8Equals(0xab, "+0xa_b", SignedAndUnsigned);
+  AssertInt8Equals(-0x7b, "-0x7_b", SignedAndUnsigned);
+}
+
+TEST(ParseInt8, Overflow) {
+  AssertInt8Fails("256");
+  AssertInt8Fails("-129");
+  AssertInt8Fails("0x100");
+  AssertInt8Fails("-0x81");
+  AssertInt8Fails("1231231231231231231231");
+}
+
+TEST(ParseInt16, Both) {
+  AssertInt16Equals(0, "0");
+  AssertInt16Equals(1000, "1000");
+  AssertInt16Equals(12345, "12345");
+  AssertInt16Equals(32767, "32767");
+  AssertInt16Equals(65535, "65535");
+  AssertInt16Equals(0xcafe, "0xcafe");
+  AssertInt16Equals(0x7fff, "0x7fff");
+  AssertInt16Equals(0x8000, "0x8000");
+  AssertInt16Equals(0xffff, "0xffff");
+}
+
+TEST(ParseInt16, SignedAndUnsigned) {
+  AssertInt16Equals(32768, "-32768", SignedAndUnsigned);
+  AssertInt16Equals(-0x8000, "-0x8000", SignedAndUnsigned);
+  AssertInt16Equals(65535, "-1", SignedAndUnsigned);
+  AssertInt16Equals(-1, "-0x1", SignedAndUnsigned);
+  AssertInt16Equals(1, "+1", SignedAndUnsigned);
+  AssertInt16Equals(-0x7bcd, "-0x7BCD", SignedAndUnsigned);
+  AssertInt16Equals(0xabcd, "+0xabcd", SignedAndUnsigned);
+}
+
+TEST(ParseInt16, Invalid) {
+  AssertInt16Fails("");
+  AssertInt16Fails("-100hello");
+  AssertInt16Fails("0XABCD");
+  AssertInt16Fails("0xgabb");
+  AssertInt16Fails("two");
+}
+
+TEST(ParseInt16, Underscores) {
+  AssertInt16Equals(12345, "12_345", Both);
+  AssertInt16Equals(12345, "+12_345", SignedAndUnsigned);
+  AssertInt16Equals(-12345, "-123_45", SignedAndUnsigned);
+  AssertInt16Equals(19, "1______9", Both);
+  AssertInt16Equals(0xabcd, "0xa_b_c_d", Both);
+  AssertInt16Equals(0xabcd, "+0xa_b_c_d", SignedAndUnsigned);
+  AssertInt16Equals(-0x7bcd, "-0x7_b_c_d", SignedAndUnsigned);
+}
+
+TEST(ParseInt16, Overflow) {
+  AssertInt16Fails("65536");
+  AssertInt16Fails("-32769");
+  AssertInt16Fails("0x10000");
+  AssertInt16Fails("-0x8001");
+  AssertInt16Fails("1231231231231231231231");
+}
 
 TEST(ParseInt32, Both) {
   AssertInt32Equals(0, "0");

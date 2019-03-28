@@ -1791,47 +1791,33 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
     // the array of bytes:
     if (integer) {
       switch(lane_count) {
-        case 16: {
-          int32_t value;
-          result = ParseInt32(s, end, Bitcast<uint32_t*>(&value), ParseIntType::SignedAndUnsigned);
-          if (value < static_cast<int32_t>(std::numeric_limits<int8_t>::min()) ||
-              value > static_cast<int32_t>(std::numeric_limits<uint8_t>::max())) {
-              Error(loc, "literal \"%s\" out-of-bounds of i8", literal.text.c_str());
-              return Result::Error;
-          }
-          *lane_ptr = static_cast<uint8_t>(value);
+        case 16:
+          result = ParseInt8(s, end, reinterpret_cast<uint8_t*>(lane_ptr),
+                             ParseIntType::SignedAndUnsigned);
           break;
-        }
-        case 8: {
-          int32_t value;
-          result = ParseInt32(s, end, Bitcast<uint32_t*>(&value), ParseIntType::SignedAndUnsigned);
-          if (value < static_cast<int32_t>(std::numeric_limits<int16_t>::min()) ||
-              value > static_cast<int32_t>(std::numeric_limits<uint16_t>::max())) {
-            Error(loc, "literal \"%s\" out-of-bounds of i16", literal.text.c_str());
-            return Result::Error;
-          }
-          *lane_ptr = static_cast<uint16_t>(value);
+        case 8:
+          result = ParseInt16(s, end, reinterpret_cast<uint16_t*>(lane_ptr),
+                              ParseIntType::SignedAndUnsigned);
           break;
-        }
-        case 4: {
-          result = ParseInt32(s, end, Bitcast<uint32_t*>(lane_ptr), ParseIntType::SignedAndUnsigned);
+        case 4:
+          result = ParseInt32(s, end, reinterpret_cast<uint32_t*>(lane_ptr),
+                              ParseIntType::SignedAndUnsigned);
           break;
-        }
-        case 2: {
-          result = ParseInt64(s, end, Bitcast<uint64_t*>(lane_ptr), ParseIntType::SignedAndUnsigned);
+        case 2:
+          result = ParseInt64(s, end, reinterpret_cast<uint64_t*>(lane_ptr),
+                              ParseIntType::SignedAndUnsigned);
           break;
-        }
       }
     } else {
       switch(lane_count) {
-        case 4: {
-          result = ParseFloat(literal.type, s, end, Bitcast<uint32_t*>(lane_ptr));
+        case 4:
+          result = ParseFloat(literal.type, s, end,
+                              reinterpret_cast<uint32_t*>(lane_ptr));
           break;
-        }
-        case 2: {
-          result = ParseDouble(literal.type,s, end, Bitcast<uint64_t*>(lane_ptr));
+        case 2:
+          result = ParseDouble(literal.type, s, end,
+                               reinterpret_cast<uint64_t*>(lane_ptr));
           break;
-        }
       }
     }
 

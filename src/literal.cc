@@ -21,6 +21,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
+#include <type_traits>
 
 namespace wabt {
 
@@ -620,10 +622,12 @@ Result ParseInt64(const char* s,
   return result;
 }
 
-Result ParseInt32(const char* s,
-                  const char* end,
-                  uint32_t* out,
-                  ParseIntType parse_type) {
+template <typename U>
+Result ParseInt(const char* s,
+                const char* end,
+                U* out,
+                ParseIntType parse_type) {
+  typedef typename std::make_signed<U>::type S;
   uint64_t value;
   bool has_sign = false;
   if (*s == '-' || *s == '+') {
@@ -638,18 +642,39 @@ Result ParseInt32(const char* s,
   CHECK_RESULT(ParseUint64(s, end, &value));
 
   if (has_sign) {
-    // abs(INT32_MIN) == INT32_MAX + 1.
-    if (value > static_cast<uint64_t>(INT32_MAX) + 1) {
+    // abs(INTN_MIN) == INTN_MAX + 1.
+    if (value > static_cast<uint64_t>(std::numeric_limits<S>::max()) + 1) {
       return Result::Error;
     }
-    value = UINT32_MAX - value + 1;
+    value = std::numeric_limits<U>::max() - value + 1;
   } else {
-    if (value > static_cast<uint64_t>(UINT32_MAX)) {
+    if (value > static_cast<uint64_t>(std::numeric_limits<U>::max())) {
       return Result::Error;
     }
   }
-  *out = static_cast<uint32_t>(value);
+  *out = static_cast<U>(value);
   return Result::Ok;
+}
+
+Result ParseInt8(const char* s,
+                 const char* end,
+                 uint8_t* out,
+                 ParseIntType parse_type) {
+  return ParseInt(s, end, out, parse_type);
+}
+
+Result ParseInt16(const char* s,
+                  const char* end,
+                  uint16_t* out,
+                  ParseIntType parse_type) {
+  return ParseInt(s, end, out, parse_type);
+}
+
+Result ParseInt32(const char* s,
+                  const char* end,
+                  uint32_t* out,
+                  ParseIntType parse_type) {
+  return ParseInt(s, end, out, parse_type);
 }
 
 Result ParseFloat(LiteralType literal_type,

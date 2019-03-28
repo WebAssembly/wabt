@@ -49,6 +49,14 @@ enum class ParseIntType {
 #define WABT_MAX_DOUBLE_HEX 40
 
 Result ParseHexdigit(char c, uint32_t* out);
+Result ParseInt8(const char* s,
+                 const char* end,
+                 uint8_t* out,
+                 ParseIntType parse_type);
+Result ParseInt16(const char* s,
+                  const char* end,
+                  uint16_t* out,
+                  ParseIntType parse_type);
 Result ParseInt32(const char* s,
                   const char* end,
                   uint32_t* out,
