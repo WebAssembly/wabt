@@ -4,65 +4,65 @@
 (module
   ;; i8x16 shl
   (func (export "i8x16_shl_0") (result v128)
-    v128.const i32 0xff000001 0xe0000002 0x00000003 0x00000004
+    v128.const i32x4 0xff000001 0xe0000002 0x00000003 0x00000004
     i32.const 3
     i8x16.shl)
 
   ;; i16x8 shl
   (func (export "i16x8_shl_0") (result v128)
-    v128.const i32 0xff000071 0xe0000702 0x00000003 0x00000004
+    v128.const i32x4 0xff000071 0xe0000702 0x00000003 0x00000004
     i32.const 3
     i16x8.shl)
 
   ;; i32x4 shl
   (func (export "i32x4_shl_0") (result v128)
-    v128.const i32 0xff0ff071 0xe0077702 0xe0004003 0x00002004
+    v128.const i32x4 0xff0ff071 0xe0077702 0xe0004003 0x00002004
     i32.const 3
     i32x4.shl)
 
   ;; i64x2 shl
   (func (export "i64x2_shl_0") (result v128)
-    v128.const i32 0xff000055 0xe0000702 0xe0004003 0x00002004
+    v128.const i32x4 0xff000055 0xe0000702 0xe0004003 0x00002004
     i32.const 3
     i64x2.shl)
 
   ;; i8x16 shr (signed and unsigned)
   (func (export "i8x16_shr_s_0") (result v128)
-    v128.const i32 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
+    v128.const i32x4 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
     i32.const 3
     i8x16.shr_s)
   (func (export "i8x16_shr_u_0") (result v128)
-    v128.const i32 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
+    v128.const i32x4 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
     i32.const 3
     i8x16.shr_u)
 
   ;; i16x8 shr (signed and unsigned)
   (func (export "i16x8_shr_s_0") (result v128)
-    v128.const i32 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
+    v128.const i32x4 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
     i32.const 3
     i16x8.shr_s)
   (func (export "i16x8_shr_u_0") (result v128)
-    v128.const i32 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
+    v128.const i32x4 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
     i32.const 3
     i16x8.shr_u)
 
   ;; i32x4 shr (signed and unsigned)
   (func (export "i32x4_shr_s_0") (result v128)
-    v128.const i32 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
+    v128.const i32x4 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
     i32.const 3
     i32x4.shr_s)
   (func (export "i32x4_shr_u_0") (result v128)
-    v128.const i32 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
+    v128.const i32x4 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
     i32.const 3
     i32x4.shr_u)
 
   ;; i64x2 shr (signed and unsigned)
   (func (export "i64x2_shr_s_0") (result v128)
-    v128.const i32 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
+    v128.const i32x4 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
     i32.const 3
     i64x2.shr_s)
   (func (export "i64x2_shr_u_0") (result v128)
-    v128.const i32 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
+    v128.const i32x4 0xff00000f 0xe00f7002 0x0f000003 0x000ff004
     i32.const 3
     i64x2.shr_u)
   )

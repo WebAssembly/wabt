@@ -488,7 +488,7 @@ void WatWriter::WriteConst(const Const& const_) {
 
     case Type::V128: {
       WritePutsSpace(Opcode::V128Const_Opcode.GetName());
-      Writef("i32 0x%08x 0x%08x 0x%08x 0x%08x", const_.v128_bits.v[0],
+      Writef("i32x4 0x%08x 0x%08x 0x%08x 0x%08x", const_.v128_bits.v[0],
              const_.v128_bits.v[1], const_.v128_bits.v[2],
              const_.v128_bits.v[3]);
       WriteNewline(NO_FORCE_NEWLINE);

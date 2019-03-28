@@ -16,7 +16,7 @@
   ;; v128 store
   (func (export "v128_store_0") (result v128)
     i32.const 4
-    v128.const i32 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
+    v128.const i32x4 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
     v128.store
     i32.const 4
     v128.load)

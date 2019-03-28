@@ -1732,49 +1732,116 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
   return Result::Ok;
 }
 
-// Current Simd const type is V128 const only.
-// The current expected V128 const lists is:
-// i32 0xXXXXXXXX 0xXXXXXXXX 0xXXXXXXXX 0xXXXXXXXX
-Result WastParser::ParseSimdConst(Const* const_,
-                                  Type in_type,
-                                  int32_t nSimdConstBytes) {
-  WABT_TRACE(ParseSimdConst);
+Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
+  WABT_TRACE(ParseSimdV128Const);
 
-  // Parse the Simd Consts according to input data type.
-  switch (in_type) {
-    case Type::I32: {
-      const_->loc = GetLocation();
-      int Count = nSimdConstBytes / sizeof(uint32_t);
-      // Meet expected "i32" token. start parse 4 i32 consts
-      for (int i = 0; i < Count; i++) {
-        Location loc = GetLocation();
+  uint8_t lane_count = 0;
+  bool integer = true;
+  switch (token_type) {
+    case TokenType::I8X16: { lane_count = 16; break; }
+    case TokenType::I16X8: { lane_count = 8; break; }
+    case TokenType::I32X4: { lane_count = 4; break; }
+    case TokenType::I64X2: { lane_count = 2; break; }
+    case TokenType::F32X4: { lane_count = 4; integer = false; break; }
+    case TokenType::F64X2: { lane_count = 2; integer = false; break; }
+    default: {
+      Error(
+        const_->loc,
+        "Unexpected type at start of simd constant. "
+        "Expected one of: i8x16, i16x8, i32x4, i64x2, f32x4, f64x2. "
+        "Found \"%s\".",
+        GetTokenTypeName(token_type)
+      );
+      return Result::Error;
+    }
+  }
+  Consume();
 
-        // Expected one 0xXXXXXXXX number
-        if (!PeekMatch(TokenType::Nat))
-          return ErrorExpected({"an Nat literal"}, "123");
+  uint8_t lane_size = sizeof(v128) / lane_count;
 
-        Literal literal = Consume().literal();
+  // The bytes of the v128 are written here first:
+  std::array<char, 16> v128_bytes{};
+  const_->loc = GetLocation();
 
-        string_view sv = literal.text;
-        const char* s = sv.begin();
-        const char* end = sv.end();
-        Result result;
+  for (int i = 0; i < lane_count; ++i) {
+    Location loc = GetLocation();
 
-        result = ParseInt32(s, end, &(const_->v128_bits.v[i]),
-                            ParseIntType::SignedAndUnsigned);
-
-        if (Failed(result)) {
-          Error(loc, "invalid literal \"%s\"", literal.text.c_str());
-          return Result::Error;
-        }
+    // Check that the lane literal type matches the element type of the v128:
+    if (integer) {
+      if (!(PeekMatch(TokenType::Int) || PeekMatch(TokenType::Nat))) {
+        return ErrorExpected({"a Nat or Integer literal"}, "123");
       }
-      break;
+    } else {
+      if (!PeekMatch(TokenType::Float)) {
+        return ErrorExpected({"a Float literal"}, "42.0");
+      }
     }
 
-    default:
-      Error(const_->loc, "Expected i32 at start of simd constant");
+    Literal literal = Consume().literal();
+
+    string_view sv = literal.text;
+    const char* s = sv.begin();
+    const char* end = sv.end();
+
+    // Pointer to the lane in the v128 bytes:
+    char* lane_ptr = &v128_bytes[lane_size * i];
+    Result result;
+
+    // For each type, parse the next literal, bound check it, and write it to
+    // the array of bytes:
+    if (integer) {
+      switch(lane_count) {
+        case 16: {
+          int32_t value;
+          result = ParseInt32(s, end, Bitcast<uint32_t*>(&value), ParseIntType::SignedAndUnsigned);
+          if (value < static_cast<int32_t>(std::numeric_limits<int8_t>::min()) ||
+              value > static_cast<int32_t>(std::numeric_limits<uint8_t>::max())) {
+              Error(loc, "literal \"%s\" out-of-bounds of i8", literal.text.c_str());
+              return Result::Error;
+          }
+          *lane_ptr = static_cast<uint8_t>(value);
+          break;
+        }
+        case 8: {
+          int32_t value;
+          result = ParseInt32(s, end, Bitcast<uint32_t*>(&value), ParseIntType::SignedAndUnsigned);
+          if (value < static_cast<int32_t>(std::numeric_limits<int16_t>::min()) ||
+              value > static_cast<int32_t>(std::numeric_limits<uint16_t>::max())) {
+            Error(loc, "literal \"%s\" out-of-bounds of i16", literal.text.c_str());
+            return Result::Error;
+          }
+          *lane_ptr = static_cast<uint16_t>(value);
+          break;
+        }
+        case 4: {
+          result = ParseInt32(s, end, Bitcast<uint32_t*>(lane_ptr), ParseIntType::SignedAndUnsigned);
+          break;
+        }
+        case 2: {
+          result = ParseInt64(s, end, Bitcast<uint64_t*>(lane_ptr), ParseIntType::SignedAndUnsigned);
+          break;
+        }
+      }
+    } else {
+      switch(lane_count) {
+        case 4: {
+          result = ParseFloat(literal.type, s, end, Bitcast<uint32_t*>(lane_ptr));
+          break;
+        }
+        case 2: {
+          result = ParseDouble(literal.type,s, end, Bitcast<uint64_t*>(lane_ptr));
+          break;
+        }
+      }
+    }
+
+    if (Failed(result)) {
+      Error(loc, "invalid literal \"%s\"", literal.text.c_str());
       return Result::Error;
+    }
   }
+
+  memcpy(&const_->v128_bits.v, v128_bytes.data(), 16);
 
   return Result::Ok;
 }
@@ -1787,11 +1854,12 @@ Result WastParser::ParseConst(Const* const_) {
   string_view sv;
   const char* s;
   const char* end;
-  Type in_type = Type::Any;
-
   const_->loc = GetLocation();
+  TokenType token_type = Peek();
 
-  switch (Peek()) {
+  // V128 is fully handled by ParseSimdV128Const:
+  if (opcode != Opcode::V128Const) {
+    switch (token_type) {
     case TokenType::Nat:
     case TokenType::Int:
     case TokenType::Float: {
@@ -1801,18 +1869,9 @@ Result WastParser::ParseConst(Const* const_) {
       end = sv.end();
       break;
     }
-    case TokenType::ValueType: {
-      // ValueType token is valid here only when after a Simd const opcode.
-      if (opcode != Opcode::V128Const) {
-        return ErrorExpected({"a numeric literal for non-simd const opcode"},
-                             "123, -45, 6.7e8");
-      }
-      // Get Simd Const input type.
-      in_type = Consume().type();
-      break;
-    }
     default:
       return ErrorExpected({"a numeric literal"}, "123, -45, 6.7e8");
+    }
   }
 
   Result result;
@@ -1843,8 +1902,8 @@ Result WastParser::ParseConst(Const* const_) {
       ErrorUnlessOpcodeEnabled(token);
       const_->type = Type::V128;
       // Parse V128 Simd Const (16 bytes).
-      result = ParseSimdConst(const_, in_type, sizeof(v128));
-      // ParseSimdConst report error already, just return here if parser get
+      result = ParseSimdV128Const(const_, token_type);
+      // ParseSimdV128Const report error already, just return here if parser get
       // errors.
       if (Failed(result)) {
         return Result::Error;

@@ -4,84 +4,84 @@
 (module
   ;; i8x16 extract lane signed/unsigned
   (func (export  "func_i8x16_extract_lane_s_0") (result i32)
-    v128.const i32 0x00000001 0x0000000f 0x000000ff 0x0000017f
+    v128.const i32x4 0x00000001 0x0000000f 0x000000ff 0x0000017f
     i8x16.extract_lane_s 8)
   (func (export  "func_i8x16_extract_lane_u_0") (result i32)
-    v128.const i32 0x00000001 0x0000000f 0x000000ff 0x0000017f
+    v128.const i32x4 0x00000001 0x0000000f 0x000000ff 0x0000017f
     i8x16.extract_lane_u 8)
 
   ;; i16x8 extract lane signed/unsigned
   (func (export  "func_i16x8_extract_lane_s_0") (result i32)
-    v128.const i32 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+    v128.const i32x4 0x00000001 0x0000000f 0x0000ffff 0x0000017f
     i16x8.extract_lane_s 4)
   (func (export  "func_i16x8_extract_lane_u_0") (result i32)
-    v128.const i32 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+    v128.const i32x4 0x00000001 0x0000000f 0x0000ffff 0x0000017f
     i16x8.extract_lane_u 4)
 
   ;; i32x4 extract lane
   (func (export  "func_i32x4_extract_lane_0") (result i32)
-    v128.const i32 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+    v128.const i32x4 0x00000001 0x0000000f 0x0000ffff 0x0000017f
     i32x4.extract_lane 2)
 
   ;; i64x2 extract lane
   (func (export  "func_i64x2_extract_lane_0") (result i64)
-    v128.const i32 0x0000000f 0x00000000 0x0000ffff 0x0000017f
+    v128.const i32x4 0x0000000f 0x00000000 0x0000ffff 0x0000017f
     i64x2.extract_lane 0)
 
   ;; f32x4 extract lane
   ;; For Floating num:
   ;; 1.5 = 0x3fc00000
   (func (export  "func_f32x4_extract_lane_0") (result f32)
-    v128.const i32 0x00000001 0x3fc00000 0x0000ffff 0x0000017f
+    v128.const i32x4 0x00000001 0x3fc00000 0x0000ffff 0x0000017f
     f32x4.extract_lane 1)
 
   ;; f64x2 extract lane
   ;; For Double num:
   ;; 4.5 = 0x4012000000000000
   (func (export  "func_f64x2_extract_lane_0") (result f64)
-    v128.const i32 0x00000000 0x40120000 0x0000ffff 0x0000017f
+    v128.const i32x4 0x00000000 0x40120000 0x0000ffff 0x0000017f
     f64x2.extract_lane 0)
 
   ;; i8x16 replace lane
   (func (export  "func_i8x16_replace_lane_0") (result v128)
-    v128.const i32 0x00000001 0x0000000f 0x000000ff 0x0000017f
+    v128.const i32x4 0x00000001 0x0000000f 0x000000ff 0x0000017f
     i32.const 0xe5
     i8x16.replace_lane 8)
 
   ;; i16x8 replace lane
   (func (export  "func_i16x8_replace_lane_0") (result v128)
-    v128.const i32 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+    v128.const i32x4 0x00000001 0x0000000f 0x0000ffff 0x0000017f
     i32.const 0xe5e6
     i16x8.replace_lane 4)
 
   ;; i32x4 replace lane
   (func (export  "func_i32x4_replace_lane_0") (result v128)
-    v128.const i32 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+    v128.const i32x4 0x00000001 0x0000000f 0x0000ffff 0x0000017f
     i32.const 0x12345678
     i32x4.replace_lane 2)
 
   ;; i64x2 replace lane
   (func (export  "func_i64x2_replace_lane_0") (result v128)
-    v128.const i32 0x0000000f 0x00000000 0x0000ffff 0x0000017f
+    v128.const i32x4 0x0000000f 0x00000000 0x0000ffff 0x0000017f
     i64.const 0x0000123400005678
     i64x2.replace_lane 0)
 
   ;; f32x4 replace lane
   (func (export  "func_f32x4_replace_lane_0") (result v128)
-    v128.const i32 0x00000001 0x00000000 0x0000ffff 0x0000017f
+    v128.const i32x4 0x00000001 0x00000000 0x0000ffff 0x0000017f
     f32.const 1.5
     f32x4.replace_lane 1)
 
   ;; f64x2 replace lane
   (func (export  "func_f64x2_replace_lane_0") (result v128)
-    v128.const i32 0x0000789a 0xff880330 0x0000ffff 0x0000017f
+    v128.const i32x4 0x0000789a 0xff880330 0x0000ffff 0x0000017f
     f64.const 4.5
     f64x2.replace_lane 0)
 
   ;; v8x16 shuffle
   (func (export  "func_v8x16_shuffle_0") (result v128)
-    v128.const i32 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
-    v128.const i32 0x00550055 0x00550055 0x00550055 0x00550155
+    v128.const i32x4 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
+    v128.const i32x4 0x00550055 0x00550055 0x00550055 0x00550155
     v8x16.shuffle 16 1 18 3 20 5 22 7 24 9 26 11 28 13 30 15)
 )
 (;; STDOUT ;;;

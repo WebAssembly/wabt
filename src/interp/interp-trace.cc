@@ -473,7 +473,7 @@ void Thread::Trace(Stream* stream) {
       break;
 
     case Opcode::V128Const: {
-      stream->Writef("%s 0x%08x 0x%08x 0x%08x 0x%08x\n", opcode.GetName(),
+      stream->Writef("%s i32x4 0x%08x 0x%08x 0x%08x 0x%08x\n", opcode.GetName(),
                      ReadU32At(pc), ReadU32At(pc + 4), ReadU32At(pc + 8),
                      ReadU32At(pc + 12));
       break;
