@@ -774,7 +774,10 @@ void BinaryWriter::WriteRelocSection(const RelocSection* reloc_section) {
     switch (reloc.type) {
       case RelocType::MemoryAddressLEB:
       case RelocType::MemoryAddressSLEB:
+      case RelocType::MemoryAddressRelSLEB:
       case RelocType::MemoryAddressI32:
+      case RelocType::FunctionOffsetI32:
+      case RelocType::SectionOffsetI32:
         WriteU32Leb128(stream_, reloc.addend, "reloc addend");
         break;
       default:

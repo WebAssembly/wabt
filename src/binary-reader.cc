@@ -1608,6 +1608,7 @@ Result BinaryReader::ReadRelocSection(Offset section_size) {
     switch (type) {
       case RelocType::MemoryAddressLEB:
       case RelocType::MemoryAddressSLEB:
+      case RelocType::MemoryAddressRelSLEB:
       case RelocType::MemoryAddressI32:
       case RelocType::FunctionOffsetI32:
       case RelocType::SectionOffsetI32:
