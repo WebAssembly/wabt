@@ -197,7 +197,7 @@ enum class ExprType {
   ReturnCallIndirect,
   Select,
   SimdLaneOp,
-  SimdShuffleOp,
+  SimdShuffle2ImmOp,
   Store,
   TableCopy,
   ElemDrop,
@@ -298,10 +298,10 @@ class SimdLaneOpExpr : public ExprMixin<ExprType::SimdLaneOp> {
   uint64_t val;
 };
 
-class SimdShuffleOpExpr : public ExprMixin<ExprType::SimdShuffleOp> {
+class SimdShuffle2ImmOpExpr : public ExprMixin<ExprType::SimdShuffle2ImmOp> {
  public:
-  SimdShuffleOpExpr(Opcode opcode, v128 val, const Location& loc = Location())
-      : ExprMixin<ExprType::SimdShuffleOp>(loc), opcode(opcode), val(val) {}
+  SimdShuffle2ImmOpExpr(Opcode opcode, v128 val, const Location& loc = Location())
+      : ExprMixin<ExprType::SimdShuffle2ImmOp>(loc), opcode(opcode), val(val) {}
 
   Opcode opcode;
   v128 val;

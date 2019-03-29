@@ -2695,7 +2695,7 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
-      case Opcode::V8X16Shuffle: {
+      case Opcode::V8X16Shuffle2Imm: {
         const int32_t lanes = 16;
         // Define SIMD data array for Simd add by Lanes.
         int8_t simd_data_ret[lanes];

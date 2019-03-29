@@ -270,7 +270,7 @@ class BinaryReaderDelegate {
 
   /* Simd instructions with Lane Imm operand*/
   virtual Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) = 0;
-  virtual Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) = 0;
+  virtual Result OnSimdShuffle2ImmOpExpr(Opcode opcode, v128 value) = 0;
 
   /* Elem section */
   virtual Result BeginElemSection(Offset size) = 0;

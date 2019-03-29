@@ -575,7 +575,7 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::V8X16Shuffle:
+    case Opcode::V8X16Shuffle2Imm:
       stream->Writef(
           "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with lane imm: "
           "$0x%08x %08x %08x %08x\n",

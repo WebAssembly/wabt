@@ -693,10 +693,10 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
                        "Simd Lane literal");
       break;
     }
-    case ExprType::SimdShuffleOp: {
-      const Opcode opcode = cast<SimdShuffleOpExpr>(expr)->opcode;
+    case ExprType::SimdShuffle2ImmOp: {
+      const Opcode opcode = cast<SimdShuffle2ImmOpExpr>(expr)->opcode;
       WriteOpcode(stream_, opcode);
-      stream_->WriteU128(cast<SimdShuffleOpExpr>(expr)->val,
+      stream_->WriteU128(cast<SimdShuffle2ImmOpExpr>(expr)->val,
                          "Simd Lane[16] literal");
       break;
     }

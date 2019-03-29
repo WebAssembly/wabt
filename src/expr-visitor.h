@@ -124,7 +124,7 @@ class ExprVisitor::Delegate {
   virtual Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) = 0;
   virtual Result OnTernaryExpr(TernaryExpr*) = 0;
   virtual Result OnSimdLaneOpExpr(SimdLaneOpExpr*) = 0;
-  virtual Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) = 0;
+  virtual Result OnSimdShuffle2ImmOpExpr(SimdShuffle2ImmOpExpr*) = 0;
 };
 
 class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
@@ -193,7 +193,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   }
   Result OnTernaryExpr(TernaryExpr*) override { return Result::Ok; }
   Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override { return Result::Ok; }
-  Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override { return Result::Ok; }
+  Result OnSimdShuffle2ImmOpExpr(SimdShuffle2ImmOpExpr*) override { return Result::Ok; }
 };
 
 }  // namespace wabt

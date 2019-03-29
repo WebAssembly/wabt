@@ -265,7 +265,7 @@ class CWriter {
   void Write(const UnaryExpr&);
   void Write(const TernaryExpr&);
   void Write(const SimdLaneOpExpr&);
-  void Write(const SimdShuffleOpExpr&);
+  void Write(const SimdShuffle2ImmOpExpr&);
 
   const WriteCOptions& options_;
   const Module* module_ = nullptr;
@@ -1648,8 +1648,8 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
-      case ExprType::SimdShuffleOp: {
-        Write(*cast<SimdShuffleOpExpr>(&expr));
+      case ExprType::SimdShuffle2ImmOp: {
+        Write(*cast<SimdShuffle2ImmOpExpr>(&expr));
         break;
       }
 
@@ -2243,7 +2243,7 @@ void CWriter::Write(const SimdLaneOpExpr& expr) {
   PushType(result_type);
 }
 
-void CWriter::Write(const SimdShuffleOpExpr& expr) {
+void CWriter::Write(const SimdShuffle2ImmOpExpr& expr) {
   Type result_type = expr.opcode.GetResultType();
   Write(StackVar(1, result_type), " = ", expr.opcode.GetName(), "(",
         StackVar(1), " ", StackVar(0), ", lane Imm: $0x%08x %08x %08x %08x",

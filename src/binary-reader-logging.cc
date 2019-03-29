@@ -353,10 +353,10 @@ Result BinaryReaderLogging::OnSimdLaneOpExpr(Opcode opcode, uint64_t value) {
   return reader_->OnSimdLaneOpExpr(opcode, value);
 }
 
-Result BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
-  LOGF("OnSimdShuffleOpExpr (lane: 0x%08x %08x %08x %08x)\n", value.v[0],
+Result BinaryReaderLogging::OnSimdShuffle2ImmOpExpr(Opcode opcode, v128 value) {
+  LOGF("OnSimdShuffle2ImmOpExpr (lane: 0x%08x %08x %08x %08x)\n", value.v[0],
        value.v[1], value.v[2], value.v[3]);
-  return reader_->OnSimdShuffleOpExpr(opcode, value);
+  return reader_->OnSimdShuffle2ImmOpExpr(opcode, value);
 }
 
 Result BinaryReaderLogging::OnDataSegmentData(Index index,

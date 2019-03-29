@@ -578,7 +578,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnAtomicRmwCmpxchgExpr(AtomicRmwCmpxchgExpr*) override;
   Result OnTernaryExpr(TernaryExpr*) override;
   Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override;
-  Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
+  Result OnSimdShuffle2ImmOpExpr(SimdShuffle2ImmOpExpr*) override;
 
  private:
   WatWriter* writer_;
@@ -941,8 +941,8 @@ Result WatWriter::ExprVisitorDelegate::OnSimdLaneOpExpr(SimdLaneOpExpr* expr) {
   return Result::Ok;
 }
 
-Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
-    SimdShuffleOpExpr* expr) {
+Result WatWriter::ExprVisitorDelegate::OnSimdShuffle2ImmOpExpr(
+    SimdShuffle2ImmOpExpr* expr) {
   writer_->WritePutsSpace(expr->opcode.GetName());
   std::array<uint8_t, 16> values = Bitcast<std::array<uint8_t, 16>>(expr->val);
   for (int32_t lane = 0; lane < 16; ++lane) {
@@ -1182,7 +1182,7 @@ void WatWriter::WriteFoldedExpr(const Expr* expr) {
       break;
     }
 
-    case ExprType::SimdShuffleOp:
+    case ExprType::SimdShuffle2ImmOp:
       PushExpr(expr, 2, 1);
       break;
 
