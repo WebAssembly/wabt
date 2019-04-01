@@ -101,20 +101,10 @@ WastLexer::~WastLexer() {
 }
 
 // static
-std::unique_ptr<WastLexer> WastLexer::CreateFileLexer(string_view filename) {
-  auto source = MakeUnique<LexerSourceFile>(filename);
-  if (!source->IsOpen()) {
-    return std::unique_ptr<WastLexer>();
-  }
-  return MakeUnique<WastLexer>(std::move(source), filename);
-}
-
-// static
 std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(string_view filename,
                                                         const void* data,
                                                         size_t size) {
-  return MakeUnique<WastLexer>(MakeUnique<LexerSourceBuffer>(data, size),
-                               filename);
+  return MakeUnique<WastLexer>(MakeUnique<LexerSource>(data, size), filename);
 }
 
 Location WastLexer::GetLocation() {

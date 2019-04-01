@@ -29,43 +29,15 @@ namespace wabt {
 
 class LexerSource {
  public:
-  LexerSource() = default;
-  virtual ~LexerSource() {}
-  virtual std::unique_ptr<LexerSource> Clone() = 0;
-  virtual Result Tell(Offset* out_offset) = 0;
-  virtual size_t Fill(void* dest, size_t size) = 0;
-  virtual Result ReadRange(OffsetRange, std::vector<char>* out_data) = 0;
-  virtual Result Seek(Offset) = 0;
+  LexerSource(const void* data, Offset size);
+
+  std::unique_ptr<LexerSource> Clone();
+  Result Tell(Offset* out_offset);
+  size_t Fill(void* dest, size_t size);
+  Result ReadRange(OffsetRange, std::vector<char>* out_data);
+  Result Seek(Offset offset);
 
   WABT_DISALLOW_COPY_AND_ASSIGN(LexerSource);
-};
-
-class LexerSourceFile : public LexerSource {
- public:
-  explicit LexerSourceFile(string_view filename);
-  ~LexerSourceFile();
-
-  bool IsOpen() const { return file_ != nullptr; }
-
-  std::unique_ptr<LexerSource> Clone() override;
-  Result Tell(Offset* out_offset) override;
-  size_t Fill(void* dest, size_t size) override;
-  Result ReadRange(OffsetRange, std::vector<char>* out_data) override;
-  Result Seek(Offset offset) override;
-
-  std::string filename_;
-  FILE* file_;
-};
-
-class LexerSourceBuffer : public LexerSource {
- public:
-  LexerSourceBuffer(const void* data, Offset size);
-
-  std::unique_ptr<LexerSource> Clone() override;
-  Result Tell(Offset* out_offset) override;
-  size_t Fill(void* dest, size_t size) override;
-  Result ReadRange(OffsetRange, std::vector<char>* out_data) override;
-  Result Seek(Offset offset) override;
 
  private:
   const void* data_;

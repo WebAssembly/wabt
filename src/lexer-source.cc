@@ -20,92 +20,21 @@
 
 namespace wabt {
 
-LexerSourceFile::LexerSourceFile(string_view filename) : filename_(filename) {
-  file_ = fopen(filename_.c_str(), "rb");
-}
-
-LexerSourceFile::~LexerSourceFile() {
-  if (file_) {
-    fclose(file_);
-  }
-}
-
-std::unique_ptr<LexerSource> LexerSourceFile::Clone() {
-  std::unique_ptr<LexerSourceFile> result(new LexerSourceFile(filename_));
-
-  Offset offset = 0;
-  if (Failed(Tell(&offset)) || Failed(result->Seek(offset))) {
-    result.reset();
-  }
-
-  return std::move(result);
-}
-
-Result LexerSourceFile::Tell(Offset* out_offset) {
-  if (!file_) {
-    return Result::Error;
-  }
-
-  long offset = ftell(file_);
-  if (offset < 0) {
-    return Result::Error;
-  }
-
-  *out_offset = offset;
-  return Result::Ok;
-}
-
-size_t LexerSourceFile::Fill(void* dest, size_t size) {
-  if (!file_) {
-    return 0;
-  }
-  return fread(dest, 1, size, file_);
-}
-
-Result LexerSourceFile::ReadRange(OffsetRange range,
-                                  std::vector<char>* out_data) {
-  Offset old_offset = 0;
-  CHECK_RESULT(Tell(&old_offset));
-  CHECK_RESULT(Seek(range.start));
-
-  std::vector<char> result(range.size());
-  if (range.size() > 0) {
-    size_t read_size = Fill(result.data(), range.size());
-    if (read_size < range.size()) {
-      result.resize(read_size);
-    }
-  }
-
-  CHECK_RESULT(Seek(old_offset));
-
-  *out_data = std::move(result);
-  return Result::Ok;
-}
-
-Result LexerSourceFile::Seek(Offset offset) {
-  if (!file_) {
-    return Result::Error;
-  }
-
-  int result = fseek(file_, offset, SEEK_SET);
-  return result < 0 ? Result::Error : Result::Ok;
-}
-
-LexerSourceBuffer::LexerSourceBuffer(const void* data, Offset size)
+LexerSource::LexerSource(const void* data, Offset size)
     : data_(data), size_(size), read_offset_(0) {}
 
-std::unique_ptr<LexerSource> LexerSourceBuffer::Clone() {
-  LexerSourceBuffer* result = new LexerSourceBuffer(data_, size_);
+std::unique_ptr<LexerSource> LexerSource::Clone() {
+  LexerSource* result = new LexerSource(data_, size_);
   result->read_offset_ = read_offset_;
   return std::unique_ptr<LexerSource>(result);
 }
 
-Result LexerSourceBuffer::Tell(Offset* out_offset) {
+Result LexerSource::Tell(Offset* out_offset) {
   *out_offset = read_offset_;
   return Result::Ok;
 }
 
-size_t LexerSourceBuffer::Fill(void* dest, Offset size) {
+size_t LexerSource::Fill(void* dest, Offset size) {
   Offset read_size = std::min(size, size_ - read_offset_);
   if (read_size > 0) {
     const void* src = static_cast<const char*>(data_) + read_offset_;
@@ -115,7 +44,7 @@ size_t LexerSourceBuffer::Fill(void* dest, Offset size) {
   return read_size;
 }
 
-Result LexerSourceBuffer::Seek(Offset offset) {
+Result LexerSource::Seek(Offset offset) {
   if (offset < size_) {
     read_offset_ = offset;
     return Result::Ok;
@@ -123,8 +52,7 @@ Result LexerSourceBuffer::Seek(Offset offset) {
   return Result::Error;
 }
 
-Result LexerSourceBuffer::ReadRange(OffsetRange range,
-                                    std::vector<char>* out_data) {
+Result LexerSource::ReadRange(OffsetRange range, std::vector<char>* out_data) {
   OffsetRange clamped = range;
   clamped.start = std::min(clamped.start, size_);
   clamped.end = std::min(clamped.end, size_);

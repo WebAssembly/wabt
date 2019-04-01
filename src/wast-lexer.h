@@ -42,7 +42,6 @@ class WastLexer {
   ~WastLexer();
 
   // Convenience functions.
-  static std::unique_ptr<WastLexer> CreateFileLexer(string_view filename);
   static std::unique_ptr<WastLexer> CreateBufferLexer(string_view filename,
                                                       const void* data,
                                                       size_t size);

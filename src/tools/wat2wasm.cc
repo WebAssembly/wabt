@@ -127,16 +127,18 @@ int ProgramMain(int argc, char** argv) {
 
   ParseOptions(argc, argv);
 
-  std::unique_ptr<WastLexer> lexer = WastLexer::CreateFileLexer(s_infile);
-  if (!lexer) {
+  std::vector<uint8_t> file_data;
+  Result result = ReadFile(s_infile, &file_data);
+  std::unique_ptr<WastLexer> lexer = WastLexer::CreateBufferLexer(
+      s_infile, file_data.data(), file_data.size());
+  if (Failed(result)) {
     WABT_FATAL("unable to read file: %s\n", s_infile);
   }
 
   Errors errors;
   std::unique_ptr<Module> module;
   WastParseOptions parse_wast_options(s_features);
-  Result result =
-      ParseWatModule(lexer.get(), &module, &errors, &parse_wast_options);
+  result = ParseWatModule(lexer.get(), &module, &errors, &parse_wast_options);
 
   if (Succeeded(result)) {
     result = ResolveNamesModule(module.get(), &errors);
