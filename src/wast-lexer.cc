@@ -26,11 +26,11 @@
 
 #define ERROR(...) parser->Error(GetLocation(), __VA_ARGS__)
 
-#define yytext (next_pos_)
-#define yyleng (cursor_ - next_pos_)
+#define yytext (token_start_)
+#define yyleng (cursor_ - token_start_)
 
 /* p must be a pointer somewhere in the lexer buffer */
-#define FILE_OFFSET(p) ((p) - (buffer_) + buffer_file_offset_)
+#define FILE_OFFSET(p) ((p) - (buffer_))
 #define COLUMN(p) (FILE_OFFSET(p) - line_file_offset_ + 1)
 
 #define NEWLINE                               \
@@ -39,46 +39,35 @@
     line_file_offset_ = FILE_OFFSET(cursor_); \
   } while (0)
 
-#define RETURN(token) return Token(GetLocation(), TokenType::token);
+#define RETURN(token) return Token(GetLocation(), token);
 
-#define RETURN_LITERAL(token, literal)          \
-  return Token(GetLocation(), TokenType::token, \
-               MakeLiteral(LiteralType::literal))
+#define RETURN_LITERAL(token, literal) \
+  return Token(GetLocation(), token, MakeLiteral(LiteralType::literal))
 
-#define RETURN_TYPE(token, type) \
-  return Token(GetLocation(), TokenType::token, Type::type)
-
-#define RETURN_OPCODE0(token) \
-  return Token(GetLocation(), TokenType::token, Opcode::token)
-
-#define RETURN_OPCODE(token, opcode) \
-  return Token(GetLocation(), TokenType::token, Opcode::opcode)
-
-#define RETURN_TEXT(token) \
-  return Token(GetLocation(), TokenType::token, GetText())
+#define RETURN_TYPE(token, type) return Token(GetLocation(), token, type)
+#define RETURN_OPCODE(token, opcode) return Token(GetLocation(), token, opcode)
+#define RETURN_TEXT(token) return Token(GetLocation(), token, GetText())
 
 #define RETURN_TEXT_AT(token, at) \
-  return Token(GetLocation(), TokenType::token, GetText(at))
+  return Token(GetLocation(), token, GetText(at))
 
 namespace wabt {
+
+namespace {
+
+#include "src/prebuilt/lexer-keywords.cc"
+
+}  // namespace
 
 WastLexer::WastLexer(std::unique_ptr<LexerSource> source, string_view filename)
     : source_(std::move(source)),
       filename_(filename),
       line_(1),
-      buffer_file_offset_(0),
+      buffer_(static_cast<const char*>(source_->data())),
+      buffer_end_(buffer_ + source_->size()),
       line_file_offset_(0),
-      eof_(false),
-      buffer_(nullptr),
-      buffer_size_(0),
-      marker_(nullptr),
-      next_pos_(nullptr),
-      cursor_(nullptr),
-      limit_(nullptr) {}
-
-WastLexer::~WastLexer() {
-  delete[] buffer_;
-}
+      token_start_(buffer_),
+      cursor_(buffer_) {}
 
 // static
 std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(string_view filename,
@@ -88,7 +77,7 @@ std::unique_ptr<WastLexer> WastLexer::CreateBufferLexer(string_view filename,
 }
 
 Location WastLexer::GetLocation() {
-  return Location(filename_, line_, COLUMN(next_pos_), COLUMN(cursor_));
+  return Location(filename_, line_, COLUMN(token_start_), COLUMN(cursor_));
 }
 
 Literal WastLexer::MakeLiteral(LiteralType type) {
@@ -99,13 +88,17 @@ std::string WastLexer::GetText(size_t offset) {
   return std::string(yytext + offset, yyleng - offset);
 }
 
+int WastLexer::PeekChar() {
+  return cursor_ < buffer_end_ ? *cursor_ : kEof;
+}
+
 int WastLexer::ReadChar() {
-  return source_->ReadChar();
+  return cursor_ < buffer_end_ ? *cursor_++ : kEof;
 }
 
 bool WastLexer::MatchChar(char c) {
-  if (source_->PeekChar() == c) {
-    source_->Skip();
+  if (PeekChar() == c) {
+    ReadChar();
     return true;
   }
   return false;
@@ -113,8 +106,9 @@ bool WastLexer::MatchChar(char c) {
 
 Token WastLexer::GetToken(WastParser* parser) {
   while (1) {
-    switch (source_->ReadChar()) {
-      case LexerSource::kEOF: RETURN(Eof);
+    token_start_ = cursor_;
+    switch (ReadChar()) {
+      case kEof: RETURN(TokenType::Eof);
 
       case '(':
         if (MatchChar(';')) {
@@ -123,9 +117,9 @@ Token WastLexer::GetToken(WastParser* parser) {
           bool in_comment = true;
           while (in_comment) {
             switch (ReadChar()) {
-              case LexerSource::kEOF:
+              case kEof:
                 ERROR("EOF in block comment");
-                RETURN(Eof);
+                RETURN(TokenType::Eof);
 
               case ';':
                 if (MatchChar(')') && --nesting == 0) {
@@ -145,11 +139,11 @@ Token WastLexer::GetToken(WastParser* parser) {
           }
           continue;
         } else {
-          RETURN(Lpar);
+          RETURN(TokenType::Lpar);
         }
         break;
 
-      case ')': RETURN(Rpar);
+      case ')': RETURN(TokenType::Rpar);
 
       case ';':
         if (MatchChar(';')) {
@@ -157,7 +151,7 @@ Token WastLexer::GetToken(WastParser* parser) {
           bool in_comment = true;
           while (in_comment) {
             switch (ReadChar()) {
-              case LexerSource::kEOF: RETURN(Eof);
+              case kEof: RETURN(TokenType::Eof);
               case '\n': NEWLINE; in_comment = false; break;
             }
           }
@@ -173,44 +167,23 @@ Token WastLexer::GetToken(WastParser* parser) {
       case '\r':  // Whitespace.
         continue;
 
-      case '"': {
-        // String.
-        bool in_string = true;
-        while (in_string) {
-          switch (ReadChar()) {
-            case LexerSource::kEOF: ERROR("eof in string"); RETURN(Eof);
-            case '\n': ERROR("newline in string"); NEWLINE; continue;
-            case '\\':
-              switch (ReadChar()) {
-                case 't':
-                case 'n':
-                case 'r':
-                case '"':
-                case '\'':
-                case '\\':  // Valid escape.
-                  break;
-
-                default:
-                  ERROR("bad escape");
-                  break;
-              }
-              break;
-            case '"': in_string = false; break;
-            default: break; // TODO Check for utf-8.
-          }
-        }
-        RETURN_TEXT(Text);
-      }
-
       case '\n': NEWLINE; continue;
+
+      case '"': // String.
+        return ReadString(parser);
 
       case '+':
       case '-':
-        switch (PeekChar()) {
-          case 'i':  // Maybe inf.
-          case 'n':  // Maybe nan.
+        switch (ReadChar()) {
+          case 'i':
+            return ReadInf(parser, true);
+
+          case 'n':
+            return ReadNan(parser, true);
 
           case '0':
+            return MatchChar('x') ? ReadHexNumber(parser, TokenType::Int)
+                                  : ReadNumber(parser, TokenType::Int);
           case '1':
           case '2':
           case '3':
@@ -220,14 +193,16 @@ Token WastLexer::GetToken(WastParser* parser) {
           case '7':
           case '8':
           case '9':
-            goto number;
+            return ReadNumber(parser, TokenType::Int);
 
-          default: RETURN_TEXT(Reserved);
+          default: RETURN_TEXT(TokenType::Reserved);
         }
         break;
 
-      number:
       case '0':
+        return MatchChar('x') ? ReadHexNumber(parser, TokenType::Nat)
+                              : ReadNumber(parser, TokenType::Nat);
+
       case '1':
       case '2':
       case '3':
@@ -237,10 +212,16 @@ Token WastLexer::GetToken(WastParser* parser) {
       case '7':
       case '8':
       case '9':  // Number.
-        break;
+        return ReadNumber(parser, TokenType::Nat);
 
       case '$':  // Name.
-        break;
+        return ReadName(parser);
+
+      case 'i':
+        return ReadInf(parser, false);
+
+      case 'n':
+        return ReadNan(parser, false);
 
       case 'a':
       case 'b':
@@ -250,12 +231,10 @@ Token WastLexer::GetToken(WastParser* parser) {
       case 'f':
       case 'g':
       case 'h':
-      case 'i':
       case 'j':
       case 'k':
       case 'l':
       case 'm':
-      case 'n':
       case 'o':
       case 'p':
       case 'q':
@@ -294,11 +273,219 @@ Token WastLexer::GetToken(WastParser* parser) {
       case 'X':
       case 'Y':
       case 'Z':  // Keyword.
+        return ReadKeyword(parser);
 
       default:
         ERROR("unexpected char");
         continue;
     }
+  }
+}
+
+Token WastLexer::ReadString(WastParser* parser) {
+  bool in_string = true;
+  while (in_string) {
+    switch (ReadChar()) {
+      case kEof:
+        ERROR("eof in string");
+        RETURN(TokenType::Eof);
+      case '\n':
+        ERROR("newline in string");
+        NEWLINE;
+        continue;
+      case '\\':
+        switch (ReadChar()) {
+          case 't':
+          case 'n':
+          case 'r':
+          case '"':
+          case '\'':
+          case '\\':  // Valid escape.
+            break;
+
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+          case 'a':
+          case 'b':
+          case 'c':
+          case 'd':
+          case 'e':
+          case 'f':
+          case 'A':
+          case 'B':
+          case 'C':
+          case 'D':
+          case 'E':
+          case 'F':  // Hex byte escape.
+            // TODO
+            break;
+
+          default:
+            ERROR("bad escape");
+            break;
+        }
+        break;
+      case '"':
+        in_string = false;
+        break;
+      default:
+        break;  // TODO Check for utf-8.
+    }
+  }
+  RETURN_TEXT(TokenType::Text);
+}
+
+namespace {
+
+bool IsDigit(int c) {
+  return (c >= '0' && c <= '9') || c == '_';
+}
+
+bool IsHexDigit(int c) {
+  return IsDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+}
+
+bool IsNameChar(int c) {
+  return IsDigit(c) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+         strchr("!#$%&`*+-./:<=>?@\\^'|~", c);
+}
+
+bool IsKeywordChar(int c) {
+  return IsDigit(c) || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+         strchr(".:/", c);
+}
+
+}  // namespace
+
+int WastLexer::ReadDigits() {
+  int count = 0;
+  while (IsDigit(PeekChar())) {
+    ReadChar();
+    ++count;
+  }
+  return count;
+}
+
+int WastLexer::ReadHexDigits() {
+  int count = 0;
+  while (IsHexDigit(PeekChar())) {
+    ReadChar();
+    ++count;
+  }
+  return count;
+}
+
+void WastLexer::ReadSign() {
+  if (PeekChar() == '+' || PeekChar() == '-') {
+    ReadChar();
+  }
+}
+
+Token WastLexer::ReadNumber(WastParser* parser, TokenType token_type) {
+  // We've already read the first digit in GetToken above.
+  ReadDigits();
+  if (MatchChar('.')) {
+    token_type = TokenType::Float;
+    ReadDigits();
+  }
+  if (tolower(PeekChar()) == 'e') {
+    token_type = TokenType::Float;
+    ReadChar();
+    ReadSign();
+    if (ReadDigits() == 0) {
+      RETURN_TEXT(TokenType::Reserved);
+    }
+  }
+  if (token_type == TokenType::Float) {
+    RETURN_LITERAL(token_type, Float);
+  } else {
+    RETURN_LITERAL(token_type, Int);
+  }
+}
+
+Token WastLexer::ReadHexNumber(WastParser* parser, TokenType token_type) {
+  // We've only read the '0x' part, we need to ensure that there's at least one
+  // hex digit.
+  if (ReadHexDigits() == 0) {
+    RETURN_TEXT(TokenType::Reserved);
+  }
+  if (MatchChar('.')) {
+    token_type = TokenType::Float;
+    ReadHexDigits();
+  }
+  if (tolower(PeekChar()) == 'p') {
+    token_type = TokenType::Float;
+    ReadChar();
+    ReadSign();
+    if (ReadHexDigits() == 0) {
+      RETURN_TEXT(TokenType::Reserved);
+    }
+  }
+  if (token_type == TokenType::Float) {
+    RETURN_LITERAL(token_type, Hexfloat);
+  } else {
+    RETURN_LITERAL(token_type, Int);
+  }
+}
+
+Token WastLexer::ReadInf(WastParser* parser, bool has_sign) {
+  // We've already read the `i`.
+  if (MatchChar('n') && MatchChar('f')) {
+    RETURN_LITERAL(TokenType::Float, Infinity);
+  }
+  if (has_sign) {
+    RETURN_TEXT(TokenType::Reserved);
+  } else {
+    return ReadKeyword(parser);
+  }
+}
+
+Token WastLexer::ReadNan(WastParser* parser, bool has_sign) {
+  // We've already read the `n`.
+  if (MatchChar('a') && MatchChar('n')) {
+    if (MatchChar(':') && ReadHexDigits() == 0) {
+      RETURN_TEXT(TokenType::Reserved);
+    }
+    RETURN_LITERAL(TokenType::Float, Nan);
+  }
+  if (has_sign) {
+    RETURN_TEXT(TokenType::Reserved);
+  } else {
+    return ReadKeyword(parser);
+  }
+}
+
+Token WastLexer::ReadName(WastParser* parser) {
+  // We've already read the leading `$`.
+  while (IsNameChar(PeekChar())) {
+    ReadChar();
+  }
+  RETURN_TEXT(TokenType::Var);
+}
+
+Token WastLexer::ReadKeyword(WastParser* parser) {
+  while (IsKeywordChar(PeekChar())) {
+    ReadChar();
+  }
+  TokenInfo* info = Perfect_Hash::InWordSet(yytext, yyleng);
+  if (!info) {
+    RETURN_TEXT(TokenType::Reserved);
+  }
+  if (IsTokenTypeBare(info->token_type)) {
+    RETURN(info->token_type);
+  } else if (IsTokenTypeType(info->token_type)) {
+    RETURN_TYPE(info->token_type, info->value_type);
+  } else {
+    assert(IsTokenTypeOpcode(info->token_type));
+    RETURN_OPCODE(info->token_type, info->opcode);
   }
 }
 

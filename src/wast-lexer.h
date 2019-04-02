@@ -39,7 +39,6 @@ class WastLexer {
   WABT_DISALLOW_COPY_AND_ASSIGN(WastLexer);
 
   WastLexer(std::unique_ptr<LexerSource> source, string_view filename);
-  ~WastLexer();
 
   // Convenience functions.
   static std::unique_ptr<WastLexer> CreateBufferLexer(string_view filename,
@@ -55,27 +54,35 @@ class WastLexer {
   }
 
  private:
+  static const int kEof = -1;
+
   Location GetLocation();
   Literal MakeLiteral(LiteralType);
   std::string GetText(size_t at = 0);
 
+  int PeekChar();
   int ReadChar();
   bool MatchChar(char c);
+
+  int ReadDigits();
+  int ReadHexDigits();
+  void ReadSign();
+  Token ReadString(WastParser*);
+  Token ReadNumber(WastParser*, TokenType);
+  Token ReadHexNumber(WastParser*, TokenType);
+  Token ReadInf(WastParser*, bool has_sign);
+  Token ReadNan(WastParser*, bool has_sign);
+  Token ReadName(WastParser*);
+  Token ReadKeyword(WastParser*);
 
   std::unique_ptr<LexerSource> source_;
   std::string filename_;
   int line_;
-  size_t buffer_file_offset_;  // File offset of the start of the buffer.
-  size_t line_file_offset_;    // File offset of the start of the current line.
-
-  // Lexing data needed by re2c.
-  bool eof_;
-  char* buffer_;
-  size_t buffer_size_;
-  char* marker_;
-  char* next_pos_;
-  char* cursor_;
-  char* limit_;
+  const char* buffer_;
+  const char* buffer_end_;
+  size_t line_file_offset_;
+  const char* token_start_;
+  const char* cursor_;
 };
 
 }  // namespace wabt

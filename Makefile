@@ -31,7 +31,7 @@ DEFAULT_SUFFIX = clang-debug
 COMPILERS := GCC GCC_I686 GCC_FUZZ CLANG EMCC
 BUILD_TYPES := DEBUG RELEASE
 SANITIZERS := ASAN MSAN LSAN UBSAN
-CONFIGS := NORMAL $(SANITIZERS) COV NO_RE2C NO_TESTS
+CONFIGS := NORMAL $(SANITIZERS) COV NO_TESTS
 
 # directory names
 GCC_DIR := gcc/
@@ -46,7 +46,6 @@ ASAN_DIR := asan/
 MSAN_DIR := msan/
 LSAN_DIR := lsan/
 UBSAN_DIR := ubsan/
-NO_RE2C_DIR := no-re2c/
 COV_DIR := cov/
 NO_TESTS_DIR := no-tests/
 
@@ -65,7 +64,6 @@ MSAN_FLAG := -DUSE_MSAN=ON
 LSAN_FLAG := -DUSE_LSAN=ON
 UBSAN_FLAG := -DUSE_UBSAN=ON
 COV_FLAG := -DCODE_COVERAGE=ON
-NO_RE2C_FLAG := -DRUN_RE2C=OFF
 NO_TESTS_FLAG := -DBUILD_TESTS=OFF
 
 # make target prefixes
@@ -82,7 +80,6 @@ MSAN_PREFIX := -msan
 LSAN_PREFIX := -lsan
 UBSAN_PREFIX := -ubsan
 COV_PREFIX := -cov
-NO_RE2C_PREFIX := -no-re2c
 NO_TESTS_PREFIX := -no-tests
 
 ifeq ($(USE_NINJA),1)
@@ -140,11 +137,11 @@ clean:
 .PHONY: test-everything
 test-everything:
 
-.PHONY: update-re2c
-update-re2c: src/prebuilt/wast-lexer-gen.cc
+.PHONY: update-gperf
+update-gperf: src/prebuilt/lexer-keywords.cc
 
-src/prebuilt/wast-lexer-gen.cc: src/wast-lexer.cc
-	re2c -W -Werror --no-generation-date -bc8 -o $@ $<
+src/prebuilt/lexer-keywords.cc: src/lexer-keywords.txt
+	gperf -m 50 -L C++ -N InWordSet -E -t -c --output-file=$@ $<
 
 .PHONY: update-wasm2c
 update-wasm2c: src/prebuilt/wasm2c.include.c src/prebuilt/wasm2c.include.h

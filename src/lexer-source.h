@@ -37,33 +37,16 @@ class LexerSource {
   Result ReadRange(OffsetRange, std::vector<char>* out_data);
   Result Seek(Offset offset);
 
-  static const int kEOF = -1;
-  int PeekChar();
-  int ReadChar();
-  void Skip();
-
   WABT_DISALLOW_COPY_AND_ASSIGN(LexerSource);
+
+  const void* data() { return data_; }
+  Offset size() { return size_; }
 
  private:
   const void* data_;
   Offset size_;
   Offset read_offset_;
 };
-
-inline int LexerSource::PeekChar() {
-  return read_offset_ < size_ ? static_cast<const char*>(data_)[read_offset_]
-                              : kEOF;
-}
-
-inline int LexerSource::ReadChar() {
-  return read_offset_ < size_ ? static_cast<const char*>(data_)[read_offset_++]
-                              : kEOF;
-}
-
-inline void LexerSource::Skip() {
-  assert(read_offset_ < size_);
-  read_offset_++;
-}
 
 }  // namespace wabt
 
