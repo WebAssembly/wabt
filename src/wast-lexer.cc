@@ -24,25 +24,7 @@
 #include "src/lexer-source.h"
 #include "src/wast-parser.h"
 
-/*!max:re2c */
-
-#define INITIAL_LEXER_BUFFER_SIZE (64 * 1024)
-
 #define ERROR(...) parser->Error(GetLocation(), __VA_ARGS__)
-
-#define BEGIN(c) cond = (c)
-#define FILL(n)              \
-  do {                       \
-    if (Failed(Fill((n)))) { \
-      RETURN(Eof);           \
-    }                        \
-  } while (0)
-
-#define MAYBE_MALFORMED_UTF8(desc)                \
-  if (!(eof_ && limit_ - cursor_ <= YYMAXFILL)) { \
-    ERROR("malformed utf-8%s", desc);             \
-  }                                               \
-  continue
 
 #define yytext (next_pos_)
 #define yyleng (cursor_ - next_pos_)
@@ -51,7 +33,6 @@
 #define FILE_OFFSET(p) ((p) - (buffer_) + buffer_file_offset_)
 #define COLUMN(p) (FILE_OFFSET(p) - line_file_offset_ + 1)
 
-#define COMMENT_NESTING (comment_nesting_)
 #define NEWLINE                               \
   do {                                        \
     line_++;                                  \
@@ -85,7 +66,6 @@ WastLexer::WastLexer(std::unique_ptr<LexerSource> source, string_view filename)
     : source_(std::move(source)),
       filename_(filename),
       line_(1),
-      comment_nesting_(0),
       buffer_file_offset_(0),
       line_file_offset_(0),
       eof_(false),
@@ -119,63 +99,210 @@ std::string WastLexer::GetText(size_t offset) {
   return std::string(yytext + offset, yyleng - offset);
 }
 
-Result WastLexer::Fill(size_t need) {
-  if (eof_) {
-    return Result::Error;
-  }
-  size_t free = next_pos_ - buffer_;
-  assert(static_cast<size_t>(cursor_ - buffer_) >= free);
-  // Our buffer is too small, need to realloc.
-  if (free < need) {
-    char* old_buffer = buffer_;
-    size_t old_buffer_size = buffer_size_;
-    size_t new_buffer_size =
-        old_buffer_size ? old_buffer_size * 2 : INITIAL_LEXER_BUFFER_SIZE;
-    // Make sure there is enough space for the bytes requested (need) and an
-    // additional YYMAXFILL bytes which is needed for the re2c lexer
-    // implementation when the eof is reached.
-    while ((new_buffer_size - old_buffer_size) + free < need + YYMAXFILL)
-      new_buffer_size *= 2;
-
-    char* new_buffer = new char[new_buffer_size];
-    if (limit_ > next_pos_) {
-      memmove(new_buffer, next_pos_, limit_ - next_pos_);
-    }
-    buffer_ = new_buffer;
-    buffer_size_ = new_buffer_size;
-    next_pos_ = new_buffer + (next_pos_ - old_buffer) - free;
-    marker_ = new_buffer + (marker_ - old_buffer) - free;
-    cursor_ = new_buffer + (cursor_ - old_buffer) - free;
-    limit_ = new_buffer + (limit_ - old_buffer) - free;
-    buffer_file_offset_ += free;
-    free += new_buffer_size - old_buffer_size;
-    delete[] old_buffer;
-  } else {
-    // Shift everything down to make more room in the buffer.
-    if (limit_ > next_pos_) {
-      memmove(buffer_, next_pos_, limit_ - next_pos_);
-    }
-    next_pos_ -= free;
-    marker_ -= free;
-    cursor_ -= free;
-    limit_ -= free;
-    buffer_file_offset_ += free;
-  }
-  // Read the new data into the buffer.
-  limit_ += source_->Fill(limit_, free);
-
-  // If at the end of file, need to fill YYMAXFILL more characters with "fake
-  // characters", that are not a lexeme nor a lexeme suffix. see
-  // http://re2c.org/examples/example_03.html.
-  if (limit_ < buffer_ + buffer_size_ - YYMAXFILL) {
-    eof_ = true;
-    // Fill with 0xff, since that is an invalid utf-8 byte.
-    memset(limit_, 0xff, YYMAXFILL);
-    limit_ += YYMAXFILL;
-  }
-  return Result::Ok;
+int WastLexer::ReadChar() {
+  return source_->ReadChar();
 }
 
+bool WastLexer::MatchChar(char c) {
+  if (source_->PeekChar() == c) {
+    source_->Skip();
+    return true;
+  }
+  return false;
+}
+
+Token WastLexer::GetToken(WastParser* parser) {
+  while (1) {
+    switch (source_->ReadChar()) {
+      case LexerSource::kEOF: RETURN(Eof);
+
+      case '(':
+        if (MatchChar(';')) {
+          // Block comment.
+          int nesting = 1;
+          bool in_comment = true;
+          while (in_comment) {
+            switch (ReadChar()) {
+              case LexerSource::kEOF:
+                ERROR("EOF in block comment");
+                RETURN(Eof);
+
+              case ';':
+                if (MatchChar(')') && --nesting == 0) {
+                  in_comment = false;
+                  break;
+                }
+                break;
+
+              case '(':
+                if (MatchChar(';')) {
+                  nesting++;
+                }
+                break;
+
+              case '\n': NEWLINE; break;
+            }
+          }
+          continue;
+        } else {
+          RETURN(Lpar);
+        }
+        break;
+
+      case ')': RETURN(Rpar);
+
+      case ';':
+        if (MatchChar(';')) {
+          // Line comment.
+          bool in_comment = true;
+          while (in_comment) {
+            switch (ReadChar()) {
+              case LexerSource::kEOF: RETURN(Eof);
+              case '\n': NEWLINE; in_comment = false; break;
+            }
+          }
+          continue;
+        } else {
+          ERROR("unexpected char");
+          continue;
+        }
+        break;
+
+      case ' ':
+      case '\t':
+      case '\r':  // Whitespace.
+        continue;
+
+      case '"': {
+        // String.
+        bool in_string = true;
+        while (in_string) {
+          switch (ReadChar()) {
+            case LexerSource::kEOF: ERROR("eof in string"); RETURN(Eof);
+            case '\n': ERROR("newline in string"); NEWLINE; continue;
+            case '\\':
+              switch (ReadChar()) {
+                case 't':
+                case 'n':
+                case 'r':
+                case '"':
+                case '\'':
+                case '\\':  // Valid escape.
+                  break;
+
+                default:
+                  ERROR("bad escape");
+                  break;
+              }
+              break;
+            case '"': in_string = false; break;
+            default: break; // TODO Check for utf-8.
+          }
+        }
+        RETURN_TEXT(Text);
+      }
+
+      case '\n': NEWLINE; continue;
+
+      case '+':
+      case '-':
+        switch (PeekChar()) {
+          case 'i':  // Maybe inf.
+          case 'n':  // Maybe nan.
+
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+          case '8':
+          case '9':
+            goto number;
+
+          default: RETURN_TEXT(Reserved);
+        }
+        break;
+
+      number:
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':  // Number.
+        break;
+
+      case '$':  // Name.
+        break;
+
+      case 'a':
+      case 'b':
+      case 'c':
+      case 'd':
+      case 'e':
+      case 'f':
+      case 'g':
+      case 'h':
+      case 'i':
+      case 'j':
+      case 'k':
+      case 'l':
+      case 'm':
+      case 'n':
+      case 'o':
+      case 'p':
+      case 'q':
+      case 'r':
+      case 's':
+      case 't':
+      case 'u':
+      case 'v':
+      case 'w':
+      case 'x':
+      case 'y':
+      case 'z':
+      case 'A':
+      case 'B':
+      case 'C':
+      case 'D':
+      case 'E':
+      case 'F':
+      case 'G':
+      case 'H':
+      case 'I':
+      case 'J':
+      case 'K':
+      case 'L':
+      case 'M':
+      case 'N':
+      case 'O':
+      case 'P':
+      case 'Q':
+      case 'R':
+      case 'S':
+      case 'T':
+      case 'U':
+      case 'V':
+      case 'W':
+      case 'X':
+      case 'Y':
+      case 'Z':  // Keyword.
+
+      default:
+        ERROR("unexpected char");
+        continue;
+    }
+  }
+}
+
+#if 0
 Token WastLexer::GetToken(WastParser* parser) {
   /*!types:re2c*/
   YYCONDTYPE cond = YYCOND_i;  // i is the initial state.
@@ -768,5 +895,6 @@ Token WastLexer::GetToken(WastParser* parser) {
      */
   }
 }
+#endif
 
 }  // namespace wabt

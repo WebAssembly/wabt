@@ -203,21 +203,6 @@ if (USE_UBSAN)
 endif ()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
-find_package(RE2C)
-if (RUN_RE2C AND RE2C_EXECUTABLE AND (NOT ${RE2C_VERSION} VERSION_LESS "0.16"))
-  message(STATUS "Using generated re2c lexer")
-  set(WAST_LEXER_CC ${WABT_SOURCE_DIR}/src/wast-lexer.cc)
-  set(WAST_LEXER_GEN_CC ${WABT_BINARY_DIR}/wast-lexer-gen.cc)
-  RE2C_TARGET(
-    NAME WAST_LEXER_GEN_CC
-    INPUT ${WAST_LEXER_CC}
-    OUTPUT ${WAST_LEXER_GEN_CC}
-    OPTIONS -bc8 -W -Werror
-  )
-else ()
-  message(STATUS "Using prebuilt re2c lexer")
-  set(WAST_LEXER_GEN_CC src/prebuilt/wast-lexer-gen.cc)
-endif ()
 
 add_custom_target(everything)
 
@@ -257,7 +242,7 @@ add_library(wabt STATIC
   src/validator.cc
   src/wast-parser.cc
   src/wat-writer.cc
-  ${WAST_LEXER_GEN_CC}
+  src/wast-lexer.cc
 
   # TODO(binji): Move this into its own library?
   src/interp/binary-reader-interp.cc

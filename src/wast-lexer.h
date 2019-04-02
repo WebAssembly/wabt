@@ -59,10 +59,12 @@ class WastLexer {
   Literal MakeLiteral(LiteralType);
   std::string GetText(size_t at = 0);
 
+  int ReadChar();
+  bool MatchChar(char c);
+
   std::unique_ptr<LexerSource> source_;
   std::string filename_;
   int line_;
-  int comment_nesting_;
   size_t buffer_file_offset_;  // File offset of the start of the buffer.
   size_t line_file_offset_;    // File offset of the start of the current line.
 
