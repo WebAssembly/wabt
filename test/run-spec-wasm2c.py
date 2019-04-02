@@ -104,6 +104,11 @@ def MangleName(s):
   return result
 
 
+def IsModuleCommand(command):
+  return (command['type'] == 'module' or
+          command['type'] == 'assert_uninstantiable')
+
+
 class CWriter(object):
 
   def __init__(self, spec_json, prefix, out_file, out_dir):
@@ -127,7 +132,7 @@ class CWriter(object):
     self.out_file.write("\n}\n")
 
   def GetModuleFilenames(self):
-    return [c['filename'] for c in self.commands if c['type'] == 'module']
+    return [c['filename'] for c in self.commands if IsModuleCommand(c)]
 
   def GetModulePrefix(self, idx_or_name=None):
     if idx_or_name is not None:
@@ -137,7 +142,7 @@ class CWriter(object):
   def _CacheModulePrefixes(self):
     idx = 0
     for command in self.commands:
-      if command['type'] == 'module':
+      if IsModuleCommand(command):
         name = os.path.basename(command['filename'])
         name = os.path.splitext(name)[0]
         name = re.sub(r'[^a-zA-Z0-9_]', '_', name)
@@ -186,6 +191,7 @@ class CWriter(object):
   def _WriteCommand(self, command):
     command_funcs = {
         'module': self._WriteModuleCommand,
+        'assert_uninstantiable': self._WriteAssertUninstantiableCommand,
         'action': self._WriteActionCommand,
         'assert_return': self._WriteAssertReturnCommand,
         'assert_return_canonical_nan': self._WriteAssertReturnNanCommand,
@@ -203,6 +209,10 @@ class CWriter(object):
   def _WriteModuleCommand(self, command):
     self.module_idx += 1
     self.out_file.write('%sinit();\n' % self.GetModulePrefix())
+
+  def _WriteAssertUninstantiableCommand(self, command):
+    self.module_idx += 1
+    self.out_file.write('ASSERT_TRAP(%sinit());\n' % self.GetModulePrefix())
 
   def _WriteActionCommand(self, command):
     self.out_file.write('%s;\n' % self._Action(command))

@@ -1167,7 +1167,6 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
     const AssertUninstantiableCommand* command) {
   Errors errors;
   DefinedModule* module;
-  Environment::MarkPoint mark = env_.Mark();
   wabt::Result result = ReadModule(command->filename, &env_, &errors, &module);
   FormatErrorsToFile(errors, Location::Type::Binary);
 
@@ -1186,7 +1185,9 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
     result = wabt::Result::Error;
   }
 
-  env_.ResetToMarkPoint(mark);
+  // Don't reset env_ here; if the start function fails, the environment is
+  // still modified. For example, a table may have been populated with a
+  // function from this module.
   return result;
 }
 
