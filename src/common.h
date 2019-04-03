@@ -226,7 +226,7 @@ enum class RelocType {
   FunctionOffsetI32 = 8,     // e.g. Code offset in DWARF metadata
   SectionOffsetI32 = 9,      // e.g. Section offset in DWARF metadata
   EventIndexLEB = 10,        // Used in throw instructions
-  MemoryAddressRelSLEB = 11, // In PIC code, data address relative to __memoary_base
+  MemoryAddressRelSLEB = 11, // In PIC code, data address relative to __memory_base
   TableIndexRelSLEB = 12,    // In PIC code, table index relative to __table_base
 
   First = FuncIndexLEB,
