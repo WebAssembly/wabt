@@ -92,7 +92,7 @@ f32x4.neg, TokenType::Unary, Opcode::F32X4Neg
 f32x4.ne, TokenType::Compare, Opcode::F32X4Ne
 f32x4.replace_lane, TokenType::SimdLaneOp, Opcode::F32X4ReplaceLane
 f32x4.splat, TokenType::Unary, Opcode::F32X4Splat
-f32x4.sqrt, TokenType::Binary, Opcode::F32X4Sqrt
+f32x4.sqrt, TokenType::Unary, Opcode::F32X4Sqrt
 f32x4.sub, TokenType::Binary, Opcode::F32X4Sub
 f32x4, TokenType::F32X4
 f64.abs, TokenType::Unary, Opcode::F64Abs
@@ -143,7 +143,7 @@ f64x2.neg, TokenType::Unary, Opcode::F64X2Neg
 f64x2.ne, TokenType::Compare, Opcode::F64X2Ne
 f64x2.replace_lane, TokenType::SimdLaneOp, Opcode::F64X2ReplaceLane
 f64x2.splat, TokenType::Unary, Opcode::F64X2Splat
-f64x2.sqrt, TokenType::Binary, Opcode::F64X2Sqrt
+f64x2.sqrt, TokenType::Unary, Opcode::F64X2Sqrt
 f64x2.sub, TokenType::Binary, Opcode::F64X2Sub
 f64x2, TokenType::F64X2
 funcref, Type::Funcref

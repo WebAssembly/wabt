@@ -55,26 +55,32 @@ class WastLexer {
 
  private:
   static const int kEof = -1;
+  enum class CharClass { Digit = 1, HexDigit = 2, Reserved = 4 };
 
   Location GetLocation();
-  Literal MakeLiteral(LiteralType);
-  std::string GetText(size_t at = 0);
+  std::string GetText(size_t offset = 0);
 
   int PeekChar();
   int ReadChar();
-  bool MatchChar(char c);
+  bool MatchChar(char);
+  bool MatchString(string_view);
 
-  int ReadDigits();
-  int ReadHexDigits();
-  int ReadReservedChars();
+  static bool IsCharClass(int c, CharClass);
+  template <CharClass>
+  int ReadCharClass();
+  int ReadDigits() { return ReadCharClass<CharClass::Digit>(); }
+  int ReadHexDigits() { return ReadCharClass<CharClass::HexDigit>(); }
+  int ReadReservedChars() { return ReadCharClass<CharClass::Reserved>(); }
   void ReadSign();
   Token ReadString(WastParser*);
-  Token ReadNumber(WastParser*, TokenType);
-  Token ReadHexNumber(WastParser*, TokenType);
-  Token ReadInf(WastParser*);
-  Token ReadNan(WastParser*);
-  Token ReadName(WastParser*);
-  Token ReadKeyword(WastParser*);
+  Token ReadNumber(TokenType);
+  Token ReadHexNumber(TokenType);
+  Token ReadInf();
+  Token ReadNan();
+  Token ReadNameEqNum(string_view name, TokenType);
+  Token ReadOffset();
+  Token ReadName();
+  Token ReadKeyword();
 
   std::unique_ptr<LexerSource> source_;
   std::string filename_;

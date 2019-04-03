@@ -1012,7 +1012,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"i8x16.mul", TokenType::Binary, Opcode::I8X16Mul},
       {""}, {""},
 #line 146 "src/lexer-keywords.txt"
-      {"f64x2.sqrt", TokenType::Binary, Opcode::F64X2Sqrt},
+      {"f64x2.sqrt", TokenType::Unary, Opcode::F64X2Sqrt},
       {""}, {""}, {""}, {""},
 #line 382 "src/lexer-keywords.txt"
       {"i64x2.any_true", TokenType::Unary, Opcode::I64X2AnyTrue},
@@ -1212,7 +1212,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"binary", TokenType::Bin},
       {""},
 #line 95 "src/lexer-keywords.txt"
-      {"f32x4.sqrt", TokenType::Binary, Opcode::F32X4Sqrt},
+      {"f32x4.sqrt", TokenType::Unary, Opcode::F32X4Sqrt},
       {""}, {""}, {""},
 #line 183 "src/lexer-keywords.txt"
       {"i16x8", TokenType::I16X8},
