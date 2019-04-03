@@ -37,5 +37,5 @@ out/test/spec/linking.wast:335: assert_unlinkable passed:
 out/test/spec/linking.wast:345: assert_unlinkable passed:
   error: elem segment is out of bounds: [0, 1) >= max value 0
   000002d: error: OnElemSegmentFunctionIndexCount callback failed
-91/91 tests passed.
+94/94 tests passed.
 ;;; STDOUT ;;)
