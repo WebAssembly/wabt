@@ -4,5 +4,5 @@
 spectest.print_i32(1)
 spectest.print_i32(2)
 spectest.print()
-6/6 tests passed.
+7/7 tests passed.
 ;;; STDOUT ;;)
