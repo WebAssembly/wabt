@@ -15,7 +15,6 @@ struct TokenInfo {
   };
 };
 %%
-align, TokenType::AlignEqNat
 anyref, Type::Anyref
 assert_exhaustion, TokenType::AssertExhaustion
 assert_invalid, TokenType::AssertInvalid
@@ -189,21 +188,21 @@ i32.atomic.load8_u, TokenType::AtomicLoad, Opcode::I32AtomicLoad8U
 i32.atomic.load, TokenType::AtomicLoad, Opcode::I32AtomicLoad
 i32.atomic.rmw16.add_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw16AddU
 i32.atomic.rmw16.and_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw16AndU
-i32.atomic.rmw16.cmpxchg_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw16CmpxchgU
+i32.atomic.rmw16.cmpxchg_u, TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmw16CmpxchgU
 i32.atomic.rmw16.or_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw16OrU
 i32.atomic.rmw16.sub_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw16SubU
 i32.atomic.rmw16.xchg_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw16XchgU
 i32.atomic.rmw16.xor_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw16XorU
 i32.atomic.rmw8.add_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw8AddU
 i32.atomic.rmw8.and_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw8AndU
-i32.atomic.rmw8.cmpxchg_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw8CmpxchgU
+i32.atomic.rmw8.cmpxchg_u, TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmw8CmpxchgU
 i32.atomic.rmw8.or_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw8OrU
 i32.atomic.rmw8.sub_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw8SubU
 i32.atomic.rmw8.xchg_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw8XchgU
 i32.atomic.rmw8.xor_u, TokenType::AtomicRmw, Opcode::I32AtomicRmw8XorU
 i32.atomic.rmw.add, TokenType::AtomicRmw, Opcode::I32AtomicRmwAdd
 i32.atomic.rmw.and, TokenType::AtomicRmw, Opcode::I32AtomicRmwAnd
-i32.atomic.rmw.cmpxchg, TokenType::AtomicRmw, Opcode::I32AtomicRmwCmpxchg
+i32.atomic.rmw.cmpxchg, TokenType::AtomicRmwCmpxchg, Opcode::I32AtomicRmwCmpxchg
 i32.atomic.rmw.or, TokenType::AtomicRmw, Opcode::I32AtomicRmwOr
 i32.atomic.rmw.sub, TokenType::AtomicRmw, Opcode::I32AtomicRmwSub
 i32.atomic.rmw.xchg, TokenType::AtomicRmw, Opcode::I32AtomicRmwXchg
@@ -294,28 +293,28 @@ i64.atomic.load8_u, TokenType::AtomicLoad, Opcode::I64AtomicLoad8U
 i64.atomic.load, TokenType::AtomicLoad, Opcode::I64AtomicLoad
 i64.atomic.rmw16.add_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw16AddU
 i64.atomic.rmw16.and_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw16AndU
-i64.atomic.rmw16.cmpxchg_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw16CmpxchgU
+i64.atomic.rmw16.cmpxchg_u, TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw16CmpxchgU
 i64.atomic.rmw16.or_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw16OrU
 i64.atomic.rmw16.sub_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw16SubU
 i64.atomic.rmw16.xchg_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw16XchgU
 i64.atomic.rmw16.xor_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw16XorU
 i64.atomic.rmw32.add_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw32AddU
 i64.atomic.rmw32.and_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw32AndU
-i64.atomic.rmw32.cmpxchg_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw32CmpxchgU
+i64.atomic.rmw32.cmpxchg_u, TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw32CmpxchgU
 i64.atomic.rmw32.or_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw32OrU
 i64.atomic.rmw32.sub_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw32SubU
 i64.atomic.rmw32.xchg_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw32XchgU
 i64.atomic.rmw32.xor_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw32XorU
 i64.atomic.rmw8.add_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw8AddU
 i64.atomic.rmw8.and_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw8AndU
-i64.atomic.rmw8.cmpxchg_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw8CmpxchgU
+i64.atomic.rmw8.cmpxchg_u, TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmw8CmpxchgU
 i64.atomic.rmw8.or_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw8OrU
 i64.atomic.rmw8.sub_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw8SubU
 i64.atomic.rmw8.xchg_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw8XchgU
 i64.atomic.rmw8.xor_u, TokenType::AtomicRmw, Opcode::I64AtomicRmw8XorU
 i64.atomic.rmw.add, TokenType::AtomicRmw, Opcode::I64AtomicRmwAdd
 i64.atomic.rmw.and, TokenType::AtomicRmw, Opcode::I64AtomicRmwAnd
-i64.atomic.rmw.cmpxchg, TokenType::AtomicRmw, Opcode::I64AtomicRmwCmpxchg
+i64.atomic.rmw.cmpxchg, TokenType::AtomicRmwCmpxchg, Opcode::I64AtomicRmwCmpxchg
 i64.atomic.rmw.or, TokenType::AtomicRmw, Opcode::I64AtomicRmwOr
 i64.atomic.rmw.sub, TokenType::AtomicRmw, Opcode::I64AtomicRmwSub
 i64.atomic.rmw.xchg, TokenType::AtomicRmw, Opcode::I64AtomicRmwXchg

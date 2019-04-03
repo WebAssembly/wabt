@@ -66,12 +66,13 @@ class WastLexer {
 
   int ReadDigits();
   int ReadHexDigits();
+  int ReadReservedChars();
   void ReadSign();
   Token ReadString(WastParser*);
   Token ReadNumber(WastParser*, TokenType);
   Token ReadHexNumber(WastParser*, TokenType);
-  Token ReadInf(WastParser*, bool has_sign);
-  Token ReadNan(WastParser*, bool has_sign);
+  Token ReadInf(WastParser*);
+  Token ReadNan(WastParser*);
   Token ReadName(WastParser*);
   Token ReadKeyword(WastParser*);
 
