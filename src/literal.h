@@ -23,13 +23,12 @@
 
 namespace wabt {
 
-/* These functions all return Result::Ok on success and Result::Error on
- * failure.
- *
- * NOTE: the functions are written for use with the re2c lexer, assuming that
- * the literal has already matched the regular expressions defined there. As a
- * result, the only validation that is done is for overflow, not for otherwise
- * bogus input. */
+// These functions all return Result::Ok on success and Result::Error on
+// failure.
+//
+// NOTE: the functions are written for use with wast-lexer, assuming that the
+// literal has already matched the patterns defined there. As a result, the
+// only validation that is done is for overflow, not for otherwise bogus input.
 
 enum class LiteralType {
   Int,

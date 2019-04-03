@@ -19,7 +19,6 @@ project(WABT)
 
 option(BUILD_TESTS "Build GTest-based tests" ON)
 option(BUILD_TOOLS "Build wabt commandline tools" ON)
-option(RUN_RE2C "Run re2c" ON)
 option(USE_ASAN "Use address sanitizer" OFF)
 option(USE_MSAN "Use memory sanitizer" OFF)
 option(USE_LSAN "Use leak sanitizer" OFF)
@@ -240,9 +239,9 @@ add_library(wabt STATIC
   src/type-checker.cc
   src/utf8.cc
   src/validator.cc
+  src/wast-lexer.cc
   src/wast-parser.cc
   src/wat-writer.cc
-  src/wast-lexer.cc
 
   # TODO(binji): Move this into its own library?
   src/interp/binary-reader-interp.cc

@@ -45,12 +45,6 @@ set_run_test_args() {
   BINDIR="out/${COMPILER}/${BUILD_TYPE}/${CONFIG}"
 }
 
-if [ ${CC} = "gcc" ]; then
-  if set_run_test_args gcc Debug no-re2c; then
-    run_tests
-  fi
-fi
-
 for BUILD_TYPE in ${BUILD_TYPES_UPPER}; do
   if [[ -n "${SANITIZER:-}" ]]; then
     if set_run_test_args ${COMPILER} ${BUILD_TYPE} ${SANITIZER}; then
