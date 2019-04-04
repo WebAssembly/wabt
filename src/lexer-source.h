@@ -39,6 +39,9 @@ class LexerSource {
 
   WABT_DISALLOW_COPY_AND_ASSIGN(LexerSource);
 
+  const void* data() { return data_; }
+  Offset size() { return size_; }
+
  private:
   const void* data_;
   Offset size_;

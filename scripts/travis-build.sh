@@ -25,10 +25,7 @@ if [[ ${TRAVIS_OS_NAME} = "linux" ]]; then
   flake8 --ignore=E111,E114 ./scripts/
 fi
 
-if [[ ${COMPILER} = "gcc" ]]; then
-  # Build without re2c to test prebuilt C sources
-  make gcc-debug-no-re2c
-elif [[ ${COMPILER} = "clang" && -z ${SANITIZER:-} ]]; then
+if [[ ${COMPILER} = "clang" && -z ${SANITIZER:-} ]]; then
   # Test building without GTest submodule
   make clang-debug-no-tests
 fi

@@ -86,8 +86,7 @@ configuration.
 
  - compilers: `gcc`, `clang`, `gcc-i686`, `gcc-fuzz`
  - build types: `debug`, `release`
- - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `no-re2c`,
-   `no-tests`
+ - configurations: empty, `asan`, `msan`, `lsan`, `ubsan`, `no-tests`
 
 They are combined with dashes, for example:
 
@@ -95,7 +94,7 @@ They are combined with dashes, for example:
 $ make clang-debug
 $ make gcc-i686-release
 $ make clang-debug-lsan
-$ make gcc-debug-no-re2c
+$ make gcc-debug-no-tests
 ```
 
 ## Building (Windows)
@@ -138,14 +137,11 @@ So, for example, if you want to build the debug configuration on Visual Studio 2
 > cmake --build . --config DEBUG --target install
 ```
 
-## Changing the lexer
+## Adding new keywords to the lexer
 
-If you make changes to `src/wast-lexer.cc`, you'll need to install
-[re2c](http://re2c.org). Before you upload your PR, please run `make
-update-re2c` to update the prebuilt C sources in `src/prebuilt/`.
-
-CMake will detect if you don't have re2c installed and use the prebuilt source
-files instead.
+If you want to add new keywords, you'll need to install
+[gperf](https://www.gnu.org/software/gperf/). Before you upload your PR, please
+run `make update-gperf` to update the prebuilt C++ sources in `src/prebuilt/`.
 
 ## Running wat2wasm and wast2json
 
