@@ -52,7 +52,7 @@ Token::Token(Location loc, TokenType token_type, Type type)
   Construct(type_, type);
 }
 
-Token::Token(Location loc, TokenType token_type, const std::string& text)
+Token::Token(Location loc, TokenType token_type, string_view text)
     : loc(loc), token_type_(token_type) {
   assert(HasText());
   Construct(text_, text);
@@ -70,78 +70,15 @@ Token::Token(Location loc, TokenType token_type, const Literal& literal)
   Construct(literal_, literal);
 }
 
-Token::Token(const Token& other) : Token() {
-  *this = other;
-}
-
-Token::Token(Token&& other) : Token() {
-  *this = std::move(other);
-}
-
-Token& Token::operator=(const Token& other) {
-  Destroy();
-  loc = other.loc;
-  token_type_ = other.token_type_;
-
-  if (HasLiteral()) {
-    Construct(literal_, other.literal_);
-  } else if (HasOpcode()) {
-    Construct(opcode_, other.opcode_);
-  } else if (HasText()) {
-    Construct(text_, other.text_);
-  } else if (HasType()) {
-    Construct(type_, other.type_);
-  }
-
-  return *this;
-}
-
-Token& Token::operator=(Token&& other) {
-  Destroy();
-  loc = other.loc;
-  token_type_ = other.token_type_;
-
-  if (HasLiteral()) {
-    Construct(literal_, std::move(other.literal_));
-  } else if (HasOpcode()) {
-    Construct(opcode_, std::move(other.opcode_));
-  } else if (HasText()) {
-    Construct(text_, std::move(other.text_));
-  } else if (HasType()) {
-    Construct(type_, std::move(other.type_));
-  }
-
-  other.token_type_ = TokenType::Invalid;
-
-  return *this;
-}
-
-Token::~Token() {
-  Destroy();
-}
-
-void Token::Destroy() {
-  if (HasLiteral()) {
-    Destruct(literal_);
-  } else if (HasOpcode()) {
-    Destruct(opcode_);
-  } else if (HasText()) {
-    Destruct(text_);
-  } else if (HasType()) {
-    Destruct(type_);
-  }
-  token_type_ = TokenType::Invalid;
-}
-
 std::string Token::to_string() const {
   if (IsTokenTypeBare(token_type_)) {
     return GetTokenTypeName(token_type_);
   } else if (HasLiteral()) {
-    return literal_.text;
+    return literal_.text.to_string();
   } else if (HasOpcode()) {
     return opcode_.GetName();
   } else if (HasText()) {
-    return text_;
+    return text_.to_string();
   } else {
     assert(HasType());
     return GetTypeName(type_);

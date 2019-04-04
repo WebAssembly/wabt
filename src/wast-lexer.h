@@ -57,7 +57,7 @@ class WastLexer {
   enum class CharClass { Reserved = 1, Keyword = 2, HexDigit = 4, Digit = 8 };
 
   Location GetLocation();
-  std::string GetText(size_t offset = 0);
+  string_view GetText(size_t offset = 0);
 
   Token BareToken(TokenType);
   Token LiteralToken(TokenType, LiteralType);
