@@ -2,7 +2,7 @@
 ;;; ERROR: 1
 (module (func) (export "foo\az" (func 0)))
 (;; STDERR ;;;
-out/test/parse/bad-string-hex-escape.txt:3:28: error: bad escape "\a"
+out/test/parse/bad-string-hex-escape.txt:3:28: error: bad escape "\az"
 (module (func) (export "foo\az" (func 0)))
-                           ^^
+                           ^^^
 ;;; STDERR ;;)

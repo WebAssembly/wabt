@@ -350,9 +350,6 @@ Token WastLexer::GetStringToken(WastParser* parser) {
         }
         break;
       }
-
-      default:
-        break;  // TODO Check for utf-8.
     }
   }
   return TextToken(TokenType::Text);
