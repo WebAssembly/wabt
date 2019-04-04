@@ -95,11 +95,11 @@ void RemoveEscapes(string_view text, OutputIter dest) {
   }
 }
 
-typedef std::vector<std::string> TextVector;
+typedef std::vector<string_view> TextVector;
 
 template <typename OutputIter>
 void RemoveEscapes(const TextVector& texts, OutputIter out) {
-  for (const std::string& text : texts)
+  for (string_view text : texts)
     RemoveEscapes(text, out);
 }
 
@@ -516,7 +516,7 @@ void WastParser::ParseBindVarOpt(std::string* name) {
   WABT_TRACE(ParseBindVarOpt);
   if (PeekMatch(TokenType::Var)) {
     Token token = Consume();
-    *name = token.text();
+    *name = token.text().to_string();
   }
 }
 
@@ -1705,12 +1705,14 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
         result = ParseInt32(s, end, &value, ParseIntType::UnsignedOnly);
 
         if (Failed(result)) {
-          Error(loc, "invalid literal \"%s\"", literal.text.c_str());
+          Error(loc, "invalid literal \"" PRIstringview "\"",
+                WABT_PRINTF_STRING_VIEW_ARG(literal.text));
           return Result::Error;
         }
 
         if (value > 31) {
-          Error(loc, "shuffle index \"%s\" out-of-range [0, 32)", literal.text.c_str());
+          Error(loc, "shuffle index \"" PRIstringview "\" out-of-range [0, 32)",
+                WABT_PRINTF_STRING_VIEW_ARG(literal.text));
           return Result::Error;
         }
 
@@ -1822,7 +1824,8 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
     }
 
     if (Failed(result)) {
-      Error(loc, "invalid literal \"%s\"", literal.text.c_str());
+      Error(loc, "invalid literal \"" PRIstringview "\"",
+            WABT_PRINTF_STRING_VIEW_ARG(literal.text));
       return Result::Error;
     }
   }
@@ -1902,7 +1905,8 @@ Result WastParser::ParseConst(Const* const_) {
   }
 
   if (Failed(result)) {
-    Error(const_->loc, "invalid literal \"%s\"", literal.text.c_str());
+    Error(const_->loc, "invalid literal \"" PRIstringview "\"",
+          WABT_PRINTF_STRING_VIEW_ARG(literal.text));
     // Return if parser get errors.
     return Result::Error;
   }
@@ -1992,7 +1996,7 @@ Result WastParser::ParseBlockInstr(std::unique_ptr<Expr>* out_expr) {
 Result WastParser::ParseLabelOpt(std::string* out_label) {
   WABT_TRACE(ParseLabelOpt);
   if (PeekMatch(TokenType::Var)) {
-    *out_label = Consume().text();
+    *out_label = Consume().text().to_string();
   } else {
     out_label->clear();
   }

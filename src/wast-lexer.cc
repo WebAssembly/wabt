@@ -174,8 +174,8 @@ Location WastLexer::GetLocation() {
   return Location(filename_, line_, column(token_start_), column(cursor_));
 }
 
-std::string WastLexer::GetText(size_t offset) {
-  return std::string(token_start_ + offset, (cursor_ - token_start_) - offset);
+string_view WastLexer::GetText(size_t offset) {
+  return string_view(token_start_ + offset, (cursor_ - token_start_) - offset);
 }
 
 Token WastLexer::BareToken(TokenType token_type) {

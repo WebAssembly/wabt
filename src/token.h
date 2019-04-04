@@ -17,19 +17,18 @@
 #ifndef WABT_TOKEN_H_
 #define WABT_TOKEN_H_
 
-#include <string>
-
 #include "src/literal.h"
 #include "src/opcode.h"
+#include "src/string-view.h"
 
 namespace wabt {
 
 struct Literal {
   Literal() = default;
-  Literal(LiteralType type, const std::string& text) : type(type), text(text) {}
+  Literal(LiteralType type, string_view text) : type(type), text(text) {}
 
   LiteralType type;
-  std::string text;
+  string_view text;
 };
 
 enum class TokenType {
@@ -75,14 +74,9 @@ struct Token {
   Token() : token_type_(TokenType::Invalid) {}
   Token(Location, TokenType);
   Token(Location, TokenType, Type);
-  Token(Location, TokenType, const std::string&);
+  Token(Location, TokenType, string_view);
   Token(Location, TokenType, Opcode);
   Token(Location, TokenType, const Literal&);
-  Token(const Token&);
-  Token(Token&&);
-  Token& operator=(const Token&);
-  Token& operator=(Token&&);
-  ~Token();
 
   Location loc;
 
@@ -93,7 +87,7 @@ struct Token {
   bool HasOpcode() const { return IsTokenTypeOpcode(token_type_); }
   bool HasLiteral() const { return IsTokenTypeLiteral(token_type_); }
 
-  const std::string& text() const {
+  string_view text() const {
     assert(HasText());
     return text_;
   }
@@ -117,12 +111,10 @@ struct Token {
   std::string to_string_clamp(size_t max_length) const;
 
  private:
-  void Destroy();
-
   TokenType token_type_;
 
   union {
-    std::string text_;
+    string_view text_;
     Type type_;
     Opcode opcode_;
     Literal literal_;
