@@ -1225,6 +1225,10 @@ Result BinaryReaderObjdump::OnGlobalCount(Index count) {
 Result BinaryReaderObjdump::BeginGlobal(Index index, Type type, bool mutable_) {
   PrintDetails(" - global[%" PRIindex "] %s mutable=%d", index,
                GetTypeName(type), mutable_);
+  string_view name = GetGlobalName(index);
+  if (!name.empty()) {
+    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+  }
   return Result::Ok;
 }
 

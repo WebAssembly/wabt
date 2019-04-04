@@ -47,7 +47,7 @@ Section Details:
 Import[1]:
  - global[0] i32 mutable=1 <- foo.imported
 Global[1]:
- - global[1] i32 mutable=1 - init i32=1
+ - global[1] i32 mutable=1 <exported> - init i32=1
 Export[1]:
  - global[1] -> "exported"
 
