@@ -310,8 +310,9 @@ void InitStdio();
 extern const char* g_kind_name[];
 
 static WABT_INLINE const char* GetKindName(ExternalKind kind) {
-  assert(static_cast<int>(kind) < kExternalKindCount);
-  return g_kind_name[static_cast<size_t>(kind)];
+  return static_cast<int>(kind) < kExternalKindCount
+    ? g_kind_name[static_cast<size_t>(kind)]
+    : "<error_kind>";
 }
 
 /* reloc */
@@ -319,8 +320,9 @@ static WABT_INLINE const char* GetKindName(ExternalKind kind) {
 extern const char* g_reloc_type_name[];
 
 static WABT_INLINE const char* GetRelocTypeName(RelocType reloc) {
-  assert(static_cast<int>(reloc) < kRelocTypeCount);
-  return g_reloc_type_name[static_cast<size_t>(reloc)];
+  return static_cast<int>(reloc) < kRelocTypeCount
+    ? g_reloc_type_name[static_cast<size_t>(reloc)]
+    : "<error_reloc_type>";
 }
 
 /* symbol */
@@ -337,8 +339,9 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
       return "section";
     case SymbolType::Event:
       return "event";
+    default:
+      return "<error_symbol_type>";
   }
-  WABT_UNREACHABLE;
 }
 
 /* type */
@@ -368,9 +371,8 @@ static WABT_INLINE const char* GetTypeName(Type type) {
     case Type::Anyref:
       return "anyref";
     default:
-      return "<type index>";
+      return "<type_index>";
   }
-  WABT_UNREACHABLE;
 }
 
 static WABT_INLINE bool IsTypeIndex(Type type) {
