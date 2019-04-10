@@ -162,6 +162,7 @@ Token WastLexer::GetToken(WastParser* parser) {
         } else if (IsReserved(PeekChar())) {
           return GetReservedToken();
         } else {
+          ReadChar();
           ERROR("unexpected char");
           continue;
         }
