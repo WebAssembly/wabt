@@ -52,7 +52,7 @@ You'll need [CMake](https://cmake.org). You can then run CMake, the normal way:
 $ mkdir build
 $ cd build
 $ cmake ..
-...
+$ cmake --build .
 ```
 
 This will produce build files using CMake's default build generator. Read the CMake
