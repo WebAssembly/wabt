@@ -132,9 +132,9 @@ Function[3]:
  - func[1] sig=1
  - func[2] sig=1 <F2>
 Code[3]:
- - func[0] size=6
+ - func[0] size=6 <F1>
  - func[1] size=2
- - func[2] size=6
+ - func[2] size=6 <F2>
 Custom:
  - name: "name"
  - func[0] <F1>

@@ -1029,7 +1029,12 @@ Result BinaryReaderObjdump::OnFunctionBodyCount(Index count) {
 }
 
 Result BinaryReaderObjdump::BeginFunctionBody(Index index, Offset size) {
-  PrintDetails(" - func[%" PRIindex "] size=%" PRIzd "\n", index, size);
+  PrintDetails(" - func[%" PRIindex "] size=%" PRIzd, index, size);
+  auto name = GetFunctionName(index);
+  if (!name.empty()) {
+    PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+  }
+  PrintDetails("\n");
   return Result::Ok;
 }
 
