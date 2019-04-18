@@ -102,9 +102,9 @@
 0000064: 41                                        ; i32.const
 0000065: 00                                        ; i32 literal
 0000066: 0b                                        ; end
-0000067: 02                                        ; num function indices
-0000068: 02                                        ; function index
-0000069: 03                                        ; function index
+0000067: 02                                        ; num elem exprs
+0000068: 02                                        ; elem expr function index
+0000069: 03                                        ; elem expr function index
 000005d: 8880 8080 00                              ; FIXUP section size
 ; section "Code" (10)
 000006a: 0a                                        ; section code

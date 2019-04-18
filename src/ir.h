@@ -559,6 +559,8 @@ struct ElemExpr {
   Var var;  // Only used when kind == RefFunc.
 };
 
+typedef std::vector<ElemExpr> ElemExprVector;
+
 struct ElemSegment {
   explicit ElemSegment(string_view name) : name(name.to_string()) {}
 
@@ -566,7 +568,7 @@ struct ElemSegment {
   Var table_var;
   bool passive = false;
   ExprList offset;
-  std::vector<ElemExpr> elem_exprs;
+  ElemExprVector elem_exprs;
 };
 
 struct Memory {

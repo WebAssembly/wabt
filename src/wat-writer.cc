@@ -1492,8 +1492,20 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   } else {
     WriteInitExpr(segment.offset);
   }
-  for (const Var& var : segment.vars) {
-    WriteVar(var, NextChar::Space);
+  for (const ElemExpr& expr : segment.elem_exprs) {
+    if (segment.passive) {
+      if (expr.kind == ElemExprKind::RefNull) {
+        WriteOpenSpace("ref.null");
+        WriteCloseSpace();
+      } else {
+        WriteOpenSpace("ref.func");
+        WriteVar(expr.var, NextChar::Space);
+        WriteCloseSpace();
+      }
+    } else {
+      assert(expr.kind == ElemExprKind::RefFunc);
+      WriteVar(expr.var, NextChar::Space);
+    }
   }
   WriteCloseNewline();
   elem_segment_index_++;

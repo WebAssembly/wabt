@@ -203,10 +203,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnSimdShuffleOpExpr(wabt::Opcode opcode, v128 value) override;
 
   wabt::Result EndElemSegmentInitExpr(Index index) override;
-  wabt::Result OnElemSegmentFunctionIndexCount(Index index,
-                                               Index count) override;
-  wabt::Result OnElemSegmentFunctionIndex(Index index,
-                                          Index func_index) override;
+  wabt::Result OnElemSegmentElemExprCount(Index index, Index count) override;
+  wabt::Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
+  wabt::Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
+                                             Index func_index) override;
 
   wabt::Result OnDataSegmentData(Index index,
                                  const void* data,
@@ -976,8 +976,8 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemSegmentFunctionIndexCount(Index index,
-                                                                 Index count) {
+wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
+                                                            Index count) {
   assert(module_->table_index != kInvalidIndex);
   Table* table = env_->GetTable(module_->table_index);
   // Check both cases, as table_offset_ + count may overflow.
@@ -991,8 +991,15 @@ wabt::Result BinaryReaderInterp::OnElemSegmentFunctionIndexCount(Index index,
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::OnElemSegmentFunctionIndex(Index index,
-                                                            Index func_index) {
+wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
+    Index segment_index) {
+  // TODO(binji): implement
+  return wabt::Result::Error;
+}
+
+wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
+    Index index,
+    Index func_index) {
   Index max_func_index = func_index_mapping_.size();
   if (func_index >= max_func_index) {
     PrintError("invalid func_index: %" PRIindex " (max %" PRIindex ")",
