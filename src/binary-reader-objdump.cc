@@ -772,9 +772,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result BeginElemSegment(Index index,
                           Index table_index,
                           bool passive) override;
-  Result OnElemSegmentFunctionIndexCount(Index index, Index count) override;
-  Result OnElemSegmentFunctionIndex(Index segment_index,
-                                    Index func_index) override;
+  Result OnElemSegmentElemExprCount(Index index, Index count) override;
+  Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
+  Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
+                                       Index func_index) override;
 
   Result BeginDataSection(Offset size) override {
     in_data_section_ = true;
@@ -1190,8 +1191,14 @@ Result BinaryReaderObjdump::OnExport(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnElemSegmentFunctionIndex(Index segment_index,
-                                                       Index func_index) {
+Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index) {
+  PrintDetails("  - elem[%" PRIindex "] = null", elem_offset_ + elem_index_);
+  elem_index_++;
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefFunc(Index segment_index,
+                                                          Index func_index) {
   PrintDetails("  - elem[%" PRIindex "] = func[%" PRIindex "]",
                elem_offset_ + elem_index_, func_index);
   auto name = GetFunctionName(func_index);
@@ -1215,8 +1222,8 @@ Result BinaryReaderObjdump::BeginElemSegment(Index index,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::OnElemSegmentFunctionIndexCount(Index index,
-                                                            Index count) {
+Result BinaryReaderObjdump::OnElemSegmentElemExprCount(Index index,
+                                                       Index count) {
   PrintDetails(" - segment[%" PRIindex "] table=%" PRIindex " count=%" PRIindex,
                index, table_index_, count);
   PrintInitExpr(elem_init_expr_);

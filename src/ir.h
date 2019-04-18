@@ -546,6 +546,21 @@ struct Table {
   Type elem_type;
 };
 
+enum class ElemExprKind {
+  RefNull,
+  RefFunc,
+};
+
+struct ElemExpr {
+  ElemExpr() : kind(ElemExprKind::RefNull) {}
+  explicit ElemExpr(Var var) : kind(ElemExprKind::RefFunc), var(var) {}
+
+  ElemExprKind kind;
+  Var var;  // Only used when kind == RefFunc.
+};
+
+typedef std::vector<ElemExpr> ElemExprVector;
+
 struct ElemSegment {
   explicit ElemSegment(string_view name) : name(name.to_string()) {}
 
@@ -553,7 +568,7 @@ struct ElemSegment {
   Var table_var;
   bool passive = false;
   ExprList offset;
-  VarVector vars;
+  ElemExprVector elem_exprs;
 };
 
 struct Memory {

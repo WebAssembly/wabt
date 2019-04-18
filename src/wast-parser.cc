@@ -592,20 +592,28 @@ bool WastParser::ParseTextListOpt(std::vector<uint8_t>* out_data) {
 
 Result WastParser::ParseVarList(VarVector* out_var_list) {
   WABT_TRACE(ParseVarList);
-  if (!ParseVarListOpt(out_var_list)) {
+  Var var;
+  while (ParseVarOpt(&var)) {
+    out_var_list->emplace_back(var);
+  }
+  return out_var_list->empty() ? Result::Error : Result::Ok;
+}
+
+Result WastParser::ParseElemExprVarList(ElemExprVector* out_list) {
+  WABT_TRACE(ParseElemExprVarList);
+  if (!ParseElemExprVarListOpt(out_list)) {
     return Result::Error;
   }
-
   return Result::Ok;
 }
 
-bool WastParser::ParseVarListOpt(VarVector* out_var_list) {
-  WABT_TRACE(ParseVarListOpt);
+bool WastParser::ParseElemExprVarListOpt(ElemExprVector* out_list) {
+  WABT_TRACE(ParseElemExprVarListOpt);
   Var var;
-  while (ParseVarOpt(&var))
-    out_var_list->push_back(var);
-
-  return !out_var_list->empty();
+  while (ParseVarOpt(&var)) {
+    out_list->emplace_back(var);
+  }
+  return !out_list->empty();
 }
 
 Result WastParser::ParseValueType(Type* out_type) {
@@ -879,11 +887,30 @@ Result WastParser::ParseElemModuleField(Module* module) {
   if (Peek() == TokenType::Passive) {
     Consume();
     field->elem_segment.passive = true;
+    // Parse a potentially empty sequence of ElemExprs.
+    while (true) {
+      Var var;
+      if (MatchLpar(TokenType::RefNull)) {
+        field->elem_segment.elem_exprs.emplace_back();
+        EXPECT(Rpar);
+      } else if (MatchLpar(TokenType::RefFunc)) {
+        CHECK_RESULT(ParseVar(&var));
+        field->elem_segment.elem_exprs.emplace_back(var);
+        EXPECT(Rpar);
+      } else if (ParseVarOpt(&var)) {
+        // TODO: This format will be removed by
+        // https://github.com/WebAssembly/bulk-memory-operations/pull/84
+        field->elem_segment.elem_exprs.emplace_back(var);
+      } else {
+        CHECK_RESULT(ErrorIfLpar({"ref.null", "ref.func"}));
+        break;
+      }
+    }
   } else {
     ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
     CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
+    ParseElemExprVarListOpt(&field->elem_segment.elem_exprs);
   }
-  ParseVarListOpt(&field->elem_segment.vars);
   EXPECT(Rpar);
   module->AppendField(std::move(field));
   return Result::Ok;
@@ -1185,12 +1212,12 @@ Result WastParser::ParseTableModuleField(Module* module) {
     elem_segment.table_var = Var(module->tables.size());
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
-    CHECK_RESULT(ParseVarList(&elem_segment.vars));
+    CHECK_RESULT(ParseElemExprVarList(&elem_segment.elem_exprs));
     EXPECT(Rpar);
 
     auto table_field = MakeUnique<TableModuleField>(loc, name);
-    table_field->table.elem_limits.initial = elem_segment.vars.size();
-    table_field->table.elem_limits.max = elem_segment.vars.size();
+    table_field->table.elem_limits.initial = elem_segment.elem_exprs.size();
+    table_field->table.elem_limits.max = elem_segment.elem_exprs.size();
     table_field->table.elem_limits.has_max = true;
     table_field->table.elem_type = elem_type;
     module->AppendField(std::move(table_field));

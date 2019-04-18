@@ -247,13 +247,16 @@ WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0c, TableInit, "table.init")
 WABT_OPCODE(___, ___,  ___,  ___,  0,  0xfc, 0x0d, ElemDrop, "elem.drop")
 WABT_OPCODE(___, I32,  I32,  I32,  0,  0xfc, 0x0e, TableCopy, "table.copy")
 
-/* Referene types (--enable-reference-types) */
+/* Reference types (--enable-reference-types) */
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x25, TableGet, "table.get")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0x26, TableSet, "table.set")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0xfc, 0x0f, TableGrow, "table.grow")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0xfc, 0x10, TableSize, "table.size")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd0, RefNull, "ref.null")
 WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd1, RefIsNull, "ref.is_null")
+
+/* Not supported by any proposal currently; needed for passive element segments */
+WABT_OPCODE(___,  ___,  ___,  ___,  0,  0,    0xd2, RefFunc, "ref.func")
 
 /* Simd opcodes (--enable-simd) */
 WABT_OPCODE(V128, I32,  ___,  ___,  16, 0xfd, 0x00, V128Load,  "v128.load")

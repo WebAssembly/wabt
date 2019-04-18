@@ -2575,9 +2575,9 @@
 0001a49: 41                                        ; i32.const
 0001a4a: 00                                        ; i32 literal
 0001a4b: 0b                                        ; end
-0001a4c: 02                                        ; num function indices
-0001a4d: 01                                        ; function index
-0001a4e: 01                                        ; function index
+0001a4c: 02                                        ; num elem exprs
+0001a4d: 01                                        ; elem expr function index
+0001a4e: 01                                        ; elem expr function index
 0001a46: 08                                        ; FIXUP section size
 ; section "Code" (10)
 0001a4f: 0a                                        ; section code
@@ -8037,9 +8037,9 @@ BeginModule(version: 1)
     BeginElemSegmentInitExpr(0)
     OnInitExprI32ConstExpr(index: 0, value: 0)
     EndElemSegmentInitExpr(0)
-    OnElemSegmentFunctionIndexCount(index: 0, count: 2)
-    OnElemSegmentFunctionIndex(index: 0, func_index: 1)
-    OnElemSegmentFunctionIndex(index: 0, func_index: 1)
+    OnElemSegmentElemExprCount(index: 0, count: 2)
+    OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
+    OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     EndElemSegment(0)
   EndElemSection
   BeginCodeSection(7547)

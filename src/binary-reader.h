@@ -254,7 +254,8 @@ class BinaryReaderDelegate {
   virtual Result OnRethrowExpr() = 0;
   virtual Result OnReturnExpr() = 0;
   virtual Result OnReturnCallExpr(Index func_index) = 0;
-  virtual Result OnReturnCallIndirectExpr(Index sig_index, Index table_index) = 0;
+  virtual Result OnReturnCallIndirectExpr(Index sig_index,
+                                          Index table_index) = 0;
   virtual Result OnSelectExpr() = 0;
   virtual Result OnStoreExpr(Opcode opcode,
                              uint32_t alignment_log2,
@@ -280,9 +281,10 @@ class BinaryReaderDelegate {
                                   bool passive) = 0;
   virtual Result BeginElemSegmentInitExpr(Index index) = 0;
   virtual Result EndElemSegmentInitExpr(Index index) = 0;
-  virtual Result OnElemSegmentFunctionIndexCount(Index index, Index count) = 0;
-  virtual Result OnElemSegmentFunctionIndex(Index segment_index,
-                                            Index func_index) = 0;
+  virtual Result OnElemSegmentElemExprCount(Index index, Index count) = 0;
+  virtual Result OnElemSegmentElemExpr_RefNull(Index segment_index) = 0;
+  virtual Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
+                                               Index func_index) = 0;
   virtual Result EndElemSegment(Index index) = 0;
   virtual Result EndElemSection() = 0;
 

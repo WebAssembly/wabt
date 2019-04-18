@@ -129,6 +129,6 @@ out/test/spec/call_indirect.wast:929: assert_invalid passed:
   0000025: error: invalid call_indirect signature index
 out/test/spec/call_indirect.wast:940: assert_invalid passed:
   error: invalid func_index: 0 (max 0)
-  0000018: error: OnElemSegmentFunctionIndex callback failed
+  0000018: error: OnElemSegmentElemExpr_RefFunc callback failed
 151/151 tests passed.
 ;;; STDOUT ;;)

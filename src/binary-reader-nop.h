@@ -291,10 +291,14 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   }
   Result BeginElemSegmentInitExpr(Index index) override { return Result::Ok; }
   Result EndElemSegmentInitExpr(Index index) override { return Result::Ok; }
-  Result OnElemSegmentFunctionIndexCount(Index index, Index count) override {
+  Result OnElemSegmentElemExprCount(Index index, Index count) override {
     return Result::Ok;
   }
-  Result OnElemSegmentFunctionIndex(Index index, Index func_index) override {
+  Result OnElemSegmentElemExpr_RefNull(Index segment_index) override {
+    return Result::Ok;
+  }
+  Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
+                                       Index func_index) override {
     return Result::Ok;
   }
   Result EndElemSegment(Index index) override { return Result::Ok; }

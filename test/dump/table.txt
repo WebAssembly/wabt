@@ -61,19 +61,19 @@
 0000029: 41                                        ; i32.const
 000002a: 00                                        ; i32 literal
 000002b: 0b                                        ; end
-000002c: 02                                        ; num function indices
-000002d: 01                                        ; function index
-000002e: 01                                        ; function index
+000002c: 02                                        ; num elem exprs
+000002d: 01                                        ; elem expr function index
+000002e: 01                                        ; elem expr function index
 ; elem segment header 1
 000002f: 00                                      
 0000030: 41                                        ; i32.const
 0000031: 02                                        ; i32 literal
 0000032: 0b                                        ; end
-0000033: 04                                        ; num function indices
-0000034: 00                                        ; function index
-0000035: 00                                        ; function index
-0000036: 01                                        ; function index
-0000037: 02                                        ; function index
+0000033: 04                                        ; num elem exprs
+0000034: 00                                        ; elem expr function index
+0000035: 00                                        ; elem expr function index
+0000036: 01                                        ; elem expr function index
+0000037: 02                                        ; elem expr function index
 0000026: 11                                        ; FIXUP section size
 ; section "Code" (10)
 0000038: 0a                                        ; section code

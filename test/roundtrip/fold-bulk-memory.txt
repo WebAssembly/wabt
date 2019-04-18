@@ -48,6 +48,6 @@
       (i32.const 0)))
   (table (;0;) 1 funcref)
   (memory (;0;) 1)
-  (elem (;0;) passive 0)
+  (elem (;0;) passive (ref.func 0))
   (data (;0;) passive "a"))
 ;;; STDOUT ;;)
