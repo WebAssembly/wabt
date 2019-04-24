@@ -586,6 +586,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::TableSize:
       case Opcode::RefNull:
       case Opcode::RefIsNull:
+      case Opcode::RefFunc:
         WABT_UNREACHABLE;
         break;
 
