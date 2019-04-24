@@ -31,12 +31,12 @@ Sections:
 
 Code Disassembly:
 
-000051 func[1] <$f>:
- 000052: 23 80 80 80 80 00          | global.get 0 <$g>
+000051 func[01] <$f>:
+ 000052[001]: 23 80 80 80 80 00          | global.get 0 <$g>
            000053: R_WASM_GLOBAL_INDEX_LEB 1 <$g>
- 000058: 10 81 80 80 80 00          | call 1 <$f>
+ 000058[007]: 10 81 80 80 80 00          | call 1 <$f>
            000059: R_WASM_FUNCTION_INDEX_LEB 0 <$f>
- 00005e: 10 80 80 80 80 00          | call 0 <__extern.foo>
+ 00005e[013]: 10 80 80 80 80 00          | call 0 <__extern.foo>
            00005f: R_WASM_FUNCTION_INDEX_LEB 2 <__extern.foo>
- 000064: 0b                         | end
+ 000064[019]: 0b                         | end
 ;;; STDOUT ;;)

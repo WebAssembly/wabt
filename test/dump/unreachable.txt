@@ -37,7 +37,7 @@ unreachable.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 00                         | unreachable
- 000018: 0b                         | end
+000016 func[00]:
+ 000017[001]: 00                         | unreachable
+ 000018[002]: 0b                         | end
 ;;; STDOUT ;;)

@@ -44,10 +44,10 @@ loop.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 03 40                      | loop
- 000019: 01                         |   nop
- 00001a: 01                         |   nop
- 00001b: 0b                         | end
- 00001c: 0b                         | end
+000016 func[00]:
+ 000017[001]: 03 40                      | loop
+ 000019[003]: 01                         |   nop
+ 00001a[004]: 01                         |   nop
+ 00001b[005]: 0b                         | end
+ 00001c[006]: 0b                         | end
 ;;; STDOUT ;;)

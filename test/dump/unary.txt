@@ -100,35 +100,35 @@ unary.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 41 00                      | i32.const 0
- 000019: 69                         | i32.popcnt
- 00001a: 68                         | i32.ctz
- 00001b: 67                         | i32.clz
- 00001c: 45                         | i32.eqz
- 00001d: 1a                         | drop
- 00001e: 42 00                      | i64.const 0
- 000020: 7b                         | i64.popcnt
- 000021: 7a                         | i64.ctz
- 000022: 79                         | i64.clz
- 000023: 1a                         | drop
- 000024: 43 00 00 00 00             | f32.const 0x0p+0
- 000029: 90                         | f32.nearest
- 00002a: 8f                         | f32.trunc
- 00002b: 8e                         | f32.floor
- 00002c: 8d                         | f32.ceil
- 00002d: 91                         | f32.sqrt
- 00002e: 8b                         | f32.abs
- 00002f: 8c                         | f32.neg
- 000030: 1a                         | drop
- 000031: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 00003a: 9e                         | f64.nearest
- 00003b: 9d                         | f64.trunc
- 00003c: 9c                         | f64.floor
- 00003d: 9b                         | f64.ceil
- 00003e: 9f                         | f64.sqrt
- 00003f: 99                         | f64.abs
- 000040: 9a                         | f64.neg
- 000041: 1a                         | drop
- 000042: 0b                         | end
+000016 func[00]:
+ 000017[001]: 41 00                      | i32.const 0
+ 000019[003]: 69                         | i32.popcnt
+ 00001a[004]: 68                         | i32.ctz
+ 00001b[005]: 67                         | i32.clz
+ 00001c[006]: 45                         | i32.eqz
+ 00001d[007]: 1a                         | drop
+ 00001e[008]: 42 00                      | i64.const 0
+ 000020[010]: 7b                         | i64.popcnt
+ 000021[011]: 7a                         | i64.ctz
+ 000022[012]: 79                         | i64.clz
+ 000023[013]: 1a                         | drop
+ 000024[014]: 43 00 00 00 00             | f32.const 0x0p+0
+ 000029[019]: 90                         | f32.nearest
+ 00002a[020]: 8f                         | f32.trunc
+ 00002b[021]: 8e                         | f32.floor
+ 00002c[022]: 8d                         | f32.ceil
+ 00002d[023]: 91                         | f32.sqrt
+ 00002e[024]: 8b                         | f32.abs
+ 00002f[025]: 8c                         | f32.neg
+ 000030[026]: 1a                         | drop
+ 000031[027]: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 00003a[036]: 9e                         | f64.nearest
+ 00003b[037]: 9d                         | f64.trunc
+ 00003c[038]: 9c                         | f64.floor
+ 00003d[039]: 9b                         | f64.ceil
+ 00003e[040]: 9f                         | f64.sqrt
+ 00003f[041]: 99                         | f64.abs
+ 000040[042]: 9a                         | f64.neg
+ 000041[043]: 1a                         | drop
+ 000042[044]: 0b                         | end
 ;;; STDOUT ;;)

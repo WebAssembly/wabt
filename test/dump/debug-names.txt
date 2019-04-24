@@ -149,14 +149,14 @@ Custom:
 
 Code Disassembly:
 
-00001d func[0] <F1>:
- 00001e: 01 7d                      | local[0] type=f32
- 000020: 02 7f                      | local[1..2] type=i32
- 000022: 0b                         | end
-000024 func[1]:
- 000025: 0b                         | end
-000027 func[2] <F2>:
- 000028: 01 7c                      | local[0] type=f64
- 00002a: 02 7e                      | local[1..2] type=i64
- 00002c: 0b                         | end
+00001d func[00] <F1>:
+ 00001e[001]: 01 7d                      | local[0] type=f32
+ 000020[003]: 02 7f                      | local[1..2] type=i32
+ 000022[005]: 0b                         | end
+000024 func[01]:
+ 000025[001]: 0b                         | end
+000027 func[02] <F2>:
+ 000028[001]: 01 7c                      | local[0] type=f64
+ 00002a[003]: 02 7e                      | local[1..2] type=i64
+ 00002c[005]: 0b                         | end
 ;;; STDOUT ;;)

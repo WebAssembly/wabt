@@ -76,22 +76,22 @@ getlocal-param.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000018 func[0]:
- 000019: 01 7e                      | local[0] type=i64
- 00001b: 01 7d                      | local[1] type=f32
- 00001d: 01 7f                      | local[2] type=i32
- 00001f: 01 7d                      | local[3] type=f32
- 000021: 20 00                      | local.get 0
- 000023: 1a                         | drop
- 000024: 20 01                      | local.get 1
- 000026: 1a                         | drop
- 000027: 20 02                      | local.get 2
- 000029: 1a                         | drop
- 00002a: 20 03                      | local.get 3
- 00002c: 1a                         | drop
- 00002d: 20 04                      | local.get 4
- 00002f: 1a                         | drop
- 000030: 20 05                      | local.get 5
- 000032: 1a                         | drop
- 000033: 0b                         | end
+000018 func[00]:
+ 000019[001]: 01 7e                      | local[0] type=i64
+ 00001b[003]: 01 7d                      | local[1] type=f32
+ 00001d[005]: 01 7f                      | local[2] type=i32
+ 00001f[007]: 01 7d                      | local[3] type=f32
+ 000021[009]: 20 00                      | local.get 0
+ 000023[011]: 1a                         | drop
+ 000024[012]: 20 01                      | local.get 1
+ 000026[014]: 1a                         | drop
+ 000027[015]: 20 02                      | local.get 2
+ 000029[017]: 1a                         | drop
+ 00002a[018]: 20 03                      | local.get 3
+ 00002c[020]: 1a                         | drop
+ 00002d[021]: 20 04                      | local.get 4
+ 00002f[023]: 1a                         | drop
+ 000030[024]: 20 05                      | local.get 5
+ 000032[026]: 1a                         | drop
+ 000033[027]: 0b                         | end
 ;;; STDOUT ;;)

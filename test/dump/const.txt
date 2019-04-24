@@ -227,84 +227,84 @@ const.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000018 func[0]:
- 000019: 41 00                      | i32.const 0
- 00001b: 1a                         | drop
- 00001c: 41 80 80 80 80 78          | i32.const 2147483648
- 000022: 1a                         | drop
- 000023: 41 7f                      | i32.const 4294967295
- 000025: 1a                         | drop
- 000026: 41 80 80 80 80 78          | i32.const 2147483648
- 00002c: 1a                         | drop
- 00002d: 41 7f                      | i32.const 4294967295
- 00002f: 1a                         | drop
- 000030: 42 00                      | i64.const 0
- 000032: 1a                         | drop
- 000033: 42 80 80 80 80 80 80 80 80 | i64.const -9223372036854775808
- 00003c: 80 7f                      | 
- 00003e: 1a                         | drop
- 00003f: 42 7f                      | i64.const -1
- 000041: 1a                         | drop
- 000042: 42 80 80 80 80 80 80 80 80 | i64.const -9223372036854775808
- 00004b: 80 7f                      | 
- 00004d: 1a                         | drop
- 00004e: 42 7f                      | i64.const -1
- 000050: 1a                         | drop
- 000051: 43 00 00 00 00             | f32.const 0x0p+0
- 000056: 1a                         | drop
- 000057: 43 16 68 a9 65             | f32.const 0x1.52d02cp+76
- 00005c: 1a                         | drop
- 00005d: 43 40 20 4f 37             | f32.const 0x1.9e408p-17
- 000062: 1a                         | drop
- 000063: 43 00 00 c0 7f             | f32.const nan
- 000068: 1a                         | drop
- 000069: 43 00 00 c0 ff             | f32.const -nan
- 00006e: 1a                         | drop
- 00006f: 43 00 00 c0 7f             | f32.const nan
- 000074: 1a                         | drop
- 000075: 43 bc 0a 80 7f             | f32.const nan:0xabc
- 00007a: 1a                         | drop
- 00007b: 43 bc 0a 80 ff             | f32.const -nan:0xabc
- 000080: 1a                         | drop
- 000081: 43 bc 0a 80 7f             | f32.const nan:0xabc
- 000086: 1a                         | drop
- 000087: 43 00 00 80 7f             | f32.const inf
- 00008c: 1a                         | drop
- 00008d: 43 00 00 80 ff             | f32.const -inf
- 000092: 1a                         | drop
- 000093: 43 00 00 80 7f             | f32.const inf
- 000098: 1a                         | drop
- 000099: 43 00 00 00 bf             | f32.const -0x1p-1
- 00009e: 1a                         | drop
- 00009f: 43 db 0f c9 40             | f32.const 0x1.921fb6p+2
- 0000a4: 1a                         | drop
- 0000a5: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 0000ae: 1a                         | drop
- 0000af: 44 b8 56 0e 3c dd 9a ef bf | f64.const -0x1.f9add3c0e56b8p-1
- 0000b8: 1a                         | drop
- 0000b9: 44 18 2d 44 54 fb 21 19 40 | f64.const 0x1.921fb54442d18p+2
- 0000c2: 1a                         | drop
- 0000c3: 44 00 00 00 00 00 00 f8 7f | f64.const nan
- 0000cc: 1a                         | drop
- 0000cd: 44 00 00 00 00 00 00 f8 ff | f64.const -nan
- 0000d6: 1a                         | drop
- 0000d7: 44 00 00 00 00 00 00 f8 7f | f64.const nan
- 0000e0: 1a                         | drop
- 0000e1: 44 bc 0a 00 00 00 00 f0 7f | f64.const nan:0xabc
- 0000ea: 1a                         | drop
- 0000eb: 44 bc 0a 00 00 00 00 f0 ff | f64.const -nan:0xabc
- 0000f4: 1a                         | drop
- 0000f5: 44 bc 0a 00 00 00 00 f0 7f | f64.const nan:0xabc
- 0000fe: 1a                         | drop
- 0000ff: 44 00 00 00 00 00 00 f0 7f | f64.const inf
- 000108: 1a                         | drop
- 000109: 44 00 00 00 00 00 00 f0 ff | f64.const -inf
- 000112: 1a                         | drop
- 000113: 44 00 00 00 00 00 00 f0 7f | f64.const inf
- 00011c: 1a                         | drop
- 00011d: 44 00 00 00 00 00 00 e0 bf | f64.const -0x1p-1
- 000126: 1a                         | drop
- 000127: 44 18 2d 44 54 fb 21 19 40 | f64.const 0x1.921fb54442d18p+2
- 000130: 1a                         | drop
- 000131: 0b                         | end
+000018 func[00]:
+ 000019[001]: 41 00                      | i32.const 0
+ 00001b[003]: 1a                         | drop
+ 00001c[004]: 41 80 80 80 80 78          | i32.const 2147483648
+ 000022[010]: 1a                         | drop
+ 000023[011]: 41 7f                      | i32.const 4294967295
+ 000025[013]: 1a                         | drop
+ 000026[014]: 41 80 80 80 80 78          | i32.const 2147483648
+ 00002c[020]: 1a                         | drop
+ 00002d[021]: 41 7f                      | i32.const 4294967295
+ 00002f[023]: 1a                         | drop
+ 000030[024]: 42 00                      | i64.const 0
+ 000032[026]: 1a                         | drop
+ 000033[027]: 42 80 80 80 80 80 80 80 80 | i64.const -9223372036854775808
+ 00003c[027]: 80 7f                      | 
+ 00003e[038]: 1a                         | drop
+ 00003f[039]: 42 7f                      | i64.const -1
+ 000041[041]: 1a                         | drop
+ 000042[042]: 42 80 80 80 80 80 80 80 80 | i64.const -9223372036854775808
+ 00004b[042]: 80 7f                      | 
+ 00004d[053]: 1a                         | drop
+ 00004e[054]: 42 7f                      | i64.const -1
+ 000050[056]: 1a                         | drop
+ 000051[057]: 43 00 00 00 00             | f32.const 0x0p+0
+ 000056[062]: 1a                         | drop
+ 000057[063]: 43 16 68 a9 65             | f32.const 0x1.52d02cp+76
+ 00005c[068]: 1a                         | drop
+ 00005d[069]: 43 40 20 4f 37             | f32.const 0x1.9e408p-17
+ 000062[074]: 1a                         | drop
+ 000063[075]: 43 00 00 c0 7f             | f32.const nan
+ 000068[080]: 1a                         | drop
+ 000069[081]: 43 00 00 c0 ff             | f32.const -nan
+ 00006e[086]: 1a                         | drop
+ 00006f[087]: 43 00 00 c0 7f             | f32.const nan
+ 000074[092]: 1a                         | drop
+ 000075[093]: 43 bc 0a 80 7f             | f32.const nan:0xabc
+ 00007a[098]: 1a                         | drop
+ 00007b[099]: 43 bc 0a 80 ff             | f32.const -nan:0xabc
+ 000080[104]: 1a                         | drop
+ 000081[105]: 43 bc 0a 80 7f             | f32.const nan:0xabc
+ 000086[110]: 1a                         | drop
+ 000087[111]: 43 00 00 80 7f             | f32.const inf
+ 00008c[116]: 1a                         | drop
+ 00008d[117]: 43 00 00 80 ff             | f32.const -inf
+ 000092[122]: 1a                         | drop
+ 000093[123]: 43 00 00 80 7f             | f32.const inf
+ 000098[128]: 1a                         | drop
+ 000099[129]: 43 00 00 00 bf             | f32.const -0x1p-1
+ 00009e[134]: 1a                         | drop
+ 00009f[135]: 43 db 0f c9 40             | f32.const 0x1.921fb6p+2
+ 0000a4[140]: 1a                         | drop
+ 0000a5[141]: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 0000ae[150]: 1a                         | drop
+ 0000af[151]: 44 b8 56 0e 3c dd 9a ef bf | f64.const -0x1.f9add3c0e56b8p-1
+ 0000b8[160]: 1a                         | drop
+ 0000b9[161]: 44 18 2d 44 54 fb 21 19 40 | f64.const 0x1.921fb54442d18p+2
+ 0000c2[170]: 1a                         | drop
+ 0000c3[171]: 44 00 00 00 00 00 00 f8 7f | f64.const nan
+ 0000cc[180]: 1a                         | drop
+ 0000cd[181]: 44 00 00 00 00 00 00 f8 ff | f64.const -nan
+ 0000d6[190]: 1a                         | drop
+ 0000d7[191]: 44 00 00 00 00 00 00 f8 7f | f64.const nan
+ 0000e0[200]: 1a                         | drop
+ 0000e1[201]: 44 bc 0a 00 00 00 00 f0 7f | f64.const nan:0xabc
+ 0000ea[210]: 1a                         | drop
+ 0000eb[211]: 44 bc 0a 00 00 00 00 f0 ff | f64.const -nan:0xabc
+ 0000f4[220]: 1a                         | drop
+ 0000f5[221]: 44 bc 0a 00 00 00 00 f0 7f | f64.const nan:0xabc
+ 0000fe[230]: 1a                         | drop
+ 0000ff[231]: 44 00 00 00 00 00 00 f0 7f | f64.const inf
+ 000108[240]: 1a                         | drop
+ 000109[241]: 44 00 00 00 00 00 00 f0 ff | f64.const -inf
+ 000112[250]: 1a                         | drop
+ 000113[251]: 44 00 00 00 00 00 00 f0 7f | f64.const inf
+ 00011c[260]: 1a                         | drop
+ 00011d[261]: 44 00 00 00 00 00 00 e0 bf | f64.const -0x1p-1
+ 000126[270]: 1a                         | drop
+ 000127[271]: 44 18 2d 44 54 fb 21 19 40 | f64.const 0x1.921fb54442d18p+2
+ 000130[280]: 1a                         | drop
+ 000131[281]: 0b                         | end
 ;;; STDOUT ;;)

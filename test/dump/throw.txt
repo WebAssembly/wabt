@@ -55,8 +55,8 @@ throw.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001f func[0]:
- 000020: 41 01                      | i32.const 1
- 000022: 08 00                      | throw 0
- 000024: 0b                         | end
+00001f func[00]:
+ 000020[001]: 41 01                      | i32.const 1
+ 000022[003]: 08 00                      | throw 0
+ 000024[005]: 0b                         | end
 ;;; STDOUT ;;)

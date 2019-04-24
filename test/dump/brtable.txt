@@ -80,21 +80,21 @@ brtable.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 02 40                      | block
- 000019: 02 40                      |   block
- 00001b: 02 40                      |     block
- 00001d: 41 00                      |       i32.const 0
- 00001f: 0e 02 00 01 00             |       br_table
- 000024: 0b                         |     end
- 000025: 41 01                      |     i32.const 1
- 000027: 1a                         |     drop
- 000028: 41 02                      |     i32.const 2
- 00002a: 1a                         |     drop
- 00002b: 0c 01                      |     br 1
- 00002d: 0b                         |   end
- 00002e: 0b                         | end
- 00002f: 41 03                      | i32.const 3
- 000031: 1a                         | drop
- 000032: 0b                         | end
+000016 func[00]:
+ 000017[001]: 02 40                      | block
+ 000019[003]: 02 40                      |   block
+ 00001b[005]: 02 40                      |     block
+ 00001d[007]: 41 00                      |       i32.const 0
+ 00001f[009]: 0e 02 00 01 00             |       br_table
+ 000024[014]: 0b                         |     end
+ 000025[015]: 41 01                      |     i32.const 1
+ 000027[017]: 1a                         |     drop
+ 000028[018]: 41 02                      |     i32.const 2
+ 00002a[020]: 1a                         |     drop
+ 00002b[021]: 0c 01                      |     br 1
+ 00002d[023]: 0b                         |   end
+ 00002e[024]: 0b                         | end
+ 00002f[025]: 41 03                      | i32.const 3
+ 000031[027]: 1a                         | drop
+ 000032[028]: 0b                         | end
 ;;; STDOUT ;;)

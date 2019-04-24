@@ -86,22 +86,22 @@ setlocal-param.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000018 func[0]:
- 000019: 01 7e                      | local[0] type=i64
- 00001b: 01 7d                      | local[1] type=f32
- 00001d: 01 7f                      | local[2] type=i32
- 00001f: 01 7d                      | local[3] type=f32
- 000021: 41 00                      | i32.const 0
- 000023: 21 00                      | local.set 0
- 000025: 43 00 00 00 00             | f32.const 0x0p+0
- 00002a: 21 01                      | local.set 1
- 00002c: 42 00                      | i64.const 0
- 00002e: 21 02                      | local.set 2
- 000030: 43 00 00 00 00             | f32.const 0x0p+0
- 000035: 21 03                      | local.set 3
- 000037: 41 00                      | i32.const 0
- 000039: 21 04                      | local.set 4
- 00003b: 43 00 00 00 00             | f32.const 0x0p+0
- 000040: 21 05                      | local.set 5
- 000042: 0b                         | end
+000018 func[00]:
+ 000019[001]: 01 7e                      | local[0] type=i64
+ 00001b[003]: 01 7d                      | local[1] type=f32
+ 00001d[005]: 01 7f                      | local[2] type=i32
+ 00001f[007]: 01 7d                      | local[3] type=f32
+ 000021[009]: 41 00                      | i32.const 0
+ 000023[011]: 21 00                      | local.set 0
+ 000025[013]: 43 00 00 00 00             | f32.const 0x0p+0
+ 00002a[018]: 21 01                      | local.set 1
+ 00002c[020]: 42 00                      | i64.const 0
+ 00002e[022]: 21 02                      | local.set 2
+ 000030[024]: 43 00 00 00 00             | f32.const 0x0p+0
+ 000035[029]: 21 03                      | local.set 3
+ 000037[031]: 41 00                      | i32.const 0
+ 000039[033]: 21 04                      | local.set 4
+ 00003b[035]: 43 00 00 00 00             | f32.const 0x0p+0
+ 000040[040]: 21 05                      | local.set 5
+ 000042[042]: 0b                         | end
 ;;; STDOUT ;;)

@@ -50,7 +50,7 @@ getglobal.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001f func[0]:
- 000020: 23 00                      | global.get 0
- 000022: 0b                         | end
+00001f func[00]:
+ 000020[001]: 23 00                      | global.get 0
+ 000022[003]: 0b                         | end
 ;;; STDOUT ;;)

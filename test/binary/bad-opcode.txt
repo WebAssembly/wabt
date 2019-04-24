@@ -30,5 +30,5 @@ Code[1]:
 
 Code Disassembly:
 
-000017 func[0]:
+000017 func[00]:
 ;;; STDOUT ;;)

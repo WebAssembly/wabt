@@ -51,12 +51,12 @@ br-loop.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 03 40                      | loop
- 000019: 41 01                      |   i32.const 1
- 00001b: 04 40                      |   if
- 00001d: 0c 01                      |     br 1
- 00001f: 0b                         |   end
- 000020: 0b                         | end
- 000021: 0b                         | end
+000016 func[00]:
+ 000017[001]: 03 40                      | loop
+ 000019[003]: 41 01                      |   i32.const 1
+ 00001b[005]: 04 40                      |   if
+ 00001d[007]: 0c 01                      |     br 1
+ 00001f[009]: 0b                         |   end
+ 000020[010]: 0b                         | end
+ 000021[011]: 0b                         | end
 ;;; STDOUT ;;)

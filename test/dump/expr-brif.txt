@@ -55,13 +55,13 @@ expr-brif.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000017 func[0]:
- 000018: 02 7f                      | block i32
- 00001a: 41 2a                      |   i32.const 42
- 00001c: 41 00                      |   i32.const 0
- 00001e: 0d 00                      |   br_if 0
- 000020: 1a                         |   drop
- 000021: 41 1d                      |   i32.const 29
- 000023: 0b                         | end
- 000024: 0b                         | end
+000017 func[00]:
+ 000018[001]: 02 7f                      | block i32
+ 00001a[003]: 41 2a                      |   i32.const 42
+ 00001c[005]: 41 00                      |   i32.const 0
+ 00001e[007]: 0d 00                      |   br_if 0
+ 000020[009]: 1a                         |   drop
+ 000021[010]: 41 1d                      |   i32.const 29
+ 000023[012]: 0b                         | end
+ 000024[013]: 0b                         | end
 ;;; STDOUT ;;)

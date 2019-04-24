@@ -72,15 +72,15 @@ br_on_exn.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001f func[0]:
- 000020: 02 7f                      | block i32
- 000022: 06 40                      |   try
- 000024: 07                         |   catch
- 000025: 0a 01 00                   |     br_on_exn 1 0
- 000028: 1a                         |     drop
- 000029: 0b                         |   end
- 00002a: 41 00                      |   i32.const 0
- 00002c: 0b                         | end
- 00002d: 1a                         | drop
- 00002e: 0b                         | end
+00001f func[00]:
+ 000020[001]: 02 7f                      | block i32
+ 000022[003]: 06 40                      |   try
+ 000024[005]: 07                         |   catch
+ 000025[006]: 0a 01 00                   |     br_on_exn 1 0
+ 000028[009]: 1a                         |     drop
+ 000029[010]: 0b                         |   end
+ 00002a[011]: 41 00                      |   i32.const 0
+ 00002c[013]: 0b                         | end
+ 00002d[014]: 1a                         | drop
+ 00002e[015]: 0b                         | end
 ;;; STDOUT ;;)

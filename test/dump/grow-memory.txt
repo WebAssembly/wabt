@@ -54,9 +54,9 @@ grow-memory.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001d func[0]:
- 00001e: 20 00                      | local.get 0
- 000020: 40 00                      | memory.grow 0
- 000022: 1a                         | drop
- 000023: 0b                         | end
+00001d func[00]:
+ 00001e[001]: 20 00                      | local.get 0
+ 000020[003]: 40 00                      | memory.grow 0
+ 000022[005]: 1a                         | drop
+ 000023[006]: 0b                         | end
 ;;; STDOUT ;;)

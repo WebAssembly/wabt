@@ -106,30 +106,30 @@ convert-sat.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 43 00 00 00 00             | f32.const 0x0p+0
- 00001c: fc 00                      | i32.trunc_sat_f32_s
- 00001e: 1a                         | drop
- 00001f: 43 00 00 00 00             | f32.const 0x0p+0
- 000024: fc 01                      | i32.trunc_sat_f32_u
- 000026: 1a                         | drop
- 000027: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 000030: fc 02                      | i32.trunc_sat_f64_s
- 000032: 1a                         | drop
- 000033: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 00003c: fc 03                      | i32.trunc_sat_f64_u
- 00003e: 1a                         | drop
- 00003f: 43 00 00 00 00             | f32.const 0x0p+0
- 000044: fc 04                      | i64.trunc_sat_f32_s
- 000046: 1a                         | drop
- 000047: 43 00 00 00 00             | f32.const 0x0p+0
- 00004c: fc 05                      | i64.trunc_sat_f32_u
- 00004e: 1a                         | drop
- 00004f: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 000058: fc 06                      | i64.trunc_sat_f64_s
- 00005a: 1a                         | drop
- 00005b: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
- 000064: fc 07                      | i64.trunc_sat_f64_u
- 000066: 1a                         | drop
- 000067: 0b                         | end
+000016 func[00]:
+ 000017[001]: 43 00 00 00 00             | f32.const 0x0p+0
+ 00001c[006]: fc 00                      | i32.trunc_sat_f32_s
+ 00001e[008]: 1a                         | drop
+ 00001f[009]: 43 00 00 00 00             | f32.const 0x0p+0
+ 000024[014]: fc 01                      | i32.trunc_sat_f32_u
+ 000026[016]: 1a                         | drop
+ 000027[017]: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 000030[026]: fc 02                      | i32.trunc_sat_f64_s
+ 000032[028]: 1a                         | drop
+ 000033[029]: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 00003c[038]: fc 03                      | i32.trunc_sat_f64_u
+ 00003e[040]: 1a                         | drop
+ 00003f[041]: 43 00 00 00 00             | f32.const 0x0p+0
+ 000044[046]: fc 04                      | i64.trunc_sat_f32_s
+ 000046[048]: 1a                         | drop
+ 000047[049]: 43 00 00 00 00             | f32.const 0x0p+0
+ 00004c[054]: fc 05                      | i64.trunc_sat_f32_u
+ 00004e[056]: 1a                         | drop
+ 00004f[057]: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 000058[066]: fc 06                      | i64.trunc_sat_f64_s
+ 00005a[068]: 1a                         | drop
+ 00005b[069]: 44 00 00 00 00 00 00 00 00 | f64.const 0x0p+0
+ 000064[078]: fc 07                      | i64.trunc_sat_f64_u
+ 000066[080]: 1a                         | drop
+ 000067[081]: 0b                         | end
 ;;; STDOUT ;;)

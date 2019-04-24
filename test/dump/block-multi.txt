@@ -77,17 +77,17 @@ block-multi.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000020 func[0]:
- 000021: 02 01                      | block type[1]
- 000023: 41 01                      |   i32.const 1
- 000025: 41 02                      |   i32.const 2
- 000027: 0b                         | end
- 000028: 0f                         | return
- 000029: 0b                         | end
-00002b func[1]:
- 00002c: 41 00                      | i32.const 0
- 00002e: 02 02                      | block type[2]
- 000030: 1a                         |   drop
- 000031: 0b                         | end
- 000032: 0b                         | end
+000020 func[00]:
+ 000021[001]: 02 01                      | block type[1]
+ 000023[003]: 41 01                      |   i32.const 1
+ 000025[005]: 41 02                      |   i32.const 2
+ 000027[007]: 0b                         | end
+ 000028[008]: 0f                         | return
+ 000029[009]: 0b                         | end
+00002b func[01]:
+ 00002c[001]: 41 00                      | i32.const 0
+ 00002e[003]: 02 02                      | block type[2]
+ 000030[005]: 1a                         |   drop
+ 000031[006]: 0b                         | end
+ 000032[007]: 0b                         | end
 ;;; STDOUT ;;)

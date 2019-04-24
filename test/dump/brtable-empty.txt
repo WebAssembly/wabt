@@ -47,10 +47,10 @@ brtable-empty.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 02 40                      | block
- 000019: 41 00                      |   i32.const 0
- 00001b: 0e 00 00                   |   br_table
- 00001e: 0b                         | end
- 00001f: 0b                         | end
+000016 func[00]:
+ 000017[001]: 02 40                      | block
+ 000019[003]: 41 00                      |   i32.const 0
+ 00001b[005]: 0e 00 00                   |   br_table
+ 00001e[008]: 0b                         | end
+ 00001f[009]: 0b                         | end
 ;;; STDOUT ;;)

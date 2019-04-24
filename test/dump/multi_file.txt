@@ -18,8 +18,8 @@ Sections:
 
 Code Disassembly:
 
-000017 func[0]:
- 000018: 0b                         | end
+000017 func[00]:
+ 000018[001]: 0b                         | end
 
 multi_file.1.wasm:	file format wasm 0x1
 
@@ -31,6 +31,6 @@ Sections:
 
 Code Disassembly:
 
-000017 func[0]:
- 000018: 0b                         | end
+000017 func[00]:
+ 000018[001]: 0b                         | end
 ;;; STDOUT ;;)

@@ -33,5 +33,5 @@ Code[1]:
 
 Code Disassembly:
 
-000016 func[0]:
+000016 func[00]:
 ;;; STDOUT ;;)

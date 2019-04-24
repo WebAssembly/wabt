@@ -90,88 +90,88 @@ simd-lane.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-0001e1 func[0] <func_i8x16_extract_lane_s_0>:
- 0001e2: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x000000ff 0x0000017f
- 0001eb: 00 ff 00 00 00 7f 01 00 00 | 
- 0001f4: fd 05 08                   | i8x16.extract_lane_s 8
- 0001f7: 0b                         | end
-0001f9 func[1] <func_i8x16_extract_lane_u_0>:
- 0001fa: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x000000ff 0x0000017f
- 000203: 00 ff 00 00 00 7f 01 00 00 | 
- 00020c: fd 06 08                   | i8x16.extract_lane_u 8
- 00020f: 0b                         | end
-000211 func[2] <func_i16x8_extract_lane_s_0>:
- 000212: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
- 00021b: 00 ff ff 00 00 7f 01 00 00 | 
- 000224: fd 09 04                   | i16x8.extract_lane_s 4
- 000227: 0b                         | end
-000229 func[3] <func_i16x8_extract_lane_u_0>:
- 00022a: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
- 000233: 00 ff ff 00 00 7f 01 00 00 | 
- 00023c: fd 0a 04                   | i16x8.extract_lane_u 4
- 00023f: 0b                         | end
-000241 func[4] <func_i32x4_extract_lane_0>:
- 000242: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
- 00024b: 00 ff ff 00 00 7f 01 00 00 | 
- 000254: fd 0d 02                   | i32x4.extract_lane 2
- 000257: 0b                         | end
-000259 func[5] <func_i64x2_extract_lane_0>:
- 00025a: fd 02 0f 00 00 00 00 00 00 | v128.const 0x0000000f 0x00000000 0x0000ffff 0x0000017f
- 000263: 00 ff ff 00 00 7f 01 00 00 | 
- 00026c: fd 10 00                   | i64x2.extract_lane 0
- 00026f: 0b                         | end
-000271 func[6] <func_f32x4_extract_lane_0>:
- 000272: fd 02 01 00 00 00 00 00 c0 | v128.const 0x00000001 0x3fc00000 0x0000ffff 0x0000017f
- 00027b: 3f ff ff 00 00 7f 01 00 00 | 
- 000284: fd 13 01                   | f32x4.extract_lane 1
- 000287: 0b                         | end
-000289 func[7] <func_f64x2_extract_lane_0>:
- 00028a: fd 02 00 00 00 00 00 00 12 | v128.const 0x00000000 0x40120000 0x0000ffff 0x0000017f
- 000293: 40 ff ff 00 00 7f 01 00 00 | 
- 00029c: fd 16 00                   | f64x2.extract_lane 0
- 00029f: 0b                         | end
-0002a1 func[8] <func_i8x16_replace_lane_0>:
- 0002a2: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x000000ff 0x0000017f
- 0002ab: 00 ff 00 00 00 7f 01 00 00 | 
- 0002b4: 41 e5 01                   | i32.const 229
- 0002b7: fd 07 08                   | i8x16.replace_lane 8
- 0002ba: 0b                         | end
-0002bc func[9] <func_i16x8_replace_lane_0>:
- 0002bd: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
- 0002c6: 00 ff ff 00 00 7f 01 00 00 | 
- 0002cf: 41 e6 cb 03                | i32.const 58854
- 0002d3: fd 0b 04                   | i16x8.replace_lane 4
- 0002d6: 0b                         | end
+0001e1 func[00] <func_i8x16_extract_lane_s_0>:
+ 0001e2[001]: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x000000ff 0x0000017f
+ 0001eb[001]: 00 ff 00 00 00 7f 01 00 00 | 
+ 0001f4[019]: fd 05 08                   | i8x16.extract_lane_s 8
+ 0001f7[022]: 0b                         | end
+0001f9 func[01] <func_i8x16_extract_lane_u_0>:
+ 0001fa[001]: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x000000ff 0x0000017f
+ 000203[001]: 00 ff 00 00 00 7f 01 00 00 | 
+ 00020c[019]: fd 06 08                   | i8x16.extract_lane_u 8
+ 00020f[022]: 0b                         | end
+000211 func[02] <func_i16x8_extract_lane_s_0>:
+ 000212[001]: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+ 00021b[001]: 00 ff ff 00 00 7f 01 00 00 | 
+ 000224[019]: fd 09 04                   | i16x8.extract_lane_s 4
+ 000227[022]: 0b                         | end
+000229 func[03] <func_i16x8_extract_lane_u_0>:
+ 00022a[001]: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+ 000233[001]: 00 ff ff 00 00 7f 01 00 00 | 
+ 00023c[019]: fd 0a 04                   | i16x8.extract_lane_u 4
+ 00023f[022]: 0b                         | end
+000241 func[04] <func_i32x4_extract_lane_0>:
+ 000242[001]: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+ 00024b[001]: 00 ff ff 00 00 7f 01 00 00 | 
+ 000254[019]: fd 0d 02                   | i32x4.extract_lane 2
+ 000257[022]: 0b                         | end
+000259 func[05] <func_i64x2_extract_lane_0>:
+ 00025a[001]: fd 02 0f 00 00 00 00 00 00 | v128.const 0x0000000f 0x00000000 0x0000ffff 0x0000017f
+ 000263[001]: 00 ff ff 00 00 7f 01 00 00 | 
+ 00026c[019]: fd 10 00                   | i64x2.extract_lane 0
+ 00026f[022]: 0b                         | end
+000271 func[06] <func_f32x4_extract_lane_0>:
+ 000272[001]: fd 02 01 00 00 00 00 00 c0 | v128.const 0x00000001 0x3fc00000 0x0000ffff 0x0000017f
+ 00027b[001]: 3f ff ff 00 00 7f 01 00 00 | 
+ 000284[019]: fd 13 01                   | f32x4.extract_lane 1
+ 000287[022]: 0b                         | end
+000289 func[07] <func_f64x2_extract_lane_0>:
+ 00028a[001]: fd 02 00 00 00 00 00 00 12 | v128.const 0x00000000 0x40120000 0x0000ffff 0x0000017f
+ 000293[001]: 40 ff ff 00 00 7f 01 00 00 | 
+ 00029c[019]: fd 16 00                   | f64x2.extract_lane 0
+ 00029f[022]: 0b                         | end
+0002a1 func[08] <func_i8x16_replace_lane_0>:
+ 0002a2[001]: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x000000ff 0x0000017f
+ 0002ab[001]: 00 ff 00 00 00 7f 01 00 00 | 
+ 0002b4[019]: 41 e5 01                   | i32.const 229
+ 0002b7[022]: fd 07 08                   | i8x16.replace_lane 8
+ 0002ba[025]: 0b                         | end
+0002bc func[09] <func_i16x8_replace_lane_0>:
+ 0002bd[001]: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+ 0002c6[001]: 00 ff ff 00 00 7f 01 00 00 | 
+ 0002cf[019]: 41 e6 cb 03                | i32.const 58854
+ 0002d3[023]: fd 0b 04                   | i16x8.replace_lane 4
+ 0002d6[026]: 0b                         | end
 0002d8 func[10] <func_i32x4_replace_lane_0>:
- 0002d9: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
- 0002e2: 00 ff ff 00 00 7f 01 00 00 | 
- 0002eb: 41 f8 ac d1 91 01          | i32.const 305419896
- 0002f1: fd 0e 02                   | i32x4.replace_lane 2
- 0002f4: 0b                         | end
+ 0002d9[001]: fd 02 01 00 00 00 0f 00 00 | v128.const 0x00000001 0x0000000f 0x0000ffff 0x0000017f
+ 0002e2[001]: 00 ff ff 00 00 7f 01 00 00 | 
+ 0002eb[019]: 41 f8 ac d1 91 01          | i32.const 305419896
+ 0002f1[025]: fd 0e 02                   | i32x4.replace_lane 2
+ 0002f4[028]: 0b                         | end
 0002f6 func[11] <func_i64x2_replace_lane_0>:
- 0002f7: fd 02 0f 00 00 00 00 00 00 | v128.const 0x0000000f 0x00000000 0x0000ffff 0x0000017f
- 000300: 00 ff ff 00 00 7f 01 00 00 | 
- 000309: 42 f8 ac 81 80 c0 c6 04    | i64.const 20014547621496
- 000311: fd 11 00                   | i64x2.replace_lane 0
- 000314: 0b                         | end
+ 0002f7[001]: fd 02 0f 00 00 00 00 00 00 | v128.const 0x0000000f 0x00000000 0x0000ffff 0x0000017f
+ 000300[001]: 00 ff ff 00 00 7f 01 00 00 | 
+ 000309[019]: 42 f8 ac 81 80 c0 c6 04    | i64.const 20014547621496
+ 000311[027]: fd 11 00                   | i64x2.replace_lane 0
+ 000314[030]: 0b                         | end
 000316 func[12] <func_f32x4_replace_lane_0>:
- 000317: fd 02 01 00 00 00 00 00 00 | v128.const 0x00000001 0x00000000 0x0000ffff 0x0000017f
- 000320: 00 ff ff 00 00 7f 01 00 00 | 
- 000329: 43 00 00 c0 3f             | f32.const 0x1.8p+0
- 00032e: fd 14 01                   | f32x4.replace_lane 1
- 000331: 0b                         | end
+ 000317[001]: fd 02 01 00 00 00 00 00 00 | v128.const 0x00000001 0x00000000 0x0000ffff 0x0000017f
+ 000320[001]: 00 ff ff 00 00 7f 01 00 00 | 
+ 000329[019]: 43 00 00 c0 3f             | f32.const 0x1.8p+0
+ 00032e[024]: fd 14 01                   | f32x4.replace_lane 1
+ 000331[027]: 0b                         | end
 000333 func[13] <func_f64x2_replace_lane_0>:
- 000334: fd 02 9a 78 00 00 30 03 88 | v128.const 0x0000789a 0xff880330 0x0000ffff 0x0000017f
- 00033d: ff ff ff 00 00 7f 01 00 00 | 
- 000346: 44 00 00 00 00 00 00 12 40 | f64.const 0x1.2p+2
- 00034f: fd 17 00                   | f64x2.replace_lane 0
- 000352: 0b                         | end
+ 000334[001]: fd 02 9a 78 00 00 30 03 88 | v128.const 0x0000789a 0xff880330 0x0000ffff 0x0000017f
+ 00033d[001]: ff ff ff 00 00 7f 01 00 00 | 
+ 000346[019]: 44 00 00 00 00 00 00 12 40 | f64.const 0x1.2p+2
+ 00034f[028]: fd 17 00                   | f64x2.replace_lane 0
+ 000352[031]: 0b                         | end
 000354 func[14] <func_v8x16_shuffle_0>:
- 000355: fd 02 01 ff 00 ff 0f ff 00 | v128.const 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
- 00035e: ff ff ff 00 ff 7f ff 00 ff | 
- 000367: fd 02 55 00 55 00 55 00 55 | v128.const 0x00550055 0x00550055 0x00550055 0x00550155
- 000370: 00 55 00 55 00 55 01 55 00 | 
- 000379: fd 03 10 01 12 03 14 05 16 | v8x16.shuffle 0x03120110 0x07160514 0x0b1a0918 0x0f1e0d1c
- 000382: 07 18 09 1a 0b 1c 0d 1e 0f | 
- 00038b: 0b                         | end
+ 000355[001]: fd 02 01 ff 00 ff 0f ff 00 | v128.const 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
+ 00035e[001]: ff ff ff 00 ff 7f ff 00 ff | 
+ 000367[019]: fd 02 55 00 55 00 55 00 55 | v128.const 0x00550055 0x00550055 0x00550055 0x00550155
+ 000370[019]: 00 55 00 55 00 55 01 55 00 | 
+ 000379[037]: fd 03 10 01 12 03 14 05 16 | v8x16.shuffle 0x03120110 0x07160514 0x0b1a0918 0x0f1e0d1c
+ 000382[037]: 07 18 09 1a 0b 1c 0d 1e 0f | 
+ 00038b[055]: 0b                         | end
 ;;; STDOUT ;;)

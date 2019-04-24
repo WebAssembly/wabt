@@ -47,11 +47,11 @@ if-then-list.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 41 01                      | i32.const 1
- 000019: 04 40                      | if
- 00001b: 01                         |   nop
- 00001c: 01                         |   nop
- 00001d: 0b                         | end
- 00001e: 0b                         | end
+000016 func[00]:
+ 000017[001]: 41 01                      | i32.const 1
+ 000019[003]: 04 40                      | if
+ 00001b[005]: 01                         |   nop
+ 00001c[006]: 01                         |   nop
+ 00001d[007]: 0b                         | end
+ 00001e[008]: 0b                         | end
 ;;; STDOUT ;;)

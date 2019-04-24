@@ -78,10 +78,10 @@ Code[3]:
 
 Code Disassembly:
 
-00001b func[0]:
- 00001c: 0b                         | end
-00001e func[1]:
- 00001f: 0b                         | end
-000021 func[2]:
- 000022: 0b                         | end
+00001b func[00]:
+ 00001c[001]: 0b                         | end
+00001e func[01]:
+ 00001f[001]: 0b                         | end
+000021 func[02]:
+ 000022[001]: 0b                         | end
 ;;; STDOUT ;;)

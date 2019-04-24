@@ -87,265 +87,265 @@ atomic.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001e func[0]:
- 00001f: 41 00                      | i32.const 0
- 000021: 41 00                      | i32.const 0
- 000023: fe 00 02 00                | atomic.notify 2 0
- 000027: 1a                         | drop
- 000028: 41 00                      | i32.const 0
- 00002a: 41 00                      | i32.const 0
- 00002c: 42 00                      | i64.const 0
- 00002e: fe 01 02 00                | i32.atomic.wait 2 0
- 000032: 1a                         | drop
- 000033: 41 00                      | i32.const 0
- 000035: 42 00                      | i64.const 0
- 000037: 42 00                      | i64.const 0
- 000039: fe 02 03 00                | i64.atomic.wait 3 0
- 00003d: 1a                         | drop
- 00003e: 41 00                      | i32.const 0
- 000040: fe 10 02 00                | i32.atomic.load 2 0
- 000044: 1a                         | drop
- 000045: 41 00                      | i32.const 0
- 000047: fe 11 03 00                | i64.atomic.load 3 0
- 00004b: 1a                         | drop
- 00004c: 41 00                      | i32.const 0
- 00004e: fe 12 00 00                | i32.atomic.load8_u 0 0
- 000052: 1a                         | drop
- 000053: 41 00                      | i32.const 0
- 000055: fe 13 01 00                | i32.atomic.load16_u 1 0
- 000059: 1a                         | drop
- 00005a: 41 00                      | i32.const 0
- 00005c: fe 14 00 00                | i64.atomic.load8_u 0 0
- 000060: 1a                         | drop
- 000061: 41 00                      | i32.const 0
- 000063: fe 15 01 00                | i64.atomic.load16_u 1 0
- 000067: 1a                         | drop
- 000068: 41 00                      | i32.const 0
- 00006a: fe 16 02 00                | i64.atomic.load32_u 2 0
- 00006e: 1a                         | drop
- 00006f: 41 00                      | i32.const 0
- 000071: 41 00                      | i32.const 0
- 000073: fe 17 02 00                | i32.atomic.store 2 0
- 000077: 41 00                      | i32.const 0
- 000079: 42 00                      | i64.const 0
- 00007b: fe 18 03 00                | i64.atomic.store 3 0
- 00007f: 41 00                      | i32.const 0
- 000081: 41 00                      | i32.const 0
- 000083: fe 19 00 00                | i32.atomic.store8 0 0
- 000087: 41 00                      | i32.const 0
- 000089: 41 00                      | i32.const 0
- 00008b: fe 1a 01 00                | i32.atomic.store16 1 0
- 00008f: 41 00                      | i32.const 0
- 000091: 42 00                      | i64.const 0
- 000093: fe 1b 00 00                | i64.atomic.store8 0 0
- 000097: 41 00                      | i32.const 0
- 000099: 42 00                      | i64.const 0
- 00009b: fe 1c 01 00                | i64.atomic.store16 1 0
- 00009f: 41 00                      | i32.const 0
- 0000a1: 42 00                      | i64.const 0
- 0000a3: fe 1d 02 00                | i64.atomic.store32 2 0
- 0000a7: 41 00                      | i32.const 0
- 0000a9: 41 00                      | i32.const 0
- 0000ab: fe 1e 02 00                | i32.atomic.rmw.add 2 0
- 0000af: 1a                         | drop
- 0000b0: 41 00                      | i32.const 0
- 0000b2: 42 00                      | i64.const 0
- 0000b4: fe 1f 03 00                | i64.atomic.rmw.add 3 0
- 0000b8: 1a                         | drop
- 0000b9: 41 00                      | i32.const 0
- 0000bb: 41 00                      | i32.const 0
- 0000bd: fe 20 00 00                | i32.atomic.rmw8.add_u 0 0
- 0000c1: 1a                         | drop
- 0000c2: 41 00                      | i32.const 0
- 0000c4: 41 00                      | i32.const 0
- 0000c6: fe 21 01 00                | i32.atomic.rmw16.add_u 1 0
- 0000ca: 1a                         | drop
- 0000cb: 41 00                      | i32.const 0
- 0000cd: 42 00                      | i64.const 0
- 0000cf: fe 22 00 00                | i64.atomic.rmw8.add_u 0 0
- 0000d3: 1a                         | drop
- 0000d4: 41 00                      | i32.const 0
- 0000d6: 42 00                      | i64.const 0
- 0000d8: fe 23 01 00                | i64.atomic.rmw16.add_u 1 0
- 0000dc: 1a                         | drop
- 0000dd: 41 00                      | i32.const 0
- 0000df: 42 00                      | i64.const 0
- 0000e1: fe 24 02 00                | i64.atomic.rmw32.add_u 2 0
- 0000e5: 1a                         | drop
- 0000e6: 41 00                      | i32.const 0
- 0000e8: 41 00                      | i32.const 0
- 0000ea: fe 25 02 00                | i32.atomic.rmw.sub 2 0
- 0000ee: 1a                         | drop
- 0000ef: 41 00                      | i32.const 0
- 0000f1: 42 00                      | i64.const 0
- 0000f3: fe 26 03 00                | i64.atomic.rmw.sub 3 0
- 0000f7: 1a                         | drop
- 0000f8: 41 00                      | i32.const 0
- 0000fa: 41 00                      | i32.const 0
- 0000fc: fe 27 00 00                | i32.atomic.rmw8.sub_u 0 0
- 000100: 1a                         | drop
- 000101: 41 00                      | i32.const 0
- 000103: 41 00                      | i32.const 0
- 000105: fe 28 01 00                | i32.atomic.rmw16.sub_u 1 0
- 000109: 1a                         | drop
- 00010a: 41 00                      | i32.const 0
- 00010c: 42 00                      | i64.const 0
- 00010e: fe 29 00 00                | i64.atomic.rmw8.sub_u 0 0
- 000112: 1a                         | drop
- 000113: 41 00                      | i32.const 0
- 000115: 42 00                      | i64.const 0
- 000117: fe 2a 01 00                | i64.atomic.rmw16.sub_u 1 0
- 00011b: 1a                         | drop
- 00011c: 41 00                      | i32.const 0
- 00011e: 42 00                      | i64.const 0
- 000120: fe 2b 02 00                | i64.atomic.rmw32.sub_u 2 0
- 000124: 1a                         | drop
- 000125: 41 00                      | i32.const 0
- 000127: 41 00                      | i32.const 0
- 000129: fe 2c 02 00                | i32.atomic.rmw.and 2 0
- 00012d: 1a                         | drop
- 00012e: 41 00                      | i32.const 0
- 000130: 42 00                      | i64.const 0
- 000132: fe 2d 03 00                | i64.atomic.rmw.and 3 0
- 000136: 1a                         | drop
- 000137: 41 00                      | i32.const 0
- 000139: 41 00                      | i32.const 0
- 00013b: fe 2e 00 00                | i32.atomic.rmw8.and_u 0 0
- 00013f: 1a                         | drop
- 000140: 41 00                      | i32.const 0
- 000142: 41 00                      | i32.const 0
- 000144: fe 2f 01 00                | i32.atomic.rmw16.and_u 1 0
- 000148: 1a                         | drop
- 000149: 41 00                      | i32.const 0
- 00014b: 42 00                      | i64.const 0
- 00014d: fe 30 00 00                | i64.atomic.rmw8.and_u 0 0
- 000151: 1a                         | drop
- 000152: 41 00                      | i32.const 0
- 000154: 42 00                      | i64.const 0
- 000156: fe 31 01 00                | i64.atomic.rmw16.and_u 1 0
- 00015a: 1a                         | drop
- 00015b: 41 00                      | i32.const 0
- 00015d: 42 00                      | i64.const 0
- 00015f: fe 32 02 00                | i64.atomic.rmw32.and_u 2 0
- 000163: 1a                         | drop
- 000164: 41 00                      | i32.const 0
- 000166: 41 00                      | i32.const 0
- 000168: fe 33 02 00                | i32.atomic.rmw.or 2 0
- 00016c: 1a                         | drop
- 00016d: 41 00                      | i32.const 0
- 00016f: 42 00                      | i64.const 0
- 000171: fe 34 03 00                | i64.atomic.rmw.or 3 0
- 000175: 1a                         | drop
- 000176: 41 00                      | i32.const 0
- 000178: 41 00                      | i32.const 0
- 00017a: fe 35 00 00                | i32.atomic.rmw8.or_u 0 0
- 00017e: 1a                         | drop
- 00017f: 41 00                      | i32.const 0
- 000181: 41 00                      | i32.const 0
- 000183: fe 36 01 00                | i32.atomic.rmw16.or_u 1 0
- 000187: 1a                         | drop
- 000188: 41 00                      | i32.const 0
- 00018a: 42 00                      | i64.const 0
- 00018c: fe 37 00 00                | i64.atomic.rmw8.or_u 0 0
- 000190: 1a                         | drop
- 000191: 41 00                      | i32.const 0
- 000193: 42 00                      | i64.const 0
- 000195: fe 38 01 00                | i64.atomic.rmw16.or_u 1 0
- 000199: 1a                         | drop
- 00019a: 41 00                      | i32.const 0
- 00019c: 42 00                      | i64.const 0
- 00019e: fe 39 02 00                | i64.atomic.rmw32.or_u 2 0
- 0001a2: 1a                         | drop
- 0001a3: 41 00                      | i32.const 0
- 0001a5: 41 00                      | i32.const 0
- 0001a7: fe 3a 02 00                | i32.atomic.rmw.xor 2 0
- 0001ab: 1a                         | drop
- 0001ac: 41 00                      | i32.const 0
- 0001ae: 42 00                      | i64.const 0
- 0001b0: fe 3b 03 00                | i64.atomic.rmw.xor 3 0
- 0001b4: 1a                         | drop
- 0001b5: 41 00                      | i32.const 0
- 0001b7: 41 00                      | i32.const 0
- 0001b9: fe 3c 00 00                | i32.atomic.rmw8.xor_u 0 0
- 0001bd: 1a                         | drop
- 0001be: 41 00                      | i32.const 0
- 0001c0: 41 00                      | i32.const 0
- 0001c2: fe 3d 01 00                | i32.atomic.rmw16.xor_u 1 0
- 0001c6: 1a                         | drop
- 0001c7: 41 00                      | i32.const 0
- 0001c9: 42 00                      | i64.const 0
- 0001cb: fe 3e 00 00                | i64.atomic.rmw8.xor_u 0 0
- 0001cf: 1a                         | drop
- 0001d0: 41 00                      | i32.const 0
- 0001d2: 42 00                      | i64.const 0
- 0001d4: fe 3f 01 00                | i64.atomic.rmw16.xor_u 1 0
- 0001d8: 1a                         | drop
- 0001d9: 41 00                      | i32.const 0
- 0001db: 42 00                      | i64.const 0
- 0001dd: fe 40 02 00                | i64.atomic.rmw32.xor_u 2 0
- 0001e1: 1a                         | drop
- 0001e2: 41 00                      | i32.const 0
- 0001e4: 41 00                      | i32.const 0
- 0001e6: fe 41 02 00                | i32.atomic.rmw.xchg 2 0
- 0001ea: 1a                         | drop
- 0001eb: 41 00                      | i32.const 0
- 0001ed: 42 00                      | i64.const 0
- 0001ef: fe 42 03 00                | i64.atomic.rmw.xchg 3 0
- 0001f3: 1a                         | drop
- 0001f4: 41 00                      | i32.const 0
- 0001f6: 41 00                      | i32.const 0
- 0001f8: fe 43 00 00                | i32.atomic.rmw8.xchg_u 0 0
- 0001fc: 1a                         | drop
- 0001fd: 41 00                      | i32.const 0
- 0001ff: 41 00                      | i32.const 0
- 000201: fe 44 01 00                | i32.atomic.rmw16.xchg_u 1 0
- 000205: 1a                         | drop
- 000206: 41 00                      | i32.const 0
- 000208: 42 00                      | i64.const 0
- 00020a: fe 45 00 00                | i64.atomic.rmw8.xchg_u 0 0
- 00020e: 1a                         | drop
- 00020f: 41 00                      | i32.const 0
- 000211: 42 00                      | i64.const 0
- 000213: fe 46 01 00                | i64.atomic.rmw16.xchg_u 1 0
- 000217: 1a                         | drop
- 000218: 41 00                      | i32.const 0
- 00021a: 42 00                      | i64.const 0
- 00021c: fe 47 02 00                | i64.atomic.rmw32.xchg_u 2 0
- 000220: 1a                         | drop
- 000221: 41 00                      | i32.const 0
- 000223: 41 00                      | i32.const 0
- 000225: 41 00                      | i32.const 0
- 000227: fe 48 02 00                | i32.atomic.rmw.cmpxchg 2 0
- 00022b: 1a                         | drop
- 00022c: 41 00                      | i32.const 0
- 00022e: 42 00                      | i64.const 0
- 000230: 42 00                      | i64.const 0
- 000232: fe 49 03 00                | i64.atomic.rmw.cmpxchg 3 0
- 000236: 1a                         | drop
- 000237: 41 00                      | i32.const 0
- 000239: 41 00                      | i32.const 0
- 00023b: 41 00                      | i32.const 0
- 00023d: fe 4a 00 00                | i32.atomic.rmw8.cmpxchg_u 0 0
- 000241: 1a                         | drop
- 000242: 41 00                      | i32.const 0
- 000244: 41 00                      | i32.const 0
- 000246: 41 00                      | i32.const 0
- 000248: fe 4b 01 00                | i32.atomic.rmw16.cmpxchg_u 1 0
- 00024c: 1a                         | drop
- 00024d: 41 00                      | i32.const 0
- 00024f: 42 00                      | i64.const 0
- 000251: 42 00                      | i64.const 0
- 000253: fe 4c 00 00                | i64.atomic.rmw8.cmpxchg_u 0 0
- 000257: 1a                         | drop
- 000258: 41 00                      | i32.const 0
- 00025a: 42 00                      | i64.const 0
- 00025c: 42 00                      | i64.const 0
- 00025e: fe 4d 01 00                | i64.atomic.rmw16.cmpxchg_u 1 0
- 000262: 1a                         | drop
- 000263: 41 00                      | i32.const 0
- 000265: 42 00                      | i64.const 0
- 000267: 42 00                      | i64.const 0
- 000269: fe 4e 02 00                | i64.atomic.rmw32.cmpxchg_u 2 0
- 00026d: 1a                         | drop
- 00026e: 0b                         | end
+00001e func[00]:
+ 00001f[001]: 41 00                      | i32.const 0
+ 000021[003]: 41 00                      | i32.const 0
+ 000023[005]: fe 00 02 00                | atomic.notify 2 0
+ 000027[009]: 1a                         | drop
+ 000028[010]: 41 00                      | i32.const 0
+ 00002a[012]: 41 00                      | i32.const 0
+ 00002c[014]: 42 00                      | i64.const 0
+ 00002e[016]: fe 01 02 00                | i32.atomic.wait 2 0
+ 000032[020]: 1a                         | drop
+ 000033[021]: 41 00                      | i32.const 0
+ 000035[023]: 42 00                      | i64.const 0
+ 000037[025]: 42 00                      | i64.const 0
+ 000039[027]: fe 02 03 00                | i64.atomic.wait 3 0
+ 00003d[031]: 1a                         | drop
+ 00003e[032]: 41 00                      | i32.const 0
+ 000040[034]: fe 10 02 00                | i32.atomic.load 2 0
+ 000044[038]: 1a                         | drop
+ 000045[039]: 41 00                      | i32.const 0
+ 000047[041]: fe 11 03 00                | i64.atomic.load 3 0
+ 00004b[045]: 1a                         | drop
+ 00004c[046]: 41 00                      | i32.const 0
+ 00004e[048]: fe 12 00 00                | i32.atomic.load8_u 0 0
+ 000052[052]: 1a                         | drop
+ 000053[053]: 41 00                      | i32.const 0
+ 000055[055]: fe 13 01 00                | i32.atomic.load16_u 1 0
+ 000059[059]: 1a                         | drop
+ 00005a[060]: 41 00                      | i32.const 0
+ 00005c[062]: fe 14 00 00                | i64.atomic.load8_u 0 0
+ 000060[066]: 1a                         | drop
+ 000061[067]: 41 00                      | i32.const 0
+ 000063[069]: fe 15 01 00                | i64.atomic.load16_u 1 0
+ 000067[073]: 1a                         | drop
+ 000068[074]: 41 00                      | i32.const 0
+ 00006a[076]: fe 16 02 00                | i64.atomic.load32_u 2 0
+ 00006e[080]: 1a                         | drop
+ 00006f[081]: 41 00                      | i32.const 0
+ 000071[083]: 41 00                      | i32.const 0
+ 000073[085]: fe 17 02 00                | i32.atomic.store 2 0
+ 000077[089]: 41 00                      | i32.const 0
+ 000079[091]: 42 00                      | i64.const 0
+ 00007b[093]: fe 18 03 00                | i64.atomic.store 3 0
+ 00007f[097]: 41 00                      | i32.const 0
+ 000081[099]: 41 00                      | i32.const 0
+ 000083[101]: fe 19 00 00                | i32.atomic.store8 0 0
+ 000087[105]: 41 00                      | i32.const 0
+ 000089[107]: 41 00                      | i32.const 0
+ 00008b[109]: fe 1a 01 00                | i32.atomic.store16 1 0
+ 00008f[113]: 41 00                      | i32.const 0
+ 000091[115]: 42 00                      | i64.const 0
+ 000093[117]: fe 1b 00 00                | i64.atomic.store8 0 0
+ 000097[121]: 41 00                      | i32.const 0
+ 000099[123]: 42 00                      | i64.const 0
+ 00009b[125]: fe 1c 01 00                | i64.atomic.store16 1 0
+ 00009f[129]: 41 00                      | i32.const 0
+ 0000a1[131]: 42 00                      | i64.const 0
+ 0000a3[133]: fe 1d 02 00                | i64.atomic.store32 2 0
+ 0000a7[137]: 41 00                      | i32.const 0
+ 0000a9[139]: 41 00                      | i32.const 0
+ 0000ab[141]: fe 1e 02 00                | i32.atomic.rmw.add 2 0
+ 0000af[145]: 1a                         | drop
+ 0000b0[146]: 41 00                      | i32.const 0
+ 0000b2[148]: 42 00                      | i64.const 0
+ 0000b4[150]: fe 1f 03 00                | i64.atomic.rmw.add 3 0
+ 0000b8[154]: 1a                         | drop
+ 0000b9[155]: 41 00                      | i32.const 0
+ 0000bb[157]: 41 00                      | i32.const 0
+ 0000bd[159]: fe 20 00 00                | i32.atomic.rmw8.add_u 0 0
+ 0000c1[163]: 1a                         | drop
+ 0000c2[164]: 41 00                      | i32.const 0
+ 0000c4[166]: 41 00                      | i32.const 0
+ 0000c6[168]: fe 21 01 00                | i32.atomic.rmw16.add_u 1 0
+ 0000ca[172]: 1a                         | drop
+ 0000cb[173]: 41 00                      | i32.const 0
+ 0000cd[175]: 42 00                      | i64.const 0
+ 0000cf[177]: fe 22 00 00                | i64.atomic.rmw8.add_u 0 0
+ 0000d3[181]: 1a                         | drop
+ 0000d4[182]: 41 00                      | i32.const 0
+ 0000d6[184]: 42 00                      | i64.const 0
+ 0000d8[186]: fe 23 01 00                | i64.atomic.rmw16.add_u 1 0
+ 0000dc[190]: 1a                         | drop
+ 0000dd[191]: 41 00                      | i32.const 0
+ 0000df[193]: 42 00                      | i64.const 0
+ 0000e1[195]: fe 24 02 00                | i64.atomic.rmw32.add_u 2 0
+ 0000e5[199]: 1a                         | drop
+ 0000e6[200]: 41 00                      | i32.const 0
+ 0000e8[202]: 41 00                      | i32.const 0
+ 0000ea[204]: fe 25 02 00                | i32.atomic.rmw.sub 2 0
+ 0000ee[208]: 1a                         | drop
+ 0000ef[209]: 41 00                      | i32.const 0
+ 0000f1[211]: 42 00                      | i64.const 0
+ 0000f3[213]: fe 26 03 00                | i64.atomic.rmw.sub 3 0
+ 0000f7[217]: 1a                         | drop
+ 0000f8[218]: 41 00                      | i32.const 0
+ 0000fa[220]: 41 00                      | i32.const 0
+ 0000fc[222]: fe 27 00 00                | i32.atomic.rmw8.sub_u 0 0
+ 000100[226]: 1a                         | drop
+ 000101[227]: 41 00                      | i32.const 0
+ 000103[229]: 41 00                      | i32.const 0
+ 000105[231]: fe 28 01 00                | i32.atomic.rmw16.sub_u 1 0
+ 000109[235]: 1a                         | drop
+ 00010a[236]: 41 00                      | i32.const 0
+ 00010c[238]: 42 00                      | i64.const 0
+ 00010e[240]: fe 29 00 00                | i64.atomic.rmw8.sub_u 0 0
+ 000112[244]: 1a                         | drop
+ 000113[245]: 41 00                      | i32.const 0
+ 000115[247]: 42 00                      | i64.const 0
+ 000117[249]: fe 2a 01 00                | i64.atomic.rmw16.sub_u 1 0
+ 00011b[253]: 1a                         | drop
+ 00011c[254]: 41 00                      | i32.const 0
+ 00011e[256]: 42 00                      | i64.const 0
+ 000120[258]: fe 2b 02 00                | i64.atomic.rmw32.sub_u 2 0
+ 000124[262]: 1a                         | drop
+ 000125[263]: 41 00                      | i32.const 0
+ 000127[265]: 41 00                      | i32.const 0
+ 000129[267]: fe 2c 02 00                | i32.atomic.rmw.and 2 0
+ 00012d[271]: 1a                         | drop
+ 00012e[272]: 41 00                      | i32.const 0
+ 000130[274]: 42 00                      | i64.const 0
+ 000132[276]: fe 2d 03 00                | i64.atomic.rmw.and 3 0
+ 000136[280]: 1a                         | drop
+ 000137[281]: 41 00                      | i32.const 0
+ 000139[283]: 41 00                      | i32.const 0
+ 00013b[285]: fe 2e 00 00                | i32.atomic.rmw8.and_u 0 0
+ 00013f[289]: 1a                         | drop
+ 000140[290]: 41 00                      | i32.const 0
+ 000142[292]: 41 00                      | i32.const 0
+ 000144[294]: fe 2f 01 00                | i32.atomic.rmw16.and_u 1 0
+ 000148[298]: 1a                         | drop
+ 000149[299]: 41 00                      | i32.const 0
+ 00014b[301]: 42 00                      | i64.const 0
+ 00014d[303]: fe 30 00 00                | i64.atomic.rmw8.and_u 0 0
+ 000151[307]: 1a                         | drop
+ 000152[308]: 41 00                      | i32.const 0
+ 000154[310]: 42 00                      | i64.const 0
+ 000156[312]: fe 31 01 00                | i64.atomic.rmw16.and_u 1 0
+ 00015a[316]: 1a                         | drop
+ 00015b[317]: 41 00                      | i32.const 0
+ 00015d[319]: 42 00                      | i64.const 0
+ 00015f[321]: fe 32 02 00                | i64.atomic.rmw32.and_u 2 0
+ 000163[325]: 1a                         | drop
+ 000164[326]: 41 00                      | i32.const 0
+ 000166[328]: 41 00                      | i32.const 0
+ 000168[330]: fe 33 02 00                | i32.atomic.rmw.or 2 0
+ 00016c[334]: 1a                         | drop
+ 00016d[335]: 41 00                      | i32.const 0
+ 00016f[337]: 42 00                      | i64.const 0
+ 000171[339]: fe 34 03 00                | i64.atomic.rmw.or 3 0
+ 000175[343]: 1a                         | drop
+ 000176[344]: 41 00                      | i32.const 0
+ 000178[346]: 41 00                      | i32.const 0
+ 00017a[348]: fe 35 00 00                | i32.atomic.rmw8.or_u 0 0
+ 00017e[352]: 1a                         | drop
+ 00017f[353]: 41 00                      | i32.const 0
+ 000181[355]: 41 00                      | i32.const 0
+ 000183[357]: fe 36 01 00                | i32.atomic.rmw16.or_u 1 0
+ 000187[361]: 1a                         | drop
+ 000188[362]: 41 00                      | i32.const 0
+ 00018a[364]: 42 00                      | i64.const 0
+ 00018c[366]: fe 37 00 00                | i64.atomic.rmw8.or_u 0 0
+ 000190[370]: 1a                         | drop
+ 000191[371]: 41 00                      | i32.const 0
+ 000193[373]: 42 00                      | i64.const 0
+ 000195[375]: fe 38 01 00                | i64.atomic.rmw16.or_u 1 0
+ 000199[379]: 1a                         | drop
+ 00019a[380]: 41 00                      | i32.const 0
+ 00019c[382]: 42 00                      | i64.const 0
+ 00019e[384]: fe 39 02 00                | i64.atomic.rmw32.or_u 2 0
+ 0001a2[388]: 1a                         | drop
+ 0001a3[389]: 41 00                      | i32.const 0
+ 0001a5[391]: 41 00                      | i32.const 0
+ 0001a7[393]: fe 3a 02 00                | i32.atomic.rmw.xor 2 0
+ 0001ab[397]: 1a                         | drop
+ 0001ac[398]: 41 00                      | i32.const 0
+ 0001ae[400]: 42 00                      | i64.const 0
+ 0001b0[402]: fe 3b 03 00                | i64.atomic.rmw.xor 3 0
+ 0001b4[406]: 1a                         | drop
+ 0001b5[407]: 41 00                      | i32.const 0
+ 0001b7[409]: 41 00                      | i32.const 0
+ 0001b9[411]: fe 3c 00 00                | i32.atomic.rmw8.xor_u 0 0
+ 0001bd[415]: 1a                         | drop
+ 0001be[416]: 41 00                      | i32.const 0
+ 0001c0[418]: 41 00                      | i32.const 0
+ 0001c2[420]: fe 3d 01 00                | i32.atomic.rmw16.xor_u 1 0
+ 0001c6[424]: 1a                         | drop
+ 0001c7[425]: 41 00                      | i32.const 0
+ 0001c9[427]: 42 00                      | i64.const 0
+ 0001cb[429]: fe 3e 00 00                | i64.atomic.rmw8.xor_u 0 0
+ 0001cf[433]: 1a                         | drop
+ 0001d0[434]: 41 00                      | i32.const 0
+ 0001d2[436]: 42 00                      | i64.const 0
+ 0001d4[438]: fe 3f 01 00                | i64.atomic.rmw16.xor_u 1 0
+ 0001d8[442]: 1a                         | drop
+ 0001d9[443]: 41 00                      | i32.const 0
+ 0001db[445]: 42 00                      | i64.const 0
+ 0001dd[447]: fe 40 02 00                | i64.atomic.rmw32.xor_u 2 0
+ 0001e1[451]: 1a                         | drop
+ 0001e2[452]: 41 00                      | i32.const 0
+ 0001e4[454]: 41 00                      | i32.const 0
+ 0001e6[456]: fe 41 02 00                | i32.atomic.rmw.xchg 2 0
+ 0001ea[460]: 1a                         | drop
+ 0001eb[461]: 41 00                      | i32.const 0
+ 0001ed[463]: 42 00                      | i64.const 0
+ 0001ef[465]: fe 42 03 00                | i64.atomic.rmw.xchg 3 0
+ 0001f3[469]: 1a                         | drop
+ 0001f4[470]: 41 00                      | i32.const 0
+ 0001f6[472]: 41 00                      | i32.const 0
+ 0001f8[474]: fe 43 00 00                | i32.atomic.rmw8.xchg_u 0 0
+ 0001fc[478]: 1a                         | drop
+ 0001fd[479]: 41 00                      | i32.const 0
+ 0001ff[481]: 41 00                      | i32.const 0
+ 000201[483]: fe 44 01 00                | i32.atomic.rmw16.xchg_u 1 0
+ 000205[487]: 1a                         | drop
+ 000206[488]: 41 00                      | i32.const 0
+ 000208[490]: 42 00                      | i64.const 0
+ 00020a[492]: fe 45 00 00                | i64.atomic.rmw8.xchg_u 0 0
+ 00020e[496]: 1a                         | drop
+ 00020f[497]: 41 00                      | i32.const 0
+ 000211[499]: 42 00                      | i64.const 0
+ 000213[501]: fe 46 01 00                | i64.atomic.rmw16.xchg_u 1 0
+ 000217[505]: 1a                         | drop
+ 000218[506]: 41 00                      | i32.const 0
+ 00021a[508]: 42 00                      | i64.const 0
+ 00021c[510]: fe 47 02 00                | i64.atomic.rmw32.xchg_u 2 0
+ 000220[514]: 1a                         | drop
+ 000221[515]: 41 00                      | i32.const 0
+ 000223[517]: 41 00                      | i32.const 0
+ 000225[519]: 41 00                      | i32.const 0
+ 000227[521]: fe 48 02 00                | i32.atomic.rmw.cmpxchg 2 0
+ 00022b[525]: 1a                         | drop
+ 00022c[526]: 41 00                      | i32.const 0
+ 00022e[528]: 42 00                      | i64.const 0
+ 000230[530]: 42 00                      | i64.const 0
+ 000232[532]: fe 49 03 00                | i64.atomic.rmw.cmpxchg 3 0
+ 000236[536]: 1a                         | drop
+ 000237[537]: 41 00                      | i32.const 0
+ 000239[539]: 41 00                      | i32.const 0
+ 00023b[541]: 41 00                      | i32.const 0
+ 00023d[543]: fe 4a 00 00                | i32.atomic.rmw8.cmpxchg_u 0 0
+ 000241[547]: 1a                         | drop
+ 000242[548]: 41 00                      | i32.const 0
+ 000244[550]: 41 00                      | i32.const 0
+ 000246[552]: 41 00                      | i32.const 0
+ 000248[554]: fe 4b 01 00                | i32.atomic.rmw16.cmpxchg_u 1 0
+ 00024c[558]: 1a                         | drop
+ 00024d[559]: 41 00                      | i32.const 0
+ 00024f[561]: 42 00                      | i64.const 0
+ 000251[563]: 42 00                      | i64.const 0
+ 000253[565]: fe 4c 00 00                | i64.atomic.rmw8.cmpxchg_u 0 0
+ 000257[569]: 1a                         | drop
+ 000258[570]: 41 00                      | i32.const 0
+ 00025a[572]: 42 00                      | i64.const 0
+ 00025c[574]: 42 00                      | i64.const 0
+ 00025e[576]: fe 4d 01 00                | i64.atomic.rmw16.cmpxchg_u 1 0
+ 000262[580]: 1a                         | drop
+ 000263[581]: 41 00                      | i32.const 0
+ 000265[583]: 42 00                      | i64.const 0
+ 000267[585]: 42 00                      | i64.const 0
+ 000269[587]: fe 4e 02 00                | i64.atomic.rmw32.cmpxchg_u 2 0
+ 00026d[591]: 1a                         | drop
+ 00026e[592]: 0b                         | end
 ;;; STDOUT ;;)

@@ -94,33 +94,33 @@ convert.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 41 00                      | i32.const 0
- 000019: b8                         | f64.convert_i32_u
- 00001a: ab                         | i32.trunc_f64_u
- 00001b: b7                         | f64.convert_i32_s
- 00001c: aa                         | i32.trunc_f64_s
- 00001d: b3                         | f32.convert_i32_u
- 00001e: a9                         | i32.trunc_f32_u
- 00001f: b2                         | f32.convert_i32_s
- 000020: a8                         | i32.trunc_f32_s
- 000021: ad                         | i64.extend_i32_u
- 000022: a7                         | i32.wrap_i64
- 000023: 1a                         | drop
- 000024: 41 00                      | i32.const 0
- 000026: ac                         | i64.extend_i32_s
- 000027: ba                         | f64.convert_i64_u
- 000028: b1                         | i64.trunc_f64_u
- 000029: b9                         | f64.convert_i64_s
- 00002a: b0                         | i64.trunc_f64_s
- 00002b: b5                         | f32.convert_i64_u
- 00002c: af                         | i64.trunc_f32_u
- 00002d: b4                         | f32.convert_i64_s
- 00002e: ae                         | i64.trunc_f32_s
- 00002f: 1a                         | drop
- 000030: 43 00 00 00 00             | f32.const 0x0p+0
- 000035: bb                         | f64.promote_f32
- 000036: b6                         | f32.demote_f64
- 000037: 1a                         | drop
- 000038: 0b                         | end
+000016 func[00]:
+ 000017[001]: 41 00                      | i32.const 0
+ 000019[003]: b8                         | f64.convert_i32_u
+ 00001a[004]: ab                         | i32.trunc_f64_u
+ 00001b[005]: b7                         | f64.convert_i32_s
+ 00001c[006]: aa                         | i32.trunc_f64_s
+ 00001d[007]: b3                         | f32.convert_i32_u
+ 00001e[008]: a9                         | i32.trunc_f32_u
+ 00001f[009]: b2                         | f32.convert_i32_s
+ 000020[010]: a8                         | i32.trunc_f32_s
+ 000021[011]: ad                         | i64.extend_i32_u
+ 000022[012]: a7                         | i32.wrap_i64
+ 000023[013]: 1a                         | drop
+ 000024[014]: 41 00                      | i32.const 0
+ 000026[016]: ac                         | i64.extend_i32_s
+ 000027[017]: ba                         | f64.convert_i64_u
+ 000028[018]: b1                         | i64.trunc_f64_u
+ 000029[019]: b9                         | f64.convert_i64_s
+ 00002a[020]: b0                         | i64.trunc_f64_s
+ 00002b[021]: b5                         | f32.convert_i64_u
+ 00002c[022]: af                         | i64.trunc_f32_u
+ 00002d[023]: b4                         | f32.convert_i64_s
+ 00002e[024]: ae                         | i64.trunc_f32_s
+ 00002f[025]: 1a                         | drop
+ 000030[026]: 43 00 00 00 00             | f32.const 0x0p+0
+ 000035[031]: bb                         | f64.promote_f32
+ 000036[032]: b6                         | f32.demote_f64
+ 000037[033]: 1a                         | drop
+ 000038[034]: 0b                         | end
 ;;; STDOUT ;;)

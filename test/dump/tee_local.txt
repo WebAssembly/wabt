@@ -46,10 +46,10 @@ tee_local.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 01 7f                      | local[0] type=i32
- 000019: 41 00                      | i32.const 0
- 00001b: 22 00                      | local.tee 0
- 00001d: 1a                         | drop
- 00001e: 0b                         | end
+000016 func[00]:
+ 000017[001]: 01 7f                      | local[0] type=i32
+ 000019[003]: 41 00                      | i32.const 0
+ 00001b[005]: 22 00                      | local.tee 0
+ 00001d[007]: 1a                         | drop
+ 00001e[008]: 0b                         | end
 ;;; STDOUT ;;)

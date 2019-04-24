@@ -43,8 +43,8 @@ func-result-multi.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000018 func[0]:
- 000019: 41 00                      | i32.const 0
- 00001b: 42 00                      | i64.const 0
- 00001d: 0b                         | end
+000018 func[00]:
+ 000019[001]: 41 00                      | i32.const 0
+ 00001b[003]: 42 00                      | i64.const 0
+ 00001d[005]: 0b                         | end
 ;;; STDOUT ;;)

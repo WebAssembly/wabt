@@ -90,29 +90,29 @@ getlocal.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 01 7c                      | local[0] type=f64
- 000019: 01 7d                      | local[1] type=f32
- 00001b: 01 7e                      | local[2] type=i64
- 00001d: 02 7f                      | local[3..4] type=i32
- 00001f: 01 7d                      | local[5] type=f32
- 000021: 01 7c                      | local[6] type=f64
- 000023: 01 7e                      | local[7] type=i64
- 000025: 20 00                      | local.get 0
- 000027: 1a                         | drop
- 000028: 20 01                      | local.get 1
- 00002a: 1a                         | drop
- 00002b: 20 02                      | local.get 2
- 00002d: 1a                         | drop
- 00002e: 20 03                      | local.get 3
- 000030: 1a                         | drop
- 000031: 20 04                      | local.get 4
- 000033: 1a                         | drop
- 000034: 20 05                      | local.get 5
- 000036: 1a                         | drop
- 000037: 20 06                      | local.get 6
- 000039: 1a                         | drop
- 00003a: 20 07                      | local.get 7
- 00003c: 1a                         | drop
- 00003d: 0b                         | end
+000016 func[00]:
+ 000017[001]: 01 7c                      | local[0] type=f64
+ 000019[003]: 01 7d                      | local[1] type=f32
+ 00001b[005]: 01 7e                      | local[2] type=i64
+ 00001d[007]: 02 7f                      | local[3..4] type=i32
+ 00001f[009]: 01 7d                      | local[5] type=f32
+ 000021[011]: 01 7c                      | local[6] type=f64
+ 000023[013]: 01 7e                      | local[7] type=i64
+ 000025[015]: 20 00                      | local.get 0
+ 000027[017]: 1a                         | drop
+ 000028[018]: 20 01                      | local.get 1
+ 00002a[020]: 1a                         | drop
+ 00002b[021]: 20 02                      | local.get 2
+ 00002d[023]: 1a                         | drop
+ 00002e[024]: 20 03                      | local.get 3
+ 000030[026]: 1a                         | drop
+ 000031[027]: 20 04                      | local.get 4
+ 000033[029]: 1a                         | drop
+ 000034[030]: 20 05                      | local.get 5
+ 000036[032]: 1a                         | drop
+ 000037[033]: 20 06                      | local.get 6
+ 000039[035]: 1a                         | drop
+ 00003a[036]: 20 07                      | local.get 7
+ 00003c[038]: 1a                         | drop
+ 00003d[039]: 0b                         | end
 ;;; STDOUT ;;)

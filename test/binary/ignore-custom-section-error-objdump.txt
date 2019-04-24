@@ -38,7 +38,7 @@ Code[1]:
 
 Code Disassembly:
 
-000027 func[0]:
- 000028: 0f                         | return
- 000029: 0b                         | end
+000027 func[00]:
+ 000028[001]: 0f                         | return
+ 000029[002]: 0b                         | end
 ;;; STDOUT ;;)

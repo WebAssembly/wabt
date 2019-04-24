@@ -151,22 +151,22 @@ no-canonicalize.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000076 func[1] <f1>:
- 000077: 20 00                      | local.get 0
- 000079: 20 01                      | local.get 1
- 00007b: 11 00 00                   | call_indirect 0 0
- 00007e: 1a                         | drop
- 00007f: 0b                         | end
-000085 func[2]:
- 000086: 20 00                      | local.get 0
- 000088: 41 01                      | i32.const 1
- 00008a: 6a                         | i32.add
- 00008b: 1a                         | drop
- 00008c: 0b                         | end
-000092 func[3]:
- 000093: 20 00                      | local.get 0
- 000095: 41 02                      | i32.const 2
- 000097: 6c                         | i32.mul
- 000098: 1a                         | drop
- 000099: 0b                         | end
+000076 func[01] <f1>:
+ 000077[001]: 20 00                      | local.get 0
+ 000079[003]: 20 01                      | local.get 1
+ 00007b[005]: 11 00 00                   | call_indirect 0 0
+ 00007e[008]: 1a                         | drop
+ 00007f[009]: 0b                         | end
+000085 func[02]:
+ 000086[001]: 20 00                      | local.get 0
+ 000088[003]: 41 01                      | i32.const 1
+ 00008a[005]: 6a                         | i32.add
+ 00008b[006]: 1a                         | drop
+ 00008c[007]: 0b                         | end
+000092 func[03]:
+ 000093[001]: 20 00                      | local.get 0
+ 000095[003]: 41 02                      | i32.const 2
+ 000097[005]: 6c                         | i32.mul
+ 000098[006]: 1a                         | drop
+ 000099[007]: 0b                         | end
 ;;; STDOUT ;;)

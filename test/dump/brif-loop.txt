@@ -46,10 +46,10 @@ brif-loop.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 03 40                      | loop
- 000019: 41 00                      |   i32.const 0
- 00001b: 0d 00                      |   br_if 0
- 00001d: 0b                         | end
- 00001e: 0b                         | end
+000016 func[00]:
+ 000017[001]: 03 40                      | loop
+ 000019[003]: 41 00                      |   i32.const 0
+ 00001b[005]: 0d 00                      |   br_if 0
+ 00001d[007]: 0b                         | end
+ 00001e[008]: 0b                         | end
 ;;; STDOUT ;;)

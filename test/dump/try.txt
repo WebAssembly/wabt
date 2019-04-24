@@ -54,14 +54,14 @@ try.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-000016 func[0]:
- 000017: 06 7f                      | try i32
- 000019: 01                         |   nop
- 00001a: 41 07                      |   i32.const 7
- 00001c: 07                         | catch
- 00001d: 1a                         |   drop
- 00001e: 41 08                      |   i32.const 8
- 000020: 0b                         | end
- 000021: 1a                         | drop
- 000022: 0b                         | end
+000016 func[00]:
+ 000017[001]: 06 7f                      | try i32
+ 000019[003]: 01                         |   nop
+ 00001a[004]: 41 07                      |   i32.const 7
+ 00001c[006]: 07                         | catch
+ 00001d[007]: 1a                         |   drop
+ 00001e[008]: 41 08                      |   i32.const 8
+ 000020[010]: 0b                         | end
+ 000021[011]: 1a                         | drop
+ 000022[012]: 0b                         | end
 ;;; STDOUT ;;)

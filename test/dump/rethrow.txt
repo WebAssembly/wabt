@@ -53,10 +53,10 @@ rethrow.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001b func[0]:
- 00001c: 06 40                      | try
- 00001e: 07                         | catch
- 00001f: 09                         |   rethrow
- 000020: 0b                         | end
- 000021: 0b                         | end
+00001b func[00]:
+ 00001c[001]: 06 40                      | try
+ 00001e[003]: 07                         | catch
+ 00001f[004]: 09                         |   rethrow
+ 000020[005]: 0b                         | end
+ 000021[006]: 0b                         | end
 ;;; STDOUT ;;)

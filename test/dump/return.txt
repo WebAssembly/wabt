@@ -54,11 +54,11 @@ return.wasm:	file format wasm 0x1
 
 Code Disassembly:
 
-00001b func[0]:
- 00001c: 41 2a                      | i32.const 42
- 00001e: 0f                         | return
- 00001f: 0b                         | end
-000021 func[1]:
- 000022: 0f                         | return
- 000023: 0b                         | end
+00001b func[00]:
+ 00001c[001]: 41 2a                      | i32.const 42
+ 00001e[003]: 0f                         | return
+ 00001f[004]: 0b                         | end
+000021 func[01]:
+ 000022[001]: 0f                         | return
+ 000023[002]: 0b                         | end
 ;;; STDOUT ;;)
