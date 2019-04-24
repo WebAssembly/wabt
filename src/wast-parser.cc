@@ -887,6 +887,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   if (Peek() == TokenType::Passive) {
     Consume();
     field->elem_segment.passive = true;
+    CHECK_RESULT(ParseRefType(&field->elem_segment.elem_type));
     // Parse a potentially empty sequence of ElemExprs.
     while (true) {
       Var var;
@@ -907,6 +908,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
       }
     }
   } else {
+    field->elem_segment.elem_type = Type::Funcref;
     ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
     CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
     ParseElemExprVarListOpt(&field->elem_segment.elem_exprs);

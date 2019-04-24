@@ -286,7 +286,10 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Elem section */
   Result BeginElemSection(Offset size) override { return Result::Ok; }
   Result OnElemSegmentCount(Index count) override { return Result::Ok; }
-  Result BeginElemSegment(Index index, Index table_index, bool passive) override {
+  Result BeginElemSegment(Index index,
+                          Index table_index,
+                          bool passive,
+                          Type elem_type) override {
     return Result::Ok;
   }
   Result BeginElemSegmentInitExpr(Index index) override { return Result::Ok; }

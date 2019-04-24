@@ -1,3 +1,203 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/memory_fill.wast
 ;;; ARGS*: --enable-bulk-memory
+(;; STDOUT ;;;
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+out/test/spec/bulk-memory-operations/memory_fill.wast:156: assert_invalid passed:
+  error: memory.fill requires an imported or defined memory.
+  000002f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:162: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i32, f32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:169: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i32, i64]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:176: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i32, f64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:183: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, i32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:190: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, f32]
+  000003b: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:197: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, i64]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:204: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f32, f64]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:211: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i64, i32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:218: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i64, f32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:225: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i64, i64]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:232: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, i64, f64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:239: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f64, i32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:246: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f64, f32]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:253: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f64, i64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:260: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i32, f64, f64]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:267: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, i32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:274: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, f32]
+  000003b: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:281: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, i64]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:288: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i32, f64]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:295: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f32, i32]
+  000003b: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:302: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f32, f32]
+  000003e: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:309: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f32, i64]
+  000003b: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:316: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f32, f64]
+  0000042: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:323: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i64, i32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:330: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i64, f32]
+  000003b: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:337: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i64, i64]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:344: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, i64, f64]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:351: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f64, i32]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:358: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f64, f32]
+  0000042: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:365: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f64, i64]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:372: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f32, f64, f64]
+  0000046: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:379: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i32, i32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:386: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i32, f32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:393: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i32, i64]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:400: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i32, f64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:407: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f32, i32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:414: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f32, f32]
+  000003b: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:421: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f32, i64]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:428: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f32, f64]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:435: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i64, i32]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:442: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i64, f32]
+  0000038: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:449: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i64, i64]
+  0000035: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:456: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, i64, f64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:463: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f64, i32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:470: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f64, f32]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:477: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f64, i64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:484: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [i64, f64, f64]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:491: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i32, i32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:498: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i32, f32]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:505: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i32, i64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:512: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i32, f64]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:519: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f32, i32]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:526: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f32, f32]
+  0000042: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:533: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f32, i64]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:540: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f32, f64]
+  0000046: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:547: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i64, i32]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:554: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i64, f32]
+  000003f: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:561: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i64, i64]
+  000003c: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:568: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, i64, f64]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:575: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, i32]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:582: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, f32]
+  0000046: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:589: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, i64]
+  0000043: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:596: assert_invalid passed:
+  error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, f64]
+  000004a: error: OnMemoryFillExpr callback failed
+91/91 tests passed.
+;;; STDOUT ;;)

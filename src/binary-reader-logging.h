@@ -221,7 +221,10 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
 
   Result BeginElemSection(Offset size) override;
   Result OnElemSegmentCount(Index count) override;
-  Result BeginElemSegment(Index index, Index table_index, bool passive) override;
+  Result BeginElemSegment(Index index,
+                          Index table_index,
+                          bool passive,
+                          Type elem_type) override;
   Result BeginElemSegmentInitExpr(Index index) override;
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;

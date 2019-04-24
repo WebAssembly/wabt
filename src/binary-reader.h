@@ -278,7 +278,8 @@ class BinaryReaderDelegate {
   virtual Result OnElemSegmentCount(Index count) = 0;
   virtual Result BeginElemSegment(Index index,
                                   Index table_index,
-                                  bool passive) = 0;
+                                  bool passive,
+                                  Type elem_type) = 0;
   virtual Result BeginElemSegmentInitExpr(Index index) = 0;
   virtual Result EndElemSegmentInitExpr(Index index) = 0;
   virtual Result OnElemSegmentElemExprCount(Index index, Index count) = 0;

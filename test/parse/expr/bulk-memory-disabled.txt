@@ -12,7 +12,7 @@
   )
 
   (table 1 anyfunc)
-  (elem $elem passive 0)
+  (elem $elem passive funcref 0)
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0
     elem.drop 0

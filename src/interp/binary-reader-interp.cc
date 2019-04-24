@@ -187,7 +187,11 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnLocalSetExpr(Index local_index) override;
   wabt::Result OnLocalTeeExpr(Index local_index) override;
   wabt::Result OnLoopExpr(Type sig_type) override;
+  wabt::Result OnMemoryCopyExpr() override;
+  wabt::Result OnDataDropExpr(Index segment_index) override;
   wabt::Result OnMemoryGrowExpr() override;
+  wabt::Result OnMemoryFillExpr() override;
+  wabt::Result OnMemoryInitExpr(Index segment_index) override;
   wabt::Result OnMemorySizeExpr() override;
   wabt::Result OnNopExpr() override;
   wabt::Result OnReturnExpr() override;
@@ -196,18 +200,29 @@ class BinaryReaderInterp : public BinaryReaderNop {
                            uint32_t alignment_log2,
                            Address offset) override;
   wabt::Result OnUnaryExpr(wabt::Opcode opcode) override;
+  wabt::Result OnTableCopyExpr() override;
+  wabt::Result OnElemDropExpr(Index segment_index) override;
+  wabt::Result OnTableInitExpr(Index segment_index) override;
   wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnUnreachableExpr() override;
   wabt::Result EndFunctionBody(Index index) override;
   wabt::Result OnSimdLaneOpExpr(wabt::Opcode opcode, uint64_t value) override;
   wabt::Result OnSimdShuffleOpExpr(wabt::Opcode opcode, v128 value) override;
 
+  wabt::Result BeginElemSegment(Index index,
+                                Index table_index,
+                                bool passive,
+                                Type elem_type) override;
   wabt::Result EndElemSegmentInitExpr(Index index) override;
   wabt::Result OnElemSegmentElemExprCount(Index index, Index count) override;
   wabt::Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
   wabt::Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
                                              Index func_index) override;
 
+  wabt::Result OnDataCount(Index count) override;
+  wabt::Result BeginDataSegment(Index index,
+                                Index memory_index,
+                                bool passive) override;
   wabt::Result OnDataSegmentData(Index index,
                                  const void* data,
                                  Address size) override;
@@ -241,6 +256,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Type GetGlobalTypeByModuleIndex(Index global_index);
   Index TranslateLocalIndex(Index local_index);
   Type GetLocalTypeByIndex(Func* func, Index local_index);
+  Index TranslateDataSegmentIndexToEnv(Index data_segment_index);
 
   IstreamOffset GetIstreamOffset();
 
@@ -270,10 +286,12 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   wabt::Result CheckLocal(Index local_index);
   wabt::Result CheckGlobal(Index global_index);
+  wabt::Result CheckDataSegment(Index data_segment_index);
   wabt::Result CheckImportKind(Import* import, ExternalKind expected_kind);
   wabt::Result CheckImportLimits(const Limits* declared_limits,
                                  const Limits* actual_limits);
   wabt::Result CheckHasMemory(wabt::Opcode opcode);
+  wabt::Result CheckHasTable(wabt::Opcode opcode);
   wabt::Result CheckAlign(uint32_t alignment_log2, Address natural_alignment);
   wabt::Result CheckAtomicAlign(uint32_t alignment_log2,
                                 Address natural_alignment);
@@ -304,6 +322,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   IndexVector sig_index_mapping_;
   IndexVector func_index_mapping_;
   IndexVector global_index_mapping_;
+  IndexVector data_segment_index_mapping_;
 
   Index num_func_imports_ = 0;
   Index num_global_imports_ = 0;
@@ -317,6 +336,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // Values cached so they can be shared between callbacks.
   TypedValue init_expr_value_;
   IstreamOffset table_offset_ = 0;
+  bool segment_is_passive_ = false;
 };
 
 BinaryReaderInterp::BinaryReaderInterp(Environment* env,
@@ -404,6 +424,10 @@ Type BinaryReaderInterp::GetGlobalTypeByModuleIndex(Index global_index) {
 Type BinaryReaderInterp::GetLocalTypeByIndex(Func* func, Index local_index) {
   assert(!func->is_host);
   return cast<DefinedFunc>(func)->param_and_local_types[local_index];
+}
+
+Index BinaryReaderInterp::TranslateDataSegmentIndexToEnv(Index index) {
+  return data_segment_index_mapping_[index];
 }
 
 IstreamOffset BinaryReaderInterp::GetIstreamOffset() {
@@ -592,6 +616,16 @@ wabt::Result BinaryReaderInterp::CheckGlobal(Index global_index) {
   if (global_index >= max_global_index) {
     PrintError("invalid global_index: %" PRIindex " (max %" PRIindex ")",
                global_index, max_global_index);
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::CheckDataSegment(Index data_segment_index) {
+  Index max_data_segment_index = data_segment_index_mapping_.size();
+  if (data_segment_index >= max_data_segment_index) {
+    PrintError("invalid data_segment_index: %" PRIindex " (max %" PRIindex ")",
+               data_segment_index, max_data_segment_index);
     return wabt::Result::Error;
   }
   return wabt::Result::Ok;
@@ -970,7 +1004,16 @@ wabt::Result BinaryReaderInterp::OnStartFunction(Index func_index) {
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
+                                                  Index table_index,
+                                                  bool passive,
+                                                  Type elem_type) {
+  segment_is_passive_ = passive;
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
+  assert(segment_is_passive_ == false);
   assert(init_expr_value_.type == Type::I32);
   table_offset_ = init_expr_value_.value.i32;
   return wabt::Result::Ok;
@@ -978,15 +1021,17 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
                                                             Index count) {
-  assert(module_->table_index != kInvalidIndex);
-  Table* table = env_->GetTable(module_->table_index);
-  // Check both cases, as table_offset_ + count may overflow.
-  if (table_offset_ > table->func_indexes.size() ||
-      table_offset_ + count > table->func_indexes.size()) {
-    PrintError("elem segment is out of bounds: [%u, %u) >= max value %" PRIzd,
-               table_offset_, table_offset_ + count,
-               table->func_indexes.size());
-    return wabt::Result::Error;
+  if (!segment_is_passive_) {
+    assert(module_->table_index != kInvalidIndex);
+    Table* table = env_->GetTable(module_->table_index);
+    // Check both cases, as table_offset_ + count may overflow.
+    if (table_offset_ > table->func_indexes.size() ||
+        table_offset_ + count > table->func_indexes.size()) {
+      PrintError("elem segment is out of bounds: [%u, %u) >= max value %" PRIzd,
+                 table_offset_, table_offset_ + count,
+                 table->func_indexes.size());
+      return wabt::Result::Error;
+    }
   }
   return wabt::Result::Ok;
 }
@@ -994,43 +1039,70 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
     Index segment_index) {
   // TODO(binji): implement
-  return wabt::Result::Error;
+  return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
     Index index,
     Index func_index) {
-  Index max_func_index = func_index_mapping_.size();
-  if (func_index >= max_func_index) {
-    PrintError("invalid func_index: %" PRIindex " (max %" PRIindex ")",
-               func_index, max_func_index);
-    return wabt::Result::Error;
-  }
+  if (!segment_is_passive_) {
+    Index max_func_index = func_index_mapping_.size();
+    if (func_index >= max_func_index) {
+      PrintError("invalid func_index: %" PRIindex " (max %" PRIindex ")",
+                 func_index, max_func_index);
+      return wabt::Result::Error;
+    }
 
-  Table* table = env_->GetTable(module_->table_index);
-  elem_segment_infos_.emplace_back(&table->func_indexes[table_offset_++],
-                                   TranslateFuncIndexToEnv(func_index));
+    Table* table = env_->GetTable(module_->table_index);
+    elem_segment_infos_.emplace_back(&table->func_indexes[table_offset_++],
+                                     TranslateFuncIndexToEnv(func_index));
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnDataCount(Index count) {
+  for (Index i = 0; i < count; ++i) {
+    data_segment_index_mapping_.push_back(env_->GetDataSegmentCount() + i);
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::BeginDataSegment(Index index,
+                                                  Index memory_index,
+                                                  bool passive) {
+  segment_is_passive_ = passive;
   return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
                                                    const void* src_data,
                                                    Address size) {
-  assert(module_->memory_index != kInvalidIndex);
-  Memory* memory = env_->GetMemory(module_->memory_index);
-  assert(init_expr_value_.type == Type::I32);
-  Address address = init_expr_value_.value.i32;
-  uint64_t end_address =
-      static_cast<uint64_t>(address) + static_cast<uint64_t>(size);
-  if (end_address > memory->data.size()) {
-    PrintError("data segment is out of bounds: [%" PRIaddress ", %" PRIu64
-               ") >= max value %" PRIzd,
-               address, end_address, memory->data.size());
-    return wabt::Result::Error;
-  }
+  DataSegment* segment = env_->EmplaceBackDataSegment();
+  if (segment_is_passive_) {
+    segment->data.resize(size);
+    memcpy(segment->data.data(), src_data, size);
+  } else {
+    // An active segment still is present in the segment index space, but
+    // cannot be used with `memory.init` (it's as if it has already been
+    // dropped).
+    segment->dropped = true;
 
-  if (size > 0) {
-    data_segment_infos_.emplace_back(&memory->data[address], src_data, size);
+    assert(module_->memory_index != kInvalidIndex);
+    Memory* memory = env_->GetMemory(module_->memory_index);
+    assert(init_expr_value_.type == Type::I32);
+    Address address = init_expr_value_.value.i32;
+    uint64_t end_address =
+        static_cast<uint64_t>(address) + static_cast<uint64_t>(size);
+    if (end_address > memory->data.size()) {
+      PrintError("data segment is out of bounds: [%" PRIaddress ", %" PRIu64
+                 ") >= max value %" PRIzd,
+                 address, end_address, memory->data.size());
+      return wabt::Result::Error;
+    }
+
+    if (size > 0) {
+      data_segment_infos_.emplace_back(&memory->data[address], src_data, size);
+    }
   }
 
   return wabt::Result::Ok;
@@ -1116,6 +1188,14 @@ wabt::Result BinaryReaderInterp::OnLocalDecl(Index decl_index,
 wabt::Result BinaryReaderInterp::CheckHasMemory(wabt::Opcode opcode) {
   if (module_->memory_index == kInvalidIndex) {
     PrintError("%s requires an imported or defined memory.", opcode.GetName());
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::CheckHasTable(wabt::Opcode opcode) {
+  if (module_->table_index == kInvalidIndex) {
+    PrintError("%s requires an imported or defined table.", opcode.GetName());
     return wabt::Result::Error;
   }
   return wabt::Result::Ok;
@@ -1590,6 +1670,64 @@ wabt::Result BinaryReaderInterp::OnAtomicNotifyExpr(Opcode opcode,
   CHECK_RESULT(EmitOpcode(opcode));
   CHECK_RESULT(EmitI32(module_->memory_index));
   CHECK_RESULT(EmitI32(offset));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnMemoryCopyExpr() {
+  CHECK_RESULT(CheckHasMemory(Opcode::MemoryCopy));
+  CHECK_RESULT(typechecker_.OnMemoryCopy());
+  CHECK_RESULT(EmitOpcode(Opcode::MemoryCopy));
+  CHECK_RESULT(EmitI32(module_->memory_index));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnDataDropExpr(Index segment_index) {
+  CHECK_RESULT(CheckDataSegment(segment_index));
+  CHECK_RESULT(typechecker_.OnDataDrop(segment_index));
+  CHECK_RESULT(EmitOpcode(Opcode::DataDrop));
+  CHECK_RESULT(EmitI32(TranslateDataSegmentIndexToEnv(segment_index)));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnMemoryFillExpr() {
+  CHECK_RESULT(CheckHasMemory(Opcode::MemoryFill));
+  CHECK_RESULT(typechecker_.OnMemoryFill());
+  CHECK_RESULT(EmitOpcode(Opcode::MemoryFill));
+  CHECK_RESULT(EmitI32(module_->memory_index));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnMemoryInitExpr(Index segment_index) {
+  CHECK_RESULT(CheckHasMemory(Opcode::MemoryInit));
+  CHECK_RESULT(CheckDataSegment(segment_index));
+  CHECK_RESULT(typechecker_.OnMemoryInit(segment_index));
+  CHECK_RESULT(EmitOpcode(Opcode::MemoryInit));
+  CHECK_RESULT(EmitI32(module_->memory_index));
+  CHECK_RESULT(EmitI32(TranslateDataSegmentIndexToEnv(segment_index)));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnTableCopyExpr() {
+  CHECK_RESULT(CheckHasTable(Opcode::TableCopy));
+  CHECK_RESULT(typechecker_.OnTableCopy());
+  CHECK_RESULT(EmitOpcode(Opcode::TableCopy));
+  CHECK_RESULT(EmitI32(module_->table_index));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnElemDropExpr(Index segment_index) {
+  CHECK_RESULT(typechecker_.OnElemDrop(segment_index));
+  CHECK_RESULT(EmitOpcode(Opcode::ElemDrop));
+  CHECK_RESULT(EmitI32(segment_index));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnTableInitExpr(Index segment_index) {
+  CHECK_RESULT(CheckHasTable(Opcode::TableInit));
+  CHECK_RESULT(typechecker_.OnTableInit(segment_index));
+  CHECK_RESULT(EmitOpcode(Opcode::TableInit));
+  CHECK_RESULT(EmitI32(module_->table_index));
+  CHECK_RESULT(EmitI32(segment_index));
   return wabt::Result::Ok;
 }
 

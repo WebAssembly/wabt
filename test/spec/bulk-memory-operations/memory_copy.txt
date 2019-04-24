@@ -1,3 +1,212 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/memory_copy.wast
 ;;; ARGS*: --enable-bulk-memory
+(;; STDOUT ;;;
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+out/test/spec/bulk-memory-operations/memory_copy.wast:4447: assert_invalid passed:
+  error: memory.copy requires an imported or defined memory.
+  0000030: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4453: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i32, f32]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4460: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i32, i64]
+  0000036: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4467: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i32, f64]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4474: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f32, i32]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4481: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f32, f32]
+  000003c: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4488: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f32, i64]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4495: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f32, f64]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4502: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i64, i32]
+  0000036: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4509: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i64, f32]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4516: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i64, i64]
+  0000036: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4523: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, i64, f64]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4530: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f64, i32]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4537: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f64, f32]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4544: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f64, i64]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4551: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i32, f64, f64]
+  0000044: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4558: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i32, i32]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4565: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i32, f32]
+  000003c: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4572: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i32, i64]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4579: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i32, f64]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4586: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, f32, i32]
+  000003c: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4593: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, f32, f32]
+  000003f: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4600: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, f32, i64]
+  000003c: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4607: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, f32, f64]
+  0000043: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4614: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i64, i32]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4621: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i64, f32]
+  000003c: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4628: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i64, i64]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4635: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, i64, f64]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4642: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, f64, i32]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4649: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, f64, f32]
+  0000043: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4656: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, f64, i64]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4663: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f32, f64, f64]
+  0000047: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4670: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, i32, i32]
+  0000036: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4677: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, i32, f32]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4684: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, i32, i64]
+  0000036: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4691: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, i32, f64]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4698: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, f32, i32]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4705: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, f32, f32]
+  000003c: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4712: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, f32, i64]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4719: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, f32, f64]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4726: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, i64, i32]
+  0000036: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4733: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, i64, f32]
+  0000039: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4740: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, i64, i64]
+  0000036: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4747: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, i64, f64]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4754: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, f64, i32]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4761: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, f64, f32]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4768: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, f64, i64]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4775: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [i64, f64, f64]
+  0000044: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4782: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, i32, i32]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4789: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, i32, f32]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4796: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, i32, i64]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4803: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, i32, f64]
+  0000044: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4810: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, f32, i32]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4817: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, f32, f32]
+  0000043: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4824: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, f32, i64]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4831: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, f32, f64]
+  0000047: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4838: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, i64, i32]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4845: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, i64, f32]
+  0000040: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4852: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, i64, i64]
+  000003d: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4859: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, i64, f64]
+  0000044: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4866: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, f64, i32]
+  0000044: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4873: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, f64, f32]
+  0000047: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4880: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, f64, i64]
+  0000044: error: OnMemoryCopyExpr callback failed
+out/test/spec/bulk-memory-operations/memory_copy.wast:4887: assert_invalid passed:
+  error: type mismatch in memory.copy, expected [i32, i32, i32] but got [f64, f64, f64]
+  000004b: error: OnMemoryCopyExpr callback failed
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+4545/4545 tests passed.
+;;; STDOUT ;;)

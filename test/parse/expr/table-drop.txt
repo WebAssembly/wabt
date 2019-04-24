@@ -8,5 +8,5 @@
 
   (func)
 
-  (table 0 anyfunc)
-  (elem passive 1))
+  (table 0 funcref)
+  (elem passive funcref 1))

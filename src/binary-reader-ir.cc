@@ -198,7 +198,10 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override;
 
   Result OnElemSegmentCount(Index count) override;
-  Result BeginElemSegment(Index index, Index table_index, bool passive) override;
+  Result BeginElemSegment(Index index,
+                          Index table_index,
+                          bool passive,
+                          Type elem_type) override;
   Result BeginElemSegmentInitExpr(Index index) override;
   Result EndElemSegmentInitExpr(Index index) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
@@ -984,11 +987,13 @@ Result BinaryReaderIR::OnElemSegmentCount(Index count) {
 
 Result BinaryReaderIR::BeginElemSegment(Index index,
                                         Index table_index,
-                                        bool passive) {
+                                        bool passive,
+                                        Type elem_type) {
   auto field = MakeUnique<ElemSegmentModuleField>(GetLocation());
   ElemSegment& elem_segment = field->elem_segment;
   elem_segment.table_var = Var(table_index, GetLocation());
   elem_segment.passive = passive;
+  elem_segment.elem_type = elem_type;
   module_->AppendField(std::move(field));
   return Result::Ok;
 }

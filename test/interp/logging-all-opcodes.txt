@@ -8033,7 +8033,7 @@ BeginModule(version: 1)
   EndExportSection
   BeginElemSection(8)
     OnElemSegmentCount(1)
-    BeginElemSegment(index: 0, table_index: 0, passive: false)
+    BeginElemSegment(index: 0, table_index: 0, passive: false, elem_type: funcref)
     BeginElemSegmentInitExpr(0)
     OnInitExprI32ConstExpr(index: 0, value: 0)
     EndElemSegmentInitExpr(0)
