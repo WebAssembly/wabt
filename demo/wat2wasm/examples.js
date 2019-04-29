@@ -44,7 +44,7 @@ for (let i = 0; i < 10; i++) {
     name: 'factorial',
     contents:
 `(module
-  (func (export "fac") (param f64) (result f64)
+  (func $fac (export "fac") (param f64) (result f64)
     local.get 0
     f64.const 1
     f64.lt
