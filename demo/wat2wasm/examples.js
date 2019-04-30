@@ -44,7 +44,7 @@ for (let i = 0; i < 10; i++) {
     name: 'factorial',
     contents:
 `(module
-  (func $fac (export "fac") (param f64) (result f64)
+  (func $fac (param f64) (result f64)
     local.get 0
     f64.const 1
     f64.lt
@@ -57,7 +57,8 @@ for (let i = 0; i < 10; i++) {
       f64.sub
       call $fac
       f64.mul
-    end))
+    end)
+	(export "fac" (func $fac)))
 `,
     js: `const wasmInstance =
     new WebAssembly.Instance(wasmModule, {});
