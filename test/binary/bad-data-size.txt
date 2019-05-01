@@ -15,5 +15,4 @@ section(DATA) {
 }
 (;; STDERR ;;;
 error: data segment is out of bounds: [0, 8) >= max value 0
-000001d: error: OnDataSegmentData callback failed
 ;;; STDERR ;;)

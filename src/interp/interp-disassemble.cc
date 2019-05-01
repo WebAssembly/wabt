@@ -591,31 +591,25 @@ void Environment::Disassemble(Stream* stream,
         break;
 
       case Opcode::MemoryInit:
-        WABT_UNREACHABLE;
+      case Opcode::TableInit: {
+        Index index = ReadU32(&pc);
+        Index segment_index = ReadU32(&pc);
+        stream->Writef("%s $%" PRIindex ", $%" PRIindex
+                       ", %%[-3], %%[-2], %%[-1]\n",
+                       opcode.GetName(), index, segment_index);
         break;
+      }
 
       case Opcode::DataDrop:
-        WABT_UNREACHABLE;
+      case Opcode::ElemDrop:
+        stream->Writef("%s $%u\n", opcode.GetName(), ReadU32(&pc));
         break;
 
       case Opcode::MemoryCopy:
-        WABT_UNREACHABLE;
-        break;
-
-      case Opcode::MemoryFill:
-        WABT_UNREACHABLE;
-        break;
-
-      case Opcode::TableInit:
-        WABT_UNREACHABLE;
-        break;
-
-      case Opcode::ElemDrop:
-        WABT_UNREACHABLE;
-        break;
-
       case Opcode::TableCopy:
-        WABT_UNREACHABLE;
+      case Opcode::MemoryFill:
+        stream->Writef("%s $%u, %%[-3], %%[-2], %%[-1]\n", opcode.GetName(),
+                       ReadU32(&pc));
         break;
 
       // The following opcodes are either never generated or should never be

@@ -51,19 +51,23 @@ Label::Label(IstreamOffset offset, IstreamOffset fixup_offset)
     : offset(offset), fixup_offset(fixup_offset) {}
 
 struct ElemSegmentInfo {
-  ElemSegmentInfo(Index* dst, Index func_index)
-      : dst(dst), func_index(func_index) {}
+  ElemSegmentInfo(Table* table, Index dst) : table(table), dst(dst) {}
 
-  Index* dst;
-  Index func_index;
+  Table* table;
+  Index dst;
+  std::vector<Index> src;
 };
 
 struct DataSegmentInfo {
-  DataSegmentInfo(void* dst_data, const void* src_data, IstreamOffset size)
-      : dst_data(dst_data), src_data(src_data), size(size) {}
+  DataSegmentInfo(Memory* memory,
+                  Address dst,
+                  const void* src,
+                  IstreamOffset size)
+      : memory(memory), dst(dst), src(src), size(size) {}
 
-  void* dst_data;        // Not owned.
-  const void* src_data;  // Not owned.
+  Memory* memory;
+  Address dst;
+  const void* src;  // Not owned.
   IstreamOffset size;
 };
 
@@ -79,10 +83,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   std::unique_ptr<OutputBuffer> ReleaseOutputBuffer();
 
+  wabt::Result InitializeSegments();
+
   // Implement BinaryReader.
   bool OnError(const Error&) override;
-
-  wabt::Result EndModule() override;
 
   wabt::Result OnTypeCount(Index count) override;
   wabt::Result OnType(Index index,
@@ -209,6 +213,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnSimdLaneOpExpr(wabt::Opcode opcode, uint64_t value) override;
   wabt::Result OnSimdShuffleOpExpr(wabt::Opcode opcode, v128 value) override;
 
+  wabt::Result OnElemSegmentCount(Index count) override;
   wabt::Result BeginElemSegment(Index index,
                                 Index table_index,
                                 bool passive,
@@ -257,6 +262,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   Index TranslateLocalIndex(Index local_index);
   Type GetLocalTypeByIndex(Func* func, Index local_index);
   Index TranslateDataSegmentIndexToEnv(Index data_segment_index);
+  Index TranslateElemSegmentIndexToEnv(Index elem_segment_index);
 
   IstreamOffset GetIstreamOffset();
 
@@ -287,6 +293,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result CheckLocal(Index local_index);
   wabt::Result CheckGlobal(Index global_index);
   wabt::Result CheckDataSegment(Index data_segment_index);
+  wabt::Result CheckElemSegment(Index elem_segment_index);
   wabt::Result CheckImportKind(Import* import, ExternalKind expected_kind);
   wabt::Result CheckImportLimits(const Limits* declared_limits,
                                  const Limits* actual_limits);
@@ -323,6 +330,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   IndexVector func_index_mapping_;
   IndexVector global_index_mapping_;
   IndexVector data_segment_index_mapping_;
+  IndexVector elem_segment_index_mapping_;
 
   Index num_func_imports_ = 0;
   Index num_global_imports_ = 0;
@@ -330,6 +338,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // Changes to linear memory and tables should not apply if a validation error
   // occurs; these vectors cache the changes that must be applied after we know
   // that there are no validation errors.
+  //
+  // Note that this behavior changed after the bulk memory proposal; in that
+  // case each segment is initialized as it is encountered. If one fails, then
+  // no further segments are processed.
   std::vector<ElemSegmentInfo> elem_segment_infos_;
   std::vector<DataSegmentInfo> data_segment_infos_;
 
@@ -337,6 +349,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   TypedValue init_expr_value_;
   IstreamOffset table_offset_ = 0;
   bool segment_is_passive_ = false;
+  ElemSegment* elem_segment_ = nullptr;
+  ElemSegmentInfo* elem_segment_info_ = nullptr;
 };
 
 BinaryReaderInterp::BinaryReaderInterp(Environment* env,
@@ -428,6 +442,10 @@ Type BinaryReaderInterp::GetLocalTypeByIndex(Func* func, Index local_index) {
 
 Index BinaryReaderInterp::TranslateDataSegmentIndexToEnv(Index index) {
   return data_segment_index_mapping_[index];
+}
+
+Index BinaryReaderInterp::TranslateElemSegmentIndexToEnv(Index index) {
+  return elem_segment_index_mapping_[index];
 }
 
 IstreamOffset BinaryReaderInterp::GetIstreamOffset() {
@@ -626,6 +644,16 @@ wabt::Result BinaryReaderInterp::CheckDataSegment(Index data_segment_index) {
   if (data_segment_index >= max_data_segment_index) {
     PrintError("invalid data_segment_index: %" PRIindex " (max %" PRIindex ")",
                data_segment_index, max_data_segment_index);
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::CheckElemSegment(Index elem_segment_index) {
+  Index max_elem_segment_index = elem_segment_index_mapping_.size();
+  if (elem_segment_index >= max_elem_segment_index) {
+    PrintError("invalid elem_segment_index: %" PRIindex " (max %" PRIindex ")",
+               elem_segment_index, max_elem_segment_index);
     return wabt::Result::Error;
   }
   return wabt::Result::Ok;
@@ -1004,6 +1032,13 @@ wabt::Result BinaryReaderInterp::OnStartFunction(Index func_index) {
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::OnElemSegmentCount(Index count) {
+  for (Index i = 0; i < count; ++i) {
+    elem_segment_index_mapping_.push_back(env_->GetElemSegmentCount() + i);
+  }
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
                                                   Index table_index,
                                                   bool passive,
@@ -1021,41 +1056,46 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
                                                             Index count) {
-  if (!segment_is_passive_) {
+  elem_segment_ = env_->EmplaceBackElemSegment();
+  if (segment_is_passive_) {
+    elem_segment_info_ = nullptr;
+  } else {
+    // An active segment still is present in the segment index space, but
+    // cannot be used with `table.init` (it's as if it has already been
+    // dropped).
+    elem_segment_->dropped = true;
+
     assert(module_->table_index != kInvalidIndex);
     Table* table = env_->GetTable(module_->table_index);
-    // Check both cases, as table_offset_ + count may overflow.
-    if (table_offset_ > table->func_indexes.size() ||
-        table_offset_ + count > table->func_indexes.size()) {
-      PrintError("elem segment is out of bounds: [%u, %u) >= max value %" PRIzd,
-                 table_offset_, table_offset_ + count,
-                 table->func_indexes.size());
-      return wabt::Result::Error;
-    }
+    elem_segment_infos_.emplace_back(table, table_offset_);
+    elem_segment_info_ = &elem_segment_infos_.back();
   }
   return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
     Index segment_index) {
-  // TODO(binji): implement
+  assert(segment_is_passive_);
+  elem_segment_->elems.push_back(kInvalidIndex);
   return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
     Index index,
     Index func_index) {
-  if (!segment_is_passive_) {
-    Index max_func_index = func_index_mapping_.size();
-    if (func_index >= max_func_index) {
-      PrintError("invalid func_index: %" PRIindex " (max %" PRIindex ")",
-                 func_index, max_func_index);
-      return wabt::Result::Error;
-    }
+  Index max_func_index = func_index_mapping_.size();
+  if (func_index >= max_func_index) {
+    PrintError("invalid func_index: %" PRIindex " (max %" PRIindex ")",
+               func_index, max_func_index);
+    return wabt::Result::Error;
+  }
 
-    Table* table = env_->GetTable(module_->table_index);
-    elem_segment_infos_.emplace_back(&table->func_indexes[table_offset_++],
-                                     TranslateFuncIndexToEnv(func_index));
+  func_index = TranslateFuncIndexToEnv(func_index);
+
+  if (segment_is_passive_) {
+    elem_segment_->elems.push_back(func_index);
+  } else {
+    elem_segment_info_->src.push_back(func_index);
   }
   return wabt::Result::Ok;
 }
@@ -1091,20 +1131,8 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
     Memory* memory = env_->GetMemory(module_->memory_index);
     assert(init_expr_value_.type == Type::I32);
     Address address = init_expr_value_.value.i32;
-    uint64_t end_address =
-        static_cast<uint64_t>(address) + static_cast<uint64_t>(size);
-    if (end_address > memory->data.size()) {
-      PrintError("data segment is out of bounds: [%" PRIaddress ", %" PRIu64
-                 ") >= max value %" PRIzd,
-                 address, end_address, memory->data.size());
-      return wabt::Result::Error;
-    }
-
-    if (size > 0) {
-      data_segment_infos_.emplace_back(&memory->data[address], src_data, size);
-    }
+    data_segment_infos_.emplace_back(memory, address, src_data, size);
   }
-
   return wabt::Result::Ok;
 }
 
@@ -1716,28 +1744,73 @@ wabt::Result BinaryReaderInterp::OnTableCopyExpr() {
 }
 
 wabt::Result BinaryReaderInterp::OnElemDropExpr(Index segment_index) {
+  CHECK_RESULT(CheckElemSegment(segment_index));
   CHECK_RESULT(typechecker_.OnElemDrop(segment_index));
   CHECK_RESULT(EmitOpcode(Opcode::ElemDrop));
-  CHECK_RESULT(EmitI32(segment_index));
+  CHECK_RESULT(EmitI32(TranslateElemSegmentIndexToEnv(segment_index)));
   return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnTableInitExpr(Index segment_index) {
   CHECK_RESULT(CheckHasTable(Opcode::TableInit));
+  CHECK_RESULT(CheckElemSegment(segment_index));
   CHECK_RESULT(typechecker_.OnTableInit(segment_index));
   CHECK_RESULT(EmitOpcode(Opcode::TableInit));
   CHECK_RESULT(EmitI32(module_->table_index));
-  CHECK_RESULT(EmitI32(segment_index));
+  CHECK_RESULT(EmitI32(TranslateElemSegmentIndexToEnv(segment_index)));
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::EndModule() {
-  for (ElemSegmentInfo& info : elem_segment_infos_) {
-    *info.dst = info.func_index;
+wabt::Result BinaryReaderInterp::InitializeSegments() {
+  // The MVP requires that all segments are bounds-checked before being copied
+  // into the table or memory. The bulk memory proposal changes this behavior;
+  // instead, each segment is copied in order. If any segment fails, then no
+  // further segments are copied. Any data that was written persists.
+  enum Pass { Check = 0, Init = 1 };
+  int pass = features_.bulk_memory_enabled() ? Init : Check;
+
+  for (; pass <= Init; ++pass) {
+    for (const ElemSegmentInfo& info : elem_segment_infos_) {
+      uint32_t table_size = info.table->func_indexes.size();
+      uint32_t segment_size = info.src.size();
+      uint32_t copy_size = segment_size;
+      bool ok = ClampToBounds(info.dst, &copy_size, table_size);
+
+      if (pass == Init) {
+        std::copy(info.src.begin(), info.src.begin() + copy_size,
+                  info.table->func_indexes.begin() + info.dst);
+      }
+
+      if (!ok) {
+        PrintError(
+            "elem segment is out of bounds: [%u, %" PRIzd ") >= max value %u",
+            info.dst, static_cast<size_t>(info.dst) + segment_size, table_size);
+        return wabt::Result::Error;
+      }
+    }
+
+    for (const DataSegmentInfo& info : data_segment_infos_) {
+      uint32_t memory_size = info.memory->data.size();
+      uint32_t segment_size = info.size;
+      uint32_t copy_size = segment_size;
+      bool ok = ClampToBounds(info.dst, &copy_size, memory_size);
+
+      if (pass == Init) {
+        const char* src_data = static_cast<const char*>(info.src);
+        std::copy(src_data, src_data + copy_size,
+                  info.memory->data.begin() + info.dst);
+      }
+
+      if (!ok) {
+        PrintError("data segment is out of bounds: [%u, %" PRIzd
+                   ") >= max value %u",
+                   info.dst, static_cast<size_t>(info.dst) + segment_size,
+                   memory_size);
+        return wabt::Result::Error;
+      }
+    }
   }
-  for (DataSegmentInfo& info : data_segment_infos_) {
-    memcpy(info.dst_data, info.src_data, info.size);
-  }
+
   return wabt::Result::Ok;
 }
 
@@ -1766,11 +1839,21 @@ wabt::Result ReadBinaryInterp(Environment* env,
   if (Succeeded(result)) {
     module->istream_start = istream_offset;
     module->istream_end = env->istream().size();
-    *out_module = module;
+
+    result = reader.InitializeSegments();
+    if (Succeeded(result)) {
+      *out_module = module;
+    } else {
+      // We failed to initialize data and element segments, but we can't reset
+      // to the mark point. An element segment may have initialized an imported
+      // table with a function from this module, which is still callable.
+      *out_module = nullptr;
+    }
   } else {
     env->ResetToMarkPoint(mark);
     *out_module = nullptr;
   }
+
   return result;
 }
 

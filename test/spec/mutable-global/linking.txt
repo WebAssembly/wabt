@@ -15,27 +15,21 @@ out/test/spec/mutable-global/linking.wast:91: assert_unlinkable passed:
   0000016: error: OnImportGlobal callback failed
 out/test/spec/mutable-global/linking.wast:207: assert_unlinkable passed:
   error: elem segment is out of bounds: [10, 11) >= max value 10
-  0000028: error: OnElemSegmentElemExprCount callback failed
 out/test/spec/mutable-global/linking.wast:216: assert_unlinkable passed:
   error: unknown module field "mem"
   0000027: error: OnImportMemory callback failed
 out/test/spec/mutable-global/linking.wast:228: assert_unlinkable passed:
   error: elem segment is out of bounds: [12, 13) >= max value 10
-  000002f: error: OnElemSegmentElemExprCount callback failed
 out/test/spec/mutable-global/linking.wast:239: assert_unlinkable passed:
   error: data segment is out of bounds: [65536, 65537) >= max value 65536
-  0000042: error: OnDataSegmentData callback failed
 out/test/spec/mutable-global/linking.wast:299: assert_unlinkable passed:
   error: data segment is out of bounds: [65536, 65537) >= max value 65536
-  0000020: error: OnDataSegmentData callback failed
 out/test/spec/mutable-global/linking.wast:324: assert_unlinkable passed:
   error: unknown module field "tab"
   0000037: error: OnImportTable callback failed
 out/test/spec/mutable-global/linking.wast:335: assert_unlinkable passed:
   error: data segment is out of bounds: [327680, 327681) >= max value 327680
-  0000028: error: OnDataSegmentData callback failed
 out/test/spec/mutable-global/linking.wast:345: assert_unlinkable passed:
   error: elem segment is out of bounds: [0, 1) >= max value 0
-  000002d: error: OnElemSegmentElemExprCount callback failed
 91/91 tests passed.
 ;;; STDOUT ;;)

@@ -67,6 +67,10 @@ namespace interp {
   V(TrapHostTrapped, "host function trapped")                               \
   /* the data segment has been dropped. */                                  \
   V(TrapDataSegmentDropped, "data segment dropped")                         \
+  /* the element segment has been dropped. */                               \
+  V(TrapElemSegmentDropped, "element segment dropped")                      \
+  /* table access is out of bounds */                                       \
+  V(TrapTableAccessOutOfBounds, "out of bounds table access")               \
   /* we attempted to call a function with the an argument list that doesn't \
    * match the function signature */                                        \
   V(ArgumentTypeMismatch, "argument type mismatch")                         \
@@ -120,6 +124,13 @@ struct DataSegment {
   DataSegment() = default;
 
   std::vector<char> data;
+  bool dropped = false;
+};
+
+struct ElemSegment {
+  ElemSegment() = default;
+
+  std::vector<Index> elems;
   bool dropped = false;
 };
 
@@ -396,6 +407,7 @@ class Environment {
     size_t tables_size = 0;
     size_t globals_size = 0;
     size_t data_segments_size = 0;
+    size_t elem_segments_size = 0;
     size_t istream_size = 0;
   };
 
@@ -413,6 +425,7 @@ class Environment {
   Index GetMemoryCount() const { return memories_.size(); }
   Index GetTableCount() const { return tables_.size(); }
   Index GetDataSegmentCount() const { return data_segments_.size(); }
+  Index GetElemSegmentCount() const { return elem_segments_.size(); }
   Index GetModuleCount() const { return modules_.size(); }
 
   Index GetLastModuleIndex() const {
@@ -440,6 +453,10 @@ class Environment {
   DataSegment* GetDataSegment(Index index) {
     assert(index < data_segments_.size());
     return &data_segments_[index];
+  }
+  ElemSegment* GetElemSegment(Index index) {
+    assert(index < elem_segments_.size());
+    return &elem_segments_[index];
   }
   Module* GetModule(Index index) {
     assert(index < modules_.size());
@@ -489,6 +506,12 @@ class Environment {
   }
 
   template <typename... Args>
+  ElemSegment* EmplaceBackElemSegment(Args&&... args) {
+    elem_segments_.emplace_back(std::forward<Args>(args)...);
+    return &elem_segments_.back();
+  }
+
+  template <typename... Args>
   Module* EmplaceBackModule(Args&&... args) {
     modules_.emplace_back(std::forward<Args>(args)...);
     return modules_.back().get();
@@ -524,6 +547,7 @@ class Environment {
   std::vector<Table> tables_;
   std::vector<Global> globals_;
   std::vector<DataSegment> data_segments_;
+  std::vector<ElemSegment> elem_segments_;
   std::unique_ptr<OutputBuffer> istream_;
   BindingHash module_bindings_;
   BindingHash registered_module_bindings_;
@@ -569,7 +593,10 @@ class Thread {
   template <typename MemType>
   Result GetAtomicAccessAddress(const uint8_t** pc, void** out_address);
 
+  Table* ReadTable(const uint8_t** pc);
+
   DataSegment* ReadDataSegment(const uint8_t** pc);
+  ElemSegment* ReadElemSegment(const uint8_t** pc);
 
   Value& Top();
   Value& Pick(Index depth);
@@ -618,6 +645,9 @@ class Thread {
   Result DataDrop(const uint8_t** pc) WABT_WARN_UNUSED;
   Result MemoryCopy(const uint8_t** pc) WABT_WARN_UNUSED;
   Result MemoryFill(const uint8_t** pc) WABT_WARN_UNUSED;
+  Result TableInit(const uint8_t** pc) WABT_WARN_UNUSED;
+  Result ElemDrop(const uint8_t** pc) WABT_WARN_UNUSED;
+  Result TableCopy(const uint8_t** pc) WABT_WARN_UNUSED;
 
   template <typename R, typename T = R>
   Result Unop(UnopFunc<R, T> func) WABT_WARN_UNUSED;
@@ -686,6 +716,8 @@ bool IsArithmeticNan(uint64_t f64_bits);
 
 std::string TypedValueToString(const TypedValue&);
 const char* ResultToString(Result);
+
+bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max);
 
 void WriteTypedValue(Stream* stream, const TypedValue&);
 void WriteTypedValues(Stream* stream, const TypedValues&);
