@@ -1120,7 +1120,9 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
   DataSegment* segment = env_->EmplaceBackDataSegment();
   if (segment_is_passive_) {
     segment->data.resize(size);
-    memcpy(segment->data.data(), src_data, size);
+    if (size > 0) {
+      memcpy(segment->data.data(), src_data, size);
+    }
   } else {
     // An active segment still is present in the segment index space, but
     // cannot be used with `memory.init` (it's as if it has already been
@@ -1782,9 +1784,10 @@ wabt::Result BinaryReaderInterp::InitializeSegments() {
       }
 
       if (!ok) {
-        PrintError(
-            "elem segment is out of bounds: [%u, %" PRIzd ") >= max value %u",
-            info.dst, static_cast<size_t>(info.dst) + segment_size, table_size);
+        PrintError("elem segment is out of bounds: [%u, %" PRIzd
+                   ") >= max value %u",
+                   info.dst, static_cast<uint64_t>(info.dst) + segment_size,
+                   table_size);
         return wabt::Result::Error;
       }
     }
@@ -1804,7 +1807,7 @@ wabt::Result BinaryReaderInterp::InitializeSegments() {
       if (!ok) {
         PrintError("data segment is out of bounds: [%u, %" PRIzd
                    ") >= max value %u",
-                   info.dst, static_cast<size_t>(info.dst) + segment_size,
+                   info.dst, static_cast<uint64_t>(info.dst) + segment_size,
                    memory_size);
         return wabt::Result::Error;
       }
