@@ -1784,7 +1784,7 @@ wabt::Result BinaryReaderInterp::InitializeSegments() {
       }
 
       if (!ok) {
-        PrintError("elem segment is out of bounds: [%u, %" PRIzd
+        PrintError("elem segment is out of bounds: [%u, %" PRIu64
                    ") >= max value %u",
                    info.dst, static_cast<uint64_t>(info.dst) + segment_size,
                    table_size);
@@ -1805,7 +1805,7 @@ wabt::Result BinaryReaderInterp::InitializeSegments() {
       }
 
       if (!ok) {
-        PrintError("data segment is out of bounds: [%u, %" PRIzd
+        PrintError("data segment is out of bounds: [%u, %" PRIu64
                    ") >= max value %u",
                    info.dst, static_cast<uint64_t>(info.dst) + segment_size,
                    memory_size);
