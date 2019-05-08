@@ -137,6 +137,7 @@ WABT_TOKEN_LAST(Opcode, Unreachable)
 
 /* Tokens with string data. */
 WABT_TOKEN(AlignEqNat, "align=")
+WABT_TOKEN(LparAnn, "Annotation")
 WABT_TOKEN(OffsetEqNat, "offset=")
 WABT_TOKEN(Reserved, "Reserved")
 WABT_TOKEN(Text, "TEXT")

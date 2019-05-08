@@ -391,8 +391,35 @@ Location WastParser::GetLocation() {
 }
 
 TokenType WastParser::Peek(size_t n) {
-  while (tokens_.size() <= n)
-    tokens_.push_back(lexer_->GetToken(this));
+  while (tokens_.size() <= n) {
+    Token cur = lexer_->GetToken(this);
+    if (cur.token_type() != TokenType::LparAnn) {
+      tokens_.push_back(cur);
+    } else {
+      // Custom annotation. For now, discard until matching Rpar
+      if (!options_->features.annotations_enabled()) {
+        Error(cur.loc, "annotations not enabled: %s", cur.to_string().c_str());
+        return TokenType::Invalid;
+      }
+      int indent = 1;
+      while (indent > 0) {
+        cur = lexer_->GetToken(this);
+        switch (cur.token_type()) {
+          case TokenType::Lpar:
+          case TokenType::LparAnn:
+            indent++;
+            break;
+
+          case TokenType::Rpar:
+            indent--;
+            break;
+
+          default:
+            break;
+        }
+      }
+    }
+  }
   return tokens_.at(n).token_type();
 }
 

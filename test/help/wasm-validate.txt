@@ -22,6 +22,7 @@ options:
       --enable-tail-call                      Enable Tail-call support
       --enable-bulk-memory                    Enable Bulk-memory operations
       --enable-reference-types                Enable Reference types (anyref)
+      --enable-annotations                    Enable Custom annotation syntax
       --no-debug-names                        Ignore debug names in the binary file
       --ignore-custom-section-errors          Ignore errors in custom sections
 ;;; STDOUT ;;)
