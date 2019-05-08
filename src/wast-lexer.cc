@@ -66,7 +66,8 @@ Token WastLexer::GetToken(WastParser* parser) {
           return BareToken(TokenType::Eof);
         } else if (MatchString("(@")) {
           ReadReservedChars();
-          return TextToken(TokenType::LparAnn);
+          // offset=2 to skip the "(@" prefix
+          return TextToken(TokenType::LparAnn, 2);
         } else {
           ReadChar();
           return BareToken(TokenType::Lpar);
