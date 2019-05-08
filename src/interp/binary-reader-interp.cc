@@ -1778,7 +1778,7 @@ wabt::Result BinaryReaderInterp::InitializeSegments() {
       uint32_t copy_size = segment_size;
       bool ok = ClampToBounds(info.dst, &copy_size, table_size);
 
-      if (pass == Init) {
+      if (pass == Init && copy_size > 0) {
         std::copy(info.src.begin(), info.src.begin() + copy_size,
                   info.table->func_indexes.begin() + info.dst);
       }
@@ -1798,7 +1798,7 @@ wabt::Result BinaryReaderInterp::InitializeSegments() {
       uint32_t copy_size = segment_size;
       bool ok = ClampToBounds(info.dst, &copy_size, memory_size);
 
-      if (pass == Init) {
+      if (pass == Init && copy_size > 0) {
         const char* src_data = static_cast<const char*>(info.src);
         std::copy(src_data, src_data + copy_size,
                   info.memory->data.begin() + info.dst);
