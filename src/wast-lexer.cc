@@ -64,6 +64,9 @@ Token WastLexer::GetToken(WastParser* parser) {
             continue;
           }
           return BareToken(TokenType::Eof);
+        } else if (MatchString("(@")) {
+          ReadReservedChars();
+          return TextToken(TokenType::LparAnn);
         } else {
           ReadChar();
           return BareToken(TokenType::Lpar);
