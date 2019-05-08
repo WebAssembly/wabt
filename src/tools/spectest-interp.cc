@@ -1136,11 +1136,9 @@ wabt::Result CommandRunner::OnRegisterCommand(const RegisterCommand* command) {
 
 wabt::Result CommandRunner::OnAssertUnlinkableCommand(
     const AssertUnlinkableCommand* command) {
-  Environment::MarkPoint mark = env_.Mark();
   wabt::Result result =
       ReadInvalidModule(command->line, command->filename, &env_, command->type,
                         "assert_unlinkable");
-  env_.ResetToMarkPoint(mark);
 
   if (Succeeded(result)) {
     PrintError(command->line, "expected module to be unlinkable: \"%s\"",

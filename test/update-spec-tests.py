@@ -97,6 +97,7 @@ def main(args):
   ProcessProposalDir('nontrapping-float-to-int-conversions',
                      '--enable-saturating-float-to-int')
   ProcessProposalDir('sign-extension-ops', '--enable-sign-extension')
+  ProcessProposalDir('bulk-memory-operations', '--enable-bulk-memory')
 
   return 0
 

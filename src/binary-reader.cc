@@ -2078,7 +2078,18 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     if (flags == SegmentFlags::IndexOther) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     }
-    CALLBACK(BeginElemSegment, i, table_index, flags == SegmentFlags::Passive);
+    Type elem_type;
+    if (flags == SegmentFlags::Passive) {
+      CHECK_RESULT(ReadType(&elem_type, "table elem type"));
+      ERROR_UNLESS(elem_type == Type::Funcref || elem_type == Type::Anyref,
+                   "segment elem type must by funcref or anyref");
+    } else {
+      elem_type = Type::Funcref;
+    }
+
+    CALLBACK(BeginElemSegment, i, table_index, flags == SegmentFlags::Passive,
+             elem_type);
+
     if (flags != SegmentFlags::Passive) {
       CALLBACK(BeginElemSegmentInitExpr, i);
       CHECK_RESULT(ReadI32InitExpr(i));

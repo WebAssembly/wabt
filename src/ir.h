@@ -567,6 +567,7 @@ struct ElemSegment {
   std::string name;
   Var table_var;
   bool passive = false;
+  Type elem_type;  // If passive == false, this is always Type::Funcref.
   ExprList offset;
   ElemExprVector elem_exprs;
 };

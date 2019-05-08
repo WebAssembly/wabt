@@ -1,0 +1,22 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/custom.wast
+;;; ARGS*: --enable-bulk-memory
+(;; STDOUT ;;;
+out/test/spec/bulk-memory-operations/custom.wast:61: assert_malformed passed:
+  0000009: error: unable to read u32 leb128: section size
+out/test/spec/bulk-memory-operations/custom.wast:69: assert_malformed passed:
+  000000a: error: unable to read u32 leb128: string length
+out/test/spec/bulk-memory-operations/custom.wast:77: assert_malformed passed:
+  000000a: error: unable to read u32 leb128: string length
+out/test/spec/bulk-memory-operations/custom.wast:85: assert_malformed passed:
+  000000a: error: invalid section size: extends past end
+out/test/spec/bulk-memory-operations/custom.wast:93: assert_malformed passed:
+  0000031: error: invalid section code: 36
+out/test/spec/bulk-memory-operations/custom.wast:102: assert_malformed passed:
+  000003e: error: function signature count != function body count
+out/test/spec/bulk-memory-operations/custom.wast:115: assert_malformed passed:
+  000000a: error: invalid section size: extends past end
+out/test/spec/bulk-memory-operations/custom.wast:123: assert_malformed passed:
+  0000013: error: data segment count does not equal count in DataCount section
+8/8 tests passed.
+;;; STDOUT ;;)

@@ -1019,6 +1019,7 @@ Result BinaryWriter::WriteModule() {
       WriteHeader("elem segment header", i);
       if (segment->passive) {
         stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::Passive));
+        WriteType(stream_, segment->elem_type);
       } else {
         assert(module_->GetTableIndex(segment->table_var) == 0);
         stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));

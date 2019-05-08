@@ -6,7 +6,7 @@
   (memory 1)
   (data passive "a")
   (table 1 anyfunc)
-  (elem passive 0)
+  (elem passive funcref 0)
 
   (func
     ;; Mismatch first operand.

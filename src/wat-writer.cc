@@ -1489,6 +1489,7 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteNameOrIndex(segment.name, elem_segment_index_, NextChar::Space);
   if (segment.passive) {
     WritePutsSpace("passive");
+    WriteType(segment.elem_type, NextChar::Space);
   } else {
     WriteInitExpr(segment.offset);
   }

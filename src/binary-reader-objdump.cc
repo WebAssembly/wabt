@@ -771,7 +771,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index,
                           Index table_index,
-                          bool passive) override;
+                          bool passive,
+                          Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
   Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
   Result OnElemSegmentElemExpr_RefFunc(Index segment_index,
@@ -1216,7 +1217,8 @@ Result BinaryReaderObjdump::OnElemSegmentCount(Index count) {
 
 Result BinaryReaderObjdump::BeginElemSegment(Index index,
                                              Index table_index,
-                                             bool passive) {
+                                             bool passive,
+                                             Type elem_type) {
   table_index_ = table_index;
   elem_index_ = 0;
   return Result::Ok;

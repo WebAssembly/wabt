@@ -337,6 +337,8 @@ Environment::MarkPoint Environment::Mark() {
   mark.memories_size = memories_.size();
   mark.tables_size = tables_.size();
   mark.globals_size = globals_.size();
+  mark.data_segments_size = data_segments_.size();
+  mark.elem_segments_size = elem_segments_.size();
   mark.istream_size = istream_->data.size();
   return mark;
 }
@@ -367,6 +369,10 @@ void Environment::ResetToMarkPoint(const MarkPoint& mark) {
   memories_.erase(memories_.begin() + mark.memories_size, memories_.end());
   tables_.erase(tables_.begin() + mark.tables_size, tables_.end());
   globals_.erase(globals_.begin() + mark.globals_size, globals_.end());
+  data_segments_.erase(data_segments_.begin() + mark.data_segments_size,
+                       data_segments_.end());
+  elem_segments_.erase(elem_segments_.begin() + mark.elem_segments_size,
+                       elem_segments_.end());
   istream_->data.resize(mark.istream_size);
 }
 
@@ -744,6 +750,11 @@ Memory* Thread::ReadMemory(const uint8_t** pc) {
   return &env_->memories_[memory_index];
 }
 
+Table* Thread::ReadTable(const uint8_t** pc) {
+  Index table_index = ReadU32(pc);
+  return &env_->tables_[table_index];
+}
+
 template <typename MemType>
 Result Thread::GetAccessAddress(const uint8_t** pc, void** out_address) {
   Memory* memory = ReadMemory(pc);
@@ -763,6 +774,18 @@ Result Thread::GetAtomicAccessAddress(const uint8_t** pc, void** out_address) {
   TRAP_IF((addr & (sizeof(MemType) - 1)) != 0, AtomicMemoryAccessUnaligned);
   *out_address = memory->data.data() + static_cast<IstreamOffset>(addr);
   return Result::Ok;
+}
+
+DataSegment* Thread::ReadDataSegment(const uint8_t** pc) {
+  Index index = ReadU32(pc);
+  assert(index < env_->data_segments_.size());
+  return &env_->data_segments_[index];
+}
+
+ElemSegment* Thread::ReadElemSegment(const uint8_t** pc) {
+  Index index = ReadU32(pc);
+  assert(index < env_->elem_segments_.size());
+  return &env_->elem_segments_[index];
 }
 
 Value& Thread::Top() {
@@ -914,6 +937,126 @@ Result Thread::AtomicRmwCmpxchg(const uint8_t** pc) {
     StoreToMemory<MemType>(addr, replace);
   }
   return Push<ResultType>(static_cast<ExtendedType>(read));
+}
+
+bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max) {
+  if (start > max) {
+    *length = 0;
+    return false;
+  }
+  uint32_t avail = max - start;
+  if (*length > avail) {
+    *length = avail;
+    return false;
+  }
+  return true;
+}
+
+Result Thread::MemoryInit(const uint8_t** pc) {
+  Memory* memory = ReadMemory(pc);
+  DataSegment* segment = ReadDataSegment(pc);
+  TRAP_IF(segment->dropped, DataSegmentDropped);
+  uint32_t memory_size = memory->data.size();
+  uint32_t segment_size = segment->data.size();
+  uint32_t size = Pop<uint32_t>();
+  uint32_t src = Pop<uint32_t>();
+  uint32_t dst = Pop<uint32_t>();
+  bool ok = ClampToBounds(dst, &size, memory_size);
+  ok &= ClampToBounds(src, &size, segment_size);
+  if (size > 0) {
+    memcpy(memory->data.data() + dst, segment->data.data() + src, size);
+  }
+  TRAP_IF(!ok, MemoryAccessOutOfBounds);
+  return Result::Ok;
+}
+
+Result Thread::DataDrop(const uint8_t** pc) {
+  DataSegment* segment = ReadDataSegment(pc);
+  TRAP_IF(segment->dropped, DataSegmentDropped);
+  segment->dropped = true;
+  return Result::Ok;
+}
+
+Result Thread::MemoryCopy(const uint8_t** pc) {
+  Memory* memory = ReadMemory(pc);
+  uint32_t memory_size = memory->data.size();
+  uint32_t size = Pop<uint32_t>();
+  uint32_t src = Pop<uint32_t>();
+  uint32_t dst = Pop<uint32_t>();
+  bool copy_backward = src < dst && dst - src < size;
+  bool ok = ClampToBounds(dst, &size, memory_size);
+  // When copying backward, if the range is out-of-bounds, then no data will be
+  // written.
+  if (ok || !copy_backward) {
+    ok &= ClampToBounds(src, &size, memory_size);
+    if (size > 0) {
+      char* data = memory->data.data();
+      memmove(data + dst, data + src, size);
+    }
+  }
+  TRAP_IF(!ok, MemoryAccessOutOfBounds);
+  return Result::Ok;
+}
+
+Result Thread::MemoryFill(const uint8_t** pc) {
+  Memory* memory = ReadMemory(pc);
+  uint32_t memory_size = memory->data.size();
+  uint32_t size = Pop<uint32_t>();
+  uint8_t value = static_cast<uint8_t>(Pop<uint32_t>());
+  uint32_t dst = Pop<uint32_t>();
+  bool ok = ClampToBounds(dst, &size, memory_size);
+  if (size > 0) {
+    memset(memory->data.data() + dst, value, size);
+  }
+  TRAP_IF(!ok, MemoryAccessOutOfBounds);
+  return Result::Ok;
+}
+
+Result Thread::TableInit(const uint8_t** pc) {
+  Table* table = ReadTable(pc);
+  ElemSegment* segment = ReadElemSegment(pc);
+  TRAP_IF(segment->dropped, ElemSegmentDropped);
+  uint32_t table_size = table->func_indexes.size();
+  uint32_t segment_size = segment->elems.size();
+  uint32_t size = Pop<uint32_t>();
+  uint32_t src = Pop<uint32_t>();
+  uint32_t dst = Pop<uint32_t>();
+  bool ok = ClampToBounds(dst, &size, table_size);
+  ok &= ClampToBounds(src, &size, segment_size);
+  if (size > 0) {
+    memcpy(table->func_indexes.data() + dst, segment->elems.data() + src,
+           size * sizeof(table->func_indexes[0]));
+  }
+  TRAP_IF(!ok, TableAccessOutOfBounds);
+  return Result::Ok;
+}
+
+Result Thread::ElemDrop(const uint8_t** pc) {
+  ElemSegment* segment = ReadElemSegment(pc);
+  TRAP_IF(segment->dropped, ElemSegmentDropped);
+  segment->dropped = true;
+  return Result::Ok;
+}
+
+Result Thread::TableCopy(const uint8_t** pc) {
+  Table* table = ReadTable(pc);
+  uint32_t table_size = table->func_indexes.size();
+  uint32_t size = Pop<uint32_t>();
+  uint32_t src = Pop<uint32_t>();
+  uint32_t dst = Pop<uint32_t>();
+  bool copy_backward = src < dst && dst - src < size;
+  bool ok = ClampToBounds(dst, &size, table_size);
+  // When copying backward, if the range is out-of-bounds, then no data will be
+  // written.
+  if (ok || !copy_backward) {
+    ok &= ClampToBounds(src, &size, table_size);
+    if (size > 0) {
+      Index* data = table->func_indexes.data();
+      memmove(data + dst, data + src, size * sizeof(Index));
+    }
+  }
+  TRAP_IF(!ok, TableAccessOutOfBounds);
+  return Result::Ok;
 }
 
 template <typename R, typename T>
@@ -1638,8 +1781,7 @@ Result Thread::Run(int num_instructions) {
       }
 
       case Opcode::CallIndirect: {
-        Index table_index = ReadU32(&pc);
-        Table* table = &env_->tables_[table_index];
+        Table* table = ReadTable(&pc);
         Index sig_index = ReadU32(&pc);
         Index entry_index = Pop<uint32_t>();
         TRAP_IF(entry_index >= table->func_indexes.size(), UndefinedTableIndex);
@@ -1671,8 +1813,7 @@ Result Thread::Run(int num_instructions) {
       }
 
       case Opcode::ReturnCallIndirect:{
-        Index table_index = ReadU32(&pc);
-        Table* table = &env_->tables_[table_index];
+        Table* table = ReadTable(&pc);
         Index sig_index = ReadU32(&pc);
         Index entry_index = Pop<uint32_t>();
         TRAP_IF(entry_index >= table->func_indexes.size(), UndefinedTableIndex);
@@ -3278,31 +3419,31 @@ Result Thread::Run(int num_instructions) {
         break;
 
       case Opcode::MemoryInit:
-        WABT_UNREACHABLE;
+        CHECK_TRAP(MemoryInit(&pc));
         break;
 
       case Opcode::DataDrop:
-        WABT_UNREACHABLE;
+        CHECK_TRAP(DataDrop(&pc));
         break;
 
       case Opcode::MemoryCopy:
-        WABT_UNREACHABLE;
+        CHECK_TRAP(MemoryCopy(&pc));
         break;
 
       case Opcode::MemoryFill:
-        WABT_UNREACHABLE;
+        CHECK_TRAP(MemoryFill(&pc));
         break;
 
       case Opcode::TableInit:
-        WABT_UNREACHABLE;
+        CHECK_TRAP(TableInit(&pc));
         break;
 
       case Opcode::ElemDrop:
-        WABT_UNREACHABLE;
+        CHECK_TRAP(ElemDrop(&pc));
         break;
 
       case Opcode::TableCopy:
-        WABT_UNREACHABLE;
+        CHECK_TRAP(TableCopy(&pc));
         break;
 
       // The following opcodes are either never generated or should never be

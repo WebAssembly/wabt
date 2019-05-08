@@ -39,8 +39,8 @@
   (func)
 
   (data passive "hi")
-  (elem passive (ref.func 0) (ref.null))
-  (elem passive 1)
+  (elem passive funcref (ref.func 0) (ref.null))
+  (elem passive funcref 1)
 
 )
 (;; STDOUT ;;;
@@ -72,7 +72,7 @@
   (func (;1;) (type 0))
   (table (;0;) 0 funcref)
   (memory (;0;) 0)
-  (elem (;0;) passive (ref.func 0) (ref.null))
-  (elem (;1;) passive (ref.func 1))
+  (elem (;0;) passive funcref (ref.func 0) (ref.null))
+  (elem (;1;) passive funcref (ref.func 1))
   (data (;0;) passive "hi"))
 ;;; STDOUT ;;)

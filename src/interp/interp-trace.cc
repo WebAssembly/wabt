@@ -701,31 +701,20 @@ void Thread::Trace(Stream* stream) {
       break;
 
     case Opcode::MemoryInit:
-      WABT_UNREACHABLE;
+    case Opcode::TableInit: {
+      Index index = ReadU32At(pc);
+      Index segment_index = ReadU32At(pc + 4);
+      stream->Writef("%s $%" PRIindex ", $%" PRIindex "\n", opcode.GetName(),
+                     index, segment_index);
       break;
+    }
 
     case Opcode::DataDrop:
-      WABT_UNREACHABLE;
-      break;
-
-    case Opcode::MemoryCopy:
-      WABT_UNREACHABLE;
-      break;
-
-    case Opcode::MemoryFill:
-      WABT_UNREACHABLE;
-      break;
-
-    case Opcode::TableInit:
-      WABT_UNREACHABLE;
-      break;
-
     case Opcode::ElemDrop:
-      WABT_UNREACHABLE;
-      break;
-
+    case Opcode::MemoryCopy:
     case Opcode::TableCopy:
-      WABT_UNREACHABLE;
+    case Opcode::MemoryFill:
+      stream->Writef("%s $%u\n", opcode.GetName(), ReadU32At(pc));
       break;
 
     // The following opcodes are either never generated or should never be

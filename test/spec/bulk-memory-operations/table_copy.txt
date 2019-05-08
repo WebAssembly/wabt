@@ -1,0 +1,17 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/table_copy.wast
+;;; ARGS*: --enable-bulk-memory
+(;; STDOUT ;;;
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+test() =>
+810/810 tests passed.
+;;; STDOUT ;;)
