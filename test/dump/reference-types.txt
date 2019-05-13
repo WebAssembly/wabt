@@ -27,13 +27,13 @@
   )
 
   (func (result i32)
-    i32.const 0
     ref.null
+    i32.const 0
     table.grow $foo
   )
   (func (result i32)
-    i32.const 0
     ref.null
+    i32.const 0
     table.grow $bar
   )
 
@@ -79,13 +79,13 @@ Code Disassembly:
  000055: 26 01                      | table.set 1
  000057: 0b                         | end
 000059 func[4]:
- 00005a: 41 00                      | i32.const 0
- 00005c: d0                         | ref.null
+ 00005a: d0                         | ref.null
+ 00005b: 41 00                      | i32.const 0
  00005d: fc 0f 00                   | table.grow 0
  000060: 0b                         | end
 000062 func[5]:
- 000063: 41 00                      | i32.const 0
- 000065: d0                         | ref.null
+ 000063: d0                         | ref.null
+ 000064: 41 00                      | i32.const 0
  000066: fc 0f 01                   | table.grow 1
  000069: 0b                         | end
 00006b func[6]:

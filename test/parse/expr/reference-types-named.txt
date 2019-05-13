@@ -13,8 +13,8 @@
     table.set $foo
   )
   (func (result i32)
-    i32.const 0
     ref.null
+    i32.const 0
     table.grow $foo
   )
 )
