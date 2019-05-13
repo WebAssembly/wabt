@@ -641,7 +641,7 @@ Result TypeChecker::OnTableSet(Index segment) {
 }
 
 Result TypeChecker::OnTableGrow(Index segment) {
-  Result result = PopAndCheck2Types(Type::I32, Type::Anyref, "table.grow");
+  Result result = PopAndCheck2Types(Type::Anyref, Type::I32, "table.grow");
   PushType(Type::I32);
   return result;
 }
