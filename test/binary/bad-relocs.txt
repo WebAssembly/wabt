@@ -1,0 +1,27 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
+magic
+version
+section("reloc.BAD") {
+  reloc_section[99]
+  reloc_count[0]
+}
+(;; STDERR ;;;
+invalid relocation section index: 99
+0000016: warning: OnRelocCount callback failed
+invalid relocation section index: 99
+invalid relocation section index: 99
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+bad-relocs.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "reloc.BAD"
+  - relocations for section: 99 () [0]
+
+Code Disassembly:
+
+;;; STDOUT ;;)

@@ -175,6 +175,12 @@ void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
 }
 
 Result BinaryReaderObjdumpBase::OnRelocCount(Index count, Index section_index) {
+  if (section_index >= section_types_.size()) {
+    fprintf(stderr, "invalid relocation section index: %" PRIindex "\n",
+            section_index);
+    reloc_section_ = BinarySection::Invalid;
+    return Result::Error;
+  }
   reloc_section_ = section_types_[section_index];
   return Result::Ok;
 }
@@ -1583,6 +1589,7 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
 Result BinaryReaderObjdump::OnSectionSymbol(Index index,
                                             uint32_t flags,
                                             Index section_index) {
+  printf("%d\n", index);
   auto sym_name = GetSectionName(section_index);
   assert(!sym_name.empty());
   PrintDetails("   - %d: S <" PRIstringview "> section=%" PRIindex, index,
