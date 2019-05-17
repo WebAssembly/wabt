@@ -175,6 +175,12 @@ void BinaryReaderObjdumpBase::PrintRelocation(const Reloc& reloc,
 }
 
 Result BinaryReaderObjdumpBase::OnRelocCount(Index count, Index section_index) {
+  if (section_index >= section_types_.size()) {
+    fprintf(stderr, "invalid relocation section index: %" PRIindex "\n",
+            section_index);
+    reloc_section_ = BinarySection::Invalid;
+    return Result::Error;
+  }
   reloc_section_ = section_types_[section_index];
   return Result::Ok;
 }
