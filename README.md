@@ -33,6 +33,41 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 - [wat2wasm](https://webassembly.github.io/wabt/demo/wat2wasm/)
 - [wasm2wat](https://webassembly.github.io/wabt/demo/wasm2wat/)
 
+## Supported Proposals
+
+* Proposal: Name and link to the WebAssembly proposal repo
+* flag: Flag to pass to the tool to enable support for the feature
+* binary: Whether wabt can read/write the binary format
+* text: Whether wabt can read/write the text format
+* validate: Whether wabt can validate the syntax
+* interpret: Whether wabt can execute these operations in `wasm-interp` or `spectest-interp`
+
+| Proposal | flag | binary | text | validate | interpret |
+| - | - | - | - | - | - |
+| [exception handling][] | `--enable-exceptions` | ✓ | ✓ | ✓ | |
+| [mutable globals][] | `--enable-mutable-globals` | ✓ | ✓ | ✓ | ✓ |
+| [nontrapping float-to-int conversions][] | `--enable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ |
+| [sign extension][] | `--enable-sign-extension` | ✓ | ✓ | ✓ | ✓ |
+| [simd][] | `--enable-simd` | ✓ | ✓ | ✓ | ✓ |
+| [threads][] | `--enable-threads` | ✓ | ✓ | ✓ | |
+| [multi-value][] | `--enable-multi-value` | ✓ | ✓ | ✓ | ✓ |
+| [tail-call][] | `--enable-tail-call` | ✓ | ✓ | ✓ | ✓ |
+| [bulk memory][] | `--enable-bulk-memory` | ✓ | ✓ | ✓ | ✓ |
+| [reference types][] | `--enable-reference-types` | ✓ | ✓ | ✓ | |
+| [annotations][] | `--enable-annotations` | | ✓ | | |
+
+[exception handling]: https://github.com/WebAssembly/exception-handling
+[mutable globals]: https://github.com/WebAssembly/mutable-global
+[nontrapping float-to-int conversions]: https://github.com/WebAssembly/nontrapping-float-to-int-conversions
+[sign extension]: https://github.com/WebAssembly/sign-extension-ops
+[simd]: https://github.com/WebAssembly/simd
+[threads]: https://github.com/WebAssembly/threads
+[multi-value]: https://github.com/WebAssembly/multi-value
+[tail-call]: https://github.com/WebAssembly/tail-call
+[bulk memory]: https://github.com/WebAssembly/bulk-memory-operations
+[reference types]: https://github.com/WebAssembly/reference-types
+[annotations]: https://github.com/WebAssembly/annotations
+
 ## Cloning
 
 Clone as normal, but don't forget to get the submodules as well:
