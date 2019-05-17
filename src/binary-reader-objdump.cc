@@ -1589,7 +1589,6 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
 Result BinaryReaderObjdump::OnSectionSymbol(Index index,
                                             uint32_t flags,
                                             Index section_index) {
-  printf("%d\n", index);
   auto sym_name = GetSectionName(section_index);
   assert(!sym_name.empty());
   PrintDetails("   - %d: S <" PRIstringview "> section=%" PRIindex, index,
