@@ -450,6 +450,13 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnInitFunction(uint32_t priority, Index function_index) override {
     return Result::Ok;
   }
+  Result OnComdatCount(Index count) override { return Result::Ok; }
+  Result OnComdatBegin(string_view name, uint32_t flags, Index count) override {
+    return Result::Ok;
+  }
+  Result OnComdatEntry(ComdatType kind, Index index) override {
+    return Result::Ok;
+  }
   Result EndLinkingSection() override { return Result::Ok; }
 
   /* InitExpr - used by elem, data and global sections; these functions are

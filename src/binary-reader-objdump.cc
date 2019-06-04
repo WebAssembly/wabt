@@ -857,6 +857,10 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                        uint32_t flags) override;
   Result OnInitFunctionCount(Index count) override;
   Result OnInitFunction(uint32_t priority, Index function_index) override;
+  Result OnComdatCount(Index count) override;
+  Result OnComdatBegin(string_view name, uint32_t flags, Index count) override;
+  Result OnComdatEntry(ComdatType kind, Index index) override;
+  Result EndLinkingSection() override { return Result::Ok; }
 
   Result OnEventCount(Index count) override;
   Result OnEventType(Index index, Index sig_index) override;
@@ -1634,6 +1638,21 @@ Result BinaryReaderObjdump::OnInitFunctionCount(Index count) {
 Result BinaryReaderObjdump::OnInitFunction(uint32_t priority,
                                            Index function_index) {
   PrintDetails("   - %d: priority=%d\n", function_index, priority);
+  return Result::Ok;
+}
+Result BinaryReaderObjdump::OnComdatCount(Index count) {
+  PrintDetails("  - comdat groups functions [count=%d]\n", count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnComdatBegin(string_view name, uint32_t flags, Index count) {
+  PrintDetails("   - " PRIstringview ": [count=%d]\n",
+               WABT_PRINTF_STRING_VIEW_ARG(name), count);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnComdatEntry(ComdatType kind, Index index) {
+  PrintDetails("    - kind=%d index=%" PRIindex "\n", kind, index);
   return Result::Ok;
 }
 

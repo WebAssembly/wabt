@@ -574,6 +574,19 @@ Result BinaryReaderLogging::OnInitFunction(uint32_t priority,
   return reader_->OnInitFunction(priority, func_index);
 }
 
+Result BinaryReaderLogging::OnComdatBegin(string_view name,
+                                          uint32_t flags,
+                                          Index count) {
+  LOGF("OnComdatBegin(" PRIstringview ", flags: %d, count: %" PRIindex ")\n",
+       WABT_PRINTF_STRING_VIEW_ARG(name), flags, count);
+  return reader_->OnComdatBegin(name, flags, count);
+}
+
+Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
+  LOGF("OnComdatEntry(kind: %d, index: %" PRIindex ")\n", kind, index);
+  return reader_->OnComdatEntry(kind, index);
+}
+
 #define DEFINE_BEGIN(name)                        \
   Result BinaryReaderLogging::name(Offset size) { \
     LOGF(#name "(%" PRIzd ")\n", size);           \
@@ -771,6 +784,7 @@ DEFINE_BEGIN(BeginLinkingSection)
 DEFINE_INDEX(OnSymbolCount)
 DEFINE_INDEX(OnSegmentInfoCount)
 DEFINE_INDEX(OnInitFunctionCount)
+DEFINE_INDEX(OnComdatCount)
 DEFINE_END(EndLinkingSection)
 
 DEFINE_BEGIN(BeginEventSection);

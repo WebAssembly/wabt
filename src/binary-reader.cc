@@ -1748,6 +1748,27 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
           CALLBACK(OnInitFunction, priority, func);
         }
         break;
+      case LinkingEntryType::ComdatInfo:
+        CHECK_RESULT(ReadU32Leb128(&count, "count"));
+        CALLBACK(OnComdatCount, count);
+        while (count--) {
+          uint32_t flags;
+          uint32_t entry_count;
+          string_view name;
+          CHECK_RESULT(ReadStr(&name, "comdat name"));
+          CHECK_RESULT(ReadU32Leb128(&flags, "flags"));
+          CHECK_RESULT(ReadU32Leb128(&entry_count, "entry count"));
+          CALLBACK(OnComdatBegin, name, flags, entry_count);
+          while (entry_count--) {
+            uint32_t kind;
+            uint32_t index;
+            CHECK_RESULT(ReadU32Leb128(&kind, "kind"));
+            CHECK_RESULT(ReadU32Leb128(&index, "index"));
+            ComdatType comdat_type = static_cast<ComdatType>(kind);
+            CALLBACK(OnComdatEntry, comdat_type, index);
+          }
+        }
+        break;
       default:
         // Unknown subsection, skip it.
         state_.offset = subsection_end;
