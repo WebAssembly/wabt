@@ -318,6 +318,9 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
                        uint32_t flags) override;
   Result OnInitFunctionCount(Index count) override;
   Result OnInitFunction(uint32_t priority, Index function_index) override;
+  Result OnComdatCount(Index count) override;
+  Result OnComdatBegin(string_view name, uint32_t flags, Index count) override;
+  Result OnComdatEntry(ComdatType kind, Index index) override;
   Result EndLinkingSection() override;
 
   Result BeginEventSection(Offset size) override;

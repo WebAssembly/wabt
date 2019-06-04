@@ -383,6 +383,11 @@ class BinaryReaderDelegate {
                                uint32_t flags) = 0;
   virtual Result OnInitFunctionCount(Index count) = 0;
   virtual Result OnInitFunction(uint32_t priority, Index function_index) = 0;
+  virtual Result OnComdatCount(Index count) = 0;
+  virtual Result OnComdatBegin(string_view name,
+                               uint32_t flags,
+                               Index count) = 0;
+  virtual Result OnComdatEntry(ComdatType kind, Index index) = 0;
   virtual Result EndLinkingSection() = 0;
 
   /* Event section */

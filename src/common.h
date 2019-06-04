@@ -258,6 +258,11 @@ enum class SymbolType {
   Event = 4,
 };
 
+enum class ComdatType {
+  Data = 0x0,
+  Function = 0x1,
+};
+
 #define WABT_SYMBOL_FLAG_UNDEFINED 0x10
 #define WABT_SYMBOL_MASK_VISIBILITY 0x4
 #define WABT_SYMBOL_MASK_BINDING 0x3
