@@ -110,7 +110,7 @@ void BinaryWriterSpec::WriteEscapedString(string_view s) {
   json_stream_->WriteChar('"');
   for (size_t i = 0; i < s.length(); ++i) {
     uint8_t c = s[i];
-    if (c < 0x20 || c == '\\' || c == '"' || c > 0x7f) {
+    if (c < 0x20 || c == '\\' || c == '"') {
       json_stream_->Writef("\\u%04x", c);
     } else {
       json_stream_->WriteChar(c);
