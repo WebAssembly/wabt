@@ -106,7 +106,7 @@ class Stream {
   void WriteChar(char c,
                  const char* desc = nullptr,
                  PrintChars print_chars = PrintChars::No) {
-    WriteU8(c, desc, print_chars);
+    WriteU8(static_cast<unsigned char>(c), desc, print_chars);
   }
 
   // Dump memory as text, similar to the xxd format.

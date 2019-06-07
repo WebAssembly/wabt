@@ -95,7 +95,7 @@ def MangleTypes(types):
 
 def MangleName(s):
   result = 'Z_'
-  for c in s:
+  for c in s.encode('utf-8'):
     # NOTE(binji): Z is not allowed.
     if c in '_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY0123456789':
       result += c
