@@ -1,0 +1,19 @@
+;;; TOOL: run-gen-wasm-interp
+;;; ERROR: 1
+magic
+version
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[0]
+}
+section(DATA) {
+  count[1]
+  flags[0]
+  addr[end]
+  data[str("test")]
+}
+(;; STDERR ;;;
+error: type mismatch in data segment initializer expression, expected i32 but got void
+0000017: error: OnDataSegmentData callback failed
+;;; STDERR ;;)

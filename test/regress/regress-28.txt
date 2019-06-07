@@ -1,0 +1,20 @@
+;;; TOOL: run-gen-wasm-interp
+;;; ERROR: 1
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[1] type[0] }
+section(CODE) {
+  count[1]
+  func {
+    locals[0]
+    unreachable
+    end
+    i32.div_s
+    select
+  }
+}
+(;; STDERR ;;;
+error: Unexpected instruction after end of function
+000001a: error: OnOpcode callback failed
+;;; STDERR ;;)
