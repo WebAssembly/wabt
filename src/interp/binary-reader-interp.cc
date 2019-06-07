@@ -219,6 +219,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                 Index table_index,
                                 bool passive,
                                 Type elem_type) override;
+  wabt::Result BeginElemSegmentInitExpr(Index index) override;
   wabt::Result EndElemSegmentInitExpr(Index index) override;
   wabt::Result OnElemSegmentElemExprCount(Index index, Index count) override;
   wabt::Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
@@ -229,6 +230,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result BeginDataSegment(Index index,
                                 Index memory_index,
                                 bool passive) override;
+  wabt::Result BeginDataSegmentInitExpr(Index index) override;
   wabt::Result OnDataSegmentData(Index index,
                                  const void* data,
                                  Address size) override;
@@ -1049,6 +1051,11 @@ wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::BeginElemSegmentInitExpr(Index index) {
+  init_expr_value_.type = Type::Void;
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
   assert(segment_is_passive_ == false);
 
@@ -1121,6 +1128,11 @@ wabt::Result BinaryReaderInterp::BeginDataSegment(Index index,
                                                   Index memory_index,
                                                   bool passive) {
   segment_is_passive_ = passive;
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::BeginDataSegmentInitExpr(Index index) {
+  init_expr_value_.type = Type::Void;
   return wabt::Result::Ok;
 }
 

@@ -14,6 +14,6 @@ section(DATA) {
   data[str("test")]
 }
 (;; STDERR ;;;
-error: type mismatch in data segment initializer expression, expected i32 but got <type_index>
+error: type mismatch in data segment initializer expression, expected i32 but got void
 0000017: error: OnDataSegmentData callback failed
 ;;; STDERR ;;)
