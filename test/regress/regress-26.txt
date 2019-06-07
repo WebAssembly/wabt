@@ -1,0 +1,19 @@
+;;; TOOL: run-gen-wasm-interp
+;;; ERROR: 1
+magic
+version
+section(TABLE) {
+  count[1]
+  anyfunc
+  has_max[0]
+  initial[0]
+}
+section(ELEM) {
+  count[1]
+  flags[0]
+  addr[end]
+}
+(;; STDERR ;;;
+error: type mismatch in elem segment initializer expression, expected i32 but got <type_index>
+0000013: error: EndElemSegmentInitExpr callback failed
+;;; STDERR ;;)

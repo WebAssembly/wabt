@@ -142,6 +142,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnLocalDeclCount(Index count) override;
   wabt::Result OnLocalDecl(Index decl_index, Index count, Type type) override;
 
+  wabt::Result OnOpcode(Opcode Opcode) override;
   wabt::Result OnAtomicLoadExpr(Opcode opcode,
                                 uint32_t alignment_log2,
                                 Address offset) override;
@@ -302,6 +303,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result CheckAlign(uint32_t alignment_log2, Address natural_alignment);
   wabt::Result CheckAtomicAlign(uint32_t alignment_log2,
                                 Address natural_alignment);
+  wabt::Result CheckInFunction();
 
   wabt::Result AppendExport(Module* module,
                             ExternalKind kind,
@@ -1049,7 +1051,15 @@ wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
 
 wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
   assert(segment_is_passive_ == false);
-  assert(init_expr_value_.type == Type::I32);
+
+  if (init_expr_value_.type != Type::I32) {
+    PrintError(
+        "type mismatch in elem segment initializer expression, expected i32 "
+        "but got %s",
+        GetTypeName(init_expr_value_.type));
+    return wabt::Result::Error;
+  }
+
   table_offset_ = init_expr_value_.value.i32;
   return wabt::Result::Ok;
 }
@@ -1124,6 +1134,14 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
       memcpy(segment->data.data(), src_data, size);
     }
   } else {
+    if (init_expr_value_.type != Type::I32) {
+      PrintError(
+          "type mismatch in data segment initializer expression, expected i32 "
+          "but got %s",
+          GetTypeName(init_expr_value_.type));
+      return wabt::Result::Error;
+    }
+
     // An active segment still is present in the segment index space, but
     // cannot be used with `memory.init` (it's as if it has already been
     // dropped).
@@ -1131,7 +1149,6 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
 
     assert(module_->memory_index != kInvalidIndex);
     Memory* memory = env_->GetMemory(module_->memory_index);
-    assert(init_expr_value_.type == Type::I32);
     Address address = init_expr_value_.value.i32;
     data_segment_infos_.emplace_back(memory, address, src_data, size);
   }
@@ -1246,6 +1263,14 @@ wabt::Result BinaryReaderInterp::CheckAtomicAlign(uint32_t alignment_log2,
   if (alignment_log2 >= 32 || (1U << alignment_log2) != natural_alignment) {
     PrintError("alignment must be equal to natural alignment (%u)",
                natural_alignment);
+    return wabt::Result::Error;
+  }
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnOpcode(Opcode opcode) {
+  if (current_func_ == nullptr || label_stack_.size() == 0) {
+    PrintError("Unexpected instruction after end of function");
     return wabt::Result::Error;
   }
   return wabt::Result::Ok;
