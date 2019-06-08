@@ -40,132 +40,78 @@ out/test/spec/bulk-memory-operations/binary.wast:31: assert_malformed passed:
   0000004: error: bad magic value
 out/test/spec/bulk-memory-operations/binary.wast:34: assert_malformed passed:
   0000004: error: bad magic value
-out/test/spec/bulk-memory-operations/binary.wast:36: assert_malformed passed:
-  0000004: error: unable to read uint32_t: version
 out/test/spec/bulk-memory-operations/binary.wast:37: assert_malformed passed:
   0000004: error: unable to read uint32_t: version
 out/test/spec/bulk-memory-operations/binary.wast:38: assert_malformed passed:
   0000004: error: unable to read uint32_t: version
 out/test/spec/bulk-memory-operations/binary.wast:39: assert_malformed passed:
-  0000008: error: bad wasm file version: 0 (expected 0x1)
+  0000004: error: unable to read uint32_t: version
 out/test/spec/bulk-memory-operations/binary.wast:40: assert_malformed passed:
-  0000008: error: bad wasm file version: 0xd (expected 0x1)
+  0000008: error: bad wasm file version: 0 (expected 0x1)
 out/test/spec/bulk-memory-operations/binary.wast:41: assert_malformed passed:
-  0000008: error: bad wasm file version: 0xe (expected 0x1)
+  0000008: error: bad wasm file version: 0xd (expected 0x1)
 out/test/spec/bulk-memory-operations/binary.wast:42: assert_malformed passed:
-  0000008: error: bad wasm file version: 0x100 (expected 0x1)
+  0000008: error: bad wasm file version: 0xe (expected 0x1)
 out/test/spec/bulk-memory-operations/binary.wast:43: assert_malformed passed:
-  0000008: error: bad wasm file version: 0x10000 (expected 0x1)
+  0000008: error: bad wasm file version: 0x100 (expected 0x1)
 out/test/spec/bulk-memory-operations/binary.wast:44: assert_malformed passed:
+  0000008: error: bad wasm file version: 0x10000 (expected 0x1)
+out/test/spec/bulk-memory-operations/binary.wast:45: assert_malformed passed:
   0000008: error: bad wasm file version: 0x1000000 (expected 0x1)
-out/test/spec/bulk-memory-operations/binary.wast:139: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
-out/test/spec/bulk-memory-operations/binary.wast:147: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
-out/test/spec/bulk-memory-operations/binary.wast:166: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
-out/test/spec/bulk-memory-operations/binary.wast:185: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
-out/test/spec/bulk-memory-operations/binary.wast:204: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
-out/test/spec/bulk-memory-operations/binary.wast:225: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
-out/test/spec/bulk-memory-operations/binary.wast:235: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
-out/test/spec/bulk-memory-operations/binary.wast:246: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
-out/test/spec/bulk-memory-operations/binary.wast:256: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
-out/test/spec/bulk-memory-operations/binary.wast:268: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
-out/test/spec/bulk-memory-operations/binary.wast:276: assert_malformed passed:
-  000000c: error: unable to read u32 leb128: memory initial page count
-out/test/spec/bulk-memory-operations/binary.wast:284: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
-out/test/spec/bulk-memory-operations/binary.wast:303: assert_malformed passed:
-  0000022: error: unable to read u32 leb128: load offset
-out/test/spec/bulk-memory-operations/binary.wast:322: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
-out/test/spec/bulk-memory-operations/binary.wast:340: assert_malformed passed:
-  0000021: error: unable to read u32 leb128: load alignment
-out/test/spec/bulk-memory-operations/binary.wast:359: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
-out/test/spec/bulk-memory-operations/binary.wast:378: assert_malformed passed:
-  0000023: error: unable to read u32 leb128: store alignment
-out/test/spec/bulk-memory-operations/binary.wast:397: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
-out/test/spec/bulk-memory-operations/binary.wast:416: assert_malformed passed:
-  0000024: error: unable to read u32 leb128: store offset
-out/test/spec/bulk-memory-operations/binary.wast:438: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
-out/test/spec/bulk-memory-operations/binary.wast:448: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
-out/test/spec/bulk-memory-operations/binary.wast:458: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
-out/test/spec/bulk-memory-operations/binary.wast:468: assert_malformed passed:
-  000000e: error: unable to read i32 leb128: init_expr i32.const value
-out/test/spec/bulk-memory-operations/binary.wast:479: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
-out/test/spec/bulk-memory-operations/binary.wast:489: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
-out/test/spec/bulk-memory-operations/binary.wast:499: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
-out/test/spec/bulk-memory-operations/binary.wast:509: assert_malformed passed:
-  000000e: error: unable to read i64 leb128: init_expr i64.const value
-out/test/spec/bulk-memory-operations/binary.wast:521: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:50: assert_malformed passed:
   0000022: error: call_indirect reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:540: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:69: assert_malformed passed:
   0000022: error: call_indirect reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:559: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:88: assert_malformed passed:
   0000022: error: call_indirect reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:577: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:106: assert_malformed passed:
   0000022: error: call_indirect reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:595: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:124: assert_malformed passed:
   0000022: error: call_indirect reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:614: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:143: assert_malformed passed:
   0000020: error: memory.grow reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:634: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:163: assert_malformed passed:
   0000020: error: memory.grow reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:654: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:183: assert_malformed passed:
   0000020: error: memory.grow reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:673: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:202: assert_malformed passed:
   0000020: error: memory.grow reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:692: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:221: assert_malformed passed:
   0000020: error: memory.grow reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:712: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:241: assert_malformed passed:
   000001e: error: memory.size reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:731: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:260: assert_malformed passed:
   000001e: error: memory.size reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:750: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:279: assert_malformed passed:
   000001e: error: memory.size reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:768: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:297: assert_malformed passed:
   000001e: error: memory.size reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:786: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:315: assert_malformed passed:
   000001e: error: memory.size reserved value must be 0
-out/test/spec/bulk-memory-operations/binary.wast:805: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:334: assert_malformed passed:
   000001c: error: local count must be < 0x10000000
-out/test/spec/bulk-memory-operations/binary.wast:837: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:366: assert_malformed passed:
   0000013: error: function signature count != function body count
-out/test/spec/bulk-memory-operations/binary.wast:847: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:376: assert_malformed passed:
   000000b: error: function signature count != function body count
-out/test/spec/bulk-memory-operations/binary.wast:856: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:385: assert_malformed passed:
   0000016: error: function signature count != function body count
-out/test/spec/bulk-memory-operations/binary.wast:867: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:396: assert_malformed passed:
   0000015: error: function signature count != function body count
-out/test/spec/bulk-memory-operations/binary.wast:890: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:419: assert_malformed passed:
   000000e: error: data section without memory section
-out/test/spec/bulk-memory-operations/binary.wast:900: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:429: assert_malformed passed:
   000000e: error: data section without memory section
-out/test/spec/bulk-memory-operations/binary.wast:910: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:439: assert_malformed passed:
   error: invalid data_segment_index: 0 (max 0)
   0000026: error: OnMemoryInitExpr callback failed
-out/test/spec/bulk-memory-operations/binary.wast:932: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:461: assert_malformed passed:
   error: invalid data_segment_index: 0 (max 0)
   000001f: error: OnDataDropExpr callback failed
-out/test/spec/bulk-memory-operations/binary.wast:951: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:480: assert_malformed passed:
   0000024: error: expected ref.null or ref.func in passive element segment
   0000025: error: expected END opcode after element expression
-out/test/spec/bulk-memory-operations/binary.wast:977: assert_malformed passed:
+out/test/spec/bulk-memory-operations/binary.wast:506: assert_malformed passed:
   0000022: error: segment elem type must by funcref or anyref
-81/81 tests passed.
+54/54 tests passed.
 ;;; STDOUT ;;)
