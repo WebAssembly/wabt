@@ -278,8 +278,10 @@ Result FloatParser<T>::ParseHex(const char* s,
         if (seen_dot) {
           significand_exponent -= 4;
         }
-      } else if (!seen_dot) {
-        significand_exponent += 4;
+      } else {
+        if (!seen_dot) {
+          significand_exponent += 4;
+        }
       }
     } else {
       break;
