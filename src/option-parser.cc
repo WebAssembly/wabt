@@ -190,7 +190,8 @@ void OptionParser::Parse(int argc, char* argv[]) {
         const Option& best_option = options_[best_index];
         const char* option_argument = nullptr;
         if (best_option.has_argument) {
-          if (arg[best_length + 2] == '=') {  // +2 to skip "--"
+          if (arg[best_length + 1] != 0 &&    // This byte is 0 on a full match.
+              arg[best_length + 2] == '=') {  // +2 to skip "--".
             option_argument = &arg[best_length + 3];
           } else {
             if (i + 1 == argc || argv[i + 1][0] == '-') {
