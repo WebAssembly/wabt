@@ -96,6 +96,10 @@ void OptionParser::AddHelpOption() {
   });
 }
 
+void OptionParser::SetErrorCallback(const Callback& callback) {
+  on_error_ = callback;
+}
+
 // static
 int OptionParser::Match(const char* s,
                         const std::string& full,
@@ -186,8 +190,8 @@ void OptionParser::Parse(int argc, char* argv[]) {
         const Option& best_option = options_[best_index];
         const char* option_argument = nullptr;
         if (best_option.has_argument) {
-          if (arg[best_length] == '=') {
-            option_argument = &arg[best_length + 1];
+          if (arg[best_length + 2] == '=') {  // +2 to skip "--"
+            option_argument = &arg[best_length + 3];
           } else {
             if (i + 1 == argc || argv[i + 1][0] == '-') {
               Errorf("option '--%s' requires argument",
