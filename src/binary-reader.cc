@@ -2238,8 +2238,9 @@ Result BinaryReader::ReadDataCountSection(Offset section_size) {
 
 Result BinaryReader::ReadSections() {
   Result result = Result::Ok;
+  Index section_index = 0;
 
-  while (state_.offset < state_.size) {
+  for (; state_.offset < state_.size; ++section_index) {
     uint32_t section_code;
     Offset section_size;
     CHECK_RESULT(ReadU32Leb128(&section_code, "section code"));
@@ -2266,7 +2267,7 @@ Result BinaryReader::ReadSections() {
                  "%s section can not occur after Name section",
                  GetSectionName(section));
 
-    CALLBACK(BeginSection, section, section_size);
+    CALLBACK(BeginSection, section_index, section, section_size);
 
     bool stop_on_first_error = options_.stop_on_first_error;
     Result section_result = Result::Error;

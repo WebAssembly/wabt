@@ -41,7 +41,9 @@ class BinaryReaderObjdumpBase : public BinaryReaderNop {
   bool OnError(const Error&) override;
 
   Result BeginModule(uint32_t version) override;
-  Result BeginSection(BinarySection section_type, Offset size) override;
+  Result BeginSection(Index section_index,
+                      BinarySection section_type,
+                      Offset size) override;
 
   Result OnRelocCount(Index count, Index section_index) override;
 
@@ -81,7 +83,8 @@ BinaryReaderObjdumpBase::BinaryReaderObjdumpBase(const uint8_t* data,
   ZeroMemory(section_starts_);
 }
 
-Result BinaryReaderObjdumpBase::BeginSection(BinarySection section_code,
+Result BinaryReaderObjdumpBase::BeginSection(Index section_index,
+                                             BinarySection section_code,
                                              Offset size) {
   section_starts_[static_cast<size_t>(section_code)] = state->offset;
   section_types_.push_back(section_code);
@@ -189,8 +192,10 @@ class BinaryReaderObjdumpPrepass : public BinaryReaderObjdumpBase {
  public:
   using BinaryReaderObjdumpBase::BinaryReaderObjdumpBase;
 
-  Result BeginSection(BinarySection section_code, Offset size) override {
-    BinaryReaderObjdumpBase::BeginSection(section_code, size);
+  Result BeginSection(Index section_index,
+                      BinarySection section_code,
+                      Offset size) override {
+    BinaryReaderObjdumpBase::BeginSection(section_index, section_code, size);
     if (section_code != BinarySection::Custom) {
       objdump_state_->section_names.push_back(
           wabt::GetSectionName(section_code));
@@ -700,7 +705,9 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
                       ObjdumpState* state);
 
   Result EndModule() override;
-  Result BeginSection(BinarySection section_type, Offset size) override;
+  Result BeginSection(Index section_index,
+                      BinarySection section_type,
+                      Offset size) override;
   Result BeginCustomSection(Offset size, string_view section_name) override;
 
   Result OnTypeCount(Index count) override;
@@ -903,14 +910,19 @@ Result BinaryReaderObjdump::BeginCustomSection(Offset size,
   return Result::Ok;
 }
 
-Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
+Result BinaryReaderObjdump::BeginSection(Index section_index,
+                                         BinarySection section_code,
                                          Offset size) {
-  BinaryReaderObjdumpBase::BeginSection(section_code, size);
+  BinaryReaderObjdumpBase::BeginSection(section_index, section_code, size);
 
-  const char* name = wabt::GetSectionName(section_code);
+  // |section_name| and |match_name| are identical for known sections. For
+  // custom sections, |section_name| is "Custom", but |match_name| is the name
+  // of the custom section.
+  const char* section_name = wabt::GetSectionName(section_code);
+  std::string match_name = GetSectionName(section_index).to_string();
 
-  bool section_match =
-      !options_->section_name || !strcasecmp(options_->section_name, name);
+  bool section_match = !options_->section_name ||
+                       !strcasecmp(options_->section_name, match_name.c_str());
   if (section_match) {
     section_found_ = true;
   }
@@ -919,11 +931,11 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
     case ObjdumpMode::Headers:
       printf("%9s start=%#010" PRIzx " end=%#010" PRIzx " (size=%#010" PRIoffset
              ") ",
-             name, state->offset, state->offset + size, size);
+             section_name, state->offset, state->offset + size, size);
       break;
     case ObjdumpMode::Details:
       if (section_match) {
-        printf("%s", name);
+        printf("%s", section_name);
         // All known section types except the Start and DataCount sections have
         // a count in which case this line gets completed in OnCount().
         if (section_code == BinarySection::Start ||
@@ -938,7 +950,7 @@ Result BinaryReaderObjdump::BeginSection(BinarySection section_code,
       break;
     case ObjdumpMode::RawData:
       if (section_match) {
-        printf("\nContents of section %s:\n", name);
+        printf("\nContents of section %s:\n", section_name);
         out_stream_->WriteMemoryDump(data_ + state->offset, size, state->offset,
                                      PrintChars::Yes);
       }

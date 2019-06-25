@@ -71,7 +71,9 @@ class BinaryReaderDelegate {
   virtual Result BeginModule(uint32_t version) = 0;
   virtual Result EndModule() = 0;
 
-  virtual Result BeginSection(BinarySection section_type, Offset size) = 0;
+  virtual Result BeginSection(Index section_index,
+                              BinarySection section_type,
+                              Offset size) = 0;
 
   /* Custom section */
   virtual Result BeginCustomSection(Offset size, string_view section_name) = 0;
