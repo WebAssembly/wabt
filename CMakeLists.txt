@@ -406,6 +406,7 @@ if (NOT EMSCRIPTEN)
       src/test-interp.cc
       src/test-intrusive-list.cc
       src/test-literal.cc
+      src/test-option-parser.cc
       src/test-string-view.cc
       src/test-filenames.cc
       src/test-utf8.cc
