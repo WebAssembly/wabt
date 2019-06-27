@@ -29,7 +29,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result BeginModule(uint32_t version) override { return Result::Ok; }
   Result EndModule() override { return Result::Ok; }
 
-  Result BeginSection(BinarySection section_type, Offset size) override {
+  Result BeginSection(Index section_index,
+                      BinarySection section_type,
+                      Offset size) override {
     return Result::Ok;
   }
 

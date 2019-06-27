@@ -33,7 +33,9 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result BeginModule(uint32_t version) override;
   Result EndModule() override;
 
-  Result BeginSection(BinarySection section_type, Offset size) override;
+  Result BeginSection(Index section_index,
+                      BinarySection section_type,
+                      Offset size) override;
 
   Result BeginCustomSection(Offset size, string_view section_name) override;
   Result EndCustomSection() override;

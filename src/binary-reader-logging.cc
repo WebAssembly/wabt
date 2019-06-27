@@ -114,9 +114,10 @@ Result BinaryReaderLogging::BeginModule(uint32_t version) {
   return reader_->BeginModule(version);
 }
 
-Result BinaryReaderLogging::BeginSection(BinarySection section_type,
+Result BinaryReaderLogging::BeginSection(Index section_index,
+                                         BinarySection section_type,
                                          Offset size) {
-  return reader_->BeginSection(section_type, size);
+  return reader_->BeginSection(section_index, section_type, size);
 }
 
 Result BinaryReaderLogging::BeginCustomSection(Offset size,
