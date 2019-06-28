@@ -144,11 +144,27 @@ Module* Environment::FindModule(string_view name) {
 }
 
 Module* Environment::FindRegisteredModule(string_view name) {
-  auto iter = registered_module_bindings_.find(name.to_string());
-  if (iter == registered_module_bindings_.end()) {
-    return nullptr;
+  bool retry = false;
+  while (true) {
+    auto iter = registered_module_bindings_.find(name.to_string());
+    if (iter != registered_module_bindings_.end()) {
+      return modules_[iter->second.index].get();
+    }
+
+    if (retry) {
+      // If you return true from on_unknown_module, you must add the module
+      // using AppendHostModule().
+      assert(false);
+      break;
+    }
+
+    if (on_unknown_module && on_unknown_module(this, name)) {
+      retry = true;
+      continue;
+    }
+    break;
   }
-  return modules_[iter->second.index].get();
+  return nullptr;
 }
 
 Thread::Options::Options(uint32_t value_stack_size, uint32_t call_stack_size)

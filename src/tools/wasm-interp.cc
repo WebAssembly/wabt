@@ -46,6 +46,7 @@ static Thread::Options s_thread_options;
 static Stream* s_trace_stream;
 static bool s_run_all_exports;
 static bool s_host_print;
+static bool s_dummy_import_func;
 static Features s_features;
 
 static std::unique_ptr<FileStream> s_log_stream;
@@ -106,6 +107,11 @@ static void ParseOptions(int argc, char** argv) {
                    "Include an importable function named \"host.print\" for "
                    "printing to stdout",
                    []() { s_host_print = true; });
+  parser.AddOption(
+      "dummy-import-func",
+      "Provide a dummy implementation of all imported functions. The function "
+      "will log the call and return an appropriate zero value.",
+      []() { s_dummy_import_func = true; });
 
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) { s_infile = argument; });
@@ -169,7 +175,7 @@ static interp::Result PrintCallback(const HostFunc* func,
 
 static void InitEnvironment(Environment* env) {
   if (s_host_print) {
-    HostModule* host_module = env->AppendHostModule("host");
+    auto* host_module = env->AppendHostModule("host");
     host_module->on_unknown_func_export =
         [](Environment* env, HostModule* host_module, string_view name,
            Index sig_index) -> Index {
@@ -177,9 +183,21 @@ static void InitEnvironment(Environment* env) {
         return kInvalidIndex;
       }
 
-      std::pair<HostFunc*, Index> pair =
-          host_module->AppendFuncExport(name, sig_index, PrintCallback);
-      return pair.second;
+      return host_module->AppendFuncExport(name, sig_index, PrintCallback)
+          .second;
+    };
+  }
+
+  if (s_dummy_import_func) {
+    env->on_unknown_module = [](Environment* env, string_view name) {
+      auto* host_module = env->AppendHostModule(name);
+      host_module->on_unknown_func_export =
+          [](Environment* env, HostModule* host_module, string_view name,
+             Index sig_index) -> Index {
+        return host_module->AppendFuncExport(name, sig_index, PrintCallback)
+            .second;
+      };
+      return true;
     };
   }
 }
