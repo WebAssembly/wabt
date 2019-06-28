@@ -39,4 +39,5 @@ options:
   -t, --trace                                 Trace execution
       --run-all-exports                       Run all the exported functions, in order. Useful for testing
       --host-print                            Include an importable function named "host.print" for printing to stdout
+      --dummy-import-func                     Provide a dummy implementation of all imported functions. The function will log the call and return an appropriate zero value.
 ;;; STDOUT ;;)

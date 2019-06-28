@@ -537,6 +537,11 @@ class Environment {
   void Disassemble(Stream* stream, IstreamOffset from, IstreamOffset to);
   void DisassembleModule(Stream* stream, Module*);
 
+  // Called when a module name isn't found in registered_module_bindings_. If
+  // you want to provide a module with this name, call AppendHostModule() with
+  // this name and return true.
+  std::function<bool(Environment*, string_view name)> on_unknown_module;
+
  private:
   friend class Thread;
 

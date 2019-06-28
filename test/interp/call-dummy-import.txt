@@ -1,0 +1,20 @@
+;;; TOOL: run-interp
+;;; ARGS: --dummy-import-func
+(module
+  (import "foo" "bar" (func $bar (param i32 f32) (result i32)))
+  (import "baz" "quux" (func $quux (param f64) (result i64)))
+
+  (func (export "f1") (result i32)
+    i32.const 1
+    f32.const 2
+    call $bar)
+
+  (func (export "f2") (result i64)
+    f64.const 3
+    call $quux))
+(;; STDOUT ;;;
+called host foo.bar(i32:1, f32:2.000000) => i32:0
+f1() => i32:0
+called host baz.quux(f64:3.000000) => i64:0
+f2() => i64:0
+;;; STDOUT ;;)
