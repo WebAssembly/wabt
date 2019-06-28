@@ -490,8 +490,8 @@ void BinaryWriterSpec::WriteCommands() {
         WriteSeparator();
         WriteAction(*assert_exhaustion_command->action);
         WriteSeparator();
-        WriteKey("expected");
-        WriteActionResultType(*assert_exhaustion_command->action);
+        WriteKey("text");
+        WriteEscapedString(assert_exhaustion_command->text);
         break;
       }
     }
