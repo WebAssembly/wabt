@@ -738,6 +738,8 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT(",");
     CHECK_RESULT(ParseAction(&command->action));
     EXPECT(",");
+    PARSE_KEY_STRING_VALUE("text", &command->text);
+    EXPECT(",");
     CHECK_RESULT(ParseActionResult());
     *out_command = std::move(command);
   } else {
