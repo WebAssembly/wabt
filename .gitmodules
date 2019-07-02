@@ -1,9 +1,6 @@
 [submodule "third_party/testsuite"]
 	path = third_party/testsuite
 	url = https://github.com/WebAssembly/testsuite
-[submodule "third_party/gtest"]
-	path = third_party/gtest
-	url = https://github.com/google/googletest
 [submodule "third_party/ply"]
 	path = third_party/ply
 	url = https://github.com/dabeaz/ply

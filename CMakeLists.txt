@@ -373,30 +373,15 @@ if (NOT EMSCRIPTEN)
 
   find_package(Threads)
   if (BUILD_TESTS)
-    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/gtest/googletest)
-      message(FATAL_ERROR "Can't find third_party/gtest. Run git submodule update --init, or disable with CMake -DBUILD_TESTS=OFF.")
-    endif ()
-
-    include_directories(
-      third_party/gtest/googletest
-      third_party/gtest/googletest/include
-    )
-
-    # gtest
-    add_library(libgtest STATIC
-      third_party/gtest/googletest/src/gtest-all.cc
-    )
-
     # hexfloat-test
     set(HEXFLOAT_TEST_SRCS
       src/literal.cc
       src/test-hexfloat.cc
-      third_party/gtest/googletest/src/gtest_main.cc
     )
     wabt_executable(
       NAME hexfloat_test
       SOURCES ${HEXFLOAT_TEST_SRCS}
-      LIBS libgtest ${CMAKE_THREAD_LIBS_INIT}
+      LIBS gtest_main gtest ${CMAKE_THREAD_LIBS_INIT}
     )
 
     # wabt-unittests
@@ -411,12 +396,11 @@ if (NOT EMSCRIPTEN)
       src/test-filenames.cc
       src/test-utf8.cc
       src/test-wast-parser.cc
-      third_party/gtest/googletest/src/gtest_main.cc
     )
     wabt_executable(
       NAME wabt-unittests
       SOURCES ${UNITTESTS_SRCS}
-      LIBS libgtest ${CMAKE_THREAD_LIBS_INIT}
+      LIBS gtest_main gtest ${CMAKE_THREAD_LIBS_INIT}
     )
 
     if (NOT CMAKE_VERSION VERSION_LESS "3.2")
