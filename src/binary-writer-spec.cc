@@ -16,8 +16,10 @@
 
 #include "src/binary-writer-spec.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cinttypes>
+#include <sstream>
 
 #include "config.h"
 
@@ -204,12 +206,12 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("v128");
       WriteSeparator();
       WriteKey("value");
-      json_stream_->Writef("\"");
       v128 v = const_.v128_bits;
       uint64_t digits, remainder;
+      std::ostringstream reversed_result;
       do {
         remainder = v.v[0];
-        
+
         digits = remainder / 10;
         remainder = ((remainder - digits * 10) << 32) + v.v[1];
         v.v[0] = digits;
@@ -225,12 +227,14 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
         digits = remainder / 10;
         remainder = remainder - digits * 10;
         v.v[3] = digits;
-        
-        json_stream_->Writef("%" PRIu64 "", remainder);
+
+        reversed_result << remainder;
       } while (v.v[0] || v.v[1] || v.v[2] || v.v[3]);
-      json_stream_->Writef("\"");
+      reversed_result.flush();
+      std::string result(reversed_result.str());
+      std::reverse(result.begin(), result.end());
+      json_stream_->Writef("\"%s\"", result.c_str());
       break;
-      
     }
 
     default:
