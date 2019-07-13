@@ -24,6 +24,8 @@
 #include <limits>
 #include <type_traits>
 
+#include <cinttypes>
+
 namespace wabt {
 
 namespace {
@@ -93,7 +95,9 @@ class FloatParser {
                                const char* end,
                                const char* prefix);
   static Uint Make(bool sign, int exp, Uint sig);
-  static Uint ShiftAndRoundToNearest(Uint significand, int shift);
+  static Uint ShiftAndRoundToNearest(Uint significand,
+                                     int shift,
+                                     bool seen_trailing_non_zero);
 
   static Result ParseFloat(const char* s, const char* end, Uint* out_bits);
   static Result ParseNan(const char* s, const char* end, Uint* out_bits);
@@ -188,10 +192,11 @@ typename FloatParser<T>::Uint FloatParser<T>::Make(bool sign,
 template <typename T>
 typename FloatParser<T>::Uint FloatParser<T>::ShiftAndRoundToNearest(
     Uint significand,
-    int shift) {
+    int shift,
+    bool seen_trailing_non_zero) {
   assert(shift > 0);
   // Round ties to even.
-  if (significand & (Uint(1) << shift)) {
+  if ((significand & (Uint(1) << shift)) || seen_trailing_non_zero) {
     significand += Uint(1) << (shift - 1);
   }
   significand >>= shift;
@@ -220,6 +225,9 @@ Result FloatParser<T>::ParseNan(const char* s,
     s += 3;
 
     for (; s < end; ++s) {
+      if (*s == '_') {
+        continue;
+      }
       uint32_t digit;
       CHECK_RESULT(ParseHexdigit(*s, &digit));
       tag = tag * 16 + digit;
@@ -264,6 +272,7 @@ Result FloatParser<T>::ParseHex(const char* s,
   // 0x10000000.0p0 => significand = 1, significand_exponent = 28
   // 0x0.000001p0 => significand = 1, significand_exponent = -24
   bool seen_dot = false;
+  bool seen_trailing_non_zero = false;
   Uint significand = 0;
   int significand_exponent = 0;  // Exponent adjustment due to dot placement.
   for (; s < end; ++s) {
@@ -279,6 +288,9 @@ Result FloatParser<T>::ParseHex(const char* s,
           significand_exponent -= 4;
         }
       } else {
+        if (!seen_trailing_non_zero && digit != 0) {
+          seen_trailing_non_zero = true;
+        }
         if (!seen_dot) {
           significand_exponent += 4;
         }
@@ -336,18 +348,23 @@ Result FloatParser<T>::ParseHex(const char* s,
 
   if (exponent <= Traits::kMinExp) {
     // Maybe subnormal.
+
+    // Normalize significand.
     if (significand_bits > Traits::kSigBits) {
-      significand = ShiftAndRoundToNearest(significand,
-                                           significand_bits - Traits::kSigBits);
+      int shift = significand_bits - Traits::kSigBits;
+      seen_trailing_non_zero |= (significand & ((1 << (shift - 1)) - 1)) != 0;
+      significand >>= shift;
     } else if (significand_bits < Traits::kSigBits) {
       significand <<= (Traits::kSigBits - significand_bits);
     }
 
     int shift = Traits::kMinExp - exponent;
-    if (shift < Traits::kSigBits) {
+    if (shift <= Traits::kSigBits) {
       if (shift) {
+        seen_trailing_non_zero |= (significand & ((1 << (shift - 1)) - 1)) != 0;
         significand =
-            ShiftAndRoundToNearest(significand, shift) & Traits::kSigMask;
+            ShiftAndRoundToNearest(significand, shift, seen_trailing_non_zero) &
+            Traits::kSigMask;
       }
       exponent = Traits::kMinExp;
 
@@ -363,7 +380,8 @@ Result FloatParser<T>::ParseHex(const char* s,
     // Maybe Normal value.
     if (significand_bits > Traits::kSigPlusOneBits) {
       significand = ShiftAndRoundToNearest(
-          significand, significand_bits - Traits::kSigPlusOneBits);
+          significand, significand_bits - Traits::kSigPlusOneBits,
+          seen_trailing_non_zero);
       if (significand > Traits::kSigPlusOneMask) {
         exponent++;
       }
