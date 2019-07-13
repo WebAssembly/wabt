@@ -1488,7 +1488,6 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteOpenSpace("elem");
   WriteNameOrIndex(segment.name, elem_segment_index_, NextChar::Space);
   if (segment.passive) {
-    WritePutsSpace("passive");
     WriteType(segment.elem_type, NextChar::Space);
   } else {
     WriteInitExpr(segment.offset);
@@ -1525,9 +1524,7 @@ void WatWriter::WriteMemory(const Memory& memory) {
 void WatWriter::WriteDataSegment(const DataSegment& segment) {
   WriteOpenSpace("data");
   WriteNameOrIndex(segment.name, data_segment_index_, NextChar::Space);
-  if (segment.passive) {
-    WritePutsSpace("passive");
-  } else {
+  if (!segment.passive) {
     WriteInitExpr(segment.offset);
   }
   WriteQuotedData(segment.data.data(), segment.data.size());

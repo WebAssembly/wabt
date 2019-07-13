@@ -6,4 +6,4 @@
   (func
     data.drop 0)
 
-  (data passive "hi"))
+  (data "hi"))
