@@ -24,8 +24,6 @@
 #include <limits>
 #include <type_traits>
 
-#include <cinttypes>
-
 namespace wabt {
 
 namespace {
