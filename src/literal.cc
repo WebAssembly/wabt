@@ -346,11 +346,16 @@ Result FloatParser<T>::ParseHex(const char* s,
 
   if (exponent <= Traits::kMinExp) {
     // Maybe subnormal.
+    auto update_seen_trailing_non_zero = [&](int shift) {
+      assert(shift > 0);
+      auto mask = (Uint(1) << (shift - 1)) - 1;
+      seen_trailing_non_zero |= (significand & mask) != 0;
+    };
 
     // Normalize significand.
     if (significand_bits > Traits::kSigBits) {
       int shift = significand_bits - Traits::kSigBits;
-      seen_trailing_non_zero |= (significand & ((1 << (shift - 1)) - 1)) != 0;
+      update_seen_trailing_non_zero(shift);
       significand >>= shift;
     } else if (significand_bits < Traits::kSigBits) {
       significand <<= (Traits::kSigBits - significand_bits);
@@ -359,7 +364,7 @@ Result FloatParser<T>::ParseHex(const char* s,
     int shift = Traits::kMinExp - exponent;
     if (shift <= Traits::kSigBits) {
       if (shift) {
-        seen_trailing_non_zero |= (significand & ((1 << (shift - 1)) - 1)) != 0;
+        update_seen_trailing_non_zero(shift);
         significand =
             ShiftAndRoundToNearest(significand, shift, seen_trailing_non_zero) &
             Traits::kSigMask;
