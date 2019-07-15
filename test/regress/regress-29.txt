@@ -1,0 +1,18 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-tail-call
+(table funcref (elem $f))
+(func $f (result i32) i32.const 65)
+
+(func (export "g") (result i32)
+  i32.const 7  ;; extra i32 on stack
+  return_call $f
+)
+(func (export "h") (result i32)
+  i32.const 7  ;; extra i32 on stack
+  i32.const 0
+  return_call_indirect (result i32)
+)
+(;; STDOUT ;;;
+g() => i32:65
+h() => i32:65
+;;; STDOUT ;;)
