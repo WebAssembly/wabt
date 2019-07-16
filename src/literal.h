@@ -65,6 +65,7 @@ Result ParseInt64(const char* s,
                   uint64_t* out,
                   ParseIntType parse_type);
 Result ParseUint64(const char* s, const char* end, uint64_t* out);
+Result ParseUint128(const char* s, const char* end, v128* out);
 Result ParseFloat(LiteralType literal_type,
                   const char* s,
                   const char* end,

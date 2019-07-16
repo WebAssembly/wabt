@@ -622,6 +622,74 @@ Result ParseInt64(const char* s,
   return result;
 }
 
+static uint32_t add_with_carry(uint32_t x, uint32_t y, uint32_t* carry) {
+  // Increments *carry if the addition overflows, otherwise leaves carry alone.
+  if ((0xffffffff - x) < y) ++*carry;
+  return x + y;
+}
+
+static void mul_10(v128* v) {
+  // Multiply-by-10 decomposes into (x << 3) + (x << 1). We implement those
+  // operations with carrying from smaller quads of the v128 to the larger
+  // quads.
+
+  // 0xe0_00_00_00 is a mask for the top 3 bits, to carry over from x << 3.
+  // 0x80_00_00_00 does the same for x << 1.
+  uint32_t carry_into_v1 = ((v->v[0] & 0xe0000000) >> 29) +
+                           ((v->v[0] & 0x80000000) >> 31);
+  v->v[0] = add_with_carry(v->v[0] << 3, v->v[0] << 1, &carry_into_v1);
+  uint32_t carry_into_v2 = ((v->v[1] & 0xe0000000) >> 29) +
+                           ((v->v[1] & 0x80000000) >> 31);
+  v->v[1] = add_with_carry(v->v[1] << 3, v->v[1] << 1, &carry_into_v2);
+  v->v[1] = add_with_carry(v->v[1], carry_into_v1, &carry_into_v2);
+  uint32_t carry_into_v3 = ((v->v[2] & 0xe0000000) >> 29) +
+                           ((v->v[2] & 0x80000000) >> 31);
+  v->v[2] = add_with_carry(v->v[2] << 3, v->v[2] << 1, &carry_into_v3);
+  v->v[2] = add_with_carry(v->v[2], carry_into_v2, &carry_into_v3);
+  v->v[3] = v->v[3] * 10 + carry_into_v3;
+}
+
+Result ParseUint128(const char* s,
+                    const char* end,
+                    v128* out) {
+  if (s == end) {
+    return Result::Error;
+  }
+
+  out->v[0] = 0;
+  out->v[1] = 0;
+  out->v[2] = 0;
+  out->v[3] = 0;
+
+  while (true) {
+    uint32_t digit = (*s - '0');
+    if (digit > 9) {
+      return Result::Error;
+    }
+
+    uint32_t carry_into_v1 = 0;
+    uint32_t carry_into_v2 = 0;
+    uint32_t carry_into_v3 = 0;
+    uint32_t overflow = 0;
+    out->v[0] = add_with_carry(out->v[0], digit, &carry_into_v1);
+    out->v[1] = add_with_carry(out->v[1], carry_into_v1, &carry_into_v2);
+    out->v[2] = add_with_carry(out->v[2], carry_into_v2, &carry_into_v3);
+    out->v[3] = add_with_carry(out->v[3], carry_into_v3, &overflow);
+    if (overflow) {
+      return Result::Error;
+    }
+
+    ++s;
+
+    if (s == end) {
+      break;
+    }
+
+    mul_10(out);
+  }
+  return Result::Ok;
+}
+
 template <typename U>
 Result ParseInt(const char* s,
                 const char* end,
