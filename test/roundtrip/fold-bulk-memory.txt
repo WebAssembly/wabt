@@ -3,7 +3,7 @@
 
 (module
   (memory 1)
-  (data passive "a")
+  (data "a")
   (func
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
     data.drop 0
@@ -12,7 +12,7 @@
   )
 
   (table 1 anyfunc)
-  (elem passive funcref 0)
+  (elem funcref 0)
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0
     elem.drop 0
@@ -48,6 +48,6 @@
       (i32.const 0)))
   (table (;0;) 1 funcref)
   (memory (;0;) 1)
-  (elem (;0;) passive funcref (ref.func 0))
-  (data (;0;) passive "a"))
+  (elem (;0;) funcref (ref.func 0))
+  (data (;0;) "a"))
 ;;; STDOUT ;;)

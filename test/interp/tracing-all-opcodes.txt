@@ -10,8 +10,8 @@
   (memory 1 1 shared)
   (table anyfunc (elem $empty $empty))
   (global $g (mut i32) (i32.const 0))
-  (data passive)
-  (elem passive funcref)
+  (data "")
+  (elem funcref)
 
   (; 0x00 ;) (func (export "unreachable") unreachable)
   (; 0x01 ;) ;; nop       -- not generated in interpreter

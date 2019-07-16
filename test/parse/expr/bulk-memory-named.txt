@@ -3,15 +3,15 @@
 
 (module
   (memory 1)
-  (data $data passive "a")
+  (data $data "a")
   (func
     i32.const 0 i32.const 0 i32.const 0 memory.init $data
     data.drop $data
   )
 
   (table 1 anyfunc)
-  (elem $elem passive funcref (ref.func 0) (ref.null))
-  (elem $elem passive funcref 0)
+  (elem $elem funcref (ref.func 0) (ref.null))
+  (elem $elem funcref 0)
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init $elem
     elem.drop $elem

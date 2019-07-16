@@ -439,7 +439,6 @@ mut, TokenType::Mut
 nop, TokenType::Nop, Opcode::Nop
 offset, TokenType::Offset
 param, TokenType::Param
-passive, TokenType::Passive
 quote, TokenType::Quote
 ref.func, TokenType::RefFunc, Opcode::RefFunc
 ref.is_null, TokenType::RefIsNull, Opcode::RefIsNull
