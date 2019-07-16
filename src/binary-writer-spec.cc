@@ -206,27 +206,29 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("v128");
       WriteSeparator();
       WriteKey("value");
+
       v128 v = const_.v128_bits;
+
       uint64_t digits, remainder;
       std::ostringstream reversed_result;
       do {
-        remainder = v.v[0];
-
-        digits = remainder / 10;
-        remainder = ((remainder - digits * 10) << 32) + v.v[1];
-        v.v[0] = digits;
+        remainder = v.v[3];
 
         digits = remainder / 10;
         remainder = ((remainder - digits * 10) << 32) + v.v[2];
-        v.v[1] = digits;
+        v.v[3] = digits;
 
         digits = remainder / 10;
-        remainder = ((remainder - digits * 10) << 32) + v.v[3];
+        remainder = ((remainder - digits * 10) << 32) + v.v[1];
         v.v[2] = digits;
 
         digits = remainder / 10;
+        remainder = ((remainder - digits * 10) << 32) + v.v[0];
+        v.v[1] = digits;
+
+        digits = remainder / 10;
         remainder = remainder - digits * 10;
-        v.v[3] = digits;
+        v.v[0] = digits;
 
         reversed_result << remainder;
       } while (v.v[0] || v.v[1] || v.v[2] || v.v[3]);
