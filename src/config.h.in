@@ -292,7 +292,8 @@ typedef long ssize_t;
 #endif
 #endif
 
-#if COMPILER_IS_MSVC && defined(_M_X64)
+#if COMPILER_IS_MSVC
+#if _M_X64
 // MSVC on x64 generates uint64 -> float conversions but doesn't do
 // round-to-nearest-ties-to-even, which is required by WebAssembly.
 #include <emmintrin.h>
@@ -318,12 +319,54 @@ __inline float wabt_convert_uint64_to_float(unsigned __int64 x) {
   return _mm_cvtss_f32(result);
 }
 
+// These seem to work correctly.
+__inline double wabt_convert_int64_to_double(__int64 x) {
+  return static_cast<double>(x);
+}
+__inline float wabt_convert_int64_to_float(__int64 x) {
+  return static_cast<float>(x);
+}
+
+#elif _M_IX86
+__inline double wabt_convert_uint64_to_double(unsigned __int64 x) {
+  static const float c = 18446744073709551616.0f;
+  __asm fild x;
+  if (x & 0x8000000000000000ULL) {
+    __asm fadd c;
+  }
+}
+
+__inline float wabt_convert_uint64_to_float(unsigned __int64 x) {
+  static const float c = 18446744073709551616.0f;
+  __asm fild x;
+  if (x & 0x8000000000000000ULL) {
+    __asm fadd c;
+  }
+}
+
+__inline double wabt_convert_int64_to_double(__int64 x) {
+  __asm fild x;
+}
+
+__inline float wabt_convert_int64_to_float(__int64 x) {
+  __asm fild x;
+}
+#endif
+
 #else
 __inline double wabt_convert_uint64_to_double(uint64_t x) {
   return static_cast<double>(x);
 }
 
 __inline float wabt_convert_uint64_to_float(uint64_t x) {
+  return static_cast<float>(x);
+}
+
+__inline double wabt_convert_int64_to_double(int64_t x) {
+  return static_cast<double>(x);
+}
+
+__inline float wabt_convert_int64_to_float(int64_t x) {
   return static_cast<float>(x);
 }
 #endif
