@@ -1664,7 +1664,25 @@ Result BinaryReaderObjdump::OnComdatBegin(string_view name, uint32_t flags, Inde
 }
 
 Result BinaryReaderObjdump::OnComdatEntry(ComdatType kind, Index index) {
-  PrintDetails("    - kind=%d index=%" PRIindex "\n", kind, index);
+  switch (kind) {
+    case ComdatType::Data: {
+      PrintDetails("    - segment[%" PRIindex "]", index);
+      auto name = GetSegmentName(index);
+      if (!name.empty()) {
+        PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+      }
+      break;
+    }
+    case ComdatType::Function: {
+      PrintDetails("    - func[%" PRIindex "]", index);
+      auto name = GetFunctionName(index);
+      if (!name.empty()) {
+        PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+      }
+      break;
+    }
+  }
+  PrintDetails("\n");
   return Result::Ok;
 }
 

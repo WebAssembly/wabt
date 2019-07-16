@@ -111,10 +111,10 @@ Custom:
    - 3: F <func_sym> func=0 undefined binding=global vis=default
   - comdat groups functions [count=2]
    - comdat1: [count=1]
-    - kind=0 index=1
+    - segment[1] <data2>
    - comdat2: [count=2]
-    - kind=1 index=2
-    - kind=1 index=3
+    - func[2]
+    - func[3]
 
 Code Disassembly:
 
