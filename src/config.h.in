@@ -329,8 +329,8 @@ __inline float wabt_convert_int64_to_float(__int64 x) {
 
 #elif _M_IX86
 __inline double wabt_convert_uint64_to_double(unsigned __int64 x) {
-  static const float c = 18446744073709551616.0f;
-  float result;
+  static const double c = 18446744073709551616.0;
+  double result;
   __asm fild x;
   if (x & 0x8000000000000000ULL) {
     __asm fadd c;
@@ -351,7 +351,7 @@ __inline float wabt_convert_uint64_to_float(unsigned __int64 x) {
 }
 
 __inline double wabt_convert_int64_to_double(__int64 x) {
-  float result;
+  double result;
   __asm fild x;
   __asm fstp result;
   return result;
