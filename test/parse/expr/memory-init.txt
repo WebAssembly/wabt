@@ -9,4 +9,4 @@
     i32.const 0
     memory.init 0)
 
-  (data passive "hi"))
+  (data "hi"))

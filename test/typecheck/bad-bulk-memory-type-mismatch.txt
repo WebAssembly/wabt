@@ -4,9 +4,9 @@
 
 (module
   (memory 1)
-  (data passive "a")
+  (data "a")
   (table 1 anyfunc)
-  (elem passive funcref 0)
+  (elem funcref 0)
 
   (func
     ;; Mismatch first operand.

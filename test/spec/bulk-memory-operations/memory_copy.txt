@@ -208,5 +208,6 @@ test() =>
 test() =>
 test() =>
 test() =>
-4545/4545 tests passed.
+test() =>
+4548/4548 tests passed.
 ;;; STDOUT ;;)

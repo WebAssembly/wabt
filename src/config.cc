@@ -19,6 +19,10 @@
 #include <cstdarg>
 #include <cstdio>
 
+#if COMPILER_IS_MSVC && _M_X64
+#include <emmintrin.h>
+#endif
+
 /* c99-style vsnprintf for MSVC < 2015. See http://stackoverflow.com/a/8712996
  using _snprintf or vsnprintf will not-properly null-terminate, and will return
  -1 instead of the number of characters needed on overflow. */
@@ -43,7 +47,84 @@ int wabt_snprintf(char* str, size_t size, const char* format, ...) {
   return result;
 }
 #endif
-
-#elif COMPILER_IS_CLANG
-void wabt_config_cc_dummy(void) {}
 #endif
+
+double wabt_convert_uint64_to_double(uint64_t x) {
+#if COMPILER_IS_MSVC && _M_X64
+  // MSVC on x64 generates uint64 -> float conversions but doesn't do
+  // round-to-nearest-ties-to-even, which is required by WebAssembly.
+  __m128d result = _mm_setzero_pd();
+  if (x & 0x8000000000000000ULL) {
+    result = _mm_cvtsi64_sd(result, (x >> 1) | (x & 1));
+    result = _mm_add_sd(result, result);
+  } else {
+    result = _mm_cvtsi64_sd(result, x);
+  }
+  return _mm_cvtsd_f64(result);
+#elif COMPILER_IS_MSVC && _M_IX86
+  // MSVC on x86 converts from i64 -> double -> float, which causes incorrect
+  // rounding. Using the x87 float stack instead preserves the correct
+  // rounding.
+  static const double c = 18446744073709551616.0;
+  double result;
+  __asm fild x;
+  if (x & 0x8000000000000000ULL) {
+    __asm fadd c;
+  }
+  __asm fstp result;
+  return result;
+#else
+  return static_cast<double>(x);
+#endif
+}
+
+float wabt_convert_uint64_to_float(uint64_t x) {
+#if COMPILER_IS_MSVC && _M_X64
+  // MSVC on x64 generates uint64 -> float conversions but doesn't do
+  // round-to-nearest-ties-to-even, which is required by WebAssembly.
+  __m128 result = _mm_setzero_ps();
+  if (x & 0x8000000000000000ULL) {
+    result = _mm_cvtsi64_ss(result, (x >> 1) | (x & 1));
+    result = _mm_add_ss(result, result);
+  } else {
+    result = _mm_cvtsi64_ss(result, x);
+  }
+  return _mm_cvtss_f32(result);
+#elif COMPILER_IS_MSVC && _M_IX86
+  // MSVC on x86 converts from i64 -> double -> float, which causes incorrect
+  // rounding. Using the x87 float stack instead preserves the correct
+  // rounding.
+  static const float c = 18446744073709551616.0f;
+  float result;
+  __asm fild x;
+  if (x & 0x8000000000000000ULL) {
+    __asm fadd c;
+  }
+  __asm fstp result;
+  return result;
+#else
+  return static_cast<float>(x);
+#endif
+}
+
+double wabt_convert_int64_to_double(int64_t x) {
+#if COMPILER_IS_MSVC && _M_IX86
+  double result;
+  __asm fild x;
+  __asm fstp result;
+  return result;
+#else
+  return static_cast<double>(x);
+#endif
+}
+
+float wabt_convert_int64_to_float(int64_t x) {
+#if COMPILER_IS_MSVC && _M_IX86
+  float result;
+  __asm fild x;
+  __asm fstp result;
+  return result;
+#else
+  return static_cast<float>(x);
+#endif
+}

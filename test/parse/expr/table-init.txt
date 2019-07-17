@@ -12,4 +12,4 @@
   (func)
 
   (table 0 funcref)
-  (elem passive funcref 1))
+  (elem funcref 1))

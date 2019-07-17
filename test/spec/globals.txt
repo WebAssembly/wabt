@@ -3,7 +3,7 @@
 (;; STDOUT ;;;
 out/test/spec/globals.wast:243: assert_invalid passed:
   error: can't global.set on immutable global at index 0.
-  0000026: error: OnGlobalSetExpr callback failed
+  0000029: error: OnGlobalSetExpr callback failed
 out/test/spec/globals.wast:252: assert_invalid passed:
   0000013: error: expected END opcode after initializer expression
 out/test/spec/globals.wast:257: assert_invalid passed:
@@ -29,9 +29,9 @@ out/test/spec/globals.wast:297: assert_invalid passed:
   error: initializer expression can only reference an imported global
   000000f: error: OnInitExprGlobalGetExpr callback failed
 out/test/spec/globals.wast:305: assert_malformed passed:
-  0000019: error: unable to read string: import field name
+  0000026: error: global mutability must be 0 or 1
 out/test/spec/globals.wast:318: assert_malformed passed:
-  0000019: error: unable to read string: import field name
+  0000026: error: global mutability must be 0 or 1
 out/test/spec/globals.wast:335: assert_malformed passed:
   0000011: error: global mutability must be 0 or 1
 out/test/spec/globals.wast:347: assert_malformed passed:

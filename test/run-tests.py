@@ -37,7 +37,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT_DIR = os.path.dirname(TEST_DIR)
 OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
 DEFAULT_TIMEOUT = 10  # seconds
-SLOW_TIMEOUT_MULTIPLIER = 2
+SLOW_TIMEOUT_MULTIPLIER = 3
 
 # default configurations for tests
 TOOLS = {

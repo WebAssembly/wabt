@@ -2537,7 +2537,7 @@ Result Thread::Run(int num_instructions) {
         break;
 
       case Opcode::F32ConvertI64S:
-        CHECK_TRAP(Push<float>(Pop<int64_t>()));
+        CHECK_TRAP(Push<float>(wabt_convert_int64_to_float(Pop<int64_t>())));
         break;
 
       case Opcode::F32ConvertI64U:
@@ -2577,7 +2577,7 @@ Result Thread::Run(int num_instructions) {
         break;
 
       case Opcode::F64ConvertI64S:
-        CHECK_TRAP(Push<double>(Pop<int64_t>()));
+        CHECK_TRAP(Push<double>(wabt_convert_int64_to_double(Pop<int64_t>())));
         break;
 
       case Opcode::F64ConvertI64U:
