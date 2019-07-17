@@ -77,6 +77,7 @@ Result ParseDouble(LiteralType literal_type,
 
 void WriteFloatHex(char* buffer, size_t size, uint32_t bits);
 void WriteDoubleHex(char* buffer, size_t size, uint64_t bits);
+void WriteUint128(char* buffer, size_t size, v128 bits);
 
 }  // namespace wabt
 

@@ -16,10 +16,8 @@
 
 #include "src/binary-writer-spec.h"
 
-#include <algorithm>
 #include <cassert>
 #include <cinttypes>
-#include <sstream>
 
 #include "config.h"
 
@@ -28,6 +26,7 @@
 #include "src/cast.h"
 #include "src/filenames.h"
 #include "src/ir.h"
+#include "src/literal.h"
 #include "src/stream.h"
 #include "src/string-view.h"
 
@@ -206,36 +205,9 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteString("v128");
       WriteSeparator();
       WriteKey("value");
-
-      v128 v = const_.v128_bits;
-
-      uint64_t digits, remainder;
-      std::ostringstream reversed_result;
-      do {
-        remainder = v.v[3];
-
-        digits = remainder / 10;
-        remainder = ((remainder - digits * 10) << 32) + v.v[2];
-        v.v[3] = digits;
-
-        digits = remainder / 10;
-        remainder = ((remainder - digits * 10) << 32) + v.v[1];
-        v.v[2] = digits;
-
-        digits = remainder / 10;
-        remainder = ((remainder - digits * 10) << 32) + v.v[0];
-        v.v[1] = digits;
-
-        digits = remainder / 10;
-        remainder = remainder - digits * 10;
-        v.v[0] = digits;
-
-        reversed_result << remainder;
-      } while (v.v[0] || v.v[1] || v.v[2] || v.v[3]);
-      reversed_result.flush();
-      std::string result(reversed_result.str());
-      std::reverse(result.begin(), result.end());
-      json_stream_->Writef("\"%s\"", result.c_str());
+      char buffer[128];
+      WriteUint128(buffer, 128, const_.v128_bits);
+      json_stream_->Writef("\"%s\"", buffer);
       break;
     }
 

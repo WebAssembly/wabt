@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cassert>
 #include <cstdio>
 #include <thread>
 #include <vector>
@@ -86,6 +87,14 @@ void AssertInt64Equals(uint64_t expected,
   AssertIntEquals(expected, s, ParseInt64, parse_type);
 }
 
+void AssertUint128Equals(v128 expected,
+                         const char* s) {
+  const char* const end = s + strlen(s);
+  v128 actual;
+  ASSERT_EQ(Result::Ok, ParseUint128(s, end, &actual)) << s;
+  ASSERT_EQ(expected, actual);
+}
+
 void AssertInt8Fails(const char* s) {
   const char* const end = s + strlen(s);
   uint8_t actual;
@@ -139,6 +148,11 @@ void AssertUint64Equals(uint64_t expected, const char* s) {
 void AssertUint64Fails(const char* s) {
   uint64_t actual_bits;
   ASSERT_EQ(Result::Error, ParseUint64(s, s + strlen(s), &actual_bits)) << s;
+}
+
+void AssertUint128Fails(const char* s) {
+  v128 actual;
+  ASSERT_EQ(Result::Error, ParseUint128(s, s + strlen(s), &actual)) << s;
 }
 
 void AssertHexFloatEquals(uint32_t expected_bits, const char* s) {
@@ -411,6 +425,23 @@ TEST(ParseUint64, Overflow) {
   AssertUint64Fails("10000000000000000000000000000000000000000");
 }
 
+TEST(ParseUint128, Basic) {
+  AssertUint128Equals({0, 0, 0, 0}, "0");
+  AssertUint128Equals({1, 0, 0, 0}, "1");
+  AssertUint128Equals({0x100f0e0d, 0x0c0b0a09, 0x08070605, 0x04030201},
+                      "5332529520247008778714484145835150861");
+  AssertUint128Equals({0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff},
+                      "340282366920938463463374607431768211455");
+  AssertUint128Equals({0, 0, 1, 0}, "18446744073709551616");
+}
+
+TEST(ParseUint128, Invalid) {
+  AssertUint128Fails("");
+  AssertUint128Fails("-1");
+  AssertUint128Fails("340282366920938463463374607431768211456");
+  AssertUint128Fails("123a456");
+}
+
 TEST(ParseFloat, NonCanonical) {
   AssertHexFloatEquals(0x3f800000, "0x00000000000000000000001.0p0");
   AssertHexFloatEquals(0x3f800000, "0x1.00000000000000000000000p0");
@@ -465,4 +496,44 @@ TEST(ParseDouble, OutOfRange) {
   AssertHexDoubleFails("-0x1p1024");
   AssertHexDoubleFails("0x1.fffffffffffff8p1023");
   AssertHexDoubleFails("-0x1.fffffffffffff8p1023");
+}
+
+void AssertWriteUint128Equals(const v128& value, const std::string& expected) {
+  assert(expected.length() < 128);
+  char buffer[128];
+  WriteUint128(buffer, 128, value);
+  std::string actual(buffer, buffer + expected.length());
+  ASSERT_EQ(expected, actual);
+  ASSERT_EQ(buffer[expected.length()], '\0');
+}
+
+TEST(WriteUint128, Basic) {
+  AssertWriteUint128Equals({0, 0, 0, 0}, "0");
+  AssertWriteUint128Equals({1, 0, 0, 0}, "1");
+  AssertWriteUint128Equals({0x100f0e0d, 0x0c0b0a09, 0x08070605, 0x04030201},
+                           "5332529520247008778714484145835150861");
+  AssertWriteUint128Equals({0x00112233, 0x44556677, 0x8899aabb, 0xccddeeff},
+                           "272314856204801878456120017448021860915");
+  AssertWriteUint128Equals({0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff},
+                           "340282366920938463463374607431768211455");
+  AssertWriteUint128Equals({0, 0, 1, 0}, "18446744073709551616");
+}
+
+TEST(WriteUint128, BufferTooSmall) {
+  {
+    char buffer[20];
+    WriteUint128(buffer, 20,
+                 {0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff});
+    ASSERT_EQ(buffer[19], '\0');
+    std::string actual(buffer, buffer + 19);
+    ASSERT_EQ("3402823669209384634", actual);
+  }
+
+  {
+    char buffer[3];
+    WriteUint128(buffer, 3, {123, 0, 0, 0});
+    ASSERT_EQ(buffer[0], '1');
+    ASSERT_EQ(buffer[1], '2');
+    ASSERT_EQ(buffer[2], '\0');
+  }
 }
