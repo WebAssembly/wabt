@@ -25,6 +25,7 @@
 
 #include "src/binary-reader.h"
 #include "src/cast.h"
+#include "src/common.h"
 #include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/interp/binary-reader-interp.h"
@@ -444,6 +445,9 @@ wabt::Result JSONParser::ParseTypeObject(Type* out_type) {
   } else if (type_str == "f64") {
     *out_type = Type::F64;
     return wabt::Result::Ok;
+  } else if (type_str == "v128") {
+    *out_type = Type::V128;
+    return wabt::Result::Ok;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -505,6 +509,12 @@ wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
                             ParseIntType::UnsignedOnly));
     out_value->type = Type::F64;
     out_value->value.f64_bits = value_bits;
+    return wabt::Result::Ok;
+  } else if (type_str == "v128") {
+    v128 value_bits;
+    CHECK_RESULT(ParseUint128(value_start, value_end, &value_bits));
+    out_value->type = Type::V128;
+    out_value->value.v128_bits = value_bits;
     return wabt::Result::Ok;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
@@ -1209,6 +1219,8 @@ static bool TypedValuesAreEqual(const TypedValue& tv1, const TypedValue& tv2) {
       return tv1.value.i64 == tv2.value.i64;
     case Type::F64:
       return tv1.value.f64_bits == tv2.value.f64_bits;
+    case Type::V128:
+      return tv1.value.v128_bits == tv2.value.v128_bits;
     default:
       WABT_UNREACHABLE;
   }

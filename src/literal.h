@@ -65,6 +65,7 @@ Result ParseInt64(const char* s,
                   uint64_t* out,
                   ParseIntType parse_type);
 Result ParseUint64(const char* s, const char* end, uint64_t* out);
+Result ParseUint128(const char* s, const char* end, v128* out);
 Result ParseFloat(LiteralType literal_type,
                   const char* s,
                   const char* end,
@@ -76,6 +77,7 @@ Result ParseDouble(LiteralType literal_type,
 
 void WriteFloatHex(char* buffer, size_t size, uint32_t bits);
 void WriteDoubleHex(char* buffer, size_t size, uint64_t bits);
+void WriteUint128(char* buffer, size_t size, v128 bits);
 
 }  // namespace wabt
 

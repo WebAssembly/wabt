@@ -102,6 +102,14 @@
 
 struct v128 {
   uint32_t v[4];
+
+  bool operator==(const v128& other) const {
+    return v[0] == other.v[0] &&
+           v[1] == other.v[1] &&
+           v[2] == other.v[2] &&
+           v[3] == other.v[3];
+  }
+  bool operator!=(const v128& other) const { return !(*this == other); }
 };
 
 namespace wabt {

@@ -26,6 +26,7 @@
 #include "src/cast.h"
 #include "src/filenames.h"
 #include "src/ir.h"
+#include "src/literal.h"
 #include "src/stream.h"
 #include "src/string-view.h"
 
@@ -197,6 +198,16 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteSeparator();
       WriteKey("value");
       json_stream_->Writef("\"%" PRIu64 "\"", const_.f64_bits);
+      break;
+    }
+
+    case Type::V128: {
+      WriteString("v128");
+      WriteSeparator();
+      WriteKey("value");
+      char buffer[128];
+      WriteUint128(buffer, 128, const_.v128_bits);
+      json_stream_->Writef("\"%s\"", buffer);
       break;
     }
 
