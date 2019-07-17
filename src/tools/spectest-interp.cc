@@ -1220,10 +1220,7 @@ static bool TypedValuesAreEqual(const TypedValue& tv1, const TypedValue& tv2) {
     case Type::F64:
       return tv1.value.f64_bits == tv2.value.f64_bits;
     case Type::V128:
-      return tv1.value.v128_bits.v[0] == tv2.value.v128_bits.v[0] &&
-             tv1.value.v128_bits.v[1] == tv2.value.v128_bits.v[1] &&
-             tv1.value.v128_bits.v[2] == tv2.value.v128_bits.v[2] &&
-             tv1.value.v128_bits.v[3] == tv2.value.v128_bits.v[3];
+      return tv1.value.v128_bits == tv2.value.v128_bits;
     default:
       WABT_UNREACHABLE;
   }
