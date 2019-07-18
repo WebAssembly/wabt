@@ -18,6 +18,7 @@
 
 #include <cassert>
 #include <cerrno>
+#include <cinttypes>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -812,7 +813,7 @@ void WriteUint128(char* buffer, size_t size, v128 bits) {
     bits.v[0] = digits;
 
     char remainder_buffer[21];
-    snprintf(remainder_buffer, 21, "%llu", remainder);
+    snprintf(remainder_buffer, 21, "%" PRIu64, remainder);
     int remainder_buffer_len = strlen(remainder_buffer);
     assert(len + remainder_buffer_len < sizeof(reversed_buffer));
     memcpy(&reversed_buffer[len], remainder_buffer, remainder_buffer_len);
