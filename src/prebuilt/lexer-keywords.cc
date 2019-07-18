@@ -150,7 +150,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 {
   enum
     {
-      TOTAL_KEYWORDS = 498,
+      TOTAL_KEYWORDS = 500,
       MIN_WORD_LENGTH = 2,
       MAX_WORD_LENGTH = 28,
       MIN_HASH_VALUE = 23,
@@ -447,7 +447,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 471 "src/lexer-keywords.txt"
       {"v128.not", TokenType::Unary, Opcode::V128Not},
       {""}, {""}, {""}, {""}, {""},
-#line 515 "src/lexer-keywords.txt"
+#line 516 "src/lexer-keywords.txt"
       {"set_local", TokenType::LocalSet, Opcode::LocalSet},
       {""}, {""},
 #line 325 "src/lexer-keywords.txt"
@@ -456,7 +456,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"i32.atomic.store", TokenType::AtomicStore, Opcode::I32AtomicStore},
 #line 469 "src/lexer-keywords.txt"
       {"v128.const", TokenType::Const, Opcode::V128Const},
-#line 516 "src/lexer-keywords.txt"
+#line 517 "src/lexer-keywords.txt"
       {"tee_local", TokenType::LocalTee, Opcode::LocalTee},
       {""}, {""},
 #line 445 "src/lexer-keywords.txt"
@@ -547,13 +547,13 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""}, {""},
 #line 30 "src/lexer-keywords.txt"
       {"br_if", TokenType::BrIf, Opcode::BrIf},
-#line 506 "src/lexer-keywords.txt"
+#line 507 "src/lexer-keywords.txt"
       {"i64.trunc_s/f32", TokenType::Convert, Opcode::I64TruncF32S},
-#line 494 "src/lexer-keywords.txt"
+#line 495 "src/lexer-keywords.txt"
       {"i32.trunc_s/f32", TokenType::Convert, Opcode::I32TruncF32S},
-#line 510 "src/lexer-keywords.txt"
+#line 511 "src/lexer-keywords.txt"
       {"i64.trunc_u/f32", TokenType::Convert, Opcode::I64TruncF32U},
-#line 498 "src/lexer-keywords.txt"
+#line 499 "src/lexer-keywords.txt"
       {"i32.trunc_u/f32", TokenType::Convert, Opcode::I32TruncF32U},
       {""}, {""}, {""},
 #line 21 "src/lexer-keywords.txt"
@@ -618,16 +618,16 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""},
 #line 87 "src/lexer-keywords.txt"
       {"f32x4.lt", TokenType::Compare, Opcode::F32X4Lt},
-#line 507 "src/lexer-keywords.txt"
+#line 508 "src/lexer-keywords.txt"
       {"i64.trunc_s/f64", TokenType::Convert, Opcode::I64TruncF64S},
-#line 495 "src/lexer-keywords.txt"
+#line 496 "src/lexer-keywords.txt"
       {"i32.trunc_s/f64", TokenType::Convert, Opcode::I32TruncF64S},
-#line 511 "src/lexer-keywords.txt"
+#line 512 "src/lexer-keywords.txt"
       {"i64.trunc_u/f64", TokenType::Convert, Opcode::I64TruncF64U},
-#line 499 "src/lexer-keywords.txt"
+#line 500 "src/lexer-keywords.txt"
       {"i32.trunc_u/f64", TokenType::Convert, Opcode::I32TruncF64U},
       {""}, {""},
-#line 483 "src/lexer-keywords.txt"
+#line 484 "src/lexer-keywords.txt"
       {"f32.demote/f64", TokenType::Convert, Opcode::F32DemoteF64},
       {""},
 #line 316 "src/lexer-keywords.txt"
@@ -785,7 +785,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"f64.sqrt", TokenType::Unary, Opcode::F64Sqrt},
 #line 72 "src/lexer-keywords.txt"
       {"f32.sqrt", TokenType::Unary, Opcode::F32Sqrt},
-#line 492 "src/lexer-keywords.txt"
+#line 493 "src/lexer-keywords.txt"
       {"get_local", TokenType::LocalGet, Opcode::LocalGet},
       {""}, {""},
 #line 31 "src/lexer-keywords.txt"
@@ -804,10 +804,10 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 36 "src/lexer-keywords.txt"
       {"catch", TokenType::Catch, Opcode::Catch},
       {""},
-#line 503 "src/lexer-keywords.txt"
+#line 504 "src/lexer-keywords.txt"
       {"i64.extend_s/i32", TokenType::Convert, Opcode::I64ExtendI32S},
       {""},
-#line 504 "src/lexer-keywords.txt"
+#line 505 "src/lexer-keywords.txt"
       {"i64.extend_u/i32", TokenType::Convert, Opcode::I64ExtendI32U},
 #line 294 "src/lexer-keywords.txt"
       {"i64.atomic.rmw16.add_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16AddU},
@@ -834,13 +834,13 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 60 "src/lexer-keywords.txt"
       {"f32.ge", TokenType::Compare, Opcode::F32Ge},
       {""}, {""}, {""},
-#line 485 "src/lexer-keywords.txt"
+#line 486 "src/lexer-keywords.txt"
       {"f64.convert_s/i32", TokenType::Convert, Opcode::F64ConvertI32S},
-#line 479 "src/lexer-keywords.txt"
+#line 480 "src/lexer-keywords.txt"
       {"f32.convert_s/i32", TokenType::Convert, Opcode::F32ConvertI32S},
-#line 487 "src/lexer-keywords.txt"
+#line 488 "src/lexer-keywords.txt"
       {"f64.convert_u/i32", TokenType::Convert, Opcode::F64ConvertI32U},
-#line 481 "src/lexer-keywords.txt"
+#line 482 "src/lexer-keywords.txt"
       {"f32.convert_u/i32", TokenType::Convert, Opcode::F32ConvertI32U},
 #line 297 "src/lexer-keywords.txt"
       {"i64.atomic.rmw16.or_u", TokenType::AtomicRmw, Opcode::I64AtomicRmw16OrU},
@@ -990,7 +990,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 182 "src/lexer-keywords.txt"
       {"i16x8.sub", TokenType::Binary, Opcode::I16X8Sub},
       {""},
-#line 478 "src/lexer-keywords.txt"
+#line 479 "src/lexer-keywords.txt"
       {"anyfunc", Type::Funcref},
       {""}, {""}, {""},
 #line 422 "src/lexer-keywords.txt"
@@ -1032,7 +1032,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 222 "src/lexer-keywords.txt"
       {"i32.extend8_s", TokenType::Unary, Opcode::I32Extend8S},
       {""}, {""},
-#line 514 "src/lexer-keywords.txt"
+#line 515 "src/lexer-keywords.txt"
       {"set_global", TokenType::GlobalSet, Opcode::GlobalSet},
       {""}, {""},
 #line 387 "src/lexer-keywords.txt"
@@ -1058,22 +1058,22 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""},
 #line 386 "src/lexer-keywords.txt"
       {"i64x2.shl", TokenType::Binary, Opcode::I64X2Shl},
-#line 508 "src/lexer-keywords.txt"
+#line 509 "src/lexer-keywords.txt"
       {"i64.trunc_s:sat/f32", TokenType::Convert, Opcode::I64TruncSatF32S},
-#line 496 "src/lexer-keywords.txt"
+#line 497 "src/lexer-keywords.txt"
       {"i32.trunc_s:sat/f32", TokenType::Convert, Opcode::I32TruncSatF32S},
-#line 512 "src/lexer-keywords.txt"
+#line 513 "src/lexer-keywords.txt"
       {"i64.trunc_u:sat/f32", TokenType::Convert, Opcode::I64TruncSatF32U},
-#line 500 "src/lexer-keywords.txt"
+#line 501 "src/lexer-keywords.txt"
       {"i32.trunc_u:sat/f32", TokenType::Convert, Opcode::I32TruncSatF32U},
       {""}, {""},
-#line 486 "src/lexer-keywords.txt"
+#line 487 "src/lexer-keywords.txt"
       {"f64.convert_s/i64", TokenType::Convert, Opcode::F64ConvertI64S},
-#line 480 "src/lexer-keywords.txt"
+#line 481 "src/lexer-keywords.txt"
       {"f32.convert_s/i64", TokenType::Convert, Opcode::F32ConvertI64S},
-#line 488 "src/lexer-keywords.txt"
+#line 489 "src/lexer-keywords.txt"
       {"f64.convert_u/i64", TokenType::Convert, Opcode::F64ConvertI64U},
-#line 482 "src/lexer-keywords.txt"
+#line 483 "src/lexer-keywords.txt"
       {"f32.convert_u/i64", TokenType::Convert, Opcode::F32ConvertI64U},
       {""},
 #line 94 "src/lexer-keywords.txt"
@@ -1089,7 +1089,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""},
 #line 384 "src/lexer-keywords.txt"
       {"i64x2.neg", TokenType::Unary, Opcode::I64X2Neg},
-#line 484 "src/lexer-keywords.txt"
+#line 485 "src/lexer-keywords.txt"
       {"f32.reinterpret/i32", TokenType::Convert, Opcode::F32ReinterpretI32},
       {""},
 #line 134 "src/lexer-keywords.txt"
@@ -1109,13 +1109,13 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 95 "src/lexer-keywords.txt"
       {"f32x4.sqrt", TokenType::Unary, Opcode::F32X4Sqrt},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 509 "src/lexer-keywords.txt"
+#line 510 "src/lexer-keywords.txt"
       {"i64.trunc_s:sat/f64", TokenType::Convert, Opcode::I64TruncSatF64S},
-#line 497 "src/lexer-keywords.txt"
+#line 498 "src/lexer-keywords.txt"
       {"i32.trunc_s:sat/f64", TokenType::Convert, Opcode::I32TruncSatF64S},
-#line 513 "src/lexer-keywords.txt"
+#line 514 "src/lexer-keywords.txt"
       {"i64.trunc_u:sat/f64", TokenType::Convert, Opcode::I64TruncSatF64U},
-#line 501 "src/lexer-keywords.txt"
+#line 502 "src/lexer-keywords.txt"
       {"i32.trunc_u:sat/f64", TokenType::Convert, Opcode::I32TruncSatF64U},
 #line 395 "src/lexer-keywords.txt"
       {"i8x16.add_saturate_s", TokenType::Binary, Opcode::I8X16AddSaturateS},
@@ -1128,11 +1128,11 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 393 "src/lexer-keywords.txt"
       {"i64x2.trunc_sat_f64x2_u", TokenType::Unary, Opcode::I64X2TruncSatF64X2U},
       {""},
-#line 489 "src/lexer-keywords.txt"
+#line 490 "src/lexer-keywords.txt"
       {"f64.promote/f32", TokenType::Convert, Opcode::F64PromoteF32},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""},
-#line 490 "src/lexer-keywords.txt"
+#line 491 "src/lexer-keywords.txt"
       {"f64.reinterpret/i64", TokenType::Convert, Opcode::F64ReinterpretI64},
       {""}, {""}, {""},
 #line 115 "src/lexer-keywords.txt"
@@ -1277,7 +1277,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 455 "src/lexer-keywords.txt"
       {"table.copy", TokenType::TableCopy, Opcode::TableCopy},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 491 "src/lexer-keywords.txt"
+#line 492 "src/lexer-keywords.txt"
       {"get_global", TokenType::GlobalGet, Opcode::GlobalGet},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""},
@@ -1295,7 +1295,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 436 "src/lexer-keywords.txt"
       {"memory", TokenType::Memory},
       {""}, {""}, {""},
-#line 493 "src/lexer-keywords.txt"
+#line 494 "src/lexer-keywords.txt"
       {"i32.reinterpret/f32", TokenType::Convert, Opcode::I32ReinterpretF32},
 #line 321 "src/lexer-keywords.txt"
       {"i64.atomic.rmw.xor", TokenType::AtomicRmw, Opcode::I64AtomicRmwXor},
@@ -1321,7 +1321,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 179 "src/lexer-keywords.txt"
       {"i16x8.splat", TokenType::Unary, Opcode::I16X8Splat},
       {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 505 "src/lexer-keywords.txt"
+#line 506 "src/lexer-keywords.txt"
       {"i64.reinterpret/f64", TokenType::Convert, Opcode::I64ReinterpretF64},
       {""}, {""}, {""}, {""},
 #line 88 "src/lexer-keywords.txt"
@@ -1330,7 +1330,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 415 "src/lexer-keywords.txt"
       {"i8x16.shl", TokenType::Binary, Opcode::I8X16Shl},
       {""},
-#line 502 "src/lexer-keywords.txt"
+#line 503 "src/lexer-keywords.txt"
       {"i32.wrap/i64", TokenType::Convert, Opcode::I32WrapI64},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
       {""}, {""}, {""},
@@ -1365,12 +1365,15 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
 #line 131 "src/lexer-keywords.txt"
       {"f64x2.convert_i64x2_u", TokenType::Unary, Opcode::F64X2ConvertI64X2U},
       {""}, {""}, {""}, {""}, {""}, {""}, {""},
-#line 476 "src/lexer-keywords.txt"
+#line 518 "src/lexer-keywords.txt"
       {"v8x16.shuffle", TokenType::SimdShuffleOp, Opcode::V8X16Shuffle},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 414 "src/lexer-keywords.txt"
       {"i8x16.replace_lane", TokenType::SimdLaneOp, Opcode::I8X16ReplaceLane},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""},
+#line 476 "src/lexer-keywords.txt"
+      {"v8x16.shuffle1", TokenType::SimdShuffle1Op, Opcode::V8X16Shuffle1},
+      {""}, {""}, {""},
 #line 399 "src/lexer-keywords.txt"
       {"i8x16.any_true", TokenType::Unary, Opcode::I8X16AnyTrue},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
@@ -1384,7 +1387,10 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 176 "src/lexer-keywords.txt"
       {"i16x8.shl", TokenType::Binary, Opcode::I16X8Shl},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""}, {""},
+#line 477 "src/lexer-keywords.txt"
+      {"v8x16.shuffle2_imm", TokenType::SimdShuffle2ImmOp, Opcode::V8X16Shuffle2Imm},
+      {""}, {""}, {""}, {""}, {""},
 #line 37 "src/lexer-keywords.txt"
       {"current_memory", TokenType::MemorySize, Opcode::MemorySize},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},

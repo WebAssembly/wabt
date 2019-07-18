@@ -2854,7 +2854,59 @@ Result Thread::Run(int num_instructions) {
 
       case Opcode::V8X16Shuffle: {
         const int32_t lanes = 16;
-        // Define SIMD data array for Simd add by Lanes.
+        // Define SIMD data array for SIMD add by lanes.
+        int8_t simd_data_ret[lanes];
+        int8_t simd_data_0[lanes];
+        int8_t simd_data_1[lanes];
+        int8_t simd_shuffle[lanes];
+
+        v128 v2 = PopRep<v128>();
+        v128 v1 = PopRep<v128>();
+        v128 shuffle_imm = ReadV128(&pc);
+
+        // Convert input SIMD data to array.
+        memcpy(simd_data_0, &v1, sizeof(v128));
+        memcpy(simd_data_1, &v2, sizeof(v128));
+        memcpy(simd_shuffle, &shuffle_imm, sizeof(v128));
+
+        // Construct the SIMD value by lane data and lane nums.
+        for (int32_t i = 0; i < lanes; i++) {
+          int8_t lane_idx = simd_shuffle[i];
+          simd_data_ret[i] = (lane_idx < lanes) ? simd_data_0[lane_idx]
+                                                : simd_data_1[lane_idx - lanes];
+        }
+
+        CHECK_TRAP(PushRep<v128>(Bitcast<v128>(simd_data_ret)));
+        break;
+      }
+
+      case Opcode::V8X16Shuffle1: {
+        const int32_t lanes = 16;
+        // Define SIMD data array for SIMD add by lanes.
+        int8_t simd_data_ret[lanes];
+        int8_t simd_data[lanes];
+        int8_t simd_shuffle[lanes];
+
+        v128 v2 = PopRep<v128>();
+        v128 v1 = PopRep<v128>();
+
+        // Convert input SIMD data to array.
+        memcpy(simd_data, &v1, sizeof(v128));
+        memcpy(simd_shuffle, &v2, sizeof(v128));
+
+        // Construct the SIMD value by lane data and lane nums.
+        for (int32_t i = 0; i < lanes; i++) {
+          uint8_t lane_idx = simd_shuffle[i];
+          simd_data_ret[i] = lane_idx < lanes ? simd_data[lane_idx] : 0;
+        }
+
+        CHECK_TRAP(PushRep<v128>(Bitcast<v128>(simd_data_ret)));
+        break;
+      }
+
+    case Opcode::V8X16Shuffle2Imm: {
+        const int32_t lanes = 16;
+        // Define SIMD data array for SIMD add by lanes.
         int8_t simd_data_ret[lanes];
         int8_t simd_data_0[lanes];
         int8_t simd_data_1[lanes];
@@ -2869,7 +2921,7 @@ Result Thread::Run(int num_instructions) {
         memcpy(simd_data_1, &v2, sizeof(v128));
         memcpy(simd_shuffle, &shuffle_imm, sizeof(v128));
 
-        // Constuct the Simd value by Lane data and Lane nums.
+        // Constuct the SIMD value by lane data and lane nums.
         for (int32_t i = 0; i < lanes; i++) {
           int8_t lane_idx = simd_shuffle[i];
           simd_data_ret[i] = (lane_idx < lanes) ? simd_data_0[lane_idx]

@@ -586,6 +586,26 @@ void Thread::Trace(Stream* stream) {
           ReadU32At(pc + 4), ReadU32At(pc + 8), ReadU32At(pc + 12));
       break;
 
+    case Opcode::V8X16Shuffle1:
+      stream->Writef(
+          "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x\n",
+          opcode.GetName(), Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
+          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
+          Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
+          Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
+      break;
+
+    case Opcode::V8X16Shuffle2Imm:
+      stream->Writef(
+          "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with lane imm: "
+          "$0x%08x %08x %08x %08x\n",
+          opcode.GetName(), Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
+          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
+          Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
+          Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3], ReadU32At(pc),
+          ReadU32At(pc + 4), ReadU32At(pc + 8), ReadU32At(pc + 12));
+      break;
+
     case Opcode::I8X16Add:
     case Opcode::I16X8Add:
     case Opcode::I32X4Add:

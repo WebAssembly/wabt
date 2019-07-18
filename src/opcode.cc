@@ -300,6 +300,8 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I32X4TruncSatF32X4U:
     case Opcode::I64X2TruncSatF64X2S:
     case Opcode::I64X2TruncSatF64X2U:
+    case Opcode::V8X16Shuffle1:
+    case Opcode::V8X16Shuffle2Imm:
       return features.simd_enabled();
 
     case Opcode::MemoryInit:

@@ -473,7 +473,8 @@ v128.or, TokenType::Binary, Opcode::V128Or
 v128.store, TokenType::Store, Opcode::V128Store
 v128, Type::V128
 v128.xor, TokenType::Binary, Opcode::V128Xor
-v8x16.shuffle, TokenType::SimdShuffleOp, Opcode::V8X16Shuffle
+v8x16.shuffle1, TokenType::SimdShuffle1Op, Opcode::V8X16Shuffle1
+v8x16.shuffle2_imm, TokenType::SimdShuffle2ImmOp, Opcode::V8X16Shuffle2Imm
 # Deprecated names.
 anyfunc, Type::Funcref
 f32.convert_s/i32, TokenType::Convert, Opcode::F32ConvertI32S
@@ -514,3 +515,4 @@ i64.trunc_u:sat/f64, TokenType::Convert, Opcode::I64TruncSatF64U
 set_global, TokenType::GlobalSet, Opcode::GlobalSet
 set_local, TokenType::LocalSet, Opcode::LocalSet
 tee_local, TokenType::LocalTee, Opcode::LocalTee
+v8x16.shuffle, TokenType::SimdShuffleOp, Opcode::V8X16Shuffle
