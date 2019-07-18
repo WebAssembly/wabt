@@ -519,23 +519,17 @@ void Environment::Disassemble(Stream* stream,
       }
 
       case Opcode::V8X16Shuffle:
+      case Opcode::V8X16ShuffleImm:
         stream->Writef(
             "%s %%[-2], %%[-1] : (Lane imm: $0x%08x 0x%08x 0x%08x 0x%08x )\n",
             opcode.GetName(), ReadU32(&pc), ReadU32(&pc), ReadU32(&pc),
             ReadU32(&pc));
         break;
 
-      case Opcode::V8X16Shuffle1:
+      case Opcode::V8X16Swizzle:
         stream->Writef(
             "%s %%[-2], %%[-1]\n",
             opcode.GetName());
-        break;
-
-      case Opcode::V8X16Shuffle2Imm:
-        stream->Writef(
-            "%s %%[-2], %%[-1] : (Lane imm: $0x%08x 0x%08x 0x%08x 0x%08x )\n",
-            opcode.GetName(), ReadU32(&pc), ReadU32(&pc), ReadU32(&pc),
-            ReadU32(&pc));
         break;
 
     case Opcode::MemoryGrow: {

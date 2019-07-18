@@ -1031,7 +1031,9 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {"i64.extend8_s", TokenType::Unary, Opcode::I64Extend8S},
 #line 222 "src/lexer-keywords.txt"
       {"i32.extend8_s", TokenType::Unary, Opcode::I32Extend8S},
-      {""}, {""},
+      {""},
+#line 476 "src/lexer-keywords.txt"
+      {"v8x16.swizzle", TokenType::SimdSwizzleOp, Opcode::V8X16Swizzle},
 #line 515 "src/lexer-keywords.txt"
       {"set_global", TokenType::GlobalSet, Opcode::GlobalSet},
       {""}, {""},
@@ -1370,10 +1372,7 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 414 "src/lexer-keywords.txt"
       {"i8x16.replace_lane", TokenType::SimdLaneOp, Opcode::I8X16ReplaceLane},
-      {""}, {""}, {""},
-#line 476 "src/lexer-keywords.txt"
-      {"v8x16.shuffle1", TokenType::SimdShuffle1Op, Opcode::V8X16Shuffle1},
-      {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 399 "src/lexer-keywords.txt"
       {"i8x16.any_true", TokenType::Unary, Opcode::I8X16AnyTrue},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
@@ -1383,14 +1382,14 @@ Perfect_Hash::InWordSet (const char *str, size_t len)
       {""}, {""}, {""},
 #line 178 "src/lexer-keywords.txt"
       {"i16x8.shr_u", TokenType::Binary, Opcode::I16X8ShrU},
+      {""}, {""}, {""}, {""}, {""}, {""},
+#line 477 "src/lexer-keywords.txt"
+      {"v8x16.shuffle_imm", TokenType::SimdShuffleImmOp, Opcode::V8X16ShuffleImm},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
+      {""},
 #line 176 "src/lexer-keywords.txt"
       {"i16x8.shl", TokenType::Binary, Opcode::I16X8Shl},
-      {""}, {""},
-#line 477 "src/lexer-keywords.txt"
-      {"v8x16.shuffle2_imm", TokenType::SimdShuffle2ImmOp, Opcode::V8X16Shuffle2Imm},
-      {""}, {""}, {""}, {""}, {""},
+      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
 #line 37 "src/lexer-keywords.txt"
       {"current_memory", TokenType::MemorySize, Opcode::MemorySize},
       {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},

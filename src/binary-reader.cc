@@ -1136,12 +1136,12 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::V8X16Shuffle1: {
+      case Opcode::V8X16Swizzle: {
         CALLBACK(OnBinaryExpr, opcode);
         break;
       }
 
-      case Opcode::V8X16Shuffle2Imm: {
+      case Opcode::V8X16ShuffleImm: {
         v128 value;
         CHECK_RESULT(ReadV128(&value, "Lane idx [16]"));
         CALLBACK(OnSimdShuffleOpExpr, opcode, value);

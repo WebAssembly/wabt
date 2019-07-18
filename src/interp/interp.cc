@@ -2880,23 +2880,23 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
-      case Opcode::V8X16Shuffle1: {
+      case Opcode::V8X16Swizzle: {
         const int32_t lanes = 16;
         // Define SIMD data array for SIMD add by lanes.
         int8_t simd_data_ret[lanes];
         int8_t simd_data[lanes];
-        int8_t simd_shuffle[lanes];
+        int8_t simd_swizzle[lanes];
 
         v128 v2 = PopRep<v128>();
         v128 v1 = PopRep<v128>();
 
         // Convert input SIMD data to array.
         memcpy(simd_data, &v1, sizeof(v128));
-        memcpy(simd_shuffle, &v2, sizeof(v128));
+        memcpy(simd_swizzle, &v2, sizeof(v128));
 
         // Construct the SIMD value by lane data and lane nums.
         for (int32_t i = 0; i < lanes; i++) {
-          uint8_t lane_idx = simd_shuffle[i];
+          uint8_t lane_idx = simd_swizzle[i];
           simd_data_ret[i] = lane_idx < lanes ? simd_data[lane_idx] : 0;
         }
 
@@ -2904,7 +2904,7 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
-    case Opcode::V8X16Shuffle2Imm: {
+    case Opcode::V8X16ShuffleImm: {
         const int32_t lanes = 16;
         // Define SIMD data array for SIMD add by lanes.
         int8_t simd_data_ret[lanes];

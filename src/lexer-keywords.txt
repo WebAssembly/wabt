@@ -473,8 +473,8 @@ v128.or, TokenType::Binary, Opcode::V128Or
 v128.store, TokenType::Store, Opcode::V128Store
 v128, Type::V128
 v128.xor, TokenType::Binary, Opcode::V128Xor
-v8x16.shuffle1, TokenType::SimdShuffle1Op, Opcode::V8X16Shuffle1
-v8x16.shuffle2_imm, TokenType::SimdShuffle2ImmOp, Opcode::V8X16Shuffle2Imm
+v8x16.swizzle, TokenType::SimdSwizzleOp, Opcode::V8X16Swizzle
+v8x16.shuffle_imm, TokenType::SimdShuffleImmOp, Opcode::V8X16ShuffleImm
 # Deprecated names.
 anyfunc, Type::Funcref
 f32.convert_s/i32, TokenType::Convert, Opcode::F32ConvertI32S

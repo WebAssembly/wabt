@@ -339,21 +339,21 @@
     v128.const i32x4 0x00000000 0x3ff00000 0x00000000 0x3ff80000
     f64x2.mul)
 
-  ;; v8x16.shuffle1
-  (func (export "v8x16_shuffle1_0") (result v128)
+  ;; v8x16.swizzle
+  (func (export "v8x16_swizzle_0") (result v128)
     v128.const i32x4 0x04030201 0x08070605 0x0c0b0a09 0x100f0e0d
     v128.const i8x16 0 4 8 12 5 9 13 1 10 14 6 2 15 3 7 11
-    v8x16.shuffle1)
+    v8x16.swizzle)
 
-  (func (export "v8x16_shuffle1_1") (result v128)
+  (func (export "v8x16_swizzle_1") (result v128)
     v128.const i32x4 0x11223344 0x55667788 0x99aabbcc 0xddeeff00
     v128.const i8x16 0 0 0 0 0 0 0 0 4 4 4 4 4 4 4 4
-    v8x16.shuffle1)
+    v8x16.swizzle)
 
-  (func (export "v8x16_shuffle1_2") (result v128)
+  (func (export "v8x16_swizzle_2") (result v128)
     v128.const i32x4 0xffffffff 0xffffffff 0xffffffff 0xffffffff
     v128.const i8x16 -1 16 31 255 -128 127 32 63 64 127 128 -2 -3 -4 -5 -6
-    v8x16.shuffle1)
+    v8x16.swizzle)
 )
 
 (;; STDOUT ;;;
@@ -402,7 +402,7 @@ f32x4_div_0() => v128 i32x4:0x7fc00000 0x7fc00000 0x3fc00000 0xc0000000
 f64x2_div_0() => v128 i32x4:0x00000000 0x3ff80000 0x00000000 0xc0000000
 f32x4_mul_0() => v128 i32x4:0x80000000 0x7fc00000 0x3fc00000 0xc0900000
 f64x2_mul_0() => v128 i32x4:0x00000000 0x3ff80000 0x00000000 0xc0120000
-v8x16_shuffle1_0() => v128 i32x4:0x0d090501 0x020e0a06 0x03070f0b 0x0c080410
-v8x16_shuffle1_1() => v128 i32x4:0x44444444 0x44444444 0x88888888 0x88888888
-v8x16_shuffle1_2() => v128 i32x4:0x00000000 0x00000000 0x00000000 0x00000000
+v8x16_swizzle_0() => v128 i32x4:0x0d090501 0x020e0a06 0x03070f0b 0x0c080410
+v8x16_swizzle_1() => v128 i32x4:0x44444444 0x44444444 0x88888888 0x88888888
+v8x16_swizzle_2() => v128 i32x4:0x00000000 0x00000000 0x00000000 0x00000000
 ;;; STDOUT ;;)
