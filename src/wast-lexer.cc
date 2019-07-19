@@ -288,6 +288,7 @@ void WastLexer::ReadWhitespace() {
 }
 
 Token WastLexer::GetStringToken(WastParser* parser) {
+  auto saved_loc = GetLocation();
   ReadChar();
   bool in_string = true;
   while (in_string) {
@@ -357,7 +358,13 @@ Token WastLexer::GetStringToken(WastParser* parser) {
       }
     }
   }
-  return TextToken(TokenType::Text);
+  auto token = TextToken(TokenType::Text);
+  // Use line and first_column from the saved location instead. Otherwise, the
+  // beginning of the string may not start with a quote if the string contains
+  // a newline.
+  token.loc.line = saved_loc.line;
+  token.loc.first_column = saved_loc.first_column;
+  return token;
 }
 
 // static
