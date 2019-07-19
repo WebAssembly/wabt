@@ -584,7 +584,8 @@ Result BinaryReaderLogging::OnComdatBegin(string_view name,
 }
 
 Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
-  LOGF("OnComdatEntry(kind: %d, index: %" PRIindex ")\n", kind, index);
+  LOGF("OnComdatEntry(kind: %d, index: %" PRIindex ")\n",
+       static_cast<int>(kind), index);
   return reader_->OnComdatEntry(kind, index);
 }
 
