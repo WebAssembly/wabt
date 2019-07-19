@@ -1,0 +1,14 @@
+;;; TOOL: run-interp-spec
+(assert_malformed
+  (module quote "\80")
+  "")
+(;; STDOUT ;;;
+out/test/regress/regress-30.txt:3: assert_malformed passed:
+  out/test/regress/regress-30/regress-30.0.wat:1:1: error: unexpected char
+  €
+  ^
+  out/test/regress/regress-30/regress-30.0.wat:1:2: error: unexpected token "EOF", expected a module field or a command.
+  €
+   ^
+1/1 tests passed.
+;;; STDOUT ;;)
