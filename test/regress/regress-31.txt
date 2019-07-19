@@ -1,0 +1,13 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+"
+"
+(;; STDERR ;;;
+out/test/regress/regress-31.txt:3:2: error: newline in string
+"
+ ^
+out/test/regress/regress-31.txt:3:1: error: unexpected token "
+"", expected a module field or a module.
+"
+^
+;;; STDERR ;;)
