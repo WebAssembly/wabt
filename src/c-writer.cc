@@ -266,6 +266,7 @@ class CWriter {
   void Write(const TernaryExpr&);
   void Write(const SimdLaneOpExpr&);
   void Write(const SimdShuffleOpExpr&);
+  void Write(const LoadSplatExpr&);
 
   const WriteCOptions& options_;
   const Module* module_ = nullptr;
@@ -1656,6 +1657,10 @@ void CWriter::Write(const ExprList& exprs) {
         break;
       }
 
+      case ExprType::LoadSplat:
+        Write(*cast<LoadSplatExpr>(&expr));
+        break;
+
       case ExprType::Unreachable:
         Write("UNREACHABLE;", Newline());
         return;
@@ -2253,6 +2258,20 @@ void CWriter::Write(const SimdShuffleOpExpr& expr) {
         expr.val.v[0], expr.val.v[1], expr.val.v[2], expr.val.v[3], ")",
         Newline());
   DropTypes(2);
+  PushType(result_type);
+}
+
+void CWriter::Write(const LoadSplatExpr& expr) {
+  assert(module_->memories.size() == 1);
+  Memory* memory = module_->memories[0];
+
+  Type result_type = expr.opcode.GetResultType();
+  Write(StackVar(0, result_type), " = ", expr.opcode.GetName(), "(",
+        ExternalPtr(memory->name), ", (u64)(", StackVar(0));
+  if (expr.offset != 0)
+    Write(" + ", expr.offset);
+  Write("));", Newline());
+  DropTypes(1);
   PushType(result_type);
 }
 

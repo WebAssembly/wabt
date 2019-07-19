@@ -275,6 +275,10 @@ class BinaryReaderDelegate {
   virtual Result OnSimdLaneOpExpr(Opcode opcode, uint64_t value) = 0;
   virtual Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) = 0;
 
+  virtual Result OnLoadSplatExpr(Opcode opcode,
+                                 uint32_t alignment_log2,
+                                 Address offset) = 0;
+
   /* Elem section */
   virtual Result BeginElemSection(Offset size) = 0;
   virtual Result OnElemSegmentCount(Index count) = 0;

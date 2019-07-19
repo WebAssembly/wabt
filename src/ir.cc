@@ -67,6 +67,7 @@ const char* ExprTypeName[] = {
   "Select",
   "SimdLaneOp",
   "SimdShuffleOp",
+  "LoadSplat",
   "Store",
   "TableCopy",
   "ElemDrop",
