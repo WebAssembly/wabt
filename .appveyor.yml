@@ -18,15 +18,12 @@ environment:
     JOBS_FLAG: -j
     EXE_DIR: .
     DEPLOY: false
-# TODO(binji): re-enable. This is disabled because of a test failure in the
-# spec testsuite, and because it's unlikely that most users need a 32-bit
-# build. See https://github.com/WebAssembly/wabt/issues/1113
-#  - GENERATOR: Visual Studio 14 2015
-#    CONFIG: Release
-#    JOBS_FLAG: "/m:"
-#    EXE_DIR: '%CONFIG%'
-#    DEPLOY: true
-#    DEPLOY_NAME: wabt-%APPVEYOR_REPO_TAG_NAME%-win32.zip
+  - GENERATOR: Visual Studio 14 2015
+    CONFIG: Release
+    JOBS_FLAG: "/m:"
+    EXE_DIR: '%CONFIG%'
+    DEPLOY: true
+    DEPLOY_NAME: wabt-%APPVEYOR_REPO_TAG_NAME%-win32.zip
   - GENERATOR: Visual Studio 14 2015 Win64
     CONFIG: Debug
     JOBS_FLAG: "/m:"

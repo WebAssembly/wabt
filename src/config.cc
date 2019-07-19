@@ -21,6 +21,8 @@
 
 #if COMPILER_IS_MSVC && _M_X64
 #include <emmintrin.h>
+#elif COMPILER_IS_MSVC && _M_IX86
+#include <float.h>
 #endif
 
 /* c99-style vsnprintf for MSVC < 2015. See http://stackoverflow.com/a/8712996
@@ -49,6 +51,28 @@ int wabt_snprintf(char* str, size_t size, const char* format, ...) {
 #endif
 #endif
 
+#if COMPILER_IS_MSVC && _M_IX86
+// Allow the following functions to change the floating-point environment (e.g.
+// update to 64-bit precision in the mantissa). This is only needed for x87
+// floats, which are only used on MSVC 32-bit.
+#pragma fenv_access (on)
+namespace {
+
+typedef unsigned int FPControl;
+
+FPControl Set64BitPrecisionControl() {
+  FPControl old_ctrl = _control87(0, 0);
+  _control87(_PC_64, _MCW_PC);
+  return old_ctrl;
+}
+
+void ResetPrecisionControl(FPControl old_ctrl) {
+  _control87(old_ctrl, _MCW_PC);
+}
+
+}  // end of anonymous namespace
+#endif
+
 double wabt_convert_uint64_to_double(uint64_t x) {
 #if COMPILER_IS_MSVC && _M_X64
   // MSVC on x64 generates uint64 -> float conversions but doesn't do
@@ -65,6 +89,7 @@ double wabt_convert_uint64_to_double(uint64_t x) {
   // MSVC on x86 converts from i64 -> double -> float, which causes incorrect
   // rounding. Using the x87 float stack instead preserves the correct
   // rounding.
+  FPControl old_ctrl = Set64BitPrecisionControl();
   static const double c = 18446744073709551616.0;
   double result;
   __asm fild x;
@@ -72,6 +97,7 @@ double wabt_convert_uint64_to_double(uint64_t x) {
     __asm fadd c;
   }
   __asm fstp result;
+  ResetPrecisionControl(old_ctrl);
   return result;
 #else
   return static_cast<double>(x);
@@ -94,6 +120,7 @@ float wabt_convert_uint64_to_float(uint64_t x) {
   // MSVC on x86 converts from i64 -> double -> float, which causes incorrect
   // rounding. Using the x87 float stack instead preserves the correct
   // rounding.
+  FPControl old_ctrl = Set64BitPrecisionControl();
   static const float c = 18446744073709551616.0f;
   float result;
   __asm fild x;
@@ -101,6 +128,7 @@ float wabt_convert_uint64_to_float(uint64_t x) {
     __asm fadd c;
   }
   __asm fstp result;
+  ResetPrecisionControl(old_ctrl);
   return result;
 #else
   return static_cast<float>(x);
@@ -128,3 +156,7 @@ float wabt_convert_int64_to_float(int64_t x) {
   return static_cast<float>(x);
 #endif
 }
+
+#if COMPILER_IS_MSVC && _M_IX86
+#pragma fenv_access (off)
+#endif
