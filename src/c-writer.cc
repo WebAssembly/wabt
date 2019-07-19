@@ -335,7 +335,7 @@ static const char* s_global_symbols[] = {
     "uint_fast64_t", "UINT_FAST8_MAX", "uint_fast8_t", "UINT_LEAST16_MAX",
     "uint_least16_t", "UINT_LEAST32_MAX", "uint_least32_t", "UINT_LEAST64_MAX",
     "uint_least64_t", "UINT_LEAST8_MAX", "uint_least8_t", "UINTMAX_C",
-    "UINTMAX_MAX", "uintmax_t", "UINTPTR_MAX", "uintptr_t", "UNT8_C",
+    "UINTMAX_MAX", "uintmax_t", "UINTPTR_MAX", "uintptr_t", "UINT8_C",
     "WCHAR_MAX", "WCHAR_MIN", "WINT_MAX", "WINT_MIN",
 
     // string.h
