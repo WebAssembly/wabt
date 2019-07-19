@@ -143,7 +143,11 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::I64Load:
       case Opcode::F32Load:
       case Opcode::F64Load:
-      case Opcode::V128Load: {
+      case Opcode::V128Load:
+      case Opcode::I8X16LoadSplat:
+      case Opcode::I16X8LoadSplat:
+      case Opcode::I32X4LoadSplat:
+      case Opcode::I64X2LoadSplat: {
         const Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%%[-1]+$%u\n", opcode.GetName(),
                        memory_index, ReadU32(&pc));
@@ -395,6 +399,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::F64X2Div:
       case Opcode::F32X4Mul:
       case Opcode::F64X2Mul:
+      case Opcode::V8X16Swizzle:
         stream->Writef("%s %%[-2], %%[-1]\n", opcode.GetName());
         break;
 
@@ -519,20 +524,13 @@ void Environment::Disassemble(Stream* stream,
       }
 
       case Opcode::V8X16Shuffle:
-      case Opcode::V8X16ShuffleImm:
         stream->Writef(
             "%s %%[-2], %%[-1] : (Lane imm: $0x%08x 0x%08x 0x%08x 0x%08x )\n",
             opcode.GetName(), ReadU32(&pc), ReadU32(&pc), ReadU32(&pc),
             ReadU32(&pc));
         break;
 
-      case Opcode::V8X16Swizzle:
-        stream->Writef(
-            "%s %%[-2], %%[-1]\n",
-            opcode.GetName());
-        break;
-
-    case Opcode::MemoryGrow: {
+      case Opcode::MemoryGrow: {
         Index memory_index = ReadU32(&pc);
         stream->Writef("%s $%" PRIindex ":%%[-1]\n", opcode.GetName(),
                        memory_index);

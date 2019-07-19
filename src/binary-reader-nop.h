@@ -284,6 +284,11 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnSimdShuffleOpExpr(Opcode opcode, v128 value) override {
     return Result::Ok;
   }
+  Result OnLoadSplatExpr(Opcode opcode,
+                         uint32_t alignment_log2,
+                         Address offset) override {
+    return Result::Ok;
+  }
 
   /* Elem section */
   Result BeginElemSection(Offset size) override { return Result::Ok; }

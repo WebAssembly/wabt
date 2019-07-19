@@ -971,6 +971,7 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::F64X2Div:
       case Opcode::F32X4Mul:
       case Opcode::F64X2Mul:
+      case Opcode::V8X16Swizzle:
         CALLBACK(OnBinaryExpr, opcode);
         CALLBACK0(OnOpcodeBare);
         break;
@@ -1136,19 +1137,19 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
-      case Opcode::V8X16Swizzle: {
-        CALLBACK(OnBinaryExpr, opcode);
+      case Opcode::I8X16LoadSplat:
+      case Opcode::I16X8LoadSplat:
+      case Opcode::I32X4LoadSplat:
+      case Opcode::I64X2LoadSplat: {
+        uint32_t alignment_log2;
+        CHECK_RESULT(ReadU32Leb128(&alignment_log2, "load alignment"));
+        Address offset;
+        CHECK_RESULT(ReadU32Leb128(&offset, "load offset"));
+
+        CALLBACK(OnLoadSplatExpr, opcode, alignment_log2, offset);
+        CALLBACK(OnOpcodeUint32Uint32, alignment_log2, offset);
         break;
       }
-
-      case Opcode::V8X16ShuffleImm: {
-        v128 value;
-        CHECK_RESULT(ReadV128(&value, "Lane idx [16]"));
-        CALLBACK(OnSimdShuffleOpExpr, opcode, value);
-        CALLBACK(OnOpcodeV128, value);
-        break;
-      }
-
       case Opcode::I32TruncF32S:
       case Opcode::I32TruncF64S:
       case Opcode::I32TruncF32U:

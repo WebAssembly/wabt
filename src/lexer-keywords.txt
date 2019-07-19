@@ -167,6 +167,7 @@ i16x8.gt_s, TokenType::Compare, Opcode::I16X8GtS
 i16x8.gt_u, TokenType::Compare, Opcode::I16X8GtU
 i16x8.le_s, TokenType::Compare, Opcode::I16X8LeS
 i16x8.le_u, TokenType::Compare, Opcode::I16X8LeU
+i16x8.load_splat, TokenType::Load, Opcode::I16X8LoadSplat
 i16x8.lt_s, TokenType::Compare, Opcode::I16X8LtS
 i16x8.lt_u, TokenType::Compare, Opcode::I16X8LtU
 i16x8.mul, TokenType::Binary, Opcode::I16X8Mul
@@ -270,6 +271,7 @@ i32x4.gt_s, TokenType::Compare, Opcode::I32X4GtS
 i32x4.gt_u, TokenType::Compare, Opcode::I32X4GtU
 i32x4.le_s, TokenType::Compare, Opcode::I32X4LeS
 i32x4.le_u, TokenType::Compare, Opcode::I32X4LeU
+i32x4.load_splat, TokenType::Load, Opcode::I32X4LoadSplat
 i32x4.lt_s, TokenType::Compare, Opcode::I32X4LtS
 i32x4.lt_u, TokenType::Compare, Opcode::I32X4LtU
 i32x4.mul, TokenType::Binary, Opcode::I32X4Mul
@@ -381,6 +383,7 @@ i64x2.add, TokenType::Binary, Opcode::I64X2Add
 i64x2.all_true, TokenType::Unary, Opcode::I64X2AllTrue
 i64x2.any_true, TokenType::Unary, Opcode::I64X2AnyTrue
 i64x2.extract_lane, TokenType::SimdLaneOp, Opcode::I64X2ExtractLane
+i64x2.load_splat, TokenType::Load, Opcode::I64X2LoadSplat
 i64x2.neg, TokenType::Unary, Opcode::I64X2Neg
 i64x2.replace_lane, TokenType::SimdLaneOp, Opcode::I64X2ReplaceLane
 i64x2.shl, TokenType::Binary, Opcode::I64X2Shl
@@ -406,6 +409,7 @@ i8x16.gt_s, TokenType::Compare, Opcode::I8X16GtS
 i8x16.gt_u, TokenType::Compare, Opcode::I8X16GtU
 i8x16.le_s, TokenType::Compare, Opcode::I8X16LeS
 i8x16.le_u, TokenType::Compare, Opcode::I8X16LeU
+i8x16.load_splat, TokenType::Load, Opcode::I8X16LoadSplat
 i8x16.lt_s, TokenType::Compare, Opcode::I8X16LtS
 i8x16.lt_u, TokenType::Compare, Opcode::I8X16LtU
 i8x16.mul, TokenType::Binary, Opcode::I8X16Mul
@@ -473,8 +477,8 @@ v128.or, TokenType::Binary, Opcode::V128Or
 v128.store, TokenType::Store, Opcode::V128Store
 v128, Type::V128
 v128.xor, TokenType::Binary, Opcode::V128Xor
-v8x16.swizzle, TokenType::SimdSwizzleOp, Opcode::V8X16Swizzle
-v8x16.shuffle_imm, TokenType::SimdShuffleImmOp, Opcode::V8X16ShuffleImm
+v8x16.swizzle, TokenType::Binary, Opcode::V8X16Swizzle
+v8x16.shuffle, TokenType::SimdShuffleOp, Opcode::V8X16Shuffle
 # Deprecated names.
 anyfunc, Type::Funcref
 f32.convert_s/i32, TokenType::Convert, Opcode::F32ConvertI32S
@@ -515,4 +519,3 @@ i64.trunc_u:sat/f64, TokenType::Convert, Opcode::I64TruncSatF64U
 set_global, TokenType::GlobalSet, Opcode::GlobalSet
 set_local, TokenType::LocalSet, Opcode::LocalSet
 tee_local, TokenType::LocalTee, Opcode::LocalTee
-v8x16.shuffle, TokenType::SimdShuffleOp, Opcode::V8X16Shuffle

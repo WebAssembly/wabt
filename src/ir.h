@@ -198,6 +198,7 @@ enum class ExprType {
   Select,
   SimdLaneOp,
   SimdShuffleOp,
+  LoadSplat,
   Store,
   TableCopy,
   ElemDrop,
@@ -437,6 +438,7 @@ typedef LoadStoreExpr<ExprType::AtomicRmw> AtomicRmwExpr;
 typedef LoadStoreExpr<ExprType::AtomicRmwCmpxchg> AtomicRmwCmpxchgExpr;
 typedef LoadStoreExpr<ExprType::AtomicWait> AtomicWaitExpr;
 typedef LoadStoreExpr<ExprType::AtomicNotify> AtomicNotifyExpr;
+typedef LoadStoreExpr<ExprType::LoadSplat> LoadSplatExpr;
 
 struct Event {
   explicit Event(string_view name) : name(name.to_string()) {}

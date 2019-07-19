@@ -579,6 +579,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnTernaryExpr(TernaryExpr*) override;
   Result OnSimdLaneOpExpr(SimdLaneOpExpr*) override;
   Result OnSimdShuffleOpExpr(SimdShuffleOpExpr*) override;
+  Result OnLoadSplatExpr(LoadSplatExpr*) override;
 
  private:
   WatWriter* writer_;
@@ -949,6 +950,11 @@ Result WatWriter::ExprVisitorDelegate::OnSimdShuffleOpExpr(
     writer_->Writef(" %u", values[lane]);
   }
   writer_->WritePutsNewline("");
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnLoadSplatExpr(LoadSplatExpr* expr) {
+  writer_->WriteLoadStoreExpr<LoadSplatExpr>(expr);
   return Result::Ok;
 }
 

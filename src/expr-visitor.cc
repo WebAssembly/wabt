@@ -231,6 +231,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnLoadExpr(cast<LoadExpr>(expr)));
       break;
 
+    case ExprType::LoadSplat:
+      CHECK_RESULT(delegate_->OnLoadSplatExpr(cast<LoadSplatExpr>(expr)));
+      break;
+
     case ExprType::LocalGet:
       CHECK_RESULT(delegate_->OnLocalGetExpr(cast<LocalGetExpr>(expr)));
       break;

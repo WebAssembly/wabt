@@ -137,7 +137,11 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64Load:
     case Opcode::F32Load:
     case Opcode::F64Load:
-    case Opcode::V128Load: {
+    case Opcode::V128Load:
+    case Opcode::I8X16LoadSplat:
+    case Opcode::I16X8LoadSplat:
+    case Opcode::I32X4LoadSplat:
+    case Opcode::I64X2LoadSplat: {
       const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u\n", opcode.GetName(),
                      memory_index, Top().i32, ReadU32At(pc));
@@ -586,26 +590,6 @@ void Thread::Trace(Stream* stream) {
           ReadU32At(pc + 4), ReadU32At(pc + 8), ReadU32At(pc + 12));
       break;
 
-    case Opcode::V8X16Swizzle:
-      stream->Writef(
-          "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x\n",
-          opcode.GetName(), Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
-          Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
-          Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
-      break;
-
-    case Opcode::V8X16ShuffleImm:
-      stream->Writef(
-          "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with lane imm: "
-          "$0x%08x %08x %08x %08x\n",
-          opcode.GetName(), Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
-          Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
-          Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3], ReadU32At(pc),
-          ReadU32At(pc + 4), ReadU32At(pc + 8), ReadU32At(pc + 12));
-      break;
-
     case Opcode::I8X16Add:
     case Opcode::I16X8Add:
     case Opcode::I32X4Add:
@@ -681,7 +665,8 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32X4Div:
     case Opcode::F64X2Div:
     case Opcode::F32X4Mul:
-    case Opcode::F64X2Mul: {
+    case Opcode::F64X2Mul:
+    case Opcode::V8X16Swizzle: {
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n",
                      opcode.GetName(), Pick(2).v128_bits.v[0],
                      Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2],

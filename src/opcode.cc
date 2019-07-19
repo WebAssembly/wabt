@@ -183,7 +183,6 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64X2ReplaceLane:
     case Opcode::F32X4ReplaceLane:
     case Opcode::F64X2ReplaceLane:
-    case Opcode::V8X16Shuffle:
     case Opcode::I8X16Add:
     case Opcode::I16X8Add:
     case Opcode::I32X4Add:
@@ -301,7 +300,11 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::I64X2TruncSatF64X2S:
     case Opcode::I64X2TruncSatF64X2U:
     case Opcode::V8X16Swizzle:
-    case Opcode::V8X16ShuffleImm:
+    case Opcode::V8X16Shuffle:
+    case Opcode::I8X16LoadSplat:
+    case Opcode::I16X8LoadSplat:
+    case Opcode::I32X4LoadSplat:
+    case Opcode::I64X2LoadSplat:
       return features.simd_enabled();
 
     case Opcode::MemoryInit:

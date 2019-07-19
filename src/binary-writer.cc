@@ -700,6 +700,9 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
                          "Simd Lane[16] literal");
       break;
     }
+    case ExprType::LoadSplat:
+      WriteLoadStoreExpr<LoadSplatExpr>(func, expr, "load offset");
+      break;
     case ExprType::Unreachable:
       WriteOpcode(stream_, Opcode::Unreachable);
       break;

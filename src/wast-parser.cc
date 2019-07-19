@@ -156,8 +156,6 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::Ternary:
     case TokenType::SimdLaneOp:
     case TokenType::SimdShuffleOp:
-    case TokenType::SimdSwizzleOp:
-    case TokenType::SimdShuffleImmOp:
       return true;
     default:
       return false;
@@ -1599,9 +1597,12 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
-    case TokenType::Binary:
-      out_expr->reset(new BinaryExpr(Consume().opcode(), loc));
+    case TokenType::Binary: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      out_expr->reset(new BinaryExpr(token.opcode(), loc));
       break;
+    }
 
     case TokenType::Compare:
       out_expr->reset(new CompareExpr(Consume().opcode(), loc));
@@ -1763,8 +1764,7 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       break;
     }
 
-    case TokenType::SimdShuffleOp:
-    case TokenType::SimdShuffleImmOp: {
+    case TokenType::SimdShuffleOp: {
       Token token = Consume();
       ErrorUnlessOpcodeEnabled(token);
       uint8_t values[16];
@@ -1803,13 +1803,6 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
 
       out_expr->reset(
           new SimdShuffleOpExpr(token.opcode(), value, loc));
-      break;
-    }
-
-    case TokenType::SimdSwizzleOp: {
-      Token token = Consume();
-      ErrorUnlessOpcodeEnabled(token);
-      out_expr->reset(new BinaryExpr(token.opcode(), loc));
       break;
     }
 

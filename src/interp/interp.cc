@@ -2852,34 +2852,6 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
-      case Opcode::V8X16Shuffle: {
-        const int32_t lanes = 16;
-        // Define SIMD data array for SIMD add by lanes.
-        int8_t simd_data_ret[lanes];
-        int8_t simd_data_0[lanes];
-        int8_t simd_data_1[lanes];
-        int8_t simd_shuffle[lanes];
-
-        v128 v2 = PopRep<v128>();
-        v128 v1 = PopRep<v128>();
-        v128 shuffle_imm = ReadV128(&pc);
-
-        // Convert input SIMD data to array.
-        memcpy(simd_data_0, &v1, sizeof(v128));
-        memcpy(simd_data_1, &v2, sizeof(v128));
-        memcpy(simd_shuffle, &shuffle_imm, sizeof(v128));
-
-        // Construct the SIMD value by lane data and lane nums.
-        for (int32_t i = 0; i < lanes; i++) {
-          int8_t lane_idx = simd_shuffle[i];
-          simd_data_ret[i] = (lane_idx < lanes) ? simd_data_0[lane_idx]
-                                                : simd_data_1[lane_idx - lanes];
-        }
-
-        CHECK_TRAP(PushRep<v128>(Bitcast<v128>(simd_data_ret)));
-        break;
-      }
-
       case Opcode::V8X16Swizzle: {
         const int32_t lanes = 16;
         // Define SIMD data array for SIMD add by lanes.
@@ -2904,7 +2876,7 @@ Result Thread::Run(int num_instructions) {
         break;
       }
 
-    case Opcode::V8X16ShuffleImm: {
+    case Opcode::V8X16Shuffle: {
         const int32_t lanes = 16;
         // Define SIMD data array for SIMD add by lanes.
         int8_t simd_data_ret[lanes];
@@ -2916,7 +2888,7 @@ Result Thread::Run(int num_instructions) {
         v128 v1 = PopRep<v128>();
         v128 shuffle_imm = ReadV128(&pc);
 
-        // Convert intput SIMD data to array.
+        // Convert input SIMD data to array.
         memcpy(simd_data_0, &v1, sizeof(v128));
         memcpy(simd_data_1, &v2, sizeof(v128));
         memcpy(simd_shuffle, &shuffle_imm, sizeof(v128));
@@ -2930,6 +2902,34 @@ Result Thread::Run(int num_instructions) {
 
         CHECK_TRAP(PushRep<v128>(Bitcast<v128>(simd_data_ret)));
         break;
+      }
+
+      case Opcode::I8X16LoadSplat: {
+          CHECK_TRAP(Load<uint8_t, uint32_t>(&pc));
+          uint8_t lane_data = Pop<uint32_t>();
+          CHECK_TRAP(Push<v128>(SimdSplat<v128, uint8_t>(lane_data)));
+          break;
+      }
+
+      case Opcode::I16X8LoadSplat: {
+          CHECK_TRAP(Load<uint16_t, uint32_t>(&pc));
+          uint16_t lane_data = Pop<uint32_t>();
+          CHECK_TRAP(Push<v128>(SimdSplat<v128, uint16_t>(lane_data)));
+          break;
+      }
+
+      case Opcode::I32X4LoadSplat: {
+          CHECK_TRAP(Load<uint32_t, uint32_t>(&pc));
+          uint32_t lane_data = Pop<uint32_t>();
+          CHECK_TRAP(Push<v128>(SimdSplat<v128, uint32_t>(lane_data)));
+          break;
+      }
+
+      case Opcode::I64X2LoadSplat: {
+          CHECK_TRAP(Load<uint64_t, uint64_t>(&pc));
+          uint64_t lane_data = Pop<uint64_t>();
+          CHECK_TRAP(Push<v128>(SimdSplat<v128, uint64_t>(lane_data)));
+          break;
       }
 
       case Opcode::I8X16Add:
