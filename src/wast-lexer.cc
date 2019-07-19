@@ -196,11 +196,11 @@ Token WastLexer::TextToken(TokenType token_type, size_t offset) {
 }
 
 int WastLexer::PeekChar() {
-  return cursor_ < buffer_end_ ? *cursor_ : kEof;
+  return cursor_ < buffer_end_ ? static_cast<uint8_t>(*cursor_) : kEof;
 }
 
 int WastLexer::ReadChar() {
-  return cursor_ < buffer_end_ ? *cursor_++ : kEof;
+  return cursor_ < buffer_end_ ? static_cast<uint8_t>(*cursor_++) : kEof;
 }
 
 bool WastLexer::MatchChar(char c) {
