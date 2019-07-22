@@ -410,6 +410,9 @@ static WABT_INLINE TypeVector GetInlineTypeVector(Type type) {
     case Type::F32:
     case Type::F64:
     case Type::V128:
+    case Type::Funcref:
+    case Type::Anyref:
+    case Type::ExceptRef:
       return TypeVector(&type, &type + 1);
 
     default:
