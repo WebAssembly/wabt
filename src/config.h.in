@@ -18,6 +18,7 @@
 #define WABT_CONFIG_H_
 
 #include <stdint.h>
+#include <stdlib.h>
 
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 
@@ -57,8 +58,6 @@
 #define alloca _alloca
 #elif defined(__MINGW32__)
 #include <malloc.h>
-#else
-#include <stdlib.h>
 #endif
 
 #if COMPILER_IS_CLANG || COMPILER_IS_GNU
@@ -93,8 +92,6 @@
 #define WABT_STATIC_ASSERT(x) _Static_assert((x), #x)
 #endif
 
-#define WABT_UNREACHABLE __builtin_unreachable()
-
 #elif COMPILER_IS_MSVC
 
 #include <intrin.h>
@@ -108,13 +105,13 @@
 #define WABT_LIKELY(x) (x)
 #define WABT_PRINTF_FORMAT(format_arg, first_arg)
 
-#define WABT_UNREACHABLE __assume(0)
-
 #else
 
 #error unknown compiler
 
 #endif
+
+#define WABT_UNREACHABLE abort()
 
 #ifdef __cplusplus
 
