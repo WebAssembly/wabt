@@ -1,0 +1,10 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-reference-types
+(module
+  (func (param anyref) (result anyref)
+    i32.const 0
+    if (result anyref)
+      local.get 0
+    else
+      local.get 0
+    end))
