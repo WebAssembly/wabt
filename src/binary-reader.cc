@@ -112,6 +112,7 @@ class BinaryReader {
   Index NumTotalTables();
   Index NumTotalMemories();
   Index NumTotalGlobals();
+  Index NumTotalEvents();
 
   Result ReadI32InitExpr(Index index) WABT_WARN_UNUSED;
   Result ReadInitExpr(Index index, bool require_i32 = false) WABT_WARN_UNUSED;
@@ -420,6 +421,10 @@ Index BinaryReader::NumTotalMemories() {
 
 Index BinaryReader::NumTotalGlobals() {
   return num_global_imports_ + num_globals_;
+}
+
+Index BinaryReader::NumTotalEvents() {
+  return num_event_imports_ + num_events_;
 }
 
 Result BinaryReader::ReadI32InitExpr(Index index) {
@@ -1801,6 +1806,8 @@ Result BinaryReader::ReadEventType(Index* out_sig_index) {
   CHECK_RESULT(ReadU32Leb128(&attribute, "event attribute"));
   ERROR_UNLESS(attribute == 0, "event attribute must be 0");
   CHECK_RESULT(ReadIndex(out_sig_index, "event signature index"));
+  ERROR_UNLESS(*out_sig_index < num_signatures_,
+               "invalid event signature index");
   return Result::Ok;
 }
 
@@ -2073,9 +2080,10 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
                      "invalid export global index: %" PRIindex, item_index);
         break;
       case ExternalKind::Event:
-        // Note: Can't check if index valid, the event section comes later.
         ERROR_UNLESS(options_.features.exceptions_enabled(),
                      "invalid export event kind: exceptions not allowed");
+        ERROR_UNLESS(item_index < NumTotalEvents(),
+                     "invalid export event index: %" PRIindex, item_index);
         break;
     }
 
