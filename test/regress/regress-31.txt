@@ -6,8 +6,7 @@
 out/test/regress/regress-31.txt:3:2: error: newline in string
 "
  ^
-out/test/regress/regress-31.txt:3:1: error: unexpected token "
-"", expected a module field or a module.
+out/test/regress/regress-31.txt:4:1: error: unexpected token "Invalid", expected a module field or a module.
 "
 ^
 ;;; STDERR ;;)

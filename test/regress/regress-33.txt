@@ -1,0 +1,11 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(data "\d")
+(;; STDERR ;;;
+out/test/regress/regress-33.txt:3:8: error: bad escape "\d"
+(data "\d")
+       ^^
+out/test/regress/regress-33.txt:3:7: error: unexpected token Invalid, expected ).
+(data "\d")
+      ^^^^
+;;; STDERR ;;)

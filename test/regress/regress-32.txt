@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(func f32.const 0xcab.ba6ep41e100)
+(;; STDERR ;;;
+out/test/regress/regress-32.txt:3:17: error: unexpected token "0xcab.ba6ep41e100", expected a numeric literal (e.g. 123, -45, 6.7e8).
+(func f32.const 0xcab.ba6ep41e100)
+                ^^^^^^^^^^^^^^^^^
+;;; STDERR ;;)
