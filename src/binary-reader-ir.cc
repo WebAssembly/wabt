@@ -240,6 +240,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
+  Result OnInitExprRefNull(Index index) override;
 
  private:
   Location GetLocation() const;
@@ -1175,6 +1176,12 @@ Result BinaryReaderIR::OnInitExprI64ConstExpr(Index index, uint64_t value) {
   Location loc = GetLocation();
   current_init_expr_->push_back(
       MakeUnique<ConstExpr>(Const::I64(value, loc), loc));
+  return Result::Ok;
+}
+
+Result BinaryReaderIR::OnInitExprRefNull(Index index) {
+  Location loc = GetLocation();
+  current_init_expr_->push_back(MakeUnique<RefNullExpr>(loc));
   return Result::Ok;
 }
 

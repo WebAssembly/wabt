@@ -1,4 +1,5 @@
 ;;; TOOL: wat2wasm
+;;; ARGS: --enable-reference-types
 (module
   (import "foo" "i32_global" (global i32))
   (import "foo" "i64_global" (global i64))
@@ -13,4 +14,6 @@
   (global i32 (get_global 0))
   (global i64 (get_global 1))
   (global f32 (get_global 2))
-  (global f64 (get_global 3)))
+  (global f64 (get_global 3))
+
+  (global anyref (ref.null)))
