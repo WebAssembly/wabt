@@ -175,7 +175,9 @@ Token WastLexer::GetToken(WastParser* parser) {
 }
 
 Location WastLexer::GetLocation() {
-  auto column = [=](const char* p) { return p - line_start_ + 1; };
+  auto column = [=](const char* p) {
+    return std::max(1, static_cast<int>(p - line_start_ + 1));
+  };
   return Location(filename_, line_, column(token_start_), column(cursor_));
 }
 
@@ -288,9 +290,10 @@ void WastLexer::ReadWhitespace() {
 }
 
 Token WastLexer::GetStringToken(WastParser* parser) {
-  auto saved_loc = GetLocation();
-  ReadChar();
+  const char* saved_token_start = token_start_;
+  bool has_error = false;
   bool in_string = true;
+  ReadChar();
   while (in_string) {
     switch (ReadChar()) {
       case kEof:
@@ -299,6 +302,7 @@ Token WastLexer::GetStringToken(WastParser* parser) {
       case '\n':
         token_start_ = cursor_ - 1;
         ERROR("newline in string");
+        has_error = true;
         Newline();
         continue;
 
@@ -339,8 +343,10 @@ Token WastLexer::GetStringToken(WastParser* parser) {
           case 'D':
           case 'E':
           case 'F':  // Hex byte escape.
-            if (!IsHexDigit(ReadChar())) {
-              token_start_ = cursor_ - 3;
+            if (IsHexDigit(PeekChar())) {
+              ReadChar();
+            } else {
+              token_start_ = cursor_ - 2;
               goto error;
             }
             break;
@@ -352,19 +358,19 @@ Token WastLexer::GetStringToken(WastParser* parser) {
           error:
             ERROR("bad escape \"%.*s\"",
                   static_cast<int>(cursor_ - token_start_), token_start_);
+            has_error = true;
             break;
         }
         break;
       }
     }
   }
-  auto token = TextToken(TokenType::Text);
-  // Use line and first_column from the saved location instead. Otherwise, the
-  // beginning of the string may not start with a quote if the string contains
-  // a newline.
-  token.loc.line = saved_loc.line;
-  token.loc.first_column = saved_loc.first_column;
-  return token;
+  token_start_ = saved_token_start;
+  if (has_error) {
+    return Token(GetLocation(), TokenType::Invalid);
+  }
+
+  return TextToken(TokenType::Text);
 }
 
 // static
@@ -466,7 +472,7 @@ Token WastLexer::GetHexNumberToken(TokenType token_type) {
     if (MatchChar('p') || MatchChar('P')) {
       token_type = TokenType::Float;
       ReadSign();
-      if (!ReadHexNum()) {
+      if (!ReadNum()) {
         return GetReservedToken();
       }
     }

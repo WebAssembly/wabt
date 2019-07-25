@@ -396,10 +396,11 @@ TokenType WastParser::Peek(size_t n) {
     if (cur.token_type() != TokenType::LparAnn) {
       tokens_.push_back(cur);
     } else {
-      // Custom annotation. For now, discard until matching Rpar
+      // Custom annotation. For now, discard until matching Rpar.
       if (!options_->features.annotations_enabled()) {
         Error(cur.loc, "annotations not enabled: %s", cur.to_string().c_str());
-        return TokenType::Invalid;
+        tokens_.push_back(Token(cur.loc, TokenType::Invalid));
+        continue;
       }
       int indent = 1;
       while (indent > 0) {
