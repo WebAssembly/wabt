@@ -683,6 +683,7 @@ enum class InitExprType {
   F64,
   V128,
   Global,
+  NullRef,
 };
 
 struct InitExpr {
@@ -821,6 +822,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
+  Result OnInitExprRefNull(Index index) override;
 
   Result OnDylinkInfo(uint32_t mem_size,
                       uint32_t mem_align_log2,
@@ -1303,6 +1305,10 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
       PrintDetails("\n");
       break;
     }
+    case InitExprType::NullRef: {
+      PrintDetails(" - init nullref\n");
+      break;
+    }
   }
 }
 
@@ -1319,6 +1325,7 @@ static Result InitExprToConstOffset(const InitExpr& expr,
     case InitExprType::F32:
     case InitExprType::F64:
     case InitExprType::V128:
+    case InitExprType::NullRef:
       fprintf(stderr, "Segment/Elem offset must be an i32 init expr");
       return Result::Error;
       break;
@@ -1388,6 +1395,13 @@ Result BinaryReaderObjdump::OnInitExprI64ConstExpr(Index index,
   InitExpr expr;
   expr.type = InitExprType::I64;
   expr.value.i64 = value;
+  HandleInitExpr(expr);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnInitExprRefNull(Index index) {
+  InitExpr expr;
+  expr.type = InitExprType::NullRef;
   HandleInitExpr(expr);
   return Result::Ok;
 }

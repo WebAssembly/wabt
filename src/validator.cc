@@ -1069,6 +1069,10 @@ void Validator::CheckConstInitExpr(const Location* loc,
         break;
       }
 
+      case ExprType::RefNull:
+        type = Type::Anyref;
+        break;
+      
       default:
         PrintConstExprError(loc, desc);
         return;

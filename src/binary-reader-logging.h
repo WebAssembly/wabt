@@ -339,6 +339,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnInitExprGlobalGetExpr(Index index, Index global_index) override;
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
+  Result OnInitExprRefNull(Index index) override;
 
  private:
   void Indent();

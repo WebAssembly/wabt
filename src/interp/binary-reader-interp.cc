@@ -245,6 +245,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                                        Index global_index) override;
   wabt::Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   wabt::Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
+  wabt::Result OnInitExprRefNull(Index index) override;
 
  private:
   Label* GetLabel(Index depth);
@@ -1014,6 +1015,11 @@ wabt::Result BinaryReaderInterp::OnInitExprI64ConstExpr(Index index,
   init_expr_value_.type = Type::I64;
   init_expr_value_.value.i64 = value;
   return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
+  PrintError("ref.null global init expressions unimplemented by interpreter");
+  return wabt::Result::Error;
 }
 
 wabt::Result BinaryReaderInterp::OnExport(Index index,

@@ -486,6 +486,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override {
     return Result::Ok;
   }
+  Result OnInitExprRefNull(Index index) override {
+    return Result::Ok;
+  }
 };
 
 }  // namespace wabt

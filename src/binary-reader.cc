@@ -480,6 +480,10 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
       break;
     }
 
+    case Opcode::RefNull:
+      CALLBACK(OnInitExprRefNull, index);
+      break;
+
     case Opcode::End:
       return Result::Ok;
 

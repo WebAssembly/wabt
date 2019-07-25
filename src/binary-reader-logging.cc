@@ -777,7 +777,9 @@ DEFINE_END(EndNamesSection)
 
 DEFINE_BEGIN(BeginRelocSection)
 DEFINE_END(EndRelocSection)
+
 DEFINE_INDEX_INDEX(OnInitExprGlobalGetExpr, "index", "global_index")
+DEFINE_INDEX(OnInitExprRefNull)
 
 DEFINE_BEGIN(BeginDylinkSection)
 DEFINE_INDEX(OnDylinkNeededCount)

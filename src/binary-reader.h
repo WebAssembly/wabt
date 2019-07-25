@@ -410,6 +410,7 @@ class BinaryReaderDelegate {
   virtual Result OnInitExprGlobalGetExpr(Index index, Index global_index) = 0;
   virtual Result OnInitExprI32ConstExpr(Index index, uint32_t value) = 0;
   virtual Result OnInitExprI64ConstExpr(Index index, uint64_t value) = 0;
+  virtual Result OnInitExprRefNull(Index index) = 0;
 
   const State* state = nullptr;
 };
