@@ -1,0 +1,66 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-all
+(module
+  ;; threads
+  (memory 1 1 shared)
+
+  ;; mutable globals
+  (global (mut i32) (i32.const 0))
+
+  ;; exceptions
+  (event $e)
+
+  ;; annotations
+  (func $f (@name "func") (result i32)
+    (i32.const 0))
+
+  (func (result i32)
+    ;; mutable globals
+    i32.const 0
+    global.set 0
+
+    ;; saturating float-to-int
+    f32.const 0
+    i32.trunc_s:sat/f32
+    drop
+
+    ;; sign extention
+    i32.const 0
+    i32.extend8_s
+    drop
+
+    ;; simd
+    v128.const i32x4 0xff00ff01 0xff00ff0f 0xff00ffff 0xff00ff7f
+    v128.const i32x4 0x00550055 0x00550055 0x00550055 0x00550155
+    v8x16.shuffle 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+    drop
+
+    ;; threads
+    i32.const 0
+    i32.const 0
+    i32.atomic.rmw.add
+    drop
+
+    ;; multi-value
+    block (result i32 i32)
+      i32.const 0
+      i32.const 0
+    end
+    drop
+    drop
+
+    ;; bulk memory
+    i32.const 0
+    i32.const 0
+    i32.const 0
+    memory.copy
+
+    ;; reference types
+    ref.null
+    drop
+
+    ;; exceptions
+    throw $e
+
+    ;; tail call
+    return_call $f))
