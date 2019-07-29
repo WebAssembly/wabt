@@ -32,6 +32,8 @@ void Features::AddOptions(OptionParser* parser) {
 
 #include "src/feature.def"
 #undef WABT_FEATURE
+  parser->AddOption("enable-all", "Enable all features",
+                    [this]() { EnableAll(); });
 }
 
 }  // namespace wabt

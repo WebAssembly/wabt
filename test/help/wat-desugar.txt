@@ -33,5 +33,6 @@ options:
       --enable-bulk-memory                    Enable Bulk-memory operations
       --enable-reference-types                Enable Reference types (anyref)
       --enable-annotations                    Enable Custom annotation syntax
+      --enable-all                            Enable all features
       --generate-names                        Give auto-generated names to non-named functions, types, etc.
 ;;; STDOUT ;;)
