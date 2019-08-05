@@ -106,11 +106,18 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint32_t)-1;
   }
-  memory->pages = new_pages;
-  memory->size = new_pages * PAGE_SIZE;
-  memory->data = realloc(memory->data, memory->size);
-  memset(memory->data + old_pages * PAGE_SIZE, 0, delta * PAGE_SIZE);
-  return old_pages;
+  uint32_t new_size = new_pages * PAGE_SIZE;
+  uint8_t *new_data = realloc(memory->data, new_size);
+
+  if (new_data) {
+    memory->pages = new_pages;
+    memory->size = new_size;
+    memory->data = new_data;
+    memset(memory->data + old_pages * PAGE_SIZE, 0, delta * PAGE_SIZE);
+    return old_pages;
+  } else {
+    return (uint32_t)-1;
+  }
 }
 
 void wasm_rt_allocate_table(wasm_rt_table_t* table,
