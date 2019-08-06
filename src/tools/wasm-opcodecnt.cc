@@ -41,6 +41,7 @@ static const char* s_separator = ": ";
 
 static ReadBinaryOptions s_read_binary_options;
 static std::unique_ptr<FileStream> s_log_stream;
+static Features s_features;
 
 static const char s_description[] =
 R"(  Read a file in the wasm binary format, and count opcode usage for
@@ -60,6 +61,7 @@ static void ParseOptions(int argc, char** argv) {
     s_read_binary_options.log_stream = s_log_stream.get();
   });
   parser.AddHelpOption();
+  s_features.AddOptions(&parser);
   parser.AddOption('o', "output", "FILENAME",
                    "Output file for the opcode counts, by default use stdout",
                    [](const char* argument) { s_outfile = argument; });
@@ -88,6 +90,14 @@ struct WithinCutoff {
     return pair.second >= s_cutoff;
   }
 };
+
+static size_t SumCounts(const OpcodeInfoCounts& info_counts) {
+  size_t sum = 0;
+  for (auto& pair : info_counts) {
+    sum += pair.second;
+  }
+  return sum;
+}
 
 void WriteCounts(Stream& stream, const OpcodeInfoCounts& info_counts) {
   typedef std::pair<Opcode, size_t> OpcodeCountPair;
@@ -155,9 +165,12 @@ int ProgramMain(int argc, char** argv) {
 
   if (Succeeded(result)) {
     OpcodeInfoCounts counts;
+    s_read_binary_options.features = s_features;
     result = ReadBinaryOpcnt(file_data.data(), file_data.size(),
                              s_read_binary_options, &counts);
     if (Succeeded(result)) {
+      stream.Writef("Total opcodes: %" PRIzd "\n\n", SumCounts(counts));
+
       stream.Writef("Opcode counts:\n");
       WriteCounts(stream, counts);
 

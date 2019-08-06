@@ -11,9 +11,21 @@ examples:
   $ wasm-opcodecnt test.wasm -o test.dist
 
 options:
-  -v, --verbose                    Use multiple times for more info
-      --help                       Print this help message
-  -o, --output=FILENAME            Output file for the opcode counts, by default use stdout
-  -c, --cutoff=N                   Cutoff for reporting counts less than N
-  -s, --separator=SEPARATOR        Separator text between element and count when reporting counts
+  -v, --verbose                               Use multiple times for more info
+      --help                                  Print this help message
+      --enable-exceptions                     Enable Experimental exception handling
+      --disable-mutable-globals               Disable Import/export mutable globals
+      --enable-saturating-float-to-int        Enable Saturating float-to-int operators
+      --enable-sign-extension                 Enable Sign-extension operators
+      --enable-simd                           Enable SIMD support
+      --enable-threads                        Enable Threading support
+      --enable-multi-value                    Enable Multi-value
+      --enable-tail-call                      Enable Tail-call support
+      --enable-bulk-memory                    Enable Bulk-memory operations
+      --enable-reference-types                Enable Reference types (anyref)
+      --enable-annotations                    Enable Custom annotation syntax
+      --enable-all                            Enable all features
+  -o, --output=FILENAME                       Output file for the opcode counts, by default use stdout
+  -c, --cutoff=N                              Cutoff for reporting counts less than N
+  -s, --separator=SEPARATOR                   Separator text between element and count when reporting counts
 ;;; STDOUT ;;)
