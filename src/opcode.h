@@ -34,7 +34,7 @@ struct Opcode {
   //
   enum Enum : uint32_t {
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text)                                                     \
+                    text, decomp)                                             \
   Name,
 #include "src/opcode.def"
 #undef WABT_OPCODE
@@ -43,7 +43,7 @@ struct Opcode {
 
 // Static opcode objects.
 #define WABT_OPCODE(rtype, type1, type2, type3, mem_size, prefix, code, Name, \
-                    text)                                                     \
+                    text, decomp)                                             \
   static Opcode Name##_Opcode;
 #include "src/opcode.def"
 #undef WABT_OPCODE
@@ -59,6 +59,9 @@ struct Opcode {
   uint32_t GetCode() const { return GetInfo().code; }
   size_t GetLength() const { return GetBytes().size(); }
   const char* GetName() const { return GetInfo().name; }
+  const char* GetDecomp() const {
+    return *GetInfo().decomp ? GetInfo().decomp : GetInfo().name;
+  }
   Type GetResultType() const { return GetInfo().result_type; }
   Type GetParamType1() const { return GetInfo().param1_type; }
   Type GetParamType2() const { return GetInfo().param2_type; }
@@ -93,6 +96,7 @@ struct Opcode {
 
   struct Info {
     const char* name;
+    const char* decomp;
     Type result_type;
     Type param1_type;
     Type param2_type;
