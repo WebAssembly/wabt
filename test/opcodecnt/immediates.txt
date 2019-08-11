@@ -35,6 +35,8 @@
 
     return))
 (;; STDOUT ;;;
+Total opcodes: 19
+
 Opcode counts:
 i32.const: 5
 end: 3

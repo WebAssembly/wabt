@@ -13,6 +13,8 @@
     f64.const 9
     return))
 (;; STDOUT ;;;
+Total opcodes: 11
+
 Opcode counts:
 i32.const: 5
 f32.const: 3

@@ -20,6 +20,8 @@
     f32.add
     br 0))
 (;; STDOUT ;;;
+Total opcodes: 16
+
 Opcode counts:
 local.get: 5
 i32.const: 3
