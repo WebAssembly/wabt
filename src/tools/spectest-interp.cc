@@ -996,7 +996,8 @@ wabt::Result CommandRunner::ReadInvalidTextModule(string_view module_filename,
   Errors errors;
   if (Succeeded(result)) {
     std::unique_ptr<::Script> script;
-    result = ParseWastScript(lexer.get(), &script, &errors);
+    WastParseOptions options(s_features);
+    result = ParseWastScript(lexer.get(), &script, &errors, &options);
     if (Succeeded(result)) {
       wabt::Module* module = script->GetFirstModule();
       result = ResolveNamesModule(module, &errors);

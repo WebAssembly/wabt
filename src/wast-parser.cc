@@ -1851,12 +1851,10 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
     Location loc = GetLocation();
 
     // Check that the lane literal type matches the element type of the v128:
-    if (integer) {
-      if (!(PeekMatch(TokenType::Int) || PeekMatch(TokenType::Nat))) {
+    if (!PeekMatch(TokenType::Int) && !PeekMatch(TokenType::Nat)) {
+      if (integer) {
         return ErrorExpected({"a Nat or Integer literal"}, "123");
-      }
-    } else {
-      if (!PeekMatch(TokenType::Float)) {
+      } else if (!PeekMatch(TokenType::Float)) {
         return ErrorExpected({"a Float literal"}, "42.0");
       }
     }
@@ -2600,6 +2598,7 @@ Result ParseWatModule(WastLexer* lexer,
                       Errors* errors,
                       WastParseOptions* options) {
   assert(out_module != nullptr);
+  assert(options != nullptr);
   WastParser parser(lexer, errors, options);
   return parser.ParseModule(out_module);
 }
@@ -2609,6 +2608,7 @@ Result ParseWastScript(WastLexer* lexer,
                        Errors* errors,
                        WastParseOptions* options) {
   assert(out_script != nullptr);
+  assert(options != nullptr);
   WastParser parser(lexer, errors, options);
   return parser.ParseScript(out_script);
 }

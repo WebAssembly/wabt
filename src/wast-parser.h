@@ -220,12 +220,12 @@ class WastParser {
 Result ParseWatModule(WastLexer* lexer,
                       std::unique_ptr<Module>* out_module,
                       Errors*,
-                      WastParseOptions* options = nullptr);
+                      WastParseOptions* options);
 
 Result ParseWastScript(WastLexer* lexer,
                        std::unique_ptr<Script>* out_script,
                        Errors*,
-                       WastParseOptions* options = nullptr);
+                       WastParseOptions* options);
 
 }  // namespace wabt
 

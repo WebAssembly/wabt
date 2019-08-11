@@ -37,7 +37,9 @@ Errors ParseInvalidModule(std::string text) {
   auto lexer = WastLexer::CreateBufferLexer("test", text.c_str(), text.size());
   Errors errors;
   std::unique_ptr<Module> module;
-  Result result = ParseWatModule(lexer.get(), &module, &errors);
+  Features features;
+  WastParseOptions options(features);
+  Result result = ParseWatModule(lexer.get(), &module, &errors, &options);
   EXPECT_EQ(Result::Error, result);
 
   return errors;
