@@ -95,12 +95,11 @@ Result ExprVisitor::VisitExpr(Expr* root_expr) {
         if (iter != try_expr->block.exprs.end()) {
           PushDefault(&*iter++);
         } else {
+          CHECK_RESULT(delegate_->OnCatchExpr(try_expr));
+          PopExprlist();
           if (try_expr->catch_.empty()) {
             CHECK_RESULT(delegate_->EndTryExpr(try_expr));
-            PopExprlist();
           } else {
-            CHECK_RESULT(delegate_->OnCatchExpr(try_expr));
-            PopExprlist();
             PushExprlist(State::Catch, expr, try_expr->catch_);
           }
         }

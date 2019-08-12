@@ -1,0 +1,14 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-exceptions
+;;; ERROR: 1
+(module
+  (func
+    try
+    catch
+    end
+  ))
+(;; STDERR ;;;
+out/test/typecheck/bad-empty-catch.txt:7:5: error: type mismatch in try catch, expected [] but got [except_ref]
+    catch
+    ^^^^^
+;;; STDERR ;;)
