@@ -8,7 +8,7 @@
     end
   ))
 (;; STDERR ;;;
-out/test/typecheck/bad-empty-catch.txt:7:5: error: type mismatch in try catch, expected [] but got [except_ref]
+out/test/typecheck/bad-empty-catch.txt:7:5: error: type mismatch in try catch, expected [] but got [exnref]
     catch
     ^^^^^
 ;;; STDERR ;;)
