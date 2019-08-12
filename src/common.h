@@ -207,18 +207,18 @@ struct Location {
 
 // Matches binary format, do not change.
 enum class Type : int32_t {
-  I32 = -0x01,        // 0x7f
-  I64 = -0x02,        // 0x7e
-  F32 = -0x03,        // 0x7d
-  F64 = -0x04,        // 0x7c
-  V128 = -0x05,       // 0x7b
-  Funcref = -0x10,    // 0x70
-  Anyref = -0x11,     // 0x6f
-  ExceptRef = -0x18,  // 0x68
-  Func = -0x20,       // 0x60
-  Void = -0x40,       // 0x40
-  ___ = Void,         // Convenient for the opcode table in opcode.h
-  Any = 0,            // Not actually specified, but useful for type-checking
+  I32 = -0x01,      // 0x7f
+  I64 = -0x02,      // 0x7e
+  F32 = -0x03,      // 0x7d
+  F64 = -0x04,      // 0x7c
+  V128 = -0x05,     // 0x7b
+  Funcref = -0x10,  // 0x70
+  Anyref = -0x11,   // 0x6f
+  Exnref = -0x18,   // 0x68
+  Func = -0x20,     // 0x60
+  Void = -0x40,     // 0x40
+  ___ = Void,       // Convenient for the opcode table in opcode.h
+  Any = 0,          // Not actually specified, but useful for type-checking
 };
 typedef std::vector<Type> TypeVector;
 
@@ -377,8 +377,8 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "funcref";
     case Type::Func:
       return "func";
-    case Type::ExceptRef:
-      return "except_ref";
+    case Type::Exnref:
+      return "exnref";
     case Type::Void:
       return "void";
     case Type::Any:
@@ -412,7 +412,7 @@ static WABT_INLINE TypeVector GetInlineTypeVector(Type type) {
     case Type::V128:
     case Type::Funcref:
     case Type::Anyref:
-    case Type::ExceptRef:
+    case Type::Exnref:
       return TypeVector(&type, &type + 1);
 
     default:

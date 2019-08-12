@@ -7,7 +7,7 @@
       i32.const 1
       i32.const 2
     catch
-      drop  ;; drop except_ref
+      drop  ;; drop exnref
       i32.const 3
       i32.const 4
     end
@@ -18,7 +18,7 @@
     try (param i32)
       drop
     catch
-      drop  ;; drop except_ref
+      drop  ;; drop exnref
     end
     return))
 (;; STDERR ;;;
