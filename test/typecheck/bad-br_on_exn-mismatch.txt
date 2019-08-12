@@ -8,7 +8,7 @@
     br_on_exn 0 $e
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-br_on_exn-mismatch.txt:8:5: error: type mismatch in br_on_exn, expected [except_ref] but got [i32]
+out/test/typecheck/bad-br_on_exn-mismatch.txt:8:5: error: type mismatch in br_on_exn, expected [exnref] but got [i32]
     br_on_exn 0 $e
     ^^^^^^^^^
 ;;; STDERR ;;)

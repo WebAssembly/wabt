@@ -19,7 +19,7 @@
     try (param i32) (result i32)
       i32.eqz
     catch
-      drop  ;; no i32 param, just except_ref
+      drop  ;; no i32 param, just exnref
       i32.const 0
     end
     return)

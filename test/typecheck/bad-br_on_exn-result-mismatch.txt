@@ -9,7 +9,7 @@
       br_on_exn 0 $e
     end))
 (;; STDERR ;;;
-out/test/typecheck/bad-br_on_exn-result-mismatch.txt:8:5: error: type mismatch in try catch, expected [] but got [except_ref]
+out/test/typecheck/bad-br_on_exn-result-mismatch.txt:8:5: error: type mismatch in try catch, expected [] but got [exnref]
     catch
     ^^^^^
 ;;; STDERR ;;)

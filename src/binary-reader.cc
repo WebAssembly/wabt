@@ -384,7 +384,7 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::V128:
       return options_.features.simd_enabled();
 
-    case Type::ExceptRef:
+    case Type::Exnref:
       return options_.features.exceptions_enabled();
 
     case Type::Anyref:
