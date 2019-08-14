@@ -22,7 +22,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")"; pwd -P)"
 source "${SCRIPT_DIR}/travis-common.sh"
 
 if [[ ${TRAVIS_OS_NAME} = "linux" ]]; then
-  flake8 --ignore=E111,E114 ./scripts/
+  flake8 --ignore=E111,E114
 fi
 
 if [[ ${COMPILER} = "clang" && -z ${SANITIZER:-} ]]; then
