@@ -24,6 +24,7 @@ except ImportError:
 import os
 import sys
 
+
 def EscapeCString(s):
   out = ''
   for b in bytearray(s.encode('utf-8')):
@@ -60,13 +61,13 @@ def main(args):
     for line in f.readlines():
       if line.startswith('%%'):
         if section_name is not None:
-          output.write(';\n\n');
+          output.write(';\n\n')
         section_name = line[2:-1]
         output.write('const char SECTION_NAME(%s)[] =\n' % section_name)
       else:
         output.write('"%s"\n' % EscapeCString(line))
 
-  output.write(';\n');
+  output.write(';\n')
   if options.output:
     with open(options.output, 'w') as outf:
       outf.write(output.getvalue())

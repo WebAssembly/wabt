@@ -36,7 +36,7 @@ try:
 except ImportError:
   raise Error('Unable to import ply. Did you run "git submodule update"?')
 
-## ply stuff ###################################################################
+# ply stuff ###################################################################
 NAMED_VALUES = {
     'i32': 0x7f,  # -1
     'i64': 0x7e,  # -2
@@ -268,7 +268,7 @@ keywords = {
     'str': 'STR',
 }
 
-## lexer ###
+# lexer ###
 
 tokens = tuple(keywords.values()) + (
     'BYTE',
@@ -344,7 +344,7 @@ def t_error(t):
 
 lexer = lex.lex()
 
-## parser ###
+# parser ###
 
 
 def LebLoop(data, v, cond):

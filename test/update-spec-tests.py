@@ -29,6 +29,7 @@ WASM2C_SPEC_TEST_DIR = os.path.join(TEST_DIR, 'wasm2c', 'spec')
 
 options = None
 
+
 def GetFilesWithExtension(src_dir, want_ext):
   result = set()
   if os.path.exists(src_dir):
@@ -73,13 +74,6 @@ def ProcessProposalDir(name, flags=None):
              os.path.join(TESTSUITE_DIR, 'proposals', name),
              'run-interp-spec',
              flags)
-
-
-def ProcessTestsuite(wabt_test_dir, testsuite_dir, tool, flags=None):
-  testsuite_dir = os.path.join(TESTSUITE_DIR, reldir)
-  testsuite_tests = GetFilesWithExtension(testsuite_dir, '.wast')
-  wabt_test_dir = os.path.join(SPEC_TEST_DIR, reldir)
-  ProcessDir(wabt_test_dir, testsuite_tests, 'run-interp-spec')
 
 
 def main(args):
