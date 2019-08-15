@@ -25,7 +25,6 @@ import json
 import os
 import re
 import struct
-import subprocess
 import sys
 
 import find_exe
@@ -38,6 +37,7 @@ WASM2C_DIR = os.path.join(find_exe.REPO_ROOT_DIR, 'wasm2c')
 
 def ReinterpretF32(f32_bits):
   return struct.unpack('<f', struct.pack('<I', f32_bits))[0]
+
 
 def F32ToC(f32_bits):
   F32_SIGN_BIT = 0x80000000
@@ -63,6 +63,7 @@ def F32ToC(f32_bits):
 
 def ReinterpretF64(f64_bits):
   return struct.unpack('<d', struct.pack('<Q', f64_bits))[0]
+
 
 def F64ToC(f64_bits):
   F64_SIGN_BIT = 0x8000000000000000
@@ -343,8 +344,8 @@ def main(args):
   parser.add_argument('-v', '--verbose', help='print more diagnotic messages.',
                       action='store_true')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when'
-                      + ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when '
+                      'an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',
@@ -381,7 +382,7 @@ def main(args):
     cwriter = CWriter(spec_json, prefix, output, out_dir)
     cwriter.Write()
 
-    main_filename = utils.ChangeExt(json_file_path,  '-main.c')
+    main_filename = utils.ChangeExt(json_file_path, '-main.c')
     with open(main_filename, 'w') as out_main_file:
       out_main_file.write(output.getvalue())
 

@@ -18,10 +18,7 @@
 import argparse
 import difflib
 import os
-import re
-import shutil
 import sys
-import tempfile
 
 import find_exe
 import utils
@@ -65,7 +62,7 @@ def TwoRoundtrips(wat2wasm, wasm2wat, out_dir, filename, verbose):
   wasm3_file = os.path.join(out_dir, basename_noext + '-3.wasm')
   try:
     wat2wasm.RunWithArgs('-o', wasm1_file, filename)
-  except Error as e:
+  except Error:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
     # test)
     return (SKIPPED, None)
@@ -83,7 +80,7 @@ def OneRoundtripToStdout(wat2wasm, wasm2wat, out_dir, filename, verbose):
   wasm_file = os.path.join(out_dir, basename_noext + '.wasm')
   try:
     wat2wasm.RunWithArgs('-o', wasm_file, filename)
-  except Error as e:
+  except Error:
     # if the file doesn't parse properly, just skip it (it may be a "bad-*"
     # test)
     return (SKIPPED, None)
@@ -106,8 +103,8 @@ def main(args):
   parser.add_argument('--stdout', action='store_true',
                       help='do one roundtrip and write wast output to stdout')
   parser.add_argument('--no-error-cmdline',
-                      help='don\'t display the subprocess\'s commandline when'
-                      + ' an error occurs', dest='error_cmdline',
+                      help='don\'t display the subprocess\'s commandline when '
+                      'an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',

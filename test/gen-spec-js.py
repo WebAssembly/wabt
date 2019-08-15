@@ -16,7 +16,6 @@
 #
 
 import argparse
-from collections import namedtuple
 try:
   from cStringIO import StringIO
 except ImportError:
@@ -200,9 +199,9 @@ def CollectInvalidModuleCommands(commands):
       module_name = command.get('name')
       if module_name:
         module_map[module_name] = pair
-    elif command['type'] in (
-        'assert_return', 'assert_return_canonical_nan',
-        'assert_return_arithmetic_nan', 'assert_trap', 'assert_exhaustion'):
+    elif command['type'] in ('assert_return', 'assert_return_canonical_nan',
+                             'assert_return_arithmetic_nan', 'assert_trap',
+                             'assert_exhaustion'):
       if IsValidJSCommand(command):
         continue
 
@@ -501,7 +500,7 @@ def main(args):
                       ' files are written.')
   parser.add_argument('--no-error-cmdline',
                       help='don\'t display the subprocess\'s commandline when'
-                      + ' an error occurs', dest='error_cmdline',
+                      ' an error occurs', dest='error_cmdline',
                       action='store_false')
   parser.add_argument('-p', '--print-cmd',
                       help='print the commands that are run.',

@@ -74,13 +74,13 @@ TOOLS = {
     'run-roundtrip': [
         ('RUN', 'test/run-roundtrip.py'),
         ('ARGS', [
-                '%(in_file)s',
-                '-v',
-                '--bindir=%(bindir)s',
-                '--no-error-cmdline',
-                '-o',
-                '%(out_dir)s',
-                ]),
+          '%(in_file)s',
+          '-v',
+          '--bindir=%(bindir)s',
+          '--no-error-cmdline',
+          '-o',
+          '%(out_dir)s',
+         ]),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ],
     'run-interp': [
@@ -131,12 +131,12 @@ TOOLS = {
     'run-spec-wasm2c': [
         ('RUN', 'test/run-spec-wasm2c.py'),
         ('ARGS', [
-                '%(in_file)s',
-                '--bindir=%(bindir)s',
-                '--no-error-cmdline',
-                '-o',
-                '%(out_dir)s',
-                ]),
+          '%(in_file)s',
+          '--bindir=%(bindir)s',
+          '--no-error-cmdline',
+          '-o',
+          '%(out_dir)s',
+         ]),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
     ]
 }
@@ -537,7 +537,7 @@ class TestInfo(object):
     gen_input_dir = os.path.dirname(gen_input_path)
     try:
       os.makedirs(gen_input_dir)
-    except OSError as e:
+    except OSError:
       if not os.path.isdir(gen_input_dir):
         raise
 
@@ -753,7 +753,7 @@ def HandleTestResult(status, info, result, rebase=False):
     status.Failed(info, str(e), result)
 
 
-#Source : http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
+# Source : http://stackoverflow.com/questions/3041986/python-command-line-yes-no-input
 def YesNoPrompt(question, default='yes'):
   """Ask a yes/no question via raw_input() and return their answer.
 
@@ -787,7 +787,6 @@ def YesNoPrompt(question, default='yes'):
 
 
 def RunMultiThreaded(infos_to_run, status, options, variables):
-  test_count = len(infos_to_run)
   pool = multiprocessing.Pool(options.jobs)
   try:
     results = [(info, pool.apply_async(RunTest, (info, options, variables)))
