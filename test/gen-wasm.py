@@ -31,21 +31,21 @@ PLY_DIR = os.path.join(ROOT_DIR, 'third_party', 'ply')
 sys.path.append(PLY_DIR)
 
 try:
-  import ply.lex as lex
-  import ply.yacc as yacc
+    import ply.lex as lex
+    import ply.yacc as yacc
 except ImportError:
-  raise Error('Unable to import ply. Did you run "git submodule update"?')
+    raise Error('Unable to import ply. Did you run "git submodule update"?')
 
 # ply stuff ###################################################################
 NAMED_VALUES = {
-    'i32': 0x7f,  # -1
-    'i64': 0x7e,  # -2
-    'f32': 0x7d,  # -3
-    'f64': 0x7c,  # -4
-    'v128': 0x7b,  # -5
-    'anyfunc': 0x70,  # -0x10
-    'function': 0x60,  # -0x20
-    'void': 0x40,  # -0x40
+    'i32': 0x7f,    # -1
+    'i64': 0x7e,    # -2
+    'f32': 0x7d,    # -3
+    'f64': 0x7c,    # -4
+    'v128': 0x7b,    # -5
+    'anyfunc': 0x70,    # -0x10
+    'function': 0x60,    # -0x20
+    'void': 0x40,    # -0x40
     'magic': (0, 0x61, 0x73, 0x6d),
     'version': (1, 0, 0, 0),
 
@@ -294,52 +294,52 @@ t_ignore = ' \t'
 
 
 def t_COMMENT(t):
-  r';;.*'
-  pass
+    r';;.*'
+    pass
 
 
 def t_INT(t):
-  r'\-?(0[xX][0-9a-fA-F]+|[0-9]+)'
-  if t.value.lower().startswith('0x'):
-    t.value = int(t.value, 16)
-  else:
-    t.value = int(t.value)
+    r'\-?(0[xX][0-9a-fA-F]+|[0-9]+)'
+    if t.value.lower().startswith('0x'):
+        t.value = int(t.value, 16)
+    else:
+        t.value = int(t.value)
 
-  if 0 <= t.value < 256:
-    t.type = 'BYTE'
-  return t
+    if 0 <= t.value < 256:
+        t.type = 'BYTE'
+    return t
 
 
 def t_FLOAT(t):
-  r'\-?([0-9]*\.?[0-9]+|[0-9]+\.?[0-9]*)([eE][0-9]+)?'
-  t.value = float(t.value)
-  return t
+    r'\-?([0-9]*\.?[0-9]+|[0-9]+\.?[0-9]*)([eE][0-9]+)?'
+    t.value = float(t.value)
+    return t
 
 
 def t_STRING(t):
-  r'\'[^\']*\'|\"[^\"]*\"'
-  t.value = t.value[1:-1]
-  return t
+    r'\'[^\']*\'|\"[^\"]*\"'
+    t.value = t.value[1:-1]
+    return t
 
 
 def t_NAME(t):
-  r'[a-zA-Z][a-zA-Z0-9_\.\/]*'
-  if t.value in NAMED_VALUES:
-    t.type = 'NAMED_VALUE'
-    t.value = NAMED_VALUES[t.value]
-  elif t.value in keywords:
-    t.type = keywords[t.value]
-  return t
+    r'[a-zA-Z][a-zA-Z0-9_\.\/]*'
+    if t.value in NAMED_VALUES:
+        t.type = 'NAMED_VALUE'
+        t.value = NAMED_VALUES[t.value]
+    elif t.value in keywords:
+        t.type = keywords[t.value]
+    return t
 
 
 def t_newline(t):
-  r'\n+'
-  t.lexer.lineno += len(t.value)
+    r'\n+'
+    t.lexer.lineno += len(t.value)
 
 
 def t_error(t):
-  print("Illegal character '%s'" % t.value[0])
-  t.lexer.skip(1)
+    print("Illegal character '%s'" % t.value[0])
+    t.lexer.skip(1)
 
 
 lexer = lex.lex()
@@ -348,166 +348,166 @@ lexer = lex.lex()
 
 
 def LebLoop(data, v, cond):
-  while True:
-    byte = v & 0x7f
-    v >>= 7
-    if cond(v, byte):
-      data.append(byte)
-      break
-    else:
-      data.append(byte | 0x80)
+    while True:
+        byte = v & 0x7f
+        v >>= 7
+        if cond(v, byte):
+            data.append(byte)
+            break
+        else:
+            data.append(byte | 0x80)
 
 
 def WriteUnsignedLeb(data, v, max_size):
-  result = []
-  LebLoop(result, v, lambda v, byte: v == 0)
-  assert len(result) <= max_size
-  data.extend(result)
+    result = []
+    LebLoop(result, v, lambda v, byte: v == 0)
+    assert len(result) <= max_size
+    data.extend(result)
 
 
 def WriteLebU32(data, v):
-  WriteUnsignedLeb(data, v, 5)
+    WriteUnsignedLeb(data, v, 5)
 
 
 def WriteSignedLeb(data, v, max_size):
-  result = []
-  if v < 0:
-    LebLoop(result, v, lambda v, byte: v == -1 and byte & 0x40)
-  else:
-    LebLoop(result, v, lambda v, byte: v == 0 and not byte & 0x40)
-  assert len(result) <= max_size
-  data.extend(result)
+    result = []
+    if v < 0:
+        LebLoop(result, v, lambda v, byte: v == -1 and byte & 0x40)
+    else:
+        LebLoop(result, v, lambda v, byte: v == 0 and not byte & 0x40)
+    assert len(result) <= max_size
+    data.extend(result)
 
 
 def WriteLebI32(data, v):
-  WriteSignedLeb(data, v, 5)
+    WriteSignedLeb(data, v, 5)
 
 
 def WriteLebI64(data, v):
-  WriteSignedLeb(data, v, 10)
+    WriteSignedLeb(data, v, 10)
 
 
 def WriteF32(data, v):
-  data.extend(ord(b) for b in struct.pack('<f', v))
+    data.extend(ord(b) for b in struct.pack('<f', v))
 
 
 def WriteF64(data, v):
-  data.extend(ord(b) for b in struct.pack('<d', v))
+    data.extend(ord(b) for b in struct.pack('<d', v))
 
 
 def WriteString(data, s):
-  data.extend(ord(c) for c in s)
+    data.extend(ord(c) for c in s)
 
 
 def p_data_byte(p):
-  'data : data BYTE'
-  p[0] = p[1]
-  p[0].append(p[2])
-
-
-def p_data_name(p):
-  '''data : data NAME LBRACKET data RBRACKET
-          | data FUNC LBRACKET data RBRACKET'''
-  p[0] = p[1]
-  # name is only used for documentation
-  p[0].extend(p[4])
-
-
-def p_data_named_value(p):
-  'data : data NAMED_VALUE'
-  p[0] = p[1]
-  if type(p[2]) is tuple:
-    p[0].extend(p[2])
-  else:
+    'data : data BYTE'
+    p[0] = p[1]
     p[0].append(p[2])
 
 
+def p_data_name(p):
+    '''data : data NAME LBRACKET data RBRACKET
+          | data FUNC LBRACKET data RBRACKET'''
+    p[0] = p[1]
+    # name is only used for documentation
+    p[0].extend(p[4])
+
+
+def p_data_named_value(p):
+    'data : data NAMED_VALUE'
+    p[0] = p[1]
+    if type(p[2]) is tuple:
+        p[0].extend(p[2])
+    else:
+        p[0].append(p[2])
+
+
 def p_data_section(p):
-  'data : data SECTION LPAREN NAMED_VALUE RPAREN LBRACE data RBRACE'
-  p[0] = p[1]
-  section_data = p[7]
-  p[0].append(p[4])
-  WriteLebU32(p[0], len(section_data))
-  p[0].extend(section_data)
+    'data : data SECTION LPAREN NAMED_VALUE RPAREN LBRACE data RBRACE'
+    p[0] = p[1]
+    section_data = p[7]
+    p[0].append(p[4])
+    WriteLebU32(p[0], len(section_data))
+    p[0].extend(section_data)
 
 
 def p_data_user_section(p):
-  'data : data SECTION LPAREN STRING RPAREN LBRACE data RBRACE'
-  p[0] = p[1]
-  name = p[4]
-  section_data = p[7]
-  p[0].append(0)  # 0 is the section code for "user"
-  section_name_data = []
-  WriteLebU32(section_name_data, len(name))
-  WriteString(section_name_data, name)
-  WriteLebU32(p[0], len(section_name_data) + len(section_data))
-  p[0].extend(section_name_data)
-  p[0].extend(section_data)
+    'data : data SECTION LPAREN STRING RPAREN LBRACE data RBRACE'
+    p[0] = p[1]
+    name = p[4]
+    section_data = p[7]
+    p[0].append(0)  # 0 is the section code for "user"
+    section_name_data = []
+    WriteLebU32(section_name_data, len(name))
+    WriteString(section_name_data, name)
+    WriteLebU32(p[0], len(section_name_data) + len(section_data))
+    p[0].extend(section_name_data)
+    p[0].extend(section_data)
 
 
 def p_data_func(p):
-  'data : data FUNC LBRACE data RBRACE'
-  p[0] = p[1]
-  func_data = p[4]
-  func_data.append(0xb)  # end opcode
-  WriteLebU32(p[0], len(func_data))
-  p[0].extend(func_data)
+    'data : data FUNC LBRACE data RBRACE'
+    p[0] = p[1]
+    func_data = p[4]
+    func_data.append(0xb)  # end opcode
+    WriteLebU32(p[0], len(func_data))
+    p[0].extend(func_data)
 
 
 def p_data_str(p):
-  'data : data STR LPAREN STRING RPAREN'
-  p[0] = p[1]
-  s = p[4]
-  WriteLebU32(p[0], len(s))
-  WriteString(p[0], s)
+    'data : data STR LPAREN STRING RPAREN'
+    p[0] = p[1]
+    s = p[4]
+    WriteLebU32(p[0], len(s))
+    WriteString(p[0], s)
 
 
 def p_data_leb_i32(p):
-  '''data : data LEB_I32 LPAREN INT RPAREN
-          | data LEB_I32 LPAREN BYTE RPAREN'''
-  p[0] = p[1]
-  WriteLebI32(p[0], p[4])
+    '''data : data LEB_I32 LPAREN INT RPAREN
+            | data LEB_I32 LPAREN BYTE RPAREN'''
+    p[0] = p[1]
+    WriteLebI32(p[0], p[4])
 
 
 def p_data_leb_i64(p):
-  '''data : data LEB_I64 LPAREN INT RPAREN
-          | data LEB_I64 LPAREN BYTE RPAREN'''
-  p[0] = p[1]
-  WriteLebI64(p[0], p[4])
+    '''data : data LEB_I64 LPAREN INT RPAREN
+            | data LEB_I64 LPAREN BYTE RPAREN'''
+    p[0] = p[1]
+    WriteLebI64(p[0], p[4])
 
 
 def p_data_leb_u32(p):
-  '''data : data LEB_U32 LPAREN INT RPAREN
-          | data LEB_U32 LPAREN BYTE RPAREN'''
-  p[0] = p[1]
-  WriteLebU32(p[0], p[4])
+    '''data : data LEB_U32 LPAREN INT RPAREN
+            | data LEB_U32 LPAREN BYTE RPAREN'''
+    p[0] = p[1]
+    WriteLebU32(p[0], p[4])
 
 
 def p_data_f32(p):
-  'data : data F32 LPAREN FLOAT RPAREN'
-  p[0] = p[1]
-  WriteF32(p[0], p[4])
+    'data : data F32 LPAREN FLOAT RPAREN'
+    p[0] = p[1]
+    WriteF32(p[0], p[4])
 
 
 def p_data_f64(p):
-  'data : data F64 LPAREN FLOAT RPAREN'
-  p[0] = p[1]
-  WriteF64(p[0], p[4])
+    'data : data F64 LPAREN FLOAT RPAREN'
+    p[0] = p[1]
+    WriteF64(p[0], p[4])
 
 
 def p_data_string(p):
-  'data : data STRING'
-  p[0] = p[1]
-  WriteString(p[0], p[2])
+    'data : data STRING'
+    p[0] = p[1]
+    WriteString(p[0], p[2])
 
 
 def p_data_empty(p):
-  'data :'
-  p[0] = []
+    'data :'
+    p[0] = []
 
 
 def p_error(p):
-  raise Error('%d: syntax error, %s' % (p.lineno, p))
+    raise Error('%d: syntax error, %s' % (p.lineno, p))
 
 
 parser = yacc.yacc(debug=False, tabmodule='gen_wasm',
@@ -517,35 +517,35 @@ parser = yacc.yacc(debug=False, tabmodule='gen_wasm',
 
 
 def Run(input_file_name):
-  with open(input_file_name) as input_file:
-    input_data = input_file.read()
-  data = parser.parse(input_data)
-  # convert to bytes
-  data = bytearray(data)
-  return data
+    with open(input_file_name) as input_file:
+        input_data = input_file.read()
+    data = parser.parse(input_data)
+    # convert to bytes
+    data = bytearray(data)
+    return data
 
 
 def main(args):
-  arg_parser = argparse.ArgumentParser()
-  arg_parser.add_argument('-o', '--output', metavar='PATH',
-                          help='output file.')
-  arg_parser.add_argument('-v', '--verbose',
-                          help='print more diagnotic messages.',
-                          action='store_true')
-  arg_parser.add_argument('file', help='input file.')
-  options = arg_parser.parse_args(args)
-  data = Run(options.file)
-  if options.output:
-    with open(options.output, 'wb') as output_file:
-      output_file.write(data)
-  else:
-    sys.stdout.writelines(Hexdump(data))
-  return 0
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('-o', '--output', metavar='PATH',
+                            help='output file.')
+    arg_parser.add_argument('-v', '--verbose',
+                            help='print more diagnotic messages.',
+                            action='store_true')
+    arg_parser.add_argument('file', help='input file.')
+    options = arg_parser.parse_args(args)
+    data = Run(options.file)
+    if options.output:
+        with open(options.output, 'wb') as output_file:
+            output_file.write(data)
+    else:
+        sys.stdout.writelines(Hexdump(data))
+    return 0
 
 
 if __name__ == '__main__':
-  try:
-    sys.exit(main(sys.argv[1:]))
-  except Error as e:
-    sys.stderr.write(str(e) + '\n')
-    sys.exit(1)
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except Error as e:
+        sys.stderr.write(str(e) + '\n')
+        sys.exit(1)

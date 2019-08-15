@@ -32,78 +32,78 @@ from utils import Executable, Error  # noqa: E402
 
 
 def FindFiles(cmake_build_dir):
-  result = []
-  for root, dirs, files in os.walk(cmake_build_dir):
-    for file_ in files:
-      path = os.path.join(root, file_)
-      if file_ == 'libwabt.a' or re.search(r'emscripten-helpers', file_):
-        result.append(path)
-  return result
+    result = []
+    for root, dirs, files in os.walk(cmake_build_dir):
+        for file_ in files:
+            path = os.path.join(root, file_)
+            if file_ == 'libwabt.a' or re.search(r'emscripten-helpers', file_):
+                result.append(path)
+    return result
 
 
 def GetNM(emscripten_dir):
-  python = Executable(sys.executable)
-  stdout = python.RunWithArgsForStdout(
-      '-c', 'import tools.shared; print(tools.shared.LLVM_ROOT)',
-      cwd=emscripten_dir)
-  return Executable(os.path.join(stdout.strip(), 'llvm-nm'))
+    python = Executable(sys.executable)
+    stdout = python.RunWithArgsForStdout(
+        '-c', 'import tools.shared; print(tools.shared.LLVM_ROOT)',
+        cwd=emscripten_dir)
+    return Executable(os.path.join(stdout.strip(), 'llvm-nm'))
 
 
 def ProcessFile(nm, file_):
-  names = []
-  for line in nm.RunWithArgsForStdout(file_).splitlines():
-    line = line.rstrip()
-    if not line.lstrip():
-      continue
-    if line.endswith(':'):
-      # displaying the archive name, e.g. "foo.c.o:"
-      continue
-    # line looks like:
-    #
-    # -------- d yycheck
-    # -------- t wabt_strndup_
-    #          U wabt_parse_int64
-    # -------- T wabt_offsetof_allocator_alloc
-    #
-    # we want to only keep the "T" names; the extern function symbols defined
-    # in the object.
-    type_ = line[9]
-    if type_ != 'T':
-      continue
-    name = line[11:]
-    names.append('_' + name)
-  return names
+    names = []
+    for line in nm.RunWithArgsForStdout(file_).splitlines():
+        line = line.rstrip()
+        if not line.lstrip():
+            continue
+        if line.endswith(':'):
+            # displaying the archive name, e.g. "foo.c.o:"
+            continue
+        # line looks like:
+        #
+        # -------- d yycheck
+        # -------- t wabt_strndup_
+        #          U wabt_parse_int64
+        # -------- T wabt_offsetof_allocator_alloc
+        #
+        # we want to only keep the "T" names; the extern function symbols defined
+        # in the object.
+        type_ = line[9]
+        if type_ != 'T':
+            continue
+        name = line[11:]
+        names.append('_' + name)
+    return names
 
 
 def main(args):
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
-  parser.add_argument('-v', '--verbose',
-                      help='print more diagnostic messages.',
-                      action='store_true')
-  parser.add_argument('--emscripten-dir', metavar='PATH',
-                      help='emscripten directory',
-                      default=DEFAULT_EMSCRIPTEN_DIR)
-  parser.add_argument('cmake_build_dir', metavar='cmake_build_dir')
-  options = parser.parse_args(args)
-  nm = GetNM(options.emscripten_dir)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
+    parser.add_argument('-v', '--verbose',
+                        help='print more diagnostic messages.',
+                        action='store_true')
+    parser.add_argument('--emscripten-dir', metavar='PATH',
+                        help='emscripten directory',
+                        default=DEFAULT_EMSCRIPTEN_DIR)
+    parser.add_argument('cmake_build_dir', metavar='cmake_build_dir')
+    options = parser.parse_args(args)
+    nm = GetNM(options.emscripten_dir)
 
-  names = []
-  for file_ in FindFiles(options.cmake_build_dir):
-    names.extend(ProcessFile(nm, file_))
+    names = []
+    for file_ in FindFiles(options.cmake_build_dir):
+        names.extend(ProcessFile(nm, file_))
 
-  out_data = json.dumps(sorted(names), separators=(',\n', ':\n'))
-  if options.output:
-    with open(options.output, 'w') as out_file:
-      out_file.write(out_data)
-  else:
-    print out_data
-  return 0
+    out_data = json.dumps(sorted(names), separators=(',\n', ':\n'))
+    if options.output:
+        with open(options.output, 'w') as out_file:
+            out_file.write(out_data)
+    else:
+        print out_data
+    return 0
 
 
 if __name__ == '__main__':
-  try:
-    sys.exit(main(sys.argv[1:]))
-  except Error as e:
-    sys.stderr.write(str(e) + '\n')
-    sys.exit(1)
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except Error as e:
+        sys.stderr.write(str(e) + '\n')
+        sys.exit(1)
