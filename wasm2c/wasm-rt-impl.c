@@ -103,12 +103,20 @@ void wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   uint32_t old_pages = memory->pages;
   uint32_t new_pages = memory->pages + delta;
+  if (new_pages == 0) {
+    return 0;
+  }
   if (new_pages < old_pages || new_pages > memory->max_pages) {
     return (uint32_t)-1;
   }
+  uint32_t new_size = new_pages * PAGE_SIZE;
+  uint8_t* new_data = realloc(memory->data, new_size);
+  if (memory->data == NULL) {
+    return (uint32_t)-1;
+  }
   memory->pages = new_pages;
-  memory->size = new_pages * PAGE_SIZE;
-  memory->data = realloc(memory->data, memory->size);
+  memory->size = new_size;
+  memory->data = new_data;
   memset(memory->data + old_pages * PAGE_SIZE, 0, delta * PAGE_SIZE);
   return old_pages;
 }
