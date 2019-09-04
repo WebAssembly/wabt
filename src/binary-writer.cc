@@ -1032,8 +1032,8 @@ Result BinaryWriter::WriteModule() {
         WriteType(stream_, segment->elem_type);
       } else {
         auto table_var = module_->GetTableIndex(segment->table_var);
-        if (!options_.features.reference_types_enabled()) {
-          assert(table_var == 0);
+        if (!options_.features.reference_types_enabled() && table_var != 0) {
+          return Result::Error;
         }
         if (table_var == 0) {
           stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));

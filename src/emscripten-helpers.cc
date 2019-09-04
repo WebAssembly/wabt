@@ -172,7 +172,8 @@ WabtWriteScriptResult* wabt_write_binary_spec_script(
     int log,
     int canonicalize_lebs,
     int relocatable,
-    int write_debug_names) {
+    int write_debug_names,
+    wabt::Features* features) {
   wabt::MemoryStream log_stream;
   wabt::MemoryStream* log_stream_p = log ? &log_stream : nullptr;
 
@@ -180,6 +181,7 @@ WabtWriteScriptResult* wabt_write_binary_spec_script(
   options.canonicalize_lebs = canonicalize_lebs;
   options.relocatable = relocatable;
   options.write_debug_names = write_debug_names;
+  options.features = *features;
 
   std::vector<wabt::FilenameMemoryStreamPair> module_streams;
   wabt::MemoryStream json_stream(log_stream_p);
@@ -218,12 +220,14 @@ WabtWriteModuleResult* wabt_write_binary_module(wabt::Module* module,
                                                 int log,
                                                 int canonicalize_lebs,
                                                 int relocatable,
-                                                int write_debug_names) {
+                                                int write_debug_names,
+                                                wabt::Features* features) {
   wabt::MemoryStream log_stream;
   wabt::WriteBinaryOptions options;
   options.canonicalize_lebs = canonicalize_lebs;
   options.relocatable = relocatable;
   options.write_debug_names = write_debug_names;
+  options.features = *features;
 
   wabt::MemoryStream stream(log ? &log_stream : nullptr);
   WabtWriteModuleResult* result = new WabtWriteModuleResult();
