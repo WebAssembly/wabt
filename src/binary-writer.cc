@@ -642,6 +642,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, index, "table.size table index");
       break;
     }
+    case ExprType::TableFill: {
+      Index index =
+          module_->GetTableIndex(cast<TableFillExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::TableFill);
+      WriteU32Leb128(stream_, index, "table.fill table index");
+      break;
+    }
     case ExprType::RefNull: {
       WriteOpcode(stream_, Opcode::RefNull);
       break;
@@ -1024,8 +1031,16 @@ Result BinaryWriter::WriteModule() {
         stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::Passive));
         WriteType(stream_, segment->elem_type);
       } else {
-        assert(module_->GetTableIndex(segment->table_var) == 0);
-        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));
+        auto table_var = module_->GetTableIndex(segment->table_var);
+        if (!options_.features.reference_types_enabled()) {
+          assert(table_var == 0);
+        }
+        if (table_var == 0) {
+          stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));
+        } else {
+          stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexOther));
+          WriteU32Leb128(stream_, table_var, "table index");
+        }
         WriteInitExpr(segment->offset);
       }
       WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elem exprs");

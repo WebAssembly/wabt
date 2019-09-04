@@ -72,6 +72,7 @@ const char* ExprTypeName[] = {
   "TableCopy",
   "ElemDrop",
   "TableInit",
+  "TableFill",
   "TableGet",
   "TableGrow",
   "TableSize",

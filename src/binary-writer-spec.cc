@@ -132,6 +132,7 @@ void BinaryWriterSpec::WriteCommandType(const Command& command) {
       "assert_return",
       "assert_return_canonical_nan",
       "assert_return_arithmetic_nan",
+      "assert_return_func",
       "assert_trap",
       "assert_exhaustion",
   };
@@ -488,6 +489,18 @@ void BinaryWriterSpec::WriteCommands() {
         WriteSeparator();
         WriteKey("expected");
         WriteActionResultType(*assert_return_arithmetic_nan_command->action);
+        break;
+      }
+
+      case CommandType::AssertReturnFunc: {
+        auto* assert_return_func_command =
+            cast<AssertReturnFuncCommand>(command);
+        WriteLocation(assert_return_func_command->action->loc);
+        WriteSeparator();
+        WriteAction(*assert_return_func_command->action);
+        WriteSeparator();
+        WriteKey("expected");
+        WriteActionResultType(*assert_return_func_command->action);
         break;
       }
 

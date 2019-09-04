@@ -206,6 +206,7 @@ enum class ExprType {
   TableCopy,
   ElemDrop,
   TableInit,
+  TableFill,
   TableGet,
   TableGrow,
   TableSize,
@@ -339,6 +340,7 @@ typedef VarExpr<ExprType::TableGet> TableGetExpr;
 typedef VarExpr<ExprType::TableSet> TableSetExpr;
 typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
 typedef VarExpr<ExprType::TableSize> TableSizeExpr;
+typedef VarExpr<ExprType::TableFill> TableFillExpr;
 
 class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
  public:
@@ -1012,6 +1014,7 @@ enum class CommandType {
   AssertReturn,
   AssertReturnCanonicalNan,
   AssertReturnArithmeticNan,
+  AssertReturnFunc,
   AssertTrap,
   AssertExhaustion,
 
@@ -1055,6 +1058,8 @@ typedef ActionCommandBase<CommandType::AssertReturnCanonicalNan>
     AssertReturnCanonicalNanCommand;
 typedef ActionCommandBase<CommandType::AssertReturnArithmeticNan>
     AssertReturnArithmeticNanCommand;
+typedef ActionCommandBase<CommandType::AssertReturnFunc>
+    AssertReturnFuncCommand;
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:

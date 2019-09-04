@@ -63,6 +63,7 @@ class NameResolver : public ExprVisitor::DelegateNop {
   Result OnTableSetExpr(TableSetExpr*) override;
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
+  Result OnTableFillExpr(TableFillExpr*) override;
   Result BeginTryExpr(TryExpr*) override;
   Result EndTryExpr(TryExpr*) override;
   Result OnThrowExpr(ThrowExpr*) override;
@@ -377,6 +378,11 @@ Result NameResolver::OnTableSizeExpr(TableSizeExpr* expr) {
   return Result::Ok;
 }
 
+Result NameResolver::OnTableFillExpr(TableFillExpr* expr) {
+  ResolveTableVar(&expr->var);
+  return Result::Ok;
+}
+
 Result NameResolver::BeginTryExpr(TryExpr* expr) {
   PushLabel(expr->block.label);
   ResolveBlockDeclarationVar(&expr->block.decl);
@@ -502,6 +508,7 @@ void NameResolver::VisitCommand(Command* command) {
     case CommandType::AssertReturn:
     case CommandType::AssertReturnCanonicalNan:
     case CommandType::AssertReturnArithmeticNan:
+    case CommandType::AssertReturnFunc:
     case CommandType::AssertTrap:
     case CommandType::AssertExhaustion:
     case CommandType::Register:

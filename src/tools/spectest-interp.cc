@@ -155,6 +155,8 @@ typedef ActionCommandBase<CommandType::AssertReturnCanonicalNan>
     AssertReturnCanonicalNanCommand;
 typedef ActionCommandBase<CommandType::AssertReturnArithmeticNan>
     AssertReturnArithmeticNanCommand;
+typedef ActionCommandBase<CommandType::AssertReturnFunc>
+    AssertReturnFuncCommand;
 
 class RegisterCommand : public CommandMixin<CommandType::Register> {
  public:
@@ -807,6 +809,7 @@ class CommandRunner {
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
   template <typename NanCommand>
   wabt::Result OnAssertReturnNanCommand(const NanCommand*);
+  wabt::Result OnAssertReturnFuncCommand(const AssertReturnFuncCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
   wabt::Result OnAssertExhaustionCommand(const AssertExhaustionCommand*);
 
@@ -915,6 +918,11 @@ wabt::Result CommandRunner::Run(const Script& script) {
       case CommandType::AssertReturnArithmeticNan:
         TallyCommand(OnAssertReturnNanCommand(
             cast<AssertReturnArithmeticNanCommand>(command.get())));
+        break;
+
+      case CommandType::AssertReturnFunc:
+        TallyCommand(OnAssertReturnFuncCommand(
+            cast<AssertReturnFuncCommand>(command.get())));
         break;
 
       case CommandType::AssertTrap:
@@ -1310,6 +1318,37 @@ wabt::Result CommandRunner::OnAssertReturnNanCommand(
 
     default:
       PrintError(command->line, "expected result type to be f32 or f64, got %s",
+                 GetTypeName(actual.type));
+      return wabt::Result::Error;
+  }
+
+  return wabt::Result::Ok;
+}
+
+wabt::Result CommandRunner::OnAssertReturnFuncCommand(
+    const AssertReturnFuncCommand* command) {
+  ExecResult exec_result =
+      RunAction(command->line, &command->action, RunVerbosity::Quiet);
+
+  if (exec_result.result != interp::Result::Ok) {
+    PrintError(command->line, "unexpected trap: %s",
+               ResultToString(exec_result.result));
+    return wabt::Result::Error;
+  }
+
+  if (exec_result.values.size() != 1) {
+    PrintError(command->line, "expected one result, got %" PRIzd,
+               exec_result.values.size());
+    return wabt::Result::Error;
+  }
+
+  const TypedValue& actual = exec_result.values[0];
+  switch (actual.type) {
+    case Type::Funcref:
+      break;
+
+    default:
+      PrintError(command->line, "expected result type to be funcref, got %s",
                  GetTypeName(actual.type));
       return wabt::Result::Error;
   }

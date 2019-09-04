@@ -143,6 +143,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::TableSet:
     case TokenType::TableGrow:
     case TokenType::TableSize:
+    case TokenType::TableFill:
     case TokenType::Throw:
     case TokenType::Rethrow:
     case TokenType::RefNull:
@@ -221,6 +222,7 @@ bool IsCommand(TokenTypePair pair) {
     case TokenType::AssertReturn:
     case TokenType::AssertReturnArithmeticNan:
     case TokenType::AssertReturnCanonicalNan:
+    case TokenType::AssertReturnFunc:
     case TokenType::AssertTrap:
     case TokenType::AssertUnlinkable:
     case TokenType::Get:
@@ -1527,9 +1529,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::CallIndirect: {
       Consume();
       auto expr = MakeUnique<CallIndirectExpr>(loc);
+      ParseVarOpt(&expr->table, Var(0));
       CHECK_RESULT(ParseTypeUseOpt(&expr->decl));
       CHECK_RESULT(ParseUnboundFuncSignature(&expr->decl.sig));
-      ParseVarOpt(&expr->table, Var(0));
       *out_expr = std::move(expr);
       break;
     }
@@ -1679,6 +1681,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::TableSize:
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<TableSizeExpr>(loc, out_expr));
+      break;
+
+    case TokenType::TableFill:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<TableFillExpr>(loc, out_expr));
       break;
 
     case TokenType::RefNull:
@@ -2349,6 +2356,9 @@ Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
     case TokenType::AssertReturnCanonicalNan:
       return ParseAssertReturnCanonicalNanCommand(out_command);
 
+    case TokenType::AssertReturnFunc:
+      return ParseAssertReturnFunc(out_command);
+
     case TokenType::AssertTrap:
       return ParseAssertTrapCommand(out_command);
 
@@ -2413,6 +2423,13 @@ Result WastParser::ParseAssertReturnCanonicalNanCommand(
   WABT_TRACE(ParseAssertReturnCanonicalNanCommand);
   return ParseAssertActionCommand<AssertReturnCanonicalNanCommand>(
       TokenType::AssertReturnCanonicalNan, out_command);
+}
+
+Result WastParser::ParseAssertReturnFunc(
+    CommandPtr* out_command) {
+  WABT_TRACE(ParseAssertReturnFunc);
+  return ParseAssertActionCommand<AssertReturnFuncCommand>(
+      TokenType::AssertReturnFunc, out_command);
 }
 
 Result WastParser::ParseAssertTrapCommand(CommandPtr* out_command) {

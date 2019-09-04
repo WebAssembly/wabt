@@ -311,18 +311,22 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::DataDrop:
     case Opcode::MemoryCopy:
     case Opcode::MemoryFill:
-    case Opcode::TableInit:
     case Opcode::ElemDrop:
-    case Opcode::TableCopy:
       return features.bulk_memory_enabled();
 
     case Opcode::TableGet:
     case Opcode::TableSet:
     case Opcode::TableGrow:
     case Opcode::TableSize:
-    case Opcode::RefNull:
+    case Opcode::TableFill:
     case Opcode::RefIsNull:
       return features.reference_types_enabled();
+
+    case Opcode::RefFunc:
+    case Opcode::RefNull:
+    case Opcode::TableCopy:
+    case Opcode::TableInit:
+      return features.bulk_memory_enabled() || features.reference_types_enabled();
 
     // Interpreter opcodes are never "enabled".
     case Opcode::InterpAlloca:

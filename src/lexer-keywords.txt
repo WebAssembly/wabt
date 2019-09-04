@@ -21,6 +21,7 @@ assert_invalid, TokenType::AssertInvalid
 assert_malformed, TokenType::AssertMalformed
 assert_return_arithmetic_nan, TokenType::AssertReturnArithmeticNan
 assert_return_canonical_nan, TokenType::AssertReturnCanonicalNan
+assert_return_func, TokenType::AssertReturnFunc
 assert_return, TokenType::AssertReturn
 assert_trap, TokenType::AssertTrap
 assert_unlinkable, TokenType::AssertUnlinkable
@@ -463,6 +464,7 @@ table.grow, TokenType::TableGrow, Opcode::TableGrow
 table.init, TokenType::TableInit, Opcode::TableInit
 table.set, TokenType::TableSet, Opcode::TableSet
 table.size, TokenType::TableSize, Opcode::TableSize
+table.fill, TokenType::TableFill, Opcode::TableFill
 table, TokenType::Table
 then, TokenType::Then
 throw, TokenType::Throw, Opcode::Throw

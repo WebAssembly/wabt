@@ -106,6 +106,7 @@ class TypeChecker {
   Result OnTableSet(Index);
   Result OnTableGrow(Index);
   Result OnTableSize(Index);
+  Result OnTableFill(Index);
   Result OnRefNullExpr();
   Result OnRefIsNullExpr();
   Result OnRethrow();

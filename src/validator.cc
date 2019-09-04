@@ -80,6 +80,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnTableSetExpr(TableSetExpr*) override;
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
+  Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
   Result OnNopExpr(NopExpr*) override;
@@ -826,6 +827,13 @@ Result Validator::OnTableSizeExpr(TableSizeExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::OnTableFillExpr(TableFillExpr* expr) {
+  expr_loc_ = &expr->loc;
+  CheckHasTable(&expr->loc, Opcode::TableFill, expr->var.index());
+  typechecker_.OnTableFill(expr->var.index());
+  return Result::Ok;
+}
+
 Result Validator::OnRefNullExpr(RefNullExpr* expr) {
   expr_loc_ = &expr->loc;
   typechecker_.OnRefNullExpr();
@@ -1522,6 +1530,39 @@ void Validator::CheckCommand(const Command* command) {
       CheckAssertReturnNanCommand(
           cast<AssertReturnArithmeticNanCommand>(command)->action.get());
       break;
+
+    case CommandType::AssertReturnFunc: {
+      auto* assert_return_func_command = cast <AssertReturnFuncCommand>(command);
+      const Action* action = assert_return_func_command->action.get();
+      ActionResult result = CheckAction(action);
+      switch (result.kind) {
+        case ActionResult::Kind::Types: {
+          if (result.types->size() != 1) {
+            PrintError(&action->loc, "expected 1 result, got %" PRIzd,
+                       result.types->size());
+            break;
+          }
+          auto actual = result.types->at(0);
+          if (!(actual == Type::Funcref || actual == Type::Anyref)) {
+            PrintError(&action->loc, "type mismatch at action. got %s, expected funcref or anyref",
+                       GetTypeName(actual));
+          }
+          break;
+        }
+
+        case ActionResult::Kind::Type:
+          if (result.type != Type::Funcref || result.type != Type::Anyref) {
+            PrintError(&action->loc, "type mismatch at action. got %s, expected funcref or anyref",
+                       GetTypeName(result.type));
+          }
+          break;
+
+        case ActionResult::Kind::Error:
+          // Error occurred, don't do any further checks.
+          break;
+      }
+      break;
+    }
 
     case CommandType::AssertTrap:
       // ignore result type.

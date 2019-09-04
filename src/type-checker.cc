@@ -658,6 +658,10 @@ Result TypeChecker::OnTableSize(Index segment) {
   return Result::Ok;
 }
 
+Result TypeChecker::OnTableFill(Index segment) {
+  return CheckOpcode3(Opcode::TableFill);
+}
+
 Result TypeChecker::OnRefNullExpr() {
   PushType(Type::Nullref);
   return Result::Ok;

@@ -589,6 +589,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::TableSet:
       case Opcode::TableGrow:
       case Opcode::TableSize:
+      case Opcode::TableFill:
       case Opcode::RefNull:
       case Opcode::RefIsNull:
       case Opcode::RefFunc:

@@ -1482,6 +1482,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::TableFill: {
+        Index table;
+        CHECK_RESULT(ReadIndex(&table, "table index"));
+        CALLBACK(OnTableFillExpr, table);
+        CALLBACK(OnOpcodeUint32, table);
+        break;
+      }
+
       case Opcode::RefNull: {
         CALLBACK(OnRefNullExpr);
         CALLBACK0(OnOpcodeBare);
