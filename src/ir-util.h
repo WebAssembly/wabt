@@ -56,7 +56,8 @@ struct ModuleContext {
   void BeginFunc(const Func& func);
   void EndFunc();
 
-  std::pair<Index, Index> GetExprArity(const Expr& expr);
+  struct Arities { Index nargs; Index nreturns; };
+  Arities GetExprArity(const Expr& expr);
 
   const Module &module;
  private:

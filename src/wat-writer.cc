@@ -952,7 +952,7 @@ void WatWriter::WriteExprList(const ExprList& exprs) {
 void WatWriter::WriteFoldedExpr(const Expr* expr) {
   WABT_TRACE_ARGS(WriteFoldedExpr, "%s", GetExprTypeName(*expr));
   auto arity = GetExprArity(*expr);
-  PushExpr(expr, arity.first, arity.second);
+  PushExpr(expr, arity.nargs, arity.nreturns);
 }
 
 void WatWriter::WriteFoldedExprList(const ExprList& exprs) {

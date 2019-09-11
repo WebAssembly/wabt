@@ -95,7 +95,7 @@ void ModuleContext::EndFunc() {
   current_func_ = nullptr;
 }
 
-std::pair<Index, Index> ModuleContext::GetExprArity(const Expr& expr) {
+ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
   switch (expr.type()) {
     case ExprType::AtomicNotify:
     case ExprType::AtomicRmw:
@@ -193,7 +193,8 @@ std::pair<Index, Index> ModuleContext::GetExprArity(const Expr& expr) {
       return { 0, 0 };
 
     case ExprType::Return:
-      return { current_func_->decl.sig.result_types.size(), 1 };
+      return
+        { static_cast<Index>(current_func_->decl.sig.result_types.size()), 1 };
 
     case ExprType::Rethrow:
       return { 0, 0 };

@@ -260,6 +260,7 @@ add_library(wabt STATIC
   src/opcode.cc
   src/opcode-code-table.h
   src/opcode-code-table.c
+  src/opcode.def
   src/option-parser.h
   src/option-parser.cc
   src/resolve-names.h

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 WebAssembly Community Group participants
+ * Copyright 2019 WebAssembly Community Group participants
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,9 @@ struct Decompiler : ModuleContext {
 
   struct Value {
     std::vector<std::string> v;
-    bool needs_bracketing;  // TODO: replace with a system based on precedence?
+    // Lazily add bracketing only if the parent requires it.
+    // TODO: replace with a system based on precedence?
+    bool needs_bracketing;
 
     size_t width() {
       size_t w = 0;
@@ -75,7 +77,7 @@ struct Decompiler : ModuleContext {
                     WABT_PRINTF_STRING_VIEW_ARG(val.v[0]), val.v.size());
     auto indent = Indent(amount);
     for (auto& s : val.v) {
-      auto is = &s != &val.v[0] || first_indent.empty()
+      auto is = (&s != &val.v[0] || first_indent.empty())
                 ? string_view(indent)
                 : first_indent;
       s.insert(0, is.data(), is.size());
@@ -91,7 +93,7 @@ struct Decompiler : ModuleContext {
     if (width < target_exp_width ||
         (prefix.size() <= indent_amount && postfix.size() <= indent_amount)) {
       if (v.size() == 1) {
-      // Fits in a single line.
+        // Fits in a single line.
         v[0].insert(0, prefix.data(), prefix.size());
         v[0].append(postfix.data(), postfix.size());
       } else {
@@ -136,6 +138,7 @@ struct Decompiler : ModuleContext {
     }
   }
 
+  // Turns e.g. "i32.load8_u" -> "i32_8_u"
   std::string TypeFromLoadStore(Opcode opcode, string_view name) {
     auto op = std::string(OpcodeToToken(opcode));
     auto load_pos = op.find(name.data(), 0, name.size());
@@ -144,6 +147,11 @@ struct Decompiler : ModuleContext {
       if (op.size() > load_pos) op.insert(load_pos, "_");
     }
     return op;
+  }
+
+  void PushSStream() {
+    stack.push_back({ { ss.str() }, false });
+    ss.str({});
   }
 
   void DecompileExpr(const Expr& e) {
@@ -167,19 +175,22 @@ struct Decompiler : ModuleContext {
             ss << "V128";  // FIXME
             break;
           default:
-            assert(false);
+            WABT_UNREACHABLE;
         }
-        break;
+        PushSStream();
+        return;
       }
       case ExprType::LocalGet: {
         auto& lg = *cast<LocalGetExpr>(&e);
         ss << lg.var.name();
-        break;
+        PushSStream();
+        return;
       }
       case ExprType::GlobalGet: {
         auto& gg = *cast<GlobalGetExpr>(&e);
         ss << gg.var.name();
-        break;
+        PushSStream();
+        return;
       }
       case ExprType::LocalSet: {
         auto& ls = *cast<LocalSetExpr>(&e);
@@ -275,7 +286,8 @@ struct Decompiler : ModuleContext {
         } else {
           ss << "if (" << ifs.v[0] << ") { " <<  thenp.v[0] << " }";
           if (!elsep.v.empty()) ss << " else { " << elsep.v[0] << " }";
-          break;
+          PushSStream();
+          return;
         }
       }
       case ExprType::Loop: {
@@ -288,79 +300,77 @@ struct Decompiler : ModuleContext {
         return;
       }
       default: {
-        std::string name = GetExprTypeName(e.type());
+        std::string name;
         switch (e.type()) {
-          case ExprType::Call: {
+          case ExprType::Call:
             name = cast<CallExpr>(&e)->var.name();
             break;
-          }
-          case ExprType::Convert: {
+          case ExprType::Convert:
             name = std::string(OpcodeToToken(cast<ConvertExpr>(&e)->opcode));
             break;
-          }
           default:
+            name = GetExprTypeName(e.type());
             break;
         }
-        size_t twidth = 0;
-        size_t mwidth = 0;
-        auto num_args = GetExprArity(e).first;
+        size_t total_width = 0;
+        size_t max_width = 0;
+        auto nargs = GetExprArity(e).nargs;
         bool multiline = false;
-        for (Index i = 0; i < num_args; i++) {
+        for (Index i = 0; i < nargs; i++) {
           auto& child = stack[stack.size() - i - 1];
           auto w = child.width();
-          mwidth = std::max(mwidth, w);
-          twidth += w;
+          max_width = std::max(max_width, w);
+          total_width += w;
           multiline = multiline || child.v.size() > 1;
         }
-        if (!multiline && twidth + name.length() < target_exp_width) {
+        if (!multiline && total_width + name.length() < target_exp_width) {
           // Single line.
           ss << name;
           ss << "(";
-          if (num_args) {
-            for (Index i = 0; i < num_args; i++) {
-              auto& child = stack[stack.size() - num_args + i];
+          if (nargs) {
+            for (Index i = 0; i < nargs; i++) {
+              auto& child = stack[stack.size() - nargs + i];
               if (i) ss << ", ";
               ss << child.v[0];
             }
-            stack.resize(stack.size() - num_args);
+            stack.resize(stack.size() - nargs);
           }
           ss << ")";
-          break;
+          PushSStream();
+          return;
         } else {
           // Multi-line.
           name += "(";
-          auto ident_with_name = mwidth + name.length() < target_exp_width;
-          for (Index i = 0; i < num_args; i++) {
-            auto& child = stack[stack.size() - num_args + i];
+          auto ident_with_name = max_width + name.length() < target_exp_width;
+          for (Index i = 0; i < nargs; i++) {
+            auto& child = stack[stack.size() - nargs + i];
             IndentValue(child, ident_with_name ? name.size() : indent_amount,
                         !i && ident_with_name ? name : string_view {});
-            child.v.back() += i == num_args - 1 ? ")" : ",";
+            child.v.back() += i == nargs - 1 ? ")" : ",";
             if (i) {
               std::move(child.v.begin(), child.v.end(),
-                        std::back_inserter(stack[stack.size() - num_args].v));
+                        std::back_inserter(stack[stack.size() - nargs].v));
             } else if (!ident_with_name) {
               child.v.insert(child.v.begin(), name);
             }
           }
-          stack.erase(stack.end() - num_args + 1, stack.end());
+          stack.erase(stack.end() - nargs + 1, stack.end());
           return;
         }
       }
     }
-    stack.push_back({ { ss.str() }, false });
-    ss.str({});
   }
 
   void DecompileExprs(const ExprList &es) {
     auto start = stack.size();
     for (auto& e : es) {
       DecompileExpr(e);
-      auto num_returns = GetExprArity(e).second;
-      if (num_returns > 1) {
+      auto nreturns = GetExprArity(e).nreturns;
+      if (nreturns > 1) {
         // Multivalue: we "push" everything on to the stack.
         WrapChild(stack.back(), "push_all(", ")");
         // All values become pops.
-        for (Index i = 0; i < num_returns; i++)
+        for (Index i = 0; i < nreturns; i++)
           stack.insert(stack.end(), Value { { "pop()" }, false });
         // TODO: can also implement a push_all_but_one that returns the top,
         // then insert N-1 pops below it. Or have a function that returns N
