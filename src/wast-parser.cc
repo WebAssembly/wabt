@@ -1994,12 +1994,75 @@ Result WastParser::ParseConst(Const* const_) {
   return Result::Ok;
 }
 
+Result WastParser::ParseHostRef(Const* const_) {
+  WABT_TRACE(ParseHostRef);
+  Token token = Consume();
+  if (!options_->features.reference_types_enabled()) {
+    Error(token.loc, "hostref not allowed");
+    return Result::Error;
+  }
+
+  Literal literal;
+  string_view sv;
+  const char* s;
+  const char* end;
+  const_->loc = GetLocation();
+  TokenType token_type = Peek();
+
+  switch (token_type) {
+    case TokenType::Nat:
+    case TokenType::Int: {
+      literal = Consume().literal();
+      sv = literal.text;
+      s = sv.begin();
+      end = sv.end();
+      break;
+    }
+    default:
+      return ErrorExpected({"a numeric literal"}, "123");
+  }
+
+  uint64_t ref_bits;
+  Result result = ParseInt64(s, end, &ref_bits, ParseIntType::UnsignedOnly);
+
+  const_->type = ref_bits ? Type::Anyref : Type::Nullref;
+  const_->ref_bits = static_cast<uintptr_t>(ref_bits);
+
+  if (Failed(result)) {
+    Error(const_->loc, "invalid literal \"" PRIstringview "\"",
+          WABT_PRINTF_STRING_VIEW_ARG(literal.text));
+    // Return if parser get errors.
+    return Result::Error;
+  }
+
+  return Result::Ok;
+}
+
 Result WastParser::ParseConstList(ConstVector* consts) {
   WABT_TRACE(ParseConstList);
-  while (PeekMatchLpar(TokenType::Const)) {
+  while (PeekMatchLpar(TokenType::Const) || PeekMatchLpar(TokenType::RefNull) ||
+         PeekMatchLpar(TokenType::RefHost)) {
     Consume();
     Const const_;
-    CHECK_RESULT(ParseConst(&const_));
+    switch (Peek()) {
+      case TokenType::Const:
+        CHECK_RESULT(ParseConst(&const_));
+        break;
+      case TokenType::RefNull: {
+        auto token = Consume();
+        ErrorUnlessOpcodeEnabled(token);
+        const_.loc = GetLocation();
+        const_.type = Type::Nullref;
+        const_.ref_bits = 0;
+        break;
+      }
+      case TokenType::RefHost:
+        CHECK_RESULT(ParseHostRef(&const_));
+        break;
+      default:
+        assert(!"unreachable");
+        return Result::Error;
+    }
     EXPECT(Rpar);
     consts->push_back(const_);
   }

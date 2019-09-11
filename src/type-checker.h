@@ -121,6 +121,8 @@ class TypeChecker {
   Result OnUnreachable();
   Result EndFunction();
 
+  static Result CheckType(Type actual, Type expected);
+
  private:
   void WABT_PRINTF_FORMAT(2, 3) PrintError(const char* fmt, ...);
   Result TopLabel(Label** out_label);
@@ -138,7 +140,6 @@ class TypeChecker {
   void PushType(Type type);
   void PushTypes(const TypeVector& types);
   Result CheckTypeStackEnd(const char* desc);
-  Result CheckType(Type actual, Type expected);
   Result CheckTypes(const TypeVector &actual, const TypeVector &expected);
   Result CheckSignature(const TypeVector& sig, const char* desc);
   Result CheckReturnSignature(const TypeVector& sig, const TypeVector &expected,const char *desc);

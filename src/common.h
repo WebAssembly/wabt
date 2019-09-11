@@ -219,6 +219,7 @@ enum class Type : int32_t {
   Void = -0x40,     // 0x40
   ___ = Void,       // Convenient for the opcode table in opcode.h
   Any = 0,          // Not actually specified, but useful for type-checking
+  Nullref = 1,      // Not actually specified, but useful for anyref type-checking
 };
 typedef std::vector<Type> TypeVector;
 

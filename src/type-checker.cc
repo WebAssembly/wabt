@@ -169,9 +169,16 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
 }
 
 Result TypeChecker::CheckType(Type actual, Type expected) {
-  return (expected == actual || expected == Type::Any || actual == Type::Any)
-             ? Result::Ok
-             : Result::Error;
+  if (expected == actual || expected == Type::Any || actual == Type::Any) {
+    return Result::Ok;
+  }
+  if (expected == Type::Anyref && (actual == Type::Funcref || actual == Type::Nullref)) {
+    return Result::Ok;
+  }
+  if ((expected == Type::Funcref || expected == Type::Anyref) && actual == Type::Nullref) {
+    return Result::Ok;
+  }
+  return Result::Error;
 }
 
 Result TypeChecker::CheckTypes(const TypeVector& actual,
@@ -631,7 +638,7 @@ Result TypeChecker::OnTableInit(uint32_t segment) {
 
 Result TypeChecker::OnTableGet(Index segment) {
   Result result = PopAndCheck1Type(Type::I32, "table.get");
-  PushType(Type::Anyref); // TODO: should be the table's type
+  PushType(Type::Nullref); // TODO: should be the table's type
   return result;
 }
 
@@ -652,7 +659,7 @@ Result TypeChecker::OnTableSize(Index segment) {
 }
 
 Result TypeChecker::OnRefNullExpr() {
-  PushType(Type::Anyref);
+  PushType(Type::Nullref);
   return Result::Ok;
 }
 

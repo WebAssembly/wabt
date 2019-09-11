@@ -201,6 +201,17 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       break;
     }
 
+    case Type::Nullref:
+    case Type::Funcref:
+    case Type::Anyref: {
+      WriteString("ref");
+      WriteSeparator();
+      WriteKey("value");
+      int64_t ref_bits = static_cast<int64_t>(const_.ref_bits);
+      json_stream_->Writef("\"%" PRIu64 "\"", ref_bits);
+      break;
+    }
+
     case Type::V128: {
       WriteString("v128");
       WriteSeparator();

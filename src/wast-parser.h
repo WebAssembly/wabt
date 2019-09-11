@@ -164,6 +164,7 @@ class WastParser {
   Result ParseInstr(ExprList*);
   Result ParsePlainInstr(std::unique_ptr<Expr>*);
   Result ParseConst(Const*);
+  Result ParseHostRef(Const*);
   Result ParseConstList(ConstVector*);
   Result ParseBlockInstr(std::unique_ptr<Expr>*);
   Result ParseLabelOpt(std::string*);

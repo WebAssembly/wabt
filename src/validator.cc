@@ -412,7 +412,7 @@ void Validator::CheckType(const Location* loc,
                           Type actual,
                           Type expected,
                           const char* desc) {
-  if (expected != actual) {
+  if (Failed(TypeChecker::CheckType(actual, expected))) {
     PrintError(loc, "type mismatch at %s. got %s, expected %s", desc,
                GetTypeName(actual), GetTypeName(expected));
   }
@@ -424,7 +424,7 @@ void Validator::CheckTypeIndex(const Location* loc,
                                const char* desc,
                                Index index,
                                const char* index_kind) {
-  if (expected != actual && expected != Type::Any && actual != Type::Any) {
+  if (Failed(TypeChecker::CheckType(actual, expected))) {
     PrintError(
         loc, "type mismatch for %s %" PRIindex " of %s. got %s, expected %s",
         index_kind, index, desc, GetTypeName(actual), GetTypeName(expected));
@@ -1070,7 +1070,7 @@ void Validator::CheckConstInitExpr(const Location* loc,
       }
 
       case ExprType::RefNull:
-        type = Type::Anyref;
+        type = Type::Nullref;
         break;
       
       default:
