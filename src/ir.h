@@ -101,6 +101,7 @@ struct Const {
     uint64_t u64;
     uint32_t f32_bits;
     uint64_t f64_bits;
+    uintptr_t ref_bits;
     v128 v128_bits;
   };
 
@@ -110,12 +111,14 @@ struct Const {
   struct I64Tag {};
   struct F32Tag {};
   struct F64Tag {};
+  struct RefTag {};
   struct V128Tag {};
 
   Const(I32Tag, uint32_t val = 0, const Location& loc = Location());
   Const(I64Tag, uint64_t val = 0, const Location& loc = Location());
   Const(F32Tag, uint32_t val = 0, const Location& loc = Location());
   Const(F64Tag, uint64_t val = 0, const Location& loc = Location());
+  Const(RefTag, uintptr_t val = 0, const Location& loc = Location());
   Const(V128Tag, v128 val = {{0, 0, 0, 0}}, const Location& loc = Location());
 };
 typedef std::vector<Const> ConstVector;
