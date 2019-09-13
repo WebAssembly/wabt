@@ -1,0 +1,47 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/linking.wast
+;;; ARGS*: --enable-reference-types
+(;; STDERR ;;;
+000000c: error: invalid global type: 0xfffffff0
+error: unknown import module "Mref-ex"
+000001e: error: OnImportGlobal callback failed
+;;; STDERR ;;)
+(;; STDOUT ;;;
+out/test/spec/reference-types/linking.wast:28: assert_unlinkable passed:
+  error: import signature mismatch
+  0000025: error: OnImportFunc callback failed
+out/test/spec/reference-types/linking.wast:32: assert_unlinkable passed:
+  error: import signature mismatch
+  0000026: error: OnImportFunc callback failed
+out/test/spec/reference-types/linking.wast:87: assert_unlinkable passed:
+  error: mutability mismatch in imported global, expected mutable but got immutable.
+  000001a: error: OnImportGlobal callback failed
+out/test/spec/reference-types/linking.wast:91: assert_unlinkable passed:
+  error: mutability mismatch in imported global, expected immutable but got mutable.
+  0000016: error: OnImportGlobal callback failed
+out/test/spec/reference-types/linking.wast:96: error reading module: "out/test/spec/reference-types/linking/linking.9.wasm"
+out/test/spec/reference-types/linking.wast:100: unknown module in register
+out/test/spec/reference-types/linking.wast:102: error reading module: "out/test/spec/reference-types/linking/linking.10.wasm"
+out/test/spec/reference-types/linking.wast:107: assert_unlinkable passed:
+  error: unknown import module "Mref-ex"
+  000001c: error: OnImportGlobal callback failed
+out/test/spec/reference-types/linking.wast:224: assert_unlinkable passed:
+  error: elem segment is out of bounds: [10, 11) >= max value 10
+out/test/spec/reference-types/linking.wast:233: assert_unlinkable passed:
+  error: unknown module field "mem"
+  0000027: error: OnImportMemory callback failed
+out/test/spec/reference-types/linking.wast:245: assert_unlinkable passed:
+  error: elem segment is out of bounds: [12, 13) >= max value 10
+out/test/spec/reference-types/linking.wast:256: assert_unlinkable passed:
+  error: data segment is out of bounds: [65536, 65537) >= max value 65536
+out/test/spec/reference-types/linking.wast:316: assert_unlinkable passed:
+  error: data segment is out of bounds: [65536, 65537) >= max value 65536
+out/test/spec/reference-types/linking.wast:341: assert_unlinkable passed:
+  error: unknown module field "tab"
+  0000037: error: OnImportTable callback failed
+out/test/spec/reference-types/linking.wast:352: assert_unlinkable passed:
+  error: data segment is out of bounds: [327680, 327681) >= max value 327680
+out/test/spec/reference-types/linking.wast:362: assert_unlinkable passed:
+  error: elem segment is out of bounds: [0, 1) >= max value 0
+95/95 tests passed.
+;;; STDOUT ;;)

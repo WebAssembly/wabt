@@ -1,0 +1,3 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/globals.wast
+;;; ARGS*: --enable-reference-types

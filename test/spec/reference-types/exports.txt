@@ -1,0 +1,76 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/exports.wast
+;;; ARGS*: --enable-reference-types
+(;; STDERR ;;;
+error: only one table allowed
+0000011: error: OnTable callback failed
+;;; STDERR ;;)
+(;; STDOUT ;;;
+out/test/spec/reference-types/exports.wast:29: assert_invalid passed:
+  0000019: error: invalid export func index: 1
+out/test/spec/reference-types/exports.wast:33: assert_invalid passed:
+  error: duplicate export "a"
+  000001d: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:37: assert_invalid passed:
+  error: duplicate export "a"
+  000001e: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:41: assert_invalid passed:
+  error: duplicate export "a"
+  0000025: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:45: assert_invalid passed:
+  error: duplicate export "a"
+  0000023: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:49: assert_invalid passed:
+  error: duplicate export "a"
+  0000022: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:78: assert_invalid passed:
+  0000017: error: invalid export global index: 1
+out/test/spec/reference-types/exports.wast:82: assert_invalid passed:
+  error: duplicate export "a"
+  000001b: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:86: assert_invalid passed:
+  error: duplicate export "a"
+  0000020: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:90: assert_invalid passed:
+  error: duplicate export "a"
+  0000025: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:94: assert_invalid passed:
+  error: duplicate export "a"
+  0000021: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:98: assert_invalid passed:
+  error: duplicate export "a"
+  0000020: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:107: error reading module: "out/test/spec/reference-types/exports/exports.40.wasm"
+out/test/spec/reference-types/exports.wast:125: assert_invalid passed:
+  0000015: error: invalid export table index: 1
+out/test/spec/reference-types/exports.wast:129: assert_invalid passed:
+  error: duplicate export "a"
+  0000019: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:133: assert_invalid passed:
+  error: only one table allowed
+  0000011: error: OnTable callback failed
+out/test/spec/reference-types/exports.wast:137: assert_invalid passed:
+  error: duplicate export "a"
+  0000023: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:141: assert_invalid passed:
+  error: duplicate export "a"
+  0000021: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:145: assert_invalid passed:
+  error: duplicate export "a"
+  000001e: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:173: assert_invalid passed:
+  0000014: error: invalid export memory index: 1
+out/test/spec/reference-types/exports.wast:177: assert_invalid passed:
+  error: duplicate export "a"
+  0000018: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:186: assert_invalid passed:
+  error: duplicate export "a"
+  0000022: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:190: assert_invalid passed:
+  error: duplicate export "a"
+  0000020: error: OnExport callback failed
+out/test/spec/reference-types/exports.wast:194: assert_invalid passed:
+  error: duplicate export "a"
+  000001e: error: OnExport callback failed
+29/29 tests passed.
+;;; STDOUT ;;)
