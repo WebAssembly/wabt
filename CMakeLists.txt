@@ -27,6 +27,7 @@ option(USE_UBSAN "Use undefined behavior sanitizer" OFF)
 option(CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(WITH_EXCEPTIONS "Build with exceptions enabled" OFF)
 option(WERROR "Build with warnings as errors" OFF)
+option(WIP_TOOLS "Build Work-In-Progress functionality" OFF)
 
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")
   set(COMPILER_IS_CLANG 1)
@@ -207,45 +208,88 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 add_custom_target(everything)
 
 add_library(wabt STATIC
+  src/apply-names.h
   src/apply-names.cc
+  src/binary.h
   src/binary.cc
+  src/binary-reader.h
   src/binary-reader.cc
+  src/binary-reader-ir.h
   src/binary-reader-ir.cc
+  src/binary-reader-logging.h
   src/binary-reader-logging.cc
+  src/binary-writer.h
   src/binary-writer.cc
+  src/binary-writer-spec.h
   src/binary-writer-spec.cc
+  src/binding-hash.h
   src/binding-hash.cc
+  src/color.h
   src/color.cc
+  src/common.h
   src/common.cc
+  src/config.h
   src/config.cc
+  src/decompiler.h
+  src/decompiler.cc
+  src/error-formatter.h
   src/error-formatter.cc
+  src/expr-visitor.h
   src/expr-visitor.cc
+  src/feature.h
   src/feature.cc
+  src/filenames.h
   src/filenames.cc
+  src/generate-names.h
   src/generate-names.cc
+  src/hash-util.h
   src/hash-util.cc
+  src/ir.h
   src/ir.cc
+  src/ir-util.h
+  src/ir-util.cc
+  src/leb128.h
   src/leb128.cc
+  src/lexer-source.h
   src/lexer-source.cc
+  src/lexer-source-line-finder.h
   src/lexer-source-line-finder.cc
+  src/literal.h
   src/literal.cc
+  src/opcode.h
   src/opcode.cc
+  src/opcode-code-table.h
   src/opcode-code-table.c
+  src/opcode.def
+  src/option-parser.h
   src/option-parser.cc
+  src/resolve-names.h
   src/resolve-names.cc
+  src/stream.h
   src/stream.cc
+  src/string-view.h
   src/string-view.cc
+  src/token.h
   src/token.cc
+  src/tracing.h
   src/tracing.cc
+  src/type-checker.h
   src/type-checker.cc
+  src/utf8.h
   src/utf8.cc
+  src/validator.h
   src/validator.cc
+  src/wast-lexer.h
   src/wast-lexer.cc
+  src/wast-parser.h
   src/wast-parser.cc
+  src/wat-writer.h
   src/wat-writer.cc
 
   # TODO(binji): Move this into its own library?
+  src/interp/binary-reader-interp.h
   src/interp/binary-reader-interp.cc
+  src/interp/interp.h
   src/interp/interp.cc
   src/interp/interp-disassemble.cc
   src/interp/interp-trace.cc
@@ -370,6 +414,15 @@ if (NOT EMSCRIPTEN)
       SOURCES src/tools/wasm-strip.cc
       INSTALL
     )
+
+    if (WIP_TOOLS)
+      # wasm-decompile
+      wabt_executable(
+        NAME wasm-decompile
+        SOURCES src/tools/wasm-decompile.cc
+        INSTALL
+      )
+    endif()
   endif ()
 
   find_package(Threads)
