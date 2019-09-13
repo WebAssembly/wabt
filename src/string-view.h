@@ -20,6 +20,7 @@
 #include <cassert>
 #include <functional>
 #include <iterator>
+#include <ostream>
 #include <string>
 
 #include "src/hash-util.h"
@@ -269,6 +270,11 @@ inline string_view::const_reference string_view::back() const {
 
 constexpr inline string_view::const_pointer string_view::data() const noexcept {
   return data_;
+}
+
+inline std::ostream& operator<<(std::ostream& os, string_view sv) {
+    os.write(sv.data(), sv.size());
+    return os;
 }
 
 }  // namespace wabt
