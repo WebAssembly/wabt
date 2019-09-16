@@ -290,6 +290,15 @@ struct Decompiler : ModuleContext {
           return;
         }
       }
+      case ExprType::Block: {
+        auto le = cast<BlockExpr>(&e);
+        DecompileExprs(le->block.exprs);
+        auto &val = stack.back();
+        IndentValue(val, indent_amount, {});
+        val.v.insert(val.v.begin(), "block {");
+        val.v.push_back("}");
+        return;
+      }
       case ExprType::Loop: {
         auto le = cast<LoopExpr>(&e);
         DecompileExprs(le->block.exprs);
