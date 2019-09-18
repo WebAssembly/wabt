@@ -878,7 +878,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result HandleInitExpr(const InitExpr& expr);
   bool ShouldPrintDetails();
   void PrintDetails(const char* fmt, ...);
-  void PrintSymbolFlags(uint32_t flags);
+  Result PrintSymbolFlags(uint32_t flags);
   void PrintInitExpr(const InitExpr& expr);
   Result OnCount(Index count);
 
@@ -1545,7 +1545,12 @@ Result BinaryReaderObjdump::OnSymbolCount(Index count) {
   return Result::Ok;
 }
 
-void BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
+Result BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
+  if (flags > WABT_SYMBOL_FLAG_MAX) {
+    fprintf(stderr, "Unknown symbols flags: %x\n", flags);
+    return Result::Error;
+  }
+
   const char* binding_name = nullptr;
   SymbolBinding binding =
       static_cast<SymbolBinding>(flags & WABT_SYMBOL_MASK_BINDING);
@@ -1574,7 +1579,15 @@ void BinaryReaderObjdump::PrintSymbolFlags(uint32_t flags) {
   }
   if (flags & WABT_SYMBOL_FLAG_UNDEFINED)
     PrintDetails(" undefined");
+  if (flags & WABT_SYMBOL_FLAG_EXPORTED)
+    PrintDetails(" exported");
+  if (flags & WABT_SYMBOL_FLAG_EXPLICIT_NAME)
+    PrintDetails(" explicit_name");
+  if (flags & WABT_SYMBOL_FLAG_NO_STRIP)
+    PrintDetails(" no_strip");
+
   PrintDetails(" binding=%s vis=%s\n", binding_name, vis_name);
+  return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnDataSymbol(Index index,
@@ -1588,8 +1601,7 @@ Result BinaryReaderObjdump::OnDataSymbol(Index index,
   if (!(flags & WABT_SYMBOL_FLAG_UNDEFINED))
     PrintDetails(" segment=%" PRIindex " offset=%d size=%d", segment, offset,
                  size);
-  PrintSymbolFlags(flags);
-  return Result::Ok;
+  return PrintSymbolFlags(flags);
 }
 
 Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
@@ -1601,8 +1613,7 @@ Result BinaryReaderObjdump::OnFunctionSymbol(Index index,
   }
   PrintDetails("   - %d: F <" PRIstringview "> func=%" PRIindex, index,
                WABT_PRINTF_STRING_VIEW_ARG(name), func_index);
-  PrintSymbolFlags(flags);
-  return Result::Ok;
+  return PrintSymbolFlags(flags);
 }
 
 Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
@@ -1614,8 +1625,7 @@ Result BinaryReaderObjdump::OnGlobalSymbol(Index index,
   }
   PrintDetails("   - %d: G <" PRIstringview "> global=%" PRIindex, index,
                WABT_PRINTF_STRING_VIEW_ARG(name), global_index);
-  PrintSymbolFlags(flags);
-  return Result::Ok;
+  return PrintSymbolFlags(flags);
 }
 
 Result BinaryReaderObjdump::OnSectionSymbol(Index index,
@@ -1625,8 +1635,7 @@ Result BinaryReaderObjdump::OnSectionSymbol(Index index,
   assert(!sym_name.empty());
   PrintDetails("   - %d: S <" PRIstringview "> section=%" PRIindex, index,
                WABT_PRINTF_STRING_VIEW_ARG(sym_name), section_index);
-  PrintSymbolFlags(flags);
-  return Result::Ok;
+  return PrintSymbolFlags(flags);
 }
 
 Result BinaryReaderObjdump::OnEventSymbol(Index index,
@@ -1638,8 +1647,7 @@ Result BinaryReaderObjdump::OnEventSymbol(Index index,
   }
   PrintDetails("   - [%d] E <" PRIstringview "> event=%" PRIindex, index,
                WABT_PRINTF_STRING_VIEW_ARG(name), event_index);
-  PrintSymbolFlags(flags);
-  return Result::Ok;
+  return PrintSymbolFlags(flags);
 }
 
 Result BinaryReaderObjdump::OnSegmentInfoCount(Index count) {
