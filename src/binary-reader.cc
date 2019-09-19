@@ -1708,7 +1708,7 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
               uint32_t index = 0;
               CHECK_RESULT(ReadU32Leb128(&index, "index"));
               if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0 ||
-                  (flags & WASM_SYMBOL_EXPLICIT_NAME) != 0)
+                  (flags & WABT_SYMBOL_FLAG_EXPLICIT_NAME) != 0)
                 CHECK_RESULT(ReadStr(&name, "symbol name"));
               switch (sym_type) {
                 case SymbolType::Function:
