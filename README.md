@@ -44,12 +44,12 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 
 | Proposal | flag | binary | text | validate | interpret |
 | - | - | - | - | - | - |
-| [exception handling][] | `--enable-exceptions` | ✓ | ✓ | ✓ | |
-| [mutable globals][] | `--enable-mutable-globals` | ✓ | ✓ | ✓ | ✓ |
+| [exception handling][] | `--enable-exceptions` | ✓ | ✓ | ✓ | ✓ |
+| [mutable globals][] | `--disable-mutable-globals` | ✓ | ✓ | ✓ | ✓ |
 | [nontrapping float-to-int conversions][] | `--enable-saturating-float-to-int` | ✓ | ✓ | ✓ | ✓ |
 | [sign extension][] | `--enable-sign-extension` | ✓ | ✓ | ✓ | ✓ |
 | [simd][] | `--enable-simd` | ✓ | ✓ | ✓ | ✓ |
-| [threads][] | `--enable-threads` | ✓ | ✓ | ✓ | |
+| [threads][] | `--enable-threads` | ✓ | ✓ | ✓ | ✓ |
 | [multi-value][] | `--enable-multi-value` | ✓ | ✓ | ✓ | ✓ |
 | [tail-call][] | `--enable-tail-call` | ✓ | ✓ | ✓ | ✓ |
 | [bulk memory][] | `--enable-bulk-memory` | ✓ | ✓ | ✓ | ✓ |
