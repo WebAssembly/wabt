@@ -113,7 +113,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
       return { 0, cast<BlockExpr>(&expr)->block.decl.sig.GetNumResults() };
 
     case ExprType::Br:
-      return { GetLabelArity(cast<BrExpr>(&expr)->var), 1 };
+      return { GetLabelArity(cast<BrExpr>(&expr)->var), 1, true };
 
     case ExprType::BrIf: {
       Index arity = GetLabelArity(cast<BrIfExpr>(&expr)->var);
@@ -124,7 +124,8 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
       return { 1, 1 };
 
     case ExprType::BrTable:
-      return { GetLabelArity(cast<BrTableExpr>(&expr)->default_target) + 1, 1 };
+      return { GetLabelArity(cast<BrTableExpr>(&expr)->default_target) + 1, 1,
+               true };
 
     case ExprType::Call: {
       const Var& var = cast<CallExpr>(&expr)->var;
@@ -133,7 +134,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
 
     case ExprType::ReturnCall: {
       const Var& var = cast<ReturnCallExpr>(&expr)->var;
-      return { GetFuncParamCount(var), GetFuncResultCount(var) };
+      return { GetFuncParamCount(var), GetFuncResultCount(var), true };
     }
 
     case ExprType::CallIndirect: {
@@ -145,7 +146,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
     case ExprType::ReturnCallIndirect: {
       const auto* rci_expr = cast<ReturnCallIndirectExpr>(&expr);
       return { rci_expr->decl.GetNumParams() + 1,
-               rci_expr->decl.GetNumResults() };
+               rci_expr->decl.GetNumResults(), true };
     }
 
     case ExprType::Const:
@@ -153,9 +154,11 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
     case ExprType::LocalGet:
     case ExprType::MemorySize:
     case ExprType::TableSize:
-    case ExprType::Unreachable:
     case ExprType::RefNull:
       return { 0, 1 };
+
+    case ExprType::Unreachable:
+      return { 0, 1, true };
 
     case ExprType::DataDrop:
     case ExprType::ElemDrop:
@@ -194,10 +197,11 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
 
     case ExprType::Return:
       return
-        { static_cast<Index>(current_func_->decl.sig.result_types.size()), 1 };
+        { static_cast<Index>(current_func_->decl.sig.result_types.size()), 1,
+          true };
 
     case ExprType::Rethrow:
-      return { 0, 0 };
+      return { 0, 0, true };
 
     case ExprType::AtomicRmwCmpxchg:
     case ExprType::AtomicWait:
@@ -210,7 +214,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
       if (Event* event = module.GetEvent(throw_->var)) {
         operand_count = event->decl.sig.param_types.size();
       }
-      return { operand_count, 0 };
+      return { operand_count, 0, true };
     }
 
     case ExprType::Try:

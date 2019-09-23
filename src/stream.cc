@@ -232,6 +232,10 @@ FileStream::~FileStream() {
   }
 }
 
+void FileStream::Flush() {
+  if (file_) fflush(file_);
+}
+
 Result FileStream::WriteDataImpl(size_t at, const void* data, size_t size) {
   if (!file_) {
     return Result::Error;

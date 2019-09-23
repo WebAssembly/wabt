@@ -125,6 +125,8 @@ class Stream {
     WriteU8(static_cast<uint32_t>(value), desc, print_chars);
   }
 
+  virtual void Flush() {}
+
  protected:
   virtual Result WriteDataImpl(size_t offset,
                                const void* data,
@@ -193,6 +195,8 @@ class FileStream : public Stream {
   static std::unique_ptr<FileStream> CreateStderr();
 
   bool is_open() const { return file_ != nullptr; }
+
+  void Flush() override;
 
  protected:
   Result WriteDataImpl(size_t offset, const void* data, size_t size) override;

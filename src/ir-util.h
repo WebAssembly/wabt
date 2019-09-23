@@ -56,7 +56,13 @@ struct ModuleContext {
   void BeginFunc(const Func& func);
   void EndFunc();
 
-  struct Arities { Index nargs; Index nreturns; };
+  struct Arities {
+    Index nargs;
+    Index nreturns;
+    bool unreachable;
+    Arities(Index na, Index nr, bool ur = false)
+      : nargs(na), nreturns(nr), unreachable(ur) {}
+  };
   Arities GetExprArity(const Expr& expr);
 
   const Module &module;
