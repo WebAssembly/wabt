@@ -31,7 +31,7 @@ namespace {
 
 class NameGenerator : public ExprVisitor::DelegateNop {
  public:
-  NameGenerator();
+  NameGenerator(NameOpts opts);
 
   Result VisitModule(Module* module);
 
@@ -46,37 +46,37 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   // Generate a name with the given prefix, followed by the index and
   // optionally a disambiguating number. If index == kInvalidIndex, the index
   // is not appended.
-  static void GenerateName(const char* prefix,
-                           Index index,
-                           unsigned disambiguator,
-                           std::string* out_str);
+  void GenerateName(const char* prefix,
+                    Index index,
+                    unsigned disambiguator,
+                    std::string* out_str);
 
   // Like GenerateName, but only generates a name if |out_str| is empty.
-  static void MaybeGenerateName(const char* prefix,
-                                Index index,
-                                std::string* out_str);
+  void MaybeGenerateName(const char* prefix,
+                         Index index,
+                         std::string* out_str);
 
   // Generate a name via GenerateName and bind it to the given binding hash. If
   // the name already exists, the name will be disambiguated until it can be
   // added.
-  static void GenerateAndBindName(BindingHash* bindings,
-                                  const char* prefix,
-                                  Index index,
-                                  std::string* out_str);
+  void GenerateAndBindName(BindingHash* bindings,
+                           const char* prefix,
+                           Index index,
+                           std::string* out_str);
 
   // Like GenerateAndBindName, but only  generates a name if |out_str| is empty.
-  static void MaybeGenerateAndBindName(BindingHash* bindings,
-                                       const char* prefix,
-                                       Index index,
-                                       std::string* out_str);
+  void MaybeGenerateAndBindName(BindingHash* bindings,
+                                const char* prefix,
+                                Index index,
+                                std::string* out_str);
 
   // Like MaybeGenerateAndBindName but uses the name directly, without
   // appending the index. If the name already exists, a disambiguating suffix
   // is added.
-  static void MaybeUseAndBindName(BindingHash* bindings,
-                                  const char* name,
-                                  Index index,
-                                  std::string* out_str);
+  void MaybeUseAndBindName(BindingHash* bindings,
+                           const char* name,
+                           Index index,
+                           std::string* out_str);
 
   void GenerateAndBindLocalNames(Func* func);
 
@@ -104,30 +104,42 @@ class NameGenerator : public ExprVisitor::DelegateNop {
   Index num_memory_imports_ = 0;
   Index num_global_imports_ = 0;
   Index num_event_imports_ = 0;
+
+  NameOpts opts_;
 };
 
-NameGenerator::NameGenerator() : visitor_(this) {}
+NameGenerator::NameGenerator(NameOpts opts)
+  : visitor_(this), opts_(opts) {}
 
 // static
 bool NameGenerator::HasName(const std::string& str) {
   return !str.empty();
 }
 
-// static
 void NameGenerator::GenerateName(const char* prefix,
                                  Index index,
                                  unsigned disambiguator,
                                  std::string* str) {
-  *str = prefix;
+  if (!(opts_ & NameOpts::NoDollar)) *str = "$";
+  *str += prefix;
   if (index != kInvalidIndex) {
-    *str += std::to_string(index);
+    if (opts_ & NameOpts::AlphaNames) {
+      // For params and locals, do not use a prefix char.
+      if (!strcmp(prefix, "p") || !strcmp(prefix, "l")) {
+        str->pop_back();
+      } else {
+        *str += '_';
+      }
+      *str += IndexToAlphaName(index);
+    } else {
+      *str += std::to_string(index);
+    }
   }
   if (disambiguator != 0) {
     *str += '_' + std::to_string(disambiguator);
   }
 }
 
-// static
 void NameGenerator::MaybeGenerateName(const char* prefix,
                                       Index index,
                                       std::string* str) {
@@ -138,7 +150,6 @@ void NameGenerator::MaybeGenerateName(const char* prefix,
   }
 }
 
-// static
 void NameGenerator::GenerateAndBindName(BindingHash* bindings,
                                         const char* prefix,
                                         Index index,
@@ -155,7 +166,6 @@ void NameGenerator::GenerateAndBindName(BindingHash* bindings,
   }
 }
 
-// static
 void NameGenerator::MaybeGenerateAndBindName(BindingHash* bindings,
                                              const char* prefix,
                                              Index index,
@@ -165,7 +175,6 @@ void NameGenerator::MaybeGenerateAndBindName(BindingHash* bindings,
   }
 }
 
-// static
 void NameGenerator::MaybeUseAndBindName(BindingHash* bindings,
                                         const char* name,
                                         Index index,
@@ -194,7 +203,7 @@ void NameGenerator::GenerateAndBindLocalNames(Func* func) {
       continue;
     }
 
-    const char* prefix = i < func->GetNumParams() ? "$p" : "$l";
+    const char* prefix = i < func->GetNumParams() ? "p" : "l";
     std::string new_name;
     GenerateAndBindName(&func->bindings, prefix, i, &new_name);
     index_to_name[i] = new_name;
@@ -202,22 +211,22 @@ void NameGenerator::GenerateAndBindLocalNames(Func* func) {
 }
 
 Result NameGenerator::BeginBlockExpr(BlockExpr* expr) {
-  MaybeGenerateName("$B", label_count_++, &expr->block.label);
+  MaybeGenerateName("B", label_count_++, &expr->block.label);
   return Result::Ok;
 }
 
 Result NameGenerator::BeginLoopExpr(LoopExpr* expr) {
-  MaybeGenerateName("$L", label_count_++, &expr->block.label);
+  MaybeGenerateName("L", label_count_++, &expr->block.label);
   return Result::Ok;
 }
 
 Result NameGenerator::BeginIfExpr(IfExpr* expr) {
-  MaybeGenerateName("$I", label_count_++, &expr->true_.label);
+  MaybeGenerateName("I", label_count_++, &expr->true_.label);
   return Result::Ok;
 }
 
 Result NameGenerator::VisitFunc(Index func_index, Func* func) {
-  MaybeGenerateAndBindName(&module_->func_bindings, "$f", func_index,
+  MaybeGenerateAndBindName(&module_->func_bindings, "f", func_index,
                            &func->name);
   GenerateAndBindLocalNames(func);
 
@@ -227,46 +236,46 @@ Result NameGenerator::VisitFunc(Index func_index, Func* func) {
 }
 
 Result NameGenerator::VisitGlobal(Index global_index, Global* global) {
-  MaybeGenerateAndBindName(&module_->global_bindings, "$g", global_index,
+  MaybeGenerateAndBindName(&module_->global_bindings, "g", global_index,
                            &global->name);
   return Result::Ok;
 }
 
 Result NameGenerator::VisitFuncType(Index func_type_index,
                                     FuncType* func_type) {
-  MaybeGenerateAndBindName(&module_->func_type_bindings, "$t", func_type_index,
+  MaybeGenerateAndBindName(&module_->func_type_bindings, "t", func_type_index,
                            &func_type->name);
   return Result::Ok;
 }
 
 Result NameGenerator::VisitTable(Index table_index, Table* table) {
-  MaybeGenerateAndBindName(&module_->table_bindings, "$T", table_index,
+  MaybeGenerateAndBindName(&module_->table_bindings, "T", table_index,
                            &table->name);
   return Result::Ok;
 }
 
 Result NameGenerator::VisitMemory(Index memory_index, Memory* memory) {
-  MaybeGenerateAndBindName(&module_->memory_bindings, "$M", memory_index,
+  MaybeGenerateAndBindName(&module_->memory_bindings, "M", memory_index,
                            &memory->name);
   return Result::Ok;
 }
 
 Result NameGenerator::VisitEvent(Index event_index, Event* event) {
-  MaybeGenerateAndBindName(&module_->event_bindings, "$e", event_index,
+  MaybeGenerateAndBindName(&module_->event_bindings, "e", event_index,
                            &event->name);
   return Result::Ok;
 }
 
 Result NameGenerator::VisitDataSegment(Index data_segment_index,
                                        DataSegment* data_segment) {
-  MaybeGenerateAndBindName(&module_->data_segment_bindings, "$d",
+  MaybeGenerateAndBindName(&module_->data_segment_bindings, "d",
                            data_segment_index, &data_segment->name);
   return Result::Ok;
 }
 
 Result NameGenerator::VisitElemSegment(Index elem_segment_index,
                                        ElemSegment* elem_segment) {
-  MaybeGenerateAndBindName(&module_->elem_segment_bindings, "$e",
+  MaybeGenerateAndBindName(&module_->elem_segment_bindings, "e",
                            elem_segment_index, &elem_segment->name);
   return Result::Ok;
 }
@@ -320,7 +329,7 @@ Result NameGenerator::VisitImport(Import* import) {
 
   if (bindings && name) {
     assert(index != kInvalidIndex);
-    std::string new_name = '$' + import->module_name + '.' + import->field_name;
+    std::string new_name = import->module_name + '.' + import->field_name;
     MaybeUseAndBindName(bindings, new_name.c_str(), index, name);
   }
 
@@ -375,8 +384,7 @@ Result NameGenerator::VisitExport(Export* export_) {
   }
 
   if (bindings && name) {
-    std::string new_name = '$' + export_->name;
-    MaybeUseAndBindName(bindings, new_name.c_str(), index, name);
+    MaybeUseAndBindName(bindings, export_->name.c_str(), index, name);
   }
 
   return Result::Ok;
@@ -416,8 +424,8 @@ Result NameGenerator::VisitModule(Module* module) {
 
 }  // end anonymous namespace
 
-Result GenerateNames(Module* module) {
-  NameGenerator generator;
+Result GenerateNames(Module* module, NameOpts opts) {
+  NameGenerator generator(opts);
   return generator.VisitModule(module);
 }
 

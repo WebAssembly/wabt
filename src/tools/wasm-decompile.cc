@@ -89,7 +89,9 @@ int ProgramMain(int argc, char** argv) {
         result = ValidateModule(&module, &errors, options);
       }
       // FIXME: do we need these?
-      result = GenerateNames(&module);
+      result = GenerateNames(&module,
+                             static_cast<NameOpts>(NameOpts::AlphaNames |
+                                                   NameOpts::NoDollar));
       if (Succeeded(result)) {
         /* TODO(binji): This shouldn't fail; if a name can't be applied
          * (because the index is invalid, say) it should just be skipped. */

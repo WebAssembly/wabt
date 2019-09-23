@@ -23,7 +23,24 @@ namespace wabt {
 
 struct Module;
 
-Result GenerateNames(struct Module*);
+enum NameOpts {
+  None = 0,
+  AlphaNames = 1 << 0,
+  NoDollar = 1 << 0,
+};
+
+Result GenerateNames(struct Module*, NameOpts opts = NameOpts::None);
+
+inline std::string IndexToAlphaName(Index index) {
+  std::string s;
+  do {
+    // For multiple chars, put most frequently changing char first.
+    s += 'a' + (index % 26);
+    index /= 26;
+    // Continue remaining sequence with 'a' rather than 'b'.
+  } while (index--);
+  return s;
+}
 
 }  // namespace wabt
 

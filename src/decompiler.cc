@@ -35,6 +35,7 @@
 #include "src/ir.h"
 #include "src/ir-util.h"
 #include "src/literal.h"
+#include "src/generate-names.h"
 #include "src/stream.h"
 
 #define WABT_TRACING 0
@@ -138,13 +139,39 @@ struct Decompiler : ModuleContext {
     }
   }
 
-  // Turns e.g. "i32.load8_u" -> "i32_8_u"
+  const char *GetDecompTypeName(Type t) {
+    switch (t) {
+      case Type::I32: return "int";
+      case Type::I64: return "long";
+      case Type::F32: return "float";
+      case Type::F64: return "double";
+      case Type::V128: return "simd";
+      case Type::Anyref: return "anyref";
+      case Type::Func: return "func";
+      case Type::Funcref: return "funcref";
+      case Type::Exnref: return "exceptionref";
+      case Type::Void: return "void";
+      default: return "illegal";
+    }
+  }
+
+  Type GetTypeFromString(string_view name) {
+    if (name == "i32") return Type::I32;
+    if (name == "i64") return Type::I64;
+    if (name == "f32") return Type::F32;
+    if (name == "f64") return Type::F64;
+    return Type::Any;
+  }
+
+  // Turns e.g. "i32.load8_u" -> "int_8_u"
   std::string TypeFromLoadStore(Opcode opcode, string_view name) {
     auto op = std::string(OpcodeToToken(opcode));
     auto load_pos = op.find(name.data(), 0, name.size());
     if (load_pos != std::string::npos) {
-      op.erase(load_pos, name.size());
-      if (op.size() > load_pos) op.insert(load_pos, "_");
+      auto t = GetTypeFromString(string_view(op.data(), load_pos));
+      auto s = std::string(GetDecompTypeName(t));
+      if (op.size() <= load_pos + name.size()) return s;
+      return s + "_" + (op.data() + load_pos + name.size());
     }
     return op;
   }
@@ -410,7 +437,8 @@ struct Decompiler : ModuleContext {
       for (Index i = 0; i < f->GetNumParams(); i++) {
         if (i) stream.Writef(", ");
         auto t = f->GetParamType(i);
-        stream.Writef("$p%d:%s", i, GetTypeName(t));
+        stream.Writef("%s:%s", IndexToAlphaName(i).c_str(),
+                      GetDecompTypeName(t));
       }
       stream.Writef(") {\n");
       DecompileExprs(f->exprs);
