@@ -139,6 +139,52 @@ struct Decompiler : ModuleContext {
     }
   }
 
+  void WrapNAry(Index nargs, string_view prefix, string_view postfix) {
+    size_t total_width = 0;
+    size_t max_width = 0;
+    bool multiline = false;
+    for (Index i = 0; i < nargs; i++) {
+      auto& child = stack[stack.size() - i - 1];
+      auto w = child.width();
+      max_width = std::max(max_width, w);
+      total_width += w;
+      multiline = multiline || child.v.size() > 1;
+    }
+    if (!multiline &&
+        total_width + prefix.size() + postfix.size() < target_exp_width) {
+      // Single line.
+      ss << prefix;
+      if (nargs) {
+        for (Index i = 0; i < nargs; i++) {
+          auto& child = stack[stack.size() - nargs + i];
+          if (i) ss << ", ";
+          ss << child.v[0];
+        }
+        stack.resize(stack.size() - nargs);
+      }
+      ss << postfix;
+      PushSStream();
+      return;
+    } else {
+      // Multi-line.
+      auto ident_with_name = max_width + prefix.size() < target_exp_width;
+      for (Index i = 0; i < nargs; i++) {
+        auto& child = stack[stack.size() - nargs + i];
+        IndentValue(child, ident_with_name ? prefix.size() : indent_amount,
+                    !i && ident_with_name ? prefix : string_view {});
+        child.v.back() += i == nargs - 1 ? std::string(postfix) : ",";
+        if (i) {
+          std::move(child.v.begin(), child.v.end(),
+                    std::back_inserter(stack[stack.size() - nargs].v));
+        } else if (!ident_with_name) {
+          child.v.insert(child.v.begin(), std::string(prefix));
+        }
+      }
+      stack.erase(stack.end() - nargs + 1, stack.end());
+      return;
+    }
+  }
+
   const char *GetDecompTypeName(Type t) {
     switch (t) {
       case Type::I32: return "int";
@@ -290,14 +336,14 @@ struct Decompiler : ModuleContext {
         auto ifs = std::move(stack.back());
         stack.pop_back();
         stack_depth--;  // Condition.
-        DecompileExprs(ife->true_.exprs, ife->true_.decl.GetNumResults());
+        DecompileExprs(ife->true_.exprs, ife->true_.decl.GetNumResults(), false);
         auto thenp = std::move(stack.back());
         stack.pop_back();
         bool multiline = ifs.v.size() > 1 || thenp.v.size() > 1;
         size_t width = ifs.width() + thenp.width();
         Value elsep { {}, false };
         if (!ife->false_.empty()) {
-          DecompileExprs(ife->false_, ife->true_.decl.GetNumResults());
+          DecompileExprs(ife->false_, ife->true_.decl.GetNumResults(), false);
           elsep = std::move(stack.back());
           width += elsep.width();
           stack.pop_back();
@@ -328,7 +374,7 @@ struct Decompiler : ModuleContext {
       }
       case ExprType::Block: {
         auto le = cast<BlockExpr>(&e);
-        DecompileExprs(le->block.exprs, le->block.decl.GetNumResults());
+        DecompileExprs(le->block.exprs, le->block.decl.GetNumResults(), false);
         auto &val = stack.back();
         IndentValue(val, indent_amount, {});
         val.v.insert(val.v.begin(), "block {");
@@ -337,7 +383,7 @@ struct Decompiler : ModuleContext {
       }
       case ExprType::Loop: {
         auto le = cast<LoopExpr>(&e);
-        DecompileExprs(le->block.exprs, le->block.decl.GetNumResults());
+        DecompileExprs(le->block.exprs, le->block.decl.GetNumResults(), false);
         auto &val = stack.back();
         IndentValue(val, indent_amount, {});
         val.v.insert(val.v.begin(), "loop {");
@@ -357,56 +403,13 @@ struct Decompiler : ModuleContext {
             name = GetExprTypeName(e.type());
             break;
         }
-        size_t total_width = 0;
-        size_t max_width = 0;
-        auto nargs = GetExprArity(e).nargs;
-        bool multiline = false;
-        for (Index i = 0; i < nargs; i++) {
-          auto& child = stack[stack.size() - i - 1];
-          auto w = child.width();
-          max_width = std::max(max_width, w);
-          total_width += w;
-          multiline = multiline || child.v.size() > 1;
-        }
-        if (!multiline && total_width + name.length() < target_exp_width) {
-          // Single line.
-          ss << name;
-          ss << "(";
-          if (nargs) {
-            for (Index i = 0; i < nargs; i++) {
-              auto& child = stack[stack.size() - nargs + i];
-              if (i) ss << ", ";
-              ss << child.v[0];
-            }
-            stack.resize(stack.size() - nargs);
-          }
-          ss << ")";
-          PushSStream();
-          return;
-        } else {
-          // Multi-line.
-          name += "(";
-          auto ident_with_name = max_width + name.length() < target_exp_width;
-          for (Index i = 0; i < nargs; i++) {
-            auto& child = stack[stack.size() - nargs + i];
-            IndentValue(child, ident_with_name ? name.size() : indent_amount,
-                        !i && ident_with_name ? name : string_view {});
-            child.v.back() += i == nargs - 1 ? ")" : ",";
-            if (i) {
-              std::move(child.v.begin(), child.v.end(),
-                        std::back_inserter(stack[stack.size() - nargs].v));
-            } else if (!ident_with_name) {
-              child.v.insert(child.v.begin(), name);
-            }
-          }
-          stack.erase(stack.end() - nargs + 1, stack.end());
-          return;
-        }
+        WrapNAry(GetExprArity(e).nargs, name + "(", ")");
+        return;
       }
     }
   }
 
-  void DecompileExprs(const ExprList &es, Index nresults) {
+  void DecompileExprs(const ExprList &es, Index nresults, bool return_results) {
     auto start = stack.size();
     auto stack_depth_start = stack_depth;
     bool unreachable = false;
@@ -436,6 +439,13 @@ struct Decompiler : ModuleContext {
     stack_depth = stack_depth_start;
     auto end = stack.size();
     Assert(end >= start);
+    if (return_results) {
+      // Combine nresults into a return statement, for when this is used as
+      // a function body.
+      // TODO: if this is some other kind of block and >1 value is being
+      // returned, probably need some kind of syntax to make that clearer.
+      WrapNAry(nresults, "return ", "");
+    }
     if (end - start == 0) {
       stack.push_back({ { "{}" }, false });
     } else if (end - start > 1) {
@@ -462,11 +472,23 @@ struct Decompiler : ModuleContext {
                       GetDecompTypeName(t));
       }
       stream.Writef(")");
+      if (f->GetNumResults()) {
+        if (f->GetNumResults() == 1) {
+          stream.Writef(":%s", GetDecompTypeName(f->GetResultType(0)));
+        } else {
+          stream.Writef(":(");
+          for (Index i = 0; i < f->GetNumResults(); i++) {
+            if (i) stream.Writef(", ");
+            stream.Writef("%s", GetDecompTypeName(f->GetResultType(i)));
+          }
+          stream.Writef(")");
+        }
+      }
       if (module.IsImport(ExternalKind::Func, Var(func_index))) {
         stream.Writef(" = import;\n\n");
       } else {
         stream.Writef(" {\n");
-        DecompileExprs(f->exprs, f->decl.GetNumResults());
+        DecompileExprs(f->exprs, f->GetNumResults(), true);
         IndentValue(stack.back(), indent_amount, {});
         for (auto& s : stack[0].v) {
           stream.Writef("%s\n", s.c_str());
