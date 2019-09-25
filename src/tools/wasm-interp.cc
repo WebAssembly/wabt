@@ -40,10 +40,24 @@
 using namespace wabt;
 using namespace wabt::interp;
 
+struct FunctionExecution {
+  std::string name;
+  TypedValues args;
+};
+
+#define ERROR_EXIT_UNLESS(cond, ...)  \
+  do{                                 \
+    if(!(cond)) {                     \
+      printf(__VA_ARGS__);            \
+      exit(1);                        \
+    }                                 \
+  } while(0);
+
 static int s_verbose;
 static const char* s_infile;
 static Thread::Options s_thread_options;
 static Stream* s_trace_stream;
+static std::vector<FunctionExecution> s_run_exports;
 static bool s_run_all_exports;
 static bool s_host_print;
 static bool s_dummy_import_func;
@@ -76,6 +90,36 @@ examples:
   $ wasm-interp test.wasm -V 100 --run-all-exports
 )";
 
+wabt::Result ParseArgument(std::string argument, TypedValue &val) {
+  size_t cindex;
+  if(argument.empty() || (cindex = argument.find(':')) == -1u){
+    return wabt::Result::Error;
+  }
+
+  argument[cindex] = '\0';
+  const char* ptype = argument.c_str();
+  const char* pval = argument.c_str() + cindex + 1;
+  const char* pval_end = ptype + argument.length();
+
+  if(strcmp(ptype, "i32") == 0) {
+    val.type = Type::I32;
+    return ParseInt32(pval, pval_end, &val.value.i32, ParseIntType::UnsignedOnly);
+  }
+  if(strcmp(ptype, "i64") == 0) {
+    val.type = Type::I64;
+    return ParseInt64(pval, pval_end, &val.value.i64, ParseIntType::UnsignedOnly);
+  }
+  if(strcmp(ptype, "f32") == 0) {
+    val.type = Type::F32;
+    return ParseFloat(LiteralType::Float, pval, pval_end, &val.value.f32_bits);
+  }
+  if(strcmp(ptype, "f64") == 0) {
+    val.type = Type::F64;
+    return ParseDouble(LiteralType::Float, pval, pval_end, &val.value.f64_bits);
+  }
+  return wabt::Result::Error;
+}
+
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-interp", s_description);
 
@@ -99,6 +143,21 @@ static void ParseOptions(int argc, char** argv) {
                    });
   parser.AddOption('t', "trace", "Trace execution",
                    []() { s_trace_stream = s_stdout_stream.get(); });
+  parser.AddOption('r', "run-export", "FUNCTION", "Run exported function by name",
+                   [](const std::string& argument){
+                      FunctionExecution func;
+                      func.name = argument;
+                      s_run_exports.push_back(func);
+                    });
+  parser.AddOption('a', "argument", "ARGUMENT", "Add argument to a function execution.",
+                   [](const std::string& argument){
+                      TypedValue tval;
+                      ERROR_EXIT_UNLESS(!s_run_exports.empty(),
+                                        "Cannot find a function execution for argument '%s'\n", argument.c_str());
+                      ERROR_EXIT_UNLESS(Succeeded(ParseArgument(argument, tval)),
+                                        "Failed to parse argument '%s'\n", argument.c_str());
+                      s_run_exports.back().args.push_back(tval);
+                    });
   parser.AddOption(
       "run-all-exports",
       "Run all the exported functions, in order. Useful for testing",
@@ -116,6 +175,25 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) { s_infile = argument; });
   parser.Parse(argc, argv);
+}
+
+static void RunSpecificExports(interp::Module* module,
+                          Executor* executor,
+                          RunVerbosity verbose) {
+  for (const interp::Export& export_ : module->exports) {
+    if (export_.kind != ExternalKind::Func) {
+      continue;
+    }
+    for(auto &run_export : s_run_exports) {
+      if(run_export.name == export_.name) {
+        ExecResult exec_result = executor->RunExport(&export_, run_export.args);
+        if (verbose == RunVerbosity::Verbose) {
+          WriteCall(s_stdout_stream.get(), string_view(), export_.name, run_export.args,
+                    exec_result.values, exec_result.result);
+        }
+      }
+    }
+  }
 }
 
 static void RunAllExports(interp::Module* module,
@@ -217,6 +295,9 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
     if (exec_result.result == interp::Result::Ok) {
       if (s_run_all_exports) {
         RunAllExports(module, &executor, RunVerbosity::Verbose);
+      }
+      if (!s_run_exports.empty()) {
+        RunSpecificExports(module, &executor, RunVerbosity::Verbose);
       }
     } else {
       WriteResult(s_stdout_stream.get(), "error running start function",
