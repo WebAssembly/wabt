@@ -237,6 +237,16 @@ struct Decompiler : ModuleContext {
     stack.back().needs_bracketing = true;
   }
 
+  void Block(const Block& block, LabelType label, const char *name) {
+    BeginBlock(label, block);
+    DecompileExprs(block.exprs, block.decl.GetNumResults(), false);
+    EndBlock();
+    auto &val = stack.back();
+    IndentValue(val, indent_amount, {});
+    val.v.insert(val.v.begin(), std::string(name) + " " + block.label + " {");
+    val.v.push_back("}");
+  }
+
   void DecompileExpr(const Expr& e) {
     switch (e.type()) {
       case ExprType::Const: {
@@ -336,6 +346,7 @@ struct Decompiler : ModuleContext {
         auto ifs = std::move(stack.back());
         stack.pop_back();
         stack_depth--;  // Condition.
+        BeginBlock(LabelType::Block, ife->true_);
         DecompileExprs(ife->true_.exprs, ife->true_.decl.GetNumResults(), false);
         auto thenp = std::move(stack.back());
         stack.pop_back();
@@ -349,6 +360,7 @@ struct Decompiler : ModuleContext {
           stack.pop_back();
           multiline = multiline || elsep.v.size() > 1;
         }
+        EndBlock();
         stack_depth++;  // Put Condition back.
         multiline = multiline || width > target_exp_width;
         if (multiline) {
@@ -373,21 +385,27 @@ struct Decompiler : ModuleContext {
         }
       }
       case ExprType::Block: {
-        auto le = cast<BlockExpr>(&e);
-        DecompileExprs(le->block.exprs, le->block.decl.GetNumResults(), false);
-        auto &val = stack.back();
-        IndentValue(val, indent_amount, {});
-        val.v.insert(val.v.begin(), "block {");
-        val.v.push_back("}");
+        Block(cast<BlockExpr>(&e)->block, LabelType::Block, "block");
         return;
       }
       case ExprType::Loop: {
-        auto le = cast<LoopExpr>(&e);
-        DecompileExprs(le->block.exprs, le->block.decl.GetNumResults(), false);
-        auto &val = stack.back();
-        IndentValue(val, indent_amount, {});
-        val.v.insert(val.v.begin(), "loop {");
-        val.v.push_back("}");
+        Block(cast<LoopExpr>(&e)->block, LabelType::Loop, "loop");
+        return;
+      }
+      case ExprType::Br: {
+        auto be = cast<BrExpr>(&e);
+        auto label = GetLabel(be->var);
+        auto jmp = label->label_type == LabelType::Loop ? "continue" : "break";
+        ss << jmp << " " << be->var.name();
+        PushSStream();
+        return;
+      }
+      case ExprType::BrIf: {
+        auto bie = cast<BrIfExpr>(&e);
+        auto label = GetLabel(bie->var);
+        auto jmp = label->label_type == LabelType::Loop ? "continue" : "break";
+        WrapChild(stack.back(), "if (",
+                  ") " + std::string(jmp) + " " + bie->var.name());
         return;
       }
       default: {
@@ -445,6 +463,11 @@ struct Decompiler : ModuleContext {
       // TODO: if this is some other kind of block and >1 value is being
       // returned, probably need some kind of syntax to make that clearer.
       WrapNAry(nresults, "return ", "");
+    }
+    // Now we only have "statements" left, so add semicolons.
+    for (size_t i = start; i < end; i++) {
+      auto& s = stack[i].v.back();
+      if (s.back() != '}') s += ';';
     }
     if (end - start == 0) {
       stack.push_back({ { "{}" }, false });
