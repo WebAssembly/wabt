@@ -181,6 +181,16 @@ struct Decompiler : ModuleContext {
     ss.str({});
   }
 
+  template<ExprType T> void Get(const VarExpr<T>& ve) {
+    ss << ve.var.name();
+    PushSStream();
+  }
+
+  template<ExprType T> void Set(const VarExpr<T>& ve) {
+    WrapChild(stack.back(), ve.var.name() + " = ", "");
+    stack.back().needs_bracketing = true;
+  }
+
   void DecompileExpr(const Expr& e) {
     switch (e.type()) {
       case ExprType::Const: {
@@ -208,33 +218,30 @@ struct Decompiler : ModuleContext {
         return;
       }
       case ExprType::LocalGet: {
-        auto& lg = *cast<LocalGetExpr>(&e);
-        ss << lg.var.name();
-        PushSStream();
+        Get(*cast<LocalGetExpr>(&e));
         return;
       }
       case ExprType::GlobalGet: {
-        auto& gg = *cast<GlobalGetExpr>(&e);
-        ss << gg.var.name();
-        PushSStream();
+        Get(*cast<GlobalGetExpr>(&e));
         return;
       }
       case ExprType::LocalSet: {
-        auto& ls = *cast<LocalSetExpr>(&e);
-        WrapChild(stack.back(), ls.var.name() + " = ", "");
-        stack.back().needs_bracketing = true;
+        Set(*cast<LocalSetExpr>(&e));
         return;
       }
       case ExprType::GlobalSet: {
-        auto& gs = *cast<GlobalSetExpr>(&e);
-        WrapChild(stack.back(), gs.var.name() + " = ", "");
-        stack.back().needs_bracketing = true;
+        Set(*cast<GlobalSetExpr>(&e));
         return;
       }
       case ExprType::LocalTee: {
         auto& lt = *cast<LocalTeeExpr>(&e);
-        WrapChild(stack.back(), lt.var.name() + " = ", "");
-        stack.back().needs_bracketing = true;
+        Set(lt);
+        if (stack_depth == 1) {  // Tee is the only thing on there.
+          Get(lt);  // Now Set + Get instead.
+        } else {
+          // Things are above us on the stack so the Tee can't be eliminated.
+          // The Set makes this work as a Tee when consumed by a parent.
+        }
         return;
       }
       case ExprType::Binary: {
@@ -282,19 +289,21 @@ struct Decompiler : ModuleContext {
         auto ife = cast<IfExpr>(&e);
         auto ifs = std::move(stack.back());
         stack.pop_back();
-        DecompileExprs(ife->true_.exprs);
+        stack_depth--;  // Condition.
+        DecompileExprs(ife->true_.exprs, ife->true_.decl.GetNumResults());
         auto thenp = std::move(stack.back());
         stack.pop_back();
         bool multiline = ifs.v.size() > 1 || thenp.v.size() > 1;
         size_t width = ifs.width() + thenp.width();
         Value elsep { {}, false };
         if (!ife->false_.empty()) {
-          DecompileExprs(ife->false_);
+          DecompileExprs(ife->false_, ife->true_.decl.GetNumResults());
           elsep = std::move(stack.back());
           width += elsep.width();
           stack.pop_back();
           multiline = multiline || elsep.v.size() > 1;
         }
+        stack_depth++;  // Put Condition back.
         multiline = multiline || width > target_exp_width;
         if (multiline) {
           auto if_start = string_view("if (");
@@ -319,7 +328,7 @@ struct Decompiler : ModuleContext {
       }
       case ExprType::Block: {
         auto le = cast<BlockExpr>(&e);
-        DecompileExprs(le->block.exprs);
+        DecompileExprs(le->block.exprs, le->block.decl.GetNumResults());
         auto &val = stack.back();
         IndentValue(val, indent_amount, {});
         val.v.insert(val.v.begin(), "block {");
@@ -328,7 +337,7 @@ struct Decompiler : ModuleContext {
       }
       case ExprType::Loop: {
         auto le = cast<LoopExpr>(&e);
-        DecompileExprs(le->block.exprs);
+        DecompileExprs(le->block.exprs, le->block.decl.GetNumResults());
         auto &val = stack.back();
         IndentValue(val, indent_amount, {});
         val.v.insert(val.v.begin(), "loop {");
@@ -397,16 +406,22 @@ struct Decompiler : ModuleContext {
     }
   }
 
-  void DecompileExprs(const ExprList &es) {
+  void DecompileExprs(const ExprList &es, Index nresults) {
     auto start = stack.size();
+    auto stack_depth_start = stack_depth;
+    bool unreachable = false;
     for (auto& e : es) {
       DecompileExpr(e);
-      auto nreturns = GetExprArity(e).nreturns;
-      if (nreturns > 1) {
+      auto arity = GetExprArity(e);
+      stack_depth -= arity.nargs;
+      stack_depth += arity.nreturns;
+      unreachable = unreachable || arity.unreachable;
+      Assert(unreachable || stack_depth >= 0);
+      if (arity.nreturns > 1) {
         // Multivalue: we "push" everything on to the stack.
         WrapChild(stack.back(), "push_all(", ")");
         // All values become pops.
-        for (Index i = 0; i < nreturns; i++)
+        for (Index i = 0; i < arity.nreturns; i++)
           stack.insert(stack.end(), Value { { "pop()" }, false });
         // TODO: can also implement a push_all_but_one that returns the top,
         // then insert N-1 pops below it. Or have a function that returns N
@@ -414,8 +429,13 @@ struct Decompiler : ModuleContext {
         // etc.
       }
     }
+    Assert(unreachable ||
+           stack_depth - stack_depth_start == static_cast<int>(nresults));
+    // Undo any changes to stack_depth, since parent takes care of arity
+    // changes.
+    stack_depth = stack_depth_start;
     auto end = stack.size();
-    assert(end >= start);
+    Assert(end >= start);
     if (end - start == 0) {
       stack.push_back({ { "{}" }, false });
     } else if (end - start > 1) {
@@ -431,6 +451,7 @@ struct Decompiler : ModuleContext {
   }
 
   void Decompile() {
+    Index func_index = 0;
     for(auto f : module.funcs) {
       BeginFunc(*f);
       stream.Writef("function %s(", f->name.c_str());
@@ -440,16 +461,42 @@ struct Decompiler : ModuleContext {
         stream.Writef("%s:%s", IndexToAlphaName(i).c_str(),
                       GetDecompTypeName(t));
       }
-      stream.Writef(") {\n");
-      DecompileExprs(f->exprs);
-      IndentValue(stack.back(), indent_amount, {});
-      for (auto& s : stack[0].v) {
-        stream.Writef("%s\n", s.c_str());
+      stream.Writef(")");
+      if (module.IsImport(ExternalKind::Func, Var(func_index))) {
+        stream.Writef(" = import;\n\n");
+      } else {
+        stream.Writef(" {\n");
+        DecompileExprs(f->exprs, f->decl.GetNumResults());
+        IndentValue(stack.back(), indent_amount, {});
+        for (auto& s : stack[0].v) {
+          stream.Writef("%s\n", s.c_str());
+        }
+        stream.Writef("}\n\n");
       }
-      stream.Writef("}\n\n");
       EndFunc();
       stack.clear();
+      func_index++;
     }
+  }
+
+  void DumpInternalState() {
+    // Dump the remainder of the stack.
+    for (auto &se : stack) {
+      for (auto& s : se.v) {
+        stream.Writef("%s\n", s.c_str());
+      }
+    }
+    stream.Flush();
+  }
+
+  // For debugging purposes, this assert, when it fails, first prints the
+  // internal state that hasn't been printed yet.
+  void Assert(bool ok) {
+    if (ok) return;
+    #ifndef NDEBUG
+      DumpInternalState();
+    #endif
+    assert(false);
   }
 
   Stream& stream;
@@ -458,6 +505,7 @@ struct Decompiler : ModuleContext {
   std::ostringstream ss;
   size_t indent_amount = 2;
   size_t target_exp_width = 70;
+  int stack_depth = 0;
 };
 
 }  // end anonymous namespace
