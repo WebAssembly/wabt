@@ -491,6 +491,7 @@ if (NOT EMSCRIPTEN)
       WORKING_DIRECTORY ${WABT_SOURCE_DIR}
       ${USES_TERMINAL}
     )
+    add_dependencies(run-tests wabt-unittests)
   endif ()
 
   # install
