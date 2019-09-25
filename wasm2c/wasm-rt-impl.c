@@ -111,7 +111,7 @@ uint32_t wasm_rt_grow_memory(wasm_rt_memory_t* memory, uint32_t delta) {
   }
   uint32_t new_size = new_pages * PAGE_SIZE;
   uint8_t* new_data = realloc(memory->data, new_size);
-  if (memory->data == NULL) {
+  if (new_data == NULL) {
     return (uint32_t)-1;
   }
   memory->pages = new_pages;
