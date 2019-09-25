@@ -422,6 +422,13 @@ if (NOT EMSCRIPTEN)
         SOURCES src/tools/wasm-decompile.cc
         INSTALL
       )
+
+      # wasm-bugpoint
+      wabt_executable(
+        NAME wasm-bugpoint
+        SOURCES src/tools/wasm-bugpoint.cc
+        INSTALL
+      )
     endif()
   endif ()
 
