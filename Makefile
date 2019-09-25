@@ -23,7 +23,7 @@ USE_NINJA ?= 0
 FUZZ_BIN_DIR ?= ${ROOT_DIR}/afl-fuzz
 GCC_FUZZ_CC := ${FUZZ_BIN_DIR}/afl-gcc
 GCC_FUZZ_CXX := ${FUZZ_BIN_DIR}/afl-g++
-EMSCRIPTEN_DIR ?= ${ROOT_DIR}/emscripten
+EMSCRIPTEN_DIR ?= $(dir $(shell which emcc))
 CMAKE_CMD ?= cmake
 
 DEFAULT_SUFFIX = clang-debug
