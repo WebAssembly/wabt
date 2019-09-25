@@ -149,7 +149,7 @@ static void ParseOptions(int argc, char** argv) {
                       func.name = argument;
                       s_run_exports.push_back(func);
                     });
-  parser.AddOption('a', "argument", "ARGUMENT", "Add argument to a function execution.",
+  parser.AddOption('a', "argument", "ARGUMENT", "Add argument to a function execution",
                    [](const std::string& argument){
                       TypedValue tval;
                       ERROR_EXIT_UNLESS(!s_run_exports.empty(),

@@ -38,6 +38,8 @@ options:
   -V, --value-stack-size=SIZE                 Size in elements of the value stack
   -C, --call-stack-size=SIZE                  Size in elements of the call stack
   -t, --trace                                 Trace execution
+  -r, --run-export=FUNCTION                   Run exported function by name
+  -a, --argument=ARGUMENT                     Add argument to a function execution
       --run-all-exports                       Run all the exported functions, in order. Useful for testing
       --host-print                            Include an importable function named "host.print" for printing to stdout
       --dummy-import-func                     Provide a dummy implementation of all imported functions. The function will log the call and return an appropriate zero value.
