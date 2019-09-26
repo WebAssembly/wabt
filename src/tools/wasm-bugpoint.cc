@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 
@@ -34,6 +35,78 @@
 using namespace wabt;
 
 static WriteBinaryOptions s_write_binary_options;
+
+class Bisect {
+public:
+  explicit Bisect(unsigned length)
+    : length_(length), pos_(0), window_(length / 2), remainder_(0) {
+    if (window_ != 0) {
+      remainder_ = length_ % window_;
+    }
+  }
+
+  static constexpr std::pair<unsigned, unsigned> kEndBisect = std::make_pair(0, 0);
+
+  // Returns a pair of values <start, end+1> where start < end+1 and
+  // end+1 <= length. It will return approx-evenly spaced ranges over
+  // [0..length), and each time it reaches the end, it will return back to zero
+  // and use smaller ranges. It continues until the ranges are size one each,
+  // after which point it returns kEndBisect.
+  std::pair<unsigned, unsigned> Next() {
+    if (pos_ >= length_) {
+      pos_ = 0;
+      window_ /= 2;
+      if (window_ != 0) {
+        remainder_ = length_ % window_;
+      }
+    }
+
+    if (window_ == 0) {
+      return kEndBisect;
+    }
+
+    unsigned end = pos_ + window_ + remainder_;
+    if (remainder_ != 0) {
+      --remainder_;
+    }
+    auto range = std::make_pair(pos_, end);
+    pos_ = end;
+    return range;
+  }
+
+  // Shrink this Bisect down to the range last returned by Next() and restart
+  // at index zero.
+  void Keep() {
+    assert(window_ != 0);
+    length_ = window_;
+    window_ = length_ / 2;
+    pos_ = 0;
+    remainder_ = 0;
+    if (window_ != 0) {
+      remainder_ = length_ % window_;
+    }
+  }
+
+  // Shrink this Bisect by removing the range last returned by Next() and
+  // restart at index zero.
+  void KeepInverse() {
+    assert(window_ != 0);
+    length_ -= window_;
+    window_ = length_ / 2;
+    pos_ = 0;
+    remainder_ = 0;
+    if (window_ != 0) {
+      remainder_ = length_ % window_;
+    }
+  }
+
+private:
+  unsigned length_;
+  unsigned pos_;
+  unsigned window_;
+  unsigned remainder_;
+};
+constexpr std::pair<unsigned, unsigned> Bisect::kEndBisect;
 
 static bool TryModule(string_view scriptfile_name,
                       const Module* module) {
