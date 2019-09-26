@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <cstdlib>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
