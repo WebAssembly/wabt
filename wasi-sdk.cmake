@@ -1,5 +1,7 @@
 # Cmake toolchain description file for the Makefile
 
+# TODO: get this added to the wasi-sdk itself so we don't need to duplicate it here
+
 # This is arbitrary, AFAIK, for now.
 cmake_minimum_required(VERSION 3.4.0)
 
@@ -7,7 +9,7 @@ set(CMAKE_SYSTEM_NAME Wasm)
 set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_SYSTEM_PROCESSOR wasm32)
 set(triple wasm32-wasi)
-set(WASI_SDK_PREFIX ${PROJECT_SOURCE_DIR}/wasi-sdk-5.0/opt/wasi-sdk)
+set(WASI_SDK_PREFIX ${PROJECT_SOURCE_DIR}/out/wasi/wasi-sdk-5.0/opt/wasi-sdk)
 
 set(CMAKE_C_COMPILER ${WASI_SDK_PREFIX}/bin/clang)
 set(CMAKE_CXX_COMPILER ${WASI_SDK_PREFIX}/bin/clang++)

@@ -7,31 +7,31 @@ repository = "https://github.com/wapm-packages/wabt"
 
 [[module]]
 name = "wat2wasm"
-source = "build/wat2wasm.wasm"
+source = "out/wasi/wat2wasm.wasm"
 abi = "wasi"
 interfaces = {wasi= "0.0.0-unstable"}
 
 [[module]]
 name = "wast2json"
-source = "build/wast2json.wasm"
+source = "out/wasi/wast2json.wasm"
 abi = "wasi"
 interfaces = {wasi= "0.0.0-unstable"}
 
 [[module]]
 name = "wasm2wat"
-source = "build/wasm2wat.wasm"
+source = "out/wasi/wasm2wat.wasm"
 abi = "wasi"
 interfaces = {wasi= "0.0.0-unstable"}
 
 [[module]]
 name = "wasm-validate"
-source = "build/wasm-validate.wasm"
+source = "out/wasi/wasm-validate.wasm"
 abi = "wasi"
 interfaces = {wasi= "0.0.0-unstable"}
 
 [[module]]
 name = "wasm-strip"
-source = "build/wasm-strip.wasm"
+source = "out/wasi/wasm-strip.wasm"
 abi = "wasi"
 interfaces = {wasi= "0.0.0-unstable"}
 

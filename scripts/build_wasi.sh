@@ -1,5 +1,8 @@
 #!/bin/bash
 
+mkdir -p out/wasi
+cd out/wasi
+
 # We download the SDK
 if [[ ! -d wasi-sdk-5.0 ]]; then
     OS=$(uname | tr '[:upper:]' '[:lower:]')
@@ -12,21 +15,18 @@ if [[ ! -d wasi-sdk-5.0 ]]; then
     tar zxvf wasi-sdk-5.0.tar.gz
 fi
 
-mkdir -p build
-cd build
-cmake -DCMAKE_TOOLCHAIN_FILE=../wasi-sdk.cmake -DBUILD_TESTS=OFF ..
-cd ..
-make -C build
+cmake -DCMAKE_TOOLCHAIN_FILE=../../wasi-sdk.cmake -DBUILD_TESTS=OFF ../..
+make -j 4
 
 # Strip and optimize the wasm files
-wasm-strip ./build/wasm-strip.wasm
-wasm-strip ./build/wasm-validate.wasm
-wasm-strip ./build/wasm2wat.wasm
-wasm-strip ./build/wast2json.wasm
-wasm-strip ./build/wat2wasm.wasm
+wasm-strip wasm-strip.wasm
+wasm-strip wasm-validate.wasm
+wasm-strip wasm2wat.wasm
+wasm-strip wast2json.wasm
+wasm-strip wat2wasm.wasm
 
-wasm-opt ./build/wasm-strip.wasm -o ./build/wasm-strip.wasm
-wasm-opt ./build/wasm-validate.wasm -o ./build/wasm-validate.wasm
-wasm-opt ./build/wasm2wat.wasm -o ./build/wasm2wat.wasm
-wasm-opt ./build/wast2json.wasm -o ./build/wast2json.wasm
-wasm-opt ./build/wat2wasm.wasm -o ./build/wat2wasm.wasm
+wasm-opt wasm-strip.wasm -o wasm-strip.wasm
+wasm-opt wasm-validate.wasm -o wasm-validate.wasm
+wasm-opt wasm2wat.wasm -o wasm2wat.wasm
+wasm-opt wast2json.wasm -o wast2json.wasm
+wasm-opt wat2wasm.wasm -o wat2wasm.wasm
