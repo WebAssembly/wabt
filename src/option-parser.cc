@@ -96,6 +96,13 @@ void OptionParser::AddHelpOption() {
   });
 }
 
+void OptionParser::AddVersionOption() {
+  AddOption("version", "Print version information", [this]() {
+    printf("%s\n", WABT_VERSION_INFO);
+    exit(0);
+  });
+}
+
 void OptionParser::SetErrorCallback(const Callback& callback) {
   on_error_ = callback;
 }
