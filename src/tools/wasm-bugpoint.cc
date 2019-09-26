@@ -79,7 +79,7 @@ public:
   void Keep() {
     assert(window_ != 0);
     length_ = window_;
-    window_ = length_ / 2;
+    window_ = std::min(window_, length_ / 2);
     pos_ = 0;
     remainder_ = 0;
     if (window_ != 0) {
@@ -92,7 +92,7 @@ public:
   void KeepInverse() {
     assert(window_ != 0);
     length_ -= window_;
-    window_ = length_ / 2;
+    window_ = std::min(window_, length_ / 2);
     pos_ = 0;
     remainder_ = 0;
     if (window_ != 0) {
