@@ -66,6 +66,7 @@ static void ParseOptions(int argc, char* argv[]) {
     s_log_stream = FileStream::CreateStdout();
   });
   parser.AddHelpOption();
+  parser.AddVersionOption();
   parser.AddOption("debug-parser", "Turn on debugging the parser of wast files",
                    []() { s_debug_parsing = true; });
   s_features.AddOptions(&parser);

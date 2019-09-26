@@ -61,6 +61,7 @@ static void ParseOptions(int argc, char** argv) {
   parser.AddOption('r', "reloc", "Show relocations inline with disassembly",
                    []() { s_objdump_options.relocs = true; });
   parser.AddHelpOption();
+  parser.AddVersionOption();
   parser.AddArgument(
       "filename", OptionParser::ArgumentCount::OneOrMore,
       [](const char* argument) { s_infiles.push_back(argument); });

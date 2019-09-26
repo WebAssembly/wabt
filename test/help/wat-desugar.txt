@@ -17,6 +17,7 @@ examples:
 
 options:
       --help                                  Print this help message
+      --version                               Print version information
   -o, --output=FILE                           Output file for the formatted file
       --debug-parser                          Turn on debugging the parser of wat files
   -f, --fold-exprs                            Write folded expressions where possible

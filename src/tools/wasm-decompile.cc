@@ -53,6 +53,7 @@ int ProgramMain(int argc, char** argv) {
       "  $ wasm-decompile test.wasm -o test.dcmp\n";
     OptionParser parser("wasm-decompile", s_description);
     parser.AddHelpOption();
+    parser.AddVersionOption();
     parser.AddOption(
         'o', "output", "FILENAME",
         "Output file for the decompiled file, by default use stdout",

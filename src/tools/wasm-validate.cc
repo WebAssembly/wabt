@@ -53,6 +53,7 @@ static void ParseOptions(int argc, char** argv) {
     s_log_stream = FileStream::CreateStdout();
   });
   parser.AddHelpOption();
+  parser.AddVersionOption();
   s_features.AddOptions(&parser);
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });

@@ -72,6 +72,7 @@ static void ParseOptions(int argc, char* argv[]) {
     s_log_stream = FileStream::CreateStdout();
   });
   parser.AddHelpOption();
+  parser.AddVersionOption();
   parser.AddOption("debug-parser", "Turn on debugging the parser of wat files",
                    []() { s_debug_parsing = true; });
   parser.AddOption('d', "dump-module",

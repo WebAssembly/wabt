@@ -17,4 +17,5 @@ options:
   -x, --details                Show section details
   -r, --reloc                  Show relocations inline with disassembly
       --help                   Print this help message
+      --version                Print version information
 ;;; STDOUT ;;)

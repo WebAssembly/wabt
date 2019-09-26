@@ -16,6 +16,7 @@ examples:
 options:
   -v, --verbose                               Use multiple times for more info
       --help                                  Print this help message
+      --version                               Print version information
   -o, --output=FILENAME                       Output file for the generated wast file, by default use stdout
   -f, --fold-exprs                            Write folded expressions where possible
       --enable-exceptions                     Enable Experimental exception handling

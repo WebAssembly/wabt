@@ -63,6 +63,7 @@ static void ParseOptions(int argc, char** argv) {
     s_log_stream = FileStream::CreateStdout();
   });
   parser.AddHelpOption();
+  parser.AddVersionOption();
   parser.AddOption(
       'o', "output", "FILENAME",
       "Output file for the generated C source file, by default use stdout",
