@@ -92,9 +92,9 @@ Section Details:
 Memory[1]:
  - memory[0] pages: initial=0
 Data[2]:
- - segment[0] <data1> size=3 - init i32=0
+ - segment[0] <data1> memory=0 size=3 - init i32=0
   - 0000000: 666f 6f                                  foo
- - segment[1] <data2> size=3 - init i32=10
+ - segment[1] <data2> memory=0 size=3 - init i32=10
   - 000000a: 6261 72                                  bar
 Custom:
  - name: "linking"
