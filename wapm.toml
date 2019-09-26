@@ -24,6 +24,12 @@ abi = "wasi"
 interfaces = {wasi= "0.0.0-unstable"}
 
 [[module]]
+name = "wasm-interp"
+source = "out/wasi/wasm-interp.wasm"
+abi = "wasi"
+interfaces = {wasi= "0.0.0-unstable"}
+
+[[module]]
 name = "wasm-validate"
 source = "out/wasi/wasm-validate.wasm"
 abi = "wasi"
@@ -47,6 +53,10 @@ module = "wast2json"
 [[command]]
 name = "wasm2wat"
 module = "wasm2wat"
+
+[[command]]
+name = "wasm-interp"
+module = "wasm-interp"
 
 [[command]]
 name = "wasm-validate"
