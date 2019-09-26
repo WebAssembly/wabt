@@ -25,6 +25,7 @@
 #include <iterator>
 #include <map>
 #include <numeric>
+#include <set>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -227,13 +228,34 @@ struct Decompiler : ModuleContext {
     ss.str({});
   }
 
-  template<ExprType T> void Get(const VarExpr<T>& ve) {
+  void PreDecl(const Var& var) {
+    predecl << Indent(indent_amount) << "var " << var.name() << ":"
+            << GetDecompTypeName(cur_func->GetLocalType(var)) << ";\n";
+
+  }
+
+  template<ExprType T> void Get(const VarExpr<T>& ve, bool local) {
+    if (local && vars_defined.insert(ve.var.name()).second) {
+      // Use before def, may happen since locals are guaranteed 0.
+      PreDecl(ve.var);
+    }
     ss << ve.var.name();
     PushSStream();
   }
 
-  template<ExprType T> void Set(const VarExpr<T>& ve) {
-    WrapChild(stack.back(), ve.var.name() + " = ", "");
+  template<ExprType T> void Set(const VarExpr<T>& ve, bool local) {
+    auto decl = "";
+    // Seen this var before?
+    if (local && vars_defined.insert(ve.var.name()).second) {
+      if (stack_depth == 1) {
+        // Top level, declare it here.
+        decl = "var ";
+      } else {
+        // Inside exp, better leave it as assignment exp and lift the decl out.
+        PreDecl(ve.var);
+      }
+    }
+    WrapChild(stack.back(), decl + ve.var.name() + " = ", "");
     stack.back().needs_bracketing = true;
   }
 
@@ -274,26 +296,26 @@ struct Decompiler : ModuleContext {
         return;
       }
       case ExprType::LocalGet: {
-        Get(*cast<LocalGetExpr>(&e));
+        Get(*cast<LocalGetExpr>(&e), true);
         return;
       }
       case ExprType::GlobalGet: {
-        Get(*cast<GlobalGetExpr>(&e));
+        Get(*cast<GlobalGetExpr>(&e), false);
         return;
       }
       case ExprType::LocalSet: {
-        Set(*cast<LocalSetExpr>(&e));
+        Set(*cast<LocalSetExpr>(&e), true);
         return;
       }
       case ExprType::GlobalSet: {
-        Set(*cast<GlobalSetExpr>(&e));
+        Set(*cast<GlobalSetExpr>(&e), false);
         return;
       }
       case ExprType::LocalTee: {
         auto& lt = *cast<LocalTeeExpr>(&e);
-        Set(lt);
+        Set(lt, true);
         if (stack_depth == 1) {  // Tee is the only thing on there.
-          Get(lt);  // Now Set + Get instead.
+          Get(lt, true);  // Now Set + Get instead.
         } else {
           // Things are above us on the stack so the Tee can't be eliminated.
           // The Set makes this work as a Tee when consumed by a parent.
@@ -483,16 +505,32 @@ struct Decompiler : ModuleContext {
     }
   }
 
+  void Reset() {
+    stack.clear();
+    stack_depth = 0;
+    vars_defined.clear();
+    predecl.str({});
+  }
+
   void Decompile() {
+    for (auto g : module.globals) {
+      DecompileExprs(g->init_expr, 1, false);
+      stream.Writef("global %s:%s = %s\n", g->name.c_str(),
+                    GetDecompTypeName(g->type), stack[0].v[0].c_str());
+      Reset();
+    }
+    if (!module.globals.empty()) stream.Writef("\n");
     Index func_index = 0;
     for(auto f : module.funcs) {
+      cur_func = f;
       BeginFunc(*f);
       stream.Writef("function %s(", f->name.c_str());
       for (Index i = 0; i < f->GetNumParams(); i++) {
         if (i) stream.Writef(", ");
         auto t = f->GetParamType(i);
-        stream.Writef("%s:%s", IndexToAlphaName(i).c_str(),
-                      GetDecompTypeName(t));
+        auto name = IndexToAlphaName(i);
+        vars_defined.insert(name);
+        stream.Writef("%s:%s", name.c_str(), GetDecompTypeName(t));
       }
       stream.Writef(")");
       if (f->GetNumResults()) {
@@ -512,6 +550,7 @@ struct Decompiler : ModuleContext {
       } else {
         stream.Writef(" {\n");
         DecompileExprs(f->exprs, f->GetNumResults(), true);
+        stream.Writef("%s", predecl.str().c_str());
         IndentValue(stack.back(), indent_amount, {});
         for (auto& s : stack[0].v) {
           stream.Writef("%s\n", s.c_str());
@@ -519,7 +558,7 @@ struct Decompiler : ModuleContext {
         stream.Writef("}\n\n");
       }
       EndFunc();
-      stack.clear();
+      Reset();
       func_index++;
     }
   }
@@ -548,9 +587,12 @@ struct Decompiler : ModuleContext {
   const DecompileOptions& options;
   std::vector<Value> stack;
   std::ostringstream ss;
+  std::ostringstream predecl;
   size_t indent_amount = 2;
   size_t target_exp_width = 70;
   int stack_depth = 0;
+  std::set<std::string> vars_defined;
+  const Func* cur_func = nullptr;
 };
 
 }  // end anonymous namespace
