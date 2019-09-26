@@ -17,3 +17,16 @@ cd build
 cmake -DCMAKE_TOOLCHAIN_FILE=../wasi-sdk.cmake -DBUILD_TESTS=OFF ..
 cd ..
 make -C build
+
+# Strip and optimize the wasm files
+wasm-strip ./build/wasm-strip.wasm
+wasm-strip ./build/wasm-validate.wasm
+wasm-strip ./build/wasm2wat.wasm
+wasm-strip ./build/wast2json.wasm
+wasm-strip ./build/wat2wasm.wasm
+
+wasm-opt ./build/wasm-strip.wasm -o ./build/wasm-strip.wasm
+wasm-opt ./build/wasm-validate.wasm -o ./build/wasm-validate.wasm
+wasm-opt ./build/wasm2wat.wasm -o ./build/wasm2wat.wasm
+wasm-opt ./build/wast2json.wasm -o ./build/wast2json.wasm
+wasm-opt ./build/wat2wasm.wasm -o ./build/wat2wasm.wasm
