@@ -16,46 +16,26 @@
 
 #include "src/decompiler.h"
 
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <cinttypes>
-#include <cstdarg>
-#include <cstdio>
-#include <iterator>
-#include <map>
-#include <numeric>
-#include <set>
-#include <string>
-#include <vector>
-#include <sstream>
-
-#include "src/cast.h"
-#include "src/common.h"
-#include "src/expr-visitor.h"
-#include "src/ir.h"
-#include "src/ir-util.h"
-#include "src/literal.h"
-#include "src/generate-names.h"
-#include "src/stream.h"
+#include "src/decompiler-ast.inl"
 
 #define WABT_TRACING 0
 #include "src/tracing.h"
 
 namespace wabt {
 
-namespace {
-
-struct Decompiler : ModuleContext {
+struct Decompiler {
   Decompiler(Stream& stream, const Module& module,
              const DecompileOptions& options)
-      : ModuleContext(module), stream(stream), options(options) {}
+      : mc(module), stream(stream), options(options) {}
 
   struct Value {
     std::vector<std::string> v;
     // Lazily add bracketing only if the parent requires it.
     // TODO: replace with a system based on precedence?
     bool needs_bracketing;
+
+    Value(std::vector<std::string>&& v, bool nb)
+      : v(v), needs_bracketing(nb) {}
 
     size_t width() {
       size_t w = 0;
@@ -64,6 +44,12 @@ struct Decompiler : ModuleContext {
       }
       return w;
     }
+
+    // This value should really never be copied, only moved.
+    Value(Value&& rhs) = default;
+    Value(const Value& rhs) = delete;
+    Value& operator=(Value&& rhs) = default;
+    Value& operator=(const Value& rhs) = delete;
   };
 
   std::string Indent(size_t amount) {
@@ -86,7 +72,7 @@ struct Decompiler : ModuleContext {
     }
   }
 
-  void WrapChild(Value &child, string_view prefix, string_view postfix) {
+  Value WrapChild(Value &child, string_view prefix, string_view postfix) {
     WABT_TRACE_ARGS(WrapChild, "\"" PRIstringview "\" - \"" PRIstringview "\"",
                     WABT_PRINTF_STRING_VIEW_ARG(prefix),
                     WABT_PRINTF_STRING_VIEW_ARG(postfix));
@@ -109,80 +95,74 @@ struct Decompiler : ModuleContext {
       v.insert(v.begin(), std::string(prefix));
       v.back().append(postfix.data(), postfix.size());
     }
+    return std::move(child);
   }
 
   void BracketIfNeeded(Value &val) {
     if (!val.needs_bracketing) return;
-    WrapChild(val, "(", ")");
+    val = WrapChild(val, "(", ")");
     val.needs_bracketing = false;
   }
 
-  void WrapBinary(string_view infix, bool indent_right) {
-    auto right = std::move(stack.back());
-    stack.pop_back();
-    BracketIfNeeded(right);
-    auto left = std::move(stack.back());
-    stack.pop_back();
+  Value WrapBinary(std::vector<Value>& args, string_view infix, bool indent_right) {
+    assert(args.size() == 2);
+    auto& left = args[0];
+    auto& right = args[1];
     BracketIfNeeded(left);
+    BracketIfNeeded(right);
     auto width = infix.size() + left.width() + right.width();
     if (width < target_exp_width && left.v.size() == 1 && right.v.size() == 1) {
-      stack.push_back({
+      return Value {
         { left.v[0] + std::string(infix) + right.v[0] },
         true
-      });
+      };
     } else {
       Value bin { {}, true };
       std::move(left.v.begin(), left.v.end(), std::back_inserter(bin.v));
       bin.v.back().append(infix.data(), infix.size());
       if (indent_right) IndentValue(right, indent_amount, {});
       std::move(right.v.begin(), right.v.end(), std::back_inserter(bin.v));
-      stack.push_back(std::move(bin));
+      return bin;
     }
   }
 
-  void WrapNAry(Index nargs, string_view prefix, string_view postfix) {
+  Value WrapNAry(std::vector<Value>& args, string_view prefix, string_view postfix) {
     size_t total_width = 0;
     size_t max_width = 0;
     bool multiline = false;
-    for (Index i = 0; i < nargs; i++) {
-      auto& child = stack[stack.size() - i - 1];
+    for (auto& child : args) {
       auto w = child.width();
       max_width = std::max(max_width, w);
       total_width += w;
       multiline = multiline || child.v.size() > 1;
     }
     if (!multiline &&
-        total_width + prefix.size() + postfix.size() < target_exp_width) {
+        (total_width + prefix.size() + postfix.size() < target_exp_width ||
+         args.empty())) {
       // Single line.
       ss << prefix;
-      if (nargs) {
-        for (Index i = 0; i < nargs; i++) {
-          auto& child = stack[stack.size() - nargs + i];
-          if (i) ss << ", ";
-          ss << child.v[0];
-        }
-        stack.resize(stack.size() - nargs);
+      for (auto& child : args) {
+        if (&child != &args[0]) ss << ", ";
+        ss << child.v[0];
       }
       ss << postfix;
-      PushSStream();
-      return;
+      return PushSStream();
     } else {
       // Multi-line.
+      Value ml { {}, false };
       auto ident_with_name = max_width + prefix.size() < target_exp_width;
-      for (Index i = 0; i < nargs; i++) {
-        auto& child = stack[stack.size() - nargs + i];
+      size_t i = 0;
+      for (auto& child : args) {
         IndentValue(child, ident_with_name ? prefix.size() : indent_amount,
                     !i && ident_with_name ? prefix : string_view {});
-        child.v.back() += i == nargs - 1 ? std::string(postfix) : ",";
-        if (i) {
-          std::move(child.v.begin(), child.v.end(),
-                    std::back_inserter(stack[stack.size() - nargs].v));
-        } else if (!ident_with_name) {
-          child.v.insert(child.v.begin(), std::string(prefix));
-        }
+        if (i < args.size() - 1) child.v.back() += ",";
+        std::move(child.v.begin(), child.v.end(),
+                  std::back_inserter(ml.v));
+        i++;
       }
-      stack.erase(stack.end() - nargs + 1, stack.end());
-      return;
+      if (!ident_with_name) ml.v.insert(ml.v.begin(), std::string(prefix));
+      ml.v.back() += std::string(postfix);
+      return ml;
     }
   }
 
@@ -223,56 +203,75 @@ struct Decompiler : ModuleContext {
     return op;
   }
 
-  void PushSStream() {
-    stack.push_back({ { ss.str() }, false });
+  Value PushSStream() {
+    auto v = Value { { ss.str() }, false };
     ss.str({});
+    return v;
   }
 
-  void PreDecl(const Var& var) {
-    predecl << Indent(indent_amount) << "var " << var.name() << ":"
-            << GetDecompTypeName(cur_func->GetLocalType(var)) << ";\n";
-
-  }
-
-  template<ExprType T> void Get(const VarExpr<T>& ve, bool local) {
-    if (local && vars_defined.insert(ve.var.name()).second) {
-      // Use before def, may happen since locals are guaranteed 0.
-      PreDecl(ve.var);
-    }
+  template<ExprType T> Value Get(const VarExpr<T>& ve) {
     ss << ve.var.name();
-    PushSStream();
+    return PushSStream();
   }
 
-  template<ExprType T> void Set(const VarExpr<T>& ve, bool local) {
-    auto decl = "";
-    // Seen this var before?
-    if (local && vars_defined.insert(ve.var.name()).second) {
-      if (stack_depth == 1) {
-        // Top level, declare it here.
-        decl = "var ";
-      } else {
-        // Inside exp, better leave it as assignment exp and lift the decl out.
-        PreDecl(ve.var);
-      }
-    }
-    WrapChild(stack.back(), decl + ve.var.name() + " = ", "");
-    stack.back().needs_bracketing = true;
+  template<ExprType T> Value Set(Value& child, const VarExpr<T>& ve) {
+    child.needs_bracketing = true;
+    return WrapChild(child, ve.var.name() + " = ", "");
   }
 
-  void Block(const Block& block, LabelType label, const char *name) {
-    BeginBlock(label, block);
-    DecompileExprs(block.exprs, block.decl.GetNumResults(), false);
-    EndBlock();
-    auto &val = stack.back();
+  Value Block(Value &val, const Block& block, LabelType label, const char *name) {
     IndentValue(val, indent_amount, {});
     val.v.insert(val.v.begin(), std::string(name) + " " + block.label + " {");
     val.v.push_back("}");
+    return std::move(val);
   }
 
-  void DecompileExpr(const Expr& e) {
-    switch (e.type()) {
+  Value DecompileExpr(const Node &n) {
+    std::vector<Value> args;
+    for (auto &c : n.children) {
+      args.push_back(DecompileExpr(c));
+    }
+    // First deal with the specialized node types.
+    switch (n.ntype) {
+      case NodeType::PushAll: {
+        return WrapChild(args[0], "push_all(", ")");
+      }
+      case NodeType::Pop: {
+        return Value { { "pop()" }, false };
+      }
+      case NodeType::Statements: {
+        Value stats { {}, false };
+        for (size_t i = 0; i < n.children.size(); i++) {
+          auto& s = args[i].v.back();
+          if (s.back() != '}') s += ';';
+          std::move(args[i].v.begin(), args[i].v.end(),
+                    std::back_inserter(stats.v));
+        }
+        return stats;
+      }
+      case NodeType::EndReturn: {
+        return WrapNAry(args, "return ", "");
+      }
+      case NodeType::Decl: {
+        // FIXME: this is icky.
+        auto lg = reinterpret_cast<const VarExpr<ExprType::LocalGet> *>(n.e);
+        ss << "var " << lg->var.name() << ":"
+           << GetDecompTypeName(cur_func->GetLocalType(lg->var));
+        return PushSStream();
+      }
+      case NodeType::DeclInit: {
+        // FIXME: this is icky.
+        auto lg = reinterpret_cast<const VarExpr<ExprType::LocalGet> *>(n.e);
+        return WrapChild(args[0], "var " + lg->var.name() + ":"
+              + GetDecompTypeName(cur_func->GetLocalType(lg->var)) + " = ", "");
+      }
+      case NodeType::Expr:
+        // We're going to fall thru to the second switch to deal with ExprType.
+        break;
+    }
+    switch (n.etype) {
       case ExprType::Const: {
-        auto& c = cast<ConstExpr>(&e)->const_;
+        auto& c = cast<ConstExpr>(n.e)->const_;
         switch (c.type) {
           case Type::I32:
             ss << static_cast<int32_t>(c.u32);
@@ -292,98 +291,75 @@ struct Decompiler : ModuleContext {
           default:
             WABT_UNREACHABLE;
         }
-        PushSStream();
-        return;
+        return PushSStream();
       }
       case ExprType::LocalGet: {
-        Get(*cast<LocalGetExpr>(&e), true);
-        return;
+        return Get(*cast<LocalGetExpr>(n.e));
       }
       case ExprType::GlobalGet: {
-        Get(*cast<GlobalGetExpr>(&e), false);
-        return;
+        return Get(*cast<GlobalGetExpr>(n.e));
       }
       case ExprType::LocalSet: {
-        Set(*cast<LocalSetExpr>(&e), true);
-        return;
+        return Set(args[0], *cast<LocalSetExpr>(n.e));
       }
       case ExprType::GlobalSet: {
-        Set(*cast<GlobalSetExpr>(&e), false);
-        return;
+        return Set(args[0], *cast<GlobalSetExpr>(n.e));
       }
       case ExprType::LocalTee: {
-        auto& lt = *cast<LocalTeeExpr>(&e);
-        Set(lt, true);
-        if (stack_depth == 1) {  // Tee is the only thing on there.
-          Get(lt, true);  // Now Set + Get instead.
-        } else {
-          // Things are above us on the stack so the Tee can't be eliminated.
-          // The Set makes this work as a Tee when consumed by a parent.
-        }
-        return;
+        auto& te = *cast<LocalTeeExpr>(n.e);
+        return args.empty() ? Get(te) : Set(args[0], te);
       }
       case ExprType::Binary: {
-        auto& be = *cast<BinaryExpr>(&e);
-        WrapBinary(" " + std::string(OpcodeToToken(be.opcode)) + " ", false);
-        return;
+        auto& be = *cast<BinaryExpr>(n.e);
+        return WrapBinary(args, " " + std::string(OpcodeToToken(be.opcode)) + " ", false);
       }
       case ExprType::Compare: {
-        auto& ce = *cast<CompareExpr>(&e);
-        WrapBinary(" " + std::string(OpcodeToToken(ce.opcode)) + " ", false);
-        return;
+        auto& ce = *cast<CompareExpr>(n.e);
+        return WrapBinary(args, " " + std::string(OpcodeToToken(ce.opcode)) + " ", false);
       }
       case ExprType::Unary: {
-        auto& ue = *cast<UnaryExpr>(&e);
+        auto& ue = *cast<UnaryExpr>(n.e);
         //BracketIfNeeded(stack.back());
         // TODO: also version without () depending on precedence.
-        WrapChild(stack.back(),
+        return WrapChild(args[0],
                   std::string(OpcodeToToken(ue.opcode)) + "(", ")");
-        return;
       }
       case ExprType::Load: {
-        auto& le = *cast<LoadExpr>(&e);
-        BracketIfNeeded(stack.back());
+        auto& le = *cast<LoadExpr>(n.e);
+        BracketIfNeeded(args[0]);
         std::string suffix = "[";
         suffix += std::to_string(le.offset);
         suffix += "]:";
         suffix += TypeFromLoadStore(le.opcode, string_view(".load"));
-        stack.back().v.back() += suffix;
+        args[0].v.back() += suffix;
         // FIXME: align
-        return;
+        return std::move(args[0]);
       }
       case ExprType::Store: {
-        auto& se = *cast<StoreExpr>(&e);
-        BracketIfNeeded(stack[stack.size() - 2]);
+        auto& se = *cast<StoreExpr>(n.e);
+        BracketIfNeeded(args[0]);
         std::string suffix = "[";
         suffix += std::to_string(se.offset);
         suffix += "]:";
         suffix += TypeFromLoadStore(se.opcode, string_view(".store"));
-        stack[stack.size() - 2].v.back() += suffix;
-        WrapBinary(" = ", true);
+        args[0].v.back() += suffix;
         // FIXME: align
-        return;
+        return WrapBinary(args, " = ", true);
       }
       case ExprType::If: {
-        auto ife = cast<IfExpr>(&e);
-        auto ifs = std::move(stack.back());
-        stack.pop_back();
-        stack_depth--;  // Condition.
-        BeginBlock(LabelType::Block, ife->true_);
-        DecompileExprs(ife->true_.exprs, ife->true_.decl.GetNumResults(), false);
-        auto thenp = std::move(stack.back());
-        stack.pop_back();
+        auto ife = cast<IfExpr>(n.e);
+        Value *elsep = nullptr;
+        if (!ife->false_.empty()) {
+          elsep = &args[2];
+        }
+        auto& thenp = args[1];
+        auto& ifs = args[0];
         bool multiline = ifs.v.size() > 1 || thenp.v.size() > 1;
         size_t width = ifs.width() + thenp.width();
-        Value elsep { {}, false };
-        if (!ife->false_.empty()) {
-          DecompileExprs(ife->false_, ife->true_.decl.GetNumResults(), false);
-          elsep = std::move(stack.back());
-          width += elsep.width();
-          stack.pop_back();
-          multiline = multiline || elsep.v.size() > 1;
+        if (elsep) {
+          width += elsep->width();
+          multiline = multiline || elsep->v.size() > 1;
         }
-        EndBlock();
-        stack_depth++;  // Put Condition back.
         multiline = multiline || width > target_exp_width;
         if (multiline) {
           auto if_start = string_view("if (");
@@ -391,145 +367,76 @@ struct Decompiler : ModuleContext {
           ifs.v.back() += ") {";
           IndentValue(thenp, indent_amount, {});
           std::move(thenp.v.begin(), thenp.v.end(), std::back_inserter(ifs.v));
-          if (!elsep.v.empty()) {
+          if (elsep) {
             ifs.v.push_back("} else {");
-            IndentValue(elsep, indent_amount, {});
-            std::move(elsep.v.begin(), elsep.v.end(), std::back_inserter(ifs.v));
+            IndentValue(*elsep, indent_amount, {});
+            std::move(elsep->v.begin(), elsep->v.end(), std::back_inserter(ifs.v));
           }
           ifs.v.push_back("}");
-          stack.push_back(std::move(ifs));
-          return;
+          return std::move(ifs);
         } else {
           ss << "if (" << ifs.v[0] << ") { " <<  thenp.v[0] << " }";
-          if (!elsep.v.empty()) ss << " else { " << elsep.v[0] << " }";
-          PushSStream();
-          return;
+          if (elsep) ss << " else { " << elsep->v[0] << " }";
+          return PushSStream();
         }
       }
       case ExprType::Block: {
-        Block(cast<BlockExpr>(&e)->block, LabelType::Block, "block");
-        return;
+        return Block(args[0], cast<BlockExpr>(n.e)->block, LabelType::Block, "block");
       }
       case ExprType::Loop: {
-        Block(cast<LoopExpr>(&e)->block, LabelType::Loop, "loop");
-        return;
+        return Block(args[0], cast<LoopExpr>(n.e)->block, LabelType::Loop, "loop");
       }
       case ExprType::Br: {
-        auto be = cast<BrExpr>(&e);
-        auto label = GetLabel(be->var);
-        auto jmp = label->label_type == LabelType::Loop ? "continue" : "break";
+        auto be = cast<BrExpr>(n.e);
+        auto jmp = n.lt == LabelType::Loop ? "continue" : "break";
         ss << jmp << " " << be->var.name();
-        PushSStream();
-        return;
+        return PushSStream();
       }
       case ExprType::BrIf: {
-        auto bie = cast<BrIfExpr>(&e);
-        auto label = GetLabel(bie->var);
-        auto jmp = label->label_type == LabelType::Loop ? "continue" : "break";
-        WrapChild(stack.back(), "if (",
+        auto bie = cast<BrIfExpr>(n.e);
+        auto jmp = n.lt == LabelType::Loop ? "continue" : "break";
+        return WrapChild(args[0], "if (",
                   ") " + std::string(jmp) + " " + bie->var.name());
-        return;
       }
       default: {
         std::string name;
-        switch (e.type()) {
+        switch (n.etype) {
           case ExprType::Call:
-            name = cast<CallExpr>(&e)->var.name();
+            name = cast<CallExpr>(n.e)->var.name();
             break;
           case ExprType::Convert:
-            name = std::string(OpcodeToToken(cast<ConvertExpr>(&e)->opcode));
+            name = std::string(OpcodeToToken(cast<ConvertExpr>(n.e)->opcode));
             break;
           default:
-            name = GetExprTypeName(e.type());
+            name = GetExprTypeName(n.etype);
             break;
         }
-        WrapNAry(GetExprArity(e).nargs, name + "(", ")");
-        return;
+        return WrapNAry(args, name + "(", ")");
       }
     }
-  }
-
-  void DecompileExprs(const ExprList &es, Index nresults, bool return_results) {
-    auto start = stack.size();
-    auto stack_depth_start = stack_depth;
-    bool unreachable = false;
-    for (auto& e : es) {
-      DecompileExpr(e);
-      auto arity = GetExprArity(e);
-      stack_depth -= arity.nargs;
-      stack_depth += arity.nreturns;
-      unreachable = unreachable || arity.unreachable;
-      Assert(unreachable || stack_depth >= 0);
-      if (arity.nreturns > 1) {
-        // Multivalue: we "push" everything on to the stack.
-        WrapChild(stack.back(), "push_all(", ")");
-        // All values become pops.
-        for (Index i = 0; i < arity.nreturns; i++)
-          stack.insert(stack.end(), Value { { "pop()" }, false });
-        // TODO: can also implement a push_all_but_one that returns the top,
-        // then insert N-1 pops below it. Or have a function that returns N
-        // values direcly to N arguments for when structs are passed on,
-        // etc.
-      }
-    }
-    Assert(unreachable ||
-           stack_depth - stack_depth_start == static_cast<int>(nresults));
-    // Undo any changes to stack_depth, since parent takes care of arity
-    // changes.
-    stack_depth = stack_depth_start;
-    auto end = stack.size();
-    Assert(end >= start);
-    if (return_results) {
-      // Combine nresults into a return statement, for when this is used as
-      // a function body.
-      // TODO: if this is some other kind of block and >1 value is being
-      // returned, probably need some kind of syntax to make that clearer.
-      WrapNAry(nresults, "return ", "");
-    }
-    // Now we only have "statements" left, so add semicolons.
-    for (size_t i = start; i < end; i++) {
-      auto& s = stack[i].v.back();
-      if (s.back() != '}') s += ';';
-    }
-    if (end - start == 0) {
-      stack.push_back({ { "{}" }, false });
-    } else if (end - start > 1) {
-      Value stats { {}, false };
-      // FIXME: insert ; ?
-      for (size_t i = start; i < end; i++) {
-        auto &e = stack[i];
-        std::move(e.v.begin(), e.v.end(), std::back_inserter(stats.v));
-      }
-      stack.resize(start);
-      stack.push_back(std::move(stats));
-    }
-  }
-
-  void Reset() {
-    stack.clear();
-    stack_depth = 0;
-    vars_defined.clear();
-    predecl.str({});
   }
 
   void Decompile() {
-    for (auto g : module.globals) {
-      DecompileExprs(g->init_expr, 1, false);
+    for (auto g : mc.module.globals) {
+      AST ast(mc, nullptr);
+      ast.Construct(g->init_expr, 1, false);
+      auto val = DecompileExpr(ast.stack[0]);
+      assert(ast.stack.size() == 1 && val.v.size() == 1);
       stream.Writef("global %s:%s = %s\n", g->name.c_str(),
-                    GetDecompTypeName(g->type), stack[0].v[0].c_str());
-      Reset();
+                    GetDecompTypeName(g->type), val.v[0].c_str());
     }
-    if (!module.globals.empty()) stream.Writef("\n");
+    if (!mc.module.globals.empty()) stream.Writef("\n");
     Index func_index = 0;
-    for(auto f : module.funcs) {
+    for(auto f : mc.module.funcs) {
       cur_func = f;
-      BeginFunc(*f);
+      auto is_import = mc.module.IsImport(ExternalKind::Func, Var(func_index));
+      AST ast(mc, f);
+      if (!is_import) ast.Construct(f->exprs, f->GetNumResults(), true);
       stream.Writef("function %s(", f->name.c_str());
       for (Index i = 0; i < f->GetNumParams(); i++) {
         if (i) stream.Writef(", ");
         auto t = f->GetParamType(i);
         auto name = IndexToAlphaName(i);
-        vars_defined.insert(name);
         stream.Writef("%s:%s", name.c_str(), GetDecompTypeName(t));
       }
       stream.Writef(")");
@@ -545,31 +452,24 @@ struct Decompiler : ModuleContext {
           stream.Writef(")");
         }
       }
-      if (module.IsImport(ExternalKind::Func, Var(func_index))) {
+      if (is_import) {
         stream.Writef(" = import;\n\n");
       } else {
         stream.Writef(" {\n");
-        DecompileExprs(f->exprs, f->GetNumResults(), true);
-        stream.Writef("%s", predecl.str().c_str());
-        IndentValue(stack.back(), indent_amount, {});
-        for (auto& s : stack[0].v) {
+        auto val = DecompileExpr(ast.stack[0]);
+        IndentValue(val, indent_amount, {});
+        for (auto& s : val.v) {
           stream.Writef("%s\n", s.c_str());
         }
         stream.Writef("}\n\n");
       }
-      EndFunc();
-      Reset();
+      mc.EndFunc();
       func_index++;
     }
   }
 
   void DumpInternalState() {
-    // Dump the remainder of the stack.
-    for (auto &se : stack) {
-      for (auto& s : se.v) {
-        stream.Writef("%s\n", s.c_str());
-      }
-    }
+    // TODO: print ast?
     stream.Flush();
   }
 
@@ -583,19 +483,14 @@ struct Decompiler : ModuleContext {
     assert(false);
   }
 
+  ModuleContext mc;
   Stream& stream;
   const DecompileOptions& options;
-  std::vector<Value> stack;
   std::ostringstream ss;
-  std::ostringstream predecl;
   size_t indent_amount = 2;
   size_t target_exp_width = 70;
-  int stack_depth = 0;
-  std::set<std::string> vars_defined;
   const Func* cur_func = nullptr;
 };
-
-}  // end anonymous namespace
 
 Result Decompile(Stream& stream,
                  const Module& module,
