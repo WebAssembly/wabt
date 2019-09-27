@@ -30,6 +30,7 @@
 #include "src/error-formatter.h"
 #include "src/feature.h"
 #include "src/ir.h"
+#include "src/make-unique.h"
 #include "src/option-parser.h"
 #include "src/validator.h"
 
@@ -75,6 +76,10 @@ public:
     return range;
   }
 
+  bool ShouldConsiderInverse() const {
+    return window_ < length_ / 2;
+  }
+  
   // Shrink this Bisect down to the range last returned by Next() and restart
   // at index zero.
   void Keep() {
@@ -108,6 +113,27 @@ private:
   unsigned remainder_;
 };
 constexpr std::pair<unsigned, unsigned> Bisect::kEndBisect;
+
+static Module CopyModule(const Module* orig) {
+  // TODO: surely there's a better way.
+  MemoryStream stream;
+  Result result = WriteBinaryModule(&stream, orig, s_write_binary_options);
+  if (Failed(result)) {
+    abort();
+  }
+
+  Errors errors;
+  Module copy;
+  Features features;
+  features.EnableAll();
+  ReadBinaryOptions options(features, nullptr, true, true, false);
+  result = ReadBinaryIr("memory stream", stream.output_buffer().data.data(),
+                        stream.output_buffer().size(), options, &errors, &copy);
+  if (Failed(result)) {
+    abort();
+  }
+  return copy;
+}
 
 static bool TryModule(string_view scriptfile_name,
                       const Module* module) {
@@ -195,10 +221,88 @@ static int ProgramMain(int argc, char** argv) {
       result = ValidateModule(&module, &errors, options);
     }
     if (Succeeded(result)) {
-      if (TryModule(scriptfile, &module)) {
-        printf("A\n");
-      } else {
-        printf("B\n");
+      if (!TryModule(scriptfile, &module)) {
+        // TODO: inform the user. This can happen because the parse and
+        // reserialization removed the interestingness.
+        abort();
+      }
+      Bisect bisect(module.funcs.size());
+
+      // Instead of deleting the functions, we remove their expressions,
+      // replacing them with constants as needed to meet the function signature.
+      // Because they aren't deleted, we need to map the contiguous space of
+      // "not-deleted" functions to the actual function indexes in the Module.
+      std::vector<int> func_map;
+      func_map.reserve(module.funcs.size());
+      for (int i = 0, e = module.funcs.size(); i != e; ++i) {
+        func_map.push_back(i);
+      }
+
+      do {
+        Module copy = CopyModule(&module);
+        auto range = bisect.Next();
+        if (range == Bisect::kEndBisect) {
+          break;
+        }
+        printf("[%u, %u]\n", func_map[range.first], func_map[range.second-1]);
+        for (unsigned i = 0, e = func_map.size(); i != e; ++i) {
+          if (i == range.first) {
+            i = range.second - 1;
+            continue;
+          }
+          assert(i < func_map.size());
+          unsigned fi = func_map[i];
+          copy.funcs[fi]->exprs = ExprList();
+          if (copy.funcs[fi]->GetNumResults() > 1) {
+            // TODO: multi-value return
+            abort();
+          }
+          if (copy.funcs[fi]->GetNumResults() == 1) {
+            switch (copy.funcs[fi]->GetResultType(0)) {
+            case Type::I32:
+              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::I32()));
+              break;
+            case Type::I64:
+              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::I64()));
+              break;
+            case Type::F32:
+              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::F32()));
+              break;
+            case Type::F64:
+              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::F64()));
+              break;
+            case Type::V128:
+              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::V128({0, 0, 0, 0})));
+              break;
+            default:
+              abort();
+            }
+          }
+        }
+        if (TryModule(scriptfile, &copy)) {
+          unsigned window = range.second - range.first;
+          std::vector<int> new_func_map;
+          new_func_map.reserve(window);
+          for (unsigned i = 0; i < window; ++i) {
+            new_func_map.push_back(func_map[range.first + i]);
+          }
+          std::swap(func_map, new_func_map);
+
+          bisect.Keep();
+          module = CopyModule(&copy);
+        }
+      } while (1);
+
+      // Reduction complete.
+      {
+        MemoryStream stream;
+        Result result = WriteBinaryModule(&stream, &module,
+                                          s_write_binary_options);
+        if (Failed(result)) {
+          abort();
+        }
+        stream.WriteToFile(outfile.c_str());
+        printf("Reduced testcase written out to %s\n", outfile.c_str());
       }
     }
     FormatErrorsToFile(errors, Location::Type::Binary);
