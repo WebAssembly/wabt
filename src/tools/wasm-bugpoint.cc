@@ -115,7 +115,7 @@ private:
 constexpr std::pair<unsigned, unsigned> Bisect::kEndBisect;
 
 static Module CopyModule(const Module* orig) {
-  // TODO: surely there's a better way.
+  // TODO: build a copy without involving streams
   MemoryStream stream;
   Result result = WriteBinaryModule(&stream, orig, s_write_binary_options);
   if (Failed(result)) {
@@ -231,7 +231,7 @@ static int ProgramMain(int argc, char** argv) {
       // Instead of deleting the functions, we remove their expressions,
       // replacing them with constants as needed to meet the function signature.
       // Because they aren't deleted, we need to map the contiguous space of
-      // "not-deleted" functions to the actual function indexes in the Module.
+      // not-deleted functions to the function indexes in the Module.
       std::vector<int> func_map;
       func_map.reserve(module.funcs.size());
       for (int i = 0, e = module.funcs.size(); i != e; ++i) {
@@ -253,12 +253,8 @@ static int ProgramMain(int argc, char** argv) {
           assert(i < func_map.size());
           unsigned fi = func_map[i];
           copy.funcs[fi]->exprs = ExprList();
-          if (copy.funcs[fi]->GetNumResults() > 1) {
-            // TODO: multi-value return
-            abort();
-          }
-          if (copy.funcs[fi]->GetNumResults() == 1) {
-            switch (copy.funcs[fi]->GetResultType(0)) {
+          for (int j = 0, je = copy.funcs[fi]->GetNumResults(); j != je; ++j) {
+            switch (copy.funcs[fi]->GetResultType(j)) {
             case Type::I32:
               copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::I32()));
               break;
