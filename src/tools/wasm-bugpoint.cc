@@ -38,6 +38,7 @@
 using namespace wabt;
 
 static WriteBinaryOptions s_write_binary_options;
+std::string s_scriptfile;
 
 class Bisect {
 public:
@@ -82,7 +83,7 @@ public:
   bool ShouldConsiderInverse() const {
     return window_ < length_ / 2;
   }
-  
+
   // Shrink this Bisect down to the range last returned by Next() and restart
   // at index zero.
   void Keep() {
@@ -198,8 +199,7 @@ static Module CopyModule(const Module* orig) {
   return copy;
 }
 
-static bool TryModule(string_view scriptfile_name,
-                      const Module* module) {
+static bool IsModuleInteresting(const Module* module) {
   // TODO: enforced timeouts.
   // TODO: unique temp filename selection so multiple bugpoints can run.
   {
@@ -214,7 +214,7 @@ static bool TryModule(string_view scriptfile_name,
     stream.WriteToFile("wasm-bugpoint.tmp.wasm");
   }
   int interesting =
-    system((scriptfile_name.to_string() + " wasm-bugpoint.tmp.wasm").c_str());
+    system((s_scriptfile + " wasm-bugpoint.tmp.wasm").c_str());
   remove("wasm-bugpoint.tmp.wasm");
   return interesting != 0;
 }
@@ -248,7 +248,7 @@ static void AddSomeValueOfType(ExprList* exprs, Type type) {
   }
 }
 
-static bool TryRemovingBodyFromFunctions(Module* module, string_view scriptfile) {
+static bool TryRemovingBodyFromFunctions(Module* module) {
   bool modified = false;
   BisectWithFixedLinearRange bisect(module->funcs.size());
 
@@ -275,7 +275,7 @@ static bool TryRemovingBodyFromFunctions(Module* module, string_view scriptfile)
         AddSomeValueOfType(&func->exprs, func->GetResultType(j));
       }
     }
-    if (TryModule(scriptfile, &copy)) {
+    if (IsModuleInteresting(&copy)) {
       bisect.Keep();
       *module = CopyModule(&copy);
       modified = true;
@@ -292,7 +292,7 @@ static bool TryRemovingBodyFromFunctions(Module* module, string_view scriptfile)
   return false;
 }
 
-static bool TryRemovingBlocksFromFunction(Module* module, Index func, string_view scriptfile) {
+static bool TryRemovingBlocksFromFunction(Module* module, Index func) {
   // Find only blocks at a specified depth. In this way, we produce a list of
   // blocks where deleting one doesn't delete another in our list. For one block
   // to be inside another one, they would necessarily be at different depths.
@@ -378,7 +378,7 @@ static bool TryRemovingBlocksFromFunction(Module* module, Index func, string_vie
         }
       }
 
-      if (TryModule(scriptfile, &copy)) {
+      if (IsModuleInteresting(&copy)) {
         bisect.Keep();
         *module = CopyModule(&copy);
         modified = true;
@@ -396,7 +396,6 @@ static int ProgramMain(int argc, char** argv) {
   InitStdio();
 
   std::string outfile = "wasm-bugpoint.wasm";
-  std::string scriptfile;
   std::string wasmfile;
   Features features;
   {
@@ -422,9 +421,9 @@ static int ProgramMain(int argc, char** argv) {
     features.AddOptions(&parser);
     parser.AddArgument("scriptfilename", OptionParser::ArgumentCount::One,
                        [&](const char* argument) {
-                         scriptfile = argument;
-                         ConvertBackslashToSlash(&scriptfile);
-                         AbsolutePath(&scriptfile);
+                         s_scriptfile = argument;
+                         ConvertBackslashToSlash(&s_scriptfile);
+                         AbsolutePath(&s_scriptfile);
                        });
     parser.AddArgument("wasmfilename", OptionParser::ArgumentCount::One,
                        [&](const char* argument) {
@@ -450,7 +449,7 @@ static int ProgramMain(int argc, char** argv) {
       result = ValidateModule(&module, &errors, options);
     }
     if (Succeeded(result)) {
-      if (!TryModule(scriptfile, &module)) {
+      if (!IsModuleInteresting(&module)) {
         // TODO: inform the user. This can happen because the parse and
         // reserialization removed the interestingness.
         abort();
@@ -459,10 +458,10 @@ static int ProgramMain(int argc, char** argv) {
       bool did_modify;
       do {
         did_modify = false;
-        did_modify |= TryRemovingBodyFromFunctions(&module, scriptfile);
+        did_modify |= TryRemovingBodyFromFunctions(&module);
         // TODO:
         for (int i = 0, e = module.funcs.size(); i != e; ++i) {
-          did_modify |= TryRemovingBlocksFromFunction(&module, i, scriptfile);
+          did_modify |= TryRemovingBlocksFromFunction(&module, i);
           // TryRemovingExprsFromFunction();
         }
         // TryRemovingTableElements();
