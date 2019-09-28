@@ -38,7 +38,7 @@
 using namespace wabt;
 
 static WriteBinaryOptions s_write_binary_options;
-std::string s_scriptfile;
+static std::string s_scriptfile;
 
 class Bisect {
  public:
