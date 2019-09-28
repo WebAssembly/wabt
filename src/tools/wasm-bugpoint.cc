@@ -22,13 +22,13 @@
 #include <string>
 #include <vector>
 
-#include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
+#include "src/binary-reader.h"
 #include "src/binary-writer.h"
 #include "src/cast.h"
 #include "src/common.h"
-#include "src/error.h"
 #include "src/error-formatter.h"
+#include "src/error.h"
 #include "src/feature.h"
 #include "src/ir.h"
 #include "src/make-unique.h"
@@ -41,15 +41,16 @@ static WriteBinaryOptions s_write_binary_options;
 std::string s_scriptfile;
 
 class Bisect {
-public:
+ public:
   explicit Bisect(unsigned length)
-    : length_(length), pos_(0), window_(length / 2), remainder_(0) {
+      : length_(length), pos_(0), window_(length / 2), remainder_(0) {
     if (window_ != 0) {
       remainder_ = length_ % window_;
     }
   }
 
-  static constexpr std::pair<unsigned, unsigned> kEndBisect = std::make_pair(0, 0);
+  static constexpr std::pair<unsigned, unsigned> kEndBisect =
+      std::make_pair(0, 0);
 
   // Returns a pair of values <start, end+1> where start < end+1 and
   // end+1 <= length. It will return approx-evenly spaced ranges over
@@ -80,9 +81,7 @@ public:
     return range;
   }
 
-  bool ShouldConsiderInverse() const {
-    return window_ < length_ / 2;
-  }
+  bool ShouldConsiderInverse() const { return window_ < length_ / 2; }
 
   // Shrink this Bisect down to the range last returned by Next() and restart
   // at index zero.
@@ -114,7 +113,7 @@ public:
 
   unsigned Size() const { return length_; }
 
-private:
+ private:
   unsigned length_;
   unsigned pos_;
   unsigned window_;
@@ -123,9 +122,8 @@ private:
 constexpr std::pair<unsigned, unsigned> Bisect::kEndBisect;
 
 class BisectWithFixedLinearRange {
-public:
-  explicit BisectWithFixedLinearRange(unsigned length)
-    : bisect_(length) {
+ public:
+  explicit BisectWithFixedLinearRange(unsigned length) : bisect_(length) {
     map_.reserve(length);
     for (unsigned i = 0; i != length; ++i) {
       map_.push_back(i);
@@ -172,7 +170,7 @@ public:
 
   unsigned Size() const { return bisect_.Size(); }
 
-private:
+ private:
   Bisect bisect_;
   std::vector<int> map_;
   std::pair<unsigned, unsigned> range_;
@@ -206,21 +204,19 @@ static bool IsModuleInteresting(const Module* module) {
     // TODO: FileWriter::MoveData not implemented!
     // FileStream stream("wasm-bugpoint.tmp.wasm");
     MemoryStream stream;
-    Result result = WriteBinaryModule(&stream, module,
-                                      s_write_binary_options);
+    Result result = WriteBinaryModule(&stream, module, s_write_binary_options);
     if (Failed(result)) {
       abort();
     }
     stream.WriteToFile("wasm-bugpoint.tmp.wasm");
   }
-  int interesting =
-    system((s_scriptfile + " wasm-bugpoint.tmp.wasm").c_str());
+  int interesting = system((s_scriptfile + " wasm-bugpoint.tmp.wasm").c_str());
   remove("wasm-bugpoint.tmp.wasm");
   return interesting != 0;
 }
 
 static void AbsolutePath(std::string* path) {
-  if (char *abs_path = realpath(path->c_str(), nullptr)) {
+  if (char* abs_path = realpath(path->c_str(), nullptr)) {
     *path = std::string(abs_path);
     free(abs_path);
   }
@@ -228,23 +224,23 @@ static void AbsolutePath(std::string* path) {
 
 static void AddSomeValueOfType(ExprList* exprs, Type type) {
   switch (type) {
-  case Type::I32:
-    exprs->push_back(MakeUnique<ConstExpr>(Const::I32()));
-    break;
-  case Type::I64:
-    exprs->push_back(MakeUnique<ConstExpr>(Const::I64()));
-    break;
-  case Type::F32:
-    exprs->push_back(MakeUnique<ConstExpr>(Const::F32()));
-    break;
-  case Type::F64:
-    exprs->push_back(MakeUnique<ConstExpr>(Const::F64()));
-    break;
-  case Type::V128:
-    exprs->push_back(MakeUnique<ConstExpr>(Const::V128({0, 0, 0, 0})));
-    break;
-  default:
-    abort();
+    case Type::I32:
+      exprs->push_back(MakeUnique<ConstExpr>(Const::I32()));
+      break;
+    case Type::I64:
+      exprs->push_back(MakeUnique<ConstExpr>(Const::I64()));
+      break;
+    case Type::F32:
+      exprs->push_back(MakeUnique<ConstExpr>(Const::F32()));
+      break;
+    case Type::F64:
+      exprs->push_back(MakeUnique<ConstExpr>(Const::F64()));
+      break;
+    case Type::V128:
+      exprs->push_back(MakeUnique<ConstExpr>(Const::V128({0, 0, 0, 0})));
+      break;
+    default:
+      abort();
   }
 }
 
@@ -287,7 +283,7 @@ static bool TryRemovingBodyFromFunctions(Module* module) {
   // The return value truly means "should we rerun this", so conservatively we
   // can answer "false". If we always answer true, bugpoint will have an
   // infinite loop as it keeps thinking it's making progress.
-  //return modified;
+  // return modified;
   (void)modified;
   return false;
 }
@@ -308,42 +304,44 @@ static bool TryRemovingBlocksFromFunction(Module* module, Index func) {
       worklist.pop_back();
       for (auto& expr : *exprs) {
         switch (expr.type()) {
-        case ExprType::Block:
-          if (depth == desired_depth) {
-            blocks.push_back(&cast<BlockExpr>(&expr)->block);
-          } else {
-            worklist.emplace_back(&cast<BlockExpr>(&expr)->block.exprs, depth + 1);
+          case ExprType::Block:
+            if (depth == desired_depth) {
+              blocks.push_back(&cast<BlockExpr>(&expr)->block);
+            } else {
+              worklist.emplace_back(&cast<BlockExpr>(&expr)->block.exprs,
+                                    depth + 1);
+            }
+            break;
+          case ExprType::If: {
+            IfExpr* if_expr = cast<IfExpr>(&expr);
+            if (depth == desired_depth) {
+              blocks.push_back(&if_expr->true_);
+            } else {
+              worklist.emplace_back(&if_expr->true_.exprs, depth + 1);
+            }
+            worklist.emplace_back(&if_expr->false_, depth);
+            break;
           }
-          break;
-        case ExprType::If: {
-          IfExpr *if_expr = cast<IfExpr>(&expr);
-          if (depth == desired_depth) {
-            blocks.push_back(&if_expr->true_);
-          } else {
-            worklist.emplace_back(&if_expr->true_.exprs, depth + 1);
+          case ExprType::Try: {
+            TryExpr* try_expr = cast<TryExpr>(&expr);
+            if (depth == desired_depth) {
+              blocks.push_back(&try_expr->block);
+            } else {
+              worklist.emplace_back(&try_expr->block.exprs, depth + 1);
+            }
+            worklist.emplace_back(&try_expr->catch_, depth);
+            break;
           }
-          worklist.emplace_back(&if_expr->false_, depth);
-          break;
-        }
-        case ExprType::Try: {
-          TryExpr *try_expr = cast<TryExpr>(&expr);
-          if (depth == desired_depth) {
-            blocks.push_back(&try_expr->block);
-          } else {
-            worklist.emplace_back(&try_expr->block.exprs, depth + 1);
-          }
-          worklist.emplace_back(&try_expr->catch_, depth);
-          break;
-        }
-        case ExprType::Loop:
-          if (depth == desired_depth) {
-            blocks.push_back(&cast<LoopExpr>(&expr)->block);
-          } else {
-            worklist.emplace_back(&cast<LoopExpr>(&expr)->block.exprs, depth + 1);
-          }
-          break;
-        default:
-          break;
+          case ExprType::Loop:
+            if (depth == desired_depth) {
+              blocks.push_back(&cast<LoopExpr>(&expr)->block);
+            } else {
+              worklist.emplace_back(&cast<LoopExpr>(&expr)->block.exprs,
+                                    depth + 1);
+            }
+            break;
+          default:
+            break;
         }
       }
     } while (!worklist.empty());
@@ -387,7 +385,7 @@ static bool TryRemovingBlocksFromFunction(Module* module, Index func) {
     ++depth;
   } while (1);
 
-  //return modified;
+  // return modified;
   (void)modified;
   return false;
 }
@@ -400,24 +398,24 @@ static int ProgramMain(int argc, char** argv) {
   Features features;
   {
     const char s_description[] =
-      "  WebAssembly testcase reducer.\n"
-      "\n"
-      "  Given a script that determines whether a file in WebAssembly binary\n"
-      "  format is interesting, indicated by returning exit code 0, and an\n"
-      "  interesting file, we attempt to produce a smaller variation of the\n"
-      "  file which is still interesting.\n"
-      "\n"
-      "example:\n"
-      "  $ wasm-bugpoint delta.sh test.wasm\n";
+        "  WebAssembly testcase reducer.\n"
+        "\n"
+        "  Given a script that determines whether a file in WebAssembly "
+        "  binary format is interesting, indicated by returning exit code 0,\n"
+        "  and an interesting file, we attempt to produce a smaller variation\n"
+        "  of the file which is still interesting.\n"
+        "\n"
+        "example:\n"
+        "  $ wasm-bugpoint delta.sh test.wasm\n";
     OptionParser parser("wasm-bugpoint", s_description);
     parser.AddHelpOption();
-    parser.AddOption(
-        'o', "output", "FILENAME",
-        "Output file for the reduced testcase, defaults to \"wasm-bugpoint.wasm\"",
-        [&](const char* argument) {
-          outfile = argument;
-          ConvertBackslashToSlash(&outfile);
-        });
+    parser.AddOption('o', "output", "FILENAME",
+                     "Output file for the reduced testcase, defaults to "
+                     "\"wasm-bugpoint.wasm\"",
+                     [&](const char* argument) {
+                       outfile = argument;
+                       ConvertBackslashToSlash(&outfile);
+                     });
     features.AddOptions(&parser);
     parser.AddArgument("scriptfilename", OptionParser::ArgumentCount::One,
                        [&](const char* argument) {
@@ -472,8 +470,8 @@ static int ProgramMain(int argc, char** argv) {
       // Reduction complete.
       {
         MemoryStream stream;
-        Result result = WriteBinaryModule(&stream, &module,
-                                          s_write_binary_options);
+        Result result =
+            WriteBinaryModule(&stream, &module, s_write_binary_options);
         if (Failed(result)) {
           abort();
         }
