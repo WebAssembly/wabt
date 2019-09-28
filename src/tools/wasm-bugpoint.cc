@@ -25,6 +25,7 @@
 #include "src/binary-reader.h"
 #include "src/binary-reader-ir.h"
 #include "src/binary-writer.h"
+#include "src/cast.h"
 #include "src/common.h"
 #include "src/error.h"
 #include "src/error-formatter.h"
@@ -55,22 +56,24 @@ public:
   // and use smaller ranges. It continues until the ranges are size one each,
   // after which point it returns kEndBisect.
   std::pair<unsigned, unsigned> Next() {
-    if (pos_ >= length_) {
+    if (pos_ == length_) {
       pos_ = 0;
       window_ /= 2;
+      remainder_ = 0;
       if (window_ != 0) {
         remainder_ = length_ % window_;
       }
     }
 
-    if (window_ == 0) {
+    if (window_ == 0 && remainder_ <= 0) {
       return kEndBisect;
     }
 
-    unsigned end = pos_ + window_ + remainder_;
-    if (remainder_ != 0) {
-      --remainder_;
+    unsigned end = pos_ + window_;
+    if (remainder_ > 0) {
+      ++end;
     }
+    --remainder_;
     auto range = std::make_pair(pos_, end);
     pos_ = end;
     return range;
@@ -84,8 +87,9 @@ public:
   // at index zero.
   void Keep() {
     assert(window_ != 0);
-    length_ = window_;
-    window_ = std::min(window_, length_ / 2);
+    int remainder_adjustment = remainder_ >= 0 ? 1 : 0;
+    length_ = window_ + remainder_adjustment;
+    window_ = std::min(window_ + remainder_adjustment, length_ / 2);
     pos_ = 0;
     remainder_ = 0;
     if (window_ != 0) {
@@ -97,8 +101,9 @@ public:
   // restart at index zero.
   void KeepInverse() {
     assert(window_ != 0);
-    length_ -= window_;
-    window_ = std::min(window_, length_ / 2);
+    int remainder_adjustment = remainder_ >= 0 ? 1 : 0;
+    length_ -= window_ + remainder_adjustment;
+    window_ = std::min(window_ + remainder_adjustment, length_ / 2);
     pos_ = 0;
     remainder_ = 0;
     if (window_ != 0) {
@@ -106,13 +111,71 @@ public:
     }
   }
 
+  unsigned Size() const { return length_; }
+
 private:
   unsigned length_;
   unsigned pos_;
   unsigned window_;
-  unsigned remainder_;
+  int remainder_;
 };
 constexpr std::pair<unsigned, unsigned> Bisect::kEndBisect;
+
+class BisectWithFixedLinearRange {
+public:
+  explicit BisectWithFixedLinearRange(unsigned length)
+    : bisect_(length) {
+    map_.reserve(length);
+    for (unsigned i = 0; i != length; ++i) {
+      map_.push_back(i);
+    }
+  }
+
+  std::pair<unsigned, unsigned> Next() {
+    range_ = bisect_.Next();
+    return range_;
+  }
+
+  bool ShouldConsiderInverse() const { return bisect_.ShouldConsiderInverse(); }
+
+  void Keep() {
+    unsigned window = range_.second - range_.first;
+    std::vector<int> new_map;
+    new_map.reserve(window);
+    for (unsigned i = 0; i != window; ++i) {
+      new_map.push_back(map_[range_.first + i]);
+    }
+    bisect_.Keep();
+    assert(new_map.size() == bisect_.Size());
+    std::swap(map_, new_map);
+  }
+
+  void KeepInverse() {
+    unsigned window = range_.second - range_.first;
+    std::vector<int> new_map;
+    new_map.reserve(map_.size() - window);
+    for (unsigned i = 0, e = map_.size(); i != e; ++i) {
+      if (i < range_.first || i >= range_.second) {
+        new_map.push_back(map_[i]);
+      }
+    }
+    bisect_.KeepInverse();
+    assert(new_map.size() == bisect_.Size());
+    std::swap(map_, new_map);
+  }
+
+  unsigned Map(unsigned i) const {
+    assert(i < map_.size());
+    return map_[i];
+  }
+
+  unsigned Size() const { return bisect_.Size(); }
+
+private:
+  Bisect bisect_;
+  std::vector<int> map_;
+  std::pair<unsigned, unsigned> range_;
+};
 
 static Module CopyModule(const Module* orig) {
   // TODO: build a copy without involving streams
@@ -161,6 +224,172 @@ static void AbsolutePath(std::string* path) {
     *path = std::string(abs_path);
     free(abs_path);
   }
+}
+
+static void AddSomeValueOfType(ExprList* exprs, Type type) {
+  switch (type) {
+  case Type::I32:
+    exprs->push_back(MakeUnique<ConstExpr>(Const::I32()));
+    break;
+  case Type::I64:
+    exprs->push_back(MakeUnique<ConstExpr>(Const::I64()));
+    break;
+  case Type::F32:
+    exprs->push_back(MakeUnique<ConstExpr>(Const::F32()));
+    break;
+  case Type::F64:
+    exprs->push_back(MakeUnique<ConstExpr>(Const::F64()));
+    break;
+  case Type::V128:
+    exprs->push_back(MakeUnique<ConstExpr>(Const::V128({0, 0, 0, 0})));
+    break;
+  default:
+    abort();
+  }
+}
+
+static bool TryRemovingBodyFromFunctions(Module* module, string_view scriptfile) {
+  bool modified = false;
+  BisectWithFixedLinearRange bisect(module->funcs.size());
+
+  // Instead of deleting the functions, we remove their expressions,
+  // replacing them with constants as needed to meet the function signature.
+  // Because they aren't deleted, we need to map the contiguous space of
+  // not-deleted functions to the function indexes in the Module.
+  do {
+    auto range = bisect.Next();
+    if (range == Bisect::kEndBisect) {
+      break;
+    }
+
+    Module copy = CopyModule(module);
+
+    for (unsigned i = 0, e = bisect.Size(); i != e; ++i) {
+      if (i == range.first) {
+        i = range.second - 1;
+        continue;
+      }
+      Func* func = copy.funcs[bisect.Map(i)];
+      func->exprs = ExprList();
+      for (int j = 0, je = func->GetNumResults(); j != je; ++j) {
+        AddSomeValueOfType(&func->exprs, func->GetResultType(j));
+      }
+    }
+    if (TryModule(scriptfile, &copy)) {
+      bisect.Keep();
+      *module = CopyModule(&copy);
+      modified = true;
+    }
+  } while (1);
+
+  // TODO: we don't know if we actually modified the function, we could be
+  // replacing (i32.const 0) with (i32.const 0) and thinking we modified it.
+  // The return value truly means "should we rerun this", so conservatively we
+  // can answer "false". If we always answer true, bugpoint will have an
+  // infinite loop as it keeps thinking it's making progress.
+  //return modified;
+  (void)modified;
+  return false;
+}
+
+static bool TryRemovingBlocksFromFunction(Module* module, Index func, string_view scriptfile) {
+  // Find only blocks at a specified depth. In this way, we produce a list of
+  // blocks where deleting one doesn't delete another in our list. For one block
+  // to be inside another one, they would necessarily be at different depths.
+  auto ScanForBlocks = [](ExprList* exprs, unsigned desired_depth) {
+    std::vector<Block*> blocks;
+    std::vector<std::pair<ExprList*, unsigned>> worklist;
+    unsigned depth = 0;
+    worklist.emplace_back(exprs, depth);
+    do {
+      auto entry = worklist.back();
+      ExprList* exprs = entry.first;
+      depth = entry.second;
+      worklist.pop_back();
+      for (auto& expr : *exprs) {
+        switch (expr.type()) {
+        case ExprType::Block:
+          if (depth == desired_depth) {
+            blocks.push_back(&cast<BlockExpr>(&expr)->block);
+          } else {
+            worklist.emplace_back(&cast<BlockExpr>(&expr)->block.exprs, depth + 1);
+          }
+          break;
+        case ExprType::If: {
+          IfExpr *if_expr = cast<IfExpr>(&expr);
+          if (depth == desired_depth) {
+            blocks.push_back(&if_expr->true_);
+          } else {
+            worklist.emplace_back(&if_expr->true_.exprs, depth + 1);
+          }
+          worklist.emplace_back(&if_expr->false_, depth);
+          break;
+        }
+        case ExprType::Try: {
+          TryExpr *try_expr = cast<TryExpr>(&expr);
+          if (depth == desired_depth) {
+            blocks.push_back(&try_expr->block);
+          } else {
+            worklist.emplace_back(&try_expr->block.exprs, depth + 1);
+          }
+          worklist.emplace_back(&try_expr->catch_, depth);
+          break;
+        }
+        case ExprType::Loop:
+          if (depth == desired_depth) {
+            blocks.push_back(&cast<LoopExpr>(&expr)->block);
+          } else {
+            worklist.emplace_back(&cast<LoopExpr>(&expr)->block.exprs, depth + 1);
+          }
+          break;
+        default:
+          break;
+        }
+      }
+    } while (!worklist.empty());
+    return blocks;
+  };
+
+  bool modified = false;
+  unsigned depth = 0;
+  // Start at depth zero, the outermost blocks and proceed toward nested blocks.
+  // Stop when there are no more blocks.
+  do {
+    auto blocks = ScanForBlocks(&module->funcs[func]->exprs, depth);
+    if (blocks.empty()) {
+      break;
+    }
+
+    BisectWithFixedLinearRange bisect(blocks.size());
+    do {
+      auto range = bisect.Next();
+      if (range == Bisect::kEndBisect) {
+        break;
+      }
+
+      Module copy = CopyModule(module);
+      auto blocks = ScanForBlocks(&copy.funcs[func]->exprs, depth);
+
+      for (unsigned i = range.first; i != range.second; ++i) {
+        Block* block = blocks[bisect.Map(i)];
+        block->exprs = ExprList();
+        for (int j = 0, je = block->decl.GetNumResults(); j != je; ++j) {
+          AddSomeValueOfType(&block->exprs, block->decl.GetResultType(j));
+        }
+      }
+
+      if (TryModule(scriptfile, &copy)) {
+        bisect.Keep();
+        *module = CopyModule(&copy);
+        modified = true;
+      }
+    } while (1);
+    ++depth;
+  } while (1);
+
+  //return modified;
+  (void)modified;
+  return false;
 }
 
 static int ProgramMain(int argc, char** argv) {
@@ -226,68 +455,20 @@ static int ProgramMain(int argc, char** argv) {
         // reserialization removed the interestingness.
         abort();
       }
-      Bisect bisect(module.funcs.size());
 
-      // Instead of deleting the functions, we remove their expressions,
-      // replacing them with constants as needed to meet the function signature.
-      // Because they aren't deleted, we need to map the contiguous space of
-      // not-deleted functions to the function indexes in the Module.
-      std::vector<int> func_map;
-      func_map.reserve(module.funcs.size());
-      for (int i = 0, e = module.funcs.size(); i != e; ++i) {
-        func_map.push_back(i);
-      }
-
+      bool did_modify;
       do {
-        Module copy = CopyModule(&module);
-        auto range = bisect.Next();
-        if (range == Bisect::kEndBisect) {
-          break;
+        did_modify = false;
+        did_modify |= TryRemovingBodyFromFunctions(&module, scriptfile);
+        // TODO:
+        for (int i = 0, e = module.funcs.size(); i != e; ++i) {
+          did_modify |= TryRemovingBlocksFromFunction(&module, i, scriptfile);
+          // TryRemovingExprsFromFunction();
         }
-        printf("[%u, %u]\n", func_map[range.first], func_map[range.second-1]);
-        for (unsigned i = 0, e = func_map.size(); i != e; ++i) {
-          if (i == range.first) {
-            i = range.second - 1;
-            continue;
-          }
-          assert(i < func_map.size());
-          unsigned fi = func_map[i];
-          copy.funcs[fi]->exprs = ExprList();
-          for (int j = 0, je = copy.funcs[fi]->GetNumResults(); j != je; ++j) {
-            switch (copy.funcs[fi]->GetResultType(j)) {
-            case Type::I32:
-              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::I32()));
-              break;
-            case Type::I64:
-              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::I64()));
-              break;
-            case Type::F32:
-              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::F32()));
-              break;
-            case Type::F64:
-              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::F64()));
-              break;
-            case Type::V128:
-              copy.funcs[fi]->exprs.push_back(MakeUnique<ConstExpr>(Const::V128({0, 0, 0, 0})));
-              break;
-            default:
-              abort();
-            }
-          }
-        }
-        if (TryModule(scriptfile, &copy)) {
-          unsigned window = range.second - range.first;
-          std::vector<int> new_func_map;
-          new_func_map.reserve(window);
-          for (unsigned i = 0; i < window; ++i) {
-            new_func_map.push_back(func_map[range.first + i]);
-          }
-          std::swap(func_map, new_func_map);
-
-          bisect.Keep();
-          module = CopyModule(&copy);
-        }
-      } while (1);
+        // TryRemovingTableElements();
+        // TryRemovingFunctions();
+        // TryRemovingTypeSignature();
+      } while (did_modify);
 
       // Reduction complete.
       {
