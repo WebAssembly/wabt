@@ -50,6 +50,10 @@ OptionParser::OptionParser(const char* program_name, const char* description)
     : program_name_(program_name),
       description_(description),
       on_error_([this](const std::string& message) { DefaultError(message); }) {
+
+  // Add common options
+  AddHelpOption();
+  AddVersionOption();
 }
 
 void OptionParser::AddOption(const Option& option) {

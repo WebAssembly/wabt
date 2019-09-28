@@ -12,9 +12,9 @@ examples:
   $ wast2json spec-test.wast -o spec-test.json
 
 options:
-  -v, --verbose                               Use multiple times for more info
       --help                                  Print this help message
       --version                               Print version information
+  -v, --verbose                               Use multiple times for more info
       --debug-parser                          Turn on debugging the parser of wast files
       --enable-exceptions                     Enable Experimental exception handling
       --disable-mutable-globals               Disable Import/export mutable globals

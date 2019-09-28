@@ -78,10 +78,10 @@ class OptionParser {
                  const char* metavar,
                  const char* help,
                  const Callback&);
-  void AddHelpOption();
-  void AddVersionOption();
 
  private:
+  void AddHelpOption();
+  void AddVersionOption();
   static int Match(const char* s, const std::string& full, bool has_argument);
   void WABT_PRINTF_FORMAT(2, 3) Errorf(const char* format, ...);
   void HandleArgument(size_t* arg_index, const char* arg_value);

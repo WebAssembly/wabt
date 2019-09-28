@@ -37,8 +37,6 @@ examples:
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wasm-strip", s_description);
 
-  parser.AddHelpOption();
-  parser.AddVersionOption();
   parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                      [](const char* argument) {
                        s_filename = argument;

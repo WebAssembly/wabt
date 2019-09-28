@@ -9,6 +9,8 @@ examples:
   $ wasm-objdump test.wasm
 
 options:
+      --help                   Print this help message
+      --version                Print version information
   -h, --headers                Print headers
   -j, --section=SECTION        Select just one section
   -s, --full-contents          Print raw section contents
@@ -16,6 +18,4 @@ options:
       --debug                  Print extra debug information
   -x, --details                Show section details
   -r, --reloc                  Show relocations inline with disassembly
-      --help                   Print this help message
-      --version                Print version information
 ;;; STDOUT ;;)
