@@ -186,9 +186,8 @@ static Module CopyModule(const Module* orig) {
 
   Errors errors;
   Module copy;
-  Features features;
-  features.EnableAll();
-  ReadBinaryOptions options(features, nullptr, true, true, false);
+  ReadBinaryOptions options(s_write_binary_options.features, nullptr, true,
+                            true, false);
   result = ReadBinaryIr("memory stream", stream.output_buffer().data.data(),
                         stream.output_buffer().size(), options, &errors, &copy);
   if (Failed(result)) {
