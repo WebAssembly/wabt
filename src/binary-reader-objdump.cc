@@ -890,6 +890,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   bool in_elem_section_ = false;
   InitExpr data_init_expr_;
   InitExpr elem_init_expr_;
+  bool data_is_passive_ = false;
+  Index data_mem_index_ = 0;
   uint32_t data_offset_ = 0;
   uint32_t elem_offset_ = 0;
 };
@@ -1436,8 +1438,8 @@ Result BinaryReaderObjdump::OnDataSegmentCount(Index count) {
 Result BinaryReaderObjdump::BeginDataSegment(Index index,
                                              Index memory_index,
                                              bool passive) {
-  // TODO(sbc): Display memory_index once multiple memories become a thing
-  // PrintDetails(" - memory[%" PRIindex "]", memory_index);
+  data_mem_index_ = memory_index;
+  data_is_passive_ = passive;
   return Result::Ok;
 }
 
@@ -1453,8 +1455,17 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   if (!name.empty()) {
     PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
+  if (data_is_passive_) {
+    PrintDetails(" passive");
+  } else {
+    PrintDetails(" memory=%" PRIindex, data_mem_index_);
+  }
   PrintDetails(" size=%" PRIaddress, size);
-  PrintInitExpr(data_init_expr_);
+  if (data_is_passive_) {
+    PrintDetails("\n");
+  } else {
+    PrintInitExpr(data_init_expr_);
+  }
 
   out_stream_->WriteMemoryDump(src_data, size, data_offset_, PrintChars::Yes,
                                "  - ");

@@ -47,9 +47,9 @@ Section Details:
 Memory[1]:
  - memory[0] pages: initial=1
 Data[2]:
- - segment[0] size=5 - init i32=10
+ - segment[0] memory=0 size=5 - init i32=10
   - 000000a: 6865 6c6c 6f                             hello
- - segment[1] size=48 - init i32=20
+ - segment[1] memory=0 size=48 - init i32=20
   - 0000014: 676f 6f64 6279 652c 204c 6f72 656d 2069  goodbye, Lorem i
   - 0000024: 7073 756d 2064 6f6c 6f72 2073 6974 2061  psum dolor sit a
   - 0000034: 6d65 742c 2063 6f6e 7365 6374 6574 7572  met, consectetur

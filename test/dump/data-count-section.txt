@@ -24,11 +24,11 @@ Memory[1]:
 DataCount:
  - data count: 3
 Data[3]:
- - segment[0] size=2 - init i32=0
+ - segment[0] memory=0 size=2 - init i32=0
   - 0000000: 6869                                     hi
- - segment[1] size=5 - init i32=2
+ - segment[1] memory=0 size=5 - init i32=2
   - 0000002: 776f 726c 64                             world
- - segment[2] size=7 - init i32=7
+ - segment[2] memory=0 size=7 - init i32=7
   - 0000007: 676f 6f64 6279 65                        goodbye
 
 Code Disassembly:
