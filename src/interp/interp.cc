@@ -251,7 +251,7 @@ Export* Module::GetExport(string_view name) {
 Index Module::AppendExport(ExternalKind kind,
                            Index item_index,
                            string_view name) {
-  exports.emplace_back(name, kind, item_index);
+  exports.emplace_back(/*env,*/ name, kind, item_index);
   Export* export_ = &exports.back();
   export_bindings.emplace(export_->name, Binding(exports.size() - 1));
   return exports.size() - 1;

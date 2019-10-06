@@ -222,7 +222,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${WABT_SOURCE_DIR}/cmake)
 
 add_custom_target(everything)
 
-add_library(wabt STATIC
+set(WABT_LIBRARY_SRC
   src/apply-names.h
   src/apply-names.cc
   src/binary.h
@@ -305,12 +305,23 @@ add_library(wabt STATIC
   # TODO(binji): Move this into its own library?
   src/interp/binary-reader-interp.h
   src/interp/binary-reader-interp.cc
+  src/interp/binary-reader-metadata.h
+  src/interp/binary-reader-metadata.cc
   src/interp/interp.h
   src/interp/interp.cc
   src/interp/interp-disassemble.cc
   src/interp/interp-trace.cc
 )
 
+add_library(wabt STATIC ${WABT_LIBRARY_SRC})
+
+# libwasm, which implenents the wasm C API
+add_library(wasm SHARED ${WABT_LIBRARY_SRC} src/interp/interp-wasm-c-api.cc)
+target_link_libraries(wasm wabt)
+target_include_directories(wasm PUBLIC third_party/wasm-c-api/include)
+target_compile_options(wasm PUBLIC -Wno-old-style-cast)
+target_compile_definitions(wasm PRIVATE "WASM_API_EXTERN=__attribute__((visibility(\"default\")))")
+set_target_properties(wasm PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
 if (NOT EMSCRIPTEN)
   if (CODE_COVERAGE)
@@ -500,12 +511,41 @@ if (NOT EMSCRIPTEN)
     set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
     add_custom_target(run-tests
       COMMAND ${CMAKE_BINARY_DIR}/wabt-unittests
+      COMMAND ${PYTHON_EXECUTABLE} ${WABT_SOURCE_DIR}/test/run-c-api-examples.py
       COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir ${CMAKE_BINARY_DIR}
       DEPENDS ${WABT_EXECUTABLES}
       WORKING_DIRECTORY ${WABT_SOURCE_DIR}
       ${USES_TERMINAL}
     )
     add_dependencies(run-tests wabt-unittests)
+
+    macro(c_api_example)
+      set(THREADS_PREFER_PTHREAD_FLAG ON)
+      find_package(Threads REQUIRED)
+      add_executable(wasm-c-api-${ARGV0} third_party/wasm-c-api/example/${ARGV0}.c)
+      target_link_libraries(wasm-c-api-${ARGV0} wasm Threads::Threads)
+      set_target_properties(wasm-c-api-${ARGV0} PROPERTIES OUTPUT_NAME c-api-examples/${ARGV0})
+      add_custom_target(wasm-c-api-${ARGV0}-copy-to-bin ALL
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${WABT_SOURCE_DIR}/bin/c-api-examples
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:wasm-c-api-${ARGV0}> ${WABT_SOURCE_DIR}/bin/c-api-examples/
+        COMMAND ${CMAKE_COMMAND} -E copy ${WABT_SOURCE_DIR}/third_party/wasm-c-api/example/${ARGV0}.wasm ${WABT_SOURCE_DIR}/bin/c-api-examples
+        DEPENDS wasm-c-api-${ARGV0}
+      )
+    endmacro()
+
+    c_api_example(callback)
+    c_api_example(finalize)
+    c_api_example(global)
+    c_api_example(hello)
+    c_api_example(hostref)
+    c_api_example(multi)
+    c_api_example(reflect)
+    c_api_example(serialize)
+    c_api_example(start)
+    c_api_example(table)
+    c_api_example(threads)
+    c_api_example(trap)
   endif ()
 
   # install

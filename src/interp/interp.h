@@ -101,9 +101,13 @@ struct FuncSignature {
 };
 
 enum class RefType {
-  Func,
   Null,
-  Host
+  Host,
+  Func,
+  Global,
+  Table,
+  Memory,
+  Event,
 };
 
 struct Ref {
@@ -274,6 +278,8 @@ struct HostFunc : Func {
   Callback callback;
 };
 
+class Environment;
+
 struct Export {
   Export(string_view name, ExternalKind kind, Index index)
       : name(name.to_string()), kind(kind), index(index) {}
@@ -283,7 +289,12 @@ struct Export {
   Index index;
 };
 
-class Environment;
+struct ModuleMetadata {
+  WABT_DISALLOW_COPY_AND_ASSIGN(ModuleMetadata);
+  ModuleMetadata() = default;
+  std::vector<Import> imports;
+  std::vector<Export> exports;
+};
 
 struct Module {
   WABT_DISALLOW_COPY_AND_ASSIGN(Module);
