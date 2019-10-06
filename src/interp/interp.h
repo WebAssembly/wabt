@@ -342,6 +342,13 @@ struct Export {
 
 class Environment;
 
+struct ModuleMetadata {
+  WABT_DISALLOW_COPY_AND_ASSIGN(ModuleMetadata);
+  ModuleMetadata() = default;
+  std::vector<Import> imports;
+  std::vector<Export> exports;
+};
+
 struct Module {
   WABT_DISALLOW_COPY_AND_ASSIGN(Module);
   Module(Environment* env, bool is_host);
