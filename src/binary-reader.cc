@@ -1919,13 +1919,13 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
 
     uint8_t kind;
     CHECK_RESULT(ReadU8(&kind, "import kind"));
+    CALLBACK(OnImport, i, static_cast<ExternalKind>(kind), module_name, field_name);
     switch (static_cast<ExternalKind>(kind)) {
       case ExternalKind::Func: {
         Index sig_index;
         CHECK_RESULT(ReadIndex(&sig_index, "import signature index"));
         ERROR_UNLESS(sig_index < num_signatures_,
                      "invalid import signature index");
-        CALLBACK(OnImport, i, module_name, field_name);
         CALLBACK(OnImportFunc, i, module_name, field_name, num_func_imports_,
                  sig_index);
         num_func_imports_++;
@@ -1936,7 +1936,6 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         Type elem_type;
         Limits elem_limits;
         CHECK_RESULT(ReadTable(&elem_type, &elem_limits));
-        CALLBACK(OnImport, i, module_name, field_name);
         CALLBACK(OnImportTable, i, module_name, field_name, num_table_imports_,
                  elem_type, &elem_limits);
         num_table_imports_++;
@@ -1946,7 +1945,6 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
       case ExternalKind::Memory: {
         Limits page_limits;
         CHECK_RESULT(ReadMemory(&page_limits));
-        CALLBACK(OnImport, i, module_name, field_name);
         CALLBACK(OnImportMemory, i, module_name, field_name,
                  num_memory_imports_, &page_limits);
         num_memory_imports_++;
@@ -1957,7 +1955,6 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
         Type type;
         bool mutable_;
         CHECK_RESULT(ReadGlobalHeader(&type, &mutable_));
-        CALLBACK(OnImport, i, module_name, field_name);
         CALLBACK(OnImportGlobal, i, module_name, field_name,
                  num_global_imports_, type, mutable_);
         num_global_imports_++;
@@ -1969,7 +1966,6 @@ Result BinaryReader::ReadImportSection(Offset section_size) {
                      "invalid import event kind: exceptions not allowed");
         Index sig_index;
         CHECK_RESULT(ReadEventType(&sig_index));
-        CALLBACK(OnImport, i, module_name, field_name);
         CALLBACK(OnImportEvent, i, module_name, field_name, num_event_imports_,
                  sig_index);
         num_event_imports_++;

@@ -143,13 +143,14 @@ Result BinaryReaderLogging::OnType(Index index,
 }
 
 Result BinaryReaderLogging::OnImport(Index index,
+                                     ExternalKind kind,
                                      string_view module_name,
                                      string_view field_name) {
-  LOGF("OnImport(index: %" PRIindex ", module: \"" PRIstringview
+  LOGF("OnImport(index: %" PRIindex ", kind: %s, module: \"" PRIstringview
        "\", field: \"" PRIstringview "\")\n",
-       index, WABT_PRINTF_STRING_VIEW_ARG(module_name),
+       index, GetKindName(kind), WABT_PRINTF_STRING_VIEW_ARG(module_name),
        WABT_PRINTF_STRING_VIEW_ARG(field_name));
-  return reader_->OnImport(index, module_name, field_name);
+  return reader_->OnImport(index, kind, module_name, field_name);
 }
 
 Result BinaryReaderLogging::OnImportFunc(Index import_index,

@@ -7468,7 +7468,7 @@ BeginModule(version: 1)
   EndTypeSection
   BeginImportSection(14)
     OnImportCount(1)
-    OnImport(index: 0, module: "host", field: "print")
+    OnImport(index: 0, kind: func, module: "host", field: "print")
     OnImportFunc(import_index: 0, func_index: 0, sig_index: 1)
   EndImportSection
   BeginFunctionSection(406)

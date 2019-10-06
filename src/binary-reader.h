@@ -93,6 +93,7 @@ class BinaryReaderDelegate {
   virtual Result BeginImportSection(Offset size) = 0;
   virtual Result OnImportCount(Index count) = 0;
   virtual Result OnImport(Index index,
+                          ExternalKind kind,
                           string_view module_name,
                           string_view field_name) = 0;
   virtual Result OnImportFunc(Index import_index,
