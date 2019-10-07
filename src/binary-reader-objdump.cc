@@ -1029,10 +1029,23 @@ Result BinaryReaderObjdump::OnType(Index index,
     printf("%s", GetTypeName(param_types[i]));
   }
   printf(") -> ");
-  if (result_count) {
-    printf("%s", GetTypeName(result_types[0]));
-  } else {
-    printf("nil");
+  switch (result_count) {
+    case 0:
+      printf("nil");
+      break;
+    case 1:
+      printf("%s", GetTypeName(result_types[0]));
+      break;
+    default:
+      printf("(");
+      for (Index i = 0; i < result_count; i++) {
+        if (i != 0) {
+          printf(", ");
+        }
+        printf("%s", GetTypeName(result_types[i]));
+      }
+      printf(")");
+      break;
   }
   printf("\n");
   return Result::Ok;
