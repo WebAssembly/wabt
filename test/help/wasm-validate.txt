@@ -10,8 +10,9 @@ examples:
   $ wasm-validate test.wasm
 
 options:
-  -v, --verbose                               Use multiple times for more info
       --help                                  Print this help message
+      --version                               Print version information
+  -v, --verbose                               Use multiple times for more info
       --enable-exceptions                     Enable Experimental exception handling
       --disable-mutable-globals               Disable Import/export mutable globals
       --enable-saturating-float-to-int        Enable Saturating float-to-int operators

@@ -83,7 +83,6 @@ static void ParseOptions(int argc, char** argv) {
     s_verbose++;
     s_log_stream = FileStream::CreateStdout();
   });
-  parser.AddHelpOption();
   s_features.AddOptions(&parser);
   parser.AddOption('V', "value-stack-size", "SIZE",
                    "Size in elements of the value stack",

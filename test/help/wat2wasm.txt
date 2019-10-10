@@ -18,8 +18,9 @@ examples:
   $ wat2wasm spec-test.wast -v
 
 options:
-  -v, --verbose                               Use multiple times for more info
       --help                                  Print this help message
+      --version                               Print version information
+  -v, --verbose                               Use multiple times for more info
       --debug-parser                          Turn on debugging the parser of wat files
   -d, --dump-module                           Print a hexdump of the module to stdout
       --enable-exceptions                     Enable Experimental exception handling

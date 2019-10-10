@@ -20,6 +20,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#cmakedefine WABT_VERSION_INFO "${WABT_VERSION_INFO}"
+
 /* TODO(binji): nice way to define these with WABT_ prefix? */
 
 /* Whether <alloca.h> is available */

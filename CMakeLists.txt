@@ -68,6 +68,22 @@ include(CheckTypeSize)
 check_type_size(ssize_t SSIZE_T)
 check_type_size(size_t SIZEOF_SIZE_T)
 
+FIND_PACKAGE(Git QUIET REQUIRED)
+EXECUTE_PROCESS(COMMAND
+        "${GIT_EXECUTABLE}" --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git describe --tags
+        RESULT_VARIABLE
+            GIT_HASH_RESULT
+        OUTPUT_VARIABLE
+            GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+IF(${GIT_HASH_RESULT})
+    MESSAGE(WARNING "Error running git describe to determine version")
+    SET(WABT_VERSION_INFO "(unable to determine version)")
+ELSE()
+    SET(WABT_VERSION_INFO "${GIT_HASH}")
+ENDIF()
+
 configure_file(
   ${WABT_SOURCE_DIR}/src/config.h.in
   ${WABT_BINARY_DIR}/config.h

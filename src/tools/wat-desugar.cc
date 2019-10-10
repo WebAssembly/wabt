@@ -59,7 +59,6 @@ examples:
 static void ParseOptions(int argc, char** argv) {
   OptionParser parser("wat-desugar", s_description);
 
-  parser.AddHelpOption();
   parser.AddOption('o', "output", "FILE", "Output file for the formatted file",
                    [](const char* argument) { s_outfile = argument; });
   parser.AddOption("debug-parser", "Turn on debugging the parser of wat files",
