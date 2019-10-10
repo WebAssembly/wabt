@@ -52,6 +52,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result BeginImportSection(Offset size) override;
   Result OnImportCount(Index count) override;
   Result OnImport(Index index,
+                  ExternalKind kind,
                   string_view module_name,
                   string_view field_name) override;
   Result OnImportFunc(Index import_index,
