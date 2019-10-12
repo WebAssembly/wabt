@@ -634,8 +634,14 @@ Result BinaryReaderObjdumpDisassemble::OnBrTableExpr(
     Index* target_depths,
     Index default_target_depth) {
   Offset immediate_len = state->offset - current_opcode_offset;
-  /* TODO(sbc): Print targets */
-  LogOpcode(immediate_len, nullptr);
+
+  std::string buffer = std::string();
+  for (Index i = 0; i < num_targets; i++) {
+    buffer.append(std::to_string(target_depths[i])).append(" ");
+  }
+  buffer.append(std::to_string(default_target_depth));
+
+  LogOpcode(immediate_len, "%s", buffer.c_str());
   return Result::Ok;
 }
 
