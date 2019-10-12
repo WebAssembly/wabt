@@ -52,8 +52,14 @@ OptionParser::OptionParser(const char* program_name, const char* description)
       on_error_([this](const std::string& message) { DefaultError(message); }) {
 
   // Add common options
-  AddHelpOption();
-  AddVersionOption();
+  AddOption("help", "Print this help message", [this]() {
+    PrintHelp();
+    exit(0);
+  });
+  AddOption("version", "Print version information", []() {
+    printf("%s\n", WABT_VERSION_INFO);
+    exit(0);
+  });
 }
 
 void OptionParser::AddOption(const Option& option) {
@@ -91,20 +97,6 @@ void OptionParser::AddOption(char short_name,
   Option option(short_name, long_name, metavar, HasArgument::Yes, help,
                 callback);
   AddOption(option);
-}
-
-void OptionParser::AddHelpOption() {
-  AddOption("help", "Print this help message", [this]() {
-    PrintHelp();
-    exit(0);
-  });
-}
-
-void OptionParser::AddVersionOption() {
-  AddOption("version", "Print version information", [this]() {
-    printf("%s\n", WABT_VERSION_INFO);
-    exit(0);
-  });
 }
 
 void OptionParser::SetErrorCallback(const Callback& callback) {
