@@ -59,11 +59,13 @@ EMCC_FLAG := -DCMAKE_TOOLCHAIN_FILE=${EMSCRIPTEN_DIR}/cmake/Modules/Platform/Ems
 DEBUG_FLAG := -DCMAKE_BUILD_TYPE=Debug
 RELEASE_FLAG := -DCMAKE_BUILD_TYPE=Release
 NORMAL_FLAG :=
-ASAN_FLAG := -DUSE_ASAN=ON
-MSAN_FLAG := -DUSE_MSAN=ON
-LSAN_FLAG := -DUSE_LSAN=ON
-UBSAN_FLAG := -DUSE_UBSAN=ON
-COV_FLAG := -DCODE_COVERAGE=ON
+# Enable -Werror for santizer builds so that we can get some CI coverage
+# with -Werror and end users are unlikely to be using these configs
+ASAN_FLAG := -DUSE_ASAN=ON -DWERROR
+MSAN_FLAG := -DUSE_MSAN=ON -DWERROR
+LSAN_FLAG := -DUSE_LSAN=ON -DWERROR
+UBSAN_FLAG := -DUSE_UBSAN=ON -DWERROR
+COV_FLAG := -DCODE_COVERAGE=ON -DWERROR
 NO_TESTS_FLAG := -DBUILD_TESTS=OFF
 
 # make target prefixes
