@@ -1023,8 +1023,11 @@ Result BinaryWriter::WriteModule() {
       if (segment->passive) {
         stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::Passive));
         WriteType(stream_, segment->elem_type);
+      } else if (module_->GetTableIndex(segment->table_var)) {
+        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexOther));
+        WriteU32Leb128(stream_, module_->GetTableIndex(segment->table_var), "table index");
+        WriteInitExpr(segment->offset);
       } else {
-        assert(module_->GetTableIndex(segment->table_var) == 0);
         stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));
         WriteInitExpr(segment->offset);
       }
