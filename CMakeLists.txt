@@ -27,7 +27,6 @@ option(USE_UBSAN "Use undefined behavior sanitizer" OFF)
 option(CODE_COVERAGE "Build with code coverage enabled" OFF)
 option(WITH_EXCEPTIONS "Build with exceptions enabled" OFF)
 option(WERROR "Build with warnings as errors" OFF)
-option(WIP_TOOLS "Build Work-In-Progress functionality" OFF)
 
 if (CMAKE_C_COMPILER_ID MATCHES "Clang")
   set(COMPILER_IS_CLANG 1)
@@ -432,14 +431,12 @@ if (NOT EMSCRIPTEN)
       INSTALL
     )
 
-    if (WIP_TOOLS)
-      # wasm-decompile
-      wabt_executable(
-        NAME wasm-decompile
-        SOURCES src/tools/wasm-decompile.cc
-        INSTALL
-      )
-    endif()
+    # wasm-decompile
+    wabt_executable(
+      NAME wasm-decompile
+      SOURCES src/tools/wasm-decompile.cc
+      INSTALL
+    )
   endif ()
 
   find_package(Threads)

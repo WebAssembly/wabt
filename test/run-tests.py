@@ -138,6 +138,10 @@ TOOLS = {
             '%(out_dir)s',
         ]),
         ('VERBOSE-ARGS', ['--print-cmd', '-v']),
+    ],
+    'run-wasm-decompile': [
+        ('RUN', '%(wat2wasm)s --enable-multi-value %(in_file)s -o %(temp_file)s.wasm'),
+        ('RUN', '%(wasm-decompile)s --enable-multi-value %(temp_file)s.wasm'),
     ]
 }
 
