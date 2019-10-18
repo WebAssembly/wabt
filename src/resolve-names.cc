@@ -461,6 +461,7 @@ void NameResolver::VisitDataSegment(DataSegment* segment) {
 
 Result NameResolver::VisitModule(Module* module) {
   current_module_ = module;
+  CheckDuplicateBindings(&module->elem_segment_bindings, "elem");
   CheckDuplicateBindings(&module->func_bindings, "function");
   CheckDuplicateBindings(&module->global_bindings, "global");
   CheckDuplicateBindings(&module->func_type_bindings, "function type");

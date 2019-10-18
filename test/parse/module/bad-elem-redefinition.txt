@@ -1,0 +1,10 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(module
+  (elem $elem funcref 0)
+  (elem $elem funcref 0))
+(;; STDERR ;;;
+out/test/parse/module/bad-elem-redefinition.txt:5:4: error: redefinition of elem "$elem"
+  (elem $elem funcref 0))
+   ^^^^
+;;; STDERR ;;)
