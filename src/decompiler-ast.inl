@@ -232,12 +232,19 @@ struct AST {
     stack_depth = stack_depth_start;
     auto end = stack.size();
     assert(end >= start);
-    if (return_results && nresults) {
-      // Combine nresults into a return statement, for when this is used as
-      // a function body.
-      // TODO: if this is some other kind of block and >1 value is being
-      // returned, probably need some kind of syntax to make that clearer.
-      NewNode(NodeType::EndReturn, ExprType::Nop, nullptr, nresults);
+    if (return_results && !stack.empty()) {
+      if (stack.back().etype == ExprType::Return) {
+        if (stack.back().children.empty()) {
+          // Return statement at the end of a void function.
+          stack.pop_back();
+        }
+      } else if (nresults) {
+        // Combine nresults into a return statement, for when this is used as
+        // a function body.
+        // TODO: if this is some other kind of block and >1 value is being
+        // returned, probably need some kind of syntax to make that clearer.
+        NewNode(NodeType::EndReturn, ExprType::Nop, nullptr, nresults);
+      }
     }
     end = stack.size();
     assert(end >= start);

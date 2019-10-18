@@ -398,6 +398,14 @@ struct Decompiler {
         return WrapChild(args[0], "if (",
                   ") " + std::string(jmp) + " " + bie->var.name());
       }
+      case ExprType::Return: {
+        return WrapNAry(args, "return ", "");
+      }
+      case ExprType::Drop: {
+        // Silent dropping of return values is very common, so currently
+        // don't output this.
+        return std::move(args[0]);
+      }
       default: {
         std::string name;
         switch (n.etype) {
