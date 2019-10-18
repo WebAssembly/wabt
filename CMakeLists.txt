@@ -247,6 +247,7 @@ add_library(wabt STATIC
   src/config.h
   src/config.cc
   src/decompiler.h
+  src/decompiler-ast.inl
   src/decompiler.cc
   src/error-formatter.h
   src/error-formatter.cc

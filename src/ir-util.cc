@@ -40,23 +40,23 @@
 
 using namespace wabt;
 
-Label* ModuleContext::GetLabel(const Var& var) {
+const Label* ModuleContext::GetLabel(const Var& var) const {
   if (var.is_name()) {
     for (Index i = GetLabelStackSize(); i > 0; --i) {
-      Label* label = &label_stack_[i - 1];
+      auto label = &label_stack_[i - 1];
       if (label->name == var.name()) {
         return label;
       }
     }
   } else if (var.index() < GetLabelStackSize()) {
-    Label* label = &label_stack_[GetLabelStackSize() - var.index() - 1];
+    auto label = &label_stack_[GetLabelStackSize() - var.index() - 1];
     return label;
   }
   return nullptr;
 }
 
-Index ModuleContext::GetLabelArity(const Var& var) {
-  Label* label = GetLabel(var);
+Index ModuleContext::GetLabelArity(const Var& var) const {
+  auto label = GetLabel(var);
   if (!label) {
     return 0;
   }
@@ -65,12 +65,12 @@ Index ModuleContext::GetLabelArity(const Var& var) {
                                               : label->result_types.size();
 }
 
-Index ModuleContext::GetFuncParamCount(const Var& var) {
+Index ModuleContext::GetFuncParamCount(const Var& var) const {
   const Func* func = module.GetFunc(var);
   return func ? func->GetNumParams() : 0;
 }
 
-Index ModuleContext::GetFuncResultCount(const Var& var) {
+Index ModuleContext::GetFuncResultCount(const Var& var) const {
   const Func* func = module.GetFunc(var);
   return func ? func->GetNumResults() : 0;
 }
@@ -95,7 +95,7 @@ void ModuleContext::EndFunc() {
   current_func_ = nullptr;
 }
 
-ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) {
+ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
   switch (expr.type()) {
     case ExprType::AtomicNotify:
     case ExprType::AtomicRmw:

@@ -41,15 +41,15 @@ struct Label {
 struct ModuleContext {
   ModuleContext(const Module &module) : module(module) {}
 
-  Index GetLabelStackSize() { return label_stack_.size(); }
-  Label* GetLabel(const Var& var);
-  Index GetLabelArity(const Var& var);
+  Index GetLabelStackSize() const { return label_stack_.size(); }
+  const Label* GetLabel(const Var& var) const;
+  Index GetLabelArity(const Var& var) const;
   void SetTopLabelType(LabelType label_type) {
     label_stack_.back().label_type = label_type;
   }
 
-  Index GetFuncParamCount(const Var& var);
-  Index GetFuncResultCount(const Var& var);
+  Index GetFuncParamCount(const Var& var) const;
+  Index GetFuncResultCount(const Var& var) const;
 
   void BeginBlock(LabelType label_type, const Block& block);
   void EndBlock();
@@ -63,7 +63,7 @@ struct ModuleContext {
     Arities(Index na, Index nr, bool ur = false)
       : nargs(na), nreturns(nr), unreachable(ur) {}
   };
-  Arities GetExprArity(const Expr& expr);
+  Arities GetExprArity(const Expr& expr) const;
 
   const Module &module;
  private:
