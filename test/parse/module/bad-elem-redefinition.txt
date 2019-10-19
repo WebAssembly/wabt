@@ -1,10 +1,13 @@
 ;;; TOOL: wat2wasm
+;;; ARGS: --enable-bulk-memory
 ;;; ERROR: 1
 (module
   (elem $elem funcref 0)
-  (elem $elem funcref 0))
+  (elem $elem funcref 0)
+  (func))
+
 (;; STDERR ;;;
-out/test/parse/module/bad-elem-redefinition.txt:5:4: error: redefinition of elem "$elem"
-  (elem $elem funcref 0))
+out/test/parse/module/bad-elem-redefinition.txt:6:4: error: redefinition of elem "$elem"
+  (elem $elem funcref 0)
    ^^^^
 ;;; STDERR ;;)

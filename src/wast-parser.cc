@@ -932,9 +932,17 @@ Result WastParser::ParseElemModuleField(Module* module) {
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Elem);
-  std::string name;
-  ParseBindVarOpt(&name);
-  auto field = MakeUnique<ElemSegmentModuleField>(loc, name);
+  std::string segment_name;
+  ParseBindVarOpt(&segment_name);
+  // With MVP text format the name here was intended to refer to the table
+  // that the elem segment was part of, but we never did anything with this name
+  // since there was only one table anyway.
+  // With bulk-memory enabled this introduces a new name for the particualr
+  // elem segment.
+  if (!options_->features.bulk_memory_enabled()) {
+    segment_name = "";
+  }
+  auto field = MakeUnique<ElemSegmentModuleField>(loc, segment_name);
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
     field->elem_segment.passive = true;
