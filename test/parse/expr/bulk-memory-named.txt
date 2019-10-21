@@ -11,7 +11,7 @@
 
   (table 1 anyfunc)
   (elem $elem funcref (ref.func 0) (ref.null))
-  (elem $elem funcref 0)
+  (elem $elem2 funcref 0)
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init $elem
     elem.drop $elem
