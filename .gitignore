@@ -7,6 +7,3 @@
 .idea/
 .vscode/
 /cmake-build-debug/
-/wasi-sdk-*
-/wapm.lock
-/wapm_packages
