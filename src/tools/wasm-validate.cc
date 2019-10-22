@@ -35,6 +35,7 @@ static std::string s_infile;
 static Features s_features;
 static bool s_read_debug_names = true;
 static bool s_fail_on_custom_section_error = true;
+static bool s_read_linking_names = false;
 static std::unique_ptr<FileStream> s_log_stream;
 
 static const char s_description[] =
@@ -80,7 +81,8 @@ int ProgramMain(int argc, char** argv) {
     const bool kStopOnFirstError = true;
     ReadBinaryOptions options(s_features, s_log_stream.get(),
                               s_read_debug_names, kStopOnFirstError,
-                              s_fail_on_custom_section_error);
+                              s_fail_on_custom_section_error,
+                              s_read_linking_names);
     result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
     if (Succeeded(result)) {

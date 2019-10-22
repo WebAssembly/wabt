@@ -1712,7 +1712,9 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                 CHECK_RESULT(ReadStr(&name, "symbol name"));
               switch (sym_type) {
                 case SymbolType::Function:
-                  CALLBACK(OnFunctionSymbol, i, flags, name, index);
+                  if (options_.read_linking_names) {
+                    CALLBACK(OnFunctionSymbol, i, flags, name, index);
+                  }
                   break;
                 case SymbolType::Global:
                   CALLBACK(OnGlobalSymbol, i, flags, name, index);

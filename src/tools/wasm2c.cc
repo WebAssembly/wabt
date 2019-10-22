@@ -116,9 +116,10 @@ int ProgramMain(int argc, char** argv) {
     Module module;
     const bool kStopOnFirstError = true;
     const bool kFailOnCustomSectionError = true;
+    const bool kReadLinkingNames = true;
     ReadBinaryOptions options(s_features, s_log_stream.get(),
                               s_read_debug_names, kStopOnFirstError,
-                              kFailOnCustomSectionError);
+                              kFailOnCustomSectionError, kReadLinkingNames);
     result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
     if (Succeeded(result)) {

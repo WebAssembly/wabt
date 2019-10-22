@@ -37,18 +37,21 @@ struct ReadBinaryOptions {
                     Stream* log_stream,
                     bool read_debug_names,
                     bool stop_on_first_error,
-                    bool fail_on_custom_section_error)
+                    bool fail_on_custom_section_error,
+                    bool read_linking_names)
       : features(features),
         log_stream(log_stream),
         read_debug_names(read_debug_names),
         stop_on_first_error(stop_on_first_error),
-        fail_on_custom_section_error(fail_on_custom_section_error) {}
+        fail_on_custom_section_error(fail_on_custom_section_error),
+        read_linking_names(read_linking_names) {}
 
   Features features;
   Stream* log_stream = nullptr;
   bool read_debug_names = false;
   bool stop_on_first_error = true;
   bool fail_on_custom_section_error = true;
+  bool read_linking_names = true;
 };
 
 class BinaryReaderDelegate {

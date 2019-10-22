@@ -222,6 +222,10 @@ class BinaryReaderIR : public BinaryReaderNop {
 
   Result OnModuleName(string_view module_name) override;
   Result OnFunctionNamesCount(Index num_functions) override;
+  Result OnFunctionSymbol(Index index,
+                          uint32_t flags,
+                          string_view name,
+                          Index function_index) override;
   Result OnFunctionName(Index function_index,
                         string_view function_name) override;
   Result OnLocalNameLocalCount(Index function_index, Index num_locals) override;
@@ -1107,6 +1111,28 @@ Result BinaryReaderIR::OnModuleName(string_view name) {
   }
 
   module_->name = MakeDollarName(name);
+  return Result::Ok;
+}
+
+
+Result BinaryReaderIR::OnFunctionSymbol(Index index,
+                                        uint32_t flags,
+                                        string_view name,
+                                        Index function_index) {
+  if ((flags & WABT_SYMBOL_FLAG_UNDEFINED) == 0 ||
+      (flags & WABT_SYMBOL_FLAG_EXPLICIT_NAME) != 0) {
+
+    if (name.empty()) {
+      return Result::Ok;
+    }
+
+    Func* func = module_->funcs[function_index];
+    std::string dollar_name =
+      GetUniqueName(&module_->func_bindings, MakeDollarName(name));
+    func->name = dollar_name;
+    module_->func_bindings.emplace(dollar_name, Binding(function_index));
+  }
+
   return Result::Ok;
 }
 

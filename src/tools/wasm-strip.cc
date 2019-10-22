@@ -91,10 +91,11 @@ int ProgramMain(int argc, char** argv) {
     Errors errors;
     Features features;
     const bool kReadDebugNames = false;
+    const bool kReadLinkingNames = true;
     const bool kStopOnFirstError = true;
     const bool kFailOnCustomSectionError = false;
     ReadBinaryOptions options(features, nullptr, kReadDebugNames,
-                              kStopOnFirstError, kFailOnCustomSectionError);
+                              kStopOnFirstError, kFailOnCustomSectionError, kReadLinkingNames);
 
     BinaryReaderStrip reader(&errors);
     result = ReadBinary(file_data.data(), file_data.size(), &reader, options);
