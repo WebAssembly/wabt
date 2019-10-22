@@ -317,10 +317,6 @@ if (NOT EMSCRIPTEN)
       set(EXE_LIBS "${EXE_LIBS};m")
     endif ()
 
-    if (${triple} MATCHES "wasi")
-      set(EXE_NAME ${EXE_NAME}.wasm)
-    endif ()
-
     add_executable(${EXE_NAME} ${EXE_SOURCES})
     add_dependencies(everything ${EXE_NAME})
     target_link_libraries(${EXE_NAME} ${EXE_LIBS})
