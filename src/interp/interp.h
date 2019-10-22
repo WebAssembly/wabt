@@ -199,7 +199,6 @@ struct Global {
 };
 
 struct Import {
-  explicit Import(ExternalKind kind) : kind(kind) {}
   Import(ExternalKind kind, string_view module_name, string_view field_name)
       : kind(kind),
         module_name(module_name.to_string()),
@@ -209,47 +208,6 @@ struct Import {
   std::string module_name;
   std::string field_name;
 };
-
-struct FuncImport : Import {
-  FuncImport() : Import(ExternalKind::Func) {}
-  FuncImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Func, module_name, field_name) {}
-
-  Index sig_index = kInvalidIndex;
-};
-
-struct TableImport : Import {
-  TableImport() : Import(ExternalKind::Table) {}
-  TableImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Table, module_name, field_name) {}
-
-  Limits limits;
-};
-
-struct MemoryImport : Import {
-  MemoryImport() : Import(ExternalKind::Memory) {}
-  MemoryImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Memory, module_name, field_name) {}
-
-  Limits limits;
-};
-
-struct GlobalImport : Import {
-  GlobalImport() : Import(ExternalKind::Global) {}
-  GlobalImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Global, module_name, field_name) {}
-
-  Type type = Type::Void;
-  bool mutable_ = false;
-};
-
-struct EventImport : Import {
-  EventImport() : Import(ExternalKind::Event) {}
-  EventImport(string_view module_name, string_view field_name)
-      : Import(ExternalKind::Event, module_name, field_name) {}
-};
-
-struct Func;
 
 struct Func {
   WABT_DISALLOW_COPY_AND_ASSIGN(Func);
@@ -342,11 +300,6 @@ struct DefinedModule : Module {
     return kInvalidIndex;
   }
 
-  std::vector<FuncImport> func_imports;
-  std::vector<TableImport> table_imports;
-  std::vector<MemoryImport> memory_imports;
-  std::vector<GlobalImport> global_imports;
-  std::vector<EventImport> event_imports;
   Index start_func_index; /* kInvalidIndex if not defined */
   IstreamOffset istream_start;
   IstreamOffset istream_end;
