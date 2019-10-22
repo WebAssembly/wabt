@@ -41,6 +41,7 @@ static Features s_features;
 static WriteWatOptions s_write_wat_options;
 static bool s_generate_names;
 static bool s_read_debug_names = true;
+static bool s_read_linking_names = false;
 static bool s_fail_on_custom_section_error = true;
 static std::unique_ptr<FileStream> s_log_stream;
 static bool s_validate = true;
@@ -80,6 +81,8 @@ static void ParseOptions(int argc, char** argv) {
                    []() { s_write_wat_options.inline_import = true; });
   parser.AddOption("no-debug-names", "Ignore debug names in the binary file",
                    []() { s_read_debug_names = false; });
+  parser.AddOption("read-linking-names", "Use names in linking custom section of the binary file",
+                   []() { s_read_linking_names = true; });
   parser.AddOption("ignore-custom-section-errors",
                    "Ignore errors in custom sections",
                    []() { s_fail_on_custom_section_error = false; });
@@ -111,7 +114,8 @@ int ProgramMain(int argc, char** argv) {
     const bool kStopOnFirstError = true;
     ReadBinaryOptions options(s_features, s_log_stream.get(),
                               s_read_debug_names, kStopOnFirstError,
-                              s_fail_on_custom_section_error);
+                              s_fail_on_custom_section_error,
+                              s_read_linking_names);
     result = ReadBinaryIr(s_infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
     if (Succeeded(result)) {
