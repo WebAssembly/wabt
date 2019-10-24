@@ -58,13 +58,14 @@ struct Node {
   // Node specific annotations.
   union {
     LabelType lt;  // br/br_if target.
+    const Var* var;  // Decl/DeclInit.
   };
 
   Node()
     : ntype(NodeType::Expr), etype(ExprType::Nop), e(nullptr),
-      lt(LabelType::First) {}
-  Node(NodeType ntype, ExprType etype, const Expr* e)
-    : ntype(ntype), etype(etype), e(e), lt(LabelType::First) {}
+      var(nullptr) {}
+  Node(NodeType ntype, ExprType etype, const Expr* e, const Var* v)
+    : ntype(ntype), etype(etype), e(e), var(v) {}
 
   // This value should really never be copied, only moved.
   Node(Node&& rhs) = default;
@@ -90,7 +91,7 @@ struct AST {
 
   void NewNode(NodeType ntype, ExprType etype, const Expr* e, Index nargs) {
     assert(stack.size() >= nargs);
-    Node n { ntype, etype, e };
+    Node n { ntype, etype, e, nullptr };
     n.children.reserve(nargs);
     std::move(stack.end() - nargs, stack.end(),
               std::back_inserter(n.children));
@@ -100,7 +101,7 @@ struct AST {
 
   template<ExprType T> void PreDecl(const VarExpr<T>& ve) {
     stack.emplace(stack.begin() + pre_decl_insertion_point++,
-                  NodeType::Decl, ExprType::Nop, &ve);
+                  NodeType::Decl, ExprType::Nop, nullptr, &ve.var);
   }
 
   template<ExprType T> void Get(const VarExpr<T>& ve, bool local) {
@@ -116,7 +117,8 @@ struct AST {
     if (local && vars_defined.insert(ve.var.name()).second) {
       if (stack_depth == 1) {
         // Top level, declare it here.
-        NewNode(NodeType::DeclInit, ExprType::Nop, &ve, 1);
+        NewNode(NodeType::DeclInit, ExprType::Nop, nullptr, 1);
+        stack.back().var = &ve.var;
         return;
       } else {
         // Inside exp, better leave it as assignment exp and lift the decl out.

@@ -253,17 +253,13 @@ struct Decompiler {
         return WrapNAry(args, "return ", "");
       }
       case NodeType::Decl: {
-        // FIXME: this is icky.
-        auto lg = reinterpret_cast<const VarExpr<ExprType::LocalGet> *>(n.e);
-        ss << "var " << lg->var.name() << ":"
-           << GetDecompTypeName(cur_func->GetLocalType(lg->var));
+        ss << "var " << n.var->name() << ":"
+           << GetDecompTypeName(cur_func->GetLocalType(*n.var));
         return PushSStream();
       }
       case NodeType::DeclInit: {
-        // FIXME: this is icky.
-        auto lg = reinterpret_cast<const VarExpr<ExprType::LocalGet> *>(n.e);
-        return WrapChild(args[0], "var " + lg->var.name() + ":"
-              + GetDecompTypeName(cur_func->GetLocalType(lg->var)) + " = ", "");
+        return WrapChild(args[0], "var " + n.var->name() + ":"
+              + GetDecompTypeName(cur_func->GetLocalType(*n.var)) + " = ", "");
       }
       case NodeType::Expr:
         // We're going to fall thru to the second switch to deal with ExprType.
@@ -279,12 +275,18 @@ struct Decompiler {
           case Type::I64:
             ss << static_cast<int64_t>(c.u64) << "L";
             break;
-          case Type::F32:
-            ss << *reinterpret_cast<const float *>(&c.f32_bits) << "f";
+          case Type::F32: {
+            float f;
+            memcpy(&f, &c.f32_bits, sizeof(float));
+            ss << f << "f";
             break;
-          case Type::F64:
-            ss << *reinterpret_cast<const double *>(&c.f64_bits) << "d";
+          }
+          case Type::F64: {
+            double d;
+            memcpy(&d, &c.f64_bits, sizeof(double));
+            ss << d << "d";
             break;
+          }
           case Type::V128:
             ss << "V128";  // FIXME
             break;
