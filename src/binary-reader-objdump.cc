@@ -1129,10 +1129,11 @@ Result BinaryReaderObjdump::OnImportTable(Index import_index,
                                           Index table_index,
                                           Type elem_type,
                                           const Limits* elem_limits) {
-  PrintDetails(" - table[%" PRIindex "] elem_type=%s init=%" PRId64
-               " max=%" PRId64,
-               table_index, GetTypeName(elem_type), elem_limits->initial,
-               elem_limits->max);
+  PrintDetails(" - table[%" PRIindex "] type=%s initial=%" PRId64, table_index,
+               GetTypeName(elem_type), elem_limits->initial);
+  if (elem_limits->has_max) {
+    PrintDetails(" max=%" PRId64, elem_limits->max);
+  }
   PrintDetails(" <- " PRIstringview "." PRIstringview "\n",
                WABT_PRINTF_STRING_VIEW_ARG(module_name),
                WABT_PRINTF_STRING_VIEW_ARG(field_name));

@@ -92,7 +92,7 @@ Import[5]:
  - func[0] sig=0 <ignored.test> <- ignored.test
  - func[1] sig=1 <ignored.test2> <- ignored.test2
  - memory[0] pages: initial=0 <- ignored.testmem
- - table[0] elem_type=funcref init=0 max=0 <- ignored.testtable
+ - table[0] type=funcref initial=0 <- ignored.testtable
  - event[0] sig=2 <ignored.testevent> <- ignored.testevent
 
 Code Disassembly:
