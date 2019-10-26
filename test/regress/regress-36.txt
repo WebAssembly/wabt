@@ -1,0 +1,8 @@
+;;; TOOL: wat2wasm
+;;; ERROR: 1
+(data "hello")
+(;; STDERR ;;;
+out/test/regress/regress-36.txt:3:2: error: passive data segments are not allowed
+(data "hello")
+ ^^^^
+;;; STDERR ;;)
