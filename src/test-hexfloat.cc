@@ -35,15 +35,15 @@
   for (; bits >= last_bits;  \
        last_bits = bits, bits += num_threads_ * FOREACH_UINT32_MULTIPLIER)
 
-#define LOG_COMPLETION(bits)                                                 \
-  if (shard == 0) {                                                          \
-    int top_byte = bits >> 24;                                               \
-    if (top_byte != last_top_byte) {                                         \
-      printf("value: 0x%08x (%d%%)\r", bits,                                 \
-             static_cast<int>(static_cast<float>(bits) * 100 / UINT32_MAX)); \
-      fflush(stdout);                                                        \
-      last_top_byte = top_byte;                                              \
-    }                                                                        \
+#define LOG_COMPLETION(bits)                                                  \
+  if (shard == 0) {                                                           \
+    int top_byte = bits >> 24;                                                \
+    if (top_byte != last_top_byte) {                                          \
+      printf("value: 0x%08x (%d%%)\r", bits,                                  \
+             static_cast<int>(static_cast<double>(bits) * 100 / UINT32_MAX)); \
+      fflush(stdout);                                                         \
+      last_top_byte = top_byte;                                               \
+    }                                                                         \
   }
 
 #define LOG_DONE()     \
