@@ -4,7 +4,10 @@
   (memory 100)
   (data foo))
 (;; STDERR ;;;
-out/test/parse/module/bad-memory-segment-address.txt:5:9: error: unexpected token foo, expected ).
+out/test/parse/module/bad-memory-segment-address.txt:5:4: error: passive data segments are not allowed
+  (data foo))
+   ^^^^
+out/test/parse/module/bad-memory-segment-address.txt:5:9: error: unexpected token foo.
   (data foo))
         ^^^
 ;;; STDERR ;;)

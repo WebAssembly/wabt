@@ -5,7 +5,7 @@
 out/test/regress/regress-33.txt:3:8: error: bad escape "\d"
 (data "\d")
        ^^
-out/test/regress/regress-33.txt:3:7: error: unexpected token Invalid, expected ).
+out/test/regress/regress-33.txt:3:2: error: passive data segments are not allowed
 (data "\d")
-      ^^^^
+ ^^^^
 ;;; STDERR ;;)
