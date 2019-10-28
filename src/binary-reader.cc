@@ -390,6 +390,9 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::Anyref:
       return options_.features.reference_types_enabled();
 
+    case Type::Funcref:
+      return options_.features.reference_types_enabled();
+
     default:
       return false;
   }
@@ -1479,6 +1482,14 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CHECK_RESULT(ReadIndex(&table, "table index"));
         CALLBACK(OnTableSizeExpr, table);
         CALLBACK(OnOpcodeUint32, table);
+        break;
+      }
+
+      case Opcode::RefFunc: {
+        Index func;
+        CHECK_RESULT(ReadIndex(&func, "func index"));
+        CALLBACK(OnRefFuncExpr, func);
+        CALLBACK(OnOpcodeUint32, func);
         break;
       }
 

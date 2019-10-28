@@ -389,6 +389,8 @@ static WABT_INLINE const char* GetTypeName(Type type) {
       return "any";
     case Type::Anyref:
       return "anyref";
+    case Type::Nullref:
+      return "nullref";
     default:
       return "<type_index>";
   }

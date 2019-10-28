@@ -42,6 +42,9 @@
     ref.is_null
   )
 
+  (func (result anyref)
+    ref.func 0
+  )
 
   (func (result i32)
     table.size $foo

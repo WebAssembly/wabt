@@ -59,6 +59,7 @@ const char* ExprTypeName[] = {
   "MemorySize",
   "Nop",
   "RefIsNull",
+  "RefFunc",
   "RefNull",
   "Rethrow",
   "Return",

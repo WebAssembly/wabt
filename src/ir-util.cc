@@ -155,6 +155,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::MemorySize:
     case ExprType::TableSize:
     case ExprType::RefNull:
+    case ExprType::RefFunc:
       return { 0, 1 };
 
     case ExprType::Unreachable:

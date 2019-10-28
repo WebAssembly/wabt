@@ -195,6 +195,7 @@ class BinaryReaderLogging : public BinaryReaderDelegate {
   Result OnTableSetExpr(Index table) override;
   Result OnTableGrowExpr(Index table) override;
   Result OnTableSizeExpr(Index table) override;
+  Result OnRefFuncExpr(Index index) override;
   Result OnRefNullExpr() override;
   Result OnRefIsNullExpr() override;
   Result OnNopExpr() override;

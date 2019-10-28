@@ -55,7 +55,7 @@ struct ElemSegmentInfo {
 
   Table* table;
   Index dst;
-  std::vector<Index> src;
+  std::vector<Ref> src;
 };
 
 struct DataSegmentInfo {
@@ -198,6 +198,9 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnMemoryFillExpr() override;
   wabt::Result OnMemoryInitExpr(Index segment_index) override;
   wabt::Result OnMemorySizeExpr() override;
+  wabt::Result OnRefFuncExpr(Index func_index) override;
+  wabt::Result OnRefNullExpr() override;
+  wabt::Result OnRefIsNullExpr() override;
   wabt::Result OnNopExpr() override;
   wabt::Result OnReturnExpr() override;
   wabt::Result OnSelectExpr() override;
@@ -206,6 +209,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
                            Address offset) override;
   wabt::Result OnUnaryExpr(wabt::Opcode opcode) override;
   wabt::Result OnTableCopyExpr() override;
+  wabt::Result OnTableGetExpr(Index table_index) override;
+  wabt::Result OnTableSetExpr(Index table_index) override;
   wabt::Result OnElemDropExpr(Index segment_index) override;
   wabt::Result OnTableInitExpr(Index segment_index) override;
   wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
@@ -876,7 +881,7 @@ wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
   CHECK_RESULT(CheckImportKind(module_name, field_name, ExternalKind::Global, export_->kind));
 
   Global* exported_global = env_->GetGlobal(export_->index);
-  if (exported_global->typed_value.type != type) {
+  if (Failed(typechecker_.CheckType(type, exported_global->typed_value.type))) {
     PrintError("type mismatch in imported global, expected %s but got %s.",
                GetTypeName(exported_global->typed_value.type),
                GetTypeName(type));
@@ -948,7 +953,7 @@ wabt::Result BinaryReaderInterp::BeginGlobal(Index index,
 
 wabt::Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
   Global* global = GetGlobalByModuleIndex(index);
-  if (init_expr_value_.type != global->typed_value.type) {
+  if (Failed(typechecker_.CheckType(init_expr_value_.type, global->typed_value.type))) {
     PrintError("type mismatch in global, expected %s but got %s.",
                GetTypeName(global->typed_value.type),
                GetTypeName(init_expr_value_.type));
@@ -1009,8 +1014,9 @@ wabt::Result BinaryReaderInterp::OnInitExprI64ConstExpr(Index index,
 }
 
 wabt::Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
-  PrintError("ref.null global init expressions unimplemented by interpreter");
-  return wabt::Result::Error;
+  init_expr_value_.type = Type::Nullref;
+  init_expr_value_.set_ref({RefType::Func, kInvalidIndex});
+  return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnExport(Index index,
@@ -1121,7 +1127,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
     Index segment_index) {
   assert(segment_is_passive_);
-  elem_segment_->elems.push_back(kInvalidIndex);
+  elem_segment_->elems.push_back({RefType::Null, kInvalidIndex});
   return wabt::Result::Ok;
 }
 
@@ -1138,9 +1144,9 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
   func_index = TranslateFuncIndexToEnv(func_index);
 
   if (segment_is_passive_) {
-    elem_segment_->elems.push_back(func_index);
+    elem_segment_->elems.push_back({RefType::Func, func_index});
   } else {
-    elem_segment_info_->src.push_back(func_index);
+    elem_segment_info_->src.push_back({RefType::Func, func_index});
   }
   return wabt::Result::Ok;
 }
@@ -1732,6 +1738,25 @@ wabt::Result BinaryReaderInterp::OnMemorySizeExpr() {
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
+  CHECK_RESULT(typechecker_.OnRefFuncExpr(func_index));
+  CHECK_RESULT(EmitOpcode(Opcode::RefFunc));
+  CHECK_RESULT(EmitI32(func_index));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnRefNullExpr() {
+  CHECK_RESULT(typechecker_.OnRefNullExpr());
+  CHECK_RESULT(EmitOpcode(Opcode::RefNull));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnRefIsNullExpr() {
+  CHECK_RESULT(typechecker_.OnRefIsNullExpr());
+  CHECK_RESULT(EmitOpcode(Opcode::RefIsNull));
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::OnNopExpr() {
   return wabt::Result::Ok;
 }
@@ -1815,6 +1840,20 @@ wabt::Result BinaryReaderInterp::OnMemoryInitExpr(Index segment_index) {
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::OnTableGetExpr(Index table_index) {
+  CHECK_RESULT(typechecker_.OnTableGet(table_index));
+  CHECK_RESULT(EmitOpcode(Opcode::TableGet));
+  CHECK_RESULT(EmitI32(table_index));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnTableSetExpr(Index table_index) {
+  CHECK_RESULT(typechecker_.OnTableSet(table_index));
+  CHECK_RESULT(EmitOpcode(Opcode::TableSet));
+  CHECK_RESULT(EmitI32(table_index));
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::OnTableCopyExpr() {
   CHECK_RESULT(CheckHasTable(Opcode::TableCopy));
   CHECK_RESULT(typechecker_.OnTableCopy());
@@ -1851,14 +1890,14 @@ wabt::Result BinaryReaderInterp::InitializeSegments() {
 
   for (; pass <= Init; ++pass) {
     for (const ElemSegmentInfo& info : elem_segment_infos_) {
-      uint32_t table_size = info.table->func_indexes.size();
+      uint32_t table_size = info.table->size();
       uint32_t segment_size = info.src.size();
       uint32_t copy_size = segment_size;
       bool ok = ClampToBounds(info.dst, &copy_size, table_size);
 
       if (pass == Init && copy_size > 0) {
         std::copy(info.src.begin(), info.src.begin() + copy_size,
-                  info.table->func_indexes.begin() + info.dst);
+                  info.table->entries.begin() + info.dst);
       }
 
       if (!ok) {
