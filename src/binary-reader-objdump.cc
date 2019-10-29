@@ -1776,7 +1776,7 @@ Result ReadBinaryObjdump(const uint8_t* data,
   const bool kReadDebugNames = true;
   const bool kStopOnFirstError = false;
   const bool kFailOnCustomSectionError = false;
-  const bool kUseLinkingNames = true;
+  const LinkingNameStrategy kUseLinkingNames = LinkingNameStrategy::USE_PURE_LINKING_NAMES;
   ReadBinaryOptions read_options(features, options->log_stream, kReadDebugNames,
                                  kStopOnFirstError, kFailOnCustomSectionError, kUseLinkingNames);
 

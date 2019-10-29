@@ -31,6 +31,10 @@ namespace wabt {
 
 class Stream;
 
+enum class LinkingNameStrategy {DONT_USE_LINKING_NAMES,
+                                USE_PURE_LINKING_NAMES,
+                                USE_LINKING_NAMES_WITH_DOLLAR};
+
 struct ReadBinaryOptions {
   ReadBinaryOptions() = default;
   ReadBinaryOptions(const Features& features,
@@ -38,7 +42,7 @@ struct ReadBinaryOptions {
                     bool read_debug_names,
                     bool stop_on_first_error,
                     bool fail_on_custom_section_error,
-                    bool read_linking_names)
+                    LinkingNameStrategy read_linking_names)
       : features(features),
         log_stream(log_stream),
         read_debug_names(read_debug_names),
@@ -51,7 +55,7 @@ struct ReadBinaryOptions {
   bool read_debug_names = false;
   bool stop_on_first_error = true;
   bool fail_on_custom_section_error = true;
-  bool read_linking_names = true;
+  LinkingNameStrategy read_linking_names = LinkingNameStrategy::USE_PURE_LINKING_NAMES;
 };
 
 class BinaryReaderDelegate {

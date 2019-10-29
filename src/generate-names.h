@@ -42,6 +42,8 @@ inline std::string IndexToAlphaName(Index index) {
   return s;
 }
 
+  std::string GenerateNameWithDollar( const std::string& func_name, Index function_index);
+
 }  // namespace wabt
 
 #endif /* WABT_GENERATE_NAMES_H_ */

@@ -1126,11 +1126,11 @@ Result BinaryReaderIR::OnFunctionSymbol(Index index,
       return Result::Ok;
     }
 
+    std::string func_name = name.to_string();
     Func* func = module_->funcs[function_index];
-    std::string dollar_name =
-      GetUniqueName(&module_->func_bindings, MakeDollarName(name));
-    func->name = dollar_name;
-    module_->func_bindings.emplace(dollar_name, Binding(function_index));
+    GetUniqueName(&module_->func_bindings, func_name);
+    func->name = func_name;
+    module_->func_bindings.emplace(func_name, Binding(function_index));
   }
 
   return Result::Ok;

@@ -1026,7 +1026,7 @@ static wabt::Result ReadModule(string_view module_filename,
   result = ReadFile(module_filename, &file_data);
   if (Succeeded(result)) {
     const bool kReadDebugNames = true;
-    const bool kReadLinkingNames = true;
+    const LinkingNameStrategy kReadLinkingNames = LinkingNameStrategy::DONT_USE_LINKING_NAMES;
     const bool kStopOnFirstError = true;
     const bool kFailOnCustomSectionError = true;
     ReadBinaryOptions options(s_features, s_log_stream.get(), kReadDebugNames,

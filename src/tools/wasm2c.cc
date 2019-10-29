@@ -116,7 +116,7 @@ int ProgramMain(int argc, char** argv) {
     Module module;
     const bool kStopOnFirstError = true;
     const bool kFailOnCustomSectionError = true;
-    const bool kReadLinkingNames = true;
+    const LinkingNameStrategy kReadLinkingNames = LinkingNameStrategy::USE_PURE_LINKING_NAMES;
     ReadBinaryOptions options(s_features, s_log_stream.get(),
                               s_read_debug_names, kStopOnFirstError,
                               kFailOnCustomSectionError, kReadLinkingNames);

@@ -77,9 +77,13 @@ int ProgramMain(int argc, char** argv) {
     Errors errors;
     Module module;
     const bool kStopOnFirstError = true;
-    ReadBinaryOptions options(features, nullptr,
-                              true, kStopOnFirstError,
-                              fail_on_custom_section_error);
+    ReadBinaryOptions options(features, 
+                              nullptr,
+                              true,
+                              kStopOnFirstError,
+                              fail_on_custom_section_error,
+                              LinkingNameStrategy::DONT_USE_LINKING_NAMES);
+
     result = ReadBinaryIr(infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
     if (Succeeded(result)) {

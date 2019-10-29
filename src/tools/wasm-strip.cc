@@ -91,7 +91,7 @@ int ProgramMain(int argc, char** argv) {
     Errors errors;
     Features features;
     const bool kReadDebugNames = false;
-    const bool kReadLinkingNames = true;
+    const LinkingNameStrategy kReadLinkingNames = LinkingNameStrategy::DONT_USE_LINKING_NAMES;
     const bool kStopOnFirstError = true;
     const bool kFailOnCustomSectionError = false;
     ReadBinaryOptions options(features, nullptr, kReadDebugNames,

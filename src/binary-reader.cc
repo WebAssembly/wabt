@@ -31,6 +31,7 @@
 #include "src/leb128.h"
 #include "src/stream.h"
 #include "src/utf8.h"
+#include "src/generate-names.h"
 
 #if HAVE_ALLOCA
 #include <alloca.h>
@@ -1712,8 +1713,16 @@ Result BinaryReader::ReadLinkingSection(Offset section_size) {
                 CHECK_RESULT(ReadStr(&name, "symbol name"));
               switch (sym_type) {
                 case SymbolType::Function:
-                  if (options_.read_linking_names) {
-                    CALLBACK(OnFunctionSymbol, i, flags, name, index);
+                  if (options_.read_linking_names != LinkingNameStrategy::DONT_USE_LINKING_NAMES) {
+                    bool prepend_dollar = (options_.read_linking_names == LinkingNameStrategy::USE_LINKING_NAMES_WITH_DOLLAR);
+
+                    std::string function_name = name.to_string();
+
+                    if (prepend_dollar) {
+                      function_name = wabt::GenerateNameWithDollar(name.to_string(), index);
+                    }
+
+                    CALLBACK(OnFunctionSymbol, i, flags, function_name, index);
                   }
                   break;
                 case SymbolType::Global:

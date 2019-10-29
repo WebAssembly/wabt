@@ -20,6 +20,7 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <sstream>
 
 #include "src/cast.h"
 #include "src/expr-visitor.h"
@@ -427,6 +428,25 @@ Result NameGenerator::VisitModule(Module* module) {
 Result GenerateNames(Module* module, NameOpts opts) {
   NameGenerator generator(opts);
   return generator.VisitModule(module);
+}
+
+std::string GenerateNameWithDollar( const std::string& func_name, Index function_index) {
+
+  std::stringstream ss;
+
+  assert( !func_name.empty() || function_index != kInvalidIndex );
+
+  ss << "$";
+
+  if (func_name.empty() ) {
+    ss << function_index;
+  } else if (func_name[0] == '$') {
+    ss << func_name.substr(1);
+  } else {
+    ss << func_name;
+  }
+
+  return ss.str();
 }
 
 }  // namespace wabt
