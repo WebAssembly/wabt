@@ -42,6 +42,7 @@ int ProgramMain(int argc, char** argv) {
   Features features;
   DecompileOptions decompile_options;
   bool fail_on_custom_section_error = true;
+  bool use_custom_linking_names = false;
 
   {
     const char s_description[] =
@@ -63,6 +64,10 @@ int ProgramMain(int argc, char** argv) {
     parser.AddOption("ignore-custom-section-errors",
                      "Ignore errors in custom sections",
                      [&]() { fail_on_custom_section_error = false; });
+    parser.AddOption("use-linking-names",
+                     "Use custom linking section names, if available",
+                      [&]() { use_custom_linking_names = true; });
+
     parser.AddArgument("filename", OptionParser::ArgumentCount::One,
                        [&](const char* argument) {
                          infile = argument;
@@ -82,7 +87,9 @@ int ProgramMain(int argc, char** argv) {
                               true,
                               kStopOnFirstError,
                               fail_on_custom_section_error,
-                              LinkingNameStrategy::DONT_USE_LINKING_NAMES);
+                              //prepending names with dollar doesn't make here
+                              use_custom_linking_names ? LinkingNameStrategy::USE_PURE_LINKING_NAMES :
+                                                         LinkingNameStrategy::DONT_USE_LINKING_NAMES);
 
     result = ReadBinaryIr(infile.c_str(), file_data.data(), file_data.size(),
                           options, &errors, &module);
