@@ -39,19 +39,12 @@
       i32.const 1
       br_if 0
     end
-    call $mv
-    i32.eq
-  )
-  (func $mv (param) (result i32 i32)
     i32.const 1
-    i32.const 2
   )
   (export "f" (func $f))
-  (export "mv" (func $mv))
 )
 
 (;; STDOUT ;;;
-
 function f(a:int, b:int):int {
   var c:long = 8L;
   var d:float = 6f;
@@ -65,12 +58,7 @@ function f(a:int, b:int):int {
     }
     if (1) continue L_b;
   }
-  push_all(mv());
-  return pop() == pop();
-}
-
-function mv():(int, int) {
-  return 1, 2
+  return 1;
 }
 
 ;;; STDOUT ;;)

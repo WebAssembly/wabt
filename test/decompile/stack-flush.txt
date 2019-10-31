@@ -1,0 +1,79 @@
+;;; TOOL: run-wasm-decompile
+
+(module
+  (memory 1)
+  (func $f (param i32 i32) (result i32) (local i64 f32 f64)
+    ;; Two-level flushing to stack with code that can't be reordered.
+    call $s
+    call $s
+    drop
+    call $s
+    call $s
+    call $s
+    drop
+    i32.add
+    drop
+    drop
+    ;; Two level flushing with constants that can be re-ordered.
+    i32.const 14
+    i32.const 15
+    drop
+    i32.const 11
+    i32.const 12
+    i32.const 13
+    drop
+    i32.add
+    drop
+    drop
+    ;; Multi-value examples.
+    call $mv
+    call $mv
+    drop
+    i32.add
+    drop
+    drop
+    call $mv
+    i32.eq
+  )
+  (func $s (param) (result i32)
+    i32.const 1
+  )
+  (func $mv (param) (result i32 i32)
+    i32.const 1
+    i32.const 2
+  )
+  (export "f" (func $f))
+  (export "s" (func $s))
+  (export "mv" (func $mv))
+)
+
+(;; STDOUT ;;;
+function f(a:int, b:int):int {
+  let t0 = s();
+  s();
+  let t1, t2 = s(), s();
+  s();
+  t1 + t2;
+  t0;
+  15;
+  13;
+  11 + 12;
+  14;
+  let t3, t4 = mv();
+  let t5, t6 = mv();
+  t6;
+  t4 + t5;
+  t3;
+  let t7, t8 = mv();
+  return t7 == t8;
+}
+
+function s():int {
+  return 1
+}
+
+function mv():(int, int) {
+  return 1, 2
+}
+
+;;; STDOUT ;;)
