@@ -979,7 +979,7 @@ wabt::Result BinaryReaderInterp::OnInitExprF64ConstExpr(Index index,
 wabt::Result BinaryReaderInterp::OnInitExprV128ConstExpr(Index index,
                                                          v128 value_bits) {
   init_expr_value_.type = Type::V128;
-  init_expr_value_.value.v128_bits = value_bits;
+  init_expr_value_.value.vec128 = value_bits;
   return wabt::Result::Ok;
 }
 

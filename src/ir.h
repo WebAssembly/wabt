@@ -102,7 +102,7 @@ struct Const {
     uint32_t f32_bits;
     uint64_t f64_bits;
     uintptr_t ref_bits;
-    v128 v128_bits;
+    v128 vec128;
   };
 
  private:

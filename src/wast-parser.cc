@@ -1924,7 +1924,7 @@ Result WastParser::ParseSimdV128Const(Const* const_, TokenType token_type) {
     }
   }
 
-  memcpy(&const_->v128_bits.v, v128_bytes.data(), 16);
+  memcpy(&const_->vec128.v, v128_bytes.data(), 16);
 
   return Result::Ok;
 }

@@ -69,8 +69,8 @@ std::string TypedValueToString(const TypedValue& tv) {
 
     case Type::V128:
       return StringPrintf("v128 i32x4:0x%08x 0x%08x 0x%08x 0x%08x",
-                          tv.value.v128_bits.v[0], tv.value.v128_bits.v[1],
-                          tv.value.v128_bits.v[2], tv.value.v128_bits.v[3]);
+                          tv.value.vec128.v[0], tv.value.vec128.v[1],
+                          tv.value.vec128.v[2], tv.value.vec128.v[3]);
 
     case Type::Nullref:
       return StringPrintf("nullref");
@@ -420,7 +420,7 @@ uint32_t ToRep(int32_t x) { return Bitcast<uint32_t>(x); }
 uint64_t ToRep(int64_t x) { return Bitcast<uint64_t>(x); }
 uint32_t ToRep(float x) { return Bitcast<uint32_t>(x); }
 uint64_t ToRep(double x) { return Bitcast<uint64_t>(x); }
-v128     ToRep(v128 x) { return Bitcast<v128>(x); }
+v128     ToRep(v128 x) { return x; }
 Ref      ToRep(Ref x) { return x; }
 
 template <typename Dst, typename Src>
@@ -439,7 +439,7 @@ float FromRep<float>(uint32_t x) { return Bitcast<float>(x); }
 template <>
 double FromRep<double>(uint64_t x) { return Bitcast<double>(x); }
 template <>
-v128 FromRep<v128>(v128 x) { return Bitcast<v128>(x); }
+v128 FromRep<v128>(v128 x) { return x; }
 template <>
 Ref FromRep<Ref>(Ref x) { return x; }
 
@@ -729,7 +729,7 @@ Value MakeValue<double>(uint64_t v) {
 template <>
 Value MakeValue<v128>(v128 v) {
   Value result;
-  result.v128_bits = v;
+  result.vec128 = v;
   return result;
 }
 
@@ -747,7 +747,7 @@ template<> uint64_t GetValue<int64_t>(Value v) { return v.i64; }
 template<> uint64_t GetValue<uint64_t>(Value v) { return v.i64; }
 template<> uint32_t GetValue<float>(Value v) { return v.f32_bits; }
 template<> uint64_t GetValue<double>(Value v) { return v.f64_bits; }
-template<> v128 GetValue<v128>(Value v) { return v.v128_bits; }
+template<> v128 GetValue<v128>(Value v) { return v.vec128; }
 template<> Ref GetValue<Ref>(Value v) { return v.ref; }
 
 template <typename T>

@@ -168,7 +168,7 @@ union Value {
   uint64_t i64;
   ValueTypeRep<float> f32_bits;
   ValueTypeRep<double> f64_bits;
-  ValueTypeRep<v128> v128_bits;
+  ValueTypeRep<v128> vec128;
   Ref ref;
 };
 

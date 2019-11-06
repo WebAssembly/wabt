@@ -513,7 +513,7 @@ wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
     v128 value_bits;
     CHECK_RESULT(ParseUint128(value_start, value_end, &value_bits));
     out_value->type = Type::V128;
-    out_value->value.v128_bits = value_bits;
+    out_value->value.vec128 = value_bits;
     return wabt::Result::Ok;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
@@ -1220,7 +1220,7 @@ static bool TypedValuesAreEqual(const TypedValue& tv1, const TypedValue& tv2) {
     case Type::F64:
       return tv1.value.f64_bits == tv2.value.f64_bits;
     case Type::V128:
-      return tv1.value.v128_bits == tv2.value.v128_bits;
+      return tv1.value.vec128 == tv2.value.vec128;
     default:
       WABT_UNREACHABLE;
   }
