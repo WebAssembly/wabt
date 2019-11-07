@@ -897,6 +897,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   InitExpr data_init_expr_;
   InitExpr elem_init_expr_;
   bool data_is_passive_ = false;
+  bool elem_is_passive_ = false;
   Index data_mem_index_ = 0;
   uint32_t data_offset_ = 0;
   uint32_t elem_offset_ = 0;
@@ -1239,7 +1240,7 @@ Result BinaryReaderObjdump::OnExport(Index index,
 }
 
 Result BinaryReaderObjdump::OnElemSegmentElemExpr_RefNull(Index segment_index) {
-  PrintDetails("  - elem[%" PRIindex "] = null", elem_offset_ + elem_index_);
+  PrintDetails("  - elem[%" PRIindex "] = nullref\n", elem_offset_ + elem_index_);
   elem_index_++;
   return Result::Ok;
 }
@@ -1267,6 +1268,7 @@ Result BinaryReaderObjdump::BeginElemSegment(Index index,
                                              Type elem_type) {
   table_index_ = table_index;
   elem_index_ = 0;
+  elem_is_passive_ = passive;
   return Result::Ok;
 }
 
@@ -1274,7 +1276,11 @@ Result BinaryReaderObjdump::OnElemSegmentElemExprCount(Index index,
                                                        Index count) {
   PrintDetails(" - segment[%" PRIindex "] table=%" PRIindex " count=%" PRIindex,
                index, table_index_, count);
-  PrintInitExpr(elem_init_expr_);
+  if (elem_is_passive_) {
+    PrintDetails(" passive\n");
+  } else {
+    PrintInitExpr(elem_init_expr_);
+  }
   return Result::Ok;
 }
 
