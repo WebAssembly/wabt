@@ -308,7 +308,10 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result CheckGlobal(Index global_index);
   wabt::Result CheckDataSegment(Index data_segment_index);
   wabt::Result CheckElemSegment(Index elem_segment_index);
-  wabt::Result CheckImportKind(Import* import, ExternalKind expected_kind);
+  wabt::Result CheckImportKind(string_view module,
+                               string_view field,
+                               ExternalKind kind,
+                               ExternalKind actual_kind);
   wabt::Result CheckImportLimits(const Limits* declared_limits,
                                  const Limits* actual_limits);
   wabt::Result CheckHasMemory(wabt::Opcode opcode);
@@ -695,14 +698,16 @@ wabt::Result BinaryReaderInterp::CheckElemSegment(Index elem_segment_index) {
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::CheckImportKind(Import* import,
+wabt::Result BinaryReaderInterp::CheckImportKind(string_view module_name,
+                                                 string_view field_name,
+                                                 ExternalKind kind,
                                                  ExternalKind actual_kind) {
-  if (import->kind != actual_kind) {
+  if (kind != actual_kind) {
     PrintError("expected import \"" PRIstringview "." PRIstringview
                "\" to have kind %s, not %s",
-               WABT_PRINTF_STRING_VIEW_ARG(import->module_name),
-               WABT_PRINTF_STRING_VIEW_ARG(import->field_name),
-               GetKindName(import->kind), GetKindName(actual_kind));
+               WABT_PRINTF_STRING_VIEW_ARG(module_name),
+               WABT_PRINTF_STRING_VIEW_ARG(field_name),
+               GetKindName(kind), GetKindName(actual_kind));
     return wabt::Result::Error;
   }
   return wabt::Result::Ok;
@@ -780,26 +785,25 @@ wabt::Result BinaryReaderInterp::OnImportFunc(Index import_index,
                                               string_view field_name,
                                               Index func_index,
                                               Index sig_index) {
-  module_->func_imports.emplace_back(module_name, field_name);
-  FuncImport* import = &module_->func_imports.back();
-  import->sig_index = TranslateSigIndexToEnv(sig_index);
+  Index env_sig_index = TranslateSigIndexToEnv(sig_index);
 
   Module* import_module;
-  CHECK_RESULT(FindRegisteredModule(import->module_name, &import_module));
+  CHECK_RESULT(FindRegisteredModule(module_name, &import_module));
 
   Export* export_ =
-      import_module->GetFuncExport(env_, field_name, import->sig_index);
+      import_module->GetFuncExport(env_, field_name, env_sig_index);
   if (!export_) {
     // If GetFuncExport fails then GetModuleExport will fail too. But it's
     // useful to call here to share the same error handling code as other
     // imports.
-    CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
+    CHECK_RESULT(GetModuleExport(import_module, field_name, &export_));
   }
 
-  CHECK_RESULT(CheckImportKind(import, export_->kind));
+  CHECK_RESULT(CheckImportKind(module_name, field_name, ExternalKind::Func,
+                               export_->kind));
 
   Func* func = env_->GetFunc(export_->index);
-  if (!env_->FuncSignaturesAreEqual(import->sig_index, func->sig_index)) {
+  if (!env_->FuncSignaturesAreEqual(env_sig_index, func->sig_index)) {
     PrintError("import signature mismatch");
     return wabt::Result::Error;
   }
@@ -820,20 +824,16 @@ wabt::Result BinaryReaderInterp::OnImportTable(Index import_index,
     return wabt::Result::Error;
   }
 
-  module_->table_imports.emplace_back(module_name, field_name);
-  TableImport* import = &module_->table_imports.back();
-
   Module* import_module;
-  CHECK_RESULT(FindRegisteredModule(import->module_name, &import_module));
+  CHECK_RESULT(FindRegisteredModule(module_name, &import_module));
 
   Export* export_;
-  CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
-  CHECK_RESULT(CheckImportKind(import, export_->kind));
+  CHECK_RESULT(GetModuleExport(import_module, field_name, &export_));
+  CHECK_RESULT(CheckImportKind(module_name, field_name, ExternalKind::Table, export_->kind));
 
   Table* table = env_->GetTable(export_->index);
   CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
 
-  import->limits = *elem_limits;
   module_->table_index = export_->index;
   return wabt::Result::Ok;
 }
@@ -848,20 +848,16 @@ wabt::Result BinaryReaderInterp::OnImportMemory(Index import_index,
     return wabt::Result::Error;
   }
 
-  module_->memory_imports.emplace_back(module_name, field_name);
-  MemoryImport* import = &module_->memory_imports.back();
-
   Module* import_module;
-  CHECK_RESULT(FindRegisteredModule(import->module_name, &import_module));
+  CHECK_RESULT(FindRegisteredModule(module_name, &import_module));
 
   Export* export_;
-  CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
-  CHECK_RESULT(CheckImportKind(import, export_->kind));
+  CHECK_RESULT(GetModuleExport(import_module, field_name, &export_));
+  CHECK_RESULT(CheckImportKind(module_name, field_name, ExternalKind::Memory, export_->kind));
 
   Memory* memory = env_->GetMemory(export_->index);
   CHECK_RESULT(CheckImportLimits(page_limits, &memory->page_limits));
 
-  import->limits = *page_limits;
   module_->memory_index = export_->index;
   return wabt::Result::Ok;
 }
@@ -872,15 +868,12 @@ wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
                                                 Index global_index,
                                                 Type type,
                                                 bool mutable_) {
-  module_->global_imports.emplace_back(module_name, field_name);
-  GlobalImport* import = &module_->global_imports.back();
-
   Module* import_module;
-  CHECK_RESULT(FindRegisteredModule(import->module_name, &import_module));
+  CHECK_RESULT(FindRegisteredModule(module_name, &import_module));
 
   Export* export_;
-  CHECK_RESULT(GetModuleExport(import_module, import->field_name, &export_));
-  CHECK_RESULT(CheckImportKind(import, export_->kind));
+  CHECK_RESULT(GetModuleExport(import_module, field_name, &export_));
+  CHECK_RESULT(CheckImportKind(module_name, field_name, ExternalKind::Global, export_->kind));
 
   Global* exported_global = env_->GetGlobal(export_->index);
   if (exported_global->typed_value.type != type) {
@@ -898,8 +891,6 @@ wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
     return wabt::Result::Error;
   }
 
-  import->type = type;
-  import->mutable_ = mutable_;
   global_index_mapping_.push_back(export_->index);
   num_global_imports_++;
   return wabt::Result::Ok;
