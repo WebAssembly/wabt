@@ -40,8 +40,8 @@
 namespace wabt {
 
 enum class NodeType {
-  PushAll,
-  Pop,
+  FlushToVars,
+  FlushedVar,
   Statements,
   EndReturn,
   Decl,
@@ -59,6 +59,7 @@ struct Node {
   union {
     LabelType lt;  // br/br_if target.
     const Var* var;  // Decl/DeclInit.
+    struct { Index var_start, var_count; };  // FlushedVar/FlushToVars
   };
 
   Node()
@@ -89,18 +90,20 @@ struct AST {
     if (f) mc.EndFunc();
   }
 
-  void NewNode(NodeType ntype, ExprType etype, const Expr* e, Index nargs) {
-    assert(stack.size() >= nargs);
+  // Create a new node, take nargs existing nodes on the exp stack as children.
+  Node& InsertNode(NodeType ntype, ExprType etype, const Expr* e, Index nargs) {
+    assert(exp_stack.size() >= nargs);
     Node n { ntype, etype, e, nullptr };
     n.children.reserve(nargs);
-    std::move(stack.end() - nargs, stack.end(),
+    std::move(exp_stack.end() - nargs, exp_stack.end(),
               std::back_inserter(n.children));
-    stack.resize(stack.size() - nargs);
-    stack.push_back(std::move(n));
+    exp_stack.erase(exp_stack.end() - nargs, exp_stack.end());
+    exp_stack.push_back(std::move(n));
+    return exp_stack.back();
   }
 
   template<ExprType T> void PreDecl(const VarExpr<T>& ve) {
-    stack.emplace(stack.begin() + pre_decl_insertion_point++,
+    exp_stack.emplace(exp_stack.begin() + pre_decl_insertion_point++,
                   NodeType::Decl, ExprType::Nop, nullptr, &ve.var);
   }
 
@@ -109,30 +112,29 @@ struct AST {
       // Use before def, may happen since locals are guaranteed 0.
       PreDecl(ve);
     }
-    NewNode(NodeType::Expr, T, &ve, 0);
+    InsertNode(NodeType::Expr, T, &ve, 0);
   }
 
   template<ExprType T> void Set(const VarExpr<T>& ve, bool local) {
     // Seen this var before?
     if (local && vars_defined.insert(ve.var.name()).second) {
-      if (stack_depth == 1) {
+      if (value_stack_depth == 1) {
         // Top level, declare it here.
-        NewNode(NodeType::DeclInit, ExprType::Nop, nullptr, 1);
-        stack.back().var = &ve.var;
+        InsertNode(NodeType::DeclInit, ExprType::Nop, nullptr, 1).var = &ve.var;
         return;
       } else {
         // Inside exp, better leave it as assignment exp and lift the decl out.
         PreDecl(ve);
       }
     }
-    NewNode(NodeType::Expr, T, &ve, 1);
+    InsertNode(NodeType::Expr, T, &ve, 1);
   }
 
   template<ExprType T> void Block(const BlockExprBase<T>& be, LabelType label) {
     mc.BeginBlock(label, be.block);
     Construct(be.block.exprs, be.block.decl.GetNumResults(), false);
     mc.EndBlock();
-    NewNode(NodeType::Expr, T, &be, 1);
+    InsertNode(NodeType::Expr, T, &be, 1);
   }
 
   void Construct(const Expr& e) {
@@ -157,7 +159,7 @@ struct AST {
       case ExprType::LocalTee: {
         auto& lt = *cast<LocalTeeExpr>(&e);
         Set(lt, true);
-        if (stack_depth == 1) {  // Tee is the only thing on there.
+        if (value_stack_depth == 1) {  // Tee is the only thing on there.
           Get(lt, true);  // Now Set + Get instead.
         } else {
           // Things are above us on the stack so the Tee can't be eliminated.
@@ -167,15 +169,15 @@ struct AST {
       }
       case ExprType::If: {
         auto ife = cast<IfExpr>(&e);
-        stack_depth--;  // Condition.
+        value_stack_depth--;  // Condition.
         mc.BeginBlock(LabelType::Block, ife->true_);
         Construct(ife->true_.exprs, ife->true_.decl.GetNumResults(), false);
         if (!ife->false_.empty()) {
           Construct(ife->false_, ife->true_.decl.GetNumResults(), false);
         }
         mc.EndBlock();
-        stack_depth++;  // Put Condition back.
-        NewNode(NodeType::Expr, ExprType::If, &e, ife->false_.empty() ? 2 : 3);
+        value_stack_depth++;  // Put Condition back.
+        InsertNode(NodeType::Expr, ExprType::If, &e, ife->false_.empty() ? 2 : 3);
         return;
       }
       case ExprType::Block: {
@@ -187,81 +189,160 @@ struct AST {
         return;
       }
       case ExprType::Br: {
-        NewNode(NodeType::Expr, ExprType::Br, &e, 0);
-        stack.back().lt = mc.GetLabel(cast<BrExpr>(&e)->var)->label_type;
+        InsertNode(NodeType::Expr, ExprType::Br, &e, 0).lt =
+            mc.GetLabel(cast<BrExpr>(&e)->var)->label_type;
         return;
       }
       case ExprType::BrIf: {
-        NewNode(NodeType::Expr, ExprType::BrIf, &e, 1);
-        stack.back().lt = mc.GetLabel(cast<BrIfExpr>(&e)->var)->label_type;
+        InsertNode(NodeType::Expr, ExprType::BrIf, &e, 1).lt =
+            mc.GetLabel(cast<BrIfExpr>(&e)->var)->label_type;
         return;
       }
       default: {
-        NewNode(NodeType::Expr, e.type(), &e, mc.GetExprArity(e).nargs);
+        InsertNode(NodeType::Expr, e.type(), &e, mc.GetExprArity(e).nargs);
         return;
       }
     }
-    NewNode(NodeType::Expr, e.type(), &e, arity.nargs);
+    InsertNode(NodeType::Expr, e.type(), &e, arity.nargs);
   }
 
   void Construct(const ExprList& es, Index nresults, bool return_results) {
-    auto start = stack.size();
-    auto stack_depth_start = stack_depth;
+    auto start = exp_stack.size();
+    auto value_stack_depth_start = value_stack_depth;
+    auto value_stack_in_variables = value_stack_depth;
     bool unreachable = false;
     for (auto& e : es) {
       Construct(e);
       auto arity = mc.GetExprArity(e);
-      stack_depth -= arity.nargs;
-      stack_depth += arity.nreturns;
+      value_stack_depth -= arity.nargs;
+      value_stack_in_variables = std::min(value_stack_in_variables,
+                                          value_stack_depth);
       unreachable = unreachable || arity.unreachable;
-      assert(unreachable || stack_depth >= 0);
-      if (arity.nreturns > 1) {
-        // Multivalue: we "push" everything on to the stack.
-        NewNode(NodeType::PushAll, ExprType::Nop, nullptr, 1);
-        // All values become pops.
-        for (Index i = 0; i < arity.nreturns; i++)
-          NewNode(NodeType::Pop, ExprType::Nop, nullptr, 0);
-        // TODO: can also implement a push_all_but_one that returns the top,
-        // then insert N-1 pops below it. Or have a function that returns N
-        // values direcly to N arguments for when structs are passed on,
-        // etc.
+      assert(unreachable || value_stack_depth >= value_stack_depth_start);
+      value_stack_depth += arity.nreturns;
+      // We maintain the invariant that a value_stack_depth of N is represented
+      // by the last N exp_stack items (each of which returning exactly 1
+      // value), all exp_stack items before it return void ("statements").
+      // In particular for the wasm stack:
+      // - The values between 0 and value_stack_depth_start are part of the
+      //   parent block, and not touched here.
+      // - The values from there up to value_stack_in_variables are variables
+      //   to be used, representing previous statements that flushed the
+      //   stack into variables.
+      // - Values on top of that up to value_stack_depth are exps returning
+      //   a single value.
+      // The code below maintains the above invariants. With this in place
+      // code "falls into place" the way you expect it.
+      if (arity.nreturns != 1) {
+        auto num_vars = value_stack_in_variables - value_stack_depth_start;
+        auto num_vals = value_stack_depth - value_stack_in_variables;
+        auto GenFlushVars = [&](int nargs) {
+          auto& ftv = InsertNode(NodeType::FlushToVars, ExprType::Nop, nullptr,
+                                 nargs);
+          ftv.var_start = flushed_vars;
+          ftv.var_count = num_vals;
+        };
+        auto MoveStatementsBelowVars = [&](size_t amount) {
+          std::rotate(exp_stack.end() - num_vars - amount,
+                      exp_stack.end() - amount,
+                      exp_stack.end());
+        };
+        auto GenFlushedVars = [&]() {
+          // Re-generate these values as vars.
+          for (int i = 0; i < num_vals; i++) {
+            auto& fv = InsertNode(NodeType::FlushedVar, ExprType::Nop, nullptr,
+                                  0);
+            fv.var_start = flushed_vars++;
+            fv.var_count = 1;
+          }
+        };
+        if (arity.nreturns == 0 &&
+            value_stack_depth > value_stack_depth_start) {
+          // We have a void item on top of the exp_stack, so we must "lift" the
+          // previous values around it.
+          // We track what part of the stack is in variables to avoid doing
+          // this unnecessarily.
+          if (num_vals > 0) {
+            // We have actual new values that need lifting.
+            // This puts the part of the stack that wasn't already a variable
+            // (before the current void exp) into a FlushToVars.
+            auto void_exp = std::move(exp_stack.back());
+            exp_stack.pop_back();
+            GenFlushVars(num_vals);
+            exp_stack.push_back(std::move(void_exp));
+            // Put this flush statement + void statement before any
+            // existing variables.
+            MoveStatementsBelowVars(2);
+            // Now re-generate these values after the void exp as vars.
+            GenFlushedVars();
+          } else {
+            // We have existing variables that need lifting, but no need to
+            // create them anew.
+            std::rotate(exp_stack.end() - num_vars - 1, exp_stack.end() - 1,
+                        exp_stack.end());
+          }
+          value_stack_in_variables = value_stack_depth;
+        } else if (arity.nreturns > 1) {
+          // Multivalue: we flush the stack also.
+          // Number of other non-variable values that may be present:
+          assert(num_vals >= static_cast<int>(arity.nreturns));
+          // Flush multi-value exp + others.
+          GenFlushVars(num_vals - arity.nreturns + 1);
+          // Put this flush statement before any existing variables.
+          MoveStatementsBelowVars(1);
+          GenFlushedVars();
+          value_stack_in_variables = value_stack_depth;
+        }
+      } else {
+        // Special optimisation: for constant instructions, we can mark these
+        // as if they were variables, so they can be re-ordered for free with
+        // the above code, without needing new variables!
+        // TODO: this would be nice to also do for get_local and maybe others,
+        // though that needs a way to ensure there's no set_local in between
+        // when they get lifted, so complicates matters a bit.
+        if (e.type() == ExprType::Const &&
+            value_stack_in_variables == value_stack_depth - 1) {
+          value_stack_in_variables++;
+        }
       }
     }
     assert(unreachable ||
-           stack_depth - stack_depth_start == static_cast<int>(nresults));
-    // Undo any changes to stack_depth, since parent takes care of arity
+           value_stack_depth - value_stack_depth_start ==
+           static_cast<int>(nresults));
+    // Undo any changes to value_stack_depth, since parent takes care of arity
     // changes.
-    stack_depth = stack_depth_start;
-    auto end = stack.size();
+    value_stack_depth = value_stack_depth_start;
+    auto end = exp_stack.size();
     assert(end >= start);
-    if (return_results && !stack.empty()) {
-      if (stack.back().etype == ExprType::Return) {
-        if (stack.back().children.empty()) {
+    if (return_results && !exp_stack.empty()) {
+      if (exp_stack.back().etype == ExprType::Return) {
+        if (exp_stack.back().children.empty()) {
           // Return statement at the end of a void function.
-          stack.pop_back();
+          exp_stack.pop_back();
         }
       } else if (nresults) {
         // Combine nresults into a return statement, for when this is used as
         // a function body.
         // TODO: if this is some other kind of block and >1 value is being
         // returned, probably need some kind of syntax to make that clearer.
-        NewNode(NodeType::EndReturn, ExprType::Nop, nullptr, nresults);
+        InsertNode(NodeType::EndReturn, ExprType::Nop, nullptr, nresults);
       }
     }
-    end = stack.size();
+    end = exp_stack.size();
     assert(end >= start);
     auto size = end - start;
     if (size != 1) {
-      NewNode(NodeType::Statements, ExprType::Nop, nullptr, size);
+      InsertNode(NodeType::Statements, ExprType::Nop, nullptr, size);
     }
   }
 
   ModuleContext& mc;
-  std::vector<Node> stack;
+  std::vector<Node> exp_stack;
   const Func *f;
   size_t pre_decl_insertion_point = 0;
-  int stack_depth = 0;
+  int value_stack_depth = 0;
   std::set<std::string> vars_defined;
+  Index flushed_vars = 0;
 };
 
 }  // namespace wabt

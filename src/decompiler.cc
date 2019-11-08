@@ -226,6 +226,13 @@ struct Decompiler {
     return std::move(val);
   }
 
+  std::string TempVarName(Index n) {
+    // FIXME: this needs much better variable naming. Problem is, the code
+    // in generate-names.cc has allready run, its dictionaries deleted, so it
+    // is not easy to integrate with it.
+    return "t" + std::to_string(n);
+  }
+
   Value DecompileExpr(const Node &n) {
     std::vector<Value> args;
     for (auto &c : n.children) {
@@ -233,11 +240,17 @@ struct Decompiler {
     }
     // First deal with the specialized node types.
     switch (n.ntype) {
-      case NodeType::PushAll: {
-        return WrapChild(args[0], "push_all(", ")");
+      case NodeType::FlushToVars: {
+        std::string decls = "let ";
+        for (Index i = 0; i < n.var_count; i++) {
+          if (i) decls += ", ";
+          decls += TempVarName(n.var_start + i);
+        }
+        decls += " = ";
+        return WrapNAry(args, decls, "");
       }
-      case NodeType::Pop: {
-        return Value { { "pop()" }, false };
+      case NodeType::FlushedVar: {
+        return Value { { TempVarName(n.var_start) }, false };
       }
       case NodeType::Statements: {
         Value stats { {}, false };
@@ -430,8 +443,8 @@ struct Decompiler {
     for (auto g : mc.module.globals) {
       AST ast(mc, nullptr);
       ast.Construct(g->init_expr, 1, false);
-      auto val = DecompileExpr(ast.stack[0]);
-      assert(ast.stack.size() == 1 && val.v.size() == 1);
+      auto val = DecompileExpr(ast.exp_stack[0]);
+      assert(ast.exp_stack.size() == 1 && val.v.size() == 1);
       stream.Writef("global %s:%s = %s\n", g->name.c_str(),
                     GetDecompTypeName(g->type), val.v[0].c_str());
     }
@@ -466,7 +479,7 @@ struct Decompiler {
         stream.Writef(" = import;\n\n");
       } else {
         stream.Writef(" {\n");
-        auto val = DecompileExpr(ast.stack[0]);
+        auto val = DecompileExpr(ast.exp_stack[0]);
         IndentValue(val, indent_amount, {});
         for (auto& s : val.v) {
           stream.Writef("%s\n", s.c_str());
