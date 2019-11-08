@@ -80,6 +80,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnTableSetExpr(TableSetExpr*) override;
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
+  Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
   Result OnNopExpr(NopExpr*) override;
@@ -826,6 +827,15 @@ Result Validator::OnTableSizeExpr(TableSizeExpr* expr) {
   return Result::Ok;
 }
 
+Result Validator::OnRefFuncExpr(RefFuncExpr* expr) {
+  expr_loc_ = &expr->loc;
+  const Func* callee;
+  if (Succeeded(CheckFuncVar(&expr->var, &callee))) {
+    typechecker_.OnRefFuncExpr(expr->var.index());
+  }
+  return Result::Ok;
+}
+
 Result Validator::OnRefNullExpr(RefNullExpr* expr) {
   expr_loc_ = &expr->loc;
   typechecker_.OnRefNullExpr();
@@ -1069,10 +1079,14 @@ void Validator::CheckConstInitExpr(const Location* loc,
         break;
       }
 
+      case ExprType::RefFunc:
+        type = Type::Funcref;
+        break;
+
       case ExprType::RefNull:
         type = Type::Nullref;
         break;
-      
+
       default:
         PrintConstExprError(loc, desc);
         return;

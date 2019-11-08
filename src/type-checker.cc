@@ -658,6 +658,11 @@ Result TypeChecker::OnTableSize(Index segment) {
   return Result::Ok;
 }
 
+Result TypeChecker::OnRefFuncExpr(Index) {
+  PushType(Type::Funcref);
+  return Result::Ok;
+}
+
 Result TypeChecker::OnRefNullExpr() {
   PushType(Type::Nullref);
   return Result::Ok;

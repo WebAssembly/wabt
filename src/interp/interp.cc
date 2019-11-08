@@ -61,18 +61,29 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::I64:
       return StringPrintf("i64:%" PRIu64, tv.get_i64());
 
-    case Type::F32: {
+    case Type::F32:
       return StringPrintf("f32:%f", tv.get_f32());
-    }
 
-    case Type::F64: {
+    case Type::F64:
       return StringPrintf("f64:%f", tv.get_f64());
-    }
 
     case Type::V128:
       return StringPrintf("v128 i32x4:0x%08x 0x%08x 0x%08x 0x%08x",
                           tv.value.v128_bits.v[0], tv.value.v128_bits.v[1],
                           tv.value.v128_bits.v[2], tv.value.v128_bits.v[3]);
+
+    case Type::Nullref:
+      return StringPrintf("nullref");
+
+    case Type::Anyref:
+      if (tv.get_ref().index == kInvalidIndex)
+        return StringPrintf("anyref:nullref");
+      return StringPrintf("anyref:%d(%" PRIindex ")",
+                          static_cast<int>(tv.get_ref().kind),
+                          tv.get_ref().index);
+
+    case Type::Funcref:
+      return StringPrintf("funcref:%" PRIindex, tv.get_ref().index);
 
     default:
       WABT_UNREACHABLE;
@@ -408,6 +419,7 @@ uint64_t ToRep(int64_t x) { return Bitcast<uint64_t>(x); }
 uint32_t ToRep(float x) { return Bitcast<uint32_t>(x); }
 uint64_t ToRep(double x) { return Bitcast<uint64_t>(x); }
 v128     ToRep(v128 x) { return Bitcast<v128>(x); }
+Ref      ToRep(Ref x) { return x; }
 
 template <typename Dst, typename Src>
 Dst FromRep(Src x);
@@ -426,6 +438,8 @@ template <>
 double FromRep<double>(uint64_t x) { return Bitcast<double>(x); }
 template <>
 v128 FromRep<v128>(v128 x) { return Bitcast<v128>(x); }
+template <>
+Ref FromRep<Ref>(Ref x) { return x; }
 
 template <typename T>
 struct FloatTraits;
@@ -717,6 +731,13 @@ Value MakeValue<v128>(v128 v) {
   return result;
 }
 
+template <>
+Value MakeValue<Ref>(Ref v) {
+  Value result;
+  result.ref = v;
+  return result;
+}
+
 template <typename T> ValueTypeRep<T> GetValue(Value);
 template<> uint32_t GetValue<int32_t>(Value v) { return v.i32; }
 template<> uint32_t GetValue<uint32_t>(Value v) { return v.i32; }
@@ -725,6 +746,7 @@ template<> uint64_t GetValue<uint64_t>(Value v) { return v.i64; }
 template<> uint32_t GetValue<float>(Value v) { return v.f32_bits; }
 template<> uint64_t GetValue<double>(Value v) { return v.f64_bits; }
 template<> v128 GetValue<v128>(Value v) { return v.v128_bits; }
+template<> Ref GetValue<Ref>(Value v) { return v.ref; }
 
 template <typename T>
 ValueTypeRep<T> CanonicalizeNan(ValueTypeRep<T> rep) {
@@ -1032,19 +1054,38 @@ Result Thread::TableInit(const uint8_t** pc) {
   Table* table = ReadTable(pc);
   ElemSegment* segment = ReadElemSegment(pc);
   TRAP_IF(segment->dropped, ElemSegmentDropped);
-  uint32_t table_size = table->func_indexes.size();
   uint32_t segment_size = segment->elems.size();
   uint32_t size = Pop<uint32_t>();
   uint32_t src = Pop<uint32_t>();
   uint32_t dst = Pop<uint32_t>();
-  bool ok = ClampToBounds(dst, &size, table_size);
+  bool ok = ClampToBounds(dst, &size, table->size());
   ok &= ClampToBounds(src, &size, segment_size);
   if (size > 0) {
-    memcpy(table->func_indexes.data() + dst, segment->elems.data() + src,
-           size * sizeof(table->func_indexes[0]));
+    memcpy(table->entries.data() + dst, segment->elems.data() + src,
+           size * sizeof(table->entries[0]));
   }
   TRAP_IF(!ok, TableAccessOutOfBounds);
   return Result::Ok;
+}
+
+Result Thread::TableSet(const uint8_t** pc) {
+  Table* table = ReadTable(pc);
+  // We currently only support tables of Funcref.
+  assert(table->elem_type == Type::Funcref);
+  Ref ref = Pop<Ref>();
+  uint32_t index = Pop<uint32_t>();
+  TRAP_IF(index >= table->size(), TableAccessOutOfBounds);
+  table->entries[index] = ref;
+  return Result::Ok;
+}
+
+Result Thread::TableGet(const uint8_t** pc) {
+  Table* table = ReadTable(pc);
+  assert(table->elem_type == Type::Funcref);
+  uint32_t index = Pop<uint32_t>();
+  TRAP_IF(index >= table->size(), TableAccessOutOfBounds);
+  Ref ref = static_cast<Ref>(table->entries[index]);
+  return Push(ref);
 }
 
 Result Thread::ElemDrop(const uint8_t** pc) {
@@ -1056,23 +1097,28 @@ Result Thread::ElemDrop(const uint8_t** pc) {
 
 Result Thread::TableCopy(const uint8_t** pc) {
   Table* table = ReadTable(pc);
-  uint32_t table_size = table->func_indexes.size();
   uint32_t size = Pop<uint32_t>();
   uint32_t src = Pop<uint32_t>();
   uint32_t dst = Pop<uint32_t>();
   bool copy_backward = src < dst && dst - src < size;
-  bool ok = ClampToBounds(dst, &size, table_size);
+  bool ok = ClampToBounds(dst, &size, table->size());
   // When copying backward, if the range is out-of-bounds, then no data will be
   // written.
   if (ok || !copy_backward) {
-    ok &= ClampToBounds(src, &size, table_size);
+    ok &= ClampToBounds(src, &size, table->size());
     if (size > 0) {
-      Index* data = table->func_indexes.data();
-      memmove(data + dst, data + src, size * sizeof(Index));
+      Ref* data = table->entries.data();
+      memmove(data + dst, data + src, size * sizeof(Ref));
     }
   }
   TRAP_IF(!ok, TableAccessOutOfBounds);
   return Result::Ok;
+}
+
+Result Thread::RefFunc(const uint8_t** pc) {
+  uint32_t index = ReadU32(pc);
+  assert(index < env_->GetFuncCount());
+  return Push(Ref{RefType::Func, index});
 }
 
 template <typename R, typename T>
@@ -1395,6 +1441,10 @@ ValueTypeRep<T> IntRotr(ValueTypeRep<T> lhs_rep, ValueTypeRep<T> rhs_rep) {
 template <typename R, typename T>
 ValueTypeRep<R> IntEqz(ValueTypeRep<T> v_rep) {
   return ToRep(v_rep == 0);
+}
+
+ValueTypeRep<uint32_t> RefIsNull(ValueTypeRep<Ref> v_rep) {
+  return ToRep(v_rep.index == kInvalidIndex);
 }
 
 template <typename T>
@@ -1800,10 +1850,11 @@ Result Thread::Run(int num_instructions) {
         Table* table = ReadTable(&pc);
         Index sig_index = ReadU32(&pc);
         Index entry_index = Pop<uint32_t>();
-        TRAP_IF(entry_index >= table->func_indexes.size(), UndefinedTableIndex);
-        Index func_index = table->func_indexes[entry_index];
-        TRAP_IF(func_index == kInvalidIndex, UninitializedTableElement);
-        Func* func = env_->funcs_[func_index].get();
+        TRAP_IF(entry_index >= table->size(), UndefinedTableIndex);
+        Ref ref = table->entries[entry_index];
+        TRAP_IF(ref.kind == RefType::Null, UninitializedTableElement);
+        assert(ref.kind == RefType::Func && ref.index != kInvalidIndex);
+        Func* func = env_->GetFunc(ref.index);
         TRAP_UNLESS(env_->FuncSignaturesAreEqual(func->sig_index, sig_index),
                     IndirectCallSignatureMismatch);
         if (func->is_host) {
@@ -1832,10 +1883,12 @@ Result Thread::Run(int num_instructions) {
         Table* table = ReadTable(&pc);
         Index sig_index = ReadU32(&pc);
         Index entry_index = Pop<uint32_t>();
-        TRAP_IF(entry_index >= table->func_indexes.size(), UndefinedTableIndex);
-        Index func_index = table->func_indexes[entry_index];
-        TRAP_IF(func_index == kInvalidIndex, UninitializedTableElement);
-        Func* func = env_->funcs_[func_index].get();
+        TRAP_IF(entry_index >= table->size(), UndefinedTableIndex);
+        Ref ref = table->entries[entry_index];
+        assert(ref.kind == RefType::Func);
+        TRAP_IF(ref.kind == RefType::Null, UninitializedTableElement);
+        assert(ref.kind == RefType::Func && ref.index != kInvalidIndex);
+        Func* func = env_->GetFunc(ref.index);
         TRAP_UNLESS(env_->FuncSignaturesAreEqual(func->sig_index, sig_index),
                     IndirectCallSignatureMismatch);
         if (func->is_host) { // Emulate a call/return for imported functions
@@ -3476,13 +3529,28 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(SimdUnop<v128, uint64_t>(IntTruncSat<uint64_t, double>));
         break;
 
+      case Opcode::RefIsNull:
+        CHECK_TRAP(Unop(RefIsNull));
+        break;
+
       case Opcode::TableGet:
+        CHECK_TRAP(TableGet(&pc));
+        break;
+
       case Opcode::TableSet:
+        CHECK_TRAP(TableSet(&pc));
+        break;
+
+      case Opcode::RefFunc:
+        CHECK_TRAP(RefFunc(&pc));
+        break;
+
+      case Opcode::RefNull:
+        CHECK_TRAP(Push(Ref{RefType::Null, kInvalidIndex}));
+        break;
+
       case Opcode::TableGrow:
       case Opcode::TableSize:
-      case Opcode::RefNull:
-      case Opcode::RefIsNull:
-      case Opcode::RefFunc:
         WABT_UNREACHABLE;
         break;
 

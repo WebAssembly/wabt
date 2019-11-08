@@ -193,6 +193,7 @@ enum class ExprType {
   MemorySize,
   Nop,
   RefIsNull,
+  RefFunc,
   RefNull,
   Rethrow,
   Return,
@@ -323,6 +324,7 @@ class VarExpr : public ExprMixin<TypeEnum> {
 typedef VarExpr<ExprType::Br> BrExpr;
 typedef VarExpr<ExprType::BrIf> BrIfExpr;
 typedef VarExpr<ExprType::Call> CallExpr;
+typedef VarExpr<ExprType::RefFunc> RefFuncExpr;
 typedef VarExpr<ExprType::GlobalGet> GlobalGetExpr;
 typedef VarExpr<ExprType::GlobalSet> GlobalSetExpr;
 typedef VarExpr<ExprType::LocalGet> LocalGetExpr;

@@ -1,0 +1,42 @@
+;;; TOOL: run-interp
+;;; ARGS*: --enable-reference-types
+
+(module
+  (table $t 1 anyfunc)
+  (elem $t funcref (ref.null))
+  (elem $t funcref (ref.func 1) (ref.null))
+  (global $g anyref (ref.null))
+
+  (func $ref_null (export "ref_null") (result anyref)
+    ref.null
+  )
+
+  (func $ref_is_null (export "ref_is_null") (result i32)
+    global.get $g
+    ref.is_null
+  )
+
+  (func $ref_func (export "ref_func") (result anyfunc)
+    ref.func $ref_is_null
+  )
+
+  (func $table_set (export "table_set")
+    i32.const 0
+    call $ref_func
+    table.set $t
+  )
+
+  (func (export "table_get") (result i32)
+    call $table_set
+    i32.const 0
+    table.get $t
+    ref.is_null
+  )
+)
+(;; STDOUT ;;;
+ref_null() => anyref:nullref
+ref_is_null() => i32:1
+ref_func() => funcref:1
+table_set() =>
+table_get() => i32:0
+;;; STDOUT ;;)

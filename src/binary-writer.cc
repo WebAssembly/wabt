@@ -642,6 +642,12 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, index, "table.size table index");
       break;
     }
+    case ExprType::RefFunc: {
+      WriteOpcode(stream_, Opcode::RefFunc);
+      Index index = module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var);
+      WriteU32Leb128WithReloc(index, "function index", RelocType::FuncIndexLEB);
+      break;
+    }
     case ExprType::RefNull: {
       WriteOpcode(stream_, Opcode::RefNull);
       break;
