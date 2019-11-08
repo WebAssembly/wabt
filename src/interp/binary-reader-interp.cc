@@ -1947,7 +1947,7 @@ wabt::Result ReadBinaryInterp(Environment* env,
 
   std::unique_ptr<OutputBuffer> istream = env->ReleaseIstream();
   IstreamOffset istream_offset = istream->size();
-  DefinedModule* module = new DefinedModule();
+  DefinedModule* module = new DefinedModule(env);
 
   BinaryReaderInterp reader(env, module, std::move(istream), errors,
                             options.features);
