@@ -282,13 +282,11 @@ struct Export {
 };
 
 class Environment;
-struct DefinedModule;
-struct HostModule;
 
 struct Module {
   WABT_DISALLOW_COPY_AND_ASSIGN(Module);
-  explicit Module(bool is_host);
-  Module(string_view name, bool is_host);
+  Module(Environment* env, bool is_host);
+  Module(Environment* env, string_view name, bool is_host);
   virtual ~Module() = default;
 
   // Function exports are special-cased to allow for overloading functions by
@@ -306,10 +304,13 @@ struct Module {
   Index memory_index; /* kInvalidIndex if not defined */
   Index table_index;  /* kInvalidIndex if not defined */
   bool is_host;
+
+ protected:
+  Environment* env;
 };
 
 struct DefinedModule : Module {
-  DefinedModule();
+  explicit DefinedModule(Environment* env);
   static bool classof(const Module* module) { return !module->is_host; }
 
   Index OnUnknownFuncExport(string_view name, Index sig_index) override {
@@ -360,9 +361,6 @@ struct HostModule : Module {
   std::function<
       Index(Environment*, HostModule*, string_view name, Index sig_index)>
       on_unknown_func_export;
-
- private:
-  Environment* env_;
 };
 
 class Environment {

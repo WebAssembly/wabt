@@ -197,16 +197,18 @@ FuncSignature::FuncSignature(Index param_count,
     : param_types(param_types, param_types + param_count),
       result_types(result_types, result_types + result_count) {}
 
-Module::Module(bool is_host)
+Module::Module(Environment* env, bool is_host)
     : memory_index(kInvalidIndex),
       table_index(kInvalidIndex),
-      is_host(is_host) {}
+      is_host(is_host),
+      env(env) {}
 
-Module::Module(string_view name, bool is_host)
+Module::Module(Environment* env, string_view name, bool is_host)
     : name(name.to_string()),
       memory_index(kInvalidIndex),
       table_index(kInvalidIndex),
-      is_host(is_host) {}
+      is_host(is_host),
+      env(env) {}
 
 Export* Module::GetFuncExport(Environment* env,
                               string_view name,
@@ -255,18 +257,18 @@ Index Module::AppendExport(ExternalKind kind,
   return exports.size() - 1;
 }
 
-DefinedModule::DefinedModule()
-    : Module(false),
+DefinedModule::DefinedModule(Environment* env)
+    : Module(env, false),
       start_func_index(kInvalidIndex),
       istream_start(kInvalidIstreamOffset),
       istream_end(kInvalidIstreamOffset) {}
 
 HostModule::HostModule(Environment* env, string_view name)
-    : Module(name, true), env_(env) {}
+    : Module(env, name, true) {}
 
 Index HostModule::OnUnknownFuncExport(string_view name, Index sig_index) {
   if (on_unknown_func_export) {
-    return on_unknown_func_export(env_, this, name, sig_index);
+    return on_unknown_func_export(env, this, name, sig_index);
   }
   return kInvalidIndex;
 }
@@ -276,8 +278,8 @@ std::pair<HostFunc*, Index> HostModule::AppendFuncExport(
     const FuncSignature& sig,
     HostFunc::Callback callback) {
   // TODO(binji): dedupe signature?
-  env_->EmplaceBackFuncSignature(sig);
-  Index sig_index = env_->GetFuncSignatureCount() - 1;
+  env->EmplaceBackFuncSignature(sig);
+  Index sig_index = env->GetFuncSignatureCount() - 1;
   return AppendFuncExport(name, sig_index, callback);
 }
 
@@ -286,8 +288,8 @@ std::pair<HostFunc*, Index> HostModule::AppendFuncExport(
     Index sig_index,
     HostFunc::Callback callback) {
   auto* host_func = new HostFunc(this->name, name, sig_index, callback);
-  env_->EmplaceBackFunc(host_func);
-  Index func_env_index = env_->GetFuncCount() - 1;
+  env->EmplaceBackFunc(host_func);
+  Index func_env_index = env->GetFuncCount() - 1;
   Index export_index = AppendExport(ExternalKind::Func, func_env_index, name);
   return {host_func, export_index};
 }
@@ -295,16 +297,16 @@ std::pair<HostFunc*, Index> HostModule::AppendFuncExport(
 std::pair<Table*, Index> HostModule::AppendTableExport(string_view name,
                                                        Type elem_type,
                                                        const Limits& limits) {
-  Table* table = env_->EmplaceBackTable(elem_type, limits);
-  Index table_env_index = env_->GetTableCount() - 1;
+  Table* table = env->EmplaceBackTable(elem_type, limits);
+  Index table_env_index = env->GetTableCount() - 1;
   Index export_index = AppendExport(ExternalKind::Table, table_env_index, name);
   return {table, export_index};
 }
 
 std::pair<Memory*, Index> HostModule::AppendMemoryExport(string_view name,
                                                          const Limits& limits) {
-  Memory* memory = env_->EmplaceBackMemory(limits);
-  Index memory_env_index = env_->GetMemoryCount() - 1;
+  Memory* memory = env->EmplaceBackMemory(limits);
+  Index memory_env_index = env->GetMemoryCount() - 1;
   Index export_index =
       AppendExport(ExternalKind::Memory, memory_env_index, name);
   return {memory, export_index};
@@ -313,8 +315,8 @@ std::pair<Memory*, Index> HostModule::AppendMemoryExport(string_view name,
 std::pair<Global*, Index> HostModule::AppendGlobalExport(string_view name,
                                                          Type type,
                                                          bool mutable_) {
-  Global* global = env_->EmplaceBackGlobal(TypedValue(type), mutable_);
-  Index global_env_index = env_->GetGlobalCount() - 1;
+  Global* global = env->EmplaceBackGlobal(TypedValue(type), mutable_);
+  Index global_env_index = env->GetGlobalCount() - 1;
   Index export_index =
       AppendExport(ExternalKind::Global, global_env_index, name);
   return {global, export_index};
