@@ -90,14 +90,14 @@ static const IstreamOffset kInvalidIstreamOffset = ~0;
 
 struct FuncSignature {
   FuncSignature() = default;
-  FuncSignature(std::vector<Type> param_types, std::vector<Type> result_types);
+  FuncSignature(TypeVector param_types, TypeVector result_types);
   FuncSignature(Index param_count,
                 Type* param_types,
                 Index result_count,
                 Type* result_types);
 
-  std::vector<Type> param_types;
-  std::vector<Type> result_types;
+  TypeVector param_types;
+  TypeVector result_types;
 };
 
 enum class RefType {
@@ -206,12 +206,14 @@ typedef std::vector<TypedValue> TypedValues;
 
 struct Global {
   Global() : mutable_(false), import_index(kInvalidIndex) {}
-  Global(const TypedValue& typed_value, bool mutable_)
-      : typed_value(typed_value), mutable_(mutable_) {}
+  Global(Type& type, bool mutable_) : type(type), mutable_(mutable_) {
+    typed_value.type = type;
+  }
 
+  Type type;
   TypedValue typed_value;
   bool mutable_;
-  Index import_index; /* or kInvalidIndex if not imported */
+  Index import_index = kInvalidIndex; /* kInvalidIndex if not imported */
 };
 
 struct Import {

@@ -946,17 +946,16 @@ wabt::Result BinaryReaderInterp::BeginGlobal(Index index,
                                              Type type,
                                              bool mutable_) {
   assert(TranslateGlobalIndexToEnv(index) == env_->GetGlobalCount());
-  env_->EmplaceBackGlobal(TypedValue(type), mutable_);
+  env_->EmplaceBackGlobal(type, mutable_);
   init_expr_value_.type = Type::Void;
   return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::EndGlobalInitExpr(Index index) {
   Global* global = GetGlobalByModuleIndex(index);
-  if (Failed(typechecker_.CheckType(init_expr_value_.type, global->typed_value.type))) {
+  if (Failed(typechecker_.CheckType(init_expr_value_.type, global->type))) {
     PrintError("type mismatch in global, expected %s but got %s.",
-               GetTypeName(global->typed_value.type),
-               GetTypeName(init_expr_value_.type));
+               GetTypeName(global->type), GetTypeName(init_expr_value_.type));
     return wabt::Result::Error;
   }
   global->typed_value = init_expr_value_;
@@ -1656,7 +1655,7 @@ wabt::Result BinaryReaderInterp::OnGlobalSetExpr(Index global_index) {
                global_index);
     return wabt::Result::Error;
   }
-  CHECK_RESULT(typechecker_.OnGlobalSet(global->typed_value.type));
+  CHECK_RESULT(typechecker_.OnGlobalSet(global->type));
   CHECK_RESULT(EmitOpcode(Opcode::GlobalSet));
   CHECK_RESULT(EmitI32(TranslateGlobalIndexToEnv(global_index)));
   return wabt::Result::Ok;

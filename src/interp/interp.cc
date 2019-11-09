@@ -315,7 +315,7 @@ std::pair<Memory*, Index> HostModule::AppendMemoryExport(string_view name,
 std::pair<Global*, Index> HostModule::AppendGlobalExport(string_view name,
                                                          Type type,
                                                          bool mutable_) {
-  Global* global = env->EmplaceBackGlobal(TypedValue(type), mutable_);
+  Global* global = env->EmplaceBackGlobal(type, mutable_);
   Index global_env_index = env->GetGlobalCount() - 1;
   Index export_index =
       AppendExport(ExternalKind::Global, global_env_index, name);
