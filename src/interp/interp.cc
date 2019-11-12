@@ -28,6 +28,7 @@
 
 #include "src/cast.h"
 #include "src/stream.h"
+#include "src/type-checker.h"
 
 namespace wabt {
 namespace interp {
@@ -53,6 +54,17 @@ namespace interp {
     }                              \
   } while (0)
 
+std::string RefTypeToString(RefType t) {
+  switch (t) {
+    case RefType::Null:
+      return "null";
+    case RefType::Func:
+      return "func";
+    case RefType::Foreign:
+      return "foreign";
+  }
+}
+
 std::string TypedValueToString(const TypedValue& tv) {
   switch (tv.type) {
     case Type::I32:
@@ -75,12 +87,11 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::Nullref:
       return StringPrintf("nullref");
 
+    case Type::Foreignref:
+      return StringPrintf("foreignref:%" PRIindex, tv.get_ref().index);
+
     case Type::Anyref:
-      if (tv.get_ref().index == kInvalidIndex)
-        return StringPrintf("anyref:nullref");
-      return StringPrintf("anyref:%d(%" PRIindex ")",
-                          static_cast<int>(tv.get_ref().kind),
-                          tv.get_ref().index);
+      return StringPrintf("anyref:%" PRIindex, tv.get_ref().index);
 
     case Type::Funcref:
       return StringPrintf("funcref:%" PRIindex, tv.get_ref().index);
@@ -1072,8 +1083,6 @@ Result Thread::TableInit(const uint8_t** pc) {
 
 Result Thread::TableSet(const uint8_t** pc) {
   Table* table = ReadTable(pc);
-  // We currently only support tables of Funcref.
-  assert(table->elem_type == Type::Funcref);
   Ref ref = Pop<Ref>();
   uint32_t index = Pop<uint32_t>();
   TRAP_IF(index >= table->size(), TableAccessOutOfBounds);
@@ -1083,7 +1092,6 @@ Result Thread::TableSet(const uint8_t** pc) {
 
 Result Thread::TableGet(const uint8_t** pc) {
   Table* table = ReadTable(pc);
-  assert(table->elem_type == Type::Funcref);
   uint32_t index = Pop<uint32_t>();
   TRAP_IF(index >= table->size(), TableAccessOutOfBounds);
   Ref ref = static_cast<Ref>(table->entries[index]);
@@ -1716,10 +1724,8 @@ Result Thread::CallHost(HostFunc* func) {
   TypedValues params(num_params);
   TypedValues results(num_results);
 
-  for (size_t i = num_params; i > 0; --i) {
-    params[i - 1].value = Pop();
-    params[i - 1].type = sig->param_types[i - 1];
-  }
+  for (size_t i = num_params; i > 0; --i)
+    params[i - 1] = {sig->param_types[i - 1], Pop()};
 
   for (size_t i = 0; i < num_results; ++i) {
     results[i].type = sig->result_types[i];
@@ -1731,7 +1737,9 @@ Result Thread::CallHost(HostFunc* func) {
 
   TRAP_IF(results.size() != num_results, HostResultTypeMismatch);
   for (size_t i = 0; i < num_results; ++i) {
-    TRAP_IF(results[i].type != sig->result_types[i], HostResultTypeMismatch);
+    TRAP_IF(TypeChecker::CheckType(results[i].type, sig->result_types[i]) !=
+                wabt::Result::Ok,
+            HostResultTypeMismatch);
     CHECK_TRAP(Push(results[i].value));
   }
 
@@ -1821,7 +1829,7 @@ Result Thread::Run(int num_instructions) {
       case Opcode::GlobalSet: {
         Index index = ReadU32(&pc);
         assert(index < env_->globals_.size());
-        env_->globals_[index].typed_value.value = Pop();
+        env_->globals_[index].typed_value = {env_->globals_[index].type, Pop()};
         break;
       }
 
@@ -3698,7 +3706,8 @@ Result Executor::PushArgs(const FuncSignature* sig, const TypedValues& args) {
   }
 
   for (size_t i = 0; i < sig->param_types.size(); ++i) {
-    if (sig->param_types[i] != args[i].type) {
+    if (TypeChecker::CheckType(args[i].type, sig->param_types[i]) !=
+        wabt::Result::Ok) {
       return Result::ArgumentTypeMismatch;
     }
 

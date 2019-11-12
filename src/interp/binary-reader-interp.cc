@@ -1014,7 +1014,7 @@ wabt::Result BinaryReaderInterp::OnInitExprI64ConstExpr(Index index,
 
 wabt::Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
   init_expr_value_.type = Type::Nullref;
-  init_expr_value_.set_ref({RefType::Func, kInvalidIndex});
+  init_expr_value_.set_ref({RefType::Null, kInvalidIndex});
   return wabt::Result::Ok;
 }
 
