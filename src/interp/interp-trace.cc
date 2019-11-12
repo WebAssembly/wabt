@@ -268,8 +268,8 @@ void Thread::Trace(Stream* stream) {
       const Index memory_index = ReadU32(&pc);
       stream->Writef("%s $%" PRIindex ":%u+$%u, $0x%08x 0x%08x 0x%08x 0x%08x\n",
                      opcode.GetName(), memory_index, Pick(2).i32, ReadU32At(pc),
-                     Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
-                     Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
+                     Pick(1).vec128.v[0], Pick(1).vec128.v[1],
+                     Pick(1).vec128.v[2], Pick(1).vec128.v[3]);
       break;
     }
 
@@ -511,8 +511,8 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64X2TruncSatF64X2S:
     case Opcode::I64X2TruncSatF64X2U: {
       stream->Writef("%s $0x%08x 0x%08x 0x%08x 0x%08x\n", opcode.GetName(),
-                     Top().v128_bits.v[0], Top().v128_bits.v[1],
-                     Top().v128_bits.v[2], Top().v128_bits.v[3]);
+                     Top().vec128.v[0], Top().vec128.v[1],
+                     Top().vec128.v[2], Top().vec128.v[3]);
       break;
     }
 
@@ -520,12 +520,12 @@ void Thread::Trace(Stream* stream) {
       stream->Writef(
           "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x $0x%08x %08x %08x "
           "%08x\n",
-          opcode.GetName(), Pick(3).v128_bits.v[0], Pick(3).v128_bits.v[1],
-          Pick(3).v128_bits.v[2], Pick(3).v128_bits.v[3],
-          Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
-          Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
-          Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3]);
+          opcode.GetName(), Pick(3).vec128.v[0], Pick(3).vec128.v[1],
+          Pick(3).vec128.v[2], Pick(3).vec128.v[3],
+          Pick(2).vec128.v[0], Pick(2).vec128.v[1],
+          Pick(2).vec128.v[2], Pick(2).vec128.v[3],
+          Pick(1).vec128.v[0], Pick(1).vec128.v[1],
+          Pick(1).vec128.v[2], Pick(1).vec128.v[3]);
       break;
 
     case Opcode::I8X16ExtractLaneS:
@@ -537,9 +537,9 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F32X4ExtractLane:
     case Opcode::F64X2ExtractLane: {
       stream->Writef("%s : LaneIdx %d From $0x%08x 0x%08x 0x%08x 0x%08x\n",
-                     opcode.GetName(), ReadU8At(pc), Top().v128_bits.v[0],
-                     Top().v128_bits.v[1], Top().v128_bits.v[2],
-                     Top().v128_bits.v[3]);
+                     opcode.GetName(), ReadU8At(pc), Top().vec128.v[0],
+                     Top().vec128.v[1], Top().vec128.v[2],
+                     Top().vec128.v[3]);
       break;
     }
 
@@ -548,25 +548,25 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I32X4ReplaceLane: {
       stream->Writef(
           "%s : Set %u to LaneIdx %d In $0x%08x 0x%08x 0x%08x 0x%08x\n",
-          opcode.GetName(), Pick(1).i32, ReadU8At(pc), Pick(2).v128_bits.v[0],
-          Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2],
-          Pick(2).v128_bits.v[3]);
+          opcode.GetName(), Pick(1).i32, ReadU8At(pc), Pick(2).vec128.v[0],
+          Pick(2).vec128.v[1], Pick(2).vec128.v[2],
+          Pick(2).vec128.v[3]);
       break;
     }
     case Opcode::I64X2ReplaceLane: {
       stream->Writef("%s : Set %" PRIu64
                      " to LaneIdx %d In $0x%08x 0x%08x 0x%08x 0x%08x\n",
                      opcode.GetName(), Pick(1).i64, ReadU8At(pc),
-                     Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-                     Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3]);
+                     Pick(2).vec128.v[0], Pick(2).vec128.v[1],
+                     Pick(2).vec128.v[2], Pick(2).vec128.v[3]);
       break;
     }
     case Opcode::F32X4ReplaceLane: {
       stream->Writef(
           "%s : Set %g to LaneIdx %d In $0x%08x 0x%08x 0x%08x 0x%08x\n",
           opcode.GetName(), Bitcast<float>(Pick(1).f32_bits), ReadU8At(pc),
-          Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3]);
+          Pick(2).vec128.v[0], Pick(2).vec128.v[1],
+          Pick(2).vec128.v[2], Pick(2).vec128.v[3]);
 
       break;
     }
@@ -574,8 +574,8 @@ void Thread::Trace(Stream* stream) {
       stream->Writef(
           "%s : Set %g to LaneIdx %d In $0x%08x 0x%08x 0x%08x 0x%08x\n",
           opcode.GetName(), Bitcast<double>(Pick(1).f64_bits), ReadU8At(pc),
-          Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3]);
+          Pick(2).vec128.v[0], Pick(2).vec128.v[1],
+          Pick(2).vec128.v[2], Pick(2).vec128.v[3]);
       break;
     }
 
@@ -583,10 +583,10 @@ void Thread::Trace(Stream* stream) {
       stream->Writef(
           "%s $0x%08x %08x %08x %08x $0x%08x %08x %08x %08x : with lane imm: "
           "$0x%08x %08x %08x %08x\n",
-          opcode.GetName(), Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-          Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
-          Pick(1).v128_bits.v[0], Pick(1).v128_bits.v[1],
-          Pick(1).v128_bits.v[2], Pick(1).v128_bits.v[3], ReadU32At(pc),
+          opcode.GetName(), Pick(2).vec128.v[0], Pick(2).vec128.v[1],
+          Pick(2).vec128.v[2], Pick(2).vec128.v[3],
+          Pick(1).vec128.v[0], Pick(1).vec128.v[1],
+          Pick(1).vec128.v[2], Pick(1).vec128.v[3], ReadU32At(pc),
           ReadU32At(pc + 4), ReadU32At(pc + 8), ReadU32At(pc + 12));
       break;
 
@@ -668,11 +668,11 @@ void Thread::Trace(Stream* stream) {
     case Opcode::F64X2Mul:
     case Opcode::V8X16Swizzle: {
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x %08x %08x %08x\n",
-                     opcode.GetName(), Pick(2).v128_bits.v[0],
-                     Pick(2).v128_bits.v[1], Pick(2).v128_bits.v[2],
-                     Pick(2).v128_bits.v[3], Pick(1).v128_bits.v[0],
-                     Pick(1).v128_bits.v[1], Pick(1).v128_bits.v[2],
-                     Pick(1).v128_bits.v[3]);
+                     opcode.GetName(), Pick(2).vec128.v[0],
+                     Pick(2).vec128.v[1], Pick(2).vec128.v[2],
+                     Pick(2).vec128.v[3], Pick(1).vec128.v[0],
+                     Pick(1).vec128.v[1], Pick(1).vec128.v[2],
+                     Pick(1).vec128.v[3]);
       break;
     }
 
@@ -689,8 +689,8 @@ void Thread::Trace(Stream* stream) {
     case Opcode::I64X2ShrS:
     case Opcode::I64X2ShrU: {
       stream->Writef("%s $0x%08x %08x %08x %08x  $0x%08x\n", opcode.GetName(),
-                     Pick(2).v128_bits.v[0], Pick(2).v128_bits.v[1],
-                     Pick(2).v128_bits.v[2], Pick(2).v128_bits.v[3],
+                     Pick(2).vec128.v[0], Pick(2).vec128.v[1],
+                     Pick(2).vec128.v[2], Pick(2).vec128.v[3],
                      Pick(1).i32);
       break;
     }

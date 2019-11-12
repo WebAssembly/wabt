@@ -217,7 +217,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
       WriteSeparator();
       WriteKey("value");
       char buffer[128];
-      WriteUint128(buffer, 128, const_.v128_bits);
+      WriteUint128(buffer, 128, const_.vec128);
       json_stream_->Writef("\"%s\"", buffer);
       break;
     }
