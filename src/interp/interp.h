@@ -329,7 +329,6 @@ struct Module {
   std::vector<Export> exports;
   BindingHash export_bindings;
   Index memory_index; /* kInvalidIndex if not defined */
-  Index table_index;  /* kInvalidIndex if not defined */
   bool is_host;
 
  protected:

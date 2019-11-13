@@ -1391,11 +1391,13 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       case Opcode::TableInit: {
         Index segment;
         CHECK_RESULT(ReadIndex(&segment, "elem segment index"));
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CALLBACK(OnTableInitExpr, segment);
-        CALLBACK(OnOpcodeUint32Uint32, segment, reserved);
+        Index table_index;
+        CHECK_RESULT(ReadIndex(&table_index, "reserved table index"));
+        if (!options_.features.reference_types_enabled()) {
+          ERROR_UNLESS(table_index == 0, "table.index index must be 0");
+        }
+        CALLBACK(OnTableInitExpr, segment, table_index);
+        CALLBACK(OnOpcodeUint32Uint32, segment, table_index);
         break;
       }
 
@@ -1443,13 +1445,18 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
       }
 
       case Opcode::TableCopy: {
-        uint8_t reserved;
-        CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CHECK_RESULT(ReadU8(&reserved, "reserved table index"));
-        ERROR_UNLESS(reserved == 0, "reserved value must be 0");
-        CALLBACK(OnTableCopyExpr);
-        CALLBACK(OnOpcodeUint32Uint32, reserved, reserved);
+        Index table_dst;
+        Index table_src;
+        CHECK_RESULT(ReadIndex(&table_dst, "reserved table index"));
+        if (!options_.features.reference_types_enabled()) {
+          ERROR_UNLESS(table_dst == 0, "table.copy dst must be 0");
+        }
+        CHECK_RESULT(ReadIndex(&table_src, "table src"));
+        if (!options_.features.reference_types_enabled()) {
+          ERROR_UNLESS(table_src == 0, "table.copy src must be 0");
+        }
+        CALLBACK(OnTableCopyExpr, table_dst, table_src);
+        CALLBACK(OnOpcodeUint32Uint32, table_dst, table_src);
         break;
       }
 

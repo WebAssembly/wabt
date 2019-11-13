@@ -354,7 +354,8 @@ Result NameResolver::OnElemDropExpr(ElemDropExpr* expr) {
 }
 
 Result NameResolver::OnTableInitExpr(TableInitExpr* expr) {
-  ResolveElemSegmentVar(&expr->var);
+  ResolveElemSegmentVar(&expr->segment_index);
+  ResolveTableVar(&expr->table_index);
   return Result::Ok;
 }
 

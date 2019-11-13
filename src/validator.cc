@@ -793,9 +793,12 @@ Result Validator::OnElemDropExpr(ElemDropExpr* expr) {
 
 Result Validator::OnTableInitExpr(TableInitExpr* expr) {
   expr_loc_ = &expr->loc;
-  CheckHasTable(&expr->loc, Opcode::TableInit);
-  CheckElemSegmentVar(&expr->var);
-  typechecker_.OnTableInit(expr->var.index());
+  typechecker_.OnTableInit(expr->table_index.index(),
+                           expr->segment_index.index());
+  if (!CheckHasTable(&expr->loc, Opcode::TableInit))
+    return Result::Ok;
+  CheckTableVar(&expr->table_index, nullptr);
+  CheckElemSegmentVar(&expr->segment_index);
   return Result::Ok;
 }
 
@@ -1147,7 +1150,6 @@ void Validator::CheckElemSegments(const Module* module) {
   for (const ModuleField& field : module->fields) {
     if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(&field)) {
       auto&& elem_segment = elem_segment_field->elem_segment;
-      const Table* table;
       for (const ElemExpr& elem_expr : elem_segment.elem_exprs) {
         if (elem_expr.kind == ElemExprKind::RefFunc) {
           CheckFuncVar(&elem_expr.var, nullptr);
@@ -1157,7 +1159,7 @@ void Validator::CheckElemSegments(const Module* module) {
       if (elem_segment.passive)  {
         continue;
       }
-      if (Failed(CheckTableVar(&elem_segment.table_var, &table))) {
+      if (Failed(CheckTableVar(&elem_segment.table_var, nullptr))) {
         continue;
       }
       CheckConstInitExpr(&field.loc, elem_segment.offset, Type::I32,

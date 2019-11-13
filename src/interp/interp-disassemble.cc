@@ -611,10 +611,14 @@ void Environment::Disassemble(Stream* stream,
         break;
 
       case Opcode::MemoryCopy:
-      case Opcode::TableCopy:
       case Opcode::MemoryFill:
         stream->Writef("%s $%u, %%[-3], %%[-2], %%[-1]\n", opcode.GetName(),
                        ReadU32(&pc));
+        break;
+
+      case Opcode::TableCopy:
+        stream->Writef("%s $%u, $%u, %%[-3], %%[-2], %%[-1]\n", opcode.GetName(),
+                       ReadU32(&pc), ReadU32(&pc));
         break;
 
       // The following opcodes are either never generated or should never be
