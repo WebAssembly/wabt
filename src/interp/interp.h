@@ -101,8 +101,8 @@ struct FuncSignature {
 };
 
 enum class RefType {
-  Null,
   Func,
+  Null,
   Host,
 };
 
@@ -146,6 +146,7 @@ struct ElemSegment {
   bool dropped = false;
 };
 
+// Opaque handle to a host object.
 struct HostObject {};
 
 // ValueTypeRep converts from one type to its representation on the

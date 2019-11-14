@@ -90,13 +90,17 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::Hostref:
       return StringPrintf("hostref:%" PRIindex, tv.get_ref().index);
 
-    case Type::Anyref:
-      return StringPrintf("anyref:%" PRIindex, tv.get_ref().index);
-
     case Type::Funcref:
       return StringPrintf("funcref:%" PRIindex, tv.get_ref().index);
 
-    default:
+    case Type::Exnref:
+      return StringPrintf("exnref:%" PRIindex, tv.get_ref().index);
+
+    case Type::Func:
+    case Type::Void:
+    case Type::Any:
+    case Type::Anyref:
+      // These types are not concrete types and should never exist as a value
       WABT_UNREACHABLE;
   }
 }
