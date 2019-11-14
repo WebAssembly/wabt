@@ -267,6 +267,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
                          TypeVector* out_result_types);
   FuncSignature* GetSignatureByModuleIndex(Index sig_index);
   Index TranslateFuncIndexToEnv(Index func_index);
+  Table* GetTableByModuleIndex(Index table_index);
   Index TranslateTableIndexToEnv(Index table_index);
   Index TranslateModuleFuncIndexToDefined(Index func_index);
   Func* GetFuncByModuleIndex(Index func_index);
@@ -454,6 +455,10 @@ Index BinaryReaderInterp::TranslateModuleFuncIndexToDefined(Index func_index) {
 
 Func* BinaryReaderInterp::GetFuncByModuleIndex(Index func_index) {
   return env_->GetFunc(TranslateFuncIndexToEnv(func_index));
+}
+
+Table* BinaryReaderInterp::GetTableByModuleIndex(Index table_index) {
+  return env_->GetTable(TranslateTableIndexToEnv(table_index));
 }
 
 Index BinaryReaderInterp::TranslateGlobalIndexToEnv(Index global_index) {
@@ -1126,8 +1131,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
     elem_segment_->dropped = true;
 
     assert(segment_table_index_ != kInvalidIndex);
-    Table* table =
-        env_->GetTable(TranslateTableIndexToEnv(segment_table_index_));
+    Table* table = GetTableByModuleIndex(segment_table_index_);
     elem_segment_infos_.emplace_back(table, table_offset_);
     elem_segment_info_ = &elem_segment_infos_.back();
   }
@@ -1851,14 +1855,16 @@ wabt::Result BinaryReaderInterp::OnMemoryInitExpr(Index segment_index) {
 }
 
 wabt::Result BinaryReaderInterp::OnTableGetExpr(Index table_index) {
-  CHECK_RESULT(typechecker_.OnTableGet(table_index));
+  const Table* table = GetTableByModuleIndex(table_index);
+  CHECK_RESULT(typechecker_.OnTableGet(table->elem_type));
   CHECK_RESULT(EmitOpcode(Opcode::TableGet));
   CHECK_RESULT(EmitI32(TranslateTableIndexToEnv(table_index)));
   return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnTableSetExpr(Index table_index) {
-  CHECK_RESULT(typechecker_.OnTableSet(table_index));
+  const Table* table = GetTableByModuleIndex(table_index);
+  CHECK_RESULT(typechecker_.OnTableSet(table->elem_type));
   CHECK_RESULT(EmitOpcode(Opcode::TableSet));
   CHECK_RESULT(EmitI32(TranslateTableIndexToEnv(table_index)));
   return wabt::Result::Ok;

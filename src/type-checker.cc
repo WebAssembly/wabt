@@ -645,15 +645,14 @@ Result TypeChecker::OnTableInit(uint32_t table, uint32_t segment) {
   return CheckOpcode3(Opcode::TableInit);
 }
 
-Result TypeChecker::OnTableGet(Index table_index) {
+Result TypeChecker::OnTableGet(Type elem_type) {
   Result result = PopAndCheck1Type(Type::I32, "table.get");
-  PushType(Type::Nullref); // TODO: should be the table's type
+  PushType(elem_type);
   return result;
 }
 
-Result TypeChecker::OnTableSet(Index table_index) {
-  // TODO: anyref here should be the table's type
-  return PopAndCheck2Types(Type::I32, Type::Anyref, "table.set");
+Result TypeChecker::OnTableSet(Type elem_type) {
+  return PopAndCheck2Types(Type::I32, elem_type, "table.set");
 }
 
 Result TypeChecker::OnTableGrow(Index segment) {
