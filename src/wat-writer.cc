@@ -616,15 +616,12 @@ Result WatWriter::ExprVisitorDelegate::OnCallExpr(CallExpr* expr) {
 Result WatWriter::ExprVisitorDelegate::OnCallIndirectExpr(
     CallIndirectExpr* expr) {
   writer_->WritePutsSpace(Opcode::CallIndirect_Opcode.GetName());
-  writer_->WriteOpenSpace("type");
-  writer_->WriteVar(expr->decl.type_var, NextChar::Space);
-
-  if (expr->table.is_index() && expr->table.index() == 0) {
-    writer_->WriteCloseNewline();
-  } else {
-    writer_->WriteCloseSpace();
-    writer_->WriteVar(expr->table, NextChar::Newline);
+  if (!expr->table.is_index() || expr->table.index() != 0) {
+    writer_->WriteVar(expr->table, NextChar::Space);
   }
+  writer_->WriteOpenSpace("type");
+  writer_->WriteVar(expr->decl.type_var, NextChar::Newline);
+  writer_->WriteCloseNewline();
   return Result::Ok;
 }
 
