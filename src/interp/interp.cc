@@ -60,8 +60,8 @@ std::string RefTypeToString(RefType t) {
       return "null";
     case RefType::Func:
       return "func";
-    case RefType::Foreign:
-      return "foreign";
+    case RefType::Host:
+      return "host";
   }
 }
 
@@ -87,8 +87,8 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::Nullref:
       return StringPrintf("nullref");
 
-    case Type::Foreignref:
-      return StringPrintf("foreignref:%" PRIindex, tv.get_ref().index);
+    case Type::Hostref:
+      return StringPrintf("hostref:%" PRIindex, tv.get_ref().index);
 
     case Type::Anyref:
       return StringPrintf("anyref:%" PRIindex, tv.get_ref().index);

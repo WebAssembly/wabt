@@ -103,7 +103,7 @@ struct FuncSignature {
 enum class RefType {
   Null,
   Func,
-  Foreign,
+  Host,
 };
 
 struct Ref {
@@ -146,8 +146,7 @@ struct ElemSegment {
   bool dropped = false;
 };
 
-struct ForeignObject {
-};
+struct HostObject {};
 
 // ValueTypeRep converts from one type to its representation on the
 // stack. For example, float -> uint32_t. See Value below.
@@ -192,8 +191,8 @@ struct TypedValue {
         case RefType::Null:
           type = Type::Nullref;
           break;
-        case RefType::Foreign:
-          type = Type::Foreignref;
+        case RefType::Host:
+          type = Type::Hostref;
           break;
       }
     }
@@ -421,7 +420,7 @@ class Environment {
   Index GetDataSegmentCount() const { return data_segments_.size(); }
   Index GetElemSegmentCount() const { return elem_segments_.size(); }
   Index GetModuleCount() const { return modules_.size(); }
-  Index GetForeignCount() const { return foreign_objects_.size(); }
+  Index GetHostCount() const { return host_objects_.size(); }
 
   Index GetLastModuleIndex() const {
     return modules_.empty() ? kInvalidIndex : modules_.size() - 1;
@@ -513,9 +512,9 @@ class Environment {
   }
 
   template <typename... Args>
-  ForeignObject* EmplaceBackForeign(Args&&... args) {
-    foreign_objects_.emplace_back(std::forward<Args>(args)...);
-    return &foreign_objects_.back();
+  HostObject* EmplaceBackHostObject(Args&&... args) {
+    host_objects_.emplace_back(std::forward<Args>(args)...);
+    return &host_objects_.back();
   }
 
   template <typename... Args>
@@ -554,7 +553,7 @@ class Environment {
   std::vector<Global> globals_;
   std::vector<DataSegment> data_segments_;
   std::vector<ElemSegment> elem_segments_;
-  std::vector<ForeignObject> foreign_objects_;
+  std::vector<HostObject> host_objects_;
   std::unique_ptr<OutputBuffer> istream_;
   BindingHash module_bindings_;
   BindingHash registered_module_bindings_;

@@ -170,11 +170,11 @@ Result TypeChecker::CheckTypeStackEnd(const char* desc) {
 
 static bool IsRefType(Type t) {
   return t == Type::Anyref || t == Type::Funcref || t == Type::Nullref ||
-         t == Type::Foreignref;
+         t == Type::Hostref;
 }
 
 static bool IsNullableRefType(Type t) {
-  return t == Type::Anyref || t == Type::Funcref || t == Type::Foreignref;
+  return t == Type::Anyref || t == Type::Funcref || t == Type::Hostref;
 }
 
 Result TypeChecker::CheckType(Type actual, Type expected) {
