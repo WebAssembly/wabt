@@ -803,16 +803,20 @@ Result Validator::OnTableInitExpr(TableInitExpr* expr) {
 }
 
 Result Validator::OnTableGetExpr(TableGetExpr* expr) {
+  const Table* table;
+  CheckTableVar(&expr->var, &table);
   expr_loc_ = &expr->loc;
   CheckHasTable(&expr->loc, Opcode::TableGet, expr->var.index());
-  typechecker_.OnTableGet(expr->var.index());
+  typechecker_.OnTableGet(table->elem_type);
   return Result::Ok;
 }
 
 Result Validator::OnTableSetExpr(TableSetExpr* expr) {
+  const Table* table;
+  CheckTableVar(&expr->var, &table);
   expr_loc_ = &expr->loc;
   CheckHasTable(&expr->loc, Opcode::TableSet, expr->var.index());
-  typechecker_.OnTableSet(expr->var.index());
+  typechecker_.OnTableSet(table->elem_type);
   return Result::Ok;
 }
 
