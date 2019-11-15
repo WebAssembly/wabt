@@ -711,7 +711,7 @@ Result TypeChecker::OnSelect() {
   result |= PeekAndCheckType(0, Type::I32);
   result |= PeekType(1, &type);
   result |= PeekAndCheckType(2, type);
-  PrintStackIfFailed(result, "select", Type::I32, type, type);
+  PrintStackIfFailed(result, "select", type, type, Type::I32);
   result |= DropTypes(3);
   PushType(type);
   return result;

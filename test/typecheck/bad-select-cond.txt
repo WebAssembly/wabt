@@ -1,13 +1,13 @@
 ;;; TOOL: wat2wasm
 ;;; ERROR: 1
 (module
-  (func (result i32)
+  (func (result i64)
+    i64.const 0
+    i64.const 0
     f32.const 0
-    i32.const 0
-    i32.const 0
     select))
 (;; STDERR ;;;
-out/test/typecheck/bad-select-cond.txt:8:5: error: type mismatch in select, expected [i32, i32, i32] but got [f32, i32, i32]
+out/test/typecheck/bad-select-cond.txt:8:5: error: type mismatch in select, expected [i64, i64, i32] but got [i64, i64, f32]
     select))
     ^^^^^^
 ;;; STDERR ;;)

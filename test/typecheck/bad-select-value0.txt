@@ -8,7 +8,7 @@
     select
     drop))
 (;; STDERR ;;;
-out/test/typecheck/bad-select-value0.txt:8:5: error: type mismatch in select, expected [i32, f64, f64] but got [i32, f64, f32]
+out/test/typecheck/bad-select-value0.txt:8:5: error: type mismatch in select, expected [f64, f64, i32] but got [i32, f64, f32]
     select
     ^^^^^^
 ;;; STDERR ;;)
