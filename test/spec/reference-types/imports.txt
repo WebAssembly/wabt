@@ -1,0 +1,275 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/imports.wast
+;;; ARGS*: --enable-reference-types
+(;; STDOUT ;;;
+called host spectest.print_i32(i32:13) =>
+called host spectest.print_i32_f32(i32:14, f32:42.000000) =>
+called host spectest.print_i32(i32:13) =>
+called host spectest.print_i32(i32:13) =>
+called host spectest.print_f32(f32:13.000000) =>
+called host spectest.print_i32(i32:13) =>
+called host spectest.print_f64_f64(f64:25.000000, f64:53.000000) =>
+called host spectest.print_f64(f64:24.000000) =>
+called host spectest.print_f64(f64:24.000000) =>
+called host spectest.print_f64(f64:24.000000) =>
+out/test/spec/reference-types/imports.wast:92: assert_invalid passed:
+  000001e: error: invalid import signature index
+out/test/spec/reference-types/imports.wast:108: assert_unlinkable passed:
+  error: unknown module field "unknown"
+  0000020: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:112: assert_unlinkable passed:
+  error: unknown module field "unknown"
+  0000024: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:117: assert_unlinkable passed:
+  error: import signature mismatch
+  000001e: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:121: assert_unlinkable passed:
+  error: import signature mismatch
+  000001e: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:125: assert_unlinkable passed:
+  error: import signature mismatch
+  000001f: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:129: assert_unlinkable passed:
+  error: import signature mismatch
+  0000021: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:133: assert_unlinkable passed:
+  error: import signature mismatch
+  0000022: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:137: assert_unlinkable passed:
+  error: import signature mismatch
+  0000022: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:141: assert_unlinkable passed:
+  error: import signature mismatch
+  0000022: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:145: assert_unlinkable passed:
+  error: import signature mismatch
+  0000023: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:149: assert_unlinkable passed:
+  error: import signature mismatch
+  0000022: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:153: assert_unlinkable passed:
+  error: import signature mismatch
+  0000023: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:157: assert_unlinkable passed:
+  error: import signature mismatch
+  0000023: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:161: assert_unlinkable passed:
+  error: import signature mismatch
+  0000023: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:165: assert_unlinkable passed:
+  error: import signature mismatch
+  0000024: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:169: assert_unlinkable passed:
+  error: import signature mismatch
+  0000026: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:173: assert_unlinkable passed:
+  error: import signature mismatch
+  0000027: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:177: assert_unlinkable passed:
+  error: import signature mismatch
+  0000027: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:182: assert_unlinkable passed:
+  error: expected import "test.global-i32" to have kind func, not global
+  0000024: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:186: assert_unlinkable passed:
+  error: expected import "test.table-10-inf" to have kind func, not table
+  0000025: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:190: assert_unlinkable passed:
+  error: expected import "test.memory-2-inf" to have kind func, not memory
+  0000025: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:194: assert_unlinkable passed:
+  error: expected import "spectest.global_i32" to have kind func, not global
+  0000027: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:198: assert_unlinkable passed:
+  error: expected import "spectest.table" to have kind func, not table
+  0000022: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:202: assert_unlinkable passed:
+  error: expected import "spectest.memory" to have kind func, not memory
+  0000023: error: OnImportFunc callback failed
+out/test/spec/reference-types/imports.wast:236: assert_unlinkable passed:
+  error: unknown module field "unknown"
+  000001b: error: OnImportGlobal callback failed
+out/test/spec/reference-types/imports.wast:240: assert_unlinkable passed:
+  error: unknown module field "unknown"
+  000001f: error: OnImportGlobal callback failed
+out/test/spec/reference-types/imports.wast:245: assert_unlinkable passed:
+  error: expected import "test.func" to have kind global, not func
+  0000018: error: OnImportGlobal callback failed
+out/test/spec/reference-types/imports.wast:249: assert_unlinkable passed:
+  error: expected import "test.table-10-inf" to have kind global, not table
+  0000020: error: OnImportGlobal callback failed
+out/test/spec/reference-types/imports.wast:253: assert_unlinkable passed:
+  error: expected import "test.memory-2-inf" to have kind global, not memory
+  0000020: error: OnImportGlobal callback failed
+out/test/spec/reference-types/imports.wast:257: assert_unlinkable passed:
+  error: expected import "spectest.print_i32" to have kind global, not func
+  0000021: error: OnImportGlobal callback failed
+out/test/spec/reference-types/imports.wast:261: assert_unlinkable passed:
+  error: expected import "spectest.table" to have kind global, not table
+  000001d: error: OnImportGlobal callback failed
+out/test/spec/reference-types/imports.wast:265: assert_unlinkable passed:
+  error: expected import "spectest.memory" to have kind global, not memory
+  000001e: error: OnImportGlobal callback failed
+out/test/spec/reference-types/imports.wast:284: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/imports.wast:287: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/imports.wast:288: assert_trap passed: undefined table index
+out/test/spec/reference-types/imports.wast:303: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/imports.wast:306: assert_trap passed: uninitialized table element
+out/test/spec/reference-types/imports.wast:307: assert_trap passed: undefined table index
+out/test/spec/reference-types/imports.wast:339: assert_unlinkable passed:
+  error: unknown module field "unknown"
+  000001c: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:343: assert_unlinkable passed:
+  error: unknown module field "unknown"
+  0000020: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:348: assert_unlinkable passed:
+  error: actual size (10) smaller than declared (12)
+  0000021: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:352: assert_unlinkable passed:
+  error: max size (unspecified) larger than declared (20)
+  0000022: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:356: assert_unlinkable passed:
+  error: actual size (10) smaller than declared (12)
+  0000021: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:360: assert_unlinkable passed:
+  error: max size (20) larger than declared (18)
+  0000021: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:364: assert_unlinkable passed:
+  error: actual size (10) smaller than declared (12)
+  000001e: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:368: assert_unlinkable passed:
+  error: max size (20) larger than declared (15)
+  000001f: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:373: assert_unlinkable passed:
+  error: expected import "test.func" to have kind table, not func
+  0000019: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:377: assert_unlinkable passed:
+  error: expected import "test.global-i32" to have kind table, not global
+  000001f: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:381: assert_unlinkable passed:
+  error: expected import "test.memory-2-inf" to have kind table, not memory
+  0000021: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:385: assert_unlinkable passed:
+  error: expected import "spectest.print_i32" to have kind table, not func
+  0000022: error: OnImportTable callback failed
+out/test/spec/reference-types/imports.wast:403: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
+out/test/spec/reference-types/imports.wast:414: assert_trap passed: out of bounds memory access: access at 1000000+4 >= max value 65536
+out/test/spec/reference-types/imports.wast:417: assert_invalid passed:
+  error: unknown import module ""
+  0000010: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:421: assert_invalid passed:
+  error: unknown import module ""
+  0000010: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:425: assert_invalid passed:
+  000000b: error: memory count must be 0 or 1
+out/test/spec/reference-types/imports.wast:440: assert_unlinkable passed:
+  error: unknown module field "unknown"
+  000001b: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:444: assert_unlinkable passed:
+  error: unknown module field "unknown"
+  000001f: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:449: assert_unlinkable passed:
+  error: actual size (2) smaller than declared (3)
+  0000020: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:453: assert_unlinkable passed:
+  error: max size (unspecified) larger than declared (3)
+  0000021: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:457: assert_unlinkable passed:
+  error: actual size (1) smaller than declared (2)
+  000001e: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:461: assert_unlinkable passed:
+  error: max size (2) larger than declared (1)
+  000001f: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:466: assert_unlinkable passed:
+  error: expected import "test.func-i32" to have kind memory, not func
+  000001c: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:470: assert_unlinkable passed:
+  error: expected import "test.global-i32" to have kind memory, not global
+  000001e: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:474: assert_unlinkable passed:
+  error: expected import "test.table-10-inf" to have kind memory, not table
+  0000020: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:478: assert_unlinkable passed:
+  error: expected import "spectest.print_i32" to have kind memory, not func
+  0000021: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:482: assert_unlinkable passed:
+  error: expected import "spectest.global_i32" to have kind memory, not global
+  0000022: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:486: assert_unlinkable passed:
+  error: expected import "spectest.table" to have kind memory, not table
+  000001d: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:491: assert_unlinkable passed:
+  error: actual size (1) smaller than declared (2)
+  000001e: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:495: assert_unlinkable passed:
+  error: max size (2) larger than declared (1)
+  000001f: error: OnImportMemory callback failed
+out/test/spec/reference-types/imports.wast:513: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.109.wat:1:9: error: imports must occur before all non-import definitions
+  (func) (import "" "" (func))
+          ^^^^^^
+out/test/spec/reference-types/imports.wast:517: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.110.wat:1:9: error: imports must occur before all non-import definitions
+  (func) (import "" "" (global i64))
+          ^^^^^^
+out/test/spec/reference-types/imports.wast:521: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.111.wat:1:9: error: imports must occur before all non-import definitions
+  (func) (import "" "" (table 0 funcref))
+          ^^^^^^
+out/test/spec/reference-types/imports.wast:525: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.112.wat:1:9: error: imports must occur before all non-import definitions
+  (func) (import "" "" (memory 0))
+          ^^^^^^
+out/test/spec/reference-types/imports.wast:530: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.113.wat:1:29: error: imports must occur before all non-import definitions
+  (global i64 (i64.const 0)) (import "" "" (func))
+                              ^^^^^^
+out/test/spec/reference-types/imports.wast:534: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.114.wat:1:29: error: imports must occur before all non-import definitions
+  (global i64 (i64.const 0)) (import "" "" (global f32))
+                              ^^^^^^
+out/test/spec/reference-types/imports.wast:538: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.115.wat:1:29: error: imports must occur before all non-import definitions
+  (global i64 (i64.const 0)) (import "" "" (table 0 funcref))
+                              ^^^^^^
+out/test/spec/reference-types/imports.wast:542: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.116.wat:1:29: error: imports must occur before all non-import definitions
+  (global i64 (i64.const 0)) (import "" "" (memory 0))
+                              ^^^^^^
+out/test/spec/reference-types/imports.wast:547: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.117.wat:1:20: error: imports must occur before all non-import definitions
+  (table 0 funcref) (import "" "" (func))
+                     ^^^^^^
+out/test/spec/reference-types/imports.wast:551: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.118.wat:1:20: error: imports must occur before all non-import definitions
+  (table 0 funcref) (import "" "" (global i32))
+                     ^^^^^^
+out/test/spec/reference-types/imports.wast:555: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.119.wat:1:20: error: imports must occur before all non-import definitions
+  (table 0 funcref) (import "" "" (table 0 funcref))
+                     ^^^^^^
+out/test/spec/reference-types/imports.wast:559: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.120.wat:1:20: error: imports must occur before all non-import definitions
+  (table 0 funcref) (import "" "" (memory 0))
+                     ^^^^^^
+out/test/spec/reference-types/imports.wast:564: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.121.wat:1:13: error: imports must occur before all non-import definitions
+  (memory 0) (import "" "" (func))
+              ^^^^^^
+out/test/spec/reference-types/imports.wast:568: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.122.wat:1:13: error: imports must occur before all non-import definitions
+  (memory 0) (import "" "" (global i32))
+              ^^^^^^
+out/test/spec/reference-types/imports.wast:572: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.123.wat:1:13: error: imports must occur before all non-import definitions
+  (memory 0) (import "" "" (table 1 3 funcref))
+              ^^^^^^
+out/test/spec/reference-types/imports.wast:576: assert_malformed passed:
+  out/test/spec/reference-types/imports/imports.124.wat:1:13: error: imports must occur before all non-import definitions
+  (memory 0) (import "" "" (memory 1 2))
+              ^^^^^^
+out/test/spec/reference-types/imports.wast:586: assert_unlinkable passed:
+  error: unknown module field "overloaded"
+  000004d: error: OnImportFunc callback failed
+108/108 tests passed.
+;;; STDOUT ;;)

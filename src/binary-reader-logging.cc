@@ -783,6 +783,7 @@ DEFINE_END(EndRelocSection)
 
 DEFINE_INDEX_INDEX(OnInitExprGlobalGetExpr, "index", "global_index")
 DEFINE_INDEX(OnInitExprRefNull)
+DEFINE_INDEX_INDEX(OnInitExprRefFunc, "index", "func_index")
 
 DEFINE_BEGIN(BeginDylinkSection)
 DEFINE_INDEX(OnDylinkNeededCount)

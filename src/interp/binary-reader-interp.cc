@@ -47,6 +47,11 @@ struct Label {
   IstreamOffset fixup_offset;
 };
 
+struct GlobalType {
+  Type type;
+  bool mutable_;
+};
+
 Label::Label(IstreamOffset offset, IstreamOffset fixup_offset)
     : offset(offset), fixup_offset(fixup_offset) {}
 
@@ -189,6 +194,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnTableCopyExpr(Index dst_index, Index src_index) override;
   wabt::Result OnTableGetExpr(Index table_index) override;
   wabt::Result OnTableSetExpr(Index table_index) override;
+  wabt::Result OnTableGrowExpr(Index table_index) override;
+  wabt::Result OnTableSizeExpr(Index table_index) override;
   wabt::Result OnElemDropExpr(Index segment_index) override;
   wabt::Result OnTableInitExpr(Index segment_index, Index table_index) override;
   wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
@@ -229,6 +236,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   wabt::Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
   wabt::Result OnInitExprRefNull(Index index) override;
+  wabt::Result OnInitExprRefFunc(Index index, Index func_index) override;
 
  private:
   Label* GetLabel(Index depth);
@@ -291,6 +299,8 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   wabt::Result CheckLocal(Index local_index);
   wabt::Result CheckGlobal(Index global_index);
+  wabt::Result CheckGlobalType(GlobalType actual,
+                               GlobalType expected);
   wabt::Result CheckDataSegment(Index data_segment_index);
   wabt::Result CheckElemSegment(Index elem_segment_index);
   wabt::Result CheckImportKind(string_view module,
@@ -815,6 +825,12 @@ wabt::Result BinaryReaderInterp::OnImportTable(Index import_index,
   CHECK_RESULT(CheckImportKind(module_name, field_name, ExternalKind::Table, export_->kind));
 
   Table* table = env_->GetTable(export_->index);
+  if (elem_type != table->elem_type) {
+    PrintError("type mismatch in imported table, expected %s but got %s.",
+               GetTypeName(elem_type), GetTypeName(table->elem_type));
+    return wabt::Result::Error;
+  }
+
   CHECK_RESULT(CheckImportLimits(elem_limits, &table->limits));
 
   table_index_mapping_.push_back(export_->index);
@@ -845,6 +861,27 @@ wabt::Result BinaryReaderInterp::OnImportMemory(Index import_index,
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::CheckGlobalType(GlobalType actual,
+                                                 GlobalType expected) {
+  if (actual.mutable_ != expected.mutable_) {
+    const char* kMutableNames[] = {"immutable", "mutable"};
+    PrintError(
+        "mutability mismatch in imported global, expected %s but got %s.",
+        kMutableNames[actual.mutable_], kMutableNames[expected.mutable_]);
+    return wabt::Result::Error;
+  }
+
+  if (actual.type == expected.type ||
+      (!expected.mutable_ &&
+       Succeeded(typechecker_.CheckType(actual.type, expected.type)))) {
+    return wabt::Result::Ok;
+  }
+
+  PrintError("type mismatch in imported global, expected %s but got %s.",
+             GetTypeName(expected.type), GetTypeName(actual.type));
+  return wabt::Result::Error;
+}
+
 wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
                                                 string_view module_name,
                                                 string_view field_name,
@@ -856,21 +893,14 @@ wabt::Result BinaryReaderInterp::OnImportGlobal(Index import_index,
 
   Export* export_;
   CHECK_RESULT(GetModuleExport(import_module, field_name, &export_));
-  CHECK_RESULT(CheckImportKind(module_name, field_name, ExternalKind::Global, export_->kind));
+  CHECK_RESULT(CheckImportKind(module_name, field_name, ExternalKind::Global,
+                               export_->kind));
 
   Global* exported_global = env_->GetGlobal(export_->index);
-  if (Failed(typechecker_.CheckType(type, exported_global->typed_value.type))) {
-    PrintError("type mismatch in imported global, expected %s but got %s.",
-               GetTypeName(exported_global->typed_value.type),
-               GetTypeName(type));
-    return wabt::Result::Error;
-  }
+  GlobalType expected = {type, mutable_};
+  GlobalType actual = {exported_global->type, exported_global->mutable_};
 
-  if (exported_global->mutable_ != mutable_) {
-    const char* kMutableNames[] = {"immutable", "mutable"};
-    PrintError(
-        "mutability mismatch in imported global, expected %s but got %s.",
-        kMutableNames[exported_global->mutable_], kMutableNames[mutable_]);
+  if (Failed(CheckGlobalType(actual, expected))) {
     return wabt::Result::Error;
   }
 
@@ -996,6 +1026,12 @@ wabt::Result BinaryReaderInterp::OnInitExprI64ConstExpr(Index index,
 wabt::Result BinaryReaderInterp::OnInitExprRefNull(Index index) {
   init_expr_value_.type = Type::Nullref;
   init_expr_value_.set_ref({RefType::Null, kInvalidIndex});
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnInitExprRefFunc(Index index, Index func_index) {
+  init_expr_value_.type = Type::Funcref;
+  init_expr_value_.set_ref({RefType::Func, TranslateFuncIndexToEnv(func_index)});
   return wabt::Result::Ok;
 }
 
@@ -1724,10 +1760,25 @@ wabt::Result BinaryReaderInterp::OnMemorySizeExpr() {
   return wabt::Result::Ok;
 }
 
+wabt::Result BinaryReaderInterp::OnTableGrowExpr(Index table_index) {
+  Table* table = GetTableByModuleIndex(table_index);
+  CHECK_RESULT(typechecker_.OnTableGrow(table->elem_type));
+  CHECK_RESULT(EmitOpcode(Opcode::TableGrow));
+  CHECK_RESULT(EmitI32(TranslateTableIndexToEnv(table_index)));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnTableSizeExpr(Index table_index) {
+  CHECK_RESULT(typechecker_.OnTableSize());
+  CHECK_RESULT(EmitOpcode(Opcode::TableSize));
+  CHECK_RESULT(EmitI32(TranslateTableIndexToEnv(table_index)));
+  return wabt::Result::Ok;
+}
+
 wabt::Result BinaryReaderInterp::OnRefFuncExpr(Index func_index) {
   CHECK_RESULT(typechecker_.OnRefFuncExpr(func_index));
   CHECK_RESULT(EmitOpcode(Opcode::RefFunc));
-  CHECK_RESULT(EmitI32(func_index));
+  CHECK_RESULT(EmitI32(TranslateFuncIndexToEnv(func_index)));
   return wabt::Result::Ok;
 }
 

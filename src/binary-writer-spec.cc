@@ -203,9 +203,23 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
     }
 
     case Type::Nullref:
-    case Type::Funcref:
-    case Type::Anyref: {
-      WriteString("ref");
+      WriteString("nullref");
+      WriteSeparator();
+      WriteKey("value");
+      json_stream_->Writef("\"0\"");
+      break;
+
+    case Type::Funcref: {
+      WriteString("funcref");
+      WriteSeparator();
+      WriteKey("value");
+      int64_t ref_bits = static_cast<int64_t>(const_.ref_bits);
+      json_stream_->Writef("\"%" PRIu64 "\"", ref_bits);
+      break;
+    }
+
+    case Type::Hostref: {
+      WriteString("hostref");
       WriteSeparator();
       WriteKey("value");
       int64_t ref_bits = static_cast<int64_t>(const_.ref_bits);
@@ -224,7 +238,7 @@ void BinaryWriterSpec::WriteConst(const Const& const_) {
     }
 
     default:
-      assert(0);
+      WABT_UNREACHABLE;
   }
 
   json_stream_->Writef("}");

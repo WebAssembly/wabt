@@ -376,6 +376,16 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
 
 /* type */
 
+static WABT_INLINE bool IsRefType(Type t) {
+  return t == Type::Anyref || t == Type::Funcref || t == Type::Nullref ||
+         t == Type::Hostref;
+}
+
+static WABT_INLINE bool IsNullableRefType(Type t) {
+  /* Currently all reftypes are nullable */
+  return IsRefType(t);
+}
+
 static WABT_INLINE const char* GetTypeName(Type type) {
   switch (type) {
     case Type::I32:

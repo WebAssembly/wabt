@@ -586,13 +586,28 @@ void Environment::Disassemble(Stream* stream,
       }
 
       case Opcode::TableGet:
+        stream->Writef("%s %u %%[-1]\n", opcode.GetName(), ReadU32(&pc));
+        break;
+
       case Opcode::TableSet:
+        stream->Writef("%s $%u %%[-1] %%[-2]\n", opcode.GetName(), ReadU32(&pc));
+        break;
+
       case Opcode::TableGrow:
       case Opcode::TableSize:
+        stream->Writef("%s %u\n", opcode.GetName(), ReadU32(&pc));
+        break;
+
       case Opcode::RefNull:
-      case Opcode::RefIsNull:
+        stream->Writef("%s\n", opcode.GetName());
+        break;
+
       case Opcode::RefFunc:
-        WABT_UNREACHABLE;
+        stream->Writef("%s $%u\n", opcode.GetName(), ReadU32(&pc));
+        break;
+
+      case Opcode::RefIsNull:
+        stream->Writef("%s %%[-1]\n", opcode.GetName());
         break;
 
       case Opcode::MemoryInit:
@@ -634,6 +649,7 @@ void Environment::Disassemble(Stream* stream,
       case Opcode::Rethrow:
       case Opcode::Throw:
       case Opcode::Try:
+        fprintf(stderr, "unknown opcode: %#x\n", static_cast<uint32_t>(opcode));
         WABT_UNREACHABLE;
         break;
     }

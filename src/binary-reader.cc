@@ -497,6 +497,13 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
       CALLBACK(OnInitExprRefNull, index);
       break;
 
+    case Opcode::RefFunc: {
+      Index func_index;
+      CHECK_RESULT(ReadIndex(&func_index, "init_expr ref.func index"));
+      CALLBACK(OnInitExprRefFunc, index, func_index);
+      break;
+    }
+
     case Opcode::End:
       return Result::Ok;
 

@@ -104,8 +104,8 @@ class TypeChecker {
   Result OnTableInit(Index, Index);
   Result OnTableGet(Type elem_type);
   Result OnTableSet(Type elem_type);
-  Result OnTableGrow(Index table_index);
-  Result OnTableSize(Index table_index);
+  Result OnTableGrow(Type elem_type);
+  Result OnTableSize();
   Result OnRefFuncExpr(Index func_index);
   Result OnRefNullExpr();
   Result OnRefIsNullExpr();

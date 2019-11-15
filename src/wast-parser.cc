@@ -672,6 +672,9 @@ Result WastParser::ParseValueType(Type* out_type) {
       is_enabled = options_->features.simd_enabled();
       break;
     case Type::Anyref:
+    case Type::Funcref:
+    case Type::Hostref:
+    case Type::Exnref:
       is_enabled = options_->features.reference_types_enabled();
       break;
     default:
@@ -949,24 +952,33 @@ Result WastParser::ParseElemModuleField(Module* module) {
   // since there was only one table anyway.
   // With bulk-memory enabled this introduces a new name for the particualr
   // elem segment.
-  std::string segment_name;
-  ParseBindVarOpt(&segment_name);
+  std::string initial_name;
+  bool has_name = ParseBindVarOpt(&initial_name);
+
+  std::string segment_name = initial_name;
   if (!options_->features.bulk_memory_enabled()) {
     segment_name = "";
   }
-
   auto field = MakeUnique<ElemSegmentModuleField>(loc, segment_name);
 
   // Optional table specifier
-  if (options_->features.bulk_memory_enabled() &&
-      PeekMatchLpar(TokenType::Table)) {
-    field->elem_segment.flags |= SegExplicitIndex;
-    EXPECT(Lpar);
-    EXPECT(Table);
-    CHECK_RESULT(ParseVar(&field->elem_segment.table_var));
-    EXPECT(Rpar);
+  if (options_->features.bulk_memory_enabled()) {
+    if (PeekMatchLpar(TokenType::Table)) {
+      field->elem_segment.flags |= SegExplicitIndex;
+      EXPECT(Lpar);
+      EXPECT(Table);
+      CHECK_RESULT(ParseVar(&field->elem_segment.table_var));
+      EXPECT(Rpar);
+    } else {
+      ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
+    }
   } else {
-    ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
+    if (has_name) {
+      field->elem_segment.table_var = Var(initial_name, loc);
+      field->elem_segment.flags |= SegExplicitIndex;
+    } else {
+      ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
+    }
   }
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
@@ -2081,7 +2093,7 @@ Result WastParser::ParseHostRef(Const* const_) {
   uint64_t ref_bits;
   Result result = ParseInt64(s, end, &ref_bits, ParseIntType::UnsignedOnly);
 
-  const_->type = ref_bits ? Type::Anyref : Type::Nullref;
+  const_->type = Type::Hostref;
   const_->ref_bits = static_cast<uintptr_t>(ref_bits);
 
   if (Failed(result)) {

@@ -20,6 +20,7 @@
     i32.const 3
     call $fib))
 (;; STDOUT ;;;
+>>> initializing segments
 >>> running export "main":
 #0.  100: V:0  | i32.const 3
 #0.  108: V:1  | call @0
