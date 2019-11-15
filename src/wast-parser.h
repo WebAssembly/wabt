@@ -186,6 +186,7 @@ class WastParser {
   Result ParseAssertInvalidCommand(CommandPtr*);
   Result ParseAssertMalformedCommand(CommandPtr*);
   Result ParseAssertReturnCommand(CommandPtr*);
+  Result ParseAssertReturnFuncCommand(CommandPtr*);
   Result ParseAssertReturnArithmeticNanCommand(CommandPtr*);
   Result ParseAssertReturnCanonicalNanCommand(CommandPtr*);
   Result ParseAssertTrapCommand(CommandPtr*);

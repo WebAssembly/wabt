@@ -1511,6 +1511,13 @@ void Validator::CheckCommand(const Command* command) {
       // Ignore.
       break;
 
+    case CommandType::AssertReturnFunc: {
+      auto* cmd = cast<AssertReturnFuncCommand>(command);
+      const Action* action = cmd->action.get();
+      CheckAction(action);
+      break;
+    }
+
     case CommandType::AssertReturn: {
       auto* assert_return_command = cast<AssertReturnCommand>(command);
       const Action* action = assert_return_command->action.get();

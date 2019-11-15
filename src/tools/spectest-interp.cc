@@ -167,6 +167,12 @@ class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
   TypedValues expected;
 };
 
+class AssertReturnFuncCommand
+    : public CommandMixin<CommandType::AssertReturnFunc> {
+ public:
+  Action action;
+};
+
 template <CommandType TypeEnum>
 class AssertTrapCommandBase : public CommandMixin<TypeEnum> {
  public:
@@ -447,6 +453,12 @@ wabt::Result JSONParser::ParseTypeObject(Type* out_type) {
   } else if (type_str == "v128") {
     *out_type = Type::V128;
     return wabt::Result::Ok;
+  } else if (type_str == "funcref") {
+    *out_type = Type::Funcref;
+    return wabt::Result::Ok;
+  } else if (type_str == "anyref") {
+    *out_type = Type::Anyref;
+    return wabt::Result::Ok;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
@@ -515,8 +527,26 @@ wabt::Result JSONParser::ParseConst(TypedValue* out_value) {
     out_value->type = Type::V128;
     out_value->value.vec128 = value_bits;
     return wabt::Result::Ok;
+  } else if (type_str == "nullref") {
+    out_value->type = Type::Nullref;
+    out_value->value.ref = {RefType::Null, 0};
+    return wabt::Result::Ok;
+  } else if (type_str == "hostref") {
+    uint32_t value;
+    CHECK_RESULT(
+        ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly));
+    out_value->type = Type::Hostref;
+    out_value->value.ref = {RefType::Host, value};
+    return wabt::Result::Ok;
+  } else if (type_str == "funcref") {
+    uint32_t value;
+    CHECK_RESULT(
+        ParseInt32(value_start, value_end, &value, ParseIntType::UnsignedOnly));
+    out_value->type = Type::Funcref;
+    out_value->value.ref = {RefType::Func, value};
+    return wabt::Result::Ok;
   } else {
-    PrintError("unknown type: \"%s\"", type_str.c_str());
+    PrintError("unknown concrete type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;
   }
 }
@@ -711,6 +741,13 @@ wabt::Result JSONParser::ParseCommand(CommandPtr* out_command) {
     EXPECT_KEY("expected");
     CHECK_RESULT(ParseConstVector(&command->expected));
     *out_command = std::move(command);
+  } else if (Match("\"assert_return_func\"")) {
+    auto command = MakeUnique<AssertReturnFuncCommand>();
+    EXPECT(",");
+    CHECK_RESULT(ParseLine(&command->line));
+    EXPECT(",");
+    CHECK_RESULT(ParseAction(&command->action));
+    *out_command = std::move(command);
   } else if (Match("\"assert_return_canonical_nan\"")) {
     auto command = MakeUnique<AssertReturnCanonicalNanCommand>();
     EXPECT(",");
@@ -804,6 +841,7 @@ class CommandRunner {
   wabt::Result OnAssertUninstantiableCommand(
       const AssertUninstantiableCommand*);
   wabt::Result OnAssertReturnCommand(const AssertReturnCommand*);
+  wabt::Result OnAssertReturnFuncCommand(const AssertReturnFuncCommand*);
   template <typename NanCommand>
   wabt::Result OnAssertReturnNanCommand(const NanCommand*);
   wabt::Result OnAssertTrapCommand(const AssertTrapCommand*);
@@ -906,6 +944,11 @@ wabt::Result CommandRunner::Run(const Script& script) {
             OnAssertReturnCommand(cast<AssertReturnCommand>(command.get())));
         break;
 
+      case CommandType::AssertReturnFunc:
+        TallyCommand(
+            OnAssertReturnFuncCommand(cast<AssertReturnFuncCommand>(command.get())));
+        break;
+
       case CommandType::AssertReturnCanonicalNan:
         TallyCommand(OnAssertReturnNanCommand(
             cast<AssertReturnCanonicalNanCommand>(command.get())));
@@ -941,6 +984,7 @@ static ExecResult GetGlobalExportByName(Environment* env,
                                         string_view name) {
   interp::Export* export_ = module->GetExport(name);
   if (!export_) {
+    printf("xxx\n");
     return ExecResult(interp::Result::UnknownExport);
   }
   if (export_->kind != ExternalKind::Global) {
@@ -1221,9 +1265,44 @@ static bool TypedValuesAreEqual(const TypedValue& tv1, const TypedValue& tv2) {
       return tv1.value.f64_bits == tv2.value.f64_bits;
     case Type::V128:
       return tv1.value.vec128 == tv2.value.vec128;
+    case Type::Nullref:
+      return true;
+    case Type::Funcref:
+      return tv1.value.ref.index == tv2.value.ref.index;
+    case Type::Hostref:
+      return tv1.value.ref.index == tv2.value.ref.index;
     default:
       WABT_UNREACHABLE;
   }
+}
+
+wabt::Result CommandRunner::OnAssertReturnFuncCommand(
+    const AssertReturnFuncCommand* command) {
+  ExecResult exec_result =
+      RunAction(command->line, &command->action, RunVerbosity::Quiet);
+
+  if (exec_result.result != interp::Result::Ok) {
+    PrintError(command->line, "unexpected trap: %s",
+               ResultToString(exec_result.result));
+    return wabt::Result::Error;
+  }
+
+  if (exec_result.values.size() != 1) {
+    PrintError(command->line,
+               "expected 1 result in assert_return_func, got %" PRIzd,
+               exec_result.values.size());
+    return wabt::Result::Error;
+  }
+
+  const TypedValue& result = exec_result.values[0];
+  if (result.type != Type::Funcref) {
+    PrintError(command->line,
+               "mismatch in result of assert_return_func: expected %s, got %s",
+               GetTypeName(Type::Funcref), TypedValueToString(result).c_str());
+    return wabt::Result::Error;
+  }
+
+  return wabt::Result::Ok;
 }
 
 wabt::Result CommandRunner::OnAssertReturnCommand(

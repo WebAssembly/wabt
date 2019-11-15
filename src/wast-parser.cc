@@ -220,6 +220,7 @@ bool IsCommand(TokenTypePair pair) {
     case TokenType::AssertInvalid:
     case TokenType::AssertMalformed:
     case TokenType::AssertReturn:
+    case TokenType::AssertReturnFunc:
     case TokenType::AssertReturnArithmeticNan:
     case TokenType::AssertReturnCanonicalNan:
     case TokenType::AssertTrap:
@@ -2383,6 +2384,9 @@ Result WastParser::ParseCommand(Script* script, CommandPtr* out_command) {
     case TokenType::AssertReturn:
       return ParseAssertReturnCommand(out_command);
 
+    case TokenType::AssertReturnFunc:
+      return ParseAssertReturnFuncCommand(out_command);
+
     case TokenType::AssertReturnArithmeticNan:
       return ParseAssertReturnArithmeticNanCommand(out_command);
 
@@ -2436,6 +2440,17 @@ Result WastParser::ParseAssertReturnCommand(CommandPtr* out_command) {
   auto command = MakeUnique<AssertReturnCommand>();
   CHECK_RESULT(ParseAction(&command->action));
   CHECK_RESULT(ParseConstList(&command->expected));
+  EXPECT(Rpar);
+  *out_command = std::move(command);
+  return Result::Ok;
+}
+
+Result WastParser::ParseAssertReturnFuncCommand(CommandPtr* out_command) {
+  WABT_TRACE(ParseAssertReturnFuncCommand);
+  EXPECT(Lpar);
+  EXPECT(AssertReturnFunc);
+  auto command = MakeUnique<AssertReturnFuncCommand>();
+  CHECK_RESULT(ParseAction(&command->action));
   EXPECT(Rpar);
   *out_command = std::move(command);
   return Result::Ok;
