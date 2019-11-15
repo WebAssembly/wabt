@@ -1034,6 +1034,7 @@ enum class CommandType {
   AssertUnlinkable,
   AssertUninstantiable,
   AssertReturn,
+  AssertReturnFunc,
   AssertReturnCanonicalNan,
   AssertReturnArithmeticNan,
   AssertTrap,
@@ -1093,6 +1094,12 @@ class AssertReturnCommand : public CommandMixin<CommandType::AssertReturn> {
  public:
   ActionPtr action;
   ConstVector expected;
+};
+
+class AssertReturnFuncCommand
+    : public CommandMixin<CommandType::AssertReturnFunc> {
+ public:
+  ActionPtr action;
 };
 
 template <CommandType TypeEnum>
