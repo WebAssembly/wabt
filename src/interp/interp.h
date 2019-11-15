@@ -103,12 +103,12 @@ struct FuncSignature {
 enum class RefType {
   Func,
   Null,
-  Host
+  Host,
 };
 
 struct Ref {
   RefType kind;
-  Index index;  // Only meaningful for RefType::FUNC
+  Index index;  // Not meaningful for RefType::Null
 };
 
 struct Table {
@@ -146,6 +146,9 @@ struct ElemSegment {
   bool dropped = false;
 };
 
+// Opaque handle to a host object.
+struct HostObject {};
+
 // ValueTypeRep converts from one type to its representation on the
 // stack. For example, float -> uint32_t. See Value below.
 template <typename T>
@@ -175,10 +178,32 @@ union Value {
 struct TypedValue {
   TypedValue() {}
   explicit TypedValue(Type type) : type(type) {}
-  TypedValue(Type type, const Value& value) : type(type), value(value) {}
+  TypedValue(Type basetype, const Value& value) : type(basetype), value(value) {
+    SetConcreteType();
+  }
+
+  void SetConcreteType() {
+    // Anyref is an abstract type. The actual type is stored in value.
+    if (type == Type::Anyref) {
+      switch (value.ref.kind) {
+        case RefType::Func:
+          type = Type::Funcref;
+          break;
+        case RefType::Null:
+          type = Type::Nullref;
+          break;
+        case RefType::Host:
+          type = Type::Hostref;
+          break;
+      }
+    }
+  }
 
   void SetZero() { ZeroMemory(value); }
-  void set_ref(Ref x) { value.ref = x; }
+  void set_ref(Ref x) {
+    value.ref = x;
+    SetConcreteType();
+  }
   void set_i32(uint32_t x) { value.i32 = x; }
   void set_i64(uint64_t x) { value.i64 = x; }
   void set_f32(float x) { memcpy(&value.f32_bits, &x, sizeof(x)); }
@@ -396,6 +421,7 @@ class Environment {
   Index GetDataSegmentCount() const { return data_segments_.size(); }
   Index GetElemSegmentCount() const { return elem_segments_.size(); }
   Index GetModuleCount() const { return modules_.size(); }
+  Index GetHostCount() const { return host_objects_.size(); }
 
   Index GetLastModuleIndex() const {
     return modules_.empty() ? kInvalidIndex : modules_.size() - 1;
@@ -487,6 +513,12 @@ class Environment {
   }
 
   template <typename... Args>
+  HostObject* EmplaceBackHostObject(Args&&... args) {
+    host_objects_.emplace_back(std::forward<Args>(args)...);
+    return &host_objects_.back();
+  }
+
+  template <typename... Args>
   void EmplaceModuleBinding(Args&&... args) {
     module_bindings_.emplace(std::forward<Args>(args)...);
   }
@@ -522,6 +554,7 @@ class Environment {
   std::vector<Global> globals_;
   std::vector<DataSegment> data_segments_;
   std::vector<ElemSegment> elem_segments_;
+  std::vector<HostObject> host_objects_;
   std::unique_ptr<OutputBuffer> istream_;
   BindingHash module_bindings_;
   BindingHash registered_module_bindings_;
@@ -691,6 +724,7 @@ bool IsCanonicalNan(uint64_t f64_bits);
 bool IsArithmeticNan(uint32_t f32_bits);
 bool IsArithmeticNan(uint64_t f64_bits);
 
+std::string RefTypeToString(RefType t);
 std::string TypedValueToString(const TypedValue&);
 const char* ResultToString(Result);
 
