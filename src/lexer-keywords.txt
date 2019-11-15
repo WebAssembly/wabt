@@ -464,6 +464,7 @@ table.grow, TokenType::TableGrow, Opcode::TableGrow
 table.init, TokenType::TableInit, Opcode::TableInit
 table.set, TokenType::TableSet, Opcode::TableSet
 table.size, TokenType::TableSize, Opcode::TableSize
+table.fill, TokenType::TableFill, Opcode::TableFill
 table, TokenType::Table
 then, TokenType::Then
 throw, TokenType::Throw, Opcode::Throw

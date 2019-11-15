@@ -77,6 +77,7 @@ const char* ExprTypeName[] = {
   "TableGrow",
   "TableSize",
   "TableSet",
+  "TableFill",
   "Ternary",
   "Throw",
   "Try",

@@ -196,6 +196,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnTableSetExpr(Index table_index) override;
   wabt::Result OnTableGrowExpr(Index table_index) override;
   wabt::Result OnTableSizeExpr(Index table_index) override;
+  wabt::Result OnTableFillExpr(Index table_index) override;
   wabt::Result OnElemDropExpr(Index segment_index) override;
   wabt::Result OnTableInitExpr(Index segment_index, Index table_index) override;
   wabt::Result OnTernaryExpr(wabt::Opcode opcode) override;
@@ -1771,6 +1772,14 @@ wabt::Result BinaryReaderInterp::OnTableGrowExpr(Index table_index) {
 wabt::Result BinaryReaderInterp::OnTableSizeExpr(Index table_index) {
   CHECK_RESULT(typechecker_.OnTableSize());
   CHECK_RESULT(EmitOpcode(Opcode::TableSize));
+  CHECK_RESULT(EmitI32(TranslateTableIndexToEnv(table_index)));
+  return wabt::Result::Ok;
+}
+
+wabt::Result BinaryReaderInterp::OnTableFillExpr(Index table_index) {
+  Table* table = GetTableByModuleIndex(table_index);
+  CHECK_RESULT(typechecker_.OnTableFill(table->elem_type));
+  CHECK_RESULT(EmitOpcode(Opcode::TableFill));
   CHECK_RESULT(EmitI32(TranslateTableIndexToEnv(table_index)));
   return wabt::Result::Ok;
 }

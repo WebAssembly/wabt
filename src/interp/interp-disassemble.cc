@@ -595,7 +595,11 @@ void Environment::Disassemble(Stream* stream,
 
       case Opcode::TableGrow:
       case Opcode::TableSize:
-        stream->Writef("%s %u\n", opcode.GetName(), ReadU32(&pc));
+        break;
+
+      case Opcode::TableFill:
+        stream->Writef("%s %u %%[-3], %%[-2], %%[-1]\n", opcode.GetName(),
+                       ReadU32(&pc));
         break;
 
       case Opcode::RefNull:

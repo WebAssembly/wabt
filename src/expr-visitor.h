@@ -101,6 +101,7 @@ class ExprVisitor::Delegate {
   virtual Result OnTableSetExpr(TableSetExpr*) = 0;
   virtual Result OnTableGrowExpr(TableGrowExpr*) = 0;
   virtual Result OnTableSizeExpr(TableSizeExpr*) = 0;
+  virtual Result OnTableFillExpr(TableFillExpr*) = 0;
   virtual Result OnRefFuncExpr(RefFuncExpr*) = 0;
   virtual Result OnRefNullExpr(RefNullExpr*) = 0;
   virtual Result OnRefIsNullExpr(RefIsNullExpr*) = 0;
@@ -168,6 +169,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnTableSetExpr(TableSetExpr*) override { return Result::Ok; }
   Result OnTableGrowExpr(TableGrowExpr*) override { return Result::Ok; }
   Result OnTableSizeExpr(TableSizeExpr*) override { return Result::Ok; }
+  Result OnTableFillExpr(TableFillExpr*) override { return Result::Ok; }
   Result OnRefFuncExpr(RefFuncExpr*) override { return Result::Ok; }
   Result OnRefNullExpr(RefNullExpr*) override { return Result::Ok; }
   Result OnRefIsNullExpr(RefIsNullExpr*) override { return Result::Ok; }

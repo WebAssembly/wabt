@@ -144,6 +144,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::TableSet:
     case TokenType::TableGrow:
     case TokenType::TableSize:
+    case TokenType::TableFill:
     case TokenType::Throw:
     case TokenType::Rethrow:
     case TokenType::RefFunc:
@@ -1742,6 +1743,11 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
     case TokenType::TableSize:
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<TableSizeExpr>(loc, out_expr));
+      break;
+
+    case TokenType::TableFill:
+      ErrorUnlessOpcodeEnabled(Consume());
+      CHECK_RESULT(ParsePlainInstrVar<TableFillExpr>(loc, out_expr));
       break;
 
     case TokenType::RefFunc:

@@ -80,6 +80,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnTableSetExpr(TableSetExpr*) override;
   Result OnTableGrowExpr(TableGrowExpr*) override;
   Result OnTableSizeExpr(TableSizeExpr*) override;
+  Result OnTableFillExpr(TableFillExpr*) override;
   Result OnRefFuncExpr(RefFuncExpr*) override;
   Result OnRefNullExpr(RefNullExpr*) override;
   Result OnRefIsNullExpr(RefIsNullExpr*) override;
@@ -819,6 +820,15 @@ Result Validator::OnTableSizeExpr(TableSizeExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasTable(&expr->loc, Opcode::TableSize, expr->var.index());
   typechecker_.OnTableSize();
+  return Result::Ok;
+}
+
+Result Validator::OnTableFillExpr(TableFillExpr* expr) {
+  const Table* table;
+  CheckTableVar(&expr->var, &table);
+  expr_loc_ = &expr->loc;
+  CheckHasTable(&expr->loc, Opcode::TableFill, expr->var.index());
+  typechecker_.OnTableFill(table->elem_type);
   return Result::Ok;
 }
 

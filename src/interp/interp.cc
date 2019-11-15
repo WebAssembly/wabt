@@ -1129,6 +1129,20 @@ Result Thread::TableGet(const uint8_t** pc) {
   return Push(table->entries[index]);
 }
 
+Result Thread::TableFill(const uint8_t** pc) {
+  Table* table = ReadTable(pc);
+  uint32_t table_size = table->size();
+  uint32_t size = Pop<uint32_t>();
+  Ref value = static_cast<Ref>(Pop<Ref>());
+  uint32_t dst = Pop<uint32_t>();
+  bool ok = ClampToBounds(dst, &size, table_size);
+  for (uint32_t i = 0; i < size; i++) {
+    table->entries[dst+i] = value;
+  }
+  TRAP_IF(!ok, MemoryAccessOutOfBounds);
+  return ResultType::Ok;
+}
+
 Result Thread::ElemDrop(const uint8_t** pc) {
   ElemSegment* segment = ReadElemSegment(pc);
   TRAP_IF(segment->dropped, ElemSegmentDropped);
@@ -3613,6 +3627,10 @@ Result Thread::Run(int num_instructions) {
         CHECK_TRAP(Push<uint32_t>(table->entries.size()));
         break;
       }
+
+      case Opcode::TableFill:
+        CHECK_TRAP(TableFill(&pc));
+        break;
 
       case Opcode::MemoryInit:
         CHECK_TRAP(MemoryInit(&pc));

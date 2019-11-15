@@ -648,6 +648,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteU32Leb128(stream_, index, "table.size table index");
       break;
     }
+    case ExprType::TableFill: {
+      Index index =
+          module_->GetTableIndex(cast<TableFillExpr>(expr)->var);
+      WriteOpcode(stream_, Opcode::TableFill);
+      WriteU32Leb128(stream_, index, "table.fill table index");
+      break;
+    }
     case ExprType::RefFunc: {
       WriteOpcode(stream_, Opcode::RefFunc);
       Index index = module_->GetFuncIndex(cast<RefFuncExpr>(expr)->var);
