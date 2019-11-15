@@ -214,14 +214,12 @@ FuncSignature::FuncSignature(Index param_count,
 
 Module::Module(Environment* env, bool is_host)
     : memory_index(kInvalidIndex),
-      table_index(kInvalidIndex),
       is_host(is_host),
       env(env) {}
 
 Module::Module(Environment* env, string_view name, bool is_host)
     : name(name.to_string()),
       memory_index(kInvalidIndex),
-      table_index(kInvalidIndex),
       is_host(is_host),
       env(env) {}
 
@@ -1110,19 +1108,22 @@ Result Thread::ElemDrop(const uint8_t** pc) {
 }
 
 Result Thread::TableCopy(const uint8_t** pc) {
-  Table* table = ReadTable(pc);
+  Table* src_table = ReadTable(pc);
+  Table* dst_table = ReadTable(pc);
+  assert(src_table == dst_table);
   uint32_t size = Pop<uint32_t>();
   uint32_t src = Pop<uint32_t>();
   uint32_t dst = Pop<uint32_t>();
-  bool copy_backward = src < dst && dst - src < size;
-  bool ok = ClampToBounds(dst, &size, table->size());
+  bool copy_backward = src_table == dst_table && src < dst && dst - src < size;
+  bool ok = ClampToBounds(dst, &size, dst_table->size());
   // When copying backward, if the range is out-of-bounds, then no data will be
   // written.
   if (ok || !copy_backward) {
-    ok &= ClampToBounds(src, &size, table->size());
+    ok &= ClampToBounds(src, &size, dst_table->size());
     if (size > 0) {
-      Ref* data = table->entries.data();
-      memmove(data + dst, data + src, size * sizeof(Ref));
+      Ref* data_src = src_table->entries.data();
+      Ref* data_dst = dst_table->entries.data();
+      memmove(data_dst + dst, data_src + src, size * sizeof(Ref));
     }
   }
   TRAP_IF(!ok, TableAccessOutOfBounds);

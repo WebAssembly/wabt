@@ -101,7 +101,7 @@ class TypeChecker {
   Result OnMemorySize();
   Result OnTableCopy();
   Result OnElemDrop(Index);
-  Result OnTableInit(Index);
+  Result OnTableInit(Index, Index);
   Result OnTableGet(Index);
   Result OnTableSet(Index);
   Result OnTableGrow(Index);

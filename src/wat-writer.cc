@@ -757,7 +757,7 @@ Result WatWriter::ExprVisitorDelegate::OnElemDropExpr(ElemDropExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnTableInitExpr(TableInitExpr* expr) {
   writer_->WritePutsSpace(Opcode::TableInit_Opcode.GetName());
-  writer_->WriteVar(expr->var, NextChar::Newline);
+  writer_->WriteVar(expr->segment_index, NextChar::Newline);
   return Result::Ok;
 }
 

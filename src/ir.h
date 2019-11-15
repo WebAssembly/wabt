@@ -270,7 +270,6 @@ typedef ExprMixin<ExprType::MemoryGrow> MemoryGrowExpr;
 typedef ExprMixin<ExprType::MemorySize> MemorySizeExpr;
 typedef ExprMixin<ExprType::MemoryCopy> MemoryCopyExpr;
 typedef ExprMixin<ExprType::MemoryFill> MemoryFillExpr;
-typedef ExprMixin<ExprType::TableCopy> TableCopyExpr;
 typedef ExprMixin<ExprType::Nop> NopExpr;
 typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
@@ -335,12 +334,35 @@ typedef VarExpr<ExprType::Throw> ThrowExpr;
 
 typedef VarExpr<ExprType::MemoryInit> MemoryInitExpr;
 typedef VarExpr<ExprType::DataDrop> DataDropExpr;
-typedef VarExpr<ExprType::TableInit> TableInitExpr;
 typedef VarExpr<ExprType::ElemDrop> ElemDropExpr;
 typedef VarExpr<ExprType::TableGet> TableGetExpr;
 typedef VarExpr<ExprType::TableSet> TableSetExpr;
 typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
 typedef VarExpr<ExprType::TableSize> TableSizeExpr;
+
+class TableInitExpr : public ExprMixin<ExprType::TableInit> {
+ public:
+  TableInitExpr(const Var& segment_index,
+                const Var& table_index,
+                const Location& loc = Location())
+      : ExprMixin<ExprType::TableInit>(loc),
+        segment_index(segment_index),
+        table_index(table_index) {}
+
+  Var segment_index;
+  Var table_index;
+};
+
+class TableCopyExpr : public ExprMixin<ExprType::TableCopy> {
+ public:
+  TableCopyExpr(const Var& dst,
+                const Var& src,
+                const Location& loc = Location())
+      : ExprMixin<ExprType::TableCopy>(loc), dst_table(dst), src_table(src) {}
+
+  Var dst_table;
+  Var src_table;
+};
 
 class CallIndirectExpr : public ExprMixin<ExprType::CallIndirect> {
  public:

@@ -259,7 +259,8 @@ Result NameApplier::OnElemDropExpr(ElemDropExpr* expr)  {
 }
 
 Result NameApplier::OnTableInitExpr(TableInitExpr* expr)  {
-  CHECK_RESULT(UseNameForElemSegmentVar(&expr->var));
+  CHECK_RESULT(UseNameForElemSegmentVar(&expr->segment_index));
+  CHECK_RESULT(UseNameForTableVar(&expr->table_index));
   return Result::Ok;
 }
 

@@ -594,11 +594,15 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       WriteOpcode(stream_, Opcode::MemorySize);
       WriteU32Leb128(stream_, 0, "memory.size reserved");
       break;
-    case ExprType::TableCopy:
+    case ExprType::TableCopy: {
+      auto* copy_expr = cast<TableCopyExpr>(expr);
+      Index dst = module_->GetTableIndex(copy_expr->dst_table);
+      Index src = module_->GetTableIndex(copy_expr->src_table);
       WriteOpcode(stream_, Opcode::TableCopy);
-      WriteU32Leb128(stream_, 0, "table.copy reserved");
-      WriteU32Leb128(stream_, 0, "table.copy reserved");
+      WriteU32Leb128(stream_, dst, "table.copy dst_table");
+      WriteU32Leb128(stream_, src, "table.copy src_table");
       break;
+    }
     case ExprType::ElemDrop: {
       Index index =
           module_->GetElemSegmentIndex(cast<ElemDropExpr>(expr)->var);
@@ -607,11 +611,13 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
       break;
     }
     case ExprType::TableInit: {
-      Index index =
-          module_->GetElemSegmentIndex(cast<TableInitExpr>(expr)->var);
+      auto* init_expr = cast<TableInitExpr>(expr);
+      Index table_index = module_->GetTableIndex(init_expr->table_index);
+      Index segment_index =
+          module_->GetElemSegmentIndex(init_expr->segment_index);
       WriteOpcode(stream_, Opcode::TableInit);
-      WriteU32Leb128(stream_, index, "table.init segment");
-      WriteU32Leb128(stream_, 0, "table.init reserved");
+      WriteU32Leb128(stream_, segment_index, "table.init segment");
+      WriteU32Leb128(stream_, table_index, "table.init table");
       break;
     }
     case ExprType::TableGet: {

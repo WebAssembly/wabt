@@ -2,9 +2,10 @@
 ;;; ARGS*: --enable-reference-types
 
 (module
-  (table $t 1 anyfunc)
-  (elem $t funcref (ref.null))
-  (elem $t funcref (ref.func 1) (ref.null))
+  (table $t_func 1 anyfunc)
+  (table $t_any 1 anyref)
+  (elem $t_func funcref (ref.func 1) (ref.null))
+  (elem $t_any anyref (ref.func 1) (ref.null))
   (global $g (mut anyref) (ref.null))
 
   (func $ref_null (export "ref_null") (result anyref)
@@ -23,13 +24,13 @@
   (func $table_set (export "table_set")
     i32.const 0
     call $ref_func
-    table.set $t
+    table.set $t_func
   )
 
   (func (export "table_get") (result i32)
     call $table_set
     i32.const 0
-    table.get $t
+    table.get $t_func
     ref.is_null
   )
 

@@ -541,12 +541,14 @@ Result WastParser::ErrorIfLpar(const std::vector<std::string>& expected,
   return Result::Ok;
 }
 
-void WastParser::ParseBindVarOpt(std::string* name) {
+bool WastParser::ParseBindVarOpt(std::string* name) {
   WABT_TRACE(ParseBindVarOpt);
-  if (PeekMatch(TokenType::Var)) {
-    Token token = Consume();
-    *name = token.text().to_string();
+  if (!PeekMatch(TokenType::Var)) {
+    return false;
   }
+  Token token = Consume();
+  *name = token.text().to_string();
+  return true;
 }
 
 Result WastParser::ParseVar(Var* out_var) {
@@ -933,19 +935,16 @@ Result WastParser::ParseElemModuleField(Module* module) {
   EXPECT(Lpar);
   Location loc = GetLocation();
   EXPECT(Elem);
-  std::string segment_name;
-  ParseBindVarOpt(&segment_name);
-  // With MVP text format the name here was intended to refer to the table
-  // that the elem segment was part of, but we never did anything with this name
-  // since there was only one table anyway.
-  // With bulk-memory enabled this introduces a new name for the particualr
-  // elem segment.
-  if (!options_->features.bulk_memory_enabled()) {
-    segment_name = "";
-  }
-  auto field = MakeUnique<ElemSegmentModuleField>(loc, segment_name);
+
+  // Name here can either refer the name of the segment itself or active
+  // segments, the name of the table its part of.
+  std::string name;
+  bool has_name = ParseBindVarOpt(&name);
+
+  auto field = MakeUnique<ElemSegmentModuleField>(loc);
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
+    field->elem_segment.name = name;
     field->elem_segment.passive = true;
     // Parse a potentially empty sequence of ElemExprs.
     while (true) {
@@ -967,8 +966,24 @@ Result WastParser::ParseElemModuleField(Module* module) {
       }
     }
   } else {
+    // With the bulk memory proposal we can name both the elem section and the
+    // table to which is is attached.  Previously we could only name the table.
+    Var second_name;
+    bool has_second_name = ParseVarOpt(&second_name, Var(0, loc));
+    if (options_->features.bulk_memory_enabled() && has_second_name) {
+      field->elem_segment.table_var = second_name;
+      field->elem_segment.name = name;
+    } else {
+      // If we have only one name, and we are an active segment, we treat
+      // that as the name of the table, since naming an active elem segment
+      // is not practically useful.
+      if (has_second_name)
+        field->elem_segment.table_var = second_name;
+      else
+        field->elem_segment.table_var = has_name ? Var(name, loc) : Var(0, loc);
+    }
+
     field->elem_segment.elem_type = Type::Funcref;
-    ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
     CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
     ParseElemExprVarListOpt(&field->elem_segment.elem_exprs);
   }
@@ -1655,20 +1670,31 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       out_expr->reset(new MemoryGrowExpr(loc));
       break;
 
-    case TokenType::TableCopy:
+    case TokenType::TableCopy: {
       ErrorUnlessOpcodeEnabled(Consume());
-      out_expr->reset(new TableCopyExpr(loc));
+      Var dst(0);
+      Var src(0);
+      if (options_->features.reference_types_enabled()) {
+        CHECK_RESULT(ParseVar(&dst));
+        CHECK_RESULT(ParseVar(&src));
+      }
+      out_expr->reset(new TableCopyExpr(dst, src, loc));
       break;
+    }
 
     case TokenType::ElemDrop:
       ErrorUnlessOpcodeEnabled(Consume());
       CHECK_RESULT(ParsePlainInstrVar<ElemDropExpr>(loc, out_expr));
       break;
 
-    case TokenType::TableInit:
+    case TokenType::TableInit: {
       ErrorUnlessOpcodeEnabled(Consume());
-      CHECK_RESULT(ParsePlainInstrVar<TableInitExpr>(loc, out_expr));
+      Var segment_index(0);
+      CHECK_RESULT(ParseVar(&segment_index));
+      Var table_index(0);
+      out_expr->reset(new TableInitExpr(segment_index, table_index, loc));
       break;
+    }
 
     case TokenType::TableGet:
       ErrorUnlessOpcodeEnabled(Consume());
