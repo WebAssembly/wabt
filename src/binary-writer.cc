@@ -612,8 +612,7 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     }
     case ExprType::TableInit: {
       auto* init_expr = cast<TableInitExpr>(expr);
-      Index table_index =
-          module_->GetTableIndex(init_expr->table_index);
+      Index table_index = module_->GetTableIndex(init_expr->table_index);
       Index segment_index =
           module_->GetElemSegmentIndex(init_expr->segment_index);
       WriteOpcode(stream_, Opcode::TableInit);
