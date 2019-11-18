@@ -922,7 +922,7 @@ Result WastParser::ParseDataModuleField(Module* module) {
   if (ParseVarOpt(&field->data_segment.memory_var, Var(0, loc))) {
     CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
   } else if (!ParseOffsetExprOpt(&field->data_segment.offset)) {
-    field->data_segment.passive = true;
+    field->data_segment.flags |= SegPassive;
   }
 
   ParseTextListOpt(&field->data_segment.data);
@@ -946,7 +946,8 @@ Result WastParser::ParseElemModuleField(Module* module) {
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
     field->elem_segment.name = name;
-    field->elem_segment.passive = true;
+    field->elem_segment.flags |= SegPassive;
+
     // Parse a potentially empty sequence of ElemExprs.
     while (true) {
       Var var;
@@ -978,10 +979,14 @@ Result WastParser::ParseElemModuleField(Module* module) {
       // If we have only one name, and we are an active segment, we treat
       // that as the name of the table, since naming an active elem segment
       // is not practically useful.
-      if (has_second_name)
+      if (has_second_name) {
         field->elem_segment.table_var = second_name;
-      else
+      } else {
         field->elem_segment.table_var = has_name ? Var(name, loc) : Var(0, loc);
+      }
+    }
+    if (module->GetTableIndex(field->elem_segment.table_var) > 0) {
+      field->elem_segment.flags |= SegIndexOther;
     }
 
     field->elem_segment.elem_type = Type::Funcref;
@@ -1287,6 +1292,8 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
     elem_segment.table_var = Var(module->tables.size());
+    if (module->tables.size() > 0)
+      elem_segment.flags |= SegIndexOther;
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     CHECK_RESULT(ParseElemExprVarList(&elem_segment.elem_exprs));

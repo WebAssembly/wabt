@@ -1160,7 +1160,7 @@ void Validator::CheckElemSegments(const Module* module) {
         }
       }
 
-      if (elem_segment.passive)  {
+      if (elem_segment.is_passive()) {
         continue;
       }
       if (Failed(CheckTableVar(&elem_segment.table_var, nullptr))) {
@@ -1192,7 +1192,7 @@ void Validator::CheckDataSegments(const Module* module) {
     if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(&field)) {
       auto&& data_segment = data_segment_field->data_segment;
       const Memory* memory;
-      if (data_segment.passive)  {
+      if (data_segment.is_passive()) {
         continue;
       }
       if (Failed(CheckMemoryVar(&data_segment.memory_var, &memory))) {

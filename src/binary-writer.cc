@@ -1032,19 +1032,18 @@ Result BinaryWriter::WriteModule() {
     for (size_t i = 0; i < module_->elem_segments.size(); ++i) {
       ElemSegment* segment = module_->elem_segments[i];
       WriteHeader("elem segment header", i);
-      if (segment->passive) {
-        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::Passive));
+      stream_->WriteU8(segment->flags, "segment flags");
+      if (segment->is_passive()) {
         WriteType(stream_, segment->elem_type);
-      } else if (module_->GetTableIndex(segment->table_var)) {
-        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexOther));
+      } else if (segment->flags & SegIndexOther) {
         WriteU32Leb128(stream_, module_->GetTableIndex(segment->table_var), "table index");
         WriteInitExpr(segment->offset);
       } else {
-        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));
+        assert(module_->GetTableIndex(segment->table_var) == 0);
         WriteInitExpr(segment->offset);
       }
-      WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elem exprs");
-      if (segment->passive) {
+      WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elems");
+      if (segment->is_passive()) {
         for (const ElemExpr& elem_expr : segment->elem_exprs) {
           switch (elem_expr.kind) {
             case ElemExprKind::RefNull:
@@ -1104,11 +1103,11 @@ Result BinaryWriter::WriteModule() {
     for (size_t i = 0; i < module_->data_segments.size(); ++i) {
       const DataSegment* segment = module_->data_segments[i];
       WriteHeader("data segment header", i);
-      if (segment->passive) {
-        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::Passive));
+      if (segment->is_passive()) {
+        stream_->WriteU8(SegPassive);
       } else {
         assert(module_->GetMemoryIndex(segment->memory_var) == 0);
-        stream_->WriteU8(static_cast<uint8_t>(SegmentFlags::IndexZero));
+        stream_->WriteU8(SegIndexZero);
         WriteInitExpr(segment->offset);
       }
       WriteU32Leb128(stream_, segment->data.size(), "data segment size");

@@ -226,7 +226,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnElemSegmentCount(Index count) override;
   wabt::Result BeginElemSegment(Index index,
                                 Index table_index,
-                                bool passive,
+                                uint8_t flags,
                                 Type elem_type) override;
   wabt::Result BeginElemSegmentInitExpr(Index index) override;
   wabt::Result EndElemSegmentInitExpr(Index index) override;
@@ -238,7 +238,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result OnDataCount(Index count) override;
   wabt::Result BeginDataSegment(Index index,
                                 Index memory_index,
-                                bool passive) override;
+                                uint8_t flags) override;
   wabt::Result BeginDataSegmentInitExpr(Index index) override;
   wabt::Result OnDataSegmentData(Index index,
                                  const void* data,
@@ -375,7 +375,7 @@ class BinaryReaderInterp : public BinaryReaderNop {
   // Values cached so they can be shared between callbacks.
   TypedValue init_expr_value_;
   IstreamOffset table_offset_ = 0;
-  bool segment_is_passive_ = false;
+  uint8_t segment_flags_ = 0;
   Index segment_table_index_ = kInvalidIndex;
   ElemSegment* elem_segment_ = nullptr;
   ElemSegmentInfo* elem_segment_info_ = nullptr;
@@ -1092,9 +1092,9 @@ wabt::Result BinaryReaderInterp::OnElemSegmentCount(Index count) {
 
 wabt::Result BinaryReaderInterp::BeginElemSegment(Index index,
                                                   Index table_index,
-                                                  bool passive,
+                                                  uint8_t flags,
                                                   Type elem_type) {
-  segment_is_passive_ = passive;
+  segment_flags_ = flags;
   segment_table_index_ = table_index;
   return wabt::Result::Ok;
 }
@@ -1105,7 +1105,7 @@ wabt::Result BinaryReaderInterp::BeginElemSegmentInitExpr(Index index) {
 }
 
 wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
-  assert(segment_is_passive_ == false);
+  assert(!(segment_flags_ & SegPassive));
 
   if (init_expr_value_.type != Type::I32) {
     PrintError(
@@ -1122,7 +1122,7 @@ wabt::Result BinaryReaderInterp::EndElemSegmentInitExpr(Index index) {
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
                                                             Index count) {
   elem_segment_ = env_->EmplaceBackElemSegment();
-  if (segment_is_passive_) {
+  if (segment_flags_ & SegPassive) {
     elem_segment_info_ = nullptr;
   } else {
     // An active segment still is present in the segment index space, but
@@ -1140,7 +1140,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
     Index segment_index) {
-  assert(segment_is_passive_);
+  assert(segment_flags_ & SegPassive);
   elem_segment_->elems.push_back({RefType::Null, kInvalidIndex});
   return wabt::Result::Ok;
 }
@@ -1157,7 +1157,7 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefFunc(
 
   func_index = TranslateFuncIndexToEnv(func_index);
 
-  if (segment_is_passive_) {
+  if (segment_flags_ & SegPassive) {
     elem_segment_->elems.push_back({RefType::Func, func_index});
   } else {
     elem_segment_info_->src.push_back({RefType::Func, func_index});
@@ -1174,8 +1174,8 @@ wabt::Result BinaryReaderInterp::OnDataCount(Index count) {
 
 wabt::Result BinaryReaderInterp::BeginDataSegment(Index index,
                                                   Index memory_index,
-                                                  bool passive) {
-  segment_is_passive_ = passive;
+                                                  uint8_t flags) {
+  segment_flags_ = flags;
   return wabt::Result::Ok;
 }
 
@@ -1188,7 +1188,7 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
                                                    const void* src_data,
                                                    Address size) {
   DataSegment* segment = env_->EmplaceBackDataSegment();
-  if (segment_is_passive_) {
+  if (segment_flags_ & SegPassive) {
     segment->data.resize(size);
     if (size > 0) {
       memcpy(segment->data.data(), src_data, size);

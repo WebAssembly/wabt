@@ -363,12 +363,12 @@ Result BinaryReaderLogging::OnSimdShuffleOpExpr(Opcode opcode, v128 value) {
 
 Result BinaryReaderLogging::BeginElemSegment(Index index,
                                              Index table_index,
-                                             bool passive,
+                                             uint8_t flags,
                                              Type elem_type) {
   LOGF("BeginElemSegment(index: %" PRIindex ", table_index: %" PRIindex
-       ", passive: %s, elem_type: %s)\n",
-       index, table_index, passive ? "true" : "false", GetTypeName(elem_type));
-  return reader_->BeginElemSegment(index, table_index, passive, elem_type);
+       ", flags: %d, elem_type: %s)\n",
+       index, table_index, flags, GetTypeName(elem_type));
+  return reader_->BeginElemSegment(index, table_index, flags, elem_type);
 }
 
 Result BinaryReaderLogging::OnDataSegmentData(Index index,
@@ -623,12 +623,13 @@ Result BinaryReaderLogging::OnComdatEntry(ComdatType kind, Index index) {
     return reader_->name(value0, value1);                                \
   }
 
-#define DEFINE_INDEX_INDEX_BOOL(name, desc0, desc1, desc2)                     \
-  Result BinaryReaderLogging::name(Index value0, Index value1, bool value2) {  \
-    LOGF(#name "(" desc0 ": %" PRIindex ", " desc1 ": %" PRIindex              \
-               ", " desc2 ": %s)\n",                                           \
-         value0, value1, value2 ? "true" : "false");                           \
-    return reader_->name(value0, value1, value2);                              \
+#define DEFINE_INDEX_INDEX_U8(name, desc0, desc1, desc2)                     \
+  Result BinaryReaderLogging::name(Index value0, Index value1,               \
+                                   uint8_t value2) {                         \
+    LOGF(#name "(" desc0 ": %" PRIindex ", " desc1 ": %" PRIindex ", " desc2 \
+               ": %d)\n",                                                    \
+         value0, value1, value2);                                            \
+    return reader_->name(value0, value1, value2);                            \
   }
 
 #define DEFINE_OPCODE(name)                                            \
@@ -761,7 +762,7 @@ DEFINE_END(EndElemSection)
 
 DEFINE_BEGIN(BeginDataSection)
 DEFINE_INDEX(OnDataSegmentCount)
-DEFINE_INDEX_INDEX_BOOL(BeginDataSegment, "index", "memory_index", "passive")
+DEFINE_INDEX_INDEX_U8(BeginDataSegment, "index", "memory_index", "flags")
 DEFINE_INDEX(BeginDataSegmentInitExpr)
 DEFINE_INDEX(EndDataSegmentInitExpr)
 DEFINE_INDEX(EndDataSegment)

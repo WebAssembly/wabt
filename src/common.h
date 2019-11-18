@@ -224,6 +224,15 @@ enum class Type : int32_t {
 };
 typedef std::vector<Type> TypeVector;
 
+// Matches binary format, do not change.
+enum SegmentFlags : uint8_t {
+  SegIndexZero = 0,
+  SegPassive = 1,
+  SegIndexOther = 2,
+
+  SegFlagMax = SegIndexOther,
+};
+
 enum class RelocType {
   FuncIndexLEB = 0,          // e.g. Immediate of call instruction
   TableIndexSLEB = 1,        // e.g. Loading address of function

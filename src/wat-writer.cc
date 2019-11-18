@@ -1250,13 +1250,13 @@ void WatWriter::WriteTable(const Table& table) {
 void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteOpenSpace("elem");
   WriteNameOrIndex(segment.name, elem_segment_index_, NextChar::Space);
-  if (segment.passive) {
+  if (segment.is_passive()) {
     WriteType(segment.elem_type, NextChar::Space);
   } else {
     WriteInitExpr(segment.offset);
   }
   for (const ElemExpr& expr : segment.elem_exprs) {
-    if (segment.passive) {
+    if (segment.is_passive()) {
       if (expr.kind == ElemExprKind::RefNull) {
         WriteOpenSpace("ref.null");
         WriteCloseSpace();
@@ -1287,7 +1287,7 @@ void WatWriter::WriteMemory(const Memory& memory) {
 void WatWriter::WriteDataSegment(const DataSegment& segment) {
   WriteOpenSpace("data");
   WriteNameOrIndex(segment.name, data_segment_index_, NextChar::Space);
-  if (!segment.passive) {
+  if (!segment.is_passive()) {
     WriteInitExpr(segment.offset);
   }
   WriteQuotedData(segment.data.data(), segment.data.size());

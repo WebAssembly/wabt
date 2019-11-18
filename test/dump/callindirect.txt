@@ -41,11 +41,11 @@
 000001b: 00                                        ; section size (guess)
 000001c: 01                                        ; num elem segments
 ; elem segment header 0
-000001d: 00                                      
+000001d: 00                                        ; segment flags
 000001e: 41                                        ; i32.const
 000001f: 00                                        ; i32 literal
 0000020: 0b                                        ; end
-0000021: 01                                        ; num elem exprs
+0000021: 01                                        ; num elems
 0000022: 00                                        ; elem expr function index
 000001b: 07                                        ; FIXUP section size
 ; section "Code" (10)

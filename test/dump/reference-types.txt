@@ -84,9 +84,9 @@ Table[3]:
  - table[1] type=anyref initial=1
  - table[2] type=funcref initial=1
 Elem[2]:
- - segment[0] table=2 count=1 - init i32=0
+ - segment[0] flags=2 table=2 count=1 - init i32=0
   - elem[0] = func[0]
- - segment[1] table=0 count=1 passive
+ - segment[1] flags=1 table=0 count=1
   - elem[0] = nullref
 Code[10]:
  - func[0] size=6
