@@ -973,7 +973,6 @@ Result WastParser::ParseElemModuleField(Module* module) {
     Var second_name;
     bool has_second_name = ParseVarOpt(&second_name, Var(0, loc));
     if (options_->features.bulk_memory_enabled() && has_second_name) {
-      //field->elem_segment.flags |= SegIndexOther;
       field->elem_segment.table_var = second_name;
       field->elem_segment.name = name;
     } else {
