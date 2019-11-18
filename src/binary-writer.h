@@ -46,7 +46,7 @@ struct WriteBinaryOptions {
 
 Result WriteBinaryModule(Stream*, const Module*, const WriteBinaryOptions&);
 
-void WriteType(Stream* stream, Type type);
+void WriteType(Stream* stream, Type type, const char* desc = nullptr);
 
 void WriteStr(Stream* stream,
               string_view s,

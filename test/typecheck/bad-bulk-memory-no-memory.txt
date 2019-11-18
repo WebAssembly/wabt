@@ -14,13 +14,13 @@
 out/test/typecheck/bad-bulk-memory-no-memory.txt:7:41: error: memory.init requires an imported or defined memory.
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
                                         ^^^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-memory.txt:7:53: error: data_segment variable out of range (max 0)
+out/test/typecheck/bad-bulk-memory-no-memory.txt:7:53: error: data_segment variable out of range: 0 (max 4294967295)
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
                                                     ^
 out/test/typecheck/bad-bulk-memory-no-memory.txt:8:5: error: data.drop requires an imported or defined memory.
     data.drop 0
     ^^^^^^^^^
-out/test/typecheck/bad-bulk-memory-no-memory.txt:8:15: error: data_segment variable out of range (max 0)
+out/test/typecheck/bad-bulk-memory-no-memory.txt:8:15: error: data_segment variable out of range: 0 (max 4294967295)
     data.drop 0
               ^
 out/test/typecheck/bad-bulk-memory-no-memory.txt:9:41: error: memory.copy requires an imported or defined memory.

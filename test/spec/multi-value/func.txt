@@ -209,11 +209,11 @@ out/test/spec/multi-value/func.wast:889: assert_malformed passed:
                      ^^^^^
 out/test/spec/multi-value/func.wast:893: assert_malformed passed:
   out/test/spec/multi-value/func/func.66.wat:1:20: error: unexpected token "result", expected an instr.
-  (func (local i32) (result i32) (get_local 0))
+  (func (local i32) (result i32) (local.get 0))
                      ^^^^^^
 out/test/spec/multi-value/func.wast:897: assert_malformed passed:
   out/test/spec/multi-value/func/func.67.wat:1:21: error: unexpected token "param", expected an instr.
-  (func (result i32) (param i32) (get_local 0))
+  (func (result i32) (param i32) (local.get 0))
                       ^^^^^
 158/158 tests passed.
 ;;; STDOUT ;;)

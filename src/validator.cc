@@ -266,8 +266,9 @@ Result Validator::CheckVar(Index max_index,
     }
     return Result::Ok;
   }
-  PrintError(&var->loc, "%s variable out of range (max %" PRIindex ")", desc,
-             max_index);
+  PrintError(&var->loc,
+             "%s variable out of range: %" PRIindex " (max %" PRIindex ")",
+             desc, var->index(), max_index - 1);
   return Result::Error;
 }
 

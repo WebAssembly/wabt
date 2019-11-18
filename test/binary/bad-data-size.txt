@@ -13,6 +13,6 @@ section(DATA) {
   offset[i32.const 0 end]
   data[str("overflow")]
 }
-(;; STDERR ;;;
-error: data segment is out of bounds: [0, 8) >= max value 0
-;;; STDERR ;;)
+(;; STDOUT ;;;
+error initialiazing module: out of bounds memory access: data segment is out of bounds: [0, 8) >= max value 0
+;;; STDOUT ;;)

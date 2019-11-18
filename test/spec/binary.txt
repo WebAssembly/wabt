@@ -97,5 +97,44 @@ out/test/spec/binary.wast:385: assert_malformed passed:
   0000016: error: function signature count != function body count
 out/test/spec/binary.wast:396: assert_malformed passed:
   0000015: error: function signature count != function body count
-48/48 tests passed.
+out/test/spec/binary.wast:425: assert_malformed passed:
+  000000a: error: invalid section size: extends past end
+out/test/spec/binary.wast:436: assert_malformed passed:
+  000000e: error: unfinished section (expected end: 0x11)
+out/test/spec/binary.wast:455: assert_malformed passed:
+  0000027: error: unable to read u32 leb128: string length
+out/test/spec/binary.wast:474: assert_malformed passed:
+  000002b: error: unfinished section (expected end: 0x40)
+out/test/spec/binary.wast:505: assert_malformed passed:
+  000000b: error: invalid table count 1, only 0 bytes left in section
+out/test/spec/binary.wast:521: assert_malformed passed:
+  000000b: error: invalid memory count 1, only 0 bytes left in section
+out/test/spec/binary.wast:537: assert_malformed passed:
+  0000010: error: unable to read i32 leb128: global type
+out/test/spec/binary.wast:548: assert_malformed passed:
+  0000010: error: unfinished section (expected end: 0x15)
+out/test/spec/binary.wast:571: assert_malformed passed:
+  000001b: error: unable to read u32 leb128: string length
+out/test/spec/binary.wast:592: assert_malformed passed:
+  000001b: error: unfinished section (expected end: 0x20)
+out/test/spec/binary.wast:626: assert_malformed passed:
+  0000021: error: unable to read u32 leb128: elem segment flags
+out/test/spec/binary.wast:644: assert_malformed passed:
+  0000021: error: unfinished section (expected end: 0x27)
+out/test/spec/binary.wast:670: assert_malformed passed:
+  0000016: error: unable to read u32 leb128: data segment flags
+out/test/spec/binary.wast:683: assert_malformed passed:
+  0000016: error: unfinished section (expected end: 0x1c)
+out/test/spec/binary.wast:696: assert_malformed passed:
+  0000015: error: unable to read data: data segment data
+out/test/spec/binary.wast:710: assert_malformed passed:
+  000001a: error: unfinished section (expected end: 0x1b)
+out/test/spec/binary.wast:741: assert_malformed passed:
+  error: invalid depth: 11 (max 2)
+  0000024: error: OnBrTableExpr callback failed
+out/test/spec/binary.wast:763: assert_malformed passed:
+  0000025: error: expected valid block signature type
+out/test/spec/binary.wast:798: assert_malformed passed:
+  0000017: error: multiple Start sections
+67/67 tests passed.
 ;;; STDOUT ;;)

@@ -2651,11 +2651,11 @@
 0001b1a: 00                                        ; i32 literal
 0001b1b: 0b                                        ; end
 0001b1c: 02                                        ; num elems
-0001b1d: 01                                        ; elem expr function index
-0001b1e: 01                                        ; elem expr function index
+0001b1d: 01                                        ; elem function index
+0001b1e: 01                                        ; elem function index
 ; elem segment header 1
-0001b1f: 01                                        ; segment flags
-0001b20: 70                                        ; funcref
+0001b1f: 05                                        ; segment flags
+0001b20: 70                                        ; elem expr list type
 0001b21: 00                                        ; num elems
 0001b16: 0b                                        ; FIXUP section size
 ; section "DataCount" (12)
@@ -7456,7 +7456,7 @@
 0003948: 00                                        ; section size (guess)
 0003949: 01                                        ; num data segments
 ; data segment header 0
-000394a: 01                                      
+000394a: 01                                        ; segment flags
 000394b: 00                                        ; data segment size
 ; data segment data 0
 0003948: 03                                        ; FIXUP section size
@@ -8310,7 +8310,7 @@ BeginModule(version: 1)
     OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     EndElemSegment(0)
-    BeginElemSegment(index: 1, table_index: 0, flags: 1, elem_type: funcref)
+    BeginElemSegment(index: 1, table_index: 0, flags: 5, elem_type: funcref)
     OnElemSegmentElemExprCount(index: 1, count: 0)
     EndElemSegment(1)
   EndElemSection
@@ -12985,7 +12985,7 @@ i64.trunc_s:sat/f32() =>
 i64.trunc_u:sat/f32() =>
 i64.trunc_s:sat/f64() =>
 i64.trunc_u:sat/f64() =>
-memory.init() => error: out of bounds memory access
+memory.init() => error: out of bounds memory access: memory.init out of bounds
 data.drop() =>
 memory.copy() =>
 memory.fill() =>

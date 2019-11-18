@@ -50,27 +50,6 @@ struct Label {
 Label::Label(IstreamOffset offset, IstreamOffset fixup_offset)
     : offset(offset), fixup_offset(fixup_offset) {}
 
-struct ElemSegmentInfo {
-  ElemSegmentInfo(Table* table, Index dst) : table(table), dst(dst) {}
-
-  Table* table;
-  Index dst;
-  std::vector<Ref> src;
-};
-
-struct DataSegmentInfo {
-  DataSegmentInfo(Memory* memory,
-                  Address dst,
-                  const void* src,
-                  IstreamOffset size)
-      : memory(memory), dst(dst), src(src), size(size) {}
-
-  Memory* memory;
-  Address dst;
-  const void* src;  // Not owned.
-  IstreamOffset size;
-};
-
 class BinaryReaderInterp : public BinaryReaderNop {
  public:
   BinaryReaderInterp(Environment* env,
@@ -82,8 +61,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
   wabt::Result ReadBinary(DefinedModule* out_module);
 
   std::unique_ptr<OutputBuffer> ReleaseOutputBuffer();
-
-  wabt::Result InitializeSegments();
 
   // Implement BinaryReader.
   bool OnError(const Error&) override;
@@ -361,16 +338,6 @@ class BinaryReaderInterp : public BinaryReaderNop {
 
   Index num_func_imports_ = 0;
   Index num_global_imports_ = 0;
-
-  // Changes to linear memory and tables should not apply if a validation error
-  // occurs; these vectors cache the changes that must be applied after we know
-  // that there are no validation errors.
-  //
-  // Note that this behavior changed after the bulk memory proposal; in that
-  // case each segment is initialized as it is encountered. If one fails, then
-  // no further segments are processed.
-  std::vector<ElemSegmentInfo> elem_segment_infos_;
-  std::vector<DataSegmentInfo> data_segment_infos_;
 
   // Values cached so they can be shared between callbacks.
   TypedValue init_expr_value_;
@@ -1132,15 +1099,15 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
 
     assert(segment_table_index_ != kInvalidIndex);
     Table* table = GetTableByModuleIndex(segment_table_index_);
-    elem_segment_infos_.emplace_back(table, table_offset_);
-    elem_segment_info_ = &elem_segment_infos_.back();
+    module_->active_elem_segments_.emplace_back(table, table_offset_);
+    elem_segment_info_ = &module_->active_elem_segments_.back();
   }
   return wabt::Result::Ok;
 }
 
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
     Index segment_index) {
-  assert(segment_flags_ & SegPassive);
+  assert(segment_flags_ & SegUseElemExprs);
   elem_segment_->elems.push_back({RefType::Null, kInvalidIndex});
   return wabt::Result::Ok;
 }
@@ -1210,7 +1177,12 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
     assert(module_->memory_index != kInvalidIndex);
     Memory* memory = env_->GetMemory(module_->memory_index);
     Address address = init_expr_value_.value.i32;
-    data_segment_infos_.emplace_back(memory, address, src_data, size);
+    module_->active_data_segments_.emplace_back(memory, address);
+    auto& segment = module_->active_data_segments_.back();
+    if (size > 0) {
+      segment.data.resize(size);
+      memcpy(segment.data.data(), src_data, size);
+    }
   }
   return wabt::Result::Ok;
 }
@@ -1899,60 +1871,6 @@ wabt::Result BinaryReaderInterp::OnTableInitExpr(Index segment_index,
   return wabt::Result::Ok;
 }
 
-wabt::Result BinaryReaderInterp::InitializeSegments() {
-  // The MVP requires that all segments are bounds-checked before being copied
-  // into the table or memory. The bulk memory proposal changes this behavior;
-  // instead, each segment is copied in order. If any segment fails, then no
-  // further segments are copied. Any data that was written persists.
-  enum Pass { Check = 0, Init = 1 };
-  int pass = features_.bulk_memory_enabled() ? Init : Check;
-
-  for (; pass <= Init; ++pass) {
-    for (const ElemSegmentInfo& info : elem_segment_infos_) {
-      uint32_t table_size = info.table->size();
-      uint32_t segment_size = info.src.size();
-      uint32_t copy_size = segment_size;
-      bool ok = ClampToBounds(info.dst, &copy_size, table_size);
-
-      if (pass == Init && copy_size > 0) {
-        std::copy(info.src.begin(), info.src.begin() + copy_size,
-                  info.table->entries.begin() + info.dst);
-      }
-
-      if (!ok) {
-        PrintError("elem segment is out of bounds: [%u, %" PRIu64
-                   ") >= max value %u",
-                   info.dst, static_cast<uint64_t>(info.dst) + segment_size,
-                   table_size);
-        return wabt::Result::Error;
-      }
-    }
-
-    for (const DataSegmentInfo& info : data_segment_infos_) {
-      uint32_t memory_size = info.memory->data.size();
-      uint32_t segment_size = info.size;
-      uint32_t copy_size = segment_size;
-      bool ok = ClampToBounds(info.dst, &copy_size, memory_size);
-
-      if (pass == Init && copy_size > 0) {
-        const char* src_data = static_cast<const char*>(info.src);
-        std::copy(src_data, src_data + copy_size,
-                  info.memory->data.begin() + info.dst);
-      }
-
-      if (!ok) {
-        PrintError("data segment is out of bounds: [%u, %" PRIu64
-                   ") >= max value %u",
-                   info.dst, static_cast<uint64_t>(info.dst) + segment_size,
-                   memory_size);
-        return wabt::Result::Error;
-      }
-    }
-  }
-
-  return wabt::Result::Ok;
-}
-
 }  // end anonymous namespace
 
 wabt::Result ReadBinaryInterp(Environment* env,
@@ -1975,24 +1893,14 @@ wabt::Result ReadBinaryInterp(Environment* env,
   wabt::Result result = ReadBinary(data, size, &reader, options);
   env->SetIstream(reader.ReleaseOutputBuffer());
 
-  if (Succeeded(result)) {
-    module->istream_start = istream_offset;
-    module->istream_end = env->istream().size();
-
-    result = reader.InitializeSegments();
-    if (Succeeded(result)) {
-      *out_module = module;
-    } else {
-      // We failed to initialize data and element segments, but we can't reset
-      // to the mark point. An element segment may have initialized an imported
-      // table with a function from this module, which is still callable.
-      *out_module = nullptr;
-    }
-  } else {
+  if (Failed(result)) {
     env->ResetToMarkPoint(mark);
-    *out_module = nullptr;
+    return result;
   }
 
+  *out_module = module;
+  module->istream_start = istream_offset;
+  module->istream_end = env->istream().size();
   return result;
 }
 

@@ -29,26 +29,20 @@ out/test/spec/linking.wast:185: assert_trap passed: uninitialized table element
 out/test/spec/linking.wast:187: assert_trap passed: uninitialized table element
 out/test/spec/linking.wast:188: assert_trap passed: uninitialized table element
 out/test/spec/linking.wast:190: assert_trap passed: undefined table index
-out/test/spec/linking.wast:207: assert_unlinkable passed:
-  error: elem segment is out of bounds: [10, 11) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
 out/test/spec/linking.wast:216: assert_unlinkable passed:
   error: unknown module field "mem"
   0000027: error: OnImportMemory callback failed
 out/test/spec/linking.wast:225: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:228: assert_unlinkable passed:
-  error: elem segment is out of bounds: [12, 13) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [12, 13) >= max value 10
 out/test/spec/linking.wast:236: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:239: assert_unlinkable passed:
-  error: data segment is out of bounds: [65536, 65537) >= max value 65536
+assert_unlinkable passed: out of bounds memory access: data segment is out of bounds: [65536, 65537) >= max value 65536
 out/test/spec/linking.wast:248: assert_trap passed: uninitialized table element
-out/test/spec/linking.wast:299: assert_unlinkable passed:
-  error: data segment is out of bounds: [65536, 65537) >= max value 65536
+assert_unlinkable passed: out of bounds memory access: data segment is out of bounds: [65536, 65537) >= max value 65536
 out/test/spec/linking.wast:324: assert_unlinkable passed:
   error: unknown module field "tab"
   0000037: error: OnImportTable callback failed
-out/test/spec/linking.wast:335: assert_unlinkable passed:
-  error: data segment is out of bounds: [327680, 327681) >= max value 327680
-out/test/spec/linking.wast:345: assert_unlinkable passed:
-  error: elem segment is out of bounds: [0, 1) >= max value 0
+assert_unlinkable passed: out of bounds memory access: data segment is out of bounds: [327680, 327681) >= max value 327680
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [0, 1) >= max value 0
 94/94 tests passed.
 ;;; STDOUT ;;)

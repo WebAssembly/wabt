@@ -1250,13 +1250,20 @@ void WatWriter::WriteTable(const Table& table) {
 void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteOpenSpace("elem");
   WriteNameOrIndex(segment.name, elem_segment_index_, NextChar::Space);
-  if (segment.is_passive()) {
-    WriteType(segment.elem_type, NextChar::Space);
-  } else {
+
+  if (!segment.is_passive()) {
     WriteInitExpr(segment.offset);
   }
+
+  if (segment.flags & SegUseElemExprs) {
+    WriteType(segment.elem_type, NextChar::Space);
+  } else {
+    assert(segment.elem_type == Type::Funcref);
+    WritePuts("func", NextChar::Space);
+  }
+
   for (const ElemExpr& expr : segment.elem_exprs) {
-    if (segment.is_passive()) {
+    if (segment.flags & SegUseElemExprs) {
       if (expr.kind == ElemExprKind::RefNull) {
         WriteOpenSpace("ref.null");
         WriteCloseSpace();

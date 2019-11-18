@@ -159,53 +159,53 @@ out/test/spec/if.wast:884: assert_invalid passed:
   error: type mismatch in if, expected [i32] but got []
   000001e: error: OnIfExpr callback failed
 out/test/spec/if.wast:895: assert_malformed passed:
-  out/test/spec/if/if.53.wat:1:14: error: unexpected label "$l"
-  (func if end $l)
-               ^^
+  out/test/spec/if/if.53.wat:1:26: error: unexpected label "$l"
+  (func i32.const 0 if end $l)
+                           ^^
 out/test/spec/if.wast:899: assert_malformed passed:
-  out/test/spec/if/if.54.wat:1:17: error: mismatching label "$a" != "$l"
-  (func if $a end $l)
-                  ^^
+  out/test/spec/if/if.54.wat:1:29: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a end $l)
+                              ^^
 out/test/spec/if.wast:903: assert_malformed passed:
-  out/test/spec/if/if.55.wat:1:15: error: unexpected label "$l"
-  (func if else $l end)
-                ^^
+  out/test/spec/if/if.55.wat:1:27: error: unexpected label "$l"
+  (func i32.const 0 if else $l end)
+                            ^^
 out/test/spec/if.wast:907: assert_malformed passed:
-  out/test/spec/if/if.56.wat:1:18: error: mismatching label "$a" != "$l"
-  (func if $a else $l end)
-                   ^^
+  out/test/spec/if/if.56.wat:1:30: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else $l end)
+                               ^^
 out/test/spec/if.wast:911: assert_malformed passed:
-  out/test/spec/if/if.57.wat:1:19: error: unexpected label "$l"
-  (func if else end $l)
-                    ^^
+  out/test/spec/if/if.57.wat:1:31: error: unexpected label "$l"
+  (func i32.const 0 if else end $l)
+                                ^^
 out/test/spec/if.wast:915: assert_malformed passed:
-  out/test/spec/if/if.58.wat:1:15: error: unexpected label "$l"
-  (func if else $l end $l)
-                ^^
-  out/test/spec/if/if.58.wat:1:22: error: unexpected label "$l"
-  (func if else $l end $l)
-                       ^^
+  out/test/spec/if/if.58.wat:1:27: error: unexpected label "$l"
+  (func i32.const 0 if else $l end $l)
+                            ^^
+  out/test/spec/if/if.58.wat:1:34: error: unexpected label "$l"
+  (func i32.const 0 if else $l end $l)
+                                   ^^
 out/test/spec/if.wast:919: assert_malformed passed:
-  out/test/spec/if/if.59.wat:1:15: error: unexpected label "$l1"
-  (func if else $l1 end $l2)
-                ^^^
-  out/test/spec/if/if.59.wat:1:23: error: unexpected label "$l2"
-  (func if else $l1 end $l2)
-                        ^^^
+  out/test/spec/if/if.59.wat:1:27: error: unexpected label "$l1"
+  (func i32.const 0 if else $l1 end $l2)
+                            ^^^
+  out/test/spec/if/if.59.wat:1:35: error: unexpected label "$l2"
+  (func i32.const 0 if else $l1 end $l2)
+                                    ^^^
 out/test/spec/if.wast:923: assert_malformed passed:
-  out/test/spec/if/if.60.wat:1:22: error: mismatching label "$a" != "$l"
-  (func if $a else end $l)
-                       ^^
+  out/test/spec/if/if.60.wat:1:34: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else end $l)
+                                   ^^
 out/test/spec/if.wast:927: assert_malformed passed:
-  out/test/spec/if/if.61.wat:1:25: error: mismatching label "$a" != "$l"
-  (func if $a else $a end $l)
-                          ^^
+  out/test/spec/if/if.61.wat:1:37: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else $a end $l)
+                                      ^^
 out/test/spec/if.wast:931: assert_malformed passed:
-  out/test/spec/if/if.62.wat:1:18: error: mismatching label "$a" != "$l"
-  (func if $a else $l end $l)
-                   ^^
-  out/test/spec/if/if.62.wat:1:25: error: mismatching label "$a" != "$l"
-  (func if $a else $l end $l)
-                          ^^
+  out/test/spec/if/if.62.wat:1:30: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else $l end $l)
+                               ^^
+  out/test/spec/if/if.62.wat:1:37: error: mismatching label "$a" != "$l"
+  (func i32.const 0 if $a else $l end $l)
+                                      ^^
 150/150 tests passed.
 ;;; STDOUT ;;)

@@ -9,4 +9,4 @@
   (func)
 
   (table 0 funcref)
-  (elem funcref 1))
+  (elem func 1))

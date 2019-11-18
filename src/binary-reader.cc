@@ -99,6 +99,8 @@ class BinaryReader {
   Result ReadS32Leb128(uint32_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadS64Leb128(uint64_t* out_value, const char* desc) WABT_WARN_UNUSED;
   Result ReadType(Type* out_value, const char* desc) WABT_WARN_UNUSED;
+  Result ReadExternalKind(ExternalKind* out_value,
+                          const char* desc) WABT_WARN_UNUSED;
   Result ReadStr(string_view* out_str, const char* desc) WABT_WARN_UNUSED;
   Result ReadBytes(const void** out_data,
                    Address* out_data_size,
@@ -309,6 +311,16 @@ Result BinaryReader::ReadType(Type* out_value, const char* desc) {
   return Result::Ok;
 }
 
+Result BinaryReader::ReadExternalKind(ExternalKind* out_value,
+                                      const char* desc) {
+  uint8_t value = 0;
+  CHECK_RESULT(ReadU8(&value, desc));
+  ERROR_UNLESS(value < kExternalKindCount, "invalid export external kind: %d",
+               value);
+  *out_value = static_cast<ExternalKind>(value);
+  return Result::Ok;
+}
+
 Result BinaryReader::ReadStr(string_view* out_str, const char* desc) {
   uint32_t str_len = 0;
   CHECK_RESULT(ReadU32Leb128(&str_len, "string length"));
@@ -369,10 +381,6 @@ Result BinaryReader::ReadCount(Index* count, const char* desc) {
     return Result::Error;
   }
   return Result::Ok;
-}
-
-static bool is_valid_external_kind(uint8_t kind) {
-  return kind < kExternalKindCount;
 }
 
 bool BinaryReader::IsConcreteType(Type type) {
@@ -2075,14 +2083,12 @@ Result BinaryReader::ReadExportSection(Offset section_size) {
     string_view name;
     CHECK_RESULT(ReadStr(&name, "export item name"));
 
-    uint8_t kind = 0;
-    CHECK_RESULT(ReadU8(&kind, "export kind"));
-    ERROR_UNLESS(is_valid_external_kind(kind),
-                 "invalid export external kind: %d", kind);
+    ExternalKind kind;
+    CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
 
     Index item_index;
     CHECK_RESULT(ReadIndex(&item_index, "export item index"));
-    switch (static_cast<ExternalKind>(kind)) {
+    switch (kind) {
       case ExternalKind::Func:
         ERROR_UNLESS(item_index < NumTotalFuncs(),
                      "invalid export func index: %" PRIindex, item_index);
@@ -2137,17 +2143,10 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid elem segment flags: %#x",
              flags);
     Index table_index(0);
-    if (flags & SegIndexOther) {
+    if (flags & SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     }
-    Type elem_type;
-    if (flags & SegPassive) {
-      CHECK_RESULT(ReadType(&elem_type, "table elem type"));
-      ERROR_UNLESS(elem_type == Type::Funcref || elem_type == Type::Anyref,
-                   "segment elem type must by funcref or anyref");
-    } else {
-      elem_type = Type::Funcref;
-    }
+    Type elem_type = Type::Funcref;
 
     CALLBACK(BeginElemSegment, i, table_index, flags, elem_type);
 
@@ -2157,12 +2156,31 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
       CALLBACK(EndElemSegmentInitExpr, i);
     }
 
+    // For backwards compat we support not declaring the element kind.
+    bool legacy = !(flags & SegPassive) && !(flags & SegExplicitIndex);
+    if (!legacy) {
+      if (flags & SegUseElemExprs) {
+        CHECK_RESULT(ReadType(&elem_type, "table elem type"));
+        ERROR_UNLESS(
+            elem_type == Type::Funcref || elem_type == Type::Anyref,
+            "segment elem expr type must be funcref or anyref (got %s)",
+            GetTypeName(elem_type));
+      } else {
+        ExternalKind kind;
+        CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
+        ERROR_UNLESS(kind == ExternalKind::Func,
+                     "segment elem type must be func (%s)",
+                     GetTypeName(elem_type));
+        elem_type = Type::Funcref;
+      }
+    }
+
     Index num_elem_exprs;
-    CHECK_RESULT(ReadCount(&num_elem_exprs, "elem expr count"));
+    CHECK_RESULT(ReadCount(&num_elem_exprs, "elem count"));
 
     CALLBACK(OnElemSegmentElemExprCount, i, num_elem_exprs);
     for (Index j = 0; j < num_elem_exprs; ++j) {
-      if (flags & SegPassive) {
+      if (flags & SegUseElemExprs) {
         Opcode opcode;
         CHECK_RESULT(ReadOpcode(&opcode, "elem expr opcode"));
         if (opcode == Opcode::RefNull) {
@@ -2246,7 +2264,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
     ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid data segment flags: %#x",
              flags);
     Index memory_index(0);
-    if (flags & SegIndexOther) {
+    if (flags & SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));
     }
     CALLBACK(BeginDataSegment, i, memory_index, flags);
@@ -2279,6 +2297,7 @@ Result BinaryReader::ReadDataCountSection(Offset section_size) {
 Result BinaryReader::ReadSections() {
   Result result = Result::Ok;
   Index section_index = 0;
+  bool seen_section_code[static_cast<int>(BinarySection::Last) + 1] = {false};
 
   for (; state_.offset < state_.size; ++section_index) {
     uint32_t section_code;
@@ -2293,6 +2312,13 @@ Result BinaryReader::ReadSections() {
     }
 
     BinarySection section = static_cast<BinarySection>(section_code);
+    if (section != BinarySection::Custom) {
+      if (seen_section_code[section_code]) {
+        PrintError("multiple %s sections", GetSectionName(section));
+        return Result::Error;
+      }
+      seen_section_code[section_code] = true;
+    }
 
     ERROR_UNLESS(read_end_ <= state_.size,
                  "invalid section size: extends past end");

@@ -49,26 +49,27 @@
 0000023: 00                                        ; i32 literal
 0000024: 0b                                        ; end
 0000025: 01                                        ; num elems
-0000026: 00                                        ; elem expr function index
+0000026: 00                                        ; elem function index
 ; elem segment header 1
 0000027: 02                                        ; segment flags
 0000028: 01                                        ; table index
 0000029: 41                                        ; i32.const
 000002a: 00                                        ; i32 literal
 000002b: 0b                                        ; end
-000002c: 01                                        ; num elems
-000002d: 00                                        ; elem expr function index
-000001f: 0e                                        ; FIXUP section size
+000002c: 00                                        ; elem list type
+000002d: 01                                        ; num elems
+000002e: 00                                        ; elem function index
+000001f: 0f                                        ; FIXUP section size
 ; section "Code" (10)
-000002e: 0a                                        ; section code
-000002f: 00                                        ; section size (guess)
-0000030: 01                                        ; num functions
+000002f: 0a                                        ; section code
+0000030: 00                                        ; section size (guess)
+0000031: 01                                        ; num functions
 ; function body 0
-0000031: 00                                        ; func body size (guess)
-0000032: 00                                        ; local decl count
-0000033: 0b                                        ; end
-0000031: 02                                        ; FIXUP func body size
-000002f: 04                                        ; FIXUP section size
+0000032: 00                                        ; func body size (guess)
+0000033: 00                                        ; local decl count
+0000034: 0b                                        ; end
+0000032: 02                                        ; FIXUP func body size
+0000030: 04                                        ; FIXUP section size
 
 table-multi.wasm:	file format wasm 0x1
 
@@ -91,6 +92,6 @@ Code[1]:
 
 Code Disassembly:
 
-000032 func[0]:
- 000033: 0b                         | end
+000033 func[0]:
+ 000034: 0b                         | end
 ;;; STDOUT ;;)

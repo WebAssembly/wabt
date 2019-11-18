@@ -7,7 +7,10 @@
   (func))
 
 (;; STDERR ;;;
-out/test/parse/module/bad-elem-redefinition.txt:6:4: error: redefinition of elem "$elem"
+out/test/parse/module/bad-elem-redefinition.txt:5:23: error: unexpected token 0, expected ).
   (elem $elem funcref 0)
-   ^^^^
+                      ^
+out/test/parse/module/bad-elem-redefinition.txt:6:23: error: unexpected token 0, expected ).
+  (elem $elem funcref 0)
+                      ^
 ;;; STDERR ;;)

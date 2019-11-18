@@ -7,7 +7,7 @@ out/test/spec/bulk-memory-operations/memory_fill.wast:43: assert_trap passed: ou
 out/test/spec/bulk-memory-operations/memory_fill.wast:61: assert_trap passed: out of bounds memory access: memory.fill out of bounds
 test() =>
 test() =>
-out/test/spec/bulk-memory-operations/memory_fill.wast:117: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+test() =>
 test() =>
 test() =>
 out/test/spec/bulk-memory-operations/memory_fill.wast:174: assert_invalid passed:
@@ -203,7 +203,7 @@ out/test/spec/bulk-memory-operations/memory_fill.wast:614: assert_invalid passed
   error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, f64]
   000004a: error: OnMemoryFillExpr callback failed
 out/test/spec/bulk-memory-operations/memory_fill.wast:637: assert_trap passed: out of bounds memory access: memory.fill out of bounds
-out/test/spec/bulk-memory-operations/memory_fill.wast:661: assert_trap passed: out of bounds memory access: memory.fill out of bounds
-out/test/spec/bulk-memory-operations/memory_fill.wast:685: assert_trap passed: out of bounds memory access: memory.fill out of bounds
-92/92 tests passed.
+out/test/spec/bulk-memory-operations/memory_fill.wast:659: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+out/test/spec/bulk-memory-operations/memory_fill.wast:681: assert_trap passed: out of bounds memory access: memory.fill out of bounds
+89/89 tests passed.
 ;;; STDOUT ;;)

@@ -46,7 +46,7 @@
 000001f: 00                                        ; i32 literal
 0000020: 0b                                        ; end
 0000021: 01                                        ; num elems
-0000022: 00                                        ; elem expr function index
+0000022: 00                                        ; elem function index
 000001b: 07                                        ; FIXUP section size
 ; section "Code" (10)
 0000023: 0a                                        ; section code
