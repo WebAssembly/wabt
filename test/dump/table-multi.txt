@@ -44,19 +44,19 @@
 000001f: 00                                        ; section size (guess)
 0000020: 02                                        ; num elem segments
 ; elem segment header 0
-0000021: 00                                      
+0000021: 00                                        ; segment flags
 0000022: 41                                        ; i32.const
 0000023: 00                                        ; i32 literal
 0000024: 0b                                        ; end
-0000025: 01                                        ; num elem exprs
+0000025: 01                                        ; num elems
 0000026: 00                                        ; elem expr function index
 ; elem segment header 1
-0000027: 02                                      
+0000027: 02                                        ; segment flags
 0000028: 01                                        ; table index
 0000029: 41                                        ; i32.const
 000002a: 00                                        ; i32 literal
 000002b: 0b                                        ; end
-000002c: 01                                        ; num elem exprs
+000002c: 01                                        ; num elems
 000002d: 00                                        ; elem expr function index
 000001f: 0e                                        ; FIXUP section size
 ; section "Code" (10)
@@ -82,9 +82,9 @@ Table[2]:
  - table[0] type=funcref initial=1 max=1
  - table[1] type=funcref initial=1 max=1
 Elem[2]:
- - segment[0] table=0 count=1 - init i32=0
+ - segment[0] flags=0 table=0 count=1 - init i32=0
   - elem[0] = func[0]
- - segment[1] table=1 count=1 - init i32=0
+ - segment[1] flags=2 table=1 count=1 - init i32=0
   - elem[0] = func[0]
 Code[1]:
  - func[0] size=2

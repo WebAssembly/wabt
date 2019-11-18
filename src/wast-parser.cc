@@ -973,17 +973,21 @@ Result WastParser::ParseElemModuleField(Module* module) {
     Var second_name;
     bool has_second_name = ParseVarOpt(&second_name, Var(0, loc));
     if (options_->features.bulk_memory_enabled() && has_second_name) {
-      field->elem_segment.flags |= SegIndexOther;
+      //field->elem_segment.flags |= SegIndexOther;
       field->elem_segment.table_var = second_name;
       field->elem_segment.name = name;
     } else {
       // If we have only one name, and we are an active segment, we treat
       // that as the name of the table, since naming an active elem segment
       // is not practically useful.
-      if (has_second_name)
+      if (has_second_name) {
         field->elem_segment.table_var = second_name;
-      else
+      } else {
         field->elem_segment.table_var = has_name ? Var(name, loc) : Var(0, loc);
+      }
+    }
+    if (module->GetTableIndex(field->elem_segment.table_var) > 0) {
+      field->elem_segment.flags |= SegIndexOther;
     }
 
     field->elem_segment.elem_type = Type::Funcref;
