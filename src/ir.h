@@ -592,11 +592,12 @@ typedef std::vector<ElemExpr> ElemExprVector;
 
 struct ElemSegment {
   explicit ElemSegment(string_view name) : name(name.to_string()) {}
+  bool is_passive() const { return flags & SegPassive; }
 
   std::string name;
   Var table_var;
-  bool passive = false;
-  Type elem_type;  // If passive == false, this is always Type::Funcref.
+  uint8_t flags = 0;
+  Type elem_type;
   ExprList offset;
   ElemExprVector elem_exprs;
 };
@@ -610,10 +611,11 @@ struct Memory {
 
 struct DataSegment {
   explicit DataSegment(string_view name) : name(name.to_string()) {}
+  bool is_passive() const { return flags & SegPassive; }
 
   std::string name;
   Var memory_var;
-  bool passive = false;
+  uint8_t flags = 0;
   ExprList offset;
   std::vector<uint8_t> data;
 };

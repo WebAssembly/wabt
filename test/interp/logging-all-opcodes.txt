@@ -2646,17 +2646,17 @@
 0001b16: 00                                        ; section size (guess)
 0001b17: 02                                        ; num elem segments
 ; elem segment header 0
-0001b18: 00                                      
+0001b18: 00                                        ; segment flags
 0001b19: 41                                        ; i32.const
 0001b1a: 00                                        ; i32 literal
 0001b1b: 0b                                        ; end
-0001b1c: 02                                        ; num elem exprs
+0001b1c: 02                                        ; num elems
 0001b1d: 01                                        ; elem expr function index
 0001b1e: 01                                        ; elem expr function index
 ; elem segment header 1
-0001b1f: 01                                      
+0001b1f: 01                                        ; segment flags
 0001b20: 70                                        ; funcref
-0001b21: 00                                        ; num elem exprs
+0001b21: 00                                        ; num elems
 0001b16: 0b                                        ; FIXUP section size
 ; section "DataCount" (12)
 0001b22: 0c                                        ; section code
@@ -8302,7 +8302,7 @@ BeginModule(version: 1)
   EndExportSection
   BeginElemSection(11)
     OnElemSegmentCount(2)
-    BeginElemSegment(index: 0, table_index: 0, passive: false, elem_type: funcref)
+    BeginElemSegment(index: 0, table_index: 0, flags: 0, elem_type: funcref)
     BeginElemSegmentInitExpr(0)
     OnInitExprI32ConstExpr(index: 0, value: 0)
     EndElemSegmentInitExpr(0)
@@ -8310,7 +8310,7 @@ BeginModule(version: 1)
     OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     EndElemSegment(0)
-    BeginElemSegment(index: 1, table_index: 0, passive: true, elem_type: funcref)
+    BeginElemSegment(index: 1, table_index: 0, flags: 1, elem_type: funcref)
     OnElemSegmentElemExprCount(index: 1, count: 0)
     EndElemSegment(1)
   EndElemSection
@@ -10958,7 +10958,7 @@ BeginModule(version: 1)
   EndCodeSection
   BeginDataSection(3)
     OnDataSegmentCount(1)
-    BeginDataSegment(index: 0, memory_index: 0, passive: true)
+    BeginDataSegment(index: 0, memory_index: 0, flags: 1)
     OnDataSegmentData(index:0, size:0)
     EndDataSegment(0)
   EndDataSection

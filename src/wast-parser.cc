@@ -922,7 +922,7 @@ Result WastParser::ParseDataModuleField(Module* module) {
   if (ParseVarOpt(&field->data_segment.memory_var, Var(0, loc))) {
     CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
   } else if (!ParseOffsetExprOpt(&field->data_segment.offset)) {
-    field->data_segment.passive = true;
+    field->data_segment.flags |= SegPassive;
   }
 
   ParseTextListOpt(&field->data_segment.data);
@@ -946,7 +946,8 @@ Result WastParser::ParseElemModuleField(Module* module) {
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
     field->elem_segment.name = name;
-    field->elem_segment.passive = true;
+    field->elem_segment.flags |= SegPassive;
+
     // Parse a potentially empty sequence of ElemExprs.
     while (true) {
       Var var;
@@ -972,6 +973,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
     Var second_name;
     bool has_second_name = ParseVarOpt(&second_name, Var(0, loc));
     if (options_->features.bulk_memory_enabled() && has_second_name) {
+      field->elem_segment.flags |= SegIndexOther;
       field->elem_segment.table_var = second_name;
       field->elem_segment.name = name;
     } else {
@@ -1287,6 +1289,8 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
     elem_segment.table_var = Var(module->tables.size());
+    if (module->tables.size() > 0)
+      elem_segment.flags |= SegIndexOther;
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     CHECK_RESULT(ParseElemExprVarList(&elem_segment.elem_exprs));

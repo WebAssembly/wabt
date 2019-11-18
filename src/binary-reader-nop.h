@@ -301,7 +301,7 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   Result OnElemSegmentCount(Index count) override { return Result::Ok; }
   Result BeginElemSegment(Index index,
                           Index table_index,
-                          bool passive,
+                          uint8_t flags,
                           Type elem_type) override {
     return Result::Ok;
   }
@@ -323,7 +323,9 @@ class BinaryReaderNop : public BinaryReaderDelegate {
   /* Data section */
   Result BeginDataSection(Offset size) override { return Result::Ok; }
   Result OnDataSegmentCount(Index count) override { return Result::Ok; }
-  Result BeginDataSegment(Index index, Index memory_index, bool passive) override {
+  Result BeginDataSegment(Index index,
+                          Index memory_index,
+                          uint8_t flags) override {
     return Result::Ok;
   }
   Result BeginDataSegmentInitExpr(Index index) override { return Result::Ok; }

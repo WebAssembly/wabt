@@ -286,7 +286,7 @@ class BinaryReaderDelegate {
   virtual Result OnElemSegmentCount(Index count) = 0;
   virtual Result BeginElemSegment(Index index,
                                   Index table_index,
-                                  bool passive,
+                                  uint8_t flags,
                                   Type elem_type) = 0;
   virtual Result BeginElemSegmentInitExpr(Index index) = 0;
   virtual Result EndElemSegmentInitExpr(Index index) = 0;
@@ -302,7 +302,7 @@ class BinaryReaderDelegate {
   virtual Result OnDataSegmentCount(Index count) = 0;
   virtual Result BeginDataSegment(Index index,
                                   Index memory_index,
-                                  bool passive) = 0;
+                                  uint8_t flags) = 0;
   virtual Result BeginDataSegmentInitExpr(Index index) = 0;
   virtual Result EndDataSegmentInitExpr(Index index) = 0;
   virtual Result OnDataSegmentData(Index index,

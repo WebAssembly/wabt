@@ -791,7 +791,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnElemSegmentCount(Index count) override;
   Result BeginElemSegment(Index index,
                           Index table_index,
-                          bool passive,
+                          uint8_t flags,
                           Type elem_type) override;
   Result OnElemSegmentElemExprCount(Index index, Index count) override;
   Result OnElemSegmentElemExpr_RefNull(Index segment_index) override;
@@ -810,7 +810,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnDataSegmentCount(Index count) override;
   Result BeginDataSegment(Index index,
                           Index memory_index,
-                          bool passive) override;
+                          uint8_t flags) override;
   Result OnDataSegmentData(Index index,
                            const void* data,
                            Address size) override;
@@ -896,8 +896,8 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   bool in_elem_section_ = false;
   InitExpr data_init_expr_;
   InitExpr elem_init_expr_;
-  bool data_is_passive_ = false;
-  bool elem_is_passive_ = false;
+  uint8_t data_flags_ = 0;
+  uint8_t elem_flags_ = 0;
   Index data_mem_index_ = 0;
   uint32_t data_offset_ = 0;
   uint32_t elem_offset_ = 0;
@@ -1264,20 +1264,21 @@ Result BinaryReaderObjdump::OnElemSegmentCount(Index count) {
 
 Result BinaryReaderObjdump::BeginElemSegment(Index index,
                                              Index table_index,
-                                             bool passive,
+                                             uint8_t flags,
                                              Type elem_type) {
   table_index_ = table_index;
   elem_index_ = 0;
-  elem_is_passive_ = passive;
+  elem_flags_ = flags;
   return Result::Ok;
 }
 
 Result BinaryReaderObjdump::OnElemSegmentElemExprCount(Index index,
                                                        Index count) {
-  PrintDetails(" - segment[%" PRIindex "] table=%" PRIindex " count=%" PRIindex,
-               index, table_index_, count);
-  if (elem_is_passive_) {
-    PrintDetails(" passive\n");
+  PrintDetails(" - segment[%" PRIindex "] flags=%d table=%" PRIindex
+               " count=%" PRIindex,
+               index, elem_flags_, table_index_, count);
+  if (elem_flags_ & SegPassive) {
+    PrintDetails("\n");
   } else {
     PrintInitExpr(elem_init_expr_);
   }
@@ -1463,9 +1464,9 @@ Result BinaryReaderObjdump::OnDataSegmentCount(Index count) {
 
 Result BinaryReaderObjdump::BeginDataSegment(Index index,
                                              Index memory_index,
-                                             bool passive) {
+                                             uint8_t flags) {
   data_mem_index_ = memory_index;
-  data_is_passive_ = passive;
+  data_flags_ = flags;
   return Result::Ok;
 }
 
@@ -1481,13 +1482,13 @@ Result BinaryReaderObjdump::OnDataSegmentData(Index index,
   if (!name.empty()) {
     PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
   }
-  if (data_is_passive_) {
+  if (data_flags_ & SegPassive) {
     PrintDetails(" passive");
   } else {
     PrintDetails(" memory=%" PRIindex, data_mem_index_);
   }
   PrintDetails(" size=%" PRIaddress, size);
-  if (data_is_passive_) {
+  if (data_flags_ & SegPassive) {
     PrintDetails("\n");
   } else {
     PrintInitExpr(data_init_expr_);

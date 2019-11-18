@@ -36,13 +36,15 @@
 #include <alloca.h>
 #endif
 
-#define ERROR_UNLESS(expr, ...) \
-  do {                          \
-    if (!(expr)) {              \
-      PrintError(__VA_ARGS__);  \
-      return Result::Error;     \
-    }                           \
+#define ERROR_IF(expr, ...)    \
+  do {                         \
+    if (expr) {                \
+      PrintError(__VA_ARGS__); \
+      return Result::Error;    \
+    }                          \
   } while (0)
+
+#define ERROR_UNLESS(expr, ...) ERROR_IF(!(expr), __VA_ARGS__)
 
 #define ERROR_UNLESS_OPCODE_ENABLED(opcode)     \
   do {                                          \
@@ -519,7 +521,7 @@ Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadU32Leb128(&initial, "table initial elem count"));
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
-  ERROR_UNLESS(!is_shared, "tables may not be shared");
+  ERROR_IF(is_shared, "tables may not be shared");
   if (has_max) {
     CHECK_RESULT(ReadU32Leb128(&max, "table max elem count"));
     ERROR_UNLESS(initial <= max,
@@ -541,7 +543,7 @@ Result BinaryReader::ReadMemory(Limits* out_page_limits) {
   ERROR_UNLESS(initial <= WABT_MAX_PAGES, "invalid memory initial size");
   bool has_max = flags & WABT_BINARY_LIMITS_HAS_MAX_FLAG;
   bool is_shared = flags & WABT_BINARY_LIMITS_IS_SHARED_FLAG;
-  ERROR_UNLESS(!is_shared || has_max, "shared memory must have a max size");
+  ERROR_IF(is_shared && !has_max, "shared memory must have a max size");
   if (has_max) {
     CHECK_RESULT(ReadU32Leb128(&max, "memory max page count"));
     ERROR_UNLESS(max <= WABT_MAX_PAGES, "invalid memory max size");
@@ -2130,17 +2132,16 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
   ERROR_UNLESS(num_elem_segments == 0 || NumTotalTables() > 0,
                "elem section without table section");
   for (Index i = 0; i < num_elem_segments; ++i) {
-    uint32_t flags_u32;
-    CHECK_RESULT(ReadU32Leb128(&flags_u32, "elem segment flags"));
-    ERROR_UNLESS(flags_u32 <= static_cast<uint32_t>(SegmentFlags::IndexOther),
-                 "invalid elem segment flags");
-    SegmentFlags flags = static_cast<SegmentFlags>(flags_u32);
+    uint32_t flags;
+    CHECK_RESULT(ReadU32Leb128(&flags, "elem segment flags"));
+    ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid elem segment flags: %#x",
+             flags);
     Index table_index(0);
-    if (flags == SegmentFlags::IndexOther) {
+    if (flags & SegIndexOther) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     }
     Type elem_type;
-    if (flags == SegmentFlags::Passive) {
+    if (flags & SegPassive) {
       CHECK_RESULT(ReadType(&elem_type, "table elem type"));
       ERROR_UNLESS(elem_type == Type::Funcref || elem_type == Type::Anyref,
                    "segment elem type must by funcref or anyref");
@@ -2148,10 +2149,9 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
       elem_type = Type::Funcref;
     }
 
-    CALLBACK(BeginElemSegment, i, table_index, flags == SegmentFlags::Passive,
-             elem_type);
+    CALLBACK(BeginElemSegment, i, table_index, flags, elem_type);
 
-    if (flags != SegmentFlags::Passive) {
+    if (!(flags & SegPassive)) {
       CALLBACK(BeginElemSegmentInitExpr, i);
       CHECK_RESULT(ReadI32InitExpr(i));
       CALLBACK(EndElemSegmentInitExpr, i);
@@ -2159,9 +2159,10 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
 
     Index num_elem_exprs;
     CHECK_RESULT(ReadCount(&num_elem_exprs, "elem expr count"));
+
     CALLBACK(OnElemSegmentElemExprCount, i, num_elem_exprs);
     for (Index j = 0; j < num_elem_exprs; ++j) {
-      if (flags == SegmentFlags::Passive) {
+      if (flags & SegPassive) {
         Opcode opcode;
         CHECK_RESULT(ReadOpcode(&opcode, "elem expr opcode"));
         if (opcode == Opcode::RefNull) {
@@ -2240,17 +2241,16 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   ERROR_UNLESS(data_count_ == kInvalidIndex || data_count_ == num_data_segments,
                "data segment count does not equal count in DataCount section");
   for (Index i = 0; i < num_data_segments; ++i) {
-    uint32_t flags_u32;
-    CHECK_RESULT(ReadU32Leb128(&flags_u32, "data segment flags"));
-    ERROR_UNLESS(flags_u32 <= static_cast<uint32_t>(SegmentFlags::IndexOther),
-                 "invalid data segment flags");
-    SegmentFlags flags = static_cast<SegmentFlags>(flags_u32);
+    uint32_t flags;
+    CHECK_RESULT(ReadU32Leb128(&flags, "data segment flags"));
+    ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid data segment flags: %#x",
+             flags);
     Index memory_index(0);
-    if (flags == SegmentFlags::IndexOther) {
+    if (flags & SegIndexOther) {
       CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));
     }
-    CALLBACK(BeginDataSegment, i, memory_index, flags == SegmentFlags::Passive);
-    if (flags != SegmentFlags::Passive) {
+    CALLBACK(BeginDataSegment, i, memory_index, flags);
+    if (!(flags & SegPassive)) {
       CALLBACK(BeginDataSegmentInitExpr, i);
       CHECK_RESULT(ReadI32InitExpr(i));
       CALLBACK(EndDataSegmentInitExpr, i);

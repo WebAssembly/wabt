@@ -28,11 +28,11 @@
 0000014: 00                                        ; section size (guess)
 0000015: 01                                        ; num elem segments
 ; elem segment header 0
-0000016: 00                                      
+0000016: 00                                        ; segment flags
 0000017: 41                                        ; i32.const
 0000018: 00                                        ; i32 literal
 0000019: 0b                                        ; end
-000001a: 02                                        ; num elem exprs
+000001a: 02                                        ; num elems
 000001b: 00                                        ; elem expr function index
 000001c: 01                                        ; elem expr function index
 0000014: 08                                        ; FIXUP section size

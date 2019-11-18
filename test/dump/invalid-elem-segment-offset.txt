@@ -36,12 +36,12 @@
 0000019: 00                                        ; section size (guess)
 000001a: 01                                        ; num elem segments
 ; elem segment header 0
-000001b: 00                                      
+000001b: 00                                        ; segment flags
 000001c: 41                                        ; i32.const
 000001d: 01                                        ; i32 literal
 000001e: 45                                        ; i32.eqz
 000001f: 0b                                        ; end
-0000020: 01                                        ; num elem exprs
+0000020: 01                                        ; num elems
 0000021: 00                                        ; elem expr function index
 0000019: 08                                        ; FIXUP section size
 ; section "Code" (10)
