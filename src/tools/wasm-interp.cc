@@ -220,6 +220,7 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
     } else {
       WriteResult(s_stdout_stream.get(), "error running start function",
                   exec_result.result);
+      return wabt::Result::Error;
     }
   }
   return result;

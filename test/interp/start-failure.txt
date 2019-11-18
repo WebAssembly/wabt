@@ -1,0 +1,9 @@
+;;; TOOL: run-interp
+;;; ERROR: 1
+(module
+  (func $start unreachable)
+  (start $start)
+)
+(;; STDOUT ;;;
+error running start function: unreachable executed
+;;; STDOUT ;;)
