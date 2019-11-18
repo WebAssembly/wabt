@@ -157,6 +157,7 @@ bool IsPlainInstr(TokenType token_type) {
     case TokenType::AtomicRmw:
     case TokenType::AtomicRmwCmpxchg:
     case TokenType::AtomicNotify:
+    case TokenType::AtomicFence:
     case TokenType::AtomicWait:
     case TokenType::Ternary:
     case TokenType::SimdLaneOp:
@@ -1972,6 +1973,14 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       ErrorUnlessOpcodeEnabled(token);
       CHECK_RESULT(
           ParsePlainLoadStoreInstr<AtomicNotifyExpr>(loc, token, out_expr));
+      break;
+    }
+
+    case TokenType::AtomicFence: {
+      Token token = Consume();
+      ErrorUnlessOpcodeEnabled(token);
+      uint32_t consistency_model = 0x0;
+      out_expr->reset(new AtomicFenceExpr(consistency_model, loc));
       break;
     }
 

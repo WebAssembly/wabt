@@ -108,6 +108,7 @@ class SharedValidator {
   Result EndFunctionBody(const Location&);
   Result OnLocalDecl(const Location&, Index count, Type type);
 
+  Result OnAtomicFence(const Location&, uint32_t consistency_model);
   Result OnAtomicLoad(const Location&, Opcode, Address align);
   Result OnAtomicNotify(const Location&, Opcode, Address align);
   Result OnAtomicRmwCmpxchg(const Location&, Opcode, Address align);

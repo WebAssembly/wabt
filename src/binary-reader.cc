@@ -1315,6 +1315,16 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         break;
       }
 
+      case Opcode::AtomicFence: {
+        uint8_t consistency_model;
+        CHECK_RESULT(ReadU8(&consistency_model, "consistency model"));
+        ERROR_UNLESS(consistency_model == 0,
+                     "atomic.fence consistency model must be 0");
+        CALLBACK(OnAtomicFenceExpr, consistency_model);
+        CALLBACK(OnOpcodeUint32, consistency_model);
+        break;
+      }
+
       case Opcode::I32AtomicLoad8U:
       case Opcode::I32AtomicLoad16U:
       case Opcode::I64AtomicLoad8U:

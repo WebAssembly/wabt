@@ -214,6 +214,7 @@ class BinaryReaderDelegate {
   virtual Result OnAtomicWaitExpr(Opcode opcode,
                                   uint32_t alignment_log2,
                                   Address offset) = 0;
+  virtual Result OnAtomicFenceExpr(uint32_t consistency_model) = 0;
   virtual Result OnAtomicNotifyExpr(Opcode opcode,
                                     uint32_t alignment_log2,
                                     Address offset) = 0;

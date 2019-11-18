@@ -547,6 +547,7 @@ class WatWriter::ExprVisitorDelegate : public ExprVisitor::Delegate {
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
+  Result OnAtomicFenceExpr(AtomicFenceExpr*) override;
   Result OnAtomicNotifyExpr(AtomicNotifyExpr*) override;
   Result OnAtomicLoadExpr(AtomicLoadExpr*) override;
   Result OnAtomicStoreExpr(AtomicStoreExpr*) override;
@@ -884,6 +885,13 @@ Result WatWriter::ExprVisitorDelegate::OnRethrowExpr(RethrowExpr* expr) {
 
 Result WatWriter::ExprVisitorDelegate::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
   writer_->WriteLoadStoreExpr<AtomicWaitExpr>(expr);
+  return Result::Ok;
+}
+
+Result WatWriter::ExprVisitorDelegate::OnAtomicFenceExpr(
+    AtomicFenceExpr* expr) {
+  assert(expr->consistency_model == 0);
+  writer_->WritePutsNewline(Opcode::AtomicFence_Opcode.GetName());
   return Result::Ok;
 }
 

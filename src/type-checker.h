@@ -59,6 +59,7 @@ class TypeChecker {
   Result GetLabel(Index depth, Label** out_label);
 
   Result BeginFunction(const TypeVector& sig);
+  Result OnAtomicFence(uint32_t consistency_model);
   Result OnAtomicLoad(Opcode);
   Result OnAtomicNotify(Opcode);
   Result OnAtomicStore(Opcode);

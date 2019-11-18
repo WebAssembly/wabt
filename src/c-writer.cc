@@ -1676,6 +1676,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::AtomicRmwCmpxchg:
       case ExprType::AtomicStore:
       case ExprType::AtomicWait:
+      case ExprType::AtomicFence:
       case ExprType::AtomicNotify:
       case ExprType::BrOnExn:
       case ExprType::Rethrow:

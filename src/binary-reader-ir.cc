@@ -129,12 +129,13 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnAtomicRmwCmpxchgExpr(Opcode opcode,
                                 uint32_t alignment_log2,
                                 Address offset) override;
-  wabt::Result OnAtomicWaitExpr(Opcode opcode,
-                                uint32_t alignment_log2,
-                                Address offset) override;
-  wabt::Result OnAtomicNotifyExpr(Opcode opcode,
-                                  uint32_t alignment_log2,
-                                  Address offset) override;
+  Result OnAtomicWaitExpr(Opcode opcode,
+                          uint32_t alignment_log2,
+                          Address offset) override;
+  Result OnAtomicFenceExpr(uint32_t consistency_model) override;
+  Result OnAtomicNotifyExpr(Opcode opcode,
+                            uint32_t alignment_log2,
+                            Address offset) override;
   Result OnBinaryExpr(Opcode opcode) override;
   Result OnBlockExpr(Type sig_type) override;
   Result OnBrExpr(Index depth) override;
@@ -658,16 +659,20 @@ Result BinaryReaderIR::OnAtomicRmwCmpxchgExpr(Opcode opcode,
       MakeUnique<AtomicRmwCmpxchgExpr>(opcode, 1 << alignment_log2, offset));
 }
 
-wabt::Result BinaryReaderIR::OnAtomicWaitExpr(Opcode opcode,
-                                              uint32_t alignment_log2,
-                                              Address offset) {
+Result BinaryReaderIR::OnAtomicWaitExpr(Opcode opcode,
+                                        uint32_t alignment_log2,
+                                        Address offset) {
   return AppendExpr(
       MakeUnique<AtomicWaitExpr>(opcode, 1 << alignment_log2, offset));
 }
 
-wabt::Result BinaryReaderIR::OnAtomicNotifyExpr(Opcode opcode,
-                                                uint32_t alignment_log2,
-                                                Address offset) {
+Result BinaryReaderIR::OnAtomicFenceExpr(uint32_t consistency_model) {
+  return AppendExpr(MakeUnique<AtomicFenceExpr>(consistency_model));
+}
+
+Result BinaryReaderIR::OnAtomicNotifyExpr(Opcode opcode,
+                                          uint32_t alignment_log2,
+                                          Address offset) {
   return AppendExpr(
       MakeUnique<AtomicNotifyExpr>(opcode, 1 << alignment_log2, offset));
 }

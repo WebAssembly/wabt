@@ -140,6 +140,7 @@ class Validator : public ExprVisitor::Delegate {
   Result OnThrowExpr(ThrowExpr*) override;
   Result OnRethrowExpr(RethrowExpr*) override;
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override;
+  Result OnAtomicFenceExpr(AtomicFenceExpr*) override;
   Result OnAtomicNotifyExpr(AtomicNotifyExpr*) override;
   Result OnAtomicLoadExpr(AtomicLoadExpr*) override;
   Result OnAtomicStoreExpr(AtomicStoreExpr*) override;
@@ -517,6 +518,11 @@ Result Validator::OnRethrowExpr(RethrowExpr* expr) {
 Result Validator::OnAtomicWaitExpr(AtomicWaitExpr* expr) {
   result_ |= validator_.OnAtomicWait(expr->loc, expr->opcode,
                                      expr->opcode.GetAlignment(expr->align));
+  return Result::Ok;
+}
+
+Result Validator::OnAtomicFenceExpr(AtomicFenceExpr* expr) {
+  result_ |= validator_.OnAtomicFence(expr->loc, expr->consistency_model);
   return Result::Ok;
 }
 

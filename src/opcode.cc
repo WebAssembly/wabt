@@ -94,6 +94,7 @@ bool Opcode::IsEnabled(const Features& features) const {
     case Opcode::AtomicNotify:
     case Opcode::I32AtomicWait:
     case Opcode::I64AtomicWait:
+    case Opcode::AtomicFence:
     case Opcode::I32AtomicLoad:
     case Opcode::I64AtomicLoad:
     case Opcode::I32AtomicLoad8U:

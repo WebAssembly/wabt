@@ -119,6 +119,7 @@ class ExprVisitor::Delegate {
   virtual Result OnThrowExpr(ThrowExpr*) = 0;
   virtual Result OnRethrowExpr(RethrowExpr*) = 0;
   virtual Result OnAtomicWaitExpr(AtomicWaitExpr*) = 0;
+  virtual Result OnAtomicFenceExpr(AtomicFenceExpr*) = 0;
   virtual Result OnAtomicNotifyExpr(AtomicNotifyExpr*) = 0;
   virtual Result OnAtomicLoadExpr(AtomicLoadExpr*) = 0;
   virtual Result OnAtomicStoreExpr(AtomicStoreExpr*) = 0;
@@ -189,6 +190,7 @@ class ExprVisitor::DelegateNop : public ExprVisitor::Delegate {
   Result OnThrowExpr(ThrowExpr*) override { return Result::Ok; }
   Result OnRethrowExpr(RethrowExpr*) override { return Result::Ok; }
   Result OnAtomicWaitExpr(AtomicWaitExpr*) override { return Result::Ok; }
+  Result OnAtomicFenceExpr(AtomicFenceExpr*) override { return Result::Ok; }
   Result OnAtomicNotifyExpr(AtomicNotifyExpr*) override { return Result::Ok; }
   Result OnAtomicLoadExpr(AtomicLoadExpr*) override { return Result::Ok; }
   Result OnAtomicStoreExpr(AtomicStoreExpr*) override { return Result::Ok; }

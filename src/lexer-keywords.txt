@@ -23,6 +23,7 @@ assert_malformed, TokenType::AssertMalformed
 assert_return, TokenType::AssertReturn
 assert_trap, TokenType::AssertTrap
 assert_unlinkable, TokenType::AssertUnlinkable
+atomic.fence, TokenType::AtomicFence, Opcode::AtomicFence
 atomic.notify, TokenType::AtomicNotify, Opcode::AtomicNotify
 binary, TokenType::Bin
 block, TokenType::Block, Opcode::Block
