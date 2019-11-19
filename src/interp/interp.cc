@@ -101,6 +101,11 @@ std::string TypedValueToString(const TypedValue& tv) {
     case Type::Void:
     case Type::Any:
     case Type::Anyref:
+    case Type::I8:
+    case Type::I8U:
+    case Type::I16:
+    case Type::I16U:
+    case Type::I32U:
       // These types are not concrete types and should never exist as a value
       WABT_UNREACHABLE;
   }
