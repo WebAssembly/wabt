@@ -76,11 +76,11 @@ EXECUTE_PROCESS(COMMAND
             GIT_HASH
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-IF(${GIT_HASH_RESULT})
+IF(${GIT_HASH_RESULT} EQUAL 0)
+    SET(WABT_VERSION_INFO "${GIT_HASH}")
+ELSE()
     MESSAGE(WARNING "Error running git describe to determine version")
     SET(WABT_VERSION_INFO "(unable to determine version)")
-ELSE()
-    SET(WABT_VERSION_INFO "${GIT_HASH}")
 ENDIF()
 
 configure_file(
