@@ -1,171 +1,171 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/memory_trap.wast
 (;; STDOUT ;;;
-out/test/spec/memory_trap.wast:23: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:24: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:25: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:26: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:27: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:28: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:29: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:30: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:31: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:32: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:111: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:112: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:113: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:114: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:115: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:116: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:117: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:118: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:119: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:120: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:121: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:122: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:123: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:124: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:125: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:126: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:127: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:128: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:129: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:130: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:131: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:132: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:133: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:134: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:135: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:136: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:137: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:138: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:139: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:140: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:141: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:142: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:143: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:144: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:145: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:146: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:147: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:148: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:149: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:150: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:151: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:152: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:153: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:154: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:155: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:156: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:157: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:158: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:159: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:160: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:161: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:162: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:163: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:164: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:165: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:166: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:167: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:168: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:169: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:170: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:171: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:172: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:173: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:174: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:175: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:176: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:177: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:178: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:179: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:180: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:181: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:182: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:183: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:184: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:185: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:186: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:187: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:188: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:189: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:190: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:191: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:192: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:193: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:194: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:195: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:196: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:197: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:198: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:199: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:200: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:201: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:202: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:203: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:204: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:205: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:206: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:207: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:208: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:209: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:210: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:211: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:212: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:213: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:214: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:215: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:216: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:217: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:218: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:219: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:220: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:221: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:222: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:223: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:224: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:225: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:226: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:227: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:228: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:229: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:230: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:231: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:232: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:233: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:234: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:235: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:236: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:237: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:238: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:239: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:240: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:241: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:242: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:243: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:244: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:245: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:246: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:247: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:248: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:249: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:250: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:251: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:252: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:253: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:254: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:255: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:256: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:257: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:258: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:259: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:260: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:261: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:262: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:263: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:264: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:265: assert_trap passed: out of bounds memory access
-out/test/spec/memory_trap.wast:266: assert_trap passed: out of bounds memory access
+out/test/spec/memory_trap.wast:23: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:24: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:25: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:26: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:27: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:28: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:29: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:30: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:31: assert_trap passed: out of bounds memory access: access at 2147549184+4 >= max value 65536
+out/test/spec/memory_trap.wast:32: assert_trap passed: out of bounds memory access: access at 2147549184+4 >= max value 65536
+out/test/spec/memory_trap.wast:111: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:112: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:113: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:114: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:115: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory_trap.wast:116: assert_trap passed: out of bounds memory access: access at 4294967294+4 >= max value 65536
+out/test/spec/memory_trap.wast:117: assert_trap passed: out of bounds memory access: access at 4294967293+4 >= max value 65536
+out/test/spec/memory_trap.wast:118: assert_trap passed: out of bounds memory access: access at 4294967292+4 >= max value 65536
+out/test/spec/memory_trap.wast:119: assert_trap passed: out of bounds memory access: access at 65536+8 >= max value 65536
+out/test/spec/memory_trap.wast:120: assert_trap passed: out of bounds memory access: access at 65535+8 >= max value 65536
+out/test/spec/memory_trap.wast:121: assert_trap passed: out of bounds memory access: access at 65534+8 >= max value 65536
+out/test/spec/memory_trap.wast:122: assert_trap passed: out of bounds memory access: access at 65533+8 >= max value 65536
+out/test/spec/memory_trap.wast:123: assert_trap passed: out of bounds memory access: access at 65532+8 >= max value 65536
+out/test/spec/memory_trap.wast:124: assert_trap passed: out of bounds memory access: access at 65531+8 >= max value 65536
+out/test/spec/memory_trap.wast:125: assert_trap passed: out of bounds memory access: access at 65530+8 >= max value 65536
+out/test/spec/memory_trap.wast:126: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/memory_trap.wast:127: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/memory_trap.wast:128: assert_trap passed: out of bounds memory access: access at 4294967294+8 >= max value 65536
+out/test/spec/memory_trap.wast:129: assert_trap passed: out of bounds memory access: access at 4294967293+8 >= max value 65536
+out/test/spec/memory_trap.wast:130: assert_trap passed: out of bounds memory access: access at 4294967292+8 >= max value 65536
+out/test/spec/memory_trap.wast:131: assert_trap passed: out of bounds memory access: access at 4294967291+8 >= max value 65536
+out/test/spec/memory_trap.wast:132: assert_trap passed: out of bounds memory access: access at 4294967290+8 >= max value 65536
+out/test/spec/memory_trap.wast:133: assert_trap passed: out of bounds memory access: access at 4294967289+8 >= max value 65536
+out/test/spec/memory_trap.wast:134: assert_trap passed: out of bounds memory access: access at 4294967288+8 >= max value 65536
+out/test/spec/memory_trap.wast:135: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:136: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:137: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:138: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:139: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory_trap.wast:140: assert_trap passed: out of bounds memory access: access at 4294967294+4 >= max value 65536
+out/test/spec/memory_trap.wast:141: assert_trap passed: out of bounds memory access: access at 4294967293+4 >= max value 65536
+out/test/spec/memory_trap.wast:142: assert_trap passed: out of bounds memory access: access at 4294967292+4 >= max value 65536
+out/test/spec/memory_trap.wast:143: assert_trap passed: out of bounds memory access: access at 65536+8 >= max value 65536
+out/test/spec/memory_trap.wast:144: assert_trap passed: out of bounds memory access: access at 65535+8 >= max value 65536
+out/test/spec/memory_trap.wast:145: assert_trap passed: out of bounds memory access: access at 65534+8 >= max value 65536
+out/test/spec/memory_trap.wast:146: assert_trap passed: out of bounds memory access: access at 65533+8 >= max value 65536
+out/test/spec/memory_trap.wast:147: assert_trap passed: out of bounds memory access: access at 65532+8 >= max value 65536
+out/test/spec/memory_trap.wast:148: assert_trap passed: out of bounds memory access: access at 65531+8 >= max value 65536
+out/test/spec/memory_trap.wast:149: assert_trap passed: out of bounds memory access: access at 65530+8 >= max value 65536
+out/test/spec/memory_trap.wast:150: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/memory_trap.wast:151: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/memory_trap.wast:152: assert_trap passed: out of bounds memory access: access at 4294967294+8 >= max value 65536
+out/test/spec/memory_trap.wast:153: assert_trap passed: out of bounds memory access: access at 4294967293+8 >= max value 65536
+out/test/spec/memory_trap.wast:154: assert_trap passed: out of bounds memory access: access at 4294967292+8 >= max value 65536
+out/test/spec/memory_trap.wast:155: assert_trap passed: out of bounds memory access: access at 4294967291+8 >= max value 65536
+out/test/spec/memory_trap.wast:156: assert_trap passed: out of bounds memory access: access at 4294967290+8 >= max value 65536
+out/test/spec/memory_trap.wast:157: assert_trap passed: out of bounds memory access: access at 4294967289+8 >= max value 65536
+out/test/spec/memory_trap.wast:158: assert_trap passed: out of bounds memory access: access at 4294967288+8 >= max value 65536
+out/test/spec/memory_trap.wast:159: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/memory_trap.wast:160: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/memory_trap.wast:161: assert_trap passed: out of bounds memory access: access at 65536+2 >= max value 65536
+out/test/spec/memory_trap.wast:162: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/memory_trap.wast:163: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/memory_trap.wast:164: assert_trap passed: out of bounds memory access: access at 4294967294+2 >= max value 65536
+out/test/spec/memory_trap.wast:165: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/memory_trap.wast:166: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/memory_trap.wast:167: assert_trap passed: out of bounds memory access: access at 65536+2 >= max value 65536
+out/test/spec/memory_trap.wast:168: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/memory_trap.wast:169: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/memory_trap.wast:170: assert_trap passed: out of bounds memory access: access at 4294967294+2 >= max value 65536
+out/test/spec/memory_trap.wast:171: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:172: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:173: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:174: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:175: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory_trap.wast:176: assert_trap passed: out of bounds memory access: access at 4294967294+4 >= max value 65536
+out/test/spec/memory_trap.wast:177: assert_trap passed: out of bounds memory access: access at 4294967293+4 >= max value 65536
+out/test/spec/memory_trap.wast:178: assert_trap passed: out of bounds memory access: access at 4294967292+4 >= max value 65536
+out/test/spec/memory_trap.wast:179: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:180: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:181: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:182: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:183: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory_trap.wast:184: assert_trap passed: out of bounds memory access: access at 4294967294+4 >= max value 65536
+out/test/spec/memory_trap.wast:185: assert_trap passed: out of bounds memory access: access at 4294967293+4 >= max value 65536
+out/test/spec/memory_trap.wast:186: assert_trap passed: out of bounds memory access: access at 4294967292+4 >= max value 65536
+out/test/spec/memory_trap.wast:187: assert_trap passed: out of bounds memory access: access at 65536+8 >= max value 65536
+out/test/spec/memory_trap.wast:188: assert_trap passed: out of bounds memory access: access at 65535+8 >= max value 65536
+out/test/spec/memory_trap.wast:189: assert_trap passed: out of bounds memory access: access at 65534+8 >= max value 65536
+out/test/spec/memory_trap.wast:190: assert_trap passed: out of bounds memory access: access at 65533+8 >= max value 65536
+out/test/spec/memory_trap.wast:191: assert_trap passed: out of bounds memory access: access at 65532+8 >= max value 65536
+out/test/spec/memory_trap.wast:192: assert_trap passed: out of bounds memory access: access at 65531+8 >= max value 65536
+out/test/spec/memory_trap.wast:193: assert_trap passed: out of bounds memory access: access at 65530+8 >= max value 65536
+out/test/spec/memory_trap.wast:194: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/memory_trap.wast:195: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/memory_trap.wast:196: assert_trap passed: out of bounds memory access: access at 4294967294+8 >= max value 65536
+out/test/spec/memory_trap.wast:197: assert_trap passed: out of bounds memory access: access at 4294967293+8 >= max value 65536
+out/test/spec/memory_trap.wast:198: assert_trap passed: out of bounds memory access: access at 4294967292+8 >= max value 65536
+out/test/spec/memory_trap.wast:199: assert_trap passed: out of bounds memory access: access at 4294967291+8 >= max value 65536
+out/test/spec/memory_trap.wast:200: assert_trap passed: out of bounds memory access: access at 4294967290+8 >= max value 65536
+out/test/spec/memory_trap.wast:201: assert_trap passed: out of bounds memory access: access at 4294967289+8 >= max value 65536
+out/test/spec/memory_trap.wast:202: assert_trap passed: out of bounds memory access: access at 4294967288+8 >= max value 65536
+out/test/spec/memory_trap.wast:203: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:204: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:205: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:206: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:207: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory_trap.wast:208: assert_trap passed: out of bounds memory access: access at 4294967294+4 >= max value 65536
+out/test/spec/memory_trap.wast:209: assert_trap passed: out of bounds memory access: access at 4294967293+4 >= max value 65536
+out/test/spec/memory_trap.wast:210: assert_trap passed: out of bounds memory access: access at 4294967292+4 >= max value 65536
+out/test/spec/memory_trap.wast:211: assert_trap passed: out of bounds memory access: access at 65536+8 >= max value 65536
+out/test/spec/memory_trap.wast:212: assert_trap passed: out of bounds memory access: access at 65535+8 >= max value 65536
+out/test/spec/memory_trap.wast:213: assert_trap passed: out of bounds memory access: access at 65534+8 >= max value 65536
+out/test/spec/memory_trap.wast:214: assert_trap passed: out of bounds memory access: access at 65533+8 >= max value 65536
+out/test/spec/memory_trap.wast:215: assert_trap passed: out of bounds memory access: access at 65532+8 >= max value 65536
+out/test/spec/memory_trap.wast:216: assert_trap passed: out of bounds memory access: access at 65531+8 >= max value 65536
+out/test/spec/memory_trap.wast:217: assert_trap passed: out of bounds memory access: access at 65530+8 >= max value 65536
+out/test/spec/memory_trap.wast:218: assert_trap passed: out of bounds memory access: access at 65529+8 >= max value 65536
+out/test/spec/memory_trap.wast:219: assert_trap passed: out of bounds memory access: access at 4294967295+8 >= max value 65536
+out/test/spec/memory_trap.wast:220: assert_trap passed: out of bounds memory access: access at 4294967294+8 >= max value 65536
+out/test/spec/memory_trap.wast:221: assert_trap passed: out of bounds memory access: access at 4294967293+8 >= max value 65536
+out/test/spec/memory_trap.wast:222: assert_trap passed: out of bounds memory access: access at 4294967292+8 >= max value 65536
+out/test/spec/memory_trap.wast:223: assert_trap passed: out of bounds memory access: access at 4294967291+8 >= max value 65536
+out/test/spec/memory_trap.wast:224: assert_trap passed: out of bounds memory access: access at 4294967290+8 >= max value 65536
+out/test/spec/memory_trap.wast:225: assert_trap passed: out of bounds memory access: access at 4294967289+8 >= max value 65536
+out/test/spec/memory_trap.wast:226: assert_trap passed: out of bounds memory access: access at 4294967288+8 >= max value 65536
+out/test/spec/memory_trap.wast:227: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/memory_trap.wast:228: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/memory_trap.wast:229: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/memory_trap.wast:230: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/memory_trap.wast:231: assert_trap passed: out of bounds memory access: access at 65536+2 >= max value 65536
+out/test/spec/memory_trap.wast:232: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/memory_trap.wast:233: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/memory_trap.wast:234: assert_trap passed: out of bounds memory access: access at 4294967294+2 >= max value 65536
+out/test/spec/memory_trap.wast:235: assert_trap passed: out of bounds memory access: access at 65536+2 >= max value 65536
+out/test/spec/memory_trap.wast:236: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/memory_trap.wast:237: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/memory_trap.wast:238: assert_trap passed: out of bounds memory access: access at 4294967294+2 >= max value 65536
+out/test/spec/memory_trap.wast:239: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/memory_trap.wast:240: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/memory_trap.wast:241: assert_trap passed: out of bounds memory access: access at 65536+1 >= max value 65536
+out/test/spec/memory_trap.wast:242: assert_trap passed: out of bounds memory access: access at 4294967295+1 >= max value 65536
+out/test/spec/memory_trap.wast:243: assert_trap passed: out of bounds memory access: access at 65536+2 >= max value 65536
+out/test/spec/memory_trap.wast:244: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/memory_trap.wast:245: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/memory_trap.wast:246: assert_trap passed: out of bounds memory access: access at 4294967294+2 >= max value 65536
+out/test/spec/memory_trap.wast:247: assert_trap passed: out of bounds memory access: access at 65536+2 >= max value 65536
+out/test/spec/memory_trap.wast:248: assert_trap passed: out of bounds memory access: access at 65535+2 >= max value 65536
+out/test/spec/memory_trap.wast:249: assert_trap passed: out of bounds memory access: access at 4294967295+2 >= max value 65536
+out/test/spec/memory_trap.wast:250: assert_trap passed: out of bounds memory access: access at 4294967294+2 >= max value 65536
+out/test/spec/memory_trap.wast:251: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:252: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:253: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:254: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:255: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory_trap.wast:256: assert_trap passed: out of bounds memory access: access at 4294967294+4 >= max value 65536
+out/test/spec/memory_trap.wast:257: assert_trap passed: out of bounds memory access: access at 4294967293+4 >= max value 65536
+out/test/spec/memory_trap.wast:258: assert_trap passed: out of bounds memory access: access at 4294967292+4 >= max value 65536
+out/test/spec/memory_trap.wast:259: assert_trap passed: out of bounds memory access: access at 65536+4 >= max value 65536
+out/test/spec/memory_trap.wast:260: assert_trap passed: out of bounds memory access: access at 65535+4 >= max value 65536
+out/test/spec/memory_trap.wast:261: assert_trap passed: out of bounds memory access: access at 65534+4 >= max value 65536
+out/test/spec/memory_trap.wast:262: assert_trap passed: out of bounds memory access: access at 65533+4 >= max value 65536
+out/test/spec/memory_trap.wast:263: assert_trap passed: out of bounds memory access: access at 4294967295+4 >= max value 65536
+out/test/spec/memory_trap.wast:264: assert_trap passed: out of bounds memory access: access at 4294967294+4 >= max value 65536
+out/test/spec/memory_trap.wast:265: assert_trap passed: out of bounds memory access: access at 4294967293+4 >= max value 65536
+out/test/spec/memory_trap.wast:266: assert_trap passed: out of bounds memory access: access at 4294967292+4 >= max value 65536
 171/171 tests passed.
 ;;; STDOUT ;;)

@@ -168,8 +168,8 @@ static interp::Result PrintCallback(const HostFunc* func,
                                     TypedValues& results) {
   printf("called host ");
   WriteCall(s_stdout_stream.get(), func->module_name, func->field_name, args,
-            results, interp::Result::Ok);
-  return interp::Result::Ok;
+            results, interp::ResultType::Ok);
+  return interp::ResultType::Ok;
 }
 
 static void InitEnvironment(Environment* env) {
@@ -213,7 +213,7 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
   if (Succeeded(result)) {
     Executor executor(&env, s_trace_stream, s_thread_options);
     ExecResult exec_result = executor.RunStartFunction(module);
-    if (exec_result.result == interp::Result::Ok) {
+    if (exec_result.ok()) {
       if (s_run_all_exports) {
         RunAllExports(module, &executor, RunVerbosity::Verbose);
       }

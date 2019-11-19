@@ -1645,7 +1645,7 @@ elem.drop() => error: element segment dropped
 #0. 5188: V:1  | i32.const 2
 #0. 5196: V:2  | i32.const 3
 #0. 5204: V:3  | table.copy $0
-table.copy() => error: out of bounds table access
+table.copy() => error: out of bounds table access: table.copy out of bounds
 >>> running export "v128.load":
 #0. 5220: V:0  | i32.const 1
 #0. 5228: V:1  | v128.load $0:1+$3

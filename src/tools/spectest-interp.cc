@@ -873,8 +873,8 @@ static interp::Result PrintCallback(const HostFunc* func,
                                     TypedValues& results) {
   printf("called host ");
   WriteCall(s_stdout_stream.get(), func->module_name, func->field_name, args,
-            results, interp::Result::Ok);
-  return interp::Result::Ok;
+            results, interp::ResultType::Ok);
+  return interp::ResultType::Ok;
 }
 
 static void InitEnvironment(Environment* env) {
@@ -984,15 +984,14 @@ static ExecResult GetGlobalExportByName(Environment* env,
                                         string_view name) {
   interp::Export* export_ = module->GetExport(name);
   if (!export_) {
-    printf("xxx\n");
-    return ExecResult(interp::Result::UnknownExport);
+    return ExecResult(interp::ResultType::UnknownExport);
   }
   if (export_->kind != ExternalKind::Global) {
-    return ExecResult(interp::Result::ExportKindMismatch);
+    return ExecResult(interp::ResultType::ExportKindMismatch);
   }
 
   interp::Global* global = env->GetGlobal(export_->index);
-  return ExecResult(interp::Result::Ok, {global->typed_value});
+  return ExecResult(interp::ResultType::Ok, {global->typed_value});
 }
 
 ExecResult CommandRunner::RunAction(int line_number,
@@ -1127,7 +1126,7 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
   }
 
   ExecResult exec_result = executor_.RunStartFunction(last_module_);
-  if (exec_result.result != interp::Result::Ok) {
+  if (!exec_result.ok()) {
     env_.ResetToMarkPoint(mark);
     WriteResult(s_stdout_stream.get(), "error running start function",
                 exec_result.result);
@@ -1147,9 +1146,9 @@ wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
   ExecResult exec_result =
       RunAction(command->line, &command->action, RunVerbosity::Verbose);
 
-  if (exec_result.result != interp::Result::Ok) {
+  if (!exec_result.ok()) {
     PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result));
+               ResultToString(exec_result.result).c_str());
     return wabt::Result::Error;
   }
 
@@ -1230,7 +1229,7 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
 
   if (Succeeded(result)) {
     ExecResult exec_result = executor_.RunStartFunction(module);
-    if (exec_result.result == interp::Result::Ok) {
+    if (exec_result.ok()) {
       PrintError(command->line, "expected error running start function: \"%s\"",
                  command->filename.c_str());
       result = wabt::Result::Error;
@@ -1281,9 +1280,9 @@ wabt::Result CommandRunner::OnAssertReturnFuncCommand(
   ExecResult exec_result =
       RunAction(command->line, &command->action, RunVerbosity::Quiet);
 
-  if (exec_result.result != interp::Result::Ok) {
+  if (!exec_result.ok()) {
     PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result));
+               ResultToString(exec_result.result).c_str());
     return wabt::Result::Error;
   }
 
@@ -1310,9 +1309,9 @@ wabt::Result CommandRunner::OnAssertReturnCommand(
   ExecResult exec_result =
       RunAction(command->line, &command->action, RunVerbosity::Quiet);
 
-  if (exec_result.result != interp::Result::Ok) {
+  if (!exec_result.ok()) {
     PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result));
+               ResultToString(exec_result.result).c_str());
     return wabt::Result::Error;
   }
 
@@ -1347,9 +1346,9 @@ wabt::Result CommandRunner::OnAssertReturnNanCommand(
   ExecResult exec_result =
       RunAction(command->line, &command->action, RunVerbosity::Quiet);
 
-  if (exec_result.result != interp::Result::Ok) {
+  if (!exec_result.ok()) {
     PrintError(command->line, "unexpected trap: %s",
-               ResultToString(exec_result.result));
+               ResultToString(exec_result.result).c_str());
     return wabt::Result::Error;
   }
 
@@ -1399,13 +1398,13 @@ wabt::Result CommandRunner::OnAssertTrapCommand(
     const AssertTrapCommand* command) {
   ExecResult exec_result =
       RunAction(command->line, &command->action, RunVerbosity::Quiet);
-  if (exec_result.result == interp::Result::Ok) {
+  if (exec_result.ok()) {
     PrintError(command->line, "expected trap: \"%s\"", command->text.c_str());
     return wabt::Result::Error;
   }
 
   PrintError(command->line, "assert_trap passed: %s",
-             ResultToString(exec_result.result));
+             ResultToString(exec_result.result).c_str());
   return wabt::Result::Ok;
 }
 
@@ -1413,8 +1412,8 @@ wabt::Result CommandRunner::OnAssertExhaustionCommand(
     const AssertExhaustionCommand* command) {
   ExecResult exec_result =
       RunAction(command->line, &command->action, RunVerbosity::Quiet);
-  if (exec_result.result != interp::Result::TrapCallStackExhausted &&
-      exec_result.result != interp::Result::TrapValueStackExhausted) {
+  if (exec_result.result.type != interp::ResultType::TrapCallStackExhausted &&
+      exec_result.result.type != interp::ResultType::TrapValueStackExhausted) {
     PrintError(command->line, "expected call stack exhaustion");
     return wabt::Result::Error;
   }
