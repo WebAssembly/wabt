@@ -37,5 +37,6 @@ out/test/spec/elem.wast:282: assert_invalid passed:
   0000013: error: unexpected opcode in initializer expression: 0x1
 out/test/spec/elem.wast:290: assert_invalid passed:
   0000015: error: expected END opcode after initializer expression
+out/test/spec/elem.wast:353: assert_trap passed: uninitialized table element
 31/31 tests passed.
 ;;; STDOUT ;;)

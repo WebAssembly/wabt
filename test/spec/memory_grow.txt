@@ -1,6 +1,13 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/memory_grow.wast
 (;; STDOUT ;;;
+out/test/spec/memory_grow.wast:15: assert_trap passed: out of bounds memory access
+out/test/spec/memory_grow.wast:16: assert_trap passed: out of bounds memory access
+out/test/spec/memory_grow.wast:17: assert_trap passed: out of bounds memory access
+out/test/spec/memory_grow.wast:18: assert_trap passed: out of bounds memory access
+out/test/spec/memory_grow.wast:24: assert_trap passed: out of bounds memory access
+out/test/spec/memory_grow.wast:25: assert_trap passed: out of bounds memory access
+out/test/spec/memory_grow.wast:286: assert_trap passed: undefined table index
 out/test/spec/memory_grow.wast:313: assert_invalid passed:
   error: type mismatch in memory.grow, expected [i32] but got []
   000001e: error: OnMemoryGrowExpr callback failed

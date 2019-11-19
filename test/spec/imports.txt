@@ -109,6 +109,12 @@ out/test/spec/imports.wast:260: assert_unlinkable passed:
 out/test/spec/imports.wast:264: assert_unlinkable passed:
   error: expected import "spectest.memory" to have kind global, not memory
   000001e: error: OnImportGlobal callback failed
+out/test/spec/imports.wast:283: assert_trap passed: uninitialized table element
+out/test/spec/imports.wast:286: assert_trap passed: uninitialized table element
+out/test/spec/imports.wast:287: assert_trap passed: undefined table index
+out/test/spec/imports.wast:302: assert_trap passed: uninitialized table element
+out/test/spec/imports.wast:305: assert_trap passed: uninitialized table element
+out/test/spec/imports.wast:306: assert_trap passed: undefined table index
 out/test/spec/imports.wast:310: assert_invalid passed:
   error: unknown import module ""
   0000011: error: OnImportTable callback failed
@@ -147,6 +153,8 @@ out/test/spec/imports.wast:369: assert_unlinkable passed:
 out/test/spec/imports.wast:373: assert_unlinkable passed:
   error: expected import "spectest.print_i32" to have kind table, not func
   0000022: error: OnImportTable callback failed
+out/test/spec/imports.wast:391: assert_trap passed: out of bounds memory access
+out/test/spec/imports.wast:402: assert_trap passed: out of bounds memory access
 out/test/spec/imports.wast:405: assert_invalid passed:
   error: unknown import module ""
   0000010: error: OnImportMemory callback failed

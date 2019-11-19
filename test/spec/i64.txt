@@ -1,6 +1,15 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/i64.wast
 (;; STDOUT ;;;
+out/test/spec/i64.wast:62: assert_trap passed: integer divide by zero
+out/test/spec/i64.wast:63: assert_trap passed: integer divide by zero
+out/test/spec/i64.wast:64: assert_trap passed: integer overflow
+out/test/spec/i64.wast:82: assert_trap passed: integer divide by zero
+out/test/spec/i64.wast:83: assert_trap passed: integer divide by zero
+out/test/spec/i64.wast:99: assert_trap passed: integer divide by zero
+out/test/spec/i64.wast:100: assert_trap passed: integer divide by zero
+out/test/spec/i64.wast:120: assert_trap passed: integer divide by zero
+out/test/spec/i64.wast:121: assert_trap passed: integer divide by zero
 out/test/spec/i64.wast:426: assert_invalid passed:
   error: type mismatch in i64.add, expected [i64, i64] but got [i32, f32]
   0000020: error: OnBinaryExpr callback failed

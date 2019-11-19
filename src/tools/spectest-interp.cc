@@ -1404,6 +1404,8 @@ wabt::Result CommandRunner::OnAssertTrapCommand(
     return wabt::Result::Error;
   }
 
+  PrintError(command->line, "assert_trap passed: %s",
+             ResultToString(exec_result.result));
   return wabt::Result::Ok;
 }
 
