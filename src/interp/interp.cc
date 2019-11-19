@@ -798,12 +798,6 @@ ValueTypeRep<double> CanonicalizeNan<double>(ValueTypeRep<double> rep) {
 
 #define TRAP_MSG(type, ...) \
   return Result(ResultType::Trap##type, StringPrintf(__VA_ARGS__))
-#define TRAP_IF_MSG(cond, type, ...) \
-  do {                               \
-    if (WABT_UNLIKELY(cond)) {       \
-      TRAP_MSG(type, __VA_ARGS__);   \
-    }                                \
-  } while (0)
 
 #define CHECK_STACK() \
   TRAP_IF(value_stack_top_ >= value_stack_.size(), ValueStackExhausted)
@@ -1071,7 +1065,9 @@ Result Thread::MemoryCopy(const uint8_t** pc) {
       memmove(data + dst, data + src, size);
     }
   }
-  TRAP_IF_MSG(!ok, MemoryAccessOutOfBounds, "memory.copy out of bound");
+  if (!ok) {
+    TRAP_MSG(MemoryAccessOutOfBounds, "memory.copy out of bound");
+  }
   return ResultType::Ok;
 }
 
@@ -1085,7 +1081,9 @@ Result Thread::MemoryFill(const uint8_t** pc) {
   if (size > 0) {
     memset(memory->data.data() + dst, value, size);
   }
-  TRAP_IF_MSG(!ok, MemoryAccessOutOfBounds, "memory.fill out of bounds");
+  if (!ok) {
+    TRAP_MSG(MemoryAccessOutOfBounds, "memory.fill out of bounds");
+  }
   return ResultType::Ok;
 }
 
@@ -1103,7 +1101,9 @@ Result Thread::TableInit(const uint8_t** pc) {
     memcpy(table->entries.data() + dst, segment->elems.data() + src,
            size * sizeof(table->entries[0]));
   }
-  TRAP_IF_MSG(!ok, TableAccessOutOfBounds, "table.init out of bounds");
+  if (!ok) {
+    TRAP_MSG(TableAccessOutOfBounds, "table.init out of bounds");
+  }
   return ResultType::Ok;
 }
 
@@ -1112,7 +1112,7 @@ Result Thread::TableSet(const uint8_t** pc) {
   Ref ref = Pop<Ref>();
   uint32_t index = Pop<uint32_t>();
   if (index >= table->size()) {
-    TRAP_MSG(TableAccessOutOfBounds, "table.set at %u >= max value %" PRIu64,
+    TRAP_MSG(TableAccessOutOfBounds, "table.set at %u >= max value %" PRIzx,
              index, table->size());
   }
   table->entries[index] = ref;
@@ -1123,7 +1123,7 @@ Result Thread::TableGet(const uint8_t** pc) {
   Table* table = ReadTable(pc);
   uint32_t index = Pop<uint32_t>();
   if (index >= table->size()) {
-    TRAP_MSG(TableAccessOutOfBounds, "table.get at %u >= max value %" PRIu64,
+    TRAP_MSG(TableAccessOutOfBounds, "table.get at %u >= max value %" PRIzx,
              index, table->size());
   }
   Ref ref = static_cast<Ref>(table->entries[index]);
@@ -1156,7 +1156,9 @@ Result Thread::TableCopy(const uint8_t** pc) {
       memmove(data_dst + dst, data_src + src, size * sizeof(Ref));
     }
   }
-  TRAP_IF_MSG(!ok, TableAccessOutOfBounds, "table.copy out of bounds");
+  if (!ok) {
+    TRAP_MSG(TableAccessOutOfBounds, "table.copy out of bounds");
+  }
   return ResultType::Ok;
 }
 
@@ -1770,8 +1772,10 @@ Result Thread::CallHost(HostFunc* func) {
   Result call_result = func->callback(func, sig, params, results);
   TRAP_UNLESS(call_result.ok(), HostTrapped);
 
-  TRAP_IF_MSG(results.size() != num_results, HostResultTypeMismatch,
-              "expected %lu results but got %lu", num_results, results.size());
+  if (results.size() != num_results) {
+    TRAP_MSG(HostResultTypeMismatch, "expected %lu results but got %lu",
+             num_results, results.size());
+  }
   for (size_t i = 0; i < num_results; ++i) {
     if (TypeChecker::CheckType(results[i].type, sig->result_types[i]) !=
         wabt::Result::Ok) {
