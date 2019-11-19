@@ -13,15 +13,34 @@ out/test/spec/mutable-global/linking.wast:87: assert_unlinkable passed:
 out/test/spec/mutable-global/linking.wast:91: assert_unlinkable passed:
   error: mutability mismatch in imported global, expected immutable but got mutable.
   0000016: error: OnImportGlobal callback failed
+out/test/spec/mutable-global/linking.wast:136: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:137: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:139: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:141: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:142: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:144: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:146: assert_trap passed: undefined table index
+out/test/spec/mutable-global/linking.wast:147: assert_trap passed: undefined table index
+out/test/spec/mutable-global/linking.wast:148: assert_trap passed: undefined table index
+out/test/spec/mutable-global/linking.wast:149: assert_trap passed: undefined table index
+out/test/spec/mutable-global/linking.wast:152: assert_trap passed: indirect call signature mismatch
+out/test/spec/mutable-global/linking.wast:184: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:185: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:187: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:188: assert_trap passed: uninitialized table element
+out/test/spec/mutable-global/linking.wast:190: assert_trap passed: undefined table index
 out/test/spec/mutable-global/linking.wast:207: assert_unlinkable passed:
   error: elem segment is out of bounds: [10, 11) >= max value 10
 out/test/spec/mutable-global/linking.wast:216: assert_unlinkable passed:
   error: unknown module field "mem"
   0000027: error: OnImportMemory callback failed
+out/test/spec/mutable-global/linking.wast:225: assert_trap passed: uninitialized table element
 out/test/spec/mutable-global/linking.wast:228: assert_unlinkable passed:
   error: elem segment is out of bounds: [12, 13) >= max value 10
+out/test/spec/mutable-global/linking.wast:236: assert_trap passed: uninitialized table element
 out/test/spec/mutable-global/linking.wast:239: assert_unlinkable passed:
   error: data segment is out of bounds: [65536, 65537) >= max value 65536
+out/test/spec/mutable-global/linking.wast:248: assert_trap passed: uninitialized table element
 out/test/spec/mutable-global/linking.wast:299: assert_unlinkable passed:
   error: data segment is out of bounds: [65536, 65537) >= max value 65536
 out/test/spec/mutable-global/linking.wast:324: assert_unlinkable passed:

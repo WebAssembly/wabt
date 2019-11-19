@@ -296,5 +296,6 @@ out/test/spec/align.wast:448: assert_invalid passed:
 out/test/spec/align.wast:452: assert_invalid passed:
   error: alignment must not be larger than natural alignment (8)
   000002a: error: OnStoreExpr callback failed
+out/test/spec/align.wast:864: assert_trap passed: out of bounds memory access
 131/131 tests passed.
 ;;; STDOUT ;;)

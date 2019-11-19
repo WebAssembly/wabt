@@ -1,5 +1,19 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/int_exprs.wast
 (;; STDOUT ;;;
+out/test/spec/int_exprs.wast:113: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:114: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:115: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:116: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:132: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:133: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:134: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:135: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:196: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:197: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:198: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:199: assert_trap passed: integer divide by zero
+out/test/spec/int_exprs.wast:349: assert_trap passed: integer overflow
+out/test/spec/int_exprs.wast:350: assert_trap passed: integer overflow
 89/89 tests passed.
 ;;; STDOUT ;;)

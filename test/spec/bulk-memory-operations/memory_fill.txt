@@ -3,8 +3,11 @@
 ;;; ARGS*: --enable-bulk-memory
 (;; STDOUT ;;;
 test() =>
+out/test/spec/bulk-memory-operations/memory_fill.wast:43: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_fill.wast:61: assert_trap passed: out of bounds memory access
 test() =>
 test() =>
+out/test/spec/bulk-memory-operations/memory_fill.wast:117: assert_trap passed: out of bounds memory access
 test() =>
 test() =>
 out/test/spec/bulk-memory-operations/memory_fill.wast:174: assert_invalid passed:
@@ -199,5 +202,8 @@ out/test/spec/bulk-memory-operations/memory_fill.wast:607: assert_invalid passed
 out/test/spec/bulk-memory-operations/memory_fill.wast:614: assert_invalid passed:
   error: type mismatch in memory.fill, expected [i32, i32, i32] but got [f64, f64, f64]
   000004a: error: OnMemoryFillExpr callback failed
+out/test/spec/bulk-memory-operations/memory_fill.wast:637: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_fill.wast:661: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_fill.wast:685: assert_trap passed: out of bounds memory access
 92/92 tests passed.
 ;;; STDOUT ;;)

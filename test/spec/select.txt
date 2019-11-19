@@ -1,6 +1,12 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/select.wast
 (;; STDOUT ;;;
+out/test/spec/select.wast:208: assert_trap passed: unreachable executed
+out/test/spec/select.wast:209: assert_trap passed: unreachable executed
+out/test/spec/select.wast:210: assert_trap passed: unreachable executed
+out/test/spec/select.wast:211: assert_trap passed: unreachable executed
+out/test/spec/select.wast:248: assert_trap passed: undefined table index
+out/test/spec/select.wast:249: assert_trap passed: undefined table index
 out/test/spec/select.wast:290: assert_invalid passed:
   error: type mismatch in select, expected [any, any, i32] but got [i32]
   000001c: error: OnSelectExpr callback failed

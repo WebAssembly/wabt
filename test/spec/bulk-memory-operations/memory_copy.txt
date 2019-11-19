@@ -10,6 +10,17 @@ test() =>
 test() =>
 test() =>
 test() =>
+out/test/spec/bulk-memory-operations/memory_copy.wast:349: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:730: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:1113: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:1494: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:1877: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:2238: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:2619: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:2980: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:3351: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:3712: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:4093: assert_trap passed: out of bounds memory access
 out/test/spec/bulk-memory-operations/memory_copy.wast:4447: assert_invalid passed:
   error: memory.copy requires an imported or defined memory.
   0000030: error: OnMemoryCopyExpr callback failed
@@ -204,9 +215,15 @@ out/test/spec/bulk-memory-operations/memory_copy.wast:4887: assert_invalid passe
   000004b: error: OnMemoryCopyExpr callback failed
 test() =>
 test() =>
+out/test/spec/bulk-memory-operations/memory_copy.wast:4950: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:4956: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:4962: assert_trap passed: out of bounds memory access
+out/test/spec/bulk-memory-operations/memory_copy.wast:4968: assert_trap passed: out of bounds memory access
 test() =>
 test() =>
+out/test/spec/bulk-memory-operations/memory_copy.wast:5004: assert_trap passed: out of bounds memory access
 test() =>
+out/test/spec/bulk-memory-operations/memory_copy.wast:5016: assert_trap passed: out of bounds memory access
 test() =>
 test() =>
 4548/4548 tests passed.

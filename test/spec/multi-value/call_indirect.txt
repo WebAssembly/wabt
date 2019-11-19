@@ -2,6 +2,13 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/multi-value/call_indirect.wast
 ;;; ARGS*: --enable-multi-value
 (;; STDOUT ;;;
+out/test/spec/multi-value/call_indirect.wast:262: assert_trap passed: indirect call signature mismatch
+out/test/spec/multi-value/call_indirect.wast:263: assert_trap passed: indirect call signature mismatch
+out/test/spec/multi-value/call_indirect.wast:264: assert_trap passed: undefined table index
+out/test/spec/multi-value/call_indirect.wast:265: assert_trap passed: undefined table index
+out/test/spec/multi-value/call_indirect.wast:266: assert_trap passed: undefined table index
+out/test/spec/multi-value/call_indirect.wast:272: assert_trap passed: indirect call signature mismatch
+out/test/spec/multi-value/call_indirect.wast:273: assert_trap passed: indirect call signature mismatch
 out/test/spec/multi-value/call_indirect.wast:302: assert_malformed passed:
   out/test/spec/multi-value/call_indirect/call_indirect.1.wat:1:122: error: unexpected token "param", expected an expr.
   ...indirect (type $sig) (result i32) (param i32)    (i32.const 0) (i32.const ...
