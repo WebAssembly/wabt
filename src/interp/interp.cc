@@ -826,7 +826,7 @@ Result Thread::GetAccessAddress(const uint8_t** pc, void** out_address) {
   uint64_t addr = static_cast<uint64_t>(Pop<uint32_t>()) + ReadU32(pc);
   if (addr + sizeof(MemType) > memory->data.size()) {
     TRAP_MSG(MemoryAccessOutOfBounds,
-             "access at %" PRIu64 "+%" PRIzx " >= max value %" PRIu64, addr,
+             "access at %" PRIu64 "+%" PRIzd " >= max value %" PRIzd, addr,
              sizeof(MemType), memory->data.size());
   }
   *out_address = memory->data.data() + static_cast<IstreamOffset>(addr);
@@ -839,7 +839,7 @@ Result Thread::GetAtomicAccessAddress(const uint8_t** pc, void** out_address) {
   uint64_t addr = static_cast<uint64_t>(Pop<uint32_t>()) + ReadU32(pc);
   if (addr + sizeof(MemType) > memory->data.size()) {
     TRAP_MSG(MemoryAccessOutOfBounds,
-             "atomic access at %" PRIu64 "+%" PRIzx " >= max value %" PRIu64,
+             "atomic access at %" PRIu64 "+%" PRIzd " >= max value %" PRIzd,
              addr, sizeof(MemType), memory->data.size());
   }
   TRAP_IF((addr & (sizeof(MemType) - 1)) != 0, AtomicMemoryAccessUnaligned);
@@ -1773,8 +1773,9 @@ Result Thread::CallHost(HostFunc* func) {
   TRAP_UNLESS(call_result.ok(), HostTrapped);
 
   if (results.size() != num_results) {
-    TRAP_MSG(HostResultTypeMismatch, "expected %lu results but got %lu",
-             num_results, results.size());
+    TRAP_MSG(HostResultTypeMismatch,
+             "expected %" PRIzx " results but got %" PRIzx, num_results,
+             results.size());
   }
   for (size_t i = 0; i < num_results; ++i) {
     if (TypeChecker::CheckType(results[i].type, sig->result_types[i]) !=
