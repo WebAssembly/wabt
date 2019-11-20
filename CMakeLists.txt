@@ -496,7 +496,13 @@ if (NOT EMSCRIPTEN)
     endif ()
 
     # test running
-    find_package(PythonInterp 2.7 REQUIRED)
+    # TODO(sbc): Requrie python3 for running tests.
+    # For now we don't set a version here due to and issue with github actions
+    # where python 2.7 is in the PATH as "python.exe" but a mingw version is
+    # installed as "python2.7.exe" and cmake will alwasy choose the later (which
+    # we don't want) if we specify 2.7 explictly here.
+    # See: https://github.com/actions/setup-python/issues/40
+    find_package(PythonInterp REQUIRED)
     set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
     add_custom_target(run-tests
       COMMAND $<TARGET_FILE:wabt-unittests>
