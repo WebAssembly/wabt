@@ -39,6 +39,7 @@ OUT_DIR = os.path.join(REPO_ROOT_DIR, 'out')
 DEFAULT_TIMEOUT = 10    # seconds
 SLOW_TIMEOUT_MULTIPLIER = 3
 
+
 # default configurations for tests
 TOOLS = {
     'wat2wasm': [
@@ -902,8 +903,8 @@ def main(args):
     variables = {}
     variables['test_dir'] = os.path.abspath(TEST_DIR)
     variables['bindir'] = options.bindir
-    variables['gen_wasm_py'] = find_exe.GEN_WASM_PY
-    variables['gen_spec_js_py'] = find_exe.GEN_SPEC_JS_PY
+    variables['gen_wasm_py'] = os.path.join(TEST_DIR, 'gen-wasm.py')
+    variables['gen_spec_js_py'] = os.path.join(TEST_DIR, 'gen-spec-js.py')
     for exe_basename in find_exe.EXECUTABLES:
         exe_override = os.path.join(options.bindir, exe_basename)
         variables[exe_basename] = find_exe.FindExecutable(exe_basename,

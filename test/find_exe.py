@@ -29,9 +29,6 @@ EXECUTABLES = [
     'wasm2c', 'wasm-strip', 'wasm-decompile'
 ]
 
-GEN_WASM_PY = os.path.join(SCRIPT_DIR, 'gen-wasm.py')
-GEN_SPEC_JS_PY = os.path.join(SCRIPT_DIR, 'gen-spec-js.py')
-
 
 def GetDefaultPath():
     return os.path.join(REPO_ROOT_DIR, 'bin')
