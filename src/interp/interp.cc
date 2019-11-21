@@ -63,6 +63,7 @@ std::string RefTypeToString(RefType t) {
     case RefType::Host:
       return "host";
   }
+  WABT_UNREACHABLE;
 }
 
 std::string TypedValueToString(const TypedValue& tv) {
@@ -103,6 +104,7 @@ std::string TypedValueToString(const TypedValue& tv) {
       // These types are not concrete types and should never exist as a value
       WABT_UNREACHABLE;
   }
+  WABT_UNREACHABLE;
 }
 
 void WriteTypedValue(Stream* stream, const TypedValue& tv) {
