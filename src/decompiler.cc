@@ -439,8 +439,9 @@ struct Decompiler {
     }
   }
 
-  bool CheckImportExport(ExternalKind kind, Index &index, string_view name) {
-    auto is_import = mc.module.IsImport(kind, Var(index++));
+  bool CheckImportExport(ExternalKind kind, Index index, string_view name) {
+    // Figure out if this thing is imported, exported, or neither.
+    auto is_import = mc.module.IsImport(kind, Var(index));
     // TODO: is this the best way to check for export?
     // FIXME: this doesn't work for functions that get renamed in some way,
     // as the export has the original name..
@@ -478,6 +479,7 @@ struct Decompiler {
   }
 
   void Decompile() {
+    // Memories.
     Index memory_index = 0;
     for (auto m : mc.module.memories) {
       auto is_import =
@@ -488,9 +490,11 @@ struct Decompiler {
                       m->page_limits.max);
       }
       stream.Writef(";\n");
+      memory_index++;
     }
     if (!mc.module.memories.empty()) stream.Writef("\n");
 
+    // Globals.
     Index global_index = 0;
     for (auto g : mc.module.globals) {
       auto is_import =
@@ -501,9 +505,11 @@ struct Decompiler {
         stream.Writef(" = %s", InitExp(g->init_expr).c_str());
       }
       stream.Writef(";\n");
+      global_index++;
     }
     if (!mc.module.globals.empty()) stream.Writef("\n");
 
+    // Tables.
     Index table_index = 0;
     for (auto tab : mc.module.tables) {
       auto is_import =
@@ -515,9 +521,11 @@ struct Decompiler {
                       tab->elem_limits.max);
       }
       stream.Writef(";\n");
+      table_index++;
     }
     if (!mc.module.tables.empty()) stream.Writef("\n");
 
+    // Data.
     for (auto dat : mc.module.data_segments) {
       stream.Writef("data %s(offset: %s) = %s;\n", dat->name.c_str(),
                     InitExp(dat->offset).c_str(),
@@ -525,8 +533,9 @@ struct Decompiler {
     }
     if (!mc.module.data_segments.empty()) stream.Writef("\n");
 
+    // Code.
     Index func_index = 0;
-    for(auto f : mc.module.funcs) {
+    for (auto f : mc.module.funcs) {
       cur_func = f;
       auto is_import =
           CheckImportExport(ExternalKind::Func, func_index, f->name);
@@ -565,6 +574,7 @@ struct Decompiler {
       }
       mc.EndFunc();
       stream.Writef("\n\n");
+      func_index++;
     }
   }
 
