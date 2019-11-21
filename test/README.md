@@ -107,7 +107,7 @@ The currently supported list of keys:
 - `ARGS*`: additional args to all `RUN` commands
 - `ENV`: environment variables to set, separated by spaces
 - `ERROR`: the expected return value from the executable, defaults to 0
-- `SLOW`: if defined, this test's timeout is doubled.
+- `SLOW`: if defined, this test's timeout is increased (currently by 3x).
 - `SKIP`: if defined, this test is not run. You can use the value as a comment.
 - `TODO`,`NOTE`: useful place to put additional info about the test.
 
