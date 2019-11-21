@@ -17,11 +17,5 @@ out/test/spec/func_ptrs.wast:48: assert_invalid passed:
   000000c: error: invalid function signature index: 42
 out/test/spec/func_ptrs.wast:49: assert_invalid passed:
   0000020: error: invalid import signature index
-out/test/spec/func_ptrs.wast:78: assert_trap passed: undefined table index
-out/test/spec/func_ptrs.wast:79: assert_trap passed: undefined table index
-out/test/spec/func_ptrs.wast:80: assert_trap passed: undefined table index
-out/test/spec/func_ptrs.wast:89: assert_trap passed: undefined table index
-out/test/spec/func_ptrs.wast:90: assert_trap passed: undefined table index
-out/test/spec/func_ptrs.wast:91: assert_trap passed: undefined table index
 33/33 tests passed.
 ;;; STDOUT ;;)

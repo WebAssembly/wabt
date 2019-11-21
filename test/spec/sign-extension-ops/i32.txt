@@ -2,14 +2,5 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/sign-extension-ops/i32.wast
 ;;; ARGS*: --enable-sign-extension
 (;; STDOUT ;;;
-out/test/spec/sign-extension-ops/i32.wast:64: assert_trap passed: integer divide by zero
-out/test/spec/sign-extension-ops/i32.wast:65: assert_trap passed: integer divide by zero
-out/test/spec/sign-extension-ops/i32.wast:66: assert_trap passed: integer overflow
-out/test/spec/sign-extension-ops/i32.wast:84: assert_trap passed: integer divide by zero
-out/test/spec/sign-extension-ops/i32.wast:85: assert_trap passed: integer divide by zero
-out/test/spec/sign-extension-ops/i32.wast:101: assert_trap passed: integer divide by zero
-out/test/spec/sign-extension-ops/i32.wast:102: assert_trap passed: integer divide by zero
-out/test/spec/sign-extension-ops/i32.wast:122: assert_trap passed: integer divide by zero
-out/test/spec/sign-extension-ops/i32.wast:123: assert_trap passed: integer divide by zero
 373/373 tests passed.
 ;;; STDOUT ;;)

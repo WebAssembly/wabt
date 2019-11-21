@@ -1,15 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/i32.wast
 (;; STDOUT ;;;
-out/test/spec/i32.wast:62: assert_trap passed: integer divide by zero
-out/test/spec/i32.wast:63: assert_trap passed: integer divide by zero
-out/test/spec/i32.wast:64: assert_trap passed: integer overflow
-out/test/spec/i32.wast:82: assert_trap passed: integer divide by zero
-out/test/spec/i32.wast:83: assert_trap passed: integer divide by zero
-out/test/spec/i32.wast:99: assert_trap passed: integer divide by zero
-out/test/spec/i32.wast:100: assert_trap passed: integer divide by zero
-out/test/spec/i32.wast:120: assert_trap passed: integer divide by zero
-out/test/spec/i32.wast:121: assert_trap passed: integer divide by zero
 out/test/spec/i32.wast:425: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
   0000018: error: OnConvertExpr callback failed

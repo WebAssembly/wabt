@@ -1,7 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/globals.wast
 (;; STDOUT ;;;
-out/test/spec/globals.wast:221: assert_trap passed: undefined table index
 out/test/spec/globals.wast:243: assert_invalid passed:
   error: can't global.set on immutable global at index 0.
   0000029: error: OnGlobalSetExpr callback failed

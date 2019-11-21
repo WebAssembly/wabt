@@ -36,11 +36,11 @@ namespace interp {
 // Differs from the normal CHECK_RESULT because this one is meant to return the
 // interp Result type.
 #undef CHECK_RESULT
-#define CHECK_RESULT(expr)      \
-  do {                          \
-    if (WABT_FAILED(expr)) {    \
-      return ResultType::Error; \
-    }                           \
+#define CHECK_RESULT(expr)   \
+  do {                       \
+    if (WABT_FAILED(expr)) { \
+      return Result::Error;  \
+    }                        \
   } while (0)
 
 // Differs from CHECK_RESULT since it can return different traps, not just
@@ -49,7 +49,7 @@ namespace interp {
 #define CHECK_TRAP(...)            \
   do {                             \
     Result result = (__VA_ARGS__); \
-    if (!result.ok()) {            \
+    if (result != Result::Ok) {    \
       return result;               \
     }                              \
   } while (0)
@@ -123,21 +123,12 @@ void WriteTypedValues(Stream* stream, const TypedValues& values) {
 static const char* s_trap_strings[] = {FOREACH_INTERP_RESULT(V)};
 #undef V
 
-const char* ResultTypeToString(ResultType result) {
+const char* ResultToString(Result result) {
   return s_trap_strings[static_cast<size_t>(result)];
 }
 
-std::string ResultToString(Result result) {
-  std::string rtn = ResultTypeToString(result.type);
-  if (!result.message.empty()) {
-    rtn += ": ";
-    rtn += result.message;
-  }
-  return rtn;
-}
-
 void WriteResult(Stream* stream, const char* desc, Result result) {
-  stream->Writef("%s: %s\n", desc, ResultToString(result).c_str());
+  stream->Writef("%s: %s\n", desc, ResultToString(result));
 }
 
 void WriteCall(Stream* stream,
@@ -152,7 +143,7 @@ void WriteCall(Stream* stream,
   stream->Writef(PRIstringview "(", WABT_PRINTF_STRING_VIEW_ARG(func_name));
   WriteTypedValues(stream, args);
   stream->Writef(") =>");
-  if (result.ok()) {
+  if (result == Result::Ok) {
     if (results.size() > 0) {
       stream->Writef(" ");
       WriteTypedValues(stream, results);
@@ -787,7 +778,7 @@ ValueTypeRep<double> CanonicalizeNan<double>(ValueTypeRep<double> rep) {
   return FloatTraits<double>::CanonicalizeNan(rep);
 }
 
-#define TRAP(type) return ResultType::Trap##type
+#define TRAP(type) return Result::Trap##type
 #define TRAP_UNLESS(cond, type) TRAP_IF(!(cond), type)
 #define TRAP_IF(cond, type)    \
   do {                         \
@@ -795,9 +786,6 @@ ValueTypeRep<double> CanonicalizeNan<double>(ValueTypeRep<double> rep) {
       TRAP(type);              \
     }                          \
   } while (0)
-
-#define TRAP_MSG(type, ...) \
-  return Result(ResultType::Trap##type, StringPrintf(__VA_ARGS__))
 
 #define CHECK_STACK() \
   TRAP_IF(value_stack_top_ >= value_stack_.size(), ValueStackExhausted)
@@ -824,27 +812,21 @@ template <typename MemType>
 Result Thread::GetAccessAddress(const uint8_t** pc, void** out_address) {
   Memory* memory = ReadMemory(pc);
   uint64_t addr = static_cast<uint64_t>(Pop<uint32_t>()) + ReadU32(pc);
-  if (addr + sizeof(MemType) > memory->data.size()) {
-    TRAP_MSG(MemoryAccessOutOfBounds,
-             "access at %" PRIu64 "+%" PRIzd " >= max value %" PRIzd, addr,
-             sizeof(MemType), memory->data.size());
-  }
+  TRAP_IF(addr + sizeof(MemType) > memory->data.size(),
+          MemoryAccessOutOfBounds);
   *out_address = memory->data.data() + static_cast<IstreamOffset>(addr);
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 template <typename MemType>
 Result Thread::GetAtomicAccessAddress(const uint8_t** pc, void** out_address) {
   Memory* memory = ReadMemory(pc);
   uint64_t addr = static_cast<uint64_t>(Pop<uint32_t>()) + ReadU32(pc);
-  if (addr + sizeof(MemType) > memory->data.size()) {
-    TRAP_MSG(MemoryAccessOutOfBounds,
-             "atomic access at %" PRIu64 "+%" PRIzd " >= max value %" PRIzd,
-             addr, sizeof(MemType), memory->data.size());
-  }
+  TRAP_IF(addr + sizeof(MemType) > memory->data.size(),
+          MemoryAccessOutOfBounds);
   TRAP_IF((addr & (sizeof(MemType) - 1)) != 0, AtomicMemoryAccessUnaligned);
   *out_address = memory->data.data() + static_cast<IstreamOffset>(addr);
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 DataSegment* Thread::ReadDataSegment(const uint8_t** pc) {
@@ -876,7 +858,7 @@ void Thread::Reset() {
 Result Thread::Push(Value value) {
   CHECK_STACK();
   value_stack_[value_stack_top_++] = value;
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 Value Thread::Pop() {
@@ -919,7 +901,7 @@ void Thread::DropKeep(uint32_t drop_count, uint32_t keep_count) {
 Result Thread::PushCall(const uint8_t* pc) {
   TRAP_IF(call_stack_top_ >= call_stack_.size(), CallStackExhausted);
   call_stack_[call_stack_top_++] = pc - GetIstream();
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 IstreamOffset Thread::PopCall() {
@@ -936,9 +918,9 @@ void StoreToMemory(void* dst, T value) {
   memcpy(dst, &value, sizeof(T));
 }
 
-template <typename MemType, typename ResultValueType>
+template <typename MemType, typename ResultType>
 Result Thread::Load(const uint8_t** pc) {
-  typedef typename ExtendMemType<ResultValueType, MemType>::type ExtendedType;
+  typedef typename ExtendMemType<ResultType, MemType>::type ExtendedType;
   static_assert(std::is_floating_point<MemType>::value ==
                     std::is_floating_point<ExtendedType>::value,
                 "Extended type should be float iff MemType is float");
@@ -947,59 +929,59 @@ Result Thread::Load(const uint8_t** pc) {
   CHECK_TRAP(GetAccessAddress<MemType>(pc, &src));
   MemType value;
   LoadFromMemory<MemType>(&value, src);
-  return Push<ResultValueType>(static_cast<ExtendedType>(value));
+  return Push<ResultType>(static_cast<ExtendedType>(value));
 }
 
-template <typename MemType, typename ResultValueType>
+template <typename MemType, typename ResultType>
 Result Thread::Store(const uint8_t** pc) {
-  typedef typename WrapMemType<ResultValueType, MemType>::type WrappedType;
-  WrappedType value = PopRep<ResultValueType>();
+  typedef typename WrapMemType<ResultType, MemType>::type WrappedType;
+  WrappedType value = PopRep<ResultType>();
   void* dst;
   CHECK_TRAP(GetAccessAddress<MemType>(pc, &dst));
   StoreToMemory<WrappedType>(dst, value);
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
-template <typename MemType, typename ResultValueType>
+template <typename MemType, typename ResultType>
 Result Thread::AtomicLoad(const uint8_t** pc) {
-  typedef typename ExtendMemType<ResultValueType, MemType>::type ExtendedType;
+  typedef typename ExtendMemType<ResultType, MemType>::type ExtendedType;
   static_assert(!std::is_floating_point<MemType>::value,
                 "AtomicLoad type can't be float");
   void* src;
   CHECK_TRAP(GetAtomicAccessAddress<MemType>(pc, &src));
   MemType value;
   LoadFromMemory<MemType>(&value, src);
-  return Push<ResultValueType>(static_cast<ExtendedType>(value));
+  return Push<ResultType>(static_cast<ExtendedType>(value));
 }
 
-template <typename MemType, typename ResultValueType>
+template <typename MemType, typename ResultType>
 Result Thread::AtomicStore(const uint8_t** pc) {
-  typedef typename WrapMemType<ResultValueType, MemType>::type WrappedType;
-  WrappedType value = PopRep<ResultValueType>();
+  typedef typename WrapMemType<ResultType, MemType>::type WrappedType;
+  WrappedType value = PopRep<ResultType>();
   void* dst;
   CHECK_TRAP(GetAtomicAccessAddress<MemType>(pc, &dst));
   StoreToMemory<WrappedType>(dst, value);
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
-template <typename MemType, typename ResultValueType>
-Result Thread::AtomicRmw(BinopFunc<ResultValueType, ResultValueType> func,
+template <typename MemType, typename ResultType>
+Result Thread::AtomicRmw(BinopFunc<ResultType, ResultType> func,
                          const uint8_t** pc) {
-  typedef typename ExtendMemType<ResultValueType, MemType>::type ExtendedType;
-  MemType rhs = PopRep<ResultValueType>();
+  typedef typename ExtendMemType<ResultType, MemType>::type ExtendedType;
+  MemType rhs = PopRep<ResultType>();
   void* addr;
   CHECK_TRAP(GetAtomicAccessAddress<MemType>(pc, &addr));
   MemType read;
   LoadFromMemory<MemType>(&read, addr);
   StoreToMemory<MemType>(addr, func(read, rhs));
-  return Push<ResultValueType>(static_cast<ExtendedType>(read));
+  return Push<ResultType>(static_cast<ExtendedType>(read));
 }
 
-template <typename MemType, typename ResultValueType>
+template <typename MemType, typename ResultType>
 Result Thread::AtomicRmwCmpxchg(const uint8_t** pc) {
-  typedef typename ExtendMemType<ResultValueType, MemType>::type ExtendedType;
-  MemType replace = PopRep<ResultValueType>();
-  MemType expect = PopRep<ResultValueType>();
+  typedef typename ExtendMemType<ResultType, MemType>::type ExtendedType;
+  MemType replace = PopRep<ResultType>();
+  MemType expect = PopRep<ResultType>();
   void* addr;
   CHECK_TRAP(GetAtomicAccessAddress<MemType>(pc, &addr));
   MemType read;
@@ -1007,7 +989,7 @@ Result Thread::AtomicRmwCmpxchg(const uint8_t** pc) {
   if (read == expect) {
     StoreToMemory<MemType>(addr, replace);
   }
-  return Push<ResultValueType>(static_cast<ExtendedType>(read));
+  return Push<ResultType>(static_cast<ExtendedType>(read));
 }
 
 bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max) {
@@ -1038,14 +1020,14 @@ Result Thread::MemoryInit(const uint8_t** pc) {
     memcpy(memory->data.data() + dst, segment->data.data() + src, size);
   }
   TRAP_IF(!ok, MemoryAccessOutOfBounds);
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 Result Thread::DataDrop(const uint8_t** pc) {
   DataSegment* segment = ReadDataSegment(pc);
   TRAP_IF(segment->dropped, DataSegmentDropped);
   segment->dropped = true;
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 Result Thread::MemoryCopy(const uint8_t** pc) {
@@ -1065,10 +1047,8 @@ Result Thread::MemoryCopy(const uint8_t** pc) {
       memmove(data + dst, data + src, size);
     }
   }
-  if (!ok) {
-    TRAP_MSG(MemoryAccessOutOfBounds, "memory.copy out of bound");
-  }
-  return ResultType::Ok;
+  TRAP_IF(!ok, MemoryAccessOutOfBounds);
+  return Result::Ok;
 }
 
 Result Thread::MemoryFill(const uint8_t** pc) {
@@ -1081,10 +1061,8 @@ Result Thread::MemoryFill(const uint8_t** pc) {
   if (size > 0) {
     memset(memory->data.data() + dst, value, size);
   }
-  if (!ok) {
-    TRAP_MSG(MemoryAccessOutOfBounds, "memory.fill out of bounds");
-  }
-  return ResultType::Ok;
+  TRAP_IF(!ok, MemoryAccessOutOfBounds);
+  return Result::Ok;
 }
 
 Result Thread::TableInit(const uint8_t** pc) {
@@ -1101,31 +1079,23 @@ Result Thread::TableInit(const uint8_t** pc) {
     memcpy(table->entries.data() + dst, segment->elems.data() + src,
            size * sizeof(table->entries[0]));
   }
-  if (!ok) {
-    TRAP_MSG(TableAccessOutOfBounds, "table.init out of bounds");
-  }
-  return ResultType::Ok;
+  TRAP_IF(!ok, TableAccessOutOfBounds);
+  return Result::Ok;
 }
 
 Result Thread::TableSet(const uint8_t** pc) {
   Table* table = ReadTable(pc);
   Ref ref = Pop<Ref>();
   uint32_t index = Pop<uint32_t>();
-  if (index >= table->size()) {
-    TRAP_MSG(TableAccessOutOfBounds, "table.set at %u >= max value %" PRIzx,
-             index, table->size());
-  }
+  TRAP_IF(index >= table->size(), TableAccessOutOfBounds);
   table->entries[index] = ref;
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 Result Thread::TableGet(const uint8_t** pc) {
   Table* table = ReadTable(pc);
   uint32_t index = Pop<uint32_t>();
-  if (index >= table->size()) {
-    TRAP_MSG(TableAccessOutOfBounds, "table.get at %u >= max value %" PRIzx,
-             index, table->size());
-  }
+  TRAP_IF(index >= table->size(), TableAccessOutOfBounds);
   Ref ref = static_cast<Ref>(table->entries[index]);
   return Push(ref);
 }
@@ -1134,7 +1104,7 @@ Result Thread::ElemDrop(const uint8_t** pc) {
   ElemSegment* segment = ReadElemSegment(pc);
   TRAP_IF(segment->dropped, ElemSegmentDropped);
   segment->dropped = true;
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 Result Thread::TableCopy(const uint8_t** pc) {
@@ -1156,10 +1126,8 @@ Result Thread::TableCopy(const uint8_t** pc) {
       memmove(data_dst + dst, data_src + src, size * sizeof(Ref));
     }
   }
-  if (!ok) {
-    TRAP_MSG(TableAccessOutOfBounds, "table.copy out of bounds");
-  }
-  return ResultType::Ok;
+  TRAP_IF(!ok, TableAccessOutOfBounds);
+  return Result::Ok;
 }
 
 Result Thread::RefFunc(const uint8_t** pc) {
@@ -1364,7 +1332,7 @@ Result IntDivS(ValueTypeRep<T> lhs_rep,
   TRAP_IF(rhs == 0, IntegerDivideByZero);
   TRAP_UNLESS(IsNormalDivRemS(lhs, rhs), IntegerOverflow);
   *out_result = ToRep(lhs / rhs);
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 // i{32,64}.rem_s
@@ -1380,7 +1348,7 @@ Result IntRemS(ValueTypeRep<T> lhs_rep,
   } else {
     *out_result = 0;
   }
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 // i{32,64}.div_u
@@ -1392,7 +1360,7 @@ Result IntDivU(ValueTypeRep<T> lhs_rep,
   auto rhs = FromRep<T>(rhs_rep);
   TRAP_IF(rhs == 0, IntegerDivideByZero);
   *out_result = ToRep(lhs / rhs);
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 // i{32,64}.rem_u
@@ -1404,7 +1372,7 @@ Result IntRemU(ValueTypeRep<T> lhs_rep,
   auto rhs = FromRep<T>(rhs_rep);
   TRAP_IF(rhs == 0, IntegerDivideByZero);
   *out_result = ToRep(lhs % rhs);
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 // f{32,64}.div
@@ -1647,7 +1615,7 @@ Result IntTrunc(ValueTypeRep<T> v_rep, ValueTypeRep<R>* out_result) {
   TRAP_IF(FloatTraits<T>::IsNan(v_rep), InvalidConversionToInteger);
   TRAP_UNLESS((IsConversionInRange<R, T>(v_rep)), IntegerOverflow);
   *out_result = ToRep(static_cast<R>(FromRep<T>(v_rep)));
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 // i{32,64}.trunc_{s,u}:sat/f{32,64}
@@ -1770,26 +1738,21 @@ Result Thread::CallHost(HostFunc* func) {
   }
 
   Result call_result = func->callback(func, sig, params, results);
-  TRAP_UNLESS(call_result.ok(), HostTrapped);
+  TRAP_IF(call_result != Result::Ok, HostTrapped);
 
-  if (results.size() != num_results) {
-    TRAP_MSG(HostResultTypeMismatch,
-             "expected %" PRIzx " results but got %" PRIzx, num_results,
-             results.size());
-  }
+  TRAP_IF(results.size() != num_results, HostResultTypeMismatch);
   for (size_t i = 0; i < num_results; ++i) {
-    if (TypeChecker::CheckType(results[i].type, sig->result_types[i]) !=
-        wabt::Result::Ok) {
-      TRAP_MSG(HostResultTypeMismatch, "result mistmatch at %" PRIzx, i);
-    }
+    TRAP_IF(TypeChecker::CheckType(results[i].type, sig->result_types[i]) !=
+                wabt::Result::Ok,
+            HostResultTypeMismatch);
     CHECK_TRAP(Push(results[i].value));
   }
 
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 Result Thread::Run(int num_instructions) {
-  Result result = ResultType::Ok;
+  Result result = Result::Ok;
 
   const uint8_t* istream = GetIstream();
   const uint8_t* pc = &istream[pc_];
@@ -1835,7 +1798,7 @@ Result Thread::Run(int num_instructions) {
 
       case Opcode::Return:
         if (call_stack_top_ == 0) {
-          result = ResultType::Returned;
+          result = Result::Returned;
           goto exit_loop;
         }
         GOTO(PopCall());
@@ -1946,7 +1909,7 @@ Result Thread::Run(int num_instructions) {
         if (func->is_host) { // Emulate a call/return for imported functions
           CHECK_TRAP(CallHost(cast<HostFunc>(func)));
           if (call_stack_top_ == 0) {
-            result = ResultType::Returned;
+            result = Result::Returned;
             goto exit_loop;
           }
           GOTO(PopCall());
@@ -3670,11 +3633,11 @@ ExecResult Executor::RunFunction(Index func_index, const TypedValues& args) {
 
   thread_.Reset();
   exec_result.result = PushArgs(sig, args);
-  if (exec_result.ok()) {
+  if (exec_result.result == Result::Ok) {
     exec_result.result =
         func->is_host ? thread_.CallHost(cast<HostFunc>(func))
                       : RunDefinedFunction(cast<DefinedFunc>(func)->offset);
-    if (exec_result.ok()) {
+    if (exec_result.result == Result::Ok) {
       CopyResults(sig, &exec_result.values);
     }
   }
@@ -3684,7 +3647,7 @@ ExecResult Executor::RunFunction(Index func_index, const TypedValues& args) {
 
 ExecResult Executor::RunStartFunction(DefinedModule* module) {
   if (module->start_func_index == kInvalidIndex) {
-    return ExecResult(ResultType::Ok);
+    return ExecResult(Result::Ok);
   }
 
   if (trace_stream_) {
@@ -3712,53 +3675,53 @@ ExecResult Executor::RunExportByName(Module* module,
                                      const TypedValues& args) {
   Export* export_ = module->GetExport(name);
   if (!export_) {
-    return ExecResult(ResultType::UnknownExport);
+    return ExecResult(Result::UnknownExport);
   }
   if (export_->kind != ExternalKind::Func) {
-    return ExecResult(ResultType::ExportKindMismatch);
+    return ExecResult(Result::ExportKindMismatch);
   }
   return RunExport(export_, args);
 }
 
 Result Executor::RunDefinedFunction(IstreamOffset function_offset) {
-  Result result = ResultType::Ok;
+  Result result = Result::Ok;
   thread_.set_pc(function_offset);
   if (trace_stream_) {
     const int kNumInstructions = 1;
-    while (result.ok()) {
+    while (result == Result::Ok) {
       thread_.Trace(trace_stream_);
       result = thread_.Run(kNumInstructions);
     }
   } else {
     const int kNumInstructions = 1000;
-    while (result.ok()) {
+    while (result == Result::Ok) {
       result = thread_.Run(kNumInstructions);
     }
   }
-  if (result.type != ResultType::Returned) {
+  if (result != Result::Returned) {
     return result;
   }
   // Use OK instead of RETURNED for consistency.
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 Result Executor::PushArgs(const FuncSignature* sig, const TypedValues& args) {
   if (sig->param_types.size() != args.size()) {
-    return ResultType::ArgumentTypeMismatch;
+    return Result::ArgumentTypeMismatch;
   }
 
   for (size_t i = 0; i < sig->param_types.size(); ++i) {
     if (TypeChecker::CheckType(args[i].type, sig->param_types[i]) !=
         wabt::Result::Ok) {
-      return ResultType::ArgumentTypeMismatch;
+      return Result::ArgumentTypeMismatch;
     }
 
     Result result = thread_.Push(args[i].value);
-    if (!result.ok()) {
+    if (result != Result::Ok) {
       return result;
     }
   }
-  return ResultType::Ok;
+  return Result::Ok;
 }
 
 void Executor::CopyResults(const FuncSignature* sig, TypedValues* out_results) {

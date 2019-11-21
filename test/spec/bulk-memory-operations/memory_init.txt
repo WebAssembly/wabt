@@ -12,9 +12,6 @@ out/test/spec/bulk-memory-operations/memory_init.wast:189: assert_invalid passed
 out/test/spec/bulk-memory-operations/memory_init.wast:195: assert_invalid passed:
   error: invalid data_segment_index: 4 (max 1)
   000002c: error: OnDataDropExpr callback failed
-out/test/spec/bulk-memory-operations/memory_init.wast:208: assert_trap passed: data segment dropped
-out/test/spec/bulk-memory-operations/memory_init.wast:216: assert_trap passed: data segment dropped
-out/test/spec/bulk-memory-operations/memory_init.wast:223: assert_trap passed: data segment dropped
 out/test/spec/bulk-memory-operations/memory_init.wast:226: assert_invalid passed:
   error: memory.init requires an imported or defined memory.
   000002f: error: OnMemoryInitExpr callback failed
@@ -22,12 +19,7 @@ out/test/spec/bulk-memory-operations/memory_init.wast:232: assert_invalid passed
   error: invalid data_segment_index: 1 (max 1)
   0000034: error: OnMemoryInitExpr callback failed
 test() =>
-out/test/spec/bulk-memory-operations/memory_init.wast:252: assert_trap passed: out of bounds memory access
-out/test/spec/bulk-memory-operations/memory_init.wast:259: assert_trap passed: out of bounds memory access
-out/test/spec/bulk-memory-operations/memory_init.wast:266: assert_trap passed: out of bounds memory access
-out/test/spec/bulk-memory-operations/memory_init.wast:273: assert_trap passed: out of bounds memory access
 test() =>
-out/test/spec/bulk-memory-operations/memory_init.wast:287: assert_trap passed: out of bounds memory access
 test() =>
 test() =>
 out/test/spec/bulk-memory-operations/memory_init.wast:304: assert_invalid passed:
@@ -219,11 +211,5 @@ out/test/spec/bulk-memory-operations/memory_init.wast:792: assert_invalid passed
 out/test/spec/bulk-memory-operations/memory_init.wast:800: assert_invalid passed:
   error: type mismatch in memory.init, expected [i32, i32, i32] but got [f64, f64, f64]
   0000048: error: OnMemoryInitExpr callback failed
-out/test/spec/bulk-memory-operations/memory_init.wast:825: assert_trap passed: out of bounds memory access
-out/test/spec/bulk-memory-operations/memory_init.wast:852: assert_trap passed: out of bounds memory access
-out/test/spec/bulk-memory-operations/memory_init.wast:879: assert_trap passed: out of bounds memory access
-out/test/spec/bulk-memory-operations/memory_init.wast:906: assert_trap passed: out of bounds memory access
-out/test/spec/bulk-memory-operations/memory_init.wast:933: assert_trap passed: out of bounds memory access
-out/test/spec/bulk-memory-operations/memory_init.wast:960: assert_trap passed: out of bounds memory access
 227/227 tests passed.
 ;;; STDOUT ;;)

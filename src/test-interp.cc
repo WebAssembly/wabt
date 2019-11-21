@@ -36,7 +36,7 @@ interp::Result TrapCallback(const interp::HostFunc* func,
                             const interp::FuncSignature* sig,
                             const interp::TypedValues& args,
                             interp::TypedValues& results) {
-  return interp::ResultType::TrapHostTrapped;
+  return interp::Result::TrapHostTrapped;
 }
 
 class HostTrapTest : public ::testing::Test {
@@ -80,8 +80,8 @@ TEST_F(HostTrapTest, Call) {
       0x01, 0x61, 0x00, 0x00, 0x03, 0x02, 0x01, 0x00, 0x08, 0x01, 0x01,
       0x0a, 0x06, 0x01, 0x04, 0x00, 0x10, 0x00, 0x0b,
   };
-  ASSERT_EQ(LoadModuleAndRunStartFunction(data).result.type,
-            interp::ResultType::TrapHostTrapped);
+  ASSERT_EQ(interp::Result::TrapHostTrapped,
+            LoadModuleAndRunStartFunction(data).result);
 }
 
 TEST_F(HostTrapTest, CallIndirect) {
@@ -96,8 +96,8 @@ TEST_F(HostTrapTest, CallIndirect) {
       0x01, 0x08, 0x01, 0x01, 0x09, 0x07, 0x01, 0x00, 0x41, 0x00, 0x0b, 0x01,
       0x00, 0x0a, 0x09, 0x01, 0x07, 0x00, 0x41, 0x00, 0x11, 0x00, 0x00, 0x0b,
   };
-  ASSERT_EQ(LoadModuleAndRunStartFunction(data).result.type,
-            interp::ResultType::TrapHostTrapped);
+  ASSERT_EQ(interp::Result::TrapHostTrapped,
+            LoadModuleAndRunStartFunction(data).result);
 }
 
 namespace {
@@ -155,7 +155,7 @@ class HostMemoryTest : public ::testing::Test {
               memory_->data.begin() + ptr);
 
     results[0].set_i32(size);
-    return interp::ResultType::Ok;
+    return interp::Result::Ok;
   }
 
   interp::Result BufDoneCallback(const interp::HostFunc* func,
@@ -177,7 +177,7 @@ class HostMemoryTest : public ::testing::Test {
     std::copy(memory_->data.begin() + ptr, memory_->data.begin() + ptr + size,
               string_data.begin());
 
-    return interp::ResultType::Ok;
+    return interp::Result::Ok;
   }
 
   interp::Environment env_;
@@ -270,11 +270,13 @@ TEST_F(HostMemoryTest, Rot13) {
 
   string_data = "Hello, WebAssembly!";
 
-  ASSERT_TRUE(executor_->RunExportByName(module_, "rot13", {}).ok());
+  ASSERT_EQ(interp::Result::Ok,
+            executor_->RunExportByName(module_, "rot13", {}).result);
 
   ASSERT_EQ("Uryyb, JroNffrzoyl!", string_data);
 
-  ASSERT_TRUE(executor_->RunExportByName(module_, "rot13", {}).ok());
+  ASSERT_EQ(interp::Result::Ok,
+            executor_->RunExportByName(module_, "rot13", {}).result);
 
   ASSERT_EQ("Hello, WebAssembly!", string_data);
 }

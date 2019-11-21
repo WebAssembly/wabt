@@ -1,7 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/if.wast
 (;; STDOUT ;;;
-out/test/spec/if.wast:440: assert_trap passed: undefined table index
 out/test/spec/if.wast:499: assert_invalid passed:
   error: type mismatch in implicit return, expected [i32] but got []
   000001e: error: EndFunctionBody callback failed

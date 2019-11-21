@@ -79,18 +79,10 @@ namespace interp {
   /* the expected export kind doesn't match. */                             \
   V(ExportKindMismatch, "export kind mismatch")
 
-enum class ResultType {
+enum class Result {
 #define V(Name, str) Name,
   FOREACH_INTERP_RESULT(V)
 #undef V
-};
-
-struct Result {
-  Result(ResultType type) : type(type) {}
-  Result(ResultType type, std::string msg) : type(type), message(msg) {}
-  bool ok() const { return type == ResultType::Ok; }
-  ResultType type;
-  std::string message;
 };
 
 typedef uint32_t IstreamOffset;
@@ -696,11 +688,10 @@ class Thread {
 struct ExecResult {
   ExecResult() = default;
   explicit ExecResult(Result result) : result(result) {}
-  bool ok() const { return result.ok(); }
   ExecResult(Result result, const TypedValues& values)
       : result(result), values(values) {}
 
-  Result result = ResultType::Ok;
+  Result result = Result::Ok;
   TypedValues values;
 };
 
@@ -734,8 +725,7 @@ bool IsArithmeticNan(uint64_t f64_bits);
 
 std::string RefTypeToString(RefType t);
 std::string TypedValueToString(const TypedValue&);
-std::string ResultToString(Result);
-const char* ResultTypeToString(ResultType);
+const char* ResultToString(Result);
 
 bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max);
 

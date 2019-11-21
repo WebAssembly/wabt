@@ -1,7 +1,6 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/call.wast
 (;; STDOUT ;;;
-out/test/spec/call.wast:289: assert_trap passed: undefined table index
 out/test/spec/call.wast:314: assert_invalid passed:
   error: type mismatch in i32.eqz, expected [i32] but got []
   000001b: error: OnConvertExpr callback failed
