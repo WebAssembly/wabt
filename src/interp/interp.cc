@@ -824,7 +824,7 @@ template <typename MemType>
 Result Thread::GetAccessAddress(const uint8_t** pc, void** out_address) {
   Memory* memory = ReadMemory(pc);
   uint64_t addr = static_cast<uint64_t>(Pop<uint32_t>()) + ReadU32(pc);
-  if (addr + sizeof(MemType) > memory->data.size()) {
+  if (WABT_UNLIKELY(addr + sizeof(MemType) > memory->data.size())) {
     TRAP_MSG(MemoryAccessOutOfBounds,
              "access at %" PRIu64 "+%" PRIzd " >= max value %" PRIzd, addr,
              sizeof(MemType), memory->data.size());
@@ -837,7 +837,7 @@ template <typename MemType>
 Result Thread::GetAtomicAccessAddress(const uint8_t** pc, void** out_address) {
   Memory* memory = ReadMemory(pc);
   uint64_t addr = static_cast<uint64_t>(Pop<uint32_t>()) + ReadU32(pc);
-  if (addr + sizeof(MemType) > memory->data.size()) {
+  if (WABT_UNLIKELY(addr + sizeof(MemType) > memory->data.size())) {
     TRAP_MSG(MemoryAccessOutOfBounds,
              "atomic access at %" PRIu64 "+%" PRIzd " >= max value %" PRIzd,
              addr, sizeof(MemType), memory->data.size());
@@ -1111,7 +1111,7 @@ Result Thread::TableSet(const uint8_t** pc) {
   Table* table = ReadTable(pc);
   Ref ref = Pop<Ref>();
   uint32_t index = Pop<uint32_t>();
-  if (index >= table->size()) {
+  if (WABT_UNLIKELY(index >= table->size())) {
     TRAP_MSG(TableAccessOutOfBounds, "table.set at %u >= max value %" PRIzx,
              index, table->size());
   }
@@ -1122,7 +1122,7 @@ Result Thread::TableSet(const uint8_t** pc) {
 Result Thread::TableGet(const uint8_t** pc) {
   Table* table = ReadTable(pc);
   uint32_t index = Pop<uint32_t>();
-  if (index >= table->size()) {
+  if (WABT_UNLIKELY(index >= table->size())) {
     TRAP_MSG(TableAccessOutOfBounds, "table.get at %u >= max value %" PRIzx,
              index, table->size());
   }

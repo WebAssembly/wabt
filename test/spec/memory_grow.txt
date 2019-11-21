@@ -1,4 +1,3 @@
-;;; SLOW:
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/memory_grow.wast
 (;; STDOUT ;;;
