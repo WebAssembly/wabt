@@ -1,0 +1,27 @@
+name: CI
+
+on: [pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-16.04, macos-latest, windows-latest]
+    steps:
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '2.7'
+    - uses: actions/checkout@v1
+      with:
+        submodules: true
+    - name: mkdir
+      run: mkdir -p out
+    - name: cmake
+      run: cmake ..
+      working-directory: out
+    - name: build
+      run: cmake --build out
+    - name: test
+      run: cmake --build out --target run-tests
