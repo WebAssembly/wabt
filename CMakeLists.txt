@@ -499,8 +499,8 @@ if (NOT EMSCRIPTEN)
     find_package(PythonInterp 2.7 REQUIRED)
     set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
     add_custom_target(run-tests
-      COMMAND ${CMAKE_BINARY_DIR}/wabt-unittests
-      COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir ${CMAKE_BINARY_DIR}
+      COMMAND $<TARGET_FILE:wabt-unittests>
+      COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
       DEPENDS ${WABT_EXECUTABLES}
       WORKING_DIRECTORY ${WABT_SOURCE_DIR}
       ${USES_TERMINAL}
