@@ -3,7 +3,7 @@
 (module
   (export "mem" (memory 0)))
 (;; STDERR ;;;
-out/test/parse/module/bad-export-memory-undefined.txt:4:25: error: memory variable out of range (max 0)
+out/test/parse/module/bad-export-memory-undefined.txt:4:25: error: memory variable out of range: 0 (max 4294967295)
   (export "mem" (memory 0)))
                         ^
 ;;; STDERR ;;)

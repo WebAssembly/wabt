@@ -5,5 +5,5 @@
   (start $start)
 )
 (;; STDOUT ;;;
-error running start function: unreachable executed
+error initialiazing module: unreachable executed
 ;;; STDOUT ;;)

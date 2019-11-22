@@ -21,7 +21,7 @@
 000000e: 00                                        ; section size (guess)
 000000f: 02                                        ; num data segments
 ; data segment header 0
-0000010: 00                                      
+0000010: 00                                        ; segment flags
 0000011: 41                                        ; i32.const
 0000012: 0a                                        ; i32 literal
 0000013: 0b                                        ; end
@@ -29,7 +29,7 @@
 ; data segment data 0
 0000015: 6865 6c6c 6f                              ; data segment data
 ; data segment header 1
-000001a: 00                                      
+000001a: 00                                        ; segment flags
 000001b: 41                                        ; i32.const
 000001c: 14                                        ; i32 literal
 000001d: 0b                                        ; end

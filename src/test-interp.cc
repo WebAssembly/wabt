@@ -39,10 +39,13 @@ interp::Result TrapCallback(const interp::HostFunc* func,
   return interp::ResultType::TrapHostTrapped;
 }
 
+Features s_features;
+
 class HostTrapTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    interp::HostModule* host_module = env_.AppendHostModule("host");
+    env_ = MakeUnique<interp::Environment>(s_features);
+    interp::HostModule* host_module = env_->AppendHostModule("host");
     host_module->AppendFuncExport("a", {{}, {}}, TrapCallback);
   }
 
@@ -53,19 +56,19 @@ class HostTrapTest : public ::testing::Test {
     Errors errors;
     interp::DefinedModule* module = nullptr;
     ReadBinaryOptions options;
-    Result result = ReadBinaryInterp(&env_, data.data(), data.size(), options,
-                                     &errors, &module);
+    Result result = ReadBinaryInterp(env_.get(), data.data(), data.size(),
+                                     options, &errors, &module);
     EXPECT_EQ(Result::Ok, result);
 
     if (result == Result::Ok) {
-      interp::Executor executor(&env_);
-      return executor.RunStartFunction(module);
+      interp::Executor executor(env_.get());
+      return executor.Initialize(module);
     } else {
       return {};
     }
   }
 
-  interp::Environment env_;
+  std::unique_ptr<interp::Environment> env_;
 };
 
 }  // end of anonymous namespace
@@ -105,8 +108,9 @@ namespace {
 class HostMemoryTest : public ::testing::Test {
  protected:
   virtual void SetUp() {
-    interp::HostModule* host_module = env_.AppendHostModule("host");
-    executor_ = MakeUnique<interp::Executor>(&env_);
+    env_ = MakeUnique<interp::Environment>(s_features);
+    interp::HostModule* host_module = env_->AppendHostModule("host");
+    executor_ = MakeUnique<interp::Executor>(env_.get());
     std::pair<interp::Memory*, Index> pair =
         host_module->AppendMemoryExport("mem", Limits(1));
 
@@ -128,8 +132,8 @@ class HostMemoryTest : public ::testing::Test {
   Result LoadModule(const std::vector<uint8_t>& data) {
     Errors errors;
     ReadBinaryOptions options;
-    return ReadBinaryInterp(&env_, data.data(), data.size(), options, &errors,
-                            &module_);
+    return ReadBinaryInterp(env_.get(), data.data(), data.size(), options,
+                            &errors, &module_);
   }
 
   std::string string_data;
@@ -180,7 +184,7 @@ class HostMemoryTest : public ::testing::Test {
     return interp::ResultType::Ok;
   }
 
-  interp::Environment env_;
+  std::unique_ptr<interp::Environment> env_;
   interp::Memory* memory_;
   interp::DefinedModule* module_;
   std::unique_ptr<interp::Executor> executor_;

@@ -1,5 +1,5 @@
 ;;; TOOL: run-spec-wasm2c
 ;;; STDIN_FILE: third_party/testsuite/i32.wast
 (;; STDOUT ;;;
-359/359 tests passed.
+360/360 tests passed.
 ;;; STDOUT ;;)

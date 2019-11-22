@@ -21,6 +21,7 @@
 #include "src/cast.h"
 #include "src/expr-visitor.h"
 #include "src/make-unique.h"
+#include "src/stream.h"
 #include "src/utf8.h"
 
 #define WABT_TRACING 0
@@ -919,7 +920,13 @@ Result WastParser::ParseDataModuleField(Module* module) {
   ParseBindVarOpt(&name);
   auto field = MakeUnique<DataSegmentModuleField>(loc, name);
 
-  if (ParseVarOpt(&field->data_segment.memory_var, Var(0, loc))) {
+  if (PeekMatchLpar(TokenType::Memory)) {
+    EXPECT(Lpar);
+    EXPECT(Memory);
+    CHECK_RESULT(ParseVar(&field->data_segment.memory_var));
+    EXPECT(Rpar);
+    CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
+  } else if (ParseVarOpt(&field->data_segment.memory_var, Var(0, loc))) {
     CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
   } else if (!ParseOffsetExprOpt(&field->data_segment.offset)) {
     field->data_segment.flags |= SegPassive;
@@ -937,17 +944,33 @@ Result WastParser::ParseElemModuleField(Module* module) {
   Location loc = GetLocation();
   EXPECT(Elem);
 
-  // Name here can either refer the name of the segment itself or active
-  // segments, the name of the table its part of.
-  std::string name;
-  bool has_name = ParseBindVarOpt(&name);
+  // With MVP text format the name here was intended to refer to the table
+  // that the elem segment was part of, but we never did anything with this name
+  // since there was only one table anyway.
+  // With bulk-memory enabled this introduces a new name for the particualr
+  // elem segment.
+  std::string segment_name;
+  ParseBindVarOpt(&segment_name);
+  if (!options_->features.bulk_memory_enabled()) {
+    segment_name = "";
+  }
 
-  auto field = MakeUnique<ElemSegmentModuleField>(loc);
+  auto field = MakeUnique<ElemSegmentModuleField>(loc, segment_name);
+
+  // Optional table specifier
+  if (options_->features.bulk_memory_enabled() &&
+      PeekMatchLpar(TokenType::Table)) {
+    field->elem_segment.flags |= SegExplicitIndex;
+    EXPECT(Lpar);
+    EXPECT(Table);
+    CHECK_RESULT(ParseVar(&field->elem_segment.table_var));
+    EXPECT(Rpar);
+  } else {
+    ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
+  }
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
-    field->elem_segment.name = name;
-    field->elem_segment.flags |= SegPassive;
-
+    field->elem_segment.flags |= (SegPassive | SegUseElemExprs);
     // Parse a potentially empty sequence of ElemExprs.
     while (true) {
       Var var;
@@ -958,39 +981,19 @@ Result WastParser::ParseElemModuleField(Module* module) {
         CHECK_RESULT(ParseVar(&var));
         field->elem_segment.elem_exprs.emplace_back(var);
         EXPECT(Rpar);
-      } else if (ParseVarOpt(&var)) {
-        // TODO: This format will be removed by
-        // https://github.com/WebAssembly/bulk-memory-operations/pull/84
-        field->elem_segment.elem_exprs.emplace_back(var);
       } else {
         CHECK_RESULT(ErrorIfLpar({"ref.null", "ref.func"}));
         break;
       }
     }
   } else {
-    // With the bulk memory proposal we can name both the elem section and the
-    // table to which is is attached.  Previously we could only name the table.
-    Var second_name;
-    bool has_second_name = ParseVarOpt(&second_name, Var(0, loc));
-    if (options_->features.bulk_memory_enabled() && has_second_name) {
-      field->elem_segment.table_var = second_name;
-      field->elem_segment.name = name;
-    } else {
-      // If we have only one name, and we are an active segment, we treat
-      // that as the name of the table, since naming an active elem segment
-      // is not practically useful.
-      if (has_second_name) {
-        field->elem_segment.table_var = second_name;
-      } else {
-        field->elem_segment.table_var = has_name ? Var(name, loc) : Var(0, loc);
-      }
-    }
-    if (module->GetTableIndex(field->elem_segment.table_var) > 0) {
-      field->elem_segment.flags |= SegIndexOther;
-    }
-
     field->elem_segment.elem_type = Type::Funcref;
-    CHECK_RESULT(ParseOffsetExpr(&field->elem_segment.offset));
+    if (!ParseOffsetExprOpt(&field->elem_segment.offset)) {
+      field->elem_segment.flags |= SegPassive;
+    }
+    if (PeekMatch(TokenType::Func)) {
+      EXPECT(Func);
+    }
     ParseElemExprVarListOpt(&field->elem_segment.elem_exprs);
   }
   EXPECT(Rpar);
@@ -1254,6 +1257,10 @@ Result WastParser::ParseStartModuleField(Module* module) {
   WABT_TRACE(ParseStartModuleField);
   EXPECT(Lpar);
   Location loc = GetLocation();
+  if (module->starts.size() > 0) {
+    Error(loc, "multiple start sections");
+    return Result::Error;
+  }
   EXPECT(Start);
   Var var;
   CHECK_RESULT(ParseVar(&var));
@@ -1293,9 +1300,10 @@ Result WastParser::ParseTableModuleField(Module* module) {
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
     elem_segment.table_var = Var(module->tables.size());
     if (module->tables.size() > 0)
-      elem_segment.flags |= SegIndexOther;
+      elem_segment.flags |= SegExplicitIndex;
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
+    elem_segment.elem_type = elem_type;
     CHECK_RESULT(ParseElemExprVarList(&elem_segment.elem_exprs));
     EXPECT(Rpar);
 
@@ -2526,6 +2534,10 @@ Result WastParser::ParseModuleCommand(Script* script, CommandPtr* out_command) {
     case ScriptModuleType::Binary: {
       auto* bsm = cast<BinaryScriptModule>(script_module.get());
       ReadBinaryOptions options;
+#if WABT_TRACING
+      auto log_stream = FileStream::CreateStdout();
+      options.log_stream = log_stream.get();
+#endif
       options.features = options_->features;
       Errors errors;
       const char* filename = "<text>";

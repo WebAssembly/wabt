@@ -2,124 +2,308 @@
 ;;; STDIN_FILE: third_party/testsuite/const.wast
 (;; STDOUT ;;;
 out/test/spec/const.wast:8: assert_malformed passed:
-  out/test/spec/const/const.2.wat:1:18: error: invalid literal "0x100000000"
+  out/test/spec/const/const.2.wat:1:17: error: unexpected token ")", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (i32.const) drop)
+                  ^
+out/test/spec/const.wast:12: assert_malformed passed:
+  out/test/spec/const/const.3.wat:1:18: error: unexpected token "0x", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (i32.const 0x) drop)
+                   ^^
+out/test/spec/const.wast:16: assert_malformed passed:
+  out/test/spec/const/const.4.wat:1:18: error: unexpected token "1x", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (i32.const 1x) drop)
+                   ^^
+out/test/spec/const.wast:20: assert_malformed passed:
+  out/test/spec/const/const.5.wat:1:18: error: unexpected token "0xg", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (i32.const 0xg) drop)
+                   ^^^
+out/test/spec/const.wast:27: assert_malformed passed:
+  out/test/spec/const/const.8.wat:1:17: error: unexpected token ")", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (i64.const) drop)
+                  ^
+out/test/spec/const.wast:31: assert_malformed passed:
+  out/test/spec/const/const.9.wat:1:18: error: unexpected token "0x", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (i64.const 0x) drop)
+                   ^^
+out/test/spec/const.wast:35: assert_malformed passed:
+  out/test/spec/const/const.10.wat:1:18: error: unexpected token "1x", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (i64.const 1x) drop)
+                   ^^
+out/test/spec/const.wast:39: assert_malformed passed:
+  out/test/spec/const/const.11.wat:1:18: error: unexpected token "0xg", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (i64.const 0xg) drop)
+                   ^^^
+out/test/spec/const.wast:68: assert_malformed passed:
+  out/test/spec/const/const.36.wat:1:17: error: unexpected token ")", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const) drop)
+                  ^
+out/test/spec/const.wast:72: assert_malformed passed:
+  out/test/spec/const/const.37.wat:1:18: error: unexpected token ".0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const .0) drop)
+                   ^^
+out/test/spec/const.wast:76: assert_malformed passed:
+  out/test/spec/const/const.38.wat:1:18: error: unexpected token ".0e0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const .0e0) drop)
+                   ^^^^
+out/test/spec/const.wast:80: assert_malformed passed:
+  out/test/spec/const/const.39.wat:1:18: error: unexpected token "0e", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0e) drop)
+                   ^^
+out/test/spec/const.wast:84: assert_malformed passed:
+  out/test/spec/const/const.40.wat:1:18: error: unexpected token "0e+", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0e+) drop)
+                   ^^^
+out/test/spec/const.wast:88: assert_malformed passed:
+  out/test/spec/const/const.41.wat:1:18: error: unexpected token "0.0e", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0.0e) drop)
+                   ^^^^
+out/test/spec/const.wast:92: assert_malformed passed:
+  out/test/spec/const/const.42.wat:1:18: error: unexpected token "0.0e-", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0.0e-) drop)
+                   ^^^^^
+out/test/spec/const.wast:96: assert_malformed passed:
+  out/test/spec/const/const.43.wat:1:18: error: unexpected token "0x", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x) drop)
+                   ^^
+out/test/spec/const.wast:100: assert_malformed passed:
+  out/test/spec/const/const.44.wat:1:18: error: unexpected token "1x", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 1x) drop)
+                   ^^
+out/test/spec/const.wast:104: assert_malformed passed:
+  out/test/spec/const/const.45.wat:1:18: error: unexpected token "0xg", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0xg) drop)
+                   ^^^
+out/test/spec/const.wast:108: assert_malformed passed:
+  out/test/spec/const/const.46.wat:1:18: error: unexpected token "0x.", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x.) drop)
+                   ^^^
+out/test/spec/const.wast:112: assert_malformed passed:
+  out/test/spec/const/const.47.wat:1:18: error: unexpected token "0x0.g", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x0.g) drop)
+                   ^^^^^
+out/test/spec/const.wast:116: assert_malformed passed:
+  out/test/spec/const/const.48.wat:1:18: error: unexpected token "0x0p", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x0p) drop)
+                   ^^^^
+out/test/spec/const.wast:120: assert_malformed passed:
+  out/test/spec/const/const.49.wat:1:18: error: unexpected token "0x0p+", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x0p+) drop)
+                   ^^^^^
+out/test/spec/const.wast:124: assert_malformed passed:
+  out/test/spec/const/const.50.wat:1:18: error: unexpected token "0x0p-", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x0p-) drop)
+                   ^^^^^
+out/test/spec/const.wast:128: assert_malformed passed:
+  out/test/spec/const/const.51.wat:1:18: error: unexpected token "0x0.0p", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x0.0p) drop)
+                   ^^^^^^
+out/test/spec/const.wast:132: assert_malformed passed:
+  out/test/spec/const/const.52.wat:1:18: error: unexpected token "0x0.0p+", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x0.0p+) drop)
+                   ^^^^^^^
+out/test/spec/const.wast:136: assert_malformed passed:
+  out/test/spec/const/const.53.wat:1:18: error: unexpected token "0x0.0p-", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x0.0p-) drop)
+                   ^^^^^^^
+out/test/spec/const.wast:140: assert_malformed passed:
+  out/test/spec/const/const.54.wat:1:18: error: unexpected token "0x0pA", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f32.const 0x0pA) drop)
+                   ^^^^^
+out/test/spec/const.wast:170: assert_malformed passed:
+  out/test/spec/const/const.79.wat:1:17: error: unexpected token ")", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const) drop)
+                  ^
+out/test/spec/const.wast:174: assert_malformed passed:
+  out/test/spec/const/const.80.wat:1:18: error: unexpected token ".0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const .0) drop)
+                   ^^
+out/test/spec/const.wast:178: assert_malformed passed:
+  out/test/spec/const/const.81.wat:1:18: error: unexpected token ".0e0", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const .0e0) drop)
+                   ^^^^
+out/test/spec/const.wast:182: assert_malformed passed:
+  out/test/spec/const/const.82.wat:1:18: error: unexpected token "0e", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0e) drop)
+                   ^^
+out/test/spec/const.wast:186: assert_malformed passed:
+  out/test/spec/const/const.83.wat:1:18: error: unexpected token "0e+", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0e+) drop)
+                   ^^^
+out/test/spec/const.wast:190: assert_malformed passed:
+  out/test/spec/const/const.84.wat:1:18: error: unexpected token "0.0e", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0.0e) drop)
+                   ^^^^
+out/test/spec/const.wast:194: assert_malformed passed:
+  out/test/spec/const/const.85.wat:1:18: error: unexpected token "0.0e-", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0.0e-) drop)
+                   ^^^^^
+out/test/spec/const.wast:198: assert_malformed passed:
+  out/test/spec/const/const.86.wat:1:18: error: unexpected token "0x", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x) drop)
+                   ^^
+out/test/spec/const.wast:202: assert_malformed passed:
+  out/test/spec/const/const.87.wat:1:18: error: unexpected token "1x", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 1x) drop)
+                   ^^
+out/test/spec/const.wast:206: assert_malformed passed:
+  out/test/spec/const/const.88.wat:1:18: error: unexpected token "0xg", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0xg) drop)
+                   ^^^
+out/test/spec/const.wast:210: assert_malformed passed:
+  out/test/spec/const/const.89.wat:1:18: error: unexpected token "0x.", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x.) drop)
+                   ^^^
+out/test/spec/const.wast:214: assert_malformed passed:
+  out/test/spec/const/const.90.wat:1:18: error: unexpected token "0x0.g", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x0.g) drop)
+                   ^^^^^
+out/test/spec/const.wast:218: assert_malformed passed:
+  out/test/spec/const/const.91.wat:1:18: error: unexpected token "0x0p", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x0p) drop)
+                   ^^^^
+out/test/spec/const.wast:222: assert_malformed passed:
+  out/test/spec/const/const.92.wat:1:18: error: unexpected token "0x0p+", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x0p+) drop)
+                   ^^^^^
+out/test/spec/const.wast:226: assert_malformed passed:
+  out/test/spec/const/const.93.wat:1:18: error: unexpected token "0x0p-", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x0p-) drop)
+                   ^^^^^
+out/test/spec/const.wast:230: assert_malformed passed:
+  out/test/spec/const/const.94.wat:1:18: error: unexpected token "0x0.0p", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x0.0p) drop)
+                   ^^^^^^
+out/test/spec/const.wast:234: assert_malformed passed:
+  out/test/spec/const/const.95.wat:1:18: error: unexpected token "0x0.0p+", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x0.0p+) drop)
+                   ^^^^^^^
+out/test/spec/const.wast:238: assert_malformed passed:
+  out/test/spec/const/const.96.wat:1:18: error: unexpected token "0x0.0p-", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x0.0p-) drop)
+                   ^^^^^^^
+out/test/spec/const.wast:242: assert_malformed passed:
+  out/test/spec/const/const.97.wat:1:18: error: unexpected token "0x0pA", expected a numeric literal (e.g. 123, -45, 6.7e8).
+  (func (f64.const 0x0pA) drop)
+                   ^^^^^
+out/test/spec/const.wast:252: assert_malformed passed:
+  out/test/spec/const/const.100.wat:1:18: error: invalid literal "0x100000000"
   (func (i32.const 0x100000000) drop)
                    ^^^^^^^^^^^
-out/test/spec/const.wast:12: assert_malformed passed:
-  out/test/spec/const/const.3.wat:1:18: error: invalid literal "-0x80000001"
+out/test/spec/const.wast:256: assert_malformed passed:
+  out/test/spec/const/const.101.wat:1:18: error: invalid literal "-0x80000001"
   (func (i32.const -0x80000001) drop)
                    ^^^^^^^^^^^
-out/test/spec/const.wast:19: assert_malformed passed:
-  out/test/spec/const/const.6.wat:1:18: error: invalid literal "4294967296"
+out/test/spec/const.wast:263: assert_malformed passed:
+  out/test/spec/const/const.104.wat:1:18: error: invalid literal "4294967296"
   (func (i32.const 4294967296) drop)
                    ^^^^^^^^^^
-out/test/spec/const.wast:23: assert_malformed passed:
-  out/test/spec/const/const.7.wat:1:18: error: invalid literal "-2147483649"
+out/test/spec/const.wast:267: assert_malformed passed:
+  out/test/spec/const/const.105.wat:1:18: error: invalid literal "-2147483649"
   (func (i32.const -2147483649) drop)
                    ^^^^^^^^^^^
-out/test/spec/const.wast:30: assert_malformed passed:
-  out/test/spec/const/const.10.wat:1:18: error: invalid literal "0x10000000000000000"
+out/test/spec/const.wast:274: assert_malformed passed:
+  out/test/spec/const/const.108.wat:1:18: error: invalid literal "0x10000000000000000"
   (func (i64.const 0x10000000000000000) drop)
                    ^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:34: assert_malformed passed:
-  out/test/spec/const/const.11.wat:1:18: error: invalid literal "-0x8000000000000001"
+out/test/spec/const.wast:278: assert_malformed passed:
+  out/test/spec/const/const.109.wat:1:18: error: invalid literal "-0x8000000000000001"
   (func (i64.const -0x8000000000000001) drop)
                    ^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:41: assert_malformed passed:
-  out/test/spec/const/const.14.wat:1:18: error: invalid literal "18446744073709551616"
+out/test/spec/const.wast:285: assert_malformed passed:
+  out/test/spec/const/const.112.wat:1:18: error: invalid literal "18446744073709551616"
   (func (i64.const 18446744073709551616) drop)
                    ^^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:45: assert_malformed passed:
-  out/test/spec/const/const.15.wat:1:18: error: invalid literal "-9223372036854775809"
+out/test/spec/const.wast:289: assert_malformed passed:
+  out/test/spec/const/const.113.wat:1:18: error: invalid literal "-9223372036854775809"
   (func (i64.const -9223372036854775809) drop)
                    ^^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:60: assert_malformed passed:
-  out/test/spec/const/const.26.wat:1:18: error: invalid literal "0x1p128"
+out/test/spec/const.wast:304: assert_malformed passed:
+  out/test/spec/const/const.124.wat:1:18: error: invalid literal "0x1p128"
   (func (f32.const 0x1p128) drop)
                    ^^^^^^^
-out/test/spec/const.wast:64: assert_malformed passed:
-  out/test/spec/const/const.27.wat:1:18: error: invalid literal "-0x1p128"
+out/test/spec/const.wast:308: assert_malformed passed:
+  out/test/spec/const/const.125.wat:1:18: error: invalid literal "-0x1p128"
   (func (f32.const -0x1p128) drop)
                    ^^^^^^^^
-out/test/spec/const.wast:68: assert_malformed passed:
-  out/test/spec/const/const.28.wat:1:18: error: invalid literal "0x1.ffffffp127"
+out/test/spec/const.wast:312: assert_malformed passed:
+  out/test/spec/const/const.126.wat:1:18: error: invalid literal "0x1.ffffffp127"
   (func (f32.const 0x1.ffffffp127) drop)
                    ^^^^^^^^^^^^^^
-out/test/spec/const.wast:72: assert_malformed passed:
-  out/test/spec/const/const.29.wat:1:18: error: invalid literal "-0x1.ffffffp127"
+out/test/spec/const.wast:316: assert_malformed passed:
+  out/test/spec/const/const.127.wat:1:18: error: invalid literal "-0x1.ffffffp127"
   (func (f32.const -0x1.ffffffp127) drop)
                    ^^^^^^^^^^^^^^^
-out/test/spec/const.wast:79: assert_malformed passed:
-  out/test/spec/const/const.32.wat:1:18: error: invalid literal "1e39"
+out/test/spec/const.wast:323: assert_malformed passed:
+  out/test/spec/const/const.130.wat:1:18: error: invalid literal "1e39"
   (func (f32.const 1e39) drop)
                    ^^^^
-out/test/spec/const.wast:83: assert_malformed passed:
-  out/test/spec/const/const.33.wat:1:18: error: invalid literal "-1e39"
+out/test/spec/const.wast:327: assert_malformed passed:
+  out/test/spec/const/const.131.wat:1:18: error: invalid literal "-1e39"
   (func (f32.const -1e39) drop)
                    ^^^^^
-out/test/spec/const.wast:90: assert_malformed passed:
-  out/test/spec/const/const.36.wat:1:18: error: invalid literal "340282356779733661637539395458142568448"
+out/test/spec/const.wast:334: assert_malformed passed:
+  out/test/spec/const/const.134.wat:1:18: error: invalid literal "340282356779733661637539395458142568448"
   (func (f32.const 340282356779733661637539395458142568448) drop)
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:94: assert_malformed passed:
-  out/test/spec/const/const.37.wat:1:18: error: invalid literal "-340282356779733661637539395458142568448"
+out/test/spec/const.wast:338: assert_malformed passed:
+  out/test/spec/const/const.135.wat:1:18: error: invalid literal "-340282356779733661637539395458142568448"
   (func (f32.const -340282356779733661637539395458142568448) drop)
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:107: assert_malformed passed:
-  out/test/spec/const/const.46.wat:1:18: error: invalid literal "0x1p1024"
+out/test/spec/const.wast:351: assert_malformed passed:
+  out/test/spec/const/const.144.wat:1:18: error: invalid literal "0x1p1024"
   (func (f64.const 0x1p1024) drop)
                    ^^^^^^^^
-out/test/spec/const.wast:111: assert_malformed passed:
-  out/test/spec/const/const.47.wat:1:18: error: invalid literal "-0x1p1024"
+out/test/spec/const.wast:355: assert_malformed passed:
+  out/test/spec/const/const.145.wat:1:18: error: invalid literal "-0x1p1024"
   (func (f64.const -0x1p1024) drop)
                    ^^^^^^^^^
-out/test/spec/const.wast:115: assert_malformed passed:
-  out/test/spec/const/const.48.wat:1:18: error: invalid literal "0x1.fffffffffffff8p1023"
+out/test/spec/const.wast:359: assert_malformed passed:
+  out/test/spec/const/const.146.wat:1:18: error: invalid literal "0x1.fffffffffffff8p1023"
   (func (f64.const 0x1.fffffffffffff8p1023) drop)
                    ^^^^^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:119: assert_malformed passed:
-  out/test/spec/const/const.49.wat:1:18: error: invalid literal "-0x1.fffffffffffff8p1023"
+out/test/spec/const.wast:363: assert_malformed passed:
+  out/test/spec/const/const.147.wat:1:18: error: invalid literal "-0x1.fffffffffffff8p1023"
   (func (f64.const -0x1.fffffffffffff8p1023) drop)
                    ^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:126: assert_malformed passed:
-  out/test/spec/const/const.52.wat:1:18: error: invalid literal "1e309"
+out/test/spec/const.wast:370: assert_malformed passed:
+  out/test/spec/const/const.150.wat:1:18: error: invalid literal "1e309"
   (func (f64.const 1e309) drop)
                    ^^^^^
-out/test/spec/const.wast:130: assert_malformed passed:
-  out/test/spec/const/const.53.wat:1:18: error: invalid literal "-1e309"
+out/test/spec/const.wast:374: assert_malformed passed:
+  out/test/spec/const/const.151.wat:1:18: error: invalid literal "-1e309"
   (func (f64.const -1e309) drop)
                    ^^^^^^
-out/test/spec/const.wast:137: assert_malformed passed:
-  out/test/spec/const/const.56.wat:1:18: error: invalid literal "269653970229347356221791135597556535197105851288767494898376215204735891170042808140884337949150317257310688430271573696351481990334196274152701320055306275479074865864826923114368235135583993416113802762682700913456874855354834422248712838998185022412196739306217084753107265771378949821875606039276187287552"
+out/test/spec/const.wast:381: assert_malformed passed:
+  out/test/spec/const/const.154.wat:1:18: error: invalid literal "269653970229347356221791135597556535197105851288767494898376215204735891170042808140884337949150317257310688430271573696351481990334196274152701320055306275479074865864826923114368235135583993416113802762682700913456874855354834422248712838998185022412196739306217084753107265771378949821875606039276187287552"
   (func (f64.const 269653970229347356221791135597556535197105851288767494898376...
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:141: assert_malformed passed:
-  out/test/spec/const/const.57.wat:1:18: error: invalid literal "-269653970229347356221791135597556535197105851288767494898376215204735891170042808140884337949150317257310688430271573696351481990334196274152701320055306275479074865864826923114368235135583993416113802762682700913456874855354834422248712838998185022412196739306217084753107265771378949821875606039276187287552"
+out/test/spec/const.wast:385: assert_malformed passed:
+  out/test/spec/const/const.155.wat:1:18: error: invalid literal "-269653970229347356221791135597556535197105851288767494898376215204735891170042808140884337949150317257310688430271573696351481990334196274152701320055306275479074865864826923114368235135583993416113802762682700913456874855354834422248712838998185022412196739306217084753107265771378949821875606039276187287552"
   (func (f64.const -26965397022934735622179113559755653519710585128876749489837...
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-out/test/spec/const.wast:151: assert_malformed passed:
-  out/test/spec/const/const.62.wat:1:18: error: unexpected token "nan:1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/const.wast:395: assert_malformed passed:
+  out/test/spec/const/const.160.wat:1:18: error: unexpected token "nan:1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (func (f32.const nan:1) drop)
                    ^^^^^
-out/test/spec/const.wast:155: assert_malformed passed:
-  out/test/spec/const/const.63.wat:1:18: error: unexpected token "nan:1", expected a numeric literal (e.g. 123, -45, 6.7e8).
+out/test/spec/const.wast:399: assert_malformed passed:
+  out/test/spec/const/const.161.wat:1:18: error: unexpected token "nan:1", expected a numeric literal (e.g. 123, -45, 6.7e8).
   (func (f64.const nan:1) drop)
                    ^^^^^
-out/test/spec/const.wast:160: assert_malformed passed:
-  out/test/spec/const/const.64.wat:1:18: error: invalid literal "nan:0x0"
+out/test/spec/const.wast:404: assert_malformed passed:
+  out/test/spec/const/const.162.wat:1:18: error: invalid literal "nan:0x0"
   (func (f32.const nan:0x0) drop)
                    ^^^^^^^
-out/test/spec/const.wast:164: assert_malformed passed:
-  out/test/spec/const/const.65.wat:1:18: error: invalid literal "nan:0x0"
+out/test/spec/const.wast:408: assert_malformed passed:
+  out/test/spec/const/const.163.wat:1:18: error: invalid literal "nan:0x0"
   (func (f64.const nan:0x0) drop)
                    ^^^^^^^
-out/test/spec/const.wast:169: assert_malformed passed:
-  out/test/spec/const/const.66.wat:1:18: error: invalid literal "nan:0x80_0000"
+out/test/spec/const.wast:413: assert_malformed passed:
+  out/test/spec/const/const.164.wat:1:18: error: invalid literal "nan:0x80_0000"
   (func (f32.const nan:0x80_0000) drop)
                    ^^^^^^^^^^^^^
-out/test/spec/const.wast:173: assert_malformed passed:
-  out/test/spec/const/const.67.wat:1:18: error: invalid literal "nan:0x10_0000_0000_0000"
+out/test/spec/const.wast:417: assert_malformed passed:
+  out/test/spec/const/const.165.wat:1:18: error: invalid literal "nan:0x10_0000_0000_0000"
   (func (f64.const nan:0x10_0000_0000_0000) drop)
                    ^^^^^^^^^^^^^^^^^^^^^^^
-330/330 tests passed.
+376/376 tests passed.
 ;;; STDOUT ;;)

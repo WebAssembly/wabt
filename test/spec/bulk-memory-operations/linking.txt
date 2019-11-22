@@ -30,24 +30,12 @@ out/test/spec/bulk-memory-operations/linking.wast:185: assert_trap passed: unini
 out/test/spec/bulk-memory-operations/linking.wast:187: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/linking.wast:188: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/linking.wast:190: assert_trap passed: undefined table index
-out/test/spec/bulk-memory-operations/linking.wast:207: assert_unlinkable passed:
-  error: elem segment is out of bounds: [10, 11) >= max value 10
 out/test/spec/bulk-memory-operations/linking.wast:216: assert_unlinkable passed:
   error: unknown module field "mem"
   0000027: error: OnImportMemory callback failed
 out/test/spec/bulk-memory-operations/linking.wast:225: assert_trap passed: uninitialized table element
-out/test/spec/bulk-memory-operations/linking.wast:230: assert_unlinkable passed:
-  error: elem segment is out of bounds: [12, 13) >= max value 10
-out/test/spec/bulk-memory-operations/linking.wast:241: assert_unlinkable passed:
-  error: data segment is out of bounds: [65536, 65537) >= max value 65536
-out/test/spec/bulk-memory-operations/linking.wast:301: assert_unlinkable passed:
-  error: data segment is out of bounds: [65536, 65537) >= max value 65536
 out/test/spec/bulk-memory-operations/linking.wast:326: assert_unlinkable passed:
   error: unknown module field "tab"
   0000037: error: OnImportTable callback failed
-out/test/spec/bulk-memory-operations/linking.wast:339: assert_unlinkable passed:
-  error: data segment is out of bounds: [327680, 327681) >= max value 327680
-out/test/spec/bulk-memory-operations/linking.wast:349: assert_unlinkable passed:
-  error: elem segment is out of bounds: [0, 1) >= max value 0
 94/94 tests passed.
 ;;; STDOUT ;;)

@@ -69,5 +69,80 @@ out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:247: assert_
 out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:248: assert_trap passed: invalid conversion to integer
 out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:249: assert_trap passed: invalid conversion to integer
 out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:250: assert_trap passed: invalid conversion to integer
-581/581 tests passed.
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:674: assert_invalid passed:
+  error: type mismatch in i32.wrap_i64, expected [i64] but got [f32]
+  000001e: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:675: assert_invalid passed:
+  error: type mismatch in i32.trunc_f32_s, expected [f32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:676: assert_invalid passed:
+  error: type mismatch in i32.trunc_f32_u, expected [f32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:677: assert_invalid passed:
+  error: type mismatch in i32.trunc_f64_s, expected [f64] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:678: assert_invalid passed:
+  error: type mismatch in i32.trunc_f64_u, expected [f64] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:679: assert_invalid passed:
+  error: type mismatch in i32.reinterpret_f32, expected [f32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:680: assert_invalid passed:
+  error: type mismatch in i64.extend_i32_s, expected [i32] but got [f32]
+  000001e: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:681: assert_invalid passed:
+  error: type mismatch in i64.extend_i32_u, expected [i32] but got [f32]
+  000001e: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:682: assert_invalid passed:
+  error: type mismatch in i64.trunc_f32_s, expected [f32] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:683: assert_invalid passed:
+  error: type mismatch in i64.trunc_f32_u, expected [f32] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:684: assert_invalid passed:
+  error: type mismatch in i64.trunc_f64_s, expected [f64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:685: assert_invalid passed:
+  error: type mismatch in i64.trunc_f64_u, expected [f64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:686: assert_invalid passed:
+  error: type mismatch in i64.reinterpret_f64, expected [f64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:687: assert_invalid passed:
+  error: type mismatch in f32.convert_i32_s, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:688: assert_invalid passed:
+  error: type mismatch in f32.convert_i32_u, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:689: assert_invalid passed:
+  error: type mismatch in f32.convert_i64_s, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:690: assert_invalid passed:
+  error: type mismatch in f32.convert_i64_u, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:691: assert_invalid passed:
+  error: type mismatch in f32.demote_f64, expected [f64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:692: assert_invalid passed:
+  error: type mismatch in f32.reinterpret_i32, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:693: assert_invalid passed:
+  error: type mismatch in f64.convert_i32_s, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:694: assert_invalid passed:
+  error: type mismatch in f64.convert_i32_u, expected [i32] but got [i64]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:695: assert_invalid passed:
+  error: type mismatch in f64.convert_i64_s, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:696: assert_invalid passed:
+  error: type mismatch in f64.convert_i64_u, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:697: assert_invalid passed:
+  error: type mismatch in f64.promote_f32, expected [f32] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+out/test/spec/nontrapping-float-to-int-conversions/conversions.wast:698: assert_invalid passed:
+  error: type mismatch in f64.reinterpret_i64, expected [i64] but got [i32]
+  000001b: error: OnConvertExpr callback failed
+614/614 tests passed.
 ;;; STDOUT ;;)

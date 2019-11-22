@@ -18,5 +18,5 @@
   (table $T0 3 3 funcref)
   (export "zero" (func $zero))
   (export "one" (func $one))
-  (elem $e0 (i32.const 0) $zero $one $zero))
+  (elem $e0 (i32.const 0) func $zero $one $zero))
 ;;; STDOUT ;;)

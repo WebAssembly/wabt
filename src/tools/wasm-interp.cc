@@ -203,7 +203,7 @@ static void InitEnvironment(Environment* env) {
 
 static wabt::Result ReadAndRunModule(const char* module_filename) {
   wabt::Result result;
-  Environment env;
+  Environment env(s_features);
   InitEnvironment(&env);
 
   Errors errors;
@@ -212,13 +212,13 @@ static wabt::Result ReadAndRunModule(const char* module_filename) {
   FormatErrorsToFile(errors, Location::Type::Binary);
   if (Succeeded(result)) {
     Executor executor(&env, s_trace_stream, s_thread_options);
-    ExecResult exec_result = executor.RunStartFunction(module);
+    ExecResult exec_result = executor.Initialize(module);
     if (exec_result.ok()) {
       if (s_run_all_exports) {
         RunAllExports(module, &executor, RunVerbosity::Verbose);
       }
     } else {
-      WriteResult(s_stdout_stream.get(), "error running start function",
+      WriteResult(s_stdout_stream.get(), "error initialiazing module",
                   exec_result.result);
       return wabt::Result::Error;
     }

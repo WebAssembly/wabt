@@ -40,7 +40,7 @@
 
   (data "hi")
   (elem funcref (ref.func 0) (ref.null))
-  (elem funcref 1)
+  (elem func 1)
 
 )
 (;; STDOUT ;;;
@@ -73,6 +73,6 @@
   (table (;0;) 0 funcref)
   (memory (;0;) 0)
   (elem (;0;) funcref (ref.func 0) (ref.null))
-  (elem (;1;) funcref (ref.func 1))
+  (elem (;1;) func 1)
   (data (;0;) "hi"))
 ;;; STDOUT ;;)

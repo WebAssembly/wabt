@@ -1,30 +1,18 @@
 ;;; TOOL: run-interp-spec
 ;;; STDIN_FILE: third_party/testsuite/elem.wast
 (;; STDOUT ;;;
-out/test/spec/elem.wast:143: assert_unlinkable passed:
-  error: elem segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/elem.wast:152: assert_unlinkable passed:
-  error: elem segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/elem.wast:161: assert_unlinkable passed:
-  error: elem segment is out of bounds: [0, 1) >= max value 0
-out/test/spec/elem.wast:170: assert_unlinkable passed:
-  error: elem segment is out of bounds: [1, 1) >= max value 0
-out/test/spec/elem.wast:178: assert_unlinkable passed:
-  error: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/elem.wast:186: assert_unlinkable passed:
-  error: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/elem.wast:195: assert_unlinkable passed:
-  error: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/elem.wast:203: assert_unlinkable passed:
-  error: elem segment is out of bounds: [10, 11) >= max value 10
-out/test/spec/elem.wast:212: assert_unlinkable passed:
-  error: elem segment is out of bounds: [4294967295, 4294967296) >= max value 10
-out/test/spec/elem.wast:220: assert_unlinkable passed:
-  error: elem segment is out of bounds: [4294967295, 4294967296) >= max value 10
-out/test/spec/elem.wast:229: assert_unlinkable passed:
-  error: elem segment is out of bounds: [4294967286, 4294967287) >= max value 10
-out/test/spec/elem.wast:237: assert_unlinkable passed:
-  error: elem segment is out of bounds: [4294967286, 4294967287) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [0, 1) >= max value 0
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [0, 1) >= max value 0
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [0, 1) >= max value 0
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [1, 1) >= max value 0
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [10, 11) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [4294967295, 4294967296) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [4294967295, 4294967296) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [4294967286, 4294967287) >= max value 10
+assert_unlinkable passed: out of bounds table access: elem segment is out of bounds: [4294967286, 4294967287) >= max value 10
 out/test/spec/elem.wast:248: assert_invalid passed:
   0000015: error: elem section without table section
 out/test/spec/elem.wast:258: assert_invalid passed:

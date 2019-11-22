@@ -857,6 +857,11 @@ class CommandRunner {
                                  Environment* env,
                                  ModuleType module_type,
                                  const char* desc);
+  wabt::Result ReadUnlinkableModule(int line_number,
+                                    string_view module_filename,
+                                    Environment* env,
+                                    ModuleType module_type,
+                                    const char* desc);
 
   Environment env_;
   Executor executor_;
@@ -898,7 +903,7 @@ static void InitEnvironment(Environment* env) {
 }
 
 CommandRunner::CommandRunner()
-    : executor_(&env_, s_trace_stream, s_thread_options) {
+    : env_(s_features), executor_(&env_, s_trace_stream, s_thread_options) {
   InitEnvironment(&env_);
 }
 
@@ -1102,8 +1107,11 @@ wabt::Result CommandRunner::ReadInvalidModule(int line_number,
       DefinedModule* module;
       Errors errors;
       wabt::Result result = ReadModule(module_filename, env, &errors, &module);
-      FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
-                         PrintHeader::Once);
+      if (Failed(result)) {
+        FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
+                           PrintHeader::Once);
+        return result;
+      }
       return result;
     }
   }
@@ -1125,10 +1133,10 @@ wabt::Result CommandRunner::OnModuleCommand(const ModuleCommand* command) {
     return wabt::Result::Error;
   }
 
-  ExecResult exec_result = executor_.RunStartFunction(last_module_);
+  ExecResult exec_result = executor_.Initialize(last_module_);
   if (!exec_result.ok()) {
     env_.ResetToMarkPoint(mark);
-    WriteResult(s_stdout_stream.get(), "error running start function",
+    WriteResult(s_stdout_stream.get(), "error initializing module",
                 exec_result.result);
     return wabt::Result::Error;
   }
@@ -1157,7 +1165,7 @@ wabt::Result CommandRunner::OnActionCommand(const ActionCommand* command) {
 
 wabt::Result CommandRunner::OnAssertMalformedCommand(
     const AssertMalformedCommand* command) {
-  Environment env;
+  Environment env(s_features);
   InitEnvironment(&env);
 
   wabt::Result result =
@@ -1191,22 +1199,33 @@ wabt::Result CommandRunner::OnRegisterCommand(const RegisterCommand* command) {
 
 wabt::Result CommandRunner::OnAssertUnlinkableCommand(
     const AssertUnlinkableCommand* command) {
+  Errors errors;
   wabt::Result result =
-      ReadInvalidModule(command->line, command->filename, &env_, command->type,
-                        "assert_unlinkable");
+      ReadModule(command->filename, &env_, &errors, &last_module_);
 
-  if (Succeeded(result)) {
+  if (Failed(result)) {
+    std::string header = StringPrintf("%s:%d: assert_unlinkable passed",
+                                      source_filename_.c_str(), command->line);
+    FormatErrorsToFile(errors, Location::Type::Binary, {}, stdout, header,
+                       PrintHeader::Once);
+    return wabt::Result::Ok;
+  }
+
+  ExecResult exec_result = executor_.Initialize(last_module_);
+  if (exec_result.ok()) {
     PrintError(command->line, "expected module to be unlinkable: \"%s\"",
                command->filename.c_str());
     return wabt::Result::Error;
   }
 
+  WriteResult(s_stdout_stream.get(), "assert_unlinkable passed",
+              exec_result.result);
   return wabt::Result::Ok;
 }
 
 wabt::Result CommandRunner::OnAssertInvalidCommand(
     const AssertInvalidCommand* command) {
-  Environment env;
+  Environment env(s_features);
   InitEnvironment(&env);
 
   wabt::Result result = ReadInvalidModule(
@@ -1228,9 +1247,9 @@ wabt::Result CommandRunner::OnAssertUninstantiableCommand(
   FormatErrorsToFile(errors, Location::Type::Binary);
 
   if (Succeeded(result)) {
-    ExecResult exec_result = executor_.RunStartFunction(module);
+    ExecResult exec_result = executor_.Initialize(module);
     if (exec_result.ok()) {
-      PrintError(command->line, "expected error running start function: \"%s\"",
+      PrintError(command->line, "expected instantiation error: \"%s\"",
                  command->filename.c_str());
       result = wabt::Result::Error;
     } else {

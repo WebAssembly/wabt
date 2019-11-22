@@ -42,7 +42,7 @@
 000001e: 45                                        ; i32.eqz
 000001f: 0b                                        ; end
 0000020: 01                                        ; num elems
-0000021: 00                                        ; elem expr function index
+0000021: 00                                        ; elem function index
 0000019: 08                                        ; FIXUP section size
 ; section "Code" (10)
 0000022: 0a                                        ; section code

@@ -226,11 +226,12 @@ typedef std::vector<Type> TypeVector;
 
 // Matches binary format, do not change.
 enum SegmentFlags : uint8_t {
-  SegIndexZero = 0,
-  SegPassive = 1,
-  SegIndexOther = 2,
+  SegFlagsNone = 0,
+  SegPassive = 1,        // bit 0: Is passive
+  SegExplicitIndex = 2,  // bit 1: Has explict index (Inplies table 0 if absent)
+  SegUseElemExprs = 4,   // bit 2: Is elemexpr (Or else index sequence)
 
-  SegFlagMax = SegIndexOther,
+  SegFlagMax = SegUseElemExprs,
 };
 
 enum class RelocType {

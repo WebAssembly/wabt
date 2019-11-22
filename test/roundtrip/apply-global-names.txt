@@ -18,6 +18,6 @@
   (table $T0 1 funcref)
   (memory $M0 1)
   (global $g1 i32 (global.get $m.g))
-  (elem $e0 (global.get $m.g) $f0)
+  (elem $e0 (global.get $m.g) func $f0)
   (data $d0 (global.get $m.g) "hi"))
 ;;; STDOUT ;;)

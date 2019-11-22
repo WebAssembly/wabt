@@ -74,9 +74,9 @@ out/test/spec/bulk-memory-operations/table_init.wast:357: assert_trap passed: ou
 out/test/spec/bulk-memory-operations/table_init.wast:380: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/bulk-memory-operations/table_init.wast:403: assert_trap passed: out of bounds table access: table.init out of bounds
 test() =>
-out/test/spec/bulk-memory-operations/table_init.wast:449: assert_trap passed: out of bounds table access: table.init out of bounds
 test() =>
-out/test/spec/bulk-memory-operations/table_init.wast:495: assert_trap passed: out of bounds table access: table.init out of bounds
+test() =>
+test() =>
 test() =>
 out/test/spec/bulk-memory-operations/table_init.wast:521: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f32]
@@ -268,6 +268,14 @@ out/test/spec/bulk-memory-operations/table_init.wast:1079: assert_invalid passed
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f64]
   000005c: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1115: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/table_init.wast:1116: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1117: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1118: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1119: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1120: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1121: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1122: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1123: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1124: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1125: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1126: assert_trap passed: uninitialized table element
@@ -293,6 +301,13 @@ out/test/spec/bulk-memory-operations/table_init.wast:1145: assert_trap passed: u
 out/test/spec/bulk-memory-operations/table_init.wast:1146: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1147: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1177: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/table_init.wast:1178: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1179: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1180: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1181: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1182: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1183: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1184: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1185: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1186: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1187: assert_trap passed: uninitialized table element
@@ -319,6 +334,22 @@ out/test/spec/bulk-memory-operations/table_init.wast:1207: assert_trap passed: u
 out/test/spec/bulk-memory-operations/table_init.wast:1208: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1209: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1239: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/table_init.wast:1240: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1241: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1242: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1243: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1244: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1245: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1246: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1247: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1248: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1249: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1250: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1251: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1252: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1253: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1254: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1255: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1256: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1257: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1258: assert_trap passed: uninitialized table element
@@ -464,6 +495,22 @@ out/test/spec/bulk-memory-operations/table_init.wast:1397: assert_trap passed: u
 out/test/spec/bulk-memory-operations/table_init.wast:1398: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1399: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1429: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/table_init.wast:1430: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1431: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1432: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1433: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1434: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1435: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1436: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1437: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1438: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1439: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1440: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1441: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1442: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1443: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1444: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1445: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1446: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1447: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1448: assert_trap passed: uninitialized table element
@@ -609,6 +656,22 @@ out/test/spec/bulk-memory-operations/table_init.wast:1587: assert_trap passed: u
 out/test/spec/bulk-memory-operations/table_init.wast:1588: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1589: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1619: assert_trap passed: out of bounds table access: table.init out of bounds
+out/test/spec/bulk-memory-operations/table_init.wast:1620: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1621: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1622: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1623: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1624: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1625: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1626: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1627: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1628: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1629: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1630: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1631: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1632: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1633: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1634: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1635: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1636: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1637: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1638: assert_trap passed: uninitialized table element
@@ -658,5 +721,21 @@ out/test/spec/bulk-memory-operations/table_init.wast:1681: assert_trap passed: u
 out/test/spec/bulk-memory-operations/table_init.wast:1682: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1683: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1713: assert_trap passed: out of bounds table access: table.init out of bounds
-635/635 tests passed.
+out/test/spec/bulk-memory-operations/table_init.wast:1714: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1715: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1716: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1717: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1718: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1719: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1720: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1721: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1722: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1723: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1724: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1725: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1726: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1727: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1728: assert_trap passed: uninitialized table element
+out/test/spec/bulk-memory-operations/table_init.wast:1729: assert_trap passed: uninitialized table element
+643/643 tests passed.
 ;;; STDOUT ;;)
