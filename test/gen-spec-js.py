@@ -15,6 +15,8 @@
 # limitations under the License.
 #
 
+"""Convert a JSON descrption of a spec test into a JavaScript."""
+
 import argparse
 try:
     from cStringIO import StringIO
@@ -488,7 +490,7 @@ class JSWriter(object):
 
 
 def main(args):
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-o', '--output', metavar='PATH', help='output file.')
     parser.add_argument('-P', '--prefix', metavar='PATH', help='prefix file.',
                         default=os.path.join(SCRIPT_DIR, 'gen-spec-prefix.js'))
@@ -532,8 +534,7 @@ def main(args):
             if assert_commands:
                 wasm_path = os.path.join(json_dir, module_command['filename'])
                 new_module_filename = extender.Extend(wasm_path, assert_commands)
-                module_command['filename'] = os.path.relpath(new_module_filename,
-                                                             json_dir)
+                module_command['filename'] = new_module_filename
 
         output = StringIO()
         if options.prefix:
