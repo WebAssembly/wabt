@@ -186,7 +186,7 @@ class BinaryReaderIR : public BinaryReaderNop {
   Result OnNopExpr() override;
   Result OnRethrowExpr() override;
   Result OnReturnExpr() override;
-  Result OnSelectExpr() override;
+  Result OnSelectExpr(Type result_type) override;
   Result OnStoreExpr(Opcode opcode,
                      uint32_t alignment_log2,
                      Address offset) override;
@@ -914,8 +914,8 @@ Result BinaryReaderIR::OnReturnExpr() {
   return AppendExpr(MakeUnique<ReturnExpr>());
 }
 
-Result BinaryReaderIR::OnSelectExpr() {
-  return AppendExpr(MakeUnique<SelectExpr>());
+Result BinaryReaderIR::OnSelectExpr(Type result_type) {
+  return AppendExpr(MakeUnique<SelectExpr>(TypeVector{result_type}));
 }
 
 Result BinaryReaderIR::OnGlobalSetExpr(Index global_index) {

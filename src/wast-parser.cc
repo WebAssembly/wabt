@@ -1533,10 +1533,19 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       out_expr->reset(new DropExpr(loc));
       break;
 
-    case TokenType::Select:
+    case TokenType::Select: {
       Consume();
-      out_expr->reset(new SelectExpr(loc));
+      TypeVector result;
+      if (options_->features.reference_types_enabled() &&
+          MatchLpar(TokenType::Result)) {
+        CHECK_RESULT(ParseValueTypeList(&result));
+        EXPECT(Rpar);
+      } else {
+        result.push_back(Type::Any);
+      }
+      out_expr->reset(new SelectExpr(result, loc));
       break;
+    }
 
     case TokenType::Br:
       Consume();

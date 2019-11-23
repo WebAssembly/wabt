@@ -274,7 +274,6 @@ typedef ExprMixin<ExprType::MemoryFill> MemoryFillExpr;
 typedef ExprMixin<ExprType::Nop> NopExpr;
 typedef ExprMixin<ExprType::Rethrow> RethrowExpr;
 typedef ExprMixin<ExprType::Return> ReturnExpr;
-typedef ExprMixin<ExprType::Select> SelectExpr;
 typedef ExprMixin<ExprType::Unreachable> UnreachableExpr;
 typedef ExprMixin<ExprType::RefNull> RefNullExpr;
 typedef ExprMixin<ExprType::RefIsNull> RefIsNullExpr;
@@ -341,6 +340,13 @@ typedef VarExpr<ExprType::TableSet> TableSetExpr;
 typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
 typedef VarExpr<ExprType::TableSize> TableSizeExpr;
 typedef VarExpr<ExprType::TableFill> TableFillExpr;
+
+class SelectExpr : public ExprMixin<ExprType::Select> {
+ public:
+  SelectExpr(TypeVector type, const Location& loc = Location())
+      : ExprMixin<ExprType::Select>(loc), result_type(type) {}
+  TypeVector result_type;
+};
 
 class TableInitExpr : public ExprMixin<ExprType::TableInit> {
  public:

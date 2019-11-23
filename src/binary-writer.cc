@@ -678,9 +678,21 @@ void BinaryWriter::WriteExpr(const Func* func, const Expr* expr) {
     case ExprType::Return:
       WriteOpcode(stream_, Opcode::Return);
       break;
-    case ExprType::Select:
-      WriteOpcode(stream_, Opcode::Select);
+    case ExprType::Select: {
+      auto* select_expr = cast<SelectExpr>(expr);
+      if (select_expr->result_type.size() == 1 &&
+          select_expr->result_type[0] == Type::Any) {
+        WriteOpcode(stream_, Opcode::Select);
+      } else {
+        WriteOpcode(stream_, Opcode::SelectT);
+        WriteU32Leb128(stream_, select_expr->result_type.size(),
+                       "num result types");
+        for (Type t : select_expr->result_type) {
+          WriteType(stream_, t, "result type");
+        }
+      }
       break;
+    }
     case ExprType::Store:
       WriteLoadStoreExpr<StoreExpr>(func, expr, "store offset");
       break;

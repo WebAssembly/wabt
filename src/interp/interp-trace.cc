@@ -34,6 +34,7 @@ void Thread::Trace(Stream* stream) {
   assert(!opcode.IsInvalid());
   switch (opcode) {
     case Opcode::Select:
+    case Opcode::SelectT:
       // TODO(binji): We don't know the type here so we can't display the value
       // to the user. This used to display the full 64-bit value, but that
       // will potentially display garbage if the value is 32-bit.

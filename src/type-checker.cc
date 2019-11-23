@@ -714,7 +714,7 @@ Result TypeChecker::OnReturn() {
   return result;
 }
 
-Result TypeChecker::OnSelect() {
+Result TypeChecker::OnSelect(Type expected) {
   Result result = Result::Ok;
   Type type1 = Type::Any;
   Type type2 = Type::Any;
@@ -722,9 +722,18 @@ Result TypeChecker::OnSelect() {
   result |= PeekAndCheckType(0, Type::I32);
   result |= PeekType(1, &type1);
   result |= PeekType(2, &type2);
-  result |= CheckType(type1, type2);
-  result_type = type1;
-  PrintStackIfFailed(result, "select", type1, type1, Type::I32);
+  if (expected == Type::Any) {
+    if (IsRefType(type1) || IsRefType(type2)) {
+      result = Result::Error;
+    } else {
+      result |= CheckType(type1, type2);
+      result_type = type1;
+    }
+  } else {
+    result |= CheckType(type1, expected);
+    result |= CheckType(type2, expected);
+  }
+  PrintStackIfFailed(result, "select", result_type, result_type, Type::I32);
   result |= DropTypes(3);
   PushType(result_type);
   return result;
