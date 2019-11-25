@@ -486,8 +486,8 @@ struct Decompiler {
           CheckImportExport(ExternalKind::Memory, memory_index, m->name);
       stream.Writef("memory %s", m->name.c_str());
       if (!is_import) {
-        stream.Writef("(initial: %ld, max: %ld)", m->page_limits.initial,
-                      m->page_limits.max);
+        stream.Writef("(initial: %" PRIu64 ", max: %" PRIu64 ")",
+                      m->page_limits.initial, m->page_limits.max);
       }
       stream.Writef(";\n");
       memory_index++;
@@ -517,8 +517,8 @@ struct Decompiler {
       stream.Writef("table %s:%s", tab->name.c_str(),
                     GetDecompTypeName(tab->elem_type));
       if (!is_import) {
-        stream.Writef("(min: %ld, max: %ld)", tab->elem_limits.initial,
-                      tab->elem_limits.max);
+        stream.Writef("(min: %" PRIu64 ", max: %" PRIu64 ")",
+                      tab->elem_limits.initial, tab->elem_limits.max);
       }
       stream.Writef(";\n");
       table_index++;
