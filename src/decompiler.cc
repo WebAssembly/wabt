@@ -439,20 +439,106 @@ struct Decompiler {
     }
   }
 
+  bool CheckImportExport(ExternalKind kind, Index index, string_view name) {
+    // Figure out if this thing is imported, exported, or neither.
+    auto is_import = mc.module.IsImport(kind, Var(index));
+    // TODO: is this the best way to check for export?
+    // FIXME: this doesn't work for functions that get renamed in some way,
+    // as the export has the original name..
+    auto xport = mc.module.GetExport(name);
+    auto is_export = xport && xport->kind == kind;
+    if (is_export) stream.Writef("export ");
+    if (is_import) stream.Writef("import ");
+    return is_import;
+  }
+
+  std::string InitExp(const ExprList &el) {
+    assert(!el.empty());
+    AST ast(mc, nullptr);
+    ast.Construct(el, 1, false);
+    auto val = DecompileExpr(ast.exp_stack[0]);
+    assert(ast.exp_stack.size() == 1 && val.v.size() == 1);
+    return std::move(val.v[0]);
+  }
+
+  // FIXME: Merge with WatWriter::WriteQuotedData somehow.
+  std::string BinaryToString(const std::vector<uint8_t> &in) {
+    std::string s = "\"";
+    static const char s_hexdigits[] = "0123456789abcdef";
+    for (auto c : in) {
+      if (c >= ' ' && c <= '~') {
+        s += c;
+      } else {
+        s += '\\';
+        s += s_hexdigits[c >> 4];
+        s += s_hexdigits[c & 0xf];
+      }
+    }
+    s += '\"';
+    return s;
+  }
+
   void Decompile() {
+    // Memories.
+    Index memory_index = 0;
+    for (auto m : mc.module.memories) {
+      auto is_import =
+          CheckImportExport(ExternalKind::Memory, memory_index, m->name);
+      stream.Writef("memory %s", m->name.c_str());
+      if (!is_import) {
+        stream.Writef("(initial: %" PRIu64 ", max: %" PRIu64 ")",
+                      m->page_limits.initial, m->page_limits.max);
+      }
+      stream.Writef(";\n");
+      memory_index++;
+    }
+    if (!mc.module.memories.empty()) stream.Writef("\n");
+
+    // Globals.
+    Index global_index = 0;
     for (auto g : mc.module.globals) {
-      AST ast(mc, nullptr);
-      ast.Construct(g->init_expr, 1, false);
-      auto val = DecompileExpr(ast.exp_stack[0]);
-      assert(ast.exp_stack.size() == 1 && val.v.size() == 1);
-      stream.Writef("global %s:%s = %s\n", g->name.c_str(),
-                    GetDecompTypeName(g->type), val.v[0].c_str());
+      auto is_import =
+          CheckImportExport(ExternalKind::Global, global_index, g->name);
+      stream.Writef("global %s:%s", g->name.c_str(),
+                    GetDecompTypeName(g->type));
+      if (!is_import) {
+        stream.Writef(" = %s", InitExp(g->init_expr).c_str());
+      }
+      stream.Writef(";\n");
+      global_index++;
     }
     if (!mc.module.globals.empty()) stream.Writef("\n");
+
+    // Tables.
+    Index table_index = 0;
+    for (auto tab : mc.module.tables) {
+      auto is_import =
+          CheckImportExport(ExternalKind::Table, table_index, tab->name);
+      stream.Writef("table %s:%s", tab->name.c_str(),
+                    GetDecompTypeName(tab->elem_type));
+      if (!is_import) {
+        stream.Writef("(min: %" PRIu64 ", max: %" PRIu64 ")",
+                      tab->elem_limits.initial, tab->elem_limits.max);
+      }
+      stream.Writef(";\n");
+      table_index++;
+    }
+    if (!mc.module.tables.empty()) stream.Writef("\n");
+
+    // Data.
+    for (auto dat : mc.module.data_segments) {
+      stream.Writef("data %s(offset: %s) = %s;\n", dat->name.c_str(),
+                    InitExp(dat->offset).c_str(),
+                    BinaryToString(dat->data).c_str());
+    }
+    if (!mc.module.data_segments.empty()) stream.Writef("\n");
+
+    // Code.
     Index func_index = 0;
-    for(auto f : mc.module.funcs) {
+    for (auto f : mc.module.funcs) {
       cur_func = f;
-      auto is_import = mc.module.IsImport(ExternalKind::Func, Var(func_index));
+      auto is_import =
+          CheckImportExport(ExternalKind::Func, func_index, f->name);
       AST ast(mc, f);
       if (!is_import) ast.Construct(f->exprs, f->GetNumResults(), true);
       stream.Writef("function %s(", f->name.c_str());
@@ -476,7 +562,7 @@ struct Decompiler {
         }
       }
       if (is_import) {
-        stream.Writef(" = import;\n\n");
+        stream.Writef(";");
       } else {
         stream.Writef(" {\n");
         auto val = DecompileExpr(ast.exp_stack[0]);
@@ -484,9 +570,10 @@ struct Decompiler {
         for (auto& s : val.v) {
           stream.Writef("%s\n", s.c_str());
         }
-        stream.Writef("}\n\n");
+        stream.Writef("}");
       }
       mc.EndFunc();
+      stream.Writef("\n\n");
       func_index++;
     }
   }

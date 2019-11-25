@@ -1,7 +1,21 @@
 ;;; TOOL: run-wasm-decompile
 
 (module
-  (memory 1)
+  (import "ns" "fi" (func))
+  (import "ns" "g3" (global i32))
+  (import "ns" "tab3" (table 0 12 funcref))
+  ;; (import "ns" "m1" (memory 1))  ;; Can test only 1 at a time :(
+
+  (memory (export "m2") 1)
+
+  (global $g1 (mut i32) (i32.const 10))
+  (global (export "g2") (mut i32) (i32.const 11))
+
+  (table $tab1 0 10 funcref)
+  (table (export "tab2") 0 11 funcref)
+
+  (data 0 (offset (i32.const 0)) "Hello, World!\n\00")
+
   (func $f (param i32 i32) (result i32) (local i64 f32 f64)
     i64.const 8
     set_local 2
@@ -20,7 +34,7 @@
       i32.store offset=4
     end
     get_local 0
-    get_local 1
+    get_global $g1
     i32.add
     i32.const 9
     call $f
@@ -45,16 +59,31 @@
   ;; so have to make sure special chars get removed.
   (func (export "signature-&<>()") (param) (result))
   (func (export "signature-&[]()") (param) (result))
+  (func $not-exported (param) (result))
   (export "f" (func $f))
 )
 
 (;; STDOUT ;;;
-function f(a:int, b:int):int {
+export memory m2(initial: 1, max: 0);
+
+import global ns_g3:int;
+global g_b:int = 10;
+export global g2:int = 11;
+
+import table ns_tab3:funcref;
+table T_b:funcref(min: 0, max: 10);
+export table tab2:funcref(min: 0, max: 11);
+
+data d_a(offset: 0) = "Hello, World!\0a\00";
+
+import function ns_fi();
+
+export function f(a:int, b:int):int {
   var c:long = 8L;
   var d:float = 6f;
   var e:double = 7d;
   if (e < 10d) { 1[4]:int = (2[3]:int + 5) }
-  f(a + b, 9);
+  f(a + g_b, 9);
   loop L_b {
     block B_c {
       if (if (0) { 1 } else { 2 }) break B_c;
@@ -69,6 +98,9 @@ function signature______() {
 }
 
 function signature_______1() {
+}
+
+function f_e() {
 }
 
 ;;; STDOUT ;;)
