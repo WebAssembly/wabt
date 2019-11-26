@@ -885,8 +885,8 @@ Result Validator::OnReturnCallIndirectExpr(ReturnCallIndirectExpr* expr) {
 
 Result Validator::OnSelectExpr(SelectExpr* expr) {
   expr_loc_ = &expr->loc;
-  typechecker_.OnSelect();
-  return Result::Ok;
+  assert(expr->result_type.size());
+  return typechecker_.OnSelect(expr->result_type[0]);
 }
 
 Result Validator::OnStoreExpr(StoreExpr* expr) {

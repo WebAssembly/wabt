@@ -1805,6 +1805,7 @@ Result Thread::Run(int num_instructions) {
     Opcode opcode = ReadOpcode(&pc);
     assert(!opcode.IsInvalid());
     switch (opcode) {
+      case Opcode::SelectT:
       case Opcode::Select: {
         uint32_t cond = Pop<uint32_t>();
         Value false_ = Pop();

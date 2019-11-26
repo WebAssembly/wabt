@@ -43,6 +43,7 @@ void Environment::Disassemble(Stream* stream,
     assert(!opcode.IsInvalid());
     switch (opcode) {
       case Opcode::Select:
+      case Opcode::SelectT:
       case Opcode::V128BitSelect:
         stream->Writef("%s %%[-3], %%[-2], %%[-1]\n", opcode.GetName());
         break;

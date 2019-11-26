@@ -78,7 +78,7 @@ void BinaryReaderLogging::WriteIndent() {
 
 void BinaryReaderLogging::LogType(Type type) {
   if (IsTypeIndex(type)) {
-    LOGF_NOINDENT("funcidx[%d]", static_cast<int>(type));
+    LOGF_NOINDENT("typeidx[%d]", static_cast<int>(type));
   } else {
     LOGF_NOINDENT("%s", GetTypeName(type));
   }
@@ -341,6 +341,11 @@ Result BinaryReaderLogging::OnLoopExpr(Type sig_type) {
   LogType(sig_type);
   LOGF_NOINDENT(")\n");
   return reader_->OnLoopExpr(sig_type);
+}
+
+Result BinaryReaderLogging::OnSelectExpr(Type return_type) {
+  LOGF("OnSelectExpr(return_type: %s)\n", GetTypeName(return_type));
+  return reader_->OnSelectExpr(return_type);
 }
 
 Result BinaryReaderLogging::OnTryExpr(Type sig_type) {
@@ -742,7 +747,6 @@ DEFINE_INDEX_DESC(OnReturnCallExpr, "func_index")
 
 DEFINE_INDEX_INDEX(OnReturnCallIndirectExpr, "sig_index", "table_index")
 DEFINE0(OnReturnExpr)
-DEFINE0(OnSelectExpr)
 DEFINE_LOAD_STORE_OPCODE(OnLoadSplatExpr);
 DEFINE_LOAD_STORE_OPCODE(OnStoreExpr);
 DEFINE_INDEX_DESC(OnThrowExpr, "event_index")

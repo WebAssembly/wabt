@@ -636,8 +636,22 @@ Result BinaryReader::ReadFunctionBody(Offset end_offset) {
         CALLBACK0(OnOpcodeBare);
         break;
 
+      case Opcode::SelectT: {
+        Index count;
+        CHECK_RESULT(ReadCount(&count, "num result types"));
+        if (count != 1) {
+          PrintError("invalid arity in select instrcution: %u", count);
+          return Result::Error;
+        }
+        Type result_type;
+        CHECK_RESULT(ReadType(&result_type, "select result type"));
+        CALLBACK(OnSelectExpr, result_type);
+        CALLBACK0(OnOpcodeBare);
+        break;
+      }
+
       case Opcode::Select:
-        CALLBACK0(OnSelectExpr);
+        CALLBACK(OnSelectExpr, Type::Any);
         CALLBACK0(OnOpcodeBare);
         break;
 
