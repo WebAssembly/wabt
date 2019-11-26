@@ -228,7 +228,10 @@ class Validator : public ExprVisitor::Delegate {
 Validator::Validator(Errors* errors,
                      const Script* script,
                      const ValidateOptions& options)
-    : options_(options), errors_(errors), script_(script) {
+    : options_(options),
+      errors_(errors),
+      script_(script),
+      typechecker_(options.features) {
   typechecker_.set_error_callback(
       [this](const char* msg) { OnTypecheckerError(msg); });
 }

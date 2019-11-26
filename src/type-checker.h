@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "src/common.h"
+#include "src/feature.h"
 #include "src/opcode.h"
 
 namespace wabt {
@@ -46,8 +47,7 @@ class TypeChecker {
     bool unreachable;
   };
 
-  TypeChecker() = default;
-  explicit TypeChecker(const ErrorCallback&);
+  explicit TypeChecker(const Features& features) : features_(features) {}
 
   void set_error_callback(const ErrorCallback& error_callback) {
     error_callback_ = error_callback;
@@ -177,6 +177,7 @@ class TypeChecker {
   // Cache the expected br_table signature. It will be initialized to `nullptr`
   // to represent "any".
   TypeVector* br_table_sig_ = nullptr;
+  Features features_;
 };
 
 }  // namespace wabt
