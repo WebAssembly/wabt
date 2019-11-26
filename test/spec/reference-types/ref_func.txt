@@ -1,0 +1,11 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/ref_func.wast
+;;; ARGS*: --enable-reference-types
+(;; STDOUT ;;;
+set-g() =>
+set-f() =>
+out/test/spec/reference-types/ref_func.wast:58: assert_invalid passed:
+  error: unknown import module "M"
+  0000019: error: OnImportFunc callback failed
+11/11 tests passed.
+;;; STDOUT ;;)

@@ -161,14 +161,10 @@ class Validator : public ExprVisitor::Delegate {
                   const TypeVector& expected,
                   const char* desc,
                   const char* index_kind);
-  void CheckConstTypes(const Location* loc,
-                       const TypeVector& actual,
-                       const ConstVector& expected,
-                       const char* desc);
-  void CheckConstType(const Location* loc,
-                      Type actual,
-                      const ConstVector& expected,
-                      const char* desc);
+  void CheckResultTypes(const Location* loc,
+                        const TypeVector& actual,
+                        const TypeVector& expected,
+                        const char* desc);
   void CheckAssertReturnNanType(const Location* loc,
                                 Type actual,
                                 const char* desc);
@@ -448,29 +444,18 @@ void Validator::CheckTypes(const Location* loc,
   }
 }
 
-void Validator::CheckConstTypes(const Location* loc,
-                                const TypeVector& actual,
-                                const ConstVector& expected,
-                                const char* desc) {
+void Validator::CheckResultTypes(const Location* loc,
+                                 const TypeVector& actual,
+                                 const TypeVector& expected,
+                                 const char* desc) {
   if (actual.size() == expected.size()) {
     for (size_t i = 0; i < actual.size(); ++i) {
-      CheckTypeIndex(loc, actual[i], expected[i].type, desc, i, "result");
+      CheckTypeIndex(loc, actual[i], expected[i], desc, i, "result");
     }
   } else {
     PrintError(loc, "expected %" PRIzd " results, got %" PRIzd, expected.size(),
                actual.size());
   }
-}
-
-void Validator::CheckConstType(const Location* loc,
-                               Type actual,
-                               const ConstVector& expected,
-                               const char* desc) {
-  TypeVector actual_types;
-  if (actual != Type::Void) {
-    actual_types.push_back(actual);
-  }
-  CheckConstTypes(loc, actual_types, expected, desc);
 }
 
 void Validator::CheckAssertReturnNanType(const Location* loc,
@@ -822,16 +807,18 @@ Result Validator::OnTableSetExpr(TableSetExpr* expr) {
 }
 
 Result Validator::OnTableGrowExpr(TableGrowExpr* expr) {
+  const Table* table;
+  CheckTableVar(&expr->var, &table);
   expr_loc_ = &expr->loc;
   CheckHasTable(&expr->loc, Opcode::TableGrow, expr->var.index());
-  typechecker_.OnTableGrow(expr->var.index());
+  typechecker_.OnTableGrow(table->elem_type);
   return Result::Ok;
 }
 
 Result Validator::OnTableSizeExpr(TableSizeExpr* expr) {
   expr_loc_ = &expr->loc;
   CheckHasTable(&expr->loc, Opcode::TableSize, expr->var.index());
-  typechecker_.OnTableSize(expr->var.index());
+  typechecker_.OnTableSize();
   return Result::Ok;
 }
 
@@ -1523,15 +1510,19 @@ void Validator::CheckCommand(const Command* command) {
       auto* assert_return_command = cast<AssertReturnCommand>(command);
       const Action* action = assert_return_command->action.get();
       ActionResult result = CheckAction(action);
+      // Here we take the concrete expected output types verify those actains
+      // the types that are the result of the action.
+      TypeVector actual_types;
+      for (auto ex : assert_return_command->expected) {
+        actual_types.push_back(ex.type);
+      }
       switch (result.kind) {
         case ActionResult::Kind::Types:
-          CheckConstTypes(&action->loc, *result.types,
-                          assert_return_command->expected, "action");
+          CheckResultTypes(&action->loc, actual_types, *result.types, "action");
           break;
 
         case ActionResult::Kind::Type:
-          CheckConstType(&action->loc, result.type,
-                         assert_return_command->expected, "action");
+          CheckResultTypes(&action->loc, actual_types, {result.type}, "action");
           break;
 
         case ActionResult::Kind::Error:

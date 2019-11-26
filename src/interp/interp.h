@@ -122,10 +122,15 @@ struct Ref {
 
 struct Table {
   explicit Table(Type elem_type, const Limits& limits)
-      : elem_type(elem_type),
-        limits(limits),
-        entries(limits.initial, {RefType::Null, kInvalidIndex}) {}
+      : elem_type(elem_type), limits(limits) {
+    resize(limits.initial, {RefType::Null, kInvalidIndex});
+  }
+
   size_t size() const { return entries.size(); }
+
+  void resize(size_t new_size, Ref init_elem) {
+    entries.resize(new_size, init_elem);
+  }
 
   Type elem_type;
   Limits limits;
@@ -206,30 +211,34 @@ struct TypedValue {
   TypedValue() {}
   explicit TypedValue(Type type) : type(type) {}
   TypedValue(Type basetype, const Value& value) : type(basetype), value(value) {
-    SetConcreteType();
+    UpdateType();
   }
 
-  void SetConcreteType() {
-    // Anyref is an abstract type. The actual type is stored in value.
-    if (type == Type::Anyref) {
-      switch (value.ref.kind) {
-        case RefType::Func:
-          type = Type::Funcref;
-          break;
-        case RefType::Null:
-          type = Type::Nullref;
-          break;
-        case RefType::Host:
-          type = Type::Hostref;
-          break;
-      }
+  void UpdateType() {
+    if (!IsRefType(type)) {
+      return;
+    }
+
+    // For references types, the concrete type of TypedValue can change as it
+    // gets its value changed.  For example assigning a RefType::Func value to
+    // an Anyref will cause type of the TypedValue to be changed into a Funcref.
+    switch (value.ref.kind) {
+      case RefType::Func:
+        type = Type::Funcref;
+        break;
+      case RefType::Host:
+        type = Type::Hostref;
+        break;
+      case RefType::Null:
+        type = Type::Nullref;
+        break;
     }
   }
 
   void SetZero() { ZeroMemory(value); }
   void set_ref(Ref x) {
     value.ref = x;
-    SetConcreteType();
+    UpdateType();
   }
   void set_i32(uint32_t x) { value.i32 = x; }
   void set_i64(uint64_t x) { value.i64 = x; }

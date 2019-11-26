@@ -699,10 +699,19 @@ void Thread::Trace(Stream* stream) {
     case Opcode::TableSet:
     case Opcode::TableGrow:
     case Opcode::TableSize:
+
     case Opcode::RefNull:
+      stream->Writef("%s\n", opcode.GetName());
+      break;
+
     case Opcode::RefIsNull:
+      stream->Writef("%s %s:%08x\n", opcode.GetName(),
+                     RefTypeToString(Pick(1).ref.kind).c_str(),
+                     Pick(1).ref.index);
+      break;
+
     case Opcode::RefFunc:
-      WABT_UNREACHABLE;
+      stream->Writef("%s $%u\n", opcode.GetName(), ReadU32At(pc));
       break;
 
     case Opcode::MemoryInit:

@@ -689,13 +689,14 @@ enum class InitExprType {
   F64,
   V128,
   Global,
+  FuncRef,
   NullRef,
 };
 
 struct InitExpr {
   InitExprType type;
   union {
-    Index global;
+    Index index;
     uint32_t i32;
     uint32_t f32;
     uint64_t i64;
@@ -829,6 +830,7 @@ class BinaryReaderObjdump : public BinaryReaderObjdumpBase {
   Result OnInitExprI32ConstExpr(Index index, uint32_t value) override;
   Result OnInitExprI64ConstExpr(Index index, uint64_t value) override;
   Result OnInitExprRefNull(Index index) override;
+  Result OnInitExprRefFunc(Index index, Index func_index) override;
 
   Result OnDylinkInfo(uint32_t mem_size,
                       uint32_t mem_align_log2,
@@ -1326,8 +1328,17 @@ void BinaryReaderObjdump::PrintInitExpr(const InitExpr& expr) {
       break;
     }
     case InitExprType::Global: {
-      PrintDetails(" - init global=%" PRIindex, expr.value.global);
-      string_view name = GetGlobalName(expr.value.global);
+      PrintDetails(" - init global=%" PRIindex, expr.value.index);
+      string_view name = GetGlobalName(expr.value.index);
+      if (!name.empty()) {
+        PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
+      }
+      PrintDetails("\n");
+      break;
+    }
+    case InitExprType::FuncRef: {
+      PrintDetails(" - init ref.func:%" PRIindex, expr.value.index);
+      string_view name = GetFunctionName(expr.value.index);
       if (!name.empty()) {
         PrintDetails(" <" PRIstringview ">", WABT_PRINTF_STRING_VIEW_ARG(name));
       }
@@ -1354,6 +1365,7 @@ static Result InitExprToConstOffset(const InitExpr& expr,
     case InitExprType::F32:
     case InitExprType::F64:
     case InitExprType::V128:
+    case InitExprType::FuncRef:
     case InitExprType::NullRef:
       fprintf(stderr, "Segment/Elem offset must be an i32 init expr");
       return Result::Error;
@@ -1405,7 +1417,7 @@ Result BinaryReaderObjdump::OnInitExprGlobalGetExpr(Index index,
                                                     Index global_index) {
   InitExpr expr;
   expr.type = InitExprType::Global;
-  expr.value.global = global_index;
+  expr.value.index = global_index;
   HandleInitExpr(expr);
   return Result::Ok;
 }
@@ -1431,6 +1443,12 @@ Result BinaryReaderObjdump::OnInitExprI64ConstExpr(Index index,
 Result BinaryReaderObjdump::OnInitExprRefNull(Index index) {
   InitExpr expr;
   expr.type = InitExprType::NullRef;
+  HandleInitExpr(expr);
+  return Result::Ok;
+}
+
+Result BinaryReaderObjdump::OnInitExprRefFunc(Index index, Index func_index) {
+  InitExpr expr{InitExprType::FuncRef, {func_index}};
   HandleInitExpr(expr);
   return Result::Ok;
 }

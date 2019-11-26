@@ -1,0 +1,8 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/ref_is_null.wast
+;;; ARGS*: --enable-reference-types
+(;; STDOUT ;;;
+init(hostref:0) =>
+deinit() =>
+13/13 tests passed.
+;;; STDOUT ;;)

@@ -441,6 +441,7 @@
   (; 0xfe 0x4e ;) (func (export "i64.atomic.rmw32.cmpxchg_u") i32.const 1 i64.const 2 i64.const 3 i64.atomic.rmw32.cmpxchg_u offset=3 drop)
 )
 (;; STDOUT ;;;
+>>> initializing segments
 >>> running export "unreachable":
 #0.    4: V:0  | unreachable
 unreachable() => error: unreachable executed
