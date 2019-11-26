@@ -672,6 +672,10 @@ Result TypeChecker::OnTableSize() {
   return Result::Ok;
 }
 
+Result TypeChecker::OnTableFill(Type elem_type) {
+  return PopAndCheck3Types(Type::I32, elem_type, Type::I32, "table.fill");
+}
+
 Result TypeChecker::OnRefFuncExpr(Index) {
   PushType(Type::Funcref);
   return Result::Ok;

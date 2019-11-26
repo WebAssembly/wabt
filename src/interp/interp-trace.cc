@@ -695,11 +695,6 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
-    case Opcode::TableGet:
-    case Opcode::TableSet:
-    case Opcode::TableGrow:
-    case Opcode::TableSize:
-
     case Opcode::RefNull:
       stream->Writef("%s\n", opcode.GetName());
       break;
@@ -723,6 +718,11 @@ void Thread::Trace(Stream* stream) {
       break;
     }
 
+    case Opcode::TableGet:
+    case Opcode::TableSet:
+    case Opcode::TableSize:
+    case Opcode::TableFill:
+    case Opcode::TableGrow:
     case Opcode::DataDrop:
     case Opcode::ElemDrop:
     case Opcode::MemoryCopy:

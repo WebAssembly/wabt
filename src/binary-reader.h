@@ -251,6 +251,7 @@ class BinaryReaderDelegate {
   virtual Result OnTableSetExpr(Index table_index) = 0;
   virtual Result OnTableGrowExpr(Index table_index) = 0;
   virtual Result OnTableSizeExpr(Index table_index) = 0;
+  virtual Result OnTableFillExpr(Index table_index) = 0;
   virtual Result OnRefFuncExpr(Index func_index) = 0;
   virtual Result OnRefNullExpr() = 0;
   virtual Result OnRefIsNullExpr() = 0;

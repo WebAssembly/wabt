@@ -106,6 +106,7 @@ class TypeChecker {
   Result OnTableSet(Type elem_type);
   Result OnTableGrow(Type elem_type);
   Result OnTableSize();
+  Result OnTableFill(Type elem_type);
   Result OnRefFuncExpr(Index func_index);
   Result OnRefNullExpr();
   Result OnRefIsNullExpr();

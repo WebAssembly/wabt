@@ -1592,6 +1592,7 @@ void CWriter::Write(const ExprList& exprs) {
       case ExprType::TableSet:
       case ExprType::TableGrow:
       case ExprType::TableSize:
+      case ExprType::TableFill:
       case ExprType::RefFunc:
       case ExprType::RefNull:
       case ExprType::RefIsNull:

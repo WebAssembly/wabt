@@ -211,6 +211,7 @@ enum class ExprType {
   TableGrow,
   TableSize,
   TableSet,
+  TableFill,
   Ternary,
   Throw,
   Try,
@@ -339,6 +340,7 @@ typedef VarExpr<ExprType::TableGet> TableGetExpr;
 typedef VarExpr<ExprType::TableSet> TableSetExpr;
 typedef VarExpr<ExprType::TableGrow> TableGrowExpr;
 typedef VarExpr<ExprType::TableSize> TableSizeExpr;
+typedef VarExpr<ExprType::TableFill> TableFillExpr;
 
 class TableInitExpr : public ExprMixin<ExprType::TableInit> {
  public:

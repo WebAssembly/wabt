@@ -305,6 +305,10 @@ Result ExprVisitor::HandleDefaultState(Expr* expr) {
       CHECK_RESULT(delegate_->OnTableSizeExpr(cast<TableSizeExpr>(expr)));
       break;
 
+    case ExprType::TableFill:
+      CHECK_RESULT(delegate_->OnTableFillExpr(cast<TableFillExpr>(expr)));
+      break;
+
     case ExprType::RefFunc:
       CHECK_RESULT(delegate_->OnRefFuncExpr(cast<RefFuncExpr>(expr)));
       break;

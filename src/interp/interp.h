@@ -702,6 +702,7 @@ class Thread {
   Result TableInit(const uint8_t** pc) WABT_WARN_UNUSED;
   Result TableGet(const uint8_t** pc) WABT_WARN_UNUSED;
   Result TableSet(const uint8_t** pc) WABT_WARN_UNUSED;
+  Result TableFill(const uint8_t** pc) WABT_WARN_UNUSED;
   Result ElemDrop(const uint8_t** pc) WABT_WARN_UNUSED;
   Result TableCopy(const uint8_t** pc) WABT_WARN_UNUSED;
   Result RefFunc(const uint8_t** pc) WABT_WARN_UNUSED;
