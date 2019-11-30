@@ -15,8 +15,6 @@ jobs:
             sanitizer: asan
           - os: windows-latest
             sanitizer: asan
-    env:
-      SANITIZER: ${{ matrix.sanitizer }}
     steps:
     - uses: actions/setup-python@v1
       with:
@@ -27,7 +25,12 @@ jobs:
     - name: mkdir
       run: mkdir -p out
     - name: cmake
-      run: cmake ..
+      run: |
+        CMAKE_FLAGS=''
+        if [[ ${{ matrix.sanitizer }} == asan ]]; then
+          CMAKE_FLAGS=-DUSE_ASAN=ON
+        fi
+        cmake .. $CMAKE_FLAGS
       working-directory: out
     - name: build
       run: cmake --build out
