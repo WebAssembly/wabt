@@ -4,11 +4,19 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Build
+    name: '${{ matrix.os }} : ${{ matrix.sanitizer }}'
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-16.04, macos-latest, windows-latest]
+        sanitizer: [none, asan]
+        exclude:
+          - os: macos-latest
+            sanitizer: asan
+          - os: windows-latest
+            sanitizer: asan
+    env:
+      SANITIZER: ${{ matrix.sanitizer }}
     steps:
     - uses: actions/setup-python@v1
       with:
