@@ -122,7 +122,7 @@ else ()
   endif ()
 
   if (NOT WITH_EXCEPTIONS)
-    add_definitions(-fno-exceptions)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
   endif ()
 
   # Need to define __STDC_*_MACROS because C99 specifies that C++ shouldn't
@@ -186,7 +186,7 @@ endif ()
 
 set(USE_SANITIZER FALSE)
 
-function(SANITIZER NAME FLAGS)
+function(sanitizer NAME FLAGS)
   if (${NAME})
     if (USE_SANITIZER)
       message(FATAL_ERROR "Only one sanitizer allowed")
@@ -196,22 +196,22 @@ function(SANITIZER NAME FLAGS)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAGS}" PARENT_SCOPE)
   endif ()
 endfunction()
-SANITIZER(USE_ASAN "-fsanitize=address")
-SANITIZER(USE_MSAN "-fsanitize=memory")
-SANITIZER(USE_LSAN "-fsanitize=leak")
+sanitizer(USE_ASAN "-fsanitize=address")
+sanitizer(USE_MSAN "-fsanitize=memory")
+sanitizer(USE_LSAN "-fsanitize=leak")
 
 if (USE_UBSAN)
   # -fno-sanitize-recover was deprecated, see if we are compiling with a newer
   # clang that requires -fno-sanitize-recover=all.
   set(UBSAN_BLACKLIST ${WABT_SOURCE_DIR}/ubsan.blacklist)
   include(CheckCXXCompilerFlag)
-  CHECK_CXX_COMPILER_FLAG("-fsanitize=undefined -fno-sanitize-recover -Wall -Werror" HAS_UBSAN_RECOVER_BARE)
+  check_cxx_compiler_flag("-fsanitize=undefined -fno-sanitize-recover -Wall -Werror" HAS_UBSAN_RECOVER_BARE)
   if (HAS_UBSAN_RECOVER_BARE)
-    SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover -fsanitize-blacklist=${UBSAN_BLACKLIST}")
+    sanitizer(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover -fsanitize-blacklist=${UBSAN_BLACKLIST}")
   endif ()
-  CHECK_CXX_COMPILER_FLAG("-fsanitize=undefined -fno-sanitize-recover=all -Wall -Werror" HAS_UBSAN_RECOVER_ALL)
+  check_cxx_compiler_flag("-fsanitize=undefined -fno-sanitize-recover=all -Wall -Werror" HAS_UBSAN_RECOVER_ALL)
   if (HAS_UBSAN_RECOVER_ALL)
-    SANITIZER(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover=all -fsanitize-blacklist=${UBSAN_BLACKLIST}")
+    sanitizer(USE_UBSAN "-fsanitize=undefined -fno-sanitize-recover=all -fsanitize-blacklist=${UBSAN_BLACKLIST}")
   endif ()
   if (NOT USE_SANITIZER)
     message(FATAL_ERROR "UBSAN is not supported")
@@ -276,7 +276,6 @@ add_library(wabt STATIC
   src/opcode.cc
   src/opcode-code-table.h
   src/opcode-code-table.c
-  src/opcode.def
   src/option-parser.h
   src/option-parser.cc
   src/resolve-names.h
@@ -505,13 +504,20 @@ if (NOT EMSCRIPTEN)
     find_package(PythonInterp REQUIRED)
     set(RUN_TESTS_PY ${WABT_SOURCE_DIR}/test/run-tests.py)
     add_custom_target(run-tests
-      COMMAND $<TARGET_FILE:wabt-unittests>
       COMMAND ${PYTHON_EXECUTABLE} ${RUN_TESTS_PY} --bindir $<TARGET_FILE_DIR:wat2wasm>
       DEPENDS ${WABT_EXECUTABLES}
       WORKING_DIRECTORY ${WABT_SOURCE_DIR}
       ${USES_TERMINAL}
     )
-    add_dependencies(run-tests wabt-unittests)
+
+    add_custom_target(run-unittests
+      COMMAND $<TARGET_FILE:wabt-unittests>
+      DEPENDS wabt-unittests
+      WORKING_DIRECTORY ${WABT_SOURCE_DIR}
+      ${USES_TERMINAL}
+    )
+
+    add_custom_target(check DEPENDS run-tests wabt-unittests)
   endif ()
 
   # install
