@@ -793,7 +793,7 @@ Result WatWriter::ExprVisitorDelegate::OnTableFillExpr(TableFillExpr* expr) {
 }
 
 Result WatWriter::ExprVisitorDelegate::OnRefFuncExpr(RefFuncExpr* expr) {
-  writer_->WritePutsNewline(Opcode::RefFunc_Opcode.GetName());
+  writer_->WritePutsSpace(Opcode::RefFunc_Opcode.GetName());
   writer_->WriteVar(expr->var, NextChar::Newline);
   return Result::Ok;
 }
