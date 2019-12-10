@@ -221,6 +221,11 @@ enum class Type : int32_t {
   Any = 0,          // Not actually specified, but useful for type-checking
   Nullref = 1,      // Not actually specified, but used in testing and type-checking
   Hostref = 2,      // Not actually specified, but used in testing and type-checking
+  I8 = 3,           // Not actually specified, but used internally with load/store
+  I8U = 4,          // Not actually specified, but used internally with load/store
+  I16 = 5,          // Not actually specified, but used internally with load/store
+  I16U = 6,         // Not actually specified, but used internally with load/store
+  I32U = 7,         // Not actually specified, but used internally with load/store
 };
 typedef std::vector<Type> TypeVector;
 

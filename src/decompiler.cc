@@ -16,10 +16,16 @@
 
 #include "src/decompiler.h"
 
-#include "src/decompiler-ast.inl"
+#include "src/decompiler-ast.h"
+#include "src/decompiler-ls.h"
+
+#include "src/stream.h"
 
 #define WABT_TRACING 0
 #include "src/tracing.h"
+
+#include <sstream>
+#include <inttypes.h>
 
 namespace wabt {
 
@@ -166,43 +172,6 @@ struct Decompiler {
     }
   }
 
-  const char *GetDecompTypeName(Type t) {
-    switch (t) {
-      case Type::I32: return "int";
-      case Type::I64: return "long";
-      case Type::F32: return "float";
-      case Type::F64: return "double";
-      case Type::V128: return "simd";
-      case Type::Anyref: return "anyref";
-      case Type::Func: return "func";
-      case Type::Funcref: return "funcref";
-      case Type::Exnref: return "exceptionref";
-      case Type::Void: return "void";
-      default: return "illegal";
-    }
-  }
-
-  Type GetTypeFromString(string_view name) {
-    if (name == "i32") return Type::I32;
-    if (name == "i64") return Type::I64;
-    if (name == "f32") return Type::F32;
-    if (name == "f64") return Type::F64;
-    return Type::Any;
-  }
-
-  // Turns e.g. "i32.load8_u" -> "int_8_u"
-  std::string TypeFromLoadStore(Opcode opcode, string_view name) {
-    auto op = std::string(OpcodeToToken(opcode));
-    auto load_pos = op.find(name.data(), 0, name.size());
-    if (load_pos != std::string::npos) {
-      auto t = GetTypeFromString(string_view(op.data(), load_pos));
-      auto s = std::string(GetDecompTypeName(t));
-      if (op.size() <= load_pos + name.size()) return s;
-      return s + "_" + (op.data() + load_pos + name.size());
-    }
-    return op;
-  }
-
   Value PushSStream() {
     auto v = Value { { ss.str() }, false };
     ss.str({});
@@ -231,6 +200,35 @@ struct Decompiler {
     // in generate-names.cc has allready run, its dictionaries deleted, so it
     // is not easy to integrate with it.
     return "t" + std::to_string(n);
+  }
+
+  std::string LocalDecl(const std::string& name, Type t) {
+    std::string s = name;
+    s += ":";
+    auto struc = lst.GenStruct(name);
+    if (struc.empty()) {
+      s += GetDecompTypeName(t);
+    } else {
+      s += struc;
+    }
+    return s;
+  }
+
+  void LoadStore(Value &val, const Node& addr_exp, uint32_t offset,
+                  Opcode opc, Address align, Type op_type) {
+    BracketIfNeeded(val);
+    auto access = lst.GenAccess(offset, addr_exp);
+    if (!access.empty()) {
+      val.v.back() += ".";
+      val.v.back() += access;
+    } else {
+      std::string suffix = "[";
+      suffix += std::to_string(offset);
+      suffix += "]:";
+      suffix += GetDecompTypeName(GetMemoryType(op_type, opc));
+      if (!opc.IsNaturallyAligned(align)) suffix += "@" + std::to_string(align);
+      val.v.back() += suffix;
+    }
   }
 
   Value DecompileExpr(const Node &n) {
@@ -266,13 +264,14 @@ struct Decompiler {
         return WrapNAry(args, "return ", "");
       }
       case NodeType::Decl: {
-        ss << "var " << n.var->name() << ":"
-           << GetDecompTypeName(cur_func->GetLocalType(*n.var));
+        ss << "var ";
+        ss << LocalDecl(n.var->name(), cur_func->GetLocalType(*n.var));
         return PushSStream();
       }
       case NodeType::DeclInit: {
-        return WrapChild(args[0], "var " + n.var->name() + ":"
-              + GetDecompTypeName(cur_func->GetLocalType(*n.var)) + " = ", "");
+        return WrapChild(args[0],
+            "var " + LocalDecl(n.var->name(), cur_func->GetLocalType(*n.var)) +
+            " = ", "");
       }
       case NodeType::Expr:
         // We're going to fall thru to the second switch to deal with ExprType.
@@ -341,24 +340,14 @@ struct Decompiler {
       }
       case ExprType::Load: {
         auto& le = *cast<LoadExpr>(n.e);
-        BracketIfNeeded(args[0]);
-        std::string suffix = "[";
-        suffix += std::to_string(le.offset);
-        suffix += "]:";
-        suffix += TypeFromLoadStore(le.opcode, string_view(".load"));
-        args[0].v.back() += suffix;
-        // FIXME: align
+        LoadStore(args[0], n.children[0], le.offset, le.opcode, le.align,
+                  le.opcode.GetResultType());
         return std::move(args[0]);
       }
       case ExprType::Store: {
         auto& se = *cast<StoreExpr>(n.e);
-        BracketIfNeeded(args[0]);
-        std::string suffix = "[";
-        suffix += std::to_string(se.offset);
-        suffix += "]:";
-        suffix += TypeFromLoadStore(se.opcode, string_view(".store"));
-        args[0].v.back() += suffix;
-        // FIXME: align
+        LoadStore(args[0], n.children[0], se.offset, se.opcode, se.align,
+                  se.opcode.GetParamType2());
         return WrapBinary(args, " = ", true);
       }
       case ExprType::If: {
@@ -540,13 +529,17 @@ struct Decompiler {
       auto is_import =
           CheckImportExport(ExternalKind::Func, func_index, f->name);
       AST ast(mc, f);
-      if (!is_import) ast.Construct(f->exprs, f->GetNumResults(), true);
+      if (!is_import) {
+        ast.Construct(f->exprs, f->GetNumResults(), true);
+        lst.Track(ast.exp_stack[0]);
+        lst.CheckLayouts();
+      }
       stream.Writef("function %s(", f->name.c_str());
       for (Index i = 0; i < f->GetNumParams(); i++) {
         if (i) stream.Writef(", ");
         auto t = f->GetParamType(i);
         auto name = IndexToAlphaName(i);
-        stream.Writef("%s:%s", name.c_str(), GetDecompTypeName(t));
+        stream.Writef("%s", LocalDecl(name, t).c_str());
       }
       stream.Writef(")");
       if (f->GetNumResults()) {
@@ -572,8 +565,9 @@ struct Decompiler {
         }
         stream.Writef("}");
       }
-      mc.EndFunc();
       stream.Writef("\n\n");
+      mc.EndFunc();
+      lst.Clear();
       func_index++;
     }
   }
@@ -600,6 +594,7 @@ struct Decompiler {
   size_t indent_amount = 2;
   size_t target_exp_width = 70;
   const Func* cur_func = nullptr;
+  LoadStoreTracking lst;
 };
 
 Result Decompile(Stream& stream,

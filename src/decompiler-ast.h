@@ -14,28 +14,15 @@
  * limitations under the License.
  */
 
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <cinttypes>
-#include <cstdarg>
-#include <cstdio>
-#include <iterator>
-#include <map>
-#include <numeric>
-#include <set>
-#include <string>
-#include <vector>
-#include <sstream>
+#ifndef WABT_DECOMPILER_AST_H_
+#define WABT_DECOMPILER_AST_H_
 
 #include "src/cast.h"
-#include "src/common.h"
-#include "src/expr-visitor.h"
+#include "src/generate-names.h"
 #include "src/ir.h"
 #include "src/ir-util.h"
-#include "src/literal.h"
-#include "src/generate-names.h"
-#include "src/stream.h"
+
+#include <set>
 
 namespace wabt {
 
@@ -346,3 +333,5 @@ struct AST {
 };
 
 }  // namespace wabt
+
+#endif  // WABT_DECOMPILER_AST_H_

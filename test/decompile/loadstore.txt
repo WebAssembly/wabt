@@ -1,0 +1,83 @@
+;;; TOOL: run-wasm-decompile
+
+(module
+  (memory $m1 1)
+
+  (func $f (param i32 i32) (result) (local i32 i32 i32 i32 i32 i32)
+    ;; Test regular accesses that become a struct.
+    get_local 0
+    f32.load offset=0
+    get_local 2
+    f32.load offset=0
+    f32.add
+    get_local 0
+    f32.load offset=4
+    get_local 2
+    f32.load offset=4
+    f32.add
+    f32.add
+    drop
+    get_local 1
+    i64.load16_u offset=0
+    get_local 3
+    i64.load16_u offset=0
+    i64.add
+    get_local 1
+    i64.load offset=8
+    get_local 3
+    i64.load offset=8
+    i64.add
+    i64.add
+    drop
+    ;; Test things that do not become a struct for various reasons.
+    ;; 1) Mixed type access.
+    get_local 4
+    i32.load offset=0
+    drop
+    get_local 4
+    f32.load offset=0
+    drop
+    ;; 2) Mixed size access.
+    get_local 5
+    i32.load offset=0
+    drop
+    get_local 5
+    i32.load16_s offset=0
+    drop
+    ;; 3) Mixed align requirement access.
+    get_local 6
+    i32.load offset=0
+    drop
+    get_local 6
+    i32.load offset=0 align=1
+    drop
+    ;; 4) Unaligned access / access with unexpected gaps.
+    get_local 7
+    f32.load offset=1
+    drop
+  )
+  (export "f" (func $f))
+)
+
+(;; STDOUT ;;;
+memory M_a(initial: 1, max: 0);
+
+export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
+  var c:{ a:float, b:float }
+  var d:{ a:ushort, b:long }
+  var e:int;
+  var f:int;
+  var g:int;
+  var h:int;
+  (a.a + c.a) + (a.b + c.b);
+  (b.a + d.a) + (b.b + d.b);
+  e[0]:int;
+  e[0]:float;
+  f[0]:int;
+  f[0]:short;
+  g[0]:int;
+  g[0]:int@1;
+  h[1]:float;
+}
+
+;;; STDOUT ;;)
