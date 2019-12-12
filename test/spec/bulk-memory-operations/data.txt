@@ -1,0 +1,20 @@
+;;; TOOL: run-interp-spec
+;;; STDIN_FILE: third_party/testsuite/proposals/bulk-memory-operations/data.wast
+;;; ARGS*: --enable-bulk-memory
+(;; STDOUT ;;;
+error initializing module: out of bounds memory access: data segment is out of bounds: [1, 1) >= max value 0
+error initializing module: out of bounds memory access: data segment is out of bounds: [1, 1) >= max value 0
+out/test/spec/bulk-memory-operations/data.wast:290: assert_invalid passed:
+  000000e: error: data section without memory section
+out/test/spec/bulk-memory-operations/data.wast:299: assert_invalid passed:
+  0000016: error: expected i32 init_expr
+out/test/spec/bulk-memory-operations/data.wast:307: assert_invalid passed:
+  0000017: error: expected END opcode after initializer expression
+out/test/spec/bulk-memory-operations/data.wast:315: assert_invalid passed:
+  0000015: error: unexpected opcode in initializer expression: 0x1
+out/test/spec/bulk-memory-operations/data.wast:323: assert_invalid passed:
+  0000015: error: unexpected opcode in initializer expression: 0x1
+out/test/spec/bulk-memory-operations/data.wast:331: assert_invalid passed:
+  0000017: error: expected END opcode after initializer expression
+18/18 tests passed.
+;;; STDOUT ;;)
