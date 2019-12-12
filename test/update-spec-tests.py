@@ -92,6 +92,7 @@ def main(args):
                        '--enable-saturating-float-to-int')
     ProcessProposalDir('sign-extension-ops', '--enable-sign-extension')
     ProcessProposalDir('bulk-memory-operations', '--enable-bulk-memory')
+    ProcessProposalDir('reference-types', '--enable-reference-types')
 
     return 0
 

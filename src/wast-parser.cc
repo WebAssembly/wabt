@@ -982,6 +982,10 @@ Result WastParser::ParseElemModuleField(Module* module) {
     }
   }
 
+  if (!ParseOffsetExprOpt(&field->elem_segment.offset)) {
+    field->elem_segment.flags |= SegPassive;
+  }
+
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
     field->elem_segment.flags |= (SegPassive | SegUseElemExprs);
     // Parse a potentially empty sequence of ElemExprs.
@@ -1001,9 +1005,6 @@ Result WastParser::ParseElemModuleField(Module* module) {
     }
   } else {
     field->elem_segment.elem_type = Type::Funcref;
-    if (!ParseOffsetExprOpt(&field->elem_segment.offset)) {
-      field->elem_segment.flags |= SegPassive;
-    }
     if (PeekMatch(TokenType::Func)) {
       EXPECT(Func);
     }
