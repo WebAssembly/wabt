@@ -99,9 +99,10 @@ int ProgramMain(int argc, char** argv) {
         WABT_USE(dummy_result);
       }
       if (Succeeded(result)) {
+        auto s = Decompile(module, decompile_options);
         FileStream stream(!outfile.empty() ? FileStream(outfile)
                                              : FileStream(stdout));
-        result = Decompile(stream, module, decompile_options);
+        stream.WriteData(s.data(), s.size());
       }
     }
     FormatErrorsToFile(errors, Location::Type::Binary);

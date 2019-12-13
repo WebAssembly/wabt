@@ -187,6 +187,59 @@ inline bool operator>=(string_view x, string_view y) noexcept {
   return x.compare(y) >= 0;
 }
 
+// non-member append.
+inline std::string& operator+=(std::string& x, string_view y) {
+  x.append(y.data(), y.size());
+  return x;
+}
+
+inline std::string operator+(string_view x, string_view y) {
+  std::string s;
+  s.reserve(x.size() + y.size());
+  s.append(x.data(), x.size());
+  s.append(y.data(), y.size());
+  return s;
+}
+
+inline std::string operator+(const std::string& x, string_view y) {
+  return string_view(x) + y;
+}
+
+inline std::string operator+(string_view x, const std::string& y) {
+  return x + string_view(y);
+}
+
+inline std::string operator+(const char* x, string_view y) {
+  return string_view(x) + y;
+}
+
+inline std::string operator+(string_view x, const char* y) {
+  return x + string_view(y);
+}
+
+inline void cat_concatenate(std::string&) {}
+
+template<typename T, typename ...Ts>
+void cat_concatenate(std::string& s, const T& t, const Ts&... args) {
+    s += t;
+    cat_concatenate(s, args...);
+}
+
+inline size_t cat_compute_size() { return 0; }
+
+template<typename T, typename ...Ts>
+size_t cat_compute_size(const T& t, const Ts&... args) {
+    return string_view(t).size() + cat_compute_size(args...);
+}
+
+// Is able to concatenate any combination of string/string_view/char*
+template<typename ...Ts> std::string cat(const Ts&... args) {
+    std::string s;
+    s.reserve(cat_compute_size(args...));
+    cat_concatenate(s, args...);
+    return s;
+}
+
 inline constexpr string_view::string_view() noexcept
     : data_(nullptr), size_(0) {}
 
