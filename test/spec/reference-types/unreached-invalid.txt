@@ -262,7 +262,7 @@ out/test/spec/reference-types/unreached-invalid.wast:521: assert_invalid passed:
   error: type mismatch in br_table, expected [i32] but got [f32]
   0000025: error: OnBrTableExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:527: assert_invalid passed:
-  error: br_table labels have inconsistent types: expected [f32], got []
+  error: br_table labels have inconsistent arity: expected 1 got 0
   0000023: error: OnBrTableExpr callback failed
 out/test/spec/reference-types/unreached-invalid.wast:540: assert_invalid passed:
   error: type mismatch in block, expected [] but got [i32]
