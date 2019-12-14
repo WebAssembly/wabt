@@ -24,15 +24,13 @@
 #define WABT_TRACING 0
 #include "src/tracing.h"
 
-#include <sstream>
 #include <inttypes.h>
 
 namespace wabt {
 
 struct Decompiler {
-  Decompiler(Stream& stream, const Module& module,
-             const DecompileOptions& options)
-      : mc(module), stream(stream), options(options) {}
+  Decompiler(const Module& module, const DecompileOptions& options)
+      : mc(module), options(options) {}
 
   struct Value {
     std::vector<std::string> v;
@@ -58,6 +56,14 @@ struct Decompiler {
     Value& operator=(const Value& rhs) = delete;
   };
 
+  std::string to_string(double d) {
+    auto s = std::to_string(d);
+    // Remove redundant trailing '0's that to_string produces.
+    while (s.size() > 2 && s.back() == '0' && s[s.size() - 2] != '.')
+      s.pop_back();
+    return s;
+  }
+
   std::string Indent(size_t amount) {
     return std::string(amount, ' ');
   }
@@ -67,21 +73,16 @@ struct Decompiler {
   }
 
   void IndentValue(Value &val, size_t amount, string_view first_indent) {
-    WABT_TRACE_ARGS(IndentValue, "\"" PRIstringview "\" - %d",
-                    WABT_PRINTF_STRING_VIEW_ARG(val.v[0]), val.v.size());
     auto indent = Indent(amount);
-    for (auto& s : val.v) {
-      auto is = (&s != &val.v[0] || first_indent.empty())
-                ? string_view(indent)
-                : first_indent;
-      s.insert(0, is.data(), is.size());
+    for (auto& stat : val.v) {
+      auto is = (&stat != &val.v[0] || first_indent.empty())
+                    ? string_view(indent)
+                    : first_indent;
+      stat.insert(0, is.data(), is.size());
     }
   }
 
   Value WrapChild(Value &child, string_view prefix, string_view postfix) {
-    WABT_TRACE_ARGS(WrapChild, "\"" PRIstringview "\" - \"" PRIstringview "\"",
-                    WABT_PRINTF_STRING_VIEW_ARG(prefix),
-                    WABT_PRINTF_STRING_VIEW_ARG(postfix));
     auto width = prefix.size() + postfix.size() + child.width();
     auto &v = child.v;
     if (width < target_exp_width ||
@@ -118,10 +119,7 @@ struct Decompiler {
     BracketIfNeeded(right);
     auto width = infix.size() + left.width() + right.width();
     if (width < target_exp_width && left.v.size() == 1 && right.v.size() == 1) {
-      return Value {
-        { left.v[0] + std::string(infix) + right.v[0] },
-        true
-      };
+      return Value{{left.v[0] + infix + right.v[0]}, true};
     } else {
       Value bin { {}, true };
       std::move(left.v.begin(), left.v.end(), std::back_inserter(bin.v));
@@ -146,13 +144,14 @@ struct Decompiler {
         (total_width + prefix.size() + postfix.size() < target_exp_width ||
          args.empty())) {
       // Single line.
-      ss << prefix;
+      auto s = std::string(prefix);
       for (auto& child : args) {
-        if (&child != &args[0]) ss << ", ";
-        ss << child.v[0];
+        if (&child != &args[0])
+          s += ", ";
+        s += child.v[0];
       }
-      ss << postfix;
-      return PushSStream();
+      s += postfix;
+      return Value{{std::move(s)}, false};
     } else {
       // Multi-line.
       Value ml { {}, false };
@@ -167,20 +166,13 @@ struct Decompiler {
         i++;
       }
       if (!ident_with_name) ml.v.insert(ml.v.begin(), std::string(prefix));
-      ml.v.back() += std::string(postfix);
+      ml.v.back() += postfix;
       return ml;
     }
   }
 
-  Value PushSStream() {
-    auto v = Value { { ss.str() }, false };
-    ss.str({});
-    return v;
-  }
-
   template<ExprType T> Value Get(const VarExpr<T>& ve) {
-    ss << ve.var.name();
-    return PushSStream();
+    return Value{{ve.var.name()}, false};
   }
 
   template<ExprType T> Value Set(Value& child, const VarExpr<T>& ve) {
@@ -190,7 +182,7 @@ struct Decompiler {
 
   Value Block(Value &val, const Block& block, LabelType label, const char *name) {
     IndentValue(val, indent_amount, {});
-    val.v.insert(val.v.begin(), std::string(name) + " " + block.label + " {");
+    val.v.insert(val.v.begin(), cat(name, " ", block.label, " {"));
     val.v.push_back("}");
     return std::move(val);
   }
@@ -203,32 +195,22 @@ struct Decompiler {
   }
 
   std::string LocalDecl(const std::string& name, Type t) {
-    std::string s = name;
-    s += ":";
     auto struc = lst.GenStruct(name);
-    if (struc.empty()) {
-      s += GetDecompTypeName(t);
-    } else {
-      s += struc;
-    }
-    return s;
+    return cat(name, ":", struc.empty() ? GetDecompTypeName(t) : struc);
   }
 
   void LoadStore(Value &val, const Node& addr_exp, uint32_t offset,
                   Opcode opc, Address align, Type op_type) {
     BracketIfNeeded(val);
     auto access = lst.GenAccess(offset, addr_exp);
-    if (!access.empty()) {
-      val.v.back() += ".";
-      val.v.back() += access;
-    } else {
-      std::string suffix = "[";
-      suffix += std::to_string(offset);
-      suffix += "]:";
-      suffix += GetDecompTypeName(GetMemoryType(op_type, opc));
-      if (!opc.IsNaturallyAligned(align)) suffix += "@" + std::to_string(align);
-      val.v.back() += suffix;
-    }
+    val.v.back() +=
+        !access.empty()
+            ? "." + access
+            : cat("[", std::to_string(offset),
+                  "]:", GetDecompTypeName(GetMemoryType(op_type, opc)),
+                  !opc.IsNaturallyAligned(align)
+                      ? cat("@" + std::to_string(align))
+                      : "");
   }
 
   Value DecompileExpr(const Node &n) {
@@ -264,14 +246,17 @@ struct Decompiler {
         return WrapNAry(args, "return ", "");
       }
       case NodeType::Decl: {
-        ss << "var ";
-        ss << LocalDecl(n.var->name(), cur_func->GetLocalType(*n.var));
-        return PushSStream();
+        return Value{
+            {"var " + LocalDecl(n.var->name(), cur_func->GetLocalType(*n.var))},
+            false};
       }
       case NodeType::DeclInit: {
-        return WrapChild(args[0],
-            "var " + LocalDecl(n.var->name(), cur_func->GetLocalType(*n.var)) +
-            " = ", "");
+        return WrapChild(
+            args[0],
+            cat("var ",
+                LocalDecl(n.var->name(), cur_func->GetLocalType(*n.var)),
+                " = "),
+            "");
       }
       case NodeType::Expr:
         // We're going to fall thru to the second switch to deal with ExprType.
@@ -282,30 +267,26 @@ struct Decompiler {
         auto& c = cast<ConstExpr>(n.e)->const_;
         switch (c.type) {
           case Type::I32:
-            ss << static_cast<int32_t>(c.u32);
-            break;
+            return Value{{std::to_string(static_cast<int32_t>(c.u32))}, false};
           case Type::I64:
-            ss << static_cast<int64_t>(c.u64) << "L";
-            break;
+            return Value{{std::to_string(static_cast<int64_t>(c.u64)) + "L"},
+                         false};
           case Type::F32: {
             float f;
             memcpy(&f, &c.f32_bits, sizeof(float));
-            ss << f << "f";
-            break;
+            return Value{{to_string(f) + "f"}, false};
           }
           case Type::F64: {
             double d;
             memcpy(&d, &c.f64_bits, sizeof(double));
-            ss << d << "d";
-            break;
+            return Value{{to_string(d)}, false};
           }
           case Type::V128:
-            ss << "V128";  // FIXME
-            break;
+            return Value{{"V128"}, false};  // FIXME
           default:
             WABT_UNREACHABLE;
         }
-        return PushSStream();
+        return Value{{}, false};
       }
       case ExprType::LocalGet: {
         return Get(*cast<LocalGetExpr>(n.e));
@@ -325,18 +306,17 @@ struct Decompiler {
       }
       case ExprType::Binary: {
         auto& be = *cast<BinaryExpr>(n.e);
-        return WrapBinary(args, " " + std::string(OpcodeToToken(be.opcode)) + " ", false);
+        return WrapBinary(args, cat(" ", OpcodeToToken(be.opcode), " "), false);
       }
       case ExprType::Compare: {
         auto& ce = *cast<CompareExpr>(n.e);
-        return WrapBinary(args, " " + std::string(OpcodeToToken(ce.opcode)) + " ", false);
+        return WrapBinary(args, cat(" ", OpcodeToToken(ce.opcode), " "), false);
       }
       case ExprType::Unary: {
         auto& ue = *cast<UnaryExpr>(n.e);
         //BracketIfNeeded(stack.back());
         // TODO: also version without () depending on precedence.
-        return WrapChild(args[0],
-                  std::string(OpcodeToToken(ue.opcode)) + "(", ")");
+        return WrapChild(args[0], OpcodeToToken(ue.opcode) + "(", ")");
       }
       case ExprType::Load: {
         auto& le = *cast<LoadExpr>(n.e);
@@ -379,9 +359,10 @@ struct Decompiler {
           ifs.v.push_back("}");
           return std::move(ifs);
         } else {
-          ss << "if (" << ifs.v[0] << ") { " <<  thenp.v[0] << " }";
-          if (elsep) ss << " else { " << elsep->v[0] << " }";
-          return PushSStream();
+          auto s = cat("if (", ifs.v[0], ") { ", thenp.v[0], " }");
+          if (elsep)
+            s += cat(" else { ", elsep->v[0], " }");
+          return Value{{std::move(s)}, false};
         }
       }
       case ExprType::Block: {
@@ -392,15 +373,14 @@ struct Decompiler {
       }
       case ExprType::Br: {
         auto be = cast<BrExpr>(n.e);
-        auto jmp = n.lt == LabelType::Loop ? "continue" : "break";
-        ss << jmp << " " << be->var.name();
-        return PushSStream();
+        return Value{{(n.lt == LabelType::Loop ? "continue " : "break ") +
+                      be->var.name()},
+                     false};
       }
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
         auto jmp = n.lt == LabelType::Loop ? "continue" : "break";
-        return WrapChild(args[0], "if (",
-                  ") " + std::string(jmp) + " " + bie->var.name());
+        return WrapChild(args[0], "if (", cat(") ", jmp, " ", bie->var.name()));
       }
       case ExprType::Return: {
         return WrapNAry(args, "return ", "");
@@ -428,7 +408,10 @@ struct Decompiler {
     }
   }
 
-  bool CheckImportExport(ExternalKind kind, Index index, string_view name) {
+  bool CheckImportExport(std::string& s,
+                         ExternalKind kind,
+                         Index index,
+                         string_view name) {
     // Figure out if this thing is imported, exported, or neither.
     auto is_import = mc.module.IsImport(kind, Var(index));
     // TODO: is this the best way to check for export?
@@ -436,8 +419,10 @@ struct Decompiler {
     // as the export has the original name..
     auto xport = mc.module.GetExport(name);
     auto is_export = xport && xport->kind == kind;
-    if (is_export) stream.Writef("export ");
-    if (is_import) stream.Writef("import ");
+    if (is_export)
+      s += "export ";
+    if (is_import)
+      s += "import ";
     return is_import;
   }
 
@@ -467,142 +452,128 @@ struct Decompiler {
     return s;
   }
 
-  void Decompile() {
+  std::string Decompile() {
+    std::string s;
     // Memories.
     Index memory_index = 0;
     for (auto m : mc.module.memories) {
       auto is_import =
-          CheckImportExport(ExternalKind::Memory, memory_index, m->name);
-      stream.Writef("memory %s", m->name.c_str());
+          CheckImportExport(s, ExternalKind::Memory, memory_index, m->name);
+      s += cat("memory ", m->name);
       if (!is_import) {
-        stream.Writef("(initial: %" PRIu64 ", max: %" PRIu64 ")",
-                      m->page_limits.initial, m->page_limits.max);
+        s += cat("(initial: ", std::to_string(m->page_limits.initial),
+                 ", max: ", std::to_string(m->page_limits.max), ")");
       }
-      stream.Writef(";\n");
+      s += ";\n";
       memory_index++;
     }
-    if (!mc.module.memories.empty()) stream.Writef("\n");
+    if (!mc.module.memories.empty())
+      s += "\n";
 
     // Globals.
     Index global_index = 0;
     for (auto g : mc.module.globals) {
       auto is_import =
-          CheckImportExport(ExternalKind::Global, global_index, g->name);
-      stream.Writef("global %s:%s", g->name.c_str(),
-                    GetDecompTypeName(g->type));
+          CheckImportExport(s, ExternalKind::Global, global_index, g->name);
+      s += cat("global ", g->name, ":", GetDecompTypeName(g->type));
       if (!is_import) {
-        stream.Writef(" = %s", InitExp(g->init_expr).c_str());
+        s += cat(" = ", InitExp(g->init_expr));
       }
-      stream.Writef(";\n");
+      s += ";\n";
       global_index++;
     }
-    if (!mc.module.globals.empty()) stream.Writef("\n");
+    if (!mc.module.globals.empty())
+      s += "\n";
 
     // Tables.
     Index table_index = 0;
     for (auto tab : mc.module.tables) {
       auto is_import =
-          CheckImportExport(ExternalKind::Table, table_index, tab->name);
-      stream.Writef("table %s:%s", tab->name.c_str(),
-                    GetDecompTypeName(tab->elem_type));
+          CheckImportExport(s, ExternalKind::Table, table_index, tab->name);
+      s += cat("table ", tab->name, ":", GetDecompTypeName(tab->elem_type));
       if (!is_import) {
-        stream.Writef("(min: %" PRIu64 ", max: %" PRIu64 ")",
-                      tab->elem_limits.initial, tab->elem_limits.max);
+        s += cat("(min: ", std::to_string(tab->elem_limits.initial),
+                 ", max: ", std::to_string(tab->elem_limits.max), ")");
       }
-      stream.Writef(";\n");
+      s += ";\n";
       table_index++;
     }
-    if (!mc.module.tables.empty()) stream.Writef("\n");
+    if (!mc.module.tables.empty())
+      s += "\n";
 
     // Data.
     for (auto dat : mc.module.data_segments) {
-      stream.Writef("data %s(offset: %s) = %s;\n", dat->name.c_str(),
-                    InitExp(dat->offset).c_str(),
-                    BinaryToString(dat->data).c_str());
+      s += cat("data ", dat->name, "(offset: ", InitExp(dat->offset),
+               ") = ", BinaryToString(dat->data), ";\n");
     }
-    if (!mc.module.data_segments.empty()) stream.Writef("\n");
+    if (!mc.module.data_segments.empty())
+      s += "\n";
 
     // Code.
     Index func_index = 0;
     for (auto f : mc.module.funcs) {
       cur_func = f;
       auto is_import =
-          CheckImportExport(ExternalKind::Func, func_index, f->name);
+          CheckImportExport(s, ExternalKind::Func, func_index, f->name);
       AST ast(mc, f);
       if (!is_import) {
         ast.Construct(f->exprs, f->GetNumResults(), true);
         lst.Track(ast.exp_stack[0]);
         lst.CheckLayouts();
       }
-      stream.Writef("function %s(", f->name.c_str());
+      s += cat("function ", f->name, "(");
       for (Index i = 0; i < f->GetNumParams(); i++) {
-        if (i) stream.Writef(", ");
+        if (i)
+          s += ", ";
         auto t = f->GetParamType(i);
         auto name = IndexToAlphaName(i);
-        stream.Writef("%s", LocalDecl(name, t).c_str());
+        s += LocalDecl(name, t);
       }
-      stream.Writef(")");
+      s += ")";
       if (f->GetNumResults()) {
         if (f->GetNumResults() == 1) {
-          stream.Writef(":%s", GetDecompTypeName(f->GetResultType(0)));
+          s += cat(":", GetDecompTypeName(f->GetResultType(0)));
         } else {
-          stream.Writef(":(");
+          s += ":(";
           for (Index i = 0; i < f->GetNumResults(); i++) {
-            if (i) stream.Writef(", ");
-            stream.Writef("%s", GetDecompTypeName(f->GetResultType(i)));
+            if (i)
+              s += ", ";
+            s += GetDecompTypeName(f->GetResultType(i));
           }
-          stream.Writef(")");
+          s += ")";
         }
       }
       if (is_import) {
-        stream.Writef(";");
+        s += ";";
       } else {
-        stream.Writef(" {\n");
+        s += " {\n";
         auto val = DecompileExpr(ast.exp_stack[0]);
         IndentValue(val, indent_amount, {});
-        for (auto& s : val.v) {
-          stream.Writef("%s\n", s.c_str());
+        for (auto& stat : val.v) {
+          s += stat;
+          s += "\n";
         }
-        stream.Writef("}");
+        s += "}";
       }
-      stream.Writef("\n\n");
+      s += "\n\n";
       mc.EndFunc();
       lst.Clear();
       func_index++;
     }
-  }
-
-  void DumpInternalState() {
-    // TODO: print ast?
-    stream.Flush();
-  }
-
-  // For debugging purposes, this assert, when it fails, first prints the
-  // internal state that hasn't been printed yet.
-  void Assert(bool ok) {
-    if (ok) return;
-    #ifndef NDEBUG
-      DumpInternalState();
-    #endif
-    assert(false);
+    return s;
   }
 
   ModuleContext mc;
-  Stream& stream;
   const DecompileOptions& options;
-  std::ostringstream ss;
   size_t indent_amount = 2;
   size_t target_exp_width = 70;
   const Func* cur_func = nullptr;
   LoadStoreTracking lst;
 };
 
-Result Decompile(Stream& stream,
-                 const Module& module,
-                 const DecompileOptions& options) {
-  Decompiler decompiler(stream, module, options);
-  decompiler.Decompile();
-  return Result::Ok;
+std::string Decompile(const Module& module, const DecompileOptions& options) {
+  Decompiler decompiler(module, options);
+  return decompiler.Decompile();
 }
 
 }  // namespace wabt
