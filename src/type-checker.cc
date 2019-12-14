@@ -51,9 +51,6 @@ TypeChecker::Label::Label(LabelType label_type,
       type_stack_limit(limit),
       unreachable(false) {}
 
-TypeChecker::TypeChecker(const ErrorCallback& error_callback)
-    : error_callback_(error_callback) {}
-
 void TypeChecker::PrintError(const char* fmt, ...) {
   if (error_callback_) {
     WABT_SNPRINTF_ALLOCA(buffer, length, fmt);
@@ -436,12 +433,23 @@ Result TypeChecker::OnBrTableTarget(Index depth) {
   // signatures.
   if (br_table_sig_ == nullptr) {
     br_table_sig_ = &label_sig;
-  }
-  if (*br_table_sig_ != label_sig) {
-    result |= Result::Error;
-    PrintError("br_table labels have inconsistent types: expected %s, got %s",
-               TypesToString(*br_table_sig_).c_str(),
-               TypesToString(label_sig).c_str());
+  } else {
+    if (features_.reference_types_enabled()) {
+      if (br_table_sig_->size() != label_sig.size()) {
+        result |= Result::Error;
+        PrintError("br_table labels have inconsistent arity: expected %" PRIzd
+                   " got %" PRIzd,
+                   br_table_sig_->size(), label_sig.size());
+      }
+    } else {
+      if (*br_table_sig_ != label_sig) {
+        result |= Result::Error;
+        PrintError(
+            "br_table labels have inconsistent types: expected %s, got %s",
+            TypesToString(*br_table_sig_).c_str(),
+            TypesToString(label_sig).c_str());
+      }
+    }
   }
 
   return result;

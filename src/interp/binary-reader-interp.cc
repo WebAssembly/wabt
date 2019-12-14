@@ -369,6 +369,7 @@ BinaryReaderInterp::BinaryReaderInterp(Environment* env,
       errors_(errors),
       env_(env),
       module_(module),
+      typechecker_(features),
       istream_(std::move(istream)),
       istream_offset_(istream_.output_buffer().size()) {
   typechecker_.set_error_callback(
