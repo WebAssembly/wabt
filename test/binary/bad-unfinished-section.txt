@@ -1,0 +1,44 @@
+;;; TOOL: run-objdump-gen-wasm
+;;; ARGS: -x
+;;; ERROR: 1
+magic
+version
+section(TYPE) { count[1] function params[0] results[0] }
+section(FUNCTION) { count[0] }
+section(MEMORY) {
+  count[1]
+  has_max[0]
+  initial[1]
+}
+section(CODE) {
+  count[0]
+  data[str("extra_data_in_code_section")]
+}
+section(DATA) {
+  count[1]
+  memory_index[0]
+  offset[i32.const 0 end]
+  data[str("somedata")]
+}
+(;; STDERR ;;;
+0000019: error: unfinished section (expected end: 0x34)
+;;; STDERR ;;)
+(;; STDOUT ;;;
+
+bad-unfinished-section.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Function[0]:
+Memory[1]:
+ - memory[0] pages: initial=1
+Code[0]:
+Data[1]:
+ - segment[0] memory=0 size=8 - init i32=0
+  - 0000000: 736f 6d65 6461 7461                      somedata
+
+Code Disassembly:
+
+;;; STDOUT ;;)

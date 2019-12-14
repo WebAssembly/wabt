@@ -2437,6 +2437,12 @@ Result BinaryReader::ReadSections() {
         WABT_UNREACHABLE;
     }
 
+    if (Succeeded(section_result) && state_.offset != read_end_) {
+      PrintError("unfinished section (expected end: 0x%" PRIzx ")", read_end_);
+      section_result = Result::Error;
+      result |= section_result;
+    }
+
     if (Failed(section_result)) {
       if (stop_on_first_error) {
         return Result::Error;
@@ -2448,8 +2454,6 @@ Result BinaryReader::ReadSections() {
       state_.offset = read_end_;
     }
 
-    ERROR_UNLESS(state_.offset == read_end_,
-                 "unfinished section (expected end: 0x%" PRIzx ")", read_end_);
 
     if (section != BinarySection::Custom) {
       last_known_section_ = section;
