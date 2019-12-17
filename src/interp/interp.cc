@@ -1018,7 +1018,11 @@ Result Thread::AtomicRmwCmpxchg(const uint8_t** pc) {
   return Push<ResultValueType>(static_cast<ExtendedType>(read));
 }
 
-bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max) {
+// This function is used to clanp the bound for table.fill operations.  This
+// can be removed once the behaviour of table.fill is updated to match the
+// new bulk meory semantics, which is to trap early on OOB.
+// See: https://github.com/webassembly/bulk-memory-operations/issues/111
+static bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max) {
   if (start > max) {
     *length = 0;
     return false;
@@ -1031,6 +1035,14 @@ bool ClampToBounds(uint32_t start, uint32_t* length, uint32_t max) {
   return true;
 }
 
+static bool CheckBounds(uint32_t start, uint32_t length, uint32_t max) {
+  if (start > max) {
+    return false;
+  }
+  uint32_t avail = max - start;
+  return length <= avail;
+}
+
 Result Thread::MemoryInit(const uint8_t** pc) {
   Memory* memory = ReadMemory(pc);
   DataSegment* segment = ReadDataSegment(pc);
@@ -1039,13 +1051,12 @@ Result Thread::MemoryInit(const uint8_t** pc) {
   uint32_t size = Pop<uint32_t>();
   uint32_t src = Pop<uint32_t>();
   uint32_t dst = Pop<uint32_t>();
+  bool ok = CheckBounds(dst, size, memory_size);
+  ok &= CheckBounds(src, size, segment_size);
+  if (!ok) {
+    TRAP_MSG(MemoryAccessOutOfBounds, "memory.init out of bounds");
+  }
   if (size > 0) {
-    TRAP_IF(segment->dropped, DataSegmentDropped);
-    bool ok = ClampToBounds(dst, &size, memory_size);
-    ok &= ClampToBounds(src, &size, segment_size);
-    if (!ok) {
-      TRAP_MSG(MemoryAccessOutOfBounds, "memory.init out of bounds");
-    }
     memcpy(memory->data.data() + dst, segment->data.data() + src, size);
   }
   return ResultType::Ok;
@@ -1053,8 +1064,7 @@ Result Thread::MemoryInit(const uint8_t** pc) {
 
 Result Thread::DataDrop(const uint8_t** pc) {
   DataSegment* segment = ReadDataSegment(pc);
-  TRAP_IF(segment->dropped, DataSegmentDropped);
-  segment->dropped = true;
+  segment->data.clear();
   return ResultType::Ok;
 }
 
@@ -1064,12 +1074,12 @@ Result Thread::MemoryCopy(const uint8_t** pc) {
   uint32_t size = Pop<uint32_t>();
   uint32_t src = Pop<uint32_t>();
   uint32_t dst = Pop<uint32_t>();
+  bool ok = CheckBounds(dst, size, memory_size);
+  ok &= CheckBounds(src, size, memory_size);
+  if (!ok) {
+    TRAP_MSG(MemoryAccessOutOfBounds, "memory.copy out of bound");
+  }
   if (size > 0) {
-    bool ok = ClampToBounds(dst, &size, memory_size);
-    ok &= ClampToBounds(src, &size, memory_size);
-    if (!ok) {
-      TRAP_MSG(MemoryAccessOutOfBounds, "memory.copy out of bound");
-    }
     char* data = memory->data.data();
     memmove(data + dst, data + src, size);
   }
@@ -1082,11 +1092,10 @@ Result Thread::MemoryFill(const uint8_t** pc) {
   uint32_t size = Pop<uint32_t>();
   uint8_t value = static_cast<uint8_t>(Pop<uint32_t>());
   uint32_t dst = Pop<uint32_t>();
+  if (!CheckBounds(dst, size, memory_size)) {
+    TRAP_MSG(MemoryAccessOutOfBounds, "memory.fill out of bounds");
+  }
   if (size > 0) {
-    bool ok = ClampToBounds(dst, &size, memory_size);
-    if (!ok) {
-      TRAP_MSG(MemoryAccessOutOfBounds, "memory.fill out of bounds");
-    }
     memset(memory->data.data() + dst, value, size);
   }
   return ResultType::Ok;
@@ -1099,13 +1108,12 @@ Result Thread::TableInit(const uint8_t** pc) {
   uint32_t size = Pop<uint32_t>();
   uint32_t src = Pop<uint32_t>();
   uint32_t dst = Pop<uint32_t>();
+  bool ok = CheckBounds(dst, size, table->size());
+  ok &= CheckBounds(src, size, segment_size);
+  if (!ok) {
+    TRAP_MSG(TableAccessOutOfBounds, "table.init out of bounds");
+  }
   if (size > 0) {
-    TRAP_IF(segment->dropped, ElemSegmentDropped);
-    bool ok = ClampToBounds(dst, &size, table->size());
-    ok &= ClampToBounds(src, &size, segment_size);
-    if (!ok) {
-      TRAP_MSG(TableAccessOutOfBounds, "table.init out of bounds");
-    }
     memcpy(table->entries.data() + dst, segment->elems.data() + src,
            size * sizeof(table->entries[0]));
   }
@@ -1144,14 +1152,13 @@ Result Thread::TableFill(const uint8_t** pc) {
   for (uint32_t i = 0; i < size; i++) {
     table->entries[dst+i] = value;
   }
-  TRAP_IF(!ok, MemoryAccessOutOfBounds);
+  TRAP_IF(!ok, TableAccessOutOfBounds);
   return ResultType::Ok;
 }
 
 Result Thread::ElemDrop(const uint8_t** pc) {
   ElemSegment* segment = ReadElemSegment(pc);
-  TRAP_IF(segment->dropped, ElemSegmentDropped);
-  segment->dropped = true;
+  segment->elems.clear();
   return ResultType::Ok;
 }
 
@@ -1162,12 +1169,12 @@ Result Thread::TableCopy(const uint8_t** pc) {
   uint32_t size = Pop<uint32_t>();
   uint32_t src = Pop<uint32_t>();
   uint32_t dst = Pop<uint32_t>();
+  bool ok = CheckBounds(dst, size, dst_table->size());
+  ok &= CheckBounds(src, size, dst_table->size());
+  if (!ok) {
+    TRAP_MSG(TableAccessOutOfBounds, "table.copy out of bounds");
+  }
   if (size > 0) {
-    bool ok = ClampToBounds(dst, &size, dst_table->size());
-    ok &= ClampToBounds(src, &size, dst_table->size());
-    if (!ok) {
-      TRAP_MSG(TableAccessOutOfBounds, "table.copy out of bounds");
-    }
     Ref* data_src = src_table->entries.data();
     Ref* data_dst = dst_table->entries.data();
     memmove(data_dst + dst, data_src + src, size * sizeof(Ref));
@@ -3755,19 +3762,17 @@ Result Executor::InitializeSegments(DefinedModule* module) {
       uint32_t table_size = info.table->size();
       uint32_t segment_size = info.src.size();
       uint32_t copy_size = segment_size;
-      bool ok = ClampToBounds(info.dst, &copy_size, table_size);
-
-      if (pass == Init && copy_size > 0) {
-        std::copy(info.src.begin(), info.src.begin() + copy_size,
-                  info.table->entries.begin() + info.dst);
-      }
-
-      if (!ok) {
+      if (!CheckBounds(info.dst, copy_size, table_size)) {
         TRAP_MSG(TableAccessOutOfBounds,
                  "elem segment is out of bounds: [%u, %" PRIu64
                  ") >= max value %u",
                  info.dst, static_cast<uint64_t>(info.dst) + segment_size,
                  table_size);
+      }
+
+      if (pass == Init && copy_size > 0) {
+        std::copy(info.src.begin(), info.src.begin() + copy_size,
+                  info.table->entries.begin() + info.dst);
       }
     }
 
@@ -3775,19 +3780,17 @@ Result Executor::InitializeSegments(DefinedModule* module) {
       uint32_t memory_size = info.memory->data.size();
       uint32_t segment_size = info.data.size();
       uint32_t copy_size = segment_size;
-      bool ok = ClampToBounds(info.dst, &copy_size, memory_size);
-
-      if (pass == Init && copy_size > 0) {
-        std::copy(info.data.begin(), info.data.begin() + copy_size,
-                  info.memory->data.begin() + info.dst);
-      }
-
-      if (!ok) {
+      if (!CheckBounds(info.dst, copy_size, memory_size)) {
         TRAP_MSG(MemoryAccessOutOfBounds,
                  "data segment is out of bounds: [%u, %" PRIu64
                  ") >= max value %u",
                  info.dst, static_cast<uint64_t>(info.dst) + segment_size,
                  memory_size);
+      }
+
+      if (pass == Init && copy_size > 0) {
+        std::copy(info.data.begin(), info.data.begin() + copy_size,
+                  info.memory->data.begin() + info.dst);
       }
     }
   }

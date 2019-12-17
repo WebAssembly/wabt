@@ -48,6 +48,11 @@ class WastParser {
   std::unique_ptr<Script> ReleaseScript();
 
  private:
+  enum class ConstType {
+    Normal,
+    Expectation,
+  };
+
   void ErrorUnlessOpcodeEnabled(const Token&);
 
   // Print an error message listing the expected tokens, as well as an example
@@ -163,9 +168,10 @@ class WastParser {
   Result ParseTerminatingInstrList(ExprList*);
   Result ParseInstr(ExprList*);
   Result ParsePlainInstr(std::unique_ptr<Expr>*);
-  Result ParseConst(Const*);
+  Result ParseConst(Const*, ConstType type);
   Result ParseHostRef(Const*);
-  Result ParseConstList(ConstVector*);
+  Result ParseExpectedNan(ExpectedNan* expected);
+  Result ParseConstList(ConstVector*, ConstType type);
   Result ParseBlockInstr(std::unique_ptr<Expr>*);
   Result ParseLabelOpt(std::string*);
   Result ParseEndLabelOpt(const std::string&);
@@ -187,8 +193,6 @@ class WastParser {
   Result ParseAssertMalformedCommand(CommandPtr*);
   Result ParseAssertReturnCommand(CommandPtr*);
   Result ParseAssertReturnFuncCommand(CommandPtr*);
-  Result ParseAssertReturnArithmeticNanCommand(CommandPtr*);
-  Result ParseAssertReturnCanonicalNanCommand(CommandPtr*);
   Result ParseAssertTrapCommand(CommandPtr*);
   Result ParseAssertUnlinkableCommand(CommandPtr*);
   Result ParseActionCommand(CommandPtr*);

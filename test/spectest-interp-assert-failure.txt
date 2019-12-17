@@ -1,0 +1,20 @@
+;;; TOOL: run-interp-spec
+;;; ERROR: 2
+;; spectest-interp returns the number of failed tests as the error code.
+(module
+  (func (export "func32") (result f32) (f32.const 0.1))
+  (func (export "func64") (result f64) (f64.const 0.2))
+  (func (export "func32nan") (result f32) (f32.const nan))
+  (func (export "func64nan") (result f64) (f64.const nan))
+)
+(assert_return (invoke "func32") (f32.const nan:canonical))
+(assert_return (invoke "func64") (f64.const nan:arithmetic))
+(assert_return (invoke "func32nan") (f32.const nan:arithmetic))
+(assert_return (invoke "func64nan") (f64.const nan:arithmetic))
+(assert_return (invoke "func32nan") (f32.const nan:canonical))
+(assert_return (invoke "func64nan") (f64.const nan:canonical))
+(;; STDOUT ;;;
+out/test/spectest-interp-assert-failure.txt:10: expected result to be nan, got f32:0.100000
+out/test/spectest-interp-assert-failure.txt:11: expected result to be nan, got f64:0.200000
+4/6 tests passed.
+;;; STDOUT ;;)

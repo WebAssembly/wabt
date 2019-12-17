@@ -1637,10 +1637,11 @@ memory.fill() =>
 #0. 5136: V:1  | i32.const 2
 #0. 5144: V:2  | i32.const 3
 #0. 5152: V:3  | table.init $0, $0
-table.init() => error: element segment dropped
+table.init() => error: out of bounds table access: table.init out of bounds
 >>> running export "elem.drop":
 #0. 5168: V:0  | elem.drop $0
-elem.drop() => error: element segment dropped
+#0. 5176: V:0  | return
+elem.drop() =>
 >>> running export "table.copy":
 #0. 5180: V:0  | i32.const 1
 #0. 5188: V:1  | i32.const 2

@@ -7,7 +7,7 @@ out/test/spec/bulk-memory-operations/memory_fill.wast:43: assert_trap passed: ou
 out/test/spec/bulk-memory-operations/memory_fill.wast:61: assert_trap passed: out of bounds memory access: memory.fill out of bounds
 test() =>
 test() =>
-test() =>
+out/test/spec/bulk-memory-operations/memory_fill.wast:117: assert_trap passed: out of bounds memory access: memory.fill out of bounds
 test() =>
 test() =>
 out/test/spec/bulk-memory-operations/memory_fill.wast:174: assert_invalid passed:

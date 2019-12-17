@@ -2,9 +2,9 @@
 ;;; STDIN_FILE: third_party/testsuite/proposals/reference-types/table_fill.wast
 ;;; ARGS*: --enable-reference-types
 (;; STDOUT ;;;
-out/test/spec/reference-types/table_fill.wast:50: assert_trap passed: out of bounds memory access
-out/test/spec/reference-types/table_fill.wast:58: assert_trap passed: out of bounds memory access
-out/test/spec/reference-types/table_fill.wast:63: assert_trap passed: out of bounds memory access
+out/test/spec/reference-types/table_fill.wast:50: assert_trap passed: out of bounds table access
+out/test/spec/reference-types/table_fill.wast:58: assert_trap passed: out of bounds table access
+out/test/spec/reference-types/table_fill.wast:63: assert_trap passed: out of bounds table access
 out/test/spec/reference-types/table_fill.wast:71: assert_invalid passed:
   error: type mismatch in table.fill, expected [i32, anyref, i32] but got []
   0000020: error: OnTableFillExpr callback failed

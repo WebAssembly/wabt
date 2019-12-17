@@ -221,10 +221,11 @@ out/test/spec/bulk-memory-operations/memory_copy.wast:4830: assert_trap passed: 
 out/test/spec/bulk-memory-operations/memory_copy.wast:4836: assert_trap passed: out of bounds memory access: memory.copy out of bound
 test() =>
 test() =>
+out/test/spec/bulk-memory-operations/memory_copy.wast:4872: assert_trap passed: out of bounds memory access: memory.copy out of bound
 test() =>
+out/test/spec/bulk-memory-operations/memory_copy.wast:4884: assert_trap passed: out of bounds memory access: memory.copy out of bound
 test() =>
+out/test/spec/bulk-memory-operations/memory_copy.wast:4896: assert_trap passed: out of bounds memory access: memory.copy out of bound
 test() =>
-test() =>
-test() =>
-4416/4416 tests passed.
+4417/4417 tests passed.
 ;;; STDOUT ;;)

@@ -166,9 +166,6 @@ class Validator : public ExprVisitor::Delegate {
                         const TypeVector& actual,
                         const TypeVector& expected,
                         const char* desc);
-  void CheckAssertReturnNanType(const Location* loc,
-                                Type actual,
-                                const char* desc);
   void CheckExprList(const Location* loc, const ExprList& exprs);
   bool CheckHasMemory(const Location* loc, Opcode opcode);
   bool CheckHasTable(const Location* loc, Opcode opcode, Index index = 0);
@@ -203,7 +200,6 @@ class Validator : public ExprVisitor::Delegate {
   const TypeVector* CheckInvoke(const InvokeAction* action);
   Result CheckGet(const GetAction* action, Type* out_type);
   ActionResult CheckAction(const Action* action);
-  void CheckAssertReturnNanCommand(const Action* action);
   void CheckCommand(const Command* command);
 
   void CheckEvent(const Location* loc, const Event* Event);
@@ -459,17 +455,6 @@ void Validator::CheckResultTypes(const Location* loc,
   } else {
     PrintError(loc, "expected %" PRIzd " results, got %" PRIzd, expected.size(),
                actual.size());
-  }
-}
-
-void Validator::CheckAssertReturnNanType(const Location* loc,
-                                         Type actual,
-                                         const char* desc) {
-  // When using assert_return_nan, the result can be either a f32 or f64 type
-  // so we special case it here.
-  if (actual != Type::F32 && actual != Type::F64) {
-    PrintError(loc, "type mismatch at %s. got %s, expected f32 or f64", desc,
-               GetTypeName(actual));
   }
 }
 
@@ -1478,29 +1463,6 @@ Validator::ActionResult Validator::CheckAction(const Action* action) {
   return result;
 }
 
-void Validator::CheckAssertReturnNanCommand(const Action* action) {
-  ActionResult result = CheckAction(action);
-
-  // A valid result type will either be f32 or f64; convert a Types result into
-  // a Type result, so it is easier to check below. Type::Any is used to
-  // specify a type that should not be checked (because an earlier error
-  // occurred).
-  if (result.kind == ActionResult::Kind::Types) {
-    if (result.types->size() == 1) {
-      result.kind = ActionResult::Kind::Type;
-      result.type = (*result.types)[0];
-    } else {
-      PrintError(&action->loc, "expected 1 result, got %" PRIzd,
-                 result.types->size());
-      result.type = Type::Any;
-    }
-  }
-
-  if (result.kind == ActionResult::Kind::Type && result.type != Type::Any) {
-    CheckAssertReturnNanType(&action->loc, result.type, "action");
-  }
-}
-
 void Validator::CheckCommand(const Command* command) {
   switch (command->type) {
     case CommandType::Module:
@@ -1552,16 +1514,6 @@ void Validator::CheckCommand(const Command* command) {
       }
       break;
     }
-
-    case CommandType::AssertReturnCanonicalNan:
-      CheckAssertReturnNanCommand(
-          cast<AssertReturnCanonicalNanCommand>(command)->action.get());
-      break;
-
-    case CommandType::AssertReturnArithmeticNan:
-      CheckAssertReturnNanCommand(
-          cast<AssertReturnArithmeticNanCommand>(command)->action.get());
-      break;
 
     case CommandType::AssertTrap:
       // ignore result type.

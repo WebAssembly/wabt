@@ -1130,11 +1130,6 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
   if (segment_flags_ & SegPassive) {
     elem_segment_info_ = nullptr;
   } else {
-    // An active segment still is present in the segment index space, but
-    // cannot be used with `table.init` (it's as if it has already been
-    // dropped).
-    elem_segment_->dropped = true;
-
     assert(segment_table_index_ != kInvalidIndex);
     Table* table = GetTableByModuleIndex(segment_table_index_);
     module_->active_elem_segments_.emplace_back(table, table_offset_);
@@ -1146,7 +1141,11 @@ wabt::Result BinaryReaderInterp::OnElemSegmentElemExprCount(Index index,
 wabt::Result BinaryReaderInterp::OnElemSegmentElemExpr_RefNull(
     Index segment_index) {
   assert(segment_flags_ & SegUseElemExprs);
-  elem_segment_->elems.push_back({RefType::Null, kInvalidIndex});
+  if (segment_flags_ & SegPassive) {
+    elem_segment_->elems.push_back({RefType::Null, kInvalidIndex});
+  } else {
+    elem_segment_info_->src.push_back({RefType::Null, kInvalidIndex});
+  }
   return wabt::Result::Ok;
 }
 
@@ -1206,11 +1205,6 @@ wabt::Result BinaryReaderInterp::OnDataSegmentData(Index index,
           GetTypeName(init_expr_value_.type));
       return wabt::Result::Error;
     }
-
-    // An active segment still is present in the segment index space, but
-    // cannot be used with `memory.init` (it's as if it has already been
-    // dropped).
-    segment->dropped = true;
 
     assert(module_->memory_index != kInvalidIndex);
     Memory* memory = env_->GetMemory(module_->memory_index);
