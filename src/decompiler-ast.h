@@ -27,6 +27,7 @@
 namespace wabt {
 
 enum class NodeType {
+  Uninitialized,
   FlushToVars,
   FlushedVar,
   Statements,
@@ -44,22 +45,34 @@ struct Node {
   std::vector<Node> children;
   // Node specific annotations.
   union {
-    LabelType lt;  // br/br_if target.
-    const Var* var;  // Decl/DeclInit.
     struct { Index var_start, var_count; };  // FlushedVar/FlushToVars
-  };
+    const Var* var;  // Decl/DeclInit.
+    LabelType lt;  // br/br_if target.
+  } u;
 
-  Node()
-    : ntype(NodeType::Expr), etype(ExprType::Nop), e(nullptr),
-      var(nullptr) {}
+  Node() : ntype(NodeType::Uninitialized), etype(ExprType::Nop), e(nullptr) {
+  }
   Node(NodeType ntype, ExprType etype, const Expr* e, const Var* v)
-    : ntype(ntype), etype(etype), e(e), var(v) {}
+    : ntype(ntype), etype(etype), e(e) {
+    u.var = v;
+  }
 
   // This value should really never be copied, only moved.
-  Node(Node&& rhs) = default;
   Node(const Node& rhs) = delete;
-  Node& operator=(Node&& rhs) = default;
   Node& operator=(const Node& rhs) = delete;
+
+  Node(Node&& rhs) { *this = std::move(rhs); }
+  Node& operator=(Node&& rhs) {
+    ntype = rhs.ntype;
+    // Reset ntype to avoid moved from values still being used.
+    rhs.ntype = NodeType::Uninitialized;
+    etype = rhs.etype;
+    rhs.etype = ExprType::Nop;
+    e = rhs.e;
+    std::swap(children, rhs.children);
+    u = rhs.u;
+    return *this;
+  }
 };
 
 struct AST {
@@ -90,8 +103,7 @@ struct AST {
   }
 
   template<ExprType T> void PreDecl(const VarExpr<T>& ve) {
-    exp_stack.emplace(exp_stack.begin() + pre_decl_insertion_point++,
-                  NodeType::Decl, ExprType::Nop, nullptr, &ve.var);
+    predecls.emplace_back(NodeType::Decl, ExprType::Nop, nullptr, &ve.var);
   }
 
   template<ExprType T> void Get(const VarExpr<T>& ve, bool local) {
@@ -107,7 +119,8 @@ struct AST {
     if (local && vars_defined.insert(ve.var.name()).second) {
       if (value_stack_depth == 1) {
         // Top level, declare it here.
-        InsertNode(NodeType::DeclInit, ExprType::Nop, nullptr, 1).var = &ve.var;
+        InsertNode(NodeType::DeclInit, ExprType::Nop, nullptr, 1).u.var =
+            &ve.var;
         return;
       } else {
         // Inside exp, better leave it as assignment exp and lift the decl out.
@@ -176,24 +189,23 @@ struct AST {
         return;
       }
       case ExprType::Br: {
-        InsertNode(NodeType::Expr, ExprType::Br, &e, 0).lt =
+        InsertNode(NodeType::Expr, ExprType::Br, &e, 0).u.lt =
             mc.GetLabel(cast<BrExpr>(&e)->var)->label_type;
         return;
       }
       case ExprType::BrIf: {
-        InsertNode(NodeType::Expr, ExprType::BrIf, &e, 1).lt =
+        InsertNode(NodeType::Expr, ExprType::BrIf, &e, 1).u.lt =
             mc.GetLabel(cast<BrIfExpr>(&e)->var)->label_type;
         return;
       }
       default: {
-        InsertNode(NodeType::Expr, e.type(), &e, mc.GetExprArity(e).nargs);
+        InsertNode(NodeType::Expr, e.type(), &e, arity.nargs);
         return;
       }
     }
-    InsertNode(NodeType::Expr, e.type(), &e, arity.nargs);
   }
 
-  void Construct(const ExprList& es, Index nresults, bool return_results) {
+  void Construct(const ExprList& es, Index nresults, bool is_function_body) {
     auto start = exp_stack.size();
     auto value_stack_depth_start = value_stack_depth;
     auto value_stack_in_variables = value_stack_depth;
@@ -226,8 +238,8 @@ struct AST {
         auto GenFlushVars = [&](int nargs) {
           auto& ftv = InsertNode(NodeType::FlushToVars, ExprType::Nop, nullptr,
                                  nargs);
-          ftv.var_start = flushed_vars;
-          ftv.var_count = num_vals;
+          ftv.u.var_start = flushed_vars;
+          ftv.u.var_count = num_vals;
         };
         auto MoveStatementsBelowVars = [&](size_t amount) {
           std::rotate(exp_stack.end() - num_vars - amount,
@@ -239,8 +251,8 @@ struct AST {
           for (int i = 0; i < num_vals; i++) {
             auto& fv = InsertNode(NodeType::FlushedVar, ExprType::Nop, nullptr,
                                   0);
-            fv.var_start = flushed_vars++;
-            fv.var_count = 1;
+            fv.u.var_start = flushed_vars++;
+            fv.u.var_count = 1;
           }
         };
         if (arity.nreturns == 0 &&
@@ -301,19 +313,26 @@ struct AST {
     value_stack_depth = value_stack_depth_start;
     auto end = exp_stack.size();
     assert(end >= start);
-    if (return_results && !exp_stack.empty()) {
-      if (exp_stack.back().etype == ExprType::Return) {
-        if (exp_stack.back().children.empty()) {
-          // Return statement at the end of a void function.
-          exp_stack.pop_back();
+    if (is_function_body) {
+      if (!exp_stack.empty()) {
+        if (exp_stack.back().etype == ExprType::Return) {
+          if (exp_stack.back().children.empty()) {
+            // Return statement at the end of a void function.
+            exp_stack.pop_back();
+          }
+        } else if (nresults) {
+          // Combine nresults into a return statement, for when this is used as
+          // a function body.
+          // TODO: if this is some other kind of block and >1 value is being
+          // returned, probably need some kind of syntax to make that clearer.
+          InsertNode(NodeType::EndReturn, ExprType::Nop, nullptr, nresults);
         }
-      } else if (nresults) {
-        // Combine nresults into a return statement, for when this is used as
-        // a function body.
-        // TODO: if this is some other kind of block and >1 value is being
-        // returned, probably need some kind of syntax to make that clearer.
-        InsertNode(NodeType::EndReturn, ExprType::Nop, nullptr, nresults);
       }
+      std::move(predecls.begin(), predecls.end(),
+                std::back_inserter(exp_stack));
+      std::rotate(exp_stack.begin(), exp_stack.end() - predecls.size(),
+                  exp_stack.end());
+      predecls.clear();
     }
     end = exp_stack.size();
     assert(end >= start);
@@ -325,8 +344,8 @@ struct AST {
 
   ModuleContext& mc;
   std::vector<Node> exp_stack;
+  std::vector<Node> predecls;
   const Func *f;
-  size_t pre_decl_insertion_point = 0;
   int value_stack_depth = 0;
   std::set<std::string> vars_defined;
   Index flushed_vars = 0;
