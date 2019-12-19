@@ -27,6 +27,8 @@ class Stream;
 struct DecompileOptions {
 };
 
+void RenameAll(Module&);
+
 std::string Decompile(const Module&, const DecompileOptions&);
 
 }  // namespace wabt

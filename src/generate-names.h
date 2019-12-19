@@ -27,7 +27,6 @@ enum NameOpts {
   None = 0,
   AlphaNames = 1 << 0,
   NoDollar = 1 << 1,
-  OnlyAlphaNum = 1 << 2,
 };
 
 Result GenerateNames(struct Module*, NameOpts opts = NameOpts::None);

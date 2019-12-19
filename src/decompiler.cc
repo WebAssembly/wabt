@@ -18,6 +18,7 @@
 
 #include "src/decompiler-ast.h"
 #include "src/decompiler-ls.h"
+#include "src/decompiler-naming.h"
 
 #include "src/stream.h"
 
@@ -68,8 +69,10 @@ struct Decompiler {
     return std::string(amount, ' ');
   }
 
-  string_view OpcodeToToken(Opcode opcode) {
-    return opcode.GetDecomp();
+  std::string OpcodeToToken(Opcode opcode) {
+    std::string s = opcode.GetDecomp();
+    std::replace(s.begin(), s.end(), '.', '_');
+    return s;
   }
 
   void IndentValue(Value &val, size_t amount, string_view first_indent) {
