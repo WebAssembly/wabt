@@ -222,15 +222,15 @@ struct Decompiler {
     switch (n.ntype) {
       case NodeType::FlushToVars: {
         std::string decls = "let ";
-        for (Index i = 0; i < n.var_count; i++) {
+        for (Index i = 0; i < n.u.var_count; i++) {
           if (i) decls += ", ";
-          decls += TempVarName(n.var_start + i);
+          decls += TempVarName(n.u.var_start + i);
         }
         decls += " = ";
         return WrapNAry(args, decls, "");
       }
       case NodeType::FlushedVar: {
-        return Value { { TempVarName(n.var_start) }, false };
+        return Value { { TempVarName(n.u.var_start) }, false };
       }
       case NodeType::Statements: {
         Value stats { {}, false };
@@ -247,19 +247,23 @@ struct Decompiler {
       }
       case NodeType::Decl: {
         return Value{
-            {"var " + LocalDecl(n.var->name(), cur_func->GetLocalType(*n.var))},
+            {"var " + LocalDecl(n.u.var->name(),
+                                cur_func->GetLocalType(*n.u.var))},
             false};
       }
       case NodeType::DeclInit: {
         return WrapChild(
             args[0],
             cat("var ",
-                LocalDecl(n.var->name(), cur_func->GetLocalType(*n.var)),
+                LocalDecl(n.u.var->name(), cur_func->GetLocalType(*n.u.var)),
                 " = "),
             "");
       }
       case NodeType::Expr:
         // We're going to fall thru to the second switch to deal with ExprType.
+        break;
+      case NodeType::Uninitialized:
+        assert(false);
         break;
     }
     switch (n.etype) {
@@ -373,13 +377,13 @@ struct Decompiler {
       }
       case ExprType::Br: {
         auto be = cast<BrExpr>(n.e);
-        return Value{{(n.lt == LabelType::Loop ? "continue " : "break ") +
+        return Value{{(n.u.lt == LabelType::Loop ? "continue " : "break ") +
                       be->var.name()},
                      false};
       }
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
-        auto jmp = n.lt == LabelType::Loop ? "continue" : "break";
+        auto jmp = n.u.lt == LabelType::Loop ? "continue" : "break";
         return WrapChild(args[0], "if (", cat(") ", jmp, " ", bie->var.name()));
       }
       case ExprType::Return: {
