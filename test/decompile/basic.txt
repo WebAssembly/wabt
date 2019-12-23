@@ -57,8 +57,8 @@
   )
   ;; LLD outputs a name section with de-mangled C++ function signatures as names,
   ;; so have to make sure special chars get removed.
-  (func (export "signature-&<>()") (param) (result))
-  (func (export "signature-&[]()") (param) (result))
+  (func (export "void signature-&<>(int a)") (param) (result))
+  (func (export "void signature-&[](int a)") (param) (result))
   (func $not-exported (param) (result))
   (export "f" (func $f))
 )
@@ -94,10 +94,10 @@ export function f(a:int, b:int):int {
   return 1;
 }
 
-function signature______() {
+function signature() {
 }
 
-function signature_______1() {
+function signature_1() {
 }
 
 function f_e() {

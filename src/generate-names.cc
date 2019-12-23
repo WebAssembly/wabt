@@ -122,11 +122,7 @@ void NameGenerator::GenerateName(const char* prefix,
                                  std::string* str) {
   str->clear();
   if (!(opts_ & NameOpts::NoDollar)) *str = "$";
-  if (opts_ & NameOpts::OnlyAlphaNum) {
-    for (auto p = prefix; *p; p++) *str += isalnum(*p) ? *p : '_';
-  } else {
-    *str += prefix;
-  }
+  *str += prefix;
   if (index != kInvalidIndex) {
     if (opts_ & NameOpts::AlphaNames) {
       // For params and locals, do not use a prefix char.
