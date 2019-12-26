@@ -214,7 +214,7 @@ enum class Type : int32_t {
   V128 = -0x05,     // 0x7b
   Funcref = -0x10,  // 0x70
   Anyref = -0x11,   // 0x6f
-  Exnref = -0x18,   // 0x68
+  Exnref = -0x12,   // 0x6e
   Func = -0x20,     // 0x60
   Void = -0x40,     // 0x40
   ___ = Void,       // Convenient for the opcode table in opcode.h
