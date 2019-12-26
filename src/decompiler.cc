@@ -33,14 +33,39 @@ struct Decompiler {
   Decompiler(const Module& module, const DecompileOptions& options)
       : mc(module), options(options) {}
 
+  // Sorted such that "greater precedence" is also the bigger enum val.
+  enum Precedence {
+    // Low precedence.
+    None,      // precedence doesn't matter, since never nested.
+    Assign,    // =
+    OtherBin,  // min
+    Bit,       // & |
+    Equal,     // == != < > >= <=
+    Shift,     // << >>
+    Add,       // + -
+    Multiply,  // * / %
+    If,        // if{}
+    Indexing,  // []
+    Atomic,    // (), a, 1, a()
+    // High precedence.
+  };
+
+  // Anything besides these will get parentheses if used with equal precedence,
+  // for clarity.
+  bool Associative(Precedence p) {
+    return p == Precedence::Add || p == Precedence::Multiply;
+  }
+
   struct Value {
     std::vector<std::string> v;
     // Lazily add bracketing only if the parent requires it.
-    // TODO: replace with a system based on precedence?
-    bool needs_bracketing;
+    // This is the precedence level of this value, for example, if this
+    // precedence is Add, and the parent is Multiply, bracketing is needed,
+    // but not if it is the reverse.
+    Precedence precedence;
 
-    Value(std::vector<std::string>&& v, bool nb)
-      : v(v), needs_bracketing(nb) {}
+    Value(std::vector<std::string>&& v, Precedence p)
+      : v(v), precedence(p) {}
 
     size_t width() {
       size_t w = 0;
@@ -108,23 +133,26 @@ struct Decompiler {
     return std::move(child);
   }
 
-  void BracketIfNeeded(Value &val) {
-    if (!val.needs_bracketing) return;
+  void BracketIfNeeded(Value &val, Precedence parent_precedence) {
+    if (parent_precedence < val.precedence ||
+        (parent_precedence == val.precedence &&
+         Associative(parent_precedence))) return;
     val = WrapChild(val, "(", ")");
-    val.needs_bracketing = false;
+    val.precedence = Precedence::Atomic;
   }
 
-  Value WrapBinary(std::vector<Value>& args, string_view infix, bool indent_right) {
+  Value WrapBinary(std::vector<Value>& args, string_view infix,
+                   bool indent_right, Precedence precedence) {
     assert(args.size() == 2);
     auto& left = args[0];
     auto& right = args[1];
-    BracketIfNeeded(left);
-    BracketIfNeeded(right);
+    BracketIfNeeded(left, precedence);
+    BracketIfNeeded(right, precedence);
     auto width = infix.size() + left.width() + right.width();
     if (width < target_exp_width && left.v.size() == 1 && right.v.size() == 1) {
-      return Value{{left.v[0] + infix + right.v[0]}, true};
+      return Value{{left.v[0] + infix + right.v[0]}, precedence};
     } else {
-      Value bin { {}, true };
+      Value bin { {}, precedence };
       std::move(left.v.begin(), left.v.end(), std::back_inserter(bin.v));
       bin.v.back().append(infix.data(), infix.size());
       if (indent_right) IndentValue(right, indent_amount, {});
@@ -133,7 +161,8 @@ struct Decompiler {
     }
   }
 
-  Value WrapNAry(std::vector<Value>& args, string_view prefix, string_view postfix) {
+  Value WrapNAry(std::vector<Value>& args, string_view prefix,
+                 string_view postfix, Precedence precedence) {
     size_t total_width = 0;
     size_t max_width = 0;
     bool multiline = false;
@@ -154,10 +183,10 @@ struct Decompiler {
         s += child.v[0];
       }
       s += postfix;
-      return Value{{std::move(s)}, false};
+      return Value{{std::move(s)}, precedence};
     } else {
       // Multi-line.
-      Value ml { {}, false };
+      Value ml { {}, precedence };
       auto ident_with_name = max_width + prefix.size() < target_exp_width;
       size_t i = 0;
       for (auto& child : args) {
@@ -175,11 +204,11 @@ struct Decompiler {
   }
 
   template<ExprType T> Value Get(const VarExpr<T>& ve) {
-    return Value{{ve.var.name()}, false};
+    return Value{{ve.var.name()}, Precedence::Atomic};
   }
 
   template<ExprType T> Value Set(Value& child, const VarExpr<T>& ve) {
-    child.needs_bracketing = true;
+    child.precedence = Precedence::Assign;
     return WrapChild(child, ve.var.name() + " = ", "");
   }
 
@@ -204,7 +233,7 @@ struct Decompiler {
 
   void LoadStore(Value &val, const Node& addr_exp, uint32_t offset,
                   Opcode opc, Address align, Type op_type) {
-    BracketIfNeeded(val);
+    BracketIfNeeded(val, Precedence::Indexing);
     auto access = lst.GenAccess(offset, addr_exp);
     val.v.back() +=
         !access.empty()
@@ -230,13 +259,13 @@ struct Decompiler {
           decls += TempVarName(n.u.var_start + i);
         }
         decls += " = ";
-        return WrapNAry(args, decls, "");
+        return WrapNAry(args, decls, "", Precedence::Assign);
       }
       case NodeType::FlushedVar: {
-        return Value { { TempVarName(n.u.var_start) }, false };
+        return Value { { TempVarName(n.u.var_start) }, Precedence::Atomic };
       }
       case NodeType::Statements: {
-        Value stats { {}, false };
+        Value stats { {}, Precedence::None };
         for (size_t i = 0; i < n.children.size(); i++) {
           auto& s = args[i].v.back();
           if (s.back() != '}') s += ';';
@@ -246,13 +275,13 @@ struct Decompiler {
         return stats;
       }
       case NodeType::EndReturn: {
-        return WrapNAry(args, "return ", "");
+        return WrapNAry(args, "return ", "", Precedence::None);
       }
       case NodeType::Decl: {
         return Value{
             {"var " + LocalDecl(n.u.var->name(),
                                 cur_func->GetLocalType(*n.u.var))},
-            false};
+            Precedence::None};
       }
       case NodeType::DeclInit: {
         return WrapChild(
@@ -274,26 +303,26 @@ struct Decompiler {
         auto& c = cast<ConstExpr>(n.e)->const_;
         switch (c.type) {
           case Type::I32:
-            return Value{{std::to_string(static_cast<int32_t>(c.u32))}, false};
+            return Value{{std::to_string(static_cast<int32_t>(c.u32))},
+                         Precedence::Atomic};
           case Type::I64:
             return Value{{std::to_string(static_cast<int64_t>(c.u64)) + "L"},
-                         false};
+                         Precedence::Atomic};
           case Type::F32: {
             float f;
             memcpy(&f, &c.f32_bits, sizeof(float));
-            return Value{{to_string(f) + "f"}, false};
+            return Value{{to_string(f) + "f"}, Precedence::Atomic};
           }
           case Type::F64: {
             double d;
             memcpy(&d, &c.f64_bits, sizeof(double));
-            return Value{{to_string(d)}, false};
+            return Value{{to_string(d)}, Precedence::Atomic};
           }
           case Type::V128:
-            return Value{{"V128"}, false};  // FIXME
+            return Value{{"V128"}, Precedence::Atomic};  // FIXME
           default:
             WABT_UNREACHABLE;
         }
-        return Value{{}, false};
       }
       case ExprType::LocalGet: {
         return Get(*cast<LocalGetExpr>(n.e));
@@ -313,11 +342,25 @@ struct Decompiler {
       }
       case ExprType::Binary: {
         auto& be = *cast<BinaryExpr>(n.e);
-        return WrapBinary(args, cat(" ", OpcodeToToken(be.opcode), " "), false);
+        auto opcs = OpcodeToToken(be.opcode);
+        // TODO: Is this selection better done on Opcode values directly?
+        // What if new values get added and OtherBin doesn't make sense?
+        auto prec = Precedence::OtherBin;
+        if (opcs == "*" || opcs == "/" || opcs == "%") {
+          prec = Precedence::Multiply;
+        } else if (opcs == "+" || opcs == "-") {
+          prec = Precedence::Add;
+        } else if (opcs == "&" || opcs == "|" || opcs == "^") {
+          prec = Precedence::Bit;
+        } else if (opcs == "<<" || opcs == ">>") {
+          prec = Precedence::Shift;
+        }
+        return WrapBinary(args, cat(" ", opcs, " "), false, prec);
       }
       case ExprType::Compare: {
         auto& ce = *cast<CompareExpr>(n.e);
-        return WrapBinary(args, cat(" ", OpcodeToToken(ce.opcode), " "), false);
+         return WrapBinary(args, cat(" ", OpcodeToToken(ce.opcode), " "), false,
+                           Precedence::Equal);
       }
       case ExprType::Unary: {
         auto& ue = *cast<UnaryExpr>(n.e);
@@ -335,7 +378,7 @@ struct Decompiler {
         auto& se = *cast<StoreExpr>(n.e);
         LoadStore(args[0], n.children[0], se.offset, se.opcode, se.align,
                   se.opcode.GetParamType2());
-        return WrapBinary(args, " = ", true);
+        return WrapBinary(args, " = ", true, Precedence::Assign);
       }
       case ExprType::If: {
         auto ife = cast<IfExpr>(n.e);
@@ -364,12 +407,13 @@ struct Decompiler {
             std::move(elsep->v.begin(), elsep->v.end(), std::back_inserter(ifs.v));
           }
           ifs.v.push_back("}");
+          ifs.precedence = Precedence::If;
           return std::move(ifs);
         } else {
           auto s = cat("if (", ifs.v[0], ") { ", thenp.v[0], " }");
           if (elsep)
             s += cat(" else { ", elsep->v[0], " }");
-          return Value{{std::move(s)}, false};
+          return Value{{std::move(s)}, Precedence::If};
         }
       }
       case ExprType::Block: {
@@ -382,7 +426,7 @@ struct Decompiler {
         auto be = cast<BrExpr>(n.e);
         return Value{{(n.u.lt == LabelType::Loop ? "continue " : "break ") +
                       be->var.name()},
-                     false};
+                     Precedence::None};
       }
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
@@ -390,7 +434,7 @@ struct Decompiler {
         return WrapChild(args[0], "if (", cat(") ", jmp, " ", bie->var.name()));
       }
       case ExprType::Return: {
-        return WrapNAry(args, "return ", "");
+        return WrapNAry(args, "return ", "", Precedence::None);
       }
       case ExprType::Drop: {
         // Silent dropping of return values is very common, so currently
@@ -410,7 +454,7 @@ struct Decompiler {
             name = GetExprTypeName(n.etype);
             break;
         }
-        return WrapNAry(args, name + "(", ")");
+        return WrapNAry(args, name + "(", ")", Precedence::Atomic);
       }
     }
   }

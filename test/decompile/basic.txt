@@ -82,7 +82,7 @@ export function f(a:int, b:int):int {
   var c:long = 8L;
   var d:float = 6.0f;
   var e:double = 7.0;
-  if (e < 10.0) { 1[4]:int = (2[3]:int + 5) }
+  if (e < 10.0) { 1[4]:int = 2[3]:int + 5 }
   f(a + g_b, 9);
   loop L_b {
     block B_c {
