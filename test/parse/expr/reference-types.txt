@@ -5,6 +5,7 @@
   (table $foo 1 anyref)
   (table $bar 1 anyref)
   (table $baz 1 anyfunc)
+  (table $qux 1 nullref)
 
   (func (result anyref)
     i32.const 0
@@ -13,6 +14,10 @@
   (func (result anyref)
     i32.const 0
     table.get $bar
+  )
+  (func (result nullref)
+    i32.const 0
+    table.get $qux
   )
 
   (func (param anyref)
@@ -24,6 +29,11 @@
     i32.const 0
     get_local 0
     table.set $bar
+  )
+  (func (param nullref)
+    i32.const 0
+    get_local 0
+    table.set $qux
   )
 
   (func (result i32)
@@ -44,6 +54,9 @@
 
   (func (result anyref)
     ref.func 0
+  )
+  (func (result nullref)
+    ref.null
   )
 
   (func (result i32)

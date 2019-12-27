@@ -1146,8 +1146,8 @@ void Validator::CheckTable(const Location* loc, const Table* table) {
       !options_.features.reference_types_enabled()) {
     PrintError(loc, "tables must have anyref type");
   }
-  if (table->elem_type != Type::Anyref && table->elem_type != Type::Funcref) {
-    PrintError(loc, "tables must have anyref or funcref type");
+  if (!IsRefType(table->elem_type)) {
+    PrintError(loc, "tables must have reference types");
   }
 }
 

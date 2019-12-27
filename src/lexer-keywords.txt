@@ -442,6 +442,7 @@ memory, TokenType::Memory
 module, TokenType::Module
 mut, TokenType::Mut
 nop, TokenType::Nop, Opcode::Nop
+nullref, Type::Nullref
 offset, TokenType::Offset
 param, TokenType::Param
 quote, TokenType::Quote

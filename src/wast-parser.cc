@@ -703,7 +703,7 @@ Result WastParser::ParseValueTypeList(TypeVector* out_type_list) {
 Result WastParser::ParseRefType(Type* out_type) {
   WABT_TRACE(ParseRefType);
   if (!PeekMatch(TokenType::ValueType)) {
-    return ErrorExpected({"anyref", "funcref"});
+    return ErrorExpected({"funcref", "anyref", "nullref", "exnref"});
   }
 
   Token token = Consume();

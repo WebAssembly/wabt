@@ -8,7 +8,7 @@
   (elem $t_any anyref (ref.func 1) (ref.null))
   (global $g (mut anyref) (ref.null))
 
-  (func $ref_null (export "ref_null") (result anyref)
+  (func $ref_null (export "ref_null") (result nullref)
     ref.null
   )
 

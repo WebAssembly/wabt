@@ -394,14 +394,14 @@ bool BinaryReader::IsConcreteType(Type type) {
     case Type::V128:
       return options_.features.simd_enabled();
 
-    case Type::Exnref:
-      return options_.features.exceptions_enabled();
-
-    case Type::Anyref:
-      return options_.features.reference_types_enabled();
-
     case Type::Funcref:
+    case Type::Anyref:
+    case Type::Nullref:
       return options_.features.reference_types_enabled();
+
+    case Type::Exnref:
+      return options_.features.reference_types_enabled() &&
+             options_.features.exceptions_enabled();
 
     default:
       return false;
@@ -525,9 +525,8 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
 
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadType(out_elem_type, "table elem type"));
-  ERROR_UNLESS(
-      *out_elem_type == Type::Funcref || *out_elem_type == Type::Anyref,
-      "table elem type must by funcref or anyref");
+  ERROR_UNLESS(IsRefType(*out_elem_type),
+               "table elem type must be reference types");
 
   uint32_t flags;
   uint32_t initial;
@@ -2190,10 +2189,9 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     if (!legacy) {
       if (flags & SegUseElemExprs) {
         CHECK_RESULT(ReadType(&elem_type, "table elem type"));
-        ERROR_UNLESS(
-            elem_type == Type::Funcref || elem_type == Type::Anyref,
-            "segment elem expr type must be funcref or anyref (got %s)",
-            GetTypeName(elem_type));
+        ERROR_UNLESS(IsRefType(elem_type),
+                     "segment elem expr type must be reference types (got %s)",
+                     GetTypeName(elem_type));
       } else {
         ExternalKind kind;
         CHECK_RESULT(ReadExternalKind(&kind, "export kind"));
