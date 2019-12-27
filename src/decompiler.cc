@@ -298,6 +298,7 @@ struct Decompiler {
         assert(false);
         break;
     }
+    // Existing ExprTypes.
     switch (n.etype) {
       case ExprType::Const: {
         auto& c = cast<ConstExpr>(n.e)->const_;
@@ -436,25 +437,87 @@ struct Decompiler {
       case ExprType::Return: {
         return WrapNAry(args, "return ", "", Precedence::None);
       }
+      case ExprType::Rethrow: {
+        return WrapNAry(args, "rethrow ", "", Precedence::None);
+      }
       case ExprType::Drop: {
         // Silent dropping of return values is very common, so currently
         // don't output this.
         return std::move(args[0]);
       }
+      case ExprType::Nop: {
+        return Value{{"nop"}, Precedence::None};
+      }
+      case ExprType::Unreachable: {
+        return Value{{"unreachable"}, Precedence::None};
+      }
+      case ExprType::RefNull: {
+        return Value{{"null"}, Precedence::Atomic};
+      }
+      case ExprType::BrTable: {
+        auto bte = cast<BrTableExpr>(n.e);
+        std::string ts = "br_table[";
+        for (auto &v : bte->targets) {
+          ts += v.name();
+          ts += ", ";
+        }
+        ts += "..";
+        ts += bte->default_target.name();
+        ts += "](";
+        return WrapChild(args[0], ts, ")");
+      }
       default: {
+        // Everything that looks like a function call.
         std::string name;
+        auto precedence = Precedence::Atomic;
         switch (n.etype) {
           case ExprType::Call:
             name = cast<CallExpr>(n.e)->var.name();
             break;
+          case ExprType::ReturnCall:
+            name = "return_call " + cast<ReturnCallExpr>(n.e)->var.name();
+            precedence = Precedence::None;
+            break;
           case ExprType::Convert:
             name = std::string(OpcodeToToken(cast<ConvertExpr>(n.e)->opcode));
+            break;
+          case ExprType::Ternary:
+            name = std::string(OpcodeToToken(cast<TernaryExpr>(n.e)->opcode));
+            break;
+          case ExprType::Select:
+            // This one looks like it could be translated to "?:" style ternary,
+            // but the arguments are NOT lazy, and side effects definitely do
+            // occur in the branches. So it has no clear equivalent in C-syntax.
+            // To emphasize that all args are being evaluated in order, we
+            // leave it as a function call.
+            name = "select_if";
+            break;
+          case ExprType::MemoryGrow:
+            name = "memory_grow";
+            break;
+          case ExprType::MemorySize:
+            name = "memory_size";
+            break;
+          case ExprType::MemoryCopy:
+            name = "memory_copy";
+            break;
+          case ExprType::MemoryFill:
+            name = "memory_fill";
+            break;
+          case ExprType::RefIsNull:
+            name = "is_null";
+            break;
+          case ExprType::CallIndirect:
+            name = "call_indirect";
+            break;
+          case ExprType::ReturnCallIndirect:
+            name = "return_call call_indirect";
             break;
           default:
             name = GetExprTypeName(n.etype);
             break;
         }
-        return WrapNAry(args, name + "(", ")", Precedence::Atomic);
+        return WrapNAry(args, name + "(", ")", precedence);
       }
     }
   }
