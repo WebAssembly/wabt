@@ -69,8 +69,8 @@ export function f(a:{ a:float, b:float }, b:{ a:ushort, b:long }) {
   var f:int;
   var g:int;
   var h:int;
-  (a.a + c.a) + (a.b + c.b);
-  (b.a + d.a) + (b.b + d.b);
+  a.a + c.a + a.b + c.b;
+  b.a + d.a + b.b + d.b;
   e[0]:int;
   e[0]:float;
   f[0]:int;
