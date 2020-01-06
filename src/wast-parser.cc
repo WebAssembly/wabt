@@ -975,10 +975,14 @@ Result WastParser::ParseElemModuleField(Module* module) {
     }
   } else {
     if (has_name) {
-      field->elem_segment.table_var = Var(initial_name, loc);
-      field->elem_segment.flags |= SegExplicitIndex;
+      auto index = module->table_bindings.FindIndex(initial_name);
+      if(index != 0)
+        Error(loc, "Referencing a table different from the first table requires the bulk_memory_enabled feature");
+      field->elem_segment.table_var = Var(0, loc);
     } else {
       ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
+      if(field->elem_segment.table_var.is_index() && field->elem_segment.table_var.index() != 0)
+          Error(loc, "Referencing a table different from the first table requires the bulk_memory_enabled feature");
     }
   }
 
