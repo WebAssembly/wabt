@@ -212,13 +212,6 @@ struct Decompiler {
     return WrapChild(child, ve.var.name() + " = ", "");
   }
 
-  Value Block(Value &val, const Block& block, LabelType label, const char *name) {
-    IndentValue(val, indent_amount, {});
-    val.v.insert(val.v.begin(), cat(name, " ", block.label, " {"));
-    val.v.push_back("}");
-    return std::move(val);
-  }
-
   std::string TempVarName(Index n) {
     // FIXME: this needs much better variable naming. Problem is, the code
     // in generate-names.cc has allready run, its dictionaries deleted, so it
@@ -245,10 +238,10 @@ struct Decompiler {
                       : "");
   }
 
-  Value DecompileExpr(const Node &n) {
+  Value DecompileExpr(const Node& n, const Node* parent) {
     std::vector<Value> args;
-    for (auto &c : n.children) {
-      args.push_back(DecompileExpr(c));
+    for (auto& c : n.children) {
+      args.push_back(DecompileExpr(c, &n));
     }
     // First deal with the specialized node types.
     switch (n.ntype) {
@@ -268,7 +261,7 @@ struct Decompiler {
         Value stats { {}, Precedence::None };
         for (size_t i = 0; i < n.children.size(); i++) {
           auto& s = args[i].v.back();
-          if (s.back() != '}') s += ';';
+          if (s.back() != '}' && s.back() != ':') s += ';';
           std::move(args[i].v.begin(), args[i].v.end(),
                     std::back_inserter(stats.v));
         }
@@ -398,7 +391,7 @@ struct Decompiler {
         multiline = multiline || width > target_exp_width;
         if (multiline) {
           auto if_start = string_view("if (");
-          ifs.v[0].insert(0, if_start.data(), if_start.size());
+          IndentValue(ifs, if_start.size(), if_start);
           ifs.v.back() += ") {";
           IndentValue(thenp, indent_amount, {});
           std::move(thenp.v.begin(), thenp.v.end(), std::back_inserter(ifs.v));
@@ -418,20 +411,39 @@ struct Decompiler {
         }
       }
       case ExprType::Block: {
-        return Block(args[0], cast<BlockExpr>(n.e)->block, LabelType::Block, "block");
+        auto& val = args[0];
+        val.v.push_back(
+              cat("label ", cast<BlockExpr>(n.e)->block.label, ":"));
+        // If this block is part of a larger statement scope, it doesn't
+        // need its own indenting, but if its part of an exp we wrap it in {}.
+        if (parent && parent->ntype != NodeType::Statements
+                   && parent->etype != ExprType::Block
+                   && parent->etype != ExprType::Loop
+                   && (parent->etype != ExprType::If ||
+                       &parent->children[0] == &n)) {
+          IndentValue(val, indent_amount, {});
+          val.v.insert(val.v.begin(), "{");
+          val.v.push_back("}");
+        }
+        return std::move(val);
       }
       case ExprType::Loop: {
-        return Block(args[0], cast<LoopExpr>(n.e)->block, LabelType::Loop, "loop");
+        auto& val = args[0];
+        auto& block = cast<LoopExpr>(n.e)->block;
+        IndentValue(val, indent_amount, {});
+        val.v.insert(val.v.begin(), cat("loop ", block.label, " {"));
+        val.v.push_back("}");
+        return std::move(val);
       }
       case ExprType::Br: {
         auto be = cast<BrExpr>(n.e);
-        return Value{{(n.u.lt == LabelType::Loop ? "continue " : "break ") +
+        return Value{{(n.u.lt == LabelType::Loop ? "continue " : "goto ") +
                       be->var.name()},
                      Precedence::None};
       }
       case ExprType::BrIf: {
         auto bie = cast<BrIfExpr>(n.e);
-        auto jmp = n.u.lt == LabelType::Loop ? "continue" : "break";
+        auto jmp = n.u.lt == LabelType::Loop ? "continue" : "goto";
         return WrapChild(args[0], "if (", cat(") ", jmp, " ", bie->var.name()));
       }
       case ExprType::Return: {
@@ -544,7 +556,7 @@ struct Decompiler {
     assert(!el.empty());
     AST ast(mc, nullptr);
     ast.Construct(el, 1, false);
-    auto val = DecompileExpr(ast.exp_stack[0]);
+    auto val = DecompileExpr(ast.exp_stack[0], nullptr);
     assert(ast.exp_stack.size() == 1 && val.v.size() == 1);
     return std::move(val.v[0]);
   }
@@ -661,7 +673,7 @@ struct Decompiler {
         s += ";";
       } else {
         s += " {\n";
-        auto val = DecompileExpr(ast.exp_stack[0]);
+        auto val = DecompileExpr(ast.exp_stack[0], nullptr);
         IndentValue(val, indent_amount, {});
         for (auto& stat : val.v) {
           s += stat;
