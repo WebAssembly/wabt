@@ -162,8 +162,9 @@ def Indent(s, spaces):
 
 
 def DiffLines(expected, actual):
-    expected_lines = [line for line in expected.splitlines() if line]
-    actual_lines = [line for line in actual.splitlines() if line]
+    decode = lambda s: s.decode('utf-8', 'replace')
+    expected_lines = [decode(line) for line in expected.splitlines() if line]
+    actual_lines = [decode(line) for line in actual.splitlines() if line]
     return list(
         difflib.unified_diff(expected_lines, actual_lines, fromfile='expected',
                              tofile='actual', lineterm=''))
@@ -268,7 +269,7 @@ class Command(object):
             process = subprocess.Popen(self.args, cwd=cwd, env=env,
                                        stdout=None if console_out else subprocess.PIPE,
                                        stderr=None if console_out else subprocess.PIPE,
-                                       universal_newlines=True, **kwargs)
+                                       **kwargs)
             timer = threading.Timer(timeout, KillProcess)
             try:
                 timer.start()
@@ -315,8 +316,8 @@ class TestResult(object):
 
     def __init__(self):
         self.results = []
-        self.stdout = ''
-        self.stderr = ''
+        self.stdout = b''
+        self.stderr = b''
         self.duration = 0
 
     def GetLastCommand(self):
@@ -479,7 +480,7 @@ class TestInfo(object):
         self.filename = filename
 
         test_path = os.path.join(REPO_ROOT_DIR, filename)
-        with open(test_path) as f:
+        with open(test_path, 'rb') as f:
             state = 'header'
             empty = True
             header_lines = []
@@ -488,9 +489,9 @@ class TestInfo(object):
             stderr_lines = []
             for line in f.readlines():
                 empty = False
-                m = re.match(r'\s*\(;; (STDOUT|STDERR) ;;;$', line)
+                m = re.match(b'\s*\(;; (STDOUT|STDERR) ;;;$', line)
                 if m:
-                    directive = m.group(1)
+                    directive = m.group(1).decode('utf-8')
                     if directive == 'STDERR':
                         state = 'stderr'
                         continue
@@ -498,9 +499,9 @@ class TestInfo(object):
                         state = 'stdout'
                         continue
                 else:
-                    m = re.match(r'\s*;;;(.*)$', line)
+                    m = re.match(b'\s*;;;(.*)$', line)
                     if m:
-                        directive = m.group(1).strip()
+                        directive = m.group(1).decode('utf-8').strip()
                         if state == 'header':
                             key, value = directive.split(':', 1)
                             key = key.strip()
@@ -517,7 +518,7 @@ class TestInfo(object):
                         state = 'input'
 
                 if state == 'header':
-                    header_lines.append(line)
+                    header_lines.append(line.decode('utf-8'))
                 if state == 'input':
                     if self.input_filename:
                         raise Error('Can\'t have STDIN_FILE and input')
@@ -530,9 +531,9 @@ class TestInfo(object):
             raise Error('empty test file')
 
         self.header = ''.join(header_lines)
-        self.input_ = ''.join(input_lines)
-        self.expected_stdout = ''.join(stdout_lines)
-        self.expected_stderr = ''.join(stderr_lines)
+        self.input_ = b''.join(input_lines)
+        self.expected_stdout = b''.join(stdout_lines)
+        self.expected_stderr = b''.join(stderr_lines)
 
         if not self.cmds:
             raise Error('test has no commands')
@@ -555,23 +556,23 @@ class TestInfo(object):
             else:
                 # add an empty line for each header line so the line numbers match
                 gen_input_file.write(('\n' * self.header.count('\n')).encode('ascii'))
-                gen_input_file.write(self.input_.encode('ascii'))
+                gen_input_file.write(self.input_)
             gen_input_file.flush()
             return gen_input_file.name
 
     def Rebase(self, stdout, stderr):
         test_path = os.path.join(REPO_ROOT_DIR, self.filename)
         with open(test_path, 'wb') as f:
-            f.write(self.header)
+            f.write(self.header.encode('ascii'))
             f.write(self.input_)
             if stderr:
-                f.write('(;; STDERR ;;;\n')
+                f.write(b'(;; STDERR ;;;\n')
                 f.write(stderr)
-                f.write(';;; STDERR ;;)\n')
+                f.write(b';;; STDERR ;;)\n')
             if stdout:
-                f.write('(;; STDOUT ;;;\n')
+                f.write(b'(;; STDOUT ;;;\n')
                 f.write(stdout)
-                f.write(';;; STDOUT ;;)\n')
+                f.write(b';;; STDOUT ;;)\n')
 
     def Diff(self, stdout, stderr):
         msg = ''
