@@ -491,7 +491,7 @@ class TestInfo(object):
             stderr_lines = []
             for line in f.readlines():
                 empty = False
-                m = re.match(b'\\s*\\(;; (STDOUT|STDERR) ;;;$', line)
+                m = re.match(b'\\s*\\(;; (STDOUT|STDERR) ;;;$', line.strip())
                 if m:
                     directive = m.group(1).decode('utf-8')
                     if directive == 'STDERR':
