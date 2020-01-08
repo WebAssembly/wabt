@@ -317,7 +317,10 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
       name = module_->globals[index]->name;
       break;
     default:
-      WABT_UNREACHABLE;
+      // TODO: Add support for TypeIndexLEB.
+      fprintf(stderr, "warning: unsupported relocation type: %s\n",
+              GetRelocTypeName(reloc_type));
+      return kInvalidIndex;
   }
   auto iter = symtab_.find(name);
   if (iter != symtab_.end()) {
