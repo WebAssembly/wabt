@@ -33,6 +33,8 @@
 
 namespace wabt {
 
+struct Module;
+
 enum class VarType {
   Index,
   Name,
@@ -600,11 +602,11 @@ typedef std::vector<ElemExpr> ElemExprVector;
 
 struct ElemSegment {
   explicit ElemSegment(string_view name) : name(name.to_string()) {}
-  bool is_passive() const { return flags & SegPassive; }
+  uint8_t GetFlags(const Module*) const;
 
+  SegmentKind kind = SegmentKind::Active;
   std::string name;
   Var table_var;
-  uint8_t flags = 0;
   Type elem_type;
   ExprList offset;
   ElemExprVector elem_exprs;
@@ -619,11 +621,11 @@ struct Memory {
 
 struct DataSegment {
   explicit DataSegment(string_view name) : name(name.to_string()) {}
-  bool is_passive() const { return flags & SegPassive; }
+  uint8_t GetFlags(const Module*) const;
 
+  SegmentKind kind = SegmentKind::Active;
   std::string name;
   Var memory_var;
-  uint8_t flags = 0;
   ExprList offset;
   std::vector<uint8_t> data;
 };

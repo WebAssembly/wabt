@@ -229,11 +229,18 @@ enum class Type : int32_t {
 };
 typedef std::vector<Type> TypeVector;
 
+enum class SegmentKind {
+  Active,
+  Passive,
+  Declared,
+};
+
 // Matches binary format, do not change.
 enum SegmentFlags : uint8_t {
   SegFlagsNone = 0,
   SegPassive = 1,        // bit 0: Is passive
-  SegExplicitIndex = 2,  // bit 1: Has explict index (Inplies table 0 if absent)
+  SegExplicitIndex = 2,  // bit 1: Has explict index (Implies table 0 if absent)
+  SegDeclared = 3,       // Only used for declared segments
   SegUseElemExprs = 4,   // bit 2: Is elemexpr (Or else index sequence)
 
   SegFlagMax = SegUseElemExprs,

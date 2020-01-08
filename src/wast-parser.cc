@@ -934,7 +934,7 @@ Result WastParser::ParseDataModuleField(Module* module) {
     CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
   } else if (!ParseOffsetExprOpt(&field->data_segment.offset)) {
     if (options_->features.bulk_memory_enabled()) {
-      field->data_segment.flags |= SegPassive;
+      field->data_segment.kind = SegmentKind::Passive;
     } else {
       Error(loc, "passive data segments are not allowed");
       return Result::Error;
@@ -956,7 +956,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   // With MVP text format the name here was intended to refer to the table
   // that the elem segment was part of, but we never did anything with this name
   // since there was only one table anyway.
-  // With bulk-memory enabled this introduces a new name for the particualr
+  // With bulk-memory enabled this introduces a new name for the particular
   // elem segment.
   std::string initial_name;
   bool has_name = ParseBindVarOpt(&initial_name);
@@ -970,7 +970,6 @@ Result WastParser::ParseElemModuleField(Module* module) {
   // Optional table specifier
   if (options_->features.bulk_memory_enabled()) {
     if (PeekMatchLpar(TokenType::Table)) {
-      field->elem_segment.flags |= SegExplicitIndex;
       EXPECT(Lpar);
       EXPECT(Table);
       CHECK_RESULT(ParseVar(&field->elem_segment.table_var));
@@ -981,23 +980,25 @@ Result WastParser::ParseElemModuleField(Module* module) {
   } else {
     if (has_name) {
       field->elem_segment.table_var = Var(initial_name, loc);
-      field->elem_segment.flags |= SegExplicitIndex;
     } else {
       ParseVarOpt(&field->elem_segment.table_var, Var(0, loc));
     }
   }
 
   if (!ParseOffsetExprOpt(&field->elem_segment.offset)) {
-    field->elem_segment.flags |= SegPassive;
+    field->elem_segment.kind = SegmentKind::Passive;
   }
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
-    // TODO: Don't allow unless bulk memory is enabled.
-    field->elem_segment.flags |= (SegPassive | SegUseElemExprs);
     // Parse a potentially empty sequence of ElemExprs.
     while (true) {
       Var var;
+      Location loc = GetLocation();
       if (MatchLpar(TokenType::RefNull)) {
+        if (!(options_->features.bulk_memory_enabled() ||
+              options_->features.reference_types_enabled())) {
+          Error(loc, "ref.null not allowed");
+        }
         field->elem_segment.elem_exprs.emplace_back();
         EXPECT(Rpar);
       } else if (MatchLpar(TokenType::RefFunc)) {
@@ -1319,8 +1320,6 @@ Result WastParser::ParseTableModuleField(Module* module) {
     auto elem_segment_field = MakeUnique<ElemSegmentModuleField>(loc);
     ElemSegment& elem_segment = elem_segment_field->elem_segment;
     elem_segment.table_var = Var(module->tables.size());
-    if (module->tables.size() > 0)
-      elem_segment.flags |= SegExplicitIndex;
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     elem_segment.elem_type = elem_type;

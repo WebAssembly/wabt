@@ -1055,30 +1055,29 @@ Result BinaryWriter::WriteModule() {
       ElemSegment* segment = module_->elem_segments[i];
       WriteHeader("elem segment header", i);
       // 1. flags
-      stream_->WriteU8(segment->flags, "segment flags");
+      uint8_t flags = segment->GetFlags(module_);
+      stream_->WriteU8(flags, "segment flags");
       // 2. optional target table
-      if (segment->flags & SegExplicitIndex) {
-        WriteU32Leb128(stream_, module_->GetTableIndex(segment->table_var), "table index");
+      if (flags & SegExplicitIndex) {
+        WriteU32Leb128(stream_, module_->GetTableIndex(segment->table_var),
+                       "table index");
       }
       // 3. optional target location within the table (active segments only)
-      if (!segment->is_passive()) {
+      if (!(flags & SegPassive)) {
         WriteInitExpr(segment->offset);
       }
-      // 4. type of item in the following list
-      bool legacy =
-          !segment->is_passive() && !(segment->flags & SegExplicitIndex);
-      if (!legacy) {
-        if (segment->flags & SegUseElemExprs) {
+      // 4. type of item in the following list (omitted for "legacy" segments)
+      if (flags & (SegPassive | SegExplicitIndex)) {
+        if (flags & SegUseElemExprs) {
           WriteType(stream_, segment->elem_type, "elem expr list type");
         } else {
-          assert(segment->elem_type == Type::Funcref);
           stream_->WriteU8Enum(ExternalKind::Func, "elem list type");
         }
       }
       // 5. actual list of elements (with extern indexes or elem expr's)
       // preceeded by length
       WriteU32Leb128(stream_, segment->elem_exprs.size(), "num elems");
-      if (segment->flags & SegUseElemExprs) {
+      if (flags & SegUseElemExprs) {
         for (const ElemExpr& elem_expr : segment->elem_exprs) {
           switch (elem_expr.kind) {
             case ElemExprKind::RefNull:
@@ -1137,8 +1136,9 @@ Result BinaryWriter::WriteModule() {
     for (size_t i = 0; i < module_->data_segments.size(); ++i) {
       const DataSegment* segment = module_->data_segments[i];
       WriteHeader("data segment header", i);
-      stream_->WriteU8(segment->flags, "segment flags");
-      if (!segment->is_passive()) {
+      uint8_t flags = segment->GetFlags(module_);
+      stream_->WriteU8(flags, "segment flags");
+      if (!(flags & SegPassive)) {
         assert(module_->GetMemoryIndex(segment->memory_var) == 0);
         WriteInitExpr(segment->offset);
       }

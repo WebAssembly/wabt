@@ -1,0 +1,35 @@
+;;; TOOL: run-objdump
+;;; ARGS0: -v
+;;; NOTE: referring to table 0 by name should still be MVP compatible
+(module
+  (table $t 1 funcref)
+  (elem $t (i32.const 0)))
+(;; STDOUT ;;;
+0000000: 0061 736d                                 ; WASM_BINARY_MAGIC
+0000004: 0100 0000                                 ; WASM_BINARY_VERSION
+; section "Table" (4)
+0000008: 04                                        ; section code
+0000009: 00                                        ; section size (guess)
+000000a: 01                                        ; num tables
+; table 0
+000000b: 70                                        ; funcref
+000000c: 00                                        ; limits: flags
+000000d: 01                                        ; limits: initial
+0000009: 04                                        ; FIXUP section size
+; section "Elem" (9)
+000000e: 09                                        ; section code
+000000f: 00                                        ; section size (guess)
+0000010: 01                                        ; num elem segments
+; elem segment header 0
+0000011: 00                                        ; segment flags
+0000012: 41                                        ; i32.const
+0000013: 00                                        ; i32 literal
+0000014: 0b                                        ; end
+0000015: 00                                        ; num elems
+000000f: 06                                        ; FIXUP section size
+
+regress-36.wasm:	file format wasm 0x1
+
+Code Disassembly:
+
+;;; STDOUT ;;)

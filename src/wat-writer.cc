@@ -1258,11 +1258,13 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   WriteOpenSpace("elem");
   WriteNameOrIndex(segment.name, elem_segment_index_, NextChar::Space);
 
-  if (!segment.is_passive()) {
+  uint8_t flags = segment.GetFlags(&module);
+
+  if (!(flags & SegPassive)) {
     WriteInitExpr(segment.offset);
   }
 
-  if (segment.flags & SegUseElemExprs) {
+  if (flags & SegUseElemExprs) {
     WriteType(segment.elem_type, NextChar::Space);
   } else {
     assert(segment.elem_type == Type::Funcref);
@@ -1270,7 +1272,7 @@ void WatWriter::WriteElemSegment(const ElemSegment& segment) {
   }
 
   for (const ElemExpr& expr : segment.elem_exprs) {
-    if (segment.flags & SegUseElemExprs) {
+    if (flags & SegUseElemExprs) {
       if (expr.kind == ElemExprKind::RefNull) {
         WriteOpenSpace("ref.null");
         WriteCloseSpace();
@@ -1301,7 +1303,7 @@ void WatWriter::WriteMemory(const Memory& memory) {
 void WatWriter::WriteDataSegment(const DataSegment& segment) {
   WriteOpenSpace("data");
   WriteNameOrIndex(segment.name, data_segment_index_, NextChar::Space);
-  if (!segment.is_passive()) {
+  if (segment.kind != SegmentKind::Passive) {
     WriteInitExpr(segment.offset);
   }
   WriteQuotedData(segment.data.data(), segment.data.size());

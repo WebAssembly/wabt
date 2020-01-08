@@ -2171,7 +2171,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid elem segment flags: %#x",
              flags);
     Index table_index(0);
-    if (flags & SegExplicitIndex) {
+    if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     }
     Type elem_type = Type::Funcref;
@@ -2185,8 +2185,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     }
 
     // For backwards compat we support not declaring the element kind.
-    bool legacy = !(flags & SegPassive) && !(flags & SegExplicitIndex);
-    if (!legacy) {
+    if (flags & (SegPassive | SegExplicitIndex)) {
       if (flags & SegUseElemExprs) {
         CHECK_RESULT(ReadType(&elem_type, "table elem type"));
         ERROR_UNLESS(IsRefType(elem_type),

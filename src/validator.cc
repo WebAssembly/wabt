@@ -1152,16 +1152,21 @@ void Validator::CheckTable(const Location* loc, const Table* table) {
 }
 
 void Validator::CheckElemSegments(const Module* module) {
+  bool bulk_or_ref_enabled = options_.features.bulk_memory_enabled() ||
+                             options_.features.reference_types_enabled();
+
   for (const ModuleField& field : module->fields) {
     if (auto elem_segment_field = dyn_cast<ElemSegmentModuleField>(&field)) {
       auto&& elem_segment = elem_segment_field->elem_segment;
       for (const ElemExpr& elem_expr : elem_segment.elem_exprs) {
         if (elem_expr.kind == ElemExprKind::RefFunc) {
           CheckFuncVar(&elem_expr.var, nullptr);
+        } else if (!bulk_or_ref_enabled) {
+          PrintError(&field.loc, "ref.null is not allowed");
         }
       }
 
-      if (elem_segment.is_passive()) {
+      if (elem_segment.kind == SegmentKind::Passive) {
         continue;
       }
       if (Failed(CheckTableVar(&elem_segment.table_var, nullptr))) {
@@ -1193,7 +1198,7 @@ void Validator::CheckDataSegments(const Module* module) {
     if (auto data_segment_field = dyn_cast<DataSegmentModuleField>(&field)) {
       auto&& data_segment = data_segment_field->data_segment;
       const Memory* memory;
-      if (data_segment.is_passive()) {
+      if (data_segment.kind == SegmentKind::Passive) {
         continue;
       }
       if (Failed(CheckMemoryVar(&data_segment.memory_var, &memory))) {
