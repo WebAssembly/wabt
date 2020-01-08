@@ -526,7 +526,7 @@ Result BinaryReader::ReadInitExpr(Index index, bool require_i32) {
 Result BinaryReader::ReadTable(Type* out_elem_type, Limits* out_elem_limits) {
   CHECK_RESULT(ReadType(out_elem_type, "table elem type"));
   ERROR_UNLESS(IsRefType(*out_elem_type),
-               "table elem type must be reference types");
+               "table elem type must be a reference type");
 
   uint32_t flags;
   uint32_t initial;
@@ -2190,7 +2190,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
       if (flags & SegUseElemExprs) {
         CHECK_RESULT(ReadType(&elem_type, "table elem type"));
         ERROR_UNLESS(IsRefType(elem_type),
-                     "segment elem expr type must be reference types (got %s)",
+                     "segment elem expr type must be a reference type (got %s)",
                      GetTypeName(elem_type));
       } else {
         ExternalKind kind;
