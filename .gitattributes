@@ -7,14 +7,16 @@
 *.py text
 *.rst text
 *.sh text
+*.txt text
 *.y text
 demo/primer.css binary
 demo/libwabt.js binary
 demo/third_party/codemirror/codemirror.css binary
 demo/third_party/codemirror/codemirror.js binary
 
-# Mark test files as binary so the line endings don't change.
-test/**/*.txt binary
+# Mark these tests as binary so git doesn't change the line endings:
+test/parse/bad-crlf.txt binary
+test/parse/bad-string-eof.txt binary
 
 # Highlight tests like .wast files when displayed on GitHub.
 test/**/*.txt linguist-language=WebAssembly

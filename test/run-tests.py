@@ -482,6 +482,7 @@ class TestInfo(object):
         self.filename = filename
 
         test_path = os.path.join(REPO_ROOT_DIR, filename)
+        # Read/write as binary because spec tests may have invalid UTF-8 codes.
         with open(test_path, 'rb') as f:
             state = 'header'
             empty = True
@@ -503,7 +504,17 @@ class TestInfo(object):
                 else:
                     m = re.match(b'\\s*;;;(.*)$', line)
                     if m:
-                        directive = m.group(1).decode('utf-8').strip()
+                        # The matched string has type bytes, but in python2
+                        # that is the same as str. In python3 that needs to be
+                        # decoded first. If we decode the string in python2 the
+                        # result is a unicode string, which doesn't work
+                        # everywhere (as used in a subprocess environment, for
+                        # example).
+                        if sys.version_info.major == 3:
+                            directive = m.group(1).decode('utf-8').strip()
+                        else:
+                            directive = m.group(1).strip()
+
                         if state == 'header':
                             key, value = directive.split(':', 1)
                             key = key.strip()
