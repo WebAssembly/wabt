@@ -165,8 +165,8 @@ def DiffLines(expected, actual):
     def Decode(s):
         return s.decode('utf-8', 'replace')
 
-    expected_lines = [decode(line) for line in expected.splitlines() if line]
-    actual_lines = [decode(line) for line in actual.splitlines() if line]
+    expected_lines = [Decode(line) for line in expected.splitlines() if line]
+    actual_lines = [Decode(line) for line in actual.splitlines() if line]
     return list(
         difflib.unified_diff(expected_lines, actual_lines, fromfile='expected',
                              tofile='actual', lineterm=''))
