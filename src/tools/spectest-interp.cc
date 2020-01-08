@@ -459,6 +459,12 @@ wabt::Result JSONParser::ParseTypeObject(Type* out_type) {
   } else if (type_str == "anyref") {
     *out_type = Type::Anyref;
     return wabt::Result::Ok;
+  } else if (type_str == "nullref") {
+    *out_type = Type::Nullref;
+    return wabt::Result::Ok;
+  } else if (type_str == "exnref") {
+    *out_type = Type::Exnref;
+    return wabt::Result::Ok;
   } else {
     PrintError("unknown type: \"%s\"", type_str.c_str());
     return wabt::Result::Error;

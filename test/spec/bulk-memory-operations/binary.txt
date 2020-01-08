@@ -142,7 +142,7 @@ out/test/spec/bulk-memory-operations/binary.wast:725: assert_malformed passed:
   0000024: error: expected ref.null or ref.func in passive element segment
   0000025: error: expected END opcode after element expression
 out/test/spec/bulk-memory-operations/binary.wast:751: assert_malformed passed:
-  0000022: error: segment elem expr type must be funcref or anyref (got i32)
+  0000022: error: segment elem expr type must be a reference type (got i32)
 out/test/spec/bulk-memory-operations/binary.wast:832: assert_malformed passed:
   000000a: error: invalid section size: extends past end
 out/test/spec/bulk-memory-operations/binary.wast:843: assert_malformed passed:

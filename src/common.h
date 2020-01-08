@@ -214,12 +214,12 @@ enum class Type : int32_t {
   V128 = -0x05,     // 0x7b
   Funcref = -0x10,  // 0x70
   Anyref = -0x11,   // 0x6f
+  Nullref = -0x12,  // 0x6e
   Exnref = -0x18,   // 0x68
   Func = -0x20,     // 0x60
   Void = -0x40,     // 0x40
   ___ = Void,       // Convenient for the opcode table in opcode.h
   Any = 0,          // Not actually specified, but useful for type-checking
-  Nullref = 1,      // Not actually specified, but used in testing and type-checking
   Hostref = 2,      // Not actually specified, but used in testing and type-checking
   I8 = 3,           // Not actually specified, but used internally with load/store
   I8U = 4,          // Not actually specified, but used internally with load/store
@@ -383,7 +383,7 @@ static WABT_INLINE const char* GetSymbolTypeName(SymbolType type) {
 
 static WABT_INLINE bool IsRefType(Type t) {
   return t == Type::Anyref || t == Type::Funcref || t == Type::Nullref ||
-         t == Type::Hostref;
+         t == Type::Exnref || t == Type::Hostref;
 }
 
 static WABT_INLINE bool IsNullableRefType(Type t) {
@@ -444,6 +444,7 @@ static WABT_INLINE TypeVector GetInlineTypeVector(Type type) {
     case Type::V128:
     case Type::Funcref:
     case Type::Anyref:
+    case Type::Nullref:
     case Type::Exnref:
       return TypeVector(&type, &type + 1);
 

@@ -54,7 +54,7 @@ Wabt has been compiled to JavaScript via emscripten. Some of the functionality i
 | [multi-value][] | `--enable-multi-value` | ✓ | ✓ | ✓ | ✓ |
 | [tail-call][] | `--enable-tail-call` | ✓ | ✓ | ✓ | ✓ |
 | [bulk memory][] | `--enable-bulk-memory` | ✓ | ✓ | ✓ | ✓ |
-| [reference types][] | `--enable-reference-types` | ✓ | ✓ | ✓ | |
+| [reference types][] | `--enable-reference-types` | ✓ | ✓ | ✓ | ✓ |
 | [annotations][] | `--enable-annotations` | | ✓ | | |
 
 [exception handling]: https://github.com/WebAssembly/exception-handling
