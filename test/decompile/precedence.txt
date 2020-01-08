@@ -1,0 +1,47 @@
+  ;;; TOOL: run-wasm-decompile
+
+(module
+  (memory $m1 1)
+
+  (func $precedence (param) (result)
+    ;; some exp in order that will generate no parens
+    i32.const 0
+    i32.load offset=0
+    i32.const 1
+    i32.mul
+    i32.const 2
+    i32.add
+    i32.const 3
+    i32.shl
+    i32.const 4
+    i32.eq
+    i32.const 5
+    i32.and
+    drop
+    ;; some exp in reverse order that will generate parens.
+    i32.const 6
+    i32.const 5
+    i32.and
+    i32.const 4
+    i32.eq
+    i32.const 3
+    i32.shl
+    i32.const 2
+    i32.add
+    i32.const 1
+    i32.mul
+    i32.load offset=0
+    drop
+  )
+  (export "precedence" (func $precedence))
+)
+
+(;; STDOUT ;;;
+memory M_a(initial: 1, max: 0);
+
+export function precedence() {
+  0[0]:int * 1 + 2 << 3 == 4 & 5;
+  (((((6 & 5) == 4) << 3) + 2) * 1)[0]:int;
+}
+
+;;; STDOUT ;;)

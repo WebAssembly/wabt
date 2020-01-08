@@ -54,6 +54,50 @@
       br_if 0
     end
     i32.const 1
+    i32.const 2
+    i32.const 1
+    i32.const 1
+    i32.eq
+    select
+    drop
+    block
+      block
+        block
+          block
+            block
+              local.get 0
+              br_table 3 2 1 0 4
+              unreachable
+            end
+            i32.const 100
+            return
+          end
+          i32.const 101
+          return
+        end
+        i32.const 102
+        return
+      end
+      i32.const 103
+      return
+    end
+    i32.const 104
+    drop
+    block (result i32)  ;; block as an exp.
+    i32.const 2
+    i32.const 0
+    br_if 0
+    drop
+    i32.const 3
+    end
+    set_local 0
+    nop
+    ref.null
+    ref.is_null
+    drop
+    i32.const 0  ;; fi
+    call_indirect
+    i32.const 0
   )
   ;; LLD outputs a name section with de-mangled C++ function signatures as names,
   ;; so have to make sure special chars get removed.
@@ -82,16 +126,37 @@ export function f(a:int, b:int):int {
   var c:long = 8L;
   var d:float = 6.0f;
   var e:double = 7.0;
-  if (e < 10.0) { 1[4]:int = (2[3]:int + 5) }
+  if (e < 10.0) { 1[4]:int = 2[3]:int + 5 }
   f(a + g_b, 9);
   loop L_b {
-    block B_c {
-      if (if (0) { 1 } else { 2 }) break B_c;
-      continue L_b;
-    }
+    if (if (0) { 1 } else { 2 }) goto B_c;
+    continue L_b;
+    label B_c:
     if (1) continue L_b;
   }
-  return 1;
+  select_if(1, 2, 1 == 1);
+  br_table[B_f, B_g, B_h, B_i, ..B_e](a);
+  unreachable;
+  label B_i:
+  return 100;
+  label B_h:
+  return 101;
+  label B_g:
+  return 102;
+  label B_f:
+  return 103;
+  label B_e:
+  104;
+  a = {
+        2;
+        if (0) goto B_j;
+        3;
+        label B_j:
+      }
+  nop;
+  is_null(null);
+  call_indirect(0);
+  return 0;
 }
 
 function signature() {
