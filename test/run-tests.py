@@ -162,7 +162,9 @@ def Indent(s, spaces):
 
 
 def DiffLines(expected, actual):
-    decode = lambda s: s.decode('utf-8', 'replace')
+    def Decode(s):
+        return s.decode('utf-8', 'replace')
+
     expected_lines = [decode(line) for line in expected.splitlines() if line]
     actual_lines = [decode(line) for line in actual.splitlines() if line]
     return list(
@@ -489,7 +491,7 @@ class TestInfo(object):
             stderr_lines = []
             for line in f.readlines():
                 empty = False
-                m = re.match(b'\s*\(;; (STDOUT|STDERR) ;;;$', line)
+                m = re.match(b'\\s*\\(;; (STDOUT|STDERR) ;;;$', line)
                 if m:
                     directive = m.group(1).decode('utf-8')
                     if directive == 'STDERR':
@@ -499,7 +501,7 @@ class TestInfo(object):
                         state = 'stdout'
                         continue
                 else:
-                    m = re.match(b'\s*;;;(.*)$', line)
+                    m = re.match(b'\\s*;;;(.*)$', line)
                     if m:
                         directive = m.group(1).decode('utf-8').strip()
                         if state == 'header':
