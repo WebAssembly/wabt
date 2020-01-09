@@ -13,6 +13,7 @@
 
   (table 1 anyfunc)
   (elem $elem funcref 0)
+  (elem funcref (ref.null))
   (func
     i32.const 0 i32.const 0 i32.const 0 table.init 0
     elem.drop 0
@@ -38,13 +39,16 @@ out/test/parse/expr/bulk-memory-disabled.txt:11:41: error: opcode not allowed: m
 out/test/parse/expr/bulk-memory-disabled.txt:15:23: error: unexpected token 0, expected ).
   (elem $elem funcref 0)
                       ^
-out/test/parse/expr/bulk-memory-disabled.txt:17:41: error: opcode not allowed: table.init
+out/test/parse/expr/bulk-memory-disabled.txt:16:17: error: ref.null not allowed
+  (elem funcref (ref.null))
+                ^
+out/test/parse/expr/bulk-memory-disabled.txt:18:41: error: opcode not allowed: table.init
     i32.const 0 i32.const 0 i32.const 0 table.init 0
                                         ^^^^^^^^^^
-out/test/parse/expr/bulk-memory-disabled.txt:18:5: error: opcode not allowed: elem.drop
+out/test/parse/expr/bulk-memory-disabled.txt:19:5: error: opcode not allowed: elem.drop
     elem.drop 0
     ^^^^^^^^^
-out/test/parse/expr/bulk-memory-disabled.txt:19:41: error: opcode not allowed: table.copy
+out/test/parse/expr/bulk-memory-disabled.txt:20:41: error: opcode not allowed: table.copy
     i32.const 0 i32.const 0 i32.const 0 table.copy
                                         ^^^^^^^^^^
 ;;; STDERR ;;)

@@ -80,193 +80,193 @@ test() =>
 test() =>
 out/test/spec/bulk-memory-operations/table_init.wast:521: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f32]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:530: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, i64]
-  0000047: error: OnTableInitExpr callback failed
+  0000041: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:539: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i32, f64]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:548: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i32]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:557: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, f32]
-  000004d: error: OnTableInitExpr callback failed
+  0000047: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:566: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, i64]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:575: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f32, f64]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:584: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, i32]
-  0000047: error: OnTableInitExpr callback failed
+  0000041: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:593: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, f32]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:602: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, i64]
-  0000047: error: OnTableInitExpr callback failed
+  0000041: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:611: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, i64, f64]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:620: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, i32]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:629: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, f32]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:638: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, i64]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:647: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i32, f64, f64]
-  0000055: error: OnTableInitExpr callback failed
+  000004f: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:656: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i32]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:665: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, f32]
-  000004d: error: OnTableInitExpr callback failed
+  0000047: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:674: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, i64]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:683: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i32, f64]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:692: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, i32]
-  000004d: error: OnTableInitExpr callback failed
+  0000047: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:701: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, f32]
-  0000050: error: OnTableInitExpr callback failed
+  000004a: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:710: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, i64]
-  000004d: error: OnTableInitExpr callback failed
+  0000047: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:719: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f32, f64]
-  0000054: error: OnTableInitExpr callback failed
+  000004e: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:728: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, i32]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:737: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, f32]
-  000004d: error: OnTableInitExpr callback failed
+  0000047: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:746: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, i64]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:755: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, i64, f64]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:764: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, i32]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:773: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, f32]
-  0000054: error: OnTableInitExpr callback failed
+  000004e: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:782: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, i64]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:791: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f32, f64, f64]
-  0000058: error: OnTableInitExpr callback failed
+  0000052: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:800: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, i32]
-  0000047: error: OnTableInitExpr callback failed
+  0000041: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:809: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, f32]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:818: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, i64]
-  0000047: error: OnTableInitExpr callback failed
+  0000041: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:827: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i32, f64]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:836: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, i32]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:845: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, f32]
-  000004d: error: OnTableInitExpr callback failed
+  0000047: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:854: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, i64]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:863: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f32, f64]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:872: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, i32]
-  0000047: error: OnTableInitExpr callback failed
+  0000041: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:881: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, f32]
-  000004a: error: OnTableInitExpr callback failed
+  0000044: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:890: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, i64]
-  0000047: error: OnTableInitExpr callback failed
+  0000041: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:899: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, i64, f64]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:908: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, i32]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:917: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, f32]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:926: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, i64]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:935: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [i64, f64, f64]
-  0000055: error: OnTableInitExpr callback failed
+  000004f: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:944: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, i32]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:953: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, f32]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:962: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, i64]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:971: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i32, f64]
-  0000055: error: OnTableInitExpr callback failed
+  000004f: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:980: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, i32]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:989: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, f32]
-  0000054: error: OnTableInitExpr callback failed
+  000004e: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:998: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, i64]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1007: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f32, f64]
-  0000058: error: OnTableInitExpr callback failed
+  0000052: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1016: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, i32]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1025: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, f32]
-  0000051: error: OnTableInitExpr callback failed
+  000004b: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1034: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, i64]
-  000004e: error: OnTableInitExpr callback failed
+  0000048: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1043: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, i64, f64]
-  0000055: error: OnTableInitExpr callback failed
+  000004f: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1052: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, i32]
-  0000055: error: OnTableInitExpr callback failed
+  000004f: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1061: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f32]
-  0000058: error: OnTableInitExpr callback failed
+  0000052: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1070: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, i64]
-  0000055: error: OnTableInitExpr callback failed
+  000004f: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1079: assert_invalid passed:
   error: type mismatch in table.init, expected [i32, i32, i32] but got [f64, f64, f64]
-  000005c: error: OnTableInitExpr callback failed
+  0000056: error: OnTableInitExpr callback failed
 out/test/spec/bulk-memory-operations/table_init.wast:1115: assert_trap passed: out of bounds table access: table.init out of bounds
 out/test/spec/bulk-memory-operations/table_init.wast:1116: assert_trap passed: uninitialized table element
 out/test/spec/bulk-memory-operations/table_init.wast:1117: assert_trap passed: uninitialized table element

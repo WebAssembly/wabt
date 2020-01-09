@@ -651,4 +651,52 @@ Const::Const(F64Tag, uint64_t value, const Location& loc_)
 Const::Const(V128Tag, v128 value, const Location& loc_)
     : loc(loc_), type(Type::V128), vec128(value) {}
 
+uint8_t ElemSegment::GetFlags(const Module* module) const {
+  uint8_t flags = 0;
+
+  switch (kind) {
+    case SegmentKind::Active: {
+      Index table_index = module->GetTableIndex(table_var);
+      if (table_index != 0) {
+        flags |= SegExplicitIndex;
+      }
+      break;
+    }
+
+    case SegmentKind::Passive:
+      flags |= SegPassive;
+      break;
+
+    case SegmentKind::Declared:
+      flags |= SegDeclared;
+      break;
+  }
+
+  bool all_ref_func = std::all_of(
+      elem_exprs.begin(), elem_exprs.end(), [](const ElemExpr& elem_expr) {
+        return elem_expr.kind == ElemExprKind::RefFunc;
+      });
+  if (!all_ref_func) {
+    flags |= SegUseElemExprs;
+  }
+
+  return flags;
+}
+
+uint8_t DataSegment::GetFlags(const Module* module) const {
+  uint8_t flags = 0;
+
+  if (kind == SegmentKind::Passive) {
+    flags |= SegPassive;
+  }
+
+  Index memory_index = module->GetMemoryIndex(memory_var);
+  if (memory_index != 0) {
+    flags |= SegExplicitIndex;
+  }
+
+  return flags;
+}
+
+
 }  // namespace wabt

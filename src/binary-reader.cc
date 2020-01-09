@@ -2168,10 +2168,11 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
   for (Index i = 0; i < num_elem_segments; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "elem segment flags"));
-    ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid elem segment flags: %#x",
-             flags);
+    ERROR_IF(flags > SegFlagMax, "invalid elem segment flags: %#x", flags);
+    ERROR_IF((flags & SegDeclared) == SegDeclared,
+             "declared segments aren't supported");
     Index table_index(0);
-    if (flags & SegExplicitIndex) {
+    if ((flags & (SegPassive | SegExplicitIndex)) == SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&table_index, "elem segment table index"));
     }
     Type elem_type = Type::Funcref;
@@ -2185,8 +2186,7 @@ Result BinaryReader::ReadElemSection(Offset section_size) {
     }
 
     // For backwards compat we support not declaring the element kind.
-    bool legacy = !(flags & SegPassive) && !(flags & SegExplicitIndex);
-    if (!legacy) {
+    if (flags & (SegPassive | SegExplicitIndex)) {
       if (flags & SegUseElemExprs) {
         CHECK_RESULT(ReadType(&elem_type, "table elem type"));
         ERROR_UNLESS(IsRefType(elem_type),
@@ -2288,8 +2288,7 @@ Result BinaryReader::ReadDataSection(Offset section_size) {
   for (Index i = 0; i < num_data_segments; ++i) {
     uint32_t flags;
     CHECK_RESULT(ReadU32Leb128(&flags, "data segment flags"));
-    ERROR_IF(flags > ~(~0u << SegFlagMax), "invalid data segment flags: %#x",
-             flags);
+    ERROR_IF(flags > SegFlagMax, "invalid data segment flags: %#x", flags);
     Index memory_index(0);
     if (flags & SegExplicitIndex) {
       CHECK_RESULT(ReadIndex(&memory_index, "data segment memory index"));

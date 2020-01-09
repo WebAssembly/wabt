@@ -2660,8 +2660,8 @@
 0001b2a: 01                                        ; elem function index
 0001b2b: 01                                        ; elem function index
 ; elem segment header 1
-0001b2c: 05                                        ; segment flags
-0001b2d: 70                                        ; elem expr list type
+0001b2c: 01                                        ; segment flags
+0001b2d: 00                                        ; elem list type
 0001b2e: 00                                        ; num elems
 0001b23: 0b                                        ; FIXUP section size
 ; section "DataCount" (12)
@@ -8333,7 +8333,7 @@ BeginModule(version: 1)
     OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     OnElemSegmentElemExpr_RefFunc(index: 0, func_index: 1)
     EndElemSegment(0)
-    BeginElemSegment(index: 1, table_index: 0, flags: 5, elem_type: funcref)
+    BeginElemSegment(index: 1, table_index: 0, flags: 1, elem_type: funcref)
     OnElemSegmentElemExprCount(index: 1, count: 0)
     EndElemSegment(1)
   EndElemSection

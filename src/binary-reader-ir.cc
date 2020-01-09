@@ -1016,7 +1016,13 @@ Result BinaryReaderIR::BeginElemSegment(Index index,
   auto field = MakeUnique<ElemSegmentModuleField>(GetLocation());
   ElemSegment& elem_segment = field->elem_segment;
   elem_segment.table_var = Var(table_index, GetLocation());
-  elem_segment.flags = flags;
+  if ((flags & SegDeclared) == SegDeclared) {
+    elem_segment.kind = SegmentKind::Declared;
+  } else if ((flags & SegPassive) == SegPassive) {
+    elem_segment.kind = SegmentKind::Passive;
+  } else {
+    elem_segment.kind = SegmentKind::Active;
+  }
   elem_segment.elem_type = elem_type;
   module_->AppendField(std::move(field));
   return Result::Ok;
@@ -1071,7 +1077,11 @@ Result BinaryReaderIR::BeginDataSegment(Index index,
   auto field = MakeUnique<DataSegmentModuleField>(GetLocation());
   DataSegment& data_segment = field->data_segment;
   data_segment.memory_var = Var(memory_index, GetLocation());
-  data_segment.flags = flags;
+  if ((flags & SegPassive) == SegPassive) {
+    data_segment.kind = SegmentKind::Passive;
+  } else {
+    data_segment.kind = SegmentKind::Active;
+  }
   module_->AppendField(std::move(field));
   return Result::Ok;
 }
