@@ -20,6 +20,9 @@
   )
 )
 (;; STDERR ;;;
+out/test/parse/expr/bulk-memory-disabled.txt:6:4: error: passive data segments are not allowed
+  (data $data "a")
+   ^^^^
 out/test/parse/expr/bulk-memory-disabled.txt:8:41: error: opcode not allowed: memory.init
     i32.const 0 i32.const 0 i32.const 0 memory.init 0
                                         ^^^^^^^^^^^

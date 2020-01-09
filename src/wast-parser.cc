@@ -933,7 +933,12 @@ Result WastParser::ParseDataModuleField(Module* module) {
   } else if (ParseVarOpt(&field->data_segment.memory_var, Var(0, loc))) {
     CHECK_RESULT(ParseOffsetExpr(&field->data_segment.offset));
   } else if (!ParseOffsetExprOpt(&field->data_segment.offset)) {
-    field->data_segment.flags |= SegPassive;
+    if (options_->features.bulk_memory_enabled()) {
+      field->data_segment.flags |= SegPassive;
+    } else {
+      Error(loc, "passive data segments are not allowed");
+      return Result::Error;
+    }
   }
 
   ParseTextListOpt(&field->data_segment.data);
@@ -987,6 +992,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   }
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
+    // TODO: Don't allow unless bulk memory is enabled.
     field->elem_segment.flags |= (SegPassive | SegUseElemExprs);
     // Parse a potentially empty sequence of ElemExprs.
     while (true) {
