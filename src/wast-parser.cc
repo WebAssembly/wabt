@@ -617,6 +617,7 @@ bool WastParser::ParseOffsetExprOpt(ExprList* out_expr_list) {
 Result WastParser::ParseTextList(std::vector<uint8_t>* out_data) {
   WABT_TRACE(ParseTextList);
   if (!ParseTextListOpt(out_data)) {
+    // TODO(binji): Add error message here.
     return Result::Error;
   }
 
@@ -639,15 +640,40 @@ Result WastParser::ParseVarList(VarVector* out_var_list) {
   while (ParseVarOpt(&var)) {
     out_var_list->emplace_back(var);
   }
-  return out_var_list->empty() ? Result::Error : Result::Ok;
+  if (out_var_list->empty()) {
+    return ErrorExpected({"a var"}, "12 or $foo");
+  } else {
+    return Result::Ok;
+  }
 }
 
-Result WastParser::ParseElemExprVarList(ElemExprVector* out_list) {
-  WABT_TRACE(ParseElemExprVarList);
-  if (!ParseElemExprVarListOpt(out_list)) {
-    return Result::Error;
+bool WastParser::ParseElemExprOpt(ElemExpr* out_elem_expr) {
+  Location loc = GetLocation();
+  if (MatchLpar(TokenType::RefNull)) {
+    if (!(options_->features.bulk_memory_enabled() ||
+          options_->features.reference_types_enabled())) {
+      Error(loc, "ref.null not allowed");
+    }
+    *out_elem_expr = ElemExpr();
+    EXPECT(Rpar);
+    return true;
+  } else if (MatchLpar(TokenType::RefFunc)) {
+    Var var;
+    CHECK_RESULT(ParseVar(&var));
+    *out_elem_expr = ElemExpr(var);
+    EXPECT(Rpar);
+    return true;
+  } else {
+    return false;
   }
-  return Result::Ok;
+}
+
+bool WastParser::ParseElemExprListOpt(ElemExprVector* out_list) {
+  ElemExpr elem_expr;
+  while (ParseElemExprOpt(&elem_expr)) {
+    out_list->push_back(elem_expr);
+  }
+  return !out_list->empty();
 }
 
 bool WastParser::ParseElemExprVarListOpt(ElemExprVector* out_list) {
@@ -990,26 +1016,7 @@ Result WastParser::ParseElemModuleField(Module* module) {
   }
 
   if (ParseRefTypeOpt(&field->elem_segment.elem_type)) {
-    // Parse a potentially empty sequence of ElemExprs.
-    while (true) {
-      Var var;
-      Location loc = GetLocation();
-      if (MatchLpar(TokenType::RefNull)) {
-        if (!(options_->features.bulk_memory_enabled() ||
-              options_->features.reference_types_enabled())) {
-          Error(loc, "ref.null not allowed");
-        }
-        field->elem_segment.elem_exprs.emplace_back();
-        EXPECT(Rpar);
-      } else if (MatchLpar(TokenType::RefFunc)) {
-        CHECK_RESULT(ParseVar(&var));
-        field->elem_segment.elem_exprs.emplace_back(var);
-        EXPECT(Rpar);
-      } else {
-        CHECK_RESULT(ErrorIfLpar({"ref.null", "ref.func"}));
-        break;
-      }
-    }
+    ParseElemExprListOpt(&field->elem_segment.elem_exprs);
   } else {
     field->elem_segment.elem_type = Type::Funcref;
     if (PeekMatch(TokenType::Func)) {
@@ -1323,7 +1330,16 @@ Result WastParser::ParseTableModuleField(Module* module) {
     elem_segment.offset.push_back(MakeUnique<ConstExpr>(Const::I32(0)));
     elem_segment.offset.back().loc = loc;
     elem_segment.elem_type = elem_type;
-    CHECK_RESULT(ParseElemExprVarList(&elem_segment.elem_exprs));
+    // Syntax is either an optional list of var (legacy), or a non-empty list
+    // of elem expr.
+    ElemExpr elem_expr;
+    if (ParseElemExprOpt(&elem_expr)) {
+      elem_segment.elem_exprs.push_back(elem_expr);
+      // Parse the rest.
+      ParseElemExprListOpt(&elem_segment.elem_exprs);
+    } else {
+      ParseElemExprVarListOpt(&elem_segment.elem_exprs);
+    }
     EXPECT(Rpar);
 
     auto table_field = MakeUnique<TableModuleField>(loc, name);
@@ -2669,6 +2685,8 @@ Result WastParser::ParseScriptModule(
     case TokenType::Bin: {
       Consume();
       std::vector<uint8_t> data;
+      // TODO(binji): The spec allows this to be empty, switch to
+      // ParseTextListOpt.
       CHECK_RESULT(ParseTextList(&data));
 
       auto bsm = MakeUnique<BinaryScriptModule>();
@@ -2682,6 +2700,8 @@ Result WastParser::ParseScriptModule(
     case TokenType::Quote: {
       Consume();
       std::vector<uint8_t> data;
+      // TODO(binji): The spec allows this to be empty, switch to
+      // ParseTextListOpt.
       CHECK_RESULT(ParseTextList(&data));
 
       auto qsm = MakeUnique<QuotedScriptModule>();
