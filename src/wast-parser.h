@@ -118,6 +118,7 @@ class WastParser {
   bool ParseVarOpt(Var* out_var, Var default_var = Var());
   Result ParseOffsetExpr(ExprList* out_expr_list);
   bool ParseOffsetExprOpt(ExprList* out_expr_list);
+  Result ParseTextList(std::vector<uint8_t>* out_data);
   bool ParseTextListOpt(std::vector<uint8_t>* out_data);
   Result ParseVarList(VarVector* out_var_list);
   bool ParseElemExprOpt(ElemExpr* out_elem_expr);
