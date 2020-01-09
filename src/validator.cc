@@ -1161,8 +1161,11 @@ void Validator::CheckElemSegments(const Module* module) {
       for (const ElemExpr& elem_expr : elem_segment.elem_exprs) {
         if (elem_expr.kind == ElemExprKind::RefFunc) {
           CheckFuncVar(&elem_expr.var, nullptr);
-        } else if (!bulk_or_ref_enabled) {
-          PrintError(&field.loc, "ref.null is not allowed");
+        } else {
+          assert(elem_expr.kind == ElemExprKind::RefNull);
+          if (!bulk_or_ref_enabled) {
+            PrintError(&field.loc, "ref.null is not allowed");
+          }
         }
       }
 
