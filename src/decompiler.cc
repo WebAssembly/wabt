@@ -226,16 +226,62 @@ struct Decompiler {
 
   void LoadStore(Value &val, const Node& addr_exp, uint32_t offset,
                   Opcode opc, Address align, Type op_type) {
-    BracketIfNeeded(val, Precedence::Indexing);
     auto access = lst.GenAccess(offset, addr_exp);
+    if (!access.empty()) {
+      // We can do this load/store as a struct access.
+      BracketIfNeeded(val, Precedence::Indexing);
+      val.v.back() += "." + access;
+      return;
+    }
+    // Do the load/store as a generalized indexing operation.
+    // The offset is divisible by the alignment in 99.99% of
+    // cases, but the spec doesn't guarantee it, so we must
+    // have a backup syntax.
+    auto index = offset % align == 0
+                ? std::to_string(offset / align)
+                : cat(std::to_string(offset), "@", std::to_string(align));
+    // Detect the very common case of (base + (index << 2))[0]:int etc.
+    // so we can instead do base[index]:int
+    // TODO: (index << 2) on the left of + occurs also.
+    // TODO: sadly this does not address cases where the shift amount > align.
+    // (which happens for arrays of structs or arrays of long (with align=4)).
+    // TODO: also very common is (v = base + (index << 2))[0]:int
+    if (addr_exp.etype == ExprType::Binary) {
+      auto& pe = *cast<BinaryExpr>(addr_exp.e);
+      auto& shift_exp = addr_exp.children[1];
+      if (pe.opcode == Opcode::I32Add &&
+          shift_exp.etype == ExprType::Binary) {
+        auto& se = *cast<BinaryExpr>(shift_exp.e);
+        auto& const_exp = shift_exp.children[1];
+        if (se.opcode == Opcode::I32Shl &&
+            const_exp.etype == ExprType::Const) {
+          auto& ce = *cast<ConstExpr>(const_exp.e);
+          if (ce.const_.type == Type::I32 && (1 << ce.const_.u32) == align) {
+            // Pfew, case detected :( Lets re-write this in Haskell.
+            // TODO: we're decompiling these twice.
+            // The thing to the left of << is going to be part of the index.
+            auto ival = DecompileExpr(shift_exp.children[0], &shift_exp);
+            if (ival.v.size() == 1) {  // Don't bother if huge.
+              if (offset == 0) {
+                index = ival.v[0];
+              } else {
+                BracketIfNeeded(ival, Precedence::Add);
+                index = cat(ival.v[0], " + ", index);
+              }
+              // We're going to use the thing to the left of + as the new
+              // base address:
+              val = DecompileExpr(addr_exp.children[0], &addr_exp);
+            }
+          }
+        }
+      }
+    }
+    BracketIfNeeded(val, Precedence::Indexing);
     val.v.back() +=
-        !access.empty()
-            ? "." + access
-            : cat("[", std::to_string(offset),
-                  "]:", GetDecompTypeName(GetMemoryType(op_type, opc)),
-                  !opc.IsNaturallyAligned(align)
-                      ? cat("@" + std::to_string(align))
-                      : "");
+        cat("[", index, "]:", GetDecompTypeName(GetMemoryType(op_type, opc)),
+            opc.IsNaturallyAligned(align)
+              ? ""
+              : cat("@", std::to_string(align)));
   }
 
   Value DecompileExpr(const Node& n, const Node* parent) {

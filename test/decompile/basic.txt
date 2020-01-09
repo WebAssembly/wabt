@@ -28,7 +28,7 @@
     if
       i32.const 1
       i32.const 2
-      i32.load offset=3
+      i32.load offset=3 align=1
       i32.const 5
       i32.add
       i32.store offset=4
@@ -126,7 +126,7 @@ export function f(a:int, b:int):int {
   var c:long = 8L;
   var d:float = 6.0f;
   var e:double = 7.0;
-  if (e < 10.0) { 1[4]:int = 2[3]:int + 5 }
+  if (e < 10.0) { 1[1]:int = 2[3]:int@1 + 5 }
   f(a + g_b, 9);
   loop L_b {
     if (if (0) { 1 } else { 2 }) goto B_c;
