@@ -1,0 +1,11 @@
+;;; TOOL: run-roundtrip
+;;; ARGS: --stdout --debug-names --generate-names
+(module
+  (func)
+  (start 0))
+(;; STDOUT ;;;
+(module
+  (type $t0 (func))
+  (func $f0 (type $t0))
+  (start $f0))
+;;; STDOUT ;;)
